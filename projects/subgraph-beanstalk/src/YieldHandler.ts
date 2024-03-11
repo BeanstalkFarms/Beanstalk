@@ -7,15 +7,27 @@ import { loadFertilizerYield } from "./utils/FertilizerYield";
 import { loadSilo, loadSiloHourlySnapshot, loadSiloYield, loadTokenYield, loadWhitelistTokenSetting } from "./utils/SiloEntities";
 import { SILO_YIELD_14_000 } from "./utils/HistoricYield";
 
-const MAX_WINDOW = 720;
+const ROLLING_24_WINDOW = 24;
+const ROLLING_7_DAY_WINDOW = 168;
+const ROLLING_30_DAY_WINDOW = 720;
 
 // Note: minimum value of `t` is 6075
 export function updateBeanEMA(t: i32, timestamp: BigInt): void {
+  updateWindowEMA(t, timestamp, ROLLING_24_WINDOW);
+  updateWindowEMA(t, timestamp, ROLLING_7_DAY_WINDOW);
+  updateWindowEMA(t, timestamp, ROLLING_30_DAY_WINDOW);
+}
+
+/**
+ *
+ *
+ */
+function updateWindowEMA(t: i32, timestamp: BigInt, window: i32): void {
   let silo = loadSilo(BEANSTALK);
-  let siloYield = loadSiloYield(t);
+  let siloYield = loadSiloYield(t, window);
 
   // Check for cached info
-  if (t <= 14_000) {
+  if (window == ROLLING_30_DAY_WINDOW && t <= 14_000) {
     let cacheIndex = t - 6075;
     siloYield.beta = BigDecimal.fromString(SILO_YIELD_14_000[cacheIndex][1]);
     siloYield.u = <i32>parseInt(SILO_YIELD_14_000[cacheIndex][2]);
@@ -24,14 +36,14 @@ export function updateBeanEMA(t: i32, timestamp: BigInt): void {
     siloYield.createdAt = BigInt.fromString(SILO_YIELD_14_000[cacheIndex][4]);
     siloYield.save();
 
-    updateFertAPY(t, timestamp);
+    updateFertAPY(t, timestamp, window);
 
     return;
   }
 
-  // When less then MAX_WINDOW data points are available,
-  // smooth over whatever is available. Otherwise use MAX_WINDOW.
-  siloYield.u = t - 6074 < MAX_WINDOW ? t - 6074 : MAX_WINDOW;
+  // When less then window data points are available,
+  // smooth over whatever is available. Otherwise use the full window.
+  siloYield.u = t - 6074 < window ? t - 6074 : window;
   siloYield.whitelistedTokens = silo.whitelistedTokens;
 
   // Calculate the current beta value
@@ -41,7 +53,7 @@ export function updateBeanEMA(t: i32, timestamp: BigInt): void {
   let currentEMA = ZERO_BD;
   let priorEMA = ZERO_BD;
 
-  if (siloYield.u < MAX_WINDOW) {
+  if (siloYield.u < window) {
     // Recalculate EMA from initial season since beta has changed
     for (let i = 6075; i <= t; i++) {
       let season = loadSiloHourlySnapshot(BEANSTALK, i, timestamp);
@@ -50,7 +62,7 @@ export function updateBeanEMA(t: i32, timestamp: BigInt): void {
     }
   } else {
     // Calculate EMA for the prior 720 seasons
-    for (let i = t - MAX_WINDOW + 1; i <= t; i++) {
+    for (let i = t - window + 1; i <= t; i++) {
       let season = loadSiloHourlySnapshot(BEANSTALK, i, timestamp);
       currentEMA = toDecimal(season.deltaBeanMints).minus(priorEMA).times(siloYield.beta).plus(priorEMA);
       priorEMA = currentEMA;
@@ -68,7 +80,7 @@ export function updateBeanEMA(t: i32, timestamp: BigInt): void {
   for (let i = 0; i < siloYield.whitelistedTokens.length; i++) {
     let token = Address.fromString(siloYield.whitelistedTokens[i]);
     let siloSettings = loadWhitelistTokenSetting(token);
-    let tokenYield = loadTokenYield(token, t);
+    let tokenYield = loadTokenYield(token, t, window);
 
     let tokenAPY = calculateAPY(
       currentEMA,
@@ -83,7 +95,7 @@ export function updateBeanEMA(t: i32, timestamp: BigInt): void {
     tokenYield.save();
   }
 
-  updateFertAPY(t, timestamp);
+  updateFertAPY(t, timestamp, window);
 }
 
 /**
@@ -156,9 +168,10 @@ export function calculateAPY(
 
   return apys;
 }
-function updateFertAPY(t: i32, timestamp: BigInt): void {
-  let siloYield = loadSiloYield(t);
-  let fertilizerYield = loadFertilizerYield(t);
+
+function updateFertAPY(t: i32, timestamp: BigInt, window: i32): void {
+  let siloYield = loadSiloYield(t, window);
+  let fertilizerYield = loadFertilizerYield(t, window);
   let fertilizer = loadFertilizer(FERTILIZER);
   let beanstalk = Beanstalk.bind(BEANSTALK);
   let currentFertHumidity = beanstalk.try_getCurrentHumidity();
