@@ -7,6 +7,7 @@ var exec = require('child_process').exec;
 // BIP 39 
 const { bipSeedGauge } = require("./bips.js");
 const { getWellContractAt } = require("../utils/well.js");
+const { log } = require('console');
 
 //////////////////////// STEPS ////////////////////////
 // - fetch the baseFee of the block at the top of the hour --> done
@@ -21,43 +22,22 @@ const { getWellContractAt } = require("../utils/well.js");
 
 async function setNextBlockBaseFee(baseFee) {
   await network.provider.send("anvil_setNextBlockBaseFeePerGas", [
-    "0x2540be400", // 10 gwei
+    hre.ethers.utils.hexlify(baseFee),
   ]);
 }
 
 async function simulateSeedGaugeSunrises() {
 
+  console.log("\n////////////////////////// INITIAL STATE //////////////////////////")
 
   // fetch the baseFee of the block at the top of the hour 
-
-  // this returns an object like this
-  //   lastBaseFeePerGas: BigNumber { value: "70202737439" },
-  //   maxFeePerGas: BigNumber { value: "141905474878" },
-  //   maxPriorityFeePerGas: BigNumber { value: "1500000000" },
-  //   gasPrice: BigNumber { value: "73800624839" }
-  // fee data of the current forked block
   const baseFeeData = await hre.ethers.provider.getFeeData();
-
-  console.log('baseFee: ', baseFeeData.lastBaseFeePerGas.toString());
-
-
-  const seasonFacet = await hre.ethers.getContractAt(
-    'SeasonFacet',
-    '0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5'
-  );
-
-
-  // const instantaneousReserves = await multiFlowPump.readInstantaneousReserves(
-  //   well.address,
-  //   "0x"
-  // );
-  // console.log("Instantaneous Bean Reserve:", instantaneousReserves[0].toString());
-  // console.log("Instantaneous WETH Reserve:", instantaneousReserves[1].toString());
+  console.log('Initial baseFee: ', baseFeeData.lastBaseFeePerGas.toString());
   
   // get bean eth well deployed at: 0xBEA0e11282e2bB5893bEcE110cF199501e872bAd
-
   const well = await getWellContractAt("Well", "0xBEA0e11282e2bB5893bEcE110cF199501e872bAd");
-
+  
+  // fetch the reserves of the bean/eth well at the top of the hour
   const reserves = await well.getReserves();
   console.log("Well Statistics:")
   console.log("Bean Reserve:", reserves[0].toString());
@@ -65,15 +45,95 @@ async function simulateSeedGaugeSunrises() {
   console.log("LP Token Total Supply:", (await well.totalSupply()).toString());
 
   const BEFORE_SUNRISE_BLOCK = 19398596;
+  const SUNRISE_BLOCK = 19398597;
 
-  setNextBlockBaseFee(10);
+  console.log("\n////////////////////////// SEED GAUGE UPGRADE //////////////////////////")
 
-  // go forward a block
-  await network.provider.send("evm_mine");
+  // upgrade beanstalk at the block right before the sunrise block
+  console.log("Excuting the deployBip39 upgrade script...")
+  await bipSeedGauge();
+
+  console.log("\n////////////////////////// SNAPSHOT //////////////////////////")
+
+  // capture a snapshot of the current state of the blockchain
+  console.log("Capturing a snapshot of the current state of the blockchain...")
+  const snapshotId = await network.provider.send("evm_snapshot");
+  console.log("Snapshot ID: ", snapshotId);
   
-  // console.log("Excute the deployBip39 script...")
-  // await bipSeedGauge();
+  console.log("\n////////////////////////// SUNRISE TX //////////////////////////")
 
+  // call sunrise
+  const seasonFacet = await hre.ethers.getContractAt(
+    'SeasonFacet',
+    '0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5'
+  );
+
+  // go forward a block to reach the sunrise block
+  console.log("Going forward a block to reach the sunrise block...")
+  await network.provider.send("anvil_mine");
+
+  console.log("Sunrise block reached: ", await hre.ethers.provider.getBlockNumber());
+  console.log("Calling sunrise...");
+  const sunriseReceipt = await seasonFacet.sunrise();
+
+  const sunriseEvents = await seasonFacet.queryFilter(
+    'Sunrise(uint256)',
+    BEFORE_SUNRISE_BLOCK - 10,
+    'latest'
+  );
+
+  console.log("Number of sunrise events: ", sunriseEvents.length);
+
+  const txHash = sunriseEvents[0].transactionHash;
+  const receipt = await ethers.provider.getTransactionReceipt(txHash);
+  console.log("Sunrise Receipt: ", receipt);
+
+  const gasUsed = receipt.gasUsed;
+  const gasPrice = receipt.effectiveGasPrice;
+  const [beanTransfer] = receipt.logs.filter((log) => {
+    return (
+      log.address === '0xBEA0000029AD1c77D3d5D23Ba2D8893dB9d1Efab' &&
+      hre.ethers.utils.hexZeroPad(receipt.from.toLowerCase(), 32) ===
+        log.topics[2]
+    );
+  });
+
+  const beanAmount = parseInt(beanTransfer?.data, 16);
+
+  const ethPrice = 3800;
+
+  const usdGasCost =
+    ethPrice * gasUsed * ethers.utils.formatUnits(gasPrice, 'ether');
+  const beanInUsd = ethers.utils.formatUnits(beanAmount, 6);
+
+
+
+    console.log("Sunrise Gas Used: ", gasUsed);
+    console.log("Sunrise Gas Price: ", gasPrice);
+    console.log("Sunrise Gas Cost: ", gasUsed * ethers.utils.formatUnits(gasPrice, 'ether'));
+    console.log("Sunrise Gas Cost in Dollars: ", usdGasCost);
+    console.log("Bean Amount: ", beanAmount);
+    console.log("Profit: ", (beanInUsd - usdGasCost));
+
+    console.log("/////////////////////////  LOG TOPICS //////////////////////////");
+
+    const logTopicMapping = {
+        "0xb360bcf4b60112f485fd94b599df45181250ef0e80538be7b334728ab0990b1a": "Sunrise",
+        "0x0e0c101fa6afb12838450cfd752d904d70198349367ff256b1460f10bcbd1904": "MetaPoolOracle",
+        "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef": "Bean Transfer Reward",
+        "0xbb4f656853bc420ad6e4321622c07eefb4ed40e3f91b35553ce14a6dff4c0981": "Incentivization (Bean transfer reward_"
+    }
+
+    for (let i = 0; i < receipt.logs.length; i++) {
+        console.log(receipt.logs[i].topics);
+    }
+
+
+  // set next block base fee to 100 gwei
+  // setNextBlockBaseFee(100000000000);
+
+//   revert back to snapshot
+  await network.provider.send("evm_revert", [snapshotId]);
 
 }
 
