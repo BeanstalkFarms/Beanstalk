@@ -1,11 +1,12 @@
-import { Token, TokenValue } from "@beanstalk/sdk";
+import { TokenValue } from "@beanstalk/sdk";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { multicall } from "@wagmi/core";
 import { BigNumber } from "ethers";
-import { useCallback, useMemo } from "react";
+import { useMemo } from "react";
 import { useAccount } from "wagmi";
 import { useTokens } from "./TokenProvider";
 import { Log } from "src/utils/logger";
+import { config } from "src/utils/wagmi/config";
 
 const TokenBalanceABI = [
   {
@@ -48,9 +49,9 @@ export const useAllTokensBalance = () => {
     ["token", "balance"],
     async () => {
       if (!address) return {};
-      const res = (await multicall({
+      const res = (await multicall(config, {
         contracts: calls,
-        allowFailure: true
+        allowFailure: false
       })) as unknown as BigNumber[];
       const balances: Record<string, TokenValue> = {};
 
