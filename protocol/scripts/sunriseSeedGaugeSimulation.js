@@ -8,6 +8,7 @@ var exec = require('child_process').exec;
 const { bipSeedGauge } = require("./bips.js");
 const { getWellContractAt } = require("../utils/well.js");
 const { takeSnapshot, revertToSnapshot} = require("../test/utils/snapshot.js");
+const { setReserves } = require("../utils/well.js");
 
 //////////////////////// STEPS ////////////////////////
 // - fetch the baseFee of the block at the top of the hour --> done
@@ -36,10 +37,10 @@ async function simulateSeedGaugeSunrises() {
     writeToCsv([
         "Iteration",
         "Sunrise Block",
-        "Gas Used",
+        "Gas Used (computational units)",
         "Gas Price (gwei)",
-        "Gas Cost",
-        "Gas Cost in Dollars",
+        "Gas Cost (ETH)",
+        "Gas Cost (USD)",
         "Bean Amount",
         "Profit"
     ]);
@@ -73,7 +74,7 @@ async function simulateSeedGaugeSunrises() {
     let baseFee = hre.ethers.utils.parseUnits('10.0', 'gwei');
     setNextBlockBaseFee(baseFee);
 
-    for (let i = 0; i < 10; i++) {
+    for (let i = 0; i < 100; i++) {
 
         // capture a snapshot of the current state of the blockchain
         console.log("Capturing a snapshot of the current state of the blockchain at block: " + await hre.ethers.provider.getBlockNumber());
@@ -81,7 +82,7 @@ async function simulateSeedGaugeSunrises() {
         console.log("Snapshot ID: ", snapshotId);
 
         console.log("////////////////////////// ITERATION: ", i, " //////////////////////////")
-        console.log("Base Fee: ", baseFee.toString());
+        console.log("Base Fee: ", hre.ethers.utils.formatUnits(baseFee, 'gwei') + ' gwei');
         const reserves = [100000000000, 100000000000];
         await simulateSunrise(baseFee, reserves, ethPrice, i);
 
@@ -110,9 +111,12 @@ async function simulateSunrise(baseFee, reserves, ethPrice, index) {
     console.log("Sunrise block reached: ", await hre.ethers.provider.getBlockNumber());
     console.log("Calling sunrise...");
     
-    const maxFeePerGas = hre.ethers.utils.parseUnits('100', 'gwei');
+    const maxFeePerGas = hre.ethers.utils.parseUnits('150', 'gwei');
 
     await seasonFacet.sunrise({maxFeePerGas: maxFeePerGas});
+
+    // wait 100 ms
+    await new Promise((resolve) => setTimeout(resolve, 100));
   
     const sunriseEvents = await seasonFacet.queryFilter(
       'Sunrise(uint256)',
@@ -165,12 +169,19 @@ async function simulateSunrise(baseFee, reserves, ethPrice, index) {
     ]);
 }
 
+////////////////////////// HELPER FUNCTIONS //////////////////////////
+
 // Function to write data to CSV
 function writeToCsv(data) {
     const csvString = `${data.join(',')}\n`;
     fs.appendFileSync(csvFilePath, csvString, (err) => {
         if (err) throw err;
     });
+}
+
+async function updateReserves(account, well, reserves) {
+    console.log("Updating reserves...");
+    await setReserves(account, well, reserves);
 }
 
 async function setNextBlockBaseFee(baseFee) {
