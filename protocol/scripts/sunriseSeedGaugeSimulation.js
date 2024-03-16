@@ -9,7 +9,6 @@ const { bipSeedGauge } = require("./bips.js");
 const { getWellContractAt } = require("../utils/well.js");
 const { takeSnapshot, revertToSnapshot} = require("../test/utils/snapshot.js");
 
-
 //////////////////////// STEPS ////////////////////////
 // - fetch the baseFee of the block at the top of the hour --> done
 // - fetch the reserves of the bean/eth well at the top of the hour --> done 
@@ -23,6 +22,7 @@ const { takeSnapshot, revertToSnapshot} = require("../test/utils/snapshot.js");
 
 const BEFORE_SUNRISE_BLOCK = 19398596;
 const SUNRISE_BLOCK = 19398597;
+const csvFilePath = './sunrise_simulation.csv';
 
 async function setNextBlockBaseFee(baseFee) {
   await network.provider.send("anvil_setNextBlockBaseFeePerGas", [
@@ -31,6 +31,18 @@ async function setNextBlockBaseFee(baseFee) {
 }
 
 async function simulateSeedGaugeSunrises() {
+
+    // Write CSV headers
+    writeToCsv([
+        "Iteration",
+        "Sunrise Block",
+        "Gas Used",
+        "Gas Price",
+        "Gas Cost",
+        "Gas Cost in Dollars",
+        "Bean Amount",
+        "Profit"
+    ]);
   
     console.log("\n////////////////////////// INITIAL STATE //////////////////////////")
   
@@ -56,39 +68,40 @@ async function simulateSeedGaugeSunrises() {
 
     console.log("Beanstalk upgraded at block: ", await hre.ethers.provider.getBlockNumber());
   
-    console.log("\n////////////////////////// SNAPSHOT //////////////////////////")
-  
-    // capture a snapshot of the current state of the blockchain
-    console.log("Capturing a snapshot of the current state of the blockchain... Block:" + await hre.ethers.provider.getBlockNumber());
-    const snapshotId = await takeSnapshot();
-    console.log("Snapshot ID: ", snapshotId);
-
     for (let i = 0; i < 10; i++) {
-      console.log("////////////////////////// ITERATION: ", i, " //////////////////////////")
-      const baseFee = 100000000000;
-      const reserves = [100000000000, 100000000000];
-      await simulateSunrise(baseFee, reserves, snapshotId);
+
+        console.log("\n////////////////////////// SNAPSHOT //////////////////////////")
+        // capture a snapshot of the current state of the blockchain
+        console.log("Capturing a snapshot of the current state of the blockchain... Block:" + await hre.ethers.provider.getBlockNumber());
+        let snapshotId = await takeSnapshot();
+        console.log("Snapshot ID: ", snapshotId);
+
+        console.log("////////////////////////// ITERATION: ", i, " //////////////////////////")
+        const baseFee = 100000000000;
+        const reserves = [100000000000, 100000000000];
+        await simulateSunrise(baseFee, reserves, i);
+        // revert to previous block
+        await revertToSnapshot(snapshotId);
+
+        // set next block base fee to 100 gwei
+        // setNextBlockBaseFee(baseFee);
     }
 
     // reset the fork
-    console.log("Resetting the fork...");
-    await network.provider.send("anvil_reset");
-    console.log("Fork reset successfully.");
-    console.log("Current block: ", await hre.ethers.provider.getBlockNumber());
+    // console.log("Resetting the fork...");
+    // await network.provider.send("anvil_reset");
+    // console.log("Fork reset successfully.");
+    // console.log("Current block: ", await hre.ethers.provider.getBlockNumber());
 }
 
-async function simulateSunrise(baseFee, reserves, snapshotId) {
+async function simulateSunrise(baseFee, reserves, index) {
+
     console.log("\n////////////////////////// SUNRISE TX //////////////////////////")
-  
     // call sunrise
     const seasonFacet = await hre.ethers.getContractAt(
       'SeasonFacet',
       '0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5'
     );
-  
-    // // go forward a block to reach the sunrise block
-    // console.log("Going forward a block to reach the sunrise block...")
-    // // await hre.network.provider.send("anvil_mine");
   
     console.log("Sunrise block reached: ", await hre.ethers.provider.getBlockNumber());
     console.log("Calling sunrise...");
@@ -105,7 +118,7 @@ async function simulateSunrise(baseFee, reserves, snapshotId) {
   
     const txHash = sunriseEvents[0].transactionHash;
     const receipt = await ethers.provider.getTransactionReceipt(txHash);
-    //console.log("Sunrise Receipt: ", receipt);
+    // console.log("Sunrise Receipt: ", receipt);
   
     const gasUsed = receipt.gasUsed;
     const gasPrice = receipt.effectiveGasPrice;
@@ -124,8 +137,8 @@ async function simulateSunrise(baseFee, reserves, snapshotId) {
     const ethPrice = 3800;
   
     const usdGasCost =
-      ethPrice * gasUsed * ethers.utils.formatUnits(gasPrice, 'ether');
-    const beanInUsd = ethers.utils.formatUnits(beanAmount, 6);
+      ethPrice * gasUsed * hre.ethers.utils.formatUnits(gasPrice, 'ether');
+    const beanInUsd = hre.ethers.utils.formatUnits(beanAmount, 6);
 
     console.log("Sunrise Gas Used: ", gasUsed);
     console.log("Sunrise Gas Price: ", gasPrice);
@@ -134,22 +147,36 @@ async function simulateSunrise(baseFee, reserves, snapshotId) {
     console.log("Bean Amount: ", beanAmount);
     console.log("Profit: ", (beanInUsd - usdGasCost));
 
-    const logTopicMapping = {
-        "0xb360bcf4b60112f485fd94b599df45181250ef0e80538be7b334728ab0990b1a": "Sunrise",
-        "0x0e0c101fa6afb12838450cfd752d904d70198349367ff256b1460f10bcbd1904": "MetaPoolOracle",
-        "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef": "Bean Transfer Reward",
-        "0xbb4f656853bc420ad6e4321622c07eefb4ed40e3f91b35553ce14a6dff4c0981": "Incentivization (Bean transfer reward_"
-    }
-    // set next block base fee to 100 gwei
-    // setNextBlockBaseFee(baseFee);
-
-    // revert to previous block
-    await revertToSnapshot(snapshotId);
+    // Inside simulateSunrise, after you have calculated all your variables
+    writeToCsv([
+        index, // Make sure you pass the iteration 'i' into simulateSunrise function
+        await hre.ethers.provider.getBlockNumber(),
+        gasUsed.toString(),
+        gasPrice.toString(),
+        (gasUsed * ethers.utils.formatUnits(gasPrice, 'ether')).toString(),
+        usdGasCost.toString(),
+        beanAmount.toString(),
+        (beanInUsd - usdGasCost).toString()
+    ]);
 }
 
 ////////////////////////// END //////////////////////////
 
+// Function to write data to CSV
+function writeToCsv(data) {
+    const csvString = `${data.join(',')}\n`;
+    fs.appendFileSync(csvFilePath, csvString, (err) => {
+        if (err) throw err;
+    });
+}
 
+
+simulateSeedGaugeSunrises()
+  .then(() => process.exit(0))
+  .catch((error) => {
+    console.error(error);
+    process.exit(1);
+});
 
 
 async function main() {
@@ -305,10 +332,3 @@ async function main() {
     throw err;
   }
 }
-
-simulateSeedGaugeSunrises()
-  .then(() => process.exit(0))
-  .catch((error) => {
-    console.error(error);
-    process.exit(1);
-  });
