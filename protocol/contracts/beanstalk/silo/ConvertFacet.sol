@@ -146,6 +146,10 @@ contract ConvertFacet is ReentrancyGuard {
         )
     {   
         LibTractor._setPublisher(msg.sender);
+
+        //log stems
+
+        
         
         // AppStorage storage s = LibAppStorage.diamondStorage();
 
@@ -181,6 +185,7 @@ contract ConvertFacet is ReentrancyGuard {
         IERC20(inputToken).transfer(PIPELINE, totalAmountIn);
         amountOut = executeAdvancedFarmCalls(farmData);
 
+        console.log('amountOut: ', amountOut);
         
         //user MUST leave final assets in pipeline, allowing us to verify that the farm has been called successfully.
         //this also let's us know how many assets to attempt to pull out of the final type
@@ -387,6 +392,16 @@ contract ConvertFacet is ReentrancyGuard {
             stems.length == amounts.length,
             "Convert: stems, amounts are diff lengths."
         );
+
+        for (uint256 i = 0; i < stems.length; i++) {
+            console.log('_withdrawTokens i: ', i);
+            console.log('_withdrawTokens stems[i]: ');
+            console.logInt(stems[i]);
+            console.log('_withdrawTokens amounts[i]: ', amounts[i]);
+        }
+
+        console.log('maxTokens: ', maxTokens);
+
         AssetsRemovedConvert memory a;
         // uint256 depositBDV;
         uint256 i = 0;
@@ -429,9 +444,15 @@ contract ConvertFacet is ReentrancyGuard {
                         );
                     a.stalkRemoved = a.stalkRemoved.add(a.stalksRemoved[i]);
                 }
+
+
                 
                 a.tokensRemoved = a.tokensRemoved.add(amounts[i]);
                 a.bdvRemoved = a.bdvRemoved.add(a.bdvsRemoved[i]);
+
+
+            console.log('a.tokensRemoved: ', a.tokensRemoved);
+            console.log('a.bdvsRemoved[i]: ', a.bdvsRemoved[i]);
                 
                 a.depositIds[i] = uint256(LibBytes.packAddressAndStem(
                     token,
@@ -440,6 +461,7 @@ contract ConvertFacet is ReentrancyGuard {
                 i++;
             }
             for (i; i < stems.length; ++i) amounts[i] = 0;
+
             
             emit RemoveDeposits(
                 LibTractor._getUser(),
@@ -464,6 +486,7 @@ contract ConvertFacet is ReentrancyGuard {
             "Convert: Not enough tokens removed."
         );
         LibTokenSilo.decrementTotalDeposited(token, a.tokensRemoved, a.bdvRemoved);
+        console.log('a.bdvRemoved: ', a.bdvRemoved);
         LibSilo.burnStalk(
             LibTractor._getUser(),
             a.stalkRemoved.add(a.bdvRemoved.mul(s.ss[token].stalkIssuedPerBdv))
@@ -567,6 +590,8 @@ amountRequiredForBdv: 3162278450600000000
         //loop through bdvs and calculate amount of token required to get that amount of bdv
         uint256 totalAmount = 0;
         for (uint256 i = 0; i < bdvs.length; i++) {
+            console.log('bdvs[i]: ', bdvs[i]);
+            console.log('amount: ', amount);
             // uint256 bdv = bdvs[i];
             require( bdvs[i] > 0 && amount > 0, "Convert: BDV or amount is 0.");
             uint256 crateAmount = bdvs[i].mul(amountPerBdv);
@@ -599,8 +624,5 @@ amountRequiredForBdv: 3162278450600000000
                 LibTokenSilo.Transfer.emitTransferSingle
             );
         }
-        
-
-
     }
 }

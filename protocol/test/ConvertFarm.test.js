@@ -107,7 +107,7 @@ describe('Farm Convert', function () {
     });
 
     describe('basic convert', async function () {
-      it.only('does the most basic possible convert Bean to LP', async function () {
+      it('does the most basic possible convert Bean to LP', async function () {
 
         await this.silo.connect(user).deposit(this.bean.address, toBean('200'), EXTERNAL);
         //user needs to approve bean to well
@@ -191,6 +191,60 @@ describe('Farm Convert', function () {
       //"ERC20: transfer amount exceeds balance"
 
 
+    });
+
+
+    describe('basic convert multiple crates', async function () {
+      it.only('Bean to LP multiple crates', async function () {
+
+        await this.silo.connect(user).deposit(this.bean.address, toBean('200'), EXTERNAL);
+        const stemTip1 = await this.silo.stemTipForToken(this.bean.address);
+        await this.season.siloSunrise(0);
+
+        await this.silo.connect(user).deposit(this.bean.address, toBean('200'), EXTERNAL);
+        const stemTip2 = await this.silo.stemTipForToken(this.bean.address);
+        await this.season.siloSunrise(0);
+        
+        await this.silo.connect(user).deposit(this.bean.address, toBean('200'), EXTERNAL);
+        const stemTip3 = await this.silo.stemTipForToken(this.bean.address);
+        await this.season.siloSunrise(0);
+        
+        console.log('stemTip1: ', stemTip1);
+        console.log('stemTip2: ', stemTip2);
+        console.log('stemTip3: ', stemTip3);
+
+        //do another sunrise because of germination
+        await this.season.siloSunrise(0);
+        
+
+        let advancedFarmCalls = await draftConvertBeanToBeanEthWell();
+
+        const farmData = this.farmFacet.interface.encodeFunctionData("advancedFarm", [
+          advancedFarmCalls
+        ]);
+
+        //get well amount out if we deposit 600 beans
+        const wellAmountOut = await this.beanstalk.getAmountOut(BEAN, this.well.address, toBean('600'))
+        //store bdv of this well amount out for later comparison
+        const bdvWellAmountOut = await this.silo.bdv(this.well.address, wellAmountOut);
+
+        this.result = this.convert.connect(user).pipelineConvert(this.bean.address, [stemTip1, stemTip2, stemTip3], [toBean('200'), toBean('200'), toBean('200')], toBean('600'), this.well.address, farmData);
+
+        //expect it to emit the Convert event
+        await expect(this.result).to.emit(this.convert, 'Convert').withArgs(user.address, this.bean.address, this.well.address, toBean('200'), wellAmountOut);
+        await expect(this.result).to.emit(this.convert, 'Convert').withArgs(user.address, this.bean.address, this.well.address, toBean('200'), wellAmountOut);
+        await expect(this.result).to.emit(this.convert, 'Convert').withArgs(user.address, this.bean.address, this.well.address, toBean('200'), wellAmountOut);
+
+        //expect it to emit the RemoveDeposits event
+        await expect(this.result).to.emit(this.silo, 'RemoveDeposits').withArgs(user.address, this.bean.address, [stemTip1, stemTip2, stemTip3], [toBean('200'), toBean('200'), toBean('200')], toBean('600'), [toBean('200'), toBean('200'), toBean('200')]);
+
+        //expect add deposit event
+        await expect(this.result).to.emit(this.silo, 'AddDeposit').withArgs(user.address, this.well.address, stemTip1, wellAmountOut, bdvWellAmountOut);
+        await expect(this.result).to.emit(this.silo, 'AddDeposit').withArgs(user.address, this.well.address, stemTip2, wellAmountOut, bdvWellAmountOut);
+        await expect(this.result).to.emit(this.silo, 'AddDeposit').withArgs(user.address, this.well.address, stemTip3, wellAmountOut, bdvWellAmountOut);
+      });
+
+      //write a test with a ton of crates but low max tokens
     });
   });
 });

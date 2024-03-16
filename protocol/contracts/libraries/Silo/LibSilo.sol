@@ -14,6 +14,7 @@ import {LibPRBMath} from "../LibPRBMath.sol";
 import {LibTokenSilo} from "./LibTokenSilo.sol";
 import {LibSafeMath128} from "../LibSafeMath128.sol";
 import {LibSafeMathSigned96} from "../LibSafeMathSigned96.sol";
+import "hardhat/console.sol";
 
 /**
  * @title LibSilo
@@ -255,6 +256,9 @@ library LibSilo {
         }
 
         if (roots > s.a[account].roots) roots = s.a[account].roots;
+
+        console.log('stalk before: ', s.s.stalk);
+        console.log('stalk subtracting: ', stalk);
 
         // Decrease supply of Stalk; Remove Stalk from the balance of `account`
         s.s.stalk = s.s.stalk.sub(stalk);
