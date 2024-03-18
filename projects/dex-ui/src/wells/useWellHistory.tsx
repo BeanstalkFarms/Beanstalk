@@ -43,17 +43,17 @@ export type WellEvent = SwapEvent | AddEvent | RemoveEvent | ShiftEvent ;
 const useWellHistory = (well: Well) => {
   const sdk = useSdk();
 
-  return useQuery(
-    ["wells", "history", well.address],
-    async () => {
+  return useQuery({
+    queryKey: ["wells", "history", well.address],
+
+    queryFn: async () => {
       const data = await loadHistory(sdk, well);
 
       return data;
     },
-    {
-      staleTime: 1000 * 60
-    }
-  );
+
+    staleTime: 1000 * 60
+  });
 };
 
 export default useWellHistory;

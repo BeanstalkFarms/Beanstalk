@@ -15,9 +15,10 @@ export const useMultiFlowPumpTWAReserves = () => {
   const { getIsMultiPumpWell } = useBeanstalkSiloWhitelist();
   const sdk = useSdk();
 
-  const query = useQuery(
-    ["wells", "multiFlowPumpTWAReserves"],
-    async () => {
+  const query = useQuery({
+    queryKey: ["wells", "multiFlowPumpTWAReserves"],
+
+    queryFn: async () => {
       const whitelistedWells = (wells || []).filter((well) => getIsMultiPumpWell(well));
 
       const [{ timestamp: seasonTimestamp }, ...wellOracleSnapshots] = await Promise.all([
@@ -67,12 +68,11 @@ export const useMultiFlowPumpTWAReserves = () => {
       });
       return mapping;
     },
-    {
-      staleTime: 1000 * 60,
-      enabled: !!wells?.length,
-      refetchOnMount: true
-    }
-  );
+
+    staleTime: 1000 * 60,
+    enabled: !!wells?.length,
+    refetchOnMount: true
+  });
 
   const getTWAReservesWithWell = useCallback(
     (well: Well | undefined) => {

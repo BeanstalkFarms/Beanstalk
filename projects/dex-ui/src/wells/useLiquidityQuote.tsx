@@ -35,25 +35,29 @@ export const useLiquidityQuote = (
     data: balancedQuote,
     isLoading: loadingBalancedQuote,
     isError: balanedQuoteError
-  } = useQuery(["wells", "quote", "removeLiquidity", well.address, removeLiquidityMode, lpTokenAmount], async () => {
-    if (!lpTokenAmount || removeLiquidityMode !== REMOVE_LIQUIDITY_MODE.Balanced) {
-      return null;
-    }
+  } = useQuery({
+    queryKey: ["wells", "quote", "removeLiquidity", well.address, removeLiquidityMode, lpTokenAmount],
 
-    if (!lpTokenAmount || lpTokenAmount.eq(TokenValue.ZERO) || !address) {
-      return null;
-    }
+    queryFn: async () => {
+      if (!lpTokenAmount || removeLiquidityMode !== REMOVE_LIQUIDITY_MODE.Balanced) {
+        return null;
+      }
 
-    try {
-      const quote = await well.removeLiquidityQuote(lpTokenAmount);
-      const estimate = await well.removeLiquidityEstimateGas(lpTokenAmount, quote, address);
-      return {
-        quote,
-        estimate
-      };
-    } catch (error: any) {
-      Log.module("addliquidity").error("Error during quote: ", (error as Error).message);
-      return null;
+      if (!lpTokenAmount || lpTokenAmount.eq(TokenValue.ZERO) || !address) {
+        return null;
+      }
+
+      try {
+        const quote = await well.removeLiquidityQuote(lpTokenAmount);
+        const estimate = await well.removeLiquidityEstimateGas(lpTokenAmount, quote, address);
+        return {
+          quote,
+          estimate
+        };
+      } catch (error: any) {
+        Log.module("addliquidity").error("Error during quote: ", (error as Error).message);
+        return null;
+      }
     }
   });
 
@@ -61,9 +65,10 @@ export const useLiquidityQuote = (
     data: oneTokenQuote,
     isLoading: loadingOneTokenQuote,
     isError: oneTokenQuoteError
-  } = useQuery(
-    ["wells", "quote", "removeliquidity", well.address, removeLiquidityMode, lpTokenAmount, singleTokenIndex],
-    async () => {
+  } = useQuery({
+    queryKey: ["wells", "quote", "removeliquidity", well.address, removeLiquidityMode, lpTokenAmount, singleTokenIndex],
+
+    queryFn: async () => {
       if (removeLiquidityMode !== REMOVE_LIQUIDITY_MODE.OneToken) {
         return null;
       }
@@ -84,20 +89,20 @@ export const useLiquidityQuote = (
         return null;
       }
     },
-    {
-      staleTime: 1000 * 10,
-      refetchOnMount: false,
-      refetchOnWindowFocus: false
-    }
-  );
+
+    staleTime: 1000 * 10,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false
+  });
 
   const {
     data: customRatioQuote,
     isLoading: loadingCustomRatioQuote,
     isError: customRatioQuoteError
-  } = useQuery(
-    ["wells", "quote", "removeliquidity", well.address, removeLiquidityMode, amounts],
-    async () => {
+  } = useQuery({
+    queryKey: ["wells", "quote", "removeliquidity", well.address, removeLiquidityMode, amounts],
+
+    queryFn: async () => {
       if (removeLiquidityMode !== REMOVE_LIQUIDITY_MODE.Custom) {
         return null;
       }
@@ -122,12 +127,11 @@ export const useLiquidityQuote = (
         return null;
       }
     },
-    {
-      staleTime: 1000 * 10,
-      refetchOnMount: false,
-      refetchOnWindowFocus: false
-    }
-  );
+
+    staleTime: 1000 * 10,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false
+  });
 
   return {
     balanced: {

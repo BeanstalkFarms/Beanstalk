@@ -13,9 +13,10 @@ export const useWellTokens = () => {
 
   // @dev: if we fail to load wells, we still execute the useQuery below (see the `enabled` option), but
   // make useQuery return the error, instead of throwing here and needing the parent to handle two type of errors
-  return useQuery<Token[], Error>(
-    ["tokens", "wellsError", sdk],
-    async () => {
+  return useQuery({
+    queryKey: ["tokens", "wellsError", sdk],
+
+    queryFn: async () => {
       if (wellsError) {
         Log.module("useWellTokens").log(`No wells found: ${wellsError.message}`);
         return [];
@@ -37,10 +38,9 @@ export const useWellTokens = () => {
 
       return tokens;
     },
-    {
-      enabled: Array.isArray(wells) || !!wellsError,
-      refetchOnWindowFocus: false,
-      retry: false
-    }
-  );
+
+    enabled: Array.isArray(wells) || !!wellsError,
+    refetchOnWindowFocus: false,
+    retry: false
+  });
 };
