@@ -85,9 +85,10 @@ export const useLPPositionSummary = () => {
   /**
    * Fetch external & internal balances
    */
-  const { data: balanceData, ...balanceRest } = useQuery<Record<string, Omit<LPBalanceSummary, "silo">>, Error>(
-    ["token", "lpSummary", ...lpTokens],
-    async () => {
+  const { data: balanceData, ...balanceRest } = useQuery({
+    queryKey: ["token", "lpSummary", ...lpTokens],
+
+    queryFn: async () => {
       /**
        * TODO: check if there are any cached balances.
        * If so, return those instead of fetching
@@ -126,18 +127,18 @@ export const useLPPositionSummary = () => {
 
       return balances;
     },
-    {
-      /**
-       * Token balances are cached for 30 seconds, refetch value every 30 seconds,
-       * when the window is hidden/not visible, stop background refresh,
-       * when the window gains focus, force a refresh even if cache is not stale     *
-       */
-      staleTime: 1000 * 30,
-      refetchInterval: 1000 * 30,
-      refetchIntervalInBackground: false,
-      refetchOnWindowFocus: "always"
-    }
-  );
+
+    /**
+     * Token balances are cached for 30 seconds, refetch value every 30 seconds,
+     * when the window is hidden/not visible, stop background refresh,
+     * when the window gains focus, force a refresh even if cache is not stale     *
+     */
+    staleTime: 1000 * 30,
+
+    refetchInterval: 1000 * 30,
+    refetchIntervalInBackground: false,
+    refetchOnWindowFocus: "always"
+  });
 
   // Combine silo, internal & external balances & update state
   useEffect(() => {

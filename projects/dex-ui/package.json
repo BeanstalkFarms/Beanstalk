@@ -6,7 +6,7 @@
   "license": "MIT",
   "type": "module",
   "scripts": {
-    "start": "vite --port 2424",
+    "dev": "vite --port 2424",
     "build": "yarn all:build && yarn generate && tsc && vite build",
     "build:netlify": "./utils/build-netlify.sh",
     "generate:graphql": "graphql-codegen --config codegen.ts",
@@ -21,8 +21,8 @@
   },
   "dependencies": {
     "@beanstalk/sdk": "workspace:*",
-    "@tanstack/react-query": "4.36.1",
-    "@tanstack/react-query-devtools": "4.36.1",
+    "@tanstack/react-query": "5.28.4",
+    "@tanstack/react-query-devtools": "5.28.4",
     "@typechain/ethers-v5": "10.2.1",
     "connectkit": "1.7.2",
     "ethers": "^5.7.2",
