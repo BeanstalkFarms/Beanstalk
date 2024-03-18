@@ -1,7 +1,7 @@
 import BigNumber from 'bignumber.js';
 import { DateTime } from 'luxon';
 import { useCallback } from 'react';
-import { useProvider } from 'wagmi';
+import { useEthersProvider } from '~/util/wagmi/ethersAdapter';
 
 export type BlockInfo = {
   blockNumber: BigNumber;
@@ -9,7 +9,7 @@ export type BlockInfo = {
 };
 
 export default function useFetchLatestBlock() {
-  const provider = useProvider();
+  const provider = useEthersProvider();
 
   const fetch = useCallback(async (): Promise<BlockInfo> => {
     const block = await provider.getBlock('latest');
