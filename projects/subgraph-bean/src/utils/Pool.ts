@@ -2,7 +2,7 @@ import { BigDecimal, BigInt } from "@graphprotocol/graph-ts";
 import { Pool, PoolDailySnapshot, PoolHourlySnapshot } from "../../generated/schema";
 import { dayFromTimestamp, hourFromTimestamp } from "../../../subgraph-core/utils/Dates";
 import { emptyBigIntArray, ZERO_BD, ZERO_BI } from "../../../subgraph-core/utils/Decimals";
-import { getBeanTokenAddress, loadBean } from "./Bean";
+import { getBeanTokenAddress, loadBean, updateBeanDeltaB } from "./Bean";
 import { checkPoolCross } from "./Cross";
 
 export function loadOrCreatePool(poolAddress: string, blockNumber: BigInt): Pool {
@@ -132,6 +132,8 @@ export function updatePoolValues(
   poolDaily.utilization = poolDaily.deltaVolumeUSD.div(poolDaily.liquidityUSD);
   poolDaily.updatedAt = timestamp;
   poolDaily.save();
+
+  updateBeanDeltaB(pool.bean, blockNumber, timestamp);
 }
 
 export function incrementPoolCross(poolAddress: string, timestamp: BigInt, blockNumber: BigInt): void {
