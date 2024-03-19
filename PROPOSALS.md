@@ -49,6 +49,7 @@ You can read more about BIPs [here](https://docs.bean.money/almanac/governance/p
 * [BIP-38](https://bean.money/bip-38): Migrate urBEAN3CRV to urBEANETH
 * [BIP-39](https://bean.money/bip-39): Beanstalk Farms 2024 Development Budget
 * [BIP-40](https://bean.money/bip-40): Beanstalk Farms 2024 Development Budget
+* [BIP-41](https://bean.money/bip-41): Immunefi Program Update
 
 ## Emergency Beanstalk Improvement Proposal (EBIP)
 
