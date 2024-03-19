@@ -21,7 +21,7 @@ const SLUGS = [
   'supply',
   'crosses',
   'inst_delta_b',
-  'weigh_delta_b',
+  'twa_delta_b',
   'liquiditysupplyratio',
 ];
 
@@ -42,7 +42,7 @@ const BeanAnalytics: FC<{}> = () => {
         <Tab label="Supply" />
         <Tab label="Crosses" />
         <Tab label="Inst. deltaB" />
-        <Tab label="Weighted deltaB" />
+        <Tab label="TWA deltaB" />
         <Tab label="L2SR" />
       </Tabs>
       {/* 

@@ -19,9 +19,9 @@ const getValue = (season: SnapshotData<SeasonalWeightedDeltaBQuery>) =>
 const formatValue = (value: number) =>
   `${value.toLocaleString('en-us', { maximumFractionDigits: 2 })}`;
 const statProps = {
-  title: 'deltaB',
+  title: 'Cumulative TWA deltaB',
   titleTooltip:
-    'The liquidity and time weighted average shortage of Beans in liquidity pools on the Minting Whitelist at the beginning of every Season.',
+    'The cumulative liquidity and time weighted average shortage of Beans in liquidity pools on the Minting Whitelist at the beginning of every Season.',
   gap: 0.25,
 };
 
