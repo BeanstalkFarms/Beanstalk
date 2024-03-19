@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   Box,
   Card,
@@ -55,7 +55,7 @@ const ProposalPageInner: FC<{ proposal: Proposal }> = ({ proposal }) => {
           <Grid item xs={12} md={8} maxWidth="100% !important">
             <ProposalContent proposal={proposal} quorum={quorum} />
           </Grid>
-          <Grid item xs={12} md={4} maxWidth="100%">
+          <Grid item xs={12} md={4} zeroMinWidth>
             <GovernanceActions proposal={proposal} quorum={quorum} />
           </Grid>
         </Grid>
@@ -68,18 +68,46 @@ const ProposalPage: FC<{}> = () => {
   /// Routing
   const { id } = useParams<{ id: string }>();
 
+  const oldBip = id?.startsWith('bip-');
+  const ebip = id?.startsWith('ebip-');
+  const bipNumber = oldBip ? id?.replace('bip-', '') : ebip ? id?.replace('ebip-', '') : null;
+
   /// Query: Proposal
   const { loading, error, data } = useProposalQuery({
     variables: { proposal_id: id || '' },
     context: { subgraph: 'snapshot' },
     fetchPolicy: 'cache-and-network',
     nextFetchPolicy: 'network-only',
-    skip: !id,
+    skip: oldBip || ebip,
   });
-  const proposal = data?.proposal as Proposal;
+
+  const [bipData, setBipData] = useState<Proposal>();
+  const [loadingBipData, setLoadingBipData] = useState<boolean>(true);
+  useEffect(() => {
+    (async () => {
+      try {
+        if (oldBip) {
+          const fetchOldBip = await fetch(`/.netlify/functions/oldbipdata?getOldBip=${bipNumber}`)
+            .then((response) => response.json())
+          setBipData(fetchOldBip);
+          setLoadingBipData(false);
+        }
+        if (ebip) {
+          const fetchEbip = await fetch(`/.netlify/functions/ebipdata?getEbip=${bipNumber}`)
+            .then((response) => response.json())
+          setBipData(fetchEbip);
+          setLoadingBipData(false);
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    })();
+  }, [oldBip, ebip, bipNumber]);
+
+  const proposal = ((oldBip || ebip) ? bipData : data?.proposal) as Proposal;
 
   /// Loading or Error
-  if (loading || error) {
+  if (((oldBip || ebip) ? loadingBipData : loading) || error) {
     return (
       <>
         {error ? (
@@ -108,7 +136,7 @@ const ProposalPage: FC<{}> = () => {
   }
 
   /// Finished loading but no proposal
-  if ((!loading && data?.proposal === null) || !id) {
+  if ((((oldBip || ebip) ? !loadingBipData : !loading) && proposal === null) || !id) {
     return <PageNotFound />;
   }
 

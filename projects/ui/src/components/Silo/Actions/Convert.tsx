@@ -152,7 +152,7 @@ const ConvertForm: FC<
   const txnActions = useFarmerFormTxnsActions({ mode: 'plantToggle' });
 
   /// Change button state and prepare outputs
-  if (depositedAmount.eq(0)) {
+  if (depositedAmount.eq(0) && (!plantCrate || plantCrate.amount.eq(0))) {
     buttonContent = 'Nothing to Convert';
   } else if (values.maxAmountIn === null) {
     if (values.tokenOut) {

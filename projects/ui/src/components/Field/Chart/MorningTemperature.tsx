@@ -187,7 +187,7 @@ const Chart: React.FC<Props> = ({
           {seriesData.map((d, i) => {
             const interval = getInterval(d);
             const barWidth = intervalScale.bandwidth();
-            const _barHeight = yMax - temperatureScale(getTemperature(d)) ?? 0;
+            const _barHeight = yMax - temperatureScale(getTemperature(d));
 
             /// Minimum value of 5px to prevent the bar from being too small
             const barHeight = i === 0 ? Math.max(10, _barHeight) : _barHeight;

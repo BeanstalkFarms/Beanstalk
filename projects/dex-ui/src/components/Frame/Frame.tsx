@@ -12,7 +12,7 @@ import wellsIcon from "src/assets/images/navbar/wells.svg";
 import { LinksNav } from "../Typography";
 import { BurgerMenuIcon, Discord, Github, Logo, Twitter, X, BeanstalkLogoBlack } from "../Icons";
 import { size } from "src/breakpoints";
-import { useNetwork } from "wagmi";
+import { useAccount } from "wagmi";
 import { Title } from "../PageComponents/Title";
 import { TokenMarquee } from "./TokenMarquee";
 import { WalletButton } from "src/components/Wallet";
@@ -20,7 +20,7 @@ import { WalletButton } from "src/components/Wallet";
 export const Frame: FC<{}> = ({ children }) => {
   const isNotProd = !Settings.PRODUCTION;
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const { chain } = useNetwork();
+  const { chain } = useAccount();
 
   return (
     <Container id="frame">
@@ -107,7 +107,9 @@ export const Frame: FC<{}> = ({ children }) => {
             <WalletButton />
           </MobileConnectContainer>
         </BurgerMenu>
-        {chain?.unsupported ? <Title title="Unsupported Chain" /> : children}
+        {/* TODO Restore this */}
+        {/* {chain?.unsupported ? <Title title="Unsupported Chain" /> : children} */}
+        {children}
       </Window>
       <Footer />
     </Container>

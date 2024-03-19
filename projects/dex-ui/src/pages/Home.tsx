@@ -36,7 +36,7 @@ export const Home = () => {
                 </div>
               </MevInfo>
               <GetStartedContainer href={links.multiFlowPump} target="_blank" rel="noopener noreferrer">
-                <GetStarted>Get Started →</GetStarted>
+                <GetStarted>Read the whitepaper →</GetStarted>
               </GetStartedContainer>
             </MevBannerBG>
           </MevBanner>

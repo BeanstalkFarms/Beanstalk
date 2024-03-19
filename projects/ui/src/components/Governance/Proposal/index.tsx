@@ -25,6 +25,7 @@ const ProposalContent: FC<{
     'ipfs://',
     'https://cf-ipfs.com/ipfs/'
   );
+
   return (
     <Card sx={{ p: 2 }}>
       <Row justifyContent="space-between">
@@ -36,7 +37,7 @@ const ProposalContent: FC<{
             showLink
           />
         </Stack>
-        {pctOfQuorum && (
+        {pctOfQuorum && pctOfQuorum > 0 && (
           <Tooltip
             title={`${props.quorum.data.tag} is ~${(pctOfQuorum * 100).toFixed(
               1
@@ -62,7 +63,7 @@ const ProposalContent: FC<{
                   fontSize: FontSize.xs,
                 }}
               >
-                {Math.min(pctOfQuorum * 100, 100)?.toFixed(0)}%
+                {parseInt(Math.min(pctOfQuorum * 100, 100).toString(), 10)}%
               </Box>
             </Box>
           </Tooltip>
