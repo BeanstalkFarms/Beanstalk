@@ -155,6 +155,10 @@ contract ConvertFacet is ReentrancyGuard {
     {   
         LibTractor._setPublisher(msg.sender);
 
+        // mow input and output tokens: 
+        LibSilo._mow(LibTractor._getUser(), inputToken);
+        LibSilo._mow(LibTractor._getUser(), outputToken);
+
         //log stems
 
         
@@ -216,7 +220,8 @@ contract ConvertFacet is ReentrancyGuard {
 
         _depositTokensForConvertMultiCrate(outputToken, amountOut, bdvsRemoved, grownStalks);
 
-        //emit convert event, but do we want a new event definition? the old one can't handle multiple input tokens nor the combining of stems/etc
+        // emit convert event, but do we want a new event definition? the old one can't handle multiple input tokens nor the combining of stems/etc
+        emit Convert(LibTractor._getUser(), inputToken, outputToken, totalAmountIn, amountOut);
 
         //there's nothing about total BDV in this event, but it can be derived from the AddDeposit events
         LibTractor._resetPublisher();

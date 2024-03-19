@@ -120,9 +120,7 @@ describe('Farm Convert', function () {
 
         //advance 2 seasons to get past germination
         await this.season.siloSunrise(0);
-        await this.season.mockEndTotalGerminationForToken(this.bean.address);
         await this.season.siloSunrise(0);
-        await this.season.mockEndTotalGerminationForToken(this.bean.address);
 
         let advancedFarmCalls = await draftConvertBeanToBeanEthWell();
 
