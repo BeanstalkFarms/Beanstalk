@@ -25,7 +25,7 @@ const RDUpper = new BigNumber(POD_RATE_UPPER_BOUND / 100);
 const beanSupply = (
   // The award for successfully calling the sunrise() function for t;
   a_t: BigNumber,
-  // The sum of liquidity and time weighted average shortages or excesss of Beans across liquidity pools on the Oracle Whitelist over the previous Season;
+  // The sum of liquidity and time weighted average shortages or excesss of Beans across liquidity pools on the Minting Whitelist over the previous Season;
   ΔB_t1: BigNumber,
   // The total Unfertilized Sprouts;
   𝒟: BigNumber,
@@ -45,7 +45,7 @@ const soilSupply = (
   h_t: BigNumber,
   // The Pod Rate at the end of the previous Season;
   RD_t1: BigNumber,
-  // bean.deltaB: The sum of liquidity and time weighted average shortages or excesss of Beans across liquidity pools on the Oracle Whitelist over the previous Season;
+  // bean.deltaB: The sum of liquidity and time weighted average shortages or excesss of Beans across liquidity pools on the Minting Whitelist over the previous Season;
   ΔB_t1: BigNumber
 ) => {
   let x: number;

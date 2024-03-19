@@ -35,7 +35,7 @@ const actionsToIconMap = {
   },
 };
 
-const ClaimBeanDrawerToggle: React.FC<{}> = () => {
+const ClaimBeanDrawerToggle: React.FC<{ actionText?: string }> = ({ actionText }) => {
   /// Formik
   const { values } = useFormikContext<FormTxnsFormState>();
 
@@ -94,10 +94,10 @@ const ClaimBeanDrawerToggle: React.FC<{}> = () => {
           />
           <Stack>
             <Typography variant="h4" color="primary.main">
-              Use Claimable Beans
+              {`${actionText || 'Use'} Claimable Beans`}
             </Typography>
             <Typography variant="bodySmall" color="text.tertiary">
-              Select assets to use in this transaction
+              Select additional assets to use in this transaction.
             </Typography>
           </Stack>
         </Row>

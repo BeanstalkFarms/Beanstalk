@@ -16,7 +16,7 @@ contract InitBip13 {
     AppStorage internal s;
 
     function init() external {
-        s.cases = [
+        s.deprecated_cases = [
         // Dsc, Sdy, Inc, nul
        int8(3),   1,   0,   0,  // Exs Low: P < 1
             -1,  -3,  -3,   0,  //          P > 1

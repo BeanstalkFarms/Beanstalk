@@ -1,0 +1,14 @@
+query AllVotes($proposal_id: String) {
+  votes (
+    where: {
+      proposal: $proposal_id,
+    },
+    first: 1000,
+    orderBy: "vp",
+    orderDirection: desc
+  ) {
+    voter,
+    choice,
+    vp
+  }
+}

@@ -26,8 +26,8 @@ contract MockConvertFacet is ConvertFacet {
         uint256[] memory amounts,
         uint256 maxTokens
     ) external {
+        LibSilo._mow(msg.sender, token);
         (uint256 stalkRemoved, uint256 bdvRemoved, , ) = _withdrawTokens(token, stems, amounts, maxTokens);
-        
         
         emit MockConvert(stalkRemoved, bdvRemoved);
     }
@@ -38,6 +38,7 @@ contract MockConvertFacet is ConvertFacet {
         uint256 bdv, 
         uint256 grownStalk
     ) external {
+        LibSilo._mow(msg.sender, token);
         _depositTokensForConvert(token, amount, bdv, grownStalk);
     }
 

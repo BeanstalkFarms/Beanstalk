@@ -12,10 +12,15 @@ import { loadField, loadFieldDaily, loadFieldHourly } from "./utils/Field";
 import { expirePodListing, loadPodListing } from "./utils/PodListing";
 import { loadPodMarketplace, loadPodMarketplaceDailySnapshot, loadPodMarketplaceHourlySnapshot } from "./utils/PodMarketplace";
 import { loadSeason } from "./utils/Season";
-import { loadSilo, loadSiloDailySnapshot, loadSiloHourlySnapshot } from "./utils/Silo";
 import { addDepositToSiloAsset, updateStalkWithCalls } from "./SiloHandler";
 import { updateBeanEMA } from "./YieldHandler";
-import { loadSiloAssetDailySnapshot, loadSiloAssetHourlySnapshot } from "./utils/SiloAsset";
+import {
+  loadSilo,
+  loadSiloDailySnapshot,
+  loadSiloHourlySnapshot,
+  loadSiloAssetDailySnapshot,
+  loadSiloAssetHourlySnapshot
+} from "./utils/SiloEntities";
 import { BeanstalkPrice } from "../generated/Season-Replanted/BeanstalkPrice";
 
 export function handleSunrise(event: Sunrise): void {

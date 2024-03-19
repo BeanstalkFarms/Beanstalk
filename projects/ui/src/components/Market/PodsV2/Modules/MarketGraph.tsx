@@ -582,6 +582,13 @@ const Graph: FC<GraphProps> = ({
       }
     } else if (params.listingID) {
       const index = listings.findIndex((l) => l.id === params.listingID);
+      if (index === -1) {
+        if (selectedPoint) {
+          setSelectedPoint(undefined);
+          hideTooltip();
+        }
+        return
+      };
       const newSelectdPoint: SelectedPoint = {
         type: 'listing',
         index,
@@ -596,6 +603,13 @@ const Graph: FC<GraphProps> = ({
       }
     } else if (params.orderID) {
       const index = orders.findIndex((l) => l.id === params.orderID);
+      if (index === -1) {
+        if (selectedPoint) {
+          setSelectedPoint(undefined);
+          hideTooltip();
+        }
+        return
+      };
       if (!selectedPoint || selectedPoint.index !== index) {
         setSelectedPoint({
           type: 'order',

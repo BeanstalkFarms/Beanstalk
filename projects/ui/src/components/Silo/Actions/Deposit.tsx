@@ -231,7 +231,7 @@ const DepositForm: FC<
             />
           );
         })}
-        {migrationNeeded === true ? null : <ClaimBeanDrawerToggle />}
+        {migrationNeeded === true ? null : <ClaimBeanDrawerToggle actionText="Deposit" />}
         {isReady ? (
           <>
             <TxnSeparator />
@@ -296,7 +296,7 @@ const DepositForm: FC<
           Deposit
         </SmartSubmitButton>
       </Stack>
-      <FormWithDrawer.Drawer title="Use Claimable Beans">
+      <FormWithDrawer.Drawer title="Deposit Claimable Beans">
         <ClaimBeanDrawerContent
           quoteProviderProps={{
             name: 'claimableBeans',
@@ -487,7 +487,7 @@ const DepositPropProvider: FC<{
           throw new Error('Only one token supported at this time');
         }
 
-        const { BEAN, BEAN_ETH_WELL_LP } = sdk.tokens;
+        const { BEAN } = sdk.tokens;
 
         const formData = values.tokens[0];
         const claimData = values.claimableBeans;
@@ -542,8 +542,8 @@ const DepositPropProvider: FC<{
           depositTxn,
           amountIn,
           values.settings.slippage,
-          target.equals(BEAN_ETH_WELL_LP) ? 1.2 : undefined,
-          tokenIn.symbol !== "BEANETH" && target.equals(BEAN_ETH_WELL_LP)
+          1.2,
+          true
         );
 
         const txn = await execute();

@@ -1,12 +1,12 @@
 @keyframes color-breathe {
   0% {
-    fill: rgba(70, 185, 85, 1);
+    fill: rgba(29, 138, 121, 1);
   }
   50% {
-    fill: rgba(70, 185, 85, 0.35);
+    fill: rgba(29, 138, 121, 0.35);
   }
   100% {
-    fill: rgba(70, 185, 85, 1);
+    fill: rgba(29, 138, 121, 1);
   }
 }
 
@@ -17,13 +17,13 @@
 
 .bar-current {
   animation: color-breathe 3000ms infinite linear;
-  fill: rgba(70, 185, 85, 0.35);
+  fill: rgba(29, 138, 121, 0.35);
   /* padding-left: 3px;
   padding-right: 3px; */
 }
 
 .bar-past {
-  fill: rgba(70, 185, 85, 0.2);
+  fill: rgba(29, 138, 121, 0.2);
   /* padding-left: 3px;
   padding-right: 3px; */
 }

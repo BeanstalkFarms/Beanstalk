@@ -57,6 +57,7 @@ library LibConvertData {
         );
     }
 
+    /// @notice Decoder for the lambdaConvert
     function lambdaConvert(bytes memory self)
         internal
         pure

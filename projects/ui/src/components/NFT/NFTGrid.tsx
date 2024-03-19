@@ -1,18 +1,17 @@
 import React from 'react';
-import { Card, CircularProgress, Grid, Stack } from '@mui/material';
+import { Box, Card, CircularProgress, Grid, Stack, Typography, Link } from '@mui/material';
 import { Nft } from '~/util/BeaNFTs';
 import NFTDetails from './NFTDetails';
 import { BeanstalkPalette } from '../App/muiTheme';
-import EmptyState from '../Common/ZeroState/EmptyState';
-
 import { FC } from '~/types';
 
 export interface NFTGridProps {
   nfts: Nft[] | null;
+  collectionAddress: string;
   handleDialogOpen: any;
 }
 
-const NFTGrid: FC<NFTGridProps> = ({ nfts, handleDialogOpen }) => {
+const NFTGrid: FC<NFTGridProps> = ({ nfts, collectionAddress, handleDialogOpen }) => {
   if (nfts === null) {
     return (
       <Stack
@@ -26,10 +25,25 @@ const NFTGrid: FC<NFTGridProps> = ({ nfts, handleDialogOpen }) => {
     );
   }
 
+  
+
   return (
     <>
       {nfts.length === 0 ? (
-        <EmptyState message="You don't have any NFTs from this collection!" />
+        <Box
+          height={300}
+          display="flex"
+          flexDirection="column"
+          alignItems="center"
+          justifyContent="center"
+        >
+          <Typography variant="body1" color="gray">
+            You don&apos;t have any NFTs from this collection!
+          </Typography>
+          <Link href={`https://opensea.io/assets/ethereum/${collectionAddress}`} variant="body1" color="primary">
+            Explore this collection on Opensea →
+          </Link>
+        </Box>
       ) : (
         <Grid container spacing={{ md: 3, xs: 2 }}>
           {nfts.map((nft) => (
