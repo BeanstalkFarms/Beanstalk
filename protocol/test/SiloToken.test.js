@@ -2,7 +2,7 @@ const { expect } = require("chai");
 const { deploy } = require("../scripts/deploy.js");
 const { readPrune, toBN, signSiloDepositTokenPermit, signSiloDepositTokensPermit } = require("../utils");
 const { EXTERNAL, INTERNAL, INTERNAL_EXTERNAL, INTERNAL_TOLERANT } = require("./utils/balances.js");
-const { BEAN, THREE_POOL, BEAN_3_CURVE, UNRIPE_LP, UNRIPE_BEAN, THREE_CURVE } = require("./utils/constants");
+const { BEAN, THREE_POOL, BEAN_3_CURVE, UNRIPE_LP, UNRIPE_BEAN, THREE_CURVE, ZERO_ADDRESS } = require("./utils/constants");
 const { to18, to6, toStalk, toBean } = require("./utils/helpers.js");
 const { takeSnapshot, revertToSnapshot } = require("./utils/snapshot");
 const { time, mineUpTo, mine } = require("@nomicfoundation/hardhat-network-helpers");
@@ -346,6 +346,18 @@ describe("Silo Token", function () {
         it('emits RemoveDeposits event', async function () {
           await expect(this.result).to.emit(this.silo, 'RemoveDeposits').withArgs(userAddress, this.siloToken.address, [0,1], ['500', '1000'], '1500', ['500', '1000']);
         });
+
+        it('emits TransferBatch event', async function () {
+          const depositID0 = await this.silo.getDepositId(this.siloToken.address, 0)
+          const depositID1 = await this.silo.getDepositId(this.siloToken.address, 1)
+          await expect(this.result).to.emit(this.silo, 'TransferBatch').withArgs(
+            userAddress,
+            userAddress,
+            ZERO_ADDRESS,
+            [depositID0, depositID1], 
+            ['500', '1000']
+          )
+        });
       });
       describe("2 token crates", function () {
         beforeEach(async function () {
@@ -379,6 +391,18 @@ describe("Silo Token", function () {
         });
         it('emits RemoveDeposits event', async function () {
           await expect(this.result).to.emit(this.silo, 'RemoveDeposits').withArgs(userAddress, this.siloToken.address, [0,1], ['1000', '1000'], '2000', ['1000', '1000']);
+        });
+
+        it('emits TransferBatch event', async function () {
+          const depositID0 = await this.silo.getDepositId(this.siloToken.address, 0)
+          const depositID1 = await this.silo.getDepositId(this.siloToken.address, 1)
+          await expect(this.result).to.emit(this.silo, 'TransferBatch').withArgs(
+            userAddress,
+            userAddress,
+            ZERO_ADDRESS,
+            [depositID0, depositID1], 
+            ['1000', '1000']
+          )
         });
       });
     });

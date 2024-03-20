@@ -2,7 +2,7 @@ const { expect } = require("chai");
 const { deploy } = require("../scripts/deploy.js");
 const { readPrune, toBN, } = require("../utils");
 const { EXTERNAL } = require("./utils/balances.js");
-const { BEAN, BEAN_3_CURVE, UNRIPE_LP, UNRIPE_BEAN, THREE_CURVE, BEAN_ETH_WELL, WETH } = require("./utils/constants");
+const { BEAN, BEAN_3_CURVE, UNRIPE_LP, UNRIPE_BEAN, THREE_CURVE, BEAN_ETH_WELL, WETH, ZERO_ADDRESS } = require("./utils/constants");
 const { to18, to6, toStalk } = require("./utils/helpers.js");
 const { takeSnapshot, revertToSnapshot } = require("./utils/snapshot");
 const { impersonateMockWell } = require("../utils/well.js");
@@ -240,6 +240,14 @@ describe("Silo Enroot", function () {
         await expect(this.result).to.emit(this.silo, 'AddDeposit').withArgs(userAddress, UNRIPE_BEAN, stem10, to6('5'), to6('2.5'));
         await expect(this.result).to.emit(this.silo, 'AddDeposit').withArgs(userAddress, UNRIPE_BEAN, stem11, to6('5'), to6('2.5'));
       });
+
+      it('omits TransferBatch event', async function () {
+        const stem10 = await this.silo.seasonToStem(UNRIPE_BEAN, ENROOT_FIX_SEASON);
+        const stem11 = await this.silo.seasonToStem(UNRIPE_BEAN, ENROOT_FIX_SEASON+1);
+        const depositID0 = await this.silo.getDepositId(UNRIPE_BEAN, stem10)
+        const depositID1 = await this.silo.getDepositId(UNRIPE_BEAN, stem11)
+        await expect(this.result).to.not.emit(this.silo, 'TransferBatch')
+      });
     });
 
     describe("2 deposit, round", async function () {
@@ -279,6 +287,14 @@ describe("Silo Enroot", function () {
         dep = await this.silo.getDeposit(userAddress, UNRIPE_LP, stem11);
         expect(dep[0]).to.equal(to6('10'))
         expect(dep[1]).to.equal(bdv.sub('1').div('2').add('1'))
+      });
+
+      it('omits TransferBatch event', async function () {
+        const stem10 = await this.silo.seasonToStem(UNRIPE_LP, ENROOT_FIX_SEASON);
+        const stem11 = await this.silo.seasonToStem(UNRIPE_LP, ENROOT_FIX_SEASON);
+        const depositID0 = await this.silo.getDepositId(UNRIPE_LP, stem10)
+        const depositID1 = await this.silo.getDepositId(UNRIPE_LP, stem11)
+        await expect(this.result).to.not.emit(this.silo, 'TransferBatch');
       });
     });
   });
