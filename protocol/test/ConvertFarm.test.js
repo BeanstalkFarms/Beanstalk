@@ -111,7 +111,7 @@ describe('Farm Convert', function () {
     });
 
     describe('basic convert', async function () {
-      it.only('does the most basic possible convert Bean to LP', async function () {
+      it('does the most basic possible convert Bean to LP', async function () {
 
         await this.silo.connect(user).deposit(this.bean.address, toBean('200'), EXTERNAL);
         //user needs to approve bean to well
@@ -190,13 +190,15 @@ describe('Farm Convert', function () {
         const siloReceipt = await siloResult.wait();
         const depositedBdv = getBdvFromAddDepositReceipt(this.silo, siloReceipt);
         
-        const stemTip = await this.siloGetters.stemTipForToken(this.well.address);
+        const depositStemTip = await this.siloGetters.stemTipForToken(this.well.address);
 
         //advance 2 seasons to get past germination
         await this.season.siloSunrise(0);
-        await this.season.mockEndTotalGerminationForToken(this.well.address);
         await this.season.siloSunrise(0);
-        await this.season.mockEndTotalGerminationForToken(this.well.address);
+
+
+        const grownStalk = await this.siloGetters.grownStalkForDeposit(user.address, this.well.address, depositStemTip);
+        const [newStemTip, ] = await this.siloGetters.calculateStemForTokenFromGrownStalk(this.bean.address, grownStalk, beanAmountOut);
 
         let advancedFarmCalls = await draftConvertBeanEthWellToBean(wellAmountOut, beanAmountOut)
 
@@ -204,13 +206,13 @@ describe('Farm Convert', function () {
           advancedFarmCalls
         ]);
 
-        this.result = this.convert.connect(user).pipelineConvert(this.well.address, [stemTip], [wellAmountOut], wellAmountOut, this.bean.address, farmData);
+        this.result = this.convert.connect(user).pipelineConvert(this.well.address, [depositStemTip], [wellAmountOut], wellAmountOut, this.bean.address, farmData);
 
         //verify events
         await expect(this.result).to.emit(this.convert, 'Convert').withArgs(user.address, this.well.address, this.bean.address, wellAmountOut, beanAmountOut);
-        await expect(this.result).to.emit(this.silo, 'RemoveDeposits').withArgs(user.address, this.well.address, [stemTip], [wellAmountOut], wellAmountOut, [depositedBdv]);
-        await expect(this.result).to.emit(this.silo, 'AddDeposit').withArgs(user.address, this.bean.address, stemTip, beanAmountOut, beanAmountOut);
-        console.log('updated yo');
+        await expect(this.result).to.emit(this.silo, 'RemoveDeposits').withArgs(user.address, this.well.address, [depositStemTip], [wellAmountOut], wellAmountOut, [depositedBdv]);
+
+        await expect(this.result).to.emit(this.silo, 'AddDeposit').withArgs(user.address, this.bean.address, newStemTip, beanAmountOut, beanAmountOut);
       });
 
       //need a test that leaves fewer amount of erc20 in the pipeline than is returned by the final function

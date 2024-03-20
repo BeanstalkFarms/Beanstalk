@@ -186,11 +186,10 @@ contract ConvertFacet is ReentrancyGuard {
         // }
 
         //todo: actually withdraw crates
-        uint256 grownStalk;
         uint256[] memory bdvsRemoved;
         uint256[] memory grownStalks;
 
-        (grownStalk, , bdvsRemoved, grownStalks) = _withdrawTokens(
+        ( , , bdvsRemoved, grownStalks) = _withdrawTokens(
             inputToken,
             stems,
             amounts,
@@ -225,7 +224,7 @@ contract ConvertFacet is ReentrancyGuard {
         //grownstalk recieved as a bonus should be deposited evenly across all deposits
         //use current bdv of in tokens or bdv at time of previous deposit?
 
-        _depositTokensForConvertMultiCrate(outputToken, amountOut, bdvsRemoved, grownStalks);
+        _depositTokensForConvertMultiCrate(inputToken, outputToken, amountOut, bdvsRemoved, grownStalks, amounts);
 
         // emit convert event, but do we want a new event definition? the old one can't handle multiple input tokens nor the combining of stems/etc
         // emit Convert(LibTractor._getUser(), inputToken, outputToken, totalAmountIn, amountOut);
@@ -774,15 +773,17 @@ contract ConvertFacet is ReentrancyGuard {
     }
 
     function _depositTokensForConvertMultiCrate(
-        address token,
+        address inputToken,
+        address outputToken,
         uint256 amount,
         uint256[] memory bdvs,
-        uint256[] memory grownStalks
+        uint256[] memory grownStalks,
+        uint256[] memory inputAmounts
     ) internal {
 
         MultiCrateDepositData memory mcdd;
 
-        mcdd.amountPerBdv = amount.div(LibTokenSilo.beanDenominatedValue(token, amount));
+        mcdd.amountPerBdv = amount.div(LibTokenSilo.beanDenominatedValue(outputToken, amount));
         mcdd.totalAmount = 0;
 
         for (uint256 i = 0; i < bdvs.length; i++) {
@@ -806,37 +807,39 @@ contract ConvertFacet is ReentrancyGuard {
             // because we're calculating a new token amount, the bdv will not be exactly the same as what we withdrew,
             // so we need to make sure we calculate what the actual deposited BDV is.
             // TODO: investigate and see if we can just use the amountPerBdv variable instead of calculating it again.
-            mcdd.depositedBdv = LibTokenSilo.beanDenominatedValue(token, mcdd.crateAmount);
+            mcdd.depositedBdv = LibTokenSilo.beanDenominatedValue(outputToken, mcdd.crateAmount);
             
             // LibGerminate.Germinate germ;
 
             // calculate the stem and germination state for the new deposit.
-            (int96 stem, LibGerminate.Germinate germ) = LibTokenSilo.calculateStemForTokenFromGrownStalk(token, grownStalks[i], mcdd.depositedBdv);
+            (int96 stem, LibGerminate.Germinate germ) = LibTokenSilo.calculateStemForTokenFromGrownStalk(outputToken, grownStalks[i], mcdd.depositedBdv);
             
             // increment totals based on germination state, 
             // as well as issue stalk to the user.
             // if the deposit is germinating, only the inital stalk of the deposit is germinating. 
             // the rest is active stalk.
             if (germ == LibGerminate.Germinate.NOT_GERMINATING) {
-                LibTokenSilo.incrementTotalDeposited(token, mcdd.crateAmount, mcdd.depositedBdv);
+                LibTokenSilo.incrementTotalDeposited(outputToken, mcdd.crateAmount, mcdd.depositedBdv);
                 LibSilo.mintActiveStalk(
                     LibTractor._getUser(), 
-                    mcdd.depositedBdv.mul(LibTokenSilo.stalkIssuedPerBdv(token)).add(grownStalks[i])
+                    mcdd.depositedBdv.mul(LibTokenSilo.stalkIssuedPerBdv(outputToken)).add(grownStalks[i])
                 );
             } else {
-                LibTokenSilo.incrementTotalGerminating(token, mcdd.crateAmount, mcdd.depositedBdv, germ);
+                LibTokenSilo.incrementTotalGerminating(outputToken, mcdd.crateAmount, mcdd.depositedBdv, germ);
                 // safeCast not needed as stalk is <= max(uint128)
-                LibSilo.mintGerminatingStalk(LibTractor._getUser(), uint128(mcdd.depositedBdv.mul(LibTokenSilo.stalkIssuedPerBdv(token))), germ);   
+                LibSilo.mintGerminatingStalk(LibTractor._getUser(), uint128(mcdd.depositedBdv.mul(LibTokenSilo.stalkIssuedPerBdv(outputToken))), germ);   
                 LibSilo.mintActiveStalk(LibTractor._getUser(), grownStalks[i]);
             }
             LibTokenSilo.addDepositToAccount(
                 LibTractor._getUser(),
-                token, 
+                outputToken, 
                 stem, 
                 mcdd.crateAmount,
                 mcdd.depositedBdv,
                 LibTokenSilo.Transfer.emitTransferSingle
             );
+
+            emit Convert(LibTractor._getUser(), inputToken, outputToken, inputAmounts[i], mcdd.crateAmount);
         }
     }
 
