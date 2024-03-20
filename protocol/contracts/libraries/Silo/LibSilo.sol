@@ -52,7 +52,7 @@ library LibSilo {
      */
     enum ERC1155Event {
         EMIT_BATCH_EVENT,
-        OMIT_BATCH_EVENT
+        NO_EMIT_BATCH_EVENT
     }
     
     // The `VESTING_PERIOD` is the number of blocks that must pass before
