@@ -135,7 +135,7 @@ describe('Farm Convert', function () {
         const wellAmountOut = await this.beanstalk.getAmountOut(BEAN, this.well.address, toBean('200'))
         console.log('wellAmountOut: ', wellAmountOut);
         //store bdv of this well amount out for later comparison
-        const bdvWellAmountOut = await this.siloGetters.bdv(this.well.address, wellAmountOut);
+        var bdvWellAmountOut = await this.siloGetters.bdv(this.well.address, wellAmountOut);
         console.log('bdvWellAmountOut: ', bdvWellAmountOut);
 
         //get grownStalk for this deposit

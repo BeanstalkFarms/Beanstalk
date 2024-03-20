@@ -75,6 +75,13 @@ contract ConvertFacet is ReentrancyGuard {
         uint256[] depositIds;
     }
 
+    struct MultiCrateDepositData {
+        uint256 amountPerBdv;
+        uint256 totalAmount;
+        uint256 crateAmount;
+        uint256 depositedBdv;
+    }
+
     /**
      * @notice convert allows a user to convert a deposit to another deposit,
      * given that the conversion is supported by the ConvertFacet.
@@ -197,7 +204,7 @@ contract ConvertFacet is ReentrancyGuard {
         IERC20(inputToken).transfer(PIPELINE, totalAmountIn);
         amountOut = executeAdvancedFarmCalls(farmData);
 
-        console.log('amountOut: ', amountOut);
+        console.log('amountOut after pipe calls: ', amountOut);
         
         //user MUST leave final assets in pipeline, allowing us to verify that the farm has been called successfully.
         //this also let's us know how many assets to attempt to pull out of the final type
@@ -773,9 +780,10 @@ contract ConvertFacet is ReentrancyGuard {
         uint256[] memory grownStalks
     ) internal {
 
+        MultiCrateDepositData memory mcdd;
 
-        uint256 amountPerBdv = amount.div(LibTokenSilo.beanDenominatedValue(token, amount));
-        uint256 totalAmount = 0;
+        mcdd.amountPerBdv = amount.div(LibTokenSilo.beanDenominatedValue(token, amount));
+        mcdd.totalAmount = 0;
 
         for (uint256 i = 0; i < bdvs.length; i++) {
             // console.log('_depositTokensForConvertMultiCrate bdvs[i]: ', bdvs[i]);
@@ -783,49 +791,50 @@ contract ConvertFacet is ReentrancyGuard {
             // console.log('_depositTokensForConvertMultiCrate amount: ', amount);
             // uint256 bdv = bdvs[i];
             require( bdvs[i] > 0 && amount > 0, "Convert: BDV or amount is 0.");
-            uint256 crateAmount = bdvs[i].mul(amountPerBdv);
-            // console.log('crateAmount: ', crateAmount);
-            totalAmount = totalAmount.add(crateAmount);
+            mcdd.crateAmount = bdvs[i].mul(mcdd.amountPerBdv);
+            console.log('crateAmount: ', mcdd.crateAmount);
+            mcdd.totalAmount = mcdd.totalAmount.add(mcdd.crateAmount);
 
             //if we're on the last crate, deposit the rest of the amount
             if (i == bdvs.length - 1 && bdvs.length > 1) {
-                crateAmount = amount.sub(totalAmount);
-                // console.log('remainder crateAmount:  ', crateAmount);
-                
+                mcdd.crateAmount = amount.sub(mcdd.totalAmount);
+            } else if (i == bdvs.length - 1) {
+                mcdd.crateAmount = amount; //if there's only one crate, make sure to deposit the full amount
             }
+                console.log('final mcdd.crateAmount:  ', mcdd.crateAmount);
 
             // because we're calculating a new token amount, the bdv will not be exactly the same as what we withdrew,
             // so we need to make sure we calculate what the actual deposited BDV is.
             // TODO: investigate and see if we can just use the amountPerBdv variable instead of calculating it again.
-            uint256 depositedBdv = LibTokenSilo.beanDenominatedValue(token, crateAmount);
+            mcdd.depositedBdv = LibTokenSilo.beanDenominatedValue(token, mcdd.crateAmount);
             
             // LibGerminate.Germinate germ;
 
             // calculate the stem and germination state for the new deposit.
-            (int96 stem, LibGerminate.Germinate germ) = LibTokenSilo.calculateStemForTokenFromGrownStalk(token, grownStalks[i], depositedBdv);
+            (int96 stem, LibGerminate.Germinate germ) = LibTokenSilo.calculateStemForTokenFromGrownStalk(token, grownStalks[i], mcdd.depositedBdv);
             
             // increment totals based on germination state, 
             // as well as issue stalk to the user.
             // if the deposit is germinating, only the inital stalk of the deposit is germinating. 
             // the rest is active stalk.
             if (germ == LibGerminate.Germinate.NOT_GERMINATING) {
-                LibTokenSilo.incrementTotalDeposited(token, crateAmount, depositedBdv);
+                LibTokenSilo.incrementTotalDeposited(token, mcdd.crateAmount, mcdd.depositedBdv);
                 LibSilo.mintActiveStalk(
                     LibTractor._getUser(), 
-                    depositedBdv.mul(LibTokenSilo.stalkIssuedPerBdv(token)).add(grownStalks[i])
+                    mcdd.depositedBdv.mul(LibTokenSilo.stalkIssuedPerBdv(token)).add(grownStalks[i])
                 );
             } else {
-                LibTokenSilo.incrementTotalGerminating(token, crateAmount, depositedBdv, germ);
+                LibTokenSilo.incrementTotalGerminating(token, mcdd.crateAmount, mcdd.depositedBdv, germ);
                 // safeCast not needed as stalk is <= max(uint128)
-                LibSilo.mintGerminatingStalk(LibTractor._getUser(), uint128(depositedBdv.mul(LibTokenSilo.stalkIssuedPerBdv(token))), germ);   
+                LibSilo.mintGerminatingStalk(LibTractor._getUser(), uint128(mcdd.depositedBdv.mul(LibTokenSilo.stalkIssuedPerBdv(token))), germ);   
                 LibSilo.mintActiveStalk(LibTractor._getUser(), grownStalks[i]);
             }
             LibTokenSilo.addDepositToAccount(
                 LibTractor._getUser(),
                 token, 
                 stem, 
-                crateAmount,
-                depositedBdv,
+                mcdd.crateAmount,
+                mcdd.depositedBdv,
                 LibTokenSilo.Transfer.emitTransferSingle
             );
         }
