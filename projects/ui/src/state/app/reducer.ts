@@ -11,6 +11,7 @@ export const initialState: App = {
     denomination: 'usd',
     subgraphEnv: SGEnvironments.BF_PROD,
     datasource: DataSource.LEDGER,
+    impersonatedAccount: undefined,
     ...persistedState?.app?.settings,
   },
   globals: {
