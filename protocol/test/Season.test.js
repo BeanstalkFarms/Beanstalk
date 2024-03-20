@@ -1,13 +1,14 @@
 const { expect } = require('chai');
 const { deploy } = require('../scripts/deploy.js');
-const { getAltBeanstalk } = require('../utils/contracts.js');
-const { BEAN_3_CURVE, BEAN, UNRIPE_BEAN, UNRIPE_LP, BEAN_ETH_WELL, WETH, BEAN_WSTETH_WELL } = require('./utils/constants.js');
+const { getBeanstalk } = require('../utils/contracts.js');
+const { BEAN_3_CURVE, BEAN, UNRIPE_BEAN, UNRIPE_LP, BEAN_ETH_WELL, WETH, BEAN_WSTETH_WELL, ZERO_BYTES } = require('./utils/constants.js');
 const { to6, to18 } = require('./utils/helpers.js');
 const { takeSnapshot, revertToSnapshot } = require("./utils/snapshot");
 const { deployMockBeanWell } = require('../utils/well.js');
 const { advanceTime } = require('../utils/helpers.js');
 const { setEthUsdChainlinkPrice } = require('../utils/oracle.js');
-const ZERO_BYTES = ethers.utils.formatBytes32String('0x0')
+const { getAllBeanstalkContracts } = require("../utils/contracts");
+
 
 let user, user2, owner;
 
@@ -20,14 +21,13 @@ async function setToSecondsAfterHour(seconds = 0) {
 describe('Season', function () {
     before(async function () {
         [owner, user, user2] = await ethers.getSigners();
-        const contracts = await deploy("Test", false, true);
+        const contracts = await deploy(verbose = false, mock = true, reset = true)        
         this.diamond = contracts.beanstalkDiamond;
-        beanstalk = await getAltBeanstalk(this.diamond.address)
+        // `beanstalk` contains all functions that the regualar beanstalk has.
+        // `mockBeanstalk` has functions that are only available in the mockFacets.
+        [ beanstalk, mockBeanstalk ] = await getAllBeanstalkContracts(this.diamond.address);
         
         // add unripe
-        this.fertilizer = await ethers.getContractAt('MockFertilizerFacet', this.diamond.address)
-        this.unripe = await ethers.getContractAt('MockUnripeFacet', this.diamond.address)
-        this.season = await ethers.getContractAt('MockSeasonFacet', this.diamond.address)
         this.unripeBean = await ethers.getContractAt('MockToken', UNRIPE_BEAN)
         this.unripeLP = await ethers.getContractAt('MockToken', UNRIPE_LP)
         this.beanThreeCurve = await ethers.getContractAt('MockMeta3Curve', BEAN_3_CURVE);
@@ -36,14 +36,9 @@ describe('Season', function () {
         await this.unripeLP.connect(user).approve(this.diamond.address, to6('100000000'))
         await this.unripeBean.mint(user.address, to6('1000'))
         await this.unripeBean.connect(user).approve(this.diamond.address, to6('100000000'))
-        await this.fertilizer.setFertilizerE(true, to6('10000'))
-        await this.unripe.addUnripeToken(UNRIPE_BEAN, BEAN, ZERO_BYTES);
-        await this.unripe.addUnripeToken(UNRIPE_LP, BEAN_ETH_WELL, ZERO_BYTES);
-
-        this.whitelist = await ethers.getContractAt('MockWhitelistFacet', this.diamond.address);
-        await this.whitelist.connect(owner).addWhitelistStatus(BEAN_ETH_WELL, true, true, true);
-        await this.whitelist.connect(owner).addWhitelistStatus(BEAN_WSTETH_WELL, true, true, true);
-        this.result = await this.whitelist.connect(owner).dewhitelistToken(BEAN_3_CURVE);
+        await mockBeanstalk.setFertilizerE(true, to6('10000'))
+        await mockBeanstalk.addUnripeToken(UNRIPE_BEAN, BEAN, ZERO_BYTES);
+        await mockBeanstalk.addUnripeToken(UNRIPE_LP, BEAN_ETH_WELL, ZERO_BYTES);
 
         // add wells
         [this.beanEthWell, this.beanEthWellFunction, this.pump] = await deployMockBeanWell(BEAN_ETH_WELL, WETH);

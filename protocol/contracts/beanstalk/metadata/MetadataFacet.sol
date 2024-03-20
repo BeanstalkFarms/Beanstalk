@@ -9,6 +9,8 @@ import "./MetadataImage.sol";
 import {LibBytes} from "contracts/libraries/LibBytes.sol";
 import {LibTokenSilo} from "contracts/libraries/Silo/LibTokenSilo.sol";
 
+import "hardhat/console.sol";
+import "contracts/libraries/LibStrings.sol";
 
 /**
  * @title MetadataFacet
@@ -34,6 +36,7 @@ contract MetadataFacet is MetadataImage {
     function uri(uint256 depositId) external view returns (string memory) {
         (address token, int96 stem) = LibBytes.unpackAddressAndStem(depositId);
         int96 stemTip = LibTokenSilo.stemTipForToken(token);
+
         // validate the uri
         // the deposit id must return 
         // 1) a token in the silo whitelist (by checking milestone season)

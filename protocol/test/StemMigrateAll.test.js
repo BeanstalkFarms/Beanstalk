@@ -86,13 +86,13 @@ describe.skip('Silo V3: Stem deployment migrate everyone', function () {
   
       this.diamond = BEANSTALK;
   
-      this.season = await ethers.getContractAt('MockSeasonFacet', this.diamond);
+      beanstalk = await ethers.getContractAt('MockSeasonFacet', this.diamond);
   
-      this.silo = await ethers.getContractAt('MockSiloFacet', this.diamond);
+      
       this.migrate = await ethers.getContractAt('MigrationFacet', this.diamond);
-      this.convert = await ethers.getContractAt('ConvertFacet', this.diamond);
-      this.whitelist = await ethers.getContractAt('WhitelistFacet', this.diamond);
-      this.bean = await ethers.getContractAt('Bean', BEAN);
+      beanstalk = await ethers.getContractAt('ConvertFacet', this.diamond);
+      beanstalk = await ethers.getContractAt('WhitelistFacet', this.diamond);
+      bean = await ethers.getContractAt('Bean', BEAN);
       this.beanMetapool = await ethers.getContractAt('IMockCurvePool', BEAN_3_CURVE);
       this.unripeBean = await ethers.getContractAt('MockToken', UNRIPE_BEAN)
       this.unripeLP = await ethers.getContractAt('MockToken', UNRIPE_LP)
@@ -501,7 +501,7 @@ describe.skip('Silo V3: Stem deployment migrate everyone', function () {
 
             const depositorSigner = await impersonateSigner(depositorAddress);
             mintEth(depositorAddress);
-            await this.silo.connect(depositorSigner);
+            await beanstalk.connect(depositorSigner);
         
             const migrateResult = await this.migrate.mowAndMigrate(depositorAddress, tokens, seasons, amounts, stalkDiff, seedsDiff, proof);
             const receipt = await migrateResult.wait();
@@ -552,7 +552,7 @@ describe.skip('Silo V3: Stem deployment migrate everyone', function () {
 
             for (let k = 0; k < migratedDeposits.length; k++) {
               const migratedDeposit = migratedDeposits[k];
-              const withdraw = await this.silo.connect(depositorSigner).withdrawDeposit(migratedDeposit.token, migratedDeposit.stem, migratedDeposit.amount, EXTERNAL);
+              const withdraw = await beanstalk.connect(depositorSigner).withdrawDeposit(migratedDeposit.token, migratedDeposit.stem, migratedDeposit.amount, EXTERNAL);
               const receipt = await withdraw.wait();
 
               for (const log of receipt.logs) {

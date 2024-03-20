@@ -1,4 +1,4 @@
-const { BEAN_ETH_WELL, BEAN_3_CURVE, STABLE_FACTORY, USDT, TRI_CRYPTO_POOL, CURVE_REGISTRY, WETH, BEAN, BEANSTALK, THREE_CURVE, THREE_POOL, CRYPTO_REGISTRY, UNRIPE_LP } = require("../test/utils/constants");
+const { BEAN_ETH_WELL, BEAN_3_CURVE, STABLE_FACTORY, USDT, WETH, BEAN, BEANSTALK, THREE_CURVE, UNRIPE_LP } = require("../test/utils/constants");
 const { toX } = require("../test/utils/helpers");
 const { getBeanstalk, impersonateBeanstalkOwner } = require("../utils");
 const { bipMigrateUnripeBean3CrvToBeanEth } = require("./bips");

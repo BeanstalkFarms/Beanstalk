@@ -17,6 +17,8 @@ import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {LibConvert} from "contracts/libraries/Convert/LibConvert.sol";
 import {LibGerminate} from "contracts/libraries/Silo/LibGerminate.sol";
 
+import "hardhat/console.sol";
+
 /**
  * @author Publius, Brean, DeadManWalking
  * @title ConvertFacet handles converting Deposited assets within the Silo.

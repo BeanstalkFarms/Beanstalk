@@ -4,7 +4,7 @@ pragma experimental ABIEncoderV2;
 
 import "./CurvePrice.sol";
 import {WellPrice, C, SafeMath} from "./WellPrice.sol";
-
+import "hardhat/console.sol";
 interface IWhitelistFacet {
     function getWhitelistedWellLpTokens() external view returns (address[] memory tokens);
 }
@@ -35,7 +35,6 @@ contract BeanstalkPrice is CurvePrice, WellPrice {
      * @dev No protocol should use this function to calculate manipulation resistant Bean price data.
     **/
     function price() external view returns (Prices memory p) {
-
         address[] memory wells = IWhitelistFacet(_beanstalk).getWhitelistedWellLpTokens();
         p.ps = new P.Pool[](1 + wells.length);
         p.ps[0] = getCurve();
@@ -43,7 +42,7 @@ contract BeanstalkPrice is CurvePrice, WellPrice {
             // Assume all Wells are CP2 wells.
             p.ps[i + 1] = getConstantProductWell(wells[i]);
         }
-
+        
         // assumes that liquidity and prices on all pools uses the same precision.
         for (uint256 i = 0; i < p.ps.length; i++) {
             p.price += p.ps[i].price.mul(p.ps[i].liquidity);

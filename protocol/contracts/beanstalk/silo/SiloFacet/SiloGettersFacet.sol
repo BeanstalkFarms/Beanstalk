@@ -16,6 +16,7 @@ import {LibBytes} from "contracts/libraries/LibBytes.sol";
 import {LibSilo} from "contracts/libraries/Silo/LibSilo.sol";
 import {C} from "contracts/C.sol";
 
+import "hardhat/console.sol";
 /**
  * @author Brean
  * @title SiloGettersFacet contains view functions related to the silo.

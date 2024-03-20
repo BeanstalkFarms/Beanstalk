@@ -11,13 +11,20 @@ async function deploy(account=undefined) {
   return await deployAtNonce('Pipeline', account, n = 6)
 }
 
-async function impersonate() {
+async function impersonate(verbose = false) {
+  if(verbose) {
+    console.log("Deploying pipeline...")
+  }
   let json = fs.readFileSync(`./artifacts/contracts/pipeline/Pipeline.sol/Pipeline.json`);
   await network.provider.send("hardhat_setCode", [
     PIPELINE,
     JSON.parse(json).deployedBytecode,
   ]);
-  return await ethers.getContractAt('Pipeline', PIPELINE)
+  pipeline = await ethers.getContractAt('Pipeline', PIPELINE)
+  if(verbose) {
+    console.log("Pipeline deployed at: ", pipeline.address)
+  }
+  return pipeline
 }
 
 exports.deployPipeline = deploy

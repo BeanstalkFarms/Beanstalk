@@ -1,14 +1,15 @@
 const { expect } = require('chai')
 const { ethers } = require('hardhat')
 const { deploy } = require('../scripts/deploy.js')
-const { EXTERNAL, INTERNAL, INTERNAL_EXTERNAL, INTERNAL_TOLERANT } = require('./utils/balances.js')
+const { EXTERNAL, INTERNAL } = require('./utils/balances.js')
 const { BEAN, THREE_CURVE, THREE_POOL, BEAN_3_CURVE, STABLE_FACTORY, USDC } = require('./utils/constants')
-const { to18, to6, toStalk } = require('./utils/helpers.js')
+const { to18, to6 } = require('./utils/helpers.js')
 const { takeSnapshot, revertToSnapshot } = require("./utils/snapshot")
 const { testIfRpcSet } = require('./utils/test.js')
+const { getAllBeanstalkContracts } = require("../utils/contracts");
 
 let user,user2,owner;
-let userAddress, ownerAddress, user2Address;
+
 
 async function reset() {
   await network.provider.request({
@@ -25,33 +26,30 @@ async function reset() {
 testIfRpcSet('Curve', function () {
   before(async function () {
     [owner,user,user2] = await ethers.getSigners()
-    userAddress = user.address;
-    user2Address = user2.address;
-    const contracts = await deploy("Test", false, true)
+    
+    const contracts = await deploy(verbose = false, mock = true, reset = true)
     ownerAddress = contracts.account;
     this.diamond = contracts.beanstalkDiamond;
-    this.season = await ethers.getContractAt('MockSeasonFacet', this.diamond.address)
-    this.seasonGetter = await ethers.getContractAt('SeasonGettersFacet', this.diamond.address)
-    this.bean = await ethers.getContractAt('Bean', BEAN)
+    // `beanstalk` contains all functions that the regualar beanstalk has.
+    // `mockBeanstalk` has functions that are only available in the mockFacets.
+    [ beanstalk, mockBeanstalk ] = await getAllBeanstalkContracts(this.diamond.address);
+
+
+    bean = await ethers.getContractAt('Bean', BEAN)
     this.threeCurve = await ethers.getContractAt('MockToken', THREE_CURVE)
     this.threePool = await ethers.getContractAt('Mock3Curve', THREE_POOL)
     this.beanMetapool = await ethers.getContractAt('MockMeta3Curve', BEAN_3_CURVE)
-    this.curve = await ethers.getContractAt('CurveFacet', this.diamond.address)
-    this.token = await ethers.getContractAt('TokenFacet', this.diamond.address)
-    this.silo = await ethers.getContractAt('MockSiloFacet', this.diamond.address)
-    this.farm = await ethers.getContractAt('FarmFacet', this.diamond.address)
-    this.usdc = await ethers.getContractAt('IERC20', USDC)
-    this.whitelist = await ethers.getContractAt('WhitelistFacet', this.diamond.address)
-    this.bdv = await ethers.getContractAt('BDVFacet', this.diamond.address)
+    
+    this.usdc = await ethers.getContractAt('IERC20', USDC)    
 
-    await this.season.siloSunrise(0)
-    await this.bean.connect(user).approve(this.diamond.address, '100000000000')
-    await this.bean.connect(user2).approve(this.diamond.address, '100000000000') 
-    await this.bean.connect(user).approve(this.beanMetapool.address, '100000000000')
-    await this.bean.mint(userAddress, to6('10000'))
-    await this.bean.mint(user2Address, to6('10000'))
+    await mockBeanstalk.siloSunrise(0)
+    await bean.connect(user).approve(this.diamond.address, '100000000000')
+    await bean.connect(user2).approve(this.diamond.address, '100000000000') 
+    await bean.connect(user).approve(this.beanMetapool.address, '100000000000')
+    await bean.mint(user.address, to6('10000'))
+    await bean.mint(user2.address, to6('10000'))
 
-    await this.threeCurve.mint(userAddress, to18('1000'))
+    await this.threeCurve.mint(user.address, to18('1000'))
     await this.threePool.set_virtual_price(to18('1'))
     await this.threeCurve.connect(user).approve(this.beanMetapool.address, to18('100000000000'))
 
@@ -61,7 +59,7 @@ testIfRpcSet('Curve', function () {
     await this.beanMetapool.connect(user).approve(this.diamond.address, to18('100000000000'))
     await this.threeCurve.connect(user).approve(this.diamond.address, to18('100000000000'))
 
-    this.result = await this.curve.connect(user).addLiquidity(
+    this.result = await beanstalk.connect(user).addLiquidity(
       BEAN_3_CURVE,
       STABLE_FACTORY,
       [to6('1000'), to18('1000')],
@@ -89,24 +87,24 @@ testIfRpcSet('Curve', function () {
       })
 
       it('updates beanstalk balances', async function () {
-        expect(await this.bean.balanceOf(this.token.address)).to.be.eq('0');
-        expect(await this.threeCurve.balanceOf(this.token.address)).to.be.eq('0');
-        expect(await this.beanMetapool.balanceOf(this.token.address)).to.be.eq('0');
+        expect(await bean.balanceOf(beanstalk.address)).to.be.eq('0');
+        expect(await this.threeCurve.balanceOf(beanstalk.address)).to.be.eq('0');
+        expect(await this.beanMetapool.balanceOf(beanstalk.address)).to.be.eq('0');
       })
 
       it('adds lp tokens to external balance', async function () {
-        expect(await this.token.getExternalBalance(userAddress, this.beanMetapool.address)).to.be.equal(to18('2000'))
+        expect(await beanstalk.getExternalBalance(user.address, this.beanMetapool.address)).to.be.equal(to18('2000'))
       })
 
       it('adds lp tokens to internal balance', async function () {
-        expect(await this.token.getInternalBalance(userAddress, this.beanMetapool.address)).to.be.equal(to18('0'))
+        expect(await beanstalk.getInternalBalance(user.address, this.beanMetapool.address)).to.be.equal(to18('0'))
       })
     })
 
     describe("To internal", async function () {
       beforeEach(async function () {
-        await this.threeCurve.mint(userAddress, to18('500'))
-        this.result = await this.curve.connect(user).addLiquidity(
+        await this.threeCurve.mint(user.address, to18('500'))
+        this.result = await beanstalk.connect(user).addLiquidity(
             BEAN_3_CURVE,
             STABLE_FACTORY,
             [to6('500'), to18('500')],
@@ -123,17 +121,17 @@ testIfRpcSet('Curve', function () {
       })
 
       it('updates beanstalk balances', async function () {
-        expect(await this.bean.balanceOf(this.token.address)).to.be.eq('0');
-        expect(await this.threeCurve.balanceOf(this.token.address)).to.be.eq('0');
-        expect(await this.beanMetapool.balanceOf(this.token.address)).to.be.eq(to18('1000'));
+        expect(await bean.balanceOf(beanstalk.address)).to.be.eq('0');
+        expect(await this.threeCurve.balanceOf(beanstalk.address)).to.be.eq('0');
+        expect(await this.beanMetapool.balanceOf(beanstalk.address)).to.be.eq(to18('1000'));
       })
 
       it('adds lp tokens to external balance', async function () {
-        expect(await this.token.getExternalBalance(userAddress, this.beanMetapool.address)).to.be.equal(to18('2000'))
+        expect(await beanstalk.getExternalBalance(user.address, this.beanMetapool.address)).to.be.equal(to18('2000'))
       })
 
       it('adds lp tokens to internal balance', async function () {
-        expect(await this.token.getInternalBalance(userAddress, this.beanMetapool.address)).to.be.equal(to18('1000'))
+        expect(await beanstalk.getInternalBalance(user.address, this.beanMetapool.address)).to.be.equal(to18('1000'))
       })
     })
   })
@@ -141,10 +139,10 @@ testIfRpcSet('Curve', function () {
   describe("Exchange", async function () {
     describe("To external", async function () {
       beforeEach(async function () {
-        await this.curve.connect(user2).exchange(
+        await beanstalk.connect(user2).exchange(
           this.beanMetapool.address,
           STABLE_FACTORY,
-          this.bean.address,
+          bean.address,
           this.threeCurve.address,
           to6('10'),
           to18('9'),
@@ -160,26 +158,26 @@ testIfRpcSet('Curve', function () {
       })
 
       it('updates beanstalk balances', async function () {
-        expect(await this.bean.balanceOf(this.token.address)).to.be.eq('0')
-        expect(await this.threeCurve.balanceOf(this.token.address)).to.be.eq('0')
-        expect(await this.beanMetapool.balanceOf(this.token.address)).to.be.eq('0')
+        expect(await bean.balanceOf(beanstalk.address)).to.be.eq('0')
+        expect(await this.threeCurve.balanceOf(beanstalk.address)).to.be.eq('0')
+        expect(await this.beanMetapool.balanceOf(beanstalk.address)).to.be.eq('0')
       })
 
       it('adds lp tokens to internal balance', async function () {
-        expect(await this.token.getInternalBalance(user2Address, this.threeCurve.address)).to.be.equal('0')
+        expect(await beanstalk.getInternalBalance(user2.address, this.threeCurve.address)).to.be.equal('0')
       })
 
       it('adds lp tokens to external balance', async function () {
-        expect(await this.token.getExternalBalance(user2Address, this.threeCurve.address)).to.be.equal('9990916598540524929')
+        expect(await beanstalk.getExternalBalance(user2.address, this.threeCurve.address)).to.be.equal('9990916598540524929')
       })
     })
 
     describe("To internal", async function () {
       beforeEach(async function () {
-        await this.curve.connect(user2).exchange(
+        await beanstalk.connect(user2).exchange(
           this.beanMetapool.address,
           STABLE_FACTORY,
-          this.bean.address,
+          bean.address,
           this.threeCurve.address,
           to6('10'),
           to18('9'),
@@ -195,17 +193,17 @@ testIfRpcSet('Curve', function () {
       })
 
       it('updates beanstalk balances', async function () {
-        expect(await this.bean.balanceOf(this.token.address)).to.be.eq('0')
-        expect(await this.threeCurve.balanceOf(this.token.address)).to.be.eq('9990916598540524929')
-        expect(await this.beanMetapool.balanceOf(this.token.address)).to.be.eq('0')
+        expect(await bean.balanceOf(beanstalk.address)).to.be.eq('0')
+        expect(await this.threeCurve.balanceOf(beanstalk.address)).to.be.eq('9990916598540524929')
+        expect(await this.beanMetapool.balanceOf(beanstalk.address)).to.be.eq('0')
       })
 
       it('adds lp tokens to internal balance', async function () {
-        expect(await this.token.getInternalBalance(user2Address, this.threeCurve.address)).to.be.equal('9990916598540524929')
+        expect(await beanstalk.getInternalBalance(user2.address, this.threeCurve.address)).to.be.equal('9990916598540524929')
       })
 
       it('adds lp tokens to external balance', async function () {
-        expect(await this.token.getExternalBalance(user2Address, this.threeCurve.address)).to.be.equal('0')
+        expect(await beanstalk.getExternalBalance(user2.address, this.threeCurve.address)).to.be.equal('0')
       })
     })
   })
@@ -213,7 +211,7 @@ testIfRpcSet('Curve', function () {
   describe("Remove Liqudity", async function () {
     describe("To external", async function () {
       beforeEach(async function () {
-        await this.curve.connect(user).removeLiquidity(
+        await beanstalk.connect(user).removeLiquidity(
           this.beanMetapool.address,
           STABLE_FACTORY,
           to18('500'),
@@ -230,25 +228,25 @@ testIfRpcSet('Curve', function () {
       })
 
       it('updates beanstalk balances', async function () {
-        expect(await this.bean.balanceOf(this.token.address)).to.be.eq('0')
-        expect(await this.threeCurve.balanceOf(this.token.address)).to.be.eq('0')
-        expect(await this.beanMetapool.balanceOf(this.token.address)).to.be.eq('0')
+        expect(await bean.balanceOf(beanstalk.address)).to.be.eq('0')
+        expect(await this.threeCurve.balanceOf(beanstalk.address)).to.be.eq('0')
+        expect(await this.beanMetapool.balanceOf(beanstalk.address)).to.be.eq('0')
       })
 
       it('adds lp tokens to internal balance', async function () {
-        expect(await this.token.getInternalBalance(userAddress, this.threeCurve.address)).to.be.equal('0')
-        expect(await this.token.getInternalBalance(userAddress, this.bean.address)).to.be.equal('0')
+        expect(await beanstalk.getInternalBalance(user.address, this.threeCurve.address)).to.be.equal('0')
+        expect(await beanstalk.getInternalBalance(user.address, bean.address)).to.be.equal('0')
       })
 
       it('adds lp tokens to external balance', async function () {
-        expect(await this.token.getExternalBalance(userAddress, this.threeCurve.address)).to.be.equal(to18('250'))
-        expect(await this.token.getExternalBalance(userAddress, this.bean.address)).to.be.equal(to6('9250'))
+        expect(await beanstalk.getExternalBalance(user.address, this.threeCurve.address)).to.be.equal(to18('250'))
+        expect(await beanstalk.getExternalBalance(user.address, bean.address)).to.be.equal(to6('9250'))
       })
     })
 
     describe("To internal", async function () {
       beforeEach(async function () {
-        await this.curve.connect(user).removeLiquidity(
+        await beanstalk.connect(user).removeLiquidity(
           this.beanMetapool.address,
           STABLE_FACTORY,
           to18('500'),
@@ -265,19 +263,19 @@ testIfRpcSet('Curve', function () {
       })
 
       it('updates beanstalk balances', async function () {
-        expect(await this.bean.balanceOf(this.token.address)).to.be.eq(to6('250'))
-        expect(await this.threeCurve.balanceOf(this.token.address)).to.be.eq(to18('250'))
-        expect(await this.beanMetapool.balanceOf(this.token.address)).to.be.eq('0')
+        expect(await bean.balanceOf(beanstalk.address)).to.be.eq(to6('250'))
+        expect(await this.threeCurve.balanceOf(beanstalk.address)).to.be.eq(to18('250'))
+        expect(await this.beanMetapool.balanceOf(beanstalk.address)).to.be.eq('0')
       })
 
       it('adds lp tokens to internal balance', async function () {
-        expect(await this.token.getInternalBalance(userAddress, this.threeCurve.address)).to.be.equal(to18('250'))
-        expect(await this.token.getInternalBalance(userAddress, this.bean.address)).to.be.equal(to6('250'))
+        expect(await beanstalk.getInternalBalance(user.address, this.threeCurve.address)).to.be.equal(to18('250'))
+        expect(await beanstalk.getInternalBalance(user.address, bean.address)).to.be.equal(to6('250'))
       })
 
       it('adds lp tokens to external balance', async function () {
-        expect(await this.token.getExternalBalance(userAddress, this.threeCurve.address)).to.be.equal(to18('0'))
-        expect(await this.token.getExternalBalance(userAddress, this.bean.address)).to.be.equal(to6('9000'))
+        expect(await beanstalk.getExternalBalance(user.address, this.threeCurve.address)).to.be.equal(to18('0'))
+        expect(await beanstalk.getExternalBalance(user.address, bean.address)).to.be.equal(to6('9000'))
       })
     })
   })
@@ -285,7 +283,7 @@ testIfRpcSet('Curve', function () {
   describe("Remove Liqudity Inbalance", async function () {
     describe("To external", async function () {
       beforeEach(async function () {
-        await this.curve.connect(user).removeLiquidityImbalance(
+        await beanstalk.connect(user).removeLiquidityImbalance(
           this.beanMetapool.address,
           STABLE_FACTORY,
           [to6('400'), to18('100')],
@@ -302,25 +300,25 @@ testIfRpcSet('Curve', function () {
       })
 
       it('updates beanstalk balances', async function () {
-        expect(await this.bean.balanceOf(this.token.address)).to.be.eq('0')
-        expect(await this.threeCurve.balanceOf(this.token.address)).to.be.eq('0')
-        expect(await this.beanMetapool.balanceOf(this.token.address)).to.be.eq('0')
+        expect(await bean.balanceOf(beanstalk.address)).to.be.eq('0')
+        expect(await this.threeCurve.balanceOf(beanstalk.address)).to.be.eq('0')
+        expect(await this.beanMetapool.balanceOf(beanstalk.address)).to.be.eq('0')
       })
 
       it('adds lp tokens to internal balance', async function () {
-        expect(await this.token.getInternalBalance(userAddress, this.threeCurve.address)).to.be.equal('0')
-        expect(await this.token.getInternalBalance(userAddress, this.bean.address)).to.be.equal('0')
+        expect(await beanstalk.getInternalBalance(user.address, this.threeCurve.address)).to.be.equal('0')
+        expect(await beanstalk.getInternalBalance(user.address, bean.address)).to.be.equal('0')
       })
 
       it('adds lp tokens to external balance', async function () {
-        expect(await this.token.getExternalBalance(userAddress, this.threeCurve.address)).to.be.equal(to18('100'))
-        expect(await this.token.getExternalBalance(userAddress, this.bean.address)).to.be.equal(to6('9400'))
+        expect(await beanstalk.getExternalBalance(user.address, this.threeCurve.address)).to.be.equal(to18('100'))
+        expect(await beanstalk.getExternalBalance(user.address, bean.address)).to.be.equal(to6('9400'))
       })
     })
 
     describe("To internal", async function () {
       beforeEach(async function () {
-        await this.curve.connect(user).removeLiquidityImbalance(
+        await beanstalk.connect(user).removeLiquidityImbalance(
           this.beanMetapool.address,
           STABLE_FACTORY,
           [to6('400'), to18('100')],
@@ -337,19 +335,19 @@ testIfRpcSet('Curve', function () {
       })
 
       it('updates beanstalk balances', async function () {
-        expect(await this.bean.balanceOf(this.token.address)).to.be.eq(to6('400'))
-        expect(await this.threeCurve.balanceOf(this.token.address)).to.be.eq(to18('100'))
-        expect(await this.beanMetapool.balanceOf(this.token.address)).to.be.eq('0')
+        expect(await bean.balanceOf(beanstalk.address)).to.be.eq(to6('400'))
+        expect(await this.threeCurve.balanceOf(beanstalk.address)).to.be.eq(to18('100'))
+        expect(await this.beanMetapool.balanceOf(beanstalk.address)).to.be.eq('0')
       })
 
       it('adds lp tokens to internal balance', async function () {
-        expect(await this.token.getInternalBalance(userAddress, this.threeCurve.address)).to.be.equal(to18('100'))
-        expect(await this.token.getInternalBalance(userAddress, this.bean.address)).to.be.equal(to6('400'))
+        expect(await beanstalk.getInternalBalance(user.address, this.threeCurve.address)).to.be.equal(to18('100'))
+        expect(await beanstalk.getInternalBalance(user.address, bean.address)).to.be.equal(to6('400'))
       })
 
       it('adds lp tokens to external balance', async function () {
-        expect(await this.token.getExternalBalance(userAddress, this.threeCurve.address)).to.be.equal(to18('0'))
-        expect(await this.token.getExternalBalance(userAddress, this.bean.address)).to.be.equal(to6('9000'))
+        expect(await beanstalk.getExternalBalance(user.address, this.threeCurve.address)).to.be.equal(to18('0'))
+        expect(await beanstalk.getExternalBalance(user.address, bean.address)).to.be.equal(to6('9000'))
       })
     })
   })
@@ -357,10 +355,10 @@ testIfRpcSet('Curve', function () {
   describe("Remove Liqudity one token", async function () {
     describe("To external", async function () {
       beforeEach(async function () {
-        await this.curve.connect(user).removeLiquidityOneToken(
+        await beanstalk.connect(user).removeLiquidityOneToken(
           this.beanMetapool.address,
           STABLE_FACTORY,
-          this.bean.address,
+          bean.address,
           to18('500'),
           to6('480'),
           EXTERNAL,
@@ -375,28 +373,28 @@ testIfRpcSet('Curve', function () {
       })
 
       it('updates beanstalk balances', async function () {
-        expect(await this.bean.balanceOf(this.token.address)).to.be.eq('0')
-        expect(await this.threeCurve.balanceOf(this.token.address)).to.be.eq('0')
-        expect(await this.beanMetapool.balanceOf(this.token.address)).to.be.eq('0')
+        expect(await bean.balanceOf(beanstalk.address)).to.be.eq('0')
+        expect(await this.threeCurve.balanceOf(beanstalk.address)).to.be.eq('0')
+        expect(await this.beanMetapool.balanceOf(beanstalk.address)).to.be.eq('0')
       })
 
       it('adds lp tokens to internal balance', async function () {
-        expect(await this.token.getInternalBalance(userAddress, this.threeCurve.address)).to.be.equal('0')
-        expect(await this.token.getInternalBalance(userAddress, this.bean.address)).to.be.equal('0')
+        expect(await beanstalk.getInternalBalance(user.address, this.threeCurve.address)).to.be.equal('0')
+        expect(await beanstalk.getInternalBalance(user.address, bean.address)).to.be.equal('0')
       })
 
       it('adds lp tokens to external balance', async function () {
-        expect(await this.token.getExternalBalance(userAddress, this.threeCurve.address)).to.be.equal('0')
-        expect(await this.token.getExternalBalance(userAddress, this.bean.address)).to.be.equal('9491960239')
+        expect(await beanstalk.getExternalBalance(user.address, this.threeCurve.address)).to.be.equal('0')
+        expect(await beanstalk.getExternalBalance(user.address, bean.address)).to.be.equal('9491960239')
       })
     })
 
     describe("To internal", async function () {
       beforeEach(async function () {
-        await this.curve.connect(user).removeLiquidityOneToken(
+        await beanstalk.connect(user).removeLiquidityOneToken(
           this.beanMetapool.address,
           STABLE_FACTORY,
-          this.bean.address,
+          bean.address,
           to18('500'),
           to6('480'),
           EXTERNAL,
@@ -411,19 +409,19 @@ testIfRpcSet('Curve', function () {
       })
 
       it('updates beanstalk balances', async function () {
-        expect(await this.bean.balanceOf(this.token.address)).to.be.eq('491960239')
-        expect(await this.threeCurve.balanceOf(this.token.address)).to.be.eq('0')
-        expect(await this.beanMetapool.balanceOf(this.token.address)).to.be.eq('0')
+        expect(await bean.balanceOf(beanstalk.address)).to.be.eq('491960239')
+        expect(await this.threeCurve.balanceOf(beanstalk.address)).to.be.eq('0')
+        expect(await this.beanMetapool.balanceOf(beanstalk.address)).to.be.eq('0')
       })
 
       it('adds lp tokens to internal balance', async function () {
-        expect(await this.token.getInternalBalance(userAddress, this.threeCurve.address)).to.be.equal('0')
-        expect(await this.token.getInternalBalance(userAddress, this.bean.address)).to.be.equal('491960239')
+        expect(await beanstalk.getInternalBalance(user.address, this.threeCurve.address)).to.be.equal('0')
+        expect(await beanstalk.getInternalBalance(user.address, bean.address)).to.be.equal('491960239')
       })
 
       it('adds lp tokens to external balance', async function () {
-        expect(await this.token.getExternalBalance(userAddress, this.threeCurve.address)).to.be.equal('0')
-        expect(await this.token.getExternalBalance(userAddress, this.bean.address)).to.be.equal(to6('9000'))
+        expect(await beanstalk.getExternalBalance(user.address, this.threeCurve.address)).to.be.equal('0')
+        expect(await beanstalk.getExternalBalance(user.address, bean.address)).to.be.equal(to6('9000'))
       })
     })
   })
@@ -431,9 +429,9 @@ testIfRpcSet('Curve', function () {
   // skipped due to curve dewhitelisting.
   describe.skip("farm LP and Deposit", async function () {
     beforeEach('add LP and Deposits', async function () {
-      await this.season.teleportSunrise(10);
-      this.season.deployStemsUpgrade();
-      const addLiquidity = await this.curve.interface.encodeFunctionData("addLiquidity", [
+      await mockBeanstalk.teleportSunrise(10);
+      mockBeanstalk.deployStemsUpgrade();
+      const addLiquidity = await beanstalk.interface.encodeFunctionData("addLiquidity", [
         BEAN_3_CURVE,
         STABLE_FACTORY,
         [to6('500'), to18('500')],
@@ -441,31 +439,31 @@ testIfRpcSet('Curve', function () {
         EXTERNAL,
         INTERNAL
       ])
-      const deposit = await this.silo.interface.encodeFunctionData('deposit', [
+      const deposit = await beanstalk.interface.encodeFunctionData('deposit', [
         this.beanMetapool.address, 
         to18('1000'),
         INTERNAL
       ])
 
-      await this.threeCurve.mint(user2Address, to18('500'))
-      await this.bean.mint(user2Address, to6('500'))
-      await this.threeCurve.connect(user2).approve(this.silo.address, to18('5000000'))
-      await this.bean.connect(user2).approve(this.silo.address, to6('50000000'))
+      await this.threeCurve.mint(user2.address, to18('500'))
+      await bean.mint(user2.address, to6('500'))
+      await this.threeCurve.connect(user2).approve(beanstalk.address, to18('5000000'))
+      await bean.connect(user2).approve(beanstalk.address, to6('50000000'))
       // psuedo whitelist for testing purposes 
-      await this.silo.mockWhitelistToken(
+      await mockBeanstalk.mockWhitelistToken(
         BEAN_3_CURVE,
-        this.bdv.interface.getSighash('curveToBDV'),
+        beanstalk.interface.getSighash('curveToBDV'),
         10000,
         to6('1')
       );
-      await this.farm.connect(user2).farm([addLiquidity, deposit])
-      await this.whitelist.dewhitelistToken(BEAN_3_CURVE)
+      await beanstalk.connect(user2).farm([addLiquidity, deposit])
+      await beanstalk.dewhitelistToken(BEAN_3_CURVE)
     })
 
     it('add lp and deposit', async function () {
       const season = await this.seasonGetter.season()
-      const stemBean = await this.silo.mockSeasonToStem(this.beanMetapool.address, season);
-      const dep = await this.siloGetters.getDeposit(user2Address, this.beanMetapool.address, stemBean)
+      const stemBean = await mockBeanstalk.mockSeasonToStem(this.beanMetapool.address, season);
+      const dep = await beanstalk.getDeposit(user2.address, this.beanMetapool.address, stemBean)
       expect(dep[0]).to.be.equal(to18('1000'))
       expect(dep[1]).to.be.equal(to6('1000'))
     })

@@ -2,67 +2,49 @@ const { expect } = require('chai');
 const { deploy } = require('../scripts/deploy.js')
 const { EXTERNAL } = require('./utils/balances.js')
 const { to18, to6, advanceTime } = require('./utils/helpers.js')
-const { BEAN, BEANSTALK, BEAN_3_CURVE, THREE_CURVE, THREE_POOL, WETH, STABLE_FACTORY, BEAN_ETH_WELL, BEAN_WSTETH_WELL } = require('./utils/constants.js')
+const { BEAN, BEAN_3_CURVE, THREE_CURVE, THREE_POOL, STABLE_FACTORY, BEAN_ETH_WELL, BEAN_WSTETH_WELL } = require('./utils/constants.js')
 const { takeSnapshot, revertToSnapshot } = require("./utils/snapshot.js");
-const { deployWell, setReserves, whitelistWell, impersonateBeanWstethWell } = require('../utils/well.js');
-const { setEthUsdChainlinkPrice, setWstethUsdPrice } = require('../utils/oracle.js');
-const { getBeanstalk } = require('../utils/contracts.js');
-const { impersonateBeanEthWell } = require('../utils/well.js')
+const { setReserves, impersonateBeanWstethWell, impersonateBeanEthWell } = require('../utils/well.js');
+const { setEthUsdChainlinkPrice } = require('../utils/oracle.js');
+const { getAllBeanstalkContracts } = require("../utils/contracts");
 const fs = require('fs');
 
 let user, user2, owner;
-let userAddress, ownerAddress, user2Address;
 
-async function initWell(owner, well, season) {
-  await setReserves(
-    owner,
-    well,
-    [to6('1000000'), to18('1000')]
-  );
-
-  await setReserves(
-    owner,
-    well,
-    [to6('1000000'), to18('1000')]
-  );
-
-  await whitelistWell(well.address, '10000', to6('4'))
-  await season.captureWellE(well.address);
-}
 
 describe('BeanstalkPrice', function () {
   before(async function () {
 
     [owner, user] = await ethers.getSigners();
-    const contracts = await deploy("Test", false, true);
+    const contracts = await deploy(verbose = false, mock = true, reset = true)    
     ownerAddress = contracts.account;
-    userAddress = user.address;
     this.diamond = contracts.beanstalkDiamond;
-    this.beanstalk = await getBeanstalk(this.diamond.address);
-    this.curve = await ethers.getContractAt('CurveFacet', this.diamond.address)
-    await impersonateBeanEthWell()
-    await impersonateBeanWstethWell()
+    // `beanstalk` contains all functions that the regualar beanstalk has.
+    // `mockBeanstalk` has functions that are only available in the mockFacets.
+    [ beanstalk, mockBeanstalk ] = await getAllBeanstalkContracts(this.diamond.address);
 
+    await impersonateBeanEthWell();
+    await impersonateBeanWstethWell();
+    
     this.beanEthWell = await ethers.getContractAt("IWell", BEAN_ETH_WELL);
     this.beanWstethWell = await ethers.getContractAt("IWell", BEAN_WSTETH_WELL);
     this.wellToken = await ethers.getContractAt("IERC20", this.beanEthWell.address)
     this.threeCurve = await ethers.getContractAt('MockToken', THREE_CURVE)
     this.threePool = await ethers.getContractAt('Mock3Curve', THREE_POOL)
     this.beanThreeCurve = await ethers.getContractAt('MockMeta3Curve', BEAN_3_CURVE);
-    this.season = await ethers.getContractAt('MockSeasonFacet', this.diamond.address);
-    this.bean = await ethers.getContractAt("MockToken", BEAN);
+    bean = await ethers.getContractAt("MockToken", BEAN);
   
-    await this.bean.connect(user).approve(this.diamond.address, ethers.constants.MaxUint256)
-    await this.bean.connect(user).approve(this.beanThreeCurve.address, ethers.constants.MaxUint256);
-    await this.bean.mint(userAddress, to6('10000000000'))
+    await bean.connect(user).approve(this.diamond.address, ethers.constants.MaxUint256)
+    await bean.connect(user).approve(this.beanThreeCurve.address, ethers.constants.MaxUint256);
+    await bean.mint(user.address, to6('10000000000'))
 
-    await this.threeCurve.mint(userAddress, to18('10000000000'))
+    await this.threeCurve.mint(user.address, to18('10000000000'))
     await this.threePool.set_virtual_price(to18('1'))
     await this.threeCurve.connect(user).approve(this.beanThreeCurve.address, ethers.constants.MaxUint256)
     
-    await this.bean.mint(ownerAddress, to6('1000000000'))
-    await this.wellToken.connect(owner).approve(this.beanstalk.address, ethers.constants.MaxUint256)
-    await this.bean.connect(owner).approve(this.beanstalk.address, ethers.constants.MaxUint256)
+    await bean.mint(ownerAddress, to6('1000000000'))
+    await this.wellToken.connect(owner).approve(beanstalk.address, ethers.constants.MaxUint256)
+    await bean.connect(owner).approve(beanstalk.address, ethers.constants.MaxUint256)
     
     await this.beanThreeCurve.set_A_precise('1000')
     await this.beanThreeCurve.set_virtual_price(ethers.utils.parseEther('1'))
@@ -70,7 +52,7 @@ describe('BeanstalkPrice', function () {
     await this.beanThreeCurve.connect(user).approve(this.diamond.address, ethers.constants.MaxUint256)
     await this.threeCurve.connect(user).approve(this.diamond.address, ethers.constants.MaxUint256)
 
-    this.result = await this.curve.connect(user).addLiquidity(
+    this.result = await beanstalk.connect(user).addLiquidity(
       BEAN_3_CURVE,
       STABLE_FACTORY,
       [to6('500000'), to18('500000')],
@@ -79,7 +61,7 @@ describe('BeanstalkPrice', function () {
       EXTERNAL
     )
 
-    this.result = await this.curve.connect(user).addLiquidity(
+    this.result = await beanstalk.connect(user).addLiquidity(
       BEAN_3_CURVE,
       STABLE_FACTORY,
       [to6('500000'), to18('500000')],
@@ -87,17 +69,17 @@ describe('BeanstalkPrice', function () {
       EXTERNAL,
       EXTERNAL
     )
+
+    // set reserves of bean eth and bean wsteth wells.
+    await setReserves(owner, this.beanEthWell, [to6('1000000'), to18('1000')]);
+    await setReserves(owner, this.beanWstethWell, [to6('1000000'), to18('1000')]);
 
     await setEthUsdChainlinkPrice('1000')
-
-    await initWell(owner, this.beanEthWell, this.season)
-    await initWell(owner, this.beanWstethWell, this.season)
 
     const BeanstalkPrice = await ethers.getContractFactory('BeanstalkPrice');
     const _beanstalkPrice = await BeanstalkPrice.deploy(this.diamond.address);
     await _beanstalkPrice.deployed();
     this.beanstalkPrice = await ethers.getContractAt('BeanstalkPrice', _beanstalkPrice.address);
-
   });
 
   beforeEach(async function () {
@@ -109,7 +91,7 @@ describe('BeanstalkPrice', function () {
   });
 
   describe("Price", async function () {
-    it('deltaB = 0', async function () {      
+    it('deltaB = 0', async function () { 
       const p = await this.beanstalkPrice.price()
       // price is within +/- 1 due to rounding
       expect(p.price).to.equal('999999');
@@ -118,7 +100,7 @@ describe('BeanstalkPrice', function () {
     })
 
     it('deltaB > 0, curve only', async function () {
-      this.result = await this.curve.connect(user).addLiquidity(
+      this.result = await beanstalk.connect(user).addLiquidity(
         BEAN_3_CURVE,
         STABLE_FACTORY,
         [to6('0'), to18('100000')],
@@ -174,7 +156,7 @@ describe('BeanstalkPrice', function () {
     })
 
     it('deltaB > 0, wells and curve', async function () {
-      this.result = await this.curve.connect(user).addLiquidity(
+      this.result = await beanstalk.connect(user).addLiquidity(
         BEAN_3_CURVE,
         STABLE_FACTORY,
         [to6('0'), to18('100000')],
@@ -212,7 +194,7 @@ describe('BeanstalkPrice', function () {
     })
 
     it('deltaB < 0, curve only', async function () {
-      this.result = await this.curve.connect(user).addLiquidity(
+      this.result = await beanstalk.connect(user).addLiquidity(
         BEAN_3_CURVE,
         STABLE_FACTORY,
         [to6('100000'), to18('0')],
@@ -271,7 +253,7 @@ describe('BeanstalkPrice', function () {
     })
 
     it('deltaB < 0, wells and curve', async function () {
-      this.result = await this.curve.connect(user).addLiquidity(
+      this.result = await beanstalk.connect(user).addLiquidity(
         BEAN_3_CURVE,
         STABLE_FACTORY,
         [to6('100000'), to18('0')],
@@ -309,7 +291,7 @@ describe('BeanstalkPrice', function () {
     })
 
     it('well deltaB > 0, curve deltaB < 0', async function () {
-      this.result = await this.curve.connect(user).addLiquidity(
+      this.result = await beanstalk.connect(user).addLiquidity(
         BEAN_3_CURVE,
         STABLE_FACTORY,
         [to6('100000'), to18('0')],
@@ -347,7 +329,7 @@ describe('BeanstalkPrice', function () {
     })
 
     it('well deltaB < 0, curve deltaB > 0', async function () {
-      this.result = await this.curve.connect(user).addLiquidity(
+      this.result = await beanstalk.connect(user).addLiquidity(
         BEAN_3_CURVE,
         STABLE_FACTORY,
         [to6('0'), to18('100000')],

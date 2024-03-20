@@ -33,7 +33,7 @@ contract BDVFacet {
     }
 
     /**
-     * @dev Returns the BDV of a given `amount` of Unripe Bean:3Crv LP Tokens.
+     * @dev Returns the BDV of a given `amount` of Unripe LP Tokens.
      */
     function unripeLPToBDV(uint256 amount) public view returns (uint256) {
         amount = LibUnripe.unripeToUnderlying(

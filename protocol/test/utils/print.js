@@ -1,5 +1,5 @@
 async function printSopSeasons(season) {
-  const s = await this.season.season()
+  const s = await beanstalk.season()
   for (let i = 0; i < s; i++) {
     const sop = await season.seasonOfPlenty(i);
     console.log(`Season: ${i}, Sop: ${sop}`);

@@ -13,6 +13,8 @@ import {LibWell} from "contracts/libraries/Well/LibWell.sol";
 
 import {LibBarnRaise} from "contracts/libraries/LibBarnRaise.sol";
 
+import "hardhat/console.sol";
+
 /**
  * @author Brean
  * @title LibEvaluate calculates the caseId based on the state of Beanstalk.

@@ -19,7 +19,7 @@ import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
  * 2: deploy MetadataMockERC1155 with the address of the MockMetadataFacet.
  * (MockMetadataFacet with ERC1155 exceeds the contract size limit.)
 **/
-contract MockMetadataFacet is MetadataImage  {
+contract TestnetMetadataFacet is MetadataImage  {
     using SafeMath for uint256;
 
     // inital conditions: 2 seeds, 1000 seasons has elapsed from milestone season.

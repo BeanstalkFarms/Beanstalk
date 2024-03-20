@@ -1,5 +1,5 @@
 const fs = require('fs');
-const { BEAN, WETH, BEANSTALK_PUMP, BEAN_ETH_WELL, BEAN_WSTETH_WELL, WSTETH } = require('../test/utils/constants');
+const { BEAN, WETH, BEANSTALK_PUMP, BEAN_ETH_WELL, BEAN_WSTETH_WELL, WSTETH, ZERO_ADDRESS } = require('../test/utils/constants');
 const { to6, to18 } = require('../test/utils/helpers');
 const { getBeanstalk } = require('./contracts');
 const { impersonateBeanstalkOwner } = require('./signer');
@@ -287,7 +287,7 @@ async function deployMockBeanWell(address, token1) {
     return [well, wellFunction, pump]
 }
 
-async function deployMockWell() {
+async function deployMockWell(tokens = [BEAN, WETH]) {
 
     let wellFunction = await (await getWellContractFactory('ConstantProduct2', await getWellDeployer())).deploy()
     await wellFunction.deployed()
@@ -300,15 +300,13 @@ async function deployMockWell() {
     pump = await deployMultiFlowPump()
 
     await well.setWellFunction([wellFunction.address, '0x'])
-    await well.setTokens([BEAN, WETH])
+    await well.setTokens(tokens)
 
     await well.setReserves([to6('1000000'), to18('1000')])
     await well.setReserves([to6('1000000'), to18('1000')])
 
     return well
 }
-
-
 
 async function deployMockWellWithMockPump(address = BEAN_ETH_WELL, token1 = WETH) {
 
@@ -317,11 +315,17 @@ async function deployMockWellWithMockPump(address = BEAN_ETH_WELL, token1 = WETH
 
     let well = await (await ethers.getContractFactory('MockSetComponentsWell', await getWellDeployer())).deploy()
     await well.deployed()
-    await network.provider.send("hardhat_setCode", [
-        address,
-        await ethers.provider.getCode(well.address),
-      ]);
-    well = await ethers.getContractAt('MockSetComponentsWell', address)
+    // if address is uninitalized, do not set code.
+    if(address != ZERO_ADDRESS) { 
+        await network.provider.send("hardhat_setCode", [
+            address,
+            await ethers.provider.getCode(well.address),
+          ]);
+        well = await ethers.getContractAt('MockSetComponentsWell', address)
+    } else {
+        well = await ethers.getContractAt('MockSetComponentsWell', well.address)
+    }
+    
     await well.init()
 
     pump = await deployMockPump()
