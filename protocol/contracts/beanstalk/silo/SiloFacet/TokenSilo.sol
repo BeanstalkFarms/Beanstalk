@@ -238,7 +238,8 @@ contract TokenSilo is Silo {
             account,
             token,
             stems,
-            amounts
+            amounts,
+            LibSilo.ERC1155Event.EMIT_BATCH_EVENT
         );
 
         _withdraw(
