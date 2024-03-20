@@ -34,6 +34,7 @@ const FertilizerImage: FC<FertilizerImageProps> = ({
       justifyContent="center"
       sx={{
         height: '100%',
+        width: '100%',
         aspectRatio: '1/1',
         borderColor: isNew ? BeanstalkPalette.logoGreen : 'divider',
         borderWidth: id ? 0 : 1, // if ID is present, use button border
