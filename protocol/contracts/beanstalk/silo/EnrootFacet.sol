@@ -126,7 +126,7 @@ contract EnrootFacet is ReentrancyGuard {
             token, 
             stems, 
             amounts,
-            LibSilo.ERC1155Event.OMIT_BATCH_EVENT
+            LibSilo.ERC1155Event.NO_EMIT_BATCH_EVENT
         );
 
         // Get new BDV
