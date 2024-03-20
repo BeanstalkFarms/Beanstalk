@@ -119,7 +119,7 @@ task("sunrise2", async function () {
 });
 
 task("getTime", async function () {
-  this.season = await ethers.getContractAt("SeasonFacet", BEANSTALK);
+  beanstalk = await ethers.getContractAt("SeasonFacet", BEANSTALK);
   console.log("Current time: ", await this.seasonGetter.time());
 });
 
@@ -156,8 +156,10 @@ task("diamondABI", "Generates ABI file for diamond, includes all ABIs of facets"
     const files = glob.sync(pattern);
     if (module == "silo") {
       // Manually add in libraries that emit events
+      files.push("contracts/libraries/LibIncentive.sol")
       files.push("contracts/libraries/Silo/LibWhitelist.sol")
       files.push("contracts/libraries/LibGauge.sol")
+      files.push("contracts/libraries/Silo/LibGerminate.sol") 
     }
     files.forEach((file) => {
       const facetName = getFacetName(file);
@@ -382,7 +384,7 @@ module.exports = {
     }
   },
   gasReporter: {
-    enabled: true
+    enabled: false
   },
   mocha: {
     timeout: 100000000

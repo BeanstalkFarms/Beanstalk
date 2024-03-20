@@ -1,15 +1,15 @@
 const { expect } = require("chai");
 const { deploy } = require("../scripts/deploy.js");
-const { readPrune, toBN, signSiloDepositTokenPermit, signSiloDepositTokensPermit, getBean } = require("../utils");
+const { readPrune, toBN } = require("../utils");
 const { getBeanstalk } = require("../utils/contracts.js");
-const { EXTERNAL, INTERNAL, INTERNAL_EXTERNAL, INTERNAL_TOLERANT } = require("./utils/balances.js");
-const { BEAN, THREE_POOL, BEAN_3_CURVE, UNRIPE_LP, UNRIPE_BEAN, THREE_CURVE } = require("./utils/constants");
-const { to18, to6, toStalk, toBean } = require("./utils/helpers.js");
+const { EXTERNAL } = require("./utils/balances.js");
+const { BEAN, THREE_POOL, BEAN_3_CURVE, UNRIPE_LP, UNRIPE_BEAN, THREE_CURVE, ZERO_BYTES } = require("./utils/constants");
+const { to18, toStalk, to6 } = require("./utils/helpers.js");
 const { takeSnapshot, revertToSnapshot } = require("./utils/snapshot");
-const ZERO_BYTES = ethers.utils.formatBytes32String("0x0");
+const { getAllBeanstalkContracts } = require("../utils/contracts");
 
 let user, user2, owner;
-let userAddress, ownerAddress, user2Address;
+
 
 let pru;
 
@@ -29,16 +29,14 @@ describe("Silo Enroot", function () {
   before(async function () {
     pru = await readPrune();
     [owner, user, user2] = await ethers.getSigners();
-    userAddress = user.address;
-    user2Address = user2.address;
-    const contracts = await deploy("Test", false, true);
+    
+    const contracts = await deploy(verbose = false, mock = true, reset = true)    
     ownerAddress = contracts.account;
     this.diamond = contracts.beanstalkDiamond;
-    this.beanstalk = await getBeanstalk(this.diamond.address);
-    this.season = await ethers.getContractAt('MockSeasonFacet', this.diamond.address);
-    this.seasonGetter = await ethers.getContractAt('SeasonGettersFacet', this.diamond.address)
-    this.silo = await ethers.getContractAt('MockSiloFacet', this.diamond.address);
-    this.unripe = await ethers.getContractAt('MockUnripeFacet', this.diamond.address);
+    // `beanstalk` contains all functions that the regualar beanstalk has.
+    // `mockBeanstalk` has functions that are only available in the mockFacets.
+    [ beanstalk, mockBeanstalk ] = await getAllBeanstalkContracts(this.diamond.address);
+
     this.migrate = await ethers.getContractAt('MigrationFacet', this.diamond.address);
 
     this.threeCurve = await ethers.getContractAt("MockToken", THREE_CURVE);
@@ -53,37 +51,37 @@ describe("Silo Enroot", function () {
     this.siloToken2 = await SiloToken.deploy("Silo", "SILO");
     await this.siloToken2.deployed();
 
-    await this.silo.mockWhitelistToken(this.siloToken.address, this.silo.interface.getSighash("mockBDV(uint256 amount)"), "10000", "1");
+    await mockBeanstalk.mockWhitelistToken(this.siloToken.address, mockBeanstalk.interface.getSighash("mockBDV(uint256 amount)"), "10000", "1");
 
-    await this.season.siloSunrise(0);
-    await this.siloToken.connect(user).approve(this.silo.address, "100000000000");
-    await this.siloToken.connect(user2).approve(this.silo.address, "100000000000");
-    await this.siloToken.mint(userAddress, "10000");
-    await this.siloToken.mint(user2Address, "10000");
-    await this.siloToken2.connect(user).approve(this.silo.address, "100000000000");
-    await this.siloToken2.mint(userAddress, "10000");
+    await mockBeanstalk.siloSunrise(0);
+    await this.siloToken.connect(user).approve(beanstalk.address, "100000000000");
+    await this.siloToken.connect(user2).approve(beanstalk.address, "100000000000");
+    await this.siloToken.mint(user.address, "10000");
+    await this.siloToken.mint(user2.address, "10000");
+    await this.siloToken2.connect(user).approve(beanstalk.address, "100000000000");
+    await this.siloToken2.mint(user.address, "10000");
 
-    await this.siloToken.connect(owner).approve(this.silo.address, to18("10000"));
+    await this.siloToken.connect(owner).approve(beanstalk.address, to18("10000"));
     await this.siloToken.mint(ownerAddress, to18("10000"));
 
     this.unripeBeans = await ethers.getContractAt("MockToken", UNRIPE_BEAN);
-    await this.unripeBeans.connect(user).mint(userAddress, to6("10000"));
-    await this.unripeBeans.connect(user).approve(this.silo.address, to18("10000"));
-    await this.unripe.addUnripeToken(UNRIPE_BEAN, this.siloToken.address, ZERO_BYTES);
-    await this.unripe.connect(owner).addUnderlying(UNRIPE_BEAN, to6("10000").mul(toBN(pru)).div(to18("1")));
+    await this.unripeBeans.connect(user).mint(user.address, to6("10000"));
+    await this.unripeBeans.connect(user).approve(beanstalk.address, to18("10000"));
+    await mockBeanstalk.addUnripeToken(UNRIPE_BEAN, this.siloToken.address, ZERO_BYTES);
+    await mockBeanstalk.connect(owner).addUnderlying(UNRIPE_BEAN, to6("10000").mul(toBN(pru)).div(to18("1")));
 
     this.unripeLP = await ethers.getContractAt("MockToken", UNRIPE_LP);
-    await this.unripeLP.connect(user).mint(userAddress, to6("10000"));
-    await this.unripeLP.connect(user).approve(this.silo.address, to18("10000"));
-    await this.unripe.addUnripeToken(UNRIPE_LP, this.siloToken.address, ZERO_BYTES);
-    await this.unripe.connect(owner).addUnderlying(UNRIPE_LP, toBN(pru).mul(toBN("10000")));
+    await this.unripeLP.connect(user).mint(user.address, to6("10000"));
+    await this.unripeLP.connect(user).approve(beanstalk.address, to18("10000"));
+    await mockBeanstalk.addUnripeToken(UNRIPE_LP, this.siloToken.address, ZERO_BYTES);
+    await mockBeanstalk.connect(owner).addUnderlying(UNRIPE_LP, toBN(pru).mul(toBN("10000")));
 
     this.beanThreeCurve = await ethers.getContractAt("MockMeta3Curve", BEAN_3_CURVE);
     await this.beanThreeCurve.set_supply(ethers.utils.parseEther("2000000"));
     await this.beanThreeCurve.set_balances([ethers.utils.parseUnits("1000000", 6), ethers.utils.parseEther("1000000")]);
     await this.beanThreeCurve.set_balances([ethers.utils.parseUnits("1200000", 6), ethers.utils.parseEther("1000000")]);
 
-    season = await this.seasonGetter.season();
+    season = await beanstalk.season();
   });
 
   beforeEach(async function () {
@@ -100,30 +98,30 @@ describe("Silo Enroot", function () {
             // 158328 * 0.185564685220298701 ~= 29380.085
             // 158327 * 0.185564685220298701 ~= 29379.899
             // floor(29380.085) - floor(29379.899) = 1
-            await this.silo.connect(user).mockUnripeBeanDeposit(season, '158328')
+            await mockBeanstalk.connect(user).mockUnripeBeanDeposit(season, '158328')
 
-            this.season.deployStemsUpgrade();
-            this.stem = await this.silo.mockSeasonToStem(UNRIPE_BEAN, season);
+            mockBeanstalk.deployStemsUpgrade();
+            this.stem = await mockBeanstalk.mockSeasonToStem(UNRIPE_BEAN, season);
 
             // call sunrise twice to avoid germination error. 
             // note that `mockUnripeBeanDeposit` increments correctly,
             // and the error is only thrown due to the stem being a germinating stem.
-            await this.season.siloSunrise(0);
-            await this.season.siloSunrise(0);
+            await mockBeanstalk.siloSunrise(0);
+            await mockBeanstalk.siloSunrise(0);
 
             await this.migrate.mowAndMigrate(user.address, [UNRIPE_BEAN], [[season]], [[158328]], 0, 0, []);
 
-            await this.beanstalk.connect(user).withdrawDeposit(UNRIPE_BEAN, this.stem, '158327', EXTERNAL);
+            await beanstalk.connect(user).withdrawDeposit(UNRIPE_BEAN, this.stem, '158327', EXTERNAL);
         })
         it("should remove most of the deposit", async function () {
-            const deposit = await this.beanstalk.connect(user).getDeposit(userAddress, UNRIPE_BEAN, this.stem)
+            const deposit = await beanstalk.connect(user).getDeposit(user.address, UNRIPE_BEAN, this.stem)
             // bdv != amt due to bdv removals rounding up. acceptable.
             expect(deposit[0]).to.equal('1') // amt 
             expect(deposit[1]).to.equal('0') // bdv
         });
 
         it("removes all stalk", async function () {
-            const stalk = await this.beanstalk.balanceOfStalk(userAddress)
+            const stalk = await beanstalk.balanceOfStalk(user.address)
             expect(stalk).to.equal('0')
         })
 

@@ -1,7 +1,7 @@
 const { BEAN, WETH, BEANSTALK_FARMS, ETH_USD_CHAINLINK_AGGREGATOR, PRICE_DEPLOYER } = require("../test/utils/constants");
 const { toX } = require("../test/utils/helpers");
 const { defaultAbiCoder } = require('@ethersproject/abi');
-const { impersonateSigner, toBN, getBean, impersonateBeanstalkOwner } = require("../utils");
+const { impersonateSigner, toBN, getBean } = require("../utils");
 const { deployWellContractAtNonce, encodeWellImmutableData, getWellContractAt, deployMockPump } = require("../utils/well");
 const { bipBasinIntegration } = require("./bips");
 const { deployContract } = require("./contracts");

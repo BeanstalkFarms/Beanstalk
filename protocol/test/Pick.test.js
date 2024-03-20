@@ -2,9 +2,10 @@ const { expect } = require("chai");
 const { MerkleTree } = require("merkletreejs");
 const keccak256 = require("keccak256");
 
-const { deploy } = require("../scripts/newDeploy.js");
+const { deploy } = require("../scripts/deploy.js");
 const { takeSnapshot, revertToSnapshot } = require("./utils/snapshot");
 const { EXTERNAL } = require("./utils/balances.js");
+const { getAllBeanstalkContracts } = require("../utils/contracts");
 
 let owner;
 let users;
@@ -65,11 +66,14 @@ const initializeMerkleTree = async () => {
   });
 };
 
-describe.only("UnripeClaim", function () {
+describe("UnripeClaim", function () {
   before(async function () {
     [owner, user, user2, user3, user4, user5] = await ethers.getSigners();
     const contracts = await deploy(verbose=false, mock=true, reset=true);
     this.diamond = contracts.beanstalkDiamond;
+    // `beanstalk` contains all functions that the regualar beanstalk has.
+    // `mockBeanstalk` has functions that are only available in the mockFacets.
+    [ beanstalk, mockBeanstalk ] = await getAllBeanstalkContracts(this.diamond.address);
     this.unripeClaim = await ethers.getContractAt(
       "MockUnripeFacet",
       this.diamond.address

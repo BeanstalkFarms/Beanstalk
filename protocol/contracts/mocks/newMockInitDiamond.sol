@@ -28,7 +28,7 @@ contract MockInitDiamond is InitalizeDiamond {
     // min 1micro stalk earned per season due to germination.
     uint32 constant INIT_UR_BEAN_STALK_EARNED_PER_SEASON = 1;
     uint32 constant INIT_BEAN_WSTETH_WELL_STALK_EARNED_PER_SEASON = 4e6;
-    uint32 constant INIT_TOKEN_WURLP_POINTS = 100e6;
+    uint128 constant INIT_TOKEN_WURLP_POINTS = 100e18;
     uint32 constant INIT_BEAN_WURLP_PERCENT_TARGET = 50e6;
 
 
@@ -76,7 +76,7 @@ contract MockInitDiamond is InitalizeDiamond {
             s.ss[tokens[i]] = siloSettings[i];
             // note: unripeLP is not an LP token (only the underlying is)
             LibWhitelistedTokens.addWhitelistStatus(
-                tokens[i],
+                tokens[i],  
                 true, // is whitelisted,
                 false,
                 false
@@ -123,11 +123,19 @@ contract MockInitDiamond is InitalizeDiamond {
                 gaugePoints: 0,
                 optimalPercentDepositedBdv: 0
             });
-        
-        siloSettings[1] = siloSettings[0]; 
-
-        // note: for testing purposes, the bdv calculation is the same for both unripe tokens.
-        // siloSettings[1].selector = BDVFacet.unripeLPToBDV.selector;
+        siloSettings[1] = Storage.SiloSettings({
+                selector: BDVFacet.unripeLPToBDV.selector,
+                stalkEarnedPerSeason: INIT_UR_BEAN_STALK_EARNED_PER_SEASON,
+                stalkIssuedPerBdv: INIT_STALK_ISSUED_PER_BDV,
+                milestoneSeason: s.season.current,
+                milestoneStem: 0,
+                encodeType: 0x00,
+                deltaStalkEarnedPerSeason: 0,
+                gpSelector: bytes4(0),
+                lwSelector: bytes4(0),
+                gaugePoints: 0,
+                optimalPercentDepositedBdv: 0
+            });
     }
 
     /**
@@ -171,5 +179,16 @@ contract MockInitDiamond is InitalizeDiamond {
             C.BEAN_ETH_WELL,
             INIT_BEAN_TOKEN_WELL_PERCENT_TARGET - INIT_BEAN_WURLP_PERCENT_TARGET
         );
+
+        // update whitelist status.
+        LibWhitelistedTokens.addWhitelistStatus(
+                well,
+                true, // is whitelisted,
+                true, // is LP
+                true  // is well 
+            );
+
+        s.twaReserves[well].reserve0 = 1;
+        s.twaReserves[well].reserve1 = 1;
     }
 }

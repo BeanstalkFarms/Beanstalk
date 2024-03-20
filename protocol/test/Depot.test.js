@@ -1,36 +1,37 @@
 const { expect } = require('chai');
-const { defaultAbiCoder } = require('ethers/lib/utils.js');
 const { deploy } = require('../scripts/deploy.js');
-const { deployPipeline, impersonatePipeline } = require('../scripts/pipeline.js');
-const { deployContract } = require('../scripts/contracts.js');
-const { getBeanstalk, getBean, getUsdc } = require('../utils/contracts.js');
+const { getBean, getUsdc } = require('../utils/contracts.js');
 const { signERC2612Permit } = require("eth-permit");
-const { toBN, encodeAdvancedData, signSiloDepositTokenPermit, signSiloDepositTokensPermit, signTokenPermit } = require('../utils/index.js');
-const { impersonateSigner } = require('../utils/signer.js');
-const { EXTERNAL, INTERNAL, INTERNAL_EXTERNAL, INTERNAL_TOLERANT } = require('./utils/balances.js');
-const { BEAN_3_CURVE, THREE_POOL, THREE_CURVE, STABLE_FACTORY, WETH, BEAN, PIPELINE } = require('./utils/constants.js');
+const { signSiloDepositTokenPermit, signSiloDepositTokensPermit, signTokenPermit } = require('../utils/index.js');
+const { EXTERNAL, INTERNAL, INTERNAL_TOLERANT } = require('./utils/balances.js');
+const { BEAN_3_CURVE, THREE_POOL, THREE_CURVE, STABLE_FACTORY, WETH, BEAN, PIPELINE, DEPOT } = require('./utils/constants.js');
 const { to6, to18 } = require('./utils/helpers.js');
 const { takeSnapshot, revertToSnapshot } = require("./utils/snapshot");
-const { impersonateDepot } = require('../scripts/depot.js');
+const { getAllBeanstalkContracts } = require("../utils/contracts");
+
 
 let user, user2, owner;
 
 describe('Depot', function () {
     before(async function () {
         [owner, user, user2] = await ethers.getSigners();
-        const contracts = await deploy("Test", false, true);
-        this.beanstalk = await getBeanstalk(contracts.beanstalkDiamond.address)
-        this.mockSilo = await ethers.getContractAt('MockSiloFacet', contracts.beanstalkDiamond.address);
-        this.approval = await ethers.getContractAt('ApprovalFacet', contracts.beanstalkDiamond.address);
-        this.bean = await getBean()
+        const contracts = await deploy(verbose = false, mock = true, reset = true);
+        this.diamond = contracts.beanstalkDiamond.address;
+
+        // `beanstalk` contains all functions that the regualar beanstalk has.
+        // `mockBeanstalk` has functions that are only available in the mockFacets.
+        [ beanstalk, mockBeanstalk ] = await getAllBeanstalkContracts(this.diamond.address);
+
+        bean = await getBean()
         this.usdc = await getUsdc()
         this.threeCurve = await ethers.getContractAt('MockToken', THREE_CURVE)
         this.threePool = await ethers.getContractAt('Mock3Curve', THREE_POOL)
         this.beanMetapool = await ethers.getContractAt('MockMeta3Curve', BEAN_3_CURVE)
         this.weth = await ethers.getContractAt("MockWETH", WETH)
 
-        pipeline = await impersonatePipeline()
-        this.depot = await impersonateDepot()
+        pipeline = await ethers.getContractAt("Pipeline", PIPELINE)
+
+        this.depot =await ethers.getContractAt("Depot", DEPOT)
 
         this.erc1155 = await (await ethers.getContractFactory('MockERC1155', owner)).deploy('Mock')
         await this.erc1155.connect(user).setApprovalForAll(this.depot.address, true)
@@ -40,17 +41,16 @@ describe('Depot', function () {
         this.mockContract = await (await ethers.getContractFactory('MockContract', owner)).deploy()
         await this.mockContract.deployed()
         await this.mockContract.setAccount(user2.address)
-        const season = await ethers.getContractAt('MockSeasonFacet', contracts.beanstalkDiamond.address)
 
-        await this.bean.mint(user.address, to6('1004'))
+        await bean.mint(user.address, to6('1004'))
         await this.usdc.mint(user.address, to6('1000'))
 
-        await this.bean.connect(user).approve(this.beanstalk.address, to18('1'))
-        await this.usdc.connect(user).approve(this.beanstalk.address, to18('1'))
+        await bean.connect(user).approve(beanstalk.address, to18('1'))
+        await this.usdc.connect(user).approve(beanstalk.address, to18('1'))
 
-        await this.bean.connect(user).approve(this.beanstalk.address, '100000000000')
-        await this.bean.connect(user).approve(this.beanMetapool.address, '100000000000')
-        await this.bean.mint(user.address, to6('10000'))
+        await bean.connect(user).approve(beanstalk.address, '100000000000')
+        await bean.connect(user).approve(this.beanMetapool.address, '100000000000')
+        await bean.mint(user.address, to6('10000'))
 
         await this.threeCurve.mint(user.address, to18('1000'))
         await this.threePool.set_virtual_price(to18('2'))
@@ -59,9 +59,9 @@ describe('Depot', function () {
         await this.beanMetapool.set_A_precise('1000')
         await this.beanMetapool.set_virtual_price(ethers.utils.parseEther('1'))
         await this.beanMetapool.connect(user).approve(this.threeCurve.address, to18('100000000000'))
-        await this.beanMetapool.connect(user).approve(this.beanstalk.address, to18('100000000000'))
-        await this.threeCurve.connect(user).approve(this.beanstalk.address, to18('100000000000'))
-        this.result = await this.beanstalk.connect(user).addLiquidity(
+        await this.beanMetapool.connect(user).approve(beanstalk.address, to18('100000000000'))
+        await this.threeCurve.connect(user).approve(beanstalk.address, to18('100000000000'))
+        this.result = await beanstalk.connect(user).addLiquidity(
             BEAN_3_CURVE,
             STABLE_FACTORY,
             [to6('1000'), to18('1000')],
@@ -73,20 +73,20 @@ describe('Depot', function () {
         const SiloToken = await ethers.getContractFactory("MockToken");
         this.siloToken = await SiloToken.deploy("Silo", "SILO")
         await this.siloToken.deployed()
-        await this.mockSilo.mockWhitelistToken(
+        await mockBeanstalk.mockWhitelistToken(
             this.siloToken.address,
-            this.mockSilo.interface.getSighash("mockBDV(uint256 amount)"),
+            mockBeanstalk.interface.getSighash("mockBDV(uint256 amount)"),
             '10000',
             '1'
         );
-        await this.siloToken.connect(user).approve(this.beanstalk.address, '100000000000');
+        await this.siloToken.connect(user).approve(beanstalk.address, '100000000000');
         await this.siloToken.mint(user.address, to6('2'));
 
-        await this.beanstalk.connect(user).deposit(BEAN, to6('1'), EXTERNAL)
-        await this.beanstalk.connect(user).deposit(this.siloToken.address, to6('1'), EXTERNAL)
-        await season.siloSunrise('0')
-        await this.beanstalk.connect(user).deposit(BEAN, to6('1'), EXTERNAL)
-        await this.beanstalk.connect(user).transferToken(BEAN, user.address, to6('1'), EXTERNAL, INTERNAL)
+        await beanstalk.connect(user).deposit(BEAN, to6('1'), EXTERNAL)
+        await beanstalk.connect(user).deposit(this.siloToken.address, to6('1'), EXTERNAL)
+        await mockBeanstalk.siloSunrise('0')
+        await beanstalk.connect(user).deposit(BEAN, to6('1'), EXTERNAL)
+        await beanstalk.connect(user).transferToken(BEAN, user.address, to6('1'), EXTERNAL, INTERNAL)
     });
 
     beforeEach(async function () {
@@ -128,22 +128,22 @@ describe('Depot', function () {
     describe("Normal Pipe", async function () {
         describe("1 Pipe", async function () {
             beforeEach(async function () {
-                const mintBeans = this.bean.interface.encodeFunctionData('mint', [
+                const mintBeans = bean.interface.encodeFunctionData('mint', [
                     pipeline.address,
                     to6('100')
                 ])
-                await this.depot.connect(user).pipe([this.bean.address, mintBeans])
+                await this.depot.connect(user).pipe([bean.address, mintBeans])
             })
 
             it('mints beans', async function () {
-                expect(await this.bean.balanceOf(pipeline.address)).to.be.equal(to6('100'))
+                expect(await bean.balanceOf(pipeline.address)).to.be.equal(to6('100'))
             })
         })
     })
 
     describe("Permit Deposit and Transfer Deposits (multiple seasons)", async function () {
         beforeEach(async function () {
-            const nonce = await this.beanstalk.connect(user).depositPermitNonces(user.address);
+            const nonce = await beanstalk.connect(user).depositPermitNonces(user.address);
             const signature = await signSiloDepositTokenPermit(user, user.address, this.depot.address, BEAN, to6('2'), nonce);
             permit = await this.depot.interface.encodeFunctionData('permitDeposit',
                 [
@@ -168,19 +168,19 @@ describe('Depot', function () {
         })
 
         it('pipeline has deposits', async function () {
-            const deposit = await this.beanstalk.getDeposit(PIPELINE, BEAN, to6('0'))
+            const deposit = await beanstalk.getDeposit(PIPELINE, BEAN, to6('0'))
             expect(deposit[0]).to.be.equal(to6('1'))
             expect(deposit[1]).to.be.equal(to6('1'))
-            const deposit2 = await this.beanstalk.getDeposit(PIPELINE, BEAN, to6('2'))
+            const deposit2 = await beanstalk.getDeposit(PIPELINE, BEAN, to6('2'))
             expect(deposit2[0]).to.be.equal(to6('1'))
             expect(deposit2[1]).to.be.equal(to6('1'))
         })
 
         it('user does not have deposits', async function () {
-            const deposit = await this.beanstalk.getDeposit(user.address, BEAN, to6('0'))
+            const deposit = await beanstalk.getDeposit(user.address, BEAN, to6('0'))
             expect(deposit[0]).to.be.equal(to6('0'))
             expect(deposit[1]).to.be.equal(to6('0'))
-            const deposit2 = await this.beanstalk.getDeposit(user.address, BEAN, to6('2'))
+            const deposit2 = await beanstalk.getDeposit(user.address, BEAN, to6('2'))
             expect(deposit2[0]).to.be.equal(to6('0'))
             expect(deposit2[1]).to.be.equal(to6('0'))
         })
@@ -188,7 +188,7 @@ describe('Depot', function () {
 
     describe("Permit Deposit and Transfer Deposits (multiple tokens)", async function () {
         beforeEach(async function () {
-            const nonce = await this.beanstalk.connect(user).depositPermitNonces(user.address);
+            const nonce = await beanstalk.connect(user).depositPermitNonces(user.address);
             const signature = await signSiloDepositTokensPermit(user, user.address, this.depot.address, [BEAN, this.siloToken.address], [to6('1'), to6('1')], nonce);
             permit = await this.depot.interface.encodeFunctionData('permitDeposits',
                 [
@@ -222,19 +222,19 @@ describe('Depot', function () {
         })
 
         it('pipeline has deposits', async function () {
-            const deposit = await this.beanstalk.getDeposit(PIPELINE, BEAN, 0)
+            const deposit = await beanstalk.getDeposit(PIPELINE, BEAN, 0)
             expect(deposit[0]).to.be.equal(to6('1'))
             expect(deposit[1]).to.be.equal(to6('1'))
-            const deposit2 = await this.beanstalk.getDeposit(PIPELINE, this.siloToken.address, 0)
+            const deposit2 = await beanstalk.getDeposit(PIPELINE, this.siloToken.address, 0)
             expect(deposit2[0]).to.be.equal(to6('1'))
             expect(deposit2[1]).to.be.equal(to6('1'))
         })
 
         it('user does not have deposits', async function () {
-            const deposit = await this.beanstalk.getDeposit(user.address, BEAN, 0)
+            const deposit = await beanstalk.getDeposit(user.address, BEAN, 0)
             expect(deposit[0]).to.be.equal(to6('0'))
             expect(deposit[1]).to.be.equal(to6('0'))
-            const deposit2 = await this.beanstalk.getDeposit(user.address, this.siloToken.address, 0)
+            const deposit2 = await beanstalk.getDeposit(user.address, this.siloToken.address, 0)
             expect(deposit2[0]).to.be.equal(to6('0'))
             expect(deposit2[1]).to.be.equal(to6('0'))
         })
@@ -283,7 +283,7 @@ describe('Depot', function () {
                 '10000000',
             );
 
-            permit = this.beanstalk.interface.encodeFunctionData('permitERC20', [
+            permit = beanstalk.interface.encodeFunctionData('permitERC20', [
                 this.siloToken.address,
                 signature.owner, 
                 signature.spender, 
@@ -312,10 +312,10 @@ describe('Depot', function () {
 
     describe("Permit and Transfer ERC-20 token from Farm balances", async function () {
         beforeEach(async function () {
-            const nonce = await this.beanstalk.tokenPermitNonces(user.address);
+            const nonce = await beanstalk.tokenPermitNonces(user.address);
             const signature = await signTokenPermit(user, user.address, this.depot.address, BEAN, to6('1'), nonce);
 
-            permit = this.beanstalk.interface.encodeFunctionData('permitToken', [
+            permit = beanstalk.interface.encodeFunctionData('permitToken', [
                 signature.owner, 
                 signature.spender, 
                 signature.token, 
@@ -336,8 +336,8 @@ describe('Depot', function () {
         })
 
         it('transfers token', async function () {
-            expect(await this.beanstalk.getInternalBalance(BEAN, user.address)).to.be.equal(to6('0'))
-            expect(await this.bean.balanceOf(PIPELINE)).to.be.equal(to6('1'))
+            expect(await beanstalk.getInternalBalance(BEAN, user.address)).to.be.equal(to6('0'))
+            expect(await bean.balanceOf(PIPELINE)).to.be.equal(to6('1'))
         })
     })
 

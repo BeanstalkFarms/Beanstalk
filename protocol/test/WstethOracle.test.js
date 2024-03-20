@@ -29,7 +29,7 @@ async function checkPriceWithError(price, lookback = '0', error = '100') {
 describe('wStEth Oracle', function () {
     before(async function () {
         [owner, user, user2] = await ethers.getSigners();
-        const contracts = await deploy("Test", false, true);
+        const contracts = await deploy(verbose = false, mock = true, reset = true)        
         season = await ethers.getContractAt('MockSeasonFacet', contracts.beanstalkDiamond.address)
         beanstalk = await getBeanstalk(contracts.beanstalkDiamond.address)
         bean = await getBean()

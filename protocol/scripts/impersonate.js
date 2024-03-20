@@ -28,6 +28,7 @@ const {
   WSTETH
 } = require('../test/utils/constants');
 const { impersonatePipeline } = require('./pipeline');
+const { impersonateDepot } = require('./depot');
 const { impersonateSigner, mintEth } = require('../utils');
 const { to18 } = require('../test/utils/helpers');
 
@@ -83,11 +84,11 @@ async function curveMetapool(poolAddress, name, tokenAddress) {
     poolAddress
   )
 
-    const beanMetapool = await ethers.getContractAt('MockMeta3Curve', poolAddress);
-    await beanMetapool.init(tokenAddress, THREE_CURVE, THREE_POOL);
-    await beanMetapool.set_A_precise('1000');
-    await beanMetapool.set_virtual_price(ethers.utils.parseEther('1'));
-    await beanMetapool.setSymbol(`${name}-f`);
+  const beanMetapool = await ethers.getContractAt('MockMeta3Curve', poolAddress);
+  await beanMetapool.init(tokenAddress, THREE_CURVE, THREE_POOL);
+  await beanMetapool.set_A_precise('1000');
+  await beanMetapool.set_virtual_price(ethers.utils.parseEther('1'));
+  await beanMetapool.setSymbol(`${name}-f`);
 }
 
 /**
@@ -283,3 +284,4 @@ exports.impersonateContract = impersonateContract
 exports.impersonateUniswapV3 = uniswapV3
 exports.impersonateWsteth = wsteth
 exports.impersonatePipeline = impersonatePipeline
+exports.impersonateDepot = impersonateDepot

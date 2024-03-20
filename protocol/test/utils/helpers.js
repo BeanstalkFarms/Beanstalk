@@ -18,7 +18,7 @@ async function getEthSpentOnGas(result) {
   return receipt.effectiveGasPrice.mul(receipt.cumulativeGasUsed);
 }
 
-function toBean(amount) {
+function to6(amount) {
   return ethers.utils.parseUnits(amount,6);
 }
 
@@ -56,7 +56,7 @@ async function advanceTime(time) {
 }
 
 
-exports.toBean = toBean
+exports.to6 = to6
 exports.toStalk = toStalk
 exports.toEther = toEther
 exports.to18 = to18

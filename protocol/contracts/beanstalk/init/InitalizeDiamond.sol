@@ -32,7 +32,7 @@ contract InitalizeDiamond {
     uint32 constant INIT_BEAN_STALK_EARNED_PER_SEASON = 2e6;
     uint32 constant INIT_BEAN_TOKEN_WELL_STALK_EARNED_PER_SEASON = 4e6;
     uint32 constant INIT_STALK_ISSUED_PER_BDV = 1e4;
-    uint32 constant INIT_TOKEN_G_POINTS = 100e6;
+    uint128 constant INIT_TOKEN_G_POINTS = 100e18;
     uint32 constant INIT_BEAN_TOKEN_WELL_PERCENT_TARGET = 100e6;
 
     // EVENTS:
@@ -72,7 +72,7 @@ contract InitalizeDiamond {
             });
         
         siloSettings[1] = Storage.SiloSettings({
-                selector: BDVFacet.beanToBDV.selector,
+                selector: BDVFacet.wellBdv.selector,
                 stalkEarnedPerSeason: INIT_BEAN_TOKEN_WELL_STALK_EARNED_PER_SEASON,
                 stalkIssuedPerBdv: INIT_STALK_ISSUED_PER_BDV,
                 milestoneSeason: s.season.current,
@@ -89,6 +89,12 @@ contract InitalizeDiamond {
             tokens,
             siloSettings
         );
+
+        // init usdTokenPrice. C.Bean_eth_well should be 
+        // a bean well w/ the native token of the network.
+        s.usdTokenPrice[C.BEAN_ETH_WELL] = 1;
+        s.twaReserves[beanTokenWell].reserve0 = 1;
+        s.twaReserves[beanTokenWell].reserve1 = 1;
     }
 
     /**
