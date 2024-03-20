@@ -242,10 +242,6 @@ describe("Silo Enroot", function () {
       });
 
       it('omits TransferBatch event', async function () {
-        const stem10 = await this.silo.seasonToStem(UNRIPE_BEAN, ENROOT_FIX_SEASON);
-        const stem11 = await this.silo.seasonToStem(UNRIPE_BEAN, ENROOT_FIX_SEASON+1);
-        const depositID0 = await this.silo.getDepositId(UNRIPE_BEAN, stem10)
-        const depositID1 = await this.silo.getDepositId(UNRIPE_BEAN, stem11)
         await expect(this.result).to.not.emit(this.silo, 'TransferBatch')
       });
     });
@@ -290,10 +286,6 @@ describe("Silo Enroot", function () {
       });
 
       it('omits TransferBatch event', async function () {
-        const stem10 = await this.silo.seasonToStem(UNRIPE_LP, ENROOT_FIX_SEASON);
-        const stem11 = await this.silo.seasonToStem(UNRIPE_LP, ENROOT_FIX_SEASON);
-        const depositID0 = await this.silo.getDepositId(UNRIPE_LP, stem10)
-        const depositID1 = await this.silo.getDepositId(UNRIPE_LP, stem11)
         await expect(this.result).to.not.emit(this.silo, 'TransferBatch');
       });
     });
