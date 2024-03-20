@@ -539,6 +539,18 @@ contract SiloGettersFacet is ReentrancyGuard {
         );
     }
 
+    function calculateStemForTokenFromGrownStalk(
+        address token,
+        uint256 grownStalk,
+        uint256 bdv
+    ) external view returns (int96 stem, LibGerminate.Germinate germ) {
+        (stem, germ) = LibTokenSilo.calculateStemForTokenFromGrownStalk(
+            token,
+            grownStalk,
+            bdv
+        );
+    }
+
     /**
      * @notice given the season/token, returns the stem assoicated with that deposit.
      * kept for legacy reasons. 

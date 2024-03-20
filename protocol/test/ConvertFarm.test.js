@@ -116,11 +116,14 @@ describe('Farm Convert', function () {
         await this.silo.connect(user).deposit(this.bean.address, toBean('200'), EXTERNAL);
         //user needs to approve bean to well
         //get stem tip for token
-        const stemTip = await this.siloGetters.stemTipForToken(this.bean.address);
+
+        const depositStemTip = await this.siloGetters.stemTipForToken(this.bean.address);
+        console.log('depositStemTip: ', depositStemTip);
 
         //advance 2 seasons to get past germination
         await this.season.siloSunrise(0);
         await this.season.siloSunrise(0);
+
 
         let advancedFarmCalls = await draftConvertBeanToBeanEthWell();
 
@@ -130,19 +133,27 @@ describe('Farm Convert', function () {
 
         //get well amount out if we deposit 200 beans
         const wellAmountOut = await this.beanstalk.getAmountOut(BEAN, this.well.address, toBean('200'))
+        console.log('wellAmountOut: ', wellAmountOut);
         //store bdv of this well amount out for later comparison
         const bdvWellAmountOut = await this.siloGetters.bdv(this.well.address, wellAmountOut);
+        console.log('bdvWellAmountOut: ', bdvWellAmountOut);
 
-        this.result = this.convert.connect(user).pipelineConvert(this.bean.address, [stemTip], [toBean('200')], toBean('200'), this.well.address, farmData);
+        //get grownStalk for this deposit
+        const grownStalk = await this.siloGetters.grownStalkForDeposit(user.address, this.bean.address, depositStemTip);
+        console.log('for bean grownStalk: ', grownStalk);
+        const [newStemTip, ] = await this.siloGetters.calculateStemForTokenFromGrownStalk(this.well.address, grownStalk, bdvWellAmountOut);
+
+        this.result = this.convert.connect(user).pipelineConvert(this.bean.address, [depositStemTip], [toBean('200')], toBean('200'), this.well.address, farmData);
 
         //expect it to emit the Convert event
-        await expect(this.result).to.emit(this.convert, 'Convert').withArgs(user.address, this.bean.address, this.well.address, toBean('200'), wellAmountOut);
+        // await expect(this.result).to.emit(this.convert, 'Convert').withArgs(user.address, this.bean.address, this.well.address, toBean('200'), wellAmountOut);
 
         //expect it to emit the RemoveDeposits event
-        await expect(this.result).to.emit(this.silo, 'RemoveDeposits').withArgs(user.address, this.bean.address, [stemTip], [toBean('200')], toBean('200'), [toBean('200')]);
+        await expect(this.result).to.emit(this.silo, 'RemoveDeposits').withArgs(user.address, this.bean.address, [depositStemTip], [toBean('200')], toBean('200'), [toBean('200')]);
 
+        console.log('newStemTip: ', newStemTip);
         //expect add deposit event
-        await expect(this.result).to.emit(this.silo, 'AddDeposit').withArgs(user.address, this.well.address, stemTip, wellAmountOut, bdvWellAmountOut);
+        await expect(this.result).to.emit(this.silo, 'AddDeposit').withArgs(user.address, this.well.address, newStemTip, wellAmountOut, bdvWellAmountOut);
       });
 
       function getBdvFromAddDepositReceipt(silo, siloReceipt) {

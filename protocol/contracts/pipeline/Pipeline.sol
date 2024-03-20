@@ -108,10 +108,10 @@ contract Pipeline is IPipeline, ERC1155Holder, ERC721Holder {
         override
         returns (bytes memory result)
     {
-        console.log('pipe in Pipeline.sol');
-        console.log('pipe target: ', p.target);
-        console.log('pipe data:');
-        console.logBytes(p.data);
+        // console.log('pipe in Pipeline.sol');
+        // console.log('pipe target: ', p.target);
+        // console.log('pipe data:');
+        // console.logBytes(p.data);
         // extractData(p.data);
         
         result = _pipe(p.target, p.data, msg.value);

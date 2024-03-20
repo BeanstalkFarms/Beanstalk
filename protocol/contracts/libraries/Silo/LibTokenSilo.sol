@@ -359,6 +359,13 @@ library LibTokenSilo {
                 amount // token amount
             );
         }
+        console.log('addDepositToAccount emit AddDeposit');
+        console.log('addDepositToAccount account: ', account);
+        console.log('addDepositToAccount token: ', token);
+        console.log('addDepositToAccount stem: ');
+        console.logInt(stem);
+        console.log('addDepositToAccount amount: ', amount);
+        console.log('addDepositToAccount bdv: ', bdv);
         emit AddDeposit(account, token, stem, amount, bdv);
     }
 
@@ -582,6 +589,10 @@ library LibTokenSilo {
         uint256 grownStalk,
         uint256 bdv
     ) internal view returns (int96 stem, LibGerminate.Germinate germ) {
+        console.log('calculateStemForTokenFromGrownStalk');
+        console.log('calculateStemForTokenFromGrownStalk token: ', token);
+        console.log('calculateStemForTokenFromGrownStalk bdv: ', bdv);
+        console.log('calculateStemForTokenFromGrownStalk grownStalk: ', grownStalk);
         LibGerminate.GermStem memory germStem = LibGerminate.getGerminatingStem(token);
         stem = germStem.stemTip.sub(toInt96(grownStalk.mul(PRECISION).div(bdv)));
         germ = LibGerminate._getGerminationState(stem, germStem);

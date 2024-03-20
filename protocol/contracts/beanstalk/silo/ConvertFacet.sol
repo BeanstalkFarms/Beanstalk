@@ -221,7 +221,7 @@ contract ConvertFacet is ReentrancyGuard {
         _depositTokensForConvertMultiCrate(outputToken, amountOut, bdvsRemoved, grownStalks);
 
         // emit convert event, but do we want a new event definition? the old one can't handle multiple input tokens nor the combining of stems/etc
-        emit Convert(LibTractor._getUser(), inputToken, outputToken, totalAmountIn, amountOut);
+        // emit Convert(LibTractor._getUser(), inputToken, outputToken, totalAmountIn, amountOut);
 
         //there's nothing about total BDV in this event, but it can be derived from the AddDeposit events
         LibTractor._resetPublisher();
@@ -606,13 +606,13 @@ contract ConvertFacet is ReentrancyGuard {
                         stems[i],
                         amounts[i]
                     );
-                a.active.stalk = a.active.stalk.add(
-                    LibSilo.stalkReward(
+                
+                a.stalksRemoved[i] = LibSilo.stalkReward(
                         stems[i],
                         germStem.stemTip,
                         a.bdvsRemoved[i].toUint128()
-                    )
-                );
+                    );
+                a.active.stalk = a.active.stalk.add(a.stalksRemoved[i]);
                 
                 console.log('a.active.stalk: ', a.active.stalk);
                 a.active.tokens = a.active.tokens.add(amounts[i]);
@@ -775,12 +775,12 @@ contract ConvertFacet is ReentrancyGuard {
 
 
         uint256 amountPerBdv = amount.div(LibTokenSilo.beanDenominatedValue(token, amount));
-
-
         uint256 totalAmount = 0;
+
         for (uint256 i = 0; i < bdvs.length; i++) {
-            console.log('bdvs[i]: ', bdvs[i]);
-            console.log('amount: ', amount);
+            // console.log('_depositTokensForConvertMultiCrate bdvs[i]: ', bdvs[i]);
+            // console.log('_depositTokensForConvertMultiCrate grownStalks[i]: ', grownStalks[i]);
+            // console.log('_depositTokensForConvertMultiCrate amount: ', amount);
             // uint256 bdv = bdvs[i];
             require( bdvs[i] > 0 && amount > 0, "Convert: BDV or amount is 0.");
             uint256 crateAmount = bdvs[i].mul(amountPerBdv);
@@ -793,26 +793,31 @@ contract ConvertFacet is ReentrancyGuard {
                 // console.log('remainder crateAmount:  ', crateAmount);
                 
             }
+
+            // because we're calculating a new token amount, the bdv will not be exactly the same as what we withdrew,
+            // so we need to make sure we calculate what the actual deposited BDV is.
+            // TODO: investigate and see if we can just use the amountPerBdv variable instead of calculating it again.
+            uint256 depositedBdv = LibTokenSilo.beanDenominatedValue(token, crateAmount);
             
             // LibGerminate.Germinate germ;
 
             // calculate the stem and germination state for the new deposit.
-            (int96 stem, LibGerminate.Germinate germ) = LibTokenSilo.calculateStemForTokenFromGrownStalk(token, grownStalks[i], bdvs[i]);
+            (int96 stem, LibGerminate.Germinate germ) = LibTokenSilo.calculateStemForTokenFromGrownStalk(token, grownStalks[i], depositedBdv);
             
             // increment totals based on germination state, 
             // as well as issue stalk to the user.
             // if the deposit is germinating, only the inital stalk of the deposit is germinating. 
             // the rest is active stalk.
             if (germ == LibGerminate.Germinate.NOT_GERMINATING) {
-                LibTokenSilo.incrementTotalDeposited(token, crateAmount, bdvs[i]);
+                LibTokenSilo.incrementTotalDeposited(token, crateAmount, depositedBdv);
                 LibSilo.mintActiveStalk(
                     LibTractor._getUser(), 
-                    bdvs[i].mul(LibTokenSilo.stalkIssuedPerBdv(token)).add(grownStalks[i])
+                    depositedBdv.mul(LibTokenSilo.stalkIssuedPerBdv(token)).add(grownStalks[i])
                 );
             } else {
-                LibTokenSilo.incrementTotalGerminating(token, crateAmount, bdvs[i], germ);
+                LibTokenSilo.incrementTotalGerminating(token, crateAmount, depositedBdv, germ);
                 // safeCast not needed as stalk is <= max(uint128)
-                LibSilo.mintGerminatingStalk(LibTractor._getUser(), uint128(bdvs[i].mul(LibTokenSilo.stalkIssuedPerBdv(token))), germ);   
+                LibSilo.mintGerminatingStalk(LibTractor._getUser(), uint128(depositedBdv.mul(LibTokenSilo.stalkIssuedPerBdv(token))), germ);   
                 LibSilo.mintActiveStalk(LibTractor._getUser(), grownStalks[i]);
             }
             LibTokenSilo.addDepositToAccount(
@@ -820,13 +825,10 @@ contract ConvertFacet is ReentrancyGuard {
                 token, 
                 stem, 
                 crateAmount,
-                bdvs[i],
+                depositedBdv,
                 LibTokenSilo.Transfer.emitTransferSingle
             );
-
         }
-
-
     }
 
     /**

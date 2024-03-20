@@ -52,20 +52,20 @@ library LibFarm {
         // 0x00 -> Static Call - Execute static call
         // else > Advanced Call - Use clipboard on and execute call
         if (pipeType == 0x00) {
-            console.log('data.callData: ');
-            console.logBytes(data.callData);
+            // console.log('data.callData: ');
+            // console.logBytes(data.callData);
             result = _farmMem(data.callData);
         } else {
-            console.log('data.callData: ');
-            console.logBytes(data.callData);
+            // console.log('data.callData: ');
+            // console.logBytes(data.callData);
             
             bytes memory callData = LibClipboard.useClipboard(
                 data.callData,
                 data.clipboard,
                 returnData
             );
-            console.log('LibFarm _advancedFarmMem callData after clipboard: ');
-            console.logBytes(callData);
+            // console.log('LibFarm _advancedFarmMem callData after clipboard: ');
+            // console.logBytes(callData);
             result = _farmMem(callData);
         }
     }
