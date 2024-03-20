@@ -133,11 +133,11 @@ describe('Well Convert', function () {
       })
 
       it('convert greater than max', async function () {
-        const convertData = ConvertEncoder.convertBeansToWellLP(to6('200000'), '3338505354221892343955', this.well.address)
+        const convertData = ConvertEncoder.convertBeansToWellLP(to6('600000'), '3338505354221892343955', this.well.address)
         const [toToken, fromToken, toAmount, fromAmount] =
           await mockBeanstalk.connect(owner).callStatic.convertInternalE(
             bean.address,
-            to6('400000'),
+            to6('600000'),
             convertData
           )
         expect(fromToken).to.be.equal(BEAN)
