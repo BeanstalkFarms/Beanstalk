@@ -30,14 +30,13 @@ const {
   mintEth,
   getBeanstalk
 } = require("./utils");
-const { EXTERNAL, INTERNAL, INTERNAL_EXTERNAL, INTERNAL_TOLERANT } = require("./test/utils/balances.js");
-const { BEANSTALK, PUBLIUS, BEAN_3_CURVE, BEAN_ETH_WELL } = require("./test/utils/constants.js");
+const { BEANSTALK, PUBLIUS, BEAN_3_CURVE, BEAN_ETH_WELL, UNRIPE_BEAN } = require("./test/utils/constants.js");
 const { to6 } = require("./test/utils/helpers.js");
 //const { replant } = require("./replant/replant.js")
 const { task } = require("hardhat/config");
 const { TASK_COMPILE_SOLIDITY_GET_SOURCE_PATHS } = require("hardhat/builtin-tasks/task-names");
 const { bipNewSilo, mockBeanstalkAdmin } = require("./scripts/bips.js");
-const { ebip9, ebip10, ebip11, ebip13, ebip14 } = require("./scripts/ebips.js");
+const { ebip9, ebip10, ebip11, ebip13, ebip14, ebip15 } = require("./scripts/ebips.js");
 
 //////////////////////// UTILITIES ////////////////////////
 
@@ -222,9 +221,48 @@ task("migrate-bip38", async function () {
   await finishBeanEthMigration();
 });
 
+// verify that ebip worked: 
+// 1. run ebip15-test without upgrading (npx hardhat ebip15-test --upgrade 0).
+// verify that the "TransferBatch" event is emitted. This is the event that should be removed.
+// 2. run ebip15-test with upgrading (npx hardhat ebip15-test --upgrade 1).
+// verify that the "TransferBatch" event is not emitted.
+task("ebip15-test")
+  .addParam("upgrade", "commit e-bip15")
+  .setAction(async (args) => {
+  try {
+    await network.provider.request({
+      method: "hardhat_reset",
+      params: [{ forking:{jsonRpcUrl: process.env.FORKING_RPC, blockNumber: 19472525 }}],
+    });
+  } catch(error) {
+    console.log('forking error. set FORKING_RPC.');
+    return
+  }
+
+  if(args.upgrade == 1) {
+    await ebip15(true);
+  }
+
+  beanstalk = await getBeanstalk();
+  // enroot deposits from an account:
+  account = await impersonateSigner('0xD7Fca6b7F0dD2C18E85a77b18a5e7aa6E1EBB445', true)
+  const tx = await beanstalk.connect(account).enrootDeposits(
+    UNRIPE_BEAN,
+    ['-16296', '-16272'],
+    ['35247540', '388597073']
+  )
+  const receipt = await tx.wait();
+  console.log(receipt['events'])
+});
+
+task("ebip15", async function () {
+  await ebip15();
+})
+
 task("ebip14", async function () {
   await ebip14();
 })
+
 
 task("ebip13", async function () {
   await ebip13();
