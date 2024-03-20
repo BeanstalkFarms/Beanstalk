@@ -12,7 +12,7 @@
   },
   "scripts": {
     "compile": "hardhat compile",
-    "generate": "echo '\nProtocol Generate' && yarn compile && hardhat diamondABI",
+    "generate": "echo '\nProtocol Generate' && yarn compile && hardhat diamondABI && hardhat mockDaimondABI",
     "test": "hardhat compile && hardhat test --network hardhat",
     "clean": "hardhat clean"
   },
