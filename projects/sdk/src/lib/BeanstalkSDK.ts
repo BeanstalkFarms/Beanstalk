@@ -46,6 +46,7 @@ export class BeanstalkSDK {
   public providerOrSigner: Signer | Provider;
   public source: DataSource;
   public subgraphUrl: string;
+  public lastRefreshTimestamp: number;
 
   public readonly chainId: ChainId;
   public readonly addresses: typeof addresses;
@@ -97,6 +98,19 @@ export class BeanstalkSDK {
 
     // Wells
     this.wells = new WellsSDK(config);
+  }
+
+  /**
+   * Refreshes the SDK's state with updated data from contracts. This should be called immediately after sdk initialization and after every season
+   */
+  async refresh() {
+    // Reload dynamic stalk per wl token
+    const whitelist = this.tokens.siloWhitelist;
+    for await (const token of whitelist) {
+      const { stalkEarnedPerSeason } = await this.contracts.beanstalk.tokenSettings(token.address);
+      token.rewards!.seeds = this.tokens.SEEDS.fromBlockchain(stalkEarnedPerSeason);
+    }
+    this.lastRefreshTimestamp = Date.now();
   }
 
   debug(...args: any[]) {
@@ -167,6 +181,7 @@ export class BeanstalkSDK {
   toJSON() {
     return {
       chainId: this.chainId,
+      lastRefreshTimestamp: this.lastRefreshTimestamp,
       provider: {
         url: this.provider?.connection?.url,
         network: this.provider?._network

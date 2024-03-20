@@ -1,5 +1,5 @@
-import { useContext, useMemo } from 'react';
-import { Token } from '@beanstalk/sdk';
+import { useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import { BeanstalkSDK, Token } from '@beanstalk/sdk';
 import { BeanstalkSDKContext } from '~/components/App/SdkProvider';
 import {
   BEAN,
@@ -21,8 +21,10 @@ import {
   BEAN_ETH_UNIV2_LP,
   RINSABLE_SPROUTS,
   BEAN_ETH_WELL_LP,
+  SILO_WHITELIST,
 } from '~/constants/tokens';
 import { Token as TokenOld } from '~/classes';
+import useGetChainToken from '../chain/useGetChainToken';
 
 export default function useSdk() {
   const sdk = useContext(BeanstalkSDKContext);
@@ -61,3 +63,39 @@ export function getNewToOldToken(_token: Token) {
   }
   return token as TokenOld;
 }
+
+export const useRefreshSeeds = () => {
+  const getChainToken = useGetChainToken();
+  return useCallback(
+    async (sdk: BeanstalkSDK) => {
+      await sdk.refresh();
+      // Copy the seed values from sdk tokens to ui tokens
+
+      for await (const chainToken of SILO_WHITELIST) {
+        const token = getChainToken(chainToken);
+        const seeds = sdk.tokens.findBySymbol(token.symbol)?.rewards?.seeds;
+        if (!seeds) {
+          console.log(`SDK token ${token.symbol} did not have any seeds set`);
+          throw new Error(`No seeds set for ${token.symbol}`);
+        }
+        token!.rewards!.seeds = parseFloat(seeds.toHuman());
+      }
+    },
+    [getChainToken]
+  );
+};
+
+export const useDynamicSeeds = (sdk: BeanstalkSDK) => {
+  const [ready, setReady] = useState(false);
+  const refreshSeeds = useRefreshSeeds();
+  useEffect(() => {
+    const load = async () => {
+      await refreshSeeds(sdk);
+      setReady(true);
+    };
+
+    load();
+  }, [refreshSeeds, sdk]);
+
+  return ready;
+};

@@ -149,7 +149,7 @@ export const BEAN = {
     },
     {
       stalk: 1,
-      seeds: 3,
+      seeds: 0,
     }
   ),
 };
@@ -242,7 +242,7 @@ export const BEAN_ETH_UNIV2_LP = {
     },
     {
       stalk: 1,
-      seeds: 4,
+      seeds: 0,
     }
   ),
 };
@@ -259,7 +259,7 @@ export const BEAN_LUSD_LP = {
     },
     {
       stalk: 1,
-      seeds: 3,
+      seeds: 0,
     }
   ),
 };
@@ -282,7 +282,7 @@ export const BEAN_CRV3_LP = {
     },
     {
       stalk: 1,
-      seeds: 3.25,
+      seeds: 0,
     }
   ),
 };
@@ -301,7 +301,7 @@ export const BEAN_ETH_WELL_LP = {
     },
     {
       stalk: 1,
-      seeds: 4.5,
+      seeds: 0,
     }
   ),
 };
@@ -385,10 +385,16 @@ export const UNRIPE_UNDERLYING_TOKENS: ChainConstant<ERC20Token>[] = [
 // Show these tokens as whitelisted in the Silo.
 export const SILO_WHITELIST: ChainConstant<ERC20Token>[] = [
   BEAN,
-  BEAN_CRV3_LP,
   BEAN_ETH_WELL_LP,
   UNRIPE_BEAN,
   UNRIPE_BEAN_WETH,
+  BEAN_CRV3_LP,
+];
+
+// Tokens that are no longer whitelisted.
+// If you edit this, make sure you also edit WHITELISTED_POOLS in pools.ts
+export const SILO_WHITELIST_DEPRECATED: ChainConstant<ERC20Token>[] = [
+  BEAN_CRV3_LP,
 ];
 
 // All supported ERC20 tokens.

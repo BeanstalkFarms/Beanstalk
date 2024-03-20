@@ -157,6 +157,16 @@ export class Convert {
         minAmountOut.toBlockchain(), // minBeans
         fromToken.address // output token address = pool address
       );
+    } else if (fromToken.address === this.urBean.address && toToken.address === this.Bean.address) {
+      encoding = ConvertEncoder.unripeToRipe(
+        amountIn.toBlockchain(), // unRipe Amount
+        fromToken.address // unRipe Token
+      );
+    } else if (fromToken.address === this.urBeanWeth.address && toToken.address === this.BeanEth.address) {
+      encoding = ConvertEncoder.unripeToRipe(
+        amountIn.toBlockchain(), // unRipe Amount
+        fromToken.address // unRipe Token
+      );
     } else {
       throw new Error("SDK: Unknown conversion pathway");
     }
@@ -175,22 +185,6 @@ export class Convert {
 
     if (fromToken.equals(toToken)) {
       throw new Error("Cannot convert between the same token");
-    }
-
-    if (!this.paths.get(fromToken)?.equals(toToken)) {
-      throw new Error("Cannot convert between these tokens");
-    }
-
-    const deltaB = await Convert.sdk.bean.getDeltaB();
-
-    if (deltaB.gte(TokenValue.ZERO)) {
-      if (fromToken.equals(this.BeanCrv3) || fromToken.equals(this.urBeanWeth) || fromToken.equals(this.BeanEth)) {
-        throw new Error("Cannot convert this token when deltaB is >= 0");
-      }
-    } else if (deltaB.lt(TokenValue.ZERO)) {
-      if (fromToken.equals(this.Bean) || fromToken.equals(this.urBean)) {
-        throw new Error("Cannot convert this token when deltaB is < 0");
-      }
     }
   }
 }

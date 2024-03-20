@@ -46,4 +46,11 @@ export const ALL_POOLS: ChainConstant<PoolMap> = {
   },
 };
 
+// If you edit this, make sure you also edit SILO_WHITELIST_DEPRECATED in tokens.ts
+export const WHITELISTED_POOLS: ChainConstant<PoolMap> = {
+  [SupportedChainId.MAINNET]: {
+    [BEANETH_WELL_MAINNET.address]: BEANETH_WELL_MAINNET,
+  },
+};
+
 export default ALL_POOLS;

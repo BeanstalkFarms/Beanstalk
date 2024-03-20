@@ -25,6 +25,7 @@ import LegacyClaim, {
   LegacyWithdrawalSubgraph,
 } from '~/components/Silo/Actions/LegacyClaim';
 import { transform } from '~/util';
+import { useIsTokenDeprecated } from '~/hooks/beanstalk/useWhitelist';
 
 /**
  * Show the three primary Silo actions: Deposit, Withdraw, Claim.
@@ -44,6 +45,7 @@ const SiloActions: FC<{
   siloBalance: FarmerSiloTokenBalance;
 }> = (props) => {
   const sdk = useSdk();
+  const checkIfDeprecated = useIsTokenDeprecated();
   const [tab, handleChange] = useTabs(SLUGS, 'action');
   const migrationNeeded = useMigrationNeeded();
   const account = useAccount();
@@ -85,6 +87,8 @@ const SiloActions: FC<{
     ? withdrawalItems.length > 0
     : false;
 
+  const isDeprecated = checkIfDeprecated(token);
+
   return (
     <>
       <Module>
@@ -107,7 +111,9 @@ const SiloActions: FC<{
           </Alert>
         ) : null}
         <ModuleTabs value={tab} onChange={handleChange}>
-          <Tab label="Deposit" disabled={migrationNeeded === true} />
+          {!isDeprecated && (
+            <Tab label="Deposit" disabled={migrationNeeded === true} />
+          )}
           <Tab label="Convert" disabled={migrationNeeded === true} />
           <Tab label="Transfer" disabled={migrationNeeded === true} />
           <Tab label="Withdraw" disabled={migrationNeeded === true} />
