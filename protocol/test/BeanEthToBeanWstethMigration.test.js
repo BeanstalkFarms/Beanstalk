@@ -4,7 +4,7 @@ const { BEAN, FERTILIZER, USDC, BEAN_3_CURVE, THREE_CURVE, UNRIPE_BEAN, UNRIPE_L
 const { setEthUsdcPrice, setEthUsdChainlinkPrice } = require('../utils/oracle.js');
 const { to6, to18 } = require('./utils/helpers.js');
 const { bipMigrateUnripeBean3CrvToBeanEth, bipMigrateUnripeBeanEthToBeanSteth, bipSeedGauge } = require('../scripts/bips.js');
-const { getBeanstalk, getBeanstalkAdminControls } = require('../utils/contracts.js');
+const { getBeanstalk, getBeanstalkAdminControls, getWeth } = require('../utils/contracts.js');
 const { impersonateBeanstalkOwner, impersonateSigner } = require('../utils/signer.js');
 const { ethers } = require('hardhat');
 const { upgradeWithNewFacets } = require("../scripts/diamond.js");
