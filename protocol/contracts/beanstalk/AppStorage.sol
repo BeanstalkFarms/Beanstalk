@@ -656,6 +656,4 @@ struct AppStorage {
     Storage.WhitelistStatus[] whitelistStatuses;
 
     address sopWell;
-
-    address barnRaiseWell;
 }

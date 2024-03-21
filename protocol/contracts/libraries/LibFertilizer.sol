@@ -248,7 +248,5 @@ library LibFertilizer {
         );
         LibUnripe.decrementUnderlying(C.UNRIPE_LP, balanceOfUnderlying);
         LibUnripe.switchUnderlyingToken(C.UNRIPE_LP, well);
-
-        s.barnRaiseWell = well;
     }
 }
