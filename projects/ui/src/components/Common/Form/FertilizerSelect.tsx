@@ -70,6 +70,10 @@ function RowContent({isMobile, fertilizer, index, values, setFieldValue, focused
         newIds[index] = undefined;
         newAmounts[index] = undefined;
         setDisplayValue(undefined);
+      } else if (roundedValue > fertilizer.amount.toNumber()) {
+        newIds[index] = fertilizer.token.id.toNumber();
+        newAmounts[index] = fertilizer.amount.toNumber();
+        setDisplayValue(fertilizer.amount.toNumber());
       } else {
         newIds[index] = fertilizer.token.id.toNumber();
         newAmounts[index] = roundedValue;
@@ -87,7 +91,7 @@ function RowContent({isMobile, fertilizer, index, values, setFieldValue, focused
     setFieldValue('amounts', newAmounts);
     setFieldValue('totalSelected', newTotalSelected);
 
-  }, [index, setFieldValue, values.amounts, values.fertilizerIds, fertilizer.token.id]);
+  }, [index, setFieldValue, values.amounts, fertilizer.amount, values.fertilizerIds, fertilizer.token.id]);
 
   return (
     <Row justifyContent="space-between" sx={{ width: '100%' }}>
