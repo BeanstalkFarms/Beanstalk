@@ -24,13 +24,9 @@ describe("Facet: Pipeline", () => {
   let snapshot: number;
 
   beforeEach(async () => {
-    snapshot = await test.snapshot();
+    test.resetFork();
     farm = sdk.farm.create();
     await test.sendBean(account, sdk.tokens.BEAN.amount(100));
-  });
-
-  afterEach(async () => {
-    await test.revert(snapshot);
   });
 
   describe("loading without approval", () => {

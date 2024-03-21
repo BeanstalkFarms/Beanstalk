@@ -4,5 +4,6 @@ query BeaNFTUsers($id_in: [ID!]) {
     barnRaise
     winter
     genesis
+    basin
   }
 }

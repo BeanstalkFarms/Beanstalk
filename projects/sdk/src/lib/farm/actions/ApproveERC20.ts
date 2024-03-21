@@ -3,14 +3,15 @@ import { ERC20Token } from "src/classes/Token";
 import { RunContext, Step, StepClass } from "src/classes/Workflow";
 import { Clipboard } from "src/lib/depot";
 import { AdvancedPipePreparedResult } from "src/lib/depot/pipe";
+import { ClipboardSettings } from "src/types";
 
 export class ApproveERC20 extends StepClass<AdvancedPipePreparedResult> {
   public name: string = "approve";
   public token: ERC20Token;
   public spender: string;
-  public clipboard?: { tag: string, copySlot: number, pasteSlot: number };
+  public clipboard?: ClipboardSettings;
 
-  constructor(token: ERC20Token, spender: string, clipboard?: { tag: string, copySlot: number, pasteSlot: number }) {
+  constructor(token: ERC20Token, spender: string, clipboard?: ClipboardSettings) {
     super();
     if (!token) throw new Error("ApproveERC20 action requires a token");
     if (!spender) throw new Error("ApproveERC20 action requires a spender");

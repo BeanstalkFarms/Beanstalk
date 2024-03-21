@@ -15,15 +15,24 @@ import {
   AddDeposit as AddDeposit_V3,
   RemoveDeposit as RemoveDeposit_V3,
   RemoveDeposits as RemoveDeposits_V3,
+  UpdatedStalkPerBdvPerSeason,
   WhitelistToken as WhitelistToken_V3
 } from "../generated/Silo-V3/Beanstalk";
 import { Beanstalk, TransferDepositCall, TransferDepositsCall } from "../generated/Silo-Calls/Beanstalk";
 import { ZERO_BI } from "../../subgraph-core/utils/Decimals";
 import { loadFarmer } from "./utils/Farmer";
-import { loadSilo, loadSiloDailySnapshot, loadSiloHourlySnapshot } from "./utils/Silo";
-import { loadSiloAsset as loadSiloAsset, loadSiloAssetDailySnapshot, loadSiloAssetHourlySnapshot } from "./utils/SiloAsset";
-import { loadSiloDeposit, loadSiloDepositV3 } from "./utils/SiloDeposit";
-import { loadSiloWithdraw } from "./utils/SiloWithdraw";
+import {
+  loadSilo,
+  loadSiloDailySnapshot,
+  loadSiloHourlySnapshot,
+  loadSiloAsset,
+  loadSiloAssetDailySnapshot,
+  loadSiloAssetHourlySnapshot,
+  loadSiloWithdraw,
+  loadSiloDeposit,
+  loadSiloDepositV3,
+  loadWhitelistTokenSetting
+} from "./utils/SiloEntities";
 import {
   AddDeposit as AddDepositEntity,
   RemoveDeposit as RemoveDepositEntity,
@@ -56,13 +65,19 @@ export function handleAddDeposit(event: AddDeposit): void {
   let beanstalk = loadBeanstalk(event.address);
 
   // Update overall silo totals
-  addDepositToSilo(event.address, beanstalk.lastSeason, event.params.bdv, event.block.timestamp, event.block.number);
-  addDepositToSiloAsset(
+  addDepositToSilo(
     event.address,
-    event.params.token,
     beanstalk.lastSeason,
     event.params.bdv,
-    event.params.amount,
+    addDepositToSiloAsset(
+      event.address,
+      event.params.token,
+      beanstalk.lastSeason,
+      event.params.bdv,
+      event.params.amount,
+      event.block.timestamp,
+      event.block.number
+    ),
     event.block.timestamp,
     event.block.number
   );
@@ -71,13 +86,19 @@ export function handleAddDeposit(event: AddDeposit): void {
   loadFarmer(event.params.account);
 
   // Update farmer silo totals
-  addDepositToSilo(event.params.account, beanstalk.lastSeason, event.params.bdv, event.block.timestamp, event.block.number);
-  addDepositToSiloAsset(
+  addDepositToSilo(
     event.params.account,
-    event.params.token,
     beanstalk.lastSeason,
     event.params.bdv,
-    event.params.amount,
+    addDepositToSiloAsset(
+      event.params.account,
+      event.params.token,
+      beanstalk.lastSeason,
+      event.params.bdv,
+      event.params.amount,
+      event.block.timestamp,
+      event.block.number
+    ),
     event.block.timestamp,
     event.block.number
   );
@@ -111,25 +132,37 @@ export function handleRemoveDeposit(event: RemoveDeposit): void {
   deposit.save();
 
   // Update protocol totals
-  removeDepositFromSilo(event.address, beanstalk.lastSeason, withdrawnBDV, event.block.timestamp, event.block.number);
-  removeDepositFromSiloAsset(
+  removeDepositFromSilo(
     event.address,
-    event.params.token,
     beanstalk.lastSeason,
     withdrawnBDV,
-    event.params.amount,
+    removeDepositFromSiloAsset(
+      event.address,
+      event.params.token,
+      beanstalk.lastSeason,
+      withdrawnBDV,
+      event.params.amount,
+      event.block.timestamp,
+      event.block.number
+    ),
     event.block.timestamp,
     event.block.number
   );
 
   // Update farmer totals
-  removeDepositFromSilo(event.params.account, beanstalk.lastSeason, withdrawnBDV, event.block.timestamp, event.block.number);
-  removeDepositFromSiloAsset(
+  removeDepositFromSilo(
     event.params.account,
-    event.params.token,
     beanstalk.lastSeason,
     withdrawnBDV,
-    event.params.amount,
+    removeDepositFromSiloAsset(
+      event.params.account,
+      event.params.token,
+      beanstalk.lastSeason,
+      withdrawnBDV,
+      event.params.amount,
+      event.block.timestamp,
+      event.block.number
+    ),
     event.block.timestamp,
     event.block.number
   );
@@ -164,25 +197,37 @@ export function handleRemoveDeposits(event: RemoveDeposits): void {
     deposit.save();
 
     // Update protocol totals
-    removeDepositFromSilo(event.address, beanstalk.lastSeason, withdrawnBDV, event.block.timestamp, event.block.number);
-    removeDepositFromSiloAsset(
+    removeDepositFromSilo(
       event.address,
-      event.params.token,
       beanstalk.lastSeason,
       withdrawnBDV,
-      event.params.amounts[i],
+      removeDepositFromSiloAsset(
+        event.address,
+        event.params.token,
+        beanstalk.lastSeason,
+        withdrawnBDV,
+        event.params.amounts[i],
+        event.block.timestamp,
+        event.block.number
+      ),
       event.block.timestamp,
       event.block.number
     );
 
     // Update farmer totals
-    removeDepositFromSilo(event.params.account, beanstalk.lastSeason, withdrawnBDV, event.block.timestamp, event.block.number);
-    removeDepositFromSiloAsset(
+    removeDepositFromSilo(
       event.params.account,
-      event.params.token,
       beanstalk.lastSeason,
       withdrawnBDV,
-      event.params.amounts[i],
+      removeDepositFromSiloAsset(
+        event.params.account,
+        event.params.token,
+        beanstalk.lastSeason,
+        withdrawnBDV,
+        event.params.amounts[i],
+        event.block.timestamp,
+        event.block.number
+      ),
       event.block.timestamp,
       event.block.number
     );
@@ -223,13 +268,19 @@ export function handleAddDeposit_V3(event: AddDeposit_V3): void {
   let beanstalk = loadBeanstalk(event.address);
 
   // Update overall silo totals
-  addDepositToSilo(event.address, beanstalk.lastSeason, event.params.bdv, event.block.timestamp, event.block.number);
-  addDepositToSiloAsset(
+  addDepositToSilo(
     event.address,
-    event.params.token,
     beanstalk.lastSeason,
     event.params.bdv,
-    event.params.amount,
+    addDepositToSiloAsset(
+      event.address,
+      event.params.token,
+      beanstalk.lastSeason,
+      event.params.bdv,
+      event.params.amount,
+      event.block.timestamp,
+      event.block.number
+    ),
     event.block.timestamp,
     event.block.number
   );
@@ -238,13 +289,19 @@ export function handleAddDeposit_V3(event: AddDeposit_V3): void {
   loadFarmer(event.params.account);
 
   // Update farmer silo totals
-  addDepositToSilo(event.params.account, beanstalk.lastSeason, event.params.bdv, event.block.timestamp, event.block.number);
-  addDepositToSiloAsset(
+  addDepositToSilo(
     event.params.account,
-    event.params.token,
     beanstalk.lastSeason,
     event.params.bdv,
-    event.params.amount,
+    addDepositToSiloAsset(
+      event.params.account,
+      event.params.token,
+      beanstalk.lastSeason,
+      event.params.bdv,
+      event.params.amount,
+      event.block.timestamp,
+      event.block.number
+    ),
     event.block.timestamp,
     event.block.number
   );
@@ -277,25 +334,37 @@ export function handleRemoveDeposit_V3(event: RemoveDeposit_V3): void {
   deposit.save();
 
   // Update protocol totals
-  removeDepositFromSilo(event.address, beanstalk.lastSeason, event.params.bdv, event.block.timestamp, event.block.number);
-  removeDepositFromSiloAsset(
+  removeDepositFromSilo(
     event.address,
-    event.params.token,
     beanstalk.lastSeason,
     event.params.bdv,
-    event.params.amount,
+    removeDepositFromSiloAsset(
+      event.address,
+      event.params.token,
+      beanstalk.lastSeason,
+      event.params.bdv,
+      event.params.amount,
+      event.block.timestamp,
+      event.block.number
+    ),
     event.block.timestamp,
     event.block.number
   );
 
   // Update farmer totals
-  removeDepositFromSilo(event.params.account, beanstalk.lastSeason, event.params.bdv, event.block.timestamp, event.block.number);
-  removeDepositFromSiloAsset(
+  removeDepositFromSilo(
     event.params.account,
-    event.params.token,
     beanstalk.lastSeason,
     event.params.bdv,
-    event.params.amount,
+    removeDepositFromSiloAsset(
+      event.params.account,
+      event.params.token,
+      beanstalk.lastSeason,
+      event.params.bdv,
+      event.params.amount,
+      event.block.timestamp,
+      event.block.number
+    ),
     event.block.timestamp,
     event.block.number
   );
@@ -330,25 +399,37 @@ export function handleRemoveDeposits_V3(event: RemoveDeposits_V3): void {
     deposit.save();
 
     // Update protocol totals
-    removeDepositFromSilo(event.address, beanstalk.lastSeason, event.params.bdvs[i], event.block.timestamp, event.block.number);
-    removeDepositFromSiloAsset(
+    removeDepositFromSilo(
       event.address,
-      event.params.token,
       beanstalk.lastSeason,
       event.params.bdvs[i],
-      event.params.amounts[i],
+      removeDepositFromSiloAsset(
+        event.address,
+        event.params.token,
+        beanstalk.lastSeason,
+        event.params.bdvs[i],
+        event.params.amounts[i],
+        event.block.timestamp,
+        event.block.number
+      ),
       event.block.timestamp,
       event.block.number
     );
 
     // Update farmer totals
-    removeDepositFromSilo(event.params.account, beanstalk.lastSeason, event.params.bdvs[i], event.block.timestamp, event.block.number);
-    removeDepositFromSiloAsset(
+    removeDepositFromSilo(
       event.params.account,
-      event.params.token,
       beanstalk.lastSeason,
       event.params.bdvs[i],
-      event.params.amounts[i],
+      removeDepositFromSiloAsset(
+        event.params.account,
+        event.params.token,
+        beanstalk.lastSeason,
+        event.params.bdvs[i],
+        event.params.amounts[i],
+        event.block.timestamp,
+        event.block.number
+      ),
       event.block.timestamp,
       event.block.number
     );
@@ -520,42 +601,62 @@ export function handleTransferDepositsCall(call: TransferDepositsCall): void {
   beanstalk.save();
 }
 
-function addDepositToSilo(account: Address, season: i32, bdv: BigInt, timestamp: BigInt, blockNumber: BigInt): void {
+function addDepositToSilo(
+  account: Address,
+  season: i32,
+  bdv: BigInt,
+  grownStalkPerBDV: BigInt,
+  timestamp: BigInt,
+  blockNumber: BigInt
+): void {
   let silo = loadSilo(account);
   let siloHourly = loadSiloHourlySnapshot(account, season, timestamp);
   let siloDaily = loadSiloDailySnapshot(account, timestamp);
 
   silo.depositedBDV = silo.depositedBDV.plus(bdv);
+  silo.grownStalkPerBdvPerSeason = silo.grownStalkPerBdvPerSeason.plus(grownStalkPerBDV);
   silo.save();
 
   siloHourly.deltaDepositedBDV = siloHourly.deltaDepositedBDV.plus(bdv);
   siloHourly.depositedBDV = silo.depositedBDV;
+  siloHourly.grownStalkPerBdvPerSeason = silo.grownStalkPerBdvPerSeason;
   siloHourly.updatedAt = timestamp;
   siloHourly.save();
 
   siloDaily.season = season;
   siloDaily.deltaDepositedBDV = siloDaily.deltaDepositedBDV.plus(bdv);
   siloDaily.depositedBDV = silo.depositedBDV;
+  siloDaily.grownStalkPerBdvPerSeason = silo.grownStalkPerBdvPerSeason;
   siloDaily.updatedAt = timestamp;
   siloDaily.save();
 }
 
-function removeDepositFromSilo(account: Address, season: i32, bdv: BigInt, timestamp: BigInt, blockNumber: BigInt): void {
+function removeDepositFromSilo(
+  account: Address,
+  season: i32,
+  bdv: BigInt,
+  grownStalkPerBDV: BigInt,
+  timestamp: BigInt,
+  blockNumber: BigInt
+): void {
   let silo = loadSilo(account);
   let siloHourly = loadSiloHourlySnapshot(account, season, timestamp);
   let siloDaily = loadSiloDailySnapshot(account, timestamp);
 
   silo.depositedBDV = silo.depositedBDV.minus(bdv);
+  silo.grownStalkPerBdvPerSeason = silo.grownStalkPerBdvPerSeason.minus(grownStalkPerBDV);
   silo.save();
 
   siloHourly.deltaDepositedBDV = siloHourly.deltaDepositedBDV.minus(bdv);
   siloHourly.depositedBDV = silo.depositedBDV;
+  siloHourly.grownStalkPerBdvPerSeason = silo.grownStalkPerBdvPerSeason;
   siloHourly.updatedAt = timestamp;
   siloHourly.save();
 
   siloDaily.season = season;
   siloDaily.deltaDepositedBDV = siloDaily.deltaDepositedBDV.minus(bdv);
   siloDaily.depositedBDV = silo.depositedBDV;
+  siloDaily.grownStalkPerBdvPerSeason = silo.grownStalkPerBdvPerSeason;
   siloDaily.updatedAt = timestamp;
   siloDaily.save();
 }
@@ -568,10 +669,13 @@ export function addDepositToSiloAsset(
   amount: BigInt,
   timestamp: BigInt,
   blockNumber: BigInt
-): void {
+): BigInt {
   let asset = loadSiloAsset(account, token);
   let assetHourly = loadSiloAssetHourlySnapshot(account, token, season, timestamp);
   let assetDaily = loadSiloAssetDailySnapshot(account, token, timestamp);
+
+  let tokenSettings = loadWhitelistTokenSetting(token);
+  let newGrownStalk = bdv.times(tokenSettings.stalkEarnedPerSeason).div(BigInt.fromI32(1000000));
 
   asset.depositedBDV = asset.depositedBDV.plus(bdv);
   asset.depositedAmount = asset.depositedAmount.plus(amount);
@@ -591,6 +695,8 @@ export function addDepositToSiloAsset(
   assetDaily.depositedAmount = asset.depositedAmount;
   assetDaily.updatedAt = timestamp;
   assetDaily.save();
+
+  return newGrownStalk;
 }
 
 function removeDepositFromSiloAsset(
@@ -601,10 +707,13 @@ function removeDepositFromSiloAsset(
   amount: BigInt,
   timestamp: BigInt,
   blockNumber: BigInt
-): void {
+): BigInt {
   let asset = loadSiloAsset(account, token);
   let assetHourly = loadSiloAssetHourlySnapshot(account, token, season, timestamp);
   let assetDaily = loadSiloAssetDailySnapshot(account, token, timestamp);
+
+  let tokenSettings = loadWhitelistTokenSetting(token);
+  let removedGrownStalk = bdv.times(tokenSettings.stalkEarnedPerSeason).div(BigInt.fromI32(1000000));
 
   asset.depositedBDV = asset.depositedBDV.minus(bdv);
   asset.depositedAmount = asset.depositedAmount.minus(amount);
@@ -624,6 +733,8 @@ function removeDepositFromSiloAsset(
   assetDaily.depositedAmount = asset.depositedAmount;
   assetDaily.updatedAt = timestamp;
   assetDaily.save();
+
+  return removedGrownStalk;
 }
 
 function addWithdrawToSiloAsset(
@@ -777,11 +888,20 @@ export function handleWhitelistToken(event: WhitelistToken): void {
   if (currentList.length == 0) {
     // Push unripe bean and unripe bean:3crv upon the initial whitelisting.
     currentList.push(UNRIPE_BEAN.toHexString());
+    loadWhitelistTokenSetting(UNRIPE_BEAN);
+
     currentList.push(UNRIPE_BEAN_3CRV.toHexString());
+    loadWhitelistTokenSetting(UNRIPE_BEAN_3CRV);
   }
   currentList.push(event.params.token.toHexString());
   silo.whitelistedTokens = currentList;
   silo.save();
+
+  let setting = loadWhitelistTokenSetting(event.params.token);
+  setting.selector = event.params.selector;
+  setting.stalkIssuedPerBdv = BigInt.fromString("10000000000");
+  setting.stalkEarnedPerSeason = event.params.stalk.times(BigInt.fromI32(1000000));
+  setting.save();
 
   let id = "whitelistToken-" + event.transaction.hash.toHexString() + "-" + event.logIndex.toString();
   let rawEvent = new WhitelistTokenEntity(id);
@@ -797,17 +917,69 @@ export function handleWhitelistToken(event: WhitelistToken): void {
   rawEvent.save();
 }
 
+export function handleUpdatedStalkPerBdvPerSeason(event: UpdatedStalkPerBdvPerSeason): void {
+  let siloSettings = loadWhitelistTokenSetting(event.params.token);
+
+  siloSettings.milestoneSeason = event.params.season.toI32();
+  siloSettings.stalkEarnedPerSeason = event.params.stalkEarnedPerSeason;
+  siloSettings.updatedAt = event.block.timestamp;
+  siloSettings.save();
+
+  /// Capture deltas due to new stalk amount.
+
+  let beanstalk = loadBeanstalk(BEANSTALK);
+  let beanstalkSilo = loadSilo(BEANSTALK);
+
+  // Update protocol level metrics
+  let newGrownStalkAmount = ZERO_BI;
+
+  for (let i = 0; i < beanstalkSilo.whitelistedTokens.length; i++) {
+    let asset = loadSiloAsset(BEANSTALK, Address.fromString(beanstalkSilo.whitelistedTokens[i]));
+    let assetSettings = loadWhitelistTokenSetting(Address.fromString(beanstalkSilo.whitelistedTokens[i]));
+
+    newGrownStalkAmount = newGrownStalkAmount.plus(
+      asset.depositedBDV.times(assetSettings.stalkEarnedPerSeason).div(BigInt.fromI32(1000000))
+    );
+  }
+
+  beanstalkSilo.grownStalkPerBdvPerSeason = newGrownStalkAmount;
+  beanstalkSilo.save();
+
+  // Update farmer level metrics
+
+  for (let i = 0; i < beanstalk.activeFarmers.length; i++) {
+    newGrownStalkAmount = ZERO_BI;
+
+    let account = Address.fromString(beanstalk.activeFarmers[i]);
+    let farmerSilo = loadSilo(account);
+
+    for (let i = 0; i < beanstalkSilo.whitelistedTokens.length; i++) {
+      let asset = loadSiloAsset(account, Address.fromString(beanstalkSilo.whitelistedTokens[i]));
+      let assetSettings = loadWhitelistTokenSetting(Address.fromString(beanstalkSilo.whitelistedTokens[i]));
+
+      newGrownStalkAmount = newGrownStalkAmount.plus(
+        asset.depositedBDV.times(assetSettings.stalkEarnedPerSeason).div(BigInt.fromI32(1000000))
+      );
+    }
+
+    farmerSilo.grownStalkPerBdvPerSeason = newGrownStalkAmount;
+    farmerSilo.save();
+  }
+}
+
 export function handleWhitelistToken_V3(event: WhitelistToken_V3): void {
   let silo = loadSilo(event.address);
   let currentList = silo.whitelistedTokens;
-  if (currentList.length == 0) {
-    // Push unripe bean and unripe bean:3crv upon the initial whitelisting.
-    currentList.push(UNRIPE_BEAN.toHexString());
-    currentList.push(UNRIPE_BEAN_3CRV.toHexString());
-  }
+
   currentList.push(event.params.token.toHexString());
   silo.whitelistedTokens = currentList;
   silo.save();
+
+  let setting = loadWhitelistTokenSetting(event.params.token);
+  setting.selector = event.params.selector;
+  setting.stalkIssuedPerBdv = event.params.stalk.times(BigInt.fromI32(1_000_000));
+  setting.stalkEarnedPerSeason = event.params.stalkEarnedPerSeason;
+  setting.save();
 
   let id = "whitelistToken-" + event.transaction.hash.toHexString() + "-" + event.logIndex.toString();
   let rawEvent = new WhitelistTokenEntity(id);

@@ -6,7 +6,8 @@ query Proposals($space_in: [String!]!, $state: String) {
       state: $state
     },
     orderBy: "created",
-    orderDirection: desc
+    orderDirection: desc,
+    first: 1000
   ) {
     ...Proposal
   }

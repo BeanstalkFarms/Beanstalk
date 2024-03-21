@@ -251,6 +251,7 @@ describe("Silo Token", function () {
   describe("withdraw", function () {
     beforeEach(async function () {
       await this.silo.connect(user).deposit(this.siloToken.address, '1000', EXTERNAL);
+      await mineUpTo((await ethers.provider.getBlockNumber()) + 11 + 1);
     })
     describe('reverts', function () {
       it('reverts if amount is 0', async function () {

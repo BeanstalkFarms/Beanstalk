@@ -208,7 +208,7 @@ export default function ClaimBeanDrawerContent<T>({
         <Card {...sharedCardProps}>
           <Stack gap={1} p={1}>
             <Typography variant="body1" color="text.tertiary">
-              Amount of Claimable Beans to use in this transaction
+              Amount of Claimable Beans to use in this transaction:
             </Typography>
             <TokenQuoteProviderWithParams<T>
               name={name}

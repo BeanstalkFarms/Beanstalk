@@ -11,5 +11,8 @@ export default defineConfig({
         replacement: path.resolve(__dirname, "src")
       }
     ]
+  },
+  define: {
+    global: {} // fix "global is not defined" error for Wallet Connect
   }
 });

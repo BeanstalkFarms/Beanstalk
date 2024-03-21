@@ -21,6 +21,11 @@ const ProposalContent: FC<{
   quorum: ReturnType<typeof useProposalBlockData>;
 }> = (props) => {
   const pctOfQuorum = props.quorum?.data.pctOfQuorum;
+  const body = (props.proposal?.body || '').replaceAll(
+    'ipfs://',
+    'https://cf-ipfs.com/ipfs/'
+  );
+
   return (
     <Card sx={{ p: 2 }}>
       <Row justifyContent="space-between">
@@ -32,7 +37,7 @@ const ProposalContent: FC<{
             showLink
           />
         </Stack>
-        {pctOfQuorum && (
+        {pctOfQuorum && pctOfQuorum > 0 && (
           <Tooltip
             title={`${props.quorum.data.tag} is ~${(pctOfQuorum * 100).toFixed(
               1
@@ -65,7 +70,7 @@ const ProposalContent: FC<{
         )}
       </Row>
       <Box maxWidth="100%" mt={1}>
-        <MarkdownWrapper>{props.proposal?.body}</MarkdownWrapper>
+        <MarkdownWrapper>{body}</MarkdownWrapper>
       </Box>
     </Card>
   );

@@ -252,7 +252,7 @@ const TokenInput: FC<TokenInputProps & FieldProps> = ({
         }
       }
     },
-    [form, field.name, field.value, onChange, clamp]
+    [form, field.name, field.value, onChange, clamp, balance]
   );
 
   //

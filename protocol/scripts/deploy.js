@@ -106,7 +106,7 @@ async function main(scriptName, verbose = true, mock = false, reset = true) {
 
   // A list of public libraries that need to be deployed separately.
   const libraryNames = [
-    'LibGauge', 'LibIncentive', 'LibConvert', 'LibLockedUnderlying', 'LibCurveMinting', 'LibWellMinting'
+    'LibGauge', 'LibIncentive', 'LibConvert', 'LibLockedUnderlying', 'LibCurveMinting', 'LibWellMinting', 'LibGerminate'
   ]
 
   // A mapping of facet to public library names that will be linked to i4t.
@@ -116,6 +116,7 @@ async function main(scriptName, verbose = true, mock = false, reset = true) {
       'LibIncentive',
       'LibLockedUnderlying',
       'LibWellMinting',
+      'LibGerminate'
     ],
     'MockSeasonFacet': [
       'LibGauge',
@@ -123,6 +124,7 @@ async function main(scriptName, verbose = true, mock = false, reset = true) {
       'LibLockedUnderlying',
       'LibCurveMinting',
       'LibWellMinting',
+      'LibGerminate'
     ],
     'SeasonGettersFacet': [
       'LibLockedUnderlying',

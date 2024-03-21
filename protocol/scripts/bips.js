@@ -221,7 +221,7 @@ async function bipSeedGauge(mock = true, account = undefined, verbose = true) {
     initFacetName: "InitBipSeedGauge",
     selectorsToRemove: [],
     libraryNames: [
-      'LibGauge', 'LibConvert', 'LibLockedUnderlying', 'LibIncentive', 'LibWellMinting'
+      'LibGauge', 'LibConvert', 'LibLockedUnderlying', 'LibIncentive', 'LibWellMinting', 'LibGerminate'
     ],
     facetLibraries: {
       'SeasonFacet': [
@@ -229,6 +229,7 @@ async function bipSeedGauge(mock = true, account = undefined, verbose = true) {
         'LibIncentive',
         'LibLockedUnderlying',
         'LibWellMinting',
+        'LibGerminate'
       ],
       'SeasonGettersFacet': [
         'LibLockedUnderlying',
@@ -277,6 +278,7 @@ async function bipMigrateUnripeBeanEthToBeanSteth(mock = true, account = undefin
       'LibConvert',
       'LibLockedUnderlying',
       'LibWellMinting',
+      'LibGerminate'
     ],
     facetLibraries: {
       'ConvertFacet': [
@@ -290,6 +292,7 @@ async function bipMigrateUnripeBeanEthToBeanSteth(mock = true, account = undefin
         'LibIncentive',
         'LibLockedUnderlying',
         'LibWellMinting',
+        'LibGerminate'
       ],
       'SeasonGettersFacet': [
         'LibLockedUnderlying',
