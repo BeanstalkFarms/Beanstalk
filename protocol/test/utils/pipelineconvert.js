@@ -318,7 +318,7 @@ const draftConvertBeanEthWellToUDSCViaUniswapThenToBeanVia3Crv = async (amountOf
 
     // approve USDC
     pipe1 = [USDC, approveUSDC, noData]
-
+ 
     // remove Liq
     pipe2 = [this.well.address, removeLiquidity, noData]
 
@@ -347,17 +347,18 @@ const draftConvertBeanEthWellToUDSCViaUniswapThenToBeanVia3Crv = async (amountOf
     // exchange USDC -> BEAN
     pipe4 = [this.curveBean3crvPool.address, exchangeCurve, pipelineData2]
 
-    // get balance of USDC
+    beanPipe = [BEAN, this.bean.interface.encodeFunctionData("balanceOf", [PIPELINE]), noData]
+    console.log('beanPipe PIPELINE: ', PIPELINE);
+    console.log('beanPipe: ', beanPipe);
     
     // pipeline construction. Beanstalk has it's own pipeline function, 2 params, the pipe calls themselves and second is value (if eth amount needed).
     advancedFarm1 = await this.beanstalk.interface.encodeFunctionData(
         "advancedPipe",
         [
-            [pipe0, pipe1, pipe2, pipe3, usdcPipe, pipe4],
+            [pipe0, pipe1, pipe2, pipe3, usdcPipe, pipe4, beanPipe],
             0
         ]
     )
-    // await console.log('advancedFarm1: ', advancedFarm1)
 
     output = [
         // [advancedFarm0, noData], // transfer BEAN/WETH into pipeline

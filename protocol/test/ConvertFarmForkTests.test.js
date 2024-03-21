@@ -183,13 +183,13 @@ describe('Farm Convert', function () {
 
 
     //test that does a tricrypto and 3crv swap
-    it.only('does a tricrypto and 3crv swap', async function () {
+    it('does a tricrypto and 3crv swap', async function () {
 
       //first deposit 200 bean into bean:eth well
       await this.bean.connect(user).approve(this.well.address, ethers.constants.MaxUint256);
       //get amount out that we should recieve for depositing 200 beans
       const wellAmountOut = await this.well.getAddLiquidityOut([toBean('200'), to18("0")]);
-      console.log('wellAmountOut: ', wellAmountOut);
+
 
       await this.well.connect(user).addLiquidity([toBean('200'), to18("0")], ethers.constants.Zero, user.address, ethers.constants.MaxUint256);
 
@@ -250,6 +250,11 @@ describe('Farm Convert', function () {
       const siloReceipt = await siloResult.wait();
       const depositedBdv = getBdvFromAddDepositReceipt(this.silo, siloReceipt);
       const stemTip = await this.siloGetters.stemTipForToken(this.well.address);
+
+      // advance 2 seasons so we get past germination
+      await this.season.siloSunrise(0);
+      await this.season.siloSunrise(0);
+
       let advancedFarmCalls = await draftConvertBeanEthWellToUDSCViaUniswapThenToBeanVia3Crv(wellAmountOut, 0);
       const farmData = this.farmFacet.interface.encodeFunctionData("advancedFarm", [
         advancedFarmCalls
