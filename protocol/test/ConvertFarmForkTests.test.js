@@ -35,8 +35,8 @@ const { deployPipeline, impersonatePipeline } = require('../scripts/pipeline.js'
 const { getBeanstalk } = require('../utils/contracts.js');
 
 //to get trace with hardhat tracer:
-//yarn hardhat test test/ConvertFarm.test.js --trace
-//if it errors out, need to run: `export NODE_OPTIONS="--max_old_space_size=32768"` or even higher than that
+//yarn hardhat test test/ConvertFarmForkTests.test.js --trace
+//if it errors out, need to run: `export NODE_OPTIONS="--max_old_space_size=65536"` or even higher than that
 
 //attach node debugger:
 //node --inspect-brk --unhandled-rejections=strict node_modules/.bin/hardhat test test/ConvertFarmForkTests.test.js --no-compile
@@ -75,11 +75,20 @@ describe('Farm Convert', function () {
     const beanstalkOwner = await impersonateBeanstalkOwner();
     await upgradeWithNewFacets({
       diamondAddress: BEANSTALK,
-      facetNames: ['ConvertFacet', 'MockAdminFacet'],
+      facetNames: ['ConvertFacet', 'MockAdminFacet', 'MockSeasonFacet', 'MockSiloFacet', 'SiloGettersFacet'],
       initFacetName: "InitTractor",
-      libraryNames: [ 'LibConvert' ],
+      libraryNames: [
+        'LibGauge', 'LibConvert', 'LibLockedUnderlying', 'LibCurveMinting', 'LibIncentive', 'LibGerminate'
+      ],
       facetLibraries: {
-        'ConvertFacet': [ 'LibConvert' ]
+        'ConvertFacet': [ 'LibConvert' ],
+        'MockSeasonFacet': [
+          'LibGauge', 
+          'LibIncentive',
+          'LibLockedUnderlying',
+          'LibCurveMinting',
+          'LibGerminate'
+        ],
       },
       bip: false,
       object: false,
@@ -102,6 +111,7 @@ describe('Farm Convert', function () {
     this.usdt = await ethers.getContractAt("MockToken", USDT);
     this.weth = await ethers.getContractAt("MockToken", WETH);
     this.season = await ethers.getContractAt('MockSeasonFacet', BEANSTALK);
+    this.siloGetters = await ethers.getContractAt('SiloGettersFacet', BEANSTALK);
     this.curveTricryptoPool = await ethers.getContractAt(curveABI, TRI_CRYPTO_POOL);
     this.curveBean3crvPool = await ethers.getContractAt(curveABI, BEAN_3_CURVE);
     await this.admin.mintBeans(ownerAddress, to18('1000000000'))
@@ -134,20 +144,6 @@ describe('Farm Convert', function () {
     await this.admin.mintBeans(userAddress, toBean('1000000000'));
     await this.admin.mintBeans(user2Address, toBean('1000000000'));
 
-    // const beanstalkOwner = await impersonateBeanstalkOwner();
-    // await upgradeWithNewFacets({
-    //   diamondAddress: BEANSTALK,
-    //   facetNames: ['ConvertFacet'],
-    //   libraryNames: [ 'LibConvert' ],
-    //   facetLibraries: {
-    //     'ConvertFacet': [ 'LibConvert' ]
-    //   },
-    //   bip: false,
-    //   object: false,
-    //   verbose: false,
-    //   account: beanstalkOwner
-    // });
-
     this.pipeline = await impersonatePipeline();
 
     await initContracts(); //deploys drafter contract
@@ -179,7 +175,7 @@ describe('Farm Convert', function () {
           }
         } catch (e) {
           //for some reason it fails to parse one of the events, 
-          console.log('error parsing event: ', e);
+          // console.log('error parsing event: ', e);
         }
       }
       return depositedBdv;
@@ -187,12 +183,13 @@ describe('Farm Convert', function () {
 
 
     //test that does a tricrypto and 3crv swap
-    it('does a tricrypto and 3crv swap', async function () {
+    it.only('does a tricrypto and 3crv swap', async function () {
 
       //first deposit 200 bean into bean:eth well
       await this.bean.connect(user).approve(this.well.address, ethers.constants.MaxUint256);
       //get amount out that we should recieve for depositing 200 beans
       const wellAmountOut = await this.well.getAddLiquidityOut([toBean('200'), to18("0")]);
+      console.log('wellAmountOut: ', wellAmountOut);
 
       await this.well.connect(user).addLiquidity([toBean('200'), to18("0")], ethers.constants.Zero, user.address, ethers.constants.MaxUint256);
 
@@ -205,7 +202,19 @@ describe('Farm Convert', function () {
       // get event logs and see how much the actual bdv was
       const siloReceipt = await siloResult.wait();
       const depositedBdv = getBdvFromAddDepositReceipt(this.silo, siloReceipt);
-      const stemTip = await this.silo.stemTipForToken(this.well.address);
+      const stemTip = await this.siloGetters.stemTipForToken(this.well.address);
+
+
+      // advance 2 seasons so we get past germination
+      await this.season.siloSunrise(0);
+      await this.season.siloSunrise(0);
+
+      //get grownStalk for this deposit
+      const grownStalk = await this.siloGetters.grownStalkForDeposit(user.address, this.well.address, stemTip);
+      console.log('initial deposit grownStalk: ', grownStalk);
+      const [newStemTip, ] = await this.siloGetters.calculateStemForTokenFromGrownStalk(this.bean.address, grownStalk, beanAmountOut);
+
+
       let advancedFarmCalls = await draftConvertBeanEthWellToUDSTViaCurveTricryptoThenToBeanVia3Crv(wellAmountOut, 0);
       const farmData = this.farmFacet.interface.encodeFunctionData("advancedFarm", [
         advancedFarmCalls
@@ -214,10 +223,12 @@ describe('Farm Convert', function () {
 
       this.result = await this.convert.connect(user).pipelineConvert(this.well.address, [stemTip], [wellAmountOut], wellAmountOut, this.bean.address, farmData);
 
-      // verify events
-      // await expect(this.result).to.emit(this.convert, 'Convert').withArgs(user.address, this.well.address, this.bean.address, wellAmountOut, beanAmountOut);
+      // the 200204225 is the amount of beans out in this particular case, would be great to use curve functions to actually get these values, but for now it looks correct (a hardhat --trace helps confirm things look good)
+      await expect(this.result).to.emit(this.convert, 'Convert').withArgs(user.address, this.well.address, this.bean.address, '1971707291118118111', '200204225');
+      
       await expect(this.result).to.emit(this.silo, 'RemoveDeposits').withArgs(user.address, this.well.address, [stemTip], [wellAmountOut], wellAmountOut, [depositedBdv]);
-      // await expect(this.result).to.emit(this.silo, 'AddDeposit').withArgs(user.address, this.bean.address, stemTip, beanAmountOut, beanAmountOut);
+
+      await expect(this.result).to.emit(this.silo, 'AddDeposit').withArgs(user.address, this.bean.address, '10017011608', '200204225', '200204225');
     });
 
     it('does a uniswap and 3crv swap', async function () {
@@ -238,7 +249,7 @@ describe('Farm Convert', function () {
       // get event logs and see how much the actual bdv was
       const siloReceipt = await siloResult.wait();
       const depositedBdv = getBdvFromAddDepositReceipt(this.silo, siloReceipt);
-      const stemTip = await this.silo.stemTipForToken(this.well.address);
+      const stemTip = await this.siloGetters.stemTipForToken(this.well.address);
       let advancedFarmCalls = await draftConvertBeanEthWellToUDSCViaUniswapThenToBeanVia3Crv(wellAmountOut, 0);
       const farmData = this.farmFacet.interface.encodeFunctionData("advancedFarm", [
         advancedFarmCalls

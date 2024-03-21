@@ -151,7 +151,7 @@ const draftConvertBeanEthWellToUDSTViaCurveTricryptoThenToBeanVia3Crv = async (a
     this.well = await ethers.getContractAt("IWell", BEAN_ETH_WELL);
     this.bean = await ethers.getContractAt('MockToken', BEAN);
     this.usdt = await ethers.getContractAt('MockToken', USDT);
-    this.weth = await ethers.getContractAt('IWETH', WETH)
+    this.weth = await ethers.getContractAt('contracts/interfaces/IWETH.sol:IWETH', WETH);
     this.curveTricryptoPool = await ethers.getContractAt(curveABI, TRI_CRYPTO_POOL);
     this.curveBean3crvPool = await ethers.getContractAt(curveABI, BEAN_3_CURVE);
     this.pipeline = await ethers.getContractAt("Pipeline", PIPELINE);
@@ -217,38 +217,41 @@ const draftConvertBeanEthWellToUDSTViaCurveTricryptoThenToBeanVia3Crv = async (a
     // put into 2nd (3rd) param
     // SLOT_SIZE (32) is param to take it from (start of output data from previous call starts 32 bytes in)
     // SELECTOR_SIZE+SLOT_SIZE*3 is 100 is 4+32*3. First 4 bytes are selector, then each param is 32 bytes.
-    pipelineData = encodeAdvancedData(1, 0, [2, SLOT_SIZE, SELECTOR_SIZE+SLOT_SIZE*3])
+    wethToUsdtPipelineData = encodeAdvancedData(1, 0, [2, SLOT_SIZE, SELECTOR_SIZE+SLOT_SIZE*3])
 
     // exchange WETH -> USDT
-    pipe3 = [this.curveTricryptoPool.address, selector2, pipelineData]
+    pipe3 = [this.curveTricryptoPool.address, selector2, wethToUsdtPipelineData]
 
     // get balance of USDT
     usdtPipe = [USDT, this.usdt.interface.encodeFunctionData("balanceOf", [PIPELINE]), noData]
 
     // from the 5th call, take 0th (1st) param, 
     // put into 2nd (3rd) param
-    pipelineData2 = encodeAdvancedData(1, 0, [4, SLOT_SIZE, SELECTOR_SIZE+SLOT_SIZE*3])
+    usdtToBeanPipelineData = encodeAdvancedData(1, 0, [4, SLOT_SIZE, SELECTOR_SIZE+SLOT_SIZE*3])
 
     // exchange USDT -> BEAN
-    pipe4 = [this.curveBean3crvPool.address, selector3, pipelineData2]
+    pipe4 = [this.curveBean3crvPool.address, selector3, usdtToBeanPipelineData]
 
-    // get balance of USDT
+    // get balance of BEAN in pipeline
+    beanPipe = [BEAN, this.bean.interface.encodeFunctionData("balanceOf", [PIPELINE]), noData]
+    console.log('beanPipe PIPELINE: ', PIPELINE);
+    console.log('beanPipe: ', beanPipe);
     
     // pipeline construction. Beanstalk has it's own pipeline function, 2 params, the pipe calls themselves and second is value (if eth amount needed).
     advancedFarm1 = await this.beanstalk.interface.encodeFunctionData(
         "advancedPipe",
         [
-            [pipe0, pipe1, pipe2, pipe3, usdtPipe, pipe4],
+            [pipe0, pipe1, pipe2, pipe3, usdtPipe, pipe4, beanPipe],
             0
         ]
     )
-    await console.log('advancedFarm1: ', advancedFarm1)
+    // await console.log('advancedFarm1: ', advancedFarm1)
 
     output = [
         // [advancedFarm0, noData], // transfer BEAN/WETH into pipeline
         [advancedFarm1, noData] // pipeline call
     ]
-    await console.log('advancedFarmCalls output: ', output)
+    // await console.log('advancedFarmCalls output: ', output)
     return output;
   };
 
@@ -258,7 +261,7 @@ const draftConvertBeanEthWellToUDSCViaUniswapThenToBeanVia3Crv = async (amountOf
     this.well = await ethers.getContractAt("IWell", BEAN_ETH_WELL);
     this.bean = await ethers.getContractAt('MockToken', BEAN);
     this.usdc = await ethers.getContractAt('MockToken', USDC);
-    this.weth = await ethers.getContractAt('IWETH', WETH)
+    this.weth = await ethers.getContractAt('contracts/interfaces/IWETH.sol:IWETH', WETH);
     this.uniswapRouter = await ethers.getContractAt(uniswapABI, UNISWAP_ROUTER);
     this.curveBean3crvPool = await ethers.getContractAt(curveABI, BEAN_3_CURVE);
     this.pipeline = await ethers.getContractAt("Pipeline", PIPELINE);
@@ -338,6 +341,7 @@ const draftConvertBeanEthWellToUDSCViaUniswapThenToBeanVia3Crv = async (amountOf
     // type 1
     // copy from index zero param
     // from call result at index 4
+    // paste to amountIn index 3 (SLOT_SIZE*3)
     pipelineData2 = encodeAdvancedData(1, 0, [4, SLOT_SIZE, SELECTOR_SIZE+SLOT_SIZE*3])
 
     // exchange USDC -> BEAN
@@ -353,13 +357,13 @@ const draftConvertBeanEthWellToUDSCViaUniswapThenToBeanVia3Crv = async (amountOf
             0
         ]
     )
-    await console.log('advancedFarm1: ', advancedFarm1)
+    // await console.log('advancedFarm1: ', advancedFarm1)
 
     output = [
         // [advancedFarm0, noData], // transfer BEAN/WETH into pipeline
         [advancedFarm1, noData] // pipeline call
     ]
-    await console.log('advancedFarmCalls output: ', output)
+    // await console.log('advancedFarmCalls output: ', output)
     return output;
   };
 

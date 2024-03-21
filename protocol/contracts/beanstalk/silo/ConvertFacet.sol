@@ -359,13 +359,17 @@ contract ConvertFacet is ReentrancyGuard {
             results[i] = LibFarm._advancedFarmMem(calls[i], results);
 
             //log result
-            // console.log('results[i]: ', i);
-            // console.logBytes(results[i]);
+            console.log('results[i]: ', i);
+            console.logBytes(results[i]);
         }
         // assume last value is the amountOut
         // todo: for full functionality, we should instead have the user specify the index of the amountOut
         // in the farmCallResult.
-        amountOut = abi.decode(LibBytes.sliceFrom(results[results.length-1], 64), (uint256));
+        // amountOut = abi.decode(LibBytes.sliceFrom(results[results.length-1], 64), (uint256));
+
+        // grab very last 32 bytes
+        amountOut = abi.decode(LibBytes.sliceFrom(results[results.length-1], results[results.length-1].length-32), (uint256));
+        console.log('executeAdvancedFarmCalls amountOut: ', amountOut);
     }
 
 
@@ -594,8 +598,8 @@ contract ConvertFacet is ReentrancyGuard {
 
             while ((i < stems.length) && (a.active.tokens < maxTokens)) {
 
-                console.log('i: ', i);
-                console.log('amounts[i]', amounts[i]);
+                console.log('_withdrawTokens i: ', i);
+                console.log('_withdrawTokens amounts[i]', amounts[i]);
 
                 // skip any stems that are germinating, due to the ability to 
                 // circumvent the germination process.
@@ -604,6 +608,9 @@ contract ConvertFacet is ReentrancyGuard {
                     console.log('this stuff was still germinating');
                     continue;
                 }
+
+                console.log('_withdrawTokens stems[i]: ');
+                console.logInt(stems[i]);
 
                 if (a.active.tokens.add(amounts[i]) >= maxTokens) amounts[i] = maxTokens.sub(a.active.tokens);
                 a.bdvsRemoved[i] = LibTokenSilo.removeDepositFromAccount(
@@ -781,6 +788,9 @@ contract ConvertFacet is ReentrancyGuard {
         uint256[] memory inputAmounts
     ) internal {
 
+        console.log('_depositTokensForConvertMultiCrate amount: ', amount);
+        console.log('_depositTokensForConvertMultiCrate bdvs.length: ', bdvs.length);
+
         MultiCrateDepositData memory mcdd;
 
         mcdd.amountPerBdv = amount.div(LibTokenSilo.beanDenominatedValue(outputToken, amount));
@@ -793,7 +803,7 @@ contract ConvertFacet is ReentrancyGuard {
             // uint256 bdv = bdvs[i];
             require( bdvs[i] > 0 && amount > 0, "Convert: BDV or amount is 0.");
             mcdd.crateAmount = bdvs[i].mul(mcdd.amountPerBdv);
-            console.log('crateAmount: ', mcdd.crateAmount);
+            console.log('_depositTokensForConvertMultiCrate crateAmount: ', mcdd.crateAmount);
             mcdd.totalAmount = mcdd.totalAmount.add(mcdd.crateAmount);
 
             //if we're on the last crate, deposit the rest of the amount
@@ -802,7 +812,8 @@ contract ConvertFacet is ReentrancyGuard {
             } else if (i == bdvs.length - 1) {
                 mcdd.crateAmount = amount; //if there's only one crate, make sure to deposit the full amount
             }
-                console.log('final mcdd.crateAmount:  ', mcdd.crateAmount);
+            
+            console.log('_depositTokensForConvertMultiCrate final mcdd.crateAmount:  ', mcdd.crateAmount);
 
             // because we're calculating a new token amount, the bdv will not be exactly the same as what we withdrew,
             // so we need to make sure we calculate what the actual deposited BDV is.
