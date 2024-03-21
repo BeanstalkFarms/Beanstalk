@@ -1,59 +1,56 @@
-/**
- * SPDX-License-Identifier: MIT
- **/
+// SPDX-License-Identifier: MIT
 pragma solidity =0.7.6;
 pragma abicoder v2;
-
 
 import "forge-std/Test.sol";
 import "./Strings.sol";
 
-import {Utils} from "test/foundry/utils/Utils.sol";
+import { Utils } from "test/foundry/utils/Utils.sol";
 
 // Diamond setup
-import {Diamond} from "~/beanstalk/Diamond.sol";
-import {IDiamondCut} from "~/interfaces/IDiamondCut.sol";
-import {MockInitDiamond} from "~/mocks/MockInitDiamond.sol";
+import { Diamond } from "~/beanstalk/Diamond.sol";
+import { IDiamondCut } from "~/interfaces/IDiamondCut.sol";
+import { MockInitDiamond } from "~/mocks/MockInitDiamond.sol";
 
 /// Modules
 // Diamond
-import {DiamondCutFacet} from "~/beanstalk/diamond/DiamondCutFacet.sol";
-import {DiamondLoupeFacet} from "~/beanstalk/diamond/DiamondLoupeFacet.sol";
-import {PauseFacet} from "~/beanstalk/diamond/PauseFacet.sol";
-import {OwnershipFacet} from "~/beanstalk/diamond/OwnershipFacet.sol";
+import { DiamondCutFacet } from "~/beanstalk/diamond/DiamondCutFacet.sol";
+import { DiamondLoupeFacet } from "~/beanstalk/diamond/DiamondLoupeFacet.sol";
+import { PauseFacet } from "~/beanstalk/diamond/PauseFacet.sol";
+import { OwnershipFacet } from "~/beanstalk/diamond/OwnershipFacet.sol";
 
 // Silo
-import {MockSiloFacet} from "~/mocks/mockFacets/MockSiloFacet.sol";
-import {BDVFacet} from "~/beanstalk/silo/BDVFacet.sol";
-import {ConvertFacet} from "~/beanstalk/silo/ConvertFacet.sol";
-import {WhitelistFacet} from "~/beanstalk/silo/WhitelistFacet.sol";
+import { MockSiloFacet } from "~/mocks/mockFacets/MockSiloFacet.sol";
+import { BDVFacet } from "~/beanstalk/silo/BDVFacet.sol";
+import { ConvertFacet } from "~/beanstalk/silo/ConvertFacet.sol";
+import { WhitelistFacet } from "~/beanstalk/silo/WhitelistFacet.sol";
 
 // Field
-import {MockFieldFacet} from "~/mocks/mockFacets/MockFieldFacet.sol";
-import {MockFundraiserFacet} from "~/mocks/mockFacets/MockFundraiserFacet.sol";
+import { MockFieldFacet } from "~/mocks/mockFacets/MockFieldFacet.sol";
+import { MockFundraiserFacet } from "~/mocks/mockFacets/MockFundraiserFacet.sol";
 
 // Farm
-import {FarmFacet} from "~/beanstalk/farm/FarmFacet.sol";
-import {CurveFacet} from "~/beanstalk/farm/CurveFacet.sol";
-import {TokenFacet} from "~/beanstalk/farm/TokenFacet.sol";
+import { FarmFacet } from "~/beanstalk/farm/FarmFacet.sol";
+import { CurveFacet } from "~/beanstalk/farm/CurveFacet.sol";
+import { TokenFacet } from "~/beanstalk/farm/TokenFacet.sol";
 
 /// Ecosystem
-import {BeanstalkPrice} from "~/ecosystem/price/BeanstalkPrice.sol";
+import { BeanstalkPrice } from "~/ecosystem/price/BeanstalkPrice.sol";
 
 /// Mocks
-import {MockConvertFacet} from "~/mocks/mockFacets/MockConvertFacet.sol";
-import {MockMarketplaceFacet} from "~/mocks/mockFacets/MockMarketplaceFacet.sol";
-import {MockSeasonFacet} from "~/mocks/mockFacets/MockSeasonFacet.sol";
-import {MockFertilizerFacet} from "~/mocks/mockFacets/MockFertilizerFacet.sol";
-import {MockToken} from "~/mocks/MockToken.sol";
-import {MockUnripeFacet} from "~/mocks/mockFacets/MockUnripeFacet.sol";
-import {Mock3Curve} from "~/mocks/curve/Mock3Curve.sol";
-import {MockCurveFactory} from "~/mocks/curve/MockCurveFactory.sol";
-import {MockCurveZap} from "~/mocks/curve/MockCurveZap.sol";
-import {MockMeta3Curve} from "~/mocks/curve/MockMeta3Curve.sol";
-import {MockUniswapV3Pool} from "~/mocks/uniswap/MockUniswapV3Pool.sol";
-import {MockUniswapV3Factory} from "~/mocks/uniswap/MockUniswapV3Factory.sol";
-import {MockWETH} from "~/mocks/MockWETH.sol";
+import { MockConvertFacet } from "~/mocks/mockFacets/MockConvertFacet.sol";
+import { MockMarketplaceFacet } from "~/mocks/mockFacets/MockMarketplaceFacet.sol";
+import { MockSeasonFacet } from "~/mocks/mockFacets/MockSeasonFacet.sol";
+import { MockFertilizerFacet } from "~/mocks/mockFacets/MockFertilizerFacet.sol";
+import { MockToken } from "~/mocks/MockToken.sol";
+import { MockUnripeFacet } from "~/mocks/mockFacets/MockUnripeFacet.sol";
+import { Mock3Curve } from "~/mocks/curve/Mock3Curve.sol";
+import { MockCurveFactory } from "~/mocks/curve/MockCurveFactory.sol";
+import { MockCurveZap } from "~/mocks/curve/MockCurveZap.sol";
+import { MockMeta3Curve } from "~/mocks/curve/MockMeta3Curve.sol";
+import { MockUniswapV3Pool } from "~/mocks/uniswap/MockUniswapV3Pool.sol";
+import { MockUniswapV3Factory } from "~/mocks/uniswap/MockUniswapV3Factory.sol";
+import { MockWETH } from "~/mocks/MockWETH.sol";
 
 import "~/beanstalk/AppStorage.sol";
 import "~/libraries/Decimal.sol";
@@ -65,9 +62,9 @@ import "~/C.sol";
 // We deploy every facet, even if a facet is unused
 abstract contract TestHelper is Test {
     using strings for *;
-    
+
     Utils internal utils;
-  
+
     address payable[] internal users;
 
     // the cool dudes
@@ -78,7 +75,6 @@ abstract contract TestHelper is Test {
     address internal alice;
     address internal bob;
     address internal diamond;
-
 
     // season mocks
     MockSeasonFacet internal season;
@@ -135,15 +131,15 @@ abstract contract TestHelper is Test {
         cut[14] = _cut("MockMarketplaceFacet", address(new MockMarketplaceFacet()));
         console.log("Deployed mock facets.");
         deployMockTokens();
-        // create diamond    
+        // create diamond
         d = new Diamond(deployer);
         MockInitDiamond i = new MockInitDiamond();
 
         vm.prank(deployer);
         IDiamondCut(address(d)).diamondCut(
-        cut,
-        address(i), // address of contract with init() function
-        abi.encodeWithSignature("init()")
+            cut,
+            address(i), // address of contract with init() function
+            abi.encodeWithSignature("init()")
         );
 
         console.log("Initialized diamond at", address(d));
@@ -159,13 +155,13 @@ abstract contract TestHelper is Test {
         _mockUniswap();
         _mockUnripe();
         _mockWeth(); // only if "reset"
-        // _mockCurveMetapool();
-        // _mockFertilizer();
+            // _mockCurveMetapool();
+            // _mockFertilizer();
     }
 
     ///////////////////////// Utilities /////////////////////////
 
-    function _abs(int256 v) pure internal returns (uint256) {
+    function _abs(int256 v) internal pure returns (uint256) {
         return uint256(v < 0 ? 0 : v);
     }
 
@@ -176,7 +172,6 @@ abstract contract TestHelper is Test {
 
     //////////////////////// Deploy  /////////////////////////
 
-
     function _etch(string memory _file, address _address, bytes memory args) internal returns (address) {
         address codeaddress = deployCode(_file, args);
         vm.etch(_address, at(codeaddress));
@@ -184,12 +179,12 @@ abstract contract TestHelper is Test {
     }
 
     function _mockToken(string memory _tokenName, address _tokenAddress) internal returns (MockToken) {
-        return MockToken(_etch("MockToken.sol", _tokenAddress,abi.encode(_tokenName,"")));
+        return MockToken(_etch("MockToken.sol", _tokenAddress, abi.encode(_tokenName, "")));
     }
 
     function _mockWeth() internal returns (MockWETH) {
         address payable weth = 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2;
-        return MockWETH(payable(_etch("MockWETH.sol", weth, abi.encode("Wrapped Ether","WETH"))));
+        return MockWETH(payable(_etch("MockWETH.sol", weth, abi.encode("Wrapped Ether", "WETH"))));
     }
 
     function _mockPrice() internal returns (BeanstalkPrice p) {
@@ -204,41 +199,35 @@ abstract contract TestHelper is Test {
         MockToken crv3 = _mockToken("3CRV", THREE_CRV);
         MockToken(crv3).setDecimals(18);
         //
-        Mock3Curve pool3 = Mock3Curve(_etch("Mock3Curve.sol", C.curve3PoolAddress(), abi.encode(""))); // 3Curve = 3Pool
+        Mock3Curve pool3 = Mock3Curve(_etch("Mock3Curve.sol", C.curve3PoolAddress(), abi.encode("")));
+        // 3Curve = 3Pool
         Mock3Curve(pool3).set_virtual_price(1);
 
         //
         address STABLE_FACTORY = 0xB9fC157394Af804a3578134A6585C0dc9cc990d4;
         MockCurveFactory stableFactory = MockCurveFactory(_etch("MockCurveFactory.sol", STABLE_FACTORY, abi.encode("")));
 
-
         // address CRYPTO_REGISTRY = 0x8F942C20D02bEfc377D41445793068908E2250D0;
         address CURVE_REGISTRY = 0x90E00ACe148ca3b23Ac1bC8C240C2a7Dd9c2d7f5;
         _etch("MockToken.sol", CURVE_REGISTRY, abi.encode("")); // why this interface?
-        stableFactory.set_coins(C.CURVE_BEAN_METAPOOL, [
-            C.BEAN,
-            THREE_CRV,
-            address(0),
-            address(0)
-        ]);
+        stableFactory.set_coins(C.CURVE_BEAN_METAPOOL, [C.BEAN, THREE_CRV, address(0), address(0)]);
         //
         MockCurveZap curveZap = MockCurveZap(_etch("MockCurveZap.sol", C.curveZapAddress(), abi.encode("")));
         curveZap.approve();
     }
 
     function _mockUniswap() internal {
-        //address UNIV3_FACTORY = 0x1F98431c8aD98523631AE4a59f267346ea31F984; 
+        //address UNIV3_FACTORY = 0x1F98431c8aD98523631AE4a59f267346ea31F984;
         MockUniswapV3Factory uniFactory = MockUniswapV3Factory(new MockUniswapV3Factory());
-        address ethUsdc = 
-            uniFactory.createPool(
-            0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2,//weth
-            address(C.usdc()),//usdc
+        address ethUsdc = uniFactory.createPool(
+            0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2, //weth
+            address(C.usdc()), //usdc
             3000
-            );
+        );
         bytes memory code = at(ethUsdc);
         address targetAddr = C.UNIV3_ETH_USDC_POOL;
         vm.etch(targetAddr, code);
-        MockUniswapV3Pool(C.UNIV3_ETH_USDC_POOL).setOraclePrice(1000e6,18);
+        MockUniswapV3Pool(C.UNIV3_ETH_USDC_POOL).setOraclePrice(1000e6, 18);
     }
 
     function _mockCurveMetapool() internal {
@@ -259,10 +248,7 @@ abstract contract TestHelper is Test {
         console.log("C: Bean = %s", address(C.bean()));
     }
 
-    function _cut(string memory _facetName, address _facetAddress)
-        internal
-        returns (IDiamondCut.FacetCut memory cut) 
-    {
+    function _cut(string memory _facetName, address _facetAddress) internal returns (IDiamondCut.FacetCut memory cut) {
         bytes4[] memory functionSelectors = _generateSelectors(_facetName);
         cut = IDiamondCut.FacetCut({
             facetAddress: _facetAddress,
@@ -271,10 +257,7 @@ abstract contract TestHelper is Test {
         });
     }
 
-    function _generateSelectors(string memory _facetName)
-        internal
-        returns (bytes4[] memory selectors)
-    {
+    function _generateSelectors(string memory _facetName) internal returns (bytes4[] memory selectors) {
         string[] memory cmd = new string[](3);
         cmd[0] = "node";
         cmd[1] = "scripts/genSelectors.js";
@@ -299,8 +282,6 @@ abstract contract TestHelper is Test {
             extcodecopy(_addr, add(o_code, 0x20), 0, size)
         }
     }
-
-
 
     // function initUser() internal {
     //     users = new Users();
