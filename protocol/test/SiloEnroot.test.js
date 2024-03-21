@@ -81,6 +81,7 @@ describe("Silo Enroot", function () {
     await this.beanThreeCurve.set_supply(ethers.utils.parseEther("2000000"));
     await this.beanThreeCurve.set_balances([ethers.utils.parseUnits("1000000", 6), ethers.utils.parseEther("1000000")]);
     await this.beanThreeCurve.set_balances([ethers.utils.parseUnits("1200000", 6), ethers.utils.parseEther("1000000")]);
+
   });
 
   beforeEach(async function () {
@@ -249,6 +250,8 @@ describe("Silo Enroot", function () {
 
       beforeEach(async function () {
         await this.unripe.connect(owner).addUnderlying(UNRIPE_LP, '147796000000000')
+        this.fertilizer = await ethers.getContractAt('MockFertilizerFacet', this.diamond.address)
+        await this.fertilizer.setBarnRaiseWell(BEAN_WSTETH_WELL);
         await this.silo.connect(user).mockUnripeLPDeposit('0', ENROOT_FIX_SEASON, to18('0.000000083406453'), to6('10'))
         await this.season.lightSunrise()
         await this.silo.connect(user).mockUnripeLPDeposit('0', ENROOT_FIX_SEASON+1, to18('0.000000083406453'), to6('10'))

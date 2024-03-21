@@ -2,7 +2,7 @@ const { expect } = require('chai')
 const { deploy } = require('../scripts/deploy.js')
 const { takeSnapshot, revertToSnapshot } = require("./utils/snapshot")
 const { to6, toStalk, toBean, to18 } = require('./utils/helpers.js');
-const { USDC, UNRIPE_BEAN, UNRIPE_LP, BEAN,ETH_USDC_UNISWAP_V3, BASE_FEE_CONTRACT, THREE_CURVE, THREE_POOL, BEAN_3_CURVE, BEAN_ETH_WELL, WSTETH, WETH } = require('./utils/constants.js');
+const { USDC, UNRIPE_BEAN, UNRIPE_LP, BEAN,ETH_USDC_UNISWAP_V3, BASE_FEE_CONTRACT, THREE_CURVE, THREE_POOL, BEAN_3_CURVE, BEAN_ETH_WELL, WSTETH, WETH, BEAN_WSTETH_WELL } = require('./utils/constants.js');
 const { EXTERNAL, INTERNAL } = require('./utils/balances.js');
 const { ethers } = require('hardhat');
 const { setEthUsdChainlinkPrice, setWstethUsdPrice } = require('../utils/oracle.js');
@@ -62,7 +62,7 @@ describe('Sun', function () {
     await this.unripeBean.mint(userAddress, to6('1000'))
     await this.unripeBean.connect(user).approve(this.diamond.address, to6('100000000'))
     await this.unripe.addUnripeToken(UNRIPE_BEAN, BEAN, ZERO_BYTES)
-    await this.unripe.addUnripeToken(UNRIPE_LP, BEAN_ETH_WELL, ZERO_BYTES);
+    await this.unripe.addUnripeToken(UNRIPE_LP, BEAN_WSTETH_WELL, ZERO_BYTES);
 
     await setEthUsdChainlinkPrice('1000');
     await setWstethUsdPrice('1000');
