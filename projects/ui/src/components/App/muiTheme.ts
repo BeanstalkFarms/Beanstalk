@@ -161,6 +161,7 @@ export const BeanstalkPalette = {
       orderGreen: '#60D394',
       listingRed: '#EC4067',
       primaryDark: '#0074AF',
+      primaryDarkAlt: '#146054',
       chart: {
         primaryLight: '#D1E7E4',
         blue: '#6B9AC4',
@@ -266,13 +267,13 @@ const muiThemeBase: ThemeOptions = {
   palette: {
     divider: BeanstalkPalette.blue,
     primary: {
-      main: BeanstalkPalette.logoGreen,
-      dark: BeanstalkPalette.supportGreen,
-      light: BeanstalkPalette.lightestGreen,
+      main: BeanstalkPalette.theme.winter.primary,
+      dark: BeanstalkPalette.theme.winter.primaryDarkAlt,
+      light: BeanstalkPalette.theme.winter.primaryHover,
       contrastText: '#ffffff',
     },
     secondary: {
-      main: BeanstalkPalette.mediumGreen,
+      main: BeanstalkPalette.blue,
       contrastText: '#ffffff',
     },
     light: {
@@ -303,11 +304,11 @@ const muiThemeBase: ThemeOptions = {
       light: BeanstalkPalette.lightestGrey,
     },
     background: {
-      default: '#DBF5FF',
+      default: BeanstalkPalette.theme.winter.iceBlue,
       paper: BeanstalkPalette.offWhite,
     },
     error: {
-      main: BeanstalkPalette.theme.spring.red,
+      main: BeanstalkPalette.theme.winter.red,
     },
   },
 
@@ -411,10 +412,7 @@ const muiThemeBase: ThemeOptions = {
       styleOverrides: {
         root: (t) =>
           t.theme.unstable_sx({
-            borderWidth: '1px',
-            borderStyle: 'solid',
-            borderColor: 'divider',
-            borderRadius: 1,
+            border: 'none'
           }),
       },
     },
@@ -448,7 +446,7 @@ const muiThemeBase: ThemeOptions = {
               borderColor: BeanstalkPalette.lightestGrey,
               ':hover': {
                 borderColor: 'primary.main',
-                background: BeanstalkPalette.lightestGreen,
+                background: BeanstalkPalette.theme.winter.primaryHover,
               },
             }),
         },
@@ -476,7 +474,7 @@ const muiThemeBase: ThemeOptions = {
               borderColor: 'divider',
               ':hover': {
                 borderColor: 'primary.main',
-                background: BeanstalkPalette.lightestGreen,
+                background: BeanstalkPalette.theme.winter.primaryHover,
               },
             }),
         },
@@ -822,8 +820,8 @@ const muiThemeBase: ThemeOptions = {
           },
           style: (t) =>
             t.theme.unstable_sx({
-              color: BeanstalkPalette.logoGreen,
-              backgroundColor: hexToRgba(BeanstalkPalette.logoGreen, 0.1),
+              color: BeanstalkPalette.theme.winter.primary,
+              backgroundColor: hexToRgba(BeanstalkPalette.theme.winter.primary, 0.1),
             }),
         },
         {

@@ -47,6 +47,7 @@ import useFormMiddleware from '~/hooks/ledger/useFormMiddleware';
 import TokenOutput from '~/components/Common/Form/TokenOutput';
 import useSdk from '~/hooks/sdk';
 import useAccount from '~/hooks/ledger/useAccount';
+import { BalanceFrom } from '~/components/Common/Form/BalanceFromRow';
 
 export type FillListingFormValues = FormState & {
   settings: SlippageSettingsFragment;
@@ -197,6 +198,7 @@ const FillListingV2Form: FC<
         balances={balances}
         tokenList={Object.values(erc20TokenMap)}
         mode={TokenSelectMode.SINGLE}
+        balanceFrom={BalanceFrom.TOTAL}
       />
       <Stack gap={1}>
         <TokenQuoteProvider
@@ -212,6 +214,7 @@ const FillListingV2Form: FC<
           state={values.tokens[0]}
           showTokenSelect={handleOpen}
           handleQuote={handleQuote}
+          balanceFrom={BalanceFrom.TOTAL}
           size="small"
         />
         {isReady ? (
@@ -412,7 +415,8 @@ const FillListingForm: FC<{
           finalFromMode = optimizeFromMode(amountBeans, balances[Bean.address]);
           farm = sdk.farm.create();
           tokenInNew = sdk.tokens.BEAN; // FIXME
-        } else { /// Swap to BEAN and buy
+        } else {
+          /// Swap to BEAN and buy
           // Require a quote
           if (!formData.amountOut)
             throw new Error(`No quote available for ${formData.token.symbol}`);
@@ -497,7 +501,7 @@ const FillListingForm: FC<{
       balances,
       sdk,
       beanstalk.interface,
-      account
+      account,
     ]
   );
 

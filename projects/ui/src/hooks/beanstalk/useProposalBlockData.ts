@@ -2,11 +2,17 @@ import BigNumber from 'bignumber.js';
 import { useEffect, useMemo, useState } from 'react';
 import { ZERO_BN } from '~/constants';
 import { STALK } from '~/constants/tokens';
-import { useProposalVotingPowerQuery } from '~/generated/graphql';
-import { useBeanstalkContract } from '~/hooks/ledger/useContract';
+import { useAllVotesQuery, useProposalVotingPowerQuery } from '~/generated/graphql';
+import { useBeanstalkContract, useEnsReverseRecords } from '~/hooks/ledger/useContract';
 import { GovSpace, getQuorumPct } from '~/lib/Beanstalk/Governance';
 import { getProposalTag, getProposalType, Proposal, tokenResult } from '~/util';
 import useTotalBeaNFTsMintedAtBlock from './useTotalBeaNFTsMintedAtBlock';
+
+type VoteData = {
+  voter: string; 
+  choice: any; 
+  vp?: number | undefined | null
+};
 
 export type ProposalBlockData = {
   /** The proposal tag (BIP-0) */
@@ -25,6 +31,8 @@ export type ProposalBlockData = {
   pctOfQuorum: number | undefined;
   /** The voting power (in Stalk / BeaNFTs) of `account` at the proposal block. */
   votingPower: BigNumber | undefined;
+  /** All votes cast in this proposal. */
+  votes: VoteData[] | undefined;
 };
 
 function useTotalOutstandingAtBlock(proposal: Proposal) {
@@ -89,7 +97,9 @@ export default function useProposalBlockData(
   const score =
     proposal.space.id === GovSpace.BeanSprout
       ? new BigNumber(proposal.scores_total || ZERO_BN)
-      : new BigNumber(proposal.scores[0] || ZERO_BN);
+      : proposal.title.includes("BFCP-B-") && proposal.choices && proposal.choices[1].includes("Remove")
+        ? new BigNumber(proposal.scores[1])
+        : new BigNumber(proposal.scores[0] || ZERO_BN);
 
   /// Voting power
   const { data: vpData } = useProposalVotingPowerQuery({
@@ -119,8 +129,47 @@ export default function useProposalBlockData(
   const pctOfQuorum =
     score && totalForQuorum ? score.div(totalForQuorum).toNumber() : undefined;
 
+  /// Votes
+  const { data: voteData } = useAllVotesQuery({
+    variables: {
+      proposal_id: proposal?.id.toLowerCase()
+    },
+    skip: !proposal?.id,
+    context: { subgraph: 'snapshot' },
+    fetchPolicy: 'cache-and-network',
+    nextFetchPolicy: 'network-only',
+  });
+
+  const votes = voteData?.votes as VoteData[];
+
+  const ens = useEnsReverseRecords()
+  const [votesWithEns, setVotesWithEns] = useState<Array<VoteData & { ens: string }>>([]);
+  const [loadingEns, setLoadingEns] = useState(true);
+
+  useMemo(() => {
+      (async () => {
+        if (!votes) return
+        const voterAddresses = votes.map((vote) => vote.voter);
+        const names = voterAddresses ? await ens.getNames(voterAddresses) : undefined;
+        let votesEns;
+        if (names) {
+          votesEns = votes.map((vote, index) => ({
+            ...vote,
+            ens: names[index] 
+          }))
+        } else {
+          votesEns = votes.map((vote) => ({
+            ...vote,
+            ens: '' 
+          }))
+        };
+        setVotesWithEns(votesEns);
+        setLoadingEns(false);
+      })()
+  }, [ens, votes]);
+
   return {
-    loading: isLoading,
+    loading: isLoading || loadingEns,
     data: {
       // Metadata
       tag,
@@ -133,6 +182,8 @@ export default function useProposalBlockData(
       pctOfQuorum,
       // Account
       votingPower,
+      // Votes
+      votes: votesWithEns || undefined
     },
   };
 }

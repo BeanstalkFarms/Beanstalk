@@ -1,13 +1,14 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { FC } from "src/types";
 import { ChartContainer } from "./ChartStyles";
 import { createChart } from "lightweight-charts";
 import { useRef } from "react";
 import styled from "styled-components";
+import { IChartDataItem } from "./ChartSection";
 
 type Props = {
   legend: string;
-  data: any;
+  data: IChartDataItem[];
 };
 
 function formatToUSD(value: any) {
@@ -15,13 +16,20 @@ function formatToUSD(value: any) {
   return formattedValue;
 }
 
-export const Chart: FC<Props> = ({ legend, data }) => {
+export const Chart: FC<Props> = ({ legend, data: _data }) => {
   const chartContainerRef = useRef<any>();
   const chart = useRef<any>();
   const lineSeries = useRef<any>();
   const [lastDataPoint, setLastDataPoint] = useState<any>();
   const [dataPoint, setDataPoint] = useState<any>();
   const [dataPointValue, setDataPointValue] = useState<any>();
+
+  const data = useMemo(() => {
+    return _data.map(({ time, value }) => ({
+      time,
+      value: parseFloat(value)
+    }));
+  }, [_data]);
 
   useEffect(() => {
     if (!chartContainerRef.current) return;

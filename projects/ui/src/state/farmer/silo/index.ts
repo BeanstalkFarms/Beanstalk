@@ -150,4 +150,6 @@ export type FarmerSilo = FarmerSiloBalances &
     migrationNeeded: boolean | undefined;
     balancesSdk: Map<Token, TokenSiloBalance>;
     loading?: boolean;
+    error?: string;
+    ran: boolean;
   };

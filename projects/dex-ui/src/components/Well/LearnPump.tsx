@@ -10,7 +10,7 @@ function PumpDetails() {
     <TextContainer>
       <div>
         Pumps are the oracle framework of Basin. Well deployers can define the conditions under which the Well 
-        should write new reserve data to the Pump, which can be used as a price feed.
+        should write new reserve data to the Pump, which can be used as a data feed.
       </div>
       <div>
         The <StyledLink href="https://basin.exchange/multi-flow-pump.pdf" target="_blank" rel="noopener">Multi Flow Pump</StyledLink> is 
@@ -27,7 +27,7 @@ export const LearnPump: FC<Props> = () => {
         <span role="img" aria-label="glass globe emoji">
           🔮
         </span>{" "}
-        What’s a pump?
+        What is a Pump?
       </ExpandBox.Header>
       <ExpandBox.Body>
         <PumpDetails />

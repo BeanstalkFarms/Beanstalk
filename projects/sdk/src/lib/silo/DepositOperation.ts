@@ -1,4 +1,4 @@
-import { ContractTransaction } from "ethers";
+import { PayableOverrides, ContractTransaction } from "ethers";
 import { Router, Route } from "src/classes/Router";
 import { Token } from "src/classes/Token";
 import { ActionType } from "src/constants/actions";
@@ -14,7 +14,7 @@ export class DepositOperation {
   inputToken: Token;
   inputAmount: TokenValue;
   readonly router: Router;
-  workflow: AdvancedFarmWorkflow|FarmWorkflow<{ slippage: number } & Record<string, any>>;
+  workflow: AdvancedFarmWorkflow | FarmWorkflow<{ slippage: number } & Record<string, any>>;
   lastAmountIn: TokenValue;
   route: Route;
 
@@ -118,11 +118,11 @@ export class DepositOperation {
     return this.targetToken.fromBlockchain(est);
   }
 
-  async execute(amountIn: TokenValue, slippage: number): Promise<ContractTransaction> {
+  async execute(amountIn: TokenValue, slippage: number, overrides: PayableOverrides = {}): Promise<ContractTransaction> {
     this.validate();
 
     this.lastAmountIn = amountIn;
-    return this.workflow.execute(amountIn, { slippage });
+    return this.workflow.execute(amountIn, { slippage }, overrides);
   }
 
   validate() {

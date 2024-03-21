@@ -40,7 +40,7 @@ contract InitBipSeedGauge is Weather, InitWhitelistStatuses {
     uint256 internal constant SILO_V2_EARNED_BEANS = 342_221_369041; // ~342k BDV
 
     // gauge point factor is used to scale up the gauge points of the bean and bean3crv pools.
-    uint128 internal constant BEAN_ETH_INITIAL_GAUGE_POINTS = 1000e18;
+    uint128 internal constant BEAN_ETH_INITIAL_GAUGE_POINTS = 100e18;
 
     function init() external {
 

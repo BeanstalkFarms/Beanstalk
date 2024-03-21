@@ -21,8 +21,8 @@ import useSdk from '~/hooks/sdk';
 
 export type DelegationBannerProps = {
   tab: number;
-  farmerDelegations: FarmerDelegation;
-  votingPower: ReturnType<typeof useFarmerVotingPower>['votingPower'];
+  farmerDelegations?: FarmerDelegation;
+  votingPower?: ReturnType<typeof useFarmerVotingPower>['votingPower'];
 };
 
 const DelegationBanner: React.FC<DelegationBannerProps> = ({
@@ -36,11 +36,11 @@ const DelegationBanner: React.FC<DelegationBannerProps> = ({
 
   const stalk = sdk.tokens.STALK;
 
+  if (!farmerDelegations || !votingPower || !account) return null;
+
   const delegate = farmerDelegations.delegates[space];
 
   const isNFT = space === GovSpace.BeanNFT;
-
-  if (!account) return null;
 
   return (
     <Button

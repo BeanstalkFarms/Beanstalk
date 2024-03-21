@@ -190,7 +190,7 @@ const NestedFormDrawer: React.FC<{
             top: '0px',
             bottom: '0px',
             position: 'absolute',
-            backgroundColor: 'primary.light',
+            backgroundColor: '#E5F0EE',
             zIndex: 1300,
             borderRadius: 1,
             border: '0px solid',

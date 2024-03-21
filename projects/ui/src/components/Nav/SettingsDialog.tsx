@@ -174,7 +174,7 @@ const SettingsDialog: FC<{ open: boolean; onClose?: () => void }> = ({
               </Box>
             </Split>
             <Split>
-              <Typography color="text.secondary">Data Source</Typography>
+              <Typography color="text.secondary">Data source</Typography>
               {/* @ts-ignore */}
               <ButtonGroup variant="outlined" color="dark" disableRipple>
                 <Button
@@ -193,7 +193,7 @@ const SettingsDialog: FC<{ open: boolean; onClose?: () => void }> = ({
                   )}
                 >
                   {datasource === DataSource.SUBGRAPH ? '✓ ' : undefined}
-                  SubGraph
+                  Subgraph
                 </Button>
               </ButtonGroup>
             </Split>
@@ -229,7 +229,7 @@ const SettingsDialog: FC<{ open: boolean; onClose?: () => void }> = ({
                 <Typography variant="h4">Dev Controls</Typography>
                 <Split>
                   <Typography color="text.secondary">
-                    Set season timer
+                    Set Season timer
                   </Typography>
                   <Button {...buttonStyle} onClick={setSeasonTimer}>
                     in 5s
@@ -237,7 +237,7 @@ const SettingsDialog: FC<{ open: boolean; onClose?: () => void }> = ({
                 </Split>
                 <Split>
                   <Typography color="text.secondary">
-                    Export deposits
+                    Export Deposits
                   </Typography>
                   <Button {...buttonStyle} onClick={exportDepositsCSV}>
                     Export

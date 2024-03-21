@@ -23,7 +23,7 @@ jobs:
           key: ${{ runner.os }}-modules-${{ hashFiles('**/yarn.lock') }}
       - name: Install Dependencies
         if: steps.node-modules-cache.outputs.cache-hit != 'true'
-        run: yarn install --immutable
+        run: yarn install --no-immutable
       - run: yarn generate
         working-directory: protocol
       - run: yarn test

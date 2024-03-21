@@ -20,7 +20,7 @@ const formatValue = (value: number) => `${value.toFixed(2)}%`;
 const statProps = {
   title: 'Pod Rate',
   titleTooltip:
-    'The ratio of outstanding Pods per Bean, displayed as a percentage. The Pod Rate is used by Beanstalk as a proxy for its health.',
+    'The ratio of Unharvestable Pods per Bean, displayed as a percentage, at the beginning of every Season. The Pod Rate is used by Beanstalk as a proxy for its health.',
   gap: 0.25,
   sx: { ml: 0 },
 };

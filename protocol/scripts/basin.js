@@ -103,7 +103,7 @@ async function deployBasin(mock = true, accounts = undefined, verbose = true, ju
     account = await getAccount(accounts, 'addLiquidity', ADD_LIQUIDITY_ADDRESS);
 
     const bean = await getBean();
-    const weth = await ethers.getContractAt("IWETH", WETH);
+    const weth = await ethers.getContractAt("contracts/interfaces/IWETH.sol:IWETH", WETH);
 
     const ethUsdChainlinkAggregator = await ethers.getContractAt('MockChainlinkAggregator', ETH_USD_CHAINLINK_AGGREGATOR)
     const beanEthPrice = (await ethUsdChainlinkAggregator.latestRoundData()).answer;
@@ -223,7 +223,7 @@ async function deployBasinWithMockPump(mock = true, accounts = undefined, verbos
     account = await getAccount(accounts, 'addLiquidity', ADD_LIQUIDITY_ADDRESS);
 
     const bean = await getBean();
-    const weth = await ethers.getContractAt("IWETH", WETH);
+    const weth = await ethers.getContractAt("contracts/interfaces/IWETH.sol:IWETH", WETH);
 
     const ethUsdChainlinkAggregator = await ethers.getContractAt('MockChainlinkAggregator', ETH_USD_CHAINLINK_AGGREGATOR)
     const beanEthPrice = (await ethUsdChainlinkAggregator.latestRoundData()).answer;

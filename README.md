@@ -27,8 +27,8 @@
 
 [![Discord][discord-badge]][discord-url]
 
-Code Version: `2.6.0` <br>
-Whitepaper Version: `2.6.0`
+Code Version: `2.7.3` <br>
+Whitepaper Version: `2.7.0`
 
 ## About
 

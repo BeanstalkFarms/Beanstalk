@@ -16,7 +16,7 @@ export enum ActionType {
 
   /// FIELD
   BUY_BEANS,
-  BURN_BEANS,
+  SOW_BEANS,
   RECEIVE_PODS,
   HARVEST,
   RECEIVE_BEANS,
