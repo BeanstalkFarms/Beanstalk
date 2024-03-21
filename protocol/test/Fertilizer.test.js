@@ -68,9 +68,6 @@ describe('Fertilize', function () {
     this.wellToken = await ethers.getContractAt("IERC20", this.well.address)
     await this.wellToken.connect(owner).approve(BEANSTALK, ethers.constants.MaxUint256)
     await this.bean.connect(owner).approve(BEANSTALK, ethers.constants.MaxUint256)
-
-    console.log(`Well Address: ${this.well.address}`)
-
   });
 
   beforeEach(async function () {
@@ -272,13 +269,13 @@ describe('Fertilize', function () {
   describe("Mint Fertilizer", async function () {
     it('Reverts if mints 0', async function () {
       await this.season.teleportSunrise('6274')
-      await expect(this.fertilizer.connect(user).mintFertilizer('0', '0', '0', EXTERNAL)).to.be.revertedWith('Fertilizer: None bought.')
+      await expect(this.fertilizer.connect(user).mintFertilizer('0', '0', '0')).to.be.revertedWith('Fertilizer: None bought.')
     })
 
     describe('1 mint', async function () {
       beforeEach(async function () {
         await this.season.teleportSunrise('6274')
-        this.result = await this.fertilizer.connect(user).mintFertilizer(to18('0.1'), '0', '0', EXTERNAL)
+        this.result = await this.fertilizer.connect(user).mintFertilizer(to18('0.1'), '0', '0')
         this.lpBeans = lpBeansForUsdc('100')
       })
 
@@ -324,8 +321,8 @@ describe('Fertilize', function () {
     describe('2 mints', async function () {
       beforeEach(async function () {
         await this.season.teleportSunrise('6274')
-        this.result = await this.fertilizer.connect(user).mintFertilizer(to18('0.05'), '0', '0', EXTERNAL)
-        this.result = await this.fertilizer.connect(user).mintFertilizer(to18('0.05'), '0', '0', EXTERNAL)
+        this.result = await this.fertilizer.connect(user).mintFertilizer(to18('0.05'), '0', '0')
+        this.result = await this.fertilizer.connect(user).mintFertilizer(to18('0.05'), '0', '0')
         this.lpBeans = lpBeansForUsdc('100');
       })
 
@@ -371,10 +368,10 @@ describe('Fertilize', function () {
     describe("2 mint with season in between", async function () {
       beforeEach(async function () {
         await this.season.teleportSunrise('6074')
-        await this.fertilizer.connect(user).mintFertilizer(to18('0.1'), '0', '0', EXTERNAL)
+        await this.fertilizer.connect(user).mintFertilizer(to18('0.1'), '0', '0')
         await this.season.rewardToFertilizerE(to6('50'))
         await this.season.teleportSunrise('6274')
-        this.result = await this.fertilizer.connect(user).mintFertilizer(to18('0.1'), '0', '0', EXTERNAL)
+        this.result = await this.fertilizer.connect(user).mintFertilizer(to18('0.1'), '0', '0')
         this.lpBeans = lpBeansForUsdc('100').add(lpBeansForUsdc('100'))
       })
 
@@ -426,10 +423,10 @@ describe('Fertilize', function () {
     describe("2 mint with same id", async function () {
       beforeEach(async function () {
         await this.season.teleportSunrise('6074')
-        await this.fertilizer.connect(user).mintFertilizer(to18('0.1'), '0', '0', EXTERNAL)
+        await this.fertilizer.connect(user).mintFertilizer(to18('0.1'), '0', '0')
         await this.season.rewardToFertilizerE(to6('50'))
         await this.season.teleportSunrise('6174')
-        this.result = await this.fertilizer.connect(user).mintFertilizer(to18('0.1'), '0', '0', EXTERNAL)
+        this.result = await this.fertilizer.connect(user).mintFertilizer(to18('0.1'), '0', '0')
         this.lpBeans = lpBeansForUsdc('100').add(lpBeansForUsdc('100'))
       })
 
@@ -480,11 +477,11 @@ describe('Fertilize', function () {
     describe("2 mint with same id and claim", async function () {
       beforeEach(async function () {
         await this.season.teleportSunrise('6074')
-        await this.fertilizer.connect(user).mintFertilizer(to18('0.1'), '0', '0', EXTERNAL)
+        await this.fertilizer.connect(user).mintFertilizer(to18('0.1'), '0', '0')
         await this.season.rewardToFertilizerE(to6('50'))
         await this.season.teleportSunrise('6174')
         await this.fertilizer.connect(user).claimFertilized([to6('3.5')], INTERNAL)
-        this.result = await this.fertilizer.connect(user).mintFertilizer(to18('0.1'), '0', '0', EXTERNAL)
+        this.result = await this.fertilizer.connect(user).mintFertilizer(to18('0.1'), '0', '0')
       })
 
       it('updates claims fertilized Beans', async function () {
@@ -496,7 +493,7 @@ describe('Fertilize', function () {
   describe("Fertilize", async function () {
     beforeEach(async function () {
       await this.season.teleportSunrise('6274')
-      this.result = await this.fertilizer.connect(user).mintFertilizer(to18('0.1'), '0', '0', EXTERNAL)
+      this.result = await this.fertilizer.connect(user).mintFertilizer(to18('0.1'), '0', '0')
     })
 
     it('gets fertilizable', async function () {
@@ -584,7 +581,7 @@ describe('Fertilize', function () {
       beforeEach(async function() {
         await this.season.rewardToFertilizerE(to6('200'))
         await this.season.teleportSunrise('6474')
-        this.result = await this.fertilizer.connect(user).mintFertilizer(to18('0.1'), '0', '0', EXTERNAL)
+        this.result = await this.fertilizer.connect(user).mintFertilizer(to18('0.1'), '0', '0')
         await this.fertilizer.connect(user).claimFertilized([to6('2.5')], EXTERNAL)
         await this.season.rewardToFertilizerE(to6('150'))
 
@@ -613,7 +610,7 @@ describe('Fertilize', function () {
       beforeEach(async function() {
         await this.season.rewardToFertilizerE(to6('200'))
         await this.season.teleportSunrise('6474')
-        this.result = await this.fertilizer.connect(user).mintFertilizer(to18('0.1'), '0', '0', EXTERNAL)
+        this.result = await this.fertilizer.connect(user).mintFertilizer(to18('0.1'), '0', '0')
         await this.fertilizer.connect(user).claimFertilized([to6('2.5')], EXTERNAL)
         await this.season.rewardToFertilizerE(to6('150'))
 
@@ -642,7 +639,7 @@ describe('Fertilize', function () {
       beforeEach(async function() {
         await this.season.rewardToFertilizerE(to6('200'))
         await this.season.teleportSunrise('6474')
-        this.result = await this.fertilizer.connect(user).mintFertilizer(to18('0.1'), '0', '0', EXTERNAL)
+        this.result = await this.fertilizer.connect(user).mintFertilizer(to18('0.1'), '0', '0')
         await this.fertilizer.connect(user).claimFertilized([to6('2.5')], EXTERNAL)
         await this.season.rewardToFertilizerE(to6('200'))
 
@@ -671,7 +668,7 @@ describe('Fertilize', function () {
   describe("Transfer", async function () {
     beforeEach(async function () {
       await this.season.teleportSunrise('6274')
-      this.result = await this.fertilizer.connect(user).mintFertilizer(to18('0.1'), '0', '0', EXTERNAL)
+      this.result = await this.fertilizer.connect(user).mintFertilizer(to18('0.1'), '0', '0')
     })
 
     describe("no fertilized", async function () {
@@ -735,7 +732,7 @@ describe('Fertilize', function () {
 
     describe("Both some Beans", async function () {
       beforeEach(async function() {
-        this.result = await this.fertilizer.connect(user2).mintFertilizer(to18('0.1'), '0', '0', EXTERNAL)
+        this.result = await this.fertilizer.connect(user2).mintFertilizer(to18('0.1'), '0', '0')
         await this.season.rewardToFertilizerE(to6('100'))
         await this.fert.connect(user).safeTransferFrom(user.address, user2.address, to6('2.5'), '50', ethers.constants.HashZero)
       })
@@ -762,7 +759,7 @@ describe('Fertilize', function () {
       beforeEach(async function() {
         await this.season.rewardToFertilizerE(to6('200'))
         await this.season.teleportSunrise('6474')
-        this.result = await this.fertilizer.connect(user).mintFertilizer(to18('0.1'), '0', '0', EXTERNAL)
+        this.result = await this.fertilizer.connect(user).mintFertilizer(to18('0.1'), '0', '0')
         await this.season.rewardToFertilizerE(to6('150'))
         await this.fert.connect(user).safeBatchTransferFrom(user.address, user2.address, [to6('2.5'), to6('3.5')], ['50', '50'], ethers.constants.HashZero)
       })
@@ -790,11 +787,11 @@ describe('Fertilize', function () {
 
     describe("Both some Beans", async function () {
       beforeEach(async function() {
-        this.result = await this.fertilizer.connect(user2).mintFertilizer(to18('0.1'), '0', '0', EXTERNAL)
+        this.result = await this.fertilizer.connect(user2).mintFertilizer(to18('0.1'), '0', '0')
         await this.season.rewardToFertilizerE(to6('400'))
         await this.season.teleportSunrise('6474')
-        this.result = await this.fertilizer.connect(user).mintFertilizer(to18('0.1'), '0', '0', EXTERNAL)
-        this.result = await this.fertilizer.connect(user2).mintFertilizer(to18('0.1'), '0', '0', EXTERNAL)
+        this.result = await this.fertilizer.connect(user).mintFertilizer(to18('0.1'), '0', '0')
+        this.result = await this.fertilizer.connect(user2).mintFertilizer(to18('0.1'), '0', '0')
         await this.season.rewardToFertilizerE(to6('300'))
         await this.fert.connect(user).safeBatchTransferFrom(user.address, user2.address, [to6('2.5'), to6('3.5')], ['50', '50'], ethers.constants.HashZero)
       })

@@ -23,6 +23,9 @@ library LibBarnRaise {
 
     function getBarnRaiseWell() internal view returns (address) {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        return s.barnRaiseWell == address(0) ? C.BEAN_ETH_WELL : s.barnRaiseWell;
+        return
+            s.u[C.UNRIPE_LP].underlyingToken == address(0)
+                ? C.BEAN_ETH_WELL
+                : s.u[C.UNRIPE_LP].underlyingToken;
     }
 }
