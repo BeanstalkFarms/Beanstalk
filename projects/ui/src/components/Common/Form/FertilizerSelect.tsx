@@ -1,4 +1,4 @@
-import React, { ReactElement, useCallback } from 'react';
+import React, { ReactElement, useCallback, useState } from 'react';
 import {
   ListItemIcon,
   ListItemText,
@@ -15,23 +15,23 @@ import fertActiveIcon from '~/img/tokens/fert-logo-active.svg';
 import fertUsedIcon from '~/img//tokens/fert-logo-used.svg';
 import Row from '~/components/Common/Row';
 import { FullFertilizerBalance } from '~/components/Barn/Actions/Transfer';
+import { useFormikContext } from 'formik';
 import SelectionItem from '../SelectionItem';
 
 export interface PlotSelectProps {
   /** A farmer's fertilizers */
   fertilizers: FullFertilizerBalance[];
-  /** Custom function to set the selected plot index */
-  handleSelect: any;
-  /** List of selected fertilizers */
-  selected?: any[];
 }
 
 interface IRowContent {
   isMobile: boolean | null;
   fertilizer: FullFertilizerBalance;
+  index: number;
+  values: any;
+  setFieldValue: any;
 }
 
-function RowContent({isMobile, fertilizer}: IRowContent): ReactElement {
+function RowContent({isMobile, fertilizer, index, values, setFieldValue }: IRowContent): ReactElement {
 
   const textFieldStyles = {
     borderRadius: 1,
@@ -40,84 +40,134 @@ function RowContent({isMobile, fertilizer}: IRowContent): ReactElement {
     },
   } as const;
 
+  // Internal State
+  const [displayValue, setDisplayValue] = useState(values.amounts[index])
+
   // Ignore scroll events on the input. Prevents
   // accidentally scrolling up/down the number input.
-  const handleWheel = useCallback((e: any) => {
+  const preventScroll = useCallback((e: any) => {
     // @ts-ignore
     e.target.blur();
   }, []);
 
+  const preventNegativeInput = (
+    e: React.KeyboardEvent<HTMLInputElement>
+  ) => {
+    if (e.key === '-') {
+      e.preventDefault();
+    }
+  };
+
+  const handleInput = useCallback((e: any) => {
+
+    const newIds = values.fertilizerIds;
+    const newAmounts = values.amounts;
+
+    if (e.target.value && e.target.value !== newAmounts[index]) {
+      const roundedValue = Math.round(e.target.value);
+      if (roundedValue === 0) {
+        newIds[index] = undefined;
+        newAmounts[index] = undefined;
+        setDisplayValue(undefined);
+      } else {
+        newIds[index] = fertilizer.token.id.toNumber();
+        newAmounts[index] = roundedValue;
+        setDisplayValue(roundedValue);
+      };
+    } else {
+      newIds[index] = undefined;
+      newAmounts[index] = undefined;
+      setDisplayValue(undefined);
+    }
+
+    const newTotalSelected = newIds.filter(Boolean).length;
+
+    setFieldValue('fertilizerIds', newIds);
+    setFieldValue('amounts', newAmounts);
+    setFieldValue('totalSelected', newTotalSelected);
+
+  }, [index, setFieldValue, values.amounts, values.fertilizerIds, fertilizer.token.id]);
+
   return (
     <Row justifyContent="space-between" sx={{ width: '100%' }}>
-    <Row justifyContent="center">
-      <ListItemIcon sx={{ pr: 1 }}>
-        <Box
-          component="img"
-          src={fertilizer.status === "active" ? fertActiveIcon : fertUsedIcon}
-          alt=""
-          sx={{
-            width: IconSize.tokenSelect,
-            height: IconSize.tokenSelect,
-          }}
+      <Row justifyContent="center">
+        <ListItemIcon sx={{ pr: 1 }}>
+          <Box
+            component="img"
+            src={fertilizer.status === "active" ? fertActiveIcon : fertUsedIcon}
+            alt=""
+            sx={{
+              width: IconSize.tokenSelect,
+              height: IconSize.tokenSelect,
+            }}
+          />
+        </ListItemIcon>
+        <ListItemText
+          primary={`${isMobile ? 'x' : ''}${displayBN(fertilizer.amount)} ${!isMobile ? 'FERTILIZER' : ''}`}
+          primaryTypographyProps={{ color: 'text.primary', display: 'flex' }}
+          secondary={
+            <>
+              <Box sx={{ display: 'flex', alignItems: 'center', flexGrow: 1 }}>
+                {isMobile ? 
+                  <Box
+                    component="img"
+                    src={sproutIcon}
+                    alt=""
+                    sx={{
+                      width: IconSize.xs,
+                      height: IconSize.xs,
+                    }}
+                  /> 
+                  : 'Sprouts: '}
+                {displayBN(fertilizer.sprouts)}
+              </Box>
+            </>
+          }
+          secondaryTypographyProps={{ display: 'flex', gap: 1}}
+          sx={{ my: 0 }}
         />
-      </ListItemIcon>
-      <ListItemText
-        primary={`${isMobile ? 'x' : ''}${displayBN(fertilizer.amount)} ${!isMobile ? 'FERTILIZER' : ''}`}
-        primaryTypographyProps={{ color: 'text.primary', display: 'flex' }}
-        secondary={
-          <>
-            <Box sx={{ display: 'flex', alignItems: 'center', flexGrow: 1 }}>
-              {isMobile ? 
-                <Box
-                  component="img"
-                  src={sproutIcon}
-                  alt=""
-                  sx={{
-                    width: IconSize.xs,
-                    height: IconSize.xs,
-                  }}
-                /> 
-                : 'Sprouts: '}
-              {displayBN(fertilizer.sprouts)}
-            </Box>
-          </>
-        }
-        secondaryTypographyProps={{ display: 'flex', gap: 1}}
-        sx={{ my: 0 }}
+      </Row>
+      <TextField
+        type="number"
+        color="primary"
+        placeholder={isMobile ? "Amount" :  "Amount to Transfer"}
+        value={displayValue}
+        onWheel={preventScroll}
+        onChange={handleInput}
+        onKeyDown={preventNegativeInput}
+        size="small"
+        sx={{ ...textFieldStyles, width: isMobile ? 84 : 160 }}
       />
     </Row>
-    <TextField
-      type="number"
-      color="primary"
-      placeholder={isMobile ? "Amount" :  "Amount to Transfer"}
-      value={fertilizer.amount.toNumber()}
-      onWheel={handleWheel}
-      size="small"
-      sx={{ ...textFieldStyles, width: isMobile ? 84 : 160 }}
-    />
-  </Row>
   );
 }
 
 const FertilizerSelect: FC<PlotSelectProps> = ({
   fertilizers,
-  handleSelect,
-  selected,
 }) => {
   const isMobile = useMediaQuery('(max-width: 500px)');
+
+  /// Form state
+  const { values, setFieldValue } = useFormikContext<{
+    /// These fields are required in the parent's Formik state
+    fertilizerIds: any[];
+    amounts: any[];
+  }>();
+
   if (!fertilizers) return null;
-  ///
-  const items = fertilizers.map((fertilizer) => {
+
+  const items = fertilizers.map((fertilizer, index) => {
     
     const thisFert = {
       id: fertilizer.token.id.toNumber(),
       amount: fertilizer.amount.toNumber(),
+      index: index,
     };
 
     let isSelected = false;
-    if (selected) {
-      for (let i = 0; i < selected?.length; i += 1) {
-        if (selected[i] === thisFert.id) {
+    if (values.fertilizerIds) {
+      for (let i = 0; i < values.fertilizerIds?.length; i += 1) {
+        if (values.fertilizerIds[i] === thisFert.id) {
           isSelected = true;
           break
         }
@@ -128,7 +178,6 @@ const FertilizerSelect: FC<PlotSelectProps> = ({
       <SelectionItem
         selected={isSelected}
         checkIcon="left"
-        onClick={() => handleSelect(thisFert)}
         sx={{
           // ListItem is used elsewhere so we define here
           // instead of in muiTheme.ts
@@ -148,6 +197,9 @@ const FertilizerSelect: FC<PlotSelectProps> = ({
           <RowContent
             isMobile={isMobile}
             fertilizer={fertilizer}
+            index={index}
+            values={values}
+            setFieldValue={setFieldValue}
           />
       </SelectionItem>
     );

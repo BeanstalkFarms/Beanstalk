@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo } from 'react';
+import React, { useMemo } from 'react';
 import { useFormikContext } from 'formik';
 import useToggle from '~/hooks/display/useToggle';
 import { SPROUTS } from '~/constants/tokens';
@@ -24,6 +24,7 @@ const FertInputField: FC<
     /// These fields are required in the parent's Formik state
     fertilizerIds: any[];
     amounts: any[];
+    totalSelected: number;
   }>();
 
   /// Local state
@@ -35,6 +36,7 @@ const FertInputField: FC<
   useMemo(() => {
     setFieldValue('fertilizerIds', []);
     setFieldValue('amounts', []);
+    setFieldValue('totalSelected', 0);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [account]);
 
@@ -47,12 +49,9 @@ const FertInputField: FC<
             onClick={showDialog}
             buttonLabel={
             <Row gap={0.75}>
-              {!values.fertilizerIds || values.fertilizerIds.length === 0 ?
+              {values.totalSelected === 0 ?
                   `Select Fertilizers`
-                : values.fertilizerIds.length === 1 ?
-                  `ID: 1234`
-                : values.fertilizerIds.length > 1 &&
-                  `${values.fertilizerIds.length} FERT${values.fertilizerIds.length > 1 && 'S'}`
+                : `${values.totalSelected} FERT${values.totalSelected > 1 ? 'S' : ''}`
               }
             </Row>
           }
@@ -60,42 +59,14 @@ const FertInputField: FC<
         />
       ),
     }),
-    [showDialog, values.fertilizerIds, props.size]
-  );
-
-  /// Handlers
-  const handleFertSelect = useCallback(
-    (selectedFertilizer: any) => {
-
-      const newIds = [...values.fertilizerIds];
-      const newAmounts = [...values.amounts];
-
-      const indexOf = values.fertilizerIds.findIndex(
-        (fertilizerId) => fertilizerId === selectedFertilizer.id
-      );
-
-      if (values.fertilizerIds.length === 0 || indexOf < 0) {
-          newIds.push(selectedFertilizer.id);
-          newAmounts.push(selectedFertilizer.amount);
-      } else {
-          newIds.splice(indexOf, 1);
-          newAmounts.splice(indexOf, 1);
-      };
-
-      setFieldValue('fertilizerIds', newIds);
-      setFieldValue('amounts', newAmounts);
-
-    },
-    [values.amounts, values.fertilizerIds, setFieldValue]
+    [showDialog, values.totalSelected, props.size]
   );
 
   return (
     <>
       <FertilizerSelectDialog
         fertilizers={fertilizers}
-        handleSelect={handleFertSelect}
         handleClose={hideDialog}
-        selected={values.fertilizerIds}
         open={dialogOpen}
       />
       <TokenInputField

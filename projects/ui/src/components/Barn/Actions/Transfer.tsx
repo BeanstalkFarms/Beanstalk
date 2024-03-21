@@ -30,6 +30,7 @@ export type TransferFormValues = {
     fertilizerIds: number[];
     amounts: number[];
     to: string | null;
+    totalSelected: number;
 };
 
 export type FullFertilizerBalance = FertilizerBalance & {
@@ -179,6 +180,7 @@ const Transfer: FC<{}> = () => {
       fertilizerIds: [],
       amounts: [],
       to: null,
+      totalSelected: 0,
     }),
     []
   );
