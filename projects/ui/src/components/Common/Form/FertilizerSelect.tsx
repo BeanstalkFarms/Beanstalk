@@ -29,9 +29,10 @@ interface IRowContent {
   index: number;
   values: any;
   setFieldValue: any;
+  focused: number | null | undefined;
 }
 
-function RowContent({isMobile, fertilizer, index, values, setFieldValue }: IRowContent): ReactElement {
+function RowContent({isMobile, fertilizer, index, values, setFieldValue, focused }: IRowContent): ReactElement {
 
   const textFieldStyles = {
     borderRadius: 1,
@@ -78,7 +79,7 @@ function RowContent({isMobile, fertilizer, index, values, setFieldValue }: IRowC
       newIds[index] = undefined;
       newAmounts[index] = undefined;
       setDisplayValue(undefined);
-    }
+    };
 
     const newTotalSelected = newIds.filter(Boolean).length;
 
@@ -136,6 +137,7 @@ function RowContent({isMobile, fertilizer, index, values, setFieldValue }: IRowC
         onChange={handleInput}
         onKeyDown={preventNegativeInput}
         size="small"
+        inputRef={inputRef => inputRef && focused === index && inputRef.focus()}
         sx={{ ...textFieldStyles, width: isMobile ? 84 : 160 }}
       />
     </Row>
@@ -154,6 +156,9 @@ const FertilizerSelect: FC<PlotSelectProps> = ({
     amounts: any[];
   }>();
 
+  /// Internal state
+  const [isFocused, setIsFocused] = useState<number | null>();
+
   if (!fertilizers) return null;
 
   const items = fertilizers.map((fertilizer, index) => {
@@ -169,15 +174,16 @@ const FertilizerSelect: FC<PlotSelectProps> = ({
       for (let i = 0; i < values.fertilizerIds?.length; i += 1) {
         if (values.fertilizerIds[i] === thisFert.id) {
           isSelected = true;
-          break
-        }
-      }
-    }
+          break;
+        };
+      };
+    };
     
     return (
       <SelectionItem
         selected={isSelected}
         checkIcon="left"
+        onClick={() => setIsFocused(index)}
         sx={{
           // ListItem is used elsewhere so we define here
           // instead of in muiTheme.ts
@@ -200,6 +206,7 @@ const FertilizerSelect: FC<PlotSelectProps> = ({
             index={index}
             values={values}
             setFieldValue={setFieldValue}
+            focused={isFocused}
           />
       </SelectionItem>
     );
