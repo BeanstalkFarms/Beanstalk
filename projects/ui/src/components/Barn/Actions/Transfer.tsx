@@ -196,8 +196,15 @@ const Transfer: FC<{}> = () => {
         middleware.before();
 
         const to = values.to;
-        const fertilizers = values.fertilizerIds;
-        const amounts = values.amounts;
+        const fertilizers = [];
+        const amounts = [];
+
+        for (let i = 0; i < values.fertilizerIds.length; i += 1) {
+          if (values.fertilizerIds[i]) {
+            fertilizers.push(values.fertilizerIds[i]);
+            amounts.push(values.amounts[i]);
+          };
+        };
 
         if (!account) throw new Error('Connect a wallet first.');
         if (!to || !fertilizers || !amounts || fertilizers.length === 0) throw new Error('Missing data.');
@@ -212,8 +219,8 @@ const Transfer: FC<{}> = () => {
           call = fertilizer.safeTransferFrom(
             account,
             to,
-            fertilizers[0],
-            amounts[0],
+            fertilizers,
+            amounts,
             "0x00"
           );
         } else {
@@ -224,7 +231,7 @@ const Transfer: FC<{}> = () => {
             amounts,
             "0x00"
           );
-        }
+        };
 
         const txn = await call;
         txToast.confirming(txn);
