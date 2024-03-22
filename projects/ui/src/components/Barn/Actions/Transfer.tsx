@@ -71,7 +71,8 @@ const TransferForm: FC<FormikProps<TransferFormValues>> = ({
 
   /// Derived
   const isReady = values.fertilizerIds && values.to && values.amounts && isValid;
-  const totalFertAmount = values.amounts.reduce((total, current) => current + total, 0);
+  const totalFertAmount = values.amounts.reduce((total, current) => (current || 0) + total, 0);
+
   const fertilizers = useMemo(() => {
     const output: FullFertilizerBalance[] = [];
     farmerBarn.balances.forEach((balance) => {
@@ -99,6 +100,18 @@ const TransferForm: FC<FormikProps<TransferFormValues>> = ({
     return output;
   }, [farmerBarn.balances, pctRepaid]);
 
+  const sproutAmounts = useMemo(() => {
+    const output = [];
+    for (let i = 0; i < fertilizers.length; i += 1) {
+      const pctRatio = BigNumber(values.amounts[i] || 0).div(fertilizers[i].amount);
+      const sprouts = fertilizers[i].sprouts.multipliedBy(pctRatio);
+      output.push(sprouts);
+    };
+    return output;
+  }, [fertilizers, values.amounts]);
+
+  const totalSprouts = sproutAmounts.reduce((total: BigNumber, current: BigNumber) => total.plus(current), BigNumber(0));
+
   return (
     <Form autoComplete="off">
       <Stack gap={1}>
@@ -114,7 +127,7 @@ const TransferForm: FC<FormikProps<TransferFormValues>> = ({
             <TxnSeparator />
             <TokenOutput>
               <TokenOutput.Row
-                amount={BigNumber(totalFertAmount).negated()}
+                amount={totalSprouts.negated()}
                 token={sdk.tokens.SPROUTS}
               />
             </TokenOutput>
