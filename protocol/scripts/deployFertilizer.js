@@ -32,6 +32,7 @@ async function deploy(account, pre=true, mock=false) {
       value: ethers.utils.parseEther('1')
     })
     await hre.network.provider.request({ method: "hardhat_impersonateAccount", params: [BCM] });
+    await hre.network.provider.send("hardhat_setBalance", [BCM, "0x21E19E0C9BAB2400000"]);
     const bcm = await ethers.getSigner(BCM)
     await usdc.connect(bcm).transfer(USDC_MINTER, await usdc.balanceOf(BCM));
 

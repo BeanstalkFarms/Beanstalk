@@ -45,6 +45,7 @@ contract MockSiloFacet is SiloFacet {
 
     function mockWhitelistToken(address token, bytes4 selector, uint16 stalk, uint24 stalkEarnedPerSeason) external {
        whitelistTokenLegacy(token, selector, stalk, stalkEarnedPerSeason);
+       LibWhitelistedTokens.addWhitelistStatus(token, true, true, true);
     }
 
     function mockBDV(uint256 amount) external pure returns (uint256) {
