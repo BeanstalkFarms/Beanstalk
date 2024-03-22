@@ -6,6 +6,7 @@ import {
   Box,
   useMediaQuery,
   TextField,
+  Button,
 } from '@mui/material';
 import { FC } from '~/types';
 import { FontSize, IconSize } from '~/components/App/muiTheme';
@@ -94,60 +95,90 @@ function RowContent({isMobile, fertilizer, index, values, setFieldValue, focused
 
   }, [index, setFieldValue, values.amounts, fertilizer.amount, values.fertilizerIds, fertilizer.token.id]);
 
+  const clearInput = useCallback(() => {
+
+    const newIds = values.fertilizerIds;
+    const newAmounts = values.amounts;
+    newIds[index] = undefined;
+    newAmounts[index] = undefined;
+    setDisplayValue(undefined);
+
+    const newTotalSelected = newIds.filter(Boolean).length;
+    setFieldValue('fertilizerIds', newIds);
+    setFieldValue('amounts', newAmounts);
+    setFieldValue('totalSelected', newTotalSelected);
+    
+  }, [index, values.amounts, values.fertilizerIds, setFieldValue])
+
   return (
-    <Row justifyContent="space-between" sx={{ width: '100%' }}>
-      <Row justifyContent="center">
-        <ListItemIcon sx={{ pr: 1 }}>
-          <Box
-            component="img"
-            src={fertilizer.status === "active" ? fertActiveIcon : fertUsedIcon}
-            alt=""
-            sx={{
-              width: IconSize.tokenSelect,
-              height: IconSize.tokenSelect,
-            }}
+    <>
+      <Row justifyContent="space-between" sx={{ width: '100%' }}>
+        <Row justifyContent="center">
+          <ListItemIcon sx={{ pr: 1 }}>
+            <Box
+              component="img"
+              src={fertilizer.status === "active" ? fertActiveIcon : fertUsedIcon}
+              alt=""
+              sx={{
+                width: IconSize.tokenSelect,
+                height: IconSize.tokenSelect,
+              }}
+            />
+          </ListItemIcon>
+          <ListItemText
+            primary={`${isMobile ? 'x' : ''}${displayBN(fertilizer.amount)} ${!isMobile ? 'FERTILIZER' : ''}`}
+            primaryTypographyProps={{ color: 'text.primary', display: 'flex' }}
+            secondary={
+              <>
+                <Box sx={{ display: 'flex', alignItems: 'center', flexGrow: 1 }}>
+                  {isMobile ? 
+                    <Box
+                      component="img"
+                      src={sproutIcon}
+                      alt=""
+                      sx={{
+                        width: IconSize.xs,
+                        height: IconSize.xs,
+                      }}
+                    /> 
+                    : 'Sprouts: '}
+                  {displayBN(fertilizer.sprouts)}
+                </Box>
+              </>
+            }
+            secondaryTypographyProps={{ display: 'flex', gap: 1}}
+            sx={{ my: 0 }}
           />
-        </ListItemIcon>
-        <ListItemText
-          primary={`${isMobile ? 'x' : ''}${displayBN(fertilizer.amount)} ${!isMobile ? 'FERTILIZER' : ''}`}
-          primaryTypographyProps={{ color: 'text.primary', display: 'flex' }}
-          secondary={
-            <>
-              <Box sx={{ display: 'flex', alignItems: 'center', flexGrow: 1 }}>
-                {isMobile ? 
-                  <Box
-                    component="img"
-                    src={sproutIcon}
-                    alt=""
-                    sx={{
-                      width: IconSize.xs,
-                      height: IconSize.xs,
-                    }}
-                  /> 
-                  : 'Sprouts: '}
-                {displayBN(fertilizer.sprouts)}
-              </Box>
-            </>
-          }
-          secondaryTypographyProps={{ display: 'flex', gap: 1}}
-          sx={{ my: 0 }}
+        </Row>
+        <TextField
+          type="number"
+          color="primary"
+          placeholder={isMobile ? "Amount" :  "Amount to Transfer"}
+          value={displayValue || ''}
+          onWheel={preventScroll}
+          onChange={handleInput}
+          onKeyDown={preventNegativeInput}
+          size="small"
+          inputRef={inputRef => inputRef && focused === index && !focusWithin && inputRef.focus()}
+          onFocus={() => setFocusWithin(true)}
+          onBlur={() => setFocusWithin(false)}
+          sx={{ ...textFieldStyles, width: isMobile ? 84 : 160 }}
         />
       </Row>
-      <TextField
-        type="number"
-        color="primary"
-        placeholder={isMobile ? "Amount" :  "Amount to Transfer"}
-        value={displayValue || ''}
-        onWheel={preventScroll}
-        onChange={handleInput}
-        onKeyDown={preventNegativeInput}
-        size="small"
-        inputRef={inputRef => inputRef && focused === index && !focusWithin && inputRef.focus()}
-        onFocus={() => setFocusWithin(true)}
-        onBlur={() => setFocusWithin(false)}
-        sx={{ ...textFieldStyles, width: isMobile ? 84 : 160 }}
-      />
-    </Row>
+      <Button
+        color='primary'
+        size='small'
+        onClick={clearInput}
+        sx={{
+          marginLeft: 1,
+          paddingY: 1,
+          minWidth: 24,
+          alignSelf: 'center'
+        }}
+      >
+        ✖
+      </Button>
+    </>
   );
 }
 
