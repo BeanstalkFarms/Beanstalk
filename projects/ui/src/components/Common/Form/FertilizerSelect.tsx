@@ -162,22 +162,28 @@ function RowContent({isMobile, fertilizer, index, values, setFieldValue, focused
           inputRef={inputRef => inputRef && focused === index && !focusWithin && inputRef.focus()}
           onFocus={() => setFocusWithin(true)}
           onBlur={() => setFocusWithin(false)}
-          sx={{ ...textFieldStyles, width: isMobile ? 84 : 160 }}
+          sx={{ ...textFieldStyles, width: isMobile ? 105 : 190 }}
+          InputProps={{
+            endAdornment: 
+              <Button
+                color='primary'
+                size='small'
+                onClick={clearInput}
+                sx={{
+                  minWidth: 28,
+                  maxWidth: 28,
+                  fontSize: 20,
+                  scale: '65%',
+                  marginRight: -1,
+                  borderRadius: '50%',
+                  alignSelf: 'center',
+                }}
+              >
+                ✖
+              </Button>,
+          }}
         />
       </Row>
-      <Button
-        color='primary'
-        size='small'
-        onClick={clearInput}
-        sx={{
-          marginLeft: 1,
-          paddingY: 1,
-          minWidth: 24,
-          alignSelf: 'center'
-        }}
-      >
-        ✖
-      </Button>
     </>
   );
 }
