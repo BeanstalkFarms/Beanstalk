@@ -115,9 +115,9 @@ const FertInputField: FC<
                         </Box>
                         <Box display='flex' flexDirection='row' flexGrow={1} alignItems='center' gap={0.1} >
                           <img alt="" src={humidityIcon} height="11px" />
-                          <Typography textAlign='start' fontSize={12}>{`${fertilizers[index].humidity}%`}</Typography>
+                          <Typography textAlign='start' fontSize={12} marginTop={0.1}>{`${fertilizers[index].humidity}%`}</Typography>
                         </Box>
-                        <Box display='flex' flexDirection='row' flexGrow={1} >
+                        <Box display='flex' flexDirection='row' flexGrow={1} alignItems='center'>
                           <TokenIcon token={SPROUTS} css={{ width: '10px' }} />
                           <Typography textAlign='start' fontSize={12}>{`${displayBN(sprouts)}`}</Typography>
                         </Box>
