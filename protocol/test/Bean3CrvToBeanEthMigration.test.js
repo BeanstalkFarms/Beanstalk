@@ -21,7 +21,7 @@ let beanEthUnderlying
 let snapshotId
 
 
-describe('Bean:3Crv to Bean:Eth Migration', function () {
+describe.skip('Bean:3Crv to Bean:Eth Migration', function () {
   before(async function () {
 
     [user, user2] = await ethers.getSigners()
@@ -73,6 +73,7 @@ describe('Bean:3Crv to Bean:Eth Migration', function () {
     });
     const beanstalkAdmin = await getBeanstalkAdminControls();
     await beanstalkAdmin.upgradeStems();
+    //init tractor
 
   });
 

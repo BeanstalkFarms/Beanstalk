@@ -395,8 +395,13 @@ library LibTokenSilo {
         int96 stem,
         uint256 amount
     ) internal returns (uint256 crateBDV) {
+        console.log('removeDepositFromAccount account: ', account);
+        console.log('removeDepositFromAccount token: ', token);
+
         AppStorage storage s = LibAppStorage.diamondStorage();
         uint256 depositId = LibBytes.packAddressAndStem(token, stem);
+
+        console.log('depositId: ', depositId);
 
         uint256 crateAmount = s.a[account].deposits[depositId].amount;
         crateBDV = s.a[account].deposits[depositId].bdv;
@@ -415,6 +420,11 @@ library LibTokenSilo {
                 );
             }
         }
+
+        console.log('removeDepositFromAccount amount: ', amount);
+        console.log('removeDepositFromAccount crateAmount: ', crateAmount);
+
+
         require(amount <= crateAmount, "Silo: Crate balance too low.");
 
         // Partial remove

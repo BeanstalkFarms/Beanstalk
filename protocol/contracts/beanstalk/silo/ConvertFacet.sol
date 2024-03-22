@@ -106,11 +106,10 @@ contract ConvertFacet is ReentrancyGuard {
         nonReentrant
         returns (int96 toStem, uint256 fromAmount, uint256 toAmount, uint256 fromBdv, uint256 toBdv)
     {
-        address toToken; address fromToken; uint256 grownStalk;
+        LibTractor._setPublisher(msg.sender);
 
+        address toToken; address fromToken; uint256 grownStalk;
         (toToken, fromToken, toAmount, fromAmount) = LibConvert.convert(convertData);
-        
-        require(fromAmount > 0, "Convert: From amount is 0.");
 
         require(fromAmount > 0, "Convert: From amount is 0.");
 
@@ -124,14 +123,14 @@ contract ConvertFacet is ReentrancyGuard {
             fromAmount
         );
 
-        // calculate the bdv of the new deposit
         uint256 newBdv = LibTokenSilo.beanDenominatedValue(toToken, toAmount);
-
         toBdv = newBdv > fromBdv ? newBdv : fromBdv;
 
         toStem = _depositTokensForConvert(toToken, toAmount, toBdv, grownStalk);
 
         emit Convert(LibTractor._getUser(), fromToken, toToken, fromAmount, toAmount);
+
+        LibTractor._resetPublisher();
     }
 
 
@@ -160,7 +159,11 @@ contract ConvertFacet is ReentrancyGuard {
             uint256 amountOut, int96 toStem
         )
     {   
+
+        console.log('1 LibTractor._getUser: ', LibTractor._getUser());
         LibTractor._setPublisher(msg.sender);
+
+        console.log('2 LibTractor._getUser: ', LibTractor._getUser());
 
         // mow input and output tokens: 
         LibSilo._mow(LibTractor._getUser(), inputToken);
@@ -613,6 +616,9 @@ contract ConvertFacet is ReentrancyGuard {
                 console.logInt(stems[i]);
 
                 if (a.active.tokens.add(amounts[i]) >= maxTokens) amounts[i] = maxTokens.sub(a.active.tokens);
+
+                console.log('doing remove deposit from account');
+                
                 a.bdvsRemoved[i] = LibTokenSilo.removeDepositFromAccount(
                         LibTractor._getUser(),
                         token,

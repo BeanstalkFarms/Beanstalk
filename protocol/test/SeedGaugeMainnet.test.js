@@ -8,7 +8,7 @@ const { upgradeWithNewFacets } = require("../scripts/diamond");
 const { mintEth, mintBeans } = require('../utils/mint.js');
 const { getBeanstalk } = require('../utils/contracts.js');
 const { ConvertEncoder } = require('./utils/encoder.js');
-const { bipSeedGauge } = require('../scripts/bips.js');
+const { bipSeedGauge, bipInitTractor } = require('../scripts/bips.js');
 const { to6, to18 } = require('./utils/helpers.js');
 const { setReserves } = require('../utils/well.js');
 const { toBN } = require('../utils/helpers.js');
@@ -49,6 +49,7 @@ describe('SeedGauge Init Test', function () {
 
     // seed Gauge
     await bipSeedGauge(true, undefined, false)
+    await bipInitTractor(true, undefined, false)
   });
 
   beforeEach(async function () {

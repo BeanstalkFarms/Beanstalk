@@ -5,6 +5,7 @@
 pragma solidity =0.7.6;
 
 import {C} from "contracts/C.sol";
+import {console} from "hardhat/console.sol";
 
 /**
  * @title Lib Tractor
@@ -82,6 +83,7 @@ library LibTractor {
     /// @notice set blueprint publisher address
     /// @param publisher blueprint publisher address
     function _setPublisher(address publisher) internal {
+        console.log('_tractorStorage().activePublisher: ', _tractorStorage().activePublisher);
         require(
             _tractorStorage().activePublisher == address(1),
             "LibTractor: publisher already set"

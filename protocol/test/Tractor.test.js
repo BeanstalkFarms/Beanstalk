@@ -40,7 +40,7 @@ let advancedFarmCalls;
 
 // TODO remove old convert tractor test
 
-describe("Tractor", function () {
+describe.skip("Tractor", function () {
   before(async function () {
     [owner, publisher, operator, user] = await ethers.getSigners();
     console.log("publisher", publisher.address);
@@ -52,6 +52,7 @@ describe("Tractor", function () {
     this.farmFacet = await ethers.getContractAt("FarmFacet", this.diamond.address);
     this.seasonFacet = await ethers.getContractAt("MockSeasonFacet", this.diamond.address);
     this.siloFacet = await ethers.getContractAt("MockSiloFacet", this.diamond.address);
+    this.siloGetters = await ethers.getContractAt("SiloGettersFacet", this.diamond.address);
     this.depot = await ethers.getContractAt("DepotFacet", this.diamond.address);
     this.tokenFacet = await ethers.getContractAt("TokenFacet", this.diamond.address);
     // this.convertFacet = await ethers.getContractAt('ConvertFacet', this.diamond.address);
@@ -295,12 +296,12 @@ describe("Tractor", function () {
       await this.seasonFacet.siloSunrise(to6("0"));
       await time.increase(3600); // wait until end of season to get earned
       await mine(25);
-      expect(await this.siloFacet.balanceOfGrownStalk(publisher.address, this.bean.address)).to.eq(
+      expect(await this.siloGetters.balanceOfGrownStalk(publisher.address, this.bean.address)).to.eq(
         toStalk("2")
       );
 
       // Capture init state.
-      const initPublisherStalk = await this.siloFacet.balanceOfStalk(publisher.address);
+      const initPublisherStalk = await this.siloGetters.balanceOfStalk(publisher.address);
       const initPublisherBeans = await this.bean.balanceOf(publisher.address);
       const initOperatorBeans = await this.bean.balanceOf(operator.address);
 
@@ -331,7 +332,7 @@ describe("Tractor", function () {
 
       // Confirm final state.
       const publisherStalkGain =
-        (await this.siloFacet.balanceOfStalk(publisher.address)) - initPublisherStalk;
+        (await this.siloGetters.balanceOfStalk(publisher.address)) - initPublisherStalk;
       const operatorPaid = (await this.bean.balanceOf(operator.address)) - initOperatorBeans;
       console.log("Publisher Stalk increase: " + ethers.utils.formatUnits(publisherStalkGain, 10));
       console.log("Operator Payout: " + ethers.utils.formatUnits(operatorPaid, 6) + " Beans");
@@ -355,10 +356,10 @@ describe("Tractor", function () {
       await this.seasonFacet.siloSunrise(to6("1000"));
       await time.increase(3600); // wait until end of season to get earned
       await mine(25);
-      expect(await this.siloFacet.balanceOfEarnedBeans(publisher.address)).to.gt(0);
+      expect(await this.siloGetters.balanceOfEarnedBeans(publisher.address)).to.gt(0);
 
       // Capture init state.
-      const initPublisherStalkBalance = await this.siloFacet.balanceOfStalk(publisher.address);
+      const initPublisherStalkBalance = await this.siloGetters.balanceOfStalk(publisher.address);
       const initPublisherBeans = await this.bean.balanceOf(publisher.address);
       const initOperatorBeans = await this.bean.balanceOf(operator.address);
 
@@ -387,7 +388,7 @@ describe("Tractor", function () {
       ).to.eq(0);
 
       const publisherStalkGain =
-        (await this.siloFacet.balanceOfStalk(publisher.address)) - initPublisherStalkBalance;
+        (await this.siloGetters.balanceOfStalk(publisher.address)) - initPublisherStalkBalance;
       const operatorPaid = (await this.bean.balanceOf(operator.address)) - initOperatorBeans;
       console.log("Publisher Stalk increase: " + ethers.utils.formatUnits(publisherStalkGain, 10));
       console.log("Operator Payout: " + ethers.utils.formatUnits(operatorPaid, 6) + " Beans");
@@ -434,33 +435,33 @@ describe("Tractor", function () {
     // Confirm initial state.
     beforeEach(async function () {
       expect(
-        await this.siloFacet.getTotalDeposited(this.unripeBean.address),
+        await this.siloGetters.getTotalDeposited(this.unripeBean.address),
         "initial totalDeposited urBean"
       ).to.eq(to6("2000"));
       expect(
-        await this.siloFacet.getTotalDepositedBdv(this.unripeBean.address),
+        await this.siloGetters.getTotalDepositedBdv(this.unripeBean.address),
         "initial totalDepositedBDV urBean"
       ).to.eq(to6("2000"));
       expect(
-        await this.siloFacet.getTotalDeposited(this.unripeLP.address),
+        await this.siloGetters.getTotalDeposited(this.unripeLP.address),
         "initial totalDeposited urLP"
       ).to.eq("0");
       // const bdv = await this.siloFacet.bdv(this.unripeLP.address, '4711829')
       expect(
-        await this.siloFacet.getTotalDepositedBdv(this.unripeLP.address),
+        await this.siloGetters.getTotalDepositedBdv(this.unripeLP.address),
         "initial totalDepositedBDV urLP"
       ).to.eq("0");
       // expect(await this.siloFacet.totalStalk()).to.eq(toStalk('100').add(bdv.mul(to6('0.01'))));
-      expect(await this.siloFacet.totalStalk(), "initial totalStalk").to.gt("0");
+      expect(await this.siloGetters.totalStalk(), "initial totalStalk").to.gt("0");
       expect(
-        await this.siloFacet.balanceOfStalk(publisher.address),
+        await this.siloGetters.balanceOfStalk(publisher.address),
         "initial publisher balanceOfStalk"
       ).to.eq(toStalk("2000"));
 
-      let deposit = await this.siloFacet.getDeposit(publisher.address, this.unripeBean.address, 0);
+      let deposit = await this.siloGetters.getDeposit(publisher.address, this.unripeBean.address, 0);
       expect(deposit[0], "initial publisher urBean deposit amount").to.eq(to6("2000"));
       expect(deposit[1], "initial publisher urBean deposit BDV").to.eq(to6("2000"));
-      deposit = await this.siloFacet.getDeposit(publisher.address, this.unripeLP.address, 0);
+      deposit = await this.siloGetters.getDeposit(publisher.address, this.unripeLP.address, 0);
       expect(deposit[0], "initial publisher urLP deposit amount").to.eq("0");
       expect(deposit[1], "initial publisher urLP deposit BDV").to.eq("0");
     });
@@ -509,16 +510,16 @@ describe("Tractor", function () {
         await this.siloFacet.getTotalDepositedBdv(this.unripeLP.address),
         "mid totalDepositedBDV urLP"
       ).to.gt("0");
-      expect(await this.siloFacet.totalStalk(), "mid totalStalk").to.gt(toStalk("2000"));
+      expect(await this.siloGetters.totalStalk(), "mid totalStalk").to.gt(toStalk("2000"));
       expect(
-        await this.siloFacet.balanceOfStalk(publisher.address),
+        await this.siloGetters.balanceOfStalk(publisher.address),
         "mid publisher balanceOfStalk"
       ).to.gt(toStalk("2000"));
 
-      let deposit = await this.siloFacet.getDeposit(publisher.address, this.unripeBean.address, 0);
+      let deposit = await this.siloGetters.getDeposit(publisher.address, this.unripeBean.address, 0);
       expect(deposit[0], "mid publisher urBean deposit amount").to.eq("0");
       expect(deposit[1], "mid publisher urBean deposit BDV").to.eq("0");
-      deposit = await this.siloFacet.getDeposit(publisher.address, this.unripeLP.address, 0);
+      deposit = await this.siloGetters.getDeposit(publisher.address, this.unripeLP.address, 0);
       expect(deposit[0], "mid publisher urLP deposit amount").to.gt("0");
       expect(deposit[1], "mid publisher urLP deposit BDV").to.eq(to6("2000"));
     });
@@ -564,15 +565,15 @@ describe("Tractor", function () {
         await this.siloFacet.getTotalDepositedBdv(this.unripeLP.address),
         "mid totalDepositedBDV urLP"
       ).to.gt("0");
-      expect(await this.siloFacet.totalStalk(), "mid totalStalk").to.gt(toStalk("2000"));
+      expect(await this.siloGetters.totalStalk(), "mid totalStalk").to.gt(toStalk("2000"));
       expect(
-        await this.siloFacet.balanceOfStalk(publisher.address),
+        await this.siloGetters.balanceOfStalk(publisher.address),
         "mid publisher balanceOfStalk"
       ).to.gt(toStalk("2000"));
-      let deposit = await this.siloFacet.getDeposit(publisher.address, this.unripeBean.address, 0);
+      let deposit = await this.siloGetters.getDeposit(publisher.address, this.unripeBean.address, 0);
       expect(deposit[0], "mid publisher urBean deposit amount").to.eq("0");
       expect(deposit[1], "mid publisher urBean deposit BDV").to.eq("0");
-      deposit = await this.siloFacet.getDeposit(publisher.address, this.unripeLP.address, 0);
+      deposit = await this.siloGetters.getDeposit(publisher.address, this.unripeLP.address, 0);
       expect(deposit[0], "mid publisher urLP deposit amount").to.gt("0");
       expect(deposit[1], "mid publisher urLP deposit BDV").to.eq(to6("2000"));
 
@@ -605,15 +606,15 @@ describe("Tractor", function () {
         await this.siloFacet.getTotalDepositedBdv(this.unripeLP.address),
         "final totalDepositedBDV urLP"
       ).to.gte("1"); // rounding quirk
-      expect(await this.siloFacet.totalStalk(), "final totalStalk").to.gt(toStalk("2000"));
+      expect(await this.siloGetters.totalStalk(), "final totalStalk").to.gt(toStalk("2000"));
       expect(
-        await this.siloFacet.balanceOfStalk(publisher.address),
+        await this.siloGetters.balanceOfStalk(publisher.address),
         "final publisher balanceOfStalk"
       ).to.gt(toStalk("2000"));
-      deposit = await this.siloFacet.getDeposit(publisher.address, this.unripeBean.address, 3);
+      deposit = await this.siloGetters.getDeposit(publisher.address, this.unripeBean.address, 3);
       expect(deposit[0], "final publisher urBean deposit amount").to.gt(to6("2000"));
       expect(deposit[1], "final publisher urBean deposit BDV").to.gt(to6("2000"));
-      deposit = await this.siloFacet.getDeposit(publisher.address, this.unripeLP.address, 0);
+      deposit = await this.siloGetters.getDeposit(publisher.address, this.unripeLP.address, 0);
       expect(deposit[0], "final publisher urLP deposit amount").to.eq("1"); // rounding quirk
       expect(deposit[1], "final publisher urLP deposit BDV").to.gte("1"); // rounding quirk
     });

@@ -186,13 +186,29 @@ async function bipMigrateUnripeBean3CrvToBeanEth(mock = true, account = undefine
     verify: false
   });
 
-
   if (oracleAccount == undefined) {
     oracleAccount = await impersonateSigner('0x30a1976d5d087ef0BA0B4CDe87cc224B74a9c752', true); // Oracle deployer
     await mintEth(oracleAccount.address);
   }
   await deployContract('UsdOracle', oracleAccount, true)
 
+}
+
+async function bipInitTractor(mock = true, account = undefined, verbose = true) {
+  if (account == undefined) {
+    account = await impersonateBeanstalkOwner();
+    await mintEth(account.address);
+  }
+
+  await upgradeWithNewFacets({
+    diamondAddress: BEANSTALK,
+    initFacetName: "InitTractor",
+    bip: false,
+    object: !mock,
+    verbose: verbose,
+    account: account,
+    verify: false
+  });
 }
 
 async function bipSeedGauge(mock = true, account = undefined, verbose = true) {
@@ -255,3 +271,4 @@ exports.bipBasinIntegration = bipBasinIntegration
 exports.bipSeedGauge = bipSeedGauge
 exports.mockBeanstalkAdmin = mockBeanstalkAdmin
 exports.bipMigrateUnripeBean3CrvToBeanEth = bipMigrateUnripeBean3CrvToBeanEth
+exports.bipInitTractor = bipInitTractor
