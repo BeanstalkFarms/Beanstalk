@@ -1,16 +1,18 @@
 import { Token, TokenValue } from "@beanstalk/sdk";
 import { Well } from "@beanstalk/sdk/Wells";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { erc20ABI, useAccount, useQueryClient } from "wagmi";
+import { useAccount } from "wagmi";
+import { erc20Abi } from "viem";
 
 import useSdk from "src/utils/sdk/useSdk";
 import { Log } from "src/utils/logger";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { BigNumber as EthersBN } from "ethers";
 import { multicall } from "@wagmi/core";
 import BEANSTALK_ABI from "@beanstalk/protocol/abi/Beanstalk.json";
 import { useSiloBalanceMany } from "./useSiloBalance";
 import { useWells } from "src/wells/useWells";
+import { config } from "src/utils/wagmi/config";
 
 export type LPBalanceSummary = {
   silo: TokenValue;
@@ -65,7 +67,7 @@ export const useLPPositionSummary = () => {
     for (const t of lpTokens) {
       contractCalls.push({
         address: t.address as `0x{string}`,
-        abi: erc20ABI,
+        abi: erc20Abi,
         functionName: "balanceOf",
         args: [address]
       });
@@ -83,9 +85,10 @@ export const useLPPositionSummary = () => {
   /**
    * Fetch external & internal balances
    */
-  const { data: balanceData, ...balanceRest } = useQuery<Record<string, Omit<LPBalanceSummary, "silo">>, Error>(
-    ["token", "lpSummary", ...lpTokens],
-    async () => {
+  const { data: balanceData, ...balanceRest } = useQuery({
+    queryKey: ["token", "lpSummary", ...lpTokens],
+
+    queryFn: async () => {
       /**
        * TODO: check if there are any cached balances.
        * If so, return those instead of fetching
@@ -93,9 +96,9 @@ export const useLPPositionSummary = () => {
       const balances: Record<string, Omit<LPBalanceSummary, "silo">> = {};
       if (!address || !lpTokens.length) return balances;
 
-      const res = (await multicall({
+      const res = (await multicall(config, {
         contracts: calls,
-        allowFailure: true
+        allowFailure: false
       })) as unknown as EthersBN[];
 
       for (let i = 0; i < res.length; i++) {
@@ -124,18 +127,18 @@ export const useLPPositionSummary = () => {
 
       return balances;
     },
-    {
-      /**
-       * Token balances are cached for 30 seconds, refetch value every 30 seconds,
-       * when the window is hidden/not visible, stop background refresh,
-       * when the window gains focus, force a refresh even if cache is not stale     *
-       */
-      staleTime: 1000 * 30,
-      refetchInterval: 1000 * 30,
-      refetchIntervalInBackground: false,
-      refetchOnWindowFocus: "always"
-    }
-  );
+
+    /**
+     * Token balances are cached for 30 seconds, refetch value every 30 seconds,
+     * when the window is hidden/not visible, stop background refresh,
+     * when the window gains focus, force a refresh even if cache is not stale     *
+     */
+    staleTime: 1000 * 30,
+
+    refetchInterval: 1000 * 30,
+    refetchIntervalInBackground: false,
+    refetchOnWindowFocus: "always"
+  });
 
   // Combine silo, internal & external balances & update state
   useEffect(() => {

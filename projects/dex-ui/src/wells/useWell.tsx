@@ -6,20 +6,21 @@ export const useWell = (address: string) => {
   const sdk = useSdk();
   const queryClient = useQueryClient();
 
-  const { data, isLoading, error } = useQuery<Well, Error>(
-    ["well", sdk, address],
-    async () => {
+  const { data, isLoading, error } = useQuery({
+    queryKey: ["well", sdk, address],
+
+    queryFn: async () => {
       return sdk.wells.getWell(address);
     },
-    {
-      placeholderData: () => {
-        const cachedWell = queryClient.getQueryData<Well[]>(["wells", !!sdk.signer])?.find((well) => well.address === address);
-        return cachedWell;
-      },
-      staleTime: Infinity,
-      refetchOnWindowFocus: false
-    }
-  );
+
+    placeholderData: () => {
+      const cachedWell = queryClient.getQueryData<Well[]>(["wells", !!sdk.signer])?.find((well) => well.address === address);
+      return cachedWell;
+    },
+
+    staleTime: Infinity,
+    refetchOnWindowFocus: false
+  });
 
   return { well: data, loading: isLoading, error };
 };

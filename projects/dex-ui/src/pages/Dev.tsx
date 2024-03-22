@@ -9,12 +9,13 @@ import toast from "react-hot-toast";
 import { useAllTokensBalance } from "src/tokens/useAllTokenBalance";
 import { useWellTokens } from "src/tokens/useWellTokens";
 import styled from "styled-components";
-import { useAccount, useProvider } from "wagmi";
+import { useAccount } from "wagmi";
 import { ToastAlert } from "src/components/TxnToast/ToastAlert";
 import { useWells } from "src/wells/useWells";
+import { useEthersProvider } from "src/utils/wagmi/ethersAdapter";
 
 export const Dev = () => {
-  const provider = useProvider();
+  const provider = useEthersProvider();
   const account = useAccount();
   const { data } = useWellTokens();
   const { data: wells } = useWells();
