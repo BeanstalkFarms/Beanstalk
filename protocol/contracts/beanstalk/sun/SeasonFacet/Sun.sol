@@ -237,7 +237,7 @@ contract Sun is Oracle {
     function setSoilBelowPeg(int256 twaDeltaB) internal {
 
         // Calculate deltaB from instantaneous reserves.
-        // NOTE: deltaB is calculated only from the Bean:ETH Well at this time
+        // NOTE: deltaB is calculated only from the Bean:ETH Well at this time.
         // If more wells are added, this will need to be updated.
         (int256 instDeltaB, ,) = LibWellMinting.instantaneousDeltaB(C.BEAN_ETH_WELL);
 
