@@ -119,6 +119,8 @@ contract FertilizerFacet {
         );
     }
 
+    ///////////////////////////// Fertilizer Getters //////////////////////////////
+
     function totalFertilizedBeans() external view returns (uint256 beans) {
         return s.fertilizedIndex;
     }
