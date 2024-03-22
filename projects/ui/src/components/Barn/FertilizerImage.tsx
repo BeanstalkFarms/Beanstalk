@@ -20,6 +20,8 @@ export type FertilizerImageProps = {
   isNew?: boolean;
   progress?: number;
   id?: BigNumber;
+  noOpenseaLink?: boolean;
+  verySmallIdStyling?: boolean;
 };
 
 const FertilizerImage: FC<FertilizerImageProps> = ({
@@ -27,6 +29,8 @@ const FertilizerImage: FC<FertilizerImageProps> = ({
   isNew = false,
   progress,
   id,
+  noOpenseaLink,
+  verySmallIdStyling
 }) => {
   const inner = (
     <Stack
@@ -40,6 +44,7 @@ const FertilizerImage: FC<FertilizerImageProps> = ({
         borderWidth: id ? 0 : 1, // if ID is present, use button border
         borderStyle: 'solid',
         borderRadius: 1,
+        overflow: 'hidden',
         position: 'relative',
         '&:hover > .id': {
           display: 'block',
@@ -62,11 +67,20 @@ const FertilizerImage: FC<FertilizerImageProps> = ({
           sx={{
             display: 'none',
             position: 'absolute',
-            bottom: 5,
-            left: 10,
+            bottom: verySmallIdStyling ? 1 : 5,
+            width: '100%',
+            zIndex: verySmallIdStyling ? 3 : 1,
           }}
         >
-          <Typography sx={{ fontSize: 11 }} color="gray">
+          <Typography 
+            color={verySmallIdStyling ? "text.primary" : "gray"}
+            sx={{ 
+              fontSize: 11, 
+              display: 'flex', 
+              justifyContent: verySmallIdStyling ? 'center' : 'start',
+              paddingX: verySmallIdStyling ? 0 : 1
+            }}
+          >
             #{id.toString()}
           </Typography>
         </Box>
@@ -91,6 +105,17 @@ const FertilizerImage: FC<FertilizerImageProps> = ({
   );
 
   if (id) {
+    if (noOpenseaLink) {
+      return (
+        <Button
+          variant="outlined"
+          sx={{ borderColor: 'none', p: 0, height: 'auto' }}
+          fullWidth
+        >
+          {inner}
+        </Button>
+      );
+    };
     return (
       <Button
         variant="outlined"
