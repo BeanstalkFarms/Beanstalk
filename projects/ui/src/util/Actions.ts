@@ -240,8 +240,8 @@ export type FertilizerRewardsAction = {
 export type FertilizerTransferAction = {
   type: ActionType.TRANSFER_FERTILIZER;
   to: string;
-  fertilizerId: BigNumber;
-  amount: BigNumber;
+  fertAmount: BigNumber;
+  sproutAmount: BigNumber;
 };
 
 /// /////////////////////////// AGGREGATE /////////////////////////////////
@@ -420,7 +420,7 @@ export const parseActionMessage = (a: Action) => {
     case ActionType.RECEIVE_FERT_REWARDS:
       return `Receive ${displayFullBN(a.amountOut, 2)} Sprouts.`;
     case ActionType.TRANSFER_FERTILIZER:
-      return `Transferred ${displayFullBN(a.amount, 0)} Fertilizer to ${trimAddress(a.to, false)}`;
+      return `Transfer ${displayFullBN(a.fertAmount, 0)} Fertilizer${a.fertAmount.gt(1) ? 's' : ''} containing ${displayFullBN(a.sproutAmount, 2)} Sprout${a.sproutAmount.gt(1) ? 's' : ''} to ${trimAddress(a.to, false)}`;
 
     /// MARKET
     case ActionType.CREATE_ORDER:
