@@ -56,6 +56,7 @@ import { QuoteHandlerWithParams } from '~/hooks/ledger/useQuoteWithParams';
 
 import FormTxnProvider from '~/components/Common/Form/FormTxnProvider';
 import useFormTxnContext from '~/hooks/sdk/useFormTxnContext';
+import { BalanceFrom } from '~/components/Common/Form/BalanceFromRow';
 
 export type CreateOrderFormValues = {
   placeInLine: BigNumber | null;
@@ -175,6 +176,7 @@ const CreateOrderV2Form: FC<
         selected={values.tokens}
         handleSubmit={handleSelectTokens}
         balances={balances}
+        balanceFrom={BalanceFrom.TOTAL}
         tokenList={Object.values(erc20TokenMap)}
         mode={TokenSelectMode.SINGLE}
       />
@@ -223,6 +225,7 @@ const CreateOrderV2Form: FC<
                     ? balances.eth
                     : balances[state.token.address] || ZERO_BN
                 }
+                balanceFrom={BalanceFrom.TOTAL}
                 state={state}
                 params={quoteHandlerParams}
                 showTokenSelect={handleOpen}

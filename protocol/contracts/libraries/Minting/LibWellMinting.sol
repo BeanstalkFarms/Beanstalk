@@ -193,6 +193,9 @@ library LibWellMinting {
 
             return (deltaB, snapshot, twaReserves, ratios);
         }
-        catch {}
+        catch {
+            // if the pump fails, return all 0s to avoid the sunrise reverting.
+            return (0, new bytes(0), new uint256[](0), new uint256[](0));
+        }
     }
 }

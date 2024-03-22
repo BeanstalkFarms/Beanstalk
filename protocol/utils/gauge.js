@@ -9,9 +9,11 @@ const { upgradeWithNewFacets } = require("../scripts/diamond");
 async function initalizeGaugeForToken(token, gaugePoints, optimalPercentDepositedBdv) {
     const season = await ethers.getContractAt('MockSeasonFacet', BEANSTALK)
     const gauge = await ethers.getContractAt('GaugePointFacet', BEANSTALK)
+    const liquidityWeight = await ethers.getContractAt('LiquidityWeightFacet', BEANSTALK)
     await season.connect(await impersonateBeanstalkOwner()).mockInitalizeGaugeForToken(
         token,
-        gauge.interface.getSighash("defaultGaugePointFunction(uint256 currentGaugePoints,uint256 optimalPercentDepositedBdv,uint256 percentOfDepositedBdv)"),
+        gauge.interface.getSighash("defaultGaugePointFunction(uint256,uint256,uint256)"),
+        liquidityWeight.interface.getSighash("maxWeight()"),
         gaugePoints,
         optimalPercentDepositedBdv
     )

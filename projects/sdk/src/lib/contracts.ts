@@ -30,6 +30,11 @@ import {
   Math__factory,
   UsdOracle,
   UsdOracle__factory,
+  UniswapV3Router__factory,
+  UniswapV3Router,
+  UniswapV3QuoterV2__factory,
+  UniswapV3QuoterV2,
+  
 } from "src/constants/generated";
 import { BaseContract } from "ethers";
 
@@ -53,6 +58,7 @@ export class Contracts {
   static sdk: BeanstalkSDK;
 
   public readonly beanstalk: Beanstalk;
+  public readonly beanstalkRead: Beanstalk;
   public readonly beanstalkPrice: BeanstalkPrice;
   public readonly fertilizer: BeanstalkFertilizer;
 
@@ -63,6 +69,9 @@ export class Contracts {
   public readonly usdOracle: UsdOracle;
 
   public readonly curve: CurveContracts;
+
+  public readonly uniswapV3Router: UniswapV3Router;
+  public readonly uniswapV3QuoterV2: UniswapV3QuoterV2;
 
   // private chain: string;
 
@@ -88,8 +97,12 @@ export class Contracts {
     const cryptoFactoryAddress = sdk.addresses.CRYPTO_FACTORY.get(sdk.chainId);
     const zapAddress = sdk.addresses.CURVE_ZAP.get(sdk.chainId);
 
+    const uniswapV3RouterAddress = sdk.addresses.UNISWAP_V3_ROUTER.get(sdk.chainId);
+    const uniswapV3QuoterV2Address = sdk.addresses.UNISWAP_V3_QUOTER_V2.get(sdk.chainId);
+
     // Instances
     this.beanstalk = Beanstalk__factory.connect(beanstalkAddress, sdk.providerOrSigner);
+    this.beanstalkRead = Beanstalk__factory.connect(beanstalkAddress, sdk.readProvider ?? sdk.providerOrSigner);
     this.beanstalkPrice = BeanstalkPrice__factory.connect(beanstalkPriceAddress, sdk.providerOrSigner);
     this.fertilizer = BeanstalkFertilizer__factory.connect(beanstalkFertilizerAddress, sdk.providerOrSigner);
 
@@ -106,6 +119,9 @@ export class Contracts {
     const metaFactory = CurveMetaFactory__factory.connect(metaFactoryAddress, sdk.providerOrSigner);
     const cryptoFactory = CurveCryptoFactory__factory.connect(cryptoFactoryAddress, sdk.providerOrSigner);
     const zap = CurveZap__factory.connect(zapAddress, sdk.providerOrSigner);
+
+    this.uniswapV3Router = UniswapV3Router__factory.connect(uniswapV3RouterAddress, sdk.providerOrSigner);
+    this.uniswapV3QuoterV2 = UniswapV3QuoterV2__factory.connect(uniswapV3QuoterV2Address, sdk.providerOrSigner);
 
     this.curve = {
       pools: {

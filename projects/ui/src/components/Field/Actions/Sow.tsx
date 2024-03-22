@@ -268,7 +268,7 @@ const SowForm: FC<
           balanceFrom={values.balanceFrom}
           disableTokenSelect={!hasSoil || !maxAmountIn}
         />
-        {hasSoil && <ClaimBeanDrawerToggle />}
+        {hasSoil && <ClaimBeanDrawerToggle actionText='Sow'/>}
         {!hasSoil ? (
           <Box>
             <WarningAlert sx={{ color: 'black' }}>
@@ -308,13 +308,13 @@ const SowForm: FC<
                   actions={[
                     {
                       type: ActionType.BUY_BEANS,
-                      beanAmount: totalBeansAmount,
+                      beanAmount: beans,
                       beanPrice: beanPrice,
                       token: getNewToOldToken(tokenIn),
                       tokenAmount: amountIn || ZERO_BN,
                     },
                     {
-                      type: ActionType.BURN_BEANS,
+                      type: ActionType.SOW_BEANS,
                       amount: totalBeansAmount,
                     },
                     {
@@ -366,7 +366,7 @@ const SowForm: FC<
           Sow
         </SmartSubmitButton>
       </Stack>
-      <FormWithDrawer.Drawer title="Use Claimable Beans">
+      <FormWithDrawer.Drawer title="Sow Claimable Beans">
         <ClaimBeanDrawerContent
           maxBeans={soil}
           beansUsed={beans}

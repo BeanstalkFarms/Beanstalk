@@ -39,7 +39,7 @@ const DepositedAsset: FC<{
           : asset.symbol === 'urBEAN'
           ? 'Unripe Beans'
           : asset.name
-      } at the end of each Season.`,
+      } at the beginning of every Season.`,
       gap: 0.5,
     }),
     [asset]

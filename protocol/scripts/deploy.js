@@ -101,23 +101,40 @@ async function main(scriptName, verbose = true, mock = false, reset = true) {
 
   // A list of public libraries that need to be deployed separately.
   const libraryNames = [
-    "LibGauge",
-    "LibConvert",
-    "LibIncentive",
-    "LibLockedUnderlying",
-    "LibCurveMinting"
-  ];
+    'LibGauge', 'LibIncentive', 'LibConvert', 'LibLockedUnderlying', 'LibCurveMinting', 'LibGerminate'
+  ]
 
   // A mapping of facet to public library names that will be linked to it.
   const facetLibraries = {
-    SeasonFacet: ["LibGauge", "LibIncentive", "LibLockedUnderlying", "LibCurveMinting"],
-    MockSeasonFacet: ["LibGauge", "LibIncentive", "LibLockedUnderlying", "LibCurveMinting"],
-    SeasonGettersFacet: ["LibLockedUnderlying"],
-    ConvertFacet: ["LibConvert"],
-    MockConvertFacet: ["LibConvert"],
-    MockUnripeFacet: ["LibLockedUnderlying"],
-    UnripeFacet: ["LibLockedUnderlying"]
-  };
+    'SeasonFacet': [
+      'LibGauge',
+      'LibIncentive',
+      'LibLockedUnderlying',
+      'LibGerminate'
+    ],
+    'MockSeasonFacet': [
+      'LibGauge',
+      'LibIncentive',
+      'LibLockedUnderlying',
+      'LibCurveMinting',
+      'LibGerminate'
+    ],
+    'SeasonGettersFacet': [
+      'LibLockedUnderlying'
+    ],
+    'ConvertFacet': [
+      'LibConvert'
+    ],
+    'MockConvertFacet': [
+      'LibConvert'
+    ],
+    'MockUnripeFacet': [
+      'LibLockedUnderlying'
+    ],
+    'UnripeFacet': [
+      'LibLockedUnderlying'
+    ]
+  }
 
   let [
     bdvFacet,
@@ -144,75 +161,77 @@ async function main(scriptName, verbose = true, mock = false, reset = true) {
     whitelistFacet,
     metadataFacet,
     gaugePointFacet,
-    tractorFacet
-  ] = mock
-    ? await deployFacets(
-        verbose,
-        [
-          "BDVFacet",
-          "CurveFacet",
-          "MigrationFacet",
-          "ApprovalFacet",
-          "MockConvertFacet",
-          "ConvertGettersFacet",
-          "EnrootFacet",
-          "FarmFacet",
-          "MockFieldFacet",
-          "MockFundraiserFacet",
-          "MockMarketplaceFacet",
-          "PauseFacet",
-          "DepotFacet",
-          "MockSeasonFacet",
-          "SeasonGettersFacet",
-          "MockSiloFacet",
-          "MockFertilizerFacet",
-          "OwnershipFacet",
-          "TokenFacet",
-          "TokenSupportFacet",
-          "MockUnripeFacet",
-          "WhitelistFacet",
-          "MetadataFacet",
-          "GaugePointFacet",
-          "TractorFacet"
-        ],
-        libraryNames,
-        facetLibraries
-      )
-    : await deployFacets(
-        verbose,
-        [
-          "BDVFacet",
-          "CurveFacet",
-          "MigrationFacet",
-          "ApprovalFacet",
-          "ConvertFacet",
-          "ConvertGettersFacet",
-          "EnrootFacet",
-          "FarmFacet",
-          "FieldFacet",
-          "FundraiserFacet",
-          "MarketplaceFacet",
-          "OwnershipFacet",
-          "PauseFacet",
-          "DepotFacet",
-          "SeasonFacet",
-          "SeasonGettersFacet",
-          "SiloFacet",
-          "FertilizerFacet",
-          "TokenFacet",
-          "TokenSupportFacet",
-          "UnripeFacet",
-          "WhitelistFacet",
-          "MetadataFacet",
-          "GaugePointFacet",
-          "TractorFacet"
-        ],
-        libraryNames,
-        facetLibraries
-      );
-  const initDiamondArg = mock
-    ? "contracts/mocks/MockInitDiamond.sol:MockInitDiamond"
-    : "contracts/farm/init/InitDiamond.sol:InitDiamond";
+    tractorFacet,
+    siloGettersFacet,
+    liquidityWeightFacet
+  ] = mock ? await deployFacets(
+    verbose,
+    [ 
+      'BDVFacet',
+      'CurveFacet',
+      'MigrationFacet',
+      'ApprovalFacet',
+      'MockConvertFacet',
+      'ConvertGettersFacet',
+      'EnrootFacet',
+      'FarmFacet',
+      'MockFieldFacet',
+      'MockFundraiserFacet',
+      'MockMarketplaceFacet',
+      'PauseFacet',
+      'DepotFacet',
+      'MockSeasonFacet',
+      'SeasonGettersFacet',
+      'MockSiloFacet',
+      'MockFertilizerFacet',
+      'OwnershipFacet',
+      'TokenFacet',
+      'TokenSupportFacet',
+      'MockUnripeFacet',
+      'MockWhitelistFacet',
+      'MetadataFacet',
+      'GaugePointFacet',
+      'TractorFacet',
+      'SiloGettersFacet',
+      'LiquidityWeightFacet'
+    ],
+    libraryNames,
+    facetLibraries
+  ) : await deployFacets(
+    verbose,
+    [ 
+      'BDVFacet',
+      'CurveFacet',
+      'MigrationFacet',
+      'ApprovalFacet',
+      'ConvertFacet',
+      'ConvertGettersFacet',
+      'EnrootFacet',
+      'FarmFacet',
+      'FieldFacet',
+      'FundraiserFacet',
+      'MarketplaceFacet',
+      'OwnershipFacet',
+      'PauseFacet',
+      'DepotFacet',
+      'SeasonFacet',
+      'SeasonGettersFacet',
+      'SiloFacet',
+      'FertilizerFacet',
+      'TokenFacet',
+      'TokenSupportFacet',
+      'UnripeFacet',
+      'WhitelistFacet',
+      'MetadataFacet',
+      'GaugePointFacet',
+      'TractorFacet',
+      'SiloGettersFacet',
+      'LiquidityWeightFacet'
+    ],
+    libraryNames,
+    facetLibraries
+  )
+  const initDiamondArg = mock ? 'contracts/mocks/MockInitDiamond.sol:MockInitDiamond' : 'contracts/farm/init/InitDiamond.sol:InitDiamond'
   // eslint-disable-next-line no-unused-vars
 
   let args = [];
@@ -236,31 +255,33 @@ async function main(scriptName, verbose = true, mock = false, reset = true) {
     diamondName: "BeanstalkDiamond",
     initDiamond: initDiamondArg,
     facets: [
-      ["BDVFacet", bdvFacet],
-      ["CurveFacet", curveFacet],
-      ["MigrationFacet", migrationFacet],
-      ["ApprovalFacet", approvalFacet],
-      ["ConvertFacet", convertFacet],
-      ["ConvertGettersFacet", convertGettersFacet],
-      ["EnrootFacet", enrootFacet],
-      ["FarmFacet", farmFacet],
-      ["FieldFacet", fieldFacet],
-      ["FundraiserFacet", fundraiserFacet],
-      ["MarketplaceFacet", marketplaceFacet],
-      ["OwnershipFacet", ownershipFacet],
-      ["PauseFacet", pauseFacet],
-      ["DepotFacet", depotFacet],
-      ["SeasonFacet", seasonFacet],
-      ["SeasonGettersFacet", seasonGettersFacet],
-      ["SiloFacet", siloFacet],
-      ["FertilizerFacet", fertilizerFacet],
-      ["TokenFacet", tokenFacet],
-      ["TokenSupportFacet", tokenSupportFacet],
-      ["UnripeFacet", unripeFacet],
-      ["WhitelistFacet", whitelistFacet],
-      ["MetadataFacet", metadataFacet],
-      ["GaugePointFacet", gaugePointFacet],
-      ["TractorFacet", tractorFacet]
+      ['BDVFacet', bdvFacet],
+      ['CurveFacet', curveFacet],
+      ['MigrationFacet', migrationFacet],
+      ['ApprovalFacet', approvalFacet],
+      ['ConvertFacet', convertFacet],
+      ['ConvertGettersFacet', convertGettersFacet],
+      ['EnrootFacet', enrootFacet],
+      ['FarmFacet', farmFacet],
+      ['FieldFacet', fieldFacet],
+      ['FundraiserFacet', fundraiserFacet],
+      ['MarketplaceFacet', marketplaceFacet],
+      ['OwnershipFacet', ownershipFacet],
+      ['PauseFacet', pauseFacet],
+      ['DepotFacet', depotFacet],
+      ['SeasonFacet', seasonFacet],
+      ['SeasonGettersFacet', seasonGettersFacet],
+      ['SiloFacet', siloFacet],
+      ['FertilizerFacet', fertilizerFacet],
+      ['TokenFacet', tokenFacet],
+      ['TokenSupportFacet', tokenSupportFacet],
+      ['UnripeFacet', unripeFacet],
+      ['WhitelistFacet', whitelistFacet],
+      ['MetadataFacet', metadataFacet],
+      ['GaugePointFacet', gaugePointFacet],
+      ["TractorFacet", tractorFacet],
+      ['SiloGettersFacet', siloGettersFacet],
+      ['LiquidityWeightFacet', liquidityWeightFacet]
     ],
     owner: account,
     args: args,
@@ -314,8 +335,10 @@ async function main(scriptName, verbose = true, mock = false, reset = true) {
     unripeFacet,
     metadataFacet,
     gaugePointFacet,
-    tractorFacet
-  };
+    tractorFacet,
+    siloGettersFacet,
+    liquidityWeightFacet
+  }
 }
 
 // We recommend this pattern to be able to use async/await everywhere

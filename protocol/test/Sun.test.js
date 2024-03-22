@@ -2,12 +2,12 @@ const { expect } = require('chai')
 const { deploy } = require('../scripts/deploy.js')
 const { takeSnapshot, revertToSnapshot } = require("./utils/snapshot")
 const { to6, toStalk, toBean, to18 } = require('./utils/helpers.js');
-const { USDC, UNRIPE_BEAN, UNRIPE_LP, BEAN,ETH_USDC_UNISWAP_V3, BASE_FEE_CONTRACT, THREE_CURVE, THREE_POOL, BEAN_3_CURVE, BEAN_ETH_WELL, WETH } = require('./utils/constants.js');
+const { USDC, UNRIPE_BEAN, UNRIPE_LP, BEAN,ETH_USDC_UNISWAP_V3, BASE_FEE_CONTRACT, THREE_CURVE, THREE_POOL, BEAN_3_CURVE, BEAN_ETH_WELL, WETH, BEANSTALK_PUMP } = require('./utils/constants.js');
 const { EXTERNAL, INTERNAL } = require('./utils/balances.js');
 const { ethers } = require('hardhat');
 const { deployMockWell, setReserves } = require('../utils/well.js');
 const { setEthUsdPrice, setEthUsdcPrice } = require('../utils/oracle.js');
-const { deployBasin } = require('../scripts/basin.js');
+const { deployBasin, deployBasinWithMockPump } = require('../scripts/basin.js');
 const ZERO_BYTES = ethers.utils.formatBytes32String('0x0')
 const { advanceTime } = require('../utils/helpers.js');
 
@@ -45,11 +45,15 @@ describe('Sun', function () {
     await this.threePool.set_virtual_price(to18('1'));
     this.beanThreeCurve = await ethers.getContractAt('MockMeta3Curve', BEAN_3_CURVE);
     this.uniswapV3EthUsdc = await ethers.getContractAt('MockUniswapV3Pool', ETH_USDC_UNISWAP_V3);
+    this.siloGetters = await ethers.getContractAt('SiloGettersFacet', this.diamond.address)
     await this.beanThreeCurve.set_supply(toBean('100000'));
     await this.beanThreeCurve.set_A_precise('1000');
     await this.beanThreeCurve.set_virtual_price(to18('1'));
     await this.beanThreeCurve.set_balances([toBean('10000'), to18('10000')]);
     await this.beanThreeCurve.reset_cumulative();
+
+    this.whitelist = await ethers.getContractAt('WhitelistFacet', this.diamond.address);
+    this.result = await this.whitelist.connect(owner).dewhitelistToken(BEAN_3_CURVE);
 
     await this.usdc.mint(owner.address, to6('10000'))
     await this.bean.mint(owner.address, to6('10000'))
@@ -70,7 +74,11 @@ describe('Sun', function () {
     await setEthUsdPrice('999.998018');
     await setEthUsdcPrice('1000');
 
-    this.well = await deployBasin(true, undefined, false, true)
+    this.well = await deployBasinWithMockPump(true, undefined, false, true)
+    this.pump = await ethers.getContractAt('MockPump', BEANSTALK_PUMP);
+    await this.pump.update([toBean('10000'), to18('10')], 0x00);
+    await this.pump.update([toBean('10000'), to18('10')], 0x00);
+
     await this.season.siloSunrise(0)
   })
 
@@ -124,8 +132,8 @@ describe('Sun', function () {
     this.result = await this.season.sunSunrise('100', 8);
     await expect(this.result).to.emit(this.season, 'Soil').withArgs(3, '0');
     await expect(this.result).to.emit(this.season, 'Reward').withArgs(3, '0', '100', '0');
-    expect(await this.silo.totalStalk()).to.be.equal('1000000');
-    expect(await this.silo.totalEarnedBeans()).to.be.equal('100');
+    expect(await this.siloGetters.totalStalk()).to.be.equal('1000000');
+    expect(await this.siloGetters.totalEarnedBeans()).to.be.equal('100');
   })
 
   it("some harvestable", async function () {
@@ -137,8 +145,8 @@ describe('Sun', function () {
     expect(await this.field.totalSoil()).to.be.equal('9900');
     await expect(this.result).to.emit(this.season, 'Reward').withArgs(3, '10000', '10000', '0');
     expect(await this.field.totalHarvestable()).to.be.equal('10000');
-    expect(await this.silo.totalStalk()).to.be.equal('100000000');
-    expect(await this.silo.totalEarnedBeans()).to.be.equal('10000');
+    expect(await this.siloGetters.totalStalk()).to.be.equal('100000000');
+    expect(await this.siloGetters.totalEarnedBeans()).to.be.equal('10000');
   })
 
   it("all harvestable", async function () {
@@ -151,8 +159,8 @@ describe('Sun', function () {
     expect(await this.field.totalSoil()).to.be.equal('4950');
     await expect(this.result).to.emit(this.season, 'Reward').withArgs(3, '5000', '10000', '0');
     expect(await this.field.totalHarvestable()).to.be.equal('5000');
-    expect(await this.silo.totalStalk()).to.be.equal('100000000');
-    expect(await this.silo.totalEarnedBeans()).to.be.equal('10000');
+    expect(await this.siloGetters.totalStalk()).to.be.equal('100000000');
+    expect(await this.siloGetters.totalEarnedBeans()).to.be.equal('10000');
   })
 
   it("all harvestable and all fertilizable", async function () {
@@ -173,8 +181,8 @@ describe('Sun', function () {
 
     expect(await this.field.totalHarvestable()).to.be.equal(to6('50'));
 
-    expect(await this.silo.totalStalk()).to.be.equal(toStalk('100'));
-    expect(await this.silo.totalEarnedBeans()).to.be.equal(to6('100'));
+    expect(await this.siloGetters.totalStalk()).to.be.equal(toStalk('100'));
+    expect(await this.siloGetters.totalEarnedBeans()).to.be.equal(to6('100'));
   })
 
   it("all harvestable, some fertilizable", async function () {
@@ -194,8 +202,8 @@ describe('Sun', function () {
 
     expect(await this.field.totalHarvestable()).to.be.equal('500');
 
-    expect(await this.silo.totalStalk()).to.be.equal('8340000');
-    expect(await this.silo.totalEarnedBeans()).to.be.equal('834');
+    expect(await this.siloGetters.totalStalk()).to.be.equal('8340000');
+    expect(await this.siloGetters.totalEarnedBeans()).to.be.equal('834');
   })
 
   it("some harvestable, some fertilizable", async function () {
@@ -223,8 +231,8 @@ describe('Sun', function () {
 
     expect(await this.field.totalHarvestable()).to.be.equal('500');
 
-    expect(await this.silo.totalStalk()).to.be.equal('5000000');
-    expect(await this.silo.totalEarnedBeans()).to.be.equal('500');
+    expect(await this.siloGetters.totalStalk()).to.be.equal('5000000');
+    expect(await this.siloGetters.totalEarnedBeans()).to.be.equal('500');
   })
 
   it("1 all and 1 some fertilizable", async function () {
@@ -243,8 +251,8 @@ describe('Sun', function () {
 
     expect(await this.field.totalHarvestable()).to.be.equal(to6('200'));
 
-    expect(await this.silo.totalStalk()).to.be.equal(toStalk('200'));
-    expect(await this.silo.totalEarnedBeans()).to.be.equal(to6('200'));
+    expect(await this.siloGetters.totalStalk()).to.be.equal(toStalk('200'));
+    expect(await this.siloGetters.totalEarnedBeans()).to.be.equal(to6('200'));
   })
 
   it("sunrise reward", async function() {
@@ -274,8 +282,8 @@ describe('Sun', function () {
 
       snapshotId = await takeSnapshot();
 
-      await setReserves(owner, this.well, mockVal[0]);
-      await setReserves(owner, this.well, mockVal[0]);
+      await this.pump.update(mockVal[0], 0x00);
+      await this.pump.update(mockVal[0], 0x00);
 
       // Time skip an hour after setting new balance (twap will be very close to whats in mockVal)
       await timeSkip(START_TIME + 60*60);
@@ -331,7 +339,32 @@ describe('Sun', function () {
           .withArgs(owner.address, Math.round(rewardAmount * Math.pow(10, 6)));
       await revertToSnapshot(snapshotId);
     }
+
   })
+
+  it('ends germination', async function () {
+
+    await this.season.teleportSunrise(5);
+    await this.season.mockIncrementGermination(
+      BEAN,
+      to6('1000'),
+      to6('1000'),
+      1
+    );
+    expect((await this.siloGetters.getEvenGerminating(BEAN))[0]).to.be.equal(to6('1000'));
+    expect((await this.siloGetters.getEvenGerminating(BEAN))[1]).to.be.equal(to6('1000'));
+    this.result = await this.season.siloSunrise(0);
+    
+    await expect(this.result).to.emit(this.silo, 'TotalGerminatingBalanceChanged')
+      .withArgs(
+        '6',
+        BEAN, 
+        to6('-1000'), 
+        to6('-1000')
+      );
+    expect((await this.siloGetters.getEvenGerminating(BEAN))[0]).to.be.equal(to6('0'));
+    expect((await this.siloGetters.getEvenGerminating(BEAN))[1]).to.be.equal(to6('0'));
+  });
 
   it("rewards more than type(uint128).max/10000 to silo", async function () {
     await expect(this.season.siloSunrise('340282366920938463463374607431768211456')).to.be.revertedWith('SafeCast: value doesn\'t fit in 128 bits');

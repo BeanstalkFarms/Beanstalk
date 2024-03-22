@@ -8,8 +8,9 @@ import SlippagePanel from "./SlippagePanel";
 import { ChevronDown, Info } from "../Icons";
 import { ImageButton } from "../ImageButton";
 import { Tooltip } from "../Tooltip";
-import { BodyXS } from "../Typography";
+import { BodyS } from "../Typography";
 import { size } from "src/breakpoints";
+import { displayTokenSymbol } from "src/utils/format";
 
 type QuoteDetailsProps = {
   type: LIQUIDITY_OPERATION_TYPE | "FORWARD_SWAP" | "REVERSE_SWAP";
@@ -96,7 +97,7 @@ const QuoteDetails = ({
 
     if (type === LIQUIDITY_OPERATION_TYPE.ADD) {
       const _quoteValue = quote?.quote as TokenValue;
-      return `${_quoteValue.toHuman("short")} ${wellLpToken!.symbol}`;
+      return `${_quoteValue.toHuman("short")} ${displayTokenSymbol(wellLpToken!)}`;
     }
 
     if (removeLiquidityMode === REMOVE_LIQUIDITY_MODE.Custom) {
@@ -342,6 +343,6 @@ const QuoteContainer = styled.div`
   display: flex;
   flex-direction: column;
   @media (max-width: ${size.mobile}) {
-    ${BodyXS}
+    ${BodyS}
   }
 `;

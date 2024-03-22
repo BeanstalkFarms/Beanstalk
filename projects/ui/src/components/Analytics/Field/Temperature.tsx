@@ -20,7 +20,7 @@ const getValue = (snapshot: SnapshotData<SeasonalTemperatureQuery>) =>
 const formatValue = (value: number) => `${value.toFixed(0)}%`;
 const statProps = {
   title: 'Max Temperature',
-  titleTooltip: 'The maximum interest rate for Sowing Beans each Season.',
+  titleTooltip: 'The maximum interest rate for Sowing Beans every Season.',
   gap: 0.5,
 };
 const lineChartProps: Partial<LineChartProps> = {

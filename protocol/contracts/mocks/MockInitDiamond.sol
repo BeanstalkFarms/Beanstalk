@@ -11,6 +11,7 @@ import {MockToken} from "../mocks/MockToken.sol";
 import {AppStorage, Storage} from "../beanstalk/AppStorage.sol";
 import {C} from "../C.sol";
 import {InitWhitelist} from "contracts/beanstalk/init/InitWhitelist.sol";
+import {InitWhitelistStatuses} from "contracts/beanstalk/init/InitWhitelistStatuses.sol";
 import {LibDiamond} from "../libraries/LibDiamond.sol";
 import {LibCases} from "../libraries/LibCases.sol";
 import {LibGauge} from "contracts/libraries/LibGauge.sol";
@@ -21,7 +22,7 @@ import {Weather} from "contracts/beanstalk/sun/SeasonFacet/Weather.sol";
  * @author Publius
  * @title Mock Init Diamond
 **/
-contract MockInitDiamond is InitWhitelist, Weather {
+contract MockInitDiamond is InitWhitelist, InitWhitelistStatuses, Weather {
 
     function init() external {
         LibDiamond.DiamondStorage storage ds = LibDiamond.diamondStorage();
@@ -49,12 +50,9 @@ contract MockInitDiamond is InitWhitelist, Weather {
         s.usdTokenPrice[C.BEAN_ETH_WELL] = 1;
         s.twaReserves[C.BEAN_ETH_WELL].reserve0 = 1;
         s.twaReserves[C.BEAN_ETH_WELL].reserve1 = 1;
-        // Even though it is not used, still initialize.
-        s.usdTokenPrice[C.CURVE_BEAN_METAPOOL] = 1;
-        s.twaReserves[C.CURVE_BEAN_METAPOOL].reserve0 = 1;
-        s.twaReserves[C.CURVE_BEAN_METAPOOL].reserve1 = 1;
 
         s.season.stemStartSeason = uint16(s.season.current);
+        s.season.stemScaleSeason = uint16(s.season.current);
         s.seedGauge.beanToMaxLpGpPerBdvRatio = 50e18; // 50%
         s.seedGauge.averageGrownStalkPerBdvPerSeason = 3e6;
 
@@ -64,6 +62,7 @@ contract MockInitDiamond is InitWhitelist, Weather {
         emit LibGauge.UpdateAverageStalkPerBdvPerSeason(s.seedGauge.averageGrownStalkPerBdvPerSeason);
 
         whitelistPools();
+        addWhitelistStatuses(false);
     }
 
 }

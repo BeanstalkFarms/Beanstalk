@@ -18,6 +18,7 @@ import StatHorizontal from '~/components/Common/StatHorizontal';
 import { FC } from '~/types';
 import useStemTipForToken from '~/hooks/beanstalk/useStemTipForToken';
 import useSdk from '~/hooks/sdk';
+import useBDV from '~/hooks/beanstalk/useBDV';
 
 const Deposits: FC<
   {
@@ -28,6 +29,7 @@ const Deposits: FC<
 > = ({ token, siloBalance, useLegacySeason, ...props }) => {
   const sdk = useSdk();
   const getUSD = useSiloTokenToFiat();
+  const getBDV = useBDV();
   const account = useWagmiAccount();
   const newToken = sdk.tokens.findBySymbol(token.symbol) as ERC20Token;
 
@@ -67,14 +69,17 @@ const Deposits: FC<
               placement="bottom"
               title={
                 <Stack gap={0.5}>
-                  <StatHorizontal label="BDV when Deposited">
-                    {displayFullBN(params.row.bdv.div(params.row.amount), 6)}
-                  </StatHorizontal>
-                  <StatHorizontal label="Total BDV">
+                  <StatHorizontal label="Recorded BDV">
                     {displayFullBN(params.row.bdv, token.displayDecimals)}
+                  </StatHorizontal>
+                  <StatHorizontal label="Current BDV">
+                    {displayFullBN(params.row.amount.multipliedBy(getBDV(token)), token.displayDecimals)}
                   </StatHorizontal>
                   <StatHorizontal label="Current Value">
                     <Fiat amount={params.row.amount} token={token} />
+                  </StatHorizontal>
+                  <StatHorizontal label="Stem">
+                    {params.row.stem.toString()}
                   </StatHorizontal>
                 </Stack>
               }
@@ -164,7 +169,7 @@ const Deposits: FC<
         },
         COLUMNS.seeds,
       ] as GridColumns,
-    [token]
+    [token, getBDV]
   );
 
   const amount = siloBalance?.deposited.amount;

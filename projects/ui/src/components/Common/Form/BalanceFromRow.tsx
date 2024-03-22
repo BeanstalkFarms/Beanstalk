@@ -49,9 +49,10 @@ const options: BalanceFrom[] = [
 const BalanceFromRow: React.FC<{
   balanceFrom: BalanceFrom;
   setBalanceFrom: (v: BalanceFrom) => void;
-}> = ({ balanceFrom, setBalanceFrom }) => (
+  customOptions?: BalanceFrom[];
+}> = ({ balanceFrom, setBalanceFrom, customOptions }) => (
   <Row gap={1}>
-    {options.map((option) => {
+    {(customOptions || options).map((option) => {
       const isSelected = balanceFrom === option;
       return (
         <Button

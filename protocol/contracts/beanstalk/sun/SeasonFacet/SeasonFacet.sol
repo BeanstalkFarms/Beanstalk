@@ -9,7 +9,7 @@ import {LibTransfer} from "contracts/libraries/Token/LibTransfer.sol";
 import {LibWell} from "contracts/libraries/Well/LibWell.sol";
 import {LibGauge} from "contracts/libraries/LibGauge.sol";
 import {LibWhitelistedTokens} from "contracts/libraries/Silo/LibWhitelistedTokens.sol";
-import {LibMetaCurve} from "contracts/libraries/Curve/LibMetaCurve.sol";
+import {LibGerminate} from "contracts/libraries/Silo/LibGerminate.sol";
 
 /**
  * @title SeasonFacet
@@ -46,9 +46,10 @@ contract SeasonFacet is Weather {
 
         require(!s.paused, "Season: Paused.");
         require(seasonTime() > s.season.current, "Season: Still current Season.");
-        stepSeason();
+        uint32 season = stepSeason();
         int256 deltaB = stepOracle();
         uint256 caseId = calcCaseIdandUpdate(deltaB);
+        LibGerminate.endTotalGermination(season, LibWhitelistedTokens.getWhitelistedTokens());
         LibGauge.stepGauge();
         stepSun(deltaB, caseId);
 
@@ -70,10 +71,11 @@ contract SeasonFacet is Weather {
     /**
      * @dev Moves the Season forward by 1.
      */
-    function stepSeason() private {
+    function stepSeason() private returns (uint32 season) {
         s.season.current += 1;
+        season = s.season.current;
         s.season.sunriseBlock = uint32(block.number); // Note: Will overflow in the year 3650.
-        emit Sunrise(s.season.current);
+        emit Sunrise(season);
     }
 
     /**
@@ -105,9 +107,6 @@ contract SeasonFacet is Weather {
             LibWell.resetTwaReservesForWell(whitelistedWells[i]);
         }
 
-        // set twaReserves for the bean:3crv pool
-        LibMetaCurve.resetTwaReservesForPool(C.CURVE_BEAN_METAPOOL);
-
         uint256 incentiveAmount = LibIncentive.determineReward(
             initialGasLeft,
             blocksLate,
@@ -118,19 +117,5 @@ contract SeasonFacet is Weather {
 
         emit LibIncentive.Incentivization(account, incentiveAmount);
         return incentiveAmount;
-    }
-
-    /**
-     * @notice updates the UpdateAverageStalkPerBdvPerSeason in the seed gauge.
-     * @dev anyone can call this function to update. Currently, the function
-     * updates the targetGrownStalkPerBdvPerSeason such that it will take 6 months
-     * for the average new depositer to catch up to the average grown stalk per BDV.
-     *
-     * The expectation is that actors will call this function on their own as it benefits them.
-     * Newer depositers will call it if the value increases to catch up to the average faster,
-     * Older depositers will call it if the value decreases to slow down their rate of dilution.
-     */
-    function updateAverageStalkPerBdvPerSeason() external {
-        LibGauge.updateAverageStalkPerBdvPerSeason();
     }
 }
