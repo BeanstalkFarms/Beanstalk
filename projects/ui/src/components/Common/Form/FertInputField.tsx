@@ -67,7 +67,7 @@ const FertInputField: FC<
       >
         {values.totalSelected === 0 
           ? <>Select Fertilizers to Transfer</>
-          : <Grid container spacing={3} gridTemplateColumns={3} justifyContent='center'>
+          : <Grid container gridTemplateColumns={4} justifyContent='space-evenly' marginLeft={0}>
               {fertIndexesToRender.map((index, renderIndex) => {
                 if (!values.fertilizerIds[index]) return null
                 if (values.totalSelected > 4 && renderIndex > 3) return null
