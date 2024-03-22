@@ -7,6 +7,8 @@ import {SafeCast} from "@openzeppelin/contracts/utils/SafeCast.sol";
 import {LibFertilizer, SafeMath} from "contracts/libraries/LibFertilizer.sol";
 import {LibSafeMath128} from "contracts/libraries/LibSafeMath128.sol";
 import {Oracle, C} from "./Oracle.sol";
+import {Math} from "@openzeppelin/contracts/math/Math.sol";
+import {LibWellMinting} from "contracts/libraries/Minting/LibWellMinting.sol";
 
 /**
  * @title Sun
@@ -70,7 +72,7 @@ contract Sun is Oracle {
 
         // Below peg
         else {
-            setSoil(uint256(-deltaB));
+            setSoilBelowPeg(deltaB);
             s.season.abovePeg = false;
         }
     }
@@ -223,7 +225,33 @@ contract Sun is Oracle {
         setSoil(newSoil);
     }
 
-    
+    /**
+    * @param twaDeltaB The time weighted average precalculated deltaB 
+    * from {Oracle.stepOracle} at the start of the season.
+    * @dev When below peg, Beanstalk wants to issue debt for beans to be sown(burned),
+    * and removed from the supply, pushing the price up. To avoid soil over issuance,
+    * Beanstalk can read inter-block MEV manipulation resistant instantaneous reserves
+    * for whitelisted Well LP tokens via Multi Flow, compare it to the twaDeltaB calculated
+    * at the start of the season, and pick the minimum of the two.
+    */
+    function setSoilBelowPeg(int256 twaDeltaB) internal {
+
+        // Calculate deltaB from instantaneous reserves.
+        // NOTE: deltaB is calculated only from the Bean:ETH Well at this time
+        // If more wells are added, this will need to be updated.
+        (int256 instDeltaB, ,) = LibWellMinting.instantaneousDeltaB(C.BEAN_ETH_WELL);
+
+        // If the inst delta b is 0 it means that the oracle failed so the twa delta b is used.
+        uint256 newSoil = instDeltaB == 0 ? uint256(-twaDeltaB) : Math.min(uint256(-twaDeltaB), uint256(-instDeltaB));
+
+        // Set new soil.
+        setSoil(newSoil);
+    }
+
+    /**
+    * @param amount The new amount of Soil available.
+    * @dev Sets the amount of Soil available and emits a Soil event.
+    */
     function setSoil(uint256 amount) internal {
         s.f.soil = amount.toUint128();
         emit Soil(s.season.current, amount.toUint128());
