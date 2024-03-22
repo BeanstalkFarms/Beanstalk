@@ -11,6 +11,7 @@ import {LibConvertData} from "./LibConvertData.sol";
 import {LibWellConvert} from "./LibWellConvert.sol";
 import {LibChopConvert} from "./LibChopConvert.sol";
 import {LibWell} from "contracts/libraries/Well/LibWell.sol";
+import {LibBarnRaise} from "contracts/libraries/LibBarnRaise.sol";
 import {C} from "contracts/C.sol";
 
 /**
@@ -93,19 +94,19 @@ library LibConvert {
         if (tokenIn.isWell() && tokenOut == C.BEAN)
             return LibWellConvert.lpToPeg(tokenIn);
 
-        // urBEANETH Convert
+        // urLP Convert
         if (tokenIn == C.UNRIPE_LP){
             // UrBEANETH -> urBEAN
             if (tokenOut == C.UNRIPE_BEAN)
                 return LibUnripeConvert.lpToPeg();
             // UrBEANETH -> BEANETH
-            if (tokenOut == C.BEAN_ETH_WELL)
+            if (tokenOut == LibBarnRaise.getBarnRaiseWell())
                 return type(uint256).max;
         }
 
         // urBEAN Convert
         if (tokenIn == C.UNRIPE_BEAN){
-            // urBEAN -> urBEANETH LP
+            // urBEAN -> urLP
             if (tokenOut == C.UNRIPE_LP)
                 return LibUnripeConvert.beansToPeg();
             // UrBEAN -> BEAN
@@ -130,11 +131,11 @@ library LibConvert {
         // if (tokenIn == C.BEAN && tokenOut == C.CURVE_BEAN_METAPOOL)
         //     return LibCurveConvert.getLPAmountOut(C.CURVE_BEAN_METAPOOL, amountIn);
 
-        /// urBEANETH LP -> urBEAN
+        /// urLP -> urBEAN
         if (tokenIn == C.UNRIPE_LP && tokenOut == C.UNRIPE_BEAN)
             return LibUnripeConvert.getBeanAmountOut(amountIn);
         
-        /// urBEAN -> urBEANETH LP
+        /// urBEAN -> urLP
         if (tokenIn == C.UNRIPE_BEAN && tokenOut == C.UNRIPE_LP)
             return LibUnripeConvert.getLPAmountOut(amountIn);
         
@@ -155,7 +156,7 @@ library LibConvert {
             return LibChopConvert.getConvertedUnderlyingOut(tokenIn, amountIn);
 
         // UrBEANETH -> BEANETH
-        if (tokenIn == C.UNRIPE_LP && tokenOut == C.BEAN_ETH_WELL)
+        if (tokenIn == C.UNRIPE_LP && tokenOut == LibBarnRaise.getBarnRaiseWell())
             return LibChopConvert.getConvertedUnderlyingOut(tokenIn, amountIn);
 
         revert("Convert: Tokens not supported");

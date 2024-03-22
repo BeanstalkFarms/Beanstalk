@@ -3,10 +3,10 @@ const { deploy } = require('../scripts/deploy.js')
 const { takeSnapshot, revertToSnapshot } = require("./utils/snapshot");
 const { to18, to6 } = require('./utils/helpers.js');
 const { getBeanstalk, getBean } = require('../utils/contracts.js');
-const { whitelistWell, deployMockBeanEthWell } = require('../utils/well.js');
-const { setEthUsdPrice, setEthUsdcPrice, setEthUsdtPrice } = require('../scripts/usdOracle.js');
+const { whitelistWell, deployMockBeanWell } = require('../utils/well.js');
+const { setEthUsdChainlinkPrice } = require('../utils/oracle.js');
 const { advanceTime } = require('../utils/helpers.js');
-const { ETH_USD_CHAINLINK_AGGREGATOR } = require('./utils/constants.js');
+const { ETH_USD_CHAINLINK_AGGREGATOR, BEAN_ETH_WELL, WETH } = require('./utils/constants.js');
 let user,user2,owner;
 let userAddress, ownerAddress, user2Address;
 
@@ -26,13 +26,10 @@ describe('Well Minting', function () {
     this.bean = await getBean()
     ethUsdChainlinkAggregator = await ethers.getContractAt('MockChainlinkAggregator', ETH_USD_CHAINLINK_AGGREGATOR)
     await this.bean.mint(userAddress, to18('1'));
-    [this.well, this.wellFunction, this.pump] = await deployMockBeanEthWell()
-    await setEthUsdPrice('999.998018')
-    await setEthUsdcPrice('1000')
-    await setEthUsdtPrice('1000')
+    [this.well, this.wellFunction, this.pump] = await deployMockBeanWell(BEAN_ETH_WELL, WETH);
+    await setEthUsdChainlinkPrice('1000')
     await whitelistWell(this.well.address, '10000', to6('4'))
-    await this.season.captureWellE(this.well.address)
-  
+    await this.season.captureWellE(this.well.address)  
   });
 
   beforeEach(async function () {
@@ -129,7 +126,7 @@ describe('Well Minting', function () {
 
   describe('it reverts on broken USD Oracle', async function () {
     it("Broken Chainlink Oracle", async function () {
-      await setEthUsdPrice('0')
+      await setEthUsdChainlinkPrice('0')
       await advanceTime(3600)
       await user.sendTransaction({
         to: beanstalk.address,

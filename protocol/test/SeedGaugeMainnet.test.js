@@ -1,9 +1,9 @@
-const { BEAN, BEAN_3_CURVE, STABLE_FACTORY, UNRIPE_BEAN, UNRIPE_LP, WETH, BEANSTALK, BEAN_ETH_WELL, ZERO_ADDRESS } = require('./utils/constants.js');
+const { BEAN, BEAN_3_CURVE, STABLE_FACTORY, UNRIPE_BEAN, UNRIPE_LP, WETH, BEANSTALK, BEAN_ETH_WELL, ZERO_ADDRESS, BEAN_WSTETH_WELL } = require('./utils/constants.js');
 const { EXTERNAL, INTERNAL, INTERNAL_EXTERNAL, INTERNAL_TOLERANT } = require('./utils/balances.js')
 const { impersonateBeanstalkOwner, impersonateSigner } = require('../utils/signer.js');
 const { time, mine } = require("@nomicfoundation/hardhat-network-helpers");
 const { takeSnapshot, revertToSnapshot } = require("./utils/snapshot.js");
-const { setEthUsdcPrice, setEthUsdPrice } = require('../utils/oracle.js');
+const { setEthUsdcPrice, setEthUsdChainlinkPrice, setWstethUsdPrice } = require('../utils/oracle.js');
 const { upgradeWithNewFacets } = require("../scripts/diamond");
 const { mintEth, mintBeans } = require('../utils/mint.js');
 const { getBeanstalk } = require('../utils/contracts.js');
@@ -14,13 +14,15 @@ const { setReserves } = require('../utils/well.js');
 const { toBN } = require('../utils/helpers.js');
 const { ethers } = require('hardhat');
 const { expect } = require('chai');
+const { deployBasinV1_1Upgrade } = require('../scripts/basinV1_1.js');
+const { testIfRpcSet } = require('./utils/test.js');
+const { impersonateWsteth, impersonateBean } = require('../scripts/impersonate.js');
 
 let user,user2, owner;
 
 let snapshotId
 
-
-describe('SeedGauge Init Test', function () {
+testIfRpcSet('SeedGauge Init Test', function () {
   before(async function () {
 
     [user, user2] = await ethers.getSigners()

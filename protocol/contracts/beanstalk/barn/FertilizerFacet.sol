@@ -11,11 +11,13 @@ import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
 import {IFertilizer} from "contracts/interfaces/IFertilizer.sol";
 import {AppStorage} from "../AppStorage.sol";
 import {LibTransfer} from "contracts/libraries/Token/LibTransfer.sol";
-import {LibEthUsdOracle} from "contracts/libraries/Oracle/LibEthUsdOracle.sol";
+import {LibUsdOracle} from "contracts/libraries/Oracle/LibUsdOracle.sol";
 import {LibFertilizer} from "contracts/libraries/LibFertilizer.sol";
 import {LibSafeMath128} from "contracts/libraries/LibSafeMath128.sol";
 import {C} from "contracts/C.sol";
 import {LibDiamond} from "contracts/libraries/LibDiamond.sol";
+import {IWell} from "contracts/interfaces/basin/IWell.sol";
+import {LibBarnRaise} from "contracts/libraries/LibBarnRaise.sol";
 
 /**
  * @author Publius
@@ -53,30 +55,18 @@ contract FertilizerFacet {
     }
 
     /**
-     * @notice Purchase Fertilizer from the Barn Raise with WETH.
-     * @param wethAmountIn Amount of WETH to buy Fertilizer with 18 decimal precision.
-     * @param minFertilizerOut The minimum amount of Fertilizer to purchase. Protects against a significant ETH/USD price decrease.
-     * @param minLPTokensOut The minimum amount of LP tokens to receive after adding liquidity with `weth`.
-     * @param mode The balance to transfer Beans to; see {LibTrasfer.To}
+     * @notice Purchase Fertilizer from the Barn Raise with the Barn Raise token.
+     * @param tokenAmountIn Amount of tokens to buy Fertilizer with 18 decimal precision.
+     * @param minFertilizerOut The minimum amount of Fertilizer to purchase. Protects against a significant Barn Raise Token/USD price decrease.
+     * @param minLPTokensOut The minimum amount of LP tokens to receive after adding liquidity with Barn Raise tokens.
      * @dev The # of Fertilizer minted is equal to the value of the Ether paid in USD.
      */
     function mintFertilizer(
-        uint256 wethAmountIn,
+        uint256 tokenAmountIn,
         uint256 minFertilizerOut,
-        uint256 minLPTokensOut,
-        LibTransfer.From mode
+        uint256 minLPTokensOut
     ) external payable returns (uint256 fertilizerAmountOut) {
-        // Transfer the WETH directly to the Well for gas efficiency purposes. The WETH is later synced in {LibFertilizer.addUnderlying}.
-        wethAmountIn = LibTransfer.transferToken(
-            IERC20(C.WETH),
-            msg.sender,
-            C.BEAN_ETH_WELL,
-            uint256(wethAmountIn),
-            mode,
-            LibTransfer.To.EXTERNAL
-        );
-
-        fertilizerAmountOut = getMintFertilizerOut(wethAmountIn);
+        fertilizerAmountOut = _getMintFertilizerOut(tokenAmountIn, LibBarnRaise.getBarnRaiseToken());
 
         require(fertilizerAmountOut >= minFertilizerOut, "Fertilizer: Not enough bought.");
         require(fertilizerAmountOut > 0, "Fertilizer: None bought.");
@@ -86,6 +76,7 @@ contract FertilizerFacet {
 
         uint128 id = LibFertilizer.addFertilizer(
             uint128(s.season.current),
+            tokenAmountIn,
             fertilizerAmountOut,
             minLPTokensOut
         );
@@ -106,16 +97,26 @@ contract FertilizerFacet {
     }
 
     /**
-     * @dev Returns the amount of Fertilizer that can be purchased with `wethAmountIn` WETH.
+     * @dev Returns the amount of Fertilizer that can be purchased with `tokenAmountIn` Barn Raise tokens.
      * Can be used to help calculate `minFertilizerOut` in `mintFertilizer`.
-     * `wethAmountIn` has 18 decimals, `getEthUsdPrice()` has 6 decimals and `fertilizerAmountOut` has 0 decimals.
+     * `tokenAmountIn` has 18 decimals, `getEthUsdPrice()` has 6 decimals and `fertilizerAmountOut` has 0 decimals.
      */
-    function getMintFertilizerOut(
-        uint256 wethAmountIn
+    function getMintFertilizerOut(uint256 tokenAmountIn)
+        external
+        view
+        returns (uint256 fertilizerAmountOut)
+    {
+        address barnRaiseToken = LibBarnRaise.getBarnRaiseToken();
+        return _getMintFertilizerOut(tokenAmountIn, barnRaiseToken);
+    }
+
+    function _getMintFertilizerOut(
+        uint256 tokenAmountIn,
+        address barnRaiseToken
     ) public view returns (uint256 fertilizerAmountOut) {
-        fertilizerAmountOut = wethAmountIn.mul(
-            LibEthUsdOracle.getEthUsdPrice()
-        ).div(FERTILIZER_AMOUNT_PRECISION);
+        fertilizerAmountOut = tokenAmountIn.div(
+            LibUsdOracle.getUsdPrice(barnRaiseToken)
+        );
     }
 
     function totalFertilizedBeans() external view returns (uint256 beans) {
@@ -225,5 +226,29 @@ contract FertilizerFacet {
             numFerts = numFerts.add(1);
             idx = LibFertilizer.getNext(idx);
         }
+    }
+
+    function getBarnRaiseWell() external view returns (address) {
+        return LibBarnRaise.getBarnRaiseWell();
+    }
+
+    function getBarnRaiseToken() external view returns (address) {
+        return LibBarnRaise.getBarnRaiseToken();
+    }
+
+    /**
+     * @notice Begins the process of Migration the Barn Raise to a new Well.
+     * @param well The address of the Well to migrate to.
+     * @dev
+     * Withdraws all underlying Unripe LP tokens to the owner contract.
+     * Converting, chopping and purchasing Fertilizer will be disabled until the migration is complete.
+     * The migration process is completed by calling {UnripeFacet.addMigratedUnderlying}.
+     * After migration, Unripe liquidity will be added into `well`. and Fertilizer purchases can only happen
+     * with the non-Bean token in `well`.
+     *
+     */
+    function beginBarnRaiseMigration(address well) external {
+        LibDiamond.enforceIsOwnerOrContract();
+        LibFertilizer.beginBarnRaiseMigration(well);
     }
 }

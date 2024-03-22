@@ -8,7 +8,7 @@ const { ethers } = require('hardhat')
 const { advanceTime } = require('../utils/helpers.js')
 const { deployMockWell, whitelistWell, deployMockWellWithMockPump } = require('../utils/well.js')
 const { initalizeGaugeForToken } = require('../utils/gauge.js')
-const { setEthUsdPrice, setEthUsdcPrice, setEthUsdtPrice } = require('../scripts/usdOracle.js')
+const { setEthUsdChainlinkPrice, setWstethUsdPrice } = require('../utils/oracle.js')
 const { time, mineUpTo, mine } = require("@nomicfoundation/hardhat-network-helpers")
 const ZERO_BYTES = ethers.utils.formatBytes32String('0x0')
 const { setOracleFailure } = require('../utils/oracle.js')
@@ -41,6 +41,8 @@ describe('Gauge', function () {
     this.fertilizer = await ethers.getContractAt('MockFertilizerFacet', this.diamond.address)
     this.gaugePoint = await ethers.getContractAt('GaugePointFacet', this.diamond.address)
     this.bean = await ethers.getContractAt('MockToken', BEAN)
+
+    await this.fertilizer.setBarnRaiseWell(BEAN_ETH_WELL)
     
     await this.bean.connect(owner).approve(this.diamond.address, to6('100000000'))
     await this.bean.connect(user).approve(this.diamond.address, to6('100000000'));
@@ -58,9 +60,7 @@ describe('Gauge', function () {
     await this.season.siloSunrise(0)
     await this.season.captureWellE(this.well.address)
 
-    await setEthUsdPrice('999.998018')
-    await setEthUsdcPrice('1000')
-    await setEthUsdtPrice('1000')
+    await setEthUsdChainlinkPrice('1000')
 
     // add unripe
     this.unripeBean = await ethers.getContractAt('MockToken', UNRIPE_BEAN)
@@ -317,12 +317,12 @@ describe('Gauge', function () {
       it('getters', async function () {
         // urBean supply * 10% recapitalization (underlyingBean/UrBean) * 10% (fertilizerIndex/totalFertilizer)
         // = 10000 urBEAN * 10% = 1000 BEAN * (100-10%) = 900 beans locked.
-        // urBEANETH supply * 0.1% recapitalization (underlyingBEANETH/UrBEANETH) * 10% (fertilizerIndex/totalFertilizer)
-        // urBEANETH supply * 0.1% recapitalization * (100-10%) = 0.9% BEANETHLP locked.
+        // urLP supply * 0.1% recapitalization (underlyingBEANETH/UrBEANETH) * 10% (fertilizerIndex/totalFertilizer)
+        // urLP supply * 0.1% recapitalization * (100-10%) = 0.9% BEANETHLP locked.
         // 1m beans underlay all beanETHLP tokens.
         // 1m * 0.9% = 900 beans locked.
         expect(await this.unripe.getLockedBeansUnderlyingUnripeBean()).to.be.eq(to6('436.332105'))
-        expect(await this.unripe.getLockedBeansUnderlyingUnripeBeanEth()).to.be.eq(to6('436.332105'))
+        expect(await this.unripe.getLockedBeansUnderlyingUnripeLP()).to.be.eq(to6('436.332105'))
         expect(await this.unripe.getLockedBeans()).to.be.eq(to6('872.66421'))
         expect(
           await this.seasonGetters.getLiquidityToSupplyRatio()
@@ -330,11 +330,11 @@ describe('Gauge', function () {
       })
 
       it('is MEV resistant', async function () {
-        expect(await this.unripe.getLockedBeansUnderlyingUnripeBeanEth()).to.be.eq(to6('436.332105'))
+        expect(await this.unripe.getLockedBeansUnderlyingUnripeLP()).to.be.eq(to6('436.332105'))
 
         await this.well.mint(ownerAddress, to18('1000'))
-        
-        expect(await this.unripe.getLockedBeansUnderlyingUnripeBeanEth()).to.be.eq(to6('436.332105'))
+
+        expect(await this.unripe.getLockedBeansUnderlyingUnripeLP()).to.be.eq(to6('436.332105'))
       })
     })
   })

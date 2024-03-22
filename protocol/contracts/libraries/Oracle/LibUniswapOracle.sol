@@ -18,31 +18,19 @@ import '@uniswap/v3-core/contracts/interfaces/IUniswapV3Pool.sol';
  **/
 library LibUniswapOracle {
 
-    uint128 constant ONE_WETH = 1e18;
+    // All instantaneous queries of Uniswap Oracles should use a 15 minute lookback.
+    uint32 constant internal FIFTEEN_MINUTES = 900;
 
     /**
-     * @dev Uses the Uniswap V3 Oracle to get the price of ETH denominated in USDC.
-     * Return value has 6 decimal precision.
-     * Returns 0 if {IUniswapV3Pool.observe} reverts.
-     * It is recommended to use a substantially large `lookback` (at least 900 seconds) to protect
-     * against manipulation.
-     * Note: Uniswap V3 pool oracles are not multi-block MEV resistant.
-     */
-    function getEthUsdcPrice(uint32 lookback) internal view returns (uint256 price) {
-        (bool success, int24 tick) = consult(C.UNIV3_ETH_USDC_POOL, lookback);
-        if (!success) return 0;
-        price = OracleLibrary.getQuoteAtTick(tick, ONE_WETH, C.WETH, C.USDC);
-    }
-
-    /**
-     * @dev Uses the Uniswap V3 Oracle to get the price of ETH denominated in USDT.
+     * @dev Uses `pool`'s Uniswap V3 Oracle to get the TWAP price of `token1` in `token2` over the
+     * last `lookback` seconds.
      * Return value has 6 decimal precision.
      * Returns 0 if {IUniswapV3Pool.observe} reverts.
      */
-    function getEthUsdtPrice(uint32 lookback) internal view returns (uint256 price) {
-        (bool success, int24 tick) = consult(C.UNIV3_ETH_USDT_POOL, lookback);
+    function getTwap(uint32 lookback, address pool, address token1, address token2, uint128 oneToken) internal view returns (uint256 price) {
+        (bool success, int24 tick) = consult(pool, lookback);
         if (!success) return 0;
-        price = OracleLibrary.getQuoteAtTick(tick, ONE_WETH, C.WETH, C.USDT);
+        price = OracleLibrary.getQuoteAtTick(tick, oneToken, token1, token2);
     }
 
     /**

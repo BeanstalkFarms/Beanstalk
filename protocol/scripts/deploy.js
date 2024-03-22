@@ -1,5 +1,4 @@
-const MAX_INT = '115792089237316195423570985008687907853269984665640564039457584007913129639935'
-
+const { ETH_USD_CHAINLINK_AGGREGATOR, STETH_ETH_CHAINLINK_PRICE_AGGREGATOR, WETH, WSTETH, WSTETH_ETH_UNIV3_01_POOL } = require('../test/utils/constants.js')
 const diamond = require('./diamond.js')
 const { 
   impersonateBean, 
@@ -7,13 +6,13 @@ const {
   impersonateBean3CrvMetapool, 
   impersonateWeth, 
   impersonateUnripe, 
-  impersonateFertilizer,
   impersonatePrice,
   impersonateBlockBasefee,
   impersonateEthUsdcUniswap,
   impersonateEthUsdtUniswap,
-  impersonateEthUsdChainlinkAggregator,
-  impersonateBeanEthWell
+  impersonateChainlinkAggregator,
+  impersonateUniswapV3,
+  impersonateWsteth
 } = require('./impersonate.js')
 
 function addCommas(nStr) {
@@ -107,15 +106,16 @@ async function main(scriptName, verbose = true, mock = false, reset = true) {
 
   // A list of public libraries that need to be deployed separately.
   const libraryNames = [
-    'LibGauge', 'LibIncentive', 'LibConvert', 'LibLockedUnderlying', 'LibCurveMinting', 'LibGerminate'
+    'LibGauge', 'LibIncentive', 'LibConvert', 'LibLockedUnderlying', 'LibCurveMinting', 'LibWellMinting', 'LibGerminate'
   ]
 
-  // A mapping of facet to public library names that will be linked to it.
+  // A mapping of facet to public library names that will be linked to i4t.
   const facetLibraries = {
     'SeasonFacet': [
       'LibGauge',
       'LibIncentive',
       'LibLockedUnderlying',
+      'LibWellMinting',
       'LibGerminate'
     ],
     'MockSeasonFacet': [
@@ -123,10 +123,12 @@ async function main(scriptName, verbose = true, mock = false, reset = true) {
       'LibIncentive',
       'LibLockedUnderlying',
       'LibCurveMinting',
+      'LibWellMinting',
       'LibGerminate'
     ],
     'SeasonGettersFacet': [
-      'LibLockedUnderlying'
+      'LibLockedUnderlying',
+      'LibWellMinting',
     ],
     'ConvertFacet': [
       'LibConvert'
@@ -244,14 +246,20 @@ async function main(scriptName, verbose = true, mock = false, reset = true) {
     if (reset) {
       await impersonateCurve()
       await impersonateWeth()
+
+      // Eth:USDC oracle
       await impersonateEthUsdcUniswap()
       await impersonateEthUsdtUniswap()
+      await impersonateChainlinkAggregator(ETH_USD_CHAINLINK_AGGREGATOR);
+  
+      // WStEth oracle
+      await impersonateWsteth()
+      await impersonateChainlinkAggregator(STETH_ETH_CHAINLINK_PRICE_AGGREGATOR);
+      await impersonateUniswapV3(WSTETH_ETH_UNIV3_01_POOL, WSTETH, WETH, 100)
     }
     await impersonateBean3CrvMetapool()
     await impersonateUnripe()
-    await impersonateFertilizer()
     await impersonateBlockBasefee();
-    await impersonateEthUsdChainlinkAggregator()
   }
 
   const [beanstalkDiamond, diamondCut] = await diamond.deploy({

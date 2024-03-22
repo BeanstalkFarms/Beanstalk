@@ -1,10 +1,10 @@
 const { expect } = require('chai');
 const { takeSnapshot, revertToSnapshot } = require("./utils/snapshot.js");
 const { BEAN, FERTILIZER, USDC, BEAN_3_CURVE, THREE_CURVE, UNRIPE_BEAN, UNRIPE_LP, WETH, BEANSTALK, BEAN_ETH_WELL, BCM, STABLE_FACTORY, PUBLIUS } = require('./utils/constants.js');
-const { setEthUsdcPrice, setEthUsdPrice } = require('../utils/oracle.js');
+const { setEthUsdcPrice, setEthUsdChainlinkPrice } = require('../utils/oracle.js');
 const { to6, to18 } = require('./utils/helpers.js');
 const { bipMigrateUnripeBean3CrvToBeanEth } = require('../scripts/bips.js');
-const { getBeanstalk, getBeanstalkAdminControls } = require('../utils/contracts.js');
+const { getBeanstalk, getBeanstalkAdminControls , getWeth } = require('../utils/contracts.js');
 const { impersonateBeanstalkOwner, impersonateSigner } = require('../utils/signer.js');
 const { ethers } = require('hardhat');
 const { upgradeWithNewFacets } = require("../scripts/diamond");
@@ -13,6 +13,7 @@ const { ConvertEncoder } = require('./utils/encoder.js');
 const { setReserves } = require('../utils/well.js');
 const { toBN } = require('../utils/helpers.js');
 const { impersonateBean } = require('../scripts/impersonate.js');
+
 let user,user2,owner;
 let publius;
 
@@ -20,8 +21,8 @@ let underlyingBefore
 let beanEthUnderlying
 let snapshotId
 
-
-describe('Bean:3Crv to Bean:Eth Migration', function () {
+// Skipping because this migration already occured.
+describe.skip('Bean:3Crv to Bean:Eth Migration', function () {
   before(async function () {
 
     [user, user2] = await ethers.getSigners()
@@ -49,7 +50,7 @@ describe('Bean:3Crv to Bean:Eth Migration', function () {
     owner = await impersonateBeanstalkOwner()
     this.beanstalk = await getBeanstalk()
     this.well = await ethers.getContractAt('IWell', BEAN_ETH_WELL);
-    this.weth = await ethers.getContractAt('contracts/interfaces/IWETH.sol:IWETH', WETH)
+    this.weth = await getWeth();
     this.bean = await ethers.getContractAt('IBean', BEAN)
     this.beanEth = await ethers.getContractAt('IWell', BEAN_ETH_WELL)
     this.beanEthToken = await ethers.getContractAt('IERC20', BEAN_ETH_WELL)
