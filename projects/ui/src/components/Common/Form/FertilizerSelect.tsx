@@ -42,7 +42,8 @@ function RowContent({isMobile, fertilizer, index, values, setFieldValue, focused
   } as const;
 
   // Internal State
-  const [displayValue, setDisplayValue] = useState(values.amounts[index])
+  const [displayValue, setDisplayValue] = useState(values.amounts[index]);
+  const [focusWithin, setFocusWithin] = useState(false);
 
   // Ignore scroll events on the input. Prevents
   // accidentally scrolling up/down the number input.
@@ -136,12 +137,14 @@ function RowContent({isMobile, fertilizer, index, values, setFieldValue, focused
         type="number"
         color="primary"
         placeholder={isMobile ? "Amount" :  "Amount to Transfer"}
-        value={displayValue}
+        value={displayValue || ''}
         onWheel={preventScroll}
         onChange={handleInput}
         onKeyDown={preventNegativeInput}
         size="small"
-        inputRef={inputRef => inputRef && focused === index && inputRef.focus()}
+        inputRef={inputRef => inputRef && focused === index && !focusWithin && inputRef.focus()}
+        onFocus={() => setFocusWithin(true)}
+        onBlur={() => setFocusWithin(false)}
         sx={{ ...textFieldStyles, width: isMobile ? 84 : 160 }}
       />
     </Row>
