@@ -16,7 +16,7 @@ import {C} from "contracts/C.sol";
 
 /**
  * @title LibConvert
- * @author Publius
+ * @author Publius, deadmanwalking
  */
 library LibConvert {
     using SafeMath for uint256;
@@ -27,6 +27,10 @@ library LibConvert {
      * @notice Takes in bytes object that has convert input data encoded into it for a particular convert for
      * a specified pool and returns the in and out convert amounts and token addresses and bdv
      * @param convertData Contains convert input parameters for a specified convert
+     * note account and decreaseBDV variables are initialized at the start
+     * as address(0) and false respectively and remain that way if a convert is not anti-lambda-lambda
+     * If it is anti-lambda, account is the address of the account to update the deposit
+     * and decreaseBDV is true
      */
     function convert(bytes calldata convertData)
         external
@@ -34,7 +38,9 @@ library LibConvert {
             address tokenOut,
             address tokenIn,
             uint256 amountOut,
-            uint256 amountIn
+            uint256 amountIn,
+            address account,
+            bool decreaseBDV
         )
     {
         LibConvertData.ConvertKind kind = convertData.convertKind();
@@ -63,6 +69,9 @@ library LibConvert {
         } else if (kind == LibConvertData.ConvertKind.UNRIPE_TO_RIPE) {
             (tokenOut, tokenIn, amountOut, amountIn) = LibChopConvert
                 .convertUnripeToRipe(convertData);
+        } else if (kind == LibConvertData.ConvertKind.ANTI_LAMBDA_LAMBDA) {
+	        (tokenOut, tokenIn, amountOut, amountIn, account, decreaseBDV) = LibLambdaConvert
+                .antiConvert(convertData);
         } else {
             revert("Convert: Invalid payload");
         }
@@ -82,7 +91,8 @@ library LibConvert {
         // if (tokenIn == C.BEAN && tokenOut == C.CURVE_BEAN_METAPOOL)
         //     return LibCurveConvert.beansToPeg(C.CURVE_BEAN_METAPOOL);
         
-        // Lambda -> Lambda
+        // Lambda -> Lambda &
+        // Anti-Lambda -> Lambda
         if (tokenIn == tokenOut) 
             return type(uint256).max;
 
@@ -139,7 +149,8 @@ library LibConvert {
         if (tokenIn == C.UNRIPE_BEAN && tokenOut == C.UNRIPE_LP)
             return LibUnripeConvert.getLPAmountOut(amountIn);
         
-        // Lambda -> Lambda
+        // Lambda -> Lambda &
+        // Anti-Lambda -> Lambda
         if (tokenIn == tokenOut)
             return amountIn;
 

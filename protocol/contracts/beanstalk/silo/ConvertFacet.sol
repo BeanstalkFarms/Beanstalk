@@ -75,30 +75,39 @@ contract ConvertFacet is ReentrancyGuard {
         nonReentrant
         returns (int96 toStem, uint256 fromAmount, uint256 toAmount, uint256 fromBdv, uint256 toBdv)
     {
-        address toToken; address fromToken; uint256 grownStalk;
+        address toToken; address fromToken; uint256 grownStalk; address account; bool decreaseBDV;
 
-        (toToken, fromToken, toAmount, fromAmount) = LibConvert.convert(convertData);
+        (toToken, fromToken, toAmount, fromAmount, account, decreaseBDV) = LibConvert.convert(convertData);
         
         require(fromAmount > 0, "Convert: From amount is 0.");
 
         require(fromAmount > 0, "Convert: From amount is 0.");
 
-        LibSilo._mow(msg.sender, fromToken);
-        LibSilo._mow(msg.sender, toToken);
+        // Replace account with msg.sender if no account is specified.
+        if(account == address(0)) account = msg.sender;
+
+        LibSilo._mow(account, fromToken);
+
+        // If the fromToken and toToken are different, mow the toToken as well.
+        if (fromToken != toToken) LibSilo._mow(account, toToken);
+        
+        // Withdraw the tokens from the deposit.
         (grownStalk, fromBdv) = _withdrawTokens(
             fromToken,
             stems,
             amounts,
-            fromAmount
+            fromAmount,
+            account
         );
 
-        // calculate the bdv of the new deposit
+        // Calculate the bdv of the new deposit.
         uint256 newBdv = LibTokenSilo.beanDenominatedValue(toToken, toAmount);
 
-        toBdv = newBdv > fromBdv ? newBdv : fromBdv;
+        // If `decreaseBDV` flag is not enabled, set toBDV to the max of the two bdvs.
+        toBdv = (newBdv > fromBdv || decreaseBDV)  ? newBdv : fromBdv;
 
-        toStem = _depositTokensForConvert(toToken, toAmount, toBdv, grownStalk);
-        emit Convert(msg.sender, fromToken, toToken, fromAmount, toAmount);
+        toStem = _depositTokensForConvert(toToken, toAmount, toBdv, grownStalk, account);
+        emit Convert(account, fromToken, toToken, fromAmount, toAmount);
     }
 
     /**
@@ -113,7 +122,8 @@ contract ConvertFacet is ReentrancyGuard {
         address token,
         int96[] memory stems,
         uint256[] memory amounts,
-        uint256 maxTokens
+        uint256 maxTokens,
+        address account
     ) internal returns (uint256, uint256) {
         require(
             stems.length == amounts.length,
@@ -141,7 +151,7 @@ contract ConvertFacet is ReentrancyGuard {
 
                 if (a.active.tokens.add(amounts[i]) >= maxTokens) amounts[i] = maxTokens.sub(a.active.tokens);
                 depositBDV = LibTokenSilo.removeDepositFromAccount(
-                        msg.sender,
+                        account,
                         token,
                         stems[i],
                         amounts[i]
@@ -167,7 +177,7 @@ contract ConvertFacet is ReentrancyGuard {
             for (i; i < stems.length; ++i) amounts[i] = 0;
             
             emit RemoveDeposits(
-                msg.sender,
+                account,
                 token,
                 stems,
                 amounts,
@@ -176,8 +186,8 @@ contract ConvertFacet is ReentrancyGuard {
             );
 
             emit LibSilo.TransferBatch(
-                msg.sender, 
-                msg.sender,
+                account, 
+                account,
                 address(0), 
                 depositIds, 
                 amounts
@@ -192,7 +202,7 @@ contract ConvertFacet is ReentrancyGuard {
 
         // all deposits converted are not germinating.
         LibSilo.burnActiveStalk(
-            msg.sender,
+            account,
             a.active.stalk.add(a.active.bdv.mul(s.ss[token].stalkIssuedPerBdv))
         );
         return (a.active.stalk, a.active.bdv);
@@ -204,6 +214,7 @@ contract ConvertFacet is ReentrancyGuard {
      * @param amount the amount of tokens to deposit
      * @param bdv the bean denominated value of the deposit
      * @param grownStalk the amount of grown stalk retained to issue to the new deposit.
+     * @param account account to update the deposit (used in bdv decrease)
      * 
      * @dev there are cases where a convert may cause the new deposit to be partially germinating, 
      * if the convert goes from a token with a lower amount of seeds to a higher amount of seeds.
@@ -213,7 +224,8 @@ contract ConvertFacet is ReentrancyGuard {
         address token,
         uint256 amount,
         uint256 bdv,
-        uint256 grownStalk
+        uint256 grownStalk,
+        address account
     ) internal returns (int96 stem) {
         require(bdv > 0 && amount > 0, "Convert: BDV or amount is 0.");
         
@@ -229,17 +241,17 @@ contract ConvertFacet is ReentrancyGuard {
         if (germ == LibGerminate.Germinate.NOT_GERMINATING) {
             LibTokenSilo.incrementTotalDeposited(token, amount, bdv);
             LibSilo.mintActiveStalk(
-                msg.sender, 
+                account, 
                 bdv.mul(LibTokenSilo.stalkIssuedPerBdv(token)).add(grownStalk)
             );
         } else {
             LibTokenSilo.incrementTotalGerminating(token, amount, bdv, germ);
             // safeCast not needed as stalk is <= max(uint128)
-            LibSilo.mintGerminatingStalk(msg.sender, uint128(bdv.mul(LibTokenSilo.stalkIssuedPerBdv(token))), germ);   
-            LibSilo.mintActiveStalk(msg.sender, grownStalk);
+            LibSilo.mintGerminatingStalk(account, uint128(bdv.mul(LibTokenSilo.stalkIssuedPerBdv(token))), germ);   
+            LibSilo.mintActiveStalk(account, grownStalk);
         }
         LibTokenSilo.addDepositToAccount(
-            msg.sender, 
+            account, 
             token, 
             stem, 
             amount,
