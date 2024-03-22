@@ -11,6 +11,8 @@ import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {LibSafeMath32} from "contracts/libraries/LibSafeMath32.sol";
 import {LibWell} from "contracts/libraries/Well/LibWell.sol";
 
+import {LibBarnRaise} from "contracts/libraries/LibBarnRaise.sol";
+
 /**
  * @author Brean
  * @title LibEvaluate calculates the caseId based on the state of Beanstalk.
@@ -244,7 +246,7 @@ library LibEvaluate {
             }
             totalUsdLiquidity = totalUsdLiquidity.add(wellLiquidity);
             
-            if (pools[i] == C.BEAN_ETH_WELL) {
+            if (pools[i] == LibBarnRaise.getBarnRaiseWell()) {
                 // Scale down bean supply by the locked beans, if there is fertilizer to be paid off.
                 // Note: This statement is put into the for loop to prevent another extraneous read of 
                 // the twaReserves from storage as `twaReserves` are already loaded into memory.

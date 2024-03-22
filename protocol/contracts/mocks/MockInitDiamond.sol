@@ -57,6 +57,8 @@ contract MockInitDiamond is InitWhitelist, InitWhitelistStatuses, Weather {
         s.seedGauge.averageGrownStalkPerBdvPerSeason = 3e6;
 
         LibTractor._resetPublisher();
+        
+        s.u[C.UNRIPE_LP].underlyingToken = C.BEAN_WSTETH_WELL;
 
         emit BeanToMaxLpGpPerBdvRatioChange(s.season.current, type(uint256).max, int80(s.seedGauge.beanToMaxLpGpPerBdvRatio));
         emit LibGauge.UpdateAverageStalkPerBdvPerSeason(s.seedGauge.averageGrownStalkPerBdvPerSeason);

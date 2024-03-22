@@ -5,7 +5,7 @@ const { BEAN, THREE_CURVE, THREE_POOL, BEAN_3_CURVE, UNRIPE_BEAN, UNRIPE_LP, WET
 const { ConvertEncoder } = require('./utils/encoder.js')
 const { to6, to18, toBean, toStalk } = require('./utils/helpers.js')
 const { takeSnapshot, revertToSnapshot } = require("./utils/snapshot");
-const { setEthUsdcPrice, setEthUsdPrice, setEthUsdtPrice, setOracleFailure, printPrices } = require('../utils/oracle.js');
+const { setEthUsdcPrice, setEthUsdChainlinkPrice } = require('../utils/oracle.js');
 const { deployBasin } = require('../scripts/basin.js');
 const { toBN } = require('../utils/helpers.js');
 const ZERO_BYTES = ethers.utils.formatBytes32String('0x0')
@@ -26,16 +26,17 @@ describe('Unripe Convert', function () {
     this.convert = await ethers.getContractAt('ConvertFacet', this.diamond.address);
     this.convertGet = await ethers.getContractAt('ConvertGettersFacet', this.diamond.address);
     this.siloGetters = await ethers.getContractAt('SiloGettersFacet', this.diamond.address);
+    this.fertilizer = await ethers.getContractAt('MockFertilizerFacet', this.diamond.address);
+    this.fertilizer.setBarnRaiseWell(BEAN_ETH_WELL)
     this.bean = await ethers.getContractAt('MockToken', BEAN);
     this.weth = await ethers.getContractAt('MockToken', WETH);
 
-    this.well = await deployBasin(true, undefined, false, true)
+    await setEthUsdChainlinkPrice('1000')
+
+    this.well = (await deployBasin(true, undefined, false, true)).well
     this.wellToken = await ethers.getContractAt("IERC20", this.well.address)
     await this.wellToken.connect(owner).approve(BEANSTALK, ethers.constants.MaxUint256)
     await this.bean.connect(owner).approve(BEANSTALK, ethers.constants.MaxUint256)
-
-    await setEthUsdPrice('999.998018')
-    await setEthUsdcPrice('1000')
 
     await this.season.siloSunrise(0);
     await this.bean.mint(userAddress, toBean('10000000000'));
@@ -207,7 +208,6 @@ describe('Unripe Convert', function () {
         expect(await this.siloGetters.getTotalDepositedBdv(this.unripeLP.address)).to.eq('0');
         expect(await this.siloGetters.getGerminatingTotalDeposited(this.unripeLP.address)).to.eq('4711829');
         let bdv = await this.siloGetters.bdv(this.unripeLP.address, '4711829')
-        await console.log('bdv', bdv.toString())
         expect(await this.siloGetters.getGerminatingTotalDepositedBdv(this.unripeLP.address)).to.eq(bdv);
 
         // the total stalk should increase by 0.04, the grown stalk from the deposit.

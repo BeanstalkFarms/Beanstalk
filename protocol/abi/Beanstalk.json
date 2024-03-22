@@ -298,7 +298,7 @@
   },
   {
     "inputs": [],
-    "name": "getLockedBeansUnderlyingUnripeBeanEth",
+    "name": "getLockedBeansUnderlyingUnripeLP",
     "outputs": [
       {
         "internalType": "uint256",
@@ -595,6 +595,30 @@
   {
     "inputs": [
       {
+        "internalType": "uint256",
+        "name": "tokenAmountIn",
+        "type": "uint256"
+      },
+      {
+        "internalType": "address",
+        "name": "barnRaiseToken",
+        "type": "address"
+      }
+    ],
+    "name": "_getMintFertilizerOut",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "fertilizerAmountOut",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
         "internalType": "address[]",
         "name": "accounts",
         "type": "address[]"
@@ -758,6 +782,32 @@
   },
   {
     "inputs": [],
+    "name": "getBarnRaiseToken",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "getBarnRaiseWell",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
     "name": "getCurrentHumidity",
     "outputs": [
       {
@@ -875,7 +925,7 @@
     "inputs": [
       {
         "internalType": "uint256",
-        "name": "wethAmountIn",
+        "name": "tokenAmountIn",
         "type": "uint256"
       }
     ],
@@ -926,7 +976,7 @@
     "inputs": [
       {
         "internalType": "uint256",
-        "name": "wethAmountIn",
+        "name": "tokenAmountIn",
         "type": "uint256"
       },
       {
@@ -8024,6 +8074,11 @@
             "internalType": "uint16",
             "name": "stemScaleSeason",
             "type": "uint16"
+          },
+          {
+            "internalType": "uint32",
+            "name": "beanEthStartMintingSeason",
+            "type": "uint32"
           },
           {
             "internalType": "uint256",
