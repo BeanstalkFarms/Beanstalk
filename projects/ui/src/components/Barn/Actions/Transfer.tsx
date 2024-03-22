@@ -100,16 +100,12 @@ const TransferForm: FC<FormikProps<TransferFormValues>> = ({
     return output;
   }, [farmerBarn.balances, pctRepaid]);
 
-  const sproutAmounts = useMemo(() => {
-    const output = [];
-    for (let i = 0; i < fertilizers.length; i += 1) {
-      const pctRatio = BigNumber(values.amounts[i] || 0).div(fertilizers[i].amount);
-      const sprouts = fertilizers[i].sprouts.multipliedBy(pctRatio);
-      output.push(sprouts);
-    };
-    return output;
-  }, [fertilizers, values.amounts]);
-
+  const sproutAmounts = [];
+  for (let i = 0; i < fertilizers.length; i += 1) {
+    const pctRatio = BigNumber(values.amounts[i] || 0).div(fertilizers[i].amount);
+    const sprouts = fertilizers[i].sprouts.multipliedBy(pctRatio);
+    sproutAmounts.push(sprouts);
+  };
   const totalSprouts = sproutAmounts.reduce((total: BigNumber, current: BigNumber) => total.plus(current), BigNumber(0));
 
   return (
@@ -143,8 +139,8 @@ const TransferForm: FC<FormikProps<TransferFormValues>> = ({
                           [
                             {
                               type: ActionType.TRANSFER_FERTILIZER,
-                              amount: BigNumber(totalFertAmount),
-                              fertilizerId: BigNumber(values.fertilizerIds[0]),
+                              fertAmount: BigNumber(totalFertAmount),
+                              sproutAmount: totalSprouts,
                               to: values.to,
                             },
                             {
