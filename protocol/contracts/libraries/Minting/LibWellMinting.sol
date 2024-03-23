@@ -14,6 +14,7 @@ import {LibWell} from "contracts/libraries/Well/LibWell.sol";
 import {IBeanstalkWellFunction} from "contracts/interfaces/basin/IBeanstalkWellFunction.sol";
 import {SignedSafeMath} from "@openzeppelin/contracts/math/SignedSafeMath.sol";
 import {LibEthUsdOracle} from "contracts/libraries/Oracle/LibEthUsdOracle.sol";
+import {IInstantaneousPump} from "contracts/interfaces/basin/pumps/IInstantaneousPump.sol";
 
 /**
  * @title Well Minting Oracle Library
@@ -207,6 +208,56 @@ library LibWellMinting {
         }
     }
 
+        /**
+     * @dev Calculates the instantaneous delta B for a given Well address.
+     * @param well The address of the Well.
+     * @return deltaB The instantaneous delta B balance since the last `capture` call.
+     */
+    function instantaneousDeltaB(address well) internal view returns 
+        (int256, uint256[] memory, uint256[] memory) {
+
+        AppStorage storage s = LibAppStorage.diamondStorage();
+        Call[] memory pumps = IWell(well).pumps();
+                                                                        // well address , data[]
+        try IInstantaneousPump(pumps[0].target).readInstantaneousReserves(well, C.BYTES_ZERO) returns (uint[] memory instReserves) {
+            // Get well tokens
+            IERC20[] memory tokens = IWell(well).tokens();
+
+            // Get ratios and bean index
+            (
+                uint256[] memory ratios,
+                uint256 beanIndex,
+                bool success
+            ) = LibWell.getRatiosAndBeanIndex(tokens, block.timestamp.sub(s.season.timestamp));
+
+            // HANDLE FAILURE
+            // If the Bean reserve is less than the minimum, the minting oracle should be considered off.
+            if (instReserves[beanIndex] < C.WELL_MINIMUM_BEAN_BALANCE) {
+                return (0, new uint256[](0), new uint256[](0));
+            }
+
+            // If the USD Oracle oracle call fails, the minting oracle should be considered off.
+            if (!success) {
+                return (0, instReserves, new uint256[](0));
+            }
+
+            // Get well function
+            Call memory wellFunction = IWell(well).wellFunction();
+
+            // Delta B is the difference between the target Bean reserve at the peg price
+            // and the instantaneous Bean balance in the Well.
+            int256 deltaB = int256(IBeanstalkWellFunction(wellFunction.target).calcReserveAtRatioSwap(
+                instReserves,
+                beanIndex,
+                ratios,
+                wellFunction.data
+            )).sub(int256(instReserves[beanIndex]));
+
+            return (deltaB, instReserves, ratios);
+        }
+        catch {}
+    }
+
     // Remove in next BIP.
     function checkShouldTurnOnMinting(address well) internal view returns (bool) {
         AppStorage storage s = LibAppStorage.diamondStorage();
@@ -216,5 +267,5 @@ library LibWellMinting {
             }
         }
         return true;
-    }
+    } 
 }

@@ -7,6 +7,8 @@ import {SafeCast} from "@openzeppelin/contracts/utils/SafeCast.sol";
 import {LibFertilizer, SafeMath} from "contracts/libraries/LibFertilizer.sol";
 import {LibSafeMath128} from "contracts/libraries/LibSafeMath128.sol";
 import {Oracle, C} from "./Oracle.sol";
+import {Math} from "@openzeppelin/contracts/math/Math.sol";
+import {LibWellMinting} from "contracts/libraries/Minting/LibWellMinting.sol";
 
 /**
  * @title Sun
@@ -70,7 +72,7 @@ contract Sun is Oracle {
 
         // Below peg
         else {
-            setSoil(uint256(-deltaB));
+            setSoilBelowPeg(deltaB);
             s.season.abovePeg = false;
         }
     }
