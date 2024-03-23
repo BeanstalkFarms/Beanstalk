@@ -22,8 +22,8 @@ const FertInputField: FC<
   /// Form state
   const { values, setFieldValue } = useFormikContext<{
     /// These fields are required in the parent's Formik state
-    fertilizerIds: any[];
-    amounts: any[];
+    fertilizerIds: (number|undefined)[];
+    amounts: (number|undefined)[];
     totalSelected: number;
   }>();
 
@@ -83,7 +83,7 @@ const FertInputField: FC<
               {values.fertilizerIds.map((fertilizer, index) => {
                 if (!fertilizer) return null
 
-                const pctRatio = BigNumber(values.amounts[index]).div(fertilizers[index].amount);
+                const pctRatio = BigNumber(values.amounts[index] || 0).div(fertilizers[index].amount);
                 const sprouts = fertilizers[index].sprouts.multipliedBy(pctRatio);
 
                 return (

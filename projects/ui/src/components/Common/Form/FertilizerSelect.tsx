@@ -19,16 +19,21 @@ import { FullFertilizerBalance } from '~/components/Barn/Actions/Transfer';
 import { useFormikContext } from 'formik';
 import SelectionItem from '../SelectionItem';
 
-export interface PlotSelectProps {
+export interface FertilizerSelectProps {
   /** A farmer's fertilizers */
   fertilizers: FullFertilizerBalance[];
+}
+
+interface FertilizerTransferFormContext {
+  fertilizerIds: (number|undefined)[];
+  amounts: (number|undefined)[];
 }
 
 interface IRowContent {
   isMobile: boolean | null;
   fertilizer: FullFertilizerBalance;
   index: number;
-  values: any;
+  values: FertilizerTransferFormContext;
   setFieldValue: any;
   focused: number | null | undefined;
 }
@@ -188,17 +193,13 @@ function RowContent({isMobile, fertilizer, index, values, setFieldValue, focused
   );
 }
 
-const FertilizerSelect: FC<PlotSelectProps> = ({
+const FertilizerSelect: FC<FertilizerSelectProps> = ({
   fertilizers,
 }) => {
   const isMobile = useMediaQuery('(max-width: 500px)');
 
   /// Form state
-  const { values, setFieldValue } = useFormikContext<{
-    /// These fields are required in the parent's Formik state
-    fertilizerIds: any[];
-    amounts: any[];
-  }>();
+  const { values, setFieldValue } = useFormikContext<FertilizerTransferFormContext>();
 
   /// Internal state
   const [isFocused, setIsFocused] = useState<number | null>();

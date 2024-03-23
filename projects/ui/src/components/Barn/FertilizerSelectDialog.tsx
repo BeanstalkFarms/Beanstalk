@@ -4,15 +4,16 @@ import { FC } from '~/types';
 import { StyledDialogContent, StyledDialogTitle } from '../Common/Dialog';
 import EmptyState from '../Common/ZeroState/EmptyState';
 import FertilizerSelect from '../Common/Form/FertilizerSelect';
+import { FullFertilizerBalance } from './Actions/Transfer';
 
-export interface PlotSelectDialogProps {
+export interface FertilizerSelectDialogProps {
   /** Closes dialog */
   handleClose: any;
   /** A farmer's fertilizers */
-  fertilizers: any[];
+  fertilizers: FullFertilizerBalance[];
 }
 
-const FertilizerSelectDialog: FC<PlotSelectDialogProps & DialogProps> = ({
+const FertilizerSelectDialog: FC<FertilizerSelectDialogProps & DialogProps> = ({
   // Custom
   handleClose,
   fertilizers,
