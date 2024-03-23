@@ -9,6 +9,7 @@ const { bipSeedGauge } = require("./bips.js");
 const { getWellContractAt } = require("../utils/well.js");
 const { takeSnapshot, revertToSnapshot} = require("../test/utils/snapshot.js");
 const { setReserves } = require("../utils/well.js");
+const Papa = require('papaparse');
 
 //////////////////////// STEPS ////////////////////////
 // 1. Fetch all sunrise events in the last 6 months
@@ -24,28 +25,7 @@ const { setReserves } = require("../utils/well.js");
 // go forward to the next sunrise
 // repeat.....
 
-const START_BLOCK = 18137928; // 190 days ago
-const ANVIL_FORK_BLOCK = 19497260;
-const csvFilePath = './sunrise_simulation.csv';
-
-async function writeSunriseBlockNumbersToFile() {
-  // get season facet
-  const seasonFacet = await hre.ethers.getContractAt(
-    'SeasonFacet',
-    '0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5'
-  );
-  
-  // fetch the sunrise events in the last 6 months
-  const events = await seasonFacet.queryFilter(
-    'Sunrise(uint256)',
-    START_BLOCK,
-    'latest'
-  );
-
-  const blockNumbers = events.map((event) => event.blockNumber);
-  fs.writeFileSync('sunrise_block_numbers.txt', blockNumbers.join('\n'));
-}
-
+const csvFilePath = 'sunrise_simulation.csv';
 
 async function simulateSeedGaugeSunrises() {
 
@@ -72,79 +52,44 @@ async function simulateSeedGaugeSunrises() {
     // fetch the baseFee of the block at the top of the hour 
     const baseFeeData = await hre.ethers.provider.getFeeData();
     const formattedBaseFee = hre.ethers.utils.formatUnits(baseFeeData.lastBaseFeePerGas, 'gwei');
-    console.log('Initial baseFee: ', formattedBaseFee + ' gwei');
     
     // get bean eth well deployed at: 0xBEA0e11282e2bB5893bEcE110cF199501e872bAd
     const well = await getWellContractAt("Well", "0xBEA0e11282e2bB5893bEcE110cF199501e872bAd");
+
+    console.log("////////////////////////// SEED GAUGE UPGRADE //////////////////////////")
+
+    await bipSeedGauge();
+
+    const sunriseBlockInfoCsv = 'adjusted_blocks_info_final.csv';
+
+    const sunriseBlocks = await readCsvFile(sunriseBlockInfoCsv);
     
-    // fetch the reserves of the bean/eth well at the top of the hour
-    const reserves = await well.getReserves();
-    console.log("Well Statistics:")
-    console.log("Bean Reserve:", reserves[0].toString());
-    console.log("Eth Reserve:", reserves[1].toString());
-    console.log("LP Token Total Supply:", (await well.totalSupply()).toString());
-    console.log("initial ETH Price: ", await getETHPriceAtCurrentBlock());
+    for (let i = 0; i < sunriseBlocks.length; i++) {
 
-    console.log("Number of sunrise events: ", events.length);
-    // for all events get block number 
-    const blockNumbers = events.map((event) => event.blockNumber);
+        const snapshotId = await takeSnapshot();
 
-    for (let i = 0; i < 1; i++) {
+        const row = sunriseBlocks[i];
+        const blockNumber = parseInt(row['Block Number']);
+        const baseFee = hre.ethers.utils.parseUnits(row['Base Fee (Gwei)'], 'gwei');
+        const ethPrice = parseFloat(row['ETH Price (USD)']);
 
-      const event = events[i];
-  
-      const lastTimestamp = (await hre.ethers.provider.getBlock('latest')).timestamp;
-      const sunriseBlock = await hre.ethers.provider.getBlock(event.blockNumber);
-      const sunriseTimestamp = sunriseBlock.timestamp;
-      await hre.network.provider.send('evm_setNextBlockTimestamp', [sunriseTimestamp]);
-      await setNextBlockBaseFee(event.baseFee);
-  
-      await bipSeedGauge();
-  
-      simulateSunrise(event.baseFee, i);
+        console.log("Block Number: ", blockNumber);
+        console.log("Base Fee: ", baseFee);
+        console.log("ETH Price: ", ethPrice);
+
+        // set the base fee for the next block
+        await setNextBlockBaseFee(baseFee);
+
+        // simulate sunrise
+        await simulateSunrise(blockNumber, baseFee, i);
+
+        // go to the next block
+        await network.provider.send("evm_mine", [adjustedBlockNumber]);
+
+        await revertToSnapshot(snapshotId);
     }
-
-    // for (let i = 0; i < 1; i++) {
-    //     console.log("\n////////////////////////// ITERATION ", i, " //////////////////////////")
-
-    //     // get the block number of the next sunrise event
-    //     const blockNumber = blockNumbers[i];
-    //     console.log("Sunrise block number: ", blockNumber);
-
-    //     // get the block before the sunrise event
-    //     const blockBeforeSunrise = blockNumber - 1;
-    //     console.log("Block before sunrise: ", blockBeforeSunrise);
-
-    //     // take a snapshot of the current state
-    //     const snapshotId = await takeSnapshot;
-    //     console.log("Snapshot taken: ", snapshotId);
-
-    //     console.log("\n////////////////////////// SEED GAUGE UPGRADE //////////////////////////")
-    //     // upgrade beanstalk at the block right before the sunrise block
-    //     console.log("Excuting the deployBip39 upgrade script...")
-    //     // this does not mine a block since --no-mining flag is set
-    //     await bipSeedGauge();
-
-    //     // mine 1 block
-    //     // await network.provider.send("evm_mine");
-
-    //     // get the base fee of the block before the sunrise event
-    //     const baseFeeData = await hre.ethers.provider.getFeeData();
-    //     const formattedBaseFee = hre.ethers.utils.formatUnits(baseFeeData.lastBaseFeePerGas, 'gwei');
-    //     console.log('Base Fee before sunrise: ', formattedBaseFee + ' gwei');
-
-    //     // simulate sunrise
-    //     await simulateSunrise(baseFeeData.lastBaseFeePerGas, reserves, i);
-
-    //     // revert to the snapshot
-    //     await revertToSnapshot(snapshotId);
-    //     console.log("Reverted to snapshot: ", snapshotId);
-    // }
-
-}
-
-// TODO: Adjust the block numbers to the closest block number to the true sunrise block
-// async function adjustDelayedSunriseBlockNumebers(blockNumbers) {
+  }
+  
 
 async function simulateSunrise(baseFee, index) {
 
@@ -173,7 +118,6 @@ async function simulateSunrise(baseFee, index) {
   
     const txHash = sunriseEvents[0].transactionHash;
     const receipt = await hre.ethers.provider.getTransactionReceipt(txHash);
-    // console.log("Sunrise Receipt: ", receipt);
   
     const gasUsed = receipt.gasUsed;
 
@@ -227,6 +171,29 @@ function writeToCsv(data) {
     fs.appendFileSync(csvFilePath, csvString, (err) => {
         if (err) throw err;
     });
+}
+
+function readCsvFile(filePath) {
+  return new Promise((resolve, reject) => {
+      // Read the CSV file as a string
+      fs.readFile(filePath, 'utf8', (err, data) => {
+          if (err) {
+              reject(err);
+              return;
+          }
+
+          // Parse CSV string
+          Papa.parse(data, {
+              header: true, // Use the first row as property names
+              complete: (results) => {
+                  resolve(results.data); // Resolve promise with parsed objects
+              },
+              error: (error) => {
+                  reject(error); // Reject promise on error
+              }
+          });
+      });
+  });
 }
 
 async function getETHPriceAtCurrentBlock() {
