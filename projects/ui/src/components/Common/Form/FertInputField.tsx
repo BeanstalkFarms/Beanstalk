@@ -64,7 +64,7 @@ const FertInputField: FC<
           : <Box 
               display='flex' 
               flexDirection='row'
-              gap={2}
+              gap={4}
               width='100%'
               ref={ref}
               sx={{ 
