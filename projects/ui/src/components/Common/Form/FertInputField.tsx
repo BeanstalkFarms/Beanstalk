@@ -5,7 +5,7 @@ import { FC } from '~/types';
 import useAccount from '~/hooks/ledger/useAccount';
 import { FullFertilizerBalance } from '~/components/Barn/Actions/Transfer';
 import FertilizerSelectDialog from '~/components/Barn/FertilizerSelectDialog';
-import { Box, Button, Grid, Typography } from '@mui/material';
+import { Box, Button, Typography } from '@mui/material';
 import humidityIcon from '~/img/beanstalk/humidity-icon.svg';
 import FertilizerImage, { FertilizerState } from '~/components/Barn/FertilizerImage';
 import BigNumber from 'bignumber.js';
@@ -40,14 +40,6 @@ const FertInputField: FC<
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [account]);
 
-  const fertIndexesToRender: number[] = [];
-
-  for (let i = 0; i < values.fertilizerIds.length; i += 1) {
-    if (values.fertilizerIds[i]) {
-      fertIndexesToRender.push(i);
-    };
-  };
-
   return (
     <>
       <FertilizerSelectDialog
@@ -60,47 +52,38 @@ const FertInputField: FC<
         variant='outlined-secondary'
         color='secondary'
         sx={{
-          paddingY: 4,
+          paddingY: 4.5,
           fontWeight: 'normal',
           color: 'text.primary',
         }}
       >
         {values.totalSelected === 0 
           ? <>Select Fertilizers to Transfer</>
-          : <Grid container gridTemplateColumns={4} justifyContent='space-evenly' marginLeft={0}>
-              {fertIndexesToRender.map((index, renderIndex) => {
-                if (!values.fertilizerIds[index]) return null
-                if (values.totalSelected > 4 && renderIndex > 3) return null
+          : <Box 
+              display='flex' 
+              flexDirection='row'
+              gap={2}
+              width='100%'
+              justifyContent={values.totalSelected < 5 ? 'center' : undefined}
+              marginTop={values.totalSelected > 4 ? '10px' : '0px'}
+              sx={{ 
+                overflowX: values.totalSelected > 4 ? 'auto' : 'hidden',
+                overflowY: 'hidden', 
+                scrollbarWidth: 'thin',
+                '@media (pointer:coarse)': {
+                  marginTop: '0px',
+                },
+              }}
+            >
+              {values.fertilizerIds.map((fertilizer, index) => {
+                if (!fertilizer) return null
 
                 const pctRatio = BigNumber(values.amounts[index]).div(fertilizers[index].amount);
                 const sprouts = fertilizers[index].sprouts.multipliedBy(pctRatio);
 
-                if (values.totalSelected > 4 && renderIndex === 3) {
-                  return (
-                    <Grid key='selectedFertIDOverflow' item>
-                      <Box
-                        width={100}
-                        height={65}
-                        alignItems='center'
-                        justifyContent='center'
-                        display='flex'
-                        sx={{
-                          borderColor: 'divider',
-                          borderWidth: 1,
-                          borderStyle: 'solid',
-                          borderRadius: 1,
-                          fontSize: 28
-                        }}
-                      >
-                        {`+${values.totalSelected - 3}`}
-                      </Box>
-                    </Grid>
-                  )
-                }
-
                 return (
-                  <Grid key={`selectedFertID${values.fertilizerIds[index]}`} item>
-                    <Box display='flex' flexDirection='row' gap={0.25} width={100}>
+                  <Box key={`selectedFertID${values.fertilizerIds[index]}`} width={100}>
+                    <Box display='flex' flexDirection='row' gap={0.25}>
                       <FertilizerImage 
                         isNew={false} 
                         state={fertilizers[index].status as FertilizerState} 
@@ -123,9 +106,9 @@ const FertInputField: FC<
                         </Box>
                       </Box>
                     </Box>
-                  </Grid>   
+                  </Box>   
               )})}
-            </Grid>
+            </Box>
         }
       </Button>
     </>
