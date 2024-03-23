@@ -1,4 +1,4 @@
-import React, { ReactElement, useCallback, useState } from 'react';
+import React, { ReactElement, useCallback } from 'react';
 import {
   ListItemIcon,
   ListItemText,
@@ -6,12 +6,10 @@ import {
   Box,
   useMediaQuery,
   TextField,
-  IconButton,
 } from '@mui/material';
 import { FC } from '~/types';
 import { FontSize, IconSize } from '~/components/App/muiTheme';
 import { displayBN } from '~/util';
-import CloseIcon from '@mui/icons-material/Close';
 import sproutIcon from '~/img/beanstalk/sprout-icon.svg';
 import fertActiveIcon from '~/img/tokens/fert-logo-active.svg';
 import fertUsedIcon from '~/img//tokens/fert-logo-used.svg';
@@ -36,10 +34,9 @@ interface IRowContent {
   index: number;
   values: FertilizerTransferFormContext;
   setFieldValue: any;
-  focused: number | null | undefined;
 }
 
-function RowContent({isMobile, fertilizer, index, values, setFieldValue, focused }: IRowContent): ReactElement {
+function RowContent({isMobile, fertilizer, index, values, setFieldValue }: IRowContent): ReactElement {
 
   const textFieldStyles = {
     borderRadius: 1,
@@ -48,10 +45,6 @@ function RowContent({isMobile, fertilizer, index, values, setFieldValue, focused
     },
   } as const;
 
-  // Internal State
-  const [displayValue, setDisplayValue] = useState(values.amounts[index]);
-  const [focusWithin, setFocusWithin] = useState(false);
-
   // Ignore scroll events on the input. Prevents
   // accidentally scrolling up/down the number input.
   const preventScroll = useCallback((e: any) => {
@@ -59,12 +52,10 @@ function RowContent({isMobile, fertilizer, index, values, setFieldValue, focused
     e.target.blur();
   }, []);
 
-  const preventNegativeInput = (
-    e: React.KeyboardEvent<HTMLInputElement>
-  ) => {
+  const preventNegativeInput = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === '-') {
       e.preventDefault();
-    }
+    };
   };
 
   const handleInput = useCallback((e: any) => {
@@ -77,20 +68,16 @@ function RowContent({isMobile, fertilizer, index, values, setFieldValue, focused
       if (roundedValue === 0) {
         newIds[index] = undefined;
         newAmounts[index] = undefined;
-        setDisplayValue(undefined);
       } else if (roundedValue > fertilizer.amount.toNumber()) {
         newIds[index] = fertilizer.token.id.toNumber();
         newAmounts[index] = fertilizer.amount.toNumber();
-        setDisplayValue(fertilizer.amount.toNumber());
       } else {
         newIds[index] = fertilizer.token.id.toNumber();
         newAmounts[index] = roundedValue;
-        setDisplayValue(roundedValue);
       };
     } else {
       newIds[index] = undefined;
       newAmounts[index] = undefined;
-      setDisplayValue(undefined);
     };
 
     const newTotalSelected = newIds.filter(Boolean).length;
@@ -101,20 +88,9 @@ function RowContent({isMobile, fertilizer, index, values, setFieldValue, focused
 
   }, [index, setFieldValue, values.amounts, fertilizer.amount, values.fertilizerIds, fertilizer.token.id]);
 
-  const clearInput = useCallback(() => {
-
-    const newIds = values.fertilizerIds;
-    const newAmounts = values.amounts;
-    newIds[index] = undefined;
-    newAmounts[index] = undefined;
-    setDisplayValue(undefined);
-
-    const newTotalSelected = newIds.filter(Boolean).length;
-    setFieldValue('fertilizerIds', newIds);
-    setFieldValue('amounts', newAmounts);
-    setFieldValue('totalSelected', newTotalSelected);
-    
-  }, [index, values.amounts, values.fertilizerIds, setFieldValue])
+  const handleClick = (e: any) => {
+    e.stopPropagation();
+  };
 
   return (
     <>
@@ -160,21 +136,13 @@ function RowContent({isMobile, fertilizer, index, values, setFieldValue, focused
           type="number"
           color="primary"
           placeholder={isMobile ? "Amount" :  "Amount to Transfer"}
-          value={displayValue || ''}
+          value={values.amounts[index] || ''}
           onWheel={preventScroll}
           onChange={handleInput}
           onKeyDown={preventNegativeInput}
+          onClick={handleClick}
           size="small"
-          inputRef={inputRef => inputRef && focused === index && !focusWithin && inputRef.focus()}
-          onFocus={() => setFocusWithin(true)}
-          onBlur={() => setFocusWithin(false)}
-          sx={{ ...textFieldStyles, width: isMobile ? 110 : 190 }}
-          InputProps={{
-            endAdornment:
-              <IconButton onClick={clearInput} sx={{ marginRight: -1 }}>
-                <CloseIcon sx={{ height: 20, width: 20, fontSize: '100%' }} />
-              </IconButton>,
-          }}
+          sx={{ ...textFieldStyles, width: isMobile ? 85 : 160 }}
         />
       </Row>
     </>
@@ -189,13 +157,10 @@ const FertilizerSelect: FC<FertilizerSelectProps> = ({
   /// Form state
   const { values, setFieldValue } = useFormikContext<FertilizerTransferFormContext>();
 
-  /// Internal state
-  const [isFocused, setIsFocused] = useState<number | null>();
-
   if (!fertilizers) return null;
 
   const items = fertilizers.map((fertilizer, index) => {
-    
+
     const thisFert = {
       id: fertilizer.token.id.toNumber(),
       amount: fertilizer.amount.toNumber(),
@@ -203,6 +168,7 @@ const FertilizerSelect: FC<FertilizerSelectProps> = ({
     };
 
     let isSelected = false;
+
     if (values.fertilizerIds) {
       for (let i = 0; i < values.fertilizerIds?.length; i += 1) {
         if (values.fertilizerIds[i] === thisFert.id) {
@@ -211,12 +177,29 @@ const FertilizerSelect: FC<FertilizerSelectProps> = ({
         };
       };
     };
+
+    function toggleFertilizer() {
+      const newIds = values.fertilizerIds;
+      const newAmounts = values.amounts;
+      let newTotalSelected = values.fertilizerIds.filter(Boolean).length;
+      if (isSelected) {
+        newIds[index] = undefined;
+        newAmounts[index] = undefined;
+      } else {
+        newIds[index] = fertilizer.token.id.toNumber();
+        newAmounts[index] = fertilizer.amount.toNumber();
+      };
+      newTotalSelected = newIds.filter(Boolean).length;
+      setFieldValue('fertilizerIds', newIds);
+      setFieldValue('amounts', newAmounts);
+      setFieldValue('totalSelected', newTotalSelected);
+    };
     
     return (
       <SelectionItem
         selected={isSelected}
         checkIcon="left"
-        onClick={() => setIsFocused(index)}
+        onClick={() => toggleFertilizer()}
         sx={{
           // ListItem is used elsewhere so we define here
           // instead of in muiTheme.ts
@@ -239,7 +222,6 @@ const FertilizerSelect: FC<FertilizerSelectProps> = ({
             index={index}
             values={values}
             setFieldValue={setFieldValue}
-            focused={isFocused}
           />
       </SelectionItem>
     );
