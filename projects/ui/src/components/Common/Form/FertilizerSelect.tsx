@@ -6,11 +6,12 @@ import {
   Box,
   useMediaQuery,
   TextField,
-  Button,
+  IconButton,
 } from '@mui/material';
 import { FC } from '~/types';
 import { FontSize, IconSize } from '~/components/App/muiTheme';
 import { displayBN } from '~/util';
+import CloseIcon from '@mui/icons-material/Close';
 import sproutIcon from '~/img/beanstalk/sprout-icon.svg';
 import fertActiveIcon from '~/img/tokens/fert-logo-active.svg';
 import fertUsedIcon from '~/img//tokens/fert-logo-used.svg';
@@ -167,25 +168,12 @@ function RowContent({isMobile, fertilizer, index, values, setFieldValue, focused
           inputRef={inputRef => inputRef && focused === index && !focusWithin && inputRef.focus()}
           onFocus={() => setFocusWithin(true)}
           onBlur={() => setFocusWithin(false)}
-          sx={{ ...textFieldStyles, width: isMobile ? 105 : 190 }}
+          sx={{ ...textFieldStyles, width: isMobile ? 110 : 190 }}
           InputProps={{
-            endAdornment: 
-              <Button
-                color='primary'
-                size='small'
-                onClick={clearInput}
-                sx={{
-                  minWidth: 28,
-                  maxWidth: 28,
-                  fontSize: 20,
-                  scale: '65%',
-                  marginRight: -1,
-                  borderRadius: '50%',
-                  alignSelf: 'center',
-                }}
-              >
-                ✖
-              </Button>,
+            endAdornment:
+              <IconButton onClick={clearInput} sx={{ marginRight: -1 }}>
+                <CloseIcon sx={{ height: 20, width: 20, fontSize: '100%' }} />
+              </IconButton>,
           }}
         />
       </Row>
