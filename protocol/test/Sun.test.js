@@ -9,8 +9,6 @@ const { setEthUsdChainlinkPrice, setWstethUsdPrice } = require('../utils/oracle.
 const { deployBasin } = require('../scripts/basin.js');
 const ZERO_BYTES = ethers.utils.formatBytes32String('0x0')
 const { deployBasinV1_1Upgrade } = require('../scripts/basinV1_1.js');
-const { advanceTime } = require('../utils/helpers.js');
-const { deployMockWell, setReserves, deployMockBeanWell } = require('../utils/well.js');
 
 let user, user2, owner;
 let userAddress, ownerAddress, user2Address;
@@ -77,8 +75,6 @@ describe('Sun', function () {
     await c.multiFlowPump.update([toBean('10000'), to18('10')], 0x00);
     this.pump = c.multiFlowPump;
 
-    [this.well, this.wellFunction, this.pump] = await deployMockBeanWell(BEAN_ETH_WELL, WETH);
-
     await this.season.siloSunrise(0)
   })
 
@@ -90,59 +86,9 @@ describe('Sun', function () {
     await revertToSnapshot(snapshotId)
   })
 
-  it("When deltaB < 0 it sets the soil to be the min of -twaDeltaB and -instantaneous deltaB", async function () {
-    // go fo forward 1800 blocks
-    await advanceTime(1800)
-    // set reserves to 2M Beans and 1000 Eth
-    // await this.well.setReserves([to6('2000000'), to18('1000')])
-    await await this.well.setReserves([to6('2000000'), to18('1000')]);
-    await await this.well.setReserves([to6('2000000'), to18('1000')]);
-    // go forward 1800 blocks
-    await advanceTime(1800)
-    // send 0 eth to beanstalk
-    await user.sendTransaction({
-      to: this.diamond.address,
-      value: 0
-    })
-
-    // twaDeltaB = -100000000
-    // instantaneousDeltaB = -585786437627
-                                            // twaDeltaB, case ID
-    this.result = await this.season.sunSunrise('-100000000', 8);
-    await expect(this.result).to.emit(this.season, 'Soil').withArgs(3, '100000000');
-    await expect(await this.field.totalSoil()).to.be.equal('100000000');
-  })
-
-
-  it("When deltaB < 0 it sets the correct soil if the instantanious deltaB oracle fails", async function () {
-    // go fo forward 1800 blocks
-    await advanceTime(1800)
-    // set reserves to 1 Bean and 1 Eth
-    // If the Bean reserve is less than the minimum of 1000 beans,
-    // LibWellMinting.instantaneousDeltaB returns a deltaB of 0
-    await this.well.setReserves([to6('1'), to18('1')]);
-    await this.well.setReserves([to6('1'), to18('1')]);
-    // go forward 1800 blocks
-    await advanceTime(1800)
-    // send 0 eth to beanstalk
-    await user.sendTransaction({
-      to: this.diamond.address,
-      value: 0
-    })
-
-                                          // twadeltaB, CASE ID
-    this.result = await this.season.sunSunrise('-100000000', 8);
-    await expect(this.result).to.emit(this.season, 'Soil').withArgs(3, '100000000');
-    await expect(await this.field.totalSoil()).to.be.equal('100000000');
-  })
-
-  it("rewards more than type(uint128).max Soil below peg", async function () {
-    // Here, since we haven't changed the reserves the instantaneous deltaB is 0
-    // And we maniuplate the twaDeltaB to be a number that is greater than type(uint128).max
-    // Because we consider that a value of 0 returned by the oracle to be a failure, we set the soil to be the twaDeltaB
-    // which is greater than type(uint128).max and therefore reverts
-                                            // twadeltaB,                        CASE ID
-    await expect(this.season.sunSunrise('-340282366920938463463374607431768211456', '8')).to.be.revertedWith('SafeCast: value doesn\'t fit in 128 bits');
+  it("delta B < 1", async function () {
+    this.result = await this.season.sunSunrise('-100', 8);
+    await expect(this.result).to.emit(this.season, 'Soil').withArgs(3, '100');
   })
 
   it("delta B == 1", async function () {
@@ -420,6 +366,9 @@ describe('Sun', function () {
     await expect(this.season.siloSunrise('340282366920938463463374607431768211456')).to.be.revertedWith('SafeCast: value doesn\'t fit in 128 bits');
   })
 
+  it("rewards more than type(uint128).max Soil below peg", async function () {
+    await expect(this.season.sunSunrise('-340282366920938463463374607431768211456', '0')).to.be.revertedWith('SafeCast: value doesn\'t fit in 128 bits');
+  })
 })
 
 function viewGenericUint256Logs(logs) {

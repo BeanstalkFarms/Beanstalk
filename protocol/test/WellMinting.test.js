@@ -53,15 +53,11 @@ describe('Well Minting', function () {
       })
     })
 
-    it("Captures twa", async function () {
+    it("Captures", async function () {
       expect(await this.season.callStatic.captureWellE(this.well.address)).to.be.equal('0')
     })
-
-    it("Captures instantaneous", async function () {
-      expect(await this.season.callStatic.captureWellEInstantaneous(this.well.address)).to.be.equal('0')
-    })
   
-    it("Checks twa", async function () {
+    it("Checks", async function () {
       expect(await this.seasonGetter.poolDeltaB(this.well.address)).to.be.equal('0')
     })
 
@@ -78,15 +74,11 @@ describe('Well Minting', function () {
       })
     })
 
-    it("Captures a twa delta B > 0", async function () {
+    it("Captures a delta B > 0", async function () {
       expect(await this.season.callStatic.captureWellE(this.well.address)).to.be.equal('133789634067')
     })
-
-    it("Captures an instantaneous delta B > 0", async function () {
-      expect(await this.season.callStatic.captureWellEInstantaneous(this.well.address)).to.be.equal('207106781186')
-    })
   
-    it("Checks a twa delta B > 0", async function () {
+    it("Checks a delta B > 0", async function () {
       expect(await this.seasonGetter.poolDeltaB(this.well.address)).to.be.equal('133789634067')
     })
   })
@@ -102,15 +94,11 @@ describe('Well Minting', function () {
       })
     })
 
-    it("Captures a twa delta B < 0", async function () {
+    it("Captures a delta B < 0", async function () {
       expect(await this.season.callStatic.captureWellE(this.well.address)).to.be.equal('-225006447371')
     })
 
-    it("Captures an instantaneous delta B < 0", async function () {
-      expect(await this.season.callStatic.captureWellEInstantaneous(this.well.address)).to.be.equal('-585786437627')
-    })
-
-    it("Checks a twa delta B < 0", async function () {
+    it("Checks a delta B < 0", async function () {
       expect(await this.seasonGetter.poolDeltaB(this.well.address)).to.be.equal('-225006447371')
     })
   })
@@ -126,15 +114,11 @@ describe('Well Minting', function () {
       })
     })
 
-    it("Captures a Beans below min twa", async function () {
+    it("Captures a Beans below min", async function () {
       expect(await this.season.callStatic.captureWellE(this.well.address)).to.be.equal('0')
     })
 
-    it("Captures a Beans below min instantaneous", async function () {
-      expect(await this.season.callStatic.captureWellEInstantaneous(this.well.address)).to.be.equal('0')
-    })
-
-    it("Checks a Beans below min twa", async function () {
+    it("Checks a Beans below min", async function () {
       expect(await this.seasonGetter.poolDeltaB(this.well.address)).to.be.equal('0')
     })
 
