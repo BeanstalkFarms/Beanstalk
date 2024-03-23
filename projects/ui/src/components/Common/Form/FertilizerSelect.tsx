@@ -13,6 +13,7 @@ import { displayBN } from '~/util';
 import sproutIcon from '~/img/beanstalk/sprout-icon.svg';
 import fertActiveIcon from '~/img/tokens/fert-logo-active.svg';
 import fertUsedIcon from '~/img//tokens/fert-logo-used.svg';
+import humidityIcon from '~/img/beanstalk/humidity-icon.svg';
 import Row from '~/components/Common/Row';
 import { FullFertilizerBalance } from '~/components/Barn/Actions/Transfer';
 import { useFormikContext } from 'formik';
@@ -126,9 +127,32 @@ function RowContent({isMobile, fertilizer, index, values, setFieldValue }: IRowC
                     : 'Sprouts: '}
                   {displayBN(fertilizer.sprouts)}
                 </Box>
+                {!isMobile ? 
+                  <>·</>
+                  : null
+                }
+                <Box sx={{ display: 'flex', alignItems: 'center', flexGrow: 1 }}>
+                  {isMobile ? 
+                    <Box
+                      component="img"
+                      src={humidityIcon}
+                      alt=""
+                      sx={{
+                        width: IconSize.xs,
+                        height: IconSize.xs,
+                      }}
+                    /> 
+                    : 'Humidity: '}
+                  {`${Number(fertilizer.token.humidity)}%`}
+                </Box>
               </>
             }
-            secondaryTypographyProps={{ display: 'flex', gap: 1}}
+            secondaryTypographyProps={{ 
+              display: 'flex', 
+              marginTop: isMobile ? -0.5 : 0, 
+              gap: isMobile ? 0 : 1, 
+              flexDirection: isMobile ? 'column' : 'row'
+            }}
             sx={{ my: 0 }}
           />
         </Row>
@@ -152,7 +176,7 @@ function RowContent({isMobile, fertilizer, index, values, setFieldValue }: IRowC
 const FertilizerSelect: FC<FertilizerSelectProps> = ({
   fertilizers,
 }) => {
-  const isMobile = useMediaQuery('(max-width: 500px)');
+  const isMobile = useMediaQuery('(max-width: 600px)');
 
   /// Form state
   const { values, setFieldValue } = useFormikContext<FertilizerTransferFormContext>();
