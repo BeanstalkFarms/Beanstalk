@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useRef } from 'react';
 import { useFormikContext } from 'formik';
 import useToggle from '~/hooks/display/useToggle';
 import { FC } from '~/types';
@@ -29,6 +29,8 @@ const FertInputField: FC<
 
   /// Local state
   const [dialogOpen, showDialog, hideDialog] = useToggle();
+  const ref = useRef<HTMLInputElement>();
+  const scrollbarHeight = ref.current ? ref.current.offsetHeight - ref.current.clientHeight : 0;
 
   /// Account
   const account = useAccount();
@@ -64,14 +66,17 @@ const FertInputField: FC<
               flexDirection='row'
               gap={2}
               width='100%'
-              justifyContent={values.totalSelected < 5 ? 'center' : undefined}
-              marginTop={values.totalSelected > 4 ? '10px' : '0px'}
+              ref={ref}
               sx={{ 
-                overflowX: values.totalSelected > 4 ? 'auto' : 'hidden',
+                overflowX: 'auto',
                 overflowY: 'hidden', 
                 scrollbarWidth: 'thin',
-                '@media (pointer:coarse)': {
-                  marginTop: '0px',
+                marginTop: `${scrollbarHeight}px`,
+                '&:first-child': {
+                  marginLeft: '5px'
+                },
+                '&:last-child': {
+                  marginRight: '5px'
                 },
               }}
             >
