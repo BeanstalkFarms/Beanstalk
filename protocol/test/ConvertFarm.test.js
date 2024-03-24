@@ -40,6 +40,7 @@ describe('Farm Convert', function () {
     this.bean = await ethers.getContractAt("MockToken", BEAN);
     this.season = await ethers.getContractAt('MockSeasonFacet', this.diamond.address);
     this.siloGetters = await ethers.getContractAt('SiloGettersFacet', this.diamond.address);
+    this.seasonGetters = await ethers.getContractAt('SeasonGettersFacet', this.diamond.address);
     await this.bean.mint(ownerAddress, to18('1000000000'))
     await this.wellToken.connect(owner).approve(this.beanstalk.address, ethers.constants.MaxUint256)
     await this.bean.connect(owner).approve(this.beanstalk.address, ethers.constants.MaxUint256)
@@ -111,11 +112,16 @@ describe('Farm Convert', function () {
     });
 
     describe('basic convert', async function () {
-      it('does the most basic possible convert Bean to LP', async function () {
+      it.only('does the most basic possible convert Bean to LP', async function () {
 
         await this.silo.connect(user).deposit(this.bean.address, toBean('200'), EXTERNAL);
         //user needs to approve bean to well
         //get stem tip for token
+
+        //get deltaB of both pools before convert //poolDeltaBInsta
+        const beforeDeltaB = await this.seasonGetters.poolDeltaBInsta(this.well.address);
+        console.log('beforeDeltaB: ', beforeDeltaB);
+
 
         const depositStemTip = await this.siloGetters.stemTipForToken(this.bean.address);
         console.log('depositStemTip: ', depositStemTip);
@@ -144,6 +150,9 @@ describe('Farm Convert', function () {
         const [newStemTip, ] = await this.siloGetters.calculateStemForTokenFromGrownStalk(this.well.address, grownStalk, bdvWellAmountOut);
 
         this.result = this.convert.connect(user).pipelineConvert(this.bean.address, [depositStemTip], [toBean('200')], toBean('200'), this.well.address, farmData);
+
+        const afterDeltaB = await this.seasonGetters.poolDeltaBInsta(this.well.address);
+        console.log('afterDeltaB: ', afterDeltaB);
 
         //expect it to emit the Convert event
         // await expect(this.result).to.emit(this.convert, 'Convert').withArgs(user.address, this.bean.address, this.well.address, toBean('200'), wellAmountOut);

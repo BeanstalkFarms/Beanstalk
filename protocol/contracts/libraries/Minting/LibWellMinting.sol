@@ -15,6 +15,7 @@ import {LibWell} from "contracts/libraries/Well/LibWell.sol";
 import {IBeanstalkWellFunction} from "contracts/interfaces/basin/IBeanstalkWellFunction.sol";
 import {SignedSafeMath} from "@openzeppelin/contracts/math/SignedSafeMath.sol";
 import {LibEthUsdOracle} from "contracts/libraries/Oracle/LibEthUsdOracle.sol";
+import {console} from "hardhat/console.sol";
 
 /**
  * @title Well Minting Oracle Library
@@ -236,6 +237,15 @@ library LibWellMinting {
             // Get well function
             Call memory wellFunction = IWell(well).wellFunction();
 
+            console.log('beanIndex: ', beanIndex);
+            console.log('instReserves[beanIndex]: ', instReserves[beanIndex]);
+
+            // loop through instReserves and log each one
+            for (uint i = 0; i < instReserves.length; i++) {
+                console.log('i: ', i);
+                console.log('instReserves[i]: ', instReserves[i]);
+            }
+
             // Delta B is the difference between the target Bean reserve at the peg price
             // and the instantaneous Bean balance in the Well.
             int256 deltaB = int256(IBeanstalkWellFunction(wellFunction.target).calcReserveAtRatioSwap(
@@ -244,6 +254,9 @@ library LibWellMinting {
                 ratios,
                 wellFunction.data
             )).sub(int256(instReserves[beanIndex]));
+
+            console.log('inside the function got a deltaB: ');
+            console.logInt(deltaB);
 
             return (deltaB, instReserves, ratios);
         }

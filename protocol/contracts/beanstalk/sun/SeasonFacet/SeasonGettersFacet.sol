@@ -105,6 +105,15 @@ contract SeasonGettersFacet {
         revert("Oracle: Pool not supported");
     }
 
+    function poolDeltaBInsta(address pool) external view returns (int256 deltaB) {
+        if (LibWell.isWell(pool)) {
+            (deltaB, , ) = LibWellMinting.instantaneousDeltaB(pool);
+            return deltaB;
+        } else {
+            revert("Oracle: Pool not supported");
+        }
+    }
+
     /**
      * @notice Returns the last Well Oracle Snapshot for a given `well`.
      * @return snapshot The encoded cumulative balances the last time the Oracle was captured.

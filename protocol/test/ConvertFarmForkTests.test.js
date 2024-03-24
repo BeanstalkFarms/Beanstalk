@@ -118,25 +118,6 @@ describe('Farm Convert', function () {
     await this.wellToken.connect(owner).approve(this.beanstalk.address, ethers.constants.MaxUint256)
     await this.bean.connect(owner).approve(this.beanstalk.address, ethers.constants.MaxUint256)
 
-    // await setEthUsdPrice('999.998018')
-    // await setEthUsdcPrice('1000')
-    // await setEthUsdtPrice('1000')
-
-    // await setReserves(
-    //   owner,
-    //   this.well,
-    //   [to6('1000000'), to18('1000')]
-    // );
-
-    // await setReserves(
-    //   owner,
-    //   this.well,
-    //   [to6('1000000'), to18('1000')]
-    // );
-    // await whitelistWell(this.well.address, '10000', to6('4'))
-    // await this.season.captureWellE(this.well.address); //inits well oracle price
-
-
     this.silo = await ethers.getContractAt('SiloFacet', BEANSTALK);
     this.farmFacet = await ethers.getContractAt("FarmFacet", BEANSTALK);
 

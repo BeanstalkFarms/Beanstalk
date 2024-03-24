@@ -18,6 +18,7 @@ import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {LibConvert} from "contracts/libraries/Convert/LibConvert.sol";
 import {AppStorage, LibAppStorage} from "contracts/libraries/LibAppStorage.sol";
 import {AdvancedFarmCall, LibFarm} from "../../libraries/LibFarm.sol";
+import {LibWellMinting} from "../../libraries/Minting/LibWellMinting.sol";
 import {IPipeline, PipeCall} from "contracts/interfaces/IPipeline.sol";
 import {LibFunction} from "contracts/libraries/LibFunction.sol";
 import "hardhat/console.sol";
@@ -80,6 +81,13 @@ contract ConvertFacet is ReentrancyGuard {
         uint256 totalAmount;
         uint256 crateAmount;
         uint256 depositedBdv;
+    }
+
+    struct PipelineConvertData {
+        uint256[] bdvsRemoved;
+        uint256[] grownStalks;
+        int256 combinedDeltaBinsta;
+        uint256 amountOut;
     }
 
     /**
@@ -145,19 +153,19 @@ contract ConvertFacet is ReentrancyGuard {
      */
 
     function pipelineConvert(
-        address inputToken, 
+        address inputToken,
         int96[] calldata stems, //array of stems to convert
         uint256[] calldata amounts, //amount from each crate to convert
-        uint256 totalAmountIn, //passed in rather than calculated to save gas (should fail if it's wrong)
+        uint256 totalAmountIn, //passed in rather than calculated to save gas (TODO make sure fail if it's wrong)
         address outputToken,
         bytes calldata farmData
     )
         external
         payable
         nonReentrant
-        returns (
-            uint256 amountOut, int96 toStem
-        )
+        // returns (
+        //     int96 toStem
+        // )
     {   
         LibTractor._setPublisher(msg.sender);
 
@@ -183,10 +191,11 @@ contract ConvertFacet is ReentrancyGuard {
         // }
 
         //todo: actually withdraw crates
-        uint256[] memory bdvsRemoved;
-        uint256[] memory grownStalks;
+        // uint256[] memory bdvsRemoved;
+        // uint256[] memory grownStalks;
+        PipelineConvertData memory pipeData;
 
-        ( , , bdvsRemoved, grownStalks) = _withdrawTokens(
+        ( , , pipeData.bdvsRemoved, pipeData.grownStalks) = _withdrawTokens(
             inputToken,
             stems,
             amounts,
@@ -194,17 +203,19 @@ contract ConvertFacet is ReentrancyGuard {
         );
 
         // storePoolDeltaB(inputToken, outputToken);
-        // int256 (combinedDeltaBtwa, combinedDeltaBinsta) = getCombinedDeltaBForTokens(inputToken, outputToken);
+        pipeData.combinedDeltaBinsta = getCombinedDeltaBForTokens(inputToken, outputToken);
+        console.log('before updatedCombinedDeltaB:');
+        console.logInt(pipeData.combinedDeltaBinsta);
 
 
         IERC20(inputToken).transfer(PIPELINE, totalAmountIn);
-        amountOut = executeAdvancedFarmCalls(farmData);
+        pipeData.amountOut = executeAdvancedFarmCalls(farmData);
 
-        console.log('amountOut after pipe calls: ', amountOut);
+        console.log('amountOut after pipe calls: ', pipeData.amountOut);
         
         //user MUST leave final assets in pipeline, allowing us to verify that the farm has been called successfully.
         //this also let's us know how many assets to attempt to pull out of the final type
-        transferTokensFromPipeline(outputToken, amountOut);
+        transferTokensFromPipeline(outputToken, pipeData.amountOut);
 
 
         //note bdv could decrease here, by a lot, esp because you can deposit only a fraction
@@ -213,18 +224,17 @@ contract ConvertFacet is ReentrancyGuard {
 
         //stalk bonus/penalty will be applied here
 
-        // combinedDeltaB = combinedDeltaB + getCombinedDeltaBForTokens(inputToken, outputToken);
-        // console.log('updatedCombinedDeltaB');
-        // console.logInt(combinedDeltaB);
+        pipeData.combinedDeltaBinsta = pipeData.combinedDeltaBinsta + getCombinedDeltaBForTokens(inputToken, outputToken);
+        console.log('after updatedCombinedDeltaB:');
+        console.logInt(pipeData.combinedDeltaBinsta);
 
         //TODO: grownStalk should be lost as % of bdv decrease?
         //grownstalk recieved as a bonus should be deposited evenly across all deposits
         //use current bdv of in tokens or bdv at time of previous deposit?
 
-        _depositTokensForConvertMultiCrate(inputToken, outputToken, amountOut, bdvsRemoved, grownStalks, amounts);
+        // Convert event emitted within this function
+        _depositTokensForConvertMultiCrate(inputToken, outputToken, pipeData.amountOut, pipeData.bdvsRemoved, pipeData.grownStalks, amounts);
 
-        // emit convert event, but do we want a new event definition? the old one can't handle multiple input tokens nor the combining of stems/etc
-        // emit Convert(LibTractor._getUser(), inputToken, outputToken, totalAmountIn, amountOut);
 
         //there's nothing about total BDV in this event, but it can be derived from the AddDeposit events
         LibTractor._resetPublisher();
@@ -234,43 +244,32 @@ contract ConvertFacet is ReentrancyGuard {
     //the inst and the twa deltaB
 
     //note we need a way to get insta version of this
-    // function getCombinedDeltaBForTokens(address inputToken, address outputToken) internal
-    //     returns (int256 combinedDeltaBtwa, int256 combinedDeltaBinsta) {
-    //     //get deltaB of input/output tokens for comparison later
-    //     combinedDeltaBtwa = getDeltaBIfNotBean(inputToken) + getDeltaBIfNotBean(outputToken);
-    //     console.log('getCombinedDeltaBForTokens');
-    //     console.logInt(combinedDeltaB);
-
-    //     combinedDeltaBinsta = getDeltaBIfNotBeanInsta(inputToken) + getDeltaBIfNotBeanInsta(outputToken);
-    // }
-
-    // function storePoolDeltaB(address inputToken, address outputToken) internal {
-    //             //get deltaB of input/output tokens for comparison later
-    //     int256 inputTokenDeltaB = getDeltaBIfNotBean(inputToken);
-    //     int256 outputTokenDeltaB = getDeltaBIfNotBean(outputToken);
-
-    //     console.log('inputTokenDeltaB: ');
-    //     console.logInt(inputTokenDeltaB);
-    //     console.log('outputTokenDeltaB: ');
-    //     console.logInt(outputTokenDeltaB);
-    // }
-
-    //may not be best use of gas to have this as different function?
-    function getDeltaBIfNotBeanTwa(address token) internal view returns (int256) {
-        console.log('getDeltaBIfNotBean token: ', token);
-        if (token == address(C.bean())) {
-            return 0;
-        }
-        return BEANSTALK.poolDeltaB(token);
+    function getCombinedDeltaBForTokens(address inputToken, address outputToken) internal view
+        returns (int256 combinedDeltaBinsta) {
+        //get deltaB of input/output tokens for comparison later
+        // combinedDeltaBtwa = getDeltaBIfNotBeanInsta(inputToken) + getDeltaBIfNotBeanInsta(outputToken);
+        combinedDeltaBinsta = getDeltaBIfNotBeanInsta(inputToken) + getDeltaBIfNotBeanInsta(outputToken);
+        console.log('combinedDeltaBinsta:');
+        console.logInt(combinedDeltaBinsta);
     }
 
-    // function getDeltaBIfNotBeanInsta(address token) internal view returns (int256) {
+    //may not be best use of gas to have this as different function?
+    // function getDeltaBIfNotBeanTwa(address token) internal view returns (int256) {
     //     console.log('getDeltaBIfNotBean token: ', token);
     //     if (token == address(C.bean())) {
     //         return 0;
     //     }
-    //     return LibWellMinting.instantaneousDeltaB(token);
+    //     return BEANSTALK.poolDeltaB(token);
     // }
+
+    function getDeltaBIfNotBeanInsta(address token) internal view returns (int256 instDeltaB) {
+        console.log('getDeltaBIfNotBean token: ', token);
+        if (token == address(C.bean())) {
+            return 0;
+        }
+        (instDeltaB, , )  = LibWellMinting.instantaneousDeltaB(token);
+        return instDeltaB;
+    }
 
     function logResultBySlot(bytes memory data) public view returns (bytes[] memory args) {
         // Extract the selector
