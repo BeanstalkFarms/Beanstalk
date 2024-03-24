@@ -26,7 +26,7 @@ import {OwnershipFacet} from "contracts/beanstalk/diamond/OwnershipFacet.sol";
 import {MockSiloFacet} from "contracts/mocks/mockFacets/MockSiloFacet.sol";
 import {BDVFacet} from "contracts/beanstalk/silo/BDVFacet.sol";
 import {ConvertFacet} from "contracts/beanstalk/silo/ConvertFacet.sol";
-import {WhitelistFacet} from "contracts/beanstalk/silo/WhitelistFacet.sol";
+import {WhitelistFacet} from "contracts/beanstalk/silo/WhitelistFacet/WhitelistFacet.sol";
 
 // Field
 import {MockFieldFacet} from "contracts/mocks/mockFacets/MockFieldFacet.sol";
@@ -78,6 +78,9 @@ abstract contract TestHelper is Test {
     address internal alice;
     address internal bob;
     address internal diamond;
+
+    // beanstalk
+    address constant BEANSTALK  = address(0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5);
 
 
     // season mocks
@@ -141,9 +144,9 @@ abstract contract TestHelper is Test {
 
         vm.prank(deployer);
         IDiamondCut(address(d)).diamondCut(
-        cut,
-        address(i), // address of contract with init() function
-        abi.encodeWithSignature("init()")
+            cut,
+            address(i), // address of contract with init() function
+            abi.encodeWithSignature("init()")
         );
 
         console.log("Initialized diamond at", address(d));
@@ -156,7 +159,7 @@ abstract contract TestHelper is Test {
         _mockToken("USDC", address(C.usdc()));
         _mockPrice();
         _mockCurve(); // only if "reset"
-        _mockUniswap();
+        // _mockUniswap();
         _mockUnripe();
         _mockWeth(); // only if "reset"
         // _mockCurveMetapool();
@@ -195,7 +198,7 @@ abstract contract TestHelper is Test {
     function _mockPrice() internal returns (BeanstalkPrice p) {
         address PRICE_DEPLOYER = 0x884B463E078Ff26C4b83792dB9bEF33619a69767;
         vm.prank(PRICE_DEPLOYER);
-        p = new BeanstalkPrice();
+        p = new BeanstalkPrice(BEANSTALK);
     }
 
     function _mockCurve() internal {
@@ -231,14 +234,14 @@ abstract contract TestHelper is Test {
         MockUniswapV3Factory uniFactory = MockUniswapV3Factory(new MockUniswapV3Factory());
         address ethUsdc = 
             uniFactory.createPool(
-            0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2,//weth
+            0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2, //weth
             address(C.usdc()),//usdc
             3000
             );
         bytes memory code = at(ethUsdc);
-        address targetAddr = C.UNIV3_ETH_USDC_POOL;
-        vm.etch(targetAddr, code);
-        MockUniswapV3Pool(C.UNIV3_ETH_USDC_POOL).setOraclePrice(1000e6,18);
+        // address targetAddr = C.UNIV3_ETH_USDC_POOL;
+        // vm.etch(targetAddr, code);
+        // MockUniswapV3Pool(C.UNIV3_ETH_USDC_POOL).setOraclePrice(1000e6,18);
     }
 
     function _mockCurveMetapool() internal {

@@ -204,7 +204,6 @@ contract FieldTest is FieldFacet, TestHelper {
         season.setSoilE(3e6);
         vm.prank(brean);
         field.sow(1e6, 1, LibTransfer.From.EXTERNAL);
-        weather = season.weather();
         assertEq(uint256(weather.thisSowTime), uint256(LibConstant.MAX_UINT32));
     }
 

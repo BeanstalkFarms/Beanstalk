@@ -17,17 +17,13 @@ async function printSelectors(contractName, artifactFolderPath = "../out") {
     `${contractName}.json`
   );
   const contractArtifact = require(contractFilePath);
-  const abi = contractArtifact.abi;
-  const bytecode = contractArtifact.bytecode;
-  const target = new ethers.ContractFactory(abi, bytecode);
-  const signatures = Object.keys(target.interface.functions);
 
-  const selectors = signatures.reduce((acc, val) => {
-    if (val !== "init(bytes)") {
-      acc.push(target.interface.getSighash(val));
-    }
-    return acc;
-  }, []);
+  // create an array of Object.values(contractArtifact.methodIdentifiers):
+  const selectors = Object.values(contractArtifact.methodIdentifiers);
+  // add '0x to each element of array:
+  selectors.forEach((element, index) => {
+    selectors[index] = '0x' + element;
+  });
 
   const coder = ethers.utils.defaultAbiCoder;
   const coded = coder.encode(["bytes4[]"], [selectors]);
