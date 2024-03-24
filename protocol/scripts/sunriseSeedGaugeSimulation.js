@@ -11,21 +11,9 @@ const { takeSnapshot, revertToSnapshot} = require("../test/utils/snapshot.js");
 const { setReserves } = require("../utils/well.js");
 const Papa = require('papaparse');
 
-//////////////////////// STEPS ////////////////////////
-// 1. Fetch all sunrise events in the last 6 months
-// 1.check sunrise block --> if it is later than top of hour --> search for block number closest to true sunrise block
-// 2.Go to block before sunrise
-// 3.upgrade beanstalk with seed gauge
-// call sunrise
-// check block base fee (gwei) 
-// check eth price from oracle 
-// log sunrise data
-// write to csv all info 
-// reverto to block before sunrise
-// go forward to the next sunrise
-// repeat.....
 
 const csvFilePath = 'sunrise_simulation.csv';
+const FORKING_BLOCK_NUMBER = 19398596;
 
 async function simulateSeedGaugeSunrises() {
 
@@ -38,7 +26,6 @@ async function simulateSeedGaugeSunrises() {
     writeToCsv([
         "Iteration",
         "Sunrise Block",
-        "Sunrise block timestamp",
         "Gas Used (computational units)",
         "Gas Price (gwei)",
         "Gas Cost (ETH)",
@@ -47,26 +34,34 @@ async function simulateSeedGaugeSunrises() {
         "Profit"
     ]);
   
-    console.log("\n////////////////////////// INITIAL STATE //////////////////////////")
-  
     // fetch the baseFee of the block at the top of the hour 
-    const baseFeeData = await hre.ethers.provider.getFeeData();
-    const formattedBaseFee = hre.ethers.utils.formatUnits(baseFeeData.lastBaseFeePerGas, 'gwei');
+    // const baseFeeData = await hre.ethers.provider.getFeeData();
+    // const formattedBaseFee = hre.ethers.utils.formatUnits(baseFeeData.lastBaseFeePerGas, 'gwei');
     
     // get bean eth well deployed at: 0xBEA0e11282e2bB5893bEcE110cF199501e872bAd
-    const well = await getWellContractAt("Well", "0xBEA0e11282e2bB5893bEcE110cF199501e872bAd");
+    // const well = await getWellContractAt("Well", "0xBEA0e11282e2bB5893bEcE110cF199501e872bAd");
 
-    console.log("////////////////////////// SEED GAUGE UPGRADE //////////////////////////")
+    console.log("Upgrading Beanstalk with Seed Gauge...");
 
     await bipSeedGauge();
 
     const sunriseBlockInfoCsv = 'adjusted_blocks_info_final.csv';
 
     const sunriseBlocks = await readCsvFile(sunriseBlockInfoCsv);
+
+    // console.log("Going forward 1000 blocks...")
+    // mine 100 blocks to reach the next sunrise block
+    // for (let i = 0; i < 1000; i++) {
+    //     await network.provider.send("evm_mine");
+    // }
     
     for (let i = 0; i < sunriseBlocks.length; i++) {
 
+        console.log("\n////////////////////////// ITERATION ", i, " //////////////////////////")
+
+        console.log("Taking snapshot...")
         const snapshotId = await takeSnapshot();
+        console.log("Snapshot taken: ", snapshotId);
 
         const row = sunriseBlocks[i];
         const blockNumber = parseInt(row['Block Number']);
@@ -79,19 +74,20 @@ async function simulateSeedGaugeSunrises() {
 
         // set the base fee for the next block
         await setNextBlockBaseFee(baseFee);
+        
+        // wait 100 ms for events to be emitted
+        await new Promise((resolve) => setTimeout(resolve, 100));
 
         // simulate sunrise
-        await simulateSunrise(blockNumber, baseFee, i);
+        await simulateSunrise(blockNumber, baseFee, i, ethPrice);
 
-        // go to the next block
-        await network.provider.send("evm_mine", [adjustedBlockNumber]);
-
+        console.log("Reverting to snapshot...")
         await revertToSnapshot(snapshotId);
     }
   }
   
 
-async function simulateSunrise(baseFee, index) {
+async function simulateSunrise(blockNumber, baseFee, index, ethPrice) {
 
     console.log("\n////////////////////////// SUNRISE TX //////////////////////////")
     // call sunrise
@@ -100,24 +96,29 @@ async function simulateSunrise(baseFee, index) {
       '0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5'
     );
   
-    console.log("Sunrise block reached: ", await hre.ethers.provider.getBlockNumber());
+    console.log("Sunrise block : ", await hre.ethers.provider.getBlockNumber());
     console.log("Calling sunrise...");
     
-    const maxFeePerGas = hre.ethers.utils.parseUnits('150', 'gwei');
+    // const maxFeePerGas = hre.ethers.utils.parseUnits('150', 'gwei');
 
-    await seasonFacet.sunrise({maxFeePerGas: maxFeePerGas});
+    await seasonFacet.sunrise();
 
-    // wait 100 ms
+    // wait 100 ms for events to be emitted
     await new Promise((resolve) => setTimeout(resolve, 100));
-  
+        
     const sunriseEvents = await seasonFacet.queryFilter(
       'Sunrise(uint256)',
-       hre.ethers.provider.getBlockNumber() - 10,
+       FORKING_BLOCK_NUMBER - 100,
       'latest'
     );
+
+    console.log("Sunrise events: ", sunriseEvents.length);
   
     const txHash = sunriseEvents[0].transactionHash;
+
     const receipt = await hre.ethers.provider.getTransactionReceipt(txHash);
+
+    // console.log("Sunrise receipt: ", receipt);
   
     const gasUsed = receipt.gasUsed;
 
@@ -131,35 +132,35 @@ async function simulateSunrise(baseFee, index) {
       );
     });
   
-    console.log("Bean Transfer: ", beanTransfer);
+    // console.log("Bean Transfer: ", beanTransfer);
   
     const beanAmount = parseInt(beanTransfer?.data, 16);
 
-    ethPrice = await getETHPriceAtCurrentBlock();
-  
     const usdGasCost =
       ethPrice * gasUsed * hre.ethers.utils.formatUnits(gasPrice, 'ether');
+
     const beanInUsd = hre.ethers.utils.formatUnits(beanAmount, 6);
+
+    const gasCostEth = gasUsed * hre.ethers.utils.formatUnits(gasPrice, 'ether');
 
     console.log("Sunrise Gas Used: ", gasUsed);
     console.log("Sunrise Gas Price: ", gasPrice);
-    console.log("Sunrise Gas Cost: ", gasUsed * ethers.utils.formatUnits(gasPrice, 'ether'));
+    console.log("Sunrise Gas Cost: ", gasCostEth);
     console.log("Sunrise Gas Cost in Dollars: ", usdGasCost);
     console.log("Bean Amount: ", beanAmount);
+    console.log("Bean in USD: ", beanInUsd);
+    console.log("ETH Price: ", ethPrice)
     console.log("Profit: ", (beanInUsd - usdGasCost));
-    console.log("Block timestamp: ", (await hre.ethers.provider.getBlock(receipt.blockNumber)).timestamp);
-    console.log("Block datetime: ", new Date((await hre.ethers.provider.getBlock(receipt.blockNumber)).timestamp * 1000));
 
     writeToCsv([
         index, // iteration
-        await hre.ethers.provider.getBlockNumber(), // sunrise block
-        (await hre.ethers.provider.getBlock(receipt.blockNumber)).timestamp, // sunrise block timestamp
-        gasUsed.toString(), // gas used
-        hre.ethers.utils.formatUnits(gasPrice, 'gwei'), // gas price
+        blockNumber, // sunrise block
+        gasUsed, // gas used (computational units)
+        hre.ethers.utils.formatUnits(gasPrice, 'gwei'), // gas price (gwei)
         (gasUsed * ethers.utils.formatUnits(gasPrice, 'ether')).toString(), // gas cost
         usdGasCost.toString(), // gas cost in dollars
         hre.ethers.utils.formatUnits(beanAmount, 6).toString(), // bean amount
-        (beanInUsd - usdGasCost).toString(), // profit
+        (beanInUsd - usdGasCost).toString() // profit
     ]);
 }
 
@@ -212,8 +213,9 @@ async function updateReserves(account, well, reserves) {
 
 async function setNextBlockBaseFee(baseFee) {
     console.log("Setting next block base fee to: ", hre.ethers.utils.formatUnits(baseFee, 'gwei') + ' gwei');
-    await network.provider.send("anvil_setNextBlockBaseFeePerGas", [
-      hre.ethers.utils.hexlify(baseFee),
+    console.log("Hex representation: ", hre.ethers.utils.hexlify(baseFee));
+    await hre.network.provider.send("anvil_setNextBlockBaseFeePerGas", [
+      hre.ethers.utils.hexlify(baseFee)
     ]);
 }
 
