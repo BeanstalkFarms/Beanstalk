@@ -59,14 +59,12 @@ contract FertilizerFacet {
      * @param tokenAmountIn Amount of tokens to buy Fertilizer with 18 decimal precision.
      * @param minFertilizerOut The minimum amount of Fertilizer to purchase. Protects against a significant Barn Raise Token/USD price decrease.
      * @param minLPTokensOut The minimum amount of LP tokens to receive after adding liquidity with Barn Raise tokens.
-     * @param mode The balance to transfer Beans to; see {LibTrasfer.To}
      * @dev The # of Fertilizer minted is equal to the value of the Ether paid in USD.
      */
     function mintFertilizer(
         uint256 tokenAmountIn,
         uint256 minFertilizerOut,
-        uint256 minLPTokensOut,
-        LibTransfer.From mode
+        uint256 minLPTokensOut
     ) external payable returns (uint256 fertilizerAmountOut) {
         fertilizerAmountOut = _getMintFertilizerOut(tokenAmountIn, LibBarnRaise.getBarnRaiseToken());
 

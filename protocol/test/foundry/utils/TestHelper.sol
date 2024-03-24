@@ -1,9 +1,8 @@
 /**
  * SPDX-License-Identifier: MIT
  **/
-pragma solidity =0.7.6;
+pragma solidity ^0.7.6;
 pragma abicoder v2;
-
 
 import "forge-std/Test.sol";
 import "./Strings.sol";
@@ -13,7 +12,8 @@ import {Utils} from "test/foundry/utils/Utils.sol";
 // Diamond setup
 import {Diamond} from "contracts/beanstalk/Diamond.sol";
 import {IDiamondCut} from "contracts/interfaces/IDiamondCut.sol";
-import {MockInitDiamond} from "contracts/mocks/MockInitDiamond.sol";
+import {MockInitDiamond} from "contracts/mocks/newMockInitDiamond.sol";
+import {InitDiamond} from "contracts/mocks/newInitDiamond.sol";
 
 /// Modules
 // Diamond
@@ -23,13 +23,15 @@ import {PauseFacet} from "contracts/beanstalk/diamond/PauseFacet.sol";
 import {OwnershipFacet} from "contracts/beanstalk/diamond/OwnershipFacet.sol";
 
 // Silo
-import {MockSiloFacet} from "contracts/mocks/mockFacets/MockSiloFacet.sol";
+import {MockSiloFacet, SiloFacet} from "contracts/mocks/mockFacets/MockSiloFacet.sol";
 import {BDVFacet} from "contracts/beanstalk/silo/BDVFacet.sol";
-import {ConvertFacet} from "contracts/beanstalk/silo/ConvertFacet.sol";
+import {GaugePointFacet} from "contracts/beanstalk/sun/GaugePointFacet.sol";
+import {LiquidityWeightFacet} from "contracts/beanstalk/sun/LiquidityWeightFacet.sol";
 import {WhitelistFacet} from "contracts/beanstalk/silo/WhitelistFacet/WhitelistFacet.sol";
 
 // Field
-import {MockFieldFacet} from "contracts/mocks/mockFacets/MockFieldFacet.sol";
+import {MockFieldFacet, FieldFacet} from "contracts/mocks/mockFacets/MockFieldFacet.sol";
+import {FundraiserFacet} from "contracts/beanstalk/field/FundraiserFacet.sol";
 import {MockFundraiserFacet} from "contracts/mocks/mockFacets/MockFundraiserFacet.sol";
 
 // Farm
@@ -37,16 +39,19 @@ import {FarmFacet} from "contracts/beanstalk/farm/FarmFacet.sol";
 import {CurveFacet} from "contracts/beanstalk/farm/CurveFacet.sol";
 import {TokenFacet} from "contracts/beanstalk/farm/TokenFacet.sol";
 
+/// Misc
+import {MockAdminFacet} from "contracts/mocks/mockFacets/MockAdminFacet.sol";
+import {MockWhitelistFacet, WhitelistFacet} from "contracts/mocks/mockFacets/MockWhitelistFacet.sol";
+import {UnripeFacet, MockUnripeFacet} from "contracts/mocks/mockFacets/MockUnripeFacet.sol";
+import {MockFertilizerFacet, FertilizerFacet} from "contracts/mocks/mockFacets/MockFertilizerFacet.sol";
+import {MockSeasonFacet, SeasonFacet} from "contracts/mocks/mockFacets/MockSeasonFacet.sol";
+import {MockConvertFacet, ConvertFacet} from "contracts/mocks/mockFacets/MockConvertFacet.sol";
+
 /// Ecosystem
 import {BeanstalkPrice} from "contracts/ecosystem/price/BeanstalkPrice.sol";
 
 /// Mocks
-import {MockConvertFacet} from "contracts/mocks/mockFacets/MockConvertFacet.sol";
-import {MockMarketplaceFacet} from "contracts/mocks/mockFacets/MockMarketplaceFacet.sol";
-import {MockSeasonFacet} from "contracts/mocks/mockFacets/MockSeasonFacet.sol";
-import {MockFertilizerFacet} from "contracts/mocks/mockFacets/MockFertilizerFacet.sol";
 import {MockToken} from "contracts/mocks/MockToken.sol";
-import {MockUnripeFacet} from "contracts/mocks/mockFacets/MockUnripeFacet.sol";
 import {Mock3Curve} from "contracts/mocks/curve/Mock3Curve.sol";
 import {MockCurveFactory} from "contracts/mocks/curve/MockCurveFactory.sol";
 import {MockCurveZap} from "contracts/mocks/curve/MockCurveZap.sol";
@@ -55,6 +60,10 @@ import {MockUniswapV3Pool} from "contracts/mocks/uniswap/MockUniswapV3Pool.sol";
 import {MockUniswapV3Factory} from "contracts/mocks/uniswap/MockUniswapV3Factory.sol";
 import {MockWETH} from "contracts/mocks/MockWETH.sol";
 
+// Potential removals for L2 migration.
+import {MockMarketplaceFacet, MarketplaceFacet} from "contracts/mocks/mockFacets/MockMarketplaceFacet.sol";
+
+
 import "contracts/beanstalk/AppStorage.sol";
 import "contracts/libraries/Decimal.sol";
 import "contracts/libraries/LibSafeMath32.sol";
@@ -62,96 +71,110 @@ import "contracts/libraries/Token/LibTransfer.sol";
 
 import "contracts/C.sol";
 
-// We deploy every facet, even if a facet is unused
+/**
+ * @title TestHelper
+ * @author Brean
+ * @notice Test helper contract for Beanstalk tests.
+ */
 abstract contract TestHelper is Test {
-    using strings for *;
     
     Utils internal utils;
   
     address payable[] internal users;
 
-    // the cool dudes
     address internal deployer;
-    address internal publius;
-    address internal brean;
-    address internal siloChad;
-    address internal alice;
-    address internal bob;
-    address internal diamond;
 
     // beanstalk
-    address constant BEANSTALK  = address(0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5);
+    address payable constant BEANSTALK  = payable(address(0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5));
 
-
-    // season mocks
-    MockSeasonFacet internal season;
-    MockSiloFacet internal silo;
-    MockFieldFacet internal field;
-    MockConvertFacet internal convert;
-    MockFundraiserFacet internal fundraiser;
-    MockMarketplaceFacet internal marketplace;
-    MockFertilizerFacet internal fertilizer;
-    TokenFacet internal token;
-
-    function setupDiamond() public {
-        diamond = address(deployMocks());
-        season = MockSeasonFacet(diamond);
-        silo = MockSiloFacet(diamond);
-        field = MockFieldFacet(diamond);
-        convert = MockConvertFacet(diamond);
-        fundraiser = MockFundraiserFacet(diamond);
-        marketplace = MockMarketplaceFacet(diamond);
-        fertilizer = MockFertilizerFacet(diamond);
-        token = TokenFacet(diamond);
-    }
-
-    function deployMocks() public returns (Diamond d) {
+    /**
+     * @notice deploys the beanstalk diamond contract.
+     * @param mock if true, deploys all mocks and sets the diamond address to the canonical beanstalk address.
+     */
+    function setupDiamond(bool mock) public returns (Diamond d) {
         // create accounts
         utils = new Utils();
         users = utils.createUsers(6);
         deployer = users[0];
-        publius = users[1];
-        brean = users[2];
-        siloChad = users[3];
-        alice = users[4];
-        bob = users[5];
 
         vm.label(deployer, "Deployer");
 
         // create facet cuts
-        IDiamondCut.FacetCut[] memory cut = new IDiamondCut.FacetCut[](15);
+        IDiamondCut.FacetCut[] memory cut = new IDiamondCut.FacetCut[](50);
 
-        cut[0] = _cut("BDVFacet", address(new BDVFacet()));
-        cut[1] = _cut("CurveFacet", address(new CurveFacet()));
-        cut[2] = _cut("MockConvertFacet", address(new MockConvertFacet()));
-        cut[3] = _cut("FarmFacet", address(new FarmFacet()));
-        cut[4] = _cut("MockFieldFacet", address(new MockFieldFacet()));
-        cut[5] = _cut("MockFundraiserFacet", address(new MockFundraiserFacet()));
-        cut[6] = _cut("PauseFacet", address(new PauseFacet()));
-        cut[7] = _cut("MockSeasonFacet", address(new MockSeasonFacet()));
-        cut[8] = _cut("MockSiloFacet", address(new MockSiloFacet()));
-        cut[9] = _cut("MockFertilizerFacet", address(new MockFertilizerFacet()));
-        cut[10] = _cut("OwnershipFacet", address(new OwnershipFacet()));
-        cut[11] = _cut("TokenFacet", address(new TokenFacet()));
-        cut[12] = _cut("MockUnripeFacet", address(new MockUnripeFacet()));
-        cut[13] = _cut("WhitelistFacet", address(new WhitelistFacet()));
-        cut[14] = _cut("MockMarketplaceFacet", address(new MockMarketplaceFacet()));
-        console.log("Deployed mock facets.");
+        // add or remove facets here. Facets here do not have mocks.
+        uint i;
+        cut[i++] = _cut("BDVFacet", address(new BDVFacet()));
+        cut[i++] = _cut("CurveFacet", address(new CurveFacet()));
+        cut[i++] = _cut("FarmFacet", address(new FarmFacet()));
+        cut[i++] = _cut("PauseFacet", address(new PauseFacet()));
+        cut[i++] = _cut("OwnershipFacet", address(new OwnershipFacet()));
+        cut[i++] = _cut("TokenFacet", address(new TokenFacet()));
+        cut[i++] = _cut("GaugePointFacet", address(new GaugePointFacet()));
+        cut[i++] = _cut("LiquidityWeightFacet", address(new LiquidityWeightFacet()));
+
+        // facets with a mock counterpart should be added here.
+        if(mock) {
+            cut[i++] = _cut("MockAdminFacet", address(new MockAdminFacet()));
+            cut[i++] = _cut("MockConvertFacet", address(new MockConvertFacet()));
+            cut[i++] = _cut("MockFertilizerFacet", address(new MockFertilizerFacet()));
+            cut[i++] = _cut("MockFieldFacet", address(new MockFieldFacet()));
+            cut[i++] = _cut("MockFundraiserFacet", address(new MockFundraiserFacet()));
+            cut[i++] = _cut("MockMarketplaceFacet", address(new MockMarketplaceFacet()));
+            cut[i++] = _cut("MockSeasonFacet", address(new MockSeasonFacet()));
+            cut[i++] = _cut("MockSiloFacet", address(new MockSiloFacet()));
+            cut[i++] = _cut("MockUnripeFacet", address(new MockUnripeFacet()));
+            cut[i++] = _cut("MockWhitelistFacet", payable(address(new MockWhitelistFacet())));
+        } else {
+            cut[i++] = _cut("ConvertFacet", address(new ConvertFacet()));
+            cut[i++] = _cut("FertilizerFacet", address(new FertilizerFacet()));
+            cut[i++] = _cut("FieldFacet", address(new FieldFacet()));
+            cut[i++] = _cut("FundraiserFacet", address(new FundraiserFacet()));
+            cut[i++] = _cut("MarketplaceFacet", address(new MarketplaceFacet()));
+            cut[i++] = _cut("SeasonFacet", address(new SeasonFacet()));
+            cut[i++] = _cut("SiloFacet", address(new SiloFacet()));
+            cut[i++] = _cut("UnripeFacet", address(new UnripeFacet()));
+            cut[i++] = _cut("WhitelistFacet", address(new WhitelistFacet()));
+        }
+
+        assembly {
+            mstore(cut, i)
+        }
+
+        d = deployDiamondAtAddress(deployer, BEANSTALK);
+        console.log("Deployed facets.");
         deployMockTokens();
         // create diamond    
-        d = new Diamond(deployer);
-        MockInitDiamond i = new MockInitDiamond();
+        // d = new Diamond(deployer);
+        console.log("jack");
+
+        // if mocking, set the diamond address to
+        // the canonical beanstalk address.
+        address initDiamondAddress;
+        if(mock) { 
+            console.log("jack");
+            initDiamondAddress = address(new MockInitDiamond());
+            console.log("jack");
+        } else {
+            initDiamondAddress = address(new InitDiamond());
+        }
 
         vm.prank(deployer);
+        console.log("here");
         IDiamondCut(address(d)).diamondCut(
             cut,
-            address(i), // address of contract with init() function
+            initDiamondAddress,
             abi.encodeWithSignature("init()")
         );
+        console.log("there");
+        console.log("jack");
 
         console.log("Initialized diamond at", address(d));
     }
 
+    /**
+     * @notice deploys mock tokens.
+     */
     function deployMockTokens() public {
         // impersonate tokens and utilities
         _mockToken("Bean", address(C.bean()));
@@ -179,13 +202,22 @@ abstract contract TestHelper is Test {
 
     //////////////////////// Deploy  /////////////////////////
 
+    /**
+     * @notice deploys a diamond contract at an address.
+     */
+    function deployDiamondAtAddress(address _deployer, address payable beanstalkAddress) internal returns (Diamond d) {
+        vm.prank(_deployer);
+        deployCodeTo("Diamond.sol", abi.encode(_deployer), beanstalkAddress);
+        return Diamond(beanstalkAddress);
+    }
 
     function _etch(string memory _file, address _address, bytes memory args) internal returns (address) {
         address codeaddress = deployCode(_file, args);
-        vm.etch(_address, at(codeaddress));
+        vm.etch(_address, getBytecodeAt(codeaddress));
         return _address;
     }
 
+    
     function _mockToken(string memory _tokenName, address _tokenAddress) internal returns (MockToken) {
         return MockToken(_etch("MockToken.sol", _tokenAddress,abi.encode(_tokenName,"")));
     }
@@ -238,7 +270,7 @@ abstract contract TestHelper is Test {
             address(C.usdc()),//usdc
             3000
             );
-        bytes memory code = at(ethUsdc);
+        bytes memory code = getBytecodeAt(ethUsdc);
         // address targetAddr = C.UNIV3_ETH_USDC_POOL;
         // vm.etch(targetAddr, code);
         // MockUniswapV3Pool(C.UNIV3_ETH_USDC_POOL).setOraclePrice(1000e6,18);
@@ -286,8 +318,8 @@ abstract contract TestHelper is Test {
         selectors = abi.decode(res, (bytes4[]));
     }
 
-    //gets bytecode at specific address (cant use address.code as we're in 0.7.6)
-    function at(address _addr) public view returns (bytes memory o_code) {
+    // gets bytecode at specific address (cant use address.code as we're in 0.7.6)
+    function getBytecodeAt(address _addr) public view returns (bytes memory o_code) {
         assembly {
             // retrieve the size of the code
             let size := extcodesize(_addr)
@@ -298,20 +330,9 @@ abstract contract TestHelper is Test {
             mstore(0x40, add(o_code, and(add(add(size, 0x20), 0x1f), not(0x1f))))
             // store length in memory
             mstore(o_code, size)
-            // actually retrieve the code, this needs assembly
             extcodecopy(_addr, add(o_code, 0x20), 0, size)
         }
     }
-
-
-
-    // function initUser() internal {
-    //     users = new Users();
-    //     address[] memory _user = new address[](2);
-    //     _user = users.createUsers(2);
-    //     user = _user[0];
-    //     user2 = _user[1];
-    // }
 
     // /// @dev deploy `n` mock ERC20 tokens and sort by address
     // function deployMockTokens(uint n) internal {
@@ -319,8 +340,8 @@ abstract contract TestHelper is Test {
     //     for (uint i = 0; i < n; i++) {
     //         IERC20 temp = IERC20(
     //             new MockToken(
-    //                 string.concat("Token ", i.toString()), // name
-    //                 string.concat("TOKEN", i.toString()), // symbol
+    //                 string.concgetBytecodeAt("Token ", i.toString()), // name
+    //                 string.concgetBytecodeAt("TOKEN", i.toString()), // symbol
     //                 18 // decimals
     //             )
     //         );
@@ -364,19 +385,6 @@ abstract contract TestHelper is Test {
     //     for (uint i; i < n; ++i) {
     //         _tokens[i] = tokens[i];
     //     }
-    // }
-
-    // /// @dev get `account` balance of each token, lp token, total lp token supply
-    // function getBalances(address account) internal view returns (Balances memory balances) {
-    //     uint[] memory tokenBalances = new uint[](tokens.length);
-    //     for (uint i = 0; i < tokenBalances.length; ++i) {
-    //         tokenBalances[i] = tokens[i].balanceOf(account);
-    //     }
-    //     balances = Balances(
-    //         tokenBalances,
-    //         well.balanceOf(account),
-    //         well.totalSupply()
-    //     );
     // }
 
     /// @dev impersonate `from`

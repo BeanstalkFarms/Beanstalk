@@ -95,6 +95,7 @@ library LibWell {
                 return (address(tokens[i]), i);
             }
         }
+        revert("LibWell: invalid well:");
     }
 
     /**
