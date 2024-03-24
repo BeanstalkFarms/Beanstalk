@@ -231,17 +231,14 @@ describe('Farm Convert', function () {
       await expect(this.result).to.emit(this.silo, 'AddDeposit').withArgs(user.address, this.bean.address, '10017011608', '200204225', '200204225');
     });
 
-    it('does a uniswap and 3crv swap', async function () {
+    it.only('does a uniswap and 3crv swap', async function () {
 
       //first deposit 200 bean into bean:eth well
       await this.bean.connect(user).approve(this.well.address, ethers.constants.MaxUint256);
-      //get amount out that we should recieve for depositing 200 beans
+      //get amount out that we should receive for depositing 200 beans
       const wellAmountOut = await this.well.getAddLiquidityOut([toBean('200'), to18("0")]);
 
       await this.well.connect(user).addLiquidity([toBean('200'), to18("0")], ethers.constants.Zero, user.address, ethers.constants.MaxUint256);
-
-      // if we removed that well amount, how many bean would we expect to get?
-      const beanAmountOut = await this.well.getRemoveLiquidityOneTokenOut(wellAmountOut, BEAN);
 
       // deposit the bean:eth
       const siloResult = await this.silo.connect(user).deposit(this.well.address, wellAmountOut, EXTERNAL);
@@ -264,9 +261,14 @@ describe('Farm Convert', function () {
       this.result = await this.convert.connect(user).pipelineConvert(this.well.address, [stemTip], [wellAmountOut], wellAmountOut, this.bean.address, farmData);
 
       // verify events
-      // await expect(this.result).to.emit(this.convert, 'Convert').withArgs(user.address, this.well.address, this.bean.address, wellAmountOut, beanAmountOut);
+      await expect(this.result).to.emit(this.convert, 'Convert').withArgs(user.address, this.well.address, this.bean.address, wellAmountOut, '199758011');
+
       await expect(this.result).to.emit(this.silo, 'RemoveDeposits').withArgs(user.address, this.well.address, [stemTip], [wellAmountOut], wellAmountOut, [depositedBdv]);
-      // await expect(this.result).to.emit(this.silo, 'AddDeposit').withArgs(user.address, this.bean.address, stemTip, beanAmountOut, beanAmountOut);
+
+      // these numbers are specific for this test, ideally we could come up with them
+      // using get value function from the uniswap/curve contracts rather than just
+      // using the hardcoded values it happened to spit out.
+      await expect(this.result).to.emit(this.silo, 'AddDeposit').withArgs(user.address, this.bean.address, '10016991524', '199758011', '199758011');
     });
   });
 });

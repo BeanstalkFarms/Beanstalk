@@ -159,19 +159,13 @@ contract ConvertFacet is ReentrancyGuard {
             uint256 amountOut, int96 toStem
         )
     {   
-
-        console.log('1 LibTractor._getUser: ', LibTractor._getUser());
         LibTractor._setPublisher(msg.sender);
 
-        console.log('2 LibTractor._getUser: ', LibTractor._getUser());
 
         // mow input and output tokens: 
         LibSilo._mow(LibTractor._getUser(), inputToken);
         LibSilo._mow(LibTractor._getUser(), outputToken);
 
-        //log stems
-
-        
         
         // AppStorage storage s = LibAppStorage.diamondStorage();
 
