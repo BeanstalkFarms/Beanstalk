@@ -13,7 +13,7 @@ import { SPROUTS } from '~/constants/tokens';
 import { displayBN } from '~/util';
 import TokenIcon from '../TokenIcon';
 
-const FertInputField: FC<
+const FertilizerSelectButton: FC<
   {
     /** A farmer's fertilizers */
     fertilizers: FullFertilizerBalance[];
@@ -120,4 +120,4 @@ const FertInputField: FC<
   );
 };
 
-export default FertInputField;
+export default FertilizerSelectButton;

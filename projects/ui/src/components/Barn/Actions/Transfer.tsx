@@ -20,7 +20,7 @@ import useFormMiddleware from '~/hooks/ledger/useFormMiddleware';
 import { FC } from '~/types';
 import TokenOutput from '~/components/Common/Form/TokenOutput';
 import useSdk from '~/hooks/sdk';
-import FertInputField from '~/components/Common/Form/FertInputField';
+import FertilizerSelectButton from '~/components/Common/Form/FertilizerSelectButton';
 import { useSelector } from 'react-redux';
 import { AppState } from '~/state';
 import { useFetchFarmerBarn } from '~/state/farmer/barn/updater';
@@ -111,7 +111,7 @@ const TransferForm: FC<FormikProps<TransferFormValues>> = ({
   return (
     <Form autoComplete="off">
       <Stack gap={1}>
-        <FertInputField fertilizers={fertilizers} />
+        <FertilizerSelectButton fertilizers={fertilizers} />
         {fertilizers.length > 0 && (
           <FieldWrapper label="Transfer to">
             <AddressInputField name="to" />
@@ -228,8 +228,8 @@ const Transfer: FC<{}> = () => {
           call = fertilizer.safeTransferFrom(
             account,
             to,
-            fertilizers,
-            amounts,
+            fertilizers[0],
+            amounts[0],
             "0x00"
           );
         } else {
