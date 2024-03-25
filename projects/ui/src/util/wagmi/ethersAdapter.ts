@@ -6,11 +6,17 @@ import { Config, useClient, useConnectorClient } from 'wagmi';
 export function clientToProvider(client: Client<Transport, Chain>) {
   const { chain, transport } = client;
 
-  const network = {
-    chainId: chain.id,
-    name: chain.name,
-    ensAddress: chain.contracts?.ensRegistry?.address,
-  };
+  const network = chain
+    ? {
+        chainId: chain.id,
+        name: chain.name,
+        ensAddress: chain.contracts?.ensRegistry?.address,
+      }
+    : {
+        chainId: 1,
+        name: 'mainnet',
+      };
+
   if (transport.type === 'fallback')
     return new providers.FallbackProvider(
       (transport.transports as ReturnType<Transport>[]).map(
@@ -22,11 +28,16 @@ export function clientToProvider(client: Client<Transport, Chain>) {
 
 export function clientToSigner(client: Client<Transport, Chain, Account>) {
   const { account, chain, transport } = client;
-  const network = {
-    chainId: chain.id,
-    name: chain.name,
-    ensAddress: chain.contracts?.ensRegistry?.address,
-  };
+  const network = chain
+    ? {
+        chainId: chain.id,
+        name: chain.name,
+        ensAddress: chain.contracts?.ensRegistry?.address,
+      }
+    : {
+        chainId: 1,
+        name: 'mainnet',
+      };
   const provider = new providers.Web3Provider(transport, network);
   const signer = provider.getSigner(account.address);
 
@@ -47,5 +58,9 @@ export function useEthersProvider({
 /** Hook to convert a Viem Client to an ethers.js Signer. */
 export function useEthersSigner({ chainId }: { chainId?: number } = {}) {
   const { data: client } = useConnectorClient<Config>({ chainId });
-  return useMemo(() => (client ? clientToSigner(client) : undefined), [client]);
+  return useMemo(
+    () => (client ? clientToSigner(client) : undefined),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [chainId]
+  );
 }
