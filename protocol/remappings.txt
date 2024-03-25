@@ -1,8 +1,3 @@
-@contracts/=contracts/
-~/=contracts/
-
-src/=@beanstalk/wells/src/
-@wells/=@beanstalk/wells/src/
-oz/=@openzeppelin/contracts/
-
 forge-std/=lib/forge-std/src/
+@openzeppelin/=node_modules/@openzeppelin/
+@wells/=node_modules/@beanstalk/wells1.1/

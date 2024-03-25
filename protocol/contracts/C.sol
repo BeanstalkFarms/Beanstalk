@@ -83,6 +83,14 @@ library C {
     uint256 internal constant BEAN_INDEX = 0;
     uint256 internal constant ETH_INDEX = 1;
 
+
+    //////////////////// Chainlink Oracles ////////////////////
+    address constant ETH_USD_CHAINLINK_PRICE_AGGREGATOR = 0x5f4eC3Df9cbd43714FE2740f5E3616155c5b8419;
+    address constant WSTETH_ETH_CHAINLINK_PRICE_AGGREGATOR = 0x86392dC19c0b719886221c78AB11eb8Cf5c52812;
+
+    //////////////////// Uniswap Oracles //////////////////////
+    address internal constant WSTETH_ETH_UNIV3_01_POOL = 0x109830a1AAaD605BbF02a9dFA7B0B92EC2FB7dAa; // 0.01% pool
+
     function getSeasonPeriod() internal pure returns (uint256) {
         return CURRENT_SEASON_PERIOD;
     }

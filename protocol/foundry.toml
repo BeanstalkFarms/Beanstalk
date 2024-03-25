@@ -29,7 +29,11 @@ bytecode_hash = 'ipfs'
 # https://book.getfoundry.sh/reference/config/testing
 verbosity = 0
 ffi = true
-fs_permissions = [{ access = "read", path = "./out" }]
+fs_permissions = [
+  { access = "read", path = "../"},
+  { access = "read", path = "./out" }
+]
+ignored_warnings_from = ["/test"]
 sender = '0x00a329c0648769a73afac7f9381e08fb43dbea72' # The value of `msg.sender` in tests.
 tx_origin = '0x00a329c0648769a73afac7f9381e08fb43dbea72' # The value of `tx.origin` in tests.
 gas_reports = ['*']
