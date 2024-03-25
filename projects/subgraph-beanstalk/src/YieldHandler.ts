@@ -5,7 +5,6 @@ import { toDecimal, ZERO_BD } from "../../subgraph-core/utils/Decimals";
 import { loadFertilizer } from "./utils/Fertilizer";
 import { loadFertilizerYield } from "./utils/FertilizerYield";
 import { loadSilo, loadSiloHourlySnapshot, loadSiloYield, loadTokenYield, loadWhitelistTokenSetting } from "./utils/SiloEntities";
-import { SILO_YIELD_14_000 } from "./utils/HistoricYield";
 
 const ROLLING_24_WINDOW = 24;
 const ROLLING_7_DAY_WINDOW = 168;
@@ -23,23 +22,21 @@ export function updateBeanEMA(t: i32, timestamp: BigInt): void {
  *
  */
 function updateWindowEMA(t: i32, timestamp: BigInt, window: i32): void {
-  let silo = loadSilo(BEANSTALK);
-  let siloYield = loadSiloYield(t, window);
+  // Historic cache values up to season 20,000
+  if (t <= 20_000) {
+    let silo = loadSilo(BEANSTALK);
+    let siloYield = loadSiloYield(t, window);
 
-  // Check for cached info
-  if (window == ROLLING_30_DAY_WINDOW && t <= 14_000) {
-    let cacheIndex = t - 6075;
-    siloYield.beta = BigDecimal.fromString(SILO_YIELD_14_000[cacheIndex][1]);
-    siloYield.u = <i32>parseInt(SILO_YIELD_14_000[cacheIndex][2]);
-    siloYield.beansPerSeasonEMA = BigDecimal.fromString(SILO_YIELD_14_000[cacheIndex][3]);
     siloYield.whitelistedTokens = silo.whitelistedTokens;
-    siloYield.createdAt = BigInt.fromString(SILO_YIELD_14_000[cacheIndex][4]);
     siloYield.save();
 
     updateFertAPY(t, timestamp, window);
 
     return;
   }
+
+  let silo = loadSilo(BEANSTALK);
+  let siloYield = loadSiloYield(t, window);
 
   // When less then window data points are available,
   // smooth over whatever is available. Otherwise use the full window.
