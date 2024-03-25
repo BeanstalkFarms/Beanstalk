@@ -4,7 +4,6 @@ import {
   ListItemText,
   List,
   Box,
-  useMediaQuery,
   TextField,
 } from '@mui/material';
 import { FC } from '~/types';
@@ -22,6 +21,8 @@ import SelectionItem from '../SelectionItem';
 export interface FertilizerSelectProps {
   /** A farmer's fertilizers */
   fertilizers: FullFertilizerBalance[];
+  /** If true, switch to small screen layout */
+  isMobile: boolean;
 }
 
 interface FertilizerTransferFormContext {
@@ -175,9 +176,8 @@ function RowContent({isMobile, fertilizer, index, values, setFieldValue }: IRowC
 
 const FertilizerSelect: FC<FertilizerSelectProps> = ({
   fertilizers,
+  isMobile
 }) => {
-  const isMobile = useMediaQuery('(max-width: 600px)');
-
   /// Form state
   const { values, setFieldValue } = useFormikContext<FertilizerTransferFormContext>();
 

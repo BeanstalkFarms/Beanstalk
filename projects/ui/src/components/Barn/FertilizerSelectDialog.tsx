@@ -1,5 +1,5 @@
 import React from 'react';
-import { Dialog, DialogProps } from '@mui/material';
+import { Dialog, DialogProps, useMediaQuery, useTheme } from '@mui/material';
 import { FC } from '~/types';
 import { StyledDialogContent, StyledDialogTitle } from '../Common/Dialog';
 import EmptyState from '../Common/ZeroState/EmptyState';
@@ -19,7 +19,12 @@ const FertilizerSelectDialog: FC<FertilizerSelectDialogProps & DialogProps> = ({
   fertilizers,
   // Dialog
   open,
-}) => (
+}) => {
+
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+
+  return (
     <Dialog onClose={handleClose} open={open} fullWidth>
       <StyledDialogTitle onClose={handleClose}>My Fertilizer</StyledDialogTitle>
       <StyledDialogContent
@@ -29,6 +34,7 @@ const FertilizerSelectDialog: FC<FertilizerSelectDialogProps & DialogProps> = ({
       >
         {fertilizers.length > 0 ? (
           <FertilizerSelect
+            isMobile={isMobile}
             fertilizers={fertilizers}
           />
         ) : (
@@ -37,5 +43,6 @@ const FertilizerSelectDialog: FC<FertilizerSelectDialogProps & DialogProps> = ({
       </StyledDialogContent>
     </Dialog>
   );
+};
 
 export default FertilizerSelectDialog;
