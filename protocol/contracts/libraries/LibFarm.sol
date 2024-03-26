@@ -153,12 +153,12 @@ library LibFarm {
         assembly {
             selector := mload(add(data, 32))
         }
-        console.log('_farmMem selector: ');
-        console.logBytes4(selector);
+        // console.log('_farmMem selector: ');
+        // console.logBytes4(selector);
         address facet = LibFunction.facetForSelector(selector);
-        console.log('_farmMem facet: ', facet);
-        console.log('_farmMem data: ');
-        console.logBytes(data);
+        // console.log('_farmMem facet: ', facet);
+        // console.log('_farmMem data: ');
+        // console.logBytes(data);
 
         (success, result) = facet.delegatecall(data);
         

@@ -20,6 +20,7 @@ import {AppStorage, LibAppStorage} from "contracts/libraries/LibAppStorage.sol";
 import {AdvancedFarmCall, LibFarm} from "../../libraries/LibFarm.sol";
 import {LibWellMinting} from "../../libraries/Minting/LibWellMinting.sol";
 import {IPipeline, PipeCall} from "contracts/interfaces/IPipeline.sol";
+import {SignedSafeMath} from "@openzeppelin/contracts/math/SignedSafeMath.sol";
 import {LibFunction} from "contracts/libraries/LibFunction.sol";
 import "hardhat/console.sol";
 
@@ -35,6 +36,7 @@ import {LibGerminate} from "contracts/libraries/Silo/LibGerminate.sol";
  **/
 contract ConvertFacet is ReentrancyGuard {
     using SafeMath for uint256;
+    using SignedSafeMath for int256;
     using SafeCast for uint256;
     using LibSafeMath32 for uint32;
     address internal constant PIPELINE = 0xb1bE0000C6B3C62749b5F0c92480146452D15423; //import this from C.sol?
@@ -88,6 +90,13 @@ contract ConvertFacet is ReentrancyGuard {
         uint256[] grownStalks;
         int256 combinedDeltaBinsta;
         uint256 amountOut;
+        uint256 percentStalkPenalty; // 0 means no penalty, 1 means 100% penalty
+    }
+
+    // TODO: when we updated to Solidity 0.8, use the native abs function
+    // the verson of OpenZeppelin we're on does not support abs
+    function abs(int256 a) internal pure returns (uint256) {
+        return a >= 0 ? uint256(a) : uint256(-a);
     }
 
     /**
@@ -240,6 +249,67 @@ contract ConvertFacet is ReentrancyGuard {
         LibTractor._resetPublisher();
     }
 
+    /**
+     * @notice Calculates the percentStalkPenalty for a given convert.
+     * @dev The percentStalkPenalty is the amount of Stalk that is lost as a result of converting against
+     * or past peg.
+     * @param beforeDeltaB The deltaB before the deposit.
+     * @param afterDeltaB The deltaB after the deposit.
+     * @param bdvConverted The amount of BDV that was converted.
+     * @return percentStalkPenalty The percent of stalk that should be lost, 0 means no penalty, 1 means 100% penalty.
+     * 
+     * TODO: External only so that tests can be written on it. Any danger in leaving it public? It's just a pure function so I don't think so.
+     */
+
+    // TODO change to pure upon log removal
+    function calculatePercentStalkPenalty(int256 beforeDeltaB, int256 afterDeltaB, uint256 bdvConverted) external view returns (uint256) {
+    // Check if the signs of beforeDeltaB and afterDeltaB are different,
+    // indicating that deltaB has crossed zero
+    // if (beforeDeltaB.mul(afterDeltaB) < 0) {
+    // The bitwise XOR of two signed integers will be positive if they have different signs, and negative if they have the same sign
+    if ((beforeDeltaB ^ afterDeltaB) < 0 || beforeDeltaB == 0 || afterDeltaB == 0) {
+
+        if (beforeDeltaB == 0 && afterDeltaB != 0) {
+            //this means we converted away from peg, so entire amount of bdvConverted is penalty
+            return 1e18;
+        }
+
+        if (afterDeltaB == 0) {
+            return 0; //perfectly to peg, all good
+        }
+
+        console.log('beforeDeltaB: ');
+        console.logInt(beforeDeltaB);
+        console.log('afterDeltaB: ');
+        console.logInt(afterDeltaB);
+        console.log('bdvConverted: ', bdvConverted);
+
+
+        // Calculate how far past peg we went - so actually this is just abs of new deltaB
+        uint256 crossoverAmount = uint256(abs(int256(afterDeltaB)));
+
+        console.log('crossoverAmount: ', crossoverAmount);
+
+        // Check if the crossoverAmount is greater than or equal to bdvConverted
+        // TODO: see if we can find cases where bdcConverted doesn't match the deltaB diff? should always in theory afaict
+        if (crossoverAmount >= bdvConverted) {
+            // If the entire bdvConverted amount crossed over, return 100%
+            return 1e18; // 1e18 represents 100% as a fixed-point number with 18 decimal places
+            // TODO: consider if this is a good amount of precision
+        } else {
+            // Calculate the percentage of bdvConverted that crossed over
+            return crossoverAmount.mul(1e18).div(bdvConverted);
+        }
+    } else if (beforeDeltaB <= 0 && afterDeltaB < beforeDeltaB) { 
+        return 1e18;
+    } else if (beforeDeltaB >= 0 && afterDeltaB > beforeDeltaB) { 
+        return 1e18;
+    } else {
+        // If the deltaB did not cross zero, or is the same before/after, return 0. In the future maybe calculate bonus here.
+        return 0;
+    }
+}
+
     //for finding the before/after deltaB difference, we need to use the min of
     //the inst and the twa deltaB
 
@@ -263,7 +333,7 @@ contract ConvertFacet is ReentrancyGuard {
     // }
 
     function getDeltaBIfNotBeanInsta(address token) internal view returns (int256 instDeltaB) {
-        console.log('getDeltaBIfNotBean token: ', token);
+        // console.log('getDeltaBIfNotBean token: ', token);
         if (token == address(C.bean())) {
             return 0;
         }
@@ -355,8 +425,8 @@ contract ConvertFacet is ReentrancyGuard {
             results[i] = LibFarm._advancedFarmMem(calls[i], results);
 
             //log result
-            console.log('results[i]: ', i);
-            console.logBytes(results[i]);
+            // console.log('results[i]: ', i);
+            // console.logBytes(results[i]);
         }
         // assume last value is the amountOut
         // todo: for full functionality, we should instead have the user specify the index of the amountOut
@@ -409,166 +479,6 @@ contract ConvertFacet is ReentrancyGuard {
      * the function will omit that deposit. This is due to the fact that
      * germinating deposits can be manipulated and skip the germination process.
      */
-//     function _withdrawTokens(
-//         address token,
-//         int96[] memory stems,
-//         uint256[] memory amounts,
-//         uint256 maxTokens
-//     ) internal returns (uint256 grownStalk, uint256 fromBdv, uint256[] memory bdvs, uint256[] memory stalksRemoved) {
-//         require(
-//             stems.length == amounts.length,
-//             "Convert: stems, amounts are diff lengths."
-//         );
-
-//         // for (uint256 i = 0; i < stems.length; i++) {
-//         //     console.log('_withdrawTokens i: ', i);
-//         //     console.log('_withdrawTokens stems[i]: ');
-//         //     console.logInt(stems[i]);
-//         //     console.log('_withdrawTokens amounts[i]: ', amounts[i]);
-//         // }
-
-//         console.log('maxTokens: ', maxTokens);
-
-//         AssetsRemovedConvert memory a;
-//         // uint256 depositBDV;
-//         uint256 i = 0;
-
-//         // a bracket is included here to avoid the "stack too deep" error.
-//         {
-//             a.bdvsRemoved = new uint256[](stems.length);
-//             a.stalksRemoved = new uint256[](stems.length);
-//             a.depositIds = new uint256[](stems.length);
-//             while ((i < stems.length) && (a.tokensRemoved < maxTokens)) {
-//                 if (a.tokensRemoved.add(amounts[i]) < maxTokens) {
-//                     //keeping track of stalk removed must happen before we actually remove the deposit
-//                     //this is because LibTokenSilo.grownStalkForDeposit() uses the current deposit info
-//                     a.bdvsRemoved[i] = LibTokenSilo.removeDepositFromAccount(
-//                         LibTractor._getUser(),
-//                         token,
-//                         stems[i],
-//                         amounts[i]
-//                     );
-
-//                     a.stalksRemoved[i] = LibSilo.stalkReward(
-//                             stems[i],
-//                             LibTokenSilo.stemTipForToken(token),
-//                             a.bdvsRemoved[i].toUint128()
-//                         );
-//                     a.stalkRemoved = a.stalkRemoved.add(a.stalksRemoved[i]);
-                    
-//                 } else {
-//                     amounts[i] = maxTokens.sub(a.tokensRemoved);
-//                     a.bdvsRemoved[i] = LibTokenSilo.removeDepositFromAccount(
-//                         LibTractor._getUser(),
-//                         token,
-//                         stems[i],
-//                         amounts[i]
-//                     );
-
-//                     a.stalksRemoved[i] = LibSilo.stalkReward(
-//                             stems[i],
-//                             LibTokenSilo.stemTipForToken(token),
-//                             a.bdvsRemoved[i].toUint128()
-//                         );
-//                     a.stalkRemoved = a.stalkRemoved.add(a.stalksRemoved[i]);
-//                 }
-                
-//                 a.tokensRemoved = a.tokensRemoved.add(amounts[i]);
-//                 a.bdvRemoved = a.bdvRemoved.add(a.bdvsRemoved[i]);
-
-
-//             console.log('a.tokensRemoved: ', a.tokensRemoved);
-//             console.log('a.bdvsRemoved[i]: ', a.bdvsRemoved[i]);
-
-// /*
-//             uint256[] memory bdvsRemoved = new uint256[](stems.length);
-//             uint256[] memory depositIds = new uint256[](stems.length);
-
-//             // get germinating stem and stemTip for the token
-//             LibGerminate.GermStem memory germStem = LibGerminate.getGerminatingStem(token);
-
-//             while ((i < stems.length) && (a.active.tokens < maxTokens)) {
-//                 // skip any stems that are germinating, due to the ability to 
-//                 // circumvent the germination process.
-//                 if (germStem.germinatingStem <= stems[i]) {
-//                     i++;
-//                     continue;
-//                 }
-
-//                 if (a.active.tokens.add(amounts[i]) >= maxTokens) amounts[i] = maxTokens.sub(a.active.tokens);
-//                 depositBDV = LibTokenSilo.removeDepositFromAccount(
-//                         msg.sender,
-//                         token,
-//                         stems[i],
-//                         amounts[i]
-//                     );
-//                 bdvsRemoved[i] = depositBDV;
-//                 a.active.stalk = a.active.stalk.add(
-//                     LibSilo.stalkReward(
-//                         stems[i],
-//                         germStem.stemTip,
-//                         depositBDV.toUint128()
-//                     )
-//                 );
-                
-//                 a.active.tokens = a.active.tokens.add(amounts[i]);
-//                 a.active.bdv = a.active.bdv.add(depositBDV);
-// >>>>>>> bip39-seedGauge
-// */
-                
-//                 a.depositIds[i] = uint256(LibBytes.packAddressAndStem(
-//                     token,
-//                     stems[i]
-//                 ));
-//                 i++;
-//             }
-//             for (i; i < stems.length; ++i) amounts[i] = 0;
-
-            
-//             emit RemoveDeposits(
-//                 LibTractor._getUser(),
-//                 token,
-//                 stems,
-//                 amounts,
-//                 a.tokensRemoved,
-//                 a.bdvsRemoved
-//             );
-
-//             emit LibSilo.TransferBatch(
-//                 LibTractor._getUser(), 
-//                 LibTractor._getUser(),
-//                 address(0), 
-//                 a.depositIds, 
-//                 amounts
-//             );
-//         }
-        
-//         require(
-//             a.active.tokens == maxTokens,
-//             "Convert: Not enough tokens removed."
-//         );
-
-//         LibTokenSilo.decrementTotalDeposited(token, a.tokensRemoved, a.bdvRemoved);
-//         console.log('a.bdvRemoved: ', a.bdvRemoved);
-//         LibSilo.burnStalk(
-//             LibTractor._getUser(),
-//             a.stalkRemoved.add(a.bdvRemoved.mul(s.ss[token].stalkIssuedPerBdv))
-//         );
-//         return (a.stalkRemoved, a.bdvRemoved, a.bdvsRemoved, a.stalksRemoved);
-
-// /*=======
-//         LibTokenSilo.decrementTotalDeposited(token, a.active.tokens, a.active.bdv);
-
-//         // all deposits converted are not germinating.
-//         LibSilo.burnActiveStalk(
-//             msg.sender,
-//             a.active.stalk.add(a.active.bdv.mul(s.ss[token].stalkIssuedPerBdv))
-//         );
-//         return (a.active.stalk, a.active.bdv);
-// >>>>>>> bip39-seedGauge*/
-//     }
-
-    //this is the function I'm fixing/merging
     function _withdrawTokens(
         address token,
         int96[] memory stems,
@@ -681,64 +591,6 @@ contract ConvertFacet is ReentrancyGuard {
     }
 
 
-    /**
-     * @notice deposits token into the silo with the given grown stalk.
-     * @param token the token to deposit
-     * @param amount the amount of tokens to deposit
-     * @param bdv the bean denominated value of the deposit
-     * @param grownStalk the amount of grown stalk retained to issue to the new deposit.
-     * 
-     * @dev there are cases where a convert may cause the new deposit to be partially germinating, 
-     * if the convert goes from a token with a lower amount of seeds to a higher amount of seeds.
-     * We accept this as a tradeoff to avoid additional complexity.
-     */
-//     function _depositTokensForConvert(
-//         address token,
-//         uint256 amount,
-//         uint256 bdv,
-//         uint256 grownStalk
-//     ) internal returns (int96 stem) {
-//         require(bdv > 0 && amount > 0, "Convert: BDV or amount is 0.");
-        
-//         LibGerminate.Germinate germ;
-
-// /* HEAD
-//         (grownStalk, stem) = LibTokenSilo.calculateGrownStalkAndStem(token, grownStalk, bdv);
-
-//         LibSilo.mintStalk(LibTractor._getUser(), bdv.mul(LibTokenSilo.stalkIssuedPerBdv(token)).add(grownStalk));
-
-//         LibTokenSilo.incrementTotalDeposited(token, amount, bdv);
-// =======*/
-//         // calculate the stem and germination state for the new deposit.
-//         (stem, germ) = LibTokenSilo.calculateStemForTokenFromGrownStalk(token, grownStalk, bdv);
-        
-//         // increment totals based on germination state, 
-//         // as well as issue stalk to the user.
-//         // if the deposit is germinating, only the inital stalk of the deposit is germinating. 
-//         // the rest is active stalk.
-//         if (germ == LibGerminate.Germinate.NOT_GERMINATING) {
-//             LibTokenSilo.incrementTotalDeposited(token, amount, bdv);
-//             LibSilo.mintActiveStalk(
-//                 msg.sender, 
-//                 bdv.mul(LibTokenSilo.stalkIssuedPerBdv(token)).add(grownStalk)
-//             );
-//         } else {
-//             LibTokenSilo.incrementTotalGerminating(token, amount, bdv, germ);
-//             // safeCast not needed as stalk is <= max(uint128)
-//             LibSilo.mintGerminatingStalk(msg.sender, uint128(bdv.mul(LibTokenSilo.stalkIssuedPerBdv(token))), germ);   
-//             LibSilo.mintActiveStalk(msg.sender, grownStalk);
-//         }
-// // >>>>>>> bip39-seedGauge
-//         LibTokenSilo.addDepositToAccount(
-//             LibTractor._getUser(), 
-//             token, 
-//             stem, 
-//             amount,
-//             bdv,
-//             LibTokenSilo.Transfer.emitTransferSingle
-//         );        
-//     }
-
     function _depositTokensForConvert(
         address token,
         uint256 amount,
@@ -778,6 +630,15 @@ contract ConvertFacet is ReentrancyGuard {
         );        
     }
 
+    /**
+     * @dev Add this amount of tokens to the silo, splitting the deposits by bdv into multiple crates.
+     * @param inputToken The input token for the convert.
+     * @param outputToken The output token for the convert.
+     * @param amount The amount of tokens to deposit.
+     * @param bdvs The bdvs to split the amounts into
+     * @param grownStalks The amount of Stalk to deposit per crate
+     * @param inputAmounts The amount of tokens to deposit per crate
+     */
     function _depositTokensForConvertMultiCrate(
         address inputToken,
         address outputToken,
@@ -786,9 +647,6 @@ contract ConvertFacet is ReentrancyGuard {
         uint256[] memory grownStalks,
         uint256[] memory inputAmounts
     ) internal {
-
-        console.log('_depositTokensForConvertMultiCrate amount: ', amount);
-        console.log('_depositTokensForConvertMultiCrate bdvs.length: ', bdvs.length);
 
         MultiCrateDepositData memory mcdd;
 
@@ -802,7 +660,6 @@ contract ConvertFacet is ReentrancyGuard {
             // uint256 bdv = bdvs[i];
             require( bdvs[i] > 0 && amount > 0, "Convert: BDV or amount is 0.");
             mcdd.crateAmount = bdvs[i].mul(mcdd.amountPerBdv);
-            console.log('_depositTokensForConvertMultiCrate crateAmount: ', mcdd.crateAmount);
             mcdd.totalAmount = mcdd.totalAmount.add(mcdd.crateAmount);
 
             //if we're on the last crate, deposit the rest of the amount
@@ -812,7 +669,7 @@ contract ConvertFacet is ReentrancyGuard {
                 mcdd.crateAmount = amount; //if there's only one crate, make sure to deposit the full amount
             }
             
-            console.log('_depositTokensForConvertMultiCrate final mcdd.crateAmount:  ', mcdd.crateAmount);
+            // console.log('_depositTokensForConvertMultiCrate final mcdd.crateAmount:  ', mcdd.crateAmount);
 
             // because we're calculating a new token amount, the bdv will not be exactly the same as what we withdrew,
             // so we need to make sure we calculate what the actual deposited BDV is.
@@ -852,103 +709,4 @@ contract ConvertFacet is ReentrancyGuard {
             emit Convert(LibTractor._getUser(), inputToken, outputToken, inputAmounts[i], mcdd.crateAmount);
         }
     }
-
-    /**
-     * @dev Add this amount of tokens to the silo, splitting the deposits by bdv into multiple crates.
-     * @param token The token to deposit.
-     * @param amount The amount of tokens to deposit.
-     * @param bdvs The bdvs to split the amounts into
-     * @param grownStalks The amount of Stalk to deposit per crate
-     */
-//     function _depositTokensForConvertMultiCrate(
-//         address token,
-//         uint256 amount,
-//         uint256[] memory bdvs,
-//         uint256[] memory grownStalks // stalk grown previously by these deposits
-//     ) internal {
-
-//         // amount:  3162119562094783067
-//         // bdvOfAmount:  199989951
-//         // console.log('amount: ', amount);
-
-//         // uint256 bdvOfAmount = LibTokenSilo.beanDenominatedValue(token, amount);
-//         // console.log('bdvOfAmount: ', bdvOfAmount);
-
-
-//         // uint256 amountPerBdv = amount.div(bdvOfAmount);
-//         // console.log('amountPerBdv: ', amountPerBdv);
-
-//         // //so let's calc for first bdv
-
-//         // console.log('bdvs[0] :', bdvs[0]);
-
-//         // uint256 amountRequiredForBdv = bdvs[0].mul(amountPerBdv);
-//         // console.log('amountRequiredForBdv:', amountRequiredForBdv);
-
-//         // uint256 bdvOfAmount = LibTokenSilo.beanDenominatedValue(token, amount);
-//         // console.log('bdvOfAmount: ', bdvOfAmount);
-
-//         uint256 amountPerBdv = amount.div(LibTokenSilo.beanDenominatedValue(token, amount));
-//         // console.log('amountPerBdv: ', amountPerBdv);
-
-//         //so let's calc for first bdv
-
-//         // console.log('bdvs[0] :', bdvs[0]);
-
-//         // uint256 amountRequiredForBdv = bdvs[0].mul(amountPerBdv);
-//         // console.log('amountRequiredForBdv:', amountRequiredForBdv);
-
-
-// /*
-// amount:  3162119562094783067
-// bdvOfAmount:  199989951
-// amountPerBdv:  15811392253
-// bdvs[0] : 200000000
-// amountRequiredForBdv: 3162278450600000000
-// */
-
-
-//         //calculate stem index we need to deposit at from grownStalk and bdv
-//         //if we attempt to deposit at a half-season (a grown stalk index that would fall between seasons)
-//         //then in affect we lose that partial season's worth of stalk when we deposit
-//         //so here we need to update grownStalk to be the amount you'd have with the above deposit
-        
-//         //loop through bdvs and calculate amount of token required to get that amount of bdv
-//         uint256 totalAmount = 0;
-//         for (uint256 i = 0; i < bdvs.length; i++) {
-//             console.log('bdvs[i]: ', bdvs[i]);
-//             console.log('amount: ', amount);
-//             // uint256 bdv = bdvs[i];
-//             require( bdvs[i] > 0 && amount > 0, "Convert: BDV or amount is 0.");
-//             uint256 crateAmount = bdvs[i].mul(amountPerBdv);
-//             // console.log('crateAmount: ', crateAmount);
-//             totalAmount = totalAmount.add(crateAmount);
-
-//             //if we're on the last crate, deposit the rest of the amount
-//             if (i == bdvs.length - 1 && bdvs.length > 1) {
-//                 crateAmount = amount.sub(totalAmount);
-//                 // console.log('remainder crateAmount:  ', crateAmount);
-                
-//             }
-
-
-//             (uint256 grownStalk, int96 stem) = LibTokenSilo.calculateGrownStalkAndStem(token, grownStalks[i],  bdvs[i]);
-
-//             LibSilo.mintStalk(LibTractor._getUser(),  bdvs[i].mul(LibTokenSilo.stalkIssuedPerBdv(token)).add(grownStalk));
-
-//             LibTokenSilo.incrementTotalDeposited(token, crateAmount,  bdvs[i]);
-
-//             // to properly support this event, we need to pass into this function the originating from token amount for each crate
-//             // emit Convert(LibTractor._getUser(), inputToken, outputToken, totalAmountIn, crateAmount);
-
-//             LibTokenSilo.addDepositToAccount(
-//                 LibTractor._getUser(),
-//                 token,
-//                 stem,
-//                 crateAmount,
-//                 bdvs[i],
-//                 LibTokenSilo.Transfer.emitTransferSingle
-//             );
-//         }
-    // }
 }

@@ -108,11 +108,11 @@ contract Pipeline is IPipeline, ERC1155Holder, ERC721Holder {
         override
         returns (bytes memory result)
     {
-        console.log('pipe in Pipeline.sol');
-        console.log('pipe target: ', p.target);
-        console.log('pipe data:');
-        console.logBytes(p.data);
-        extractData(p.data);
+        // console.log('pipe in Pipeline.sol');
+        // console.log('pipe target: ', p.target);
+        // console.log('pipe data:');
+        // console.logBytes(p.data);
+        // extractData(p.data);
         
         result = _pipe(p.target, p.data, msg.value);
     }
@@ -158,8 +158,8 @@ contract Pipeline is IPipeline, ERC1155Holder, ERC721Holder {
     ) private returns (bytes memory result) {
         bool success;
 
-        console.log('_pipe data:');
-        console.logBytes(data);
+        // console.log('_pipe data:');
+        // console.logBytes(data);
         (success, result) = target.call{value: value}(data);
 
         LibFunction.checkReturn(success, result);
@@ -172,13 +172,13 @@ contract Pipeline is IPipeline, ERC1155Holder, ERC721Holder {
         uint256 value
     ) private returns (bytes memory result) {
         bool success;
-        console.log('doing _pipeMem');   
-        console.log('_pipeMem target: ', target);
-        console.log('_pipeMem data:');
-        console.logBytes(data);
+        // console.log('doing _pipeMem');   
+        // console.log('_pipeMem target: ', target);
+        // console.log('_pipeMem data:');
+        // console.logBytes(data);
         (success, result) = target.call{value: value}(data);
-        console.log('_pipeMem result:');
-        console.logBytes(result);
+        // console.log('_pipeMem result:');
+        // console.logBytes(result);
 
         LibFunction.checkReturn(success, result);
     }

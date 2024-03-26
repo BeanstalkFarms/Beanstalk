@@ -599,16 +599,16 @@ library LibTokenSilo {
         uint256 grownStalk,
         uint256 bdv
     ) internal view returns (int96 stem, LibGerminate.Germinate germ) {
-        console.log('calculateStemForTokenFromGrownStalk');
-        console.log('calculateStemForTokenFromGrownStalk token: ', token);
-        console.log('calculateStemForTokenFromGrownStalk bdv: ', bdv);
-        console.log('calculateStemForTokenFromGrownStalk grownStalk: ', grownStalk);
+        // console.log('calculateStemForTokenFromGrownStalk');
+        // console.log('calculateStemForTokenFromGrownStalk token: ', token);
+        // console.log('calculateStemForTokenFromGrownStalk bdv: ', bdv);
+        // console.log('calculateStemForTokenFromGrownStalk grownStalk: ', grownStalk);
         LibGerminate.GermStem memory germStem = LibGerminate.getGerminatingStem(token);
         stem = germStem.stemTip.sub(toInt96(grownStalk.mul(PRECISION).div(bdv)));
         germ = LibGerminate._getGerminationState(stem, germStem);
 
-        console.log('calculateStemForTokenFromGrownStalk stem: ');
-        console.logInt(stem);
+        // console.log('calculateStemForTokenFromGrownStalk stem: ');
+        // console.logInt(stem);
     }
 
     /**
