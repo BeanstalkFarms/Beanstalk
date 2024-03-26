@@ -9,7 +9,7 @@ let user, user2, owner;
 let userAddress, ownerAddress, user2Address;
 const { toBN, encodeAdvancedData, signSiloDepositTokenPermit, signSiloDepositTokensPermit, signTokenPermit } = require('../utils/index.js');
 const { deployWell, setReserves, whitelistWell, deployMockBeanEthWell, impersonateBeanEthWell } = require('../utils/well.js');
-const { setEthUsdPrice, setEthUsdcPrice, setEthUsdtPrice } = require('../scripts/usdOracle.js');
+const { setEthUsdChainlinkPrice, setEthUsdcPrice, setEthUsdtPrice } = require('../utils/oracle.js');
 const fs = require('fs');
 const { upgradeWithNewFacets } = require("../scripts/diamond");
 const { impersonateBeanstalkOwner, impersonateSigner } = require('../utils/signer.js')
@@ -45,7 +45,7 @@ describe('Farm Convert', function () {
     await this.wellToken.connect(owner).approve(this.beanstalk.address, ethers.constants.MaxUint256)
     await this.bean.connect(owner).approve(this.beanstalk.address, ethers.constants.MaxUint256)
 
-    await setEthUsdPrice('999.998018')
+    await setEthUsdChainlinkPrice('999.998018')
     await setEthUsdcPrice('1000')
     await setEthUsdtPrice('1000')
 

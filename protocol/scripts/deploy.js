@@ -1,4 +1,3 @@
-<<<<<<
 const MAX_INT = "115792089237316195423570985008687907853269984665640564039457584007913129639935";
 const { ETH_USD_CHAINLINK_AGGREGATOR, STETH_ETH_CHAINLINK_PRICE_AGGREGATOR, WETH, WSTETH, WSTETH_ETH_UNIV3_01_POOL } = require('../test/utils/constants.js')
 
@@ -9,12 +8,10 @@ const {
   impersonateBean3CrvMetapool,
   impersonateWeth,
   impersonateUnripe,
-  impersonateFertilizer,
   impersonatePrice,
   impersonateBlockBasefee,
   impersonateEthUsdcUniswap,
   impersonateEthUsdtUniswap,
-  impersonateEthUsdChainlinkAggregator,
   impersonateChainlinkAggregator,
   impersonateUniswapV3,
   impersonateWsteth,
@@ -277,9 +274,8 @@ async function main(scriptName, verbose = true, mock = false, reset = true) {
 
     await impersonateBean3CrvMetapool();
     await impersonateUnripe();
-    await impersonateFertilizer();
+    // await impersonateFertilizer();
     await impersonateBlockBasefee();
-    await impersonateEthUsdChainlinkAggregator();
   }
 
   const [beanstalkDiamond, diamondCut] = await diamond.deploy({

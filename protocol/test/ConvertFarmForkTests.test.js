@@ -20,7 +20,7 @@ let user, user2, owner;
 let userAddress, ownerAddress, user2Address;
 const { toBN, encodeAdvancedData, signSiloDepositTokenPermit, signSiloDepositTokensPermit, signTokenPermit } = require('../utils/index.js');
 const { deployWell, setReserves, whitelistWell, deployMockBeanEthWell, impersonateBeanEthWell } = require('../utils/well.js');
-const { setEthUsdPrice, setEthUsdcPrice, setEthUsdtPrice } = require('../scripts/usdOracle.js');
+// const { setEthUsdPrice, setEthUsdcPrice, setEthUsdtPrice } = require('../utils/oracle.js');
 const fs = require('fs');
 const { upgradeWithNewFacets } = require("../scripts/diamond");
 const { impersonateBeanstalkOwner, impersonateSigner } = require('../utils/signer.js')
@@ -78,7 +78,7 @@ describe('Farm Convert', function () {
       facetNames: ['ConvertFacet', 'MockAdminFacet', 'MockSeasonFacet', 'MockSiloFacet', 'SiloGettersFacet'],
       initFacetName: "InitTractor",
       libraryNames: [
-        'LibGauge', 'LibConvert', 'LibLockedUnderlying', 'LibCurveMinting', 'LibIncentive', 'LibGerminate'
+        'LibGauge', 'LibConvert', 'LibLockedUnderlying', 'LibCurveMinting', 'LibIncentive', 'LibGerminate', 'LibWellMinting'
       ],
       facetLibraries: {
         'ConvertFacet': [ 'LibConvert' ],
@@ -87,6 +87,7 @@ describe('Farm Convert', function () {
           'LibIncentive',
           'LibLockedUnderlying',
           'LibCurveMinting',
+          'LibWellMinting',
           'LibGerminate'
         ],
       },
