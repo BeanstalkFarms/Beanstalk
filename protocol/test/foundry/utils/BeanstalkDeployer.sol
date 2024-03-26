@@ -32,10 +32,11 @@ contract BeanstalkDeployer is Utils {
      * @notice deploys the beanstalk diamond contract.
      * @param mock if true, deploys all mocks and sets the diamond address to the canonical beanstalk address.
      */
-    function setupDiamond(bool mock) public returns (Diamond d) {
+    function setupDiamond(bool mock, bool verbose) public returns (Diamond d) {
         users = createUsers(6);
         deployer = users[0];
         vm.label(deployer, "Deployer");
+        vm.label(BEANSTALK, "Beanstalk");
         
         // create facet cuts
         IDiamondCut.FacetCut[] memory cut = new IDiamondCut.FacetCut[](50);
@@ -48,11 +49,16 @@ contract BeanstalkDeployer is Utils {
         cut[i++] = _cut("PauseFacet", address(new PauseFacet()));
         cut[i++] = _cut("OwnershipFacet", address(new OwnershipFacet()));
         cut[i++] = _cut("TokenFacet", address(new TokenFacet()));
+        cut[i++] = _cut("TokenSupportFacet", address(new TokenSupportFacet()));
         cut[i++] = _cut("GaugePointFacet", address(new GaugePointFacet()));
         cut[i++] = _cut("LiquidityWeightFacet", address(new LiquidityWeightFacet()));
+        cut[i++] = _cut("SiloGettersFacet", address(new SiloGettersFacet()));
+        cut[i++] = _cut("ConvertGettersFacet", address(new ConvertGettersFacet()));
+        cut[i++] = _cut("SeasonGettersFacet", address(new ConvertGettersFacet()));
+        cut[i++] = _cut("MetadataFacet", address(new MetadataFacet()));
 
         // facets with a mock counterpart should be added here.
-        if(mock) {
+        if (mock) {
             cut[i++] = _cut("MockAdminFacet", address(new MockAdminFacet()));
             cut[i++] = _cut("MockConvertFacet", address(new MockConvertFacet()));
             cut[i++] = _cut("MockFertilizerFacet", address(new MockFertilizerFacet()));
@@ -84,7 +90,7 @@ contract BeanstalkDeployer is Utils {
         // if mocking, set the diamond address to
         // the canonical beanstalk address.
         address initDiamondAddress;
-        if(mock) { 
+        if (mock) { 
             initDiamondAddress = address(new MockInitDiamond());
         } else {
             initDiamondAddress = address(new InitDiamond());
@@ -97,7 +103,7 @@ contract BeanstalkDeployer is Utils {
             abi.encodeWithSignature("init()")
         );
 
-        console.log("Diamond deployed at: ", address(d));
+        if(verbose) console.log("Diamond deployed at: ", address(d));
     }
 
     //////////////////////// Deploy /////////////////////////

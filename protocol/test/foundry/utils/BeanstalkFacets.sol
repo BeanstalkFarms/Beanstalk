@@ -29,6 +29,7 @@ import {MockFundraiserFacet} from "contracts/mocks/mockFacets/MockFundraiserFace
 import {FarmFacet} from "contracts/beanstalk/farm/FarmFacet.sol";
 import {CurveFacet} from "contracts/beanstalk/farm/CurveFacet.sol";
 import {TokenFacet} from "contracts/beanstalk/farm/TokenFacet.sol";
+import {TokenSupportFacet} from "contracts/beanstalk/farm/TokenSupportFacet.sol";
 
 /// Misc
 import {MockAdminFacet} from "contracts/mocks/mockFacets/MockAdminFacet.sol";
@@ -37,6 +38,12 @@ import {UnripeFacet, MockUnripeFacet} from "contracts/mocks/mockFacets/MockUnrip
 import {MockFertilizerFacet, FertilizerFacet} from "contracts/mocks/mockFacets/MockFertilizerFacet.sol";
 import {MockSeasonFacet, SeasonFacet} from "contracts/mocks/mockFacets/MockSeasonFacet.sol";
 import {MockConvertFacet, ConvertFacet} from "contracts/mocks/mockFacets/MockConvertFacet.sol";
+import {MetadataFacet} from "contracts/beanstalk/metadata/MetadataFacet.sol";
+
+/// Getters
+import {SiloGettersFacet} from "contracts/beanstalk/silo/SiloFacet/SiloGettersFacet.sol";
+import {ConvertGettersFacet} from "contracts/beanstalk/silo/ConvertGettersFacet.sol";
+import {SeasonGettersFacet} from "contracts/beanstalk/sun/SeasonFacet/SeasonGettersFacet.sol";
 
 // Potential removals for L2 migration.
 import {MockMarketplaceFacet, MarketplaceFacet} from "contracts/mocks/mockFacets/MockMarketplaceFacet.sol";

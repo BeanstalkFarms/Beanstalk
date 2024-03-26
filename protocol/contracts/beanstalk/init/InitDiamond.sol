@@ -21,7 +21,7 @@ import {MockToken} from "../../mocks/MockToken.sol";
 import {Weather} from "contracts/beanstalk/sun/SeasonFacet/Weather.sol";
 import {LibIncentive} from "contracts/libraries/LibIncentive.sol";
 
-import "hardhat/console.sol";
+
 
 /**
  * @author Publius

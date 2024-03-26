@@ -6,7 +6,7 @@ import {P} from "./P.sol";
 import "contracts/interfaces/ICurve.sol";
 import "contracts/libraries/Curve/LibCurve.sol";
 
-import "hardhat/console.sol";
+
 
 interface IERC20D {
     function decimals() external view returns (uint8);

@@ -61,19 +61,19 @@ contract BasinDeployer is Utils {
      * @dev deploys the Aquifer, ConstantProduct2, MultiFlowPump, and Well implmentation,
      * at current mainnet addresses.
      */
-    function initBasin(bool mock) public {
-        console.log("deploying Basin...");
-        deployBasin();
+    function initBasin(bool mock, bool verbose) public {
+        if (verbose) console.log("deploying Basin...");
+        deployBasin(verbose);
 
-        console.log("deploying Wells...");
-        deployWells(mock);
+        if (verbose) console.log("deploying Wells...");
+        deployWells(mock, verbose);
     }
 
     /**
      * @notice deploys the basin contracts.
      * @dev new well functions, pumps, and well implmentations should be appended.
      */
-    function deployBasin() public {
+    function deployBasin(bool verbose) public {
         // new well functions should be added here.
         DeployData[] memory wfDeployData = new DeployData[](1);
         wfDeployData[0] = DeployData(
@@ -109,7 +109,8 @@ contract BasinDeployer is Utils {
             AQUIFER, // aquifer
             wfDeployData, // well functions
             pumpsDeployData, // pumps
-            wellImplmentationDeployData // well implmentations
+            wellImplmentationDeployData, // well implmentations
+            verbose
         );
     }
     
@@ -120,32 +121,33 @@ contract BasinDeployer is Utils {
         address aquiferAddress,
         DeployData[] memory wfData,
         DeployData[] memory pumpData,
-        DeployData[] memory wellImplmentationData
+        DeployData[] memory wellImplmentationData,
+        bool verbose
     ) public {
         // deploy Aquifier
         deployCodeTo("Aquifer.sol", aquiferAddress);
-        console.log("Aquifer Deployed at:", aquiferAddress);
+        if (verbose) console.log("Aquifer Deployed at:", aquiferAddress);
         aquifer = aquiferAddress;
 
         // deploy well functions.
-        console.log("deploying well functions:");
+        if (verbose) console.log("deploying well functions:");
         for (uint i; i < wfData.length; ++i) {
             wellFunctions.push(deployCodeWithArgs(wfData[i]));
-            console.log("WellFunction", i, "Deployed at:", wellFunctions[i]);
+            if (verbose) console.log("WellFunction", i, "Deployed at:", wellFunctions[i]);
         }
 
         // deploy pumps
-        console.log("deploying pump:");
+        if (verbose) console.log("deploying pump:");
         for (uint i; i < pumpData.length; i++) {
             pumps.push(deployCodeWithArgs(pumpData[i]));
-            console.log("Pump", i, "Deployed at:", pumps[i]);
+            if (verbose) console.log("Pump", i, "Deployed at:", pumps[i]);
         }
 
         // deploy implmentations
-        console.log("deploying well implm:");
+        if (verbose) console.log("deploying well implm:");
         for (uint i; i < wellImplmentationData.length; i++) {
             wellImplmentations.push(deployCodeWithArgs(wellImplmentationData[i]));
-            console.log("Well Implm", i, "Deployed at:", wellImplmentations[i]);
+            if (verbose) console.log("Well Implm", i, "Deployed at:", wellImplmentations[i]);
         }
     }
 
@@ -154,10 +156,10 @@ contract BasinDeployer is Utils {
      * @dev new wells should be added here.
      * @param mock if true, deploys wells with mock pump (for testing purposes).
      */
-    function deployWells(bool mock) public {
+    function deployWells(bool mock, bool verbose) public {
         address _pump;
         
-        if(mock) {
+        if (mock) {
             // mock pump.
             _pump = pumps[1];
         } else {
@@ -167,11 +169,11 @@ contract BasinDeployer is Utils {
 
         // deploy bean eth well:
         wells.push(deployBeanCp2Well([C.BEAN_ETH_WELL, C.WETH], _pump));
-        console.log("Bean Eth well deployed at:", wells[0]);
+        if (verbose) console.log("Bean Eth well deployed at:", wells[0]);
         
         // deploy bean wsteth well:
         wells.push(deployBeanCp2Well([C.BEAN_WSTETH_WELL, C.WSTETH], _pump));
-        console.log("Bean wstEth well deployed at:", wells[1]);
+        if (verbose) console.log("Bean wstEth well deployed at:", wells[1]);
     }
 
     /**
@@ -257,7 +259,7 @@ contract BasinDeployer is Utils {
         );
 
         // etch to address if specified.
-        if(targetAddress != address(0)) { 
+        if (targetAddress != address(0)) { 
             vm.etch(targetAddress, getBytecodeAt(wellAddress));
             return targetAddress;
         } else {

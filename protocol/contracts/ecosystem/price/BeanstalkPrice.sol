@@ -4,7 +4,7 @@ pragma experimental ABIEncoderV2;
 
 import "./CurvePrice.sol";
 import {WellPrice, C, SafeMath} from "./WellPrice.sol";
-import "hardhat/console.sol";
+
 interface IWhitelistFacet {
     function getWhitelistedWellLpTokens() external view returns (address[] memory tokens);
 }

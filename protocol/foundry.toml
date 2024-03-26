@@ -33,9 +33,11 @@ fs_permissions = [
   { access = "read", path = "../"},
   { access = "read", path = "./out" }
 ]
-ignored_warnings_from = ["/test"]
-sender = '0x00a329c0648769a73afac7f9381e08fb43dbea72' # The value of `msg.sender` in tests.
-tx_origin = '0x00a329c0648769a73afac7f9381e08fb43dbea72' # The value of `tx.origin` in tests.
+ignored_warnings_from = [
+  "test",
+  "contracts/interfaces/IMockFBeanstalk.sol",
+  "contracts/mocks/"
+]
 gas_reports = ['*']
  # Cache to `$HOME/.foundry/cache/<chain id>/<block number>`.
 no_storage_caching = false

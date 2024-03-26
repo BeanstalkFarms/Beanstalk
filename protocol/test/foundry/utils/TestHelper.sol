@@ -8,14 +8,14 @@ import "forge-std/Test.sol";
 
 import {Utils} from "test/foundry/utils/Utils.sol";
 
-/// Mocks
+////// Mocks //////
 import {MockToken} from "contracts/mocks/MockToken.sol";
 
 ///// TEST HELPERS ////// 
-import "test/foundry/utils/BeanstalkDeployer.sol";
-import "test/foundry/utils/BasinDeployer.sol";
-import "test/foundry/utils/DepotDeployer.sol";
-import "test/foundry/utils/OracleDeployer.sol";
+import {BeanstalkDeployer, C} from "test/foundry/utils/BeanstalkDeployer.sol";
+import {BasinDeployer} from "test/foundry/utils/BasinDeployer.sol";
+import {DepotDeployer} from "test/foundry/utils/DepotDeployer.sol";
+import {OracleDeployer} from "test/foundry/utils/OracleDeployer.sol";
 
 /**
  * @title TestHelper
@@ -34,24 +34,24 @@ contract TestHelper is Test, BeanstalkDeployer, BasinDeployer, DepotDeployer, Or
     /**
      * @notice initializes the state of the beanstalk contracts for testing.
      */
-    function initializeBeanstalkTestState(bool mock) public {
+    function initializeBeanstalkTestState(bool mock, bool verbose) public {
         // initalize mock tokens.
-        initMockTokens();
+        initMockTokens(verbose);
 
         // initialize Depot:
-        initDepot();
+        initDepot(verbose);
 
         // initialize Basin, deploy wells.
-        initBasin(mock);
+        initBasin(mock, verbose);
 
         // initialize chainlink oracles (note by default mocks).
-        initChainlink();
+        initChainlink(verbose);
 
         // initialize uniswap pools.
-        initUniswapPools();
+        initUniswapPools(verbose);
         
         // initialize Diamond:
-        setupDiamond(mock);
+        setupDiamond(mock, verbose);
     }
 
     /**
@@ -59,7 +59,7 @@ contract TestHelper is Test, BeanstalkDeployer, BasinDeployer, DepotDeployer, Or
      * @dev each token is deployed with the MockToken.sol contract,
      * which allows for arbitary minting for testing purposes.
      */
-    function initMockTokens() public {
+    function initMockTokens(bool verbose) public {
         initERC20params[5] memory tokens = [
             initERC20params(C.BEAN, 'Bean','BEAN', 6),
             initERC20params(C.UNRIPE_BEAN, 'Unripe Bean','UrBEAN', 6),
@@ -72,7 +72,8 @@ contract TestHelper is Test, BeanstalkDeployer, BasinDeployer, DepotDeployer, Or
             string memory mock = tokens[i].targetAddr != C.WETH ? "MockToken.sol" : "MockWETH.sol"; 
             deployCodeTo(mock, abi.encode(tokens[i].name, tokens[i].symbol), tokens[i].targetAddr);
             MockToken(tokens[i].targetAddr).setDecimals(tokens[i].decimals);
-            console.log(tokens[i].name, "Deployed at:", tokens[i].targetAddr);
+            if (verbose) console.log(tokens[i].name, "Deployed at:", tokens[i].targetAddr);
+            vm.label(tokens[i].targetAddr, tokens[i].name);
         }
     }
 

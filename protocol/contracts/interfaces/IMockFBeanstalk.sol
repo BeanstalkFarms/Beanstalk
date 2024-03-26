@@ -1,11 +1,8 @@
-// SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.4;
+// SPDX-License-Identifier: MIT
+pragma solidity >=0.6.0 <0.9.0;
+pragma abicoder v2;
 
 interface IMockFBeanstalk {
-    type FacetCutAction is uint8;
-    type From is uint8;
-    type PriceType is uint8;
-    type To is uint8;
 
     struct AccountSeasonOfPlenty {
         uint32 lastRain;
@@ -38,7 +35,7 @@ interface IMockFBeanstalk {
 
     struct FacetCut {
         address facetAddress;
-        FacetCutAction action;
+        uint8 action; // FacetCutAction
         bytes4[] functionSelectors;
     }
 
@@ -68,7 +65,7 @@ interface IMockFBeanstalk {
         uint24 pricePerPod;
         uint256 maxHarvestableIndex;
         uint256 minFillAmount;
-        To mode;
+        uint8 mode;
     }
 
     struct PodOrder {
@@ -176,8 +173,8 @@ interface IMockFBeanstalk {
         uint256 maxHarvestableIndex,
         uint256 minFillAmount,
         bytes pricingFunction,
-        To mode,
-        PriceType pricingType
+        uint8 mode,
+        uint8 pricingType
     );
     event PodListingFilled(
         address indexed from, address indexed to, uint256 index, uint256 start, uint256 amount, uint256 costInBeans
@@ -191,7 +188,7 @@ interface IMockFBeanstalk {
         uint256 maxPlaceInLine,
         uint256 minFillAmount,
         bytes pricingFunction,
-        PriceType priceType
+        uint8 priceType
     );
     event PodOrderFilled(
         address indexed from,
@@ -253,8 +250,8 @@ interface IMockFBeanstalk {
         address registry,
         uint256[] memory amounts,
         uint256 minAmountOut,
-        From fromMode,
-        To toMode
+        uint8 fromMode,
+        uint8 toMode
     ) external payable;
     function addMigratedUnderlying(address unripeToken, uint256 amount) external payable;
     function addUnripeToken(address unripeToken, address underlyingToken, bytes32 root) external payable;
@@ -312,18 +309,18 @@ interface IMockFBeanstalk {
     function beansPerFertilizer() external view returns (uint128 bpf);
     function beginBarnRaiseMigration(address well) external;
     function cancelPodListing(uint256 index) external payable;
-    function cancelPodOrder(uint24 pricePerPod, uint256 maxPlaceInLine, uint256 minFillAmount, To mode)
+    function cancelPodOrder(uint24 pricePerPod, uint256 maxPlaceInLine, uint256 minFillAmount, uint8 mode)
         external
         payable;
-    function cancelPodOrderV2(uint256 maxPlaceInLine, uint256 minFillAmount, bytes memory pricingFunction, To mode)
+    function cancelPodOrderV2(uint256 maxPlaceInLine, uint256 minFillAmount, bytes memory pricingFunction, uint8 mode)
         external
         payable;
-    function chop(address unripeToken, uint256 amount, From fromMode, To toMode) external payable returns (uint256);
-    function claimFertilized(uint256[] memory ids, To mode) external payable;
+    function chop(address unripeToken, uint256 amount, uint8 fromMode, uint8 toMode) external payable returns (uint256);
+    function claimFertilized(uint256[] memory ids, uint8 mode) external payable;
     function claimOwnership() external;
     function claimPlenty() external payable;
-    function claimWithdrawal(address token, uint32 season, To mode) external payable;
-    function claimWithdrawals(address token, uint32[] memory seasons, To mode) external payable;
+    function claimWithdrawal(address token, uint32 season, uint8 mode) external payable;
+    function claimWithdrawals(address token, uint32[] memory seasons, uint8 mode) external payable;
     function convert(bytes memory convertData, int96[] memory stems, uint256[] memory amounts)
         external
         payable
@@ -336,7 +333,7 @@ interface IMockFBeanstalk {
         uint24 pricePerPod,
         uint256 maxHarvestableIndex,
         uint256 minFillAmount,
-        To mode
+        uint8 mode
     ) external payable;
     function createPodListingV2(
         uint256 index,
@@ -345,21 +342,21 @@ interface IMockFBeanstalk {
         uint256 maxHarvestableIndex,
         uint256 minFillAmount,
         bytes memory pricingFunction,
-        To mode
+        uint8 mode
     ) external payable;
     function createPodOrder(
         uint256 beanAmount,
         uint24 pricePerPod,
         uint256 maxPlaceInLine,
         uint256 minFillAmount,
-        From mode
+        uint8 mode
     ) external payable returns (bytes32 id);
     function createPodOrderV2(
         uint256 beanAmount,
         uint256 maxPlaceInLine,
         uint256 minFillAmount,
         bytes memory pricingFunction,
-        From mode
+        uint8 mode
     ) external payable returns (bytes32 id);
     function curveToBDV(uint256 amount) external view returns (uint256);
     function decreaseDepositAllowance(address spender, address token, uint256 subtractedValue)
@@ -371,7 +368,7 @@ interface IMockFBeanstalk {
         uint256 optimalPercentDepositedBdv,
         uint256 percentOfDepositedBdv
     ) external pure returns (uint256 newGaugePoints);
-    function deposit(address token, uint256 _amount, From mode)
+    function deposit(address token, uint256 _amount, uint8 mode)
         external
         payable
         returns (uint256 amount, uint256 _bdv, int96 stem);
@@ -394,8 +391,8 @@ interface IMockFBeanstalk {
         address toToken,
         uint256 amountIn,
         uint256 minAmountOut,
-        From fromMode,
-        To toMode
+        uint8 fromMode,
+        uint8 toMode
     ) external payable;
     function exchangeUnderlying(
         address pool,
@@ -403,28 +400,28 @@ interface IMockFBeanstalk {
         address toToken,
         uint256 amountIn,
         uint256 minAmountOut,
-        From fromMode,
-        To toMode
+        uint8 fromMode,
+        uint8 toMode
     ) external payable;
     function facetAddress(bytes4 _functionSelector) external view returns (address facetAddress_);
     function facetAddresses() external view returns (address[] memory facetAddresses_);
     function facetFunctionSelectors(address _facet) external view returns (bytes4[] memory facetFunctionSelectors_);
     function facets() external view returns (Facet[] memory facets_);
     function farm(bytes[] memory data) external payable returns (bytes[] memory results);
-    function fillPodListing(PodListing memory l, uint256 beanAmount, From mode) external payable;
-    function fillPodListingV2(PodListing memory l, uint256 beanAmount, bytes memory pricingFunction, From mode)
+    function fillPodListing(PodListing memory l, uint256 beanAmount, uint8 mode) external payable;
+    function fillPodListingV2(PodListing memory l, uint256 beanAmount, bytes memory pricingFunction, uint8 mode)
         external
         payable;
-    function fillPodOrder(PodOrder memory o, uint256 index, uint256 start, uint256 amount, To mode) external payable;
+    function fillPodOrder(PodOrder memory o, uint256 index, uint256 start, uint256 amount, uint8 mode) external payable;
     function fillPodOrderV2(
         PodOrder memory o,
         uint256 index,
         uint256 start,
         uint256 amount,
         bytes memory pricingFunction,
-        To mode
+        uint8 mode
     ) external payable;
-    function fund(uint32 id, uint256 amount, From mode) external payable returns (uint256);
+    function fund(uint32 id, uint256 amount, uint8 mode) external payable returns (uint256);
     function fundingToken(uint32 id) external view returns (address);
     function fundraiser(uint32 id) external view returns (Fundraiser memory);
     function getActiveFertilizer() external view returns (uint256);
@@ -526,12 +523,12 @@ interface IMockFBeanstalk {
         external
         view
         returns (uint256 matureGerminatingStalk, uint256 youngGerminatingStalk);
-    function gm(address account, To mode) external payable returns (uint256);
+    function gm(address account, uint8 mode) external payable returns (uint256);
     function grownStalkForDeposit(address account, address token, int96 stem)
         external
         view
         returns (uint256 grownStalk);
-    function harvest(uint256[] memory plots, To mode) external payable;
+    function harvest(uint256[] memory plots, uint8 mode) external payable;
     function harvestableIndex() external view returns (uint256);
     function imageURI(address token, int96 stem, int96 stemTip) external view returns (string memory);
     function increaseDepositAllowance(address spender, address token, uint256 addedValue) external returns (bool);
@@ -544,7 +541,7 @@ interface IMockFBeanstalk {
     function maxTemperature() external view returns (uint256);
     function maxWeight() external pure returns (uint256);
     function migrationNeeded(address account) external view returns (bool hasMigrated);
-    function mintFertilizer(uint256 tokenAmountIn, uint256 minFertilizerOut, uint256 minLPTokensOut, From mode)
+    function mintFertilizer(uint256 tokenAmountIn, uint256 minFertilizerOut, uint256 minLPTokensOut, uint8 mode)
         external
         payable
         returns (uint256 fertilizerAmountOut);
@@ -616,7 +613,7 @@ interface IMockFBeanstalk {
         bytes32 r,
         bytes32 s
     ) external payable;
-    function pick(address token, uint256 amount, bytes32[] memory proof, To mode) external payable;
+    function pick(address token, uint256 amount, bytes32[] memory proof, uint8 mode) external payable;
     function picked(address account, address token) external view returns (bool);
     function pipe(PipeCall memory p) external payable returns (bytes memory result);
     function plant() external payable returns (uint256 beans, int96 stem);
@@ -644,16 +641,16 @@ interface IMockFBeanstalk {
         address registry,
         uint256 amountIn,
         uint256[] memory minAmountsOut,
-        From fromMode,
-        To toMode
+        uint8 fromMode,
+        uint8 toMode
     ) external payable;
     function removeLiquidityImbalance(
         address pool,
         address registry,
         uint256[] memory amountsOut,
         uint256 maxAmountIn,
-        From fromMode,
-        To toMode
+        uint8 fromMode,
+        uint8 toMode
     ) external payable;
     function removeLiquidityOneToken(
         address pool,
@@ -661,8 +658,8 @@ interface IMockFBeanstalk {
         address toToken,
         uint256 amountIn,
         uint256 minAmountOut,
-        From fromMode,
-        To toMode
+        uint8 fromMode,
+        uint8 toMode
     ) external payable;
     function safeBatchTransferFrom(
         address sender,
@@ -677,8 +674,8 @@ interface IMockFBeanstalk {
     function seasonTime() external view returns (uint32);
     function seasonToStem(address token, uint32 season) external view returns (int96 stem);
     function setApprovalForAll(address spender, bool approved) external;
-    function sow(uint256 beans, uint256 minTemperature, From mode) external payable returns (uint256 pods);
-    function sowWithMin(uint256 beans, uint256 minTemperature, uint256 minSoil, From mode)
+    function sow(uint256 beans, uint256 minTemperature, uint8 mode) external payable returns (uint256 pods);
+    function sowWithMin(uint256 beans, uint256 minTemperature, uint256 minSoil, uint8 mode)
         external
         payable
         returns (uint256 pods);
@@ -722,18 +719,18 @@ interface IMockFBeanstalk {
     ) external payable returns (uint256[] memory bdvs);
     function transferERC1155(address token, address to, uint256 id, uint256 value) external payable;
     function transferERC721(address token, address to, uint256 id) external payable;
-    function transferInternalTokenFrom(address token, address sender, address recipient, uint256 amount, To toMode)
+    function transferInternalTokenFrom(address token, address sender, address recipient, uint256 amount, uint8 toMode)
         external
         payable;
     function transferOwnership(address _newOwner) external;
     function transferPlot(address sender, address recipient, uint256 id, uint256 start, uint256 end) external payable;
-    function transferToken(address token, address recipient, uint256 amount, From fromMode, To toMode)
+    function transferToken(address token, address recipient, uint256 amount, uint8 fromMode, uint8 toMode)
         external
         payable;
     function unpause() external payable;
     function unripeBeanToBDV(uint256 amount) external view returns (uint256);
     function unripeLPToBDV(uint256 amount) external view returns (uint256);
-    function unwrapEth(uint256 amount, From mode) external payable;
+    function unwrapEth(uint256 amount, uint8 mode) external payable;
     function updateGaugeForToken(
         address token,
         bytes4 gaugePointSelector,
@@ -766,10 +763,10 @@ interface IMockFBeanstalk {
         uint128 gaugePoints,
         uint64 optimalPercentDepositedBdv
     ) external payable;
-    function withdrawDeposit(address token, int96 stem, uint256 amount, To mode) external payable;
-    function withdrawDeposits(address token, int96[] memory stems, uint256[] memory amounts, To mode)
+    function withdrawDeposit(address token, int96 stem, uint256 amount, uint8 mode) external payable;
+    function withdrawDeposits(address token, int96[] memory stems, uint256[] memory amounts, uint8 mode)
         external
         payable;
-    function wrapEth(uint256 amount, To mode) external payable;
+    function wrapEth(uint256 amount, uint8 mode) external payable;
     function yield() external view returns (uint32);
 }

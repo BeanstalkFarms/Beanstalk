@@ -25,7 +25,7 @@ contract OracleDeployer is Utils {
      * @notice initializes chainlink oracles.
      * @dev oracles are mocked, and thus require initalization/updates.
      */
-    function initChainlink() public {
+    function initChainlink(bool verbose) public {
         // new chainlink oracles should be appended here.
         address[2] memory oracles = [
             C.ETH_USD_CHAINLINK_PRICE_AGGREGATOR, // ETH/USD
@@ -40,7 +40,7 @@ contract OracleDeployer is Utils {
         
         for(uint i; i < oracles.length; i++) {
             deployCodeTo("MockChainlinkAggregator.sol", new bytes(0), oracles[i]);
-            console.log("Chainlink Oracle Deployed at:", oracles[i]);
+            if (verbose) console.log("Chainlink Oracle Deployed at:", oracles[i]);
             mockAddRound(oracles[i], initalPrices[i], 900);
         }
     }
@@ -65,7 +65,7 @@ contract OracleDeployer is Utils {
     /**
      * @notice initializes uniswap pools for testing.
      */
-    function initUniswapPools() internal {
+    function initUniswapPools(bool verbose) internal {
 
         MockUniswapV3Factory uniFactory = MockUniswapV3Factory(new MockUniswapV3Factory());
         
@@ -82,7 +82,9 @@ contract OracleDeployer is Utils {
             address[3] memory poolData = pools[i];
             address pool = uniFactory.createPool(poolData[0], poolData[1], 100);
             vm.etch(poolData[2], getBytecodeAt(pool));
+            if (verbose) console.log("Uniswap Oracle Deployed at:", poolData[2]);
             MockUniswapV3Pool(poolData[2]).setOraclePrice(priceData[i][0], uint8(priceData[i][1]));
+            if (verbose) console.log("Price set at:", priceData[i][0]);
         }
     }
 }

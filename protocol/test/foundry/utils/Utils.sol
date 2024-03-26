@@ -55,4 +55,8 @@ contract Utils is Test {
         }
         return _users;
     }
+
+    function toStalk(uint256 stalk) public pure returns (uint256) {
+        return stalk * 1e10;
+    }
 }
