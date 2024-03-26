@@ -206,60 +206,32 @@ library LibWellMinting {
      * @param well The address of the Well.
      * @return deltaB The instantaneous delta B balance since the last `capture` call.
      */
-    function instantaneousDeltaB(address well) internal view returns 
-        (int256, uint256[] memory, uint256[] memory) {
-
+    function instantaneousDeltaBForConvert(address well) internal view returns 
+        (int256 deltaB) {
         AppStorage storage s = LibAppStorage.diamondStorage();
+        IERC20[] memory tokens = IWell(well).tokens();
+        uint256[] memory reserves = IWell(well).getReserves();
 
-                                                                        // well address , data[]
-        try IInstantaneousPump(C.BEANSTALK_PUMP).readInstantaneousReserves(well, C.BYTES_ZERO) returns (uint[] memory instReserves) {
-            // Get well tokens
-            IERC20[] memory tokens = IWell(well).tokens();
+        Call memory wellFunction = IWell(well).wellFunction();
 
-            // Get ratios and bean index
-            (
-                uint256[] memory ratios,
-                uint256 beanIndex,
-                bool success
-            ) = LibWell.getRatiosAndBeanIndex(tokens, block.timestamp.sub(s.season.timestamp));
+        (
+            uint256[] memory ratios,
+            uint256 beanIndex,
+            // success var unused
+        ) = LibWell.getRatiosAndBeanIndex(tokens, block.timestamp.sub(s.season.timestamp));
 
-            // HANDLE FAILURE
-            // If the Bean reserve is less than the minimum, the minting oracle should be considered off.
-            if (instReserves[beanIndex] < C.WELL_MINIMUM_BEAN_BALANCE) {
-                return (0, new uint256[](0), new uint256[](0));
-            }
-
-            // If the USD Oracle oracle call fails, the minting oracle should be considered off.
-            if (!success) {
-                return (0, instReserves, new uint256[](0));
-            }
-
-            // Get well function
-            Call memory wellFunction = IWell(well).wellFunction();
-
-            console.log('beanIndex: ', beanIndex);
-            console.log('instReserves[beanIndex]: ', instReserves[beanIndex]);
-
-            // loop through instReserves and log each one
-            for (uint i = 0; i < instReserves.length; i++) {
-                console.log('i: ', i);
-                console.log('instReserves[i]: ', instReserves[i]);
-            }
-
-            // Delta B is the difference between the target Bean reserve at the peg price
-            // and the instantaneous Bean balance in the Well.
-            int256 deltaB = int256(IBeanstalkWellFunction(wellFunction.target).calcReserveAtRatioSwap(
-                instReserves,
-                beanIndex,
-                ratios,
-                wellFunction.data
-            )).sub(int256(instReserves[beanIndex]));
-
-            console.log('inside the function got a deltaB: ');
-            console.logInt(deltaB);
-
-            return (deltaB, instReserves, ratios);
+        // assume that if liquidity is too low, don't allow converting (mainly so people don't get bad prices?)
+        if (reserves[beanIndex] < C.WELL_MINIMUM_BEAN_BALANCE) {
+            return (0);
         }
-        catch {}
+
+        deltaB = int256(IBeanstalkWellFunction(wellFunction.target).calcReserveAtRatioSwap(
+            reserves,
+            beanIndex,
+            ratios,
+            wellFunction.data
+        )).sub(int256(reserves[beanIndex]));
+
+        return deltaB;
     }
 }

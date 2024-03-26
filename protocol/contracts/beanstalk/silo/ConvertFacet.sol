@@ -267,7 +267,7 @@ contract ConvertFacet is ReentrancyGuard {
         if (token == address(C.bean())) {
             return 0;
         }
-        (instDeltaB, , )  = LibWellMinting.instantaneousDeltaB(token);
+        (instDeltaB)  = LibWellMinting.instantaneousDeltaBForConvert(token);
         return instDeltaB;
     }
 

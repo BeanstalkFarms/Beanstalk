@@ -107,7 +107,7 @@ contract SeasonGettersFacet {
 
     function poolDeltaBInsta(address pool) external view returns (int256 deltaB) {
         if (LibWell.isWell(pool)) {
-            (deltaB, , ) = LibWellMinting.instantaneousDeltaB(pool);
+            (deltaB) = LibWellMinting.instantaneousDeltaBForConvert(pool);
             return deltaB;
         } else {
             revert("Oracle: Pool not supported");
