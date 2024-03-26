@@ -289,99 +289,99 @@ describe('Farm Convert', function () {
     describe('stalk penalty calculation tests', async function () {
       describe('non-peg crossing', async function () {
         it('calculates penalty for towards-peg upward to zero', async function () {
-          const penalty = await this.convert.calculatePercentStalkPenalty(to6('-100'), to6('0'), to6('100'));
+          const penalty = await this.convert.calculateStalkPenalty(to6('-100'), to6('0'), to6('100'));
           expect(penalty).to.be.equal('0');
         });
 
         it('calculates penalty for towards-peg upward non-zero', async function () {
-          const penalty = await this.convert.calculatePercentStalkPenalty(to6('-200'), to6('-100'), to6('100'));
+          const penalty = await this.convert.calculateStalkPenalty(to6('-200'), to6('-100'), to6('100'));
           expect(penalty).to.be.equal('0');
         });
 
         it('calculates penalty for towards-peg upward big', async function () {
-          const penalty = await this.convert.calculatePercentStalkPenalty(to18('-200'), to18('-100'), to18('100'));
+          const penalty = await this.convert.calculateStalkPenalty(to18('-200'), to18('-100'), to18('100'));
           expect(penalty).to.be.equal('0');
         });
 
         //in theory it can handle larger numbers but for some reason BigNumber on the JS side overflows
         it('calculates penalty for towards-peg upward very big', async function () {
-          const penalty = await this.convert.calculatePercentStalkPenalty(toX("-2", 40), toX("-1", 40), toX("1", 20));
+          const penalty = await this.convert.calculateStalkPenalty(toX("-2", 40), toX("-1", 40), toX("1", 20));
           expect(penalty).to.be.equal('0');
         });
 
         it('calculates penalty for towards-peg downward to zero', async function () {
-          const penalty = await this.convert.calculatePercentStalkPenalty(to6('100'), to6('0'), to6('100'));
+          const penalty = await this.convert.calculateStalkPenalty(to6('100'), to6('0'), to6('100'));
           expect(penalty).to.be.equal('0');
         });
 
         it('calculates penalty for towards-peg downward non-zero', async function () {
-          const penalty = await this.convert.calculatePercentStalkPenalty(to6('200'), to6('100'), to6('100'));
+          const penalty = await this.convert.calculateStalkPenalty(to6('200'), to6('100'), to6('100'));
           expect(penalty).to.be.equal('0');
         });
 
         it('calculates penalty for towards-peg downward big', async function () {
-          const penalty = await this.convert.calculatePercentStalkPenalty(to18('200'), to18('100'), to18('100'));
+          const penalty = await this.convert.calculateStalkPenalty(to18('200'), to18('100'), to18('100'));
           expect(penalty).to.be.equal('0');
         });
 
         //in theory it can handle larger numbers but for some reason BigNumber on the JS side overflows
         it('calculates penalty for towards-peg downward very big', async function () {
-          const penalty = await this.convert.calculatePercentStalkPenalty(toX("2", 40), toX("1", 40), toX("1", 20));
+          const penalty = await this.convert.calculateStalkPenalty(toX("2", 40), toX("1", 40), toX("1", 20));
           expect(penalty).to.be.equal('0');
         });
       });
 
       describe('peg-crossing', async function () {
         it('calculates penalty for cross-peg upward', async function () {
-          const penalty = await this.convert.calculatePercentStalkPenalty(to6('-50'), to6('50'), to6('100'));
-          expect(penalty).to.be.equal(toX('50', 16));
+          const penalty = await this.convert.calculateStalkPenalty(to6('-50'), to6('50'), to6('100'));
+          expect(penalty).to.be.equal(to6('50'));
         });
 
         it('calculates penalty for cross-peg upward', async function () {
-          const penalty = await this.convert.calculatePercentStalkPenalty('-99', '1', '100');
-          expect(penalty).to.be.equal(toX('1', 16)); //crossed pag by 1%
+          const penalty = await this.convert.calculateStalkPenalty('-99', '1', '100');
+          expect(penalty).to.be.equal('1');
         });
 
         it('calculates penalty for cross-peg upward small percentage', async function () {
           // 16 zeros
-          const penalty = await this.convert.calculatePercentStalkPenalty('-990000000000000000', '1', '1000000000000000000');
-          expect(penalty).to.be.equal('1'); //crossed pag by 1%
+          const penalty = await this.convert.calculateStalkPenalty('-990000000000000000', '1', '1000000000000000000');
+          expect(penalty).to.be.equal('1');
         });
 
       });
 
       describe('start at peg and convert away', async function () {
         it('calculates penalty for at-peg upward', async function () {
-          const penalty = await this.convert.calculatePercentStalkPenalty(to6('0'), to6('50'), to6('50'));
-          expect(penalty).to.be.equal(toX('100', 16)); // 100% penalty
+          const penalty = await this.convert.calculateStalkPenalty(to6('0'), to6('50'), to6('50'));
+          expect(penalty).to.be.equal(to6('50'));
         });
 
         it('calculates penalty for at-peg downward', async function () {
-          const penalty = await this.convert.calculatePercentStalkPenalty(to6('0'), to6('-50'), to6('50'));
-          expect(penalty).to.be.equal(toX('100', 16));
+          const penalty = await this.convert.calculateStalkPenalty(to6('0'), to6('-50'), to6('50'));
+          expect(penalty).to.be.equal(to6('50'));
         });
       });
 
       describe('start away and convert away', async function () {
         it('calculates penalty for away-peg downward', async function () {
-          const penalty = await this.convert.calculatePercentStalkPenalty(to6('-50'), to6('-150'), to6('100'));
-          expect(penalty).to.be.equal(toX('100', 16)); // 100% penalty
+          const penalty = await this.convert.calculateStalkPenalty(to6('-50'), to6('-150'), to6('100'));
+          expect(penalty).to.be.equal(to6('100'));
         });
 
         it('calculates penalty for away-peg upward', async function () {
-          const penalty = await this.convert.calculatePercentStalkPenalty(to6('50'), to6('150'), to6('100'));
-          expect(penalty).to.be.equal(toX('100', 16)); // 100% penalty
+          const penalty = await this.convert.calculateStalkPenalty(to6('50'), to6('150'), to6('100'));
+          expect(penalty).to.be.equal(to6('100'));
         });
       });
 
       describe('no change', async function () {
         it('no change over peg', async function () {
-          const penalty = await this.convert.calculatePercentStalkPenalty(to6('-50'), to6('-50'), to6('0'));
+          const penalty = await this.convert.calculateStalkPenalty(to6('-50'), to6('-50'), to6('0'));
           expect(penalty).to.be.equal('0');
         });
 
         it('no change below peg', async function () {
-          const penalty = await this.convert.calculatePercentStalkPenalty(to6('50'), to6('50'), to6('0'));
+          const penalty = await this.convert.calculateStalkPenalty(to6('50'), to6('50'), to6('0'));
           expect(penalty).to.be.equal('0');
         });
       });

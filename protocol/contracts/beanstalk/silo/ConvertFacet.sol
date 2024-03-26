@@ -157,8 +157,11 @@ contract ConvertFacet is ReentrancyGuard {
      * 2. An output token address
      * 3. A farm function that does a swap, somehow we have to pass all the input tokens and amounts to this function
      * 
-     * I was considering adding an allowConvertPastPeg bool, which if false, would rever the txn.
+     * I was considering adding an allowConvertPastPeg bool, which if false, would revert the txn.
      * This functionality can be achieve by baking it into the pipeline calls however.
+     * 
+     * It is assumed you pass in stems/amounts in order from highest grown stalk per bdv to lowest.
+     * Whatever the case, if you convert past peg, you'll lose the stalk starting from the end crates.
      */
 
     function pipelineConvert(
@@ -262,7 +265,7 @@ contract ConvertFacet is ReentrancyGuard {
      */
 
     // TODO change to pure upon log removal
-    function calculatePercentStalkPenalty(int256 beforeDeltaB, int256 afterDeltaB, uint256 bdvConverted) external view returns (uint256) {
+    function calculateStalkPenalty(int256 beforeDeltaB, int256 afterDeltaB, uint256 bdvConverted) external view returns (uint256) {
     // Check if the signs of beforeDeltaB and afterDeltaB are different,
     // indicating that deltaB has crossed zero
     // if (beforeDeltaB.mul(afterDeltaB) < 0) {
@@ -271,7 +274,7 @@ contract ConvertFacet is ReentrancyGuard {
 
         if (beforeDeltaB == 0 && afterDeltaB != 0) {
             //this means we converted away from peg, so entire amount of bdvConverted is penalty
-            return 1e18;
+            return bdvConverted;
         }
 
         if (afterDeltaB == 0) {
@@ -292,18 +295,19 @@ contract ConvertFacet is ReentrancyGuard {
 
         // Check if the crossoverAmount is greater than or equal to bdvConverted
         // TODO: see if we can find cases where bdcConverted doesn't match the deltaB diff? should always in theory afaict
-        if (crossoverAmount >= bdvConverted) {
-            // If the entire bdvConverted amount crossed over, return 100%
-            return 1e18; // 1e18 represents 100% as a fixed-point number with 18 decimal places
+        if (crossoverAmount > bdvConverted) {
+            // If the entire bdvConverted amount crossed over, something is fishy, bdv amounts wrong?
+            revert("Convert: converted farther than bdv");
+            // return 1e18; // 1e18 represents 100% as a fixed-point number with 18 decimal places
             // TODO: consider if this is a good amount of precision
         } else {
-            // Calculate the percentage of bdvConverted that crossed over
-            return crossoverAmount.mul(1e18).div(bdvConverted);
+            // return amount crossed over
+            return crossoverAmount;
         }
     } else if (beforeDeltaB <= 0 && afterDeltaB < beforeDeltaB) { 
-        return 1e18;
+        return bdvConverted;
     } else if (beforeDeltaB >= 0 && afterDeltaB > beforeDeltaB) { 
-        return 1e18;
+        return bdvConverted;
     } else {
         // If the deltaB did not cross zero, or is the same before/after, return 0. In the future maybe calculate bonus here.
         return 0;
