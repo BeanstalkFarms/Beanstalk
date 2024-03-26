@@ -5405,12 +5405,58 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@graphprotocol/graph-cli@npm:0.69.0":
+  version: 0.69.0
+  resolution: "@graphprotocol/graph-cli@npm:0.69.0"
+  dependencies:
+    "@float-capital/float-subgraph-uncrashable": "npm:^0.0.0-alpha.4"
+    "@oclif/core": "npm:2.8.6"
+    "@oclif/plugin-autocomplete": "npm:^2.3.6"
+    "@oclif/plugin-not-found": "npm:^2.4.0"
+    "@whatwg-node/fetch": "npm:^0.8.4"
+    assemblyscript: "npm:0.19.23"
+    binary-install-raw: "npm:0.0.13"
+    chalk: "npm:3.0.0"
+    chokidar: "npm:3.5.3"
+    debug: "npm:4.3.4"
+    docker-compose: "npm:0.23.19"
+    dockerode: "npm:2.5.8"
+    fs-extra: "npm:9.1.0"
+    glob: "npm:9.3.5"
+    gluegun: "npm:5.1.6"
+    graphql: "npm:15.5.0"
+    immutable: "npm:4.2.1"
+    ipfs-http-client: "npm:55.0.0"
+    jayson: "npm:4.0.0"
+    js-yaml: "npm:3.14.1"
+    prettier: "npm:3.0.3"
+    semver: "npm:7.4.0"
+    sync-request: "npm:6.1.0"
+    tmp-promise: "npm:3.0.3"
+    web3-eth-abi: "npm:1.7.0"
+    which: "npm:2.0.2"
+    yaml: "npm:1.10.2"
+  bin:
+    graph: bin/run
+  checksum: 10/55c1dcc2396530171ade4dde5444395f0a78755292237a67fdd5122b3390bcbc547bf5509427950ccdfb41ed22de7455aecb4573a4faa643c793633ee8535765
+  languageName: node
+  linkType: hard
+
 "@graphprotocol/graph-ts@npm:0.31.0":
   version: 0.31.0
   resolution: "@graphprotocol/graph-ts@npm:0.31.0"
   dependencies:
     assemblyscript: "npm:0.19.10"
   checksum: 10/624f672e2f0e4d35a6752df1fa6d8208216205ffc412d2506e6bfdb59802a044646007fb6fcd21abda4cc219abad0b180635118070a74b44261c71d6dd859f2a
+  languageName: node
+  linkType: hard
+
+"@graphprotocol/graph-ts@npm:0.34.0":
+  version: 0.34.0
+  resolution: "@graphprotocol/graph-ts@npm:0.34.0"
+  dependencies:
+    assemblyscript: "npm:0.19.10"
+  checksum: 10/0aa26453002bb7b5342010877ba1148b9173603f4a3ce6db00afe77da5982f1d9a964ea86a79218c9b0615e2b3b459ed036eabc8e0d866ed9524c93396bf37de
   languageName: node
   linkType: hard
 
@@ -9957,6 +10003,64 @@ __metadata:
     wordwrap: "npm:^1.0.0"
     wrap-ansi: "npm:^7.0.0"
   checksum: 10/fe07fa06509de39ab781ef7ac3be4b8c307f4d8686cc665bd3cd002f496c29614eaa8cd3d4d0389a18e99a75c77a47118263501551e15220b75e58c0b3926c29
+  languageName: node
+  linkType: hard
+
+"@oclif/core@npm:^2.15.0":
+  version: 2.15.0
+  resolution: "@oclif/core@npm:2.15.0"
+  dependencies:
+    "@types/cli-progress": "npm:^3.11.0"
+    ansi-escapes: "npm:^4.3.2"
+    ansi-styles: "npm:^4.3.0"
+    cardinal: "npm:^2.1.1"
+    chalk: "npm:^4.1.2"
+    clean-stack: "npm:^3.0.1"
+    cli-progress: "npm:^3.12.0"
+    debug: "npm:^4.3.4"
+    ejs: "npm:^3.1.8"
+    get-package-type: "npm:^0.1.0"
+    globby: "npm:^11.1.0"
+    hyperlinker: "npm:^1.0.0"
+    indent-string: "npm:^4.0.0"
+    is-wsl: "npm:^2.2.0"
+    js-yaml: "npm:^3.14.1"
+    natural-orderby: "npm:^2.0.3"
+    object-treeify: "npm:^1.1.33"
+    password-prompt: "npm:^1.1.2"
+    slice-ansi: "npm:^4.0.0"
+    string-width: "npm:^4.2.3"
+    strip-ansi: "npm:^6.0.1"
+    supports-color: "npm:^8.1.1"
+    supports-hyperlinks: "npm:^2.2.0"
+    ts-node: "npm:^10.9.1"
+    tslib: "npm:^2.5.0"
+    widest-line: "npm:^3.1.0"
+    wordwrap: "npm:^1.0.0"
+    wrap-ansi: "npm:^7.0.0"
+  checksum: 10/610ad7425ac811797ec289be9f2f4763f95abf407d2b7b78a8f2871a2954168ff5c4ec323f831a0df5b5938d3ef826ad3915629c9749f7f615e1d4455f13b100
+  languageName: node
+  linkType: hard
+
+"@oclif/plugin-autocomplete@npm:^2.3.6":
+  version: 2.3.10
+  resolution: "@oclif/plugin-autocomplete@npm:2.3.10"
+  dependencies:
+    "@oclif/core": "npm:^2.15.0"
+    chalk: "npm:^4.1.0"
+    debug: "npm:^4.3.4"
+  checksum: 10/b6ea0ef7478a464ed592f1239dc1ec1c95725f7bb68f5321a5d5e04fd858e4a0f8991bfcbf4a32e698cd0e6921e9e0d83fedbc3e7af8edf5d162bb523770d1c5
+  languageName: node
+  linkType: hard
+
+"@oclif/plugin-not-found@npm:^2.4.0":
+  version: 2.4.3
+  resolution: "@oclif/plugin-not-found@npm:2.4.3"
+  dependencies:
+    "@oclif/core": "npm:^2.15.0"
+    chalk: "npm:^4"
+    fast-levenshtein: "npm:^3.0.0"
+  checksum: 10/a7452e4d4b868411856dd3a195609af0757a8a171fbcc17f4311d8b04764e37f4c6d32dd1d9078b166452836e5fa7c42996ffb444016e466f92092c46a2606fb
   languageName: node
   linkType: hard
 
@@ -19765,7 +19869,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"chalk@npm:4.1.2, chalk@npm:^4.0.0, chalk@npm:^4.0.2, chalk@npm:^4.1.0, chalk@npm:^4.1.1, chalk@npm:^4.1.2":
+"chalk@npm:4.1.2, chalk@npm:^4, chalk@npm:^4.0.0, chalk@npm:^4.0.2, chalk@npm:^4.1.0, chalk@npm:^4.1.1, chalk@npm:^4.1.2":
   version: 4.1.2
   resolution: "chalk@npm:4.1.2"
   dependencies:
@@ -22875,6 +22979,17 @@ __metadata:
   languageName: node
   linkType: hard
 
+"ejs@npm:3.1.8":
+  version: 3.1.8
+  resolution: "ejs@npm:3.1.8"
+  dependencies:
+    jake: "npm:^10.8.5"
+  bin:
+    ejs: bin/cli.js
+  checksum: 10/879f84c8ee56d06dea7b47a8b493e1b398dba578ec7a701660cf77c8a6d565b932c5896639d1dc4a3be29204eccdb70ee4e1bdf634647c2490227f727d5d6a3d
+  languageName: node
+  linkType: hard
+
 "ejs@npm:^3.1.6, ejs@npm:^3.1.8":
   version: 3.1.9
   resolution: "ejs@npm:3.1.9"
@@ -25231,6 +25346,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"fast-levenshtein@npm:^3.0.0":
+  version: 3.0.0
+  resolution: "fast-levenshtein@npm:3.0.0"
+  dependencies:
+    fastest-levenshtein: "npm:^1.0.7"
+  checksum: 10/df98841b262eb345335043ae42f0219f1acf1a88f2e0959ca94c4a46df44e40455d9ee11a3f1c730dee2b1b87dc8b20d4184e71712b30b229df5b40c944ea649
+  languageName: node
+  linkType: hard
+
 "fast-querystring@npm:^1.0.0, fast-querystring@npm:^1.1.1":
   version: 1.1.2
   resolution: "fast-querystring@npm:1.1.2"
@@ -25277,7 +25401,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"fastest-levenshtein@npm:1.0.16":
+"fastest-levenshtein@npm:1.0.16, fastest-levenshtein@npm:^1.0.7":
   version: 1.0.16
   resolution: "fastest-levenshtein@npm:1.0.16"
   checksum: 10/ee85d33b5cef592033f70e1c13ae8624055950b4eb832435099cd56aa313d7f251b873bedbc06a517adfaff7b31756d139535991e2406967438e03a1bf1b008e
@@ -27052,6 +27176,46 @@ __metadata:
   bin:
     gluegun: bin/gluegun
   checksum: 10/c3a673d114953fd79090b4bd2e417e9f9cf819f8cb4c53d17659f814bd1f508597bed64be0e8041fcdd0d6ba0b06ffe95c8cb95708cd4a4a5e0c1d3867b56ae8
+  languageName: node
+  linkType: hard
+
+"gluegun@npm:5.1.6":
+  version: 5.1.6
+  resolution: "gluegun@npm:5.1.6"
+  dependencies:
+    apisauce: "npm:^2.1.5"
+    app-module-path: "npm:^2.2.0"
+    cli-table3: "npm:0.6.0"
+    colors: "npm:1.4.0"
+    cosmiconfig: "npm:7.0.1"
+    cross-spawn: "npm:7.0.3"
+    ejs: "npm:3.1.8"
+    enquirer: "npm:2.3.6"
+    execa: "npm:5.1.1"
+    fs-jetpack: "npm:4.3.1"
+    lodash.camelcase: "npm:^4.3.0"
+    lodash.kebabcase: "npm:^4.1.1"
+    lodash.lowercase: "npm:^4.3.0"
+    lodash.lowerfirst: "npm:^4.3.1"
+    lodash.pad: "npm:^4.5.1"
+    lodash.padend: "npm:^4.6.1"
+    lodash.padstart: "npm:^4.6.1"
+    lodash.repeat: "npm:^4.1.0"
+    lodash.snakecase: "npm:^4.1.1"
+    lodash.startcase: "npm:^4.4.0"
+    lodash.trim: "npm:^4.5.1"
+    lodash.trimend: "npm:^4.5.1"
+    lodash.trimstart: "npm:^4.5.1"
+    lodash.uppercase: "npm:^4.3.0"
+    lodash.upperfirst: "npm:^4.3.1"
+    ora: "npm:4.0.2"
+    pluralize: "npm:^8.0.0"
+    semver: "npm:7.3.5"
+    which: "npm:2.0.2"
+    yargs-parser: "npm:^21.0.0"
+  bin:
+    gluegun: bin/gluegun
+  checksum: 10/b6a9938307611e200b799158fca3d3631c194dc0d74e708211d21d894550a8de55ce4d15711d8ac746ea8d4a5538231e96abd1e0bac299f5c0fbd09a0763c433
   languageName: node
   linkType: hard
 
@@ -33320,6 +33484,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"matchstick-as@npm:^0.6.0":
+  version: 0.6.0
+  resolution: "matchstick-as@npm:0.6.0"
+  dependencies:
+    wabt: "npm:1.0.24"
+  checksum: 10/340025caf2fe677675d9e388f2726b9517dcd977e13c1d5d13517d3d72ebfe561ea849e5859df74e1ccf48559d5fe3a9bb7cce107187102ec9a3d0d677c596ff
+  languageName: node
+  linkType: hard
+
 "math-expression-evaluator@npm:^1.2.14":
   version: 1.4.0
   resolution: "math-expression-evaluator@npm:1.4.0"
@@ -37002,6 +37175,15 @@ __metadata:
   bin:
     prettier: ./bin-prettier.js
   checksum: 10/21d245fe788d1123fd7df63a3759f7807d8c0bb7aaa2f4f02cc055998c3e1f92d7c614b6e2749a936c527cdbbb0f3c869bd9723eb32c5232b0fab9fac04b455d
+  languageName: node
+  linkType: hard
+
+"prettier@npm:3.0.3":
+  version: 3.0.3
+  resolution: "prettier@npm:3.0.3"
+  bin:
+    prettier: bin/prettier.cjs
+  checksum: 10/ccf1ead9794b017be6b42d0873f459070beef2069eb393c8b4c0d11aa3430acefc54f6d5f44a5b7ce9af05ad8daf694b912f0aa2808d1c22dfa86e61e9d563f8
   languageName: node
   linkType: hard
 
@@ -41403,9 +41585,9 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "subgraph-beanstalk@workspace:projects/subgraph-beanstalk"
   dependencies:
-    "@graphprotocol/graph-cli": "npm:0.56.0"
-    "@graphprotocol/graph-ts": "npm:0.31.0"
-    matchstick-as: "npm:^0.5.0"
+    "@graphprotocol/graph-cli": "npm:0.69.0"
+    "@graphprotocol/graph-ts": "npm:0.34.0"
+    matchstick-as: "npm:^0.6.0"
   languageName: unknown
   linkType: soft
 

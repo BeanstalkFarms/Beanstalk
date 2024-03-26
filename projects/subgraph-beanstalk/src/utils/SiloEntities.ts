@@ -268,29 +268,37 @@ export function loadSiloWithdraw(account: Address, token: Address, season: i32):
 
 /* ===== Yield Entities ===== */
 
-export function loadSiloYield(season: i32): SiloYield {
-  let siloYield = SiloYield.load(season.toString());
+export function loadSiloYield(season: i32, window: i32): SiloYield {
+  let siloYield = SiloYield.load(season.toString() + "-" + window.toString());
   if (siloYield == null) {
-    siloYield = new SiloYield(season.toString());
+    siloYield = new SiloYield(season.toString() + "-" + window.toString());
     siloYield.season = season;
     siloYield.beta = ZERO_BD;
     siloYield.u = 0;
     siloYield.beansPerSeasonEMA = ZERO_BD;
     siloYield.whitelistedTokens = [];
     siloYield.createdAt = ZERO_BI;
+
+    if (window == 24) {
+      siloYield.window = "ROLLING_24_HOUR";
+    } else if (window == 168) {
+      siloYield.window = "ROLLING_7_DAY";
+    } else if (window == 720) {
+      siloYield.window = "ROLLING_30_DAY";
+    }
     siloYield.save();
   }
   return siloYield as SiloYield;
 }
 
-export function loadTokenYield(token: Address, season: i32): TokenYield {
-  let id = token.concatI32(season);
+export function loadTokenYield(token: Address, season: i32, window: i32): TokenYield {
+  let id = token.concatI32(season).concatI32(window);
   let tokenYield = TokenYield.load(id);
   if (tokenYield == null) {
     tokenYield = new TokenYield(id);
     tokenYield.token = token;
     tokenYield.season = season;
-    tokenYield.siloYield = season.toString();
+    tokenYield.siloYield = season.toString() + "-" + window.toString();
     tokenYield.beanAPY = ZERO_BD;
     tokenYield.stalkAPY = ZERO_BD;
     tokenYield.createdAt = ZERO_BI;
