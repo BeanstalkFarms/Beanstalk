@@ -58,7 +58,7 @@ library LibWellMinting {
      */
     function check(
         address well
-    ) internal view returns (int256 deltaB) {
+    ) external view returns (int256 deltaB) {
         bytes memory lastSnapshot = LibAppStorage
             .diamondStorage()
             .wellOracleSnapshots[well];
@@ -80,7 +80,7 @@ library LibWellMinting {
      */
     function capture(
         address well
-    ) internal returns (int256 deltaB) {
+    ) external returns (int256 deltaB) {
         bytes memory lastSnapshot = LibAppStorage
             .diamondStorage()
             .wellOracleSnapshots[well];
@@ -104,11 +104,18 @@ library LibWellMinting {
     function initializeOracle(address well) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
 
+        // Given Multi Flow Pump V 1.0 isn't resistant to large changes in balance,
+        // minting in the Bean:Eth Well needs to be turned off upon migration.
+        if (!checkShouldTurnOnMinting(well)) {
+            return;
+        }
+
         // If pump has not been initialized for `well`, `readCumulativeReserves` will revert. 
         // Need to handle failure gracefully, so Sunrise does not revert.
-        try ICumulativePump(C.BEANSTALK_PUMP).readCumulativeReserves(
+        Call[] memory pumps = IWell(well).pumps();
+        try ICumulativePump(pumps[0].target).readCumulativeReserves(
             well,
-            C.BYTES_ZERO
+            pumps[0].data
         ) returns (bytes memory lastSnapshot) {
             s.wellOracleSnapshots[well] = lastSnapshot;
             emit WellOracle(s.season.current, well, 0, lastSnapshot);
@@ -160,11 +167,12 @@ library LibWellMinting {
         AppStorage storage s = LibAppStorage.diamondStorage();
         // Try to call `readTwaReserves` and handle failure gracefully, so Sunrise does not revert.
         // On failure, reset the Oracle by returning an empty snapshot and a delta B of 0.
-        try ICumulativePump(C.BEANSTALK_PUMP).readTwaReserves(
+        Call[] memory pumps = IWell(well).pumps();
+        try ICumulativePump(pumps[0].target).readTwaReserves(
             well,
             lastSnapshot,
             uint40(s.season.timestamp),
-            C.BYTES_ZERO
+            pumps[0].data
         ) returns (uint[] memory twaReserves, bytes memory snapshot) {
             IERC20[] memory tokens = IWell(well).tokens();
             (
@@ -233,5 +241,17 @@ library LibWellMinting {
         )).sub(int256(reserves[beanIndex]));
 
         return deltaB;
+    }
+
+    
+    // Remove in next BIP.
+    function checkShouldTurnOnMinting(address well) internal view returns (bool) {
+        AppStorage storage s = LibAppStorage.diamondStorage();
+        if (well == C.BEAN_ETH_WELL) {
+            if (s.season.current < s.season.beanEthStartMintingSeason) {
+                return false;
+            }
+        }
+        return true;
     }
 }

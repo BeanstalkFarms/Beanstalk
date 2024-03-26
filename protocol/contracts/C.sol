@@ -69,8 +69,7 @@ library C {
     address internal constant USDC = 0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48;
     address internal constant USDT = 0xdAC17F958D2ee523a2206206994597C13D831ec7;
     address internal constant WETH = 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2;
-    address internal constant UNIV3_ETH_USDC_POOL = 0x88e6A0c2dDD26FEEb64F039a2c41296FcB3f5640; // 0.05% pool
-    address internal constant UNIV3_ETH_USDT_POOL = 0x11b815efB8f581194ae79006d24E0d814B7697F6; // 0.05% pool
+    address internal constant WSTETH = 0x7f39C581F595B53c5cb19bD0b3f8dA6c935E2Ca0;
 
     // Use external contract for block.basefee as to avoid upgrading existing contracts to solidity v8
     address private constant BASE_FEE_CONTRACT = 0x84292919cB64b590C0131550483707E43Ef223aC;
@@ -78,8 +77,8 @@ library C {
     //////////////////// Well ////////////////////
 
     uint256 internal constant WELL_MINIMUM_BEAN_BALANCE = 1000_000_000; // 1,000 Beans
-    address internal constant BEANSTALK_PUMP = 0xBA510f10E3095B83a0F33aa9ad2544E22570a87C;
     address internal constant BEAN_ETH_WELL = 0xBEA0e11282e2bB5893bEcE110cF199501e872bAd;
+    address internal constant BEAN_WSTETH_WELL = 0xa61Ef2313C1eC9c8cf2E1cAC986539d136b1393E; // TODO: Set
     // The index of the Bean and Weth token addresses in all BEAN/ETH Wells.
     uint256 internal constant BEAN_INDEX = 0;
     uint256 internal constant ETH_INDEX = 1;
@@ -169,10 +168,6 @@ library C {
 
     function threeCrv() internal pure returns (IERC20) {
         return IERC20(THREE_CRV);
-    }
-
-    function UniV3EthUsdc() internal pure returns (address){
-        return UNIV3_ETH_USDC_POOL;
     }
 
     function fertilizer() internal pure returns (IFertilizer) {
