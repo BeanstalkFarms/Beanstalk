@@ -32,7 +32,7 @@ async function fastForwardHour() {
 }
 
 // Skipping because this migration already occured.
-testIfRpcSet('Bean:Eth to Bean:Wsteth Migration', function () {
+describe.skip('Bean:Eth to Bean:Wsteth Migration', function () {
   before(async function () {
 
     [user, user2] = await ethers.getSigners()
