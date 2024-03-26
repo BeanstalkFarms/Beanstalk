@@ -240,16 +240,18 @@ contract ConvertFacet is ReentrancyGuard {
         console.log('after updatedCombinedDeltaB:');
         console.logInt(pipeData.combinedDeltaBinsta);
 
-        //TODO: grownStalk should be lost as % of bdv decrease?
-        //grownstalk recieved as a bonus should be deposited evenly across all deposits
-        //use current bdv of in tokens or bdv at time of previous deposit?
+        uint256 stalkPenalty = _calculateStalkPenalty(pipeData.combinedDeltaBinsta, getCombinedDeltaBForTokens(inputToken, outputToken), pipeData.bdvsRemoved);
 
         // Convert event emitted within this function
-        _depositTokensForConvertMultiCrate(inputToken, outputToken, pipeData.amountOut, pipeData.bdvsRemoved, pipeData.grownStalks, amounts);
+        _depositTokensForConvertMultiCrate(inputToken, outputToken, pipeData.amountOut, pipeData.bdvsRemoved, pipeData.grownStalks, amounts, stalkPenalty);
 
 
         //there's nothing about total BDV in this event, but it can be derived from the AddDeposit events
         LibTractor._resetPublisher();
+    }
+
+    function calculateStalkPenalty(int256 beforeDeltaB, int256 afterDeltaB, uint256[] memory bdvsRemoved) external view returns (uint256) {
+        return _calculateStalkPenalty(beforeDeltaB, afterDeltaB, bdvsRemoved);
     }
 
     /**
@@ -258,60 +260,65 @@ contract ConvertFacet is ReentrancyGuard {
      * or past peg.
      * @param beforeDeltaB The deltaB before the deposit.
      * @param afterDeltaB The deltaB after the deposit.
-     * @param bdvConverted The amount of BDV that was converted.
+     * @param bdvsRemoved The amount of BDVs that were removed, will be summed in this function.
      * @return percentStalkPenalty The percent of stalk that should be lost, 0 means no penalty, 1 means 100% penalty.
      * 
      * TODO: External only so that tests can be written on it. Any danger in leaving it public? It's just a pure function so I don't think so.
      */
 
     // TODO change to pure upon log removal
-    function calculateStalkPenalty(int256 beforeDeltaB, int256 afterDeltaB, uint256 bdvConverted) external view returns (uint256) {
-    // Check if the signs of beforeDeltaB and afterDeltaB are different,
-    // indicating that deltaB has crossed zero
-    // if (beforeDeltaB.mul(afterDeltaB) < 0) {
-    // The bitwise XOR of two signed integers will be positive if they have different signs, and negative if they have the same sign
-    if ((beforeDeltaB ^ afterDeltaB) < 0 || beforeDeltaB == 0 || afterDeltaB == 0) {
+    function _calculateStalkPenalty(int256 beforeDeltaB, int256 afterDeltaB, uint256[] memory bdvsRemoved) internal view returns (uint256) {
 
-        if (beforeDeltaB == 0 && afterDeltaB != 0) {
-            //this means we converted away from peg, so entire amount of bdvConverted is penalty
+        uint256 bdvConverted;
+        for (uint256 i = 0; i < bdvsRemoved.length; i++) {
+            bdvConverted = bdvConverted.add(bdvsRemoved[i]);
+        }
+
+        // Check if the signs of beforeDeltaB and afterDeltaB are different,
+        // indicating that deltaB has crossed zero
+        // if (beforeDeltaB.mul(afterDeltaB) < 0) {
+        // The bitwise XOR of two signed integers will be positive if they have different signs, and negative if they have the same sign
+        if ((beforeDeltaB ^ afterDeltaB) < 0 || beforeDeltaB == 0 || afterDeltaB == 0) {
+
+            if (beforeDeltaB == 0 && afterDeltaB != 0) {
+                //this means we converted away from peg, so entire amount of bdvConverted is penalty
+                return bdvConverted;
+            }
+
+            if (afterDeltaB == 0) {
+                return 0; //perfectly to peg, all good
+            }
+
+            console.log('beforeDeltaB: ');
+            console.logInt(beforeDeltaB);
+            console.log('afterDeltaB: ');
+            console.logInt(afterDeltaB);
+            console.log('bdvConverted: ', bdvConverted);
+
+
+            // Calculate how far past peg we went - so actually this is just abs of new deltaB
+            uint256 crossoverAmount = uint256(abs(int256(afterDeltaB)));
+
+            console.log('crossoverAmount: ', crossoverAmount);
+
+            // Check if the crossoverAmount is greater than or equal to bdvConverted
+            // TODO: see if we can find cases where bdcConverted doesn't match the deltaB diff? should always in theory afaict
+            if (crossoverAmount > bdvConverted) {
+                // If the entire bdvConverted amount crossed over, something is fishy, bdv amounts wrong?
+                revert("Convert: converted farther than bdv");
+                // return 1e18; // 1e18 represents 100% as a fixed-point number with 18 decimal places
+                // TODO: consider if this is a good amount of precision
+            } else {
+                // return amount crossed over
+                return crossoverAmount;
+            }
+        } else if (beforeDeltaB <= 0 && afterDeltaB < beforeDeltaB) { 
+            return bdvConverted;
+        } else if (beforeDeltaB >= 0 && afterDeltaB > beforeDeltaB) { 
             return bdvConverted;
         }
-
-        if (afterDeltaB == 0) {
-            return 0; //perfectly to peg, all good
-        }
-
-        console.log('beforeDeltaB: ');
-        console.logInt(beforeDeltaB);
-        console.log('afterDeltaB: ');
-        console.logInt(afterDeltaB);
-        console.log('bdvConverted: ', bdvConverted);
-
-
-        // Calculate how far past peg we went - so actually this is just abs of new deltaB
-        uint256 crossoverAmount = uint256(abs(int256(afterDeltaB)));
-
-        console.log('crossoverAmount: ', crossoverAmount);
-
-        // Check if the crossoverAmount is greater than or equal to bdvConverted
-        // TODO: see if we can find cases where bdcConverted doesn't match the deltaB diff? should always in theory afaict
-        if (crossoverAmount > bdvConverted) {
-            // If the entire bdvConverted amount crossed over, something is fishy, bdv amounts wrong?
-            revert("Convert: converted farther than bdv");
-            // return 1e18; // 1e18 represents 100% as a fixed-point number with 18 decimal places
-            // TODO: consider if this is a good amount of precision
-        } else {
-            // return amount crossed over
-            return crossoverAmount;
-        }
-    } else if (beforeDeltaB <= 0 && afterDeltaB < beforeDeltaB) { 
-        return bdvConverted;
-    } else if (beforeDeltaB >= 0 && afterDeltaB > beforeDeltaB) { 
-        return bdvConverted;
-    } else {
-        // If the deltaB did not cross zero, or is the same before/after, return 0. In the future maybe calculate bonus here.
-        return 0;
-    }
+    // If the deltaB did not cross zero, or is the same before/after, return 0. In the future maybe calculate bonus here.
+    return 0;
 }
 
     //for finding the before/after deltaB difference, we need to use the min of
@@ -649,7 +656,8 @@ contract ConvertFacet is ReentrancyGuard {
         uint256 amount,
         uint256[] memory bdvs,
         uint256[] memory grownStalks,
-        uint256[] memory inputAmounts
+        uint256[] memory inputAmounts,
+        uint256 stalkPenalty
     ) internal {
 
         MultiCrateDepositData memory mcdd;
