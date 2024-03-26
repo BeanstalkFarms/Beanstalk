@@ -4,6 +4,7 @@ import metamaskLogo from '~/img/wallets/metamask-logo.png';
 import walletConnectLogo from '~/img/wallets/walletconnect-logo.svg';
 import coinbaseWalletLogo from '~/img/wallets/coinbase-wallet-logo.png';
 import tallyLogo from '~/img/wallets/tally-logo.svg';
+import rabbyLogo from '~/img/wallets/rabby.png';
 import { SupportedChainId } from './chains';
 
 export const CONNECTOR_LOGOS: { [key: string]: string } = {
@@ -11,6 +12,7 @@ export const CONNECTOR_LOGOS: { [key: string]: string } = {
   WalletConnect: walletConnectLogo,
   'Coinbase Wallet': coinbaseWalletLogo,
   Tally: tallyLogo,
+  'Rabby Wallet': rabbyLogo,
 };
 
 export const CONNECT_WALLET_ERRORS: {

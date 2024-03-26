@@ -1,7 +1,7 @@
 import React, { createContext, useMemo } from 'react';
 import { BeanstalkSDK } from '@beanstalk/sdk';
-import { useProvider } from 'wagmi';
-import { useSigner } from '~/hooks/ledger/useSigner';
+// import { useProvider } from 'wagmi';
+// import { useSigner } from '~/hooks/ledger/useSigner';
 
 // Ethereum Images
 import ethIconCircled from '~/img/tokens/eth-logo-circled.svg';
@@ -31,12 +31,13 @@ import unripeBeanLogo from '~/img/tokens/unripe-bean-logo-circled.svg';
 import unripeBeanWethLogoUrl from '~/img/tokens/unrip-beanweth.svg';
 import useSetting from '~/hooks/app/useSetting';
 import { SUBGRAPH_ENVIRONMENTS } from '~/graph/endpoints';
+import { useEthersProvider, useEthersSigner } from '~/util/wagmi/ethersAdapter';
 
 const IS_DEVELOPMENT_ENV = process.env.NODE_ENV !== 'production';
 
 const useBeanstalkSdkContext = () => {
-  const provider = useProvider();
-  const { data: signer } = useSigner();
+  const signer = useEthersSigner();
+  const provider = useEthersProvider();
 
   const [datasource] = useSetting('datasource');
   const [subgraphEnv] = useSetting('subgraphEnv');
