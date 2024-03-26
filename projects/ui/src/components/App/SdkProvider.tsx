@@ -1,14 +1,11 @@
 import React, { createContext, useMemo } from 'react';
 import { BeanstalkSDK } from '@beanstalk/sdk';
-// import { useProvider } from 'wagmi';
-// import { useSigner } from '~/hooks/ledger/useSigner';
 
 // Ethereum Images
 import ethIconCircled from '~/img/tokens/eth-logo-circled.svg';
 import wEthIconCircled from '~/img/tokens/weth-logo-circled.svg';
 
 // Bean Images
-// import beanLogoUrl from '~/img/tokens/bean-logo.svg';
 import beanCircleLogo from '~/img/tokens/bean-logo-circled.svg';
 import beanCrv3LpLogo from '~/img/tokens/bean-crv3-logo.svg';
 
@@ -31,12 +28,13 @@ import unripeBeanLogo from '~/img/tokens/unripe-bean-logo-circled.svg';
 import unripeBeanWethLogoUrl from '~/img/tokens/unrip-beanweth.svg';
 import useSetting from '~/hooks/app/useSetting';
 import { SUBGRAPH_ENVIRONMENTS } from '~/graph/endpoints';
-import { useEthersProvider, useEthersSigner } from '~/util/wagmi/ethersAdapter';
+import { useEthersProvider } from '~/util/wagmi/ethersAdapter';
+import { useSigner } from '~/hooks/ledger/useSigner';
 
 const IS_DEVELOPMENT_ENV = process.env.NODE_ENV !== 'production';
 
 const useBeanstalkSdkContext = () => {
-  const signer = useEthersSigner();
+  const { data: signer } = useSigner();
   const provider = useEthersProvider();
 
   const [datasource] = useSetting('datasource');
