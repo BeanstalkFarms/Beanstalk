@@ -1,11 +1,12 @@
-import { Token, TokenValue } from "@beanstalk/sdk";
+import { TokenValue } from "@beanstalk/sdk";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { multicall } from "@wagmi/core";
 import { BigNumber } from "ethers";
-import { useCallback, useMemo } from "react";
+import { useMemo } from "react";
 import { useAccount } from "wagmi";
 import { useTokens } from "./TokenProvider";
 import { Log } from "src/utils/logger";
+import { config } from "src/utils/wagmi/config";
 
 const TokenBalanceABI = [
   {
@@ -44,13 +45,14 @@ export const useAllTokensBalance = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps -- doing just tokensToLoad doesn't work and causes multiple calls
   }, [address, tokensToLoad.map((t) => t.symbol).join()]);
 
-  const { data, isLoading, error, refetch, isFetching } = useQuery<Record<string, TokenValue>, Error>(
-    ["token", "balance"],
-    async () => {
+  const { data, isLoading, error, refetch, isFetching } = useQuery({
+    queryKey: ["token", "balance"],
+
+    queryFn: async () => {
       if (!address) return {};
-      const res = (await multicall({
+      const res = (await multicall(config, {
         contracts: calls,
-        allowFailure: true
+        allowFailure: false
       })) as unknown as BigNumber[];
       const balances: Record<string, TokenValue> = {};
 
@@ -61,6 +63,7 @@ export const useAllTokensBalance = () => {
 
         // set the balance in the query cache too
         queryClient.setQueryData(["token", "balance", token.symbol], { [token.symbol]: balances[token.symbol] });
+
       }
 
       const ETH = tokens.ETH;
@@ -73,11 +76,10 @@ export const useAllTokensBalance = () => {
 
       return balances;
     },
-    {
-      staleTime: 1000 * 30,
-      refetchInterval: 1000 * 30
-    }
-  );
+
+    staleTime: 1000 * 30,
+    refetchInterval: 1000 * 30
+  });
 
   return { data, isLoading, isFetching, error, refetch };
 };

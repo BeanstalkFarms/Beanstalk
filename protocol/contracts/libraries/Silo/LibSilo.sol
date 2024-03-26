@@ -43,6 +43,21 @@ library LibSilo {
     using LibSafeMath32 for uint32;
     using SafeCast for uint256;
 
+    //////////////////////// ENUM ////////////////////////
+    
+    /**
+     * @dev when a user removes multiple deposits, the
+     * {TransferBatch} event is emitted. However, in the 
+     * case of an enroot, the event is omitted (as the 
+     * depositID does not change). This enum is
+     * used to determine if the event should be emitted.
+     */
+    enum ERC1155Event {
+        EMIT_BATCH_EVENT,
+        NO_EMIT_BATCH_EVENT
+    }
+    
+
     uint128 internal constant PRECISION = 1e6;
     //////////////////////// EVENTS ////////////////////////
 
@@ -649,7 +664,8 @@ library LibSilo {
         address account,
         address token,
         int96[] calldata stems,
-        uint256[] calldata amounts
+        uint256[] calldata amounts,
+        ERC1155Event emission
     ) internal returns (AssetsRemoved memory ar) {
         AppStorage storage s = LibAppStorage.diamondStorage();
 
@@ -710,12 +726,15 @@ library LibSilo {
         }
 
         // "removing" deposits is equivalent to "burning" a batch of ERC1155 tokens.
-        emit TransferBatch(msg.sender, account, address(0), removedDepositIDs, amounts);
+        if(emission == ERC1155Event.EMIT_BATCH_EVENT) {
+            emit TransferBatch(msg.sender, account, address(0), removedDepositIDs, amounts);
+        }
+
         emit RemoveDeposits(
             account, 
             token, 
             stems, 
-            amounts, 
+            amounts,
             ar.active.tokens.add(ar.odd.tokens).add(ar.even.tokens), 
             bdvsRemoved
         );

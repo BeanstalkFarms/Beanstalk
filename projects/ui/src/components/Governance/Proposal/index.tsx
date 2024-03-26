@@ -63,7 +63,7 @@ const ProposalContent: FC<{
                   fontSize: FontSize.xs,
                 }}
               >
-                {Math.min(pctOfQuorum * 100, 100)?.toFixed(0)}%
+                {parseInt(Math.min(pctOfQuorum * 100, 100).toString(), 10)}%
               </Box>
             </Box>
           </Tooltip>

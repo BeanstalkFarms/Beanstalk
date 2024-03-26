@@ -71,7 +71,6 @@ export class UniswapV3Swap extends StepClass<AdvancedPipePreparedResult> {
         if (context.data.slippage === undefined) throw new Error("Exchange: slippage required");
         let callData;
         const estimatedOutput = TokenValue.fromBlockchain(estimate[0].toString(), this.tokenOut.decimals);
-        const sqrtPriceX96After = estimate[1];
         
         if (!reversed) {
           const minAmountOut = estimatedOutput.subSlippage(context.data.slippage);
@@ -85,7 +84,7 @@ export class UniswapV3Swap extends StepClass<AdvancedPipePreparedResult> {
             deadline: this.transactionDeadline,
             amountIn: _amountInStep,
             amountOutMinimum: minAmountOut.toBlockchain().toString(),
-            sqrtPriceLimitX96: sqrtPriceX96After,
+            sqrtPriceLimitX96: 0,
             reversed,
             method: "exactInputSingle",
             context
@@ -99,7 +98,7 @@ export class UniswapV3Swap extends StepClass<AdvancedPipePreparedResult> {
               deadline: this.transactionDeadline,
               amountIn: _amountInStep,
               amountOutMinimum: minAmountOut.toBlockchain().toString(),
-              sqrtPriceLimitX96: sqrtPriceX96After
+              sqrtPriceLimitX96: 0
             }]);
 
         } else {
@@ -114,7 +113,7 @@ export class UniswapV3Swap extends StepClass<AdvancedPipePreparedResult> {
             deadline: this.transactionDeadline,
             amountOut: _amountInStep,
             amountInMaximum: maxAmountIn.toBlockchain().toString(),
-            sqrtPriceLimitX96: sqrtPriceX96After,
+            sqrtPriceLimitX96: 0,
             reversed,
             method: "exactOutputSingle",
             context
@@ -128,7 +127,7 @@ export class UniswapV3Swap extends StepClass<AdvancedPipePreparedResult> {
               deadline: this.transactionDeadline,
               amountOut: _amountInStep,
               amountInMaximum: maxAmountIn.toBlockchain().toString(),
-              sqrtPriceLimitX96: sqrtPriceX96After
+              sqrtPriceLimitX96: 0
             }]);
         };
         
