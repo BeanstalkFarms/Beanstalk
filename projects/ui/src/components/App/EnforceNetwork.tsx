@@ -10,10 +10,10 @@ const BackdropProps = {
 };
 
 const EnforceNetwork: React.FC = () => {
-  const { chain } = useAccount();
+  const { isConnected, chain } = useAccount();
   const isValid = !!chain?.id && !!SupportedChainId[chain?.id];
 
-  if (isValid) return null;
+  if (!isConnected || isValid) return null;
 
   return (
     <NetworkDialog open handleClose={undefined} BackdropProps={BackdropProps} />
