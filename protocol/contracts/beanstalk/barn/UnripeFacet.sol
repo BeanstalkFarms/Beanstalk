@@ -19,6 +19,7 @@ import {ReentrancyGuard} from "contracts/beanstalk/ReentrancyGuard.sol";
 import {LibLockedUnderlying} from "contracts/libraries/LibLockedUnderlying.sol";
 import {LibChop} from "contracts/libraries/LibChop.sol";
 import {LibBarnRaise} from "contracts/libraries/LibBarnRaise.sol";
+import {LibTractor} from "contracts/libraries/LibTractor.sol";
 
 /**
  * @title UnripeFacet
@@ -84,7 +85,7 @@ contract UnripeFacet is ReentrancyGuard {
     ) external payable nonReentrant returns (uint256) {
         // burn the token from the msg.sender address
         uint256 supply = IBean(unripeToken).totalSupply();
-        amount = LibTransfer.burnToken(IBean(unripeToken), amount, msg.sender, fromMode);
+        amount = LibTransfer.burnToken(IBean(unripeToken), amount, LibTractor._getUser(), fromMode);
         // get ripe address and ripe amount
         (address underlyingToken, uint256 underlyingAmount) = LibChop.chop(
             unripeToken,
@@ -93,9 +94,9 @@ contract UnripeFacet is ReentrancyGuard {
         );
         // send the corresponding amount of ripe token to the user address
         require(underlyingAmount > 0, "Chop: no underlying");
-        IERC20(underlyingToken).sendToken(underlyingAmount, msg.sender, toMode);
+        IERC20(underlyingToken).sendToken(underlyingAmount, LibTractor._getUser(), toMode);
         // emit the event
-        emit Chop(msg.sender, unripeToken, amount, underlyingAmount);
+        emit Chop(LibTractor._getUser(), unripeToken, amount, underlyingAmount);
         return underlyingAmount;
     }
 
@@ -115,15 +116,15 @@ contract UnripeFacet is ReentrancyGuard {
     ) external payable nonReentrant {
         bytes32 root = s.u[token].merkleRoot;
         require(root != bytes32(0), "UnripeClaim: invalid token");
-        require(!picked(msg.sender, token), "UnripeClaim: already picked");
+        require(!picked(LibTractor._getUser(), token), "UnripeClaim: already picked");
 
-        bytes32 leaf = keccak256(abi.encodePacked(msg.sender, amount));
+        bytes32 leaf = keccak256(abi.encodePacked(LibTractor._getUser(), amount));
         require(MerkleProof.verify(proof, root, leaf), "UnripeClaim: invalid proof");
-        s.unripeClaimed[token][msg.sender] = true;
+        s.unripeClaimed[token][LibTractor._getUser()] = true;
 
-        LibTransfer.sendToken(IERC20(token), amount, msg.sender, mode);
+        LibTransfer.sendToken(IERC20(token), amount, LibTractor._getUser(), mode);
 
-        emit Pick(msg.sender, token, amount);
+        emit Pick(LibTractor._getUser(), token, amount);
     }
 
     /**
@@ -327,7 +328,7 @@ contract UnripeFacet is ReentrancyGuard {
     ) external payable nonReentrant {
         LibDiamond.enforceIsContractOwner();
         IERC20(s.u[unripeToken].underlyingToken).safeTransferFrom(
-            msg.sender,
+            LibTractor._getUser(),
             address(this),
             amount
         );
