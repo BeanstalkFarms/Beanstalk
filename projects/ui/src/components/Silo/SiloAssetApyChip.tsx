@@ -12,6 +12,7 @@ import Stat from '../Common/Stat';
 import useChainConstant from '~/hooks/chain/useChainConstant';
 
 import { FC } from '~/types';
+import BigNumber from 'bignumber.js';
 
 const TOOLTIP_COMPONENT_PROPS = {
   tooltip: {
@@ -43,10 +44,9 @@ const SiloAssetApyChip: FC<SiloAssetApyChipProps> = ({
     ? Bean
     : ({ symbol: 'Stalk', logo: stalkIconBlue } as Token);
 
-  const val = apys ? apys[metric].times(100) : null;
-  const displayString = `${
-    val ? (val.gt(0) && val.lt(0.1) ? '< 0.1' : val.toFixed(1)) : '0.0'
-  }%`;
+  function getDisplayString(val: (BigNumber | null)) {
+    return `${val ? (val.gt(0) && val.lt(0.1) ? '< 0.1' : val.toFixed(1)) : '0.0'}%`;
+  }
 
   return (
     <Tooltip
@@ -68,7 +68,7 @@ const SiloAssetApyChip: FC<SiloAssetApyChipProps> = ({
                 amount={
                   latestYield
                     ? displayFullBN(
-                        latestYield.beansPerSeasonEMA,
+                        latestYield.beansPerSeasonEMA30d,
                         Bean.displayDecimals
                       )
                     : '0'
@@ -116,13 +116,21 @@ const SiloAssetApyChip: FC<SiloAssetApyChipProps> = ({
         color={metric === 'bean' ? 'primary' : 'secondary'}
         label={
           <Typography sx={{ whiteSpace: 'nowrap' }}>
-            <Row gap={0.5} flexWrap="nowrap" justifyContent="center">
+            <Row gap={0.5} flexWrap="nowrap" justifyContent="center" alignItems="center">
               {variant === 'labeled' && (
                 <>
                   <TokenIcon token={tokenProps} /> vAPY:{' '}
                 </>
               )}
-              {displayString}
+              {metric === 'bean' ? 
+                <>
+                  <Box >{getDisplayString(apys ? apys['24h'][metric].times(100) : null)}</Box>
+                  <Typography color='white' marginTop={-0.25}>|</Typography>
+                  <Box>{getDisplayString(apys ? apys['7d'][metric].times(100) : null)}</Box>
+                  <Typography color='white' marginTop={-0.25}>|</Typography>
+                </> 
+              : null }
+                <Box>{getDisplayString(apys ? apys['30d'][metric].times(100) : null)}</Box>
             </Row>
           </Typography>
         }

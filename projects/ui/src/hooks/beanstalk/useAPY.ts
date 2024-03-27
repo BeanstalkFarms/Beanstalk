@@ -8,46 +8,89 @@ type APY = {
 };
 
 type APYs = {
-  beansPerSeasonEMA: BigNumber;
+  beansPerSeasonEMA24h: BigNumber;
+  beansPerSeasonEMA7d: BigNumber;
+  beansPerSeasonEMA30d: BigNumber;
   byToken: {
-    [token: string]: APY;
+    [token: string]: {
+      '24h': APY;
+      '7d': APY;
+      '30d': APY;
+    };
   };
 };
 
 export default function useAPY() {
-  const query = useLatestApyQuery({
+
+  const apyQuery = useLatestApyQuery({
     fetchPolicy: 'cache-and-network',
     nextFetchPolicy: 'cache-first',
   });
-  return useMemo(() => {
-    if (query.data?.siloYields?.[0]) {
-      const siloYield = query.data.siloYields[0];
 
-      const apys: APYs = {
-        beansPerSeasonEMA: new BigNumber(siloYield.beansPerSeasonEMA),
+  return useMemo(() => {
+    if (apyQuery.data?.day?.[0]) {
+
+      const siloYield24h = apyQuery.data.day[0];
+      const siloYield7d = apyQuery.data.week[0];
+      const siloYield30d = apyQuery.data.month[0];
+
+      let apys: APYs = {
+        beansPerSeasonEMA24h: new BigNumber(siloYield24h.beansPerSeasonEMA),
+        beansPerSeasonEMA7d: new BigNumber(siloYield7d.beansPerSeasonEMA),
+        beansPerSeasonEMA30d: new BigNumber(siloYield30d.beansPerSeasonEMA),
         byToken: {},
       };
 
-      siloYield.tokenAPYS.forEach((tokenAPY) => {
+      let apysByToken: any = {};
+
+      siloYield24h.tokenAPYS.forEach((tokenAPY) => {
         const apy: APY = {
           bean: new BigNumber(tokenAPY.beanAPY),
           stalk: new BigNumber(tokenAPY.stalkAPY),
         };
 
-        apys.byToken[tokenAPY.token] = apy;
+        apysByToken[tokenAPY.token] = {
+          '24h': apy,
+        };
       });
 
+      siloYield7d.tokenAPYS.forEach((tokenAPY) => {
+        const apy: APY = {
+          bean: new BigNumber(tokenAPY.beanAPY),
+          stalk: new BigNumber(tokenAPY.stalkAPY),
+        };
+
+        apysByToken[tokenAPY.token] = {
+          ...apysByToken[tokenAPY.token],
+          '7d': apy,
+        };
+      });
+
+      siloYield30d.tokenAPYS.forEach((tokenAPY) => {
+        const apy: APY = {
+          bean: new BigNumber(tokenAPY.beanAPY),
+          stalk: new BigNumber(tokenAPY.stalkAPY),
+        };
+
+        apysByToken[tokenAPY.token] = {
+          ...apysByToken[tokenAPY.token],
+          '30d': apy,
+        };
+      });
+
+      apys.byToken = apysByToken;
+
       return {
-        loading: query.loading,
+        loading: apyQuery.loading,
         error: undefined,
         data: apys as APYs,
       };
     }
 
     return {
-      loading: query.loading,
-      error: query.error,
+      loading: apyQuery.loading,
+      error: apyQuery.error,
       data: undefined,
     };
-  }, [query]);
+  }, [apyQuery]);
 }

@@ -41,7 +41,7 @@ import Row from '~/components/Common/Row';
 import Stat from '~/components/Common/Stat';
 import useUnripeUnderlyingMap from '~/hooks/beanstalk/useUnripeUnderlying';
 import useAPY from '~/hooks/beanstalk/useAPY';
-import stalkIconBlue from '~/img/beanstalk/stalk-icon-blue.svg';
+import stalkIcon from '~/img/beanstalk/stalk-icon.svg';
 import SiloAssetApyChip from './SiloAssetApyChip';
 import BeanProgressIcon from '../Common/BeanProgressIcon';
 import logo from '~/img/tokens/bean-logo.svg';
@@ -108,7 +108,7 @@ const Whitelist: FC<{
           <Grid item md={2.5} xs={4}>
             <Typography color="text.secondary">Token</Typography>
           </Grid>
-          <Grid item md={3} xs={0} display={{ xs: 'none', md: 'block' }}>
+          {/* <Grid item md={3} xs={0} display={{ xs: 'none', md: 'block' }}>
             <Row gap={0.25}>
               <Tooltip
                 title={
@@ -188,13 +188,50 @@ const Whitelist: FC<{
                 </span>
               </Tooltip>
             </Row>
+                    </Grid> */}
+          <Grid item md={1} xs={0} display={{ xs: 'none', md: 'block' }}>
+            <Tooltip title="Estimated annual Beans earned by a Stalkholder for Depositing an asset.">
+              <Typography color="text.secondary">Rewards</Typography>
+            </Tooltip>
           </Grid>
-          <Grid item md={1.5} xs={0} display={{ xs: 'none', md: 'block' }}>
+          <Grid item md={2.25} xs={0} display={{ xs: 'none', md: 'block' }}>
+            <Tooltip title="Estimated annual Beans earned by a Stalkholder for Depositing an asset.">
+              <Chip
+                variant="filled"
+                color="primary"
+                label={
+                  <Row gap={0.5}>
+                    <TokenIcon token={BEAN[1]} /> 
+                    vAPY 24H 
+                    <Typography color='white' marginTop={-0.25}>|</Typography> 
+                    7D 
+                    <Typography color='white' marginTop={-0.25}>|</Typography> 
+                    30D
+                  </Row>
+                }
+                onClick={undefined}
+                size="small"
+              />
+            </Tooltip>
+          </Grid>
+          <Grid item md={1} xs={0} display={{ xs: 'none', md: 'block' }}>
+            <Tooltip title="Estimated annual growth in Stalk for Depositing an asset.">
+              <Row gap={0.5}>
+                <TokenIcon
+                  token={
+                    { symbol: 'Stalk', logo: stalkIcon } as Token
+                  }
+                />
+                vAPY
+              </Row>
+            </Tooltip>
+          </Grid>
+          <Grid item md={1} xs={0} display={{ xs: 'none', md: 'block' }}>
             <Tooltip title="Total Value Deposited in the Silo.">
               <Typography color="text.secondary">TVD</Typography>
             </Tooltip>
           </Grid>
-          <Grid item md={3.5} xs={0} display={{ xs: 'none', md: 'block' }}>
+          <Grid item md={2.75} xs={0} display={{ xs: 'none', md: 'block' }}>
             <Typography color="text.secondary">Amount Deposited</Typography>
           </Grid>
           <Grid
@@ -287,7 +324,7 @@ const Whitelist: FC<{
                    */}
                   <Grid
                     item
-                    md={3}
+                    md={1}
                     xs={0}
                     display={{ xs: 'none', md: 'block' }}
                   >
@@ -317,11 +354,31 @@ const Whitelist: FC<{
                           </Row>
                         </Box>
                       </Tooltip>
-                      <Row gap={0.25}>
-                        <SiloAssetApyChip token={token} metric="bean" />
-                        <SiloAssetApyChip token={token} metric="stalk" />
-                      </Row>
                     </Row>
+                  </Grid>
+
+                  {/**
+                   * Cell: Bean APY
+                   */}
+                  <Grid
+                    item
+                    md={2.25}
+                    xs={0}
+                    display={{ xs: 'none', md: 'block' }}
+                  >
+                    <SiloAssetApyChip token={token} metric="bean" />
+                  </Grid>
+
+                  {/**
+                   * Cell: Stalk APY
+                   */}
+                  <Grid
+                    item
+                    md={1}
+                    xs={0}
+                    display={{ xs: 'none', md: 'block' }}
+                  >
+                    <SiloAssetApyChip token={token} metric="stalk" />
                   </Grid>
 
                   {/**
@@ -329,7 +386,7 @@ const Whitelist: FC<{
                    */}
                   <Grid
                     item
-                    md={1.5}
+                    md={1}
                     xs={0}
                     display={{ xs: 'none', md: 'block' }}
                   >
@@ -503,7 +560,7 @@ const Whitelist: FC<{
                        */}
                       <Grid
                         item
-                        md={3.5}
+                        md={2.5}
                         xs={0}
                         display={{ xs: 'none', md: 'block' }}
                       >
@@ -646,7 +703,7 @@ const Whitelist: FC<{
                       {/**
                        * Cell: My Deposits
                        */}
-                      <Grid item md={1.5} xs={5}>
+                      <Grid item md={1.75} xs={5}>
                         <Row justifyContent="flex-end">
                           <Tooltip
                             placement="left"
