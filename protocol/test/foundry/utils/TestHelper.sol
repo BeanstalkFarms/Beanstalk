@@ -6,16 +6,15 @@ pragma abicoder v2;
 
 import "forge-std/Test.sol";
 
-import {Utils} from "test/foundry/utils/Utils.sol";
-
 ////// Mocks //////
 import {MockToken} from "contracts/mocks/MockToken.sol";
 
 ///// TEST HELPERS ////// 
-import {BeanstalkDeployer, C} from "test/foundry/utils/BeanstalkDeployer.sol";
+import {BeanstalkDeployer} from "test/foundry/utils/BeanstalkDeployer.sol";
 import {BasinDeployer} from "test/foundry/utils/BasinDeployer.sol";
 import {DepotDeployer} from "test/foundry/utils/DepotDeployer.sol";
 import {OracleDeployer} from "test/foundry/utils/OracleDeployer.sol";
+import {C} from "contracts/C.sol";
 
 /**
  * @title TestHelper
@@ -59,7 +58,7 @@ contract TestHelper is Test, BeanstalkDeployer, BasinDeployer, DepotDeployer, Or
      * @dev each token is deployed with the MockToken.sol contract,
      * which allows for arbitary minting for testing purposes.
      */
-    function initMockTokens(bool verbose) public {
+    function initMockTokens(bool verbose) internal {
         initERC20params[5] memory tokens = [
             initERC20params(C.BEAN, 'Bean','BEAN', 6),
             initERC20params(C.UNRIPE_BEAN, 'Unripe Bean','UrBEAN', 6),
@@ -85,7 +84,7 @@ contract TestHelper is Test, BeanstalkDeployer, BasinDeployer, DepotDeployer, Or
         address[] memory users,
         address token,
         uint256 amount
-    ) public {
+    ) internal {
         for(uint i; i < users.length; i++) {
             mintTokensToUser(users[i], token, amount);
         }
@@ -99,7 +98,7 @@ contract TestHelper is Test, BeanstalkDeployer, BasinDeployer, DepotDeployer, Or
         address user,
         address token,
         uint256 amount
-    ) public {
+    ) internal {
         MockToken(token).mint(user, amount);
         vm.prank(user);
         MockToken(token).approve(BEANSTALK, type(uint256).max);

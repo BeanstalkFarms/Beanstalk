@@ -4,15 +4,13 @@
 pragma solidity >=0.7.6 <0.9.0;
 pragma abicoder v2;
 
-import "forge-std/Test.sol";
-import {Utils} from "test/foundry/utils/Utils.sol";
+import {Utils, console} from "test/foundry/utils/Utils.sol";
 import {C} from "contracts/C.sol";
 
 ///////// MOCKS ////////
 import {MockChainlinkAggregator} from "contracts/mocks/chainlink/MockChainlinkAggregator.sol";
 import {MockUniswapV3Pool} from "contracts/mocks/uniswap/MockUniswapV3Pool.sol";
 import {MockUniswapV3Factory} from "contracts/mocks/uniswap/MockUniswapV3Factory.sol";
-
 
 /**
  * @title OracleDeployer
@@ -25,7 +23,7 @@ contract OracleDeployer is Utils {
      * @notice initializes chainlink oracles.
      * @dev oracles are mocked, and thus require initalization/updates.
      */
-    function initChainlink(bool verbose) public {
+    function initChainlink(bool verbose) internal {
         // new chainlink oracles should be appended here.
         address[2] memory oracles = [
             C.ETH_USD_CHAINLINK_PRICE_AGGREGATOR, // ETH/USD
@@ -53,7 +51,7 @@ contract OracleDeployer is Utils {
         address chainlinkOracle,
         int256 price,
         uint256 secondsAgo
-    ) public {
+    ) internal {
         MockChainlinkAggregator(chainlinkOracle).addRound(
             price,
             block.timestamp - secondsAgo, 

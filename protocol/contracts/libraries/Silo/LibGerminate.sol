@@ -88,14 +88,14 @@ library LibGerminate {
         // in the season.
         if (s.s.roots == 0) {
             // casted to uint256 and downcasted to uint128 to prevent overflow.
-            s.unclaimedGerminating[season.sub(2)].roots = 
-                uint256(s.unclaimedGerminating[season.sub(2)].stalk)
-                .mul(C.getRootsBase()).toUint128();
+            s.unclaimedGerminating[season.sub(2)].roots =
+                s.unclaimedGerminating[season.sub(2)].stalk
+                .mul(uint128(C.getRootsBase()));
         } else if (s.unclaimedGerminating[season.sub(2)].stalk > 0) {
             s.unclaimedGerminating[season.sub(2)].roots = s
             .s.roots
             .mul(s.unclaimedGerminating[season.sub(2)].stalk)
-            .div(s.s.stalk) 
+            .div(s.s.stalk)
             .toUint128();
         }
         // increment total stalk and roots based on unclaimed values.

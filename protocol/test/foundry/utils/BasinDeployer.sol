@@ -4,14 +4,11 @@
 pragma solidity >=0.7.6 <0.9.0;
 pragma abicoder v2;
 
-import "forge-std/Test.sol";
-
-import {Utils} from "test/foundry/utils/Utils.sol";
+import {Utils, console} from "test/foundry/utils/Utils.sol";
 import {C} from "contracts/C.sol";
 
 ////// INTERFACES //////
 import {Call, IAquifer} from "contracts/interfaces/basin/IAquifer.sol";
-
 import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
 /**
@@ -61,7 +58,7 @@ contract BasinDeployer is Utils {
      * @dev deploys the Aquifer, ConstantProduct2, MultiFlowPump, and Well implmentation,
      * at current mainnet addresses.
      */
-    function initBasin(bool mock, bool verbose) public {
+    function initBasin(bool mock, bool verbose) internal {
         if (verbose) console.log("deploying Basin...");
         deployBasin(verbose);
 
@@ -73,7 +70,7 @@ contract BasinDeployer is Utils {
      * @notice deploys the basin contracts.
      * @dev new well functions, pumps, and well implmentations should be appended.
      */
-    function deployBasin(bool verbose) public {
+    function deployBasin(bool verbose) internal {
         // new well functions should be added here.
         DeployData[] memory wfDeployData = new DeployData[](1);
         wfDeployData[0] = DeployData(
@@ -123,7 +120,7 @@ contract BasinDeployer is Utils {
         DeployData[] memory pumpData,
         DeployData[] memory wellImplmentationData,
         bool verbose
-    ) public {
+    ) internal {
         // deploy Aquifier
         deployCodeTo("Aquifer.sol", aquiferAddress);
         if (verbose) console.log("Aquifer Deployed at:", aquiferAddress);
@@ -156,7 +153,7 @@ contract BasinDeployer is Utils {
      * @dev new wells should be added here.
      * @param mock if true, deploys wells with mock pump (for testing purposes).
      */
-    function deployWells(bool mock, bool verbose) public {
+    function deployWells(bool mock, bool verbose) internal {
         address _pump;
         
         if (mock) {
@@ -185,7 +182,7 @@ contract BasinDeployer is Utils {
     function deployBeanCp2Well(
         address[2] memory wellAddressAndNonBeanToken,
         address pump
-    ) public returns (address) {
+    ) internal returns (address) {
         return deployWellAtAddressNoData(
             wellAddressAndNonBeanToken[0],
             C.BEAN,
@@ -195,6 +192,7 @@ contract BasinDeployer is Utils {
             wellImplmentations[0]
         );
     }
+
     function deployWellAtAddressNoData(
         address targetAddress,
         address token0,
@@ -202,7 +200,7 @@ contract BasinDeployer is Utils {
         address wellFunction,
         address pumpAddress,
         address wellImplementation
-    ) public returns (address) {
+    ) internal returns (address) {
         return deployWellAtAddress(
             targetAddress,
             token0,
@@ -230,7 +228,7 @@ contract BasinDeployer is Utils {
         bytes memory pumpData,
         address wellImplementation,
         bytes32 salt
-    ) public returns (address) {
+    ) internal returns (address) {
         DeployWellData memory wellEncodedData = getWellParams2Tkn1Pump(
             token0,
             token1,

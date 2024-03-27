@@ -11,22 +11,13 @@ if (args.length != 1) {
 }
 
 async function printSelectors(contractName, artifactFolderPath = "../out") {
-  const contractFilePath = path.join(
-    artifactFolderPath,
-    `${contractName}.sol`,
-    `${contractName}.json`
-  );
+  const contractFilePath = path.join(artifactFolderPath,`${contractName}.sol`,`${contractName}.json`);
   const contractArtifact = require(contractFilePath);
 
-  // create an array of Object.values(contractArtifact.methodIdentifiers):
-  const selectors = Object.values(contractArtifact.methodIdentifiers);
-  // add '0x to each element of array:
-  selectors.forEach((element, index) => {
-    selectors[index] = '0x' + element;
-  });
+  // Use map to prepend '0x' to each element
+  const selectors = Object.values(contractArtifact.methodIdentifiers).map(element => '0x' + element);
 
-  const coder = ethers.utils.defaultAbiCoder;
-  const coded = coder.encode(["bytes4[]"], [selectors]);
+  const coded = ethers.utils.defaultAbiCoder.encode(["bytes4[]"], [selectors]);
 
   process.stdout.write(coded);
 }
