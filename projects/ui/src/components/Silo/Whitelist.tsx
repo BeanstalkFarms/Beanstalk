@@ -98,13 +98,13 @@ const Whitelist: FC<{
         sx={{
           px: 3, // 1 + 2 from Table Body
           pt: '14px', // manually adjusted
-          pb: '5px', // manually adjusted
+          pb: '14px', // manually adjusted
           borderBottomStyle: 'solid',
           borderBottomColor: 'divider',
           borderBottomWidth: 1,
         }}
       >
-        <Grid container alignItems="flex-end">
+        <Grid container alignItems="center">
           <Grid item md={2.5} xs={4}>
             <Typography color="text.secondary">Token</Typography>
           </Grid>
