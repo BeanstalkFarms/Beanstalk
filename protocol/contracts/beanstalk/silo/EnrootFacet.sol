@@ -5,6 +5,7 @@
 pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
+import {LibTractor} from "contracts/libraries/LibTractor.sol";
 import "contracts/libraries/Silo/LibSilo.sol";
 import "contracts/libraries/Silo/LibTokenSilo.sol";
 import "./SiloFacet/Silo.sol";
@@ -50,7 +51,7 @@ contract EnrootFacet is ReentrancyGuard {
     }
 
     modifier mowSender(address token) {
-       LibSilo._mow(msg.sender, token);
+       LibSilo._mow(LibTractor._getUser(), token);
         _;
     }
 
@@ -82,20 +83,20 @@ contract EnrootFacet is ReentrancyGuard {
 
         // remove Deposit and Redeposit with new BDV
         uint256 ogBDV = LibTokenSilo.removeDepositFromAccount(
-            msg.sender,
+            LibTractor._getUser(),
             token,
             stem,
             amount
         );
 
         // Remove Deposit does not emit an event, while Add Deposit does.
-        emit RemoveDeposit(msg.sender, token, stem, amount, ogBDV); 
+        emit RemoveDeposit(LibTractor._getUser(), token, stem, amount, ogBDV); 
 
         // Calculate the current BDV for `amount` of `token` and add a Deposit.
         uint256 newBDV = LibTokenSilo.beanDenominatedValue(token, amount);
 
         LibTokenSilo.addDepositToAccount(
-            msg.sender, 
+            LibTractor._getUser(), 
             token, 
             stem, 
             amount,
@@ -114,7 +115,7 @@ contract EnrootFacet is ReentrancyGuard {
             LibSilo.stalkReward(stem, LibTokenSilo.stemTipForToken(token), uint128(deltaBDV))
         );
 
-        LibSilo.mintActiveStalk(msg.sender, deltaStalk.toUint128());
+        LibSilo.mintActiveStalk(LibTractor._getUser(), deltaStalk.toUint128());
     }
 
     /** 
@@ -138,7 +139,7 @@ contract EnrootFacet is ReentrancyGuard {
         require(s.u[token].underlyingToken != address(0), "Silo: token not unripe");
         // First, remove Deposits because every deposit is in a different season,
         // we need to get the total Stalk, not just BDV.
-        LibSilo.AssetsRemoved memory ar = LibSilo._removeDepositsFromAccount(msg.sender, token, stems, amounts);
+        LibSilo.AssetsRemoved memory ar = LibSilo._removeDepositsFromAccount(LibTractor._getUser(), token, stems, amounts);
 
         // Get enroot data.
         EnrootData memory enrootData = _getTokenEnrootData(token, ar);
@@ -187,7 +188,7 @@ contract EnrootFacet is ReentrancyGuard {
             )
         );
         LibSilo.mintActiveStalk(
-            msg.sender, 
+            LibTractor._getUser(), 
             enrootData.stalkAdded.sub(
                 ar.active.stalk
                 .add(ar.even.stalk)
@@ -237,7 +238,7 @@ contract EnrootFacet is ReentrancyGuard {
         uint32 stalkPerBdv
     ) private returns (uint256 stalkAdded) {
         LibTokenSilo.addDepositToAccount(
-            msg.sender,
+            LibTractor._getUser(),
             token,
             stem,
             amount,

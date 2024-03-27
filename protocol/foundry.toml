@@ -45,4 +45,5 @@ no_match_test = "a^"
 chains = 'all'
 endpoints = 'all'
 
-
+[rpc_endpoints]
+mainnet = "${FORKING_RPC}" 

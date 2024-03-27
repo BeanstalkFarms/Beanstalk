@@ -1,5 +1,4 @@
-const MAX_INT = '115792089237316195423570985008687907853269984665640564039457584007913129639935'
-
+const { ETH_USD_CHAINLINK_AGGREGATOR, STETH_ETH_CHAINLINK_PRICE_AGGREGATOR, WETH, WSTETH, WSTETH_ETH_UNIV3_01_POOL } = require('../test/utils/constants.js')
 const diamond = require('./diamond.js')
 const { 
   impersonateBean, 
@@ -7,79 +6,74 @@ const {
   impersonateBean3CrvMetapool, 
   impersonateWeth, 
   impersonateUnripe, 
-  impersonateFertilizer,
   impersonatePrice,
   impersonateBlockBasefee,
   impersonateEthUsdcUniswap,
   impersonateEthUsdtUniswap,
-  impersonateEthUsdChainlinkAggregator,
-  impersonateBeanEthWell
+  impersonateChainlinkAggregator,
+  impersonateUniswapV3,
+  impersonateWsteth
 } = require('./impersonate.js')
 
 function addCommas(nStr) {
-  nStr += ''
-  const x = nStr.split('.')
-  let x1 = x[0]
-  const x2 = x.length > 1 ? '.' + x[1] : ''
-  var rgx = /(\d+)(\d{3})/
+  nStr += "";
+  const x = nStr.split(".");
+  let x1 = x[0];
+  const x2 = x.length > 1 ? "." + x[1] : "";
+  var rgx = /(\d+)(\d{3})/;
   while (rgx.test(x1)) {
-    x1 = x1.replace(rgx, '$1' + ',' + '$2')
+    x1 = x1.replace(rgx, "$1" + "," + "$2");
   }
-  return x1 + x2
+  return x1 + x2;
 }
 
 function strDisplay(str) {
-  return addCommas(str.toString())
+  return addCommas(str.toString());
 }
 
 async function main(scriptName, verbose = true, mock = false, reset = true) {
   if (verbose) {
-    console.log('SCRIPT NAME: ', scriptName)
-    console.log('MOCKS ENABLED: ', mock)
+    console.log("SCRIPT NAME: ", scriptName);
+    console.log("MOCKS ENABLED: ", mock);
   }
 
   if (mock && reset) {
     await network.provider.request({
       method: "hardhat_reset",
-      params: [],
+      params: []
     });
   }
 
-  const accounts = await ethers.getSigners()
-  const account = await accounts[0].getAddress()
+  const accounts = await ethers.getSigners();
+  const account = await accounts[0].getAddress();
   if (verbose) {
-    console.log('Account: ' + account)
-    console.log('---')
+    console.log("Account: " + account);
+    console.log("---");
   }
-  let tx
-  let totalGasUsed = ethers.BigNumber.from('0')
-  let receipt
-  const name = 'Beanstalk'
+  let tx;
+  let totalGasUsed = ethers.BigNumber.from("0");
+  let receipt;
+  const name = "Beanstalk";
 
-
-  async function deployFacets(verbose,
-    facets,
-    libraryNames = [],
-    facetLibraries = {},
-  ) {
-    const instances = []
-    const libraries = {}
+  async function deployFacets(verbose, facets, libraryNames = [], facetLibraries = {}) {
+    const instances = [];
+    const libraries = {};
 
     for (const name of libraryNames) {
-      if (verbose) console.log(`Deploying: ${name}`)
-      let libraryFactory = await ethers.getContractFactory(name)
-      libraryFactory = await libraryFactory.deploy()
-      await libraryFactory.deployed()
-      const receipt = await libraryFactory.deployTransaction.wait()
-      if (verbose) console.log(`${name} deploy gas used: ` + strDisplay(receipt.gasUsed))
-      if (verbose) console.log(`Deployed at ${libraryFactory.address}`)
-      libraries[name] = libraryFactory.address
+      if (verbose) console.log(`Deploying: ${name}`);
+      let libraryFactory = await ethers.getContractFactory(name);
+      libraryFactory = await libraryFactory.deploy();
+      await libraryFactory.deployed();
+      const receipt = await libraryFactory.deployTransaction.wait();
+      if (verbose) console.log(`${name} deploy gas used: ` + strDisplay(receipt.gasUsed));
+      if (verbose) console.log(`Deployed at ${libraryFactory.address}`);
+      libraries[name] = libraryFactory.address;
     }
 
     for (let facet of facets) {
-      let constructorArgs = []
+      let constructorArgs = [];
       if (Array.isArray(facet)) {
-        ;[facet, constructorArgs] = facet
+        [facet, constructorArgs] = facet;
       }
       let factory;
       if (facetLibraries[facet] !== undefined) {
@@ -89,33 +83,33 @@ async function main(scriptName, verbose = true, mock = false, reset = true) {
         }, {});
         factory = await ethers.getContractFactory(facet, {
           libraries: facetLibrary
-        },
-        );
+        });
       } else {
-        factory = await ethers.getContractFactory(facet)
+        factory = await ethers.getContractFactory(facet);
       }
-      const facetInstance = await factory.deploy(...constructorArgs)
-      await facetInstance.deployed()
-      const tx = facetInstance.deployTransaction
-      const receipt = await tx.wait()
-      if (verbose) console.log(`${facet} deploy gas used: ` + strDisplay(receipt.gasUsed))
-      totalGasUsed = totalGasUsed.add(receipt.gasUsed)
-      instances.push(facetInstance)
+      const facetInstance = await factory.deploy(...constructorArgs);
+      await facetInstance.deployed();
+      const tx = facetInstance.deployTransaction;
+      const receipt = await tx.wait();
+      if (verbose) console.log(`${facet} deploy gas used: ` + strDisplay(receipt.gasUsed));
+      totalGasUsed = totalGasUsed.add(receipt.gasUsed);
+      instances.push(facetInstance);
     }
-    return instances
+    return instances;
   }
 
   // A list of public libraries that need to be deployed separately.
   const libraryNames = [
-    'LibGauge', 'LibIncentive', 'LibConvert', 'LibLockedUnderlying', 'LibCurveMinting', 'LibGerminate'
+    'LibGauge', 'LibIncentive', 'LibConvert', 'LibLockedUnderlying', 'LibCurveMinting', 'LibWellMinting', 'LibGerminate'
   ]
 
-  // A mapping of facet to public library names that will be linked to it.
+  // A mapping of facet to public library names that will be linked to i4t.
   const facetLibraries = {
     'SeasonFacet': [
       'LibGauge',
       'LibIncentive',
       'LibLockedUnderlying',
+      'LibWellMinting',
       'LibGerminate'
     ],
     'MockSeasonFacet': [
@@ -123,10 +117,12 @@ async function main(scriptName, verbose = true, mock = false, reset = true) {
       'LibIncentive',
       'LibLockedUnderlying',
       'LibCurveMinting',
+      'LibWellMinting',
       'LibGerminate'
     ],
     'SeasonGettersFacet': [
-      'LibLockedUnderlying'
+      'LibLockedUnderlying',
+      'LibWellMinting',
     ],
     'ConvertFacet': [
       'LibConvert'
@@ -167,6 +163,7 @@ async function main(scriptName, verbose = true, mock = false, reset = true) {
     whitelistFacet,
     metadataFacet,
     gaugePointFacet,
+    tractorFacet,
     siloGettersFacet,
     liquidityWeightFacet
   ] = mock ? await deployFacets(
@@ -196,6 +193,7 @@ async function main(scriptName, verbose = true, mock = false, reset = true) {
       'MockWhitelistFacet',
       'MetadataFacet',
       'GaugePointFacet',
+      'TractorFacet',
       'SiloGettersFacet',
       'LiquidityWeightFacet'
     ],
@@ -228,6 +226,7 @@ async function main(scriptName, verbose = true, mock = false, reset = true) {
       'WhitelistFacet',
       'MetadataFacet',
       'GaugePointFacet',
+      'TractorFacet',
       'SiloGettersFacet',
       'LiquidityWeightFacet'
     ],
@@ -237,25 +236,31 @@ async function main(scriptName, verbose = true, mock = false, reset = true) {
   const initDiamondArg = mock ? 'contracts/mocks/MockInitDiamond.sol:MockInitDiamond' : 'contracts/farm/init/InitDiamond.sol:InitDiamond'
   // eslint-disable-next-line no-unused-vars
 
-  let args = []
+  let args = [];
   if (mock) {
-    await impersonateBean()
-    await impersonatePrice()
+    await impersonateBean();
+    await impersonatePrice();
     if (reset) {
       await impersonateCurve()
       await impersonateWeth()
+
+      // Eth:USDC oracle
       await impersonateEthUsdcUniswap()
       await impersonateEthUsdtUniswap()
+      await impersonateChainlinkAggregator(ETH_USD_CHAINLINK_AGGREGATOR);
+  
+      // WStEth oracle
+      await impersonateWsteth()
+      await impersonateChainlinkAggregator(STETH_ETH_CHAINLINK_PRICE_AGGREGATOR);
+      await impersonateUniswapV3(WSTETH_ETH_UNIV3_01_POOL, WSTETH, WETH, 100)
     }
     await impersonateBean3CrvMetapool()
     await impersonateUnripe()
-    await impersonateFertilizer()
     await impersonateBlockBasefee();
-    await impersonateEthUsdChainlinkAggregator()
   }
 
   const [beanstalkDiamond, diamondCut] = await diamond.deploy({
-    diamondName: 'BeanstalkDiamond',
+    diamondName: "BeanstalkDiamond",
     initDiamond: initDiamondArg,
     facets: [
       ['BDVFacet', bdvFacet],
@@ -282,6 +287,7 @@ async function main(scriptName, verbose = true, mock = false, reset = true) {
       ['WhitelistFacet', whitelistFacet],
       ['MetadataFacet', metadataFacet],
       ['GaugePointFacet', gaugePointFacet],
+      ["TractorFacet", tractorFacet],
       ['SiloGettersFacet', siloGettersFacet],
       ['LiquidityWeightFacet', liquidityWeightFacet]
     ],
@@ -291,23 +297,26 @@ async function main(scriptName, verbose = true, mock = false, reset = true) {
     impersonate: mock && reset
   });
 
-  tx = beanstalkDiamond.deployTransaction
+  tx = beanstalkDiamond.deployTransaction;
   if (!!tx) {
-    receipt = await tx.wait()
-    if (verbose) console.log('Beanstalk diamond deploy gas used: ' + strDisplay(receipt.gasUsed))
-    if (verbose) console.log('Beanstalk diamond cut gas used: ' + strDisplay(diamondCut.gasUsed))
-    totalGasUsed = totalGasUsed.add(receipt.gasUsed).add(diamondCut.gasUsed)
+    receipt = await tx.wait();
+    if (verbose) console.log("Beanstalk diamond deploy gas used: " + strDisplay(receipt.gasUsed));
+    if (verbose) console.log("Beanstalk diamond cut gas used: " + strDisplay(diamondCut.gasUsed));
+    totalGasUsed = totalGasUsed.add(receipt.gasUsed).add(diamondCut.gasUsed);
   }
 
   if (verbose) {
     console.log("--");
-    console.log('Beanstalk diamond address:' + beanstalkDiamond.address)
+    console.log("Beanstalk diamond address:" + beanstalkDiamond.address);
     console.log("--");
   }
 
-  const diamondLoupeFacet = await ethers.getContractAt('DiamondLoupeFacet', beanstalkDiamond.address)
+  const diamondLoupeFacet = await ethers.getContractAt(
+    "DiamondLoupeFacet",
+    beanstalkDiamond.address
+  );
 
-  if (verbose) console.log('Total gas used: ' + strDisplay(totalGasUsed))
+  if (verbose) console.log("Total gas used: " + strDisplay(totalGasUsed));
   return {
     account: account,
     beanstalkDiamond: beanstalkDiamond,
@@ -334,6 +343,7 @@ async function main(scriptName, verbose = true, mock = false, reset = true) {
     unripeFacet,
     metadataFacet,
     gaugePointFacet,
+    tractorFacet,
     siloGettersFacet,
     liquidityWeightFacet
   }
@@ -345,8 +355,8 @@ if (require.main === module) {
   main()
     .then(() => process.exit(0))
     .catch((error) => {
-      console.error(error)
-      process.exit(1)
-    })
+      console.error(error);
+      process.exit(1);
+    });
 }
-exports.deploy = main
+exports.deploy = main;

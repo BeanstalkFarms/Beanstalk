@@ -8,6 +8,7 @@ pragma experimental ABIEncoderV2;
 import "../../beanstalk/silo/ConvertFacet.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
 import {LibConvert} from "../../libraries/Convert/LibConvert.sol";
+import {LibTractor} from "../../libraries/LibTractor.sol";
 
 /**
  * @author Publius
@@ -26,7 +27,7 @@ contract MockConvertFacet is ConvertFacet {
         uint256[] memory amounts,
         uint256 maxTokens
     ) external {
-        LibSilo._mow(msg.sender, token);
+        LibSilo._mow(LibTractor._getUser(), token);
         (uint256 stalkRemoved, uint256 bdvRemoved) = _withdrawTokens(token, stems, amounts, maxTokens);
         
         
@@ -39,7 +40,7 @@ contract MockConvertFacet is ConvertFacet {
         uint256 bdv, 
         uint256 grownStalk
     ) external {
-        LibSilo._mow(msg.sender, token);
+        LibSilo._mow(LibTractor._getUser(), token);
         _depositTokensForConvert(token, amount, bdv, grownStalk);
     }
 
@@ -53,10 +54,10 @@ contract MockConvertFacet is ConvertFacet {
         uint256 toAmount,
         uint256 fromAmount
     ) {
-        IERC20(tokenIn).safeTransferFrom(msg.sender, address(this), amountIn);
+        IERC20(tokenIn).safeTransferFrom(LibTractor._getUser(), address(this), amountIn);
         (toToken, fromToken, toAmount, fromAmount) = LibConvert.convert(
             convertData
         );
-        IERC20(toToken).safeTransfer(msg.sender, toAmount);
+        IERC20(toToken).safeTransfer(LibTractor._getUser(), toAmount);
     }
 }

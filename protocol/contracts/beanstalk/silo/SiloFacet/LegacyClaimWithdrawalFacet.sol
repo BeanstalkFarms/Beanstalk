@@ -8,6 +8,7 @@ pragma experimental ABIEncoderV2;
 import "contracts/beanstalk/ReentrancyGuard.sol";
 import "contracts/libraries/Token/LibTransfer.sol";
 import "contracts/libraries/Silo/LibLegacyTokenSilo.sol";
+import "contracts/libraries/LibTractor.sol";
 
 
 /**
@@ -37,8 +38,8 @@ contract LegacyClaimWithdrawalFacet is ReentrancyGuard {
         uint32 season,
         LibTransfer.To mode
     ) external payable nonReentrant {
-        uint256 amount = LibLegacyTokenSilo._claimWithdrawal(msg.sender, token, season);
-        LibTransfer.sendToken(IERC20(token), amount, msg.sender, mode);
+        uint256 amount = LibLegacyTokenSilo._claimWithdrawal(LibTractor._getUser(), token, season);
+        LibTransfer.sendToken(IERC20(token), amount, LibTractor._getUser(), mode);
     }
 
     /**
@@ -52,8 +53,8 @@ contract LegacyClaimWithdrawalFacet is ReentrancyGuard {
         uint32[] calldata seasons,
         LibTransfer.To mode
     ) external payable nonReentrant {
-        uint256 amount = LibLegacyTokenSilo._claimWithdrawals(msg.sender, token, seasons);
-        LibTransfer.sendToken(IERC20(token), amount, msg.sender, mode);
+        uint256 amount = LibLegacyTokenSilo._claimWithdrawals(LibTractor._getUser(), token, seasons);
+        LibTransfer.sendToken(IERC20(token), amount, LibTractor._getUser(), mode);
     }
 
     /*

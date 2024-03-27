@@ -23,7 +23,7 @@ struct PipeCall {
 // AdvancedPipeCalls support sending Ether in calls.
 // [ PipeCall Type | Send Ether Flag | PipeCall Type data | Ether Value (only if flag == 1)]
 // [ 1 byte        | 1 byte          | n bytes        | 0 or 32 bytes                      ]
-// See LibFunction.useClipboard for more details.
+// See LibClipboard.useClipboard for more details.
 struct AdvancedPipeCall {
     address target;
     bytes callData;

@@ -15,6 +15,7 @@ import {InitWhitelistStatuses} from "contracts/beanstalk/init/InitWhitelistStatu
 import {LibDiamond} from "../libraries/LibDiamond.sol";
 import {LibCases} from "../libraries/LibCases.sol";
 import {LibGauge} from "contracts/libraries/LibGauge.sol";
+import {LibTractor} from "contracts/libraries/LibTractor.sol";
 import {Weather} from "contracts/beanstalk/sun/SeasonFacet/Weather.sol";
 
 /**
@@ -54,6 +55,10 @@ contract MockInitDiamond is InitWhitelist, InitWhitelistStatuses, Weather {
         s.season.stemScaleSeason = uint16(s.season.current);
         s.seedGauge.beanToMaxLpGpPerBdvRatio = 50e18; // 50%
         s.seedGauge.averageGrownStalkPerBdvPerSeason = 3e6;
+
+        LibTractor._resetPublisher();
+        
+        s.u[C.UNRIPE_LP].underlyingToken = C.BEAN_WSTETH_WELL;
 
         emit BeanToMaxLpGpPerBdvRatioChange(s.season.current, type(uint256).max, int80(s.seedGauge.beanToMaxLpGpPerBdvRatio));
         emit LibGauge.UpdateAverageStalkPerBdvPerSeason(s.seedGauge.averageGrownStalkPerBdvPerSeason);

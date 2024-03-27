@@ -13,6 +13,7 @@ import {LibSafeMath32} from "contracts/libraries/LibSafeMath32.sol";
 import {LibGerminate} from "contracts/libraries/Silo/LibGerminate.sol";
 import {LibTokenSilo} from "contracts/libraries/Silo/LibTokenSilo.sol";
 import {LibSilo} from "contracts/libraries/Silo/LibSilo.sol";
+import {LibTractor} from "contracts/libraries/LibTractor.sol";
 import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
 import {SafeCast} from "@openzeppelin/contracts/utils/SafeCast.sol";
 import {LibBytes} from "contracts/libraries/LibBytes.sol";
@@ -92,7 +93,7 @@ contract Silo is ReentrancyGuard {
      * @dev Claims the Grown Stalk for `msg.sender`. Requires token address to mow.
      */
     modifier mowSender(address token) {
-        LibSilo._mow(msg.sender, token);
+        LibSilo._mow(LibTractor._getUser(), token);
         _;
     }
 
@@ -152,7 +153,7 @@ contract Silo is ReentrancyGuard {
      * with an amount of 0.
      */
     function _claimPlenty(address account) internal {
-        // Plenty is earned in the form of the sop token.
+        // Plenty is earned in the form of the non-Bean token in the SOP Well.
         uint256 plenty = s.a[account].sop.plenty;
         IWell well = IWell(s.sopWell);
         IERC20[] memory tokens = well.tokens();

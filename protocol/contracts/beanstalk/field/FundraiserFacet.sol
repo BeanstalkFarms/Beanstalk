@@ -12,6 +12,7 @@ import "../ReentrancyGuard.sol";
 import "contracts/libraries/LibDiamond.sol";
 import "contracts/libraries/LibDibbler.sol";
 import "contracts/libraries/Token/LibTransfer.sol";
+import "contracts/libraries/LibTractor.sol";
 import {C} from "contracts/C.sol";
 
 /**
@@ -118,11 +119,11 @@ contract FundraiserFacet is ReentrancyGuard {
         amount = LibTransfer.receiveToken(
             IERC20(s.fundraisers[id].token),
             amount,
-            msg.sender,
+            LibTractor._getUser(),
             mode
         );
         s.fundraisers[id].remaining = remaining - amount; // Note: SafeMath is redundant here.
-        emit FundFundraiser(msg.sender, id, amount);
+        emit FundFundraiser(LibTractor._getUser(), id, amount);
 
         // If completed, transfer tokens to payee and emit an event
         if (s.fundraisers[id].remaining == 0) {
@@ -141,7 +142,7 @@ contract FundraiserFacet is ReentrancyGuard {
         ); 
 
         // Sow for Pods and return the number of Pods received.
-        return LibDibbler.sowNoSoil(msg.sender, amount, pods);
+        return LibDibbler.sowNoSoil(LibTractor._getUser(), amount, pods);
     }
 
     /**

@@ -30,10 +30,7 @@ describe('Curve Convert', function () {
     this.beanMetapool = await ethers.getContractAt('IMockCurvePool', BEAN_3_CURVE);
     this.bdv = await ethers.getContractAt('BDVFacet', this.diamond.address);
     this.whitelist = await ethers.getContractAt('MockWhitelistFacet', this.diamond.address);
-    await impersonateCurveMetapool(fakeMetapoolAccount.address, 'FAKE');
-    this.fakeMetapool = await ethers.getContractAt('IMockCurvePool', fakeMetapoolAccount.address);
-
-    await impersonateCurveMetapool(fakeMetapoolAccount.address, 'FAKE');
+    await impersonateCurveMetapool(fakeMetapoolAccount.address, 'FAKE', BEAN);
     this.fakeMetapool = await ethers.getContractAt('IMockCurvePool', fakeMetapoolAccount.address);
 
     await this.threeCurve.mint(userAddress, to18('100000'));

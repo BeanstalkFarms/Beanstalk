@@ -11,6 +11,7 @@ import "contracts/interfaces/ICurve.sol";
 import "contracts/libraries/Token/LibTransfer.sol";
 import "contracts/libraries/Token/LibApprove.sol";
 import "contracts/beanstalk/ReentrancyGuard.sol";
+import "contracts/libraries/LibTractor.sol";
 
 /**
  * @author Publius
@@ -43,13 +44,13 @@ contract CurveFacet is ReentrancyGuard {
         (int128 i, int128 j) = getIandJ(fromToken, toToken, pool, registry);
         amountIn = IERC20(fromToken).receiveToken(
             amountIn,
-            msg.sender,
+            LibTractor._getUser(),
             fromMode
         );
         IERC20(fromToken).approveToken(pool, amountIn);
 
         if (toMode == LibTransfer.To.EXTERNAL && isStable(registry)) {
-            ICurvePoolR(pool).exchange(i, j, amountIn, minAmountOut, msg.sender);
+            ICurvePoolR(pool).exchange(i, j, amountIn, minAmountOut, LibTractor._getUser());
         } else {
             uint256 amountOut;
             if (hasNoReturnValue(pool)) {
@@ -61,7 +62,7 @@ contract CurveFacet is ReentrancyGuard {
                 if (isStable(registry)) amountOut = ICurvePool(pool).exchange(i, j, amountIn, minAmountOut);
                 else amountOut = ICurvePoolC(pool).exchange(uint256(i), uint256(j), amountIn, minAmountOut);
             }
-            LibTransfer.sendToken(IERC20(toToken), amountOut, msg.sender, toMode);
+            LibTransfer.sendToken(IERC20(toToken), amountOut, LibTractor._getUser(), toMode);
         }
     }
 
@@ -75,7 +76,7 @@ contract CurveFacet is ReentrancyGuard {
         LibTransfer.To toMode
     ) external payable nonReentrant {
         (int128 i, int128 j) = getUnderlyingIandJ(fromToken, toToken, pool);
-        amountIn = IERC20(fromToken).receiveToken(amountIn, msg.sender, fromMode);
+        amountIn = IERC20(fromToken).receiveToken(amountIn, LibTractor._getUser(), fromMode);
         IERC20(fromToken).approveToken(pool, amountIn);
 
         if (toMode == LibTransfer.To.EXTERNAL) {
@@ -84,7 +85,7 @@ contract CurveFacet is ReentrancyGuard {
                 j,
                 amountIn,
                 minAmountOut,
-                msg.sender
+                LibTractor._getUser()
             );
         } else {
             uint256 amountOut = ICurvePool(pool).exchange_underlying(
@@ -93,7 +94,7 @@ contract CurveFacet is ReentrancyGuard {
                 amountIn,
                 minAmountOut
             );
-            msg.sender.increaseInternalBalance(IERC20(toToken), amountOut);
+            LibTractor._getUser().increaseInternalBalance(IERC20(toToken), amountOut);
         }
     }
 
@@ -111,7 +112,7 @@ contract CurveFacet is ReentrancyGuard {
             if (amounts[i] > 0) {
                 amounts[i] = IERC20(coins[i]).receiveToken(
                     amounts[i],
-                    msg.sender,
+                    LibTractor._getUser(),
                     fromMode
                 );
                 IERC20(coins[i]).approveToken(pool, amounts[i]);
@@ -127,11 +128,11 @@ contract CurveFacet is ReentrancyGuard {
                 minAmountOut
             );
             amountOut = lpToken.balanceOf(address(this)).sub(beforeBalance);
-            LibTransfer.sendToken(lpToken, amountOut, msg.sender, toMode);
+            LibTransfer.sendToken(lpToken, amountOut, LibTractor._getUser(), toMode);
             return;
         }
         address to = toMode == LibTransfer.To.EXTERNAL
-            ? msg.sender
+            ? LibTractor._getUser()
             : address(this);
         if (nCoins == 2) {
             amountOut = ICurvePool2R(pool).add_liquidity(
@@ -153,7 +154,7 @@ contract CurveFacet is ReentrancyGuard {
             );
         }
         if (toMode == LibTransfer.To.INTERNAL)
-            msg.sender.increaseInternalBalance(IERC20(pool), amountOut);
+            LibTractor._getUser().increaseInternalBalance(IERC20(pool), amountOut);
     }
 
     function removeLiquidity(
@@ -165,7 +166,7 @@ contract CurveFacet is ReentrancyGuard {
         LibTransfer.To toMode
     ) external payable nonReentrant {
         IERC20 token = tokenForPool(pool);
-        amountIn = token.receiveToken(amountIn, msg.sender, fromMode);
+        amountIn = token.receiveToken(amountIn, LibTractor._getUser(), fromMode);
 
         uint256 nCoins = minAmountsOut.length;
 
@@ -183,13 +184,13 @@ contract CurveFacet is ReentrancyGuard {
             );
             for (uint256 i; i < nCoins; ++i) {
                 amountOut = IERC20(coins[i]).balanceOf(address(this)).sub(beforeAmounts[i]);
-                if (amountOut > 0) LibTransfer.sendToken(IERC20(coins[i]), amountOut, msg.sender, toMode);
+                if (amountOut > 0) LibTransfer.sendToken(IERC20(coins[i]), amountOut, LibTractor._getUser(), toMode);
             }
             return;
         }
 
         address to = toMode == LibTransfer.To.EXTERNAL
-            ? msg.sender
+            ? LibTractor._getUser()
             : address(this);
         uint256[] memory amounts = new uint256[](nCoins);
 
@@ -224,7 +225,7 @@ contract CurveFacet is ReentrancyGuard {
             address[8] memory coins = getCoins(pool, registry);
             for (uint256 i; i < nCoins; ++i) {
                 if (amounts[i] > 0) {
-                    msg.sender.increaseInternalBalance(
+                    LibTractor._getUser().increaseInternalBalance(
                         IERC20(coins[i]),
                         amounts[i]
                     );
@@ -242,7 +243,7 @@ function removeLiquidityImbalance(
     LibTransfer.To toMode
 ) external payable nonReentrant {
         IERC20 token = tokenForPool(pool);
-        maxAmountIn = token.receiveToken(maxAmountIn, msg.sender, fromMode);
+        maxAmountIn = token.receiveToken(maxAmountIn, LibTractor._getUser(), fromMode);
         uint256 nCoins = amountsOut.length;
         uint256 amountIn;
 
@@ -260,7 +261,7 @@ function removeLiquidityImbalance(
             );
             for (uint256 i; i < nCoins; ++i) {
                 if (amountsOut[i] > 0) {
-                    LibTransfer.sendToken(IERC20(coins[i]), amountsOut[i], msg.sender, toMode);
+                    LibTransfer.sendToken(IERC20(coins[i]), amountsOut[i], LibTractor._getUser(), toMode);
                 }
             }
             amountIn = beforeBalance.sub(lpToken.balanceOf(address(this)));
@@ -269,7 +270,7 @@ function removeLiquidityImbalance(
         }
 
         address to = toMode == LibTransfer.To.EXTERNAL
-            ? msg.sender
+            ? LibTractor._getUser()
             : address(this);
         if (nCoins == 2)
             amountIn = ICurvePool2R(pool).remove_liquidity_imbalance(
@@ -294,7 +295,7 @@ function removeLiquidityImbalance(
             address[8] memory coins = getCoins(pool, registry);
             for (uint256 i; i < nCoins; ++i) {
                 if (amountsOut[i] > 0) {
-                    msg.sender.increaseInternalBalance(
+                    LibTractor._getUser().increaseInternalBalance(
                         IERC20(coins[i]),
                         amountsOut[i]
                     );
@@ -313,7 +314,7 @@ function removeLiquidityImbalance(
         LibTransfer.To toMode
     ) external payable nonReentrant {
         IERC20 fromToken = tokenForPool(pool);
-        amountIn = fromToken.receiveToken(amountIn, msg.sender, fromMode);
+        amountIn = fromToken.receiveToken(amountIn, LibTractor._getUser(), fromMode);
         int128 i = getI(toToken, pool, registry);
 
         if (hasNoReturnValue(pool)) {
@@ -332,7 +333,7 @@ function removeLiquidityImbalance(
                 );
             }
             uint256 amountOut = IERC20(toToken).balanceOf(address(this)).sub(beforeBalance);
-            LibTransfer.sendToken(IERC20(toToken), amountOut, msg.sender, toMode);
+            LibTransfer.sendToken(IERC20(toToken), amountOut, LibTractor._getUser(), toMode);
             return;
         }
 
@@ -341,7 +342,7 @@ function removeLiquidityImbalance(
                 amountIn,
                 i,
                 minAmountOut,
-                msg.sender
+                LibTractor._getUser()
             );
         } else {
             uint256 amountOut = ICurvePool(pool).remove_liquidity_one_coin(
@@ -349,7 +350,7 @@ function removeLiquidityImbalance(
                 i,
                 minAmountOut
             );
-            msg.sender.increaseInternalBalance(IERC20(toToken), amountOut);
+            LibTractor._getUser().increaseInternalBalance(IERC20(toToken), amountOut);
         }
     }
 
@@ -443,7 +444,7 @@ function removeLiquidityImbalance(
                     ? LibTransfer.To.EXTERNAL
                     : LibTransfer.To.INTERNAL
             );
-            token.sendToken(maxAmountIn - amountIn, msg.sender, refundMode);
+            token.sendToken(maxAmountIn - amountIn, LibTractor._getUser(), refundMode);
         }
     }
 }

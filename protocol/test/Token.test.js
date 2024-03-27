@@ -2,6 +2,7 @@ const { to18, toBean } = require('./utils/helpers.js')
 const { EXTERNAL, INTERNAL, INTERNAL_EXTERNAL, INTERNAL_TOLERANT } = require('./utils/balances.js')
 const { WETH, BEANSTALK } = require('./utils/constants');
 const { signERC2612Permit } = require("eth-permit");
+const { getWeth } = require('../utils/contracts.js');
 const { expect } = require('chai');
 const { deploy } = require('../scripts/deploy.js')
 const { takeSnapshot, revertToSnapshot } = require("./utils/snapshot");
@@ -35,7 +36,7 @@ describe('Token', function () {
         await this.token2.connect(this.user).mint(this.user.address, '1000')
         await this.token2.connect(this.user).approve(this.tokenFacet.address, to18('1000000000000000'))
 
-        this.weth = await ethers.getContractAt('contracts/interfaces/IWETH.sol:IWETH', WETH)
+        this.weth = await getWeth()
         await this.weth.connect(this.user).approve(this.tokenFacet.address, to18('1000000000000000'))
 
         const MockERC1155Token = await ethers.getContractFactory("MockERC1155");
