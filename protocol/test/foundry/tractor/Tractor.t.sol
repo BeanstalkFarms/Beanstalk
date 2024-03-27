@@ -16,7 +16,6 @@ import {IDiamondCut} from "contracts/interfaces/IDiamondCut.sol";
 import {TokenFacet} from "contracts/beanstalk/farm/TokenFacet.sol";
 import {TractorFacet} from "contracts/beanstalk/farm/TractorFacet.sol";
 import {JunctionFacet} from "contracts/beanstalk/junction/JunctionFacet.sol";
-import {InitTractor} from "contracts/beanstalk/init/InitTractor.sol";
 import {TestHelper} from "test/foundry/utils/TestHelper.sol";
 import {LibTransfer} from "contracts/libraries/Token/LibTransfer.sol";
 import {LibClipboard} from "./LibClipboard.sol";
@@ -54,13 +53,12 @@ contract TractorTest is TestHelper {
         PUBLISHER = vm.addr(PUBLISHER_PRIVATE_KEY);
 
         // Cut and init TractorFacet.
-        InitTractor initTractor = new InitTractor();
         IDiamondCut.FacetCut[] memory cut = new IDiamondCut.FacetCut[](1);
         cut[0] = _cut("TractorFacet", address(new TractorFacet()));
         vm.prank(BEANSTALK_OWNER); // LibAppStorage.diamondStorage().contractOwner
         IDiamondCut(BEANSTALK).diamondCut(
             cut,
-            address(initTractor), // address of contract with init() function
+            address(0), // address of contract with init() function
             abi.encodeWithSignature("init()")
         );
         tractorFacet = TractorFacet(BEANSTALK);

@@ -36,7 +36,7 @@ library LibTractor {
         // Publisher Address => counter id => counter value.
         mapping(address => mapping(bytes32 => uint256)) blueprintCounters;
         // Publisher of current operations. Set to address(1) when no active publisher.
-        address activePublisher;
+        address payable activePublisher;
     }
 
     // Blueprint stores blueprint related values
@@ -81,9 +81,9 @@ library LibTractor {
 
     /// @notice set blueprint publisher address
     /// @param publisher blueprint publisher address
-    function _setPublisher(address publisher) internal {
+    function _setPublisher(address payable publisher) internal {
         require(
-            _tractorStorage().activePublisher == address(1),
+            uint160(bytes20(_tractorStorage().activePublisher)) <= 1,
             "LibTractor: publisher already set"
         );
         _tractorStorage().activePublisher = publisher;
@@ -96,15 +96,15 @@ library LibTractor {
 
     /// @notice return current activePublisher address
     /// @return publisher current activePublisher address
-    function _getActivePublisher() internal view returns (address) {
+    function _getActivePublisher() internal view returns (address payable) {
         return _tractorStorage().activePublisher;
     }
 
     /// @notice return current activePublisher address or msg.sender if no active blueprint
     /// @return user to take actions on behalf of
-    function _getUser() internal view returns (address user) {
+    function _getUser() internal view returns (address payable user) {
         user = _getActivePublisher();
-        if (user == address(1)) {
+        if (uint160(bytes20(user)) <= 1) {
             user = msg.sender;
         }
     }

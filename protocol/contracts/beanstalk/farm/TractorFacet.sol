@@ -60,7 +60,7 @@ contract TractorFacet {
             "TractorFacet: blueprint is not active"
         );
         LibTractor._incrementBlueprintNonce(requisition.blueprintHash);
-        LibTractor._setPublisher(requisition.blueprint.publisher);
+        LibTractor._setPublisher(payable(requisition.blueprint.publisher));
         _;
         LibTractor._resetPublisher();
     }

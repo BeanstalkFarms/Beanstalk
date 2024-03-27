@@ -64,11 +64,10 @@ const siloGettersFacetInterface = async () => (await ethers.getContractFactory("
 // const convertFacetInterface = async () => (await ethers.getContractFactory("ConvertFacet")).interface;
 const junctionInterface = async () => (await ethers.getContractFactory("Junction")).interface;
 const pipelineInterface = async () => (await ethers.getContractFactory("Pipeline")).interface;
-const tractorFacetInterface = async () =>
-  (await ethers.getContractFactory("TractorFacet")).interface;
+const tractorFacetInterface = async () => (await ethers.getContractFactory("TractorFacet")).interface;
 
 // Need to actually execute the logic in Drafter pure functions.
-// Are these making actual rpc calls?
+// TODO replace Drafter contract with TS SDK drafter.
 const drafter = async () => await ethers.getContractAt("Drafter", drafterAddr);
 
 const signRequisition = async (requisition, signer) => {
