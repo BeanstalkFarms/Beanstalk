@@ -4,7 +4,6 @@ const { getAltBeanstalk, getBean } = require('../utils/contracts.js');
 const { to6 } = require('./utils/helpers.js');
 const { takeSnapshot, revertToSnapshot } = require("./utils/snapshot.js");
 const { toBN } = require('../utils/helpers.js');
-const { setEthUsdPrice } = require('../utils/oracle.js');
 const { ETH_USD_CHAINLINK_AGGREGATOR } = require('./utils/constants.js');
 
 let user, user2, owner;

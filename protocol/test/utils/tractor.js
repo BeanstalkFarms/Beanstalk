@@ -60,6 +60,7 @@ const convertFacetInterface = new ethers.utils.Interface([
 const farmFacetInterface = async () => (await ethers.getContractFactory("FarmFacet")).interface;
 const tokenFacetInterface = async () => (await ethers.getContractFactory("TokenFacet")).interface;
 const siloFacetInterface = async () => (await ethers.getContractFactory("SiloFacet")).interface;
+const siloGettersFacetInterface = async () => (await ethers.getContractFactory("SiloGettersFacet")).interface;
 // const convertFacetInterface = async () => (await ethers.getContractFactory("ConvertFacet")).interface;
 const junctionInterface = async () => (await ethers.getContractFactory("Junction")).interface;
 const pipelineInterface = async () => (await ethers.getContractFactory("Pipeline")).interface;
@@ -160,7 +161,7 @@ const draftBalanceOfStalk = async (callNumber) => {
   let tmpAdvancedFarmCalls = [];
   let tmpOperatorPasteInstrs = [];
   tmpAdvancedFarmCalls.push({
-    callData: (await siloFacetInterface()).encodeFunctionData("balanceOfStalk", [ZERO_ADDRESS]),
+    callData: (await siloGettersFacetInterface()).encodeFunctionData("balanceOfStalk", [ZERO_ADDRESS]),
     clipboard: ethers.utils.hexlify("0x000000")
   });
   tmpOperatorPasteInstrs.push(
@@ -497,7 +498,7 @@ const draftConvertUrBeanToUrLP = async (tip, minOutLpPerBean) => {
 
   // Call[0] - Junction get deposit ID.
   advancedFarmCalls.push({
-    callData: (await siloFacetInterface()).encodeFunctionData("getDepositId", [
+    callData: (await siloGettersFacetInterface()).encodeFunctionData("getDepositId", [
       UNRIPE_BEAN,
       0 // stem
     ]),
@@ -513,7 +514,7 @@ const draftConvertUrBeanToUrLP = async (tip, minOutLpPerBean) => {
 
   // Call[1] - Junction get deposit balance in Beans.
   advancedFarmCalls.push({
-    callData: (await siloFacetInterface()).encodeFunctionData("balanceOf", [ZERO_ADDRESS, TO_FILL]),
+    callData: (await siloGettersFacetInterface()).encodeFunctionData("balanceOf", [ZERO_ADDRESS, TO_FILL]),
     clipboard: await drafter().then(
       async (drafter) =>
         await drafter.encodeClipboard(0, [
@@ -690,7 +691,7 @@ const draftConvert = async (tip, minUrLpPerUrBeanRatio, minUrBeanPerUrLpRatio) =
 
   // Call[2] - Get deposit ID.
   advancedFarmCalls.push({
-    callData: (await siloFacetInterface()).encodeFunctionData("getDepositId", [
+    callData: (await siloGettersFacetInterface()).encodeFunctionData("getDepositId", [
       ZERO_ADDRESS,
       TO_FILL // stem
     ]),
@@ -716,7 +717,7 @@ const draftConvert = async (tip, minUrLpPerUrBeanRatio, minUrBeanPerUrLpRatio) =
 
   // Call[3] - Get deposit amount.
   advancedFarmCalls.push({
-    callData: (await siloFacetInterface()).encodeFunctionData("balanceOf", [ZERO_ADDRESS, TO_FILL]),
+    callData: (await siloGettersFacetInterface()).encodeFunctionData("balanceOf", [ZERO_ADDRESS, TO_FILL]),
     clipboard: await drafter().then(
       async (drafter) =>
         await drafter.encodeClipboard(0, [
