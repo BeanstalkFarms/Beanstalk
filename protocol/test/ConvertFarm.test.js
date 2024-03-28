@@ -45,7 +45,8 @@ describe('Farm Convert', function () {
     await this.wellToken.connect(owner).approve(this.beanstalk.address, ethers.constants.MaxUint256)
     await this.bean.connect(owner).approve(this.beanstalk.address, ethers.constants.MaxUint256)
 
-    await setEthUsdChainlinkPrice('999.998018')
+    await setEthUsdChainlinkPrice('1000.50')
+    // await setEthUsdChainlinkPrice('999.998018')
     await setEthUsdcPrice('1000')
     await setEthUsdtPrice('1000')
 
@@ -54,7 +55,7 @@ describe('Farm Convert', function () {
       this.well,
       [to6('1000000'), to18('1000')]
     );
-
+    // Not sure why this setReserves has to run twice, without it a "Whitelist: Invalid BDV selector" happens
     await setReserves(
       owner,
       this.well,
@@ -112,7 +113,7 @@ describe('Farm Convert', function () {
     });
 
     describe('basic convert', async function () {
-      it('does the most basic possible convert Bean to LP', async function () {
+      it('does the most basic possible convert Bean to LP in direction of peg', async function () {
 
         await this.silo.connect(user).deposit(this.bean.address, toBean('200'), EXTERNAL);
         //user needs to approve bean to well
@@ -181,7 +182,8 @@ describe('Farm Convert', function () {
         return depositedBdv;
       }
 
-      it('does the most basic possible convert LP to Bean', async function () {
+      it('does the most basic possible convert LP to Bean in direction of peg', async function () {
+        await setEthUsdChainlinkPrice('999.998018') // adjust deltaB
 
         //first deposit 200 bean into bean:eth well
         await this.bean.connect(user).approve(this.well.address, ethers.constants.MaxUint256);
@@ -459,6 +461,16 @@ describe('Farm Convert', function () {
         const convertedResult = resultingGrownStalks.map(value => value.toString());
         console.log('convertedResult: ', convertedResult);
         expect(convertedResult).to.deep.equal([to6('50').toString(), to6('25').toString()]);
+      });
+
+      it('two grown stalk 1/4 penalty but no actual grown stalk', async function () {
+        const bdvsRemoved = [to6('50'), to6('50')];
+        const grownStalks = [to6('0'), to6('0')];
+        const penalty = to6('25');
+        const resultingGrownStalks =  await this.convert.applyPenaltyToGrownStalks(penalty, bdvsRemoved, grownStalks);
+        const convertedResult = resultingGrownStalks.map(value => value.toString());
+        console.log('convertedResult: ', convertedResult);
+        expect(convertedResult).to.deep.equal([to6('0').toString(), to6('0').toString()]);
       });
     });
 

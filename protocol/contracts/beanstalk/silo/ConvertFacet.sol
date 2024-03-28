@@ -88,7 +88,7 @@ contract ConvertFacet is ReentrancyGuard {
     struct PipelineConvertData {
         uint256[] bdvsRemoved;
         uint256[] grownStalks;
-        int256 combinedDeltaBinsta;
+        int256 startingDeltaB;
         uint256 amountOut;
         uint256 percentStalkPenalty; // 0 means no penalty, 1 means 100% penalty
     }
@@ -215,9 +215,9 @@ contract ConvertFacet is ReentrancyGuard {
         );
 
         // storePoolDeltaB(inputToken, outputToken);
-        pipeData.combinedDeltaBinsta = getCombinedDeltaBForTokens(inputToken, outputToken);
-        console.log('before updatedCombinedDeltaB:');
-        console.logInt(pipeData.combinedDeltaBinsta);
+        pipeData.startingDeltaB = getCombinedDeltaBForTokens(inputToken, outputToken);
+        console.log('startingDeltaB:');
+        console.logInt(pipeData.startingDeltaB);
 
 
         IERC20(inputToken).transfer(PIPELINE, totalAmountIn);
@@ -236,12 +236,12 @@ contract ConvertFacet is ReentrancyGuard {
 
         //stalk bonus/penalty will be applied here
 
-        pipeData.combinedDeltaBinsta = pipeData.combinedDeltaBinsta + getCombinedDeltaBForTokens(inputToken, outputToken);
-        console.log('after updatedCombinedDeltaB:');
-        console.logInt(pipeData.combinedDeltaBinsta);
+        // pipeData.changeInDeltaB = getCombinedDeltaBForTokens(inputToken, outputToken).sub(pipeData.changeInDeltaB);
+        // console.log('after changeInDeltaB:');
+        // console.logInt(pipeData.changeInDeltaB);
 
-        uint256 stalkPenaltyBdv = _calculateStalkPenalty(pipeData.combinedDeltaBinsta, getCombinedDeltaBForTokens(inputToken, outputToken), pipeData.bdvsRemoved);
-
+        uint256 stalkPenaltyBdv = _calculateStalkPenalty(pipeData.startingDeltaB, getCombinedDeltaBForTokens(inputToken, outputToken), pipeData.bdvsRemoved);
+        console.log('stalkPenaltyBdv: ', stalkPenaltyBdv);
         pipeData.grownStalks = _applyPenaltyToGrownStalks(stalkPenaltyBdv, pipeData.bdvsRemoved, pipeData.grownStalks);
 
         // Convert event emitted within this function
@@ -302,6 +302,13 @@ contract ConvertFacet is ReentrancyGuard {
             bdvConverted = bdvConverted.add(bdvsRemoved[i]);
         }
 
+
+        console.log('beforeDeltaB: ');
+        console.logInt(beforeDeltaB);
+        console.log('afterDeltaB: ');
+        console.logInt(afterDeltaB);
+        console.log('bdvConverted: ', bdvConverted);
+
         // Check if the signs of beforeDeltaB and afterDeltaB are different,
         // indicating that deltaB has crossed zero
         // if (beforeDeltaB.mul(afterDeltaB) < 0) {
@@ -317,11 +324,6 @@ contract ConvertFacet is ReentrancyGuard {
                 return 0; //perfectly to peg, all good
             }
 
-            console.log('beforeDeltaB: ');
-            console.logInt(beforeDeltaB);
-            console.log('afterDeltaB: ');
-            console.logInt(afterDeltaB);
-            console.log('bdvConverted: ', bdvConverted);
 
 
             // Calculate how far past peg we went - so actually this is just abs of new deltaB
@@ -357,7 +359,7 @@ contract ConvertFacet is ReentrancyGuard {
         returns (int256 combinedDeltaBinsta) {
         //get deltaB of input/output tokens for comparison later
         // combinedDeltaBtwa = getDeltaBIfNotBeanInsta(inputToken) + getDeltaBIfNotBeanInsta(outputToken);
-        combinedDeltaBinsta = getDeltaBIfNotBeanInsta(inputToken) + getDeltaBIfNotBeanInsta(outputToken);
+        combinedDeltaBinsta = getDeltaBIfNotBeanInsta(inputToken).add(getDeltaBIfNotBeanInsta(outputToken));
         console.log('combinedDeltaBinsta:');
         console.logInt(combinedDeltaBinsta);
     }
@@ -372,11 +374,13 @@ contract ConvertFacet is ReentrancyGuard {
     // }
 
     function getDeltaBIfNotBeanInsta(address token) internal view returns (int256 instDeltaB) {
-        // console.log('getDeltaBIfNotBean token: ', token);
+        console.log('getDeltaBIfNotBean token: ', token);
         if (token == address(C.bean())) {
             return 0;
         }
-        (instDeltaB)  = LibWellMinting.instantaneousDeltaBForConvert(token);
+        instDeltaB = LibWellMinting.instantaneousDeltaBForConvert(token);
+        console.log('instDeltaB: ');
+        console.logInt(instDeltaB);
         return instDeltaB;
     }
 

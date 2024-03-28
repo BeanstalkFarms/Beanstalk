@@ -103,19 +103,19 @@ library LibTokenSilo {
         uint256 bdv,
         LibGerminate.Germinate germ
     ) internal {
-        console.log('incrementTotalGerminating');
-        console.log('token: ', token);
-        console.log('amount: ', amount);
-        console.log('bdv: ', bdv);
+        // console.log('incrementTotalGerminating');
+        // console.log('token: ', token);
+        // console.log('amount: ', amount);
+        // console.log('bdv: ', bdv);
         AppStorage storage s = LibAppStorage.diamondStorage();
         Storage.TotalGerminating storage germinate;
 
         // verify germ is valid
         if (germ == LibGerminate.Germinate.ODD) {
-            console.log('germinate is odd');
+            // console.log('germinate is odd');
             germinate = s.oddGerminating;
         } else if (germ == LibGerminate.Germinate.EVEN) {
-            console.log('germinate is even');
+            // console.log('germinate is even');
             germinate = s.evenGerminating;
         } else {
             revert("invalid germinationMode"); // should not ever get here
@@ -128,8 +128,8 @@ library LibTokenSilo {
         germinate.deposited[token].bdv = germinate.deposited[token].bdv.add(bdv.toUint128());
 
 
-        console.log('germinate.deposited[token].amount', germinate.deposited[token].amount);
-        console.log('germinate.deposited[token].bdv', germinate.deposited[token].bdv);
+        // console.log('germinate.deposited[token].amount', germinate.deposited[token].amount);
+        // console.log('germinate.deposited[token].bdv', germinate.deposited[token].bdv);
 
         // emit event.
         emit LibGerminate.TotalGerminatingBalanceChanged(
@@ -359,13 +359,13 @@ library LibTokenSilo {
                 amount // token amount
             );
         }
-        console.log('addDepositToAccount emit AddDeposit');
-        console.log('addDepositToAccount account: ', account);
-        console.log('addDepositToAccount token: ', token);
-        console.log('addDepositToAccount stem: ');
-        console.logInt(stem);
-        console.log('addDepositToAccount amount: ', amount);
-        console.log('addDepositToAccount bdv: ', bdv);
+        // console.log('addDepositToAccount emit AddDeposit');
+        // console.log('addDepositToAccount account: ', account);
+        // console.log('addDepositToAccount token: ', token);
+        // console.log('addDepositToAccount stem: ');
+        // console.logInt(stem);
+        // console.log('addDepositToAccount amount: ', amount);
+        // console.log('addDepositToAccount bdv: ', bdv);
         emit AddDeposit(account, token, stem, amount, bdv);
     }
 
@@ -395,13 +395,13 @@ library LibTokenSilo {
         int96 stem,
         uint256 amount
     ) internal returns (uint256 crateBDV) {
-        console.log('removeDepositFromAccount account: ', account);
-        console.log('removeDepositFromAccount token: ', token);
 
         AppStorage storage s = LibAppStorage.diamondStorage();
         uint256 depositId = LibBytes.packAddressAndStem(token, stem);
 
-        console.log('depositId: ', depositId);
+        // console.log('removeDepositFromAccount account: ', account);
+        // console.log('removeDepositFromAccount token: ', token);
+        // console.log('depositId: ', depositId);
 
         uint256 crateAmount = s.a[account].deposits[depositId].amount;
         crateBDV = s.a[account].deposits[depositId].bdv;
@@ -421,8 +421,8 @@ library LibTokenSilo {
             }
         }
 
-        console.log('removeDepositFromAccount amount: ', amount);
-        console.log('removeDepositFromAccount crateAmount: ', crateAmount);
+        // console.log('removeDepositFromAccount amount: ', amount);
+        // console.log('removeDepositFromAccount crateAmount: ', crateAmount);
 
 
         require(amount <= crateAmount, "Silo: Crate balance too low.");
