@@ -121,8 +121,11 @@ contract BasinDeployer is Utils {
         DeployData[] memory wellImplmentationData,
         bool verbose
     ) internal {
-        // deploy Aquifier
-        deployCodeTo("Aquifer.sol", aquiferAddress);
+        // deploy Aquifier.
+        deployCodeTo(
+            "./node_modules/@beanstalk/wells/out/Aquifer.sol/Aquifer.json",
+            aquiferAddress
+        );
         if (verbose) console.log("Aquifer Deployed at:", aquiferAddress);
         aquifer = aquiferAddress;
 
