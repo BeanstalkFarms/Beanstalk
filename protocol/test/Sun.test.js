@@ -90,11 +90,10 @@ describe('Sun', function () {
     await revertToSnapshot(snapshotId)
   })
 
-  it("When deltaB < 0 it sets the soil to be the min of -twaDeltaB and -instantaneous deltaB", async function () {
-    // go fo forward 1800 blocks
+  it("When deltaB < 0 it sets the soil to be the min of -twaDeltaB and -instantaneous deltaB  (-twaDeltaB < -instDeltaB)", async function () {
+    // go forward 1800 blocks
     await advanceTime(1800)
     // set reserves to 2M Beans and 1000 Eth
-    // await this.well.setReserves([to6('2000000'), to18('1000')])
     await await this.well.setReserves([to6('2000000'), to18('1000')]);
     await await this.well.setReserves([to6('2000000'), to18('1000')]);
     // go forward 1800 blocks
@@ -113,8 +112,30 @@ describe('Sun', function () {
     await expect(await this.field.totalSoil()).to.be.equal('100000000');
   })
 
+  it("When deltaB < 0 it sets the soil to be the min of -twaDeltaB and -instantaneous deltaB (-twaDeltaB > -instDeltaB)", async function () {
+    // go forward 1800 blocks
+    await advanceTime(1800)
+    // set reserves to 2M Beans and 1000 Eth
+    await await this.well.setReserves([to6('2000000'), to18('1000')]);
+    await await this.well.setReserves([to6('2000000'), to18('1000')]);
+    // go forward 1800 blocks
+    await advanceTime(1800)
+    // send 0 eth to beanstalk
+    await user.sendTransaction({
+      to: this.diamond.address,
+      value: 0
+    })
 
-  it("When deltaB < 0 it sets the correct soil if the instantanious deltaB oracle fails", async function () {
+    // twaDeltaB = -100000000000000000
+    // instantaneousDeltaB = -585786437627
+                                            // twaDeltaB, case ID
+    this.result = await this.season.sunSunrise('-100000000000000000', 8);
+    await expect(this.result).to.emit(this.season, 'Soil').withArgs(3, '100000000000000000');
+    await expect(await this.field.totalSoil()).to.be.equal('100000000000000000');
+  })
+
+
+  it("When deltaB < 0 it sets the correct soil if the instantaneous deltaB oracle fails", async function () {
     // go fo forward 1800 blocks
     await advanceTime(1800)
     // set reserves to 1 Bean and 1 Eth
