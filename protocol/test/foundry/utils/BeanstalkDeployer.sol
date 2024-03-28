@@ -11,6 +11,7 @@ import {Diamond} from "contracts/beanstalk/Diamond.sol";
 import {IDiamondCut} from "contracts/interfaces/IDiamondCut.sol";
 import {MockInitDiamond} from "contracts/mocks/newMockInitDiamond.sol";
 import {InitDiamond} from "contracts/mocks/newInitDiamond.sol";
+import {DiamondLoupeFacet} from "contracts/beanstalk/diamond/DiamondLoupeFacet.sol";
 
 /// Beanstalk Contracts w/external libraries.
 import {UnripeFacet, MockUnripeFacet} from "contracts/mocks/mockFacets/MockUnripeFacet.sol";
@@ -146,6 +147,47 @@ contract BeanstalkDeployer is Utils {
         if(verbose) console.log("Diamond deployed at: ", address(d));
     }
 
+    /**
+     * @notice upgrades a diamond contract with new facets.
+     * @param diamondAddress the address of the diamond contract.
+     * @param newFacetNames the names of the new facets. Used to generate selectors.
+     * @param newFacetAddresses the addresses of the new facets. 
+     * @param initAddress the address of the init diamond contract.
+     * @param selectorsToRemove the selectors to remove.
+     * .
+     * @dev the hardhat deploy script should be used when deploying to mainnet. 
+     * This is used in the scope of testing.
+     */
+    function upgradeWithNewFacets(
+        address diamondAddress,
+        address diamondOwner,
+        string[] memory newFacetNames,
+        address[] memory newFacetAddresses,
+        address initAddress,
+        bytes memory initFunctionCall,
+        bytes4[] memory selectorsToRemove
+    ) internal {
+        vm.startPrank(diamondOwner);
+
+        // create facet cuts
+        IDiamondCut.FacetCut[] memory cut = new IDiamondCut.FacetCut[](newFacetNames.length + 1);
+        
+        // generate cut for new facets:
+        cut = _multiCutWithSelectorRemovals(
+            newFacetNames, 
+            newFacetAddresses,
+            selectorsToRemove
+        );
+    
+        // call diamondcut
+        IDiamondCut(diamondAddress).diamondCut(
+            cut,
+            initAddress,
+            initFunctionCall
+        );
+        vm.stopPrank();
+    }
+
     //////////////////////// Deploy /////////////////////////
 
     /**
@@ -173,6 +215,31 @@ contract BeanstalkDeployer is Utils {
                 action: IDiamondCut.FacetCutAction.Add,
                 functionSelectors: functionSelectorsArray[i]
             });
+        }
+    }
+
+    /**
+     * @dev assumes selectors that are removed are grouped by facets.
+     */
+    function _multiCutWithSelectorRemovals(
+        string[] memory _facetNames,
+        address[] memory _facetAddresses,
+        bytes4[] memory _selectorsToRemove
+    ) internal returns (IDiamondCut.FacetCut[] memory cutArray) {
+        // get inital cutArray.
+        cutArray = _multiCut(_facetNames, _facetAddresses);
+
+        // generate cuts for selectors to remove.
+        if(_selectorsToRemove.length != 0) {
+            assembly {
+                mstore(cutArray, add(mload(cutArray), 1))
+            }
+
+            cutArray[cutArray.length - 1] = IDiamondCut.FacetCut(
+                address(0),
+                IDiamondCut.FacetCutAction.Remove,
+                _selectorsToRemove
+            ); 
         }
     }
 
