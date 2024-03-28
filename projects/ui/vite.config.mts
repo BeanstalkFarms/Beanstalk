@@ -62,7 +62,7 @@ const CSP = buildCSP({
     'https://cf-ipfs.com/', // Gov proposal images,
     'https://*.ipfs.cf-ipfs.com/',
   ],
-  'frame-src': ['https://verify.walletconnect.com/'], // for walletconnect
+  'frame-src': ['https://verify.walletconnect.com/', 'https://verify.walletconnect.org'], // for walletconnect
 });
 
 // @ts-ignore

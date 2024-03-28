@@ -61,6 +61,6 @@ export function useEthersSigner({ chainId }: { chainId?: number } = {}) {
   return useMemo(
     () => (client ? clientToSigner(client) : undefined),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [chainId]
+    [chainId, client]
   );
 }
