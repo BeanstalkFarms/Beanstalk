@@ -93,56 +93,71 @@ const draftPipelineApprovals = async () => {
     return advancedFarmCalls;
 }
 
-const draftConvertBeanToBeanEthWell = async (amountOfBean) => {
+  const draftConvertBeanToBeanEthWell = async (amountOfBean) => {
     this.well = await ethers.getContractAt("IWell", BEAN_ETH_WELL);
     this.bean = await ethers.getContractAt('MockToken', BEAN);
-    
-    let advancedFarmCalls = [];
+    this.beanstalk = await getBeanstalk(BEANSTALK);
 
-    //approve pipeline to spend beans to bean:eth well
-    advancedFarmCalls.push({
-        callData: await wrapExternalCall(
-            BEAN,
-            this.bean.interface.encodeFunctionData("approve", [BEAN_ETH_WELL, ethers.constants.MaxUint256])
-        ),
-        clipboard: ethers.utils.hexlify("0x000000")
-    });
+    // no data clipboard
+    noData = encodeAdvancedData(0)
 
-    advancedFarmCalls.push({
-        callData: await wrapExternalCall(
-            BEAN_ETH_WELL,
-            this.well.interface.encodeFunctionData("addLiquidity", [[amountOfBean, to18('0')], ethers.constants.Zero, PIPELINE, ethers.constants.MaxUint256])
-        ),
-        clipboard: ethers.utils.hexlify("0x000000")
-    });
+    approveEncoded = this.bean.interface.encodeFunctionData(
+        "approve", 
+        [BEAN_ETH_WELL, ethers.constants.MaxUint256]
+    );
+
+    addLiquidityEncoded = this.well.interface.encodeFunctionData(
+        "addLiquidity", 
+        [[amountOfBean, to18('0')], ethers.constants.Zero, PIPELINE, ethers.constants.MaxUint256]
+    );
+
+    pipe0 = [this.bean.address, approveEncoded, noData]
+    pipe1 = [this.well.address, addLiquidityEncoded, noData]
+
+    advancedFarm = await this.beanstalk.interface.encodeFunctionData(
+        "advancedPipe",
+        [
+            [pipe0, pipe1],
+            0
+        ]
+    )
   
-    return advancedFarmCalls;
+    output = [
+        [advancedFarm, noData] // pipeline call
+    ]
+    return output;
   };
 
 const draftConvertBeanEthWellToBean = async (amountOfLpToRemove, minTokenAmountOut) => {
     this.well = await ethers.getContractAt("IWell", BEAN_ETH_WELL);
     this.bean = await ethers.getContractAt('MockToken', BEAN);
+    this.beanstalk = await getBeanstalk(BEANSTALK);
+    noData = encodeAdvancedData(0)
     
-    let advancedFarmCalls = [];
+    approveEncoded = this.bean.interface.encodeFunctionData(
+        "approve", 
+        [BEAN_ETH_WELL, ethers.constants.MaxUint256]
+    );
 
-    //approve pipeline to spend bean:eth well to... bean:eth well?
-    advancedFarmCalls.push({
-        callData: await wrapExternalCall(
-            BEAN_ETH_WELL,
-            this.bean.interface.encodeFunctionData("approve", [BEAN_ETH_WELL, ethers.constants.MaxUint256])
-        ),
-        clipboard: ethers.utils.hexlify("0x000000")
-    });
-
-    advancedFarmCalls.push({
-        callData: await wrapExternalCall(
-            BEAN_ETH_WELL,
-            this.well.interface.encodeFunctionData("removeLiquidityOneToken", [amountOfLpToRemove, BEAN, minTokenAmountOut, PIPELINE, ethers.constants.MaxUint256])
-        ),
-        clipboard: ethers.utils.hexlify("0x000000")
-    });
+    removeLiquidityEncoded = this.well.interface.encodeFunctionData(
+        "removeLiquidityOneToken", 
+        [amountOfLpToRemove, BEAN, minTokenAmountOut, PIPELINE, ethers.constants.MaxUint256]
+    );
   
-    return advancedFarmCalls;
+    pipe0 = [this.bean.address, approveEncoded, noData]
+    pipe1 = [this.well.address, removeLiquidityEncoded, noData]
+
+    advancedFarm = await this.beanstalk.interface.encodeFunctionData(
+        "advancedPipe",
+        [
+            [pipe0, pipe1],
+            0
+        ]
+    )
+    output = [
+        [advancedFarm, noData] // pipeline call
+    ]
+    return output;
   };
 
   
