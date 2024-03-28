@@ -228,7 +228,7 @@ library LibWellMinting {
                 uint256[] memory ratios,
                 uint256 beanIndex,
                 bool success
-            ) = LibWell.getRatiosAndBeanIndex(tokens, block.timestamp.sub(s.season.timestamp));
+            ) = LibWell.getRatiosAndBeanIndex(tokens);
 
             // HANDLE FAILURE
             // If the Bean reserve is less than the minimum, the minting oracle should be considered off.
