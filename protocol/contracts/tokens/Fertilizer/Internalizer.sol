@@ -106,11 +106,11 @@ contract Internalizer is OwnableUpgradeable, ReentrancyGuardUpgradeable, Fertili
         }
     } 
 
-    function name() public pure returns (string memory) {
+    function name() external pure returns (string memory) {
         return "Fertilizer";
     }
 
-    function symbol() public pure returns (string memory) {
+    function symbol() external pure returns (string memory) {
         return "FERT";
     }
 
