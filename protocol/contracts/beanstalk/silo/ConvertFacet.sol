@@ -240,14 +240,42 @@ contract ConvertFacet is ReentrancyGuard {
         console.log('after updatedCombinedDeltaB:');
         console.logInt(pipeData.combinedDeltaBinsta);
 
-        uint256 stalkPenalty = _calculateStalkPenalty(pipeData.combinedDeltaBinsta, getCombinedDeltaBForTokens(inputToken, outputToken), pipeData.bdvsRemoved);
+        uint256 stalkPenaltyBdv = _calculateStalkPenalty(pipeData.combinedDeltaBinsta, getCombinedDeltaBForTokens(inputToken, outputToken), pipeData.bdvsRemoved);
+
+        pipeData.grownStalks = _applyPenaltyToGrownStalks(stalkPenaltyBdv, pipeData.bdvsRemoved, pipeData.grownStalks);
 
         // Convert event emitted within this function
-        _depositTokensForConvertMultiCrate(inputToken, outputToken, pipeData.amountOut, pipeData.bdvsRemoved, pipeData.grownStalks, amounts, stalkPenalty);
+        _depositTokensForConvertMultiCrate(inputToken, outputToken, pipeData.amountOut, pipeData.bdvsRemoved, pipeData.grownStalks, amounts, stalkPenaltyBdv);
 
 
         //there's nothing about total BDV in this event, but it can be derived from the AddDeposit events
         LibTractor._resetPublisher();
+    }
+
+    function applyPenaltyToGrownStalks(uint256 penaltyBdv, uint256[] memory bdvsRemoved, uint256[] memory grownStalks) external view returns (uint256[] memory) {
+        return _applyPenaltyToGrownStalks(penaltyBdv, bdvsRemoved, grownStalks);
+    }
+
+    function _applyPenaltyToGrownStalks(uint256 stalkPenaltyBdv, uint256[] memory bdvsRemoved, uint256[] memory grownStalks)
+        internal view returns (uint256[] memory) {
+
+        for (uint256 i = bdvsRemoved.length-1; i >= 0; i--) {
+            uint256 bdvRemoved = bdvsRemoved[i];
+            uint256 grownStalk = grownStalks[i];
+
+            if (stalkPenaltyBdv >= bdvRemoved) {
+                stalkPenaltyBdv -= bdvRemoved;
+                grownStalks[i] = 0;
+            } else {
+                uint256 penaltyPercentage = stalkPenaltyBdv.mul(1e16).div(bdvRemoved);
+                grownStalks[i] = grownStalk.sub(grownStalk.mul(penaltyPercentage).div(1e16));
+                stalkPenaltyBdv = 0;
+            }
+            if (stalkPenaltyBdv == 0) {
+                break;
+            }
+        }
+        return grownStalks;
     }
 
     function calculateStalkPenalty(int256 beforeDeltaB, int256 afterDeltaB, uint256[] memory bdvsRemoved) external view returns (uint256) {
@@ -649,6 +677,7 @@ contract ConvertFacet is ReentrancyGuard {
      * @param bdvs The bdvs to split the amounts into
      * @param grownStalks The amount of Stalk to deposit per crate
      * @param inputAmounts The amount of tokens to deposit per crate
+     * @param stalkPenaltyBdv The BDV amount that gets penalized
      */
     function _depositTokensForConvertMultiCrate(
         address inputToken,
@@ -657,7 +686,7 @@ contract ConvertFacet is ReentrancyGuard {
         uint256[] memory bdvs,
         uint256[] memory grownStalks,
         uint256[] memory inputAmounts,
-        uint256 stalkPenalty
+        uint256 stalkPenaltyBdv
     ) internal {
 
         MultiCrateDepositData memory mcdd;

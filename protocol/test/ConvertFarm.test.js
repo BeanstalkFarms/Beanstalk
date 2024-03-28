@@ -386,5 +386,81 @@ describe('Farm Convert', function () {
         });
       });
     });
+
+    describe('apply penalty to grown stalks function test', async function () {
+      it('one grown stalk no penalty', async function () {
+        console.log('starting test');
+        const bdvsRemoved = [to6('50')];
+        const grownStalks = [to6('50')];
+        await this.convert.applyPenaltyToGrownStalks(to6('0'), bdvsRemoved, grownStalks);
+        expect(grownStalks).to.deep.equal([to6('50')]);
+      });
+
+      it('two grown stalk no penalty', async function () {
+        console.log('starting test');
+        const bdvsRemoved = [to6('50'), to6('50')];
+        const grownStalks = [to6('50'), to6('50')];
+        await this.convert.applyPenaltyToGrownStalks(to6('0'), bdvsRemoved, grownStalks);
+        expect(grownStalks).to.deep.equal([to6('50'), to6('50')]);
+      });
+
+      it('one grown stalk full penalty', async function () {
+        const bdvsRemoved = [to6('50')];
+        const grownStalks = [to6('50')];
+        const penalty = to6('50');
+        const resultingGrownStalks = await this.convert.applyPenaltyToGrownStalks(penalty, bdvsRemoved, grownStalks);
+
+        const convertedResult = resultingGrownStalks.map(value => value.toString());
+        expect(convertedResult).to.deep.equal(['0']);
+      });
+
+      it('two grown stalk full penalty', async function () {
+        const bdvsRemoved = [to6('50'), to6('50')];
+        const grownStalks = [to6('50'), to6('50')];
+        const penalty = to6('100');
+        const resultingGrownStalks = await this.convert.applyPenaltyToGrownStalks(penalty, bdvsRemoved, grownStalks);
+
+        const convertedResult = resultingGrownStalks.map(value => value.toString());
+        expect(convertedResult).to.deep.equal(['0', '0']);
+      });
+
+      it('one grown stalk half penalty', async function () {
+        const bdvsRemoved = [to6('50')];
+        const grownStalks = [to6('50')];
+        const penalty = to6('25');
+        const resultingGrownStalks =  await this.convert.applyPenaltyToGrownStalks(penalty, bdvsRemoved, grownStalks);
+        const convertedResult = resultingGrownStalks.map(value => value.toString());
+        expect(convertedResult).to.deep.equal([to6('25').toString()]);
+      });
+
+      it('two grown stalk half penalty', async function () {
+        const bdvsRemoved = [to6('50'), to6('50')];
+        const grownStalks = [to6('50'), to6('50')];
+        const penalty = to6('50');
+        const resultingGrownStalks =  await this.convert.applyPenaltyToGrownStalks(penalty, bdvsRemoved, grownStalks);
+        const convertedResult = resultingGrownStalks.map(value => value.toString());
+        expect(convertedResult).to.deep.equal([to6('50').toString(), '0']);
+      });
+
+      it('two grown stalk 3/4 penalty', async function () {
+        const bdvsRemoved = [to6('50'), to6('50')];
+        const grownStalks = [to6('50'), to6('50')];
+        const penalty = to6('75');
+        const resultingGrownStalks =  await this.convert.applyPenaltyToGrownStalks(penalty, bdvsRemoved, grownStalks);
+        const convertedResult = resultingGrownStalks.map(value => value.toString());
+        expect(convertedResult).to.deep.equal([to6('25').toString(), '0']);
+      });
+
+      it('two grown stalk 1/4 penalty', async function () {
+        const bdvsRemoved = [to6('50'), to6('50')];
+        const grownStalks = [to6('50'), to6('50')];
+        const penalty = to6('25');
+        const resultingGrownStalks =  await this.convert.applyPenaltyToGrownStalks(penalty, bdvsRemoved, grownStalks);
+        const convertedResult = resultingGrownStalks.map(value => value.toString());
+        console.log('convertedResult: ', convertedResult);
+        expect(convertedResult).to.deep.equal([to6('50').toString(), to6('25').toString()]);
+      });
+    });
+
   });
 });
