@@ -47,49 +47,84 @@ contract BeanstalkDeployer is Utils {
         // otherwise, use deployCode() to speed up test compiles.
 
         // add or remove facets here. Facets here do not have mocks.
-        uint i;
-        cut[i++] = _cut("BDVFacet", address(deployCode("BDVFacet.sol")));
-        cut[i++] = _cut("CurveFacet", address(deployCode("CurveFacet.sol")));
-        cut[i++] = _cut("FarmFacet", address(deployCode("FarmFacet.sol")));
-        cut[i++] = _cut("PauseFacet", address(deployCode("PauseFacet.sol")));
-        cut[i++] = _cut("OwnershipFacet", address(deployCode("OwnershipFacet.sol")));
-        cut[i++] = _cut("TokenFacet", address(deployCode("TokenFacet.sol")));
-        cut[i++] = _cut("TokenSupportFacet", address(deployCode("TokenSupportFacet.sol")));
-        cut[i++] = _cut("GaugePointFacet", address(deployCode("GaugePointFacet.sol")));
-        cut[i++] = _cut("LiquidityWeightFacet", address(deployCode("LiquidityWeightFacet.sol")));
-        cut[i++] = _cut("SiloGettersFacet", address(deployCode("SiloGettersFacet.sol")));
-        cut[i++] = _cut("ConvertGettersFacet", address(deployCode("ConvertGettersFacet.sol")));
-        cut[i++] = _cut("MetadataFacet", address(deployCode("MetadataFacet.sol")));
-        cut[i++] = _cut("SeasonGettersFacet", address(new SeasonGettersFacet()));
+        uint i = 0;
+        string[] memory facetNames = new string[](50);
+        address[] memory deployedFacetAddresses = new address[](50);
+        deployedFacetAddresses[i] = address(deployCode("BDVFacet.sol"));
+        facetNames[i++] = "BDVFacet";
+        deployedFacetAddresses[i] = address(deployCode("CurveFacet.sol"));
+        facetNames[i++] = "CurveFacet";
+        deployedFacetAddresses[i] = address(deployCode("FarmFacet.sol"));
+        facetNames[i++] = "FarmFacet";
+        deployedFacetAddresses[i] = address(deployCode("PauseFacet.sol"));
+        facetNames[i++] = "PauseFacet";
+        deployedFacetAddresses[i] = address(deployCode("OwnershipFacet.sol"));
+        facetNames[i++] = "OwnershipFacet";
+        deployedFacetAddresses[i] = address(deployCode("TokenFacet.sol"));
+        facetNames[i++] = "TokenFacet";
+        deployedFacetAddresses[i] = address(deployCode("TokenSupportFacet.sol"));
+        facetNames[i++] = "TokenSupportFacet";
+        deployedFacetAddresses[i] = address(deployCode("GaugePointFacet.sol"));
+        facetNames[i++] = "GaugePointFacet";
+        deployedFacetAddresses[i] = address(deployCode("LiquidityWeightFacet.sol"));
+        facetNames[i++] = "LiquidityWeightFacet";
+        deployedFacetAddresses[i] = address(deployCode("SiloGettersFacet.sol"));
+        facetNames[i++] = "SiloGettersFacet";
+        deployedFacetAddresses[i] = address(deployCode("ConvertGettersFacet.sol"));
+        facetNames[i++] = "ConvertGettersFacet";
+        deployedFacetAddresses[i] = address(deployCode("MetadataFacet.sol"));
+        facetNames[i++] = "MetadataFacet";
+        deployedFacetAddresses[i] = address(new SeasonGettersFacet());
+        facetNames[i++] = "SeasonGettersFacet";
 
-        // facets with a mock counterpart should be added here.
         if (mock) {
-            cut[i++] = _cut("MockAdminFacet", address(deployCode("MockAdminFacet.sol")));
-            cut[i++] = _cut("MockFertilizerFacet", address(deployCode("MockFertilizerFacet.sol")));
-            cut[i++] = _cut("MockFieldFacet", address(deployCode("MockFieldFacet.sol")));
-            cut[i++] = _cut("MockFundraiserFacet", address(deployCode("MockFundraiserFacet.sol")));
-            cut[i++] = _cut("MockMarketplaceFacet", address(deployCode("MockMarketplaceFacet.sol")));
-            cut[i++] = _cut("MockWhitelistFacet", address(deployCode("MockWhitelistFacet.sol")));
-            cut[i++] = _cut("MockSiloFacet", address(deployCode("MockSiloFacet.sol")));
-            cut[i++] = _cut("MockUnripeFacet", address(new MockUnripeFacet()));
-            cut[i++] = _cut("MockConvertFacet", address(new MockConvertFacet()));
-            cut[i++] = _cut("MockSeasonFacet", address(new MockSeasonFacet()));
+            deployedFacetAddresses[i] = address(deployCode("MockAdminFacet.sol"));
+            facetNames[i++] = "MockAdminFacet";
+            deployedFacetAddresses[i] = address(deployCode("MockFertilizerFacet.sol"));
+            facetNames[i++] = "MockFertilizerFacet";
+            deployedFacetAddresses[i] = address(deployCode("MockFieldFacet.sol"));
+            facetNames[i++] = "MockFieldFacet";
+            deployedFacetAddresses[i] = address(deployCode("MockFundraiserFacet.sol"));
+            facetNames[i++] = "MockFundraiserFacet";
+            deployedFacetAddresses[i] = address(deployCode("MockMarketplaceFacet.sol"));
+            facetNames[i++] = "MockMarketplaceFacet";
+            deployedFacetAddresses[i] = address(deployCode("MockWhitelistFacet.sol"));
+            facetNames[i++] = "MockWhitelistFacet";
+            deployedFacetAddresses[i] = address(deployCode("MockSiloFacet.sol"));
+            facetNames[i++] = "MockSiloFacet";
+            deployedFacetAddresses[i] = address(new MockUnripeFacet());
+            facetNames[i++] = "MockUnripeFacet";
+            deployedFacetAddresses[i] = address(new MockConvertFacet());
+            facetNames[i++] = "MockConvertFacet";
+            deployedFacetAddresses[i] = address(new MockSeasonFacet());
+            facetNames[i++] = "MockSeasonFacet";
         } else {
-            cut[i++] = _cut("FertilizerFacet", address(deployCode("FertilizerFacet.sol")));
-            cut[i++] = _cut("FieldFacet", address(deployCode("FieldFacet.sol")));
-            cut[i++] = _cut("FundraiserFacet", address(deployCode("FundraiserFacet.sol")));
-            cut[i++] = _cut("MarketplaceFacet", address(deployCode("MarketplaceFacet.sol")));
-            cut[i++] = _cut("WhitelistFacet", address(deployCode("WhitelistFacet.sol")));
-            cut[i++] = _cut("SiloFacet", address(deployCode("SiloFacet.sol")));
-            cut[i++] = _cut("UnripeFacet", address(new UnripeFacet()));
-            cut[i++] = _cut("ConvertFacet", address(new ConvertFacet()));
-            cut[i++] = _cut("SeasonFacet", address(new SeasonFacet()));
+            deployedFacetAddresses[i] = address(deployCode("FertilizerFacet.sol"));
+            facetNames[i++] = "FertilizerFacet";
+            deployedFacetAddresses[i] = address(deployCode("FieldFacet.sol"));
+            facetNames[i++] = "FieldFacet";
+            deployedFacetAddresses[i] = address(deployCode("FundraiserFacet.sol"));
+            facetNames[i++] = "FundraiserFacet";
+            deployedFacetAddresses[i] = address(deployCode("MarketplaceFacet.sol"));
+            facetNames[i++] = "MarketplaceFacet";
+            deployedFacetAddresses[i] = address(deployCode("WhitelistFacet.sol"));
+            facetNames[i++] = "WhitelistFacet";
+            deployedFacetAddresses[i] = address(deployCode("SiloFacet.sol"));
+            facetNames[i++] = "SiloFacet";
+            deployedFacetAddresses[i] = address(new UnripeFacet());
+            facetNames[i++] = "UnripeFacet";
+            deployedFacetAddresses[i] = address(new ConvertFacet());
+            facetNames[i++] = "ConvertFacet";
+            deployedFacetAddresses[i] = address(new SeasonFacet());
+            facetNames[i++] = "SeasonFacet";
         }
-
+        
         assembly {
-            mstore(cut, i)
+            mstore(facetNames, i)
+            mstore(deployedFacetAddresses, i)
         }
-
+        
+        cut = _multiCut(facetNames, deployedFacetAddresses);
         d = deployDiamondAtAddress(deployer, BEANSTALK);
 
         // if mocking, set the diamond address to
@@ -122,27 +157,40 @@ contract BeanstalkDeployer is Utils {
         return Diamond(beanstalkAddress);
     }
 
-    function _cut(string memory _facetName, address _facetAddress)
+    /**
+     * @notice generates the diamond cut array for multiple facets.
+     * @dev optimized such that ffi is only called once.
+     */
+    function _multiCut(string[] memory _facetNames, address[] memory _facetAddresses)
         internal
-        returns (IDiamondCut.FacetCut memory cut) 
+        returns (IDiamondCut.FacetCut[] memory cutArray) 
     {
-        bytes4[] memory functionSelectors = _generateSelectors(_facetName);
-        cut = IDiamondCut.FacetCut({
-            facetAddress: _facetAddress,
-            action: IDiamondCut.FacetCutAction.Add,
-            functionSelectors: functionSelectors
-        });
+        cutArray = new IDiamondCut.FacetCut[](_facetNames.length);
+        bytes4[][] memory functionSelectorsArray = _generateMultiSelectors(_facetNames);
+        for(uint i; i < _facetNames.length; i++) {
+            cutArray[i] = IDiamondCut.FacetCut({
+                facetAddress: _facetAddresses[i],
+                action: IDiamondCut.FacetCutAction.Add,
+                functionSelectors: functionSelectorsArray[i]
+            });
+        }
     }
 
-    function _generateSelectors(string memory _facetName)
-        internal
-        returns (bytes4[] memory selectors)
-    {
-        string[] memory cmd = new string[](3);
+    /**
+     * @notice generates the selectors for multiple facets.
+     * @dev optimized such that ffi is only called once to 
+     * optimize on compile time.
+     */
+    function _generateMultiSelectors(
+        string[] memory _facetNames
+    ) internal returns (bytes4[][] memory selectorsArray) {
+        string[] memory cmd = new string[](_facetNames.length + 2);
         cmd[0] = "node";
         cmd[1] = "scripts/genSelectors.js";
-        cmd[2] = _facetName;
+        for (uint i = 0; i < _facetNames.length; i++) {
+            cmd[i + 2] = _facetNames[i];
+        }
         bytes memory res = vm.ffi(cmd);
-        selectors = abi.decode(res, (bytes4[]));
+        selectorsArray = abi.decode(res, (bytes4[][]));
     }
 }
