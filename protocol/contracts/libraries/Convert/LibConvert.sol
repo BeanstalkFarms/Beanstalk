@@ -48,8 +48,11 @@ library LibConvert {
         // if (kind == LibConvertData.ConvertKind.BEANS_TO_CURVE_LP) {
         //     (tokenOut, tokenIn, amountOut, amountIn) = LibCurveConvert
         //         .convertBeansToLP(convertData);
-        if (kind == LibConvertData.ConvertKind.CURVE_LP_TO_BEANS) {
-            (tokenOut, tokenIn, amountOut, amountIn) = LibCurveConvert
+        if (kind == LibConvertData.ConvertKind.BEANS_TO_WELL_LP) {
+            (tokenOut, tokenIn, amountOut, amountIn) = LibWellConvert
+                .convertBeansToLP(convertData);
+        } else if (kind == LibConvertData.ConvertKind.WELL_LP_TO_BEANS) {
+            (tokenOut, tokenIn, amountOut, amountIn) = LibWellConvert
                 .convertLPToBeans(convertData);
         } else if (kind == LibConvertData.ConvertKind.UNRIPE_BEANS_TO_UNRIPE_LP) {
             (tokenOut, tokenIn, amountOut, amountIn) = LibUnripeConvert
@@ -60,18 +63,12 @@ library LibConvert {
         } else if (kind == LibConvertData.ConvertKind.LAMBDA_LAMBDA) {
             (tokenOut, tokenIn, amountOut, amountIn) = LibLambdaConvert
                 .convert(convertData);
-        } else if (kind == LibConvertData.ConvertKind.BEANS_TO_WELL_LP) {
-            (tokenOut, tokenIn, amountOut, amountIn) = LibWellConvert
-                .convertBeansToLP(convertData);
-        } else if (kind == LibConvertData.ConvertKind.WELL_LP_TO_BEANS) {
-            (tokenOut, tokenIn, amountOut, amountIn) = LibWellConvert
-                .convertLPToBeans(convertData);
-        } else if (kind == LibConvertData.ConvertKind.UNRIPE_TO_RIPE) {
-            (tokenOut, tokenIn, amountOut, amountIn) = LibChopConvert
-                .convertUnripeToRipe(convertData);
         } else if (kind == LibConvertData.ConvertKind.ANTI_LAMBDA_LAMBDA) {
-	        (tokenOut, tokenIn, amountOut, amountIn, account, decreaseBDV) = LibLambdaConvert
+            (tokenOut, tokenIn, amountOut, amountIn, account, decreaseBDV) = LibLambdaConvert
                 .antiConvert(convertData);
+        } else if (kind == LibConvertData.ConvertKind.CURVE_LP_TO_BEANS) {
+            (tokenOut, tokenIn, amountOut, amountIn) = LibCurveConvert
+                .convertLPToBeans(convertData);
         } else {
             revert("Convert: Invalid payload");
         }
