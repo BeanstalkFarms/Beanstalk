@@ -251,7 +251,7 @@ contract Sun is Oracle {
         uint256 newSoil = instDeltaB == 0 ? uint256(-twaDeltaB) : Math.min(uint256(-twaDeltaB), uint256(-instDeltaB));
 
         // Set new soil.
-        setSoil(newSoil);
+        setSoil(instDeltaB == 0 ? uint256(-twaDeltaB) : Math.min(uint256(-twaDeltaB), uint256(-instDeltaB)));
     }
 
     /**
