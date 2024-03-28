@@ -33,17 +33,9 @@ async function simulateSeedGaugeSunrises() {
         "Bean Amount",
         "Profit"
     ]);
-  
-    // fetch the baseFee of the block at the top of the hour 
-    // const baseFeeData = await hre.ethers.provider.getFeeData();
-    // const formattedBaseFee = hre.ethers.utils.formatUnits(baseFeeData.lastBaseFeePerGas, 'gwei');
     
     // get bean eth well deployed at: 0xBEA0e11282e2bB5893bEcE110cF199501e872bAd
     // const well = await getWellContractAt("Well", "0xBEA0e11282e2bB5893bEcE110cF199501e872bAd");
-
-    console.log("Upgrading Beanstalk with Seed Gauge...");
-
-    await bipSeedGauge();
 
     const sunriseBlockInfoCsv = 'adjusted_blocks_info_final.csv';
 
@@ -59,30 +51,51 @@ async function simulateSeedGaugeSunrises() {
 
         console.log("\n////////////////////////// ITERATION ", i, " //////////////////////////")
 
-        console.log("Taking snapshot...")
-        const snapshotId = await takeSnapshot();
-        console.log("Snapshot taken: ", snapshotId);
+        // console.log("Taking snapshot...")
+        // const snapshotId = await takeSnapshot();
+        // console.log("Snapshot taken: ", snapshotId);
 
         const row = sunriseBlocks[i];
         const blockNumber = parseInt(row['Block Number']);
-        const baseFee = hre.ethers.utils.parseUnits(row['Base Fee (Gwei)'], 'gwei');
-        const ethPrice = parseFloat(row['ETH Price (USD)']);
 
-        console.log("Block Number: ", blockNumber);
-        console.log("Base Fee: ", baseFee);
-        console.log("ETH Price: ", ethPrice);
+        // reset fork to the block number of the sunrise
+        console.log("Resetting fork to sunrise block number: ", blockNumber);
+        await resetForkToBlock(blockNumber);
 
-        // set the base fee for the next block
-        await setNextBlockBaseFee(baseFee);
+
+        // obtain current parameters
+        
+        // get the eth price at the current block
+        let ethPrice = await getETHPriceAtCurrentBlock();
+        ethPrice = ethers.utils.formatUnits(ethPrice, 6);
+        console.log("Current ETH Price from Oracle: ", ethPrice);
+
+        // get the base fee of the block
+        const baseFeeData = await hre.ethers.provider.getFeeData();
+        const baseFee = baseFeeData.lastBaseFeePerGas;
+        console.log("Base Fee: ", hre.ethers.utils.formatUnits(baseFee, 'gwei') + ' gwei');
+
+        // reset to 18 blocks before the sunrise and excecute seed gauge
+        console.log("Resetting fork to 18 blocks before sunrise...");
+        await resetForkToBlock(blockNumber);
+
+        // seed gauge takes 17 blocks to execute
+        console.log("Executing Seed Gauge...");
+        await bipSeedGauge();
         
         // wait 100 ms for events to be emitted
         await new Promise((resolve) => setTimeout(resolve, 100));
 
+        // mine 100 blocks to reach the next sunrise block
+        // for (let i = 0; i < 1000; i++) {
+        //     await network.provider.send("evm_mine");
+        // }
+
+        // set the base fee for the next block to be the same as the sunrise block
+        await setNextBlockBaseFee(baseFee);
+
         // simulate sunrise
         await simulateSunrise(blockNumber, baseFee, i, ethPrice);
-
-        console.log("Reverting to snapshot...")
-        await revertToSnapshot(snapshotId);
     }
   }
   
@@ -108,7 +121,7 @@ async function simulateSunrise(blockNumber, baseFee, index, ethPrice) {
         
     const sunriseEvents = await seasonFacet.queryFilter(
       'Sunrise(uint256)',
-       FORKING_BLOCK_NUMBER - 100,
+       blockNumber - 100,
       'latest'
     );
 
@@ -211,11 +224,17 @@ async function updateReserves(account, well, reserves) {
     await setReserves(account, well, reserves);
 }
 
+function numberToRpcQuantity(value) {
+    value = value.toBigInt();
+    return `0x${value.toString(16)}`;
+}
+
 async function setNextBlockBaseFee(baseFee) {
-    console.log("Setting next block base fee to: ", hre.ethers.utils.formatUnits(baseFee, 'gwei') + ' gwei');
-    console.log("Hex representation: ", hre.ethers.utils.hexlify(baseFee));
-    await hre.network.provider.send("anvil_setNextBlockBaseFeePerGas", [
-      hre.ethers.utils.hexlify(baseFee)
+    // console.log("Setting next block base fee to: ", hre.ethers.utils.formatUnits(baseFee, 'gwei') + ' gwei');
+    // console.log("Hex representation: ", hre.ethers.utils.hexlify(baseFee));
+    // console.log("NUmber to RPC Quantity: ", numberToRpcQuantity(baseFee));
+    await hre.network.provider.send("hardhat_setNextBlockBaseFeePerGas", [
+      numberToRpcQuantity(baseFee),
     ]);
 }
 
@@ -230,6 +249,20 @@ async function resetFork() {
         console.log("Fork reset successfully.");
         console.log("Current block: ", await hre.ethers.provider.getBlockNumber());
     }
+}
+
+async function resetForkToBlock(blockNumber) {
+    await network.provider.request({
+        method: 'hardhat_reset',
+        params: [
+          {
+            forking: {
+              jsonRpcUrl: "",
+              blockNumber: blockNumber,
+            },
+          },
+        ],
+    });
 }
 
 simulateSeedGaugeSunrises()
