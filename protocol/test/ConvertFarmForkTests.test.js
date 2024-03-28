@@ -203,7 +203,7 @@ describe('Farm Convert', function () {
       ]);
 
 
-      this.result = await this.convert.connect(user).pipelineConvert(this.well.address, [stemTip], [wellAmountOut], wellAmountOut, this.bean.address, farmData);
+      this.result = await this.convert.connect(user).pipelineConvert(this.well.address, [stemTip], [wellAmountOut], this.bean.address, farmData);
 
       // the 200204225 is the amount of beans out in this particular case, would be great to use curve functions to actually get these values, but for now it looks correct (a hardhat --trace helps confirm things look good)
       await expect(this.result).to.emit(this.convert, 'Convert').withArgs(user.address, this.well.address, this.bean.address, '1971707291118118111', '200204225');
@@ -240,7 +240,7 @@ describe('Farm Convert', function () {
       ]);
 
 
-      this.result = await this.convert.connect(user).pipelineConvert(this.well.address, [stemTip], [wellAmountOut], wellAmountOut, this.bean.address, farmData);
+      this.result = await this.convert.connect(user).pipelineConvert(this.well.address, [stemTip], [wellAmountOut], this.bean.address, farmData);
 
       // verify events
       await expect(this.result).to.emit(this.convert, 'Convert').withArgs(user.address, this.well.address, this.bean.address, wellAmountOut, '199322498');

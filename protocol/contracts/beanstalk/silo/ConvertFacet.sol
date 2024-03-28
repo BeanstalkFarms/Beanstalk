@@ -168,7 +168,6 @@ contract ConvertFacet is ReentrancyGuard {
         address inputToken,
         int96[] calldata stems, //array of stems to convert
         uint256[] calldata amounts, //amount from each crate to convert
-        uint256 totalAmountIn, //passed in rather than calculated to save gas (TODO make sure fail if it's wrong)
         address outputToken,
         bytes calldata farmData
     )
@@ -197,10 +196,10 @@ contract ConvertFacet is ReentrancyGuard {
         //so if a user wants to do special combining of crates, this function can be called multiple times
 
         
-        // uint256 totalAmountIn = 0;
-        // for (uint256 i = 0; i < stems.length; i++) {
-        //     totalAmountIn = totalAmountIn.add(amounts[i]);
-        // }
+        uint256 maxTokens = 0;
+        for (uint256 i = 0; i < stems.length; i++) {
+            maxTokens = maxTokens.add(amounts[i]);
+        }
 
         //todo: actually withdraw crates
         // uint256[] memory bdvsRemoved;
@@ -211,7 +210,7 @@ contract ConvertFacet is ReentrancyGuard {
             inputToken,
             stems,
             amounts,
-            totalAmountIn
+            maxTokens
         );
 
         // storePoolDeltaB(inputToken, outputToken);
@@ -220,7 +219,7 @@ contract ConvertFacet is ReentrancyGuard {
         console.logInt(pipeData.startingDeltaB);
 
 
-        IERC20(inputToken).transfer(PIPELINE, totalAmountIn);
+        IERC20(inputToken).transfer(PIPELINE, maxTokens);
         pipeData.amountOut = executeAdvancedFarmCalls(farmData);
 
         console.log('amountOut after pipe calls: ', pipeData.amountOut);

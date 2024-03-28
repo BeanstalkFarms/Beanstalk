@@ -93,7 +93,7 @@ const draftPipelineApprovals = async () => {
     return advancedFarmCalls;
 }
 
-const draftConvertBeanToBeanEthWell = async () => {
+const draftConvertBeanToBeanEthWell = async (amountOfBean) => {
     this.well = await ethers.getContractAt("IWell", BEAN_ETH_WELL);
     this.bean = await ethers.getContractAt('MockToken', BEAN);
     
@@ -111,7 +111,7 @@ const draftConvertBeanToBeanEthWell = async () => {
     advancedFarmCalls.push({
         callData: await wrapExternalCall(
             BEAN_ETH_WELL,
-            this.well.interface.encodeFunctionData("addLiquidity", [[toBean('200'), to18('0')], ethers.constants.Zero, PIPELINE, ethers.constants.MaxUint256])
+            this.well.interface.encodeFunctionData("addLiquidity", [[amountOfBean, to18('0')], ethers.constants.Zero, PIPELINE, ethers.constants.MaxUint256])
         ),
         clipboard: ethers.utils.hexlify("0x000000")
     });
