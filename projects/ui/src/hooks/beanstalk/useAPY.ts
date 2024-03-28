@@ -34,14 +34,14 @@ export default function useAPY() {
       const siloYield7d = apyQuery.data.week[0];
       const siloYield30d = apyQuery.data.month[0];
 
-      let apys: APYs = {
+      const apys: APYs = {
         beansPerSeasonEMA24h: new BigNumber(siloYield24h.beansPerSeasonEMA),
         beansPerSeasonEMA7d: new BigNumber(siloYield7d.beansPerSeasonEMA),
         beansPerSeasonEMA30d: new BigNumber(siloYield30d.beansPerSeasonEMA),
         byToken: {},
       };
 
-      let apysByToken: any = {};
+      const apysByToken: any = {};
 
       siloYield24h.tokenAPYS.forEach((tokenAPY) => {
         const apy: APY = {
