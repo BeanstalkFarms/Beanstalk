@@ -103,12 +103,6 @@ library LibWellMinting {
     function initializeOracle(address well) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
 
-        // Given Multi Flow Pump V 1.0 isn't resistant to large changes in balance,
-        // minting in the Bean:Eth Well needs to be turned off upon migration.
-        if (!checkShouldTurnOnMinting(well)) {
-            return;
-        }
-
         // If pump has not been initialized for `well`, `readCumulativeReserves` will revert. 
         // Need to handle failure gracefully, so Sunrise does not revert.
         Call[] memory pumps = IWell(well).pumps();
@@ -154,6 +148,53 @@ library LibWellMinting {
             s.wellOracleSnapshots[well]
         );
     }
+    
+    /**
+     * @dev Calculates the deltaB for a given Well address
+     * and returns the deltaB, snapshot, reserves and ratios.
+     * @param well The address of the Well.
+     * @return deltaB The instantaneous delta B balance since the last `capture` call.
+     */
+    function getDeltaBInfo(address well, uint[] memory reserves, bytes memory snapshot, uint256 lookback
+    ) internal view returns (int256, bytes memory, uint256[] memory, uint256[] memory) {
+
+        // get well tokens
+        IERC20[] memory tokens = IWell(well).tokens();
+        (
+            uint256[] memory ratios,
+            uint256 beanIndex,
+            bool success
+        ) = LibWell.getRatiosAndBeanIndex(tokens, lookback);
+
+        // If the Bean reserve is less than the minimum, the minting oracle should be considered off.
+        if (reserves[beanIndex] < C.WELL_MINIMUM_BEAN_BALANCE) {
+            return (0, snapshot, new uint256[](0), new uint256[](0));
+        }
+
+        // If the USD Oracle oracle call fails, the minting oracle should be considered off.
+        if (!success) {
+            return (0, snapshot, reserves, new uint256[](0));
+        }
+
+        int256 deltaB = calculateDeltaBAtBeanIndex(well, reserves, ratios, beanIndex);
+
+        return (deltaB, snapshot, reserves, ratios);    
+    }
+
+    /**
+     * @dev Calculates the delta B at a given Bean index for a given Well address
+     * based on the current well reserves, well ratios and well function.
+     */
+    function calculateDeltaBAtBeanIndex(address well, uint[] memory reserves, uint256[] memory ratios, uint256 beanIndex
+    ) internal view returns (int256) {
+        Call memory wellFunction = IWell(well).wellFunction();
+        return int256(IBeanstalkWellFunction(wellFunction.target).calcReserveAtRatioSwap(
+            reserves,
+            beanIndex,
+            ratios,
+            wellFunction.data
+        )).sub(int256(reserves[beanIndex]));
+    }
 
     /**
      * @dev Calculates the time weighted average delta B since the input snapshot for
@@ -173,34 +214,8 @@ library LibWellMinting {
             uint40(s.season.timestamp),
             pumps[0].data
         ) returns (uint[] memory twaReserves, bytes memory snapshot) {
-            IERC20[] memory tokens = IWell(well).tokens();
-            (
-                uint256[] memory ratios,
-                uint256 beanIndex,
-                bool success
-            ) = LibWell.getRatiosAndBeanIndex(tokens, block.timestamp.sub(s.season.timestamp));
-
-            // If the Bean reserve is less than the minimum, the minting oracle should be considered off.
-            if (twaReserves[beanIndex] < C.WELL_MINIMUM_BEAN_BALANCE) {
-                return (0, snapshot, new uint256[](0), new uint256[](0));
-            }
-
-            // If the USD Oracle oracle call fails, the minting oracle should be considered off.
-            if (!success) {
-                return (0, snapshot, twaReserves, new uint256[](0));
-            }
-
-            Call memory wellFunction = IWell(well).wellFunction();
-            // Delta B is the difference between the target Bean reserve at the peg price
-            // and the time weighted average Bean balance in the Well.
-            int256 deltaB = int256(IBeanstalkWellFunction(wellFunction.target).calcReserveAtRatioSwap(
-                twaReserves,
-                beanIndex,
-                ratios,
-                wellFunction.data
-            )).sub(int256(twaReserves[beanIndex]));
-
-            return (deltaB, snapshot, twaReserves, ratios);
+                                // well, reserves, snapshot  lookback
+            return (getDeltaBInfo(well, twaReserves, snapshot, block.timestamp.sub(s.season.timestamp)));
         }
         catch {
             // if the pump fails, return all 0s to avoid the sunrise reverting.
@@ -213,59 +228,15 @@ library LibWellMinting {
      * @param well The address of the Well.
      * @return deltaB The instantaneous delta B balance since the last `capture` call.
      */
-    function instantaneousDeltaB(address well) internal view returns 
-        (int256, uint256[] memory, uint256[] memory) {
+    function instantaneousDeltaB(address well) internal view returns (int256, uint256[] memory, uint256[] memory) {
 
         AppStorage storage s = LibAppStorage.diamondStorage();
         Call[] memory pumps = IWell(well).pumps();
-                                                                        // well address , data[]
-        try IInstantaneousPump(pumps[0].target).readInstantaneousReserves(well, C.BYTES_ZERO) returns (uint[] memory instReserves) {
-            // Get well tokens
-            IERC20[] memory tokens = IWell(well).tokens();
-
-            // Get ratios and bean index
-            (
-                uint256[] memory ratios,
-                uint256 beanIndex,
-                bool success
-            ) = LibWell.getRatiosAndBeanIndex(tokens);
-
-            // HANDLE FAILURE
-            // If the Bean reserve is less than the minimum, the minting oracle should be considered off.
-            if (instReserves[beanIndex] < C.WELL_MINIMUM_BEAN_BALANCE) {
-                return (0, new uint256[](0), new uint256[](0));
-            }
-
-            // If the USD Oracle oracle call fails, the minting oracle should be considered off.
-            if (!success) {
-                return (0, instReserves, new uint256[](0));
-            }
-
-            // Get well function
-            Call memory wellFunction = IWell(well).wellFunction();
-
-            // Delta B is the difference between the target Bean reserve at the peg price
-            // and the instantaneous Bean balance in the Well.
-            int256 deltaB = int256(IBeanstalkWellFunction(wellFunction.target).calcReserveAtRatioSwap(
-                instReserves,
-                beanIndex,
-                ratios,
-                wellFunction.data
-            )).sub(int256(instReserves[beanIndex]));
-
-            return (deltaB, instReserves, ratios);
-        }
-        catch {}
+                                                                                            // well address , data[]
+        uint[] memory instReserves = IInstantaneousPump(pumps[0].target).readInstantaneousReserves(well, C.BYTES_ZERO);
+                                                                    // well, reserves, snapshot, lookback
+        (int256 deltaB, , ,uint256[] memory ratios) = getDeltaBInfo(well, instReserves, new bytes(0) , 0);
+        return (deltaB, instReserves, ratios);
     }
 
-    // Remove in next BIP.
-    function checkShouldTurnOnMinting(address well) internal view returns (bool) {
-        AppStorage storage s = LibAppStorage.diamondStorage();
-        if (well == C.BEAN_ETH_WELL) {
-            if (s.season.current < s.season.beanEthStartMintingSeason) {
-                return false;
-            }
-        }
-        return true;
-    } 
 }
