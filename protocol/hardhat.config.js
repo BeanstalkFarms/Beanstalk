@@ -119,7 +119,7 @@ task("sunrise2", async function () {
 });
 
 task("getTime", async function () {
-  this.season = await ethers.getContractAt("SeasonFacet", BEANSTALK);
+  beanstalk = await ethers.getContractAt("SeasonFacet", BEANSTALK);
   console.log("Current time: ", await this.seasonGetter.time());
 });
 
@@ -133,7 +133,7 @@ task("diamondABI", "Generates ABI file for diamond, includes all ABIs of facets"
   const modulesDir = path.join("contracts", "beanstalk");
 
   // The list of modules to combine into a single ABI. All facets (and facet dependencies) will be aggregated.
-  const modules = ["barn", "diamond", "farm", "field", "market", "silo", "sun"];
+  const modules = ["barn", "diamond", "farm", "field", "market", "silo", "sun", "metadata"];
 
   // The glob returns the full file path like this:
   // contracts/beanstalk/barn/UnripeFacet.sol
@@ -156,9 +156,10 @@ task("diamondABI", "Generates ABI file for diamond, includes all ABIs of facets"
     const files = glob.sync(pattern);
     if (module == "silo") {
       // Manually add in libraries that emit events
+      files.push("contracts/libraries/LibIncentive.sol")
       files.push("contracts/libraries/Silo/LibWhitelist.sol")
       files.push("contracts/libraries/LibGauge.sol")
-      files.push("contracts/libraries/Silo/LibLegacyTokenSilo.sol")
+      files.push("contracts/libraries/Silo/LibGerminate.sol") 
     }
     files.forEach((file) => {
       const facetName = getFacetName(file);
@@ -188,6 +189,54 @@ task("diamondABI", "Generates ABI file for diamond, includes all ABIs of facets"
 
   console.log("ABI written to abi/Beanstalk.json");
 });
+
+/**
+ * @notice generates mock diamond ABI.
+ */
+task("mockDiamondABI", "Generates ABI file for mock contracts", async () => {
+  // The path (relative to the root of `protocol` directory) where all modules sit.
+  const modulesDir = path.join("contracts", "mocks", "mockFacets");
+
+  // The glob returns the full file path like this:
+  // contracts/beanstalk/barn/UnripeFacet.sol
+  // We want the "UnripeFacet" part.
+  const getFacetName = (file) => {
+    return file.split("/").pop().split(".")[0];
+  };
+
+  // Load files across all modules
+  const filesInModule = fs.readdirSync(path.join(".", modulesDir));
+  console.log(filesInModule)
+
+  // Build ABI
+  let abi = [];
+  filesInModule.forEach((module) => {
+    const file = path.join(".", modulesDir, module); 
+    const facetName = getFacetName(file);
+    const jsonFileName = `${facetName}.json`;
+    const jsonFileLoc = path.join(".", "artifacts", file, jsonFileName);
+    const json = JSON.parse(fs.readFileSync(jsonFileLoc));
+
+    // Log what's being included
+    console.log(`${module}:`.padEnd(10), file);
+    json.abi.forEach((item) => console.log(``.padEnd(10), item.type, item.name));
+    console.log("");
+
+    abi.push(...json.abi);
+  });
+
+  const names = abi.map((a) => a.name);
+  fs.writeFileSync(
+    "./abi/MockBeanstalk.json",
+    JSON.stringify(
+      abi.filter((item, pos) => names.indexOf(item.name) == pos),
+      null,
+      2
+    )
+  );
+
+  console.log("ABI written to abi/MockBeanstalk.json");
+})
 
 task("marketplace", async function () {
   const owner = await impersonateBeanstalkOwner();
@@ -339,7 +388,7 @@ module.exports = {
     }
   },
   gasReporter: {
-    enabled: true
+    enabled: false
   },
   mocha: {
     timeout: 100000000

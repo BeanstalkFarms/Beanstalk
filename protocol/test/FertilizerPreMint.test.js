@@ -34,11 +34,11 @@ testIfRpcSet("PreFertilizer", function () {
         await reset();
       } catch { return; }
       [user, user2] = await ethers.getSigners();
-      this.fertilizer = await deployFertilizer(user, true, true);
-      this.usdc = await ethers.getContractAt("IUSDC", await this.fertilizer.USDC())
-      await this.usdc.connect(user).approve(this.fertilizer.address, to18('1000'))
+      mockBeanstalk = await deployFertilizer(user, true, true);
+      this.usdc = await ethers.getContractAt("IUSDC", await mockBeanstalk.USDC())
+      await this.usdc.connect(user).approve(mockBeanstalk.address, to18('1000'))
 
-      await expect(this.fertilizer.connect(user).mint(to6('10000'))).to.be.revertedWith('Fertilizer: Not started')
+      await expect(mockBeanstalk.connect(user).mint(to6('10000'))).to.be.revertedWith('Fertilizer: Not started')
       await network.provider.send("evm_setNextBlockTimestamp", [1654531200])
     })
 
@@ -51,40 +51,40 @@ testIfRpcSet("PreFertilizer", function () {
     });
 
     it('reverts on balance of 0', async function () {
-      await expect(this.fertilizer.balanceOf(ethers.constants.AddressZero, to6('6'))).to.be.revertedWith('ERC1155: balance query for the zero address')
-      await expect(this.fertilizer.lastBalanceOf(ethers.constants.AddressZero, to6('6'))).to.be.revertedWith('ERC1155: balance query for the zero address')
+      await expect(mockBeanstalk.balanceOf(ethers.constants.AddressZero, to6('6'))).to.be.revertedWith('ERC1155: balance query for the zero address')
+      await expect(mockBeanstalk.lastBalanceOf(ethers.constants.AddressZero, to6('6'))).to.be.revertedWith('ERC1155: balance query for the zero address')
     })
 
     describe("Below Remaining", async function () {
       describe("Contribute from usdc", async function () {
         beforeEach(async function () {
-          await this.fertilizer.connect(user).mint(to6('10000'))
+          await mockBeanstalk.connect(user).mint(to6('10000'))
         })
 
         it('changes user balance', async function () {
-          expect(await this.fertilizer.balanceOf(user.address, to6('6'))).to.equal('10000')
+          expect(await mockBeanstalk.balanceOf(user.address, to6('6'))).to.equal('10000')
           expect(await this.usdc.balanceOf(BCM)).to.equal(to6('10000'))
           expect(await this.usdc.balanceOf(user.address)).to.equal(to6('0'))
-          const lb = await this.fertilizer.lastBalanceOf(user.address, to6('6'))
+          const lb = await mockBeanstalk.lastBalanceOf(user.address, to6('6'))
           expect(lb[0]).to.be.equal('10000')
           expect(lb[1]).to.be.equal(0)
         })
 
         it('changes total balance', async function () {
-          expect(await this.fertilizer.remaining()).to.equal(to6('76990000'))
+          expect(await mockBeanstalk.remaining()).to.equal(to6('76990000'))
         })
       })
 
       describe("Contribute from eth", async function () {
         beforeEach(async function () {
           const ethIn = ethers.utils.parseEther('0.01')
-          this.usdcOut = await this.fertilizer.callStatic.getUsdcOut(ethIn)
-          usdcOutSlippage = await this.fertilizer.callStatic.getUsdcOutWithSlippage(ethIn, '10')
-          await this.fertilizer.buyAndMint(usdcOutSlippage, {value: ethIn})
+          this.usdcOut = await mockBeanstalk.callStatic.getUsdcOut(ethIn)
+          usdcOutSlippage = await mockBeanstalk.callStatic.getUsdcOutWithSlippage(ethIn, '10')
+          await mockBeanstalk.buyAndMint(usdcOutSlippage, {value: ethIn})
         })
 
         it('changes user balance', async function () {
-          expect(await this.fertilizer.balanceOf(user.address, to6('6'))).to.equal(this.usdcOut.div(1e6))
+          expect(await mockBeanstalk.balanceOf(user.address, to6('6'))).to.equal(this.usdcOut.div(1e6))
           expect(await this.usdc.balanceOf(BCM)).to.equal(this.usdcOut)
         })
       })
@@ -99,17 +99,17 @@ testIfRpcSet("PreFertilizer", function () {
 
       describe("Contribute from usdc", async function () {
         beforeEach(async function () {
-          await this.fertilizer.connect(user).mint(to6('10000'))
+          await mockBeanstalk.connect(user).mint(to6('10000'))
         })
     
         it('changes user balance', async function () {
-          expect(await this.fertilizer.balanceOf(user.address, to6('6'))).to.equal('1')
+          expect(await mockBeanstalk.balanceOf(user.address, to6('6'))).to.equal('1')
           expect(await this.usdc.balanceOf(BCM)).to.equal(to6('77000000'))
           expect(await this.usdc.balanceOf(user.address)).to.equal(to6('9999'))
         })
     
         it('changes total balance', async function () {
-          expect(await this.fertilizer.remaining()).to.equal(to6('0'))
+          expect(await mockBeanstalk.remaining()).to.equal(to6('0'))
         })
       })
       
@@ -117,29 +117,29 @@ testIfRpcSet("PreFertilizer", function () {
       describe("Contribute from eth", async function () {
         it('reverts', async function () {
           const ethIn = ethers.utils.parseEther('0.01')
-          await expect(this.fertilizer.buyAndMint('0', {value: ethIn})).to.be.revertedWith('Fertilizer: Not enough remaining')
+          await expect(mockBeanstalk.buyAndMint('0', {value: ethIn})).to.be.revertedWith('Fertilizer: Not enough remaining')
         })
       })
     })
 
     describe("Transfer", async function () {
       it('revert if not enough', async function () {
-        await expect(this.fertilizer.safeTransferFrom(user.address, user.address, to6('6'), '10001', ethers.constants.HashZero))
+        await expect(mockBeanstalk.safeTransferFrom(user.address, user.address, to6('6'), '10001', ethers.constants.HashZero))
           .to.be.revertedWith("ERC1155: insufficient balance for transfer")
       })
 
       it('works if enough', async function () {
-        await this.fertilizer.connect(user).mint(to6('10000'))
-        await this.fertilizer.safeTransferFrom(user.address, user2.address, to6('6'), '1000', ethers.constants.HashZero)
-        expect(await this.fertilizer.balanceOf(user.address, to6('6'))).to.equal('9000')
-        expect(await this.fertilizer.balanceOf(user2.address, to6('6'))).to.equal('1000')
+        await mockBeanstalk.connect(user).mint(to6('10000'))
+        await mockBeanstalk.safeTransferFrom(user.address, user2.address, to6('6'), '1000', ethers.constants.HashZero)
+        expect(await mockBeanstalk.balanceOf(user.address, to6('6'))).to.equal('9000')
+        expect(await mockBeanstalk.balanceOf(user2.address, to6('6'))).to.equal('1000')
       })
 
       it('batch works if enough', async function () {
-        await this.fertilizer.connect(user).mint(to6('10000'))
-        await this.fertilizer.safeBatchTransferFrom(user.address, user2.address, [to6('6')], ['1000'], ethers.constants.HashZero)
-        expect(await this.fertilizer.balanceOf(user.address, to6('6'))).to.equal('9000')
-        expect(await this.fertilizer.balanceOf(user2.address, to6('6'))).to.equal('1000')
+        await mockBeanstalk.connect(user).mint(to6('10000'))
+        await mockBeanstalk.safeBatchTransferFrom(user.address, user2.address, [to6('6')], ['1000'], ethers.constants.HashZero)
+        expect(await mockBeanstalk.balanceOf(user.address, to6('6'))).to.equal('9000')
+        expect(await mockBeanstalk.balanceOf(user2.address, to6('6'))).to.equal('1000')
       })
 
     })

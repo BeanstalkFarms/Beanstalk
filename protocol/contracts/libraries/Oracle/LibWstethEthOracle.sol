@@ -45,12 +45,6 @@ library LibWstethEthOracle {
     uint128 constant AVERAGE_DENOMINATOR = 2;
     uint128 constant PRECISION_DENOMINATOR = 1e12;
 
-    /////////////////// ORACLES ///////////////////
-    address constant WSTETH_ETH_CHAINLINK_PRICE_AGGREGATOR =
-        0x86392dC19c0b719886221c78AB11eb8Cf5c52812;
-    address internal constant WSTETH_ETH_UNIV3_01_POOL = 0x109830a1AAaD605BbF02a9dFA7B0B92EC2FB7dAa; // 0.01% pool
-    ///////////////////////////////////////////////
-
     /**
      * @dev Returns the instantaneous wstETH/ETH price
      * Return value has 6 decimal precision.
@@ -68,8 +62,8 @@ library LibWstethEthOracle {
     function getWstethEthPrice(uint256 lookback) internal view returns (uint256 wstethEthPrice) {
 
         uint256 chainlinkPrice = lookback == 0 ? 
-            LibChainlinkOracle.getPrice(WSTETH_ETH_CHAINLINK_PRICE_AGGREGATOR, LibChainlinkOracle.FOUR_DAY_TIMEOUT) :
-            LibChainlinkOracle.getTwap(WSTETH_ETH_CHAINLINK_PRICE_AGGREGATOR, LibChainlinkOracle.FOUR_DAY_TIMEOUT, lookback);
+            LibChainlinkOracle.getPrice(C.WSTETH_ETH_CHAINLINK_PRICE_AGGREGATOR, LibChainlinkOracle.FOUR_DAY_TIMEOUT) :
+            LibChainlinkOracle.getTwap(C.WSTETH_ETH_CHAINLINK_PRICE_AGGREGATOR, LibChainlinkOracle.FOUR_DAY_TIMEOUT, lookback);
 
         // Check if the chainlink price is broken or frozen.
         if (chainlinkPrice == 0) return 0;
@@ -84,7 +78,7 @@ library LibWstethEthOracle {
         uint256 uniswapPrice = LibUniswapOracle.getTwap(
             lookback == 0 ? LibUniswapOracle.FIFTEEN_MINUTES :
             uint32(lookback),
-            WSTETH_ETH_UNIV3_01_POOL, C.WSTETH, C.WETH, ONE
+            C.WSTETH_ETH_UNIV3_01_POOL, C.WSTETH, C.WETH, ONE
         );
 
         // Check if the uniswapPrice oracle fails.

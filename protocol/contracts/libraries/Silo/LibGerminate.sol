@@ -13,6 +13,10 @@ import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
 import {C} from "../../C.sol";
 import "hardhat/console.sol";
 
+import "forge-std/console.sol";
+
+
+
 /**
  * @title LibGerminate
  * @author Brean
@@ -93,14 +97,15 @@ library LibGerminate {
         // root calculation is skipped if no deposits have been made 
         // in the season.
         if (s.s.roots == 0) {
-            s.unclaimedGerminating[season.sub(2)].roots = 
+            // casted to uint256 and downcasted to uint128 to prevent overflow.
+            s.unclaimedGerminating[season.sub(2)].roots =
                 s.unclaimedGerminating[season.sub(2)].stalk
                 .mul(uint128(C.getRootsBase()));
         } else if (s.unclaimedGerminating[season.sub(2)].stalk > 0) {
             s.unclaimedGerminating[season.sub(2)].roots = s
             .s.roots
             .mul(s.unclaimedGerminating[season.sub(2)].stalk)
-            .div(s.s.stalk) 
+            .div(s.s.stalk)
             .toUint128();
         }
         // increment total stalk and roots based on unclaimed values.
@@ -242,7 +247,7 @@ library LibGerminate {
      */
     function calculateGerminatingRoots(
         uint32 season,
-        uint128 stalk
+        uint256 stalk
     ) private view returns (uint128 roots) {
         console.log('calculateGerminatingRoots');
         console.log('season: ', season);
@@ -257,7 +262,8 @@ library LibGerminate {
             // calculate the roots:
             roots = stalk.mul(s.unclaimedGerminating[season].roots).div(
                 s.unclaimedGerminating[season].stalk
-            );
+            ).toUint128();
+            console.log("roots:", roots);
         }
     }
 

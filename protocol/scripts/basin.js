@@ -1,7 +1,7 @@
 const { BEAN, WETH, BEANSTALK_FARMS, ETH_USD_CHAINLINK_AGGREGATOR, PRICE_DEPLOYER } = require("../test/utils/constants");
 const { toX } = require("../test/utils/helpers");
 const { defaultAbiCoder } = require('@ethersproject/abi');
-const { impersonateSigner, toBN, getBean, impersonateBeanstalkOwner } = require("../utils");
+const { impersonateSigner, toBN, getBean } = require("../utils");
 const { deployWellContractAtNonce, encodeWellImmutableData, getWellContractAt, deployMockPump } = require("../utils/well");
 const { bipBasinIntegration } = require("./bips");
 const { deployContract } = require("./contracts");
@@ -39,7 +39,6 @@ async function deployBasinAndIntegrationBip(mock, bipAccount = undefined, basinA
 }
 
 async function deployBasin(mock = true, accounts = undefined, verbose = true, justDeploy = false, mockPump = false) {
-    
     let c = {}
 
     if (verbose) console.log("Deploying Basin...")
@@ -92,14 +91,14 @@ async function deployBasin(mock = true, accounts = undefined, verbose = true, ju
 
     await wellTxn.wait();
 
-    if (justDeploy) return c;
-
     if (verbose) console.log("Bean:Eth Well Deployed at:", c.well.address);
-
+    
+    if (justDeploy) return c;
+    
     if (verbose) console.log("");
-
+    
     if (verbose) console.log("Adding Liquidity to Well...")
-
+    
     account = await getAccount(accounts, 'addLiquidity', ADD_LIQUIDITY_ADDRESS);
 
     const bean = await getBean();
@@ -284,7 +283,6 @@ async function getAccount(accounts, key, mockAddress) {
 }
 
 exports.deployBasin = deployBasin;
-exports.deployBasinWithMockPump = deployBasinWithMockPump;
 exports.deployBasinAndIntegrationBip = deployBasinAndIntegrationBip;
 exports.getAccount = getAccount
 exports.deployAquifer = deployAquifer

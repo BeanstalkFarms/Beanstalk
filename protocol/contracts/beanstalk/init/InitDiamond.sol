@@ -21,9 +21,12 @@ import {MockToken} from "../../mocks/MockToken.sol";
 import {Weather} from "contracts/beanstalk/sun/SeasonFacet/Weather.sol";
 import {LibIncentive} from "contracts/libraries/LibIncentive.sol";
 
+
+
 /**
  * @author Publius
- * @title Init Diamond initializes the Beanstalk Diamond.
+ * @title InitDiamond 
+ * @notice InitDiamond initializes the Beanstalk Diamond.
 **/
 contract InitDiamond is Weather {
 
@@ -66,7 +69,6 @@ contract InitDiamond is Weather {
 
         emit BeanToMaxLpGpPerBdvRatioChange(s.season.current, type(uint256).max, int80(s.seedGauge.beanToMaxLpGpPerBdvRatio));
         emit LibGauge.UpdateAverageStalkPerBdvPerSeason(s.seedGauge.averageGrownStalkPerBdvPerSeason);
-
         C.bean().mint(msg.sender, LibIncentive.MAX_REWARD);
         emit LibIncentive.Incentivization(msg.sender, LibIncentive.MAX_REWARD);
     }

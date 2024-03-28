@@ -14,6 +14,8 @@ import {AppStorage, LibAppStorage, Storage} from "../LibAppStorage.sol";
 import {LibUsdOracle} from "contracts/libraries/Oracle/LibUsdOracle.sol";
 import {LibSafeMath128} from "contracts/libraries/LibSafeMath128.sol";
 
+
+
 /**
  * @title Well Library
  * Contains helper functions for common Well related functionality.
@@ -93,6 +95,7 @@ library LibWell {
                 return (address(tokens[i]), i);
             }
         }
+        revert("LibWell: invalid well:");
     }
 
     /**

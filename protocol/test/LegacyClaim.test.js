@@ -49,9 +49,9 @@ describe.skip("Legacy Claim", async function () {
 
     this.diamond = BEANSTALK;
 
-    // this.season = await ethers.getContractAt("MockSeasonFacet", this.diamond);
+    // beanstalk = await ethers.getContractAt("MockSeasonFacet", this.diamond);
 
-    this.silo = await ethers.getContractAt("MockSiloFacet", this.diamond);
+    beanstalk = await ethers.getContractAt("MockSiloFacet", this.diamond);
     // this.legacyClaim = await ethers.getContractAt("LegacyClaimWithdrawalFacet", this.diamond);
 
 
@@ -229,7 +229,7 @@ describe.skip("Legacy Claim", async function () {
       for (var i = 0; i < this.withdraws.length; i++) {
         const withdraw = this.withdraws[i];
 
-        await expect(this.results[i]).to.emit(this.silo, "RemoveWithdrawal").withArgs(ethers.utils.getAddress(withdraw.farmer.id), ethers.utils.getAddress(withdraw.token), withdraw.withdrawSeason, withdraw.amount);
+        await expect(this.results[i]).to.emit(beanstalk, "RemoveWithdrawal").withArgs(ethers.utils.getAddress(withdraw.farmer.id), ethers.utils.getAddress(withdraw.token), withdraw.withdrawSeason, withdraw.amount);
       }
     });
   });

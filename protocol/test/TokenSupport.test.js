@@ -1,9 +1,9 @@
 const { expect } = require('chai');
 const { deploy } = require('../scripts/deploy.js');
-const { getAltBeanstalk, getBean, getUsdc } = require('../utils/contracts.js');
+const { getBeanstalk } = require('../utils/contracts.js');
 const { signERC2612Permit } = require("eth-permit");
-const { BEAN_3_CURVE, THREE_POOL, THREE_CURVE, PIPELINE, BEANSTALK } = require('./utils/constants.js');
-const { to6, to18 } = require('./utils/helpers.js');
+const { PIPELINE, BEANSTALK } = require('./utils/constants.js');
+const { to6 } = require('./utils/helpers.js');
 const { takeSnapshot, revertToSnapshot } = require("./utils/snapshot");
 
 let user, user2, owner;
@@ -11,15 +11,15 @@ let user, user2, owner;
 describe('External Token', function () {
     before(async function () {
         [owner, user, user2] = await ethers.getSigners();
-        const contracts = await deploy("Test", false, true);
-        this.beanstalk = await getAltBeanstalk(contracts.beanstalkDiamond.address)
+        const contracts = await deploy(verbose = false, mock = true, reset = true)        
+        beanstalk= await getBeanstalk(contracts.beanstalkDiamond.address)
 
         const Token = await ethers.getContractFactory("MockToken");
         this.token = await Token.deploy("Silo", "SILO")
         await this.token.deployed()
 
         this.erc1155 = await (await ethers.getContractFactory('MockERC1155', owner)).deploy('Mock')
-        await this.erc1155.connect(user).setApprovalForAll(this.beanstalk.address, true)
+        await this.erc1155.connect(user).setApprovalForAll(beanstalk.address, true)
 
         this.erc721 = await (await ethers.getContractFactory('MockERC721', owner)).deploy()
     });
@@ -42,7 +42,7 @@ describe('External Token', function () {
                 '10000000'
             );
 
-            await this.beanstalk.connect(user).permitERC20(
+            await beanstalk.connect(user).permitERC20(
                 this.token.address,
                 user.address,
                 BEANSTALK,
@@ -64,11 +64,11 @@ describe('External Token', function () {
                 '10000000'
             );
 
-            await expect(this.beanstalk.connect(user).permitERC20(
-                this.bean.address,
+            await expect(beanstalk.connect(user).permitERC20(
+                bean.address,
                 user.address,
                 BEANSTALK,
-                toBean('10'),
+                to6('10'),
                 fakeResult.deadline,
                 fakeResult.v,
                 fakeResult.r,
@@ -86,11 +86,11 @@ describe('External Token', function () {
                 '1'
             );
 
-            await expect(this.beanstalk.connect(user).permitERC20(
-                this.bean.address,
+            await expect(beanstalk.connect(user).permitERC20(
+                bean.address,
                 user.address,
                 BEANSTALK,
-                toBean('10'),
+                to6('10'),
                 endedResult.deadline,
                 endedResult.v,
                 endedResult.r,
@@ -102,7 +102,7 @@ describe('External Token', function () {
     describe("Transfer ERC-1155", async function () {
         beforeEach(async function () {
             await this.erc1155.mockMint(user.address, '0', '5')
-            await this.beanstalk.connect(user).transferERC1155(this.erc1155.address, PIPELINE, '0', '2')
+            await beanstalk.connect(user).transferERC1155(this.erc1155.address, PIPELINE, '0', '2')
         })
 
         it('transfers ERC-1155', async function () {
@@ -115,7 +115,7 @@ describe('External Token', function () {
         beforeEach(async function () {
             await this.erc1155.mockMint(user.address, '0', '5')
             await this.erc1155.mockMint(user.address, '1', '10')
-            await this.beanstalk.connect(user).batchTransferERC1155(this.erc1155.address, PIPELINE, ['0', '1'], ['2', '3'])
+            await beanstalk.connect(user).batchTransferERC1155(this.erc1155.address, PIPELINE, ['0', '1'], ['2', '3'])
         })
 
         it('transfers ERC-1155', async function () {
@@ -133,8 +133,8 @@ describe('External Token', function () {
     describe("Transfer ERC-721", async function () {
         beforeEach(async function () {
             await this.erc721.mockMint(user.address, '0')
-            await this.erc721.connect(user).approve(this.beanstalk.address, '0')
-            await this.beanstalk.connect(user).transferERC721(this.erc721.address, PIPELINE, '0')
+            await this.erc721.connect(user).approve(beanstalk.address, '0')
+            await beanstalk.connect(user).transferERC721(this.erc721.address, PIPELINE, '0')
         })
 
         it('transfers ERC-721', async function () {
@@ -145,17 +145,17 @@ describe('External Token', function () {
     describe("Permit and transfer ERC-721", async function () {
         beforeEach(async function () {
             await this.erc721.mockMint(user.address, '0')
-            const permit = this.beanstalk.interface.encodeFunctionData("permitERC721", [
+            const permit = beanstalk.interface.encodeFunctionData("permitERC721", [
                 this.erc721.address,
-                this.beanstalk.address,
+                beanstalk.address,
                 '0',
                 '0',
                 ethers.constants.HashZero
             ])
-            const transfer = this.beanstalk.interface.encodeFunctionData('transferERC721', [
+            const transfer = beanstalk.interface.encodeFunctionData('transferERC721', [
                 this.erc721.address, PIPELINE, '0'
             ])
-            await this.beanstalk.connect(user).farm([permit, transfer])
+            await beanstalk.connect(user).farm([permit, transfer])
         })
 
         it('transfers ERC-721', async function () {
