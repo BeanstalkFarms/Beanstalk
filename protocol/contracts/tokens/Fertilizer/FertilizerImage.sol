@@ -3,7 +3,6 @@
 pragma solidity ^0.7.6;
 pragma experimental ABIEncoderV2;
 
-import "contracts/libraries/LibStrings.sol";
 import {LibStrings} from "contracts/libraries/LibStrings.sol";
 import {LibBytes64} from "contracts/libraries/LibBytes64.sol";
 
@@ -58,19 +57,19 @@ contract FertilizerImage {
     // END OF SVG
 
     /**
-        * @dev generateImageSvg assembles the needed components for the Fertilizer svg
-        * For use in the on-chain json fertilizer metadata
-        * @param _id - the id of the Fertilizer
-        * @param bpfRemaining - the bpfRemaining of the Fertilizer
-        * @return imageUri - the image URI representation of the Fertilizer
+     * @dev generateImageSvg assembles the needed components for the Fertilizer svg
+     * For use in the on-chain json fertilizer metadata
+     * @param _id - the id of the Fertilizer
+     * @param bpfRemaining - the bpfRemaining of the Fertilizer
+     * @return imageUri - the image URI representation of the Fertilizer
      */
     function generateImageSvg(uint256 _id, uint128 bpfRemaining) internal view returns (string memory) {
         return string(
             abi.encodePacked(
                 '<svg width="294" height="512" viewBox="0 0 294 512" fill="none" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">', // SVG HEADER
-                BASE_SVG_START, // BASE SVG START
+                BASE_SVG_START,
                 getFertilizerStatusSvg(_id, bpfRemaining), // FERT_SVG_TOP (available, active)
-                BASE_SVG_END, // BASE SVG END
+                BASE_SVG_END,
                 '<text font-family="sans-serif" font-size="20" x="20" y="490" fill="black" ><tspan dy="0" x="20">', // PRE NUMBER FOR BPF REMAINING
                 LibStrings.formatUintWith6DecimalsTo2(bpfRemaining), // BPF_REMAINING with 2 decimal places
                 " BPF Remaining </tspan></text></svg>" // END OF SVG
@@ -79,10 +78,10 @@ contract FertilizerImage {
     }
 
     /**
-        * @dev Returns the correct svg top for the Fertilizer status based on the bpfRemaining.
-        * @param _id - the id of the Fertilizer
-        * @param bpfRemaining - the bpfRemaining of the Fertilizer
-        * @return fertilizerStatusSvg an svg top for the correct Fertilizer status
+     * @dev Returns the correct svg top for the Fertilizer status based on the bpfRemaining.
+     * @param _id - the id of the Fertilizer
+     * @param bpfRemaining - the bpfRemaining of the Fertilizer
+     * @return fertilizerStatusSvg an svg top for the correct Fertilizer status
      */
     function getFertilizerStatusSvg(uint256 _id, uint128 bpfRemaining) internal view returns (string memory) {
 
