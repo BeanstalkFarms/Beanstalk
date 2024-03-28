@@ -1,18 +1,16 @@
-import { Box, Chip, Link, Stack, Tooltip, Typography } from '@mui/material';
 import React from 'react';
+import { Box, Chip, Link, Stack, Tooltip, Typography } from '@mui/material';
 import Token from '~/classes/Token';
 import { BEAN } from '~/constants/tokens';
 import useAPY from '~/hooks/beanstalk/useAPY';
-import Row from '../Common/Row';
-import TokenIcon from '../Common/TokenIcon';
 import stalkIconBlue from '~/img/beanstalk/stalk-icon-blue.svg';
 import { displayFullBN } from '~/util';
-
-import Stat from '../Common/Stat';
 import useChainConstant from '~/hooks/chain/useChainConstant';
-
 import { FC } from '~/types';
 import BigNumber from 'bignumber.js';
+import Row from '../Common/Row';
+import TokenIcon from '../Common/TokenIcon';
+import BeanProgressIcon from '../Common/BeanProgressIcon';
 
 const TOOLTIP_COMPONENT_PROPS = {
   tooltip: {
@@ -34,7 +32,7 @@ const SiloAssetApyChip: FC<SiloAssetApyChipProps> = ({
   metric,
   variant = 'default',
 }) => {
-  const { data: latestYield } = useAPY();
+  const { data: latestYield, loading: isLoading } = useAPY();
   const Bean = useChainConstant(BEAN);
   const isBean = metric === 'bean';
 
@@ -130,6 +128,11 @@ const SiloAssetApyChip: FC<SiloAssetApyChipProps> = ({
       <Chip
         variant="filled"
         color={metric === 'bean' ? 'primary' : 'secondary'}
+        sx={{
+          "& .MuiChip-label": {
+            overflow: "visible"
+          }
+        }}
         label={
           <Typography sx={{ whiteSpace: 'nowrap' }}>
             <Row gap={0.5} flexWrap="nowrap" justifyContent="center" alignItems="center">
@@ -140,13 +143,49 @@ const SiloAssetApyChip: FC<SiloAssetApyChipProps> = ({
               )}
               {metric === 'bean' ? 
                 <>
-                  <Box >{getDisplayString(apys ? apys['24h'][metric].times(100) : null)}</Box>
+                  <Box display='flex' justifyContent='center' width={isLoading ? '40px' : 'auto'}>
+                    {isLoading ? (
+                      <BeanProgressIcon
+                        size={10}
+                        enabled
+                        variant="indeterminate"
+                      />
+                    ) : (
+                      <>
+                        {getDisplayString(apys ? apys['24h'][metric].times(100) : null)}
+                      </>
+                    )}
+                  </Box>
                   <Typography color='white' marginTop={-0.25}>|</Typography>
-                  <Box>{getDisplayString(apys ? apys['7d'][metric].times(100) : null)}</Box>
+                  <Box display='flex' justifyContent='center' width={isLoading ? '40px' : 'auto'}>
+                    {isLoading ? (
+                      <BeanProgressIcon
+                        size={10}
+                        enabled
+                        variant="indeterminate"
+                      />
+                    ) : (
+                      <>
+                        {getDisplayString(apys ? apys['7d'][metric].times(100) : null)}
+                      </>
+                    )}
+                  </Box>
                   <Typography color='white' marginTop={-0.25}>|</Typography>
-                </> 
+                </>
               : null }
-                <Box>{getDisplayString(apys ? apys['30d'][metric].times(100) : null)}</Box>
+              <Box display='flex' justifyContent='center'  width={isLoading ? '40px' : 'auto'}>
+                {isLoading ? (
+                  <BeanProgressIcon
+                    size={10}
+                    enabled
+                    variant="indeterminate"
+                  />
+                ) : (
+                  <>
+                    {getDisplayString(apys ? apys['30d'][metric].times(100) : null)}
+                  </>
+                )}
+              </Box>
             </Row>
           </Typography>
         }
