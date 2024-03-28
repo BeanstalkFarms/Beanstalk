@@ -31,26 +31,31 @@ describe('Fertilize', function () {
     [owner, user, user2] = await ethers.getSigners()
     
     user2.address = user2.address
+    console.log("test")
     const contracts = await deploy(verbose = false, mock = true, reset = true)
     // impersonate fertilizer.
     this.fert = await impersonateFertilizer()
     ownerAddress = contracts.account
     this.diamond = contracts.beanstalkDiamond;
+    console.log("test");
     
     // `beanstalk` contains all functions that the regualar beanstalk has.
     // `mockBeanstalk` has functions that are only available in the mockFacets.
     [ beanstalk, mockBeanstalk ] = await getAllBeanstalkContracts(this.diamond.address);
+    console.log("test");
 
     // simulate transfer to diamond address. impersonate bean-wsteth well.
     await this.fert.transferOwnership(this.diamond.address)
     this.usdc = await ethers.getContractAt('IBean', USDC)
     bean = await ethers.getContractAt('IBean', BEAN)
     this.barnRaiseToken = await ethers.getContractAt('IBean', BARN_RAISE_TOKEN)
+    console.log("test")
 
     this.unripeBean = await ethers.getContractAt('MockToken', UNRIPE_BEAN)
     this.unripeLP = await ethers.getContractAt('MockToken', UNRIPE_LP)
     await this.unripeBean.mint(user2.address, to6('1000'))
     await this.unripeLP.mint(user2.address, to6('942.297473'))
+    console.log("test")
 
     await bean.mint(owner.address, to18('1000000000'));
     await this.barnRaiseToken.mint(owner.address, to18('1000000000'));
@@ -60,12 +65,14 @@ describe('Fertilize', function () {
     await this.barnRaiseToken.connect(owner).approve(this.diamond.address, to18('1000000000'));
     await this.barnRaiseToken.connect(user).approve(this.diamond.address, to18('1000000000'));
     await this.barnRaiseToken.connect(user2).approve(this.diamond.address, to18('1000000000'));
+    console.log("test")
 
     await setWstethUsdPrice('1000')
 
     this.well = await ethers.getContractAt('MockToken', BEAN_WSTETH_WELL)
     await this.well.connect(owner).approve(BEANSTALK, ethers.constants.MaxUint256)
-  await bean.connect(owner).approve(BEANSTALK, ethers.constants.MaxUint256)
+    await bean.connect(owner).approve(BEANSTALK, ethers.constants.MaxUint256)
+    console.log("test")
   });
 
   beforeEach(async function () {
@@ -267,13 +274,13 @@ describe('Fertilize', function () {
   describe("Mint Fertilizer", async function () {
     it('Reverts if mints 0', async function () {
       await mockBeanstalk.teleportSunrise('6274')
-      await expect(mockBeanstalk.connect(user).mintFertilizer('0', '0', '0', EXTERNAL)).to.be.revertedWith('Fertilizer: None bought.')
+      await expect(mockBeanstalk.connect(user).mintFertilizer('0', '0', '0')).to.be.revertedWith('Fertilizer: None bought.')
     })
 
     describe('1 mint', async function () {
       beforeEach(async function () {
         await mockBeanstalk.teleportSunrise('6274')
-        this.result = await mockBeanstalk.connect(user).mintFertilizer(to18('0.1'), '0', '0', EXTERNAL)
+        this.result = await mockBeanstalk.connect(user).mintFertilizer(to18('0.1'), '0', '0')
         this.lpBeans = lpBeansForUsdc('100')
       })
 
@@ -319,8 +326,8 @@ describe('Fertilize', function () {
     describe('2 mints', async function () {
       beforeEach(async function () {
         await mockBeanstalk.teleportSunrise('6274')
-        this.result = await mockBeanstalk.connect(user).mintFertilizer(to18('0.05'), '0', '0', EXTERNAL)
-        this.result = await mockBeanstalk.connect(user).mintFertilizer(to18('0.05'), '0', '0', EXTERNAL)
+        this.result = await mockBeanstalk.connect(user).mintFertilizer(to18('0.05'), '0', '0')
+        this.result = await mockBeanstalk.connect(user).mintFertilizer(to18('0.05'), '0', '0')
         this.lpBeans = lpBeansForUsdc('100');
       })
 
@@ -366,10 +373,10 @@ describe('Fertilize', function () {
     describe("2 mint with season in between", async function () {
       beforeEach(async function () {
         await mockBeanstalk.teleportSunrise('6074')
-        await mockBeanstalk.connect(user).mintFertilizer(to18('0.1'), '0', '0', EXTERNAL)
+        await mockBeanstalk.connect(user).mintFertilizer(to18('0.1'), '0', '0')
         await mockBeanstalk.rewardToFertilizerE(to6('50'))
         await mockBeanstalk.teleportSunrise('6274')
-        this.result = await mockBeanstalk.connect(user).mintFertilizer(to18('0.1'), '0', '0', EXTERNAL)
+        this.result = await mockBeanstalk.connect(user).mintFertilizer(to18('0.1'), '0', '0')
         this.lpBeans = lpBeansForUsdc('100').add(lpBeansForUsdc('100'))
       })
 
@@ -421,10 +428,10 @@ describe('Fertilize', function () {
     describe("2 mint with same id", async function () {
       beforeEach(async function () {
         await mockBeanstalk.teleportSunrise('6074')
-        await mockBeanstalk.connect(user).mintFertilizer(to18('0.1'), '0', '0', EXTERNAL)
+        await mockBeanstalk.connect(user).mintFertilizer(to18('0.1'), '0', '0')
         await mockBeanstalk.rewardToFertilizerE(to6('50'))
         await mockBeanstalk.teleportSunrise('6174')
-        this.result = await mockBeanstalk.connect(user).mintFertilizer(to18('0.1'), '0', '0', EXTERNAL)
+        this.result = await mockBeanstalk.connect(user).mintFertilizer(to18('0.1'), '0', '0')
         this.lpBeans = lpBeansForUsdc('100').add(lpBeansForUsdc('100'))
       })
 
@@ -475,11 +482,11 @@ describe('Fertilize', function () {
     describe("2 mint with same id and claim", async function () {
       beforeEach(async function () {
         await mockBeanstalk.teleportSunrise('6074')
-        await mockBeanstalk.connect(user).mintFertilizer(to18('0.1'), '0', '0', EXTERNAL)
+        await mockBeanstalk.connect(user).mintFertilizer(to18('0.1'), '0', '0')
         await mockBeanstalk.rewardToFertilizerE(to6('50'))
         await mockBeanstalk.teleportSunrise('6174')
         await mockBeanstalk.connect(user).claimFertilized([to6('3.5')], INTERNAL)
-        this.result = await mockBeanstalk.connect(user).mintFertilizer(to18('0.1'), '0', '0', EXTERNAL)
+        this.result = await mockBeanstalk.connect(user).mintFertilizer(to18('0.1'), '0', '0')
       })
 
       it('updates claims fertilized Beans', async function () {
@@ -491,7 +498,7 @@ describe('Fertilize', function () {
   describe("Fertilize", async function () {
     beforeEach(async function () {
       await mockBeanstalk.teleportSunrise('6274')
-      this.result = await mockBeanstalk.connect(user).mintFertilizer(to18('0.1'), '0', '0', EXTERNAL)
+      this.result = await mockBeanstalk.connect(user).mintFertilizer(to18('0.1'), '0', '0')
     })
 
     it('gets fertilizable', async function () {
@@ -579,7 +586,7 @@ describe('Fertilize', function () {
       beforeEach(async function() {
         await mockBeanstalk.rewardToFertilizerE(to6('200'))
         await mockBeanstalk.teleportSunrise('6474')
-        this.result = await mockBeanstalk.connect(user).mintFertilizer(to18('0.1'), '0', '0', EXTERNAL)
+        this.result = await mockBeanstalk.connect(user).mintFertilizer(to18('0.1'), '0', '0')
         await mockBeanstalk.connect(user).claimFertilized([to6('2.5')], EXTERNAL)
         await mockBeanstalk.rewardToFertilizerE(to6('150'))
 
@@ -608,7 +615,7 @@ describe('Fertilize', function () {
       beforeEach(async function() {
         await mockBeanstalk.rewardToFertilizerE(to6('200'))
         await mockBeanstalk.teleportSunrise('6474')
-        this.result = await mockBeanstalk.connect(user).mintFertilizer(to18('0.1'), '0', '0', EXTERNAL)
+        this.result = await mockBeanstalk.connect(user).mintFertilizer(to18('0.1'), '0', '0')
         await mockBeanstalk.connect(user).claimFertilized([to6('2.5')], EXTERNAL)
         await mockBeanstalk.rewardToFertilizerE(to6('150'))
 
@@ -637,7 +644,7 @@ describe('Fertilize', function () {
       beforeEach(async function() {
         await mockBeanstalk.rewardToFertilizerE(to6('200'))
         await mockBeanstalk.teleportSunrise('6474')
-        this.result = await mockBeanstalk.connect(user).mintFertilizer(to18('0.1'), '0', '0', EXTERNAL)
+        this.result = await mockBeanstalk.connect(user).mintFertilizer(to18('0.1'), '0', '0')
         await mockBeanstalk.connect(user).claimFertilized([to6('2.5')], EXTERNAL)
         await mockBeanstalk.rewardToFertilizerE(to6('200'))
 
@@ -666,7 +673,7 @@ describe('Fertilize', function () {
   describe("Transfer", async function () {
     beforeEach(async function () {
       await mockBeanstalk.teleportSunrise('6274')
-      this.result = await mockBeanstalk.connect(user).mintFertilizer(to18('0.1'), '0', '0', EXTERNAL)
+      this.result = await mockBeanstalk.connect(user).mintFertilizer(to18('0.1'), '0', '0')
     })
 
     describe("no fertilized", async function () {
@@ -730,7 +737,7 @@ describe('Fertilize', function () {
 
     describe("Both some Beans", async function () {
       beforeEach(async function() {
-        this.result = await mockBeanstalk.connect(user2).mintFertilizer(to18('0.1'), '0', '0', EXTERNAL)
+        this.result = await mockBeanstalk.connect(user2).mintFertilizer(to18('0.1'), '0', '0')
         await mockBeanstalk.rewardToFertilizerE(to6('100'))
         await this.fert.connect(user).safeTransferFrom(user.address, user2.address, to6('2.5'), '50', ethers.constants.HashZero)
       })
@@ -757,7 +764,7 @@ describe('Fertilize', function () {
       beforeEach(async function() {
         await mockBeanstalk.rewardToFertilizerE(to6('200'))
         await mockBeanstalk.teleportSunrise('6474')
-        this.result = await mockBeanstalk.connect(user).mintFertilizer(to18('0.1'), '0', '0', EXTERNAL)
+        this.result = await mockBeanstalk.connect(user).mintFertilizer(to18('0.1'), '0', '0')
         await mockBeanstalk.rewardToFertilizerE(to6('150'))
         await this.fert.connect(user).safeBatchTransferFrom(user.address, user2.address, [to6('2.5'), to6('3.5')], ['50', '50'], ethers.constants.HashZero)
       })
@@ -785,11 +792,11 @@ describe('Fertilize', function () {
 
     describe("Both some Beans", async function () {
       beforeEach(async function() {
-        this.result = await mockBeanstalk.connect(user2).mintFertilizer(to18('0.1'), '0', '0', EXTERNAL)
+        this.result = await mockBeanstalk.connect(user2).mintFertilizer(to18('0.1'), '0', '0')
         await mockBeanstalk.rewardToFertilizerE(to6('400'))
         await mockBeanstalk.teleportSunrise('6474')
-        this.result = await mockBeanstalk.connect(user).mintFertilizer(to18('0.1'), '0', '0', EXTERNAL)
-        this.result = await mockBeanstalk.connect(user2).mintFertilizer(to18('0.1'), '0', '0', EXTERNAL)
+        this.result = await mockBeanstalk.connect(user).mintFertilizer(to18('0.1'), '0', '0')
+        this.result = await mockBeanstalk.connect(user2).mintFertilizer(to18('0.1'), '0', '0')
         await mockBeanstalk.rewardToFertilizerE(to6('300'))
         await this.fert.connect(user).safeBatchTransferFrom(user.address, user2.address, [to6('2.5'), to6('3.5')], ['50', '50'], ethers.constants.HashZero)
       })

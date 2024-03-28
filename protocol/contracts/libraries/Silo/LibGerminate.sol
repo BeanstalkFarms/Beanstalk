@@ -11,7 +11,6 @@ import {LibSilo} from "./LibSilo.sol";
 import {SafeCast} from "@openzeppelin/contracts/utils/SafeCast.sol";
 import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
 import {C} from "../../C.sol";
-import "hardhat/console.sol";
 
 import "forge-std/console.sol";
 

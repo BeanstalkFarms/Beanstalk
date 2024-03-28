@@ -89,7 +89,7 @@ async function main(
   // Fetch init diamond contract
   const initDiamondArg = mock
     ? "contracts/mocks/newMockInitDiamond.sol:MockInitDiamond"
-    : "contracts/beanstalk/init/newInitDiamond.sol:InitDiamond";
+    : "contracts/mocks/newInitDiamond.sol:InitDiamond";
   // eslint-disable-next-line no-unused-vars
   
 
@@ -387,7 +387,8 @@ async function getFacetData(mock=true) {
     "LibConvert",
     "LibLockedUnderlying",
     "LibCurveMinting",
-    "LibWellMinting"
+    "LibWellMinting",
+    "LibGerminate"
   ];
 
   // A mapping of facet to public library names that will be linked to it.
@@ -397,7 +398,8 @@ async function getFacetData(mock=true) {
       "LibGauge", 
       "LibIncentive", 
       "LibLockedUnderlying", 
-      "LibWellMinting"
+      "LibWellMinting",
+      "LibGerminate"
     ],
     ConvertFacet: ["LibConvert"],
     UnripeFacet: ["LibLockedUnderlying"],

@@ -7,7 +7,8 @@ const {
   BEAN_3_CURVE,
   USDC,
   FERTILIZER,
-  PRICE
+  PRICE,
+  WETH
 } = require("../test/utils/constants");
 
 async function getBeanstalk(contract = BEANSTALK) {

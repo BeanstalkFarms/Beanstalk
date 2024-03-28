@@ -14,7 +14,7 @@ const {
   USDT
 } = require("./utils/constants");
 const { ConvertEncoder } = require('./utils/encoder.js')
-const { to18, toBean, toStalk, to6 } = require('./utils/helpers.js')
+const { to18, toStalk, to6 } = require('./utils/helpers.js')
 const { takeSnapshot, revertToSnapshot } = require("./utils/snapshot");
 let user, user2, owner;
 let userAddress, ownerAddress, user2Address;
@@ -42,7 +42,7 @@ const { getBeanstalk } = require('../utils/contracts.js');
 //node --inspect-brk --unhandled-rejections=strict node_modules/.bin/hardhat test test/ConvertFarmForkTests.test.js --no-compile
 
 
-describe('Farm Convert', function () {
+describe('Farm Convert Forking', function () {
   before(async function () {
     //I wanted to put this in the same file as ConvertFarm.test.js, but when I tried to refactor
     //some setup code into different functions, this.whatever was not passed through successfully,
@@ -86,7 +86,6 @@ describe('Farm Convert', function () {
           'LibGauge', 
           'LibIncentive',
           'LibLockedUnderlying',
-          'LibCurveMinting',
           'LibWellMinting',
           'LibGerminate'
         ],
@@ -123,8 +122,8 @@ describe('Farm Convert', function () {
     this.farmFacet = await ethers.getContractAt("FarmFacet", BEANSTALK);
 
 
-    await this.admin.mintBeans(userAddress, toBean('1000000000'));
-    await this.admin.mintBeans(user2Address, toBean('1000000000'));
+    await this.admin.mintBeans(userAddress, to6('1000000000'));
+    await this.admin.mintBeans(user2Address, to6('1000000000'));
 
     this.pipeline = await impersonatePipeline();
 
@@ -170,10 +169,10 @@ describe('Farm Convert', function () {
       //first deposit 200 bean into bean:eth well
       await this.bean.connect(user).approve(this.well.address, ethers.constants.MaxUint256);
       //get amount out that we should recieve for depositing 200 beans
-      const wellAmountOut = await this.well.getAddLiquidityOut([toBean('200'), to18("0")]);
+      const wellAmountOut = await this.well.getAddLiquidityOut([to6('200'), to18("0")]);
 
 
-      await this.well.connect(user).addLiquidity([toBean('200'), to18("0")], ethers.constants.Zero, user.address, ethers.constants.MaxUint256);
+      await this.well.connect(user).addLiquidity([to6('200'), to18("0")], ethers.constants.Zero, user.address, ethers.constants.MaxUint256);
 
       // if we removed that well amount, how many bean would we expect to get?
       const beanAmountOut = await this.well.getRemoveLiquidityOneTokenOut(wellAmountOut, BEAN);
@@ -218,9 +217,9 @@ describe('Farm Convert', function () {
       //first deposit 200 bean into bean:eth well
       await this.bean.connect(user).approve(this.well.address, ethers.constants.MaxUint256);
       //get amount out that we should receive for depositing 200 beans
-      const wellAmountOut = await this.well.getAddLiquidityOut([toBean('200'), to18("0")]);
+      const wellAmountOut = await this.well.getAddLiquidityOut([to6('200'), to18("0")]);
 
-      await this.well.connect(user).addLiquidity([toBean('200'), to18("0")], ethers.constants.Zero, user.address, ethers.constants.MaxUint256);
+      await this.well.connect(user).addLiquidity([to6('200'), to18("0")], ethers.constants.Zero, user.address, ethers.constants.MaxUint256);
 
       // deposit the bean:eth
       const siloResult = await this.silo.connect(user).deposit(this.well.address, wellAmountOut, EXTERNAL);

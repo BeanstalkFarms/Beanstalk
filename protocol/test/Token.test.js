@@ -5,7 +5,7 @@ const { expect } = require('chai');
 const { deploy } = require('../scripts/deploy.js')
 const { takeSnapshot, revertToSnapshot } = require("./utils/snapshot");
 const { signTokenPermit } = require('../utils');
-const { getAllBeanstalkContracts } = require("../utils/contracts");
+const { getAllBeanstalkContracts, getWeth } = require("../utils/contracts");
 
 
 describe('Token', function () {
@@ -40,7 +40,7 @@ describe('Token', function () {
         await this.token2.connect(this.user).mint(this.user.address, '1000')
         await this.token2.connect(this.user).approve(beanstalk.address, to18('1000000000000000'))
 
-        this.weth = await ethers.getContractAt('IWETH', WETH)
+        this.weth = await getWeth()
         await this.weth.connect(this.user).approve(beanstalk.address, to18('1000000000000000'))
 
         const MockERC1155Token = await ethers.getContractFactory("MockERC1155");

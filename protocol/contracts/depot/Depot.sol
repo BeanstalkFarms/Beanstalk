@@ -8,7 +8,7 @@ import "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
 import "../beanstalk/farm/DepotFacet.sol";
-import "../beanstalk/farm/TokenSupportFacet.sol";
+import {TokenSupportFacet} from "../beanstalk/farm/TokenSupportFacet.sol";
 import "../interfaces/IBeanstalkTransfer.sol";
 import "../interfaces/IERC4494.sol";
 import "../libraries/LibFunction.sol";

@@ -7,7 +7,8 @@ import "../libraries/LibFunction.sol";
 import "../libraries/LibClipboard.sol";
 import "@openzeppelin/contracts/token/ERC1155/ERC1155Holder.sol";
 import "@openzeppelin/contracts/token/ERC721/ERC721Holder.sol";
-import "hardhat/console.sol";
+
+import "forge-std/console.sol";
 
 /**
  * @title Pipeline

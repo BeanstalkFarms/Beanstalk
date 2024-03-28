@@ -242,6 +242,7 @@ describe("Silo Enroot", function () {
 
       beforeEach(async function () {
         await mockBeanstalk.connect(owner).addUnderlying(UNRIPE_LP, '147796000000000')
+        await mockBeanstalk.setBarnRaiseWell(BEAN_WSTETH_WELL);
         await mockBeanstalk.connect(user).mockUnripeLPDeposit('0', ENROOT_FIX_SEASON, to18('0.000000083406453'), to6('10'))
         await mockBeanstalk.lightSunrise()
         await mockBeanstalk.connect(user).mockUnripeLPDeposit('0', ENROOT_FIX_SEASON+1, to18('0.000000083406453'), to6('10'))

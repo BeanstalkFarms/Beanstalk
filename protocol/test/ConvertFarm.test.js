@@ -3,7 +3,7 @@ const { deploy } = require('../scripts/deploy.js')
 const { EXTERNAL, INTERNAL, INTERNAL_EXTERNAL, INTERNAL_TOLERANT } = require('./utils/balances.js')
 const { BEAN, THREE_CURVE, THREE_POOL, BEAN_3_CURVE, PIPELINE, WETH, BEAN_ETH_WELL, BEANSTALK } = require('./utils/constants')
 const { ConvertEncoder } = require('./utils/encoder.js')
-const { to18, toBean, toStalk, to6, toX } = require('./utils/helpers.js')
+const { to18, toStalk, to6, toX } = require('./utils/helpers.js')
 const { takeSnapshot, revertToSnapshot } = require("./utils/snapshot");
 let user, user2, owner;
 let userAddress, ownerAddress, user2Address;
@@ -24,11 +24,10 @@ const { getBeanstalk } = require('../utils/contracts.js');
 
 describe('Farm Convert', function () {
   before(async function () {
-
     [owner, user, user2] = await ethers.getSigners();
     userAddress = user.address;
     user2Address = user2.address;
-    const contracts = await deploy("Test", false, true);
+    const contracts = await deploy(false, true);
     ownerAddress = contracts.account;
     this.diamond = contracts.beanstalkDiamond;
     this.beanstalk = await getBeanstalk(this.diamond.address);
@@ -44,7 +43,6 @@ describe('Farm Convert', function () {
     await this.bean.mint(ownerAddress, to18('1000000000'))
     await this.wellToken.connect(owner).approve(this.beanstalk.address, ethers.constants.MaxUint256)
     await this.bean.connect(owner).approve(this.beanstalk.address, ethers.constants.MaxUint256)
-
     await setEthUsdChainlinkPrice('999.998018')
     await setEthUsdcPrice('1000')
     await setEthUsdtPrice('1000')
@@ -60,42 +58,24 @@ describe('Farm Convert', function () {
       this.well,
       [to6('1000000'), to18('1000')]
     );
-    await whitelistWell(this.well.address, '10000', to6('4'))
+    
     await this.season.captureWellE(this.well.address); //inits well oracle price
 
 
     this.silo = await ethers.getContractAt('SiloFacet', this.diamond.address);
     this.farmFacet = await ethers.getContractAt("FarmFacet", this.diamond.address);
 
-
-    await this.bean.mint(userAddress, toBean('1000000000'));
-    await this.bean.mint(user2Address, toBean('1000000000'));
-
-    const beanstalkOwner = await impersonateBeanstalkOwner();
-    await upgradeWithNewFacets({
-      diamondAddress: BEANSTALK,
-      facetNames: ['ConvertFacet'],
-      libraryNames: [ 'LibConvert' ],
-      facetLibraries: {
-        'ConvertFacet': [ 'LibConvert' ]
-      },
-      bip: false,
-      object: false,
-      verbose: false,
-      account: beanstalkOwner
-    });
-
-    this.pipeline = await deployPipeline();
+    await this.bean.mint(userAddress, to6('1000000000'));
+    await this.bean.mint(user2Address, to6('1000000000'));
 
     await this.season.teleportSunrise(10);
     this.season.deployStemsUpgrade();
 
     await initContracts(); //deploys drafter contract
 
-
     await this.bean.connect(user).approve(this.well.address, ethers.constants.MaxUint256);
     await this.bean.connect(user).approve(this.silo.address, ethers.constants.MaxUint256);
-    await this.wellToken.connect(user).approve(this.pipeline.address, ethers.constants.MaxUint256)
+    await this.wellToken.connect(user).approve(PIPELINE, ethers.constants.MaxUint256)
     await this.wellToken.connect(user).approve(this.silo.address, ethers.constants.MaxUint256)
   });
 
@@ -114,7 +94,7 @@ describe('Farm Convert', function () {
     describe('basic convert', async function () {
       it('does the most basic possible convert Bean to LP', async function () {
 
-        await this.silo.connect(user).deposit(this.bean.address, toBean('200'), EXTERNAL);
+        await this.silo.connect(user).deposit(this.bean.address, to6('200'), EXTERNAL);
         //user needs to approve bean to well
         //get stem tip for token
 
@@ -138,7 +118,7 @@ describe('Farm Convert', function () {
         ]);
 
         //get well amount out if we deposit 200 beans
-        const wellAmountOut = await this.beanstalk.getAmountOut(BEAN, this.well.address, toBean('200'))
+        const wellAmountOut = await this.beanstalk.getAmountOut(BEAN, this.well.address, to6('200'))
         console.log('wellAmountOut: ', wellAmountOut);
         //store bdv of this well amount out for later comparison
         var bdvWellAmountOut = await this.siloGetters.bdv(this.well.address, wellAmountOut);
@@ -149,16 +129,16 @@ describe('Farm Convert', function () {
         console.log('for bean grownStalk: ', grownStalk);
         const [newStemTip, ] = await this.siloGetters.calculateStemForTokenFromGrownStalk(this.well.address, grownStalk, bdvWellAmountOut);
 
-        this.result = this.convert.connect(user).pipelineConvert(this.bean.address, [depositStemTip], [toBean('200')], toBean('200'), this.well.address, farmData);
+        this.result = this.convert.connect(user).pipelineConvert(this.bean.address, [depositStemTip], [to6('200')], to6('200'), this.well.address, farmData);
 
         const afterDeltaB = await this.seasonGetters.poolDeltaBInsta(this.well.address);
         console.log('afterDeltaB: ', afterDeltaB);
 
         //expect it to emit the Convert event
-        // await expect(this.result).to.emit(this.convert, 'Convert').withArgs(user.address, this.bean.address, this.well.address, toBean('200'), wellAmountOut);
+        // await expect(this.result).to.emit(this.convert, 'Convert').withArgs(user.address, this.bean.address, this.well.address, to6('200'), wellAmountOut);
 
         //expect it to emit the RemoveDeposits event
-        await expect(this.result).to.emit(this.silo, 'RemoveDeposits').withArgs(user.address, this.bean.address, [depositStemTip], [toBean('200')], toBean('200'), [toBean('200')]);
+        await expect(this.result).to.emit(this.silo, 'RemoveDeposits').withArgs(user.address, this.bean.address, [depositStemTip], [to6('200')], to6('200'), [to6('200')]);
 
         console.log('newStemTip: ', newStemTip);
         //expect add deposit event
@@ -186,8 +166,8 @@ describe('Farm Convert', function () {
         //first deposit 200 bean into bean:eth well
         await this.bean.connect(user).approve(this.well.address, ethers.constants.MaxUint256);
         //get amount out that we should recieve for depositing 200 beans
-        const wellAmountOut = await this.well.getAddLiquidityOut([toBean('200'), to18("0")]);
-        await this.well.connect(user).addLiquidity([toBean('200'), to18("0")], ethers.constants.Zero, user.address, ethers.constants.MaxUint256);
+        const wellAmountOut = await this.well.getAddLiquidityOut([to6('200'), to18("0")]);
+        await this.well.connect(user).addLiquidity([to6('200'), to18("0")], ethers.constants.Zero, user.address, ethers.constants.MaxUint256);
 
         //alright now if we removed that well amount, how many bean would we expect to get?
         const beanAmountOut = await this.well.getRemoveLiquidityOneTokenOut(wellAmountOut, BEAN);
@@ -235,15 +215,15 @@ describe('Farm Convert', function () {
     /*describe('basic convert multiple crates', async function () {
       it('Bean to LP multiple crates', async function () {
 
-        await this.silo.connect(user).deposit(this.bean.address, toBean('200'), EXTERNAL);
+        await this.silo.connect(user).deposit(this.bean.address, to6('200'), EXTERNAL);
         const stemTip1 = await this.siloGetters.stemTipForToken(this.bean.address);
         await this.season.siloSunrise(0);
 
-        await this.silo.connect(user).deposit(this.bean.address, toBean('200'), EXTERNAL);
+        await this.silo.connect(user).deposit(this.bean.address, to6('200'), EXTERNAL);
         const stemTip2 = await this.siloGetters.stemTipForToken(this.bean.address);
         await this.season.siloSunrise(0);
         
-        await this.silo.connect(user).deposit(this.bean.address, toBean('200'), EXTERNAL);
+        await this.silo.connect(user).deposit(this.bean.address, to6('200'), EXTERNAL);
         const stemTip3 = await this.siloGetters.stemTipForToken(this.bean.address);
         await this.season.siloSunrise(0);
         
@@ -262,19 +242,19 @@ describe('Farm Convert', function () {
         ]);
 
         //get well amount out if we deposit 600 beans
-        const wellAmountOut = await this.beanstalk.getAmountOut(BEAN, this.well.address, toBean('600'))
+        const wellAmountOut = await this.beanstalk.getAmountOut(BEAN, this.well.address, to6('600'))
         //store bdv of this well amount out for later comparison
         const bdvWellAmountOut = await this.siloGetters.bdv(this.well.address, wellAmountOut);
 
-        this.result = this.convert.connect(user).pipelineConvert(this.bean.address, [stemTip1, stemTip2, stemTip3], [toBean('200'), toBean('200'), toBean('200')], toBean('600'), this.well.address, farmData);
+        this.result = this.convert.connect(user).pipelineConvert(this.bean.address, [stemTip1, stemTip2, stemTip3], [to6('200'), to6('200'), to6('200')], to6('600'), this.well.address, farmData);
 
         //expect it to emit the Convert event
-        await expect(this.result).to.emit(this.convert, 'Convert').withArgs(user.address, this.bean.address, this.well.address, toBean('200'), wellAmountOut);
-        await expect(this.result).to.emit(this.convert, 'Convert').withArgs(user.address, this.bean.address, this.well.address, toBean('200'), wellAmountOut);
-        await expect(this.result).to.emit(this.convert, 'Convert').withArgs(user.address, this.bean.address, this.well.address, toBean('200'), wellAmountOut);
+        await expect(this.result).to.emit(this.convert, 'Convert').withArgs(user.address, this.bean.address, this.well.address, to6('200'), wellAmountOut);
+        await expect(this.result).to.emit(this.convert, 'Convert').withArgs(user.address, this.bean.address, this.well.address, to6('200'), wellAmountOut);
+        await expect(this.result).to.emit(this.convert, 'Convert').withArgs(user.address, this.bean.address, this.well.address, to6('200'), wellAmountOut);
 
         //expect it to emit the RemoveDeposits event
-        await expect(this.result).to.emit(this.silo, 'RemoveDeposits').withArgs(user.address, this.bean.address, [stemTip1, stemTip2, stemTip3], [toBean('200'), toBean('200'), toBean('200')], toBean('600'), [toBean('200'), toBean('200'), toBean('200')]);
+        await expect(this.result).to.emit(this.silo, 'RemoveDeposits').withArgs(user.address, this.bean.address, [stemTip1, stemTip2, stemTip3], [to6('200'), to6('200'), to6('200')], to6('600'), [to6('200'), to6('200'), to6('200')]);
 
         //expect add deposit event
         await expect(this.result).to.emit(this.silo, 'AddDeposit').withArgs(user.address, this.well.address, stemTip1, wellAmountOut, bdvWellAmountOut);

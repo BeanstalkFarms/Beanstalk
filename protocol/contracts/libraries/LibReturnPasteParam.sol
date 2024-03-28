@@ -7,8 +7,8 @@ pragma solidity =0.7.6;
 import {C} from "contracts/C.sol";
 import {LibBytes} from "./LibBytes.sol";
 import {LibFunction} from "./LibFunction.sol";
-import "hardhat/console.sol";
 
+import "forge-std/console.sol";
 // https://evmpipeline.org/pipeline.pdf
 
 /**

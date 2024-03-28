@@ -312,6 +312,64 @@
   {
     "inputs": [
       {
+        "internalType": "uint256",
+        "name": "penaltyBdv",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256[]",
+        "name": "bdvsRemoved",
+        "type": "uint256[]"
+      },
+      {
+        "internalType": "uint256[]",
+        "name": "grownStalks",
+        "type": "uint256[]"
+      }
+    ],
+    "name": "applyPenaltyToGrownStalks",
+    "outputs": [
+      {
+        "internalType": "uint256[]",
+        "name": "",
+        "type": "uint256[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "int256",
+        "name": "beforeDeltaB",
+        "type": "int256"
+      },
+      {
+        "internalType": "int256",
+        "name": "afterDeltaB",
+        "type": "int256"
+      },
+      {
+        "internalType": "uint256[]",
+        "name": "bdvsRemoved",
+        "type": "uint256[]"
+      }
+    ],
+    "name": "calculateStalkPenalty",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
         "internalType": "bytes",
         "name": "convertData",
         "type": "bytes"
@@ -428,6 +486,63 @@
     "name": "depositForConvertE",
     "outputs": [],
     "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes",
+        "name": "data",
+        "type": "bytes"
+      }
+    ],
+    "name": "logResultBySlot",
+    "outputs": [
+      {
+        "internalType": "bytes[]",
+        "name": "args",
+        "type": "bytes[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "inputToken",
+        "type": "address"
+      },
+      {
+        "internalType": "int96[]",
+        "name": "stems",
+        "type": "int96[]"
+      },
+      {
+        "internalType": "uint256[]",
+        "name": "amounts",
+        "type": "uint256[]"
+      },
+      {
+        "internalType": "uint256",
+        "name": "totalAmountIn",
+        "type": "uint256"
+      },
+      {
+        "internalType": "address",
+        "name": "outputToken",
+        "type": "address"
+      },
+      {
+        "internalType": "bytes",
+        "name": "farmData",
+        "type": "bytes"
+      }
+    ],
+    "name": "pipelineConvert",
+    "outputs": [],
+    "stateMutability": "payable",
     "type": "function"
   },
   {
@@ -909,11 +1024,6 @@
         "internalType": "uint256",
         "name": "minLPTokensOut",
         "type": "uint256"
-      },
-      {
-        "internalType": "enum LibTransfer.From",
-        "name": "mode",
-        "type": "uint8"
       }
     ],
     "name": "mintFertilizer",
@@ -962,7 +1072,7 @@
     "inputs": [
       {
         "internalType": "address",
-        "name": "welll",
+        "name": "well",
         "type": "address"
       }
     ],
