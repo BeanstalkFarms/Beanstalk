@@ -93,7 +93,7 @@ library LibStrings {
         pure
         returns (string memory)
     {                                       
-                        // Cast to uint256 to be compatible with toString  
+        // Cast to uint256 to be compatible with toString  
         string memory numString = toString(uint256(number));
 
         // If the number has fewer than 6 decimals, add trailing zeros
