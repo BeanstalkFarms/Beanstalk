@@ -208,7 +208,7 @@ library LibWellMinting {
         }
     }
 
-        /**
+    /**
      * @dev Calculates the instantaneous delta B for a given Well address.
      * @param well The address of the Well.
      * @return deltaB The instantaneous delta B balance since the last `capture` call.

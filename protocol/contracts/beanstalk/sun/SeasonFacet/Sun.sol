@@ -8,7 +8,9 @@ import {LibFertilizer, SafeMath} from "contracts/libraries/LibFertilizer.sol";
 import {LibSafeMath128} from "contracts/libraries/LibSafeMath128.sol";
 import {Oracle, C} from "./Oracle.sol";
 import {Math} from "@openzeppelin/contracts/math/Math.sol";
+import {SignedSafeMath} from "@openzeppelin/contracts/math/SignedSafeMath.sol";
 import {LibWellMinting} from "contracts/libraries/Minting/LibWellMinting.sol";
+import {LibWhitelistedTokens} from "contracts/libraries/Silo/LibWhitelistedTokens.sol";
 
 /**
  * @title Sun
@@ -19,6 +21,7 @@ contract Sun is Oracle {
     using SafeCast for uint256;
     using SafeMath for uint256;
     using LibSafeMath128 for uint128;
+    using SignedSafeMath for int256;
 
     /// @dev When Fertilizer is Active, it receives 1/3 of new Bean mints.
     uint256 private constant FERTILIZER_DENOMINATOR = 3;
@@ -236,10 +239,13 @@ contract Sun is Oracle {
     */
     function setSoilBelowPeg(int256 twaDeltaB) internal {
 
-        // Calculate deltaB from instantaneous reserves.
-        // NOTE: deltaB is calculated only from the Bean:ETH Well at this time.
-        // If more wells are added, this will need to be updated.
-        (int256 instDeltaB, ,) = LibWellMinting.instantaneousDeltaB(C.BEAN_ETH_WELL);
+        // Calculate deltaB from instantaneous reserves of all whitelisted Wells.
+        int256 instDeltaB;
+        address[] memory tokens = LibWhitelistedTokens.getWhitelistedWellLpTokens();
+        for (uint256 i = 0; i < tokens.length; i++) {
+            (int256 wellInstDeltaB, ,) = LibWellMinting.instantaneousDeltaB(tokens[i]);
+            instDeltaB = instDeltaB.add(wellInstDeltaB);
+        }
 
         // If the inst delta b is 0 it means that the oracle failed so the twa delta b is used.
         uint256 newSoil = instDeltaB == 0 ? uint256(-twaDeltaB) : Math.min(uint256(-twaDeltaB), uint256(-instDeltaB));
