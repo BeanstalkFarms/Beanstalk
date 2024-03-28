@@ -113,8 +113,7 @@ describe('Farm Convert', function () {
     });
 
     describe('basic convert', async function () {
-      it('does the most basic possible convert Bean to LP in direction of peg', async function () {
-
+      it('does the most basic possible convert Bean to LP towards peg', async function () {
         await this.silo.connect(user).deposit(this.bean.address, toBean('200'), EXTERNAL);
         //user needs to approve bean to well
         //get stem tip for token
@@ -182,7 +181,7 @@ describe('Farm Convert', function () {
         return depositedBdv;
       }
 
-      it('does the most basic possible convert LP to Bean in direction of peg', async function () {
+      it('does the most basic possible convert LP to Bean towards peg', async function () {
         await setEthUsdChainlinkPrice('999.998018') // adjust deltaB
 
         //first deposit 200 bean into bean:eth well
@@ -231,6 +230,63 @@ describe('Farm Convert', function () {
       //"ERC20: transfer amount exceeds balance"
 
 
+      it('does the most basic possible convert Bean to LP against peg', async function () {
+        await setEthUsdChainlinkPrice('999.95')
+        await this.silo.connect(user).deposit(this.bean.address, toBean('200'), EXTERNAL);
+        const depositStemTip = await this.siloGetters.stemTipForToken(this.bean.address);
+        //advance 2 seasons to get past germination
+        await this.season.siloSunrise(0);
+        await this.season.siloSunrise(0);
+  
+        let advancedFarmCalls = await draftConvertBeanToBeanEthWell();
+        const farmData = this.farmFacet.interface.encodeFunctionData("advancedFarm", [advancedFarmCalls]);
+  
+        //get well amount out if we deposit 200 beans
+        const wellAmountOut = await this.beanstalk.getAmountOut(BEAN, this.well.address, toBean('200'))
+        //store bdv of this well amount out for later comparison
+        var bdvWellAmountOut = await this.siloGetters.bdv(this.well.address, wellAmountOut);
+  
+        //get grownStalk for this deposit
+        const grownStalk = 0; // zero grown stalk since it's all lost since converting away from peg
+        const [newStemTip, ] = await this.siloGetters.calculateStemForTokenFromGrownStalk(this.well.address, grownStalk, bdvWellAmountOut);
+  
+        this.result = this.convert.connect(user).pipelineConvert(this.bean.address, [depositStemTip], [toBean('200')], toBean('200'), this.well.address, farmData);
+        const afterDeltaB = await this.seasonGetters.poolDeltaBInsta(this.well.address);
+  
+        //expect it to emit the Convert event
+        await expect(this.result).to.emit(this.convert, 'Convert').withArgs(user.address, this.bean.address, this.well.address, toBean('200'), wellAmountOut);
+  
+        //expect it to emit the RemoveDeposits event
+        await expect(this.result).to.emit(this.silo, 'RemoveDeposits').withArgs(user.address, this.bean.address, [depositStemTip], [toBean('200')], toBean('200'), [toBean('200')]);
+  
+        //expect add deposit event
+        await expect(this.result).to.emit(this.silo, 'AddDeposit').withArgs(user.address, this.well.address, newStemTip, wellAmountOut, bdvWellAmountOut);
+      });
+
+      it.only('does the most basic possible convert LP to Bean against peg', async function () {
+        await this.bean.connect(user).approve(this.well.address, ethers.constants.MaxUint256);
+        const wellAmountOut = await this.well.getAddLiquidityOut([toBean('200'), to18("0")]);
+        await this.well.connect(user).addLiquidity([toBean('200'), to18("0")], ethers.constants.Zero, user.address, ethers.constants.MaxUint256);
+        const beanAmountOut = await this.well.getRemoveLiquidityOneTokenOut(wellAmountOut, BEAN);
+        const siloResult = await this.silo.connect(user).deposit(this.well.address, wellAmountOut, EXTERNAL);
+        const siloReceipt = await siloResult.wait();
+        const depositedBdv = getBdvFromAddDepositReceipt(this.silo, siloReceipt);
+        const depositStemTip = await this.siloGetters.stemTipForToken(this.well.address);
+        //advance 2 seasons to get past germination
+        await this.season.siloSunrise(0);
+        await this.season.siloSunrise(0);
+        const grownStalk = 0;
+        const [newStemTip, ] = await this.siloGetters.calculateStemForTokenFromGrownStalk(this.bean.address, grownStalk, beanAmountOut);
+
+        let advancedFarmCalls = await draftConvertBeanEthWellToBean(wellAmountOut, beanAmountOut)
+        const farmData = this.farmFacet.interface.encodeFunctionData("advancedFarm", [advancedFarmCalls]);
+        this.result = this.convert.connect(user).pipelineConvert(this.well.address, [depositStemTip], [wellAmountOut], wellAmountOut, this.bean.address, farmData);
+
+        //verify events
+        await expect(this.result).to.emit(this.convert, 'Convert').withArgs(user.address, this.well.address, this.bean.address, wellAmountOut, beanAmountOut);
+        await expect(this.result).to.emit(this.silo, 'RemoveDeposits').withArgs(user.address, this.well.address, [depositStemTip], [wellAmountOut], wellAmountOut, [depositedBdv]);
+        await expect(this.result).to.emit(this.silo, 'AddDeposit').withArgs(user.address, this.bean.address, newStemTip, beanAmountOut, beanAmountOut);
+      });
     });
 
 
