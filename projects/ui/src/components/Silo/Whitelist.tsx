@@ -4,7 +4,6 @@ import {
   Button,
   Card,
   Chip,
-  CircularProgress,
   Divider,
   Grid,
   Link,
@@ -40,18 +39,17 @@ import useSetting from '~/hooks/app/useSetting';
 import Row from '~/components/Common/Row';
 import Stat from '~/components/Common/Stat';
 import useUnripeUnderlyingMap from '~/hooks/beanstalk/useUnripeUnderlying';
-import useAPY from '~/hooks/beanstalk/useAPY';
 import stalkIcon from '~/img/beanstalk/stalk-icon.svg';
-import SiloAssetApyChip from './SiloAssetApyChip';
-import BeanProgressIcon from '../Common/BeanProgressIcon';
 import logo from '~/img/tokens/bean-logo.svg';
+import { FC } from '~/types';
+import SiloAssetApyChip from './SiloAssetApyChip';
+import StatHorizontal from '../Common/StatHorizontal';
+import BeanProgressIcon from '../Common/BeanProgressIcon';
 
 /**
  * Display a pseudo-table of Whitelisted Silo Tokens.
  * This table is the entry point to deposit Beans, LP, etc.
  */
-import { FC } from '~/types';
-import StatHorizontal from '../Common/StatHorizontal';
 
 const ARROW_CONTAINER_WIDTH = 20;
 const TOOLTIP_COMPONENT_PROPS = {
@@ -82,7 +80,7 @@ const Whitelist: FC<{
   const unripeUnderlyingTokens = useUnripeUnderlyingMap();
 
   /// State
-  const apyQuery = useAPY();
+  // const apyQuery = useAPY();
   const getBDV = useBDV();
   const beanstalkSilo = useSelector<AppState, AppState['_beanstalk']['silo']>(
     (state) => state._beanstalk.silo
@@ -227,10 +225,11 @@ const Whitelist: FC<{
                    */}
                   <Grid item md={2.5} xs={7}>
                     <Row gap={1}>
-                      <img
+                      <Box
+                        component="img"
                         src={token.logo}
                         alt={token.name}
-                        css={{ height: IconSize.medium, display: 'inline' }}
+                        sx={{ height: IconSize.medium, display: 'inline' }}
                       />
                       <Typography display="inline" color="text.primary">
                         {token.name}
