@@ -26,6 +26,14 @@ contract ConvertFacet is ReentrancyGuard {
     using SafeCast for uint256;
     using LibSafeMath32 for uint32;
 
+    struct convertParams {
+        address toToken; 
+        address fromToken; 
+        uint256 grownStalk; 
+        address account; 
+        bool decreaseBDV;
+    }
+
     event Convert(
         address indexed account,
         address fromToken,
@@ -75,39 +83,36 @@ contract ConvertFacet is ReentrancyGuard {
         nonReentrant
         returns (int96 toStem, uint256 fromAmount, uint256 toAmount, uint256 fromBdv, uint256 toBdv)
     {
-        address toToken; address fromToken; uint256 grownStalk; address account; bool decreaseBDV;
-
-        (toToken, fromToken, toAmount, fromAmount, account, decreaseBDV) = LibConvert.convert(convertData);
+        convertParams memory cp;
+        (cp.toToken, cp.fromToken, toAmount, fromAmount, cp.account, cp.decreaseBDV) = LibConvert.convert(convertData);
         
-        require(fromAmount > 0, "Convert: From amount is 0.");
-
         require(fromAmount > 0, "Convert: From amount is 0.");
 
         // Replace account with msg.sender if no account is specified.
-        if(account == address(0)) account = msg.sender;
+        if(cp.account == address(0)) cp.account = msg.sender;
 
-        LibSilo._mow(account, fromToken);
+        LibSilo._mow(cp.account, cp.fromToken);
 
         // If the fromToken and toToken are different, mow the toToken as well.
-        if (fromToken != toToken) LibSilo._mow(account, toToken);
+        if (cp.fromToken != cp.toToken) LibSilo._mow(cp.account, cp.toToken);
         
         // Withdraw the tokens from the deposit.
-        (grownStalk, fromBdv) = _withdrawTokens(
-            fromToken,
+        (cp.grownStalk, fromBdv) = _withdrawTokens(
+            cp.fromToken,
             stems,
             amounts,
             fromAmount,
-            account
+            cp.account
         );
 
         // Calculate the bdv of the new deposit.
-        uint256 newBdv = LibTokenSilo.beanDenominatedValue(toToken, toAmount);
+        uint256 newBdv = LibTokenSilo.beanDenominatedValue(cp.toToken, toAmount);
 
         // If `decreaseBDV` flag is not enabled, set toBDV to the max of the two bdvs.
-        toBdv = (newBdv > fromBdv || decreaseBDV)  ? newBdv : fromBdv;
+        toBdv = (newBdv > fromBdv || cp.decreaseBDV)  ? newBdv : fromBdv;
 
-        toStem = _depositTokensForConvert(toToken, toAmount, toBdv, grownStalk, account);
-        emit Convert(account, fromToken, toToken, fromAmount, toAmount);
+        toStem = _depositTokensForConvert(cp.toToken, toAmount, toBdv, cp.grownStalk, cp.account);
+        emit Convert(cp.account, cp.fromToken, cp.toToken, fromAmount, toAmount);
     }
 
     /**
