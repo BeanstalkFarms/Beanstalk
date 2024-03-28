@@ -1,4 +1,4 @@
-import { Box, Chip, Link, Tooltip, Typography } from '@mui/material';
+import { Box, Chip, Link, Stack, Tooltip, Typography } from '@mui/material';
 import React from 'react';
 import Token from '~/classes/Token';
 import { BEAN } from '~/constants/tokens';
@@ -56,25 +56,41 @@ const SiloAssetApyChip: FC<SiloAssetApyChipProps> = ({
         <Row gap={0}>
           {metric === 'bean' && (
             <Box sx={{ px: 1, py: 0.5, maxWidth: 245 }}>
-              <Stat
-                title={
-                  <Row gap={0.5}>
-                    <TokenIcon token={Bean} />
-                    Total Beans per Season
-                  </Row>
-                }
-                gap={0.25}
-                variant="h4"
-                amount={
-                  latestYield
-                    ? displayFullBN(
-                        latestYield.beansPerSeasonEMA30d,
-                        Bean.displayDecimals
-                      )
-                    : '0'
-                }
-                subtitle="30-day exponential moving average of Beans earned by all Stalkholders per Season."
-              />
+              <Stack gap={0.25}>
+                <Row gap={0.5}>
+                  <TokenIcon token={Bean} />
+                  Total Beans per Season
+                </Row>
+                <Box display='flex'>
+                  <Stack width='33%'>
+                    <Typography variant='h4'>
+                      24H
+                    </Typography>
+                    <Typography variant='h4'>
+                      {latestYield ? displayFullBN(latestYield.beansPerSeasonEMA24h, Bean.displayDecimals) : '0'}
+                    </Typography>
+                  </Stack>
+                  <Stack width='33%'>
+                    <Typography variant='h4'>
+                      7D
+                    </Typography>
+                    <Typography variant='h4'>
+                      {latestYield ? displayFullBN(latestYield.beansPerSeasonEMA7d, Bean.displayDecimals) : '0'}
+                    </Typography>
+                  </Stack>
+                  <Stack width='33%'>
+                    <Typography variant='h4'>
+                      30D
+                    </Typography>
+                    <Typography variant='h4'>
+                      {latestYield ? displayFullBN(latestYield.beansPerSeasonEMA30d, Bean.displayDecimals) : '0'}
+                    </Typography>
+                  </Stack>
+                </Box>
+                <Typography variant="bodySmall" color="text.primary">
+                  24-hour/7-day/30-day exponential moving average of Beans earned by all Stalkholders per Season.
+                </Typography>
+              </Stack>
             </Box>
           )}
           <Box

@@ -108,93 +108,12 @@ const Whitelist: FC<{
           <Grid item md={2.5} xs={4}>
             <Typography color="text.secondary">Token</Typography>
           </Grid>
-          {/* <Grid item md={3} xs={0} display={{ xs: 'none', md: 'block' }}>
-            <Row gap={0.25}>
-              <Tooltip
-                title={
-                  <>
-                    The amount of Stalk and Seeds earned for each 1 Bean
-                    Denominated Value (BDV) Deposited in the Silo.
-                  </>
-                }
-              >
-                <Typography color="text.secondary">Rewards</Typography>
-              </Tooltip>
-              &nbsp;
-              <Tooltip
-                title={
-                  <>
-                    <strong>vAPY</strong> (Variable APY) uses historical data
-                    about Beans earned by Stalkholders to estimate future
-                    returns for Depositing assets in the Silo.&nbsp;
-                    <Link
-                      underline="hover"
-                      href="https://docs.bean.money/almanac/guides/silo/understand-silo-vapy"
-                      target="_blank"
-                      rel="noreferrer"
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      Learn more
-                    </Link>
-                    <Divider sx={{ my: 1, borderColor: 'divider' }} />
-                    <Typography fontSize={FontSize.sm}>
-                      <strong>Bean vAPY:</strong> Estimated annual Beans earned
-                      by a Stalkholder for Depositing an asset.
-                      <br />
-                      <strong>Stalk vAPY:</strong> Estimated annual growth in
-                      Stalk for Depositing an asset.
-                    </Typography>
-                  </>
-                }
-              >
-                <span>
-                  <Row gap={0.25}>
-                    <Chip
-                      variant="filled"
-                      color="primary"
-                      label={
-                        <Row gap={0.5}>
-                          <TokenIcon token={BEAN[1]} /> vAPY
-                        </Row>
-                      }
-                      onClick={undefined}
-                      size="small"
-                    />
-                    <Chip
-                      variant="filled"
-                      color="secondary"
-                      label={
-                        <Row gap={0.5}>
-                          <TokenIcon
-                            token={
-                              { symbol: 'Stalk', logo: stalkIconBlue } as Token
-                            }
-                          />{' '}
-                          vAPY
-                        </Row>
-                      }
-                      onClick={undefined}
-                      size="small"
-                    />
-                    {apyQuery.loading && (
-                      <CircularProgress
-                        variant="indeterminate"
-                        size={12}
-                        thickness={4}
-                        sx={{ ml: 0.5 }}
-                      />
-                    )}
-                  </Row>
-                </span>
-              </Tooltip>
-            </Row>
-                    </Grid> */}
           <Grid item md={1} xs={0} display={{ xs: 'none', md: 'block' }}>
-            <Tooltip title="Estimated annual Beans earned by a Stalkholder for Depositing an asset.">
+            <Tooltip title="The amount of Stalk and Seeds earned for each 1 Bean Denominated Value (BDV) Deposited in the Silo.">
               <Typography color="text.secondary">Rewards</Typography>
             </Tooltip>
           </Grid>
-          <Grid item md={2.25} xs={0} display={{ xs: 'none', md: 'block' }}>
+          <Grid item md={2} xs={0} display={{ xs: 'none', md: 'flex' }} justifyContent='center'>
             <Tooltip title="Estimated annual Beans earned by a Stalkholder for Depositing an asset.">
               <Chip
                 variant="filled"
@@ -214,16 +133,16 @@ const Whitelist: FC<{
               />
             </Tooltip>
           </Grid>
-          <Grid item md={1} xs={0} display={{ xs: 'none', md: 'block' }}>
+          <Grid item md={1.25} xs={0} display={{ xs: 'none', md: 'flex' }} justifyContent='center'>
             <Tooltip title="Estimated annual growth in Stalk for Depositing an asset.">
-              <Row gap={0.5}>
+              <Typography color="text.primary">
                 <TokenIcon
                   token={
                     { symbol: 'Stalk', logo: stalkIcon } as Token
                   }
                 />
-                vAPY
-              </Row>
+                {' '}vAPY
+              </Typography>
             </Tooltip>
           </Grid>
           <Grid item md={1} xs={0} display={{ xs: 'none', md: 'block' }}>
@@ -318,7 +237,6 @@ const Whitelist: FC<{
                       </Typography>
                     </Row>
                   </Grid>
-
                   {/**
                    * Cell: Rewards
                    */}
@@ -362,9 +280,10 @@ const Whitelist: FC<{
                    */}
                   <Grid
                     item
-                    md={2.25}
+                    md={2}
                     xs={0}
-                    display={{ xs: 'none', md: 'block' }}
+                    display={{ xs: 'none', md: 'flex' }}
+                    justifyContent='center'
                   >
                     <SiloAssetApyChip token={token} metric="bean" />
                   </Grid>
@@ -374,9 +293,10 @@ const Whitelist: FC<{
                    */}
                   <Grid
                     item
-                    md={1}
+                    md={1.25}
                     xs={0}
-                    display={{ xs: 'none', md: 'block' }}
+                    display={{ xs: 'none', md: 'flex' }}
+                    justifyContent='center'
                   >
                     <SiloAssetApyChip token={token} metric="stalk" />
                   </Grid>
