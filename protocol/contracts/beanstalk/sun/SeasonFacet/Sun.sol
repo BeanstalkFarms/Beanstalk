@@ -247,11 +247,10 @@ contract Sun is Oracle {
             instDeltaB = instDeltaB.add(wellInstDeltaB);
         }
 
-        // If the inst delta b is 0 it means that the oracle failed so the twa delta b is used.
-        uint256 newSoil = instDeltaB == 0 ? uint256(-twaDeltaB) : Math.min(uint256(-twaDeltaB), uint256(-instDeltaB));
-
         // Set new soil.
+        // If the inst delta b is 0 it means that the oracle failed so the twa delta b is used.
         setSoil(instDeltaB == 0 ? uint256(-twaDeltaB) : Math.min(uint256(-twaDeltaB), uint256(-instDeltaB)));
+        
     }
 
     /**
