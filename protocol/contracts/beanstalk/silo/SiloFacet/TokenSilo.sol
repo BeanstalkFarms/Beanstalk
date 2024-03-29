@@ -6,7 +6,9 @@ pragma solidity =0.7.6;
 pragma abicoder v2;
 
 import "./Silo.sol";
-import "hardhat/console.sol";
+
+import "forge-std/console.sol";
+
 
 /**
  * @title TokenSilo

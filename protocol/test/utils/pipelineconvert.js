@@ -2,7 +2,7 @@ const { ethers } = require("hardhat");
 
 const { EXTERNAL, INTERNAL } = require("./balances.js");
 const { BEAN, ZERO_ADDRESS, UNRIPE_BEAN, UNRIPE_LP, BEAN_ETH_WELL, PIPELINE, TRI_CRYPTO_POOL, WETH, BEAN_3_CURVE, BEAN_METAPOOL, USDT, USDC, BEANSTALK, UNISWAP_ROUTER, MAX_UINT256 } = require("./constants.js");
-const { to6, to18, toBean } = require("./helpers.js");
+const { to6, to18 } = require("./helpers.js");
 const { wrapExternalCall, encodeBlueprintData } = require("./tractor.js");
 const { packAdvanced, encodeAdvancedData, decodeAdvancedData } = require('../../utils/function.js')
 const curveABI = require("../../abi/curve.json");

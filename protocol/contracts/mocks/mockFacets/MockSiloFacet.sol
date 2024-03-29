@@ -9,7 +9,8 @@ import "@openzeppelin/contracts/math/SafeMath.sol";
 import "../../beanstalk/silo/SiloFacet/SiloFacet.sol";
 import "../../libraries/Silo/LibWhitelist.sol";
 import "../../libraries/Silo/LibLegacyTokenSilo.sol";
-
+import "contracts/libraries/Silo/LibWhitelistedTokens.sol";
+import "contracts/libraries/Well/LibWell.sol";
 /**
  * @author Publius
  * @title Mock Silo Facet
@@ -42,10 +43,6 @@ contract MockSiloFacet is SiloFacet {
         int256 delta,
         int256 deltaBdv
     );
-
-    function mockWhitelistToken(address token, bytes4 selector, uint16 stalk, uint24 stalkEarnedPerSeason) external {
-       whitelistTokenLegacy(token, selector, stalk, stalkEarnedPerSeason);
-    }
 
     function mockBDV(uint256 amount) external pure returns (uint256) {
         return amount;
@@ -346,20 +343,64 @@ contract MockSiloFacet is SiloFacet {
         return s.s.deprecated_seeds;
     }
 
-    function whitelistTokenLegacy(
+    /**
+     * @notice Whitelists a token for testing purposes.
+     * @dev no gauge. no error checking.
+     */
+    function mockWhitelistToken(
         address token,
         bytes4 selector,
         uint16 stalkIssuedPerBdv,
         uint24 stalkEarnedPerSeason
-    ) internal {
+    ) external {
 
         s.ss[token].selector = selector;
         s.ss[token].stalkIssuedPerBdv = stalkIssuedPerBdv; //previously just called "stalk"
         s.ss[token].stalkEarnedPerSeason = stalkEarnedPerSeason; //previously called "seeds"
 
         s.ss[token].milestoneSeason = uint24(s.season.current);
-
+        LibWhitelistedTokens.addWhitelistStatus(
+            token,
+            true,
+            true,
+            selector == LibWell.WELL_BDV_SELECTOR
+        );
+        
         // emit WhitelistToken(token, selector, stalkEarnedPerSeason, stalkIssuedPerBdv);
+    }
+
+    /**
+     * @dev Whitelists a token for testing purposes.
+     * @dev no error checking.
+     */
+    function mockWhitelistTokenWithGauge(
+        address token,
+        bytes4 selector,
+        uint16 stalkIssuedPerBdv,
+        uint24 stalkEarnedPerSeason,
+        bytes1 encodeType,
+        bytes4 gaugePointSelector,
+        bytes4 liquidityWeightSelector,
+        uint128 gaugePoints,
+        uint64 optimalPercentDepositedBdv
+    ) external {
+        if (stalkEarnedPerSeason == 0) stalkEarnedPerSeason = 1;
+        s.ss[token].selector = selector;
+        s.ss[token].stalkEarnedPerSeason = stalkEarnedPerSeason;
+        s.ss[token].stalkIssuedPerBdv = stalkIssuedPerBdv;
+        s.ss[token].milestoneSeason = uint32(s.season.current);
+        s.ss[token].encodeType = encodeType;
+        s.ss[token].gpSelector = gaugePointSelector;
+        s.ss[token].lwSelector = liquidityWeightSelector;
+        s.ss[token].gaugePoints = gaugePoints;
+        s.ss[token].optimalPercentDepositedBdv = optimalPercentDepositedBdv;
+
+        LibWhitelistedTokens.addWhitelistStatus(
+            token,
+            true,
+            true,
+            selector == LibWell.WELL_BDV_SELECTOR
+        );
     }
 
     function addWhitelistSelector(address token, bytes4 selector) external {

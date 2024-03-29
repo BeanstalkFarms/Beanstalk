@@ -18,7 +18,7 @@ async function getEthSpentOnGas(result) {
   return receipt.effectiveGasPrice.mul(receipt.cumulativeGasUsed);
 }
 
-function toBean(amount) {
+function to6(amount) {
   return ethers.utils.parseUnits(amount,6);
 }
 
@@ -42,6 +42,10 @@ function toX(amount, x) {
   return ethers.utils.parseUnits(amount,x);
 }
 
+function toBN(a) {
+  return ethers.BigNumber.from(a)
+}
+
 async function advanceTime(time) {
   let timestamp = (await ethers.provider.getBlock('latest')).timestamp;
   timestamp += time
@@ -52,7 +56,7 @@ async function advanceTime(time) {
 }
 
 
-exports.toBean = toBean
+exports.to6 = to6
 exports.toStalk = toStalk
 exports.toEther = toEther
 exports.to18 = to18
@@ -62,3 +66,4 @@ exports.getEthSpentOnGas = getEthSpentOnGas
 exports.incrementTime = incrementTime
 exports.advanceTime = advanceTime
 exports.toX = toX
+exports.toBN = toBN

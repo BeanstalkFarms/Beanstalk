@@ -3,7 +3,7 @@ const { deploy } = require('../scripts/deploy.js')
 const { EXTERNAL, INTERNAL, INTERNAL_EXTERNAL, INTERNAL_TOLERANT } = require('./utils/balances.js')
 const { BEAN, THREE_CURVE, THREE_POOL, BEAN_3_CURVE, PIPELINE, WETH, BEAN_ETH_WELL, BEANSTALK } = require('./utils/constants')
 const { ConvertEncoder } = require('./utils/encoder.js')
-const { to18, toBean, toStalk, to6, toX } = require('./utils/helpers.js')
+const { to18, toStalk, to6, toX } = require('./utils/helpers.js')
 const { takeSnapshot, revertToSnapshot } = require("./utils/snapshot");
 let user, user2, owner;
 let userAddress, ownerAddress, user2Address;
@@ -24,11 +24,10 @@ const { getBeanstalk } = require('../utils/contracts.js');
 
 describe('Farm Convert', function () {
   before(async function () {
-
     [owner, user, user2] = await ethers.getSigners();
     userAddress = user.address;
     user2Address = user2.address;
-    const contracts = await deploy("Test", false, true);
+    const contracts = await deploy(false, true);
     ownerAddress = contracts.account;
     this.diamond = contracts.beanstalkDiamond;
     this.beanstalk = await getBeanstalk(this.diamond.address);
@@ -61,42 +60,24 @@ describe('Farm Convert', function () {
       this.well,
       [to6('1000000'), to18('1000')]
     );
-    await whitelistWell(this.well.address, '10000', to6('4'))
+    
     await this.season.captureWellE(this.well.address); //inits well oracle price
 
 
     this.silo = await ethers.getContractAt('SiloFacet', this.diamond.address);
     this.farmFacet = await ethers.getContractAt("FarmFacet", this.diamond.address);
 
-
-    await this.bean.mint(userAddress, toBean('1000000000'));
-    await this.bean.mint(user2Address, toBean('1000000000'));
-
-    const beanstalkOwner = await impersonateBeanstalkOwner();
-    await upgradeWithNewFacets({
-      diamondAddress: BEANSTALK,
-      facetNames: ['ConvertFacet'],
-      libraryNames: [ 'LibConvert' ],
-      facetLibraries: {
-        'ConvertFacet': [ 'LibConvert' ]
-      },
-      bip: false,
-      object: false,
-      verbose: false,
-      account: beanstalkOwner
-    });
-
-    this.pipeline = await deployPipeline();
+    await this.bean.mint(userAddress, to6('1000000000'));
+    await this.bean.mint(user2Address, to6('1000000000'));
 
     await this.season.teleportSunrise(10);
     this.season.deployStemsUpgrade();
 
     await initContracts(); //deploys drafter contract
 
-
     await this.bean.connect(user).approve(this.well.address, ethers.constants.MaxUint256);
     await this.bean.connect(user).approve(this.silo.address, ethers.constants.MaxUint256);
-    await this.wellToken.connect(user).approve(this.pipeline.address, ethers.constants.MaxUint256)
+    await this.wellToken.connect(user).approve(PIPELINE, ethers.constants.MaxUint256)
     await this.wellToken.connect(user).approve(this.silo.address, ethers.constants.MaxUint256)
   });
 
@@ -166,8 +147,8 @@ describe('Farm Convert', function () {
         //first deposit 200 bean into bean:eth well
         await this.bean.connect(user).approve(this.well.address, ethers.constants.MaxUint256);
         //get amount out that we should recieve for depositing 200 beans
-        const wellAmountOut = await this.well.getAddLiquidityOut([toBean('200'), to18("0")]);
-        await this.well.connect(user).addLiquidity([toBean('200'), to18("0")], ethers.constants.Zero, user.address, ethers.constants.MaxUint256);
+        const wellAmountOut = await this.well.getAddLiquidityOut([to6('200'), to18("0")]);
+        await this.well.connect(user).addLiquidity([to6('200'), to18("0")], ethers.constants.Zero, user.address, ethers.constants.MaxUint256);
 
         //alright now if we removed that well amount, how many bean would we expect to get?
         const beanAmountOut = await this.well.getRemoveLiquidityOneTokenOut(wellAmountOut, BEAN);

@@ -27,15 +27,21 @@ const {
   ETH_USD_CHAINLINK_AGGREGATOR,
   WSTETH
 } = require('../test/utils/constants');
+const { impersonatePipeline } = require('./pipeline');
+const { impersonateDepot } = require('./depot');
 const { impersonateSigner, mintEth } = require('../utils');
 const { to18 } = require('../test/utils/helpers');
 
 const { getSigner } = '../utils'
 
+/**
+ * @notice deploys the curve ecosystem relevant to beanstalk.
+ * @dev Because bean3crv is dewhitelisted, this is kept for testing 
+ * legacy functionality. 
+ */
 async function curve() {
-  // Deploy 3 Curveadd
-  await usdc()
 
+  // 3-pool (DAI, USDC, USDT)
   await impersonateContractOnPath(
     `./artifacts/contracts/mocks/curve/Mock3Curve.sol/Mock3Curve.json`,
     THREE_POOL
@@ -44,11 +50,13 @@ async function curve() {
   const threePool = await ethers.getContractAt('Mock3Curve', THREE_POOL)
   await threePool.set_virtual_price(ethers.utils.parseEther('1'));
 
-
+  // 3crv token
   await impersonateContractOnPath(
     './artifacts/contracts/mocks/MockToken.sol/MockToken.json',
     THREE_CURVE
   )
+
+  // Stable Factory, Curve Registry, Curve Zap
   await impersonateContractOnPath(
     './artifacts/contracts/mocks/curve/MockCurveFactory.sol/MockCurveFactory.json',
     STABLE_FACTORY
@@ -67,7 +75,6 @@ async function curve() {
 
   const curveZap = await ethers.getContractAt("MockCurveZap", CURVE_ZAP);
   await curveZap.approve()
-
 }
 
 async function curveMetapool(poolAddress, name, tokenAddress) {
@@ -77,17 +84,21 @@ async function curveMetapool(poolAddress, name, tokenAddress) {
     poolAddress
   )
 
-    const beanMetapool = await ethers.getContractAt('MockMeta3Curve', poolAddress);
-    await beanMetapool.init(tokenAddress, THREE_CURVE, THREE_POOL);
-    await beanMetapool.set_A_precise('1000');
-    await beanMetapool.set_virtual_price(ethers.utils.parseEther('1'));
-    await beanMetapool.setSymbol(`${name}-f`);
+  const beanMetapool = await ethers.getContractAt('MockMeta3Curve', poolAddress);
+  await beanMetapool.init(tokenAddress, THREE_CURVE, THREE_POOL);
+  await beanMetapool.set_A_precise('1000');
+  await beanMetapool.set_virtual_price(ethers.utils.parseEther('1'));
+  await beanMetapool.setSymbol(`${name}-f`);
 }
 
+/**
+ * @notice deploys the bean3crv metapool.
+ */
 async function bean3CrvMetapool() {
   await curveMetapool(BEAN_3_CURVE, 'BEAN3CRV', BEAN);
 }
 
+/// WETH ///
 async function weth() {
   await impersonateContractOnPath(
     './artifacts/contracts/mocks/MockWETH.sol/MockWETH.json',
@@ -98,6 +109,7 @@ async function weth() {
   await weth.setDecimals(18);
 }
 
+/// WstETH ///
 async function wsteth() {
   await impersonateContractOnPath(
     './artifacts/contracts/mocks/MockWsteth.sol/MockWsteth.json',
@@ -108,6 +120,7 @@ async function wsteth() {
   await wsteth.setStEthPerToken(to18('1'))
 }
 
+/// Uniswap V2 Router ///
 async function router() {
   await impersonateContractOnPath(
     './artifacts/contracts/mocks/MockUniswapV2Router.sol/MockUniswapV2Router.json',
@@ -119,6 +132,7 @@ async function router() {
   return UNISWAP_V2_ROUTER;
 }
 
+/// Uniswap V2 Pair ///
 async function pool() {
   await impersonateContractOnPath(
     './artifacts/contracts/mocks/MockUniswapV2Pair.sol/MockUniswapV2Pair.json',
@@ -132,18 +146,12 @@ async function pool() {
 
 async function bean() {
   await token(BEAN, 6)
-  const bean = await ethers.getContractAt("MockToken", BEAN);
+  // if a new beanstalk is deployed, the bean token should use "BeanstalkERC20", 
+  // rather than "MockToken".
+ const bean = await ethers.getContractAt("MockToken", BEAN);
   await bean.setSymbol("BEAN");
   await bean.setName("Bean");
   return BEAN;
-}
-
-async function usdc() {
-  await token(USDC, 6)
-}
-
-async function usdt() {
-  await token(USDT, 6)
 }
 
 async function token(address, decimals) {
@@ -154,7 +162,6 @@ async function token(address, decimals) {
 
   const token = await ethers.getContractAt("MockToken", address);
   await token.setDecimals(decimals);
-
 }
 
 async function unripe() {
@@ -212,7 +219,6 @@ async function ethUsdcUniswap() {
 }
 
 async function ethUsdtUniswap() {
-  await usdt()
   await uniswapV3(ETH_USDT_UNISWAP_V3, WETH, USDT, 3000);
 }
 
@@ -267,7 +273,7 @@ exports.impersonateBean3CrvMetapool = bean3CrvMetapool
 exports.impersonatePool = pool
 exports.impersonateWeth = weth
 exports.impersonateUnripe = unripe
-exports.impersonateUsdc = usdc
+exports.impersonateToken = token
 exports.impersonatePrice = price
 exports.impersonateBlockBasefee = blockBasefee;
 exports.impersonateEthUsdcUniswap = ethUsdcUniswap
@@ -275,5 +281,7 @@ exports.impersonateEthUsdtUniswap = ethUsdtUniswap
 exports.impersonateBeanstalk = impersonateBeanstalk
 exports.impersonateChainlinkAggregator = chainlinkAggregator
 exports.impersonateContract = impersonateContract
-exports.impersonateUniswapV3 = uniswapV3;
-exports.impersonateWsteth = wsteth;
+exports.impersonateUniswapV3 = uniswapV3
+exports.impersonateWsteth = wsteth
+exports.impersonatePipeline = impersonatePipeline
+exports.impersonateDepot = impersonateDepot

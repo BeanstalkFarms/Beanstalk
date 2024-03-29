@@ -6,12 +6,15 @@ import {P} from "./P.sol";
 import "contracts/interfaces/ICurve.sol";
 import "contracts/libraries/Curve/LibCurve.sol";
 
+
+
 interface IERC20D {
     function decimals() external view returns (uint8);
 }
 
 interface IBDV {
     function bdv(address token, uint256 amount) external view returns (uint256);
+    function curveToBDV(uint256 amount) external view returns (uint256);
 }
 
 contract CurvePrice {
@@ -53,7 +56,7 @@ contract CurvePrice {
         pool.liquidity = getCurveUSDValue(balances, rates);
         pool.deltaB = getCurveDeltaB(balances[0], D);
         pool.lpUsd = pool.liquidity * 1e18 / ICurvePool(POOL).totalSupply();
-        pool.lpBdv = IBDV(BEANSTALK).bdv(POOL, 1e18);
+        pool.lpBdv = IBDV(BEANSTALK).curveToBDV(1e18);
     }
 
     function getCurveDeltaB(uint256 balance, uint256 D) private pure returns (int deltaB) {

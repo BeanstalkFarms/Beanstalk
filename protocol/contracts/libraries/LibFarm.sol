@@ -7,8 +7,8 @@ pragma experimental ABIEncoderV2;
 
 import {LibFunction} from "./LibFunction.sol";
 import {LibClipboard} from "./LibClipboard.sol";
-import "hardhat/console.sol";
 
+import "forge-std/console.sol";
 /**
  * @title Farm Lib
  * @author Beasley, Publius

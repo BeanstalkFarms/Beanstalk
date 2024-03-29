@@ -21,11 +21,6 @@ import {LibOracleHelpers} from "contracts/libraries/Oracle/LibOracleHelpers.sol"
 library LibEthUsdOracle {
     using SafeMath for uint256;
 
-    /////////////////// ORACLES ///////////////////
-    address constant ETH_USD_CHAINLINK_PRICE_AGGREGATOR =
-        0x5f4eC3Df9cbd43714FE2740f5E3616155c5b8419;
-    ///////////////////////////////////////////////
-
     function getEthUsdPriceFromStorageIfSaved() internal view returns (uint256) {
         AppStorage storage s = LibAppStorage.diamondStorage();
 
@@ -43,7 +38,7 @@ library LibEthUsdOracle {
      * Returns 0 if the ETH/USD Chainlink Oracle is broken or frozen.
      **/
     function getEthUsdPrice() internal view returns (uint256) {
-        return LibChainlinkOracle.getPrice(ETH_USD_CHAINLINK_PRICE_AGGREGATOR, LibChainlinkOracle.FOUR_HOUR_TIMEOUT);
+        return LibChainlinkOracle.getPrice(C.ETH_USD_CHAINLINK_PRICE_AGGREGATOR, LibChainlinkOracle.FOUR_HOUR_TIMEOUT);
     }
 
     /**
@@ -56,12 +51,12 @@ library LibEthUsdOracle {
         return
             lookback > 0
                 ? LibChainlinkOracle.getTwap(
-                    ETH_USD_CHAINLINK_PRICE_AGGREGATOR,
+                    C.ETH_USD_CHAINLINK_PRICE_AGGREGATOR,
                     LibChainlinkOracle.FOUR_HOUR_TIMEOUT,
                     lookback
                 )
                 : LibChainlinkOracle.getPrice(
-                    ETH_USD_CHAINLINK_PRICE_AGGREGATOR,
+                    C.ETH_USD_CHAINLINK_PRICE_AGGREGATOR,
                     LibChainlinkOracle.FOUR_HOUR_TIMEOUT
                 );
     }

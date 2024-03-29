@@ -38,6 +38,7 @@ function encodeAdvancedData(type, value = to6('0'), copyData = []) {
     encodeData.push(value)
   }
   d = defaultAbiCoder.encode(types, encodeData);
+
   return d
 }
 

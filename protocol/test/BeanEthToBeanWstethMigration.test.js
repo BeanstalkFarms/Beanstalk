@@ -4,7 +4,7 @@ const { BEAN, FERTILIZER, USDC, BEAN_3_CURVE, THREE_CURVE, UNRIPE_BEAN, UNRIPE_L
 const { setEthUsdcPrice, setEthUsdChainlinkPrice } = require('../utils/oracle.js');
 const { to6, to18 } = require('./utils/helpers.js');
 const { bipMigrateUnripeBean3CrvToBeanEth, bipMigrateUnripeBeanEthToBeanSteth, bipSeedGauge } = require('../scripts/bips.js');
-const { getBeanstalk, getBeanstalkAdminControls, getWeth } = require('../utils/contracts.js');
+const { getBeanstalk } = require('../utils/contracts.js');
 const { impersonateBeanstalkOwner, impersonateSigner } = require('../utils/signer.js');
 const { ethers } = require('hardhat');
 const { upgradeWithNewFacets } = require("../scripts/diamond.js");
@@ -75,13 +75,13 @@ describe.skip('Bean:Eth to Bean:Wsteth Migration', function () {
     publius = await impersonateSigner(PUBLIUS, true)
 
     owner = await impersonateBeanstalkOwner()
-    this.beanstalk = await getBeanstalk()
+    beanstalk= await getBeanstalk()
     this.well = await ethers.getContractAt('IWell', c.well.address);
-    this.bean = await ethers.getContractAt('IBean', BEAN)
+    bean = await ethers.getContractAt('IBean', BEAN)
     this.beanEth = await ethers.getContractAt('IWell', BEAN_ETH_WELL)
     this.beanEthToken = await ethers.getContractAt('IERC20', BEAN_ETH_WELL)
     this.unripeLp = await ethers.getContractAt('IERC20', UNRIPE_LP)
-    underlyingBefore = await this.beanstalk.getTotalUnderlying(UNRIPE_LP);
+    underlyingBefore = await beanstalk.getTotalUnderlying(UNRIPE_LP);
 
     this.beanWsteth = await ethers.getContractAt('IWell', BEAN_WSTETH_WELL)
 
@@ -104,66 +104,66 @@ describe.skip('Bean:Eth to Bean:Wsteth Migration', function () {
 
     describe("Bean Eth minting", async function () {
       it('resets well oracle snapshot', async function () {
-        expect(await this.beanstalk.wellOracleSnapshot(BEAN_ETH_WELL)).to.be.equal('0x')
+        expect(await beanstalk.wellOracleSnapshot(BEAN_ETH_WELL)).to.be.equal('0x')
       })
 
       it('doesn\'t start the oracle next season well oracle snapshot', async function () {
         await fastForwardHour();
-        await this.beanstalk.sunrise();
-        expect(await this.beanstalk.wellOracleSnapshot(BEAN_ETH_WELL)).to.be.equal('0x')
+        await beanstalk.sunrise();
+        expect(await beanstalk.wellOracleSnapshot(BEAN_ETH_WELL)).to.be.equal('0x')
       })
 
       it('doesn\'t start the oracle after 24 season well oracle snapshot', async function () {
         for (let i = 0; i < 23; i++) {
           await fastForwardHour();
-          await this.beanstalk.sunrise();
+          await beanstalk.sunrise();
         }
-        expect(await this.beanstalk.wellOracleSnapshot(BEAN_ETH_WELL)).to.be.equal('0x')
+        expect(await beanstalk.wellOracleSnapshot(BEAN_ETH_WELL)).to.be.equal('0x')
       })
 
       it('starts the oracle after 24 season well oracle snapshot', async function () {
         for (let i = 0; i < 24; i++) {
           await fastForwardHour();
-          await this.beanstalk.sunrise();
+          await beanstalk.sunrise();
         }
-        expect(await this.beanstalk.wellOracleSnapshot(BEAN_ETH_WELL)).to.be.not.equal('0x')
+        expect(await beanstalk.wellOracleSnapshot(BEAN_ETH_WELL)).to.be.not.equal('0x')
       })
 
     })
 
     it('Changings underlying token', async function () {
-      expect(await this.beanstalk.getBarnRaiseToken()).to.be.equal(WSTETH)
+      expect(await beanstalk.getBarnRaiseToken()).to.be.equal(WSTETH)
     })
 
     it('Barn Raise Token', async function () {
-      expect(await this.beanstalk.getBarnRaiseWell()).to.be.equal(BEAN_WSTETH_WELL)
+      expect(await beanstalk.getBarnRaiseWell()).to.be.equal(BEAN_WSTETH_WELL)
     })
   
     it('Removes underlying balance', async function () { 
-      expect(await this.beanstalk.getTotalUnderlying(UNRIPE_LP)).to.be.equal(0)
+      expect(await beanstalk.getTotalUnderlying(UNRIPE_LP)).to.be.equal(0)
     })
   
     it('Sends underlying balance to BCM', async function () {
-      expect(await this.beanstalk.getExternalBalance(BCM, BEAN_ETH_WELL)).to.be.equal(underlyingBefore)
+      expect(await beanstalk.getExternalBalance(BCM, BEAN_ETH_WELL)).to.be.equal(underlyingBefore)
     })
 
     describe('Interactions with Unripe fail', async function () {
       it('chop fails', async function () {
-        await this.beanstalk.connect(publius).withdrawDeposit(UNRIPE_LP, '-56836000000', to6('1'), 1);
-        await expect(this.beanstalk.connect(publius).chop(UNRIPE_LP, to6('1'), 1, 0)).to.be.revertedWith("Chop: no underlying")
+        await beanstalk.connect(publius).withdrawDeposit(UNRIPE_LP, '-56836000000', to6('1'), 1);
+        await expect(beanstalk.connect(publius).chop(UNRIPE_LP, to6('1'), 1, 0)).to.be.revertedWith("Chop: no underlying")
       })
 
       it('deposit fails', async function () {
-        await this.beanstalk.connect(publius).withdrawDeposit(UNRIPE_LP, '-56836000000', to6('1'), 1);
-        await expect(this.beanstalk.connect(publius).deposit(UNRIPE_LP, to6('1'),  1)).to.be.revertedWith('Silo: No Beans under Token.')
+        await beanstalk.connect(publius).withdrawDeposit(UNRIPE_LP, '-56836000000', to6('1'), 1);
+        await expect(beanstalk.connect(publius).deposit(UNRIPE_LP, to6('1'),  1)).to.be.revertedWith('Silo: No Beans under Token.')
       })
 
       it('enrootDeposit fails', async function () {
-        await expect(this.beanstalk.connect(publius).enrootDeposit(UNRIPE_LP, '-56836000000', to6('1'))).to.be.revertedWith('SafeMath: subtraction overflow');
+        await expect(beanstalk.connect(publius).enrootDeposit(UNRIPE_LP, '-56836000000', to6('1'))).to.be.revertedWith('SafeMath: subtraction overflow');
       })
 
       it('enrootDeposits fails', async function () {
-        await expect(this.beanstalk.connect(publius).enrootDeposits(UNRIPE_LP, ['-56836000000'], [to6('1')])).to.be.revertedWith('SafeMath: subtraction overflow');
+        await expect(beanstalk.connect(publius).enrootDeposits(UNRIPE_LP, ['-56836000000'], [to6('1')])).to.be.revertedWith('SafeMath: subtraction overflow');
       })
 
       it('convert Unripe Bean to LP fails', async function () {
@@ -171,12 +171,12 @@ describe.skip('Bean:Eth to Bean:Wsteth Migration', function () {
         await this.wsteth.mint(liquidityAdder.address, to18('0.05'));
         await this.wsteth.connect(liquidityAdder).approve(this.well.address, to18('0.05'));
         await this.beanWsteth.connect(liquidityAdder).addLiquidity(['0', to18('0.05')], '0', liquidityAdder.address, ethers.constants.MaxUint256)
-        await expect(this.beanstalk.connect(publius).convert(ConvertEncoder.convertUnripeBeansToLP(to6('200'), '0'), ['-16272000000'], [to6('200')])).to.be.revertedWith('SafeMath: division by zero');
+        await expect(beanstalk.connect(publius).convert(ConvertEncoder.convertUnripeBeansToLP(to6('200'), '0'), ['-16272000000'], [to6('200')])).to.be.revertedWith('SafeMath: division by zero');
       })
 
       it('convert Unripe LP to Bean fails', async function () {
         const liquidityAdder = await impersonateSigner('0x7eaE23DD0f0d8289d38653BCE11b92F7807eFB64', true);
-        await expect(this.beanstalk.connect(publius).convert(ConvertEncoder.convertUnripeLPToBeans(to6('200'), '0'), ['-56836000000'], [to6('200')])).to.be.revertedWith('SafeMath: division by zero');
+        await expect(beanstalk.connect(publius).convert(ConvertEncoder.convertUnripeLPToBeans(to6('200'), '0'), ['-56836000000'], [to6('200')])).to.be.revertedWith('SafeMath: division by zero');
       })
     })
   })
@@ -187,39 +187,39 @@ describe.skip('Bean:Eth to Bean:Wsteth Migration', function () {
     })
 
     it("successfully adds underlying", async function () {
-      expect(await this.beanstalk.getTotalUnderlying(UNRIPE_LP)).to.be.equal(this.beanWstethUnderlying)
-      expect(await this.beanstalk.getUnderlying(UNRIPE_LP, await this.unripeLp.totalSupply())).to.be.equal(this.beanWstethUnderlying)
+      expect(await beanstalk.getTotalUnderlying(UNRIPE_LP)).to.be.equal(this.beanWstethUnderlying)
+      expect(await beanstalk.getUnderlying(UNRIPE_LP, await this.unripeLp.totalSupply())).to.be.equal(this.beanWstethUnderlying)
     })
 
     describe('Interactions with Unripe succeed', async function () {
       it('chop succeeds', async function () {
-        await this.beanstalk.connect(publius).withdrawDeposit(UNRIPE_LP, '-56836000000', to6('1'), 1);
-        await this.beanstalk.connect(publius).chop(UNRIPE_LP, to6('1'), 1, 0);
+        await beanstalk.connect(publius).withdrawDeposit(UNRIPE_LP, '-56836000000', to6('1'), 1);
+        await beanstalk.connect(publius).chop(UNRIPE_LP, to6('1'), 1, 0);
       })
 
       it('deposit succeeds', async function () {
-        await this.beanstalk.connect(publius).withdrawDeposit(UNRIPE_LP, '-56836000000', to6('1'), 1);
-        await this.beanstalk.connect(publius).deposit(UNRIPE_LP, to6('1'),  1);
+        await beanstalk.connect(publius).withdrawDeposit(UNRIPE_LP, '-56836000000', to6('1'), 1);
+        await beanstalk.connect(publius).deposit(UNRIPE_LP, to6('1'),  1);
       })
 
       it('enrootDeposit succeeds', async function () {
-        await this.beanstalk.connect(publius).enrootDeposit(UNRIPE_LP, '-56836000000', to6('1'));
+        await beanstalk.connect(publius).enrootDeposit(UNRIPE_LP, '-56836000000', to6('1'));
       })
 
       it('enrootDeposits succeeds', async function () {
-        await this.beanstalk.connect(publius).enrootDeposits(UNRIPE_LP, ['-56836000000'], [to6('1')]);
+        await beanstalk.connect(publius).enrootDeposits(UNRIPE_LP, ['-56836000000'], [to6('1')]);
       })
 
       it('convert Unripe Bean to LP succeeds', async function () {
-        await this.beanstalk.connect(publius).convert(ConvertEncoder.convertUnripeBeansToLP(to6('200'), '0'), ['-16272000000'], [to6('200')]);
+        await beanstalk.connect(publius).convert(ConvertEncoder.convertUnripeBeansToLP(to6('200'), '0'), ['-16272000000'], [to6('200')]);
       })
 
       it('convert Unripe LP to Bean succeeds', async function () {
         await impersonateBean()
-        await this.bean.mint(user.address, to6('100000'))
-        await this.bean.connect(user).approve(BEAN_WSTETH_WELL, to6('100000'))
+        await bean.mint(user.address, to6('100000'))
+        await bean.connect(user).approve(BEAN_WSTETH_WELL, to6('100000'))
         await this.beanWsteth.connect(user).addLiquidity([to6('100000'), '0'], '0', user.address, ethers.constants.MaxUint256);
-        await this.beanstalk.connect(publius).convert(ConvertEncoder.convertUnripeLPToBeans(to6('200'), '0'), ['-56836000000'], [to6('200')])
+        await beanstalk.connect(publius).convert(ConvertEncoder.convertUnripeLPToBeans(to6('200'), '0'), ['-56836000000'], [to6('200')])
       })
     })
   })
