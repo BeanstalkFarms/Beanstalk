@@ -312,10 +312,23 @@ export function handlePlotTransfer(event: PlotTransfer): void {
   let sourceEndIndex = sourceIndex.plus(sourcePlot.pods);
   let transferEndIndex = event.params.id.plus(event.params.pods);
 
+  // Determines how many of the pods being transferred are harvestable
+  const calcHarvestable = (index: BigInt, pods: BigInt, harvestableIndex: BigInt): BigInt => {
+    let harvestable = harvestableIndex.minus(index);
+    if (harvestable < ZERO_BI) {
+      return ZERO_BI;
+    } else {
+      return harvestable >= pods ? pods : harvestable;
+    }
+  };
+
+  let transferredHarvestable = calcHarvestable(event.params.id, event.params.pods, season.harvestableIndex);
+
   log.debug("\nPodTransfer: ===================\n", []);
   log.debug("\nPodTransfer: Transfer Season - {}\n", [field.season.toString()]);
   log.debug("\nPodTransfer: Transfer Index - {}\n", [event.params.id.toString()]);
   log.debug("\nPodTransfer: Transfer Pods - {}\n", [event.params.pods.toString()]);
+  log.debug("\nPodTransfer: Transfer Harvestable Pods - {}\n", [transferredHarvestable.toString()]);
   log.debug("\nPodTransfer: Transfer Ending Index - {}\n", [event.params.id.plus(event.params.pods).toString()]);
   log.debug("\nPodTransfer: Source Index - {}\n", [sourceIndex.toString()]);
   log.debug("\nPodTransfer: Source Ending Index - {}\n", [sourceIndex.plus(sourcePlot.pods).toString()]);
@@ -339,6 +352,7 @@ export function handlePlotTransfer(event: PlotTransfer): void {
     sourcePlot.farmer = event.params.to.toHexString();
     sourcePlot.updatedAt = event.block.timestamp;
     sourcePlot.pods = event.params.pods;
+    sourcePlot.harvestablePods = calcHarvestable(sourcePlot.index, sourcePlot.pods, season.harvestableIndex);
     sourcePlot.save();
 
     remainderPlot.farmer = event.params.from.toHexString();
@@ -349,6 +363,7 @@ export function handlePlotTransfer(event: PlotTransfer): void {
     remainderPlot.updatedAt = event.block.timestamp;
     remainderPlot.index = remainderIndex;
     remainderPlot.pods = sourceEndIndex.minus(transferEndIndex);
+    remainderPlot.harvestablePods = calcHarvestable(remainderPlot.index, remainderPlot.pods, season.harvestableIndex);
     remainderPlot.temperature = sourcePlot.temperature;
     remainderPlot.save();
 
@@ -364,6 +379,7 @@ export function handlePlotTransfer(event: PlotTransfer): void {
 
     sourcePlot.updatedAt = event.block.timestamp;
     sourcePlot.pods = sourcePlot.pods.minus(event.params.pods);
+    sourcePlot.harvestablePods = calcHarvestable(sourcePlot.index, sourcePlot.pods, season.harvestableIndex);
     sourcePlot.save();
 
     toPlot.farmer = event.params.to.toHexString();
@@ -374,6 +390,7 @@ export function handlePlotTransfer(event: PlotTransfer): void {
     toPlot.updatedAt = event.block.timestamp;
     toPlot.index = event.params.id;
     toPlot.pods = event.params.pods;
+    toPlot.harvestablePods = calcHarvestable(toPlot.index, toPlot.pods, season.harvestableIndex);
     toPlot.temperature = sourcePlot.temperature;
     toPlot.save();
 
@@ -390,6 +407,7 @@ export function handlePlotTransfer(event: PlotTransfer): void {
 
     sourcePlot.updatedAt = event.block.timestamp;
     sourcePlot.pods = event.params.id.minus(sourcePlot.index);
+    sourcePlot.harvestablePods = calcHarvestable(sourcePlot.index, sourcePlot.pods, season.harvestableIndex);
     sourcePlot.save();
 
     toPlot.farmer = event.params.to.toHexString();
@@ -400,6 +418,7 @@ export function handlePlotTransfer(event: PlotTransfer): void {
     toPlot.updatedAt = event.block.timestamp;
     toPlot.index = event.params.id;
     toPlot.pods = event.params.pods;
+    toPlot.harvestablePods = calcHarvestable(toPlot.index, toPlot.pods, season.harvestableIndex);
     toPlot.temperature = sourcePlot.temperature;
     toPlot.save();
 
@@ -411,6 +430,7 @@ export function handlePlotTransfer(event: PlotTransfer): void {
     remainderPlot.updatedAt = event.block.timestamp;
     remainderPlot.index = remainderIndex;
     remainderPlot.pods = sourceEndIndex.minus(transferEndIndex);
+    remainderPlot.harvestablePods = calcHarvestable(remainderPlot.index, remainderPlot.pods, season.harvestableIndex);
     remainderPlot.temperature = sourcePlot.temperature;
     remainderPlot.save();
 
@@ -424,7 +444,33 @@ export function handlePlotTransfer(event: PlotTransfer): void {
   field.save();
 
   // Update any harvestable pod amounts
-  updateHarvestablePlots(season.harvestableIndex, event.block.timestamp, event.block.number);
+  // No need to shift beanstalk field, only the farmer fields.
+  if (transferredHarvestable != ZERO_BI) {
+    updateFieldTotals(
+      event.params.from,
+      beanstalk.lastSeason,
+      ZERO_BI,
+      ZERO_BI,
+      ZERO_BI,
+      ZERO_BI,
+      ZERO_BI.minus(transferredHarvestable),
+      ZERO_BI,
+      event.block.timestamp,
+      event.block.number
+    );
+    updateFieldTotals(
+      event.params.to,
+      beanstalk.lastSeason,
+      ZERO_BI,
+      ZERO_BI,
+      ZERO_BI,
+      ZERO_BI,
+      transferredHarvestable,
+      ZERO_BI,
+      event.block.timestamp,
+      event.block.number
+    );
+  }
 
   // Save the raw event data
   savePodTransfer(event);
