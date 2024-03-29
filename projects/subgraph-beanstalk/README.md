@@ -25,6 +25,4 @@ All currently used subgraphs live on the graph protocol's centralized host.
 
 ### Testing
 
-To test with Docker, the first time you will need to run `yarn run graph test -d`. This will build the docker images. Then, you can use the `yarn testd` script to run all tests. I have found running in docker to be preferred since otherwise there can be issues with console output and some test cases fail silently.
-
-If you would like to run specific tests, you can do so by specifying the name of the test in all lowercase. When running in docker, add this flag to the start of the command `-e ARGS="<testname>"` right after `docker run`. You can find the full command inside `package.json` (be sure to remove the escape characters if running in the terminal).
+To test with Docker, the first time you will need to run `yarn run graph test -d`. This will build the `matchstick` Docker image. Then, you can use the `yarn testd` script to run all tests. Alternatively, use `yarn testd-named <TestName1> ...` to run specific tests. I have found running in Docker to be preferred since otherwise there can be issues with console output and some test cases fail silently.
