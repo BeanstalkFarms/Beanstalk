@@ -42,6 +42,7 @@ contract OracleDeployer is Utils {
         
         for(uint i; i < oracles.length; i++) {
             deployCodeTo("MockChainlinkAggregator.sol", new bytes(0), oracles[i]);
+            MockChainlinkAggregator(oracles[i]).setDecimals(6);
             if (verbose) console.log("Chainlink Oracle Deployed at:", oracles[i]);
             
             mockAddRound(oracles[i], initalPrices[i], 900);
@@ -57,10 +58,16 @@ contract OracleDeployer is Utils {
         int256 price,
         uint256 secondsAgo
     ) internal {
+        uint256 time;
+        if(block.timestamp < secondsAgo) {
+            time = 1; // min timestamp = 1.
+        } else { 
+            time = block.timestamp - secondsAgo;
+        }
         MockChainlinkAggregator(chainlinkOracle).addRound(
             price,
-            block.timestamp - secondsAgo, 
-            block.timestamp - secondsAgo, 
+            time, 
+            time, 
             1
         );
     }

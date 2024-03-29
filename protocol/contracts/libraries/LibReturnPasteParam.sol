@@ -85,7 +85,7 @@ library LibReturnPasteParam {
         console.logBytes(returnData[_returnDataItemIndex]);
         console.log('to this data:');
         console.logBytes(data);
-        LibFunction.paste32Bytes(
+        LibBytes.paste32Bytes(
             returnData[_returnDataItemIndex], // isolate returnDataItemIndex
             data,
             _copyByteIndex, // Isolate copyByteIndex

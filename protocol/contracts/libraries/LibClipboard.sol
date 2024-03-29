@@ -10,6 +10,8 @@ import {LibTractor} from "./LibTractor.sol";
 import {LibFunction} from "./LibFunction.sol";
 import {LibReturnPasteParam} from "./LibReturnPasteParam.sol";
 
+import "forge-std/console.sol";
+
 /**
  * @title LibClipboard
  * @author funderbrker

@@ -149,6 +149,12 @@ contract BasinDeployer is Utils {
             wellImplmentations.push(deployCodeWithArgs(wellImplmentationData[i]));
             if (verbose) console.log("Well Implm", i, "Deployed at:", wellImplmentations[i]);
         }
+
+        // optional labels for testing. 
+        vm.label(CP2, "Constant Product 2");
+        vm.label(MFP, "MultiFlowPump");
+        vm.label(pumps[1], "MockPump");
+        vm.label(wellImplmentations[0], "well");
     }
 
     /**
@@ -170,10 +176,12 @@ contract BasinDeployer is Utils {
         // deploy bean eth well:
         wells.push(deployBeanCp2Well([C.BEAN_ETH_WELL, C.WETH], _pump));
         if (verbose) console.log("Bean Eth well deployed at:", wells[0]);
+        vm.label(C.BEAN_ETH_WELL, "BEAN/ETH Well");
         
         // deploy bean wsteth well:
         wells.push(deployBeanCp2Well([C.BEAN_WSTETH_WELL, C.WSTETH], _pump));
         if (verbose) console.log("Bean wstEth well deployed at:", wells[1]);
+        vm.label(C.BEAN_WSTETH_WELL, "BEAN/WSTETH Well");
     }
 
     /**

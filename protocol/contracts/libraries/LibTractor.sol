@@ -5,7 +5,7 @@
 pragma solidity =0.7.6;
 
 import {C} from "contracts/C.sol";
-import {console} from "hardhat/console.sol";
+import {console} from "forge-std/console.sol";
 
 /**
  * @title Lib Tractor
@@ -88,7 +88,7 @@ library LibTractor {
             uint160(bytes20(_tractorStorage().activePublisher)) <= 1,
             "LibTractor: publisher already set"
         );
-        _tractorStorage().activePublisher = publisher;
+        _tractorStorage().activePublisher = payable(publisher);
     }
 
     /// @notice reset blueprint publisher address

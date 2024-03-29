@@ -18,6 +18,7 @@ import {AdvancedFarmCall} from "contracts/libraries/libFarm.sol";
 import {C} from "contracts/C.sol";
 import {console} from "forge-std/console.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {LibWell} from "contracts/libraries/Well/LibWell.sol";
 
 /**
  * @title PipelineConvertTest
@@ -51,10 +52,20 @@ contract PipelineConvertTest is TestHelper {
   
     function setUp() public {
         initializeBeanstalkTestState(true, false);
-        
-        // mint 1000 beans to user 1 and user 2 (user 0 is the beanstalk deployer).
+
+        // initalize farmers.
         farmers.push(users[1]); 
         farmers.push(users[2]);
+        
+        // add inital liquidity to bean eth well:
+        // prank beanstalk deployer (can be anyone)
+        vm.prank(users[0]); 
+        addInitialLiquidity(
+            C.BEAN_ETH_WELL,
+            10000e6, // 10,000 bean,
+            10 ether  // 10 WETH
+        );
+        // mint 1000 beans to farmers (user 0 is the beanstalk deployer).
         mintTokensToUsers(farmers, C.BEAN,  MAX_DEPOSIT_BOUND);
     }
 
@@ -113,8 +124,12 @@ contract PipelineConvertTest is TestHelper {
 
     function testBasicConvertBeanToLP(uint256 amount) public {
         int96 stem;
+        // well is initalized with 10000 beans. cap add liquidity 
+        // to reasonable amounts. 
+        amount = bound(amount, 1e6, 5000e6);
         // deposits bean into the silo.
-        (amount, stem) = setUpSiloDepositTest(amount, farmers);
+        bean.mint(users[1], 5000e6);
+        (amount, ) = setUpSiloDepositTest(amount, farmers);
         console.log('stem: ');
         console.logInt(stem);
         console.log('amount: ', amount);
@@ -123,7 +138,7 @@ contract PipelineConvertTest is TestHelper {
         season.siloSunrise(0);
         season.siloSunrise(0);
 
-        uint256 amountOfBean = 200 * 1e6;
+        uint256 amountOfBean = amount;
 
         // do the convert
         // first setup the pipeline calls
@@ -131,17 +146,21 @@ contract PipelineConvertTest is TestHelper {
         // setup approve max call
         bytes memory approveEncoded = abi.encodeWithSelector(
             IERC20.approve.selector,
-            C.BEAN,
+            C.BEAN_ETH_WELL,
             MAX_UINT256
         );
+
+        uint256[] memory tokenAmountsIn = new uint256[](2); 
+        tokenAmountsIn[0] = amountOfBean;
+        tokenAmountsIn[1] = 0;
 
         // encode Add liqudity.
         bytes memory addLiquidityEncoded = abi.encodeWithSelector(
             IWell.addLiquidity.selector,
-            abi.encode([amountOfBean, 0]), // tokenAmountsIn
-            abi.encode(0), // min out
-            abi.encode(C.PIPELINE), // recipient
-            abi.encode(type(uint256).max) // deadline
+            tokenAmountsIn, // tokenAmountsIn
+            0, // min out
+            C.PIPELINE, // recipient
+            type(uint256).max // deadline
         );
 
         // Fabricate advancePipes: 
@@ -149,16 +168,16 @@ contract PipelineConvertTest is TestHelper {
         
         // Action 0: approve the Bean-Eth well to spend pipeline's bean.
         advancedPipeCalls[0] = AdvancedPipeCall(
-            C.BEAN_ETH_WELL, // target
+            C.BEAN, // target
             approveEncoded, // calldata
-            new bytes(0) // clipboard
+            abi.encode(0) // clipboard
         );
 
         // Action 2: Add One sided Liquidity into the well. 
         advancedPipeCalls[1] = AdvancedPipeCall(
             C.BEAN_ETH_WELL, // target
             addLiquidityEncoded, // calldata
-            new bytes(0) // clipboard
+            abi.encode(0) // clipboard
         );
 
 
@@ -205,6 +224,25 @@ contract PipelineConvertTest is TestHelper {
 
 
     ////// SILO TEST HELPERS //////
+
+    /**
+     * @notice assumes a CP2 well with bean as one of the tokens.
+     */
+    function addInitialLiquidity(
+        address well,
+        uint256 beanAmount,
+        uint256 nonBeanTokenAmount
+    ) internal { 
+        (address nonBeanToken, ) = LibWell.getNonBeanTokenAndIndexFromWell(
+            well
+        );
+        
+        // mint and sync.
+        MockToken(C.BEAN).mint(well, beanAmount);
+        MockToken(nonBeanToken).mint(well, nonBeanTokenAmount);
+
+        IWell(well).sync(msg.sender, 0);
+    }
 
     /**
      * @notice Set up the silo deposit test by depositing beans to the silo from multiple users.
