@@ -16,6 +16,7 @@ import {LibSafeMathSigned96} from "contracts/libraries/LibSafeMathSigned96.sol";
 import {LibBytes} from "contracts/libraries/LibBytes.sol";
 import {LibGerminate} from "contracts/libraries/Silo/LibGerminate.sol";
 import {LibWhitelistedTokens} from "contracts/libraries/Silo/LibWhitelistedTokens.sol";
+import {LibTractor} from "contracts/libraries/LibTractor.sol";
 
 import "forge-std/console.sol";
 
@@ -355,7 +356,7 @@ library LibTokenSilo {
          */
         if (transferType == Transfer.emitTransferSingle) {
             emit TransferSingle(
-                msg.sender, // operator
+                LibTractor._getUser(), // operator
                 address(0), // from
                 account, // to
                 depositId, // depositID
@@ -658,7 +659,7 @@ library LibTokenSilo {
 
         // Emit burn events.
         emit TransferSingle(
-            msg.sender,
+            LibTractor._getUser(),
             account,
             address(0),
             legacyDepositId,
@@ -675,7 +676,7 @@ library LibTokenSilo {
 
         // Emit mint events.
         emit TransferSingle(
-            msg.sender,
+            LibTractor._getUser(),
             address(0),
             account,
             LibBytes.packAddressAndStem(token, newStem),

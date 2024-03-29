@@ -129,7 +129,7 @@ describe.skip('Depot Facet', function () {
       data = encodeAdvancedData(9)
       await expect(beanstalk.connect(user).advancedPipe(
         [[WETH, selector, data]], to18('0')
-      )).to.be.revertedWith('Function: Advanced Type not supported')
+      )).to.be.revertedWith('Clipboard: Type not supported')
     })
 
     describe("Ether Pipe to Internal", async function () {

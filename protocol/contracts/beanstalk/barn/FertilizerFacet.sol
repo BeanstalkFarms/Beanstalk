@@ -81,7 +81,7 @@ contract FertilizerFacet {
             fertilizerAmountOut,
             minLPTokensOut
         );
-        C.fertilizer().beanstalkMint(msg.sender, uint256(id), (fertilizerAmountOut).toUint128(), s.bpf);
+        C.fertilizer().beanstalkMint(LibTractor._getUser(), uint256(id), (fertilizerAmountOut).toUint128(), s.bpf);
     }
 
     /**

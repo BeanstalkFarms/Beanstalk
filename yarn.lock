@@ -2277,6 +2277,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@beanstalk/protocol@workspace:protocol"
   dependencies:
+    "@nomicfoundation/hardhat-network-helpers": "npm:^1.0.10"
     "@beanstalk/wells": 0.4.1
     "@beanstalk/wells1.1": "npm:@beanstalk/wells@1.1.0-prerelease0"
     "@ethereum-waffle/chai": 4.0.10

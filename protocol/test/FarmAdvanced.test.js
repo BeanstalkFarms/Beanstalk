@@ -67,7 +67,7 @@ describe.skip('Farm Advanced', function () {
     data = encodeAdvancedData(9)
     await expect(beanstalk.connect(user).advancedFarm(
       [[selector, data]]
-    )).to.be.revertedWith('Function: Advanced Type not supported')
+    )).to.be.revertedWith('Clipboard: Type not supported')
   })
                       
   describe("1 Return data", async function () {

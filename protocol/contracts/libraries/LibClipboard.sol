@@ -35,29 +35,24 @@ library LibClipboard {
         uint256 etherValue,
         bytes32[] memory returnPasteParams
     ) internal pure returns (bytes memory clipboard) {
-        // Set clipboard type and use ether flag.
-        clipboard = abi.encodePacked(
-            returnPasteParams.length < 2
-                ? bytes1(uint8(returnPasteParams.length))
-                : bytes1(uint8(2)), // type
-            etherValue == 0 ? bytes1(0) : bytes1(uint8(1)) // use ether flag
-        );
+        uint8 useEther = etherValue == 0 ? 0 : 1;
 
-        // Set paste params, with proper padding.
-        if (clipboard[0] == bytes1(uint8(1))) {
+        if (returnPasteParams.length == 0) {
+            clipboard = abi.encodePacked(uint8(0), useEther);
+        } else if (returnPasteParams.length == 1) {
             clipboard = abi.encodePacked(
-                clipboard,
+                uint8(1),
+                useEther,
                 uint240(uint256(returnPasteParams[0])) // remove padding
             );
-        } else if (clipboard[0] == bytes1(uint8(2))) {
-            clipboard = abi.encodePacked(clipboard, bytes30(0), returnPasteParams.length);
-            for (uint256 i; i < returnPasteParams.length; ++i) {
-                clipboard = abi.encodePacked(clipboard, returnPasteParams[i]);
-            }
+        } else {
+            clipboard = abi.encode(
+                (uint256(0x02) << 248) | (uint256(useEther) << 240), // type + ether
+                returnPasteParams
+            );
         }
 
-        // Optionally append ether value.
-        if (clipboard[1] == bytes1(uint8(1))) {
+        if (useEther == 1) {
             clipboard = abi.encodePacked(clipboard, etherValue);
         }
 
@@ -72,19 +67,14 @@ library LibClipboard {
         returns (bytes1 typeId, uint256 etherValue, bytes32[] memory returnPasteParams)
     {
         typeId = clipboard[0];
-        bytes1 useEther = clipboard[1];
         if (typeId == 0x01) {
             returnPasteParams = new bytes32[](1);
-            // Replace leading 2 bytes with padding.
-            returnPasteParams[0] = bytes32(uint256(uint240(uint256(clipboard.toBytes32(0)))));
+            returnPasteParams[0] = abi.decode(clipboard, (bytes32));
         } else if (typeId == 0x02) {
-            uint256 numPasteParams = clipboard.toUint256(32);
-            returnPasteParams = new bytes32[](numPasteParams);
-            for (uint256 i; i < numPasteParams; i++) {
-                returnPasteParams[i] = clipboard.toBytes32(64 + i * 32);
-            }
+            (, returnPasteParams) = abi.decode(clipboard, (bytes2, bytes32[]));
         }
 
+        bytes1 useEther = clipboard[1];
         if (useEther == 0x01) {
             etherValue = clipboard.toUint256(clipboard.length - 32);
         }
@@ -100,7 +90,7 @@ library LibClipboard {
      * [ Type   | Use Ether Flag*  | Type data      | Ether Value (only if flag == 1)*]
      * [ 1 byte | 1 byte           | n bytes        | 0 or 32 bytes                   ]
      * * Use Ether Flag and Ether Value are processed in Pipeline.sol (Not used in Farm). See Pipeline.getEthValue for ussage.
-     * Type: 0x00, 0x01 or 0x002
+     * Type: 0x00, 0x01 or 0x02
      *  - 0x00: 0 Paste Operations (Logic in Pipeline.sol and FarmFacet.sol)
      *  - 0x01: 1 Paste Operation
      *  - 0x02: n Paste Operations
@@ -115,8 +105,8 @@ library LibClipboard {
      *        * The first 32 bytes are the length of the array.
      * -------------------------------------------------------------------------------------
      * @param returnData A list of return values from previously executed Advanced Calls
-     @return data The function call return datas
-    **/
+     * @return data The function call return datas
+     **/
     function useClipboard(
         bytes memory callData,
         bytes memory clipboard,
@@ -126,7 +116,7 @@ library LibClipboard {
         require(typeId == 0x01 || typeId == 0x02, "Clipboard: Type not supported");
         data = callData;
         for (uint256 i; i < returnPasteParams.length; i++) {
-            data = LibReturnPasteParam.pasteBytes(returnPasteParams[i], returnData, data);
+            LibReturnPasteParam.pasteBytes(returnPasteParams[i], returnData, data);
         }
     }
 }

@@ -189,6 +189,7 @@ contract SiloFacet is TokenSilo {
             totalAmount = totalAmount.add(amounts[i]);
         }
 
+        // Tractor operator does not use allowance.
         if (sender != LibTractor._getUser()) {
             LibSiloPermit._spendDepositAllowance(sender, LibTractor._getUser(), token, totalAmount);
         }

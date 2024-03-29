@@ -207,7 +207,7 @@ contract FieldFacet is ReentrancyGuard {
         // ownership check, which is done above.
         if (s.podListings[index] > 0) {
             delete s.podListings[index];
-            emit PodListingCancelled(msg.sender, index);
+            emit PodListingCancelled(LibTractor._getUser(), index);
         }
 
         // If the entire Plot was harvested, exit.

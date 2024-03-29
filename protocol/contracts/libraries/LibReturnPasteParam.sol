@@ -6,7 +6,6 @@ pragma solidity =0.7.6;
 
 import {C} from "contracts/C.sol";
 import {LibBytes} from "./LibBytes.sol";
-import {LibFunction} from "./LibFunction.sol";
 
 import "forge-std/console.sol";
 // https://evmpipeline.org/pipeline.pdf
@@ -63,8 +62,8 @@ library LibReturnPasteParam {
     function pasteBytes(
         bytes32 returnPasteParam, // returnPasteParams
         bytes[] memory returnData, // paste source
-        bytes memory data // paste destination
-    ) internal view returns (bytes memory pastedData) {
+        bytes memory data // paste destination. modified.
+    ) internal view {
         uint256 _returnDataItemIndex = returnDataItemIndex(returnPasteParam);
         uint256 _copyByteIndex = copyByteIndex(returnPasteParam);
         uint256 _pasteByteIndex = pasteByteIndex(returnPasteParam);
@@ -92,7 +91,5 @@ library LibReturnPasteParam {
             _copyByteIndex, // Isolate copyByteIndex
             _pasteByteIndex // Isolate pasteByteIndex
         );
-        // NOTE pass by reference?
-        return data;
     }
 }

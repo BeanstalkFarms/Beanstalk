@@ -7,7 +7,6 @@ pragma experimental ABIEncoderV2;
 
 import {C} from "contracts/C.sol";
 import {LibBytes} from "./LibBytes.sol";
-import {LibFunction} from "./LibFunction.sol";
 import {LibTractor} from "./LibTractor.sol";
 
 /**
@@ -87,7 +86,7 @@ library LibOperatorPasteInstr {
         bytes32 operatorPasteInstr,
         bytes memory operatorData,
         bytes memory callData
-    ) internal view returns (bytes memory) {
+    ) internal view {
         (uint80 _copyByteIndex, , uint80 _pasteByteIndex) = decode(operatorPasteInstr);
 
         // _pasteByteIndex must have 32 bytes of available space and not write into the length data.
@@ -112,13 +111,12 @@ library LibOperatorPasteInstr {
         require(C.SLOT_SIZE <= _copyByteIndex, "OP: _copyByteIndex too small");
         require(_copyByteIndex <= callData.length, "OP: _copyByteIndex too large");
 
-        // data[_pasteCallIndex] = LibFunction.paste32Bytes(
+        // data[_pasteCallIndex] = LibBytes.paste32Bytes(
         //     copyData,
         //     data[_pasteCallIndex],
         //     uint256(_copyByteIndex),
         //     _pasteByteIndex
         // );
-        LibFunction.paste32Bytes(copyData, callData, uint256(_copyByteIndex), _pasteByteIndex);
-        return callData;
+        LibBytes.paste32Bytes(copyData, callData, uint256(_copyByteIndex), _pasteByteIndex);
     }
 }
