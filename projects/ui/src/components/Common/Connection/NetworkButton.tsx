@@ -1,5 +1,5 @@
 import React from 'react';
-import { useNetwork } from 'wagmi';
+import { useAccount } from 'wagmi';
 import { Button, ButtonProps, Typography } from '@mui/material';
 import useAnchor from '~/hooks/display/useAnchor';
 import { SupportedChainId } from '~/constants/chains';
@@ -19,7 +19,7 @@ const NetworkButton: React.FC<
   children,
   ...props
 }) => {
-  const { chain } = useNetwork();
+  const { chain } = useAccount();
 
   /// Dialog
   const [anchor, toggleAnchor] = useAnchor();

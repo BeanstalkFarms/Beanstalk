@@ -182,9 +182,10 @@ const AddLiquidityContent = ({ well, slippage, slippageSettingsClickHandler, han
 
   const allTokensHaveMinAllowance = useMemo(() => tokenAllowance.filter((a) => a === false).length === 0, [tokenAllowance]);
 
-  const { data: quote } = useQuery(
-    ["wells", "quote", "addliquidity", address, amounts, allTokensHaveMinAllowance],
-    async () => {
+  const { data: quote } = useQuery({
+    queryKey: ["wells", "quote", "addliquidity", address, amounts, allTokensHaveMinAllowance],
+
+    queryFn: async () => {
       if (!atLeastOneAmountNonZero) {
         setShowQuoteDetails(false);
         return null;
@@ -217,10 +218,9 @@ const AddLiquidityContent = ({ well, slippage, slippageSettingsClickHandler, han
         return null;
       }
     },
-    {
-      enabled: !isSubmitting
-    }
-  );
+
+    enabled: !isSubmitting
+  });
 
   const addLiquidityButtonClickHandler = useCallback(async () => {
     if (quote && address) {

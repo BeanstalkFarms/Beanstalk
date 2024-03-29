@@ -3,7 +3,6 @@ import { InputAdornment, Box, Typography, Stack, Alert } from '@mui/material';
 import BigNumber from 'bignumber.js';
 import { FormikHelpers, Formik, FormikProps, Form } from 'formik';
 import React, { useMemo } from 'react';
-import { useSigner } from 'wagmi';
 import WarningAmberIcon from '@mui/icons-material/WarningAmber';
 import {
   PlotFragment,
@@ -36,6 +35,7 @@ import {
   PlotMap,
   toStringBaseUnitBN,
 } from '~/util';
+import { useEthersSigner } from '~/util/wagmi/ethersAdapter';
 
 export type CreateListingFormValues = {
   plot: PlotFragment;
@@ -233,7 +233,7 @@ const CreateSellListing: React.FC<{}> = () => {
   const getChainToken = useGetChainToken();
 
   /// Ledger
-  const { data: signer } = useSigner();
+  const signer = useEthersSigner();
   const beanstalk = useBeanstalkContract(signer);
 
   /// Beanstalk

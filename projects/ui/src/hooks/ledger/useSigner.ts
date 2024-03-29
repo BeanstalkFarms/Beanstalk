@@ -1,61 +1,54 @@
 import { ethers } from 'ethers';
 import { useEffect, useState } from 'react';
-import { useSigner as useWagmiSigner } from 'wagmi';
-import useChainId from '~/hooks/chain/useChainId';
-import { TESTNET_CHAINS, TESTNET_RPC_ADDRESSES } from '~/constants';
 import useSetting from '../app/useSetting';
+import { useAccount } from 'wagmi';
+import { TESTNET_RPC_ADDRESSES } from '~/constants';
+import { useEthersSigner } from '~/util/wagmi/ethersAdapter';
 
+const IMPERSONATE_ADDRESS = import.meta.env.VITE_OVERRIDE_FARMER_ACCOUNT || useSetting('impersonatedAccount')[0] || '';
+const isImpersonating = !!(import.meta.env.DEV && IMPERSONATE_ADDRESS) || useSetting('impersonatedAccount')[0];
 
-export let useSigner = useWagmiSigner;
+// This returns an _ethers_ signer, but one that may be impersonating an account, if we're in dev mode with the right environment variables set.
+export const useSigner = () => {
+  const [signer, setSigner] = useState<ethers.Signer | undefined>(undefined);
+  const { chainId } = useAccount();
+  const ethersSigner = useEthersSigner({ chainId });
 
-
-
-  // @ts-ignore
-  useSigner = () => {
-    const [signer, setSigner] = useState<ethers.Signer | undefined>(undefined);
-    const chainId = useChainId();
-    const wagmiSigner = useWagmiSigner();
-    const isTestnet = TESTNET_CHAINS.has(chainId);
-
-    const impersonatedAccount = useSetting('impersonatedAccount')[0];
-    const account = { address: impersonatedAccount };
-
-    useEffect(() => {
-      (async () => {
-        if (account.address && isTestnet) {
-          try {
-            const provider = new ethers.providers.JsonRpcProvider(
-              TESTNET_RPC_ADDRESSES[chainId]
-            );
-            await provider.send('hardhat_impersonateAccount', [
-              account.address,
-            ]);
-            setSigner(provider.getSigner(account.address));
-          } catch (e) {
-            console.error(e);
-          }
+  useEffect(() => {
+    (async () => {
+      if (isImpersonating) {
+        try {
+          if (!chainId) throw new Error('Cannot impersonate, unknown chainId');
+          const provider = new ethers.providers.JsonRpcProvider(
+            TESTNET_RPC_ADDRESSES[chainId]
+          );
+          await provider.send('hardhat_impersonateAccount', [
+            IMPERSONATE_ADDRESS,
+          ]);
+          setSigner(provider.getSigner(IMPERSONATE_ADDRESS));
+        } catch (e) {
+          console.error(e);
         }
-      })();
-    }, [account?.address, chainId, isTestnet]);
+      } else {
+        setSigner(ethersSigner);
+      }
+    })();
+  }, [ethersSigner, chainId]);
 
-    /// If we're not connected to a testnet and 
-    /// not impersonating an address, use the normal signer.
-    if (!isTestnet && !impersonatedAccount) return wagmiSigner;
-
-    return {
-      data: signer,
-      //
-      error: null,
-      fetchStatus: null,
-      internal: null,
-      isError: false,
-      isFetched: false,
-      isFetching: false,
-      isIdle: false,
-      isLoading: false,
-      isRefetching: false,
-      isSuccess: false,
-      refetch: () => {},
-      status: null,
-    };
+  return {
+    data: signer,
+    //
+    error: null,
+    fetchStatus: null,
+    internal: null,
+    isError: false,
+    isFetched: false,
+    isFetching: false,
+    isIdle: false,
+    isLoading: false,
+    isRefetching: false,
+    isSuccess: false,
+    refetch: () => {},
+    status: null,
   };
+};
