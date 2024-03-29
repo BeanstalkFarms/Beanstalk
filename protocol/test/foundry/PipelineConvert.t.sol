@@ -138,71 +138,7 @@ contract PipelineConvertTest is TestHelper {
         season.siloSunrise(0);
         season.siloSunrise(0);
 
-        uint256 amountOfBean = amount;
-
         // do the convert
-        // first setup the pipeline calls
-
-        // setup approve max call
-        bytes memory approveEncoded = abi.encodeWithSelector(
-            IERC20.approve.selector,
-            C.BEAN_ETH_WELL,
-            MAX_UINT256
-        );
-
-        uint256[] memory tokenAmountsIn = new uint256[](2); 
-        tokenAmountsIn[0] = amountOfBean;
-        tokenAmountsIn[1] = 0;
-
-        // encode Add liqudity.
-        bytes memory addLiquidityEncoded = abi.encodeWithSelector(
-            IWell.addLiquidity.selector,
-            tokenAmountsIn, // tokenAmountsIn
-            0, // min out
-            C.PIPELINE, // recipient
-            type(uint256).max // deadline
-        );
-
-        // Fabricate advancePipes: 
-        AdvancedPipeCall[] memory advancedPipeCalls = new AdvancedPipeCall[](2);
-        
-        // Action 0: approve the Bean-Eth well to spend pipeline's bean.
-        advancedPipeCalls[0] = AdvancedPipeCall(
-            C.BEAN, // target
-            approveEncoded, // calldata
-            abi.encode(0) // clipboard
-        );
-
-        // Action 2: Add One sided Liquidity into the well. 
-        advancedPipeCalls[1] = AdvancedPipeCall(
-            C.BEAN_ETH_WELL, // target
-            addLiquidityEncoded, // calldata
-            abi.encode(0) // clipboard
-        );
-
-
-        // Encode into a AdvancedFarmCall. NOTE: advancedFarmCall != advancedPipeCall. 
-        
-        // AdvancedFarmCall calls any function on the beanstalk diamond. 
-        // advancedPipe is one of the functions that its calling. 
-        // AdvancedFarmCall cannot call approve/addLiquidity, but can call AdvancedPipe.
-        // AdvancedPipe can call any arbitrary function.
-        AdvancedFarmCall[] memory advancedFarmCalls = new AdvancedFarmCall[](1);
-        
-        bytes memory advancedPipeCalldata = 
-            abi.encodeWithSelector(
-                depot.advancedPipe.selector,
-                advancedPipeCalls,
-                0
-            );
-
-        advancedFarmCalls[0] = AdvancedFarmCall(
-           advancedPipeCalldata, // calldata
-           new bytes(0) // clipboard
-        );
-
-        // encode into bytes. 
-        bytes memory output = abi.encode(advancedFarmCalls);
 
         // Create arrays for stem and amount. Tried just passing in [stem] and it's like nope.
         int96[] memory stems = new int96[](1);
@@ -217,7 +153,7 @@ contract PipelineConvertTest is TestHelper {
             stems,  // stems
             amounts,  // amount
             C.BEAN_ETH_WELL, // token out
-            output // farmData
+            createBeanToLP(amount) // farmData
         );
     }
 
@@ -319,27 +255,6 @@ contract PipelineConvertTest is TestHelper {
         }
     }
 
-    function initZeroEarnedBeansTest(
-        uint256 amount, 
-        address[] memory initalFarmers, 
-        address newFarmer
-    ) public returns (uint256 _amount) {
-        // deposit 'amount' beans to the silo.
-        (_amount, ) = setUpSiloDepositTest(amount, initalFarmers);
-
-        // call sunrise twice to finish the germination process.
-        season.siloSunrise(0);
-        season.siloSunrise(0);
-
-        address[] memory farmer = new address[](1);
-        farmer[0] = newFarmer;
-        // mint token to new farmer.
-        mintTokensToUsers(farmer, C.BEAN,  MAX_DEPOSIT_BOUND);
-
-        // deposit into the silo.
-        setUpSiloDepositTest(amount, farmer);
-    }
-
     ////// ASSERTIONS ////// 
 
     /**
@@ -401,5 +316,69 @@ contract PipelineConvertTest is TestHelper {
 
     function checkFarmerGerminatingBalances(address farmer, uint256 expected) public view {
         assertEq(bs.balanceOfGerminatingStalk(farmer), C.STALK_PER_BEAN * expected, "balanceOfGerminatingStalk");
+    }
+
+    function createBeanToLP(
+        uint256 amountOfBean
+    ) public returns (bytes memory output) {
+        // first setup the pipeline calls
+
+        // setup approve max call
+        bytes memory approveEncoded = abi.encodeWithSelector(
+            IERC20.approve.selector,
+            C.BEAN_ETH_WELL,
+            MAX_UINT256
+        );
+
+        uint256[] memory tokenAmountsIn = new uint256[](2); 
+        tokenAmountsIn[0] = amountOfBean;
+        tokenAmountsIn[1] = 0;
+
+        // encode Add liqudity.
+        bytes memory addLiquidityEncoded = abi.encodeWithSelector(
+            IWell.addLiquidity.selector,
+            tokenAmountsIn, // tokenAmountsIn
+            0, // min out
+            C.PIPELINE, // recipient
+            type(uint256).max // deadline
+        );
+
+        // Fabricate advancePipes: 
+        AdvancedPipeCall[] memory advancedPipeCalls = new AdvancedPipeCall[](2);
+        
+        // Action 0: approve the Bean-Eth well to spend pipeline's bean.
+        advancedPipeCalls[0] = AdvancedPipeCall(
+            C.BEAN, // target
+            approveEncoded, // calldata
+            abi.encode(0) // clipboard
+        );
+
+        // Action 2: Add One sided Liquidity into the well. 
+        advancedPipeCalls[1] = AdvancedPipeCall(
+            C.BEAN_ETH_WELL, // target
+            addLiquidityEncoded, // calldata
+            abi.encode(0) // clipboard
+        );
+
+
+        // Encode into a AdvancedFarmCall. NOTE: advancedFarmCall != advancedPipeCall. 
+        
+        // AdvancedFarmCall calls any function on the beanstalk diamond. 
+        // advancedPipe is one of the functions that its calling. 
+        // AdvancedFarmCall cannot call approve/addLiquidity, but can call AdvancedPipe.
+        // AdvancedPipe can call any arbitrary function.
+        AdvancedFarmCall[] memory advancedFarmCalls = new AdvancedFarmCall[](1);
+        
+        bytes memory advancedPipeCalldata = 
+            abi.encodeWithSelector(
+                depot.advancedPipe.selector,
+                advancedPipeCalls,
+                0
+            );
+
+        advancedFarmCalls[0] = AdvancedFarmCall(advancedPipeCalldata, new bytes(0));
+
+        // encode into bytes. 
+        output = abi.encode(advancedFarmCalls);
     }
 }
