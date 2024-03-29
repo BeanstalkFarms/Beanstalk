@@ -31,7 +31,7 @@ library LibClipboard {
      * @param returnPasteParams Array of returnPasteParam encoded as bytes32 objects.
      * @return clipboard Encoded clipboard, adhering to https://evmpipeline.org/pipeline.pdf, Figure 2.
      */
-    function encode(
+    function encodeOld(
         uint256 etherValue,
         bytes32[] memory returnPasteParams
     ) internal pure returns (bytes memory clipboard) {
@@ -64,6 +64,23 @@ library LibClipboard {
         return clipboard;
     }
 
+    // assumes type 1 or 2 encoding.
+    function encode(
+        uint256 etherValue,
+        bytes32[] memory returnPasteParams
+    ) internal pure returns (bytes memory clipboard) {
+        // type 1: 
+        if(returnPasteParams.length == 1) {
+            clipboard = abi.encode(uint256(0x0100) << 240 | uint256((returnPasteParams[0] << 16) >> 16));
+        } else {
+            clipboard = abi.encode(
+                uint256(0x0200) << 240, // type + ether
+                returnPasteParams
+            );
+        }
+        return abi.encodePacked(clipboard, etherValue);
+    }
+
     function decode(
         bytes memory clipboard
     )
@@ -72,19 +89,14 @@ library LibClipboard {
         returns (bytes1 typeId, uint256 etherValue, bytes32[] memory returnPasteParams)
     {
         typeId = clipboard[0];
-        bytes1 useEther = clipboard[1];
         if (typeId == 0x01) {
             returnPasteParams = new bytes32[](1);
-            // Replace leading 2 bytes with padding.
-            returnPasteParams[0] = bytes32(uint256(uint240(uint256(clipboard.toBytes32(0)))));
+            returnPasteParams[0] = abi.decode(clipboard, (bytes32));
         } else if (typeId == 0x02) {
-            uint256 numPasteParams = clipboard.toUint256(32);
-            returnPasteParams = new bytes32[](numPasteParams);
-            for (uint256 i; i < numPasteParams; i++) {
-                returnPasteParams[i] = clipboard.toBytes32(64 + i * 32);
-            }
+            (, returnPasteParams) = abi.decode(clipboard, (bytes2, bytes32[]));
         }
 
+        bytes1 useEther = clipboard[1];
         if (useEther == 0x01) {
             etherValue = clipboard.toUint256(clipboard.length - 32);
         }
@@ -100,7 +112,7 @@ library LibClipboard {
      * [ Type   | Use Ether Flag*  | Type data      | Ether Value (only if flag == 1)*]
      * [ 1 byte | 1 byte           | n bytes        | 0 or 32 bytes                   ]
      * * Use Ether Flag and Ether Value are processed in Pipeline.sol (Not used in Farm). See Pipeline.getEthValue for ussage.
-     * Type: 0x00, 0x01 or 0x002
+     * Type: 0x00, 0x01 or 0x02
      *  - 0x00: 0 Paste Operations (Logic in Pipeline.sol and FarmFacet.sol)
      *  - 0x01: 1 Paste Operation
      *  - 0x02: n Paste Operations
@@ -115,7 +127,7 @@ library LibClipboard {
      *        * The first 32 bytes are the length of the array.
      * -------------------------------------------------------------------------------------
      * @param returnData A list of return values from previously executed Advanced Calls
-     @return data The function call return datas
+     * @return data The function call return datas
     **/
     function useClipboard(
         bytes memory callData,

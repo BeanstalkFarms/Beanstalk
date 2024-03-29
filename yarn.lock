@@ -2277,6 +2277,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@beanstalk/protocol@workspace:protocol"
   dependencies:
+    "@nomicfoundation/hardhat-network-helpers": "npm:^1.0.10"
     "@beanstalk/wells": 0.4.1
     "@beanstalk/wells1.1": "npm:@beanstalk/wells@1.1.0-prerelease0"
     "@ethereum-waffle/chai": 4.0.10
@@ -9143,6 +9144,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@scure/base@npm:^1.1.1":
+  version: 1.1.5
+  resolution: "@scure/base@npm:1.1.5"
+  checksum: 10/543fa9991c6378b6a0d5ab7f1e27b30bb9c1e860d3ac81119b4213cfdf0ad7b61be004e06506e89de7ce0cec9391c17f5c082bb34c3b617a2ee6a04129f52481
+  languageName: node
+  linkType: hard
+
 "@scure/base@npm:~1.1.0":
   version: 1.1.1
   resolution: "@scure/base@npm:1.1.1"
@@ -11521,6 +11529,15 @@ __metadata:
   dependencies:
     "@types/ms": "*"
   checksum: a9a9bb40a199e9724aa944e139a7659173a9b274798ea7efbc277cb084bc37d32fc4c00877c3496fac4fed70a23243d284adb75c00b5fdabb38a22154d18e5df
+  languageName: node
+  linkType: hard
+
+"@types/debug@npm:^4.1.9":
+  version: 4.1.12
+  resolution: "@types/debug@npm:4.1.12"
+  dependencies:
+    "@types/ms": "npm:*"
+  checksum: 10/47876a852de8240bfdaf7481357af2b88cb660d30c72e73789abf00c499d6bc7cd5e52f41c915d1b9cd8ec9fef5b05688d7b7aef17f7f272c2d04679508d1053
   languageName: node
   linkType: hard
 
@@ -16215,6 +16232,13 @@ __metadata:
   dependencies:
     bigint-mod-arith: ^3.1.0
   checksum: deb004aacf0ac6150b3cebe472c8166a7a315c411260d6c20e43c8c9b1e48831879e5a2e8e7af1ef1aefc542ad7d842a1de4bef12b98e50c825d9243321efe52
+  languageName: node
+  linkType: hard
+
+"bigint-crypto-utils@npm:^3.2.2":
+  version: 3.3.0
+  resolution: "bigint-crypto-utils@npm:3.3.0"
+  checksum: 10/94d10ac9db66b093c7c2beace833ac167b57188c8ac784a7e207ea4f585cf9c2066e5d1f5a1b26cb6ccb7f7be8e38687c79f049b87df07cfdc7bd484aee2390d
   languageName: node
   linkType: hard
 
@@ -29701,6 +29725,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"lru-cache@npm:^10.0.0":
+  version: 10.2.0
+  resolution: "lru-cache@npm:10.2.0"
+  checksum: 10/502ec42c3309c0eae1ce41afca471f831c278566d45a5273a0c51102dee31e0e250a62fa9029c3370988df33a14188a38e682c16143b794de78668de3643e302
+  languageName: node
+  linkType: hard
+
 "lru-cache@npm:^5.1.1":
   version: 5.1.1
   resolution: "lru-cache@npm:5.1.1"
@@ -35569,6 +35600,22 @@ __metadata:
   dependencies:
     aproba: ^1.1.1
   checksum: c4541e18b5e056af60f398f2f1b3d89aae5c093d1524bf817c5ee68bcfa4851ad9976f457a9aea135b1d0d72ee9a91c386e3d136bcd95b699c367cd09c70be53
+  languageName: node
+  linkType: hard
+
+"rust-verkle-wasm@npm:^0.0.1":
+  version: 0.0.1
+  resolution: "rust-verkle-wasm@npm:0.0.1"
+  checksum: 10/3680d9bfde00606fe81684fbc3f6fbba1855dea72a5951efb3671dd4c2e85d1ab15e786d6b572c64298c9bae095674bebd6e074aaeceb69217536d65ad507e85
+  languageName: node
+  linkType: hard
+
+"rustbn-wasm@npm:^0.2.0":
+  version: 0.2.0
+  resolution: "rustbn-wasm@npm:0.2.0"
+  dependencies:
+    "@scure/base": "npm:^1.1.1"
+  checksum: 10/36a4ee287e0e43051becf8788fc50b5e8f8829e53fbbf1e5e47dc284f2920797c86900646b51f89dedf644ce7321c3fc83520bc60dab0ad455482f6ea220c19a
   languageName: node
   linkType: hard
 
