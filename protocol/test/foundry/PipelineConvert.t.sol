@@ -51,6 +51,7 @@ contract PipelineConvertTest is TestHelper {
     bytes constant noData = abi.encode(0);
   
     function setUp() public {
+        
         initializeBeanstalkTestState(true, false);
 
         // initalize farmers.
@@ -123,6 +124,7 @@ contract PipelineConvertTest is TestHelper {
     }*/
 
     function testBasicConvertBeanToLP(uint256 amount) public {
+        vm.pauseGasMetering();
         int96 stem;
         // well is initalized with 10000 beans. cap add liquidity 
         // to reasonable amounts. 
@@ -146,14 +148,15 @@ contract PipelineConvertTest is TestHelper {
 
         uint256[] memory amounts = new uint256[](1);
         amounts[0] = amount;
-
+        bytes memory output = createBeanToLP(amount);
+        vm.resumeGasMetering();
         vm.prank(users[1]); // do this as user 1
         convert.pipelineConvert(
             C.BEAN, // input token
             stems,  // stems
             amounts,  // amount
             C.BEAN_ETH_WELL, // token out
-            createBeanToLP(amount) // farmData
+            output // farmData
         );
     }
 
