@@ -1,6 +1,6 @@
 import { Contract, ContractInterface, ethers } from 'ethers';
 import { useCallback, useMemo } from 'react';
-import { useProvider, useContract as useWagmiContract } from 'wagmi';
+import { useContract as useWagmiContract } from '~/util/wagmi/useContract';
 
 import BEANSTALK_ABI from '@beanstalk/protocol/abi/Beanstalk.json';
 import BEANSTALK_PRICE_ABI from '~/constants/abi/Beanstalk/BeanstalkPrice.json';
@@ -12,8 +12,8 @@ import BEANFT_BARNRAISE_ABI from '~/constants/abi/BeaNFT/BeaNFTBarnRaise.json';
 import AGGREGATOR_V3_ABI from '~/constants/abi/Chainlink/AggregatorV3.json';
 import GNOSIS_DELEGATE_REGISTRY_ABI from '~/constants/abi/Gnosis/DelegateRegistry.json';
 import ENS_REVERSE_RECORDS_ABI from '~/constants/abi/ENS/ENSReverseRecords.json';
-import useChainConstant from '../chain/useChainConstant';
 import { SupportedChainId } from '~/constants/chains';
+import useChainConstant from '~/hooks/chain/useChainConstant';
 import {
   BEANFT_GENESIS_ADDRESSES,
   BEANFT_WINTER_ADDRESSES,
@@ -37,8 +37,9 @@ import {
   ERC20,
   AggregatorV3,
   DelegateRegistry,
-  ENSReverseRecords
+  ENSReverseRecords,
 } from '~/generated/index';
+import { useEthersProvider } from '~/util/wagmi/ethersAdapter';
 
 export type AddressOrAddressMap = string | ChainConstant<string>;
 export type AbiOrAbiMap = ContractInterface | ChainConstant<ContractInterface>;
@@ -49,7 +50,7 @@ export function useContractReadOnly<T extends Contract = Contract>(
   addressOrAddressMap: AddressOrAddressMap,
   abiOrAbiMap: AbiOrAbiMap
 ): [T | null, SupportedChainId] {
-  const provider = useProvider();
+  const provider = useEthersProvider();
   const address =
     typeof addressOrAddressMap === 'string'
       ? addressOrAddressMap
@@ -88,7 +89,7 @@ export function useGetContract<T extends Contract = Contract>(
   abiOrAbiMap: AbiOrAbiMap,
   useSignerIfPossible: boolean = true
 ): (addressOrAddressMap: AddressOrAddressMap) => [T | null, SupportedChainId] {
-  const provider = useProvider();
+  const provider = useEthersProvider();
   const { data: signer } = useSigner();
   const chainId = provider.network.chainId;
   const abi = Array.isArray(abiOrAbiMap)
@@ -162,7 +163,7 @@ export function useERC20Contract(addressOrAddressMap: AddressOrAddressMap) {
 
 export function useFertilizerContract(signer?: ethers.Signer | null) {
   const fertAddress = useChainConstant(BEANSTALK_FERTILIZER_ADDRESSES);
-  const provider = useProvider();
+  const provider = useEthersProvider();
   return useWagmiContract({
     address: fertAddress,
     abi: BEANSTALK_FERTILIZER_ABI,
@@ -172,7 +173,7 @@ export function useFertilizerContract(signer?: ethers.Signer | null) {
 
 export function useBeanstalkContract(signer?: ethers.Signer | null) {
   const address = useChainConstant(BEANSTALK_ADDRESSES);
-  const provider = useProvider();
+  const provider = useEthersProvider();
   return useWagmiContract({
     address,
     abi: BEANSTALK_ABI,
@@ -182,7 +183,7 @@ export function useBeanstalkContract(signer?: ethers.Signer | null) {
 
 export function useGenesisNFTContract(signer?: ethers.Signer | null) {
   const address = useChainConstant(BEANFT_GENESIS_ADDRESSES);
-  const provider = useProvider();
+  const provider = useEthersProvider();
   return useWagmiContract({
     address,
     abi: BEANFT_GENESIS_ABI,
@@ -192,7 +193,7 @@ export function useGenesisNFTContract(signer?: ethers.Signer | null) {
 
 export function useWinterNFTContract(signer?: ethers.Signer | null) {
   const address = useChainConstant(BEANFT_WINTER_ADDRESSES);
-  const provider = useProvider();
+  const provider = useEthersProvider();
   return useWagmiContract({
     address,
     abi: BEANFT_WINTER_ABI,
@@ -202,7 +203,7 @@ export function useWinterNFTContract(signer?: ethers.Signer | null) {
 
 export function useBarnRaiseNFTContract(signer?: ethers.Signer | null) {
   const address = useChainConstant(BEANFT_BARNRAISE_ADDRESSES);
-  const provider = useProvider();
+  const provider = useEthersProvider();
   return useWagmiContract({
     address,
     abi: BEANFT_BARNRAISE_ABI,
@@ -216,7 +217,7 @@ export function useAggregatorV3Contract(
   signer?: ethers.Signer | null
 ) {
   const address = useChainConstant(chainConstant);
-  const provider = useProvider();
+  const provider = useEthersProvider();
   return useWagmiContract({
     address,
     abi: AGGREGATOR_V3_ABI,
@@ -226,7 +227,7 @@ export function useAggregatorV3Contract(
 
 export function useDelegatesRegistryContract(signer?: ethers.Signer | null) {
   const address = useChainConstant(DELEGATES_REGISTRY_ADDRESSES);
-  const provider = useProvider();
+  const provider = useEthersProvider();
   return useWagmiContract({
     address,
     abi: GNOSIS_DELEGATE_REGISTRY_ABI,
@@ -236,7 +237,7 @@ export function useDelegatesRegistryContract(signer?: ethers.Signer | null) {
 
 export function useEnsReverseRecords(signer?: ethers.Signer | null) {
   const address = useChainConstant(ENS_REVERSE_RECORDS);
-  const provider = useProvider();
+  const provider = useEthersProvider();
   return useWagmiContract({
     address,
     abi: ENS_REVERSE_RECORDS_ABI,
