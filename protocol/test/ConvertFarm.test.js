@@ -264,6 +264,31 @@ describe('Farm Convert', function () {
       });
     });
 
+
+    describe('pipe convert where things should break', async function () {
+      it.only('reverts if you pass in non-whitelisted silo token', async function () {
+        const uniswapUsdcEthPool = '0x88e6a0c2ddd26feeb64f039a2c41296fcb3f5640';
+        await this.bean.connect(user).approve(this.well.address, ethers.constants.MaxUint256);
+        const wellAmountOut = await this.well.getAddLiquidityOut([toBean('200'), to18("0")]);
+        await this.well.connect(user).addLiquidity([toBean('200'), to18("0")], ethers.constants.Zero, user.address, ethers.constants.MaxUint256);
+        const beanAmountOut = await this.well.getRemoveLiquidityOneTokenOut(wellAmountOut, BEAN);
+        const siloResult = await this.silo.connect(user).deposit(this.well.address, wellAmountOut, EXTERNAL);
+        const siloReceipt = await siloResult.wait();
+        const depositedBdv = getBdvFromAddDepositReceipt(this.silo, siloReceipt);
+        const depositStemTip = await this.siloGetters.stemTipForToken(this.well.address);
+        //advance 2 seasons to get past germination
+        await this.season.siloSunrise(0);
+        await this.season.siloSunrise(0);
+        const grownStalk = 0;
+        const [newStemTip, ] = await this.siloGetters.calculateStemForTokenFromGrownStalk(this.bean.address, grownStalk, beanAmountOut);
+
+        let advancedFarmCalls = await draftConvertBeanEthWellToBean(wellAmountOut, beanAmountOut)
+        const farmData = this.farmFacet.interface.encodeFunctionData("advancedFarm", [advancedFarmCalls]);
+        await expect(this.convert.connect(user).pipelineConvert(uniswapUsdcEthPool, [depositStemTip], [wellAmountOut], this.bean.address, farmData)).to.be.revertedWith("Convert: Not enough tokens removed.");
+
+      });
+    });
+
       // write a test that inputs non-whitelisted tokens
       // write LP to LP tests
 
