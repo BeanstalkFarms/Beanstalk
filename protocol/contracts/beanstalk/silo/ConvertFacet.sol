@@ -456,23 +456,24 @@ contract ConvertFacet is ReentrancyGuard {
             uint256 amountOut
         )
     {
+        console.log("executeAdvancedFarmCalls:");
+        console.log("bytes being fed in:");
+        console.logBytes(farmData);
         // bytes memory lastBytes = results[results.length - 1];
         //at this point lastBytes is 3 slots long, we just need the last slot (first two slots contain 0x2 for some reason)
         bytes[] memory results;
-        AdvancedFarmCall[] memory calls = abi.decode(
-            LibBytes.sliceFrom(farmData, 4),
-            (AdvancedFarmCall[])
-        );
+        AdvancedFarmCall[] memory calls = abi.decode(farmData, (AdvancedFarmCall[]));
+        console.log("advancedFarm decoded.");
 
         results = new bytes[](calls.length);
         for (uint256 i = 0; i < calls.length; ++i) {
+            console.log("looping:", i);
+            console.log("calldata:");
+            console.logBytes(calls[i].callData);
             require(calls[i].callData.length != 0, "Convert: empty AdvancedFarmCall");
             results[i] = LibFarm._advancedFarmMem(calls[i], results);
-
-            //log result
-            // console.log('results[i]: ', i);
-            // console.logBytes(results[i]);
         }
+
         // assume last value is the amountOut
         // todo: for full functionality, we should instead have the user specify the index of the amountOut
         // in the farmCallResult.

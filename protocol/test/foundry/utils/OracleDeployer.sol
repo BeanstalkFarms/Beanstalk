@@ -30,6 +30,10 @@ contract OracleDeployer is Utils {
             C.WSTETH_ETH_CHAINLINK_PRICE_AGGREGATOR // wstETH/ETH
         ];
 
+        // optional labels to assist in testing. 
+        vm.label(C.ETH_USD_CHAINLINK_PRICE_AGGREGATOR, "CL ETH/USD");
+        vm.label(C.WSTETH_ETH_CHAINLINK_PRICE_AGGREGATOR, "CL WstETH/ETH");
+
         // price to initalize at. Assumes index matching with oracles.
         int256[2] memory initalPrices = [
             int256(1000e6), // ETH/USD
@@ -39,6 +43,7 @@ contract OracleDeployer is Utils {
         for(uint i; i < oracles.length; i++) {
             deployCodeTo("MockChainlinkAggregator.sol", new bytes(0), oracles[i]);
             if (verbose) console.log("Chainlink Oracle Deployed at:", oracles[i]);
+            
             mockAddRound(oracles[i], initalPrices[i], 900);
         }
     }
