@@ -31,40 +31,6 @@ library LibClipboard {
      * @param returnPasteParams Array of returnPasteParam encoded as bytes32 objects.
      * @return clipboard Encoded clipboard, adhering to https://evmpipeline.org/pipeline.pdf, Figure 2.
      */
-    function encodeOld(
-        uint256 etherValue,
-        bytes32[] memory returnPasteParams
-    ) internal pure returns (bytes memory clipboard) {
-        // Set clipboard type and use ether flag.
-        clipboard = abi.encodePacked(
-            returnPasteParams.length < 2
-                ? bytes1(uint8(returnPasteParams.length))
-                : bytes1(uint8(2)), // type
-            etherValue == 0 ? bytes1(0) : bytes1(uint8(1)) // use ether flag
-        );
-
-        // Set paste params, with proper padding.
-        if (clipboard[0] == bytes1(uint8(1))) {
-            clipboard = abi.encodePacked(
-                clipboard,
-                uint240(uint256(returnPasteParams[0])) // remove padding
-            );
-        } else if (clipboard[0] == bytes1(uint8(2))) {
-            clipboard = abi.encodePacked(clipboard, bytes30(0), returnPasteParams.length);
-            for (uint256 i; i < returnPasteParams.length; ++i) {
-                clipboard = abi.encodePacked(clipboard, returnPasteParams[i]);
-            }
-        }
-
-        // Optionally append ether value.
-        if (clipboard[1] == bytes1(uint8(1))) {
-            clipboard = abi.encodePacked(clipboard, etherValue);
-        }
-
-        return clipboard;
-    }
-
-    // assumes type 1 or 2 encoding.
     function encode(
         uint256 etherValue,
         bytes32[] memory returnPasteParams
