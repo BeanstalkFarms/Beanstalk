@@ -1,15 +1,16 @@
 /// <reference path="../../../node_modules/assemblyscript/dist/assemblyscript.d.ts" />
 
-import { beforeEach, afterEach, assert, clearStore, describe, test } from "matchstick-as/assembly/index";
+import { beforeEach, afterEach, assert, clearStore, describe, test, createMockedFunction } from "matchstick-as/assembly/index";
 import { log } from "matchstick-as/assembly/log";
 import { logStore } from "matchstick-as/assembly/store";
-import { BigInt } from "@graphprotocol/graph-ts";
+import { BigInt, ethereum } from "@graphprotocol/graph-ts";
 import { createSowEvent, createPlotTransferEvent } from "./event-mocking/Field";
+import { createIncentivizationEvent } from "./event-mocking/Season";
 
-import { Season } from "../generated/schema";
 import { loadSeason } from "../src/utils/Season";
 
 import { handleSow, handlePlotTransfer } from "../src/FieldHandler";
+import { handleIncentive } from "../src/SeasonHandler";
 import { BEANSTALK } from "../src/utils/Constants";
 
 const ANVIL_ADDR_1 = "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266".toLowerCase();
@@ -68,6 +69,17 @@ const assertFieldHas = (field: string, unharvestable: BigInt, harvestable: BigIn
   assert.fieldEquals("Field", field, "harvestablePods", harvestable.toString());
 };
 
+const setHarvestable = (harvestableIndex: BigInt): BigInt => {
+  createMockedFunction(BEANSTALK, "harvestableIndex", "harvestableIndex():(uint256)")
+    // @ts-expect-error:2322
+    .returns([ethereum.Value.fromUnsignedBigInt(harvestableIndex)]);
+
+  // Incentivization event triggers update of harvestable amount of each plot
+  handleIncentive(createIncentivizationEvent(ANVIL_ADDR_1, BigInt.fromI32(123456)));
+
+  return harvestableIndex;
+};
+
 // Begin tests
 describe("Field: Plot Transfer", () => {
   beforeEach(() => {
@@ -91,7 +103,7 @@ describe("Field: Plot Transfer", () => {
 
   // Transfers entire first plot
   describe("Full Plot", () => {
-    test("Unharvestable", () => {
+    test("F: Unharvestable", () => {
       handlePlotTransfer(createPlotTransferEvent(ANVIL_ADDR_1, ANVIL_ADDR_2, initialPlots[0].plotStart, initialPlots[0].pods));
 
       assertFarmerHasPlot(ANVIL_ADDR_2, initialPlots[0].plotStart, initialPlots[0].pods);
@@ -100,11 +112,12 @@ describe("Field: Plot Transfer", () => {
       assertFieldHas(BEANSTALK.toHexString(), initialPlots[0].pods.plus(initialPlots[1].pods), BigInt.zero());
     });
 
-    test("Harvestable (Full)", () => {
+    test("F: Harvestable (Full)", () => {
       // Entire first plot is harvestable
-      const season = loadSeason(BEANSTALK, BigInt.fromU32(1));
-      season.harvestableIndex = initialPlots[0].plotStart.plus(initialPlots[0].pods);
-      season.save();
+      setHarvestable(initialPlots[0].plotStart.plus(initialPlots[0].pods));
+      // const season = loadSeason(BEANSTALK, BigInt.fromU32(1));
+      // season.harvestableIndex = initialPlots[0].plotStart.plus(initialPlots[0].pods);
+      // season.save();
 
       handlePlotTransfer(createPlotTransferEvent(ANVIL_ADDR_1, ANVIL_ADDR_2, initialPlots[0].plotStart, initialPlots[0].pods));
 
@@ -113,12 +126,13 @@ describe("Field: Plot Transfer", () => {
       assertFieldHas(BEANSTALK.toHexString(), initialPlots[1].pods, initialPlots[0].pods);
     });
 
-    test("Harvestable (Partial)", () => {
+    test("F: Harvestable (Partial)", () => {
       // 1/3 of first plot is harvestable
       const harvestableAmount = initialPlots[0].pods.div(BigInt.fromI32(3));
-      const season = loadSeason(BEANSTALK, BigInt.fromU32(1));
-      season.harvestableIndex = initialPlots[0].plotStart.plus(harvestableAmount);
-      season.save();
+      setHarvestable(initialPlots[0].plotStart.plus(harvestableAmount));
+      // const season = loadSeason(BEANSTALK, BigInt.fromU32(1));
+      // season.harvestableIndex = initialPlots[0].plotStart.plus(harvestableAmount);
+      // season.save();
 
       handlePlotTransfer(createPlotTransferEvent(ANVIL_ADDR_1, ANVIL_ADDR_2, initialPlots[0].plotStart, initialPlots[0].pods));
 
@@ -130,7 +144,7 @@ describe("Field: Plot Transfer", () => {
 
   // Transfers the first third of the plot
   describe("Partial Plot: From Start", () => {
-    test("Unharvestable", () => {
+    test("S: Unharvestable", () => {
       const transferredIndex = initialPlots[0].plotStart;
       const transferredAmount = initialPlots[0].pods.div(BigInt.fromI32(3));
       handlePlotTransfer(createPlotTransferEvent(ANVIL_ADDR_1, ANVIL_ADDR_2, transferredIndex, transferredAmount));
@@ -142,11 +156,12 @@ describe("Field: Plot Transfer", () => {
       assertFieldHas(BEANSTALK.toHexString(), initialPlots[0].pods.plus(initialPlots[1].pods), BigInt.zero());
     });
 
-    test("Harvestable (Full)", () => {
+    test("S: Harvestable (Full)", () => {
       // Entire first plot is harvestable
-      const season = loadSeason(BEANSTALK, BigInt.fromU32(1));
-      season.harvestableIndex = initialPlots[0].plotStart.plus(initialPlots[0].pods);
-      season.save();
+      setHarvestable(initialPlots[0].plotStart.plus(initialPlots[0].pods));
+      // const season = loadSeason(BEANSTALK, BigInt.fromU32(1));
+      // season.harvestableIndex = initialPlots[0].plotStart.plus(initialPlots[0].pods);
+      // season.save();
 
       const transferredIndex = initialPlots[0].plotStart;
       const transferredAmount = initialPlots[0].pods.div(BigInt.fromI32(3));
@@ -157,12 +172,13 @@ describe("Field: Plot Transfer", () => {
       assertFieldHas(BEANSTALK.toHexString(), initialPlots[1].pods, initialPlots[0].pods);
     });
 
-    test("Harvestable (Partial)", () => {
+    test("S: Harvestable (Partial)", () => {
       // 1/4 of first plot is harvestable
       const harvestableAmount = initialPlots[0].pods.div(BigInt.fromI32(4));
-      const season = loadSeason(BEANSTALK, BigInt.fromU32(1));
-      season.harvestableIndex = initialPlots[0].plotStart.plus(harvestableAmount);
-      season.save();
+      setHarvestable(initialPlots[0].plotStart.plus(harvestableAmount));
+      // const season = loadSeason(BEANSTALK, BigInt.fromU32(1));
+      // season.harvestableIndex = initialPlots[0].plotStart.plus(harvestableAmount);
+      // season.save();
 
       // Transfers first third of plot (only some of which is harvestable)
       const transferredIndex = initialPlots[0].plotStart;
@@ -178,7 +194,7 @@ describe("Field: Plot Transfer", () => {
 
   // Transfers the final third of the plot
   describe("Partial Plot: To End", () => {
-    test("Unharvestable", () => {
+    test("E: Unharvestable", () => {
       const transferredAmount = initialPlots[0].pods.div(BigInt.fromI32(3));
       const transferredIndex = initialPlots[0].plotEnd.minus(transferredAmount);
       handlePlotTransfer(createPlotTransferEvent(ANVIL_ADDR_1, ANVIL_ADDR_2, transferredIndex, transferredAmount));
@@ -190,11 +206,12 @@ describe("Field: Plot Transfer", () => {
       assertFieldHas(BEANSTALK.toHexString(), initialPlots[0].pods.plus(initialPlots[1].pods), BigInt.zero());
     });
 
-    test("Harvestable (Full)", () => {
+    test("E: Harvestable (Full)", () => {
       // Entire first plot is harvestable
-      const season = loadSeason(BEANSTALK, BigInt.fromU32(1));
-      season.harvestableIndex = initialPlots[0].plotStart.plus(initialPlots[0].pods);
-      season.save();
+      setHarvestable(initialPlots[0].plotStart.plus(initialPlots[0].pods));
+      // const season = loadSeason(BEANSTALK, BigInt.fromU32(1));
+      // season.harvestableIndex = initialPlots[0].plotStart.plus(initialPlots[0].pods);
+      // season.save();
 
       const transferredAmount = initialPlots[0].pods.div(BigInt.fromI32(3));
       const transferredIndex = initialPlots[0].plotEnd.minus(transferredAmount);
@@ -205,18 +222,19 @@ describe("Field: Plot Transfer", () => {
       assertFieldHas(BEANSTALK.toHexString(), initialPlots[1].pods, initialPlots[0].pods);
     });
 
-    test("Harvestable (Partial)", () => {
+    test("E: Harvestable (Partial)", () => {
       // 3/4 of first plot is harvestable
       const harvestableAmount = initialPlots[0].pods.times(BigInt.fromI32(3)).div(BigInt.fromI32(4));
-      const season = loadSeason(BEANSTALK, BigInt.fromU32(1));
-      season.harvestableIndex = initialPlots[0].plotStart.plus(harvestableAmount);
-      season.save();
+      const harvestableIndex = setHarvestable(initialPlots[0].plotStart.plus(harvestableAmount));
+      // const season = loadSeason(BEANSTALK, BigInt.fromU32(1));
+      // season.harvestableIndex = initialPlots[0].plotStart.plus(harvestableAmount);
+      // season.save();
 
       const transferredAmount = initialPlots[0].pods.div(BigInt.fromI32(3));
       const transferredIndex = initialPlots[0].plotEnd.minus(transferredAmount);
       handlePlotTransfer(createPlotTransferEvent(ANVIL_ADDR_1, ANVIL_ADDR_2, transferredIndex, transferredAmount));
 
-      const transferredHarvestable = season.harvestableIndex.minus(transferredIndex);
+      const transferredHarvestable = harvestableIndex.minus(transferredIndex);
       assertFieldHas(ANVIL_ADDR_1, initialPlots[1].pods, harvestableAmount.minus(transferredHarvestable));
       assertFieldHas(ANVIL_ADDR_2, initialPlots[0].pods.minus(harvestableAmount), transferredHarvestable);
       assertFieldHas(BEANSTALK.toHexString(), initialPlots[0].pods.minus(harvestableAmount).plus(initialPlots[1].pods), harvestableAmount);
@@ -225,7 +243,7 @@ describe("Field: Plot Transfer", () => {
 
   // Transfers the middle third of the plot
   describe("Partial Plot: Middle", () => {
-    test("Unharvestable", () => {
+    test("M: Unharvestable", () => {
       const transferredAmount = initialPlots[0].pods.div(BigInt.fromI32(3));
       const transferredIndex = initialPlots[0].plotStart.plus(transferredAmount);
       handlePlotTransfer(createPlotTransferEvent(ANVIL_ADDR_1, ANVIL_ADDR_2, transferredIndex, transferredAmount));
@@ -238,11 +256,12 @@ describe("Field: Plot Transfer", () => {
       assertFieldHas(BEANSTALK.toHexString(), initialPlots[0].pods.plus(initialPlots[1].pods), BigInt.zero());
     });
 
-    test("Harvestable (Full)", () => {
+    test("M: Harvestable (Full)", () => {
       // Entire first plot is harvestable
-      const season = loadSeason(BEANSTALK, BigInt.fromU32(1));
-      season.harvestableIndex = initialPlots[0].plotStart.plus(initialPlots[0].pods);
-      season.save();
+      setHarvestable(initialPlots[0].plotStart.plus(initialPlots[0].pods));
+      // const season = loadSeason(BEANSTALK, BigInt.fromU32(1));
+      // season.harvestableIndex = initialPlots[0].plotStart.plus(initialPlots[0].pods);
+      // season.save();
 
       const transferredAmount = initialPlots[0].pods.div(BigInt.fromI32(3));
       const transferredIndex = initialPlots[0].plotStart.plus(transferredAmount);
@@ -253,12 +272,13 @@ describe("Field: Plot Transfer", () => {
       assertFieldHas(BEANSTALK.toHexString(), initialPlots[0].pods, initialPlots[1].pods);
     });
 
-    test("Harvestable (Partial)", () => {
+    test("M: Harvestable (Partial)", () => {
       // 1/2 of first plot is harvestable
       const harvestableAmount = initialPlots[0].pods.div(BigInt.fromI32(2));
-      const season = loadSeason(BEANSTALK, BigInt.fromU32(1));
-      season.harvestableIndex = initialPlots[0].plotStart.plus(harvestableAmount);
-      season.save();
+      setHarvestable(initialPlots[0].plotStart.plus(harvestableAmount));
+      // const season = loadSeason(BEANSTALK, BigInt.fromU32(1));
+      // season.harvestableIndex = initialPlots[0].plotStart.plus(harvestableAmount);
+      // season.save();
 
       const transferredAmount = initialPlots[0].pods.div(BigInt.fromI32(3));
       const transferredIndex = initialPlots[0].plotStart.plus(transferredAmount);

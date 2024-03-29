@@ -319,6 +319,7 @@ export function handlePlotTransfer(event: PlotTransfer): void {
   log.debug("\nPodTransfer: Transfer Ending Index - {}\n", [event.params.id.plus(event.params.pods).toString()]);
   log.debug("\nPodTransfer: Source Index - {}\n", [sourceIndex.toString()]);
   log.debug("\nPodTransfer: Source Ending Index - {}\n", [sourceIndex.plus(sourcePlot.pods).toString()]);
+  log.debug("\nPodTransfer: Source Harvestable Pods - {}\n", [sourcePlot.harvestablePods.toString()]);
   log.debug("\nPodTransfer: Starting Source Pods - {}\n", [sourcePlot.pods.toString()]);
 
   // Actually transfer the plots
