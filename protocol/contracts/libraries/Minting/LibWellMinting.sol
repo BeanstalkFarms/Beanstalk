@@ -228,15 +228,15 @@ library LibWellMinting {
      * @param well The address of the Well.
      * @return deltaB The instantaneous delta B balance since the last `capture` call.
      */
-    function instantaneousDeltaB(address well) internal view returns (int256, uint256[] memory, uint256[] memory) {
+    function instantaneousDeltaB(address well) internal view returns (int256) {
 
         AppStorage storage s = LibAppStorage.diamondStorage();
         Call[] memory pumps = IWell(well).pumps();
                                                                                             // well address , data[]
         uint[] memory instReserves = IInstantaneousPump(pumps[0].target).readInstantaneousReserves(well, C.BYTES_ZERO);
                                                                     // well, reserves, snapshot, lookback
-        (int256 deltaB, , ,uint256[] memory ratios) = getDeltaBInfo(well, instReserves, new bytes(0) , 0);
-        return (deltaB, instReserves, ratios);
+        (int256 deltaB, , ,) = getDeltaBInfo(well, instReserves, new bytes(0) , 0);
+        return (deltaB);
     }
 
 }

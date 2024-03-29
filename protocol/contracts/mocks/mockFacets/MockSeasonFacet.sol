@@ -560,7 +560,7 @@ contract MockSeasonFacet is SeasonFacet  {
     }
 
     function captureWellEInstantaneous(address well) external returns (int256 instDeltaB) {
-        (instDeltaB, ,) = LibWellMinting.instantaneousDeltaB(well);
+        instDeltaB = LibWellMinting.instantaneousDeltaB(well);
         s.season.timestamp = block.timestamp;
         emit DeltaB(instDeltaB);
     }

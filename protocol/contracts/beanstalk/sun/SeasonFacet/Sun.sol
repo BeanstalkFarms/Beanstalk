@@ -243,7 +243,7 @@ contract Sun is Oracle {
         int256 instDeltaB;
         address[] memory tokens = LibWhitelistedTokens.getWhitelistedWellLpTokens();
         for (uint256 i = 0; i < tokens.length; i++) {
-            (int256 wellInstDeltaB, ,) = LibWellMinting.instantaneousDeltaB(tokens[i]);
+            int256 wellInstDeltaB = LibWellMinting.instantaneousDeltaB(tokens[i]);
             instDeltaB = instDeltaB.add(wellInstDeltaB);
         }
 
