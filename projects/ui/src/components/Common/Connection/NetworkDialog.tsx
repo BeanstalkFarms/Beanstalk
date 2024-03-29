@@ -1,5 +1,5 @@
 import React, { useCallback } from 'react';
-import { useNetwork, useSwitchNetwork } from 'wagmi';
+import { useAccount, useSwitchChain } from 'wagmi';
 import {
   Alert,
   Button,
@@ -13,8 +13,8 @@ import { useTheme } from '@mui/material/styles';
 import { SWITCH_NETWORK_ERRORS } from '~/constants/wallets';
 import { SupportedChainId, TESTNET_RPC_ADDRESSES } from '~/constants';
 import { ETH } from '~/constants/tokens';
-import { StyledDialogContent, StyledDialogTitle } from '../Dialog';
 import Row from '~/components/Common/Row';
+import { StyledDialogContent, StyledDialogTitle } from '../Dialog';
 
 const NetworkDialog: React.FC<
   DialogProps & {
@@ -27,17 +27,17 @@ const NetworkDialog: React.FC<
   const isMedium = useMediaQuery(theme.breakpoints.down('md'));
 
   ///
-  const { chain: _chain } = useNetwork();
-  const { chains, error, pendingChainId, switchNetwork } = useSwitchNetwork();
+  const { chain: _chain } = useAccount();
+  const { chains, error, isPending, switchChain } = useSwitchChain();
   const handleSwitch = useCallback(
     (id: number) => () => {
-      if (switchNetwork) {
+      if (switchChain) {
         console.debug(`[NetworkButton] switching network => ${id}`);
-        switchNetwork(id);
+        switchChain({ chainId: id });
         handleClose?.();
       }
     },
-    [switchNetwork, handleClose]
+    [switchChain, handleClose]
   );
 
   return (
@@ -88,7 +88,7 @@ const NetworkDialog: React.FC<
                       ETH[SupportedChainId.MAINNET].logo
                     }
                     alt=""
-                    css={{ height: 35 }}
+                    style={{ height: 35 }}
                   />
                 )}
               </Row>
@@ -96,9 +96,9 @@ const NetworkDialog: React.FC<
           ))}
           {error && (
             <Alert severity="error">
-              {SWITCH_NETWORK_ERRORS[error.name || error.message](
-                pendingChainId
-              ) || error.message}
+              {/* @ts-ignore */}
+              {SWITCH_NETWORK_ERRORS[error.name || error.message](isPending) ||
+                error.message}
             </Alert>
           )}
         </Stack>

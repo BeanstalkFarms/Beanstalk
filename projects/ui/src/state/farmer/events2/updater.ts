@@ -1,7 +1,7 @@
 import { useCallback } from 'react';
 import { useDispatch } from 'react-redux';
-import { useProvider } from 'wagmi';
 import type { EventManager } from '@beanstalk/sdk';
+import { useEthersProvider } from '~/util/wagmi/ethersAdapter';
 import useChainId from '~/hooks/chain/useChainId';
 import useEventCache from '~/hooks/farmer/useEventCache';
 import useAccount from '~/hooks/ledger/useAccount';
@@ -95,7 +95,7 @@ export default function useEvents(
 ) {
   const dispatch = useDispatch();
   const chainId = useChainId();
-  const provider = useProvider();
+  const provider = useEthersProvider();
   const account = useAccount();
   const cache = useEventCache(cacheName);
 
