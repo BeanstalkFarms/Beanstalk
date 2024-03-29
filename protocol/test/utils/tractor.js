@@ -246,7 +246,7 @@ const draftDepositInternalBeanBalance = async (tip) => {
     ),
     clipboard: await drafter().then(
       async (drafter) =>
-        await drafter.encodeClipboard(0, [
+        await drafter.encodeClipboard(1, [
           await drafter.encodeLibReturnPasteParam(
             1,
             SLOT_SIZE + PIPE_RETURN_BYTE_OFFSET,

@@ -106,7 +106,7 @@ library LibClipboard {
      * -------------------------------------------------------------------------------------
      * @param returnData A list of return values from previously executed Advanced Calls
      * @return data The function call return datas
-    **/
+     **/
     function useClipboard(
         bytes memory callData,
         bytes memory clipboard,
@@ -116,7 +116,7 @@ library LibClipboard {
         require(typeId == 0x01 || typeId == 0x02, "Clipboard: Type not supported");
         data = callData;
         for (uint256 i; i < returnPasteParams.length; i++) {
-            data = LibReturnPasteParam.pasteBytes(returnPasteParams[i], returnData, data);
+            LibReturnPasteParam.pasteBytes(returnPasteParams[i], returnData, data);
         }
     }
 }

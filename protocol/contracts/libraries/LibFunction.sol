@@ -42,22 +42,4 @@ library LibFunction {
         facet = ds.selectorToFacetAndPosition[selector].facetAddress;
         require(facet != address(0), "Diamond: Function does not exist");
     }
-
-    /**
-     * @notice Copy 32 Bytes from copyData at copyIndex and paste into pasteData at pasteIndex
-     * @param copyData The data bytes to copy from
-     * @param pasteData The data bytes to paste into
-     * @param copyIndex The index in copyData to copying from
-     * @param pasteIndex The index in pasteData to paste into
-     **/
-    function paste32Bytes(
-        bytes memory copyData,
-        bytes memory pasteData,
-        uint256 copyIndex,
-        uint256 pasteIndex
-    ) internal view {
-        assembly {
-            mstore(add(pasteData, pasteIndex), mload(add(copyData, copyIndex)))
-        }
-    }
 }

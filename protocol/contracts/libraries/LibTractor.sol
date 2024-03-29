@@ -117,6 +117,7 @@ library LibTractor {
     }
 
     /// @notice calculates blueprint hash
+    /// @dev https://eips.ethereum.org/EIPS/eip-712
     /// @param blueprint blueprint object
     /// @return hash calculated Blueprint hash
     function _getBlueprintHash(Blueprint calldata blueprint) internal view returns (bytes32) {
