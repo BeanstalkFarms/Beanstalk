@@ -60,6 +60,9 @@ library LibConvert {
         } else if (kind == LibConvertData.ConvertKind.UNRIPE_LP_TO_UNRIPE_BEANS) {
             (tokenOut, tokenIn, amountOut, amountIn) = LibUnripeConvert
                 .convertLPToBeans(convertData);
+        } else if (kind == LibConvertData.ConvertKind.UNRIPE_TO_RIPE) {
+            (tokenOut, tokenIn, amountOut, amountIn) = LibChopConvert
+                .convertUnripeToRipe(convertData);
         } else if (kind == LibConvertData.ConvertKind.LAMBDA_LAMBDA) {
             (tokenOut, tokenIn, amountOut, amountIn) = LibLambdaConvert
                 .convert(convertData);
