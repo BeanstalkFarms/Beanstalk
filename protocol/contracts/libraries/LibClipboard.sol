@@ -35,16 +35,28 @@ library LibClipboard {
         uint256 etherValue,
         bytes32[] memory returnPasteParams
     ) internal pure returns (bytes memory clipboard) {
-        // type 1: 
-        if(returnPasteParams.length == 1) {
-            clipboard = abi.encode(uint256(0x0100) << 240 | uint256((returnPasteParams[0] << 16) >> 16));
+        uint8 useEther = etherValue == 0 ? 0 : 1;
+
+        if (returnPasteParams.length == 0) {
+            clipboard = abi.encodePacked(uint8(0), useEther);
+        } else if (returnPasteParams.length == 1) {
+            clipboard = abi.encodePacked(
+                uint8(1),
+                useEther,
+                uint240(uint256(returnPasteParams[0])) // remove padding
+            );
         } else {
             clipboard = abi.encode(
-                uint256(0x0200) << 240, // type + ether
+                (uint256(0x02) << 248) | (uint256(useEther) << 240), // type + ether
                 returnPasteParams
             );
         }
-        return abi.encodePacked(clipboard, etherValue);
+
+        if (useEther == 1) {
+            clipboard = abi.encodePacked(clipboard, etherValue);
+        }
+
+        return clipboard;
     }
 
     function decode(
