@@ -14,7 +14,7 @@ import {FarmFacet} from "contracts/beanstalk/farm/FarmFacet.sol";
 import {MockToken} from "contracts/mocks/MockToken.sol";
 import {Pipeline} from "contracts/pipeline/Pipeline.sol";
 import {DepotFacet, AdvancedPipeCall} from "contracts/beanstalk/farm/DepotFacet.sol";
-import {AdvancedFarmCall} from "contracts/libraries/libFarm.sol";
+import {AdvancedFarmCall} from "contracts/libraries/LibFarm.sol";
 import {C} from "contracts/C.sol";
 import {console} from "forge-std/console.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
@@ -72,57 +72,6 @@ contract PipelineConvertTest is TestHelper {
 
     //////////// DEPOSITS ////////////
 
-    /**
-     * @notice verify that silo deposits continue to germinate
-     * After a season.
-     */
-    /*function testBasicConvertBeanToLP(uint256 amount) public {
-        int96 stem;
-        // deposits bean into the silo.
-        (amount, stem) = setUpSiloDepositTest(amount, farmers);
-
-        // call sunrise twice.
-        season.siloSunrise(0);
-        season.siloSunrise(0);
-
-        uint256 amountOfBean = 200*1e6;
-
-        // do the convert
-        // first setup the pipeline calls
-
-        // setup approve call
-        bytes memory approveEncoded = abi.encodeWithSelector(
-            bean.approve.selector,
-            C.BEAN_ETH_WELL,
-            MAX_UINT256
-        );
-
-        bytes memory addLiquidityEncoded = abi.encodeWithSelector(
-            IWell.addLiquidity.selector,
-            [abi.encode([amountOfBean, 0]), abi.encode(0), abi.encode(C.PIPELINE), abi.encode(type(uint256).max)]
-        );
-
-        bytes[] memory pipe0 = new bytes[](3);
-        pipe0[0] = abi.encodePacked(bean);
-        pipe0[1] = approveEncoded;
-        pipe0[2] = noData;
-
-        bytes[] memory pipe1 = new bytes[](3);
-        pipe1[0] = abi.encodePacked(beanEthWell);
-        pipe1[1] = addLiquidityEncoded;
-        pipe1[2] = noData;
-
-        
-        bytes memory flattenedPipes = abi.encodePacked(pipe0, pipe1);
-
-        bytes memory advancedFarm = abi.encodeWithSelector(pipeline.advancedPipe.selector, flattenedPipes, 0);
-
-        bytes memory output = new bytes[](1);
-        output[0] = abi.encode(advancedFarm, noData);
-
-        convert.pipelineConvert(C.BEAN, [stem], [amount], C.BEAN_ETH_WELL, output);
-    }*/
-
     function testBasicConvertBeanToLP(uint256 amount) public {
         vm.pauseGasMetering();
         int96 stem;
@@ -146,41 +95,13 @@ contract PipelineConvertTest is TestHelper {
         int96[] memory stems = new int96[](1);
         stems[0] = stem;
 
-        // bytes memory advancedFarm = abi.encodeWithSelector(pipeline.advancedPipe.selector, flattenedPipes, 0);
-
-        // AdvancedFarmCall[] memory output = createBeanToLP(amount);
-        // AdvancedFarmCall[] memory farmCalls = new AdvancedFarmCall[](1);
-        // farmCalls[0] = createBeanToLP(amount);
-
         AdvancedFarmCall[] memory farmCalls = new AdvancedFarmCall[](1);
         AdvancedFarmCall[] memory beanToLPFarmCalls = createBeanToLP(amount);
         farmCalls[0] = beanToLPFarmCalls[0]; // Assign the first element of the returned array
 
-        // AdvancedFarmCall[] memory beanToLPFarmCalls = createBeanToLP(amount);
-
-        // // Create a memory array and copy the elements from beanToLPFarmCalls
-        // AdvancedFarmCall[] memory farmCallsMemory = new AdvancedFarmCall[](beanToLPFarmCalls.length);
-        // for (uint256 i = 0; i < beanToLPFarmCalls.length; i++) {
-        //     farmCallsMemory[i] = beanToLPFarmCalls[i];
-        // }
-
-        // // Create a calldata array and assign values from the memory array
-        // AdvancedFarmCall[] calldata farmCallsCalldata = new AdvancedFarmCall[](farmCallsMemory.length);
-        // assembly {
-        //     // Get the calldata offset and length of the farmCallsCalldata array
-        //     let offset := farmCallsCalldata.offset
-        //     let length := farmCallsCalldata.length
-
-        //     // Copy the memory array to the calldata array
-        //     calldatacopy(offset, mload(farmCallsMemory), mul(length, 0x20))
-        // }
-
-
         uint256[] memory amounts = new uint256[](1);
         amounts[0] = amount;
         
-
-
         vm.resumeGasMetering();
         vm.prank(users[1]); // do this as user 1
         convert.pipelineConvert(
