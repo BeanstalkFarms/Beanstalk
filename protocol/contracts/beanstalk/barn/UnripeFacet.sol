@@ -164,6 +164,10 @@ contract UnripeFacet is ReentrancyGuard {
      */
     function getPenalty(address unripeToken) external view returns (uint256 penalty) {
                                       // token     // amount = 1e6 = 1 unripe token
+        console.log("///////////////// UnripeFacet.getPenalty() ///////////////////");
+        console.log("Parameters");
+        console.log("unripeToken: ", unripeToken);
+        console.log("amount: ", LibUnripe.DECIMALS);
         return getPenalizedUnderlying(unripeToken, LibUnripe.DECIMALS);
     }
 
@@ -178,8 +182,13 @@ contract UnripeFacet is ReentrancyGuard {
         address unripeToken,
         uint256 amount
     ) public view returns (uint256 redeem) {
-        return
-            LibUnripe._getPenalizedUnderlying(unripeToken, amount, IBean(unripeToken).totalSupply());
+        console.log("///////////////// UnripeFacet.getPenalizedUnderlying() ///////////////////");
+        console.log("Parameters");
+        console.log("unripeToken: ", unripeToken);
+        console.log("amount: ", amount);
+        console.log("totalSupply: ", IBean(unripeToken).totalSupply());
+                                        // token     // amount = 1e6 = 1 unripe token | supply = 1000
+        return LibUnripe._getPenalizedUnderlying(unripeToken, amount, IBean(unripeToken).totalSupply());
     }
 
     /**
@@ -215,6 +224,7 @@ contract UnripeFacet is ReentrancyGuard {
         address unripeToken,
         address account
     ) external view returns (uint256 underlying) {
+        console.log("///////////////// UnripeFacet.balanceOfPenalizedUnderlying() ///////////////////");
         return getPenalizedUnderlying(unripeToken, IERC20(unripeToken).balanceOf(account));
     }
 

@@ -147,6 +147,7 @@ library LibUnripe {
         uint256 supply
     ) internal view returns (uint256 redeem) {
         require(isUnripe(unripeToken), "not vesting");
+        // WE NO LONGER TAKE INTO ACCOUNT THE % AMOUNT REPAID BACK TO FERTILIZER
         // uint256 sharesBeingRedeemed = getRecapPaidPercentAmount(amount);
         uint256 sharesBeingRedeemed = amount;
         console.log("//////////////////// LibUnripe._getPenalizedUnderlying() ////////////////////");

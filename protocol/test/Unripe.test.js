@@ -81,6 +81,7 @@ describe('Unripe', function () {
       expect(await this.unripe.isUnripe(UNRIPE_BEAN)).to.be.equal(true)
       // getUnderlying Returns the amount of Ripe Tokens that underly a given amount of Unripe Tokens.
       // Does NOT include the penalty associated with the percent of Sprouts that are Rinsable or Rinsed.
+      // NO CONNECTION WITH PENALTY PARAMS OR CHOP RATE
       expect(await this.unripe.getUnderlying(UNRIPE_BEAN, to6('1'))).to.be.equal(to6('0.1'))
       expect(await this.unripe.balanceOfUnderlying(UNRIPE_BEAN, userAddress)).to.be.equal(to6('100'))
       expect(await this.unripe.balanceOfPenalizedUnderlying(UNRIPE_BEAN, userAddress)).to.be.equal('0')
@@ -95,7 +96,7 @@ describe('Unripe', function () {
     })
   })
 
-  describe('penalty go down', async function () {
+  describe.only('penalty go down', async function () {
     beforeEach(async function () {
       await this.unripe.connect(owner).addUnderlying(
         UNRIPE_BEAN,
@@ -105,20 +106,28 @@ describe('Unripe', function () {
     })
 
     it('getters', async function () {
+      // getUnderlyingPerUnripeToken Returns the amount of Ripe Tokens that underly a single Unripe Token.
+      // no connection with penalty params
       expect(await this.unripe.getUnderlyingPerUnripeToken(UNRIPE_BEAN)).to.be.equal(to6('0.1'))
-      expect(await this.unripe.getPenalty(UNRIPE_BEAN)).to.be.equal(to6('0.001'))
+      // GET PENALTY GETS CHOP PENALTY INFO FOR 1 SINGLE UNRIPE TOKEN
+      expect(await this.unripe.getPenalty(UNRIPE_BEAN)).to.be.equal(to6('0.01'))
       expect(await this.unripe.getTotalUnderlying(UNRIPE_BEAN)).to.be.equal(to6('100'))
       expect(await this.unripe.isUnripe(UNRIPE_BEAN)).to.be.equal(true)
-      expect(await this.unripe.getPenalizedUnderlying(UNRIPE_BEAN, to6('1'))).to.be.equal(to6('0.001'));
+      // GETPENDALIZEDUNDERLYING GETS CHOP PENALTY INFO FOR A GIVEN AMOUNT OF UNRIPE TOKENS
+      expect(await this.unripe.getPenalizedUnderlying(UNRIPE_BEAN, to6('1'))).to.be.equal(to6('0.01'));
       expect(await this.unripe.getUnderlying(UNRIPE_BEAN, to6('1'))).to.be.equal(to6('0.1'))
       expect(await this.unripe.balanceOfUnderlying(UNRIPE_BEAN, userAddress)).to.be.equal(to6('100'))
-      expect(await this.unripe.balanceOfPenalizedUnderlying(UNRIPE_BEAN, userAddress)).to.be.equal(to6('1'))
+      // balanceOfPenalizedUnderlying Returns the theoretical amount of the ripe asset in the account that underly a Farmer's balance of Unripe
+      // TODO: CONFIRM THIS
+      expect(await this.unripe.balanceOfPenalizedUnderlying(UNRIPE_BEAN, userAddress)).to.be.equal(to6('10'))
     })
 
+    ////////////////////////////////// START FROM HERE //////////////////////////////////
     it('gets percents', async function () {
       expect(await this.unripe.getRecapPaidPercent()).to.be.equal(to6('0.01'))
       expect(await this.unripe.getRecapFundedPercent(UNRIPE_BEAN)).to.be.equal(to6('0.1'))
       expect(await this.unripe.getRecapFundedPercent(UNRIPE_LP)).to.be.equal(to6('0.188459'))
+      // TODO: THIS SHOULD CHANGE TO THE CONVERSION RATE (IE 0.01) FROM getPenalty()
       expect(await this.unripe.getPercentPenalty(UNRIPE_BEAN)).to.be.equal(to6('0.001'))
       expect(await this.unripe.getPercentPenalty(UNRIPE_LP)).to.be.equal(to6('0.001884'))
     })
