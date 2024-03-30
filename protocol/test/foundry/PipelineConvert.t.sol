@@ -146,9 +146,41 @@ contract PipelineConvertTest is TestHelper {
         int96[] memory stems = new int96[](1);
         stems[0] = stem;
 
+        // bytes memory advancedFarm = abi.encodeWithSelector(pipeline.advancedPipe.selector, flattenedPipes, 0);
+
+        // AdvancedFarmCall[] memory output = createBeanToLP(amount);
+        // AdvancedFarmCall[] memory farmCalls = new AdvancedFarmCall[](1);
+        // farmCalls[0] = createBeanToLP(amount);
+
+        AdvancedFarmCall[] memory farmCalls = new AdvancedFarmCall[](1);
+        AdvancedFarmCall[] memory beanToLPFarmCalls = createBeanToLP(amount);
+        farmCalls[0] = beanToLPFarmCalls[0]; // Assign the first element of the returned array
+
+        // AdvancedFarmCall[] memory beanToLPFarmCalls = createBeanToLP(amount);
+
+        // // Create a memory array and copy the elements from beanToLPFarmCalls
+        // AdvancedFarmCall[] memory farmCallsMemory = new AdvancedFarmCall[](beanToLPFarmCalls.length);
+        // for (uint256 i = 0; i < beanToLPFarmCalls.length; i++) {
+        //     farmCallsMemory[i] = beanToLPFarmCalls[i];
+        // }
+
+        // // Create a calldata array and assign values from the memory array
+        // AdvancedFarmCall[] calldata farmCallsCalldata = new AdvancedFarmCall[](farmCallsMemory.length);
+        // assembly {
+        //     // Get the calldata offset and length of the farmCallsCalldata array
+        //     let offset := farmCallsCalldata.offset
+        //     let length := farmCallsCalldata.length
+
+        //     // Copy the memory array to the calldata array
+        //     calldatacopy(offset, mload(farmCallsMemory), mul(length, 0x20))
+        // }
+
+
         uint256[] memory amounts = new uint256[](1);
         amounts[0] = amount;
-        bytes memory output = createBeanToLP(amount);
+        
+
+
         vm.resumeGasMetering();
         vm.prank(users[1]); // do this as user 1
         convert.pipelineConvert(
@@ -156,7 +188,7 @@ contract PipelineConvertTest is TestHelper {
             stems,  // stems
             amounts,  // amount
             C.BEAN_ETH_WELL, // token out
-            output // farmData
+            farmCalls // farmData
         );
     }
 
@@ -323,7 +355,7 @@ contract PipelineConvertTest is TestHelper {
 
     function createBeanToLP(
         uint256 amountOfBean
-    ) public returns (bytes memory output) {
+    ) public returns (AdvancedFarmCall[] memory output) {
         // first setup the pipeline calls
 
         // setup approve max call
@@ -382,6 +414,7 @@ contract PipelineConvertTest is TestHelper {
         advancedFarmCalls[0] = AdvancedFarmCall(advancedPipeCalldata, new bytes(0));
 
         // encode into bytes. 
-        output = abi.encode(advancedFarmCalls);
+        // output = abi.encode(advancedFarmCalls);
+        return advancedFarmCalls;
     }
 }

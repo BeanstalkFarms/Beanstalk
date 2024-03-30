@@ -172,7 +172,7 @@ contract ConvertFacet is ReentrancyGuard {
         int96[] calldata stems, //array of stems to convert
         uint256[] calldata amounts, //amount from each crate to convert
         address outputToken,
-        bytes calldata farmData
+        AdvancedFarmCall[] calldata farmCalls
     )
         external
         payable
@@ -223,7 +223,7 @@ contract ConvertFacet is ReentrancyGuard {
 
 
         IERC20(inputToken).transfer(PIPELINE, maxTokens);
-        pipeData.amountOut = executeAdvancedFarmCalls(farmData);
+        pipeData.amountOut = executeAdvancedFarmCalls(farmCalls);
 
         console.log('amountOut after pipe calls: ', pipeData.amountOut);
         
@@ -450,20 +450,20 @@ contract ConvertFacet is ReentrancyGuard {
         }
     }
 
-    function executeAdvancedFarmCalls(bytes calldata farmData)
+    function executeAdvancedFarmCalls(AdvancedFarmCall[] calldata calls)
         internal
         returns (
             uint256 amountOut
         )
     {
         console.log("executeAdvancedFarmCalls:");
-        console.log("bytes being fed in:");
-        console.logBytes(farmData);
+        // console.log("bytes being fed in:");
+        // console.logBytes(calls);
         // bytes memory lastBytes = results[results.length - 1];
         //at this point lastBytes is 3 slots long, we just need the last slot (first two slots contain 0x2 for some reason)
         bytes[] memory results;
-        AdvancedFarmCall[] memory calls = abi.decode(farmData, (AdvancedFarmCall[]));
-        console.log("advancedFarm decoded.");
+        // AdvancedFarmCall[] memory calls = abi.decode(calls, (AdvancedFarmCall[]));
+        // console.log("advancedFarm decoded.");
 
         results = new bytes[](calls.length);
         for (uint256 i = 0; i < calls.length; ++i) {
