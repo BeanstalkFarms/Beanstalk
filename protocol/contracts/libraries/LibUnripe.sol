@@ -12,6 +12,7 @@ import {LibWell} from "./Well/LibWell.sol";
 import {Call, IWell} from "contracts/interfaces/basin/IWell.sol";
 import {IWellFunction} from "contracts/interfaces/basin/IWellFunction.sol";
 import {LibLockedUnderlying} from "./LibLockedUnderlying.sol";
+import "hardhat/console.sol";
 
 /**
  * @title LibUnripe
@@ -146,7 +147,11 @@ library LibUnripe {
         uint256 supply
     ) internal view returns (uint256 redeem) {
         require(isUnripe(unripeToken), "not vesting");
-        uint256 sharesBeingRedeemed = getRecapPaidPercentAmount(amount);
+        // uint256 sharesBeingRedeemed = getRecapPaidPercentAmount(amount);
+        uint256 sharesBeingRedeemed = amount;
+        console.log("//////////////////// LibUnripe._getPenalizedUnderlying() ////////////////////");
+        console.log("NEW sharesBeingRedeemed: ", sharesBeingRedeemed);
+        console.log("THIS SHOULD BE THE SAME AS THE AMOUNT PASSED IN");
         redeem = _getUnderlying(unripeToken, sharesBeingRedeemed, supply);
     }
 
@@ -235,6 +240,14 @@ library LibUnripe {
         uint256 supply
     ) internal view returns (uint256 redeem) {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        redeem = s.u[unripeToken].balanceOfUnderlying.mul(amount).div(supply);
+        //* @param balanceOfUnderlying The number of Tokens underlying the Unripe Tokens (redemption pool).
+        // redeem = amount * ( balanceOfUnderlying / supply ) ^ 2
+        console.log("//////////////////// LibUnripe._getUnderlying() ////////////////////");
+        console.log("unripeToken: ", unripeToken);
+        console.log("unripe shares redeemed: ", amount);
+        console.log("unripe supply: ", supply);
+        console.log("unripe balanceOfUnderlying: ", s.u[unripeToken].balanceOfUnderlying);
+        redeem = (s.u[unripeToken].balanceOfUnderlying ** 2).mul(amount).div(supply ** 2);
+        console.log("FINAL REDEEM OF RIPE FROM UNRIPE AFTER SQUARING: ", redeem);
     }
 }

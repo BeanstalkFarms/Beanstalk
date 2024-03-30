@@ -19,6 +19,7 @@ import {ReentrancyGuard} from "contracts/beanstalk/ReentrancyGuard.sol";
 import {LibLockedUnderlying} from "contracts/libraries/LibLockedUnderlying.sol";
 import {LibChop} from "contracts/libraries/LibChop.sol";
 import {LibBarnRaise} from "contracts/libraries/LibBarnRaise.sol";
+import "hardhat/console.sol";
 
 /**
  * @title UnripeFacet
@@ -82,6 +83,10 @@ contract UnripeFacet is ReentrancyGuard {
         LibTransfer.From fromMode,
         LibTransfer.To toMode
     ) external payable nonReentrant returns (uint256) {
+        console.log("///////////////// UnripeFacet.chop() ///////////////////");
+        console.log("Parameters");
+        console.log("unripeToken: ", unripeToken);
+        console.log("amount: ", amount);
         // burn the token from the msg.sender address
         uint256 supply = IBean(unripeToken).totalSupply();
         amount = LibTransfer.burnToken(IBean(unripeToken), amount, msg.sender, fromMode);
@@ -96,6 +101,7 @@ contract UnripeFacet is ReentrancyGuard {
         IERC20(underlyingToken).sendToken(underlyingAmount, msg.sender, toMode);
         // emit the event
         emit Chop(msg.sender, unripeToken, amount, underlyingAmount);
+        console.log("\n\n/////////////////////////////////////// END CHOP ///////////////////////////////////////");
         return underlyingAmount;
     }
 
@@ -157,6 +163,7 @@ contract UnripeFacet is ReentrancyGuard {
      * @return penalty The current penalty for converting unripe --> ripe
      */
     function getPenalty(address unripeToken) external view returns (uint256 penalty) {
+                                      // token     // amount = 1e6 = 1 unripe token
         return getPenalizedUnderlying(unripeToken, LibUnripe.DECIMALS);
     }
 
@@ -173,14 +180,6 @@ contract UnripeFacet is ReentrancyGuard {
     ) public view returns (uint256 redeem) {
         return
             LibUnripe._getPenalizedUnderlying(unripeToken, amount, IBean(unripeToken).totalSupply());
-    }
-
-    function _getPenalizedUnderlying(
-        address unripeToken,
-        uint256 amount,
-        uint256 supply
-    ) public view returns (uint256 redeem) {
-        return LibUnripe._getPenalizedUnderlying(unripeToken, amount, supply);
     }
 
     /**

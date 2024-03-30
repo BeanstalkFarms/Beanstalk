@@ -71,11 +71,16 @@ describe('Unripe', function () {
     })
 
     it('getters', async function () {
+      // getUnderlyingPerUnripeToken Returns the amount of Ripe Tokens that underly a single Unripe Token.
+      // no connection with penalty params
       expect(await this.unripe.getUnderlyingPerUnripeToken(UNRIPE_BEAN)).to.be.equal(to6('0.1'))
+      // no penalty
       expect(await this.unripe.getPenalty(UNRIPE_BEAN)).to.be.equal(to6('0'))
       expect(await this.unripe.getPenalizedUnderlying(UNRIPE_BEAN, to6('1'))).to.be.equal('0')
       expect(await this.unripe.getTotalUnderlying(UNRIPE_BEAN)).to.be.equal(to6('100'))
       expect(await this.unripe.isUnripe(UNRIPE_BEAN)).to.be.equal(true)
+      // getUnderlying Returns the amount of Ripe Tokens that underly a given amount of Unripe Tokens.
+      // Does NOT include the penalty associated with the percent of Sprouts that are Rinsable or Rinsed.
       expect(await this.unripe.getUnderlying(UNRIPE_BEAN, to6('1'))).to.be.equal(to6('0.1'))
       expect(await this.unripe.balanceOfUnderlying(UNRIPE_BEAN, userAddress)).to.be.equal(to6('100'))
       expect(await this.unripe.balanceOfPenalizedUnderlying(UNRIPE_BEAN, userAddress)).to.be.equal('0')
@@ -119,6 +124,8 @@ describe('Unripe', function () {
     })
   })
 
+  ///////////////////////// CHOP /////////////////////////
+
   describe('chop', async function () {
     beforeEach(async function () {
       await this.unripe.connect(owner).addUnderlying(
@@ -131,7 +138,7 @@ describe('Unripe', function () {
 
     it('getters', async function () {
       expect(await this.unripe.getRecapPaidPercent()).to.be.equal(to6('0.01'))
-      expect(await this.unripe.getUnderlyingPerUnripeToken(UNRIPE_BEAN)).to.be.equal('100099')
+      expect(await this.unripe.getUnderlyingPerUnripeToken(UNRIPE_BEAN)).to.be.equal('100090')
       expect(await this.unripe.getPenalty(UNRIPE_BEAN)).to.be.equal(to6('0.001'))
       expect(await this.unripe.getTotalUnderlying(UNRIPE_BEAN)).to.be.equal(to6('99.999'))
       expect(await this.unripe.isUnripe(UNRIPE_BEAN)).to.be.equal(true)
@@ -143,7 +150,7 @@ describe('Unripe', function () {
 
     it('changes balaces', async function () {
       expect(await this.unripeBean.balanceOf(userAddress)).to.be.equal(to6('999'))
-      expect(await this.bean.balanceOf(userAddress)).to.be.equal(to6('0.001'))
+      expect(await this.bean.balanceOf(userAddress)).to.be.equal(to6('0.01'))
       expect(await this.unripeBean.totalSupply()).to.be.equal(to6('999'))
       expect(await this.bean.balanceOf(this.unripe.address)).to.be.equal(to6('99.999'))
     })
@@ -153,7 +160,7 @@ describe('Unripe', function () {
         user.address,
         UNRIPE_BEAN,
         to6('1'),
-        to6('0.001')
+        to6('0.01')
       )
     })
   })
@@ -177,7 +184,7 @@ describe('Unripe', function () {
 
     it('getters', async function () {
       expect(await this.unripe.getRecapPaidPercent()).to.be.equal(to6('0.01'))
-      expect(await this.unripe.getUnderlyingPerUnripeToken(UNRIPE_BEAN)).to.be.equal('100099')
+      expect(await this.unripe.getUnderlyingPerUnripeToken(UNRIPE_BEAN)).to.be.equal('100090')
       expect(await this.unripe.getPenalty(UNRIPE_BEAN)).to.be.equal(to6('0.001'))
       expect(await this.unripe.getTotalUnderlying(UNRIPE_BEAN)).to.be.equal(to6('99.999'))
       expect(await this.unripe.isUnripe(UNRIPE_BEAN)).to.be.equal(true)
@@ -189,7 +196,7 @@ describe('Unripe', function () {
 
     it('changes balaces', async function () {
       expect(await this.unripeBean.balanceOf(userAddress)).to.be.equal(to6('999'))
-      expect(await this.bean.balanceOf(userAddress)).to.be.equal(to6('0.001'))
+      expect(await this.bean.balanceOf(userAddress)).to.be.equal(to6('0.01'))
       expect(await this.unripeBean.totalSupply()).to.be.equal(to6('999'))
       expect(await this.bean.balanceOf(this.unripe.address)).to.be.equal(to6('99.999'))
     })
@@ -199,7 +206,7 @@ describe('Unripe', function () {
         user.address,
         UNRIPE_BEAN,
         to6('1'),
-        to6('0.001')
+        to6('0.01')
       )
     })
   })
