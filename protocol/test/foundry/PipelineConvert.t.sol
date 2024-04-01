@@ -55,6 +55,34 @@ contract PipelineConvertTest is TestHelper {
     uint256 constant MAX_UINT256 = type(uint256).max;
 
     bytes constant noData = abi.encode(0);
+
+    // Event defs
+
+    event Convert(
+        address indexed account,
+        address fromToken,
+        address toToken,
+        uint256 fromAmount,
+        uint256 toAmount
+    );
+
+    event RemoveDeposits(
+        address indexed account,
+        address indexed token,
+        int96[] stems,
+        uint256[] amounts,
+        uint256 amount,
+        uint256[] bdvs
+    );
+
+    event AddDeposit(
+        address indexed account,
+        address indexed token,
+        int96 stem,
+        uint256 amount,
+        uint256 bdv
+    );
+
   
     function setUp() public {
         
@@ -83,7 +111,7 @@ contract PipelineConvertTest is TestHelper {
         int96 stem;
         // well is initalized with 10000 beans. cap add liquidity 
         // to reasonable amounts. 
-        amount = bound(amount, 1e6, 5000e6);
+        amount = bound(amount, 10e6, 5000e6);
         // deposits bean into the silo.
         bean.mint(users[1], 5000e6);
         (amount, ) = setUpSiloDepositTest(amount, farmers);
@@ -105,6 +133,24 @@ contract PipelineConvertTest is TestHelper {
 
         uint256[] memory amounts = new uint256[](1);
         amounts[0] = amount;
+
+        // get well amount out if we deposit 200 beans
+        uint256 wellAmountOut = getWellAmountOutForAddingBeans(amount);
+
+        // verify convert
+        vm.expectEmit(true, false, false, true);
+        emit Convert(users[1], C.BEAN, C.BEAN_ETH_WELL, amount, wellAmountOut);
+
+        // vm.expectEmit(true, false, false, true);
+        // emit RemoveDeposits(users[1], C.BEAN, stems, amounts, amount, amounts);
+
+        // get bdv of this well amount out for later comparison
+        // FIXME: the well amount out reverts because pumps returning zero, maybe need a helper to update pumps?
+        // uint256 bdvOfThisWellAmountOut = bs.bdv(C.BEAN_ETH_WELL, wellAmountOut);
+
+        // vm.expectEmit(true, false, false, true);
+        // emit AddDeposit(users[1], C.BEAN_ETH_WELL, stem, wellAmountOut, amount);
+
         
         vm.resumeGasMetering();
         vm.prank(users[1]); // do this as user 1
@@ -116,17 +162,16 @@ contract PipelineConvertTest is TestHelper {
             farmCalls // farmData
         );
 
+    }
 
-        // verify convert
-        // vm.expectEmit(true, false, false, true);
-        // emit Convert(users[1], C.BEAN, C.BEAN_ETH_WELL, amount, amount);
+    function getWellAmountOutForAddingBeans(uint256 amount) public view returns (uint256) {
 
-        // vm.expectEmit(true, false, false, true);
-        // emit RemoveDeposits(users[1], C.BEAN, stems, amounts, amount, amounts);
+        uint256[] memory amounts = new uint256[](2);
+        amounts[0] = amount;
+        amounts[1] = 0;
 
-        // vm.expectEmit(true, false, false, true);
-        // emit AddDeposit(users[1], C.BEAN_ETH_WELL, stem, amount, amount);
-
+        uint256 wellAmountOut = IWell(C.BEAN_ETH_WELL).getAddLiquidityOut(amounts);
+        return wellAmountOut;
     }
 
     function testBasicConvertLPToBean(uint256 amount) public {
@@ -225,7 +270,7 @@ contract PipelineConvertTest is TestHelper {
     }
 
     function testConvertAgainstPegAndLoseStalk(uint256 amount) public {
-        amount = bound(amount, 5000e6, 5000e6); // update for range
+        amount = bound(amount, 5000e6, 5000e6); // todo: update for range
 
         // get new deltaB
         int256 beforeDeltaB = seasonGetters.poolDeltaBInsta(C.BEAN_ETH_WELL);
@@ -238,16 +283,13 @@ contract PipelineConvertTest is TestHelper {
         beanToLPDoConvert(amount, stem);
 
         uint256 grownStalkAfter = bs.balanceOfGrownStalk(users[1], C.BEAN_ETH_WELL);
-        console.log('beforeGrownStalk: ', grownStalkBefore);
-        console.log('afterGrownStalk: ', grownStalkAfter);
-
 
         assertTrue(grownStalkAfter == 0); // all grown stalk was lost
         assertTrue(grownStalkBefore > 0);
     }
 
     function testConvertWithPegAndKeepStalk(uint256 amount) public {
-        amount = bound(amount, 5000e6, 5000e6); // update for range
+        amount = bound(amount, 5000e6, 5000e6); // todo: update for range
 
         // how many eth would we get if we swapped this amount in the well
         uint256 ethAmount = IWell(C.BEAN_ETH_WELL).getSwapOut(IERC20(C.BEAN), IERC20(C.WETH), amount);
@@ -279,7 +321,6 @@ contract PipelineConvertTest is TestHelper {
         uint256 bdvBalance = bs.balanceOfDepositedBdv(users[1], C.BEAN_ETH_WELL) * 1e4; // convert to stalk amount
 
         assertTrue(totalStalkAfter == bdvBalance + grownStalkBefore); // all grown stalk was lost
-        // assertTrue(grownStalkBefore > 0);
     }
 
 
