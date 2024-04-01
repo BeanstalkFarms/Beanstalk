@@ -16,6 +16,10 @@ import {DepotDeployer} from "test/foundry/utils/DepotDeployer.sol";
 import {OracleDeployer} from "test/foundry/utils/OracleDeployer.sol";
 import {C} from "contracts/C.sol";
 
+
+///// COMMON IMPORTED LIBRARIES //////
+import {LibTransfer} from "contracts/libraries/Token/LibTransfer.sol";
+
 /**
  * @title TestHelper
  * @author Brean
@@ -49,7 +53,7 @@ contract TestHelper is Test, BeanstalkDeployer, BasinDeployer, DepotDeployer, Or
         // initialize uniswap pools.
         initUniswapPools(verbose);
         
-        // initialize Diamond:
+        // initialize Diamond, initalize users:
         setupDiamond(mock, verbose);
     }
 
