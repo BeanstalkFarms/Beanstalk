@@ -109,6 +109,18 @@ contract PipelineConvertTest is TestHelper {
             C.BEAN_ETH_WELL, // token out
             farmCalls // farmData
         );
+
+
+        // verify convert
+        // vm.expectEmit(true, false, false, true);
+        // emit Convert(users[1], C.BEAN, C.BEAN_ETH_WELL, amount, amount);
+
+        // vm.expectEmit(true, false, false, true);
+        // emit RemoveDeposits(users[1], C.BEAN, stems, amounts, amount, amounts);
+
+        // vm.expectEmit(true, false, false, true);
+        // emit AddDeposit(users[1], C.BEAN_ETH_WELL, stem, amount, amount);
+
     }
 
     function testBasicConvertLPToBean(uint256 amount) public {
