@@ -190,15 +190,42 @@ contract PipelineConvertTest is TestHelper {
         // would be great to calcuate exactly what the new deltaB should be after convert
     }
 
+    function testTotalStalkAmountDidNotIncrease(uint256 amount) public {
+        amount = bound(amount, 1e6, 5000e6);
+        int96 stem = beanToLPDepositSetup(amount);
+        uint256 beforeTotalStalk = bs.totalStalk();
+        beanToLPDoConvert(amount, stem);
+
+        uint256 afterTotalStalk = bs.totalStalk();
+        assertTrue(afterTotalStalk <= beforeTotalStalk);
+    }
+
+    function testUserStalkAmountDidNotIncrease(uint256 amount) public {
+        amount = bound(amount, 1e6, 5000e6);
+        int96 stem = beanToLPDepositSetup(amount);
+        uint256 beforeUserStalk = bs.balanceOfStalk(users[1]);
+        beanToLPDoConvert(amount, stem);
+
+        uint256 afterUserStalk = bs.balanceOfStalk(users[1]);
+        assertTrue(afterUserStalk <= beforeUserStalk);
+    }
+
+
     function doBasicBeanToLP(uint256 amount) public {
+        int96 stem = beanToLPDepositSetup(amount);
+        beanToLPDoConvert(amount, stem);
+    }
+
+    function beanToLPDepositSetup(uint256 amount) public returns (int96 stem) {
         vm.pauseGasMetering();
-        int96 stem;
         amount = bound(amount, 1e6, 5000e6);
         bean.mint(users[1], 5000e6);
         (amount, ) = setUpSiloDepositTest(amount, farmers);
 
         passGermination();
+    }
 
+    function beanToLPDoConvert(uint256 amount, int96 stem) public {
         // do the convert
 
         // Create arrays for stem and amount. Tried just passing in [stem] and it's like nope.
@@ -222,6 +249,7 @@ contract PipelineConvertTest is TestHelper {
             farmCalls // farmData
         );
     }
+
 
     function passGermination() public {
         // call sunrise twice to end the germination process.
