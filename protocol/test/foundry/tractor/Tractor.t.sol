@@ -27,6 +27,11 @@ import {LibReturnPasteParam} from "./LibReturnPasteParam.sol";
 // This is the default size of arrays containing stems/deposits. Operators can populate the array up to the size.
 uint80 constant ARRAY_LENGTH = 5;
 
+
+// NOTE: These tests are deprecated in favor of JS tests. They are kept here for reference only.
+//       They do not compile and are not necessarily correct.
+//       Testing tractor in Solidity is undesirable due to the difficulty of managing arrays and bytes in Solidity.
+/*
 contract TractorTest is TestHelper {
     uint256 private constant PUBLISHER_PRIVATE_KEY = 123456789;
 
@@ -460,3 +465,4 @@ library LibDrafter {
         }
     }
 }
+*/

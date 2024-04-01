@@ -18,16 +18,10 @@ import {LibReturnPasteParam} from "./LibReturnPasteParam.sol";
 library LibClipboard {
     using LibBytes for bytes;
 
-    function encode(bytes32 returnPasteParam) internal pure returns (bytes memory) {
-        bytes32[] memory returnPasteParams = new bytes32[](1);
-        returnPasteParams[0] = returnPasteParam;
-        return encode(0, returnPasteParams);
-    }
-
     /**
-     * @notice Encode a clipboard for a single call.
+     * @notice Encode a clipboard for a set of calls. Automatically determines type and useEther flag.
      * @dev Not the most gas efficient. Many small calls to encodePacked.
-     * @param etherValue Ether value to send with call.
+     * @param etherValue Ether value to send with call. If 0, useEther flag is set to 0.
      * @param returnPasteParams Array of returnPasteParam encoded as bytes32 objects.
      * @return clipboard Encoded clipboard, adhering to https://evmpipeline.org/pipeline.pdf, Figure 2.
      */
@@ -101,8 +95,8 @@ library LibClipboard {
      *      Note: Should be encoded with ['bytes2', 'uint80', 'uint80', 'uint80']  where the first two bytes are Type and Send Ether Flag if using Pipeline
      *  Type 2 (0x02): Copy n bytes32 from a previous function return value
      *       [ Padding      | pasteParams[] ]
-     *       [ 32 bytes     | 32 + 32 * n   ]
-     *        * The first 32 bytes are the length of the array.
+     *       [ 64 bytes     | 32 + 32 * n   ]
+     *        * The first 32 bytes are the location of data, the next 32 bytes are the length of the array.
      * -------------------------------------------------------------------------------------
      * @param returnData A list of return values from previously executed Advanced Calls
      * @return data The function call return datas

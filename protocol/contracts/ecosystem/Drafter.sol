@@ -22,11 +22,11 @@ contract Drafter {
     }
 
     function encodeLibReturnPasteParam(
-        uint80 _returnDataItemIndex,
+        uint80 _copyReturnIndex,
         uint80 _copyByteIndex,
         uint80 _pasteByteIndex
     ) external pure returns (bytes32) {
-        return LibReturnPasteParam.encode(_returnDataItemIndex, _copyByteIndex, _pasteByteIndex);
+        return LibReturnPasteParam.encode(_copyReturnIndex, _copyByteIndex, _pasteByteIndex);
     }
 
     function decodeLibReturnPasteParam(

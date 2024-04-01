@@ -4,11 +4,10 @@
 
 pragma solidity =0.7.6;
 
-/*
- * @author: Malteasy
- * @title: LibBytes
+/**
+ * @title LibBytes
+ * @notice LibBytes offers utility functions for managing data at the Byte level.
  */
-
 library LibBytes {
     /*
      * @notice From Solidity Bytes Arrays Utils
@@ -83,20 +82,20 @@ library LibBytes {
     }
 
     /**
-     * @notice Copy 32 Bytes from copyData at copyIndex and paste into pasteData at pasteIndex
-     * @param copyData The data bytes to copy from
-     * @param pasteData The data bytes to paste into
-     * @param copyIndex The index in copyData to copying from
-     * @param pasteIndex The index in pasteData to paste into
+     * @notice Copy 32 Bytes from copyFromData at copyIndex and paste into pasteToData at pasteIndex
+     * @param copyFromData The data bytes to copy from
+     * @param pasteToData The data bytes to paste into
+     * @param copyIndex The index in copyFromData to copying from
+     * @param pasteIndex The index in pasteToData to paste into
      **/
     function paste32Bytes(
-        bytes memory copyData,
-        bytes memory pasteData,
+        bytes memory copyFromData,
+        bytes memory pasteToData,
         uint256 copyIndex,
         uint256 pasteIndex
     ) internal view {
         assembly {
-            mstore(add(pasteData, pasteIndex), mload(add(copyData, copyIndex)))
+            mstore(add(pasteToData, pasteIndex), mload(add(copyFromData, copyIndex)))
         }
     }
 

@@ -40,58 +40,31 @@ library LibOperatorPasteInstr {
         );
     }
 
-    /**
-     * @notice  Generates an array of operatorPasteInstr with ascending copy/paste byte indices.
-     */
-    function generate(
-        uint256 length,
-        uint80 copyStartByteIndex,
-        uint80 _pasteCallIndex,
-        uint80 pasteStartByteIndex
-    ) internal pure returns (bytes32[] memory) {
-        bytes32[] memory operatorPasteInstrs = new bytes32[](length);
-        for (uint80 i = 0; i < length; i++) {
-            operatorPasteInstrs[i] = encode(
-                copyStartByteIndex + C.SLOT_SIZE * i,
-                _pasteCallIndex,
-                pasteStartByteIndex + C.SLOT_SIZE * i
-            );
-        }
-        return operatorPasteInstrs;
-    }
-
     function copyByteIndex(bytes32 operatorPasteInstr) internal pure returns (uint80) {
-        return uint80(bytes10(operatorPasteInstr << 16)); // lil endian
-        // return uint80(bytes10(operatorPasteInstr >> 160));
+        return uint80(bytes10(operatorPasteInstr << 16));
     }
 
     function pasteCallIndex(bytes32 operatorPasteInstr) internal pure returns (uint80) {
-        return uint80(bytes10(operatorPasteInstr << 96)); // lil endian
-        // return uint80(bytes10(operatorPasteInstr >> 80));
+        return uint80(bytes10(operatorPasteInstr << 96));
     }
 
     function pasteByteIndex(bytes32 operatorPasteInstr) internal pure returns (uint80) {
-        return uint80(bytes10(operatorPasteInstr << 176)); // lil endian
-        // return uint80(bytes10(operatorPasteInstr));
+        return uint80(bytes10(operatorPasteInstr << 176));
     }
 
     /**
-     * @notice Copies 32 bytes from operatorData into blueprint data, determined by pasteParams
-     * @dev    All bytes objects are prepended with length data. Ensure this is accounted for when entering indices.
+     * @notice Copies 32 bytes from copyFromData into pasteToData, determined by pasteParams
+     * @dev    All bytes objects are prepended with length data. Ensure this is accounted for when using byte indices.
      * @param operatorPasteInstr Denotes which data should be copied and where it should be pasted
-     * @param operatorData The callData provided by thee operator. Copy from location.
-     * @param callData The data from blueprint. Paste to location.
+     * @param copyFromData The data to copy from. Data provided by the operator.
+     * @param pasteToData The data to paste into. Calldata of the tractor operation.
      **/
     function pasteBytes(
         bytes32 operatorPasteInstr,
-        bytes memory operatorData,
-        bytes memory callData
+        bytes memory copyFromData,
+        bytes memory pasteToData
     ) internal view {
         (uint80 _copyByteIndex, , uint80 _pasteByteIndex) = decode(operatorPasteInstr);
-
-        // _pasteByteIndex must have 32 bytes of available space and not write into the length data.
-        require(C.SLOT_SIZE <= _pasteByteIndex, "OP: _pasteByteIndex too small");
-        require(_pasteByteIndex <= callData.length, "OP: _pasteByteIndex too large");
 
         bytes memory copyData;
         if (_copyByteIndex == C.PUBLISHER_COPY_INDEX) {
@@ -105,18 +78,18 @@ library LibOperatorPasteInstr {
             // Skip length data.
             _copyByteIndex = C.SLOT_SIZE;
         } else {
-            copyData = operatorData;
+            copyData = copyFromData;
         }
         // _copyByteIndex must have 32 bytes of available space and not write into the length data.
+        // The 32 byte copy/paste size cancels out the array length slot.
         require(C.SLOT_SIZE <= _copyByteIndex, "OP: _copyByteIndex too small");
-        require(_copyByteIndex <= callData.length, "OP: _copyByteIndex too large");
+        require(_copyByteIndex <= copyData.length, "OP: _copyByteIndex too large");
 
-        // data[_pasteCallIndex] = LibBytes.paste32Bytes(
-        //     copyData,
-        //     data[_pasteCallIndex],
-        //     uint256(_copyByteIndex),
-        //     _pasteByteIndex
-        // );
-        LibBytes.paste32Bytes(copyData, callData, uint256(_copyByteIndex), _pasteByteIndex);
+        // _pasteByteIndex must have 32 bytes of available space and not write into the length data.
+        // The 32 byte copy/paste size cancels out the array length slot.
+        require(C.SLOT_SIZE <= _pasteByteIndex, "OP: _pasteByteIndex too small");
+        require(_pasteByteIndex <= pasteToData.length, "OP: _pasteByteIndex too large");
+
+        LibBytes.paste32Bytes(copyData, pasteToData, _copyByteIndex, _pasteByteIndex);
     }
 }
