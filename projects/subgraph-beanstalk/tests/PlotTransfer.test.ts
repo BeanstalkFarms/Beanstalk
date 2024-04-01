@@ -11,7 +11,7 @@ import { loadSeason } from "../src/utils/Season";
 
 import { handleSow, handlePlotTransfer } from "../src/FieldHandler";
 import { handleIncentive } from "../src/SeasonHandler";
-import { BEANSTALK } from "../src/utils/Constants";
+import { BEANSTALK } from "../../subgraph-core/utils/Constants";
 import { ZERO_BI } from "../../subgraph-core/utils/Decimals";
 
 const ANVIL_ADDR_1 = "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266".toLowerCase();

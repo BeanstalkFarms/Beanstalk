@@ -4,8 +4,8 @@ import { Sow, PlotTransfer } from "../../generated/Field/Beanstalk";
 
 import { AddDeposit, RemoveDeposit, RemoveDeposits } from "../../generated/Silo-Replanted/Beanstalk";
 import { handleAddDeposit } from "../../src/SiloHandler";
-import { BEAN_DECIMALS } from "../../src/utils/Constants";
-import { BEANSTALK } from "../../src/utils/Constants";
+import { BEAN_DECIMALS } from "../../../subgraph-core/utils/Constants";
+import { BEANSTALK } from "../../../subgraph-core/utils/Constants";
 
 // Default mock to include beanstalk address
 const mockBeanstalkEvent = (): ethereum.Event => {
