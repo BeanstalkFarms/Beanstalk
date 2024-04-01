@@ -15,7 +15,7 @@ import {LibWell} from "contracts/libraries/Well/LibWell.sol";
 import {IBeanstalkWellFunction} from "contracts/interfaces/basin/IBeanstalkWellFunction.sol";
 import {SignedSafeMath} from "@openzeppelin/contracts/math/SignedSafeMath.sol";
 import {LibEthUsdOracle} from "contracts/libraries/Oracle/LibEthUsdOracle.sol";
-import {console} from "hardhat/console.sol";
+import "forge-std/console.sol";
 
 /**
  * @title Well Minting Oracle Library

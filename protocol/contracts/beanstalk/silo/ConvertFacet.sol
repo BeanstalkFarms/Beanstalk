@@ -462,9 +462,9 @@ contract ConvertFacet is ReentrancyGuard {
 
         results = new bytes[](calls.length);
         for (uint256 i = 0; i < calls.length; ++i) {
-            console.log("looping:", i);
-            console.log("calldata:");
-            console.logBytes(calls[i].callData);
+            // console.log("looping:", i);
+            // console.log("calldata:");
+            // console.logBytes(calls[i].callData);
             require(calls[i].callData.length != 0, "Convert: empty AdvancedFarmCall");
             results[i] = LibFarm._advancedFarmMem(calls[i], results);
         }
@@ -697,8 +697,9 @@ contract ConvertFacet is ReentrancyGuard {
         mcdd.totalAmount = 0;
 
         for (uint256 i = 0; i < bdvs.length; i++) {
+            console.log('_depositTokensForConvertMultiCrate i: ', i);
             // console.log('_depositTokensForConvertMultiCrate bdvs[i]: ', bdvs[i]);
-            // console.log('_depositTokensForConvertMultiCrate grownStalks[i]: ', grownStalks[i]);
+            console.log('_depositTokensForConvertMultiCrate grownStalks[i]: ', grownStalks[i]);
             // console.log('_depositTokensForConvertMultiCrate amount: ', amount);
             // uint256 bdv = bdvs[i];
             require( bdvs[i] > 0 && amount > 0, "Convert: BDV or amount is 0.");
@@ -730,6 +731,8 @@ contract ConvertFacet is ReentrancyGuard {
             // the rest is active stalk.
             if (germ == LibGerminate.Germinate.NOT_GERMINATING) {
                 LibTokenSilo.incrementTotalDeposited(outputToken, mcdd.crateAmount, mcdd.depositedBdv);
+                console.log('minting active stalk, issued from bdv: ', mcdd.depositedBdv.mul(LibTokenSilo.stalkIssuedPerBdv(outputToken)));
+                console.log('minting active stalk from grown: ', grownStalks[i]);
                 LibSilo.mintActiveStalk(
                     LibTractor._getUser(), 
                     mcdd.depositedBdv.mul(LibTokenSilo.stalkIssuedPerBdv(outputToken)).add(grownStalks[i])

@@ -611,8 +611,11 @@ library LibTokenSilo {
         stem = germStem.stemTip.sub(toInt96(grownStalk.mul(PRECISION).div(bdv)));
         germ = LibGerminate._getGerminationState(stem, germStem);
 
-        // console.log('calculateStemForTokenFromGrownStalk stem: ');
-        // console.logInt(stem);
+        console.log('calculateStemForTokenFromGrownStalk stem: ');
+        console.logInt(stem);
+
+        console.log('calculateStemForTokenFromGrownStalk germ: ');
+        console.log("germ value:", uint256(germ));
     }
 
     /**

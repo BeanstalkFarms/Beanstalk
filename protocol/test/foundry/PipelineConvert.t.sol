@@ -3,6 +3,7 @@ pragma solidity >=0.6.0 <0.9.0;
 pragma abicoder v2;
 
 import {TestHelper} from "./utils/TestHelper.sol";
+import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
 import {LibTransfer} from "contracts/libraries/Token/LibTransfer.sol";
 import {IMockFBeanstalk} from "contracts/interfaces/IMockFBeanstalk.sol";
 import {MockSeasonFacet} from "contracts/mocks/mockFacets/MockSeasonFacet.sol";
@@ -16,6 +17,7 @@ import {MockToken} from "contracts/mocks/MockToken.sol";
 import {Pipeline} from "contracts/pipeline/Pipeline.sol";
 import {DepotFacet, AdvancedPipeCall} from "contracts/beanstalk/farm/DepotFacet.sol";
 import {AdvancedFarmCall} from "contracts/libraries/LibFarm.sol";
+import {SiloGettersFacet} from "contracts/beanstalk/silo/SiloFacet/SiloGettersFacet.sol";
 import {C} from "contracts/C.sol";
 import {console} from "forge-std/console.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
@@ -27,6 +29,7 @@ import {LibWell} from "contracts/libraries/Well/LibWell.sol";
  * @notice Test pipeline convert.
  */
 contract PipelineConvertTest is TestHelper {
+    using SafeMath for uint256;
 
     // Interfaces.
     IMockFBeanstalk bs = IMockFBeanstalk(BEANSTALK);
@@ -36,6 +39,7 @@ contract PipelineConvertTest is TestHelper {
     DepotFacet depot = DepotFacet(BEANSTALK);
     FarmFacet farm = FarmFacet(BEANSTALK);
     SeasonGettersFacet seasonGetters = SeasonGettersFacet(BEANSTALK);
+    SiloGettersFacet siloGetters = SiloGettersFacet(BEANSTALK);
     MockToken bean = MockToken(C.BEAN);
     MockToken beanEthWell = MockToken(C.BEAN_ETH_WELL);
     Pipeline pipeline = Pipeline(PIPELINE);
@@ -58,7 +62,7 @@ contract PipelineConvertTest is TestHelper {
 
         // initalize farmers.
         farmers.push(users[1]); 
-        farmers.push(users[2]);
+        // farmers.push(users[2]);
         
         // add inital liquidity to bean eth well:
         // prank beanstalk deployer (can be anyone)
@@ -210,6 +214,77 @@ contract PipelineConvertTest is TestHelper {
         assertTrue(afterUserStalk <= beforeUserStalk);
     }
 
+    function testUserBDVDidNotIncrease(uint256 amount) public {
+        amount = bound(amount, 1e6, 5000e6);
+        int96 stem = beanToLPDepositSetup(amount);
+        uint256 beforeUserDeposit = bs.balanceOfDepositedBdv(users[1], C.BEAN);
+        beanToLPDoConvert(amount, stem);
+
+        uint256 afterUserDeposit = bs.balanceOfDepositedBdv(users[1], C.BEAN);
+        assertTrue(afterUserDeposit <= beforeUserDeposit);
+    }
+
+    function testConvertAgainstPegAndLoseStalk(uint256 amount) public {
+        amount = bound(amount, 5000e6, 5000e6); // update for range
+
+        // get new deltaB
+        int256 beforeDeltaB = seasonGetters.poolDeltaBInsta(C.BEAN_ETH_WELL);
+        
+        int96 stem = beanToLPDepositSetup(amount);
+        // uint256 beforeTotalStalk = bs.totalStalk();
+        uint256 grownStalkBefore = bs.balanceOfGrownStalk(users[1], C.BEAN);
+
+
+        beanToLPDoConvert(amount, stem);
+
+        uint256 grownStalkAfter = bs.balanceOfGrownStalk(users[1], C.BEAN_ETH_WELL);
+        console.log('beforeGrownStalk: ', grownStalkBefore);
+        console.log('afterGrownStalk: ', grownStalkAfter);
+
+
+        assertTrue(grownStalkAfter == 0); // all grown stalk was lost
+        assertTrue(grownStalkBefore > 0);
+    }
+
+    function testConvertWithPegAndKeepStalk(uint256 amount) public {
+        amount = bound(amount, 5000e6, 5000e6); // update for range
+
+        // how many eth would we get if we swapped this amount in the well
+        uint256 ethAmount = IWell(C.BEAN_ETH_WELL).getSwapOut(IERC20(C.BEAN), IERC20(C.WETH), amount);
+        ethAmount = ethAmount.mul(2); // I need a better way to calculate how much eth out there should be to make sure we can swap and be over peg
+
+        MockToken(C.WETH).mint(users[1], ethAmount);
+        vm.prank(users[1]);
+        MockToken(C.WETH).approve(C.BEAN_ETH_WELL, ethAmount);
+
+        uint256[] memory tokenAmountsIn = new uint256[](2);
+        tokenAmountsIn[0] = 0;
+        tokenAmountsIn[1] = ethAmount;
+
+        vm.prank(users[1]);
+        uint256 lpAmountOut = IWell(C.BEAN_ETH_WELL).addLiquidity(tokenAmountsIn, 0, users[1], type(uint256).max);
+
+        // get new deltaB
+        int256 beforeDeltaB = seasonGetters.poolDeltaBInsta(C.BEAN_ETH_WELL);
+        
+        int96 stem = beanToLPDepositSetup(amount);
+        uint256 grownStalkBefore = bs.balanceOfGrownStalk(users[1], C.BEAN);
+
+
+        beanToLPDoConvert(amount, stem);
+
+        uint256 totalStalkAfter = bs.balanceOfStalk(users[1]);
+
+        // get balance of deposited bdv for this user
+        uint256 bdvBalance = bs.balanceOfDepositedBdv(users[1], C.BEAN_ETH_WELL) * 1e4; // convert to stalk amount
+
+        assertTrue(totalStalkAfter == bdvBalance + grownStalkBefore); // all grown stalk was lost
+        // assertTrue(grownStalkBefore > 0);
+    }
+
+
+    ////// SILO TEST HELPERS //////
+
 
     function doBasicBeanToLP(uint256 amount) public {
         int96 stem = beanToLPDepositSetup(amount);
@@ -257,8 +332,6 @@ contract PipelineConvertTest is TestHelper {
         season.siloSunrise(0);
     }
 
-
-    ////// SILO TEST HELPERS //////
 
     /**
      * @notice assumes a CP2 well with bean as one of the tokens.
