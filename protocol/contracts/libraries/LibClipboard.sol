@@ -8,7 +8,6 @@ pragma experimental ABIEncoderV2;
 import {LibBytes} from "./LibBytes.sol";
 import {LibTractor} from "./LibTractor.sol";
 import {LibFunction} from "./LibFunction.sol";
-import {LibReturnPasteParam} from "./LibReturnPasteParam.sol";
 
 /**
  * @title LibClipboard
@@ -105,12 +104,16 @@ library LibClipboard {
         bytes memory callData,
         bytes memory clipboard,
         bytes[] memory returnData
-    ) internal view returns (bytes memory data) {
+    ) internal pure returns (bytes memory data) {
         (bytes1 typeId, , bytes32[] memory returnPasteParams) = decode(clipboard);
         require(typeId == 0x01 || typeId == 0x02, "Clipboard: Type not supported");
         data = callData;
         for (uint256 i; i < returnPasteParams.length; i++) {
-            LibReturnPasteParam.pasteBytes(returnPasteParams[i], returnData, data);
+            LibBytes.pasteBytesClipboard(
+                returnPasteParams[i],
+                returnData,
+                data
+            );
         }
     }
 }
