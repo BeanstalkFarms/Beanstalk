@@ -11,6 +11,7 @@ import {ConvertFacet} from "contracts/beanstalk/silo/ConvertFacet.sol";
 import {Bean} from "contracts/tokens/Bean.sol";
 import {IWell} from "contracts/interfaces/basin/IWell.sol";
 import {FarmFacet} from "contracts/beanstalk/farm/FarmFacet.sol";
+import {SeasonGettersFacet} from "contracts/beanstalk/sun/SeasonFacet/SeasonGettersFacet.sol";
 import {MockToken} from "contracts/mocks/MockToken.sol";
 import {Pipeline} from "contracts/pipeline/Pipeline.sol";
 import {DepotFacet, AdvancedPipeCall} from "contracts/beanstalk/farm/DepotFacet.sol";
@@ -34,6 +35,7 @@ contract PipelineConvertTest is TestHelper {
     MockSeasonFacet season = MockSeasonFacet(BEANSTALK);
     DepotFacet depot = DepotFacet(BEANSTALK);
     FarmFacet farm = FarmFacet(BEANSTALK);
+    SeasonGettersFacet seasonGetters = SeasonGettersFacet(BEANSTALK);
     MockToken bean = MockToken(C.BEAN);
     MockToken beanEthWell = MockToken(C.BEAN_ETH_WELL);
     Pipeline pipeline = Pipeline(PIPELINE);
@@ -172,6 +174,51 @@ contract PipelineConvertTest is TestHelper {
             stems,  // stems
             amounts,  // amount
             C.BEAN, // token out
+            farmCalls // farmData
+        );
+    }
+
+    function testDeltaBChangeBeanToLP(uint256 amount) public {
+        amount = bound(amount, 1e6, 5000e6);
+        int256 beforeDeltaB = seasonGetters.poolDeltaBInsta(C.BEAN_ETH_WELL);
+        
+        doBasicBeanToLP(amount);
+
+        int256 afterDeltaB = seasonGetters.poolDeltaBInsta(C.BEAN_ETH_WELL);
+        assertTrue(afterDeltaB < beforeDeltaB);
+        assertTrue(beforeDeltaB - int256(amount)*2 < afterDeltaB);
+        // would be great to calcuate exactly what the new deltaB should be after convert
+    }
+
+    function doBasicBeanToLP(uint256 amount) public {
+        vm.pauseGasMetering();
+        int96 stem;
+        amount = bound(amount, 1e6, 5000e6);
+        bean.mint(users[1], 5000e6);
+        (amount, ) = setUpSiloDepositTest(amount, farmers);
+
+        passGermination();
+
+        // do the convert
+
+        // Create arrays for stem and amount. Tried just passing in [stem] and it's like nope.
+        int96[] memory stems = new int96[](1);
+        stems[0] = stem;
+
+        AdvancedFarmCall[] memory farmCalls = new AdvancedFarmCall[](1);
+        AdvancedFarmCall[] memory beanToLPFarmCalls = createBeanToLP(amount);
+        farmCalls[0] = beanToLPFarmCalls[0]; // Assign the first element of the returned array
+
+        uint256[] memory amounts = new uint256[](1);
+        amounts[0] = amount;
+        
+        vm.resumeGasMetering();
+        vm.prank(users[1]); // do this as user 1
+        convert.pipelineConvert(
+            C.BEAN, // input token
+            stems,  // stems
+            amounts,  // amount
+            C.BEAN_ETH_WELL, // token out
             farmCalls // farmData
         );
     }
