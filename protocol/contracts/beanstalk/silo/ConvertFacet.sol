@@ -177,9 +177,6 @@ contract ConvertFacet is ReentrancyGuard {
         external
         payable
         nonReentrant
-        // returns (
-        //     int96 toStem
-        // )
     {   
         LibTractor._setPublisher(msg.sender);
 
@@ -204,9 +201,7 @@ contract ConvertFacet is ReentrancyGuard {
             maxTokens = maxTokens.add(amounts[i]);
         }
 
-        //todo: actually withdraw crates
-        // uint256[] memory bdvsRemoved;
-        // uint256[] memory grownStalks;
+
         PipelineConvertData memory pipeData;
 
         ( , , pipeData.bdvsRemoved, pipeData.grownStalks) = _withdrawTokens(

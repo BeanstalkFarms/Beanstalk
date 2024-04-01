@@ -85,9 +85,7 @@ contract PipelineConvertTest is TestHelper {
         console.logInt(stem);
         console.log('amount: ', amount);
 
-        // call sunrise twice to end the germination process.
-        season.siloSunrise(0);
-        season.siloSunrise(0);
+        passGermination();
 
         // do the convert
 
@@ -113,6 +111,64 @@ contract PipelineConvertTest is TestHelper {
         );
     }
 
+    function testBasicConvertLPToBean(uint256 amount) public {
+        vm.pauseGasMetering();
+        int96 stem;
+        // well is initalized with 10000 beans. cap add liquidity 
+        // to reasonable amounts. 
+        amount = bound(amount, 1e6, 10000e6);
+
+        // mint beans to user 1
+        bean.mint(users[1], amount);
+        // user 1 deposits bean into bean:eth well, first approve
+        vm.prank(users[1]);
+        bean.approve(C.BEAN_ETH_WELL, type(uint256).max);
+
+        uint256[] memory tokenAmountsIn = new uint256[](2);
+        tokenAmountsIn[0] = amount;
+        tokenAmountsIn[1] = 0;
+
+        vm.prank(users[1]);
+        uint256 lpAmountOut = IWell(C.BEAN_ETH_WELL).addLiquidity(tokenAmountsIn, 0, users[1], type(uint256).max);
+
+        // approve spending well token to beanstalk
+        vm.prank(users[1]);
+        MockToken(C.BEAN_ETH_WELL).approve(BEANSTALK, type(uint256).max);
+
+        vm.prank(users[1]);
+        ( , , stem) = silo.deposit(C.BEAN_ETH_WELL, lpAmountOut, LibTransfer.From.EXTERNAL);
+
+
+        passGermination();
+
+
+        // Create arrays for stem and amount. Tried just passing in [stem] and it's like nope.
+        int96[] memory stems = new int96[](1);
+        stems[0] = stem;
+
+        AdvancedFarmCall[] memory farmCalls = new AdvancedFarmCall[](1);
+        AdvancedFarmCall[] memory beanToLPFarmCalls = createLPToBean(lpAmountOut);
+        farmCalls[0] = beanToLPFarmCalls[0]; // Assign the first element of the returned array
+
+        uint256[] memory amounts = new uint256[](1);
+        amounts[0] = lpAmountOut;
+        
+        vm.resumeGasMetering();
+        vm.prank(users[1]); // do this as user 1
+        convert.pipelineConvert(
+            C.BEAN_ETH_WELL, // input token
+            stems,  // stems
+            amounts,  // amount
+            C.BEAN, // token out
+            farmCalls // farmData
+        );
+    }
+
+    function passGermination() public {
+        // call sunrise twice to end the germination process.
+        season.siloSunrise(0);
+        season.siloSunrise(0);
+    }
 
 
     ////// SILO TEST HELPERS //////
@@ -169,47 +225,6 @@ contract PipelineConvertTest is TestHelper {
         }
     }
 
-    /**
-     * @notice Withdraw beans from the silo for multiple users.
-     * @param users The users to withdraw beans from.
-     * @param token The token to withdraw.
-     * @param stem The stem tip for the deposited beans.
-     * @param amount The amount of beans to withdraw.
-     * @param mode The withdraw mode.
-     */
-    function withdrawDepositForUsers(
-        address[] memory users,
-        address token,
-        int96 stem,
-        uint256 amount,
-        LibTransfer.To mode
-    ) public {
-        for (uint256 i = 0; i < users.length; i++) {
-            vm.prank(users[i]);
-            silo.withdrawDeposit(token, stem, amount, mode);
-        }
-    }
-
-    /**
-     * @notice Transfer beans from the silo for multiple users.
-     * @param users Users.
-     * @param stem The stem tip for the deposited beans.
-     * @param token The token to transfer.
-     * @param amount The amount of beans to transfer
-     * @dev This function transfers a deposit from user 'i' to 
-     * user 'i + 2'. Fails with invalid array input.
-     */
-    function transferDepositFromUsersToUsers(
-        address[] memory users,
-        int96 stem,
-        address token,
-        uint256 amount
-    ) public {
-        for (uint256 i = 0; i < users.length - 2; i++) {
-            vm.prank(users[i]);
-            silo.transferDeposit(users[i], users[i + 2], token, stem, amount);
-        }
-    }
 
     ////// ASSERTIONS ////// 
 
@@ -313,6 +328,72 @@ contract PipelineConvertTest is TestHelper {
         advancedPipeCalls[1] = AdvancedPipeCall(
             C.BEAN_ETH_WELL, // target
             addLiquidityEncoded, // calldata
+            abi.encode(0) // clipboard
+        );
+
+
+        // Encode into a AdvancedFarmCall. NOTE: advancedFarmCall != advancedPipeCall. 
+        
+        // AdvancedFarmCall calls any function on the beanstalk diamond. 
+        // advancedPipe is one of the functions that its calling. 
+        // AdvancedFarmCall cannot call approve/addLiquidity, but can call AdvancedPipe.
+        // AdvancedPipe can call any arbitrary function.
+        AdvancedFarmCall[] memory advancedFarmCalls = new AdvancedFarmCall[](1);
+        
+        bytes memory advancedPipeCalldata = 
+            abi.encodeWithSelector(
+                depot.advancedPipe.selector,
+                advancedPipeCalls,
+                0
+            );
+
+        advancedFarmCalls[0] = AdvancedFarmCall(advancedPipeCalldata, new bytes(0));
+
+        // encode into bytes. 
+        // output = abi.encode(advancedFarmCalls);
+        return advancedFarmCalls;
+    }
+
+    function createLPToBean(
+        uint256 amountOfLP
+    ) public returns (AdvancedFarmCall[] memory output) {
+        // first setup the pipeline calls
+
+        // setup approve max call
+        bytes memory approveEncoded = abi.encodeWithSelector(
+            IERC20.approve.selector,
+            C.BEAN_ETH_WELL,
+            MAX_UINT256
+        );
+
+        uint256[] memory tokenAmountsIn = new uint256[](2); 
+        tokenAmountsIn[0] = amountOfLP;
+        tokenAmountsIn[1] = 0;
+
+        // encode remove liqudity.
+        bytes memory removeLiquidityEncoded = abi.encodeWithSelector(
+            IWell.removeLiquidityOneToken.selector,
+            amountOfLP, // tokenAmountsIn
+            C.BEAN, // tokenOut
+            0, // min out
+            C.PIPELINE, // recipient
+            type(uint256).max // deadline
+        );
+
+        // Fabricate advancePipes: 
+        AdvancedPipeCall[] memory advancedPipeCalls = new AdvancedPipeCall[](2);
+        
+        // Action 0: approve the Bean-Eth well to spend pipeline's bean.
+        advancedPipeCalls[0] = AdvancedPipeCall(
+            C.BEAN, // target
+            approveEncoded, // calldata
+            abi.encode(0) // clipboard
+        );
+
+        // Action 2: Add One sided Liquidity into the well. 
+        advancedPipeCalls[1] = AdvancedPipeCall(
+            C.BEAN_ETH_WELL, // target
+            removeLiquidityEncoded, // calldata
             abi.encode(0) // clipboard
         );
 
