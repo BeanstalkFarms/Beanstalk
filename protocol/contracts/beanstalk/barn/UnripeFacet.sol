@@ -248,7 +248,27 @@ contract UnripeFacet is ReentrancyGuard {
      * @return penalty The penalty % of Chopping.
      */
     function getPercentPenalty(address unripeToken) external view returns (uint256 penalty) {
-        return LibUnripe.getRecapPaidPercentAmount(getRecapFundedPercent(unripeToken));
+        console.log("///////////////// UnripeFacet.getPercentPenalty() ///////////////////");
+        console.log("Parameters");
+        console.log("unripeToken: ", unripeToken);
+        console.log("getRecapFundedPercent: ", getRecapFundedPercent(unripeToken));
+        console.log("OLD RETURN VALUE getRecapPaidPercentAmount: ", LibUnripe.getRecapPaidPercentAmount(getRecapFundedPercent(unripeToken)));
+        // --> denominates to getRecapPaidPercentAmount() (5%) of the corresponding ripe tokens for an unripe token
+        // so if for unripe bean 10% of beans are recapitalized (getRecapFundedPercent) and 5% of those are paid to fertilizer
+        // (getRecapPaidPercentAmount) the final penalty % is 0.5% 
+
+        // THE PERCENT PENALTY NOW IS JUST THE %RECAPPED^2 of a given unripe token
+        // now it should be
+        // LibUnripe._getPenalizedUnderlying(unripeToken, 1e6, IBean(unripeToken).totalSupply());
+        // or
+        console.log("Parameters");
+        console.log("unripeToken: ", unripeToken);
+        console.log("amount: ", 1e6);
+        console.log("totalSupply: ", IBean(unripeToken).totalSupply());
+        console.log("s.u[unripeToken].balanceOfUnderlying: ", s.u[unripeToken].balanceOfUnderlying);
+        console.log("% PENALTY NEW RETURN VALUE");
+        // ADDED DECIMALS TO AVOID UNDERFLOW
+        return (s.u[unripeToken].balanceOfUnderlying ** 2).mul(LibUnripe.DECIMALS).div(IERC20(unripeToken).totalSupply() ** 2);
     }
 
     /**

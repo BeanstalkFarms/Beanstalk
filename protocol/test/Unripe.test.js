@@ -23,7 +23,6 @@ describe('Unripe', function () {
     this.token = await ethers.getContractAt('TokenFacet', this.diamond.address)
     this.bean = await ethers.getContractAt('MockToken', BEAN)
     await this.bean.connect(owner).approve(this.diamond.address, to6('100000000'))
-
     this.unripeBean = await ethers.getContractAt('MockToken', UNRIPE_BEAN)
     this.unripeLP = await ethers.getContractAt('MockToken', UNRIPE_LP)
     await this.unripeLP.mint(userAddress, to6('1000'))
@@ -32,6 +31,7 @@ describe('Unripe', function () {
     await this.unripeBean.connect(user).approve(this.diamond.address, to6('100000000'))
     await this.fertilizer.setFertilizerE(true, to6('10000'))
     await this.unripe.addUnripeToken(UNRIPE_BEAN, BEAN, ZERO_BYTES)
+    await this.unripe.addUnripeToken(UNRIPE_LP, BEAN, ZERO_BYTES)
     await this.bean.mint(ownerAddress, to6('100'))
 
     await this.season.siloSunrise(0)
@@ -74,9 +74,9 @@ describe('Unripe', function () {
       // getUnderlyingPerUnripeToken Returns the amount of Ripe Tokens that underly a single Unripe Token.
       // no connection with penalty params
       expect(await this.unripe.getUnderlyingPerUnripeToken(UNRIPE_BEAN)).to.be.equal(to6('0.1'))
-      // no penalty
-      expect(await this.unripe.getPenalty(UNRIPE_BEAN)).to.be.equal(to6('0'))
-      expect(await this.unripe.getPenalizedUnderlying(UNRIPE_BEAN, to6('1'))).to.be.equal('0')
+      // getPenalty calls _getPenalizedUnderlying that returns calculates new chop rate
+      expect(await this.unripe.getPenalty(UNRIPE_BEAN)).to.be.equal(to6('0.01'))
+      expect(await this.unripe.getPenalizedUnderlying(UNRIPE_BEAN, to6('1'))).to.be.equal(to6('0.01'));
       expect(await this.unripe.getTotalUnderlying(UNRIPE_BEAN)).to.be.equal(to6('100'))
       expect(await this.unripe.isUnripe(UNRIPE_BEAN)).to.be.equal(true)
       // getUnderlying Returns the amount of Ripe Tokens that underly a given amount of Unripe Tokens.
@@ -84,19 +84,22 @@ describe('Unripe', function () {
       // NO CONNECTION WITH PENALTY PARAMS OR CHOP RATE
       expect(await this.unripe.getUnderlying(UNRIPE_BEAN, to6('1'))).to.be.equal(to6('0.1'))
       expect(await this.unripe.balanceOfUnderlying(UNRIPE_BEAN, userAddress)).to.be.equal(to6('100'))
-      expect(await this.unripe.balanceOfPenalizedUnderlying(UNRIPE_BEAN, userAddress)).to.be.equal('0')
+      // balance of penalized underlying also calls _getPenalizedUnderlying that calculates new chop rate
+      // but with an amount equal to the unripe balance of the user that has 1000 unripe tokens so with a chop rate of
+      // 0.01 the balance of penalized underlying should be 1000 * 0.01 = 10
+      expect(await this.unripe.balanceOfPenalizedUnderlying(UNRIPE_BEAN, userAddress)).to.be.equal(to6('10'))
     })
 
     it('gets percents', async function () {
       expect(await this.unripe.getRecapPaidPercent()).to.be.equal('0')
       expect(await this.unripe.getRecapFundedPercent(UNRIPE_BEAN)).to.be.equal(to6('0.1'))
       expect(await this.unripe.getRecapFundedPercent(UNRIPE_LP)).to.be.equal(to6('0.188459'))
-      expect(await this.unripe.getPercentPenalty(UNRIPE_BEAN)).to.be.equal(to6('0'))
-      expect(await this.unripe.getPercentPenalty(UNRIPE_LP)).to.be.equal(to6('0'))
+      // Same holds for Unripe LP with the same underlying balance and penalty params
+      expect(await this.unripe.getPercentPenalty(UNRIPE_BEAN)).to.be.equal(to6('0.01'))
     })
   })
 
-  describe.only('penalty go down', async function () {
+  describe('penalty go down', async function () {
     beforeEach(async function () {
       await this.unripe.connect(owner).addUnderlying(
         UNRIPE_BEAN,
@@ -118,18 +121,15 @@ describe('Unripe', function () {
       expect(await this.unripe.getUnderlying(UNRIPE_BEAN, to6('1'))).to.be.equal(to6('0.1'))
       expect(await this.unripe.balanceOfUnderlying(UNRIPE_BEAN, userAddress)).to.be.equal(to6('100'))
       // balanceOfPenalizedUnderlying Returns the theoretical amount of the ripe asset in the account that underly a Farmer's balance of Unripe
-      // TODO: CONFIRM THIS
       expect(await this.unripe.balanceOfPenalizedUnderlying(UNRIPE_BEAN, userAddress)).to.be.equal(to6('10'))
     })
 
-    ////////////////////////////////// START FROM HERE //////////////////////////////////
     it('gets percents', async function () {
       expect(await this.unripe.getRecapPaidPercent()).to.be.equal(to6('0.01'))
       expect(await this.unripe.getRecapFundedPercent(UNRIPE_BEAN)).to.be.equal(to6('0.1'))
       expect(await this.unripe.getRecapFundedPercent(UNRIPE_LP)).to.be.equal(to6('0.188459'))
-      // TODO: THIS SHOULD CHANGE TO THE CONVERSION RATE (IE 0.01) FROM getPenalty()
-      expect(await this.unripe.getPercentPenalty(UNRIPE_BEAN)).to.be.equal(to6('0.001'))
-      expect(await this.unripe.getPercentPenalty(UNRIPE_LP)).to.be.equal(to6('0.001884'))
+      // Same holds for Unripe LP with the same underlying balance and penalty params
+      expect(await this.unripe.getPercentPenalty(UNRIPE_BEAN)).to.be.equal(to6('0.01'))
     })
   })
 
@@ -148,20 +148,22 @@ describe('Unripe', function () {
     it('getters', async function () {
       expect(await this.unripe.getRecapPaidPercent()).to.be.equal(to6('0.01'))
       expect(await this.unripe.getUnderlyingPerUnripeToken(UNRIPE_BEAN)).to.be.equal('100090')
-      expect(await this.unripe.getPenalty(UNRIPE_BEAN)).to.be.equal(to6('0.001'))
-      expect(await this.unripe.getTotalUnderlying(UNRIPE_BEAN)).to.be.equal(to6('99.999'))
+      // an unripe token is removed from circulation(supply) along with a reduction in the underlying ripe balance so this should change
+      expect(await this.unripe.getPenalty(UNRIPE_BEAN)).to.be.equal(to6('0.010018'))
+      expect(await this.unripe.getTotalUnderlying(UNRIPE_BEAN)).to.be.equal(to6('99.99'))
       expect(await this.unripe.isUnripe(UNRIPE_BEAN)).to.be.equal(true)
-      expect(await this.unripe.getPenalizedUnderlying(UNRIPE_BEAN, to6('1'))).to.be.equal(to6('0.001'))
-      expect(await this.unripe.getUnderlying(UNRIPE_BEAN, to6('1'))).to.be.equal(to6('0.100099'))
-      expect(await this.unripe.balanceOfUnderlying(UNRIPE_BEAN, userAddress)).to.be.equal(to6('99.999'))
-      expect(await this.unripe.balanceOfPenalizedUnderlying(UNRIPE_BEAN, userAddress)).to.be.equal(to6('0.99999'))
+       // an unripe token is removed from circulation(supply) along with a reduction in the underlying ripe balance so this should change
+      expect(await this.unripe.getPenalizedUnderlying(UNRIPE_BEAN, to6('1'))).to.be.equal(to6('0.010018'))
+      expect(await this.unripe.getUnderlying(UNRIPE_BEAN, to6('1'))).to.be.equal(to6('0.10009'))
+      expect(await this.unripe.balanceOfUnderlying(UNRIPE_BEAN, userAddress)).to.be.equal(to6('99.99'))
+      expect(await this.unripe.balanceOfPenalizedUnderlying(UNRIPE_BEAN, userAddress)).to.be.equal(to6('10.008008'))
     })
 
     it('changes balaces', async function () {
       expect(await this.unripeBean.balanceOf(userAddress)).to.be.equal(to6('999'))
       expect(await this.bean.balanceOf(userAddress)).to.be.equal(to6('0.01'))
       expect(await this.unripeBean.totalSupply()).to.be.equal(to6('999'))
-      expect(await this.bean.balanceOf(this.unripe.address)).to.be.equal(to6('99.999'))
+      expect(await this.bean.balanceOf(this.unripe.address)).to.be.equal(to6('99.99'))
     })
 
     it('emits an event', async function () {
@@ -194,20 +196,22 @@ describe('Unripe', function () {
     it('getters', async function () {
       expect(await this.unripe.getRecapPaidPercent()).to.be.equal(to6('0.01'))
       expect(await this.unripe.getUnderlyingPerUnripeToken(UNRIPE_BEAN)).to.be.equal('100090')
-      expect(await this.unripe.getPenalty(UNRIPE_BEAN)).to.be.equal(to6('0.001'))
-      expect(await this.unripe.getTotalUnderlying(UNRIPE_BEAN)).to.be.equal(to6('99.999'))
+      // an unripe token is removed from circulation(supply) along with a reduction in the underlying ripe balance so this should change
+      expect(await this.unripe.getPenalty(UNRIPE_BEAN)).to.be.equal(to6('0.010018'))
+      expect(await this.unripe.getTotalUnderlying(UNRIPE_BEAN)).to.be.equal(to6('99.99'))
       expect(await this.unripe.isUnripe(UNRIPE_BEAN)).to.be.equal(true)
-      expect(await this.unripe.getPenalizedUnderlying(UNRIPE_BEAN, to6('1'))).to.be.equal(to6('0.001'))
-      expect(await this.unripe.getUnderlying(UNRIPE_BEAN, to6('1'))).to.be.equal(to6('0.100099'))
-      expect(await this.unripe.balanceOfUnderlying(UNRIPE_BEAN, userAddress)).to.be.equal(to6('99.999'))
-      expect(await this.unripe.balanceOfPenalizedUnderlying(UNRIPE_BEAN, userAddress)).to.be.equal(to6('0.99999'))
+      // an unripe token is removed from circulation(supply) along with a reduction in the underlying ripe balance so this should change
+      expect(await this.unripe.getPenalizedUnderlying(UNRIPE_BEAN, to6('1'))).to.be.equal(to6('0.010018'))
+      expect(await this.unripe.getUnderlying(UNRIPE_BEAN, to6('1'))).to.be.equal(to6('0.10009'))
+      expect(await this.unripe.balanceOfUnderlying(UNRIPE_BEAN, userAddress)).to.be.equal(to6('99.99'))
+      expect(await this.unripe.balanceOfPenalizedUnderlying(UNRIPE_BEAN, userAddress)).to.be.equal(to6('10.008008'))
     })
 
     it('changes balaces', async function () {
       expect(await this.unripeBean.balanceOf(userAddress)).to.be.equal(to6('999'))
       expect(await this.bean.balanceOf(userAddress)).to.be.equal(to6('0.01'))
       expect(await this.unripeBean.totalSupply()).to.be.equal(to6('999'))
-      expect(await this.bean.balanceOf(this.unripe.address)).to.be.equal(to6('99.999'))
+      expect(await this.bean.balanceOf(this.unripe.address)).to.be.equal(to6('99.99'))
     })
 
     it('emits an event', async function () {
