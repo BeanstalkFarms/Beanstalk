@@ -77,7 +77,8 @@ contract BeanstalkDeployer is Utils {
         facetNames[i++] = "MetadataFacet";
         deployedFacetAddresses[i] = address(new SeasonGettersFacet());
         facetNames[i++] = "SeasonGettersFacet";
-
+        deployedFacetAddresses[i] = address(deployCode("DepotFacet.sol"));
+        facetNames[i++] = "DepotFacet";
         if (mock) {
             deployedFacetAddresses[i] = address(deployCode("MockAdminFacet.sol"));
             facetNames[i++] = "MockAdminFacet";
