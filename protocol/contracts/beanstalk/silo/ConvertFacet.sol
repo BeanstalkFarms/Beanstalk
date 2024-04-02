@@ -237,7 +237,7 @@ contract ConvertFacet is ReentrancyGuard {
         // console.log('after changeInDeltaB:');
         // console.logInt(pipeData.changeInDeltaB);
 
-        uint256 stalkPenaltyBdv = _calculateStalkPenalty(pipeData.startingDeltaB, getCombinedDeltaBForTokens(inputToken, outputToken), pipeData.bdvsRemoved);
+        uint256 stalkPenaltyBdv = _calculateStalkPenalty(pipeData.startingDeltaB, getCombinedDeltaBForTokens(inputToken, outputToken), pipeData.bdvsRemoved, inputToken, outputToken);
         console.log('stalkPenaltyBdv: ', stalkPenaltyBdv);
         pipeData.grownStalks = _applyPenaltyToGrownStalks(stalkPenaltyBdv, pipeData.bdvsRemoved, pipeData.grownStalks);
 
@@ -275,9 +275,9 @@ contract ConvertFacet is ReentrancyGuard {
         return grownStalks;
     }
 
-    function calculateStalkPenalty(int256 beforeDeltaB, int256 afterDeltaB, uint256[] memory bdvsRemoved) external view returns (uint256) {
-        return _calculateStalkPenalty(beforeDeltaB, afterDeltaB, bdvsRemoved);
-    }
+    // function calculateStalkPenalty(int256 beforeDeltaB, int256 afterDeltaB, uint256[] memory bdvsRemoved) external view returns (uint256) {
+    //     return _calculateStalkPenalty(beforeDeltaB, afterDeltaB, bdvsRemoved);
+    // }
 
     /**
      * @notice Calculates the percentStalkPenalty for a given convert.
@@ -292,12 +292,16 @@ contract ConvertFacet is ReentrancyGuard {
      */
 
     // TODO change to pure upon log removal
-    function _calculateStalkPenalty(int256 beforeDeltaB, int256 afterDeltaB, uint256[] memory bdvsRemoved) internal view returns (uint256) {
+    function _calculateStalkPenalty(int256 beforeDeltaB, int256 afterDeltaB, uint256[] memory bdvsRemoved, address fromToken, address toToken) internal returns (uint256) {
 
         uint256 bdvConverted;
         for (uint256 i = 0; i < bdvsRemoved.length; i++) {
             bdvConverted = bdvConverted.add(bdvsRemoved[i]);
         }
+
+        AppStorage storage s = LibAppStorage.diamondStorage();
+
+        uint256 crossoverAmount = 0;
 
 
         console.log('beforeDeltaB: ');
@@ -310,6 +314,7 @@ contract ConvertFacet is ReentrancyGuard {
         // indicating that deltaB has crossed zero
         // if (beforeDeltaB.mul(afterDeltaB) < 0) {
         // The bitwise XOR of two signed integers will be positive if they have different signs, and negative if they have the same sign
+        // Maybe not use XOR if there's some obscure uninteded behavior?
         if ((beforeDeltaB ^ afterDeltaB) < 0 || beforeDeltaB == 0 || afterDeltaB == 0) {
 
             if (beforeDeltaB == 0 && afterDeltaB != 0) {
@@ -324,7 +329,7 @@ contract ConvertFacet is ReentrancyGuard {
 
 
             // Calculate how far past peg we went - so actually this is just abs of new deltaB
-            uint256 crossoverAmount = uint256(abs(int256(afterDeltaB)));
+            crossoverAmount = uint256(abs(int256(afterDeltaB)));
 
             console.log('crossoverAmount: ', crossoverAmount);
 
@@ -340,10 +345,47 @@ contract ConvertFacet is ReentrancyGuard {
                 return crossoverAmount;
             }
         } else if (beforeDeltaB <= 0 && afterDeltaB < beforeDeltaB) { 
-            return bdvConverted;
+            return bdvConverted; // actually penalty should be amount against peg you went?
         } else if (beforeDeltaB >= 0 && afterDeltaB > beforeDeltaB) { 
-            return bdvConverted;
+            return bdvConverted; // actually penalty should be amount against peg you went?
         }
+
+        // at this point we are converting in direction of peg, but we may have gone past it
+        // calculate how much closer
+
+        // see if convert power for this block has been setup yet
+        if (s.convertPowerThisBlock[block.number].hasConvertHappenedThisBlock == false) {
+            // setup initial available convert power for this block at the current deltaB
+            // use insta deltaB that's from previous block
+            int256 cappedDeltaB;
+            (cappedDeltaB, , ) = LibWellMinting.cappedReservesDeltaB(fromToken);
+            s.convertPowerThisBlock[block.number].convertPower = abs(cappedDeltaB);
+            s.convertPowerThisBlock[block.number].hasConvertHappenedThisBlock = true;
+        }
+
+        // calculate how much deltaB convert is happening with this convert
+        uint256 convertAmountInDirectionOfPeg = abs(beforeDeltaB - afterDeltaB);
+
+        if (convertAmountInDirectionOfPeg <= s.convertPowerThisBlock[block.number].convertPower) {
+            // all good, you're using less than the available convert power
+
+            // subtract from convert power available for this block
+            s.convertPowerThisBlock[block.number].convertPower -= convertAmountInDirectionOfPeg;
+
+            return crossoverAmount;
+        } else {
+            // you're using more than the available convert power
+
+            // penalty will be how far past peg you went
+            uint256 penalty = convertAmountInDirectionOfPeg - s.convertPowerThisBlock[block.number].convertPower;
+
+            // all convert power for this block is used up
+            s.convertPowerThisBlock[block.number].convertPower = 0;
+
+            return penalty+crossoverAmount; // should this be capped at bdvConverted?
+        }
+
+
     // If the deltaB did not cross zero, or is the same before/after, return 0. In the future maybe calculate bonus here.
     return 0;
 }

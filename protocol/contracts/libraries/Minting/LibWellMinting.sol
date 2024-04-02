@@ -8,6 +8,7 @@ pragma experimental ABIEncoderV2;
 import {LibAppStorage, AppStorage} from "../LibAppStorage.sol";
 import {SafeMath, C, LibMinting} from "./LibMinting.sol";
 import {ICumulativePump} from "contracts/interfaces/basin/pumps/ICumulativePump.sol";
+import {ICappedReservesPump} from "contracts/interfaces/basin/pumps/ICappedReservesPump.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {IInstantaneousPump} from "contracts/interfaces/basin/pumps/IInstantaneousPump.sol";
 import {Call, IWell} from "contracts/interfaces/basin/IWell.sol";
@@ -241,6 +242,52 @@ library LibWellMinting {
         )).sub(int256(reserves[beanIndex]));
 
         return deltaB;
+    }
+
+    
+    function cappedReservesDeltaB(address well) internal view returns 
+        (int256, uint256[] memory, uint256[] memory) {
+
+        AppStorage storage s = LibAppStorage.diamondStorage();
+
+                                                                        // well address , data[]
+        try ICappedReservesPump(C.MULTIFLOW_PUMP_V1).readCappedReserves(well) returns (uint[] memory instReserves) {
+            // Get well tokens
+            IERC20[] memory tokens = IWell(well).tokens();
+
+            // Get ratios and bean index
+            (
+                uint256[] memory ratios,
+                uint256 beanIndex,
+                bool success
+            ) = LibWell.getRatiosAndBeanIndex(tokens, block.timestamp.sub(s.season.timestamp));
+
+            // HANDLE FAILURE
+            // If the Bean reserve is less than the minimum, the minting oracle should be considered off.
+            if (instReserves[beanIndex] < C.WELL_MINIMUM_BEAN_BALANCE) {
+                return (0, new uint256[](0), new uint256[](0));
+            }
+
+            // If the USD Oracle oracle call fails, the minting oracle should be considered off.
+            if (!success) {
+                return (0, instReserves, new uint256[](0));
+            }
+
+            // Get well function
+            Call memory wellFunction = IWell(well).wellFunction();
+
+            // Delta B is the difference between the target Bean reserve at the peg price
+            // and the instantaneous Bean balance in the Well.
+            int256 deltaB = int256(IBeanstalkWellFunction(wellFunction.target).calcReserveAtRatioSwap(
+                instReserves,
+                beanIndex,
+                ratios,
+                wellFunction.data
+            )).sub(int256(instReserves[beanIndex]));
+
+            return (deltaB, instReserves, ratios);
+        }
+        catch {}
     }
 
     

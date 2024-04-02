@@ -323,6 +323,48 @@ contract PipelineConvertTest is TestHelper {
         assertTrue(totalStalkAfter == bdvBalance + grownStalkBefore); // all grown stalk was lost
     }
 
+    function testFlashloanManipulation(uint256 amount) public {
+        amount = bound(amount, 5000e6, 5000e6); // todo: update for range
+
+        // the main idea is that we start at deltaB of zero, so converts should not be possible
+        // we add eth to the well to push it over peg, then we convert our beans back down to lp
+        // then we pull our initial eth back out and we converted when we shouldn't have been able to (if we do in one tx)
+
+        // setup initial bean deposit
+        int96 stem = beanToLPDepositSetup(amount);
+
+        int256 initialDeltaB = seasonGetters.poolDeltaBInsta(C.BEAN_ETH_WELL);
+        console.log('deltaB initialDeltaB: ');
+        console.logInt(initialDeltaB);
+
+
+        // mint user 10 eth
+        uint256 ethAmount = 10e18;
+        MockToken(C.WETH).mint(users[1], ethAmount);
+
+        vm.prank(users[1]);
+        MockToken(C.WETH).approve(C.BEAN_ETH_WELL, ethAmount);
+
+        // add liquidity to well
+        uint256[] memory tokenAmountsIn = new uint256[](2);
+        tokenAmountsIn[0] = 0;
+        tokenAmountsIn[1] = ethAmount;
+
+        vm.prank(users[1]);
+        uint256 lpAmountOut = IWell(C.BEAN_ETH_WELL).addLiquidity(tokenAmountsIn, 0, users[1], type(uint256).max);
+        
+        // log insta deltaB
+        int256 beforeDeltaB = seasonGetters.poolDeltaBInsta(C.BEAN_ETH_WELL);
+        console.log('deltaB after adding eth: ');
+        console.logInt(beforeDeltaB);
+
+        // convert beans to lp
+        beanToLPDoConvert(amount, stem);
+
+        console.log('DONE - asserting false');
+        assertTrue(false);
+    }
+
 
     ////// SILO TEST HELPERS //////
 
