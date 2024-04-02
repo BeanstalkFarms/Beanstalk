@@ -32,6 +32,7 @@ import GasTag from '../../Common/GasTag';
 import { hoverMap } from '~/constants/silo';
 import MountedAccordion from '../../Common/Accordion/MountedAccordion';
 import { ZERO_BN } from '~/constants';
+import useSetting from '~/hooks/app/useSetting';
 
 const options = [
   {
@@ -82,6 +83,9 @@ const ClaimRewardsContent: React.FC<
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const getChainToken = useGetChainToken();
   const balances = useFarmerSiloBalances();
+
+  // Are we impersonating a different account
+  const isImpersonating = !!(useSetting('impersonatedAccount')[0]);
 
   /// The currently hovered action.
   const [hoveredAction, setHoveredAction] = useState<
@@ -203,7 +207,7 @@ const ClaimRewardsContent: React.FC<
         fullWidth
         size="medium"
         loading={isSubmitting}
-        disabled={isSubmitting}
+        disabled={isSubmitting || isImpersonating}
         onClick={handleOnClick}
         endIcon={
           !open ? (

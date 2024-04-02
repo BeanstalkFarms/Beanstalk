@@ -60,6 +60,7 @@ import TransactionToast from '~/components/Common/TxnToast';
 import { useFetchFarmerSilo } from '~/state/farmer/silo/updater';
 import useFarmerSilo from '~/hooks/farmer/useFarmerSilo';
 import useSilo from '~/hooks/beanstalk/useSilo';
+import useSetting from '~/hooks/app/useSetting';
 
 const FormControlLabelStat: FC<
   Partial<FormControlLabelProps> & {
@@ -112,6 +113,9 @@ const RewardsBar: FC<{
   const getChainToken = useGetChainToken();
   const getBDV = useBDV();
   const sdk = useSdk();
+
+  // Are we impersonating a different account
+  const isImpersonating = !!(useSetting('impersonatedAccount')[0]);
 
   /// Calculate Unripe Silo Balance
   const urBean = getChainToken(UNRIPE_BEAN);
@@ -609,7 +613,7 @@ const RewardsBar: FC<{
                     />
                   </TokenOutput>
                   <Button
-                    disabled={empty}
+                    disabled={empty || isImpersonating}
                     variant="contained"
                     fullWidth
                     size="large"
