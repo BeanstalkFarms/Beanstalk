@@ -24,7 +24,6 @@ import disconnectIcon from '~/img/beanstalk/interface/nav/disconnect.svg';
 import useAnchor from '~/hooks/display/useAnchor';
 import useToggle from '~/hooks/display/useToggle';
 import useAccount from '~/hooks/ledger/useAccount';
-import { BeanstalkPalette } from '~/components/App/muiTheme';
 import { CHAIN_INFO } from '~/constants';
 import PickBeansDialog from '~/components/Farmer/Unripe/PickDialog';
 import AddressIcon from '~/components/Common/AddressIcon';
