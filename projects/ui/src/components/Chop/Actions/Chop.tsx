@@ -74,7 +74,7 @@ const ChopForm: FC<
   const sdk = useSdk();
 
   // Are we impersonating a different account
-  const isImpersonating = useSetting('impersonatedAccount')[0] ? true : false;
+  const isImpersonating = !!(useSetting('impersonatedAccount')[0]);
 
   const getBDV = useBDV();
   const erc20TokenMap = useTokenMap<ERC20Token | NativeToken>(UNRIPE_TOKENS);

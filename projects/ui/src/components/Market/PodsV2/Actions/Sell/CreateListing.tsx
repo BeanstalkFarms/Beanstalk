@@ -82,7 +82,7 @@ const CreateListingV2Form: FC<
   const plot = values.plot;
 
   // Are we impersonating a different account
-  const isImpersonating = useSetting('impersonatedAccount')[0] ? true : false;
+  const isImpersonating = !!(useSetting('impersonatedAccount')[0]);
 
   /// Data
   const existingListings = useFarmerListingsLedger();

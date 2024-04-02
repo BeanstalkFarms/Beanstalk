@@ -54,7 +54,7 @@ const QuickRinseForm: FC<Props> = ({ values, isSubmitting, SPROUTS }) => {
     amountSprouts?.gt(0) && values.destination !== undefined;
 
   // Are we impersonating a different account
-  const isImpersonating = useSetting('impersonatedAccount')[0] ? true : false;
+  const isImpersonating = !!(useSetting('impersonatedAccount')[0]);
 
   return (
     <Form autoComplete="off" noValidate>
@@ -98,7 +98,7 @@ const RinseForm: FC<Props> = ({ values, isSubmitting, SPROUTS, BEAN }) => {
   const formTxnActions = useFarmerFormTxnsActions();
 
   // Are we impersonating a different account
-  const isImpersonating = useSetting('impersonatedAccount')[0] ? true : false;
+  const isImpersonating = !!(useSetting('impersonatedAccount')[0]);
 
   /// Farm actions Txn actions
   return (

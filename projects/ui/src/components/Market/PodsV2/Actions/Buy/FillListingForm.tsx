@@ -78,7 +78,7 @@ const FillListingV2Form: FC<
   const [isTokenSelectVisible, handleOpen, hideTokenSelect] = useToggle();
 
   // Are we impersonating a different account
-  const isImpersonating = useSetting('impersonatedAccount')[0] ? true : false;
+  const isImpersonating = !!(useSetting('impersonatedAccount')[0]);
 
   /// Chain
   const getChainToken = useGetChainToken();

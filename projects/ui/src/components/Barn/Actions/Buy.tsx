@@ -122,7 +122,7 @@ const BuyForm: FC<
   const [ethPrice, setEthPrice] = useState(TokenValue.ZERO);
 
   // Are we impersonating a different account
-  const isImpersonating = useSetting('impersonatedAccount')[0] ? true : false;
+  const isImpersonating = !!(useSetting('impersonatedAccount')[0]);
 
   useEffect(() => {
     getEthPrice().then((price) => {

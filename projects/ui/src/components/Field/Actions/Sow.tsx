@@ -115,7 +115,7 @@ const SowForm: FC<
   const account = useAccount();
 
   // Are we impersonating a different account
-  const isImpersonating = useSetting('impersonatedAccount')[0] ? true : false;
+  const isImpersonating = !!(useSetting('impersonatedAccount')[0]);
 
   const [isTokenSelectVisible, showTokenSelect, hideTokenSelect] = useToggle();
   const formRef = useRef<HTMLDivElement | null>(null);
