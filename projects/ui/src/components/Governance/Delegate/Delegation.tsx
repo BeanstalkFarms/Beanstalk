@@ -18,6 +18,7 @@ import { GOV_SPACE_BY_ID, trimAddress } from '~/util';
 import Row from '~/components/Common/Row';
 import { FontWeight } from '~/components/App/muiTheme';
 import { useAppSelector } from '~/state';
+import useSetting from '~/hooks/app/useSetting';
 
 type DelegateValues = {
   delegate: string;
@@ -48,6 +49,10 @@ const DelegationForm: React.FC<FormikProps<DelegateValues> & DelegateProps> = ({
   resetForm,
   values,
 }) => {
+
+  // Are we impersonating a different account
+  const isImpersonating = useSetting('impersonatedAccount')[0] ? true : false;
+
   const handleClearDelegate = useCallback(async () => {
     let txToast;
     try {
@@ -190,7 +195,7 @@ const DelegationForm: React.FC<FormikProps<DelegateValues> & DelegateProps> = ({
             mode="manual"
             type="submit"
             fullWidth
-            disabled={isSubmitting || getIsInvalidInput()}
+            disabled={isSubmitting || getIsInvalidInput() || isImpersonating}
             loading={isSubmitting}
             tokens={[]}
           >
@@ -202,7 +207,7 @@ const DelegationForm: React.FC<FormikProps<DelegateValues> & DelegateProps> = ({
             mode="manual"
             fullWidth
             onClick={() => handleClearDelegate()}
-            disabled={isSubmitting}
+            disabled={isSubmitting || isImpersonating}
             loading={isSubmitting}
             tokens={[]}
           >

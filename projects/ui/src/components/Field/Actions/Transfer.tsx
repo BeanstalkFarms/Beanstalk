@@ -31,6 +31,7 @@ import TokenOutput from '~/components/Common/Form/TokenOutput';
 import useSdk from '~/hooks/sdk';
 import { StepGenerator } from '@beanstalk/sdk';
 import { ethers } from 'ethers';
+import useSetting from '~/hooks/app/useSetting';
 
 export type TransferFormValues = {
   plot: PlotFragment;
@@ -50,6 +51,10 @@ const TransferForm: FC<SendFormProps & FormikProps<TransferFormValues>> = ({
   isSubmitting,
 }) => {
   const sdk = useSdk();
+
+  // Are we impersonating a different account
+  const isImpersonating = useSetting('impersonatedAccount')[0] ? true : false;
+
   /// Data
   const plots = useFarmerPlots();
   const harvestableIndex = useHarvestableIndex();
@@ -129,7 +134,7 @@ const TransferForm: FC<SendFormProps & FormikProps<TransferFormValues>> = ({
         )}
         <SmartSubmitButton
           loading={isSubmitting}
-          disabled={!isReady || isSubmitting}
+          disabled={!isReady || isSubmitting || isImpersonating}
           type="submit"
           variant="contained"
           color="primary"

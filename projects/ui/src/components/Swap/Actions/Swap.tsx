@@ -56,6 +56,7 @@ import { FC } from '~/types';
 import useFormMiddleware from '~/hooks/ledger/useFormMiddleware';
 import useSdk from '~/hooks/sdk';
 import { BalanceFrom } from '~/components/Common/Form/BalanceFromRow';
+import useSetting from '~/hooks/app/useSetting';
 // import { Balance } from '@mui/icons-material';
 
 /// ---------------------------------------------------------------
@@ -114,6 +115,9 @@ const SwapForm: FC<
   const { status } = useConnect();
   const account = useAccount();
   const sdk = useSdk();
+
+  // Are we impersonating a different account
+  const isImpersonating = useSetting('impersonatedAccount')[0] ? true : false;
 
   // This controls what options are show on the tokenin picker (All Balances, circulating, farm).
   const [fromOptions, setFromOptions] = useState<BalanceFrom[]>([
@@ -650,7 +654,7 @@ const SwapForm: FC<
           color="primary"
           size="large"
           loading={isSubmitting}
-          disabled={!isValid || isSubmitting || isQuoting}
+          disabled={!isValid || isSubmitting || isQuoting || isImpersonating}
           contract={beanstalk}
           tokens={shouldApprove ? values.tokensIn : []}
           mode="auto"

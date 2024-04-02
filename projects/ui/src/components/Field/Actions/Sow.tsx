@@ -67,6 +67,7 @@ import FormTxnProvider from '~/components/Common/Form/FormTxnProvider';
 import useFormTxnContext from '~/hooks/sdk/useFormTxnContext';
 import { ClaimAndDoX, SowFarmStep } from '~/lib/Txn';
 import useTemperature from '~/hooks/beanstalk/useTemperature';
+import useSetting from '~/hooks/app/useSetting';
 
 type SowFormValues = FormStateNew & {
   settings: SlippageSettingsFragment & {
@@ -112,6 +113,10 @@ const SowForm: FC<
 }) => {
   const sdk = useSdk();
   const account = useAccount();
+
+  // Are we impersonating a different account
+  const isImpersonating = useSetting('impersonatedAccount')[0] ? true : false;
+
   const [isTokenSelectVisible, showTokenSelect, hideTokenSelect] = useToggle();
   const formRef = useRef<HTMLDivElement | null>(null);
 
@@ -358,7 +363,7 @@ const SowForm: FC<
           variant="contained"
           color="primary"
           size="large"
-          disabled={!isSubmittable || isSubmitting}
+          disabled={!isSubmittable || isSubmitting || isImpersonating}
           contract={sdk.contracts.beanstalk}
           tokens={shouldApprove ? values.tokens : []}
           mode="auto"

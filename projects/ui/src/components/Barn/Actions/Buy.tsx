@@ -69,6 +69,7 @@ import FormTxnProvider from '~/components/Common/Form/FormTxnProvider';
 import useFormTxnContext from '~/hooks/sdk/useFormTxnContext';
 import { BuyFertilizerFarmStep, ClaimAndDoX } from '~/lib/Txn';
 import { useEthPriceFromBeanstalk } from '~/hooks/ledger/useEthPriceFromBeanstalk';
+import useSetting from '~/hooks/app/useSetting';
 
 // ---------------------------------------------------
 
@@ -119,6 +120,9 @@ const BuyForm: FC<
   const getEthPrice = useEthPriceFromBeanstalk();
   const tokenMap = useTokenMap<ERC20Token | NativeToken>(tokenList);
   const [ethPrice, setEthPrice] = useState(TokenValue.ZERO);
+
+  // Are we impersonating a different account
+  const isImpersonating = useSetting('impersonatedAccount')[0] ? true : false;
 
   useEffect(() => {
     getEthPrice().then((price) => {
@@ -303,7 +307,7 @@ const BuyForm: FC<
           color="primary"
           size="large"
           loading={isSubmitting}
-          disabled={!isValid}
+          disabled={!isValid || isImpersonating}
           // Smart props
           contract={sdk.contracts.beanstalk}
           tokens={shouldApprove ? values.tokens : []}

@@ -53,6 +53,7 @@ import { QuoteHandlerWithParams } from '~/hooks/ledger/useQuoteWithParams';
 import TokenQuoteProviderWithParams from '~/components/Common/Form/TokenQuoteProviderWithParams';
 import copy from '~/constants/copy';
 import useFarmerSiloBalanceSdk from '~/hooks/farmer/useFarmerSiloBalanceSdk';
+import useSetting from '~/hooks/app/useSetting';
 
 // -----------------------------------------------------------------------
 
@@ -99,6 +100,9 @@ const WithdrawForm: FC<
     () => sdk.pools.getPoolByLPToken(whitelistedToken),
     [sdk.pools, whitelistedToken]
   );
+
+  // Are we impersonating a different account
+  const isImpersonating = useSetting('impersonatedAccount')[0] ? true : false;
 
   const claimableTokens = useMemo(
     // FIXME: Temporarily disabled Withdraws of Bean:ETH LP in Bean/WETH, needs routing code
@@ -361,7 +365,7 @@ const WithdrawForm: FC<
         ) : null}
         <SmartSubmitButton
           loading={isSubmitting}
-          disabled={!isReady || !isLPReady || isSubmitting}
+          disabled={!isReady || !isLPReady || isSubmitting || isImpersonating}
           type="submit"
           variant="contained"
           color="primary"

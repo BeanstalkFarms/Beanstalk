@@ -36,6 +36,7 @@ import {
   toStringBaseUnitBN,
 } from '~/util';
 import { useEthersSigner } from '~/util/wagmi/ethersAdapter';
+import useSetting from '~/hooks/app/useSetting';
 
 export type CreateListingFormValues = {
   plot: PlotFragment;
@@ -112,6 +113,9 @@ const ListForm: FC<
 > = ({ values, isSubmitting, plots, harvestableIndex }) => {
   /// Form Data
   const plot = values.plot;
+
+  // Are we impersonating a different account
+  const isImpersonating = useSetting('impersonatedAccount')[0] ? true : false;
 
   /// Data
   const existingListings = useFarmerListingsLedger();
@@ -213,7 +217,7 @@ const ListForm: FC<
         )}
         <SmartSubmitButton
           loading={isSubmitting}
-          disabled={!isSubmittable || isSubmitting}
+          disabled={!isSubmittable || isSubmitting || isImpersonating}
           type="submit"
           variant="contained"
           color="primary"

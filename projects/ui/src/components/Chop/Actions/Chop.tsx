@@ -59,6 +59,7 @@ import useFormMiddleware from '~/hooks/ledger/useFormMiddleware';
 import useSdk from '~/hooks/sdk';
 import useBDV from '~/hooks/beanstalk/useBDV';
 import { BalanceFrom } from '~/components/Common/Form/BalanceFromRow';
+import useSetting from '~/hooks/app/useSetting';
 
 type ChopFormValues = FormState & {
   destination: FarmToMode | undefined;
@@ -71,6 +72,10 @@ const ChopForm: FC<
   }
 > = ({ values, setFieldValue, balances, beanstalk }) => {
   const sdk = useSdk();
+
+  // Are we impersonating a different account
+  const isImpersonating = useSetting('impersonatedAccount')[0] ? true : false;
+
   const getBDV = useBDV();
   const erc20TokenMap = useTokenMap<ERC20Token | NativeToken>(UNRIPE_TOKENS);
   const [isTokenSelectVisible, showTokenSelect, hideTokenSelect] = useToggle();
@@ -256,7 +261,7 @@ const ChopForm: FC<
           variant="contained"
           color="primary"
           size="large"
-          disabled={!isSubmittable}
+          disabled={!isSubmittable || isImpersonating}
           contract={beanstalk}
           tokens={values.tokens}
           mode="auto"

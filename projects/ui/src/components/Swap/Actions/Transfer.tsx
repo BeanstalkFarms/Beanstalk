@@ -38,6 +38,7 @@ import useFormMiddleware from '~/hooks/ledger/useFormMiddleware';
 import { BalanceFrom } from '~/components/Common/Form/BalanceFromRow';
 import AddressInputField from '~/components/Common/Form/AddressInputField';
 import copy from '~/constants/copy';
+import useSetting from '~/hooks/app/useSetting';
 
 /// ---------------------------------------------------------------
 
@@ -89,6 +90,9 @@ const TransferForm: FC<
   /// Tokens
   const { status } = useConnect();
   const account = useAccount();
+
+  // Are we impersonating a different account
+  const isImpersonating = useSetting('impersonatedAccount')[0] ? true : false;
 
   /// Derived values
   const stateIn = values.tokensIn[0];
@@ -379,7 +383,7 @@ const TransferForm: FC<
           color="primary"
           size="large"
           loading={isSubmitting}
-          disabled={!isValid || isSubmitting}
+          disabled={!isValid || isSubmitting || isImpersonating}
           contract={beanstalk}
           tokens={shouldApprove ? values.tokensIn : []}
           mode="auto"
