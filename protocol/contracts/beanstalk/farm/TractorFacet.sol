@@ -110,13 +110,15 @@ contract TractorFacet {
         // Update data with operator-defined fillData.
         for (uint256 i; i < requisition.blueprint.operatorPasteInstrs.length; ++i) {
             bytes32 operatorPasteInstr = requisition.blueprint.operatorPasteInstrs[i];
+            uint80 pasteCallIndex = operatorPasteInstr.getIndex1();
+            require(calls.length > pasteCallIndex, "Tractor: pasteCallIndex OOB");
 
             // note: calls[..] reverts if operatorPasteInstr.getPasteCallIndex()
             // is an invalid index.
             LibBytes.pasteBytesTractor(
                 operatorPasteInstr,
                 operatorData,
-                calls[operatorPasteInstr.getPasteCallIndex()].callData
+                calls[pasteCallIndex].callData
             );
         }
 

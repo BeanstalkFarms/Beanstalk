@@ -11,7 +11,7 @@ contract Drafter {
         uint80 _pasteCallIndex,
         uint80 _pasteByteIndex
     ) external pure returns (bytes32) {
-        return LibBytes.encode(_pasteCallIndex, _copyByteIndex, _pasteByteIndex);
+        return LibBytes.encode(_copyByteIndex, _pasteCallIndex, _pasteByteIndex);
     }
 
     function decodeOperatorPasteInstr(
