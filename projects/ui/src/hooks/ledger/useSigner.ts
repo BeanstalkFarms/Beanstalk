@@ -1,18 +1,19 @@
 import { ethers } from 'ethers';
 import { useEffect, useState } from 'react';
-import useSetting from '../app/useSetting';
 import { useAccount } from 'wagmi';
 import { TESTNET_RPC_ADDRESSES } from '~/constants';
 import { useEthersSigner } from '~/util/wagmi/ethersAdapter';
-
-const IMPERSONATE_ADDRESS = import.meta.env.VITE_OVERRIDE_FARMER_ACCOUNT || useSetting('impersonatedAccount')[0] || '';
-const isImpersonating = !!(import.meta.env.DEV && IMPERSONATE_ADDRESS) || useSetting('impersonatedAccount')[0];
+import useSetting from '../app/useSetting';
 
 // This returns an _ethers_ signer, but one that may be impersonating an account, if we're in dev mode with the right environment variables set.
 export const useSigner = () => {
   const [signer, setSigner] = useState<ethers.Signer | undefined>(undefined);
   const { chainId } = useAccount();
   const ethersSigner = useEthersSigner({ chainId });
+  const impersonateSetting = useSetting('impersonatedAccount')[0];
+
+  const IMPERSONATE_ADDRESS = import.meta.env.VITE_OVERRIDE_FARMER_ACCOUNT || impersonateSetting || '';
+  const isImpersonating = !!(import.meta.env.DEV && IMPERSONATE_ADDRESS) || impersonateSetting;
 
   useEffect(() => {
     (async () => {
@@ -33,7 +34,7 @@ export const useSigner = () => {
         setSigner(ethersSigner);
       }
     })();
-  }, [ethersSigner, chainId]);
+  }, [ethersSigner, chainId, IMPERSONATE_ADDRESS, isImpersonating]);
 
   return {
     data: signer,
