@@ -52,7 +52,8 @@ export function useEthersProvider({
   if (!client) {
     throw new Error('No client to create Ethers Adapter');
   }
-  return useMemo(() => clientToProvider(client), [client]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  return useMemo(() => clientToProvider(client), [client?.chain?.id]);
 }
 
 /** Hook to convert a Viem Client to an ethers.js Signer. */
@@ -61,6 +62,6 @@ export function useEthersSigner({ chainId }: { chainId?: number } = {}) {
   return useMemo(
     () => (client ? clientToSigner(client) : undefined),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [chainId, client]
+    [chainId, client?.account?.address]
   );
 }
