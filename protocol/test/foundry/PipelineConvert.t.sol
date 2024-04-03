@@ -365,6 +365,46 @@ contract PipelineConvertTest is TestHelper {
         assertTrue(false);
     }
 
+    function testCalculateStalkPenaltyUpwardsToZero() public {
+        int256 beforeDeltaB = -100;
+        int256 afterDeltaB = 0;
+        uint256[] memory bdvsRemoved = new uint256[](1);
+        bdvsRemoved[0] = 100;
+        uint256 cappedDeltaB = 100;
+        uint256 penalty = convert.calculateStalkPenalty(beforeDeltaB, afterDeltaB, bdvsRemoved, cappedDeltaB);
+        assertEq(penalty, 0);
+    }
+
+    function testCalculateStalkPenaltyUpwardsNonZero() public {
+        int256 beforeDeltaB = -200;
+        int256 afterDeltaB = -100;
+        uint256[] memory bdvsRemoved = new uint256[](1);
+        bdvsRemoved[0] = 100;
+        uint256 cappedDeltaB = 100;
+        uint256 penalty = convert.calculateStalkPenalty(beforeDeltaB, afterDeltaB, bdvsRemoved, cappedDeltaB);
+        assertEq(penalty, 0);
+    }
+
+    function testCalculateStalkPenaltyDownwardsToZero() public {
+        int256 beforeDeltaB = 100;
+        int256 afterDeltaB = 0;
+        uint256[] memory bdvsRemoved = new uint256[](1);
+        bdvsRemoved[0] = 100;
+        uint256 cappedDeltaB = 100;
+        uint256 penalty = convert.calculateStalkPenalty(beforeDeltaB, afterDeltaB, bdvsRemoved, cappedDeltaB);
+        assertEq(penalty, 0);
+    }
+
+    function testCalculateStalkPenaltyDownwardsNonZero() public {
+        int256 beforeDeltaB = 200;
+        int256 afterDeltaB = 100;
+        uint256[] memory bdvsRemoved = new uint256[](1);
+        bdvsRemoved[0] = 100;
+        uint256 cappedDeltaB = 100;
+        uint256 penalty = convert.calculateStalkPenalty(beforeDeltaB, afterDeltaB, bdvsRemoved, cappedDeltaB);
+        assertEq(penalty, 0);
+    }
+
 
     ////// SILO TEST HELPERS //////
 

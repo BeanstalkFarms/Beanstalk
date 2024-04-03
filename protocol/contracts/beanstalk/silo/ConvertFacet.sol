@@ -237,7 +237,10 @@ contract ConvertFacet is ReentrancyGuard {
         // console.log('after changeInDeltaB:');
         // console.logInt(pipeData.changeInDeltaB);
 
-        uint256 stalkPenaltyBdv = _calculateStalkPenalty(pipeData.startingDeltaB, getCombinedDeltaBForTokens(inputToken, outputToken), pipeData.bdvsRemoved, inputToken, outputToken);
+        int256 cappedDeltaB;
+        (cappedDeltaB, , ) = LibWellMinting.cappedReservesDeltaB(inputToken);
+
+        uint256 stalkPenaltyBdv = _calculateStalkPenalty(pipeData.startingDeltaB, getCombinedDeltaBForTokens(inputToken, outputToken), pipeData.bdvsRemoved, abs(cappedDeltaB));
         console.log('stalkPenaltyBdv: ', stalkPenaltyBdv);
         pipeData.grownStalks = _applyPenaltyToGrownStalks(stalkPenaltyBdv, pipeData.bdvsRemoved, pipeData.grownStalks);
 
@@ -275,9 +278,9 @@ contract ConvertFacet is ReentrancyGuard {
         return grownStalks;
     }
 
-    // function calculateStalkPenalty(int256 beforeDeltaB, int256 afterDeltaB, uint256[] memory bdvsRemoved) external view returns (uint256) {
-    //     return _calculateStalkPenalty(beforeDeltaB, afterDeltaB, bdvsRemoved);
-    // }
+    function calculateStalkPenalty(int256 beforeDeltaB, int256 afterDeltaB, uint256[] memory bdvsRemoved, uint256 cappedDeltaB) external returns (uint256) {
+        return _calculateStalkPenalty(beforeDeltaB, afterDeltaB, bdvsRemoved, cappedDeltaB);
+    }
 
     /**
      * @notice Calculates the percentStalkPenalty for a given convert.
@@ -292,7 +295,7 @@ contract ConvertFacet is ReentrancyGuard {
      */
 
     // TODO change to pure upon log removal
-    function _calculateStalkPenalty(int256 beforeDeltaB, int256 afterDeltaB, uint256[] memory bdvsRemoved, address fromToken, address toToken) internal returns (uint256) {
+    function _calculateStalkPenalty(int256 beforeDeltaB, int256 afterDeltaB, uint256[] memory bdvsRemoved, uint256 cappedDeltaB) internal returns (uint256) {
 
         uint256 bdvConverted;
         for (uint256 i = 0; i < bdvsRemoved.length; i++) {
@@ -357,9 +360,8 @@ contract ConvertFacet is ReentrancyGuard {
         if (s.convertPowerThisBlock[block.number].hasConvertHappenedThisBlock == false) {
             // setup initial available convert power for this block at the current deltaB
             // use insta deltaB that's from previous block
-            int256 cappedDeltaB;
-            (cappedDeltaB, , ) = LibWellMinting.cappedReservesDeltaB(fromToken);
-            s.convertPowerThisBlock[block.number].convertPower = abs(cappedDeltaB);
+            
+            s.convertPowerThisBlock[block.number].convertPower = cappedDeltaB;
             s.convertPowerThisBlock[block.number].hasConvertHappenedThisBlock = true;
         }
 
@@ -402,15 +404,6 @@ contract ConvertFacet is ReentrancyGuard {
         console.log('combinedDeltaBinsta:');
         console.logInt(combinedDeltaBinsta);
     }
-
-    //may not be best use of gas to have this as different function?
-    // function getDeltaBIfNotBeanTwa(address token) internal view returns (int256) {
-    //     console.log('getDeltaBIfNotBean token: ', token);
-    //     if (token == address(C.bean())) {
-    //         return 0;
-    //     }
-    //     return BEANSTALK.poolDeltaB(token);
-    // }
 
     function getDeltaBIfNotBeanInsta(address token) internal view returns (int256 instDeltaB) {
         console.log('getDeltaBIfNotBean token: ', token);

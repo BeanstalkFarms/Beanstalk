@@ -16,6 +16,7 @@ import {LibWell} from "contracts/libraries/Well/LibWell.sol";
 import {IBeanstalkWellFunction} from "contracts/interfaces/basin/IBeanstalkWellFunction.sol";
 import {SignedSafeMath} from "@openzeppelin/contracts/math/SignedSafeMath.sol";
 import {LibEthUsdOracle} from "contracts/libraries/Oracle/LibEthUsdOracle.sol";
+import {LibWhitelistedTokens} from "contracts/libraries/Silo/LibWhitelistedTokens.sol";
 import "forge-std/console.sol";
 
 /**
@@ -288,6 +289,16 @@ library LibWellMinting {
             return (deltaB, instReserves, ratios);
         }
         catch {}
+    }
+
+    // Calculates ovearll deltaB, used by convert for stalk penalty purposes
+    function overallDeltaB() internal view returns (int256 deltaB) {
+        address[] memory tokens = LibWhitelistedTokens.getWhitelistedWellLpTokens();
+        for (uint256 i = 0; i < tokens.length; i++) {
+            (int256 cappedDeltaB, , ) = cappedReservesDeltaB(tokens[i]);
+
+            deltaB = deltaB.add(cappedDeltaB);
+        }
     }
 
     
