@@ -289,9 +289,8 @@ contract ConvertFacet is ReentrancyGuard {
      * @param beforeDeltaB The deltaB before the deposit.
      * @param afterDeltaB The deltaB after the deposit.
      * @param bdvsRemoved The amount of BDVs that were removed, will be summed in this function.
+     * @param cappedDeltaB The capped deltaB, used to setup per-block conversion limits.
      * @return percentStalkPenalty The percent of stalk that should be lost, 0 means no penalty, 1 means 100% penalty.
-     * 
-     * TODO: External only so that tests can be written on it. Any danger in leaving it public? It's just a pure function so I don't think so.
      */
 
     // TODO change to pure upon log removal
@@ -313,22 +312,19 @@ contract ConvertFacet is ReentrancyGuard {
         console.logInt(afterDeltaB);
         console.log('bdvConverted: ', bdvConverted);
 
+        uint256 amountAgainstPeg = abs(afterDeltaB.sub(beforeDeltaB));
+
+        if (beforeDeltaB == 0 && afterDeltaB != 0) {
+            //this means we converted away from peg, so amount against peg is penalty
+            return amountAgainstPeg;
+        }
+
         // Check if the signs of beforeDeltaB and afterDeltaB are different,
         // indicating that deltaB has crossed zero
         // if (beforeDeltaB.mul(afterDeltaB) < 0) {
         // The bitwise XOR of two signed integers will be positive if they have different signs, and negative if they have the same sign
         // Maybe not use XOR if there's some obscure uninteded behavior?
-        if ((beforeDeltaB ^ afterDeltaB) < 0 || beforeDeltaB == 0 || afterDeltaB == 0) {
-
-            if (beforeDeltaB == 0 && afterDeltaB != 0) {
-                //this means we converted away from peg, so entire amount of bdvConverted is penalty
-                return bdvConverted;
-            }
-
-            if (afterDeltaB == 0) {
-                return 0; //perfectly to peg, all good
-            }
-
+        if ((beforeDeltaB ^ afterDeltaB) < 0) {
 
 
             // Calculate how far past peg we went - so actually this is just abs of new deltaB
@@ -348,9 +344,9 @@ contract ConvertFacet is ReentrancyGuard {
                 return crossoverAmount;
             }
         } else if (beforeDeltaB <= 0 && afterDeltaB < beforeDeltaB) { 
-            return bdvConverted; // actually penalty should be amount against peg you went?
+            return amountAgainstPeg; // actually penalty should be amount against peg you went?
         } else if (beforeDeltaB >= 0 && afterDeltaB > beforeDeltaB) { 
-            return bdvConverted; // actually penalty should be amount against peg you went?
+            return amountAgainstPeg; // actually penalty should be amount against peg you went?
         }
 
         // at this point we are converting in direction of peg, but we may have gone past it
@@ -360,13 +356,16 @@ contract ConvertFacet is ReentrancyGuard {
         if (s.convertPowerThisBlock[block.number].hasConvertHappenedThisBlock == false) {
             // setup initial available convert power for this block at the current deltaB
             // use insta deltaB that's from previous block
-            
+            console.log('setting up convertPower to be: ', cappedDeltaB);
             s.convertPowerThisBlock[block.number].convertPower = cappedDeltaB;
             s.convertPowerThisBlock[block.number].hasConvertHappenedThisBlock = true;
         }
 
         // calculate how much deltaB convert is happening with this convert
         uint256 convertAmountInDirectionOfPeg = abs(beforeDeltaB - afterDeltaB);
+
+        console.log('convertAmountInDirectionOfPeg: ', convertAmountInDirectionOfPeg);
+        console.log('s.convertPowerThisBlock[block.number].convertPower: ', s.convertPowerThisBlock[block.number].convertPower);
 
         if (convertAmountInDirectionOfPeg <= s.convertPowerThisBlock[block.number].convertPower) {
             // all good, you're using less than the available convert power

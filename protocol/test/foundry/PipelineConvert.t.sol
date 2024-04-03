@@ -405,6 +405,86 @@ contract PipelineConvertTest is TestHelper {
         assertEq(penalty, 0);
     }
 
+    function testCalculateStalkPenaltyCrossPegUpward() public {
+        int256 beforeDeltaB = -50;
+        int256 afterDeltaB = 50;
+        uint256[] memory bdvsRemoved = new uint256[](1);
+        bdvsRemoved[0] = 100;
+        uint256 cappedDeltaB = 50;
+        uint256 penalty = convert.calculateStalkPenalty(beforeDeltaB, afterDeltaB, bdvsRemoved, cappedDeltaB);
+        assertEq(penalty, 50);
+    }
+
+    function testCalculateStalkPenaltyCrossPegDownward() public {
+        int256 beforeDeltaB = 50;
+        int256 afterDeltaB = -50;
+        uint256[] memory bdvsRemoved = new uint256[](1);
+        bdvsRemoved[0] = 100;
+        uint256 cappedDeltaB = 50;
+        uint256 penalty = convert.calculateStalkPenalty(beforeDeltaB, afterDeltaB, bdvsRemoved, cappedDeltaB);
+        assertEq(penalty, 50);
+    }
+
+    function testCalculateStalkPenaltyNoCappedDeltaB() public {
+        int256 beforeDeltaB = 100;
+        int256 afterDeltaB = 0;
+        uint256[] memory bdvsRemoved = new uint256[](1);
+        bdvsRemoved[0] = 100;
+        uint256 cappedDeltaB = 0;
+        uint256 penalty = convert.calculateStalkPenalty(beforeDeltaB, afterDeltaB, bdvsRemoved, cappedDeltaB);
+        assertEq(penalty, 100);
+    }
+
+    function testCalculateStalkPenaltyNoCappedDeltaBNotZero() public {
+        int256 beforeDeltaB = 101;
+        int256 afterDeltaB = 1;
+        uint256[] memory bdvsRemoved = new uint256[](1);
+        bdvsRemoved[0] = 100;
+        uint256 cappedDeltaB = 0;
+        uint256 penalty = convert.calculateStalkPenalty(beforeDeltaB, afterDeltaB, bdvsRemoved, cappedDeltaB);
+        assertEq(penalty, 100);
+    }
+
+    function testCalculateStalkPenaltyNoCappedDeltaBNotZeroHalf() public {
+        int256 beforeDeltaB = 101;
+        int256 afterDeltaB = 1;
+        uint256[] memory bdvsRemoved = new uint256[](1);
+        bdvsRemoved[0] = 100;
+        uint256 cappedDeltaB = 50;
+        uint256 penalty = convert.calculateStalkPenalty(beforeDeltaB, afterDeltaB, bdvsRemoved, cappedDeltaB);
+        assertEq(penalty, 50);
+    }
+
+    function testCalculateStalkPenaltyNoCappedDeltaBToZeroHalf() public {
+        int256 beforeDeltaB = 100;
+        int256 afterDeltaB = 0;
+        uint256[] memory bdvsRemoved = new uint256[](1);
+        bdvsRemoved[0] = 100;
+        uint256 cappedDeltaB = 50;
+        uint256 penalty = convert.calculateStalkPenalty(beforeDeltaB, afterDeltaB, bdvsRemoved, cappedDeltaB);
+        assertEq(penalty, 50);
+    }
+
+    function testCalculateStalkPenaltyLPtoLPSmallSlippage() public {
+        int256 beforeDeltaB = 100;
+        int256 afterDeltaB = 101;
+        uint256[] memory bdvsRemoved = new uint256[](1);
+        bdvsRemoved[0] = 100;
+        uint256 cappedDeltaB = 100;
+        uint256 penalty = convert.calculateStalkPenalty(beforeDeltaB, afterDeltaB, bdvsRemoved, cappedDeltaB);
+        assertEq(penalty, 1);
+    }
+
+    function testCalculateStalkPenaltyLPtoLPLargeSlippageNoCapped() public {
+        int256 beforeDeltaB = 100;
+        int256 afterDeltaB = 151;
+        uint256[] memory bdvsRemoved = new uint256[](1);
+        bdvsRemoved[0] = 100;
+        uint256 cappedDeltaB = 0;
+        uint256 penalty = convert.calculateStalkPenalty(beforeDeltaB, afterDeltaB, bdvsRemoved, cappedDeltaB);
+        assertEq(penalty, 51);
+    }
+
 
     ////// SILO TEST HELPERS //////
 
