@@ -16,6 +16,7 @@ import { AppState } from '~/state';
 import TransactionToast from '~/components/Common/TxnToast';
 import useTimedRefresh from '~/hooks/app/useTimedRefresh';
 import useSdk from '~/hooks/sdk';
+import useSetting from '~/hooks/app/useSetting';
 
 export type SendFormValues = {
   to?: string;
@@ -50,6 +51,9 @@ const RewardsForm: React.FC<RewardsFormProps> = ({ open, children }) => {
   const account = useAccount();
   const { data: signer } = useSigner();
 
+  // Are we impersonating a different account
+  const isImpersonating = !!(useSetting('impersonatedAccount')[0]);
+
   /// Helpers
   const unripeTokens = useTokenMap(UNRIPE_TOKENS);
 
@@ -79,7 +83,7 @@ const RewardsForm: React.FC<RewardsFormProps> = ({ open, children }) => {
   const [gas, setGas] = useState<ClaimGasResults | null>(null);
   const [calls, setCalls] = useState<ClaimCalls | null>(null);
   const estimateGas = useCallback(async () => {
-    if (!account || !signer) return;
+    if (!account || !signer || isImpersonating) return;
 
     const selectedCratesByToken = selectCratesForEnroot(
       beanstalk,
@@ -204,6 +208,7 @@ const RewardsForm: React.FC<RewardsFormProps> = ({ open, children }) => {
     signer,
     siloBalances,
     unripeTokens,
+    isImpersonating
   ]);
 
   useTimedRefresh(estimateGas, 20 * 1000, open);
