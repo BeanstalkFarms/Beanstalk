@@ -322,12 +322,12 @@ const RewardsBar: FC<{
       return;
     }
 
-    if (farm.length === 0) return;
+    if (farm.length === 0 || isImpersonating) return;
 
     await farm.estimate(ethers.BigNumber.from(0));
 
     return farm.estimateGas(ethers.BigNumber.from(0), { slippage: 0 });
-  }, [buildWorkflow, claimState]);
+  }, [buildWorkflow, claimState, isImpersonating]);
 
   const [gas, isEstimatingGas, estimateGas] = useQuoteAgnostic(quoteGas);
 
