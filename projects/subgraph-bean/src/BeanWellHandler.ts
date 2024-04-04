@@ -1,11 +1,12 @@
-import { Address, BigDecimal, BigInt } from "@graphprotocol/graph-ts";
-import { BEANSTALK_PRICE, BEAN_ERC20 } from "../../subgraph-core/utils/Constants";
+import { Address, BigDecimal, BigInt, ethereum } from "@graphprotocol/graph-ts";
+import { BEANSTALK_PRICE, BEANSTALK_PRICE_BLOCK, BEAN_ERC20 } from "../../subgraph-core/utils/Constants";
 import { ZERO_BD, ZERO_BI, deltaBigIntArray, toDecimal } from "../../subgraph-core/utils/Decimals";
 import { BeanstalkPrice } from "../generated/BeanWETHCP2w/BeanstalkPrice";
 import { AddLiquidity, RemoveLiquidity, RemoveLiquidityOneToken, Shift, Swap, Sync } from "../generated/BeanWETHCP2w/Well";
 import { loadBean, updateBeanSupplyPegPercent, updateBeanValues } from "./utils/Bean";
 import { getPoolLiquidityUSD, loadOrCreatePool, setPoolReserves, updatePoolPrice, updatePoolValues } from "./utils/Pool";
 import { checkBeanCross } from "./utils/Cross";
+import { BEAN_WELLS, WellFunction } from "./utils/BeanWells";
 
 export function handleAddLiquidity(event: AddLiquidity): void {
   handleLiquidityChange(
@@ -72,6 +73,37 @@ export function handleShift(event: Shift): void {
     event.block.timestamp,
     event.block.number
   );
+}
+
+export function handleBlock(block: ethereum.Block): void {
+  // BeanstalkPrice contract was not deployed until about 20 mins after the first Well's deployment.
+  // In practice no data is lost by discarding these blocks, and the same is done elsewhere.
+  if (block.number.lt(BEANSTALK_PRICE_BLOCK)) {
+    return;
+  }
+
+  let beanstalkPrice = BeanstalkPrice.bind(BEANSTALK_PRICE);
+  let beanPrice = beanstalkPrice.try_price();
+  let bean = loadBean(BEAN_ERC20.toHexString());
+  let prevPrice = bean.price;
+  let newPrice = toDecimal(beanPrice.value.price);
+
+  // Check for overall peg cross
+  checkBeanCross(BEAN_ERC20.toHexString(), block.timestamp, block.number, prevPrice, newPrice);
+
+  // Update pool price for each pool - necessary for checking pool cross
+  for (let i = 0; i < BEAN_WELLS.length; ++i) {
+    const well = BEAN_WELLS[i];
+    if (block.number.lt(well.startBlock)) {
+      continue;
+    }
+
+    // Currently there is only one Well function, this needs to be expanded as more Bean wells are added.
+    let newWellPrice = toDecimal(
+      well.wellFunction == WellFunction.ConstantProduct ? beanstalkPrice.try_getConstantProductWell(well.address).value.price : ZERO_BI
+    );
+    updatePoolPrice(well.address.toHexString(), block.timestamp, block.number, newWellPrice);
+  }
 }
 
 function handleLiquidityChange(

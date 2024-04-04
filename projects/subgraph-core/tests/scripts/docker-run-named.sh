@@ -36,6 +36,6 @@ done
 
 # Run in docker on the matchstick image
 docker run -e ARGS="$DOCKER_ARGS" -it --rm \
-    --mount type=bind,source=$(pwd)/matchstick.yaml.docker,target=/matchstick/matchstick.yaml \
+    --mount type=bind,source=$(pwd)/../subgraph-core/tests/matchstick-docker.yaml,target=/matchstick/matchstick.yaml \
     --mount type=bind,source=$(pwd)/../../,target=/matchstick/repo-mounted/ \
     matchstick

@@ -211,7 +211,7 @@ dataSources:
     source:
       address: "0xBEA0e11282e2bB5893bEcE110cF199501e872bAd"
       abi: Well
-      startBlock: 17859167
+      startBlock: 17978134
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.7
@@ -238,4 +238,6 @@ dataSources:
           handler: handleShift
         - event: Sync(uint256[],uint256,address)
           handler: handleSync
+      blockHandlers:
+        - handler: handleBlock
       file: ./src/BeanWellHandler.ts
