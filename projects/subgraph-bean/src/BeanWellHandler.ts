@@ -82,14 +82,31 @@ export function handleBlock(block: ethereum.Block): void {
     return;
   }
 
-  let beanstalkPrice = BeanstalkPrice.bind(BEANSTALK_PRICE);
-  // let beanPrice = beanstalkPrice.try_price();
-  // let bean = loadBean(BEAN_ERC20.toHexString());
-  // let prevPrice = bean.price;
-  // let newPrice = toDecimal(beanPrice.value.price);
+  const beanstalkPrice = BeanstalkPrice.bind(BEANSTALK_PRICE);
+  const beanPrice = beanstalkPrice.try_price();
+  const bean = loadBean(BEAN_ERC20.toHexString());
+  const prevPrice = bean.price;
+  const newPrice = toDecimal(beanPrice.value.price);
 
-  // // Check for overall peg cross
-  // checkBeanCross(BEAN_ERC20.toHexString(), block.timestamp, block.number, prevPrice, newPrice);
+  log.debug("Prev/New bean price {} / {}", [prevPrice.toString(), newPrice.toString()]);
+
+  // Check for overall peg cross
+  const crossed = checkBeanCross(BEAN_ERC20.toHexString(), block.timestamp, block.number, prevPrice, newPrice);
+  if (crossed) {
+    // TODO: need solution for liquidity update. check all pools?
+    // let startingLiquidity = getPoolLiquidityUSD(poolAddress, blockNumber);
+    // let deltaLiquidityUSD = toDecimal(wellPrice.value.liquidity).minus(startingLiquidity);
+
+    updateBeanValues(
+      BEAN_ERC20.toHexString(),
+      block.timestamp,
+      newPrice,
+      ZERO_BI,
+      ZERO_BI,
+      ZERO_BD,
+      ZERO_BD //deltaLiquidityUSD
+    );
+  }
 
   // Update pool price for each pool - necessary for checking pool cross
   for (let i = 0; i < BEAN_WELLS.length; ++i) {
@@ -99,12 +116,10 @@ export function handleBlock(block: ethereum.Block): void {
     }
 
     // Currently there is only one Well function, this needs to be expanded as more Bean wells are added.
-    let newWellPrice = toDecimal(
+    const newWellPrice = toDecimal(
       well.wellFunction == WellFunction.ConstantProduct ? beanstalkPrice.try_getConstantProductWell(well.address).value.price : ZERO_BI
     );
     updatePoolPrice(well.address.toHexString(), block.timestamp, block.number, newWellPrice);
-
-    log.debug("New well price {}", [newWellPrice.toString()]);
   }
 }
 

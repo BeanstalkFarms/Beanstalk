@@ -91,7 +91,7 @@ export function checkPoolCross(pool: string, timestamp: BigInt, blockNumber: Big
   }
 }
 
-export function checkBeanCross(token: string, timestamp: BigInt, blockNumber: BigInt, oldPrice: BigDecimal, newPrice: BigDecimal): void {
+export function checkBeanCross(token: string, timestamp: BigInt, blockNumber: BigInt, oldPrice: BigDecimal, newPrice: BigDecimal): boolean {
   let bean = loadBean(token);
   let beanHourly = loadOrCreateBeanHourlySnapshot(token, timestamp, bean.lastSeason);
   let beanDaily = loadOrCreateBeanDailySnapshot(token, timestamp);
@@ -115,6 +115,7 @@ export function checkBeanCross(token: string, timestamp: BigInt, blockNumber: Bi
     beanDaily.crosses += 1;
     beanDaily.deltaCrosses += 1;
     beanDaily.save();
+    return true;
   } else if (oldPrice < ONE_BD && newPrice >= ONE_BD) {
     let cross = loadOrCreateBeanCross(bean.crosses, token, timestamp);
 
@@ -134,7 +135,9 @@ export function checkBeanCross(token: string, timestamp: BigInt, blockNumber: Bi
     beanDaily.crosses += 1;
     beanDaily.deltaCrosses += 1;
     beanDaily.save();
+    return true;
   }
+  return false;
 }
 
 export function getV1Crosses(): i32 {
