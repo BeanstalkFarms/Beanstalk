@@ -22,12 +22,12 @@ const mockPrice = (overall: number, beanEth: number): void => {
       {
         contract: BEAN_WETH_CP2_WELL,
         tokens: [BEAN_ERC20, WETH],
-        balances: [ZERO_BI, ZERO_BI],
+        balances: [BigInt.fromString("10"), BigInt.fromString("10")],
         price: price(beanEth),
-        liquidity: ZERO_BI,
-        deltaB: ZERO_BI,
-        lpUsd: ZERO_BI,
-        lpBdv: ZERO_BI
+        liquidity: BigInt.fromString("10"),
+        deltaB: BigInt.fromString("10"),
+        lpUsd: BigInt.fromString("10"),
+        lpBdv: BigInt.fromString("10")
       }
     ]
   });

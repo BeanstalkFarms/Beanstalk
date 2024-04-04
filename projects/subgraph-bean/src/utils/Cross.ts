@@ -1,4 +1,4 @@
-import { BigDecimal, BigInt } from "@graphprotocol/graph-ts";
+import { BigDecimal, BigInt, log } from "@graphprotocol/graph-ts";
 import { BeanCross, PoolCross } from "../../generated/schema";
 import { loadBean, loadOrCreateBeanDailySnapshot, loadOrCreateBeanHourlySnapshot } from "./Bean";
 import { dayFromTimestamp, hourFromTimestamp } from "../../../subgraph-core/utils/Dates";
@@ -43,12 +43,14 @@ export function loadOrCreatePoolCross(id: i32, pool: string, timestamp: BigInt):
   return cross as PoolCross;
 }
 
-export function checkPoolCross(pool: string, timestamp: BigInt, blockNumber: BigInt, oldPrice: BigDecimal, newPrice: BigDecimal): void {
+export function checkPoolCross(pool: string, timestamp: BigInt, blockNumber: BigInt, oldPrice: BigDecimal, newPrice: BigDecimal): boolean {
   let poolInfo = loadOrCreatePool(pool, blockNumber);
   let token = poolInfo.bean;
   let bean = loadBean(token);
   let poolHourly = loadOrCreatePoolHourlySnapshot(pool, timestamp, BigInt.fromI32(bean.lastSeason));
   let poolDaily = loadOrCreatePoolDailySnapshot(pool, timestamp, blockNumber);
+
+  log.debug("Prev/New well price {} / {}", [oldPrice.toString(), newPrice.toString()]);
 
   if (oldPrice >= ONE_BD && newPrice < ONE_BD) {
     let cross = loadOrCreatePoolCross(poolInfo.crosses, pool, timestamp);
@@ -69,6 +71,7 @@ export function checkPoolCross(pool: string, timestamp: BigInt, blockNumber: Big
     poolDaily.crosses += 1;
     poolDaily.deltaCrosses += 1;
     poolDaily.save();
+    return true;
   } else if (oldPrice < ONE_BD && newPrice >= ONE_BD) {
     let cross = loadOrCreatePoolCross(poolInfo.crosses, pool, timestamp);
 
@@ -88,7 +91,9 @@ export function checkPoolCross(pool: string, timestamp: BigInt, blockNumber: Big
     poolDaily.crosses += 1;
     poolDaily.deltaCrosses += 1;
     poolDaily.save();
+    return true;
   }
+  return false;
 }
 
 export function checkBeanCross(token: string, timestamp: BigInt, blockNumber: BigInt, oldPrice: BigDecimal, newPrice: BigDecimal): boolean {

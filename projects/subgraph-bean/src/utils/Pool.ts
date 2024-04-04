@@ -166,7 +166,13 @@ export function updatePoolSeason(poolAddress: string, timestamp: BigInt, blockNu
   poolDaily.save();
 }
 
-export function updatePoolPrice(poolAddress: string, timestamp: BigInt, blockNumber: BigInt, price: BigDecimal): void {
+export function updatePoolPrice(
+  poolAddress: string,
+  timestamp: BigInt,
+  blockNumber: BigInt,
+  price: BigDecimal,
+  checkCross: boolean = true
+): void {
   let pool = loadOrCreatePool(poolAddress, blockNumber);
   let poolHourly = loadOrCreatePoolHourlySnapshot(poolAddress, timestamp, blockNumber);
   let poolDaily = loadOrCreatePoolDailySnapshot(poolAddress, timestamp, blockNumber);
@@ -182,9 +188,9 @@ export function updatePoolPrice(poolAddress: string, timestamp: BigInt, blockNum
   poolDaily.lastPrice = price;
   poolDaily.save();
 
-  checkPoolCross(poolAddress, timestamp, blockNumber, oldPrice, price);
-
-  log.debug("Prev/New well price {} / {}", [oldPrice.toString(), price.toString()]);
+  if (checkCross) {
+    checkPoolCross(poolAddress, timestamp, blockNumber, oldPrice, price);
+  }
 }
 
 export function updatePoolReserves(poolAddress: string, deltaAmount0: BigInt, deltaAmount1: BigInt, blockNumber: BigInt): void {
