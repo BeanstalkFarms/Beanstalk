@@ -1,4 +1,4 @@
-import { Address, BigDecimal, BigInt, ethereum } from "@graphprotocol/graph-ts";
+import { Address, BigDecimal, BigInt, ethereum, log } from "@graphprotocol/graph-ts";
 import { BEANSTALK_PRICE, BEANSTALK_PRICE_BLOCK, BEAN_ERC20 } from "../../subgraph-core/utils/Constants";
 import { ZERO_BD, ZERO_BI, deltaBigIntArray, toDecimal } from "../../subgraph-core/utils/Decimals";
 import { BeanstalkPrice } from "../generated/BeanWETHCP2w/BeanstalkPrice";
@@ -83,13 +83,13 @@ export function handleBlock(block: ethereum.Block): void {
   }
 
   let beanstalkPrice = BeanstalkPrice.bind(BEANSTALK_PRICE);
-  let beanPrice = beanstalkPrice.try_price();
-  let bean = loadBean(BEAN_ERC20.toHexString());
-  let prevPrice = bean.price;
-  let newPrice = toDecimal(beanPrice.value.price);
+  // let beanPrice = beanstalkPrice.try_price();
+  // let bean = loadBean(BEAN_ERC20.toHexString());
+  // let prevPrice = bean.price;
+  // let newPrice = toDecimal(beanPrice.value.price);
 
-  // Check for overall peg cross
-  checkBeanCross(BEAN_ERC20.toHexString(), block.timestamp, block.number, prevPrice, newPrice);
+  // // Check for overall peg cross
+  // checkBeanCross(BEAN_ERC20.toHexString(), block.timestamp, block.number, prevPrice, newPrice);
 
   // Update pool price for each pool - necessary for checking pool cross
   for (let i = 0; i < BEAN_WELLS.length; ++i) {
@@ -103,6 +103,8 @@ export function handleBlock(block: ethereum.Block): void {
       well.wellFunction == WellFunction.ConstantProduct ? beanstalkPrice.try_getConstantProductWell(well.address).value.price : ZERO_BI
     );
     updatePoolPrice(well.address.toHexString(), block.timestamp, block.number, newWellPrice);
+
+    log.debug("New well price {}", [newWellPrice.toString()]);
   }
 }
 
