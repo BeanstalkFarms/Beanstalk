@@ -71,22 +71,13 @@ describe('Unripe', function () {
     })
 
     it('getters', async function () {
-      // getUnderlyingPerUnripeToken Returns the amount of Ripe Tokens that underly a single Unripe Token.
-      // no connection with penalty params
       expect(await this.unripe.getUnderlyingPerUnripeToken(UNRIPE_BEAN)).to.be.equal(to6('0.1'))
-      // getPenalty calls _getPenalizedUnderlying that returns calculates new chop rate
       expect(await this.unripe.getPenalty(UNRIPE_BEAN)).to.be.equal(to6('0.01'))
       expect(await this.unripe.getPenalizedUnderlying(UNRIPE_BEAN, to6('1'))).to.be.equal(to6('0.01'));
       expect(await this.unripe.getTotalUnderlying(UNRIPE_BEAN)).to.be.equal(to6('100'))
       expect(await this.unripe.isUnripe(UNRIPE_BEAN)).to.be.equal(true)
-      // getUnderlying Returns the amount of Ripe Tokens that underly a given amount of Unripe Tokens.
-      // Does NOT include the penalty associated with the percent of Sprouts that are Rinsable or Rinsed.
-      // NO CONNECTION WITH PENALTY PARAMS OR CHOP RATE
       expect(await this.unripe.getUnderlying(UNRIPE_BEAN, to6('1'))).to.be.equal(to6('0.1'))
       expect(await this.unripe.balanceOfUnderlying(UNRIPE_BEAN, userAddress)).to.be.equal(to6('100'))
-      // balance of penalized underlying also calls _getPenalizedUnderlying that calculates new chop rate
-      // but with an amount equal to the unripe balance of the user that has 1000 unripe tokens so with a chop rate of
-      // 0.01 the balance of penalized underlying should be 1000 * 0.01 = 10
       expect(await this.unripe.balanceOfPenalizedUnderlying(UNRIPE_BEAN, userAddress)).to.be.equal(to6('10'))
     })
 
@@ -94,7 +85,6 @@ describe('Unripe', function () {
       expect(await this.unripe.getRecapPaidPercent()).to.be.equal('0')
       expect(await this.unripe.getRecapFundedPercent(UNRIPE_BEAN)).to.be.equal(to6('0.1'))
       expect(await this.unripe.getRecapFundedPercent(UNRIPE_LP)).to.be.equal(to6('0.188459'))
-      // Same holds for Unripe LP with the same underlying balance and penalty params
       expect(await this.unripe.getPercentPenalty(UNRIPE_BEAN)).to.be.equal(to6('0.01'))
     })
   })
@@ -109,18 +99,13 @@ describe('Unripe', function () {
     })
 
     it('getters', async function () {
-      // getUnderlyingPerUnripeToken Returns the amount of Ripe Tokens that underly a single Unripe Token.
-      // no connection with penalty params
       expect(await this.unripe.getUnderlyingPerUnripeToken(UNRIPE_BEAN)).to.be.equal(to6('0.1'))
-      // GET PENALTY GETS CHOP PENALTY INFO FOR 1 SINGLE UNRIPE TOKEN
       expect(await this.unripe.getPenalty(UNRIPE_BEAN)).to.be.equal(to6('0.01'))
       expect(await this.unripe.getTotalUnderlying(UNRIPE_BEAN)).to.be.equal(to6('100'))
       expect(await this.unripe.isUnripe(UNRIPE_BEAN)).to.be.equal(true)
-      // GETPENDALIZEDUNDERLYING GETS CHOP PENALTY INFO FOR A GIVEN AMOUNT OF UNRIPE TOKENS
       expect(await this.unripe.getPenalizedUnderlying(UNRIPE_BEAN, to6('1'))).to.be.equal(to6('0.01'));
       expect(await this.unripe.getUnderlying(UNRIPE_BEAN, to6('1'))).to.be.equal(to6('0.1'))
       expect(await this.unripe.balanceOfUnderlying(UNRIPE_BEAN, userAddress)).to.be.equal(to6('100'))
-      // balanceOfPenalizedUnderlying Returns the theoretical amount of the ripe asset in the account that underly a Farmer's balance of Unripe
       expect(await this.unripe.balanceOfPenalizedUnderlying(UNRIPE_BEAN, userAddress)).to.be.equal(to6('10'))
     })
 
@@ -128,12 +113,9 @@ describe('Unripe', function () {
       expect(await this.unripe.getRecapPaidPercent()).to.be.equal(to6('0.01'))
       expect(await this.unripe.getRecapFundedPercent(UNRIPE_BEAN)).to.be.equal(to6('0.1'))
       expect(await this.unripe.getRecapFundedPercent(UNRIPE_LP)).to.be.equal(to6('0.188459'))
-      // Same holds for Unripe LP with the same underlying balance and penalty params
       expect(await this.unripe.getPercentPenalty(UNRIPE_BEAN)).to.be.equal(to6('0.01'))
     })
   })
-
-  ///////////////////////// CHOP /////////////////////////
 
   describe('chop', async function () {
     beforeEach(async function () {
@@ -148,11 +130,9 @@ describe('Unripe', function () {
     it('getters', async function () {
       expect(await this.unripe.getRecapPaidPercent()).to.be.equal(to6('0.01'))
       expect(await this.unripe.getUnderlyingPerUnripeToken(UNRIPE_BEAN)).to.be.equal('100090')
-      // an unripe token is removed from circulation(supply) along with a reduction in the underlying ripe balance so this should change
       expect(await this.unripe.getPenalty(UNRIPE_BEAN)).to.be.equal(to6('0.010018'))
       expect(await this.unripe.getTotalUnderlying(UNRIPE_BEAN)).to.be.equal(to6('99.99'))
       expect(await this.unripe.isUnripe(UNRIPE_BEAN)).to.be.equal(true)
-       // an unripe token is removed from circulation(supply) along with a reduction in the underlying ripe balance so this should change
       expect(await this.unripe.getPenalizedUnderlying(UNRIPE_BEAN, to6('1'))).to.be.equal(to6('0.010018'))
       expect(await this.unripe.getUnderlying(UNRIPE_BEAN, to6('1'))).to.be.equal(to6('0.10009'))
       expect(await this.unripe.balanceOfUnderlying(UNRIPE_BEAN, userAddress)).to.be.equal(to6('99.99'))
@@ -196,11 +176,9 @@ describe('Unripe', function () {
     it('getters', async function () {
       expect(await this.unripe.getRecapPaidPercent()).to.be.equal(to6('0.01'))
       expect(await this.unripe.getUnderlyingPerUnripeToken(UNRIPE_BEAN)).to.be.equal('100090')
-      // an unripe token is removed from circulation(supply) along with a reduction in the underlying ripe balance so this should change
       expect(await this.unripe.getPenalty(UNRIPE_BEAN)).to.be.equal(to6('0.010018'))
       expect(await this.unripe.getTotalUnderlying(UNRIPE_BEAN)).to.be.equal(to6('99.99'))
       expect(await this.unripe.isUnripe(UNRIPE_BEAN)).to.be.equal(true)
-      // an unripe token is removed from circulation(supply) along with a reduction in the underlying ripe balance so this should change
       expect(await this.unripe.getPenalizedUnderlying(UNRIPE_BEAN, to6('1'))).to.be.equal(to6('0.010018'))
       expect(await this.unripe.getUnderlying(UNRIPE_BEAN, to6('1'))).to.be.equal(to6('0.10009'))
       expect(await this.unripe.balanceOfUnderlying(UNRIPE_BEAN, userAddress)).to.be.equal(to6('99.99'))

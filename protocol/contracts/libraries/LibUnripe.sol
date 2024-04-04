@@ -12,7 +12,6 @@ import {LibWell} from "./Well/LibWell.sol";
 import {Call, IWell} from "contracts/interfaces/basin/IWell.sol";
 import {IWellFunction} from "contracts/interfaces/basin/IWellFunction.sol";
 import {LibLockedUnderlying} from "./LibLockedUnderlying.sol";
-import "hardhat/console.sol";
 
 /**
  * @title LibUnripe
@@ -141,19 +140,18 @@ library LibUnripe {
         emit SwitchUnderlyingToken(unripeToken, newUnderlyingToken);
     }
 
+    /**
+     * @notice Calculates the the penalized amount of Ripe Tokens corresponding to 
+     * the amount of Unripe Tokens that are Chopped according to the current Chop Rate.
+     * The new chop rate is %Recapitalized^2.
+     */
     function _getPenalizedUnderlying(
         address unripeToken,
         uint256 amount,
         uint256 supply
     ) internal view returns (uint256 redeem) {
         require(isUnripe(unripeToken), "not vesting");
-        // WE NO LONGER TAKE INTO ACCOUNT THE % AMOUNT REPAID BACK TO FERTILIZER
-        // uint256 sharesBeingRedeemed = getRecapPaidPercentAmount(amount);
-        uint256 sharesBeingRedeemed = amount;
-        console.log("//////////////////// LibUnripe._getPenalizedUnderlying() ////////////////////");
-        console.log("NEW sharesBeingRedeemed: ", sharesBeingRedeemed);
-        console.log("THIS SHOULD BE THE SAME AS THE AMOUNT PASSED IN");
-        redeem = _getUnderlying(unripeToken, sharesBeingRedeemed, supply);
+        redeem = _getUnderlying(unripeToken, amount, supply);
     }
 
     /**
@@ -241,14 +239,6 @@ library LibUnripe {
         uint256 supply
     ) internal view returns (uint256 redeem) {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        //* @param balanceOfUnderlying The number of Tokens underlying the Unripe Tokens (redemption pool).
-        // redeem = amount * ( balanceOfUnderlying / supply ) ^ 2
-        console.log("//////////////////// LibUnripe._getUnderlying() ////////////////////");
-        console.log("unripeToken: ", unripeToken);
-        console.log("unripe shares redeemed: ", amount);
-        console.log("unripe supply: ", supply);
-        console.log("unripe balanceOfUnderlying: ", s.u[unripeToken].balanceOfUnderlying);
         redeem = (s.u[unripeToken].balanceOfUnderlying ** 2).mul(amount).div(supply ** 2);
-        console.log("FINAL REDEEM OF RIPE FROM UNRIPE AFTER SQUARING: ", redeem);
     }
 }
