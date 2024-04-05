@@ -17,6 +17,7 @@ contract MockPump is IInstantaneousPump, ICumulativePump {
 
     uint[] instantaneousReserves;
     uint[] cumulativeReserves;
+    uint[] cappedReserves;
 
     function setInstantaneousReserves(uint[] memory _instantaneousReserves) external {
         instantaneousReserves = _instantaneousReserves;
@@ -26,9 +27,14 @@ contract MockPump is IInstantaneousPump, ICumulativePump {
         return instantaneousReserves;
     }
 
+    function readCappedReserves(address, bytes memory) external view returns (uint[] memory reserves) {
+        return cappedReserves;
+    }
+
     function update(uint256[] memory _reserves, bytes memory) external {
         instantaneousReserves = _reserves;
         cumulativeReserves = _reserves;
+        cappedReserves = _reserves;
     }
 
     function setCumulativeReserves(uint[] memory _cumulativeReserves) external {

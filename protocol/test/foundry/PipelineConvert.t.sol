@@ -11,7 +11,7 @@ import {MockSiloFacet} from "contracts/mocks/mockFacets/MockSiloFacet.sol";
 import {MockPump} from "contracts/mocks/well/MockPump.sol";
 import {ConvertFacet} from "contracts/beanstalk/silo/ConvertFacet.sol";
 import {Bean} from "contracts/tokens/Bean.sol";
-import {IWell} from "contracts/interfaces/basin/IWell.sol";
+import {IWell, Call} from "contracts/interfaces/basin/IWell.sol";
 import {FarmFacet} from "contracts/beanstalk/farm/FarmFacet.sol";
 import {SeasonGettersFacet} from "contracts/beanstalk/sun/SeasonFacet/SeasonGettersFacet.sol";
 import {MockToken} from "contracts/mocks/MockToken.sol";
@@ -379,7 +379,7 @@ contract PipelineConvertTest is TestHelper {
         amount = bound(amount, 1000e6, 1000e6); // todo: update for range
 
         // do initial pump update
-        updateMockPumpUsingCappedReserves();
+        updateMockPumpUsingCappedReserves(C.BEAN_ETH_WELL);
 
         // the main idea is that we start at deltaB of zero, so converts should not be possible
         // we add eth to the well to push it over peg, then we convert our beans back down to lp
@@ -416,7 +416,7 @@ contract PipelineConvertTest is TestHelper {
 
         // update pump
         // get
-        updateMockPumpUsingCappedReserves();
+        updateMockPumpUsingCappedReserves(C.BEAN_ETH_WELL);
 
         (int256 cappedDeltaB, , ) = convert.cappedReservesDeltaB(C.BEAN_ETH_WELL);
         console.log('cappedDeltaB: ');
@@ -460,9 +460,13 @@ contract PipelineConvertTest is TestHelper {
         assertTrue(grownStalkBefore > 0);
     }
 
-    function updateMockPumpUsingCappedReserves() public {
-        uint[] memory reserves = ICappedReservesPump(C.MULTIFLOW_PUMP_V1).readCappedReserves(C.BEAN_ETH_WELL);
-        MockPump(C.MULTIFLOW_PUMP_V1).update(reserves, new bytes(0));
+    function updateMockPumpUsingCappedReserves(address well) public {
+        Call[] memory pumps = IWell(well).pumps();
+        for (uint i = 0; i < pumps.length; i++) {
+            address pump = pumps[i].target;
+            uint[] memory reserves = MockPump(pump).readCappedReserves(well, new bytes(0));
+            MockPump(pump).update(reserves, new bytes(0));
+        }
     }
 
 
