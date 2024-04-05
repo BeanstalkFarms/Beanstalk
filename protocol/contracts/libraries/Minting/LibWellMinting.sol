@@ -249,10 +249,22 @@ library LibWellMinting {
     function cappedReservesDeltaB(address well) internal view returns 
         (int256, uint256[] memory, uint256[] memory) {
 
+            console.log('LibWellMinting cappedReservesDeltaB: ', well);
+
+        if (well == C.BEAN) {
+            return (0, new uint256[](0), new uint256[](0));
+        }
+
         AppStorage storage s = LibAppStorage.diamondStorage();
 
+        // get first pump from well
+        Call[] memory pumps = IWell(well).pumps();
+        address pump = pumps[0].target;
+
+        console.log('pump: ', pump);
+
                                                                         // well address , data[]
-        try ICappedReservesPump(C.MULTIFLOW_PUMP_V1).readCappedReserves(well) returns (uint[] memory instReserves) {
+        try ICappedReservesPump(pump).readCappedReserves(well, new bytes(0)) returns (uint[] memory instReserves) {
             // Get well tokens
             IERC20[] memory tokens = IWell(well).tokens();
 
@@ -288,13 +300,17 @@ library LibWellMinting {
 
             return (deltaB, instReserves, ratios);
         }
-        catch {}
+        catch {
+            console.log('ERROR: cappedReservesDeltaB failed');
+        }
     }
 
     // Calculates ovearll deltaB, used by convert for stalk penalty purposes
     function overallDeltaB() internal view returns (int256 deltaB) {
         address[] memory tokens = LibWhitelistedTokens.getWhitelistedWellLpTokens();
         for (uint256 i = 0; i < tokens.length; i++) {
+            if (tokens[i] == C.BEAN) continue;
+
             (int256 cappedDeltaB, , ) = cappedReservesDeltaB(tokens[i]);
 
             deltaB = deltaB.add(cappedDeltaB);

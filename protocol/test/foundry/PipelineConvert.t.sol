@@ -379,7 +379,7 @@ contract PipelineConvertTest is TestHelper {
         amount = bound(amount, 1000e6, 1000e6); // todo: update for range
 
         // do initial pump update
-        updateMockPumpUsingCappedReserves(C.BEAN_ETH_WELL);
+        updateMockPumpUsingWellReserves(C.BEAN_ETH_WELL);
 
         // the main idea is that we start at deltaB of zero, so converts should not be possible
         // we add eth to the well to push it over peg, then we convert our beans back down to lp
@@ -416,7 +416,7 @@ contract PipelineConvertTest is TestHelper {
 
         // update pump
         // get
-        updateMockPumpUsingCappedReserves(C.BEAN_ETH_WELL);
+        updateMockPumpUsingWellReserves(C.BEAN_ETH_WELL);
 
         (int256 cappedDeltaB, , ) = convert.cappedReservesDeltaB(C.BEAN_ETH_WELL);
         console.log('cappedDeltaB: ');
@@ -460,11 +460,12 @@ contract PipelineConvertTest is TestHelper {
         assertTrue(grownStalkBefore > 0);
     }
 
-    function updateMockPumpUsingCappedReserves(address well) public {
+    function updateMockPumpUsingWellReserves(address well) public {
         Call[] memory pumps = IWell(well).pumps();
         for (uint i = 0; i < pumps.length; i++) {
             address pump = pumps[i].target;
-            uint[] memory reserves = MockPump(pump).readCappedReserves(well, new bytes(0));
+            // pass to the pump the reserves that we actually have in the well
+            uint[] memory reserves = IWell(well).getReserves();
             MockPump(pump).update(reserves, new bytes(0));
         }
     }

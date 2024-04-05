@@ -243,7 +243,14 @@ contract ConvertFacet is ReentrancyGuard {
         // console.logInt(pipeData.changeInDeltaB);
 
         // int256 cappedDeltaB;
-        (pipeData.cappedDeltaB, , ) = LibWellMinting.cappedReservesDeltaB(inputToken);
+        // (pipeData.cappedDeltaB, , ) = LibWellMinting.cappedReservesDeltaB(inputToken);
+        // console.log('pipeData.cappedDeltaB: ');
+        // console.logInt(pipeData.cappedDeltaB);
+
+        // actually I want overallDeltaB from all the wells, capped
+        pipeData.cappedDeltaB = LibWellMinting.overallDeltaB();
+        console.log('cappedDeltaB: ');
+        console.logInt(pipeData.cappedDeltaB);
 
         pipeData.stalkPenaltyBdv = _calculateStalkPenalty(pipeData.startingDeltaB, getCombinedDeltaBForTokens(inputToken, outputToken), pipeData.bdvsRemoved, abs(pipeData.cappedDeltaB));
         console.log('stalkPenaltyBdv: ', pipeData.stalkPenaltyBdv);

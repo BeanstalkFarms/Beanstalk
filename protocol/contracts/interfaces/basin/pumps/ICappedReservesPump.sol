@@ -11,5 +11,5 @@ pragma experimental ABIEncoderV2;
 interface ICappedReservesPump {
 
     // TODO: Maybe not the best place to put this, perhaps in a MultiFlowPump interface?
-    function readCappedReserves(address well) external view returns (uint256[] memory cappedReserves);
+    function readCappedReserves(address well, bytes memory data) external view returns (uint256[] memory cappedReserves);
 }
