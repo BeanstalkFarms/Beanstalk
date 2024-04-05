@@ -8,6 +8,7 @@ import {LibTransfer} from "contracts/libraries/Token/LibTransfer.sol";
 import {IMockFBeanstalk} from "contracts/interfaces/IMockFBeanstalk.sol";
 import {MockSeasonFacet} from "contracts/mocks/mockFacets/MockSeasonFacet.sol";
 import {MockSiloFacet} from "contracts/mocks/mockFacets/MockSiloFacet.sol";
+import {MockPump} from "contracts/mocks/well/MockPump.sol";
 import {ConvertFacet} from "contracts/beanstalk/silo/ConvertFacet.sol";
 import {Bean} from "contracts/tokens/Bean.sol";
 import {IWell} from "contracts/interfaces/basin/IWell.sol";
@@ -22,6 +23,8 @@ import {C} from "contracts/C.sol";
 import {console} from "forge-std/console.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {LibWell} from "contracts/libraries/Well/LibWell.sol";
+import {ICappedReservesPump} from "contracts/interfaces/basin/pumps/ICappedReservesPump.sol";
+import "forge-std/Test.sol";
 
 /**
  * @title PipelineConvertTest
@@ -90,7 +93,7 @@ contract PipelineConvertTest is TestHelper {
 
         // initalize farmers.
         farmers.push(users[1]); 
-        // farmers.push(users[2]);
+        farmers.push(users[2]);
         
         // add inital liquidity to bean eth well:
         // prank beanstalk deployer (can be anyone)
@@ -114,7 +117,11 @@ contract PipelineConvertTest is TestHelper {
         amount = bound(amount, 10e6, 5000e6);
         // deposits bean into the silo.
         bean.mint(users[1], 5000e6);
-        (amount, ) = setUpSiloDepositTest(amount, farmers);
+
+        address[] memory setupUsers = new address[](1);
+        setupUsers[0] = users[1];
+
+        (amount, ) = setUpSiloDepositTest(amount, setupUsers);
         console.log('stem: ');
         console.logInt(stem);
         console.log('amount: ', amount);
@@ -231,7 +238,7 @@ contract PipelineConvertTest is TestHelper {
         amount = bound(amount, 1e6, 5000e6);
         int256 beforeDeltaB = seasonGetters.poolDeltaBInsta(C.BEAN_ETH_WELL);
         
-        doBasicBeanToLP(amount);
+        doBasicBeanToLP(amount, users[1]);
 
         int256 afterDeltaB = seasonGetters.poolDeltaBInsta(C.BEAN_ETH_WELL);
         assertTrue(afterDeltaB < beforeDeltaB);
@@ -241,9 +248,9 @@ contract PipelineConvertTest is TestHelper {
 
     function testTotalStalkAmountDidNotIncrease(uint256 amount) public {
         amount = bound(amount, 1e6, 5000e6);
-        int96 stem = beanToLPDepositSetup(amount);
+        int96 stem = beanToLPDepositSetup(amount, users[1]);
         uint256 beforeTotalStalk = bs.totalStalk();
-        beanToLPDoConvert(amount, stem);
+        beanToLPDoConvert(amount, stem, users[1]);
 
         uint256 afterTotalStalk = bs.totalStalk();
         assertTrue(afterTotalStalk <= beforeTotalStalk);
@@ -251,9 +258,9 @@ contract PipelineConvertTest is TestHelper {
 
     function testUserStalkAmountDidNotIncrease(uint256 amount) public {
         amount = bound(amount, 1e6, 5000e6);
-        int96 stem = beanToLPDepositSetup(amount);
+        int96 stem = beanToLPDepositSetup(amount, users[1]);
         uint256 beforeUserStalk = bs.balanceOfStalk(users[1]);
-        beanToLPDoConvert(amount, stem);
+        beanToLPDoConvert(amount, stem, users[1]);
 
         uint256 afterUserStalk = bs.balanceOfStalk(users[1]);
         assertTrue(afterUserStalk <= beforeUserStalk);
@@ -261,9 +268,9 @@ contract PipelineConvertTest is TestHelper {
 
     function testUserBDVDidNotIncrease(uint256 amount) public {
         amount = bound(amount, 1e6, 5000e6);
-        int96 stem = beanToLPDepositSetup(amount);
+        int96 stem = beanToLPDepositSetup(amount, users[1]);
         uint256 beforeUserDeposit = bs.balanceOfDepositedBdv(users[1], C.BEAN);
-        beanToLPDoConvert(amount, stem);
+        beanToLPDoConvert(amount, stem, users[1]);
 
         uint256 afterUserDeposit = bs.balanceOfDepositedBdv(users[1], C.BEAN);
         assertTrue(afterUserDeposit <= beforeUserDeposit);
@@ -275,12 +282,12 @@ contract PipelineConvertTest is TestHelper {
         // get new deltaB
         int256 beforeDeltaB = seasonGetters.poolDeltaBInsta(C.BEAN_ETH_WELL);
         
-        int96 stem = beanToLPDepositSetup(amount);
+        int96 stem = beanToLPDepositSetup(amount, users[1]);
         // uint256 beforeTotalStalk = bs.totalStalk();
         uint256 grownStalkBefore = bs.balanceOfGrownStalk(users[1], C.BEAN);
 
 
-        beanToLPDoConvert(amount, stem);
+        beanToLPDoConvert(amount, stem, users[1]);
 
         uint256 grownStalkAfter = bs.balanceOfGrownStalk(users[1], C.BEAN_ETH_WELL);
 
@@ -309,11 +316,11 @@ contract PipelineConvertTest is TestHelper {
         // get new deltaB
         int256 beforeDeltaB = seasonGetters.poolDeltaBInsta(C.BEAN_ETH_WELL);
         
-        int96 stem = beanToLPDepositSetup(amount);
+        int96 stem = beanToLPDepositSetup(amount, users[1]);
         uint256 grownStalkBefore = bs.balanceOfGrownStalk(users[1], C.BEAN);
 
 
-        beanToLPDoConvert(amount, stem);
+        beanToLPDoConvert(amount, stem, users[1]);
 
         uint256 totalStalkAfter = bs.balanceOfStalk(users[1]);
 
@@ -323,7 +330,7 @@ contract PipelineConvertTest is TestHelper {
         assertTrue(totalStalkAfter == bdvBalance + grownStalkBefore); // all grown stalk was lost
     }
 
-    function testFlashloanManipulation(uint256 amount) public {
+    function testFlashloanManipulationLoseGrownStalkBecauseZeroConvertPower(uint256 amount) public {
         amount = bound(amount, 5000e6, 5000e6); // todo: update for range
 
         // the main idea is that we start at deltaB of zero, so converts should not be possible
@@ -331,12 +338,9 @@ contract PipelineConvertTest is TestHelper {
         // then we pull our initial eth back out and we converted when we shouldn't have been able to (if we do in one tx)
 
         // setup initial bean deposit
-        int96 stem = beanToLPDepositSetup(amount);
+        int96 stem = beanToLPDepositSetup(amount, users[1]);
 
         int256 initialDeltaB = seasonGetters.poolDeltaBInsta(C.BEAN_ETH_WELL);
-        console.log('deltaB initialDeltaB: ');
-        console.logInt(initialDeltaB);
-
 
         // mint user 10 eth
         uint256 ethAmount = 10e18;
@@ -355,15 +359,112 @@ contract PipelineConvertTest is TestHelper {
         
         // log insta deltaB
         int256 beforeDeltaB = seasonGetters.poolDeltaBInsta(C.BEAN_ETH_WELL);
-        console.log('deltaB after adding eth: ');
-        console.logInt(beforeDeltaB);
+
+        uint256 grownStalkBefore = bs.balanceOfGrownStalk(users[1], C.BEAN);
 
         // convert beans to lp
-        beanToLPDoConvert(amount, stem);
+        beanToLPDoConvert(amount, stem, users[1]);
 
-        console.log('DONE - asserting false');
-        assertTrue(false);
+        // it should be that we lost our grown stalk from this convert
+
+        uint256 grownStalkAfter = bs.balanceOfGrownStalk(users[1], C.BEAN_ETH_WELL);
+
+        assertTrue(grownStalkAfter == 0); // all grown stalk was lost
+        assertTrue(grownStalkBefore > 0);
     }
+
+    // double convert uses up convert power so we should be left at no grown stalk after second convert
+    // (but still have grown stalk after first convert)
+    function testFlashloanManipulationLoseGrownStalkBecauseDoubleConvert(uint256 amount) public {
+        amount = bound(amount, 1000e6, 1000e6); // todo: update for range
+
+        // do initial pump update
+        updateMockPumpUsingCappedReserves();
+
+        // the main idea is that we start at deltaB of zero, so converts should not be possible
+        // we add eth to the well to push it over peg, then we convert our beans back down to lp
+        // then we pull our initial eth back out and we converted when we shouldn't have been able to (if we do in one tx)
+
+        // setup initial bean deposit
+        int96 stem = beanToLPDepositSetup(amount, users[1]);
+
+        // then setup a convert from user 2
+        int96 stem2 = beanToLPDepositSetup(amount, users[2]);
+        console.log('stem2: ');
+        console.logInt(stem2);
+
+        int256 initialDeltaB = seasonGetters.poolDeltaBInsta(C.BEAN_ETH_WELL);
+
+
+        // if you deposited amount of beans into well, how many eth would you get?
+        uint256 ethAmount = IWell(C.BEAN_ETH_WELL).getSwapOut(IERC20(C.BEAN), IERC20(C.WETH), amount);
+        console.log('ethAmount: ', ethAmount);
+        ethAmount = ethAmount.mul(2); // I need a better way to calculate how much eth out there should be to make sure we can swap and be over peg
+        // mint user 10 eth
+        // uint256 ethAmount = 5e18;
+
+        uint256 lpAmountOut = addEthToWell(users[1], ethAmount);
+        
+        vm.roll(block.number + 1);
+
+        // log insta deltaB
+        int256 beforeDeltaB = seasonGetters.poolDeltaBInsta(C.BEAN_ETH_WELL);
+
+        uint256 grownStalkBefore = bs.balanceOfGrownStalk(users[1], C.BEAN);
+
+        console.log('grownStalkBefore: ', grownStalkBefore);
+
+        // update pump
+        // get
+        updateMockPumpUsingCappedReserves();
+
+        (int256 cappedDeltaB, , ) = convert.cappedReservesDeltaB(C.BEAN_ETH_WELL);
+        console.log('cappedDeltaB: ');
+        console.logInt(cappedDeltaB);
+
+
+        // log deltaB
+        int256 deltaB1 = seasonGetters.poolDeltaBInsta(C.BEAN_ETH_WELL);
+        console.log('deltaB1: ');
+        console.logInt(deltaB1);
+
+        // convert beans to lp
+        (int96[] memory outputStems, uint256[] memory outputAmounts) = beanToLPDoConvert(amount, stem, users[1]);
+
+        console.log('from first convert amount: ', outputAmounts[0]);
+        console.log('from first convert stem:');
+        console.logInt(outputStems[0]);
+
+        // deltaB2
+        int256 deltaB2 = seasonGetters.poolDeltaBInsta(C.BEAN_ETH_WELL);
+        console.log('deltaB2: ');
+        console.logInt(deltaB2);
+
+        // add more eth to well again
+        addEthToWell(users[1], ethAmount);
+
+        console.log('going to convert second user');
+        beanToLPDoConvert(amount, stem2, users[2]);
+
+
+        
+        // deltaB3
+        int256 deltaB3 = seasonGetters.poolDeltaBInsta(C.BEAN_ETH_WELL);
+        console.log('deltaB3: ');
+        console.logInt(deltaB3);
+
+        uint256 grownStalkAfter = bs.balanceOfGrownStalk(users[1], C.BEAN_ETH_WELL);
+
+        console.log('doing assertions');
+        assertTrue(grownStalkAfter == 0); // all grown stalk was lost
+        assertTrue(grownStalkBefore > 0);
+    }
+
+    function updateMockPumpUsingCappedReserves() public {
+        uint[] memory reserves = ICappedReservesPump(C.MULTIFLOW_PUMP_V1).readCappedReserves(C.BEAN_ETH_WELL);
+        MockPump(C.MULTIFLOW_PUMP_V1).update(reserves, new bytes(0));
+    }
+
 
     function testCalculateStalkPenaltyUpwardsToZero() public {
         int256 beforeDeltaB = -100;
@@ -489,21 +590,27 @@ contract PipelineConvertTest is TestHelper {
     ////// SILO TEST HELPERS //////
 
 
-    function doBasicBeanToLP(uint256 amount) public {
-        int96 stem = beanToLPDepositSetup(amount);
-        beanToLPDoConvert(amount, stem);
+    function doBasicBeanToLP(uint256 amount, address user) public {
+        int96 stem = beanToLPDepositSetup(amount, user);
+        beanToLPDoConvert(amount, stem, user);
     }
 
-    function beanToLPDepositSetup(uint256 amount) public returns (int96 stem) {
+    function beanToLPDepositSetup(uint256 amount, address user) public returns (int96 stem) {
         vm.pauseGasMetering();
-        amount = bound(amount, 1e6, 5000e6);
-        bean.mint(users[1], 5000e6);
-        (amount, ) = setUpSiloDepositTest(amount, farmers);
+        // amount = bound(amount, 1e6, 5000e6);
+        bean.mint(user, amount);
+
+        // setup array of addresses with user
+        address[] memory users = new address[](1);
+        users[0] = user;
+
+        (amount, stem) = setUpSiloDepositTest(amount, users);
 
         passGermination();
     }
 
-    function beanToLPDoConvert(uint256 amount, int96 stem) public {
+    function beanToLPDoConvert(uint256 amount, int96 stem, address user) public 
+        returns (int96[] memory outputStems, uint256[] memory outputAmounts) {
         // do the convert
 
         // Create arrays for stem and amount. Tried just passing in [stem] and it's like nope.
@@ -518,14 +625,82 @@ contract PipelineConvertTest is TestHelper {
         amounts[0] = amount;
         
         vm.resumeGasMetering();
-        vm.prank(users[1]); // do this as user 1
-        convert.pipelineConvert(
+        vm.prank(user); // do this as user 1
+        (outputStems, outputAmounts) = convert.pipelineConvert(
             C.BEAN, // input token
             stems,  // stems
             amounts,  // amount
             C.BEAN_ETH_WELL, // token out
             farmCalls // farmData
         );
+    }
+
+    // function lpToBeanDepositSetup(uint256 amount) public returns (int96 stem) {
+    //     vm.pauseGasMetering();
+
+    //     bean.mint(users[1], amount);
+    //     // user 1 deposits bean into bean:eth well, first approve
+    //     vm.prank(users[1]);
+    //     bean.approve(C.BEAN_ETH_WELL, type(uint256).max);
+
+    //     uint256[] memory tokenAmountsIn = new uint256[](2);
+    //     tokenAmountsIn[0] = amount;
+    //     tokenAmountsIn[1] = 0;
+
+    //     vm.prank(users[1]);
+    //     uint256 lpAmountOut = IWell(C.BEAN_ETH_WELL).addLiquidity(tokenAmountsIn, 0, users[1], type(uint256).max);
+
+    //     // approve spending well token to beanstalk
+    //     vm.prank(users[1]);
+    //     MockToken(C.BEAN_ETH_WELL).approve(BEANSTALK, type(uint256).max);
+
+    //     vm.prank(users[1]);
+    //     ( , , stem) = silo.deposit(C.BEAN_ETH_WELL, lpAmountOut, LibTransfer.From.EXTERNAL);
+    //     passGermination();
+    //     console.log('lpToBeanDepositSetup done, stem is: ');
+    //     console.logInt(stem);
+    // }
+
+    function lpToBeanDoConvert(uint256 lpAmountOut, int96 stem, address user) public
+        returns (int96[] memory outputStems, uint256[] memory outputAmounts) {
+        // Create arrays for stem and amount. Tried just passing in [stem] and it's like nope.
+        int96[] memory stems = new int96[](1);
+        stems[0] = stem;
+
+        AdvancedFarmCall[] memory farmCalls = new AdvancedFarmCall[](1);
+        AdvancedFarmCall[] memory beanToLPFarmCalls = createLPToBean(lpAmountOut);
+        farmCalls[0] = beanToLPFarmCalls[0]; // Assign the first element of the returned array
+
+        uint256[] memory amounts = new uint256[](1);
+        amounts[0] = lpAmountOut;
+        
+        vm.resumeGasMetering();
+        vm.prank(user); // do this as user 1
+        (outputStems, outputAmounts) = convert.pipelineConvert(
+            C.BEAN_ETH_WELL, // input token
+            stems,  // stems
+            amounts,  // amount
+            C.BEAN, // token out
+            farmCalls // farmData
+        );
+    }
+
+    function addEthToWell(address user, uint256 amount) public returns (uint256 lpAmountOut) {
+        MockToken(C.WETH).mint(user, amount);
+
+        vm.prank(user);
+        MockToken(C.WETH).approve(C.BEAN_ETH_WELL, amount);
+
+        uint256[] memory tokenAmountsIn = new uint256[](2);
+        tokenAmountsIn[0] = 0;
+        tokenAmountsIn[1] = amount;
+
+        vm.prank(user);
+        lpAmountOut = IWell(C.BEAN_ETH_WELL).addLiquidity(tokenAmountsIn, 0, user, type(uint256).max);
+
+        // approve spending well token to beanstalk
+        vm.prank(user);
+        MockToken(C.BEAN_ETH_WELL).approve(BEANSTALK, type(uint256).max);
     }
 
 
@@ -564,7 +739,6 @@ contract PipelineConvertTest is TestHelper {
     function setUpSiloDepositTest(uint256 amount, address[] memory _farmers) public returns (uint256 _amount, int96 stem) {
         _amount = bound(amount, 1, MAX_DEPOSIT_BOUND);
 
-        // deposit beans to silo from user 1 and 2.
         depositForUsers(_farmers, C.BEAN, _amount, LibTransfer.From.EXTERNAL);
         stem = bs.stemTipForToken(C.BEAN);
     }
@@ -720,6 +894,7 @@ contract PipelineConvertTest is TestHelper {
     function createLPToBean(
         uint256 amountOfLP
     ) public returns (AdvancedFarmCall[] memory output) {
+        console.log('createLPToBean amountOfLP: ', amountOfLP);
         // first setup the pipeline calls
 
         // setup approve max call

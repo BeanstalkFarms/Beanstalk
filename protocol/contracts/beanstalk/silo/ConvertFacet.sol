@@ -86,6 +86,8 @@ contract ConvertFacet is ReentrancyGuard {
         uint256 totalAmount;
         uint256 crateAmount;
         uint256 depositedBdv;
+        int96 stem;
+        LibGerminate.Germinate germ;
     }
 
     struct PipelineConvertData {
@@ -94,6 +96,8 @@ contract ConvertFacet is ReentrancyGuard {
         int256 startingDeltaB;
         uint256 amountOut;
         uint256 percentStalkPenalty; // 0 means no penalty, 1 means 100% penalty
+        int256 cappedDeltaB;
+        uint256 stalkPenaltyBdv;
     }
 
     // TODO: when we updated to Solidity 0.8, use the native abs function
@@ -177,6 +181,7 @@ contract ConvertFacet is ReentrancyGuard {
         external
         payable
         nonReentrant
+        returns (int96[] memory outputStems, uint256[] memory outputAmounts)
     {   
         LibTractor._setPublisher(msg.sender);
 
@@ -237,19 +242,24 @@ contract ConvertFacet is ReentrancyGuard {
         // console.log('after changeInDeltaB:');
         // console.logInt(pipeData.changeInDeltaB);
 
-        int256 cappedDeltaB;
-        (cappedDeltaB, , ) = LibWellMinting.cappedReservesDeltaB(inputToken);
+        // int256 cappedDeltaB;
+        (pipeData.cappedDeltaB, , ) = LibWellMinting.cappedReservesDeltaB(inputToken);
 
-        uint256 stalkPenaltyBdv = _calculateStalkPenalty(pipeData.startingDeltaB, getCombinedDeltaBForTokens(inputToken, outputToken), pipeData.bdvsRemoved, abs(cappedDeltaB));
-        console.log('stalkPenaltyBdv: ', stalkPenaltyBdv);
-        pipeData.grownStalks = _applyPenaltyToGrownStalks(stalkPenaltyBdv, pipeData.bdvsRemoved, pipeData.grownStalks);
-
+        pipeData.stalkPenaltyBdv = _calculateStalkPenalty(pipeData.startingDeltaB, getCombinedDeltaBForTokens(inputToken, outputToken), pipeData.bdvsRemoved, abs(pipeData.cappedDeltaB));
+        console.log('stalkPenaltyBdv: ', pipeData.stalkPenaltyBdv);
+        pipeData.grownStalks = _applyPenaltyToGrownStalks(pipeData.stalkPenaltyBdv, pipeData.bdvsRemoved, pipeData.grownStalks);
+        console.log('applied penalty');
         // Convert event emitted within this function
-        _depositTokensForConvertMultiCrate(inputToken, outputToken, pipeData.amountOut, pipeData.bdvsRemoved, pipeData.grownStalks, amounts, stalkPenaltyBdv);
+        (outputStems, outputAmounts) = _depositTokensForConvertMultiCrate(inputToken, outputToken, pipeData.amountOut, pipeData.bdvsRemoved, pipeData.grownStalks, amounts, pipeData.stalkPenaltyBdv);
 
 
         //there's nothing about total BDV in this event, but it can be derived from the AddDeposit events
         LibTractor._resetPublisher();
+    }
+
+    function cappedReservesDeltaB(address well) public view returns 
+        (int256 deltaB, uint256[] memory instReserves, uint256[] memory ratios) {
+        (deltaB, instReserves, ratios) = LibWellMinting.cappedReservesDeltaB(well);
     }
 
     function applyPenaltyToGrownStalks(uint256 penaltyBdv, uint256[] memory bdvsRemoved, uint256[] memory grownStalks) external view returns (uint256[] memory) {
@@ -260,6 +270,7 @@ contract ConvertFacet is ReentrancyGuard {
         internal view returns (uint256[] memory) {
 
         for (uint256 i = bdvsRemoved.length-1; i >= 0; i--) {
+            console.log('looping through to apply penalty');
             uint256 bdvRemoved = bdvsRemoved[i];
             uint256 grownStalk = grownStalks[i];
 
@@ -289,11 +300,9 @@ contract ConvertFacet is ReentrancyGuard {
      * @param beforeDeltaB The deltaB before the deposit.
      * @param afterDeltaB The deltaB after the deposit.
      * @param bdvsRemoved The amount of BDVs that were removed, will be summed in this function.
-     * @param cappedDeltaB The capped deltaB, used to setup per-block conversion limits.
+     * @param cappedDeltaB The absolute value of capped deltaB, used to setup per-block conversion limits.
      * @return percentStalkPenalty The percent of stalk that should be lost, 0 means no penalty, 1 means 100% penalty.
      */
-
-    // TODO change to pure upon log removal
     function _calculateStalkPenalty(int256 beforeDeltaB, int256 afterDeltaB, uint256[] memory bdvsRemoved, uint256 cappedDeltaB) internal returns (uint256) {
 
         uint256 bdvConverted;
@@ -586,7 +595,7 @@ contract ConvertFacet is ReentrancyGuard {
                 // circumvent the germination process.
                 if (germStem.germinatingStem <= stems[i]) {
                     i++;
-                    console.log('this stuff was still germinating');
+                    console.log('ERROR: this stuff was still germinating');
                     continue;
                 }
 
@@ -723,12 +732,18 @@ contract ConvertFacet is ReentrancyGuard {
         uint256[] memory grownStalks,
         uint256[] memory inputAmounts,
         uint256 stalkPenaltyBdv
-    ) internal {
+    ) internal returns (int96[] memory outputStems, uint256[] memory outputAmounts) {
 
         MultiCrateDepositData memory mcdd;
 
+        console.log('_depositTokensForConvertMultiCrate: ', amount);
+
         mcdd.amountPerBdv = amount.div(LibTokenSilo.beanDenominatedValue(outputToken, amount));
         mcdd.totalAmount = 0;
+
+        // init outputStems and outputAmounts
+        outputStems = new int96[](bdvs.length);
+        outputAmounts = new uint256[](bdvs.length);
 
         for (uint256 i = 0; i < bdvs.length; i++) {
             console.log('_depositTokensForConvertMultiCrate i: ', i);
@@ -757,13 +772,31 @@ contract ConvertFacet is ReentrancyGuard {
             // LibGerminate.Germinate germ;
 
             // calculate the stem and germination state for the new deposit.
-            (int96 stem, LibGerminate.Germinate germ) = LibTokenSilo.calculateStemForTokenFromGrownStalk(outputToken, grownStalks[i], mcdd.depositedBdv);
+            (mcdd.stem, mcdd.germ) = LibTokenSilo.calculateStemForTokenFromGrownStalk(outputToken, grownStalks[i], mcdd.depositedBdv);
+
+            console.log('i: ', i);
+
+            console.log('mcdd.stem: ');
+            console.logInt(mcdd.stem);
+
+
+            console.log('crateAmount: ', mcdd.crateAmount);
+
+            console.log('yo1');
+
+            outputStems[i] = mcdd.stem;
+
+            console.log('yo2');
+
+            outputAmounts[i] = mcdd.crateAmount;
+
+
             
             // increment totals based on germination state, 
             // as well as issue stalk to the user.
             // if the deposit is germinating, only the inital stalk of the deposit is germinating. 
             // the rest is active stalk.
-            if (germ == LibGerminate.Germinate.NOT_GERMINATING) {
+            if (mcdd.germ == LibGerminate.Germinate.NOT_GERMINATING) {
                 LibTokenSilo.incrementTotalDeposited(outputToken, mcdd.crateAmount, mcdd.depositedBdv);
                 console.log('minting active stalk, issued from bdv: ', mcdd.depositedBdv.mul(LibTokenSilo.stalkIssuedPerBdv(outputToken)));
                 console.log('minting active stalk from grown: ', grownStalks[i]);
@@ -772,15 +805,15 @@ contract ConvertFacet is ReentrancyGuard {
                     mcdd.depositedBdv.mul(LibTokenSilo.stalkIssuedPerBdv(outputToken)).add(grownStalks[i])
                 );
             } else {
-                LibTokenSilo.incrementTotalGerminating(outputToken, mcdd.crateAmount, mcdd.depositedBdv, germ);
+                LibTokenSilo.incrementTotalGerminating(outputToken, mcdd.crateAmount, mcdd.depositedBdv, mcdd.germ);
                 // safeCast not needed as stalk is <= max(uint128)
-                LibSilo.mintGerminatingStalk(LibTractor._getUser(), uint128(mcdd.depositedBdv.mul(LibTokenSilo.stalkIssuedPerBdv(outputToken))), germ);   
+                LibSilo.mintGerminatingStalk(LibTractor._getUser(), uint128(mcdd.depositedBdv.mul(LibTokenSilo.stalkIssuedPerBdv(outputToken))), mcdd.germ);   
                 LibSilo.mintActiveStalk(LibTractor._getUser(), grownStalks[i]);
             }
             LibTokenSilo.addDepositToAccount(
                 LibTractor._getUser(),
                 outputToken, 
-                stem, 
+                mcdd.stem, 
                 mcdd.crateAmount,
                 mcdd.depositedBdv,
                 LibTokenSilo.Transfer.emitTransferSingle

@@ -78,14 +78,14 @@ library LibGerminate {
      * when germination finishes, rather than when germination starts.
      */
     function endTotalGermination(uint32 season, address[] memory tokens) external {
-        console.log('endTotalGermination');
-        console.log('season: ', season);
+        // console.log('endTotalGermination');
+        // console.log('season: ', season);
 
         //console log tokens with for loop
         
-        for (uint i; i < tokens.length; ++i) {
-            console.log('tokens[i]: ', tokens[i]);
-        }
+        // for (uint i; i < tokens.length; ++i) {
+        //     console.log('tokens[i]: ', tokens[i]);
+        // }
 
         AppStorage storage s = LibAppStorage.diamondStorage();
 
@@ -162,38 +162,38 @@ library LibGerminate {
         uint32 lastMowedSeason,
         uint32 currentSeason
     ) internal {
-        console.log('endAccountGermination');
-        console.log('lastMowedSeason: ', lastMowedSeason);
-        console.log('currentSeason: ', currentSeason);
+        // console.log('endAccountGermination');
+        // console.log('lastMowedSeason: ', lastMowedSeason);
+        // console.log('currentSeason: ', currentSeason);
         AppStorage storage s = LibAppStorage.diamondStorage();
         bool lastUpdateOdd = isSeasonOdd(lastMowedSeason);
         (uint128 firstStalk, uint128 secondStalk) = getGerminatingStalk(account, lastUpdateOdd);
-        console.log('firstStalk: ', firstStalk);
-        console.log('secondStalk: ', secondStalk);
+        // console.log('firstStalk: ', firstStalk);
+        // console.log('secondStalk: ', secondStalk);
         uint128 roots;
         uint128 germinatingStalk;
 
         // check to end germination for first stalk.
         // if last mowed season is not equal to current season - 1,
         if (firstStalk > 0 && lastMowedSeason != currentSeason.sub(1)) {
-            console.log('doing first stalk');
+            // console.log('doing first stalk');
             germinatingStalk = firstStalk;
             roots = claimGerminatingRoots(account, lastMowedSeason, firstStalk, lastUpdateOdd);
         }
 
         // check to end germination for second stalk.
         if (secondStalk > 0) {
-            console.log('doing secondStalk');
+            // console.log('doing secondStalk');
             germinatingStalk = germinatingStalk.add(secondStalk);
             roots = roots.add(
                 claimGerminatingRoots(account, lastMowedSeason.sub(1), secondStalk, !lastUpdateOdd)
             );
         }
-        console.log('germinatingStalk: ', germinatingStalk);
+        // console.log('germinatingStalk: ', germinatingStalk);
 
         // increment users stalk and roots.
         if (germinatingStalk > 0) {
-            console.log('incrementing userStalk');
+            // console.log('incrementing userStalk');
             s.a[account].s.stalk = s.a[account].s.stalk.add(germinatingStalk);
             s.a[account].roots = s.a[account].roots.add(roots);
 
@@ -220,10 +220,10 @@ library LibGerminate {
         uint128 stalk,
         bool clearOdd
     ) private returns (uint128 roots) {
-        console.log('claimGerminatingRoots');
-        console.log('season: ', season);
-        console.log('stalk: ', stalk);
-        console.log('clearOdd: ', clearOdd);
+        // console.log('claimGerminatingRoots');
+        // console.log('season: ', season);
+        // console.log('stalk: ', stalk);
+        // console.log('clearOdd: ', clearOdd);
         AppStorage storage s = LibAppStorage.diamondStorage();
 
         roots = calculateGerminatingRoots(season, stalk);
@@ -275,8 +275,8 @@ library LibGerminate {
         address account,
         bool lastUpdateOdd
     ) internal view returns (uint128 firstStalk, uint128 secondStalk) {
-        console.log('getGerminatingStalk');
-        console.log('lastUpdateOdd: ', lastUpdateOdd);
+        // console.log('getGerminatingStalk');
+        // console.log('lastUpdateOdd: ', lastUpdateOdd);
         AppStorage storage s = LibAppStorage.diamondStorage();
         if (lastUpdateOdd) {
             firstStalk = s.a[account].farmerGerminating.odd;

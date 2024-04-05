@@ -198,9 +198,9 @@ library LibSilo {
         uint128 stalk,
         LibGerminate.Germinate germ
     ) internal {
-        console.log('mintGerminatingStalk');
-        console.log('account: ', account);
-        console.log('stalk: ', stalk);
+        // console.log('mintGerminatingStalk');
+        // console.log('account: ', account);
+        // console.log('stalk: ', stalk);
         AppStorage storage s = LibAppStorage.diamondStorage();
 
         if (germ == LibGerminate.Germinate.ODD) {
@@ -209,8 +209,8 @@ library LibSilo {
             s.a[account].farmerGerminating.even = s.a[account].farmerGerminating.even.add(stalk);
         }
 
-        console.log('s.a[account].farmerGerminating.odd: ', s.a[account].farmerGerminating.odd);
-        console.log('s.a[account].farmerGerminating.even: ', s.a[account].farmerGerminating.even);
+        // console.log('s.a[account].farmerGerminating.odd: ', s.a[account].farmerGerminating.odd);
+        // console.log('s.a[account].farmerGerminating.even: ', s.a[account].farmerGerminating.even);
 
         // germinating stalk are either newly germinating, or partially germinated.
         // Thus they can only be incremented in the latest or previous season.
@@ -296,17 +296,17 @@ library LibSilo {
     ) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
 
-        console.log('burnGerminatingStalk');
-        console.log('stalk: ', stalk);
+        // console.log('burnGerminatingStalk');
+        // console.log('stalk: ', stalk);
 
         if (germ == LibGerminate.Germinate.ODD) {
-            console.log('before s.a[account].farmerGerminating.odd: ', s.a[account].farmerGerminating.odd);
+            // console.log('before s.a[account].farmerGerminating.odd: ', s.a[account].farmerGerminating.odd);
             s.a[account].farmerGerminating.odd = s.a[account].farmerGerminating.odd.sub(stalk);
-            console.log('before s.a[account].farmerGerminating.odd: ', s.a[account].farmerGerminating.odd);
+            // console.log('before s.a[account].farmerGerminating.odd: ', s.a[account].farmerGerminating.odd);
         } else {
-            console.log('after s.a[account].farmerGerminating.odd: ', s.a[account].farmerGerminating.odd);
+            // console.log('after s.a[account].farmerGerminating.odd: ', s.a[account].farmerGerminating.odd);
             s.a[account].farmerGerminating.even = s.a[account].farmerGerminating.even.sub(stalk);
-            console.log('after s.a[account].farmerGerminating.odd: ', s.a[account].farmerGerminating.odd);
+            // console.log('after s.a[account].farmerGerminating.odd: ', s.a[account].farmerGerminating.odd);
         }
 
         // germinating stalk are either newly germinating, or partially germinated.
