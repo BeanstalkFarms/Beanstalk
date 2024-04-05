@@ -7,11 +7,7 @@ import { AppState } from '~/state';
 import useTabs from '~/hooks/display/useTabs';
 import TokenIcon from '~/components/Common/TokenIcon';
 import { SEEDS, STALK } from '~/constants/tokens';
-import {
-  displayPercentage,
-  displayStalk,
-  displayUSD,
-} from '~/util';
+import { displayPercentage, displayStalk, displayUSD } from '~/util';
 import { ChipLabel, StyledTab } from '~/components/Common/Tabs';
 import { ZERO_BN } from '~/constants';
 import Row from '~/components/Common/Row';
@@ -78,7 +74,10 @@ const Overview: FC<{
   const migrationNeeded = useMigrationNeeded();
   const siloBalance = useFarmerSiloBalances();
   //
-  const [tab, handleChange] = useTabs(migrationNeeded ? SLUGS : altSLUGS, 'view');
+  const [tab, handleChange] = useTabs(
+    migrationNeeded ? SLUGS : altSLUGS,
+    'view'
+  );
 
   //
   const ownership =
@@ -86,13 +85,15 @@ const Overview: FC<{
       ? farmerSilo.stalk.active.div(beanstalkSilo.stalk.total)
       : ZERO_BN;
 
-  const deposits = Object.values(siloBalance).map(token => token.deposited.crates).flat(Infinity)
+  const deposits = Object.values(siloBalance)
+    .map((token) => token.deposited.crates)
+    .flat(Infinity);
 
-  let totalStalkGrown = farmerSilo.stalk.grown;
+  const totalStalkGrown = farmerSilo.stalk.grown;
 
-  deposits.forEach((deposit: any) => {
-    totalStalkGrown = totalStalkGrown.plus(deposit.stalk.grown)
-  })
+  // deposits.forEach((deposit: any) => {
+  //   totalStalkGrown = totalStalkGrown.plus(deposit.stalk.grown)
+  // })
 
   const stalkStats = useCallback(
     (s: BigNumber, v: BigNumber[], d: string) => (
@@ -118,9 +119,7 @@ const Overview: FC<{
         <Stat
           title="Total Stalk Grown"
           titleTooltip="The total number of Mown and Mowable Grown Stalk your Deposits have accrued."
-          amount={displayStalk(
-            totalStalkGrown
-          )}
+          amount={displayStalk(totalStalkGrown)}
           color="text.primary"
           gap={0.25}
           sx={{ minWidth: 120, ml: 0 }}
@@ -177,7 +176,9 @@ const Overview: FC<{
           <MigrateTab />
         </Box>
       )}
-      <Box sx={{ display: tab === (migrationNeeded ? 1 : 0) ? 'block' : 'none' }}>
+      <Box
+        sx={{ display: tab === (migrationNeeded ? 1 : 0) ? 'block' : 'none' }}
+      >
         <OverviewPlot
           label="Silo Deposits"
           account={account}
@@ -199,7 +200,9 @@ const Overview: FC<{
           empty={breakdown.states.deposited.value.eq(0)}
         />
       </Box>
-      <Box sx={{ display: tab === (migrationNeeded ? 2 : 1) ? 'block' : 'none' }}>
+      <Box
+        sx={{ display: tab === (migrationNeeded ? 2 : 1) ? 'block' : 'none' }}
+      >
         <OverviewPlot
           label="Stalk Ownership"
           account={account}
@@ -229,7 +232,9 @@ const Overview: FC<{
           empty={farmerSilo.stalk.total.lte(0)}
         />
       </Box>
-      <Box sx={{ display: tab === (migrationNeeded ? 3 : 2) ? 'block' : 'none' }}>
+      <Box
+        sx={{ display: tab === (migrationNeeded ? 3 : 2) ? 'block' : 'none' }}
+      >
         <OverviewPlot
           label="Seeds Ownership"
           account={account}
