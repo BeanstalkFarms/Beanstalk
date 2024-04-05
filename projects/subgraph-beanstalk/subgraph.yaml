@@ -2,6 +2,309 @@ specVersion: 0.0.4
 schema:
   file: ./schema.graphql
 dataSources:
+  # Historical Cache loading
+  - kind: ethereum/contract
+    name: TokenCacheWindow1_1
+    network: mainnet
+    source:
+      address: "0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5"
+      abi: Beanstalk
+      startBlock: 12974075
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.6
+      language: wasm/assemblyscript
+      entities:
+        - Diamond
+      abis:
+        - name: Beanstalk
+          file: ../subgraph-core/abis/Beanstalk/Beanstalk-Pre-Replant.json
+      eventHandlers:
+        - event: DiamondCut((address,uint8,bytes4[])[],address,bytes)
+          handler: handleLoadToken1_1
+      file: ./src/yield_cache/window_1/LoadToken_1.ts
+  - kind: ethereum/contract
+    name: TokenCacheWindow1_2
+    network: mainnet
+    source:
+      address: "0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5"
+      abi: Beanstalk
+      startBlock: 12974075
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.6
+      language: wasm/assemblyscript
+      entities:
+        - Diamond
+      abis:
+        - name: Beanstalk
+          file: ../subgraph-core/abis/Beanstalk/Beanstalk-Pre-Replant.json
+      eventHandlers:
+        - event: DiamondCut((address,uint8,bytes4[])[],address,bytes)
+          handler: handleLoadToken1_2
+      file: ./src/yield_cache/window_1/LoadToken_2.ts
+  - kind: ethereum/contract
+    name: SiloCacheWindow1_1
+    network: mainnet
+    source:
+      address: "0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5"
+      abi: Beanstalk
+      startBlock: 12974075
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.6
+      language: wasm/assemblyscript
+      entities:
+        - Diamond
+      abis:
+        - name: Beanstalk
+          file: ../subgraph-core/abis/Beanstalk/Beanstalk-Pre-Replant.json
+      eventHandlers:
+        - event: DiamondCut((address,uint8,bytes4[])[],address,bytes)
+          handler: handleLoadSilo1_1
+      file: ./src/yield_cache/window_1/LoadSilo_1.ts
+  - kind: ethereum/contract
+    name: SiloCacheWindow1_2
+    network: mainnet
+    source:
+      address: "0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5"
+      abi: Beanstalk
+      startBlock: 12974075
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.6
+      language: wasm/assemblyscript
+      entities:
+        - Diamond
+      abis:
+        - name: Beanstalk
+          file: ../subgraph-core/abis/Beanstalk/Beanstalk-Pre-Replant.json
+      eventHandlers:
+        - event: DiamondCut((address,uint8,bytes4[])[],address,bytes)
+          handler: handleLoadSilo1_2
+      file: ./src/yield_cache/window_1/LoadSilo_2.ts
+  - kind: ethereum/contract
+    name: SiloCacheWindow1_3
+    network: mainnet
+    source:
+      address: "0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5"
+      abi: Beanstalk
+      startBlock: 12974075
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.6
+      language: wasm/assemblyscript
+      entities:
+        - Diamond
+      abis:
+        - name: Beanstalk
+          file: ../subgraph-core/abis/Beanstalk/Beanstalk-Pre-Replant.json
+      eventHandlers:
+        - event: DiamondCut((address,uint8,bytes4[])[],address,bytes)
+          handler: handleLoadSilo1_3
+      file: ./src/yield_cache/window_1/LoadSilo_3.ts
+  # Window 2
+  - kind: ethereum/contract
+    name: TokenCacheWindow2_1
+    network: mainnet
+    source:
+      address: "0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5"
+      abi: Beanstalk
+      startBlock: 12974075
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.6
+      language: wasm/assemblyscript
+      entities:
+        - Diamond
+      abis:
+        - name: Beanstalk
+          file: ../subgraph-core/abis/Beanstalk/Beanstalk-Pre-Replant.json
+      eventHandlers:
+        - event: DiamondCut((address,uint8,bytes4[])[],address,bytes)
+          handler: handleLoadToken2_1
+      file: ./src/yield_cache/window_2/LoadToken_1.ts
+  - kind: ethereum/contract
+    name: TokenCacheWindow2_2
+    network: mainnet
+    source:
+      address: "0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5"
+      abi: Beanstalk
+      startBlock: 12974075
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.6
+      language: wasm/assemblyscript
+      entities:
+        - Diamond
+      abis:
+        - name: Beanstalk
+          file: ../subgraph-core/abis/Beanstalk/Beanstalk-Pre-Replant.json
+      eventHandlers:
+        - event: DiamondCut((address,uint8,bytes4[])[],address,bytes)
+          handler: handleLoadToken2_2
+      file: ./src/yield_cache/window_2/LoadToken_2.ts
+  - kind: ethereum/contract
+    name: SiloCacheWindow2_1
+    network: mainnet
+    source:
+      address: "0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5"
+      abi: Beanstalk
+      startBlock: 12974075
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.6
+      language: wasm/assemblyscript
+      entities:
+        - Diamond
+      abis:
+        - name: Beanstalk
+          file: ../subgraph-core/abis/Beanstalk/Beanstalk-Pre-Replant.json
+      eventHandlers:
+        - event: DiamondCut((address,uint8,bytes4[])[],address,bytes)
+          handler: handleLoadSilo2_1
+      file: ./src/yield_cache/window_2/LoadSilo_1.ts
+  - kind: ethereum/contract
+    name: SiloCacheWindow2_2
+    network: mainnet
+    source:
+      address: "0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5"
+      abi: Beanstalk
+      startBlock: 12974075
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.6
+      language: wasm/assemblyscript
+      entities:
+        - Diamond
+      abis:
+        - name: Beanstalk
+          file: ../subgraph-core/abis/Beanstalk/Beanstalk-Pre-Replant.json
+      eventHandlers:
+        - event: DiamondCut((address,uint8,bytes4[])[],address,bytes)
+          handler: handleLoadSilo2_2
+      file: ./src/yield_cache/window_2/LoadSilo_2.ts
+  - kind: ethereum/contract
+    name: SiloCacheWindow2_3
+    network: mainnet
+    source:
+      address: "0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5"
+      abi: Beanstalk
+      startBlock: 12974075
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.6
+      language: wasm/assemblyscript
+      entities:
+        - Diamond
+      abis:
+        - name: Beanstalk
+          file: ../subgraph-core/abis/Beanstalk/Beanstalk-Pre-Replant.json
+      eventHandlers:
+        - event: DiamondCut((address,uint8,bytes4[])[],address,bytes)
+          handler: handleLoadSilo2_3
+      file: ./src/yield_cache/window_2/LoadSilo_3.ts
+  # Window 3
+  - kind: ethereum/contract
+    name: TokenCacheWindow3_1
+    network: mainnet
+    source:
+      address: "0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5"
+      abi: Beanstalk
+      startBlock: 12974075
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.6
+      language: wasm/assemblyscript
+      entities:
+        - Diamond
+      abis:
+        - name: Beanstalk
+          file: ../subgraph-core/abis/Beanstalk/Beanstalk-Pre-Replant.json
+      eventHandlers:
+        - event: DiamondCut((address,uint8,bytes4[])[],address,bytes)
+          handler: handleLoadToken3_1
+      file: ./src/yield_cache/window_3/LoadToken_1.ts
+  - kind: ethereum/contract
+    name: TokenCacheWindow3_2
+    network: mainnet
+    source:
+      address: "0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5"
+      abi: Beanstalk
+      startBlock: 12974075
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.6
+      language: wasm/assemblyscript
+      entities:
+        - Diamond
+      abis:
+        - name: Beanstalk
+          file: ../subgraph-core/abis/Beanstalk/Beanstalk-Pre-Replant.json
+      eventHandlers:
+        - event: DiamondCut((address,uint8,bytes4[])[],address,bytes)
+          handler: handleLoadToken3_2
+      file: ./src/yield_cache/window_3/LoadToken_2.ts
+  - kind: ethereum/contract
+    name: SiloCacheWindow3_1
+    network: mainnet
+    source:
+      address: "0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5"
+      abi: Beanstalk
+      startBlock: 12974075
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.6
+      language: wasm/assemblyscript
+      entities:
+        - Diamond
+      abis:
+        - name: Beanstalk
+          file: ../subgraph-core/abis/Beanstalk/Beanstalk-Pre-Replant.json
+      eventHandlers:
+        - event: DiamondCut((address,uint8,bytes4[])[],address,bytes)
+          handler: handleLoadSilo3_1
+      file: ./src/yield_cache/window_3/LoadSilo_1.ts
+  - kind: ethereum/contract
+    name: SiloCacheWindow3_2
+    network: mainnet
+    source:
+      address: "0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5"
+      abi: Beanstalk
+      startBlock: 12974075
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.6
+      language: wasm/assemblyscript
+      entities:
+        - Diamond
+      abis:
+        - name: Beanstalk
+          file: ../subgraph-core/abis/Beanstalk/Beanstalk-Pre-Replant.json
+      eventHandlers:
+        - event: DiamondCut((address,uint8,bytes4[])[],address,bytes)
+          handler: handleLoadSilo3_2
+      file: ./src/yield_cache/window_3/LoadSilo_2.ts
+  - kind: ethereum/contract
+    name: SiloCacheWindow3_3
+    network: mainnet
+    source:
+      address: "0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5"
+      abi: Beanstalk
+      startBlock: 12974075
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.6
+      language: wasm/assemblyscript
+      entities:
+        - Diamond
+      abis:
+        - name: Beanstalk
+          file: ../subgraph-core/abis/Beanstalk/Beanstalk-Pre-Replant.json
+      eventHandlers:
+        - event: DiamondCut((address,uint8,bytes4[])[],address,bytes)
+          handler: handleLoadSilo3_3
+      file: ./src/yield_cache/window_3/LoadSilo_3.ts
   # Silo V3
   - kind: ethereum/contract
     name: Silo-V3
