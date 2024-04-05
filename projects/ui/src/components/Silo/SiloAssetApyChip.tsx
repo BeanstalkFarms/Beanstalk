@@ -16,7 +16,7 @@ const TOOLTIP_COMPONENT_PROPS = {
   tooltip: {
     sx: {
       maxWidth: 'none !important',
-      // boxShadow: '0px 6px 20px 10px rgba(255,255,255,0.3) !important',
+      /// boxShadow: '0px 6px 20px 10px rgba(255,255,255,0.3) !important',
     },
   },
 };
