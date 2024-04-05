@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { useNetwork } from 'wagmi';
+import { useAccount } from 'wagmi';
 import { SupportedChainId } from '~/constants/chains';
 
 /**
@@ -9,6 +9,6 @@ import { SupportedChainId } from '~/constants/chains';
  * @returns SupportedChainId
  */
 export default function useChainId() {
-  const { chain } = useNetwork();
+  const { chain } = useAccount();
   return useMemo(() => chain?.id || SupportedChainId.MAINNET, [chain?.id]);
 }

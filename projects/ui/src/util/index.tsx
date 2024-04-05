@@ -7,7 +7,7 @@ export * from './Actions';
 export * from './BeaNFTs';
 export * from './BigNumber';
 export * from './Chain';
-export * from './Client';
+export * from './wagmi/Client';
 export * from './Crates';
 // export * from './Curve';
 export * from './Farm';
