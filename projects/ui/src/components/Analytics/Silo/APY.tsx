@@ -30,11 +30,11 @@ const metricToKey = {
 };
 
 const metricTitles = {
-  Bean: 'Bean vAPY',
-  Bean3Curve: 'BEAN3CRV vAPY',
-  BeanETHWell: 'BEANETH Well vAPY',
-  UnripeBean: 'urBEAN vAPY',
-  UnripeBeanETH: 'urBEANETH Well vAPY',
+  Bean: 'Bean 30D vAPY',
+  Bean3Curve: 'BEAN3CRV 30D vAPY',
+  BeanETHWell: 'BEANETH 30D vAPY',
+  UnripeBean: 'urBEAN 30D vAPY',
+  UnripeBeanETH: 'urBEANETH 30D vAPY',
 };
 
 const APY: FC<{
