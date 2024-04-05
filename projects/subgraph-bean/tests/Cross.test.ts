@@ -2,7 +2,7 @@ import { beforeEach, afterEach, assert, clearStore, describe, test } from "match
 import { log } from "matchstick-as/assembly/log";
 import { BigInt } from "@graphprotocol/graph-ts";
 
-import { handleBlock } from "../src/BeanWellHandler";
+import { handleBlock } from "../src/BlockHandler";
 import { mockBlock } from "../../subgraph-core/tests/event-mocking/Block";
 import { setMockBeanPrice } from "../../subgraph-core/tests/event-mocking/Price";
 

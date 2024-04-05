@@ -238,6 +238,30 @@ dataSources:
           handler: handleShift
         - event: Sync(uint256[],uint256,address)
           handler: handleSync
+      file: ./src/BeanWellHandler.ts
+  - kind: ethereum/contract
+    name: BlockHandler
+    network: mainnet
+    source:
+      address: "0xb01CE0008CaD90104651d6A84b6B11e182a9B62A"
+      abi: BeanstalkPrice
+      startBlock: 17978222
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.7
+      language: wasm/assemblyscript
+      entities:
+        - Bean
+        - BeanHourlySnapshot
+        - BeanDailySnapshot
+        - BeanCross
+        - PoolCross
+        - Pool
+        - PoolHourlySnapshot
+        - PoolDailySnapshot
+      abis:
+        - name: BeanstalkPrice
+          file: ../subgraph-core/abis/BeanstalkPrice.json
       blockHandlers:
         - handler: handleBlock
-      file: ./src/BeanWellHandler.ts
+      file: ./src/BlockHandler.ts

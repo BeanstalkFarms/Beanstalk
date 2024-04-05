@@ -1,12 +1,11 @@
-import { Address, BigDecimal, BigInt, ethereum, log } from "@graphprotocol/graph-ts";
-import { BEANSTALK_PRICE, BEANSTALK_PRICE_BLOCK, BEAN_ERC20 } from "../../subgraph-core/utils/Constants";
+import { Address, BigDecimal, BigInt } from "@graphprotocol/graph-ts";
+import { BEANSTALK_PRICE, BEAN_ERC20 } from "../../subgraph-core/utils/Constants";
 import { ZERO_BD, ZERO_BI, deltaBigIntArray, toDecimal } from "../../subgraph-core/utils/Decimals";
 import { BeanstalkPrice } from "../generated/BeanWETHCP2w/BeanstalkPrice";
 import { AddLiquidity, RemoveLiquidity, RemoveLiquidityOneToken, Shift, Swap, Sync } from "../generated/BeanWETHCP2w/Well";
 import { loadBean, updateBeanSupplyPegPercent, updateBeanValues } from "./utils/Bean";
 import { getPoolLiquidityUSD, loadOrCreatePool, setPoolReserves, updatePoolPrice, updatePoolValues } from "./utils/Pool";
-import { checkBeanCross, checkPoolCross } from "./utils/Cross";
-import { BEAN_WELLS, WellFunction } from "./utils/BeanWells";
+import { checkBeanCross } from "./utils/Cross";
 
 export function handleAddLiquidity(event: AddLiquidity): void {
   handleLiquidityChange(
@@ -73,74 +72,6 @@ export function handleShift(event: Shift): void {
     event.block.timestamp,
     event.block.number
   );
-}
-
-export function handleBlock(block: ethereum.Block): void {
-  // BeanstalkPrice contract was not deployed until about 20 mins after the first Well's deployment.
-  // In practice no data is lost by discarding these blocks, and the same is done elsewhere.
-  if (block.number.lt(BEANSTALK_PRICE_BLOCK)) {
-    return;
-  }
-
-  const beanstalkPrice = BeanstalkPrice.bind(BEANSTALK_PRICE);
-  const beanPrice = beanstalkPrice.try_price();
-  const bean = loadBean(BEAN_ERC20.toHexString());
-  const prevPrice = bean.price;
-  const newPrice = toDecimal(beanPrice.value.price);
-
-  log.debug("Prev/New bean price {} / {}", [prevPrice.toString(), newPrice.toString()]);
-
-  // Check for overall peg cross
-  const beanCrossed = checkBeanCross(BEAN_ERC20.toHexString(), block.timestamp, block.number, prevPrice, newPrice);
-
-  // Update pool price for each pool - necessary for checking pool cross
-  let totalLiquidity = ZERO_BD;
-  for (let i = 0; i < BEAN_WELLS.length; ++i) {
-    const wellInfo = BEAN_WELLS[i];
-    if (block.number.lt(wellInfo.startBlock)) {
-      continue;
-    }
-
-    const well = loadOrCreatePool(wellInfo.address.toHexString(), block.number);
-
-    // Currently there is only one Well function, this needs to be expanded as more Bean wells are added.
-    // wellInfo.wellFunction == WellFunction.ConstantProduct ? ...
-    const newWellPrice = beanstalkPrice.try_getConstantProductWell(wellInfo.address).value;
-    const poolCrossed = checkPoolCross(
-      wellInfo.address.toHexString(),
-      block.timestamp,
-      block.number,
-      well.lastPrice,
-      toDecimal(newWellPrice.price)
-    );
-
-    if (poolCrossed || beanCrossed) {
-      totalLiquidity = totalLiquidity.plus(toDecimal(newWellPrice.liquidity));
-      updatePoolValues(
-        wellInfo.address.toHexString(),
-        block.timestamp,
-        block.number,
-        ZERO_BI,
-        ZERO_BD,
-        toDecimal(newWellPrice.liquidity).minus(well.liquidityUSD),
-        newWellPrice.deltaB
-      );
-      updatePoolPrice(wellInfo.address.toHexString(), block.timestamp, block.number, toDecimal(newWellPrice.price), false);
-    }
-  }
-
-  // Update bean values at the end now that the summation of pool liquidity is known
-  if (beanCrossed) {
-    updateBeanValues(
-      BEAN_ERC20.toHexString(),
-      block.timestamp,
-      newPrice,
-      ZERO_BI,
-      ZERO_BI,
-      ZERO_BD,
-      totalLiquidity.minus(bean.liquidityUSD)
-    );
-  }
 }
 
 function handleLiquidityChange(
