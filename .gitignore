@@ -22,7 +22,6 @@ diamondCut-*.json
 # Foundry
 cache/
 out/
-coverage_data/
 .openzeppelin
 protocol/lib/prb-math
 protocol/remappings.txt
