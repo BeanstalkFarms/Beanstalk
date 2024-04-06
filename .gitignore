@@ -23,8 +23,7 @@ diamondCut-*.json
 cache/
 out/
 .openzeppelin
-protocol/lib/prb-math
-protocol/remappings.txt
+protocol/lib
 .gas-snapshot
 
 # From SDK Monorepo Join:
@@ -41,4 +40,4 @@ node_modules
 # Local Netlify folder
 .netlify
 
-protocol/lib/forge-std
+
