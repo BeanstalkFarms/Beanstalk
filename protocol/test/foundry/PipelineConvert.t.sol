@@ -381,27 +381,23 @@ contract PipelineConvertTest is TestHelper {
         // do initial pump update
         updateMockPumpUsingWellReserves(C.BEAN_ETH_WELL);
 
-        // the main idea is that we start at deltaB of zero, so converts should not be possible
-        // we add eth to the well to push it over peg, then we convert our beans back down to lp
-        // then we pull our initial eth back out and we converted when we shouldn't have been able to (if we do in one tx)
+        // the main idea is that we start some positive deltaB, so a limited amount of converts are possible (1.2 eth worth)
+        // User One does a convert down, and that uses up convert power for this block
+        // someone adds more eth to the well, which means we're back too far over peg
+        // then User Two tries to do a convert down, but at that point the convert power has been used up, so they lose their grown stalk
 
         // setup initial bean deposit
         int96 stem = beanToLPDepositSetup(amount, users[1]);
 
         // then setup a convert from user 2
         int96 stem2 = beanToLPDepositSetup(amount, users[2]);
-        console.log('stem2: ');
-        console.logInt(stem2);
 
         int256 initialDeltaB = seasonGetters.poolDeltaBInsta(C.BEAN_ETH_WELL);
 
-
         // if you deposited amount of beans into well, how many eth would you get?
         uint256 ethAmount = IWell(C.BEAN_ETH_WELL).getSwapOut(IERC20(C.BEAN), IERC20(C.WETH), amount);
-        console.log('ethAmount: ', ethAmount);
-        ethAmount = ethAmount.mul(2); // I need a better way to calculate how much eth out there should be to make sure we can swap and be over peg
-        // mint user 10 eth
-        // uint256 ethAmount = 5e18;
+
+        ethAmount = ethAmount.mul(12000).div(10000); // I need a better way to calculate how much eth out there should be to make sure we can swap and be over peg
 
         uint256 lpAmountOut = addEthToWell(users[1], ethAmount);
         
@@ -410,7 +406,7 @@ contract PipelineConvertTest is TestHelper {
         // log insta deltaB
         int256 beforeDeltaB = seasonGetters.poolDeltaBInsta(C.BEAN_ETH_WELL);
 
-        uint256 grownStalkBefore = bs.balanceOfGrownStalk(users[1], C.BEAN);
+        uint256 grownStalkBefore = bs.balanceOfGrownStalk(users[2], C.BEAN);
 
         console.log('grownStalkBefore: ', grownStalkBefore);
 
@@ -419,44 +415,30 @@ contract PipelineConvertTest is TestHelper {
         updateMockPumpUsingWellReserves(C.BEAN_ETH_WELL);
 
         (int256 cappedDeltaB, , ) = convert.cappedReservesDeltaB(C.BEAN_ETH_WELL);
-        console.log('cappedDeltaB: ');
-        console.logInt(cappedDeltaB);
 
 
-        // log deltaB
-        int256 deltaB1 = seasonGetters.poolDeltaBInsta(C.BEAN_ETH_WELL);
-        console.log('deltaB1: ');
-        console.logInt(deltaB1);
+        uint256 convertPowerStage1 = convert.getConvertPower();
 
         // convert beans to lp
         (int96[] memory outputStems, uint256[] memory outputAmounts) = beanToLPDoConvert(amount, stem, users[1]);
 
-        console.log('from first convert amount: ', outputAmounts[0]);
-        console.log('from first convert stem:');
-        console.logInt(outputStems[0]);
+        uint256 convertPowerStage2 = convert.getConvertPower();
+        assertTrue(convertPowerStage2 < convertPowerStage1);
 
-        // deltaB2
-        int256 deltaB2 = seasonGetters.poolDeltaBInsta(C.BEAN_ETH_WELL);
-        console.log('deltaB2: ');
-        console.logInt(deltaB2);
 
         // add more eth to well again
         addEthToWell(users[1], ethAmount);
 
-        console.log('going to convert second user');
         beanToLPDoConvert(amount, stem2, users[2]);
 
+        uint256 convertPowerStage3 = convert.getConvertPower();
+        assertTrue(convertPowerStage3 < convertPowerStage2);
 
-        
-        // deltaB3
-        int256 deltaB3 = seasonGetters.poolDeltaBInsta(C.BEAN_ETH_WELL);
-        console.log('deltaB3: ');
-        console.logInt(deltaB3);
 
-        uint256 grownStalkAfter = bs.balanceOfGrownStalk(users[1], C.BEAN_ETH_WELL);
+        uint256 grownStalkAfter = bs.balanceOfGrownStalk(users[2], C.BEAN_ETH_WELL);
 
-        console.log('doing assertions');
-        assertTrue(grownStalkAfter == 0); // all grown stalk was lost
+
+        assertTrue(grownStalkAfter == 0); // all grown stalk was lost because no convert power left
         assertTrue(grownStalkBefore > 0);
     }
 

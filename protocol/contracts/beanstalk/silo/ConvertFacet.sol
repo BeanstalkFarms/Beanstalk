@@ -206,7 +206,6 @@ contract ConvertFacet is ReentrancyGuard {
             maxTokens = maxTokens.add(amounts[i]);
         }
 
-
         PipelineConvertData memory pipeData;
 
         ( , , pipeData.bdvsRemoved, pipeData.grownStalks) = _withdrawTokens(
@@ -218,8 +217,6 @@ contract ConvertFacet is ReentrancyGuard {
 
         // storePoolDeltaB(inputToken, outputToken);
         pipeData.startingDeltaB = getCombinedDeltaBForTokens(inputToken, outputToken);
-        console.log('startingDeltaB:');
-        console.logInt(pipeData.startingDeltaB);
 
 
         IERC20(inputToken).transfer(PIPELINE, maxTokens);
@@ -238,24 +235,16 @@ contract ConvertFacet is ReentrancyGuard {
 
         //stalk bonus/penalty will be applied here
 
-        // pipeData.changeInDeltaB = getCombinedDeltaBForTokens(inputToken, outputToken).sub(pipeData.changeInDeltaB);
-        // console.log('after changeInDeltaB:');
-        // console.logInt(pipeData.changeInDeltaB);
-
-        // int256 cappedDeltaB;
-        // (pipeData.cappedDeltaB, , ) = LibWellMinting.cappedReservesDeltaB(inputToken);
-        // console.log('pipeData.cappedDeltaB: ');
-        // console.logInt(pipeData.cappedDeltaB);
-
-        // actually I want overallDeltaB from all the wells, capped
+        // We want the capped deltaB from all the wells, this is what sets up/limits the overall convert power for the block
+        // Converts that either cross peg, OR occur when convert power has been exhausted, will be stalk penalized
         pipeData.cappedDeltaB = LibWellMinting.overallDeltaB();
-        console.log('cappedDeltaB: ');
+        console.log('final cappedDeltaB: ');
         console.logInt(pipeData.cappedDeltaB);
 
         pipeData.stalkPenaltyBdv = _calculateStalkPenalty(pipeData.startingDeltaB, getCombinedDeltaBForTokens(inputToken, outputToken), pipeData.bdvsRemoved, abs(pipeData.cappedDeltaB));
         console.log('stalkPenaltyBdv: ', pipeData.stalkPenaltyBdv);
         pipeData.grownStalks = _applyPenaltyToGrownStalks(pipeData.stalkPenaltyBdv, pipeData.bdvsRemoved, pipeData.grownStalks);
-        console.log('applied penalty');
+
         // Convert event emitted within this function
         (outputStems, outputAmounts) = _depositTokensForConvertMultiCrate(inputToken, outputToken, pipeData.amountOut, pipeData.bdvsRemoved, pipeData.grownStalks, amounts, pipeData.stalkPenaltyBdv);
 
@@ -403,9 +392,18 @@ contract ConvertFacet is ReentrancyGuard {
         }
 
 
-    // If the deltaB did not cross zero, or is the same before/after, return 0. In the future maybe calculate bonus here.
-    return 0;
-}
+        // If the deltaB did not cross zero, or is the same before/after, return 0. In the future maybe calculate bonus here.
+        return 0;
+    }
+
+    function getConvertPower() public view returns (uint256) {
+        AppStorage storage s = LibAppStorage.diamondStorage();
+        if (s.convertPowerThisBlock[block.number].hasConvertHappenedThisBlock == false) {
+            // if convert power has not been initialized for this block, use the overall deltaB
+            return abs(LibWellMinting.overallDeltaB());
+        }
+        return s.convertPowerThisBlock[block.number].convertPower;
+    }
 
     //for finding the before/after deltaB difference, we need to use the min of
     //the inst and the twa deltaB

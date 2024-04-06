@@ -68,7 +68,15 @@ contract TestHelper is Test, BeanstalkDeployer, BasinDeployer, DepotDeployer, Or
         ];
 
         for(uint i; i < tokens.length; i++) {
-            string memory mock = tokens[i].targetAddr != C.WETH ? "MockToken.sol" : "MockWETH.sol"; 
+            // string memory mock = tokens[i].targetAddr != C.WETH ? "MockToken.sol" : "MockWETH.sol";
+
+            string memory mock = "MockToken.sol";
+            if (tokens[i].targetAddr == C.WETH) {
+                mock = "MockWETH.sol";
+            } else if (tokens[i].targetAddr == C.WSTETH) {
+                mock = "MockWsteth.sol";
+            }
+
             deployCodeTo(mock, abi.encode(tokens[i].name, tokens[i].symbol), tokens[i].targetAddr);
             MockToken(tokens[i].targetAddr).setDecimals(tokens[i].decimals);
             if (verbose) console.log(tokens[i].name, "Deployed at:", tokens[i].targetAddr);
