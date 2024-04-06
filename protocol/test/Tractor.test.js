@@ -41,10 +41,14 @@ let advancedFarmCalls;
 // TODO remove old convert tractor test
 
 describe("Tractor", function () {
-  before(async function () {
+  before(async function (verbose = false) {
     [owner, publisher, operator, user] = await ethers.getSigners();
-    console.log("publisher", publisher.address);
-    console.log("operator", operator.address);
+
+    if(verbose) {
+      console.log("publisher", publisher.address);
+      console.log("operator", operator.address);
+    }
+    
     const contracts = await deploy("Test", false, true);
     this.diamond = contracts.beanstalkDiamond;
     this.beanstalk = await getAltBeanstalk(this.diamond.address);
@@ -140,7 +144,9 @@ describe("Tractor", function () {
       blueprintHash: await this.tractorFacet.connect(publisher).getBlueprintHash(this.blueprint)
     };
     await signRequisition(this.requisition, publisher);
-    console.log(this.requisition);
+    if (verbose) {
+      console.log(this.requisition);
+    }
   });
 
   beforeEach(async function () {
@@ -290,7 +296,7 @@ describe("Tractor", function () {
       ).to.be.eq(to6("1000"));
     });
 
-    it("Mow publisher", async function () {
+    it("Mow publisher", async function (verbose = false) {
       // Give publisher Grown Stalk.
       this.result = await this.siloFacet
         .connect(publisher)
@@ -336,8 +342,10 @@ describe("Tractor", function () {
       const publisherStalkGain =
         (await this.siloGettersFacet.balanceOfStalk(publisher.address)) - initPublisherStalk;
       const operatorPaid = (await this.bean.balanceOf(operator.address)) - initOperatorBeans;
-      console.log("Publisher Stalk increase: " + ethers.utils.formatUnits(publisherStalkGain, 10));
-      console.log("Operator Payout: " + ethers.utils.formatUnits(operatorPaid, 6) + " Beans");
+      if (verbose) {
+        console.log("Publisher Stalk increase: " + ethers.utils.formatUnits(publisherStalkGain, 10));
+        console.log("Operator Payout: " + ethers.utils.formatUnits(operatorPaid, 6) + " Beans");
+      }
 
       expect(
         await this.siloGettersFacet.balanceOfGrownStalk(publisher.address, this.bean.address),
@@ -350,7 +358,7 @@ describe("Tractor", function () {
       expect(operatorPaid, "unpaid operator").to.be.gt(0);
     });
 
-    it("Plant publisher", async function () {
+    it("Plant publisher", async function (verbose = false) {
       // Give publisher Earned Beans.
       this.result = await this.siloFacet
         .connect(publisher)
@@ -393,8 +401,10 @@ describe("Tractor", function () {
       const publisherStalkGain =
         (await this.siloGettersFacet.balanceOfStalk(publisher.address)) - initPublisherStalkBalance;
       const operatorPaid = (await this.bean.balanceOf(operator.address)) - initOperatorBeans;
-      console.log("Publisher Stalk increase: " + ethers.utils.formatUnits(publisherStalkGain, 10));
-      console.log("Operator Payout: " + ethers.utils.formatUnits(operatorPaid, 6) + " Beans");
+      if (verbose) {
+        console.log("Publisher Stalk increase: " + ethers.utils.formatUnits(publisherStalkGain, 10));
+        console.log("Operator Payout: " + ethers.utils.formatUnits(operatorPaid, 6) + " Beans");
+      }
 
       expect(publisherStalkGain, "publisher stalk balance did not increase").to.be.gt(0);
       expect(await this.bean.balanceOf(publisher.address), "publisher did not pay").to.be.lt(
@@ -420,7 +430,7 @@ describe("Tractor", function () {
     // Prepare Beanstalk
     beforeEach(async function () {
       // await this.seasonFacet.teleportSunrise(10);
-      this.seasonFacet.deployStemsUpgrade();
+      await this.seasonFacet.deployStemsUpgrade();
       await this.siloFacet
         .connect(publisher)
         .deposit(this.unripeBean.address, to6("2000"), EXTERNAL);
@@ -431,7 +441,7 @@ describe("Tractor", function () {
     });
     beforeEach(async function () {
       // Transfer Bean to publisher internal balance.
-      this.beanstalk
+      await this.beanstalk
         .connect(publisher)
         .transferToken(this.bean.address, publisher.address, to6("100"), 0, 1);
     });

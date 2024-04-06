@@ -58,7 +58,7 @@ library LibTractor {
 
     /// @notice get tractor storage from storage
     /// @return ts TractorStorage
-    function _tractorStorage() internal view returns (TractorStorage storage ts) {
+    function _tractorStorage() internal pure returns (TractorStorage storage ts) {
         // keccak256("diamond.storage.tractor") == 0x7efbaaac9214ca1879e26b4df38e29a72561affb741bba775ce66d5bb6a82a07
         assembly {
             ts.slot := 0x7efbaaac9214ca1879e26b4df38e29a72561affb741bba775ce66d5bb6a82a07

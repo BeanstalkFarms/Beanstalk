@@ -3,8 +3,7 @@ pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
 import {LibClipboard} from "contracts/libraries/LibClipboard.sol";
-import {LibOperatorPasteInstr} from "contracts/libraries/LibOperatorPasteInstr.sol";
-import {LibReturnPasteParam} from "contracts/libraries/LibReturnPasteParam.sol";
+import {LibBytes} from "contracts/libraries/LibBytes.sol";
 
 contract Drafter {
     function encodeOperatorPasteInstr(
@@ -12,13 +11,13 @@ contract Drafter {
         uint80 _pasteCallIndex,
         uint80 _pasteByteIndex
     ) external pure returns (bytes32) {
-        return LibOperatorPasteInstr.encode(_copyByteIndex, _pasteCallIndex, _pasteByteIndex);
+        return LibBytes.encode(_copyByteIndex, _pasteCallIndex, _pasteByteIndex);
     }
 
     function decodeOperatorPasteInstr(
         bytes32 operatorPasteInstr
     ) external pure returns (uint80, uint80, uint80) {
-        return LibOperatorPasteInstr.decode(operatorPasteInstr);
+        return LibBytes.decode(operatorPasteInstr);
     }
 
     function encodeLibReturnPasteParam(
@@ -26,13 +25,13 @@ contract Drafter {
         uint80 _copyByteIndex,
         uint80 _pasteByteIndex
     ) external pure returns (bytes32) {
-        return LibReturnPasteParam.encode(_copyReturnIndex, _copyByteIndex, _pasteByteIndex);
+        return LibBytes.encode(_copyReturnIndex, _copyByteIndex, _pasteByteIndex);
     }
 
     function decodeLibReturnPasteParam(
         bytes32 returnPasteParam
     ) external pure returns (uint80, uint80, uint80) {
-        return LibReturnPasteParam.decode(returnPasteParam);
+        return LibBytes.decode(returnPasteParam);
     }
 
     function encodeClipboard(

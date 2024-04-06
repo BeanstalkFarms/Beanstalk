@@ -209,7 +209,7 @@ const draftDiffOfReturns = async (returnDataItemIndex0, returnDataItemIndex1) =>
  * Operator receives a static pre-defined tip.
  * @param tip - amount of beans to tip to operator external balance
  */
-const draftDepositInternalBeanBalance = async (tip) => {
+const draftDepositInternalBeanBalance = async (tip, verbose = false) => {
   // temp arrays for handling returns.
   let tmpAdvancedFarmCalls = [];
   let tmpOperatorPasteInstrs = [];
@@ -303,9 +303,11 @@ const draftDepositInternalBeanBalance = async (tip) => {
     )
   );
 
-  console.log(advancedFarmCalls);
-  console.log(operatorPasteInstrs);
-
+  if (verbose) { 
+    console.log(advancedFarmCalls);
+    console.log(operatorPasteInstrs);
+  }
+  
   return [advancedFarmCalls, operatorPasteInstrs];
 };
 
@@ -313,7 +315,7 @@ const draftDepositInternalBeanBalance = async (tip) => {
  * Blueprint allowing the Operator to enroot one deposit on behalf of the Publisher.
  * Operator is rewarded Beans as a ratio of stalk increase (from both mowing and enroot).
  */
-const draftMow = async (rewardRatio) => {
+const draftMow = async (rewardRatio, verbose = false) => {
   // AdvancedFarmCall[]
   let advancedFarmCalls = [];
 
@@ -410,8 +412,10 @@ const draftMow = async (rewardRatio) => {
     )
   );
 
-  console.log(advancedFarmCalls);
-  console.log(operatorPasteInstrs);
+  if (verbose) {
+    console.log(advancedFarmCalls);
+    console.log(operatorPasteInstrs);
+  }
 
   return [advancedFarmCalls, operatorPasteInstrs];
 };
@@ -420,7 +424,7 @@ const draftMow = async (rewardRatio) => {
  * Blueprint allowing the Operator to Plant on behalf of the Publisher.
  * Operator is rewarded Beans as a ratio of earned beans claimed.
  */
-const draftPlant = async (rewardRatio) => {
+const draftPlant = async (rewardRatio, verbose = false) => {
   // AdvancedFarmCall[]
   let advancedFarmCalls = [];
 
@@ -477,9 +481,11 @@ const draftPlant = async (rewardRatio) => {
         )
     )
   );
-
-  console.log(advancedFarmCalls);
-  console.log(operatorPasteInstrs);
+  if (verbose) {
+    console.log(advancedFarmCalls);
+    console.log(operatorPasteInstrs);
+  }
+  
 
   return [advancedFarmCalls, operatorPasteInstrs];
 };
@@ -488,7 +494,7 @@ const draftPlant = async (rewardRatio) => {
  * Blueprint allowing the Operator to Convert one entire urBean deposit to urLP of the Publisher.
  * Operator is rewarded flat rate tip.
  */
-const draftConvertUrBeanToUrLP = async (tip, minOutLpPerBean) => {
+const draftConvertUrBeanToUrLP = async (tip, minOutLpPerBean, verbose = false) => {
   // AdvancedFarmCall[]
   let advancedFarmCalls = [];
 
@@ -611,8 +617,10 @@ const draftConvertUrBeanToUrLP = async (tip, minOutLpPerBean) => {
     )
   );
 
-  console.log(advancedFarmCalls);
-  console.log(operatorPasteInstrs);
+  if (verbose) {
+    console.log(advancedFarmCalls);
+    console.log(operatorPasteInstrs);
+  }
 
   return [advancedFarmCalls, operatorPasteInstrs];
 };
@@ -621,7 +629,7 @@ const draftConvertUrBeanToUrLP = async (tip, minOutLpPerBean) => {
  * Blueprint allowing the Operator to Convert one entire urLP deposit to urBean of the Publisher.
  * Operator is rewarded flat rate tip.
  */
-const draftConvert = async (tip, minUrLpPerUrBeanRatio, minUrBeanPerUrLpRatio) => {
+const draftConvert = async (tip, minUrLpPerUrBeanRatio, minUrBeanPerUrLpRatio, verbose = false) => {
   // AdvancedFarmCall[]
   let advancedFarmCalls = [];
 
@@ -648,11 +656,15 @@ const draftConvert = async (tip, minUrLpPerUrBeanRatio, minUrBeanPerUrLpRatio) =
     ),
     clipboard: ethers.utils.hexlify("0x000000")
   });
-  console.log("byte padding");
-  console.log(UNRIPE_BEAN);
-  console.log(ethers.utils.hexZeroPad(UNRIPE_BEAN, 32));
-  console.log(minUrLpPerUrBeanRatio);
-  console.log(ethers.utils.hexZeroPad(minUrLpPerUrBeanRatio, 32));
+
+  if (verbose) {
+    console.log("byte padding");
+    console.log(UNRIPE_BEAN);
+    console.log(ethers.utils.hexZeroPad(UNRIPE_BEAN, 32));
+    console.log(minUrLpPerUrBeanRatio);
+    console.log(ethers.utils.hexZeroPad(minUrLpPerUrBeanRatio, 32));
+  }
+
   // Get convert type as switch selector.
   operatorPasteInstrs.push(
     await drafter().then(
@@ -831,9 +843,10 @@ const draftConvert = async (tip, minUrLpPerUrBeanRatio, minUrBeanPerUrLpRatio) =
         await drafter.encodeOperatorPasteInstr(OPERATOR_COPY_INDEX, 6, ARGS_START_INDEX + SLOT_SIZE)
     )
   );
-
-  console.log(advancedFarmCalls);
-  console.log(operatorPasteInstrs);
+  if (verbose) {
+    console.log(advancedFarmCalls);
+    console.log(operatorPasteInstrs);
+  }
 
   return [advancedFarmCalls, operatorPasteInstrs];
 };
@@ -842,7 +855,7 @@ const draftConvert = async (tip, minUrLpPerUrBeanRatio, minUrBeanPerUrLpRatio) =
  * Blueprint to deposit 100 Beans from internal balance of publisher. Uses counters to limit deposits to maxCumulativeDepositAmount.
  * Serves as a demo of using counters.
  */
-const draftDepositInternalBeansWithLimit = async (maxCumulativeDepositAmount) => {
+const draftDepositInternalBeansWithLimit = async (maxCumulativeDepositAmount, verbose = false) => {
   // AdvancedFarmCall[]
   let advancedFarmCalls = [];
 
@@ -908,8 +921,10 @@ const draftDepositInternalBeansWithLimit = async (maxCumulativeDepositAmount) =>
     )
   });
 
-  console.log(advancedFarmCalls);
-  console.log(operatorPasteInstrs);
+  if (verbose) {
+    console.log(advancedFarmCalls);
+    console.log(operatorPasteInstrs);
+  }
 
   return [advancedFarmCalls, operatorPasteInstrs];
 };
