@@ -18,8 +18,7 @@ import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
 library LibChainlinkOracle {
     using SafeMath for uint256;
 
-    // Uses the same timeout as Liquity's Chainlink timeout.
-    uint256 public constant CHAINLINK_TIMEOUT = 14400; // 4 hours: 60 * 60 * 4
+    uint256 public constant CHAINLINK_TIMEOUT = 5400; // 60 * 90 = 5400
 
     IChainlinkAggregator constant priceAggregator =
         IChainlinkAggregator(0x5f4eC3Df9cbd43714FE2740f5E3616155c5b8419);
