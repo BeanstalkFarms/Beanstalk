@@ -208,4 +208,32 @@ library LibWhitelistedTokens {
         }
         return i;
     }
+
+    /**
+     * @notice checks if a token is whitelisted.
+     * @dev checks whether a token is in the whitelistStatuses array. If it is,
+     * verify whether `isWhitelisted` is set to false.
+     * @param token the token to check.
+     */
+    function checkWhitelisted(address token) internal view returns (bool isWhitelisted, bool previouslyWhitelisted) {
+        AppStorage storage s = LibAppStorage.diamondStorage();
+        uint256 whitelistedStatusLength = s.whitelistStatuses.length;
+        uint256 i;
+        while (s.whitelistStatuses[i].token != token) {
+            i++;
+            if (i >= whitelistedStatusLength) {
+                // if the token does not appear in the array
+                // it has not been whitelisted nor dewhitelisted.
+                return (false, false);
+            }
+        }
+
+        if(s.whitelistStatuses[i].isWhitelisted) {
+            // token is whitelisted.
+            return (true, false);
+        } else {
+            // token has been whitelisted previously.
+            return (false, true);
+        }
+    }
 }

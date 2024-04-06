@@ -79,6 +79,7 @@ library LibWhitelist {
 
     /**
      * @dev Adds an ERC-20 token to the Silo Whitelist.
+     * Assumes future tokens will be well pool tokens.
      */
     function whitelistToken(
         address token,
@@ -98,13 +99,38 @@ library LibWhitelist {
         verifyGaugePointSelector(gaugePointSelector);
         verifyLiquidityWeightSelector(liquidityWeightSelector);
 
-        // add whitelist status
-        LibWhitelistedTokens.addWhitelistStatus(
-            token,
-            true, // Whitelisted by default.
-            token != address(C.bean()) && !LibUnripe.isUnripe(token), // Assumes tokens that are not Unripe and not Bean are LP tokens.
-            selector == LibWell.WELL_BDV_SELECTOR
-        );
+        // fetch the whitelist status of the token. Brackets due to stack too deep.
+        { 
+            (bool isWhitelisted, bool previouslyWhitelisted) = LibWhitelistedTokens.checkWhitelisted(token);
+            require(isWhitelisted == false, "Whitelist: Token already whitelisted");
+       
+            // add whitelist status. If previously whitelisted, update the status rather than appending.
+            if(previouslyWhitelisted) { 
+                LibWhitelistedTokens.updateWhitelistStatus(
+                    token,
+                    true, // Whitelisted by default.
+                    token != address(C.bean()) && !LibUnripe.isUnripe(token), // Assumes tokens that are not Unripe and not Bean are LP tokens.
+                    selector == LibWell.WELL_BDV_SELECTOR
+                );
+            } else {
+                // assumes new tokens are well pool tokens.
+                LibWhitelistedTokens.addWhitelistStatus(
+                    token,
+                    true, // Whitelisted by default.
+                    token != address(C.bean()) && !LibUnripe.isUnripe(token), // Assumes tokens that are not Unripe and not Bean are LP tokens.
+                    selector == LibWell.WELL_BDV_SELECTOR
+                );
+            }
+
+            // if the token has previously been whitelisted, the stalkIssuedPerBdv 
+            // cannot be updated, as previous deposits would have been made with the
+            // previous value. 
+            if(previouslyWhitelisted) { 
+                stalkIssuedPerBdv = s.ss[token].stalkIssuedPerBdv;
+            }
+        }
+        
+       
 
         // If an LP token, initialize oracle storage variables.
         if (token != address(C.bean()) && !LibUnripe.isUnripe(token)) {
@@ -113,10 +139,10 @@ library LibWhitelist {
             s.twaReserves[token].reserve1 = 1;
         }
 
-        require(s.ss[token].milestoneSeason == 0, "Whitelist: Token already whitelisted");
-        // beanstalk requires all whitelisted assets to have a minimum stalkEarnedPerSeeason
+        // beanstalk requires all whitelisted assets to have a minimum stalkEarnedPerSeason
         // of 1 (due to the germination update). set stalkEarnedPerSeason to 1 to prevent revert.
         if (stalkEarnedPerSeason == 0) stalkEarnedPerSeason = 1;
+
         s.ss[token].selector = selector;
         s.ss[token].stalkEarnedPerSeason = stalkEarnedPerSeason;
         s.ss[token].stalkIssuedPerBdv = stalkIssuedPerBdv;
