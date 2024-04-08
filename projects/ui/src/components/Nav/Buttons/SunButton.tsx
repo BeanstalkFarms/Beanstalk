@@ -23,7 +23,6 @@ import FolderMenu from '../FolderMenu';
 import SeasonCard from '../../Sun/SeasonCard';
 import usePeg from '~/hooks/beanstalk/usePeg';
 import { FC } from '~/types';
-import UpdateStalkButton from '~/components/Sun/UpdateStalkButton';
 
 const castField = (data: SunButtonQuery['fields'][number]) => ({
   season: new BigNumber(data.season),
@@ -191,7 +190,6 @@ const PriceButton: FC<ButtonProps> = ({ ...props }) => {
       </Stack>
       <Divider sx={{ borderBottomWidth: 0, borderColor: 'divider' }} />
       <Box sx={{ p: 1, display: 'flex', gap: '5px', flexDirection: 'column' }}>
-        <UpdateStalkButton />
         <SunriseButton />
       </Box>
     </Box>

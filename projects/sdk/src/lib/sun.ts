@@ -15,8 +15,4 @@ export class Sun {
   async sunrise(): Promise<ContractTransaction> {
     return Sun.sdk.contracts.beanstalk.sunrise();
   }
-
-  async updateAverageStalkPerBdvPerSeason(): Promise<ContractTransaction> {
-    return Sun.sdk.contracts.beanstalk.updateAverageStalkPerBdvPerSeason();
-  }
 }
