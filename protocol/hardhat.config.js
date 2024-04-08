@@ -237,7 +237,7 @@ task("beanstalkAdmin", async function () {
   await mockBeanstalkAdmin();
 });
 
-task("deployBip39", async function () {
+task("deploySeedGauge", async function () {
   await bipSeedGauge();
 });
 
