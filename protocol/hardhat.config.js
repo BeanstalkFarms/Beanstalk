@@ -192,6 +192,11 @@ task("deployBeanstalkPrice", async function () {
   console.log("BeanstalkPrice deployed at: ", priceContract.address)
 });
 
+task("testPrice", async function () {
+  priceContract =  await ethers.getContractAt('BeanstalkPrice', PRICE)
+  console.log("Price: ", (await priceContract.price()).toString())
+});
+
 // BIP //
 task("marketplace", async function () {
   const owner = await impersonateBeanstalkOwner();
