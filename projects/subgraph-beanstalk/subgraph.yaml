@@ -479,6 +479,8 @@ dataSources:
           handler: handlePodListingCreated
         - event: PodListingCancelled(indexed address,uint256)
           handler: handlePodListingCancelled
+        - event: PodListingCancelled(indexed address,indexed uint256)
+          handler: handlePodListingCancelled
         - event: PodListingFilled(indexed address,indexed address,uint256,uint256,uint256)
           handler: handlePodListingFilled
         - event: PodOrderCreated(indexed address,bytes32,uint256,uint24,uint256)
