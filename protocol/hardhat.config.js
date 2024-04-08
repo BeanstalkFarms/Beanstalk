@@ -225,6 +225,16 @@ task("deployBip39", async function () {
   await bipSeedGauge();
 });
 
+task("deployBeanstalkPrice", async function () {
+  let json = fs.readFileSync(`./artifacts/contracts/ecosystem/price/BeanstalkPrice.sol/BeanstalkPrice.json`);
+  await network.provider.send("hardhat_setCode", [
+    PRICE,
+    JSON.parse(json).deployedBytecode,
+  ]);
+  priceContract =  await ethers.getContractAt('BeanstalkPrice', PRICE)
+  console.log("BeanstalkPrice deployed at: ", priceContract.address)
+});
+
 task("ebip14", async function () {
   await ebip14();
 })
