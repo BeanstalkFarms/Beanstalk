@@ -263,50 +263,11 @@
     "outputs": [
       {
         "internalType": "uint256",
-        "name": "",
+        "name": "underlyingAmount",
         "type": "uint256"
       }
     ],
     "stateMutability": "payable",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "getLockedBeans",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "getLockedBeansUnderlyingUnripeBean",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "getLockedBeansUnderlyingUnripeBeanEth",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
     "type": "function"
   },
   {
@@ -396,7 +357,7 @@
     "outputs": [
       {
         "internalType": "uint256",
-        "name": "percent",
+        "name": "penalty",
         "type": "uint256"
       }
     ],
@@ -439,7 +400,7 @@
     "outputs": [
       {
         "internalType": "uint256",
-        "name": "underlyingAmount",
+        "name": "redeem",
         "type": "uint256"
       }
     ],
@@ -4234,24 +4195,6 @@
         "internalType": "uint256",
         "name": "stalkIssuedPerBdv",
         "type": "uint256"
-      },
-      {
-        "indexed": false,
-        "internalType": "bytes4",
-        "name": "gpSelector",
-        "type": "bytes4"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint128",
-        "name": "gaugePoints",
-        "type": "uint128"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint96",
-        "name": "optimalPercentDepositedBdv",
-        "type": "uint96"
       }
     ],
     "name": "WhitelistToken",
@@ -4266,29 +4209,6 @@
       }
     ],
     "name": "dewhitelistToken",
-    "outputs": [],
-    "stateMutability": "payable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "token",
-        "type": "address"
-      },
-      {
-        "internalType": "bytes4",
-        "name": "gaugePointSelector",
-        "type": "bytes4"
-      },
-      {
-        "internalType": "uint96",
-        "name": "optimalPercentDepositedBdv",
-        "type": "uint96"
-      }
-    ],
-    "name": "updateGaugeForToken",
     "outputs": [],
     "stateMutability": "payable",
     "type": "function"
@@ -4324,29 +4244,14 @@
         "type": "bytes4"
       },
       {
-        "internalType": "uint16",
+        "internalType": "uint32",
         "name": "stalkIssuedPerBdv",
-        "type": "uint16"
+        "type": "uint32"
       },
       {
         "internalType": "uint32",
         "name": "stalkEarnedPerSeason",
         "type": "uint32"
-      },
-      {
-        "internalType": "bytes4",
-        "name": "gaugePointSelector",
-        "type": "bytes4"
-      },
-      {
-        "internalType": "uint128",
-        "name": "gaugePoints",
-        "type": "uint128"
-      },
-      {
-        "internalType": "uint96",
-        "name": "optimalPercentDepositedBdv",
-        "type": "uint96"
       }
     ],
     "name": "whitelistToken",
@@ -4380,21 +4285,6 @@
         "internalType": "bytes1",
         "name": "encodeType",
         "type": "bytes1"
-      },
-      {
-        "internalType": "bytes4",
-        "name": "gaugePointSelector",
-        "type": "bytes4"
-      },
-      {
-        "internalType": "uint128",
-        "name": "gaugePoints",
-        "type": "uint128"
-      },
-      {
-        "internalType": "uint96",
-        "name": "optimalPercentDepositedBdv",
-        "type": "uint96"
       }
     ],
     "name": "whitelistTokenWithEncodeType",
@@ -6297,21 +6187,6 @@
             "internalType": "bytes1",
             "name": "encodeType",
             "type": "bytes1"
-          },
-          {
-            "internalType": "uint128",
-            "name": "gaugePoints",
-            "type": "uint128"
-          },
-          {
-            "internalType": "bytes4",
-            "name": "gpSelector",
-            "type": "bytes4"
-          },
-          {
-            "internalType": "uint96",
-            "name": "optimalPercentDepositedBdv",
-            "type": "uint96"
           }
         ],
         "internalType": "struct Storage.SiloSettings",
@@ -6590,33 +6465,136 @@
     "type": "function"
   },
   {
+    "anonymous": false,
     "inputs": [
       {
-        "internalType": "uint256",
-        "name": "currentGaugePoints",
-        "type": "uint256"
+        "indexed": true,
+        "internalType": "address",
+        "name": "account",
+        "type": "address"
       },
       {
+        "indexed": false,
         "internalType": "uint256",
-        "name": "optimalPercentDepositedBdv",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "percentOfDepositedBdv",
+        "name": "beans",
         "type": "uint256"
       }
     ],
-    "name": "defaultGaugePointFunction",
-    "outputs": [
+    "name": "Incentivization",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
       {
+        "indexed": true,
+        "internalType": "uint32",
+        "name": "season",
+        "type": "uint32"
+      },
+      {
+        "indexed": false,
         "internalType": "uint256",
-        "name": "newGaugePoints",
+        "name": "toField",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "toSilo",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "toFertilizer",
         "type": "uint256"
       }
     ],
-    "stateMutability": "pure",
-    "type": "function"
+    "name": "Reward",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "season",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "amount",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "toField",
+        "type": "uint256"
+      }
+    ],
+    "name": "SeasonOfPlenty",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "uint32",
+        "name": "season",
+        "type": "uint32"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "soil",
+        "type": "uint256"
+      }
+    ],
+    "name": "Soil",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "season",
+        "type": "uint256"
+      }
+    ],
+    "name": "Sunrise",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "season",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "caseId",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "int8",
+        "name": "change",
+        "type": "int8"
+      }
+    ],
+    "name": "WeatherChange",
+    "type": "event"
   },
   {
     "inputs": [],
@@ -6667,105 +6645,19 @@
     "type": "function"
   },
   {
-    "inputs": [],
-    "name": "getAverageGrownStalkPerBdv",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "getAverageGrownStalkPerBdvPerSeason",
-    "outputs": [
-      {
-        "internalType": "uint128",
-        "name": "",
-        "type": "uint128"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "getBean3CRVLiquidity",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "usdLiquidity",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "getBeanEthTwaUsdLiquidity",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "getBeanToMaxLpGpPerBdvRatio",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "getBeanToMaxLpGpPerBdvRatioScaled",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "getDeltaPodDemand",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
     "inputs": [
       {
         "internalType": "address",
-        "name": "token",
+        "name": "account",
         "type": "address"
+      },
+      {
+        "internalType": "enum LibTransfer.To",
+        "name": "mode",
+        "type": "uint8"
       }
     ],
-    "name": "getGaugePoints",
+    "name": "gm",
     "outputs": [
       {
         "internalType": "uint256",
@@ -6773,128 +6665,7 @@
         "type": "uint256"
       }
     ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "getLastStalkGrowthRateUpdate",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "getLiquidityToSupplyRatio",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "getNewAverageGrownStalkPerBdvPerSeason",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "getNextStalkGrowthRateUpdate",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "getPodRate",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "getSeedGauge",
-    "outputs": [
-      {
-        "components": [
-          {
-            "internalType": "uint128",
-            "name": "averageGrownStalkPerBdvPerSeason",
-            "type": "uint128"
-          },
-          {
-            "internalType": "uint128",
-            "name": "beanToMaxLpGpPerBdvRatio",
-            "type": "uint128"
-          },
-          {
-            "internalType": "uint32",
-            "name": "lastStalkGrowthUpdate",
-            "type": "uint32"
-          }
-        ],
-        "internalType": "struct Storage.SeedGauge",
-        "name": "",
-        "type": "tuple"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "getTotalBdv",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "totalBdv",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "getTotalUsdLiquidity",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
+    "stateMutability": "payable",
     "type": "function"
   },
   {
@@ -6914,7 +6685,7 @@
     "inputs": [
       {
         "internalType": "uint32",
-        "name": "_season",
+        "name": "season",
         "type": "uint32"
       }
     ],
@@ -6989,6 +6760,32 @@
       }
     ],
     "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "seasonTime",
+    "outputs": [
+      {
+        "internalType": "uint32",
+        "name": "",
+        "type": "uint32"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "sunrise",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "payable",
     "type": "function"
   },
   {
@@ -7154,201 +6951,6 @@
       }
     ],
     "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": true,
-        "internalType": "uint256",
-        "name": "season",
-        "type": "uint256"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "caseId",
-        "type": "uint256"
-      },
-      {
-        "indexed": false,
-        "internalType": "int80",
-        "name": "absChange",
-        "type": "int80"
-      }
-    ],
-    "name": "BeanToMaxLpGpPerBdvRatioChange",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": true,
-        "internalType": "uint32",
-        "name": "season",
-        "type": "uint32"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "toField",
-        "type": "uint256"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "toSilo",
-        "type": "uint256"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "toFertilizer",
-        "type": "uint256"
-      }
-    ],
-    "name": "Reward",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": true,
-        "internalType": "uint256",
-        "name": "season",
-        "type": "uint256"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "amount",
-        "type": "uint256"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "toField",
-        "type": "uint256"
-      }
-    ],
-    "name": "SeasonOfPlenty",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": true,
-        "internalType": "uint32",
-        "name": "season",
-        "type": "uint32"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "soil",
-        "type": "uint256"
-      }
-    ],
-    "name": "Soil",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": true,
-        "internalType": "uint256",
-        "name": "season",
-        "type": "uint256"
-      }
-    ],
-    "name": "Sunrise",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": true,
-        "internalType": "uint256",
-        "name": "season",
-        "type": "uint256"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "caseId",
-        "type": "uint256"
-      },
-      {
-        "indexed": false,
-        "internalType": "int8",
-        "name": "absChange",
-        "type": "int8"
-      }
-    ],
-    "name": "TemperatureChange",
-    "type": "event"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "account",
-        "type": "address"
-      },
-      {
-        "internalType": "enum LibTransfer.To",
-        "name": "mode",
-        "type": "uint8"
-      }
-    ],
-    "name": "gm",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "payable",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "seasonTime",
-    "outputs": [
-      {
-        "internalType": "uint32",
-        "name": "",
-        "type": "uint32"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "sunrise",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "payable",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "updateAverageStalkPerBdvPerSeason",
-    "outputs": [],
-    "stateMutability": "nonpayable",
     "type": "function"
   }
 ]
