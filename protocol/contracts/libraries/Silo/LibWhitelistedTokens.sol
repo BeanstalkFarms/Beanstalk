@@ -228,7 +228,7 @@ library LibWhitelistedTokens {
             }
         }
 
-        if(s.whitelistStatuses[i].isWhitelisted) {
+        if (s.whitelistStatuses[i].isWhitelisted) {
             // token is whitelisted.
             return (true, false);
         } else {

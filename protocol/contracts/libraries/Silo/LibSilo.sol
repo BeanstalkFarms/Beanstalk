@@ -726,7 +726,7 @@ library LibSilo {
         }
 
         // "removing" deposits is equivalent to "burning" a batch of ERC1155 tokens.
-        if(emission == ERC1155Event.EMIT_BATCH_EVENT) {
+        if (emission == ERC1155Event.EMIT_BATCH_EVENT) {
             emit TransferBatch(msg.sender, account, address(0), removedDepositIDs, amounts);
         }
 

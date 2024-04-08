@@ -99,38 +99,9 @@ library LibWhitelist {
         verifyGaugePointSelector(gaugePointSelector);
         verifyLiquidityWeightSelector(liquidityWeightSelector);
 
-        // fetch the whitelist status of the token. Brackets due to stack too deep.
-        { 
-            (bool isWhitelisted, bool previouslyWhitelisted) = LibWhitelistedTokens.checkWhitelisted(token);
-            require(isWhitelisted == false, "Whitelist: Token already whitelisted");
-       
-            // add whitelist status. If previously whitelisted, update the status rather than appending.
-            if(previouslyWhitelisted) { 
-                LibWhitelistedTokens.updateWhitelistStatus(
-                    token,
-                    true, // Whitelisted by default.
-                    token != address(C.bean()) && !LibUnripe.isUnripe(token), // Assumes tokens that are not Unripe and not Bean are LP tokens.
-                    selector == LibWell.WELL_BDV_SELECTOR
-                );
-            } else {
-                // assumes new tokens are well pool tokens.
-                LibWhitelistedTokens.addWhitelistStatus(
-                    token,
-                    true, // Whitelisted by default.
-                    token != address(C.bean()) && !LibUnripe.isUnripe(token), // Assumes tokens that are not Unripe and not Bean are LP tokens.
-                    selector == LibWell.WELL_BDV_SELECTOR
-                );
-            }
-
-            // if the token has previously been whitelisted, the stalkIssuedPerBdv 
-            // cannot be updated, as previous deposits would have been made with the
-            // previous value. 
-            if(previouslyWhitelisted) { 
-                stalkIssuedPerBdv = s.ss[token].stalkIssuedPerBdv;
-            }
-        }
-        
-       
+        // verify whitelist status of token. 
+        // Updates stalkIssuedPerBdv in the case of an previously whitelisted token.
+        stalkIssuedPerBdv = verifyWhitelistStatus(token, selector, stalkIssuedPerBdv);       
 
         // If an LP token, initialize oracle storage variables.
         if (token != address(C.bean()) && !LibUnripe.isUnripe(token)) {
@@ -270,6 +241,49 @@ library LibWhitelist {
         // verify you passed in a callable liquidityWeight selector
         (bool success, ) = address(this).staticcall(abi.encodeWithSelector(selector));
         require(success, "Whitelist: Invalid LiquidityWeight selector");
+    }
+
+    /**
+     * @notice verifies whether a token is not whitelisted.
+     * @dev if the token has been previously whitelisted,
+     * return the current stalk issued per bdv.
+     */
+    function verifyWhitelistStatus(
+        address token,
+        bytes4 selector,
+        uint32 stalkIssuedPerBdv
+    ) internal returns (uint32) { 
+        AppStorage storage s = LibAppStorage.diamondStorage();
+        
+        (bool isWhitelisted, bool previouslyWhitelisted) = LibWhitelistedTokens.checkWhitelisted(token);
+            require(isWhitelisted == false, "Whitelist: Token already whitelisted");
+       
+        // add whitelist status. If previously whitelisted, update the status rather than appending.
+        if (previouslyWhitelisted) { 
+            LibWhitelistedTokens.updateWhitelistStatus(
+                token,
+                true, // Whitelisted by default.
+                token != address(C.bean()) && !LibUnripe.isUnripe(token), // Assumes tokens that are not Unripe and not Bean are LP tokens.
+                selector == LibWell.WELL_BDV_SELECTOR
+            );
+        } else {
+            // assumes new tokens are well pool tokens.
+            LibWhitelistedTokens.addWhitelistStatus(
+                token,
+                true, // Whitelisted by default.
+                token != address(C.bean()) && !LibUnripe.isUnripe(token), // Assumes tokens that are not Unripe and not Bean are LP tokens.
+                selector == LibWell.WELL_BDV_SELECTOR
+            );
+        }
+
+        // if the token has previously been whitelisted, the stalkIssuedPerBdv 
+        // cannot be updated, as previous deposits would have been made with the
+        // previous value. 
+        if (previouslyWhitelisted) { 
+            return s.ss[token].stalkIssuedPerBdv;
+        } else {
+            return stalkIssuedPerBdv;
+        }
     }
     
 }
