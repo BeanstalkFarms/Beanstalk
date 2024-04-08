@@ -87,7 +87,7 @@ const SiloActions: FC<{
     ? withdrawalItems.length > 0
     : false;
 
-  const isDeprecated = checkIfDeprecated(token);
+  const isDeprecated = checkIfDeprecated(token.address);
 
   return (
     <>

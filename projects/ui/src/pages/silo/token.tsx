@@ -59,6 +59,9 @@ const TokenPage: FC<{}> = () => {
   // If no data loaded...
   if (!whitelistedToken) return null;
 
+  const tokenIsBEAN3CRV =
+    address.toLowerCase() === '0xc9c32cd16bf7efb85ff14e0c8603cc90f6f2ee49';
+
   return (
     <Container sx={{ maxWidth: `${XXLWidth}px !important`, width: '100%' }}>
       <Stack gap={2} width="100%">
@@ -86,26 +89,28 @@ const TokenPage: FC<{}> = () => {
             />
           }
         />
-        <Chip
-          sx={{
-            border: '1px solid #ae2d20',
-            color: '#647265',
-            backgroundColor: '#fbeaeb',
-            marginTop: '5px',
-            padding: '15px 10px',
-          }}
-          label={
-            <span>
-              This token was removed from the Deposit Whitelist in{' '}
-              <Link to="/governance/0x83227d95ec06039a920583b1002588efa89fa079692d8c4aebe097bbcc2aaea8">
-                BIP-40
-              </Link>
-              . Farmers may no longer Deposit this token into the Silo. Any
-              Deposits before the upgrade can be Converted, Transfered or
-              Withdrawn.{' '}
-            </span>
-          }
-        />
+        {tokenIsBEAN3CRV && (
+          <Chip
+            sx={{
+              border: '1px solid #ae2d20',
+              color: '#647265',
+              backgroundColor: '#fbeaeb',
+              marginTop: '5px',
+              padding: '15px 10px',
+            }}
+            label={
+              <span>
+                This token was removed from the Deposit Whitelist in{' '}
+                <Link to="/governance/0x83227d95ec06039a920583b1002588efa89fa079692d8c4aebe097bbcc2aaea8">
+                  BIP-40
+                </Link>
+                . Farmers may no longer Deposit this token into the Silo. Any
+                Deposits before the upgrade can be Converted, Transfered or
+                Withdrawn.{' '}
+              </span>
+            }
+          />
+        )}
         <Stack gap={2} direction={{ xs: 'column', lg: 'row' }} width="100%">
           <Stack
             width="100%"
