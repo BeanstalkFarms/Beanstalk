@@ -46,7 +46,6 @@ const SiloActions: FC<{
 }> = (props) => {
   const sdk = useSdk();
   const checkIfDeprecated = useIsTokenDeprecated();
-  const [tab, handleChange] = useTabs(SLUGS, 'action');
   const migrationNeeded = useMigrationNeeded();
   const account = useAccount();
 
@@ -54,6 +53,10 @@ const SiloActions: FC<{
     const match = sdk.tokens.findBySymbol(props.token.symbol) as ERC20Token;
     return match;
   }, [props.token.symbol, sdk.tokens]);
+
+  const isDeprecated = checkIfDeprecated(token.address);
+
+  const [tab, handleChange] = useTabs(SLUGS, 'action', isDeprecated ? 1 : 0);
 
   const [fetchLegacyWithdrawals, withdrawalsQuery] =
     useFarmerLegacyWithdrawalsLazyQuery({
@@ -87,8 +90,6 @@ const SiloActions: FC<{
     ? withdrawalItems.length > 0
     : false;
 
-  const isDeprecated = checkIfDeprecated(token.address);
-
   return (
     <>
       <Module>
@@ -110,18 +111,26 @@ const SiloActions: FC<{
             </Link>
           </Alert>
         ) : null}
-        <ModuleTabs value={tab} onChange={handleChange}>
+        <ModuleTabs
+          value={isDeprecated && tab === 0 ? 1 : tab}
+          onChange={handleChange}
+        >
           {!isDeprecated && (
-            <Tab label="Deposit" disabled={migrationNeeded === true} />
+            <Tab
+              label="Deposit"
+              disabled={migrationNeeded === true}
+              value={0}
+            />
           )}
-          <Tab label="Convert" disabled={migrationNeeded === true} />
-          <Tab label="Transfer" disabled={migrationNeeded === true} />
-          <Tab label="Withdraw" disabled={migrationNeeded === true} />
+          <Tab label="Convert" disabled={migrationNeeded === true} value={1} />
+          <Tab label="Transfer" disabled={migrationNeeded === true} value={2} />
+          <Tab label="Withdraw" disabled={migrationNeeded === true} value={3} />
           {hasClaimableBeans && (
             <BadgeTab
               label="Claim"
               showBadge
               disabled={migrationNeeded === true}
+              value={4}
             />
           )}
         </ModuleTabs>
