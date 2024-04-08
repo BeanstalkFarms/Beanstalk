@@ -135,7 +135,7 @@ contract PipelineConvertTest is TestHelper {
         stems[0] = stem;
 
         AdvancedFarmCall[] memory farmCalls = new AdvancedFarmCall[](1);
-        AdvancedFarmCall[] memory beanToLPFarmCalls = createBeanToLP(amount);
+        AdvancedFarmCall[] memory beanToLPFarmCalls = createBeanToLPFarmCalls(amount);
         farmCalls[0] = beanToLPFarmCalls[0]; // Assign the first element of the returned array
 
         uint256[] memory amounts = new uint256[](1);
@@ -217,7 +217,7 @@ contract PipelineConvertTest is TestHelper {
         stems[0] = stem;
 
         AdvancedFarmCall[] memory farmCalls = new AdvancedFarmCall[](1);
-        AdvancedFarmCall[] memory beanToLPFarmCalls = createLPToBean(lpAmountOut);
+        AdvancedFarmCall[] memory beanToLPFarmCalls = createLPToBeanFarmCalls(lpAmountOut);
         farmCalls[0] = beanToLPFarmCalls[0]; // Assign the first element of the returned array
 
         uint256[] memory amounts = new uint256[](1);
@@ -340,8 +340,6 @@ contract PipelineConvertTest is TestHelper {
         // setup initial bean deposit
         int96 stem = beanToLPDepositSetup(amount, users[1]);
 
-        int256 initialDeltaB = seasonGetters.poolDeltaBInsta(C.BEAN_ETH_WELL);
-
         // mint user 10 eth
         uint256 ethAmount = 10e18;
         MockToken(C.WETH).mint(users[1], ethAmount);
@@ -355,10 +353,7 @@ contract PipelineConvertTest is TestHelper {
         tokenAmountsIn[1] = ethAmount;
 
         vm.prank(users[1]);
-        uint256 lpAmountOut = IWell(C.BEAN_ETH_WELL).addLiquidity(tokenAmountsIn, 0, users[1], type(uint256).max);
-        
-        // log insta deltaB
-        int256 beforeDeltaB = seasonGetters.poolDeltaBInsta(C.BEAN_ETH_WELL);
+        IWell(C.BEAN_ETH_WELL).addLiquidity(tokenAmountsIn, 0, users[1], type(uint256).max);
 
         uint256 grownStalkBefore = bs.balanceOfGrownStalk(users[1], C.BEAN);
 
@@ -392,39 +387,30 @@ contract PipelineConvertTest is TestHelper {
         // then setup a convert from user 2
         int96 stem2 = beanToLPDepositSetup(amount, users[2]);
 
-        int256 initialDeltaB = seasonGetters.poolDeltaBInsta(C.BEAN_ETH_WELL);
-
         // if you deposited amount of beans into well, how many eth would you get?
         uint256 ethAmount = IWell(C.BEAN_ETH_WELL).getSwapOut(IERC20(C.BEAN), IERC20(C.WETH), amount);
 
         ethAmount = ethAmount.mul(12000).div(10000); // I need a better way to calculate how much eth out there should be to make sure we can swap and be over peg
 
-        uint256 lpAmountOut = addEthToWell(users[1], ethAmount);
+        addEthToWell(users[1], ethAmount);
         
+        // go to next block
         vm.roll(block.number + 1);
-
-        // log insta deltaB
-        int256 beforeDeltaB = seasonGetters.poolDeltaBInsta(C.BEAN_ETH_WELL);
 
         uint256 grownStalkBefore = bs.balanceOfGrownStalk(users[2], C.BEAN);
 
-        console.log('grownStalkBefore: ', grownStalkBefore);
-
         // update pump
-        // get
         updateMockPumpUsingWellReserves(C.BEAN_ETH_WELL);
 
-        (int256 cappedDeltaB, , ) = convert.cappedReservesDeltaB(C.BEAN_ETH_WELL);
-
+        convert.cappedReservesDeltaB(C.BEAN_ETH_WELL);
 
         uint256 convertPowerStage1 = convert.getConvertPower();
 
         // convert beans to lp
-        (int96[] memory outputStems, uint256[] memory outputAmounts) = beanToLPDoConvert(amount, stem, users[1]);
+        beanToLPDoConvert(amount, stem, users[1]);
 
         uint256 convertPowerStage2 = convert.getConvertPower();
         assertTrue(convertPowerStage2 < convertPowerStage1);
-
 
         // add more eth to well again
         addEthToWell(users[1], ethAmount);
@@ -434,23 +420,12 @@ contract PipelineConvertTest is TestHelper {
         uint256 convertPowerStage3 = convert.getConvertPower();
         assertTrue(convertPowerStage3 < convertPowerStage2);
 
-
         uint256 grownStalkAfter = bs.balanceOfGrownStalk(users[2], C.BEAN_ETH_WELL);
-
 
         assertTrue(grownStalkAfter == 0); // all grown stalk was lost because no convert power left
         assertTrue(grownStalkBefore > 0);
     }
 
-    function updateMockPumpUsingWellReserves(address well) public {
-        Call[] memory pumps = IWell(well).pumps();
-        for (uint i = 0; i < pumps.length; i++) {
-            address pump = pumps[i].target;
-            // pass to the pump the reserves that we actually have in the well
-            uint[] memory reserves = IWell(well).getReserves();
-            MockPump(pump).update(reserves, new bytes(0));
-        }
-    }
 
 
     function testCalculateStalkPenaltyUpwardsToZero() public {
@@ -576,6 +551,15 @@ contract PipelineConvertTest is TestHelper {
 
     ////// SILO TEST HELPERS //////
 
+    function updateMockPumpUsingWellReserves(address well) public {
+        Call[] memory pumps = IWell(well).pumps();
+        for (uint i = 0; i < pumps.length; i++) {
+            address pump = pumps[i].target;
+            // pass to the pump the reserves that we actually have in the well
+            uint[] memory reserves = IWell(well).getReserves();
+            MockPump(pump).update(reserves, new bytes(0));
+        }
+    }
 
     function doBasicBeanToLP(uint256 amount, address user) public {
         int96 stem = beanToLPDepositSetup(amount, user);
@@ -605,7 +589,7 @@ contract PipelineConvertTest is TestHelper {
         stems[0] = stem;
 
         AdvancedFarmCall[] memory farmCalls = new AdvancedFarmCall[](1);
-        AdvancedFarmCall[] memory beanToLPFarmCalls = createBeanToLP(amount);
+        AdvancedFarmCall[] memory beanToLPFarmCalls = createBeanToLPFarmCalls(amount);
         farmCalls[0] = beanToLPFarmCalls[0]; // Assign the first element of the returned array
 
         uint256[] memory amounts = new uint256[](1);
@@ -622,32 +606,6 @@ contract PipelineConvertTest is TestHelper {
         );
     }
 
-    // function lpToBeanDepositSetup(uint256 amount) public returns (int96 stem) {
-    //     vm.pauseGasMetering();
-
-    //     bean.mint(users[1], amount);
-    //     // user 1 deposits bean into bean:eth well, first approve
-    //     vm.prank(users[1]);
-    //     bean.approve(C.BEAN_ETH_WELL, type(uint256).max);
-
-    //     uint256[] memory tokenAmountsIn = new uint256[](2);
-    //     tokenAmountsIn[0] = amount;
-    //     tokenAmountsIn[1] = 0;
-
-    //     vm.prank(users[1]);
-    //     uint256 lpAmountOut = IWell(C.BEAN_ETH_WELL).addLiquidity(tokenAmountsIn, 0, users[1], type(uint256).max);
-
-    //     // approve spending well token to beanstalk
-    //     vm.prank(users[1]);
-    //     MockToken(C.BEAN_ETH_WELL).approve(BEANSTALK, type(uint256).max);
-
-    //     vm.prank(users[1]);
-    //     ( , , stem) = silo.deposit(C.BEAN_ETH_WELL, lpAmountOut, LibTransfer.From.EXTERNAL);
-    //     passGermination();
-    //     console.log('lpToBeanDepositSetup done, stem is: ');
-    //     console.logInt(stem);
-    // }
-
     function lpToBeanDoConvert(uint256 lpAmountOut, int96 stem, address user) public
         returns (int96[] memory outputStems, uint256[] memory outputAmounts) {
         // Create arrays for stem and amount. Tried just passing in [stem] and it's like nope.
@@ -655,7 +613,7 @@ contract PipelineConvertTest is TestHelper {
         stems[0] = stem;
 
         AdvancedFarmCall[] memory farmCalls = new AdvancedFarmCall[](1);
-        AdvancedFarmCall[] memory beanToLPFarmCalls = createLPToBean(lpAmountOut);
+        AdvancedFarmCall[] memory beanToLPFarmCalls = createLPToBeanFarmCalls(lpAmountOut);
         farmCalls[0] = beanToLPFarmCalls[0]; // Assign the first element of the returned array
 
         uint256[] memory amounts = new uint256[](1);
@@ -813,7 +771,7 @@ contract PipelineConvertTest is TestHelper {
         assertEq(bs.balanceOfGerminatingStalk(farmer), C.STALK_PER_BEAN * expected, "balanceOfGerminatingStalk");
     }
 
-    function createBeanToLP(
+    function createBeanToLPFarmCalls(
         uint256 amountOfBean
     ) public returns (AdvancedFarmCall[] memory output) {
         // first setup the pipeline calls
@@ -878,7 +836,7 @@ contract PipelineConvertTest is TestHelper {
         return advancedFarmCalls;
     }
 
-    function createLPToBean(
+    function createLPToBeanFarmCalls(
         uint256 amountOfLP
     ) public returns (AdvancedFarmCall[] memory output) {
         console.log('createLPToBean amountOfLP: ', amountOfLP);
