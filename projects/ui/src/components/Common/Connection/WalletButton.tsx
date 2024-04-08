@@ -1,10 +1,6 @@
 import React from 'react';
 //  import { Link as RouterLink } from 'react-router-dom';
-import {
-  useDisconnect,
-  useNetwork,
-  useAccount as useWagmiAccount,
-} from 'wagmi';
+import { useDisconnect, useAccount as useWagmiAccount } from 'wagmi';
 import {
   Box,
   Button,
@@ -28,23 +24,22 @@ import disconnectIcon from '~/img/beanstalk/interface/nav/disconnect.svg';
 import useAnchor from '~/hooks/display/useAnchor';
 import useToggle from '~/hooks/display/useToggle';
 import useAccount from '~/hooks/ledger/useAccount';
+import { BeanstalkPalette } from '~/components/App/muiTheme';
 import { CHAIN_INFO } from '~/constants';
-import WalletDialog from './WalletDialog';
 import PickBeansDialog from '~/components/Farmer/Unripe/PickDialog';
 import AddressIcon from '~/components/Common/AddressIcon';
 import useGlobal from '~/hooks/app/useGlobal';
 import Row from '~/components/Common/Row';
 import FolderMenu from '~/components/Nav/FolderMenu';
-
 import { FC } from '~/types';
-import { BeanstalkPalette } from '~/components/App/muiTheme';
+
+import WalletDialog from './WalletDialog';
 
 const WalletButton: FC<{ showFullText?: boolean } & ButtonProps> = ({
   ...props
 }) => {
   const account = useAccount();
-  const { address } = useWagmiAccount();
-  const { chain: _chain } = useNetwork();
+  const { address, chain: _chain } = useWagmiAccount();
   const { disconnect } = useDisconnect();
   const chain = useChainConstant(CHAIN_INFO);
 
@@ -54,7 +49,7 @@ const WalletButton: FC<{ showFullText?: boolean } & ButtonProps> = ({
 
   /// Menu
   const [menuAnchor, toggleMenuAnchor] = useAnchor();
-  const menuVisible = Boolean(menuAnchor);
+  // const menuVisible = Boolean(menuAnchor);
 
   /// Dialog: Wallet
   const [selectingWallet, showWallets, hideWallets] = useToggle();
