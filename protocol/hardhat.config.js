@@ -29,7 +29,8 @@ const {
   mintEth,
   getBeanstalk
 } = require("./utils");
-const { BEANSTALK, PUBLIUS, BEAN_3_CURVE, BEAN_ETH_WELL, UNRIPE_BEAN } = require("./test/utils/constants.js");
+const { BEANSTALK, PUBLIUS, BEAN_3_CURVE, PRICE } = require("./test/utils/constants.js");
+const { deployContract } = require("./scripts/contracts.js")
 const { to6 } = require("./test/utils/helpers.js");
 //const { replant } = require("./replant/replant.js")
 const { task } = require("hardhat/config");
@@ -181,6 +182,22 @@ task("diamondABI", "Generates ABI file for diamond, includes all ABIs of facets"
   console.log("ABI written to abi/Beanstalk.json");
 });
 
+task("deployBeanstalkPrice", async function () {
+  let json = fs.readFileSync(`./artifacts/contracts/ecosystem/price/BeanstalkPrice.sol/BeanstalkPrice.json`);
+  await network.provider.send("hardhat_setCode", [
+    PRICE,
+    JSON.parse(json).deployedBytecode,
+  ]);
+  priceContract =  await ethers.getContractAt('BeanstalkPrice', PRICE)
+  console.log("BeanstalkPrice deployed at: ", priceContract.address)
+});
+
+task("testPrice", async function () {
+  priceContract =  await ethers.getContractAt('BeanstalkPrice', PRICE)
+  console.log("Price: ", (await priceContract.price()).toString())
+});
+
+// BIP //
 task("marketplace", async function () {
   const owner = await impersonateBeanstalkOwner();
   await mintEth(owner.address);
@@ -220,9 +237,12 @@ task("beanstalkAdmin", async function () {
   await mockBeanstalkAdmin();
 });
 
-task("deployBip39", async function () {
+task("deploySeedGauge", async function () {
   await bipSeedGauge();
 });
+
+
+/// EBIPS /// 
 
 task("ebip14", async function () {
   await ebip14();

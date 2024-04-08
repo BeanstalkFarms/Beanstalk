@@ -6,6 +6,7 @@ pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
 import {AppStorage, Storage, Account} from "contracts/beanstalk/AppStorage.sol";
+import {LibBeanMetaCurve} from "contracts/libraries/Curve/LibBeanMetaCurve.sol";
 import {LibLegacyTokenSilo} from "contracts/libraries/Silo/LibLegacyTokenSilo.sol";
 import {LibSafeMath128} from "contracts/libraries/LibSafeMath128.sol";
 import {LibGerminate} from "contracts/libraries/Silo/LibGerminate.sol";
@@ -148,7 +149,12 @@ contract SiloGettersFacet is ReentrancyGuard {
         view
         returns (uint256 _bdv)
     {
-        _bdv = LibTokenSilo.beanDenominatedValue(token, amount);
+        // future dewhitelisted tokens should be added here.
+        if(token == C.CURVE_BEAN_METAPOOL) {
+            return LibBeanMetaCurve.bdv(amount);
+        } else {
+            return LibTokenSilo.beanDenominatedValue(token, amount);
+        }   
     }
 
     //////////////////////// UTILTIES ////////////////////////
