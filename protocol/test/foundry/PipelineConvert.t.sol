@@ -24,6 +24,7 @@ import {console} from "forge-std/console.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {LibWell} from "contracts/libraries/Well/LibWell.sol";
 import {ICappedReservesPump} from "contracts/interfaces/basin/pumps/ICappedReservesPump.sol";
+import {LibClipboard} from "contracts/libraries/LibClipboard.sol";
 import "forge-std/Test.sol";
 
 /**
@@ -107,7 +108,7 @@ contract PipelineConvertTest is TestHelper {
         mintTokensToUsers(farmers, C.BEAN,  MAX_DEPOSIT_BOUND);
     }
 
-    //////////// DEPOSITS ////////////
+    //////////// CONVERTS ////////////
 
     function testBasicConvertBeanToLP(uint256 amount) public {
         vm.pauseGasMetering();
@@ -220,6 +221,42 @@ contract PipelineConvertTest is TestHelper {
             stems,  // stems
             amounts,  // amount
             C.BEAN, // token out
+            farmCalls // farmData
+        );
+    }
+
+    function testBasicConvertLPToLP(uint256 amount) public {
+        vm.pauseGasMetering();
+        int96 stem;
+        // well is initalized with 10000 beans. cap add liquidity 
+        // to reasonable amounts.
+        amount = bound(amount, 1e6, 5000e6);
+
+        // do the convert
+
+        // Create arrays for stem and amount. Tried just passing in [stem] and it's like nope.
+        int96[] memory stems = new int96[](1);
+        stems[0] = stem;
+
+        AdvancedFarmCall[] memory farmCalls = new AdvancedFarmCall[](1);
+        AdvancedFarmCall[] memory lpToLPFarmCalls = createLPToLPFarmCalls(amount);
+        farmCalls[0] = lpToLPFarmCalls[0]; // Assign the first element of the returned array
+
+        console.log('got farm calls');
+
+        uint256[] memory amounts = new uint256[](1);
+        amounts[0] = amount;
+        
+        vm.resumeGasMetering();
+        vm.prank(users[1]); // do this as user 1
+
+        console.log('doing pipeline convert');
+
+        convert.pipelineConvert(
+            C.BEAN_ETH_WELL, // input token
+            stems,  // stems
+            amounts,  // amount
+            C.BEAN_ETH_WELL, // token out
             farmCalls // farmData
         );
     }
@@ -893,6 +930,125 @@ contract PipelineConvertTest is TestHelper {
             );
 
         advancedFarmCalls[0] = AdvancedFarmCall(advancedPipeCalldata, new bytes(0));
+
+        // encode into bytes. 
+        // output = abi.encode(advancedFarmCalls);
+        return advancedFarmCalls;
+    }
+
+    function createLPToLPFarmCalls(
+        uint256 amountOfLP
+    ) public returns (AdvancedFarmCall[] memory output) {
+        
+        console.log('createLPToBean amountOfLP: ', amountOfLP);
+        // first setup the pipeline calls
+
+        // setup approve max call
+        bytes memory approveEncoded = abi.encodeWithSelector(
+            IERC20.approve.selector,
+            C.BEAN_ETH_WELL,
+            MAX_UINT256
+        );
+
+        // uint256[] memory tokenAmountsIn = new uint256[](2); 
+        // tokenAmountsIn[0] = amountOfLP;
+        // tokenAmountsIn[1] = amountOfBean;
+
+        console.log('1');
+
+        // encode remove liqudity.
+        bytes memory removeLiquidityEncoded = abi.encodeWithSelector(
+            IWell.removeLiquidityOneToken.selector,
+            amountOfLP, // lpAmountIn
+            C.BEAN, // tokenOut
+            0, // min out
+            C.PIPELINE, // recipient
+            type(uint256).max // deadline
+        );
+
+        console.log('2');
+
+        uint256[] memory emptyAmountsIn = new uint256[](2); 
+        emptyAmountsIn[0] = 0;
+        emptyAmountsIn[1] = 1; // need to paste in here
+
+        console.log('3');
+
+        // encode add liquidity
+        bytes memory addLiquidityEncoded = abi.encodeWithSelector(
+            IWell.addLiquidity.selector,
+            emptyAmountsIn, // to be pasted in
+            0, // min out
+            C.PIPELINE, // recipient
+            type(uint256).max // deadline
+        );
+
+        console.log('4');
+
+        // Fabricate advancePipes: 
+        AdvancedPipeCall[] memory advancedPipeCalls = new AdvancedPipeCall[](2);
+        
+        // Action 0: approve the Bean-Eth well to spend pipeline's bean.
+        advancedPipeCalls[0] = AdvancedPipeCall(
+            C.BEAN, // target
+            approveEncoded, // calldata
+            abi.encode(0) // clipboard
+        );
+
+        // Action 1: remove beans from well. 
+        advancedPipeCalls[1] = AdvancedPipeCall(
+            C.BEAN_ETH_WELL, // target
+            removeLiquidityEncoded, // calldata
+            abi.encode(0) // clipboard
+        );
+
+
+        // returnDataItemIndex, copyIndex, pasteIndex
+
+        console.log('5');
+
+        // uint256[3] memory params = [uint256(1), uint256(1), uint256(1)];
+        bytes32[] memory returnPasteParams = new bytes32[](3);
+        returnPasteParams[0] = bytes32(uint256(1));
+        returnPasteParams[1] = bytes32(uint256(0));
+        returnPasteParams[2] = bytes32(uint256(1));
+
+
+        bytes memory clipboard = LibClipboard.encode(0, returnPasteParams);
+
+        console.log('clipboard: ');
+        console.logBytes(clipboard);
+
+        console.log('6');
+
+        // Action 2: add beans to wsteth:bean well. 
+        advancedPipeCalls[2] = AdvancedPipeCall(
+            C.BEAN_WSTETH_WELL, // target
+            addLiquidityEncoded, // calldata
+            // clipboard // clipboard
+            new bytes(0)
+        );
+
+        console.log('7');
+
+        // Encode into a AdvancedFarmCall. NOTE: advancedFarmCall != advancedPipeCall. 
+        
+        // AdvancedFarmCall calls any function on the beanstalk diamond. 
+        // advancedPipe is one of the functions that its calling. 
+        // AdvancedFarmCall cannot call approve/addLiquidity, but can call AdvancedPipe.
+        // AdvancedPipe can call any arbitrary function.
+        AdvancedFarmCall[] memory advancedFarmCalls = new AdvancedFarmCall[](1);
+        
+        bytes memory advancedPipeCalldata = 
+            abi.encodeWithSelector(
+                depot.advancedPipe.selector,
+                advancedPipeCalls,
+                0
+            );
+
+        advancedFarmCalls[0] = AdvancedFarmCall(advancedPipeCalldata, new bytes(0));
+
+        console.log('returning advanced farm calls');
 
         // encode into bytes. 
         // output = abi.encode(advancedFarmCalls);
