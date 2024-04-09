@@ -101,6 +101,7 @@ export function handleWhitelistToken_BIP42(event: WhitelistToken): void {
   siloSettings.stalkIssuedPerBdv = event.params.stalkIssuedPerBdv;
   siloSettings.gaugePoints = event.params.gaugePoints;
   siloSettings.gpSelector = event.params.gpSelector;
+  siloSettings.lwSelector = event.params.lwSelector;
   siloSettings.optimalPercentDepositedBdv = event.params.optimalPercentDepositedBdv;
   siloSettings.updatedAt = event.block.timestamp;
   siloSettings.save();
