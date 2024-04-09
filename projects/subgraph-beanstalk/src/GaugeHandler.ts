@@ -1,11 +1,13 @@
 import { BigDecimal } from "@graphprotocol/graph-ts";
-import { BEANSTALK, BEANSTALK_PRICE } from "../../subgraph-core/utils/Constants";
+import { BEANSTALK_PRICE } from "../../subgraph-core/utils/Constants";
 import { ONE_BD, ZERO_BD, toDecimal } from "../../subgraph-core/utils/Decimals";
 import {
   BeanToMaxLpGpPerBdvRatioChange,
   GaugePointChange,
   TemperatureChange,
   UpdateAverageStalkPerBdvPerSeason,
+  FarmerGerminatingStalkBalanceChanged,
+  TotalGerminatingBalanceChanged,
   UpdateGaugeSettings,
   WhitelistToken
 } from "../generated/BIP42-SeedGauge/Beanstalk";
@@ -49,8 +51,10 @@ export function handleTemperatureChange(event: TemperatureChange): void {
   fieldDaily.save();
 }
 
+// SEED GAUGE SEASONAL ADJUSTMENTS //
+
 export function handleBeanToMaxLpGpPerBdvRatioChange(event: BeanToMaxLpGpPerBdvRatioChange): void {
-  let silo = loadSilo(BEANSTALK);
+  let silo = loadSilo(event.address);
 
   if (silo.beanToMaxLpGpPerBdvRatio == null) {
     silo.beanToMaxLpGpPerBdvRatio = event.params.absChange;
@@ -68,13 +72,26 @@ export function handleGaugePointChange(event: GaugePointChange): void {
 }
 
 export function handleUpdateAverageStalkPerBdvPerSeason(event: UpdateAverageStalkPerBdvPerSeason): void {
-  let silo = loadSilo(BEANSTALK);
-
+  let silo = loadSilo(event.address);
   silo.grownStalkPerBdvPerSeason = event.params.newStalkPerBdvPerSeason;
   silo.save();
 }
 
-// TODO: Germinating stalk.
+// GERMINATING STALK //
+
+export function handleFarmerGerminatingStalkBalanceChanged(event: FarmerGerminatingStalkBalanceChanged): void {
+  let farmerSilo = loadSilo(event.params.account);
+  farmerSilo.germinatingStalk = farmerSilo.germinatingStalk.plus(event.params.delta);
+  farmerSilo.save();
+}
+
+export function handleTotalGerminatingBalanceChanged(event: TotalGerminatingBalanceChanged): void {
+  let silo = loadSilo(event.address);
+  silo.germinatingStalk = silo.germinatingStalk.plus(event.params.delta);
+  silo.save();
+}
+
+// WHITELIST / GAUGE CONFIGURATION SETTINGS //
 
 export function handleWhitelistToken_BIP42(event: WhitelistToken): void {
   let siloSettings = loadWhitelistTokenSetting(event.params.token);

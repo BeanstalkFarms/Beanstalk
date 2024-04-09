@@ -124,6 +124,8 @@ type Silo @entity {
   grownStalkPerBdvPerSeason: BigInt!
   "Current roots balance"
   roots: BigInt!
+  "[Seed Gauge] Stalk that is currently Germinating"
+  germinatingStalk: BigInt!
   "[Seed Gauge] Current target ratio of Bean to LP deposits"
   beanToMaxLpGpPerBdvRatio: BigInt
   "Cumulative total for bean mints sent to the silo"
