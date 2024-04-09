@@ -21,14 +21,14 @@ export function handleTemperatureChange(event: TemperatureChange): void {
 export function handleBeanToMaxLpGpPerBdvRatioChange(event: BeanToMaxLpGpPerBdvRatioChange): void {
   let silo = loadSilo(event.address);
 
-  if (silo.beanToMaxLpGpPerBdvRatio == null) {
+  if (silo.beanToMaxLpGpPerBdvRatio === null) {
     silo.beanToMaxLpGpPerBdvRatio = event.params.absChange;
   } else {
-    silo.beanToMaxLpGpPerBdvRatio = silo.beanToMaxLpGpPerBdvRatio.plus(event.params.absChange);
+    silo.beanToMaxLpGpPerBdvRatio = silo.beanToMaxLpGpPerBdvRatio!.plus(event.params.absChange);
   }
   silo.save();
 
-  let siloHourly = loadSiloHourlySnapshot(event.address, event.params.season, event.block.timestamp);
+  let siloHourly = loadSiloHourlySnapshot(event.address, event.params.season.toI32(), event.block.timestamp);
   siloHourly.caseId = event.params.caseId;
   siloHourly.save();
 }

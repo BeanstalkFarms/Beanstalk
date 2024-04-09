@@ -763,8 +763,6 @@ dataSources:
           handler: handleUpdateGaugeSettings
         - event: UpdateAverageStalkPerBdvPerSeason(uint256)
           handler: handleUpdateAverageStalkPerBdvPerSeason
-        - event: UpdatedStalkPerBdvPerSeason(indexed address,uint32,uint32)
-          handler: handleUpdateStalkPerBdvPerSeason
         - event: WhitelistToken(indexed address,bytes4,uint32,uint256,bytes4,bytes4,uint128,uint64)
           handler: handleWhitelistToken_BIP42
       file: ./src/GaugeHandler.ts
