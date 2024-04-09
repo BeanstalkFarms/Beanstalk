@@ -298,6 +298,8 @@ library LibWellMinting {
         }
         catch {
             console.log('ERROR: cappedReservesDeltaB failed');
+            // TODO: revert here?
+            return (0, new uint256[](0), new uint256[](0));
         }
     }
 

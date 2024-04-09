@@ -233,7 +233,7 @@ contract ConvertFacet is ReentrancyGuard {
         pipeData.grownStalks = _applyPenaltyToGrownStalks(pipeData.stalkPenaltyBdv, pipeData.bdvsRemoved, pipeData.grownStalks);
 
         // Deposit new crates, Convert event emitted within this function
-        (outputStems, outputAmounts) = _depositTokensForConvertMultiCrate(inputToken, outputToken, pipeData.amountOut, pipeData.bdvsRemoved, pipeData.grownStalks, amounts, pipeData.stalkPenaltyBdv);
+        (outputStems, outputAmounts) = _depositTokensForConvertMultiCrate(inputToken, outputToken, pipeData.amountOut, pipeData.bdvsRemoved, pipeData.grownStalks, amounts);
 
         // End of convert function, reset Tractor publisher
         LibTractor._resetPublisher();
@@ -371,10 +371,6 @@ contract ConvertFacet is ReentrancyGuard {
 
             return penalty+crossoverAmount; // should this be capped at bdvConverted?
         }
-
-
-        // If the deltaB did not cross zero, or is the same before/after, return 0. In the future maybe calculate bonus here.
-        return 0;
     }
 
     function getConvertPower() public view returns (uint256) {
@@ -625,7 +621,6 @@ contract ConvertFacet is ReentrancyGuard {
      * @param bdvs The bdvs to split the amounts into
      * @param grownStalks The amount of Stalk to deposit per crate
      * @param inputAmounts The amount of tokens to deposit per crate
-     * @param stalkPenaltyBdv The BDV amount that gets penalized
      */
     function _depositTokensForConvertMultiCrate(
         address inputToken,
@@ -633,8 +628,7 @@ contract ConvertFacet is ReentrancyGuard {
         uint256 amount,
         uint256[] memory bdvs,
         uint256[] memory grownStalks,
-        uint256[] memory inputAmounts,
-        uint256 stalkPenaltyBdv
+        uint256[] memory inputAmounts
     ) internal returns (int96[] memory outputStems, uint256[] memory outputAmounts) {
 
         MultiCrateDepositData memory mcdd;

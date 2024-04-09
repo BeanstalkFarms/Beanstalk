@@ -121,7 +121,7 @@ contract PipelineConvertTest is TestHelper {
         address[] memory setupUsers = new address[](1);
         setupUsers[0] = users[1];
 
-        (amount, ) = setUpSiloDepositTest(amount, setupUsers);
+        (amount, stem) = setUpSiloDepositTest(amount, setupUsers);
         console.log('stem: ');
         console.logInt(stem);
         console.log('amount: ', amount);
@@ -169,16 +169,6 @@ contract PipelineConvertTest is TestHelper {
             farmCalls // farmData
         );
 
-    }
-
-    function getWellAmountOutForAddingBeans(uint256 amount) public view returns (uint256) {
-
-        uint256[] memory amounts = new uint256[](2);
-        amounts[0] = amount;
-        amounts[1] = 0;
-
-        uint256 wellAmountOut = IWell(C.BEAN_ETH_WELL).getAddLiquidityOut(amounts);
-        return wellAmountOut;
     }
 
     function testBasicConvertLPToBean(uint256 amount) public {
@@ -278,9 +268,6 @@ contract PipelineConvertTest is TestHelper {
 
     function testConvertAgainstPegAndLoseStalk(uint256 amount) public {
         amount = bound(amount, 5000e6, 5000e6); // todo: update for range
-
-        // get new deltaB
-        int256 beforeDeltaB = seasonGetters.poolDeltaBInsta(C.BEAN_ETH_WELL);
         
         int96 stem = beanToLPDepositSetup(amount, users[1]);
         // uint256 beforeTotalStalk = bs.totalStalk();
@@ -628,6 +615,15 @@ contract PipelineConvertTest is TestHelper {
             C.BEAN, // token out
             farmCalls // farmData
         );
+    }
+
+    function getWellAmountOutForAddingBeans(uint256 amount) public view returns (uint256) {
+        uint256[] memory amounts = new uint256[](2);
+        amounts[0] = amount;
+        amounts[1] = 0;
+
+        uint256 wellAmountOut = IWell(C.BEAN_ETH_WELL).getAddLiquidityOut(amounts);
+        return wellAmountOut;
     }
 
     function addEthToWell(address user, uint256 amount) public returns (uint256 lpAmountOut) {
