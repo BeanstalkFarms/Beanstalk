@@ -175,6 +175,8 @@ type SiloHourlySnapshot @entity {
   deltaBeanMints: BigInt!
   "Point in time delta number of active farmers deposited in the silo"
   deltaActiveFarmers: Int!
+  "[Seed Gauge] The caseId used in the seasonal adjustment of beanToMaxLpGpPerBdvRatio"
+  caseId: BigInt
   "Timestamp of initial snapshot creation"
   createdAt: BigInt!
   "Timestamp of last entity update"
@@ -450,6 +452,8 @@ type FieldHourlySnapshot @entity {
   blocksToSoldOutSoil: BigInt!
   "Bool flag if soil sold out for the season"
   soilSoldOut: Boolean!
+  "The caseId used in the seasonal adjustment of temperature"
+  caseId: BigInt!
   "Creation Block Number"
   blockNumber: BigInt!
   "Timestamp of initial snapshot creation"

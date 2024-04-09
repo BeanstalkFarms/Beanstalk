@@ -1,4 +1,4 @@
-import { Address, BigDecimal, BigInt, log } from "@graphprotocol/graph-ts";
+import { Address, BigInt, log } from "@graphprotocol/graph-ts";
 import {
   FundFundraiser,
   Harvest,
@@ -9,53 +9,18 @@ import {
   SupplyNeutral,
   WeatherChange
 } from "../generated/Field/Beanstalk";
-import { CurvePrice } from "../generated/Field/CurvePrice";
 import { Harvest as HarvestEntity } from "../generated/schema";
-import { BEANSTALK, BEANSTALK_FARMS, BEANSTALK_PRICE, CURVE_PRICE } from "../../subgraph-core/utils/Constants";
-import { ONE_BD, toDecimal, ZERO_BD, ZERO_BI } from "../../subgraph-core/utils/Decimals";
+import { BEANSTALK, BEANSTALK_FARMS } from "../../subgraph-core/utils/Constants";
+import { ZERO_BI } from "../../subgraph-core/utils/Decimals";
 import { loadFarmer } from "./utils/Farmer";
-import { loadField, loadFieldDaily, loadFieldHourly } from "./utils/Field";
+import { handleRateChange, loadField, loadFieldDaily, loadFieldHourly } from "./utils/Field";
 import { loadPlot } from "./utils/Plot";
 import { savePodTransfer } from "./utils/PodTransfer";
 import { loadSeason } from "./utils/Season";
 import { loadBeanstalk } from "./utils/Beanstalk";
-import { BeanstalkPrice } from "../generated/Field/BeanstalkPrice";
 
 export function handleWeatherChange(event: WeatherChange): void {
-  let field = loadField(event.address);
-  let fieldHourly = loadFieldHourly(event.address, event.params.season.toI32(), event.block.timestamp);
-  let fieldDaily = loadFieldDaily(event.address, event.block.timestamp);
-
-  field.temperature += event.params.change;
-  fieldHourly.temperature += event.params.change;
-  fieldDaily.temperature += event.params.change;
-
-  // Real Rate of Return
-
-  let season = loadSeason(event.address, event.params.season);
-
-  let currentPrice = ZERO_BD;
-  if (season.price != ZERO_BD) {
-    currentPrice = season.price;
-  } else {
-    // Attempt to pull from Beanstalk Price contract first
-    let beanstalkPrice = BeanstalkPrice.bind(BEANSTALK_PRICE);
-    let beanstalkQuery = beanstalkPrice.try_price();
-    if (beanstalkQuery.reverted) {
-      let curvePrice = CurvePrice.bind(CURVE_PRICE);
-      currentPrice = toDecimal(curvePrice.getCurve().price);
-    } else {
-      currentPrice = toDecimal(beanstalkQuery.value.price);
-    }
-  }
-
-  field.realRateOfReturn = ONE_BD.plus(BigDecimal.fromString((field.temperature / 100).toString())).div(currentPrice);
-  fieldHourly.realRateOfReturn = field.realRateOfReturn;
-  fieldHourly.realRateOfReturn = field.realRateOfReturn;
-
-  field.save();
-  fieldHourly.save();
-  fieldDaily.save();
+  handleRateChange(event.address, event.block, event.params.season, event.params.caseId, event.params.change);
 }
 
 export function handleSow(event: Sow): void {

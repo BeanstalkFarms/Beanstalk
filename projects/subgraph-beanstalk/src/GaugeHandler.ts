@@ -1,6 +1,3 @@
-import { BigDecimal } from "@graphprotocol/graph-ts";
-import { BEANSTALK_PRICE } from "../../subgraph-core/utils/Constants";
-import { ONE_BD, ZERO_BD, toDecimal } from "../../subgraph-core/utils/Decimals";
 import {
   BeanToMaxLpGpPerBdvRatioChange,
   GaugePointChange,
@@ -11,44 +8,12 @@ import {
   UpdateGaugeSettings,
   WhitelistToken
 } from "../generated/BIP42-SeedGauge/Beanstalk";
-import { BeanstalkPrice } from "../generated/BIP42-SeedGauge/BeanstalkPrice";
-import { loadField, loadFieldDaily, loadFieldHourly } from "./utils/Field";
-import { loadSeason } from "./utils/Season";
+import { handleRateChange } from "./utils/Field";
 import { loadWhitelistTokenSetting } from "./utils/SiloEntities";
-import { loadSilo } from "./utils/SiloEntities";
+import { loadSilo, loadSiloHourlySnapshot } from "./utils/SiloEntities";
 
 export function handleTemperatureChange(event: TemperatureChange): void {
-  let field = loadField(event.address);
-  let fieldHourly = loadFieldHourly(event.address, event.params.season.toI32(), event.block.timestamp);
-  let fieldDaily = loadFieldDaily(event.address, event.block.timestamp);
-
-  field.temperature += event.params.absChange;
-  fieldHourly.temperature += event.params.absChange;
-  fieldDaily.temperature += event.params.absChange;
-
-  // Real Rate of Return
-
-  let season = loadSeason(event.address, event.params.season);
-
-  let currentPrice = ZERO_BD;
-  if (season.price != ZERO_BD) {
-    currentPrice = season.price;
-  } else {
-    // Attempt to pull from Beanstalk Price contract first
-    let beanstalkPrice = BeanstalkPrice.bind(BEANSTALK_PRICE);
-    let beanstalkQuery = beanstalkPrice.try_price();
-    if (!beanstalkQuery.reverted) {
-      currentPrice = toDecimal(beanstalkQuery.value.price);
-    }
-  }
-
-  field.realRateOfReturn = ONE_BD.plus(BigDecimal.fromString((field.temperature / 100).toString())).div(currentPrice);
-  fieldHourly.realRateOfReturn = field.realRateOfReturn;
-  fieldHourly.realRateOfReturn = field.realRateOfReturn;
-
-  field.save();
-  fieldHourly.save();
-  fieldDaily.save();
+  handleRateChange(event.address, event.block, event.params.season, event.params.caseId, event.params.absChange);
 }
 
 // SEED GAUGE SEASONAL ADJUSTMENTS //
@@ -62,6 +27,10 @@ export function handleBeanToMaxLpGpPerBdvRatioChange(event: BeanToMaxLpGpPerBdvR
     silo.beanToMaxLpGpPerBdvRatio = silo.beanToMaxLpGpPerBdvRatio.plus(event.params.absChange);
   }
   silo.save();
+
+  let siloHourly = loadSiloHourlySnapshot(event.address, event.params.season, event.block.timestamp);
+  siloHourly.caseId = event.params.caseId;
+  siloHourly.save();
 }
 
 export function handleGaugePointChange(event: GaugePointChange): void {
