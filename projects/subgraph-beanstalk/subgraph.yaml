@@ -735,7 +735,7 @@ dataSources:
           handler: handlePodOrderFilled_v2
       file: ./src/MarketplaceHandler.ts
   - kind: ethereum/contract
-    name: BIP39-SeedGauge
+    name: BIP42-SeedGauge
     network: mainnet
     source:
       address: "0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5"
@@ -749,7 +749,7 @@ dataSources:
         - SeedGauge
       abis:
         - name: Beanstalk
-          file: ../subgraph-core/abis/Beanstalk/Beanstalk-BIP39.json
+          file: ../subgraph-core/abis/Beanstalk/Beanstalk-BIP42.json
         - name: BeanstalkPrice
           file: ../subgraph-core/abis/BeanstalkPrice.json
       eventHandlers:
@@ -759,12 +759,12 @@ dataSources:
           handler: handleGaugePointChange
         - event: TemperatureChange(indexed uint256,uint256,int8)
           handler: handleTemperatureChange
-        - event: UpdateGaugeSettings(indexed address,bytes4,uint96)
+        - event: UpdateGaugeSettings(indexed address,bytes4,bytes4,uint64)
           handler: handleUpdateGaugeSettings
         - event: UpdateAverageStalkPerBdvPerSeason(uint256)
           handler: handleUpdateAverageStalkPerBdvPerSeason
         - event: UpdatedStalkPerBdvPerSeason(indexed address,uint32,uint32)
           handler: handleUpdateStalkPerBdvPerSeason
-        - event: WhitelistToken(indexed address,bytes4,uint32,uint256,bytes4,uint128,uint96)
-          handler: handleWhitelistToken_BIP39
+        - event: WhitelistToken(indexed address,bytes4,uint32,uint256,bytes4,bytes4,uint128,uint64)
+          handler: handleWhitelistToken_BIP42
       file: ./src/GaugeHandler.ts

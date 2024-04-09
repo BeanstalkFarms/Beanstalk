@@ -7,14 +7,13 @@ import {
   TemperatureChange,
   UpdateAverageStalkPerBdvPerSeason,
   UpdateGaugeSettings,
-  UpdatedStalkPerBdvPerSeason,
   WhitelistToken
-} from "../generated/BIP39-SeedGauge/Beanstalk";
-import { BeanstalkPrice } from "../generated/BIP39-SeedGauge/BeanstalkPrice";
+} from "../generated/BIP42-SeedGauge/Beanstalk";
+import { BeanstalkPrice } from "../generated/BIP42-SeedGauge/BeanstalkPrice";
 import { loadField, loadFieldDaily, loadFieldHourly } from "./utils/Field";
 import { loadSeason } from "./utils/Season";
-import { loadWhitelistTokenSetting } from "./utils/SiloAsset";
-import { loadSilo } from "./utils/Silo";
+import { loadWhitelistTokenSetting } from "./utils/SiloEntities";
+import { loadSilo } from "./utils/SiloEntities";
 
 export function handleTemperatureChange(event: TemperatureChange): void {
   let field = loadField(event.address);
@@ -49,24 +48,21 @@ export function handleTemperatureChange(event: TemperatureChange): void {
   fieldHourly.save();
   fieldDaily.save();
 }
+
 export function handleBeanToMaxLpGpPerBdvRatioChange(event: BeanToMaxLpGpPerBdvRatioChange): void {
   let silo = loadSilo(BEANSTALK);
 
-  silo.beanToMaxLpGpPerBdvRatio = silo.beanToMaxLpGpPerBdvRatio.plus(event.params.absChange);
+  if (silo.beanToMaxLpGpPerBdvRatio == null) {
+    silo.beanToMaxLpGpPerBdvRatio = event.params.absChange;
+  } else {
+    silo.beanToMaxLpGpPerBdvRatio = silo.beanToMaxLpGpPerBdvRatio.plus(event.params.absChange);
+  }
   silo.save();
 }
 
 export function handleGaugePointChange(event: GaugePointChange): void {
   let siloSettings = loadWhitelistTokenSetting(event.params.token);
   siloSettings.gaugePoints = event.params.gaugePoints;
-  siloSettings.updatedAt = event.block.timestamp;
-  siloSettings.save();
-}
-
-export function handleUpdateGaugeSettings(event: UpdateGaugeSettings): void {
-  let siloSettings = loadWhitelistTokenSetting(event.params.token);
-  siloSettings.selector = event.params.selector;
-  siloSettings.optimalPercentDepositedBdv = event.params.optimalPercentDepositedBdv;
   siloSettings.updatedAt = event.block.timestamp;
   siloSettings.save();
 }
@@ -78,16 +74,9 @@ export function handleUpdateAverageStalkPerBdvPerSeason(event: UpdateAverageStal
   silo.save();
 }
 
-export function handleUpdateStalkPerBdvPerSeason(event: UpdatedStalkPerBdvPerSeason): void {
-  let siloSettings = loadWhitelistTokenSetting(event.params.token);
+// TODO: Germinating stalk.
 
-  siloSettings.milestoneSeason = event.params.season.toI32();
-  siloSettings.stalkEarnedPerSeason;
-  siloSettings.updatedAt = event.block.timestamp;
-  siloSettings.save();
-}
-
-export function handleWhitelistToken_BIP39(event: WhitelistToken): void {
+export function handleWhitelistToken_BIP42(event: WhitelistToken): void {
   let siloSettings = loadWhitelistTokenSetting(event.params.token);
 
   siloSettings.selector = event.params.selector;
@@ -95,6 +84,15 @@ export function handleWhitelistToken_BIP39(event: WhitelistToken): void {
   siloSettings.stalkIssuedPerBdv = event.params.stalkIssuedPerBdv;
   siloSettings.gaugePoints = event.params.gaugePoints;
   siloSettings.gpSelector = event.params.gpSelector;
+  siloSettings.optimalPercentDepositedBdv = event.params.optimalPercentDepositedBdv;
+  siloSettings.updatedAt = event.block.timestamp;
+  siloSettings.save();
+}
+
+export function handleUpdateGaugeSettings(event: UpdateGaugeSettings): void {
+  let siloSettings = loadWhitelistTokenSetting(event.params.token);
+  siloSettings.gpSelector = event.params.gpSelector;
+  siloSettings.lwSelector = event.params.lwSelector;
   siloSettings.optimalPercentDepositedBdv = event.params.optimalPercentDepositedBdv;
   siloSettings.updatedAt = event.block.timestamp;
   siloSettings.save();

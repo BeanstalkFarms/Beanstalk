@@ -124,6 +124,8 @@ type Silo @entity {
   grownStalkPerBdvPerSeason: BigInt!
   "Current roots balance"
   roots: BigInt!
+  "[Seed Gauge] Current target ratio of Bean to LP deposits"
+  beanToMaxLpGpPerBdvRatio: BigInt
   "Cumulative total for bean mints sent to the silo"
   beanMints: BigInt!
   "Current number of active farmers deposited in the silo"
@@ -338,16 +340,24 @@ type TokenYield @entity {
 }
 
 type WhitelistTokenSetting @entity {
-  " Contract address for the whitelisted token "
+  "Contract address for the whitelisted token"
   id: Bytes!
-  " Encoded BDV selector "
+  "Encoded BDV selector"
   selector: Bytes!
+  "[Seed Gauge] Encoded Gauge Point selector"
+  gpSelector: Bytes
+  "[Seed Gauge] Encoded Liquidity Weight selector"
+  lwSelector: Bytes
   "Represents how much Stalk one BDV of the underlying deposited token grows each season."
   stalkEarnedPerSeason: BigInt!
   "The stalk per BDV that the silo grants in exchange for depositing this token."
   stalkIssuedPerBdv: BigInt!
   "The last season in which the stalkEarnedPerSeason for this token was updated."
   milestoneSeason: Int!
+  "[Seed Gauge] Current Gauge Points"
+  gaugePoints: BigInt
+  "[Seed Gauge] The current optimal targeted distribution of BDV for this whitelisted asset"
+  optimalPercentDepositedBdv: BigInt
   "Last timestamp entity was updated"
   updatedAt: BigInt!
 }
