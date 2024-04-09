@@ -44,6 +44,18 @@ testIfRpcSet('SeedGauge Init Test', function () {
 
     // seed Gauge
     await bipSeedGauge(true, undefined, false)
+
+    // post upgrades (append new facets here.)
+    owner = await impersonateBeanstalkOwner();
+    await mintEth(owner.address);
+    await upgradeWithNewFacets({
+      diamondAddress: BEANSTALK,
+      facetNames: ['CurveFacet'],
+      bip: false,
+      object: false, 
+      verbose: false,
+      account: owner
+    })
   });
 
   beforeEach(async function () {
@@ -131,7 +143,7 @@ testIfRpcSet('SeedGauge Init Test', function () {
         object: false, 
         verbose: false,
         account: owner
-    })
+      })
       await mintBeans(user.address, to6('1000'))
       await bean.connect(user).approve(beanstalk.address, to6('1000'))
       await beanstalk.connect(user).addLiquidity(
