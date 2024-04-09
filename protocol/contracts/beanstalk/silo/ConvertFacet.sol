@@ -410,90 +410,16 @@ contract ConvertFacet is ReentrancyGuard {
         return instDeltaB;
     }
 
-    function logResultBySlot(bytes memory data) public view returns (bytes[] memory args) {
-        // Extract the selector
-
-        
-        // assembly {
-        //     selector := mload(add(data, 32))
-        // }
-
-
-        // selector = bytes4(uint32(uint256(data[0])));
-
-        // console.log('init array');
-        
-        // Initialize an array to hold the arguments
-        args = new bytes[]((data.length) / 32);
-
-        // console.log('extract args');
-        
-        // Extract each argument
-        for (uint i = 0; i < data.length; i += 32) {
-            // console.log('here');
-            bytes memory arg = new bytes(32);
-            for (uint j = 0; j < 32; j++) {
-                // console.log('here 2');
-                // Check if we're within the bounds of the data array
-                if (i + j < data.length) {
-                    // console.log('good length');
-                    arg[j] = data[i + j];
-                } else {
-                    console.log('bad length');
-                    // If we're out of bounds, fill the rest of the argument with zeros
-                    arg[j] = byte(0);
-                    console.log('hm we went out of bounds uh oh');
-                }
-            }
-            // console.log('here 3');
-            
-            uint index = i / 32;
-            // Check if the index is within bounds
-            if (index < args.length) {
-                args[index] = arg;
-            } else {
-                console.log('index was out of bounds');
-                console.log('index: ', index);
-                console.log('args.length: ', args.length);
-                // Handle the case where the index is out of bounds
-                // This should not happen if the calculation is correct, but it's good to have a safeguard
-                // revert("Index out of bounds");
-            }
-        }
-        
-        // Print the selector
-        // console.log('extractData printing selector');
-        // console.logBytes4(selector);
-
-        console.log('print cargs');
-        
-        // Print each argument
-        for (uint i = 0; i < args.length; i++) {
-            console.log('logResultBySlot printing slot: ');
-            console.logBytes(args[i]);
-        }
-    }
-
     function executeAdvancedFarmCalls(AdvancedFarmCall[] calldata calls)
         internal
         returns (
             uint256 amountOut
         )
     {
-        console.log("executeAdvancedFarmCalls:");
-        // console.log("bytes being fed in:");
-        // console.logBytes(calls);
-        // bytes memory lastBytes = results[results.length - 1];
-        //at this point lastBytes is 3 slots long, we just need the last slot (first two slots contain 0x2 for some reason)
         bytes[] memory results;
-        // AdvancedFarmCall[] memory calls = abi.decode(calls, (AdvancedFarmCall[]));
-        // console.log("advancedFarm decoded.");
-
+     
         results = new bytes[](calls.length);
         for (uint256 i = 0; i < calls.length; ++i) {
-            // console.log("looping:", i);
-            // console.log("calldata:");
-            // console.logBytes(calls[i].callData);
             require(calls[i].callData.length != 0, "Convert: empty AdvancedFarmCall");
             results[i] = LibFarm._advancedFarmMem(calls[i], results);
         }
@@ -530,15 +456,6 @@ contract ConvertFacet is ReentrancyGuard {
         // LibFunction.checkReturn(success, result);
 
         IPipeline(PIPELINE).pipe(p);
-    }
-
-    // todo: implement oracle
-    function getOracleprice() internal returns (uint256) {
-        return 1e6;
-    }
-
-    function _bdv(address token, uint256 amount) internal returns (uint256) {
-        return LibTokenSilo.beanDenominatedValue(token, amount);
     }
 
     /**
@@ -755,28 +672,18 @@ contract ConvertFacet is ReentrancyGuard {
             // TODO: investigate and see if we can just use the amountPerBdv variable instead of calculating it again.
             mcdd.depositedBdv = LibTokenSilo.beanDenominatedValue(outputToken, mcdd.crateAmount);
             
-            // LibGerminate.Germinate germ;
 
             // calculate the stem and germination state for the new deposit.
             (mcdd.stem, mcdd.germ) = LibTokenSilo.calculateStemForTokenFromGrownStalk(outputToken, grownStalks[i], mcdd.depositedBdv);
 
             console.log('i: ', i);
-
             console.log('mcdd.stem: ');
             console.logInt(mcdd.stem);
-
-
             console.log('crateAmount: ', mcdd.crateAmount);
-
-            console.log('yo1');
 
             outputStems[i] = mcdd.stem;
 
-            console.log('yo2');
-
             outputAmounts[i] = mcdd.crateAmount;
-
-
             
             // increment totals based on germination state, 
             // as well as issue stalk to the user.
