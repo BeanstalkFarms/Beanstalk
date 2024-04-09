@@ -31,20 +31,20 @@ abstract contract Invariable {
      * @dev Does not include tokens that may be held in internal balances but not Silo whitelisted.
      */
     modifier fundsSafu() {
-        AppStorage storage s = LibAppStorage.diamondStorage();
         _;
-        address[] tokens = LibWhitelistedTokens.getSiloTokens();
-        (uint256[] memory entitlements, uint256[] memory balances) = getTokenEntitlementsAndBalances(tokens);
+        address[] memory tokens = LibWhitelistedTokens.getSiloTokens();
+        (
+            uint256[] memory entitlements,
+            uint256[] memory balances
+        ) = getTokenEntitlementsAndBalances(tokens);
         for (uint256 i; i < tokens.length; i++) {
-            require(
-                balances[i] >= entitlements[i],
-                "INV: Insufficient token balance"
-            );
+            require(balances[i] >= entitlements[i], "INV: Insufficient token balance");
         }
     }
 
     /**
      * @notice Does not change the supply of Beans. No minting, no burning.
+     * @dev Applies to all but a very few functions. Sunrise, sow, raise.
      */
     modifier noSupplyChange() {
         uint256 initialSupply = C.bean().totalSupply();
@@ -74,7 +74,9 @@ abstract contract Invariable {
         }
     }
 
-    function getTokenBalances(address[] memory tokens) internal view returns (uint256[] memory balances) {
+    function getTokenBalances(
+        address[] memory tokens
+    ) internal view returns (uint256[] memory balances) {
         balances = new uint256[](tokens.length);
         for (uint256 i; i < tokens.length; i++) {
             balances[i] = IERC20(tokens[i]).balanceOf(address(this));
@@ -85,14 +87,23 @@ abstract contract Invariable {
     /**
      * @notice Get protocol level entitlements and balances for all tokens.
      */
-    function getTokenEntitlementsAndBalances(address[] memory tokens) internal view returns (uint256[] memory entitlements, uint256[] memory balances) {
+    function getTokenEntitlementsAndBalances(
+        address[] memory tokens
+    ) internal view returns (uint256[] memory entitlements, uint256[] memory balances) {
+        AppStorage storage s = LibAppStorage.diamondStorage();
         entitlements = new uint256[](tokens.length);
         balances = new uint256[](tokens.length);
         for (uint256 i; i < tokens.length; i++) {
-            entitlements[i] = s.siloBalances[tokens[i]].deposited + s.siloBalances[tokens[i]].withdrawn + s.internalTokenBalanceTotal[token];
-            if (tokens[i] == C.bean()) {
+            entitlements[i] =
+                s.siloBalances[tokens[i]].deposited +
+                s.siloBalances[tokens[i]].withdrawn +
+                s.internalTokenBalanceTotal[IERC20(tokens[i])];
+            if (tokens[i] == C.BEAN) {
                 // total of Bean in Silo + total earned Beans + unharvested harvestable Beans + user internal balances of Beans.
-                entitlements[i] += s.earnedBeans + s.f.harvestable.sub(s.f.harvested);
+                entitlements[i] +=
+                    s.earnedBeans +
+                    s.f.harvestable.sub(s.f.harvested) +
+                    s.u[C.UNRIPE_BEAN].balanceOfUnderlying;
             }
             balances[i] = IERC20(tokens[i]).balanceOf(address(this));
         }
@@ -100,19 +111,14 @@ abstract contract Invariable {
     }
 }
 
-
-
-
-
 //////////////////// Scratch pad  ///////////////////////
-
 /*
     // NOTE may be incompatible with SOP.
     // NOTE difficult/intensive, since pods are not iterable by user.
-    /**
-     * @notice Ensure protocol balances change in tandem with user balances.
-     * @dev Should be used on every function that can write and does not use noNetFlow modifier.
-     */
+    //
+    // @notice Ensure protocol balances change in tandem with user balances.
+    // @dev Should be used on every function that can write and does not use noNetFlow modifier.
+    //
     modifier reasonableFlow() {
         AppStorage storage s = LibAppStorage.diamondStorage();
         address[] memory tokens = LibWhitelistedTokens.getSiloTokens();
@@ -160,5 +166,4 @@ abstract contract Invariable {
         }
         return entitlements;
     }
-
 */

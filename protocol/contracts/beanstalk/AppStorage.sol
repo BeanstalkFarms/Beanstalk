@@ -658,4 +658,7 @@ struct AppStorage {
     address sopWell;
 
     address barnRaiseWell;
+
+    // Cumulative internal Balance of tokens.
+    mapping(IERC20 => uint256) internalTokenBalanceTotal;
 }
