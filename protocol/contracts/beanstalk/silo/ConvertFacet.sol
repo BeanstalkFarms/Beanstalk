@@ -85,6 +85,8 @@ contract ConvertFacet is ReentrancyGuard {
     {
         convertParams memory cp;
         (cp.toToken, cp.fromToken, toAmount, fromAmount, cp.account, cp.decreaseBDV) = LibConvert.convert(convertData);
+
+        if (cp.decreaseBDV) {require(stems.length == 1 && amounts.length == 1, "Convert: DecreaseBDV only supports updating one deposit.");}
         
         require(fromAmount > 0, "Convert: From amount is 0.");
 
