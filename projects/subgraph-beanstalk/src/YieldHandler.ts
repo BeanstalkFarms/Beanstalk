@@ -171,11 +171,17 @@ function updateFertAPY(t: i32, timestamp: BigInt, window: i32): void {
   let fertilizerYield = loadFertilizerYield(t, window);
   let fertilizer = loadFertilizer(FERTILIZER);
   let beanstalk = Beanstalk.bind(BEANSTALK);
-  let currentFertHumidity = beanstalk.try_getCurrentHumidity();
+  if (t < 6534) {
+    let currentFertHumidity = beanstalk.try_getCurrentHumidity();
+    fertilizerYield.humidity = BigDecimal.fromString(currentFertHumidity.reverted ? "500" : currentFertHumidity.value.toString()).div(
+      BigDecimal.fromString("1000")
+    );
+  } else {
+    // Avoid contract call for season >= 6534 since humidity will always be 0.2
+    // This gives a significant performance improvement, but will need to be revisited if humidity ever changes
+    fertilizerYield.humidity = BigDecimal.fromString("0.2");
+  }
 
-  fertilizerYield.humidity = BigDecimal.fromString(currentFertHumidity.reverted ? "500" : currentFertHumidity.value.toString()).div(
-    BigDecimal.fromString("1000")
-  );
   fertilizerYield.outstandingFert = fertilizer.supply;
   fertilizerYield.beansPerSeasonEMA = siloYield.beansPerSeasonEMA;
   fertilizerYield.deltaBpf = fertilizerYield.beansPerSeasonEMA.div(BigDecimal.fromString(fertilizerYield.outstandingFert.toString()));
