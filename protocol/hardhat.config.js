@@ -177,21 +177,6 @@ task("diamondABI", "Generates ABI file for diamond, includes all ABIs of facets"
   console.log("ABI written to abi/Beanstalk.json");
 });
 
-task("deployBeanstalkPrice", async function () {
-  let json = fs.readFileSync(`./artifacts/contracts/ecosystem/price/BeanstalkPrice.sol/BeanstalkPrice.json`);
-  await network.provider.send("hardhat_setCode", [
-    PRICE,
-    JSON.parse(json).deployedBytecode,
-  ]);
-  priceContract =  await ethers.getContractAt('BeanstalkPrice', PRICE)
-  console.log("BeanstalkPrice deployed at: ", priceContract.address)
-});
-
-task("testPrice", async function () {
-  priceContract =  await ethers.getContractAt('BeanstalkPrice', PRICE)
-  console.log("Price: ", (await priceContract.price()).toString())
-});
-
 // BIP //
 task("marketplace", async function () {
   const owner = await impersonateBeanstalkOwner();
