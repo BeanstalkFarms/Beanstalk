@@ -982,11 +982,12 @@ contract PipelineConvertTest is TestHelper {
             C.PIPELINE, // recipient
             type(uint256).max // deadline
         );
+        console.logBytes(addLiquidityEncoded);
 
         console.log('4');
 
         // Fabricate advancePipes: 
-        AdvancedPipeCall[] memory advancedPipeCalls = new AdvancedPipeCall[](2);
+        AdvancedPipeCall[] memory advancedPipeCalls = new AdvancedPipeCall[](3);
         
         // Action 0: approve the Bean-Eth well to spend pipeline's bean.
         advancedPipeCalls[0] = AdvancedPipeCall(
@@ -1003,18 +1004,17 @@ contract PipelineConvertTest is TestHelper {
         );
 
 
-        // returnDataItemIndex, copyIndex, pasteIndex
+        
 
         console.log('5');
 
-        // uint256[3] memory params = [uint256(1), uint256(1), uint256(1)];
-        bytes32[] memory returnPasteParams = new bytes32[](3);
-        returnPasteParams[0] = bytes32(uint256(1));
-        returnPasteParams[1] = bytes32(uint256(0));
-        returnPasteParams[2] = bytes32(uint256(1));
-
-
-        bytes memory clipboard = LibClipboard.encode(0, returnPasteParams);
+        // returnDataItemIndex, copyIndex, pasteIndex
+        bytes memory clipboard = abi.encodePacked(
+            bytes2(0x0100), // clipboard type 1
+            uint80(2), // from action 1 (2)
+            uint80(32), // take the first param
+            uint80(196) // paste into the 6th 32 bytes of the clipboard
+        );
 
         console.log('clipboard: ');
         console.logBytes(clipboard);
@@ -1025,8 +1025,7 @@ contract PipelineConvertTest is TestHelper {
         advancedPipeCalls[2] = AdvancedPipeCall(
             C.BEAN_WSTETH_WELL, // target
             addLiquidityEncoded, // calldata
-            // clipboard // clipboard
-            new bytes(0)
+            clipboard
         );
 
         console.log('7');
