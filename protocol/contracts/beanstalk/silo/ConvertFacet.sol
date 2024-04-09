@@ -312,12 +312,7 @@ contract ConvertFacet is ReentrancyGuard {
 
         // Check if the signs of beforeDeltaB and afterDeltaB are different,
         // indicating that deltaB has crossed zero
-        // if (beforeDeltaB.mul(afterDeltaB) < 0) {
-        // The bitwise XOR of two signed integers will be positive if they have different signs, and negative if they have the same sign
-        // Maybe not use XOR if there's some obscure uninteded behavior?
-        if ((beforeDeltaB ^ afterDeltaB) < 0) {
-
-
+        if ((beforeDeltaB > 0 && afterDeltaB < 0) || (beforeDeltaB < 0 && afterDeltaB > 0)) {
             // Calculate how far past peg we went - so actually this is just abs of new deltaB
             crossoverAmount = uint256(abs(int256(afterDeltaB)));
 
@@ -335,9 +330,9 @@ contract ConvertFacet is ReentrancyGuard {
                 return crossoverAmount;
             }
         } else if (beforeDeltaB <= 0 && afterDeltaB < beforeDeltaB) { 
-            return amountAgainstPeg; // actually penalty should be amount against peg you went?
+            return amountAgainstPeg;
         } else if (beforeDeltaB >= 0 && afterDeltaB > beforeDeltaB) { 
-            return amountAgainstPeg; // actually penalty should be amount against peg you went?
+            return amountAgainstPeg;
         }
 
         // at this point we are converting in direction of peg, but we may have gone past it
