@@ -83,7 +83,10 @@ export default function useRevitalized() {
         const currentBDV = crate.bdv;
         const stemDelta = stemTip.minus(stem);
         const deltaBDV = MaxBN(futureBDV.minus(currentBDV), ZERO_BN);
-        const deltaGrownStalk = stemDelta.times(deltaBDV).div(10000);
+        const deltaGrownStalk = stemDelta
+          .times(deltaBDV)
+          .div(10000)
+          .div(1000000); // 1e4 for stalk and 1e6 for stems
 
         // console.log({
         //   crateAmount: crate.amount.toString(),

@@ -43,6 +43,7 @@ import useUnripeUnderlyingMap from '~/hooks/beanstalk/useUnripeUnderlying';
 import stalkIcon from '~/img/beanstalk/stalk-icon.svg';
 import logo from '~/img/tokens/bean-logo.svg';
 import { FC } from '~/types';
+import { useIsTokenDeprecated } from '~/hooks/beanstalk/useWhitelist';
 import SiloAssetApyChip from './SiloAssetApyChip';
 import StatHorizontal from '../Common/StatHorizontal';
 import BeanProgressIcon from '../Common/BeanProgressIcon';
@@ -51,9 +52,6 @@ import BeanProgressIcon from '../Common/BeanProgressIcon';
  * Display a pseudo-table of Whitelisted Silo Tokens.
  * This table is the entry point to deposit Beans, LP, etc.
  */
-import { FC } from '~/types';
-import StatHorizontal from '../Common/StatHorizontal';
-import { useIsTokenDeprecated } from '~/hooks/beanstalk/useWhitelist';
 
 const ARROW_CONTAINER_WIDTH = 20;
 const TOOLTIP_COMPONENT_PROPS = {
@@ -117,18 +115,28 @@ const Whitelist: FC<{
               <Typography color="text.secondary">Rewards</Typography>
             </Tooltip>
           </Grid>
-          <Grid item md={2} xs={0} display={{ xs: 'none', md: 'flex' }} justifyContent='center'>
+          <Grid
+            item
+            md={2}
+            xs={0}
+            display={{ xs: 'none', md: 'flex' }}
+            justifyContent="center"
+          >
             <Tooltip title="Estimated annual Beans earned by a Stalkholder for Depositing an asset.">
               <Chip
                 variant="filled"
                 color="primary"
                 label={
                   <Row gap={0.5}>
-                    <TokenIcon token={BEAN[1]} /> 
-                    vAPY 24H 
-                    <Typography color='white' marginTop={-0.25}>|</Typography> 
-                    7D 
-                    <Typography color='white' marginTop={-0.25}>|</Typography> 
+                    <TokenIcon token={BEAN[1]} />
+                    vAPY 24H
+                    <Typography color="white" marginTop={-0.25}>
+                      |
+                    </Typography>
+                    7D
+                    <Typography color="white" marginTop={-0.25}>
+                      |
+                    </Typography>
                     30D
                   </Row>
                 }
@@ -137,15 +145,19 @@ const Whitelist: FC<{
               />
             </Tooltip>
           </Grid>
-          <Grid item md={1.25} xs={0} display={{ xs: 'none', md: 'flex' }} justifyContent='center'>
+          <Grid
+            item
+            md={1.25}
+            xs={0}
+            display={{ xs: 'none', md: 'flex' }}
+            justifyContent="center"
+          >
             <Tooltip title="Estimated annual growth in Stalk for Depositing an asset.">
               <Typography color="text.primary">
                 <TokenIcon
-                  token={
-                    { symbol: 'Stalk', logo: stalkIcon } as Token
-                  }
-                />
-                {' '}vAPY
+                  token={{ symbol: 'Stalk', logo: stalkIcon } as Token}
+                />{' '}
+                vAPY
               </Typography>
             </Tooltip>
           </Grid>
