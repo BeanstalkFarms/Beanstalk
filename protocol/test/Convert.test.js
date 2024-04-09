@@ -490,7 +490,7 @@ describe('Convert', function () {
       await this.season.siloSunrise(0);
       await this.season.siloSunrise(0);
 
-      // simulate deposit bdv decrease for user2 by changing bdv selector to mockBdvIncrease ie 1.1e6
+      // simulate deposit bdv increase for user2 by changing bdv selector to mockBdvIncrease ie 1.1e6
       await this.silo.mockChangeBDVSelector(this.newSiloToken.address, this.silo.interface.getSighash("newMockBDVIncrease()"))
       currentBdv = await this.silo.newMockBDVIncrease()
       let depositResult = await this.siloGetters.getDeposit(userAddress, this.newSiloToken.address,  this.stem)
@@ -533,6 +533,32 @@ describe('Convert', function () {
       await expect(this.result).to.emit(this.silo, 'AddDeposit').withArgs(userAddress, this.newSiloToken.address, this.newStem, '100', '1100000'); // last param = updated bdv
       await expect(this.result).to.emit(this.convert, 'Convert').withArgs(userAddress, this.newSiloToken.address, this.newSiloToken.address, '100', '100');
     })
+  })
 
+  describe("anti lambda convert revert on multiple deposit update", async function () {
+
+    it("Reverts on multiple deposit input", async function () {
+      // ----------------------- SETUP ------------------------
+      // user deposits 100 new silo token at stem 0 so 1000000 bdv
+      await this.newSiloToken.mint(userAddress, '10000000');
+      await this.newSiloToken.connect(user).approve(this.silo.address, '1000000000');
+      await this.silo.connect(user).deposit(this.newSiloToken.address, '100', EXTERNAL);
+      this.stem = await this.siloGetters.stemTipForToken(this.newSiloToken.address);
+
+      // end germination:
+      await this.season.siloSunrise(0);
+      await this.season.siloSunrise(0);
+
+      // ----------------------- CONVERT ------------------------
+      await expect(this.convert.connect(user2).convert(
+        // CALLDATA
+        // amount, token ,account
+        ConvertEncoder.convertAntiLambdaToLambda('100', this.newSiloToken.address , userAddress),
+        // STEMS []
+        [this.stem, this.stem],
+        // AMOUNTS []
+        ['100', '100']
+      )).to.be.revertedWith("Convert: DecreaseBDV only supports updating one deposit.")
+    })
   })
 });
