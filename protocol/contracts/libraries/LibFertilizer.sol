@@ -14,7 +14,6 @@ import {C} from "../C.sol";
 import {LibUnripe} from "./LibUnripe.sol";
 import {IWell} from "contracts/interfaces/basin/IWell.sol";
 
-
 /**
  * @author Publius
  * @title Fertilizer
@@ -93,7 +92,6 @@ library LibFertilizer {
                 C.precision()
             );
         }
-
         // Calculate how many Beans to add as LP
         uint256 newDepositedLPBeans = usdAmount.mul(C.exploitAddLPRatio()).div(
             DECIMALS
