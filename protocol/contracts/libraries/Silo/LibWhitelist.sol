@@ -100,8 +100,8 @@ library LibWhitelist {
         verifyLiquidityWeightSelector(liquidityWeightSelector);
 
         // verify whitelist status of token. 
-        // Updates stalkIssuedPerBdv in the case of an previously whitelisted token.
-        stalkIssuedPerBdv = verifyWhitelistStatus(token, selector, stalkIssuedPerBdv);       
+        // reverts on an invalid stalkIssuedPerBdv if previously whitelisted.
+        verifyWhitelistStatus(token, selector, stalkIssuedPerBdv);       
 
         // If an LP token, initialize oracle storage variables.
         if (token != address(C.bean()) && !LibUnripe.isUnripe(token)) {
@@ -252,7 +252,7 @@ library LibWhitelist {
         address token,
         bytes4 selector,
         uint32 stalkIssuedPerBdv
-    ) internal returns (uint32) { 
+    ) internal { 
         AppStorage storage s = LibAppStorage.diamondStorage();
         
         (bool isWhitelisted, bool previouslyWhitelisted) = LibWhitelistedTokens.checkWhitelisted(token);
@@ -280,9 +280,7 @@ library LibWhitelist {
         // cannot be updated, as previous deposits would have been made with the
         // previous value. 
         if (previouslyWhitelisted) { 
-            return s.ss[token].stalkIssuedPerBdv;
-        } else {
-            return stalkIssuedPerBdv;
+            require(s.ss[token].stalkIssuedPerBdv == stalkIssuedPerBdv, "Whitelist: Cannot update stalkIssuedPerBdv");
         }
     }
     
