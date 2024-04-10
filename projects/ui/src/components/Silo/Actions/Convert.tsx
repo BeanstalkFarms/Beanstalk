@@ -54,7 +54,6 @@ import useFormTxnContext from '~/hooks/sdk/useFormTxnContext';
 import { FormTxn, ConvertFarmStep } from '~/lib/Txn';
 import usePlantAndDoX from '~/hooks/farmer/form-txn/usePlantAndDoX';
 import StatHorizontal from '~/components/Common/StatHorizontal';
-import useSetting from '~/hooks/app/useSetting';
 
 // -----------------------------------------------------------------------
 
@@ -110,9 +109,6 @@ const ConvertForm: FC<
   /// Local state
   const [isTokenSelectVisible, showTokenSelect, hideTokenSelect] = useToggle();
   const getBDV = useBDV();
-
-  // Are we impersonating a different account outside dev mode
-  const isImpersonating = !!useSetting('impersonatedAccount')[0] && !import.meta.env.DEV;
 
   const plantCrate = plantAndDoX?.crate?.bn;
 
@@ -455,7 +451,7 @@ const ConvertForm: FC<
         {/* Submit */}
         <SmartSubmitButton
           loading={buttonLoading || isQuoting}
-          disabled={!isReady || isSubmitting || isImpersonating}
+          disabled={!isReady || isSubmitting}
           type="submit"
           variant="contained"
           color="primary"

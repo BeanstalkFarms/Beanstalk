@@ -57,7 +57,6 @@ import { QuoteHandlerWithParams } from '~/hooks/ledger/useQuoteWithParams';
 import FormTxnProvider from '~/components/Common/Form/FormTxnProvider';
 import useFormTxnContext from '~/hooks/sdk/useFormTxnContext';
 import { BalanceFrom } from '~/components/Common/Form/BalanceFromRow';
-import useSetting from '~/hooks/app/useSetting';
 
 export type CreateOrderFormValues = {
   placeInLine: BigNumber | null;
@@ -121,9 +120,6 @@ const CreateOrderV2Form: FC<
   contract,
 }) => {
   const sdk = useSdk();
-
-  // Are we impersonating a different account outside dev mode
-  const isImpersonating = !!useSetting('impersonatedAccount')[0] && !import.meta.env.DEV;
 
   const Bean = sdk.tokens.BEAN;
   const erc20TokenMap = useTokenMap<ERC20Token | NativeToken>(tokenList);
@@ -302,7 +298,7 @@ const CreateOrderV2Form: FC<
         <Box sx={{ position: 'sticky', bottom: 6.5, zIndex: 10 }}>
           <SmartSubmitButton
             loading={isSubmitting}
-            disabled={isSubmitting || !isReady || isImpersonating}
+            disabled={isSubmitting || !isReady}
             type="submit"
             variant="contained"
             color="primary"

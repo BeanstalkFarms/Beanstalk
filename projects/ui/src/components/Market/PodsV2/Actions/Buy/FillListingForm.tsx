@@ -48,7 +48,6 @@ import TokenOutput from '~/components/Common/Form/TokenOutput';
 import useSdk from '~/hooks/sdk';
 import useAccount from '~/hooks/ledger/useAccount';
 import { BalanceFrom } from '~/components/Common/Form/BalanceFromRow';
-import useSetting from '~/hooks/app/useSetting';
 
 export type FillListingFormValues = FormState & {
   settings: SlippageSettingsFragment;
@@ -76,9 +75,6 @@ const FillListingV2Form: FC<
 }) => {
   /// State
   const [isTokenSelectVisible, handleOpen, hideTokenSelect] = useToggle();
-
-  // Are we impersonating a different account outside dev mode
-  const isImpersonating = !!useSetting('impersonatedAccount')[0] && !import.meta.env.DEV;
 
   /// Chain
   const getChainToken = useGetChainToken();
@@ -271,7 +267,7 @@ const FillListingV2Form: FC<
           type="submit"
           variant="contained"
           color="primary"
-          disabled={!isSubmittable || isImpersonating}
+          disabled={!isSubmittable}
           contract={contract}
           tokens={values.tokens}
           mode="auto"

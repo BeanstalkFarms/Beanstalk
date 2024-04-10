@@ -15,24 +15,22 @@ import { Module, ModuleContent } from '~/components/Common/Module';
 import beanIcon from '~/img/tokens/bean-logo-circled.svg';
 import stalkIcon from '~/img/beanstalk/stalk-icon-winter.svg';
 import seedIcon from '~/img/beanstalk/seed-icon-winter.svg';
-
 import useRevitalized from '~/hooks/farmer/useRevitalized';
 import { AppState } from '~/state';
-import RewardItem from '../../Silo/RewardItem';
 import useFarmerBalancesBreakdown from '~/hooks/farmer/useFarmerBalancesBreakdown';
 import DropdownIcon from '~/components/Common/DropdownIcon';
 import useToggle from '~/hooks/display/useToggle';
 import useGetChainToken from '~/hooks/chain/useGetChainToken';
 import useFarmerSiloBalances from '~/hooks/farmer/useFarmerSiloBalances';
-import RewardsForm, { ClaimRewardsFormParams } from '../../Silo/RewardsForm';
+import { ZERO_BN } from '~/constants';
 import { ClaimRewardsAction } from '~/util';
 import { UNRIPE_BEAN, UNRIPE_BEAN_WETH } from '~/constants/tokens';
+import { hoverMap } from '~/constants/silo';
+import RewardsForm, { ClaimRewardsFormParams } from '../../Silo/RewardsForm';
 import DescriptionButton from '../../Common/DescriptionButton';
 import GasTag from '../../Common/GasTag';
-import { hoverMap } from '~/constants/silo';
 import MountedAccordion from '../../Common/Accordion/MountedAccordion';
-import { ZERO_BN } from '~/constants';
-import useSetting from '~/hooks/app/useSetting';
+import RewardItem from '../../Silo/RewardItem';
 
 const options = [
   {
@@ -83,9 +81,6 @@ const ClaimRewardsContent: React.FC<
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const getChainToken = useGetChainToken();
   const balances = useFarmerSiloBalances();
-
-  // Are we impersonating a different account outside dev mode
-  const isImpersonating = !!useSetting('impersonatedAccount')[0] && !import.meta.env.DEV;
 
   /// The currently hovered action.
   const [hoveredAction, setHoveredAction] = useState<
@@ -207,7 +202,7 @@ const ClaimRewardsContent: React.FC<
         fullWidth
         size="medium"
         loading={isSubmitting}
-        disabled={isSubmitting || isImpersonating}
+        disabled={isSubmitting}
         onClick={handleOnClick}
         endIcon={
           !open ? (

@@ -28,7 +28,6 @@ import { FC } from '~/types';
 import useFormMiddleware from '~/hooks/ledger/useFormMiddleware';
 import TokenOutput from '~/components/Common/Form/TokenOutput';
 import useSdk from '~/hooks/sdk';
-import useSetting from '~/hooks/app/useSetting';
 
 export type FillOrderFormValues = {
   plot: PlotFragment;
@@ -50,9 +49,6 @@ const FillOrderV2Form: FC<
   harvestableIndex,
 }) => {
   const sdk = useSdk();
-
-  // Are we impersonating a different account outside dev mode
-  const isImpersonating = !!useSetting('impersonatedAccount')[0] && !import.meta.env.DEV;
 
   /// Derived
   const plot = values.plot;
@@ -121,7 +117,7 @@ const FillOrderV2Form: FC<
         )}
         <SmartSubmitButton
           loading={isSubmitting}
-          disabled={!(isReady && values.destination) || isImpersonating}
+          disabled={!(isReady && values.destination)}
           type="submit"
           variant="contained"
           color="primary"

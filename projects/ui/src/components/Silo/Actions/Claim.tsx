@@ -44,7 +44,6 @@ import AdditionalTxnsAccordion from '~/components/Common/Form/FormTxn/Additional
 import FormTxnProvider from '~/components/Common/Form/FormTxnProvider';
 import useFormTxnContext from '~/hooks/sdk/useFormTxnContext';
 import { ClaimFarmStep, FormTxn } from '~/lib/Txn';
-import useSetting from '~/hooks/app/useSetting';
 
 // -----------------------------------------------------------------------
 
@@ -95,9 +94,6 @@ const ClaimForm: FC<
     () => [token, ...((token.isLP && pool?.tokens) || [])],
     [pool, token]
   );
-
-  // Are we impersonating a different account outside dev mode
-  const isImpersonating = !!useSetting('impersonatedAccount')[0] && !import.meta.env.DEV;
 
   //
   const amount = claimableBalance;
@@ -276,7 +272,7 @@ const ClaimForm: FC<
         ) : null}
         <SmartSubmitButton
           loading={isSubmitting}
-          disabled={!isSubmittable || isSubmitting || isImpersonating}
+          disabled={!isSubmittable || isSubmitting}
           type="submit"
           variant="contained"
           color="primary"

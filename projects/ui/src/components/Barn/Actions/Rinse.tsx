@@ -31,7 +31,6 @@ import AdditionalTxnsAccordion from '~/components/Common/Form/FormTxn/Additional
 import FormTxnProvider from '~/components/Common/Form/FormTxnProvider';
 import { FormTxn, RinseFarmStep } from '~/lib/Txn';
 import useFormTxnContext from '~/hooks/sdk/useFormTxnContext';
-import useSetting from '~/hooks/app/useSetting';
 
 // ---------------------------------------------------
 
@@ -53,9 +52,6 @@ const QuickRinseForm: FC<Props> = ({ values, isSubmitting, SPROUTS }) => {
   const isSubmittable =
     amountSprouts?.gt(0) && values.destination !== undefined;
 
-  // Are we impersonating a different account outside dev mode
-  const isImpersonating = !!useSetting('impersonatedAccount')[0] && !import.meta.env.DEV;
-
   return (
     <Form autoComplete="off" noValidate>
       <Stack gap={1}>
@@ -74,7 +70,7 @@ const QuickRinseForm: FC<Props> = ({ values, isSubmitting, SPROUTS }) => {
         {/* Submit */}
         <SmartSubmitButton
           loading={isSubmitting}
-          disabled={!isSubmittable || isImpersonating}
+          disabled={!isSubmittable}
           type="submit"
           variant="contained"
           color="primary"
@@ -96,9 +92,6 @@ const RinseForm: FC<Props> = ({ values, isSubmitting, SPROUTS, BEAN }) => {
     amountSprouts?.gt(0) && values.destination !== undefined;
 
   const formTxnActions = useFarmerFormTxnsActions();
-
-  // Are we impersonating a different account outside dev mode
-  const isImpersonating = !!useSetting('impersonatedAccount')[0] && !import.meta.env.DEV;
 
   /// Farm actions Txn actions
   return (
@@ -148,7 +141,7 @@ const RinseForm: FC<Props> = ({ values, isSubmitting, SPROUTS, BEAN }) => {
         {/* Submit */}
         <SmartSubmitButton
           loading={isSubmitting}
-          disabled={!isSubmittable || isImpersonating}
+          disabled={!isSubmittable}
           type="submit"
           variant="contained"
           color="primary"

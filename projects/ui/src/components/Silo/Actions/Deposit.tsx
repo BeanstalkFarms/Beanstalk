@@ -59,7 +59,6 @@ import FormTxnProvider from '~/components/Common/Form/FormTxnProvider';
 import useFormTxnContext from '~/hooks/sdk/useFormTxnContext';
 import { ClaimAndDoX, DepositFarmStep, FormTxn } from '~/lib/Txn';
 import useMigrationNeeded from '~/hooks/farmer/useMigrationNeeded';
-import useSetting from '~/hooks/app/useSetting';
 
 // -----------------------------------------------------------------------
 
@@ -107,9 +106,6 @@ const DepositForm: FC<
   setFieldValue,
 }) => {
   const sdk = useSdk();
-
-  // Are we impersonating a different account outside dev mode
-  const isImpersonating = !!useSetting('impersonatedAccount')[0] && !import.meta.env.DEV;
 
   const beanstalkSilo = useSilo();
   const siblingRef = useRef<HTMLDivElement | null>(null);
@@ -289,7 +285,7 @@ const DepositForm: FC<
         ) : null}
         <SmartSubmitButton
           loading={isSubmitting}
-          disabled={isSubmitting || noAmount || migrationNeeded === true || isImpersonating}
+          disabled={isSubmitting || noAmount || migrationNeeded === true}
           type="submit"
           variant="contained"
           color="primary"

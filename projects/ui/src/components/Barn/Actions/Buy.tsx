@@ -46,7 +46,6 @@ import usePreferredToken, {
 import { displayTokenAmount, getTokenIndex, normaliseTV, tokenValueToBN } from '~/util';
 import { useFetchFarmerAllowances } from '~/state/farmer/allowances/updater';
 import { FarmerBalances } from '~/state/farmer/balances';
-import FertilizerItem from '../FertilizerItem';
 import useAccount from '~/hooks/ledger/useAccount';
 import useFormMiddleware from '~/hooks/ledger/useFormMiddleware';
 import { FC } from '~/types';
@@ -69,7 +68,7 @@ import FormTxnProvider from '~/components/Common/Form/FormTxnProvider';
 import useFormTxnContext from '~/hooks/sdk/useFormTxnContext';
 import { BuyFertilizerFarmStep, ClaimAndDoX } from '~/lib/Txn';
 import { useEthPriceFromBeanstalk } from '~/hooks/ledger/useEthPriceFromBeanstalk';
-import useSetting from '~/hooks/app/useSetting';
+import FertilizerItem from '../FertilizerItem';
 
 // ---------------------------------------------------
 
@@ -120,9 +119,6 @@ const BuyForm: FC<
   const getEthPrice = useEthPriceFromBeanstalk();
   const tokenMap = useTokenMap<ERC20Token | NativeToken>(tokenList);
   const [ethPrice, setEthPrice] = useState(TokenValue.ZERO);
-
-  // Are we impersonating a different account outside dev mode
-  const isImpersonating = !!useSetting('impersonatedAccount')[0] && !import.meta.env.DEV;
 
   useEffect(() => {
     getEthPrice().then((price) => {
@@ -307,7 +303,7 @@ const BuyForm: FC<
           color="primary"
           size="large"
           loading={isSubmitting}
-          disabled={!isValid || isImpersonating}
+          disabled={!isValid}
           // Smart props
           contract={sdk.contracts.beanstalk}
           tokens={shouldApprove ? values.tokens : []}

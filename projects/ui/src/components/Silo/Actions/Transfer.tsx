@@ -52,7 +52,6 @@ import {
 } from '~/lib/Txn';
 import useFarmerSiloBalanceSdk from '~/hooks/farmer/useFarmerSiloBalanceSdk';
 import useFarmerSilo from '~/hooks/farmer/useFarmerSilo';
-import useSetting from '~/hooks/app/useSetting';
 
 /// tokenValueToBN is too long
 /// remove me when we migrate everything to TokenValue & DecimalBigNumber
@@ -81,9 +80,6 @@ const TransferForm: FC<
   plantAndDoX,
 }) => {
   const sdk = useSdk();
-
-  // Are we impersonating a different account outside dev mode
-  const isImpersonating = !!useSetting('impersonatedAccount')[0] && !import.meta.env.DEV;
 
   const [migrationNeeded, setMigrationNeeded] = React.useState(false);
   const { BEAN, STALK, SEEDS } = sdk.tokens;
@@ -381,8 +377,7 @@ const TransferForm: FC<
             depositedBalance.eq(0) ||
             isSubmitting ||
             values.to === '' ||
-            migrationNeeded === true ||
-            isImpersonating
+            migrationNeeded === true
           }
           type="submit"
           variant="contained"

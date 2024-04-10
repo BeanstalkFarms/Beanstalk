@@ -37,7 +37,6 @@ import FieldWrapper from '~/components/Common/Form/FieldWrapper';
 import { FC } from '~/types';
 import useFormMiddleware from '~/hooks/ledger/useFormMiddleware';
 import { useFetchFarmerMarketItems } from '~/hooks/farmer/market/useFarmerMarket2';
-import useSetting from '~/hooks/app/useSetting';
 
 export type CreateListingFormValues = {
   plot: PlotFragment;
@@ -80,9 +79,6 @@ const CreateListingV2Form: FC<
 > = ({ values, isSubmitting, plots, harvestableIndex }) => {
   /// Form Data
   const plot = values.plot;
-
-  // Are we impersonating a different account outside dev mode
-  const isImpersonating = !!useSetting('impersonatedAccount')[0] && !import.meta.env.DEV;
 
   /// Data
   const existingListings = useFarmerListingsLedger();
@@ -185,7 +181,7 @@ const CreateListingV2Form: FC<
         )}
         <SmartSubmitButton
           loading={isSubmitting}
-          disabled={!isSubmittable || isSubmitting || isImpersonating}
+          disabled={!isSubmittable || isSubmitting}
           type="submit"
           variant="contained"
           color="primary"

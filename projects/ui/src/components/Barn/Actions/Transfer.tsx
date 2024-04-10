@@ -25,7 +25,6 @@ import { useSelector } from 'react-redux';
 import { AppState } from '~/state';
 import { useFetchFarmerBarn } from '~/state/farmer/barn/updater';
 import { FertilizerBalance } from '~/state/farmer/barn';
-import useSetting from '~/hooks/app/useSetting';
 
 export type TransferFormValues = {
     fertilizerIds: number[];
@@ -49,9 +48,6 @@ const TransferForm: FC<FormikProps<TransferFormValues>> = ({
   isSubmitting,
 }) => {
   const sdk = useSdk();
-
-  // Are we impersonating a different account outside dev mode
-  const isImpersonating = !!useSetting('impersonatedAccount')[0] && !import.meta.env.DEV;
   
   /// Data
   const beanstalkBarn = useSelector<AppState, AppState['_beanstalk']['barn']>(
@@ -162,7 +158,7 @@ const TransferForm: FC<FormikProps<TransferFormValues>> = ({
         )}
         <SmartSubmitButton
           loading={isSubmitting}
-          disabled={!isReady || isSubmitting || isImpersonating}
+          disabled={!isReady || isSubmitting}
           type="submit"
           variant="contained"
           color="primary"

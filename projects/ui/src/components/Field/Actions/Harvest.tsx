@@ -31,7 +31,6 @@ import AdditionalTxnsAccordion from '~/components/Common/Form/FormTxn/Additional
 import FormTxnProvider from '~/components/Common/Form/FormTxnProvider';
 import { FormTxn, HarvestFarmStep } from '~/lib/Txn';
 import useFormTxnContext from '~/hooks/sdk/useFormTxnContext';
-import useSetting from '~/hooks/app/useSetting';
 
 // -----------------------------------------------------------------------
 
@@ -58,9 +57,6 @@ const QuickHarvestForm: FC<Props> = ({
   const isSubmittable =
     amount && amount.gt(0) && values.destination !== undefined;
 
-  // Are we impersonating a different account outside dev mode
-  const isImpersonating = !!useSetting('impersonatedAccount')[0] && !import.meta.env.DEV;
-
   return (
     <Form autoComplete="off" noValidate>
       <Stack gap={1}>
@@ -76,7 +72,7 @@ const QuickHarvestForm: FC<Props> = ({
         </Stack>
         <SmartSubmitButton
           loading={isSubmitting}
-          disabled={!isSubmittable || isSubmitting || isImpersonating}
+          disabled={!isSubmittable || isSubmitting}
           type="submit"
           variant="contained"
           color="primary"
@@ -103,9 +99,6 @@ const HarvestForm: FC<Props> = ({
 }) => {
   const sdk = useSdk();
   const txnActions = useFarmerFormTxnsActions();
-
-  // Are we impersonating a different account outside dev mode
-  const isImpersonating = !!useSetting('impersonatedAccount')[0] && !import.meta.env.DEV;
 
   /// Derived
   const amount = harvestablePods;
@@ -173,7 +166,7 @@ const HarvestForm: FC<Props> = ({
         ) : null}
         <SmartSubmitButton
           loading={isSubmitting}
-          disabled={!isSubmittable || isSubmitting || isImpersonating}
+          disabled={!isSubmittable || isSubmitting}
           type="submit"
           variant="contained"
           color="primary"
