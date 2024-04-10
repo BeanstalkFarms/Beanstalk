@@ -479,9 +479,8 @@ contract ConvertTest is TestHelper {
             amounts
         );
 
-        // verify deltaB. 
-        console.log("new max amount in:", bs.getMaxAmountIn(well, C.BEAN));
-        assertApproxEqRel(bs.getMaxAmountIn(well, C.BEAN), maxLpIn - lpConverted, 0.001e18); // .1% precision
+        // the new maximum amount out should be the difference between the deltaB and the expected amount out.
+        assertEq(bs.getAmountOut(well, C.BEAN, bs.getMaxAmountIn(well, C.BEAN)), deltaB - expectedAmtOut);
         assertEq(bean.balanceOf(well), initalWellBeanBalance - expectedAmtOut);
         assertEq(MockToken(well).totalSupply(), initalLPbalance - lpConverted);
         assertEq(bean.balanceOf(BEANSTALK), initalBeanBalance + expectedAmtOut);
