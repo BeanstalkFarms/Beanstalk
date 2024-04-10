@@ -740,7 +740,7 @@ dataSources:
     source:
       address: "0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5"
       abi: Beanstalk
-      startBlock: 18522900
+      startBlock: 19628074
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.6

@@ -57,6 +57,8 @@ export function loadSiloHourlySnapshot(account: Address, season: i32, timestamp:
     snapshot.seeds = silo.seeds;
     snapshot.grownStalkPerBdvPerSeason = silo.grownStalkPerBdvPerSeason;
     snapshot.roots = silo.roots;
+    snapshot.germinatingStalk = silo.germinatingStalk;
+    snapshot.beanToMaxLpGpPerBdvRatio = silo.beanToMaxLpGpPerBdvRatio;
     snapshot.beanMints = silo.beanMints;
     snapshot.activeFarmers = silo.activeFarmers;
     snapshot.deltaDepositedBDV = ZERO_BI;
@@ -64,6 +66,7 @@ export function loadSiloHourlySnapshot(account: Address, season: i32, timestamp:
     snapshot.deltaPlantableStalk = ZERO_BI;
     snapshot.deltaSeeds = ZERO_BI;
     snapshot.deltaRoots = ZERO_BI;
+    snapshot.deltaGerminatingStalk = ZERO_BI;
     snapshot.deltaBeanMints = ZERO_BI;
     snapshot.deltaActiveFarmers = 0;
     snapshot.createdAt = BigInt.fromString(hour);
@@ -88,6 +91,8 @@ export function loadSiloDailySnapshot(account: Address, timestamp: BigInt): Silo
     snapshot.seeds = silo.seeds;
     snapshot.grownStalkPerBdvPerSeason = silo.grownStalkPerBdvPerSeason;
     snapshot.roots = silo.roots;
+    snapshot.germinatingStalk = silo.germinatingStalk;
+    snapshot.beanToMaxLpGpPerBdvRatio = silo.beanToMaxLpGpPerBdvRatio;
     snapshot.beanMints = silo.beanMints;
     snapshot.activeFarmers = silo.activeFarmers;
     snapshot.deltaDepositedBDV = ZERO_BI;
@@ -95,6 +100,7 @@ export function loadSiloDailySnapshot(account: Address, timestamp: BigInt): Silo
     snapshot.deltaPlantableStalk = ZERO_BI;
     snapshot.deltaSeeds = ZERO_BI;
     snapshot.deltaRoots = ZERO_BI;
+    snapshot.deltaGerminatingStalk = ZERO_BI;
     snapshot.deltaBeanMints = ZERO_BI;
     snapshot.deltaActiveFarmers = 0;
     snapshot.createdAt = BigInt.fromString(day);

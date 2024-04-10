@@ -90,6 +90,7 @@ describe("Seed Gauge", () => {
 
     test("event: UpdateAverageStalkPerBdvPerSeason", () => {
       handleUpdateAverageStalkPerBdvPerSeason(createUpdateAverageStalkPerBdvPerSeasonEvent(BigInt.fromU32(3456)));
+      // TODO: Update this to expect that value times total bdv deposited
       assert.fieldEquals("Silo", BEANSTALK.toHexString(), "grownStalkPerBdvPerSeason", "3456");
     });
   });

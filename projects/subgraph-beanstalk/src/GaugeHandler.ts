@@ -9,8 +9,14 @@ import {
   WhitelistToken
 } from "../generated/BIP42-SeedGauge/Beanstalk";
 import { handleRateChange } from "./utils/Field";
-import { loadWhitelistTokenSetting } from "./utils/SiloEntities";
-import { loadSilo, loadSiloHourlySnapshot } from "./utils/SiloEntities";
+import { loadBeanstalk } from "./utils/Beanstalk";
+import { loadSilo, loadSiloHourlySnapshot, loadSiloDailySnapshot, loadWhitelistTokenSetting } from "./utils/SiloEntities";
+import { Address } from "@graphprotocol/graph-ts";
+
+function currentSeason(beanstalk: Address): i32 {
+  let beanstalkEntity = loadBeanstalk(beanstalk);
+  return beanstalkEntity.lastSeason;
+}
 
 export function handleTemperatureChange(event: TemperatureChange): void {
   handleRateChange(event.address, event.block, event.params.season, event.params.caseId, event.params.absChange);
@@ -29,8 +35,12 @@ export function handleBeanToMaxLpGpPerBdvRatioChange(event: BeanToMaxLpGpPerBdvR
   silo.save();
 
   let siloHourly = loadSiloHourlySnapshot(event.address, event.params.season.toI32(), event.block.timestamp);
+  let siloDaily = loadSiloDailySnapshot(event.address, event.block.timestamp);
+  siloHourly.beanToMaxLpGpPerBdvRatio = silo.beanToMaxLpGpPerBdvRatio;
   siloHourly.caseId = event.params.caseId;
+  siloDaily.beanToMaxLpGpPerBdvRatio = silo.beanToMaxLpGpPerBdvRatio;
   siloHourly.save();
+  siloDaily.save();
 }
 
 export function handleGaugePointChange(event: GaugePointChange): void {
@@ -38,12 +48,21 @@ export function handleGaugePointChange(event: GaugePointChange): void {
   siloSettings.gaugePoints = event.params.gaugePoints;
   siloSettings.updatedAt = event.block.timestamp;
   siloSettings.save();
+  // TODO: daily
 }
 
 export function handleUpdateAverageStalkPerBdvPerSeason(event: UpdateAverageStalkPerBdvPerSeason): void {
   let silo = loadSilo(event.address);
-  silo.grownStalkPerBdvPerSeason = event.params.newStalkPerBdvPerSeason;
+
+  // grownStalkPerBdvPerSeason variable currently stores overall, not per bdv
+  silo.grownStalkPerBdvPerSeason = silo.depositedBDV.times(event.params.newStalkPerBdvPerSeason);
   silo.save();
+  let siloHourly = loadSiloHourlySnapshot(event.address, currentSeason(event.address), event.block.timestamp);
+  let siloDaily = loadSiloDailySnapshot(event.address, event.block.timestamp);
+  siloHourly.grownStalkPerBdvPerSeason = silo.grownStalkPerBdvPerSeason;
+  siloDaily.grownStalkPerBdvPerSeason = silo.grownStalkPerBdvPerSeason;
+  siloHourly.save();
+  siloDaily.save();
 }
 
 // GERMINATING STALK //
@@ -52,12 +71,30 @@ export function handleFarmerGerminatingStalkBalanceChanged(event: FarmerGerminat
   let farmerSilo = loadSilo(event.params.account);
   farmerSilo.germinatingStalk = farmerSilo.germinatingStalk.plus(event.params.delta);
   farmerSilo.save();
+
+  let siloHourly = loadSiloHourlySnapshot(event.params.account, currentSeason(event.address), event.block.timestamp);
+  let siloDaily = loadSiloDailySnapshot(event.params.account, event.block.timestamp);
+  siloHourly.germinatingStalk = farmerSilo.germinatingStalk;
+  siloHourly.deltaGerminatingStalk = siloHourly.deltaGerminatingStalk.plus(event.params.delta);
+  siloDaily.germinatingStalk = farmerSilo.germinatingStalk;
+  siloDaily.deltaGerminatingStalk = siloDaily.deltaGerminatingStalk.plus(event.params.delta);
+  siloHourly.save();
+  siloDaily.save();
 }
 
 export function handleTotalGerminatingBalanceChanged(event: TotalGerminatingBalanceChanged): void {
   let silo = loadSilo(event.address);
   silo.germinatingStalk = silo.germinatingStalk.plus(event.params.delta);
   silo.save();
+
+  let siloHourly = loadSiloHourlySnapshot(event.address, currentSeason(event.address), event.block.timestamp);
+  let siloDaily = loadSiloDailySnapshot(event.address, event.block.timestamp);
+  siloHourly.germinatingStalk = silo.germinatingStalk;
+  siloHourly.deltaGerminatingStalk = siloHourly.deltaGerminatingStalk.plus(event.params.delta);
+  siloDaily.germinatingStalk = silo.germinatingStalk;
+  siloDaily.deltaGerminatingStalk = siloDaily.deltaGerminatingStalk.plus(event.params.delta);
+  siloHourly.save();
+  siloDaily.save();
 }
 
 // WHITELIST / GAUGE CONFIGURATION SETTINGS //

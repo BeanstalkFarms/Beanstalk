@@ -157,6 +157,10 @@ type SiloHourlySnapshot @entity {
   grownStalkPerBdvPerSeason: BigInt!
   "Point in time current roots balance"
   roots: BigInt!
+  "[Seed Gauge] Stalk that is currently Germinating"
+  germinatingStalk: BigInt!
+  "[Seed Gauge] Current target ratio of Bean to LP deposits"
+  beanToMaxLpGpPerBdvRatio: BigInt
   "Point in time cumulative total for bean mints sent to the silo"
   beanMints: BigInt!
   "Point in time current number of active farmers deposited in the silo"
@@ -171,6 +175,8 @@ type SiloHourlySnapshot @entity {
   deltaSeeds: BigInt!
   "Point in time delta roots balance"
   deltaRoots: BigInt!
+  "Point in time germinating stalk balance"
+  deltaGerminatingStalk: BigInt!
   "Point in time delta total for bean mints sent to the silo"
   deltaBeanMints: BigInt!
   "Point in time delta number of active farmers deposited in the silo"
@@ -202,6 +208,10 @@ type SiloDailySnapshot @entity {
   grownStalkPerBdvPerSeason: BigInt!
   "Point in time current roots balance"
   roots: BigInt!
+  "[Seed Gauge] Stalk that is currently Germinating"
+  germinatingStalk: BigInt!
+  "[Seed Gauge] Current target ratio of Bean to LP deposits"
+  beanToMaxLpGpPerBdvRatio: BigInt
   "Point in time cumulative total for bean mints sent to the silo"
   beanMints: BigInt!
   "Point in time current number of active farmers deposited in the silo"
@@ -216,6 +226,8 @@ type SiloDailySnapshot @entity {
   deltaSeeds: BigInt!
   "Point in time delta roots balance"
   deltaRoots: BigInt!
+  "Point in time germinating stalk balance"
+  deltaGerminatingStalk: BigInt!
   "Point in time delta total for bean mints sent to the silo"
   deltaBeanMints: BigInt!
   "Point in time delta number of active farmers deposited in the silo"
@@ -363,6 +375,64 @@ type WhitelistTokenSetting @entity {
   "[Seed Gauge] The current optimal targeted distribution of BDV for this whitelisted asset"
   optimalPercentDepositedBdv: BigInt
   "Last timestamp entity was updated"
+  updatedAt: BigInt!
+  "Link to hourly snapshot data"
+  hourlySnapshots: [WhitelistTokenHourlySnapshot!]! @derivedFrom(field: "token")
+  "Link to daily snapshot data"
+  dailySnapshots: [WhitelistTokenDailySnapshot!]! @derivedFrom(field: "token")
+}
+
+type WhitelistTokenHourlySnapshot @entity {
+  "Token address - Season"
+  id: Bytes!
+  "WhitelistTokenSetting associated with this snapshot"
+  token: WhitelistTokenSetting!
+  "Encoded BDV selector"
+  selector: Bytes!
+  "[Seed Gauge] Encoded Gauge Point selector"
+  gpSelector: Bytes
+  "[Seed Gauge] Encoded Liquidity Weight selector"
+  lwSelector: Bytes
+  "Represents how much Stalk one BDV of the underlying deposited token grows each season."
+  stalkEarnedPerSeason: BigInt!
+  "The stalk per BDV that the silo grants in exchange for depositing this token."
+  stalkIssuedPerBdv: BigInt!
+  "The last season in which the stalkEarnedPerSeason for this token was updated."
+  milestoneSeason: Int!
+  "[Seed Gauge] Current Gauge Points"
+  gaugePoints: BigInt
+  "[Seed Gauge] The current optimal targeted distribution of BDV for this whitelisted asset"
+  optimalPercentDepositedBdv: BigInt
+  "Timestamp of initial snapshot creation"
+  createdAt: BigInt!
+  "Timestamp of last entity update"
+  updatedAt: BigInt!
+}
+
+type WhitelistTokenDailySnapshot @entity {
+  "Token address - Unix Timestamp"
+  id: Bytes!
+  "WhitelistTokenSetting associated with this snapshot"
+  token: WhitelistTokenSetting!
+  "Encoded BDV selector"
+  selector: Bytes!
+  "[Seed Gauge] Encoded Gauge Point selector"
+  gpSelector: Bytes
+  "[Seed Gauge] Encoded Liquidity Weight selector"
+  lwSelector: Bytes
+  "Represents how much Stalk one BDV of the underlying deposited token grows each season."
+  stalkEarnedPerSeason: BigInt!
+  "The stalk per BDV that the silo grants in exchange for depositing this token."
+  stalkIssuedPerBdv: BigInt!
+  "The last season in which the stalkEarnedPerSeason for this token was updated."
+  milestoneSeason: Int!
+  "[Seed Gauge] Current Gauge Points"
+  gaugePoints: BigInt
+  "[Seed Gauge] The current optimal targeted distribution of BDV for this whitelisted asset"
+  optimalPercentDepositedBdv: BigInt
+  "Timestamp of initial snapshot creation"
+  createdAt: BigInt!
+  "Timestamp of last entity update"
   updatedAt: BigInt!
 }
 
