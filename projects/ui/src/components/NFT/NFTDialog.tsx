@@ -55,7 +55,7 @@ const NFTDialog: FC<NFTDialogProps> = ({
         {/* FIXME: should be a LoadingButton */}
         <Button
           onClick={handleMint}
-          disabled={nft.claimed === ClaimStatus.CLAIMED}
+          disabled={nft.claimed === ClaimStatus.CLAIMED || isImpersonating}
           sx={{ height: '45px', width: '100%' }}
         >
           {nft.claimed === ClaimStatus.CLAIMED ? 'Minted' : isImpersonating ? 'Impersonating Account' : 'Mint'}
