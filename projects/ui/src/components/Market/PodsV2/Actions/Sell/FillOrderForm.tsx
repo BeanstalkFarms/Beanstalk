@@ -49,7 +49,6 @@ const FillOrderV2Form: FC<
   harvestableIndex,
 }) => {
   const sdk = useSdk();
-
   /// Derived
   const plot = values.plot;
   const [eligiblePlots, numEligiblePlots] = useMemo(

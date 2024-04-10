@@ -46,6 +46,7 @@ import usePreferredToken, {
 import { displayTokenAmount, getTokenIndex, normaliseTV, tokenValueToBN } from '~/util';
 import { useFetchFarmerAllowances } from '~/state/farmer/allowances/updater';
 import { FarmerBalances } from '~/state/farmer/balances';
+import FertilizerItem from '../FertilizerItem';
 import useAccount from '~/hooks/ledger/useAccount';
 import useFormMiddleware from '~/hooks/ledger/useFormMiddleware';
 import { FC } from '~/types';
@@ -68,7 +69,6 @@ import FormTxnProvider from '~/components/Common/Form/FormTxnProvider';
 import useFormTxnContext from '~/hooks/sdk/useFormTxnContext';
 import { BuyFertilizerFarmStep, ClaimAndDoX } from '~/lib/Txn';
 import { useEthPriceFromBeanstalk } from '~/hooks/ledger/useEthPriceFromBeanstalk';
-import FertilizerItem from '../FertilizerItem';
 
 // ---------------------------------------------------
 

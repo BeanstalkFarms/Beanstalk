@@ -106,7 +106,6 @@ const DepositForm: FC<
   setFieldValue,
 }) => {
   const sdk = useSdk();
-
   const beanstalkSilo = useSilo();
   const siblingRef = useRef<HTMLDivElement | null>(null);
 

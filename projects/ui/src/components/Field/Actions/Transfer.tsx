@@ -50,7 +50,6 @@ const TransferForm: FC<SendFormProps & FormikProps<TransferFormValues>> = ({
   isSubmitting,
 }) => {
   const sdk = useSdk();
-
   /// Data
   const plots = useFarmerPlots();
   const harvestableIndex = useHarvestableIndex();

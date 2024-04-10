@@ -71,7 +71,6 @@ const ChopForm: FC<
   }
 > = ({ values, setFieldValue, balances, beanstalk }) => {
   const sdk = useSdk();
-
   const getBDV = useBDV();
   const erc20TokenMap = useTokenMap<ERC20Token | NativeToken>(UNRIPE_TOKENS);
   const [isTokenSelectVisible, showTokenSelect, hideTokenSelect] = useToggle();

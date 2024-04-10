@@ -112,7 +112,6 @@ const SowForm: FC<
 }) => {
   const sdk = useSdk();
   const account = useAccount();
-
   const [isTokenSelectVisible, showTokenSelect, hideTokenSelect] = useToggle();
   const formRef = useRef<HTMLDivElement | null>(null);
 

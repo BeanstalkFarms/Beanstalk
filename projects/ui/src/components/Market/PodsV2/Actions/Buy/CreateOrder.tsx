@@ -120,7 +120,6 @@ const CreateOrderV2Form: FC<
   contract,
 }) => {
   const sdk = useSdk();
-
   const Bean = sdk.tokens.BEAN;
   const erc20TokenMap = useTokenMap<ERC20Token | NativeToken>(tokenList);
   const balances = useFarmerBalances();

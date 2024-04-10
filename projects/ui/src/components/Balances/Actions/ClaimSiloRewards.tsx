@@ -15,22 +15,23 @@ import { Module, ModuleContent } from '~/components/Common/Module';
 import beanIcon from '~/img/tokens/bean-logo-circled.svg';
 import stalkIcon from '~/img/beanstalk/stalk-icon-winter.svg';
 import seedIcon from '~/img/beanstalk/seed-icon-winter.svg';
+
 import useRevitalized from '~/hooks/farmer/useRevitalized';
 import { AppState } from '~/state';
+import RewardItem from '../../Silo/RewardItem';
 import useFarmerBalancesBreakdown from '~/hooks/farmer/useFarmerBalancesBreakdown';
 import DropdownIcon from '~/components/Common/DropdownIcon';
 import useToggle from '~/hooks/display/useToggle';
 import useGetChainToken from '~/hooks/chain/useGetChainToken';
 import useFarmerSiloBalances from '~/hooks/farmer/useFarmerSiloBalances';
-import { ZERO_BN } from '~/constants';
+import RewardsForm, { ClaimRewardsFormParams } from '../../Silo/RewardsForm';
 import { ClaimRewardsAction } from '~/util';
 import { UNRIPE_BEAN, UNRIPE_BEAN_WETH } from '~/constants/tokens';
-import { hoverMap } from '~/constants/silo';
-import RewardsForm, { ClaimRewardsFormParams } from '../../Silo/RewardsForm';
 import DescriptionButton from '../../Common/DescriptionButton';
 import GasTag from '../../Common/GasTag';
+import { hoverMap } from '~/constants/silo';
 import MountedAccordion from '../../Common/Accordion/MountedAccordion';
-import RewardItem from '../../Silo/RewardItem';
+import { ZERO_BN } from '~/constants';
 
 const options = [
   {

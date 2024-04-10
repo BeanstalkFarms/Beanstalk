@@ -48,7 +48,6 @@ const DelegationForm: React.FC<FormikProps<DelegateValues> & DelegateProps> = ({
   resetForm,
   values,
 }) => {
-
   const handleClearDelegate = useCallback(async () => {
     let txToast;
     try {

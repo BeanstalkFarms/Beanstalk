@@ -80,7 +80,6 @@ const TransferForm: FC<
   plantAndDoX,
 }) => {
   const sdk = useSdk();
-
   const [migrationNeeded, setMigrationNeeded] = React.useState(false);
   const { BEAN, STALK, SEEDS } = sdk.tokens;
 
