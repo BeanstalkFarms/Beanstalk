@@ -5,7 +5,7 @@ import { TESTNET_RPC_ADDRESSES } from '~/constants';
 import { useEthersSigner } from '~/util/wagmi/ethersAdapter';
 import useSetting from '../app/useSetting';
 
-// This returns an _ethers_ signer, but one that may be impersonating an account, if we're in dev mode with the right environment variables set.
+// This returns an _ethers_ signer, but one that may be impersonating an account, if we're in dev mode with the right settings.
 export const useSigner = () => {
   const [signer, setSigner] = useState<ethers.Signer | undefined>(undefined);
   const { chainId } = useAccount();
@@ -15,9 +15,11 @@ export const useSigner = () => {
   const isImpersonating = !!IMPERSONATE_ADDRESS;
   const isDevMode = import.meta.env.DEV;
 
-  if (isImpersonating) {
-    console.warn(`Impersonating Farmer account: ${IMPERSONATE_ADDRESS}`);
-  };
+  useEffect(() => {
+    if (IMPERSONATE_ADDRESS) {
+      console.warn(`Impersonating Farmer account: ${IMPERSONATE_ADDRESS}`);
+    };
+  }, [IMPERSONATE_ADDRESS]);
 
   useEffect(() => {
     (async () => {
