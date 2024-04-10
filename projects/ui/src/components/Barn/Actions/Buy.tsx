@@ -122,7 +122,7 @@ const BuyForm: FC<
   const [ethPrice, setEthPrice] = useState(TokenValue.ZERO);
 
   // Are we impersonating a different account outside dev mode
-  const isImpersonating = !!(useSetting('impersonatedAccount')[0]) && !import.meta.env.DEV;
+  const isImpersonating = !!useSetting('impersonatedAccount')[0] && !import.meta.env.DEV;
 
   useEffect(() => {
     getEthPrice().then((price) => {

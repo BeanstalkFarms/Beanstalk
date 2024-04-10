@@ -123,7 +123,7 @@ const CreateOrderV2Form: FC<
   const sdk = useSdk();
 
   // Are we impersonating a different account outside dev mode
-  const isImpersonating = !!(useSetting('impersonatedAccount')[0]) && !import.meta.env.DEV;
+  const isImpersonating = !!useSetting('impersonatedAccount')[0] && !import.meta.env.DEV;
 
   const Bean = sdk.tokens.BEAN;
   const erc20TokenMap = useTokenMap<ERC20Token | NativeToken>(tokenList);

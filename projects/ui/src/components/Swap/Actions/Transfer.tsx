@@ -92,7 +92,7 @@ const TransferForm: FC<
   const account = useAccount();
 
   // Are we impersonating a different account outside dev mode
-  const isImpersonating = !!(useSetting('impersonatedAccount')[0]) && !import.meta.env.DEV;
+  const isImpersonating = !!useSetting('impersonatedAccount')[0] && !import.meta.env.DEV;
 
   /// Derived values
   const stateIn = values.tokensIn[0];

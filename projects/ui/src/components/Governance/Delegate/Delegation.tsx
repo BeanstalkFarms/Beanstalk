@@ -51,7 +51,7 @@ const DelegationForm: React.FC<FormikProps<DelegateValues> & DelegateProps> = ({
 }) => {
 
   // Are we impersonating a different account outside dev mode
-  const isImpersonating = !!(useSetting('impersonatedAccount')[0]) && !import.meta.env.DEV;
+  const isImpersonating = !!useSetting('impersonatedAccount')[0] && !import.meta.env.DEV;
 
   const handleClearDelegate = useCallback(async () => {
     let txToast;

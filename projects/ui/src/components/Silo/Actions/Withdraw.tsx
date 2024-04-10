@@ -102,7 +102,7 @@ const WithdrawForm: FC<
   );
 
   // Are we impersonating a different account outside dev mode
-  const isImpersonating = !!(useSetting('impersonatedAccount')[0]) && !import.meta.env.DEV;
+  const isImpersonating = !!useSetting('impersonatedAccount')[0] && !import.meta.env.DEV;
 
   const claimableTokens = useMemo(
     // FIXME: Temporarily disabled Withdraws of Bean:ETH LP in Bean/WETH, needs routing code

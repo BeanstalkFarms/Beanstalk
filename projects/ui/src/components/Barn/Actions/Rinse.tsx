@@ -54,7 +54,7 @@ const QuickRinseForm: FC<Props> = ({ values, isSubmitting, SPROUTS }) => {
     amountSprouts?.gt(0) && values.destination !== undefined;
 
   // Are we impersonating a different account outside dev mode
-  const isImpersonating = !!(useSetting('impersonatedAccount')[0]) && !import.meta.env.DEV;
+  const isImpersonating = !!useSetting('impersonatedAccount')[0] && !import.meta.env.DEV;
 
   return (
     <Form autoComplete="off" noValidate>
@@ -98,7 +98,7 @@ const RinseForm: FC<Props> = ({ values, isSubmitting, SPROUTS, BEAN }) => {
   const formTxnActions = useFarmerFormTxnsActions();
 
   // Are we impersonating a different account outside dev mode
-  const isImpersonating = !!(useSetting('impersonatedAccount')[0]) && !import.meta.env.DEV;
+  const isImpersonating = !!useSetting('impersonatedAccount')[0] && !import.meta.env.DEV;
 
   /// Farm actions Txn actions
   return (
