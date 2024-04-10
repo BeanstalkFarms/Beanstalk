@@ -73,8 +73,8 @@ const ChopForm: FC<
 > = ({ values, setFieldValue, balances, beanstalk }) => {
   const sdk = useSdk();
 
-  // Are we impersonating a different account
-  const isImpersonating = !!(useSetting('impersonatedAccount')[0]);
+  // Are we impersonating a different account outside dev mode
+  const isImpersonating = !!(useSetting('impersonatedAccount')[0]) && !import.meta.env.DEV;
 
   const getBDV = useBDV();
   const erc20TokenMap = useTokenMap<ERC20Token | NativeToken>(UNRIPE_TOKENS);

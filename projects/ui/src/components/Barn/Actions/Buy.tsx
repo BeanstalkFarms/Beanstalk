@@ -121,8 +121,8 @@ const BuyForm: FC<
   const tokenMap = useTokenMap<ERC20Token | NativeToken>(tokenList);
   const [ethPrice, setEthPrice] = useState(TokenValue.ZERO);
 
-  // Are we impersonating a different account
-  const isImpersonating = !!(useSetting('impersonatedAccount')[0]);
+  // Are we impersonating a different account outside dev mode
+  const isImpersonating = !!(useSetting('impersonatedAccount')[0]) && !import.meta.env.DEV;
 
   useEffect(() => {
     getEthPrice().then((price) => {

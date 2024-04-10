@@ -51,8 +51,8 @@ const FillOrderV2Form: FC<
 }) => {
   const sdk = useSdk();
 
-  // Are we impersonating a different account
-  const isImpersonating = !!(useSetting('impersonatedAccount')[0]);
+  // Are we impersonating a different account outside dev mode
+  const isImpersonating = !!(useSetting('impersonatedAccount')[0]) && !import.meta.env.DEV;
 
   /// Derived
   const plot = values.plot;

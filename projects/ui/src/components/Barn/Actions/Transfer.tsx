@@ -50,8 +50,8 @@ const TransferForm: FC<FormikProps<TransferFormValues>> = ({
 }) => {
   const sdk = useSdk();
 
-  // Are we impersonating a different account
-  const isImpersonating = !!(useSetting('impersonatedAccount')[0]);
+  // Are we impersonating a different account outside dev mode
+  const isImpersonating = !!(useSetting('impersonatedAccount')[0]) && !import.meta.env.DEV;
   
   /// Data
   const beanstalkBarn = useSelector<AppState, AppState['_beanstalk']['barn']>(

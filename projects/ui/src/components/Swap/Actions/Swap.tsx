@@ -116,8 +116,8 @@ const SwapForm: FC<
   const account = useAccount();
   const sdk = useSdk();
 
-  // Are we impersonating a different account
-  const isImpersonating = !!(useSetting('impersonatedAccount')[0]);
+  // Are we impersonating a different account outside dev mode
+  const isImpersonating = !!(useSetting('impersonatedAccount')[0]) && !import.meta.env.DEV;
 
   // This controls what options are show on the tokenin picker (All Balances, circulating, farm).
   const [fromOptions, setFromOptions] = useState<BalanceFrom[]>([

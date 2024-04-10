@@ -84,8 +84,8 @@ const ClaimRewardsContent: React.FC<
   const getChainToken = useGetChainToken();
   const balances = useFarmerSiloBalances();
 
-  // Are we impersonating a different account
-  const isImpersonating = !!(useSetting('impersonatedAccount')[0]);
+  // Are we impersonating a different account outside dev mode
+  const isImpersonating = !!(useSetting('impersonatedAccount')[0]) && !import.meta.env.DEV;
 
   /// The currently hovered action.
   const [hoveredAction, setHoveredAction] = useState<

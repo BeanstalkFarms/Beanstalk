@@ -49,6 +49,7 @@ import useFormMiddleware from '~/hooks/ledger/useFormMiddleware';
 // ----------------------------------------------------
 
 import { FC } from '~/types';
+import useSetting from '~/hooks/app/useSetting';
 
 // ----------------------------------------------------
 
@@ -278,6 +279,9 @@ const PickBeansDialog: FC<
     ]
   );
 
+  // Are we impersonating a different account outside dev mode
+  const isImpersonating = !!(useSetting('impersonatedAccount')[0]) && !import.meta.env.DEV;
+
   /// Tab: Pick Overview
   const alreadyPicked = picked[0] === true || picked[1] === true;
   const buttonLoading = !merkles;
@@ -433,7 +437,7 @@ const PickBeansDialog: FC<
         <Box width="100%">
           <LoadingButton
             loading={buttonLoading}
-            disabled={buttonDisabled}
+            disabled={buttonDisabled || isImpersonating}
             onClick={handleNextTab}
             fullWidth
             // Below two params are required for the disabled

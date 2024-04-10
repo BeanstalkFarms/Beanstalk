@@ -10,14 +10,14 @@ export const useSigner = () => {
   const [signer, setSigner] = useState<ethers.Signer | undefined>(undefined);
   const { chainId } = useAccount();
   const ethersSigner = useEthersSigner({ chainId });
-  const impersonateSetting = useSetting('impersonatedAccount')[0];
 
-  const IMPERSONATE_ADDRESS = import.meta.env.VITE_OVERRIDE_FARMER_ACCOUNT || impersonateSetting || '';
-  const isImpersonating = !!(import.meta.env.DEV && IMPERSONATE_ADDRESS) || impersonateSetting;
+  const IMPERSONATE_ADDRESS = useSetting('impersonatedAccount')[0];
+  const isImpersonating = !!IMPERSONATE_ADDRESS;
+  const isDevMode = import.meta.env.DEV;
 
   useEffect(() => {
     (async () => {
-      if (isImpersonating) {
+      if (isImpersonating && isDevMode) {
         try {
           if (!chainId) throw new Error('Cannot impersonate, unknown chainId');
           const provider = new ethers.providers.JsonRpcProvider(
@@ -34,7 +34,7 @@ export const useSigner = () => {
         setSigner(ethersSigner);
       }
     })();
-  }, [ethersSigner, chainId, IMPERSONATE_ADDRESS, isImpersonating]);
+  }, [ethersSigner, chainId, IMPERSONATE_ADDRESS, isImpersonating, isDevMode]);
 
   return {
     data: signer,

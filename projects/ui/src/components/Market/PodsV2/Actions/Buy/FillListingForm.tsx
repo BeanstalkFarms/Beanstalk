@@ -77,8 +77,8 @@ const FillListingV2Form: FC<
   /// State
   const [isTokenSelectVisible, handleOpen, hideTokenSelect] = useToggle();
 
-  // Are we impersonating a different account
-  const isImpersonating = !!(useSetting('impersonatedAccount')[0]);
+  // Are we impersonating a different account outside dev mode
+  const isImpersonating = !!(useSetting('impersonatedAccount')[0]) && !import.meta.env.DEV;
 
   /// Chain
   const getChainToken = useGetChainToken();

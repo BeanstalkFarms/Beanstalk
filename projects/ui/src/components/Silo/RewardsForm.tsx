@@ -51,8 +51,8 @@ const RewardsForm: React.FC<RewardsFormProps> = ({ open, children }) => {
   const account = useAccount();
   const { data: signer } = useSigner();
 
-  // Are we impersonating a different account
-  const isImpersonating = !!(useSetting('impersonatedAccount')[0]);
+  // Are we impersonating a different account outside dev mode
+  const isImpersonating = !!(useSetting('impersonatedAccount')[0]) && !import.meta.env.DEV;
 
   /// Helpers
   const unripeTokens = useTokenMap(UNRIPE_TOKENS);

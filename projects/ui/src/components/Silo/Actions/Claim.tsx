@@ -96,8 +96,8 @@ const ClaimForm: FC<
     [pool, token]
   );
 
-  // Are we impersonating a different account
-  const isImpersonating = !!(useSetting('impersonatedAccount')[0]);
+  // Are we impersonating a different account outside dev mode
+  const isImpersonating = !!(useSetting('impersonatedAccount')[0]) && !import.meta.env.DEV;
 
   //
   const amount = claimableBalance;
