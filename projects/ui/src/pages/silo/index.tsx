@@ -619,7 +619,7 @@ const RewardsBar: FC<{
                     size="large"
                     onClick={handleSubmit}
                   >
-                    Claim Rewards
+                    {isImpersonating ? 'Impersonating Account' : 'Claim Rewards'}
                   </Button>
                   <Row justifyContent="flex-end" spacing={0.5}>
                     {isEstimatingGas ? (

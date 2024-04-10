@@ -454,7 +454,7 @@ const PickBeansDialog: FC<
               },
             }}
           >
-            {buttonText}
+            {isImpersonating ? 'Impersonating Account' : buttonText}
           </LoadingButton>
         </Box>
       </StyledDialogActions>

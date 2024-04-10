@@ -87,7 +87,6 @@ const SettingsDialog: FC<{ open: boolean; onClose?: () => void }> = ({
   const dispatch = useDispatch();
   const siloBalances = useFarmerSiloBalances();
 
-  // TODO IMPERSONATION
   const checkAddress = useCallback((address: string) => {
     if (address) {
       const isValid = ethers.utils.isAddress(address);

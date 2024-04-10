@@ -207,7 +207,9 @@ const ClaimRewardsForm: FC<
           disabled={isSubmitting || values.action === undefined || isImpersonating}
           onClick={submitForm}
         >
-          {selectedAction === undefined
+          {isImpersonating 
+            ? 'Impersonating Account'
+            : selectedAction === undefined 
             ? 'Select Claim type'
             : `${options[selectedAction].title}`}
         </LoadingButton>
