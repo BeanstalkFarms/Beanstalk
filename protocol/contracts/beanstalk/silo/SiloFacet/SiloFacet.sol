@@ -8,7 +8,7 @@ pragma abicoder v2;
 import "./TokenSilo.sol";
 import "contracts/libraries/Token/LibTransfer.sol";
 import "contracts/libraries/Silo/LibSiloPermit.sol";
-import "hardhat/console.sol";
+
 
 /**
  * @title SiloFacet

@@ -9,7 +9,7 @@ import "./MetadataImage.sol";
 import {LibBytes} from "contracts/libraries/LibBytes.sol";
 import {LibTokenSilo} from "contracts/libraries/Silo/LibTokenSilo.sol";
 
-import "hardhat/console.sol";
+
 import "contracts/libraries/LibStrings.sol";
 
 /**

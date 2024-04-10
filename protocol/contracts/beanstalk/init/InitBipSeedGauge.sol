@@ -115,7 +115,7 @@ contract InitBipSeedGauge is Weather, InitWhitelistStatuses {
             );
         }
         // initalize seed gauge and emit events.
-        s.seedGauge.beanToMaxLpGpPerBdvRatio = 33_333_333_333_333_333_333; // 33% (50% + 50%* (1/3) = 66%)
+        s.seedGauge.beanToMaxLpGpPerBdvRatio = 33_333_333_333_333_333_333; // 33% (50% + 50% * (1/3) = 66%)
         s.seedGauge.averageGrownStalkPerBdvPerSeason = initializeAverageGrownStalkPerBdv(totalBdv);
 
         emit BeanToMaxLpGpPerBdvRatioChange(
