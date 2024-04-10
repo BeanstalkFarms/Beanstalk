@@ -37,7 +37,7 @@ library LibIncentive {
     uint256 internal constant BASE_REWARD = 3e6; // 3 BEAN
 
     /// @dev Max BEAN reward for calling Sunrise.
-    uint256 internal constant MAX_REWARD = 100e6; // 100 BEAN
+    uint256 internal constant MAX_REWARD = 250e6; // 250 BEAN
 
     /// @dev Wei buffer to account for the priority fee.
     uint256 internal constant PRIORITY_FEE_BUFFER = 5e9; // 5e9 wei = 5 gwei

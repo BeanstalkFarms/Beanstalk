@@ -1,16 +1,8 @@
 import React from 'react';
-
 import CallMadeIcon from '@mui/icons-material/CallMade';
-import { Link, Stack, Typography } from '@mui/material';
-
+import { Box, Link, Stack, Typography } from '@mui/material';
+import { FC } from '~/types';
 import { SEEDS, STALK, BEAN_ETH_WELL_LP } from '~/constants/tokens';
-import { FontSize } from '../App/muiTheme';
-import Stat from '../Common/Stat';
-import TokenIcon from '../Common/TokenIcon';
-import { BASIN_WELL_LINK, BEANSTALK_ADDRESSES, CURVE_LINK } from '~/constants';
-import DepositedAsset from '../Analytics/Silo/DepositedAsset';
-
-import SiloCarousel from './SiloCarousel';
 import Token, { ERC20Token } from '~/classes/Token';
 import Row from '~/components/Common/Row';
 import {
@@ -20,29 +12,39 @@ import {
 } from '~/components/Common/Module';
 import useTVD from '~/hooks/beanstalk/useTVD';
 import { displayFullBN } from '~/util';
+import { BASIN_WELL_LINK, BEANSTALK_ADDRESSES, CURVE_LINK } from '~/constants';
+import useWhitelist from '~/hooks/beanstalk/useWhitelist';
+import { FontSize } from '../App/muiTheme';
+import Stat from '../Common/Stat';
+import TokenIcon from '../Common/TokenIcon';
+import DepositedAsset from '../Analytics/Silo/DepositedAsset';
+import SiloCarousel from './SiloCarousel';
 import EmbeddedCard from '../Common/EmbeddedCard';
 import SiloAssetApyChip from './SiloAssetApyChip';
-import useWhitelist from '~/hooks/beanstalk/useWhitelist';
-
-import { FC } from '~/types';
 
 const DepositRewards: FC<{ token: ERC20Token }> = ({ token }) => (
-  <Row gap={1} justifyContent="center">
-    <Row gap={0.5} justifyContent="center">
-      <Typography variant="bodyLarge">
-        <TokenIcon token={STALK} css={{ marginTop: '7px', height: '0.7em' }} />
-        {token.rewards?.stalk}
-      </Typography>
-      <Row>
-        <TokenIcon token={SEEDS} css={{ fontSize: 'inherit' }} />
-        <Typography variant="bodyLarge">{token.rewards?.seeds}</Typography>
+  <Box>
+    <Row gap={1} justifyContent="start">
+      <Row gap={0.5} justifyContent="center">
+        <Typography variant="bodyLarge">
+          <TokenIcon token={STALK} css={{ marginTop: '7px', height: '0.7em' }} />
+          {token.rewards?.stalk}
+        </Typography>
+        <Row>
+          <TokenIcon token={SEEDS} css={{ fontSize: 'inherit' }} />
+          <Typography variant="bodyLarge">{token.rewards?.seeds}</Typography>
+        </Row>
+      </Row>
+      {/* This vAPY chip is only shown on larger screens */}
+      <Row sx={{ display: { xs: 'none', sm: 'block' } }}>
+        <SiloAssetApyChip token={token as Token} metric="bean" variant="labeled" />
       </Row>
     </Row>
-    <SiloAssetApyChip token={token as Token} metric="bean" variant="labeled" />
-  </Row>
+  </Box>
 );
 
 const SiloAssetOverviewCard: FC<{ token: ERC20Token }> = ({ token }) => {
+
   const { total, tvdByToken } = useTVD();
   const whitelist = useWhitelist();
 
@@ -50,7 +52,6 @@ const SiloAssetOverviewCard: FC<{ token: ERC20Token }> = ({ token }) => {
   const isWell = token.equals(BEAN_ETH_WELL_LP[1]);
   const tokenTVD = tvdByToken[token.address];
   const tokenPctTVD = tokenTVD.div(total).times(100);
-
 
   return (
     <Module>
@@ -106,7 +107,10 @@ const SiloAssetOverviewCard: FC<{ token: ERC20Token }> = ({ token }) => {
               amount={<DepositRewards token={token} />}
             />
           </Row>
-
+          {/* This vAPY chip is only shown on mobile screens */}
+          <Row justifyContent="center" sx={{ display: { xs: 'flex', sm: 'none' } }}>
+            <SiloAssetApyChip token={token as Token} metric="bean" variant="labeled" />
+          </Row>
           {/* Card Carousel */}
           <SiloCarousel token={token} />
         </Stack>

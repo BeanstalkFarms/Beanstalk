@@ -47,6 +47,28 @@ async function bip29(mock = true, account = undefined) {
   });
 }
 
+async function bipMorningAuction(mock = true, account = undefined) {
+  if (account == undefined) {
+    account = await impersonateBeanstalkOwner();
+    await mintEth(account.address);
+  }
+  
+  await upgradeWithNewFacets({
+    diamondAddress: BEANSTALK,
+    facetNames: [
+      "FieldFacet", // Add Morning Auction
+      "SeasonFacet", // Add ERC-20 permit function
+      "FundraiserFacet" // update fundraiser with new soil spec
+      // 'MockAdminFacet' // Add MockAdmin for testing purposes
+    ],
+    initFacetName: "InitBipSunriseImprovements",
+    initArgs: [],
+    bip: false,
+    verbose: true,
+    account: account
+  });
+}
+
 //BIP for Silo migration to stem
 async function bipNewSilo(mock = true, account = undefined) {
   if (account == undefined) {
@@ -250,6 +272,7 @@ async function bipSeedGauge(mock = true, account = undefined, verbose = true) {
 exports.bip29 = bip29
 exports.bip30 = bip30
 exports.bip34 = bip34
+exports.bipMorningAuction = bipMorningAuction
 exports.bipNewSilo = bipNewSilo
 exports.bipBasinIntegration = bipBasinIntegration
 exports.bipSeedGauge = bipSeedGauge

@@ -37,9 +37,9 @@ contract WhitelistFacet is WhitelistedTokens {
      * @param gaugePoints The inital gauge points allocated to the token.
      * @param optimalPercentDepositedBdv The target percentage
      * of the total LP deposited BDV for this token. Only used if the token is an LP token.
-     * @dev
-     * Can only be called by Beanstalk or Beanstalk owner.
-     * Assumes an `encodeType` of 0.
+     * @dev Can only be called by Beanstalk or Beanstalk owner. Assumes an `encodeType` of 0.
+     * Note: The Beanstalk DAO should not whitelist Fee-on-transfer or rebasing tokens,
+     * as the Silo is not compatible with these tokens.
      */
     function whitelistToken(
         address token,
@@ -78,6 +78,8 @@ contract WhitelistFacet is WhitelistedTokens {
      * of the total LP deposited BDV for this token. Only used if the token is an LP token.
      *
      * @dev Can only be called by Beanstalk or Beanstalk owner.
+     * Note: The Beanstalk DAO should not whitelist Fee-on-transfer or rebasing tokens,
+     * as the Silo is not compatible with these tokens.
      */
     function whitelistTokenWithEncodeType(
         address token,

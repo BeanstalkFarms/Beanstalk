@@ -1,11 +1,12 @@
 import { useMemo } from 'react';
 import { useSelector } from 'react-redux';
-import { Token, TokenValue } from '@beanstalk/sdk';
+import { Token } from '@beanstalk/sdk';
 import { MaxBN, transform } from '~/util';
 import { BEAN_TO_STALK, ZERO_BN } from '~/constants';
 import { AppState } from '~/state';
-import useFarmerSiloBalances from './useFarmerSiloBalances';
 import useSdk from '~/hooks/sdk';
+import BigNumber from 'bignumber.js';
+import useFarmerSiloBalances from './useFarmerSiloBalances';
 
 /**
  * Calculates the amount of new Stalk & Seeds the Farmer will receive if they
@@ -52,6 +53,7 @@ export default function useRevitalized() {
     let revitalizedBDV = ZERO_BN;
     let revitalizedStalk = ZERO_BN;
     let revitalizedSeeds = ZERO_BN;
+    const stemTip = ZERO_BN;
 
     // The amount of BDV this Deposit should have based on the formula:
     // amount * bdvPerToken
@@ -61,51 +63,53 @@ export default function useRevitalized() {
         beanstalkSilo.balances[token.address]?.bdvPerToken || ZERO_BN
       );
 
+    const getExpectedBDVForCrate = (token: Token, amount?: BigNumber) =>
+      (amount || ZERO_BN).times(
+        beanstalkSilo.balances[token.address]?.bdvPerToken || ZERO_BN
+      );
+
     // The on-chain `bdv` value stored with the deposit.
     const getActualBDV = (token: Token) =>
       balances[token.address]?.deposited.bdv || ZERO_BN;
 
-    const getGrownStalk = (token: Token, expected: boolean) =>
-      balances[token.address]
-        ? transform(
-            balances[token.address].deposited.crates.reduce(
-              (acc, crate) =>
-                acc.add(
-                  token.getStalk(
-                    sdk.tokens.BEAN.fromHuman(
-                      expected
-                        ? // Get the amount of BDV this Deposit should have...
-                          // amount * current bdvPerToken
-                          crate.amount
-                            .times(
-                              beanstalkSilo.balances[token.address]
-                                ?.bdvPerToken || ZERO_BN
-                            )
-                            .toString()
-                        : // Get the amount of BDV this Deposit actually has...
-                          crate.bdv.toString()
-                    )
-                  )
-                ),
-              TokenValue.ZERO
-            ),
-            'bnjs',
-            sdk.tokens.STALK
-          )
-        : ZERO_BN;
+    const getDeltaGrownStalk = (token: Token): BigNumber => {
+      let sum = ZERO_BN;
+      if (!balances[token.address]) return sum;
+
+      const crates = balances[token.address].deposited.crates;
+      crates.forEach((crate) => {
+        const stem = crate.stem as unknown as BigNumber; // Fix bad type from upstream.
+        const bdv = getExpectedBDV(token);
+        const futureBDV = getExpectedBDVForCrate(token, crate.amount);
+        const currentBDV = crate.bdv;
+        const stemDelta = stemTip.minus(stem);
+        const deltaBDV = MaxBN(futureBDV.minus(currentBDV), ZERO_BN);
+        const deltaGrownStalk = stemDelta.times(deltaBDV).div(10000);
+
+        // console.log({
+        //   crateAmount: crate.amount.toString(),
+        //   crate,
+        //   stem: stem.toString(),
+        //   stemDelta: stemDelta.toString(),
+        //   bdv: bdv.toString(),
+        //   futureBDV: futureBDV.toString(),
+        //   futureBDVOld: getExpectedBDV(token).toString(),
+        //   currentBDV: currentBDV.toString(),
+        //   currentBDVOld: getActualBDV(token).toString(),
+        //   deltaBDV: deltaBDV.toString(),
+        //   deltaGrownStalk: deltaGrownStalk.toString(),
+        // });
+
+        sum = sum.plus(deltaGrownStalk);
+      });
+      return sum;
+    };
 
     sdk.tokens.unripeTokens.forEach((token) => {
       const expectedBDV = getExpectedBDV(token);
       const actualBDV = getActualBDV(token);
-
-      const expectedGrownStalk = getGrownStalk(token, true);
-      const actualGrownStalk = getGrownStalk(token, false);
-
       const deltaBDV = MaxBN(expectedBDV.minus(actualBDV), ZERO_BN);
-      const deltaGrownStalk = MaxBN(
-        expectedGrownStalk.minus(actualGrownStalk),
-        ZERO_BN
-      );
+      const deltaGrownStalk = getDeltaGrownStalk(token);
 
       revitalizedBDV = revitalizedBDV.plus(deltaBDV);
 
@@ -130,8 +134,6 @@ export default function useRevitalized() {
       // console.log("Revitalized for", token.name, {
       //   expectedBDV: expectedBDV.toString(),
       //   actualBDV: actualBDV.toString(),
-      //   expectedGrownStalk: expectedGrownStalk.toString(),
-      //   actualGrownStalk: actualGrownStalk.toString(),
       //   deltaBDV: deltaBDV.toString(),
       //   deltaGrownStalk: deltaGrownStalk.toString(),
       //   newRevitalizedSeeds: newRevitalizedSeeds.toString(),
@@ -158,7 +160,6 @@ export default function useRevitalized() {
     balances,
     beanstalkSilo.balances,
     sdk.tokens.BEAN,
-    sdk.tokens.STALK,
     sdk.tokens.unripeTokens,
   ]);
 }

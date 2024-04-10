@@ -7,9 +7,10 @@ import { Log } from "src/utils/logger";
 export const useWells = () => {
   const sdk = useSdk();
 
-  return useQuery<Well[], Error>(
-    ["wells", sdk],
-    async () => {
+  return useQuery({
+    queryKey: ["wells", sdk],
+
+    queryFn: async () => {
       try {
         const wellAddresses = await findWells(sdk);
         Log.module("wells").debug("Well addresses: ", wellAddresses);
@@ -38,9 +39,8 @@ export const useWells = () => {
         return [];
       }
     },
-    {
-      retry: false,
-      staleTime: Infinity
-    }
-  );
+
+    retry: false,
+    staleTime: Infinity
+  });
 };

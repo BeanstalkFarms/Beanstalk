@@ -19,11 +19,12 @@ export class UnwrapEth extends StepClass<BasicPreparedResult> {
       const pipelineStepIndex = Math.max(pipelineWellSwapIndex, pipelineUniV3SwapIndex);
       // If the action before or after (happens when reverse estimating) this one is a BEAN/USDC/DAI -> WETH swap through Pipeline...
       if (pipelineStepIndex >= 0 && Math.abs(pipelineStepIndex - context.step.index) === 1) {
+        const slotToCopy = pipelineStepIndex === pipelineWellSwapIndex ? 6 : 9;
         // We use clipboard...
         this.clipboard = {
           // Then find the correct tag in the tag map
           tag: Object.keys(context.tagMap).find(tag => context.tagMap[tag] === pipelineStepIndex)!, 
-          copySlot: 6, 
+          copySlot: slotToCopy, 
           pasteSlot: 0
         };
       };

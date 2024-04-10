@@ -138,7 +138,13 @@ contract EnrootFacet is ReentrancyGuard {
         require(s.u[token].underlyingToken != address(0), "Silo: token not unripe");
         // First, remove Deposits because every deposit is in a different season,
         // we need to get the total Stalk, not just BDV.
-        LibSilo.AssetsRemoved memory ar = LibSilo._removeDepositsFromAccount(msg.sender, token, stems, amounts);
+        LibSilo.AssetsRemoved memory ar = LibSilo._removeDepositsFromAccount(
+            msg.sender, 
+            token, 
+            stems, 
+            amounts,
+            LibSilo.ERC1155Event.NO_EMIT_BATCH_EVENT
+        );
 
         // Get enroot data.
         EnrootData memory enrootData = _getTokenEnrootData(token, ar);

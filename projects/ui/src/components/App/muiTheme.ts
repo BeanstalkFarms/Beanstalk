@@ -267,13 +267,13 @@ const muiThemeBase: ThemeOptions = {
   palette: {
     divider: BeanstalkPalette.blue,
     primary: {
-      main: BeanstalkPalette.theme.winter.primary,
-      dark: BeanstalkPalette.theme.winter.primaryDarkAlt,
-      light: BeanstalkPalette.theme.winter.primaryHover,
+      main: BeanstalkPalette.logoGreen,
+      dark: BeanstalkPalette.supportGreen,
+      light: BeanstalkPalette.lightestGreen,
       contrastText: '#ffffff',
     },
     secondary: {
-      main: BeanstalkPalette.blue,
+      main: BeanstalkPalette.mediumGreen,
       contrastText: '#ffffff',
     },
     light: {
@@ -304,11 +304,11 @@ const muiThemeBase: ThemeOptions = {
       light: BeanstalkPalette.lightestGrey,
     },
     background: {
-      default: BeanstalkPalette.theme.winter.iceBlue,
+      default: '#DBF5FF',
       paper: BeanstalkPalette.offWhite,
     },
     error: {
-      main: BeanstalkPalette.theme.winter.red,
+      main: BeanstalkPalette.theme.spring.red,
     },
   },
 
@@ -412,7 +412,10 @@ const muiThemeBase: ThemeOptions = {
       styleOverrides: {
         root: (t) =>
           t.theme.unstable_sx({
-            border: 'none'
+            borderWidth: '1px',
+            borderStyle: 'solid',
+            borderColor: 'divider',
+            borderRadius: 1,
           }),
       },
     },
@@ -446,7 +449,7 @@ const muiThemeBase: ThemeOptions = {
               borderColor: BeanstalkPalette.lightestGrey,
               ':hover': {
                 borderColor: 'primary.main',
-                background: BeanstalkPalette.theme.winter.primaryHover,
+                background: BeanstalkPalette.lightestGreen,
               },
             }),
         },
@@ -474,7 +477,7 @@ const muiThemeBase: ThemeOptions = {
               borderColor: 'divider',
               ':hover': {
                 borderColor: 'primary.main',
-                background: BeanstalkPalette.theme.winter.primaryHover,
+                background: BeanstalkPalette.lightestGreen,
               },
             }),
         },
@@ -820,8 +823,8 @@ const muiThemeBase: ThemeOptions = {
           },
           style: (t) =>
             t.theme.unstable_sx({
-              color: BeanstalkPalette.theme.winter.primary,
-              backgroundColor: hexToRgba(BeanstalkPalette.theme.winter.primary, 0.1),
+              color: BeanstalkPalette.logoGreen,
+              backgroundColor: hexToRgba(BeanstalkPalette.logoGreen, 0.1),
             }),
         },
         {

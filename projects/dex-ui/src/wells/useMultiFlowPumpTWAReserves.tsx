@@ -8,15 +8,17 @@ import { TokenValue } from "@beanstalk/sdk";
 import { useQuery } from "@tanstack/react-query";
 import { Well } from "@beanstalk/sdk/Wells";
 import { useCallback } from "react";
+import { config } from "src/utils/wagmi/config";
 
 export const useMultiFlowPumpTWAReserves = () => {
   const { data: wells } = useWells();
   const { getIsMultiPumpWell } = useBeanstalkSiloWhitelist();
   const sdk = useSdk();
 
-  const query = useQuery(
-    ["wells", "multiFlowPumpTWAReserves"],
-    async () => {
+  const query = useQuery({
+    queryKey: ["wells", "multiFlowPumpTWAReserves"],
+
+    queryFn: async () => {
       const whitelistedWells = (wells || []).filter((well) => getIsMultiPumpWell(well));
 
       const [{ timestamp: seasonTimestamp }, ...wellOracleSnapshots] = await Promise.all([
@@ -37,7 +39,7 @@ export const useMultiFlowPumpTWAReserves = () => {
         return prev;
       }, []);
 
-      const twaReservesResult: any[] = await multicall({ contracts: calls });
+      const twaReservesResult: any[] = await multicall(config, { contracts: calls });
 
       const mapping: Record<string, TokenValue[]> = {};
       let index = 0;
@@ -66,12 +68,11 @@ export const useMultiFlowPumpTWAReserves = () => {
       });
       return mapping;
     },
-    {
-      staleTime: 1000 * 60,
-      enabled: !!wells?.length,
-      refetchOnMount: true
-    }
-  );
+
+    staleTime: 1000 * 60,
+    enabled: !!wells?.length,
+    refetchOnMount: true
+  });
 
   const getTWAReservesWithWell = useCallback(
     (well: Well | undefined) => {

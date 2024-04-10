@@ -80,18 +80,14 @@ library LibEvaluate {
     /**
      * @notice updates the caseId based on the price of bean (deltaB)
      * @param deltaB the amount of beans needed to be sold or bought to get bean to peg.
-     * @param podRate the length of the podline (debt), divided by the bean supply.
      * @param well the well address to get the bean price from. 
      */
     function evalPrice(
         int256 deltaB,
-        Decimal.D256 memory podRate,
         address well
     ) internal view returns (uint256 caseId) {
         // p > 1
-        if (
-            deltaB > 0 || (deltaB == 0 && podRate.lessThanOrEqualTo(POD_RATE_OPTIMAL.toDecimal()))
-        ) {
+        if (deltaB > 0) {
             // Beanstalk will only use the largest liquidity well to compute the Bean price,
             // and thus will skip the p > EXCESSIVE_PRICE_THRESHOLD check if the well oracle fails to
             // compute a valid price this Season.
@@ -311,7 +307,7 @@ library LibEvaluate {
             address largestLiqWell
         ) = getBeanstalkState(beanSupply);
         uint256 caseId = evalPodRate(podRate) // Evaluate Pod Rate
-        .add(evalPrice(deltaB, podRate, largestLiqWell)) // Evaluate Price
+        .add(evalPrice(deltaB, largestLiqWell)) // Evaluate Price
         .add(evalDeltaPodDemand(deltaPodDemand)) // Evaluate Delta Soil Demand 
         .add(evalLpToSupplyRatio(lpToSupplyRatio)); // Evaluate LP to Supply Ratio
         return(caseId, largestLiqWell);

@@ -56,8 +56,8 @@ const LiquidityOverTime: FC<{} & CardProps> = ({ sx }) => {
       fillPrimary: BeanstalkPalette.theme.spring.lightBlue 
     },
     [BEAN_ETH_WELL.address]: { 
-      stroke: BeanstalkPalette.theme.winter.primary, 
-      fillPrimary: BeanstalkPalette.theme.winter.primaryHover 
+      stroke: BeanstalkPalette.theme.spring.beanstalkGreen, 
+      fillPrimary: BeanstalkPalette.theme.spring.washedGreen 
     },
     [BEAN_ETH_UNIV2.address]: { 
       stroke: BeanstalkPalette.theme.spring.chart.purple, 
