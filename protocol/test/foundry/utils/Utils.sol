@@ -3,11 +3,14 @@ pragma solidity >=0.7.6 <0.9.0;
 pragma abicoder v2;
 
 import "forge-std/Test.sol";
+import {LibStrings} from "contracts/libraries/LibStrings.sol";
 
 /**
  * @dev common utilities for forge tests
  */
 contract Utils is Test {
+    using LibStrings for uint256;
+    using LibStrings for bytes;
     address payable[] internal users;
 
     bytes32 internal nextUser = keccak256(abi.encodePacked("user address"));
@@ -50,6 +53,7 @@ contract Utils is Test {
         address payable[] memory _users = new address payable[](userNum);
         for (uint256 i = 0; i < userNum; i++) {
             address payable user = this.getNextUserAddress();
+            vm.label(user, string(abi.encodePacked("Farmer ", i.toString())));
             vm.deal(user, 100 ether);
             _users[i] = user;
         }
