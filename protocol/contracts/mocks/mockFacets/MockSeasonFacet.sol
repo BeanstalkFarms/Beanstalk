@@ -235,10 +235,6 @@ contract MockSeasonFacet is SeasonFacet  {
             delete s.g.diamondCuts[i];
         }
 
-        for (uint32 i; i < s.fundraiserIndex; ++i) {
-            MockToken(s.fundraisers[i].token).burn(MockToken(s.fundraisers[i].token).balanceOf(address(this)));
-            delete s.fundraisers[i];
-        }
         delete s.f;
         delete s.s;
         delete s.w;
@@ -248,7 +244,6 @@ contract MockSeasonFacet is SeasonFacet  {
         delete s.r;
         delete s.co;
         delete s.season;
-        delete s.fundraiserIndex;
         s.season.start = block.timestamp;
         s.season.timestamp = block.timestamp;
         s.s.stalk = 0;

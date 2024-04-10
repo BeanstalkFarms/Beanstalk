@@ -86,8 +86,6 @@ contract BeanstalkDeployer is Utils {
             facetNames[i++] = "MockFertilizerFacet";
             deployedFacetAddresses[i] = address(deployCode("MockFieldFacet.sol"));
             facetNames[i++] = "MockFieldFacet";
-            deployedFacetAddresses[i] = address(deployCode("MockFundraiserFacet.sol"));
-            facetNames[i++] = "MockFundraiserFacet";
             deployedFacetAddresses[i] = address(deployCode("MockMarketplaceFacet.sol"));
             facetNames[i++] = "MockMarketplaceFacet";
             deployedFacetAddresses[i] = address(deployCode("MockWhitelistFacet.sol"));
@@ -105,8 +103,6 @@ contract BeanstalkDeployer is Utils {
             facetNames[i++] = "FertilizerFacet";
             deployedFacetAddresses[i] = address(deployCode("FieldFacet.sol"));
             facetNames[i++] = "FieldFacet";
-            deployedFacetAddresses[i] = address(deployCode("FundraiserFacet.sol"));
-            facetNames[i++] = "FundraiserFacet";
             deployedFacetAddresses[i] = address(deployCode("MarketplaceFacet.sol"));
             facetNames[i++] = "MarketplaceFacet";
             deployedFacetAddresses[i] = address(deployCode("WhitelistFacet.sol"));
