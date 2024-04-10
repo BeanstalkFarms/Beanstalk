@@ -1,6 +1,6 @@
 import { BigInt, ethereum, Address } from "@graphprotocol/graph-ts";
 import { createMockedFunction } from "matchstick-as/assembly/index";
-import { BEAN_3CRV, BEANSTALK_PRICE, CURVE_PRICE } from "../../utils/Constants";
+import { BEAN_3CRV, BEAN_ERC20, BEAN_WETH_CP2_WELL, BEANSTALK_PRICE, CURVE_PRICE, WETH } from "../../utils/Constants";
 
 // These 2 classes are analagous to structs used by BeanstalkPrice contract
 class Prices {
@@ -67,6 +67,28 @@ export function setMockWellPrice(pool: Pool): void {
     .withArgs([ethereum.Value.fromAddress(pool.contract)])
     .returns([ethereum.Value.fromTuple(wellPriceReturn)]);
 }
+
+const price = (p: number): BigInt => BigInt.fromU32(<u32>(p * Math.pow(10, 6)));
+
+export const simpleMockPrice = (overall: number, beanEth: number): void => {
+  setMockBeanPrice({
+    price: price(overall),
+    liquidity: BigInt.zero(),
+    deltaB: BigInt.zero(),
+    ps: [
+      {
+        contract: BEAN_WETH_CP2_WELL,
+        tokens: [BEAN_ERC20, WETH],
+        balances: [BigInt.fromString("10"), BigInt.fromString("10")],
+        price: price(beanEth),
+        liquidity: BigInt.fromString("10"),
+        deltaB: BigInt.fromString("10"),
+        lpUsd: BigInt.fromString("10"),
+        lpBdv: BigInt.fromString("10")
+      }
+    ]
+  });
+};
 
 function toPricesStruct(prices: Prices): ethereum.Tuple {
   let retval = new ethereum.Tuple();
