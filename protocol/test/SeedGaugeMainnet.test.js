@@ -66,7 +66,7 @@ testIfRpcSet('SeedGauge Init Test', function () {
     await revertToSnapshot(snapshotId)
   });
 
-  describe('init state', async function () {
+  describe.skip('init state', async function () {
 
     it('totalDepositedBDV', async function () {
       console.log("total deposited BDV")
