@@ -12,7 +12,7 @@ import {IWellFunction} from "contracts/interfaces/basin/IWellFunction.sol";
 import {LibWell} from "contracts/libraries/Well/LibWell.sol";
 import {C} from "contracts/C.sol";
 
-import "hardhat/console.sol";
+
 
 /**
  * @title Well Bdv Library

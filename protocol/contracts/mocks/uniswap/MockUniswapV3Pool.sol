@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity =0.7.6;
+pragma solidity ^0.7.6;
 
 import '@uniswap/v3-core/contracts/interfaces/IUniswapV3Pool.sol';
 
@@ -881,7 +881,7 @@ contract MockUniswapV3Pool is IUniswapV3Pool, NoDelegateCall {
     // sets price of oracle
     ///@dev decimal precision of price is the lower of the two tokens,
     ///@dev decimals is the precision of the token being quoted.
-    function setOraclePrice(uint256 price,uint8 decimals) external { 
+    function setOraclePrice(uint256 price, uint8 decimals) external { 
         manual_sqrtPriceX96 = sqrt((uint256(1<<192))*(10**decimals)/(price));
         manual_ticks = TickMath.getTickAtSqrtRatio(uint160(manual_sqrtPriceX96));
     }

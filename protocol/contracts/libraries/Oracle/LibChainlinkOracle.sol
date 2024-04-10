@@ -173,5 +173,7 @@ library LibChainlinkOracle {
         if (currentTimestamp.sub(timestamp) > maxTimeout) return true;
         // Check for non-positive price
         if (answer <= 0) return true;
+
+        return false;
     }
 }

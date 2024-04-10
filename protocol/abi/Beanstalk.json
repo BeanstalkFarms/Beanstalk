@@ -1001,11 +1001,6 @@
         "internalType": "uint256",
         "name": "minLPTokensOut",
         "type": "uint256"
-      },
-      {
-        "internalType": "enum LibTransfer.From",
-        "name": "mode",
-        "type": "uint8"
       }
     ],
     "name": "mintFertilizer",
