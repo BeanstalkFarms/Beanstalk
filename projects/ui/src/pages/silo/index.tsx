@@ -418,7 +418,7 @@ const RewardsBar: FC<{
             size="medium"
             variant="contained"
             sx={{ width: '100%', whiteSpace: 'nowrap' }}
-            endIcon={<DropdownIcon open={open} disabled={!canClaim} light />}
+            endIcon={<DropdownIcon open={open && canClaim} disabled={!canClaim} light />}
             onClick={open ? hide : show}
             disabled={!canClaim}
           >
@@ -426,7 +426,7 @@ const RewardsBar: FC<{
           </Button>
         </Box>
       </Stack>
-      {open && (
+      {open && canClaim && (
         <Box
           sx={{
             backgroundColor: 'rgba(244, 244, 244, 0.4)',
