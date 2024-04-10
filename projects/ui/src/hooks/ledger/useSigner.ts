@@ -15,6 +15,10 @@ export const useSigner = () => {
   const isImpersonating = !!IMPERSONATE_ADDRESS;
   const isDevMode = import.meta.env.DEV;
 
+  if (isImpersonating) {
+    console.warn(`Impersonating Farmer account: ${IMPERSONATE_ADDRESS}`);
+  };
+
   useEffect(() => {
     (async () => {
       if (isImpersonating && isDevMode) {

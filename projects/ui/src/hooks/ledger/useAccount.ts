@@ -7,14 +7,12 @@ export default function useAccount() {
   const account = useWagmiAccount();
   const impersonatedAccount = useSetting('impersonatedAccount')[0];
 
-  // TODO IMPERSONATION
-
   return useMemo(() => {
     if (impersonatedAccount) {
       return getAccount(impersonatedAccount);
     };
     if (account.address) {
-      return getAccount(account?.address)
+      return getAccount(account?.address);
     };
     return undefined;
   }, [impersonatedAccount, account?.address]);
