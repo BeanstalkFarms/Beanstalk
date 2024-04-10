@@ -384,7 +384,9 @@ type WhitelistTokenSetting @entity {
 
 type WhitelistTokenHourlySnapshot @entity {
   "Token address - Season"
-  id: Bytes!
+  id: ID!
+  "The season for this snapshot"
+  season: Int!
   "WhitelistTokenSetting associated with this snapshot"
   token: WhitelistTokenSetting!
   "Encoded BDV selector"
@@ -411,7 +413,7 @@ type WhitelistTokenHourlySnapshot @entity {
 
 type WhitelistTokenDailySnapshot @entity {
   "Token address - Unix Timestamp"
-  id: Bytes!
+  id: ID!
   "WhitelistTokenSetting associated with this snapshot"
   token: WhitelistTokenSetting!
   "Encoded BDV selector"

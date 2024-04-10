@@ -10,7 +10,14 @@ import {
 } from "../generated/BIP42-SeedGauge/Beanstalk";
 import { handleRateChange } from "./utils/Field";
 import { loadBeanstalk } from "./utils/Beanstalk";
-import { loadSilo, loadSiloHourlySnapshot, loadSiloDailySnapshot, loadWhitelistTokenSetting } from "./utils/SiloEntities";
+import {
+  loadSilo,
+  loadSiloHourlySnapshot,
+  loadSiloDailySnapshot,
+  loadWhitelistTokenSetting,
+  loadWhitelistTokenDailySnapshot,
+  loadWhitelistTokenHourlySnapshot
+} from "./utils/SiloEntities";
 import { Address } from "@graphprotocol/graph-ts";
 
 function currentSeason(beanstalk: Address): i32 {
@@ -48,7 +55,13 @@ export function handleGaugePointChange(event: GaugePointChange): void {
   siloSettings.gaugePoints = event.params.gaugePoints;
   siloSettings.updatedAt = event.block.timestamp;
   siloSettings.save();
-  // TODO: daily
+
+  let whitelistHourly = loadWhitelistTokenHourlySnapshot(event.params.token, event.params.season.toI32(), event.block.timestamp);
+  let whitelistDaily = loadWhitelistTokenDailySnapshot(event.params.token, event.block.timestamp);
+  whitelistHourly.gaugePoints = event.params.gaugePoints;
+  whitelistDaily.gaugePoints = event.params.gaugePoints;
+  whitelistHourly.save();
+  whitelistDaily.save();
 }
 
 export function handleUpdateAverageStalkPerBdvPerSeason(event: UpdateAverageStalkPerBdvPerSeason): void {
@@ -111,6 +124,9 @@ export function handleWhitelistToken_BIP42(event: WhitelistToken): void {
   siloSettings.optimalPercentDepositedBdv = event.params.optimalPercentDepositedBdv;
   siloSettings.updatedAt = event.block.timestamp;
   siloSettings.save();
+
+  loadWhitelistTokenHourlySnapshot(event.params.token, currentSeason(event.address), event.block.timestamp);
+  loadWhitelistTokenDailySnapshot(event.params.token, event.block.timestamp);
 }
 
 export function handleUpdateGaugeSettings(event: UpdateGaugeSettings): void {
@@ -120,4 +136,7 @@ export function handleUpdateGaugeSettings(event: UpdateGaugeSettings): void {
   siloSettings.optimalPercentDepositedBdv = event.params.optimalPercentDepositedBdv;
   siloSettings.updatedAt = event.block.timestamp;
   siloSettings.save();
+
+  loadWhitelistTokenHourlySnapshot(event.params.token, currentSeason(event.address), event.block.timestamp);
+  loadWhitelistTokenDailySnapshot(event.params.token, event.block.timestamp);
 }

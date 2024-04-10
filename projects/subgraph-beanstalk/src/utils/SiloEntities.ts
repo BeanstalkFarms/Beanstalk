@@ -10,6 +10,8 @@ import {
   SiloAssetHourlySnapshot,
   SiloAsset,
   WhitelistTokenSetting,
+  WhitelistTokenHourlySnapshot,
+  WhitelistTokenDailySnapshot,
   TokenYield
 } from "../../generated/schema";
 import { BEANSTALK, UNRIPE_BEAN, UNRIPE_BEAN_3CRV } from "../../../subgraph-core/utils/Constants";
@@ -203,6 +205,53 @@ export function loadWhitelistTokenSetting(token: Address): WhitelistTokenSetting
     }
   }
   return setting as WhitelistTokenSetting;
+}
+
+export function loadWhitelistTokenHourlySnapshot(token: Address, season: i32, timestamp: BigInt): WhitelistTokenHourlySnapshot {
+  let hour = hourFromTimestamp(timestamp);
+  let id = token.toHexString() + "-" + season.toString();
+  let snapshot = WhitelistTokenHourlySnapshot.load(id);
+  if (snapshot == null) {
+    let setting = loadWhitelistTokenSetting(token);
+    snapshot = new WhitelistTokenHourlySnapshot(id);
+    snapshot.season = season;
+    snapshot.token = setting.id;
+    snapshot.selector = setting.selector;
+    snapshot.gpSelector = setting.gpSelector;
+    snapshot.lwSelector = setting.lwSelector;
+    snapshot.stalkEarnedPerSeason = setting.stalkEarnedPerSeason;
+    snapshot.stalkIssuedPerBdv = setting.stalkIssuedPerBdv;
+    snapshot.milestoneSeason = setting.milestoneSeason;
+    snapshot.gaugePoints = setting.gaugePoints;
+    snapshot.optimalPercentDepositedBdv = setting.optimalPercentDepositedBdv;
+    snapshot.createdAt = BigInt.fromString(hour);
+    snapshot.updatedAt = ZERO_BI;
+    snapshot.save();
+  }
+  return snapshot as WhitelistTokenHourlySnapshot;
+}
+
+export function loadWhitelistTokenDailySnapshot(token: Address, timestamp: BigInt): WhitelistTokenDailySnapshot {
+  let day = dayFromTimestamp(timestamp);
+  let id = token.toHexString() + "-" + day.toString();
+  let snapshot = WhitelistTokenDailySnapshot.load(id);
+  if (snapshot == null) {
+    let setting = loadWhitelistTokenSetting(token);
+    snapshot = new WhitelistTokenDailySnapshot(id);
+    snapshot.token = setting.id;
+    snapshot.selector = setting.selector;
+    snapshot.gpSelector = setting.gpSelector;
+    snapshot.lwSelector = setting.lwSelector;
+    snapshot.stalkEarnedPerSeason = setting.stalkEarnedPerSeason;
+    snapshot.stalkIssuedPerBdv = setting.stalkIssuedPerBdv;
+    snapshot.milestoneSeason = setting.milestoneSeason;
+    snapshot.gaugePoints = setting.gaugePoints;
+    snapshot.optimalPercentDepositedBdv = setting.optimalPercentDepositedBdv;
+    snapshot.createdAt = BigInt.fromString(day);
+    snapshot.updatedAt = ZERO_BI;
+    snapshot.save();
+  }
+  return snapshot as WhitelistTokenDailySnapshot;
 }
 
 /* ===== Deposit Entities ===== */
