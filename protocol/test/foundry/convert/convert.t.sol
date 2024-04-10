@@ -233,7 +233,7 @@ contract ConvertTest is TestHelper {
     /**
      * @notice general convert test.
      */
-    function test_convertBeanToWell(
+    function test_convertBeanToWellGeneral(
         uint256 deltaB,
         uint256 beansConverted
     ) public {
@@ -281,7 +281,7 @@ contract ConvertTest is TestHelper {
     /**
      * @notice general convert test. Uses multiple deposits.
      */
-    function test_convertsBeanToWell(
+    function test_convertsBeanToWellGeneral(
         uint256 deltaB,
         uint256 beansConverted
     ) public {
@@ -437,13 +437,10 @@ contract ConvertTest is TestHelper {
      * @notice general convert test.
      */
     function test_convertWellToBeanGeneral(uint256 deltaB, uint256 lpConverted) public {
-        // minLP as anything lower than this would result in 0 beans removed.
-        uint256[] memory amountIn = new uint256[](2);
-        amountIn[0] = 1;
-        uint256 minLp = IWell(well).getAddLiquidityOut(amountIn); 
+        uint256 minLp = getMinLPin(); 
         uint256 lpMinted = wellToBeanSetup();
         
-        deltaB = bound(deltaB, 1e6, 1_000_000_000_000_000e6);
+        deltaB = bound(deltaB, 1e6, 1000 ether);
         setReserves(well, bean.balanceOf(well) + deltaB, weth.balanceOf(well));
         uint256 initalWellBeanBalance = bean.balanceOf(well);
         uint256 initalLPbalance = MockToken(well).totalSupply();
@@ -486,20 +483,79 @@ contract ConvertTest is TestHelper {
         assertEq(bean.balanceOf(BEANSTALK), initalBeanBalance + expectedAmtOut);
     }
 
+    /**
+     * @notice general convert test. multiple deposits.
+     */
+    function test_convertsWellToBeanGeneral(uint256 deltaB, uint256 lpConverted) public {
+        uint256 minLp = getMinLPin(); 
+        uint256 lpMinted = wellToBeanSetup();
+        
+        deltaB = bound(deltaB, 1e6, 1000 ether);
+        setReserves(well, bean.balanceOf(well) + deltaB, weth.balanceOf(well));
+        uint256 initalWellBeanBalance = bean.balanceOf(well);
+        uint256 initalLPbalance = MockToken(well).totalSupply();
+        uint256 initalBeanBalance = bean.balanceOf(BEANSTALK);
+
+        uint256 maxLpIn = bs.getMaxAmountIn(well, C.BEAN);
+        lpConverted = bound(lpConverted, minLp, lpMinted);
+
+        // if the maximum LP that can be used is less than 
+        // the amount that the user wants to convert,
+        // cap the amount to the maximum LP that can be used.
+        if(lpConverted > maxLpIn) lpConverted = maxLpIn;
+
+        console.log("maxLpIn: ", maxLpIn);
+        console.log("lpConverted: ", lpConverted);
+        
+        uint256 expectedAmtOut = bs.getAmountOut(well, C.BEAN, lpConverted);
+
+        console.log("expectedAmtOut: ", expectedAmtOut);
+
+        // create encoding for a well -> bean convert.
+        bytes memory convertData = convertEncoder(
+            LibConvertData.ConvertKind.WELL_LP_TO_BEANS,
+            well, // well
+            lpConverted, // amountIn
+            0 // minOut
+        );
+
+        int96[] memory stems = new int96[](2);
+        stems[0] = int96(0);
+        stems[1] = int96(4e6); // 1 season of seeds for bean-eth.
+        uint256[] memory amounts = new uint256[](2);
+        amounts[0] = lpConverted / 2;
+        amounts[1] = lpConverted - amounts[0];
+
+        vm.expectEmit();
+        emit Convert(farmers[0], well, C.BEAN, lpConverted, expectedAmtOut);
+        vm.prank(farmers[0]);
+        convert.convert(
+            convertData,
+            stems,
+            amounts
+        );
+
+        // the new maximum amount out should be the difference between the deltaB and the expected amount out.
+        assertEq(bs.getAmountOut(well, C.BEAN, bs.getMaxAmountIn(well, C.BEAN)), deltaB - expectedAmtOut);
+        assertEq(bean.balanceOf(well), initalWellBeanBalance - expectedAmtOut);
+        assertEq(MockToken(well).totalSupply(), initalLPbalance - lpConverted);
+        assertEq(bean.balanceOf(BEANSTALK), initalBeanBalance + expectedAmtOut);
+    }
+
     function wellToBeanSetup() public returns (uint256 lpMinted) {
         // Create 2 LP deposits worth 200_000 BDV. 
         // note: LP is minted with an price of 1000 beans. 
         lpMinted = mintBeanLPtoUser(
-            well,
             farmers[0],
             100000e6,
             1000e6
         );
         vm.startPrank(farmers[0]);
         MockToken(well).approve(BEANSTALK, type(uint256).max);  
-        bs.deposit(well, lpMinted/2, 0);
+        
+        bs.deposit(well, lpMinted / 2, 0);
         season.siloSunrise(0);
-        bs.deposit(well, lpMinted/2, 0);
+        bs.deposit(well, lpMinted - (lpMinted / 2), 0);
 
         // Germinating deposits cannot convert (see {LibGerminate}). 
         // End germination process.
@@ -512,7 +568,6 @@ contract ConvertTest is TestHelper {
      * @notice issues a bean-tkn LP to user. the amount of LP issued is based on some price ratio.
      */
     function mintBeanLPtoUser(
-        address well,
         address account, 
         uint256 beanAmount,
         uint256 priceRatio // ratio of TKN/BEAN (6 decimal precision)
@@ -522,6 +577,12 @@ contract ConvertTest is TestHelper {
         bean.mint(well, beanAmount);
         MockToken(nonBeanToken).mint(well, beanAmount * 1e18 / priceRatio);
         amountOut = IWell(well).sync(account, 0);
+    }
+
+    function getMinLPin() internal view returns(uint256) {
+        uint256[] memory amountIn = new uint256[](2);
+        amountIn[0] = 1;
+        return IWell(well).getAddLiquidityOut(amountIn);
     }
 
     //////////// LAMBDA/LAMBDA ////////////
