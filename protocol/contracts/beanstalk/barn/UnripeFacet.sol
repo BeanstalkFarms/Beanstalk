@@ -230,7 +230,7 @@ contract UnripeFacet is ReentrancyGuard {
      * @return penalty The penalty % of Chopping derived from %Recapitalized^2.
      */
     function getPercentPenalty(address unripeToken) external view returns (uint256 penalty) {
-        return (s.u[unripeToken].balanceOfUnderlying ** 2).mul(LibUnripe.DECIMALS).div(IERC20(unripeToken).totalSupply() ** 2);
+        return LibUnripe.getPenalizedUnderlying(unripeToken, LibUnripe.DECIMALS, IERC20(unripeToken).totalSupply());
     }
 
     /**
