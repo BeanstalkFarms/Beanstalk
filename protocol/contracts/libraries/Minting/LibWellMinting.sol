@@ -228,9 +228,8 @@ library LibWellMinting {
      */
     function instantaneousDeltaB(address well) internal view returns (int256) {
         Call[] memory pumps = IWell(well).pumps();
-                                                                                            // well address , data[]
         uint[] memory instReserves = IInstantaneousPump(pumps[0].target).readInstantaneousReserves(well, pumps[0].data);
-                                                                    // well, reserves, snapshot, lookback
+        //                                   well, reserves,   snapshot,  lookback
         (int256 deltaB, , ,) = getDeltaBInfo(well, instReserves, new bytes(0) , 0);
         return (deltaB);
     }
