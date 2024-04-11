@@ -150,10 +150,8 @@ library LibWellMinting {
     }
     
     /**
-     * @dev Calculates the deltaB for a given Well address
-     * and returns the deltaB, snapshot, reserves and ratios.
-     * @param well The address of the Well.
-     * @return deltaB The instantaneous delta B balance since the last `capture` call.
+     * @dev Calculates the delta B of a given well for a given set of well state parameters.
+     * Designed to work for instantaneous and twa delta B calculations.
      */
     function getDeltaBInfo(address well, uint[] memory reserves, bytes memory snapshot, uint256 lookback
     ) internal view returns (int256, bytes memory, uint256[] memory, uint256[] memory) {
@@ -233,7 +231,7 @@ library LibWellMinting {
         AppStorage storage s = LibAppStorage.diamondStorage();
         Call[] memory pumps = IWell(well).pumps();
                                                                                             // well address , data[]
-        uint[] memory instReserves = IInstantaneousPump(pumps[0].target).readInstantaneousReserves(well, C.BYTES_ZERO);
+        uint[] memory instReserves = IInstantaneousPump(pumps[0].target).readInstantaneousReserves(well, pumps[0].data);
                                                                     // well, reserves, snapshot, lookback
         (int256 deltaB, , ,) = getDeltaBInfo(well, instReserves, new bytes(0) , 0);
         return (deltaB);
