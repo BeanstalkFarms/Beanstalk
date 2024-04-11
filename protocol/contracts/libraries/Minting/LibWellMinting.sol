@@ -227,8 +227,6 @@ library LibWellMinting {
      * @return deltaB The instantaneous delta B balance since the last `capture` call.
      */
     function instantaneousDeltaB(address well) internal view returns (int256) {
-
-        AppStorage storage s = LibAppStorage.diamondStorage();
         Call[] memory pumps = IWell(well).pumps();
                                                                                             // well address , data[]
         uint[] memory instReserves = IInstantaneousPump(pumps[0].target).readInstantaneousReserves(well, pumps[0].data);
