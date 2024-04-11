@@ -86,6 +86,7 @@ describe('Unripe', function () {
       expect(await this.unripe.getRecapFundedPercent(UNRIPE_BEAN)).to.be.equal(to6('0.1'))
       expect(await this.unripe.getRecapFundedPercent(UNRIPE_LP)).to.be.equal(to6('0.188459'))
       expect(await this.unripe.getPercentPenalty(UNRIPE_BEAN)).to.be.equal(to6('0.01'))
+      expect(await this.unripe.getPercentPenalty(UNRIPE_LP)).to.be.equal(to6('0'))
     })
   })
 
@@ -114,6 +115,7 @@ describe('Unripe', function () {
       expect(await this.unripe.getRecapFundedPercent(UNRIPE_BEAN)).to.be.equal(to6('0.1'))
       expect(await this.unripe.getRecapFundedPercent(UNRIPE_LP)).to.be.equal(to6('0.188459'))
       expect(await this.unripe.getPercentPenalty(UNRIPE_BEAN)).to.be.equal(to6('0.01'))
+      expect(await this.unripe.getPercentPenalty(UNRIPE_LP)).to.be.equal(to6('0'))
     })
   })
 
