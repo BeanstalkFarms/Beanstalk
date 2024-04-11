@@ -72,7 +72,7 @@ const ClaimRewardsForm: FC<
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const getChainToken = useGetChainToken();
 
-  // Are we impersonating a different account outside dev mode
+  // Are we impersonating a different account while not in dev mode
   const isImpersonating = !!useSetting('impersonatedAccount')[0] && !import.meta.env.DEV;
 
   /// State

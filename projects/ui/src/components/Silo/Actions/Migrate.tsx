@@ -60,7 +60,7 @@ export const Migrate: FC<{}> = () => {
 
   const [migrating, setMigrating] = useState(false);
 
-  // Are we impersonating a different account outside dev mode
+  // Are we impersonating a different account while not in dev mode
   const isImpersonating = !!useSetting('impersonatedAccount')[0] && !import.meta.env.DEV;
 
   const migrate = useCallback(() => {

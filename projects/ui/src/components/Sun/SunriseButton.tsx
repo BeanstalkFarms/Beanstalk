@@ -46,7 +46,7 @@ const SunriseButton: FC<{}> = () => {
     AppState['_beanstalk']['sun']['sunrise']['awaiting']
   >((state) => state._beanstalk.sun.sunrise.awaiting);
 
-  // Are we impersonating a different account outside dev mode
+  // Are we impersonating a different account while not in dev mode
   const isImpersonating = !!useSetting('impersonatedAccount')[0] && !import.meta.env.DEV;
 
   useEffect(() => {

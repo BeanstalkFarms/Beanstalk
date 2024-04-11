@@ -85,7 +85,7 @@ const VoteForm: FC<
   const canVote = farmerVP.votingPower.total.gt(0);
   const isClosed = differenceInTime <= 0;
 
-  // Are we impersonating a different account outside dev mode
+  // Are we impersonating a different account while not in dev mode
   const isImpersonating = !!useSetting('impersonatedAccount')[0] && !import.meta.env.DEV;
 
   /// Handlers

@@ -114,7 +114,7 @@ const RewardsBar: FC<{
   const getBDV = useBDV();
   const sdk = useSdk();
 
-  // Are we impersonating a different account outside dev mode
+  // Are we impersonating a different account while not in dev mode
   const isImpersonating = !!useSetting('impersonatedAccount')[0] && !import.meta.env.DEV;
 
   /// Calculate Unripe Silo Balance
