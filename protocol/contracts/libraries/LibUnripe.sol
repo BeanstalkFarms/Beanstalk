@@ -151,19 +151,8 @@ library LibUnripe {
         uint256 supply
     ) internal view returns (uint256 redeem) {
         require(isUnripe(unripeToken), "not vesting");
-        redeem = _getUnderlying(unripeToken, amount, supply);
-    }
-
-    /**
-     * @notice Calculates the the amount of Ripe Tokens that would be paid out if
-     * all Unripe Tokens were Chopped at the current Chop Rate.
-     */
-    function _getTotalPenalizedUnderlying(
-        address unripeToken
-    ) internal view returns (uint256 redeem) {
-        require(isUnripe(unripeToken), "not vesting");
-        uint256 supply = IERC20(unripeToken).totalSupply();
-        redeem = _getUnderlying(unripeToken, getRecapPaidPercentAmount(supply), supply);
+        AppStorage storage s = LibAppStorage.diamondStorage();
+        redeem = (s.u[unripeToken].balanceOfUnderlying ** 2).mul(amount).div(supply ** 2);
     }
 
     /**
@@ -228,17 +217,5 @@ library LibUnripe {
     function isUnripe(address unripeToken) internal view returns (bool unripe) {
         AppStorage storage s = LibAppStorage.diamondStorage();
         unripe = s.u[unripeToken].underlyingToken != address(0);
-    }
-
-    /**
-     * @notice Returns the underlying token amount of the unripe token.
-     */
-    function _getUnderlying(
-        address unripeToken,
-        uint256 amount,
-        uint256 supply
-    ) internal view returns (uint256 redeem) {
-        AppStorage storage s = LibAppStorage.diamondStorage();
-        redeem = (s.u[unripeToken].balanceOfUnderlying ** 2).mul(amount).div(supply ** 2);
     }
 }
