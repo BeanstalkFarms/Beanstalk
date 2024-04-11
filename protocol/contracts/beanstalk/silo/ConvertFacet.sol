@@ -222,8 +222,8 @@ contract ConvertFacet is ReentrancyGuard {
         // We want the capped deltaB from all the wells, this is what sets up/limits the overall convert power for the block
         // Converts that either cross peg, OR occur when convert power has been exhausted, will be stalk penalized
         pipeData.cappedDeltaB = LibWellMinting.overallDeltaB();
-        // console.log('final cappedDeltaB: ');
-        // console.logInt(pipeData.cappedDeltaB);
+        console.log('final cappedDeltaB: ');
+        console.logInt(pipeData.cappedDeltaB);
 
         // Calculate stalk penalty using start/finish deltaB of pools, and the capped deltaB is
         // passed in the setup max convert power.

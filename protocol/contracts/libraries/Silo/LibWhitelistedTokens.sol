@@ -7,6 +7,7 @@ pragma experimental ABIEncoderV2;
 
 import {C} from "../../C.sol";
 import {AppStorage, Storage, LibAppStorage} from "contracts/libraries/LibAppStorage.sol";
+import {console} from "forge-std/console.sol";
 
 /**
  * @title LibWhitelistedTokens
@@ -118,6 +119,8 @@ library LibWhitelistedTokens {
         uint256 numberOfSiloTokens = s.whitelistStatuses.length;
         uint256 tokensLength;
 
+        console.log('getWhitelistedWellLpTokens s.whitelistStatuses.length: ', s.whitelistStatuses.length);
+
         tokens = new address[](numberOfSiloTokens);
 
         for (uint256 i = 0; i < numberOfSiloTokens; i++) {
@@ -160,6 +163,8 @@ library LibWhitelistedTokens {
         ));
 
         emit AddWhitelistStatus(token, s.whitelistStatuses.length - 1, isWhitelisted, isWhitelistedLp, isWhitelistedWell);
+
+        console.log('addWhitelistStatus s.whitelistStatuses.length: ', s.whitelistStatuses.length);
     }
 
     /**

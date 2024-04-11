@@ -25,6 +25,7 @@ import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {LibWell} from "contracts/libraries/Well/LibWell.sol";
 import {ICappedReservesPump} from "contracts/interfaces/basin/pumps/ICappedReservesPump.sol";
 import {LibClipboard} from "contracts/libraries/LibClipboard.sol";
+import {LibWellMinting} from "contracts/libraries/Minting/LibWellMinting.sol";
 import "forge-std/Test.sol";
 
 /**
@@ -222,6 +223,15 @@ contract PipelineConvertTest is TestHelper {
 
         (int96 stem, uint256 lpAmountOut) = depositLPAndPassGermination(amount);
 
+        mineBlockAndUpdatePumps();
+
+        // log deltaB for this well before convert
+        int256 beforeDeltaBEth = seasonGetters.poolDeltaBInsta(C.BEAN_ETH_WELL);
+        int256 beforeDeltaBwsteth = seasonGetters.poolDeltaBInsta(C.BEAN_WSTETH_WELL);
+
+        uint256 beforeGrownStalk = bs.balanceOfGrownStalk(users[1], C.BEAN_ETH_WELL);
+
+
         // do the convert
 
         // Create arrays for stem and amount. Tried just passing in [stem] and it's like nope.
@@ -246,7 +256,57 @@ contract PipelineConvertTest is TestHelper {
             C.BEAN_WSTETH_WELL, // token out
             farmCalls // farmData
         );
+    
+        int256 afterDeltaBEth = seasonGetters.poolDeltaBInsta(C.BEAN_ETH_WELL);
+        int256 afterDeltaBwsteth = seasonGetters.poolDeltaBInsta(C.BEAN_WSTETH_WELL);
+
+
+        // make sure deltaB's moved in the way we expect them to
+        assertTrue(beforeDeltaBEth < afterDeltaBEth);
+        assertTrue(afterDeltaBwsteth < beforeDeltaBwsteth);
+
+        console.log('beforeDeltaBEth: ');
+        console.logInt(beforeDeltaBEth);
+        console.log('afterDeltaBEth: ');
+        console.logInt(afterDeltaBEth);
+        console.log('beforeDeltaBwsteth: ');
+        console.logInt(beforeDeltaBwsteth);
+        console.log('afterDeltaBwsteth: ');
+        console.logInt(afterDeltaBwsteth);
+
+        uint256 afterGrownStalk = bs.balanceOfGrownStalk(users[1], C.BEAN_WSTETH_WELL);
+        console.log('beforeGrownStalk: ', beforeGrownStalk);
+        console.log('afterGrownStalk: ', afterGrownStalk);
+
+        // since we didn't cross peg and there was convert power, we expect full remaining grown stalk
+        assertTrue(afterGrownStalk == beforeGrownStalk);
+
+
     }
+
+
+    function testUpdatingOverallDeltaB(uint256 amount) public {
+
+        amount = bound(amount, 1e6, 5000e6);
+
+        (int96 stem, uint256 lpAmountOut) = depositLPAndPassGermination(amount);
+
+        int256 overallDeltaB = LibWellMinting.overallDeltaB();
+
+        mineBlockAndUpdatePumps();
+
+        console.log('calling overallDeltaB');
+
+        int256 newOverallDeltaB = LibWellMinting.overallDeltaB();
+
+        console.log('overallDeltaB: ');
+        console.logInt(overallDeltaB);
+        console.log('newOverallDeltaB: ');
+        console.logInt(newOverallDeltaB);
+
+        assertTrue(newOverallDeltaB != overallDeltaB);
+    }
+
 
     function testDeltaBChangeBeanToLP(uint256 amount) public {
         amount = bound(amount, 1e6, 5000e6);
@@ -562,6 +622,13 @@ contract PipelineConvertTest is TestHelper {
 
     ////// SILO TEST HELPERS //////
 
+    function mineBlockAndUpdatePumps() public {
+        // mine a block so convert power is updated
+        vm.roll(block.number + 1);
+        updateMockPumpUsingWellReserves(C.BEAN_ETH_WELL);
+        updateMockPumpUsingWellReserves(C.BEAN_WSTETH_WELL);
+    }
+
     function updateMockPumpUsingWellReserves(address well) public {
         Call[] memory pumps = IWell(well).pumps();
         for (uint i = 0; i < pumps.length; i++) {
@@ -569,6 +636,13 @@ contract PipelineConvertTest is TestHelper {
             // pass to the pump the reserves that we actually have in the well
             uint[] memory reserves = IWell(well).getReserves();
             MockPump(pump).update(reserves, new bytes(0));
+
+            console.log('updated reserves for pump: ', pump);
+            console.log('well: ', well);
+            console.log('reserves: ');
+            for (uint j = 0; j < reserves.length; j++) {
+                console.log('reserves[j]: ', reserves[j]);
+            }
         }
     }
 

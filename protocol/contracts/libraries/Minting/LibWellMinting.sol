@@ -235,12 +235,6 @@ library LibWellMinting {
             return (0);
         }
 
-        console.log('instantaneousDeltaBForConvert reserves[beanIndex]: ', reserves[beanIndex]);
-
-        for (uint i = 0; i < ratios.length; i++) {
-            console.log('instantaneousDeltaBForConvert ratios[i]: ', ratios[i]);
-        }
-
         deltaB = int256(IBeanstalkWellFunction(wellFunction.target).calcReserveAtRatioSwap(
             reserves,
             beanIndex,
@@ -270,12 +264,18 @@ library LibWellMinting {
             // Get well tokens
             IERC20[] memory tokens = IWell(well).tokens();
 
+
+            console.log('instReserves:');
+            for (uint i = 0; i < instReserves.length; i++) {
+                console.log('instReserves[i]: ', instReserves[i]);
+            }
+
             // Get ratios and bean index
             (
                 uint256[] memory ratios,
                 uint256 beanIndex,
                 bool success
-            ) = LibWell.getRatiosAndBeanIndex(tokens, block.timestamp.sub(s.season.timestamp));
+            ) = LibWell.getRatiosAndBeanIndex(tokens);
 
             // HANDLE FAILURE
             // If the Bean reserve is less than the minimum, the minting oracle should be considered off.
@@ -309,13 +309,20 @@ library LibWellMinting {
         }
     }
 
-    // Calculates ovearll deltaB, used by convert for stalk penalty purposes
+    // Calculates overall deltaB, used by convert for stalk penalty purposes
     function overallDeltaB() internal view returns (int256 deltaB) {
         address[] memory tokens = LibWhitelistedTokens.getWhitelistedWellLpTokens();
+        console.log('about to loop through tokens', tokens.length);
         for (uint256 i = 0; i < tokens.length; i++) {
             if (tokens[i] == C.BEAN) continue;
             (int256 cappedDeltaB, , ) = cappedReservesDeltaB(tokens[i]);
             deltaB = deltaB.add(cappedDeltaB);
+
+            console.log('overallDeltaB tokens[i]: ', tokens[i]);
+            console.log('overallDeltaB cappedDeltaB: ');
+            console.logInt(cappedDeltaB);
+            console.log('overallDeltaB deltaB: ');
+            console.logInt(deltaB);
         }
     }
 
