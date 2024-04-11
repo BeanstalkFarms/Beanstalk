@@ -181,7 +181,8 @@ export function calculateGrownStalkSeeds(
  * @param bdv The bdv of the deposit
  */
 export function calculateGrownStalkStems(stemTip: ethers.BigNumber, stem: ethers.BigNumber, bdv: TokenValue) {
-  const deltaStem = stemTip.sub(stem);
+  const deltaStem = stemTip.sub(stem).div(10 ** 6);
+
   if (deltaStem.lt(0)) return Silo.sdk.tokens.STALK.fromHuman("0"); // FIXME
   return Silo.sdk.tokens.STALK.fromBlockchain(bdv.toBigNumber().mul(deltaStem));
 }
