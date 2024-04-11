@@ -2,7 +2,7 @@ const { expect } = require('chai')
 const { deploy } = require('../scripts/deploy.js')
 const { takeSnapshot, revertToSnapshot } = require("./utils/snapshot")
 const { to6, toStalk, toBean, to18 } = require('./utils/helpers.js')
-const { USDC, UNRIPE_BEAN, UNRIPE_LP, BEAN, THREE_CURVE, THREE_POOL, BEAN_3_CURVE, BEAN_ETH_WELL, BEANSTALK_PUMP, STABLE_FACTORY, ETH_USDT_UNISWAP_V3 } = require('./utils/constants.js')
+const { UNRIPE_BEAN, UNRIPE_LP, BEAN, BEAN_3_CURVE, BEAN_ETH_WELL, ETH_USDT_UNISWAP_V3 } = require('./utils/constants.js')
 const { EXTERNAL, INTERNAL } = require('./utils/balances.js')
 const { ethers } = require('hardhat')
 const { advanceTime } = require('../utils/helpers.js')
@@ -482,5 +482,36 @@ describe('Gauge', function () {
     expect((await this.siloGetters.tokenSettings(BEAN))[1]).to.be.eq(to6('2'))
     expect((await this.siloGetters.tokenSettings(BEAN_ETH_WELL))[1]).to.be.eq(to6('4'))
   })
+
+  describe("excessive price", async function () {
+    beforeEach(async function () {
+      // twa: 1 million BEAN: 1000 ETH (1000 BEAN : 1 ETH)
+      await this.season.mockSetTwaReserves(BEAN_ETH_WELL, to6('1000000'), to18('1000'));
+      // USD/TKN = 0.001 ETH = 1 USD
+      await this.season.mockSetUsdTokenPrice(
+        BEAN_ETH_WELL,
+        to18('0.001')
+      )
+    })
+
+    it("at peg", async function () {
+      expect(await this.season.mockTestBeanPrice(BEAN_ETH_WELL)).to.eq(to6('1'));
+    })
+
+    it("above peg", async function () {
+      // twa: 900k BEAN: 1000 ETH (900 BEAN : 1 ETH)
+      await this.season.mockSetTwaReserves(BEAN_ETH_WELL, to6('900000'), to18('1000'));
+
+      expect(await this.season.mockTestBeanPrice(BEAN_ETH_WELL)).to.eq(1111111);
+    })
+
+    it("below peg", async function () {
+      // twa: 1.1m BEAN: 1000 ETH (110 BEAN : 1 ETH)
+      await this.season.mockSetTwaReserves(BEAN_ETH_WELL, to6('1100000'), to18('1000'));
+
+      expect(await this.season.mockTestBeanPrice(BEAN_ETH_WELL)).to.eq(909090);
+    })
+  })
+ 
 
 })

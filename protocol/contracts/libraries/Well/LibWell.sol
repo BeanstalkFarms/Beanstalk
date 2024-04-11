@@ -219,14 +219,22 @@ library LibWell {
         s.twaReserves[well].reserve1 = 1;
     }
 
-    function getWellPriceFromTwaReserves(address well) internal view returns (uint256 price) {
+    /**
+     * @notice returns the price in terms of TKN/BEAN. 
+     * (if eth is 1000 beans, this function will return 1000e6);
+     */
+    function getBeanTknPriceFromTwaReserves(address well) internal view returns (uint256 price) {
         AppStorage storage s = LibAppStorage.diamondStorage();
         // s.twaReserve[well] should be set prior to this function being called.
-        // 'price' is in terms of reserve0:reserve1.
         if (s.twaReserves[well].reserve0 == 0 || s.twaReserves[well].reserve1 == 0) {
             price = 0;
         } else {
-            price = s.twaReserves[well].reserve0.mul(1e18).div(s.twaReserves[well].reserve1);
+            // fetch the bean index from the well in order to properly return the bean price.
+            if(getBeanIndexFromWell(well) == 0) { 
+                price = uint256(s.twaReserves[well].reserve0).mul(1e18).div(s.twaReserves[well].reserve1);
+            } else { 
+                price = uint256(s.twaReserves[well].reserve1).mul(1e18).div(s.twaReserves[well].reserve0);
+            }
         }
     }
 
