@@ -51,6 +51,7 @@ contract FertilizerFacet {
         payable
     {
         uint256 amount = C.fertilizer().beanstalkUpdate(msg.sender, ids, s.bpf);
+        s.fertilizedPaidIndex += amount;
         LibTransfer.sendToken(C.bean(), amount, msg.sender, mode);
     }
 
@@ -88,6 +89,7 @@ contract FertilizerFacet {
      */
     function payFertilizer(address account, uint256 amount) external payable {
         require(msg.sender == C.fertilizerAddress());
+        s.fertilizedPaidIndex += amount;
         LibTransfer.sendToken(
             C.bean(),
             amount,

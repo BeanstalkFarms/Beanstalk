@@ -573,6 +573,7 @@ contract Storage {
  * @param whitelistedStatues Stores a list of Whitelist Statues for all tokens that have been Whitelisted and have not had their Whitelist Status manually removed.
  * @param sopWell Stores the well that will be used upon a SOP. Unintialized until a SOP occurs, and is kept constant afterwards.
  * @param barnRaiseWell Stores the well that the Barn Raise adds liquidity to.
+ * @param fertilizedPaidIndex The total number of Fertilizer Beans that have been sent out to users.
  */
 struct AppStorage {
     uint8 deprecated_index;
@@ -661,4 +662,6 @@ struct AppStorage {
 
     // Cumulative internal Balance of tokens.
     mapping(IERC20 => uint256) internalTokenBalanceTotal;
+
+    uint256 fertilizedPaidIndex;
 }
