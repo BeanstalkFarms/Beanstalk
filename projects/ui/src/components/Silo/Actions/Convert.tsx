@@ -289,6 +289,7 @@ const ConvertForm: FC<
             tokenOut?.address === sdk.tokens.BEAN_ETH_WELL_LP.address);
 
         setIsChopping(chopping);
+        if (!chopping) setChoppingConfirmed(true);
       }
     })();
   }, [sdk, setFieldValue, tokenIn, tokenOut]);
@@ -378,7 +379,10 @@ const ConvertForm: FC<
           params={quoteHandlerParams}
         />
         {!canConvert && tokenOut && maxAmountIn ? null : (
-          <AddPlantTxnToggle plantAndDoX={plantAndDoX.plantAction} actionText='Convert' />
+          <AddPlantTxnToggle
+            plantAndDoX={plantAndDoX.plantAction}
+            actionText="Convert"
+          />
         )}
 
         {/* User Input: destination token */}
