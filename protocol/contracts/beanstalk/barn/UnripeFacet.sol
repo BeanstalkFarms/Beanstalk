@@ -171,7 +171,7 @@ contract UnripeFacet is ReentrancyGuard {
         address unripeToken,
         uint256 amount
     ) public view returns (uint256 redeem) {
-        return LibUnripe._getPenalizedUnderlying(unripeToken, amount, IBean(unripeToken).totalSupply());
+        return LibUnripe.getPenalizedUnderlying(unripeToken, amount, IBean(unripeToken).totalSupply());
     }
 
     /**

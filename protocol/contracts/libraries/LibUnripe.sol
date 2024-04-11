@@ -145,7 +145,7 @@ library LibUnripe {
      * the amount of Unripe Tokens that are Chopped according to the current Chop Rate.
      * The new chop rate is %Recapitalized^2.
      */
-    function _getPenalizedUnderlying(
+    function getPenalizedUnderlying(
         address unripeToken,
         uint256 amount,
         uint256 supply
