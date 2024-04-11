@@ -917,6 +917,7 @@ export function handleWhitelistToken(event: WhitelistToken): void {
   rawEvent.save();
 }
 
+// TODO: replace this implementation with simply updating the whitelist token settings + hourly/daily snapshots
 export function handleUpdatedStalkPerBdvPerSeason(event: UpdatedStalkPerBdvPerSeason): void {
   let siloSettings = loadWhitelistTokenSetting(event.params.token);
 

@@ -67,7 +67,7 @@ export function handleGaugePointChange(event: GaugePointChange): void {
 export function handleUpdateAverageStalkPerBdvPerSeason(event: UpdateAverageStalkPerBdvPerSeason): void {
   let silo = loadSilo(event.address);
 
-  // grownStalkPerBdvPerSeason variable currently stores overall, not per bdv
+  // grownStalkPerBdvPerSeason variable currently stores overall, not per bdv as the name suggests
   silo.grownStalkPerBdvPerSeason = silo.depositedBDV.times(event.params.newStalkPerBdvPerSeason);
   silo.save();
   let siloHourly = loadSiloHourlySnapshot(event.address, currentSeason(event.address), event.block.timestamp);

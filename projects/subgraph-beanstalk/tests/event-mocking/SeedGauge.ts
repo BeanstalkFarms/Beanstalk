@@ -9,9 +9,6 @@ import {
   UpdateGaugeSettings
 } from "../../generated/BIP42-SeedGauge/Beanstalk";
 
-import { AddDeposit, RemoveDeposit, RemoveDeposits } from "../../generated/Silo-Replanted/Beanstalk";
-import { handleAddDeposit } from "../../src/SiloHandler";
-import { BEAN_DECIMALS } from "../../../subgraph-core/utils/Constants";
 import { BEANSTALK } from "../../../subgraph-core/utils/Constants";
 
 // Default mock to include beanstalk address
