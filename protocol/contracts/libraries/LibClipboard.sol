@@ -114,6 +114,7 @@ library LibClipboard {
         bytes memory clipboard,
         bytes[] memory returnData
     ) internal view returns (bytes memory data) {
+        // console.log('useClipboard: ', useClipboard);
         (bytes1 typeId, , bytes32[] memory returnPasteParams) = decode(clipboard);
         require(typeId == 0x01 || typeId == 0x02, "Clipboard: Type not supported");
         data = callData;

@@ -148,6 +148,9 @@ contract Pipeline is IPipeline, ERC1155Holder, ERC721Holder {
             results = new bytes[](pipes.length);
             for (uint256 i = 0; i < pipes.length; ++i) {
                 results[i] = _advancedPipe(pipes[i], results);
+                console.log('advancedPipe results[i] i value: ', i);
+                console.log('advancedPipe results[i]: ');
+                console.logBytes(results[i]);
             }
         }
 
@@ -159,9 +162,11 @@ contract Pipeline is IPipeline, ERC1155Holder, ERC721Holder {
     ) private returns (bytes memory result) {
         bool success;
 
-        // console.log('_pipe data:');
-        // console.logBytes(data);
+        console.log('_pipe data:');
+        console.logBytes(data);
         (success, result) = target.call{value: value}(data);
+        console.log('_pipe result:');
+        console.logBytes(result);
 
         LibFunction.checkReturn(success, result);
     }
@@ -173,13 +178,13 @@ contract Pipeline is IPipeline, ERC1155Holder, ERC721Holder {
         uint256 value
     ) private returns (bytes memory result) {
         bool success;
-        // console.log('doing _pipeMem');   
-        // console.log('_pipeMem target: ', target);
-        // console.log('_pipeMem data:');
-        // console.logBytes(data);
+        console.log('doing _pipeMem');   
+        console.log('_pipeMem target: ', target);
+        console.log('_pipeMem data:');
+        console.logBytes(data);
         (success, result) = target.call{value: value}(data);
-        // console.log('_pipeMem result:');
-        // console.logBytes(result);
+        console.log('_pipeMem result:');
+        console.logBytes(result);
 
         LibFunction.checkReturn(success, result);
     }
@@ -195,9 +200,27 @@ contract Pipeline is IPipeline, ERC1155Holder, ERC721Holder {
         if (p.clipboard[0] == 0x00) {
             result = _pipe(p.target, p.callData, value);
         } else {
+            // console.log('_advancedPipe returnData latest object:');
+            // console.logBytes(returnData[returnData.length - 1]);
+
+            for (uint256 i = 0; i < returnData.length; i++) {
+                console.log('_advancedPipe returnData[i]: ', i);
+                console.logBytes(returnData[i]);
+            }
+
+
+            console.log('_advancedPipe result before: ');
+            console.logBytes(result);
             result = LibClipboard.useClipboard(p.callData, p.clipboard, returnData);
+            console.log('_advancedPipe result after: ');
+            console.logBytes(result);
             result = _pipeMem(p.target, result, value);
+            console.log('_advancedPipe result final: ');
+            console.logBytes(result);
         }
+
+        console.log('_advancedPipe result:');
+        console.logBytes(result);
     }
 
     // Extracts Ether value from a Clipboard

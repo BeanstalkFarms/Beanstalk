@@ -235,6 +235,12 @@ library LibWellMinting {
             return (0);
         }
 
+        console.log('instantaneousDeltaBForConvert reserves[beanIndex]: ', reserves[beanIndex]);
+
+        for (uint i = 0; i < ratios.length; i++) {
+            console.log('instantaneousDeltaBForConvert ratios[i]: ', ratios[i]);
+        }
+
         deltaB = int256(IBeanstalkWellFunction(wellFunction.target).calcReserveAtRatioSwap(
             reserves,
             beanIndex,

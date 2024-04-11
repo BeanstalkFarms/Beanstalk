@@ -37,7 +37,8 @@ contract OracleDeployer is Utils {
         // price to initalize at. Assumes index matching with oracles.
         int256[2] memory initalPrices = [
             int256(1000e6), // ETH/USD
-            1e18 // wstETH/ETH
+            // 1e18 // wstETH/ETH
+            1e6
         ];
         
         for(uint i; i < oracles.length; i++) {

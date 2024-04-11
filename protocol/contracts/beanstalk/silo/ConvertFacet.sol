@@ -211,12 +211,13 @@ contract ConvertFacet is ReentrancyGuard {
         IERC20(inputToken).transfer(PIPELINE, maxTokens);
         pipeData.amountOut = executeAdvancedFarmCalls(farmCalls);
 
-        // console.log('amountOut after pipe calls: ', pipeData.amountOut);
+        console.log('amountOut after pipe calls: ', pipeData.amountOut);
         
         // user MUST leave final assets in pipeline, allowing us to verify that the farm has been called successfully.
         // this also let's us know how many assets to attempt to pull out of the final type
         transferTokensFromPipeline(outputToken, pipeData.amountOut);
 
+        console.log('transfered tokens from pipeline');
 
         // We want the capped deltaB from all the wells, this is what sets up/limits the overall convert power for the block
         // Converts that either cross peg, OR occur when convert power has been exhausted, will be stalk penalized
@@ -252,16 +253,21 @@ contract ConvertFacet is ReentrancyGuard {
     function _applyPenaltyToGrownStalks(uint256 stalkPenaltyBdv, uint256[] memory bdvsRemoved, uint256[] memory grownStalks)
         internal view returns (uint256[] memory) {
 
-        for (uint256 i = bdvsRemoved.length-1; i >= 0; i--) {
-            uint256 bdvRemoved = bdvsRemoved[i];
-            uint256 grownStalk = grownStalks[i];
+            console.log('_applyPenaltyToGrownStalks bdvsRemoved.length: ', bdvsRemoved.length);
+
+        for (uint256 i = bdvsRemoved.length; i != 0; i--) { // this i!=0 feels weird to me somehow, but appears to be necessary
+            console.log('_applyPenaltyToGrownStalks i: ', i-1);
+            console.log('_applyPenaltyToGrownStalks bdvsRemoved[i]: ', bdvsRemoved[i-1]);
+
+            uint256 bdvRemoved = bdvsRemoved[i-1];
+            uint256 grownStalk = grownStalks[i-1];
 
             if (stalkPenaltyBdv >= bdvRemoved) {
                 stalkPenaltyBdv -= bdvRemoved;
-                grownStalks[i] = 0;
+                grownStalks[i-1] = 0;
             } else {
                 uint256 penaltyPercentage = stalkPenaltyBdv.mul(1e16).div(bdvRemoved);
-                grownStalks[i] = grownStalk.sub(grownStalk.mul(penaltyPercentage).div(1e16));
+                grownStalks[i-1] = grownStalk.sub(grownStalk.mul(penaltyPercentage).div(1e16));
                 stalkPenaltyBdv = 0;
             }
             if (stalkPenaltyBdv == 0) {
@@ -413,11 +419,16 @@ contract ConvertFacet is ReentrancyGuard {
         )
     {
         bytes[] memory results;
+
+        console.log('executeAdvancedFarmCalls calls.length: ', calls.length);
      
         results = new bytes[](calls.length);
         for (uint256 i = 0; i < calls.length; ++i) {
             require(calls[i].callData.length != 0, "Convert: empty AdvancedFarmCall");
             results[i] = LibFarm._advancedFarmMem(calls[i], results);
+            console.log('executeAdvancedFarmCalls results[i] i value: ', i);
+            console.log('executeAdvancedFarmCalls results[i]: ');
+            console.logBytes(results[i]);
         }
 
         // assume last value is the amountOut

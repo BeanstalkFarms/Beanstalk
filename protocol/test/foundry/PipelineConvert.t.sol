@@ -104,6 +104,13 @@ contract PipelineConvertTest is TestHelper {
             10000e6, // 10,000 bean,
             10 ether  // 10 WETH
         );
+
+        addInitialLiquidity(
+            C.BEAN_WSTETH_WELL,
+            10000e6, // 10,000 bean,
+            10 ether  // 10 WETH of wstETH
+        );
+
         // mint 1000 beans to farmers (user 0 is the beanstalk deployer).
         mintTokensToUsers(farmers, C.BEAN,  MAX_DEPOSIT_BOUND);
     }
@@ -174,33 +181,12 @@ contract PipelineConvertTest is TestHelper {
 
     function testBasicConvertLPToBean(uint256 amount) public {
         vm.pauseGasMetering();
-        int96 stem;
+
         // well is initalized with 10000 beans. cap add liquidity 
         // to reasonable amounts. 
         amount = bound(amount, 1e6, 10000e6);
 
-        // mint beans to user 1
-        bean.mint(users[1], amount);
-        // user 1 deposits bean into bean:eth well, first approve
-        vm.prank(users[1]);
-        bean.approve(C.BEAN_ETH_WELL, type(uint256).max);
-
-        uint256[] memory tokenAmountsIn = new uint256[](2);
-        tokenAmountsIn[0] = amount;
-        tokenAmountsIn[1] = 0;
-
-        vm.prank(users[1]);
-        uint256 lpAmountOut = IWell(C.BEAN_ETH_WELL).addLiquidity(tokenAmountsIn, 0, users[1], type(uint256).max);
-
-        // approve spending well token to beanstalk
-        vm.prank(users[1]);
-        MockToken(C.BEAN_ETH_WELL).approve(BEANSTALK, type(uint256).max);
-
-        vm.prank(users[1]);
-        ( , , stem) = silo.deposit(C.BEAN_ETH_WELL, lpAmountOut, LibTransfer.From.EXTERNAL);
-
-
-        passGermination();
+        (int96 stem, uint256 lpAmountOut) = depositLPAndPassGermination(amount);
 
 
         // Create arrays for stem and amount. Tried just passing in [stem] and it's like nope.
@@ -225,12 +211,16 @@ contract PipelineConvertTest is TestHelper {
         );
     }
 
+
+
     function testBasicConvertLPToLP(uint256 amount) public {
         vm.pauseGasMetering();
-        int96 stem;
+
         // well is initalized with 10000 beans. cap add liquidity 
         // to reasonable amounts.
         amount = bound(amount, 1e6, 5000e6);
+
+        (int96 stem, uint256 lpAmountOut) = depositLPAndPassGermination(amount);
 
         // do the convert
 
@@ -239,24 +229,21 @@ contract PipelineConvertTest is TestHelper {
         stems[0] = stem;
 
         AdvancedFarmCall[] memory farmCalls = new AdvancedFarmCall[](1);
-        AdvancedFarmCall[] memory lpToLPFarmCalls = createLPToLPFarmCalls(amount);
+        AdvancedFarmCall[] memory lpToLPFarmCalls = createLPToLPFarmCalls(lpAmountOut);
         farmCalls[0] = lpToLPFarmCalls[0]; // Assign the first element of the returned array
 
-        console.log('got farm calls');
 
         uint256[] memory amounts = new uint256[](1);
-        amounts[0] = amount;
+        amounts[0] = lpAmountOut;
         
         vm.resumeGasMetering();
         vm.prank(users[1]); // do this as user 1
-
-        console.log('doing pipeline convert');
 
         convert.pipelineConvert(
             C.BEAN_ETH_WELL, // input token
             stems,  // stems
             amounts,  // amount
-            C.BEAN_ETH_WELL, // token out
+            C.BEAN_WSTETH_WELL, // token out
             farmCalls // farmData
         );
     }
@@ -604,6 +591,30 @@ contract PipelineConvertTest is TestHelper {
         passGermination();
     }
 
+    function depositLPAndPassGermination(uint256 amount) public returns (int96 stem, uint256 lpAmountOut) {
+        // mint beans to user 1
+        bean.mint(users[1], amount);
+        // user 1 deposits bean into bean:eth well, first approve
+        vm.prank(users[1]);
+        bean.approve(C.BEAN_ETH_WELL, type(uint256).max);
+
+        uint256[] memory tokenAmountsIn = new uint256[](2);
+        tokenAmountsIn[0] = amount;
+        tokenAmountsIn[1] = 0;
+
+        vm.prank(users[1]);
+        lpAmountOut = IWell(C.BEAN_ETH_WELL).addLiquidity(tokenAmountsIn, 0, users[1], type(uint256).max);
+
+        // approve spending well token to beanstalk
+        vm.prank(users[1]);
+        MockToken(C.BEAN_ETH_WELL).approve(BEANSTALK, type(uint256).max);
+
+        vm.prank(users[1]);
+        ( , , stem) = silo.deposit(C.BEAN_ETH_WELL, lpAmountOut, LibTransfer.From.EXTERNAL);
+
+        passGermination();
+    }
+
     function beanToLPDoConvert(uint256 amount, int96 stem, address user) public 
         returns (int96[] memory outputStems, uint256[] memory outputAmounts) {
         // do the convert
@@ -941,20 +952,13 @@ contract PipelineConvertTest is TestHelper {
     ) public returns (AdvancedFarmCall[] memory output) {
         
         console.log('createLPToBean amountOfLP: ', amountOfLP);
-        // first setup the pipeline calls
 
         // setup approve max call
         bytes memory approveEncoded = abi.encodeWithSelector(
             IERC20.approve.selector,
-            C.BEAN_ETH_WELL,
+            C.BEAN_WSTETH_WELL,
             MAX_UINT256
         );
-
-        // uint256[] memory tokenAmountsIn = new uint256[](2); 
-        // tokenAmountsIn[0] = amountOfLP;
-        // tokenAmountsIn[1] = amountOfBean;
-
-        console.log('1');
 
         // encode remove liqudity.
         bytes memory removeLiquidityEncoded = abi.encodeWithSelector(
@@ -966,13 +970,10 @@ contract PipelineConvertTest is TestHelper {
             type(uint256).max // deadline
         );
 
-        console.log('2');
-
         uint256[] memory emptyAmountsIn = new uint256[](2); 
         emptyAmountsIn[0] = 0;
-        emptyAmountsIn[1] = 1; // need to paste in here
+        emptyAmountsIn[1] = 0; // need to paste in here
 
-        console.log('3');
 
         // encode add liquidity
         bytes memory addLiquidityEncoded = abi.encodeWithSelector(
@@ -982,9 +983,6 @@ contract PipelineConvertTest is TestHelper {
             C.PIPELINE, // recipient
             type(uint256).max // deadline
         );
-        console.logBytes(addLiquidityEncoded);
-
-        console.log('4');
 
         // Fabricate advancePipes: 
         AdvancedPipeCall[] memory advancedPipeCalls = new AdvancedPipeCall[](3);
@@ -1003,23 +1001,13 @@ contract PipelineConvertTest is TestHelper {
             abi.encode(0) // clipboard
         );
 
-
-        
-
-        console.log('5');
-
         // returnDataItemIndex, copyIndex, pasteIndex
         bytes memory clipboard = abi.encodePacked(
             bytes2(0x0100), // clipboard type 1
-            uint80(2), // from action 1 (2)
+            uint80(1), // from result of call at index 1
             uint80(32), // take the first param
             uint80(196) // paste into the 6th 32 bytes of the clipboard
         );
-
-        console.log('clipboard: ');
-        console.logBytes(clipboard);
-
-        console.log('6');
 
         // Action 2: add beans to wsteth:bean well. 
         advancedPipeCalls[2] = AdvancedPipeCall(
@@ -1028,8 +1016,6 @@ contract PipelineConvertTest is TestHelper {
             clipboard
         );
 
-        console.log('7');
-
         // Encode into a AdvancedFarmCall. NOTE: advancedFarmCall != advancedPipeCall. 
         
         // AdvancedFarmCall calls any function on the beanstalk diamond. 
@@ -1037,7 +1023,7 @@ contract PipelineConvertTest is TestHelper {
         // AdvancedFarmCall cannot call approve/addLiquidity, but can call AdvancedPipe.
         // AdvancedPipe can call any arbitrary function.
         AdvancedFarmCall[] memory advancedFarmCalls = new AdvancedFarmCall[](1);
-        
+
         bytes memory advancedPipeCalldata = 
             abi.encodeWithSelector(
                 depot.advancedPipe.selector,
@@ -1046,8 +1032,6 @@ contract PipelineConvertTest is TestHelper {
             );
 
         advancedFarmCalls[0] = AdvancedFarmCall(advancedPipeCalldata, new bytes(0));
-
-        console.log('returning advanced farm calls');
 
         // encode into bytes. 
         // output = abi.encode(advancedFarmCalls);
