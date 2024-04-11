@@ -23,6 +23,7 @@ import { displayFullBN } from '~/util';
 import { fetchMigrationData } from '~/state/farmer/silo/updater';
 import TransactionToast from '~/components/Common/TxnToast';
 import useFarmerSilo from '~/hooks/farmer/useFarmerSilo';
+import useSetting from '~/hooks/app/useSetting';
 
 const getMigrationParams = async (account: string) => {
   const data = await fetchMigrationData(account);
@@ -58,6 +59,9 @@ export const Migrate: FC<{}> = () => {
   const sdk = useSdk();
 
   const [migrating, setMigrating] = useState(false);
+
+  // Are we impersonating a different account outside dev mode
+  const isImpersonating = !!useSetting('impersonatedAccount')[0] && !import.meta.env.DEV;
 
   const migrate = useCallback(() => {
     (async () => {
@@ -175,13 +179,14 @@ export const Migrate: FC<{}> = () => {
           </Box>
           <LoadingButton
             loading={migrating}
+            disabled={isImpersonating}
             variant="contained"
             color="primary"
             fullWidth
             size="large"
             onClick={migrate}
           >
-            Migrate
+            {isImpersonating ? 'Impersonating Account' : 'Migrate'}
           </LoadingButton>
           {migrating && (
             <Typography variant="body1" textAlign="left">
