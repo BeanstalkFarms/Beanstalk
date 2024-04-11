@@ -17,7 +17,7 @@ import { ethers } from 'ethers';
 import CheckIcon from '@mui/icons-material/Check';
 import CloseIcon from '@mui/icons-material/Close';
 import { DateTime } from 'luxon';
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { DataSource } from '@beanstalk/sdk';
 import { FontSize } from '~/components/App/muiTheme';
@@ -38,6 +38,7 @@ import {
 import { clearApolloCache, trimAddress } from '~/util';
 import useChainId from '~/hooks/chain/useChainId';
 import { CHAIN_INFO } from '~/constants';
+import { useAccount } from 'wagmi';
 import OutputField from '../Common/Form/OutputField';
 
 const Split: FC<{}> = ({ children }) => (
@@ -86,6 +87,7 @@ const SettingsDialog: FC<{ open: boolean; onClose?: () => void }> = ({
   const [isAddressValid, setIsAddressValid] = useState<boolean | undefined>(undefined);
   const dispatch = useDispatch();
   const siloBalances = useFarmerSiloBalances();
+  const account = useAccount();
 
   const checkAddress = useCallback((address: string) => {
     if (address) {
@@ -98,6 +100,14 @@ const SettingsDialog: FC<{ open: boolean; onClose?: () => void }> = ({
       setIsAddressValid(undefined);
     }
   }, [setInternalAccount]);
+
+  useMemo(() => {
+    if (!account.address) {
+      setInternalAccount('')
+      setIsAddressValid(undefined);
+      setImpersonatedAccount('');
+    };
+  }, [account.address, setImpersonatedAccount]);
 
   /// Cache
   const clearCache = useCallback(() => {

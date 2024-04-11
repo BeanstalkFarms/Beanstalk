@@ -8,10 +8,10 @@ export default function useAccount() {
   const impersonatedAccount = useSetting('impersonatedAccount')[0];
 
   return useMemo(() => {
-    if (impersonatedAccount) {
-      return getAccount(impersonatedAccount);
-    };
     if (account.address) {
+      if (impersonatedAccount) {
+        return getAccount(impersonatedAccount);
+      };
       return getAccount(account?.address);
     };
     return undefined;
