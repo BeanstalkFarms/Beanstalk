@@ -381,9 +381,16 @@ contract SiloGettersFacet is ReentrancyGuard {
         view
         returns (uint256)
     {
+        int96 lastStem = s.a[account].mowStatuses[token].lastStem;
+        // if the user hasn't updated prior to siloV3.1,
+        // their lastStem will need to be scaled.
+        uint32 _lastUpdate = s.a[account].lastUpdate;
+        if(_lastUpdate < s.season.stemScaleSeason && _lastUpdate > 0) { 
+            lastStem = lastStem * 1e6;
+        }
         return
             LibSilo._balanceOfGrownStalk(
-                s.a[account].mowStatuses[token].lastStem, //last stem farmer mowed
+                lastStem, //last stem farmer mowed
                 LibTokenSilo.stemTipForToken(token), //get latest stem for this token
                 s.a[account].mowStatuses[token].bdv
             );

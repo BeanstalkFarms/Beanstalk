@@ -237,7 +237,8 @@ async function bipSeedGauge(mock = true, account = undefined, verbose = true) {
         "MetadataFacet", // update metadata
         "BDVFacet", // update bdv functions
         "SiloGettersFacet", // add silo getters
-        "LiquidityWeightFacet" // add liquidity weight facet
+        "LiquidityWeightFacet", // add liquidity weight facet
+        "EnrootFacet" // update stem functions
       ],
       initFacetName: "InitBipSeedGauge",
       selectorsToRemove: [],
