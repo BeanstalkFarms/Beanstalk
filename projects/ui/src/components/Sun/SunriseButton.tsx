@@ -24,6 +24,7 @@ import { AppState } from '~/state';
 import Row from '~/components/Common/Row';
 
 import { FC } from '~/types';
+import useSetting from '~/hooks/app/useSetting';
 
 function getSunriseReward(now: DateTime) {
   return new BigNumber(
@@ -44,6 +45,9 @@ const SunriseButton: FC<{}> = () => {
     AppState,
     AppState['_beanstalk']['sun']['sunrise']['awaiting']
   >((state) => state._beanstalk.sun.sunrise.awaiting);
+
+  // Are we impersonating a different account outside dev mode
+  const isImpersonating = !!useSetting('impersonatedAccount')[0] && !import.meta.env.DEV;
 
   useEffect(() => {
     if (awaiting) {
@@ -171,7 +175,7 @@ const SunriseButton: FC<{}> = () => {
                       variant="contained"
                       onClick={onSubmit}
                       loading={formikProps.isSubmitting}
-                      disabled={disabled}
+                      disabled={disabled || isImpersonating}
                       sx={{
                         backgroundColor: BeanstalkPalette.washedRed,
                         height: { xs: '60px', md: '45px' },
@@ -182,7 +186,7 @@ const SunriseButton: FC<{}> = () => {
                         },
                       }}
                     >
-                      Sunrise
+                      {isImpersonating ? 'Impersonating Account' : 'Sunrise'}
                     </LoadingButton>
                   </Stack>
                 </StyledDialogContent>
