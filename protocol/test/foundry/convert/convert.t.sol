@@ -61,11 +61,11 @@ contract ConvertTest is TestHelper {
      * @notice validates that `getMaxAmountIn` gives the proper output.
      */
     function test_bean_Well_getters(uint256 beanAmount) public {
-        beanToWellSetup();
+        multipleBeanDepositSetup();
         beanAmount = bound(beanAmount, 0, 9000e6);
         
-        assertEq(bs.getMaxAmountIn(C.BEAN, well), 0);
-        assertEq(bs.getMaxAmountIn(well, C.BEAN), 0);
+        assertEq(bs.getMaxAmountIn(C.BEAN, well), 0, 'BEAN -> WELL maxAmountIn should be 0');
+        assertEq(bs.getMaxAmountIn(well, C.BEAN), 0, 'WELL -> BEAN maxAmountIn should be 0');
         
         uint256 snapshot = vm.snapshot();
         // decrease bean reserves
@@ -75,8 +75,8 @@ contract ConvertTest is TestHelper {
             weth.balanceOf(well)
         );
 
-        assertEq(bs.getMaxAmountIn(C.BEAN, well), beanAmount);
-        assertEq(bs.getMaxAmountIn(well, C.BEAN), 0);
+        assertEq(bs.getMaxAmountIn(C.BEAN, well), beanAmount, 'BEAN -> WELL maxAmountIn should be beanAmount');
+        assertEq(bs.getMaxAmountIn(well, C.BEAN), 0, 'WELL -> BEAN maxAmountIn should be 0');
 
         vm.revertTo(snapshot);
 
@@ -87,18 +87,18 @@ contract ConvertTest is TestHelper {
             weth.balanceOf(well)
         );
         
-        assertEq(bs.getMaxAmountIn(C.BEAN, well), 0);
+        assertEq(bs.getMaxAmountIn(C.BEAN, well), 0, 'BEAN -> WELL maxAmountIn should be 0');
         // convert lp amount to beans:
         uint256 lpAmountOut = bs.getMaxAmountIn(well, C.BEAN);
         uint256 beansOut = IWell(well).getRemoveLiquidityOneTokenOut(lpAmountOut, C.bean());
-        assertEq(beansOut, beanAmount);
+        assertEq(beansOut, beanAmount, 'beansOut should equal beanAmount');
     }
 
     /**
      * @notice Convert should fail if deposit amounts != convertData.
      */
     function test_bean_Well_fewTokensRemoved(uint256 beanAmount) public {
-        beanToWellSetup();
+        multipleBeanDepositSetup();
         beanAmount = bound(beanAmount, 2, 1000e6);
         setReserves(
             well,
@@ -131,7 +131,7 @@ contract ConvertTest is TestHelper {
      * @notice Convert should fail if user does not have the required deposits.
      */
     function test_bean_Well_invalidDeposit(uint256 beanAmount) public {
-        beanToWellSetup();
+        multipleBeanDepositSetup();
         beanAmount = bound(beanAmount, 2, 1000e6);
         setReserves(
             well,
@@ -163,7 +163,7 @@ contract ConvertTest is TestHelper {
      * @notice Bean -> Well convert cannot occur below peg.
      */
     function test_convertBeanToWell_belowPeg(uint256 beanAmount) public {
-        beanToWellSetup();
+        multipleBeanDepositSetup();
         
         beanAmount = bound(beanAmount, 1, 1000e6);
         // increase the amount of beans in the pool (below peg).
@@ -194,7 +194,7 @@ contract ConvertTest is TestHelper {
     function test_convertBeanToWell_beyondPeg(
         uint256 beansRemovedFromWell
     ) public {
-        beanToWellSetup();
+        multipleBeanDepositSetup();
 
         uint256 beanWellAmount = bound(beansRemovedFromWell, C.WELL_MINIMUM_BEAN_BALANCE, bean.balanceOf(well) - 1);
         
@@ -227,7 +227,7 @@ contract ConvertTest is TestHelper {
             amounts
         );
 
-        assertEq(bs.getMaxAmountIn(C.BEAN, well), 0);
+        assertEq(bs.getMaxAmountIn(C.BEAN, well), 0, 'BEAN -> WELL maxAmountIn should be 0');
     }
 
     /**
@@ -237,7 +237,7 @@ contract ConvertTest is TestHelper {
         uint256 deltaB,
         uint256 beansConverted
     ) public {
-        beanToWellSetup();
+        multipleBeanDepositSetup();
         
         deltaB = bound(deltaB, 1, bean.balanceOf(well) - C.WELL_MINIMUM_BEAN_BALANCE);
         setReserves(
@@ -246,7 +246,7 @@ contract ConvertTest is TestHelper {
             weth.balanceOf(well)
         );
 
-        uint256 beansConverted = bound(beansConverted, 1, deltaB);
+        beansConverted = bound(beansConverted, 1, deltaB);
         
         uint256 expectedAmtOut = bs.getAmountOut(
             C.BEAN, 
@@ -275,7 +275,8 @@ contract ConvertTest is TestHelper {
         );
 
         // verify deltaB. 
-        assertEq(bs.getMaxAmountIn(C.BEAN, well), deltaB - beansConverted);
+        assertEq(bs.getMaxAmountIn(C.BEAN, well), deltaB - beansConverted, 'BEAN -> WELL maxAmountIn should be deltaB - beansConverted');
+        
     }
 
     /**
@@ -285,7 +286,7 @@ contract ConvertTest is TestHelper {
         uint256 deltaB,
         uint256 beansConverted
     ) public {
-        beanToWellSetup();
+        multipleBeanDepositSetup();
         
         deltaB = bound(deltaB, 2, bean.balanceOf(well) - C.WELL_MINIMUM_BEAN_BALANCE);
         setReserves(
@@ -327,10 +328,10 @@ contract ConvertTest is TestHelper {
         );
 
         // verify deltaB. 
-        assertEq(bs.getMaxAmountIn(C.BEAN, well), deltaB - beansConverted);
+        assertEq(bs.getMaxAmountIn(C.BEAN, well), deltaB - beansConverted, 'BEAN -> WELL maxAmountIn should be deltaB - beansConverted');
     }
 
-    function beanToWellSetup() public {
+    function multipleBeanDepositSetup() public {
         // Create 2 deposits, each at 10000 Beans to farmer[0].
         C.bean().mint(farmers[0], 20000e6);
         vm.prank(farmers[0]);
@@ -351,7 +352,7 @@ contract ConvertTest is TestHelper {
      * @notice Well -> Bean convert cannot occur above peg.
      */
     function test_convertWellToBean_abovePeg(uint256 beanAmount) public {
-        wellToBeanSetup();
+        multipleWellDepositSetup();
 
         beanAmount = bound(beanAmount, 1, 1000e6);
         // decrease the amount of beans in the pool (above peg).
@@ -381,7 +382,7 @@ contract ConvertTest is TestHelper {
     function test_convertWellToBean_beyondPeg(
         uint256 beansAddedToWell
     ) public {
-        wellToBeanSetup();
+        multipleWellDepositSetup();
         
         beansAddedToWell = bound(beansAddedToWell, 1, 10000e6);
         uint256 beanWellAmount = bean.balanceOf(well) + beansAddedToWell;
@@ -410,7 +411,7 @@ contract ConvertTest is TestHelper {
             amounts
         );
 
-        assertEq(bs.getMaxAmountIn(well, C.BEAN), 0);
+        assertEq(bs.getMaxAmountIn(well, C.BEAN), 0, 'WELL -> BEAN maxAmountIn should be 0');
     }
 
     /**
@@ -438,7 +439,7 @@ contract ConvertTest is TestHelper {
      */
     function test_convertWellToBeanGeneral(uint256 deltaB, uint256 lpConverted) public {
         uint256 minLp = getMinLPin(); 
-        uint256 lpMinted = wellToBeanSetup();
+        uint256 lpMinted = multipleWellDepositSetup();
         
         deltaB = bound(deltaB, 1e6, 1000 ether);
         setReserves(well, bean.balanceOf(well) + deltaB, weth.balanceOf(well));
@@ -477,10 +478,10 @@ contract ConvertTest is TestHelper {
         );
 
         // the new maximum amount out should be the difference between the deltaB and the expected amount out.
-        assertEq(bs.getAmountOut(well, C.BEAN, bs.getMaxAmountIn(well, C.BEAN)), deltaB - expectedAmtOut);
-        assertEq(bean.balanceOf(well), initalWellBeanBalance - expectedAmtOut);
-        assertEq(MockToken(well).totalSupply(), initalLPbalance - lpConverted);
-        assertEq(bean.balanceOf(BEANSTALK), initalBeanBalance + expectedAmtOut);
+        assertEq(bs.getAmountOut(well, C.BEAN, bs.getMaxAmountIn(well, C.BEAN)), deltaB - expectedAmtOut, 'amountOut does not equal deltaB - expectedAmtOut');
+        assertEq(bean.balanceOf(well), initalWellBeanBalance - expectedAmtOut, 'well bean balance does not equal initalWellBeanBalance - expectedAmtOut');
+        assertEq(MockToken(well).totalSupply(), initalLPbalance - lpConverted, 'well LP balance does not equal initalLPbalance - lpConverted');
+        assertEq(bean.balanceOf(BEANSTALK), initalBeanBalance + expectedAmtOut, 'bean balance does not equal initalBeanBalance + expectedAmtOut');
     }
 
     /**
@@ -488,7 +489,7 @@ contract ConvertTest is TestHelper {
      */
     function test_convertsWellToBeanGeneral(uint256 deltaB, uint256 lpConverted) public {
         uint256 minLp = getMinLPin(); 
-        uint256 lpMinted = wellToBeanSetup();
+        uint256 lpMinted = multipleWellDepositSetup();
         
         deltaB = bound(deltaB, 1e6, 1000 ether);
         setReserves(well, bean.balanceOf(well) + deltaB, weth.balanceOf(well));
@@ -536,13 +537,13 @@ contract ConvertTest is TestHelper {
         );
 
         // the new maximum amount out should be the difference between the deltaB and the expected amount out.
-        assertEq(bs.getAmountOut(well, C.BEAN, bs.getMaxAmountIn(well, C.BEAN)), deltaB - expectedAmtOut);
-        assertEq(bean.balanceOf(well), initalWellBeanBalance - expectedAmtOut);
-        assertEq(MockToken(well).totalSupply(), initalLPbalance - lpConverted);
-        assertEq(bean.balanceOf(BEANSTALK), initalBeanBalance + expectedAmtOut);
+        assertEq(bs.getAmountOut(well, C.BEAN, bs.getMaxAmountIn(well, C.BEAN)), deltaB - expectedAmtOut, 'amountOut does not equal deltaB - expectedAmtOut');
+        assertEq(bean.balanceOf(well), initalWellBeanBalance - expectedAmtOut, 'well bean balance does not equal initalWellBeanBalance - expectedAmtOut');
+        assertEq(MockToken(well).totalSupply(), initalLPbalance - lpConverted, 'well LP balance does not equal initalLPbalance - lpConverted');
+        assertEq(bean.balanceOf(BEANSTALK), initalBeanBalance + expectedAmtOut, 'bean balance does not equal initalBeanBalance + expectedAmtOut');
     }
 
-    function wellToBeanSetup() public returns (uint256 lpMinted) {
+    function multipleWellDepositSetup() public returns (uint256 lpMinted) {
         // Create 2 LP deposits worth 200_000 BDV. 
         // note: LP is minted with an price of 1000 beans. 
         lpMinted = mintBeanLPtoUser(
@@ -590,22 +591,143 @@ contract ConvertTest is TestHelper {
     /**
      * @notice lamda_lamda convert increases BDV.
      */
-    function test_lamdaLamda_increaseBDV() public {
+    function test_lambdaLambda_increaseBDV(uint256 deltaB) public {
+        uint256 lpMinted = multipleWellDepositSetup();
 
+        // create -deltaB to well via swapping, increasing BDV.
+        // note: pumps are updated prior to reserves updating, 
+        // due to its manipulation resistant nature.
+        // Thus, A pump needs a block to elapsed to update, 
+        // or another transaction by the well (if using the mock pump).
+        MockToken(bean).mint(well, bound(deltaB, 1, 1000e6));
+        IWell(well).shift(IERC20(weth), 0, farmers[0]);
+        IWell(well).shift(IERC20(weth), 0, farmers[0]);
+
+        uint256 amtToConvert = lpMinted / 2;
+
+        // create lamda_lamda encoding.
+        bytes memory convertData = convertEncoder(
+            LibConvertData.ConvertKind.LAMBDA_LAMBDA,
+            well,
+            amtToConvert,
+            0
+        );
+
+        // convert oldest deposit of user. 
+        int96[] memory stems = new int96[](1);
+        uint256[] memory amounts = new uint256[](1);
+        amounts[0] = amtToConvert;
+
+        (uint256 initalAmount, uint256 initialBdv) = bs.getDeposit(farmers[0], well, 0);
+        vm.expectEmit();
+        emit Convert(farmers[0], well, well, initalAmount, initalAmount);
+        vm.prank(farmers[0]);
+        (int96 toStem,,,,) = convert.convert(
+            convertData,
+            stems,
+            amounts
+        );
+
+        (uint256 updatedAmount, uint256 updatedBdv) = bs.getDeposit(farmers[0], well, toStem);
+        // the stem of a deposit increased, because the stalkPerBdv of the deposit decreased.
+        // stalkPerBdv is calculated by (stemTip - stem).
+        assertGt(toStem, int96(0), 'new stem should be higher than inital stem');
+        assertEq(updatedAmount, initalAmount, 'amounts should be equal');
+        assertGt(updatedBdv, initialBdv, 'new bdv should be higher');
     }
 
     /**
      * @notice lamda_lamda convert does not decrease BDV.
      */
-    function test_lamdaLamda_decreaseBDV() public {
+    function test_lamdaLamda_decreaseBDV(uint256 deltaB) public {
+        uint256 lpMinted = multipleWellDepositSetup();
 
+        // create +deltaB to well via swapping, decreasing BDV.
+        MockToken(weth).mint(well, bound(deltaB, 1e18, 100e18));
+        IWell(well).shift(IERC20(bean), 0, farmers[0]);
+        // note: pumps are updated prior to reserves updating, 
+        // due to its manipulation resistant nature.
+        // Thus, A pump needs a block to elapsed to update, 
+        // or another transaction by the well (if using the mock pump).
+        IWell(well).shift(IERC20(bean), 0, farmers[0]);
+        uint256 amtToConvert = lpMinted / 2;
+
+        // create lamda_lamda encoding.
+        bytes memory convertData = convertEncoder(
+            LibConvertData.ConvertKind.LAMBDA_LAMBDA,
+            well,
+            amtToConvert,
+            0
+        );
+
+        // convert oldest deposit of user. 
+        int96[] memory stems = new int96[](1);
+        uint256[] memory amounts = new uint256[](1);
+        amounts[0] = amtToConvert;
+
+        (uint256 initalAmount, uint256 initialBdv) = bs.getDeposit(farmers[0], well, 0);
+        vm.expectEmit();
+        emit Convert(farmers[0], well, well, initalAmount, initalAmount);
+        vm.prank(farmers[0]);
+        (int96 toStem,,,,) = convert.convert(
+            convertData,
+            stems,
+            amounts
+        );
+
+        (uint256 updatedAmount, uint256 updatedBdv) = bs.getDeposit(farmers[0], well, toStem);
+        assertEq(toStem, int96(0), 'stems should be equal');
+        assertEq(updatedAmount, initalAmount, 'amounts should be equal');
+        assertEq(updatedBdv, initialBdv, 'bdv should be equal');
     }
 
     /**
      * @notice lamda_lamda convert combines deposits.
      */
-    function test_lamdaLamda_combineDeposits() public {
+    function test_lamdaLamda_combineDeposits(uint256 lpCombined) public {
+        uint256 lpMinted = multipleWellDepositSetup();
+        lpCombined = bound(lpCombined, 2, lpMinted);
 
+        // create lamda_lamda encoding.
+        bytes memory convertData = convertEncoder(
+            LibConvertData.ConvertKind.LAMBDA_LAMBDA,
+            well,
+            lpCombined,
+            0
+        );
+
+        int96[] memory stems = new int96[](2);
+        stems[0] = int96(0);
+        stems[1] = int96(4e6);
+        uint256[] memory amounts = new uint256[](2);
+        amounts[0] = lpCombined / 2;
+        amounts[1] = lpCombined - amounts[0];
+
+        // convert.
+        vm.expectEmit();
+        emit Convert(farmers[0], well, well, lpCombined, lpCombined);
+        vm.prank(farmers[0]);
+        convert.convert(
+            convertData,
+            stems,
+            amounts
+        );
+
+        // verify old deposits are gone. 
+        // see `multipleWellDepositSetup` to understand the deposits.
+        (uint256 amount, uint256 bdv) = bs.getDeposit(farmers[0], well, 0);
+        assertEq(amount, lpMinted / 2 - amounts[0], 'incorrect old deposit amount 0');
+        assertApproxEqAbs(bdv, bs.bdv(well, (lpMinted / 2 - amounts[0])), 1, 'incorrect old deposit bdv 0');
+
+        (amount, bdv) = bs.getDeposit(farmers[0], well, 4e6);
+        assertEq(amount, (lpMinted - lpMinted / 2) - amounts[1], 'incorrect old deposit amount 1'); 
+        assertApproxEqAbs(bdv, bs.bdv(well, (lpMinted - lpMinted / 2) - amounts[1]), 1, 'incorrect old deposit bdv 1');
+
+        // verify new deposit.
+        // combining a 2 equal deposits should equal a deposit with the an average of the two stems.
+        (amount, bdv) = bs.getDeposit(farmers[0], well, 2e6);
+        assertEq(amount, lpCombined, 'new deposit dne lpMinted');
+        assertApproxEqAbs(bdv, bs.bdv(well, lpCombined), 2, 'new deposit dne bdv');
     }
 
     //////////// UNRIPE_BEAN TO UNRIPE_LP ////////////

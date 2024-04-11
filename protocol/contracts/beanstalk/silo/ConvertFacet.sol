@@ -17,8 +17,6 @@ import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {LibConvert} from "contracts/libraries/Convert/LibConvert.sol";
 import {LibGerminate} from "contracts/libraries/Silo/LibGerminate.sol";
 
-import "forge-std/console.sol";
-
 
 /**
  * @author Publius, Brean, DeadManWalking
@@ -81,24 +79,17 @@ contract ConvertFacet is ReentrancyGuard {
         address toToken; address fromToken; uint256 grownStalk;
 
         (toToken, fromToken, toAmount, fromAmount) = LibConvert.convert(convertData);
-        console.log("toToken:", toToken);
-        console.log("fromToken:", fromToken);
-        console.log("toAmount:", toAmount);
-        console.log("fromAmount:", fromAmount);
-        console.log("log after libConvert:");
         
         require(fromAmount > 0, "Convert: From amount is 0.");
 
         LibSilo._mow(msg.sender, fromToken);
         LibSilo._mow(msg.sender, toToken);
-        console.log("log after mow:");
         (grownStalk, fromBdv) = _withdrawTokens(
             fromToken,
             stems,
             amounts,
             fromAmount
         );
-        console.log("log withdraw tokens:");
 
         // calculate the bdv of the new deposit
         uint256 newBdv = LibTokenSilo.beanDenominatedValue(toToken, toAmount);
@@ -146,17 +137,14 @@ contract ConvertFacet is ReentrancyGuard {
                     i++;
                     continue;
                 }
-                console.log("i", i);
 
                 if (a.active.tokens.add(amounts[i]) >= maxTokens) amounts[i] = maxTokens.sub(a.active.tokens);
-                console.log("here");
                 depositBDV = LibTokenSilo.removeDepositFromAccount(
                         msg.sender,
                         token,
                         stems[i],
                         amounts[i]
                     );
-                console.log("here");
                 bdvsRemoved[i] = depositBDV;
                 a.active.stalk = a.active.stalk.add(
                     LibSilo.stalkReward(
@@ -165,7 +153,6 @@ contract ConvertFacet is ReentrancyGuard {
                         depositBDV.toUint128()
                     )
                 );
-                console.log("here");
                 
                 a.active.tokens = a.active.tokens.add(amounts[i]);
                 a.active.bdv = a.active.bdv.add(depositBDV);
@@ -175,7 +162,6 @@ contract ConvertFacet is ReentrancyGuard {
                     stems[i]
                 ));
                 i++;
-                console.log("here");
             }
             for (i; i < stems.length; ++i) amounts[i] = 0;
             
