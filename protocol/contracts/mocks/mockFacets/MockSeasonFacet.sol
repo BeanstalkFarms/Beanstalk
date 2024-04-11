@@ -45,7 +45,7 @@ interface ResetPool {
 }
 
 interface IMockPump {
-    function update(uint256[] memory _reserves, bytes memory) external;
+    function update(address well,uint256[] memory _reserves, bytes memory) external;
     function readInstantaneousReserves(address well, bytes memory data) external view returns (uint[] memory reserves);
 }
 
@@ -311,7 +311,7 @@ contract MockSeasonFacet is SeasonFacet  {
             .mul(LibEvaluate.LIQUIDITY_PRECISION)
             .div(1000) // eth price
             .div(1000); // reserve[1] / 1000 = %
-        IMockPump(pump).update(reserves, new bytes(0));
+        IMockPump(pump).update(C.BEAN_ETH_WELL, reserves, new bytes(0));
         s.twaReserves[C.BEAN_ETH_WELL].reserve0 = uint128(reserves[0]);
         s.twaReserves[C.BEAN_ETH_WELL].reserve1 = uint128(reserves[1]);
         if(aboveQ) {

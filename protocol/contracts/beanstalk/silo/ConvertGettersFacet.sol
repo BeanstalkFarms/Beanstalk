@@ -6,6 +6,7 @@ pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
 import {LibConvert} from "contracts/libraries/Convert/LibConvert.sol";
+import {LibWellMinting} from "contracts/libraries/Minting/LibWellMinting.sol";
 
 /**
  * @author Publius
@@ -33,5 +34,9 @@ contract ConvertGettersFacet {
         uint256 amountIn
     ) external view returns (uint256 amountOut) {
         return LibConvert.getAmountOut(tokenIn, tokenOut, amountIn);
+    }
+
+    function overallDeltaB() external view returns (int256 deltaB) {
+        return LibWellMinting.overallDeltaB();
     }
 }

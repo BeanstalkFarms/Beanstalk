@@ -259,15 +259,17 @@ library LibWellMinting {
         Call[] memory pumps = IWell(well).pumps();
         address pump = pumps[0].target;
 
-                                                                        // well address , data[]
+        console.log('cappedReservesDeltaB for pump: ', pump);
+
+        // well address , data[]
         try ICappedReservesPump(pump).readCappedReserves(well, new bytes(0)) returns (uint[] memory instReserves) {
             // Get well tokens
             IERC20[] memory tokens = IWell(well).tokens();
 
 
-            console.log('instReserves:');
+            console.log('cappedReservesDeltaB instReserves:');
             for (uint i = 0; i < instReserves.length; i++) {
-                console.log('instReserves[i]: ', instReserves[i]);
+                console.log('cappedReservesDeltaB instReserves[i]: ', instReserves[i]);
             }
 
             // Get ratios and bean index
