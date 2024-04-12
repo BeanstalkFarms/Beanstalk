@@ -1,7 +1,7 @@
 const { expect } = require('chai');
 const { deploy } = require('../scripts/deploy.js')
 const { EXTERNAL, INTERNAL, INTERNAL_EXTERNAL, INTERNAL_TOLERANT } = require('./utils/balances.js')
-const { BEAN, THREE_CURVE, THREE_POOL, BEAN_3_CURVE, PIPELINE, WETH, BEAN_ETH_WELL, BEANSTALK } = require('./utils/constants')
+const { BEAN, THREE_CURVE, THREE_POOL, BEAN_3_CURVE, PIPELINE, WETH, BEAN_ETH_WELL, BEANSTALK, BEAN_WSTETH_WELL } = require('./utils/constants')
 const { ConvertEncoder } = require('./utils/encoder.js')
 const { to18, toStalk, to6, toX, toBean } = require('./utils/helpers.js')
 const { takeSnapshot, revertToSnapshot } = require("./utils/snapshot");
@@ -33,7 +33,7 @@ describe('Farm Convert', function () {
     this.beanstalk = await getBeanstalk(this.diamond.address);
     impersonateBeanEthWell();
     this.well = await ethers.getContractAt("IWell", BEAN_ETH_WELL);
-    this.fakeWell = await deployWell([BEAN, WETH]);
+    this.fakeWell = await deployWell(tokens=[BEAN, WETH], verbose=true, salt=ethers.constants.HashZero, mock=true);
     this.wellToken = await ethers.getContractAt("IERC20", this.well.address)
     this.convert = await ethers.getContractAt("MockConvertFacet", this.diamond.address)
     this.bean = await ethers.getContractAt("MockToken", BEAN);
@@ -60,6 +60,11 @@ describe('Farm Convert', function () {
       this.well,
       [to6('1000000'), to18('1000')]
     );
+
+    // initalize pumps values for the bean/wsteth well, as overallDeltaB() queries all lp wells.
+    console.log((await this.fakeWell.pumps())[0].target);
+    this.pump = await ethers.getContractAt('MockPump', (await this.fakeWell.pumps())[0].target);
+    await this.pump.updateNoBytes(BEAN_WSTETH_WELL, ['0', '0']);
     
     await this.season.captureWellE(this.well.address); //inits well oracle price
 
