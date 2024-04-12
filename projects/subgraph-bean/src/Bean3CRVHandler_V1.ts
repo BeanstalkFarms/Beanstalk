@@ -22,6 +22,7 @@ import { CalculationsCurve } from "../generated/Bean3CRV-V1/CalculationsCurve";
 import { Bean3CRV } from "../generated/Bean3CRV-V1/Bean3CRV";
 import { ERC20 } from "../generated/Bean3CRV-V1/ERC20";
 import { checkBeanCross } from "./utils/Cross";
+import { curveDeltaB } from "./utils/Price";
 
 export function handleTokenExchange(event: TokenExchange): void {
   // Do not index post-exploit data
@@ -118,49 +119,36 @@ function handleLiquidityChange(
   let beanCrvPrice = ZERO_BD;
   let lusd3crvPrice = ZERO_BD;
 
+  let lpValue = ZERO_BD;
   if (poolAddress == BEAN_3CRV_V1.toHexString()) {
     beanCrvPrice = toDecimal(lpContract.get_dy(ZERO_BI, BigInt.fromI32(1), BigInt.fromI32(1000000)), 18);
+
+    let crv3PoolContract = ERC20.bind(CRV3_POOL_V1);
+    let crvHolding = toDecimal(crv3PoolContract.balanceOf(Address.fromString(poolAddress)), 18);
+    lpValue = crvHolding.times(metapoolPrice);
   } else if (poolAddress == BEAN_LUSD_V1.toHexString()) {
     // price in LUSD
     let priceInLusd = toDecimal(lpContract.get_dy(ZERO_BI, BigInt.fromI32(1), BigInt.fromI32(1000000)), 18);
     log.info("LiquidityChange: Bean LUSD price: {}", [priceInLusd.toString()]);
 
     let lusdContract = Bean3CRV.bind(LUSD_3POOL);
-    log.info("LiquidityChange: LUSD Crv price {}", [
-      toDecimal(lusdContract.get_dy(ZERO_BI, BigInt.fromI32(1), BigInt.fromString("1000000000000000000")), 18).toString()
-    ]);
-
     lusd3crvPrice = toDecimal(lusdContract.get_dy(ZERO_BI, BigInt.fromI32(1), BigInt.fromString("1000000000000000000")), 18);
     beanCrvPrice = priceInLusd.times(lusd3crvPrice);
+
+    let lusdHolding = toDecimal(lusdContract.balanceOf(Address.fromString(poolAddress)), 18);
+    lpValue = lusdHolding.times(lusd3crvPrice).times(metapoolPrice);
   }
 
-  log.info("LiquidityChange: Bean Crv price: {}", [beanCrvPrice.toString()]);
-
   let newPrice = metapoolPrice.times(beanCrvPrice);
-
-  log.info("LiquidityChange: Bean USD price: {}", [newPrice.toString()]);
 
   let bean = loadBean(BEAN_ERC20_V1.toHexString());
   let oldBeanPrice = bean.price;
 
   let beanContract = ERC20.bind(BEAN_ERC20_V1);
-  let crv3PoolContract = ERC20.bind(CRV3_POOL_V1);
-  let lusdContract = ERC20.bind(LUSD_3POOL);
-
   let beanHolding = toDecimal(beanContract.balanceOf(Address.fromString(poolAddress)));
-  let crvHolding = toDecimal(crv3PoolContract.balanceOf(Address.fromString(poolAddress)), 18);
-  let lusdHolding = toDecimal(lusdContract.balanceOf(Address.fromString(poolAddress)), 18);
-
   let beanValue = beanHolding.times(newPrice);
-  let crvValue = crvHolding.times(metapoolPrice);
-  let lusdValue = lusdHolding.times(lusd3crvPrice).times(metapoolPrice);
 
-  let deltaB = BigInt.fromString(
-    crvValue.plus(lusdValue).minus(beanHolding).times(BigDecimal.fromString("1000000")).truncate(0).toString()
-  );
-
-  let liquidityUSD = beanValue.plus(crvValue).plus(lusdValue);
-
+  let liquidityUSD = beanValue.plus(lpValue);
   let deltaLiquidityUSD = liquidityUSD.minus(pool.liquidityUSD);
 
   let volumeUSD =
@@ -175,7 +163,11 @@ function handleLiquidityChange(
   }
 
   let reserveBalances = lpContract.try_get_balances();
-  if (!reserveBalances.reverted) setPoolReserves(poolAddress, reserveBalances.value, blockNumber);
+  if (!reserveBalances.reverted) {
+    setPoolReserves(poolAddress, reserveBalances.value, blockNumber);
+  }
+
+  let deltaB = curveDeltaB(lpContract, reserveBalances.value[0]);
 
   updateBeanSupplyPegPercent(blockNumber);
 
@@ -204,49 +196,36 @@ function handleSwap(
   let beanCrvPrice = ZERO_BD;
   let lusd3crvPrice = ZERO_BD;
 
+  let lpValue = ZERO_BD;
   if (poolAddress == BEAN_3CRV_V1.toHexString()) {
     beanCrvPrice = toDecimal(lpContract.get_dy(ZERO_BI, BigInt.fromI32(1), BigInt.fromI32(1000000)), 18);
+
+    let crv3PoolContract = ERC20.bind(CRV3_POOL_V1);
+    let crvHolding = toDecimal(crv3PoolContract.balanceOf(Address.fromString(poolAddress)), 18);
+    lpValue = crvHolding.times(metapoolPrice);
   } else if (poolAddress == BEAN_LUSD_V1.toHexString()) {
     // price in LUSD
     let priceInLusd = toDecimal(lpContract.get_dy(ZERO_BI, BigInt.fromI32(1), BigInt.fromI32(1000000)), 18);
     log.info("LiquidityChange: Bean LUSD price: {}", [priceInLusd.toString()]);
 
     let lusdContract = Bean3CRV.bind(LUSD_3POOL);
-    log.info("LiquidityChange: LUSD Crv price {}", [
-      toDecimal(lusdContract.get_dy(ZERO_BI, BigInt.fromI32(1), BigInt.fromString("1000000000000000000")), 18).toString()
-    ]);
-
     lusd3crvPrice = toDecimal(lusdContract.get_dy(ZERO_BI, BigInt.fromI32(1), BigInt.fromString("1000000000000000000")), 18);
     beanCrvPrice = priceInLusd.times(lusd3crvPrice);
+
+    let lusdHolding = toDecimal(lusdContract.balanceOf(Address.fromString(poolAddress)), 18);
+    lpValue = lusdHolding.times(lusd3crvPrice).times(metapoolPrice);
   }
 
-  log.info("LiquidityChange: Bean Crv price: {}", [beanCrvPrice.toString()]);
-
   let newPrice = metapoolPrice.times(beanCrvPrice);
-
-  log.info("LiquidityChange: Bean USD price: {}", [newPrice.toString()]);
 
   let bean = loadBean(BEAN_ERC20_V1.toHexString());
   let oldBeanPrice = bean.price;
 
   let beanContract = ERC20.bind(BEAN_ERC20_V1);
-  let crv3PoolContract = ERC20.bind(CRV3_POOL_V1);
-  let lusdContract = ERC20.bind(LUSD_3POOL);
-
   let beanHolding = toDecimal(beanContract.balanceOf(Address.fromString(poolAddress)));
-  let crvHolding = toDecimal(crv3PoolContract.balanceOf(Address.fromString(poolAddress)), 18);
-  let lusdHolding = toDecimal(lusdContract.balanceOf(Address.fromString(poolAddress)), 18);
-
   let beanValue = beanHolding.times(newPrice);
-  let crvValue = crvHolding.times(metapoolPrice);
-  let lusdValue = lusdHolding.times(lusd3crvPrice).times(metapoolPrice);
 
-  let deltaB = BigInt.fromString(
-    crvValue.plus(lusdValue).minus(beanHolding).times(BigDecimal.fromString("1000000")).truncate(0).toString()
-  );
-
-  let liquidityUSD = beanValue.plus(crvValue);
-
+  let liquidityUSD = beanValue.plus(lpValue);
   let deltaLiquidityUSD = liquidityUSD.minus(pool.liquidityUSD);
 
   let volumeBean = ZERO_BI;
@@ -257,7 +236,11 @@ function handleSwap(
   }
 
   let reserveBalances = lpContract.try_get_balances();
-  if (!reserveBalances.reverted) setPoolReserves(poolAddress, reserveBalances.value, blockNumber);
+  if (!reserveBalances.reverted) {
+    setPoolReserves(poolAddress, reserveBalances.value, blockNumber);
+  }
+
+  let deltaB = curveDeltaB(lpContract, reserveBalances.value[0]);
 
   updateBeanSupplyPegPercent(blockNumber);
 
