@@ -159,12 +159,11 @@ export function updatePoolSeason(poolAddress: string, timestamp: BigInt, blockNu
   let poolDaily = loadOrCreatePoolDailySnapshot(poolAddress, timestamp, blockNumber);
 
   pool.lastSeason = season;
-  pool.save();
-
   poolHourly.season = season;
-  poolHourly.save();
-
   poolDaily.season = season;
+
+  pool.save();
+  poolHourly.save();
   poolDaily.save();
 }
 

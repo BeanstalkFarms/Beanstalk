@@ -1,12 +1,13 @@
-import { BigInt } from "@graphprotocol/graph-ts";
+import { Address, BigInt } from "@graphprotocol/graph-ts";
 import { Sunrise } from "../generated/Beanstalk/Beanstalk";
 import { getBeanTokenAddress, loadBean, updateBeanSeason, updateBeanValues } from "./utils/Bean";
 import { loadOrCreatePool, updatePoolPrice, updatePoolSeason, updatePoolValues } from "./utils/Pool";
 import { BeanstalkPrice } from "../generated/Beanstalk/BeanstalkPrice";
-import { BEANSTALK_PRICE, BEAN_3CRV, BEAN_ERC20, BEAN_WETH_CP2_WELL, CURVE_PRICE } from "../../subgraph-core/utils/Constants";
+import { BEANSTALK_PRICE, BEAN_3CRV, BEAN_ERC20, BEAN_WETH_CP2_WELL, BEAN_WETH_V1, CURVE_PRICE } from "../../subgraph-core/utils/Constants";
 import { ZERO_BD, ZERO_BI, toDecimal } from "../../subgraph-core/utils/Decimals";
 import { CurvePrice } from "../generated/Beanstalk/CurvePrice";
 import { checkBeanCross } from "./utils/Cross";
+import { curveDeltaB, curvePriceAndLp, uniswapV2DeltaB, uniswapV2Price, updatePreReplantPriceETH } from "./utils/Price";
 
 export function handleSunrise(event: Sunrise): void {
   // Update the season for hourly and daily liquidity metrics
@@ -88,5 +89,40 @@ export function handleSunrise(event: Sunrise): void {
         checkBeanCross(BEAN_ERC20.toHexString(), event.block.timestamp, event.block.number, oldBeanPrice, toDecimal(curve.value.price));
       }
     }
+  } else {
+    // Pre-Replant
+    for (let i = 0; i < bean.pools.length; i++) {
+      const pool = loadOrCreatePool(bean.pools[i], event.block.number);
+      let price = ZERO_BD;
+      let liquidity = ZERO_BD;
+      let deltaB = ZERO_BI;
+      if (bean.pools[i] == BEAN_WETH_V1.toHexString()) {
+        const wethToken = updatePreReplantPriceETH();
+        const reserves = [toDecimal(pool.reserves[0], 18), toDecimal(pool.reserves[1])];
+        price = uniswapV2Price(reserves[1], reserves[0], wethToken.lastPriceUSD);
+        liquidity = reserves[0].times(wethToken.lastPriceUSD);
+        deltaB = uniswapV2DeltaB(reserves[1], reserves[0], wethToken.lastPriceUSD);
+      } else {
+        const priceAndLp = curvePriceAndLp(Address.fromString(bean.pools[i]));
+        price = priceAndLp[0];
+        liquidity = priceAndLp[1];
+        deltaB = curveDeltaB(Address.fromString(bean.pools[i]), pool.reserves[0]);
+      }
+
+      // Update price, liquidity, and deltaB in the pool
+      updatePoolValues(
+        BEAN_3CRV.toHexString(),
+        event.block.timestamp,
+        event.block.number,
+        ZERO_BI,
+        ZERO_BD,
+        liquidity.minus(pool.liquidityUSD),
+        deltaB
+      );
+      updatePoolPrice(BEAN_3CRV.toHexString(), event.block.timestamp, event.block.number, price);
+    }
+    // TODO: Total price
+    // updateBeanValues(BEAN_ERC20.toHexString(), event.block.timestamp, price, ZERO_BI, ZERO_BI, ZERO_BD, ZERO_BD);
+    // checkBeanCross(BEAN_ERC20.toHexString(), event.block.timestamp, event.block.number, oldBeanPrice, toDecimal(curve.value.price));
   }
 }

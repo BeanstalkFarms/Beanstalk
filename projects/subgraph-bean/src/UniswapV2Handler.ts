@@ -7,7 +7,7 @@ import { loadOrCreatePool, setPoolReserves, updatePoolPrice, updatePoolReserves,
 import { loadOrCreateToken } from "./utils/Token";
 import { checkBeanCross } from "./utils/Cross";
 import { Token } from "../generated/schema";
-import { uniswapV2DeltaB } from "./utils/Price";
+import { uniswapV2DeltaB, uniswapV2Price, uniswapV2Reserves, updatePreReplantPriceETH } from "./utils/Price";
 
 // export function handleMint(event: Mint): void {
 //   updatePoolReserves(event.address.toHexString(), event.params.amount0, event.params.amount1, event.block.number);
@@ -71,19 +71,14 @@ export function handleSync(event: Sync): void {
   let bean = loadBean(BEAN_ERC20_V1.toHexString());
   let oldBeanPrice = bean.price;
 
-  let pair = UniswapV2Pair.bind(event.address);
-
-  let reserves = pair.try_getReserves();
-  if (reserves.reverted) {
-    return;
-  }
+  let reserves = uniswapV2Reserves(event.address);
 
   // Token 0 is WETH and Token 1 is BEAN
 
-  let weth = updatePriceETH();
+  let weth = updatePreReplantPriceETH();
 
-  let wethBalance = toDecimal(reserves.value.value0, 18);
-  let beanBalance = toDecimal(reserves.value.value1);
+  let wethBalance = toDecimal(reserves[0], 18);
+  let beanBalance = toDecimal(reserves[1]);
 
   let pool = loadOrCreatePool(event.address.toHexString(), event.block.number);
   let startLiquidityUSD = pool.liquidityUSD;
@@ -93,30 +88,15 @@ export function handleSync(event: Sync): void {
 
   updatePoolValues(event.address.toHexString(), event.block.timestamp, event.block.number, ZERO_BI, ZERO_BD, deltaLiquidityUSD, deltaBeans);
 
-  let currentBeanPrice = wethBalance.times(weth.lastPriceUSD).div(beanBalance);
+  let currentBeanPrice = uniswapV2Price(beanBalance, wethBalance, weth.lastPriceUSD);
 
   updatePoolPrice(event.address.toHexString(), event.block.timestamp, event.block.number, currentBeanPrice);
 
   checkBeanCross(BEAN_ERC20_V1.toHexString(), event.block.timestamp, event.block.number, oldBeanPrice, currentBeanPrice);
 
-  setPoolReserves(event.address.toHexString(), [reserves.value.value0, reserves.value.value1], event.block.number);
+  setPoolReserves(event.address.toHexString(), reserves, event.block.number);
 
   updateBeanSupplyPegPercent(event.block.number);
 
   updateBeanValues(BEAN_ERC20_V1.toHexString(), event.block.timestamp, currentBeanPrice, ZERO_BI, ZERO_BI, ZERO_BD, deltaLiquidityUSD);
-}
-
-function updatePriceETH(): Token {
-  let token = loadOrCreateToken(WETH.toHexString());
-  let pair = UniswapV2Pair.bind(WETH_USDC_PAIR);
-
-  let reserves = pair.try_getReserves();
-  if (reserves.reverted) {
-    return token;
-  }
-
-  // Token 0 is USDC and Token 1 is WETH
-  token.lastPriceUSD = toDecimal(reserves.value.value0).div(toDecimal(reserves.value.value1, 18));
-  token.save();
-  return token;
 }
