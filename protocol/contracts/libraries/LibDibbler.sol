@@ -83,31 +83,12 @@ library LibDibbler {
         // we use trySub here because in the case of an overflow, its equivalent to having no soil left. 
         (, s.f.soil) = s.f.soil.trySub(uint128(beans));
 
-        return sowNoSoil(account, beans, pods);
-    }
+        s.a[account].field.plots[s.f.pods] = pods;
+        emit Sow(account, s.f.pods, beans, pods);
 
-    /**
-     * @dev Sows a new Plot, increments total Pods, updates Sow time.
-     */
-    function sowNoSoil(address account, uint256 beans, uint256 pods)
-        internal
-        returns (uint256)
-    {
-        AppStorage storage s = LibAppStorage.diamondStorage();
-
-        _sowPlot(account, beans, pods);
         s.f.pods = s.f.pods.add(pods);
         _saveSowTime();
         return pods;
-    }
-
-    /**
-     * @dev Create a Plot.
-     */
-    function _sowPlot(address account, uint256 beans, uint256 pods) private {
-        AppStorage storage s = LibAppStorage.diamondStorage();
-        s.a[account].field.plots[s.f.pods] = pods;
-        emit Sow(account, s.f.pods, beans, pods);
     }
 
     /** 

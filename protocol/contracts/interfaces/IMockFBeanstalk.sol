@@ -39,14 +39,6 @@ interface IMockFBeanstalk {
         bytes4[] functionSelectors;
     }
 
-    struct Fundraiser {
-        address payee;
-        address token;
-        uint256 total;
-        uint256 remaining;
-        uint256 start;
-    }
-
     struct MowStatus {
         int96 lastStem;
         uint128 bdv;
@@ -145,14 +137,11 @@ interface IMockFBeanstalk {
     event ChangeUnderlying(address indexed token, int256 underlying);
     event Chop(address indexed account, address indexed token, uint256 amount, uint256 underlying);
     event ClaimPlenty(address indexed account, address token, uint256 plenty);
-    event CompleteFundraiser(uint32 indexed id);
     event Convert(address indexed account, address fromToken, address toToken, uint256 fromAmount, uint256 toAmount);
-    event CreateFundraiser(uint32 indexed id, address payee, address token, uint256 amount);
     event DepositApproval(address indexed owner, address indexed spender, address token, uint256 amount);
     event DewhitelistToken(address indexed token);
     event DiamondCut(FacetCut[] _diamondCut, address _init, bytes _calldata);
     event FarmerGerminatingStalkBalanceChanged(address indexed account, int256 delta);
-    event FundFundraiser(address indexed account, uint32 indexed id, uint256 amount);
     event GaugePointChange(uint256 indexed season, address indexed token, uint256 gaugePoints);
     event Harvest(address indexed account, uint256[] plots, uint256 beans);
     event Incentivization(address indexed account, uint256 beans);
@@ -325,7 +314,6 @@ interface IMockFBeanstalk {
         external
         payable
         returns (int96 toStem, uint256 fromAmount, uint256 toAmount, uint256 fromBdv, uint256 toBdv);
-    function createFundraiser(address payee, address token, uint256 amount) external payable;
     function createPodListing(
         uint256 index,
         uint256 start,
@@ -423,7 +411,6 @@ interface IMockFBeanstalk {
     ) external payable;
     function fund(uint32 id, uint256 amount, uint8 mode) external payable returns (uint256);
     function fundingToken(uint32 id) external view returns (address);
-    function fundraiser(uint32 id) external view returns (Fundraiser memory);
     function getActiveFertilizer() external view returns (uint256);
     function getAllBalance(address account, address token) external view returns (Balance memory b);
     function getAllBalances(address account, address tokens) external view returns (Balance[] memory balances);
@@ -559,7 +546,6 @@ interface IMockFBeanstalk {
     function mowMultiple(address account, address[] memory tokens) external payable;
     function multiPipe(PipeCall[] memory pipes) external payable returns (bytes[] memory results);
     function name() external pure returns (string memory);
-    function numberOfFundraisers() external view returns (uint32);
     function onERC1155BatchReceived(address, address, uint256[] memory, uint256[] memory, bytes memory)
         external
         pure

@@ -118,8 +118,6 @@ dataSources:
           handler: handleSupplyDecrease
         - event: SupplyNeutral(indexed uint256,int256)
           handler: handleSupplyNeutral
-        - event: FundFundraiser(indexed address,indexed uint32,uint256)
-          handler: handleFundFundraiser
       file: ./src/FieldHandler.ts
   - kind: ethereum/contract
     name: Season

@@ -1,6 +1,5 @@
 import { Address, BigDecimal, BigInt, log } from "@graphprotocol/graph-ts";
 import {
-  FundFundraiser,
   Harvest,
   PlotTransfer,
   Sow,
@@ -465,23 +464,6 @@ export function handleSupplyNeutral(event: SupplyNeutral): void {
     event.params.season.toI32(),
     event.params.newSoil,
     ZERO_BI,
-    ZERO_BI,
-    ZERO_BI,
-    ZERO_BI,
-    ZERO_BI,
-    event.block.timestamp,
-    event.block.number
-  );
-}
-
-export function handleFundFundraiser(event: FundFundraiser): void {
-  // Account for the fact thta fundraiser sow using no soil.
-  let beanstalk = loadBeanstalk(event.address);
-  updateFieldTotals(
-    event.address,
-    beanstalk.lastSeason,
-    ZERO_BI,
-    ZERO_BI.minus(event.params.amount),
     ZERO_BI,
     ZERO_BI,
     ZERO_BI,

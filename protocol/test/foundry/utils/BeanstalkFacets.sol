@@ -22,7 +22,6 @@ pragma abicoder v2;
 
 // Field
 // import {MockFieldFacet, FieldFacet} from "contracts/mocks/mockFacets/MockFieldFacet.sol";
-// import {MockFundraiserFacet, FundraiserFacet} from "contracts/mocks/mockFacets/MockFundraiserFacet.sol";
 
 // Farm
 // import {FarmFacet} from "contracts/beanstalk/farm/FarmFacet.sol";

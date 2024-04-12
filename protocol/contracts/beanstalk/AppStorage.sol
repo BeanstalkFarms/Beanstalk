@@ -383,14 +383,14 @@ contract Storage {
     }
 
     /**
-     * @notice Describes a Fundraiser.
+     * @notice Deprecated. Fundraisers no longer in use. Describes a Fundraiser.
      * @param payee The address to be paid after the Fundraiser has been fully funded.
      * @param token The token address that used to raise funds for the Fundraiser.
      * @param total The total number of Tokens that need to be raised to complete the Fundraiser.
      * @param remaining The remaining number of Tokens that need to to complete the Fundraiser.
      * @param start The timestamp at which the Fundraiser started (Fundraisers cannot be started and funded in the same block).
      */
-    struct Fundraiser {
+    struct Deprecated_Fundraiser {
         address payee;
         address token;
         uint256 total;
@@ -594,8 +594,8 @@ struct AppStorage {
     mapping (address => Account.State) a;
     uint32 deprecated_bip0Start; // ─────┐ 4
     uint32 deprecated_hotFix3Start; // ──┘ 4 (8/32)
-    mapping (uint32 => Storage.Fundraiser) fundraisers;
-    uint32 fundraiserIndex; // 4 (4/32)
+    mapping (uint32 => Storage.Deprecated_Fundraiser) deprecated_fundraisers;
+    uint32 deprecated_fundraiserIndex; // 4 (4/32)
     mapping (address => bool) deprecated_isBudget;
     mapping(uint256 => bytes32) podListings;
     mapping(bytes32 => uint256) podOrders;

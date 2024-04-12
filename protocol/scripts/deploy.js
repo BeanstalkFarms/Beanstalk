@@ -371,7 +371,6 @@ async function getFacetData(mock=true) {
     "LiquidityWeightFacet",
     "ConvertFacet",
     "FieldFacet",
-    "FundraiserFacet",
     "MarketplaceFacet",
     "SeasonFacet",
     "SiloFacet",
