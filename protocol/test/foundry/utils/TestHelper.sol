@@ -82,6 +82,18 @@ contract TestHelper is Test, BeanstalkDeployer, BasinDeployer, DepotDeployer, Or
     }
 
     /**
+     * @notice max approves bean for beanstalk.
+     */
+    function maxApproveBeanstalk(
+        address[] memory users
+    ) public {
+        for(uint i; i < users.length; i++) {
+            vm.prank(users[i]);
+            C.bean().approve(BEANSTALK, type(uint256).max);
+        }
+    }
+
+    /**
      * @notice Mints tokens to a list of users.
      * @dev Max approves beanstalk to spend `token`.
      */
