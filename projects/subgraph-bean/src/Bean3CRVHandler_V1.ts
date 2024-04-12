@@ -97,9 +97,11 @@ export function handleRemoveLiquidityOne(event: RemoveLiquidityOne): void {
   // Do not index post-exploit data
   if (event.block.number >= BigInt.fromI32(14602790)) return;
 
-  if (event.params.provider == BEAN_ERC20_V1)
+  if (event.params.provider == BEAN_ERC20_V1) {
     handleLiquidityChange(event.address.toHexString(), event.block.timestamp, event.block.number, event.params.token_amount, ZERO_BI);
-  else handleLiquidityChange(event.address.toHexString(), event.block.timestamp, event.block.number, ZERO_BI, event.params.token_amount);
+  } else {
+    handleLiquidityChange(event.address.toHexString(), event.block.timestamp, event.block.number, ZERO_BI, event.params.token_amount);
+  }
 }
 
 function handleLiquidityChange(
