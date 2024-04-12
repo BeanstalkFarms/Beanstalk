@@ -6,9 +6,9 @@ import useTokenMap from '~/hooks/chain/useTokenMap';
 import { tokenResult } from '~/util';
 import { AddressMap, ONE_BN } from '~/constants';
 import { UNRIPE_TOKENS } from '~/constants/tokens';
-import { resetUnripe, updateUnripe } from './actions';
 import { UnripeToken } from '~/state/bean/unripe';
 import useUnripeUnderlyingMap from '~/hooks/beanstalk/useUnripeUnderlying';
+import { resetUnripe, updateUnripe } from './actions';
 
 export const useUnripe = () => {
   const dispatch = useDispatch();

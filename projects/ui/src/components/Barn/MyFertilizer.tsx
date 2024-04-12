@@ -148,7 +148,7 @@ const MyFertilizer: FC<{}> = () => {
                 const sprouts = debt.multipliedBy(ONE_BN.minus(pct));
                 const rinsableSprouts = debt.multipliedBy(pct);
                 return (
-                  <Grid key={balance.token.id.toString()} item xs={12} md={4}>
+                  <Grid key={balance.token.id.toString()} item xs={6} sm={4}>
                     <FertilizerItem
                       id={balance.token.id}
                       season={balance.token.season}

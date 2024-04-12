@@ -4,17 +4,17 @@ import { Well } from "@beanstalk/sdk/Wells";
 import { useCallback } from "react";
 
 export const useBeanstalkSiloAPYs = () => {
-  const query = useQuery(
-    ["wells", "APYs"],
-    async () => {
+  const query = useQuery({
+    queryKey: ["wells", "APYs"],
+
+    queryFn: async () => {
       const data = await loadSiloAPYData();
       return data;
     },
-    {
-      staleTime: 1000 * 60,
-      refetchOnWindowFocus: false
-    }
-  );
+
+    staleTime: 1000 * 60,
+    refetchOnWindowFocus: false
+  });
 
   const getSiloAPYWithWell = useCallback(
     (well: Well | undefined) => {

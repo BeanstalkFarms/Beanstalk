@@ -8,9 +8,10 @@ export const useTokenBalance = (token: Token) => {
 
   const key = ["token", "balance", token.symbol];
 
-  const { data, isLoading, error, refetch, isFetching } = useQuery<Record<string, TokenValue>, Error>(
-    key,
-    async () => {
+  const { data, isLoading, error, refetch, isFetching } = useQuery({
+    queryKey: key,
+
+    queryFn: async () => {
       let balance: TokenValue;
       if (!address) {
         balance = TokenValue.ZERO;
@@ -31,18 +32,12 @@ export const useTokenBalance = (token: Token) => {
 
       return result;
     },
-    /**
-     * Token balances are cached for 15 seconds, refetch value every 15 seconds,
-     * when the window is hidden/not visible, stop background refresh,
-     * when the window gains focus, force a refresh even if cache is not stale     *
-     */
-    {
-      staleTime: 1000 * 15,
-      refetchInterval: 1000 * 15,
-      refetchIntervalInBackground: false,
-      refetchOnWindowFocus: "always"
-    }
-  );
+
+    staleTime: 1000 * 15,
+    refetchInterval: 1000 * 15,
+    refetchIntervalInBackground: false,
+    refetchOnWindowFocus: "always"
+  });
 
   return { data, isLoading, error, refetch, isFetching };
 };

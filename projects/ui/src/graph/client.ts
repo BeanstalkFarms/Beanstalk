@@ -133,7 +133,7 @@ const cache = new InMemoryCache({
         siloAssetHourlySnapshots: mergeUsingSeasons(['$siloAsset']),
         siloHourlySnapshots: mergeUsingSeasons([]),
         poolHourlySnapshots: mergeUsingSeasons(['$pool']),
-        siloYields: mergeUsingSeasons([]),
+        // siloYields: mergeUsingSeasons([]),
       },
     },
   },

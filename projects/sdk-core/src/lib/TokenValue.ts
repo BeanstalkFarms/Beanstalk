@@ -59,12 +59,15 @@ export class TokenValue {
    * @param decimals The number of decimals this TokenValue should be stored with. For ex, 6 for BEAN or 18 for ETH
    * @returns a TokenValue
    */
-  static fromBlockchain(value: string | number | BigNumber, decimals: number): TokenValue {
+  static fromBlockchain(value: string | number | BigInt | BigNumber, decimals: number): TokenValue {
     if (typeof value === "string" || typeof value === "number") {
       const units = utils.formatUnits(value, decimals);
       return TokenValue.fromString(units, decimals);
     }
-    if (value._isBigNumber) return TokenValue.fromBigNumber(value, decimals);
+    if (typeof value === "bigint") {
+      return TokenValue.fromBigInt(value, decimals);
+    }
+    if ((value as BigNumber)._isBigNumber) return TokenValue.fromBigNumber(value as BigNumber, decimals);
 
     throw new Error("Invalid value parameter");
   }
@@ -106,6 +109,10 @@ export class TokenValue {
     const result = utils.parseUnits(safeValue, decimals);
 
     return TokenValue.fromBigNumber(result, decimals);
+  }
+
+  private static fromBigInt(value: BigInt, decimals: number): TokenValue {
+    return new TokenValue(blocker, BigNumber.from(value), decimals);
   }
 
   constructor(_blocker: typeof blocker, _bigNumber: BigNumber, decimals: number) {
