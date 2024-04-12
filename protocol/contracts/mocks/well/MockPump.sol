@@ -37,7 +37,7 @@ contract MockPump is IInstantaneousPump, ICumulativePump {
     }
 
     function readCappedReserves(address well, bytes memory) external view returns (uint[] memory reserves) {
-        console.log('readCappedReserves cappedReserves:');
+        console.log('readCappedReserves cappedReserves: ', well);
         for (uint i = 0; i < reservesData[well].cappedReserves.length; i++) {
             console.log('readCappedReserves cappedReserves[i]: ', reservesData[well].cappedReserves[i]);
         }
@@ -63,7 +63,7 @@ contract MockPump is IInstantaneousPump, ICumulativePump {
 
     // this function gets called from the well, msg.sender is the well
     function update(uint256[] memory _reserves, bytes memory data) external {
-        console.log('updating pump from the well');
+        console.log('updating pump from the well', msg.sender);
         _update(msg.sender, _reserves, data);
     }
 

@@ -246,7 +246,7 @@ contract PipelineConvertTest is TestHelper {
         amounts[0] = lpAmountOut;
         
         vm.resumeGasMetering();
-        vm.prank(users[1]); // do this as user 1
+        vm.prank(users[1]);
 
         convert.pipelineConvert(
             C.BEAN_ETH_WELL, // input token

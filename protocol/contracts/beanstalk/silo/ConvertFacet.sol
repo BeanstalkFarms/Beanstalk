@@ -686,6 +686,7 @@ contract ConvertFacet is ReentrancyGuard {
             console.log('mcdd.stem: ');
             console.logInt(mcdd.stem);
             console.log('crateAmount: ', mcdd.crateAmount);
+            console.log('grownStalks[i]: ', grownStalks[i]);
 
             outputStems[i] = mcdd.stem;
 
@@ -717,6 +718,12 @@ contract ConvertFacet is ReentrancyGuard {
                 mcdd.depositedBdv,
                 LibTokenSilo.Transfer.emitTransferSingle
             );
+
+            console.log('LibTractor._getUser(): ', LibTractor._getUser());
+            console.log('outputToken: ', outputToken);
+            console.log('inputToken: ', inputToken);
+            console.log('inputAmounts[i]: ', inputAmounts[i]);
+            console.log('mcdd.crateAmount: ', mcdd.crateAmount);
 
             emit Convert(LibTractor._getUser(), inputToken, outputToken, inputAmounts[i], mcdd.crateAmount);
         }
