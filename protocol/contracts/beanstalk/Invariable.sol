@@ -116,7 +116,7 @@ abstract contract Invariable {
             if (tokens[i] == C.BEAN) {
                 // total of Bean in Silo + total earned Beans + unharvested harvestable Beans + user internal balances of Beans.
                 entitlements[i] +=
-                    s.earnedBeans + // unmowed earned beans
+                    // s.earnedBeans + // unmowed earned beans // NOTE: This is a double count with deposited balance
                     s.f.harvestable.sub(s.f.harvested) + // unharvestable harvestable beans
                     s.fertilizedIndex.sub(s.fertilizedPaidIndex) + // unrinsed rinsable beans
                     s.u[C.UNRIPE_BEAN].balanceOfUnderlying; // unchopped underlying beans
