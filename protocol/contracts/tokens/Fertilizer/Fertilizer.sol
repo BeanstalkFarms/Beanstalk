@@ -4,18 +4,12 @@ pragma solidity ^0.7.6;
 pragma experimental ABIEncoderV2;
 
 import "./Internalizer.sol";
+import {IBeanstalk} from "./Internalizer.sol";
 
 /**
  * @author publius
  * @title Barn Raiser 
  */
-
-interface IBS {
-    function payFertilizer(address account, uint256 amount) external;
-    function beansPerFertilizer() external view returns (uint128);
-    function getEndBpf() external view returns (uint128);
-    function remainingRecapitalization() external view returns (uint256);
-}
 
 // Inherits Internalizer thus inherits ERC1155Upgradeable and the uri function
 // The end Fert Facet only gets the interface of this contract
@@ -79,7 +73,7 @@ contract Fertilizer is Internalizer {
         uint256[] memory, // amounts
         bytes memory // data
     ) internal virtual override {
-        uint256 bpf = uint256(IBS(owner()).beansPerFertilizer());
+        uint256 bpf = uint256(IBeanstalk(owner()).beansPerFertilizer());
         if (from != address(0)) _update(from, ids, bpf);
         _update(to, ids, bpf);
     }
@@ -97,7 +91,7 @@ contract Fertilizer is Internalizer {
         uint256 bpf
     ) internal {
         uint256 amount = __update(account, ids, bpf);
-        if (amount > 0) IBS(owner()).payFertilizer(account, amount);
+        if (amount > 0) IBeanstalk(owner()).payFertilizer(account, amount);
     }
 
     /**
@@ -132,7 +126,7 @@ contract Fertilizer is Internalizer {
      * @return beans - the amount of fertilized beans the fertilizer owner has
      */
     function balanceOfFertilized(address account, uint256[] memory ids) external view returns (uint256 beans) {
-        uint256 bpf = uint256(IBS(owner()).beansPerFertilizer());
+        uint256 bpf = uint256(IBeanstalk(owner()).beansPerFertilizer());
         for (uint256 i; i < ids.length; ++i) {
             uint256 stopBpf = bpf < ids[i] ? bpf : ids[i];
             uint256 deltaBpf = stopBpf - _balances[ids[i]][account].lastBpf;
@@ -148,7 +142,7 @@ contract Fertilizer is Internalizer {
      * @return beans - the amount of unfertilized beans the fertilizer owner has
      */
     function balanceOfUnfertilized(address account, uint256[] memory ids) external view returns (uint256 beans) {
-        uint256 bpf = uint256(IBS(owner()).beansPerFertilizer());
+        uint256 bpf = uint256(IBeanstalk(owner()).beansPerFertilizer());
         for (uint256 i; i < ids.length; ++i) {
             if (ids[i] > bpf) beans = beans.add(ids[i].sub(bpf).mul(_balances[ids[i]][account].amount));
         }
@@ -158,13 +152,13 @@ contract Fertilizer is Internalizer {
      @notice Returns the value remaining to recapitalize beanstalk
      */
     function remaining() public view returns (uint256) {
-        return IBS(owner()).remainingRecapitalization();
+        return IBeanstalk(owner()).remainingRecapitalization();
     }
 
     /**
      @notice Returns the id a fertilizer will receive when minted
     */
     function getMintId() public view returns (uint256) {
-        return uint256(IBS(owner()).getEndBpf());
+        return uint256(IBeanstalk(owner()).getEndBpf());
     }
 }

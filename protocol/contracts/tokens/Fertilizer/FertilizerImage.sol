@@ -5,18 +5,13 @@ pragma experimental ABIEncoderV2;
 
 import {LibStrings} from "contracts/libraries/LibStrings.sol";
 import {LibBytes64} from "contracts/libraries/LibBytes64.sol";
+import {IBeanstalk} from "./Internalizer.sol";
 
 /**
  * @title FertilizerImage
  * @author deadmanwalking
  */
 
-// interface to interact with the Beanstalk contract
-interface IBeanstalk {
-    function beansPerFertilizer() external view returns (uint128);
-    function getEndBpf() external view returns (uint128);
-    function getFertilizer(uint128) external view returns (uint256);
-}
 contract FertilizerImage {
 
     address internal constant BEANSTALK = 0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5;

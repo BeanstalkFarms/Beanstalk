@@ -20,6 +20,15 @@ import {LibBytes64} from "contracts/libraries/LibBytes64.sol";
  * @title Fertilizer before the Unpause
  */
 
+// interface to interact with the Beanstalk contract
+interface IBeanstalk {
+    function payFertilizer(address account, uint256 amount) external;
+    function beansPerFertilizer() external view returns (uint128);
+    function getEndBpf() external view returns (uint128);
+    function remainingRecapitalization() external view returns (uint256);
+    function getFertilizer(uint128) external view returns (uint256);
+}
+
 contract Internalizer is OwnableUpgradeable, ReentrancyGuardUpgradeable, Fertilizer1155, FertilizerImage {
 
     using SafeERC20Upgradeable for IERC20;
