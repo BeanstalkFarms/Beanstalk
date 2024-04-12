@@ -153,7 +153,7 @@ library LibWellMinting {
      * @dev Calculates the delta B of a given well for a given set of well state parameters.
      * Designed to work for instantaneous and twa delta B calculations.
      */
-    function getDeltaBInfo(address well, uint[] memory reserves, bytes memory snapshot, uint256 lookback
+    function getDeltaBInfoFromWell(address well, uint[] memory reserves, bytes memory snapshot, uint256 lookback
     ) internal view returns (int256, bytes memory, uint256[] memory, uint256[] memory) {
 
         // get well tokens
@@ -213,7 +213,7 @@ library LibWellMinting {
             pumps[0].data
         ) returns (uint[] memory twaReserves, bytes memory snapshot) {
                                 // well, reserves, snapshot  lookback
-            return (getDeltaBInfo(well, twaReserves, snapshot, block.timestamp.sub(s.season.timestamp)));
+            return (getDeltaBInfoFromWell(well, twaReserves, snapshot, block.timestamp.sub(s.season.timestamp)));
         }
         catch {
             // if the pump fails, return all 0s to avoid the sunrise reverting.
@@ -231,8 +231,8 @@ library LibWellMinting {
         try IInstantaneousPump(pumps[0].target).readInstantaneousReserves(well,pumps[0].data)
          returns (uint[] memory instReserves) {
             uint[] memory instReserves = IInstantaneousPump(pumps[0].target).readInstantaneousReserves(well, pumps[0].data);
-            //                                   well, reserves,   snapshot,  lookback
-            (int256 deltaB, , ,) = getDeltaBInfo(well, instReserves, new bytes(0) , 0);
+            //                                          well, reserves,   snapshot,  lookback
+            (int256 deltaB, , ,) = getDeltaBInfoFromWell(well, instReserves, new bytes(0) , 0);
             return (deltaB);
         } catch {
             return 0;
