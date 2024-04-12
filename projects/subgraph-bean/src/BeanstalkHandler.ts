@@ -122,7 +122,7 @@ export function handleSunrise(event: Sunrise): void {
 
       // Update price, liquidity, and deltaB in the pool
       updatePoolValues(
-        BEAN_3CRV.toHexString(),
+        bean.pools[i],
         event.block.timestamp,
         event.block.number,
         ZERO_BI,
@@ -130,7 +130,7 @@ export function handleSunrise(event: Sunrise): void {
         liquidity.minus(pool.liquidityUSD),
         deltaB
       );
-      updatePoolPrice(BEAN_3CRV.toHexString(), event.block.timestamp, event.block.number, price);
+      updatePoolPrice(bean.pools[i], event.block.timestamp, event.block.number, price);
 
       weightedPrice = weightedPrice.plus(price.times(liquidity));
       totalLiquidity = totalLiquidity.plus(liquidity);

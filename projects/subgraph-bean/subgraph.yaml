@@ -100,6 +100,14 @@ dataSources:
           file: ../subgraph-core/abis/BeanstalkPrice.json
         - name: CurvePrice
           file: ../subgraph-core/abis/CurvePrice.json
+        - name: UniswapV2Pair
+          file: ../subgraph-core/abis/UniswapV2Pair.json
+        - name: Bean3CRV
+          file: ../subgraph-core/abis/Bean3CRV.json
+        - name: CalculationsCurve
+          file: ../subgraph-core/abis/CalculationsCurve.json
+        - name: ERC20
+          file: ../subgraph-core/abis/ERC20.json
       eventHandlers:
         - event: Sunrise(indexed uint256)
           handler: handleSunrise
