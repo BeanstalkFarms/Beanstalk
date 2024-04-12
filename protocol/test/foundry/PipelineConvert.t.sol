@@ -231,12 +231,9 @@ contract PipelineConvertTest is TestHelper {
         int256 beforeDeltaBEth = seasonGetters.poolDeltaBInsta(C.BEAN_ETH_WELL);
         int256 beforeDeltaBwsteth = seasonGetters.poolDeltaBInsta(C.BEAN_WSTETH_WELL);
 
-        uint256 beforeGrownStalk = bs.balanceOfGrownStalk(users[1], C.BEAN_ETH_WELL);
+        // uint256 beforeGrownStalk = bs.balanceOfGrownStalk(users[1], C.BEAN_ETH_WELL);
+        uint256 beforeBalanceOfStalk = bs.balanceOfStalk(users[1]);
 
-
-        // do the convert
-
-        // Create arrays for stem and amount. Tried just passing in [stem] and it's like nope.
         int96[] memory stems = new int96[](1);
         stems[0] = stem;
 
@@ -262,52 +259,25 @@ contract PipelineConvertTest is TestHelper {
         int256 afterDeltaBEth = seasonGetters.poolDeltaBInsta(C.BEAN_ETH_WELL);
         int256 afterDeltaBwsteth = seasonGetters.poolDeltaBInsta(C.BEAN_WSTETH_WELL);
 
-
         // make sure deltaB's moved in the way we expect them to
         assertTrue(beforeDeltaBEth < afterDeltaBEth);
         assertTrue(afterDeltaBwsteth < beforeDeltaBwsteth);
 
-        console.log('beforeDeltaBEth: ');
-        console.logInt(beforeDeltaBEth);
-        console.log('afterDeltaBEth: ');
-        console.logInt(afterDeltaBEth);
-        console.log('beforeDeltaBwsteth: ');
-        console.logInt(beforeDeltaBwsteth);
-        console.log('afterDeltaBwsteth: ');
-        console.logInt(afterDeltaBwsteth);
-
-        uint256 afterGrownStalk = bs.balanceOfGrownStalk(users[1], C.BEAN_WSTETH_WELL);
-        console.log('beforeGrownStalk: ', beforeGrownStalk);
-        console.log('afterGrownStalk: ', afterGrownStalk);
+        uint256 totalStalkAfter = bs.balanceOfStalk(users[1]);
 
         // since we didn't cross peg and there was convert power, we expect full remaining grown stalk
-        assertTrue(afterGrownStalk == beforeGrownStalk);
-
-
+        // (plus a little from the convert benefit)
+        assertTrue(totalStalkAfter >= beforeBalanceOfStalk);
     }
 
 
     function testUpdatingOverallDeltaB(uint256 amount) public {
-
         amount = bound(amount, 1e6, 5000e6);
-
-        (int96 stem, uint256 lpAmountOut) = depositLPAndPassGermination(amount);
+        depositLPAndPassGermination(amount);
         mineBlockAndUpdatePumps();
 
         int256 overallDeltaB = convertGetters.overallDeltaB();
-
         assertTrue(overallDeltaB != 0);
-
-        // console.log('calling overallDeltaB');
-
-        // int256 newOverallDeltaB = convertGetters.overallDeltaB();
-
-        // console.log('overallDeltaB: ');
-        // console.logInt(overallDeltaB);
-        // console.log('newOverallDeltaB: ');
-        // console.logInt(newOverallDeltaB);
-
-        // assertTrue(newOverallDeltaB != overallDeltaB);
     }
 
 
