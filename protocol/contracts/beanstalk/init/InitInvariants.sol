@@ -18,10 +18,29 @@ contract InitInvariants {
     AppStorage internal s;
 
     function init() external {
-        // TODO: Proper initialization
-        // s.internalTokenBalanceTotal[] = 0;
+        /* 
+        TODO: Get exacts from future snapshot.
+        NOTE: Approximate. Sourced from subgraph using
+        {siloAssetHourlySnapshots(orderBy: season, orderDirection:desc, first: 6, where: {season: 20824, siloAsset_contains_nocase: "0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5" }
+            ) { 
+                siloAsset{
+                token
+                }
+                season
+                depositedAmount
+                withdrawnAmount
+                farmAmount
+            }
+        }
+        */
+        s.internalTokenBalanceTotal[IERC20(C.BEAN)] = 408516713733;
+        s.internalTokenBalanceTotal[IERC20(C.BEAN_ETH_WELL)] = 0; // ?????
+        s.internalTokenBalanceTotal[IERC20(C.CURVE_BEAN_METAPOOL)] = 9238364833184139286;
+        s.internalTokenBalanceTotal[IERC20(C.UNRIPE_BEAN)] = 9001888;
+        s.internalTokenBalanceTotal[IERC20(C.UNRIPE_LP)] = 12672419462;
 
-        // TODO: Proper initialization
+        // TODO: Get exact from future snapshot.
+        // NOTE: Approximate. Sourced from subgraph.
         s.fertilizedPaidIndex = 4_000_000_000_000;
     }
 }

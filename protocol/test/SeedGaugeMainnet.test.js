@@ -28,7 +28,7 @@ testIfRpcSet('SeedGauge Init Test', function () {
           {
             forking: {
               jsonRpcUrl: process.env.FORKING_RPC,
-              blockNumber: 19630488 //a random semi-recent block close to Grown Stalk Per Bdv pre-deployment
+              blockNumber: 19049520 //a random semi-recent block close to Grown Stalk Per Bdv pre-deployment
             },
           },
         ],
