@@ -3,7 +3,15 @@ import { Sunrise } from "../generated/Beanstalk/Beanstalk";
 import { getBeanTokenAddress, loadBean, updateBeanSeason, updateBeanValues } from "./utils/Bean";
 import { loadOrCreatePool, updatePoolPrice, updatePoolSeason, updatePoolValues } from "./utils/Pool";
 import { BeanstalkPrice } from "../generated/Beanstalk/BeanstalkPrice";
-import { BEANSTALK_PRICE, BEAN_3CRV, BEAN_ERC20, BEAN_WETH_CP2_WELL, BEAN_WETH_V1, CURVE_PRICE } from "../../subgraph-core/utils/Constants";
+import {
+  BEANSTALK_PRICE,
+  BEAN_3CRV,
+  BEAN_ERC20,
+  BEAN_ERC20_V1,
+  BEAN_WETH_CP2_WELL,
+  BEAN_WETH_V1,
+  CURVE_PRICE
+} from "../../subgraph-core/utils/Constants";
 import { ZERO_BD, ZERO_BI, toDecimal } from "../../subgraph-core/utils/Decimals";
 import { CurvePrice } from "../generated/Beanstalk/CurvePrice";
 import { checkBeanCross } from "./utils/Cross";
@@ -91,6 +99,9 @@ export function handleSunrise(event: Sunrise): void {
     }
   } else {
     // Pre-Replant
+    let bean = loadBean(BEAN_ERC20_V1.toHexString());
+    let weightedPrice = ZERO_BD;
+    let totalLiquidity = ZERO_BD;
     for (let i = 0; i < bean.pools.length; i++) {
       const pool = loadOrCreatePool(bean.pools[i], event.block.number);
       let price = ZERO_BD;
@@ -120,9 +131,21 @@ export function handleSunrise(event: Sunrise): void {
         deltaB
       );
       updatePoolPrice(BEAN_3CRV.toHexString(), event.block.timestamp, event.block.number, price);
+
+      weightedPrice = weightedPrice.plus(price.times(liquidity));
+      totalLiquidity = totalLiquidity.plus(liquidity);
     }
-    // TODO: Total price
-    // updateBeanValues(BEAN_ERC20.toHexString(), event.block.timestamp, price, ZERO_BI, ZERO_BI, ZERO_BD, ZERO_BD);
-    // checkBeanCross(BEAN_ERC20.toHexString(), event.block.timestamp, event.block.number, oldBeanPrice, toDecimal(curve.value.price));
+
+    const totalPrice = weightedPrice.div(totalLiquidity);
+    updateBeanValues(
+      BEAN_ERC20_V1.toHexString(),
+      event.block.timestamp,
+      totalPrice,
+      ZERO_BI,
+      ZERO_BI,
+      ZERO_BD,
+      totalLiquidity.minus(bean.liquidityUSD)
+    );
+    checkBeanCross(BEAN_ERC20_V1.toHexString(), event.block.timestamp, event.block.number, bean.price, totalPrice);
   }
 }
