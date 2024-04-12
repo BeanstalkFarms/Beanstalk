@@ -10,6 +10,9 @@
   "scripts": {
     "codegen": "graph codegen",
     "build": "graph build",
+    "test": "graph test",
+    "testd": "docker run -it --rm --mount type=bind,source=\"$(pwd)\"/matchstick.yaml.docker,target=/matchstick/matchstick.yaml --mount type=bind,source=\"$(pwd)\"/../../,target=/matchstick/repo-mounted/ matchstick",
+    "testd-named": "./tests/scripts/docker-run-named.sh",
     "deploy": "graph deploy --node https://api.studio.thegraph.com/deploy/ bean",
     "create-local": "graph create --node http://127.0.0.1:8020/ bean",
     "remove-local": "graph remove --node http://127.0.0.1:8020/ bean",

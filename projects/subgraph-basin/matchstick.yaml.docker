@@ -1,0 +1,6 @@
+# This configuration is needed when running the matchstick tests in docker.
+# This is because the root project directory is bind mounted to the container, as the
+# subgraph has some dependencies on other projects in the repo.
+testsFolder: repo-mounted/projects/subgraph-basin/tests
+libsFolder: repo-mounted/node_modules
+manifestPath: repo-mounted/projects/subgraph-basin/subgraph.yaml
