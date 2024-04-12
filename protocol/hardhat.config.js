@@ -147,6 +147,7 @@ task("diamondABI", "Generates ABI file for diamond, includes all ABIs of facets"
       files.push("contracts/libraries/Silo/LibLegacyTokenSilo.sol")
       files.push("contracts/libraries/Silo/LibGerminate.sol")
       files.push("contracts/libraries/Silo/LibWhitelistedTokens.sol")
+      files.push("contracts/libraries/Minting/LibWellMinting.sol")
     }
     files.forEach((file) => {
       const facetName = getFacetName(file);
