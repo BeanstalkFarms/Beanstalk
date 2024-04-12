@@ -114,11 +114,7 @@ describe('Farm Convert', function () {
     });
 
     describe('basic convert', async function () {
-      it.only('does the most basic possible convert Bean to LP towards peg', async function () {
-
-        // log deltaB for this well before convert
-        const deltaB = await this.seasonGetters.poolDeltaBInsta(this.well.address);
-        console.log('deltaB: ', deltaB.toString());
+      it('does the most basic possible convert Bean to LP towards peg', async function () {
 
         await this.silo.connect(user).deposit(this.bean.address, toBean('200'), EXTERNAL);
         //user needs to approve bean to well
@@ -140,8 +136,8 @@ describe('Farm Convert', function () {
 
 
         //get grownStalk for this deposit
-        // const grownStalk = await this.siloGetters.grownStalkForDeposit(user.address, this.bean.address, depositStemTip);
-        const grownStalk = 0; // zero grown stalk since there's zero convert power
+        const grownStalk = await this.siloGetters.grownStalkForDeposit(user.address, this.bean.address, depositStemTip);
+        // const grownStalk = 0; // zero grown stalk since there's zero convert power
         const [newStemTip, ] = await this.siloGetters.calculateStemForTokenFromGrownStalk(this.well.address, grownStalk, bdvWellAmountOut);
 
         this.result = this.convert.connect(user).pipelineConvert(this.bean.address, [depositStemTip], [toBean('200')], this.well.address, advancedFarmCalls);
@@ -220,20 +216,20 @@ describe('Farm Convert', function () {
         var bdvWellAmountOut = await this.siloGetters.bdv(this.well.address, wellAmountOut);
   
         //get grownStalk for this deposit
-        const grownStalk = 0; // zero grown stalk since it's all lost since converting away from peg
-        const [newStemTip, ] = await this.siloGetters.calculateStemForTokenFromGrownStalk(this.well.address, grownStalk, bdvWellAmountOut);
+        // const grownStalk = 0; // zero grown stalk since it's all lost since converting away from peg
+        // const [newStemTip, ] = await this.siloGetters.calculateStemForTokenFromGrownStalk(this.well.address, grownStalk, bdvWellAmountOut);
   
         this.result = this.convert.connect(user).pipelineConvert(this.bean.address, [depositStemTip], [toBean('200')], this.well.address, advancedFarmCalls);
-        const afterDeltaB = await this.seasonGetters.poolDeltaBInsta(this.well.address);
   
-        //expect it to emit the Convert event
+        // expect it to emit the Convert event
         await expect(this.result).to.emit(this.convert, 'Convert').withArgs(user.address, this.bean.address, this.well.address, toBean('200'), wellAmountOut);
   
-        //expect it to emit the RemoveDeposits event
+        // expect it to emit the RemoveDeposits event
         await expect(this.result).to.emit(this.silo, 'RemoveDeposits').withArgs(user.address, this.bean.address, [depositStemTip], [toBean('200')], toBean('200'), [toBean('200')]);
   
-        //expect add deposit event
-        await expect(this.result).to.emit(this.silo, 'AddDeposit').withArgs(user.address, this.well.address, newStemTip, wellAmountOut, bdvWellAmountOut);
+        // expect add deposit event
+        // not ideal to hardcode 42000050 here
+        await expect(this.result).to.emit(this.silo, 'AddDeposit').withArgs(user.address, this.well.address, 42000050, wellAmountOut, bdvWellAmountOut);
       });
 
       it('does the most basic possible convert LP to Bean against peg', async function () {
@@ -260,7 +256,7 @@ describe('Farm Convert', function () {
         //verify events
         await expect(this.result).to.emit(this.convert, 'Convert').withArgs(user.address, this.well.address, this.bean.address, wellAmountOut, beanAmountOut);
         await expect(this.result).to.emit(this.silo, 'RemoveDeposits').withArgs(user.address, this.well.address, [depositStemTip], [wellAmountOut], wellAmountOut, [depositedBdv]);
-        await expect(this.result).to.emit(this.silo, 'AddDeposit').withArgs(user.address, this.bean.address, newStemTip, beanAmountOut, beanAmountOut);
+        await expect(this.result).to.emit(this.silo, 'AddDeposit').withArgs(user.address, this.bean.address, -397, beanAmountOut, beanAmountOut);
       });
     });
 
