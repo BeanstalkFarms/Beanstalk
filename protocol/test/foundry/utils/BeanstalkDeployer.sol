@@ -19,11 +19,6 @@ import {MockConvertFacet, ConvertFacet} from "contracts/mocks/mockFacets/MockCon
 import {MockSeasonFacet, SeasonFacet} from "contracts/mocks/mockFacets/MockSeasonFacet.sol";
 import {SeasonGettersFacet} from "contracts/beanstalk/sun/SeasonFacet/SeasonGettersFacet.sol";
 
-// TODO remove ///
-import {GaugePointFacet} from "contracts/beanstalk/sun/GaugePointFacet.sol";
-import {LiquidityWeightFacet} from "contracts/beanstalk/sun/LiquidityWeightFacet.sol";
-import {MockFundraiserFacet} from "contracts/mocks/mockFacets/MockFundraiserFacet.sol";
-
 /**
  * @title TestHelper
  * @author Brean
@@ -70,9 +65,9 @@ contract BeanstalkDeployer is Utils {
         facetNames[i++] = "TokenFacet";
         deployedFacetAddresses[i] = address(deployCode("TokenSupportFacet.sol"));
         facetNames[i++] = "TokenSupportFacet";
-        deployedFacetAddresses[i] = address(new GaugePointFacet());
+        deployedFacetAddresses[i] = address(deployCode("GaugePointFacet.sol"));
         facetNames[i++] = "GaugePointFacet";
-        deployedFacetAddresses[i] = address(new LiquidityWeightFacet());
+        deployedFacetAddresses[i] = address(deployCode("LiquidityWeightFacet.sol"));
         facetNames[i++] = "LiquidityWeightFacet";
         deployedFacetAddresses[i] = address(deployCode("SiloGettersFacet.sol"));
         facetNames[i++] = "SiloGettersFacet";
@@ -91,7 +86,7 @@ contract BeanstalkDeployer is Utils {
             facetNames[i++] = "MockFertilizerFacet";
             deployedFacetAddresses[i] = address(deployCode("MockFieldFacet.sol"));
             facetNames[i++] = "MockFieldFacet";
-            deployedFacetAddresses[i] = address(new MockFundraiserFacet());
+            deployedFacetAddresses[i] = address(deployCode("MockFundraiserFacet.sol"));
             facetNames[i++] = "MockFundraiserFacet";
             deployedFacetAddresses[i] = address(deployCode("MockMarketplaceFacet.sol"));
             facetNames[i++] = "MockMarketplaceFacet";
