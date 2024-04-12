@@ -10,13 +10,14 @@ import {LibWell} from "contracts/libraries/Well/LibWell.sol";
 import {LibGauge} from "contracts/libraries/LibGauge.sol";
 import {LibWhitelistedTokens} from "contracts/libraries/Silo/LibWhitelistedTokens.sol";
 import {LibGerminate} from "contracts/libraries/Silo/LibGerminate.sol";
+import {Invariable} from "contracts/beanstalk/Invariable.sol";
 
 /**
  * @title SeasonFacet
  * @author Publius, Chaikitty, Brean
  * @notice Holds the Sunrise function and handles all logic for Season changes.
  */
-contract SeasonFacet is Weather {
+contract SeasonFacet is Invariable, Weather {
     using SafeMath for uint256;
 
     /**
@@ -31,7 +32,7 @@ contract SeasonFacet is Weather {
      * @notice Advances Beanstalk to the next Season, sending reward Beans to the caller's circulating balance.
      * @return reward The number of beans minted to the caller.
      */
-    function sunrise() external payable returns (uint256) {
+    function sunrise() external payable fundsSafu returns (uint256) {
         return gm(msg.sender, LibTransfer.To.EXTERNAL);
     }
 
@@ -41,7 +42,7 @@ contract SeasonFacet is Weather {
      * @param mode Indicates whether the reward beans are sent to internal or circulating balance
      * @return reward The number of Beans minted to the caller.
      */
-    function gm(address account, LibTransfer.To mode) public payable returns (uint256) {
+    function gm(address account, LibTransfer.To mode) public payable fundsSafu returns (uint256) {
         uint256 initialGasLeft = gasleft();
 
         require(!s.paused, "Season: Paused.");

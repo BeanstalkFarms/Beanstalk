@@ -16,14 +16,13 @@ import {SafeCast} from "@openzeppelin/contracts/utils/SafeCast.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {LibConvert} from "contracts/libraries/Convert/LibConvert.sol";
 import {LibGerminate} from "contracts/libraries/Silo/LibGerminate.sol";
-
-
+import {Invariable} from "contracts/beanstalk/Invariable.sol";
 
 /**
  * @author Publius, Brean, DeadManWalking
  * @title ConvertFacet handles converting Deposited assets within the Silo.
  **/
-contract ConvertFacet is ReentrancyGuard {
+contract ConvertFacet is Invariable, ReentrancyGuard {
     using SafeMath for uint256;
     using SafeCast for uint256;
     using LibSafeMath32 for uint32;
@@ -74,6 +73,7 @@ contract ConvertFacet is ReentrancyGuard {
     )
         external
         payable
+        fundsSafu
         nonReentrant
         returns (int96 toStem, uint256 fromAmount, uint256 toAmount, uint256 fromBdv, uint256 toBdv)
     {

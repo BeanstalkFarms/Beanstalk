@@ -18,13 +18,14 @@ import {C} from "contracts/C.sol";
 import {LibDiamond} from "contracts/libraries/LibDiamond.sol";
 import {IWell} from "contracts/interfaces/basin/IWell.sol";
 import {LibBarnRaise} from "contracts/libraries/LibBarnRaise.sol";
+import {Invariable} from "contracts/beanstalk/Invariable.sol";
 
 /**
  * @author Publius
  * @title FertilizerFacet handles Minting Fertilizer and Rinsing Sprouts earned from Fertilizer.
  **/
 
-contract FertilizerFacet {
+contract FertilizerFacet is Invariable {
     using SafeMath for uint256;
     using SafeCast for uint256;
     using LibSafeMath128 for uint128;
@@ -49,6 +50,7 @@ contract FertilizerFacet {
     function claimFertilized(uint256[] calldata ids, LibTransfer.To mode)
         external
         payable
+        fundsSafu
     {
         uint256 amount = C.fertilizer().beanstalkUpdate(msg.sender, ids, s.bpf);
         s.fertilizedPaidIndex += amount;
@@ -66,7 +68,7 @@ contract FertilizerFacet {
         uint256 tokenAmountIn,
         uint256 minFertilizerOut,
         uint256 minLPTokensOut
-    ) external payable returns (uint256 fertilizerAmountOut) {
+    ) external payable fundsSafu returns (uint256 fertilizerAmountOut) {
         fertilizerAmountOut = _getMintFertilizerOut(tokenAmountIn, LibBarnRaise.getBarnRaiseToken());
 
         require(fertilizerAmountOut >= minFertilizerOut, "Fertilizer: Not enough bought.");
@@ -87,7 +89,7 @@ contract FertilizerFacet {
     /**
      * @dev Callback from Fertilizer contract in `claimFertilized` function.
      */
-    function payFertilizer(address account, uint256 amount) external payable {
+    function payFertilizer(address account, uint256 amount) external payable fundsSafu {
         require(msg.sender == C.fertilizerAddress());
         s.fertilizedPaidIndex += amount;
         LibTransfer.sendToken(
@@ -208,11 +210,7 @@ contract FertilizerFacet {
         return C.fertilizer().lastBalanceOfBatch(accounts, ids);
     }
 
-    function getFertilizers()
-        external
-        view
-        returns (Supply[] memory fertilizers)
-    {
+    function getFertilizers() external view returns (Supply[] memory fertilizers) {
         uint256 numFerts = 0;
         uint128 idx = s.fFirst;
         while (idx > 0) {
@@ -249,7 +247,7 @@ contract FertilizerFacet {
      * with the non-Bean token in `well`.
      *
      */
-    function beginBarnRaiseMigration(address well) external {
+    function beginBarnRaiseMigration(address well) external fundsSafu {
         LibDiamond.enforceIsOwnerOrContract();
         LibFertilizer.beginBarnRaiseMigration(well);
     }

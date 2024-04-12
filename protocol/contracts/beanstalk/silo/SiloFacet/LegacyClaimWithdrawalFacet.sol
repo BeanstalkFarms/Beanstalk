@@ -8,7 +8,7 @@ pragma experimental ABIEncoderV2;
 import "contracts/beanstalk/ReentrancyGuard.sol";
 import "contracts/libraries/Token/LibTransfer.sol";
 import "contracts/libraries/Silo/LibLegacyTokenSilo.sol";
-
+import {Invariable} from "contracts/beanstalk/Invariable.sol";
 
 /**
  * @author pizzaman1337, Publius
@@ -20,8 +20,7 @@ import "contracts/libraries/Silo/LibLegacyTokenSilo.sol";
  * functionality has been perserved by this facet to allow pre-existing
  * unclaimed Withdrawals to still be claimed.
  **/
-contract LegacyClaimWithdrawalFacet is ReentrancyGuard {
-
+contract LegacyClaimWithdrawalFacet is Invariable, ReentrancyGuard {
     /*
      * Claim
      */
@@ -36,7 +35,7 @@ contract LegacyClaimWithdrawalFacet is ReentrancyGuard {
         address token,
         uint32 season,
         LibTransfer.To mode
-    ) external payable nonReentrant {
+    ) external payable fundsSafu nonReentrant {
         uint256 amount = LibLegacyTokenSilo._claimWithdrawal(msg.sender, token, season);
         LibTransfer.sendToken(IERC20(token), amount, msg.sender, mode);
     }
@@ -51,7 +50,7 @@ contract LegacyClaimWithdrawalFacet is ReentrancyGuard {
         address token,
         uint32[] calldata seasons,
         LibTransfer.To mode
-    ) external payable nonReentrant {
+    ) external payable fundsSafu nonReentrant {
         uint256 amount = LibLegacyTokenSilo._claimWithdrawals(msg.sender, token, seasons);
         LibTransfer.sendToken(IERC20(token), amount, msg.sender, mode);
     }

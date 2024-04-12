@@ -13,12 +13,13 @@ import "contracts/libraries/Token/LibTokenPermit.sol";
 import "contracts/libraries/Token/LibTokenApprove.sol";
 import "../AppStorage.sol";
 import "../ReentrancyGuard.sol";
+import {Invariable} from "contracts/beanstalk/Invariable.sol";
 
 /**
  * @author Publius
  * @title TokenFacet handles transfers of assets
  */
-contract TokenFacet is IERC1155Receiver, ReentrancyGuard {
+contract TokenFacet is Invariable, IERC1155Receiver, ReentrancyGuard {
     struct Balance {
         uint256 internalBalance;
         uint256 externalBalance;
@@ -59,15 +60,8 @@ contract TokenFacet is IERC1155Receiver, ReentrancyGuard {
         uint256 amount,
         LibTransfer.From fromMode,
         LibTransfer.To toMode
-    ) external payable {
-        LibTransfer.transferToken(
-            token,
-            msg.sender,
-            recipient,
-            amount,
-            fromMode,
-            toMode
-        );
+    ) external payable fundsSafu {
+        LibTransfer.transferToken(token, msg.sender, recipient, amount, fromMode, toMode);
     }
 
     /**
@@ -80,7 +74,7 @@ contract TokenFacet is IERC1155Receiver, ReentrancyGuard {
         address recipient,
         uint256 amount,
         LibTransfer.To toMode
-    ) external payable nonReentrant {
+    ) external payable fundsSafu nonReentrant {
         LibTransfer.transferToken(
             token,
             sender,
@@ -105,7 +99,7 @@ contract TokenFacet is IERC1155Receiver, ReentrancyGuard {
         address spender,
         IERC20 token,
         uint256 amount
-    ) external payable nonReentrant {
+    ) external payable fundsSafu nonReentrant {
         LibTokenApprove.approve(msg.sender, spender, token, amount);
     }
 
@@ -116,7 +110,7 @@ contract TokenFacet is IERC1155Receiver, ReentrancyGuard {
         address spender,
         IERC20 token,
         uint256 addedValue
-    ) public virtual nonReentrant returns (bool) {
+    ) public virtual fundsSafu nonReentrant returns (bool) {
         LibTokenApprove.approve(
             msg.sender,
             spender,
@@ -134,22 +128,10 @@ contract TokenFacet is IERC1155Receiver, ReentrancyGuard {
         address spender,
         IERC20 token,
         uint256 subtractedValue
-    ) public virtual nonReentrant returns (bool) {
-        uint256 currentAllowance = LibTokenApprove.allowance(
-            msg.sender,
-            spender,
-            token
-        );
-        require(
-            currentAllowance >= subtractedValue,
-            "Silo: decreased allowance below zero"
-        );
-        LibTokenApprove.approve(
-            msg.sender,
-            spender,
-            token,
-            currentAllowance.sub(subtractedValue)
-        );
+    ) public virtual fundsSafu nonReentrant returns (bool) {
+        uint256 currentAllowance = LibTokenApprove.allowance(msg.sender, spender, token);
+        require(currentAllowance >= subtractedValue, "Silo: decreased allowance below zero");
+        LibTokenApprove.approve(msg.sender, spender, token, currentAllowance.sub(subtractedValue));
         return true;
     }
 
@@ -178,7 +160,7 @@ contract TokenFacet is IERC1155Receiver, ReentrancyGuard {
         uint8 v,
         bytes32 r,
         bytes32 s
-    ) external payable nonReentrant {
+    ) external payable fundsSafu nonReentrant {
         LibTokenPermit.permit(owner, spender, token, value, deadline, v, r, s);
         LibTokenApprove.approve(owner, spender, IERC20(token), value);
     }
@@ -242,7 +224,7 @@ contract TokenFacet is IERC1155Receiver, ReentrancyGuard {
     /**
      * @notice wraps ETH into WETH.
      */
-    function wrapEth(uint256 amount, LibTransfer.To mode) external payable {
+    function wrapEth(uint256 amount, LibTransfer.To mode) external payable fundsSafu {
         LibWeth.wrap(amount, mode);
         LibEth.refundEth();
     }
@@ -250,7 +232,7 @@ contract TokenFacet is IERC1155Receiver, ReentrancyGuard {
     /**
      * @notice unwraps WETH into ETH.
      */
-    function unwrapEth(uint256 amount, LibTransfer.From mode) external payable {
+    function unwrapEth(uint256 amount, LibTransfer.From mode) external payable fundsSafu {
         LibWeth.unwrap(amount, mode);
     }
 

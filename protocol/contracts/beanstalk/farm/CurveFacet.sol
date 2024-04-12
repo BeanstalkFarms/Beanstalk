@@ -11,12 +11,13 @@ import "contracts/interfaces/ICurve.sol";
 import "contracts/libraries/Token/LibTransfer.sol";
 import "contracts/libraries/Token/LibApprove.sol";
 import "contracts/beanstalk/ReentrancyGuard.sol";
+import {Invariable} from "contracts/beanstalk/Invariable.sol";
 
 /**
  * @author Publius
  * @title Curve handles swapping and
  **/
-contract CurveFacet is ReentrancyGuard {
+contract CurveFacet is Invariable, ReentrancyGuard {
     address private constant STABLE_REGISTRY = 0xB9fC157394Af804a3578134A6585C0dc9cc990d4;
     address private constant CURVE_REGISTRY = 0x90E00ACe148ca3b23Ac1bC8C240C2a7Dd9c2d7f5;
     address private constant CRYPTO_REGISTRY = 0x8F942C20D02bEfc377D41445793068908E2250D0;
@@ -39,13 +40,9 @@ contract CurveFacet is ReentrancyGuard {
         uint256 minAmountOut,
         LibTransfer.From fromMode,
         LibTransfer.To toMode
-    ) external payable nonReentrant {
+    ) external payable fundsSafu nonReentrant {
         (int128 i, int128 j) = getIandJ(fromToken, toToken, pool, registry);
-        amountIn = IERC20(fromToken).receiveToken(
-            amountIn,
-            msg.sender,
-            fromMode
-        );
+        amountIn = IERC20(fromToken).receiveToken(amountIn, msg.sender, fromMode);
         IERC20(fromToken).approveToken(pool, amountIn);
 
         if (toMode == LibTransfer.To.EXTERNAL && isStable(registry)) {
@@ -73,7 +70,7 @@ contract CurveFacet is ReentrancyGuard {
         uint256 minAmountOut,
         LibTransfer.From fromMode,
         LibTransfer.To toMode
-    ) external payable nonReentrant {
+    ) external payable fundsSafu nonReentrant {
         (int128 i, int128 j) = getUnderlyingIandJ(fromToken, toToken, pool);
         amountIn = IERC20(fromToken).receiveToken(amountIn, msg.sender, fromMode);
         IERC20(fromToken).approveToken(pool, amountIn);
@@ -104,16 +101,12 @@ contract CurveFacet is ReentrancyGuard {
         uint256 minAmountOut,
         LibTransfer.From fromMode,
         LibTransfer.To toMode
-    ) external payable nonReentrant {
+    ) external payable fundsSafu nonReentrant {
         address[8] memory coins = getCoins(pool, registry);
         uint256 nCoins = amounts.length;
         for (uint256 i; i < nCoins; ++i) {
             if (amounts[i] > 0) {
-                amounts[i] = IERC20(coins[i]).receiveToken(
-                    amounts[i],
-                    msg.sender,
-                    fromMode
-                );
+                amounts[i] = IERC20(coins[i]).receiveToken(amounts[i], msg.sender, fromMode);
                 IERC20(coins[i]).approveToken(pool, amounts[i]);
             }
         }
@@ -163,7 +156,7 @@ contract CurveFacet is ReentrancyGuard {
         uint256[] calldata minAmountsOut,
         LibTransfer.From fromMode,
         LibTransfer.To toMode
-    ) external payable nonReentrant {
+    ) external payable fundsSafu nonReentrant {
         IERC20 token = tokenForPool(pool);
         amountIn = token.receiveToken(amountIn, msg.sender, fromMode);
 
@@ -224,23 +217,20 @@ contract CurveFacet is ReentrancyGuard {
             address[8] memory coins = getCoins(pool, registry);
             for (uint256 i; i < nCoins; ++i) {
                 if (amounts[i] > 0) {
-                    msg.sender.increaseInternalBalance(
-                        IERC20(coins[i]),
-                        amounts[i]
-                    );
+                    msg.sender.increaseInternalBalance(IERC20(coins[i]), amounts[i]);
                 }
             }
         }
     }
 
-function removeLiquidityImbalance(
-    address pool,
-    address registry,
-    uint256[] calldata amountsOut,
-    uint256 maxAmountIn,
-    LibTransfer.From fromMode,
-    LibTransfer.To toMode
-) external payable nonReentrant {
+    function removeLiquidityImbalance(
+        address pool,
+        address registry,
+        uint256[] calldata amountsOut,
+        uint256 maxAmountIn,
+        LibTransfer.From fromMode,
+        LibTransfer.To toMode
+    ) external payable fundsSafu nonReentrant {
         IERC20 token = tokenForPool(pool);
         maxAmountIn = token.receiveToken(maxAmountIn, msg.sender, fromMode);
         uint256 nCoins = amountsOut.length;
@@ -311,7 +301,7 @@ function removeLiquidityImbalance(
         uint256 minAmountOut,
         LibTransfer.From fromMode,
         LibTransfer.To toMode
-    ) external payable nonReentrant {
+    ) external payable fundsSafu nonReentrant {
         IERC20 fromToken = tokenForPool(pool);
         amountIn = fromToken.receiveToken(amountIn, msg.sender, fromMode);
         int128 i = getI(toToken, pool, registry);

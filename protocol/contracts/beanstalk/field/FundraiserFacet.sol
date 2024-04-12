@@ -13,13 +13,14 @@ import "contracts/libraries/LibDiamond.sol";
 import "contracts/libraries/LibDibbler.sol";
 import "contracts/libraries/Token/LibTransfer.sol";
 import {C} from "contracts/C.sol";
+import {Invariable} from "contracts/beanstalk/Invariable.sol";
 
 /**
  * @title Fundraiser Facet
  * @author Publius
  * @notice Handles the creation, funding, and completion of a Fundraiser.
  */
-contract FundraiserFacet is ReentrancyGuard {
+contract FundraiserFacet is Invariable, ReentrancyGuard {
     using SafeMath for uint256;
     using SafeERC20 for IERC20;
 
@@ -67,7 +68,7 @@ contract FundraiserFacet is ReentrancyGuard {
         address payee,
         address token,
         uint256 amount
-    ) external payable {
+    ) external payable fundsSafu {
         LibDiamond.enforceIsOwnerOrContract();
 
         // The {FundraiserFacet} was initially created to support USDC, which has the
@@ -105,9 +106,9 @@ contract FundraiserFacet is ReentrancyGuard {
         uint32 id,
         uint256 amount,
         LibTransfer.From mode
-    ) external payable nonReentrant returns (uint256) {
+    ) external payable fundsSafu nonReentrant returns (uint256) {
         uint256 remaining = s.fundraisers[id].remaining;
-        
+
         // Check amount remaining and constrain
         require(remaining > 0, "Fundraiser: completed");
         if (amount > remaining) {

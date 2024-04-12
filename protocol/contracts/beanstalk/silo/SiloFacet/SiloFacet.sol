@@ -8,7 +8,7 @@ pragma abicoder v2;
 import "./TokenSilo.sol";
 import "contracts/libraries/Token/LibTransfer.sol";
 import "contracts/libraries/Silo/LibSiloPermit.sol";
-
+import {Invariable} from "contracts/beanstalk/Invariable.sol";
 
 /**
  * @title SiloFacet
@@ -24,8 +24,7 @@ import "contracts/libraries/Silo/LibSiloPermit.sol";
  *
  * 
  */
-contract SiloFacet is TokenSilo {
-
+contract SiloFacet is Invariable, TokenSilo {
     using SafeMath for uint256;
     using LibSafeMath32 for uint32;
 
@@ -52,9 +51,10 @@ contract SiloFacet is TokenSilo {
         LibTransfer.From mode
     ) 
         external
-        payable 
-        nonReentrant 
-        mowSender(token) 
+        payable
+        fundsSafu
+        nonReentrant
+        mowSender(token)
         returns (uint256 amount, uint256 _bdv, int96 stem)
     {
         amount = LibTransfer.receiveToken(
@@ -93,7 +93,7 @@ contract SiloFacet is TokenSilo {
         int96 stem,
         uint256 amount,
         LibTransfer.To mode
-    ) external payable mowSender(token) nonReentrant {
+    ) external payable fundsSafu mowSender(token) nonReentrant {
         _withdrawDeposit(msg.sender, token, stem, amount);
         LibTransfer.sendToken(IERC20(token), amount, msg.sender, mode);
     }
@@ -117,7 +117,7 @@ contract SiloFacet is TokenSilo {
         int96[] calldata stems,
         uint256[] calldata amounts,
         LibTransfer.To mode
-    ) external payable mowSender(token) nonReentrant {
+    ) external payable fundsSafu mowSender(token) nonReentrant {
         uint256 amount = _withdrawDeposits(msg.sender, token, stems, amounts);
         LibTransfer.sendToken(IERC20(token), amount, msg.sender, mode);
     }
@@ -146,7 +146,7 @@ contract SiloFacet is TokenSilo {
         address token,
         int96 stem,
         uint256 amount
-    ) public payable nonReentrant returns (uint256 _bdv) {
+    ) public payable fundsSafu nonReentrant returns (uint256 _bdv) {
         if (sender != msg.sender) {
             LibSiloPermit._spendDepositAllowance(sender, msg.sender, token, amount);
         }
@@ -178,7 +178,7 @@ contract SiloFacet is TokenSilo {
         address token,
         int96[] calldata stem,
         uint256[] calldata amounts
-    ) public payable nonReentrant returns (uint256[] memory bdvs) {
+    ) public payable fundsSafu nonReentrant returns (uint256[] memory bdvs) {
         require(amounts.length > 0, "Silo: amounts array is empty");
         uint256 totalAmount;
         for (uint256 i = 0; i < amounts.length; ++i) {
@@ -215,7 +215,7 @@ contract SiloFacet is TokenSilo {
         uint256 depositId, 
         uint256 amount,
         bytes calldata
-    ) external {
+    ) external fundsSafu {
         require(recipient != address(0), "ERC1155: transfer to the zero address");
         // allowance requirements are checked in transferDeposit
         (address token, int96 cumulativeGrownStalkPerBDV) = 
@@ -246,8 +246,11 @@ contract SiloFacet is TokenSilo {
         uint256[] calldata depositIds, 
         uint256[] calldata amounts, 
         bytes calldata
-    ) external {
-        require(depositIds.length == amounts.length, "Silo: depositIDs and amounts arrays must be the same length");
+    ) external fundsSafu {
+        require(
+            depositIds.length == amounts.length,
+            "Silo: depositIDs and amounts arrays must be the same length"
+        );
         require(recipient != address(0), "ERC1155: transfer to the zero address");
         // allowance requirements are checked in transferDeposit
         address token;
@@ -271,42 +274,40 @@ contract SiloFacet is TokenSilo {
      * @notice Claim Grown Stalk for `account`.
      * @dev See {Silo-_mow}.
      */
-    function mow(address account, address token) external payable {
+    function mow(address account, address token) external payable fundsSafu {
         LibSilo._mow(account, token);
     }
 
     //function to mow multiple tokens given an address
-    function mowMultiple(address account, address[] calldata tokens) external payable {
+    function mowMultiple(address account, address[] calldata tokens) external payable fundsSafu {
         for (uint256 i; i < tokens.length; ++i) {
             LibSilo._mow(account, tokens[i]);
         }
     }
 
-
-    /** 
+    /**
      * @notice Claim Earned Beans and their associated Stalk and Plantable Seeds for
      * `msg.sender`.
      *
      * The Stalk associated with Earned Beans is commonly called "Earned Stalk".
      * Earned Stalk DOES contribute towards the Farmer's Stalk when earned beans is issued.
-     * 
+     *
      * The Seeds associated with Earned Beans are commonly called "Plantable
-     * Seeds". The word "Plantable" is used to highlight that these Seeds aren't 
+     * Seeds". The word "Plantable" is used to highlight that these Seeds aren't
      * yet earning the Farmer new Stalk. In other words, Seeds do NOT automatically
      * compound; they must first be Planted with {plant}.
-     * 
-     * In practice, when Seeds are Planted, all Earned Beans are Deposited in 
+     *
+     * In practice, when Seeds are Planted, all Earned Beans are Deposited in
      * the current Season.
      */
-    function plant() external payable returns (uint256 beans, int96 stem) {
+    function plant() external payable fundsSafu returns (uint256 beans, int96 stem) {
         return _plant(msg.sender);
     }
 
-    /** 
+    /**
      * @notice Claim rewards from a Flood (Was Season of Plenty)
      */
-    function claimPlenty() external payable {
+    function claimPlenty() external payable fundsSafu {
         _claimPlenty(msg.sender);
     }
-
 }

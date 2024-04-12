@@ -15,12 +15,13 @@ import "./SiloFacet/TokenSilo.sol";
 import "contracts/libraries/LibSafeMath32.sol";
 import "contracts/libraries/Convert/LibConvert.sol";
 import "../ReentrancyGuard.sol";
+import {Invariable} from "contracts/beanstalk/Invariable.sol";
 
 /**
  * @author publius, pizzaman1337
  * @title Handles Approval related functions for the Silo
  **/
-contract ApprovalFacet is ReentrancyGuard {
+contract ApprovalFacet is Invariable, ReentrancyGuard {
     using SafeMath for uint256;
 
     event DepositApproval(
@@ -47,15 +48,15 @@ contract ApprovalFacet is ReentrancyGuard {
         address spender,
         address token,
         uint256 amount
-    ) external payable nonReentrant {
+    ) external payable fundsSafu nonReentrant {
         require(spender != address(0), "approve from the zero address");
         require(token != address(0), "approve to the zero address");
         LibSiloPermit._approveDeposit(msg.sender, spender, token, amount);
     }
 
-    /** 
+    /**
      * @notice Increase the Transfer allowance for `spender`.
-     * 
+     *
      * @dev Gas optimization: We neglect to check whether `token` is actually
      * whitelisted. If a token is not whitelisted, it cannot be Deposited,
      * therefore it cannot be Transferred.
@@ -64,7 +65,7 @@ contract ApprovalFacet is ReentrancyGuard {
         address spender,
         address token,
         uint256 addedValue
-    ) public virtual nonReentrant returns (bool) {
+    ) public virtual fundsSafu nonReentrant returns (bool) {
         LibSiloPermit._approveDeposit(
             msg.sender,
             spender,
@@ -85,7 +86,7 @@ contract ApprovalFacet is ReentrancyGuard {
         address spender,
         address token,
         uint256 subtractedValue
-    ) public virtual nonReentrant returns (bool) {
+    ) public virtual fundsSafu nonReentrant returns (bool) {
         uint256 currentAllowance = depositAllowance(msg.sender, spender, token);
         require(currentAllowance >= subtractedValue, "Silo: decreased allowance below zero");
         LibSiloPermit._approveDeposit(msg.sender, spender, token, currentAllowance.sub(subtractedValue));
@@ -121,7 +122,7 @@ contract ApprovalFacet is ReentrancyGuard {
         uint8 v,
         bytes32 r,
         bytes32 s
-    ) external payable nonReentrant {
+    ) external payable fundsSafu nonReentrant {
         LibSiloPermit.permits(owner, spender, tokens, values, deadline, v, r, s);
         for (uint256 i; i < tokens.length; ++i) {
             LibSiloPermit._approveDeposit(owner, spender, tokens[i], values[i]);
@@ -149,14 +150,14 @@ contract ApprovalFacet is ReentrancyGuard {
         uint8 v,
         bytes32 r,
         bytes32 s
-    ) external payable nonReentrant {
+    ) external payable fundsSafu nonReentrant {
         LibSiloPermit.permit(owner, spender, token, value, deadline, v, r, s);
         LibSiloPermit._approveDeposit(owner, spender, token, value);
     }
 
-    /** 
+    /**
      * @notice Returns the current nonce for Deposit permits.
-     */ 
+     */
     function depositPermitNonces(address owner) public view virtual returns (uint256) {
         return LibSiloPermit.nonces(owner);
     }
@@ -184,10 +185,7 @@ contract ApprovalFacet is ReentrancyGuard {
     }
 
     // ERC1155 Approvals
-    function setApprovalForAll(
-        address spender, 
-        bool approved
-    ) external {
+    function setApprovalForAll(address spender, bool approved) external fundsSafu {
         s.a[msg.sender].isApprovedForAll[spender] = approved;
         emit ApprovalForAll(msg.sender, spender, approved);
     }

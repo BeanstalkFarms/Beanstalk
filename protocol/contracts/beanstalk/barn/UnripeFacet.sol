@@ -19,6 +19,7 @@ import {ReentrancyGuard} from "contracts/beanstalk/ReentrancyGuard.sol";
 import {LibLockedUnderlying} from "contracts/libraries/LibLockedUnderlying.sol";
 import {LibChop} from "contracts/libraries/LibChop.sol";
 import {LibBarnRaise} from "contracts/libraries/LibBarnRaise.sol";
+import {Invariable} from "contracts/beanstalk/Invariable.sol";
 
 /**
  * @title UnripeFacet
@@ -27,7 +28,7 @@ import {LibBarnRaise} from "contracts/libraries/LibBarnRaise.sol";
  * managing Unripe Tokens. Also, contains view functions to fetch Unripe Token data.
  */
 
-contract UnripeFacet is ReentrancyGuard {
+contract UnripeFacet is Invariable, ReentrancyGuard {
     using SafeERC20 for IERC20;
     using LibTransfer for IERC20;
     using SafeMath for uint256;
@@ -81,7 +82,7 @@ contract UnripeFacet is ReentrancyGuard {
         uint256 amount,
         LibTransfer.From fromMode,
         LibTransfer.To toMode
-    ) external payable nonReentrant returns (uint256) {
+    ) external payable fundsSafu nonReentrant returns (uint256) {
         // burn the token from the msg.sender address
         uint256 supply = IBean(unripeToken).totalSupply();
         amount = LibTransfer.burnToken(IBean(unripeToken), amount, msg.sender, fromMode);
@@ -112,7 +113,7 @@ contract UnripeFacet is ReentrancyGuard {
         uint256 amount,
         bytes32[] memory proof,
         LibTransfer.To mode
-    ) external payable nonReentrant {
+    ) external payable fundsSafu nonReentrant {
         bytes32 root = s.u[token].merkleRoot;
         require(root != bytes32(0), "UnripeClaim: invalid token");
         require(!picked(msg.sender, token), "UnripeClaim: already picked");
@@ -292,7 +293,7 @@ contract UnripeFacet is ReentrancyGuard {
         address unripeToken,
         address underlyingToken,
         bytes32 root
-    ) external payable nonReentrant {
+    ) external payable fundsSafu nonReentrant {
         LibDiamond.enforceIsOwnerOrContract();
         s.u[unripeToken].underlyingToken = underlyingToken;
         s.u[unripeToken].merkleRoot = root;
@@ -324,7 +325,7 @@ contract UnripeFacet is ReentrancyGuard {
     function addMigratedUnderlying(
         address unripeToken,
         uint256 amount
-    ) external payable nonReentrant {
+    ) external payable fundsSafu nonReentrant {
         LibDiamond.enforceIsContractOwner();
         IERC20(s.u[unripeToken].underlyingToken).safeTransferFrom(
             msg.sender,
@@ -343,7 +344,7 @@ contract UnripeFacet is ReentrancyGuard {
     function switchUnderlyingToken(
         address unripeToken,
         address newUnderlyingToken
-    ) external payable {
+    ) external payable fundsSafu {
         LibDiamond.enforceIsContractOwner();
         require(s.u[unripeToken].balanceOfUnderlying == 0, "Unripe: Underlying balance > 0");
         LibUnripe.switchUnderlyingToken(unripeToken, newUnderlyingToken);

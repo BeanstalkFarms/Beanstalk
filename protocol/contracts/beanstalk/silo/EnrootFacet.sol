@@ -10,13 +10,13 @@ import "contracts/libraries/Silo/LibTokenSilo.sol";
 import "./SiloFacet/Silo.sol";
 import "contracts/libraries/LibSafeMath32.sol";
 import "../ReentrancyGuard.sol";
-
+import {Invariable} from "contracts/beanstalk/Invariable.sol";
 
 /**
  * @author Publius
  * @title Enroot Facet handles enrooting Update Deposits
  **/
-contract EnrootFacet is ReentrancyGuard {
+contract EnrootFacet is Invariable, ReentrancyGuard {
     using SafeMath for uint256;
     using SafeCast for uint256;
 
@@ -77,7 +77,7 @@ contract EnrootFacet is ReentrancyGuard {
         address token,
         int96 stem,
         uint256 amount
-    ) external payable nonReentrant mowSender(token) {
+    ) external payable fundsSafu nonReentrant mowSender(token) {
         require(s.u[token].underlyingToken != address(0), "Silo: token not unripe");
 
         // remove Deposit and Redeposit with new BDV
@@ -134,7 +134,7 @@ contract EnrootFacet is ReentrancyGuard {
         address token,
         int96[] calldata stems,
         uint256[] calldata amounts
-    ) external payable nonReentrant mowSender(token) {
+    ) external payable fundsSafu nonReentrant mowSender(token) {
         require(s.u[token].underlyingToken != address(0), "Silo: token not unripe");
         // First, remove Deposits because every deposit is in a different season,
         // we need to get the total Stalk, not just BDV.
