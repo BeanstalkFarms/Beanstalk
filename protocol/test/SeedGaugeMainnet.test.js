@@ -12,7 +12,7 @@ const { ethers } = require('hardhat');
 const { expect } = require('chai');
 const { testIfRpcSet } = require('./utils/test.js');
 
-let user,user2, owner;
+let user, user2, owner;
 
 let snapshotId
 
@@ -20,7 +20,7 @@ testIfRpcSet('SeedGauge Init Test', function () {
   before(async function () {
 
     [user, user2] = await ethers.getSigners()
-    
+
     try {
       await network.provider.request({
         method: "hardhat_reset",
@@ -28,18 +28,18 @@ testIfRpcSet('SeedGauge Init Test', function () {
           {
             forking: {
               jsonRpcUrl: process.env.FORKING_RPC,
-              blockNumber: 19049520 //a random semi-recent block close to Grown Stalk Per Bdv pre-deployment
+              blockNumber: 19630488 //a random semi-recent block close to Grown Stalk Per Bdv pre-deployment
             },
           },
         ],
       });
-    } catch(error) {
+    } catch (error) {
       console.log('forking error in seed Gauge');
       console.log(error);
       return
     }
 
-    beanstalk= await getBeanstalk()
+    beanstalk = await getBeanstalk()
     bean = await ethers.getContractAt('BeanstalkERC20', BEAN)
 
     // seed Gauge
@@ -52,7 +52,16 @@ testIfRpcSet('SeedGauge Init Test', function () {
       diamondAddress: BEANSTALK,
       facetNames: ['CurveFacet'],
       bip: false,
-      object: false, 
+      object: false,
+      verbose: false,
+      account: owner
+    })
+    await upgradeWithNewFacets({
+      diamondAddress: BEANSTALK,
+      facetNames: ['FertilizerFacet'],
+      initFacetName: 'InitInvariants',
+      bip: false,
+      object: false,
       verbose: false,
       account: owner
     })
@@ -75,7 +84,7 @@ testIfRpcSet('SeedGauge Init Test', function () {
       console.log("BeanETH:", await beanstalk.getTotalDepositedBdv(BEAN_ETH_WELL));
       console.log("Unripe Bean:", await beanstalk.getTotalDepositedBdv(UNRIPE_BEAN));
       console.log("Unripe LP:", await beanstalk.getTotalDepositedBdv(UNRIPE_LP));
-      
+
       console.log("amount migrated since BIP-38:")
       console.log("BEAN:", await beanstalk.totalMigratedBdv(BEAN));
       console.log("BEAN3CRV:", await beanstalk.totalMigratedBdv(BEAN_3_CURVE));
@@ -88,7 +97,7 @@ testIfRpcSet('SeedGauge Init Test', function () {
       expect(await beanstalk.getAverageGrownStalkPerBdvPerSeason()).to.be.equal(to6('5.343518'));
     })
 
-    it('average Grown Stalk Per BDV', async function() {
+    it('average Grown Stalk Per BDV', async function () {
       // average is 2.2939 grown stalk per BDV
       // note: should change with updated BDVs
       expect(await beanstalk.getAverageGrownStalkPerBdv()).to.be.equal(22957);
@@ -105,7 +114,7 @@ testIfRpcSet('SeedGauge Init Test', function () {
       // timestamp differences.
       expect(await beanstalk.getLiquidityToSupplyRatio()).to.be.within(to18('0.93'), to18('0.94'));
     })
-    
+
     it('bean To MaxLPGpRatio', async function () {
       expect(await beanstalk.getBeanToMaxLpGpPerBdvRatio()).to.be.equal(to18('33.333333333333333333'));
       expect(await beanstalk.getBeanToMaxLpGpPerBdvRatioScaled()).to.be.equal(to18('66.666666666666666666'));
@@ -135,12 +144,12 @@ testIfRpcSet('SeedGauge Init Test', function () {
       // deploy mockAdminFacet to mint beans.
       owner = await impersonateBeanstalkOwner();
       await mintEth(owner.address);
-      
+
       await upgradeWithNewFacets({
         diamondAddress: BEANSTALK,
         facetNames: ['MockAdminFacet'],
         bip: false,
-        object: false, 
+        object: false,
         verbose: false,
         account: owner
       })
@@ -180,8 +189,8 @@ testIfRpcSet('SeedGauge Init Test', function () {
     it('reverts on conversion to bean3crv', async function () {
       // note: convert validates convert payload first.
       await expect(beanstalk.connect(user).convert(
-        ConvertEncoder.convertBeansToCurveLP(to18('100'), to6('0'), BEAN_3_CURVE), 
-        [0], 
+        ConvertEncoder.convertBeansToCurveLP(to18('100'), to6('0'), BEAN_3_CURVE),
+        [0],
         [to18('200')]
       )).to.be.revertedWith("Convert: Invalid payload")
     })
@@ -201,7 +210,7 @@ testIfRpcSet('SeedGauge Init Test', function () {
 
       await expect(newStalk).to.be.above(initalStalk)
     })
-    
+
   })
 
   // verify silov3.1 migration. 
@@ -272,9 +281,9 @@ testIfRpcSet('SeedGauge Init Test', function () {
         '130214066',
         '130214066'
       )
-      
+
     })
-    
+
   })
 
 })
