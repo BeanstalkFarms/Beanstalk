@@ -9,6 +9,7 @@ import {
   BEAN_LUSD_V1,
   CALCULATIONS_CURVE,
   CRV3_POOL_V1,
+  LUSD,
   LUSD_3POOL,
   WETH,
   WETH_USDC_PAIR
@@ -52,6 +53,9 @@ export function uniswapV2Price(beanReserves: BigDecimal, token2Reserves: BigDeci
 
 // Returns the deltaB in a uniswapv2 constant product pool
 export function uniswapV2DeltaB(beanReserves: BigDecimal, token2Reserves: BigDecimal, token2Price: BigDecimal): BigInt {
+  if (beanReserves == ZERO_BD) {
+    return ZERO_BI;
+  }
   const constantProduct = beanReserves.times(token2Reserves);
   const beansAfterSwap = BigInt.fromString(constantProduct.times(token2Price).truncate(0).toString()).sqrt();
   const deltaB = beansAfterSwap.minus(BigInt.fromString(beanReserves.truncate(0).toString()));
@@ -78,8 +82,9 @@ export function curvePriceAndLp(pool: Address): BigDecimal[] {
     // price in LUSD
     let priceInLusd = toDecimal(lpContract.get_dy(ZERO_BI, BigInt.fromI32(1), BigInt.fromI32(1000000)), 18);
 
-    let lusdContract = Bean3CRV.bind(LUSD_3POOL);
-    let lusd3crvPrice = toDecimal(lusdContract.get_dy(ZERO_BI, BigInt.fromI32(1), BigInt.fromString("1000000000000000000")), 18);
+    let lusdContract = ERC20.bind(LUSD);
+    let lusd3PoolContract = Bean3CRV.bind(LUSD_3POOL);
+    let lusd3crvPrice = toDecimal(lusd3PoolContract.get_dy(ZERO_BI, BigInt.fromI32(1), BigInt.fromString("1000000000000000000")), 18);
     beanCrvPrice = priceInLusd.times(lusd3crvPrice);
 
     let lusdHolding = toDecimal(lusdContract.balanceOf(pool), 18);
@@ -95,9 +100,10 @@ export function curvePriceAndLp(pool: Address): BigDecimal[] {
 export function curveDeltaB(pool: Address, beanReserves: BigInt): BigInt {
   let lpContract = Bean3CRV.bind(pool);
   // D = vprice * total lp tokens
-  const D = lpContract.get_virtual_price().times(lpContract.totalSupply());
-  // D / 2 / 1e18 - beanBalance
-  const deltaB = D.div(BigInt.fromU32(2)).div(BI_10.pow(18)).minus(beanReserves);
+  // vprice: 12 decimals, tokens: 18 decimals
+  const D = lpContract.get_virtual_price().times(lpContract.totalSupply()).div(BI_10.pow(30));
+  // D / 2 - beanReserves
+  const deltaB = D.div(BigInt.fromU32(2)).minus(beanReserves).div(BI_10.pow(6));
   return deltaB;
 }
 

@@ -11,6 +11,7 @@ export const BEAN_3CRV = Address.fromString("0xc9C32cd16Bf7eFB85Ff14e0c8603cc90F
 export const UNRIPE_BEAN_3CRV = Address.fromString("0x1BEA3CcD22F4EBd3d37d731BA31Eeca95713716D");
 export const BEANSTALK_FARMS = Address.fromString("0x21de18b6a8f78ede6d16c50a167f6b222dc08df7");
 export const WETH = Address.fromString("0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2");
+export const LUSD = Address.fromString("0x5f98805A4E8be255a32880FDeC7F6728C6568bA0");
 
 // Protocol Addresses
 export const BEANSTALK = Address.fromString("0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5");

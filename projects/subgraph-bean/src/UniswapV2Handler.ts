@@ -3,7 +3,7 @@ import { Swap, Sync, UniswapV2Pair } from "../generated/BeanUniswapV2Pair/Uniswa
 import { loadBean, updateBeanSupplyPegPercent, updateBeanValues } from "./utils/Bean";
 import { BEAN_ERC20_V1, WETH, WETH_USDC_PAIR } from "../../subgraph-core/utils/Constants";
 import { toDecimal, ZERO_BD, ZERO_BI } from "../../subgraph-core/utils/Decimals";
-import { loadOrCreatePool, setPoolReserves, updatePoolPrice, updatePoolReserves, updatePoolValues } from "./utils/Pool";
+import { loadOrCreatePool, setPoolReserves, updatePoolPrice, updatePoolValues } from "./utils/Pool";
 import { loadOrCreateToken } from "./utils/Token";
 import { checkBeanCross } from "./utils/Cross";
 import { Token } from "../generated/schema";
@@ -49,12 +49,12 @@ export function handleSwap(event: Swap): void {
     pool.deltaBeans
   );
 
-  updatePoolReserves(
-    event.address.toHexString(),
-    event.params.amount0In.minus(event.params.amount0Out),
-    event.params.amount1In.minus(event.params.amount1Out),
-    event.block.number
-  );
+  let newReserves = [
+    pool.reserves[0].plus(event.params.amount0In.minus(event.params.amount0Out)),
+    pool.reserves[1].plus(event.params.amount1In.minus(event.params.amount1Out))
+  ];
+
+  setPoolReserves(event.address.toHexString(), newReserves, event.block.timestamp, event.block.number);
 
   updateBeanSupplyPegPercent(event.block.number);
 
@@ -94,7 +94,7 @@ export function handleSync(event: Sync): void {
 
   checkBeanCross(BEAN_ERC20_V1.toHexString(), event.block.timestamp, event.block.number, oldBeanPrice, currentBeanPrice);
 
-  setPoolReserves(event.address.toHexString(), reserves, event.block.number);
+  setPoolReserves(event.address.toHexString(), reserves, event.block.timestamp, event.block.number);
 
   updateBeanSupplyPegPercent(event.block.number);
 

@@ -115,7 +115,7 @@ function handleLiquidityChange(
     volumeBean = ZERO_BI;
   }
 
-  setPoolReserves(poolAddress, curve.value.balances, blockNumber);
+  setPoolReserves(poolAddress, curve.value.balances, timestamp, blockNumber);
   updateBeanSupplyPegPercent(blockNumber);
 
   updateBeanValues(BEAN_ERC20.toHexString(), timestamp, beanPrice, ZERO_BI, volumeBean, volumeUSD, deltaLiquidityUSD);
@@ -166,7 +166,7 @@ function handleSwap(
   let volumeUSD = toDecimal(volumeBean).times(newPrice);
   let deltaLiquidityUSD = toDecimal(curve.value.liquidity).minus(startingLiquidity);
 
-  setPoolReserves(poolAddress, curve.value.balances, blockNumber);
+  setPoolReserves(poolAddress, curve.value.balances, timestamp, blockNumber);
   updateBeanSupplyPegPercent(blockNumber);
 
   updateBeanValues(BEAN_ERC20.toHexString(), timestamp, beanPrice, ZERO_BI, volumeBean, volumeUSD, deltaLiquidityUSD);

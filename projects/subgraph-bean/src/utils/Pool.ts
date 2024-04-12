@@ -186,20 +186,28 @@ export function updatePoolPrice(poolAddress: string, timestamp: BigInt, blockNum
   checkPoolCross(poolAddress, timestamp, blockNumber, oldPrice, price);
 }
 
-export function updatePoolReserves(poolAddress: string, deltaAmount0: BigInt, deltaAmount1: BigInt, blockNumber: BigInt): void {
-  // All pools with BEAN to date are 2 token pools
+export function setPoolReserves(poolAddress: string, reserves: BigInt[], timestamp: BigInt, blockNumber: BigInt): void {
   let pool = loadOrCreatePool(poolAddress, blockNumber);
-  let reserves = pool.reserves;
-  reserves[0] = reserves[0].plus(deltaAmount0);
-  reserves[1] = reserves[1].plus(deltaAmount1);
-  pool.reserves = reserves;
-  pool.save();
-}
+  let poolHourly = loadOrCreatePoolHourlySnapshot(poolAddress, timestamp, blockNumber);
+  let poolDaily = loadOrCreatePoolDailySnapshot(poolAddress, timestamp, blockNumber);
 
-export function setPoolReserves(poolAddress: string, reserves: BigInt[], blockNumber: BigInt): void {
-  let pool = loadOrCreatePool(poolAddress, blockNumber);
+  let deltaReserves: BigInt[] = [];
+  for (let i = 0; i < reserves.length; ++i) {
+    deltaReserves.push(reserves[i].minus(pool.reserves[i]));
+  }
+
   pool.reserves = reserves;
+  poolHourly.reserves = reserves;
+  poolDaily.reserves = reserves;
+
+  for (let i = 0; i < reserves.length; ++i) {
+    poolHourly.deltaReserves[i] = poolHourly.deltaReserves[i].plus(deltaReserves[i]);
+    poolDaily.deltaReserves[i] = poolDaily.deltaReserves[i].plus(deltaReserves[i]);
+  }
+
   pool.save();
+  poolHourly.save();
+  poolDaily.save();
 }
 
 export function getPoolLiquidityUSD(poolAddress: string, blockNumber: BigInt): BigDecimal {

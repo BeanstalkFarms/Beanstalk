@@ -119,7 +119,7 @@ function handleLiquidityChange(
     }
   }
 
-  setPoolReserves(poolAddress, wellPrice.value.balances, blockNumber);
+  setPoolReserves(poolAddress, wellPrice.value.balances, timestamp, blockNumber);
   updateBeanSupplyPegPercent(blockNumber);
 
   updateBeanValues(
@@ -165,7 +165,7 @@ function handleSwapEvent(
   let volumeUSD = toDecimal(volumeBean).times(newPrice);
   let deltaLiquidityUSD = toDecimal(wellPrice.value.liquidity).minus(startingLiquidity);
 
-  setPoolReserves(poolAddress, wellPrice.value.balances, blockNumber);
+  setPoolReserves(poolAddress, wellPrice.value.balances, timestamp, blockNumber);
   updateBeanSupplyPegPercent(blockNumber);
 
   updateBeanValues(

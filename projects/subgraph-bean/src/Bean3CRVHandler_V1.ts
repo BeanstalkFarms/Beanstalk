@@ -134,7 +134,7 @@ function handleLiquidityChange(
 
   let reserveBalances = lpContract.try_get_balances();
   if (!reserveBalances.reverted) {
-    setPoolReserves(poolAddress, reserveBalances.value, blockNumber);
+    setPoolReserves(poolAddress, reserveBalances.value, timestamp, blockNumber);
   }
 
   let deltaB = curveDeltaB(Address.fromString(poolAddress), reserveBalances.value[0]);
@@ -183,7 +183,7 @@ function handleSwap(
 
   let reserveBalances = lpContract.try_get_balances();
   if (!reserveBalances.reverted) {
-    setPoolReserves(poolAddress, reserveBalances.value, blockNumber);
+    setPoolReserves(poolAddress, reserveBalances.value, timestamp, blockNumber);
   }
 
   let deltaB = curveDeltaB(Address.fromString(poolAddress), reserveBalances.value[0]);
