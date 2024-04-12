@@ -553,6 +553,34 @@ contract SiloGettersFacet is ReentrancyGuard {
     }
 
     /**
+     * @notice gets the germinating stem for a given token.
+     * @dev deposits with a stem lower than the germinating stem are not germinating.
+     * deposits with a stem equal or greater to the germinating stem are germinating.
+     */
+    function getGerminatingStem(address token) 
+        external 
+        view 
+        returns (int96 germinatingStem) 
+    { 
+        LibGerminate.GermStem memory g = LibGerminate.getGerminatingStem(token);
+        return g.germinatingStem;
+    }
+
+    /**
+     * @notice returns the germinating stem for a list of tokens.
+     */
+    function getGerminatingStems(address[] memory tokens) 
+        external
+        view 
+        returns (int96[] memory germinatingStems) 
+    {
+        germinatingStems = new int96[](tokens.length);
+        for (uint256 i = 0; i < tokens.length; i++) {
+            germinatingStems[i] = LibGerminate.getGerminatingStem(tokens[i]).germinatingStem;
+        }
+    }
+
+    /**
      * @notice given the season/token, returns the stem assoicated with that deposit.
      * kept for legacy reasons. 
      */
