@@ -32,7 +32,7 @@ describe('Unripe', function () {
     await this.fertilizer.setFertilizerE(true, to6('10000'))
     await this.unripe.addUnripeToken(UNRIPE_BEAN, BEAN, ZERO_BYTES)
     await this.unripe.addUnripeToken(UNRIPE_LP, BEAN, ZERO_BYTES)
-    await this.bean.mint(ownerAddress, to6('100'))
+    await this.bean.mint(ownerAddress, to6('200'))
 
     await this.season.siloSunrise(0)
   })
@@ -67,6 +67,10 @@ describe('Unripe', function () {
         UNRIPE_BEAN,
         to6('100')
       )
+      await this.unripe.connect(owner).addUnderlying(
+        UNRIPE_LP,
+        to6('100')
+      )
       await this.fertilizer.connect(owner).setPenaltyParams(to6('100'), to6('0'))
     })
 
@@ -86,14 +90,18 @@ describe('Unripe', function () {
       expect(await this.unripe.getRecapFundedPercent(UNRIPE_BEAN)).to.be.equal(to6('0.1'))
       expect(await this.unripe.getRecapFundedPercent(UNRIPE_LP)).to.be.equal(to6('0.188459'))
       expect(await this.unripe.getPercentPenalty(UNRIPE_BEAN)).to.be.equal(to6('0.01'))
-      expect(await this.unripe.getPercentPenalty(UNRIPE_LP)).to.be.equal(to6('0'))
+      expect(await this.unripe.getPercentPenalty(UNRIPE_LP)).to.be.equal(to6('0.01'))
     })
   })
 
-  describe('penalty go down', async function () {
+  describe('change penalty params but penalty affected only by recapitalization ', async function () {
     beforeEach(async function () {
       await this.unripe.connect(owner).addUnderlying(
         UNRIPE_BEAN,
+        to6('100')
+      )
+      await this.unripe.connect(owner).addUnderlying(
+        UNRIPE_LP,
         to6('100')
       )
       await this.fertilizer.connect(owner).setPenaltyParams(to6('100'), to6('100'))
@@ -115,7 +123,7 @@ describe('Unripe', function () {
       expect(await this.unripe.getRecapFundedPercent(UNRIPE_BEAN)).to.be.equal(to6('0.1'))
       expect(await this.unripe.getRecapFundedPercent(UNRIPE_LP)).to.be.equal(to6('0.188459'))
       expect(await this.unripe.getPercentPenalty(UNRIPE_BEAN)).to.be.equal(to6('0.01'))
-      expect(await this.unripe.getPercentPenalty(UNRIPE_LP)).to.be.equal(to6('0'))
+      expect(await this.unripe.getPercentPenalty(UNRIPE_LP)).to.be.equal(to6('0.01'))
     })
   })
 
