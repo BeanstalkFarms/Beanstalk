@@ -157,20 +157,16 @@ describe('Sun', function () {
       to: this.diamond.address,
       value: 0
     })
-
+    // If the twaDeltaB fails, we assume the instantaneous is also manipulated
+    // And since we havent changes the reserves, the instantaneous deltaB is 0
                                           // twadeltaB, CASE ID
     this.result = await this.season.sunSunrise('-100000000', 8);
-    await expect(this.result).to.emit(this.season, 'Soil').withArgs(3, '100000000');
-    await expect(await this.field.totalSoil()).to.be.equal('100000000');
+    await expect(this.result).to.emit(this.season, 'Soil').withArgs(3, '0');
+    await expect(await this.field.totalSoil()).to.be.equal('0');
   })
 
   it("rewards more than type(uint128).max Soil below peg", async function () {
-    // Here, since we haven't changed the reserves the instantaneous deltaB is 0
-    // And we maniuplate the twaDeltaB to be a number that is greater than type(uint128).max
-    // Because we consider that a value of 0 returned by the oracle to be a failure, we set the soil to be the twaDeltaB
-    // which is greater than type(uint128).max and therefore reverts
-                                            // twadeltaB,                        CASE ID
-    await expect(this.season.sunSunrise('-340282366920938463463374607431768211456', '8')).to.be.revertedWith('SafeCast: value doesn\'t fit in 128 bits');
+    await expect(this.season.setSoilE('340282366920938463463374607431768211456')).to.be.revertedWith('SafeCast: value doesn\'t fit in 128 bits');
   })
   
   it("delta B == 1", async function () {
