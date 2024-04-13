@@ -230,7 +230,6 @@ library LibWellMinting {
         Call[] memory pumps = IWell(well).pumps();
         try IInstantaneousPump(pumps[0].target).readInstantaneousReserves(well,pumps[0].data)
          returns (uint[] memory instReserves) {
-            uint[] memory instReserves = IInstantaneousPump(pumps[0].target).readInstantaneousReserves(well, pumps[0].data);
             //                                          well, reserves,   snapshot,  lookback
             (int256 deltaB, , ,) = getDeltaBInfoFromWell(well, instReserves, new bytes(0) , 0);
             return (deltaB);
