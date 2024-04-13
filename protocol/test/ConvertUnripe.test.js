@@ -578,7 +578,7 @@ describe('Unripe Convert', function () {
 
       });
 
-      it.only('getters', async function () {
+      it('getters', async function () {
         expect(await this.unripe.getRecapPaidPercent()).to.be.equal(to6('0.01'))
         expect(await this.unripe.getUnderlyingPerUnripeToken(UNRIPE_BEAN)).to.be.equal(to6('0.100909'))
         // convert happens, 100e6 removed from unripe supply, 1e6 removed from underlying ripe

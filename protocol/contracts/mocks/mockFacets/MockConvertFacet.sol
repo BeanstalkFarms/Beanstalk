@@ -60,9 +60,13 @@ contract MockConvertFacet is ConvertFacet {
         bool decreaseBDV
     ) {
         IERC20(tokenIn).safeTransferFrom(msg.sender, address(this), amountIn);
-        (toToken, fromToken, toAmount, fromAmount , account , decreaseBDV) = LibConvert.convert(
-            convertData
-        );
+        LibConvert.convertParams memory cp = LibConvert.convert(convertData);
+        toToken = cp.toToken;
+        fromToken = cp.fromToken;
+        toAmount = cp.toAmount;
+        fromAmount = cp.fromAmount;
+        account = cp.account;
+        decreaseBDV = cp.decreaseBDV;
         IERC20(toToken).safeTransfer(msg.sender, toAmount);
     }
 }
