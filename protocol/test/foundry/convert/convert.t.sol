@@ -453,7 +453,7 @@ contract ConvertTest is TestHelper {
         // if the maximum LP that can be used is less than 
         // the amount that the user wants to convert,
         // cap the amount to the maximum LP that can be used.
-        if(lpConverted > maxLpIn) lpConverted = maxLpIn;
+        if (lpConverted > maxLpIn) lpConverted = maxLpIn;
         
         uint256 expectedAmtOut = bs.getAmountOut(well, C.BEAN, lpConverted);
 
@@ -503,7 +503,7 @@ contract ConvertTest is TestHelper {
         // if the maximum LP that can be used is less than 
         // the amount that the user wants to convert,
         // cap the amount to the maximum LP that can be used.
-        if(lpConverted > maxLpIn) lpConverted = maxLpIn;
+        if (lpConverted > maxLpIn) lpConverted = maxLpIn;
 
         console.log("maxLpIn: ", maxLpIn);
         console.log("lpConverted: ", lpConverted);
@@ -743,7 +743,7 @@ contract ConvertTest is TestHelper {
         uint256 amountIn,
         uint256 minAmountOut
     ) internal pure returns (bytes memory) {
-        if(kind == LibConvertData.ConvertKind.LAMBDA_LAMBDA) {
+        if (kind == LibConvertData.ConvertKind.LAMBDA_LAMBDA) {
             // lamda_lamda encoding
             return abi.encode(kind, amountIn, token);
         } else {

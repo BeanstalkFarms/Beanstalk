@@ -7244,6 +7244,44 @@
     "type": "function"
   },
   {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "caseId",
+        "type": "uint256"
+      }
+    ],
+    "name": "getAbsBeanToMaxLpRatioChangeFromCaseId",
+    "outputs": [
+      {
+        "internalType": "uint80",
+        "name": "ml",
+        "type": "uint80"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "caseId",
+        "type": "uint256"
+      }
+    ],
+    "name": "getAbsTemperatureChangeFromCaseId",
+    "outputs": [
+      {
+        "internalType": "int8",
+        "name": "t",
+        "type": "int8"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
     "inputs": [],
     "name": "getAverageGrownStalkPerBdv",
     "outputs": [
@@ -7316,6 +7354,72 @@
         "internalType": "uint256",
         "name": "",
         "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "caseId",
+        "type": "uint256"
+      }
+    ],
+    "name": "getCaseData",
+    "outputs": [
+      {
+        "internalType": "bytes32",
+        "name": "casesData",
+        "type": "bytes32"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "getCases",
+    "outputs": [
+      {
+        "internalType": "bytes32[144]",
+        "name": "cases",
+        "type": "bytes32[144]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "caseId",
+        "type": "uint256"
+      }
+    ],
+    "name": "getChangeFromCaseId",
+    "outputs": [
+      {
+        "internalType": "uint32",
+        "name": "",
+        "type": "uint32"
+      },
+      {
+        "internalType": "int8",
+        "name": "",
+        "type": "int8"
+      },
+      {
+        "internalType": "uint80",
+        "name": "",
+        "type": "uint80"
+      },
+      {
+        "internalType": "int80",
+        "name": "",
+        "type": "int80"
       }
     ],
     "stateMutability": "view",
@@ -7451,6 +7555,44 @@
         "internalType": "uint256",
         "name": "",
         "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "caseId",
+        "type": "uint256"
+      }
+    ],
+    "name": "getRelBeanToMaxLpRatioChangeFromCaseId",
+    "outputs": [
+      {
+        "internalType": "int80",
+        "name": "l",
+        "type": "int80"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "caseId",
+        "type": "uint256"
+      }
+    ],
+    "name": "getRelTemperatureChangeFromCaseId",
+    "outputs": [
+      {
+        "internalType": "uint32",
+        "name": "mt",
+        "type": "uint32"
       }
     ],
     "stateMutability": "view",
@@ -9111,6 +9253,19 @@
   {
     "inputs": [
       {
+        "internalType": "int256",
+        "name": "deltaB",
+        "type": "int256"
+      }
+    ],
+    "name": "mockCalcCaseIdandUpdate",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
         "internalType": "address",
         "name": "token",
         "type": "address"
@@ -9375,6 +9530,60 @@
     ],
     "name": "setBeanToMaxLpGpPerBdvRatio",
     "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "price",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "podRate",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "changeInSoilDemand",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "liquidityToSupplyRatio",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "beansInWell",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "beanSupply",
+        "type": "uint256"
+      },
+      {
+        "internalType": "address",
+        "name": "targetWell",
+        "type": "address"
+      }
+    ],
+    "name": "setBeanstalkState",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "newSupply",
+        "type": "uint256"
+      },
+      {
+        "internalType": "int256",
+        "name": "deltaB",
+        "type": "int256"
+      }
+    ],
     "stateMutability": "nonpayable",
     "type": "function"
   },

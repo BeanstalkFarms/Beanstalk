@@ -531,7 +531,7 @@ contract FieldTest is TestHelper {
     //         uint256 beans = uint256(keccak256(abi.encodePacked(rand))).mod(maxBeans);
             
     //         // if beans is less than maxBeans, then sow remaining instead
-    //         if(maxBeans > field.totalSoil()){
+    //         if (maxBeans > field.totalSoil()){
     //             beans = field.totalSoil();
     //         }
     //         totalPodsMinted = totalPodsMinted + field.sow(beans, 1e6, LibTransfer.From.EXTERNAL);
@@ -564,7 +564,7 @@ contract FieldTest is TestHelper {
     //         vm.roll(_block);
     //         uint256 lastTotalSoil = field.totalSoil();
     //         // if beans is less than maxBeans, then sow remaining instead
-    //         if(maxBeans > field.totalSoil()){
+    //         if (maxBeans > field.totalSoil()){
     //             beans = field.totalSoil();
     //         }
     //         totalSoilSown = totalSoilSown + beans;
@@ -600,7 +600,7 @@ contract FieldTest is TestHelper {
     //         vm.roll(_block);
     //         lastTotalSoil = field.totalSoil();
     //         // if beans is less than the amount of soil in the field, then sow remaining instead
-    //         if(beans > field.totalSoil()) beans = field.totalSoil();
+    //         if (beans > field.totalSoil()) beans = field.totalSoil();
     //         totalSoilSown = totalSoilSown + beans;
     //         totalPodsMinted = totalPodsMinted + field.sow(beans, 1e6, LibTransfer.From.EXTERNAL);
             
@@ -609,7 +609,7 @@ contract FieldTest is TestHelper {
     //         // (if one was rounded up, and the other is rounded down)
     //         assertApproxEqAbs(lastTotalSoil - field.totalSoil(), beans, 2);
     //         // cap the blocks between 1 - 25 blocks
-    //         if(_block < 25) _block++;
+    //         if (_block < 25) _block++;
     //     }
 
     //     assertEq(
@@ -786,7 +786,7 @@ contract FieldTest is TestHelper {
         vm.roll(30);
         season.setSoilE(soilAmount);
         vm.expectEmit();
-        if(internalBalance > sowAmount) internalBalance = sowAmount;
+        if (internalBalance > sowAmount) internalBalance = sowAmount;
         emit Sow(farmers[0], 0, internalBalance, internalBalance * 101 / 100);
         vm.prank(farmers[0]);
         field.sow(sowAmount, 0, LibTransfer.From.INTERNAL_TOLERANT);
@@ -837,7 +837,7 @@ contract FieldTest is TestHelper {
         season.setSoilE(soil);
         C.bean().mint(farmer0, amount0);
         uint256 initalBeanBalance0 = C.bean().balanceOf(farmer0);
-        if(amount0 > soil) amount0 = soil;
+        if (amount0 > soil) amount0 = soil;
         soil -= amount0;
         
 
@@ -849,7 +849,7 @@ contract FieldTest is TestHelper {
 
         C.bean().mint(farmer1, amount1);
         uint256 initalBeanBalance1 = C.bean().balanceOf(farmer1);
-        if(amount1 > soil) amount1 = soil;
+        if (amount1 > soil) amount1 = soil;
         soil -= amount1;
 
         vm.startPrank(farmer1);

@@ -1,5 +1,7 @@
-// SPDX-License-Identifier: MIT
-pragma solidity >=0.6.0 <0.9.0;
+/**
+ * SPDX-License-Identifier: MIT
+ **/
+pragma solidity >=0.7.6 <0.9.0;
 pragma abicoder v2;
 
 interface IMockFBeanstalk {
@@ -483,9 +485,14 @@ interface IMockFBeanstalk {
     function fund(uint32 id, uint256 amount, uint8 mode) external payable returns (uint256);
     function fundingToken(uint32 id) external view returns (address);
     function fundraiser(uint32 id) external view returns (Fundraiser memory);
+    function getAbsBeanToMaxLpRatioChangeFromCaseId(uint256 caseId) external view returns (uint80 ml);
+    function getAbsTemperatureChangeFromCaseId(uint256 caseId) external view returns (int8 t);
     function getActiveFertilizer() external view returns (uint256);
     function getAllBalance(address account, address token) external view returns (Balance memory b);
-    function getAllBalances(address account, address tokens) external view returns (Balance[] memory balances);
+    function getAllBalances(address account, address[] memory tokens)
+        external
+        view
+        returns (Balance[] memory balances);
     function getAmountBeansToFillOrderV2(uint256 placeInLine, uint256 amountPodsFromOrder, bytes memory pricingFunction)
         external
         pure
@@ -503,15 +510,18 @@ interface IMockFBeanstalk {
     function getAverageGrownStalkPerBdv() external view returns (uint256);
     function getAverageGrownStalkPerBdvPerSeason() external view returns (uint128);
     function getBalance(address account, address token) external view returns (uint256 balance);
-    function getBalances(address account, address tokens) external view returns (uint256[] memory balances);
+    function getBalances(address account, address[] memory tokens) external view returns (uint256[] memory balances);
     function getBarnRaiseToken() external view returns (address);
     function getBarnRaiseWell() external view returns (address);
     function getBeanEthGaugePointsPerBdv() external view returns (uint256);
     function getBeanGaugePointsPerBdv() external view returns (uint256);
     function getBeanToMaxLpGpPerBdvRatio() external view returns (uint256);
     function getBeanToMaxLpGpPerBdvRatioScaled() external view returns (uint256);
+    function getCaseData(uint256 caseId) external view returns (bytes32 casesData);
+    function getCases() external view returns (bytes32[144] memory cases);
     function getChainlinkEthUsdPrice() external view returns (uint256);
     function getChainlinkTwapEthUsdPrice(uint256 lookback) external view returns (uint256);
+    function getChangeFromCaseId(uint256 caseId) external view returns (uint32, int8, uint80, int80);
     function getCurrentHumidity() external view returns (uint128 humidity);
     function getDeltaPodDemand() external view returns (uint256);
     function getDeposit(address account, address token, int96 stem) external view returns (uint256, uint256);
@@ -522,7 +532,10 @@ interface IMockFBeanstalk {
     function getEthUsdTwap(uint256 lookback) external view returns (uint256);
     function getEvenGerminating(address token) external view returns (uint256, uint256);
     function getExternalBalance(address account, address token) external view returns (uint256 balance);
-    function getExternalBalances(address account, address tokens) external view returns (uint256[] memory balances);
+    function getExternalBalances(address account, address[] memory tokens)
+        external
+        view
+        returns (uint256[] memory balances);
     function getFertilizer(uint128 id) external view returns (uint256);
     function getFertilizers() external view returns (Supply[] memory fertilizers);
     function getFirst() external view returns (uint128);
@@ -538,7 +551,10 @@ interface IMockFBeanstalk {
     function getGrownStalkIssuedPerSeason() external view returns (uint256);
     function getHumidity(uint128 _s) external pure returns (uint128 humidity);
     function getInternalBalance(address account, address token) external view returns (uint256 balance);
-    function getInternalBalances(address account, address tokens) external view returns (uint256[] memory balances);
+    function getInternalBalances(address account, address[] memory tokens)
+        external
+        view
+        returns (uint256[] memory balances);
     function getLargestLiqWell() external view returns (address);
     function getLast() external view returns (uint128);
     function getLastMowedStem(address account, address token) external view returns (int96 lastStem);
@@ -558,6 +574,8 @@ interface IMockFBeanstalk {
     function getPodRate() external view returns (uint256);
     function getRecapFundedPercent(address unripeToken) external view returns (uint256 percent);
     function getRecapPaidPercent() external view returns (uint256 percent);
+    function getRelBeanToMaxLpRatioChangeFromCaseId(uint256 caseId) external view returns (int80 l);
+    function getRelTemperatureChangeFromCaseId(uint256 caseId) external view returns (uint32 mt);
     function getSeedGauge() external view returns (SeedGauge memory);
     function getSiloTokens() external view returns (address[] memory tokens);
     function getSopWell() external view returns (address);
@@ -623,6 +641,7 @@ interface IMockFBeanstalk {
         returns (uint256 fertilizerAmountOut);
     function mockBDV(uint256 amount) external pure returns (uint256);
     function mockBDVIncrease(uint256 amount) external pure returns (uint256);
+    function mockCalcCaseIdandUpdate(int256 deltaB) external;
     function mockEndTotalGerminationForToken(address token) external;
     function mockGetMorningTemp(uint256 initalTemp, uint256 delta) external pure returns (uint256 scaledTemperature);
     function mockGetSeedsPerToken(address token) external pure returns (uint256);
@@ -807,6 +826,15 @@ interface IMockFBeanstalk {
     function setApprovalForAll(address spender, bool approved) external;
     function setBarnRaiseWell(address welll) external;
     function setBeanToMaxLpGpPerBdvRatio(uint128 percent) external;
+    function setBeanstalkState(
+        uint256 price,
+        uint256 podRate,
+        uint256 changeInSoilDemand,
+        uint256 liquidityToSupplyRatio,
+        uint256 beansInWell,
+        uint256 beanSupply,
+        address targetWell
+    ) external returns (uint256 newSupply, int256 deltaB);
     function setCurrentSeasonE(uint32 _season) external;
     function setFertilizerE(bool fertilizing, uint256 unfertilized) external;
     function setLastDSoilE(uint128 number) external;

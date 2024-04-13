@@ -102,9 +102,8 @@ library LibEvaluate {
             // deltaB > 0 implies that address(well) != address(0).
             uint256 beanTknPrice = LibWell.getWellPriceFromTwaReserves(well);
             if (beanTknPrice > 1) {
-                uint256 beanUsdPrice = LibWell.getUsdTokenPriceForWell(well)
-                    .mul(beanTknPrice)
-                    .div(1e18);
+                uint256 beanUsdPrice = uint256(1e30).div(LibWell.getUsdTokenPriceForWell(well)
+                    .mul(beanTknPrice));
                 if (beanUsdPrice > EXCESSIVE_PRICE_THRESHOLD) {
                     // p > EXCESSIVE_PRICE_THRESHOLD
                     return caseId = 6;

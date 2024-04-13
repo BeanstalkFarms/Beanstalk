@@ -140,6 +140,9 @@ contract TestHelper is Test, BeanstalkDeployer, BasinDeployer, DepotDeployer, Or
 
         // inital liquidity owned by beanstalk deployer.
         IWell(well).sync(users[0], 0);
+
+        // sync again to update reserves.
+        IWell(well).sync(users[0], 0);
     }
 
     /**

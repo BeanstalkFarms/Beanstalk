@@ -15,39 +15,61 @@ import {ICumulativePump} from "contracts/interfaces/basin/pumps/ICumulativePump.
 
 contract MockPump is IInstantaneousPump, ICumulativePump {
 
-    uint[] instantaneousReserves;
-    uint[] cumulativeReserves;
-
-    function setInstantaneousReserves(uint[] memory _instantaneousReserves) external {
-        instantaneousReserves = _instantaneousReserves;
+    struct ReservesData {
+        uint256[] instantaneousReserves;
+        uint256[] cumulativeReserves;
+        uint256[] cappedReserves;
     }
 
-    function readInstantaneousReserves(address, bytes memory) external override view returns (uint[] memory reserves) {
-        return instantaneousReserves;
+    mapping(address => ReservesData) reservesData;
+
+    function setInstantaneousReserves(
+        address well, 
+        uint[] memory _instantaneousReserves
+    ) external {
+        reservesData[well].instantaneousReserves = _instantaneousReserves;
     }
 
-    function update(uint256[] memory _reserves, bytes memory) external {
-        instantaneousReserves = _reserves;
-        cumulativeReserves = _reserves;
+    function readInstantaneousReserves(address well, bytes memory) external override view returns (uint[] memory reserves) {
+        return reservesData[well].instantaneousReserves;
     }
 
-    function setCumulativeReserves(uint[] memory _cumulativeReserves) external {
-        cumulativeReserves = _cumulativeReserves;
+    function readCappedReserves(address well, bytes memory) external view returns (uint[] memory reserves) {
+        return reservesData[well].cappedReserves;
     }
+
+    function update(address well, uint256[] memory _reserves, bytes memory data) external {
+        _update(well, _reserves, data);
+    }
+
+    function update(uint256[] memory _reserves, bytes memory data) external {
+        _update(msg.sender, _reserves, data);
+    }
+
+    function _update(address well, uint256[] memory _reserves, bytes memory) internal {
+        reservesData[well].instantaneousReserves = _reserves;
+        reservesData[well].cumulativeReserves = _reserves;
+        reservesData[well].cappedReserves = _reserves;
+    }
+
+    function setCumulativeReserves(address well, uint[] memory _cumulativeReserves) external {
+        reservesData[well].cumulativeReserves = _cumulativeReserves;
+    }
+
     function readCumulativeReserves(
-        address,
+        address well,
         bytes memory
     ) external override view returns (bytes memory) {
-        return abi.encodePacked(cumulativeReserves[0], cumulativeReserves[1]);
+        return abi.encodePacked(reservesData[well].cumulativeReserves[0], reservesData[well].cumulativeReserves[1]);
     }
 
     function readTwaReserves(
-        address,
+        address well,
         bytes calldata,
         uint,
         bytes memory
     ) external override view returns (uint[] memory twaReserves, bytes memory _cumulativeReserves){
-        twaReserves = cumulativeReserves;
-        _cumulativeReserves = abi.encodePacked(cumulativeReserves[0], cumulativeReserves[1]);
+        twaReserves = reservesData[well].cumulativeReserves;
+        _cumulativeReserves = abi.encodePacked(twaReserves[0], twaReserves[1]);
     }
 }
