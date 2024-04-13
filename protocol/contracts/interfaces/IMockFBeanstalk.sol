@@ -1,7 +1,5 @@
-/**
- * SPDX-License-Identifier: MIT
- **/
-pragma solidity >=0.7.6 <0.9.0;
+// SPDX-License-Identifier: MIT
+pragma solidity >=0.6.0 <0.9.0;
 pragma abicoder v2;
 
 interface IMockFBeanstalk {
@@ -28,6 +26,15 @@ interface IMockFBeanstalk {
     struct Balance {
         uint128 amount;
         uint128 lastBpf;
+    }
+
+    struct Blueprint {
+        address publisher;
+        bytes data;
+        bytes32[] operatorPasteInstrs;
+        uint256 maxNonce;
+        uint256 startTime;
+        uint256 endTime;
     }
 
     struct Facet {
@@ -81,6 +88,12 @@ interface IMockFBeanstalk {
         uint256 deprecated;
         uint256 pods;
         uint256 roots;
+    }
+
+    struct Requisition {
+        Blueprint blueprint;
+        bytes32 blueprintHash;
+        bytes signature;
     }
 
     struct Season {
@@ -147,6 +160,7 @@ interface IMockFBeanstalk {
     );
     event ApprovalForAll(address indexed account, address indexed operator, bool approved);
     event BeanToMaxLpGpPerBdvRatioChange(uint256 indexed season, uint256 caseId, int80 absChange);
+    event CancelBlueprint(bytes32 blueprintHash);
     event ChangeUnderlying(address indexed token, int256 underlying);
     event Chop(address indexed account, address indexed token, uint256 amount, uint256 underlying);
     event ClaimPlenty(address indexed account, address token, uint256 plenty);
@@ -206,6 +220,7 @@ interface IMockFBeanstalk {
         uint256 amount,
         uint256 costInBeans
     );
+    event PublishRequisition(Requisition requisition);
     event RemoveDeposit(address indexed account, address indexed token, int96 stem, uint256 amount, uint256 bdv);
     event RemoveDeposits(
         address indexed account, address indexed token, int96[] stems, uint256[] amounts, uint256 amount, uint256[] bdvs
@@ -222,6 +237,7 @@ interface IMockFBeanstalk {
     event TemperatureChange(uint256 indexed season, uint256 caseId, int8 absChange);
     event TokenApproval(address indexed owner, address indexed spender, address token, uint256 amount);
     event TotalGerminatingBalanceChanged(uint256 season, address indexed token, int256 delta, int256 deltaBdv);
+    event Tractor(address indexed operator, bytes32 blueprintHash);
     event TransferBatch(
         address indexed operator, address indexed from, address indexed to, uint256[] ids, uint256[] values
     );
@@ -279,6 +295,10 @@ interface IMockFBeanstalk {
         payable
         returns (bytes[] memory results);
     function allowancePods(address owner, address spender) external view returns (uint256);
+    function applyPenaltyToGrownStalks(uint256 penaltyBdv, uint256[] memory bdvsRemoved, uint256[] memory grownStalks)
+        external
+        view
+        returns (uint256[] memory);
     function approveDeposit(address spender, address token, uint256 amount) external payable;
     function approvePods(address spender, uint256 amount) external payable;
     function approveToken(address spender, address token, uint256 amount) external payable;
@@ -342,6 +362,17 @@ interface IMockFBeanstalk {
         uint256 L2SRState,
         address pump
     ) external;
+    function calculateStalkPenalty(
+        int256 beforeDeltaB,
+        int256 afterDeltaB,
+        uint256[] memory bdvsRemoved,
+        uint256 cappedDeltaB
+    ) external returns (uint256);
+    function calculateStemForTokenFromGrownStalk(address token, uint256 grownStalk, uint256 bdvOfDeposit)
+        external
+        view
+        returns (int96 stem, uint8 germ);
+    function cancelBlueprint(Requisition memory requisition) external;
     function cancelPodListing(uint256 index) external payable;
     function cancelPodOrder(uint24 pricePerPod, uint256 maxPlaceInLine, uint256 minFillAmount, uint8 mode)
         external
@@ -349,6 +380,10 @@ interface IMockFBeanstalk {
     function cancelPodOrderV2(uint256 maxPlaceInLine, uint256 minFillAmount, bytes memory pricingFunction, uint8 mode)
         external
         payable;
+    function cappedReservesDeltaB(address well)
+        external
+        view
+        returns (int256 deltaB, uint256[] memory instReserves, uint256[] memory ratios);
     function captureCurveE() external returns (int256 deltaB);
     function captureE() external returns (int256 deltaB);
     function captureWellE(address well) external returns (int256 deltaB);
@@ -517,11 +552,15 @@ interface IMockFBeanstalk {
     function getBeanGaugePointsPerBdv() external view returns (uint256);
     function getBeanToMaxLpGpPerBdvRatio() external view returns (uint256);
     function getBeanToMaxLpGpPerBdvRatioScaled() external view returns (uint256);
+    function getBlueprintHash(Blueprint memory blueprint) external view returns (bytes32);
+    function getBlueprintNonce(bytes32 blueprintHash) external view returns (uint256);
     function getCaseData(uint256 caseId) external view returns (bytes32 casesData);
     function getCases() external view returns (bytes32[144] memory cases);
     function getChainlinkEthUsdPrice() external view returns (uint256);
     function getChainlinkTwapEthUsdPrice(uint256 lookback) external view returns (uint256);
     function getChangeFromCaseId(uint256 caseId) external view returns (uint32, int8, uint80, int80);
+    function getConvertPower() external view returns (uint256);
+    function getCounter(bytes32 counterId) external view returns (uint256 count);
     function getCurrentHumidity() external view returns (uint128 humidity);
     function getDeltaPodDemand() external view returns (uint256);
     function getDeposit(address account, address token, int96 stem) external view returns (uint256, uint256);
@@ -641,7 +680,7 @@ interface IMockFBeanstalk {
         returns (uint256 fertilizerAmountOut);
     function mockBDV(uint256 amount) external pure returns (uint256);
     function mockBDVIncrease(uint256 amount) external pure returns (uint256);
-    function mockCalcCaseIdandUpdate(int256 deltaB) external;
+    function mockCalcCaseIdandUpdate(int256 deltaB) external returns (uint256 caseId);
     function mockEndTotalGerminationForToken(address token) external;
     function mockGetMorningTemp(uint256 initalTemp, uint256 delta) external pure returns (uint256 scaledTemperature);
     function mockGetSeedsPerToken(address token) external pure returns (uint256);
@@ -700,6 +739,7 @@ interface IMockFBeanstalk {
         pure
         returns (bytes4);
     function onERC1155Received(address, address, uint256, uint256, bytes memory) external pure returns (bytes4);
+    function overallDeltaB() external view returns (int256 deltaB);
     function owner() external view returns (address owner_);
     function ownerCandidate() external view returns (address ownerCandidate_);
     function pause() external payable;
@@ -751,6 +791,13 @@ interface IMockFBeanstalk {
     function pick(address token, uint256 amount, bytes32[] memory proof, uint8 mode) external payable;
     function picked(address account, address token) external view returns (bool);
     function pipe(PipeCall memory p) external payable returns (bytes memory result);
+    function pipelineConvert(
+        address inputToken,
+        int96[] memory stems,
+        uint256[] memory amounts,
+        address outputToken,
+        AdvancedFarmCall[] memory farmCalls
+    ) external payable returns (int96[] memory outputStems, uint256[] memory outputAmounts);
     function plant() external payable returns (uint256 beans, int96 stem);
     function plentyPerRoot(uint32 _season) external view returns (uint256);
     function plot(address account, uint256 index) external view returns (uint256);
@@ -766,6 +813,8 @@ interface IMockFBeanstalk {
         view
         returns (uint256);
     function poolDeltaB(address pool) external view returns (int256);
+    function poolDeltaBInsta(address pool) external view returns (int256 deltaB);
+    function publishRequisition(Requisition memory requisition) external;
     function rain() external view returns (Rain memory);
     function rainSiloSunrise(uint256 amount) external;
     function rainSunrise() external;
@@ -824,19 +873,19 @@ interface IMockFBeanstalk {
     function seedGaugeSunSunrise(int256 deltaB, uint256 caseId) external;
     function setAbovePegE(bool peg) external;
     function setApprovalForAll(address spender, bool approved) external;
-    function setBarnRaiseWell(address welll) external;
+    function setBarnRaiseWell(address well) external;
     function setBeanToMaxLpGpPerBdvRatio(uint128 percent) external;
     function setBeanstalkState(
         uint256 price,
         uint256 podRate,
         uint256 changeInSoilDemand,
         uint256 liquidityToSupplyRatio,
-        uint256 beansInWell,
-        uint256 beanSupply,
         address targetWell
-    ) external returns (uint256 newSupply, int256 deltaB);
+    ) external returns (int256 deltaB);
+    function setChangeInSoilDemand(uint256 changeInSoilDemand) external;
     function setCurrentSeasonE(uint32 _season) external;
     function setFertilizerE(bool fertilizing, uint256 unfertilized) external;
+    function setL2SR(uint256 liquidityToSupplyRatio, address targetWell) external;
     function setLastDSoilE(uint128 number) external;
     function setLastSowTimeE(uint32 number) external;
     function setMaxTemp(uint32 t) external;
@@ -844,6 +893,8 @@ interface IMockFBeanstalk {
     function setMerkleRootE(address unripeToken, bytes32 root) external;
     function setNextSowTimeE(uint32 _time) external;
     function setPenaltyParams(uint256 recapitalized, uint256 fertilized) external;
+    function setPodRate(uint256 podRate) external;
+    function setPrice(uint256 price, address targetWell) external returns (int256 deltaB);
     function setSoilE(uint256 amount) external;
     function setSunriseBlock(uint256 _block) external;
     function setUsdEthPrice(uint256 price) external;
@@ -889,6 +940,10 @@ interface IMockFBeanstalk {
     function totalStalk() external view returns (uint256);
     function totalUnfertilizedBeans() external view returns (uint256 beans);
     function totalUnharvestable() external view returns (uint256);
+    function tractor(Requisition memory requisition, bytes memory operatorData)
+        external
+        payable
+        returns (bytes[] memory results);
     function transferDeposit(address sender, address recipient, address token, int96 stem, uint256 amount)
         external
         payable
@@ -915,6 +970,9 @@ interface IMockFBeanstalk {
     function unripeLPToBDV(uint256 amount) external view returns (uint256);
     function unwrapEth(uint256 amount, uint8 mode) external payable;
     function update3CRVOracle() external;
+    function updateCounter(bytes32 counterId, uint8 updateType, uint256 amount)
+        external
+        returns (uint256 count);
     function updateGaugeForToken(
         address token,
         bytes4 gaugePointSelector,
