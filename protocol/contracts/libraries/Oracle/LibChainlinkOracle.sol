@@ -50,9 +50,9 @@ library LibChainlinkOracle {
         ) {
             // Check for an invalid roundId that is 0
             if (roundId == 0) return 0;
-            if (checkForInvalidTimestampOrAnswer(timestamp, answer, block.timestamp)) {
-                return 0;
-            }
+            // if (checkForInvalidTimestampOrAnswer(timestamp, answer, block.timestamp)) {
+            //     return 0;
+            // }
             // Adjust to 6 decimal precision.
             return uint256(answer).mul(PRECISION).div(10 ** decimals);
         } catch {
