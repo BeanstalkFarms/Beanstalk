@@ -281,7 +281,7 @@ library LibDibbler {
         AppStorage storage s = LibAppStorage.diamondStorage();
 
         uint256 maxTemperature = s.w.t;
-        if(maxTemperature == 0) return 0; 
+        if (maxTemperature == 0) return 0; 
 
         scaledTemperature = LibPRBMath.max(
             // To save gas, `pct` is pre-calculated to 12 digits. Here we
@@ -373,7 +373,7 @@ library LibDibbler {
         AppStorage storage s = LibAppStorage.diamondStorage();
 
         // Above peg: number of Pods is fixed, Soil adjusts
-        if(s.season.abovePeg) {
+        if (s.season.abovePeg) {
             return beansToPods(
                 s.f.soil, // 1 bean = 1 soil
                 uint256(s.w.t).mul(TEMPERATURE_PRECISION) // 1e2 -> 1e8

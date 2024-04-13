@@ -6,7 +6,6 @@ pragma experimental ABIEncoderV2;
 import {AppStorage, Storage} from "../../AppStorage.sol";
 import {C} from "../../../C.sol";
 import {Decimal, SafeMath} from "contracts/libraries/Decimal.sol";
-import {LibIncentive} from "contracts/libraries/LibIncentive.sol";
 import {LibEvaluate} from "contracts/libraries/LibEvaluate.sol";
 import {LibUsdOracle} from "contracts/libraries/Oracle/LibUsdOracle.sol";
 import {LibWellMinting} from "contracts/libraries/Minting/LibWellMinting.sol";
@@ -14,7 +13,7 @@ import {LibWell} from "contracts/libraries/Well/LibWell.sol";
 import {SignedSafeMath} from "@openzeppelin/contracts/math/SignedSafeMath.sol";
 import {LibWhitelistedTokens} from "contracts/libraries/Silo/LibWhitelistedTokens.sol";
 import {LibGauge} from "contracts/libraries/LibGauge.sol";
-import {ICumulativePump} from "contracts/interfaces/basin/pumps/ICumulativePump.sol";
+import {LibCases} from "contracts/libraries/LibCases.sol";
 
 /**
  * @title SeasonGettersFacet
@@ -330,5 +329,40 @@ contract SeasonGettersFacet {
 
     function getSopWell() external view returns (address) {
         return s.sopWell;
+    }
+
+    //////////////////// CASES ////////////////////
+
+    function getCases() external view returns(bytes32[144] memory cases) {
+        return s.casesV2;
+    }
+
+    function getCaseData(uint256 caseId) external view returns (bytes32 casesData) {
+       return LibCases.getDataFromCase(caseId);
+    }
+
+    function getChangeFromCaseId(uint256 caseId) public view returns (uint32, int8, uint80, int80) {
+        LibCases.CaseData memory cd = LibCases.decodeCaseData(caseId);
+        return (cd.mT, cd.bT, cd.mL, cd.bL);
+    }
+
+    function getAbsTemperatureChangeFromCaseId(uint256 caseId) external view returns (int8 t) {
+        (, t,,) = getChangeFromCaseId(caseId);
+        return t;
+    }
+
+    function getRelTemperatureChangeFromCaseId(uint256 caseId) external view returns (uint32 mt) {
+        (mt,,,) = getChangeFromCaseId(caseId);
+        return mt;
+    }
+
+    function getAbsBeanToMaxLpRatioChangeFromCaseId(uint256 caseId) external view returns (uint80 ml) {
+        (,, ml,) = getChangeFromCaseId(caseId);
+        return ml;
+    }
+
+    function getRelBeanToMaxLpRatioChangeFromCaseId(uint256 caseId) external view returns (int80 l) {
+        (,,,l) = getChangeFromCaseId(caseId);
+        return l;
     }
 }

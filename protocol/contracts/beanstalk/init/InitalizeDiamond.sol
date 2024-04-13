@@ -29,7 +29,7 @@ contract InitalizeDiamond {
     AppStorage internal s;
 
     // INITAL CONSTANTS //
-    uint128 constant INIT_BEAN_TO_MAX_LP_GP_RATIO = 50e18;
+    uint128 constant INIT_BEAN_TO_MAX_LP_GP_RATIO = 33_333_333_333_333_333_333; // 33%
     uint128 constant INIT_AVG_GSPBDV = 3e6;
     uint32 constant INIT_BEAN_STALK_EARNED_PER_SEASON = 2e6;
     uint32 constant INIT_BEAN_TOKEN_WELL_STALK_EARNED_PER_SEASON = 4e6;

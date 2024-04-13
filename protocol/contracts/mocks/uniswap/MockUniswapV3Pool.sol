@@ -253,7 +253,7 @@ contract MockUniswapV3Pool is IUniswapV3Pool, NoDelegateCall {
         tickCumulatives = new int56[](secondsAgos.length);
         secondsPerLiquidityCumulativeX128s = new uint160[](secondsAgos.length); // not needed
         for (uint256 i = 0; i < secondsAgos.length; i++) {
-            if(i == 0) {
+            if (i == 0) {
                 tickCumulatives[i] = 0;
                 continue;
             }

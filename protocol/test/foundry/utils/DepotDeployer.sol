@@ -18,8 +18,8 @@ contract DepotDeployer is Utils {
 
     function initDepot(bool verbose) internal {
         deployCodeTo("Pipeline.sol", PIPELINE);
-        if(verbose) console.log("Pipeline deposited at: %s", PIPELINE);
+        if (verbose) console.log("Pipeline deposited at: %s", PIPELINE);
         deployCodeTo("Depot.sol", DEPOT);
-        if(verbose) console.log("Depot deposited at: %s", DEPOT);
+        if (verbose) console.log("Depot deposited at: %s", DEPOT);
     }
 }

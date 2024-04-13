@@ -14,8 +14,6 @@ import {C} from "../../C.sol";
 
 import "forge-std/console.sol";
 
-
-
 /**
  * @title LibGerminate
  * @author Brean
@@ -262,7 +260,6 @@ library LibGerminate {
             roots = stalk.mul(s.unclaimedGerminating[season].roots).div(
                 s.unclaimedGerminating[season].stalk
             ).toUint128();
-            console.log("roots:", roots);
         }
     }
 
