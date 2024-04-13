@@ -2,7 +2,7 @@ import { useCallback, useEffect } from 'react';
 import { useDispatch } from 'react-redux';
 import BigNumber from 'bignumber.js';
 import axios from 'axios';
-import { Token, TokenValue } from '@beanstalk/sdk';
+import { Deposit, Token, TokenValue } from '@beanstalk/sdk';
 import { ethers } from 'ethers';
 import { TokenMap, ZERO_BN } from '~/constants';
 import { useBeanstalkContract } from '~/hooks/ledger/useContract';
@@ -246,23 +246,36 @@ export const useFetchFarmerSilo = () => {
           activeSeedBalance = activeSeedBalance.add(
             token.getSeeds(balance.bdv)
           );
+          const handleCrate = (
+            crate: Deposit<TokenValue>
+          ): LegacyDepositCrate => ({
+            // stem: transform(crate.stem, 'bnjs'), // FIXME
+            // ALECKS: I changed above line to below line. Typescript was expecting stem to be ethers.BigNumber
+            // Leaving this comment here in case there's unexpected issues somewhere downstream.
+            stem: crate.stem,
+            amount: transform(crate.amount, 'bnjs', token),
+            bdv: transform(crate.bdv, 'bnjs', sdk.tokens.BEAN),
+            stalk: {
+              base: transform(crate.stalk.base, 'bnjs', sdk.tokens.STALK),
+              grown: transform(crate.stalk.grown, 'bnjs', sdk.tokens.STALK),
+              total: transform(crate.stalk.total, 'bnjs', sdk.tokens.STALK),
+            },
+            seeds: transform(crate.seeds, 'bnjs'),
+            isGerminating: crate.isGerminating,
+          });
 
           payload[token.address] = {
             mowStatus: mowStatuses.get(token),
             deposited: {
               amount: transform(balance.amount, 'bnjs', token),
+              convertibleAmount: transform(
+                balance.convertibleAmount,
+                'bnjs',
+                token
+              ),
               bdv: transform(balance.bdv, 'bnjs', sdk.tokens.BEAN),
-              crates: balance.deposits.map((crate) => ({
-                stem: transform(crate.stem, 'bnjs'), // FIXME
-                amount: transform(crate.amount, 'bnjs', token),
-                bdv: transform(crate.bdv, 'bnjs', sdk.tokens.BEAN),
-                stalk: {
-                  base: transform(crate.stalk.base, 'bnjs', sdk.tokens.STALK),
-                  grown: transform(crate.stalk.grown, 'bnjs', sdk.tokens.STALK),
-                  total: transform(crate.stalk.total, 'bnjs', sdk.tokens.STALK),
-                },
-                seeds: transform(crate.seeds, 'bnjs'),
-              })),
+              crates: balance.deposits.map(handleCrate),
+              convertibleCrates: balance.convertibleDeposits.map(handleCrate),
             },
           };
         });

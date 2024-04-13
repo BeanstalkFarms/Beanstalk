@@ -1,17 +1,24 @@
 import React, { useMemo } from 'react';
 import BigNumber from 'bignumber.js';
 import { Box, Card, CircularProgress, Typography } from '@mui/material';
-import { DataGrid, GridColumns, GridSortItem } from '@mui/x-data-grid';
+import { styled } from '@mui/material/styles';
+import {
+  DataGrid,
+  GridColDef,
+  GridColumns,
+  GridRowId,
+  GridRowModel,
+  GridSortItem,
+} from '@mui/x-data-grid';
 import { tableStyle } from '~/components/Common/Table/styles';
 import { displayBN } from '~/util';
 import { ZERO_BN } from '~/constants';
+import Row from '~/components/Common/Row';
+import { FC } from '~/types';
 import { Token } from '../../classes';
 import AuthEmptyState from './ZeroState/AuthEmptyState';
 import ArrowPagination from './ArrowPagination';
 import Fiat from './Fiat';
-import Row from '~/components/Common/Row';
-
-import { FC } from '~/types';
 
 export type TableCardProps = {
   /** Card title */
@@ -39,6 +46,27 @@ export type TableCardProps = {
   hideFooter?: true | undefined;
 };
 
+interface GridRowParams<R extends GridRowModel = GridRowModel> {
+  id: GridRowId;
+  /**
+   * The row model of the row that the current cell belongs to.
+   */
+  row: R;
+  /**
+   * All grid columns.
+   */
+  columns: GridColDef[];
+}
+
+const StyledDataGrid = styled(DataGrid)(() => ({
+  '& .germinating-row': {
+    backgroundColor: '#b4e16236',
+    '&:hover': {
+      backgroundColor: '#b4e16236',
+    },
+  },
+}));
+
 /**
  * Displays a <DataGrid /> with data about Crates. Attaches
  * a header with title, aggregate amount, and aggregate value.
@@ -62,6 +90,12 @@ const TableCard: FC<TableCardProps> = ({
     if (!rows || rows.length === 0) return '250px';
     return 60.5 + (hideFooter ? 0 : 36) + Math.min(rows.length, maxRows) * 36;
   }, [hideFooter, maxRows, rows]);
+
+  // When we need custom, per row, styling, this is where we can defined the rules.
+  // Add the class names above in the StyledDataGrid definition.
+  const customRowStyler = (params: GridRowParams<any>) => {
+    if (params.row.isGerminating) return 'germinating-row';
+  };
 
   return (
     <Card
@@ -113,7 +147,7 @@ const TableCard: FC<TableCardProps> = ({
           ...tableCss,
         }}
       >
-        <DataGrid
+        <StyledDataGrid
           columns={columns}
           rows={rows}
           pageSize={maxRows}
@@ -142,6 +176,7 @@ const TableCard: FC<TableCardProps> = ({
               justifyContent: 'center',
             },
           }}
+          getRowClassName={customRowStyler}
         />
       </Box>
     </Card>

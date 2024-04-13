@@ -150,7 +150,7 @@ const ConvertForm: FC<
 
   // FIXME: these use old structs instead of SDK
   const siloBalance = siloBalances[tokenIn.address];
-  const depositedAmount = siloBalance?.deposited.amount || ZERO_BN;
+  const depositedAmount = siloBalance?.deposited.convertibleAmount || ZERO_BN;
 
   const isQuoting = values.tokens[0].quoting || false;
   const slippage = values.settings.slippage;
@@ -661,7 +661,7 @@ const ConvertPropProvider: FC<{
   >(
     async (tokenIn, _amountIn, tokenOut, { slippage, isConvertingPlanted }) => {
       try {
-        if (!farmerBalances?.deposits) {
+        if (!farmerBalances?.convertibleDeposits) {
           throw new Error('No balances found');
         }
         const { plantAction } = plantAndDoX;
@@ -670,7 +670,7 @@ const ConvertPropProvider: FC<{
 
         const result = await ConvertFarmStep._handleConversion(
           sdk,
-          farmerBalances.deposits,
+          farmerBalances.convertibleDeposits,
           tokenIn,
           tokenOut,
           tokenIn.amount(_amountIn.toString() || '0'),
@@ -687,7 +687,7 @@ const ConvertPropProvider: FC<{
         return new BigNumber('0');
       }
     },
-    [farmerBalances?.deposits, sdk, season, plantAndDoX]
+    [farmerBalances?.convertibleDeposits, sdk, season, plantAndDoX]
   );
 
   const onSubmit = useCallback(
@@ -727,7 +727,7 @@ const ConvertPropProvider: FC<{
           tokenIn,
           tokenOut,
           season.toNumber(),
-          farmerBalances.deposits
+          farmerBalances.convertibleDeposits
         );
 
         const { getEncoded, minAmountOut } = await convertTxn.handleConversion(
