@@ -9576,11 +9576,6 @@
         "internalType": "uint256",
         "name": "L2SRState",
         "type": "uint256"
-      },
-      {
-        "internalType": "address",
-        "name": "pump",
-        "type": "address"
       }
     ],
     "name": "calcCaseIdWithParams",
