@@ -52,13 +52,13 @@ export function uniswapV2Price(beanReserves: BigDecimal, token2Reserves: BigDeci
 }
 
 // Returns the deltaB in a uniswapv2 constant product pool
-export function uniswapV2DeltaB(beanReserves: BigDecimal, token2Reserves: BigDecimal, token2Price: BigDecimal): BigInt {
-  if (beanReserves == ZERO_BD) {
+export function uniswapV2DeltaB(beanReserves: BigInt, token2Reserves: BigDecimal, token2Price: BigDecimal): BigInt {
+  if (beanReserves == ZERO_BI) {
     return ZERO_BI;
   }
-  const constantProduct = beanReserves.times(token2Reserves);
+  const constantProduct = BigDecimal.fromString(beanReserves.toString()).times(token2Reserves);
   const beansAfterSwap = BigInt.fromString(constantProduct.times(token2Price).truncate(0).toString()).sqrt();
-  const deltaB = beansAfterSwap.minus(BigInt.fromString(beanReserves.truncate(0).toString()));
+  const deltaB = beansAfterSwap.minus(beanReserves);
   return deltaB;
 }
 
@@ -103,7 +103,7 @@ export function curveDeltaB(pool: Address, beanReserves: BigInt): BigInt {
   // vprice: 12 decimals, tokens: 18 decimals
   const D = lpContract.get_virtual_price().times(lpContract.totalSupply()).div(BI_10.pow(30));
   // D / 2 - beanReserves
-  const deltaB = D.div(BigInt.fromU32(2)).minus(beanReserves).div(BI_10.pow(6));
+  const deltaB = D.div(BigInt.fromU32(2)).minus(beanReserves);
   return deltaB;
 }
 

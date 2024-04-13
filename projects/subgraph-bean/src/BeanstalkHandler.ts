@@ -109,10 +109,12 @@ export function handleSunrise(event: Sunrise): void {
       let deltaB = ZERO_BI;
       if (bean.pools[i] == BEAN_WETH_V1.toHexString()) {
         const wethToken = updatePreReplantPriceETH();
-        const reserves = [toDecimal(pool.reserves[0], 18), toDecimal(pool.reserves[1])];
-        price = uniswapV2Price(reserves[1], reserves[0], wethToken.lastPriceUSD);
-        liquidity = reserves[0].times(wethToken.lastPriceUSD);
-        deltaB = uniswapV2DeltaB(reserves[1], reserves[0], wethToken.lastPriceUSD);
+        const weth_bd = toDecimal(pool.reserves[0], 18);
+        const bean_bd = toDecimal(pool.reserves[1]);
+        const bean_bi = pool.reserves[1];
+        price = uniswapV2Price(bean_bd, weth_bd, wethToken.lastPriceUSD);
+        liquidity = weth_bd.times(wethToken.lastPriceUSD);
+        deltaB = uniswapV2DeltaB(bean_bi, weth_bd, wethToken.lastPriceUSD);
       } else {
         const priceAndLp = curvePriceAndLp(Address.fromString(bean.pools[i]));
         price = priceAndLp[0];

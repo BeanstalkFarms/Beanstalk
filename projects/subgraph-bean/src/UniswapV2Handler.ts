@@ -77,18 +77,19 @@ export function handleSync(event: Sync): void {
 
   let weth = updatePreReplantPriceETH();
 
-  let wethBalance = toDecimal(reserves[0], 18);
-  let beanBalance = toDecimal(reserves[1]);
+  const weth_bd = toDecimal(reserves[0], 18);
+  const bean_bd = toDecimal(reserves[1]);
+  const bean_bi = reserves[1];
 
   let pool = loadOrCreatePool(event.address.toHexString(), event.block.number);
   let startLiquidityUSD = pool.liquidityUSD;
-  let endLiquidityUSD = wethBalance.times(weth.lastPriceUSD).times(BigDecimal.fromString("2"));
+  let endLiquidityUSD = weth_bd.times(weth.lastPriceUSD).times(BigDecimal.fromString("2"));
   let deltaLiquidityUSD = endLiquidityUSD.minus(startLiquidityUSD);
-  let deltaBeans = uniswapV2DeltaB(beanBalance, wethBalance, weth.lastPriceUSD);
+  let deltaBeans = uniswapV2DeltaB(bean_bi, weth_bd, weth.lastPriceUSD);
 
   updatePoolValues(event.address.toHexString(), event.block.timestamp, event.block.number, ZERO_BI, ZERO_BD, deltaLiquidityUSD, deltaBeans);
 
-  let currentBeanPrice = uniswapV2Price(beanBalance, wethBalance, weth.lastPriceUSD);
+  let currentBeanPrice = uniswapV2Price(bean_bd, weth_bd, weth.lastPriceUSD);
 
   updatePoolPrice(event.address.toHexString(), event.block.timestamp, event.block.number, currentBeanPrice);
 
