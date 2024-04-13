@@ -14,7 +14,12 @@ import {BeanstalkDeployer} from "test/foundry/utils/BeanstalkDeployer.sol";
 import {BasinDeployer} from "test/foundry/utils/BasinDeployer.sol";
 import {DepotDeployer} from "test/foundry/utils/DepotDeployer.sol";
 import {OracleDeployer} from "test/foundry/utils/OracleDeployer.sol";
+import {LibWell, IWell, IERC20} from "contracts/libraries/Well/LibWell.sol";
 import {C} from "contracts/C.sol";
+
+
+///// COMMON IMPORTED LIBRARIES //////
+import {LibTransfer} from "contracts/libraries/Token/LibTransfer.sol";
 
 /**
  * @title TestHelper
@@ -49,7 +54,7 @@ contract TestHelper is Test, BeanstalkDeployer, BasinDeployer, DepotDeployer, Or
         // initialize uniswap pools.
         initUniswapPools(verbose);
         
-        // initialize Diamond:
+        // initialize Diamond, initalize users:
         setupDiamond(mock, verbose);
     }
 
@@ -85,6 +90,18 @@ contract TestHelper is Test, BeanstalkDeployer, BasinDeployer, DepotDeployer, Or
     }
 
     /**
+     * @notice max approves bean for beanstalk.
+     */
+    function maxApproveBeanstalk(
+        address[] memory users
+    ) public {
+        for(uint i; i < users.length; i++) {
+            vm.prank(users[i]);
+            C.bean().approve(BEANSTALK, type(uint256).max);
+        }
+    }
+
+    /**
      * @notice Mints tokens to a list of users.
      * @dev Max approves beanstalk to spend `token`.
      */
@@ -98,7 +115,7 @@ contract TestHelper is Test, BeanstalkDeployer, BasinDeployer, DepotDeployer, Or
         }
     }
 
-     /**
+    /**
      * @notice Mints tokens to a list of users.
      * @dev Max approves beanstalk to spend `token`.
      */
@@ -112,4 +129,74 @@ contract TestHelper is Test, BeanstalkDeployer, BasinDeployer, DepotDeployer, Or
         MockToken(token).approve(BEANSTALK, type(uint256).max);
     }
 
+    /**
+     * @notice assumes a CP2 well with bean as one of the tokens.
+     */
+    function addLiquidityToWell(
+        address well,
+        uint256 beanAmount,
+        uint256 nonBeanTokenAmount
+    ) internal {
+        
+        (address nonBeanToken, ) = LibWell.getNonBeanTokenAndIndexFromWell(
+            well
+        );
+        
+        // mint and sync.
+        MockToken(C.BEAN).mint(well, beanAmount);
+        MockToken(nonBeanToken).mint(well, nonBeanTokenAmount);
+
+        // inital liquidity owned by beanstalk deployer.
+        IWell(well).sync(users[0], 0);
+
+        // sync again to update reserves.
+        IWell(well).sync(users[0], 0);
+    }
+
+    /**
+     * @notice sets the reserves of a well by adding/removing liquidity.
+     * @dev if the reserves decrease, manually remove liquidity. 
+     * if the reserves incerase, add token amounts and sync.
+     */
+    function setReserves(
+        address well,
+        uint256 beanAmount,
+        uint256 nonBeanTokenAmount
+    ) internal prank(users[0]) {
+        uint256[] memory reserves = new uint256[](2);
+        IERC20[] memory tokens = new IERC20[](2);
+        tokens = IWell(well).tokens();
+        reserves = IWell(well).getReserves();
+        uint256 beanIndex = LibWell.getBeanIndex(tokens);
+        uint256 tknIndex = beanIndex == 1 ? 0 : 1;
+
+       uint256[] memory removedTokens = new uint256[](2);
+
+        // calculate amount of tokens to remove.
+        if (reserves[beanIndex] > beanAmount) {
+            removedTokens[beanIndex] = reserves[beanIndex] - beanAmount;
+        }
+
+        if (reserves[tknIndex] > nonBeanTokenAmount) {
+            removedTokens[tknIndex] = reserves[tknIndex] - nonBeanTokenAmount;
+        }
+
+        // liquidity is removed first. 
+        IWell(well).removeLiquidityImbalanced(
+            type(uint256).max,
+            removedTokens,
+            users[0],
+            type(uint256).max
+        );
+
+        // mint amount to add to well, call sync.
+        if (reserves[beanIndex] < beanAmount) {
+            C.bean().mint(well, beanAmount - reserves[beanIndex]);
+        }
+        if (reserves[tknIndex] < nonBeanTokenAmount) {
+            MockToken(address(tokens[tknIndex])).mint(well, nonBeanTokenAmount - reserves[tknIndex]);
+        }
+
+        IWell(well).sync(users[0], 0);
+    }
 }

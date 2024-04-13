@@ -73,7 +73,7 @@ library LibPolynomial {
         bool[4] memory signs = getSigns(f, pieceIndex, numPieces);
         
         for(uint256 degree; degree <= MAX_DEGREE; ++degree) {
-            if(signs[degree]) {
+            if (signs[degree]) {
                 positiveSum = positiveSum.add(pow(x, degree).mul(significands[degree]).div(pow(10, exponents[degree])));
             } else {
                 negativeSum = negativeSum.add(pow(x, degree).mul(significands[degree]).div(pow(10, exponents[degree])));
@@ -118,7 +118,7 @@ library LibPolynomial {
         
         for(uint256 degree; degree <= MAX_DEGREE; ++degree) {
 
-            if(signs[degree]) {
+            if (signs[degree]) {
                 //uint256 max value is 1e77 and this has been tested to work to not overflow for values less than 1e14. 
                 //Note: susceptible to overflows past 1e14
                 positiveSum = positiveSum.add(pow(end, 1 + degree).mul(significands[degree]).div(pow(10, exponents[degree]).mul(1 + degree)));
@@ -146,7 +146,7 @@ library LibPolynomial {
         bool integrateToEnd;
 
         while (!integrateToEnd) {
-            if(end > nextPieceStart) {
+            if (end > nextPieceStart) {
                 integrateToEnd = false;
             } else {
                 integrateToEnd = true;
@@ -160,16 +160,16 @@ library LibPolynomial {
                 endIntegration
             ));
 
-            if(!integrateToEnd) {
+            if (!integrateToEnd) {
                 start = nextPieceStart;
-                if(currentPieceIndex == (numPieces - 1)) {
+                if (currentPieceIndex == (numPieces - 1)) {
                     //reached end of piecewise
                     integrateToEnd = true;
                 } else {
                     //continue to next piece
                     currentPieceIndex++;
                     currentPieceStart = getPiecewiseBreakpoint(f, currentPieceIndex);
-                    if(currentPieceIndex != (numPieces - 1)) nextPieceStart = getPiecewiseBreakpoint(f, currentPieceIndex + 1);
+                    if (currentPieceIndex != (numPieces - 1)) nextPieceStart = getPiecewiseBreakpoint(f, currentPieceIndex + 1);
                 }
             }
 
@@ -184,13 +184,13 @@ library LibPolynomial {
     */
     function findPiecewiseIndex(bytes calldata f, uint256 value, uint256 high) internal pure returns (uint256) {
         uint256 breakpointAtIndex = getPiecewiseBreakpoint(f, 0);
-        if(value < breakpointAtIndex) return 0;
+        if (value < breakpointAtIndex) return 0;
         
         uint256 low = 0;
         
         while(low < high) {
-            if(breakpointAtIndex == value) return low;
-            else if(breakpointAtIndex > value) return low - 1;
+            if (breakpointAtIndex == value) return low;
+            else if (breakpointAtIndex > value) return low - 1;
             else low++;
             breakpointAtIndex = getPiecewiseBreakpoint(f, low);
         }
@@ -269,13 +269,13 @@ library LibPolynomial {
     * @notice A safe way to take the power of a number.
     */
     function pow(uint256 base, uint256 exponent) internal pure returns (uint256) {
-        if(exponent == 0) 
+        if (exponent == 0) 
             return 1;
             
-        else if(exponent == 1) 
+        else if (exponent == 1) 
             return base; 
 
-        else if(base == 0 && exponent != 0) 
+        else if (base == 0 && exponent != 0) 
             return 0;
 
         else {
