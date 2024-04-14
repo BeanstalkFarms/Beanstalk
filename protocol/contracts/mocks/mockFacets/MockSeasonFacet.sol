@@ -300,8 +300,6 @@ contract MockSeasonFacet is SeasonFacet  {
         IMockPump(C.BEANSTALK_PUMP).update(reserves, new bytes(0));
         s.twaReserves[C.BEAN_ETH_WELL].reserve0 = uint128(reserves[0]);
         s.twaReserves[C.BEAN_ETH_WELL].reserve1 = uint128(reserves[1]);
-        console.log("twa reserves 0:", s.twaReserves[C.BEAN_ETH_WELL].reserve0);
-        console.log("twa reserves 1:", s.twaReserves[C.BEAN_ETH_WELL].reserve1);
         s.usdTokenPrice[C.BEAN_ETH_WELL] = 0.001e18;
         if(aboveQ) {
             // increase bean price
@@ -310,8 +308,6 @@ contract MockSeasonFacet is SeasonFacet  {
             // decrease bean price
             s.twaReserves[C.BEAN_ETH_WELL].reserve0 = uint128(reserves[0]);
         }
-        console.log("twa reserves 0:", s.twaReserves[C.BEAN_ETH_WELL].reserve0);
-        console.log("twa reserves 1:", s.twaReserves[C.BEAN_ETH_WELL].reserve1);
 
         /// FIELD ///
         s.season.raining = raining;
@@ -556,9 +552,9 @@ contract MockSeasonFacet is SeasonFacet  {
     }
 
     function mockTestBeanPrice(address well) external view returns (uint256 beanUsdPrice) {
-        uint256 beanTknPrice = LibWell.getBeanTknPriceFromTwaReserves(well);
+        uint256 beanTokenPrice = LibWell.getBeanTokenPriceFromTwaReserves(well);
         beanUsdPrice = uint256(1e30).div(
-            LibWell.getUsdTokenPriceForWell(well).mul(beanTknPrice)
+            LibWell.getUsdTokenPriceForWell(well).mul(beanTokenPrice)
         );
     }
 }
