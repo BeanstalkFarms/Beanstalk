@@ -182,6 +182,9 @@ library LibWhitelist {
         s.ss[token].milestoneSeason = s.season.current;
        
         // stalkEarnedPerSeason is set to int32 before casting down.
+        // will overflow if s.ss[token].stalkEarnedPerSeason or 
+        // stalkEarnedPerSeason > 2^31 - 1. 
+        // or if the difference is greater than 2^23 - 1.
         s.ss[token].deltaStalkEarnedPerSeason = int24(int32(stalkEarnedPerSeason) - int32(s.ss[token].stalkEarnedPerSeason)); // calculate delta
         s.ss[token].stalkEarnedPerSeason = stalkEarnedPerSeason;
 
