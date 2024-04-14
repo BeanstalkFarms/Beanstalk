@@ -281,7 +281,7 @@ library LibGerminate {
         // check to end germination for first stalk.
         // if last mowed season is the greater or equal than (currentSeason - 1),
         // then the first stalk is still germinating.
-        if (firstStalk > 0 && lastMowedSeason < currentSeason.sub(1)) {
+        if (firstStalk > 0 && lastMowedSeason != currentSeason.sub(1)) {
             germinatingStalk = firstStalk;
             germinatingRoots = calculateGerminatingRoots(lastMowedSeason, firstStalk);
         }
