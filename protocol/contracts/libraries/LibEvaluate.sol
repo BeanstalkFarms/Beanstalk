@@ -234,8 +234,9 @@ library LibEvaluate {
             // if the liquidity is the largest, update `largestLiqWell`,  
             // and add the liquidity to the total.
             // `largestLiqWell` is only used to initalize `s.sopWell` upon a sop,
-            // but a hot storage load to skip the block below 
-            // is significantly more expensive than performing the logic on every sunrise.
+            // if it has not been initalized.
+            // A hot storage load to skip the block below is significantly more expensive
+            //  than performing the logic on every sunrise.
             if (wellLiquidity > largestLiq) {
                 largestLiq = wellLiquidity;
                 largestLiqWell = pools[i];
