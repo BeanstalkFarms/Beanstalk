@@ -44,9 +44,14 @@ library LibGerminate {
 
     /**
      * @notice emitted when the total germinating amount/bdv changes.
+     * @param germinationSeason the season the germination occured. 
+     * Does not always equal the current season.
+     * @param token the token being updated.
+     * @param delta the change in the total germinating amount.
+     * @param deltaBdv the change in the total germinating bdv.
      */
     event TotalGerminatingBalanceChanged(
-        uint256 season,
+        uint256 germinationSeason,
         address indexed token,
         int256 delta,
         int256 deltaBdv
@@ -78,15 +83,16 @@ library LibGerminate {
 
         // germination can only occur after season 3.
         if (season < 2) return;
+        uint32 germinationSeason = season.sub(2);
 
         // base roots are used if there are no roots in the silo.
         // root calculation is skipped if no deposits have been made 
         // in the season.
         if (s.s.roots == 0) {
-            s.unclaimedGerminating[season.sub(2)].roots = 
-                s.unclaimedGerminating[season.sub(2)].stalk
+            s.unclaimedGerminating[germinationSeason].roots = 
+                s.unclaimedGerminating[germinationSeason].stalk
                 .mul(uint128(C.getRootsBase()));
-        } else if (s.unclaimedGerminating[season.sub(2)].stalk > 0) {
+        } else if (s.unclaimedGerminating[germinationSeason].stalk > 0) {
             s.unclaimedGerminating[season.sub(2)].roots = s
             .s.roots
             .mul(s.unclaimedGerminating[season.sub(2)].stalk)
@@ -94,8 +100,8 @@ library LibGerminate {
             .toUint128();
         }
         // increment total stalk and roots based on unclaimed values.
-        s.s.stalk = s.s.stalk.add(s.unclaimedGerminating[season.sub(2)].stalk);
-        s.s.roots = s.s.roots.add(s.unclaimedGerminating[season.sub(2)].roots);
+        s.s.stalk = s.s.stalk.add(s.unclaimedGerminating[germinationSeason].stalk);
+        s.s.roots = s.s.roots.add(s.unclaimedGerminating[germinationSeason].roots);
 
         // increment total deposited and amounts for each token.
         Storage.TotalGerminating storage totalGerm;
@@ -118,7 +124,7 @@ library LibGerminate {
 
             // emit events.
             emit TotalGerminatingBalanceChanged(
-                season,
+                germinationSeason,
                 tokens[i],
                 -int256(totalGerm.deposited[tokens[i]].amount),
                 -int256(totalGerm.deposited[tokens[i]].bdv)
