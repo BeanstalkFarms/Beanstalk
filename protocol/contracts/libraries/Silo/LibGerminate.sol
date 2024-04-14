@@ -381,6 +381,9 @@ library LibGerminate {
      *
      * @dev use when the stemTip and germinatingStem have already been calculated.
      * Assumes the same token is used.
+     * prevStalkEarnedPerSeason is the stalkEarnedPerSeason of the previous season.
+     * since `lastStemTip` + `prevStalkEarnedPerSeason` is the current stemTip, 
+     * safeMath is not needed.
      */
     function __getGerminatingStem(
         int96 stemTip,
