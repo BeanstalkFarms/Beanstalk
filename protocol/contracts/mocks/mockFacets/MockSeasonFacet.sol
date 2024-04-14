@@ -23,7 +23,7 @@ import {LibCurveMinting} from "contracts/libraries/Minting/LibCurveMinting.sol";
 import {LibWellMinting} from "contracts/libraries/Minting/LibWellMinting.sol";
 import {LibEvaluate} from "contracts/libraries/LibEvaluate.sol";
 import {LibTokenSilo} from "contracts/libraries/Silo/LibTokenSilo.sol";
-import {IWell} from "contracts/interfaces/basin/IWell.sol";
+import {IWell, Call} from "contracts/interfaces/basin/IWell.sol";
 
 import "forge-std/console.sol";
 
@@ -45,7 +45,8 @@ interface ResetPool {
 }
 
 interface IMockPump {
-    function update(address well,uint256[] memory _reserves, bytes memory) external;
+    function update(uint256[] memory _reserves, bytes memory data) external;
+    function update(address well, uint256[] memory _reserves, bytes memory) external;
     function readInstantaneousReserves(address well, bytes memory data) external view returns (uint[] memory reserves);
 }
 
@@ -279,50 +280,54 @@ contract MockSeasonFacet is SeasonFacet  {
         bool raining,
         bool rainRoots,
         bool aboveQ,
-        uint256 L2SRState,
-        address pump
+        uint256 L2SRState
     ) public {
-        s.season.raining = raining;
-        s.r.roots = rainRoots ? 1 : 0;
-        s.f.pods = pods;
-        s.w.lastDSoil = uint128(_lastDSoil);
-        s.f.beanSown = beanSown;
-        s.f.soil = endSoil;
         // L2SR
         // 3 = exs high, 1 = rea high, 2 = rea low, 3 = exs low
         uint256[] memory reserves = new uint256[](2);
-        uint256 totalSupply = C.bean().totalSupply();
         if (L2SRState == 3) {
-            // reserves[1] = 0.8e18;
-            reserves[1] = uint256(800);
+            // reserves[1] = 0.8e1
+            reserves[1] = uint256(801e18);
         } else if (L2SRState == 2) {
             // reserves[1] = 0.8e18 - 1;
-            reserves[1] = uint256(799);
+            reserves[1] = uint256(799e18);
         } else if (L2SRState == 1) {
             // reserves[1] = 0.4e18 - 1;
-            reserves[1] = uint256(399);
+            reserves[1] = uint256(399e18);
         } else if (L2SRState == 0) {
             // reserves[1] = 0.12e18 - 1;    
-            reserves[1] = uint256(119);
+            reserves[1] = uint256(119e18);
         }
-        reserves[0] = reserves[1].mul(totalSupply).div(1000);
-        reserves[1] = reserves[1]
-            .mul(totalSupply)
-            .mul(LibEvaluate.LIQUIDITY_PRECISION)
-            .div(1000) // eth price
-            .div(1000); // reserve[1] / 1000 = %
-        IMockPump(pump).update(C.BEAN_ETH_WELL, reserves, new bytes(0));
+        uint256 beanEthPrice = 1000e6;
+        uint256 l2srBeans = beanEthPrice.mul(1000);
+        reserves[0] = reserves[1].mul(beanEthPrice).div(1e18);
+        if(l2srBeans > C.bean().totalSupply()) {
+            C.bean().mint(address(this), l2srBeans - C.bean().totalSupply());
+        }
+        Call[] memory pump = IWell(C.BEAN_ETH_WELL).pumps();
+        IMockPump(pump[0].target).update(reserves, pump[0].data);
         s.twaReserves[C.BEAN_ETH_WELL].reserve0 = uint128(reserves[0]);
         s.twaReserves[C.BEAN_ETH_WELL].reserve1 = uint128(reserves[1]);
-        if (aboveQ) {
+        console.log("twa reserves 0:", s.twaReserves[C.BEAN_ETH_WELL].reserve0);
+        console.log("twa reserves 1:", s.twaReserves[C.BEAN_ETH_WELL].reserve1);
+        s.usdTokenPrice[C.BEAN_ETH_WELL] = 0.001e18;
+        if(aboveQ) {
             // increase bean price
-            s.twaReserves[C.BEAN_ETH_WELL].reserve0 = uint128(reserves[0].mul(2));
-            s.usdTokenPrice[C.BEAN_ETH_WELL] = 0.001e18;
+            s.twaReserves[C.BEAN_ETH_WELL].reserve0 = uint128(reserves[0].mul(10).div(11));
         } else {
             // decrease bean price
             s.twaReserves[C.BEAN_ETH_WELL].reserve0 = uint128(reserves[0]);
-            s.usdTokenPrice[C.BEAN_ETH_WELL] = 0.001e18;
         }
+        console.log("twa reserves 0:", s.twaReserves[C.BEAN_ETH_WELL].reserve0);
+        console.log("twa reserves 1:", s.twaReserves[C.BEAN_ETH_WELL].reserve1);
+
+        /// FIELD ///
+        s.season.raining = raining;
+        s.r.roots = rainRoots ? 1 : 0;
+        s.f.pods = (pods.mul(C.bean().totalSupply())/1000); // previous tests used 1000 as the total supply.
+        s.w.lastDSoil = uint128(_lastDSoil);
+        s.f.beanSown = beanSown;
+        s.f.soil = endSoil;
         calcCaseIdandUpdate(deltaB);
     }
 

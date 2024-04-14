@@ -24,7 +24,7 @@ describe('Well BDV', function () {
     ;
 
     [this.well, this.wellFunction, this.pump] = await deployMockWellWithMockPump();
-    this.pump.setInstantaneousReserves([to18('1'), to18('1')])
+    this.pump.setInstantaneousReserves(this.well.address, [to18('1'), to18('1')])
   });
 
   beforeEach(async function () {
@@ -37,22 +37,21 @@ describe('Well BDV', function () {
 
   it("get BDV at 1:1", async function () {
     expect(await beanstalk.wellBdv(this.well.address, to6('1000000'))).to.be.within('1999999', '2000001')
-    expect(await beanstalk.wellBdv(this.well.address, to6('1000000'))).to.be.within('1999999', '2000001')
     expect(await beanstalk.bdv(this.well.address, to6('1000000'))).to.be.within('1999999', '2000001')
   })
 
   it("Gets BDV at 4:1", async function () {
-    this.pump.setInstantaneousReserves([to18('4'), to18('1')])
+    this.pump.setInstantaneousReserves(this.well.address, [to18('4'), to18('1')])
     expect(await beanstalk.bdv(this.well.address, to6('1000000'))).to.be.within('3999999', '4000001')
   })
 
   it("Gets BDV at 1:4", async function () {
-    this.pump.setInstantaneousReserves([to18('1'), to18('4')])
+    this.pump.setInstantaneousReserves(this.well.address, [to18('1'), to18('4')])
     expect(await beanstalk.bdv(this.well.address, to6('1000000'))).to.be.within('999999', '1000001')
   })
 
   it("Fails if balance too low", async function () {
-    this.pump.setInstantaneousReserves([to6('1'), to18('1')])
+    this.pump.setInstantaneousReserves(this.well.address, [to6('1'), to18('1')])
     await expect(beanstalk.bdv(this.well.address, to6('1000000'))).to.be.revertedWith('Silo: Well Bean balance below min')
   })
 })

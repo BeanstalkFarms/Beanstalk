@@ -118,7 +118,7 @@ describe('BDV', function () {
       await this.well.setPumps([[this.pump.address, '0x']])
       await this.well.setWellFunction([this.wellFunction.address, '0x'])
       await this.well.setTokens([BEAN, WETH])
-      await this.pump.setInstantaneousReserves([to18('1'), to18('1')])
+      await this.pump.setInstantaneousReserves(this.well.address, [to18('1'), to18('1')])
     });
 
     it("properly checks bdv", async function () {
@@ -128,7 +128,7 @@ describe('BDV', function () {
     })
 
     it("properly checks bdv", async function () {
-      await this.pump.setInstantaneousReserves([to18('1.02'), to18('1')])
+      await this.pump.setInstantaneousReserves(this.well.address, [to18('1.02'), to18('1')])
       const wellBdv = await beanstalk.bdv(this.well.address, to18('2'))
       expect(await beanstalk.unripeLPToBDV(to18('20'))).to.equal(wellBdv);
       expect(await beanstalk.bdv(UNRIPE_LP, to18('20'))).to.equal(wellBdv);
