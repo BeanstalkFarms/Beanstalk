@@ -255,7 +255,7 @@ contract EnrootFacet is ReentrancyGuard {
             LibSilo.stalkReward(
                 stem,
                 stemTip,
-                uint128(bdv) // safeCast not needed because bdv is already uint128.
+                bdv.toUint128()
             )
         );
     }

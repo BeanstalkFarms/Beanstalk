@@ -234,8 +234,7 @@ contract ConvertFacet is ReentrancyGuard {
             );
         } else {
             LibTokenSilo.incrementTotalGerminating(token, amount, bdv, germ);
-            // safeCast not needed as stalk is <= max(uint128)
-            LibSilo.mintGerminatingStalk(msg.sender, uint128(bdv.mul(LibTokenSilo.stalkIssuedPerBdv(token))), germ);   
+            LibSilo.mintGerminatingStalk(msg.sender, bdv.mul(LibTokenSilo.stalkIssuedPerBdv(token)).toUint128(), germ);   
             LibSilo.mintActiveStalk(msg.sender, grownStalk);
         }
         LibTokenSilo.addDepositToAccount(
