@@ -156,7 +156,7 @@ library LibTokenSilo {
             amount.toUint128()
         );
         germinate.deposited[token].bdv = germinate.deposited[token].bdv.sub(bdv.toUint128());
-
+    
         emit LibGerminate.TotalGerminatingBalanceChanged(
             LibGerminate.getSeasonGerminationState() == germ ? 
                 s.season.current : 
@@ -303,9 +303,6 @@ library LibTokenSilo {
      *
      * Unlike {removeDepositFromAccount}, this function DOES EMIT an
      * {AddDeposit} event. See {removeDepositFromAccount} for more details.
-     *
-     * If a deposit is 'germinating', increment the germinating bdv for a user.
-     * Otherwise, increment the mow status bdv for a user.
      */
     function addDepositToAccount(
         address account,
@@ -612,7 +609,7 @@ library LibTokenSilo {
         // divide the newStem by 1e6 to get the legacy stem.
         uint256 legacyDepositId = LibBytes.packAddressAndStem(token, newStem.div(1e6));
         uint256 legacyAmount = s.a[account].legacyV3Deposits[legacyDepositId].amount;
-        uint256 legacyBdv = s.a[account].legacyV3Deposits[legacyDepositId].bdv;
+    uint256 legacyBdv = s.a[account].legacyV3Deposits[legacyDepositId].bdv;
         crateAmount = crateAmount.add(legacyAmount);
         crateBdv = crateBdv.add(legacyBdv);
         delete s.a[account].legacyV3Deposits[legacyDepositId];
