@@ -17,6 +17,7 @@ import { CurvePrice } from "../generated/Beanstalk/CurvePrice";
 import { checkBeanCross } from "./utils/Cross";
 import { curveDeltaB, curvePriceAndLp, uniswapV2DeltaB, uniswapV2Price, updatePreReplantPriceETH } from "./utils/Price";
 import { MetapoolOracle, WellOracle } from "../generated/TWAPOracles/BIP37";
+import { onSunriseSetUniswapV2Twa } from "./UniswapV2Handler";
 
 export function handleSunrise(event: Sunrise): void {
   // Update the season for hourly and daily liquidity metrics
@@ -116,6 +117,8 @@ export function handleSunrise(event: Sunrise): void {
         price = uniswapV2Price(bean_bd, weth_bd, wethToken.lastPriceUSD);
         liquidity = weth_bd.times(wethToken.lastPriceUSD);
         deltaB = uniswapV2DeltaB(bean_bi, weth_bd, wethToken.lastPriceUSD);
+
+        onSunriseSetUniswapV2Twa(bean.pools[i], event.block.timestamp, event.block.number);
       } else {
         const priceAndLp = curvePriceAndLp(Address.fromString(bean.pools[i]));
         price = priceAndLp[0];
@@ -150,6 +153,7 @@ export function handleSunrise(event: Sunrise): void {
       totalLiquidity.minus(bean.liquidityUSD)
     );
     checkBeanCross(BEAN_ERC20_V1.toHexString(), event.block.timestamp, event.block.number, bean.price, totalPrice);
+    updateBeanTwaDeltaB(event.block.timestamp, event.block.number);
   }
 }
 
@@ -157,10 +161,10 @@ export function handleSunrise(event: Sunrise): void {
 
 export function handleMetapoolOracle(event: MetapoolOracle): void {
   setPoolTwaDeltaB(BEAN_3CRV.toHexString(), event.params.deltaB, event.block.timestamp, event.block.number);
-  updateBeanTwaDeltaB(event.block.number, event.block.timestamp);
+  updateBeanTwaDeltaB(event.block.timestamp, event.block.number);
 }
 
 export function handleWellOracle(event: WellOracle): void {
   setPoolTwaDeltaB(event.params.well.toHexString(), event.params.deltaB, event.block.timestamp, event.block.number);
-  updateBeanTwaDeltaB(event.block.number, event.block.timestamp);
+  updateBeanTwaDeltaB(event.block.timestamp, event.block.number);
 }

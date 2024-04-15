@@ -96,6 +96,8 @@ dataSources:
       abis:
         - name: Beanstalk
           file: ../subgraph-core/abis/Beanstalk/Beanstalk-Replanted.json
+        - name: PreReplant
+          file: ../subgraph-core/abis/Beanstalk/Beanstalk-Pre-Replant.json
         - name: BeanstalkPrice
           file: ../subgraph-core/abis/BeanstalkPrice.json
         - name: CurvePrice

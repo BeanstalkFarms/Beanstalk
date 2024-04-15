@@ -1,13 +1,21 @@
 import { BigDecimal, BigInt } from "@graphprotocol/graph-ts";
 import { Swap, Sync, UniswapV2Pair } from "../generated/BeanUniswapV2Pair/UniswapV2Pair";
 import { loadBean, updateBeanSupplyPegPercent, updateBeanValues } from "./utils/Bean";
-import { BEAN_ERC20_V1, WETH, WETH_USDC_PAIR } from "../../subgraph-core/utils/Constants";
-import { toDecimal, ZERO_BD, ZERO_BI } from "../../subgraph-core/utils/Decimals";
-import { loadOrCreatePool, setPoolReserves, updatePoolPrice, updatePoolValues } from "./utils/Pool";
+import { BEAN_ERC20_V1, BEANSTALK, WETH, WETH_USDC_PAIR } from "../../subgraph-core/utils/Constants";
+import { BI_10, toDecimal, ZERO_BD, ZERO_BI } from "../../subgraph-core/utils/Decimals";
+import {
+  loadOrCreatePool,
+  loadOrCreatePoolDailySnapshot,
+  loadOrCreatePoolHourlySnapshot,
+  setPoolReserves,
+  updatePoolPrice,
+  updatePoolValues
+} from "./utils/Pool";
 import { loadOrCreateToken } from "./utils/Token";
 import { checkBeanCross } from "./utils/Cross";
 import { Token } from "../generated/schema";
 import { uniswapV2DeltaB, uniswapV2Price, uniswapV2Reserves, updatePreReplantPriceETH } from "./utils/Price";
+import { PreReplant } from "../generated/Beanstalk/PreReplant";
 
 // export function handleMint(event: Mint): void {
 //   updatePoolReserves(event.address.toHexString(), event.params.amount0, event.params.amount1, event.block.number);
@@ -100,4 +108,31 @@ export function handleSync(event: Sync): void {
   updateBeanSupplyPegPercent(event.block.number);
 
   updateBeanValues(BEAN_ERC20_V1.toHexString(), event.block.timestamp, currentBeanPrice, ZERO_BI, ZERO_BI, ZERO_BD, deltaLiquidityUSD);
+}
+
+export function onSunriseSetUniswapV2Twa(poolAddress: string, timestamp: BigInt, blockNumber: BigInt): void {
+  let beanstalk = PreReplant.bind(BEANSTALK);
+  const prices = beanstalk.getTWAPPrices();
+
+  // After BIP-9, reserves calculation changes
+  let reserves: BigInt[];
+  if (blockNumber.lt(BigInt.fromU64(13953949))) {
+    const result = beanstalk.reserves();
+    reserves = [result.value0, result.value1];
+  } else {
+    const result = beanstalk.lockedReserves();
+    reserves = [result.value0, result.value1];
+  }
+
+  const mulReserves = reserves[0].times(reserves[1]).times(BI_10.pow(6));
+  const currentBeans = mulReserves.div(prices.value0.times(BI_10.pow(18))).sqrt();
+  const targetBeans = mulReserves.div(prices.value1.times(BI_10.pow(18))).sqrt();
+  const deltaB = targetBeans.minus(currentBeans);
+
+  let poolHourly = loadOrCreatePoolHourlySnapshot(poolAddress, timestamp, blockNumber);
+  let poolDaily = loadOrCreatePoolDailySnapshot(poolAddress, timestamp, blockNumber);
+  poolHourly.twaDeltaBeans = deltaB;
+  poolDaily.twaDeltaBeans = deltaB;
+  poolHourly.save();
+  poolDaily.save();
 }
