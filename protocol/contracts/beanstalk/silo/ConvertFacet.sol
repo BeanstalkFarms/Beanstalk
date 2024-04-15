@@ -164,6 +164,9 @@ contract ConvertFacet is ReentrancyGuard {
                 ));
                 i++;
             }
+
+            // if the loop is exited early, set the remaining amounts to 0.
+            // `i` is not reinitalized and uses the value from the loop.
             for (i; i < stems.length; ++i) amounts[i] = 0;
             
             emit RemoveDeposits(
