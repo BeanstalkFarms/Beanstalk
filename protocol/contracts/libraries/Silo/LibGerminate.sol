@@ -161,7 +161,7 @@ library LibGerminate {
         uint128 germinatingStalk;
 
         // check to end germination for first stalk.
-        // if last mowed season is not equal to current season - 1,
+        // if last mowed season is greater or equal than (currentSeason - 1),,
         if (firstStalk > 0 && lastMowedSeason < currentSeason.sub(1)) {
             germinatingStalk = firstStalk;
             roots = claimGerminatingRoots(account, lastMowedSeason, firstStalk, lastUpdateOdd);
