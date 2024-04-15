@@ -4,12 +4,9 @@ pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
 import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
-import {OracleLibrary} from "@uniswap/v3-periphery/contracts/libraries/OracleLibrary.sol";
-import {LibWell} from "contracts/libraries/Well/LibWell.sol";
 import {IBlockBasefee} from "../interfaces/IBlockBasefee.sol";
 import "@openzeppelin/contracts/math/Math.sol";
 import "../C.sol";
-import "./Curve/LibCurve.sol";
 
 /**
  * @title LibIncentive
@@ -60,7 +57,7 @@ library LibIncentive {
     /**
      * @param initialGasLeft The amount of gas left at the start of the transaction
      * @param blocksLate The number of blocks late that {sunrise()} was called.
-     * @param beanEthPrice The Bean:Eth price calculated by the Minting Well.
+     * @param beanEthPrice The Bean:Eth price calculated by the Minting Well. The amount of Beans per ETH.
      * @dev Calculates Sunrise incentive amount based on current gas prices and a computed
      * BEAN:ETH price. This function is called at the end of {sunriseTo()} after all
      * "step" functions have been executed.
