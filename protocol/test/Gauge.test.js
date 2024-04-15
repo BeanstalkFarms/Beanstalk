@@ -37,7 +37,7 @@ describe('Gauge', function () {
     await this.well.connect(user).approve(this.diamond.address, MAX_UINT256)
 
     await this.well.setReserves([to6('1000000'), to18('1000')])
-    await this.pump.setCumulativeReserves([to6('1000000'), to18('1000')])
+    await this.pump.setCumulativeReserves(this.well.address, [to6('1000000'), to18('1000')])
     await this.well.mint(ownerAddress, to18('500'))
     await this.well.mint(user.address, to18('500'))
     await mockBeanstalk.siloSunrise(0)
@@ -55,7 +55,7 @@ describe('Gauge', function () {
     await mockBeanstalk.connect(owner).addUnripeToken(UNRIPE_BEAN, BEAN, ZERO_BYTES)
     await mockBeanstalk.connect(owner).addUnripeToken(UNRIPE_LP, BEAN_ETH_WELL, ZERO_BYTES)
 
-   
+    await mockBeanstalk.setBeanToMaxLpGpPerBdvRatio(to18('50'))
   })
 
   beforeEach(async function () {
@@ -225,7 +225,7 @@ describe('Gauge', function () {
 
       it('returns 0 if no liquidity', async function () {
         await bean.mint(ownerAddress, to6('1000000'))
-        await this.pump.setCumulativeReserves([to6('0'), to18('0')])
+        await this.pump.setCumulativeReserves(this.well.address, [to6('0'), to18('0')])
 
         expect(
           await beanstalk.getLiquidityToSupplyRatio()

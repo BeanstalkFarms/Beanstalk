@@ -962,4 +962,5 @@ interface IMockFBeanstalk {
     function woohoo() external pure returns (uint256);
     function wrapEth(uint256 amount, uint8 mode) external payable;
     function yield() external view returns (uint32);
+    function getSeasonTimestamp() external view returns (uint256);
 }

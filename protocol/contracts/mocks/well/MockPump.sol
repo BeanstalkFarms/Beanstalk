@@ -72,4 +72,8 @@ contract MockPump is IInstantaneousPump, ICumulativePump {
         twaReserves = reservesData[well].cumulativeReserves;
         _cumulativeReserves = abi.encodePacked(twaReserves[0], twaReserves[1]);
     }
+
+    function clearReserves(address well) external {
+        delete reservesData[well];
+    }
 }

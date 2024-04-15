@@ -356,4 +356,12 @@ contract SeasonGettersFacet {
         (,,,l) = getChangeFromCaseId(caseId);
         return l;
     }
+
+    function getSeasonStruct() external view returns (Storage.Season memory) {
+        return s.season;
+    }
+
+    function getSeasonTimestamp() external view returns (uint256) {
+        return s.season.timestamp;
+    }
 }

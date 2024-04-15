@@ -7600,6 +7600,109 @@
   },
   {
     "inputs": [],
+    "name": "getSeasonStruct",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "uint32",
+            "name": "current",
+            "type": "uint32"
+          },
+          {
+            "internalType": "uint32",
+            "name": "lastSop",
+            "type": "uint32"
+          },
+          {
+            "internalType": "uint8",
+            "name": "withdrawSeasons",
+            "type": "uint8"
+          },
+          {
+            "internalType": "uint32",
+            "name": "lastSopSeason",
+            "type": "uint32"
+          },
+          {
+            "internalType": "uint32",
+            "name": "rainStart",
+            "type": "uint32"
+          },
+          {
+            "internalType": "bool",
+            "name": "raining",
+            "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "fertilizing",
+            "type": "bool"
+          },
+          {
+            "internalType": "uint32",
+            "name": "sunriseBlock",
+            "type": "uint32"
+          },
+          {
+            "internalType": "bool",
+            "name": "abovePeg",
+            "type": "bool"
+          },
+          {
+            "internalType": "uint16",
+            "name": "stemStartSeason",
+            "type": "uint16"
+          },
+          {
+            "internalType": "uint16",
+            "name": "stemScaleSeason",
+            "type": "uint16"
+          },
+          {
+            "internalType": "uint32",
+            "name": "beanEthStartMintingSeason",
+            "type": "uint32"
+          },
+          {
+            "internalType": "uint256",
+            "name": "start",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "period",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "timestamp",
+            "type": "uint256"
+          }
+        ],
+        "internalType": "struct Storage.Season",
+        "name": "",
+        "type": "tuple"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "getSeasonTimestamp",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
     "name": "getSeedGauge",
     "outputs": [
       {
@@ -8940,11 +9043,6 @@
         "internalType": "uint256",
         "name": "L2SRState",
         "type": "uint256"
-      },
-      {
-        "internalType": "address",
-        "name": "pump",
-        "type": "address"
       }
     ],
     "name": "calcCaseIdWithParams",
@@ -9123,6 +9221,51 @@
   },
   {
     "inputs": [],
+    "name": "getNextSeasonStart",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "well",
+        "type": "address"
+      }
+    ],
+    "name": "getPoolDeltaBWithoutCap",
+    "outputs": [
+      {
+        "internalType": "int256",
+        "name": "deltaB",
+        "type": "int256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "getSeasonStart",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
     "name": "getT",
     "outputs": [
       {
@@ -9219,6 +9362,13 @@
   },
   {
     "inputs": [],
+    "name": "initOracleForAllWhitelistedWells",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
     "name": "lastDSoil",
     "outputs": [
       {
@@ -9259,7 +9409,13 @@
       }
     ],
     "name": "mockCalcCaseIdandUpdate",
-    "outputs": [],
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "caseId",
+        "type": "uint256"
+      }
+    ],
     "stateMutability": "nonpayable",
     "type": "function"
   },
@@ -9380,6 +9536,19 @@
     "inputs": [],
     "name": "mockStepGauge",
     "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "mockStepSeason",
+    "outputs": [
+      {
+        "internalType": "uint32",
+        "name": "season",
+        "type": "uint32"
+      }
+    ],
     "stateMutability": "nonpayable",
     "type": "function"
   },
@@ -9556,16 +9725,6 @@
         "type": "uint256"
       },
       {
-        "internalType": "uint256",
-        "name": "beansInWell",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "beanSupply",
-        "type": "uint256"
-      },
-      {
         "internalType": "address",
         "name": "targetWell",
         "type": "address"
@@ -9573,11 +9732,6 @@
     ],
     "name": "setBeanstalkState",
     "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "newSupply",
-        "type": "uint256"
-      },
       {
         "internalType": "int256",
         "name": "deltaB",
@@ -9590,12 +9744,43 @@
   {
     "inputs": [
       {
+        "internalType": "uint256",
+        "name": "changeInSoilDemand",
+        "type": "uint256"
+      }
+    ],
+    "name": "setChangeInSoilDemand",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
         "internalType": "uint32",
         "name": "_season",
         "type": "uint32"
       }
     ],
     "name": "setCurrentSeasonE",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "liquidityToSupplyRatio",
+        "type": "uint256"
+      },
+      {
+        "internalType": "address",
+        "name": "targetWell",
+        "type": "address"
+      }
+    ],
+    "name": "setL2SR",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -9649,6 +9834,43 @@
     ],
     "name": "setNextSowTimeE",
     "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "podRate",
+        "type": "uint256"
+      }
+    ],
+    "name": "setPodRate",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "price",
+        "type": "uint256"
+      },
+      {
+        "internalType": "address",
+        "name": "targetWell",
+        "type": "address"
+      }
+    ],
+    "name": "setPrice",
+    "outputs": [
+      {
+        "internalType": "int256",
+        "name": "deltaB",
+        "type": "int256"
+      }
+    ],
     "stateMutability": "nonpayable",
     "type": "function"
   },

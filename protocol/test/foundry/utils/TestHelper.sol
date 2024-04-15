@@ -8,6 +8,7 @@ import "forge-std/Test.sol";
 
 ////// Mocks //////
 import {MockToken} from "contracts/mocks/MockToken.sol";
+import {MockBlockBasefee} from "contracts/mocks/MockBlockBasefee.sol";
 
 ///// TEST HELPERS ////// 
 import {BeanstalkDeployer} from "test/foundry/utils/BeanstalkDeployer.sol";
@@ -28,6 +29,12 @@ import {LibTransfer} from "contracts/libraries/Token/LibTransfer.sol";
  */
 contract TestHelper is Test, BeanstalkDeployer, BasinDeployer, DepotDeployer, OracleDeployer {
 
+    // ideally, timestamp should be set to 1_000_000.
+    // however, beanstalk rounds down to the nearest hour. 
+    // 1_000_000 / 3600 * 3600 = 997200. 
+    uint256 constant PERIOD = 3600;
+    uint256 constant START_TIMESTAMP = 1_000_000;
+    uint256 constant INITIAL_TIMESTAMP = (START_TIMESTAMP / PERIOD) * PERIOD;
     struct initERC20params {
         address targetAddr;
         string name;
@@ -39,6 +46,17 @@ contract TestHelper is Test, BeanstalkDeployer, BasinDeployer, DepotDeployer, Or
      * @notice initializes the state of the beanstalk contracts for testing.
      */
     function initializeBeanstalkTestState(bool mock, bool verbose) public {
+
+        // initialize misc contracts.
+        initMisc();
+
+        // sets block.timestamp to 1_000_000, 
+        // as starting from an timestamp of 0 can cause issues.
+        vm.warp(INITIAL_TIMESTAMP);
+
+        // set block base fee to 1 gwei.
+        MockBlockBasefee(BASE_FEE_CONTRACT).setAnswer(1e9);
+
         // initalize mock tokens.
         initMockTokens(verbose);
 
@@ -73,11 +91,23 @@ contract TestHelper is Test, BeanstalkDeployer, BasinDeployer, DepotDeployer, Or
         ];
 
         for(uint i; i < tokens.length; i++) {
-            string memory mock = tokens[i].targetAddr != C.WETH ? "MockToken.sol" : "MockWETH.sol"; 
-            deployCodeTo(mock, abi.encode(tokens[i].name, tokens[i].symbol), tokens[i].targetAddr);
-            MockToken(tokens[i].targetAddr).setDecimals(tokens[i].decimals);
-            if (verbose) console.log(tokens[i].name, "Deployed at:", tokens[i].targetAddr);
-            vm.label(tokens[i].targetAddr, tokens[i].name);
+
+            address token = tokens[i].targetAddr;
+            string memory name = tokens[i].name;
+            string memory symbol = tokens[i].symbol;
+            uint256 decimals = tokens[i].decimals;
+
+            string memory mock = "MockToken.sol";
+            // unique ERC20s should be appended here.
+            if (token == C.WETH) {
+                mock = "MockWETH.sol";
+            } else if (token == C.WSTETH) {
+                mock = "MockWsteth.sol";
+            }
+            deployCodeTo(mock, abi.encode(name, symbol), token);
+            MockToken(token).setDecimals(decimals);
+            if (verbose) console.log(name, "Deployed at:", token);
+            vm.label(token, name);
         }
     }
 
@@ -190,5 +220,13 @@ contract TestHelper is Test, BeanstalkDeployer, BasinDeployer, DepotDeployer, Or
         }
 
         IWell(well).sync(users[0], 0);
+    }
+
+    function initMisc() internal {
+        deployCodeTo("MockBlockBasefee.sol", BASE_FEE_CONTRACT);
+    }
+
+    function abs(int256 x) internal pure returns (int256) {
+        return x >= 0 ? x : -x;
     }
 }

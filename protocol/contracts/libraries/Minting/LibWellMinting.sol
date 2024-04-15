@@ -145,7 +145,6 @@ library LibWellMinting {
         //    See {LibIncentive.determineReward}.
         LibWell.setTwaReservesForWell(well, twaReserves);
         LibWell.setUsdTokenPriceForWell(well, ratios);
-
         emit WellOracle(
             s.season.current,
             well,

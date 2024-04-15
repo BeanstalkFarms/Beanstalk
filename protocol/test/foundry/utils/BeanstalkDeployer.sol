@@ -28,6 +28,8 @@ contract BeanstalkDeployer is Utils {
 
     // beanstalk
     address payable constant BEANSTALK  = payable(address(0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5));
+
+    address constant BASE_FEE_CONTRACT = address(0x84292919cB64b590C0131550483707E43Ef223aC);
   
     address internal deployer;
 
