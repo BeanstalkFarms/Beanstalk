@@ -357,7 +357,7 @@ describe('Sun', function () {
     
     await expect(this.result).to.emit(this.silo, 'TotalGerminatingBalanceChanged')
       .withArgs(
-        '6',
+        '4',
         BEAN, 
         to6('-1000'), 
         to6('-1000')
