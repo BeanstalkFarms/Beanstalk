@@ -52,7 +52,7 @@ contract SiloFacet is Invariable, TokenSilo {
     ) 
         external
         payable
-        fundsSafu
+        fundsSafu noSupplyChange
         nonReentrant
         mowSender(token)
         returns (uint256 amount, uint256 _bdv, int96 stem)
@@ -93,7 +93,7 @@ contract SiloFacet is Invariable, TokenSilo {
         int96 stem,
         uint256 amount,
         LibTransfer.To mode
-    ) external payable fundsSafu mowSender(token) nonReentrant {
+    ) external payable fundsSafu noSupplyChange mowSender(token) nonReentrant {
         _withdrawDeposit(msg.sender, token, stem, amount);
         LibTransfer.sendToken(IERC20(token), amount, msg.sender, mode);
     }
@@ -117,7 +117,7 @@ contract SiloFacet is Invariable, TokenSilo {
         int96[] calldata stems,
         uint256[] calldata amounts,
         LibTransfer.To mode
-    ) external payable fundsSafu mowSender(token) nonReentrant {
+    ) external payable fundsSafu noSupplyChange mowSender(token) nonReentrant {
         uint256 amount = _withdrawDeposits(msg.sender, token, stems, amounts);
         LibTransfer.sendToken(IERC20(token), amount, msg.sender, mode);
     }
@@ -146,7 +146,7 @@ contract SiloFacet is Invariable, TokenSilo {
         address token,
         int96 stem,
         uint256 amount
-    ) public payable fundsSafu nonReentrant returns (uint256 _bdv) {
+    ) public payable fundsSafu noNetFlow noSupplyChange nonReentrant returns (uint256 _bdv) {
         if (sender != msg.sender) {
             LibSiloPermit._spendDepositAllowance(sender, msg.sender, token, amount);
         }
@@ -178,7 +178,7 @@ contract SiloFacet is Invariable, TokenSilo {
         address token,
         int96[] calldata stem,
         uint256[] calldata amounts
-    ) public payable fundsSafu nonReentrant returns (uint256[] memory bdvs) {
+    ) public payable fundsSafu noNetFlow noSupplyChange nonReentrant returns (uint256[] memory bdvs) {
         require(amounts.length > 0, "Silo: amounts array is empty");
         uint256 totalAmount;
         for (uint256 i = 0; i < amounts.length; ++i) {
@@ -215,7 +215,7 @@ contract SiloFacet is Invariable, TokenSilo {
         uint256 depositId, 
         uint256 amount,
         bytes calldata
-    ) external fundsSafu {
+    ) external fundsSafu noNetFlow noSupplyChange {
         require(recipient != address(0), "ERC1155: transfer to the zero address");
         // allowance requirements are checked in transferDeposit
         (address token, int96 cumulativeGrownStalkPerBDV) = 
@@ -246,7 +246,7 @@ contract SiloFacet is Invariable, TokenSilo {
         uint256[] calldata depositIds, 
         uint256[] calldata amounts, 
         bytes calldata
-    ) external fundsSafu {
+    ) external fundsSafu noNetFlow noSupplyChange {
         require(
             depositIds.length == amounts.length,
             "Silo: depositIDs and amounts arrays must be the same length"
@@ -274,12 +274,12 @@ contract SiloFacet is Invariable, TokenSilo {
      * @notice Claim Grown Stalk for `account`.
      * @dev See {Silo-_mow}.
      */
-    function mow(address account, address token) external payable fundsSafu {
+    function mow(address account, address token) external payable fundsSafu noNetFlow noSupplyChange {
         LibSilo._mow(account, token);
     }
 
     //function to mow multiple tokens given an address
-    function mowMultiple(address account, address[] calldata tokens) external payable fundsSafu {
+    function mowMultiple(address account, address[] calldata tokens) external payable fundsSafu noNetFlow noSupplyChange {
         for (uint256 i; i < tokens.length; ++i) {
             LibSilo._mow(account, tokens[i]);
         }
@@ -300,14 +300,14 @@ contract SiloFacet is Invariable, TokenSilo {
      * In practice, when Seeds are Planted, all Earned Beans are Deposited in
      * the current Season.
      */
-    function plant() external payable fundsSafu returns (uint256 beans, int96 stem) {
+    function plant() external payable fundsSafu noNetFlow noSupplyChange returns (uint256 beans, int96 stem) {
         return _plant(msg.sender);
     }
 
     /**
      * @notice Claim rewards from a Flood (Was Season of Plenty)
      */
-    function claimPlenty() external payable fundsSafu {
+    function claimPlenty() external payable fundsSafu noSupplyChange {
         _claimPlenty(msg.sender);
     }
 }

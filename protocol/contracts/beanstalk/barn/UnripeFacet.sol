@@ -82,7 +82,7 @@ contract UnripeFacet is Invariable, ReentrancyGuard {
         uint256 amount,
         LibTransfer.From fromMode,
         LibTransfer.To toMode
-    ) external payable fundsSafu nonReentrant returns (uint256) {
+    ) external payable fundsSafu noSupplyChange nonReentrant returns (uint256) {
         // burn the token from the msg.sender address
         uint256 supply = IBean(unripeToken).totalSupply();
         amount = LibTransfer.burnToken(IBean(unripeToken), amount, msg.sender, fromMode);
@@ -113,7 +113,7 @@ contract UnripeFacet is Invariable, ReentrancyGuard {
         uint256 amount,
         bytes32[] memory proof,
         LibTransfer.To mode
-    ) external payable fundsSafu nonReentrant {
+    ) external payable fundsSafu noSupplyChange nonReentrant {
         bytes32 root = s.u[token].merkleRoot;
         require(root != bytes32(0), "UnripeClaim: invalid token");
         require(!picked(msg.sender, token), "UnripeClaim: already picked");
@@ -293,7 +293,7 @@ contract UnripeFacet is Invariable, ReentrancyGuard {
         address unripeToken,
         address underlyingToken,
         bytes32 root
-    ) external payable fundsSafu nonReentrant {
+    ) external payable fundsSafu noNetFlow noSupplyChange nonReentrant {
         LibDiamond.enforceIsOwnerOrContract();
         s.u[unripeToken].underlyingToken = underlyingToken;
         s.u[unripeToken].merkleRoot = root;
@@ -325,7 +325,7 @@ contract UnripeFacet is Invariable, ReentrancyGuard {
     function addMigratedUnderlying(
         address unripeToken,
         uint256 amount
-    ) external payable fundsSafu nonReentrant {
+    ) external payable fundsSafu noNetFlow noSupplyChange nonReentrant {
         LibDiamond.enforceIsContractOwner();
         IERC20(s.u[unripeToken].underlyingToken).safeTransferFrom(
             msg.sender,
@@ -344,7 +344,7 @@ contract UnripeFacet is Invariable, ReentrancyGuard {
     function switchUnderlyingToken(
         address unripeToken,
         address newUnderlyingToken
-    ) external payable fundsSafu {
+    ) external payable fundsSafu noNetFlow noSupplyChange {
         LibDiamond.enforceIsContractOwner();
         require(s.u[unripeToken].balanceOfUnderlying == 0, "Unripe: Underlying balance > 0");
         LibUnripe.switchUnderlyingToken(unripeToken, newUnderlyingToken);

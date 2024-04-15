@@ -29,7 +29,7 @@ contract MarketplaceFacet is Invariable, Order {
         uint256 maxHarvestableIndex,
         uint256 minFillAmount,
         LibTransfer.To mode
-    ) external payable fundsSafu {
+    ) external payable fundsSafu noNetFlow noSupplyChange {
         _createPodListing(
             index,
             start,
@@ -49,7 +49,7 @@ contract MarketplaceFacet is Invariable, Order {
         uint256 minFillAmount,
         bytes calldata pricingFunction,
         LibTransfer.To mode
-    ) external payable fundsSafu {
+    ) external payable fundsSafu noNetFlow noSupplyChange {
         _createPodListingV2(
             index,
             start,
@@ -66,7 +66,7 @@ contract MarketplaceFacet is Invariable, Order {
         PodListing calldata l,
         uint256 beanAmount,
         LibTransfer.From mode
-    ) external payable fundsSafu {
+    ) external payable fundsSafu noSupplyChange {
         beanAmount = LibTransfer.transferToken(
             C.bean(),
             msg.sender,
@@ -83,7 +83,7 @@ contract MarketplaceFacet is Invariable, Order {
         uint256 beanAmount,
         bytes calldata pricingFunction,
         LibTransfer.From mode
-    ) external payable fundsSafu {
+    ) external payable fundsSafu noSupplyChange {
         beanAmount = LibTransfer.transferToken(
             C.bean(),
             msg.sender,
@@ -96,7 +96,7 @@ contract MarketplaceFacet is Invariable, Order {
     }
 
     // Cancel
-    function cancelPodListing(uint256 index) external payable fundsSafu {
+    function cancelPodListing(uint256 index) external payable fundsSafu noNetFlow noSupplyChange {
         _cancelPodListing(msg.sender, index);
     }
 
@@ -116,7 +116,7 @@ contract MarketplaceFacet is Invariable, Order {
         uint256 maxPlaceInLine,
         uint256 minFillAmount,
         LibTransfer.From mode
-    ) external payable fundsSafu returns (bytes32 id) {
+    ) external payable fundsSafu noSupplyChange returns (bytes32 id) {
         beanAmount = LibTransfer.receiveToken(C.bean(), beanAmount, msg.sender, mode);
         return _createPodOrder(beanAmount, pricePerPod, maxPlaceInLine, minFillAmount);
     }
@@ -127,7 +127,7 @@ contract MarketplaceFacet is Invariable, Order {
         uint256 minFillAmount,
         bytes calldata pricingFunction,
         LibTransfer.From mode
-    ) external payable fundsSafu returns (bytes32 id) {
+    ) external payable fundsSafu noSupplyChange returns (bytes32 id) {
         beanAmount = LibTransfer.receiveToken(C.bean(), beanAmount, msg.sender, mode);
         return _createPodOrderV2(beanAmount, maxPlaceInLine, minFillAmount, pricingFunction);
     }
@@ -139,7 +139,7 @@ contract MarketplaceFacet is Invariable, Order {
         uint256 start,
         uint256 amount,
         LibTransfer.To mode
-    ) external payable fundsSafu {
+    ) external payable fundsSafu noSupplyChange {
         _fillPodOrder(o, index, start, amount, mode);
     }
 
@@ -150,7 +150,7 @@ contract MarketplaceFacet is Invariable, Order {
         uint256 amount,
         bytes calldata pricingFunction,
         LibTransfer.To mode
-    ) external payable fundsSafu {
+    ) external payable fundsSafu noSupplyChange {
         _fillPodOrderV2(o, index, start, amount, pricingFunction, mode);
     }
 
@@ -160,7 +160,7 @@ contract MarketplaceFacet is Invariable, Order {
         uint256 maxPlaceInLine,
         uint256 minFillAmount,
         LibTransfer.To mode
-    ) external payable fundsSafu {
+    ) external payable fundsSafu noSupplyChange {
         _cancelPodOrder(pricePerPod, maxPlaceInLine, minFillAmount, mode);
     }
 
@@ -169,7 +169,7 @@ contract MarketplaceFacet is Invariable, Order {
         uint256 minFillAmount,
         bytes calldata pricingFunction,
         LibTransfer.To mode
-    ) external payable fundsSafu {
+    ) external payable fundsSafu noSupplyChange {
         _cancelPodOrderV2(maxPlaceInLine, minFillAmount, pricingFunction, mode);
     }
 
@@ -222,7 +222,7 @@ contract MarketplaceFacet is Invariable, Order {
         uint256 id,
         uint256 start,
         uint256 end
-    ) external payable fundsSafu nonReentrant {
+    ) external payable fundsSafu noNetFlow noSupplyChange nonReentrant {
         require(
             sender != address(0) && recipient != address(0),
             "Field: Transfer to/from 0 address."
@@ -241,7 +241,7 @@ contract MarketplaceFacet is Invariable, Order {
         _transferPlot(sender, recipient, id, start, amount);
     }
 
-    function approvePods(address spender, uint256 amount) external payable fundsSafu nonReentrant {
+    function approvePods(address spender, uint256 amount) external payable fundsSafu noNetFlow noSupplyChange nonReentrant {
         require(spender != address(0), "Field: Pod Approve to 0 address.");
         setAllowancePods(msg.sender, spender, amount);
         emit PodApproval(msg.sender, spender, amount);

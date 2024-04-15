@@ -40,7 +40,7 @@ contract CurveFacet is Invariable, ReentrancyGuard {
         uint256 minAmountOut,
         LibTransfer.From fromMode,
         LibTransfer.To toMode
-    ) external payable fundsSafu nonReentrant {
+    ) external payable fundsSafu noNetFlow noSupplyChange nonReentrant {
         (int128 i, int128 j) = getIandJ(fromToken, toToken, pool, registry);
         amountIn = IERC20(fromToken).receiveToken(amountIn, msg.sender, fromMode);
         IERC20(fromToken).approveToken(pool, amountIn);
@@ -70,7 +70,7 @@ contract CurveFacet is Invariable, ReentrancyGuard {
         uint256 minAmountOut,
         LibTransfer.From fromMode,
         LibTransfer.To toMode
-    ) external payable fundsSafu nonReentrant {
+    ) external payable fundsSafu noNetFlow noSupplyChange nonReentrant {
         (int128 i, int128 j) = getUnderlyingIandJ(fromToken, toToken, pool);
         amountIn = IERC20(fromToken).receiveToken(amountIn, msg.sender, fromMode);
         IERC20(fromToken).approveToken(pool, amountIn);
@@ -101,7 +101,7 @@ contract CurveFacet is Invariable, ReentrancyGuard {
         uint256 minAmountOut,
         LibTransfer.From fromMode,
         LibTransfer.To toMode
-    ) external payable fundsSafu nonReentrant {
+    ) external payable fundsSafu noNetFlow noSupplyChange nonReentrant {
         address[8] memory coins = getCoins(pool, registry);
         uint256 nCoins = amounts.length;
         for (uint256 i; i < nCoins; ++i) {
@@ -156,7 +156,7 @@ contract CurveFacet is Invariable, ReentrancyGuard {
         uint256[] calldata minAmountsOut,
         LibTransfer.From fromMode,
         LibTransfer.To toMode
-    ) external payable fundsSafu nonReentrant {
+    ) external payable fundsSafu noNetFlow noSupplyChange nonReentrant {
         IERC20 token = tokenForPool(pool);
         amountIn = token.receiveToken(amountIn, msg.sender, fromMode);
 
@@ -230,7 +230,7 @@ contract CurveFacet is Invariable, ReentrancyGuard {
         uint256 maxAmountIn,
         LibTransfer.From fromMode,
         LibTransfer.To toMode
-    ) external payable fundsSafu nonReentrant {
+    ) external payable fundsSafu noNetFlow noSupplyChange nonReentrant {
         IERC20 token = tokenForPool(pool);
         maxAmountIn = token.receiveToken(maxAmountIn, msg.sender, fromMode);
         uint256 nCoins = amountsOut.length;
@@ -301,7 +301,7 @@ contract CurveFacet is Invariable, ReentrancyGuard {
         uint256 minAmountOut,
         LibTransfer.From fromMode,
         LibTransfer.To toMode
-    ) external payable fundsSafu nonReentrant {
+    ) external payable fundsSafu noNetFlow noSupplyChange nonReentrant {
         IERC20 fromToken = tokenForPool(pool);
         amountIn = fromToken.receiveToken(amountIn, msg.sender, fromMode);
         int128 i = getI(toToken, pool, registry);

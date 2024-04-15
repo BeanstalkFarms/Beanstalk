@@ -77,7 +77,7 @@ contract EnrootFacet is Invariable, ReentrancyGuard {
         address token,
         int96 stem,
         uint256 amount
-    ) external payable fundsSafu nonReentrant mowSender(token) {
+    ) external payable fundsSafu noNetFlow noSupplyChange nonReentrant mowSender(token) {
         require(s.u[token].underlyingToken != address(0), "Silo: token not unripe");
 
         // remove Deposit and Redeposit with new BDV
@@ -134,7 +134,7 @@ contract EnrootFacet is Invariable, ReentrancyGuard {
         address token,
         int96[] calldata stems,
         uint256[] calldata amounts
-    ) external payable fundsSafu nonReentrant mowSender(token) {
+    ) external payable fundsSafu noNetFlow noSupplyChange nonReentrant mowSender(token) {
         require(s.u[token].underlyingToken != address(0), "Silo: token not unripe");
         // First, remove Deposits because every deposit is in a different season,
         // we need to get the total Stalk, not just BDV.

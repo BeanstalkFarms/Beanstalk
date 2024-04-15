@@ -48,7 +48,7 @@ contract ApprovalFacet is Invariable, ReentrancyGuard {
         address spender,
         address token,
         uint256 amount
-    ) external payable fundsSafu nonReentrant {
+    ) external payable fundsSafu noNetFlow noSupplyChange nonReentrant {
         require(spender != address(0), "approve from the zero address");
         require(token != address(0), "approve to the zero address");
         LibSiloPermit._approveDeposit(msg.sender, spender, token, amount);
@@ -65,7 +65,7 @@ contract ApprovalFacet is Invariable, ReentrancyGuard {
         address spender,
         address token,
         uint256 addedValue
-    ) public virtual fundsSafu nonReentrant returns (bool) {
+    ) public virtual fundsSafu noNetFlow noSupplyChange nonReentrant returns (bool) {
         LibSiloPermit._approveDeposit(
             msg.sender,
             spender,
@@ -86,7 +86,7 @@ contract ApprovalFacet is Invariable, ReentrancyGuard {
         address spender,
         address token,
         uint256 subtractedValue
-    ) public virtual fundsSafu nonReentrant returns (bool) {
+    ) public virtual fundsSafu noNetFlow noSupplyChange nonReentrant returns (bool) {
         uint256 currentAllowance = depositAllowance(msg.sender, spender, token);
         require(currentAllowance >= subtractedValue, "Silo: decreased allowance below zero");
         LibSiloPermit._approveDeposit(msg.sender, spender, token, currentAllowance.sub(subtractedValue));
@@ -122,7 +122,7 @@ contract ApprovalFacet is Invariable, ReentrancyGuard {
         uint8 v,
         bytes32 r,
         bytes32 s
-    ) external payable fundsSafu nonReentrant {
+    ) external payable fundsSafu noNetFlow noSupplyChange nonReentrant {
         LibSiloPermit.permits(owner, spender, tokens, values, deadline, v, r, s);
         for (uint256 i; i < tokens.length; ++i) {
             LibSiloPermit._approveDeposit(owner, spender, tokens[i], values[i]);
@@ -150,7 +150,7 @@ contract ApprovalFacet is Invariable, ReentrancyGuard {
         uint8 v,
         bytes32 r,
         bytes32 s
-    ) external payable fundsSafu nonReentrant {
+    ) external payable fundsSafu noNetFlow noSupplyChange nonReentrant {
         LibSiloPermit.permit(owner, spender, token, value, deadline, v, r, s);
         LibSiloPermit._approveDeposit(owner, spender, token, value);
     }
@@ -185,7 +185,7 @@ contract ApprovalFacet is Invariable, ReentrancyGuard {
     }
 
     // ERC1155 Approvals
-    function setApprovalForAll(address spender, bool approved) external fundsSafu {
+    function setApprovalForAll(address spender, bool approved) external fundsSafu noNetFlow noSupplyChange {
         s.a[msg.sender].isApprovedForAll[spender] = approved;
         emit ApprovalForAll(msg.sender, spender, approved);
     }

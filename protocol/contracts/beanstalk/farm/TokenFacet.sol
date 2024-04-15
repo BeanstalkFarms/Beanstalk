@@ -60,12 +60,12 @@ contract TokenFacet is Invariable, IERC1155Receiver, ReentrancyGuard {
         uint256 amount,
         LibTransfer.From fromMode,
         LibTransfer.To toMode
-    ) external payable fundsSafu {
+    ) external payable fundsSafu noSupplyChange {
         LibTransfer.transferToken(token, msg.sender, recipient, amount, fromMode, toMode);
     }
 
     /**
-     * @notice transfers a token from `sender` to an `recipient` Internal balance.
+     * @notice transfers a token from `sender` to an `recipient` from Internal balance.
      * @dev differs from transferToken as it does not use msg.sender.
      */
     function transferInternalTokenFrom(
@@ -74,7 +74,7 @@ contract TokenFacet is Invariable, IERC1155Receiver, ReentrancyGuard {
         address recipient,
         uint256 amount,
         LibTransfer.To toMode
-    ) external payable fundsSafu nonReentrant {
+    ) external payable fundsSafu noSupplyChange nonReentrant {
         LibTransfer.transferToken(
             token,
             sender,
@@ -99,7 +99,7 @@ contract TokenFacet is Invariable, IERC1155Receiver, ReentrancyGuard {
         address spender,
         IERC20 token,
         uint256 amount
-    ) external payable fundsSafu nonReentrant {
+    ) external payable fundsSafu noNetFlow noSupplyChange nonReentrant {
         LibTokenApprove.approve(msg.sender, spender, token, amount);
     }
 
@@ -110,7 +110,7 @@ contract TokenFacet is Invariable, IERC1155Receiver, ReentrancyGuard {
         address spender,
         IERC20 token,
         uint256 addedValue
-    ) public virtual fundsSafu nonReentrant returns (bool) {
+    ) public virtual fundsSafu noNetFlow noSupplyChange nonReentrant returns (bool) {
         LibTokenApprove.approve(
             msg.sender,
             spender,
@@ -128,7 +128,7 @@ contract TokenFacet is Invariable, IERC1155Receiver, ReentrancyGuard {
         address spender,
         IERC20 token,
         uint256 subtractedValue
-    ) public virtual fundsSafu nonReentrant returns (bool) {
+    ) public virtual fundsSafu noNetFlow noSupplyChange nonReentrant returns (bool) {
         uint256 currentAllowance = LibTokenApprove.allowance(msg.sender, spender, token);
         require(currentAllowance >= subtractedValue, "Silo: decreased allowance below zero");
         LibTokenApprove.approve(msg.sender, spender, token, currentAllowance.sub(subtractedValue));
@@ -160,7 +160,7 @@ contract TokenFacet is Invariable, IERC1155Receiver, ReentrancyGuard {
         uint8 v,
         bytes32 r,
         bytes32 s
-    ) external payable fundsSafu nonReentrant {
+    ) external payable fundsSafu noNetFlow noSupplyChange nonReentrant {
         LibTokenPermit.permit(owner, spender, token, value, deadline, v, r, s);
         LibTokenApprove.approve(owner, spender, IERC20(token), value);
     }
@@ -224,7 +224,7 @@ contract TokenFacet is Invariable, IERC1155Receiver, ReentrancyGuard {
     /**
      * @notice wraps ETH into WETH.
      */
-    function wrapEth(uint256 amount, LibTransfer.To mode) external payable fundsSafu {
+    function wrapEth(uint256 amount, LibTransfer.To mode) external payable fundsSafu noNetFlow noSupplyChange {
         LibWeth.wrap(amount, mode);
         LibEth.refundEth();
     }
@@ -232,7 +232,7 @@ contract TokenFacet is Invariable, IERC1155Receiver, ReentrancyGuard {
     /**
      * @notice unwraps WETH into ETH.
      */
-    function unwrapEth(uint256 amount, LibTransfer.From mode) external payable fundsSafu {
+    function unwrapEth(uint256 amount, LibTransfer.From mode) external payable fundsSafu noNetFlow noSupplyChange {
         LibWeth.unwrap(amount, mode);
     }
 

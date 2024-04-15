@@ -35,7 +35,7 @@ contract LegacyClaimWithdrawalFacet is Invariable, ReentrancyGuard {
         address token,
         uint32 season,
         LibTransfer.To mode
-    ) external payable fundsSafu nonReentrant {
+    ) external payable fundsSafu noNetFlow noSupplyChange nonReentrant {
         uint256 amount = LibLegacyTokenSilo._claimWithdrawal(msg.sender, token, season);
         LibTransfer.sendToken(IERC20(token), amount, msg.sender, mode);
     }
@@ -50,7 +50,7 @@ contract LegacyClaimWithdrawalFacet is Invariable, ReentrancyGuard {
         address token,
         uint32[] calldata seasons,
         LibTransfer.To mode
-    ) external payable fundsSafu nonReentrant {
+    ) external payable fundsSafu noNetFlow noSupplyChange nonReentrant {
         uint256 amount = LibLegacyTokenSilo._claimWithdrawals(msg.sender, token, seasons);
         LibTransfer.sendToken(IERC20(token), amount, msg.sender, mode);
     }

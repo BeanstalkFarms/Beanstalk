@@ -44,21 +44,10 @@ abstract contract Invariable {
         }
     }
 
-    /**
-     * @notice Does not change the supply of Beans. No minting, no burning.
-     * @dev Applies to all but a very few functions. Sunrise, sow, raise.
-     */
-    modifier noSupplyChange() {
-        uint256 initialSupply = C.bean().totalSupply();
-        _;
-        require(C.bean().totalSupply() == initialSupply, "INV: Supply changed");
-    }
-
     // Stalk does not decrease and and whitelisted token balances (including Bean) do not change.
     // Many operations will increase Stalk.
     // There are a relatively small number of external functions that will cause a change in token balances of contract.
     // Roughly akin to a view only check where only routine modifications are allowed (ie mowing).
-    // modifier upOnlyWithHaste() {
     modifier noNetFlow() {
         AppStorage storage s = LibAppStorage.diamondStorage();
         uint256 initialStalk = s.s.stalk;
@@ -74,6 +63,16 @@ abstract contract Invariable {
                 "INV: Token balance changed"
             );
         }
+    }
+
+    /**
+     * @notice Does not change the supply of Beans. No minting, no burning.
+     * @dev Applies to all but a very few functions. Sunrise, sow, raise.
+     */
+    modifier noSupplyChange() {
+        uint256 initialSupply = C.bean().totalSupply();
+        _;
+        require(C.bean().totalSupply() == initialSupply, "INV: Supply changed");
     }
 
     function getTokenBalances(

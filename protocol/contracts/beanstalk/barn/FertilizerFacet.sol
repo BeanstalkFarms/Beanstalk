@@ -50,7 +50,7 @@ contract FertilizerFacet is Invariable {
     function claimFertilized(uint256[] calldata ids, LibTransfer.To mode)
         external
         payable
-        fundsSafu
+        fundsSafu noSupplyChange
     {
         uint256 amount = C.fertilizer().beanstalkUpdate(msg.sender, ids, s.bpf);
         s.fertilizedPaidIndex += amount;
@@ -89,7 +89,7 @@ contract FertilizerFacet is Invariable {
     /**
      * @dev Callback from Fertilizer contract in `claimFertilized` function.
      */
-    function payFertilizer(address account, uint256 amount) external payable fundsSafu {
+    function payFertilizer(address account, uint256 amount) external payable fundsSafu noSupplyChange {
         require(msg.sender == C.fertilizerAddress());
         s.fertilizedPaidIndex += amount;
         LibTransfer.sendToken(
@@ -247,7 +247,7 @@ contract FertilizerFacet is Invariable {
      * with the non-Bean token in `well`.
      *
      */
-    function beginBarnRaiseMigration(address well) external fundsSafu {
+    function beginBarnRaiseMigration(address well) external {
         LibDiamond.enforceIsOwnerOrContract();
         LibFertilizer.beginBarnRaiseMigration(well);
     }

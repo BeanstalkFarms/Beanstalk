@@ -153,7 +153,7 @@ contract FieldFacet is Invariable, ReentrancyGuard {
      * Pods are "burned" when the corresponding Plot is deleted from
      * `s.a[account].field.plots`.
      */
-    function harvest(uint256[] calldata plots, LibTransfer.To mode) external payable fundsSafu {
+    function harvest(uint256[] calldata plots, LibTransfer.To mode) external payable fundsSafu noSupplyChange {
         uint256 beansHarvested = _harvest(plots);
         LibTransfer.sendToken(C.bean(), beansHarvested, msg.sender, mode);
     }

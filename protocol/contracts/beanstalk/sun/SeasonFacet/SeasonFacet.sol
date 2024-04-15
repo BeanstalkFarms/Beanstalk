@@ -32,7 +32,7 @@ contract SeasonFacet is Invariable, Weather {
      * @notice Advances Beanstalk to the next Season, sending reward Beans to the caller's circulating balance.
      * @return reward The number of beans minted to the caller.
      */
-    function sunrise() external payable fundsSafu returns (uint256) {
+    function sunrise() external payable fundsSafu noNetFlow returns (uint256) {
         return gm(msg.sender, LibTransfer.To.EXTERNAL);
     }
 
