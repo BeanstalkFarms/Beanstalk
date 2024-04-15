@@ -6,7 +6,7 @@
     "build": "yarn codegen && graph build",
     "test": "graph test",
     "testd": "docker run -it --rm --mount type=bind,source=\"$(pwd)\"/matchstick.yaml.docker,target=/matchstick/matchstick.yaml --mount type=bind,source=\"$(pwd)\"/../../,target=/matchstick/repo-mounted/ matchstick",
-    "testd-named": "./tests/scripts/docker-run-named.sh",
+    "testd-named": "../subgraph-core/tests/scripts/docker-run-named.sh",
     "deploy": "graph deploy --node https://api.thegraph.com/deploy/ beanft",
     "create-local": "graph create --node http://localhost:8020/ beanft",
     "remove-local": "graph remove --node http://localhost:8020/ beanft",
