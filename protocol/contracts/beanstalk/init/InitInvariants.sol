@@ -17,7 +17,9 @@ import {LibUnripe} from "contracts/libraries/LibUnripe.sol";
 contract InitInvariants {
     AppStorage internal s;
 
-    function init() external {
+    function init(uint256 _fertilizerPaidIndex) external {
+        // TODO: Test this numbers at a specific season when they are all carefully and correctly sourced.
+
         /* 
         TODO: Get exacts from future snapshot.
         NOTE: Approximate. Sourced from subgraph using
@@ -33,7 +35,7 @@ contract InitInvariants {
             }
         }
         */
-        s.internalTokenBalanceTotal[IERC20(C.BEAN)] = 408516713733;
+        s.internalTokenBalanceTotal[IERC20(C.BEAN)] = 115611612399;
         s.internalTokenBalanceTotal[IERC20(C.BEAN_ETH_WELL)] = 0; // ?????
         s.internalTokenBalanceTotal[IERC20(C.CURVE_BEAN_METAPOOL)] = 9238364833184139286;
         s.internalTokenBalanceTotal[IERC20(C.UNRIPE_BEAN)] = 9001888;
@@ -41,6 +43,6 @@ contract InitInvariants {
 
         // TODO: Get exact from future snapshot.
         // NOTE: Approximate. Sourced from subgraph.
-        s.fertilizedPaidIndex = 4_000_000_000_000;
+        s.fertilizedPaidIndex = _fertilizerPaidIndex; // 3_500_000_000_000;
     }
 }

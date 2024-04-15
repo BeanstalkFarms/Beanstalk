@@ -33,17 +33,6 @@ abstract contract Invariable {
      * @dev Does not include tokens that may be held in internal balances but not Silo whitelisted.
      */
     modifier fundsSafu() {
-        {
-            //// PRE CHECK IS FOR TESTING PURPOSES ONLY
-            address[] memory tokens = LibWhitelistedTokens.getSiloTokens();
-            (
-                uint256[] memory entitlements,
-                uint256[] memory balances
-            ) = getTokenEntitlementsAndBalances(tokens);
-            for (uint256 i; i < tokens.length; i++) {
-                require(balances[i] >= entitlements[i], "INV: PRECHECK Insufficient token balance");
-            }
-        }
         _;
         address[] memory tokens = LibWhitelistedTokens.getSiloTokens();
         (
@@ -106,8 +95,6 @@ abstract contract Invariable {
         AppStorage storage s = LibAppStorage.diamondStorage();
         entitlements = new uint256[](tokens.length);
         balances = new uint256[](tokens.length);
-        console.log("Balance of underlying Bean: %s", s.u[C.UNRIPE_BEAN].balanceOfUnderlying);
-        console.log("fertilized index: %s", s.fertilizedIndex);
         for (uint256 i; i < tokens.length; i++) {
             entitlements[i] =
                 s.siloBalances[tokens[i]].deposited +
@@ -121,39 +108,8 @@ abstract contract Invariable {
                     s.fertilizedIndex.sub(s.fertilizedPaidIndex) + // unrinsed rinsable beans
                     s.u[C.UNRIPE_BEAN].balanceOfUnderlying; // unchopped underlying beans
             }
-            // TODO: BUG: Bean entitlement too high (not even yet accounting for internal balance)
-
-            // TODO: BUG: Some Asset entitlements too low (well LP, unripe Bean, unripe LP) (curve LP ok)
-            // ^^ This is likely due to a lack of accounting for internal balances
-            // Farm balances, according to subgraph 4/11/24
-            // 0x1bea0050e63e05fbb5d8ba2f10cf5800b6224449 - 9001888 - 9.001888
-            // 0x1bea3ccd22f4ebd3d37d731ba31eeca95713716d - 12672419462 - 12672.419462
-            // 0xbea0000029ad1c77d3d5d23ba2d8893db9d1efab - 408471693908 - 408471.693908
-            // 0xc9c32cd16bf7efb85ff14e0c8603cc90f6f2ee49 - 9238364833184139286 - 9.238364833184139286
-            // 
-            /*
-
-            Token: 0xbea0000029ad1c77d3d5d23ba2d8893db9d1efab, Entitlement: 25892305957831, Balance: 25791876588501
-            Excess: 115792089237316195423570985008687907853269984665640564039457584007812700270606
-            Deposited: 2749101805317, Withdrawn: 10859391082, Internal: 0
-            Token: 0xbea0e11282e2bb5893bece110cf199501e872bad, Entitlement: 9845022928568702674655, Balance: 276659959868747681489302
-            Excess: 266814936940178978814647
-            Deposited: 9845022928568702674655, Withdrawn: 0, Internal: 0
-            Token: 0xc9c32cd16bf7efb85ff14e0c8603cc90f6f2ee49, Entitlement: 171538352193698918465170, Balance: 171547590558532102604456
-            Excess: 9238364833184139286
-            Deposited: 168502095858553402384583, Withdrawn: 3036256335145516080587, Internal: 0
-            Token: 0x1bea0050e63e05fbb5d8ba2f10cf5800b6224449, Entitlement: 85149896356334, Balance: 98418008509698
-            Excess: 13268112153364
-            Deposited: 84670872604140, Withdrawn: 479023752194, Internal: 0
-            Token: 0x1bea3ccd22f4ebd3d37d731ba31eeca95713716d, Entitlement: 93036285535468, Balance: 95620212845500
-            Excess: 2583927310032
-            Deposited: 92199302958735, Withdrawn: 836982576733, Internal: 0
-
-            */
+            // NOTE: Asset entitlements too low due to a lack of accounting for internal balances. Balances need init.
             balances[i] = IERC20(tokens[i]).balanceOf(address(this));
-            console.log("Token: %s, Entitlement: %s, Balance: %s", tokens[i], entitlements[i], balances[i]);
-            console.log("Excess: %s", balances[i] - entitlements[i]);
-            console.log("Deposited: %s, Withdrawn: %s, Internal: %s", s.siloBalances[tokens[i]].deposited, s.siloBalances[tokens[i]].withdrawn, s.internalTokenBalanceTotal[IERC20(tokens[i])]);
         }
         return (entitlements, balances);
     }

@@ -19,6 +19,9 @@ let snapshotId
 testIfRpcSet('SeedGauge Init Test', function () {
   before(async function () {
 
+    // .skip for before hook. Init is complete.
+    return;
+
     [user, user2] = await ethers.getSigners()
 
     try {
@@ -51,15 +54,6 @@ testIfRpcSet('SeedGauge Init Test', function () {
     await upgradeWithNewFacets({
       diamondAddress: BEANSTALK,
       facetNames: ['CurveFacet'],
-      bip: false,
-      object: false,
-      verbose: false,
-      account: owner
-    })
-    await upgradeWithNewFacets({
-      diamondAddress: BEANSTALK,
-      facetNames: ['FertilizerFacet'],
-      initFacetName: 'InitInvariants',
       bip: false,
       object: false,
       verbose: false,
@@ -138,7 +132,7 @@ testIfRpcSet('SeedGauge Init Test', function () {
   })
 
   // verify that bean3crv has properly dewhitelisted.
-  describe('bean3crv dewhitelisted', async function () {
+  describe.skip('bean3crv dewhitelisted', async function () {
 
     beforeEach(async function () {
       // deploy mockAdminFacet to mint beans.
@@ -214,7 +208,7 @@ testIfRpcSet('SeedGauge Init Test', function () {
   })
 
   // verify silov3.1 migration. 
-  describe('silo v3.1 migration', async function () {
+  describe.skip('silo v3.1 migration', async function () {
     // mow active user, verify stem has increased by >1e6.
     it('correctly updates lastStem for a user', async function () {
       const testAccount = '0x43a9dA9bAde357843fBE7E5ee3Eedd910F9fAC1e'
