@@ -31,7 +31,9 @@ import {
   loadSiloWithdraw,
   loadSiloDeposit,
   loadSiloDepositV3,
-  loadWhitelistTokenSetting
+  loadWhitelistTokenSetting,
+  loadWhitelistTokenHourlySnapshot,
+  loadWhitelistTokenDailySnapshot
 } from "./utils/SiloEntities";
 import {
   AddDeposit as AddDepositEntity,
@@ -917,55 +919,22 @@ export function handleWhitelistToken(event: WhitelistToken): void {
   rawEvent.save();
 }
 
-// TODO: replace this implementation with simply updating the whitelist token settings + hourly/daily snapshots
 export function handleUpdatedStalkPerBdvPerSeason(event: UpdatedStalkPerBdvPerSeason): void {
   let siloSettings = loadWhitelistTokenSetting(event.params.token);
-
   siloSettings.milestoneSeason = event.params.season.toI32();
   siloSettings.stalkEarnedPerSeason = event.params.stalkEarnedPerSeason;
   siloSettings.updatedAt = event.block.timestamp;
   siloSettings.save();
 
-  /// Capture deltas due to new stalk amount.
+  let hourly = loadWhitelistTokenHourlySnapshot(event.params.token, event.params.season.toI32(), event.block.timestamp);
+  hourly.milestoneSeason = siloSettings.milestoneSeason;
+  hourly.stalkEarnedPerSeason = siloSettings.stalkEarnedPerSeason;
+  hourly.save();
 
-  let beanstalk = loadBeanstalk(BEANSTALK);
-  let beanstalkSilo = loadSilo(BEANSTALK);
-
-  // Update protocol level metrics
-  let newGrownStalkAmount = ZERO_BI;
-
-  for (let i = 0; i < beanstalkSilo.whitelistedTokens.length; i++) {
-    let asset = loadSiloAsset(BEANSTALK, Address.fromString(beanstalkSilo.whitelistedTokens[i]));
-    let assetSettings = loadWhitelistTokenSetting(Address.fromString(beanstalkSilo.whitelistedTokens[i]));
-
-    newGrownStalkAmount = newGrownStalkAmount.plus(
-      asset.depositedBDV.times(assetSettings.stalkEarnedPerSeason).div(BigInt.fromI32(1000000))
-    );
-  }
-
-  beanstalkSilo.grownStalkPerBdvPerSeason = newGrownStalkAmount;
-  beanstalkSilo.save();
-
-  // Update farmer level metrics
-
-  for (let i = 0; i < beanstalk.activeFarmers.length; i++) {
-    newGrownStalkAmount = ZERO_BI;
-
-    let account = Address.fromString(beanstalk.activeFarmers[i]);
-    let farmerSilo = loadSilo(account);
-
-    for (let i = 0; i < beanstalkSilo.whitelistedTokens.length; i++) {
-      let asset = loadSiloAsset(account, Address.fromString(beanstalkSilo.whitelistedTokens[i]));
-      let assetSettings = loadWhitelistTokenSetting(Address.fromString(beanstalkSilo.whitelistedTokens[i]));
-
-      newGrownStalkAmount = newGrownStalkAmount.plus(
-        asset.depositedBDV.times(assetSettings.stalkEarnedPerSeason).div(BigInt.fromI32(1000000))
-      );
-    }
-
-    farmerSilo.grownStalkPerBdvPerSeason = newGrownStalkAmount;
-    farmerSilo.save();
-  }
+  let daily = loadWhitelistTokenDailySnapshot(event.params.token, event.block.timestamp);
+  daily.milestoneSeason = siloSettings.milestoneSeason;
+  daily.stalkEarnedPerSeason = siloSettings.stalkEarnedPerSeason;
+  daily.save();
 }
 
 export function handleWhitelistToken_V3(event: WhitelistToken_V3): void {

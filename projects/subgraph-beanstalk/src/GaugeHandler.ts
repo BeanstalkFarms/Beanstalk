@@ -125,8 +125,27 @@ export function handleWhitelistToken_BIP42(event: WhitelistToken): void {
   siloSettings.updatedAt = event.block.timestamp;
   siloSettings.save();
 
-  loadWhitelistTokenHourlySnapshot(event.params.token, currentSeason(event.address), event.block.timestamp);
-  loadWhitelistTokenDailySnapshot(event.params.token, event.block.timestamp);
+  let hourly = loadWhitelistTokenHourlySnapshot(event.params.token, currentSeason(event.address), event.block.timestamp);
+  hourly.selector = siloSettings.selector;
+  hourly.stalkEarnedPerSeason = siloSettings.stalkEarnedPerSeason;
+  hourly.stalkIssuedPerBdv = siloSettings.stalkIssuedPerBdv;
+  hourly.gaugePoints = siloSettings.gaugePoints;
+  hourly.gpSelector = siloSettings.gpSelector;
+  hourly.lwSelector = siloSettings.lwSelector;
+  hourly.optimalPercentDepositedBdv = siloSettings.optimalPercentDepositedBdv;
+  hourly.updatedAt = siloSettings.updatedAt;
+  hourly.save();
+
+  let daily = loadWhitelistTokenDailySnapshot(event.params.token, event.block.timestamp);
+  daily.selector = siloSettings.selector;
+  daily.stalkEarnedPerSeason = siloSettings.stalkEarnedPerSeason;
+  daily.stalkIssuedPerBdv = siloSettings.stalkIssuedPerBdv;
+  daily.gaugePoints = siloSettings.gaugePoints;
+  daily.gpSelector = siloSettings.gpSelector;
+  daily.lwSelector = siloSettings.lwSelector;
+  daily.optimalPercentDepositedBdv = siloSettings.optimalPercentDepositedBdv;
+  daily.updatedAt = siloSettings.updatedAt;
+  daily.save();
 }
 
 export function handleUpdateGaugeSettings(event: UpdateGaugeSettings): void {
@@ -137,6 +156,17 @@ export function handleUpdateGaugeSettings(event: UpdateGaugeSettings): void {
   siloSettings.updatedAt = event.block.timestamp;
   siloSettings.save();
 
-  loadWhitelistTokenHourlySnapshot(event.params.token, currentSeason(event.address), event.block.timestamp);
-  loadWhitelistTokenDailySnapshot(event.params.token, event.block.timestamp);
+  let hourly = loadWhitelistTokenHourlySnapshot(event.params.token, currentSeason(event.address), event.block.timestamp);
+  hourly.gpSelector = siloSettings.gpSelector;
+  hourly.lwSelector = siloSettings.lwSelector;
+  hourly.optimalPercentDepositedBdv = siloSettings.optimalPercentDepositedBdv;
+  hourly.updatedAt = siloSettings.updatedAt;
+  hourly.save();
+
+  let daily = loadWhitelistTokenDailySnapshot(event.params.token, event.block.timestamp);
+  daily.gpSelector = siloSettings.gpSelector;
+  daily.lwSelector = siloSettings.lwSelector;
+  daily.optimalPercentDepositedBdv = siloSettings.optimalPercentDepositedBdv;
+  daily.updatedAt = siloSettings.updatedAt;
+  daily.save();
 }
