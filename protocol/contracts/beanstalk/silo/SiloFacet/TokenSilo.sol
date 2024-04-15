@@ -146,7 +146,7 @@ contract TokenSilo is Silo {
             stem = LibTokenSilo.stemTipForToken(token),
             amount
         );
-        LibSilo.mintGerminatingStalk(account, uint128(stalk), germ);
+        LibSilo.mintGerminatingStalk(account, stalk.toUint128(), germ);
     }
 
     //////////////////////// WITHDRAW ////////////////////////
@@ -297,7 +297,7 @@ contract TokenSilo is Silo {
     ) private {
         // Decrement from total germinating.
         LibTokenSilo.decrementTotalGerminating(token, amount, bdv, germinateState); // Decrement total Germinating in the silo.
-        LibSilo.burnGerminatingStalk(account, uint128(stalk), germinateState); // Burn stalk and roots associated with the stalk.
+        LibSilo.burnGerminatingStalk(account, stalk.toUint128(), germinateState); // Burn stalk and roots associated with the stalk.
     }
 
     //////////////////////// TRANSFER ////////////////////////
