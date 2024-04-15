@@ -353,7 +353,6 @@ async function getFacetData(mock=true) {
   // if mocks are enabled (make sure to append "Mock" to the facet name).
   facets = [
     "BDVFacet",
-    "CurveFacet",
     "MigrationFacet",
     "ApprovalFacet",
     "ConvertGettersFacet",

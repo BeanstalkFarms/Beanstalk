@@ -53,8 +53,6 @@ contract BeanstalkDeployer is Utils {
         address[] memory deployedFacetAddresses = new address[](50);
         deployedFacetAddresses[i] = address(deployCode("BDVFacet.sol"));
         facetNames[i++] = "BDVFacet";
-        deployedFacetAddresses[i] = address(deployCode("CurveFacet.sol"));
-        facetNames[i++] = "CurveFacet";
         deployedFacetAddresses[i] = address(deployCode("FarmFacet.sol"));
         facetNames[i++] = "FarmFacet";
         deployedFacetAddresses[i] = address(deployCode("PauseFacet.sol"));
