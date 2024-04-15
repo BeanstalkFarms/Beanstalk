@@ -11,7 +11,8 @@ const {
   BEAN_ETH_WELL,
   BEANSTALK,
   TRI_CRYPTO_POOL,
-  USDT
+  USDT,
+  BEAN_WSTETH_WELL
 } = require("./utils/constants");
 const { ConvertEncoder } = require('./utils/encoder.js')
 const { to18, toStalk, to6 } = require('./utils/helpers.js')
@@ -42,7 +43,7 @@ const { getBeanstalk } = require('../utils/contracts.js');
 //node --inspect-brk --unhandled-rejections=strict node_modules/.bin/hardhat test test/ConvertFarmForkTests.test.js --no-compile
 
 
-describe.skip('Farm Convert Forking', function () {
+describe('Farm Convert Forking', function () {
   before(async function () {
     //I wanted to put this in the same file as ConvertFarm.test.js, but when I tried to refactor
     //some setup code into different functions, this.whatever was not passed through successfully,
@@ -103,7 +104,7 @@ describe.skip('Farm Convert Forking', function () {
     this.beanstalk = await getBeanstalk(BEANSTALK);
     impersonateBeanEthWell();
     this.well = await ethers.getContractAt("IWell", BEAN_ETH_WELL);
-    this.fakeWell = await deployWell([BEAN, WETH]);
+    this.fakeWell = await deployWell(tokens=[BEAN, WETH], verbose=true, salt=ethers.constants.HashZero, mock=true);
     this.wellToken = await ethers.getContractAt("IERC20", this.well.address)
     this.convert = await ethers.getContractAt("MockConvertFacet", BEANSTALK)
     this.admin = await ethers.getContractAt("MockAdminFacet", BEANSTALK)
@@ -120,6 +121,12 @@ describe.skip('Farm Convert Forking', function () {
 
     this.silo = await ethers.getContractAt('SiloFacet', BEANSTALK);
     this.farmFacet = await ethers.getContractAt("FarmFacet", BEANSTALK);
+
+
+    // initalize pumps values for the bean/wsteth well, as overallDeltaB() queries all lp wells.
+    console.log((await this.fakeWell.pumps())[0].target);
+    this.pump = await ethers.getContractAt('MockPump', (await this.fakeWell.pumps())[0].target);
+    await this.pump.updateNoBytes(BEAN_WSTETH_WELL, ['0', '0']);
 
 
     await this.admin.mintBeans(userAddress, to6('1000000000'));
@@ -164,7 +171,7 @@ describe.skip('Farm Convert Forking', function () {
 
 
     //test that does a tricrypto and 3crv swap
-    it('does a tricrypto and 3crv swap', async function () {
+    it.only('does a tricrypto and 3crv swap', async function () {
 
       //first deposit 200 bean into bean:eth well
       await this.bean.connect(user).approve(this.well.address, ethers.constants.MaxUint256);
@@ -197,12 +204,9 @@ describe.skip('Farm Convert Forking', function () {
 
 
       let advancedFarmCalls = await draftConvertBeanEthWellToUDSTViaCurveTricryptoThenToBeanVia3Crv(wellAmountOut, 0);
-      const farmData = this.farmFacet.interface.encodeFunctionData("advancedFarm", [
-        advancedFarmCalls
-      ]);
 
 
-      this.result = await this.convert.connect(user).pipelineConvert(this.well.address, [stemTip], [wellAmountOut], this.bean.address, farmData);
+      this.result = await this.convert.connect(user).pipelineConvert(this.well.address, [stemTip], [wellAmountOut], this.bean.address, advancedFarmCalls);
 
       // the 200204225 is the amount of beans out in this particular case, would be great to use curve functions to actually get these values, but for now it looks correct (a hardhat --trace helps confirm things look good)
       await expect(this.result).to.emit(this.convert, 'Convert').withArgs(user.address, this.well.address, this.bean.address, '1971707291118118111', '200204225');
@@ -234,12 +238,8 @@ describe.skip('Farm Convert Forking', function () {
       await this.season.siloSunrise(0);
 
       let advancedFarmCalls = await draftConvertBeanEthWellToUDSCViaUniswapThenToBeanVia3Crv(wellAmountOut, 0);
-      const farmData = this.farmFacet.interface.encodeFunctionData("advancedFarm", [
-        advancedFarmCalls
-      ]);
 
-
-      this.result = await this.convert.connect(user).pipelineConvert(this.well.address, [stemTip], [wellAmountOut], this.bean.address, farmData);
+      this.result = await this.convert.connect(user).pipelineConvert(this.well.address, [stemTip], [wellAmountOut], this.bean.address, advancedFarmCalls);
 
       // verify events
       await expect(this.result).to.emit(this.convert, 'Convert').withArgs(user.address, this.well.address, this.bean.address, wellAmountOut, '199322498');

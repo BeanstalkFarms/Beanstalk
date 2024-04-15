@@ -178,13 +178,13 @@ contract Pipeline is IPipeline, ERC1155Holder, ERC721Holder {
         uint256 value
     ) private returns (bytes memory result) {
         bool success;
-        console.log('doing _pipeMem');   
-        console.log('_pipeMem target: ', target);
-        console.log('_pipeMem data:');
+        // console.log('doing _pipeMem');   
+        // console.log('_pipeMem target: ', target);
+        // console.log('_pipeMem data:');
         console.logBytes(data);
         (success, result) = target.call{value: value}(data);
-        console.log('_pipeMem result:');
-        console.logBytes(result);
+        // console.log('_pipeMem result:');
+        // console.logBytes(result);
 
         LibFunction.checkReturn(success, result);
     }

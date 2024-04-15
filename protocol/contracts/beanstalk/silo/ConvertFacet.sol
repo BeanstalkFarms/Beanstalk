@@ -426,9 +426,9 @@ contract ConvertFacet is ReentrancyGuard {
         for (uint256 i = 0; i < calls.length; ++i) {
             require(calls[i].callData.length != 0, "Convert: empty AdvancedFarmCall");
             results[i] = LibFarm._advancedFarmMem(calls[i], results);
-            console.log('executeAdvancedFarmCalls results[i] i value: ', i);
-            console.log('executeAdvancedFarmCalls results[i]: ');
-            console.logBytes(results[i]);
+            // console.log('executeAdvancedFarmCalls results[i] i value: ', i);
+            // console.log('executeAdvancedFarmCalls results[i]: ');
+            // console.logBytes(results[i]);
         }
 
         // assume last value is the amountOut
