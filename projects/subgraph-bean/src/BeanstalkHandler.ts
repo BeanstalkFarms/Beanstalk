@@ -1,7 +1,7 @@
 import { Address, BigInt } from "@graphprotocol/graph-ts";
 import { Sunrise } from "../generated/Beanstalk/Beanstalk";
-import { getBeanTokenAddress, loadBean, updateBeanSeason, updateBeanValues } from "./utils/Bean";
-import { loadOrCreatePool, updatePoolPrice, updatePoolSeason, updatePoolValues } from "./utils/Pool";
+import { getBeanTokenAddress, loadBean, updateBeanSeason, updateBeanTwaDeltaB, updateBeanValues } from "./utils/Bean";
+import { loadOrCreatePool, setPoolTwaDeltaB, updatePoolPrice, updatePoolSeason, updatePoolValues } from "./utils/Pool";
 import { BeanstalkPrice } from "../generated/Beanstalk/BeanstalkPrice";
 import {
   BEANSTALK_PRICE,
@@ -16,6 +16,7 @@ import { ZERO_BD, ZERO_BI, toDecimal } from "../../subgraph-core/utils/Decimals"
 import { CurvePrice } from "../generated/Beanstalk/CurvePrice";
 import { checkBeanCross } from "./utils/Cross";
 import { curveDeltaB, curvePriceAndLp, uniswapV2DeltaB, uniswapV2Price, updatePreReplantPriceETH } from "./utils/Price";
+import { MetapoolOracle, WellOracle } from "../generated/TWAPOracles/BIP37";
 
 export function handleSunrise(event: Sunrise): void {
   // Update the season for hourly and daily liquidity metrics
@@ -150,4 +151,16 @@ export function handleSunrise(event: Sunrise): void {
     );
     checkBeanCross(BEAN_ERC20_V1.toHexString(), event.block.timestamp, event.block.number, bean.price, totalPrice);
   }
+}
+
+// POST REPLANT TWA DELTAB //
+
+export function handleMetapoolOracle(event: MetapoolOracle): void {
+  setPoolTwaDeltaB(BEAN_3CRV.toHexString(), event.params.deltaB, event.block.timestamp, event.block.number);
+  updateBeanTwaDeltaB(event.block.number, event.block.timestamp);
+}
+
+export function handleWellOracle(event: WellOracle): void {
+  setPoolTwaDeltaB(event.params.well.toHexString(), event.params.deltaB, event.block.timestamp, event.block.number);
+  updateBeanTwaDeltaB(event.block.number, event.block.timestamp);
 }

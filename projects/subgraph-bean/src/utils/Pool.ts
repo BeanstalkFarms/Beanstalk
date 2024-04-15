@@ -2,7 +2,7 @@ import { BigDecimal, BigInt, log } from "@graphprotocol/graph-ts";
 import { Pool, PoolDailySnapshot, PoolHourlySnapshot } from "../../generated/schema";
 import { dayFromTimestamp, hourFromTimestamp } from "../../../subgraph-core/utils/Dates";
 import { emptyBigIntArray, ZERO_BD, ZERO_BI } from "../../../subgraph-core/utils/Decimals";
-import { getBeanTokenAddress, loadBean, updateBeanDeltaB } from "./Bean";
+import { getBeanTokenAddress, loadBean, loadOrCreateBeanDailySnapshot, updateInstDeltaB } from "./Bean";
 import { checkPoolCross } from "./Cross";
 
 export function loadOrCreatePool(poolAddress: string, blockNumber: BigInt): Pool {
@@ -133,7 +133,7 @@ export function updatePoolValues(
   poolDaily.updatedAt = timestamp;
   poolDaily.save();
 
-  updateBeanDeltaB(pool.bean, blockNumber, timestamp);
+  updateInstDeltaB(pool.bean, blockNumber, timestamp);
 }
 
 export function incrementPoolCross(poolAddress: string, timestamp: BigInt, blockNumber: BigInt): void {
@@ -226,4 +226,13 @@ export function setPoolReserves(poolAddress: string, reserves: BigInt[], timesta
 export function getPoolLiquidityUSD(poolAddress: string, blockNumber: BigInt): BigDecimal {
   let pool = loadOrCreatePool(poolAddress, blockNumber);
   return pool.liquidityUSD;
+}
+
+export function setPoolTwaDeltaB(poolAddress: string, twaDeltaB: BigInt, timestamp: BigInt, blockNumber: BigInt): void {
+  let poolHourly = loadOrCreatePoolHourlySnapshot(poolAddress, timestamp, blockNumber);
+  let poolDaily = loadOrCreatePoolDailySnapshot(poolAddress, timestamp, blockNumber);
+  poolHourly.twaDeltaBeans = twaDeltaB;
+  poolDaily.twaDeltaBeans = twaDeltaB;
+  poolHourly.save();
+  poolDaily.save();
 }

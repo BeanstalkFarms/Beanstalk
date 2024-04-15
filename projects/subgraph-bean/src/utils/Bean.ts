@@ -12,7 +12,7 @@ import {
 import { dayFromTimestamp, hourFromTimestamp } from "../../../subgraph-core/utils/Dates";
 import { toDecimal, ZERO_BD, ZERO_BI } from "../../../subgraph-core/utils/Decimals";
 import { getV1Crosses } from "./Cross";
-import { loadOrCreatePool } from "./Pool";
+import { loadOrCreatePool, loadOrCreatePoolHourlySnapshot } from "./Pool";
 
 export function loadBean(token: string): Bean {
   let bean = Bean.load(token);
@@ -199,21 +199,37 @@ export function updateBeanSupplyPegPercent(blockNumber: BigInt): void {
   }
 }
 
-export function updateBeanDeltaB(token: string, blockNumber: BigInt, timestamp: BigInt): void {
+export function updateInstDeltaB(token: string, blockNumber: BigInt, timestamp: BigInt): void {
   let bean = loadBean(token);
   let beanHourly = loadOrCreateBeanHourlySnapshot(token, timestamp, bean.lastSeason);
   let beanDaily = loadOrCreateBeanDailySnapshot(token, timestamp);
 
   let cumulativeDeltaB = ZERO_BI;
-
   for (let i = 0; i < bean.pools.length; i++) {
     let pool = loadOrCreatePool(bean.pools[i], blockNumber);
     cumulativeDeltaB = cumulativeDeltaB.plus(pool.deltaBeans);
   }
 
   beanHourly.instantaneousDeltaB = cumulativeDeltaB;
-  beanHourly.save();
-
   beanDaily.instantaneousDeltaB = cumulativeDeltaB;
+  beanHourly.save();
+  beanDaily.save();
+}
+
+export function updateBeanTwaDeltaB(blockNumber: BigInt, timestamp: BigInt) {
+  let beanAddress = getBeanTokenAddress(blockNumber);
+  let bean = loadBean(beanAddress);
+  let beanHourly = loadOrCreateBeanHourlySnapshot(beanAddress, timestamp, bean.lastSeason);
+  let beanDaily = loadOrCreateBeanDailySnapshot(beanAddress, timestamp);
+
+  let cumulativeDeltaB = ZERO_BI;
+  for (let i = 0; i < bean.pools.length; i++) {
+    let poolHourly = loadOrCreatePoolHourlySnapshot(bean.pools[i], timestamp, blockNumber);
+    cumulativeDeltaB = cumulativeDeltaB.plus(poolHourly.twaDeltaBeans);
+  }
+
+  beanHourly.twaDeltaB = cumulativeDeltaB;
+  beanDaily.twaDeltaB = cumulativeDeltaB;
+  beanHourly.save();
   beanDaily.save();
 }
