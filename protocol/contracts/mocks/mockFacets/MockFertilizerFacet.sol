@@ -27,6 +27,7 @@ contract MockFertilizerFacet is FertilizerFacet {
     function setPenaltyParams(uint256 recapitalized, uint256 fertilized) external {
         s.recapitalized = recapitalized;
         s.fertilizedIndex = fertilized;
+        s.fertilizedPaidIndex = fertilized;
     }
 
     function setFertilizerE(bool fertilizing, uint256 unfertilized) external {

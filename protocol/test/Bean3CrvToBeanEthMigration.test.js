@@ -85,7 +85,7 @@ describe.skip('Bean:3Crv to Bean:Eth Migration', function () {
     await revertToSnapshot(snapshotId)
   });
 
-  describe('Initializes migration', async function () {
+  describe.skip('Initializes migration', async function () {
     it('Changings underlying token', async function () {
       expect(await beanstalk.getUnderlyingToken(UNRIPE_LP)).to.be.equal(BEAN_ETH_WELL)
     })

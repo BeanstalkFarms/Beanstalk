@@ -25,6 +25,7 @@ contract MockUnripeFacet is UnripeFacet {
         payable
         nonReentrant
     {
+        AppStorage storage s = LibAppStorage.diamondStorage();
         address underlyingToken = s.u[unripeToken].underlyingToken;
         IERC20(underlyingToken).safeTransferFrom(
             msg.sender,

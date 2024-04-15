@@ -52,6 +52,9 @@ describe("New Silo Token", function () {
       1e6 //aka "1 seed"
     );
 
+    // Needed to appease invariants when underlying asset of urBean != Bean.
+    await mockBeanstalk.removeWhitelistStatus(BEAN);
+
     await initalizeUsersForToken(
       siloToken.address,
       [user, user2, owner, flashLoanExploiter],

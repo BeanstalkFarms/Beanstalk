@@ -51,6 +51,9 @@ describe("Silo Enroot", function () {
     await this.siloToken.mint(user2.address, '10000');
     await mockBeanstalk.mockWhitelistToken(this.siloToken.address, mockBeanstalk.interface.getSighash("mockBDV(uint256 amount)"), "10000", "1");
     
+    // Needed to appease invariants when underlying asset of urBean != Bean.
+    await mockBeanstalk.removeWhitelistStatus(BEAN);
+    
     await mockBeanstalk.teleportSunrise(ENROOT_FIX_SEASON);
     [this.well, this.wellfunction, this.pump] = await deployMockWellWithMockPump(BEAN_WSTETH_WELL, WSTETH);
 
