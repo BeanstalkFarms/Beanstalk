@@ -216,7 +216,7 @@ export function updateInstDeltaB(token: string, blockNumber: BigInt, timestamp: 
   beanDaily.save();
 }
 
-export function updateBeanTwaDeltaB(blockNumber: BigInt, timestamp: BigInt) {
+export function updateBeanTwaDeltaB(blockNumber: BigInt, timestamp: BigInt): void {
   let beanAddress = getBeanTokenAddress(blockNumber);
   let bean = loadBean(beanAddress);
   let beanHourly = loadOrCreateBeanHourlySnapshot(beanAddress, timestamp, bean.lastSeason);
