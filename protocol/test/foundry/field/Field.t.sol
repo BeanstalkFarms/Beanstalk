@@ -2,15 +2,10 @@
 pragma solidity >=0.6.0 <0.9.0;
 pragma abicoder v2;
 
-import {TestHelper, LibTransfer} from "test/foundry/utils/TestHelper.sol";
-import {IMockFBeanstalk} from "contracts/interfaces/IMockFBeanstalk.sol";
+import {TestHelper, LibTransfer, IMockFBeanstalk} from "test/foundry/utils/TestHelper.sol";
 import {MockFieldFacet} from "contracts/mocks/mockFacets/MockFieldFacet.sol";
 import {MockSeasonFacet} from "contracts/mocks/mockFacets/MockSeasonFacet.sol";
 import {C} from "contracts/C.sol";
-import {console} from "forge-std/console.sol";
-import {Storage} from "contracts/beanstalk/AppStorage.sol";
-
-import "contracts/tokens/Bean.sol";
 
 contract FieldTest is TestHelper {
 
@@ -21,7 +16,6 @@ contract FieldTest is TestHelper {
     // Interfaces.
     MockFieldFacet field = MockFieldFacet(BEANSTALK);
     MockSeasonFacet season = MockSeasonFacet(BEANSTALK);
-    IMockFBeanstalk bs = IMockFBeanstalk(BEANSTALK);
 
     // test accounts
     address[] farmers;

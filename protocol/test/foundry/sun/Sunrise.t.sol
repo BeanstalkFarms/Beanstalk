@@ -3,18 +3,10 @@ pragma solidity >=0.6.0 <0.9.0;
 pragma abicoder v2;
 
 import {TestHelper, LibTransfer} from "test/foundry/utils/TestHelper.sol";
-import {LibIncentive} from "contracts/libraries/LibIncentive.sol";
-import {IMockFBeanstalk} from "contracts/interfaces/IMockFBeanstalk.sol";
 import {MockSeasonFacet} from "contracts/mocks/mockFacets/MockSeasonFacet.sol";
 import {MockPump} from "contracts/mocks/well/MockPump.sol";
 import {IWell, Call, IERC20} from "contracts/interfaces/basin/IWell.sol";
 import {C} from "contracts/C.sol";
-import {ICumulativePump} from "contracts/interfaces/basin/pumps/ICumulativePump.sol";
-import {LibWell} from "contracts/libraries/Well/LibWell.sol";
-import {MockToken} from "contracts/mocks/MockToken.sol";
-import {LibMinting} from "contracts/libraries/Minting/LibMinting.sol";
-
-import "forge-std/console.sol";
 
 /**
  * @notice Tests the various parts of sunrise. 
@@ -29,7 +21,7 @@ import "forge-std/console.sol";
  * - stepSun() - distrbuted newly minted beans to the barn, field, and silo, and issues new soil to the field. 
  * - Incentive() - rewards beans to the caller.
  */
-contract Sunrise is TestHelper {
+contract SunriseTest is TestHelper {
 
     // Events
     event Sunrise(uint256 indexed season);
@@ -42,7 +34,6 @@ contract Sunrise is TestHelper {
 
     // Interfaces.
     MockSeasonFacet season = MockSeasonFacet(BEANSTALK);
-    IMockFBeanstalk bs = IMockFBeanstalk(BEANSTALK);
 
     // test accounts.
     address[] farmers;
@@ -95,7 +86,7 @@ contract Sunrise is TestHelper {
      * @dev `s` hours need to elapse from the start of beanstalk in order for beanstalk
      * to accept a sunrise call. `s` is the current season, found at s.season.current.
      */
-    function testSunriseRevert(
+    function test_sunriseRevert(
         uint256 s,
         uint256 timestamp
     ) public {
@@ -118,7 +109,7 @@ contract Sunrise is TestHelper {
     /**
      * @notice sunrise should succeed if whitelisted lp pumps are not initialized.
      */
-    function testSunriseNoWells() public {
+    function test_sunriseNoWells() public {
         warpToNextSeasonTimestamp();
         
         uninitializeWellPumps();
@@ -129,7 +120,7 @@ contract Sunrise is TestHelper {
      * @notice sunrise should succeed if any oracle fails.
      * @dev assumes a mock oracle.
      */
-    function testSunriseOracleFailure(uint256 oracleIndex) public {
+    function test_sunriseOracleFailure(uint256 oracleIndex) public {
         warpToNextSeasonTimestamp();
         
         // see OracleDeployer.sol for the chainlink oracles.
@@ -144,7 +135,7 @@ contract Sunrise is TestHelper {
      * @notice general sunrise test. Verfies that the sunrise function
      * can be executed no matter how late the call is.
      */
-    function testLateSunrise(
+    function test_lateSunrise(
         uint256 s,
         uint256 secondsLate
     ) public {
@@ -164,7 +155,7 @@ contract Sunrise is TestHelper {
     /**
      * @notice validates that the season is incremented correctly.
      */
-    function testStepSeason(uint256 s) public {
+    function test_stepSeason(uint256 s) public {
         s = bound(s, 1, type(uint32).max - 1);
         season.setCurrentSeasonE(uint32(s));
 
@@ -178,63 +169,31 @@ contract Sunrise is TestHelper {
 
     ///////// STEP ORACLE /////////
 
-    /**
-     * @notice validates oracle functionality.
-     */
-    function testStepOracleDefault() public {
-        address[] memory lps = bs.getWhitelistedWellLpTokens();
-        uint32 currentSeason = bs.season();
-        int256 totalDeltaB;
-        // verify well oracle event.
-        for(uint i; i < lps.length; i++) {
-            Call memory pump = IWell(lps[i]).pumps()[0];
-            (, bytes memory data) = ICumulativePump(pump.target).readTwaReserves(
-                lps[i], 
-                bs.wellOracleSnapshot(lps[i]), 
-                bs.getSeasonTimestamp(), 
-                pump.data
-            );
-            int256 deltaB = bs.poolDeltaB(lps[i]);
-            vm.expectEmit();
-            emit WellOracle(currentSeason, lps[i], deltaB, data);
-        }
-        season.captureE();
-    }
+
+
+    ///////// BEANSTALK EVALUATION AND UPDATE /////////
 
     /**
-     * @notice validates oracle functionality. Change in deltaB.
+     * @notice see {Cases.t.sol}
      */
-    function testStepOracleDeltaB(
-        uint256 entropy
-    ) public {
-        int256[] memory deltaBPerWell = new int256[](lps.length);
-        uint32 currentSeason = bs.season();
-        for(uint i; i < lps.length; i++) {
-            // unix time is used to generate an unique deltaB upon every test.
-            int256 deltaB = int256(keccak256(abi.encode(entropy, i, vm.unixTime())));
-            deltaB = bound(deltaB, -1000e6, 1000e6);
-            (address tokenInWell, ) = LibWell.getNonBeanTokenAndIndexFromWell(lps[i]);
-            setDeltaBforWell(deltaB, lps[i], tokenInWell);
-            deltaBPerWell[i] = deltaB;
-        }
-        // verify well oracle event.
-        for(uint i; i < lps.length; i++) {
-            Call memory pump = IWell(lps[i]).pumps()[0];
-            (, bytes memory data) = ICumulativePump(pump.target).readTwaReserves(
-                lps[i], 
-                bs.wellOracleSnapshot(lps[i]), 
-                bs.getSeasonTimestamp(), 
-                pump.data
-            );
-            // deltaB may slightly differ due to rounding errors.
-            // validate poolDeltaB with calculated deltaB.
-            int256 poolDeltaB = season.getPoolDeltaBWithoutCap(lps[i]);
-            assertApproxEqAbs(poolDeltaB, deltaBPerWell[i], 1);
-            vm.expectEmit();
-            emit WellOracle(currentSeason, lps[i], poolDeltaB, data);
-        }
-        season.captureE();
-    }
+
+    ///////// GERMINATION /////////
+    
+    /**
+     * @notice see {Germination.t.sol}
+     */
+
+    ///////// GAUGE /////////
+    
+    /**
+     * @notice see {Gauge.t.sol}
+     */
+
+    ///////// Sun /////////
+    
+    /**
+     * @notice see {Sun.t.sol}
+     */
 
 
     ///////// INCENTIVE /////////
@@ -286,21 +245,6 @@ contract Sunrise is TestHelper {
             MockPump(IWell(lp[i]).pumps()[0].target).clearReserves(lp[i]);
         }
     }
-    
-    function initializeChainlinkOraclesForWhitelistedWells() internal noGasMetering {
-        address[] memory lp = bs.getWhitelistedLpTokens();
-        address chainlinkOracle;
-        for(uint i; i < lp.length; i++) {
-            // oracles will need to be added here, 
-            // as obtaining the chainlink oracle to well is not feasible on chain.
-            if (lp[i] == C.BEAN_ETH_WELL) {
-                chainlinkOracle = chainlinkOracles[0];
-            } else if (lp[i] == C.BEAN_WSTETH_WELL) {
-                chainlinkOracle = chainlinkOracles[1];
-            }
-            updateChainlinkOracleWithPreviousData(chainlinkOracle);
-        }
-    }
 
     /**
      * @notice gets the next time the sunrise can be called,
@@ -309,31 +253,5 @@ contract Sunrise is TestHelper {
     function warpToNextSeasonTimestamp() internal noGasMetering {
         uint256 nextTimestamp = season.getNextSeasonStart();
         vm.warp(nextTimestamp);
-    }
-
-    function determineReward(uint256 initialGasLeft) internal view returns (uint256) {
-        uint256 incentiveAmount = LibIncentive.determineReward(initialGasLeft, 0, 1000e6);
-        return incentiveAmount;
-    }
-
-    /**
-     * @notice update deltaB in wells. excess is minted to the well.
-     * commands are called twice to update pumps, due to mocks and everything
-     * executing in the same block.
-     */
-    function setDeltaBforWell(int256 deltaB, address wellAddress, address tokenInWell) internal {
-        IWell well = IWell(wellAddress);
-        IERC20 tokenOut;
-        uint256 initalBeanBalance = C.bean().balanceOf(wellAddress);
-        if (deltaB > 0) {
-            uint256 tokenAmountIn = well.getSwapIn(IERC20(tokenInWell), C.bean(), uint256(deltaB));
-            MockToken(tokenInWell).mint(wellAddress, tokenAmountIn);
-            tokenOut = C.bean();
-        } else { 
-            C.bean().mint(wellAddress, uint256(-deltaB));
-            tokenOut = IERC20(tokenInWell);
-        }
-        uint256 amountOut = well.shift(tokenOut, 0, farmers[0]);
-        well.shift(tokenOut, 0, farmers[0]);
     }
 }

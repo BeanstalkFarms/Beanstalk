@@ -9,6 +9,7 @@ import "forge-std/Test.sol";
 ////// Mocks //////
 import {MockToken} from "contracts/mocks/MockToken.sol";
 import {MockBlockBasefee} from "contracts/mocks/MockBlockBasefee.sol";
+import {IMockFBeanstalk} from "contracts/interfaces/IMockFBeanstalk.sol";
 
 ///// TEST HELPERS ////// 
 import {BeanstalkDeployer} from "test/foundry/utils/BeanstalkDeployer.sol";
@@ -28,6 +29,9 @@ import {LibTransfer} from "contracts/libraries/Token/LibTransfer.sol";
  * @notice Test helper contract for Beanstalk tests.
  */
 contract TestHelper is Test, BeanstalkDeployer, BasinDeployer, DepotDeployer, OracleDeployer {
+
+    // general mock interface for beanstalk.
+    IMockFBeanstalk bs = IMockFBeanstalk(BEANSTALK);
 
     // ideally, timestamp should be set to 1_000_000.
     // however, beanstalk rounds down to the nearest hour. 
@@ -228,5 +232,56 @@ contract TestHelper is Test, BeanstalkDeployer, BasinDeployer, DepotDeployer, Or
 
     function abs(int256 x) internal pure returns (int256) {
         return x >= 0 ? x : -x;
+    }
+
+    function initializeChainlinkOraclesForWhitelistedWells() internal noGasMetering {
+        address[] memory lp = bs.getWhitelistedLpTokens();
+        address chainlinkOracle;
+        for(uint i; i < lp.length; i++) {
+            // oracles will need to be added here, 
+            // as obtaining the chainlink oracle to well is not feasible on chain.
+            if (lp[i] == C.BEAN_ETH_WELL) {
+                chainlinkOracle = chainlinkOracles[0];
+            } else if (lp[i] == C.BEAN_WSTETH_WELL) {
+                chainlinkOracle = chainlinkOracles[1];
+            }
+            updateChainlinkOracleWithPreviousData(chainlinkOracle);
+        }
+    }
+
+    function setDeltaBForWellsWithEntropy(
+        uint256 entropy
+    ) internal returns (int256[] memory deltaBPerWell) { 
+        address[] memory lps = bs.getWhitelistedWellLpTokens();
+        deltaBPerWell = new int256[](lps.length);
+        for(uint i; i < lps.length; i++) {
+            // unix time is used to generate an unique deltaB upon every test.
+            int256 deltaB = int256(keccak256(abi.encode(entropy, i, vm.unixTime())));
+            deltaB = bound(deltaB, -1000e6, 1000e6);
+            (address tokenInWell, ) = LibWell.getNonBeanTokenAndIndexFromWell(lps[i]);
+            setDeltaBforWell(deltaB, lps[i], tokenInWell);
+            deltaBPerWell[i] = deltaB;
+        }
+    }
+
+    /**
+     * @notice update deltaB in wells. excess is minted to the well.
+     * commands are called twice to update pumps, due to mocks and everything
+     * executing in the same block.
+     */
+    function setDeltaBforWell(int256 deltaB, address wellAddress, address tokenInWell) internal {
+        IWell well = IWell(wellAddress);
+        IERC20 tokenOut;
+        uint256 initalBeanBalance = C.bean().balanceOf(wellAddress);
+        if (deltaB > 0) {
+            uint256 tokenAmountIn = well.getSwapIn(IERC20(tokenInWell), C.bean(), uint256(deltaB));
+            MockToken(tokenInWell).mint(wellAddress, tokenAmountIn);
+            tokenOut = C.bean();
+        } else { 
+            C.bean().mint(wellAddress, uint256(-deltaB));
+            tokenOut = IERC20(tokenInWell);
+        }
+        uint256 amountOut = well.shift(tokenOut, 0, users[1]);
+        well.shift(tokenOut, 0, users[1]);
     }
 }

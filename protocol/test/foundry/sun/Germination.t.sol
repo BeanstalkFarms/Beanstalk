@@ -2,12 +2,10 @@
 pragma solidity >=0.6.0 <0.9.0;
 pragma abicoder v2;
 
-import {TestHelper, LibTransfer} from "./utils/TestHelper.sol";
-import {IMockFBeanstalk} from "contracts/interfaces/IMockFBeanstalk.sol";
+import {TestHelper, LibTransfer} from "test/foundry/utils/TestHelper.sol";
 import {MockSeasonFacet} from "contracts/mocks/mockFacets/MockSeasonFacet.sol";
 import {MockSiloFacet} from "contracts/mocks/mockFacets/MockSiloFacet.sol";
 import {C} from "contracts/C.sol";
-import {console} from "forge-std/console.sol";
 
 /**
  * @title GerminationTest
@@ -18,7 +16,6 @@ import {console} from "forge-std/console.sol";
 contract GerminationTest is TestHelper {
 
     // Interfaces.
-    IMockFBeanstalk bs = IMockFBeanstalk(BEANSTALK);
     MockSiloFacet silo = MockSiloFacet(BEANSTALK);
     MockSeasonFacet season = MockSeasonFacet(BEANSTALK);
     
@@ -173,7 +170,6 @@ contract GerminationTest is TestHelper {
         farmers.push(users[4]);
 
         uint256 grownStalk = bs.balanceOfGrownStalk(users[1], C.BEAN);
-        console.log("grownStalk", grownStalk);
         
         transferDepositFromUsersToUsers(
             farmers,
