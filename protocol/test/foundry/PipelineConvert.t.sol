@@ -470,6 +470,49 @@ contract PipelineConvertTest is TestHelper {
         assertTrue(grownStalkBefore > 0);
     }
 
+    function testConvertingOutputTokenNotWell(uint256 amount) public {
+        amount = bound(amount, 1, 1000e6);
+        int96 stem = beanToLPDepositSetup(amount, users[1]);
+        int96[] memory stems = new int96[](1);
+        stems[0] = stem;
+        uint256[] memory amounts = new uint256[](1);
+        amounts[0] = amount;
+        AdvancedFarmCall[] memory farmCalls = new AdvancedFarmCall[](1);
+        AdvancedFarmCall[] memory beanToLPFarmCalls = createBeanToLPFarmCalls(amount);
+        farmCalls[0] = beanToLPFarmCalls[0]; // Assign the first element of the returned array
+        vm.expectRevert("Convert: Output token is not a well");
+        // convert non-whitelisted asset to lp
+        vm.prank(users[1]);
+        convert.pipelineConvert(
+            C.BEAN, // input token
+            stems, // stem
+            amounts, // amount
+            C.UNRIPE_LP, // token out
+            farmCalls // farmData
+        );
+    }
+
+    function testConvertingInputTokenNotWell(uint256 amount) public {
+        amount = bound(amount, 1, 1000e6);
+        int96 stem = beanToLPDepositSetup(amount, users[1]);
+        int96[] memory stems = new int96[](1);
+        stems[0] = stem;
+        uint256[] memory amounts = new uint256[](1);
+        amounts[0] = amount;
+        AdvancedFarmCall[] memory farmCalls = new AdvancedFarmCall[](1);
+        AdvancedFarmCall[] memory beanToLPFarmCalls = createBeanToLPFarmCalls(amount);
+        farmCalls[0] = beanToLPFarmCalls[0]; // Assign the first element of the returned array
+        vm.expectRevert("Convert: Input token is not a well");
+        // convert non-whitelisted asset to lp
+        vm.prank(users[1]);
+        convert.pipelineConvert(
+            C.UNRIPE_LP, // input token
+            stems, // stem
+            amounts, // amount
+            C.BEAN, // token out
+            farmCalls // farmData
+        );
+    }
 
 
     function testCalculateStalkPenaltyUpwardsToZero() public {

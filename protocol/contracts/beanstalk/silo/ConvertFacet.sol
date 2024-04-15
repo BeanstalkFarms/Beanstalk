@@ -19,6 +19,7 @@ import {LibConvert} from "contracts/libraries/Convert/LibConvert.sol";
 import {AppStorage, LibAppStorage} from "contracts/libraries/LibAppStorage.sol";
 import {AdvancedFarmCall, LibFarm} from "../../libraries/LibFarm.sol";
 import {LibWellMinting} from "../../libraries/Minting/LibWellMinting.sol";
+import {LibWell} from "contracts/libraries/Well/LibWell.sol";
 import {IPipeline, PipeCall} from "contracts/interfaces/IPipeline.sol";
 import {SignedSafeMath} from "@openzeppelin/contracts/math/SignedSafeMath.sol";
 import {LibFunction} from "contracts/libraries/LibFunction.sol";
@@ -185,6 +186,9 @@ contract ConvertFacet is ReentrancyGuard {
         // Setup Tractor publisher to support Tractor blueprints
         LibTractor._setPublisher(msg.sender);
 
+        // require that input and output tokens be wells (Unripe not supported)
+        require(LibWell.isWell(inputToken) || inputToken == C.BEAN, "Convert: Input token is not a well");
+        require(LibWell.isWell(outputToken) || outputToken == C.BEAN, "Convert: Output token is not a well");
 
         // mow input and output tokens: 
         LibSilo._mow(LibTractor._getUser(), inputToken);
