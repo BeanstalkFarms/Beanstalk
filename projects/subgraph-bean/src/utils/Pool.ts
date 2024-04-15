@@ -49,6 +49,7 @@ export function loadOrCreatePoolHourlySnapshot(pool: string, timestamp: BigInt, 
     snapshot.crosses = currentPool.crosses;
     snapshot.utilization = ZERO_BD;
     snapshot.deltaBeans = ZERO_BI;
+    snapshot.twaDeltaBeans = ZERO_BI;
     snapshot.deltaReserves = emptyBigIntArray(2);
     snapshot.deltaVolume = ZERO_BI;
     snapshot.deltaVolumeUSD = ZERO_BD;
@@ -79,6 +80,7 @@ export function loadOrCreatePoolDailySnapshot(pool: string, timestamp: BigInt, b
     snapshot.crosses = currentPool.crosses;
     snapshot.utilization = ZERO_BD;
     snapshot.deltaBeans = ZERO_BI;
+    snapshot.twaDeltaBeans = ZERO_BI;
     snapshot.deltaReserves = emptyBigIntArray(2);
     snapshot.deltaVolume = ZERO_BI;
     snapshot.deltaVolumeUSD = ZERO_BD;
