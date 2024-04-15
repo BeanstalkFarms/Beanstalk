@@ -21,7 +21,6 @@ export function loadBean(token: string): Bean {
     bean.supply = ZERO_BI;
     bean.marketCap = ZERO_BD;
     bean.supplyInPegLP = ZERO_BD;
-    bean.instantaneousDeltaB = ZERO_BI;
     bean.volume = ZERO_BI;
     bean.volumeUSD = ZERO_BD;
     bean.liquidityUSD = ZERO_BD;
@@ -47,12 +46,12 @@ export function loadOrCreateBeanHourlySnapshot(token: string, timestamp: BigInt,
     snapshot.marketCap = bean.marketCap;
     snapshot.supplyInPegLP = bean.supplyInPegLP;
     snapshot.instantaneousDeltaB = ZERO_BI;
+    snapshot.twaDeltaB = ZERO_BI;
     snapshot.volume = bean.volume;
     snapshot.volumeUSD = bean.volumeUSD;
     snapshot.liquidityUSD = bean.liquidityUSD;
     snapshot.price = bean.price;
     snapshot.crosses = bean.crosses;
-    snapshot.deltaBeans = ZERO_BI;
     snapshot.deltaVolume = ZERO_BI;
     snapshot.deltaVolumeUSD = ZERO_BD;
     snapshot.deltaLiquidityUSD = ZERO_BD;
@@ -76,12 +75,12 @@ export function loadOrCreateBeanDailySnapshot(token: string, timestamp: BigInt):
     snapshot.marketCap = bean.marketCap;
     snapshot.supplyInPegLP = bean.supplyInPegLP;
     snapshot.instantaneousDeltaB = ZERO_BI;
+    snapshot.twaDeltaB = ZERO_BI;
     snapshot.volume = bean.volume;
     snapshot.volumeUSD = bean.volumeUSD;
     snapshot.liquidityUSD = bean.liquidityUSD;
     snapshot.price = bean.price;
     snapshot.crosses = bean.crosses;
-    snapshot.deltaBeans = ZERO_BI;
     snapshot.deltaVolume = ZERO_BI;
     snapshot.deltaVolumeUSD = ZERO_BD;
     snapshot.deltaLiquidityUSD = ZERO_BD;
@@ -211,9 +210,6 @@ export function updateBeanDeltaB(token: string, blockNumber: BigInt, timestamp: 
     let pool = loadOrCreatePool(bean.pools[i], blockNumber);
     cumulativeDeltaB = cumulativeDeltaB.plus(pool.deltaBeans);
   }
-
-  bean.instantaneousDeltaB = cumulativeDeltaB;
-  bean.save();
 
   beanHourly.instantaneousDeltaB = cumulativeDeltaB;
   beanHourly.save();

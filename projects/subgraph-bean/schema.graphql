@@ -25,9 +25,6 @@ type Bean @entity {
   "Percent of supply in LP used for peg maintenance"
   supplyInPegLP: BigDecimal!
 
-  "Instantaneous deltaB across all pools"
-  instantaneousDeltaB: BigInt!
-
   "Cumulative volume of beans traded"
   volume: BigInt!
 
@@ -75,8 +72,11 @@ type BeanHourlySnapshot @entity {
   "Percent of supply in LP used for peg maintenance"
   supplyInPegLP: BigDecimal!
 
-  "Instantaneous deltaB across all pools"
+  "Instantaneous deltaB across all whitelisted pools"
   instantaneousDeltaB: BigInt!
+
+  "Time-Weighted deltaB in whitelisted pools over the previous season"
+  twaDeltaB: BigInt!
 
   "Cumulative volume in BEAN"
   volume: BigInt!
@@ -92,9 +92,6 @@ type BeanHourlySnapshot @entity {
 
   "Cumulative number of crosses"
   crosses: Int!
-
-  "Current deltaB for peg"
-  deltaBeans: BigInt!
 
   "Volume in BEAN for this snapshot"
   deltaVolume: BigInt!
@@ -129,14 +126,15 @@ type BeanDailySnapshot @entity {
 
   "Percent of supply in LP used for peg maintenance"
   supplyInPegLP: BigDecimal!
-  "Instantaneous deltaB across all pools"
+  "Instantaneous deltaB across all whitelisted pools"
   instantaneousDeltaB: BigInt!
+  "Time-Weighted deltaB in whitelisted pools over the previous season"
+  twaDeltaB: BigInt!
   volume: BigInt!
   volumeUSD: BigDecimal!
   liquidityUSD: BigDecimal!
   price: BigDecimal!
   crosses: Int!
-  deltaBeans: BigInt!
   deltaVolume: BigInt!
   deltaVolumeUSD: BigDecimal!
   deltaLiquidityUSD: BigDecimal!
@@ -182,6 +180,7 @@ type Pool @entity {
   "Last timestamp a cross was seen for this pool"
   lastCross: BigInt!
   crossEvents: [PoolCross!]! @derivedFrom(field: "pool")
+  "Instantaneous deltaB"
   deltaBeans: BigInt!
   hourlySnapshot: [PoolHourlySnapshot!]! @derivedFrom(field: "pool")
   dailySnapshot: [PoolDailySnapshot!]! @derivedFrom(field: "pool")
@@ -197,7 +196,10 @@ type PoolHourlySnapshot @entity {
   liquidityUSD: BigDecimal!
   crosses: Int!
   utilization: BigDecimal!
+  "Instantaneous deltaB"
   deltaBeans: BigInt!
+  "Time-Weighted deltaB over the previous season"
+  twaDeltaBeans: BigInt!
   deltaReserves: [BigInt!]!
   deltaVolume: BigInt!
   deltaVolumeUSD: BigDecimal!
@@ -219,7 +221,10 @@ type PoolDailySnapshot @entity {
   liquidityUSD: BigDecimal!
   crosses: Int!
   utilization: BigDecimal!
+  "Instantaneous deltaB"
   deltaBeans: BigInt!
+  "Time-Weighted deltaB over the previous season"
+  twaDeltaBeans: BigInt!
   deltaReserves: [BigInt!]!
   deltaVolume: BigInt!
   deltaVolumeUSD: BigDecimal!
