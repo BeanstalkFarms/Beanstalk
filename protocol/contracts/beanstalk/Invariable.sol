@@ -49,11 +49,19 @@ abstract contract Invariable {
     // There are a relatively small number of external functions that will cause a change in token balances of contract.
     // Roughly akin to a view only check where only routine modifications are allowed (ie mowing).
     modifier noNetFlow() {
-        AppStorage storage s = LibAppStorage.diamondStorage();
-        uint256 initialStalk = s.s.stalk;
-        address[] memory tokens = LibWhitelistedTokens.getSiloTokens();
-        uint256[] memory initialProtocolTokenBalances = getTokenBalances(tokens);
+        uint256 initialStalk;
+        uint256[] memory initialProtocolTokenBalances;
+        // Minimize stack depth impact.
+        {
+            AppStorage storage s = LibAppStorage.diamondStorage();
+            initialStalk = s.s.stalk;
+            initialProtocolTokenBalances = getTokenBalances(LibWhitelistedTokens.getSiloTokens());
+        }
+        
         _;
+
+        AppStorage storage s = LibAppStorage.diamondStorage();
+        address[] memory tokens = LibWhitelistedTokens.getSiloTokens();
         uint256[] memory finalProtocolTokenBalances = getTokenBalances(tokens);
 
         require(s.s.stalk >= initialStalk, "INV: Stalk decreased");
