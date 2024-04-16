@@ -35,6 +35,9 @@ async function fastForwardHour() {
 describe.skip('Bean:Eth to Bean:Wsteth Migration', function () {
   before(async function () {
 
+    // Skipping because this migration already occured.
+    return;
+
     [user, user2] = await ethers.getSigners()
 
     try {
@@ -100,7 +103,7 @@ describe.skip('Bean:Eth to Bean:Wsteth Migration', function () {
     await revertToSnapshot(snapshotId)
   });
 
-  describe('Initializes migration', async function () {
+  describe.skip('Initializes migration', async function () {
 
     describe("Bean Eth minting", async function () {
       it('resets well oracle snapshot', async function () {
@@ -181,7 +184,7 @@ describe.skip('Bean:Eth to Bean:Wsteth Migration', function () {
     })
   })
 
-  describe('Completes Migration', async function () {
+  describe.skip('Completes Migration', async function () {
     beforeEach(async function () {
       this.beanWstethUnderlying = await finishWstethMigration(true, false);
     })
