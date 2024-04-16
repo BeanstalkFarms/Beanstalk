@@ -7,7 +7,7 @@ import { createMetapoolOracleEvent, createWellOracleEvent } from "./event-mockin
 import { BEAN_3CRV, BEAN_ERC20, BEAN_WETH_CP2_WELL } from "../../subgraph-core/utils/Constants";
 import { hourFromTimestamp } from "../../subgraph-core/utils/Dates";
 import { mockBlock } from "../../subgraph-core/tests/event-mocking/Block";
-import { uniswapV2DeltaB } from "../src/utils/UniswapPrice";
+import { uniswapV2DeltaB } from "../src/utils/price/UniswapPrice";
 
 const timestamp1 = BigInt.fromU32(1712793374);
 const hour1 = hourFromTimestamp(timestamp1).toString();

@@ -1,9 +1,9 @@
 import { Address, BigDecimal, BigInt } from "@graphprotocol/graph-ts";
-import { BD_10, ONE_BI, pow, sqrt, toDecimal, ZERO_BD, ZERO_BI } from "../../../subgraph-core/utils/Decimals";
-import { Token } from "../../generated/schema";
-import { loadOrCreateToken } from "./Token";
-import { UniswapV2Pair } from "../../generated/BeanUniswapV2Pair/UniswapV2Pair";
-import { WETH, WETH_USDC_PAIR } from "../../../subgraph-core/utils/Constants";
+import { BD_10, ONE_BI, pow, sqrt, toDecimal, ZERO_BD, ZERO_BI } from "../../../../subgraph-core/utils/Decimals";
+import { Token } from "../../../generated/schema";
+import { loadOrCreateToken } from "../Token";
+import { UniswapV2Pair } from "../../../generated/BeanUniswapV2Pair/UniswapV2Pair";
+import { WETH, WETH_USDC_PAIR } from "../../../../subgraph-core/utils/Constants";
 
 export function updatePreReplantPriceETH(): Token {
   let token = loadOrCreateToken(WETH.toHexString());
@@ -31,7 +31,7 @@ export function uniswapV2Reserves(pool: Address): BigInt[] {
   return [reserves.value.value0, reserves.value.value1];
 }
 
-// Returns the price of beans in a uniswapv2 constant product pool
+// Returns the current price of beans in a uniswapv2 constant product pool
 export function uniswapV2Price(beanReserves: BigDecimal, token2Reserves: BigDecimal, token2Price: BigDecimal): BigDecimal {
   return token2Reserves.times(token2Price).div(beanReserves);
 }

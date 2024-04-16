@@ -1,9 +1,9 @@
 import { Address, BigDecimal, BigInt } from "@graphprotocol/graph-ts";
-import { Bean3CRV } from "../../generated/Bean3CRV-V1/Bean3CRV";
-import { BI_10, toDecimal, ZERO_BD, ZERO_BI } from "../../../subgraph-core/utils/Decimals";
-import { BEAN_3CRV_V1, BEAN_LUSD_V1, CALCULATIONS_CURVE, CRV3_POOL_V1, LUSD, LUSD_3POOL } from "../../../subgraph-core/utils/Constants";
-import { CalculationsCurve } from "../../generated/Bean3CRV-V1/CalculationsCurve";
-import { ERC20 } from "../../generated/Bean3CRV-V1/ERC20";
+import { Bean3CRV } from "../../../generated/Bean3CRV-V1/Bean3CRV";
+import { BI_10, toDecimal, ZERO_BD, ZERO_BI } from "../../../../subgraph-core/utils/Decimals";
+import { BEAN_3CRV_V1, BEAN_LUSD_V1, CALCULATIONS_CURVE, CRV3_POOL_V1, LUSD, LUSD_3POOL } from "../../../../subgraph-core/utils/Constants";
+import { CalculationsCurve } from "../../../generated/Bean3CRV-V1/CalculationsCurve";
+import { ERC20 } from "../../../generated/Bean3CRV-V1/ERC20";
 
 // Note that the Bean3CRV type applies to any curve pool (including lusd)
 

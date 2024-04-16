@@ -235,3 +235,12 @@ type PoolDailySnapshot @entity {
   createdAt: BigInt!
   updatedAt: BigInt!
 }
+
+# For tracking twa balances as the seasons progress.
+# This is only relevant for pre-replant where this information is not directly accessible.
+type TwaOracle @entity {
+  id: ID!
+  pool: Pool!
+  priceCumulativeLast: [BigInt!]!
+  lastUpdated: BigInt!
+}

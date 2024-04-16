@@ -13,7 +13,7 @@ import {
 } from "./utils/Pool";
 import { loadOrCreateToken } from "./utils/Token";
 import { checkBeanCross } from "./utils/Cross";
-import { uniswapV2DeltaB, uniswapV2Price, uniswapV2Reserves, updatePreReplantPriceETH } from "./utils/UniswapPrice";
+import { uniswapV2DeltaB, uniswapV2Price, uniswapV2Reserves, updatePreReplantPriceETH } from "./utils/price/UniswapPrice";
 import { PreReplant } from "../generated/Beanstalk/PreReplant";
 
 // export function handleMint(event: Mint): void {
