@@ -1,66 +1,11 @@
 import { Address, BigDecimal, BigInt } from "@graphprotocol/graph-ts";
 import { Bean3CRV } from "../../generated/Bean3CRV-V1/Bean3CRV";
-import { BD_10, BI_10, pow, sqrt, toDecimal, ZERO_BD, ZERO_BI } from "../../../subgraph-core/utils/Decimals";
-import { Token } from "../../generated/schema";
-import { loadOrCreateToken } from "./Token";
-import { UniswapV2Pair } from "../../generated/BeanUniswapV2Pair/UniswapV2Pair";
-import {
-  BEAN_3CRV_V1,
-  BEAN_LUSD_V1,
-  CALCULATIONS_CURVE,
-  CRV3_POOL_V1,
-  LUSD,
-  LUSD_3POOL,
-  WETH,
-  WETH_USDC_PAIR
-} from "../../../subgraph-core/utils/Constants";
+import { BI_10, toDecimal, ZERO_BD, ZERO_BI } from "../../../subgraph-core/utils/Decimals";
+import { BEAN_3CRV_V1, BEAN_LUSD_V1, CALCULATIONS_CURVE, CRV3_POOL_V1, LUSD, LUSD_3POOL } from "../../../subgraph-core/utils/Constants";
 import { CalculationsCurve } from "../../generated/Bean3CRV-V1/CalculationsCurve";
 import { ERC20 } from "../../generated/Bean3CRV-V1/ERC20";
 
-// Pre-replant prices are unavailable from the beanstalk contracts
 // Note that the Bean3CRV type applies to any curve pool (including lusd)
-
-export function updatePreReplantPriceETH(): Token {
-  let token = loadOrCreateToken(WETH.toHexString());
-  let pair = UniswapV2Pair.bind(WETH_USDC_PAIR);
-
-  let reserves = pair.try_getReserves();
-  if (reserves.reverted) {
-    return token;
-  }
-
-  // Token 0 is USDC and Token 1 is WETH
-  token.lastPriceUSD = toDecimal(reserves.value.value0).div(toDecimal(reserves.value.value1, 18));
-  token.save();
-  return token;
-}
-
-// For our single uniswapv2 pool, token 0 is WETH and token 1 is BEAN
-export function uniswapV2Reserves(pool: Address): BigInt[] {
-  let pair = UniswapV2Pair.bind(pool);
-
-  let reserves = pair.try_getReserves();
-  if (reserves.reverted) {
-    return [];
-  }
-  return [reserves.value.value0, reserves.value.value1];
-}
-
-// Returns the price of beans in a uniswapv2 constant product pool
-export function uniswapV2Price(beanReserves: BigDecimal, token2Reserves: BigDecimal, token2Price: BigDecimal): BigDecimal {
-  return token2Reserves.times(token2Price).div(beanReserves);
-}
-
-// Returns the deltaB in a uniswapv2 constant product pool
-export function uniswapV2DeltaB(beanReserves: BigDecimal, token2Reserves: BigDecimal, token2Price: BigDecimal): BigInt {
-  if (beanReserves == ZERO_BD) {
-    return ZERO_BI;
-  }
-  const constantProduct = beanReserves.times(token2Reserves);
-  const beansAfterSwap = sqrt(constantProduct.times(token2Price));
-  const deltaB = beansAfterSwap.minus(beanReserves);
-  return BigInt.fromString(deltaB.times(pow(BD_10, 6)).truncate(0).toString());
-}
 
 // Returns [beanPrice, lpValue] of the requested curve pool
 export function curvePriceAndLp(pool: Address): BigDecimal[] {

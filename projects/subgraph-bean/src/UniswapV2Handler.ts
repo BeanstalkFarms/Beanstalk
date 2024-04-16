@@ -1,5 +1,5 @@
 import { BigDecimal, BigInt } from "@graphprotocol/graph-ts";
-import { Swap, Sync, UniswapV2Pair } from "../generated/BeanUniswapV2Pair/UniswapV2Pair";
+import { Swap, Sync } from "../generated/BeanUniswapV2Pair/UniswapV2Pair";
 import { loadBean, updateBeanSupplyPegPercent, updateBeanValues } from "./utils/Bean";
 import { BEAN_ERC20_V1, BEANSTALK, WETH, WETH_USDC_PAIR } from "../../subgraph-core/utils/Constants";
 import { BI_10, toDecimal, ZERO_BD, ZERO_BI } from "../../subgraph-core/utils/Decimals";
@@ -13,8 +13,7 @@ import {
 } from "./utils/Pool";
 import { loadOrCreateToken } from "./utils/Token";
 import { checkBeanCross } from "./utils/Cross";
-import { Token } from "../generated/schema";
-import { uniswapV2DeltaB, uniswapV2Price, uniswapV2Reserves, updatePreReplantPriceETH } from "./utils/Price";
+import { uniswapV2DeltaB, uniswapV2Price, uniswapV2Reserves, updatePreReplantPriceETH } from "./utils/UniswapPrice";
 import { PreReplant } from "../generated/Beanstalk/PreReplant";
 
 // export function handleMint(event: Mint): void {

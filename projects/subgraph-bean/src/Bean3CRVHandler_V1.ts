@@ -14,7 +14,7 @@ import { loadOrCreatePool, setPoolReserves, updatePoolPrice, updatePoolValues } 
 import { Bean3CRV } from "../generated/Bean3CRV-V1/Bean3CRV";
 import { ERC20 } from "../generated/Bean3CRV-V1/ERC20";
 import { checkBeanCross } from "./utils/Cross";
-import { curveDeltaB, curvePriceAndLp } from "./utils/Price";
+import { curveDeltaB, curvePriceAndLp } from "./utils/CurvePrice";
 
 export function handleTokenExchange(event: TokenExchange): void {
   // Do not index post-exploit data
