@@ -944,7 +944,7 @@ interface IMockFBeanstalk {
     function whitelistToken(
         address token,
         bytes4 selector,
-        uint16 stalkIssuedPerBdv,
+        uint32 stalkIssuedPerBdv,
         uint32 stalkEarnedPerSeason,
         bytes4 gaugePointSelector,
         bytes4 liquidityWeightSelector,
