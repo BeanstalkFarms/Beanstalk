@@ -1,6 +1,6 @@
 import { Address, BigDecimal, BigInt } from "@graphprotocol/graph-ts";
 import { Bean3CRV } from "../../generated/Bean3CRV-V1/Bean3CRV";
-import { BI_10, toDecimal, ZERO_BD, ZERO_BI } from "../../../subgraph-core/utils/Decimals";
+import { BD_10, BI_10, pow, sqrt, toDecimal, ZERO_BD, ZERO_BI } from "../../../subgraph-core/utils/Decimals";
 import { Token } from "../../generated/schema";
 import { loadOrCreateToken } from "./Token";
 import { UniswapV2Pair } from "../../generated/BeanUniswapV2Pair/UniswapV2Pair";
@@ -52,14 +52,14 @@ export function uniswapV2Price(beanReserves: BigDecimal, token2Reserves: BigDeci
 }
 
 // Returns the deltaB in a uniswapv2 constant product pool
-export function uniswapV2DeltaB(beanReserves: BigInt, token2Reserves: BigDecimal, token2Price: BigDecimal): BigInt {
-  if (beanReserves == ZERO_BI) {
+export function uniswapV2DeltaB(beanReserves: BigDecimal, token2Reserves: BigDecimal, token2Price: BigDecimal): BigInt {
+  if (beanReserves == ZERO_BD) {
     return ZERO_BI;
   }
-  const constantProduct = BigDecimal.fromString(beanReserves.toString()).times(token2Reserves);
-  const beansAfterSwap = BigInt.fromString(constantProduct.times(token2Price).truncate(0).toString()).sqrt();
+  const constantProduct = beanReserves.times(token2Reserves);
+  const beansAfterSwap = sqrt(constantProduct.times(token2Price));
   const deltaB = beansAfterSwap.minus(beanReserves);
-  return deltaB;
+  return BigInt.fromString(deltaB.times(pow(BD_10, 6)).truncate(0).toString());
 }
 
 // Returns [beanPrice, lpValue] of the requested curve pool

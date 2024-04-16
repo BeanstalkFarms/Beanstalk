@@ -113,10 +113,9 @@ export function handleSunrise(event: Sunrise): void {
         const wethToken = updatePreReplantPriceETH();
         const weth_bd = toDecimal(pool.reserves[0], 18);
         const bean_bd = toDecimal(pool.reserves[1]);
-        const bean_bi = pool.reserves[1];
         price = uniswapV2Price(bean_bd, weth_bd, wethToken.lastPriceUSD);
         liquidity = weth_bd.times(wethToken.lastPriceUSD);
-        deltaB = uniswapV2DeltaB(bean_bi, weth_bd, wethToken.lastPriceUSD);
+        deltaB = uniswapV2DeltaB(bean_bd, weth_bd, wethToken.lastPriceUSD);
 
         onSunriseSetUniswapV2Twa(bean.pools[i], event.block.timestamp, event.block.number);
       } else {

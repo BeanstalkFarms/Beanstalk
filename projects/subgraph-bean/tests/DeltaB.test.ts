@@ -1,5 +1,5 @@
 import { beforeEach, afterEach, assert, clearStore, describe, test, createMockedFunction } from "matchstick-as/assembly/index";
-import { BigInt, Bytes } from "@graphprotocol/graph-ts";
+import { BigInt, Bytes, BigDecimal } from "@graphprotocol/graph-ts";
 import { log } from "matchstick-as/assembly/log";
 import { handleMetapoolOracle, handleWellOracle } from "../src/BeanstalkHandler";
 import { ONE_BI } from "../../subgraph-core/utils/Decimals";
@@ -7,6 +7,7 @@ import { createMetapoolOracleEvent, createWellOracleEvent } from "./event-mockin
 import { BEAN_3CRV, BEAN_ERC20, BEAN_WETH_CP2_WELL } from "../../subgraph-core/utils/Constants";
 import { hourFromTimestamp } from "../../subgraph-core/utils/Dates";
 import { mockBlock } from "../../subgraph-core/tests/event-mocking/Block";
+import { uniswapV2DeltaB } from "../src/utils/Price";
 
 const timestamp1 = BigInt.fromU32(1712793374);
 const hour1 = hourFromTimestamp(timestamp1).toString();
@@ -14,13 +15,23 @@ const block1 = mockBlock(BigInt.fromU32(18000000), timestamp1);
 const timestamp2 = BigInt.fromU32(1713220949);
 const hour2 = hourFromTimestamp(timestamp1).toString();
 
-describe("Oracle: DeltaB", () => {
+describe("DeltaB", () => {
   afterEach(() => {
     log.debug("clearing the store", []);
     clearStore();
   });
 
-  describe("TWA DeltaB", () => {
+  describe("Calculations", () => {
+    test("UniswapV2 DeltaB", () => {
+      const beans = BigDecimal.fromString("100631.374814");
+      const weth = BigDecimal.fromString("32.362727191355245180");
+      const wethPrice = BigDecimal.fromString("3156.89212676");
+      const deltaB = uniswapV2DeltaB(beans, weth, wethPrice);
+      assert.bigIntEquals(BigInt.fromString("764230012"), deltaB);
+    });
+  });
+
+  describe("Oracle: TWA DeltaB", () => {
     test("Post-Replant Curve", () => {
       let deltaB = BigInt.fromU32(100);
       handleMetapoolOracle(createMetapoolOracleEvent(ONE_BI, deltaB, [ONE_BI, ONE_BI], block1));
