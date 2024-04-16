@@ -90,6 +90,9 @@ type BeanHourlySnapshot @entity {
   "Current USD price"
   price: BigDecimal!
 
+  "Time-Weighted price over the previous season"
+  twaPrice: BigDecimal!
+
   "Cumulative number of crosses"
   crosses: Int!
 
@@ -134,6 +137,8 @@ type BeanDailySnapshot @entity {
   volumeUSD: BigDecimal!
   liquidityUSD: BigDecimal!
   price: BigDecimal!
+  "Time-Weighted price over the previous season"
+  twaPrice: BigDecimal!
   crosses: Int!
   deltaVolume: BigInt!
   deltaVolumeUSD: BigDecimal!
@@ -191,6 +196,8 @@ type PoolHourlySnapshot @entity {
   pool: Pool!
   reserves: [BigInt!]!
   lastPrice: BigDecimal!
+  "Time-Weighted price over the previous season"
+  twaPrice: BigDecimal!
   volume: BigInt!
   volumeUSD: BigDecimal!
   liquidityUSD: BigDecimal!
@@ -216,6 +223,8 @@ type PoolDailySnapshot @entity {
   pool: Pool!
   reserves: [BigInt!]!
   lastPrice: BigDecimal!
+  "Time-Weighted price over the previous season"
+  twaPrice: BigDecimal!
   volume: BigInt!
   volumeUSD: BigDecimal!
   liquidityUSD: BigDecimal!

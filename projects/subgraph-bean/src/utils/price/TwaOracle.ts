@@ -37,12 +37,19 @@ export function getTWAPrices(poolAddress: string, type: TWAType, timestamp: BigI
 
   const timeElapsed = timestamp.minus(twaOracle.lastUpdated);
   const twaPrices = [
-    newPriceCumulative[0].minus(twaOracle.priceCumulativeLast[0]).div(timeElapsed).div(BI_10.pow(12)),
-    newPriceCumulative[1].minus(twaOracle.priceCumulativeLast[1]).div(timeElapsed).div(BI_10.pow(12))
+    // (priceCumulative - s.o.cumulative) / timeElapsed / 1e12 -> Decimal.ratio() which does * 1e18 / (2 << 112).
+    newPriceCumulative[0]
+      .minus(twaOracle.priceCumulativeLast[0])
+      .div(timeElapsed)
+      .times(BI_10.pow(6))
+      .div(BigInt.fromU32(2).leftShift(112)),
+    newPriceCumulative[1].minus(twaOracle.priceCumulativeLast[1]).div(timeElapsed).times(BI_10.pow(6)).div(BigInt.fromU32(2).leftShift(112))
   ];
+
+  log.debug("twa prices {} | {}", [twaPrices[0].toString(), twaPrices[1].toString()]);
 
   twaOracle.priceCumulativeLast = newPriceCumulative;
   twaOracle.lastUpdated = timestamp;
   twaOracle.save();
-  return initialized ? twaPrices : [ONE_BI, ONE_BI];
+  return initialized ? twaPrices : [BI_10.pow(18), BI_10.pow(18)];
 }

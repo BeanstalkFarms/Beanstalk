@@ -127,11 +127,14 @@ export function onSunriseSetUniswapV2Twa(poolAddress: string, timestamp: BigInt,
   const currentBeans = mulReserves.div(prices[0]).sqrt();
   const targetBeans = mulReserves.div(prices[1]).sqrt();
   const deltaB = targetBeans.minus(currentBeans);
+  const twaPrice = BigDecimal.fromString(prices[0].toString()).div(BigDecimal.fromString(prices[1].toString()));
 
   let poolHourly = loadOrCreatePoolHourlySnapshot(poolAddress, timestamp, blockNumber);
   let poolDaily = loadOrCreatePoolDailySnapshot(poolAddress, timestamp, blockNumber);
   poolHourly.twaDeltaBeans = deltaB;
+  poolHourly.twaPrice = twaPrice;
   poolDaily.twaDeltaBeans = deltaB;
+  poolDaily.twaPrice = twaPrice;
   poolHourly.save();
   poolDaily.save();
 }
