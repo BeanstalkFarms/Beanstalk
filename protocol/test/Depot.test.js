@@ -14,7 +14,7 @@ let user, user2, owner;
 
 describe('Depot', function () {
     before(async function () {
-        [owner, user, user2] = await ethers.getSigners();
+        [owner, user, user2, user3] = await ethers.getSigners();
         const contracts = await deploy(verbose = false, mock = true, reset = true);
         this.diamond = contracts.beanstalkDiamond.address;
 
@@ -128,15 +128,17 @@ describe('Depot', function () {
     describe("Normal Pipe", async function () {
         describe("1 Pipe", async function () {
             beforeEach(async function () {
-                const mintBeans = bean.interface.encodeFunctionData('mint', [
-                    pipeline.address,
+                expect(await bean.balanceOf(user3.address)).to.be.equal(to6('0'))
+                await bean.mint(pipeline.address, to6('100'))
+                const transferBeans = bean.interface.encodeFunctionData('transfer', [
+                    user3.address,
                     to6('100')
                 ])
-                await this.depot.connect(user).pipe([bean.address, mintBeans])
+                await this.depot.connect(user).pipe([bean.address, transferBeans])
             })
 
             it('mints beans', async function () {
-                expect(await bean.balanceOf(pipeline.address)).to.be.equal(to6('100'))
+                expect(await bean.balanceOf(user3.address)).to.be.equal(to6('100'))
             })
         })
     })

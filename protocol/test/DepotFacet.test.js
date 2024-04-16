@@ -14,7 +14,7 @@ let user, user2, owner;
 
 describe('Depot Facet', function () {
   before(async function () {
-    [owner, user, user2] = await ethers.getSigners();
+    [owner, user, user2, user3] = await ethers.getSigners();
     const contracts = await deploy(verbose = false, mock = true, reset = true); 
     this.diamond = contracts.beanstalkDiamond.address;
     // `beanstalk` contains all functions that the regualar beanstalk has.
@@ -74,24 +74,26 @@ describe('Depot Facet', function () {
   describe("Normal Pipe", async function () {
     describe("1 Pipe", async function () {
       beforeEach(async function () {
-        const mintBeans = bean.interface.encodeFunctionData('mint', [
-          pipeline.address,
-          to6('100')
+        expect(await bean.balanceOf(user3.address)).to.be.equal(to6('0'))
+
+        await bean.mint(pipeline.address, to6('100'))
+        const transferBeans = bean.interface.encodeFunctionData('transfer', [
+            user3.address,
+            to6('100')
         ])
-        await beanstalk.connect(user).pipe([bean.address, mintBeans])
+        await beanstalk.connect(user).pipe([bean.address, transferBeans])
       })
 
-      it('mints beans', async function () {
-        expect(await bean.balanceOf(pipeline.address)).to.be.equal(to6('100'))
+      it('erc20 transfer beans', async function () {
+        expect(await bean.balanceOf(user3.address)).to.be.equal(to6('100'))
       })
     })
 
     describe("Multi Pipe", async function () {
       beforeEach(async function () {
-        const mintBeans = bean.interface.encodeFunctionData('mint', [
-          pipeline.address,
-          to6('100')
-        ])
+        expect(await beanstalk.getInternalBalance(user.address, bean.address)).to.be.equal(to6('0'))
+
+        await bean.mint(pipeline.address, to6('100'))
         const approve = await bean.interface.encodeFunctionData('approve', [
           beanstalk.address,
           to6('100')
@@ -100,11 +102,11 @@ describe('Depot Facet', function () {
           bean.address, user.address, to6('100'), 0, 1 
         ])
         await beanstalk.connect(user).multiPipe(
-          [[bean.address, mintBeans], [bean.address, approve], [beanstalk.address, tokenTransfer]]
+          [[bean.address, approve], [beanstalk.address, tokenTransfer]]
         )
       })
 
-      it('mints and transfers beans', async function () {
+      it('approves and transfers beans via beanstalk', async function () {
         expect(await beanstalk.getInternalBalance(user.address, bean.address)).to.be.equal(to6('100'))
       })
     })

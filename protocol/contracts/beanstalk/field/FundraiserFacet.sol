@@ -68,7 +68,7 @@ contract FundraiserFacet is Invariable, ReentrancyGuard {
         address payee,
         address token,
         uint256 amount
-    ) external payable fundsSafu noNetFlow noSupplyChange {
+    ) external payable fundsSafu {
         LibDiamond.enforceIsOwnerOrContract();
 
         // The {FundraiserFacet} was initially created to support USDC, which has the
@@ -106,7 +106,7 @@ contract FundraiserFacet is Invariable, ReentrancyGuard {
         uint32 id,
         uint256 amount,
         LibTransfer.From mode
-    ) external payable fundsSafu noNetFlow noSupplyChange nonReentrant returns (uint256) {
+    ) external payable fundsSafu nonReentrant returns (uint256) {
         uint256 remaining = s.fundraisers[id].remaining;
 
         // Check amount remaining and constrain

@@ -48,23 +48,16 @@ abstract contract Invariable {
     // Many operations will increase Stalk.
     // There are a relatively small number of external functions that will cause a change in token balances of contract.
     // Roughly akin to a view only check where only routine modifications are allowed (ie mowing).
+    /// @dev Attempt to minimize effect on stack depth.
     modifier noNetFlow() {
-        uint256 initialStalk;
-        uint256[] memory initialProtocolTokenBalances;
-        // Minimize stack depth impact.
-        {
-            AppStorage storage s = LibAppStorage.diamondStorage();
-            initialStalk = s.s.stalk;
-            initialProtocolTokenBalances = getTokenBalances(LibWhitelistedTokens.getSiloTokens());
-        }
-        
+        uint256 initialStalk = LibAppStorage.diamondStorage().s.stalk;
+        address[] memory tokens = LibWhitelistedTokens.getSiloTokens();
+        uint256[] memory initialProtocolTokenBalances = getTokenBalances(tokens);
+
         _;
 
-        AppStorage storage s = LibAppStorage.diamondStorage();
-        address[] memory tokens = LibWhitelistedTokens.getSiloTokens();
         uint256[] memory finalProtocolTokenBalances = getTokenBalances(tokens);
-
-        require(s.s.stalk >= initialStalk, "INV: Stalk decreased");
+        require(LibAppStorage.diamondStorage().s.stalk >= initialStalk, "INV: Stalk decreased");
         for (uint256 i; i < tokens.length; i++) {
             require(
                 initialProtocolTokenBalances[i] == finalProtocolTokenBalances[i],

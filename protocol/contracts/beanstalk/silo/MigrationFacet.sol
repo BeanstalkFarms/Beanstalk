@@ -46,7 +46,8 @@ contract MigrationFacet is Invariable, ReentrancyGuard {
         uint256 stalkDiff,
         uint256 seedsDiff,
         bytes32[] calldata proof
-    ) external payable fundsSafu noNetFlow noSupplyChange {
+    // NOTE: Stack too deep when using noNetFlow invariant.
+    ) external payable fundsSafu noSupplyChange { // noNetFlow
         uint256 seedsVariance = LibLegacyTokenSilo._mowAndMigrate(
             account,
             tokens,
