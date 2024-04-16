@@ -8639,6 +8639,29 @@
         "type": "uint256"
       }
     ],
+    "name": "addFertilizer",
+    "outputs": [],
+    "stateMutability": "payable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint128",
+        "name": "id",
+        "type": "uint128"
+      },
+      {
+        "internalType": "uint128",
+        "name": "tokenAmountIn",
+        "type": "uint128"
+      },
+      {
+        "internalType": "uint256",
+        "name": "minLpOut",
+        "type": "uint256"
+      }
+    ],
     "name": "addFertilizerOwner",
     "outputs": [],
     "stateMutability": "payable",

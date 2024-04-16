@@ -257,6 +257,7 @@ interface IMockFBeanstalk {
         view
         returns (uint256 redeem);
     function abovePeg() external view returns (bool);
+    function addFertilizer(uint128 id, uint128 tokenAmountIn, uint256 minLpOut) external payable;
     function addFertilizerOwner(uint128 id, uint128 tokenAmountIn, uint256 minLpOut) external payable;
     function addLiquidity(
         address pool,
@@ -339,8 +340,7 @@ interface IMockFBeanstalk {
         bool raining,
         bool rainRoots,
         bool aboveQ,
-        uint256 L2SRState,
-        address pump
+        uint256 L2SRState
     ) external;
     function cancelPodListing(uint256 index) external payable;
     function cancelPodOrder(uint24 pricePerPod, uint256 maxPlaceInLine, uint256 minFillAmount, uint8 mode)
@@ -567,15 +567,20 @@ interface IMockFBeanstalk {
     function getMintFertilizerOut(uint256 tokenAmountIn) external view returns (uint256 fertilizerAmountOut);
     function getMowStatus(address account, address token) external view returns (MowStatus memory mowStatus);
     function getNext(uint128 id) external view returns (uint128);
+    function getNextSeasonStart() external view returns (uint256);
     function getOddGerminating(address token) external view returns (uint256, uint256);
     function getPenalizedUnderlying(address unripeToken, uint256 amount) external view returns (uint256 redeem);
     function getPenalty(address unripeToken) external view returns (uint256 penalty);
     function getPercentPenalty(address unripeToken) external view returns (uint256 penalty);
     function getPodRate() external view returns (uint256);
+    function getPoolDeltaBWithoutCap(address well) external view returns (int256 deltaB);
     function getRecapFundedPercent(address unripeToken) external view returns (uint256 percent);
     function getRecapPaidPercent() external view returns (uint256 percent);
     function getRelBeanToMaxLpRatioChangeFromCaseId(uint256 caseId) external view returns (int80 l);
     function getRelTemperatureChangeFromCaseId(uint256 caseId) external view returns (uint32 mt);
+    function getSeasonStart() external view returns (uint256);
+    function getSeasonStruct() external view returns (Season memory);
+    function getSeasonTimestamp() external view returns (uint256);
     function getSeedGauge() external view returns (SeedGauge memory);
     function getSiloTokens() external view returns (address[] memory tokens);
     function getSopWell() external view returns (address);
@@ -623,6 +628,7 @@ interface IMockFBeanstalk {
     function incrementTotalHarvestableE(uint256 amount) external;
     function incrementTotalPodsE(uint256 amount) external;
     function incrementTotalSoilE(uint128 amount) external;
+    function initOracleForAllWhitelistedWells() external;
     function isApprovedForAll(address _owner, address _operator) external view returns (bool);
     function isFertilizing() external view returns (bool);
     function isUnripe(address unripeToken) external view returns (bool unripe);
@@ -641,7 +647,7 @@ interface IMockFBeanstalk {
         returns (uint256 fertilizerAmountOut);
     function mockBDV(uint256 amount) external pure returns (uint256);
     function mockBDVIncrease(uint256 amount) external pure returns (uint256);
-    function mockCalcCaseIdandUpdate(int256 deltaB) external;
+    function mockCalcCaseIdandUpdate(int256 deltaB) external returns (uint256 caseId);
     function mockEndTotalGerminationForToken(address token) external;
     function mockGetMorningTemp(uint256 initalTemp, uint256 delta) external pure returns (uint256 scaledTemperature);
     function mockGetSeedsPerToken(address token) external pure returns (uint256);
@@ -662,6 +668,7 @@ interface IMockFBeanstalk {
         external
         returns (uint256 pods);
     function mockStepGauge() external;
+    function mockStepSeason() external returns (uint32 season);
     function mockStepSilo(uint256 amount) external;
     function mockUnripeBeanDeposit(uint32 _s, uint256 amount) external;
     function mockUnripeLPDeposit(uint256 t, uint32 _s, uint256 amount, uint256 bdv) external;
@@ -831,12 +838,12 @@ interface IMockFBeanstalk {
         uint256 podRate,
         uint256 changeInSoilDemand,
         uint256 liquidityToSupplyRatio,
-        uint256 beansInWell,
-        uint256 beanSupply,
         address targetWell
-    ) external returns (uint256 newSupply, int256 deltaB);
+    ) external returns (int256 deltaB);
+    function setChangeInSoilDemand(uint256 changeInSoilDemand) external;
     function setCurrentSeasonE(uint32 _season) external;
     function setFertilizerE(bool fertilizing, uint256 unfertilized) external;
+    function setL2SR(uint256 liquidityToSupplyRatio, address targetWell) external;
     function setLastDSoilE(uint128 number) external;
     function setLastSowTimeE(uint32 number) external;
     function setMaxTemp(uint32 t) external;
@@ -844,6 +851,8 @@ interface IMockFBeanstalk {
     function setMerkleRootE(address unripeToken, bytes32 root) external;
     function setNextSowTimeE(uint32 _time) external;
     function setPenaltyParams(uint256 recapitalized, uint256 fertilized) external;
+    function setPodRate(uint256 podRate) external;
+    function setPrice(uint256 price, address targetWell) external returns (int256 deltaB);
     function setSoilE(uint256 amount) external;
     function setSunriseBlock(uint256 _block) external;
     function setUsdEthPrice(uint256 price) external;
@@ -962,5 +971,4 @@ interface IMockFBeanstalk {
     function woohoo() external pure returns (uint256);
     function wrapEth(uint256 amount, uint8 mode) external payable;
     function yield() external view returns (uint32);
-    function getSeasonTimestamp() external view returns (uint256);
 }

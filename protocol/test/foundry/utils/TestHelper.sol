@@ -16,6 +16,7 @@ import {BeanstalkDeployer} from "test/foundry/utils/BeanstalkDeployer.sol";
 import {BasinDeployer} from "test/foundry/utils/BasinDeployer.sol";
 import {DepotDeployer} from "test/foundry/utils/DepotDeployer.sol";
 import {OracleDeployer} from "test/foundry/utils/OracleDeployer.sol";
+import {FertilizerDeployer} from "test/foundry/utils/FertilizerDeployer.sol";
 import {LibWell, IWell, IERC20} from "contracts/libraries/Well/LibWell.sol";
 import {C} from "contracts/C.sol";
 
@@ -23,15 +24,21 @@ import {C} from "contracts/C.sol";
 ///// COMMON IMPORTED LIBRARIES //////
 import {LibTransfer} from "contracts/libraries/Token/LibTransfer.sol";
 
+///// ECOSYSTEM //////
+import {UsdOracle} from "contracts/ecosystem/oracles/UsdOracle.sol";
+
 /**
  * @title TestHelper
  * @author Brean
  * @notice Test helper contract for Beanstalk tests.
  */
-contract TestHelper is Test, BeanstalkDeployer, BasinDeployer, DepotDeployer, OracleDeployer {
+contract TestHelper is Test, BeanstalkDeployer, BasinDeployer, DepotDeployer, OracleDeployer, FertilizerDeployer {
 
     // general mock interface for beanstalk.
     IMockFBeanstalk bs = IMockFBeanstalk(BEANSTALK);
+
+    // usdOracle contract.
+    UsdOracle usdOracle;
 
     // ideally, timestamp should be set to 1_000_000.
     // however, beanstalk rounds down to the nearest hour. 
@@ -39,6 +46,7 @@ contract TestHelper is Test, BeanstalkDeployer, BasinDeployer, DepotDeployer, Or
     uint256 constant PERIOD = 3600;
     uint256 constant START_TIMESTAMP = 1_000_000;
     uint256 constant INITIAL_TIMESTAMP = (START_TIMESTAMP / PERIOD) * PERIOD;
+
     struct initERC20params {
         address targetAddr;
         string name;
@@ -75,9 +83,28 @@ contract TestHelper is Test, BeanstalkDeployer, BasinDeployer, DepotDeployer, Or
 
         // initialize uniswap pools.
         initUniswapPools(verbose);
+
+        // deploy fertilizer contract, and transfer ownership to beanstalk.
+        // note: does not initailize barn raise. 
+        initFertilizer(verbose);
+        transferFertilizerOwnership(BEANSTALK);
         
         // initialize Diamond, initalize users:
         setupDiamond(mock, verbose);
+    }
+
+    /**
+     * @notice many of fertilizer functionality requires
+     * unripe assets to exist.
+     */
+    function initializeUnripeTokens(
+        address user,
+        uint256 unripeBeanAmount,
+        uint256 unripeLpAmount
+    ) internal {
+        // mint tokens to users.
+        mintTokensToUser(user, C.UNRIPE_BEAN, unripeBeanAmount);
+        mintTokensToUser(user, C.UNRIPE_LP, unripeLpAmount);
     }
 
     /**
@@ -227,7 +254,8 @@ contract TestHelper is Test, BeanstalkDeployer, BasinDeployer, DepotDeployer, Or
     }
 
     function initMisc() internal {
-        deployCodeTo("MockBlockBasefee.sol", BASE_FEE_CONTRACT);
+        deployCodeTo("MockBlockBasefee", BASE_FEE_CONTRACT);
+        usdOracle = UsdOracle(deployCode("UsdOracle"));
     }
 
     function abs(int256 x) internal pure returns (int256) {
@@ -283,5 +311,49 @@ contract TestHelper is Test, BeanstalkDeployer, BasinDeployer, DepotDeployer, Or
         }
         uint256 amountOut = well.shift(tokenOut, 0, users[1]);
         well.shift(tokenOut, 0, users[1]);
+    }
+
+    /**
+     * @notice adds 'x' fertilizer based on the amount of sprouts.
+     * @dev the amount of sprouts are a function of the humidity, 
+     * which is a function of the season of mint.
+     * returns the actual amount of sprouts issued, as fertilizer 
+     * is unitless per dollar. ERC1155 is NOT issued here.
+     */
+    function addFertilizerBasedOnSprouts(
+        uint128 season,
+        uint256 sprouts
+    ) public returns (uint256, uint256) {
+        // calculate the amount of fertilizer needed to be issued.
+        // note: fertilizer rounds down.
+        uint256 humidity = bs.getHumidity(season);
+        uint256 fertOut = sprouts / ((1000 + humidity) / 1000);
+        // calculate the amount of the barnRaiseToken needed to equal usdAmount.
+        uint256 tokenAmount = fertOut * usdOracle.getUsdTokenPrice(bs.getBarnRaiseToken());
+
+        // add fertilizer.
+        mockAddFertilizer(season, uint128(tokenAmount));
+
+        // return the amount of sprouts minted. 
+        return (fertOut * (1000 + bs.getHumidity(season)) * 1000, fertOut);
+    }
+
+    /**
+     * @notice adds fertilizer based on token amount in.
+     * @dev 'season' determine the interest rate and id of the fertilizer.
+     * {see. LibFertilizer.addFertilizer} 
+     */
+    function mockAddFertilizer(
+        uint128 season,
+        uint128 tokenAmountIn
+    ) internal {
+        // mint tokens to user.
+        address barnRaiseToken = bs.getBarnRaiseToken();
+        mintTokensToUser(address(this), barnRaiseToken, tokenAmountIn);
+        // add fertilizer.
+        console.log("tokenAmountIn", tokenAmountIn);
+        if(tokenAmountIn > 0) { 
+            bs.addFertilizer(season, tokenAmountIn, 0);
+        }
     }
 }
