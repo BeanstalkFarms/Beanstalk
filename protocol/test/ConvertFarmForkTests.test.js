@@ -77,7 +77,7 @@ describe('Farm Convert Forking', function () {
     await upgradeWithNewFacets({
       diamondAddress: BEANSTALK,
       facetNames: ['ConvertFacet', 'MockAdminFacet', 'MockSeasonFacet', 'MockSiloFacet', 'SiloGettersFacet'],
-      initFacetName: "InitTractor",
+      initFacetName: "InitBipSeedGauge",
       libraryNames: [
         'LibGauge', 'LibConvert', 'LibLockedUnderlying', 'LibCurveMinting', 'LibIncentive', 'LibGerminate', 'LibWellMinting'
       ],
@@ -171,7 +171,7 @@ describe('Farm Convert Forking', function () {
 
 
     //test that does a tricrypto and 3crv swap
-    it.only('does a tricrypto and 3crv swap', async function () {
+    it('does a tricrypto and 3crv swap', async function () {
 
       //first deposit 200 bean into bean:eth well
       await this.bean.connect(user).approve(this.well.address, ethers.constants.MaxUint256);
@@ -213,7 +213,7 @@ describe('Farm Convert Forking', function () {
       
       await expect(this.result).to.emit(this.silo, 'RemoveDeposits').withArgs(user.address, this.well.address, [stemTip], [wellAmountOut], wellAmountOut, [depositedBdv]);
 
-      await expect(this.result).to.emit(this.silo, 'AddDeposit').withArgs(user.address, this.bean.address, '10017011608', '200204225', '200204225');
+      await expect(this.result).to.emit(this.silo, 'AddDeposit').withArgs(user.address, this.bean.address, '12421503390', '200204225', '200204225');
     });
 
     it('does a uniswap and 3crv swap', async function () {
@@ -249,7 +249,7 @@ describe('Farm Convert Forking', function () {
       // these numbers are specific for this test, ideally we could come up with them
       // using get value function from the uniswap/curve contracts rather than just
       // using the hardcoded values it happened to spit out.
-      await expect(this.result).to.emit(this.silo, 'AddDeposit').withArgs(user.address, this.bean.address, '10022971915', '199322498', '199322498');
+      await expect(this.result).to.emit(this.silo, 'AddDeposit').withArgs(user.address, this.bean.address, '12427483433', '199322498', '199322498');
     });
   });
 });
