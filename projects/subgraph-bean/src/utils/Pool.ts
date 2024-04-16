@@ -1,4 +1,4 @@
-import { BigDecimal, BigInt, log } from "@graphprotocol/graph-ts";
+import { BigDecimal, BigInt } from "@graphprotocol/graph-ts";
 import { Pool, PoolDailySnapshot, PoolHourlySnapshot } from "../../generated/schema";
 import { dayFromTimestamp, hourFromTimestamp } from "../../../subgraph-core/utils/Dates";
 import { emptyBigIntArray, ZERO_BD, ZERO_BI } from "../../../subgraph-core/utils/Decimals";
@@ -193,15 +193,10 @@ export function setPoolReserves(poolAddress: string, reserves: BigInt[], timesta
   let poolHourly = loadOrCreatePoolHourlySnapshot(poolAddress, timestamp, blockNumber);
   let poolDaily = loadOrCreatePoolDailySnapshot(poolAddress, timestamp, blockNumber);
 
-  log.debug("Prev  reserves[0] {}", [pool.reserves[0].toString()]);
-  log.debug("New   reserves[0] {}", [reserves[0].toString()]);
-
   let deltaReserves: BigInt[] = [];
   for (let i = 0; i < reserves.length; ++i) {
     deltaReserves.push(reserves[i].minus(pool.reserves[i]));
   }
-
-  log.debug("Delta reserves[0] {}", [deltaReserves[0].toString()]);
 
   pool.reserves = reserves;
   poolHourly.reserves = reserves;
@@ -213,9 +208,6 @@ export function setPoolReserves(poolAddress: string, reserves: BigInt[], timesta
     newHourlyDelta.push(poolHourly.deltaReserves[i].plus(deltaReserves[i]));
     newDailyDelta.push(poolDaily.deltaReserves[i].plus(deltaReserves[i]));
   }
-
-  log.debug("Prev hourly deltaReserves[0] {}", [poolHourly.deltaReserves[0].toString()]);
-  log.debug("New  hourly deltaReserves[0] {}", [newHourlyDelta[0].toString()]);
 
   poolHourly.deltaReserves = newHourlyDelta;
   poolDaily.deltaReserves = newDailyDelta;

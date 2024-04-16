@@ -15,6 +15,7 @@ import { loadOrCreateToken } from "./utils/Token";
 import { checkBeanCross } from "./utils/Cross";
 import { uniswapV2DeltaB, uniswapV2Price, uniswapV2Reserves, updatePreReplantPriceETH } from "./utils/price/UniswapPrice";
 import { PreReplant } from "../generated/Beanstalk/PreReplant";
+import { getTWAPrices, TWAType } from "./utils/price/TwaOracle";
 
 // export function handleMint(event: Mint): void {
 //   updatePoolReserves(event.address.toHexString(), event.params.amount0, event.params.amount1, event.block.number);
@@ -109,11 +110,11 @@ export function handleSync(event: Sync): void {
 }
 
 export function onSunriseSetUniswapV2Twa(poolAddress: string, timestamp: BigInt, blockNumber: BigInt): void {
-  let beanstalk = PreReplant.bind(BEANSTALK);
-  const prices = beanstalk.getTWAPPrices();
+  const prices = getTWAPrices(poolAddress, TWAType.UNISWAP, timestamp);
 
-  // After BIP-9, reserves calculation changes
+  let beanstalk = PreReplant.bind(BEANSTALK);
   let reserves: BigInt[];
+  // After BIP-9, reserves calculation changes
   if (blockNumber.lt(BigInt.fromU64(13953949))) {
     const result = beanstalk.reserves();
     reserves = [result.value0, result.value1];
@@ -123,8 +124,8 @@ export function onSunriseSetUniswapV2Twa(poolAddress: string, timestamp: BigInt,
   }
 
   const mulReserves = reserves[0].times(reserves[1]).times(BI_10.pow(6));
-  const currentBeans = mulReserves.div(prices.value0).sqrt();
-  const targetBeans = mulReserves.div(prices.value1).sqrt();
+  const currentBeans = mulReserves.div(prices[0]).sqrt();
+  const targetBeans = mulReserves.div(prices[1]).sqrt();
   const deltaB = targetBeans.minus(currentBeans);
 
   let poolHourly = loadOrCreatePoolHourlySnapshot(poolAddress, timestamp, blockNumber);

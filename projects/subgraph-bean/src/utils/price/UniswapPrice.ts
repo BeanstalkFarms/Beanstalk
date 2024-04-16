@@ -1,4 +1,4 @@
-import { Address, BigDecimal, BigInt } from "@graphprotocol/graph-ts";
+import { Address, BigDecimal, BigInt, log } from "@graphprotocol/graph-ts";
 import { BD_10, ONE_BI, pow, sqrt, toDecimal, ZERO_BD, ZERO_BI } from "../../../../subgraph-core/utils/Decimals";
 import { Token } from "../../../generated/schema";
 import { loadOrCreateToken } from "../Token";
@@ -53,7 +53,7 @@ export function uniswapCumulativePrice(pool: Address, tokenIndex: u32, timestamp
   const reserves = pair.getReserves();
   const effectiveTimestamp = u32Timestamp(timestamp);
   const timeElapsed = effectiveTimestamp.minus(reserves.value2);
-  if (timeElapsed > ZERO_BI) {
+  if (timeElapsed != ZERO_BI) {
     if (tokenIndex == 0) {
       cumulativeNow = cumulativeNow.plus(fraction(reserves.value1, reserves.value0).times(timeElapsed));
     } else {
