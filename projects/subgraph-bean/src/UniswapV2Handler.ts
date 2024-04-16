@@ -124,8 +124,8 @@ export function onSunriseSetUniswapV2Twa(poolAddress: string, timestamp: BigInt,
   }
 
   const mulReserves = reserves[0].times(reserves[1]).times(BI_10.pow(6));
-  const currentBeans = mulReserves.div(prices.value0.times(BI_10.pow(18))).sqrt();
-  const targetBeans = mulReserves.div(prices.value1.times(BI_10.pow(18))).sqrt();
+  const currentBeans = mulReserves.div(prices.value0).sqrt();
+  const targetBeans = mulReserves.div(prices.value1).sqrt();
   const deltaB = targetBeans.minus(currentBeans);
 
   let poolHourly = loadOrCreatePoolHourlySnapshot(poolAddress, timestamp, blockNumber);
