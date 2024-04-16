@@ -5218,9 +5218,9 @@
         "type": "bytes4"
       },
       {
-        "internalType": "uint16",
+        "internalType": "uint32",
         "name": "stalkIssuedPerBdv",
-        "type": "uint16"
+        "type": "uint32"
       },
       {
         "internalType": "uint32",
@@ -7176,7 +7176,7 @@
       {
         "indexed": false,
         "internalType": "uint256",
-        "name": "season",
+        "name": "germinationSeason",
         "type": "uint256"
       },
       {

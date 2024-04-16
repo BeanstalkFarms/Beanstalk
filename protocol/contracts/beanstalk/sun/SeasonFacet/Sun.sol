@@ -215,9 +215,9 @@ contract Sun is Oracle {
      */
     function setSoilAbovePeg(uint256 newHarvestable, uint256 caseId) internal {
         uint256 newSoil = newHarvestable.mul(100).div(100 + s.w.t);
-        if (caseId >= 24) {
+        if (caseId.mod(36) >= 24) {
             newSoil = newSoil.mul(SOIL_COEFFICIENT_HIGH).div(C.PRECISION); // high podrate
-        } else if (caseId < 8) {
+        } else if (caseId.mod(36) < 8) {
             newSoil = newSoil.mul(SOIL_COEFFICIENT_LOW).div(C.PRECISION); // low podrate
         }
         setSoil(newSoil);
