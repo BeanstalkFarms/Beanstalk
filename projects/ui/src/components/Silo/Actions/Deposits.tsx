@@ -51,6 +51,8 @@ const Deposits: FC<
     [siloBalance?.deposited.crates, deltaStem, decimalShift]
   );
 
+  const hasGerminating = !!rows.find((r) => r.isGerminating);
+
   const columns = useMemo(
     () =>
       [
@@ -185,16 +187,23 @@ const Deposits: FC<
   const state = !account ? 'disconnected' : 'ready';
 
   return (
-    <TableCard
-      title={`${token.name} Deposits`}
-      rows={rows}
-      columns={columns}
-      amount={amount}
-      value={getUSD(token, amount || ZERO_BN)}
-      state={state}
-      token={token}
-      {...props}
-    />
+    <>
+      <TableCard
+        title={`${token.name} Deposits`}
+        rows={rows}
+        columns={columns}
+        amount={amount}
+        value={getUSD(token, amount || ZERO_BN)}
+        state={state}
+        token={token}
+        footNote={
+          hasGerminating
+            ? 'Green rows represent germinating deposits'
+            : undefined
+        }
+        {...props}
+      />
+    </>
   );
 };
 

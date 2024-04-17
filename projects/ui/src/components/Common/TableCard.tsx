@@ -44,6 +44,7 @@ export type TableCardProps = {
   /** disable border */
   maxRows?: number;
   hideFooter?: true | undefined;
+  footNote?: string | undefined;
 };
 
 interface GridRowParams<R extends GridRowModel = GridRowModel> {
@@ -85,6 +86,7 @@ const TableCard: FC<TableCardProps> = ({
   tableCss,
   maxRows = 5,
   hideFooter = false,
+  footNote,
 }) => {
   const tableHeight = useMemo(() => {
     if (!rows || rows.length === 0) return '250px';
@@ -179,6 +181,18 @@ const TableCard: FC<TableCardProps> = ({
           getRowClassName={customRowStyler}
         />
       </Box>
+      {footNote && (
+        <Box
+          sx={{
+            pt: 0.5,
+            px: 2,
+            pb: 1,
+            color: 'text.tertiary',
+          }}
+        >
+          *{footNote}
+        </Box>
+      )}
     </Card>
   );
 };
