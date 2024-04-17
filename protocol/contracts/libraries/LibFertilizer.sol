@@ -18,6 +18,7 @@ import {LibDiamond} from "contracts/libraries/LibDiamond.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
 import {LibWell} from "contracts/libraries/Well/LibWell.sol";
 import {LibUsdOracle} from "contracts/libraries/Oracle/LibUsdOracle.sol";
+import "hardhat/console.sol";
 
 /**
  * @author Publius
@@ -219,13 +220,22 @@ library LibFertilizer {
         returns (uint256 remaining)
     {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        uint256 totalDollars = C
+        uint256 totalDollars = getTotalRecapDollarsNeeded();
+        if (s.recapitalized >= totalDollars) return 0;
+        return totalDollars.sub(s.recapitalized);
+    }
+
+    /**
+     * @dev Returns the total dollar amount needed to recapitalize Beanstalk.
+     * @return totalDollars The total dollar amount.
+     */
+    function getTotalRecapDollarsNeeded() internal view returns(uint256) {
+	    uint256 totalDollars = C
             .dollarPerUnripeLP()
             .mul(C.unripeLP().totalSupply())
             .div(DECIMALS);
         totalDollars = totalDollars / 1e6 * 1e6; // round down to nearest USDC
-        if (s.recapitalized >= totalDollars) return 0;
-        return totalDollars.sub(s.recapitalized);
+        return totalDollars;
     }
 
     /**

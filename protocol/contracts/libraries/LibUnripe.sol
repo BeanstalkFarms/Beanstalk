@@ -12,6 +12,8 @@ import {LibWell} from "./Well/LibWell.sol";
 import {Call, IWell} from "contracts/interfaces/basin/IWell.sol";
 import {IWellFunction} from "contracts/interfaces/basin/IWellFunction.sol";
 import {LibLockedUnderlying} from "./LibLockedUnderlying.sol";
+import {LibFertilizer} from "./LibFertilizer.sol";
+import "hardhat/console.sol";
 
 /**
  * @title LibUnripe
@@ -152,7 +154,18 @@ library LibUnripe {
     ) internal view returns (uint256 redeem) {
         require(isUnripe(unripeToken), "not vesting");
         AppStorage storage s = LibAppStorage.diamondStorage();
-        redeem = (s.u[unripeToken].balanceOfUnderlying ** 2).mul(amount).div(supply ** 2);
+        uint256 usdValueRaised = s.recapitalized;
+	    uint256 totalUsdNeeded = LibFertilizer.getTotalRecapDollarsNeeded();
+        uint256 totalRipeUnderlying = s.u[unripeToken].balanceOfUnderlying;
+        console.log("totalRipeUnderlying: ", totalRipeUnderlying);
+        console.log("usdValueRaised: ", usdValueRaised);
+        console.log("totalUsdNeeded: ", totalUsdNeeded);
+        console.log("amount: ", amount);
+        console.log("supply: ", supply);
+        // total redeemable * %DollarRecapitalized^2 * share of unripe tokens
+        // redeem = totalRipeUnderlying *  (usdValueRaised/totalUsdNeeded)^2 * UnripeAmountIn/UnripeSupply;
+        // redeem = 25 * (25/50)^2 * 100/100 = 25 * 0.5^2 * 1 = 6.25
+        redeem = totalRipeUnderlying.mul(usdValueRaised ** 2).div(totalUsdNeeded ** 2).mul(amount).div(supply);
     }
 
     /**
