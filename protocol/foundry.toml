@@ -47,11 +47,30 @@ no_storage_caching = false
 match_test = "testDiff"
 no_match_test = "a^"
 
-# Formatter
-# https://book.getfoundry.sh/reference/config/formatter
-# ...pass...
 [profile.default.rpc_storage_caching]
 chains = 'all'
 endpoints = 'all'
 
-
+# Formatter
+# https://book.getfoundry.sh/reference/config/formatter
+[fmt]
+# Maximum line length where formatter will try to wrap the line
+line_length = 120
+# Number of spaces per indentation level
+tab_width = 4
+# Print spaces between brackets
+bracket_spacing = false
+# Style of uint/int256 types
+int_types = "long"
+# If function parameters are multiline then always put the function attributes on separate lines
+func_attrs_with_params_multiline = true
+# Style of quotation marks
+quote_style = "double"
+# Style of underscores in number literals
+number_underscore = "thousands"
+# Controls whether statement blocks will be formatted to a single line or multiple lines
+single_line_statement_blocks = "preserve"
+# How function headers are formatted when they exceed the max line length
+multiline_func_header = "params_first"
+# Alphabetically sort import while preserving groups
+sort_imports = true
