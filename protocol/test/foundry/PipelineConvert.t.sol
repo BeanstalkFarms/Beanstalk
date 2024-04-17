@@ -560,6 +560,43 @@ contract PipelineConvertTest is TestHelper {
         );
     }
 
+    function testBeanToBeanConvert(uint256 amount) public {
+        amount = bound(amount, 1000e6, 1000e6);
+
+        int96 stem = beanToLPDepositSetup(amount, users[1]);
+        int96[] memory stems = new int96[](1);
+        stems[0] = stem;
+        uint256[] memory amounts = new uint256[](1);
+        amounts[0] = amount;
+
+
+        uint256 stalkBefore = bs.balanceOfStalk(users[1]);
+        uint256 grownStalk = bs.grownStalkForDeposit(users[1], C.BEAN, stem);
+
+        // make a pipeline call where the only thing it does is return how many beans are in pipeline
+        bytes memory callEncoded = abi.encodeWithSelector(bean.balanceOf.selector, C.PIPELINE);
+        AdvancedPipeCall[] memory extraPipeCalls = new AdvancedPipeCall[](1);
+        extraPipeCalls[0] = AdvancedPipeCall(
+            C.BEAN, // target
+            callEncoded, // calldata
+            abi.encode(0) // clipboard
+        );
+
+        AdvancedFarmCall[] memory farmCalls = createAdvancedFarmCallsFromAdvancedPipeCalls(extraPipeCalls);
+
+        vm.prank(users[1]);
+        convert.pipelineConvert(
+            C.BEAN, // input token
+            stems, // stem
+            amounts, // amount
+            C.BEAN, // token out
+            farmCalls
+        );
+
+        uint256 stalkAfter = bs.balanceOfStalk(users[1]);
+        assertEq(stalkAfter, stalkBefore+grownStalk);
+    }
+
 
     function testCalculateStalkPenaltyUpwardsToZero() public {
         int256 beforeDeltaB = -100;
@@ -1026,6 +1063,19 @@ contract PipelineConvertTest is TestHelper {
 
         // encode into bytes. 
         // output = abi.encode(advancedFarmCalls);
+        return advancedFarmCalls;
+    }
+
+    function createAdvancedFarmCallsFromAdvancedPipeCalls(AdvancedPipeCall[] memory advancedPipeCalls) public view returns (AdvancedFarmCall[] memory) {
+        AdvancedFarmCall[] memory advancedFarmCalls = new AdvancedFarmCall[](1);
+        bytes memory advancedPipeCalldata = 
+            abi.encodeWithSelector(
+                depot.advancedPipe.selector,
+                advancedPipeCalls,
+                0
+            );
+
+        advancedFarmCalls[0] = AdvancedFarmCall(advancedPipeCalldata, new bytes(0));
         return advancedFarmCalls;
     }
 

@@ -466,6 +466,10 @@ contract ConvertFacet is ReentrancyGuard {
         //I don't think calling checkReturn here is necessary if success is false?
         // LibFunction.checkReturn(success, result);
 
+        console.log('going to transfer tokens from pipeline');
+        console.log('tokenOut: ', tokenOut);
+        console.log('userReturnedConvertValue: ', userReturnedConvertValue);
+
         IPipeline(PIPELINE).pipe(p);
     }
 
