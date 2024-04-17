@@ -4,7 +4,8 @@ import { BD_10, BI_10, ONE_BI, toDecimal, ZERO_BD, ZERO_BI } from "../../../../s
 import { BEAN_3CRV_V1, BEAN_LUSD_V1, CALCULATIONS_CURVE, CRV3_POOL_V1, LUSD, LUSD_3POOL } from "../../../../subgraph-core/utils/Constants";
 import { CalculationsCurve } from "../../../generated/Bean3CRV-V1/CalculationsCurve";
 import { ERC20 } from "../../../generated/Bean3CRV-V1/ERC20";
-import { DeltaBAndPrice } from "./Types";
+import { DeltaBAndPrice, DeltaBPriceLiquidity } from "./Types";
+import { Pool } from "../../../generated/schema";
 
 // Note that the Bean3CRV type applies to any curve pool (including lusd)
 
@@ -40,6 +41,15 @@ export function curvePriceAndLp(pool: Address): BigDecimal[] {
   let beanPrice = metapoolPrice.times(beanCrvPrice);
 
   return [beanPrice, lpValue];
+}
+
+export function calcCurveInst(pool: Pool): DeltaBPriceLiquidity {
+  const priceAndLp = curvePriceAndLp(Address.fromString(pool.id));
+  return {
+    price: priceAndLp[0],
+    liquidity: priceAndLp[1],
+    deltaB: curveDeltaB(Address.fromString(pool.id), pool.reserves[0])
+  };
 }
 
 // TODO: this logic can be refactored to remove the contract calls and instead use getD method.
@@ -143,7 +153,7 @@ function getY(x: BigInt, xp: BigInt[], a: BigInt, D: BigInt): BigInt {
   let Ann: BigInt = a.times(N_COINS);
 
   // Calculate c considering each element in xp
-  for (let _i = 0; _i < N_COINS.toU32(); ++_i) {
+  for (let _i = 0; _i < N_COINS.toI32(); ++_i) {
     if (_i == i) _x = x;
     else if (_i != j) _x = xp[_i];
     else continue;

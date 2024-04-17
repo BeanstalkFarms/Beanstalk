@@ -15,10 +15,12 @@ import {
 import { ZERO_BD, ZERO_BI, toDecimal } from "../../subgraph-core/utils/Decimals";
 import { CurvePrice } from "../generated/Beanstalk/CurvePrice";
 import { checkBeanCross } from "./utils/Cross";
-import { uniswapV2DeltaB, uniswapV2Price, updatePreReplantPriceETH } from "./utils/price/UniswapPrice";
-import { curveDeltaB, curvePriceAndLp } from "./utils/price/CurvePrice";
+import { calcUniswapV2Inst, uniswapV2DeltaB, uniswapV2Price, updatePreReplantPriceETH } from "./utils/price/UniswapPrice";
+import { calcCurveInst, curveDeltaB, curvePriceAndLp } from "./utils/price/CurvePrice";
 import { MetapoolOracle, WellOracle } from "../generated/TWAPOracles/BIP37";
-import { onSunriseSetUniswapV2Twa } from "./UniswapV2Handler";
+import { setUniswapV2Twa } from "./UniswapV2Handler";
+import { setCurveTwa } from "./Bean3CRVHandler_V1";
+import { DeltaBPriceLiquidity } from "./utils/price/Types";
 
 export function handleSunrise(event: Sunrise): void {
   // Update the season for hourly and daily liquidity metrics
@@ -107,23 +109,13 @@ export function handleSunrise(event: Sunrise): void {
     let totalLiquidity = ZERO_BD;
     for (let i = 0; i < bean.pools.length; i++) {
       const pool = loadOrCreatePool(bean.pools[i], event.block.number);
-      let price = ZERO_BD;
-      let liquidity = ZERO_BD;
-      let deltaB = ZERO_BI;
+      let inst: DeltaBPriceLiquidity;
       if (bean.pools[i] == BEAN_WETH_V1.toHexString()) {
-        const wethToken = updatePreReplantPriceETH();
-        const weth_bd = toDecimal(pool.reserves[0], 18);
-        const bean_bd = toDecimal(pool.reserves[1]);
-        price = uniswapV2Price(bean_bd, weth_bd, wethToken.lastPriceUSD);
-        liquidity = weth_bd.times(wethToken.lastPriceUSD);
-        deltaB = uniswapV2DeltaB(bean_bd, weth_bd, wethToken.lastPriceUSD);
-
-        onSunriseSetUniswapV2Twa(bean.pools[i], event.block.timestamp, event.block.number);
+        inst = calcUniswapV2Inst(pool);
+        setUniswapV2Twa(bean.pools[i], event.block.timestamp, event.block.number);
       } else {
-        const priceAndLp = curvePriceAndLp(Address.fromString(bean.pools[i]));
-        price = priceAndLp[0];
-        liquidity = priceAndLp[1];
-        deltaB = curveDeltaB(Address.fromString(bean.pools[i]), pool.reserves[0]);
+        inst = calcCurveInst(pool);
+        setCurveTwa(bean.pools[i], event.block.timestamp, event.block.number);
       }
 
       // Update price, liquidity, and deltaB in the pool
@@ -133,13 +125,13 @@ export function handleSunrise(event: Sunrise): void {
         event.block.number,
         ZERO_BI,
         ZERO_BD,
-        liquidity.minus(pool.liquidityUSD),
-        deltaB
+        inst.liquidity.minus(pool.liquidityUSD),
+        inst.deltaB
       );
-      updatePoolPrice(bean.pools[i], event.block.timestamp, event.block.number, price);
+      updatePoolPrice(bean.pools[i], event.block.timestamp, event.block.number, inst.price);
 
-      weightedPrice = weightedPrice.plus(price.times(liquidity));
-      totalLiquidity = totalLiquidity.plus(liquidity);
+      weightedPrice = weightedPrice.plus(inst.price.times(inst.liquidity));
+      totalLiquidity = totalLiquidity.plus(inst.liquidity);
     }
 
     const totalPrice = weightedPrice.div(totalLiquidity);

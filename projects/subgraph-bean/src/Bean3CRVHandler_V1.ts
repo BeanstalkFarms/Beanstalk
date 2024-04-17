@@ -206,7 +206,7 @@ function handleSwap(
   checkBeanCross(BEAN_ERC20_V1.toHexString(), timestamp, blockNumber, oldBeanPrice, newPrice);
 }
 
-export function onSunriseSetCurveTwa(poolAddress: string, timestamp: BigInt, blockNumber: BigInt): void {
+export function setCurveTwa(poolAddress: string, timestamp: BigInt, blockNumber: BigInt): void {
   const twaBalances = getTWAPrices(poolAddress, TWAType.CURVE, timestamp);
   const beanPool = Address.fromString(poolAddress);
   const otherPool = beanPool == BEAN_3CRV_V1 ? CRV3_POOL_V1 : LUSD_3POOL;

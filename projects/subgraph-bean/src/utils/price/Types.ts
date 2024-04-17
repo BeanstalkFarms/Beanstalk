@@ -9,3 +9,9 @@ export class DeltaBAndPrice {
   deltaB: BigInt;
   price: BigDecimal;
 }
+
+export class DeltaBPriceLiquidity {
+  deltaB: BigInt;
+  price: BigDecimal;
+  liquidity: BigDecimal;
+}

@@ -1,11 +1,11 @@
 import { Address, BigDecimal, BigInt, log } from "@graphprotocol/graph-ts";
 import { BD_10, BI_10, ONE_BI, pow, sqrt, toDecimal, ZERO_BD, ZERO_BI } from "../../../../subgraph-core/utils/Decimals";
-import { Token } from "../../../generated/schema";
+import { Pool, Token } from "../../../generated/schema";
 import { loadOrCreateToken } from "../Token";
 import { UniswapV2Pair } from "../../../generated/BeanUniswapV2Pair/UniswapV2Pair";
 import { BEANSTALK, WETH, WETH_USDC_PAIR } from "../../../../subgraph-core/utils/Constants";
 import { PreReplant } from "../../../generated/Beanstalk/PreReplant";
-import { DeltaBAndPrice } from "./Types";
+import { DeltaBAndPrice, DeltaBPriceLiquidity } from "./Types";
 
 export function updatePreReplantPriceETH(): Token {
   let token = loadOrCreateToken(WETH.toHexString());
@@ -20,6 +20,17 @@ export function updatePreReplantPriceETH(): Token {
   token.lastPriceUSD = toDecimal(reserves.value.value0).div(toDecimal(reserves.value.value1, 18));
   token.save();
   return token;
+}
+
+export function calcUniswapV2Inst(pool: Pool): DeltaBPriceLiquidity {
+  const wethToken = updatePreReplantPriceETH();
+  const weth_bd = toDecimal(pool.reserves[0], 18);
+  const bean_bd = toDecimal(pool.reserves[1]);
+  return {
+    price: uniswapV2Price(bean_bd, weth_bd, wethToken.lastPriceUSD),
+    liquidity: weth_bd.times(wethToken.lastPriceUSD),
+    deltaB: uniswapV2DeltaB(bean_bd, weth_bd, wethToken.lastPriceUSD)
+  };
 }
 
 // For our single uniswapv2 pool, token 0 is WETH and token 1 is BEAN

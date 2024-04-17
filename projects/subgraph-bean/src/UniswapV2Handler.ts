@@ -21,7 +21,7 @@ import {
   updatePreReplantPriceETH
 } from "./utils/price/UniswapPrice";
 import { getTWAPrices } from "./utils/price/TwaOracle";
-import { TWAType } from "./utils/price/Types";
+import { DeltaBAndPrice, TWAType } from "./utils/price/Types";
 
 // export function handleMint(event: Mint): void {
 //   updatePoolReserves(event.address.toHexString(), event.params.amount0, event.params.amount1, event.block.number);
@@ -115,7 +115,7 @@ export function handleSync(event: Sync): void {
   updateBeanValues(BEAN_ERC20_V1.toHexString(), event.block.timestamp, currentBeanPrice, ZERO_BI, ZERO_BI, ZERO_BD, deltaLiquidityUSD);
 }
 
-export function onSunriseSetUniswapV2Twa(poolAddress: string, timestamp: BigInt, blockNumber: BigInt): void {
+export function setUniswapV2Twa(poolAddress: string, timestamp: BigInt, blockNumber: BigInt): DeltaBAndPrice {
   const twaPrices = getTWAPrices(poolAddress, TWAType.UNISWAP, timestamp);
   const twaResult = uniswapTwaDeltaBAndPrice(twaPrices, blockNumber);
 
@@ -127,4 +127,6 @@ export function onSunriseSetUniswapV2Twa(poolAddress: string, timestamp: BigInt,
   poolDaily.twaPrice = twaResult.price;
   poolHourly.save();
   poolDaily.save();
+
+  return twaResult;
 }
