@@ -43,7 +43,7 @@ import useFarmerBalances from '~/hooks/farmer/useFarmerBalances';
 import usePreferredToken, {
   PreferredToken,
 } from '~/hooks/farmer/usePreferredToken';
-import { getTokenIndex, normaliseTV, tokenValueToBN } from '~/util';
+import { displayTokenAmount, getTokenIndex, normaliseTV, tokenValueToBN } from '~/util';
 import { useFetchFarmerAllowances } from '~/state/farmer/allowances/updater';
 import { FarmerBalances } from '~/state/farmer/balances';
 import FertilizerItem from '../FertilizerItem';
@@ -206,7 +206,7 @@ const BuyForm: FC<
           balanceFrom={values.balanceFrom}
           params={quoteProviderParams}
         />
-        <ClaimBeanDrawerToggle />
+        <ClaimBeanDrawerToggle actionText='Buy Fert with'/>
         {/* Outputs */}
         {fert?.gt(0) ? (
           <>
@@ -229,10 +229,34 @@ const BuyForm: FC<
               </Box>
               <WarningAlert>
                 The amount of Fertilizer received is: <br />
-                {values.tokens[0].amount?.toFixed(2)}{' '}
-                {values.tokens[0].token.symbol}
+                {values.tokens[0].amount?.gt(0) && (
+                  <>
+                    {displayTokenAmount(
+                      values.tokens[0].amount || BigNumber(0),
+                      values.tokens[0].token,
+                      { showName: false, showSymbol: true }
+                    )}
+                  </>
+                )}{' '}
+                {values.claimableBeans.amount?.gt(0) && (
+                  <> 
+                    {values.tokens[0].amount?.gt(0) && (<>+ </>)} 
+                    {displayTokenAmount(
+                      values.claimableBeans.amount, 
+                      sdk.tokens.BEAN, 
+                      { showName: false, showSymbol: true }
+                    )}
+                  </>
+                )}{' '}
                 {values.tokens[0].token.symbol !== 'WETH' && (
-                  <> → {values.tokens[0].amountOut?.toFixed(2)} WETH </>
+                  <> 
+                    →{' '} 
+                    {displayTokenAmount(
+                      values.tokens[0].amountOut?.plus(values.claimableBeans.amountOut || BigNumber(0)) || BigNumber(0), 
+                      sdk.tokens.WETH, 
+                      { showName: false, showSymbol: true }
+                    )}
+                  </>
                 )}{' '}
                 * ${ethPrice.toHuman('short')} = {fert.toFixed(0)} Fertilizer
               </WarningAlert>
@@ -287,7 +311,7 @@ const BuyForm: FC<
           Buy
         </SmartSubmitButton>
       </Stack>
-      <FormWithDrawer.Drawer title="Use Claimable Beans">
+      <FormWithDrawer.Drawer title="Buy Fert with Claimable Beans">
         <ClaimBeanDrawerContent<BuyQuoteHandlerParams>
           quoteProviderProps={{
             tokenOut: token,

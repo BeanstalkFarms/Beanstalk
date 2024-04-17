@@ -46,7 +46,7 @@ describe('Sun', function () {
 
     await this.usdc.mint(owner.address, to6('10000'))
     await bean.mint(owner.address, to6('10000'))
-    await this.wsteth.mint(owner.address, to18('10000'))
+    await this.wsteth.mint(owner.address, to18('100000'))
     await this.usdc.connect(owner).approve(this.diamond.address, to6('10000'))
     await this.wsteth.connect(owner).approve(this.diamond.address, to18('10000'))
     this.unripeBean = await ethers.getContractAt('MockToken', UNRIPE_BEAN)

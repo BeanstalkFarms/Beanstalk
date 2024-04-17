@@ -1,6 +1,6 @@
 import React from 'react';
 
-import { Box, Typography } from '@mui/material';
+import { Box } from '@mui/material';
 import BigNumber from 'bignumber.js';
 import { ToastBar, Toaster } from 'react-hot-toast';
 import { Navigate, Route, Routes } from 'react-router-dom';
@@ -38,11 +38,10 @@ import SiloTokenPage from '~/pages/silo/token';
 import SwapPage from '~/pages/swap';
 import GovernanceUpdater from '~/state/beanstalk/governance/updater';
 
-import { sgEnvKey } from '~/graph/client';
 import useBanner from '~/hooks/app/useBanner';
 import useNavHeight from '~/hooks/app/usePageDimensions';
 
-import pageBackground from '~/img/beanstalk/interface/bg/spring.png';
+import pageBackground from '~/img/beanstalk/interface/bg/winter.png';
 
 import EnforceNetwork from '~/components/App/EnforceNetwork';
 import useAccount from '~/hooks/ledger/useAccount';
@@ -61,6 +60,7 @@ import FarmerDelegationsUpdater from '~/state/farmer/delegations/updater';
 import VotingPowerPage from '~/pages/governance/votingPower';
 import MorningUpdater from '~/state/beanstalk/sun/morning';
 import MorningFieldUpdater from '~/state/beanstalk/field/morning';
+import Snowflakes from './theme/winter/Snowflakes';
 
 BigNumber.set({ EXPONENTIAL_AT: [-12, 20] });
 
@@ -137,7 +137,7 @@ export default function App() {
       <CustomToaster navHeight={navHeight} />
       {account && <NewProposalsDialog />}
       {/* <Leaves /> */}
-      {/* <Snowflakes /> */}
+      <Snowflakes />
       <Box
         sx={{
           bgcolor: 'background.default',
@@ -204,6 +204,7 @@ export default function App() {
             <Route path="/404" element={<PageNotFound />} />
             <Route path="*" element={<PageNotFound />} />
           </Routes>
+          {/*
           <Box
             sx={{
               position: 'fixed',
@@ -220,6 +221,7 @@ export default function App() {
               &middot; {sgEnvKey}
             </Typography>
           </Box>
+          */}
         </Box>
       </Box>
     </>

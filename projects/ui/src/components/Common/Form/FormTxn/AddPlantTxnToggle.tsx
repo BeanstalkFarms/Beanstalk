@@ -53,7 +53,8 @@ const sx = {
  */
 const AddPlantTxnToggle: React.FC<{
   plantAndDoX: PlantAndDoX | undefined;
-}> = ({ plantAndDoX }) => {
+  actionText?: string;
+}> = ({ plantAndDoX, actionText }) => {
   /// Local State
   const [open, show, hide] = useToggle();
 
@@ -123,10 +124,10 @@ const AddPlantTxnToggle: React.FC<{
               />
               <Stack>
                 <Typography variant="h4" color="primary.main">
-                  Use Earned Beans
+                  {`${actionText || 'Use'} Earned Beans`}
                 </Typography>
                 <Typography variant="body1" color="text.tertiary">
-                  Toggle to claim Earned Beans in your transaction
+                  {`Toggle to ${actionText || 'Claim'} Earned Beans in this transaction.`}
                 </Typography>
               </Stack>
             </Row>
@@ -149,7 +150,7 @@ const AddPlantTxnToggle: React.FC<{
           >
             <Stack gap={1} p={1}>
               <Typography variant="body1" color="text.tertiary">
-                You will Plant to claim these Silo rewards
+                You will claim these Silo rewards:
               </Typography>
               <Grid container spacing={1} direction="row">
                 {items.map((item, i) => (

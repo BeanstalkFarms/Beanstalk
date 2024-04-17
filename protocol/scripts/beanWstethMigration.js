@@ -1,6 +1,8 @@
 const { BEAN_ETH_WELL, WETH, BEAN, BEANSTALK, UNRIPE_LP, WSTETH, BEAN_WSTETH_WELL } = require("../test/utils/constants");
 const { getBeanstalk, impersonateBeanstalkOwner } = require("../utils");
 const { bipMigrateUnripeBeanEthToBeanSteth } = require("./bips");
+const { impersonateWsteth } = require("./impersonate");
+const { getWeth } = require('../utils/contracts.js');
 
 const ETH_STETH_POOL = '0xDC24316b9AE028F1497c275EB9192a3Ea0f67022';
 
@@ -17,7 +19,7 @@ async function finishWstethMigration(mock = true, verbose = false) {
     if (verbose) console.log(`Migrating ${wellTokenBalance} Bean:Eth Tokens`)
 
     await beanEthWell.connect(owner).removeLiquidity(wellTokenBalance, [0, 0], owner.address, ethers.constants.MaxUint256);
-    const weth = await ethers.getContractAt('IWETH', WETH);
+    const weth = await getWeth();
     const wethBalance = await weth.balanceOf(owner.address);
 
     const bean = await ethers.getContractAt('IERC20', BEAN);

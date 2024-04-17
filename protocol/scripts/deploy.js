@@ -384,8 +384,8 @@ async function getFacetData(mock=true) {
     "LibIncentive",
     "LibConvert",
     "LibLockedUnderlying",
-    "LibCurveMinting",
-    "LibWellMinting"
+    "LibWellMinting",
+    "LibGerminate"
   ];
 
   // A mapping of facet to public library names that will be linked to it.
@@ -395,7 +395,8 @@ async function getFacetData(mock=true) {
       "LibGauge", 
       "LibIncentive", 
       "LibLockedUnderlying", 
-      "LibWellMinting"
+      "LibWellMinting",
+      "LibGerminate"
     ],
     ConvertFacet: ["LibConvert"],
     UnripeFacet: ["LibLockedUnderlying"],
@@ -466,5 +467,4 @@ if (require.main === module) {
       process.exit(1);
     });
 }
-
 exports.deploy = main;

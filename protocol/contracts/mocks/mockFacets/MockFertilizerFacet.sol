@@ -34,7 +34,7 @@ contract MockFertilizerFacet is FertilizerFacet {
         s.unfertilizedIndex = unfertilized;
     }
 
-    function setBarnRaiseWell(address welll) external {
-        s.barnRaiseWell = welll;
+    function setBarnRaiseWell(address well) external {
+        s.u[C.UNRIPE_LP].underlyingToken = well;
     }
 }

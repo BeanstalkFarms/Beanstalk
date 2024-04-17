@@ -23,7 +23,8 @@ async function reset() {
   });
 }
 
-testIfRpcSet('Curve', function () {
+// curve tests are skipped as the curveFacet is removed.
+describe.skip('Curve', function () {
   before(async function () {
     [owner,user,user2] = await ethers.getSigners()
     

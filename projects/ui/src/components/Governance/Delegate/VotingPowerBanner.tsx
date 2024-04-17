@@ -15,14 +15,14 @@ import useFarmerVotingPower from '~/hooks/farmer/useFarmerVotingPower';
 
 const VotingPowerBanner: React.FC<{
   tab: number;
-  votingPower: ReturnType<typeof useFarmerVotingPower>['votingPower'];
+  votingPower?: ReturnType<typeof useFarmerVotingPower>['votingPower'];
 }> = ({ tab, votingPower }) => {
   const account = useAccount();
   const space = getGovSpaceWithTab(tab);
 
   const isNFT = space === GovSpace.BeanNFT;
 
-  if (!account) return null;
+  if (!votingPower || !account) return null;
 
   return (
     <Button

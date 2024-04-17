@@ -65,31 +65,6 @@ const mergeUsingSeasons: (keyArgs: string[]) => FieldPolicy = (keyArgs) => ({
         existing.length - 1 // clamp to last index
       );
 
-      console.debug('[apollo/client/read@seasons] READ:');
-      console.debug(
-        `| left:  index = ${left}, season = ${readField(
-          'season',
-          existing[left]
-        )}`
-      );
-      console.debug(
-        `| right: index = ${right}, season = ${readField(
-          'season',
-          existing[right]
-        )}`
-      );
-      console.debug(`| existing.length = ${existing.length}`);
-      console.debug(
-        `| existing[0] = ${readField('season', existing[0])}`,
-        existing
-      );
-      console.debug(
-        `| existing[${existing.length - 1}] = ${readField(
-          'season',
-          existing[existing.length - 1]
-        )}`
-      );
-
       // If one of the endpoints is missing, force refresh
       if (!existing[left] || !existing[right]) return;
 
@@ -157,6 +132,7 @@ const cache = new InMemoryCache({
         beanHourlySnapshots: mergeUsingSeasons([]),
         siloAssetHourlySnapshots: mergeUsingSeasons(['$siloAsset']),
         siloHourlySnapshots: mergeUsingSeasons([]),
+        poolHourlySnapshots: mergeUsingSeasons(['$pool']),
         siloYields: mergeUsingSeasons([]),
       },
     },
@@ -211,7 +187,7 @@ const snapshotLabsLink = new HttpLink({
 });
 
 const beanftLink = new HttpLink({
-  uri: 'https://graph.node.bean.money/subgraphs/name/beanft',
+  uri: sgEnv.subgraphs.beanft,
 });
 /// ///////////////////////// Client ////////////////////////////
 

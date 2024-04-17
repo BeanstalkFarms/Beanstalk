@@ -53,7 +53,7 @@ const ProposalStats: FC<{
       <Tooltip title={new Date(proposal.end * 1000).toLocaleString()}>
         <Typography variant="body1">{getDateMessage(proposal.end)}</Typography>
       </Tooltip>
-      {showLink && (
+      {showLink && proposal.space.id && (
         <Link
           href={`https://snapshot.org/#/${proposal.space.id}/proposal/${proposal.id}`}
           target="_blank"

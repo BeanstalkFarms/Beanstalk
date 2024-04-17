@@ -73,6 +73,7 @@ describe("Silo Enroot", function () {
     await this.beanThreeCurve.set_supply(ethers.utils.parseEther("2000000"));
     await this.beanThreeCurve.set_balances([ethers.utils.parseUnits("1000000", 6), ethers.utils.parseEther("1000000")]);
     await this.beanThreeCurve.set_balances([ethers.utils.parseUnits("1200000", 6), ethers.utils.parseEther("1000000")]);
+
   });
 
   beforeEach(async function () {

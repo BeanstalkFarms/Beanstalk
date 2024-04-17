@@ -6,6 +6,7 @@ pragma solidity =0.7.6;
 pragma abicoder v2;
 
 import "./TokenSilo.sol";
+import {LibTractor} from "contracts/libraries/LibTractor.sol";
 import "contracts/libraries/Token/LibTransfer.sol";
 import "contracts/libraries/Silo/LibSiloPermit.sol";
 
@@ -35,7 +36,7 @@ contract SiloFacet is TokenSilo {
      * @notice Deposits an ERC20 into the Silo.
      * @dev farmer is issued stalk and seeds based on token (i.e non-whitelisted tokens do not get any)
      * @param token address of ERC20
-     * @param amount tokens to be transfered
+     * @param amount tokens to be transferred
      * @param mode source of funds (INTERNAL, EXTERNAL, EXTERNAL_INTERNAL, INTERNAL_TOLERANT)
      * @dev Depositing should:
      * 
@@ -60,10 +61,10 @@ contract SiloFacet is TokenSilo {
         amount = LibTransfer.receiveToken(
             IERC20(token),
             _amount,
-            msg.sender,
+            LibTractor._getUser(),
             mode
         );
-        (_bdv, stem) = _deposit(msg.sender, token, amount);
+        (_bdv, stem) = _deposit(LibTractor._getUser(), token, amount);
     }
 
     //////////////////////// WITHDRAW ////////////////////////
@@ -94,8 +95,8 @@ contract SiloFacet is TokenSilo {
         uint256 amount,
         LibTransfer.To mode
     ) external payable mowSender(token) nonReentrant {
-        _withdrawDeposit(msg.sender, token, stem, amount);
-        LibTransfer.sendToken(IERC20(token), amount, msg.sender, mode);
+        _withdrawDeposit(LibTractor._getUser(), token, stem, amount);
+        LibTransfer.sendToken(IERC20(token), amount, LibTractor._getUser(), mode);
     }
 
     /** 
@@ -118,8 +119,8 @@ contract SiloFacet is TokenSilo {
         uint256[] calldata amounts,
         LibTransfer.To mode
     ) external payable mowSender(token) nonReentrant {
-        uint256 amount = _withdrawDeposits(msg.sender, token, stems, amounts);
-        LibTransfer.sendToken(IERC20(token), amount, msg.sender, mode);
+        uint256 amount = _withdrawDeposits(LibTractor._getUser(), token, stems, amounts);
+        LibTransfer.sendToken(IERC20(token), amount, LibTractor._getUser(), mode);
     }
 
 
@@ -147,8 +148,8 @@ contract SiloFacet is TokenSilo {
         int96 stem,
         uint256 amount
     ) public payable nonReentrant returns (uint256 _bdv) {
-        if (sender != msg.sender) {
-            LibSiloPermit._spendDepositAllowance(sender, msg.sender, token, amount);
+        if (sender != LibTractor._getUser()) {
+            LibSiloPermit._spendDepositAllowance(sender, LibTractor._getUser(), token, amount);
         }
         LibSilo._mow(sender, token);
         // Need to update the recipient's Silo as well.
@@ -186,8 +187,9 @@ contract SiloFacet is TokenSilo {
             totalAmount = totalAmount.add(amounts[i]);
         }
 
-        if (sender != msg.sender) {
-            LibSiloPermit._spendDepositAllowance(sender, msg.sender, token, totalAmount);
+        // Tractor operator does not use allowance.
+        if (sender != LibTractor._getUser()) {
+            LibSiloPermit._spendDepositAllowance(sender, LibTractor._getUser(), token, totalAmount);
         }
        
         LibSilo._mow(sender, token);
@@ -299,14 +301,14 @@ contract SiloFacet is TokenSilo {
      * the current Season.
      */
     function plant() external payable returns (uint256 beans, int96 stem) {
-        return _plant(msg.sender);
+        return _plant(LibTractor._getUser());
     }
 
     /** 
      * @notice Claim rewards from a Flood (Was Season of Plenty)
      */
     function claimPlenty() external payable {
-        _claimPlenty(msg.sender);
+        _claimPlenty(LibTractor._getUser());
     }
 
 }

@@ -8,6 +8,8 @@ import { sunrise } from "./commands/sunrise.js";
 import { setPrice } from "./commands/setprice.js";
 import { help } from "./commands/help.js";
 import { mineBlocks } from "./commands/mine.js";
+import { setDeltaB } from "./commands/setDeltaB.js";
+import { getDeltaB } from "./commands/getDeltaB.js";
 
 main().catch((e) => {
   console.log("FAILED:");
@@ -28,6 +30,7 @@ async function main() {
   const args = commandLineArgs(commands, { partial: true });
 
   const { sdk, chain, stop } = await setupSDK(args);
+  sdk.DEBUG = false;
 
   switch (args.command) {
     case "balance":
@@ -44,6 +47,17 @@ async function main() {
       break;
     case "mine":
       await mineBlocks(sdk, args.amount);
+      break;
+    case "setpriceabove":
+    case "setpriceover":
+      await setDeltaB(sdk, chain, "up", args.amount);
+      break;
+    case "setpricebelow":
+    case "setpriceunder":
+      await setDeltaB(sdk, chain, "down", args.amount);
+      break;
+    case "deltab":
+      await getDeltaB(sdk);
       break;
     case "help":
     default:

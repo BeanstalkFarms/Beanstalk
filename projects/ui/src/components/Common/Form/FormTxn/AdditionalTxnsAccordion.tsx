@@ -170,8 +170,9 @@ const AdditionalTxnsAccordion: React.FC<Props> = ({ filter }) => {
   useEffect(() => {
     if (!farmActions.secondary) {
       setLocal(impliedOptions);
+      setFieldValue('farmActions.secondary', impliedOptions);
     }
-  }, [farmActions.secondary, impliedOptions]);
+  }, [farmActions.secondary, setFieldValue, impliedOptions]);
 
   if (!allOptions?.length) return null;
 

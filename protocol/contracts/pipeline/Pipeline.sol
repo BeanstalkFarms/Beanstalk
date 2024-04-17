@@ -4,6 +4,7 @@ pragma experimental ABIEncoderV2;
 
 import "../interfaces/IPipeline.sol";
 import "../libraries/LibFunction.sol";
+import "../libraries/LibClipboard.sol";
 import "@openzeppelin/contracts/token/ERC1155/ERC1155Holder.sol";
 import "@openzeppelin/contracts/token/ERC721/ERC721Holder.sol";
 
@@ -111,7 +112,7 @@ contract Pipeline is IPipeline, ERC1155Holder, ERC721Holder {
         if (p.clipboard[0] == 0x00) {
             result = _pipe(p.target, p.callData, value);
         } else {
-            result = LibFunction.useClipboard(p.callData, p.clipboard, returnData);
+            result = LibClipboard.useClipboard(p.callData, p.clipboard, returnData);
             result = _pipeMem(p.target, result, value);
         }
     }

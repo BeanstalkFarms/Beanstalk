@@ -1,31 +1,17 @@
 query SeasonalAPY(
-  $season_lte: Int,
-  $season_gt: Int,
+  $season_lte: Int
+  $season_gt: Int
   $first: Int
+  $token: Bytes
 ) {
-  seasons: siloYields(
-    where: {
-      season_lte: $season_lte,
-      season_gt: $season_gt,
-    }
-    first: $first,
-    orderBy: season,
+  seasons: tokenYields(
+    where: { season_lte: $season_lte, season_gt: $season_gt, token: $token }
+    first: $first
+    orderBy: season
     orderDirection: desc
   ) {
-    id
     season
-    zeroSeedBeanAPY
-    twoSeedBeanAPY
-    twoSeedStalkAPY
-    fourSeedBeanAPY
-    fourSeedStalkAPY
-    threeSeedBeanAPY
-    threeSeedStalkAPY
-    threePointTwoFiveSeedBeanAPY
-    threePointTwoFiveSeedStalkAPY
-    fourPointFiveSeedBeanAPY
-    fourPointFiveSeedStalkAPY
-    beansPerSeasonEMA
+    beanAPY
     createdAt
   }
 }

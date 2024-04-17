@@ -22,10 +22,11 @@ const SLUGS = [
   'deposited_urlp',
   'stalk',
   // 'seeds',
-  '0_seeds_bean_vAPY',
-  '3_seeds_bean_vAPY',
-  '3.25_seeds_bean_vAPY',
-  '4.5_seeds_bean_vAPY',
+  'bean_vAPY',
+  'bean_3crv_vAPY',
+  'bean_eth_well_vAPY',
+  'ur_bean_vAPY',
+  'ur_bean_eth_vAPY',
 ];
 
 const SiloAnalytics: FC<{}> = () => {
@@ -44,10 +45,11 @@ const SiloAnalytics: FC<{}> = () => {
         <Tab label="Deposited urBEANETH" />
         <Tab label="Stalk" />
         {/* <Tab label="Seeds" /> */}
-        <Tab label="0 Seeds Bean vAPY" />
-        <Tab label="3 Seeds Bean vAPY" />
-        <Tab label="3.25 Seeds Bean vAPY" />
-        <Tab label="4.5 Seeds Bean vAPY" />
+        <Tab label="BEAN vAPY" />
+        <Tab label="BEAN3CRV vAPY" />
+        <Tab label="BEANETH vAPY" />
+        <Tab label="urBEAN vAPY" />
+        <Tab label="urBEANETH vAPY" />
       </Tabs>
       {tab === 0 && (
         <DepositedAsset
@@ -86,10 +88,11 @@ const SiloAnalytics: FC<{}> = () => {
       )}
       {tab === 5 && <Stalk height={300} />}
       {/* {tab === 5 && <Seeds height={300} />} */}
-      {tab === 6 && <APY height={300} metric="ZeroSeeds" />}
-      {tab === 7 && <APY height={300} metric="ThreeSeeds" />}
-      {tab === 8 && <APY height={300} metric="ThreePointTwoFiveSeeds" />}
-      {tab === 9 && <APY height={300} metric="FourPointFiveSeeds" />}
+      {tab === 6 && <APY height={300} metric="Bean" />}
+      {tab === 7 && <APY height={300} metric="Bean3Curve" />}
+      {tab === 8 && <APY height={300} metric="BeanETHWell" />}
+      {tab === 9 && <APY height={300} metric="UnripeBean" />}
+      {tab === 10 && <APY height={300} metric="UnripeBeanETH" />}
     </Card>
   );
 };

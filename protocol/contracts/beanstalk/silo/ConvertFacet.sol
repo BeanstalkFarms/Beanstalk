@@ -6,6 +6,7 @@ pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
 import {C} from "contracts/C.sol";
+import {LibTractor} from "contracts/libraries/LibTractor.sol";
 import {LibSilo} from "contracts/libraries/Silo/LibSilo.sol";
 import {LibTokenSilo} from "contracts/libraries/Silo/LibTokenSilo.sol";
 import {LibSafeMath32} from "contracts/libraries/LibSafeMath32.sol";
@@ -83,8 +84,11 @@ contract ConvertFacet is ReentrancyGuard {
         
         require(fromAmount > 0, "Convert: From amount is 0.");
 
-        LibSilo._mow(msg.sender, fromToken);
-        LibSilo._mow(msg.sender, toToken);
+        require(fromAmount > 0, "Convert: From amount is 0.");
+
+        LibSilo._mow(LibTractor._getUser(), fromToken);
+        LibSilo._mow(LibTractor._getUser(), toToken);
+
         (grownStalk, fromBdv) = _withdrawTokens(
             fromToken,
             stems,
@@ -98,11 +102,12 @@ contract ConvertFacet is ReentrancyGuard {
         toBdv = newBdv > fromBdv ? newBdv : fromBdv;
 
         toStem = _depositTokensForConvert(toToken, toAmount, toBdv, grownStalk);
-        emit Convert(msg.sender, fromToken, toToken, fromAmount, toAmount);
+
+        emit Convert(LibTractor._getUser(), fromToken, toToken, fromAmount, toAmount);
     }
 
     /**
-     * @notice removes the deposits from msg.sender and returns the
+     * @notice removes the deposits from user and returns the
      * grown stalk and bdv removed.
      * 
      * @dev if a user inputs a stem of a deposit that is `germinating`, 
@@ -141,7 +146,7 @@ contract ConvertFacet is ReentrancyGuard {
 
                 if (a.active.tokens.add(amounts[i]) >= maxTokens) amounts[i] = maxTokens.sub(a.active.tokens);
                 depositBDV = LibTokenSilo.removeDepositFromAccount(
-                        msg.sender,
+                        LibTractor._getUser(),
                         token,
                         stems[i],
                         amounts[i]
@@ -167,7 +172,7 @@ contract ConvertFacet is ReentrancyGuard {
             for (i; i < stems.length; ++i) amounts[i] = 0;
             
             emit RemoveDeposits(
-                msg.sender,
+                LibTractor._getUser(),
                 token,
                 stems,
                 amounts,
@@ -176,8 +181,8 @@ contract ConvertFacet is ReentrancyGuard {
             );
 
             emit LibSilo.TransferBatch(
-                msg.sender, 
-                msg.sender,
+                LibTractor._getUser(), 
+                LibTractor._getUser(),
                 address(0), 
                 depositIds, 
                 amounts
@@ -192,7 +197,7 @@ contract ConvertFacet is ReentrancyGuard {
 
         // all deposits converted are not germinating.
         LibSilo.burnActiveStalk(
-            msg.sender,
+            LibTractor._getUser(),
             a.active.stalk.add(a.active.bdv.mul(s.ss[token].stalkIssuedPerBdv))
         );
         return (a.active.stalk, a.active.bdv);
@@ -229,17 +234,17 @@ contract ConvertFacet is ReentrancyGuard {
         if (germ == LibGerminate.Germinate.NOT_GERMINATING) {
             LibTokenSilo.incrementTotalDeposited(token, amount, bdv);
             LibSilo.mintActiveStalk(
-                msg.sender, 
+                LibTractor._getUser(), 
                 bdv.mul(LibTokenSilo.stalkIssuedPerBdv(token)).add(grownStalk)
             );
         } else {
             LibTokenSilo.incrementTotalGerminating(token, amount, bdv, germ);
             // safeCast not needed as stalk is <= max(uint128)
-            LibSilo.mintGerminatingStalk(msg.sender, uint128(bdv.mul(LibTokenSilo.stalkIssuedPerBdv(token))), germ);   
-            LibSilo.mintActiveStalk(msg.sender, grownStalk);
+            LibSilo.mintGerminatingStalk(LibTractor._getUser(), uint128(bdv.mul(LibTokenSilo.stalkIssuedPerBdv(token))), germ);   
+            LibSilo.mintActiveStalk(LibTractor._getUser(), grownStalk);
         }
         LibTokenSilo.addDepositToAccount(
-            msg.sender, 
+            LibTractor._getUser(), 
             token, 
             stem, 
             amount,

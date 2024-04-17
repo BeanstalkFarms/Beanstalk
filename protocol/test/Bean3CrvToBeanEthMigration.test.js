@@ -4,7 +4,7 @@ const { BEAN, FERTILIZER, USDC, BEAN_3_CURVE, THREE_CURVE, UNRIPE_BEAN, UNRIPE_L
 const { setEthUsdcPrice, setEthUsdChainlinkPrice } = require('../utils/oracle.js');
 const { to6, to18 } = require('./utils/helpers.js');
 const { bipMigrateUnripeBean3CrvToBeanEth } = require('../scripts/bips.js');
-const { getBeanstalk, getBeanstalkAdminControls } = require('../utils/contracts.js');
+const { getBeanstalk, getBeanstalkAdminControls , getWeth } = require('../utils/contracts.js');
 const { impersonateBeanstalkOwner, impersonateSigner } = require('../utils/signer.js');
 const { ethers } = require('hardhat');
 const { upgradeWithNewFacets } = require("../scripts/diamond");
@@ -50,8 +50,8 @@ describe.skip('Bean:3Crv to Bean:Eth Migration', function () {
     owner = await impersonateBeanstalkOwner()
     beanstalk= await getBeanstalk()
     this.well = await ethers.getContractAt('IWell', BEAN_ETH_WELL);
-    this.weth = await ethers.getContractAt('IWETH', WETH)
-    bean = await ethers.getContractAt('IBean', BEAN)
+    this.weth = await getWeth();
+    this.bean = await ethers.getContractAt('IBean', BEAN)
     this.beanEth = await ethers.getContractAt('IWell', BEAN_ETH_WELL)
     this.beanEthToken = await ethers.getContractAt('IERC20', BEAN_ETH_WELL)
     this.unripeLp = await ethers.getContractAt('IERC20', UNRIPE_LP)

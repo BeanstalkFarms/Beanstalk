@@ -15,6 +15,7 @@ import depositUrBeanImg from '~/img/beanstalk/silo/edu/depositUrBeanImg.svg';
 import depositBeanEth from '~/img/beanstalk/silo/edu/depositBeanEth.svg';
 import depositUrBeanEth from '~/img/beanstalk/silo/edu/depositUrBeanEth.svg';
 import earnStalkAndSeedsImg from '~/img/beanstalk/silo/edu/earnStalkAndSeedsImg.svg';
+import earnStalkImg from '~/img/beanstalk/silo/edu/earnStalkImg.svg';
 import { BeanstalkPalette } from '~/components/App/muiTheme';
 import Carousel from '~/components/Common/Carousel/Carousel';
 import EmbeddedCard from '~/components/Common/EmbeddedCard';
@@ -45,13 +46,7 @@ const useCardContentWithToken = (token: ERC20Token) => [
     title: `Deposit ${token.name}`,
     texts: [
       `Use the form to Deposit ${token.symbol} into the Silo.`,
-      `Beanstalk allows you to use ${
-        token.isUnripe
-          ? token.symbol
-          : token.symbol === 'BEAN'
-          ? 'BEAN or ETH'
-          : 'BEAN, ETH, WETH, 3CRV, DAI, USDC, or USDT'
-      } from your wallet or Farm balance to Deposit ${
+      `Beanstalk allows you to use different assets from your wallet or Farm balance to Deposit ${
         token.symbol
       } into the Silo.${
         token.isUnripe
@@ -66,12 +61,11 @@ const useCardContentWithToken = (token: ERC20Token) => [
     imageSrc: depositCardContentByToken[token.address]?.img || depositBeanImg,
   },
   {
-    title: 'Receive Stalk and Seeds for your Deposit',
+    title: `Receive Stalk ${!token.isUnripe ? 'and Seeds' : ''} for your Deposit`,
     texts: [
       'Stalk entitles holders to participate in Beanstalk governance and earn a portion of Bean mints.',
-      'Seeds yield 1/10000 new Stalk every Season.',
     ],
-    imageSrc: earnStalkAndSeedsImg,
+    imageSrc: token.isUnripe ? earnStalkImg : earnStalkAndSeedsImg,
   },
   {
     title: 'Earn Beans',

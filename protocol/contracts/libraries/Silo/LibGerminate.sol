@@ -77,7 +77,7 @@ library LibGerminate {
      * as the roots of the stalk should be calculated based on the total stalk
      * when germination finishes, rather than when germination starts.
      */
-    function endTotalGermination(uint32 season, address[] memory tokens) internal {
+    function endTotalGermination(uint32 season, address[] memory tokens) external {
         AppStorage storage s = LibAppStorage.diamondStorage();
 
         // germination can only occur after season 3.

@@ -109,7 +109,8 @@ testIfRpcSet('Farm', function () {
       });
     });
 
-    describe('Farm Exchange', async function () {
+    // TODO: reimplment with non-curve.
+    describe.skip('Farm Exchange', async function () {
       describe('tri-crypto', async function () {
         it('Wrap Eth, Exchange WETH -> USDT external', async function () {
           exchange = await beanstalk.interface.encodeFunctionData('exchange', [

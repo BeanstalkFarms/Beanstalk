@@ -1373,6 +1373,367 @@
     "type": "function"
   },
   {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "bytes32",
+        "name": "blueprintHash",
+        "type": "bytes32"
+      }
+    ],
+    "name": "CancelBlueprint",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "components": [
+          {
+            "components": [
+              {
+                "internalType": "address",
+                "name": "publisher",
+                "type": "address"
+              },
+              {
+                "internalType": "bytes",
+                "name": "data",
+                "type": "bytes"
+              },
+              {
+                "internalType": "bytes32[]",
+                "name": "operatorPasteInstrs",
+                "type": "bytes32[]"
+              },
+              {
+                "internalType": "uint256",
+                "name": "maxNonce",
+                "type": "uint256"
+              },
+              {
+                "internalType": "uint256",
+                "name": "startTime",
+                "type": "uint256"
+              },
+              {
+                "internalType": "uint256",
+                "name": "endTime",
+                "type": "uint256"
+              }
+            ],
+            "internalType": "struct LibTractor.Blueprint",
+            "name": "blueprint",
+            "type": "tuple"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "blueprintHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes",
+            "name": "signature",
+            "type": "bytes"
+          }
+        ],
+        "indexed": false,
+        "internalType": "struct LibTractor.Requisition",
+        "name": "requisition",
+        "type": "tuple"
+      }
+    ],
+    "name": "PublishRequisition",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "operator",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "bytes32",
+        "name": "blueprintHash",
+        "type": "bytes32"
+      }
+    ],
+    "name": "Tractor",
+    "type": "event"
+  },
+  {
+    "inputs": [
+      {
+        "components": [
+          {
+            "components": [
+              {
+                "internalType": "address",
+                "name": "publisher",
+                "type": "address"
+              },
+              {
+                "internalType": "bytes",
+                "name": "data",
+                "type": "bytes"
+              },
+              {
+                "internalType": "bytes32[]",
+                "name": "operatorPasteInstrs",
+                "type": "bytes32[]"
+              },
+              {
+                "internalType": "uint256",
+                "name": "maxNonce",
+                "type": "uint256"
+              },
+              {
+                "internalType": "uint256",
+                "name": "startTime",
+                "type": "uint256"
+              },
+              {
+                "internalType": "uint256",
+                "name": "endTime",
+                "type": "uint256"
+              }
+            ],
+            "internalType": "struct LibTractor.Blueprint",
+            "name": "blueprint",
+            "type": "tuple"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "blueprintHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes",
+            "name": "signature",
+            "type": "bytes"
+          }
+        ],
+        "internalType": "struct LibTractor.Requisition",
+        "name": "requisition",
+        "type": "tuple"
+      }
+    ],
+    "name": "cancelBlueprint",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "components": [
+          {
+            "internalType": "address",
+            "name": "publisher",
+            "type": "address"
+          },
+          {
+            "internalType": "bytes",
+            "name": "data",
+            "type": "bytes"
+          },
+          {
+            "internalType": "bytes32[]",
+            "name": "operatorPasteInstrs",
+            "type": "bytes32[]"
+          },
+          {
+            "internalType": "uint256",
+            "name": "maxNonce",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "startTime",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "endTime",
+            "type": "uint256"
+          }
+        ],
+        "internalType": "struct LibTractor.Blueprint",
+        "name": "blueprint",
+        "type": "tuple"
+      }
+    ],
+    "name": "getBlueprintHash",
+    "outputs": [
+      {
+        "internalType": "bytes32",
+        "name": "",
+        "type": "bytes32"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "blueprintHash",
+        "type": "bytes32"
+      }
+    ],
+    "name": "getBlueprintNonce",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "components": [
+          {
+            "components": [
+              {
+                "internalType": "address",
+                "name": "publisher",
+                "type": "address"
+              },
+              {
+                "internalType": "bytes",
+                "name": "data",
+                "type": "bytes"
+              },
+              {
+                "internalType": "bytes32[]",
+                "name": "operatorPasteInstrs",
+                "type": "bytes32[]"
+              },
+              {
+                "internalType": "uint256",
+                "name": "maxNonce",
+                "type": "uint256"
+              },
+              {
+                "internalType": "uint256",
+                "name": "startTime",
+                "type": "uint256"
+              },
+              {
+                "internalType": "uint256",
+                "name": "endTime",
+                "type": "uint256"
+              }
+            ],
+            "internalType": "struct LibTractor.Blueprint",
+            "name": "blueprint",
+            "type": "tuple"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "blueprintHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes",
+            "name": "signature",
+            "type": "bytes"
+          }
+        ],
+        "internalType": "struct LibTractor.Requisition",
+        "name": "requisition",
+        "type": "tuple"
+      }
+    ],
+    "name": "publishRequisition",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "components": [
+          {
+            "components": [
+              {
+                "internalType": "address",
+                "name": "publisher",
+                "type": "address"
+              },
+              {
+                "internalType": "bytes",
+                "name": "data",
+                "type": "bytes"
+              },
+              {
+                "internalType": "bytes32[]",
+                "name": "operatorPasteInstrs",
+                "type": "bytes32[]"
+              },
+              {
+                "internalType": "uint256",
+                "name": "maxNonce",
+                "type": "uint256"
+              },
+              {
+                "internalType": "uint256",
+                "name": "startTime",
+                "type": "uint256"
+              },
+              {
+                "internalType": "uint256",
+                "name": "endTime",
+                "type": "uint256"
+              }
+            ],
+            "internalType": "struct LibTractor.Blueprint",
+            "name": "blueprint",
+            "type": "tuple"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "blueprintHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes",
+            "name": "signature",
+            "type": "bytes"
+          }
+        ],
+        "internalType": "struct LibTractor.Requisition",
+        "name": "requisition",
+        "type": "tuple"
+      },
+      {
+        "internalType": "bytes",
+        "name": "operatorData",
+        "type": "bytes"
+      }
+    ],
+    "name": "tractor",
+    "outputs": [
+      {
+        "internalType": "bytes[]",
+        "name": "results",
+        "type": "bytes[]"
+      }
+    ],
+    "stateMutability": "payable",
+    "type": "function"
+  },
+  {
     "inputs": [
       {
         "internalType": "contract IERC1155",

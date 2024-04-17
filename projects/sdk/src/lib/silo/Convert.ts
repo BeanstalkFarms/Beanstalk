@@ -1,5 +1,5 @@
 import { TokenValue } from "@beanstalk/sdk-core";
-import { ContractTransaction } from "ethers";
+import { ContractTransaction, PayableOverrides } from "ethers";
 import { Token } from "src/classes/Token";
 import { BeanstalkSDK } from "../BeanstalkSDK";
 import { ConvertEncoder } from "./ConvertEncoder";
@@ -41,7 +41,13 @@ export class Convert {
     this.paths.set(this.urBeanWeth, this.urBean);
   }
 
-  async convert(fromToken: Token, toToken: Token, fromAmount: TokenValue, slippage: number = 0.1): Promise<ContractTransaction> {
+  async convert(
+    fromToken: Token,
+    toToken: Token,
+    fromAmount: TokenValue,
+    slippage: number = 0.1,
+    overrides: PayableOverrides = {}
+  ): Promise<ContractTransaction> {
     Convert.sdk.debug("silo.convert()", { fromToken, toToken, fromAmount });
 
     // Get convert estimate and details
@@ -55,7 +61,7 @@ export class Convert {
     const amounts = conversion.crates.map((crate) => crate.amount.toBlockchain());
 
     // execute
-    return Convert.sdk.contracts.beanstalk.convert(encoding, crates, amounts);
+    return Convert.sdk.contracts.beanstalk.convert(encoding, crates, amounts, overrides);
   }
 
   async convertEstimate(

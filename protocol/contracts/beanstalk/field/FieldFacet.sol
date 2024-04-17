@@ -8,6 +8,7 @@ pragma experimental ABIEncoderV2;
 import {C} from "contracts/C.sol";
 import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
 import {SafeCast} from "@openzeppelin/contracts/utils/SafeCast.sol";
+import {LibTractor} from "contracts/libraries/LibTractor.sol";
 import {LibTransfer} from "contracts/libraries/Token/LibTransfer.sol";
 import {LibDibbler} from "contracts/libraries/LibDibbler.sol";
 import {LibPRBMath} from "contracts/libraries/LibPRBMath.sol";
@@ -131,8 +132,8 @@ contract FieldFacet is ReentrancyGuard {
         internal
         returns (uint256 pods)
     {
-        beans = LibTransfer.burnToken(C.bean(), beans, msg.sender, mode);
-        pods = LibDibbler.sow(beans, _morningTemperature, msg.sender, peg);
+        beans = LibTransfer.burnToken(C.bean(), beans, LibTractor._getUser(), mode);
+        pods = LibDibbler.sow(beans, _morningTemperature, LibTractor._getUser(), peg);
         s.f.beanSown = s.f.beanSown + SafeCast.toUint128(beans); // SafeMath not needed
     }
 
@@ -156,7 +157,7 @@ contract FieldFacet is ReentrancyGuard {
         payable
     {
         uint256 beansHarvested = _harvest(plots);
-        LibTransfer.sendToken(C.bean(), beansHarvested, msg.sender, mode);
+        LibTransfer.sendToken(C.bean(), beansHarvested, LibTractor._getUser(), mode);
     }
 
     /**
@@ -171,11 +172,11 @@ contract FieldFacet is ReentrancyGuard {
             // The Plot is partially harvestable if its index is less than
             // the current harvestable index.
             require(plots[i] < s.f.harvestable, "Field: Plot not Harvestable");
-            uint256 harvested = _harvestPlot(msg.sender, plots[i]);
+            uint256 harvested = _harvestPlot(LibTractor._getUser(), plots[i]);
             beansHarvested = beansHarvested.add(harvested);
         }
         s.f.harvested = s.f.harvested.add(beansHarvested);
-        emit Harvest(msg.sender, plots, beansHarvested);
+        emit Harvest(LibTractor._getUser(), plots, beansHarvested);
     }
 
     /**
@@ -201,7 +202,7 @@ contract FieldFacet is ReentrancyGuard {
         // ownership check, which is done above.
         if (s.podListings[index] > 0) {
             delete s.podListings[index];
-            emit PodListingCancelled(msg.sender, index);
+            emit PodListingCancelled(LibTractor._getUser(), index);
         }
 
         // If the entire Plot was harvested, exit.

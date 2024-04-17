@@ -18,6 +18,7 @@ import {LibDiamond} from "contracts/libraries/LibDiamond.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
 import {LibWell} from "contracts/libraries/Well/LibWell.sol";
 import {LibUsdOracle} from "contracts/libraries/Oracle/LibUsdOracle.sol";
+import {LibTractor} from "contracts/libraries/LibTractor.sol";
 
 /**
  * @author Publius
@@ -122,7 +123,7 @@ library LibFertilizer {
         );
 
         IERC20(barnRaiseToken).transferFrom(
-            msg.sender,
+            LibTractor._getUser(),
             address(this),
             uint256(tokenAmountIn)
         );
@@ -248,7 +249,5 @@ library LibFertilizer {
         );
         LibUnripe.decrementUnderlying(C.UNRIPE_LP, balanceOfUnderlying);
         LibUnripe.switchUnderlyingToken(C.UNRIPE_LP, well);
-
-        s.barnRaiseWell = well;
     }
 }
