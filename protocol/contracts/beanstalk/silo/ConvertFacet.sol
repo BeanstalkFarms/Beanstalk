@@ -214,6 +214,8 @@ contract ConvertFacet is ReentrancyGuard {
         IERC20(inputToken).transfer(PIPELINE, maxTokens);
         pipeData.amountOut = executeAdvancedFarmCalls(farmCalls);
 
+        require(pipeData.amountOut > 0, "Convert: Final pipe call returned 0");
+
         console.log('amountOut after pipe calls: ', pipeData.amountOut);
         
         // user MUST leave final assets in pipeline, allowing us to verify that the farm has been called successfully.

@@ -692,6 +692,47 @@ contract PipelineConvertTest is TestHelper {
         assertEq(bdvAfter, bdvBefore+bdvBefore.div(2));
     }
 
+    function testBeanToBeanConvertNoneLeftInPipeline(uint256 amount) public {
+        amount = bound(amount, 1000e6, 1000e6);
+
+        int96 stem = beanToLPDepositSetup(amount, users[1]);
+        int96[] memory stems = new int96[](1);
+        stems[0] = stem;
+        uint256[] memory amounts = new uint256[](1);
+        amounts[0] = amount;
+
+
+        // make a pipeline call where the only thing it does is return how many beans are in pipeline
+        AdvancedPipeCall[] memory extraPipeCalls = new AdvancedPipeCall[](2);
+
+        // send all our beans away
+        bytes memory sendBeans = abi.encodeWithSelector(bean.transfer.selector, 0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045, amount);
+        extraPipeCalls[0] = AdvancedPipeCall(
+            C.BEAN, // target
+            sendBeans, // calldata
+            abi.encode(0) // clipboard
+        );
+
+        bytes memory callEncoded = abi.encodeWithSelector(bean.balanceOf.selector, C.PIPELINE);
+        extraPipeCalls[1] = AdvancedPipeCall(
+            C.BEAN, // target
+            callEncoded, // calldata
+            abi.encode(0) // clipboard
+        );
+
+        AdvancedFarmCall[] memory farmCalls = createAdvancedFarmCallsFromAdvancedPipeCalls(extraPipeCalls);
+
+        vm.expectRevert("Convert: Final pipe call returned 0");
+        vm.prank(users[1]);
+        convert.pipelineConvert(
+            C.BEAN, // input token
+            stems, // stem
+            amounts, // amount
+            C.BEAN, // token out
+            farmCalls
+        );
+    }
+
 
     function testCalculateStalkPenaltyUpwardsToZero() public {
         int256 beforeDeltaB = -100;
