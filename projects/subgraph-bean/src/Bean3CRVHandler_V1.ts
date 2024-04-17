@@ -8,7 +8,7 @@ import {
   TokenExchangeUnderlying
 } from "../generated/Bean3CRV/Bean3CRV";
 import { loadBean, updateBeanSupplyPegPercent, updateBeanValues } from "./utils/Bean";
-import { BEAN_3CRV_V1, BEAN_ERC20_V1, CRV3_POOL_V1, LUSD_3POOL } from "../../subgraph-core/utils/Constants";
+import { BEAN_3CRV_V1, BEAN_ERC20_V1, CRV3_POOL, LUSD_3POOL } from "../../subgraph-core/utils/Constants";
 import { toDecimal, ZERO_BD, ZERO_BI } from "../../subgraph-core/utils/Decimals";
 import {
   loadOrCreatePool,
@@ -209,7 +209,7 @@ function handleSwap(
 export function setCurveTwa(poolAddress: string, timestamp: BigInt, blockNumber: BigInt): void {
   const twaBalances = getTWAPrices(poolAddress, TWAType.CURVE, timestamp);
   const beanPool = Address.fromString(poolAddress);
-  const otherPool = beanPool == BEAN_3CRV_V1 ? CRV3_POOL_V1 : LUSD_3POOL;
+  const otherPool = beanPool == BEAN_3CRV_V1 ? CRV3_POOL : LUSD_3POOL;
   const twaResult = curveTwaDeltaBAndPrice(twaBalances, beanPool, otherPool);
 
   let poolHourly = loadOrCreatePoolHourlySnapshot(poolAddress, timestamp, blockNumber);

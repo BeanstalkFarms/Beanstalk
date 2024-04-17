@@ -1,7 +1,7 @@
 import { Address, BigDecimal, BigInt, log } from "@graphprotocol/graph-ts";
 import { Bean3CRV } from "../../../generated/Bean3CRV-V1/Bean3CRV";
 import { BD_10, BI_10, ONE_BI, toDecimal, ZERO_BD, ZERO_BI } from "../../../../subgraph-core/utils/Decimals";
-import { BEAN_3CRV_V1, BEAN_LUSD_V1, CALCULATIONS_CURVE, CRV3_POOL_V1, LUSD, LUSD_3POOL } from "../../../../subgraph-core/utils/Constants";
+import { BEAN_3CRV_V1, BEAN_LUSD_V1, CALCULATIONS_CURVE, CRV3_TOKEN, LUSD, LUSD_3POOL } from "../../../../subgraph-core/utils/Constants";
 import { CalculationsCurve } from "../../../generated/Bean3CRV-V1/CalculationsCurve";
 import { ERC20 } from "../../../generated/Bean3CRV-V1/ERC20";
 import { DeltaBAndPrice, DeltaBPriceLiquidity } from "./Types";
@@ -13,7 +13,7 @@ import { Pool } from "../../../generated/schema";
 export function curvePriceAndLp(pool: Address): BigDecimal[] {
   // Get Curve Price Details
   let curveCalc = CalculationsCurve.bind(CALCULATIONS_CURVE);
-  let metapoolPrice = toDecimal(curveCalc.getCurvePriceUsdc(CRV3_POOL_V1));
+  let metapoolPrice = toDecimal(curveCalc.getCurvePriceUsdc(CRV3_TOKEN));
 
   let lpContract = Bean3CRV.bind(pool);
   let beanCrvPrice = ZERO_BD;
@@ -22,8 +22,8 @@ export function curvePriceAndLp(pool: Address): BigDecimal[] {
   if (pool == BEAN_3CRV_V1) {
     beanCrvPrice = toDecimal(lpContract.get_dy(ZERO_BI, BigInt.fromI32(1), BigInt.fromI32(1000000)), 18);
 
-    let crv3PoolContract = ERC20.bind(CRV3_POOL_V1);
-    let crvHolding = toDecimal(crv3PoolContract.balanceOf(pool), 18);
+    let crv3Contract = ERC20.bind(CRV3_TOKEN);
+    let crvHolding = toDecimal(crv3Contract.balanceOf(pool), 18);
     lpValue = crvHolding.times(metapoolPrice);
   } else if (pool == BEAN_LUSD_V1) {
     // price in LUSD
@@ -81,16 +81,20 @@ export function curveCumulativePrices(pool: Address, timestamp: BigInt): BigInt[
 // beanPool is the pool with beans trading against otherPool's tokens.
 // otherPool is needed to get the virtual price of that token beans are trading against.
 export function curveTwaDeltaBAndPrice(twaBalances: BigInt[], beanPool: Address, otherPool: Address): DeltaBAndPrice {
-  let beanCurve = Bean3CRV.bind(beanPool);
-  const bean_A = beanCurve.A_precise();
+  // In practice we can hardcode bean_A and avoid an unnecessary call since there was no ramping in our pools
+  // let beanCurve = Bean3CRV.bind(beanPool);
+  // const bean_A = beanCurve.A_precise();
+  const bean_A = beanPool == BEAN_3CRV_V1 ? BigInt.fromU32(1000) : BigInt.fromU32(10000);
   let otherCurve = Bean3CRV.bind(otherPool);
-  const other_A = otherCurve.A_precise();
+  const other_virtual_price = otherCurve.get_virtual_price();
 
-  const xp = [twaBalances[0].times(BI_10.pow(12)), twaBalances[1].times(other_A).div(BI_10.pow(18))];
+  const xp = [twaBalances[0].times(BI_10.pow(12)), twaBalances[1].times(other_virtual_price).div(BI_10.pow(18))];
 
   const D = getD(xp, bean_A);
   const y = getY(xp[0].plus(BI_10.pow(12)), xp, bean_A, D);
 
+  log.debug("curve bean_A {}", [bean_A.toString()]);
+  log.debug("curve other_virtual_price {}", [other_virtual_price.toString()]);
   log.debug("curve D {}", [D.toString()]);
   log.debug("curve y {}", [y.toString()]);
   log.debug("curve deltaB calculated {}", [D.div(BigInt.fromU32(2)).div(BI_10.pow(12)).minus(twaBalances[0]).toString()]);

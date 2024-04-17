@@ -23,7 +23,7 @@ export const BEANSTALK_PRICE = Address.fromString("0xb01CE0008CaD90104651d6A84b6
 
 // LP Addresses
 export const BEAN_3CRV_V1 = Address.fromString("0x3a70DfA7d2262988064A2D051dd47521E43c9BdD");
-export const CRV3_POOL_V1 = Address.fromString("0x6c3F90f043a72FA612cbac8115EE7e52BDe6E490");
+export const CRV3_TOKEN = Address.fromString("0x6c3F90f043a72FA612cbac8115EE7e52BDe6E490");
 export const CRV3_POOL = Address.fromString("0xbEbc44782C7dB0a1A60Cb6fe97d0b483032FF1C7");
 export const BEAN_WETH_V1 = Address.fromString("0x87898263B6C5BABe34b4ec53F22d98430b91e371");
 export const WETH_USDC_PAIR = Address.fromString("0xB4e16d0168e52d35CaCD2c6185b44281Ec28C9Dc");
