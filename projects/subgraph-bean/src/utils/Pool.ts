@@ -43,6 +43,7 @@ export function loadOrCreatePoolHourlySnapshot(pool: string, timestamp: BigInt, 
     snapshot.pool = pool;
     snapshot.reserves = currentPool.reserves;
     snapshot.lastPrice = currentPool.lastPrice;
+    snapshot.twaPrice = ZERO_BD;
     snapshot.volume = currentPool.volume;
     snapshot.volumeUSD = currentPool.volumeUSD;
     snapshot.liquidityUSD = currentPool.liquidityUSD;
@@ -74,6 +75,7 @@ export function loadOrCreatePoolDailySnapshot(pool: string, timestamp: BigInt, b
     snapshot.pool = pool;
     snapshot.reserves = currentPool.reserves;
     snapshot.lastPrice = currentPool.lastPrice;
+    snapshot.twaPrice = ZERO_BD;
     snapshot.volume = currentPool.volume;
     snapshot.volumeUSD = currentPool.volumeUSD;
     snapshot.liquidityUSD = currentPool.liquidityUSD;

@@ -1,9 +1,11 @@
 import { Address, BigDecimal, BigInt, log } from "@graphprotocol/graph-ts";
-import { BD_10, ONE_BI, pow, sqrt, toDecimal, ZERO_BD, ZERO_BI } from "../../../../subgraph-core/utils/Decimals";
+import { BD_10, BI_10, ONE_BI, pow, sqrt, toDecimal, ZERO_BD, ZERO_BI } from "../../../../subgraph-core/utils/Decimals";
 import { Token } from "../../../generated/schema";
 import { loadOrCreateToken } from "../Token";
 import { UniswapV2Pair } from "../../../generated/BeanUniswapV2Pair/UniswapV2Pair";
-import { WETH, WETH_USDC_PAIR } from "../../../../subgraph-core/utils/Constants";
+import { BEANSTALK, WETH, WETH_USDC_PAIR } from "../../../../subgraph-core/utils/Constants";
+import { PreReplant } from "../../../generated/Beanstalk/PreReplant";
+import { DeltaBAndPrice } from "./Types";
 
 export function updatePreReplantPriceETH(): Token {
   let token = loadOrCreateToken(WETH.toHexString());
@@ -63,8 +65,41 @@ export function uniswapCumulativePrice(pool: Address, tokenIndex: u32, timestamp
   return cumulativeNow;
 }
 
+export function uniswapTwaDeltaBAndPrice(prices: BigInt[], blockNumber: BigInt): DeltaBAndPrice {
+  let beanstalk = PreReplant.bind(BEANSTALK);
+  let reserves: BigInt[];
+  // After BIP-9, reserves calculation changes
+  if (blockNumber.lt(BigInt.fromU64(13953949))) {
+    const result = beanstalk.reserves();
+    reserves = [result.value0, result.value1];
+  } else {
+    const result = beanstalk.lockedReserves();
+    reserves = [result.value0, result.value1];
+  }
+
+  const mulReserves = reserves[0].times(reserves[1]).times(BI_10.pow(6));
+  const currentBeans = mulReserves.div(prices[0]).sqrt();
+  const targetBeans = mulReserves.div(prices[1]).sqrt();
+  const deltaB = targetBeans.minus(currentBeans);
+  const twaPrice = BigDecimal.fromString(prices[0].toString()).div(BigDecimal.fromString(prices[1].toString()));
+
+  // log.debug("deltab reserves[0] {}", [reserves[0].toString()]);
+  // log.debug("deltab reserves[1] {}", [reserves[1].toString()]);
+  // log.debug("deltab mulReserves {}", [mulReserves.toString()]);
+  // log.debug("deltab prices[0] {}", [prices[0].toString()]);
+  // log.debug("deltab prices[1] {}", [prices[1].toString()]);
+  // log.debug("deltab currentBeans {}", [currentBeans.toString()]);
+  // log.debug("deltab targetBeans {}", [targetBeans.toString()]);
+  // log.debug("deltab deltaB {}", [deltaB.toString()]);
+
+  return {
+    deltaB: deltaB,
+    price: twaPrice
+  };
+}
+
 function u32Timestamp(timestamp: BigInt): BigInt {
-  return timestamp.mod(BigInt.fromU32(2).leftShift(32));
+  return timestamp.mod(ONE_BI.leftShift(32));
 }
 
 // Generated functions from here. Needed in calculating cumulative price

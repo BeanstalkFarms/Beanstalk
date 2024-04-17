@@ -8,13 +8,22 @@ import {
   TokenExchangeUnderlying
 } from "../generated/Bean3CRV/Bean3CRV";
 import { loadBean, updateBeanSupplyPegPercent, updateBeanValues } from "./utils/Bean";
-import { BEAN_ERC20_V1 } from "../../subgraph-core/utils/Constants";
+import { BEAN_3CRV_V1, BEAN_ERC20_V1, CRV3_POOL_V1, LUSD_3POOL } from "../../subgraph-core/utils/Constants";
 import { toDecimal, ZERO_BD, ZERO_BI } from "../../subgraph-core/utils/Decimals";
-import { loadOrCreatePool, setPoolReserves, updatePoolPrice, updatePoolValues } from "./utils/Pool";
+import {
+  loadOrCreatePool,
+  loadOrCreatePoolDailySnapshot,
+  loadOrCreatePoolHourlySnapshot,
+  setPoolReserves,
+  updatePoolPrice,
+  updatePoolValues
+} from "./utils/Pool";
 import { Bean3CRV } from "../generated/Bean3CRV-V1/Bean3CRV";
 import { ERC20 } from "../generated/Bean3CRV-V1/ERC20";
 import { checkBeanCross } from "./utils/Cross";
-import { curveDeltaB, curvePriceAndLp } from "./utils/price/CurvePrice";
+import { curveDeltaB, curvePriceAndLp, curveTwaDeltaBAndPrice } from "./utils/price/CurvePrice";
+import { getTWAPrices } from "./utils/price/TwaOracle";
+import { TWAType } from "./utils/price/Types";
 
 export function handleTokenExchange(event: TokenExchange): void {
   // Do not index post-exploit data
@@ -195,4 +204,20 @@ function handleSwap(
   updatePoolValues(poolAddress, timestamp, blockNumber, volumeBean, volumeUSD, deltaLiquidityUSD, deltaB);
   updatePoolPrice(poolAddress, timestamp, blockNumber, newPrice);
   checkBeanCross(BEAN_ERC20_V1.toHexString(), timestamp, blockNumber, oldBeanPrice, newPrice);
+}
+
+export function onSunriseSetCurveTwa(poolAddress: string, timestamp: BigInt, blockNumber: BigInt): void {
+  const twaBalances = getTWAPrices(poolAddress, TWAType.CURVE, timestamp);
+  const beanPool = Address.fromString(poolAddress);
+  const otherPool = beanPool == BEAN_3CRV_V1 ? CRV3_POOL_V1 : LUSD_3POOL;
+  const twaResult = curveTwaDeltaBAndPrice(twaBalances, beanPool, otherPool);
+
+  let poolHourly = loadOrCreatePoolHourlySnapshot(poolAddress, timestamp, blockNumber);
+  let poolDaily = loadOrCreatePoolDailySnapshot(poolAddress, timestamp, blockNumber);
+  poolHourly.twaDeltaBeans = twaResult.deltaB;
+  poolHourly.twaPrice = twaResult.price;
+  poolDaily.twaDeltaBeans = twaResult.deltaB;
+  poolDaily.twaPrice = twaResult.price;
+  poolHourly.save();
+  poolDaily.save();
 }

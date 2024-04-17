@@ -1,9 +1,10 @@
 import { Address, BigDecimal, BigInt } from "@graphprotocol/graph-ts";
 import { Bean3CRV } from "../../../generated/Bean3CRV-V1/Bean3CRV";
-import { BI_10, toDecimal, ZERO_BD, ZERO_BI } from "../../../../subgraph-core/utils/Decimals";
+import { BI_10, ONE_BI, toDecimal, ZERO_BD, ZERO_BI } from "../../../../subgraph-core/utils/Decimals";
 import { BEAN_3CRV_V1, BEAN_LUSD_V1, CALCULATIONS_CURVE, CRV3_POOL_V1, LUSD, LUSD_3POOL } from "../../../../subgraph-core/utils/Constants";
 import { CalculationsCurve } from "../../../generated/Bean3CRV-V1/CalculationsCurve";
 import { ERC20 } from "../../../generated/Bean3CRV-V1/ERC20";
+import { DeltaBAndPrice } from "./Types";
 
 // Note that the Bean3CRV type applies to any curve pool (including lusd)
 
@@ -41,6 +42,7 @@ export function curvePriceAndLp(pool: Address): BigDecimal[] {
   return [beanPrice, lpValue];
 }
 
+// TODO: this logic can be refactored to remove the contract calls and instead use getD method.
 // Returns the deltaB in the given curve pool
 export function curveDeltaB(pool: Address, beanReserves: BigInt): BigInt {
   let lpContract = Bean3CRV.bind(pool);
@@ -52,40 +54,73 @@ export function curveDeltaB(pool: Address, beanReserves: BigInt): BigInt {
   return deltaB;
 }
 
-// // Based on get_D from dune query here https://dune.com/queries/3561823/5993924
-// export function get_D(xp: Array<f64>, amp: f64, n_coins: i32, a_precision: i32): f64 {
-//     let s: f64 = 0;
-//     let d_prev: f64 = 0;
-//     let d: f64;
-//     let ann: f64;
-//     let d_p: f64;
+export function curveCumulativePrices(pool: Address, timestamp: BigInt): BigInt[] {
+  let curve = Bean3CRV.bind(pool);
+  const cumulativeLast = curve.get_price_cumulative_last();
+  const currentBalances = curve.get_balances();
+  const lastTimestamp = curve.block_timestamp_last();
 
-//     for (let i = 0; i < xp.length; i++) {
-//         s += xp[i];
-//     }
+  const deltaLastTimestamp = timestamp.minus(lastTimestamp);
+  const cumulativeBalances = [
+    cumulativeLast[0].plus(currentBalances[0].times(deltaLastTimestamp)),
+    cumulativeLast[1].plus(currentBalances[1].times(deltaLastTimestamp))
+  ];
+  return cumulativeBalances;
+}
 
-//     if (s == 0) {
-//         return 0;
-//     }
-//     d = s;
-//     ann = amp * n_coins;
+// beanPool is the pool with beans trading against otherPool's tokens.
+// otherPool is needed to get the virtual price of that token beans are trading against.
+export function curveTwaDeltaBAndPrice(twaBalances: BigInt[], beanPool: Address, otherPool: Address): DeltaBAndPrice {
+  let beanCurve = Bean3CRV.bind(beanPool);
+  const bean_A = beanCurve.A_precise();
+  let otherCurve = Bean3CRV.bind(otherPool);
+  const other_A = otherCurve.A_precise();
 
-//     let _i: i32 = 0;
-//     while (_i < 255) {
-//         d_p = d;
-//         for (let j = 0; j < xp.length; j++) {
-//             d_p = d_p * d / (xp[j] * n_coins);
-//         }
-//         d_prev = d;
-//         d = (ann * s / a_precision + d_p * n_coins) * d / ((ann - a_precision) * d / a_precision + (n_coins + 1) * d_p);
+  const xp = [twaBalances[0].times(BI_10.pow(12)), twaBalances[1].times(other_A).div(BI_10.pow(18))];
 
-//         if ((d > d_prev && d - d_prev <= 1) || (d_prev > d && d_prev - d <= 1)) {
-//             break;
-//         }
-//         _i++;
-//     }
-//     return d;
-// }
+  const D = getD(xp, bean_A);
+
+  return {
+    deltaB: D.div(BigInt.fromU32(2)).div(BI_10.pow(12)).minus(twaBalances[0]),
+    price: ZERO_BD // TODO
+  };
+}
+
+// Generated from functions in LibCurve.sol
+function getD(xp: BigInt[], a: BigInt): BigInt {
+  const A_PRECISION = BigInt.fromU32(100);
+  const N_COINS = BigInt.fromU32(2);
+
+  let S: BigInt = BigInt.fromString("0");
+  let Dprev: BigInt;
+  let D: BigInt = BigInt.fromString("0");
+
+  // Summing elements in the array
+  for (let i = 0; i < xp.length; ++i) {
+    S = S.plus(xp[i]);
+  }
+  if (S.toString() == "0") return BigInt.fromString("0");
+
+  D = S;
+  let Ann: BigInt = a.times(N_COINS);
+
+  for (let i = 0; i < 256; ++i) {
+    let D_P: BigInt = D;
+    for (let j = 0; j < xp.length; ++j) {
+      D_P = D_P.times(D).div(xp[j].times(N_COINS));
+    }
+    Dprev = D;
+    let num: BigInt = Ann.times(S).div(A_PRECISION).plus(D_P.times(N_COINS)).times(D);
+    let denom: BigInt = Ann.minus(A_PRECISION).times(D).div(A_PRECISION).plus(N_COINS.plus(ONE_BI).times(D_P));
+    D = num.div(denom);
+
+    // Check convergence
+    if (D == Dprev || D.minus(Dprev) == ONE_BI || Dprev.minus(D) == ONE_BI) {
+      return D;
+    }
+  }
+  throw new Error("Price: Convergence false");
+}
 
 // // Based on get_y from dune query here https://dune.com/queries/3561823/5993924
 // export function get_y(i: i32, j: i32, x: f64, xp: Array<f64>, amp: f64, n_coins: i32, a_precision: i32): f64 {

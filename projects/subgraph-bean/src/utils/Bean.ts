@@ -1,4 +1,4 @@
-import { BigDecimal, BigInt } from "@graphprotocol/graph-ts";
+import { BigDecimal, BigInt, log } from "@graphprotocol/graph-ts";
 import { Bean, BeanDailySnapshot, BeanHourlySnapshot, Pool } from "../../generated/schema";
 import {
   BEAN_3CRV,
@@ -10,7 +10,7 @@ import {
   BEAN_LUSD_V1
 } from "../../../subgraph-core/utils/Constants";
 import { dayFromTimestamp, hourFromTimestamp } from "../../../subgraph-core/utils/Dates";
-import { toDecimal, ZERO_BD, ZERO_BI } from "../../../subgraph-core/utils/Decimals";
+import { ONE_BD, toDecimal, ZERO_BD, ZERO_BI } from "../../../subgraph-core/utils/Decimals";
 import { getV1Crosses } from "./Cross";
 import { loadOrCreatePool, loadOrCreatePoolHourlySnapshot } from "./Pool";
 
@@ -51,6 +51,7 @@ export function loadOrCreateBeanHourlySnapshot(token: string, timestamp: BigInt,
     snapshot.volumeUSD = bean.volumeUSD;
     snapshot.liquidityUSD = bean.liquidityUSD;
     snapshot.price = bean.price;
+    snapshot.twaPrice = ZERO_BD;
     snapshot.crosses = bean.crosses;
     snapshot.deltaVolume = ZERO_BI;
     snapshot.deltaVolumeUSD = ZERO_BD;
@@ -80,6 +81,7 @@ export function loadOrCreateBeanDailySnapshot(token: string, timestamp: BigInt):
     snapshot.volumeUSD = bean.volumeUSD;
     snapshot.liquidityUSD = bean.liquidityUSD;
     snapshot.price = bean.price;
+    snapshot.twaPrice = ZERO_BD;
     snapshot.crosses = bean.crosses;
     snapshot.deltaVolume = ZERO_BI;
     snapshot.deltaVolumeUSD = ZERO_BD;
@@ -216,20 +218,28 @@ export function updateInstDeltaB(token: string, blockNumber: BigInt, timestamp: 
   beanDaily.save();
 }
 
-export function updateBeanTwaDeltaB(timestamp: BigInt, blockNumber: BigInt): void {
+// Update Bean's TWA deltaB and price. Individual pools' values must be computed prior to calling this method.
+export function updateBeanTwa(timestamp: BigInt, blockNumber: BigInt): void {
   let beanAddress = getBeanTokenAddress(blockNumber);
   let bean = loadBean(beanAddress);
   let beanHourly = loadOrCreateBeanHourlySnapshot(beanAddress, timestamp, bean.lastSeason);
   let beanDaily = loadOrCreateBeanDailySnapshot(beanAddress, timestamp);
 
-  let cumulativeDeltaB = ZERO_BI;
+  let twaDeltaB = ZERO_BI;
+  let weightedTwaPrice = ZERO_BD;
   for (let i = 0; i < bean.pools.length; i++) {
     let poolHourly = loadOrCreatePoolHourlySnapshot(bean.pools[i], timestamp, blockNumber);
-    cumulativeDeltaB = cumulativeDeltaB.plus(poolHourly.twaDeltaBeans);
+    twaDeltaB = twaDeltaB.plus(poolHourly.twaDeltaBeans);
+    weightedTwaPrice = weightedTwaPrice.plus(poolHourly.twaPrice.times(poolHourly.liquidityUSD));
   }
 
-  beanHourly.twaDeltaB = cumulativeDeltaB;
-  beanDaily.twaDeltaB = cumulativeDeltaB;
+  // Assumption is that total bean liquidity was already summed earlier in the same event's processing
+  const twaPrice = weightedTwaPrice.div(bean.liquidityUSD != ZERO_BD ? bean.liquidityUSD : ONE_BD);
+
+  beanHourly.twaDeltaB = twaDeltaB;
+  beanHourly.twaPrice = twaPrice;
+  beanDaily.twaDeltaB = twaDeltaB;
+  beanDaily.twaPrice = twaPrice;
   beanHourly.save();
   beanDaily.save();
 }

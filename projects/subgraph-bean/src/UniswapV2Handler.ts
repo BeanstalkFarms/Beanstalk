@@ -1,8 +1,8 @@
-import { BigDecimal, BigInt } from "@graphprotocol/graph-ts";
+import { BigDecimal, BigInt, log } from "@graphprotocol/graph-ts";
 import { Swap, Sync } from "../generated/BeanUniswapV2Pair/UniswapV2Pair";
 import { loadBean, updateBeanSupplyPegPercent, updateBeanValues } from "./utils/Bean";
-import { BEAN_ERC20_V1, BEANSTALK, WETH, WETH_USDC_PAIR } from "../../subgraph-core/utils/Constants";
-import { BI_10, toDecimal, ZERO_BD, ZERO_BI } from "../../subgraph-core/utils/Decimals";
+import { BEAN_ERC20_V1, WETH } from "../../subgraph-core/utils/Constants";
+import { toDecimal, ZERO_BD, ZERO_BI } from "../../subgraph-core/utils/Decimals";
 import {
   loadOrCreatePool,
   loadOrCreatePoolDailySnapshot,
@@ -13,9 +13,15 @@ import {
 } from "./utils/Pool";
 import { loadOrCreateToken } from "./utils/Token";
 import { checkBeanCross } from "./utils/Cross";
-import { uniswapV2DeltaB, uniswapV2Price, uniswapV2Reserves, updatePreReplantPriceETH } from "./utils/price/UniswapPrice";
-import { PreReplant } from "../generated/Beanstalk/PreReplant";
-import { getTWAPrices, TWAType } from "./utils/price/TwaOracle";
+import {
+  uniswapTwaDeltaBAndPrice,
+  uniswapV2DeltaB,
+  uniswapV2Price,
+  uniswapV2Reserves,
+  updatePreReplantPriceETH
+} from "./utils/price/UniswapPrice";
+import { getTWAPrices } from "./utils/price/TwaOracle";
+import { TWAType } from "./utils/price/Types";
 
 // export function handleMint(event: Mint): void {
 //   updatePoolReserves(event.address.toHexString(), event.params.amount0, event.params.amount1, event.block.number);
@@ -110,31 +116,15 @@ export function handleSync(event: Sync): void {
 }
 
 export function onSunriseSetUniswapV2Twa(poolAddress: string, timestamp: BigInt, blockNumber: BigInt): void {
-  const prices = getTWAPrices(poolAddress, TWAType.UNISWAP, timestamp);
-
-  let beanstalk = PreReplant.bind(BEANSTALK);
-  let reserves: BigInt[];
-  // After BIP-9, reserves calculation changes
-  if (blockNumber.lt(BigInt.fromU64(13953949))) {
-    const result = beanstalk.reserves();
-    reserves = [result.value0, result.value1];
-  } else {
-    const result = beanstalk.lockedReserves();
-    reserves = [result.value0, result.value1];
-  }
-
-  const mulReserves = reserves[0].times(reserves[1]).times(BI_10.pow(6));
-  const currentBeans = mulReserves.div(prices[0]).sqrt();
-  const targetBeans = mulReserves.div(prices[1]).sqrt();
-  const deltaB = targetBeans.minus(currentBeans);
-  const twaPrice = BigDecimal.fromString(prices[0].toString()).div(BigDecimal.fromString(prices[1].toString()));
+  const twaPrices = getTWAPrices(poolAddress, TWAType.UNISWAP, timestamp);
+  const twaResult = uniswapTwaDeltaBAndPrice(twaPrices, blockNumber);
 
   let poolHourly = loadOrCreatePoolHourlySnapshot(poolAddress, timestamp, blockNumber);
   let poolDaily = loadOrCreatePoolDailySnapshot(poolAddress, timestamp, blockNumber);
-  poolHourly.twaDeltaBeans = deltaB;
-  poolHourly.twaPrice = twaPrice;
-  poolDaily.twaDeltaBeans = deltaB;
-  poolDaily.twaPrice = twaPrice;
+  poolHourly.twaDeltaBeans = twaResult.deltaB;
+  poolHourly.twaPrice = twaResult.price;
+  poolDaily.twaDeltaBeans = twaResult.deltaB;
+  poolDaily.twaPrice = twaResult.price;
   poolHourly.save();
   poolDaily.save();
 }

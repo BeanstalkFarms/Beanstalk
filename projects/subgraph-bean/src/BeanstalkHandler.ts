@@ -1,6 +1,6 @@
 import { Address, BigInt } from "@graphprotocol/graph-ts";
 import { Sunrise } from "../generated/Beanstalk/Beanstalk";
-import { getBeanTokenAddress, loadBean, updateBeanSeason, updateBeanTwaDeltaB, updateBeanValues } from "./utils/Bean";
+import { getBeanTokenAddress, loadBean, updateBeanSeason, updateBeanTwa, updateBeanValues } from "./utils/Bean";
 import { loadOrCreatePool, setPoolTwaDeltaB, updatePoolPrice, updatePoolSeason, updatePoolValues } from "./utils/Pool";
 import { BeanstalkPrice } from "../generated/Beanstalk/BeanstalkPrice";
 import {
@@ -153,7 +153,7 @@ export function handleSunrise(event: Sunrise): void {
       totalLiquidity.minus(bean.liquidityUSD)
     );
     checkBeanCross(BEAN_ERC20_V1.toHexString(), event.block.timestamp, event.block.number, bean.price, totalPrice);
-    updateBeanTwaDeltaB(event.block.timestamp, event.block.number);
+    updateBeanTwa(event.block.timestamp, event.block.number);
   }
 }
 
@@ -161,10 +161,10 @@ export function handleSunrise(event: Sunrise): void {
 
 export function handleMetapoolOracle(event: MetapoolOracle): void {
   setPoolTwaDeltaB(BEAN_3CRV.toHexString(), event.params.deltaB, event.block.timestamp, event.block.number);
-  updateBeanTwaDeltaB(event.block.timestamp, event.block.number);
+  updateBeanTwa(event.block.timestamp, event.block.number);
 }
 
 export function handleWellOracle(event: WellOracle): void {
   setPoolTwaDeltaB(event.params.well.toHexString(), event.params.deltaB, event.block.timestamp, event.block.number);
-  updateBeanTwaDeltaB(event.block.timestamp, event.block.number);
+  updateBeanTwa(event.block.timestamp, event.block.number);
 }
