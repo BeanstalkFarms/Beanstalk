@@ -8,7 +8,7 @@ async function getBeanstalk(contract = BEANSTALK) {
 }
 
 async function getMockBeanstalk(contract = BEANSTALK) {
-  return await ethers.getContractAt("MockBeanstalk", contract);
+  return await ethers.getContractAt(mockBeanstalkABI, contract);
 }
 
 async function getAllBeanstalkContracts(contract = BEANSTALK) {

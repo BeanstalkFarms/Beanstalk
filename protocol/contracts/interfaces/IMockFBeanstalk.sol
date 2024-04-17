@@ -472,9 +472,6 @@ interface IMockFBeanstalk {
         pure
         returns (uint256);
     function forceSunrise() external;
-    function fund(uint32 id, uint256 amount, uint8 mode) external payable returns (uint256);
-    function fundingToken(uint32 id) external view returns (address);
-    function fundraiser(uint32 id) external view returns (Fundraiser memory);
     function getAbsBeanToMaxLpRatioChangeFromCaseId(uint256 caseId) external view returns (uint80 ml);
     function getAbsTemperatureChangeFromCaseId(uint256 caseId) external view returns (int8 t);
     function getActiveFertilizer() external view returns (uint256);

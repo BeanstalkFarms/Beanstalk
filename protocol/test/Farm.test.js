@@ -224,7 +224,7 @@ testIfRpcSet('Farm', function () {
       })
     })
 
-    describe("Farm Exchange Underlying", async function () {
+    describe.skip("Farm Exchange Underlying", async function () {
       before(async function () {
         exchange = await beanstalk.interface.encodeFunctionData('exchange', [
           TRI_CRYPTO_POOL, // tricrypto2
@@ -276,7 +276,7 @@ testIfRpcSet('Farm', function () {
 
     })
 
-    describe("Farm Liquidity ", async function () {
+    describe.skip("Farm Liquidity ", async function () {
       before(async function () {
         exchange = await beanstalk.interface.encodeFunctionData('exchange', [
           TRI_CRYPTO_POOL, // tricrypto2

@@ -1,7 +1,7 @@
 const { expect } = require("chai");
 const { deploy } = require("../scripts/deploy.js");
 const { deployBasin } = require("../scripts/basin.js");
-const { getAltBeanstalk } = require("../utils/contracts.js");
+const { getMockBeanstalk } = require("../utils/contracts.js");
 const { deployPipeline, impersonatePipeline } = require("../scripts/pipeline.js");
 const { impersonateSigner } = require("../utils/signer.js");
 const { setEthUsdcPrice, setEthUsdChainlinkPrice, printPrices } = require("../utils/oracle.js");
@@ -49,9 +49,9 @@ describe("Tractor", function () {
       console.log("operator", operator.address);
     }
     
-    const contracts = await deploy("Test", false, true);
+    const contracts = await deploy(false, true);
     this.diamond = contracts.beanstalkDiamond;
-    this.beanstalk = await getAltBeanstalk(this.diamond.address);
+    this.beanstalk = await getMockBeanstalk(this.diamond.address);
     this.tractorFacet = await ethers.getContractAt("TractorFacet", this.diamond.address);
     this.farmFacet = await ethers.getContractAt("FarmFacet", this.diamond.address);
     this.seasonFacet = await ethers.getContractAt("MockSeasonFacet", this.diamond.address);

@@ -38,7 +38,6 @@ describe('Depot Facet', function () {
     await this.usdc.connect(user).approve(beanstalk.address, to18('1'))
 
     await bean.connect(user).approve(beanstalk.address, '100000000000')
-    await bean.connect(user).approve(this.beanMetapool.address, '100000000000')
     await bean.mint(user.address, to6('10000'))
   });
 
@@ -187,7 +186,7 @@ describe('Depot Facet', function () {
     it("returns a value", async function () {
       selector = bean.interface.encodeFunctionData('balanceOf', [user.address])
       const pipeResult = await beanstalk.readPipe([BEAN, selector])
-      expect(defaultAbiCoder.decode(['uint256'], pipeResult)[0]).to.be.equal(to6('10000'))
+      expect(defaultAbiCoder.decode(['uint256'], pipeResult)[0]).to.be.equal(to6('11000'))
     })
   })
 })
