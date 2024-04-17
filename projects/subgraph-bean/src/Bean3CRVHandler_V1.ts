@@ -8,7 +8,7 @@ import {
   TokenExchangeUnderlying
 } from "../generated/Bean3CRV/Bean3CRV";
 import { loadBean, updateBeanSupplyPegPercent, updateBeanValues } from "./utils/Bean";
-import { BEAN_3CRV_V1, BEAN_ERC20_V1, CRV3_POOL, LUSD_3POOL } from "../../subgraph-core/utils/Constants";
+import { BEAN_3CRV_V1, BEAN_ERC20_V1, BEAN_LUSD_V1, CRV3_POOL, LUSD_3POOL } from "../../subgraph-core/utils/Constants";
 import { toDecimal, ZERO_BD, ZERO_BI } from "../../subgraph-core/utils/Decimals";
 import {
   loadOrCreatePool,
@@ -22,7 +22,7 @@ import { Bean3CRV } from "../generated/Bean3CRV-V1/Bean3CRV";
 import { ERC20 } from "../generated/Bean3CRV-V1/ERC20";
 import { checkBeanCross } from "./utils/Cross";
 import { curveDeltaB, curvePriceAndLp, curveTwaDeltaBAndPrice } from "./utils/price/CurvePrice";
-import { getTWAPrices } from "./utils/price/TwaOracle";
+import { getTWAPrices, manualTwa } from "./utils/price/TwaOracle";
 import { TWAType } from "./utils/price/Types";
 
 export function handleTokenExchange(event: TokenExchange): void {
@@ -144,6 +144,9 @@ function handleLiquidityChange(
   let reserveBalances = lpContract.try_get_balances();
   if (!reserveBalances.reverted) {
     setPoolReserves(poolAddress, reserveBalances.value, timestamp, blockNumber);
+    if (poolAddress == BEAN_LUSD_V1.toHexString()) {
+      manualTwa(poolAddress, reserveBalances.value, timestamp);
+    }
   }
 
   let deltaB = curveDeltaB(Address.fromString(poolAddress), reserveBalances.value[0]);
@@ -193,6 +196,9 @@ function handleSwap(
   let reserveBalances = lpContract.try_get_balances();
   if (!reserveBalances.reverted) {
     setPoolReserves(poolAddress, reserveBalances.value, timestamp, blockNumber);
+    if (poolAddress == BEAN_LUSD_V1.toHexString()) {
+      manualTwa(poolAddress, reserveBalances.value, timestamp);
+    }
   }
 
   let deltaB = curveDeltaB(Address.fromString(poolAddress), reserveBalances.value[0]);

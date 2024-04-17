@@ -250,6 +250,13 @@ type PoolDailySnapshot @entity {
 type TwaOracle @entity {
   id: ID!
   pool: Pool!
+  # These two fields are used to determine twa over the previous season.
+  # priceCumulativeSun is the value of priceCumulativeLast at the time of the previous sunrise (lastSun)
+  priceCumulativeSun: [BigInt!]!
+  lastSun: BigInt!
+  # These three fields are for when manual calculation of price cumulative last is required (beanlusd)
+  # Otherwise the equivalent values are derived from the corresponding contract functions.
   priceCumulativeLast: [BigInt!]!
+  lastBalances: [BigInt!]!
   lastUpdated: BigInt!
 }

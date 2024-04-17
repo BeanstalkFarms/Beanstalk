@@ -6,6 +6,7 @@ import { CalculationsCurve } from "../../../generated/Bean3CRV-V1/CalculationsCu
 import { ERC20 } from "../../../generated/Bean3CRV-V1/ERC20";
 import { DeltaBAndPrice, DeltaBPriceLiquidity } from "./Types";
 import { Pool } from "../../../generated/schema";
+import { loadOrCreateTwaOracle } from "./TwaOracle";
 
 // Note that the Bean3CRV type applies to any curve pool (including lusd)
 
@@ -52,7 +53,6 @@ export function calcCurveInst(pool: Pool): DeltaBPriceLiquidity {
   };
 }
 
-// TODO: this logic can be refactored to remove the contract calls and instead use getD method.
 // Returns the deltaB in the given curve pool
 export function curveDeltaB(pool: Address, beanReserves: BigInt): BigInt {
   let lpContract = Bean3CRV.bind(pool);
@@ -65,10 +65,21 @@ export function curveDeltaB(pool: Address, beanReserves: BigInt): BigInt {
 }
 
 export function curveCumulativePrices(pool: Address, timestamp: BigInt): BigInt[] {
-  let curve = Bean3CRV.bind(pool);
-  const cumulativeLast = curve.get_price_cumulative_last();
-  const currentBalances = curve.get_balances();
-  const lastTimestamp = curve.block_timestamp_last();
+  let cumulativeLast: BigInt[];
+  let currentBalances: BigInt[];
+  let lastTimestamp: BigInt;
+  if (pool == BEAN_3CRV_V1) {
+    let curve = Bean3CRV.bind(pool);
+    cumulativeLast = curve.get_price_cumulative_last();
+    currentBalances = curve.get_balances();
+    lastTimestamp = curve.block_timestamp_last();
+  } else {
+    // BEANLUSD does not have the above functions, uses manual calculation
+    let twaOracle = loadOrCreateTwaOracle(pool.toHexString());
+    cumulativeLast = twaOracle.priceCumulativeLast;
+    currentBalances = twaOracle.lastBalances;
+    lastTimestamp = twaOracle.lastUpdated;
+  }
 
   const deltaLastTimestamp = timestamp.minus(lastTimestamp);
   const cumulativeBalances = [
@@ -81,10 +92,7 @@ export function curveCumulativePrices(pool: Address, timestamp: BigInt): BigInt[
 // beanPool is the pool with beans trading against otherPool's tokens.
 // otherPool is needed to get the virtual price of that token beans are trading against.
 export function curveTwaDeltaBAndPrice(twaBalances: BigInt[], beanPool: Address, otherPool: Address): DeltaBAndPrice {
-  // In practice we can hardcode bean_A and avoid an unnecessary call since there was no ramping in our pools
-  // let beanCurve = Bean3CRV.bind(beanPool);
-  // const bean_A = beanCurve.A_precise();
-  const bean_A = beanPool == BEAN_3CRV_V1 ? BigInt.fromU32(1000) : BigInt.fromU32(10000);
+  const bean_A = getBean_A(beanPool);
   let otherCurve = Bean3CRV.bind(otherPool);
   const other_virtual_price = otherCurve.get_virtual_price();
 
@@ -104,8 +112,15 @@ export function curveTwaDeltaBAndPrice(twaBalances: BigInt[], beanPool: Address,
 
   return {
     deltaB: D.div(BigInt.fromU32(2)).div(BI_10.pow(12)).minus(twaBalances[0]),
-    price: BigDecimal.fromString(xp[1].minus(y).minus(ONE_BI).toString()).div(BigDecimal.fromString("1000000000000000000"))
+    price: BigDecimal.fromString(xp[1].minus(y).minus(ONE_BI).toString()).div(BigDecimal.fromString("1000000000000"))
   };
+}
+
+// In practice we can hardcode and avoid an unnecessary call since there was no ramping in our pools
+function getBean_A(beanPool: Address): BigInt {
+  // let beanCurve = Bean3CRV.bind(beanPool);
+  // const bean_A = beanCurve.A_precise();
+  return beanPool == BEAN_3CRV_V1 ? BigInt.fromU32(1000) : BigInt.fromU32(10000);
 }
 
 // These are the same for both the 3crv and lusd pools

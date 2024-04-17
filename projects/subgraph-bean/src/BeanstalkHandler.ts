@@ -15,8 +15,8 @@ import {
 import { ZERO_BD, ZERO_BI, toDecimal } from "../../subgraph-core/utils/Decimals";
 import { CurvePrice } from "../generated/Beanstalk/CurvePrice";
 import { checkBeanCross } from "./utils/Cross";
-import { calcUniswapV2Inst, uniswapV2DeltaB, uniswapV2Price, updatePreReplantPriceETH } from "./utils/price/UniswapPrice";
-import { calcCurveInst, curveDeltaB, curvePriceAndLp } from "./utils/price/CurvePrice";
+import { calcUniswapV2Inst } from "./utils/price/UniswapPrice";
+import { calcCurveInst } from "./utils/price/CurvePrice";
 import { MetapoolOracle, WellOracle } from "../generated/TWAPOracles/BIP37";
 import { setUniswapV2Twa } from "./UniswapV2Handler";
 import { setCurveTwa } from "./Bean3CRVHandler_V1";
