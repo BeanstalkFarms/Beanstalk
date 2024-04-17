@@ -43,7 +43,7 @@ describe('Sop', function () {
     await this.well.connect(user).approve(this.diamond.address, to18('100000000'))
 
     // set reserves at a 1000:1 ratio.
-    await this.pump.setCumulativeReserves([to6('1000000'), to18('1000')])
+    await this.pump.setCumulativeReserves(this.well.address, [to6('1000000'), to18('1000')])
     await this.well.mint(ownerAddress, to18('500'))
     await this.well.mint(user.address, to18('500'))
     await mockBeanstalk.siloSunrise(0)
@@ -138,7 +138,7 @@ describe('Sop', function () {
       // `setReserves` updates the values in the well,
       // `setInstantaneousReserves` updates the values in the pump.
       await this.well.setReserves([to6('1000000'), to18('1100')])
-      await this.pump.setInstantaneousReserves([to6('1000000'), to18('1100')])
+      await this.pump.setInstantaneousReserves(this.well.address, [to6('1000000'), to18('1100')])
       await mockBeanstalk.rainSunrise();
       await beanstalk.mow(user2.address, bean.address);
       await mockBeanstalk.rainSunrise();
@@ -204,13 +204,13 @@ describe('Sop', function () {
     beforeEach(async function () {
       
       await this.well.setReserves([to6('1000000'), to18('1100')])
-      await this.pump.setInstantaneousReserves([to6('1000000'), to18('1100')])
+      await this.pump.setInstantaneousReserves(this.well.address, [to6('1000000'), to18('1100')])
       await mockBeanstalk.rainSunrise();
       await beanstalk.mow(user2.address, bean.address);
       await mockBeanstalk.rainSunrise();
       await mockBeanstalk.droughtSunrise();
       await this.well.setReserves([to6('1048808.848170'), to18('1100')])
-      await this.pump.setInstantaneousReserves([to6('1048808.848170'), to18('1100')])
+      await this.pump.setInstantaneousReserves(this.well.address, [to6('1048808.848170'), to18('1100')])
       await mockBeanstalk.rainSunrises(2);
     })
 
@@ -264,7 +264,7 @@ describe('Sop', function () {
       // depending on which one issues less beans.
       // this test confirms the current reserves are used.
       await this.well.setReserves([to6('1000000'), to18('1100')])
-      await this.pump.setInstantaneousReserves([to6('900000'), to18('1100')])
+      await this.pump.setInstantaneousReserves(this.well.address, [to6('900000'), to18('1100')])
       await mockBeanstalk.rainSunrise();
       await beanstalk.mow(user2.address, bean.address);
       await mockBeanstalk.rainSunrise();

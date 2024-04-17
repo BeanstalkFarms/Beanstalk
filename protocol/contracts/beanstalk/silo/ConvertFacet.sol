@@ -19,7 +19,6 @@ import {LibConvert} from "contracts/libraries/Convert/LibConvert.sol";
 import {LibGerminate} from "contracts/libraries/Silo/LibGerminate.sol";
 
 
-
 /**
  * @author Publius, Brean, DeadManWalking
  * @title ConvertFacet handles converting Deposited assets within the Silo.

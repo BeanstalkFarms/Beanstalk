@@ -56,7 +56,7 @@ library LibStrings {
      * @dev Converts a `int256` to its ASCII `string` representation.
      */
     function toString(int256 value) internal pure returns(string memory){
-        if(value > 0){
+        if (value > 0){
             return toString(uint256(value));
         } else {
             return string(abi.encodePacked("-", toString(uint256(-value))));

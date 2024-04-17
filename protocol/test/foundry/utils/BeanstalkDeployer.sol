@@ -28,9 +28,42 @@ contract BeanstalkDeployer is Utils {
 
     // beanstalk
     address payable constant BEANSTALK  = payable(address(0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5));
+
+    address constant BASE_FEE_CONTRACT = address(0x84292919cB64b590C0131550483707E43Ef223aC);
   
     address internal deployer;
-    
+
+    // add or remove facets here. Facets here do not have mocks.
+    string[] facets = [
+        "BDVFacet", 
+        "CurveFacet", 
+        "FarmFacet", 
+        "PauseFacet", 
+        "OwnershipFacet", 
+        "TokenFacet", 
+        "TokenSupportFacet", 
+        "GaugePointFacet", 
+        "LiquidityWeightFacet", 
+        "SiloGettersFacet", 
+        "ConvertGettersFacet", 
+        "MetadataFacet", 
+        "SeasonGettersFacet",
+        "DepotFacet"
+    ];
+
+    // Facets that have a mock counter part should be appended here.
+    string[] mockFacets = [
+        "FertilizerFacet", 
+        "FieldFacet", 
+        "FundraiserFacet", 
+        "MarketplaceFacet", 
+        "WhitelistFacet", 
+        "SiloFacet", 
+        "UnripeFacet", 
+        "ConvertFacet", 
+        "SeasonFacet"
+    ];
+    address[] facetAddresses;
     /**
      * @notice deploys the beanstalk diamond contract.
      * @param mock if true, deploys all mocks and sets the diamond address to the canonical beanstalk address.
@@ -41,86 +74,47 @@ contract BeanstalkDeployer is Utils {
         vm.label(deployer, "Deployer");
         vm.label(BEANSTALK, "Beanstalk");
         
-        // create facet cuts
-        IDiamondCut.FacetCut[] memory cut = new IDiamondCut.FacetCut[](50);
+        // Create cuts.
+
         // Facets that require external libraries need to be deployed by 
         // `address(new Facet())`
         // otherwise, use deployCode() to speed up test compiles.
+        for(uint i; i < facets.length; i++) {
+            // for facets with external libraries, deploy the facet,
+            // rather than deploying using the bytecode. 
+            string memory facetName = facets[i];
+            if(keccak256(abi.encode(facetName))  == keccak256(abi.encode("SeasonGettersFacet"))) {
+                facetAddresses.push(address(new SeasonGettersFacet()));
+            } else {
+                facetAddresses.push(address(deployCode(facetName)));
+            }
+        }
 
-        // add or remove facets here. Facets here do not have mocks.
-        uint i = 0;
-        string[] memory facetNames = new string[](50);
-        address[] memory deployedFacetAddresses = new address[](50);
-        deployedFacetAddresses[i] = address(deployCode("BDVFacet.sol"));
-        facetNames[i++] = "BDVFacet";
-        deployedFacetAddresses[i] = address(deployCode("FarmFacet.sol"));
-        facetNames[i++] = "FarmFacet";
-        deployedFacetAddresses[i] = address(deployCode("PauseFacet.sol"));
-        facetNames[i++] = "PauseFacet";
-        deployedFacetAddresses[i] = address(deployCode("OwnershipFacet.sol"));
-        facetNames[i++] = "OwnershipFacet";
-        deployedFacetAddresses[i] = address(deployCode("TokenFacet.sol"));
-        facetNames[i++] = "TokenFacet";
-        deployedFacetAddresses[i] = address(deployCode("TokenSupportFacet.sol"));
-        facetNames[i++] = "TokenSupportFacet";
-        deployedFacetAddresses[i] = address(deployCode("GaugePointFacet.sol"));
-        facetNames[i++] = "GaugePointFacet";
-        deployedFacetAddresses[i] = address(deployCode("LiquidityWeightFacet.sol"));
-        facetNames[i++] = "LiquidityWeightFacet";
-        deployedFacetAddresses[i] = address(deployCode("SiloGettersFacet.sol"));
-        facetNames[i++] = "SiloGettersFacet";
-        deployedFacetAddresses[i] = address(deployCode("ConvertGettersFacet.sol"));
-        facetNames[i++] = "ConvertGettersFacet";
-        deployedFacetAddresses[i] = address(deployCode("MetadataFacet.sol"));
-        facetNames[i++] = "MetadataFacet";
-        deployedFacetAddresses[i] = address(new SeasonGettersFacet());
-        facetNames[i++] = "SeasonGettersFacet";
-        deployedFacetAddresses[i] = address(deployCode("DepotFacet.sol"));
-        facetNames[i++] = "DepotFacet";
-        if (mock) {
-            deployedFacetAddresses[i] = address(deployCode("MockAdminFacet.sol"));
-            facetNames[i++] = "MockAdminFacet";
-            deployedFacetAddresses[i] = address(deployCode("MockFertilizerFacet.sol"));
-            facetNames[i++] = "MockFertilizerFacet";
-            deployedFacetAddresses[i] = address(deployCode("MockFieldFacet.sol"));
-            facetNames[i++] = "MockFieldFacet";
-            deployedFacetAddresses[i] = address(deployCode("MockMarketplaceFacet.sol"));
-            facetNames[i++] = "MockMarketplaceFacet";
-            deployedFacetAddresses[i] = address(deployCode("MockWhitelistFacet.sol"));
-            facetNames[i++] = "MockWhitelistFacet";
-            deployedFacetAddresses[i] = address(deployCode("MockSiloFacet.sol"));
-            facetNames[i++] = "MockSiloFacet";
-            deployedFacetAddresses[i] = address(new MockUnripeFacet());
-            facetNames[i++] = "MockUnripeFacet";
-            deployedFacetAddresses[i] = address(new MockConvertFacet());
-            facetNames[i++] = "MockConvertFacet";
-            deployedFacetAddresses[i] = address(new MockSeasonFacet());
-            facetNames[i++] = "MockSeasonFacet";
-        } else {
-            deployedFacetAddresses[i] = address(deployCode("FertilizerFacet.sol"));
-            facetNames[i++] = "FertilizerFacet";
-            deployedFacetAddresses[i] = address(deployCode("FieldFacet.sol"));
-            facetNames[i++] = "FieldFacet";
-            deployedFacetAddresses[i] = address(deployCode("MarketplaceFacet.sol"));
-            facetNames[i++] = "MarketplaceFacet";
-            deployedFacetAddresses[i] = address(deployCode("WhitelistFacet.sol"));
-            facetNames[i++] = "WhitelistFacet";
-            deployedFacetAddresses[i] = address(deployCode("SiloFacet.sol"));
-            facetNames[i++] = "SiloFacet";
-            deployedFacetAddresses[i] = address(new UnripeFacet());
-            facetNames[i++] = "UnripeFacet";
-            deployedFacetAddresses[i] = address(new ConvertFacet());
-            facetNames[i++] = "ConvertFacet";
-            deployedFacetAddresses[i] = address(new SeasonFacet());
-            facetNames[i++] = "SeasonFacet";
+        for(uint i; i < mockFacets.length; i++) {
+            // for facets with external libraries, deploy the facet,
+            // rather than deploying using the bytecode. 
+            string memory facet = mockFacets[i];
+            // append "Mock" to the facet name.
+            if(mock) facet = string(abi.encodePacked("Mock", facet));
+            // Facets with an external library should be placed here.
+            bytes32 hashedName = keccak256(abi.encode(mockFacets[i]));
+            address facetAddress;
+            if(hashedName == keccak256(abi.encode("UnripeFacet"))) {
+                facetAddress = address(new MockUnripeFacet());
+            } else if(hashedName == keccak256(abi.encode("ConvertFacet"))) {
+                facetAddress = address(new MockConvertFacet());
+            } else if(hashedName == keccak256(abi.encode("SeasonFacet"))) {
+                facetAddress = address(new MockSeasonFacet());
+            } else {
+                facetAddress = address(deployCode(facet));
+            }
+
+            facetAddresses.push(facetAddress);
+
+            // append the facet name to the facets array.
+            facets.push(facet);
         }
-        
-        assembly {
-            mstore(facetNames, i)
-            mstore(deployedFacetAddresses, i)
-        }
-        
-        cut = _multiCut(facetNames, deployedFacetAddresses);
+        IDiamondCut.FacetCut[] memory cut = _multiCut(facets, facetAddresses);
         d = deployDiamondAtAddress(deployer, BEANSTALK);
 
         // if mocking, set the diamond address to

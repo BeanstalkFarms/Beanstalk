@@ -8,12 +8,15 @@ import "forge-std/Test.sol";
 
 ////// Mocks //////
 import {MockToken} from "contracts/mocks/MockToken.sol";
+import {MockBlockBasefee} from "contracts/mocks/MockBlockBasefee.sol";
+import {IMockFBeanstalk} from "contracts/interfaces/IMockFBeanstalk.sol";
 
 ///// TEST HELPERS ////// 
 import {BeanstalkDeployer} from "test/foundry/utils/BeanstalkDeployer.sol";
 import {BasinDeployer} from "test/foundry/utils/BasinDeployer.sol";
 import {DepotDeployer} from "test/foundry/utils/DepotDeployer.sol";
 import {OracleDeployer} from "test/foundry/utils/OracleDeployer.sol";
+import {FertilizerDeployer} from "test/foundry/utils/FertilizerDeployer.sol";
 import {LibWell, IWell, IERC20} from "contracts/libraries/Well/LibWell.sol";
 import {C} from "contracts/C.sol";
 
@@ -21,12 +24,28 @@ import {C} from "contracts/C.sol";
 ///// COMMON IMPORTED LIBRARIES //////
 import {LibTransfer} from "contracts/libraries/Token/LibTransfer.sol";
 
+///// ECOSYSTEM //////
+import {UsdOracle} from "contracts/ecosystem/oracles/UsdOracle.sol";
+
 /**
  * @title TestHelper
  * @author Brean
  * @notice Test helper contract for Beanstalk tests.
  */
-contract TestHelper is Test, BeanstalkDeployer, BasinDeployer, DepotDeployer, OracleDeployer {
+contract TestHelper is Test, BeanstalkDeployer, BasinDeployer, DepotDeployer, OracleDeployer, FertilizerDeployer {
+
+    // general mock interface for beanstalk.
+    IMockFBeanstalk bs = IMockFBeanstalk(BEANSTALK);
+
+    // usdOracle contract.
+    UsdOracle usdOracle;
+
+    // ideally, timestamp should be set to 1_000_000.
+    // however, beanstalk rounds down to the nearest hour. 
+    // 1_000_000 / 3600 * 3600 = 997200. 
+    uint256 constant PERIOD = 3600;
+    uint256 constant START_TIMESTAMP = 1_000_000;
+    uint256 constant INITIAL_TIMESTAMP = (START_TIMESTAMP / PERIOD) * PERIOD;
 
     struct initERC20params {
         address targetAddr;
@@ -39,6 +58,17 @@ contract TestHelper is Test, BeanstalkDeployer, BasinDeployer, DepotDeployer, Or
      * @notice initializes the state of the beanstalk contracts for testing.
      */
     function initializeBeanstalkTestState(bool mock, bool verbose) public {
+
+        // initialize misc contracts.
+        initMisc();
+
+        // sets block.timestamp to 1_000_000, 
+        // as starting from an timestamp of 0 can cause issues.
+        vm.warp(INITIAL_TIMESTAMP);
+
+        // set block base fee to 1 gwei.
+        MockBlockBasefee(BASE_FEE_CONTRACT).setAnswer(1e9);
+
         // initalize mock tokens.
         initMockTokens(verbose);
 
@@ -53,9 +83,28 @@ contract TestHelper is Test, BeanstalkDeployer, BasinDeployer, DepotDeployer, Or
 
         // initialize uniswap pools.
         initUniswapPools(verbose);
+
+        // deploy fertilizer contract, and transfer ownership to beanstalk.
+        // note: does not initailize barn raise. 
+        initFertilizer(verbose);
+        transferFertilizerOwnership(BEANSTALK);
         
         // initialize Diamond, initalize users:
         setupDiamond(mock, verbose);
+    }
+
+    /**
+     * @notice many of fertilizer functionality requires
+     * unripe assets to exist.
+     */
+    function initializeUnripeTokens(
+        address user,
+        uint256 unripeBeanAmount,
+        uint256 unripeLpAmount
+    ) internal {
+        // mint tokens to users.
+        mintTokensToUser(user, C.UNRIPE_BEAN, unripeBeanAmount);
+        mintTokensToUser(user, C.UNRIPE_LP, unripeLpAmount);
     }
 
     /**
@@ -73,11 +122,35 @@ contract TestHelper is Test, BeanstalkDeployer, BasinDeployer, DepotDeployer, Or
         ];
 
         for(uint i; i < tokens.length; i++) {
-            string memory mock = tokens[i].targetAddr != C.WETH ? "MockToken.sol" : "MockWETH.sol"; 
-            deployCodeTo(mock, abi.encode(tokens[i].name, tokens[i].symbol), tokens[i].targetAddr);
-            MockToken(tokens[i].targetAddr).setDecimals(tokens[i].decimals);
-            if (verbose) console.log(tokens[i].name, "Deployed at:", tokens[i].targetAddr);
-            vm.label(tokens[i].targetAddr, tokens[i].name);
+
+            address token = tokens[i].targetAddr;
+            string memory name = tokens[i].name;
+            string memory symbol = tokens[i].symbol;
+            uint256 decimals = tokens[i].decimals;
+
+            string memory mock = "MockToken.sol";
+            // unique ERC20s should be appended here.
+            if (token == C.WETH) {
+                mock = "MockWETH.sol";
+            } else if (token == C.WSTETH) {
+                mock = "MockWsteth.sol";
+            }
+            deployCodeTo(mock, abi.encode(name, symbol), token);
+            MockToken(token).setDecimals(decimals);
+            if (verbose) console.log(name, "Deployed at:", token);
+            vm.label(token, name);
+        }
+    }
+
+    /**
+     * @notice max approves bean for beanstalk.
+     */
+    function maxApproveBeanstalk(
+        address[] memory users
+    ) public {
+        for(uint i; i < users.length; i++) {
+            vm.prank(users[i]);
+            C.bean().approve(BEANSTALK, type(uint256).max);
         }
     }
 
@@ -95,7 +168,7 @@ contract TestHelper is Test, BeanstalkDeployer, BasinDeployer, DepotDeployer, Or
         }
     }
 
-     /**
+    /**
      * @notice Mints tokens to a list of users.
      * @dev Max approves beanstalk to spend `token`.
      */
@@ -127,6 +200,9 @@ contract TestHelper is Test, BeanstalkDeployer, BasinDeployer, DepotDeployer, Or
         MockToken(nonBeanToken).mint(well, nonBeanTokenAmount);
 
         // inital liquidity owned by beanstalk deployer.
+        IWell(well).sync(users[0], 0);
+
+        // sync again to update reserves.
         IWell(well).sync(users[0], 0);
     }
 
@@ -175,5 +251,109 @@ contract TestHelper is Test, BeanstalkDeployer, BasinDeployer, DepotDeployer, Or
         }
 
         IWell(well).sync(users[0], 0);
+    }
+
+    function initMisc() internal {
+        deployCodeTo("MockBlockBasefee", BASE_FEE_CONTRACT);
+        usdOracle = UsdOracle(deployCode("UsdOracle"));
+    }
+
+    function abs(int256 x) internal pure returns (int256) {
+        return x >= 0 ? x : -x;
+    }
+
+    function initializeChainlinkOraclesForWhitelistedWells() internal noGasMetering {
+        address[] memory lp = bs.getWhitelistedLpTokens();
+        address chainlinkOracle;
+        for(uint i; i < lp.length; i++) {
+            // oracles will need to be added here, 
+            // as obtaining the chainlink oracle to well is not feasible on chain.
+            if (lp[i] == C.BEAN_ETH_WELL) {
+                chainlinkOracle = chainlinkOracles[0];
+            } else if (lp[i] == C.BEAN_WSTETH_WELL) {
+                chainlinkOracle = chainlinkOracles[1];
+            }
+            updateChainlinkOracleWithPreviousData(chainlinkOracle);
+        }
+    }
+
+    function setDeltaBForWellsWithEntropy(
+        uint256 entropy
+    ) internal returns (int256[] memory deltaBPerWell) { 
+        address[] memory lps = bs.getWhitelistedWellLpTokens();
+        deltaBPerWell = new int256[](lps.length);
+        for(uint i; i < lps.length; i++) {
+            // unix time is used to generate an unique deltaB upon every test.
+            int256 deltaB = int256(keccak256(abi.encode(entropy, i, vm.unixTime())));
+            deltaB = bound(deltaB, -1000e6, 1000e6);
+            (address tokenInWell, ) = LibWell.getNonBeanTokenAndIndexFromWell(lps[i]);
+            setDeltaBforWell(deltaB, lps[i], tokenInWell);
+            deltaBPerWell[i] = deltaB;
+        }
+    }
+
+    /**
+     * @notice update deltaB in wells. excess is minted to the well.
+     * commands are called twice to update pumps, due to mocks and everything
+     * executing in the same block.
+     */
+    function setDeltaBforWell(int256 deltaB, address wellAddress, address tokenInWell) internal {
+        IWell well = IWell(wellAddress);
+        IERC20 tokenOut;
+        uint256 initalBeanBalance = C.bean().balanceOf(wellAddress);
+        if (deltaB > 0) {
+            uint256 tokenAmountIn = well.getSwapIn(IERC20(tokenInWell), C.bean(), uint256(deltaB));
+            MockToken(tokenInWell).mint(wellAddress, tokenAmountIn);
+            tokenOut = C.bean();
+        } else { 
+            C.bean().mint(wellAddress, uint256(-deltaB));
+            tokenOut = IERC20(tokenInWell);
+        }
+        uint256 amountOut = well.shift(tokenOut, 0, users[1]);
+        well.shift(tokenOut, 0, users[1]);
+    }
+
+    /**
+     * @notice adds 'x' fertilizer based on the amount of sprouts.
+     * @dev the amount of sprouts are a function of the humidity, 
+     * which is a function of the season of mint.
+     * returns the actual amount of sprouts issued, as fertilizer 
+     * is unitless per dollar. ERC1155 is NOT issued here.
+     */
+    function addFertilizerBasedOnSprouts(
+        uint128 season,
+        uint256 sprouts
+    ) public returns (uint256, uint256) {
+        // calculate the amount of fertilizer needed to be issued.
+        // note: fertilizer rounds down.
+        uint256 humidity = bs.getHumidity(season);
+        uint256 fertOut = sprouts / ((1000 + humidity) / 1000);
+        // calculate the amount of the barnRaiseToken needed to equal usdAmount.
+        uint256 tokenAmount = fertOut * usdOracle.getUsdTokenPrice(bs.getBarnRaiseToken());
+
+        // add fertilizer.
+        mockAddFertilizer(season, uint128(tokenAmount));
+
+        // return the amount of sprouts minted. 
+        return (fertOut * (1000 + bs.getHumidity(season)) * 1000, fertOut);
+    }
+
+    /**
+     * @notice adds fertilizer based on token amount in.
+     * @dev 'season' determine the interest rate and id of the fertilizer.
+     * {see. LibFertilizer.addFertilizer} 
+     */
+    function mockAddFertilizer(
+        uint128 season,
+        uint128 tokenAmountIn
+    ) internal {
+        // mint tokens to user.
+        address barnRaiseToken = bs.getBarnRaiseToken();
+        mintTokensToUser(address(this), barnRaiseToken, tokenAmountIn);
+        // add fertilizer.
+        console.log("tokenAmountIn", tokenAmountIn);
+        if(tokenAmountIn > 0) { 
+            bs.addFertilizer(season, tokenAmountIn, 0);
+        }
     }
 }
