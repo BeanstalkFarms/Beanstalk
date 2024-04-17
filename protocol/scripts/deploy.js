@@ -375,7 +375,8 @@ async function getFacetData(mock=true) {
     "SiloFacet",
     "FertilizerFacet",
     "UnripeFacet",
-    "WhitelistFacet"
+    "WhitelistFacet",
+    "TractorFacet"
   ]
 
   // A list of public libraries that need to be deployed separately.
@@ -389,7 +390,7 @@ async function getFacetData(mock=true) {
   ];
 
   // A mapping of facet to public library names that will be linked to it.
-  // MockFacets will be deployed with the same public libaries.
+  // MockFacets will be deployed with the same public libraries.
   facetLibraries = {
     SeasonFacet: [
       "LibGauge", 
