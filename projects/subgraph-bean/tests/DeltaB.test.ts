@@ -8,6 +8,7 @@ import { BEAN_3CRV, BEAN_ERC20, BEAN_WETH_CP2_WELL } from "../../subgraph-core/u
 import { hourFromTimestamp } from "../../subgraph-core/utils/Dates";
 import { mockBlock } from "../../subgraph-core/tests/event-mocking/Block";
 import { uniswapV2DeltaB } from "../src/utils/price/UniswapPrice";
+import { decodeCumulativeWellReserves } from "../src/utils/price/WellReserves";
 
 const timestamp1 = BigInt.fromU32(1712793374);
 const hour1 = hourFromTimestamp(timestamp1).toString();
@@ -38,6 +39,21 @@ describe("DeltaB", () => {
       const targetBeans = mulReserves.div(prices[1]).sqrt();
       const twaDeltaB = targetBeans.minus(currentBeans);
       assert.bigIntEquals(BigInt.fromString("1879205277"), twaDeltaB);
+    });
+
+    test("Well Reserves", () => {
+      const s20957: Bytes = Bytes.fromHexString(
+        "0x0000000000000000000000000000000000000000000000000000000000000060000000000000000000000000000000000000000000000000000000000000008000000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000002401c9af3e734ec6d928f0c9ca6742af600000000000000000000000000000000401d5a2f51848f06f7a8f4a88134162d00000000000000000000000000000000"
+      );
+      const s20958: Bytes = Bytes.fromHexString(
+        "0x0000000000000000000000000000000000000000000000000000000000000060000000000000000000000000000000000000000000000000000000000000008000000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000002401c9b072d77cfcb46ba839751eec22000000000000000000000000000000000401d5a3f22dfd1d71d115e69bb6a8ca800000000000000000000000000000000"
+      );
+      const result1 = decodeCumulativeWellReserves(s20957);
+      const result2 = decodeCumulativeWellReserves(s20958);
+      log.debug("Well Reserves", []);
+      log.debug("Decode result {} {}", [result1[0].toString(), result1[1].toString()]);
+      log.debug("Decode result {} {}", [result2[0].toString(), result2[1].toString()]);
+      log.debug("Differences {} {}", [result2[0].minus(result1[0]).toString(), result2[1].minus(result1[1]).toString()]);
     });
   });
 
