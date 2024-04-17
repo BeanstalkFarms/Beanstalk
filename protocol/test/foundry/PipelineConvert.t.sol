@@ -29,6 +29,12 @@ import {LibClipboard} from "contracts/libraries/LibClipboard.sol";
 import {LibWellMinting} from "contracts/libraries/Minting/LibWellMinting.sol";
 import "forge-std/Test.sol";
 
+contract MiscHelperContract {
+    function returnNumber(uint256 num) public pure returns (uint256) {
+        return num;
+    }
+}
+
 /**
  * @title PipelineConvertTest
  * @author pizzaman1337
@@ -50,6 +56,7 @@ contract PipelineConvertTest is TestHelper {
     MockToken bean = MockToken(C.BEAN);
     MockToken beanEthWell = MockToken(C.BEAN_ETH_WELL);
     Pipeline pipeline = Pipeline(PIPELINE);
+    MiscHelperContract miscHelper = new MiscHelperContract();
 
     
     // test accounts
@@ -514,6 +521,45 @@ contract PipelineConvertTest is TestHelper {
         );
     }
 
+    // test that leaves less ERC20 in the pipeline than is returned by the final function
+    function testNotEnoughTokensLeftInPipeline(uint256 amount) public {
+        amount = bound(amount, 1000e6, 1000e6);
+        int96 stem = beanToLPDepositSetup(amount, users[1]);
+        int96[] memory stems = new int96[](1);
+        stems[0] = stem;
+        uint256[] memory amounts = new uint256[](1);
+        amounts[0] = amount;
+
+        uint256 returnThisNumber = 5000e22;
+
+        bytes memory returnNumberEncoded = abi.encodeWithSelector(
+            MiscHelperContract.returnNumber.selector,
+            returnThisNumber
+        );
+
+        // create extra pipe calls
+        AdvancedPipeCall[] memory extraPipeCalls = new AdvancedPipeCall[](1);
+        // extra call will be to a function that returns a big number (more than amoutn of LP left in pipeline)
+        extraPipeCalls[0] = AdvancedPipeCall(
+            address(miscHelper), // target
+            returnNumberEncoded, // calldata
+            abi.encode(0) // clipboard
+        );
+
+        AdvancedFarmCall[] memory farmCalls = new AdvancedFarmCall[](1);
+        AdvancedFarmCall[] memory beanToLPFarmCalls = createBeanToLPFarmCalls(amount, extraPipeCalls);
+        farmCalls[0] = beanToLPFarmCalls[0]; // Assign the first element of the returned array
+        vm.expectRevert("ERC20: transfer amount exceeds balance");
+        vm.prank(users[1]);
+        convert.pipelineConvert(
+            C.BEAN, // input token
+            stems, // stem
+            amounts, // amount
+            C.BEAN_ETH_WELL, // token out
+            farmCalls // farmData
+        );
+    }
+
 
     function testCalculateStalkPenaltyUpwardsToZero() public {
         int256 beforeDeltaB = -100;
@@ -905,9 +951,17 @@ contract PipelineConvertTest is TestHelper {
         assertEq(bs.balanceOfGerminatingStalk(farmer), C.STALK_PER_BEAN * expected, "balanceOfGerminatingStalk");
     }
 
+
     function createBeanToLPFarmCalls(
         uint256 amountOfBean
     ) public returns (AdvancedFarmCall[] memory output) {
+        return createBeanToLPFarmCalls(amountOfBean, new AdvancedPipeCall[](0));
+    }
+
+    function createBeanToLPFarmCalls(
+        uint256 amountOfBean,
+        AdvancedPipeCall[] memory extraPipeCalls
+    ) public view returns (AdvancedFarmCall[] memory output) {
         // first setup the pipeline calls
 
         // setup approve max call
@@ -931,7 +985,7 @@ contract PipelineConvertTest is TestHelper {
         );
 
         // Fabricate advancePipes: 
-        AdvancedPipeCall[] memory advancedPipeCalls = new AdvancedPipeCall[](2);
+        AdvancedPipeCall[] memory advancedPipeCalls = new AdvancedPipeCall[](2+extraPipeCalls.length);
         
         // Action 0: approve the Bean-Eth well to spend pipeline's bean.
         advancedPipeCalls[0] = AdvancedPipeCall(
@@ -946,6 +1000,11 @@ contract PipelineConvertTest is TestHelper {
             addLiquidityEncoded, // calldata
             abi.encode(0) // clipboard
         );
+
+        // append any extra pipe calls
+        for (uint i; i < extraPipeCalls.length; i++) {
+            advancedPipeCalls[2+i] = extraPipeCalls[i];
+        }
 
 
         // Encode into a AdvancedFarmCall. NOTE: advancedFarmCall != advancedPipeCall. 
