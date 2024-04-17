@@ -2,7 +2,7 @@ const { expect } = require('chai')
 const { deploy } = require('../scripts/deploy.js')
 const { takeSnapshot, revertToSnapshot } = require("./utils/snapshot")
 const { toStalk, to6, to18 } = require('./utils/helpers.js');
-const { USDC, UNRIPE_BEAN, UNRIPE_LP, BEAN, ETH_USDC_UNISWAP_V3, BASE_FEE_CONTRACT, THREE_CURVE, THREE_POOL, BEAN_3_CURVE, BEAN_ETH_WELL, WSTETH, ZERO_BYTES } = require('./utils/constants.js');
+const { USDC, UNRIPE_BEAN, UNRIPE_LP, BEAN, ETH_USDC_UNISWAP_V3, BASE_FEE_CONTRACT, THREE_CURVE, THREE_POOL, BEAN_3_CURVE, BEAN_ETH_WELL, WSTETH, ZERO_BYTES, BEAN_WSTETH_WELL } = require('./utils/constants.js');
 const { EXTERNAL, INTERNAL } = require('./utils/balances.js');
 const { ethers } = require('hardhat');
 const { setEthUsdChainlinkPrice, setWstethUsdPrice } = require('../utils/oracle.js');
@@ -46,7 +46,7 @@ describe('Sun', function () {
 
     await this.usdc.mint(owner.address, to6('10000'))
     await bean.mint(owner.address, to6('10000'))
-    await this.wsteth.mint(owner.address, to18('100000'))
+    await this.wsteth.mint(owner.address, to18('10000'))
     await this.usdc.connect(owner).approve(this.diamond.address, to6('10000'))
     await this.wsteth.connect(owner).approve(this.diamond.address, to18('10000'))
     this.unripeBean = await ethers.getContractAt('MockToken', UNRIPE_BEAN)
@@ -58,7 +58,7 @@ describe('Sun', function () {
     await this.unripeBean.mint(user.address, to6('1000'))
     await this.unripeBean.connect(user).approve(this.diamond.address, to6('100000000'))
     await mockBeanstalk.addUnripeToken(UNRIPE_BEAN, BEAN, ZERO_BYTES)
-    await mockBeanstalk.addUnripeToken(UNRIPE_LP, BEAN_ETH_WELL, ZERO_BYTES);
+    await mockBeanstalk.addUnripeToken(UNRIPE_LP, BEAN_WSTETH_WELL, ZERO_BYTES);
 
     await setEthUsdChainlinkPrice('1000');
     await setWstethUsdPrice('1000');
