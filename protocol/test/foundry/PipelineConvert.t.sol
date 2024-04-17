@@ -597,6 +597,101 @@ contract PipelineConvertTest is TestHelper {
         assertEq(stalkAfter, stalkBefore+grownStalk);
     }
 
+    // half of the bdv is extracted during the convert, stalk/bdv of deposits should be correct on output
+    function testBeanToBeanConvertLessBdv(uint256 amount) public {
+        amount = bound(amount, 1000e6, 1000e6);
+
+        int96 stem = beanToLPDepositSetup(amount, users[1]);
+        int96[] memory stems = new int96[](1);
+        stems[0] = stem;
+        uint256[] memory amounts = new uint256[](1);
+        amounts[0] = amount;
+
+        uint256 stalkBefore = bs.balanceOfStalk(users[1]);
+        uint256 grownStalk = bs.grownStalkForDeposit(users[1], C.BEAN, stem);
+        uint256 bdvBefore = bs.balanceOfDepositedBdv(users[1], C.BEAN);
+
+        // make a pipeline call where the only thing it does is return how many beans are in pipeline
+        AdvancedPipeCall[] memory extraPipeCalls = new AdvancedPipeCall[](2);
+
+        // send half our beans from pipeline to Vitalik address (for some reason zero address gave an evm error)
+        bytes memory sendBeans = abi.encodeWithSelector(bean.transfer.selector, 0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045, amount.div(2));
+        extraPipeCalls[0] = AdvancedPipeCall(
+            C.BEAN, // target
+            sendBeans, // calldata
+            abi.encode(0) // clipboard
+        );
+
+        bytes memory callEncoded = abi.encodeWithSelector(bean.balanceOf.selector, C.PIPELINE);
+        extraPipeCalls[1] = AdvancedPipeCall(
+            C.BEAN, // target
+            callEncoded, // calldata
+            abi.encode(0) // clipboard
+        );
+
+        AdvancedFarmCall[] memory farmCalls = createAdvancedFarmCallsFromAdvancedPipeCalls(extraPipeCalls);
+
+        vm.prank(users[1]);
+        convert.pipelineConvert(
+            C.BEAN, // input token
+            stems, // stem
+            amounts, // amount
+            C.BEAN, // token out
+            farmCalls
+        );
+
+        uint256 stalkAfter = bs.balanceOfStalk(users[1]);
+        assertEq(stalkAfter, stalkBefore.div(2)+grownStalk);
+
+        uint256 bdvAfter = bs.balanceOfDepositedBdv(users[1], C.BEAN);
+        assertEq(bdvAfter, bdvBefore.div(2));
+    }
+
+    // adds 50% more beans to the pipeline so we get extra bdv after convert
+    function testBeanToBeanConvertMoreBdv(uint256 amount) public {
+        amount = bound(amount, 1000e6, 1000e6);
+
+        // mint extra beans to pipeline so we can snatch them on convert back into beanstalk
+        bean.mint(C.PIPELINE, amount.div(2));
+
+        int96 stem = beanToLPDepositSetup(amount, users[1]);
+        int96[] memory stems = new int96[](1);
+        stems[0] = stem;
+        uint256[] memory amounts = new uint256[](1);
+        amounts[0] = amount;
+
+        uint256 stalkBefore = bs.balanceOfStalk(users[1]);
+        uint256 grownStalk = bs.grownStalkForDeposit(users[1], C.BEAN, stem);
+        uint256 bdvBefore = bs.balanceOfDepositedBdv(users[1], C.BEAN);
+
+        // make a pipeline call where the only thing it does is return how many beans are in pipeline
+        AdvancedPipeCall[] memory extraPipeCalls = new AdvancedPipeCall[](1);
+
+        bytes memory callEncoded = abi.encodeWithSelector(bean.balanceOf.selector, C.PIPELINE);
+        extraPipeCalls[0] = AdvancedPipeCall(
+            C.BEAN, // target
+            callEncoded, // calldata
+            abi.encode(0) // clipboard
+        );
+
+        AdvancedFarmCall[] memory farmCalls = createAdvancedFarmCallsFromAdvancedPipeCalls(extraPipeCalls);
+
+        vm.prank(users[1]);
+        convert.pipelineConvert(
+            C.BEAN, // input token
+            stems, // stem
+            amounts, // amount
+            C.BEAN, // token out
+            farmCalls
+        );
+
+        uint256 stalkAfter = bs.balanceOfStalk(users[1]);
+        assertEq(stalkAfter, stalkBefore+stalkBefore.div(2)+grownStalk);
+
+        uint256 bdvAfter = bs.balanceOfDepositedBdv(users[1], C.BEAN);
+        assertEq(bdvAfter, bdvBefore+bdvBefore.div(2));
+    }
+
 
     function testCalculateStalkPenaltyUpwardsToZero() public {
         int256 beforeDeltaB = -100;
