@@ -122,14 +122,14 @@ export function curveTwaDeltaBAndPrice(twaBalances: BigInt[], beanPool: Address,
   const D = getD(xp, bean_A);
   const y = getY(xp[0].plus(BI_10.pow(12)), xp, bean_A, D);
 
-  log.debug("curve bean_A {}", [bean_A.toString()]);
-  log.debug("curve other_virtual_price {}", [other_virtual_price.toString()]);
-  log.debug("curve D {}", [D.toString()]);
-  log.debug("curve y {}", [y.toString()]);
-  log.debug("curve deltaB calculated {}", [D.div(BigInt.fromU32(2)).div(BI_10.pow(12)).minus(twaBalances[0]).toString()]);
-  log.debug("curve deltaB simple {}", [curveDeltaB(beanPool, twaBalances[0]).toString()]);
-  log.debug("curve xp[0] {}", [xp[0].toString()]);
-  log.debug("curve xp[1] {}", [xp[1].toString()]);
+  // log.debug("curve bean_A {}", [bean_A.toString()]);
+  // log.debug("curve other_virtual_price {}", [other_virtual_price.toString()]);
+  // log.debug("curve D {}", [D.toString()]);
+  // log.debug("curve y {}", [y.toString()]);
+  // log.debug("curve deltaB calculated {}", [D.div(BigInt.fromU32(2)).div(BI_10.pow(12)).minus(twaBalances[0]).toString()]);
+  // log.debug("curve deltaB simple {}", [curveDeltaB(beanPool, twaBalances[0]).toString()]);
+  // log.debug("curve xp[0] {}", [xp[0].toString()]);
+  // log.debug("curve xp[1] {}", [xp[1].toString()]);
 
   return {
     deltaB: D.div(BigInt.fromU32(2)).div(BI_10.pow(12)).minus(twaBalances[0]),

@@ -1,4 +1,4 @@
-import { BigInt, BigDecimal, Address, log } from "@graphprotocol/graph-ts";
+import { BigInt, BigDecimal, Address } from "@graphprotocol/graph-ts";
 import {
   AddLiquidity,
   RemoveLiquidity,

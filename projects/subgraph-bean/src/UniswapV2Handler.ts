@@ -1,4 +1,4 @@
-import { BigDecimal, BigInt, log } from "@graphprotocol/graph-ts";
+import { BigDecimal, BigInt } from "@graphprotocol/graph-ts";
 import { Swap, Sync } from "../generated/BeanUniswapV2Pair/UniswapV2Pair";
 import { loadBean, updateBeanSupplyPegPercent, updateBeanValues } from "./utils/Bean";
 import { BEAN_ERC20_V1, WETH } from "../../subgraph-core/utils/Constants";

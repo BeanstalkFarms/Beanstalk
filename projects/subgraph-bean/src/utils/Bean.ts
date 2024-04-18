@@ -1,4 +1,4 @@
-import { BigDecimal, BigInt, log } from "@graphprotocol/graph-ts";
+import { BigDecimal, BigInt } from "@graphprotocol/graph-ts";
 import { Bean, BeanDailySnapshot, BeanHourlySnapshot, Pool } from "../../generated/schema";
 import {
   BEAN_3CRV,
