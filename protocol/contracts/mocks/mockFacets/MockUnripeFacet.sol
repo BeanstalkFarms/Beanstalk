@@ -28,7 +28,7 @@ contract MockUnripeFacet is UnripeFacet {
     {
         address underlyingToken = s.u[unripeToken].underlyingToken;
         IERC20(underlyingToken).safeTransferFrom(
-            LibTractor._getUser(),
+            LibTractor._user(),
             address(this),
             amount
         );
@@ -45,7 +45,7 @@ contract MockUnripeFacet is UnripeFacet {
     {
         address underlyingToken = s.u[unripeToken].underlyingToken;
         IERC20(underlyingToken).safeTransferFrom(
-            LibTractor._getUser(),
+            LibTractor._user(),
             address(this),
             amount
         );

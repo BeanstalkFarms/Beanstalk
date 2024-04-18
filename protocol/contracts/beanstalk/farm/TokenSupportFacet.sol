@@ -56,7 +56,7 @@ contract TokenSupportFacet {
         address to,
         uint256 id
     ) external payable {
-        token.safeTransferFrom(LibTractor._getUser(), to, id);
+        token.safeTransferFrom(LibTractor._user(), to, id);
     }
 
     /**
@@ -89,7 +89,7 @@ contract TokenSupportFacet {
         uint256 id,
         uint256 value
     ) external payable {
-        token.safeTransferFrom(LibTractor._getUser(), to, id, value, new bytes(0));
+        token.safeTransferFrom(LibTractor._user(), to, id, value, new bytes(0));
     }
 
     /**
@@ -102,6 +102,6 @@ contract TokenSupportFacet {
         uint256[] calldata ids,
         uint256[] calldata values
     ) external payable {
-        token.safeBatchTransferFrom(LibTractor._getUser(), to, ids, values, new bytes(0));
+        token.safeBatchTransferFrom(LibTractor._user(), to, ids, values, new bytes(0));
     }
 }

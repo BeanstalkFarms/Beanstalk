@@ -343,7 +343,7 @@ library LibTokenSilo {
          */
         if (transferType == Transfer.emitTransferSingle) {
             emit TransferSingle(
-                LibTractor._getUser(), // operator
+                LibTractor._user(), // operator
                 address(0), // from
                 account, // to
                 depositId, // depositID
@@ -622,7 +622,7 @@ library LibTokenSilo {
 
         // Emit burn events.
         emit TransferSingle(
-            LibTractor._getUser(),
+            LibTractor._user(),
             account,
             address(0),
             legacyDepositId,
@@ -639,7 +639,7 @@ library LibTokenSilo {
 
         // Emit mint events.
         emit TransferSingle(
-            LibTractor._getUser(),
+            LibTractor._user(),
             address(0),
             account,
             LibBytes.packAddressAndStem(token, newStem),

@@ -85,7 +85,7 @@ contract UnripeFacet is ReentrancyGuard {
     ) external payable nonReentrant returns (uint256) {
         // burn the token from the user address
         uint256 supply = IBean(unripeToken).totalSupply();
-        amount = LibTransfer.burnToken(IBean(unripeToken), amount, LibTractor._getUser(), fromMode);
+        amount = LibTransfer.burnToken(IBean(unripeToken), amount, LibTractor._user(), fromMode);
         // get ripe address and ripe amount
         (address underlyingToken, uint256 underlyingAmount) = LibChop.chop(
             unripeToken,
@@ -94,9 +94,9 @@ contract UnripeFacet is ReentrancyGuard {
         );
         // send the corresponding amount of ripe token to the user address
         require(underlyingAmount > 0, "Chop: no underlying");
-        IERC20(underlyingToken).sendToken(underlyingAmount, LibTractor._getUser(), toMode);
+        IERC20(underlyingToken).sendToken(underlyingAmount, LibTractor._user(), toMode);
         // emit the event
-        emit Chop(LibTractor._getUser(), unripeToken, amount, underlyingAmount);
+        emit Chop(LibTractor._user(), unripeToken, amount, underlyingAmount);
         return underlyingAmount;
     }
 
@@ -116,15 +116,15 @@ contract UnripeFacet is ReentrancyGuard {
     ) external payable nonReentrant {
         bytes32 root = s.u[token].merkleRoot;
         require(root != bytes32(0), "UnripeClaim: invalid token");
-        require(!picked(LibTractor._getUser(), token), "UnripeClaim: already picked");
+        require(!picked(LibTractor._user(), token), "UnripeClaim: already picked");
 
-        bytes32 leaf = keccak256(abi.encodePacked(LibTractor._getUser(), amount));
+        bytes32 leaf = keccak256(abi.encodePacked(LibTractor._user(), amount));
         require(MerkleProof.verify(proof, root, leaf), "UnripeClaim: invalid proof");
-        s.unripeClaimed[token][LibTractor._getUser()] = true;
+        s.unripeClaimed[token][LibTractor._user()] = true;
 
-        LibTransfer.sendToken(IERC20(token), amount, LibTractor._getUser(), mode);
+        LibTransfer.sendToken(IERC20(token), amount, LibTractor._user(), mode);
 
-        emit Pick(LibTractor._getUser(), token, amount);
+        emit Pick(LibTractor._user(), token, amount);
     }
 
     /**
@@ -328,7 +328,7 @@ contract UnripeFacet is ReentrancyGuard {
     ) external payable nonReentrant {
         LibDiamond.enforceIsContractOwner();
         IERC20(s.u[unripeToken].underlyingToken).safeTransferFrom(
-            LibTractor._getUser(),
+            LibTractor._user(),
             address(this),
             amount
         );

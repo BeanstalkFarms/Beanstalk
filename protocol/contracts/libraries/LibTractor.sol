@@ -102,7 +102,7 @@ library LibTractor {
 
     /// @notice return current activePublisher address or msg.sender if no active blueprint
     /// @return user to take actions on behalf of
-    function _getUser() internal view returns (address payable user) {
+    function _user() internal view returns (address payable user) {
         user = _getActivePublisher();
         if (uint160(bytes20(user)) <= 1) {
             user = msg.sender;
