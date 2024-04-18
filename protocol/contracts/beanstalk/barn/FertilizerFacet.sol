@@ -51,8 +51,8 @@ contract FertilizerFacet {
         external
         payable
     {
-        uint256 amount = C.fertilizer().beanstalkUpdate(LibTractor._getUser(), ids, s.bpf);
-        LibTransfer.sendToken(C.bean(), amount, LibTractor._getUser(), mode);
+        uint256 amount = C.fertilizer().beanstalkUpdate(LibTractor._user(), ids, s.bpf);
+        LibTransfer.sendToken(C.bean(), amount, LibTractor._user(), mode);
     }
 
     /**
@@ -81,7 +81,7 @@ contract FertilizerFacet {
             fertilizerAmountOut,
             minLPTokensOut
         );
-        C.fertilizer().beanstalkMint(LibTractor._getUser(), uint256(id), (fertilizerAmountOut).toUint128(), s.bpf);
+        C.fertilizer().beanstalkMint(LibTractor._user(), uint256(id), (fertilizerAmountOut).toUint128(), s.bpf);
     }
 
     /**

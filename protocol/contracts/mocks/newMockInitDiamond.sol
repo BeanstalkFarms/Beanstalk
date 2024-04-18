@@ -85,6 +85,7 @@ contract MockInitDiamond is InitalizeDiamond {
 
     /**
      * @notice sets the underlying tokens for unripe. 
+     * @dev assumes the last unripe token is the unripe LP.
      */
     function setUnderlyingUnripe(
         address[] memory unripeToken,
@@ -94,6 +95,9 @@ contract MockInitDiamond is InitalizeDiamond {
         for(uint i; i < unripeToken.length; i++) {
             LibUnripe.switchUnderlyingToken(unripeToken[i], underlyingToken[i]);
         }
+
+        // sets the barn raise token to the underlying of the unripe LP.
+        s.u[unripeToken[underlyingToken.length - 1]].underlyingToken = barnRaiseWell;
     }
 
     /**

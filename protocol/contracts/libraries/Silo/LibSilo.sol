@@ -18,9 +18,6 @@ import {LibGerminate} from "./LibGerminate.sol";
 import {LibWhitelistedTokens} from "./LibWhitelistedTokens.sol";
 import {LibTractor} from "../LibTractor.sol";
 
-import "forge-std/console.sol";
-
-
 /**
  * @title LibSilo
  * @author Publius
@@ -648,7 +645,7 @@ library LibSilo {
         if (transferType == LibTokenSilo.Transfer.emitTransferSingle) {
             // "removing" a deposit is equivalent to "burning" an ERC1155 token.
             emit LibTokenSilo.TransferSingle(
-                LibTractor._getUser(), // operator
+                LibTractor._user(), // operator
                 account, // from
                 address(0), // to
                 LibBytes.packAddressAndStem(token, stem), // depositid
@@ -734,7 +731,7 @@ library LibSilo {
         }
 
         // "removing" deposits is equivalent to "burning" a batch of ERC1155 tokens.
-        emit TransferBatch(LibTractor._getUser(), account, address(0), removedDepositIDs, amounts);
+        emit TransferBatch(LibTractor._user(), account, address(0), removedDepositIDs, amounts);
         emit RemoveDeposits(
             account, 
             token, 

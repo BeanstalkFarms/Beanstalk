@@ -16,7 +16,6 @@ import {console} from "forge-std/console.sol";
 
 contract MockPump is IInstantaneousPump, ICumulativePump {
 
-    // put this in a struct
     struct ReservesData {
         uint256[] instantaneousReserves;
         uint256[] cumulativeReserves;
@@ -25,22 +24,18 @@ contract MockPump is IInstantaneousPump, ICumulativePump {
 
     mapping(address => ReservesData) reservesData;
 
-
-    function setInstantaneousReserves(address well, uint[] memory _instantaneousReserves) external {
-        console.log('setInstantaneousReserves well: ', well);
+    function setInstantaneousReserves(
+        address well, 
+        uint[] memory _instantaneousReserves
+    ) external {
         reservesData[well].instantaneousReserves = _instantaneousReserves;
     }
 
     function readInstantaneousReserves(address well, bytes memory) external override view returns (uint[] memory reserves) {
-        console.log('readInstantaneousReserves well: ', well);
         return reservesData[well].instantaneousReserves;
     }
 
     function readCappedReserves(address well, bytes memory) external view returns (uint[] memory reserves) {
-        console.log('readCappedReserves cappedReserves: ', well);
-        for (uint i = 0; i < reservesData[well].cappedReserves.length; i++) {
-            console.log('readCappedReserves cappedReserves[i]: ', reservesData[well].cappedReserves[i]);
-        }
         return reservesData[well].cappedReserves;
     }
 
@@ -48,27 +43,14 @@ contract MockPump is IInstantaneousPump, ICumulativePump {
         _update(well, _reserves, data);
     }
 
-    function updateNoBytes(address well, uint256[] memory _reserves) external {
-        _update(well, _reserves, new bytes(0));
+    function update(uint256[] memory _reserves, bytes memory data) external {
+        _update(msg.sender, _reserves, data);
     }
 
-    function _update(address well, uint256[] memory _reserves, bytes memory data) internal {
-        console.log('updating pump');
+    function _update(address well, uint256[] memory _reserves, bytes memory) internal {
         reservesData[well].instantaneousReserves = _reserves;
         reservesData[well].cumulativeReserves = _reserves;
         reservesData[well].cappedReserves = _reserves;
-
-
-        console.log('updating all reserves:');
-        for (uint i = 0; i < reservesData[well].cappedReserves.length; i++) {
-            console.log('update cappedReserves[i]: ', reservesData[well].cappedReserves[i]);
-        }
-    }
-
-    // this function gets called from the well, msg.sender is the well
-    function update(uint256[] memory _reserves, bytes memory data) external {
-        console.log('updating pump from the well', msg.sender);
-        _update(msg.sender, _reserves, data);
     }
 
     function setCumulativeReserves(address well, uint[] memory _cumulativeReserves) external {
@@ -89,6 +71,10 @@ contract MockPump is IInstantaneousPump, ICumulativePump {
         bytes memory
     ) external override view returns (uint[] memory twaReserves, bytes memory _cumulativeReserves){
         twaReserves = reservesData[well].cumulativeReserves;
-        _cumulativeReserves = abi.encodePacked(reservesData[well].cumulativeReserves[0], reservesData[well].cumulativeReserves[1]);
+        _cumulativeReserves = abi.encodePacked(twaReserves[0], twaReserves[1]);
+    }
+
+    function clearReserves(address well) external {
+        delete reservesData[well];
     }
 }

@@ -2,12 +2,10 @@
 pragma solidity >=0.6.0 <0.9.0;
 pragma abicoder v2;
 
-import {TestHelper, LibTransfer, IWell, IERC20} from "../utils/TestHelper.sol";
-import {IMockFBeanstalk} from "contracts/interfaces/IMockFBeanstalk.sol";
+import {TestHelper, LibTransfer, IMockFBeanstalk, C} from "test/foundry/utils/TestHelper.sol";
+import {IWell, IERC20} from "contracts/interfaces/basin/IWell.sol";
 import {MockSeasonFacet} from "contracts/mocks/mockFacets/MockSeasonFacet.sol";
 import {MockConvertFacet} from "contracts/mocks/mockFacets/MockConvertFacet.sol";
-import {C} from "contracts/C.sol";
-import {console} from "forge-std/console.sol";
 import {LibConvertData} from "contracts/libraries/Convert/LibConvertData.sol";
 import {MockToken} from "contracts/mocks/MockToken.sol";
 
@@ -25,7 +23,6 @@ contract ConvertTest is TestHelper {
     event Convert(address indexed account, address fromToken, address toToken, uint256 fromAmount, uint256 toAmount);
 
     // Interfaces.
-    IMockFBeanstalk bs = IMockFBeanstalk(BEANSTALK);
     MockConvertFacet convert = MockConvertFacet(BEANSTALK);
     MockSeasonFacet season = MockSeasonFacet(BEANSTALK);
 
@@ -504,13 +501,8 @@ contract ConvertTest is TestHelper {
         // the amount that the user wants to convert,
         // cap the amount to the maximum LP that can be used.
         if (lpConverted > maxLpIn) lpConverted = maxLpIn;
-
-        console.log("maxLpIn: ", maxLpIn);
-        console.log("lpConverted: ", lpConverted);
         
         uint256 expectedAmtOut = bs.getAmountOut(well, C.BEAN, lpConverted);
-
-        console.log("expectedAmtOut: ", expectedAmtOut);
 
         // create encoding for a well -> bean convert.
         bytes memory convertData = convertEncoder(

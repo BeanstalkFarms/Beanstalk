@@ -33,7 +33,7 @@ contract SeasonFacet is Weather {
      * @return reward The number of beans minted to the caller.
      */
     function sunrise() external payable returns (uint256) {
-        return gm(LibTractor._getUser(), LibTransfer.To.EXTERNAL);
+        return gm(LibTractor._user(), LibTransfer.To.EXTERNAL);
     }
 
     /**

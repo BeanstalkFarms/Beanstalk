@@ -45,7 +45,7 @@ contract TokenFacet is IERC1155Receiver, ReentrancyGuard {
     //////////////////////// Transfer ////////////////////////
 
     /**
-     * @notice transfers a token from msg.sender to `recipient`.
+     * @notice transfers a token from user to `recipient`.
      * @dev enables transfers between internal and external balances.
      * 
      * @param token The token to transfer.
@@ -63,7 +63,7 @@ contract TokenFacet is IERC1155Receiver, ReentrancyGuard {
     ) external payable {
         LibTransfer.transferToken(
             token,
-            LibTractor._getUser(),
+            LibTractor._user(),
             recipient,
             amount,
             fromMode,
@@ -73,7 +73,7 @@ contract TokenFacet is IERC1155Receiver, ReentrancyGuard {
 
     /**
      * @notice transfers a token from `sender` to an `recipient` Internal balance.
-     * @dev differs from transferToken as it does not use msg.sender.
+     * @dev differs from transferToken as sender != user.
      */
     function transferInternalTokenFrom(
         IERC20 token,
@@ -91,8 +91,8 @@ contract TokenFacet is IERC1155Receiver, ReentrancyGuard {
             toMode
         );
 
-        if (sender != LibTractor._getUser()) {
-            LibTokenApprove.spendAllowance(sender, LibTractor._getUser(), token, amount);
+        if (sender != LibTractor._user()) {
+            LibTokenApprove.spendAllowance(sender, LibTractor._user(), token, amount);
         }
     }
 
@@ -107,7 +107,7 @@ contract TokenFacet is IERC1155Receiver, ReentrancyGuard {
         IERC20 token,
         uint256 amount
     ) external payable nonReentrant {
-        LibTokenApprove.approve(LibTractor._getUser(), spender, token, amount);
+        LibTokenApprove.approve(LibTractor._user(), spender, token, amount);
     }
 
     /**
@@ -119,10 +119,10 @@ contract TokenFacet is IERC1155Receiver, ReentrancyGuard {
         uint256 addedValue
     ) public virtual nonReentrant returns (bool) {
         LibTokenApprove.approve(
-            LibTractor._getUser(),
+            LibTractor._user(),
             spender,
             token,
-            LibTokenApprove.allowance(LibTractor._getUser(), spender, token).add(addedValue)
+            LibTokenApprove.allowance(LibTractor._user(), spender, token).add(addedValue)
         );
         return true;
     }
@@ -137,7 +137,7 @@ contract TokenFacet is IERC1155Receiver, ReentrancyGuard {
         uint256 subtractedValue
     ) public virtual nonReentrant returns (bool) {
         uint256 currentAllowance = LibTokenApprove.allowance(
-            LibTractor._getUser(),
+            LibTractor._user(),
             spender,
             token
         );
@@ -146,7 +146,7 @@ contract TokenFacet is IERC1155Receiver, ReentrancyGuard {
             "Silo: decreased allowance below zero"
         );
         LibTokenApprove.approve(
-            LibTractor._getUser(),
+            LibTractor._user(),
             spender,
             token,
             currentAllowance.sub(subtractedValue)

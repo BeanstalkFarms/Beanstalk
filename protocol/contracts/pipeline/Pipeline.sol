@@ -200,20 +200,7 @@ contract Pipeline is IPipeline, ERC1155Holder, ERC721Holder {
         if (p.clipboard[0] == 0x00) {
             result = _pipe(p.target, p.callData, value);
         } else {
-            // console.log('_advancedPipe returnData latest object:');
-            // console.logBytes(returnData[returnData.length - 1]);
-
-            for (uint256 i = 0; i < returnData.length; i++) {
-                console.log('_advancedPipe returnData[i]: ', i);
-                console.logBytes(returnData[i]);
-            }
-
-
-            console.log('_advancedPipe result before: ');
-            console.logBytes(result);
             result = LibClipboard.useClipboard(p.callData, p.clipboard, returnData);
-            console.log('_advancedPipe result after: ');
-            console.logBytes(result);
             result = _pipeMem(p.target, result, value);
             console.log('_advancedPipe result final: ');
             console.logBytes(result);

@@ -12,6 +12,8 @@ import "../../libraries/Silo/LibLegacyTokenSilo.sol";
 import "../../libraries/LibTractor.sol";
 import "contracts/libraries/Silo/LibWhitelistedTokens.sol";
 import "contracts/libraries/Well/LibWell.sol";
+import "../../libraries/LibTractor.sol";
+
 /**
  * @author Publius
  * @title Mock Silo Facet
@@ -54,13 +56,13 @@ contract MockSiloFacet is SiloFacet {
     }
 
     function mockUnripeLPDeposit(uint256 t, uint32 _s, uint256 amount, uint256 bdv) external {
-        _mowLegacy(LibTractor._getUser());
+        _mowLegacy(LibTractor._user());
         if (t == 0) {
-            s.a[LibTractor._getUser()].lp.deposits[_s] += amount;
-            s.a[LibTractor._getUser()].lp.depositSeeds[_s] += bdv.mul(4);
+            s.a[LibTractor._user()].lp.deposits[_s] += amount;
+            s.a[LibTractor._user()].lp.depositSeeds[_s] += bdv.mul(4);
         }
-        else if (t == 1) addDepositToAccountLegacy(LibTractor._getUser(), C.unripeLPPool1(), _s, amount, bdv);
-        else if (t == 2) addDepositToAccountLegacy(LibTractor._getUser(), C.unripeLPPool2(), _s, amount, bdv);
+        else if (t == 1) addDepositToAccountLegacy(LibTractor._user(), C.unripeLPPool1(), _s, amount, bdv);
+        else if (t == 2) addDepositToAccountLegacy(LibTractor._user(), C.unripeLPPool2(), _s, amount, bdv);
         uint256 unripeLP = getUnripeForAmount(t, amount);
         bdv = bdv.mul(C.initialRecap()).div(1e18);
         incrementTotalDepositedAmount(C.UNRIPE_LP, unripeLP);
@@ -72,14 +74,14 @@ contract MockSiloFacet is SiloFacet {
         uint256 seeds = bdv.mul(LibLegacyTokenSilo.getLegacySeedsPerToken(C.UNRIPE_LP));
         uint256 stalk = bdv.mul(s.ss[C.UNRIPE_LP].stalkIssuedPerBdv).add(stalkRewardLegacy(seeds, s.season.current - _s));
         // not germinating because this is a old deposit.
-        LibSilo.mintActiveStalk(LibTractor._getUser(), stalk);
-        mintSeeds(LibTractor._getUser(), seeds);
-        LibTransfer.receiveToken(IERC20(C.UNRIPE_LP), unripeLP, LibTractor._getUser(), LibTransfer.From.EXTERNAL);
+        LibSilo.mintActiveStalk(LibTractor._user(), stalk);
+        mintSeeds(LibTractor._user(), seeds);
+        LibTransfer.receiveToken(IERC20(C.UNRIPE_LP), unripeLP, LibTractor._user(), LibTransfer.From.EXTERNAL);
     }
 
    function mockUnripeBeanDeposit(uint32 _s, uint256 amount) external {
-        _mowLegacy(LibTractor._getUser());
-        s.a[LibTractor._getUser()].bean.deposits[_s] += amount;
+        _mowLegacy(LibTractor._user());
+        s.a[LibTractor._user()].bean.deposits[_s] += amount;
         uint256 partialAmount = amount.mul(C.initialRecap()).div(1e18);
         incrementTotalDepositedAmount(C.UNRIPE_BEAN, amount);
 
@@ -90,13 +92,13 @@ contract MockSiloFacet is SiloFacet {
         uint256 seeds = partialAmount.mul(LibLegacyTokenSilo.getLegacySeedsPerToken(C.UNRIPE_BEAN));
         uint256 stalk = partialAmount.mul(s.ss[C.UNRIPE_BEAN].stalkIssuedPerBdv).add(stalkRewardLegacy(seeds, s.season.current - _s));
         
-        LibSilo.mintActiveStalk(LibTractor._getUser(), stalk);
-        mintSeeds(LibTractor._getUser(), seeds);
-        LibTransfer.receiveToken(IERC20(C.UNRIPE_BEAN), amount, LibTractor._getUser(), LibTransfer.From.EXTERNAL);
+        LibSilo.mintActiveStalk(LibTractor._user(), stalk);
+        mintSeeds(LibTractor._user(), seeds);
+        LibTransfer.receiveToken(IERC20(C.UNRIPE_BEAN), amount, LibTractor._user(), LibTransfer.From.EXTERNAL);
     }
 
     modifier mowSenderLegacy() {
-        _mowLegacy(LibTractor._getUser());
+        _mowLegacy(LibTractor._user());
         _;
     }
 
@@ -256,10 +258,10 @@ contract MockSiloFacet is SiloFacet {
         amount = LibTransfer.receiveToken(
             IERC20(token),
             amount,
-            LibTractor._getUser(),
+            LibTractor._user(),
             mode
         );
-        _depositLegacy(LibTractor._getUser(), token, amount);
+        _depositLegacy(LibTractor._user(), token, amount);
     }
 
     function _depositLegacy(

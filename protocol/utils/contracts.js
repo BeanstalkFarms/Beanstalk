@@ -1,22 +1,14 @@
 const fs = require("fs");
 const beanstalkABI = require("../abi/Beanstalk.json");
 const mockBeanstalkABI = require("../abi/MockBeanstalk.json");
-const {
-  BEANSTALK,
-  BEAN,
-  BEAN_3_CURVE,
-  USDC,
-  FERTILIZER,
-  PRICE,
-  WETH
-} = require("../test/utils/constants");
+const { BEANSTALK, BEAN, BEAN_3_CURVE, USDC, FERTILIZER, PRICE, WETH } = require('../test/utils/constants');
 
 async function getBeanstalk(contract = BEANSTALK) {
   return await ethers.getContractAt(beanstalkABI, contract);
 }
 
 async function getMockBeanstalk(contract = BEANSTALK) {
-  return await ethers.getContractAt("MockBeanstalk", contract);
+  return await ethers.getContractAt(mockBeanstalkABI, contract);
 }
 
 async function getAllBeanstalkContracts(contract = BEANSTALK) {

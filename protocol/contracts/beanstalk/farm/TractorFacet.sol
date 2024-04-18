@@ -3,20 +3,19 @@
 pragma solidity ^0.7.6;
 pragma experimental ABIEncoderV2;
 
-import "@openzeppelin/contracts/cryptography/ECDSA.sol";
+import {ECDSA} from "@openzeppelin/contracts/cryptography/ECDSA.sol";
 import {LibBytes} from "../../libraries/LibBytes.sol";
 import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
 
 import {LibTractor} from "../../libraries/LibTractor.sol";
 import {AdvancedFarmCall, LibFarm} from "../../libraries/LibFarm.sol";
-import {LibOperatorPasteInstr} from "../../libraries/LibOperatorPasteInstr.sol";
-
+import {LibBytes} from "contracts/libraries/LibBytes.sol";
 /**
  * @title TractorFacet handles tractor and blueprint operations.
  * @author 0xm00neth, funderberker
  */
 contract TractorFacet {
-    using LibOperatorPasteInstr for bytes32;
+    using LibBytes for bytes32;
     using SafeMath for uint256;
 
     /**********/
@@ -109,12 +108,14 @@ contract TractorFacet {
         );
 
         // Update data with operator-defined fillData.
-        uint80 pasteCallIndex;
         for (uint256 i; i < requisition.blueprint.operatorPasteInstrs.length; ++i) {
             bytes32 operatorPasteInstr = requisition.blueprint.operatorPasteInstrs[i];
-            pasteCallIndex = operatorPasteInstr.pasteCallIndex();
-            require(calls.length > pasteCallIndex, "Tractor: operator pasteCallIndex OOB");
-            LibOperatorPasteInstr.pasteBytes(
+            uint80 pasteCallIndex = operatorPasteInstr.getIndex1();
+            require(calls.length > pasteCallIndex, "Tractor: pasteCallIndex OOB");
+
+            // note: calls[..] reverts if operatorPasteInstr.getPasteCallIndex()
+            // is an invalid index.
+            LibBytes.pasteBytesTractor(
                 operatorPasteInstr,
                 operatorData,
                 calls[pasteCallIndex].callData

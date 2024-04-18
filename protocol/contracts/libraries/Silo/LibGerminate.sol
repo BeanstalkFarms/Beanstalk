@@ -12,8 +12,6 @@ import {SafeCast} from "@openzeppelin/contracts/utils/SafeCast.sol";
 import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
 import {C} from "../../C.sol";
 
-import "forge-std/console.sol";
-
 /**
  * @title LibGerminate
  * @author Brean
@@ -76,15 +74,6 @@ library LibGerminate {
      * when germination finishes, rather than when germination starts.
      */
     function endTotalGermination(uint32 season, address[] memory tokens) external {
-        // console.log('endTotalGermination');
-        // console.log('season: ', season);
-
-        //console log tokens with for loop
-        
-        // for (uint i; i < tokens.length; ++i) {
-        //     console.log('tokens[i]: ', tokens[i]);
-        // }
-
         AppStorage storage s = LibAppStorage.diamondStorage();
 
         // germination can only occur after season 3.

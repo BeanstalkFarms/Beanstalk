@@ -2814,491 +2814,6 @@
     "type": "function"
   },
   {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "pool",
-        "type": "address"
-      },
-      {
-        "internalType": "address",
-        "name": "registry",
-        "type": "address"
-      },
-      {
-        "internalType": "uint256[]",
-        "name": "amounts",
-        "type": "uint256[]"
-      },
-      {
-        "internalType": "uint256",
-        "name": "minAmountOut",
-        "type": "uint256"
-      },
-      {
-        "internalType": "enum LibTransfer.From",
-        "name": "fromMode",
-        "type": "uint8"
-      },
-      {
-        "internalType": "enum LibTransfer.To",
-        "name": "toMode",
-        "type": "uint8"
-      }
-    ],
-    "name": "addLiquidity",
-    "outputs": [],
-    "stateMutability": "payable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "pool",
-        "type": "address"
-      },
-      {
-        "internalType": "address",
-        "name": "registry",
-        "type": "address"
-      },
-      {
-        "internalType": "address",
-        "name": "fromToken",
-        "type": "address"
-      },
-      {
-        "internalType": "address",
-        "name": "toToken",
-        "type": "address"
-      },
-      {
-        "internalType": "uint256",
-        "name": "amountIn",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "minAmountOut",
-        "type": "uint256"
-      },
-      {
-        "internalType": "enum LibTransfer.From",
-        "name": "fromMode",
-        "type": "uint8"
-      },
-      {
-        "internalType": "enum LibTransfer.To",
-        "name": "toMode",
-        "type": "uint8"
-      }
-    ],
-    "name": "exchange",
-    "outputs": [],
-    "stateMutability": "payable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "pool",
-        "type": "address"
-      },
-      {
-        "internalType": "address",
-        "name": "fromToken",
-        "type": "address"
-      },
-      {
-        "internalType": "address",
-        "name": "toToken",
-        "type": "address"
-      },
-      {
-        "internalType": "uint256",
-        "name": "amountIn",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "minAmountOut",
-        "type": "uint256"
-      },
-      {
-        "internalType": "enum LibTransfer.From",
-        "name": "fromMode",
-        "type": "uint8"
-      },
-      {
-        "internalType": "enum LibTransfer.To",
-        "name": "toMode",
-        "type": "uint8"
-      }
-    ],
-    "name": "exchangeUnderlying",
-    "outputs": [],
-    "stateMutability": "payable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "pool",
-        "type": "address"
-      },
-      {
-        "internalType": "address",
-        "name": "registry",
-        "type": "address"
-      },
-      {
-        "internalType": "uint256",
-        "name": "amountIn",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256[]",
-        "name": "minAmountsOut",
-        "type": "uint256[]"
-      },
-      {
-        "internalType": "enum LibTransfer.From",
-        "name": "fromMode",
-        "type": "uint8"
-      },
-      {
-        "internalType": "enum LibTransfer.To",
-        "name": "toMode",
-        "type": "uint8"
-      }
-    ],
-    "name": "removeLiquidity",
-    "outputs": [],
-    "stateMutability": "payable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "pool",
-        "type": "address"
-      },
-      {
-        "internalType": "address",
-        "name": "registry",
-        "type": "address"
-      },
-      {
-        "internalType": "uint256[]",
-        "name": "amountsOut",
-        "type": "uint256[]"
-      },
-      {
-        "internalType": "uint256",
-        "name": "maxAmountIn",
-        "type": "uint256"
-      },
-      {
-        "internalType": "enum LibTransfer.From",
-        "name": "fromMode",
-        "type": "uint8"
-      },
-      {
-        "internalType": "enum LibTransfer.To",
-        "name": "toMode",
-        "type": "uint8"
-      }
-    ],
-    "name": "removeLiquidityImbalance",
-    "outputs": [],
-    "stateMutability": "payable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "pool",
-        "type": "address"
-      },
-      {
-        "internalType": "address",
-        "name": "registry",
-        "type": "address"
-      },
-      {
-        "internalType": "address",
-        "name": "toToken",
-        "type": "address"
-      },
-      {
-        "internalType": "uint256",
-        "name": "amountIn",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "minAmountOut",
-        "type": "uint256"
-      },
-      {
-        "internalType": "enum LibTransfer.From",
-        "name": "fromMode",
-        "type": "uint8"
-      },
-      {
-        "internalType": "enum LibTransfer.To",
-        "name": "toMode",
-        "type": "uint8"
-      }
-    ],
-    "name": "removeLiquidityOneToken",
-    "outputs": [],
-    "stateMutability": "payable",
-    "type": "function"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": true,
-        "internalType": "uint32",
-        "name": "id",
-        "type": "uint32"
-      }
-    ],
-    "name": "CompleteFundraiser",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": true,
-        "internalType": "uint32",
-        "name": "id",
-        "type": "uint32"
-      },
-      {
-        "indexed": false,
-        "internalType": "address",
-        "name": "payee",
-        "type": "address"
-      },
-      {
-        "indexed": false,
-        "internalType": "address",
-        "name": "token",
-        "type": "address"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "amount",
-        "type": "uint256"
-      }
-    ],
-    "name": "CreateFundraiser",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": true,
-        "internalType": "address",
-        "name": "account",
-        "type": "address"
-      },
-      {
-        "indexed": true,
-        "internalType": "uint32",
-        "name": "id",
-        "type": "uint32"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "amount",
-        "type": "uint256"
-      }
-    ],
-    "name": "FundFundraiser",
-    "type": "event"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "payee",
-        "type": "address"
-      },
-      {
-        "internalType": "address",
-        "name": "token",
-        "type": "address"
-      },
-      {
-        "internalType": "uint256",
-        "name": "amount",
-        "type": "uint256"
-      }
-    ],
-    "name": "createFundraiser",
-    "outputs": [],
-    "stateMutability": "payable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint32",
-        "name": "id",
-        "type": "uint32"
-      },
-      {
-        "internalType": "uint256",
-        "name": "amount",
-        "type": "uint256"
-      },
-      {
-        "internalType": "enum LibTransfer.From",
-        "name": "mode",
-        "type": "uint8"
-      }
-    ],
-    "name": "fund",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "payable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint32",
-        "name": "id",
-        "type": "uint32"
-      }
-    ],
-    "name": "fundingToken",
-    "outputs": [
-      {
-        "internalType": "address",
-        "name": "",
-        "type": "address"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint32",
-        "name": "id",
-        "type": "uint32"
-      }
-    ],
-    "name": "fundraiser",
-    "outputs": [
-      {
-        "components": [
-          {
-            "internalType": "address",
-            "name": "payee",
-            "type": "address"
-          },
-          {
-            "internalType": "address",
-            "name": "token",
-            "type": "address"
-          },
-          {
-            "internalType": "uint256",
-            "name": "total",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "remaining",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "start",
-            "type": "uint256"
-          }
-        ],
-        "internalType": "struct Storage.Fundraiser",
-        "name": "",
-        "type": "tuple"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "numberOfFundraisers",
-    "outputs": [
-      {
-        "internalType": "uint32",
-        "name": "",
-        "type": "uint32"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint32",
-        "name": "id",
-        "type": "uint32"
-      }
-    ],
-    "name": "remainingFunding",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint32",
-        "name": "id",
-        "type": "uint32"
-      }
-    ],
-    "name": "totalFunding",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
     "anonymous": false,
     "inputs": [
       {
@@ -5753,9 +5268,9 @@
         "type": "bytes4"
       },
       {
-        "internalType": "uint16",
+        "internalType": "uint32",
         "name": "stalkIssuedPerBdv",
-        "type": "uint16"
+        "type": "uint32"
       },
       {
         "internalType": "uint32",
@@ -8070,6 +7585,109 @@
         "internalType": "uint32",
         "name": "mt",
         "type": "uint32"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "getSeasonStruct",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "uint32",
+            "name": "current",
+            "type": "uint32"
+          },
+          {
+            "internalType": "uint32",
+            "name": "lastSop",
+            "type": "uint32"
+          },
+          {
+            "internalType": "uint8",
+            "name": "withdrawSeasons",
+            "type": "uint8"
+          },
+          {
+            "internalType": "uint32",
+            "name": "lastSopSeason",
+            "type": "uint32"
+          },
+          {
+            "internalType": "uint32",
+            "name": "rainStart",
+            "type": "uint32"
+          },
+          {
+            "internalType": "bool",
+            "name": "raining",
+            "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "fertilizing",
+            "type": "bool"
+          },
+          {
+            "internalType": "uint32",
+            "name": "sunriseBlock",
+            "type": "uint32"
+          },
+          {
+            "internalType": "bool",
+            "name": "abovePeg",
+            "type": "bool"
+          },
+          {
+            "internalType": "uint16",
+            "name": "stemStartSeason",
+            "type": "uint16"
+          },
+          {
+            "internalType": "uint16",
+            "name": "stemScaleSeason",
+            "type": "uint16"
+          },
+          {
+            "internalType": "uint32",
+            "name": "beanEthStartMintingSeason",
+            "type": "uint32"
+          },
+          {
+            "internalType": "uint256",
+            "name": "start",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "period",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "timestamp",
+            "type": "uint256"
+          }
+        ],
+        "internalType": "struct Storage.Season",
+        "name": "",
+        "type": "tuple"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "getSeasonTimestamp",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
       }
     ],
     "stateMutability": "view",

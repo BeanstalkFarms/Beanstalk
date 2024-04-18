@@ -8,7 +8,6 @@ pragma abicoder v2;
 import "./Silo.sol";
 import "contracts/libraries/LibTractor.sol";
 
-
 /**
  * @title TokenSilo
  * @author Publius, Brean, Pizzaman1337
@@ -365,7 +364,7 @@ contract TokenSilo is Silo {
          * which is used here.
          */
         emit TransferSingle(
-            LibTractor._getUser(),
+            LibTractor._user(),
             sender,
             recipient,
             LibBytes.packAddressAndStem(token, stem),
@@ -452,7 +451,7 @@ contract TokenSilo is Silo {
          *  However, the ERC1155 standard has a dedicated {batchTransfer} event,
          *  which is used here.
          */
-        emit LibSilo.TransferBatch(LibTractor._getUser(), sender, recipient, removedDepositIDs, amounts);
+        emit LibSilo.TransferBatch(LibTractor._user(), sender, recipient, removedDepositIDs, amounts);
         // emit RemoveDeposits event (tokens removed are summation).
         emit RemoveDeposits(
             sender,
