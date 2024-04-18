@@ -10,6 +10,7 @@ import {
   HOW_TO_RINSE_SPROUTS,
   HOW_TO_TRANSFER_FERTILIZER,
   HOW_TO_TRADE_FERTILIZER,
+  UNDERSTAND_FERT_VAPY
 } from '~/util/Guides';
 
 import { FC } from '~/types';
@@ -26,6 +27,7 @@ const Barn: FC<{}> = () => (
           <GuideButton
             title="The Farmers' Almanac: Barn Guides"
             guides={[
+              UNDERSTAND_FERT_VAPY,
               HOW_TO_BUY_FERTILIZER,
               HOW_TO_RINSE_SPROUTS,
               HOW_TO_TRANSFER_FERTILIZER,

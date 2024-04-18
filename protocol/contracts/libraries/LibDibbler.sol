@@ -83,31 +83,12 @@ library LibDibbler {
         // we use trySub here because in the case of an overflow, its equivalent to having no soil left. 
         (, s.f.soil) = s.f.soil.trySub(uint128(beans));
 
-        return sowNoSoil(account, beans, pods);
-    }
+        s.a[account].field.plots[s.f.pods] = pods;
+        emit Sow(account, s.f.pods, beans, pods);
 
-    /**
-     * @dev Sows a new Plot, increments total Pods, updates Sow time.
-     */
-    function sowNoSoil(address account, uint256 beans, uint256 pods)
-        internal
-        returns (uint256)
-    {
-        AppStorage storage s = LibAppStorage.diamondStorage();
-
-        _sowPlot(account, beans, pods);
         s.f.pods = s.f.pods.add(pods);
         _saveSowTime();
         return pods;
-    }
-
-    /**
-     * @dev Create a Plot.
-     */
-    function _sowPlot(address account, uint256 beans, uint256 pods) private {
-        AppStorage storage s = LibAppStorage.diamondStorage();
-        s.a[account].field.plots[s.f.pods] = pods;
-        emit Sow(account, s.f.pods, beans, pods);
     }
 
     /** 
@@ -281,7 +262,7 @@ library LibDibbler {
         AppStorage storage s = LibAppStorage.diamondStorage();
 
         uint256 maxTemperature = s.w.t;
-        if(maxTemperature == 0) return 0; 
+        if (maxTemperature == 0) return 0; 
 
         scaledTemperature = LibPRBMath.max(
             // To save gas, `pct` is pre-calculated to 12 digits. Here we
@@ -373,7 +354,7 @@ library LibDibbler {
         AppStorage storage s = LibAppStorage.diamondStorage();
 
         // Above peg: number of Pods is fixed, Soil adjusts
-        if(s.season.abovePeg) {
+        if (s.season.abovePeg) {
             return beansToPods(
                 s.f.soil, // 1 bean = 1 soil
                 uint256(s.w.t).mul(TEMPERATURE_PRECISION) // 1e2 -> 1e8

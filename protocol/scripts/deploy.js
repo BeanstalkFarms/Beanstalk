@@ -353,7 +353,6 @@ async function getFacetData(mock=true) {
   // if mocks are enabled (make sure to append "Mock" to the facet name).
   facets = [
     "BDVFacet",
-    "CurveFacet",
     "MigrationFacet",
     "ApprovalFacet",
     "ConvertGettersFacet",
@@ -371,13 +370,13 @@ async function getFacetData(mock=true) {
     "LiquidityWeightFacet",
     "ConvertFacet",
     "FieldFacet",
-    "FundraiserFacet",
     "MarketplaceFacet",
     "SeasonFacet",
     "SiloFacet",
     "FertilizerFacet",
     "UnripeFacet",
-    "WhitelistFacet"
+    "WhitelistFacet",
+    "TractorFacet"
   ]
 
   // A list of public libraries that need to be deployed separately.
@@ -386,18 +385,19 @@ async function getFacetData(mock=true) {
     "LibIncentive",
     "LibConvert",
     "LibLockedUnderlying",
-    "LibCurveMinting",
-    "LibWellMinting"
+    "LibWellMinting",
+    "LibGerminate"
   ];
 
   // A mapping of facet to public library names that will be linked to it.
-  // MockFacets will be deployed with the same public libaries.
+  // MockFacets will be deployed with the same public libraries.
   facetLibraries = {
     SeasonFacet: [
       "LibGauge", 
       "LibIncentive", 
       "LibLockedUnderlying", 
-      "LibWellMinting"
+      "LibWellMinting",
+      "LibGerminate"
     ],
     ConvertFacet: ["LibConvert"],
     UnripeFacet: ["LibLockedUnderlying"],
@@ -468,5 +468,4 @@ if (require.main === module) {
       process.exit(1);
     });
 }
-
 exports.deploy = main;

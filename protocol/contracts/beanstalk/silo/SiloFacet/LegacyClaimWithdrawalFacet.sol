@@ -9,6 +9,8 @@ import "contracts/beanstalk/ReentrancyGuard.sol";
 import "contracts/libraries/Token/LibTransfer.sol";
 import "contracts/libraries/Silo/LibLegacyTokenSilo.sol";
 import {Invariable} from "contracts/beanstalk/Invariable.sol";
+import {LibTractor} from "contracts/libraries/LibTractor.sol";
+
 
 /**
  * @author pizzaman1337, Publius
@@ -36,8 +38,8 @@ contract LegacyClaimWithdrawalFacet is Invariable, ReentrancyGuard {
         uint32 season,
         LibTransfer.To mode
     ) external payable fundsSafu noNetFlow noSupplyChange nonReentrant {
-        uint256 amount = LibLegacyTokenSilo._claimWithdrawal(msg.sender, token, season);
-        LibTransfer.sendToken(IERC20(token), amount, msg.sender, mode);
+        uint256 amount = LibLegacyTokenSilo._claimWithdrawal(LibTractor._user(), token, season);
+        LibTransfer.sendToken(IERC20(token), amount, LibTractor._user(), mode);
     }
 
     /**
@@ -51,8 +53,8 @@ contract LegacyClaimWithdrawalFacet is Invariable, ReentrancyGuard {
         uint32[] calldata seasons,
         LibTransfer.To mode
     ) external payable fundsSafu noNetFlow noSupplyChange nonReentrant {
-        uint256 amount = LibLegacyTokenSilo._claimWithdrawals(msg.sender, token, seasons);
-        LibTransfer.sendToken(IERC20(token), amount, msg.sender, mode);
+        uint256 amount = LibLegacyTokenSilo._claimWithdrawals(LibTractor._user(), token, seasons);
+        LibTransfer.sendToken(IERC20(token), amount, LibTractor._user(), mode);
     }
 
     /*

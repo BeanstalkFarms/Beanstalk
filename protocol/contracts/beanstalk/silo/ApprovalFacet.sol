@@ -16,6 +16,7 @@ import "contracts/libraries/LibSafeMath32.sol";
 import "contracts/libraries/Convert/LibConvert.sol";
 import "../ReentrancyGuard.sol";
 import {Invariable} from "contracts/beanstalk/Invariable.sol";
+import {LibTractor} from "contracts/libraries/LibTractor.sol";
 
 /**
  * @author publius, pizzaman1337
@@ -36,7 +37,7 @@ contract ApprovalFacet is Invariable, ReentrancyGuard {
     //////////////////////// APPROVE ////////////////////////
 
     /** 
-     * @notice Approve `spender` to Transfer Deposits for `msg.sender`.     
+     * @notice Approve `spender` to Transfer Deposits for user.     
      *
      * Sets the allowance to `amount`.
      * 
@@ -51,7 +52,7 @@ contract ApprovalFacet is Invariable, ReentrancyGuard {
     ) external payable fundsSafu noNetFlow noSupplyChange nonReentrant {
         require(spender != address(0), "approve from the zero address");
         require(token != address(0), "approve to the zero address");
-        LibSiloPermit._approveDeposit(msg.sender, spender, token, amount);
+        LibSiloPermit._approveDeposit(LibTractor._user(), spender, token, amount);
     }
 
     /**
@@ -67,10 +68,10 @@ contract ApprovalFacet is Invariable, ReentrancyGuard {
         uint256 addedValue
     ) public virtual fundsSafu noNetFlow noSupplyChange nonReentrant returns (bool) {
         LibSiloPermit._approveDeposit(
-            msg.sender,
+            LibTractor._user(),
             spender,
             token,
-            depositAllowance(msg.sender, spender, token).add(addedValue)
+            depositAllowance(LibTractor._user(), spender, token).add(addedValue)
         );
         return true;
     }
@@ -87,9 +88,9 @@ contract ApprovalFacet is Invariable, ReentrancyGuard {
         address token,
         uint256 subtractedValue
     ) public virtual fundsSafu noNetFlow noSupplyChange nonReentrant returns (bool) {
-        uint256 currentAllowance = depositAllowance(msg.sender, spender, token);
+        uint256 currentAllowance = depositAllowance(LibTractor._user(), spender, token);
         require(currentAllowance >= subtractedValue, "Silo: decreased allowance below zero");
-        LibSiloPermit._approveDeposit(msg.sender, spender, token, currentAllowance.sub(subtractedValue));
+        LibSiloPermit._approveDeposit(LibTractor._user(), spender, token, currentAllowance.sub(subtractedValue));
         return true;
     }
 
@@ -185,9 +186,12 @@ contract ApprovalFacet is Invariable, ReentrancyGuard {
     }
 
     // ERC1155 Approvals
-    function setApprovalForAll(address spender, bool approved) external fundsSafu noNetFlow noSupplyChange {
-        s.a[msg.sender].isApprovedForAll[spender] = approved;
-        emit ApprovalForAll(msg.sender, spender, approved);
+    function setApprovalForAll(
+        address spender, 
+        bool approved
+    ) external fundsSafu noNetFlow noSupplyChange {
+        s.a[LibTractor._user()].isApprovedForAll[spender] = approved;
+        emit ApprovalForAll(LibTractor._user(), spender, approved);
     }
 
     function isApprovedForAll(

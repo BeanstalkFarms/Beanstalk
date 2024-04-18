@@ -1,0 +1,115 @@
+[
+  {
+    "inputs": [
+      { "internalType": "bytes16", "name": "_maxPercentIncrease", "type": "bytes16" },
+      { "internalType": "bytes16", "name": "_maxPercentDecrease", "type": "bytes16" },
+      { "internalType": "uint256", "name": "_capInterval", "type": "uint256" },
+      { "internalType": "bytes16", "name": "_alpha", "type": "bytes16" }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "constructor"
+  },
+  { "inputs": [], "name": "NoTimePassed", "type": "error" },
+  { "inputs": [], "name": "NotInitialized", "type": "error" },
+  {
+    "inputs": [],
+    "name": "ALPHA",
+    "outputs": [{ "internalType": "bytes16", "name": "", "type": "bytes16" }],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "CAP_INTERVAL",
+    "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "LOG_MAX_DECREASE",
+    "outputs": [{ "internalType": "bytes16", "name": "", "type": "bytes16" }],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "LOG_MAX_INCREASE",
+    "outputs": [{ "internalType": "bytes16", "name": "", "type": "bytes16" }],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [{ "internalType": "address", "name": "well", "type": "address" }],
+    "name": "readCappedReserves",
+    "outputs": [{ "internalType": "uint256[]", "name": "cappedReserves", "type": "uint256[]" }],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      { "internalType": "address", "name": "well", "type": "address" },
+      { "internalType": "bytes", "name": "", "type": "bytes" }
+    ],
+    "name": "readCumulativeReserves",
+    "outputs": [{ "internalType": "bytes", "name": "cumulativeReserves", "type": "bytes" }],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      { "internalType": "address", "name": "well", "type": "address" },
+      { "internalType": "bytes", "name": "", "type": "bytes" }
+    ],
+    "name": "readInstantaneousReserves",
+    "outputs": [{ "internalType": "uint256[]", "name": "emaReserves", "type": "uint256[]" }],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [{ "internalType": "address", "name": "well", "type": "address" }],
+    "name": "readLastCappedReserves",
+    "outputs": [{ "internalType": "uint256[]", "name": "lastCappedReserves", "type": "uint256[]" }],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [{ "internalType": "address", "name": "well", "type": "address" }],
+    "name": "readLastCumulativeReserves",
+    "outputs": [{ "internalType": "bytes16[]", "name": "cumulativeReserves", "type": "bytes16[]" }],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [{ "internalType": "address", "name": "well", "type": "address" }],
+    "name": "readLastInstantaneousReserves",
+    "outputs": [{ "internalType": "uint256[]", "name": "emaReserves", "type": "uint256[]" }],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      { "internalType": "address", "name": "well", "type": "address" },
+      { "internalType": "bytes", "name": "startCumulativeReserves", "type": "bytes" },
+      { "internalType": "uint256", "name": "startTimestamp", "type": "uint256" },
+      { "internalType": "bytes", "name": "", "type": "bytes" }
+    ],
+    "name": "readTwaReserves",
+    "outputs": [
+      { "internalType": "uint256[]", "name": "twaReserves", "type": "uint256[]" },
+      { "internalType": "bytes", "name": "cumulativeReserves", "type": "bytes" }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      { "internalType": "uint256[]", "name": "reserves", "type": "uint256[]" },
+      { "internalType": "bytes", "name": "", "type": "bytes" }
+    ],
+    "name": "update",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  }
+]

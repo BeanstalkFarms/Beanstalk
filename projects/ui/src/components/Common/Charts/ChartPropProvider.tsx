@@ -18,6 +18,7 @@ import { SeriesPoint } from '@visx/shape/lib/types';
 import { TickFormatter } from '@visx/axis';
 import { localPoint } from '@visx/event';
 import { BeanstalkPalette } from '~/components/App/muiTheme';
+import { ERC20Token } from '~/classes/Token';
 
 // -------------------------------------------------------------------------
 // --------------------------------- TYPES ---------------------------------
@@ -139,6 +140,8 @@ export type BaseChartProps = {
   scale?: keyof typeof SCALES;
   pegLine?: boolean;
   isTWAP?: boolean;
+  useCustomTokenList?: ERC20Token[];
+  tokenPerSeasonFilter?: { [key: string]: { from: number, to: number } };
   horizontalLineNumber?: number;
   stylesConfig?: ChartMultiStyles;
   stackedArea?: boolean;
@@ -178,10 +181,10 @@ const chartPadding = {
   right: 17,
 };
 
-const chartColors = BeanstalkPalette.theme.spring.chart;
+const chartColors = BeanstalkPalette.theme.winter.chart;
 const defaultChartStyles: ChartMultiStyles = {
   0: {
-    stroke: BeanstalkPalette.theme.spring.beanstalkGreen,
+    stroke: BeanstalkPalette.theme.winter.primary,
     fillPrimary: chartColors.primaryLight,
     strokeWidth: 2,
   },
@@ -198,6 +201,11 @@ const defaultChartStyles: ChartMultiStyles = {
   3: {
     stroke: chartColors.yellow,
     fillPrimary: chartColors.yellowLight,
+    strokeWidth: 2,
+  },
+  4: {
+    stroke: chartColors.blue,
+    fillPrimary: chartColors.blueLight,
     strokeWidth: 2,
   },
 };

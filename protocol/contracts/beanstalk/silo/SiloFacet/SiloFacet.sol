@@ -6,6 +6,7 @@ pragma solidity =0.7.6;
 pragma abicoder v2;
 
 import "./TokenSilo.sol";
+import {LibTractor} from "contracts/libraries/LibTractor.sol";
 import "contracts/libraries/Token/LibTransfer.sol";
 import "contracts/libraries/Silo/LibSiloPermit.sol";
 import {Invariable} from "contracts/beanstalk/Invariable.sol";
@@ -34,7 +35,7 @@ contract SiloFacet is Invariable, TokenSilo {
      * @notice Deposits an ERC20 into the Silo.
      * @dev farmer is issued stalk and seeds based on token (i.e non-whitelisted tokens do not get any)
      * @param token address of ERC20
-     * @param amount tokens to be transfered
+     * @param amount tokens to be transferred
      * @param mode source of funds (INTERNAL, EXTERNAL, EXTERNAL_INTERNAL, INTERNAL_TOLERANT)
      * @dev Depositing should:
      * 
@@ -60,10 +61,10 @@ contract SiloFacet is Invariable, TokenSilo {
         amount = LibTransfer.receiveToken(
             IERC20(token),
             _amount,
-            msg.sender,
+            LibTractor._user(),
             mode
         );
-        (_bdv, stem) = _deposit(msg.sender, token, amount);
+        (_bdv, stem) = _deposit(LibTractor._user(), token, amount);
     }
 
     //////////////////////// WITHDRAW ////////////////////////
@@ -94,8 +95,8 @@ contract SiloFacet is Invariable, TokenSilo {
         uint256 amount,
         LibTransfer.To mode
     ) external payable fundsSafu noSupplyChange mowSender(token) nonReentrant {
-        _withdrawDeposit(msg.sender, token, stem, amount);
-        LibTransfer.sendToken(IERC20(token), amount, msg.sender, mode);
+        _withdrawDeposit(LibTractor._user(), token, stem, amount);
+        LibTransfer.sendToken(IERC20(token), amount, LibTractor._user(), mode);
     }
 
     /** 
@@ -118,8 +119,8 @@ contract SiloFacet is Invariable, TokenSilo {
         uint256[] calldata amounts,
         LibTransfer.To mode
     ) external payable fundsSafu noSupplyChange mowSender(token) nonReentrant {
-        uint256 amount = _withdrawDeposits(msg.sender, token, stems, amounts);
-        LibTransfer.sendToken(IERC20(token), amount, msg.sender, mode);
+        uint256 amount = _withdrawDeposits(LibTractor._user(), token, stems, amounts);
+        LibTransfer.sendToken(IERC20(token), amount, LibTractor._user(), mode);
     }
 
 
@@ -134,7 +135,7 @@ contract SiloFacet is Invariable, TokenSilo {
      * @param amount Amount of `token` to Transfer.
      * @return _bdv The BDV included in this transfer, now owned by `recipient`.
      *
-     * @dev An allowance is required if `sender !== msg.sender`
+     * @dev An allowance is required if sender != user
      * 
      * The {mowSender} modifier is not used here because _both_ the `sender` and
      * `recipient` need their Silo updated, since both accounts experience a
@@ -147,8 +148,8 @@ contract SiloFacet is Invariable, TokenSilo {
         int96 stem,
         uint256 amount
     ) public payable fundsSafu noNetFlow noSupplyChange nonReentrant returns (uint256 _bdv) {
-        if (sender != msg.sender) {
-            LibSiloPermit._spendDepositAllowance(sender, msg.sender, token, amount);
+        if (sender != LibTractor._user()) {
+            LibSiloPermit._spendDepositAllowance(sender, LibTractor._user(), token, amount);
         }
         LibSilo._mow(sender, token);
         // Need to update the recipient's Silo as well.
@@ -165,7 +166,7 @@ contract SiloFacet is Invariable, TokenSilo {
      * @param amounts Amounts of `token` to Transfer from corresponding `stem`.
      * @return bdvs Array of BDV transferred from each Season, now owned by `recipient`.
      *
-     * @dev An allowance is required if `sender !== msg.sender`. There must be enough allowance
+     * @dev An allowance is required if sender != user. There must be enough allowance
      * to transfer all of the requested Deposits, otherwise the transaction should revert.
      * 
      * The {mowSender} modifier is not used here because _both_ the `sender` and
@@ -186,8 +187,9 @@ contract SiloFacet is Invariable, TokenSilo {
             totalAmount = totalAmount.add(amounts[i]);
         }
 
-        if (sender != msg.sender) {
-            LibSiloPermit._spendDepositAllowance(sender, msg.sender, token, totalAmount);
+        // Tractor operator does not use allowance.
+        if (sender != LibTractor._user()) {
+            LibSiloPermit._spendDepositAllowance(sender, LibTractor._user(), token, totalAmount);
         }
        
         LibSilo._mow(sender, token);
@@ -287,7 +289,7 @@ contract SiloFacet is Invariable, TokenSilo {
 
     /**
      * @notice Claim Earned Beans and their associated Stalk and Plantable Seeds for
-     * `msg.sender`.
+     * user.
      *
      * The Stalk associated with Earned Beans is commonly called "Earned Stalk".
      * Earned Stalk DOES contribute towards the Farmer's Stalk when earned beans is issued.
@@ -301,13 +303,13 @@ contract SiloFacet is Invariable, TokenSilo {
      * the current Season.
      */
     function plant() external payable fundsSafu noNetFlow noSupplyChange returns (uint256 beans, int96 stem) {
-        return _plant(msg.sender);
+        return _plant(LibTractor._user());
     }
 
     /**
      * @notice Claim rewards from a Flood (Was Season of Plenty)
      */
     function claimPlenty() external payable fundsSafu noSupplyChange {
-        _claimPlenty(msg.sender);
+        _claimPlenty(LibTractor._user());
     }
 }

@@ -127,7 +127,7 @@ testIfRpcSet('SeedGauge Init Test', function () {
     })
 
     it('gaugePoints', async function () {
-      expect(await beanstalk.getGaugePoints(BEAN_ETH_WELL)).to.be.equal(to18('1000'));
+      expect(await beanstalk.getGaugePoints(BEAN_ETH_WELL)).to.be.equal(to18('100'));
     })
   })
 

@@ -6,6 +6,7 @@ pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
 import {C} from "contracts/C.sol";
+import {LibTractor} from "contracts/libraries/LibTractor.sol";
 import {LibSilo} from "contracts/libraries/Silo/LibSilo.sol";
 import {LibTokenSilo} from "contracts/libraries/Silo/LibTokenSilo.sol";
 import {LibSafeMath32} from "contracts/libraries/LibSafeMath32.sol";
@@ -17,6 +18,7 @@ import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {LibConvert} from "contracts/libraries/Convert/LibConvert.sol";
 import {LibGerminate} from "contracts/libraries/Silo/LibGerminate.sol";
 import {Invariable} from "contracts/beanstalk/Invariable.sol";
+
 
 /**
  * @author Publius, Brean, DeadManWalking
@@ -83,8 +85,11 @@ contract ConvertFacet is Invariable, ReentrancyGuard {
         
         require(fromAmount > 0, "Convert: From amount is 0.");
 
-        LibSilo._mow(msg.sender, fromToken);
-        LibSilo._mow(msg.sender, toToken);
+        require(fromAmount > 0, "Convert: From amount is 0.");
+
+        LibSilo._mow(LibTractor._user(), fromToken);
+        LibSilo._mow(LibTractor._user(), toToken);
+
         (grownStalk, fromBdv) = _withdrawTokens(
             fromToken,
             stems,
@@ -98,11 +103,12 @@ contract ConvertFacet is Invariable, ReentrancyGuard {
         toBdv = newBdv > fromBdv ? newBdv : fromBdv;
 
         toStem = _depositTokensForConvert(toToken, toAmount, toBdv, grownStalk);
-        emit Convert(msg.sender, fromToken, toToken, fromAmount, toAmount);
+
+        emit Convert(LibTractor._user(), fromToken, toToken, fromAmount, toAmount);
     }
 
     /**
-     * @notice removes the deposits from msg.sender and returns the
+     * @notice removes the deposits from user and returns the
      * grown stalk and bdv removed.
      * 
      * @dev if a user inputs a stem of a deposit that is `germinating`, 
@@ -141,7 +147,7 @@ contract ConvertFacet is Invariable, ReentrancyGuard {
 
                 if (a.active.tokens.add(amounts[i]) >= maxTokens) amounts[i] = maxTokens.sub(a.active.tokens);
                 depositBDV = LibTokenSilo.removeDepositFromAccount(
-                        msg.sender,
+                        LibTractor._user(),
                         token,
                         stems[i],
                         amounts[i]
@@ -167,7 +173,7 @@ contract ConvertFacet is Invariable, ReentrancyGuard {
             for (i; i < stems.length; ++i) amounts[i] = 0;
             
             emit RemoveDeposits(
-                msg.sender,
+                LibTractor._user(),
                 token,
                 stems,
                 amounts,
@@ -176,8 +182,8 @@ contract ConvertFacet is Invariable, ReentrancyGuard {
             );
 
             emit LibSilo.TransferBatch(
-                msg.sender, 
-                msg.sender,
+                LibTractor._user(), 
+                LibTractor._user(),
                 address(0), 
                 depositIds, 
                 amounts
@@ -192,7 +198,7 @@ contract ConvertFacet is Invariable, ReentrancyGuard {
 
         // all deposits converted are not germinating.
         LibSilo.burnActiveStalk(
-            msg.sender,
+            LibTractor._user(),
             a.active.stalk.add(a.active.bdv.mul(s.ss[token].stalkIssuedPerBdv))
         );
         return (a.active.stalk, a.active.bdv);
@@ -229,17 +235,17 @@ contract ConvertFacet is Invariable, ReentrancyGuard {
         if (germ == LibGerminate.Germinate.NOT_GERMINATING) {
             LibTokenSilo.incrementTotalDeposited(token, amount, bdv);
             LibSilo.mintActiveStalk(
-                msg.sender, 
+                LibTractor._user(), 
                 bdv.mul(LibTokenSilo.stalkIssuedPerBdv(token)).add(grownStalk)
             );
         } else {
             LibTokenSilo.incrementTotalGerminating(token, amount, bdv, germ);
             // safeCast not needed as stalk is <= max(uint128)
-            LibSilo.mintGerminatingStalk(msg.sender, uint128(bdv.mul(LibTokenSilo.stalkIssuedPerBdv(token))), germ);   
-            LibSilo.mintActiveStalk(msg.sender, grownStalk);
+            LibSilo.mintGerminatingStalk(LibTractor._user(), uint128(bdv.mul(LibTokenSilo.stalkIssuedPerBdv(token))), germ);   
+            LibSilo.mintActiveStalk(LibTractor._user(), grownStalk);
         }
         LibTokenSilo.addDepositToAccount(
-            msg.sender, 
+            LibTractor._user(), 
             token, 
             stem, 
             amount,

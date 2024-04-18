@@ -9,11 +9,8 @@ type APY = {
 
 type APYs = {
   beansPerSeasonEMA: BigNumber;
-  bySeeds: {
-    '0': APY;
-    '3': APY;
-    '3.25': APY;
-    '4.5': APY;
+  byToken: {
+    [token: string]: APY;
   };
 };
 
@@ -25,32 +22,28 @@ export default function useAPY() {
   return useMemo(() => {
     if (query.data?.siloYields?.[0]) {
       const siloYield = query.data.siloYields[0];
+
+      const apys: APYs = {
+        beansPerSeasonEMA: new BigNumber(siloYield.beansPerSeasonEMA),
+        byToken: {},
+      };
+
+      siloYield.tokenAPYS.forEach((tokenAPY) => {
+        const apy: APY = {
+          bean: new BigNumber(tokenAPY.beanAPY),
+          stalk: new BigNumber(tokenAPY.stalkAPY),
+        };
+
+        apys.byToken[tokenAPY.token] = apy;
+      });
+
       return {
         loading: query.loading,
         error: undefined,
-        data: {
-          beansPerSeasonEMA: new BigNumber(siloYield.beansPerSeasonEMA),
-          bySeeds: {
-            0: {
-              bean: new BigNumber(siloYield.zeroSeedBeanAPY),
-              stalk: new BigNumber(0),
-            },
-            3: {
-              bean: new BigNumber(siloYield.threeSeedBeanAPY),
-              stalk: new BigNumber(siloYield.threeSeedStalkAPY),
-            },
-            3.25: {
-              bean: new BigNumber(siloYield.threePointTwoFiveSeedBeanAPY),
-              stalk: new BigNumber(siloYield.threePointTwoFiveSeedStalkAPY),
-            },
-            4.5: {
-              bean: new BigNumber(siloYield.fourPointFiveSeedBeanAPY),
-              stalk: new BigNumber(siloYield.fourPointFiveSeedStalkAPY),
-            },
-          },
-        } as APYs,
+        data: apys as APYs,
       };
     }
+
     return {
       loading: query.loading,
       error: query.error,

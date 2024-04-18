@@ -59,7 +59,10 @@ type TokenOutputRowProps = {
 const formatBN = (value?: BigNumber, _decimals?: number, suffix?: string) => {
   if (!value) return '';
   const decimals = value.abs().gt(new BigNumber(1000000)) ? 0 : _decimals || 2;
-  const prefix = value ? (value.gte(0) ? '+' : '-') : '';
+  const prefix = value ? (value.gt(0) ? '+' : value.lt(0) ? '-' : '') : '';
+  if (value.abs().lt(0.01) && value.abs().gt(0)) {
+    return `${prefix} <0.01${suffix || ''}`;
+  };
   return `${prefix} ${displayFullBN(value.abs(), decimals, decimals)}${
     suffix || ''
   }`;

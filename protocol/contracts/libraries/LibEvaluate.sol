@@ -10,7 +10,6 @@ import {LibUnripe} from "contracts/libraries/LibUnripe.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {LibSafeMath32} from "contracts/libraries/LibSafeMath32.sol";
 import {LibWell} from "contracts/libraries/Well/LibWell.sol";
-
 import {LibBarnRaise} from "contracts/libraries/LibBarnRaise.sol";
 
 
@@ -102,9 +101,8 @@ library LibEvaluate {
             // deltaB > 0 implies that address(well) != address(0).
             uint256 beanTknPrice = LibWell.getWellPriceFromTwaReserves(well);
             if (beanTknPrice > 1) {
-                uint256 beanUsdPrice = LibWell.getUsdTokenPriceForWell(well)
-                    .mul(beanTknPrice)
-                    .div(1e18);
+                uint256 beanUsdPrice = uint256(1e30).div(LibWell.getUsdTokenPriceForWell(well)
+                    .mul(beanTknPrice));
                 if (beanUsdPrice > EXCESSIVE_PRICE_THRESHOLD) {
                     // p > EXCESSIVE_PRICE_THRESHOLD
                     return caseId = 6;

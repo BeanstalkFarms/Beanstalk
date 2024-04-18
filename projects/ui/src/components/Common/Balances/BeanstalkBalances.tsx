@@ -205,6 +205,7 @@ const BeanstalkBalances: FC<{
                     WHITELIST[address],
                     breakdown.tokens[address].amount
                   )}
+                  amountTooltipLocation="right"
                 />
               ))}
             </Stack>

@@ -16,6 +16,7 @@ import {LibSafeMath32} from "../LibSafeMath32.sol";
 import {LibSafeMathSigned96} from "../LibSafeMathSigned96.sol";
 import {LibGerminate} from "./LibGerminate.sol";
 import {LibWhitelistedTokens} from "./LibWhitelistedTokens.sol";
+import {LibTractor} from "../LibTractor.sol";
 
 /**
  * @title LibSilo
@@ -624,7 +625,7 @@ library LibSilo {
         if (transferType == LibTokenSilo.Transfer.emitTransferSingle) {
             // "removing" a deposit is equivalent to "burning" an ERC1155 token.
             emit LibTokenSilo.TransferSingle(
-                msg.sender, // operator
+                LibTractor._user(), // operator
                 account, // from
                 address(0), // to
                 LibBytes.packAddressAndStem(token, stem), // depositid
@@ -710,7 +711,7 @@ library LibSilo {
         }
 
         // "removing" deposits is equivalent to "burning" a batch of ERC1155 tokens.
-        emit TransferBatch(msg.sender, account, address(0), removedDepositIDs, amounts);
+        emit TransferBatch(LibTractor._user(), account, address(0), removedDepositIDs, amounts);
         emit RemoveDeposits(
             account, 
             token, 

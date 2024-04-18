@@ -10,7 +10,7 @@ import { AdvancedPipePreparedResult } from "src/lib/depot/pipe";
 export class WellShift extends StepClass<AdvancedPipePreparedResult> {
   public name: string = "shift";
 
-  constructor(public wellAddress: string, public toToken: Token, public recipient: string) {
+  constructor(public wellAddress: string, public fromToken: Token, public toToken: Token, public recipient: string) {
     super();
   }
 
@@ -23,10 +23,21 @@ export class WellShift extends StepClass<AdvancedPipePreparedResult> {
 
     const reversed = context.runMode === RunMode.EstimateReversed;
 
-    if (reversed) {
-      throw new Error("Reverse direction is not supported by shift()");
-    }
-    const estimate = await well.shiftQuote(this.toToken);
+    let estimate: any;
+
+    if (!reversed) {
+      estimate = await well.swapFromQuote(
+        this.fromToken, 
+        this.toToken, 
+        TokenValue.fromBlockchain(_amountInStep.toString(), this.fromToken.decimals)
+      );
+    } else {
+      estimate = await well.swapToQuote(
+        this.fromToken, 
+        this.toToken, 
+        TokenValue.fromBlockchain(_amountInStep.toString(), this.toToken.decimals)
+      );
+    };
 
     return {
       name: this.name,

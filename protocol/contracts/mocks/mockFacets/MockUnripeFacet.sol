@@ -7,6 +7,7 @@ pragma experimental ABIEncoderV2;
 
 import "contracts/beanstalk/barn/UnripeFacet.sol";
 import "contracts/libraries/LibAppStorage.sol";
+import "contracts/libraries/LibTractor.sol";
 
 /**
  * @author Publius
@@ -28,7 +29,7 @@ contract MockUnripeFacet is UnripeFacet {
         AppStorage storage s = LibAppStorage.diamondStorage();
         address underlyingToken = s.u[unripeToken].underlyingToken;
         IERC20(underlyingToken).safeTransferFrom(
-            msg.sender,
+            LibTractor._user(),
             address(this),
             amount
         );
@@ -45,7 +46,7 @@ contract MockUnripeFacet is UnripeFacet {
     {
         address underlyingToken = s.u[unripeToken].underlyingToken;
         IERC20(underlyingToken).safeTransferFrom(
-            msg.sender,
+            LibTractor._user(),
             address(this),
             amount
         );

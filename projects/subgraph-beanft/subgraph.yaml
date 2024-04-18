@@ -67,4 +67,27 @@ dataSources:
         - event: Transfer(indexed address,indexed address,indexed uint256)
           handler: handleTransferBarnRaise
       file: ./src/mappings.ts
+  - kind: ethereum
+    name: basin
+    network: mainnet
+    source:
+      address: "0x191b7d1cfa89c9389bbf5f7f49f4b8f93ec3740f"
+      abi: basin
+      startBlock: 18590231
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.7
+      language: wasm/assemblyscript
+      entities:
+        - BeaNFTUser
+        - Collection
+      abis:
+        - name: basin
+          file: ./abis/basin.json
+      eventHandlers:
+        - event: ConsecutiveTransfer(indexed uint256,uint256,indexed address,indexed address)
+          handler: handleConsecutiveTransferBasin
+        - event: Transfer(indexed address,indexed address,indexed uint256)
+          handler: handleTransferBasin
+      file: ./src/mappings.ts
 

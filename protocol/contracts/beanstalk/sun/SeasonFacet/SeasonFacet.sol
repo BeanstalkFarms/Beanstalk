@@ -11,6 +11,7 @@ import {LibGauge} from "contracts/libraries/LibGauge.sol";
 import {LibWhitelistedTokens} from "contracts/libraries/Silo/LibWhitelistedTokens.sol";
 import {LibGerminate} from "contracts/libraries/Silo/LibGerminate.sol";
 import {Invariable} from "contracts/beanstalk/Invariable.sol";
+import {LibTractor} from "contracts/libraries/LibTractor.sol";
 
 /**
  * @title SeasonFacet
@@ -33,7 +34,7 @@ contract SeasonFacet is Invariable, Weather {
      * @return reward The number of beans minted to the caller.
      */
     function sunrise() external payable fundsSafu noNetFlow returns (uint256) {
-        return gm(msg.sender, LibTransfer.To.EXTERNAL);
+        return gm(LibTractor._user(), LibTransfer.To.EXTERNAL);
     }
 
     /**

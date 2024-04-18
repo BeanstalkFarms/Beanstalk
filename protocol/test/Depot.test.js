@@ -12,7 +12,9 @@ const { getAllBeanstalkContracts } = require("../utils/contracts");
 
 let user, user2, owner;
 
-describe('Depot', function () {
+// skipped as depot is removed from beanstalk. 
+// TODO: add tests for depot on pipeline repo?
+describe.skip('Depot', function () {
     before(async function () {
         [owner, user, user2, user3] = await ethers.getSigners();
         const contracts = await deploy(verbose = false, mock = true, reset = true);

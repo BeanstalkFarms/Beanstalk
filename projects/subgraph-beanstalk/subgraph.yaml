@@ -32,6 +32,8 @@ dataSources:
           handler: handleRemoveDeposits_V3
         - event: WhitelistToken(indexed address,bytes4,uint32,uint256)
           handler: handleWhitelistToken_V3
+        - event: UpdatedStalkPerBdvPerSeason(indexed address,uint32,uint32)
+          handler: handleUpdatedStalkPerBdvPerSeason
       file: ./src/SiloHandler.ts
   # Silo V2 / Replanted
   - kind: ethereum/contract
@@ -118,8 +120,6 @@ dataSources:
           handler: handleSupplyDecrease
         - event: SupplyNeutral(indexed uint256,int256)
           handler: handleSupplyNeutral
-        - event: FundFundraiser(indexed address,indexed uint32,uint256)
-          handler: handleFundFundraiser
       file: ./src/FieldHandler.ts
   - kind: ethereum/contract
     name: Season

@@ -4,12 +4,9 @@ pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
 import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
-import {OracleLibrary} from "@uniswap/v3-periphery/contracts/libraries/OracleLibrary.sol";
-import {LibWell} from "contracts/libraries/Well/LibWell.sol";
 import {IBlockBasefee} from "../interfaces/IBlockBasefee.sol";
 import "@openzeppelin/contracts/math/Math.sol";
 import "../C.sol";
-import "./Curve/LibCurve.sol";
 
 /**
  * @title LibIncentive

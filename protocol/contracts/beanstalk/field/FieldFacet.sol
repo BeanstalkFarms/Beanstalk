@@ -8,6 +8,7 @@ pragma experimental ABIEncoderV2;
 import {C} from "contracts/C.sol";
 import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
 import {SafeCast} from "@openzeppelin/contracts/utils/SafeCast.sol";
+import {LibTractor} from "contracts/libraries/LibTractor.sol";
 import {LibTransfer} from "contracts/libraries/Token/LibTransfer.sol";
 import {LibDibbler} from "contracts/libraries/LibDibbler.sol";
 import {LibPRBMath} from "contracts/libraries/LibPRBMath.sol";
@@ -28,7 +29,7 @@ contract FieldFacet is Invariable, ReentrancyGuard {
     using LibSafeMath128 for uint128;
 
     /**
-     * @notice Emitted from {LibDibbler.sowNoSoil} when an `account` creates a plot. 
+     * @notice Emitted from {LibDibbler.sow} when an `account` creates a plot. 
      * A Plot is a set of Pods created in from a single {sow} or {fund} call. 
      * @param account The account that sowed Beans for Pods
      * @param index The place in line of the Plot
@@ -123,18 +124,13 @@ contract FieldFacet is Invariable, ReentrancyGuard {
     /**
      * @dev Burn Beans, Sows at the provided `_morningTemperature`, increments the total
      * number of `beanSown`.
-     * 
-     * NOTE: {FundraiserFacet} also burns Beans but bypasses the soil mechanism
-     * by calling {LibDibbler.sowWithMin} which bypasses updates to `s.f.beanSown`
-     * and `s.f.soil`. This is by design, as the Fundraiser has no impact on peg
-     * maintenance and thus should not change the supply of Soil.
      */
     function _sow(uint256 beans, uint256 _morningTemperature, bool peg, LibTransfer.From mode)
         internal
         returns (uint256 pods)
     {
-        beans = LibTransfer.burnToken(C.bean(), beans, msg.sender, mode);
-        pods = LibDibbler.sow(beans, _morningTemperature, msg.sender, peg);
+        beans = LibTransfer.burnToken(C.bean(), beans, LibTractor._user(), mode);
+        pods = LibDibbler.sow(beans, _morningTemperature, LibTractor._user(), peg);
         s.f.beanSown = s.f.beanSown + SafeCast.toUint128(beans); // SafeMath not needed
     }
 
@@ -155,7 +151,7 @@ contract FieldFacet is Invariable, ReentrancyGuard {
      */
     function harvest(uint256[] calldata plots, LibTransfer.To mode) external payable fundsSafu noSupplyChange {
         uint256 beansHarvested = _harvest(plots);
-        LibTransfer.sendToken(C.bean(), beansHarvested, msg.sender, mode);
+        LibTransfer.sendToken(C.bean(), beansHarvested, LibTractor._user(), mode);
     }
 
     /**
@@ -170,11 +166,11 @@ contract FieldFacet is Invariable, ReentrancyGuard {
             // The Plot is partially harvestable if its index is less than
             // the current harvestable index.
             require(plots[i] < s.f.harvestable, "Field: Plot not Harvestable");
-            uint256 harvested = _harvestPlot(msg.sender, plots[i]);
+            uint256 harvested = _harvestPlot(LibTractor._user(), plots[i]);
             beansHarvested = beansHarvested.add(harvested);
         }
         s.f.harvested = s.f.harvested.add(beansHarvested);
-        emit Harvest(msg.sender, plots, beansHarvested);
+        emit Harvest(LibTractor._user(), plots, beansHarvested);
     }
 
     /**
@@ -200,7 +196,7 @@ contract FieldFacet is Invariable, ReentrancyGuard {
         // ownership check, which is done above.
         if (s.podListings[index] > 0) {
             delete s.podListings[index];
-            emit PodListingCancelled(msg.sender, index);
+            emit PodListingCancelled(LibTractor._user(), index);
         }
 
         // If the entire Plot was harvested, exit.
