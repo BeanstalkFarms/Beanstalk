@@ -34,6 +34,13 @@ export function manualTwa(poolAddress: string, newReserves: BigInt[], timestamp:
   twaOracle.save();
 }
 
+export function setTwaLast(poolAddress: string, newCumulative: BigInt[], timestamp: BigInt): void {
+  let twaOracle = loadOrCreateTwaOracle(poolAddress);
+  twaOracle.priceCumulativeLast = newCumulative;
+  twaOracle.lastUpdated = timestamp;
+  twaOracle.save();
+}
+
 // Returns the current TWA prices since the previous TwaOracle update
 export function getTWAPrices(poolAddress: string, type: TWAType, timestamp: BigInt): BigInt[] {
   let twaOracle = loadOrCreateTwaOracle(poolAddress);

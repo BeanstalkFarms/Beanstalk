@@ -5,7 +5,9 @@ import { loadOrCreateToken } from "../Token";
 import { UniswapV2Pair } from "../../../generated/BeanUniswapV2Pair/UniswapV2Pair";
 import { BEANSTALK, WETH, WETH_USDC_PAIR } from "../../../../subgraph-core/utils/Constants";
 import { PreReplant } from "../../../generated/Beanstalk/PreReplant";
-import { DeltaBAndPrice, DeltaBPriceLiquidity } from "./Types";
+import { DeltaBAndPrice, DeltaBPriceLiquidity, TWAType } from "./Types";
+import { setPoolTwa } from "../Pool";
+import { getTWAPrices } from "./TwaOracle";
 
 export function updatePreReplantPriceETH(): Token {
   let token = loadOrCreateToken(WETH.toHexString());
@@ -58,6 +60,14 @@ export function uniswapV2DeltaB(beanReserves: BigDecimal, token2Reserves: BigDec
   const beansAfterSwap = sqrt(constantProduct.times(token2Price));
   const deltaB = beansAfterSwap.minus(beanReserves);
   return BigInt.fromString(deltaB.times(pow(BD_10, 6)).truncate(0).toString());
+}
+
+// Calculates and sets the TWA on the pool hourly/daily snapshots
+export function setUniswapV2Twa(poolAddress: string, timestamp: BigInt, blockNumber: BigInt): void {
+  const twaPrices = getTWAPrices(poolAddress, TWAType.UNISWAP, timestamp);
+  const twaResult = uniswapTwaDeltaBAndPrice(twaPrices, blockNumber);
+
+  setPoolTwa(poolAddress, twaResult, timestamp, blockNumber);
 }
 
 export function uniswapCumulativePrice(pool: Address, tokenIndex: u32, timestamp: BigInt): BigInt {

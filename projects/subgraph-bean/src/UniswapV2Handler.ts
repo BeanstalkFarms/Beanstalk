@@ -13,15 +13,7 @@ import {
 } from "./utils/Pool";
 import { loadOrCreateToken } from "./utils/Token";
 import { checkBeanCross } from "./utils/Cross";
-import {
-  uniswapTwaDeltaBAndPrice,
-  uniswapV2DeltaB,
-  uniswapV2Price,
-  uniswapV2Reserves,
-  updatePreReplantPriceETH
-} from "./utils/price/UniswapPrice";
-import { getTWAPrices } from "./utils/price/TwaOracle";
-import { DeltaBAndPrice, TWAType } from "./utils/price/Types";
+import { uniswapV2DeltaB, uniswapV2Price, uniswapV2Reserves, updatePreReplantPriceETH } from "./utils/price/UniswapPrice";
 
 // export function handleMint(event: Mint): void {
 //   updatePoolReserves(event.address.toHexString(), event.params.amount0, event.params.amount1, event.block.number);
@@ -113,20 +105,4 @@ export function handleSync(event: Sync): void {
   updateBeanSupplyPegPercent(event.block.number);
 
   updateBeanValues(BEAN_ERC20_V1.toHexString(), event.block.timestamp, currentBeanPrice, ZERO_BI, ZERO_BI, ZERO_BD, deltaLiquidityUSD);
-}
-
-export function setUniswapV2Twa(poolAddress: string, timestamp: BigInt, blockNumber: BigInt): DeltaBAndPrice {
-  const twaPrices = getTWAPrices(poolAddress, TWAType.UNISWAP, timestamp);
-  const twaResult = uniswapTwaDeltaBAndPrice(twaPrices, blockNumber);
-
-  let poolHourly = loadOrCreatePoolHourlySnapshot(poolAddress, timestamp, blockNumber);
-  let poolDaily = loadOrCreatePoolDailySnapshot(poolAddress, timestamp, blockNumber);
-  poolHourly.twaDeltaBeans = twaResult.deltaB;
-  poolHourly.twaPrice = twaResult.price;
-  poolDaily.twaDeltaBeans = twaResult.deltaB;
-  poolDaily.twaPrice = twaResult.price;
-  poolHourly.save();
-  poolDaily.save();
-
-  return twaResult;
 }

@@ -15,12 +15,11 @@ import {
 import { ZERO_BD, ZERO_BI, toDecimal } from "../../subgraph-core/utils/Decimals";
 import { CurvePrice } from "../generated/Beanstalk/CurvePrice";
 import { checkBeanCross } from "./utils/Cross";
-import { calcUniswapV2Inst } from "./utils/price/UniswapPrice";
-import { calcCurveInst } from "./utils/price/CurvePrice";
+import { calcUniswapV2Inst, setUniswapV2Twa } from "./utils/price/UniswapPrice";
+import { calcCurveInst, setCurveTwa } from "./utils/price/CurvePrice";
 import { MetapoolOracle, WellOracle } from "../generated/TWAPOracles/BIP37";
-import { setUniswapV2Twa } from "./UniswapV2Handler";
-import { setCurveTwa } from "./Bean3CRVHandler_V1";
 import { DeltaBPriceLiquidity } from "./utils/price/Types";
+import { setTwaLast } from "./utils/price/TwaOracle";
 
 export function handleSunrise(event: Sunrise): void {
   // Update the season for hourly and daily liquidity metrics
@@ -152,7 +151,8 @@ export function handleSunrise(event: Sunrise): void {
 // POST REPLANT TWA DELTAB //
 
 export function handleMetapoolOracle(event: MetapoolOracle): void {
-  setPoolTwaDeltaB(BEAN_3CRV.toHexString(), event.params.deltaB, event.block.timestamp, event.block.number);
+  setTwaLast(BEAN_3CRV.toHexString(), event.params.balances, event.block.timestamp);
+  setCurveTwa(BEAN_3CRV.toHexString(), event.block.timestamp, event.block.number);
   updateBeanTwa(event.block.timestamp, event.block.number);
 }
 

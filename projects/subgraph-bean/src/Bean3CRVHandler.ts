@@ -1,4 +1,4 @@
-import { BigInt, BigDecimal } from "@graphprotocol/graph-ts";
+import { BigInt, BigDecimal, Address } from "@graphprotocol/graph-ts";
 import {
   AddLiquidity,
   RemoveLiquidity,
@@ -9,9 +9,18 @@ import {
 } from "../generated/Bean3CRV/Bean3CRV";
 import { CurvePrice } from "../generated/Bean3CRV/CurvePrice";
 import { loadBean, updateBeanSupplyPegPercent, updateBeanValues } from "./utils/Bean";
-import { BEANSTALK_PRICE, BEAN_ERC20, CURVE_PRICE } from "../../subgraph-core/utils/Constants";
+import { BEANSTALK_PRICE, BEAN_ERC20, CRV3_POOL, CURVE_PRICE } from "../../subgraph-core/utils/Constants";
 import { toDecimal, ZERO_BD, ZERO_BI } from "../../subgraph-core/utils/Decimals";
-import { getPoolLiquidityUSD, loadOrCreatePool, setPoolReserves, updatePoolPrice, updatePoolValues } from "./utils/Pool";
+import {
+  getPoolLiquidityUSD,
+  loadOrCreatePool,
+  loadOrCreatePoolDailySnapshot,
+  loadOrCreatePoolHourlySnapshot,
+  setPoolReserves,
+  setPoolTwa,
+  updatePoolPrice,
+  updatePoolValues
+} from "./utils/Pool";
 import { BeanstalkPrice } from "../generated/Bean3CRV/BeanstalkPrice";
 import { checkBeanCross } from "./utils/Cross";
 

@@ -22,8 +22,7 @@ import { Bean3CRV } from "../generated/Bean3CRV-V1/Bean3CRV";
 import { ERC20 } from "../generated/Bean3CRV-V1/ERC20";
 import { checkBeanCross } from "./utils/Cross";
 import { curveDeltaB, curvePriceAndLp, curveTwaDeltaBAndPrice } from "./utils/price/CurvePrice";
-import { getTWAPrices, manualTwa } from "./utils/price/TwaOracle";
-import { TWAType } from "./utils/price/Types";
+import { manualTwa } from "./utils/price/TwaOracle";
 
 export function handleTokenExchange(event: TokenExchange): void {
   // Do not index post-exploit data
@@ -210,20 +209,4 @@ function handleSwap(
   updatePoolValues(poolAddress, timestamp, blockNumber, volumeBean, volumeUSD, deltaLiquidityUSD, deltaB);
   updatePoolPrice(poolAddress, timestamp, blockNumber, newPrice);
   checkBeanCross(BEAN_ERC20_V1.toHexString(), timestamp, blockNumber, oldBeanPrice, newPrice);
-}
-
-export function setCurveTwa(poolAddress: string, timestamp: BigInt, blockNumber: BigInt): void {
-  const twaBalances = getTWAPrices(poolAddress, TWAType.CURVE, timestamp);
-  const beanPool = Address.fromString(poolAddress);
-  const otherPool = beanPool == BEAN_3CRV_V1 ? CRV3_POOL : LUSD_3POOL;
-  const twaResult = curveTwaDeltaBAndPrice(twaBalances, beanPool, otherPool);
-
-  let poolHourly = loadOrCreatePoolHourlySnapshot(poolAddress, timestamp, blockNumber);
-  let poolDaily = loadOrCreatePoolDailySnapshot(poolAddress, timestamp, blockNumber);
-  poolHourly.twaDeltaBeans = twaResult.deltaB;
-  poolHourly.twaPrice = twaResult.price;
-  poolDaily.twaDeltaBeans = twaResult.deltaB;
-  poolDaily.twaPrice = twaResult.price;
-  poolHourly.save();
-  poolDaily.save();
 }
