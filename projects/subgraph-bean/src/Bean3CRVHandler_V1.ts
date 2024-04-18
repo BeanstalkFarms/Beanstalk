@@ -21,7 +21,7 @@ import {
 import { Bean3CRV } from "../generated/Bean3CRV-V1/Bean3CRV";
 import { ERC20 } from "../generated/Bean3CRV-V1/ERC20";
 import { checkBeanCross } from "./utils/Cross";
-import { curveDeltaB, curvePriceAndLp, curveTwaDeltaBAndPrice } from "./utils/price/CurvePrice";
+import { curveDeltaBUsingVPrice, curvePriceAndLp, curveTwaDeltaBAndPrice } from "./utils/price/CurvePrice";
 import { manualTwa } from "./utils/price/TwaOracle";
 
 export function handleTokenExchange(event: TokenExchange): void {
@@ -148,7 +148,7 @@ function handleLiquidityChange(
     }
   }
 
-  let deltaB = curveDeltaB(Address.fromString(poolAddress), reserveBalances.value[0]);
+  let deltaB = curveDeltaBUsingVPrice(Address.fromString(poolAddress), reserveBalances.value[0]);
 
   updateBeanSupplyPegPercent(blockNumber);
 
@@ -200,7 +200,7 @@ function handleSwap(
     }
   }
 
-  let deltaB = curveDeltaB(Address.fromString(poolAddress), reserveBalances.value[0]);
+  let deltaB = curveDeltaBUsingVPrice(Address.fromString(poolAddress), reserveBalances.value[0]);
 
   updateBeanSupplyPegPercent(blockNumber);
 

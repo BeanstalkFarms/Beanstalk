@@ -1,5 +1,5 @@
 import { beforeEach, beforeAll, afterEach, assert, clearStore, describe, test, createMockedFunction } from "matchstick-as/assembly/index";
-import { BigInt, Bytes, BigDecimal } from "@graphprotocol/graph-ts";
+import { BigInt, Bytes, BigDecimal, log } from "@graphprotocol/graph-ts";
 // import { log } from "matchstick-as/assembly/log";
 import { handleMetapoolOracle, handleWellOracle } from "../src/BeanstalkHandler";
 import { BI_10, ONE_BI, ZERO_BI } from "../../subgraph-core/utils/Decimals";
@@ -12,6 +12,7 @@ import { decodeCumulativeWellReserves } from "../src/utils/price/WellReserves";
 import { mock_virtual_price } from "./event-mocking/Curve";
 import { loadOrCreatePool } from "../src/utils/Pool";
 import { loadBean } from "../src/utils/Bean";
+import { getD, getY, priceFromY } from "../src/utils/price/CurvePrice";
 
 const timestamp1 = BigInt.fromU32(1712793374);
 const hour1 = hourFromTimestamp(timestamp1).toString();
@@ -48,6 +49,24 @@ describe("DeltaB", () => {
       const targetBeans = mulReserves.div(prices[1]).sqrt();
       const twaDeltaB = targetBeans.minus(currentBeans);
       assert.bigIntEquals(BigInt.fromString("1879205277"), twaDeltaB);
+    });
+
+    test("Curve Price", () => {
+      // Bean3crv_v1 pool at block 14441689
+
+      const other_virtual_price = BigInt.fromString("1020543257852678845");
+      const xp = [
+        BigInt.fromString("3503110156477").times(BI_10.pow(12)),
+        BigInt.fromString("3441135481866150809775262").times(other_virtual_price).div(BI_10.pow(18))
+      ];
+
+      const D = getD(xp, BigInt.fromU32(1000));
+      const y = getY(xp[0].plus(BI_10.pow(12)), xp, BigInt.fromU32(1000), D);
+      const price = priceFromY(y, xp[1]);
+
+      log.debug("xp[1] {}", [xp[1].toString()]);
+
+      assert.stringEquals("1.000225971464", price.toString());
     });
 
     test("Well Reserves", () => {

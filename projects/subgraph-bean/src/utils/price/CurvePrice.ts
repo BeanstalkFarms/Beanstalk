@@ -19,6 +19,9 @@ import { setPoolTwa } from "../Pool";
 
 // Note that the Bean3CRV type applies to any curve pool (including lusd)
 
+// get_dy method returns the price with the fee already applied, divide by this value to unapply the fee
+const amountAfterFee = BigDecimal.fromString("0.9996");
+
 // Returns [beanPrice, lpValue] of the requested curve pool
 export function curvePriceAndLp(pool: Address): BigDecimal[] {
   // Get Curve Price Details
@@ -30,18 +33,20 @@ export function curvePriceAndLp(pool: Address): BigDecimal[] {
 
   let lpValue = ZERO_BD;
   if (pool == BEAN_3CRV_V1) {
-    beanCrvPrice = toDecimal(lpContract.get_dy(ZERO_BI, BigInt.fromI32(1), BigInt.fromI32(1000000)), 18);
+    beanCrvPrice = toDecimal(lpContract.get_dy(ZERO_BI, BigInt.fromI32(1), BigInt.fromI32(1000000)), 18).div(amountAfterFee);
 
     let crv3Contract = ERC20.bind(CRV3_TOKEN);
     let crvHolding = toDecimal(crv3Contract.balanceOf(pool), 18);
     lpValue = crvHolding.times(metapoolPrice);
   } else if (pool == BEAN_LUSD_V1) {
     // price in LUSD
-    let priceInLusd = toDecimal(lpContract.get_dy(ZERO_BI, BigInt.fromI32(1), BigInt.fromI32(1000000)), 18);
+    let priceInLusd = toDecimal(lpContract.get_dy(ZERO_BI, BigInt.fromI32(1), BigInt.fromI32(1000000)), 18).div(amountAfterFee);
 
     let lusdContract = ERC20.bind(LUSD);
     let lusd3PoolContract = Bean3CRV.bind(LUSD_3POOL);
-    let lusd3crvPrice = toDecimal(lusd3PoolContract.get_dy(ZERO_BI, BigInt.fromI32(1), BigInt.fromString("1000000000000000000")), 18);
+    let lusd3crvPrice = toDecimal(lusd3PoolContract.get_dy(ZERO_BI, BigInt.fromI32(1), BigInt.fromString("1000000000000000000")), 18).div(
+      amountAfterFee
+    );
     beanCrvPrice = priceInLusd.times(lusd3crvPrice);
 
     let lusdHolding = toDecimal(lusdContract.balanceOf(pool), 18);
@@ -58,12 +63,12 @@ export function calcCurveInst(pool: Pool): DeltaBPriceLiquidity {
   return {
     price: priceAndLp[0],
     liquidity: priceAndLp[1],
-    deltaB: curveDeltaB(Address.fromString(pool.id), pool.reserves[0])
+    deltaB: curveDeltaBUsingVPrice(Address.fromString(pool.id), pool.reserves[0])
   };
 }
 
-// Returns the deltaB in the given curve pool
-export function curveDeltaB(pool: Address, beanReserves: BigInt): BigInt {
+// Returns the deltaB in the given curve pool using virtual_price.
+export function curveDeltaBUsingVPrice(pool: Address, beanReserves: BigInt): BigInt {
   let lpContract = Bean3CRV.bind(pool);
   // D = vprice * total lp tokens
   // vprice: 12 decimals, tokens: 18 decimals
@@ -127,14 +132,22 @@ export function curveTwaDeltaBAndPrice(twaBalances: BigInt[], beanPool: Address,
   // log.debug("curve D {}", [D.toString()]);
   // log.debug("curve y {}", [y.toString()]);
   // log.debug("curve deltaB calculated {}", [D.div(BigInt.fromU32(2)).div(BI_10.pow(12)).minus(twaBalances[0]).toString()]);
-  // log.debug("curve deltaB simple {}", [curveDeltaB(beanPool, twaBalances[0]).toString()]);
+  // log.debug("curve deltaB simple {}", [curveDeltaBUsingVPrice(beanPool, twaBalances[0]).toString()]);
   // log.debug("curve xp[0] {}", [xp[0].toString()]);
   // log.debug("curve xp[1] {}", [xp[1].toString()]);
 
   return {
-    deltaB: D.div(BigInt.fromU32(2)).div(BI_10.pow(12)).minus(twaBalances[0]),
-    price: BigDecimal.fromString(xp[1].minus(y).minus(ONE_BI).toString()).div(BigDecimal.fromString("1000000000000"))
+    deltaB: deltaFromD(D, twaBalances[0]),
+    price: priceFromY(y, xp[1])
   };
+}
+
+export function deltaFromD(D: BigInt, beanBalance: BigInt): BigInt {
+  return D.div(BigInt.fromU32(2)).div(BI_10.pow(12)).minus(beanBalance);
+}
+
+export function priceFromY(y: BigInt, nonBeanXp: BigInt): BigDecimal {
+  return BigDecimal.fromString(nonBeanXp.minus(y).minus(ONE_BI).toString()).div(BigDecimal.fromString("1000000000000"));
 }
 
 // In practice we can hardcode and avoid an unnecessary call since there was no ramping in our pools
@@ -156,7 +169,7 @@ const A_PRECISION = BigInt.fromU32(100);
 const N_COINS = BigInt.fromU32(2);
 
 // Generated from functions in LibCurve.sol
-function getD(xp: BigInt[], a: BigInt): BigInt {
+export function getD(xp: BigInt[], a: BigInt): BigInt {
   let S: BigInt = BigInt.fromString("0");
   let Dprev: BigInt;
   let D: BigInt = BigInt.fromString("0");
@@ -194,7 +207,7 @@ function getD(xp: BigInt[], a: BigInt): BigInt {
 const i = 0;
 const j = 1;
 
-function getY(x: BigInt, xp: BigInt[], a: BigInt, D: BigInt): BigInt {
+export function getY(x: BigInt, xp: BigInt[], a: BigInt, D: BigInt): BigInt {
   let S_: BigInt = BigInt.fromString("0");
   let _x: BigInt = BigInt.fromString("0");
   let y_prev: BigInt;
@@ -205,7 +218,7 @@ function getY(x: BigInt, xp: BigInt[], a: BigInt, D: BigInt): BigInt {
   // Calculate c considering each element in xp
   for (let _i = 0; _i < N_COINS.toI32(); ++_i) {
     if (_i == i) _x = x;
-    else if (_i != j) _x = xp[_i];
+    else if (_i != j) _x = xp[i];
     else continue;
     S_ = S_.plus(_x);
     c = c.times(D).div(_x.times(N_COINS));
