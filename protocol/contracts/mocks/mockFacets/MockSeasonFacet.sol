@@ -26,7 +26,6 @@ import {LibTokenSilo} from "contracts/libraries/Silo/LibTokenSilo.sol";
 import {IWell, Call} from "contracts/interfaces/basin/IWell.sol";
 
 import "forge-std/console.sol";
-
 /**
  * @author Publius
  * @title Mock Season Facet
@@ -45,7 +44,7 @@ interface ResetPool {
 }
 
 interface IMockPump {
-    function update(uint256[] memory _reserves, bytes memory data) external;
+    function update(uint256[] memory _reserves, bytes memory) external;
     function update(address well, uint256[] memory _reserves, bytes memory) external;
     function readInstantaneousReserves(address well, bytes memory data) external view returns (uint[] memory reserves);
 }
@@ -168,6 +167,16 @@ contract MockSeasonFacet is SeasonFacet  {
         s.season.sunriseBlock = uint32(block.number);
     }
 
+    /**
+     * @dev Mocks the stepSeason function.
+     */
+    function mockStepSeason() public returns(uint32 season) {
+        s.season.current += 1;
+        season = s.season.current;
+        s.season.sunriseBlock = uint32(block.number); // Note: Will overflow in the year 3650.
+        emit Sunrise(season);
+    }
+
     function fastForward(uint32 _s) public {
         // teleport current sunrise 2 seasons ahead,
         // end germination, 
@@ -238,10 +247,6 @@ contract MockSeasonFacet is SeasonFacet  {
             delete s.g.diamondCuts[i];
         }
 
-        for (uint32 i; i < s.fundraiserIndex; ++i) {
-            MockToken(s.fundraisers[i].token).burn(MockToken(s.fundraisers[i].token).balanceOf(address(this)));
-            delete s.fundraisers[i];
-        }
         delete s.f;
         delete s.s;
         delete s.w;
@@ -251,7 +256,6 @@ contract MockSeasonFacet is SeasonFacet  {
         delete s.r;
         delete s.co;
         delete s.season;
-        delete s.fundraiserIndex;
         s.season.start = block.timestamp;
         s.season.timestamp = block.timestamp;
         s.s.stalk = 0;
@@ -305,11 +309,9 @@ contract MockSeasonFacet is SeasonFacet  {
             C.bean().mint(address(this), l2srBeans - C.bean().totalSupply());
         }
         Call[] memory pump = IWell(C.BEAN_ETH_WELL).pumps();
-        IMockPump(pump[0].target).update(reserves, pump[0].data);
+        IMockPump(pump[0].target).update(pump[0].target, reserves, pump[0].data);
         s.twaReserves[C.BEAN_ETH_WELL].reserve0 = uint128(reserves[0]);
         s.twaReserves[C.BEAN_ETH_WELL].reserve1 = uint128(reserves[1]);
-        console.log("twa reserves 0:", s.twaReserves[C.BEAN_ETH_WELL].reserve0);
-        console.log("twa reserves 1:", s.twaReserves[C.BEAN_ETH_WELL].reserve1);
         s.usdTokenPrice[C.BEAN_ETH_WELL] = 0.001e18;
         if(aboveQ) {
             // increase bean price
@@ -318,8 +320,6 @@ contract MockSeasonFacet is SeasonFacet  {
             // decrease bean price
             s.twaReserves[C.BEAN_ETH_WELL].reserve0 = uint128(reserves[0]);
         }
-        console.log("twa reserves 0:", s.twaReserves[C.BEAN_ETH_WELL].reserve0);
-        console.log("twa reserves 1:", s.twaReserves[C.BEAN_ETH_WELL].reserve1);
 
         /// FIELD ///
         s.season.raining = raining;
@@ -336,7 +336,7 @@ contract MockSeasonFacet is SeasonFacet  {
     }
 
     function captureE() external returns (int256 deltaB) {
-        stepOracle();
+        deltaB = stepOracle();
         emit DeltaB(deltaB);
     }
 
@@ -708,5 +708,44 @@ contract MockSeasonFacet is SeasonFacet  {
 
     function mockCalcCaseIdandUpdate(int256 deltaB) external returns(uint256 caseId) {
         return calcCaseIdandUpdate(deltaB);
+    }
+
+    function getSeasonStart() external view returns (uint256) {
+        return s.season.start;
+    }
+
+    /**
+     * @notice returns the timestamp in which the next sunrise can be called.
+     */
+    function getNextSeasonStart() external view returns (uint256) {
+        uint256 currentSeason = s.season.current;
+        return s.season.start + ((currentSeason + 1) * 3600);
+    }
+
+    /**
+     * @notice intializes the oracle for all whitelisted well lp tokens.
+     * @dev should only be used if the oracle has not been initialized.
+     */
+    function initOracleForAllWhitelistedWells() external {
+        address[] memory lp = LibWhitelistedTokens.getWhitelistedWellLpTokens();
+        for(uint i = 0; i < lp.length; i++) {
+            initOracleForWell(lp[i]);
+        }
+    }
+
+    function initOracleForWell(address well) internal {
+        require(s.wellOracleSnapshots[well].length == 0, "Season: Oracle already initialized.");
+        LibWellMinting.initializeOracle(well);
+    }
+
+    function getPoolDeltaBWithoutCap(address well) external view returns (int256 deltaB) {
+        bytes memory lastSnapshot = LibAppStorage
+            .diamondStorage()
+            .wellOracleSnapshots[well];
+        // If the length of the stored Snapshot for a given Well is 0,
+        // then the Oracle is not initialized.
+        if (lastSnapshot.length > 0) {
+            (deltaB, , , ) = LibWellMinting.twaDeltaB(well, lastSnapshot);
+        }
     }
 }

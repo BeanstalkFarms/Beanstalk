@@ -5,7 +5,6 @@
 pragma solidity =0.7.6;
 
 import {C} from "contracts/C.sol";
-import {console} from "forge-std/console.sol";
 
 /**
  * @title Lib Tractor
@@ -59,7 +58,7 @@ library LibTractor {
 
     /// @notice get tractor storage from storage
     /// @return ts TractorStorage
-    function _tractorStorage() internal view returns (TractorStorage storage ts) {
+    function _tractorStorage() internal pure returns (TractorStorage storage ts) {
         // keccak256("diamond.storage.tractor") == 0x7efbaaac9214ca1879e26b4df38e29a72561affb741bba775ce66d5bb6a82a07
         assembly {
             ts.slot := 0x7efbaaac9214ca1879e26b4df38e29a72561affb741bba775ce66d5bb6a82a07
@@ -82,13 +81,12 @@ library LibTractor {
 
     /// @notice set blueprint publisher address
     /// @param publisher blueprint publisher address
-    function _setPublisher(address publisher) internal {
-        console.log('_tractorStorage().activePublisher: ', _tractorStorage().activePublisher);
+    function _setPublisher(address payable publisher) internal {
         require(
             uint160(bytes20(_tractorStorage().activePublisher)) <= 1,
             "LibTractor: publisher already set"
         );
-        _tractorStorage().activePublisher = payable(publisher);
+        _tractorStorage().activePublisher = publisher;
     }
 
     /// @notice reset blueprint publisher address
@@ -104,7 +102,7 @@ library LibTractor {
 
     /// @notice return current activePublisher address or msg.sender if no active blueprint
     /// @return user to take actions on behalf of
-    function _getUser() internal view returns (address payable user) {
+    function _user() internal view returns (address payable user) {
         user = _getActivePublisher();
         if (uint160(bytes20(user)) <= 1) {
             user = msg.sender;

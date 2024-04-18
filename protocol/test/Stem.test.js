@@ -20,6 +20,7 @@ require('dotenv').config();
 let user,user2,owner;
 
 
+// skip as siloV3 has been implmented.
 describe.skip('Silo V3: Grown Stalk Per Bdv deployment', function () {
     before(async function () {
       try {
@@ -46,7 +47,7 @@ describe.skip('Silo V3: Grown Stalk Per Bdv deployment', function () {
         facetNames: ['EnrootFacet', 'ConvertFacet', 'WhitelistFacet', 'MockSiloFacet', 'MockSeasonFacet', 'MigrationFacet', 'SiloGettersFacet'],
         initFacetName: 'InitBipNewSilo',
         libraryNames: [
-          'LibGauge', 'LibConvert', 'LibLockedUnderlying', 'LibIncentive', 'LibWellMinting'
+          'LibGauge', 'LibConvert', 'LibLockedUnderlying', 'LibIncentive', 'LibWellMinting', 'LibGerminate'
         ],
         facetLibraries: {
           'MockSeasonFacet': [

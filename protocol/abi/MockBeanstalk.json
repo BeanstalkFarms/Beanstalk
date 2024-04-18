@@ -1373,415 +1373,6 @@
     "type": "function"
   },
   {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": false,
-        "internalType": "bytes32",
-        "name": "blueprintHash",
-        "type": "bytes32"
-      }
-    ],
-    "name": "CancelBlueprint",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "components": [
-          {
-            "components": [
-              {
-                "internalType": "address",
-                "name": "publisher",
-                "type": "address"
-              },
-              {
-                "internalType": "bytes",
-                "name": "data",
-                "type": "bytes"
-              },
-              {
-                "internalType": "bytes32[]",
-                "name": "operatorPasteInstrs",
-                "type": "bytes32[]"
-              },
-              {
-                "internalType": "uint256",
-                "name": "maxNonce",
-                "type": "uint256"
-              },
-              {
-                "internalType": "uint256",
-                "name": "startTime",
-                "type": "uint256"
-              },
-              {
-                "internalType": "uint256",
-                "name": "endTime",
-                "type": "uint256"
-              }
-            ],
-            "internalType": "struct LibTractor.Blueprint",
-            "name": "blueprint",
-            "type": "tuple"
-          },
-          {
-            "internalType": "bytes32",
-            "name": "blueprintHash",
-            "type": "bytes32"
-          },
-          {
-            "internalType": "bytes",
-            "name": "signature",
-            "type": "bytes"
-          }
-        ],
-        "indexed": false,
-        "internalType": "struct LibTractor.Requisition",
-        "name": "requisition",
-        "type": "tuple"
-      }
-    ],
-    "name": "PublishRequisition",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": true,
-        "internalType": "address",
-        "name": "operator",
-        "type": "address"
-      },
-      {
-        "indexed": false,
-        "internalType": "bytes32",
-        "name": "blueprintHash",
-        "type": "bytes32"
-      }
-    ],
-    "name": "Tractor",
-    "type": "event"
-  },
-  {
-    "inputs": [
-      {
-        "components": [
-          {
-            "components": [
-              {
-                "internalType": "address",
-                "name": "publisher",
-                "type": "address"
-              },
-              {
-                "internalType": "bytes",
-                "name": "data",
-                "type": "bytes"
-              },
-              {
-                "internalType": "bytes32[]",
-                "name": "operatorPasteInstrs",
-                "type": "bytes32[]"
-              },
-              {
-                "internalType": "uint256",
-                "name": "maxNonce",
-                "type": "uint256"
-              },
-              {
-                "internalType": "uint256",
-                "name": "startTime",
-                "type": "uint256"
-              },
-              {
-                "internalType": "uint256",
-                "name": "endTime",
-                "type": "uint256"
-              }
-            ],
-            "internalType": "struct LibTractor.Blueprint",
-            "name": "blueprint",
-            "type": "tuple"
-          },
-          {
-            "internalType": "bytes32",
-            "name": "blueprintHash",
-            "type": "bytes32"
-          },
-          {
-            "internalType": "bytes",
-            "name": "signature",
-            "type": "bytes"
-          }
-        ],
-        "internalType": "struct LibTractor.Requisition",
-        "name": "requisition",
-        "type": "tuple"
-      }
-    ],
-    "name": "cancelBlueprint",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "components": [
-          {
-            "internalType": "address",
-            "name": "publisher",
-            "type": "address"
-          },
-          {
-            "internalType": "bytes",
-            "name": "data",
-            "type": "bytes"
-          },
-          {
-            "internalType": "bytes32[]",
-            "name": "operatorPasteInstrs",
-            "type": "bytes32[]"
-          },
-          {
-            "internalType": "uint256",
-            "name": "maxNonce",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "startTime",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "endTime",
-            "type": "uint256"
-          }
-        ],
-        "internalType": "struct LibTractor.Blueprint",
-        "name": "blueprint",
-        "type": "tuple"
-      }
-    ],
-    "name": "getBlueprintHash",
-    "outputs": [
-      {
-        "internalType": "bytes32",
-        "name": "",
-        "type": "bytes32"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "bytes32",
-        "name": "blueprintHash",
-        "type": "bytes32"
-      }
-    ],
-    "name": "getBlueprintNonce",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "bytes32",
-        "name": "counterId",
-        "type": "bytes32"
-      }
-    ],
-    "name": "getCounter",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "count",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "components": [
-          {
-            "components": [
-              {
-                "internalType": "address",
-                "name": "publisher",
-                "type": "address"
-              },
-              {
-                "internalType": "bytes",
-                "name": "data",
-                "type": "bytes"
-              },
-              {
-                "internalType": "bytes32[]",
-                "name": "operatorPasteInstrs",
-                "type": "bytes32[]"
-              },
-              {
-                "internalType": "uint256",
-                "name": "maxNonce",
-                "type": "uint256"
-              },
-              {
-                "internalType": "uint256",
-                "name": "startTime",
-                "type": "uint256"
-              },
-              {
-                "internalType": "uint256",
-                "name": "endTime",
-                "type": "uint256"
-              }
-            ],
-            "internalType": "struct LibTractor.Blueprint",
-            "name": "blueprint",
-            "type": "tuple"
-          },
-          {
-            "internalType": "bytes32",
-            "name": "blueprintHash",
-            "type": "bytes32"
-          },
-          {
-            "internalType": "bytes",
-            "name": "signature",
-            "type": "bytes"
-          }
-        ],
-        "internalType": "struct LibTractor.Requisition",
-        "name": "requisition",
-        "type": "tuple"
-      }
-    ],
-    "name": "publishRequisition",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "components": [
-          {
-            "components": [
-              {
-                "internalType": "address",
-                "name": "publisher",
-                "type": "address"
-              },
-              {
-                "internalType": "bytes",
-                "name": "data",
-                "type": "bytes"
-              },
-              {
-                "internalType": "bytes32[]",
-                "name": "operatorPasteInstrs",
-                "type": "bytes32[]"
-              },
-              {
-                "internalType": "uint256",
-                "name": "maxNonce",
-                "type": "uint256"
-              },
-              {
-                "internalType": "uint256",
-                "name": "startTime",
-                "type": "uint256"
-              },
-              {
-                "internalType": "uint256",
-                "name": "endTime",
-                "type": "uint256"
-              }
-            ],
-            "internalType": "struct LibTractor.Blueprint",
-            "name": "blueprint",
-            "type": "tuple"
-          },
-          {
-            "internalType": "bytes32",
-            "name": "blueprintHash",
-            "type": "bytes32"
-          },
-          {
-            "internalType": "bytes",
-            "name": "signature",
-            "type": "bytes"
-          }
-        ],
-        "internalType": "struct LibTractor.Requisition",
-        "name": "requisition",
-        "type": "tuple"
-      },
-      {
-        "internalType": "bytes",
-        "name": "operatorData",
-        "type": "bytes"
-      }
-    ],
-    "name": "tractor",
-    "outputs": [
-      {
-        "internalType": "bytes[]",
-        "name": "results",
-        "type": "bytes[]"
-      }
-    ],
-    "stateMutability": "payable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "bytes32",
-        "name": "counterId",
-        "type": "bytes32"
-      },
-      {
-        "internalType": "enum LibTractor.CounterUpdateType",
-        "name": "updateType",
-        "type": "uint8"
-      },
-      {
-        "internalType": "uint256",
-        "name": "amount",
-        "type": "uint256"
-      }
-    ],
-    "name": "updateCounter",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "count",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
     "inputs": [
       {
         "internalType": "contract IERC1155",
@@ -4964,19 +4555,6 @@
     "type": "function"
   },
   {
-    "inputs": [],
-    "name": "overallDeltaB",
-    "outputs": [
-      {
-        "internalType": "int256",
-        "name": "deltaB",
-        "type": "int256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
     "anonymous": false,
     "inputs": [
       {
@@ -5012,98 +4590,6 @@
     ],
     "name": "Convert",
     "type": "event"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "penaltyBdv",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256[]",
-        "name": "bdvsRemoved",
-        "type": "uint256[]"
-      },
-      {
-        "internalType": "uint256[]",
-        "name": "grownStalks",
-        "type": "uint256[]"
-      }
-    ],
-    "name": "applyPenaltyToGrownStalks",
-    "outputs": [
-      {
-        "internalType": "uint256[]",
-        "name": "",
-        "type": "uint256[]"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "int256",
-        "name": "beforeDeltaB",
-        "type": "int256"
-      },
-      {
-        "internalType": "int256",
-        "name": "afterDeltaB",
-        "type": "int256"
-      },
-      {
-        "internalType": "uint256[]",
-        "name": "bdvsRemoved",
-        "type": "uint256[]"
-      },
-      {
-        "internalType": "uint256",
-        "name": "cappedDeltaB",
-        "type": "uint256"
-      }
-    ],
-    "name": "calculateStalkPenalty",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "well",
-        "type": "address"
-      }
-    ],
-    "name": "cappedReservesDeltaB",
-    "outputs": [
-      {
-        "internalType": "int256",
-        "name": "deltaB",
-        "type": "int256"
-      },
-      {
-        "internalType": "uint256[]",
-        "name": "instReserves",
-        "type": "uint256[]"
-      },
-      {
-        "internalType": "uint256[]",
-        "name": "ratios",
-        "type": "uint256[]"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
   },
   {
     "inputs": [
@@ -5149,75 +4635,6 @@
         "internalType": "uint256",
         "name": "toBdv",
         "type": "uint256"
-      }
-    ],
-    "stateMutability": "payable",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "getConvertPower",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "inputToken",
-        "type": "address"
-      },
-      {
-        "internalType": "int96[]",
-        "name": "stems",
-        "type": "int96[]"
-      },
-      {
-        "internalType": "uint256[]",
-        "name": "amounts",
-        "type": "uint256[]"
-      },
-      {
-        "internalType": "address",
-        "name": "outputToken",
-        "type": "address"
-      },
-      {
-        "components": [
-          {
-            "internalType": "bytes",
-            "name": "callData",
-            "type": "bytes"
-          },
-          {
-            "internalType": "bytes",
-            "name": "clipboard",
-            "type": "bytes"
-          }
-        ],
-        "internalType": "struct AdvancedFarmCall[]",
-        "name": "farmCalls",
-        "type": "tuple[]"
-      }
-    ],
-    "name": "pipelineConvert",
-    "outputs": [
-      {
-        "internalType": "int96[]",
-        "name": "outputStems",
-        "type": "int96[]"
-      },
-      {
-        "internalType": "uint256[]",
-        "name": "outputAmounts",
-        "type": "uint256[]"
       }
     ],
     "stateMutability": "payable",
@@ -6289,40 +5706,6 @@
         "internalType": "uint256",
         "name": "_bdv",
         "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "token",
-        "type": "address"
-      },
-      {
-        "internalType": "uint256",
-        "name": "grownStalk",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "bdvOfDeposit",
-        "type": "uint256"
-      }
-    ],
-    "name": "calculateStemForTokenFromGrownStalk",
-    "outputs": [
-      {
-        "internalType": "int96",
-        "name": "stem",
-        "type": "int96"
-      },
-      {
-        "internalType": "enum LibGerminate.Germinate",
-        "name": "germ",
-        "type": "uint8"
       }
     ],
     "stateMutability": "view",
@@ -8217,6 +7600,109 @@
   },
   {
     "inputs": [],
+    "name": "getSeasonStruct",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "uint32",
+            "name": "current",
+            "type": "uint32"
+          },
+          {
+            "internalType": "uint32",
+            "name": "lastSop",
+            "type": "uint32"
+          },
+          {
+            "internalType": "uint8",
+            "name": "withdrawSeasons",
+            "type": "uint8"
+          },
+          {
+            "internalType": "uint32",
+            "name": "lastSopSeason",
+            "type": "uint32"
+          },
+          {
+            "internalType": "uint32",
+            "name": "rainStart",
+            "type": "uint32"
+          },
+          {
+            "internalType": "bool",
+            "name": "raining",
+            "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "fertilizing",
+            "type": "bool"
+          },
+          {
+            "internalType": "uint32",
+            "name": "sunriseBlock",
+            "type": "uint32"
+          },
+          {
+            "internalType": "bool",
+            "name": "abovePeg",
+            "type": "bool"
+          },
+          {
+            "internalType": "uint16",
+            "name": "stemStartSeason",
+            "type": "uint16"
+          },
+          {
+            "internalType": "uint16",
+            "name": "stemScaleSeason",
+            "type": "uint16"
+          },
+          {
+            "internalType": "uint32",
+            "name": "beanEthStartMintingSeason",
+            "type": "uint32"
+          },
+          {
+            "internalType": "uint256",
+            "name": "start",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "period",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "timestamp",
+            "type": "uint256"
+          }
+        ],
+        "internalType": "struct Storage.Season",
+        "name": "",
+        "type": "tuple"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "getSeasonTimestamp",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
     "name": "getSeedGauge",
     "outputs": [
       {
@@ -8375,25 +7861,6 @@
       {
         "internalType": "int256",
         "name": "",
-        "type": "int256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "pool",
-        "type": "address"
-      }
-    ],
-    "name": "poolDeltaBInsta",
-    "outputs": [
-      {
-        "internalType": "int256",
-        "name": "deltaB",
         "type": "int256"
       }
     ],
@@ -9172,6 +8639,29 @@
         "type": "uint256"
       }
     ],
+    "name": "addFertilizer",
+    "outputs": [],
+    "stateMutability": "payable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint128",
+        "name": "id",
+        "type": "uint128"
+      },
+      {
+        "internalType": "uint128",
+        "name": "tokenAmountIn",
+        "type": "uint128"
+      },
+      {
+        "internalType": "uint256",
+        "name": "minLpOut",
+        "type": "uint256"
+      }
+    ],
     "name": "addFertilizerOwner",
     "outputs": [],
     "stateMutability": "payable",
@@ -9181,7 +8671,7 @@
     "inputs": [
       {
         "internalType": "address",
-        "name": "well",
+        "name": "welll",
         "type": "address"
       }
     ],
@@ -9754,6 +9244,51 @@
   },
   {
     "inputs": [],
+    "name": "getNextSeasonStart",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "well",
+        "type": "address"
+      }
+    ],
+    "name": "getPoolDeltaBWithoutCap",
+    "outputs": [
+      {
+        "internalType": "int256",
+        "name": "deltaB",
+        "type": "int256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "getSeasonStart",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
     "name": "getT",
     "outputs": [
       {
@@ -9846,6 +9381,13 @@
       }
     ],
     "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "initOracleForAllWhitelistedWells",
+    "outputs": [],
+    "stateMutability": "nonpayable",
     "type": "function"
   },
   {
@@ -10017,6 +9559,19 @@
     "inputs": [],
     "name": "mockStepGauge",
     "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "mockStepSeason",
+    "outputs": [
+      {
+        "internalType": "uint32",
+        "name": "season",
+        "type": "uint32"
+      }
+    ],
     "stateMutability": "nonpayable",
     "type": "function"
   },

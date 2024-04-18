@@ -98,7 +98,7 @@ describe('Complex Weather', function () {
           this.testData.wasRaining, 
           this.testData.rainStalk,
           this.aboveQ, // aboveQ
-          this.L2SRState, // L2SR
+          this.L2SRState // L2SR
         )
       })
       it('Checks New Weather', async function () {

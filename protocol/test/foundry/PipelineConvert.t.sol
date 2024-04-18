@@ -44,7 +44,7 @@ contract PipelineConvertTest is TestHelper {
     using SafeMath for uint256;
 
     // Interfaces.
-    IMockFBeanstalk bs = IMockFBeanstalk(BEANSTALK);
+    // IMockFBeanstalk bs = IMockFBeanstalk(BEANSTALK);
     MockSiloFacet silo = MockSiloFacet(BEANSTALK);
     ConvertFacet convert = ConvertFacet(BEANSTALK);
     MockSeasonFacet season = MockSeasonFacet(BEANSTALK);

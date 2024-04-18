@@ -38,8 +38,8 @@ contract LegacyClaimWithdrawalFacet is ReentrancyGuard {
         uint32 season,
         LibTransfer.To mode
     ) external payable nonReentrant {
-        uint256 amount = LibLegacyTokenSilo._claimWithdrawal(LibTractor._getUser(), token, season);
-        LibTransfer.sendToken(IERC20(token), amount, LibTractor._getUser(), mode);
+        uint256 amount = LibLegacyTokenSilo._claimWithdrawal(LibTractor._user(), token, season);
+        LibTransfer.sendToken(IERC20(token), amount, LibTractor._user(), mode);
     }
 
     /**
@@ -53,8 +53,8 @@ contract LegacyClaimWithdrawalFacet is ReentrancyGuard {
         uint32[] calldata seasons,
         LibTransfer.To mode
     ) external payable nonReentrant {
-        uint256 amount = LibLegacyTokenSilo._claimWithdrawals(LibTractor._getUser(), token, seasons);
-        LibTransfer.sendToken(IERC20(token), amount, LibTractor._getUser(), mode);
+        uint256 amount = LibLegacyTokenSilo._claimWithdrawals(LibTractor._user(), token, seasons);
+        LibTransfer.sendToken(IERC20(token), amount, LibTractor._user(), mode);
     }
 
     /*

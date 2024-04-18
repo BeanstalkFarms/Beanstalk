@@ -135,10 +135,12 @@ contract ConvertFacet is ReentrancyGuard {
 
         require(fromAmount > 0, "Convert: From amount is 0.");
 
-        LibSilo._mow(LibTractor._getUser(), fromToken);
-        LibSilo._mow(LibTractor._getUser(), toToken);
+        require(fromAmount > 0, "Convert: From amount is 0.");
 
-        (grownStalk, fromBdv, ,) = _withdrawTokens(
+        LibSilo._mow(LibTractor._user(), fromToken);
+        LibSilo._mow(LibTractor._user(), toToken);
+
+        (grownStalk, fromBdv, , ) = _withdrawTokens(
             fromToken,
             stems,
             amounts,
@@ -150,7 +152,7 @@ contract ConvertFacet is ReentrancyGuard {
 
         toStem = _depositTokensForConvert(toToken, toAmount, toBdv, grownStalk);
 
-        emit Convert(LibTractor._getUser(), fromToken, toToken, fromAmount, toAmount);
+        emit Convert(LibTractor._user(), fromToken, toToken, fromAmount, toAmount);
 
         LibTractor._resetPublisher();
     }
@@ -189,8 +191,8 @@ contract ConvertFacet is ReentrancyGuard {
         require(LibWell.isWell(outputToken) || outputToken == C.BEAN, "Convert: Output token is not a well");
 
         // mow input and output tokens: 
-        LibSilo._mow(LibTractor._getUser(), inputToken);
-        LibSilo._mow(LibTractor._getUser(), outputToken);
+        LibSilo._mow(LibTractor._user(), inputToken);
+        LibSilo._mow(LibTractor._user(), outputToken);
         
         // Calculate the maximum amount of tokens to withdraw
         uint256 maxTokens = 0;
@@ -449,7 +451,7 @@ contract ConvertFacet is ReentrancyGuard {
     }
 
     /**
-     * @notice removes the deposits from msg.sender and returns the
+     * @notice removes the deposits from user and returns the
      * grown stalk and bdv removed.
      * 
      * @dev if a user inputs a stem of a deposit that is `germinating`, 
@@ -491,7 +493,7 @@ contract ConvertFacet is ReentrancyGuard {
                 if (a.active.tokens.add(amounts[i]) >= maxTokens) amounts[i] = maxTokens.sub(a.active.tokens);
                 
                 a.bdvsRemoved[i] = LibTokenSilo.removeDepositFromAccount(
-                        LibTractor._getUser(),
+                        LibTractor._user(),
                         token,
                         stems[i],
                         amounts[i]
@@ -516,7 +518,7 @@ contract ConvertFacet is ReentrancyGuard {
             for (i; i < stems.length; ++i) amounts[i] = 0;
             
             emit RemoveDeposits(
-                LibTractor._getUser(),
+                LibTractor._user(),
                 token,
                 stems,
                 amounts,
@@ -525,8 +527,8 @@ contract ConvertFacet is ReentrancyGuard {
             );
 
             emit LibSilo.TransferBatch(
-                LibTractor._getUser(), 
-                LibTractor._getUser(),
+                LibTractor._user(), 
+                LibTractor._user(),
                 address(0), 
                 a.depositIds, 
                 amounts
@@ -541,7 +543,7 @@ contract ConvertFacet is ReentrancyGuard {
 
         // all deposits converted are not germinating.
         LibSilo.burnActiveStalk(
-            LibTractor._getUser(),
+            LibTractor._user(),
             a.active.stalk.add(a.active.bdv.mul(s.ss[token].stalkIssuedPerBdv))
         );
         return (a.active.stalk, a.active.bdv, a.bdvsRemoved, a.stalksRemoved);
@@ -568,17 +570,17 @@ contract ConvertFacet is ReentrancyGuard {
         if (germ == LibGerminate.Germinate.NOT_GERMINATING) {
             LibTokenSilo.incrementTotalDeposited(token, amount, bdv);
             LibSilo.mintActiveStalk(
-                LibTractor._getUser(), 
+                LibTractor._user(), 
                 bdv.mul(LibTokenSilo.stalkIssuedPerBdv(token)).add(grownStalk)
             );
         } else {
             LibTokenSilo.incrementTotalGerminating(token, amount, bdv, germ);
             // safeCast not needed as stalk is <= max(uint128)
-            LibSilo.mintGerminatingStalk(LibTractor._getUser(), uint128(bdv.mul(LibTokenSilo.stalkIssuedPerBdv(token))), germ);   
-            LibSilo.mintActiveStalk(LibTractor._getUser(), grownStalk);
+            LibSilo.mintGerminatingStalk(LibTractor._user(), uint128(bdv.mul(LibTokenSilo.stalkIssuedPerBdv(token))), germ);   
+            LibSilo.mintActiveStalk(LibTractor._user(), grownStalk);
         }
         LibTokenSilo.addDepositToAccount(
-            LibTractor._getUser(),
+            LibTractor._user(), 
             token, 
             stem, 
             amount,
@@ -646,17 +648,17 @@ contract ConvertFacet is ReentrancyGuard {
             if (mcdd.germ == LibGerminate.Germinate.NOT_GERMINATING) {
                 LibTokenSilo.incrementTotalDeposited(outputToken, mcdd.crateAmount, mcdd.depositedBdv);
                 LibSilo.mintActiveStalk(
-                    LibTractor._getUser(), 
+                    LibTractor._user(), 
                     mcdd.depositedBdv.mul(LibTokenSilo.stalkIssuedPerBdv(outputToken)).add(grownStalks[i])
                 );
             } else {
                 LibTokenSilo.incrementTotalGerminating(outputToken, mcdd.crateAmount, mcdd.depositedBdv, mcdd.germ);
                 // safeCast not needed as stalk is <= max(uint128)
-                LibSilo.mintGerminatingStalk(LibTractor._getUser(), uint128(mcdd.depositedBdv.mul(LibTokenSilo.stalkIssuedPerBdv(outputToken))), mcdd.germ);   
-                LibSilo.mintActiveStalk(LibTractor._getUser(), grownStalks[i]);
+                LibSilo.mintGerminatingStalk(LibTractor._user(), uint128(mcdd.depositedBdv.mul(LibTokenSilo.stalkIssuedPerBdv(outputToken))), mcdd.germ);   
+                LibSilo.mintActiveStalk(LibTractor._user(), grownStalks[i]);
             }
             LibTokenSilo.addDepositToAccount(
-                LibTractor._getUser(),
+                LibTractor._user(),
                 outputToken, 
                 mcdd.stem, 
                 mcdd.crateAmount,
@@ -664,7 +666,7 @@ contract ConvertFacet is ReentrancyGuard {
                 LibTokenSilo.Transfer.emitTransferSingle
             );
 
-            emit Convert(LibTractor._getUser(), inputToken, outputToken, inputAmounts[i], mcdd.crateAmount);
+            emit Convert(LibTractor._user(), inputToken, outputToken, inputAmounts[i], mcdd.crateAmount);
         }
     }
 }

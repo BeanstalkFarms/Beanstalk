@@ -27,8 +27,9 @@ contract MockConvertFacet is ConvertFacet {
         uint256[] memory amounts,
         uint256 maxTokens
     ) external {
-        LibSilo._mow(LibTractor._getUser(), token);
-        (uint256 stalkRemoved, uint256 bdvRemoved, ,) = _withdrawTokens(token, stems, amounts, maxTokens);
+        LibSilo._mow(LibTractor._user(), token);
+        (uint256 stalkRemoved, uint256 bdvRemoved, , ) = _withdrawTokens(token, stems, amounts, maxTokens);
+        
         
         emit MockConvert(stalkRemoved, bdvRemoved);
     }
@@ -39,7 +40,7 @@ contract MockConvertFacet is ConvertFacet {
         uint256 bdv, 
         uint256 grownStalk
     ) external {
-        LibSilo._mow(LibTractor._getUser(), token);
+        LibSilo._mow(LibTractor._user(), token);
         _depositTokensForConvert(token, amount, bdv, grownStalk);
     }
 
@@ -53,10 +54,10 @@ contract MockConvertFacet is ConvertFacet {
         uint256 toAmount,
         uint256 fromAmount
     ) {
-        IERC20(tokenIn).safeTransferFrom(LibTractor._getUser(), address(this), amountIn);
+        IERC20(tokenIn).safeTransferFrom(LibTractor._user(), address(this), amountIn);
         (toToken, fromToken, toAmount, fromAmount) = LibConvert.convert(
             convertData
         );
-        IERC20(toToken).safeTransfer(LibTractor._getUser(), toAmount);
+        IERC20(toToken).safeTransfer(LibTractor._user(), toAmount);
     }
 }

@@ -15,7 +15,6 @@ import {ICumulativePump} from "contracts/interfaces/basin/pumps/ICumulativePump.
 
 contract MockPump is IInstantaneousPump, ICumulativePump {
 
-    // put this in a struct
     struct ReservesData {
         uint256[] instantaneousReserves;
         uint256[] cumulativeReserves;
@@ -24,8 +23,10 @@ contract MockPump is IInstantaneousPump, ICumulativePump {
 
     mapping(address => ReservesData) reservesData;
 
-
-    function setInstantaneousReserves(address well, uint[] memory _instantaneousReserves) external {
+    function setInstantaneousReserves(
+        address well, 
+        uint[] memory _instantaneousReserves
+    ) external {
         reservesData[well].instantaneousReserves = _instantaneousReserves;
     }
 
@@ -39,10 +40,6 @@ contract MockPump is IInstantaneousPump, ICumulativePump {
 
     function update(address well, uint256[] memory _reserves, bytes memory data) external {
         _update(well, _reserves, data);
-    }
-
-    function updateNoBytes(address well, uint256[] memory _reserves) external {
-        _update(well, _reserves, new bytes(0));
     }
 
     function _update(address well, uint256[] memory _reserves, bytes memory data) internal {
@@ -74,6 +71,10 @@ contract MockPump is IInstantaneousPump, ICumulativePump {
         bytes memory
     ) external override view returns (uint[] memory twaReserves, bytes memory _cumulativeReserves){
         twaReserves = reservesData[well].cumulativeReserves;
-        _cumulativeReserves = abi.encodePacked(reservesData[well].cumulativeReserves[0], reservesData[well].cumulativeReserves[1]);
+        _cumulativeReserves = abi.encodePacked(twaReserves[0], twaReserves[1]);
+    }
+
+    function clearReserves(address well) external {
+        delete reservesData[well];
     }
 }

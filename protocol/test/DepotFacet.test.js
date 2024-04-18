@@ -24,9 +24,6 @@ describe.skip('Depot Facet', function () {
     
     bean = await getBean()
     this.usdc = await getUsdc()
-    this.threeCurve = await ethers.getContractAt('MockToken', THREE_CURVE)
-    this.threePool = await ethers.getContractAt('Mock3Curve', THREE_POOL)
-    this.beanMetapool = await ethers.getContractAt('MockMeta3Curve', BEAN_3_CURVE)
     this.weth = await ethers.getContractAt("MockWETH", WETH)
     
     pipeline = await ethers.getContractAt('Pipeline', PIPELINE)
@@ -42,26 +39,7 @@ describe.skip('Depot Facet', function () {
     await this.usdc.connect(user).approve(beanstalk.address, to18('1'))
 
     await bean.connect(user).approve(beanstalk.address, '100000000000')
-    await bean.connect(user).approve(this.beanMetapool.address, '100000000000')
     await bean.mint(user.address, to6('10000'))
-
-    await this.threeCurve.mint(user.address, to18('1000'))
-    await this.threePool.set_virtual_price(to18('1'))
-    await this.threeCurve.connect(user).approve(this.beanMetapool.address, to18('100000000000'))
-
-    await this.beanMetapool.set_A_precise('1000')
-    await this.beanMetapool.set_virtual_price(ethers.utils.parseEther('1'))
-    await this.beanMetapool.connect(user).approve(this.threeCurve.address, to18('100000000000'))
-    await this.beanMetapool.connect(user).approve(beanstalk.address, to18('100000000000'))
-    await this.threeCurve.connect(user).approve(beanstalk.address, to18('100000000000'))
-    this.result = await beanstalk.connect(user).addLiquidity(
-      BEAN_3_CURVE,
-      STABLE_FACTORY,
-      [to6('1000'), to18('1000')],
-      to18('2000'),
-      EXTERNAL,
-      EXTERNAL
-    )
   });
 
   beforeEach(async function () {
@@ -209,7 +187,7 @@ describe.skip('Depot Facet', function () {
     it("returns a value", async function () {
       selector = bean.interface.encodeFunctionData('balanceOf', [user.address])
       const pipeResult = await beanstalk.readPipe([BEAN, selector])
-      expect(defaultAbiCoder.decode(['uint256'], pipeResult)[0]).to.be.equal(to6('10000'))
+      expect(defaultAbiCoder.decode(['uint256'], pipeResult)[0]).to.be.equal(to6('11000'))
     })
   })
 })

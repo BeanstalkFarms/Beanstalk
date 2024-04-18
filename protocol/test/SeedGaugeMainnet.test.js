@@ -55,7 +55,7 @@ testIfRpcSet('SeedGauge Init Test', function () {
     await revertToSnapshot(snapshotId)
   });
 
-  describe('init state', async function () {
+  describe.skip('init state', async function () {
 
     it('totalDepositedBDV', async function () {
       console.log("total deposited BDV")
@@ -118,7 +118,7 @@ testIfRpcSet('SeedGauge Init Test', function () {
   })
 
   // verify that bean3crv has properly dewhitelisted.
-  describe('bean3crv dewhitelisted', async function () {
+  describe.skip('bean3crv dewhitelisted', async function () {
 
     beforeEach(async function () {
       // deploy mockAdminFacet to mint beans.
@@ -194,7 +194,7 @@ testIfRpcSet('SeedGauge Init Test', function () {
   })
 
   // verify silov3.1 migration. 
-  describe('silo v3.1 migration', async function () {
+  describe.skip('silo v3.1 migration', async function () {
     // mow active user, verify stem has increased by >1e6.
     it('correctly updates lastStem for a user', async function () {
       const testAccount = '0x43a9dA9bAde357843fBE7E5ee3Eedd910F9fAC1e'

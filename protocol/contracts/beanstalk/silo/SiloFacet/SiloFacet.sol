@@ -62,10 +62,10 @@ contract SiloFacet is TokenSilo {
         amount = LibTransfer.receiveToken(
             IERC20(token),
             _amount,
-            LibTractor._getUser(),
+            LibTractor._user(),
             mode
         );
-        (_bdv, stem) = _deposit(LibTractor._getUser(), token, amount);
+        (_bdv, stem) = _deposit(LibTractor._user(), token, amount);
     }
 
     //////////////////////// WITHDRAW ////////////////////////
@@ -96,8 +96,8 @@ contract SiloFacet is TokenSilo {
         uint256 amount,
         LibTransfer.To mode
     ) external payable mowSender(token) nonReentrant {
-        _withdrawDeposit(LibTractor._getUser(), token, stem, amount);
-        LibTransfer.sendToken(IERC20(token), amount, LibTractor._getUser(), mode);
+        _withdrawDeposit(LibTractor._user(), token, stem, amount);
+        LibTransfer.sendToken(IERC20(token), amount, LibTractor._user(), mode);
     }
 
     /** 
@@ -120,8 +120,8 @@ contract SiloFacet is TokenSilo {
         uint256[] calldata amounts,
         LibTransfer.To mode
     ) external payable mowSender(token) nonReentrant {
-        uint256 amount = _withdrawDeposits(LibTractor._getUser(), token, stems, amounts);
-        LibTransfer.sendToken(IERC20(token), amount, LibTractor._getUser(), mode);
+        uint256 amount = _withdrawDeposits(LibTractor._user(), token, stems, amounts);
+        LibTransfer.sendToken(IERC20(token), amount, LibTractor._user(), mode);
     }
 
 
@@ -136,7 +136,7 @@ contract SiloFacet is TokenSilo {
      * @param amount Amount of `token` to Transfer.
      * @return _bdv The BDV included in this transfer, now owned by `recipient`.
      *
-     * @dev An allowance is required if `sender !== msg.sender`
+     * @dev An allowance is required if sender != user
      * 
      * The {mowSender} modifier is not used here because _both_ the `sender` and
      * `recipient` need their Silo updated, since both accounts experience a
@@ -149,8 +149,8 @@ contract SiloFacet is TokenSilo {
         int96 stem,
         uint256 amount
     ) public payable nonReentrant returns (uint256 _bdv) {
-        if (sender != LibTractor._getUser()) {
-            LibSiloPermit._spendDepositAllowance(sender, LibTractor._getUser(), token, amount);
+        if (sender != LibTractor._user()) {
+            LibSiloPermit._spendDepositAllowance(sender, LibTractor._user(), token, amount);
         }
         LibSilo._mow(sender, token);
         // Need to update the recipient's Silo as well.
@@ -167,7 +167,7 @@ contract SiloFacet is TokenSilo {
      * @param amounts Amounts of `token` to Transfer from corresponding `stem`.
      * @return bdvs Array of BDV transferred from each Season, now owned by `recipient`.
      *
-     * @dev An allowance is required if `sender !== msg.sender`. There must be enough allowance
+     * @dev An allowance is required if sender != user. There must be enough allowance
      * to transfer all of the requested Deposits, otherwise the transaction should revert.
      * 
      * The {mowSender} modifier is not used here because _both_ the `sender` and
@@ -190,8 +190,8 @@ contract SiloFacet is TokenSilo {
         }
 
         // Tractor operator does not use allowance.
-        if (sender != LibTractor._getUser()) {
-            LibSiloPermit._spendDepositAllowance(sender, LibTractor._getUser(), token, totalAmount);
+        if (sender != LibTractor._user()) {
+            LibSiloPermit._spendDepositAllowance(sender, LibTractor._user(), token, totalAmount);
         }
        
         LibSilo._mow(sender, token);
@@ -289,7 +289,7 @@ contract SiloFacet is TokenSilo {
 
     /** 
      * @notice Claim Earned Beans and their associated Stalk and Plantable Seeds for
-     * `msg.sender`.
+     * user.
      *
      * The Stalk associated with Earned Beans is commonly called "Earned Stalk".
      * Earned Stalk DOES contribute towards the Farmer's Stalk when earned beans is issued.
@@ -303,14 +303,14 @@ contract SiloFacet is TokenSilo {
      * the current Season.
      */
     function plant() external payable returns (uint256 beans, int96 stem) {
-        return _plant(LibTractor._getUser());
+        return _plant(LibTractor._user());
     }
 
     /** 
      * @notice Claim rewards from a Flood (Was Season of Plenty)
      */
     function claimPlenty() external payable {
-        _claimPlenty(LibTractor._getUser());
+        _claimPlenty(LibTractor._user());
     }
 
 }

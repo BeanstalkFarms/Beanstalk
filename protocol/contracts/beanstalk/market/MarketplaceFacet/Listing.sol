@@ -67,19 +67,19 @@ contract Listing is PodTransfer {
         uint256 minFillAmount,
         LibTransfer.To mode
     ) internal {
-        uint256 plotSize = s.a[LibTractor._getUser()].field.plots[index];
+        uint256 plotSize = s.a[LibTractor._user()].field.plots[index];
         
         require(plotSize >= (start.add(amount)) && amount > 0, "Marketplace: Invalid Plot/Amount.");
         require(pricePerPod > 0, "Marketplace: Pod price must be greater than 0.");
         require(s.f.harvestable <= maxHarvestableIndex, "Marketplace: Expired.");
         
-        if (s.podListings[index] != bytes32(0)) _cancelPodListing(LibTractor._getUser(), index);
+        if (s.podListings[index] != bytes32(0)) _cancelPodListing(LibTractor._user(), index);
 
         s.podListings[index] = hashListing(start, amount, pricePerPod, maxHarvestableIndex, minFillAmount, mode);
 
         bytes memory f;
         
-        emit PodListingCreated(LibTractor._getUser(), index, start, amount, pricePerPod, maxHarvestableIndex, minFillAmount, f, mode, LibPolynomial.PriceType.Fixed);
+        emit PodListingCreated(LibTractor._user(), index, start, amount, pricePerPod, maxHarvestableIndex, minFillAmount, f, mode, LibPolynomial.PriceType.Fixed);
 
     }
 
@@ -92,12 +92,12 @@ contract Listing is PodTransfer {
         bytes calldata pricingFunction,
         LibTransfer.To mode
     ) internal {
-        uint256 plotSize = s.a[LibTractor._getUser()].field.plots[index];
+        uint256 plotSize = s.a[LibTractor._user()].field.plots[index];
 
         require(plotSize >= (start.add(amount)) && amount > 0, "Marketplace: Invalid Plot/Amount.");
         require(s.f.harvestable <= maxHarvestableIndex, "Marketplace: Expired.");
         
-        if (s.podListings[index] != bytes32(0)) _cancelPodListing(LibTractor._getUser(), index);
+        if (s.podListings[index] != bytes32(0)) _cancelPodListing(LibTractor._user(), index);
 
         s.podListings[index] = hashListingV2(
             start, 
@@ -110,7 +110,7 @@ contract Listing is PodTransfer {
         );
         
         emit PodListingCreated(
-            LibTractor._getUser(), 
+            LibTractor._user(), 
             index, 
             start, 
             amount, 
@@ -144,8 +144,8 @@ contract Listing is PodTransfer {
 
         uint256 amount = getAmountPodsFromFillListing(l.pricePerPod, l.amount, beanAmount);
 
-        __fillListing(LibTractor._getUser(), l, amount, beanAmount);
-        _transferPlot(l.account, LibTractor._getUser(), l.index, l.start, amount);
+        __fillListing(LibTractor._user(), l, amount, beanAmount);
+        _transferPlot(l.account, LibTractor._user(), l.index, l.start, amount);
 
     }
 
@@ -173,8 +173,8 @@ contract Listing is PodTransfer {
 
         uint256 amount = getAmountPodsFromFillListingV2(l.index.add(l.start).sub(s.f.harvestable), l.amount, beanAmount, pricingFunction);
 
-        __fillListingV2(LibTractor._getUser(), l, pricingFunction, amount, beanAmount);
-        _transferPlot(l.account, LibTractor._getUser(), l.index, l.start, amount);
+        __fillListingV2(LibTractor._user(), l, pricingFunction, amount, beanAmount);
+        _transferPlot(l.account, LibTractor._user(), l.index, l.start, amount);
 
     }
 

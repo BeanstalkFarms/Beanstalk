@@ -123,7 +123,7 @@ library LibFertilizer {
         );
 
         IERC20(barnRaiseToken).transferFrom(
-            LibTractor._getUser(),
+            LibTractor._user(),
             address(this),
             uint256(tokenAmountIn)
         );

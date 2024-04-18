@@ -3,16 +3,9 @@ pragma solidity >=0.6.0 <0.9.0;
 pragma abicoder v2;
 
 
-import {TestHelper, LibTransfer, IWell, IERC20} from "../utils/TestHelper.sol";
-import {IMockFBeanstalk} from "contracts/interfaces/IMockFBeanstalk.sol";
+import {TestHelper, LibTransfer, IWell, IERC20, IMockFBeanstalk} from "test/foundry/utils/TestHelper.sol";
 import {MockSeasonFacet} from "contracts/mocks/mockFacets/MockSeasonFacet.sol";
-import {MockConvertFacet} from "contracts/mocks/mockFacets/MockConvertFacet.sol";
 import {C} from "contracts/C.sol";
-import {console} from "forge-std/console.sol";
-import {LibConvertData} from "contracts/libraries/Convert/LibConvertData.sol";
-import {MockToken} from "contracts/mocks/MockToken.sol";
-import {LibEvaluate} from "contracts/libraries/LibEvaluate.sol";
-import {Decimal} from "contracts/libraries/Decimal.sol";
 
 contract CasesTest is TestHelper {
 
@@ -22,7 +15,6 @@ contract CasesTest is TestHelper {
 
   
     // Interfaces.
-    IMockFBeanstalk bs = IMockFBeanstalk(BEANSTALK);
     MockSeasonFacet season = MockSeasonFacet(BEANSTALK);
 
     address well = C.BEAN_ETH_WELL;
