@@ -198,7 +198,7 @@ const Deposits: FC<
         token={token}
         footNote={
           hasGerminating
-            ? 'Green rows represent germinating deposits'
+            ? 'Green rows represent Germinating Deposits'
             : undefined
         }
         {...props}
