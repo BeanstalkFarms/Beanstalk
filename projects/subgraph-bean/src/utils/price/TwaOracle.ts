@@ -67,5 +67,11 @@ export function getTWAPrices(poolAddress: string, type: TWAType, timestamp: BigI
   twaOracle.priceCumulativeSun = newPriceCumulative;
   twaOracle.lastSun = timestamp;
   twaOracle.save();
-  return initialized ? twaPrices : [BI_10.pow(18), BI_10.pow(18)];
+  if (initialized) {
+    return twaPrices;
+  } else if (type == TWAType.UNISWAP) {
+    return [BI_10.pow(18), BI_10.pow(18)];
+  } else {
+    return [BI_10.pow(6), BI_10.pow(18)];
+  }
 }
