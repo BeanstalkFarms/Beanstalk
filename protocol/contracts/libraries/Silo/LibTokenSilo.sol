@@ -17,12 +17,8 @@ import {LibBytes} from "contracts/libraries/LibBytes.sol";
 import {LibGerminate} from "contracts/libraries/Silo/LibGerminate.sol";
 import {LibWhitelistedTokens} from "contracts/libraries/Silo/LibWhitelistedTokens.sol";
 import {LibTractor} from "contracts/libraries/LibTractor.sol";
-
-import "forge-std/console.sol";
-
-
-
 import "contracts/libraries/LibStrings.sol";
+
 /**
  * @title LibTokenSilo
  * @author Publius, Pizzaman1337
@@ -107,19 +103,13 @@ library LibTokenSilo {
         uint256 bdv,
         LibGerminate.Germinate germ
     ) internal {
-        // console.log('incrementTotalGerminating');
-        // console.log('token: ', token);
-        // console.log('amount: ', amount);
-        // console.log('bdv: ', bdv);
         AppStorage storage s = LibAppStorage.diamondStorage();
         Storage.TotalGerminating storage germinate;
 
         // verify germ is valid
         if (germ == LibGerminate.Germinate.ODD) {
-            // console.log('germinate is odd');
             germinate = s.oddGerminating;
         } else if (germ == LibGerminate.Germinate.EVEN) {
-            // console.log('germinate is even');
             germinate = s.evenGerminating;
         } else {
             revert("invalid germinationMode"); // should not ever get here
@@ -130,10 +120,6 @@ library LibTokenSilo {
             amount.toUint128()
         );
         germinate.deposited[token].bdv = germinate.deposited[token].bdv.add(bdv.toUint128());
-
-
-        // console.log('germinate.deposited[token].amount', germinate.deposited[token].amount);
-        // console.log('germinate.deposited[token].bdv', germinate.deposited[token].bdv);
 
         // emit event.
         emit LibGerminate.TotalGerminatingBalanceChanged(
@@ -363,13 +349,6 @@ library LibTokenSilo {
                 amount // token amount
             );
         }
-        // console.log('addDepositToAccount emit AddDeposit');
-        // console.log('addDepositToAccount account: ', account);
-        // console.log('addDepositToAccount token: ', token);
-        // console.log('addDepositToAccount stem: ');
-        // console.logInt(stem);
-        // console.log('addDepositToAccount amount: ', amount);
-        // console.log('addDepositToAccount bdv: ', bdv);
         emit AddDeposit(account, token, stem, amount, bdv);
     }
 
@@ -399,13 +378,8 @@ library LibTokenSilo {
         int96 stem,
         uint256 amount
     ) internal returns (uint256 crateBDV) {
-
         AppStorage storage s = LibAppStorage.diamondStorage();
         uint256 depositId = LibBytes.packAddressAndStem(token, stem);
-
-        // console.log('removeDepositFromAccount account: ', account);
-        // console.log('removeDepositFromAccount token: ', token);
-        // console.log('depositId: ', depositId);
 
         uint256 crateAmount = s.a[account].deposits[depositId].amount;
         crateBDV = s.a[account].deposits[depositId].bdv;
@@ -424,10 +398,6 @@ library LibTokenSilo {
                 );
             }
         }
-
-        // console.log('removeDepositFromAccount amount: ', amount);
-        // console.log('removeDepositFromAccount crateAmount: ', crateAmount);
-
 
         require(amount <= crateAmount, "Silo: Crate balance too low.");
 
@@ -603,19 +573,9 @@ library LibTokenSilo {
         uint256 grownStalk,
         uint256 bdv
     ) internal view returns (int96 stem, LibGerminate.Germinate germ) {
-        console.log('calculateStemForTokenFromGrownStalk');
-        console.log('calculateStemForTokenFromGrownStalk token: ', token);
-        console.log('calculateStemForTokenFromGrownStalk bdv: ', bdv);
-        console.log('calculateStemForTokenFromGrownStalk grownStalk: ', grownStalk);
         LibGerminate.GermStem memory germStem = LibGerminate.getGerminatingStem(token);
         stem = germStem.stemTip.sub(toInt96(grownStalk.mul(PRECISION).div(bdv)));
         germ = LibGerminate._getGerminationState(stem, germStem);
-
-        console.log('calculateStemForTokenFromGrownStalk stem: ');
-        console.logInt(stem);
-
-        console.log('calculateStemForTokenFromGrownStalk germ: ');
-        console.log("germ value:", uint256(germ));
     }
 
     /**

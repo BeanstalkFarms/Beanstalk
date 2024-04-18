@@ -17,7 +17,6 @@ import {IBeanstalkWellFunction} from "contracts/interfaces/basin/IBeanstalkWellF
 import {SignedSafeMath} from "@openzeppelin/contracts/math/SignedSafeMath.sol";
 import {LibEthUsdOracle} from "contracts/libraries/Oracle/LibEthUsdOracle.sol";
 import {LibWhitelistedTokens} from "contracts/libraries/Silo/LibWhitelistedTokens.sol";
-import "forge-std/console.sol";
 
 /**
  * @title Well Minting Oracle Library
@@ -259,18 +258,10 @@ library LibWellMinting {
         Call[] memory pumps = IWell(well).pumps();
         address pump = pumps[0].target;
 
-        console.log('cappedReservesDeltaB for pump: ', pump);
-
         // well address , data[]
         try ICappedReservesPump(pump).readCappedReserves(well, new bytes(0)) returns (uint[] memory instReserves) {
             // Get well tokens
             IERC20[] memory tokens = IWell(well).tokens();
-
-
-            console.log('cappedReservesDeltaB instReserves:');
-            for (uint i = 0; i < instReserves.length; i++) {
-                console.log('cappedReservesDeltaB instReserves[i]: ', instReserves[i]);
-            }
 
             // Get ratios and bean index
             (
@@ -305,7 +296,6 @@ library LibWellMinting {
             return (deltaB, instReserves, ratios);
         }
         catch {
-            console.log('ERROR: cappedReservesDeltaB failed');
             // TODO: revert here?
             return (0, new uint256[](0), new uint256[](0));
         }
@@ -314,17 +304,10 @@ library LibWellMinting {
     // Calculates overall deltaB, used by convert for stalk penalty purposes
     function overallDeltaB() internal view returns (int256 deltaB) {
         address[] memory tokens = LibWhitelistedTokens.getWhitelistedWellLpTokens();
-        console.log('about to loop through tokens', tokens.length);
         for (uint256 i = 0; i < tokens.length; i++) {
             if (tokens[i] == C.BEAN) continue;
             (int256 cappedDeltaB, , ) = cappedReservesDeltaB(tokens[i]);
             deltaB = deltaB.add(cappedDeltaB);
-
-            console.log('overallDeltaB tokens[i]: ', tokens[i]);
-            console.log('overallDeltaB cappedDeltaB: ');
-            console.logInt(cappedDeltaB);
-            console.log('overallDeltaB deltaB: ');
-            console.logInt(deltaB);
         }
     }
 

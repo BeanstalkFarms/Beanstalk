@@ -7,7 +7,6 @@ pragma solidity =0.7.6;
 import {C} from "contracts/C.sol";
 import {LibBytes} from "./LibBytes.sol";
 
-import "forge-std/console.sol";
 // https://evmpipeline.org/pipeline.pdf
 
 /**
@@ -70,21 +69,11 @@ library LibReturnPasteParam {
         require(C.SLOT_SIZE <= _pasteByteIndex, "RP: _pasteByteIndex too small");
         require(_pasteByteIndex <= data.length, "RP: _pasteByteIndex too large");
         require(C.SLOT_SIZE <= _copyByteIndex, "RP: _copyByteIndex too small");
-
-        console.log('pasteBytes _copyByteIndex: ', _copyByteIndex);
-        console.log('pasteBytes returnData[_returnDataItemIndex].length: ', returnData[_returnDataItemIndex].length);
-        console.log('returnData[_returnDataItemIndex]');
-        console.logBytes(returnData[_returnDataItemIndex]);
-
         require(
             _copyByteIndex <= returnData[_returnDataItemIndex].length,
             "RP: _copyByteIndex too large"
         );
         require(_returnDataItemIndex < returnData.length, "RP: _returnDataItemIndex too large");
-        console.log('going to paste from this data:');
-        console.logBytes(returnData[_returnDataItemIndex]);
-        console.log('to this data:');
-        console.logBytes(data);
         LibBytes.paste32Bytes(
             returnData[_returnDataItemIndex], // isolate returnDataItemIndex
             data,

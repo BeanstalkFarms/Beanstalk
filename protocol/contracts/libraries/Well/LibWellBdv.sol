@@ -11,9 +11,6 @@ import {Call, IWell} from "contracts/interfaces/basin/IWell.sol";
 import {IWellFunction} from "contracts/interfaces/basin/IWellFunction.sol";
 import {LibWell} from "contracts/libraries/Well/LibWell.sol";
 import {C} from "contracts/C.sol";
-import {console} from "forge-std/console.sol";
-
-
 
 /**
  * @title Well Bdv Library

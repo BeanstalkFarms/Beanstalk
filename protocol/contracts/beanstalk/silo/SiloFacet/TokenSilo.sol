@@ -148,13 +148,6 @@ contract TokenSilo is Silo {
             stem = LibTokenSilo.stemTipForToken(token),
             amount
         );
-        console.log('_deposit');
-        console.log('_deposit account: ', account);
-        console.log('_deposit token: ', token);
-        console.log('_deposit stem: ');
-        console.logInt(stem);
-        console.log('_deposit amount: ', amount);
-        // console.log('_deposit germ: ', germ);
         LibSilo.mintGerminatingStalk(account, uint128(stalk), germ);
     }
 

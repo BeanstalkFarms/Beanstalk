@@ -15,7 +15,6 @@ import {LibGauge} from "contracts/libraries/LibGauge.sol";
 import {BDVFacet} from "contracts/beanstalk/silo/BDVFacet.sol";
 import {LibTractor} from "contracts/libraries/LibTractor.sol";
 import {C} from "contracts/C.sol";
-import {console} from "forge-std/console.sol";
 
 
 
@@ -189,9 +188,6 @@ contract InitalizeDiamond {
         Storage.SiloSettings[] memory siloSettings
     ) internal {
         for(uint256 i = 0; i < tokens.length; i++) {
-
-            console.log('whitelisting token: ', tokens[i]);
-
             // note: no error checking.
             s.ss[tokens[i]] = siloSettings[i];
 

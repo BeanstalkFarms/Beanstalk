@@ -8,7 +8,6 @@ pragma experimental ABIEncoderV2;
 
 import {IInstantaneousPump} from "contracts/interfaces/basin/pumps/IInstantaneousPump.sol";
 import {ICumulativePump} from "contracts/interfaces/basin/pumps/ICumulativePump.sol";
-import {console} from "forge-std/console.sol";
 
 /**
  * @title Mock Pump
@@ -27,20 +26,14 @@ contract MockPump is IInstantaneousPump, ICumulativePump {
 
 
     function setInstantaneousReserves(address well, uint[] memory _instantaneousReserves) external {
-        console.log('setInstantaneousReserves well: ', well);
         reservesData[well].instantaneousReserves = _instantaneousReserves;
     }
 
     function readInstantaneousReserves(address well, bytes memory) external override view returns (uint[] memory reserves) {
-        console.log('readInstantaneousReserves well: ', well);
         return reservesData[well].instantaneousReserves;
     }
 
     function readCappedReserves(address well, bytes memory) external view returns (uint[] memory reserves) {
-        console.log('readCappedReserves cappedReserves: ', well);
-        for (uint i = 0; i < reservesData[well].cappedReserves.length; i++) {
-            console.log('readCappedReserves cappedReserves[i]: ', reservesData[well].cappedReserves[i]);
-        }
         return reservesData[well].cappedReserves;
     }
 
@@ -53,21 +46,13 @@ contract MockPump is IInstantaneousPump, ICumulativePump {
     }
 
     function _update(address well, uint256[] memory _reserves, bytes memory data) internal {
-        console.log('updating pump');
         reservesData[well].instantaneousReserves = _reserves;
         reservesData[well].cumulativeReserves = _reserves;
         reservesData[well].cappedReserves = _reserves;
-
-
-        console.log('updating all reserves:');
-        for (uint i = 0; i < reservesData[well].cappedReserves.length; i++) {
-            console.log('update cappedReserves[i]: ', reservesData[well].cappedReserves[i]);
-        }
     }
 
     // this function gets called from the well, msg.sender is the well
     function update(uint256[] memory _reserves, bytes memory data) external {
-        console.log('updating pump from the well', msg.sender);
         _update(msg.sender, _reserves, data);
     }
 
