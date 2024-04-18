@@ -10,7 +10,7 @@ import {Utils, console} from "test/foundry/utils/Utils.sol";
 import {Diamond} from "contracts/beanstalk/Diamond.sol";
 import {IDiamondCut} from "contracts/interfaces/IDiamondCut.sol";
 import {MockInitDiamond} from "contracts/mocks/newMockInitDiamond.sol";
-import {InitDiamond} from "contracts/mocks/newInitDiamond.sol";
+import {InitDiamond} from "contracts/beanstalk/init/newInitDiamond.sol";
 import {DiamondLoupeFacet} from "contracts/beanstalk/diamond/DiamondLoupeFacet.sol";
 
 /// Beanstalk Contracts w/external libraries.
@@ -36,7 +36,6 @@ contract BeanstalkDeployer is Utils {
     // add or remove facets here. Facets here do not have mocks.
     string[] facets = [
         "BDVFacet", 
-        "CurveFacet", 
         "FarmFacet", 
         "PauseFacet", 
         "OwnershipFacet", 
@@ -54,8 +53,7 @@ contract BeanstalkDeployer is Utils {
     // Facets that have a mock counter part should be appended here.
     string[] mockFacets = [
         "FertilizerFacet", 
-        "FieldFacet", 
-        "FundraiserFacet", 
+        "FieldFacet",
         "MarketplaceFacet", 
         "WhitelistFacet", 
         "SiloFacet", 
