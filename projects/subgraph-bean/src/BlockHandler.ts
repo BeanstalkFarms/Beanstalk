@@ -1,20 +1,34 @@
-import { ethereum, log } from "@graphprotocol/graph-ts";
-import { BEANSTALK_PRICE, BEAN_ERC20 } from "../../subgraph-core/utils/Constants";
-import { ZERO_BD, ZERO_BI, toDecimal } from "../../subgraph-core/utils/Decimals";
-import { BeanstalkPrice } from "../generated/BeanWETHCP2w/BeanstalkPrice";
+import { ethereum } from "@graphprotocol/graph-ts";
+import { BEAN_ERC20, BEAN_WETH_CP2_WELL_BLOCK, BEANSTALK_PRICE, EXPLOIT_BLOCK } from "../../subgraph-core/utils/Constants";
+import { checkPegCrossEth as univ2_checkPegCrossEth } from "./UniswapV2Handler";
 import { loadBean, updateBeanValues } from "./utils/Bean";
-import { loadOrCreatePool, updatePoolPrice, updatePoolValues } from "./utils/Pool";
+import { toDecimal, ZERO_BD, ZERO_BI } from "../../subgraph-core/utils/Decimals";
+import { BeanstalkPrice } from "../generated/Bean3CRV/BeanstalkPrice";
 import { checkBeanCross, checkPoolCross } from "./utils/Cross";
+import { loadOrCreatePool, updatePoolPrice, updatePoolValues } from "./utils/Pool";
 
 // Processing as each new ethereum block is created
 export function handleBlock(block: ethereum.Block): void {
+  if (block.number < EXPLOIT_BLOCK) {
+    univ2_checkPegCrossEth(block);
+  } else if (block.number >= BEAN_WETH_CP2_WELL_BLOCK) {
+    beanstalkPrice_checkPegCross(block);
+  }
+}
+
+// Using the BeanstalkPrice contract, checks for peg crosses
+function beanstalkPrice_checkPegCross(block: ethereum.Block) {
   const beanstalkPrice = BeanstalkPrice.bind(BEANSTALK_PRICE);
   const priceResult = beanstalkPrice.try_price();
+  if (priceResult.reverted) {
+    // Price contract was unavailable briefly after well deployment
+    return;
+  }
   const bean = loadBean(BEAN_ERC20.toHexString());
   const prevPrice = bean.price;
   const newPrice = toDecimal(priceResult.value.price);
 
-  log.debug("Prev/New bean price {} / {}", [prevPrice.toString(), newPrice.toString()]);
+  // log.debug("Prev/New bean price {} / {}", [prevPrice.toString(), newPrice.toString()]);
 
   // Check for overall peg cross
   const beanCrossed = checkBeanCross(BEAN_ERC20.toHexString(), block.timestamp, block.number, prevPrice, newPrice);

@@ -243,14 +243,15 @@ dataSources:
     name: BlockHandler
     network: mainnet
     source:
-      address: "0xb01CE0008CaD90104651d6A84b6B11e182a9B62A"
-      abi: BeanstalkPrice
-      startBlock: 17978222
+      address: "0x87898263B6C5BABe34b4ec53F22d98430b91e371"
+      abi: UniswapV2Pair
+      startBlock: 12974077
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.7
       language: wasm/assemblyscript
       entities:
+        - Token
         - Bean
         - BeanHourlySnapshot
         - BeanDailySnapshot
@@ -260,6 +261,8 @@ dataSources:
         - PoolHourlySnapshot
         - PoolDailySnapshot
       abis:
+        - name: UniswapV2Pair
+          file: ../subgraph-core/abis/UniswapV2Pair.json
         - name: BeanstalkPrice
           file: ../subgraph-core/abis/BeanstalkPrice.json
       blockHandlers:

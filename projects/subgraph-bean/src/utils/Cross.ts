@@ -50,7 +50,7 @@ export function checkPoolCross(pool: string, timestamp: BigInt, blockNumber: Big
   let poolHourly = loadOrCreatePoolHourlySnapshot(pool, timestamp, BigInt.fromI32(bean.lastSeason));
   let poolDaily = loadOrCreatePoolDailySnapshot(pool, timestamp, blockNumber);
 
-  log.debug("Prev/New well price {} / {}", [oldPrice.toString(), newPrice.toString()]);
+  // log.debug("Prev/New well price {} / {}", [oldPrice.toString(), newPrice.toString()]);
 
   if (oldPrice >= ONE_BD && newPrice < ONE_BD) {
     let cross = loadOrCreatePoolCross(poolInfo.crosses, pool, timestamp);
