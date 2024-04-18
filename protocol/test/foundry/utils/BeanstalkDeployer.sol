@@ -36,7 +36,6 @@ contract BeanstalkDeployer is Utils {
     // add or remove facets here. Facets here do not have mocks.
     string[] facets = [
         "BDVFacet", 
-        "CurveFacet", 
         "FarmFacet", 
         "PauseFacet", 
         "OwnershipFacet", 
@@ -54,8 +53,7 @@ contract BeanstalkDeployer is Utils {
     // Facets that have a mock counter part should be appended here.
     string[] mockFacets = [
         "FertilizerFacet", 
-        "FieldFacet", 
-        "FundraiserFacet", 
+        "FieldFacet",
         "MarketplaceFacet", 
         "WhitelistFacet", 
         "SiloFacet", 

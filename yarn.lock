@@ -21569,8 +21569,13 @@ __metadata:
   linkType: hard
 
 "ethers@npm:^6.3.0":
+<<<<<<< HEAD
   version: 6.11.1
   resolution: "ethers@npm:6.11.1"
+=======
+  version: 6.8.1
+  resolution: "ethers@npm:6.8.1"
+>>>>>>> secure-beanstalk
   dependencies:
     "@adraffy/ens-normalize": 1.10.1
     "@noble/curves": 1.2.0
@@ -21579,7 +21584,11 @@ __metadata:
     aes-js: 4.0.0-beta.5
     tslib: 2.4.0
     ws: 8.5.0
+<<<<<<< HEAD
   checksum: e8027c5071ad0370c61a1978f0602ab950d840c5923948f55e88b9808300e4e02e792bb793ea109ce7fa0e748f30a40a05f1202204a2b0402cdffbcb64a218e4
+=======
+  checksum: 78b48d2fd13cf77c7041379595a3155eaf6e4da423999b782e6ff14cc58e452ef8c52f3e2f6995fcd2b34dfdd55eaf5ece6067cd754fe0c72388b12e1768f1b3
+>>>>>>> secure-beanstalk
   languageName: node
   linkType: hard
 

@@ -54,7 +54,8 @@ contract MockInitDiamond is InitalizeDiamond {
         // set the underlying unripe tokens.
         setUnderlyingUnripe(
             unripeTokens,
-            underlyingTokens
+            underlyingTokens,
+            underlyingTokens[1]
         );
         // whitelist the unripe assets into the silo.
         whitelistUnripeAssets(
@@ -89,7 +90,8 @@ contract MockInitDiamond is InitalizeDiamond {
      */
     function setUnderlyingUnripe(
         address[] memory unripeToken,
-        address[] memory underlyingToken
+        address[] memory underlyingToken,
+        address barnRaiseWell
     ) internal {
         // sets the underlying unripe for unripe assets.
         for(uint i; i < unripeToken.length; i++) {

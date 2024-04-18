@@ -6446,136 +6446,6 @@
       },
       {
         "indexed": false,
-        "internalType": "int96[]",
-        "name": "stems",
-        "type": "int96[]"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint256[]",
-        "name": "amounts",
-        "type": "uint256[]"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "amount",
-        "type": "uint256"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint256[]",
-        "name": "bdvs",
-        "type": "uint256[]"
-      }
-    ],
-    "name": "RemoveDeposits",
-    "type": "event"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "token",
-        "type": "address"
-      },
-      {
-        "internalType": "int96",
-        "name": "stem",
-        "type": "int96"
-      },
-      {
-        "internalType": "uint256",
-        "name": "amount",
-        "type": "uint256"
-      }
-    ],
-    "name": "enrootDeposit",
-    "outputs": [],
-    "stateMutability": "payable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "token",
-        "type": "address"
-      },
-      {
-        "internalType": "int96[]",
-        "name": "stems",
-        "type": "int96[]"
-      },
-      {
-        "internalType": "uint256[]",
-        "name": "amounts",
-        "type": "uint256[]"
-      }
-    ],
-    "name": "enrootDeposits",
-    "outputs": [],
-    "stateMutability": "payable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "tokenIn",
-        "type": "address"
-      },
-      {
-        "internalType": "address",
-        "name": "tokenOut",
-        "type": "address"
-      },
-      {
-        "internalType": "uint256",
-        "name": "amountIn",
-        "type": "uint256"
-      }
-    ],
-    "name": "getAmountOut",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "amountOut",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "tokenIn",
-        "type": "address"
-      },
-      {
-        "internalType": "address",
-        "name": "tokenOut",
-        "type": "address"
-      }
-    ],
-    "name": "getMaxAmountIn",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "amountIn",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "overallDeltaB",
-    "outputs": [
-      {
         "internalType": "int256",
         "name": "delta",
         "type": "int256"
@@ -8801,7 +8671,7 @@
     "inputs": [
       {
         "internalType": "address",
-        "name": "well",
+        "name": "welll",
         "type": "address"
       }
     ],

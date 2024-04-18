@@ -17,6 +17,7 @@ import {LibBytes} from "contracts/libraries/LibBytes.sol";
 import {LibGerminate} from "contracts/libraries/Silo/LibGerminate.sol";
 import {LibWhitelistedTokens} from "contracts/libraries/Silo/LibWhitelistedTokens.sol";
 import {LibTractor} from "contracts/libraries/LibTractor.sol";
+import {console} from "forge-std/console.sol";
 
 
 import "contracts/libraries/LibStrings.sol";

@@ -142,7 +142,7 @@ contract ConvertFacet is ReentrancyGuard {
         LibSilo._mow(LibTractor._user(), fromToken);
         LibSilo._mow(LibTractor._user(), toToken);
 
-        (grownStalk, fromBdv) = _withdrawTokens(
+        (grownStalk, fromBdv, , ) = _withdrawTokens(
             fromToken,
             stems,
             amounts,
@@ -154,7 +154,7 @@ contract ConvertFacet is ReentrancyGuard {
 
         toStem = _depositTokensForConvert(toToken, toAmount, toBdv, grownStalk);
 
-        emit Convert(LibTractor._getUser(), fromToken, toToken, fromAmount, toAmount);
+        emit Convert(LibTractor._user(), fromToken, toToken, fromAmount, toAmount);
 
         LibTractor._resetPublisher();
     }
@@ -193,8 +193,8 @@ contract ConvertFacet is ReentrancyGuard {
         require(LibWell.isWell(outputToken) || outputToken == C.BEAN, "Convert: Output token is not a well");
 
         // mow input and output tokens: 
-        LibSilo._mow(LibTractor._getUser(), inputToken);
-        LibSilo._mow(LibTractor._getUser(), outputToken);
+        LibSilo._mow(LibTractor._user(), inputToken);
+        LibSilo._mow(LibTractor._user(), outputToken);
         
         // Calculate the maximum amount of tokens to withdraw
         uint256 maxTokens = 0;
@@ -432,11 +432,13 @@ contract ConvertFacet is ReentrancyGuard {
      
         results = new bytes[](calls.length);
         for (uint256 i = 0; i < calls.length; ++i) {
+            console.log('in for loop');
             require(calls[i].callData.length != 0, "Convert: empty AdvancedFarmCall");
+            console.log('going to call advanced ');
             results[i] = LibFarm._advancedFarmMem(calls[i], results);
-            // console.log('executeAdvancedFarmCalls results[i] i value: ', i);
-            // console.log('executeAdvancedFarmCalls results[i]: ');
-            // console.logBytes(results[i]);
+            console.log('executeAdvancedFarmCalls results[i] i value: ', i);
+            console.log('executeAdvancedFarmCalls results[i]: ');
+            console.logBytes(results[i]);
         }
 
         // assume last value is the amountOut
@@ -712,17 +714,17 @@ contract ConvertFacet is ReentrancyGuard {
                 console.log('minting active stalk, issued from bdv: ', mcdd.depositedBdv.mul(LibTokenSilo.stalkIssuedPerBdv(outputToken)));
                 console.log('minting active stalk from grown: ', grownStalks[i]);
                 LibSilo.mintActiveStalk(
-                    LibTractor._getUser(), 
+                    LibTractor._user(), 
                     mcdd.depositedBdv.mul(LibTokenSilo.stalkIssuedPerBdv(outputToken)).add(grownStalks[i])
                 );
             } else {
                 LibTokenSilo.incrementTotalGerminating(outputToken, mcdd.crateAmount, mcdd.depositedBdv, mcdd.germ);
                 // safeCast not needed as stalk is <= max(uint128)
-                LibSilo.mintGerminatingStalk(LibTractor._getUser(), uint128(mcdd.depositedBdv.mul(LibTokenSilo.stalkIssuedPerBdv(outputToken))), mcdd.germ);   
-                LibSilo.mintActiveStalk(LibTractor._getUser(), grownStalks[i]);
+                LibSilo.mintGerminatingStalk(LibTractor._user(), uint128(mcdd.depositedBdv.mul(LibTokenSilo.stalkIssuedPerBdv(outputToken))), mcdd.germ);   
+                LibSilo.mintActiveStalk(LibTractor._user(), grownStalks[i]);
             }
             LibTokenSilo.addDepositToAccount(
-                LibTractor._getUser(),
+                LibTractor._user(),
                 outputToken, 
                 mcdd.stem, 
                 mcdd.crateAmount,
@@ -730,13 +732,13 @@ contract ConvertFacet is ReentrancyGuard {
                 LibTokenSilo.Transfer.emitTransferSingle
             );
 
-            console.log('LibTractor._getUser(): ', LibTractor._getUser());
+            console.log('LibTractor._user(): ', LibTractor._user());
             console.log('outputToken: ', outputToken);
             console.log('inputToken: ', inputToken);
             console.log('inputAmounts[i]: ', inputAmounts[i]);
             console.log('mcdd.crateAmount: ', mcdd.crateAmount);
 
-            emit Convert(LibTractor._getUser(), inputToken, outputToken, inputAmounts[i], mcdd.crateAmount);
+            emit Convert(LibTractor._user(), inputToken, outputToken, inputAmounts[i], mcdd.crateAmount);
         }
     }
 }

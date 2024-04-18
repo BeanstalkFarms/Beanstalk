@@ -149,46 +149,35 @@ library LibGerminate {
         uint32 lastMowedSeason,
         uint32 currentSeason
     ) internal {
-        // console.log('endAccountGermination');
-        // console.log('lastMowedSeason: ', lastMowedSeason);
-        // console.log('currentSeason: ', currentSeason);
         AppStorage storage s = LibAppStorage.diamondStorage();
         bool lastUpdateOdd = isSeasonOdd(lastMowedSeason);
         (uint128 firstStalk, uint128 secondStalk) = getGerminatingStalk(account, lastUpdateOdd);
-        // console.log('firstStalk: ', firstStalk);
-        // console.log('secondStalk: ', secondStalk);
         uint128 roots;
         uint128 germinatingStalk;
 
         // check to end germination for first stalk.
         // if last mowed season is not equal to current season - 1,
         if (firstStalk > 0 && lastMowedSeason != currentSeason.sub(1)) {
-            // console.log('doing first stalk');
             germinatingStalk = firstStalk;
             roots = claimGerminatingRoots(account, lastMowedSeason, firstStalk, lastUpdateOdd);
         }
 
         // check to end germination for second stalk.
         if (secondStalk > 0) {
-            // console.log('doing secondStalk');
             germinatingStalk = germinatingStalk.add(secondStalk);
             roots = roots.add(
                 claimGerminatingRoots(account, lastMowedSeason.sub(1), secondStalk, !lastUpdateOdd)
             );
         }
-        // console.log('germinatingStalk: ', germinatingStalk);
 
         // increment users stalk and roots.
         if (germinatingStalk > 0) {
-            // console.log('incrementing userStalk');
             s.a[account].s.stalk = s.a[account].s.stalk.add(germinatingStalk);
             s.a[account].roots = s.a[account].roots.add(roots);
 
             // emit events. Active stalk is incremented, germinating stalk is decremented.
             emit LibSilo.StalkBalanceChanged(account, int256(germinatingStalk), int256(roots));
             emit FarmerGerminatingStalkBalanceChanged(account, -int256(germinatingStalk));
-        } else {
-            console.log('germinating stalk was zero');
         }
     }
 
@@ -207,10 +196,6 @@ library LibGerminate {
         uint128 stalk,
         bool clearOdd
     ) private returns (uint128 roots) {
-        // console.log('claimGerminatingRoots');
-        // console.log('season: ', season);
-        // console.log('stalk: ', stalk);
-        // console.log('clearOdd: ', clearOdd);
         AppStorage storage s = LibAppStorage.diamondStorage();
 
         roots = calculateGerminatingRoots(season, stalk);
@@ -235,9 +220,6 @@ library LibGerminate {
         uint32 season,
         uint256 stalk
     ) private view returns (uint128 roots) {
-        console.log('calculateGerminatingRoots');
-        console.log('season: ', season);
-        console.log('stalk: ', stalk);
         AppStorage storage s = LibAppStorage.diamondStorage();
 
         // if the stalk is equal to the remaining unclaimed germinating stalk,
@@ -261,8 +243,6 @@ library LibGerminate {
         address account,
         bool lastUpdateOdd
     ) internal view returns (uint128 firstStalk, uint128 secondStalk) {
-        // console.log('getGerminatingStalk');
-        // console.log('lastUpdateOdd: ', lastUpdateOdd);
         AppStorage storage s = LibAppStorage.diamondStorage();
         if (lastUpdateOdd) {
             firstStalk = s.a[account].farmerGerminating.odd;
@@ -282,7 +262,6 @@ library LibGerminate {
         uint32 lastMowedSeason,
         uint32 currentSeason
     ) internal view returns (uint256 germinatingStalk, uint256 germinatingRoots) {
-        console.log('getFinishedGerminatingStalkAndRoots');
         // if user has mowed already,
         // then there are no germinating stalk and roots to finish.
         if (lastMowedSeason == currentSeason) {
@@ -320,7 +299,6 @@ library LibGerminate {
         address account,
         uint32 lastMowedSeason
     ) internal view returns (uint256 germinatingStalk) {
-        console.log('getCurrentGerminatingStalk');
         AppStorage storage s = LibAppStorage.diamondStorage();
 
         // if the last mowed season is less than the current season - 1,
@@ -352,7 +330,6 @@ library LibGerminate {
     function getTotalGerminatingForToken(
         address token
     ) internal view returns (uint256 bdv, uint256 amount) {
-        console.log('getTotalGerminatingForToken');
         AppStorage storage s = LibAppStorage.diamondStorage();
         return (
             s.oddGerminating.deposited[token].bdv.add(s.evenGerminating.deposited[token].bdv),
