@@ -36,6 +36,7 @@ contract ConvertGettersFacet {
         return LibConvert.getAmountOut(tokenIn, tokenOut, amountIn);
     }
 
+    // TODO: rename this function? somehow indicate that is uses capped reserves?
     function overallDeltaB() external view returns (int256 deltaB) {
         return LibWellMinting.overallDeltaB();
     }

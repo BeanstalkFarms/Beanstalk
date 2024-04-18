@@ -733,6 +733,92 @@ contract PipelineConvertTest is TestHelper {
         );
     }
 
+    // test bean to bean convert, but deltaB is affected against them and there is convert power left in the block
+    // because the deltaB of "bean" is not affected, no stalk loss should occur
+    function testBeanToBeanConvertAffectDeltaB(uint256 amount) public {
+        amount = bound(amount, 1000e6, 1000e6);
+
+        int96 stem = beanToLPDepositSetup(amount, users[1]);
+        int96[] memory stems = new int96[](1);
+        stems[0] = stem;
+        uint256[] memory amounts = new uint256[](1);
+        amounts[0] = amount;
+
+        // mint a weth to pipeline for later use
+        uint256 ethAmount = 1 ether;
+        MockToken(C.WETH).mint(C.PIPELINE, ethAmount);
+
+        addEthToWell(users[1], 1 ether);
+
+        updateMockPumpUsingWellReserves(C.BEAN_ETH_WELL);
+
+        // move foward 10 seasons so we have grown stalk
+        season.siloSunrise(10);
+
+        // store stalk before
+        uint256 beforeStalk = bs.balanceOfStalk(users[1]) + bs.grownStalkForDeposit(users[1], C.BEAN, stem);
+
+        // make a pipeline call where the only thing it does is return how many beans are in pipeline
+        AdvancedPipeCall[] memory extraPipeCalls = new AdvancedPipeCall[](3);
+
+        bytes memory approveWell = abi.encodeWithSelector(
+            IERC20.approve.selector,
+            C.BEAN_ETH_WELL,
+            ethAmount
+        );
+        extraPipeCalls[0] = AdvancedPipeCall(
+            C.WETH, // target
+            approveWell, // calldata
+            abi.encode(0) // clipboard
+        );
+
+        uint256[] memory tokenAmountsIn = new uint256[](2);
+        tokenAmountsIn[0] = 0;
+        tokenAmountsIn[1] = ethAmount;
+
+        // add a weth to the well to affect deltaB
+        bytes memory addWeth = abi.encodeWithSelector(
+            IWell(C.BEAN_ETH_WELL).addLiquidity.selector,
+            tokenAmountsIn,
+            0,
+            C.PIPELINE,
+            type(uint256).max
+        );
+        extraPipeCalls[1] = AdvancedPipeCall(
+            C.BEAN_ETH_WELL, // target
+            addWeth, // calldata
+            abi.encode(0) // clipboard
+        );
+
+        bytes memory callEncoded = abi.encodeWithSelector(bean.balanceOf.selector, C.PIPELINE);
+        extraPipeCalls[2] = AdvancedPipeCall(
+            C.BEAN, // target
+            callEncoded, // calldata
+            abi.encode(0) // clipboard
+        );
+
+        AdvancedFarmCall[] memory farmCalls = createAdvancedFarmCallsFromAdvancedPipeCalls(extraPipeCalls);
+
+        vm.prank(users[1]);
+        convert.pipelineConvert(
+            C.BEAN, // input token
+            stems, // stem
+            amounts, // amount
+            C.BEAN, // token out
+            farmCalls
+        );
+
+        // after stalk
+        uint256 afterStalk = bs.balanceOfStalk(users[1]);
+
+        // check that the deltaB is correct
+        assertEq(afterStalk, beforeStalk);
+    }
+
+
+    // bonus todo: setup a test that reads remaining convert power from block and uses it when determining how much to convert
+    // there are already tests that exercise depleting convert power, but might be cool to show how you can use it in a convert
+
 
     function testCalculateStalkPenaltyUpwardsToZero() public {
         int256 beforeDeltaB = -100;
