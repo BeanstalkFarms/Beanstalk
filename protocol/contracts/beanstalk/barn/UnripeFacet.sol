@@ -83,7 +83,7 @@ contract UnripeFacet is ReentrancyGuard {
         LibTransfer.From fromMode,
         LibTransfer.To toMode
     ) external payable nonReentrant returns (uint256) {
-        // burn the token from the msg.sender address
+        // burn the token from the user address
         uint256 supply = IBean(unripeToken).totalSupply();
         amount = LibTransfer.burnToken(IBean(unripeToken), amount, LibTractor._getUser(), fromMode);
         // get ripe address and ripe amount

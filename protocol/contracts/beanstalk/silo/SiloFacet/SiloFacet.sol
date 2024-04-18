@@ -135,7 +135,7 @@ contract SiloFacet is TokenSilo {
      * @param amount Amount of `token` to Transfer.
      * @return _bdv The BDV included in this transfer, now owned by `recipient`.
      *
-     * @dev An allowance is required if `sender !== msg.sender`
+     * @dev An allowance is required if sender != user
      * 
      * The {mowSender} modifier is not used here because _both_ the `sender` and
      * `recipient` need their Silo updated, since both accounts experience a
@@ -166,7 +166,7 @@ contract SiloFacet is TokenSilo {
      * @param amounts Amounts of `token` to Transfer from corresponding `stem`.
      * @return bdvs Array of BDV transferred from each Season, now owned by `recipient`.
      *
-     * @dev An allowance is required if `sender !== msg.sender`. There must be enough allowance
+     * @dev An allowance is required if sender != user. There must be enough allowance
      * to transfer all of the requested Deposits, otherwise the transaction should revert.
      * 
      * The {mowSender} modifier is not used here because _both_ the `sender` and
@@ -287,7 +287,7 @@ contract SiloFacet is TokenSilo {
 
     /** 
      * @notice Claim Earned Beans and their associated Stalk and Plantable Seeds for
-     * `msg.sender`.
+     * user.
      *
      * The Stalk associated with Earned Beans is commonly called "Earned Stalk".
      * Earned Stalk DOES contribute towards the Farmer's Stalk when earned beans is issued.

@@ -90,7 +90,7 @@ contract Silo is ReentrancyGuard {
     //////////////////////// INTERNAL: MOW ////////////////////////
 
     /**
-     * @dev Claims the Grown Stalk for `msg.sender`. Requires token address to mow.
+     * @dev Claims the Grown Stalk for user. Requires token address to mow.
      */
     modifier mowSender(address token) {
         LibSilo._mow(LibTractor._getUser(), token);

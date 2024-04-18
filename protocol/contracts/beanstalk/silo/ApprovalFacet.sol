@@ -36,7 +36,7 @@ contract ApprovalFacet is ReentrancyGuard {
     //////////////////////// APPROVE ////////////////////////
 
     /** 
-     * @notice Approve `spender` to Transfer Deposits for `msg.sender`.     
+     * @notice Approve `spender` to Transfer Deposits for user.     
      *
      * Sets the allowance to `amount`.
      * 
