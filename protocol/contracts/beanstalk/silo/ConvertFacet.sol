@@ -24,8 +24,6 @@ import {IPipeline, PipeCall} from "contracts/interfaces/IPipeline.sol";
 import {SignedSafeMath} from "@openzeppelin/contracts/math/SignedSafeMath.sol";
 import {LibFunction} from "contracts/libraries/LibFunction.sol";
 
-import "forge-std/console.sol";
-
 interface IBeanstalk {
     function bdv(address token, uint256 amount) external view returns (uint256);
     function poolDeltaB(address pool) external view returns (int256);
@@ -215,25 +213,20 @@ contract ConvertFacet is ReentrancyGuard {
         pipeData.amountOut = executeAdvancedFarmCalls(farmCalls);
 
         require(pipeData.amountOut > 0, "Convert: Final pipe call returned 0");
-
-        console.log('amountOut after pipe calls: ', pipeData.amountOut);
         
         // user MUST leave final assets in pipeline, allowing us to verify that the farm has been called successfully.
         // this also let's us know how many assets to attempt to pull out of the final type
         transferTokensFromPipeline(outputToken, pipeData.amountOut);
 
-        console.log('transfered tokens from pipeline');
 
         // We want the capped deltaB from all the wells, this is what sets up/limits the overall convert power for the block
         // Converts that either cross peg, OR occur when convert power has been exhausted, will be stalk penalized
         pipeData.cappedDeltaB = LibWellMinting.overallDeltaB();
-        console.log('final cappedDeltaB: ');
-        console.logInt(pipeData.cappedDeltaB);
+
 
         // Calculate stalk penalty using start/finish deltaB of pools, and the capped deltaB is
-        // passed in the setup max convert power.
+        // passed in to setup max convert power.
         pipeData.stalkPenaltyBdv = _calculateStalkPenalty(pipeData.startingDeltaB, getCombinedDeltaBForTokens(inputToken, outputToken), pipeData.bdvsRemoved, abs(pipeData.cappedDeltaB));
-        console.log('stalkPenaltyBdv: ', pipeData.stalkPenaltyBdv);
         
         // Apply the calculated penalty to the grown stalks array
         pipeData.grownStalks = _applyPenaltyToGrownStalks(pipeData.stalkPenaltyBdv, pipeData.bdvsRemoved, pipeData.grownStalks);
@@ -245,25 +238,31 @@ contract ConvertFacet is ReentrancyGuard {
         LibTractor._resetPublisher();
     }
 
+    /**
+     * @param well The well for which to return the capped reserves deltaB
+     * @return deltaB The capped reserves deltaB for the well
+     */
     function cappedReservesDeltaB(address well) public view 
         returns (int256 deltaB, uint256[] memory instReserves, uint256[] memory ratios) {
         (deltaB, instReserves, ratios) = LibWellMinting.cappedReservesDeltaB(well);
     }
 
+    /**
+     * @dev A public function for the below
+     */
     function applyPenaltyToGrownStalks(uint256 penaltyBdv, uint256[] memory bdvsRemoved, uint256[] memory grownStalks)
         external view returns (uint256[] memory) {
         return _applyPenaltyToGrownStalks(penaltyBdv, bdvsRemoved, grownStalks);
     }
 
+    /**
+     * @param stalkPenaltyBdv The amount of penalty to apply to the input crates
+     * @param bdvsRemoved The amount of BDVs that were removed for the convert
+     * @param grownStalks The corresponding grown stalk amount for each convert
+     */
     function _applyPenaltyToGrownStalks(uint256 stalkPenaltyBdv, uint256[] memory bdvsRemoved, uint256[] memory grownStalks)
         internal view returns (uint256[] memory) {
-
-            console.log('_applyPenaltyToGrownStalks bdvsRemoved.length: ', bdvsRemoved.length);
-
         for (uint256 i = bdvsRemoved.length; i != 0; i--) { // this i!=0 feels weird to me somehow, but appears to be necessary
-            console.log('_applyPenaltyToGrownStalks i: ', i-1);
-            console.log('_applyPenaltyToGrownStalks bdvsRemoved[i]: ', bdvsRemoved[i-1]);
-
             uint256 bdvRemoved = bdvsRemoved[i-1];
             uint256 grownStalk = grownStalks[i-1];
 
@@ -282,8 +281,9 @@ contract ConvertFacet is ReentrancyGuard {
         return grownStalks;
     }
 
+    // public function for the below
     function calculateStalkPenalty(int256 beforeDeltaB, int256 afterDeltaB, uint256[] memory bdvsRemoved, uint256 cappedDeltaB)
-        external returns (uint256) {
+        external returns (uint256 stalkPenaltyBdv) {
         return _calculateStalkPenalty(beforeDeltaB, afterDeltaB, bdvsRemoved, cappedDeltaB);
     }
 
@@ -295,10 +295,9 @@ contract ConvertFacet is ReentrancyGuard {
      * @param afterDeltaB The deltaB after the deposit.
      * @param bdvsRemoved The amount of BDVs that were removed, will be summed in this function.
      * @param cappedDeltaB The absolute value of capped deltaB, used to setup per-block conversion limits.
-     * @return percentStalkPenalty The percent of stalk that should be lost, 0 means no penalty, 1 means 100% penalty.
+     * @return stalkPenaltyBdv The BDV amount that should be penalized, 0 means no penalty, full bdv returned means all bdv penalized
      */
-    function _calculateStalkPenalty(int256 beforeDeltaB, int256 afterDeltaB, uint256[] memory bdvsRemoved, uint256 cappedDeltaB) internal returns (uint256) {
-
+    function _calculateStalkPenalty(int256 beforeDeltaB, int256 afterDeltaB, uint256[] memory bdvsRemoved, uint256 cappedDeltaB) internal returns (uint256 stalkPenaltyBdv) {
         uint256 bdvConverted;
         for (uint256 i = 0; i < bdvsRemoved.length; i++) {
             bdvConverted = bdvConverted.add(bdvsRemoved[i]);
@@ -306,16 +305,13 @@ contract ConvertFacet is ReentrancyGuard {
 
         AppStorage storage s = LibAppStorage.diamondStorage();
 
+        // represents how far past peg deltaB was moved
         uint256 crossoverAmount = 0;
 
-        // console.log('beforeDeltaB: ');
-        // console.logInt(beforeDeltaB);
-        // console.log('afterDeltaB: ');
-        // console.logInt(afterDeltaB);
-        // console.log('bdvConverted: ', bdvConverted);
-
+        // the bdv amount that was converted against peg
         uint256 amountAgainstPeg = abs(afterDeltaB.sub(beforeDeltaB));
 
+        // we could potentially be right at zero often with automated tractor converts
         if (beforeDeltaB == 0 && afterDeltaB != 0) {
             //this means we converted away from peg, so amount against peg is penalty
             return amountAgainstPeg;
@@ -327,17 +323,12 @@ contract ConvertFacet is ReentrancyGuard {
             // Calculate how far past peg we went - so actually this is just abs of new deltaB
             crossoverAmount = uint256(abs(int256(afterDeltaB)));
 
-            console.log('crossoverAmount: ', crossoverAmount);
-
             // Check if the crossoverAmount is greater than or equal to bdvConverted
             // TODO: see if we can find cases where bdcConverted doesn't match the deltaB diff? should always in theory afaict
             if (crossoverAmount > bdvConverted) {
                 // If the entire bdvConverted amount crossed over, something is fishy, bdv amounts wrong?
                 revert("Convert: converted farther than bdv");
-                // return 1e18; // 1e18 represents 100% as a fixed-point number with 18 decimal places
-                // TODO: consider if this is a good amount of precision
             } else {
-                // return amount crossed over
                 return crossoverAmount;
             }
         } else if (beforeDeltaB <= 0 && afterDeltaB < beforeDeltaB) { 
@@ -347,22 +338,16 @@ contract ConvertFacet is ReentrancyGuard {
         }
 
         // at this point we are converting in direction of peg, but we may have gone past it
-        // calculate how much closer
 
-        // see if convert power for this block has been setup yet
+        // Setup convert power for this block if it has not already been setup
         if (s.convertPowerThisBlock[block.number].hasConvertHappenedThisBlock == false) {
-            // setup initial available convert power for this block at the current deltaB
-            // use insta deltaB that's from previous block
-            console.log('setting up convertPower to be: ', cappedDeltaB);
+            // use capped deltaB for flashloan resistance
             s.convertPowerThisBlock[block.number].convertPower = cappedDeltaB;
             s.convertPowerThisBlock[block.number].hasConvertHappenedThisBlock = true;
         }
 
         // calculate how much deltaB convert is happening with this convert
         uint256 convertAmountInDirectionOfPeg = abs(beforeDeltaB - afterDeltaB);
-
-        console.log('convertAmountInDirectionOfPeg: ', convertAmountInDirectionOfPeg);
-        console.log('s.convertPowerThisBlock[block.number].convertPower: ', s.convertPowerThisBlock[block.number].convertPower);
 
         if (convertAmountInDirectionOfPeg <= s.convertPowerThisBlock[block.number].convertPower) {
             // all good, you're using less than the available convert power
@@ -374,7 +359,7 @@ contract ConvertFacet is ReentrancyGuard {
         } else {
             // you're using more than the available convert power
 
-            // penalty will be how far past peg you went
+            // penalty will be how far past peg you went, but any remaining convert power is used to reduce the penalty
             uint256 penalty = convertAmountInDirectionOfPeg - s.convertPowerThisBlock[block.number].convertPower;
 
             // all convert power for this block is used up
@@ -384,6 +369,10 @@ contract ConvertFacet is ReentrancyGuard {
         }
     }
 
+    /**
+     * @notice Returns currently availalbe convert power for this block
+     * @return convertPower The amount of convert power available for this block
+     */
     function getConvertPower() public view returns (uint256) {
         AppStorage storage s = LibAppStorage.diamondStorage();
         if (s.convertPowerThisBlock[block.number].hasConvertHappenedThisBlock == false) {
@@ -393,61 +382,49 @@ contract ConvertFacet is ReentrancyGuard {
         return s.convertPowerThisBlock[block.number].convertPower;
     }
 
-    //for finding the before/after deltaB difference, we need to use the min of
-    //the inst and the twa deltaB
-
-    //note we need a way to get insta version of this
+    /**
+     * @param inputToken The input token for the convert.
+     * @param outputToken The output token for the convert.
+     * @return combinedDeltaBinsta The combined deltaB of the input/output tokens.
+     */
     function getCombinedDeltaBForTokens(address inputToken, address outputToken) internal view
         returns (int256 combinedDeltaBinsta) {
-        //get deltaB of input/output tokens for comparison later
-        // combinedDeltaBtwa = getDeltaBIfNotBeanInsta(inputToken) + getDeltaBIfNotBeanInsta(outputToken);
         combinedDeltaBinsta = getDeltaBIfNotBeanInsta(inputToken).add(getDeltaBIfNotBeanInsta(outputToken));
-        console.log('combinedDeltaBinsta:');
-        console.logInt(combinedDeltaBinsta);
     }
 
+    /**
+     * @param token The token to get the deltaB of.
+     * @return instDeltaB The deltaB of the token, for Bean it returns 0.
+     */
     function getDeltaBIfNotBeanInsta(address token) internal view returns (int256 instDeltaB) {
-        console.log('getDeltaBIfNotBean token: ', token);
         if (token == address(C.bean())) {
             return 0;
         }
         instDeltaB = LibWellMinting.instantaneousDeltaBForConvert(token);
-        console.log('instDeltaB: ');
-        console.logInt(instDeltaB);
         return instDeltaB;
     }
 
-
+    /**
+     * @param calls The advanced farm calls to execute.
+     * @return amountOut The amount of tokens returned by the final farm call.
+     */
     function executeAdvancedFarmCalls(AdvancedFarmCall[] calldata calls)
         internal
-        returns (
-            uint256 amountOut
-        )
-    {
+        returns (uint256 amountOut) {
         bytes[] memory results;
-
-        console.log('executeAdvancedFarmCalls calls.length: ', calls.length);
-     
         results = new bytes[](calls.length);
         for (uint256 i = 0; i < calls.length; ++i) {
             require(calls[i].callData.length != 0, "Convert: empty AdvancedFarmCall");
             results[i] = LibFarm._advancedFarmMem(calls[i], results);
-            // console.log('executeAdvancedFarmCalls results[i] i value: ', i);
-            // console.log('executeAdvancedFarmCalls results[i]: ');
-            // console.logBytes(results[i]);
         }
-
-        // assume last value is the amountOut
-        // todo: for full functionality, we should instead have the user specify the index of the amountOut
-        // in the farmCallResult.
-        // amountOut = abi.decode(LibBytes.sliceFrom(results[results.length-1], 64), (uint256));
-
         // grab very last 32 bytes
         amountOut = abi.decode(LibBytes.sliceFrom(results[results.length-1], results[results.length-1].length-32), (uint256));
-        console.log('executeAdvancedFarmCalls amountOut: ', amountOut);
     }
 
-
+    /**
+     * @param tokenOut The token to pull out of pipeline
+     * @param userReturnedConvertValue The amount of tokens to pull out
+     */
     function transferTokensFromPipeline(address tokenOut, uint256 userReturnedConvertValue) private {
         // todo investigate not using the entire interface but just using the function selector here
         PipeCall memory p;
@@ -467,10 +444,6 @@ contract ConvertFacet is ReentrancyGuard {
         // }
         //I don't think calling checkReturn here is necessary if success is false?
         // LibFunction.checkReturn(success, result);
-
-        console.log('going to transfer tokens from pipeline');
-        console.log('tokenOut: ', tokenOut);
-        console.log('userReturnedConvertValue: ', userReturnedConvertValue);
 
         IPipeline(PIPELINE).pipe(p);
     }
@@ -493,7 +466,7 @@ contract ConvertFacet is ReentrancyGuard {
             stems.length == amounts.length,
             "Convert: stems, amounts are diff lengths."
         );
-        // LibSilo.AssetsRemoved memory a;
+
         AssetsRemovedConvert memory a;
         uint256 i = 0;
 
@@ -507,24 +480,15 @@ contract ConvertFacet is ReentrancyGuard {
             LibGerminate.GermStem memory germStem = LibGerminate.getGerminatingStem(token);
 
             while ((i < stems.length) && (a.active.tokens < maxTokens)) {
-
-                console.log('_withdrawTokens i: ', i);
-                console.log('_withdrawTokens amounts[i]', amounts[i]);
-
                 // skip any stems that are germinating, due to the ability to 
                 // circumvent the germination process.
+                // TODO: expose a view function that let's you pass in stems/amounts and returns the non-germinating stems/amounts?
                 if (germStem.germinatingStem <= stems[i]) {
                     i++;
-                    console.log('ERROR: this stuff was still germinating');
                     continue;
                 }
 
-                console.log('_withdrawTokens stems[i]: ');
-                console.logInt(stems[i]);
-
                 if (a.active.tokens.add(amounts[i]) >= maxTokens) amounts[i] = maxTokens.sub(a.active.tokens);
-
-                console.log('doing remove deposit from account');
                 
                 a.bdvsRemoved[i] = LibTokenSilo.removeDepositFromAccount(
                         LibTractor._getUser(),
@@ -540,11 +504,8 @@ contract ConvertFacet is ReentrancyGuard {
                     );
                 a.active.stalk = a.active.stalk.add(a.stalksRemoved[i]);
                 
-                console.log('a.active.stalk: ', a.active.stalk);
                 a.active.tokens = a.active.tokens.add(amounts[i]);
-                console.log('a.active.tokens: ', a.active.tokens);
                 a.active.bdv = a.active.bdv.add(a.bdvsRemoved[i]);
-                console.log('a.active.bdv: ', a.active.bdv);
                 
                 a.depositIds[i] = uint256(LibBytes.packAddressAndStem(
                     token,
@@ -572,19 +533,11 @@ contract ConvertFacet is ReentrancyGuard {
             );
         }
 
-        console.log('maxTokens: ', maxTokens);
-        console.log('a.active.tokens: ', a.active.tokens);
-        console.log('a.active.stalk: ', a.active.stalk);
-        console.log('stalk from issued: ', a.active.bdv.mul(s.ss[token].stalkIssuedPerBdv));
-        console.log('total burn: ', a.active.stalk.add(a.active.bdv.mul(s.ss[token].stalkIssuedPerBdv)));
-
         require(
             a.active.tokens == maxTokens,
             "Convert: Not enough tokens removed."
         );
         LibTokenSilo.decrementTotalDeposited(token, a.active.tokens, a.active.bdv);
-
-        console.log('burning active stalk');
 
         // all deposits converted are not germinating.
         LibSilo.burnActiveStalk(
@@ -654,8 +607,7 @@ contract ConvertFacet is ReentrancyGuard {
 
         MultiCrateDepositData memory mcdd;
 
-        console.log('_depositTokensForConvertMultiCrate: ', amount);
-
+        // calculate how much token is needed to equal 1 bdv
         mcdd.amountPerBdv = amount.div(LibTokenSilo.beanDenominatedValue(outputToken, amount));
         mcdd.totalAmount = 0;
 
@@ -664,11 +616,6 @@ contract ConvertFacet is ReentrancyGuard {
         outputAmounts = new uint256[](bdvs.length);
 
         for (uint256 i = 0; i < bdvs.length; i++) {
-            console.log('_depositTokensForConvertMultiCrate i: ', i);
-            // console.log('_depositTokensForConvertMultiCrate bdvs[i]: ', bdvs[i]);
-            console.log('_depositTokensForConvertMultiCrate grownStalks[i]: ', grownStalks[i]);
-            // console.log('_depositTokensForConvertMultiCrate amount: ', amount);
-            // uint256 bdv = bdvs[i];
             require( bdvs[i] > 0 && amount > 0, "Convert: BDV or amount is 0.");
             mcdd.crateAmount = bdvs[i].mul(mcdd.amountPerBdv);
             mcdd.totalAmount = mcdd.totalAmount.add(mcdd.crateAmount);
@@ -679,8 +626,6 @@ contract ConvertFacet is ReentrancyGuard {
             } else if (i == bdvs.length - 1) {
                 mcdd.crateAmount = amount; //if there's only one crate, make sure to deposit the full amount
             }
-            
-            // console.log('_depositTokensForConvertMultiCrate final mcdd.crateAmount:  ', mcdd.crateAmount);
 
             // because we're calculating a new token amount, the bdv will not be exactly the same as what we withdrew,
             // so we need to make sure we calculate what the actual deposited BDV is.
@@ -691,14 +636,7 @@ contract ConvertFacet is ReentrancyGuard {
             // calculate the stem and germination state for the new deposit.
             (mcdd.stem, mcdd.germ) = LibTokenSilo.calculateStemForTokenFromGrownStalk(outputToken, grownStalks[i], mcdd.depositedBdv);
 
-            console.log('i: ', i);
-            console.log('mcdd.stem: ');
-            console.logInt(mcdd.stem);
-            console.log('crateAmount: ', mcdd.crateAmount);
-            console.log('grownStalks[i]: ', grownStalks[i]);
-
             outputStems[i] = mcdd.stem;
-
             outputAmounts[i] = mcdd.crateAmount;
             
             // increment totals based on germination state, 
@@ -707,8 +645,6 @@ contract ConvertFacet is ReentrancyGuard {
             // the rest is active stalk.
             if (mcdd.germ == LibGerminate.Germinate.NOT_GERMINATING) {
                 LibTokenSilo.incrementTotalDeposited(outputToken, mcdd.crateAmount, mcdd.depositedBdv);
-                console.log('minting active stalk, issued from bdv: ', mcdd.depositedBdv.mul(LibTokenSilo.stalkIssuedPerBdv(outputToken)));
-                console.log('minting active stalk from grown: ', grownStalks[i]);
                 LibSilo.mintActiveStalk(
                     LibTractor._getUser(), 
                     mcdd.depositedBdv.mul(LibTokenSilo.stalkIssuedPerBdv(outputToken)).add(grownStalks[i])
@@ -727,12 +663,6 @@ contract ConvertFacet is ReentrancyGuard {
                 mcdd.depositedBdv,
                 LibTokenSilo.Transfer.emitTransferSingle
             );
-
-            console.log('LibTractor._getUser(): ', LibTractor._getUser());
-            console.log('outputToken: ', outputToken);
-            console.log('inputToken: ', inputToken);
-            console.log('inputAmounts[i]: ', inputAmounts[i]);
-            console.log('mcdd.crateAmount: ', mcdd.crateAmount);
 
             emit Convert(LibTractor._getUser(), inputToken, outputToken, inputAmounts[i], mcdd.crateAmount);
         }
