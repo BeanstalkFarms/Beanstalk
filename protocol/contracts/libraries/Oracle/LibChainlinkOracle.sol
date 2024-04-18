@@ -87,9 +87,9 @@ library LibChainlinkOracle {
         ) {
             // Check for an invalid roundId that is 0
             if (roundId == 0) return 0;
-            if (checkForInvalidTimestampOrAnswer(timestamp, answer, block.timestamp)) {
-                return 0;
-            }
+            // if (checkForInvalidTimestampOrAnswer(timestamp, answer, block.timestamp)) {
+            //     return 0;
+            // }
 
             uint256 endTimestamp = block.timestamp.sub(lookback);
             // Check if last round was more than `lookback` ago.
@@ -112,9 +112,9 @@ library LibChainlinkOracle {
                         uint256 _timestamp,
                         uint80 /* answeredInRound */
                     ) {
-                        if (checkForInvalidTimestampOrAnswer(_timestamp, _answer, timestamp)) {
-                            return 0;
-                        }
+                        // if (checkForInvalidTimestampOrAnswer(_timestamp, _answer, timestamp)) {
+                        //     return 0;
+                        // }
                         lastTimestamp = timestamp;
                         timestamp = _timestamp;
                         answer = _answer;
