@@ -156,16 +156,18 @@ library LibUnripe {
         AppStorage storage s = LibAppStorage.diamondStorage();
         uint256 usdValueRaised = s.recapitalized;
 	    uint256 totalUsdNeeded = LibFertilizer.getTotalRecapDollarsNeeded();
-        uint256 totalRipeUnderlying = s.u[unripeToken].balanceOfUnderlying;
-        console.log("totalRipeUnderlying: ", totalRipeUnderlying);
+        uint256 currentRipeUnderlying = s.u[unripeToken].balanceOfUnderlying;
+        console.log("currentRipeUnderlying: ", currentRipeUnderlying);
+        console.log("totalRipeUnderlying: ", currentRipeUnderlying.mul(totalUsdNeeded).div(usdValueRaised));
         console.log("usdValueRaised: ", usdValueRaised);
         console.log("totalUsdNeeded: ", totalUsdNeeded);
         console.log("amount: ", amount);
         console.log("supply: ", supply);
         // total redeemable * %DollarRecapitalized^2 * share of unripe tokens
         // redeem = totalRipeUnderlying *  (usdValueRaised/totalUsdNeeded)^2 * UnripeAmountIn/UnripeSupply;
-        // redeem = 25 * (25/50)^2 * 100/100 = 25 * 0.5^2 * 1 = 6.25
-        redeem = totalRipeUnderlying.mul(usdValueRaised ** 2).div(totalUsdNeeded ** 2).mul(amount).div(supply);
+        // But totalRipeUnderlying = CurrentUnderlying * totalUsdNeeded/usdValueRaised to get the total underlying
+        // So eventually redeem = currentRipeUnderlying * (usdValueRaised/totalUsdNeeded) * UnripeAmountIn/UnripeSupply
+        redeem = currentRipeUnderlying.mul(usdValueRaised).div(totalUsdNeeded).mul(amount).div(supply);
     }
 
     /**
