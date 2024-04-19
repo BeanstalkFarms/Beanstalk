@@ -490,6 +490,7 @@ describe('Silo', function () {
       });
 
       it('emit events', async function () {
+        season = await this.seasonGetter.season();
         expect(this.result).to.emit(this.silo, 'FarmerGerminatingStalkBalanceChanged').withArgs(
           user4.address,
           toStalk('1000')
@@ -500,6 +501,10 @@ describe('Silo', function () {
           BEAN, 
           to6('1000'), 
           to6('1000')
+        );
+        expect(this.result).to.emit(this.silo, 'TotalGerminatingStalkChanged').withArgs(
+          season,
+          toStalk('1000')
         );
       });
     });
@@ -518,6 +523,7 @@ describe('Silo', function () {
       });
 
       it('emit events', async function () {
+        season = await this.seasonGetter.season();
         expect(this.result).to.emit(this.silo, 'FarmerGerminatingStalkBalanceChanged').withArgs(
           user4.address,
           toStalk('-1000')
@@ -528,6 +534,10 @@ describe('Silo', function () {
           BEAN, 
           to6('-1000'), 
           to6('-1000')
+        );
+        expect(this.result).to.emit(this.silo, 'TotalGerminatingStalkChanged').withArgs(
+          season,
+          toStalk('-1000')
         );
       });
     });

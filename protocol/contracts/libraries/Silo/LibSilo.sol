@@ -228,41 +228,12 @@ library LibSilo {
                 .add(stalk);
         }
 
-        // emit event.
-        emit LibGerminate.FarmerGerminatingStalkBalanceChanged(
-            account,
-            stalk
-        );
+        // emit events.
+        emit LibGerminate.FarmerGerminatingStalkBalanceChanged(account, stalk);
+        emit LibGerminate.TotalGerminatingStalkChanged(season, stalk);
     }
 
     //////////////////////// BURN ////////////////////////
-
-    /**
-     * @notice Burns Stalk and Roots from `account`.
-     * @dev assumes all stalk are in the same `state`. If not the case,
-     * use `burnActiveStalk` and `burnGerminatingStalk` instead.
-     */
-    function burnStalk(address account, uint256 stalk, LibGerminate.Germinate germ) internal {
-        AppStorage storage s = LibAppStorage.diamondStorage();
-        if (stalk == 0) return;
-
-        // increment user and total stalk and roots if not germinating:
-        if (germ == LibGerminate.Germinate.NOT_GERMINATING) {
-            uint256 roots = burnActiveStalk(account, stalk);
-
-            // Oversaturated was previously referred to as Raining and thus
-            // code references mentioning Rain really refer to Oversaturation
-            // If Beanstalk is Oversaturated, subtract Roots from both the
-            // account's and Beanstalk's Oversaturated Roots balances.
-            // For more info on Oversaturation, See {Weather.handleRain}
-            if (s.season.raining) {
-                s.r.roots = s.r.roots.sub(roots);
-                s.a[account].sop.roots = s.a[account].roots;
-            }
-        } else {
-            burnGerminatingStalk(account, uint128(stalk), germ);
-        }
-    }
 
     /**
      * @notice Burns stalk and roots from an account.
@@ -316,10 +287,8 @@ library LibSilo {
         }
 
         // emit events.
-        emit LibGerminate.FarmerGerminatingStalkBalanceChanged(
-            account,
-            -int256(stalk)
-        );
+        emit LibGerminate.FarmerGerminatingStalkBalanceChanged(account, -int256(stalk));
+        emit LibGerminate.TotalGerminatingStalkChanged(season, -int256(stalk));
     }
 
     //////////////////////// TRANSFER ////////////////////////

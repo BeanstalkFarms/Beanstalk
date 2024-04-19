@@ -61,6 +61,7 @@ contract MockSeasonFacet is SeasonFacet  {
         bytes4 lwSelector,
         uint64 optimalPercentDepositedBdv
     );
+    event TotalGerminatingStalkChanged(uint256 season, int256 deltaStalk);
 
     function reentrancyGuardTest() public nonReentrant {
         reentrancyGuardTest();
@@ -533,6 +534,14 @@ contract MockSeasonFacet is SeasonFacet  {
             bdv,
             germ
         );
+        uint128 stalk = bdv * s.ss[token].stalkIssuedPerBdv;
+        // increment total stalk: (see mintGerminatingStalk)
+        uint32 season = s.season.current;
+        if (LibGerminate.getSeasonGerminationState() == germ) {
+            s.unclaimedGerminating[season].stalk = s.unclaimedGerminating[season].stalk + stalk;
+        } else {
+            s.unclaimedGerminating[season - 1].stalk = s.unclaimedGerminating[season - 1].stalk + stalk;
+        }
     }
 
     function mockSetTwaReserves(

@@ -57,6 +57,17 @@ library LibGerminate {
         int256 deltaBdv
     );
 
+    /**
+     * @notice emitted when the total germinating stalk changes. 
+     * @param season issuance season of germinating stalk
+     * @param deltaStalk the change in the total germinating stalk.
+     * @dev the issuance season may differ from the season that this function was called in.
+     */
+    event TotalGerminatingStalkChanged(
+        uint256 season,
+        int256 deltaStalk
+    );
+
     struct GermStem {
         int96 germinatingStem;
         int96 stemTip;
@@ -88,19 +99,16 @@ library LibGerminate {
         // base roots are used if there are no roots in the silo.
         // root calculation is skipped if no deposits have been made 
         // in the season.
+        uint128 finishedGerminatingStalk = s.unclaimedGerminating[germinationSeason].stalk;
         if (s.s.roots == 0) {
             s.unclaimedGerminating[germinationSeason].roots = 
-                s.unclaimedGerminating[germinationSeason].stalk
-                .mul(uint128(C.getRootsBase()));
+                finishedGerminatingStalk.mul(uint128(C.getRootsBase()));
         } else if (s.unclaimedGerminating[germinationSeason].stalk > 0) {
-            s.unclaimedGerminating[season.sub(2)].roots = s
-            .s.roots
-            .mul(s.unclaimedGerminating[season.sub(2)].stalk)
-            .div(s.s.stalk) 
-            .toUint128();
+            s.unclaimedGerminating[germinationSeason].roots = 
+                s.s.roots.mul(finishedGerminatingStalk).div(s.s.stalk) .toUint128();
         }
         // increment total stalk and roots based on unclaimed values.
-        s.s.stalk = s.s.stalk.add(s.unclaimedGerminating[germinationSeason].stalk);
+        s.s.stalk = s.s.stalk.add(finishedGerminatingStalk);
         s.s.roots = s.s.roots.add(s.unclaimedGerminating[germinationSeason].roots);
 
         // increment total deposited and amounts for each token.
@@ -129,6 +137,9 @@ library LibGerminate {
                 -int256(totalGerm.deposited[tokens[i]].amount),
                 -int256(totalGerm.deposited[tokens[i]].bdv)
             );
+
+            // safecast not needed as finishedGerminatingStalk is initially a uint128.
+            emit TotalGerminatingStalkChanged(season, -int256(finishedGerminatingStalk));
 
             // clear deposited values.
             delete totalGerm.deposited[tokens[i]];
