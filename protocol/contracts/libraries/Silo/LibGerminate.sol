@@ -59,14 +59,21 @@ library LibGerminate {
 
     /**
      * @notice emitted when the total germinating stalk changes. 
-     * @param season issuance season of germinating stalk
+     * @param germinationSeason issuance season of germinating stalk
      * @param deltaStalk the change in the total germinating stalk.
      * @dev the issuance season may differ from the season that this function was called in.
      */
     event TotalGerminatingStalkChanged(
-        uint256 season,
+        uint256 germinationSeason,
         int256 deltaStalk
     );
+
+    /**
+     * @notice emitted at the sunrise function when the total stalk and roots are incremented.
+     * @dev currently, stalk and roots can only increase at the end of `endTotalGermination`,
+     * but is casted in the event to allow for future decreases.
+     */
+    event TotalStalkChanged(int256 deltaStalk, int256 deltaRoots);
 
     struct GermStem {
         int96 germinatingStem;
@@ -100,16 +107,17 @@ library LibGerminate {
         // root calculation is skipped if no deposits have been made 
         // in the season.
         uint128 finishedGerminatingStalk = s.unclaimedGerminating[germinationSeason].stalk;
+        uint128 rootsFromGerminatingStalk;
         if (s.s.roots == 0) {
-            s.unclaimedGerminating[germinationSeason].roots = 
-                finishedGerminatingStalk.mul(uint128(C.getRootsBase()));
+            rootsFromGerminatingStalk = finishedGerminatingStalk.mul(uint128(C.getRootsBase()));
+            
         } else if (s.unclaimedGerminating[germinationSeason].stalk > 0) {
-            s.unclaimedGerminating[germinationSeason].roots = 
-                s.s.roots.mul(finishedGerminatingStalk).div(s.s.stalk) .toUint128();
+            rootsFromGerminatingStalk = s.s.roots.mul(finishedGerminatingStalk).div(s.s.stalk) .toUint128();
         }
+        s.unclaimedGerminating[germinationSeason].roots = rootsFromGerminatingStalk;
         // increment total stalk and roots based on unclaimed values.
         s.s.stalk = s.s.stalk.add(finishedGerminatingStalk);
-        s.s.roots = s.s.roots.add(s.unclaimedGerminating[germinationSeason].roots);
+        s.s.roots = s.s.roots.add(rootsFromGerminatingStalk);
 
         // increment total deposited and amounts for each token.
         Storage.TotalGerminating storage totalGerm;
@@ -140,10 +148,11 @@ library LibGerminate {
             // clear deposited values.
             delete totalGerm.deposited[tokens[i]];
         }
-        
+
         // emit change in total germinating stalk.
         // safecast not needed as finishedGerminatingStalk is initially a uint128.
         emit TotalGerminatingStalkChanged(season, -int256(finishedGerminatingStalk));
+        emit TotalStalkChanged(int256(finishedGerminatingStalk), int256(rootsFromGerminatingStalk));
     }
 
     /**

@@ -20,6 +20,7 @@ import {LibCurveMinting} from "contracts/libraries/Minting/LibCurveMinting.sol";
 import {LibWellMinting} from "contracts/libraries/Minting/LibWellMinting.sol";
 import {LibEvaluate} from "contracts/libraries/LibEvaluate.sol";
 import {LibTokenSilo} from "contracts/libraries/Silo/LibTokenSilo.sol";
+import {LibSilo} from "contracts/libraries/Silo/LibSilo.sol";
 
 /**
  * @author Publius
@@ -62,6 +63,7 @@ contract MockSeasonFacet is SeasonFacet  {
         uint64 optimalPercentDepositedBdv
     );
     event TotalGerminatingStalkChanged(uint256 season, int256 deltaStalk);
+    event TotalStalkChanged(int256 deltaStalk, int256 deltaRoots);
 
     function reentrancyGuardTest() public nonReentrant {
         reentrancyGuardTest();
@@ -523,6 +525,7 @@ contract MockSeasonFacet is SeasonFacet  {
     }
 
     function mockIncrementGermination(
+        address account,
         address token,
         uint128 amount,
         uint128 bdv,
@@ -535,13 +538,7 @@ contract MockSeasonFacet is SeasonFacet  {
             germ
         );
         uint128 stalk = bdv * s.ss[token].stalkIssuedPerBdv;
-        // increment total stalk: (see mintGerminatingStalk)
-        uint32 season = s.season.current;
-        if (LibGerminate.getSeasonGerminationState() == germ) {
-            s.unclaimedGerminating[season].stalk = s.unclaimedGerminating[season].stalk + stalk;
-        } else {
-            s.unclaimedGerminating[season - 1].stalk = s.unclaimedGerminating[season - 1].stalk + stalk;
-        }
+        LibSilo.mintGerminatingStalk(account, stalk, germ); 
     }
 
     function mockSetTwaReserves(
