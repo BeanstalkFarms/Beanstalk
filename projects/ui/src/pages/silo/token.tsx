@@ -102,7 +102,7 @@ const TokenPage: FC<{}> = () => {
               <span>
                 This token was removed from the Deposit Whitelist in{' '}
                 <Link to="/governance/0x83227d95ec06039a920583b1002588efa89fa079692d8c4aebe097bbcc2aaea8">
-                  BIP-40
+                  BIP-42
                 </Link>
                 . Farmers may no longer Deposit this token into the Silo. Any
                 Deposits before the upgrade can be Converted, Transfered or
