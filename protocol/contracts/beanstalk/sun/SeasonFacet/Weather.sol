@@ -88,7 +88,7 @@ contract Weather is Sun {
      * @dev currently, an oracle failure does not affect the temperature, as 
      * the temperature is not affected by liquidity levels. The function will
      * need to be updated if the temperature is affected by liquidity levels.
-     * This is implmented such that liveliness in change in temperature is retained.
+     * This is implemented such that liveliness in change in temperature is retained.
      */
     function updateTemperatureAndBeanToMaxLpGpPerBdvRatio(uint256 caseId, bool oracleFailure) internal {
         LibCases.CaseData memory cd = LibCases.decodeCaseData(caseId);
