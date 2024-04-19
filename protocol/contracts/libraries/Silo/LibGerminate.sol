@@ -452,7 +452,15 @@ library LibGerminate {
      * @dev used in new deposits, as all new deposits are germinating.
      */
     function getSeasonGerminationState() internal view returns (Germinate) {
-        return isCurrentSeasonOdd() ? Germinate.ODD : Germinate.EVEN;
+        AppStorage storage s = LibAppStorage.diamondStorage();
+        return getGerminationStateForSeason(s.season.current);
+    }
+
+    /**
+     * @notice returns the germination state for a given season.
+     */
+    function getGerminationStateForSeason(uint32 season) internal pure returns (Germinate) {
+        return isSeasonOdd(season) ? Germinate.ODD : Germinate.EVEN;
     }
 
     /**
