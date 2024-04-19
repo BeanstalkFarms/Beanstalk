@@ -2,26 +2,18 @@ const { expect } = require('chai')
 const { deploy } = require('../scripts/deploy.js')
 const { takeSnapshot, revertToSnapshot } = require("./utils/snapshot")
 const { to6, toStalk, toBean, to18 } = require('./utils/helpers.js')
-const { UNRIPE_BEAN, UNRIPE_LP, BEAN, BEAN_3_CURVE, BEAN_ETH_WELL, ETH_USDT_UNISWAP_V3 } = require('./utils/constants.js')
+const { UNRIPE_BEAN, UNRIPE_LP, BEAN, BEAN_3_CURVE, BEAN_ETH_WELL, ETH_USDT_UNISWAP_V3, ETH_USD_CHAINLINK_AGGREGATOR } = require('./utils/constants.js')
 const { EXTERNAL, INTERNAL } = require('./utils/balances.js')
 const { ethers } = require('hardhat')
-const { advanceTime } = require('../utils/helpers.js')
-const { deployMockWell, whitelistWell, deployMockWellWithMockPump } = require('../utils/well.js')
-const { initalizeGaugeForToken } = require('../utils/gauge.js')
+const { whitelistWell, deployMockWellWithMockPump } = require('../utils/well.js')
+const { initializeGaugeForToken } = require('../utils/gauge.js')
 const { setEthUsdPrice, setEthUsdcPrice, setEthUsdtPrice } = require('../scripts/usdOracle.js')
-const { time, mineUpTo, mine } = require("@nomicfoundation/hardhat-network-helpers")
 const ZERO_BYTES = ethers.utils.formatBytes32String('0x0')
 const { setOracleFailure } = require('../utils/oracle.js')
 
 
-let user, user2, owner
-let userAddress, ownerAddress, user2Address
-
-async function setToSecondsAfterHour(seconds = 0) {
-  const lastTimestamp = (await ethers.provider.getBlock('latest')).timestamp
-  const hourTimestamp = parseInt(lastTimestamp/3600 + 1) * 3600 + seconds
-  await network.provider.send("evm_setNextBlockTimestamp", [hourTimestamp])
-}
+let user, owner
+let userAddress, ownerAddress
 
 
 describe('Gauge', function () {
@@ -471,7 +463,7 @@ describe('Gauge', function () {
     })
   })
 
-  it('does not iterate seed gauge system if oracle failed', async function (){
+  it('does not iterate seed gauge system if uniswap oracle failed', async function (){
     await setOracleFailure(true, ETH_USDT_UNISWAP_V3)
     await this.season.stepGauge()
     // verify state is same
@@ -480,6 +472,32 @@ describe('Gauge', function () {
 
     expect((await this.siloGetters.tokenSettings(BEAN))[1]).to.be.eq(to6('2'))
     expect((await this.siloGetters.tokenSettings(BEAN_ETH_WELL))[1]).to.be.eq(to6('4'))
+  })
+
+  it('does not iterate seed gauge system if chainlink oracle failed', async function (){
+    const ethUsdChainlinkAggregator = await ethers.getContractAt('MockChainlinkAggregator', ETH_USD_CHAINLINK_AGGREGATOR)
+    await ethUsdChainlinkAggregator.addRound(0, 0, 0, 0)
+    await this.season.stepGauge()
+    // verify state is same
+    expect(await this.seasonGetters.getBeanToMaxLpGpPerBdvRatio()).to.be.equal(to18('50'))
+    expect(await this.seasonGetters.getGaugePoints(BEAN_ETH_WELL)).to.be.eq(to18('1000'))
+
+    expect((await this.siloGetters.tokenSettings(BEAN))[1]).to.be.eq(to6('2'))
+    expect((await this.siloGetters.tokenSettings(BEAN_ETH_WELL))[1]).to.be.eq(to6('4'))
+  })
+
+  it("does not update Bean to maxLP ratio if oracle fails", async function () {
+    await this.season.seedGaugeSunSunriseWithOracle('0', 108, true)
+    expect(await this.seasonGetters.getBeanToMaxLpGpPerBdvRatio()).to.be.equal(to18('50'))
+  })
+
+  it("properly returns a oracle failure", async function () {
+    // add an invalid oracle round.
+    const ethUsdChainlinkAggregator = await ethers.getContractAt('MockChainlinkAggregator', ETH_USD_CHAINLINK_AGGREGATOR)
+    await ethUsdChainlinkAggregator.addRound(0, 0, 0, 0)
+    // step through case calculation and verify that BeanToMaxLpGpPerBdvRatio remains unchanged.
+    await this.season.calcCaseIdE(0,0)
+    expect(await this.seasonGetters.getBeanToMaxLpGpPerBdvRatio()).to.be.equal(to18('50'))
   })
 
   describe("excessive price", async function () {
