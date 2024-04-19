@@ -295,7 +295,7 @@ const Whitelist: FC<{
                           padding: '15px 10px',
                         }}
                         size="small"
-                        label="Removed from Deposit Whitelist in BIP-40"
+                        label="Removed from Deposit Whitelist in BIP-42"
                       />
                     )}
                   </Grid>
@@ -345,29 +345,29 @@ const Whitelist: FC<{
                    * Cell: Bean APY
                    */}
                   {!isDeprecated && (
-                  <Grid
-                    item
-                    md={2}
-                    xs={0}
-                    display={{ xs: 'none', md: 'flex' }}
-                    justifyContent='center'
-                  >
-                    <SiloAssetApyChip token={token} metric="bean" />
-                  </Grid>
+                    <Grid
+                      item
+                      md={2}
+                      xs={0}
+                      display={{ xs: 'none', md: 'flex' }}
+                      justifyContent="center"
+                    >
+                      <SiloAssetApyChip token={token} metric="bean" />
+                    </Grid>
                   )}
                   {/**
                    * Cell: Stalk APY
                    */}
                   {!isDeprecated && (
-                  <Grid
-                    item
-                    md={1.25}
-                    xs={0}
-                    display={{ xs: 'none', md: 'flex' }}
-                    justifyContent='center'
-                  >
-                    <SiloAssetApyChip token={token} metric="stalk" />
-                  </Grid>
+                    <Grid
+                      item
+                      md={1.25}
+                      xs={0}
+                      display={{ xs: 'none', md: 'flex' }}
+                      justifyContent="center"
+                    >
+                      <SiloAssetApyChip token={token} metric="stalk" />
+                    </Grid>
                   )}
                   {/**
                    * Cell: TVD
