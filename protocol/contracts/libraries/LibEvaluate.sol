@@ -213,7 +213,7 @@ library LibEvaluate {
      */
     function calcLPToSupplyRatio(
         uint256 beanSupply
-    ) internal view returns (Decimal.D256 memory lpToSupplyRatio, address largestLiqWell) {
+    ) internal view returns (Decimal.D256 memory lpToSupplyRatio, address largestLiqWell, bool oracleFailure) {
         AppStorage storage s = LibAppStorage.diamondStorage();
 
         // prevent infinite L2SR
