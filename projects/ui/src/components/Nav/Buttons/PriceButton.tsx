@@ -24,18 +24,26 @@ import { displayBeanPrice, displayBN } from '~/util/Tokens';
 import { BASIN_WELL_LINK, CURVE_LINK, NEW_BN, ZERO_BN } from '~/constants';
 import { useFetchPools } from '~/state/bean/pools/updater';
 import { AppState } from '~/state';
-import FolderMenu from '../FolderMenu';
 import ethereumLogo from '~/img/tokens/eth-logo-circled.svg';
 
 // ------------------------------------------------------------
 
 import { FC } from '~/types';
 import useDataFeedTokenPrices from '~/hooks/beanstalk/useDataFeedTokenPrices';
+import FolderMenu from '../FolderMenu';
+
+const poolLinks: { [key: string]: string } = {
+  '0xc9c32cd16bf7efb85ff14e0c8603cc90f6f2ee49': CURVE_LINK,
+  '0xbea0e11282e2bb5893bece110cf199501e872bad': `${BASIN_WELL_LINK}0xbea0e11282e2bb5893bece110cf199501e872bad`,
+};
 
 const PriceButton: FC<ButtonProps> = ({ ...props }) => {
   const [showDeprecated, setShowDeprecated] = useState(false);
 
   const pools = usePools(showDeprecated);
+  for (const [address, pool] of Object.entries(pools)) {
+    pool.link = poolLinks[address];
+  }
   const [showTWA, setShowTWA] = useState(false);
   const [showPrices, setShowPrices] = useState(false);
   const season = useSeason();
@@ -146,8 +154,7 @@ const PriceButton: FC<ButtonProps> = ({ ...props }) => {
           pool={pool}
           poolState={beanPools[pool.address]}
           ButtonProps={{
-            href:
-              index === 0 ? CURVE_LINK : `${BASIN_WELL_LINK}${pool.address}`,
+            href: `${pool.link}`,
             target: '_blank',
             rel: 'noreferrer',
           }}
