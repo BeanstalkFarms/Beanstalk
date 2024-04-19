@@ -406,7 +406,6 @@ const ConvertForm: FC<
             </WarningAlert>
           </Box>
         ) : null}
-
         {/* Outputs */}
         {totalAmountIn &&
         tokenOut &&
@@ -415,27 +414,29 @@ const ConvertForm: FC<
           <>
             <TxnSeparator mt={-1} />
             <TokenOutput danger={isChopping}>
-              <Typography
-                sx={{
-                  fontSize: FontSize.sm,
-                  fontWeight: 'bold',
-                  color: BeanstalkPalette.trueRed,
-                  px: 0.5,
-                  mb: 0.25,
-                  '&:after': {
-                    content: "''",
-                    display: 'block',
-                    margin: '10px 10px',
-                    borderBottom: '1px solid #e9ccce',
-                  },
-                }}
-                component="span"
-                display="inline-block"
-              >
-                You will forfeit {displayBN(chopPercent)}% your claim to future
-                Ripe assets through this transaction
-              </Typography>
-              <br />
+              {isChopping && (
+                <Typography
+                  sx={{
+                    fontSize: FontSize.sm,
+                    fontWeight: 'bold',
+                    color: BeanstalkPalette.trueRed,
+                    px: 0.5,
+                    mb: 0.25,
+                    '&:after': {
+                      content: "''",
+                      display: 'block',
+                      margin: '10px 10px',
+                      borderBottom: '1px solid #e9ccce',
+                    },
+                  }}
+                  component="span"
+                  display="inline-block"
+                >
+                  You will forfeit {displayBN(chopPercent)}% your claim to
+                  future Ripe assets through this transaction
+                  <br />
+                </Typography>
+              )}
               <TokenOutput.Row
                 token={tokenOut}
                 amount={amountOut || ZERO_BN}
