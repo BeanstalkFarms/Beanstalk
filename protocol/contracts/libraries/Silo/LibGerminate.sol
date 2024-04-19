@@ -437,7 +437,7 @@ library LibGerminate {
         } else {
             // return the gemination state based on whether the stem
             // is equal to the stemTip.
-            // if the stem is equal to the stem tip, it is in the inital stages of germination.
+            // if the stem is equal to the stem tip, it is in the initial stages of germination.
             // if the stem is not equal to the stemTip, its in the germination process.
             if (stem == germData.stemTip) {
                 return isCurrentSeasonOdd() ? Germinate.ODD : Germinate.EVEN;

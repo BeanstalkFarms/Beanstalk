@@ -55,7 +55,7 @@ contract InitBipBasinIntegration {
             0
         );
 
-        // the init script was initally made with the line below,
+        // the init script was initially made with the line below,
         // but since changed to compile with the current AppStorage.sol
         // s.beanEthPrice = 1;
         s.twaReserves[C.BEAN_ETH_WELL].reserve0 = 1;

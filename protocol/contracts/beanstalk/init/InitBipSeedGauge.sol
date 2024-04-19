@@ -32,7 +32,7 @@ interface ILiquidityWeightFacet {
 
 /**
  * @author Brean, Brendan
- * @title InitBipSeedGauge initalizes the seed gauge, updates siloSetting Struct
+ * @title InitBipSeedGauge initializes the seed gauge, updates siloSetting Struct
  **/
 contract InitBipSeedGauge is Weather, InitWhitelistStatuses {
     using SafeMath for uint256;
@@ -124,7 +124,7 @@ contract InitBipSeedGauge is Weather, InitWhitelistStatuses {
                 optimalPercentDepositedBdv[i]
             );
         }
-        // initalize seed gauge and emit events.
+        // initialize seed gauge and emit events.
         s.seedGauge.beanToMaxLpGpPerBdvRatio = 33_333_333_333_333_333_333; // 33% (50% + 50%* (1/3) = 66%)
         s.seedGauge.averageGrownStalkPerBdvPerSeason = initializeAverageGrownStalkPerBdv(totalBdv);
 
@@ -138,19 +138,19 @@ contract InitBipSeedGauge is Weather, InitWhitelistStatuses {
             s.seedGauge.averageGrownStalkPerBdvPerSeason
         );
 
-        // initalize s.usdTokenPrice for the bean eth well.
+        // initialize s.usdTokenPrice for the bean eth well.
         s.usdTokenPrice[C.BEAN_ETH_WELL] = 1;
 
         // set s.twaReserves for the bean eth well, and the bean:3crv pool.
         s.twaReserves[C.BEAN_ETH_WELL].reserve0 = 1;
         s.twaReserves[C.BEAN_ETH_WELL].reserve1 = 1;
 
-        // initalize V2 cases.
+        // initialize V2 cases.
         LibCases.setCasesV2();
     }
 
     /**
-     * @notice initalizes the average grown stalk per BDV, based on the total BDV.
+     * @notice initializes the average grown stalk per BDV, based on the total BDV.
      */
     function initializeAverageGrownStalkPerBdv(uint256 totalBdv) internal view returns (uint128) {
         uint256 averageGrownStalkPerBdv = s.s.stalk.div(totalBdv).sub(10000);

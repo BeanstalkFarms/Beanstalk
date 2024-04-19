@@ -613,7 +613,7 @@ library LibSilo {
     )
         internal
         returns (
-            uint256 initalStalkRemoved,
+            uint256 initialStalkRemoved,
             uint256 grownStalkRemoved,
             uint256 bdvRemoved,
             LibGerminate.Germinate germ
@@ -624,9 +624,9 @@ library LibSilo {
         (germ, stemTip) = LibGerminate.getGerminationState(token, stem);
         bdvRemoved = LibTokenSilo.removeDepositFromAccount(account, token, stem, amount);
 
-        // the inital and grown stalk are as there are instances where the inital stalk is
+        // the initial and grown stalk are as there are instances where the initial stalk is
         // germinating, but the grown stalk is not.
-        initalStalkRemoved = bdvRemoved.mul(s.ss[token].stalkIssuedPerBdv);
+        initialStalkRemoved = bdvRemoved.mul(s.ss[token].stalkIssuedPerBdv);
 
         grownStalkRemoved = stalkReward(stem, stemTip, bdvRemoved.toUint128());
         /**
@@ -709,7 +709,7 @@ library LibSilo {
             }
         }
 
-        // add inital stalk deposit to all stalk removed.
+        // add initial stalk deposit to all stalk removed.
         {
             uint256 stalkIssuedPerBdv = s.ss[token].stalkIssuedPerBdv;
             if (ar.active.tokens > 0) {

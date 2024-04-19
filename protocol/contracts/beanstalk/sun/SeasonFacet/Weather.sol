@@ -160,7 +160,7 @@ contract Weather is Sun {
             s.r.roots = s.s.roots;
         } else {
             if (s.r.roots > 0) {
-                // initalize sopWell if it is not already set.
+                // initialize sopWell if it is not already set.
                 if (s.sopWell == address(0)) s.sopWell = well;
                 sop();
             }
@@ -232,7 +232,7 @@ contract Weather is Sun {
      */
     function calculateSop(address well) private view returns (uint256 sopBeans, IERC20 sopToken){
 
-        // if the sopWell was not initalized, the should not occur.
+        // if the sopWell was not initialized, the should not occur.
         if (well == address(0)) return (0, IERC20(0));
         IWell sopWell = IWell(well);
         IERC20[] memory tokens = sopWell.tokens();

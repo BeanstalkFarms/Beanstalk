@@ -34,7 +34,7 @@ contract WhitelistFacet is WhitelistedTokens {
      * @param stalkEarnedPerSeason The amount of Stalk earned per Season for each Deposited BDV.
      * @param gaugePointSelector The function selector that is used to calculate the Gauge Points of the token.
      * @param liquidityWeightSelector The function selector that outputs the liquidity weight of the token.
-     * @param gaugePoints The inital gauge points allocated to the token.
+     * @param gaugePoints The initial gauge points allocated to the token.
      * @param optimalPercentDepositedBdv The target percentage
      * of the total LP deposited BDV for this token. Only used if the token is an LP token.
      * @dev Can only be called by Beanstalk or Beanstalk owner. Assumes an `encodeType` of 0.
@@ -73,7 +73,7 @@ contract WhitelistFacet is WhitelistedTokens {
      * @param stalkEarnedPerSeason The amount of Stalk earned per Season for each Deposited BDV.
      * @param encodeType The encode type that should be used to encode the BDV function call. See {LibTokenSilo.beanDenominatedValue}.
      * @param gaugePointSelector The function selector that is used to calculate the Gauge Points of the token.
-     * @param gaugePoints The inital gauge points allocated to the token.
+     * @param gaugePoints The initial gauge points allocated to the token.
      * @param optimalPercentDepositedBdv The target percentage
      * of the total LP deposited BDV for this token. Only used if the token is an LP token.
      *

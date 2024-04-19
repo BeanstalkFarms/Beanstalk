@@ -604,7 +604,7 @@ contract SiloGettersFacet is ReentrancyGuard {
     }
 
     /**
-     * @notice returns the season in which beanstalk initalized siloV3.
+     * @notice returns the season in which beanstalk initialized siloV3.
      */
     function stemStartSeason() external view virtual returns (uint16) {
         return s.season.stemStartSeason;

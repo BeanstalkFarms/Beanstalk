@@ -182,7 +182,7 @@ describe('SeedGauge Init Test', function () {
 
     // mow arbitrary address that contains a bean3crv deposit.
     it('allows legacy bean3crv to be mown', async function () {
-      initalStalk = await this.beanstalk.balanceOfStalk(
+      initialStalk = await this.beanstalk.balanceOfStalk(
         '0x1B7eA7D42c476A1E2808f23e18D850C5A4692DF7'
       )
       await this.beanstalk.mow(
@@ -193,7 +193,7 @@ describe('SeedGauge Init Test', function () {
         '0x1B7eA7D42c476A1E2808f23e18D850C5A4692DF7'
       )
 
-      await expect(newStalk).to.be.above(initalStalk)
+      await expect(newStalk).to.be.above(initialStalk)
     })
     
   })

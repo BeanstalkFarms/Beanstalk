@@ -166,7 +166,7 @@ contract ConvertFacet is ReentrancyGuard {
             }
 
             // if the loop is exited early, set the remaining amounts to 0.
-            // `i` is not reinitalized and uses the value from the loop.
+            // `i` is not reinitialized and uses the value from the loop.
             for (i; i < stems.length; ++i) amounts[i] = 0;
             
             emit RemoveDeposits(
@@ -227,7 +227,7 @@ contract ConvertFacet is ReentrancyGuard {
         
         // increment totals based on germination state, 
         // as well as issue stalk to the user.
-        // if the deposit is germinating, only the inital stalk of the deposit is germinating. 
+        // if the deposit is germinating, only the initial stalk of the deposit is germinating. 
         // the rest is active stalk.
         if (germ == LibGerminate.Germinate.NOT_GERMINATING) {
             LibTokenSilo.incrementTotalDeposited(token, amount, bdv);

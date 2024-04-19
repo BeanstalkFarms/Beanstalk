@@ -471,7 +471,7 @@ contract MockSeasonFacet is SeasonFacet  {
         s.seedGauge.averageGrownStalkPerBdvPerSeason = _averageGrownStalkPerBdvPerSeason;
     }
 
-    function mockInitalizeGaugeForToken(
+    function mockinitializeGaugeForToken(
         address token,
         bytes4 gaugePointSelector,
         bytes4 liquidityWeightSelector,

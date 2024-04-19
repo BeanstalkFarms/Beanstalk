@@ -250,7 +250,7 @@ library LibWell {
     /**
      * @notice gets the TwaReserves of a given well.
      * @dev only supports wells that are whitelisted in beanstalk.
-     * the inital timestamp and reserves is the timestamp of the start
+     * the initial timestamp and reserves is the timestamp of the start
      * of the last season. wrapped in try/catch to return gracefully.
      */
     function getTwaReservesFromBeanstalkPump(
@@ -272,7 +272,7 @@ library LibWell {
     /**
      * @notice gets the TwaLiquidity of a given well.
      * @dev only supports wells that are whitelisted in beanstalk.
-     * the inital timestamp and reserves is the timestamp of the start
+     * the initial timestamp and reserves is the timestamp of the start
      * of the last season.
      */
     function getTwaLiquidityFromBeanstalkPump(

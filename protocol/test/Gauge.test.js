@@ -72,12 +72,12 @@ describe('Gauge', function () {
     await this.unripe.connect(owner).addUnripeToken(UNRIPE_BEAN, BEAN, ZERO_BYTES)
     await this.unripe.connect(owner).addUnripeToken(UNRIPE_LP, BEAN_ETH_WELL, ZERO_BYTES)
     
-    // dewhitelist curve, as initMockDiamond initalizes bean3crv.
+    // dewhitelist curve, as initMockDiamond initializes bean3crv.
     // dewhitelisted here rather than updating mock to avoid breaking other tests.
     await this.whitelist.connect(owner).dewhitelistToken(BEAN_3_CURVE)
 
-    // initalize gauge parameters for lp:
-    await initalizeGaugeForToken(BEAN_ETH_WELL, to18('1000'), to6('100'))
+    // initialize gauge parameters for lp:
+    await initializeGaugeForToken(BEAN_ETH_WELL, to18('1000'), to6('100'))
 
     await this.season.updateTWAPCurveE()
   })
@@ -91,7 +91,7 @@ describe('Gauge', function () {
   })
 
   describe('Bean to maxLP ratio', function () {
-    // MockInitDiamond initalizes BeanToMaxLpGpPerBDVRatio to 50% (50e6)
+    // MockInitDiamond initializes BeanToMaxLpGpPerBDVRatio to 50% (50e6)
 
     describe('L2SR > excessively high L2SR % + P > 1', async function () {
       it("increases Bean to maxLP ratio", async function () {
@@ -213,7 +213,6 @@ describe('Gauge', function () {
       // 100 * (1 - 0.5) + 0.5 = 1
       expect(await this.seasonGetters.getBeanToMaxLpGpPerBdvRatioScaled()).to.be.equal(to18('100'))
     })
-
   })
 
   describe('L2SR calculation', async function () {
@@ -226,7 +225,7 @@ describe('Gauge', function () {
         expect(await this.seasonGetters.getTotalWeightedUsdLiquidity()).to.be.equal(to18('1000000'))
       })
 
-      it('inital state', async function () {
+      it('initial state', async function () {
         // bean:eth has a ratio of 1000:1 (1m beans paired against 1m usd of eth),
         // bean:3crv has a ratio of 1:1 (1m beans paired against 1m usd of 3crv)
         // total supply of bean is 2m, with 0 circulating.
@@ -267,27 +266,27 @@ describe('Gauge', function () {
 
       it('decreases', async function () {
         await this.bean.mint(ownerAddress, to6('1000000'))
-        initalL2SR = await this.seasonGetters.getLiquidityToSupplyRatio()
+        initialL2SR = await this.seasonGetters.getLiquidityToSupplyRatio()
         
         await this.bean.mint(ownerAddress, to6('1000000'))
         newL2SR = await this.seasonGetters.getLiquidityToSupplyRatio()
 
-        expect(initalL2SR).to.be.equal(to18('1'))
+        expect(initialL2SR).to.be.equal(to18('1'))
         expect(newL2SR).to.be.equal(to18('0.5'))
-        expect(newL2SR).to.be.lt(initalL2SR)
+        expect(newL2SR).to.be.lt(initialL2SR)
 
       })
 
       it('increases', async function () {
         await this.bean.mint(ownerAddress, to6('1000000'))
-        initalL2SR = await this.seasonGetters.getLiquidityToSupplyRatio()
+        initialL2SR = await this.seasonGetters.getLiquidityToSupplyRatio()
 
         await this.bean.connect(owner).burn(to6('500000'))
         newL2SR = await this.seasonGetters.getLiquidityToSupplyRatio()
 
-        expect(initalL2SR).to.be.equal(to18('1'))
+        expect(initialL2SR).to.be.equal(to18('1'))
         expect(newL2SR).to.be.equal(to18('2'))
-        expect(newL2SR).to.be.gt(initalL2SR)
+        expect(newL2SR).to.be.gt(initialL2SR)
       })
     })
 
