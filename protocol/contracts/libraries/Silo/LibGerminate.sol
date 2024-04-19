@@ -137,13 +137,13 @@ library LibGerminate {
                 -int256(totalGerm.deposited[tokens[i]].amount),
                 -int256(totalGerm.deposited[tokens[i]].bdv)
             );
-
-            // safecast not needed as finishedGerminatingStalk is initially a uint128.
-            emit TotalGerminatingStalkChanged(season, -int256(finishedGerminatingStalk));
-
             // clear deposited values.
             delete totalGerm.deposited[tokens[i]];
         }
+        
+        // emit change in total germinating stalk.
+        // safecast not needed as finishedGerminatingStalk is initially a uint128.
+        emit TotalGerminatingStalkChanged(season, -int256(finishedGerminatingStalk));
     }
 
     /**
