@@ -13,7 +13,6 @@ import {Call, IWell} from "contracts/interfaces/basin/IWell.sol";
 import {IWellFunction} from "contracts/interfaces/basin/IWellFunction.sol";
 import {LibLockedUnderlying} from "./LibLockedUnderlying.sol";
 import {LibFertilizer} from "./LibFertilizer.sol";
-import "hardhat/console.sol";
 
 /**
  * @title LibUnripe
@@ -157,12 +156,6 @@ library LibUnripe {
         uint256 usdValueRaised = s.recapitalized;
 	    uint256 totalUsdNeeded = LibFertilizer.getTotalRecapDollarsNeeded();
         uint256 currentRipeUnderlying = s.u[unripeToken].balanceOfUnderlying;
-        console.log("currentRipeUnderlying: ", currentRipeUnderlying);
-        console.log("totalRipeUnderlying: ", currentRipeUnderlying.mul(totalUsdNeeded).div(usdValueRaised));
-        console.log("usdValueRaised: ", usdValueRaised);
-        console.log("totalUsdNeeded: ", totalUsdNeeded);
-        console.log("amount: ", amount);
-        console.log("supply: ", supply);
         // total redeemable * %DollarRecapitalized^2 * share of unripe tokens
         // redeem = totalRipeUnderlying *  (usdValueRaised/totalUsdNeeded)^2 * UnripeAmountIn/UnripeSupply;
         // But totalRipeUnderlying = CurrentUnderlying * totalUsdNeeded/usdValueRaised to get the total underlying
