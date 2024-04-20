@@ -7163,8 +7163,14 @@
       {
         "indexed": false,
         "internalType": "int256",
-        "name": "delta",
+        "name": "deltaGerminatingStalk",
         "type": "int256"
+      },
+      {
+        "indexed": false,
+        "internalType": "enum LibGerminate.Germinate",
+        "name": "germinationState",
+        "type": "uint8"
       }
     ],
     "name": "FarmerGerminatingStalkBalanceChanged",
@@ -7188,7 +7194,7 @@
       {
         "indexed": false,
         "internalType": "int256",
-        "name": "delta",
+        "name": "deltaAmount",
         "type": "int256"
       },
       {
@@ -7199,6 +7205,44 @@
       }
     ],
     "name": "TotalGerminatingBalanceChanged",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "germinationSeason",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "int256",
+        "name": "deltaGerminatingStalk",
+        "type": "int256"
+      }
+    ],
+    "name": "TotalGerminatingStalkChanged",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "int256",
+        "name": "deltaStalk",
+        "type": "int256"
+      },
+      {
+        "indexed": false,
+        "internalType": "int256",
+        "name": "deltaRoots",
+        "type": "int256"
+      }
+    ],
+    "name": "TotalStalkChangedFromGermination",
     "type": "event"
   },
   {
