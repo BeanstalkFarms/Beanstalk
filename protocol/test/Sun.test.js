@@ -373,8 +373,8 @@ describe('Sun', function () {
         to6('-1000')
       );
       await expect(this.result).to.emit(this.season, 'TotalGerminatingStalkChanged')
-      .withArgs('6', toStalk('-1000'));
-      await expect(this.result).to.emit(this.season, 'TotalStalkChanged')
+      .withArgs('4', toStalk('-1000'));
+      await expect(this.result).to.emit(this.season, 'TotalStalkChangedFromGermination')
       .withArgs(toStalk('1000'), toStalk('1000000000000000'));
     expect((await this.siloGetters.getEvenGerminating(BEAN))[0]).to.be.equal(to6('0'));
     expect((await this.siloGetters.getEvenGerminating(BEAN))[1]).to.be.equal(to6('0'));

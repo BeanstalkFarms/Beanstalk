@@ -60,12 +60,12 @@ library LibGerminate {
     /**
      * @notice emitted when the total germinating stalk changes. 
      * @param germinationSeason issuance season of germinating stalk
-     * @param deltaStalk the change in the total germinating stalk.
-     * @dev the issuance season may differ from the season that this function was called in.
+     * @param deltaGerminatingStalk the change in the total germinating stalk.
+     * @dev the issuance season may differ from the season that this event was emitted in..
      */
     event TotalGerminatingStalkChanged(
         uint256 germinationSeason,
-        int256 deltaStalk
+        int256 deltaGerminatingStalk
     );
 
     /**
@@ -73,7 +73,7 @@ library LibGerminate {
      * @dev currently, stalk and roots can only increase at the end of `endTotalGermination`,
      * but is casted in the event to allow for future decreases.
      */
-    event TotalStalkChanged(int256 deltaStalk, int256 deltaRoots);
+    event TotalStalkChangedFromGermination(int256 deltaStalk, int256 deltaRoots);
 
     struct GermStem {
         int96 germinatingStem;
@@ -151,8 +151,8 @@ library LibGerminate {
 
         // emit change in total germinating stalk.
         // safecast not needed as finishedGerminatingStalk is initially a uint128.
-        emit TotalGerminatingStalkChanged(season, -int256(finishedGerminatingStalk));
-        emit TotalStalkChanged(int256(finishedGerminatingStalk), int256(rootsFromGerminatingStalk));
+        emit TotalGerminatingStalkChanged(germinationSeason, -int256(finishedGerminatingStalk));
+        emit TotalStalkChangedFromGermination(int256(finishedGerminatingStalk), int256(rootsFromGerminatingStalk));
     }
 
     /**

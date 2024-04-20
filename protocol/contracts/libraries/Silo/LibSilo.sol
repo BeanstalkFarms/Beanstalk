@@ -219,18 +219,20 @@ library LibSilo {
 
         // germinating stalk are either newly germinating, or partially germinated.
         // Thus they can only be incremented in the latest or previous season.
-        uint32 season = s.season.current;
+        uint32 germinationSeason = s.season.current;
         if (LibGerminate.getSeasonGerminationState() == germ) {
-            s.unclaimedGerminating[season].stalk = s.unclaimedGerminating[season].stalk.add(stalk);
+            s.unclaimedGerminating[germinationSeason].stalk =
+                s.unclaimedGerminating[germinationSeason].stalk.add(stalk);
         } else {
-            s.unclaimedGerminating[season.sub(1)].stalk = 
-                s.unclaimedGerminating[season.sub(1)].stalk
+            germinationSeason = germinationSeason.sub(1);
+            s.unclaimedGerminating[germinationSeason].stalk = 
+                s.unclaimedGerminating[germinationSeason].stalk
                 .add(stalk);
         }
 
         // emit events.
         emit LibGerminate.FarmerGerminatingStalkBalanceChanged(account, stalk);
-        emit LibGerminate.TotalGerminatingStalkChanged(season, stalk);
+        emit LibGerminate.TotalGerminatingStalkChanged(germinationSeason, stalk);
     }
 
     //////////////////////// BURN ////////////////////////
@@ -277,18 +279,20 @@ library LibSilo {
 
         // germinating stalk are either newly germinating, or partially germinated.
         // Thus they can only be decremented in the latest or previous season.
-        uint32 season = s.season.current;
+        uint32 germinationSeason = s.season.current;
         if (LibGerminate.getSeasonGerminationState() == germ) {
-            s.unclaimedGerminating[season].stalk = s.unclaimedGerminating[season].stalk.sub(stalk);
+            s.unclaimedGerminating[germinationSeason].stalk = 
+                s.unclaimedGerminating[germinationSeason].stalk.sub(stalk);
         } else {
-            s.unclaimedGerminating[season.sub(1)].stalk = 
-                s.unclaimedGerminating[season.sub(1)].stalk
+            germinationSeason = germinationSeason.sub(1);
+            s.unclaimedGerminating[germinationSeason].stalk = 
+                s.unclaimedGerminating[germinationSeason].stalk
                 .sub(stalk);
         }
 
         // emit events.
         emit LibGerminate.FarmerGerminatingStalkBalanceChanged(account, -int256(stalk));
-        emit LibGerminate.TotalGerminatingStalkChanged(season, -int256(stalk));
+        emit LibGerminate.TotalGerminatingStalkChanged(germinationSeason, -int256(stalk));
     }
 
     //////////////////////// TRANSFER ////////////////////////

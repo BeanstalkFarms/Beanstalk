@@ -63,7 +63,7 @@ contract MockSeasonFacet is SeasonFacet  {
         uint64 optimalPercentDepositedBdv
     );
     event TotalGerminatingStalkChanged(uint256 season, int256 deltaStalk);
-    event TotalStalkChanged(int256 deltaStalk, int256 deltaRoots);
+    event TotalStalkChangedFromGermination(int256 deltaStalk, int256 deltaRoots);
 
     function reentrancyGuardTest() public nonReentrant {
         reentrancyGuardTest();

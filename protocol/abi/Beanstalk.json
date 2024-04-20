@@ -7207,13 +7207,13 @@
       {
         "indexed": false,
         "internalType": "uint256",
-        "name": "season",
+        "name": "germinationSeason",
         "type": "uint256"
       },
       {
         "indexed": false,
         "internalType": "int256",
-        "name": "deltaStalk",
+        "name": "deltaGerminatingStalk",
         "type": "int256"
       }
     ],
@@ -7236,7 +7236,7 @@
         "type": "int256"
       }
     ],
-    "name": "TotalStalkChanged",
+    "name": "TotalStalkChangedFromGermination",
     "type": "event"
   },
   {
