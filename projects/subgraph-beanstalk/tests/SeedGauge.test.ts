@@ -105,10 +105,17 @@ describe("Seed Gauge", () => {
     test("event: FarmerGerminatingStalkBalanceChanged", () => {
       const initialGerminating = BigInt.fromI32(123456);
       handleFarmerGerminatingStalkBalanceChanged(createFarmerGerminatingStalkBalanceChangedEvent(ANVIL_ADDR_1, initialGerminating));
+      assert.fieldEquals("Germinating", ANVIL_ADDR_1 + "-ODD", "stalk", initialGerminating.toString());
       assert.fieldEquals("Silo", ANVIL_ADDR_1, "germinatingStalk", initialGerminating.toString());
-      const adjustment = BigInt.fromI32(-5000);
-      handleFarmerGerminatingStalkBalanceChanged(createFarmerGerminatingStalkBalanceChangedEvent(ANVIL_ADDR_1, adjustment));
-      assert.fieldEquals("Silo", ANVIL_ADDR_1, "germinatingStalk", initialGerminating.plus(adjustment).toString());
+
+      const times2 = initialGerminating.times(BigInt.fromU32(2));
+      handleFarmerGerminatingStalkBalanceChanged(createFarmerGerminatingStalkBalanceChangedEvent(ANVIL_ADDR_1, initialGerminating));
+      assert.fieldEquals("Germinating", ANVIL_ADDR_1 + "-ODD", "stalk", times2.toString());
+      assert.fieldEquals("Silo", ANVIL_ADDR_1, "germinatingStalk", times2.toString());
+
+      handleFarmerGerminatingStalkBalanceChanged(createFarmerGerminatingStalkBalanceChangedEvent(ANVIL_ADDR_1, times2.neg()));
+      assert.notInStore("Germinating", ANVIL_ADDR_1 + "-ODD");
+      assert.fieldEquals("Silo", ANVIL_ADDR_1, "germinatingStalk", "0");
     });
 
     test("event: TotalGerminatingBalanceChanged", () => {
