@@ -1743,3 +1743,17 @@ type DewhitelistToken implements SiloEvent @entity(immutable: true) {
   " Timestamp of this event "
   createdAt: BigInt!
 }
+
+# For each applicable address there will be a max of two germinating entities - one even and one odd
+type Germinating @entity {
+  "Address-(EVEN|ODD)"
+  id: ID!
+  "The season in which the germination started"
+  season: Int!
+  "Germinating stalk. This only applies to farmer/Beanstalk address"
+  stalk: BigInt!
+  "Germinating tokens. This only applies to a Token address"
+  tokenAmount: BigInt!
+  "Germinating bdv. This only applies to a Token address"
+  bdv: BigInt!
+}

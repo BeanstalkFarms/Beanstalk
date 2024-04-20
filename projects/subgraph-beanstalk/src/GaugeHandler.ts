@@ -19,8 +19,10 @@ import {
   loadWhitelistTokenHourlySnapshot
 } from "./utils/SiloEntities";
 import { Address } from "@graphprotocol/graph-ts";
+import { deleteGerminating, loadOrCreateGerminating, tryLoadGerminating } from "./utils/Germinating";
+import { ZERO_BI } from "../../subgraph-core/utils/Decimals";
 
-function currentSeason(beanstalk: Address): i32 {
+function getCurrentSeason(beanstalk: Address): i32 {
   let beanstalkEntity = loadBeanstalk(beanstalk);
   return beanstalkEntity.lastSeason;
 }
@@ -70,7 +72,7 @@ export function handleUpdateAverageStalkPerBdvPerSeason(event: UpdateAverageStal
   // grownStalkPerBdvPerSeason variable currently stores overall, not per bdv as the name suggests
   silo.grownStalkPerBdvPerSeason = silo.depositedBDV.times(event.params.newStalkPerBdvPerSeason);
   silo.save();
-  let siloHourly = loadSiloHourlySnapshot(event.address, currentSeason(event.address), event.block.timestamp);
+  let siloHourly = loadSiloHourlySnapshot(event.address, getCurrentSeason(event.address), event.block.timestamp);
   let siloDaily = loadSiloDailySnapshot(event.address, event.block.timestamp);
   siloHourly.grownStalkPerBdvPerSeason = silo.grownStalkPerBdvPerSeason;
   siloDaily.grownStalkPerBdvPerSeason = silo.grownStalkPerBdvPerSeason;
@@ -81,11 +83,41 @@ export function handleUpdateAverageStalkPerBdvPerSeason(event: UpdateAverageStal
 // GERMINATING STALK //
 
 export function handleFarmerGerminatingStalkBalanceChanged(event: FarmerGerminatingStalkBalanceChanged): void {
+  // TODO: if the germination is complete, need to also decrement germinatedStalk from
+  //  the global silo entity and add to the overall balance
+  // Specifically when the stalk had already germinated, and this germinating balance is decreased.
+  // Unclear what to do for tracking this on the individual farmer level. likely wont be tracked
+
+  const currentSeason = getCurrentSeason(event.address);
+
+  if (event.params.delta > ZERO_BI) {
+    // Germinating stalk is being added in the current season
+    let farmerGerminating = loadOrCreateGerminating(event.params.account, currentSeason);
+    farmerGerminating.stalk = farmerGerminating.stalk.plus(event.params.delta);
+    farmerGerminating.save();
+  } else {
+    // Germinating stalk is being removed from potentially multiple unknown seasons
+    let bothGerminating = tryLoadGerminating(event.params.account);
+    for (let i = 0; i < bothGerminating.length; ++i) {
+      if (bothGerminating[i] != null) {
+        const farmerGerminating = bothGerminating[i]!;
+        farmerGerminating.stalk = farmerGerminating.stalk.plus(event.params.delta);
+        // FIXME: how to know which one to decrement if multiple germinating seasons?
+        //  for this reason keeping <= s-2 check for now
+        if (farmerGerminating.stalk == ZERO_BI || farmerGerminating.season <= currentSeason - 2) {
+          deleteGerminating(farmerGerminating);
+        } else {
+          farmerGerminating.save();
+        }
+      }
+    }
+  }
+
   let farmerSilo = loadSilo(event.params.account);
   farmerSilo.germinatingStalk = farmerSilo.germinatingStalk.plus(event.params.delta);
   farmerSilo.save();
 
-  let siloHourly = loadSiloHourlySnapshot(event.params.account, currentSeason(event.address), event.block.timestamp);
+  let siloHourly = loadSiloHourlySnapshot(event.params.account, currentSeason, event.block.timestamp);
   let siloDaily = loadSiloDailySnapshot(event.params.account, event.block.timestamp);
   siloHourly.germinatingStalk = farmerSilo.germinatingStalk;
   siloHourly.deltaGerminatingStalk = siloHourly.deltaGerminatingStalk.plus(event.params.delta);
@@ -96,16 +128,18 @@ export function handleFarmerGerminatingStalkBalanceChanged(event: FarmerGerminat
 }
 
 export function handleTotalGerminatingBalanceChanged(event: TotalGerminatingBalanceChanged): void {
+  // TODO: the below logic needs to be updated when stalk gets added to this event.
+  // TODO: will need to also increment a new field called germinatedStalk (there has been no StalkBalanceChanged event yet)
   let silo = loadSilo(event.address);
-  silo.germinatingStalk = silo.germinatingStalk.plus(event.params.delta);
+  silo.germinatingStalk = silo.germinatingStalk.plus(event.params.deltaBdv);
   silo.save();
 
-  let siloHourly = loadSiloHourlySnapshot(event.address, currentSeason(event.address), event.block.timestamp);
+  let siloHourly = loadSiloHourlySnapshot(event.address, getCurrentSeason(event.address), event.block.timestamp);
   let siloDaily = loadSiloDailySnapshot(event.address, event.block.timestamp);
   siloHourly.germinatingStalk = silo.germinatingStalk;
-  siloHourly.deltaGerminatingStalk = siloHourly.deltaGerminatingStalk.plus(event.params.delta);
+  siloHourly.deltaGerminatingStalk = siloHourly.deltaGerminatingStalk.plus(event.params.deltaBdv);
   siloDaily.germinatingStalk = silo.germinatingStalk;
-  siloDaily.deltaGerminatingStalk = siloDaily.deltaGerminatingStalk.plus(event.params.delta);
+  siloDaily.deltaGerminatingStalk = siloDaily.deltaGerminatingStalk.plus(event.params.deltaBdv);
   siloHourly.save();
   siloDaily.save();
 }
@@ -125,7 +159,7 @@ export function handleWhitelistToken_BIP42(event: WhitelistToken): void {
   siloSettings.updatedAt = event.block.timestamp;
   siloSettings.save();
 
-  let hourly = loadWhitelistTokenHourlySnapshot(event.params.token, currentSeason(event.address), event.block.timestamp);
+  let hourly = loadWhitelistTokenHourlySnapshot(event.params.token, getCurrentSeason(event.address), event.block.timestamp);
   hourly.selector = siloSettings.selector;
   hourly.stalkEarnedPerSeason = siloSettings.stalkEarnedPerSeason;
   hourly.stalkIssuedPerBdv = siloSettings.stalkIssuedPerBdv;
@@ -156,7 +190,7 @@ export function handleUpdateGaugeSettings(event: UpdateGaugeSettings): void {
   siloSettings.updatedAt = event.block.timestamp;
   siloSettings.save();
 
-  let hourly = loadWhitelistTokenHourlySnapshot(event.params.token, currentSeason(event.address), event.block.timestamp);
+  let hourly = loadWhitelistTokenHourlySnapshot(event.params.token, getCurrentSeason(event.address), event.block.timestamp);
   hourly.gpSelector = siloSettings.gpSelector;
   hourly.lwSelector = siloSettings.lwSelector;
   hourly.optimalPercentDepositedBdv = siloSettings.optimalPercentDepositedBdv;
