@@ -7163,8 +7163,14 @@
       {
         "indexed": false,
         "internalType": "int256",
-        "name": "delta",
+        "name": "deltaGerminatingStalk",
         "type": "int256"
+      },
+      {
+        "indexed": false,
+        "internalType": "enum LibGerminate.Germinate",
+        "name": "germinationState",
+        "type": "uint8"
       }
     ],
     "name": "FarmerGerminatingStalkBalanceChanged",
@@ -7188,7 +7194,7 @@
       {
         "indexed": false,
         "internalType": "int256",
-        "name": "delta",
+        "name": "deltaAmount",
         "type": "int256"
       },
       {

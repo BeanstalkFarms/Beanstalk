@@ -231,7 +231,7 @@ library LibSilo {
         }
 
         // emit events.
-        emit LibGerminate.FarmerGerminatingStalkBalanceChanged(account, stalk);
+        emit LibGerminate.FarmerGerminatingStalkBalanceChanged(account, stalk, germ);
         emit LibGerminate.TotalGerminatingStalkChanged(germinationSeason, stalk);
     }
 
@@ -291,7 +291,7 @@ library LibSilo {
         }
 
         // emit events.
-        emit LibGerminate.FarmerGerminatingStalkBalanceChanged(account, -int256(stalk));
+        emit LibGerminate.FarmerGerminatingStalkBalanceChanged(account, -int256(stalk), germ);
         emit LibGerminate.TotalGerminatingStalkChanged(germinationSeason, -int256(stalk));
     }
 
@@ -328,12 +328,12 @@ library LibSilo {
         address sender,
         address recipient,
         uint256 stalk,
-        LibGerminate.Germinate GermState
+        LibGerminate.Germinate germState
     ) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
          // Subtract Germinating Stalk from the 'sender' balance, 
          // and Add to the 'recipient' balance.
-        if (GermState == LibGerminate.Germinate.ODD) {
+        if (germState == LibGerminate.Germinate.ODD) {
             s.a[sender].farmerGerminating.odd = s.a[sender].farmerGerminating.odd.sub(stalk.toUint128());
             s.a[recipient].farmerGerminating.odd = s.a[recipient].farmerGerminating.odd.add(stalk.toUint128());
         } else {
@@ -342,14 +342,8 @@ library LibSilo {
         }
 
         // emit events.
-        emit LibGerminate.FarmerGerminatingStalkBalanceChanged(
-            sender,
-            -int256(stalk)
-        );
-        emit LibGerminate.FarmerGerminatingStalkBalanceChanged(
-            recipient,
-            int256(stalk)
-        );
+        emit LibGerminate.FarmerGerminatingStalkBalanceChanged(sender, -int256(stalk), germState);
+        emit LibGerminate.FarmerGerminatingStalkBalanceChanged(recipient, int256(stalk), germState);
     }
 
     /**
