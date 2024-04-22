@@ -111,7 +111,6 @@ contract ConvertFacet is ReentrancyGuard {
         nonReentrant
         returns (int96 toStem, uint256 fromAmount, uint256 toAmount, uint256 fromBdv, uint256 toBdv)
     {
-        LibTractor._setPublisher(msg.sender);
 
         address toToken; address fromToken; uint256 grownStalk;
         (toToken, fromToken, toAmount, fromAmount) = LibConvert.convert(convertData);
@@ -136,8 +135,6 @@ contract ConvertFacet is ReentrancyGuard {
         toStem = _depositTokensForConvert(toToken, toAmount, toBdv, grownStalk);
 
         emit Convert(LibTractor._user(), fromToken, toToken, fromAmount, toAmount);
-
-        LibTractor._resetPublisher();
     }
 
     /**
@@ -163,10 +160,7 @@ contract ConvertFacet is ReentrancyGuard {
         payable
         nonReentrant
         returns (int96[] memory outputStems, uint256[] memory outputAmounts)
-    {   
-        // Setup Tractor publisher to support Tractor blueprints
-        LibTractor._setPublisher(msg.sender);
-
+    {
         // require that input and output tokens be wells (Unripe not supported)
         require(LibWell.isWell(inputToken) || inputToken == C.BEAN, "Convert: Input token is not a well");
         require(LibWell.isWell(outputToken) || outputToken == C.BEAN, "Convert: Output token is not a well");
@@ -216,9 +210,6 @@ contract ConvertFacet is ReentrancyGuard {
 
         // Deposit new crates, Convert event emitted within this function
         (outputStems, outputAmounts) = _depositTokensForConvertMultiCrate(inputToken, outputToken, pipeData.amountOut, pipeData.bdvsRemoved, pipeData.grownStalks, amounts);
-
-        // End of convert function, reset Tractor publisher
-        LibTractor._resetPublisher();
     }
 
     /**
