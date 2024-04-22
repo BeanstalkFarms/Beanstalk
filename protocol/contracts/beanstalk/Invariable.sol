@@ -12,8 +12,8 @@ import {C} from "contracts/C.sol";
 import {AppStorage} from "contracts/beanstalk/AppStorage.sol";
 import {LibAppStorage} from "contracts/libraries/LibAppStorage.sol";
 import {LibWhitelistedTokens} from "contracts/libraries/Silo/LibWhitelistedTokens.sol";
-
-import {console} from "hardhat/console.sol";
+import {LibUnripe} from "contracts/libraries/LibUnripe.sol";
+import {LibSilo} from "contracts/libraries/Silo/LibSilo.sol";
 
 /**
  * @author Beanstalk Farms
@@ -121,6 +121,9 @@ abstract contract Invariable {
                     s.f.harvestable.sub(s.f.harvested) + // unharvestable harvestable beans
                     s.fertilizedIndex.sub(s.fertilizedPaidIndex) + // unrinsed rinsable beans
                     s.u[C.UNRIPE_BEAN].balanceOfUnderlying; // unchopped underlying beans
+            }
+            else if (tokens[i] == LibUnripe._getUnderlyingToken(C.UNRIPE_LP)) {
+                entitlements[i] += s.u[C.UNRIPE_LP].balanceOfUnderlying;
             }
             if (s.sopWell != address(0) && tokens[i] == address(LibSilo.getSopToken())) {
                 entitlements[i] += s.plenty;
