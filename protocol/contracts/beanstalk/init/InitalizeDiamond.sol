@@ -89,7 +89,7 @@ contract InitalizeDiamond {
             gaugePoints: INIT_TOKEN_G_POINTS,
             optimalPercentDepositedBdv: INIT_BEAN_TOKEN_WELL_PERCENT_TARGET,
             oracleImplmentation: impl,
-            gaugePointImplmentation: impl,
+            gaugePointImplmentation: Storage.Implmentation(address(0), IGaugePointFacet.defaultGaugePointFunction.selector),
             liquidityWeightImplmentation: Storage.Implmentation(address(0), ILiquidityWeightFacet.maxWeight.selector)
         });
 

@@ -150,12 +150,7 @@ library LibGauge {
             uint256 percentDepositedBdv = depositedBdv.mul(100e6).div(totalLpBdv);
 
             // Calculate the new gauge points of the token.
-            uint256 newGaugePoints = calcGaugePoints(
-                ss.gpSelector,
-                ss.gaugePoints,
-                ss.optimalPercentDepositedBdv,
-                percentDepositedBdv
-            );
+            uint256 newGaugePoints = calcGaugePoints(ss, percentDepositedBdv);
 
             // Increment totalGaugePoints and calculate the gaugePoints per BDV:
             totalGaugePoints = totalGaugePoints.add(newGaugePoints);
@@ -172,7 +167,34 @@ library LibGauge {
             lpGpData[i] = _lpGpData;
 
             ss.gaugePoints = newGaugePoints.toUint128();
-            emit GaugePointChange(s.season.current, whitelistedLpTokens[i], ss.gaugePoints);
+            emit GaugePointChange(s.season.current, whitelistedLpTokens[i], newGaugePoints);
+        }
+    }
+
+    /**
+     * @notice calculates the new gauge points, given the silo settings and the percent deposited BDV.
+     * @param ss siloSettings of the token.
+     * @param percentDepositedBdv the current percentage of the total LP deposited BDV for the token.
+     */
+    function calcGaugePoints(
+        Storage.SiloSettings memory ss,
+        uint256 percentDepositedBdv
+    ) internal view returns (uint256 newGaugePoints) {
+
+        // if the target is 0, use address(this).
+        address target = ss.gaugePointImplmentation.target;
+        if(target == address(0)) target = address(this);
+
+        (bool success, bytes memory data) = target.staticcall(abi.encodeWithSelector(
+            ss.gaugePointImplmentation.selector,
+            ss.gaugePoints,
+            ss.optimalPercentDepositedBdv,
+            percentDepositedBdv
+        ));
+
+        if (!success) return ss.gaugePoints;
+        assembly {
+            newGaugePoints := mload(add(data, add(0x20, 0)))
         }
     }
 
@@ -180,30 +202,17 @@ library LibGauge {
      * @notice Calculates the new gauge points for the given token.
      * @dev Function calls the selector of the token's gauge point function.
      * Currently all assets uses the default GaugePoint Function.
+     * Returns the current gauge points if failed rather than revert.
      * {GaugePointFacet.defaultGaugePointFunction()}
      */
-    function calcGaugePoints(
-        bytes4 gpSelector,
+    function calcGaugePointsFromAddress(
+        address target,
+        bytes4 selector,
         uint256 gaugePoints,
         uint256 optimalPercentDepositedBdv,
         uint256 percentDepositedBdv
     ) internal view returns (uint256 newGaugePoints) {
-        bytes memory callData = abi.encodeWithSelector(
-            gpSelector,
-            gaugePoints,
-            optimalPercentDepositedBdv,
-            percentDepositedBdv
-        );
-        (bool success, bytes memory data) = address(this).staticcall(callData);
-        if (!success) {
-            if (data.length == 0) revert();
-            assembly {
-                revert(add(32, data), mload(data))
-            }
-        }
-        assembly {
-            newGaugePoints := mload(add(data, add(0x20, 0)))
-        }
+       
     }
 
     /**

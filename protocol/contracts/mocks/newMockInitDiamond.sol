@@ -188,8 +188,8 @@ contract MockInitDiamond is InitalizeDiamond {
             gaugePoints: INIT_TOKEN_WURLP_POINTS,
             optimalPercentDepositedBdv: INIT_BEAN_WURLP_PERCENT_TARGET,
             oracleImplmentation: impl,
-            gaugePointImplmentation: impl,
-            liquidityWeightImplmentation: Storage.Implmentation(address(0), bytes4(ILiquidityWeightFacet.maxWeight.selector))
+            gaugePointImplmentation: Storage.Implmentation(address(0), IGaugePointFacet.defaultGaugePointFunction.selector),
+            liquidityWeightImplmentation: Storage.Implmentation(address(0), ILiquidityWeightFacet.maxWeight.selector)
         });
 
         // updates the optimal percent deposited for bean:eth.
