@@ -1,7 +1,7 @@
 import { Address, BigDecimal, BigInt, log } from "@graphprotocol/graph-ts";
 import { Beanstalk } from "../generated/Season-Replanted/Beanstalk";
 import { BEANSTALK, BEAN_ERC20, FERTILIZER } from "../../subgraph-core/utils/Constants";
-import { ONE_BD, ONE_BI, toDecimal, ZERO_BD } from "../../subgraph-core/utils/Decimals";
+import { ONE_BD, ONE_BI, toDecimal, ZERO_BD, ZERO_BI } from "../../subgraph-core/utils/Decimals";
 import { loadFertilizer } from "./utils/Fertilizer";
 import { loadFertilizerYield } from "./utils/FertilizerYield";
 import { loadSilo, loadSiloHourlySnapshot, loadSiloYield, loadTokenYield, loadWhitelistTokenSetting } from "./utils/SiloEntities";
@@ -177,18 +177,25 @@ export function calculateAPY(
  * @param earnedBeans The average number of beans earned per season to use
  * @param gaugeLpPoints Array of gauge points assigned to each gauge lp. With a single lp, there will be one entry
  * @param gaugeLpDepositedBdv Array of deposited bdv corresponding to each gauge lp
- * @param nonGaugeBdv Amount of (whitelisted) deposited bdv that is not tracked by the gauge system
+ * @param nonGaugeDepositedBdv Amount of (whitelisted) deposited bdv that is not tracked by the gauge system
  * @param gaugeLpOptimalPercentBdv Array of optimal bdv percentages for each lp
  * @param initialR Initial ratio of max LP gauge points per bdv to Bean gauge points per bdv
  * @param siloDepositedBeanBdv The total number of Beans in the silo
  * @param siloStalk The total amount of stalk in the silo
  * @param catchUpRate Target number of hours for a deposit's grown stalk to catch up
+ *
+ * GERMINATING PARAMS - First index corresponds to Even germinating, second index is Odd.
+ *
+ * @param season The current season, required for germinating.
+ * @param germinatingBeanBdv Germinating beans bdv
+ * @param gaugeLpGerminatingBdv Germinating bdv of each gauge lp
+ * @param nonGaugeGerminatingBdv Germinating bdv of all non-gauge whitelisted assets
+ *
+ * UNRIPE
+ *
  * @param staticSeeds Provided when `token` does not have its seeds dynamically changed by gauge
  *
  * TODO: how to specify unripe here? only difference is zero seeds
- *
- * TODO: account for germinating in the first 2 seasons of deposit.
- *  Also account for already germinating assets from other deposits
  *
  * Future work includes improvement of the `r` value simulation. This involves using Beanstalk's current state,
  * including L2SR and debt level (temperature cases). Also can be improved by tracking an expected ratio of
@@ -199,12 +206,16 @@ export function calculateGaugeVAPY(
   earnedBeans: BigDecimal,
   gaugeLpPoints: BigDecimal[],
   gaugeLpDepositedBdv: BigDecimal[],
-  nonGaugeBdv: BigDecimal,
+  nonGaugeDepositedBdv: BigDecimal,
   gaugeLpOptimalPercentBdv: BigDecimal[],
   initialR: BigDecimal,
   siloDepositedBeanBdv: BigDecimal,
   siloStalk: BigDecimal,
   catchUpRate: BigDecimal,
+  season: BigInt,
+  germinatingBeanBdv: BigDecimal[],
+  gaugeLpGerminatingBdv: BigDecimal[][],
+  nonGaugeGerminatingBdv: BigDecimal[],
   staticSeeds: BigDecimal | null = null
 ): BigDecimal[] {
   // Current percentages allocations of each LP
@@ -216,18 +227,20 @@ export function calculateGaugeVAPY(
 
   // Current LP GP allocation per BDV
   let lpGpPerBdv: BigDecimal[] = [];
-  // Copy this input
-  let gaugePointLp: BigDecimal[] = [];
+  // Copy these input
+  let gaugeLpPointsCopy: BigDecimal[] = [];
+  let gaugeLpDepositedBdvCopy: BigDecimal[] = [];
   for (let i = 0; i < gaugeLpPoints.length; ++i) {
     lpGpPerBdv.push(gaugeLpPoints[i].div(gaugeLpDepositedBdv[i]));
-    gaugePointLp.push(gaugeLpPoints[i]);
+    gaugeLpDepositedBdvCopy.push(gaugeLpDepositedBdv[i]);
+    gaugeLpPointsCopy.push(gaugeLpPoints[i]);
   }
 
   let r = initialR;
   let beanBdv = siloDepositedBeanBdv;
   let totalStalk = siloStalk;
-  let gaugeBdv = beanBdv.plus(BigDecimal_sum(gaugeLpDepositedBdv));
-  let totalBdv = gaugeBdv.plus(nonGaugeBdv);
+  let gaugeBdv = beanBdv.plus(BigDecimal_sum(gaugeLpDepositedBdvCopy));
+  let totalBdv = gaugeBdv.plus(nonGaugeDepositedBdv);
   let userBeans = ONE_BD;
   let userStalk = ONE_BD;
   let largestLpGpPerBdv = BigDecimal_max(lpGpPerBdv);
@@ -238,17 +251,29 @@ export function calculateGaugeVAPY(
     r = updateR(r, deltaRFromState(null));
     const rScaled = scaleR(r);
 
+    // Add germinating bdv to actual bdv in the first 2 simulated seasons
+    if (i < 2) {
+      const index = season.mod(BigInt.fromString("2")) == ZERO_BI ? 1 : 0;
+      beanBdv = beanBdv.plus(germinatingBeanBdv[index]);
+      for (let j = 0; j < gaugeLpDepositedBdvCopy.length; ++j) {
+        gaugeLpDepositedBdvCopy[j] = gaugeLpDepositedBdvCopy[j].plus(gaugeLpGerminatingBdv[index][j]);
+      }
+      gaugeBdv = beanBdv.plus(BigDecimal_sum(gaugeLpDepositedBdvCopy));
+      nonGaugeDepositedBdv.plus(nonGaugeGerminatingBdv[index]);
+      totalBdv = gaugeBdv.plus(nonGaugeDepositedBdv);
+    }
+
     if (gaugeLpPoints.length > 1) {
-      for (let j = 0; j < gaugeLpDepositedBdv.length; ++i) {
-        gaugePointLp[j] = updateGaugePoints(gaugePointLp[j], currentPercentLpBdv[j], gaugeLpOptimalPercentBdv[j]);
-        lpGpPerBdv[j] = gaugePointLp[j].div(gaugeLpDepositedBdv[j]);
+      for (let j = 0; j < gaugeLpDepositedBdvCopy.length; ++i) {
+        gaugeLpPointsCopy[j] = updateGaugePoints(gaugeLpPointsCopy[j], currentPercentLpBdv[j], gaugeLpOptimalPercentBdv[j]);
+        lpGpPerBdv[j] = gaugeLpPointsCopy[j].div(gaugeLpDepositedBdvCopy[j]);
       }
       largestLpGpPerBdv = BigDecimal_max(lpGpPerBdv);
     }
 
     const beanGpPerBdv = largestLpGpPerBdv.times(rScaled);
     // log.debug("bean gp per bdv {}", [beanGpPerBdv.toString()]);
-    const gpTotal = BigDecimal_sum(gaugePointLp).plus(beanGpPerBdv.times(beanBdv));
+    const gpTotal = BigDecimal_sum(gaugeLpPointsCopy).plus(beanGpPerBdv.times(beanBdv));
     // log.debug("gpTotal {}", [gpTotal.toString()]);
     const avgGsPerBdv = totalStalk.div(totalBdv).minus(ONE_BD);
     // log.debug("avgGsPerBdv {}", [avgGsPerBdv.toString()]);
@@ -263,12 +288,17 @@ export function calculateGaugeVAPY(
     gaugeBdv = gaugeBdv.plus(earnedBeans);
     totalBdv = totalBdv.plus(earnedBeans);
     beanBdv = beanBdv.plus(earnedBeans);
-    const userBeanShare = earnedBeans.times(userStalk).div(totalStalk);
-    // log.debug("userBeanShare {}", [userBeanShare.toString()]);
-    userStalk = userStalk.plus(userBeanShare).plus(userBeans.times(beanSeeds).div(SEED_PRECISION));
-    // log.debug("userStalk {}", [userStalk.toString()]);
-    userBeans = userBeans.plus(userBeanShare);
-    // log.debug("userBeans {}", [userBeans.toString()]);
+
+    // No rewards while the new deposit is germinating
+    // TODO(@Brean): does the user still get stalk rewards? I forget
+    if (i >= 2) {
+      const userBeanShare = earnedBeans.times(userStalk).div(totalStalk);
+      // log.debug("userBeanShare {}", [userBeanShare.toString()]);
+      userStalk = userStalk.plus(userBeanShare).plus(userBeans.times(beanSeeds).div(SEED_PRECISION));
+      // log.debug("userStalk {}", [userStalk.toString()]);
+      userBeans = userBeans.plus(userBeanShare);
+      // log.debug("userBeans {}", [userBeans.toString()]);
+    }
   }
 
   const beanApy = userBeans.minus(ONE_BD).times(BigDecimal.fromString("100"));
