@@ -148,17 +148,16 @@ contract ConvertFacet is ReentrancyGuard {
      * @param stems The stems of the deposits to convert from.
      * @param amounts The amounts of the deposits to convert from.
      * @param outputToken The token to convert to.
-     * @param farmCalls The farm calls to execute.
+     * @param advancedFarmCalls The farm calls to execute.
      * @return outputStems The resulting stems of the converted deposits
      * @return outputAmounts The resulting amounts of the converted deposits
      */
-
     function pipelineConvert(
         address inputToken,
         int96[] calldata stems,
         uint256[] calldata amounts,
         address outputToken,
-        AdvancedFarmCall[] calldata farmCalls
+        AdvancedFarmCall[] calldata advancedFarmCalls
     )
         external
         payable
@@ -194,7 +193,7 @@ contract ConvertFacet is ReentrancyGuard {
         pipeData.startingDeltaB = getCombinedDeltaBForTokens(inputToken, outputToken);
 
         IERC20(inputToken).transfer(C.PIPELINE, maxTokens);
-        pipeData.amountOut = executeAdvancedFarmCalls(farmCalls);
+        pipeData.amountOut = executeAdvancedFarmCalls(advancedFarmCalls);
 
         require(pipeData.amountOut > 0, "Convert: Final pipe call returned 0");
         
