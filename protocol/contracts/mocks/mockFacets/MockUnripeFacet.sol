@@ -52,4 +52,8 @@ contract MockUnripeFacet is UnripeFacet {
         );
         LibUnripe.addUnderlying(unripeToken, amount);
     }
+
+    function resetUnderlying(address unripeToken) external {
+        s.u[unripeToken].balanceOfUnderlying = 0;
+    }
 }

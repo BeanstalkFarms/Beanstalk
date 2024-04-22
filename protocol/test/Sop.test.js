@@ -196,6 +196,7 @@ describe('Sop', function () {
     })
     
     it('changes the sop well', async function () {
+      expect(await beanstalk.getSopWell()).to.not.be.equal(ZERO_ADDRESS)
       expect(await beanstalk.getSopWell()).to.be.equal(this.well.address)
     })
   })
@@ -320,6 +321,7 @@ describe('Sop', function () {
     })
     
     it('changes the sop well', async function () {
+      expect(await beanstalk.getSopWell()).to.not.be.equal(ZERO_ADDRESS)
       expect(await beanstalk.getSopWell()).to.be.equal(this.well.address)
     })
   })

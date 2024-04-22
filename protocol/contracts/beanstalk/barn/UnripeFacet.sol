@@ -311,7 +311,7 @@ contract UnripeFacet is Invariable, ReentrancyGuard {
         view
         returns (address underlyingToken)
     {
-        return s.u[unripeToken].underlyingToken;
+        return LibUnripe._getUnderlyingToken(unripeToken);
     }
 
     /////////////// UNDERLYING TOKEN MIGRATION //////////////////

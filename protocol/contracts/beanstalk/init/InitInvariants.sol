@@ -9,10 +9,9 @@ import {AppStorage} from "contracts/beanstalk/AppStorage.sol";
 import {IERC20, SafeERC20} from "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
 import {C} from "contracts/C.sol";
 import {LibDiamond} from "contracts/libraries/LibDiamond.sol";
-import {LibUnripe} from "contracts/libraries/LibUnripe.sol";
 
 /**
- * Initializes the Migration of the Unripe LP underlying tokens from Bean:3Crv to Bean:Eth.
+ * Initializes the data underlying invariants.
  */
 contract InitInvariants {
     AppStorage internal s;
@@ -44,5 +43,10 @@ contract InitInvariants {
         // TODO: Get exact from future snapshot.
         // NOTE: Approximate. Sourced from subgraph.
         s.fertilizedPaidIndex = _fertilizerPaidIndex; // 3_500_000_000_000;
+
+        // s.sopWell = IERC20(C.WETH);
+        // TODO: Get exact amount. May be 0, depending on how silo migration was done.
+        s.plenty = 1_000_000_000_000_000_000;
+
     }
 }

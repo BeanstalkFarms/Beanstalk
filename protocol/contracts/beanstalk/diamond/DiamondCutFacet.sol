@@ -24,7 +24,7 @@ contract DiamondCutFacet is Invariable, IDiamondCut {
         FacetCut[] calldata _diamondCut,
         address _init,
         bytes calldata _calldata
-    ) external override fundsSafu {
+    ) external override {
         LibDiamond.enforceIsContractOwner();
         LibDiamond.diamondCut(_diamondCut, _init, _calldata);
     }

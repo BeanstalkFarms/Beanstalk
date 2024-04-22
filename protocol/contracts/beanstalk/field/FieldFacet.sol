@@ -81,7 +81,7 @@ contract FieldFacet is Invariable, ReentrancyGuard {
         uint256 beans,
         uint256 minTemperature,
         LibTransfer.From mode
-    ) external payable fundsSafu returns (uint256 pods) {
+    ) external payable fundsSafu noSupplyIncrease returns (uint256 pods) {
         pods = sowWithMin(beans, minTemperature, beans, mode);
     }
 
@@ -99,7 +99,7 @@ contract FieldFacet is Invariable, ReentrancyGuard {
         uint256 minTemperature,
         uint256 minSoil,
         LibTransfer.From mode
-    ) public payable fundsSafu returns (uint256 pods) {
+    ) public payable fundsSafu noSupplyIncrease returns (uint256 pods) {
         // `soil` is the remaining Soil
         (uint256 soil, uint256 _morningTemperature, bool abovePeg) = _totalSoilAndTemperature();
 

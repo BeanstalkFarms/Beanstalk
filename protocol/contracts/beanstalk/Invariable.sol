@@ -16,7 +16,7 @@ import {LibUnripe} from "contracts/libraries/LibUnripe.sol";
 import {LibSilo} from "contracts/libraries/Silo/LibSilo.sol";
 
 /**
- * @author Beanstalk Farms
+ * @author funderbrker
  * @title Invariable
  * @notice Implements modifiers to maintain protocol wide invariants.
  * @dev Every external function should use as many invariant modifiers as possible.
@@ -75,6 +75,15 @@ abstract contract Invariable {
         require(C.bean().totalSupply() == initialSupply, "INV: Supply changed");
     }
 
+    /**
+     * @notice Supply of Beans does not increase. No minting.
+     * @dev Prefer noSupplyChange where applicable. Use this for burn only operations.
+     */
+    modifier noSupplyIncrease() {
+        uint256 initialSupply = C.bean().totalSupply();
+        _;
+        require(C.bean().totalSupply() <= initialSupply, "INV: Supply increased");
+    }
 
     function getTokensOfInterest() internal view returns (address[] memory tokens) {
         address[] memory whitelistedTokens = LibWhitelistedTokens.getWhitelistedTokens();

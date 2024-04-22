@@ -45,7 +45,7 @@ describe("Silo Enroot", function () {
     [owner, user, user2] = await ethers.getSigners();
 
     // Setup mock facets for manipulating Beanstalk's state during tests
-    const contracts = await deploy((verbose = false), (mock = true), (reset = true));
+    const contracts = await deploy(verbose = false, mock = true, reset = true);
     ownerAddress = contracts.account;
     this.diamond = contracts.beanstalkDiamond;
     // `beanstalk` contains all functions that the regualar beanstalk has.
@@ -67,6 +67,8 @@ describe("Silo Enroot", function () {
       "10000",
       "1"
     );
+
+    this.beanWstethWell = await ethers.getContractAt("MockToken", BEAN_WSTETH_WELL);
 
     // Needed to appease invariants when underlying asset of urBean != Bean.
     await mockBeanstalk.removeWhitelistStatus(BEAN);
@@ -309,6 +311,9 @@ describe("Silo Enroot", function () {
 
     describe("2 deposit, round", async function () {
       beforeEach(async function () {
+        // Bypass fundsSafu invariant because this test handling of underlying tokens violates operating conditions.
+        await this.beanWstethWell.mint(mockBeanstalk.address, to18("10000"));
+
         await mockBeanstalk.connect(owner).addUnderlying(UNRIPE_LP, "147796000000000");
         await mockBeanstalk.connect(owner).addUnripeToken(UNRIPE_LP, BEAN_WSTETH_WELL, ZERO_BYTES);
         await mockBeanstalk

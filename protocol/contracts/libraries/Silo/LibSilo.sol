@@ -17,6 +17,8 @@ import {LibSafeMathSigned96} from "../LibSafeMathSigned96.sol";
 import {LibGerminate} from "./LibGerminate.sol";
 import {LibWhitelistedTokens} from "./LibWhitelistedTokens.sol";
 import {LibTractor} from "../LibTractor.sol";
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {IWell} from "contracts/interfaces/basin/IWell.sol";
 
 /**
  * @title LibSilo
@@ -496,6 +498,18 @@ library LibSilo {
     function _lastUpdate(address account) internal view returns (uint32) {
         AppStorage storage s = LibAppStorage.diamondStorage();
         return s.a[account].lastUpdate;
+    }
+
+    /**
+     * @notice returns the token paid out by Season of Plenty.
+     */
+    function getSopToken() internal view returns (IERC20) {
+        AppStorage storage s = LibAppStorage.diamondStorage();
+        // sopWell may not yet be initialized.
+        if (s.sopWell == address(0)) return IERC20(address(0));
+        IWell well = IWell(s.sopWell);
+        IERC20[] memory tokens = well.tokens();
+        return tokens[0] != C.bean() ? tokens[0] : tokens[1];
     }
 
     /**

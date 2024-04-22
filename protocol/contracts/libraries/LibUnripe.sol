@@ -239,4 +239,13 @@ library LibUnripe {
         AppStorage storage s = LibAppStorage.diamondStorage();
         redeem = s.u[unripeToken].balanceOfUnderlying.mul(amount).div(supply);
     }
+
+    function _getUnderlyingToken(address unripeToken)
+        internal
+        view
+        returns (address underlyingToken)
+    {
+        AppStorage storage s = LibAppStorage.diamondStorage();
+        return s.u[unripeToken].underlyingToken;
+    }
 }
