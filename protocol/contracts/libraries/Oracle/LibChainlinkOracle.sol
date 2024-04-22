@@ -32,6 +32,22 @@ library LibChainlinkOracle {
     }
 
     /**
+     * @dev Returns the TOKEN/USD price with the option of using a TWA lookback.
+     * Use `lookback = 0` for the instantaneous price. `lookback > 0` for a TWAP.
+     * Return value has 6 decimal precision.
+     * Returns 0 if `priceAggregatorAddress` is broken or frozen.
+     **/
+    function getTokenPrice(
+        address priceAggregatorAddress,
+        uint256 maxTimeout, 
+        uint256 lookback
+    ) internal view returns (uint256 price) {
+        return lookback > 0
+            ? getPrice(priceAggregatorAddress, maxTimeout)
+            : getTwap(priceAggregatorAddress, maxTimeout, lookback);
+    }
+
+    /**
      * @dev Returns the price of a given `priceAggregator`
      * Return value has 6 decimal precision.
      * Returns 0 if Chainlink's price feed is broken or frozen.

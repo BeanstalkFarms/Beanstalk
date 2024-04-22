@@ -56,7 +56,7 @@ contract InitalizeDiamond {
         
         // note: bean and assets that are not in the gauge system 
         // do not need to initalize the gauge system.
-        Storage.Implmentation memory impl = Storage.Implmentation(address(0), bytes4(0));
+        Storage.Implmentation memory impl = Storage.Implmentation(address(0), bytes4(0), bytes1(0));
 
         Storage.SiloSettings[] memory siloSettings = new Storage.SiloSettings[](2);
         siloSettings[0] = Storage.SiloSettings({
@@ -89,8 +89,8 @@ contract InitalizeDiamond {
             gaugePoints: INIT_TOKEN_G_POINTS,
             optimalPercentDepositedBdv: INIT_BEAN_TOKEN_WELL_PERCENT_TARGET,
             oracleImplmentation: impl,
-            gaugePointImplmentation: Storage.Implmentation(address(0), IGaugePointFacet.defaultGaugePointFunction.selector),
-            liquidityWeightImplmentation: Storage.Implmentation(address(0), ILiquidityWeightFacet.maxWeight.selector)
+            gaugePointImplmentation: Storage.Implmentation(address(0), ILiquidityWeightFacet.maxWeight.selector, bytes1(0)),
+            liquidityWeightImplmentation: Storage.Implmentation(address(0), ILiquidityWeightFacet.maxWeight.selector, bytes1(0))
         });
 
         whitelistPools(

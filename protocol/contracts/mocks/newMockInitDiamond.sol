@@ -110,10 +110,7 @@ contract MockInitDiamond is InitalizeDiamond {
     function initalUnripeSiloSettings() internal view returns (
         Storage.SiloSettings[] memory siloSettings
     ){
-        Storage.Implmentation memory impl = Storage.Implmentation({
-            target: address(0),
-            selector: bytes4(0)
-        });
+        Storage.Implmentation memory impl = Storage.Implmentation(address(0), bytes4(0), bytes1(0));
         siloSettings = new Storage.SiloSettings[](2);
         siloSettings[0] = Storage.SiloSettings({
                 selector: BDVFacet.unripeBeanToBDV.selector,
@@ -170,10 +167,7 @@ contract MockInitDiamond is InitalizeDiamond {
      */
     function whitelistUnderlyingUrLPWell(address well) internal {
         // whitelist bean:stETH well
-        Storage.Implmentation memory impl = Storage.Implmentation({
-            target: address(0),
-            selector: bytes4(0)
-        });
+        Storage.Implmentation memory impl = Storage.Implmentation(address(0), bytes4(0), bytes1(0));
         // note: no error checking:
         s.ss[well] = Storage.SiloSettings({
             selector: BDVFacet.wellBdv.selector,
@@ -187,9 +181,9 @@ contract MockInitDiamond is InitalizeDiamond {
             lwSelector: ILiquidityWeightFacet.maxWeight.selector,
             gaugePoints: INIT_TOKEN_WURLP_POINTS,
             optimalPercentDepositedBdv: INIT_BEAN_WURLP_PERCENT_TARGET,
-            oracleImplmentation: impl,
-            gaugePointImplmentation: Storage.Implmentation(address(0), IGaugePointFacet.defaultGaugePointFunction.selector),
-            liquidityWeightImplmentation: Storage.Implmentation(address(0), ILiquidityWeightFacet.maxWeight.selector)
+            oracleImplmentation:impl,
+            gaugePointImplmentation: Storage.Implmentation(address(0), IGaugePointFacet.defaultGaugePointFunction.selector, bytes1(0)),
+            liquidityWeightImplmentation: Storage.Implmentation(address(0), ILiquidityWeightFacet.maxWeight.selector, bytes1(0))
         });
 
         // updates the optimal percent deposited for bean:eth.

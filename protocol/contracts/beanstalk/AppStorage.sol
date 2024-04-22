@@ -431,7 +431,9 @@ contract Storage {
      * @param optimalPercentDepositedBdv The target percentage of the total LP deposited BDV for this token. 6 decimal precision.
      * @param gaugePoints the amount of Gauge points this LP token has in the LP Gauge. Only used for LP whitelisted assets.
      * GaugePoints has 18 decimal point precision (1 Gauge point = 1e18).
-
+     * @param oracleImplmentation The implmentation for the oracle.
+     * @param gaugePointImplmentation The implmentation for the gauge points. Supports encodeType 0 and 1.
+     * @param liquidityWeightImplmentation The implmentation for the liquidity weight.
      * @dev A Token is considered Whitelisted if there exists a non-zero {SiloSettings} selector.
      */
     struct SiloSettings {
@@ -455,12 +457,15 @@ contract Storage {
      * @notice contains data in order for beanstalk to call a function with a specific selector.
      * @param target The address of the implementation.
      * @param selector The function selector that is used to call on the implementation.
+     * @param encodeType The encode type that should be used to encode the function call. 
+     * The encodeType value depends on the context of each implmentation.
      * @dev assumes all future implmentations will use the same parameters as the beanstalk 
      * gaugePoint and liquidityWeight implmentations.
      */
     struct Implmentation {
         address target;
         bytes4 selector;
+        bytes1 encodeType;
     }
 
     /**

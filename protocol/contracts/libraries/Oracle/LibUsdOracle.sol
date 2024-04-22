@@ -5,6 +5,8 @@
 pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
+import {LibAppStorage, AppStorage, Storage} from "contracts/libraries/LibAppStorage.sol";
+import {LibChainlinkOracle} from "./LibChainlinkOracle.sol";
 import {LibEthUsdOracle} from "./LibEthUsdOracle.sol";
 import {LibWstethUsdOracle} from "./LibWstethUsdOracle.sol";
 import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
@@ -17,7 +19,6 @@ import {C} from "contracts/C.sol";
  * - ETH/USD price
  **/
 library LibUsdOracle {
-
     using SafeMath for uint256;
 
     function getUsdPrice(address token) internal view returns (uint256) {
@@ -55,7 +56,9 @@ library LibUsdOracle {
      * (ignoring decimal precision)
      */
     function getTokenPrice(address token, uint256 lookback) internal view returns (uint256) {
-         if (token == C.WETH) {
+
+        // oracles that are implmented within beanstalk should be placed here.
+        if (token == C.WETH) {
             uint256 ethUsdPrice = LibEthUsdOracle.getEthUsdPrice(lookback);
             if (ethUsdPrice == 0) return 0;
             return ethUsdPrice;
@@ -65,11 +68,42 @@ library LibUsdOracle {
             if (wstethUsdPrice == 0) return 0;
             return wstethUsdPrice;
         }
-        revert("Oracle: Token not supported.");
+
+        // tokens that use the default chainlink oracle implmentation,
+        // or a custom oracle implmentation are called here.
+        return getTokenPriceFromExternal(token, lookback);
     }
 
+    /**
+     * @notice gets the token price from an external oracle.
+     * @dev if address is 0, use the current contract.
+     * If encodeType is 0x01, use the default chainlink implmentation.
+     * Returns 0 rather than reverting if the call fails.
+     */
+    function getTokenPriceFromExternal(
+        address token,
+        uint256 lookback
+    ) internal view returns (uint256 tokenPrice) {
+        AppStorage storage s = LibAppStorage.diamondStorage();
+        Storage.Implmentation memory oracleImpl = s.ss[token].oracleImplmentation;
 
+        // If the encode type is type 1, use the default chainlink implmentation instead.
+        // `target` refers to the address of the price aggergator implmenation
+        if(oracleImpl.encodeType == bytes1(0x01)) {
+            return LibChainlinkOracle.getTokenPrice(oracleImpl.target, LibChainlinkOracle.FOUR_HOUR_TIMEOUT, lookback);
+        }
 
+        // If the oracle implmentation address is not set, use the current contract.
+        address target = oracleImpl.target;
+        if (target == address(0)) target = address(this);
 
+        (bool success, bytes memory data) = target.staticcall(
+            abi.encodeWithSelector(oracleImpl.selector, lookback)
+        );
 
+        if (!success) return 0;
+        assembly {
+            tokenPrice := mload(add(data, add(0x20, 0)))
+        }
+    }
 }
