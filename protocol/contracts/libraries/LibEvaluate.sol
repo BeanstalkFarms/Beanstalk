@@ -320,34 +320,22 @@ library LibEvaluate {
     /**
      * @notice calculates the liquidity weight of a token.
      * @dev the liquidity weight determines the percentage of
-     * liquidity is considered in evaluating the liquidity of bean.
+     * liquidity that is used in evaluating the liquidity of bean.
      * At 0, no liquidity is added. at 1e18, all liquidity is added.
-     * if the target address is 0, assume the beanstalk contract.
+     * The function must be a non state, viewable function that returns a uint256.
      * if failure, returns 0 (no liquidity is considered) instead of reverting.
+     * if the pool does not have a target, uses address(this).
      */
     function getLiquidityWeight(address pool) internal view returns (uint256 liquidityWeight) {
         AppStorage storage s = LibAppStorage.diamondStorage();
         Storage.Implmentation memory lw = s.ss[pool].liquidityWeightImplmentation;
        
-        // if the target is 0, assume the beanstalk contract.
+        // if the target is 0, use address(this).
         address target = lw.target;
         if(target == address(0)) target = address(this);
-        return getLiquidityWeightFromAddress(target, lw.selector);
-    }
-
-    /**
-     * @notice calculates the liquidity weight of a token, using an external contract.
-     * @dev Assumes `selector` is a callable function on the beanstalk contract.
-     * The function must be a non state, viewable function that returns a uint256.
-     * 
-     * if failure, returns 0 (no liquidity is considered) instead of reverting.
-     */
-    function getLiquidityWeightFromAddress(
-        address target,
-        bytes4 selector
-    ) private view returns (uint256 liquidityWeight) {
-        bytes memory callData = abi.encodeWithSelector(selector);
-        (bool success, bytes memory data) = target.staticcall(callData);
+        
+        (bool success, bytes memory data) = target.staticcall(abi.encodeWithSelector(lw.selector));
+        
         if (!success) return 0;
         assembly {
             liquidityWeight := mload(add(data, add(0x20, 0)))
