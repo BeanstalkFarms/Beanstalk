@@ -251,7 +251,7 @@ contract SeasonGettersFacet {
      */
     function getLiquidityToSupplyRatio() external view returns (uint256) {
         uint256 beanSupply = C.bean().totalSupply();
-        (Decimal.D256 memory l2sr, ) = LibEvaluate.calcLPToSupplyRatio(beanSupply);
+        (Decimal.D256 memory l2sr,, ) = LibEvaluate.calcLPToSupplyRatio(beanSupply);
         return l2sr.value;
     }
 
@@ -372,7 +372,7 @@ contract SeasonGettersFacet {
 
     function getLargestLiqWell() external view returns (address) {
        uint256 beanSupply = C.bean().totalSupply();
-        (, address well) = LibEvaluate.calcLPToSupplyRatio(beanSupply);
+        (, address well, ) = LibEvaluate.calcLPToSupplyRatio(beanSupply);
         return well;
     }
 

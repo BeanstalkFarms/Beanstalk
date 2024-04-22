@@ -142,12 +142,16 @@ contract MockSeasonFacet is SeasonFacet  {
         stepSun(deltaB, caseId);
     }
 
-    function seedGaugeSunSunrise(int256 deltaB, uint256 caseId) public {
+    function seedGaugeSunSunriseWithOracle(int256 deltaB, uint256 caseId, bool oracleFailure) public {
         require(!s.paused, "Season: Paused.");
         s.season.current += 1;
         s.season.sunriseBlock = uint32(block.number);
-        updateTemperatureAndBeanToMaxLpGpPerBdvRatio(caseId);
+        updateTemperatureAndBeanToMaxLpGpPerBdvRatio(caseId, oracleFailure);
         stepSun(deltaB, caseId);
+    }
+
+    function seedGaugeSunSunrise(int256 deltaB, uint256 caseId) public {
+        seedGaugeSunSunriseWithOracle(deltaB, caseId, false);
     }
 
     function sunTemperatureSunrise(int256 deltaB, uint256 caseId, uint32 t) public {
