@@ -321,11 +321,12 @@ function scaleR(R: BigDecimal): BigDecimal {
 }
 
 function deltaRFromState(state: BigInt | null): BigDecimal {
-  return BigDecimal.fromString("0.01"); // TODO: change to negative
+  return BigDecimal.fromString("-0.01");
 }
 
 // TODO: implement the various gauge point functions and choose which one to call based on the stored selector
 // see {GaugePointFacet.defaultGaugePointFunction} for implementation.
+// This will become relevant once there are multiple functions implemented in the contract.
 function updateGaugePoints(gaugePoints: BigDecimal, currentPercent: BigDecimal, optimalPercent: BigDecimal): BigDecimal {
-  return BigDecimal.fromString("100");
+  return gaugePoints;
 }
