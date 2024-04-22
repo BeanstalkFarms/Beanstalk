@@ -20,6 +20,7 @@ import {LibCurveMinting} from "contracts/libraries/Minting/LibCurveMinting.sol";
 import {LibWellMinting} from "contracts/libraries/Minting/LibWellMinting.sol";
 import {LibEvaluate} from "contracts/libraries/LibEvaluate.sol";
 import {LibTokenSilo} from "contracts/libraries/Silo/LibTokenSilo.sol";
+import {LibSilo} from "contracts/libraries/Silo/LibSilo.sol";
 
 /**
  * @author Publius
@@ -61,6 +62,8 @@ contract MockSeasonFacet is SeasonFacet  {
         bytes4 lwSelector,
         uint64 optimalPercentDepositedBdv
     );
+    event TotalGerminatingStalkChanged(uint256 season, int256 deltaStalk);
+    event TotalStalkChangedFromGermination(int256 deltaStalk, int256 deltaRoots);
 
     function reentrancyGuardTest() public nonReentrant {
         reentrancyGuardTest();
@@ -526,6 +529,7 @@ contract MockSeasonFacet is SeasonFacet  {
     }
 
     function mockIncrementGermination(
+        address account,
         address token,
         uint128 amount,
         uint128 bdv,
@@ -537,6 +541,8 @@ contract MockSeasonFacet is SeasonFacet  {
             bdv,
             germ
         );
+        uint128 stalk = bdv * s.ss[token].stalkIssuedPerBdv;
+        LibSilo.mintGerminatingStalk(account, stalk, germ); 
     }
 
     function mockSetTwaReserves(
