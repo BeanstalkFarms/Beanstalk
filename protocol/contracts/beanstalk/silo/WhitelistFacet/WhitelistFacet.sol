@@ -7,7 +7,7 @@ pragma experimental ABIEncoderV2;
 
 import {LibDiamond} from "contracts/libraries/LibDiamond.sol";
 import {LibWhitelist} from "contracts/libraries/Silo/LibWhitelist.sol";
-import {AppStorage} from "contracts/beanstalk/AppStorage.sol";
+import {AppStorage, Storage} from "contracts/beanstalk/AppStorage.sol";
 import {WhitelistedTokens} from "contracts/beanstalk/silo/WhitelistFacet/WhitelistedTokens.sol";
 
 /**
@@ -40,6 +40,8 @@ contract WhitelistFacet is WhitelistedTokens {
      * @dev
      * Can only be called by Beanstalk or Beanstalk owner.
      * Assumes an `encodeType` of 0.
+     * Assumes the token uses a gaugePoint, LiquidityWeight, and oracle implmentation in the beanstalk contract.
+     * Non standard implmentations should use {whitelistTokenWithExternalImplmenation}
      */
     function whitelistToken(
         address token,
@@ -101,6 +103,57 @@ contract WhitelistFacet is WhitelistedTokens {
             liquidityWeightSelector,
             gaugePoints,
             optimalPercentDepositedBdv
+        );
+    }
+
+    /**
+     * @notice Adds a token to the Silo Whitelist with an external implmentation.
+     * @param token Address of the token that is being Whitelisted.
+     * @param selector The function selector that is used to calculate the BDV of the token.
+     * @param stalkIssuedPerBdv The amount of Stalk issued per BDV on Deposit.
+     * @param stalkEarnedPerSeason The amount of Stalk earned per Season for each Deposited BDV.
+     * @param encodeType The encode type that should be used to encode the BDV function call. See {LibTokenSilo.beanDenominatedValue}.
+     * @param oracleImplmentation The implmentation of the oracle that should be used to fetch the token price.
+     * @param gaugePointImplmentation The implmentation of the gauge point function that should be used to calculate the gauge points.
+     * @param liquidityWeightImplmentation The implmentation of the liquidity weight function that should be used to calculate the liquidity weight.
+     * @dev If the implmentation addresses are 0, then beanstalk calls the selector on itself.
+     * See {LibWhitelist.whitelistTokenWithExternalImplmenation} for more info on implmentation.
+     * The selector MUST be a view function that returns an uint256 for all implmentation.
+     * The oracleImplmentation selector should take:
+     *  - `lookback` parameter 
+     *  (foo(uint256)).
+     * The gaugePointImplmentation selector should take:
+     *  - current gauge points, 
+     *  - optimal deposited bdv, 
+     *  - percent depositedbdv 
+     * (foo(uint256, uint256, uint256)).
+     * The liquidityWeightImplmentation selector should take no parameters.
+     * (foo()).
+     */
+    function whitelistTokenWithExternalImplmenation(
+        address token,
+        bytes4 selector,
+        uint32 stalkIssuedPerBdv,
+        uint32 stalkEarnedPerSeason,
+        bytes1 encodeType,
+        uint128 gaugePoints,
+        uint64 optimalPercentDepositedBdv,
+        Storage.Implmentation memory oracleImplmentation,
+        Storage.Implmentation memory gaugePointImplmentation,
+        Storage.Implmentation memory liquidityWeightImplmentation
+    ) external payable {
+        LibDiamond.enforceIsOwnerOrContract();
+        LibWhitelist.whitelistTokenWithExternalImplmenation(
+            token,
+            selector,
+            stalkIssuedPerBdv,
+            stalkEarnedPerSeason,
+            encodeType,
+            gaugePoints,
+            optimalPercentDepositedBdv,
+            oracleImplmentation,
+            gaugePointImplmentation,
+            liquidityWeightImplmentation
         );
     }
 
