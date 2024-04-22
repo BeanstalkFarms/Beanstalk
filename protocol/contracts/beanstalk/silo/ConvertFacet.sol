@@ -87,12 +87,6 @@ contract ConvertFacet is ReentrancyGuard {
         uint256[] bdvs
     );
 
-    // TODO: when we updated to Solidity 0.8, use the native abs function
-    // the verson of OpenZeppelin we're on does not support abs
-    function abs(int256 a) internal pure returns (uint256) {
-        return a >= 0 ? uint256(a) : uint256(-a);
-    }
-
     /**
      * @notice convert allows a user to convert a deposit to another deposit,
      * given that the conversion is supported by the ConvertFacet.
@@ -145,7 +139,6 @@ contract ConvertFacet is ReentrancyGuard {
 
         LibTractor._resetPublisher();
     }
-
 
     /**
      * @notice Pipeline convert allows any type of convert using a series of
@@ -657,5 +650,11 @@ contract ConvertFacet is ReentrancyGuard {
 
             emit Convert(LibTractor._user(), inputToken, outputToken, inputAmounts[i], mcdd.crateAmount);
         }
+    }
+
+    // TODO: when we updated to Solidity 0.8, use the native abs function
+    // the verson of OpenZeppelin we're on does not support abs
+    function abs(int256 a) internal pure returns (uint256) {
+        return a >= 0 ? uint256(a) : uint256(-a);
     }
 }
