@@ -487,7 +487,7 @@ contract PipelineConvertTest is TestHelper {
         AdvancedFarmCall[] memory farmCalls = new AdvancedFarmCall[](1);
         AdvancedFarmCall[] memory beanToLPFarmCalls = createBeanToLPFarmCalls(amount);
         farmCalls[0] = beanToLPFarmCalls[0]; // Assign the first element of the returned array
-        vm.expectRevert("Convert: Output token is not a well");
+        vm.expectRevert("Convert: Output token must be Bean or a well");
         // convert non-whitelisted asset to lp
         vm.prank(users[1]);
         convert.pipelineConvert(
@@ -509,7 +509,7 @@ contract PipelineConvertTest is TestHelper {
         AdvancedFarmCall[] memory farmCalls = new AdvancedFarmCall[](1);
         AdvancedFarmCall[] memory beanToLPFarmCalls = createBeanToLPFarmCalls(amount);
         farmCalls[0] = beanToLPFarmCalls[0]; // Assign the first element of the returned array
-        vm.expectRevert("Convert: Input token is not a well");
+        vm.expectRevert("Convert: Input token must be Bean or a well");
         // convert non-whitelisted asset to lp
         vm.prank(users[1]);
         convert.pipelineConvert(

@@ -162,8 +162,8 @@ contract ConvertFacet is ReentrancyGuard {
         returns (int96[] memory outputStems, uint256[] memory outputAmounts)
     {
         // require that input and output tokens be wells (Unripe not supported)
-        require(LibWell.isWell(inputToken) || inputToken == C.BEAN, "Convert: Input token is not a well");
-        require(LibWell.isWell(outputToken) || outputToken == C.BEAN, "Convert: Output token is not a well");
+        require(LibWell.isWell(inputToken) || inputToken == C.BEAN, "Convert: Input token must be Bean or a well");
+        require(LibWell.isWell(outputToken) || outputToken == C.BEAN, "Convert: Output token must be Bean or a well");
 
         // mow input and output tokens: 
         LibSilo._mow(LibTractor._user(), inputToken);

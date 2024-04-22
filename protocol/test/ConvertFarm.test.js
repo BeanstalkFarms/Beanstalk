@@ -280,7 +280,7 @@ describe('Farm Convert', function () {
 
         let advancedFarmCalls = await draftConvertBeanEthWellToBean(wellAmountOut, beanAmountOut)
         // const farmData = this.farmFacet.interface.encodeFunctionData("advancedFarm", [advancedFarmCalls]);
-        await expect(this.convert.connect(user).pipelineConvert(uniswapUsdcEthPool, [depositStemTip], [wellAmountOut], this.bean.address, advancedFarmCalls)).to.be.revertedWith("Convert: Input token is not a well");
+        await expect(this.convert.connect(user).pipelineConvert(uniswapUsdcEthPool, [depositStemTip], [wellAmountOut], this.bean.address, advancedFarmCalls)).to.be.revertedWith("Convert: Input token must be Bean or a well");
 
       });
     });
