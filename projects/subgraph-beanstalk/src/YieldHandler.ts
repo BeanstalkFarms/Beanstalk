@@ -170,7 +170,7 @@ export function calculateAPY(
 /**
  * Calculates silo Bean/Stalk vAPY when Seed Gauge is active.
  *
- * All of the array parameters should not be empty and be the same length.
+ * All of the array parameters should not be empty and be the same length, with one entry for every gauge lp deposit type
  *
  * @param token Which gauge lp token to calculate the apy for. corresponds to an index in the various array parameters.
  *        for Bean or other non-gauge token, provide -1
@@ -195,7 +195,7 @@ export function calculateAPY(
  *
  * @param staticSeeds Provided when `token` does not have its seeds dynamically changed by gauge
  *
- * TODO: how to specify unripe here? only difference is zero seeds
+ * TODO: performance improvement - calculate the apys for each asset in a single call.
  *
  * Future work includes improvement of the `r` value simulation. This involves using Beanstalk's current state,
  * including L2SR and debt level (temperature cases). Also can be improved by tracking an expected ratio of
@@ -241,7 +241,8 @@ export function calculateGaugeVAPY(
   let totalStalk = siloStalk;
   let gaugeBdv = beanBdv.plus(BigDecimal_sum(gaugeLpDepositedBdvCopy));
   let totalBdv = gaugeBdv.plus(nonGaugeDepositedBdv);
-  let userBeans = ONE_BD;
+  let userBeans = token == -1 ? ONE_BD : ZERO_BD;
+  let userLp = token == -1 ? ZERO_BD : ONE_BD;
   let userStalk = ONE_BD;
   let largestLpGpPerBdv = BigDecimal_max(lpGpPerBdv);
 
@@ -281,7 +282,15 @@ export function calculateGaugeVAPY(
     // log.debug("gs {}", [gs.toString()]);
     const beanSeeds = gs.div(gpTotal).times(beanGpPerBdv).times(SEED_PRECISION);
     // log.debug("beanSeeds {}", [beanSeeds.toString()]);
-    // const beanEthSeeds = // Set this equal to the number of seeds for the user deposited asset. No need to calculate for each lp
+    // Set this equal to the number of seeds for whichever is the user' deposited lp asset
+    let lpSeeds = ZERO_BD;
+    if (token != -1) {
+      if (staticSeeds !== null) {
+        lpSeeds = staticSeeds;
+      } else {
+        lpSeeds = gs.div(gpTotal).times(lpGpPerBdv[token]).times(SEED_PRECISION);
+      }
+    }
 
     totalStalk = totalStalk.plus(gs).plus(earnedBeans);
     // log.debug("totalStalk {}", [totalStalk.toString()]);
@@ -289,19 +298,16 @@ export function calculateGaugeVAPY(
     totalBdv = totalBdv.plus(earnedBeans);
     beanBdv = beanBdv.plus(earnedBeans);
 
-    // No rewards while the new deposit is germinating
-    // TODO(@Brean): does the user still get stalk rewards? I forget
-    if (i >= 2) {
-      const userBeanShare = earnedBeans.times(userStalk).div(totalStalk);
-      // log.debug("userBeanShare {}", [userBeanShare.toString()]);
-      userStalk = userStalk.plus(userBeanShare).plus(userBeans.times(beanSeeds).div(SEED_PRECISION));
-      // log.debug("userStalk {}", [userStalk.toString()]);
-      userBeans = userBeans.plus(userBeanShare);
-      // log.debug("userBeans {}", [userBeans.toString()]);
-    }
+    // No bean rewards while the new deposit is germinating, but stalk can grow
+    const userBeanShare = i < 2 ? ZERO_BD : earnedBeans.times(userStalk).div(totalStalk);
+    // log.debug("userBeanShare {}", [userBeanShare.toString()]);
+    userStalk = userStalk.plus(userBeanShare).plus(userBeans.times(beanSeeds).plus(userLp.times(lpSeeds)).div(SEED_PRECISION));
+    // log.debug("userStalk {}", [userStalk.toString()]);
+    userBeans = userBeans.plus(userBeanShare);
+    // log.debug("userBeans {}", [userBeans.toString()]);
   }
 
-  const beanApy = userBeans.minus(ONE_BD).times(BigDecimal.fromString("100"));
+  const beanApy = userBeans.plus(userLp).minus(ONE_BD).times(BigDecimal.fromString("100"));
   const stalkApy = userStalk.minus(ONE_BD).times(BigDecimal.fromString("100"));
 
   return [beanApy, stalkApy];
