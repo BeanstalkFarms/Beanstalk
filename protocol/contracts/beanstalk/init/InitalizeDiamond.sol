@@ -56,34 +56,42 @@ contract InitalizeDiamond {
         
         // note: bean and assets that are not in the gauge system 
         // do not need to initalize the gauge system.
+        Storage.Implmentation memory impl = Storage.Implmentation(address(0), bytes4(0));
+
         Storage.SiloSettings[] memory siloSettings = new Storage.SiloSettings[](2);
         siloSettings[0] = Storage.SiloSettings({
-                selector: BDVFacet.beanToBDV.selector,
-                stalkEarnedPerSeason: INIT_BEAN_STALK_EARNED_PER_SEASON,
-                stalkIssuedPerBdv: INIT_STALK_ISSUED_PER_BDV,
-                milestoneSeason: s.season.current,
-                milestoneStem: 0,
-                encodeType: 0x00,
-                deltaStalkEarnedPerSeason: 0,
-                gpSelector: bytes4(0),
-                lwSelector: bytes4(0),
-                gaugePoints: 0,
-                optimalPercentDepositedBdv: 0
-            });
+            selector: BDVFacet.beanToBDV.selector,
+            stalkEarnedPerSeason: INIT_BEAN_STALK_EARNED_PER_SEASON,
+            stalkIssuedPerBdv: INIT_STALK_ISSUED_PER_BDV,
+            milestoneSeason: s.season.current,
+            milestoneStem: 0,
+            encodeType: 0x00,
+            deltaStalkEarnedPerSeason: 0,
+            gpSelector: bytes4(0),
+            lwSelector: bytes4(0),
+            gaugePoints: 0,
+            optimalPercentDepositedBdv: 0,
+            oracleImplmentation: impl,
+            gaugePointImplmentation: impl,
+            liquidityWeightImplmentation: impl
+        });
         
         siloSettings[1] = Storage.SiloSettings({
-                selector: BDVFacet.wellBdv.selector,
-                stalkEarnedPerSeason: INIT_BEAN_TOKEN_WELL_STALK_EARNED_PER_SEASON,
-                stalkIssuedPerBdv: INIT_STALK_ISSUED_PER_BDV,
-                milestoneSeason: s.season.current,
-                milestoneStem: 0,
-                encodeType: 0x01,
-                deltaStalkEarnedPerSeason: 0,
-                gpSelector: IGaugePointFacet.defaultGaugePointFunction.selector,
-                lwSelector: ILiquidityWeightFacet.maxWeight.selector,
-                gaugePoints: INIT_TOKEN_G_POINTS,
-                optimalPercentDepositedBdv: INIT_BEAN_TOKEN_WELL_PERCENT_TARGET
-            });
+            selector: BDVFacet.wellBdv.selector,
+            stalkEarnedPerSeason: INIT_BEAN_TOKEN_WELL_STALK_EARNED_PER_SEASON,
+            stalkIssuedPerBdv: INIT_STALK_ISSUED_PER_BDV,
+            milestoneSeason: s.season.current,
+            milestoneStem: 0,
+            encodeType: 0x01,
+            deltaStalkEarnedPerSeason: 0,
+            gpSelector: IGaugePointFacet.defaultGaugePointFunction.selector,
+            lwSelector: ILiquidityWeightFacet.maxWeight.selector,
+            gaugePoints: INIT_TOKEN_G_POINTS,
+            optimalPercentDepositedBdv: INIT_BEAN_TOKEN_WELL_PERCENT_TARGET,
+            oracleImplmentation: impl,
+            gaugePointImplmentation: impl,
+            liquidityWeightImplmentation: Storage.Implmentation(address(0), ILiquidityWeightFacet.maxWeight.selector)
+        });
 
         whitelistPools(
             tokens,

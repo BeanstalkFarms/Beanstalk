@@ -110,6 +110,10 @@ contract MockInitDiamond is InitalizeDiamond {
     function initalUnripeSiloSettings() internal view returns (
         Storage.SiloSettings[] memory siloSettings
     ){
+        Storage.Implmentation memory impl = Storage.Implmentation({
+            target: address(0),
+            selector: bytes4(0)
+        });
         siloSettings = new Storage.SiloSettings[](2);
         siloSettings[0] = Storage.SiloSettings({
                 selector: BDVFacet.unripeBeanToBDV.selector,
@@ -122,7 +126,10 @@ contract MockInitDiamond is InitalizeDiamond {
                 gpSelector: bytes4(0),
                 lwSelector: bytes4(0),
                 gaugePoints: 0,
-                optimalPercentDepositedBdv: 0
+                optimalPercentDepositedBdv: 0,
+                oracleImplmentation: impl,
+                gaugePointImplmentation: impl,
+                liquidityWeightImplmentation: impl
             });
         siloSettings[1] = Storage.SiloSettings({
                 selector: BDVFacet.unripeLPToBDV.selector,
@@ -135,7 +142,10 @@ contract MockInitDiamond is InitalizeDiamond {
                 gpSelector: bytes4(0),
                 lwSelector: bytes4(0),
                 gaugePoints: 0,
-                optimalPercentDepositedBdv: 0
+                optimalPercentDepositedBdv: 0,
+                oracleImplmentation: impl,
+                gaugePointImplmentation: impl,
+                liquidityWeightImplmentation: impl
             });
     }
 
@@ -160,6 +170,10 @@ contract MockInitDiamond is InitalizeDiamond {
      */
     function whitelistUnderlyingUrLPWell(address well) internal {
         // whitelist bean:stETH well
+        Storage.Implmentation memory impl = Storage.Implmentation({
+            target: address(0),
+            selector: bytes4(0)
+        });
         // note: no error checking:
         s.ss[well] = Storage.SiloSettings({
             selector: BDVFacet.wellBdv.selector,
@@ -172,7 +186,10 @@ contract MockInitDiamond is InitalizeDiamond {
             gpSelector: IGaugePointFacet.defaultGaugePointFunction.selector,
             lwSelector: ILiquidityWeightFacet.maxWeight.selector,
             gaugePoints: INIT_TOKEN_WURLP_POINTS,
-            optimalPercentDepositedBdv: INIT_BEAN_WURLP_PERCENT_TARGET
+            optimalPercentDepositedBdv: INIT_BEAN_WURLP_PERCENT_TARGET,
+            oracleImplmentation: impl,
+            gaugePointImplmentation: impl,
+            liquidityWeightImplmentation: Storage.Implmentation(address(0), bytes4(ILiquidityWeightFacet.maxWeight.selector))
         });
 
         // updates the optimal percent deposited for bean:eth.

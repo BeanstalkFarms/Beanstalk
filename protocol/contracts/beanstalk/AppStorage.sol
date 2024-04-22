@@ -446,6 +446,21 @@ contract Storage {
         bytes4 lwSelector; //                    │ 4  (8)
         uint128 gaugePoints; //                  │ 16 (24)
         uint64 optimalPercentDepositedBdv; //  ──┘ 8  (32)
+        Implmentation oracleImplmentation;
+        Implmentation gaugePointImplmentation;
+        Implmentation liquidityWeightImplmentation;
+    }
+
+    /**
+     * @notice contains data in order for beanstalk to call a function with a specific selector.
+     * @param target The address of the implementation.
+     * @param selector The function selector that is used to call on the implementation.
+     * @dev assumes all future implmentations will use the same parameters as the beanstalk 
+     * gaugePoint and liquidityWeight implmentations.
+     */
+    struct Implmentation {
+        address target;
+        bytes4 selector;
     }
 
     /**

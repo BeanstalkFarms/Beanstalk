@@ -278,7 +278,7 @@ contract SeasonGettersFacet {
      * @dev This is the liquidity used in the gauge system.
      */
     function getWeightedTwaLiquidityForWell(address well) public view returns (uint256) {
-        return LibEvaluate.getLiquidityWeight(s.ss[well].lwSelector)
+        return LibEvaluate.getLiquidityWeight(well)
             .mul(getTwaLiquidityForWell(well))
             .div(1e18);
     }

@@ -3,7 +3,7 @@
 pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
-import {LibAppStorage, AppStorage} from "./LibAppStorage.sol";
+import {LibAppStorage, AppStorage, Storage} from "./LibAppStorage.sol";
 import {Decimal, SafeMath} from "contracts/libraries/Decimal.sol";
 import {LibWhitelistedTokens, C} from "contracts/libraries/Silo/LibWhitelistedTokens.sol";
 import {LibUnripe} from "contracts/libraries/LibUnripe.sol";
@@ -210,8 +210,6 @@ library LibEvaluate {
     function calcLPToSupplyRatio(
         uint256 beanSupply
     ) internal view returns (Decimal.D256 memory lpToSupplyRatio, address largestLiqWell) {
-        AppStorage storage s = LibAppStorage.diamondStorage();
-
         // prevent infinite L2SR
         if (beanSupply == 0) return (Decimal.zero(), address(0));
 
@@ -223,7 +221,7 @@ library LibEvaluate {
         uint256 liquidityWeight;
         for (uint256 i; i < pools.length; i++) {
             // get the liquidity weight.
-            liquidityWeight = getLiquidityWeight(s.ss[pools[i]].lwSelector);
+            liquidityWeight = getLiquidityWeight(pools[i]);
             
             // get the non-bean value in an LP.
             twaReserves = LibWell.getTwaReservesFromStorageOrBeanstalkPump(
@@ -324,17 +322,33 @@ library LibEvaluate {
      * @dev the liquidity weight determines the percentage of
      * liquidity is considered in evaluating the liquidity of bean.
      * At 0, no liquidity is added. at 1e18, all liquidity is added.
+     * if the target address is 0, assume the beanstalk contract.
+     * if failure, returns 0 (no liquidity is considered) instead of reverting.
+     */
+    function getLiquidityWeight(address pool) internal view returns (uint256 liquidityWeight) {
+        AppStorage storage s = LibAppStorage.diamondStorage();
+        Storage.Implmentation memory lw = s.ss[pool].liquidityWeightImplmentation;
+       
+        // if the target is 0, assume the beanstalk contract.
+        address target = lw.target;
+        if(target == address(0)) target = address(this);
+        return getLiquidityWeightFromAddress(target, lw.selector);
+    }
+
+    /**
+     * @notice calculates the liquidity weight of a token, using an external contract.
+     * @dev Assumes `selector` is a callable function on the beanstalk contract.
+     * The function must be a non state, viewable function that returns a uint256.
      * 
      * if failure, returns 0 (no liquidity is considered) instead of reverting.
      */
-    function getLiquidityWeight(
-        bytes4 lwSelector
-    ) internal view returns (uint256 liquidityWeight) {
-        bytes memory callData = abi.encodeWithSelector(lwSelector);
-        (bool success, bytes memory data) = address(this).staticcall(callData);
-        if (!success) {
-            return 0;
-        }
+    function getLiquidityWeightFromAddress(
+        address target,
+        bytes4 selector
+    ) private view returns (uint256 liquidityWeight) {
+        bytes memory callData = abi.encodeWithSelector(selector);
+        (bool success, bytes memory data) = target.staticcall(callData);
+        if (!success) return 0;
         assembly {
             liquidityWeight := mload(add(data, add(0x20, 0)))
         }
