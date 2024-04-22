@@ -43,7 +43,10 @@ library LibUsdOracle {
             if (wstethUsdPrice == 0) return 0;
             return uint256(1e24).div(wstethUsdPrice);
         }
-        revert("Oracle: Token not supported.");
+        
+        uint256 tokenPrice = getTokenPriceFromExternal(token, lookback);
+        if (tokenPrice == 0) return 0;
+        return uint256(1e24).div(tokenPrice);
     }
 
     function getTokenPrice(address token) internal view returns (uint256) {
