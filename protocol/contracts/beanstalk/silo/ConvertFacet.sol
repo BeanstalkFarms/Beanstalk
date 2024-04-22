@@ -342,30 +342,30 @@ contract ConvertFacet is ReentrancyGuard {
         // at this point we are converting in direction of peg, but we may have gone past it
 
         // Setup convert power for this block if it has not already been setup
-        if (s.convertCapacityThisBlock[block.number].hasConvertHappenedThisBlock == false) {
+        if (s.convertCapacity[block.number].hasConvertHappenedThisBlock == false) {
             // use capped deltaB for flashloan resistance
-            s.convertCapacityThisBlock[block.number].convertCapacity = cappedDeltaB;
-            s.convertCapacityThisBlock[block.number].hasConvertHappenedThisBlock = true;
+            s.convertCapacity[block.number].convertCapacity = uint248(cappedDeltaB);
+            s.convertCapacity[block.number].hasConvertHappenedThisBlock = true;
         }
 
         // calculate how much deltaB convert is happening with this convert
         uint256 convertAmountInDirectionOfPeg = abs(beforeDeltaB - afterDeltaB);
 
-        if (convertAmountInDirectionOfPeg <= s.convertCapacityThisBlock[block.number].convertCapacity) {
+        if (convertAmountInDirectionOfPeg <= s.convertCapacity[block.number].convertCapacity) {
             // all good, you're using less than the available convert power
 
             // subtract from convert power available for this block
-            s.convertCapacityThisBlock[block.number].convertCapacity -= convertAmountInDirectionOfPeg;
+            s.convertCapacity[block.number].convertCapacity -= uint248(convertAmountInDirectionOfPeg);
 
             return crossoverAmount;
         } else {
             // you're using more than the available convert power
 
             // penalty will be how far past peg you went, but any remaining convert power is used to reduce the penalty
-            uint256 penalty = convertAmountInDirectionOfPeg - s.convertCapacityThisBlock[block.number].convertCapacity;
+            uint256 penalty = convertAmountInDirectionOfPeg - s.convertCapacity[block.number].convertCapacity;
 
             // all convert power for this block is used up
-            s.convertCapacityThisBlock[block.number].convertCapacity = 0;
+            s.convertCapacity[block.number].convertCapacity = 0;
 
             return penalty+crossoverAmount; // should this be capped at bdvConverted?
         }
@@ -377,11 +377,11 @@ contract ConvertFacet is ReentrancyGuard {
      */
     function getConvertCapacity() public view returns (uint256) {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        if (s.convertCapacityThisBlock[block.number].hasConvertHappenedThisBlock == false) {
+        if (s.convertCapacity[block.number].hasConvertHappenedThisBlock == false) {
             // if convert power has not been initialized for this block, use the overall deltaB
             return abs(LibWellMinting.overallDeltaB());
         }
-        return s.convertCapacityThisBlock[block.number].convertCapacity;
+        return s.convertCapacity[block.number].convertCapacity;
     }
 
     /**
