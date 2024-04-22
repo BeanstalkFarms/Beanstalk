@@ -514,8 +514,8 @@ contract Storage {
     }
 
 
-    struct ConvertPower {
-        uint256 convertPower;
+    struct ConvertCapacity {
+        uint256 convertCapacity;
         bool hasConvertHappenedThisBlock; // todo: better name? but bools default to false.
     }
 }
@@ -663,7 +663,7 @@ struct AppStorage {
 
     address sopWell;
 
-    // current block number -> (convertPower, isFirstConvert)
-    // where block number is the current block, convertPower is the amount of Beans that can be converted towards peg in this block before stalk penalty becomes applied.
-    mapping(uint256 => Storage.ConvertPower) convertPowerThisBlock;
+    // current block number -> (convertCapacity, isFirstConvert)
+    // where block number is the current block, convertCapacity is the amount of Beans that can be converted towards peg in this block before stalk penalty becomes applied.
+    mapping(uint256 => Storage.ConvertCapacity) convertCapacityThisBlock;
 }

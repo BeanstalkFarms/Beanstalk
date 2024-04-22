@@ -381,7 +381,7 @@ contract PipelineConvertTest is TestHelper {
         assertTrue(totalStalkAfter == bdvBalance + grownStalkBefore); // all grown stalk was lost
     }
 
-    function testFlashloanManipulationLoseGrownStalkBecauseZeroConvertPower(uint256 amount) public {
+    function testFlashloanManipulationLoseGrownStalkBecauseZeroConvertCapacity(uint256 amount) public {
         amount = bound(amount, 5000e6, 5000e6); // todo: update for range
 
         // the main idea is that we start at deltaB of zero, so converts should not be possible
@@ -455,21 +455,21 @@ contract PipelineConvertTest is TestHelper {
 
         convert.cappedReservesDeltaB(C.BEAN_ETH_WELL);
 
-        uint256 convertPowerStage1 = convert.getConvertPower();
+        uint256 convertCapacityStage1 = convert.getConvertCapacity();
 
         // convert beans to lp
         beanToLPDoConvert(amount, stem, users[1]);
 
-        uint256 convertPowerStage2 = convert.getConvertPower();
-        assertTrue(convertPowerStage2 < convertPowerStage1);
+        uint256 convertCapacityStage2 = convert.getConvertCapacity();
+        assertTrue(convertCapacityStage2 < convertCapacityStage1);
 
         // add more eth to well again
         addEthToWell(users[1], ethAmount);
 
         beanToLPDoConvert(amount, stem2, users[2]);
 
-        uint256 convertPowerStage3 = convert.getConvertPower();
-        assertTrue(convertPowerStage3 < convertPowerStage2);
+        uint256 convertCapacityStage3 = convert.getConvertCapacity();
+        assertTrue(convertCapacityStage3 < convertCapacityStage2);
 
         uint256 grownStalkAfter = bs.balanceOfGrownStalk(users[2], C.BEAN_ETH_WELL);
 
