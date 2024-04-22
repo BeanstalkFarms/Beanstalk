@@ -1,6 +1,7 @@
 import { BigInt, BigDecimal, log } from "@graphprotocol/graph-ts";
 import { afterEach, assert, clearStore, describe, test } from "matchstick-as/assembly/index";
 import * as YieldHandler from "../src/YieldHandler";
+import { ZERO_BD, ZERO_BI } from "../../subgraph-core/utils/Decimals";
 
 describe("APY Calculations", () => {
   describe("Pre-Gauge", () => {
@@ -49,21 +50,27 @@ describe("APY Calculations", () => {
   describe("With Seed Gauge", () => {
     test("Bean yield", () => {
       // using unripe bdv 19556945+24417908
-      const apy = YieldHandler.calculateGaugeVAPY(
-        -1,
-        BigDecimal.fromString("100"),
-        [BigDecimal.fromString("100")],
-        [BigDecimal.fromString("899088")],
-        BigDecimal.fromString("43974853"),
-        [BigDecimal.fromString("100")],
-        BigDecimal.fromString("0.33"),
-        BigDecimal.fromString("2798474"),
-        BigDecimal.fromString("161540879"),
-        BigDecimal.fromString("4320")
-      );
+      for (let i = -1; i <= 0; ++i) {
+        const apy = YieldHandler.calculateGaugeVAPY(
+          i,
+          BigDecimal.fromString("100"),
+          [BigDecimal.fromString("100")],
+          [BigDecimal.fromString("899088")],
+          BigDecimal.fromString("43974853"),
+          [BigDecimal.fromString("100")],
+          BigDecimal.fromString("0.33"),
+          BigDecimal.fromString("2798474"),
+          BigDecimal.fromString("161540879"),
+          BigDecimal.fromString("4320"),
+          ZERO_BI,
+          [ZERO_BD, ZERO_BD],
+          [[ZERO_BD], [ZERO_BD]],
+          [ZERO_BD, ZERO_BD]
+        );
 
-      log.info(`bean apy: {}`, [(apy[0] as BigDecimal).toString()]);
-      log.info(`stalk apy: {}`, [(apy[1] as BigDecimal).toString()]);
+        log.info(`bean apy: {}`, [(apy[0] as BigDecimal).toString()]);
+        log.info(`stalk apy: {}`, [(apy[1] as BigDecimal).toString()]);
+      }
     });
   });
 });
