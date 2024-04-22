@@ -23,11 +23,6 @@ import {LibWell} from "contracts/libraries/Well/LibWell.sol";
 import {IPipeline, PipeCall} from "contracts/interfaces/IPipeline.sol";
 import {SignedSafeMath} from "@openzeppelin/contracts/math/SignedSafeMath.sol";
 import {LibFunction} from "contracts/libraries/LibFunction.sol";
-
-interface IBeanstalk {
-    function bdv(address token, uint256 amount) external view returns (uint256);
-    function poolDeltaB(address pool) external view returns (int256);
-}
 import {LibGerminate} from "contracts/libraries/Silo/LibGerminate.sol";
 
 
@@ -40,8 +35,6 @@ contract ConvertFacet is ReentrancyGuard {
     using SignedSafeMath for int256;
     using SafeCast for uint256;
     using LibSafeMath32 for uint32;
-    address internal constant PIPELINE = 0xb1bE0000C6B3C62749b5F0c92480146452D15423; //import this from C.sol?
-    IBeanstalk private constant BEANSTALK = IBeanstalk(0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5);
 
     event Convert(
         address indexed account,
@@ -211,7 +204,7 @@ contract ConvertFacet is ReentrancyGuard {
 
         pipeData.startingDeltaB = getCombinedDeltaBForTokens(inputToken, outputToken);
 
-        IERC20(inputToken).transfer(PIPELINE, maxTokens);
+        IERC20(inputToken).transfer(C.PIPELINE, maxTokens);
         pipeData.amountOut = executeAdvancedFarmCalls(farmCalls);
 
         require(pipeData.amountOut > 0, "Convert: Final pipe call returned 0");
@@ -447,7 +440,7 @@ contract ConvertFacet is ReentrancyGuard {
         //I don't think calling checkReturn here is necessary if success is false?
         // LibFunction.checkReturn(success, result);
 
-        IPipeline(PIPELINE).pipe(p);
+        IPipeline(C.PIPELINE).pipe(p);
     }
 
     /**
