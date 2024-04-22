@@ -3,44 +3,67 @@ import { afterEach, assert, clearStore, describe, test } from "matchstick-as/ass
 import * as YieldHandler from "../src/YieldHandler";
 
 describe("APY Calculations", () => {
-  test("No Bean mints", () => {
-    const apy = YieldHandler.calculateAPY(
-      BigDecimal.fromString("0"), // n
-      BigDecimal.fromString("2"), // seedsPerBDV
-      BigDecimal.fromString("2"), // seedsPerBeanBDV
-      BigInt.fromString("10000000000000"), // stalk
-      BigInt.fromString("2000000000") // seeds
-    );
+  describe("Pre-Gauge", () => {
+    test("No Bean mints", () => {
+      const apy = YieldHandler.calculateAPY(
+        BigDecimal.fromString("0"), // n
+        BigDecimal.fromString("2"), // seedsPerBDV
+        BigDecimal.fromString("2"), // seedsPerBeanBDV
+        BigInt.fromString("10000000000000"), // stalk
+        BigInt.fromString("2000000000") // seeds
+      );
 
-    log.info(`bean apy: {}`, [apy[0].toString()]);
-    log.info(`stalk apy: {}`, [apy[1].toString()]);
-    assert.assertTrue((apy[0] as BigDecimal).equals(BigDecimal.fromString("0")));
-    assert.assertTrue((apy[1] as BigDecimal).gt(BigDecimal.fromString("0")));
+      log.info(`bean apy: {}`, [apy[0].toString()]);
+      log.info(`stalk apy: {}`, [apy[1].toString()]);
+      assert.assertTrue((apy[0] as BigDecimal).equals(BigDecimal.fromString("0")));
+      assert.assertTrue((apy[1] as BigDecimal).gt(BigDecimal.fromString("0")));
+    });
+
+    // Sequence recreated here for testing:
+    // https://docs.google.com/spreadsheets/d/1h7pPEydeAMze_uZMZzodTB3kvEXz_dGGje4KKm83gRM/edit#gid=1845553589
+    test("Yields are higher with 4 seeds", () => {
+      const apy2 = YieldHandler.calculateAPY(
+        BigDecimal.fromString("1"),
+        BigDecimal.fromString("2"),
+        BigDecimal.fromString("2"),
+        BigInt.fromString("10000000000000"),
+        BigInt.fromString("2000000000")
+      );
+      const apy4 = YieldHandler.calculateAPY(
+        BigDecimal.fromString("1"),
+        BigDecimal.fromString("4"),
+        BigDecimal.fromString("4"),
+        BigInt.fromString("10000000000000"),
+        BigInt.fromString("2000000000")
+      );
+
+      log.info(`bean apy (2 seeds): {}`, [(apy2[0] as BigDecimal).toString()]);
+      log.info(`bean apy (4 seeds): {}`, [(apy4[0] as BigDecimal).toString()]);
+      log.info(`stalk apy (2 seeds): {}`, [(apy2[1] as BigDecimal).toString()]);
+      log.info(`stalk apy (4 seeds): {}`, [(apy4[1] as BigDecimal).toString()]);
+      assert.assertTrue((apy4[0] as BigDecimal).gt(apy2[0] as BigDecimal));
+      assert.assertTrue((apy4[1] as BigDecimal).gt(apy2[1] as BigDecimal));
+    });
   });
 
-  // Sequence recreated here for testing:
-  // https://docs.google.com/spreadsheets/d/1h7pPEydeAMze_uZMZzodTB3kvEXz_dGGje4KKm83gRM/edit#gid=1845553589
-  test("Yields are higher with 4 seeds", () => {
-    const apy2 = YieldHandler.calculateAPY(
-      BigDecimal.fromString("1"),
-      BigDecimal.fromString("2"),
-      BigDecimal.fromString("2"),
-      BigInt.fromString("10000000000000"),
-      BigInt.fromString("2000000000")
-    );
-    const apy4 = YieldHandler.calculateAPY(
-      BigDecimal.fromString("1"),
-      BigDecimal.fromString("4"),
-      BigDecimal.fromString("4"),
-      BigInt.fromString("10000000000000"),
-      BigInt.fromString("2000000000")
-    );
+  describe("With Seed Gauge", () => {
+    test("Bean yield", () => {
+      // using unripe bdv 19556945+24417908
+      const apy = YieldHandler.calculateGaugeVAPY(
+        -1,
+        BigDecimal.fromString("100"),
+        [BigDecimal.fromString("100")],
+        [BigDecimal.fromString("899088")],
+        BigDecimal.fromString("43974853"),
+        [BigDecimal.fromString("100")],
+        BigDecimal.fromString("0.33"),
+        BigDecimal.fromString("2798474"),
+        BigDecimal.fromString("161540879"),
+        BigDecimal.fromString("4320")
+      );
 
-    log.info(`bean apy (2 seeds): {}`, [(apy2[0] as BigDecimal).toString()]);
-    log.info(`bean apy (4 seeds): {}`, [(apy4[0] as BigDecimal).toString()]);
-    log.info(`stalk apy (2 seeds): {}`, [(apy2[1] as BigDecimal).toString()]);
-    log.info(`stalk apy (4 seeds): {}`, [(apy4[1] as BigDecimal).toString()]);
-    assert.assertTrue((apy4[0] as BigDecimal).gt(apy2[0] as BigDecimal));
-    assert.assertTrue((apy4[1] as BigDecimal).gt(apy2[1] as BigDecimal));
+      log.info(`bean apy: {}`, [(apy[0] as BigDecimal).toString()]);
+      log.info(`stalk apy: {}`, [(apy[1] as BigDecimal).toString()]);
+    });
   });
 });
