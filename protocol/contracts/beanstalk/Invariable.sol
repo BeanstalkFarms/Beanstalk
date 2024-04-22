@@ -34,7 +34,7 @@ abstract contract Invariable {
      */
     modifier fundsSafu() {
         _;
-        address[] memory tokens = LibWhitelistedTokens.getSiloTokens();
+        address[] memory tokens = getTokensOfInterest();
         (
             uint256[] memory entitlements,
             uint256[] memory balances
@@ -51,12 +51,11 @@ abstract contract Invariable {
     /// @dev Attempt to minimize effect on stack depth.
     modifier noNetFlow() {
         uint256 initialStalk = LibAppStorage.diamondStorage().s.stalk;
-        address[] memory tokens = LibWhitelistedTokens.getSiloTokens();
+        address[] memory tokens = getTokensOfInterest();
         uint256[] memory initialProtocolTokenBalances = getTokenBalances(tokens);
-
         _;
-
         uint256[] memory finalProtocolTokenBalances = getTokenBalances(tokens);
+
         require(LibAppStorage.diamondStorage().s.stalk >= initialStalk, "INV: Stalk decreased");
         for (uint256 i; i < tokens.length; i++) {
             require(
@@ -74,6 +73,21 @@ abstract contract Invariable {
         uint256 initialSupply = C.bean().totalSupply();
         _;
         require(C.bean().totalSupply() == initialSupply, "INV: Supply changed");
+    }
+
+
+    function getTokensOfInterest() internal view returns (address[] memory tokens) {
+        address[] memory whitelistedTokens = LibWhitelistedTokens.getWhitelistedTokens();
+        address sopToken = address(LibSilo.getSopToken());
+        if (sopToken == address(0)) {
+            tokens = new address[](whitelistedTokens.length);
+        } else {
+            tokens = new address[](whitelistedTokens.length + 1);
+            tokens[tokens.length - 1] = sopToken;
+        }
+        for (uint256 i; i < whitelistedTokens.length; i++) {
+            tokens[i] = whitelistedTokens[i];
+        }
     }
 
     function getTokenBalances(
@@ -107,6 +121,9 @@ abstract contract Invariable {
                     s.f.harvestable.sub(s.f.harvested) + // unharvestable harvestable beans
                     s.fertilizedIndex.sub(s.fertilizedPaidIndex) + // unrinsed rinsable beans
                     s.u[C.UNRIPE_BEAN].balanceOfUnderlying; // unchopped underlying beans
+            }
+            if (s.sopWell != address(0) && tokens[i] == address(LibSilo.getSopToken())) {
+                entitlements[i] += s.plenty;
             }
             // NOTE: Asset entitlements too low due to a lack of accounting for internal balances. Balances need init.
             balances[i] = IERC20(tokens[i]).balanceOf(address(this));
