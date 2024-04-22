@@ -35,6 +35,32 @@ contract ConvertFacet is ReentrancyGuard {
     using SignedSafeMath for int256;
     using SafeCast for uint256;
     using LibSafeMath32 for uint32;
+    
+    struct AssetsRemovedConvert {
+        LibSilo.Removed active;
+        uint256[] bdvsRemoved;
+        uint256[] stalksRemoved;
+        uint256[] depositIds;
+    }
+
+    struct MultiCrateDepositData {
+        uint256 amountPerBdv;
+        uint256 totalAmount;
+        uint256 crateAmount;
+        uint256 depositedBdv;
+        int96 stem;
+        LibGerminate.Germinate germ;
+    }
+
+    struct PipelineConvertData {
+        uint256[] bdvsRemoved;
+        uint256[] grownStalks;
+        int256 startingDeltaB;
+        uint256 amountOut;
+        uint256 percentStalkPenalty; // 0 means no penalty, 1 means 100% penalty
+        int256 cappedDeltaB;
+        uint256 stalkPenaltyBdv;
+    }
 
     event Convert(
         address indexed account,
@@ -60,36 +86,6 @@ contract ConvertFacet is ReentrancyGuard {
         uint256 amount,
         uint256[] bdvs
     );
-
-
-    struct AssetsRemovedConvert {
-        LibSilo.Removed active;
-        uint256 tokensRemoved;
-        // uint256 stalkRemoved;
-        // uint256 bdvRemoved;
-        uint256[] bdvsRemoved;
-        uint256[] stalksRemoved;
-        uint256[] depositIds;
-    }
-
-    struct MultiCrateDepositData {
-        uint256 amountPerBdv;
-        uint256 totalAmount;
-        uint256 crateAmount;
-        uint256 depositedBdv;
-        int96 stem;
-        LibGerminate.Germinate germ;
-    }
-
-    struct PipelineConvertData {
-        uint256[] bdvsRemoved;
-        uint256[] grownStalks;
-        int256 startingDeltaB;
-        uint256 amountOut;
-        uint256 percentStalkPenalty; // 0 means no penalty, 1 means 100% penalty
-        int256 cappedDeltaB;
-        uint256 stalkPenaltyBdv;
-    }
 
     // TODO: when we updated to Solidity 0.8, use the native abs function
     // the verson of OpenZeppelin we're on does not support abs
