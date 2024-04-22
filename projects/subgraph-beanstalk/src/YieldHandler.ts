@@ -1,11 +1,11 @@
-import { Address, BigDecimal, BigInt } from "@graphprotocol/graph-ts";
+import { Address, BigDecimal, BigInt, log } from "@graphprotocol/graph-ts";
 import { Beanstalk } from "../generated/Season-Replanted/Beanstalk";
 import { BEANSTALK, BEAN_ERC20, FERTILIZER } from "../../subgraph-core/utils/Constants";
 import { ONE_BD, ONE_BI, toDecimal, ZERO_BD } from "../../subgraph-core/utils/Decimals";
 import { loadFertilizer } from "./utils/Fertilizer";
 import { loadFertilizerYield } from "./utils/FertilizerYield";
 import { loadSilo, loadSiloHourlySnapshot, loadSiloYield, loadTokenYield, loadWhitelistTokenSetting } from "./utils/SiloEntities";
-import { BigDecimal_max, BigInt_max, BigInt_sum } from "../../subgraph-core/utils/ArrayMath";
+import { BigDecimal_max, BigDecimal_sum, BigInt_max, BigInt_sum } from "../../subgraph-core/utils/ArrayMath";
 
 const ROLLING_24_WINDOW = 24;
 const ROLLING_7_DAY_WINDOW = 168;
@@ -172,8 +172,8 @@ export function calculateAPY(
  *
  * All of the array parameters should not be empty and be the same length.
  *
- * @param token Which token to calculate the apy for. corresponds to an index in the various array parameters.
- *        for Bean, provide -1 as token
+ * @param token Which gauge lp token to calculate the apy for. corresponds to an index in the various array parameters.
+ *        for Bean or other non-gauge token, provide -1
  * @param earnedBeans The average number of beans earned per season to use
  * @param gaugeLpPoints Array of gauge points assigned to each gauge lp. With a single lp, there will be one entry
  * @param gaugeLpDepositedBdv Array of deposited bdv corresponding to each gauge lp
@@ -183,6 +183,12 @@ export function calculateAPY(
  * @param siloDepositedBeanBdv The total number of Beans in the silo
  * @param siloStalk The total amount of stalk in the silo
  * @param catchUpRate Target number of hours for a deposit's grown stalk to catch up
+ * @param staticSeeds Provided when `token` does not have its seeds dynamically changed by gauge
+ *
+ * TODO: how to specify unripe here? only difference is zero seeds
+ *
+ * TODO: account for germinating in the first 2 seasons of deposit.
+ *  Also account for already germinating assets from other deposits
  *
  * Future work includes improvement of the `r` value simulation. This involves using Beanstalk's current state,
  * including L2SR and debt level (temperature cases). Also can be improved by tracking an expected ratio of
@@ -191,42 +197,42 @@ export function calculateAPY(
 export function calculateGaugeVAPY(
   token: i32,
   earnedBeans: BigDecimal,
-  gaugeLpPoints: BigInt[],
-  gaugeLpDepositedBdv: BigInt[],
-  nonGaugeBdv: BigInt,
-  gaugeLpOptimalPercentBdv: BigInt[],
+  gaugeLpPoints: BigDecimal[],
+  gaugeLpDepositedBdv: BigDecimal[],
+  nonGaugeBdv: BigDecimal,
+  gaugeLpOptimalPercentBdv: BigDecimal[],
   initialR: BigDecimal,
-  siloDepositedBeanBdv: BigInt,
-  siloStalk: BigInt,
-  catchUpRate: BigInt
-): void {
-  const BEANSTALK_STATE = null;
-
+  siloDepositedBeanBdv: BigDecimal,
+  siloStalk: BigDecimal,
+  catchUpRate: BigDecimal,
+  staticSeeds: BigDecimal | null = null
+): BigDecimal[] {
   // Current percentages allocations of each LP
   let currentPercentLpBdv: BigDecimal[] = [];
-  const sumLpBdv = BigInt_sum(gaugeLpDepositedBdv);
+  const sumLpBdv = BigDecimal_sum(gaugeLpDepositedBdv);
   for (let i = 0; i < gaugeLpDepositedBdv.length; ++i) {
-    currentPercentLpBdv.push(new BigDecimal(gaugeLpDepositedBdv[i]).div(new BigDecimal(sumLpBdv)));
+    currentPercentLpBdv.push(gaugeLpDepositedBdv[i].div(sumLpBdv));
   }
 
   // Current LP GP allocation per BDV
   let lpGpPerBdv: BigDecimal[] = [];
   // Copy this input
-  let gaugePointLp: BigInt[] = [];
+  let gaugePointLp: BigDecimal[] = [];
   for (let i = 0; i < gaugeLpPoints.length; ++i) {
-    lpGpPerBdv.push(new BigDecimal(gaugeLpPoints[i]).div(new BigDecimal(gaugeLpDepositedBdv[i])));
-    gaugePointLp.push(BigInt.fromString(gaugeLpPoints[i].toString()));
+    lpGpPerBdv.push(gaugeLpPoints[i].div(gaugeLpDepositedBdv[i]));
+    gaugePointLp.push(gaugeLpPoints[i]);
   }
 
   let r = initialR;
   let beanBdv = siloDepositedBeanBdv;
   let totalStalk = siloStalk;
-  let gaugeBdv = beanBdv.plus(BigInt_sum(gaugeLpDepositedBdv));
+  let gaugeBdv = beanBdv.plus(BigDecimal_sum(gaugeLpDepositedBdv));
   let totalBdv = gaugeBdv.plus(nonGaugeBdv);
-  let userBeans = ONE_BI;
-  let userStalk = ONE_BI;
+  let userBeans = ONE_BD;
+  let userStalk = ONE_BD;
   let largestLpGpPerBdv = BigDecimal_max(lpGpPerBdv);
 
+  const SEED_PRECISION = BigDecimal.fromString("10000");
   const ONE_YEAR = 8760;
   for (let i = 0; i < ONE_YEAR; ++i) {
     r = updateR(r, deltaRFromState(null));
@@ -235,11 +241,40 @@ export function calculateGaugeVAPY(
     if (gaugeLpPoints.length > 1) {
       for (let j = 0; j < gaugeLpDepositedBdv.length; ++i) {
         gaugePointLp[j] = updateGaugePoints(gaugePointLp[j], currentPercentLpBdv[j], gaugeLpOptimalPercentBdv[j]);
-        lpGpPerBdv[j] = new BigDecimal(gaugePointLp[j]).div(new BigDecimal(gaugeLpDepositedBdv[j]));
+        lpGpPerBdv[j] = gaugePointLp[j].div(gaugeLpDepositedBdv[j]);
       }
       largestLpGpPerBdv = BigDecimal_max(lpGpPerBdv);
     }
+
+    const beanGpPerBdv = largestLpGpPerBdv.times(rScaled);
+    // log.debug("bean gp per bdv {}", [beanGpPerBdv.toString()]);
+    const gpTotal = BigDecimal_sum(gaugePointLp).plus(beanGpPerBdv.times(beanBdv));
+    // log.debug("gpTotal {}", [gpTotal.toString()]);
+    const avgGsPerBdv = totalStalk.div(totalBdv).minus(ONE_BD);
+    // log.debug("avgGsPerBdv {}", [avgGsPerBdv.toString()]);
+    const gs = avgGsPerBdv.div(catchUpRate).times(gaugeBdv);
+    // log.debug("gs {}", [gs.toString()]);
+    const beanSeeds = gs.div(gpTotal).times(beanGpPerBdv).times(SEED_PRECISION);
+    // log.debug("beanSeeds {}", [beanSeeds.toString()]);
+    // const beanEthSeeds = // Set this equal to the number of seeds for the user deposited asset. No need to calculate for each lp
+
+    totalStalk = totalStalk.plus(gs).plus(earnedBeans);
+    // log.debug("totalStalk {}", [totalStalk.toString()]);
+    gaugeBdv = gaugeBdv.plus(earnedBeans);
+    totalBdv = totalBdv.plus(earnedBeans);
+    beanBdv = beanBdv.plus(earnedBeans);
+    const userBeanShare = earnedBeans.times(userStalk).div(totalStalk);
+    // log.debug("userBeanShare {}", [userBeanShare.toString()]);
+    userStalk = userStalk.plus(userBeanShare).plus(userBeans.times(beanSeeds).div(SEED_PRECISION));
+    // log.debug("userStalk {}", [userStalk.toString()]);
+    userBeans = userBeans.plus(userBeanShare);
+    // log.debug("userBeans {}", [userBeans.toString()]);
   }
+
+  const beanApy = userBeans.minus(ONE_BD).times(BigDecimal.fromString("100"));
+  const stalkApy = userStalk.minus(ONE_BD).times(BigDecimal.fromString("100"));
+
+  return [beanApy, stalkApy];
 }
 
 function updateFertAPY(t: i32, timestamp: BigInt, window: i32): void {
@@ -279,12 +314,12 @@ function scaleR(R: BigDecimal): BigDecimal {
   return BigDecimal.fromString("0.5").plus(BigDecimal.fromString("0.5").times(R));
 }
 
-function deltaRFromState(state: null): BigDecimal {
-  return BigDecimal.fromString("-0.01");
+function deltaRFromState(state: BigInt | null): BigDecimal {
+  return BigDecimal.fromString("0.01"); // TODO: change to negative
 }
 
 // TODO: implement the various gauge point functions and choose which one to call based on the stored selector
 // see {GaugePointFacet.defaultGaugePointFunction} for implementation.
-function updateGaugePoints(gaugePoints: BigInt, currentPercent: BigDecimal, optimalPercent: BigInt): BigInt {
-  return BigInt.fromU32(100);
+function updateGaugePoints(gaugePoints: BigDecimal, currentPercent: BigDecimal, optimalPercent: BigDecimal): BigDecimal {
+  return BigDecimal.fromString("100");
 }
