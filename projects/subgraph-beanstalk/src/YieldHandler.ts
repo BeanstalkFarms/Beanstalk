@@ -254,7 +254,7 @@ export function calculateGaugeVAPYs(
   const SEED_PRECISION = BigDecimal.fromString("10000");
   const ONE_YEAR = 8760;
   for (let i = 0; i < ONE_YEAR; ++i) {
-    r = updateR(r, deltaRFromState(null));
+    r = updateR(r, deltaRFromState(earnedBeans));
     const rScaled = scaleR(r);
 
     // Add germinating bdv to actual bdv in the first 2 simulated seasons
@@ -355,7 +355,12 @@ function scaleR(R: BigDecimal): BigDecimal {
   return BigDecimal.fromString("0.5").plus(BigDecimal.fromString("0.5").times(R));
 }
 
-function deltaRFromState(state: BigInt | null): BigDecimal {
+// For now we return an increasing R value only when there are no beans minted over the period.
+// In the future this needs to take into account beanstalk state and the frequency of how many seasons have mints
+function deltaRFromState(earnedBeans: BigDecimal): BigDecimal {
+  if (earnedBeans == ZERO_BD) {
+    return BigDecimal.fromString("0.01");
+  }
   return BigDecimal.fromString("-0.01");
 }
 
