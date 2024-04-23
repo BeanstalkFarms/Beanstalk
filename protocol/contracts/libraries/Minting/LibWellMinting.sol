@@ -257,46 +257,41 @@ library LibWellMinting {
         address pump = pumps[0].target;
 
         // well address , data[]
-        try ICappedReservesPump(pump).readCappedReserves(well, new bytes(0)) returns (uint[] memory instReserves) {
-            // Get well tokens
-            IERC20[] memory tokens = IWell(well).tokens();
+        uint256[] memory instReserves = ICappedReservesPump(pump).readCappedReserves(well, pumps[0].data);
+        // Get well tokens
+        IERC20[] memory tokens = IWell(well).tokens();
 
-            // Get ratios and bean index
-            (
-                uint256[] memory ratios,
-                uint256 beanIndex,
-                bool success
-            ) = LibWell.getRatiosAndBeanIndex(tokens);
+        // Get ratios and bean index
+        (
+            uint256[] memory ratios,
+            uint256 beanIndex,
+            bool success
+        ) = LibWell.getRatiosAndBeanIndex(tokens);
 
-            // HANDLE FAILURE
-            // If the Bean reserve is less than the minimum, the minting oracle should be considered off.
-            if (instReserves[beanIndex] < C.WELL_MINIMUM_BEAN_BALANCE) {
-                return (0, new uint256[](0), new uint256[](0));
-            }
-
-            // If the USD Oracle oracle call fails, the minting oracle should be considered off.
-            if (!success) {
-                return (0, instReserves, new uint256[](0));
-            }
-
-            // Get well function
-            Call memory wellFunction = IWell(well).wellFunction();
-
-            // Delta B is the difference between the target Bean reserve at the peg price
-            // and the instantaneous Bean balance in the Well.
-            int256 deltaB = int256(IBeanstalkWellFunction(wellFunction.target).calcReserveAtRatioSwap(
-                instReserves,
-                beanIndex,
-                ratios,
-                wellFunction.data
-            )).sub(int256(instReserves[beanIndex]));
-
-            return (deltaB, instReserves, ratios);
-        }
-        catch {
-            // TODO: revert here?
+        // HANDLE FAILURE
+        // If the Bean reserve is less than the minimum, the minting oracle should be considered off.
+        if (instReserves[beanIndex] < C.WELL_MINIMUM_BEAN_BALANCE) {
             return (0, new uint256[](0), new uint256[](0));
         }
+
+        // If the USD Oracle oracle call fails, the minting oracle should be considered off.
+        if (!success) {
+            return (0, instReserves, new uint256[](0));
+        }
+
+        // Get well function
+        Call memory wellFunction = IWell(well).wellFunction();
+
+        // Delta B is the difference between the target Bean reserve at the peg price
+        // and the instantaneous Bean balance in the Well.
+        int256 deltaB = int256(IBeanstalkWellFunction(wellFunction.target).calcReserveAtRatioSwap(
+            instReserves,
+            beanIndex,
+            ratios,
+            wellFunction.data
+        )).sub(int256(instReserves[beanIndex]));
+
+        return (deltaB, instReserves, ratios);
     }
 
     // Calculates overall deltaB, used by convert for stalk penalty purposes
