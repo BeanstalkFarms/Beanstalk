@@ -173,8 +173,8 @@ export function calculateAPY(
  * All of the array parameters should not be empty and be the same length, with one entry for every gauge lp deposit type
  *
  * @param token Which gauge lp token to calculate the apy for. corresponds to an index in the various array parameters.
- *        for Bean or other non-gauge token, provide -1
- * @param earnedBeans The average number of beans earned per season to use
+ *        for Bean or other non-gauge token, provide -1. For Unripe, provide -2
+ * @param earnedBeans The average number of beans earned per season to use in the simulation
  * @param gaugeLpPoints Array of gauge points assigned to each gauge lp. With a single lp, there will be one entry
  * @param gaugeLpDepositedBdv Array of deposited bdv corresponding to each gauge lp
  * @param nonGaugeDepositedBdv Amount of (whitelisted) deposited bdv that is not tracked by the gauge system
