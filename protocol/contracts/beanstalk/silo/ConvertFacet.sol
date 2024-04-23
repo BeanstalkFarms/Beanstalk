@@ -322,14 +322,14 @@ contract ConvertFacet is ReentrancyGuard {
      */
     function getCombinedDeltaBForTokens(address inputToken, address outputToken) internal view
         returns (int256 combinedDeltaBinsta) {
-        combinedDeltaBinsta = getDeltaBIfNotBeanInsta(inputToken).add(getDeltaBIfNotBeanInsta(outputToken));
+        combinedDeltaBinsta = getInstaDeltaB(inputToken).add(getInstaDeltaB(outputToken));
     }
 
     /**
      * @param token The token to get the deltaB of.
      * @return instDeltaB The deltaB of the token, for Bean it returns 0.
      */
-    function getDeltaBIfNotBeanInsta(address token) internal view returns (int256 instDeltaB) {
+    function getInstaDeltaB(address token) internal view returns (int256 instDeltaB) {
         if (token == address(C.bean())) {
             return 0;
         }
