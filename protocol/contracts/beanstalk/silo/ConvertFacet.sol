@@ -187,13 +187,11 @@ contract ConvertFacet is ReentrancyGuard {
         pipeData.startingDeltaB = getCombinedDeltaBForTokens(inputToken, outputToken);
 
         IERC20(inputToken).transfer(C.PIPELINE, maxTokens);
-        pipeData.amountOut = executeAdvancedFarmCalls(advancedFarmCalls);
+        executeAdvancedFarmCalls(advancedFarmCalls);
 
-        require(pipeData.amountOut > 0, "Convert: Final pipe call returned 0");
-        
         // user MUST leave final assets in pipeline, allowing us to verify that the farm has been called successfully.
         // this also let's us know how many assets to attempt to pull out of the final type
-        transferTokensFromPipeline(outputToken, pipeData.amountOut);
+        pipeData.amountOut = transferTokensFromPipeline(outputToken);
 
 
         // We want the capped deltaB from all the wells, this is what sets up/limits the overall convert power for the block
@@ -380,33 +378,32 @@ contract ConvertFacet is ReentrancyGuard {
 
     /**
      * @param calls The advanced farm calls to execute.
-     * @return amountOut The amount of tokens returned by the final farm call.
      */
-    function executeAdvancedFarmCalls(AdvancedFarmCall[] calldata calls)
-        internal
-        returns (uint256 amountOut) {
+    function executeAdvancedFarmCalls(AdvancedFarmCall[] calldata calls) internal { 
         bytes[] memory results;
         results = new bytes[](calls.length);
         for (uint256 i = 0; i < calls.length; ++i) {
             require(calls[i].callData.length != 0, "Convert: empty AdvancedFarmCall");
             results[i] = LibFarm._advancedFarmMem(calls[i], results);
         }
-        // grab very last 32 bytes
-        amountOut = abi.decode(LibBytes.sliceFrom(results[results.length-1], results[results.length-1].length-32), (uint256));
     }
 
     /**
+     * @notice Determines input token amount left in pipeline and returns to Beanstalk
      * @param tokenOut The token to pull out of pipeline
-     * @param userReturnedConvertValue The amount of tokens to pull out
      */
-    function transferTokensFromPipeline(address tokenOut, uint256 userReturnedConvertValue) private {
+    function transferTokensFromPipeline(address tokenOut) private returns (uint256 amountOut) {
+        amountOut = IERC20(tokenOut).balanceOf(C.PIPELINE);
+
+        require(amountOut > 0, "Convert: No output tokens left in pipeline");
+
         // todo investigate not using the entire interface but just using the function selector here
         PipeCall memory p;
         p.target = address(tokenOut); //contract that pipeline will call
         p.data = abi.encodeWithSignature(
             "transfer(address,uint256)",
             address(this),
-            userReturnedConvertValue
+            amountOut
         );
 
         //todo: see if we can find a way to spit out a custom error saying it failed here, rather than a generic ERC20 revert

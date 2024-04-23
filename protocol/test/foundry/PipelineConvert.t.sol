@@ -522,7 +522,8 @@ contract PipelineConvertTest is TestHelper {
     }
 
     // test that leaves less ERC20 in the pipeline than is returned by the final function
-    function testNotEnoughTokensLeftInPipeline(uint256 amount) public {
+    // no longer necessary since we now check how many tokens were left in pipeline, leaving here in case it can be repurposed
+    /*function testNotEnoughTokensLeftInPipeline(uint256 amount) public {
         amount = bound(amount, 1000e6, 1000e6);
         int96 stem = beanToLPDepositSetup(amount, users[1]);
         int96[] memory stems = new int96[](1);
@@ -549,7 +550,9 @@ contract PipelineConvertTest is TestHelper {
         AdvancedFarmCall[] memory farmCalls = new AdvancedFarmCall[](1);
         AdvancedFarmCall[] memory beanToLPFarmCalls = createBeanToLPFarmCalls(amount, extraPipeCalls);
         farmCalls[0] = beanToLPFarmCalls[0]; // Assign the first element of the returned array
+
         vm.expectRevert("ERC20: transfer amount exceeds balance");
+
         vm.prank(users[1]);
         convert.pipelineConvert(
             C.BEAN, // input token
@@ -558,7 +561,7 @@ contract PipelineConvertTest is TestHelper {
             C.BEAN_ETH_WELL, // token out
             farmCalls // farmData
         );
-    }
+    }*/
 
     function testBeanToBeanConvert(uint256 amount) public {
         amount = bound(amount, 1000e6, 1000e6);
@@ -722,7 +725,7 @@ contract PipelineConvertTest is TestHelper {
 
         AdvancedFarmCall[] memory farmCalls = createAdvancedFarmCallsFromAdvancedPipeCalls(extraPipeCalls);
 
-        vm.expectRevert("Convert: Final pipe call returned 0");
+        vm.expectRevert("Convert: No output tokens left in pipeline");
         vm.prank(users[1]);
         convert.pipelineConvert(
             C.BEAN, // input token
