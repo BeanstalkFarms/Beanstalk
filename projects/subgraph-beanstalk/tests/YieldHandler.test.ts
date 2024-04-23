@@ -77,6 +77,10 @@ describe("APY Calculations", () => {
         log.info(`stalk apy: {}`, [(apy[i][1] as BigDecimal).toString()]);
       }
 
+      // Bean apy
+      assert.assertTrue(apy[0][0].equals(BigDecimal.fromString("1.5511649479957717076555093556872")));
+      assert.assertTrue(apy[0][1].equals(BigDecimal.fromString("433.6788615349604685422129945937972")));
+
       // Calculated separately - 8750ms
       // using unripe bdv 19556945+24417908
       // for (let i = -1; i <= 0; ++i) {
@@ -181,14 +185,26 @@ describe("APY Calculations", () => {
       ];
       siloYield.save();
 
-      /// Actual calculation here
+      /// Actual entity-based calculation here
       YieldHandler.updateSiloVAPYs(20000, ZERO_BI, 720);
 
       const beanResult = loadTokenYield(BEAN_ERC20, 20000, 720);
       log.info("bean apy {}", [beanResult.beanAPY.toString()]);
-      log.info("stalk apy {}", [beanResult.beanAPY.toString()]);
+      log.info("stalk apy {}", [beanResult.stalkAPY.toString()]);
       assert.assertTrue(beanResult.beanAPY.equals(BigDecimal.fromString("1.5511649479957717076555093556872")));
       assert.assertTrue(beanResult.stalkAPY.equals(BigDecimal.fromString("433.6788615349604685422129945937972")));
+
+      const wethResult = loadTokenYield(BEAN_WETH_CP2_WELL, 20000, 720);
+      log.info("bean apy {}", [wethResult.beanAPY.toString()]);
+      log.info("stalk apy {}", [wethResult.stalkAPY.toString()]);
+      assert.assertTrue(wethResult.beanAPY.equals(BigDecimal.fromString("2.5875980281221788705641371871859")));
+      assert.assertTrue(wethResult.stalkAPY.equals(BigDecimal.fromString("865.2659562348489010480536951671097")));
+
+      const zeroGsResult = loadTokenYield(UNRIPE_BEAN, 20000, 720);
+      log.info("bean apy {}", [zeroGsResult.beanAPY.toString()]);
+      log.info("stalk apy {}", [zeroGsResult.stalkAPY.toString()]);
+      assert.assertTrue(zeroGsResult.beanAPY.equals(BigDecimal.fromString("0.5126032843732415644388075671834")));
+      assert.assertTrue(zeroGsResult.stalkAPY.equals(BigDecimal.fromString("1.6690960621226467247354746725237")));
     });
   });
 });
