@@ -105,12 +105,6 @@ library LibWellMinting {
     function initializeOracle(address well) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
 
-        // Given Multi Flow Pump V 1.0 isn't resistant to large changes in balance,
-        // minting in the Bean:Eth Well needs to be turned off upon migration.
-        if (!checkShouldTurnOnMinting(well)) {
-            return;
-        }
-
         // If pump has not been initialized for `well`, `readCumulativeReserves` will revert. 
         // Need to handle failure gracefully, so Sunrise does not revert.
         Call[] memory pumps = IWell(well).pumps();
@@ -302,17 +296,5 @@ library LibWellMinting {
             (int256 cappedDeltaB, , ) = cappedReservesDeltaB(tokens[i]);
             deltaB = deltaB.add(cappedDeltaB);
         }
-    }
-
-    
-    // Remove in next BIP.
-    function checkShouldTurnOnMinting(address well) internal view returns (bool) {
-        AppStorage storage s = LibAppStorage.diamondStorage();
-        if (well == C.BEAN_ETH_WELL) {
-            if (s.season.current < s.season.beanEthStartMintingSeason) {
-                return false;
-            }
-        }
-        return true;
     }
 }
