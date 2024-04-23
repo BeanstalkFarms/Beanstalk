@@ -299,7 +299,7 @@ contract ConvertFacet is ReentrancyGuard {
             // all convert power for this block is used up
             s.convertCapacity[block.number].convertCapacity = 0;
 
-            return penalty+crossoverAmount; // should this be capped at bdvConverted?
+            return penalty.add(crossoverAmount); // should this be capped at bdvConverted?
         }
     }
 
