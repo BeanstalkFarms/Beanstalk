@@ -58,7 +58,6 @@ contract SiloFacet is TokenSilo {
         mowSender(token) 
         returns (uint256 amount, uint256 _bdv, int96 stem)
     {
-        console.log('SiloFacet deposit');
         amount = LibTransfer.receiveToken(
             IERC20(token),
             _amount,
