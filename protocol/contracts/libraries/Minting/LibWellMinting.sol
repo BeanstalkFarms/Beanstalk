@@ -225,7 +225,7 @@ library LibWellMinting {
         (
             uint256[] memory ratios,
             uint256 beanIndex,
-        ) = LibWell.getRatiosAndBeanIndex(tokens, block.timestamp.sub(s.season.timestamp));
+        ) = LibWell.getRatiosAndBeanIndex(tokens, 0);
 
         // Converts cannot be performed, if the Bean reserve is less than the minimum
         if (reserves[beanIndex] < C.WELL_MINIMUM_BEAN_BALANCE) {
