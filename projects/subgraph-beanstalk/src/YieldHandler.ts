@@ -15,6 +15,7 @@ import {
 import { BigDecimal_max, BigDecimal_sum, BigInt_max, BigInt_sum } from "../../subgraph-core/utils/ArrayMath";
 import { getGerminatingBdvs, tryLoadBothGerminating } from "./utils/Germinating";
 import { getCurrentSeason } from "./utils/Season";
+import { WhitelistTokenSetting } from "../generated/schema";
 
 const ROLLING_24_WINDOW = 24;
 const ROLLING_7_DAY_WINDOW = 168;
@@ -80,9 +81,19 @@ function updateWindowEMA(t: i32, timestamp: BigInt, window: i32): void {
   siloYield.createdAt = timestamp;
   siloYield.save();
 
-  // Retrieve all current whitelist settings, and determine whether gauge is live or not
-  let whitelistSettings = [];
-  let gaugeSettings = [];
+  updateSiloVAPYs(t, timestamp, window);
+  updateFertAPY(t, timestamp, window);
+}
+
+export function updateSiloVAPYs(t: i32, timestamp: BigInt, window: i32): void {
+  let silo = loadSilo(BEANSTALK);
+  let siloYield = loadSiloYield(t, window);
+  const currentEMA = siloYield.beansPerSeasonEMA;
+
+  // Retrieve all current whitelist settings, and determine whether gauge is live or not.
+  // Indices in whitelistSettings, gaugeSettings, and apys arrays refer to the same token.
+  let whitelistSettings: WhitelistTokenSetting[] = [];
+  let gaugeSettings: Array<WhitelistTokenSetting | null> = [];
   let isGaugeLive = false;
   for (let i = 0; i < siloYield.whitelistedTokens.length; ++i) {
     let token = Address.fromString(siloYield.whitelistedTokens[i]);
@@ -121,7 +132,7 @@ function updateWindowEMA(t: i32, timestamp: BigInt, window: i32): void {
     let nonGaugeDepositedBdv = ZERO_BD;
     let depositedBeanBdv = ZERO_BD;
 
-    let initialR = toDecimal(silo.beanToMaxLpGpPerBdvRatio!, 18);
+    let initialR = toDecimal(silo.beanToMaxLpGpPerBdvRatio!, 20);
     let siloStalk = toDecimal(silo.stalk.plus(silo.plantableStalk));
 
     let germinatingBeanBdv: BigDecimal[] = [];
@@ -132,29 +143,30 @@ function updateWindowEMA(t: i32, timestamp: BigInt, window: i32): void {
 
     for (let i = 0; i < whitelistSettings.length; ++i) {
       // Get the total deposited bdv of this asset
-      const siloAsset = loadSiloAsset(BEANSTALK, gaugeSettings[i]!.id);
+      const siloAsset = loadSiloAsset(BEANSTALK, Address.fromBytes(whitelistSettings[i].id));
       const depositedBdv = toDecimal(siloAsset.depositedBDV);
 
-      const germinating = getGerminatingBdvs(whitelistSettings[i].id);
+      const germinating = getGerminatingBdvs(Address.fromBytes(whitelistSettings[i].id));
 
       if (gaugeSettings[i] !== null) {
-        if (gaugeSettings[i]!.id != BEAN_ERC20) {
-          tokens.push(gaugeLpPoints.length);
-          gaugeLpPoints.push(toDecimal(gaugeSettings[i]!.gaugePoints!, 18));
-          gaugeLpOptimalPercentBdv.push(toDecimal(gaugeSettings[i]!.optimalPercentDepositedBdv!));
-          gaugeLpDepositedBdv.push(depositedBdv);
-          germinatingGaugeLpBdv.push(germinating);
-        } else {
+        tokens.push(gaugeLpPoints.length);
+        gaugeLpPoints.push(toDecimal(gaugeSettings[i]!.gaugePoints!, 18));
+        gaugeLpOptimalPercentBdv.push(toDecimal(gaugeSettings[i]!.optimalPercentDepositedBdv!));
+        gaugeLpDepositedBdv.push(depositedBdv);
+        germinatingGaugeLpBdv.push(germinating);
+        staticSeeds.push(null);
+      } else {
+        if (whitelistSettings[i].id == BEAN_ERC20) {
           tokens.push(-1);
           depositedBeanBdv = depositedBdv;
           germinatingBeanBdv = germinating;
+          staticSeeds.push(null);
+        } else {
+          tokens.push(-2);
+          nonGaugeDepositedBdv = nonGaugeDepositedBdv.plus(depositedBdv);
+          germinatingNonGaugeBdv = [germinatingNonGaugeBdv[0].plus(germinating[0]), germinatingNonGaugeBdv[1].plus(germinating[1])];
+          staticSeeds.push(toDecimal(whitelistSettings[i].stalkEarnedPerSeason));
         }
-        staticSeeds.push(null);
-      } else {
-        tokens.push(-2);
-        nonGaugeDepositedBdv = nonGaugeDepositedBdv.plus(depositedBdv);
-        germinatingNonGaugeBdv = [germinatingNonGaugeBdv[0].plus(germinating[0]), germinatingNonGaugeBdv[1].plus(germinating[1])];
-        staticSeeds.push(toDecimal(whitelistSettings[i].stalkEarnedPerSeason));
       }
     }
 
@@ -170,7 +182,7 @@ function updateWindowEMA(t: i32, timestamp: BigInt, window: i32): void {
       depositedBeanBdv,
       siloStalk,
       CATCH_UP_RATE,
-      getCurrentSeason(BEANSTALK),
+      BigInt.fromU32(getCurrentSeason(BEANSTALK)),
       germinatingBeanBdv,
       germinatingGaugeLpBdv,
       germinatingNonGaugeBdv,
@@ -180,14 +192,12 @@ function updateWindowEMA(t: i32, timestamp: BigInt, window: i32): void {
 
   // Save the apys
   for (let i = 0; i < apys.length; ++i) {
-    let tokenYield = loadTokenYield(whitelistSettings[i].id, t, window);
+    let tokenYield = loadTokenYield(Address.fromBytes(whitelistSettings[i].id), t, window);
     tokenYield.beanAPY = apys[i][0];
     tokenYield.stalkAPY = apys[i][1];
     tokenYield.createdAt = timestamp;
     tokenYield.save();
   }
-
-  updateFertAPY(t, timestamp, window);
 }
 
 /**
@@ -204,7 +214,7 @@ export function calculateAPYPreGauge(
   seedsPerBeanBDV: BigDecimal,
   stalk: BigInt,
   seeds: BigInt
-): StaticArray<BigDecimal> {
+): BigDecimal[] {
   // Initialize sequence
   let C = toDecimal(seeds); // Init: Total Seeds
   let K = toDecimal(stalk, 10); // Init: Total Stalk
@@ -254,11 +264,10 @@ export function calculateAPYPreGauge(
   // b_start = 1
   // b       = 1.1
   // b.minus(b_start) = 0.1 = 10% APY
-  let apys = new StaticArray<BigDecimal>(2);
-  apys[0] = b.minus(b_start); // beanAPY
-  apys[1] = k.minus(k_start); // stalkAPY
+  let beanApy = b.minus(b_start); // beanAPY
+  let stalkApy = k.minus(k_start); // stalkAPY
 
-  return apys;
+  return [beanApy, stalkApy];
 }
 
 /**

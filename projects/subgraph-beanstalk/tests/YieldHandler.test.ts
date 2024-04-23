@@ -1,7 +1,10 @@
-import { BigInt, BigDecimal, log } from "@graphprotocol/graph-ts";
+import { BigInt, BigDecimal, log, Bytes } from "@graphprotocol/graph-ts";
 import { afterEach, assert, clearStore, describe, test } from "matchstick-as/assembly/index";
 import * as YieldHandler from "../src/YieldHandler";
 import { ZERO_BD, ZERO_BI } from "../../subgraph-core/utils/Decimals";
+import { loadSilo, loadSiloAsset, loadSiloYield, loadTokenYield, loadWhitelistTokenSetting } from "../src/utils/SiloEntities";
+import { BEAN_ERC20, BEAN_WETH_CP2_WELL, BEANSTALK, UNRIPE_BEAN, UNRIPE_BEAN_3CRV } from "../../subgraph-core/utils/Constants";
+import { setSeason } from "./event-mocking/Season";
 
 describe("APY Calculations", () => {
   describe("Pre-Gauge", () => {
@@ -48,7 +51,7 @@ describe("APY Calculations", () => {
   });
 
   describe("With Seed Gauge", () => {
-    test("Bean yield", () => {
+    test("Token yields - direct calculation", () => {
       // Calculated in a single call - 5000 ms
       const apy = YieldHandler.calculateGaugeVAPYs(
         [-1, 0, -2],
@@ -118,6 +121,72 @@ describe("APY Calculations", () => {
 
       // log.info(`bean apy: {}`, [(apyUnripe[0][0] as BigDecimal).toString()]);
       // log.info(`stalk apy: {}`, [(apyUnripe[0][1] as BigDecimal).toString()]);
+    });
+
+    test("Token yields - entity calculation", () => {
+      // Set up the required entities for the calculation to have access to the required values
+      let silo = loadSilo(BEANSTALK);
+      silo.stalk = BigInt.fromString("161540879000000");
+      silo.beanToMaxLpGpPerBdvRatio = BigInt.fromString("33000000000000000000");
+      silo.save();
+
+      setSeason(20000);
+
+      /// Whitelist/gauge/seed settings
+      let beanWhitelistSettings = loadWhitelistTokenSetting(BEAN_ERC20);
+      // Nothing needs to be set for bean
+      beanWhitelistSettings.save();
+
+      let beanEthWhitelistSettings = loadWhitelistTokenSetting(BEAN_WETH_CP2_WELL);
+      beanEthWhitelistSettings.gpSelector = Bytes.fromHexString("0x12345678");
+      beanEthWhitelistSettings.lwSelector = Bytes.fromHexString("0x12345678");
+      beanEthWhitelistSettings.optimalPercentDepositedBdv = BigInt.fromString("100000000");
+      beanWhitelistSettings.save();
+
+      let urbeanWhitelistSettings = loadWhitelistTokenSetting(UNRIPE_BEAN);
+      urbeanWhitelistSettings.stalkEarnedPerSeason = ZERO_BI;
+      urbeanWhitelistSettings.save();
+
+      let urlpWhitelistSettings = loadWhitelistTokenSetting(UNRIPE_BEAN_3CRV);
+      urlpWhitelistSettings.stalkEarnedPerSeason = ZERO_BI;
+      urlpWhitelistSettings.save();
+
+      /// Deposited BDVs
+      let beanSiloAsset = loadSiloAsset(BEANSTALK, BEAN_ERC20);
+      beanSiloAsset.depositedBDV = BigInt.fromString("2798474000000");
+      beanSiloAsset.save();
+
+      let beanEthSiloAsset = loadSiloAsset(BEANSTALK, BEAN_WETH_CP2_WELL);
+      beanEthSiloAsset.depositedBDV = BigInt.fromString("899088000000");
+      beanEthSiloAsset.save();
+
+      let urbeanSiloAsset = loadSiloAsset(BEANSTALK, UNRIPE_BEAN);
+      urbeanSiloAsset.depositedBDV = BigInt.fromString("19556945000000");
+      urbeanSiloAsset.save();
+
+      let urlpSiloAsset = loadSiloAsset(BEANSTALK, UNRIPE_BEAN_3CRV);
+      urlpSiloAsset.depositedBDV = BigInt.fromString("24417908000000");
+      urlpSiloAsset.save();
+
+      /// EMA, whitelisted tokens
+      let siloYield = loadSiloYield(20000, 720);
+      siloYield.beansPerSeasonEMA = BigDecimal.fromString("100");
+      siloYield.whitelistedTokens = [
+        BEAN_ERC20.toHexString(),
+        BEAN_WETH_CP2_WELL.toHexString(),
+        UNRIPE_BEAN.toHexString(),
+        UNRIPE_BEAN_3CRV.toHexString()
+      ];
+      siloYield.save();
+
+      /// Actual calculation here
+      YieldHandler.updateSiloVAPYs(20000, ZERO_BI, 720);
+
+      const beanResult = loadTokenYield(BEAN_ERC20, 20000, 720);
+      log.info("bean apy {}", [beanResult.beanAPY.toString()]);
+      log.info("stalk apy {}", [beanResult.beanAPY.toString()]);
+      assert.assertTrue(beanResult.beanAPY.equals(BigDecimal.fromString("1.5511649479957717076555093556872")));
+      assert.assertTrue(beanResult.stalkAPY.equals(BigDecimal.fromString("433.6788615349604685422129945937972")));
     });
   });
 });
