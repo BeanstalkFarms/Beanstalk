@@ -206,10 +206,10 @@ library LibWellMinting {
     /**
      * @dev Calculates the instantaneous delta B for a given Well address.
      * @param well The address of the Well.
-     * @return deltaB The instantaneous delta B balance since the last `capture` call.
+     * @return The instantaneous delta B balance since the last `capture` call.
      */
     function instantaneousDeltaB(address well) internal view returns
-        (int256 deltaB) {
+        (int256) {
         AppStorage storage s = LibAppStorage.diamondStorage();
         IERC20[] memory tokens = IWell(well).tokens();
         uint256[] memory reserves = IWell(well).getReserves();
@@ -226,14 +226,12 @@ library LibWellMinting {
             return (0);
         }
 
-        deltaB = int256(IBeanstalkWellFunction(wellFunction.target).calcReserveAtRatioSwap(
+        return int256(IBeanstalkWellFunction(wellFunction.target).calcReserveAtRatioSwap(
             reserves,
             beanIndex,
             ratios,
             wellFunction.data
         )).sub(int256(reserves[beanIndex]));
-
-        return deltaB;
     }
 
     
