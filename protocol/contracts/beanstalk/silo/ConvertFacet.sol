@@ -304,11 +304,10 @@ contract ConvertFacet is ReentrancyGuard {
     }
 
     /**
-     * @notice Returns currently availalbe convert power for this block
+     * @notice Returns currently available convert power for this block
      * @return convertCapacity The amount of convert power available for this block
      */
     function getConvertCapacity() public view returns (uint256) {
-        AppStorage storage s = LibAppStorage.diamondStorage();
         if (s.convertCapacity[block.number].hasConvertHappenedThisBlock == false) {
             // if convert power has not been initialized for this block, use the overall deltaB
             return abs(LibWellMinting.overallDeltaB());
