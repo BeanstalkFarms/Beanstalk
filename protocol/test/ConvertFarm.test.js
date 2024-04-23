@@ -61,7 +61,7 @@ describe('Farm Convert', function () {
       [to6('1000000'), to18('1000')]
     );
 
-    // initalize pumps values for the bean/wsteth well, as overallDeltaB() queries all lp wells.
+    // initalize pumps values for the bean/wsteth well, as overallCappedDeltaB() queries all lp wells.
     console.log((await this.fakeWell.pumps())[0].target);
     this.pump = await ethers.getContractAt('MockPump', (await this.fakeWell.pumps())[0].target);
     await this.pump.updateNoBytes(BEAN_WSTETH_WELL, ['0', '0']);

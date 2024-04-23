@@ -715,7 +715,7 @@ interface IMockFBeanstalk {
         pure
         returns (bytes4);
     function onERC1155Received(address, address, uint256, uint256, bytes memory) external pure returns (bytes4);
-    function overallDeltaB() external view returns (int256 deltaB);
+    function overallCappedDeltaB() external view returns (int256 deltaB);
     function owner() external view returns (address owner_);
     function ownerCandidate() external view returns (address ownerCandidate_);
     function pause() external payable;

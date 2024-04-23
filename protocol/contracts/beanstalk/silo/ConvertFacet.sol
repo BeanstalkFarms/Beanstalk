@@ -192,7 +192,7 @@ contract ConvertFacet is ReentrancyGuard {
 
         // We want the capped deltaB from all the wells, this is what sets up/limits the overall convert power for the block
         // Converts that either cross peg, OR occur when convert power has been exhausted, will be stalk penalized
-        pipeData.cappedDeltaB = LibWellMinting.overallDeltaB();
+        pipeData.cappedDeltaB = LibWellMinting.overallCappedDeltaB();
 
 
         pipeData.endingCombinedDeltaB = getCombinedDeltaBForTokens(inputToken, outputToken);
@@ -310,7 +310,7 @@ contract ConvertFacet is ReentrancyGuard {
     function getConvertCapacity() public view returns (uint256) {
         if (s.convertCapacity[block.number].hasConvertHappenedThisBlock == false) {
             // if convert power has not been initialized for this block, use the overall deltaB
-            return abs(LibWellMinting.overallDeltaB());
+            return abs(LibWellMinting.overallCappedDeltaB());
         }
         return s.convertCapacity[block.number].convertCapacity;
     }

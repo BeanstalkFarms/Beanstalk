@@ -281,8 +281,8 @@ contract PipelineConvertTest is TestHelper {
         depositLPAndPassGermination(amount);
         mineBlockAndUpdatePumps();
 
-        int256 overallDeltaB = convertGetters.overallDeltaB();
-        assertTrue(overallDeltaB != 0);
+        int256 overallCappedDeltaB = convertGetters.overallCappedDeltaB();
+        assertTrue(overallCappedDeltaB != 0);
     }
 
 

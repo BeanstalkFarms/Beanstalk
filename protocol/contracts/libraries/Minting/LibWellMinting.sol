@@ -289,7 +289,7 @@ library LibWellMinting {
     }
 
     // Calculates overall deltaB, used by convert for stalk penalty purposes
-    function overallDeltaB() internal view returns (int256 deltaB) {
+    function overallCappedDeltaB() internal view returns (int256 deltaB) {
         address[] memory tokens = LibWhitelistedTokens.getWhitelistedWellLpTokens();
         for (uint256 i = 0; i < tokens.length; i++) {
             if (tokens[i] == C.BEAN) continue;
