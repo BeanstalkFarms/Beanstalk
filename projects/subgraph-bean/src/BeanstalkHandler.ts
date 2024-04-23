@@ -1,12 +1,25 @@
-import { BigInt } from "@graphprotocol/graph-ts";
+import { Address, BigInt } from "@graphprotocol/graph-ts";
 import { Sunrise } from "../generated/Beanstalk/Beanstalk";
-import { getBeanTokenAddress, loadBean, updateBeanSeason, updateBeanValues } from "./utils/Bean";
-import { loadOrCreatePool, updatePoolPrice, updatePoolSeason, updatePoolValues } from "./utils/Pool";
+import { getBeanTokenAddress, loadBean, updateBeanSeason, updateBeanTwa, updateBeanValues } from "./utils/Bean";
+import { loadOrCreatePool, setPoolTwaDeltaB, updatePoolPrice, updatePoolSeason, updatePoolValues } from "./utils/Pool";
 import { BeanstalkPrice } from "../generated/Beanstalk/BeanstalkPrice";
-import { BEANSTALK_PRICE, BEAN_3CRV, BEAN_ERC20, BEAN_WETH_CP2_WELL, CURVE_PRICE } from "../../subgraph-core/utils/Constants";
+import {
+  BEANSTALK_PRICE,
+  BEAN_3CRV,
+  BEAN_ERC20,
+  BEAN_ERC20_V1,
+  BEAN_WETH_CP2_WELL,
+  BEAN_WETH_V1,
+  CURVE_PRICE
+} from "../../subgraph-core/utils/Constants";
 import { ZERO_BD, ZERO_BI, toDecimal } from "../../subgraph-core/utils/Decimals";
 import { CurvePrice } from "../generated/Beanstalk/CurvePrice";
 import { checkBeanCross } from "./utils/Cross";
+import { calcUniswapV2Inst, setUniswapV2Twa } from "./utils/price/UniswapPrice";
+import { calcCurveInst, setCurveTwa } from "./utils/price/CurvePrice";
+import { MetapoolOracle, WellOracle } from "../generated/TWAPOracles/BIP37";
+import { DeltaBPriceLiquidity } from "./utils/price/Types";
+import { setTwaLast } from "./utils/price/TwaOracle";
 
 export function handleSunrise(event: Sunrise): void {
   // Update the season for hourly and daily liquidity metrics
@@ -88,5 +101,62 @@ export function handleSunrise(event: Sunrise): void {
         checkBeanCross(BEAN_ERC20.toHexString(), event.block.timestamp, event.block.number, oldBeanPrice, toDecimal(curve.value.price));
       }
     }
+  } else {
+    // Pre-Replant
+    let bean = loadBean(BEAN_ERC20_V1.toHexString());
+    let weightedPrice = ZERO_BD;
+    let totalLiquidity = ZERO_BD;
+    for (let i = 0; i < bean.pools.length; i++) {
+      const pool = loadOrCreatePool(bean.pools[i], event.block.number);
+      let inst: DeltaBPriceLiquidity;
+      if (bean.pools[i] == BEAN_WETH_V1.toHexString()) {
+        inst = calcUniswapV2Inst(pool);
+        setUniswapV2Twa(bean.pools[i], event.block.timestamp, event.block.number);
+      } else {
+        inst = calcCurveInst(pool);
+        setCurveTwa(bean.pools[i], event.block.timestamp, event.block.number);
+      }
+
+      // Update price, liquidity, and deltaB in the pool
+      updatePoolValues(
+        bean.pools[i],
+        event.block.timestamp,
+        event.block.number,
+        ZERO_BI,
+        ZERO_BD,
+        inst.liquidity.minus(pool.liquidityUSD),
+        inst.deltaB
+      );
+      updatePoolPrice(bean.pools[i], event.block.timestamp, event.block.number, inst.price);
+
+      weightedPrice = weightedPrice.plus(inst.price.times(inst.liquidity));
+      totalLiquidity = totalLiquidity.plus(inst.liquidity);
+    }
+
+    const totalPrice = weightedPrice.div(totalLiquidity);
+    updateBeanValues(
+      BEAN_ERC20_V1.toHexString(),
+      event.block.timestamp,
+      totalPrice,
+      ZERO_BI,
+      ZERO_BI,
+      ZERO_BD,
+      totalLiquidity.minus(bean.liquidityUSD)
+    );
+    checkBeanCross(BEAN_ERC20_V1.toHexString(), event.block.timestamp, event.block.number, bean.price, totalPrice);
+    updateBeanTwa(event.block.timestamp, event.block.number);
   }
+}
+
+// POST REPLANT TWA DELTAB //
+
+export function handleMetapoolOracle(event: MetapoolOracle): void {
+  setTwaLast(BEAN_3CRV.toHexString(), event.params.balances, event.block.timestamp);
+  setCurveTwa(BEAN_3CRV.toHexString(), event.block.timestamp, event.block.number);
+  updateBeanTwa(event.block.timestamp, event.block.number);
+}
+
+export function handleWellOracle(event: WellOracle): void {
+  setPoolTwaDeltaB(event.params.well.toHexString(), event.params.deltaB, event.block.timestamp, event.block.number);
+  updateBeanTwa(event.block.timestamp, event.block.number);
 }

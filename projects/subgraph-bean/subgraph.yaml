@@ -96,10 +96,20 @@ dataSources:
       abis:
         - name: Beanstalk
           file: ../subgraph-core/abis/Beanstalk/Beanstalk-Replanted.json
+        - name: PreReplant
+          file: ../subgraph-core/abis/Beanstalk/Beanstalk-Pre-Replant.json
         - name: BeanstalkPrice
           file: ../subgraph-core/abis/BeanstalkPrice.json
         - name: CurvePrice
           file: ../subgraph-core/abis/CurvePrice.json
+        - name: UniswapV2Pair
+          file: ../subgraph-core/abis/UniswapV2Pair.json
+        - name: Bean3CRV
+          file: ../subgraph-core/abis/Bean3CRV.json
+        - name: CalculationsCurve
+          file: ../subgraph-core/abis/CalculationsCurve.json
+        - name: ERC20
+          file: ../subgraph-core/abis/ERC20.json
       eventHandlers:
         - event: Sunrise(indexed uint256)
           handler: handleSunrise
@@ -239,3 +249,30 @@ dataSources:
         - event: Sync(uint256[],uint256,address)
           handler: handleSync
       file: ./src/BeanWellHandler.ts
+  - kind: ethereum/contract
+    name: TWAPOracles
+    network: mainnet
+    source:
+      address: "0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5"
+      abi: BIP37
+      startBlock: 15277988
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.7
+      language: wasm/assemblyscript
+      entities:
+        - BeanHourlySnapshot
+        - BeanDailySnapshot
+        - PoolHourlySnapshot
+        - PoolDailySnapshot
+      abis:
+        # This abi is chosen because it contains both MetapoolOracle and WellOracle events.
+        # Indexing of this source should begin prior to BIP37 deployment.
+        - name: BIP37
+          file: ../subgraph-core/abis/Beanstalk/Beanstalk-BIP37.json
+      eventHandlers:
+        - event: MetapoolOracle(indexed uint32,int256,uint256[2])
+          handler: handleMetapoolOracle
+        - event: WellOracle(indexed uint32,address,int256,bytes)
+          handler: handleWellOracle
+      file: ./src/BeanstalkHandler.ts

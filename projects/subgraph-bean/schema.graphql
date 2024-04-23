@@ -72,6 +72,12 @@ type BeanHourlySnapshot @entity {
   "Percent of supply in LP used for peg maintenance"
   supplyInPegLP: BigDecimal!
 
+  "Instantaneous deltaB across all whitelisted pools"
+  instantaneousDeltaB: BigInt!
+
+  "Time-Weighted deltaB in whitelisted pools over the previous season"
+  twaDeltaB: BigInt!
+
   "Cumulative volume in BEAN"
   volume: BigInt!
 
@@ -84,11 +90,11 @@ type BeanHourlySnapshot @entity {
   "Current USD price"
   price: BigDecimal!
 
+  "Time-Weighted price over the previous season"
+  twaPrice: BigDecimal!
+
   "Cumulative number of crosses"
   crosses: Int!
-
-  "Current deltaB for peg"
-  deltaBeans: BigInt!
 
   "Volume in BEAN for this snapshot"
   deltaVolume: BigInt!
@@ -123,12 +129,17 @@ type BeanDailySnapshot @entity {
 
   "Percent of supply in LP used for peg maintenance"
   supplyInPegLP: BigDecimal!
+  "Instantaneous deltaB across all whitelisted pools"
+  instantaneousDeltaB: BigInt!
+  "Time-Weighted deltaB in whitelisted pools over the previous season"
+  twaDeltaB: BigInt!
   volume: BigInt!
   volumeUSD: BigDecimal!
   liquidityUSD: BigDecimal!
   price: BigDecimal!
+  "Time-Weighted price over the previous season"
+  twaPrice: BigDecimal!
   crosses: Int!
-  deltaBeans: BigInt!
   deltaVolume: BigInt!
   deltaVolumeUSD: BigDecimal!
   deltaLiquidityUSD: BigDecimal!
@@ -174,6 +185,7 @@ type Pool @entity {
   "Last timestamp a cross was seen for this pool"
   lastCross: BigInt!
   crossEvents: [PoolCross!]! @derivedFrom(field: "pool")
+  "Instantaneous deltaB"
   deltaBeans: BigInt!
   hourlySnapshot: [PoolHourlySnapshot!]! @derivedFrom(field: "pool")
   dailySnapshot: [PoolDailySnapshot!]! @derivedFrom(field: "pool")
@@ -184,12 +196,17 @@ type PoolHourlySnapshot @entity {
   pool: Pool!
   reserves: [BigInt!]!
   lastPrice: BigDecimal!
+  "Time-Weighted price over the previous season"
+  twaPrice: BigDecimal!
   volume: BigInt!
   volumeUSD: BigDecimal!
   liquidityUSD: BigDecimal!
   crosses: Int!
   utilization: BigDecimal!
+  "Instantaneous deltaB"
   deltaBeans: BigInt!
+  "Time-Weighted deltaB over the previous season"
+  twaDeltaBeans: BigInt!
   deltaReserves: [BigInt!]!
   deltaVolume: BigInt!
   deltaVolumeUSD: BigDecimal!
@@ -206,12 +223,17 @@ type PoolDailySnapshot @entity {
   pool: Pool!
   reserves: [BigInt!]!
   lastPrice: BigDecimal!
+  "Time-Weighted price over the previous season"
+  twaPrice: BigDecimal!
   volume: BigInt!
   volumeUSD: BigDecimal!
   liquidityUSD: BigDecimal!
   crosses: Int!
   utilization: BigDecimal!
+  "Instantaneous deltaB"
   deltaBeans: BigInt!
+  "Time-Weighted deltaB over the previous season"
+  twaDeltaBeans: BigInt!
   deltaReserves: [BigInt!]!
   deltaVolume: BigInt!
   deltaVolumeUSD: BigDecimal!
@@ -221,4 +243,20 @@ type PoolDailySnapshot @entity {
   season: Int!
   createdAt: BigInt!
   updatedAt: BigInt!
+}
+
+# For tracking twa balances as the seasons progress.
+# This is only relevant for pre-replant where this information is not directly accessible.
+type TwaOracle @entity {
+  id: ID!
+  pool: Pool!
+  # These two fields are used to determine twa over the previous season.
+  # priceCumulativeSun is the value of priceCumulativeLast at the time of the previous sunrise (lastSun)
+  priceCumulativeSun: [BigInt!]!
+  lastSun: BigInt!
+  # These three fields are for when manual calculation of price cumulative last is required (beanlusd)
+  # Otherwise the equivalent values are derived from the corresponding contract functions.
+  priceCumulativeLast: [BigInt!]!
+  lastBalances: [BigInt!]!
+  lastUpdated: BigInt!
 }

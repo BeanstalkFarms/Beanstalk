@@ -10,9 +10,9 @@ import {
   BEAN_LUSD_V1
 } from "../../../subgraph-core/utils/Constants";
 import { dayFromTimestamp, hourFromTimestamp } from "../../../subgraph-core/utils/Dates";
-import { toDecimal, ZERO_BD, ZERO_BI } from "../../../subgraph-core/utils/Decimals";
+import { ONE_BD, toDecimal, ZERO_BD, ZERO_BI } from "../../../subgraph-core/utils/Decimals";
 import { getV1Crosses } from "./Cross";
-import { loadOrCreatePool } from "./Pool";
+import { loadOrCreatePool, loadOrCreatePoolHourlySnapshot } from "./Pool";
 
 export function loadBean(token: string): Bean {
   let bean = Bean.load(token);
@@ -45,12 +45,14 @@ export function loadOrCreateBeanHourlySnapshot(token: string, timestamp: BigInt,
     snapshot.supply = bean.supply;
     snapshot.marketCap = bean.marketCap;
     snapshot.supplyInPegLP = bean.supplyInPegLP;
+    snapshot.instantaneousDeltaB = ZERO_BI;
+    snapshot.twaDeltaB = ZERO_BI;
     snapshot.volume = bean.volume;
     snapshot.volumeUSD = bean.volumeUSD;
     snapshot.liquidityUSD = bean.liquidityUSD;
     snapshot.price = bean.price;
+    snapshot.twaPrice = ZERO_BD;
     snapshot.crosses = bean.crosses;
-    snapshot.deltaBeans = ZERO_BI;
     snapshot.deltaVolume = ZERO_BI;
     snapshot.deltaVolumeUSD = ZERO_BD;
     snapshot.deltaLiquidityUSD = ZERO_BD;
@@ -73,12 +75,14 @@ export function loadOrCreateBeanDailySnapshot(token: string, timestamp: BigInt):
     snapshot.supply = bean.supply;
     snapshot.marketCap = bean.marketCap;
     snapshot.supplyInPegLP = bean.supplyInPegLP;
+    snapshot.instantaneousDeltaB = ZERO_BI;
+    snapshot.twaDeltaB = ZERO_BI;
     snapshot.volume = bean.volume;
     snapshot.volumeUSD = bean.volumeUSD;
     snapshot.liquidityUSD = bean.liquidityUSD;
     snapshot.price = bean.price;
+    snapshot.twaPrice = ZERO_BD;
     snapshot.crosses = bean.crosses;
-    snapshot.deltaBeans = ZERO_BI;
     snapshot.deltaVolume = ZERO_BI;
     snapshot.deltaVolumeUSD = ZERO_BD;
     snapshot.deltaLiquidityUSD = ZERO_BD;
@@ -195,4 +199,47 @@ export function updateBeanSupplyPegPercent(blockNumber: BigInt): void {
     bean.supplyInPegLP = toDecimal(pegSupply).div(toDecimal(bean.supply));
     bean.save();
   }
+}
+
+export function updateInstDeltaB(token: string, blockNumber: BigInt, timestamp: BigInt): void {
+  let bean = loadBean(token);
+  let beanHourly = loadOrCreateBeanHourlySnapshot(token, timestamp, bean.lastSeason);
+  let beanDaily = loadOrCreateBeanDailySnapshot(token, timestamp);
+
+  let cumulativeDeltaB = ZERO_BI;
+  for (let i = 0; i < bean.pools.length; i++) {
+    let pool = loadOrCreatePool(bean.pools[i], blockNumber);
+    cumulativeDeltaB = cumulativeDeltaB.plus(pool.deltaBeans);
+  }
+
+  beanHourly.instantaneousDeltaB = cumulativeDeltaB;
+  beanDaily.instantaneousDeltaB = cumulativeDeltaB;
+  beanHourly.save();
+  beanDaily.save();
+}
+
+// Update Bean's TWA deltaB and price. Individual pools' values must be computed prior to calling this method.
+export function updateBeanTwa(timestamp: BigInt, blockNumber: BigInt): void {
+  let beanAddress = getBeanTokenAddress(blockNumber);
+  let bean = loadBean(beanAddress);
+  let beanHourly = loadOrCreateBeanHourlySnapshot(beanAddress, timestamp, bean.lastSeason);
+  let beanDaily = loadOrCreateBeanDailySnapshot(beanAddress, timestamp);
+
+  let twaDeltaB = ZERO_BI;
+  let weightedTwaPrice = ZERO_BD;
+  for (let i = 0; i < bean.pools.length; i++) {
+    let poolHourly = loadOrCreatePoolHourlySnapshot(bean.pools[i], timestamp, blockNumber);
+    twaDeltaB = twaDeltaB.plus(poolHourly.twaDeltaBeans);
+    weightedTwaPrice = weightedTwaPrice.plus(poolHourly.twaPrice.times(poolHourly.liquidityUSD));
+  }
+
+  // Assumption is that total bean liquidity was already summed earlier in the same event's processing
+  const twaPrice = weightedTwaPrice.div(bean.liquidityUSD != ZERO_BD ? bean.liquidityUSD : ONE_BD);
+
+  beanHourly.twaDeltaB = twaDeltaB;
+  beanHourly.twaPrice = twaPrice;
+  beanDaily.twaDeltaB = twaDeltaB;
+  beanDaily.twaPrice = twaPrice;
+  beanHourly.save();
+  beanDaily.save();
 }
