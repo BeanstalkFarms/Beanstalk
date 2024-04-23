@@ -1,4 +1,4 @@
-import { Address, BigDecimal } from "@graphprotocol/graph-ts";
+import { Address, BigDecimal, BigInt } from "@graphprotocol/graph-ts";
 
 // Standard Addresses
 export const ADDRESS_ZERO = Address.fromString("0x0000000000000000000000000000000000000000");
@@ -39,3 +39,10 @@ export const MIN_HUMIDITY = BigDecimal.fromString("500");
 export const DELTA_HUMIDITY = BigDecimal.fromString("0.5");
 
 export const CALCULATIONS_CURVE = Address.fromString("0x25BF7b72815476Dd515044F9650Bf79bAd0Df655");
+
+// Milestone blocks
+export const BEANSTALK_BLOCK = BigInt.fromU32(12974075);
+export const EXPLOIT_BLOCK = BigInt.fromU32(14602790);
+export const REPLANT_SUNRISE_BLOCK = BigInt.fromU32(15289934);
+export const BEANSTALK_PRICE_BLOCK = BigInt.fromU32(17978222);
+export const BEAN_WETH_CP2_WELL_BLOCK = BigInt.fromU32(17978134);

@@ -1,18 +1,11 @@
-import { BigDecimal, BigInt } from "@graphprotocol/graph-ts";
-import { Swap, Sync } from "../generated/BeanUniswapV2Pair/UniswapV2Pair";
+import { BigDecimal, BigInt, ethereum } from "@graphprotocol/graph-ts";
+import { Swap, Sync, UniswapV2Pair } from "../generated/BeanUniswapV2Pair/UniswapV2Pair";
 import { loadBean, updateBeanSupplyPegPercent, updateBeanValues } from "./utils/Bean";
-import { BEAN_ERC20_V1, WETH } from "../../subgraph-core/utils/Constants";
+import { BEAN_ERC20_V1, BEAN_WETH_V1, WETH, WETH_USDC_PAIR } from "../../subgraph-core/utils/Constants";
 import { toDecimal, ZERO_BD, ZERO_BI } from "../../subgraph-core/utils/Decimals";
-import {
-  loadOrCreatePool,
-  loadOrCreatePoolDailySnapshot,
-  loadOrCreatePoolHourlySnapshot,
-  setPoolReserves,
-  updatePoolPrice,
-  updatePoolValues
-} from "./utils/Pool";
+import { loadOrCreatePool, setPoolReserves, updatePoolPrice, updatePoolValues } from "./utils/Pool";
 import { loadOrCreateToken } from "./utils/Token";
-import { checkBeanCross } from "./utils/Cross";
+import { checkBeanCross, checkPoolCross } from "./utils/Cross";
 import { uniswapV2DeltaB, uniswapV2Price, uniswapV2Reserves, updatePreReplantPriceETH } from "./utils/price/UniswapPrice";
 
 // export function handleMint(event: Mint): void {
@@ -105,4 +98,47 @@ export function handleSync(event: Sync): void {
   updateBeanSupplyPegPercent(event.block.number);
 
   updateBeanValues(BEAN_ERC20_V1.toHexString(), event.block.timestamp, currentBeanPrice, ZERO_BI, ZERO_BI, ZERO_BD, deltaLiquidityUSD);
+}
+
+function updatePriceETH(): void {
+  let token = loadOrCreateToken(WETH.toHexString());
+  token.lastPriceUSD = getPriceETH();
+  token.save();
+}
+
+function getPriceETH(): BigDecimal {
+  let pair = UniswapV2Pair.bind(WETH_USDC_PAIR);
+  let reserves = pair.getReserves();
+  // Token 0 is USDC and Token 1 is WETH
+  return toDecimal(reserves.value0).div(toDecimal(reserves.value1, 18));
+}
+
+export function checkPegCrossEth(block: ethereum.Block): void {
+  const pool = loadOrCreatePool(BEAN_WETH_V1.toHexString(), block.number);
+  const prevPrice = pool.lastPrice;
+
+  const reserves = uniswapV2Reserves(BEAN_WETH_V1);
+  const ethPrice = getPriceETH();
+  const newPrice = uniswapV2Price(toDecimal(reserves[0]), toDecimal(reserves[1], 18), ethPrice);
+
+  // log.debug("Prev/New bean price {} / {}", [prevPrice.toString(), newPrice.toString()]);
+
+  // Check for pool peg cross
+  const poolCrossed = checkPoolCross(BEAN_WETH_V1.toHexString(), block.timestamp, block.number, prevPrice, newPrice);
+
+  if (poolCrossed) {
+    // Update price for the pool
+    // updatePoolValues(
+    //   BEAN_WETH_V1.toHexString(),
+    //   block.timestamp,
+    //   block.number,
+    //   ZERO_BI,
+    //   ZERO_BD,
+    //   toDecimal(poolPriceInfo.liquidity).minus(pool.liquidityUSD),
+    //   poolPriceInfo.deltaB
+    // );
+    // updatePoolPrice(poolPriceInfo.pool.toHexString(), block.timestamp, block.number, toDecimal(poolPriceInfo.price), false);
+  }
+
+  // TODO: if crossed, update weth token price
 }

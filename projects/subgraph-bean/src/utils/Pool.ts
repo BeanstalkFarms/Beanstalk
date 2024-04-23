@@ -1,4 +1,4 @@
-import { BigDecimal, BigInt } from "@graphprotocol/graph-ts";
+import { BigDecimal, BigInt, log } from "@graphprotocol/graph-ts";
 import { Pool, PoolDailySnapshot, PoolHourlySnapshot } from "../../generated/schema";
 import { dayFromTimestamp, hourFromTimestamp } from "../../../subgraph-core/utils/Dates";
 import { emptyBigIntArray, ZERO_BD, ZERO_BI } from "../../../subgraph-core/utils/Decimals";
@@ -172,7 +172,13 @@ export function updatePoolSeason(poolAddress: string, timestamp: BigInt, blockNu
   poolDaily.save();
 }
 
-export function updatePoolPrice(poolAddress: string, timestamp: BigInt, blockNumber: BigInt, price: BigDecimal): void {
+export function updatePoolPrice(
+  poolAddress: string,
+  timestamp: BigInt,
+  blockNumber: BigInt,
+  price: BigDecimal,
+  checkCross: boolean = true
+): void {
   let pool = loadOrCreatePool(poolAddress, blockNumber);
   let poolHourly = loadOrCreatePoolHourlySnapshot(poolAddress, timestamp, blockNumber);
   let poolDaily = loadOrCreatePoolDailySnapshot(poolAddress, timestamp, blockNumber);
@@ -188,7 +194,9 @@ export function updatePoolPrice(poolAddress: string, timestamp: BigInt, blockNum
   poolDaily.lastPrice = price;
   poolDaily.save();
 
-  checkPoolCross(poolAddress, timestamp, blockNumber, oldPrice, price);
+  if (checkCross) {
+    checkPoolCross(poolAddress, timestamp, blockNumber, oldPrice, price);
+  }
 }
 
 export function setPoolReserves(poolAddress: string, reserves: BigInt[], timestamp: BigInt, blockNumber: BigInt): void {
