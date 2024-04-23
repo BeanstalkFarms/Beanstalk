@@ -216,8 +216,9 @@ contract ConvertFacet is ReentrancyGuard {
      * @param well The well for which to return the capped reserves deltaB
      * @return deltaB The capped reserves deltaB for the well
      */
-    function cappedReservesDeltaB(address well) public view 
-        returns (int256 deltaB, uint256[] memory instReserves, uint256[] memory ratios) {
+    function cappedReservesDeltaB(
+        address well
+    ) public view returns (int256 deltaB, uint256[] memory instReserves, uint256[] memory ratios) {
         (deltaB, instReserves, ratios) = LibWellMinting.cappedReservesDeltaB(well);
     }
 
