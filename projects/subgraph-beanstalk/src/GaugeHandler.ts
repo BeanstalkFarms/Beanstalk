@@ -11,7 +11,6 @@ import {
   TotalStalkChangedFromGermination
 } from "../generated/BIP42-SeedGauge/Beanstalk";
 import { handleRateChange } from "./utils/Field";
-import { loadBeanstalk } from "./utils/Beanstalk";
 import {
   loadSilo,
   loadSiloHourlySnapshot,
@@ -20,15 +19,10 @@ import {
   loadWhitelistTokenDailySnapshot,
   loadWhitelistTokenHourlySnapshot
 } from "./utils/SiloEntities";
-import { Address } from "@graphprotocol/graph-ts";
-import { deleteGerminating, loadGerminating, loadOrCreateGerminating, tryLoadBothGerminating } from "./utils/Germinating";
+import { deleteGerminating, loadGerminating, loadOrCreateGerminating } from "./utils/Germinating";
 import { ZERO_BI } from "../../subgraph-core/utils/Decimals";
 import { updateStalkBalances } from "./SiloHandler";
-
-function getCurrentSeason(beanstalk: Address): i32 {
-  let beanstalkEntity = loadBeanstalk(beanstalk);
-  return beanstalkEntity.lastSeason;
-}
+import { getCurrentSeason } from "./utils/Season";
 
 export function handleTemperatureChange(event: TemperatureChange): void {
   handleRateChange(event.address, event.block, event.params.season, event.params.caseId, event.params.absChange);
@@ -81,6 +75,8 @@ export function handleUpdateAverageStalkPerBdvPerSeason(event: UpdateAverageStal
   siloDaily.grownStalkPerBdvPerSeason = silo.grownStalkPerBdvPerSeason;
   siloHourly.save();
   siloDaily.save();
+
+  // Individual asset grown stalk is set by the UpdatedStalkPerBdvPerSeason event in SiloHandler
 }
 
 // GERMINATING STALK //

@@ -1,5 +1,5 @@
-import { Address, BigInt, store } from "@graphprotocol/graph-ts";
-import { ZERO_BI } from "../../../subgraph-core/utils/Decimals";
+import { Address, BigDecimal, BigInt, store } from "@graphprotocol/graph-ts";
+import { toDecimal, ZERO_BD, ZERO_BI } from "../../../subgraph-core/utils/Decimals";
 import { Germinating } from "../../generated/schema";
 
 export function loadOrCreateGerminating(address: Address, season: i32): Germinating {
@@ -24,6 +24,14 @@ export function loadGerminating(address: Address, enumValue: i32): Germinating {
 
 export function tryLoadBothGerminating(address: Address): Array<Germinating | null> {
   return [Germinating.load(address.toHexString() + "-ODD"), Germinating.load(address.toHexString() + "-EVEN")];
+}
+
+export function getGerminatingBdvs(address: Address): Array<BigDecimal> {
+  const germinatingState = tryLoadBothGerminating(address);
+  return [
+    germinatingState[0] !== null ? toDecimal(germinatingState[0].bdv) : ZERO_BD,
+    germinatingState[1] !== null ? toDecimal(germinatingState[1].bdv) : ZERO_BD
+  ];
 }
 
 export function deleteGerminating(germinating: Germinating): void {

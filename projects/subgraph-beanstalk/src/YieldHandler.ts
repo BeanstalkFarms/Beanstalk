@@ -4,8 +4,17 @@ import { BEANSTALK, BEAN_ERC20, FERTILIZER } from "../../subgraph-core/utils/Con
 import { ONE_BD, ONE_BI, toDecimal, ZERO_BD, ZERO_BI } from "../../subgraph-core/utils/Decimals";
 import { loadFertilizer } from "./utils/Fertilizer";
 import { loadFertilizerYield } from "./utils/FertilizerYield";
-import { loadSilo, loadSiloHourlySnapshot, loadSiloYield, loadTokenYield, loadWhitelistTokenSetting } from "./utils/SiloEntities";
+import {
+  loadSilo,
+  loadSiloAsset,
+  loadSiloHourlySnapshot,
+  loadSiloYield,
+  loadTokenYield,
+  loadWhitelistTokenSetting
+} from "./utils/SiloEntities";
 import { BigDecimal_max, BigDecimal_sum, BigInt_max, BigInt_sum } from "../../subgraph-core/utils/ArrayMath";
+import { getGerminatingBdvs, tryLoadBothGerminating } from "./utils/Germinating";
+import { getCurrentSeason } from "./utils/Season";
 
 const ROLLING_24_WINDOW = 24;
 const ROLLING_7_DAY_WINDOW = 168;
@@ -71,24 +80,109 @@ function updateWindowEMA(t: i32, timestamp: BigInt, window: i32): void {
   siloYield.createdAt = timestamp;
   siloYield.save();
 
-  // Step through the whitelisted tokens and calculate the silo APY
-
-  let beanGrownStalk = loadWhitelistTokenSetting(BEAN_ERC20).stalkEarnedPerSeason;
-
-  for (let i = 0; i < siloYield.whitelistedTokens.length; i++) {
+  // Retrieve all current whitelist settings, and determine whether gauge is live or not
+  let whitelistSettings = [];
+  let gaugeSettings = [];
+  let isGaugeLive = false;
+  for (let i = 0; i < siloYield.whitelistedTokens.length; ++i) {
     let token = Address.fromString(siloYield.whitelistedTokens[i]);
-    let siloSettings = loadWhitelistTokenSetting(token);
-    let tokenYield = loadTokenYield(token, t, window);
+    let tokenSetting = loadWhitelistTokenSetting(token);
 
-    let tokenAPY = calculateAPYPreGauge(
+    whitelistSettings.push(tokenSetting);
+    if (tokenSetting.gpSelector !== null) {
+      gaugeSettings.push(tokenSetting);
+      isGaugeLive = true;
+    } else {
+      gaugeSettings.push(null);
+    }
+  }
+
+  let apys: BigDecimal[][] = [];
+
+  // Chooses which apy calculation to use
+  if (!isGaugeLive) {
+    const beanGrownStalk = loadWhitelistTokenSetting(BEAN_ERC20).stalkEarnedPerSeason;
+    for (let i = 0; i < whitelistSettings.length; ++i) {
+      const tokenAPY = calculateAPYPreGauge(
+        currentEMA,
+        toDecimal(whitelistSettings[i].stalkEarnedPerSeason),
+        toDecimal(beanGrownStalk),
+        silo.stalk.plus(silo.plantableStalk),
+        silo.seeds
+      );
+      apys.push(tokenAPY);
+    }
+  } else {
+    let tokens: i32[] = [];
+    let gaugeLpPoints: BigDecimal[] = [];
+    let gaugeLpDepositedBdv: BigDecimal[] = [];
+    let gaugeLpOptimalPercentBdv: BigDecimal[] = [];
+
+    let nonGaugeDepositedBdv = ZERO_BD;
+    let depositedBeanBdv = ZERO_BD;
+
+    let initialR = toDecimal(silo.beanToMaxLpGpPerBdvRatio!, 18);
+    let siloStalk = toDecimal(silo.stalk.plus(silo.plantableStalk));
+
+    let germinatingBeanBdv: BigDecimal[] = [];
+    let germinatingGaugeLpBdv: BigDecimal[][] = [];
+    let germinatingNonGaugeBdv: BigDecimal[] = [];
+
+    let staticSeeds: Array<BigDecimal | null> = [];
+
+    for (let i = 0; i < whitelistSettings.length; ++i) {
+      // Get the total deposited bdv of this asset
+      const siloAsset = loadSiloAsset(BEANSTALK, gaugeSettings[i]!.id);
+      const depositedBdv = toDecimal(siloAsset.depositedBDV);
+
+      const germinating = getGerminatingBdvs(whitelistSettings[i].id);
+
+      if (gaugeSettings[i] !== null) {
+        if (gaugeSettings[i]!.id != BEAN_ERC20) {
+          tokens.push(gaugeLpPoints.length);
+          gaugeLpPoints.push(toDecimal(gaugeSettings[i]!.gaugePoints!, 18));
+          gaugeLpOptimalPercentBdv.push(toDecimal(gaugeSettings[i]!.optimalPercentDepositedBdv!));
+          gaugeLpDepositedBdv.push(depositedBdv);
+          germinatingGaugeLpBdv.push(germinating);
+        } else {
+          tokens.push(-1);
+          depositedBeanBdv = depositedBdv;
+          germinatingBeanBdv = germinating;
+        }
+        staticSeeds.push(null);
+      } else {
+        tokens.push(-2);
+        nonGaugeDepositedBdv = nonGaugeDepositedBdv.plus(depositedBdv);
+        germinatingNonGaugeBdv = [germinatingNonGaugeBdv[0].plus(germinating[0]), germinatingNonGaugeBdv[1].plus(germinating[1])];
+        staticSeeds.push(toDecimal(whitelistSettings[i].stalkEarnedPerSeason));
+      }
+    }
+
+    const CATCH_UP_RATE = BigDecimal.fromString("4320");
+    apys = calculateGaugeVAPYs(
+      tokens,
       currentEMA,
-      toDecimal(siloSettings.stalkEarnedPerSeason), // old seeds
-      toDecimal(beanGrownStalk), // old seeds per bean
-      silo.stalk,
-      silo.seeds
+      gaugeLpPoints,
+      gaugeLpDepositedBdv,
+      nonGaugeDepositedBdv,
+      gaugeLpOptimalPercentBdv,
+      initialR,
+      depositedBeanBdv,
+      siloStalk,
+      CATCH_UP_RATE,
+      getCurrentSeason(BEANSTALK),
+      germinatingBeanBdv,
+      germinatingGaugeLpBdv,
+      germinatingNonGaugeBdv,
+      staticSeeds
     );
-    tokenYield.beanAPY = tokenAPY[0];
-    tokenYield.stalkAPY = tokenAPY[1];
+  }
+
+  // Save the apys
+  for (let i = 0; i < apys.length; ++i) {
+    let tokenYield = loadTokenYield(whitelistSettings[i].id, t, window);
+    tokenYield.beanAPY = apys[i][0];
+    tokenYield.stalkAPY = apys[i][1];
     tokenYield.createdAt = timestamp;
     tokenYield.save();
   }
