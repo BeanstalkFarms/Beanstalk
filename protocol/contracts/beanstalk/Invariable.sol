@@ -18,8 +18,8 @@ import {LibSilo} from "contracts/libraries/Silo/LibSilo.sol";
 /**
  * @author funderbrker
  * @title Invariable
- * @notice Implements modifiers to maintain protocol wide invariants.
- * @dev Every external function should use as many invariant modifiers as possible.
+ * @notice Implements modifiers that maintain protocol wide invariants.
+ * @dev Every external writing function should use as many non-redundant invariant modifiers as possible.
  * @dev https://www.nascent.xyz/idea/youre-writing-require-statements-wrong
  **/
 abstract contract Invariable {
@@ -29,8 +29,7 @@ abstract contract Invariable {
 
     /**
      * @notice Ensures all user asset entitlements are coverable by contract balances.
-     * @dev Should be used on every function that can write.
-     * @dev Does not include tokens that may be held in internal balances but not Silo whitelisted.
+     * @dev Should be used on every function that can write. Excepting Diamond functions.
      */
     modifier fundsSafu() {
         _;
@@ -44,11 +43,11 @@ abstract contract Invariable {
         }
     }
 
-    // Stalk does not decrease and and whitelisted token balances (including Bean) do not change.
-    // Many operations will increase Stalk.
-    // There are a relatively small number of external functions that will cause a change in token balances of contract.
-    // Roughly akin to a view only check where only routine modifications are allowed (ie mowing).
-    /// @dev Attempt to minimize effect on stack depth.
+    /**
+     * @notice Watched token balances do not change and Stalk does not decrease.
+     * @dev Applicable to the majority of functions, excepting functions that explicitly move assets.
+     * @dev Roughly akin to a view only check where only routine modifications are allowed (ie mowing).
+     */
     modifier noNetFlow() {
         uint256 initialStalk = LibAppStorage.diamondStorage().s.stalk;
         address[] memory tokens = getTokensOfInterest();
@@ -56,15 +55,19 @@ abstract contract Invariable {
         _;
         uint256[] memory finalProtocolTokenBalances = getTokenBalances(tokens);
 
-        require(LibAppStorage.diamondStorage().s.stalk >= initialStalk, "INV: Stalk decreased");
+        require(LibAppStorage.diamondStorage().s.stalk >= initialStalk, "INV: noNetFlow Stalk decreased");
         for (uint256 i; i < tokens.length; i++) {
             require(
                 initialProtocolTokenBalances[i] == finalProtocolTokenBalances[i],
-                "INV: Token balance changed"
+                "INV: noNetFlow Token balance changed"
             );
         }
     }
 
+    /**
+     * @notice Watched token balances do not decrease and Stalk does not decrease.
+     * @dev Favor noNetFlow where applicable.
+     */
     modifier noOutFlow() {
         uint256 initialStalk = LibAppStorage.diamondStorage().s.stalk;
         address[] memory tokens = getTokensOfInterest();
@@ -72,11 +75,11 @@ abstract contract Invariable {
         _;
         uint256[] memory finalProtocolTokenBalances = getTokenBalances(tokens);
 
-        require(LibAppStorage.diamondStorage().s.stalk >= initialStalk, "INV: Stalk down");
+        require(LibAppStorage.diamondStorage().s.stalk >= initialStalk, "INV: noOutFlow Stalk decreased");
         for (uint256 i; i < tokens.length; i++) {
             require(
                 initialProtocolTokenBalances[i] <= finalProtocolTokenBalances[i],
-                "INV: Token balance decreased"
+                "INV: noOutFlow Token balance decreased"
             );
         }
     }
@@ -104,7 +107,7 @@ abstract contract Invariable {
 
     /**
      * @notice Does not change the supply of Beans. No minting, no burning.
-     * @dev Applies to all but a very few functions. Sunrise, sow, raise.
+     * @dev Applies to all but a very few functions tht explicitly change supply.
      */
     modifier noSupplyChange() {
         uint256 initialSupply = C.bean().totalSupply();
@@ -114,7 +117,7 @@ abstract contract Invariable {
 
     /**
      * @notice Supply of Beans does not increase. No minting.
-     * @dev Prefer noSupplyChange where applicable. Use this for burn only operations.
+     * @dev Prefer noSupplyChange where applicable.
      */
     modifier noSupplyIncrease() {
         uint256 initialSupply = C.bean().totalSupply();
@@ -122,6 +125,9 @@ abstract contract Invariable {
         require(C.bean().totalSupply() <= initialSupply, "INV: Supply increased");
     }
 
+    /**
+     * @notice Which tokens to monitor in the invariants.
+     */
     function getTokensOfInterest() internal view returns (address[] memory tokens) {
         address[] memory whitelistedTokens = LibWhitelistedTokens.getWhitelistedTokens();
         address sopToken = address(LibSilo.getSopToken());
@@ -136,6 +142,9 @@ abstract contract Invariable {
         }
     }
 
+    /**
+     * @notice Get the Beanstalk balance of an ERC20 token.
+     */
     function getTokenBalances(
         address[] memory tokens
     ) internal view returns (uint256[] memory balances) {
@@ -161,9 +170,7 @@ abstract contract Invariable {
                 s.siloBalances[tokens[i]].withdrawn +
                 s.internalTokenBalanceTotal[IERC20(tokens[i])];
             if (tokens[i] == C.BEAN) {
-                // total of Bean in Silo + total earned Beans + unharvested harvestable Beans + user internal balances of Beans.
                 entitlements[i] +=
-                    // s.earnedBeans + // unmowed earned beans // NOTE: This is a double count with deposited balance
                     s.f.harvestable.sub(s.f.harvested) + // unharvestable harvestable beans
                     s.fertilizedIndex.sub(s.fertilizedPaidIndex) + // unrinsed rinsable beans
                     s.u[C.UNRIPE_BEAN].balanceOfUnderlying; // unchopped underlying beans
@@ -174,66 +181,8 @@ abstract contract Invariable {
             if (s.sopWell != address(0) && tokens[i] == address(LibSilo.getSopToken())) {
                 entitlements[i] += s.plenty;
             }
-            // NOTE: Asset entitlements too low due to a lack of accounting for internal balances. Balances need init.
             balances[i] = IERC20(tokens[i]).balanceOf(address(this));
         }
         return (entitlements, balances);
     }
 }
-
-//////////////////// Scratch pad  ///////////////////////
-/*
-    // NOTE may be incompatible with SOP.
-    // NOTE difficult/intensive, since pods are not iterable by user.
-    //
-    // @notice Ensure protocol balances change in tandem with user balances.
-    // @dev Should be used on every function that can write and does not use noNetFlow modifier.
-    //
-    modifier reasonableFlow() {
-        AppStorage storage s = LibAppStorage.diamondStorage();
-        address[] memory tokens = LibWhitelistedTokens.getSiloTokens();
-
-        uint256[] memory initialProtocolTokenBalances = getTokenBalances(tokens);
-        uint256[] memory initialUserTokenEntitlements = getUserTokenEntitlements(tokens, msg.sender);
-        _;
-        uint256[] memory finalProtocolTokenBalances = getTokenBalances();
-        uint256[] memory finalUserTokenEntitlements = getUserTokenEntitlements(msg.sender);
-        uint256 finalProtocolBeanBalance = C.bean().balanceOf(address(this));
-        uint256 finalUserBeanEntitlement = getUserBeanEntitlement(msg.sender);
-
-        for (uint256 i; i < tokens.length; i++) {
-            if(tokens[i] == C.bean()) {
-                continue;
-            }
-            int256 userTokenDelta = finalUserTokenEntitlements[i].toInt256().sub(initialUserTokenEntitlements[i].toInt256());
-            int256 protocolTokenDelta = finalProtocolTokenBalances[i].toInt256().sub(initialProtocolTokenBalances[i].toInt256());
-            // NOTE off by one errors when rounding?
-            require(
-                userTokenDelta == protocolTokenDelta, "INV: flow imbalance"
-            );
-        }
-        int256 userBeanEntitlementDelta = finalUserBeanEntitlement.toInt256().sub(initialUserBeanEntitlement.toInt256());
-        int256 protocolBeanDelta = finalProtocolBeanBalance.toInt256().sub(initialProtocolBeanBalance.toInt256());
-        if (userBeanDelta >= 0) {
-            require 
-        require(
-            finalUserBeanEntitlement.toInt256().sub(initialUserBeanEntitlement.toInt256()) ==
-                C.bean().balanceOf(address(this)).sub(s.s.stalk),
-            "INV: Bean flow imbalance"
-        );
-    }
-    }
-
-    function getUserTokenEntitlements(address[] memory tokens, address user) internal view returns (uint256[] memory entitlements) {
-        entitlements = new uint256[](tokens.length);
-        for (uint256 i; i < tokens.length; i++) {
-            entitlements[i] = s.siloBalances[tokens[i]].deposited[user] + s.siloBalances[tokens[i]].withdrawn[user] + s.internalTokenBalance[user][tokens[i]];
-            if (tokens[i] == C.bean()) {
-                // total of Bean in Silo + total earned Beans + unharvested harvestable Beans + user internal balances of Beans.
-                // NOTE difficult/intensive, since pods are not iterable by user.
-                entitlements[i] += s.earnedBeans + s.f.harvestable.sub(s.f.harvested);
-            }
-        }
-        return entitlements;
-    }
-*/
