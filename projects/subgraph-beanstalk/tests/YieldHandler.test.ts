@@ -6,7 +6,7 @@ import { ZERO_BD, ZERO_BI } from "../../subgraph-core/utils/Decimals";
 describe("APY Calculations", () => {
   describe("Pre-Gauge", () => {
     test("No Bean mints", () => {
-      const apy = YieldHandler.calculateAPY(
+      const apy = YieldHandler.calculateAPYPreGauge(
         BigDecimal.fromString("0"), // n
         BigDecimal.fromString("2"), // seedsPerBDV
         BigDecimal.fromString("2"), // seedsPerBeanBDV
@@ -23,14 +23,14 @@ describe("APY Calculations", () => {
     // Sequence recreated here for testing:
     // https://docs.google.com/spreadsheets/d/1h7pPEydeAMze_uZMZzodTB3kvEXz_dGGje4KKm83gRM/edit#gid=1845553589
     test("Yields are higher with 4 seeds", () => {
-      const apy2 = YieldHandler.calculateAPY(
+      const apy2 = YieldHandler.calculateAPYPreGauge(
         BigDecimal.fromString("1"),
         BigDecimal.fromString("2"),
         BigDecimal.fromString("2"),
         BigInt.fromString("10000000000000"),
         BigInt.fromString("2000000000")
       );
-      const apy4 = YieldHandler.calculateAPY(
+      const apy4 = YieldHandler.calculateAPYPreGauge(
         BigDecimal.fromString("1"),
         BigDecimal.fromString("4"),
         BigDecimal.fromString("4"),
@@ -49,31 +49,9 @@ describe("APY Calculations", () => {
 
   describe("With Seed Gauge", () => {
     test("Bean yield", () => {
-      // using unripe bdv 19556945+24417908
-      for (let i = -1; i <= 0; ++i) {
-        const apy = YieldHandler.calculateGaugeVAPY(
-          i,
-          BigDecimal.fromString("100"),
-          [BigDecimal.fromString("100")],
-          [BigDecimal.fromString("899088")],
-          BigDecimal.fromString("43974853"),
-          [BigDecimal.fromString("100")],
-          BigDecimal.fromString("0.33"),
-          BigDecimal.fromString("2798474"),
-          BigDecimal.fromString("161540879"),
-          BigDecimal.fromString("4320"),
-          ZERO_BI,
-          [ZERO_BD, ZERO_BD],
-          [[ZERO_BD], [ZERO_BD]],
-          [ZERO_BD, ZERO_BD]
-        );
-
-        log.info(`bean apy: {}`, [(apy[0] as BigDecimal).toString()]);
-        log.info(`stalk apy: {}`, [(apy[1] as BigDecimal).toString()]);
-      }
-
-      const apyUnripe = YieldHandler.calculateGaugeVAPY(
-        -2,
+      // Calculated in a single call - 5000 ms
+      const apy = YieldHandler.calculateGaugeVAPYs(
+        [-1, 0, -2],
         BigDecimal.fromString("100"),
         [BigDecimal.fromString("100")],
         [BigDecimal.fromString("899088")],
@@ -87,11 +65,59 @@ describe("APY Calculations", () => {
         [ZERO_BD, ZERO_BD],
         [[ZERO_BD], [ZERO_BD]],
         [ZERO_BD, ZERO_BD],
-        ZERO_BD
+        [null, null, ZERO_BD]
       );
 
-      log.info(`bean apy: {}`, [(apyUnripe[0] as BigDecimal).toString()]);
-      log.info(`stalk apy: {}`, [(apyUnripe[1] as BigDecimal).toString()]);
+      for (let i = 0; i < apy.length; ++i) {
+        log.info(`bean apy: {}`, [(apy[i][0] as BigDecimal).toString()]);
+        log.info(`stalk apy: {}`, [(apy[i][1] as BigDecimal).toString()]);
+      }
+
+      // Calculated separately - 8750ms
+      // using unripe bdv 19556945+24417908
+      // for (let i = -1; i <= 0; ++i) {
+      //   const apy = YieldHandler.calculateGaugeVAPYs(
+      //     [i],
+      //     BigDecimal.fromString("100"),
+      //     [BigDecimal.fromString("100")],
+      //     [BigDecimal.fromString("899088")],
+      //     BigDecimal.fromString("43974853"),
+      //     [BigDecimal.fromString("100")],
+      //     BigDecimal.fromString("0.33"),
+      //     BigDecimal.fromString("2798474"),
+      //     BigDecimal.fromString("161540879"),
+      //     BigDecimal.fromString("4320"),
+      //     ZERO_BI,
+      //     [ZERO_BD, ZERO_BD],
+      //     [[ZERO_BD], [ZERO_BD]],
+      //     [ZERO_BD, ZERO_BD],
+      //     [null]
+      //   );
+
+      //   log.info(`bean apy: {}`, [(apy[0][0] as BigDecimal).toString()]);
+      //   log.info(`stalk apy: {}`, [(apy[0][1] as BigDecimal).toString()]);
+      // }
+
+      // const apyUnripe = YieldHandler.calculateGaugeVAPYs(
+      //   [-2],
+      //   BigDecimal.fromString("100"),
+      //   [BigDecimal.fromString("100")],
+      //   [BigDecimal.fromString("899088")],
+      //   BigDecimal.fromString("43974853"),
+      //   [BigDecimal.fromString("100")],
+      //   BigDecimal.fromString("0.33"),
+      //   BigDecimal.fromString("2798474"),
+      //   BigDecimal.fromString("161540879"),
+      //   BigDecimal.fromString("4320"),
+      //   ZERO_BI,
+      //   [ZERO_BD, ZERO_BD],
+      //   [[ZERO_BD], [ZERO_BD]],
+      //   [ZERO_BD, ZERO_BD],
+      //   [ZERO_BD]
+      // );
+
+      // log.info(`bean apy: {}`, [(apyUnripe[0][0] as BigDecimal).toString()]);
+      // log.info(`stalk apy: {}`, [(apyUnripe[0][1] as BigDecimal).toString()]);
     });
   });
 });

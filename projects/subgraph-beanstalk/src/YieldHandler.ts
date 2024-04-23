@@ -80,7 +80,7 @@ function updateWindowEMA(t: i32, timestamp: BigInt, window: i32): void {
     let siloSettings = loadWhitelistTokenSetting(token);
     let tokenYield = loadTokenYield(token, t, window);
 
-    let tokenAPY = calculateAPY(
+    let tokenAPY = calculateAPYPreGauge(
       currentEMA,
       toDecimal(siloSettings.stalkEarnedPerSeason), // old seeds
       toDecimal(beanGrownStalk), // old seeds per bean
@@ -104,7 +104,7 @@ function updateWindowEMA(t: i32, timestamp: BigInt, window: i32): void {
  * @returns
  */
 
-export function calculateAPY(
+export function calculateAPYPreGauge(
   n: BigDecimal,
   seedsPerBDV: BigDecimal,
   seedsPerBeanBDV: BigDecimal,
@@ -172,8 +172,9 @@ export function calculateAPY(
  *
  * All of the array parameters should not be empty and be the same length, with one entry for every gauge lp deposit type
  *
- * @param token Which gauge lp token to calculate the apy for. corresponds to an index in the various array parameters.
- *        for Bean or other non-gauge token, provide -1. For Unripe, provide -2
+ * @param token Which tokens to calculate the apy for. For a gauge lp token, provide an index corresponding to
+ *        the position of that lp in the other array parameters. For Bean, provide -1.
+ *        for a non-gauge token, provide -2. See staticSeeds parameter below
  * @param earnedBeans The average number of beans earned per season to use in the simulation
  * @param gaugeLpPoints Array of gauge points assigned to each gauge lp. With a single lp, there will be one entry
  * @param gaugeLpDepositedBdv Array of deposited bdv corresponding to each gauge lp
@@ -195,14 +196,12 @@ export function calculateAPY(
  *
  * @param staticSeeds Provided when `token` does not have its seeds dynamically changed by gauge
  *
- * TODO: performance improvement - calculate the apys for each asset in a single call.
- *
  * Future work includes improvement of the `r` value simulation. This involves using Beanstalk's current state,
  * including L2SR and debt level (temperature cases). Also can be improved by tracking an expected ratio of
  * seasons with mints to seasons without mints. This will allow for a more accurate simulation of its fluctuation.
  */
-export function calculateGaugeVAPY(
-  token: i32,
+export function calculateGaugeVAPYs(
+  tokens: i32[],
   earnedBeans: BigDecimal,
   gaugeLpPoints: BigDecimal[],
   gaugeLpDepositedBdv: BigDecimal[],
@@ -216,8 +215,8 @@ export function calculateGaugeVAPY(
   germinatingBeanBdv: BigDecimal[],
   gaugeLpGerminatingBdv: BigDecimal[][],
   nonGaugeGerminatingBdv: BigDecimal[],
-  staticSeeds: BigDecimal | null = null
-): BigDecimal[] {
+  staticSeeds: Array<BigDecimal | null>
+): BigDecimal[][] {
   // Current percentages allocations of each LP
   let currentPercentLpBdv: BigDecimal[] = [];
   const sumLpBdv = BigDecimal_sum(gaugeLpDepositedBdv);
@@ -241,10 +240,16 @@ export function calculateGaugeVAPY(
   let totalStalk = siloStalk;
   let gaugeBdv = beanBdv.plus(BigDecimal_sum(gaugeLpDepositedBdvCopy));
   let totalBdv = gaugeBdv.plus(nonGaugeDepositedBdv);
-  let userBeans = token == -1 ? ONE_BD : ZERO_BD;
-  let userLp = token == -1 ? ZERO_BD : ONE_BD;
-  let userStalk = ONE_BD;
   let largestLpGpPerBdv = BigDecimal_max(lpGpPerBdv);
+
+  let userBeans: BigDecimal[] = [];
+  let userLp: BigDecimal[] = [];
+  let userStalk: BigDecimal[] = [];
+  for (let i = 0; i < tokens.length; ++i) {
+    userBeans.push(tokens[i] == -1 ? ONE_BD : ZERO_BD);
+    userLp.push(tokens[i] == -1 ? ZERO_BD : ONE_BD);
+    userStalk.push(ONE_BD);
+  }
 
   const SEED_PRECISION = BigDecimal.fromString("10000");
   const ONE_YEAR = 8760;
@@ -277,31 +282,40 @@ export function calculateGaugeVAPY(
     const avgGsPerBdv = totalStalk.div(totalBdv).minus(ONE_BD);
     const gs = avgGsPerBdv.div(catchUpRate).times(gaugeBdv);
     const beanSeeds = gs.div(gpTotal).times(beanGpPerBdv).times(SEED_PRECISION);
-    // Set this equal to the number of seeds for whichever is the user' deposited lp asset
-    let lpSeeds = ZERO_BD;
-    if (token != -1) {
-      if (staticSeeds !== null) {
-        lpSeeds = staticSeeds;
-      } else {
-        lpSeeds = gs.div(gpTotal).times(lpGpPerBdv[token]).times(SEED_PRECISION);
-      }
-    }
 
     totalStalk = totalStalk.plus(gs).plus(earnedBeans);
     gaugeBdv = gaugeBdv.plus(earnedBeans);
     totalBdv = totalBdv.plus(earnedBeans);
     beanBdv = beanBdv.plus(earnedBeans);
 
-    // No bean rewards while the new deposit is germinating, but stalk can grow
-    const userBeanShare = i < 2 ? ZERO_BD : earnedBeans.times(userStalk).div(totalStalk);
-    userStalk = userStalk.plus(userBeanShare).plus(userBeans.times(beanSeeds).plus(userLp.times(lpSeeds)).div(SEED_PRECISION));
-    userBeans = userBeans.plus(userBeanShare);
+    for (let j = 0; j < tokens.length; ++j) {
+      // Set this equal to the number of seeds for whichever is the user' deposited lp asset
+      let lpSeeds = ZERO_BD;
+      if (tokens[j] != -1) {
+        if (tokens[j] < 0) {
+          lpSeeds = staticSeeds[j]!;
+        } else {
+          lpSeeds = gs.div(gpTotal).times(lpGpPerBdv[tokens[j]]).times(SEED_PRECISION);
+        }
+      }
+
+      // No bean rewards while the new deposit is germinating, but stalk can grow
+      const userBeanShare = i < 2 ? ZERO_BD : earnedBeans.times(userStalk[j]).div(totalStalk);
+      userStalk[j] = userStalk[j]
+        .plus(userBeanShare)
+        .plus(userBeans[j].times(beanSeeds).plus(userLp[j].times(lpSeeds)).div(SEED_PRECISION));
+      userBeans[j] = userBeans[j].plus(userBeanShare);
+    }
   }
 
-  const beanApy = userBeans.plus(userLp).minus(ONE_BD).times(BigDecimal.fromString("100"));
-  const stalkApy = userStalk.minus(ONE_BD).times(BigDecimal.fromString("100"));
+  let retval: BigDecimal[][] = [];
+  for (let i = 0; i < tokens.length; ++i) {
+    const beanApy = userBeans[i].plus(userLp[i]).minus(ONE_BD).times(BigDecimal.fromString("100"));
+    const stalkApy = userStalk[i].minus(ONE_BD).times(BigDecimal.fromString("100"));
+    retval.push([beanApy, stalkApy]);
+  }
 
-  return [beanApy, stalkApy];
+  return retval;
 }
 
 function updateFertAPY(t: i32, timestamp: BigInt, window: i32): void {
