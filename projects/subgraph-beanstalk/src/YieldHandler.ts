@@ -273,15 +273,10 @@ export function calculateGaugeVAPY(
     }
 
     const beanGpPerBdv = largestLpGpPerBdv.times(rScaled);
-    // log.debug("bean gp per bdv {}", [beanGpPerBdv.toString()]);
     const gpTotal = BigDecimal_sum(gaugeLpPointsCopy).plus(beanGpPerBdv.times(beanBdv));
-    // log.debug("gpTotal {}", [gpTotal.toString()]);
     const avgGsPerBdv = totalStalk.div(totalBdv).minus(ONE_BD);
-    // log.debug("avgGsPerBdv {}", [avgGsPerBdv.toString()]);
     const gs = avgGsPerBdv.div(catchUpRate).times(gaugeBdv);
-    // log.debug("gs {}", [gs.toString()]);
     const beanSeeds = gs.div(gpTotal).times(beanGpPerBdv).times(SEED_PRECISION);
-    // log.debug("beanSeeds {}", [beanSeeds.toString()]);
     // Set this equal to the number of seeds for whichever is the user' deposited lp asset
     let lpSeeds = ZERO_BD;
     if (token != -1) {
@@ -293,18 +288,14 @@ export function calculateGaugeVAPY(
     }
 
     totalStalk = totalStalk.plus(gs).plus(earnedBeans);
-    // log.debug("totalStalk {}", [totalStalk.toString()]);
     gaugeBdv = gaugeBdv.plus(earnedBeans);
     totalBdv = totalBdv.plus(earnedBeans);
     beanBdv = beanBdv.plus(earnedBeans);
 
     // No bean rewards while the new deposit is germinating, but stalk can grow
     const userBeanShare = i < 2 ? ZERO_BD : earnedBeans.times(userStalk).div(totalStalk);
-    // log.debug("userBeanShare {}", [userBeanShare.toString()]);
     userStalk = userStalk.plus(userBeanShare).plus(userBeans.times(beanSeeds).plus(userLp.times(lpSeeds)).div(SEED_PRECISION));
-    // log.debug("userStalk {}", [userStalk.toString()]);
     userBeans = userBeans.plus(userBeanShare);
-    // log.debug("userBeans {}", [userBeans.toString()]);
   }
 
   const beanApy = userBeans.plus(userLp).minus(ONE_BD).times(BigDecimal.fromString("100"));
