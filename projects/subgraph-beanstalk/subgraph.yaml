@@ -755,16 +755,24 @@ dataSources:
         - name: BeanstalkPrice
           file: ../subgraph-core/abis/BeanstalkPrice.json
       eventHandlers:
+        - event: TemperatureChange(indexed uint256,uint256,int8)
+          handler: handleTemperatureChange
         - event: BeanToMaxLpGpPerBdvRatioChange(indexed uint256,uint256,int80)
           handler: handleBeanToMaxLpGpPerBdvRatioChange
         - event: GaugePointChange(indexed uint256,indexed address,uint256)
           handler: handleGaugePointChange
-        - event: TemperatureChange(indexed uint256,uint256,int8)
-          handler: handleTemperatureChange
-        - event: UpdateGaugeSettings(indexed address,bytes4,bytes4,uint64)
-          handler: handleUpdateGaugeSettings
         - event: UpdateAverageStalkPerBdvPerSeason(uint256)
           handler: handleUpdateAverageStalkPerBdvPerSeason
+        - event: FarmerGerminatingStalkBalanceChanged(indexed address,int256,uint8)
+          handler: handleFarmerGerminatingStalkBalanceChanged
+        - event: TotalGerminatingBalanceChanged(uint256,indexed address,int256,int256)
+          handler: handleTotalGerminatingBalanceChanged
+        - event: TotalGerminatingStalkChanged(uint256,int256)
+          handler: handleTotalGerminatingStalkChanged
+        - event: TotalStalkChangedFromGermination(int256,int256)
+          handler: handleTotalStalkChangedFromGermination
         - event: WhitelistToken(indexed address,bytes4,uint32,uint256,bytes4,bytes4,uint128,uint64)
           handler: handleWhitelistToken_BIP42
+        - event: UpdateGaugeSettings(indexed address,bytes4,bytes4,uint64)
+          handler: handleUpdateGaugeSettings
       file: ./src/GaugeHandler.ts
