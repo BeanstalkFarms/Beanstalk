@@ -760,7 +760,14 @@ function addWithdrawToSiloAsset(
   assetDaily.save();
 }
 
-function updateStalkBalances(account: Address, season: i32, stalk: BigInt, roots: BigInt, timestamp: BigInt, blockNumber: BigInt): void {
+export function updateStalkBalances(
+  account: Address,
+  season: i32,
+  stalk: BigInt,
+  roots: BigInt,
+  timestamp: BigInt,
+  blockNumber: BigInt
+): void {
   let silo = loadSilo(account);
   let siloHourly = loadSiloHourlySnapshot(account, season, timestamp);
   let siloDaily = loadSiloDailySnapshot(account, timestamp);

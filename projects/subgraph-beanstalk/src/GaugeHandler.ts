@@ -23,6 +23,7 @@ import {
 import { Address } from "@graphprotocol/graph-ts";
 import { deleteGerminating, loadGerminating, loadOrCreateGerminating, tryLoadBothGerminating } from "./utils/Germinating";
 import { ZERO_BI } from "../../subgraph-core/utils/Decimals";
+import { updateStalkBalances } from "./SiloHandler";
 
 function getCurrentSeason(beanstalk: Address): i32 {
   let beanstalkEntity = loadBeanstalk(beanstalk);
@@ -121,15 +122,22 @@ export function handleFarmerGerminatingStalkBalanceChanged(event: FarmerGerminat
 // Tracks the germinating balance on a token level
 export function handleTotalGerminatingBalanceChanged(event: TotalGerminatingBalanceChanged): void {
   let tokenGerminating = loadOrCreateGerminating(event.params.token, event.params.germinationSeason.toU32());
+  tokenGerminating.season = event.params.germinationSeason.toU32();
   tokenGerminating.tokenAmount = tokenGerminating.tokenAmount.plus(event.params.deltaAmount);
   tokenGerminating.bdv = tokenGerminating.bdv.plus(event.params.deltaBdv);
-  tokenGerminating.save();
+  if (tokenGerminating.tokenAmount == ZERO_BI) {
+    deleteGerminating(tokenGerminating);
+  } else {
+    tokenGerminating.save();
+  }
 }
 
 // This occurs at the beanstalk level regardless of whether users mow their own germinating stalk into regular stalk.
 export function handleTotalGerminatingStalkChanged(event: TotalGerminatingStalkChanged): void {
   let siloGerminating = loadOrCreateGerminating(event.address, event.params.germinationSeason.toU32());
+  siloGerminating.season = event.params.germinationSeason.toU32();
   siloGerminating.stalk = siloGerminating.stalk.plus(event.params.deltaGerminatingStalk);
+  // Don't delete this entity as the overall silo germinating stalk entity is likely to be recreated frequently.
   siloGerminating.save();
 
   let silo = loadSilo(event.address);
@@ -149,23 +157,14 @@ export function handleTotalGerminatingStalkChanged(event: TotalGerminatingStalkC
 // Germination completes, germinating stalk turns into stalk.
 // The removal of Germinating stalk would have already been handled from a separate emission
 export function handleTotalStalkChangedFromGermination(event: TotalStalkChangedFromGermination): void {
-  let silo = loadSilo(event.address);
-  silo.stalk = silo.stalk.plus(event.params.deltaStalk);
-  silo.roots = silo.roots.plus(event.params.deltaRoots);
-  silo.save();
-
-  let siloHourly = loadSiloHourlySnapshot(event.address, getCurrentSeason(event.address), event.block.timestamp);
-  let siloDaily = loadSiloDailySnapshot(event.address, event.block.timestamp);
-  siloHourly.stalk = silo.stalk;
-  siloHourly.roots = silo.roots;
-  siloHourly.deltaStalk = siloHourly.deltaStalk.plus(event.params.deltaStalk);
-  siloHourly.deltaRoots = siloHourly.deltaRoots.plus(event.params.deltaRoots);
-  siloDaily.stalk = silo.stalk;
-  siloDaily.roots = silo.roots;
-  siloDaily.deltaStalk = siloDaily.deltaStalk.plus(event.params.deltaStalk);
-  siloDaily.deltaRoots = siloDaily.deltaRoots.plus(event.params.deltaRoots);
-  siloHourly.save();
-  siloDaily.save();
+  updateStalkBalances(
+    event.address,
+    getCurrentSeason(event.address),
+    event.params.deltaStalk,
+    event.params.deltaRoots,
+    event.block.timestamp,
+    event.block.number
+  );
 }
 
 // WHITELIST / GAUGE CONFIGURATION SETTINGS //
