@@ -281,7 +281,7 @@ contract ConvertFacet is ReentrancyGuard {
         }
 
         // calculate how much deltaB convert is happening with this convert
-        uint256 convertAmountInDirectionOfPeg = abs(beforeDeltaB - afterDeltaB);
+        uint256 convertAmountInDirectionOfPeg = abs(beforeDeltaB.sub(afterDeltaB));
 
         if (convertAmountInDirectionOfPeg <= s.convertCapacity[block.number].convertCapacity) {
             // all good, you're using less than the available convert power
