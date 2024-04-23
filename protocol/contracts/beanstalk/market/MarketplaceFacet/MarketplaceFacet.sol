@@ -67,7 +67,7 @@ contract MarketplaceFacet is Invariable, Order {
         PodListing calldata l,
         uint256 beanAmount,
         LibTransfer.From mode
-    ) external payable fundsSafu noSupplyChange cappedOutFlow(C.BEAN, beanAmount) {
+    ) external payable fundsSafu noSupplyChange oneOutFlow(C.BEAN) {
         beanAmount = LibTransfer.transferToken(
             C.bean(),
             LibTractor._user(),
@@ -84,7 +84,7 @@ contract MarketplaceFacet is Invariable, Order {
         uint256 beanAmount,
         bytes calldata pricingFunction,
         LibTransfer.From mode
-    ) external payable fundsSafu noSupplyChange cappedOutFlow(C.BEAN, beanAmount) {
+    ) external payable fundsSafu noSupplyChange oneOutFlow(C.BEAN) {
         beanAmount = LibTransfer.transferToken(
             C.bean(),
             LibTractor._user(),
@@ -140,7 +140,7 @@ contract MarketplaceFacet is Invariable, Order {
         uint256 start,
         uint256 amount,
         LibTransfer.To mode
-    ) external payable fundsSafu noSupplyChange cappedOutFlow(C.BEAN, type(uint256).max) {
+    ) external payable fundsSafu noSupplyChange oneOutFlow(C.BEAN) {
         _fillPodOrder(o, index, start, amount, mode);
     }
 
@@ -151,7 +151,7 @@ contract MarketplaceFacet is Invariable, Order {
         uint256 amount,
         bytes calldata pricingFunction,
         LibTransfer.To mode
-    ) external payable fundsSafu noSupplyChange cappedOutFlow(C.BEAN, type(uint256).max) {
+    ) external payable fundsSafu noSupplyChange oneOutFlow(C.BEAN) {
         _fillPodOrderV2(o, index, start, amount, pricingFunction, mode);
     }
 
@@ -161,7 +161,7 @@ contract MarketplaceFacet is Invariable, Order {
         uint256 maxPlaceInLine,
         uint256 minFillAmount,
         LibTransfer.To mode
-    ) external payable fundsSafu noSupplyChange cappedOutFlow(C.BEAN, type(uint256).max) {
+    ) external payable fundsSafu noSupplyChange oneOutFlow(C.BEAN) {
         _cancelPodOrder(pricePerPod, maxPlaceInLine, minFillAmount, mode);
     }
 
@@ -170,7 +170,7 @@ contract MarketplaceFacet is Invariable, Order {
         uint256 minFillAmount,
         bytes calldata pricingFunction,
         LibTransfer.To mode
-    ) external payable fundsSafu noSupplyChange cappedOutFlow(C.BEAN, type(uint256).max) {
+    ) external payable fundsSafu noSupplyChange oneOutFlow(C.BEAN) {
         _cancelPodOrderV2(maxPlaceInLine, minFillAmount, pricingFunction, mode);
     }
 

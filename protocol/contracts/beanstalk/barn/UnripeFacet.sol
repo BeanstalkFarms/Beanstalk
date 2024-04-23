@@ -88,7 +88,6 @@ contract UnripeFacet is Invariable, ReentrancyGuard {
         payable
         fundsSafu
         noSupplyChange
-        cappedOutFlow(LibUnripe._getUnderlyingToken(unripeToken), amount)
         nonReentrant
         returns (uint256)
     {
@@ -122,7 +121,7 @@ contract UnripeFacet is Invariable, ReentrancyGuard {
         uint256 amount,
         bytes32[] memory proof,
         LibTransfer.To mode
-    ) external payable fundsSafu noSupplyChange cappedOutFlow(token, amount) nonReentrant {
+    ) external payable fundsSafu noSupplyChange oneOutFlow(token) nonReentrant {
         bytes32 root = s.u[token].merkleRoot;
         require(root != bytes32(0), "UnripeClaim: invalid token");
         require(!picked(LibTractor._user(), token), "UnripeClaim: already picked");

@@ -81,23 +81,23 @@ abstract contract Invariable {
         }
     }
 
-    modifier cappedOutFlow(address token, uint256 maxAmountOut) {
+    /**
+     * @notice All except one watched token balances do not decrease.
+     * @dev Favor noNetFlow or noOutFlow where applicable.
+     */
+    modifier oneOutFlow(address outboundToken) {
         address[] memory tokens = getTokensOfInterest();
         uint256[] memory initialProtocolTokenBalances = getTokenBalances(tokens);
         _;
         uint256[] memory finalProtocolTokenBalances = getTokenBalances(tokens);
 
         for (uint256 i; i < tokens.length; i++) {
-            if (tokens[i] == token) {
-                if (finalProtocolTokenBalances[i] >= initialProtocolTokenBalances[i]) continue;
-                require(
-                    initialProtocolTokenBalances[i].sub(finalProtocolTokenBalances[i]) <= maxAmountOut,
-                    "INV: Excess outflow"
-                );
+            if (tokens[i] == outboundToken) {
+                continue;
             }
             require(
-                initialProtocolTokenBalances[i] >= finalProtocolTokenBalances[i],
-                "INV: Non-capped token balance changed"
+                initialProtocolTokenBalances[i] <= finalProtocolTokenBalances[i],
+                "INV: oneOutFlow token balance decreased"
             );
         }
     }

@@ -50,7 +50,7 @@ contract FertilizerFacet is Invariable {
     function claimFertilized(
         uint256[] calldata ids,
         LibTransfer.To mode
-    ) external payable fundsSafu noSupplyChange cappedOutFlow(C.BEAN, type(uint256).max) {
+    ) external payable fundsSafu noSupplyChange oneOutFlow(C.BEAN) {
         uint256 amount = C.fertilizer().beanstalkUpdate(LibTractor._user(), ids, s.bpf);
         s.fertilizedPaidIndex += amount;
         LibTransfer.sendToken(C.bean(), amount, LibTractor._user(), mode);
@@ -99,7 +99,7 @@ contract FertilizerFacet is Invariable {
     function payFertilizer(
         address account,
         uint256 amount
-    ) external payable fundsSafu noSupplyChange cappedOutFlow(C.BEAN, amount) {
+    ) external payable fundsSafu noSupplyChange oneOutFlow(C.BEAN) {
         require(msg.sender == C.fertilizerAddress());
         s.fertilizedPaidIndex += amount;
         LibTransfer.sendToken(C.bean(), amount, account, LibTransfer.To.INTERNAL);

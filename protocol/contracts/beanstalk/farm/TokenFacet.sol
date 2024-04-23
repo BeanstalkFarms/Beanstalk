@@ -61,7 +61,7 @@ contract TokenFacet is Invariable, IERC1155Receiver, ReentrancyGuard {
         uint256 amount,
         LibTransfer.From fromMode,
         LibTransfer.To toMode
-    ) external payable fundsSafu noSupplyChange cappedOutFlow(address(token), amount) {
+    ) external payable fundsSafu noSupplyChange oneOutFlow(address(token)) {
         LibTransfer.transferToken(
             token,
             LibTractor._user(),
@@ -82,7 +82,7 @@ contract TokenFacet is Invariable, IERC1155Receiver, ReentrancyGuard {
         address recipient,
         uint256 amount,
         LibTransfer.To toMode
-    ) external payable fundsSafu noSupplyChange cappedOutFlow(address(token), amount) nonReentrant {
+    ) external payable fundsSafu noSupplyChange oneOutFlow(address(token)) nonReentrant {
         LibTransfer.transferToken(
             token,
             sender,

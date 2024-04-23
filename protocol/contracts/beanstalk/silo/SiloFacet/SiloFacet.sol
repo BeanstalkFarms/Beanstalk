@@ -89,7 +89,7 @@ contract SiloFacet is Invariable, TokenSilo {
         int96 stem,
         uint256 amount,
         LibTransfer.To mode
-    ) external payable fundsSafu noSupplyChange cappedOutFlow(token, amount) mowSender(token) nonReentrant {
+    ) external payable fundsSafu noSupplyChange oneOutFlow(token) mowSender(token) nonReentrant {
         _withdrawDeposit(LibTractor._user(), token, stem, amount);
         LibTransfer.sendToken(IERC20(token), amount, LibTractor._user(), mode);
     }
@@ -113,7 +113,7 @@ contract SiloFacet is Invariable, TokenSilo {
         int96[] calldata stems,
         uint256[] calldata amounts,
         LibTransfer.To mode
-    ) external payable fundsSafu noSupplyChange mowSender(token) nonReentrant { //  cappedOutFlow(token, [SUM] )
+    ) external payable fundsSafu noSupplyChange oneOutFlow(token) mowSender(token) nonReentrant {
         uint256 amount = _withdrawDeposits(LibTractor._user(), token, stems, amounts);
         LibTransfer.sendToken(IERC20(token), amount, LibTractor._user(), mode);
     }
@@ -304,7 +304,7 @@ contract SiloFacet is Invariable, TokenSilo {
     /**
      * @notice Claim rewards from a Flood (Was Season of Plenty)
      */
-    function claimPlenty() external payable fundsSafu noSupplyChange cappedOutFlow(address(LibSilo.getSopToken()), type(uint256).max) {
+    function claimPlenty() external payable fundsSafu noSupplyChange oneOutFlow(address(LibSilo.getSopToken())) {
         _claimPlenty(LibTractor._user());
     }
 }
