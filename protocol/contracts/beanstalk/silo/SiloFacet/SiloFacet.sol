@@ -31,45 +31,40 @@ contract SiloFacet is Invariable, TokenSilo {
 
     //////////////////////// DEPOSIT ////////////////////////
 
-    /** 
+    /**
      * @notice Deposits an ERC20 into the Silo.
      * @dev farmer is issued stalk and seeds based on token (i.e non-whitelisted tokens do not get any)
      * @param token address of ERC20
      * @param amount tokens to be transferred
      * @param mode source of funds (INTERNAL, EXTERNAL, EXTERNAL_INTERNAL, INTERNAL_TOLERANT)
      * @dev Depositing should:
-     * 
+     *
      *  1. Transfer `amount` of `token` from `account` to Beanstalk.
      *  2. Calculate the current Bean Denominated Value (BDV) for `amount` of `token`.
      *  3. Create or update a Deposit entry for `account` in the current Season.
      *  4. Mint Stalk to `account`.
      *  5. Emit an `AddDeposit` event.
-     * 
+     *
      */
     function deposit(
         address token,
         uint256 _amount,
         LibTransfer.From mode
-    ) 
+    )
         external
         payable
-        fundsSafu noSupplyChange
+        fundsSafu noSupplyChange noOutFlow
         nonReentrant
         mowSender(token)
         returns (uint256 amount, uint256 _bdv, int96 stem)
     {
-        amount = LibTransfer.receiveToken(
-            IERC20(token),
-            _amount,
-            LibTractor._user(),
-            mode
-        );
+        amount = LibTransfer.receiveToken(IERC20(token), _amount, LibTractor._user(), mode);
         (_bdv, stem) = _deposit(LibTractor._user(), token, amount);
     }
 
     //////////////////////// WITHDRAW ////////////////////////
 
-    /** 
+    /**
      * @notice Withdraws an ERC20 Deposit from the Silo.
      * @param token Address of the whitelisted ERC20 token to Withdraw.
      * @param stem The stem to Withdraw from.
@@ -94,7 +89,7 @@ contract SiloFacet is Invariable, TokenSilo {
         int96 stem,
         uint256 amount,
         LibTransfer.To mode
-    ) external payable fundsSafu noSupplyChange mowSender(token) nonReentrant {
+    ) external payable fundsSafu noSupplyChange cappedOutFlow(token, amount) mowSender(token) nonReentrant {
         _withdrawDeposit(LibTractor._user(), token, stem, amount);
         LibTransfer.sendToken(IERC20(token), amount, LibTractor._user(), mode);
     }
@@ -118,7 +113,7 @@ contract SiloFacet is Invariable, TokenSilo {
         int96[] calldata stems,
         uint256[] calldata amounts,
         LibTransfer.To mode
-    ) external payable fundsSafu noSupplyChange mowSender(token) nonReentrant {
+    ) external payable fundsSafu noSupplyChange mowSender(token) nonReentrant { //  cappedOutFlow(token, [SUM] )
         uint256 amount = _withdrawDeposits(LibTractor._user(), token, stems, amounts);
         LibTransfer.sendToken(IERC20(token), amount, LibTractor._user(), mode);
     }
@@ -309,7 +304,7 @@ contract SiloFacet is Invariable, TokenSilo {
     /**
      * @notice Claim rewards from a Flood (Was Season of Plenty)
      */
-    function claimPlenty() external payable fundsSafu noSupplyChange {
+    function claimPlenty() external payable fundsSafu noSupplyChange cappedOutFlow(address(LibSilo.getSopToken()), type(uint256).max) {
         _claimPlenty(LibTractor._user());
     }
 }

@@ -65,6 +65,43 @@ abstract contract Invariable {
         }
     }
 
+    modifier noOutFlow() {
+        uint256 initialStalk = LibAppStorage.diamondStorage().s.stalk;
+        address[] memory tokens = getTokensOfInterest();
+        uint256[] memory initialProtocolTokenBalances = getTokenBalances(tokens);
+        _;
+        uint256[] memory finalProtocolTokenBalances = getTokenBalances(tokens);
+
+        require(LibAppStorage.diamondStorage().s.stalk >= initialStalk, "INV: Stalk down");
+        for (uint256 i; i < tokens.length; i++) {
+            require(
+                initialProtocolTokenBalances[i] <= finalProtocolTokenBalances[i],
+                "INV: Token balance decreased"
+            );
+        }
+    }
+
+    modifier cappedOutFlow(address token, uint256 maxAmountOut) {
+        address[] memory tokens = getTokensOfInterest();
+        uint256[] memory initialProtocolTokenBalances = getTokenBalances(tokens);
+        _;
+        uint256[] memory finalProtocolTokenBalances = getTokenBalances(tokens);
+
+        for (uint256 i; i < tokens.length; i++) {
+            if (tokens[i] == token) {
+                if (finalProtocolTokenBalances[i] >= initialProtocolTokenBalances[i]) continue;
+                require(
+                    initialProtocolTokenBalances[i].sub(finalProtocolTokenBalances[i]) <= maxAmountOut,
+                    "INV: Excess outflow"
+                );
+            }
+            require(
+                initialProtocolTokenBalances[i] >= finalProtocolTokenBalances[i],
+                "INV: Non-capped token balance changed"
+            );
+        }
+    }
+
     /**
      * @notice Does not change the supply of Beans. No minting, no burning.
      * @dev Applies to all but a very few functions. Sunrise, sow, raise.

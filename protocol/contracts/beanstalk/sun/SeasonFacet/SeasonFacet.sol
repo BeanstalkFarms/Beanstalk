@@ -32,8 +32,10 @@ contract SeasonFacet is Invariable, Weather {
     /**
      * @notice Advances Beanstalk to the next Season, sending reward Beans to the caller's circulating balance.
      * @return reward The number of beans minted to the caller.
+     * @dev No out flow because any externally sent reward beans are freshly minted.
      */
-    function sunrise() external payable fundsSafu noNetFlow returns (uint256) {
+    // TODO: FIx this. should be broken from noNetFlow bc balance of beanstalk will increase
+    function sunrise() external payable fundsSafu noOutFlow returns (uint256) {
         return gm(LibTractor._user(), LibTransfer.To.EXTERNAL);
     }
 
@@ -42,8 +44,12 @@ contract SeasonFacet is Invariable, Weather {
      * @param account Indicates to which address reward Beans should be sent
      * @param mode Indicates whether the reward beans are sent to internal or circulating balance
      * @return reward The number of Beans minted to the caller.
+     * @dev No out flow because any externally sent reward beans are freshly minted.
      */
-    function gm(address account, LibTransfer.To mode) public payable fundsSafu returns (uint256) {
+    function gm(
+        address account,
+        LibTransfer.To mode
+    ) public payable fundsSafu noOutFlow returns (uint256) {
         uint256 initialGasLeft = gasleft();
 
         require(!s.paused, "Season: Paused.");
