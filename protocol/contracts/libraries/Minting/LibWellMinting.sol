@@ -214,7 +214,7 @@ library LibWellMinting {
      * @param well The address of the Well.
      * @return deltaB The instantaneous delta B balance since the last `capture` call.
      */
-    function instantaneousDeltaBForConvert(address well) internal view returns 
+    function instantaneousDeltaB(address well) internal view returns
         (int256 deltaB) {
         AppStorage storage s = LibAppStorage.diamondStorage();
         IERC20[] memory tokens = IWell(well).tokens();
@@ -228,7 +228,7 @@ library LibWellMinting {
             // success var unused
         ) = LibWell.getRatiosAndBeanIndex(tokens, block.timestamp.sub(s.season.timestamp));
 
-        // assume that if liquidity is too low, don't allow converting (mainly so people don't get bad prices?)
+        // Converts cannot be performed, if the Bean reserve is less than the minimum
         if (reserves[beanIndex] < C.WELL_MINIMUM_BEAN_BALANCE) {
             return (0);
         }
