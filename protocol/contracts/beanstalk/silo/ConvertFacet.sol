@@ -221,40 +221,6 @@ contract ConvertFacet is ReentrancyGuard {
         (deltaB, instReserves, ratios) = LibWellMinting.cappedReservesDeltaB(well);
     }
 
-    /**
-     * @dev A public function for the below
-     */
-    function applyPenaltyToGrownStalks(uint256 penaltyBdv, uint256[] memory bdvsRemoved, uint256[] memory grownStalks)
-        external view returns (uint256[] memory) {
-        return _applyPenaltyToGrownStalks(penaltyBdv, bdvsRemoved, grownStalks);
-    }
-
-    /**
-     * @param stalkPenaltyBdv The amount of penalty to apply to the input crates
-     * @param bdvsRemoved The amount of BDVs that were removed for the convert
-     * @param grownStalks The corresponding grown stalk amount for each convert
-     */
-    function _applyPenaltyToGrownStalks(uint256 stalkPenaltyBdv, uint256[] memory bdvsRemoved, uint256[] memory grownStalks)
-        internal view returns (uint256[] memory) {
-        for (uint256 i = bdvsRemoved.length; i != 0; i--) { // this i!=0 feels weird to me somehow, but appears to be necessary
-            uint256 bdvRemoved = bdvsRemoved[i-1];
-            uint256 grownStalk = grownStalks[i-1];
-
-            if (stalkPenaltyBdv >= bdvRemoved) {
-                stalkPenaltyBdv -= bdvRemoved;
-                grownStalks[i-1] = 0;
-            } else {
-                uint256 penaltyPercentage = stalkPenaltyBdv.mul(1e16).div(bdvRemoved);
-                grownStalks[i-1] = grownStalk.sub(grownStalk.mul(penaltyPercentage).div(1e16));
-                stalkPenaltyBdv = 0;
-            }
-            if (stalkPenaltyBdv == 0) {
-                break;
-            }
-        }
-        return grownStalks;
-    }
-
     // public function for the below
     function calculateStalkPenalty(int256 beforeDeltaB, int256 afterDeltaB, uint256 bdvConverted, uint256 cappedDeltaB)
         external returns (uint256 stalkPenaltyBdv) {
