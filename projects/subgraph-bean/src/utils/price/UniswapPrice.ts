@@ -11,17 +11,23 @@ import { getTWAPrices } from "./TwaOracle";
 
 export function updatePreReplantPriceETH(): Token {
   let token = loadOrCreateToken(WETH.toHexString());
-  let pair = UniswapV2Pair.bind(WETH_USDC_PAIR);
-
-  let reserves = pair.try_getReserves();
-  if (reserves.reverted) {
+  let price = getPreReplantPriceETH();
+  if (price.lt(ZERO_BD)) {
     return token;
   }
 
-  // Token 0 is USDC and Token 1 is WETH
-  token.lastPriceUSD = toDecimal(reserves.value.value0).div(toDecimal(reserves.value.value1, 18));
+  token.lastPriceUSD = price;
   token.save();
   return token;
+}
+
+export function getPreReplantPriceETH(): BigDecimal {
+  let reserves = uniswapV2Reserves(WETH_USDC_PAIR);
+  if (reserves.length == 0) {
+    return BigDecimal.fromString("-1");
+  }
+  // Token 0 is USDC and Token 1 is WETH
+  return toDecimal(reserves[0]).div(toDecimal(reserves[1], 18));
 }
 
 export function calcUniswapV2Inst(pool: Pool): DeltaBPriceLiquidity {
