@@ -189,5 +189,37 @@ contract WhitelistFacet is WhitelistedTokens {
             optimalPercentDepositedBdv
         );
     }
-    
+
+    /**
+     * @notice Updates the Oracle Implmentation for a given Token.
+     */
+    function updateOracleImplmentationForToken(
+        address token,
+        Storage.Implmentation memory impl
+    ) external payable {
+        LibDiamond.enforceIsOwnerOrContract();
+        LibWhitelist.updateOracleImplmentationForToken(token, impl);
+    }
+
+    /**
+     * @notice Updates the Liquidity Weight Implmentation for a given Token.
+     */
+    function updateLiqudityWeightImplmentationForToken(
+        address token,
+        Storage.Implmentation memory impl
+    ) external payable {
+        LibDiamond.enforceIsOwnerOrContract();
+        LibWhitelist.updateLiqudityWeightImplmentationForToken(token, impl);
+    }
+
+    /**
+     * @notice Updates the Gauge Point Implmentation for a given Token.
+     */
+    function updateGaugePointImplmentationForToken(
+        address token,
+        Storage.Implmentation memory impl
+    ) external payable {
+        LibDiamond.enforceIsOwnerOrContract();
+        LibWhitelist.updateGaugePointImplmentationForToken(token, impl);
+    }
 }

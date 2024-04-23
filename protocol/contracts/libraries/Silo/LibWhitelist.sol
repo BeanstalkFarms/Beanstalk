@@ -12,6 +12,7 @@ import {LibWhitelistedTokens} from "contracts/libraries/Silo/LibWhitelistedToken
 import {LibUnripe} from "contracts/libraries/LibUnripe.sol";
 import {LibWell, IWell} from "contracts/libraries/Well/LibWell.sol";
 import {LibSafeMath32} from "contracts/libraries/LibSafeMath32.sol";
+import {IChainlinkAggregator} from "contracts/interfaces/chainlink/IChainlinkAggregator.sol";
 
 /**
  * @title LibWhitelist
@@ -44,10 +45,37 @@ library LibWhitelist {
         uint64 optimalPercentDepositedBdv
     );
 
+    /**
+     * @notice Emitted when a token is added to the Silo Whitelist with external implmentation(s).
+     */
     event WhitelistTokenWithExternalImplmentation(
         Storage.Implmentation oracleImplmentation,
         Storage.Implmentation gpImplmentation,
         Storage.Implmentation lwImplmentation
+    );
+
+    /**
+     * @notice Emitted when the oracle implmentation for a token is updated.
+     */
+    event UpdatedOracleImplmentationForToken(
+        address indexed token,
+        Storage.Implmentation oracleImplmentation
+    );
+
+    /**
+     * @notice Emitted when the gauge point implmentation for a token is updated.
+     */
+    event UpdatedGaugePointImplmentationForToken(
+        address indexed token,
+        Storage.Implmentation gaugePointImplmentation
+    );
+    
+    /**
+     * @notice Emitted when the liquidity weight implmentation for a token is updated.
+     */
+    event UpdatedLiqudityWeightImplmentationForToken(
+        address indexed token,
+        Storage.Implmentation liquidityWeightImplmentation
     );
 
     /**
@@ -163,8 +191,13 @@ library LibWhitelist {
 
         // verify the BDV, gaugePoint, and liquidityWeight selector.
         verifyBDVselector(token, encodeType, selector);
-        verifyGaugePointSelectorWithAddress(gpImplmentation.target, gpImplmentation.selector);
-        verifyLiquidityWeightSelectorWithAddress(lwImplmentation.target, lwImplmentation.selector);
+        verifyOracleImplmentation(
+            oracleImplmentation.target,
+            oracleImplmentation.selector,
+            oracleImplmentation.encodeType
+        );
+        verifyGaugePointImplmentation(gpImplmentation.target, gpImplmentation.selector);
+        verifyLiquidityWeightImplmentation(lwImplmentation.target, lwImplmentation.selector);
 
         // add whitelist status
         LibWhitelistedTokens.addWhitelistStatus(
@@ -279,6 +312,70 @@ library LibWhitelist {
     }
 
     /**
+     * @notice updates the oracle implmentation for a token.
+     */
+    function updateOracleImplmentationForToken(
+        address token,
+        Storage.Implmentation memory oracleImplmentation
+    ) internal {
+        Storage.SiloSettings storage ss = LibAppStorage.diamondStorage().ss[token];
+        require(ss.selector != 0, "Whitelist: Token not whitelisted in Silo");
+        
+        // check that new implmentation is valid.
+        verifyOracleImplmentation(
+            oracleImplmentation.target,
+            oracleImplmentation.selector,
+            oracleImplmentation.encodeType
+        );
+        
+        ss.oracleImplmentation = oracleImplmentation;
+        
+        emit UpdatedOracleImplmentationForToken(token, oracleImplmentation);
+    }
+
+    /**
+     * @notice updates the gauge point implmentation for a token.
+     */
+    function updateGaugePointImplmentationForToken(
+        address token,
+        Storage.Implmentation memory gpImplmentation
+    ) internal {
+        Storage.SiloSettings storage ss = LibAppStorage.diamondStorage().ss[token];
+        require(ss.selector != 0, "Whitelist: Token not whitelisted in Silo");
+        
+        // check that new implmentation is valid.
+        verifyGaugePointImplmentation(
+            gpImplmentation.target,
+            gpImplmentation.selector
+        );
+        
+        ss.gaugePointImplmentation = gpImplmentation;
+        
+        emit UpdatedGaugePointImplmentationForToken(token, gpImplmentation);
+    }
+
+    /**
+     * @notice updates the gauge point implmentation for a token.
+     */
+    function updateLiqudityWeightImplmentationForToken(
+        address token,
+        Storage.Implmentation memory lwImplmentation
+    ) internal {
+        Storage.SiloSettings storage ss = LibAppStorage.diamondStorage().ss[token];
+        require(ss.selector != 0, "Whitelist: Token not whitelisted in Silo");
+        
+        // check that new implmentation is valid.
+        verifyLiquidityWeightImplmentation(
+            lwImplmentation.target,
+            lwImplmentation.selector
+        );
+        
+        ss.liquidityWeightImplmentation = lwImplmentation;
+        
+        emit UpdatedLiqudityWeightImplmentationForToken(token, lwImplmentation);
+    }
+
+    /**
      * @notice Removes an ERC-20 token from the Silo Whitelist.
      *
      */
@@ -302,6 +399,11 @@ library LibWhitelist {
         delete s.ss[token].lwSelector;
         delete s.ss[token].optimalPercentDepositedBdv;
 
+        // delete implmentations:
+        delete s.ss[token].oracleImplmentation;
+        delete s.ss[token].gaugePointImplmentation;
+        delete s.ss[token].liquidityWeightImplmentation;
+
         emit DewhitelistToken(token);
     }
 
@@ -316,17 +418,40 @@ library LibWhitelist {
     }
 
     /**
+     * @notice Verifies whether a gaugePointSelector at an external contract
+     * is valid for the gauge system.
+     */
+    function verifyOracleImplmentation(
+        address oracleImplmentation,
+        bytes4 selector,
+        bytes1 encodeType
+    ) internal view {
+        bool success;
+        // if the encode type is 0x01, verify using the chainlink implmentation. 
+        if(encodeType == bytes1(0x01)) {
+            (success, ) = oracleImplmentation.staticcall(
+                abi.encodeWithSelector(IChainlinkAggregator.decimals.selector)
+            );
+        } else {
+            // verify you passed in a callable oracle selector
+            (success, ) = oracleImplmentation.staticcall(abi.encodeWithSelector(selector, 0));
+        }
+        
+        require(success, "Whitelist: Invalid Oracle Implmentation");
+    }
+
+    /**
      * @notice Verifies whether the gaugePointSelector is valid for the gauge system.
      */
     function verifyGaugePointSelector(bytes4 selector) internal view {
-        verifyGaugePointSelectorWithAddress(address(this), selector);
+        verifyGaugePointImplmentation(address(this), selector);
     }
 
     /**
      * @notice Verifies whether a gaugePointSelector at an external contract
      * is valid for the gauge system.
      */
-    function verifyGaugePointSelectorWithAddress(
+    function verifyGaugePointImplmentation(
         address gpImplmentation,
         bytes4 selector
     ) internal view {
@@ -340,14 +465,14 @@ library LibWhitelist {
      */
     function verifyLiquidityWeightSelector(bytes4 selector) internal view {
         // verify you passed in a callable liquidityWeight selector
-        verifyLiquidityWeightSelectorWithAddress(address(this), selector);
+        verifyLiquidityWeightImplmentation(address(this), selector);
     }
 
     /**
      * @notice Verifies whether liquidityWeight selector at an external contract
      * is valid for the gauge system.
      */
-    function verifyLiquidityWeightSelectorWithAddress(
+    function verifyLiquidityWeightImplmentation(
         address lwImplmentation,
         bytes4 selector
     ) internal view {
