@@ -156,7 +156,7 @@ library LibTokenSilo {
             amount.toUint128()
         );
         germinate.deposited[token].bdv = germinate.deposited[token].bdv.sub(bdv.toUint128());
-
+    
         emit LibGerminate.TotalGerminatingBalanceChanged(
             LibGerminate.getSeasonGerminationState() == germ ? 
                 s.season.current : 
@@ -303,9 +303,6 @@ library LibTokenSilo {
      *
      * Unlike {removeDepositFromAccount}, this function DOES EMIT an
      * {AddDeposit} event. See {removeDepositFromAccount} for more details.
-     *
-     * If a deposit is 'germinating', increment the germinating bdv for a user.
-     * Otherwise, increment the mow status bdv for a user.
      */
     function addDepositToAccount(
         address account,
@@ -408,11 +405,11 @@ library LibTokenSilo {
 
             // SafeCast unnecessary b/c updatedAmount <= crateAmount and updatedBDV <= crateBDV, 
             // which are both <= type(uint128).max
-            s.a[account].deposits[depositId].amount = uint128(updatedAmount);
-            s.a[account].deposits[depositId].bdv = uint128(updatedBDV);
+            s.a[account].deposits[depositId].amount = updatedAmount.toUint128();
+            s.a[account].deposits[depositId].bdv = updatedBDV.toUint128();
             
             s.a[account].mowStatuses[token].bdv = s.a[account].mowStatuses[token].bdv.sub(
-                uint128(removedBDV)
+                removedBDV.toUint128()
             );
 
             return removedBDV;
@@ -422,7 +419,7 @@ library LibTokenSilo {
 
         // SafeMath unnecessary b/c crateBDV <= type(uint128).max
         s.a[account].mowStatuses[token].bdv = s.a[account].mowStatuses[token].bdv.sub(
-            uint128(crateBDV)
+            crateBDV.toUint128()
         );
     }
 
