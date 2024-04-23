@@ -52,6 +52,7 @@ describe("APY Calculations", () => {
 
   describe("With Seed Gauge", () => {
     test("Token yields - direct calculation", () => {
+      // return;
       // Calculated in a single call - 5000 ms
       const apy = YieldHandler.calculateGaugeVAPYs(
         [-1, 0, -2],
@@ -66,7 +67,7 @@ describe("APY Calculations", () => {
         BigDecimal.fromString("4320"),
         ZERO_BI,
         [ZERO_BD, ZERO_BD],
-        [[ZERO_BD], [ZERO_BD]],
+        [[ZERO_BD, ZERO_BD]],
         [ZERO_BD, ZERO_BD],
         [null, null, ZERO_BD]
       );
@@ -138,10 +139,11 @@ describe("APY Calculations", () => {
       beanWhitelistSettings.save();
 
       let beanEthWhitelistSettings = loadWhitelistTokenSetting(BEAN_WETH_CP2_WELL);
+      beanEthWhitelistSettings.gaugePoints = BigInt.fromString("100000000000000000000");
       beanEthWhitelistSettings.gpSelector = Bytes.fromHexString("0x12345678");
       beanEthWhitelistSettings.lwSelector = Bytes.fromHexString("0x12345678");
       beanEthWhitelistSettings.optimalPercentDepositedBdv = BigInt.fromString("100000000");
-      beanWhitelistSettings.save();
+      beanEthWhitelistSettings.save();
 
       let urbeanWhitelistSettings = loadWhitelistTokenSetting(UNRIPE_BEAN);
       urbeanWhitelistSettings.stalkEarnedPerSeason = ZERO_BI;
