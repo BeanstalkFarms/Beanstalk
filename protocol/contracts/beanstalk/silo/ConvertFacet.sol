@@ -240,7 +240,7 @@ contract ConvertFacet is ReentrancyGuard {
      */
     function _calculateStalkPenalty(int256 beforeDeltaB, int256 afterDeltaB, uint256 bdvConverted, uint256 cappedDeltaB) internal returns (uint256 stalkPenaltyBdv) {
         // represents how far past peg deltaB was moved
-        uint256 crossoverAmount = 0;
+        uint256 crossoverAmount;
 
         // the bdv amount that was converted against peg
         uint256 amountAgainstPeg = abs(afterDeltaB.sub(beforeDeltaB));
@@ -255,7 +255,7 @@ contract ConvertFacet is ReentrancyGuard {
         // indicating that deltaB has crossed zero
         if ((beforeDeltaB > 0 && afterDeltaB < 0) || (beforeDeltaB < 0 && afterDeltaB > 0)) {
             // Calculate how far past peg we went - so actually this is just abs of new deltaB
-            crossoverAmount = uint256(abs(int256(afterDeltaB)));
+            crossoverAmount = abs(afterDeltaB);
 
             // Check if the crossoverAmount is greater than or equal to bdvConverted
             // TODO: see if we can find cases where bdcConverted doesn't match the deltaB diff? should always in theory afaict
