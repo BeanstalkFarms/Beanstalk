@@ -307,7 +307,7 @@ contract ConvertFacet is ReentrancyGuard {
      * @notice Returns currently available convert power for this block
      * @return convertCapacity The amount of convert power available for this block
      */
-    function getConvertCapacity() public view returns (uint256) {
+    function getConvertCapacity() external view returns (uint256) {
         if (s.convertCapacity[block.number].hasConvertHappenedThisBlock == false) {
             // if convert power has not been initialized for this block, use the overall deltaB
             return abs(LibWellMinting.overallCappedDeltaB());
