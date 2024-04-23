@@ -45,7 +45,6 @@ export function loadSilo(account: Address): Silo {
 }
 
 export function loadSiloHourlySnapshot(account: Address, season: i32, timestamp: BigInt): SiloHourlySnapshot {
-  let hour = hourFromTimestamp(timestamp);
   let id = account.toHexString() + "-" + season.toString();
   let snapshot = SiloHourlySnapshot.load(id);
   if (snapshot == null) {
@@ -71,7 +70,7 @@ export function loadSiloHourlySnapshot(account: Address, season: i32, timestamp:
     snapshot.deltaGerminatingStalk = ZERO_BI;
     snapshot.deltaBeanMints = ZERO_BI;
     snapshot.deltaActiveFarmers = 0;
-    snapshot.createdAt = BigInt.fromString(hour);
+    snapshot.createdAt = BigInt.fromString(hourFromTimestamp(timestamp));
     snapshot.updatedAt = timestamp;
     snapshot.save();
   }

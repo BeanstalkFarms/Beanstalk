@@ -29,8 +29,8 @@ export function tryLoadBothGerminating(address: Address): Array<Germinating | nu
 export function getGerminatingBdvs(address: Address): Array<BigDecimal> {
   const germinatingState = tryLoadBothGerminating(address);
   return [
-    germinatingState[0] !== null ? toDecimal(germinatingState[0].bdv) : ZERO_BD,
-    germinatingState[1] !== null ? toDecimal(germinatingState[1].bdv) : ZERO_BD
+    germinatingState[0] !== null ? toDecimal(germinatingState[0]!.bdv) : ZERO_BD,
+    germinatingState[1] !== null ? toDecimal(germinatingState[1]!.bdv) : ZERO_BD
   ];
 }
 
