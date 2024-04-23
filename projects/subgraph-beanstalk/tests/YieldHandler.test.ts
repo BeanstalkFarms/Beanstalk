@@ -71,6 +71,27 @@ describe("APY Calculations", () => {
         log.info(`bean apy: {}`, [(apy[0] as BigDecimal).toString()]);
         log.info(`stalk apy: {}`, [(apy[1] as BigDecimal).toString()]);
       }
+
+      const apyUnripe = YieldHandler.calculateGaugeVAPY(
+        -2,
+        BigDecimal.fromString("100"),
+        [BigDecimal.fromString("100")],
+        [BigDecimal.fromString("899088")],
+        BigDecimal.fromString("43974853"),
+        [BigDecimal.fromString("100")],
+        BigDecimal.fromString("0.33"),
+        BigDecimal.fromString("2798474"),
+        BigDecimal.fromString("161540879"),
+        BigDecimal.fromString("4320"),
+        ZERO_BI,
+        [ZERO_BD, ZERO_BD],
+        [[ZERO_BD], [ZERO_BD]],
+        [ZERO_BD, ZERO_BD],
+        ZERO_BD
+      );
+
+      log.info(`bean apy: {}`, [(apyUnripe[0] as BigDecimal).toString()]);
+      log.info(`stalk apy: {}`, [(apyUnripe[1] as BigDecimal).toString()]);
     });
   });
 });
