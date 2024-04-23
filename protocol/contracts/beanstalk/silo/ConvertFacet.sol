@@ -211,6 +211,7 @@ contract ConvertFacet is ReentrancyGuard {
     }
 
     /**
+     * @notice Returns the multi-block MEV resistant deltaB for a given token using capped reserves from the well.
      * @param well The well for which to return the capped reserves deltaB
      * @return deltaB The capped reserves deltaB for the well
      */
