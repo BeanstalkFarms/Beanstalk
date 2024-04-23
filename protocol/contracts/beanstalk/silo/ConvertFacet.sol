@@ -43,23 +43,15 @@ contract ConvertFacet is ReentrancyGuard {
         uint256[] depositIds;
     }
 
-    struct MultiCrateDepositData {
-        uint256 amountPerBdv;
-        uint256 totalAmount;
-        uint256 crateAmount;
-        uint256 depositedBdv;
-        int96 stem;
-        LibGerminate.Germinate germ;
-    }
-
     struct PipelineConvertData {
-        uint256[] bdvsRemoved;
-        uint256[] grownStalks;
-        int256 startingDeltaB;
-        uint256 amountOut;
-        uint256 percentStalkPenalty; // 0 means no penalty, 1 means 100% penalty
+        uint256 grownStalk;
+        int256 startingCombinedDeltaB;
+        int256 endingCombinedDeltaB;
+        uint256 inputAmount;
         int256 cappedDeltaB;
         uint256 stalkPenaltyBdv;
+        address user;
+        uint256 newBdv;
     }
 
     event Convert(
@@ -122,7 +114,7 @@ contract ConvertFacet is ReentrancyGuard {
         LibSilo._mow(LibTractor._user(), fromToken);
         LibSilo._mow(LibTractor._user(), toToken);
 
-        (grownStalk, fromBdv, , ) = _withdrawTokens(
+        (grownStalk, fromBdv) = _withdrawTokens(
             fromToken,
             stems,
             amounts,
@@ -146,8 +138,11 @@ contract ConvertFacet is ReentrancyGuard {
      * @param amounts The amounts of the deposits to convert from.
      * @param outputToken The token to convert to.
      * @param advancedFarmCalls The farm calls to execute.
-     * @return outputStems The resulting stems of the converted deposits
-     * @return outputAmounts The resulting amounts of the converted deposits
+     * @return toStem the new stems of the converted deposit
+     * @return fromAmount the amount of tokens converted from
+     * @return toAmount the amount of tokens converted to
+     * @return fromBdv the bdv of the deposits converted from
+     * @return toBdv the bdv of the deposit converted to
      */
     function pipelineConvert(
         address inputToken,
@@ -159,39 +154,40 @@ contract ConvertFacet is ReentrancyGuard {
         external
         payable
         nonReentrant
-        returns (int96[] memory outputStems, uint256[] memory outputAmounts)
+        returns (int96 toStem, uint256 fromAmount, uint256 toAmount, uint256 fromBdv, uint256 toBdv)
     {
         // require that input and output tokens be wells (Unripe not supported)
         require(LibWell.isWell(inputToken) || inputToken == C.BEAN, "Convert: Input token must be Bean or a well");
         require(LibWell.isWell(outputToken) || outputToken == C.BEAN, "Convert: Output token must be Bean or a well");
 
-        // mow input and output tokens: 
-        LibSilo._mow(LibTractor._user(), inputToken);
-        LibSilo._mow(LibTractor._user(), outputToken);
-        
-        // Calculate the maximum amount of tokens to withdraw
-        uint256 maxTokens = 0;
-        for (uint256 i = 0; i < stems.length; i++) {
-            maxTokens = maxTokens.add(amounts[i]);
-        }
 
         PipelineConvertData memory pipeData;
+        pipeData.user = LibTractor._user();
 
-        ( , , pipeData.bdvsRemoved, pipeData.grownStalks) = _withdrawTokens(
+        // mow input and output tokens: 
+        LibSilo._mow(pipeData.user, inputToken);
+        LibSilo._mow(pipeData.user, outputToken);
+        
+        // Calculate the maximum amount of tokens to withdraw
+        for (uint256 i = 0; i < stems.length; i++) {
+            pipeData.inputAmount = pipeData.inputAmount.add(amounts[i]);
+        }
+
+        (pipeData.grownStalk, fromBdv) = _withdrawTokens(
             inputToken,
             stems,
             amounts,
-            maxTokens
+            pipeData.inputAmount
         );
 
-        pipeData.startingDeltaB = getCombinedDeltaBForTokens(inputToken, outputToken);
+        pipeData.startingCombinedDeltaB = getCombinedDeltaBForTokens(inputToken, outputToken);
 
-        IERC20(inputToken).transfer(C.PIPELINE, maxTokens);
+        IERC20(inputToken).transfer(C.PIPELINE, pipeData.inputAmount);
         executeAdvancedFarmCalls(advancedFarmCalls);
 
         // user MUST leave final assets in pipeline, allowing us to verify that the farm has been called successfully.
         // this also let's us know how many assets to attempt to pull out of the final type
-        pipeData.amountOut = transferTokensFromPipeline(outputToken);
+        toAmount = transferTokensFromPipeline(outputToken);
 
 
         // We want the capped deltaB from all the wells, this is what sets up/limits the overall convert power for the block
@@ -199,15 +195,20 @@ contract ConvertFacet is ReentrancyGuard {
         pipeData.cappedDeltaB = LibWellMinting.overallDeltaB();
 
 
+        pipeData.endingCombinedDeltaB = getCombinedDeltaBForTokens(inputToken, outputToken);
+
         // Calculate stalk penalty using start/finish deltaB of pools, and the capped deltaB is
         // passed in to setup max convert power.
-        pipeData.stalkPenaltyBdv = _calculateStalkPenalty(pipeData.startingDeltaB, getCombinedDeltaBForTokens(inputToken, outputToken), pipeData.bdvsRemoved, abs(pipeData.cappedDeltaB));
+        pipeData.stalkPenaltyBdv = _calculateStalkPenalty(pipeData.startingCombinedDeltaB, pipeData.endingCombinedDeltaB, fromBdv, abs(pipeData.cappedDeltaB));
         
-        // Apply the calculated penalty to the grown stalks array
-        pipeData.grownStalks = _applyPenaltyToGrownStalks(pipeData.stalkPenaltyBdv, pipeData.bdvsRemoved, pipeData.grownStalks);
+        // Update grownStalk amount with penalty applied
+        pipeData.grownStalk = pipeData.grownStalk.sub(pipeData.stalkPenaltyBdv);
 
-        // Deposit new crates, Convert event emitted within this function
-        (outputStems, outputAmounts) = _depositTokensForConvertMultiCrate(inputToken, outputToken, pipeData.amountOut, pipeData.bdvsRemoved, pipeData.grownStalks, amounts);
+        pipeData.newBdv = LibTokenSilo.beanDenominatedValue(outputToken, toAmount);
+
+        toStem = _depositTokensForConvert(outputToken, toAmount, pipeData.newBdv, pipeData.grownStalk);
+
+        emit Convert(pipeData.user, inputToken, outputToken, pipeData.inputAmount, toAmount);
     }
 
     /**
@@ -255,9 +256,9 @@ contract ConvertFacet is ReentrancyGuard {
     }
 
     // public function for the below
-    function calculateStalkPenalty(int256 beforeDeltaB, int256 afterDeltaB, uint256[] memory bdvsRemoved, uint256 cappedDeltaB)
+    function calculateStalkPenalty(int256 beforeDeltaB, int256 afterDeltaB, uint256 bdvConverted, uint256 cappedDeltaB)
         external returns (uint256 stalkPenaltyBdv) {
-        return _calculateStalkPenalty(beforeDeltaB, afterDeltaB, bdvsRemoved, cappedDeltaB);
+        return _calculateStalkPenalty(beforeDeltaB, afterDeltaB, bdvConverted, cappedDeltaB);
     }
 
     /**
@@ -266,18 +267,11 @@ contract ConvertFacet is ReentrancyGuard {
      * or past peg.
      * @param beforeDeltaB The deltaB before the deposit.
      * @param afterDeltaB The deltaB after the deposit.
-     * @param bdvsRemoved The amount of BDVs that were removed, will be summed in this function.
+     * @param bdvConverted The amount of BDVs that were removed, will be summed in this function.
      * @param cappedDeltaB The absolute value of capped deltaB, used to setup per-block conversion limits.
      * @return stalkPenaltyBdv The BDV amount that should be penalized, 0 means no penalty, full bdv returned means all bdv penalized
      */
-    function _calculateStalkPenalty(int256 beforeDeltaB, int256 afterDeltaB, uint256[] memory bdvsRemoved, uint256 cappedDeltaB) internal returns (uint256 stalkPenaltyBdv) {
-        uint256 bdvConverted;
-        for (uint256 i = 0; i < bdvsRemoved.length; i++) {
-            bdvConverted = bdvConverted.add(bdvsRemoved[i]);
-        }
-
-        AppStorage storage s = LibAppStorage.diamondStorage();
-
+    function _calculateStalkPenalty(int256 beforeDeltaB, int256 afterDeltaB, uint256 bdvConverted, uint256 cappedDeltaB) internal returns (uint256 stalkPenaltyBdv) {
         // represents how far past peg deltaB was moved
         uint256 crossoverAmount = 0;
 
@@ -433,7 +427,7 @@ contract ConvertFacet is ReentrancyGuard {
         int96[] memory stems,
         uint256[] memory amounts,
         uint256 maxTokens
-    ) internal returns (uint256, uint256, uint256[] memory bdvs, uint256[] memory stalksRemoved) {
+    ) internal returns (uint256, uint256) {
         require(
             stems.length == amounts.length,
             "Convert: stems, amounts are diff lengths."
@@ -516,7 +510,7 @@ contract ConvertFacet is ReentrancyGuard {
             LibTractor._user(),
             a.active.stalk.add(a.active.bdv.mul(s.ss[token].stalkIssuedPerBdv))
         );
-        return (a.active.stalk, a.active.bdv, a.bdvsRemoved, a.stalksRemoved);
+        return (a.active.stalk, a.active.bdv);
     }
 
 
@@ -557,87 +551,6 @@ contract ConvertFacet is ReentrancyGuard {
             bdv,
             LibTokenSilo.Transfer.emitTransferSingle
         );        
-    }
-
-    /**
-     * @dev Add this amount of tokens to the silo, splitting the deposits by bdv into multiple crates.
-     * @param inputToken The input token for the convert.
-     * @param outputToken The output token for the convert.
-     * @param amount The amount of tokens to deposit.
-     * @param bdvs The bdvs to split the amounts into
-     * @param grownStalks The amount of Stalk to deposit per crate
-     * @param inputAmounts The amount of tokens to deposit per crate
-     */
-    function _depositTokensForConvertMultiCrate(
-        address inputToken,
-        address outputToken,
-        uint256 amount,
-        uint256[] memory bdvs,
-        uint256[] memory grownStalks,
-        uint256[] memory inputAmounts
-    ) internal returns (int96[] memory outputStems, uint256[] memory outputAmounts) {
-
-        MultiCrateDepositData memory mcdd;
-
-        // calculate how much token is needed to equal 1 bdv
-        mcdd.amountPerBdv = amount.div(LibTokenSilo.beanDenominatedValue(outputToken, amount));
-        mcdd.totalAmount = 0;
-
-        // init outputStems and outputAmounts
-        outputStems = new int96[](bdvs.length);
-        outputAmounts = new uint256[](bdvs.length);
-
-        for (uint256 i = 0; i < bdvs.length; i++) {
-            require( bdvs[i] > 0 && amount > 0, "Convert: BDV or amount is 0.");
-            mcdd.crateAmount = bdvs[i].mul(mcdd.amountPerBdv);
-            mcdd.totalAmount = mcdd.totalAmount.add(mcdd.crateAmount);
-
-            //if we're on the last crate, deposit the rest of the amount
-            if (i == bdvs.length - 1 && bdvs.length > 1) {
-                mcdd.crateAmount = amount.sub(mcdd.totalAmount);
-            } else if (i == bdvs.length - 1) {
-                mcdd.crateAmount = amount; //if there's only one crate, make sure to deposit the full amount
-            }
-
-            // because we're calculating a new token amount, the bdv will not be exactly the same as what we withdrew,
-            // so we need to make sure we calculate what the actual deposited BDV is.
-            // TODO: investigate and see if we can just use the amountPerBdv variable instead of calculating it again.
-            mcdd.depositedBdv = LibTokenSilo.beanDenominatedValue(outputToken, mcdd.crateAmount);
-            
-
-            // calculate the stem and germination state for the new deposit.
-            (mcdd.stem, mcdd.germ) = LibTokenSilo.calculateStemForTokenFromGrownStalk(outputToken, grownStalks[i], mcdd.depositedBdv);
-
-            outputStems[i] = mcdd.stem;
-            outputAmounts[i] = mcdd.crateAmount;
-            
-            // increment totals based on germination state, 
-            // as well as issue stalk to the user.
-            // if the deposit is germinating, only the inital stalk of the deposit is germinating. 
-            // the rest is active stalk.
-            if (mcdd.germ == LibGerminate.Germinate.NOT_GERMINATING) {
-                LibTokenSilo.incrementTotalDeposited(outputToken, mcdd.crateAmount, mcdd.depositedBdv);
-                LibSilo.mintActiveStalk(
-                    LibTractor._user(), 
-                    mcdd.depositedBdv.mul(LibTokenSilo.stalkIssuedPerBdv(outputToken)).add(grownStalks[i])
-                );
-            } else {
-                LibTokenSilo.incrementTotalGerminating(outputToken, mcdd.crateAmount, mcdd.depositedBdv, mcdd.germ);
-                // safeCast not needed as stalk is <= max(uint128)
-                LibSilo.mintGerminatingStalk(LibTractor._user(), uint128(mcdd.depositedBdv.mul(LibTokenSilo.stalkIssuedPerBdv(outputToken))), mcdd.germ);   
-                LibSilo.mintActiveStalk(LibTractor._user(), grownStalks[i]);
-            }
-            LibTokenSilo.addDepositToAccount(
-                LibTractor._user(),
-                outputToken, 
-                mcdd.stem, 
-                mcdd.crateAmount,
-                mcdd.depositedBdv,
-                LibTokenSilo.Transfer.emitTransferSingle
-            );
-
-            emit Convert(LibTractor._user(), inputToken, outputToken, inputAmounts[i], mcdd.crateAmount);
-        }
     }
 
     // TODO: when we updated to Solidity 0.8, use the native abs function

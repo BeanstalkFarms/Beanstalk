@@ -801,120 +801,108 @@ contract PipelineConvertTest is TestHelper {
     function testCalculateStalkPenaltyUpwardsToZero() public {
         int256 beforeDeltaB = -100;
         int256 afterDeltaB = 0;
-        uint256[] memory bdvsRemoved = new uint256[](1);
-        bdvsRemoved[0] = 100;
+        uint256 bdvRemoved = 100;
         uint256 cappedDeltaB = 100;
-        uint256 penalty = convert.calculateStalkPenalty(beforeDeltaB, afterDeltaB, bdvsRemoved, cappedDeltaB);
+        uint256 penalty = convert.calculateStalkPenalty(beforeDeltaB, afterDeltaB, bdvRemoved, cappedDeltaB);
         assertEq(penalty, 0);
     }
 
     function testCalculateStalkPenaltyUpwardsNonZero() public {
         int256 beforeDeltaB = -200;
         int256 afterDeltaB = -100;
-        uint256[] memory bdvsRemoved = new uint256[](1);
-        bdvsRemoved[0] = 100;
+        uint256 bdvRemoved = 100;
         uint256 cappedDeltaB = 100;
-        uint256 penalty = convert.calculateStalkPenalty(beforeDeltaB, afterDeltaB, bdvsRemoved, cappedDeltaB);
+        uint256 penalty = convert.calculateStalkPenalty(beforeDeltaB, afterDeltaB, bdvRemoved, cappedDeltaB);
         assertEq(penalty, 0);
     }
 
     function testCalculateStalkPenaltyDownwardsToZero() public {
         int256 beforeDeltaB = 100;
         int256 afterDeltaB = 0;
-        uint256[] memory bdvsRemoved = new uint256[](1);
-        bdvsRemoved[0] = 100;
+        uint256 bdvRemoved = 100;
         uint256 cappedDeltaB = 100;
-        uint256 penalty = convert.calculateStalkPenalty(beforeDeltaB, afterDeltaB, bdvsRemoved, cappedDeltaB);
+        uint256 penalty = convert.calculateStalkPenalty(beforeDeltaB, afterDeltaB, bdvRemoved, cappedDeltaB);
         assertEq(penalty, 0);
     }
 
     function testCalculateStalkPenaltyDownwardsNonZero() public {
         int256 beforeDeltaB = 200;
         int256 afterDeltaB = 100;
-        uint256[] memory bdvsRemoved = new uint256[](1);
-        bdvsRemoved[0] = 100;
+        uint256 bdvRemoved = 100;
         uint256 cappedDeltaB = 100;
-        uint256 penalty = convert.calculateStalkPenalty(beforeDeltaB, afterDeltaB, bdvsRemoved, cappedDeltaB);
+        uint256 penalty = convert.calculateStalkPenalty(beforeDeltaB, afterDeltaB, bdvRemoved, cappedDeltaB);
         assertEq(penalty, 0);
     }
 
     function testCalculateStalkPenaltyCrossPegUpward() public {
         int256 beforeDeltaB = -50;
         int256 afterDeltaB = 50;
-        uint256[] memory bdvsRemoved = new uint256[](1);
-        bdvsRemoved[0] = 100;
+        uint256 bdvRemoved = 100;
         uint256 cappedDeltaB = 50;
-        uint256 penalty = convert.calculateStalkPenalty(beforeDeltaB, afterDeltaB, bdvsRemoved, cappedDeltaB);
+        uint256 penalty = convert.calculateStalkPenalty(beforeDeltaB, afterDeltaB, bdvRemoved, cappedDeltaB);
         assertEq(penalty, 50);
     }
 
     function testCalculateStalkPenaltyCrossPegDownward() public {
         int256 beforeDeltaB = 50;
         int256 afterDeltaB = -50;
-        uint256[] memory bdvsRemoved = new uint256[](1);
-        bdvsRemoved[0] = 100;
+        uint256 bdvRemoved = 100;
         uint256 cappedDeltaB = 50;
-        uint256 penalty = convert.calculateStalkPenalty(beforeDeltaB, afterDeltaB, bdvsRemoved, cappedDeltaB);
+        uint256 penalty = convert.calculateStalkPenalty(beforeDeltaB, afterDeltaB, bdvRemoved, cappedDeltaB);
         assertEq(penalty, 50);
     }
 
     function testCalculateStalkPenaltyNoCappedDeltaB() public {
         int256 beforeDeltaB = 100;
         int256 afterDeltaB = 0;
-        uint256[] memory bdvsRemoved = new uint256[](1);
-        bdvsRemoved[0] = 100;
+        uint256 bdvRemoved = 100;
         uint256 cappedDeltaB = 0;
-        uint256 penalty = convert.calculateStalkPenalty(beforeDeltaB, afterDeltaB, bdvsRemoved, cappedDeltaB);
+        uint256 penalty = convert.calculateStalkPenalty(beforeDeltaB, afterDeltaB, bdvRemoved, cappedDeltaB);
         assertEq(penalty, 100);
     }
 
     function testCalculateStalkPenaltyNoCappedDeltaBNotZero() public {
         int256 beforeDeltaB = 101;
         int256 afterDeltaB = 1;
-        uint256[] memory bdvsRemoved = new uint256[](1);
-        bdvsRemoved[0] = 100;
+        uint256 bdvRemoved = 100;
         uint256 cappedDeltaB = 0;
-        uint256 penalty = convert.calculateStalkPenalty(beforeDeltaB, afterDeltaB, bdvsRemoved, cappedDeltaB);
+        uint256 penalty = convert.calculateStalkPenalty(beforeDeltaB, afterDeltaB, bdvRemoved, cappedDeltaB);
         assertEq(penalty, 100);
     }
 
     function testCalculateStalkPenaltyNoCappedDeltaBNotZeroHalf() public {
         int256 beforeDeltaB = 101;
         int256 afterDeltaB = 1;
-        uint256[] memory bdvsRemoved = new uint256[](1);
-        bdvsRemoved[0] = 100;
+        uint256 bdvRemoved = 100;
         uint256 cappedDeltaB = 50;
-        uint256 penalty = convert.calculateStalkPenalty(beforeDeltaB, afterDeltaB, bdvsRemoved, cappedDeltaB);
+        uint256 penalty = convert.calculateStalkPenalty(beforeDeltaB, afterDeltaB, bdvRemoved, cappedDeltaB);
         assertEq(penalty, 50);
     }
 
     function testCalculateStalkPenaltyNoCappedDeltaBToZeroHalf() public {
         int256 beforeDeltaB = 100;
         int256 afterDeltaB = 0;
-        uint256[] memory bdvsRemoved = new uint256[](1);
-        bdvsRemoved[0] = 100;
+        uint256 bdvRemoved = 100;
         uint256 cappedDeltaB = 50;
-        uint256 penalty = convert.calculateStalkPenalty(beforeDeltaB, afterDeltaB, bdvsRemoved, cappedDeltaB);
+        uint256 penalty = convert.calculateStalkPenalty(beforeDeltaB, afterDeltaB, bdvRemoved, cappedDeltaB);
         assertEq(penalty, 50);
     }
 
     function testCalculateStalkPenaltyLPtoLPSmallSlippage() public {
         int256 beforeDeltaB = 100;
         int256 afterDeltaB = 101;
-        uint256[] memory bdvsRemoved = new uint256[](1);
-        bdvsRemoved[0] = 100;
+        uint256 bdvRemoved = 100;
         uint256 cappedDeltaB = 100;
-        uint256 penalty = convert.calculateStalkPenalty(beforeDeltaB, afterDeltaB, bdvsRemoved, cappedDeltaB);
+        uint256 penalty = convert.calculateStalkPenalty(beforeDeltaB, afterDeltaB, bdvRemoved, cappedDeltaB);
         assertEq(penalty, 1);
     }
 
     function testCalculateStalkPenaltyLPtoLPLargeSlippageNoCapped() public {
         int256 beforeDeltaB = 100;
         int256 afterDeltaB = 151;
-        uint256[] memory bdvsRemoved = new uint256[](1);
-        bdvsRemoved[0] = 100;
+        uint256 bdvRemoved = 100;
         uint256 cappedDeltaB = 0;
-        uint256 penalty = convert.calculateStalkPenalty(beforeDeltaB, afterDeltaB, bdvsRemoved, cappedDeltaB);
+        uint256 penalty = convert.calculateStalkPenalty(beforeDeltaB, afterDeltaB, bdvRemoved, cappedDeltaB);
         assertEq(penalty, 51);
     }
 
@@ -989,7 +977,7 @@ contract PipelineConvertTest is TestHelper {
     }
 
     function beanToLPDoConvert(uint256 amount, int96 stem, address user) public 
-        returns (int96[] memory outputStems, uint256[] memory outputAmounts) {
+        returns (int96 outputStem, uint256 outputAmount) {
         // do the convert
 
         // Create arrays for stem and amount. Tried just passing in [stem] and it's like nope.
@@ -1005,7 +993,7 @@ contract PipelineConvertTest is TestHelper {
         
         vm.resumeGasMetering();
         vm.prank(user); // do this as user 1
-        (outputStems, outputAmounts) = convert.pipelineConvert(
+        (outputStem, outputAmount, , , ) = convert.pipelineConvert(
             C.BEAN, // input token
             stems,  // stems
             amounts,  // amount
@@ -1015,7 +1003,7 @@ contract PipelineConvertTest is TestHelper {
     }
 
     function lpToBeanDoConvert(uint256 lpAmountOut, int96 stem, address user) public
-        returns (int96[] memory outputStems, uint256[] memory outputAmounts) {
+        returns (int96 outputStem, uint256 outputAmount) {
         // Create arrays for stem and amount. Tried just passing in [stem] and it's like nope.
         int96[] memory stems = new int96[](1);
         stems[0] = stem;
@@ -1029,7 +1017,7 @@ contract PipelineConvertTest is TestHelper {
         
         vm.resumeGasMetering();
         vm.prank(user); // do this as user 1
-        (outputStems, outputAmounts) = convert.pipelineConvert(
+        (outputStem, outputAmount, , , ) = convert.pipelineConvert(
             C.BEAN_ETH_WELL, // input token
             stems,  // stems
             amounts,  // amount
