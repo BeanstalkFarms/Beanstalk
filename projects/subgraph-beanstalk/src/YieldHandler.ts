@@ -137,7 +137,7 @@ export function updateSiloVAPYs(t: i32, timestamp: BigInt, window: i32): void {
 
     let germinatingBeanBdv: BigDecimal[] = [];
     let germinatingGaugeLpBdv: BigDecimal[][] = [];
-    let germinatingNonGaugeBdv: BigDecimal[] = [];
+    let germinatingNonGaugeBdv: BigDecimal[] = [ZERO_BD, ZERO_BD];
 
     let staticSeeds: Array<BigDecimal | null> = [];
 
@@ -292,7 +292,7 @@ export function calculateAPYPreGauge(
  *
  * @param season The current season, required for germinating.
  * @param germinatingBeanBdv Germinating beans bdv
- * @param gaugeLpGerminatingBdv Germinating bdv of each gauge lp
+ * @param gaugeLpGerminatingBdv Germinating bdv of each gauge lp. Each outer array entry corresponds to one lp
  * @param nonGaugeGerminatingBdv Germinating bdv of all non-gauge whitelisted assets
  *
  * UNRIPE
@@ -365,7 +365,7 @@ export function calculateGaugeVAPYs(
       const index = season.mod(BigInt.fromString("2")) == ZERO_BI ? 1 : 0;
       beanBdv = beanBdv.plus(germinatingBeanBdv[index]);
       for (let j = 0; j < gaugeLpDepositedBdvCopy.length; ++j) {
-        gaugeLpDepositedBdvCopy[j] = gaugeLpDepositedBdvCopy[j].plus(gaugeLpGerminatingBdv[index][j]);
+        gaugeLpDepositedBdvCopy[j] = gaugeLpDepositedBdvCopy[j].plus(gaugeLpGerminatingBdv[j][index]);
       }
       gaugeBdv = beanBdv.plus(BigDecimal_sum(gaugeLpDepositedBdvCopy));
       nonGaugeDepositedBdv.plus(nonGaugeGerminatingBdv[index]);
