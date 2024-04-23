@@ -6,7 +6,9 @@ import {
   UpdateAverageStalkPerBdvPerSeason,
   FarmerGerminatingStalkBalanceChanged,
   TotalGerminatingBalanceChanged,
-  UpdateGaugeSettings
+  UpdateGaugeSettings,
+  TotalGerminatingStalkChanged,
+  TotalStalkChangedFromGermination
 } from "../../generated/BIP42-SeedGauge/Beanstalk";
 
 import { BEANSTALK } from "../../../subgraph-core/utils/Constants";
@@ -63,15 +65,21 @@ export function createUpdateAverageStalkPerBdvPerSeasonEvent(newStalkPerBdvPerSe
   return event as UpdateAverageStalkPerBdvPerSeason;
 }
 
-export function createFarmerGerminatingStalkBalanceChangedEvent(account: string, delta: BigInt): FarmerGerminatingStalkBalanceChanged {
+export function createFarmerGerminatingStalkBalanceChangedEvent(
+  account: string,
+  deltaGerminatingStalk: BigInt,
+  germinationState: u32
+): FarmerGerminatingStalkBalanceChanged {
   let event = changetype<FarmerGerminatingStalkBalanceChanged>(mockBeanstalkEvent());
   event.parameters = new Array();
 
   let param1 = new ethereum.EventParam("account", ethereum.Value.fromAddress(Address.fromString(account)));
-  let param2 = new ethereum.EventParam("delta", ethereum.Value.fromUnsignedBigInt(delta));
+  let param2 = new ethereum.EventParam("deltaGerminatingStalk", ethereum.Value.fromUnsignedBigInt(deltaGerminatingStalk));
+  let param3 = new ethereum.EventParam("germinationState", ethereum.Value.fromUnsignedBigInt(BigInt.fromU32(germinationState)));
 
   event.parameters.push(param1);
   event.parameters.push(param2);
+  event.parameters.push(param3);
 
   return event as FarmerGerminatingStalkBalanceChanged;
 }
@@ -96,6 +104,35 @@ export function createTotalGerminatingBalanceChangedEvent(
   event.parameters.push(param4);
 
   return event as TotalGerminatingBalanceChanged;
+}
+
+export function createTotalGerminatingStalkChangedEvent(
+  germinationSeason: BigInt,
+  deltaGerminatingStalk: BigInt
+): TotalGerminatingStalkChanged {
+  let event = changetype<TotalGerminatingStalkChanged>(mockBeanstalkEvent());
+  event.parameters = new Array();
+
+  let param1 = new ethereum.EventParam("germinationSeason", ethereum.Value.fromUnsignedBigInt(germinationSeason));
+  let param2 = new ethereum.EventParam("deltaGerminatingStalk", ethereum.Value.fromUnsignedBigInt(deltaGerminatingStalk));
+
+  event.parameters.push(param1);
+  event.parameters.push(param2);
+
+  return event as TotalGerminatingStalkChanged;
+}
+
+export function createTotalStalkChangedFromGerminationEvent(deltaStalk: BigInt, deltaRoots: BigInt): TotalStalkChangedFromGermination {
+  let event = changetype<TotalStalkChangedFromGermination>(mockBeanstalkEvent());
+  event.parameters = new Array();
+
+  let param1 = new ethereum.EventParam("deltaStalk", ethereum.Value.fromUnsignedBigInt(deltaStalk));
+  let param2 = new ethereum.EventParam("deltaRoots", ethereum.Value.fromUnsignedBigInt(deltaRoots));
+
+  event.parameters.push(param1);
+  event.parameters.push(param2);
+
+  return event as TotalStalkChangedFromGermination;
 }
 
 export function createUpdateGaugeSettingsEvent(
