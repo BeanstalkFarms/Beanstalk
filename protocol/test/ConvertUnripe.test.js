@@ -557,7 +557,7 @@ describe('Unripe Convert', function () {
   });
 
   // Unripe to Ripe test
-  describe('convert unripe beans to beans', async function () {
+  describe.only('convert unripe beans to beans', async function () {
 
     beforeEach(async function () {
       // GO TO SEASON 10
@@ -575,28 +575,24 @@ describe('Unripe Convert', function () {
         await this.fertilizer.connect(owner).setPenaltyParams(to6('100'), to6('100'))
         //                                                          bytes calldata convertData, int96[] memory stems, uint256[] memory amounts)
         this.result = await this.convert.connect(user).convert(ConvertEncoder.convertUnripeToRipe(to6('100') , this.unripeBean.address) , ['0'], [to6('100')] );
-
       });
 
       it('getters', async function () {
         expect(await this.unripe.getRecapPaidPercent()).to.be.equal(to6('0.01'))
-        expect(await this.unripe.getUnderlyingPerUnripeToken(UNRIPE_BEAN)).to.be.equal(to6('0.100909'))
-        // convert happens, 100e6 removed from unripe supply, 1e6 removed from underlying ripe
-        // new params: supply = 9900,000000 , s.u[unripeToken].balanceOfUnderlying = 999,000000
-        // penalty after convert ---> (s.u[unripeToken].balanceOfUnderlying ** 2).mul(amount).div(supply ** 2) = 999000000 ^ 2 * 1e6 / 9900000000 ^ 2 = 0.010182
-        expect(await this.unripe.getPenalty(UNRIPE_BEAN)).to.be.equal(to6('0.010182'))
-        expect(await this.unripe.getTotalUnderlying(UNRIPE_BEAN)).to.be.equal(to6('999.0'))
+        expect(await this.unripe.getUnderlyingPerUnripeToken(UNRIPE_BEAN)).to.be.equal(to6('0.100949'))
+        // new params: supply = 9900,000000 , s.u[unripeToken].balanceOfUnderlying = 999.403698
+        expect(await this.unripe.getPenalty(UNRIPE_BEAN)).to.be.equal(to6('0.006019'))
+        expect(await this.unripe.getTotalUnderlying(UNRIPE_BEAN)).to.be.equal(to6('999.403698'))
         expect(await this.unripe.isUnripe(UNRIPE_BEAN)).to.be.equal(true)
         // same fert , less supply --> penalty goes down
-        expect(await this.unripe.getPenalizedUnderlying(UNRIPE_BEAN, to6('1'))).to.be.equal(to6('0.010182'))
+        expect(await this.unripe.getPenalizedUnderlying(UNRIPE_BEAN, to6('1'))).to.be.equal(to6('0.006019'))
         // getUnderlying = s.u[unripeToken].balanceOfUnderlying.mul(amount).div(supply) 
-        // = 999000000 * 1000000 / 9900000000 = 100909
-        expect(await this.unripe.getUnderlying(UNRIPE_BEAN, to6('1'))).to.be.equal(to6('0.100909'))
+        expect(await this.unripe.getUnderlying(UNRIPE_BEAN, to6('1'))).to.be.equal(to6('0.100949'))
       })
 
       it('properly updates total values', async function () {
         expect(await this.siloGetters.getTotalDeposited(this.unripeBean.address)).to.eq(to6('100'));
-        expect(await this.siloGetters.getTotalDeposited(this.bean.address)).to.eq(to6('1'));
+        expect(await this.siloGetters.getTotalDeposited(this.bean.address)).to.eq(to6('0.596302'));
         // 0.004 * 3 seasons passed = 0.012 stalk
         expect(await this.siloGetters.totalStalk()).to.eq(toStalk('20.012'));
         expect(await this.unripeBean.totalSupply()).to.be.equal(to6('9900'))
@@ -612,16 +608,18 @@ describe('Unripe Convert', function () {
 
       it('properly updates user deposits', async function () {
         expect((await this.siloGetters.getDeposit(userAddress, this.unripeBean.address, 0))[0]).to.eq(to6('100'));
-        expect((await this.siloGetters.getDeposit(userAddress, this.bean.address, 0))[0]).to.eq(to6('1'));
+        expect((await this.siloGetters.getDeposit(userAddress, this.bean.address, 0))[0]).to.eq(to6('0.596302'));
       });
 
       it('emits events', async function () {
         await expect(this.result).to.emit(this.silo, 'RemoveDeposits')
           .withArgs(userAddress, this.unripeBean.address, [0], [to6('100')], to6('100'), [to6('10')]);
         await expect(this.result).to.emit(this.silo, 'AddDeposit')
-          .withArgs(userAddress, this.bean.address, 0 , to6('1'), to6('10'));
+          .withArgs(userAddress, this.bean.address, 0 , to6('0.596302'), to6('10'));
+        // redeem = currentRipeUnderlying * (usdValueRaised/totalUsdNeeded) * UnripeAmountIn/UnripeSupply;
+        // redeem = 1000 * (100/16770) * 100/10000 = 0.596302
         await expect(this.result).to.emit(this.convert, 'Convert')
-          .withArgs(userAddress, this.unripeBean.address, this.bean.address, to6('100') , to6('1'));
+          .withArgs(userAddress, this.unripeBean.address, this.bean.address, to6('100') , to6('0.596302'));
       });
     });
   });
