@@ -262,9 +262,8 @@ describe('Sun', function () {
     ];
     let START_TIME = (await ethers.provider.getBlock('latest')).timestamp;
     await timeSkip(START_TIME + 60*60*3);
-    // Load some beans into the wallet's internal balance, and note the starting time
     // This also accomplishes initializing curve oracle
-    const initial = await beanstalk.gm(owner.address, INTERNAL);
+    const initial = await beanstalk.connect(owner).sunrise();
     const block = await ethers.provider.getBlock(initial.blockNumber);
     START_TIME = (await ethers.provider.getBlock('latest')).timestamp;
     await mockBeanstalk.setCurrentSeasonE(1);
@@ -287,7 +286,11 @@ describe('Sun', function () {
       await mockBeanstalk.resetSeasonStart(secondsLate);
 
       // SUNRISE
-      this.result = await beanstalk.gm(owner.address, mockVal[3]);
+      if (mockVal[3] == EXTERNAL) {
+        this.result = await beanstalk.sunrise();
+      } else {
+        this.result = await beanstalk.gm(owner.address, mockVal[3]);
+      }
       
       // Verify that sunrise was profitable assuming a 50% average success rate
       
