@@ -500,6 +500,7 @@ library LibSilo {
         return s.a[account].lastUpdate;
     }
 
+    // TODO: Monitor incompatibilities (esp wrt initialization) when generalized flood merges in.
     /**
      * @notice returns the token paid out by Season of Plenty.
      */
