@@ -1373,6 +1373,415 @@
     "type": "function"
   },
   {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "bytes32",
+        "name": "blueprintHash",
+        "type": "bytes32"
+      }
+    ],
+    "name": "CancelBlueprint",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "components": [
+          {
+            "components": [
+              {
+                "internalType": "address",
+                "name": "publisher",
+                "type": "address"
+              },
+              {
+                "internalType": "bytes",
+                "name": "data",
+                "type": "bytes"
+              },
+              {
+                "internalType": "bytes32[]",
+                "name": "operatorPasteInstrs",
+                "type": "bytes32[]"
+              },
+              {
+                "internalType": "uint256",
+                "name": "maxNonce",
+                "type": "uint256"
+              },
+              {
+                "internalType": "uint256",
+                "name": "startTime",
+                "type": "uint256"
+              },
+              {
+                "internalType": "uint256",
+                "name": "endTime",
+                "type": "uint256"
+              }
+            ],
+            "internalType": "struct LibTractor.Blueprint",
+            "name": "blueprint",
+            "type": "tuple"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "blueprintHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes",
+            "name": "signature",
+            "type": "bytes"
+          }
+        ],
+        "indexed": false,
+        "internalType": "struct LibTractor.Requisition",
+        "name": "requisition",
+        "type": "tuple"
+      }
+    ],
+    "name": "PublishRequisition",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "operator",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "bytes32",
+        "name": "blueprintHash",
+        "type": "bytes32"
+      }
+    ],
+    "name": "Tractor",
+    "type": "event"
+  },
+  {
+    "inputs": [
+      {
+        "components": [
+          {
+            "components": [
+              {
+                "internalType": "address",
+                "name": "publisher",
+                "type": "address"
+              },
+              {
+                "internalType": "bytes",
+                "name": "data",
+                "type": "bytes"
+              },
+              {
+                "internalType": "bytes32[]",
+                "name": "operatorPasteInstrs",
+                "type": "bytes32[]"
+              },
+              {
+                "internalType": "uint256",
+                "name": "maxNonce",
+                "type": "uint256"
+              },
+              {
+                "internalType": "uint256",
+                "name": "startTime",
+                "type": "uint256"
+              },
+              {
+                "internalType": "uint256",
+                "name": "endTime",
+                "type": "uint256"
+              }
+            ],
+            "internalType": "struct LibTractor.Blueprint",
+            "name": "blueprint",
+            "type": "tuple"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "blueprintHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes",
+            "name": "signature",
+            "type": "bytes"
+          }
+        ],
+        "internalType": "struct LibTractor.Requisition",
+        "name": "requisition",
+        "type": "tuple"
+      }
+    ],
+    "name": "cancelBlueprint",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "components": [
+          {
+            "internalType": "address",
+            "name": "publisher",
+            "type": "address"
+          },
+          {
+            "internalType": "bytes",
+            "name": "data",
+            "type": "bytes"
+          },
+          {
+            "internalType": "bytes32[]",
+            "name": "operatorPasteInstrs",
+            "type": "bytes32[]"
+          },
+          {
+            "internalType": "uint256",
+            "name": "maxNonce",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "startTime",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "endTime",
+            "type": "uint256"
+          }
+        ],
+        "internalType": "struct LibTractor.Blueprint",
+        "name": "blueprint",
+        "type": "tuple"
+      }
+    ],
+    "name": "getBlueprintHash",
+    "outputs": [
+      {
+        "internalType": "bytes32",
+        "name": "",
+        "type": "bytes32"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "blueprintHash",
+        "type": "bytes32"
+      }
+    ],
+    "name": "getBlueprintNonce",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "counterId",
+        "type": "bytes32"
+      }
+    ],
+    "name": "getCounter",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "count",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "components": [
+          {
+            "components": [
+              {
+                "internalType": "address",
+                "name": "publisher",
+                "type": "address"
+              },
+              {
+                "internalType": "bytes",
+                "name": "data",
+                "type": "bytes"
+              },
+              {
+                "internalType": "bytes32[]",
+                "name": "operatorPasteInstrs",
+                "type": "bytes32[]"
+              },
+              {
+                "internalType": "uint256",
+                "name": "maxNonce",
+                "type": "uint256"
+              },
+              {
+                "internalType": "uint256",
+                "name": "startTime",
+                "type": "uint256"
+              },
+              {
+                "internalType": "uint256",
+                "name": "endTime",
+                "type": "uint256"
+              }
+            ],
+            "internalType": "struct LibTractor.Blueprint",
+            "name": "blueprint",
+            "type": "tuple"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "blueprintHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes",
+            "name": "signature",
+            "type": "bytes"
+          }
+        ],
+        "internalType": "struct LibTractor.Requisition",
+        "name": "requisition",
+        "type": "tuple"
+      }
+    ],
+    "name": "publishRequisition",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "components": [
+          {
+            "components": [
+              {
+                "internalType": "address",
+                "name": "publisher",
+                "type": "address"
+              },
+              {
+                "internalType": "bytes",
+                "name": "data",
+                "type": "bytes"
+              },
+              {
+                "internalType": "bytes32[]",
+                "name": "operatorPasteInstrs",
+                "type": "bytes32[]"
+              },
+              {
+                "internalType": "uint256",
+                "name": "maxNonce",
+                "type": "uint256"
+              },
+              {
+                "internalType": "uint256",
+                "name": "startTime",
+                "type": "uint256"
+              },
+              {
+                "internalType": "uint256",
+                "name": "endTime",
+                "type": "uint256"
+              }
+            ],
+            "internalType": "struct LibTractor.Blueprint",
+            "name": "blueprint",
+            "type": "tuple"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "blueprintHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes",
+            "name": "signature",
+            "type": "bytes"
+          }
+        ],
+        "internalType": "struct LibTractor.Requisition",
+        "name": "requisition",
+        "type": "tuple"
+      },
+      {
+        "internalType": "bytes",
+        "name": "operatorData",
+        "type": "bytes"
+      }
+    ],
+    "name": "tractor",
+    "outputs": [
+      {
+        "internalType": "bytes[]",
+        "name": "results",
+        "type": "bytes[]"
+      }
+    ],
+    "stateMutability": "payable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "counterId",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "enum LibTractor.CounterUpdateType",
+        "name": "updateType",
+        "type": "uint8"
+      },
+      {
+        "internalType": "uint256",
+        "name": "amount",
+        "type": "uint256"
+      }
+    ],
+    "name": "updateCounter",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "count",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
     "inputs": [
       {
         "internalType": "contract IERC1155",
@@ -2399,491 +2808,6 @@
         "internalType": "bytes",
         "name": "result",
         "type": "bytes"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "pool",
-        "type": "address"
-      },
-      {
-        "internalType": "address",
-        "name": "registry",
-        "type": "address"
-      },
-      {
-        "internalType": "uint256[]",
-        "name": "amounts",
-        "type": "uint256[]"
-      },
-      {
-        "internalType": "uint256",
-        "name": "minAmountOut",
-        "type": "uint256"
-      },
-      {
-        "internalType": "enum LibTransfer.From",
-        "name": "fromMode",
-        "type": "uint8"
-      },
-      {
-        "internalType": "enum LibTransfer.To",
-        "name": "toMode",
-        "type": "uint8"
-      }
-    ],
-    "name": "addLiquidity",
-    "outputs": [],
-    "stateMutability": "payable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "pool",
-        "type": "address"
-      },
-      {
-        "internalType": "address",
-        "name": "registry",
-        "type": "address"
-      },
-      {
-        "internalType": "address",
-        "name": "fromToken",
-        "type": "address"
-      },
-      {
-        "internalType": "address",
-        "name": "toToken",
-        "type": "address"
-      },
-      {
-        "internalType": "uint256",
-        "name": "amountIn",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "minAmountOut",
-        "type": "uint256"
-      },
-      {
-        "internalType": "enum LibTransfer.From",
-        "name": "fromMode",
-        "type": "uint8"
-      },
-      {
-        "internalType": "enum LibTransfer.To",
-        "name": "toMode",
-        "type": "uint8"
-      }
-    ],
-    "name": "exchange",
-    "outputs": [],
-    "stateMutability": "payable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "pool",
-        "type": "address"
-      },
-      {
-        "internalType": "address",
-        "name": "fromToken",
-        "type": "address"
-      },
-      {
-        "internalType": "address",
-        "name": "toToken",
-        "type": "address"
-      },
-      {
-        "internalType": "uint256",
-        "name": "amountIn",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "minAmountOut",
-        "type": "uint256"
-      },
-      {
-        "internalType": "enum LibTransfer.From",
-        "name": "fromMode",
-        "type": "uint8"
-      },
-      {
-        "internalType": "enum LibTransfer.To",
-        "name": "toMode",
-        "type": "uint8"
-      }
-    ],
-    "name": "exchangeUnderlying",
-    "outputs": [],
-    "stateMutability": "payable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "pool",
-        "type": "address"
-      },
-      {
-        "internalType": "address",
-        "name": "registry",
-        "type": "address"
-      },
-      {
-        "internalType": "uint256",
-        "name": "amountIn",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256[]",
-        "name": "minAmountsOut",
-        "type": "uint256[]"
-      },
-      {
-        "internalType": "enum LibTransfer.From",
-        "name": "fromMode",
-        "type": "uint8"
-      },
-      {
-        "internalType": "enum LibTransfer.To",
-        "name": "toMode",
-        "type": "uint8"
-      }
-    ],
-    "name": "removeLiquidity",
-    "outputs": [],
-    "stateMutability": "payable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "pool",
-        "type": "address"
-      },
-      {
-        "internalType": "address",
-        "name": "registry",
-        "type": "address"
-      },
-      {
-        "internalType": "uint256[]",
-        "name": "amountsOut",
-        "type": "uint256[]"
-      },
-      {
-        "internalType": "uint256",
-        "name": "maxAmountIn",
-        "type": "uint256"
-      },
-      {
-        "internalType": "enum LibTransfer.From",
-        "name": "fromMode",
-        "type": "uint8"
-      },
-      {
-        "internalType": "enum LibTransfer.To",
-        "name": "toMode",
-        "type": "uint8"
-      }
-    ],
-    "name": "removeLiquidityImbalance",
-    "outputs": [],
-    "stateMutability": "payable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "pool",
-        "type": "address"
-      },
-      {
-        "internalType": "address",
-        "name": "registry",
-        "type": "address"
-      },
-      {
-        "internalType": "address",
-        "name": "toToken",
-        "type": "address"
-      },
-      {
-        "internalType": "uint256",
-        "name": "amountIn",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "minAmountOut",
-        "type": "uint256"
-      },
-      {
-        "internalType": "enum LibTransfer.From",
-        "name": "fromMode",
-        "type": "uint8"
-      },
-      {
-        "internalType": "enum LibTransfer.To",
-        "name": "toMode",
-        "type": "uint8"
-      }
-    ],
-    "name": "removeLiquidityOneToken",
-    "outputs": [],
-    "stateMutability": "payable",
-    "type": "function"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": true,
-        "internalType": "uint32",
-        "name": "id",
-        "type": "uint32"
-      }
-    ],
-    "name": "CompleteFundraiser",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": true,
-        "internalType": "uint32",
-        "name": "id",
-        "type": "uint32"
-      },
-      {
-        "indexed": false,
-        "internalType": "address",
-        "name": "payee",
-        "type": "address"
-      },
-      {
-        "indexed": false,
-        "internalType": "address",
-        "name": "token",
-        "type": "address"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "amount",
-        "type": "uint256"
-      }
-    ],
-    "name": "CreateFundraiser",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": true,
-        "internalType": "address",
-        "name": "account",
-        "type": "address"
-      },
-      {
-        "indexed": true,
-        "internalType": "uint32",
-        "name": "id",
-        "type": "uint32"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "amount",
-        "type": "uint256"
-      }
-    ],
-    "name": "FundFundraiser",
-    "type": "event"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "payee",
-        "type": "address"
-      },
-      {
-        "internalType": "address",
-        "name": "token",
-        "type": "address"
-      },
-      {
-        "internalType": "uint256",
-        "name": "amount",
-        "type": "uint256"
-      }
-    ],
-    "name": "createFundraiser",
-    "outputs": [],
-    "stateMutability": "payable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint32",
-        "name": "id",
-        "type": "uint32"
-      },
-      {
-        "internalType": "uint256",
-        "name": "amount",
-        "type": "uint256"
-      },
-      {
-        "internalType": "enum LibTransfer.From",
-        "name": "mode",
-        "type": "uint8"
-      }
-    ],
-    "name": "fund",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "payable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint32",
-        "name": "id",
-        "type": "uint32"
-      }
-    ],
-    "name": "fundingToken",
-    "outputs": [
-      {
-        "internalType": "address",
-        "name": "",
-        "type": "address"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint32",
-        "name": "id",
-        "type": "uint32"
-      }
-    ],
-    "name": "fundraiser",
-    "outputs": [
-      {
-        "components": [
-          {
-            "internalType": "address",
-            "name": "payee",
-            "type": "address"
-          },
-          {
-            "internalType": "address",
-            "name": "token",
-            "type": "address"
-          },
-          {
-            "internalType": "uint256",
-            "name": "total",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "remaining",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "start",
-            "type": "uint256"
-          }
-        ],
-        "internalType": "struct Storage.Fundraiser",
-        "name": "",
-        "type": "tuple"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "numberOfFundraisers",
-    "outputs": [
-      {
-        "internalType": "uint32",
-        "name": "",
-        "type": "uint32"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint32",
-        "name": "id",
-        "type": "uint32"
-      }
-    ],
-    "name": "remainingFunding",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint32",
-        "name": "id",
-        "type": "uint32"
-      }
-    ],
-    "name": "totalFunding",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
       }
     ],
     "stateMutability": "view",
@@ -5276,9 +5200,9 @@
         "type": "bytes4"
       },
       {
-        "internalType": "uint16",
+        "internalType": "uint32",
         "name": "stalkIssuedPerBdv",
-        "type": "uint16"
+        "type": "uint32"
       },
       {
         "internalType": "uint32",
@@ -8625,7 +8549,7 @@
     "inputs": [
       {
         "internalType": "uint128",
-        "name": "id",
+        "name": "seasonAdded",
         "type": "uint128"
       },
       {
@@ -8671,7 +8595,7 @@
     "inputs": [
       {
         "internalType": "address",
-        "name": "welll",
+        "name": "well",
         "type": "address"
       }
     ],
@@ -8869,29 +8793,6 @@
       }
     ],
     "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "fundraiser",
-        "type": "address"
-      },
-      {
-        "internalType": "address",
-        "name": "token",
-        "type": "address"
-      },
-      {
-        "internalType": "uint256",
-        "name": "amount",
-        "type": "uint256"
-      }
-    ],
-    "name": "createFundraiserE",
-    "outputs": [],
-    "stateMutability": "nonpayable",
     "type": "function"
   },
   {
@@ -10427,6 +10328,19 @@
     "name": "addUnderlyingWithRecap",
     "outputs": [],
     "stateMutability": "payable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "unripeToken",
+        "type": "address"
+      }
+    ],
+    "name": "resetUnderlying",
+    "outputs": [],
+    "stateMutability": "nonpayable",
     "type": "function"
   },
   {
