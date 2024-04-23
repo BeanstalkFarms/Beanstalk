@@ -221,8 +221,6 @@ contract PipelineConvertTest is TestHelper {
         );
     }
 
-
-
     function testBasicConvertLPToLP(uint256 amount) public {
         vm.pauseGasMetering();
 
@@ -615,20 +613,13 @@ contract PipelineConvertTest is TestHelper {
         uint256 bdvBefore = bs.balanceOfDepositedBdv(users[1], C.BEAN);
 
         // make a pipeline call where the only thing it does is return how many beans are in pipeline
-        AdvancedPipeCall[] memory extraPipeCalls = new AdvancedPipeCall[](2);
+        AdvancedPipeCall[] memory extraPipeCalls = new AdvancedPipeCall[](1);
 
         // send half our beans from pipeline to Vitalik address (for some reason zero address gave an evm error)
         bytes memory sendBeans = abi.encodeWithSelector(bean.transfer.selector, 0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045, amount.div(2));
         extraPipeCalls[0] = AdvancedPipeCall(
             C.BEAN, // target
             sendBeans, // calldata
-            abi.encode(0) // clipboard
-        );
-
-        bytes memory callEncoded = abi.encodeWithSelector(bean.balanceOf.selector, C.PIPELINE);
-        extraPipeCalls[1] = AdvancedPipeCall(
-            C.BEAN, // target
-            callEncoded, // calldata
             abi.encode(0) // clipboard
         );
 
@@ -704,22 +695,13 @@ contract PipelineConvertTest is TestHelper {
         uint256[] memory amounts = new uint256[](1);
         amounts[0] = amount;
 
-
-        // make a pipeline call where the only thing it does is return how many beans are in pipeline
-        AdvancedPipeCall[] memory extraPipeCalls = new AdvancedPipeCall[](2);
+        AdvancedPipeCall[] memory extraPipeCalls = new AdvancedPipeCall[](1);
 
         // send all our beans away
         bytes memory sendBeans = abi.encodeWithSelector(bean.transfer.selector, 0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045, amount);
         extraPipeCalls[0] = AdvancedPipeCall(
             C.BEAN, // target
             sendBeans, // calldata
-            abi.encode(0) // clipboard
-        );
-
-        bytes memory callEncoded = abi.encodeWithSelector(bean.balanceOf.selector, C.PIPELINE);
-        extraPipeCalls[1] = AdvancedPipeCall(
-            C.BEAN, // target
-            callEncoded, // calldata
             abi.encode(0) // clipboard
         );
 
@@ -762,7 +744,7 @@ contract PipelineConvertTest is TestHelper {
         uint256 beforeStalk = bs.balanceOfStalk(users[1]) + bs.grownStalkForDeposit(users[1], C.BEAN, stem);
 
         // make a pipeline call where the only thing it does is return how many beans are in pipeline
-        AdvancedPipeCall[] memory extraPipeCalls = new AdvancedPipeCall[](3);
+        AdvancedPipeCall[] memory extraPipeCalls = new AdvancedPipeCall[](2);
 
         bytes memory approveWell = abi.encodeWithSelector(
             IERC20.approve.selector,
@@ -790,13 +772,6 @@ contract PipelineConvertTest is TestHelper {
         extraPipeCalls[1] = AdvancedPipeCall(
             C.BEAN_ETH_WELL, // target
             addWeth, // calldata
-            abi.encode(0) // clipboard
-        );
-
-        bytes memory callEncoded = abi.encodeWithSelector(bean.balanceOf.selector, C.PIPELINE);
-        extraPipeCalls[2] = AdvancedPipeCall(
-            C.BEAN, // target
-            callEncoded, // calldata
             abi.encode(0) // clipboard
         );
 
