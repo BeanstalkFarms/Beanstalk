@@ -1,10 +1,10 @@
-import { Bytes, BigInt, Address, BigDecimal } from "@graphprotocol/graph-ts";
+import { Bytes, BigInt, Address, BigDecimal, log } from "@graphprotocol/graph-ts";
 import { getTWAPrices, loadOrCreateTwaOracle } from "./TwaOracle";
 import { ABDK_toUInt, pow2toX } from "../../../../subgraph-core/utils/ABDKMathQuad";
 import { DeltaBAndPrice, TWAType } from "./Types";
 import { setPoolTwa } from "../Pool";
 import { constantProductPrice } from "./UniswapPrice";
-import { ONE_BD, toDecimal, ZERO_BD } from "../../../../subgraph-core/utils/Decimals";
+import { ONE_BI, toDecimal, ZERO_BD, ZERO_BI } from "../../../../subgraph-core/utils/Decimals";
 
 // Cumulative Well reserves are abi encoded as a bytes16[]. This decodes into BigInt[] in uint format
 export function decodeCumulativeWellReserves(data: Bytes): BigInt[] {
@@ -37,6 +37,9 @@ export function wellCumulativePrices(pool: Address, timestamp: BigInt): BigInt[]
 }
 
 export function wellTwaReserves(currentReserves: BigInt[], pastReserves: BigInt[], timeElapsed: BigDecimal): BigInt[] {
+  if (pastReserves[0] == ZERO_BI) {
+    return [ONE_BI, ONE_BI];
+  }
   return [
     pow2toX(new BigDecimal(currentReserves[0].minus(pastReserves[0])).div(timeElapsed)),
     pow2toX(new BigDecimal(currentReserves[1].minus(pastReserves[1])).div(timeElapsed))

@@ -81,12 +81,12 @@ describe("DeltaB", () => {
       const result1 = decodeCumulativeWellReserves(s21076);
       const result2 = decodeCumulativeWellReserves(s21077);
 
-      const asUInt1 = [ABDK_toUInt(result1[0]), ABDK_toUInt(result1[1])];
-      const asUInt2 = [ABDK_toUInt(result2[0]), ABDK_toUInt(result2[1])];
+      // const asUInt1 = [ABDK_toUInt(result1[0]), ABDK_toUInt(result1[1])];
+      // const asUInt2 = [ABDK_toUInt(result2[0]), ABDK_toUInt(result2[1])];
 
       const elapsedTime = BigDecimal.fromString("3600");
-      const diff0 = new BigDecimal(asUInt2[0].minus(asUInt1[0])).div(elapsedTime);
-      const diff1 = new BigDecimal(asUInt2[1].minus(asUInt1[1])).div(elapsedTime);
+      const diff0 = new BigDecimal(result2[0].minus(result1[0])).div(elapsedTime);
+      const diff1 = new BigDecimal(result2[1].minus(result1[1])).div(elapsedTime);
 
       log.debug("Well Reserves", []);
       // log.debug("Converted result {} {}", [asUInt1[0].toString(), asUInt1[1].toString()]);
@@ -144,27 +144,28 @@ describe("DeltaB", () => {
     test("WellOracle", () => {
       // 2 consecutive seasons used for test
       // https://etherscan.io/tx/0xe62ebdb74a9908760f709408944ab2d50f0bc4fd95614a05dcc053a7117e6b33#eventlog
-      handleWellOracle(
-        createWellOracleEvent(
-          BigInt.fromI32(21076),
-          "0xbea0e11282e2bb5893bece110cf199501e872bad",
-          ZERO_BI,
-          Bytes.fromHexString(
-            "0000000000000000000000000000000000000000000000000000000000000060000000000000000000000000000000000000000000000000000000000000008000000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000002401ca3e863ef477b955382fabeb6239e00000000000000000000000000000000401d61893f2d4f8972713291748d66f700000000000000000000000000000000"
-          )
+      const event1 = createWellOracleEvent(
+        BigInt.fromI32(21076),
+        "0xbea0e11282e2bb5893bece110cf199501e872bad",
+        ZERO_BI,
+        Bytes.fromHexString(
+          "0000000000000000000000000000000000000000000000000000000000000060000000000000000000000000000000000000000000000000000000000000008000000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000002401ca3e863ef477b955382fabeb6239e00000000000000000000000000000000401d61893f2d4f8972713291748d66f700000000000000000000000000000000"
         )
       );
+      event1.block = mockBlock(BigInt.fromI32(19200000), BigInt.fromI32(1713920000));
+      handleWellOracle(event1);
+
       // https://etherscan.io/tx/0x0b872f5503d732f3c9f736e914368791ab3c8da8d9fcd87f071574f0e9b7ca6f#eventlog
-      handleWellOracle(
-        createWellOracleEvent(
-          BigInt.fromI32(21077),
-          "0xbea0e11282e2bb5893bece110cf199501e872bad",
-          ZERO_BI,
-          Bytes.fromHexString(
-            "0000000000000000000000000000000000000000000000000000000000000060000000000000000000000000000000000000000000000000000000000000008000000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000002401ca3fba9f61fac686ea2125d43bc8800000000000000000000000000000000401d61990e063036b2da05122259d76c00000000000000000000000000000000"
-          )
+      const event2 = createWellOracleEvent(
+        BigInt.fromI32(21077),
+        "0xbea0e11282e2bb5893bece110cf199501e872bad",
+        ZERO_BI,
+        Bytes.fromHexString(
+          "0000000000000000000000000000000000000000000000000000000000000060000000000000000000000000000000000000000000000000000000000000008000000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000002401ca3fba9f61fac686ea2125d43bc8800000000000000000000000000000000401d61990e063036b2da05122259d76c00000000000000000000000000000000"
         )
       );
+      event2.block = mockBlock(BigInt.fromI32(19200000), BigInt.fromI32(1713923600));
+      handleWellOracle(event2);
     });
   });
 });
