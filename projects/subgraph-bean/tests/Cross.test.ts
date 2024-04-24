@@ -66,7 +66,7 @@ describe("Peg Crosses", () => {
 
       const reserves = uniswapV2Reserves(BEAN_WETH_V1);
       const ethPriceNow = getPreReplantPriceETH();
-      const newPrice = constantProductPrice(toDecimal(reserves[0]), toDecimal(reserves[1], 18), ethPriceNow);
+      const newPrice = constantProductPrice(toDecimal(reserves[1]), toDecimal(reserves[0], 18), ethPriceNow);
       log.info("expected | actual {} | {}", [beanPrice.toString(), newPrice.truncate(4).toString()]);
       assert.assertTrue(beanPrice.equals(newPrice));
 
@@ -76,8 +76,8 @@ describe("Peg Crosses", () => {
 
       const reserves2 = uniswapV2Reserves(BEAN_WETH_V1);
       const ethPriceNow2 = getPreReplantPriceETH();
-      const newPrice2 = constantProductPrice(toDecimal(reserves2[0]), toDecimal(reserves2[1], 18), ethPriceNow2);
-      const newLiquidity2 = toDecimal(reserves2[1], 18).times(ethPriceNow2).times(BigDecimal.fromString("2"));
+      const newPrice2 = constantProductPrice(toDecimal(reserves2[1]), toDecimal(reserves2[0], 18), ethPriceNow2);
+      const newLiquidity2 = toDecimal(reserves2[0], 18).times(ethPriceNow2).times(BigDecimal.fromString("2"));
       log.info("expected | actual {} | {}", [beanPrice2.toString(), newPrice2.truncate(4).toString()]);
       assert.assertTrue(beanPrice2.equals(newPrice2));
       log.info("expected | actual {} | {}", [liquidity2.truncate(0).toString(), newLiquidity2.truncate(0).toString()]);

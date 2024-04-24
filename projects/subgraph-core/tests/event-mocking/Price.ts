@@ -150,7 +150,7 @@ export function mockPreReplantBeanEthPriceAndLiquidity(price: BigDecimal, liquid
   const beanReserves = BigInt.fromString(
     toDecimal(wethReserves, 18).times(ethPrice).div(price).times(BigDecimal.fromString("1000000")).truncate(0).toString()
   );
-  mockUniswapV2Reserves(BEAN_WETH_V1, beanReserves, wethReserves);
+  mockUniswapV2Reserves(BEAN_WETH_V1, wethReserves, beanReserves);
 }
 
 export function mockPreReplantETHPrice(price: BigDecimal): void {
