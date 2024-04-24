@@ -56,7 +56,6 @@ const initContracts = async () => {
 const convertFacetInterface = new ethers.utils.Interface([
   "function convert(bytes convertData, int96[] stems, uint256[] amounts) returns (int96 toStem, uint256 fromAmount, uint256 toAmount, uint256 fromBdv, uint256 toBdv)"
 ]);
-
 // Interfaces needed to encode calldata.
 const farmFacetInterface = async () => (await ethers.getContractFactory("FarmFacet")).interface;
 const tokenFacetInterface = async () => (await ethers.getContractFactory("TokenFacet")).interface;
