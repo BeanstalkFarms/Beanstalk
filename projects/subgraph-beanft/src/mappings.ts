@@ -1,5 +1,9 @@
 import { log } from "@graphprotocol/graph-ts"
 import {
+  ConsecutiveTransfer as ConsecutiveTransferEventBasin,
+  Transfer as TransferEventBasin
+} from "../generated/basin/basin"
+import {
   ConsecutiveTransfer as ConsecutiveTransferEventBarnRaise,
   Transfer as TransferEventBarnRaise
 } from "../generated/barnraise/barnraise"
@@ -39,13 +43,30 @@ export function handleTransferBarnRaise(event: TransferEventBarnRaise): void {
   transferHandler(from, to, tokenId, 'barnraise')
 }
 
+export function handleTransferBasin(event: TransferEventBasin): void {
+  log.info("BASIN TRANSFER! BEANFT: {}, RECEIVER: {}", [event.params.tokenId.toI32().toString(), event.params.to.toHexString()])
+  let from = event.params.from.toHexString()
+  let to = event.params.to.toHexString()
+  let tokenId = event.params.tokenId.toI32()
+  transferHandler(from, to, tokenId, 'basin')
+}
+
 export function handleConsecutiveTransferBarnRaise(event: ConsecutiveTransferEventBarnRaise): void {
   log.info("BARN RAISE CONSECUTIVE TRANSFER! FROM BEANFT {} TO {}, RECEIVER: {}", [event.params.fromTokenId.toString(), event.params.toTokenId.toString(), event.params.to.toHexString()])
   let fromTokenId = event.params.fromTokenId.toI32()
   let toTokenId = event.params.toTokenId.toI32()
   let from = event.params.from.toHexString()
   let to = event.params.to.toHexString()
-  consecutiveTransferHandler(fromTokenId, toTokenId, from, to)
+  consecutiveTransferHandler(fromTokenId, toTokenId, from, to, 'barnraise')
+}
+
+export function handleConsecutiveTransferBasin(event: ConsecutiveTransferEventBasin): void {
+  log.info("BASIN CONSECUTIVE TRANSFER! FROM BEANFT {} TO {}, RECEIVER: {}", [event.params.fromTokenId.toString(), event.params.toTokenId.toString(), event.params.to.toHexString()])
+  let fromTokenId = event.params.fromTokenId.toI32()
+  let toTokenId = event.params.toTokenId.toI32()
+  let from = event.params.from.toHexString()
+  let to = event.params.to.toHexString()
+  consecutiveTransferHandler(fromTokenId, toTokenId, from, to, 'basin')
 }
 
 function transferHandler(from:string, to:string, tokenId:i32, mode:string): void {
@@ -67,6 +88,11 @@ function transferHandler(from:string, to:string, tokenId:i32, mode:string): void
       let barnRaiseNew = source.barnRaise
       barnRaiseNew!.splice(nftIndex, 1)
       source.barnRaise = barnRaiseNew
+    } else if (mode === 'basin') {
+      let nftIndex = source.basin!.indexOf(tokenId)
+      let basinNew = source.basin
+      basinNew!.splice(nftIndex, 1)
+      source.basin = basinNew
     } else {
       log.critical("TRANSFER HANDLER - MODE MISSING", [])
     }
@@ -96,6 +122,10 @@ function transferHandler(from:string, to:string, tokenId:i32, mode:string): void
       let barnRaiseNew = destination.barnRaise
       barnRaiseNew!.push(tokenId)
       destination.barnRaise = barnRaiseNew
+    } else if (mode === 'basin') {
+      let basinNew = destination.basin
+      basinNew!.push(tokenId)
+      destination.basin = basinNew
     } else {
       log.critical("TRANSFER HANDLER - MODE MISSING", [])
     }
@@ -106,6 +136,7 @@ function transferHandler(from:string, to:string, tokenId:i32, mode:string): void
     destination.genesis = new Array<i32>()
     destination.winter = new Array<i32>()
     destination.barnRaise = new Array<i32>()
+    destination.basin = new Array<i32>()
     if (mode === 'genesis') {
       let genesisNew = destination.genesis
       genesisNew!.push(tokenId)
@@ -118,6 +149,10 @@ function transferHandler(from:string, to:string, tokenId:i32, mode:string): void
       let barnRaiseNew = destination.barnRaise
       barnRaiseNew!.push(tokenId)
       destination.barnRaise = barnRaiseNew
+    } else if (mode === 'basin') {
+      let basinNew = destination.basin
+      basinNew!.push(tokenId)
+      destination.basin = basinNew
     } else {
       log.critical("TRANSFER HANDLER - MODE MISSING", [])
     }
@@ -125,23 +160,30 @@ function transferHandler(from:string, to:string, tokenId:i32, mode:string): void
   }
 }
 
-function consecutiveTransferHandler(fromTokenId:i32, toTokenId:i32, from:string, to:string): void {
+function consecutiveTransferHandler(fromTokenId:i32, toTokenId:i32, from:string, to:string, mode:string): void {
   let totalNFTsSent = (toTokenId - fromTokenId) + 1
   for (let i = 0; i < totalNFTsSent; i++) {
     let sender = BeaNFTUser.load(from)
     let receiver = BeaNFTUser.load(to)
     let tokenId = fromTokenId + i
     if (sender) {
-      let nftIndex = sender.barnRaise!.indexOf(tokenId)
-      let barnRaiseNew = sender.barnRaise
-      barnRaiseNew!.splice(nftIndex, 1)
-      sender.barnRaise = barnRaiseNew
+      if (mode === 'barnraise') {
+        let nftIndex = sender.barnRaise!.indexOf(tokenId)
+        let barnRaiseNew = sender.barnRaise
+        barnRaiseNew!.splice(nftIndex, 1)
+        sender.barnRaise = barnRaiseNew
+      } else if (mode === 'basin') {
+        let nftIndex = sender.basin!.indexOf(tokenId)
+        let basinNew = sender.basin
+        basinNew!.splice(nftIndex, 1)
+        sender.basin = basinNew
+      }
       sender.save() 
     } else if (from == zeroAddress) {
-      log.info("NEW BARNRAISE COLLECTION MINT! ID: {}", [tokenId.toString()])
-      let collectionData = CollectionData.load('barnraise')
+      log.info("NEW {} COLLECTION MINT! ID: {}", [mode.toUpperCase(), tokenId.toString()])
+      let collectionData = CollectionData.load(mode)
       if (!collectionData) {
-        collectionData = new CollectionData('barnraise')
+        collectionData = new CollectionData(mode)
         collectionData.minted = new Array<i32>()
       }
       let mintedData = collectionData.minted
@@ -150,9 +192,15 @@ function consecutiveTransferHandler(fromTokenId:i32, toTokenId:i32, from:string,
       collectionData.save()
     }
     if (receiver) {
-      let barnRaiseNew = receiver.barnRaise
-      barnRaiseNew!.push(tokenId)
-      receiver.barnRaise = barnRaiseNew
+      if (mode === 'barnraise') {
+        let barnRaiseNew = receiver.barnRaise
+        barnRaiseNew!.push(tokenId)
+        receiver.barnRaise = barnRaiseNew
+      } else if (mode === 'basin') {
+        let basinNew = receiver.basin
+        basinNew!.push(tokenId)
+        receiver.basin = basinNew
+      }
       receiver.save()
     } 
     else if (to !== zeroAddress) {
@@ -161,9 +209,16 @@ function consecutiveTransferHandler(fromTokenId:i32, toTokenId:i32, from:string,
       receiver.genesis = new Array<i32>()
       receiver.winter = new Array<i32>()
       receiver.barnRaise = new Array<i32>()
-      let barnRaiseNew = receiver.barnRaise
-      barnRaiseNew!.push(tokenId)
-      receiver.barnRaise = barnRaiseNew
+      receiver.basin = new Array<i32>()
+      if (mode === 'barnraise') {
+        let barnRaiseNew = receiver.barnRaise
+        barnRaiseNew!.push(tokenId)
+        receiver.barnRaise = barnRaiseNew
+      } else if (mode === 'basin') {
+        let basinNew = receiver.basin
+        basinNew!.push(tokenId)
+        receiver.basin = basinNew
+      }
       receiver.save()
     }
   }

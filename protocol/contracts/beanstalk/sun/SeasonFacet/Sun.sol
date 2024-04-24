@@ -185,12 +185,16 @@ contract Sun is Oracle {
         // for gas savings.
         s.s.stalk = s.s.stalk.add(amount.mul(C.STALK_PER_BEAN));
 
-        // SafeCast not necessary as `seasonStalk.toUint128();` will fail if amount > type(uint128).max.
+        // removed at ebip-13. Will be replaced upon seed gauge BIP.
+        // s.newEarnedStalk = seasonStalk.toUint128();
+        // s.vestingPeriodRoots = 0;
+
         s.siloBalances[C.BEAN].deposited = s
             .siloBalances[C.BEAN]
             .deposited
-            .add(uint128(amount));
+            .add(amount.toUint128());
 
+        // SafeCast not necessary as the block above will fail if amount > type(uint128).max.
         s.siloBalances[C.BEAN].depositedBdv = s
             .siloBalances[C.BEAN]
             .depositedBdv

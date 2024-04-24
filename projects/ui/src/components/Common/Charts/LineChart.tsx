@@ -78,7 +78,7 @@ type GraphProps = {
 
 const strokes = [
   {
-    stroke: BeanstalkPalette.theme.spring.beanstalkGreen,
+    stroke: BeanstalkPalette.theme.winter.primary,
     strokeWidth: 2,
   },
   {

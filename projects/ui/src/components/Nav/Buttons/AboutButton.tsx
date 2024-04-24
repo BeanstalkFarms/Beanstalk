@@ -76,7 +76,7 @@ const AboutButton: FC<ButtonProps> = ({ sx }) => {
       <Box sx={{ px: 1, pt: 0.75, pb: 0.2 }}>
         <Button
           fullWidth
-          href={`${chainInfo.explorer}/address/${beanstalkAddress}`}
+          href="https://docs.bean.money/almanac/protocol/contracts"
           target="_blank"
           rel="noreferrer"
           variant="contained"
@@ -86,7 +86,7 @@ const AboutButton: FC<ButtonProps> = ({ sx }) => {
           <Row spacing={1}>
             <ListItemText>
               <Typography variant="h4">
-                Contract: {beanstalkAddress.slice(0, 6)}...
+                Contracts
               </Typography>
             </ListItemText>
             <Typography variant="body2" color="white">

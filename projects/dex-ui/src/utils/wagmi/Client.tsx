@@ -4,7 +4,7 @@ import { CoinbaseWalletConnector } from "wagmi/connectors/coinbaseWallet";
 import { InjectedConnector } from "wagmi/connectors/injected";
 import { MetaMaskConnector } from "wagmi/connectors/metaMask";
 
-// import { WalletConnectConnector } from "wagmi/connectors/walletConnect";
+import { WalletConnectConnector } from "wagmi/connectors/walletConnect";
 import { alchemyProvider } from "wagmi/providers/alchemy";
 import { publicProvider } from "wagmi/providers/public";
 
@@ -66,11 +66,8 @@ const { chains, provider } = configureChains(networks, [
   publicProvider({ priority: 2 })
 ]);
 
-// any - hack to suppress weird ts error
-export const client: any = createClient({
-  autoConnect: true,
-  provider,
-  connectors: [
+const connectors: Parameters<typeof createClient>[number]["connectors"] = (() => {
+  const baseConnectors: Parameters<typeof createClient>[number]["connectors"] = [
     new MetaMaskConnector({
       chains
     }),
@@ -81,18 +78,34 @@ export const client: any = createClient({
         shimDisconnect: true
       }
     }),
-    // new WalletConnectConnector({
-    //   chains,
-    //   options: {
-    //     projectId: "TODO",
-    //     showQrModal: true
-    //   }
-    // }),
     new CoinbaseWalletConnector({
       chains,
       options: {
         appName: "Beanstalk DEX"
       }
     })
-  ]
+  ];
+
+  const projectId = import.meta.env.VITE_WALLET_CONNECT_PROJECT_ID;
+
+  if (projectId) {
+    baseConnectors.push(
+      new WalletConnectConnector({
+        chains,
+        options: {
+          projectId: projectId,
+          showQrModal: true
+        }
+      })
+    );
+  }
+
+  return baseConnectors;
+})();
+
+// any - hack to suppress weird ts error
+export const client: any = createClient({
+  autoConnect: true,
+  provider,
+  connectors: connectors
 });

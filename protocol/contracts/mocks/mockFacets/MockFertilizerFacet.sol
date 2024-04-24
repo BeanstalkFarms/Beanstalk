@@ -16,12 +16,11 @@ contract MockFertilizerFacet is FertilizerFacet {
 
     function addFertilizerOwner(
         uint128 id,
-        uint128 tokenAmountIn,
+        uint128 tokenAmountIn,  
         uint256 minLpOut
     ) external payable {
         LibDiamond.enforceIsContractOwner();
-        uint256 fertilizerAmount = _getMintFertilizerOut(tokenAmountIn, LibBarnRaise.getBarnRaiseToken());
-        LibFertilizer.addFertilizer(id, tokenAmountIn, fertilizerAmount, minLpOut);
+        addFertilizer(id, tokenAmountIn, minLpOut);
     }
 
     function setPenaltyParams(uint256 recapitalized, uint256 fertilized) external {
@@ -34,7 +33,16 @@ contract MockFertilizerFacet is FertilizerFacet {
         s.unfertilizedIndex = unfertilized;
     }
 
-    function setBarnRaiseWell(address welll) external {
-        s.barnRaiseWell = welll;
+    function setBarnRaiseWell(address well) external {
+        s.u[C.UNRIPE_LP].underlyingToken = well;
+    }
+
+    function addFertilizer(
+        uint128 seasonAdded,
+        uint128 tokenAmountIn,  
+        uint256 minLpOut
+    ) public payable {
+        uint256 fertilizerAmount = _getMintFertilizerOut(tokenAmountIn, LibBarnRaise.getBarnRaiseToken());
+        LibFertilizer.addFertilizer(seasonAdded, tokenAmountIn, fertilizerAmount, minLpOut);
     }
 }

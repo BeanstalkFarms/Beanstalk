@@ -15,7 +15,7 @@ const getValue = (season: Season) => parseFloat(season.price);
 const formatValue = (value: number) => `$${value.toFixed(4)}`;
 const statProps = {
   title: 'Bean Price',
-  titleTooltip: 'The price at the end of every Season.',
+  titleTooltip: 'The USD price of 1 Bean at the beginning of every Season.',
   gap: 0.25,
 };
 const lineChartProps: Partial<LineChartProps> = {

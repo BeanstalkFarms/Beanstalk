@@ -71,7 +71,7 @@ describe('Unripe Convert', function () {
     await this.unripeBean.connect(user).approve(this.diamond.address, to18('100000000'))
     await this.unripeLP.connect(user).approve(this.diamond.address, to18('100000000'))
     
-    // Set recapitaliztion parameters (see function for default values).
+    // Set recapitalization parameters (see function for default values).
     await setRecapitalizationParams(owner)
   });
 

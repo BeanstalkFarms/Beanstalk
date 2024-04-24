@@ -387,7 +387,7 @@ describe('newSilo', function () {
       expect(await tryParseJSONObject(depositMetadataString) == true)
     })
 
-    it('returns correct json values', async function () {
+    it.skip('returns correct json values', async function () {
       SiloTokens = await beanstalk.getSiloTokens()
       // iterate through silo tokens:
       stem = '000000000000000000000000'

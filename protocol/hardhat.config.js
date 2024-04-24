@@ -41,7 +41,7 @@ const { to6 } = require("./test/utils/helpers.js");
 const { task } = require("hardhat/config");
 const { TASK_COMPILE_SOLIDITY_GET_SOURCE_PATHS } = require("hardhat/builtin-tasks/task-names");
 const { bipNewSilo, mockBeanstalkAdmin } = require("./scripts/bips.js");
-const { ebip9, ebip10, ebip11, ebip13 } = require("./scripts/ebips.js");
+const { ebip9, ebip10, ebip11, ebip13, ebip14 } = require("./scripts/ebips.js");
 
 //////////////////////// UTILITIES ////////////////////////
 
@@ -194,8 +194,14 @@ task("diamondABI", "Generates ABI file for diamond, includes all ABIs of facets"
  * @notice generates mock diamond ABI.
  */
 task("mockDiamondABI", "Generates ABI file for mock contracts", async () => {
+  
+  //////////////////////// FACETS ////////////////////////
+
   // The path (relative to the root of `protocol` directory) where all modules sit.
-  const modulesDir = path.join("contracts", "mocks", "mockFacets");
+  const modulesDir = path.join("contracts", "beanstalk");
+
+  // The list of modules to combine into a single ABI. All facets (and facet dependencies) will be aggregated.
+  const modules = ["barn", "diamond", "farm", "field", "market", "silo", "sun", "metadata"];
 
   // The glob returns the full file path like this:
   // contracts/beanstalk/barn/UnripeFacet.sol
@@ -205,13 +211,57 @@ task("mockDiamondABI", "Generates ABI file for mock contracts", async () => {
   };
 
   // Load files across all modules
-  const filesInModule = fs.readdirSync(path.join(".", modulesDir));
-  console.log(filesInModule)
+  let paths = [];
+  modules.forEach((module) => {
+    const filesInModule = fs.readdirSync(path.join(".", modulesDir, module));
+    paths.push(...filesInModule.map((f) => [module, f]));
+  });
+
+  console.log("Facets:")
+  console.log(paths)
 
   // Build ABI
   let abi = [];
+  modules.forEach((module) => {
+    const pattern = path.join(".", modulesDir, module, "**", "*Facet.sol");
+    const files = glob.sync(pattern);
+    if (module == "silo") {
+      // Manually add in libraries that emit events
+      files.push("contracts/libraries/LibIncentive.sol")
+      files.push("contracts/libraries/Silo/LibWhitelist.sol")
+      files.push("contracts/libraries/LibGauge.sol")
+      files.push("contracts/libraries/Silo/LibGerminate.sol") 
+    }
+    files.forEach((file) => {
+      const facetName = getFacetName(file);
+      const jsonFileName = `${facetName}.json`;
+      const jsonFileLoc = path.join(".", "artifacts", file, jsonFileName);
+
+      const json = JSON.parse(fs.readFileSync(jsonFileLoc));
+
+      // Log what's being included
+      console.log(`${module}:`.padEnd(10), file);
+      json.abi.forEach((item) => console.log(``.padEnd(10), item.type, item.name));
+      console.log("");
+
+      abi.push(...json.abi);
+    });
+  });
+
+  let string = "./abi/Beanstalk.json";
+
+  ////////////////////////// MOCK ////////////////////////
+  // The path (relative to the root of `protocol` directory) where all modules sit.
+  const mockModulesDir = path.join("contracts", "mocks", "mockFacets");
+
+  // Load files across all mock modules.
+  const filesInModule = fs.readdirSync(path.join(".", mockModulesDir));
+  console.log("Mock Facets:")
+  console.log(filesInModule)
+
+  // Build ABI
   filesInModule.forEach((module) => {
-    const file = path.join(".", modulesDir, module); 
+    const file = path.join(".", mockModulesDir, module); 
     const facetName = getFacetName(file);
     const jsonFileName = `${facetName}.json`;
     const jsonFileLoc = path.join(".", "artifacts", file, jsonFileName);
@@ -234,8 +284,6 @@ task("mockDiamondABI", "Generates ABI file for mock contracts", async () => {
       2
     )
   );
-
-  console.log("ABI written to abi/MockBeanstalk.json");
 })
 
 task("marketplace", async function () {
@@ -280,6 +328,10 @@ task("beanstalkAdmin", async function () {
 task("deployBip39", async function () {
   await bipSeedGauge();
 });
+
+task("ebip14", async function () {
+  await ebip14();
+})
 
 task("ebip13", async function () {
   await ebip13();
@@ -362,7 +414,7 @@ module.exports = {
         settings: {
           optimizer: {
             enabled: true,
-            runs: 1000
+            runs: 100
           }
         }
       },

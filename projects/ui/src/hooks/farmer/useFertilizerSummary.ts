@@ -89,7 +89,8 @@ export default function useFertilizerSummary(
 
   data.actions.push({
     type: ActionType.BUY_FERTILIZER,
-    amountIn: data.fert,
+    amountIn: data.weth,
+    amountOut: data.fert,
     humidity,
   });
   data.actions.push({

@@ -12,8 +12,9 @@ import { ChevronDown } from "../Icons";
 import { BottomDrawer } from "../BottomDrawer";
 import { BodyS } from "../Typography";
 import { size } from "src/breakpoints";
+import { displayTokenSymbol } from "src/utils/format";
 
-type Props = {
+export type TokenPickerProps = {
   token: Token;
   excludeToken?: Token;
   editable?: boolean;
@@ -25,7 +26,7 @@ type ContainerProps = {
   editable?: Boolean;
 };
 
-export const TokenPicker: FC<Props> = ({ token, excludeToken, editable = true, onChange, connectorFor }) => {
+export const TokenPicker: FC<TokenPickerProps> = ({ token, excludeToken, editable = true, onChange, connectorFor }) => {
   const [modalOpen, setModalOpen] = useState(false);
   const tokens = useTokens();
   const [list, setList] = useState<Token[]>([]);
@@ -58,7 +59,7 @@ export const TokenPicker: FC<Props> = ({ token, excludeToken, editable = true, o
         {token ? (
           <>
             <TokenLogo token={token} size={16} />
-            <TokenSymbol>{token.symbol}</TokenSymbol>
+            <TokenSymbol>{displayTokenSymbol(token)}</TokenSymbol>
           </>
         ) : (
           <div>Select a Token</div>
@@ -187,7 +188,7 @@ const Symbol = styled.div`
   font-size: 16px;
   line-height: 20px;
   @media (max-width: ${size.mobile}) {
-    line-height: 16px;   
+    line-height: 16px;
   }
 `;
 const Name = styled.div`
@@ -196,7 +197,7 @@ const Name = styled.div`
   line-height: 20px;
   color: #9e9e9e;
   @media (max-width: ${size.mobile}) {
-    line-height: 14px;   
+    line-height: 14px;
   }
 `;
 const Balance = styled.div`

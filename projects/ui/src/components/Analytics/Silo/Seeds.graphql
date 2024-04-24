@@ -1,21 +1,17 @@
-query SeasonalSeeds(
-  $season_lte: Int,
-  $season_gt: Int,
-  $first: Int
-) {
+query SeasonalSeeds($season_lte: Int, $season_gt: Int, $first: Int) {
   seasons: siloHourlySnapshots(
     where: {
-      season_lte: $season_lte,
-      season_gt: $season_gt,
+      season_lte: $season_lte
+      season_gt: $season_gt
       silo: "0xc1e088fc1323b20bcbee9bd1b9fc9546db5624c5"
     }
     first: $first
     orderBy: season
     orderDirection: desc
-  ) { 
+  ) {
     id
     season
     createdAt
-    seeds
+    grownStalkPerBdvPerSeason
   }
 }

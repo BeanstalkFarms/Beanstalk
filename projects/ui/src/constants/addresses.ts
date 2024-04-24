@@ -43,6 +43,11 @@ export const BEANFT_BARNRAISE_ADDRESSES = {
     '0xa969BB19b1d35582Ded7EA869cEcD60A3Bd5D1E8'.toLowerCase(),
 };
 
+export const BEANFT_BASIN_ADDRESSES = {
+  [SupportedChainId.MAINNET]:
+    '0x191b7d1cfa89c9389bbf5f7f49f4b8f93ec3740f'.toLowerCase(),
+};
+
 // ----------------------------------------
 // Bean & Unripe Bean Tokens
 // ----------------------------------------
@@ -206,5 +211,17 @@ export const DELEGATES_REGISTRY_ADDRESSES = {
   [SupportedChainId.MAINNET]:
     '0x469788fE6E9E9681C6ebF3bF78e7Fd26Fc015446'.toLowerCase(),
 };
+
+/// Deprecated Pools
+export const BEAN_CRV3_V1_ADDRESSES = {
+  [SupportedChainId.MAINNET]:
+    '0x3a70DfA7d2262988064A2D051dd47521E43c9BdD'.toLowerCase(),
+}
+
+/// ENS Reverse Records
+export const ENS_REVERSE_RECORDS = {
+  [SupportedChainId.MAINNET]:
+    '0x3671ae578e63fdf66ad4f3e12cc0c0d71ac7510c'.toLowerCase(),
+}
 
 export const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000';

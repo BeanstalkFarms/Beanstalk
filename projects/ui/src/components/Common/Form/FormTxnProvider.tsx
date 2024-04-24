@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { FarmToMode, TokenValue } from '@beanstalk/sdk';
+import { FarmToMode, Token, TokenValue } from '@beanstalk/sdk';
 import { FC, MayPromise } from '~/types';
 import useSdk from '~/hooks/sdk';
 import useAccount from '~/hooks/ledger/useAccount';
@@ -104,10 +104,17 @@ const useInitFormTxnContext = () => {
     );
     const claimable = farmerSilo.balances[sdk.tokens.BEAN.address]?.claimable;
     const seasons = claimable?.crates.map((c) => c.season.toString());
+   
+    const tokensWithStalk: Map<Token, TokenValue> = new Map();
+    farmerSilo.stalk.grownByToken.forEach((value, token) => { 
+      if (value.gt(0)) {
+        tokensWithStalk.set(token, value);
+      };
+    });
 
     const farmSteps = {
-      [FormTxn.MOW]: account
-        ? new MowFarmStep(sdk, account).build()
+      [FormTxn.MOW]: account && tokensWithStalk.size > 0
+        ? new MowFarmStep(sdk, account, tokensWithStalk).build()
         : undefined,
       [FormTxn.PLANT]: earnedBeans.gt(0)
         ? new PlantFarmStep(sdk).build()
@@ -134,6 +141,7 @@ const useInitFormTxnContext = () => {
     farmerField.harvestablePlots,
     farmerSilo.balances,
     farmerSilo.beans.earned,
+    farmerSilo.stalk.grownByToken,
     getBDV,
     sdk,
     destination

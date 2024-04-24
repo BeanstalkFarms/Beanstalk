@@ -14,16 +14,17 @@ import { BeanstalkPalette } from '~/components/App/muiTheme';
 
 type Props = {
   proposals: Proposal[];
+  isLoading: boolean;
 } & DelegationBannerProps;
 
 const ProposalList: FC<Props> = (props) => {
   const account = useAccount();
 
   // Null state
-  if (!props.proposals) {
+  if (!props.proposals || props.isLoading) {
     return (
       <Box
-        height={100}
+        height={300}
         display="flex"
         alignItems="center"
         justifyContent="center"

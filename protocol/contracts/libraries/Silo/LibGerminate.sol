@@ -12,10 +12,6 @@ import {SafeCast} from "@openzeppelin/contracts/utils/SafeCast.sol";
 import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
 import {C} from "../../C.sol";
 
-import "forge-std/console.sol";
-
-
-
 /**
  * @title LibGerminate
  * @author Brean
@@ -77,7 +73,7 @@ library LibGerminate {
      * as the roots of the stalk should be calculated based on the total stalk
      * when germination finishes, rather than when germination starts.
      */
-    function endTotalGermination(uint32 season, address[] memory tokens) internal {
+    function endTotalGermination(uint32 season, address[] memory tokens) external {
         AppStorage storage s = LibAppStorage.diamondStorage();
 
         // germination can only occur after season 3.
@@ -235,7 +231,6 @@ library LibGerminate {
             roots = stalk.mul(s.unclaimedGerminating[season].roots).div(
                 s.unclaimedGerminating[season].stalk
             ).toUint128();
-            console.log("roots:", roots);
         }
     }
 

@@ -40,7 +40,7 @@ const BeanAnalytics: FC<{}> = () => {
         <Tab label="Supply" />
         <Tab label="Crosses" />
         <Tab label="deltaB" />
-        <Tab label="Liquidity:Supply Ratio" />
+        <Tab label="L2SR" />
       </Tabs>
       {/* 
         TODO: The height prop currently *only* reflects in the chart height. However, the full component

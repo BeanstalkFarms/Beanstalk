@@ -1,4 +1,5 @@
 import {
+  Box,
   Button,
   CircularProgress,
   Divider,
@@ -79,6 +80,7 @@ const VoteForm: FC<
 
   /// Derived
   const isNFT = proposal.space.id === GovSpace.BeanNFT;
+  const isViewOnly = proposal.space.id === GovSpace.BeanstalkBugBounty || proposal.space.id === GovSpace.BeanstalkFarmsBudget;
   const canVote = farmerVP.votingPower.total.gt(0);
   const isClosed = differenceInTime <= 0;
 
@@ -103,6 +105,7 @@ const VoteForm: FC<
   );
 
   const createVoteButtons = () => {
+    if (isViewOnly) return null;
     switch (proposal.type) {
       case 'single-choice': {
         /// Option isn't selected or the voting period has ended
@@ -200,7 +203,7 @@ const VoteForm: FC<
                 ? alreadyVotedThisChoice
                   ? 'Already Voted'
                   : 'Vote'
-                : `Need ${isNFT ? 'Stalk' : 'BeaNFTs'} to Vote`}
+                : `Need ${isNFT ? 'BeaNFTs' : 'Stalk'} to Vote`}
             </LoadingButton>
           </>
         ) : (
@@ -239,23 +242,21 @@ const VoteForm: FC<
          * Progress by choice
          */}
         <Stack px={1} pb={1} gap={1.5}>
-          {votingPower && totalOutstanding && (
+          {votingPower && totalOutstanding && !isViewOnly && (
             <StatHorizontal
               label="Voting Power"
               labelTooltip={
-                <div>
-                  <Typography>
-                    A snapshot of your active {isNFT ? 'BeaNFTs' : 'Stalk'} when
-                    voting on {tag} began.
-                  </Typography>
-                </div>
+                <>
+                  A snapshot of your active {isNFT ? 'BeaNFTs' : 'Stalk'} when
+                  voting on {tag} began.
+                </>
               }
             >
               {displayBN(votingPower)} {isNFT ? 'BEANFT' : 'STALK'}&nbsp;·&nbsp;
               {displayBN(votingPower.div(totalOutstanding).multipliedBy(100))}%
             </StatHorizontal>
           )}
-          {quorumPct && totalForQuorum && (
+          {quorumPct && totalForQuorum && !isViewOnly && (
             <StatHorizontal
               label={
                 <>
@@ -330,7 +331,7 @@ const VoteForm: FC<
                 flexWrap="wrap"
                 justifyContent="space-between"
               >
-                <Typography variant="body1">
+                <Box>
                   {isClosed &&
                   existingChoice !== undefined &&
                   existingChoice === index + 1 ? (
@@ -343,14 +344,14 @@ const VoteForm: FC<
                     </Tooltip>
                   ) : null}
                   {choice}
-                </Typography>
-                <Typography variant="body1" color="text.secondary">
+                </Box>
+                <Box color="text.secondary">
                   {displayFullBN(
                     new BigNumber(proposal.scores[index] || 0),
                     0,
                     0
                   )}{' '}
-                  {isNFT ? 'BEANFT' : 'STALK'}
+                  {isViewOnly ? 'VOTE' : isNFT ? 'BEANFT' : 'STALK'}
                   <Typography
                     display={proposal.scores_total > 0 ? 'inline' : 'none'}
                   >
@@ -362,7 +363,7 @@ const VoteForm: FC<
                     ).toFixed(2)}
                     %
                   </Typography>
-                </Typography>
+                </Box>
               </Row>
               <LinearProgress
                 variant="determinate"

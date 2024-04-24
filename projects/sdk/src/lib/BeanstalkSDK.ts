@@ -22,6 +22,7 @@ export type Provider = ethers.providers.JsonRpcProvider;
 export type Signer = ethers.Signer;
 export type BeanstalkConfig = Partial<{
   provider: Provider;
+  readProvider?: Provider;
   signer: Signer;
   rpcUrl: string;
   subgraphUrl: string;
@@ -41,6 +42,7 @@ export class BeanstalkSDK {
   public DEBUG: boolean;
   public signer?: Signer;
   public provider: Provider;
+  public readProvider?: Provider;
   public providerOrSigner: Signer | Provider;
   public source: DataSource;
   public subgraphUrl: string;
@@ -116,6 +118,7 @@ export class BeanstalkSDK {
     } else {
       this.provider = (config.signer?.provider as Provider) ?? config.provider!;
     }
+    this.readProvider = config.readProvider;
     this.providerOrSigner = config.signer ?? config.provider!;
 
     this.DEBUG = config.DEBUG ?? false;
