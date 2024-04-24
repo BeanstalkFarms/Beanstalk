@@ -35,7 +35,7 @@ export function calcUniswapV2Inst(pool: Pool): DeltaBPriceLiquidity {
   const weth_bd = toDecimal(pool.reserves[0], 18);
   const bean_bd = toDecimal(pool.reserves[1]);
   return {
-    price: uniswapV2Price(bean_bd, weth_bd, wethToken.lastPriceUSD),
+    price: constantProductPrice(bean_bd, weth_bd, wethToken.lastPriceUSD),
     liquidity: weth_bd.times(wethToken.lastPriceUSD),
     deltaB: uniswapV2DeltaB(bean_bd, weth_bd, wethToken.lastPriceUSD)
   };
@@ -53,7 +53,7 @@ export function uniswapV2Reserves(pool: Address): BigInt[] {
 }
 
 // Returns the current price of beans in a uniswapv2 constant product pool
-export function uniswapV2Price(beanReserves: BigDecimal, token2Reserves: BigDecimal, token2Price: BigDecimal): BigDecimal {
+export function constantProductPrice(beanReserves: BigDecimal, token2Reserves: BigDecimal, token2Price: BigDecimal): BigDecimal {
   return token2Reserves.times(token2Price).div(beanReserves);
 }
 

@@ -8,11 +8,13 @@ import { BEAN_3CRV, BEAN_ERC20, BEAN_WETH_CP2_WELL, CRV3_POOL } from "../../subg
 import { hourFromTimestamp } from "../../subgraph-core/utils/Dates";
 import { mockBlock } from "../../subgraph-core/tests/event-mocking/Block";
 import { uniswapV2DeltaB } from "../src/utils/price/UniswapPrice";
-import { decodeCumulativeWellReserves } from "../src/utils/price/WellReserves";
+import { decodeCumulativeWellReserves } from "../src/utils/price/WellPrice";
 import { mock_virtual_price } from "./event-mocking/Curve";
 import { loadOrCreatePool } from "../src/utils/Pool";
 import { loadBean } from "../src/utils/Bean";
 import { getD, getY, priceFromY } from "../src/utils/price/CurvePrice";
+import { Bytes_bigEndian } from "../../subgraph-core/utils/BigEndian";
+import { ABDK_toUInt, pow2toX } from "../../subgraph-core/utils/ABDKMathQuad";
 
 const timestamp1 = BigInt.fromU32(1712793374);
 const hour1 = hourFromTimestamp(timestamp1).toString();
@@ -64,24 +66,33 @@ describe("DeltaB", () => {
       const y = getY(xp[0].plus(BI_10.pow(12)), xp, BigInt.fromU32(1000), D);
       const price = priceFromY(y, xp[1]);
 
-      log.debug("xp[1] {}", [xp[1].toString()]);
+      // log.debug("xp[1] {}", [xp[1].toString()]);
 
       assert.stringEquals("1.000225971464", price.toString());
     });
 
     test("Well Reserves", () => {
-      const s20957: Bytes = Bytes.fromHexString(
-        "0x0000000000000000000000000000000000000000000000000000000000000060000000000000000000000000000000000000000000000000000000000000008000000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000002401c9af3e734ec6d928f0c9ca6742af600000000000000000000000000000000401d5a2f51848f06f7a8f4a88134162d00000000000000000000000000000000"
+      const s21076: Bytes = Bytes.fromHexString(
+        "0000000000000000000000000000000000000000000000000000000000000060000000000000000000000000000000000000000000000000000000000000008000000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000002401ca3e863ef477b955382fabeb6239e00000000000000000000000000000000401d61893f2d4f8972713291748d66f700000000000000000000000000000000"
       );
-      const s20958: Bytes = Bytes.fromHexString(
-        "0x0000000000000000000000000000000000000000000000000000000000000060000000000000000000000000000000000000000000000000000000000000008000000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000002401c9b072d77cfcb46ba839751eec22000000000000000000000000000000000401d5a3f22dfd1d71d115e69bb6a8ca800000000000000000000000000000000"
+      const s21077: Bytes = Bytes.fromHexString(
+        "0000000000000000000000000000000000000000000000000000000000000060000000000000000000000000000000000000000000000000000000000000008000000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000002401ca3fba9f61fac686ea2125d43bc8800000000000000000000000000000000401d61990e063036b2da05122259d76c00000000000000000000000000000000"
       );
-      const result1 = decodeCumulativeWellReserves(s20957);
-      const result2 = decodeCumulativeWellReserves(s20958);
-      // log.debug("Well Reserves", []);
-      // log.debug("Decode result {} {}", [result1[0].toString(), result1[1].toString()]);
-      // log.debug("Decode result {} {}", [result2[0].toString(), result2[1].toString()]);
-      // log.debug("Differences {} {}", [result2[0].minus(result1[0]).toString(), result2[1].minus(result1[1]).toString()]);
+      const result1 = decodeCumulativeWellReserves(s21076);
+      const result2 = decodeCumulativeWellReserves(s21077);
+
+      const asUInt1 = [ABDK_toUInt(result1[0]), ABDK_toUInt(result1[1])];
+      const asUInt2 = [ABDK_toUInt(result2[0]), ABDK_toUInt(result2[1])];
+
+      const elapsedTime = BigDecimal.fromString("3600");
+      const diff0 = new BigDecimal(asUInt2[0].minus(asUInt1[0])).div(elapsedTime);
+      const diff1 = new BigDecimal(asUInt2[1].minus(asUInt1[1])).div(elapsedTime);
+
+      log.debug("Well Reserves", []);
+      // log.debug("Converted result {} {}", [asUInt1[0].toString(), asUInt1[1].toString()]);
+      // log.debug("Converted result {} {}", [asUInt2[0].toString(), asUInt2[1].toString()]);
+      // log.debug("Differences {} {}", [diff0.toString(), diff1.toString()]);
+      log.debug("TWA Reserves {} {}", [pow2toX(diff0).toString(), pow2toX(diff1).toString()]);
     });
   });
 
@@ -129,36 +140,31 @@ describe("DeltaB", () => {
       assert.fieldEquals("PoolHourlySnapshot", prefixCurve + h3, "twaDeltaBeans", "0");
       assert.fieldEquals("PoolHourlySnapshot", prefixCurve + h3, "twaPrice", "0.999996000005");
     });
+
+    test("WellOracle", () => {
+      // 2 consecutive seasons used for test
+      // https://etherscan.io/tx/0xe62ebdb74a9908760f709408944ab2d50f0bc4fd95614a05dcc053a7117e6b33#eventlog
+      handleWellOracle(
+        createWellOracleEvent(
+          BigInt.fromI32(21076),
+          "0xbea0e11282e2bb5893bece110cf199501e872bad",
+          ZERO_BI,
+          Bytes.fromHexString(
+            "0000000000000000000000000000000000000000000000000000000000000060000000000000000000000000000000000000000000000000000000000000008000000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000002401ca3e863ef477b955382fabeb6239e00000000000000000000000000000000401d61893f2d4f8972713291748d66f700000000000000000000000000000000"
+          )
+        )
+      );
+      // https://etherscan.io/tx/0x0b872f5503d732f3c9f736e914368791ab3c8da8d9fcd87f071574f0e9b7ca6f#eventlog
+      handleWellOracle(
+        createWellOracleEvent(
+          BigInt.fromI32(21077),
+          "0xbea0e11282e2bb5893bece110cf199501e872bad",
+          ZERO_BI,
+          Bytes.fromHexString(
+            "0000000000000000000000000000000000000000000000000000000000000060000000000000000000000000000000000000000000000000000000000000008000000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000002401ca3fba9f61fac686ea2125d43bc8800000000000000000000000000000000401d61990e063036b2da05122259d76c00000000000000000000000000000000"
+          )
+        )
+      );
+    });
   });
-
-  /// These tests are not relevant now that twa deltaB is derived from twa reserves
-  // describe("Oracle: TWA DeltaB", () => {
-  //   test("Post-Replant Curve", () => {
-  //     let deltaB = BigInt.fromU32(100);
-  //     handleMetapoolOracle(createMetapoolOracleEvent(ONE_BI, deltaB, [ONE_BI, ONE_BI], block1));
-  //     const poolPrefix = BEAN_3CRV.toHexString() + "-";
-  //     assert.fieldEquals("PoolHourlySnapshot", poolPrefix + hour1, "twaDeltaBeans", deltaB.toString());
-  //     assert.fieldEquals("BeanHourlySnapshot", BEAN_ERC20.toHexString() + "-6074", "twaDeltaB", deltaB.toString());
-  //   });
-
-  //   test("Post-Replant Well", () => {
-  //     let deltaB = BigInt.fromI32(-2500);
-  //     handleWellOracle(createWellOracleEvent(ONE_BI, BEAN_WETH_CP2_WELL.toHexString(), deltaB, Bytes.fromHexString("0x00"), block1));
-  //     const poolPrefix = BEAN_WETH_CP2_WELL.toHexString() + "-";
-  //     assert.fieldEquals("PoolHourlySnapshot", poolPrefix + hour1, "twaDeltaBeans", deltaB.toString());
-  //     assert.fieldEquals("BeanHourlySnapshot", BEAN_ERC20.toHexString() + "-6074", "twaDeltaB", deltaB.toString());
-  //   });
-
-  //   test("Post-Replant Cumulative", () => {
-  //     let curve = BigInt.fromI32(-150);
-  //     let well = BigInt.fromU32(600);
-  //     handleMetapoolOracle(createMetapoolOracleEvent(ONE_BI, curve, [ONE_BI, ONE_BI], block1));
-  //     handleWellOracle(createWellOracleEvent(ONE_BI, BEAN_WETH_CP2_WELL.toHexString(), well, Bytes.fromHexString("0x00"), block1));
-  //     const prefixCurve = BEAN_3CRV.toHexString() + "-";
-  //     const prefixWell = BEAN_WETH_CP2_WELL.toHexString() + "-";
-  //     assert.fieldEquals("PoolHourlySnapshot", prefixCurve + hour1, "twaDeltaBeans", curve.toString());
-  //     assert.fieldEquals("PoolHourlySnapshot", prefixWell + hour1, "twaDeltaBeans", well.toString());
-  //     assert.fieldEquals("BeanHourlySnapshot", BEAN_ERC20.toHexString() + "-6074", "twaDeltaB", curve.plus(well).toString());
-  //   });
-  // });
 });

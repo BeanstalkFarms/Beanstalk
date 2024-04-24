@@ -17,7 +17,7 @@ import {
 import { toDecimal, ZERO_BD } from "../../subgraph-core/utils/Decimals";
 
 import { loadBean } from "../src/utils/Bean";
-import { calcUniswapV2Inst, getPreReplantPriceETH, uniswapV2Price, uniswapV2Reserves } from "../src/utils/price/UniswapPrice";
+import { calcUniswapV2Inst, getPreReplantPriceETH, constantProductPrice, uniswapV2Reserves } from "../src/utils/price/UniswapPrice";
 
 const wellCrossId = (n: u32): string => {
   return BEAN_WETH_CP2_WELL.toHexString() + "-" + n.toString();
@@ -55,7 +55,7 @@ describe("Peg Crosses", () => {
 
       const reserves = uniswapV2Reserves(BEAN_WETH_V1);
       const ethPriceNow = getPreReplantPriceETH();
-      const newPrice = uniswapV2Price(toDecimal(reserves[0]), toDecimal(reserves[1], 18), ethPriceNow);
+      const newPrice = constantProductPrice(toDecimal(reserves[0]), toDecimal(reserves[1], 18), ethPriceNow);
       log.info("expected | actual {} | {}", [beanPrice.toString(), newPrice.truncate(4).toString()]);
       assert.assertTrue(beanPrice.equals(newPrice));
 
@@ -64,7 +64,7 @@ describe("Peg Crosses", () => {
 
       const reserves2 = uniswapV2Reserves(BEAN_WETH_V1);
       const ethPriceNow2 = getPreReplantPriceETH();
-      const newPrice2 = uniswapV2Price(toDecimal(reserves2[0]), toDecimal(reserves2[1], 18), ethPriceNow2);
+      const newPrice2 = constantProductPrice(toDecimal(reserves2[0]), toDecimal(reserves2[1], 18), ethPriceNow2);
       log.info("expected | actual {} | {}", [beanPrice2.toString(), newPrice2.truncate(4).toString()]);
       assert.assertTrue(beanPrice2.equals(newPrice2));
     });

@@ -1,7 +1,7 @@
 import { Address, BigInt } from "@graphprotocol/graph-ts";
 import { Sunrise } from "../generated/Beanstalk/Beanstalk";
 import { getBeanTokenAddress, loadBean, updateBeanSeason, updateBeanTwa, updateBeanValues } from "./utils/Bean";
-import { loadOrCreatePool, setPoolTwaDeltaB, updatePoolPrice, updatePoolSeason, updatePoolValues } from "./utils/Pool";
+import { loadOrCreatePool, updatePoolPrice, updatePoolSeason, updatePoolValues } from "./utils/Pool";
 import { BeanstalkPrice } from "../generated/Beanstalk/BeanstalkPrice";
 import {
   BEANSTALK_PRICE,
@@ -20,6 +20,7 @@ import { calcCurveInst, setCurveTwa } from "./utils/price/CurvePrice";
 import { MetapoolOracle, WellOracle } from "../generated/TWAPOracles/BIP37";
 import { DeltaBPriceLiquidity } from "./utils/price/Types";
 import { setTwaLast } from "./utils/price/TwaOracle";
+import { decodeCumulativeWellReserves, setWellTwa } from "./utils/price/WellPrice";
 
 export function handleSunrise(event: Sunrise): void {
   // Update the season for hourly and daily liquidity metrics
@@ -157,6 +158,7 @@ export function handleMetapoolOracle(event: MetapoolOracle): void {
 }
 
 export function handleWellOracle(event: WellOracle): void {
-  setPoolTwaDeltaB(event.params.well.toHexString(), event.params.deltaB, event.block.timestamp, event.block.number);
+  setTwaLast(event.params.well.toHexString(), decodeCumulativeWellReserves(event.params.cumulativeReserves), event.block.timestamp);
+  setWellTwa(event.params.well.toHexString(), event.params.deltaB, event.block.timestamp, event.block.number);
   updateBeanTwa(event.block.timestamp, event.block.number);
 }

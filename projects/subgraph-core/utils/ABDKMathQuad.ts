@@ -1,8 +1,8 @@
-import { BigInt, Bytes } from "@graphprotocol/graph-ts";
+import { BigInt, Bytes, BigDecimal } from "@graphprotocol/graph-ts";
 import { BigInt_bigEndian } from "./BigEndian";
 import { ZERO_BI } from "./Decimals";
 
-export function toUInt(x: BigInt): BigInt {
+export function ABDK_toUInt(x: BigInt): BigInt {
   // Extract the exponent assuming x is structured similar to a 128-bit float
   let exponent = x.rightShift(112).bitAnd(BigInt.fromUnsignedBytes(Bytes.fromUint8Array(Bytes.fromHexString("0x7FFF").reverse())));
 
@@ -34,4 +34,11 @@ export function toUInt(x: BigInt): BigInt {
   }
 
   return result;
+}
+
+// This operation accepts just a regularly formatted integer, but is relevant to ABDK so I am including in this file
+export function pow2toX(x: BigDecimal): BigInt {
+  const x_f64 = parseFloat(x.toString());
+  const result = Math.pow(2, x_f64);
+  return BigInt.fromString(BigDecimal.fromString(result.toString()).truncate(0).toString());
 }

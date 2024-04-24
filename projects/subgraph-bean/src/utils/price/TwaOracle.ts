@@ -1,10 +1,11 @@
-import { BigInt, Address, log } from "@graphprotocol/graph-ts";
+import { BigInt, Address, BigDecimal, log } from "@graphprotocol/graph-ts";
 import { TwaOracle } from "../../../generated/schema";
 import { BI_10, emptyBigIntArray, ONE_BI, ZERO_BI } from "../../../../subgraph-core/utils/Decimals";
 import { uniswapCumulativePrice } from "./UniswapPrice";
 import { WETH_USDC_PAIR } from "../../../../subgraph-core/utils/Constants";
 import { curveCumulativePrices } from "./CurvePrice";
 import { TWAType } from "./Types";
+import { wellCumulativePrices, wellTwaReserves } from "./WellPrice";
 
 export function loadOrCreateTwaOracle(poolAddress: string): TwaOracle {
   let twaOracle = TwaOracle.load(poolAddress);
@@ -41,7 +42,7 @@ export function setTwaLast(poolAddress: string, newCumulative: BigInt[], timesta
   twaOracle.save();
 }
 
-// Returns the current TWA prices since the previous TwaOracle update
+// Returns the current TWA prices (balances) since the previous TwaOracle update
 export function getTWAPrices(poolAddress: string, type: TWAType, timestamp: BigInt): BigInt[] {
   let twaOracle = loadOrCreateTwaOracle(poolAddress);
   const initialized = twaOracle.lastSun != ZERO_BI;
@@ -60,13 +61,16 @@ export function getTWAPrices(poolAddress: string, type: TWAType, timestamp: BigI
       newPriceCumulative[0].minus(twaOracle.priceCumulativeSun[0]).div(timeElapsed).times(BI_10.pow(6)).div(ONE_BI.leftShift(112)),
       newPriceCumulative[1].minus(twaOracle.priceCumulativeSun[1]).div(timeElapsed).times(BI_10.pow(6)).div(ONE_BI.leftShift(112))
     ];
-  } else {
+  } else if (type == TWAType.CURVE) {
     // Curve
     newPriceCumulative = curveCumulativePrices(Address.fromString(poolAddress), timestamp);
     twaPrices = [
       newPriceCumulative[0].minus(twaOracle.priceCumulativeSun[0]).div(timeElapsed),
       newPriceCumulative[1].minus(twaOracle.priceCumulativeSun[1]).div(timeElapsed)
     ];
+  } else if (type == TWAType.WELL_PUMP) {
+    newPriceCumulative = wellCumulativePrices(Address.fromString(poolAddress), timestamp);
+    twaPrices = wellTwaReserves(newPriceCumulative, twaOracle.priceCumulativeSun, new BigDecimal(timeElapsed));
   }
 
   // log.debug("twa prices {} | {}", [twaPrices[0].toString(), twaPrices[1].toString()]);
@@ -78,7 +82,8 @@ export function getTWAPrices(poolAddress: string, type: TWAType, timestamp: BigI
     return twaPrices;
   } else if (type == TWAType.UNISWAP) {
     return [BI_10.pow(18), BI_10.pow(18)];
-  } else {
+  } else if (type == TWAType.CURVE || type == TWAType.WELL_PUMP) {
     return [BI_10.pow(6), BI_10.pow(18)];
   }
+  throw new Error("[getTWAPrices] TWAType missing case");
 }

@@ -2,7 +2,8 @@ import { BigDecimal, BigInt } from "@graphprotocol/graph-ts";
 
 export enum TWAType {
   UNISWAP,
-  CURVE
+  CURVE,
+  WELL_PUMP
 }
 
 export class DeltaBAndPrice {

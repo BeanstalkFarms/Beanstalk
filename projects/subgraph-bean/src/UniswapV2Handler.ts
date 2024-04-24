@@ -9,7 +9,7 @@ import { checkBeanCross, checkPoolCross } from "./utils/Cross";
 import {
   getPreReplantPriceETH,
   uniswapV2DeltaB,
-  uniswapV2Price,
+  constantProductPrice,
   uniswapV2Reserves,
   updatePreReplantPriceETH
 } from "./utils/price/UniswapPrice";
@@ -92,7 +92,7 @@ export function handleSync(event: Sync): void {
 
   updatePoolValues(event.address.toHexString(), event.block.timestamp, event.block.number, ZERO_BI, ZERO_BD, deltaLiquidityUSD, deltaBeans);
 
-  let currentBeanPrice = uniswapV2Price(bean_bd, weth_bd, weth.lastPriceUSD);
+  let currentBeanPrice = constantProductPrice(bean_bd, weth_bd, weth.lastPriceUSD);
 
   updatePoolPrice(event.address.toHexString(), event.block.timestamp, event.block.number, currentBeanPrice);
 
@@ -111,7 +111,7 @@ export function checkPegCrossEth(block: ethereum.Block): void {
 
   const reserves = uniswapV2Reserves(BEAN_WETH_V1);
   const ethPrice = getPreReplantPriceETH();
-  const newPrice = uniswapV2Price(toDecimal(reserves[0]), toDecimal(reserves[1], 18), ethPrice);
+  const newPrice = constantProductPrice(toDecimal(reserves[0]), toDecimal(reserves[1], 18), ethPrice);
 
   // log.debug("Prev/New bean price {} / {}", [prevPrice.toString(), newPrice.toString()]);
 

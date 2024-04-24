@@ -233,16 +233,6 @@ export function getPoolLiquidityUSD(poolAddress: string, blockNumber: BigInt): B
   return pool.liquidityUSD;
 }
 
-// TODO: delete this function once WellOracle is handled
-export function setPoolTwaDeltaB(poolAddress: string, twaDeltaB: BigInt, timestamp: BigInt, blockNumber: BigInt): void {
-  let poolHourly = loadOrCreatePoolHourlySnapshot(poolAddress, timestamp, blockNumber);
-  let poolDaily = loadOrCreatePoolDailySnapshot(poolAddress, timestamp, blockNumber);
-  poolHourly.twaDeltaBeans = twaDeltaB;
-  poolDaily.twaDeltaBeans = twaDeltaB;
-  poolHourly.save();
-  poolDaily.save();
-}
-
 export function setPoolTwa(poolAddress: string, twaValues: DeltaBAndPrice, timestamp: BigInt, blockNumber: BigInt): void {
   let poolHourly = loadOrCreatePoolHourlySnapshot(poolAddress, timestamp, blockNumber);
   let poolDaily = loadOrCreatePoolDailySnapshot(poolAddress, timestamp, blockNumber);
