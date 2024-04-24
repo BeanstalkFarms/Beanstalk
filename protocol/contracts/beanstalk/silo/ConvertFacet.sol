@@ -199,7 +199,7 @@ contract ConvertFacet is ReentrancyGuard {
 
         // Calculate stalk penalty using start/finish deltaB of pools, and the capped deltaB is
         // passed in to setup max convert power.
-        pipeData.stalkPenaltyBdv = _calculateStalkPenalty(pipeData.startingCombinedDeltaB, pipeData.endingCombinedDeltaB, fromBdv, abs(pipeData.cappedDeltaB));
+        pipeData.stalkPenaltyBdv = LibConvert.calculateStalkPenalty(pipeData.startingCombinedDeltaB, pipeData.endingCombinedDeltaB, fromBdv, LibConvert.abs(pipeData.cappedDeltaB));
         
         // Update grownStalk amount with penalty applied
         pipeData.grownStalk = pipeData.grownStalk.sub(pipeData.stalkPenaltyBdv);
@@ -225,82 +225,7 @@ contract ConvertFacet is ReentrancyGuard {
     // public function for the below
     function calculateStalkPenalty(int256 beforeDeltaB, int256 afterDeltaB, uint256 bdvConverted, uint256 cappedDeltaB)
         external returns (uint256 stalkPenaltyBdv) {
-        return _calculateStalkPenalty(beforeDeltaB, afterDeltaB, bdvConverted, cappedDeltaB);
-    }
-
-    /**
-     * @notice Calculates the percentStalkPenalty for a given convert.
-     * @dev The percentStalkPenalty is the amount of Stalk that is lost as a result of converting against
-     * or past peg.
-     * @param beforeDeltaB The deltaB before the deposit.
-     * @param afterDeltaB The deltaB after the deposit.
-     * @param bdvConverted The amount of BDVs that were removed, will be summed in this function.
-     * @param cappedDeltaB The absolute value of capped deltaB, used to setup per-block conversion limits.
-     * @return stalkPenaltyBdv The BDV amount that should be penalized, 0 means no penalty, full bdv returned means all bdv penalized
-     */
-    function _calculateStalkPenalty(int256 beforeDeltaB, int256 afterDeltaB, uint256 bdvConverted, uint256 cappedDeltaB) internal returns (uint256 stalkPenaltyBdv) {
-        // represents how far past peg deltaB was moved
-        uint256 crossoverAmount;
-
-        // the bdv amount that was converted against peg
-        uint256 amountAgainstPeg = abs(afterDeltaB.sub(beforeDeltaB));
-
-        // we could potentially be right at zero often with automated tractor converts
-        if (beforeDeltaB == 0 && afterDeltaB != 0) {
-            //this means we converted away from peg, so amount against peg is penalty
-            return amountAgainstPeg;
-        }
-
-        // Check if the signs of beforeDeltaB and afterDeltaB are different,
-        // indicating that deltaB has crossed zero
-        if ((beforeDeltaB > 0 && afterDeltaB < 0) || (beforeDeltaB < 0 && afterDeltaB > 0)) {
-            // Calculate how far past peg we went - so actually this is just abs of new deltaB
-            crossoverAmount = abs(afterDeltaB);
-
-            // Check if the crossoverAmount is greater than or equal to bdvConverted
-            // TODO: see if we can find cases where bdcConverted doesn't match the deltaB diff? should always in theory afaict
-            if (crossoverAmount > bdvConverted) {
-                // If the entire bdvConverted amount crossed over, something is fishy, bdv amounts wrong?
-                revert("Convert: converted farther than bdv");
-            } else {
-                return crossoverAmount;
-            }
-        } else if (beforeDeltaB <= 0 && afterDeltaB < beforeDeltaB) { 
-            return amountAgainstPeg;
-        } else if (beforeDeltaB >= 0 && afterDeltaB > beforeDeltaB) { 
-            return amountAgainstPeg;
-        }
-
-        // at this point we are converting in direction of peg, but we may have gone past it
-
-        // Setup convert power for this block if it has not already been setup
-        if (s.convertCapacity[block.number].hasConvertHappenedThisBlock == false) {
-            // use capped deltaB for flashloan resistance
-            s.convertCapacity[block.number].convertCapacity = uint248(cappedDeltaB);
-            s.convertCapacity[block.number].hasConvertHappenedThisBlock = true;
-        }
-
-        // calculate how much deltaB convert is happening with this convert
-        uint256 convertAmountInDirectionOfPeg = abs(beforeDeltaB.sub(afterDeltaB));
-
-        if (convertAmountInDirectionOfPeg <= s.convertCapacity[block.number].convertCapacity) {
-            // all good, you're using less than the available convert power
-
-            // subtract from convert power available for this block
-            s.convertCapacity[block.number].convertCapacity -= uint248(convertAmountInDirectionOfPeg);
-
-            return crossoverAmount;
-        } else {
-            // you're using more than the available convert power
-
-            // penalty will be how far past peg you went, but any remaining convert power is used to reduce the penalty
-            uint256 penalty = convertAmountInDirectionOfPeg - s.convertCapacity[block.number].convertCapacity;
-
-            // all convert power for this block is used up
-            s.convertCapacity[block.number].convertCapacity = 0;
-
-            return penalty.add(crossoverAmount); // should this be capped at bdvConverted?
-        }
+        return LibConvert.calculateStalkPenalty(beforeDeltaB, afterDeltaB, bdvConverted, cappedDeltaB);
     }
 
     /**
@@ -310,7 +235,7 @@ contract ConvertFacet is ReentrancyGuard {
     function getConvertCapacity() external view returns (uint256) {
         if (s.convertCapacity[block.number].hasConvertHappenedThisBlock == false) {
             // if convert power has not been initialized for this block, use the overall deltaB
-            return abs(LibWellMinting.overallCappedDeltaB());
+            return LibConvert.abs(LibWellMinting.overallCappedDeltaB());
         }
         return s.convertCapacity[block.number].convertCapacity;
     }
@@ -517,11 +442,5 @@ contract ConvertFacet is ReentrancyGuard {
             bdv,
             LibTokenSilo.Transfer.emitTransferSingle
         );        
-    }
-
-    // TODO: when we updated to Solidity 0.8, use the native abs function
-    // the verson of OpenZeppelin we're on does not support abs
-    function abs(int256 a) internal pure returns (uint256) {
-        return a >= 0 ? uint256(a) : uint256(-a);
     }
 }
