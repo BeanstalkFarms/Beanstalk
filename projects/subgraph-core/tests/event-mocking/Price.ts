@@ -1,6 +1,16 @@
-import { BigInt, ethereum, Address } from "@graphprotocol/graph-ts";
+import { BigInt, BigDecimal, ethereum, Address, log } from "@graphprotocol/graph-ts";
 import { createMockedFunction } from "matchstick-as/assembly/index";
-import { BEAN_3CRV, BEAN_ERC20, BEAN_WETH_CP2_WELL, BEANSTALK_PRICE, CURVE_PRICE, WETH } from "../../utils/Constants";
+import {
+  BEAN_3CRV,
+  BEAN_ERC20,
+  BEAN_WETH_CP2_WELL,
+  BEAN_WETH_V1,
+  BEANSTALK_PRICE,
+  CURVE_PRICE,
+  WETH,
+  WETH_USDC_PAIR
+} from "../../utils/Constants";
+import { BI_10, toDecimal, ZERO_BI } from "../../utils/Decimals";
 
 // These 2 classes are analagous to structs used by BeanstalkPrice contract
 class Prices {
@@ -124,4 +134,36 @@ function toPoolStruct(pool: Pool): ethereum.Tuple {
   retval.push(ethereum.Value.fromUnsignedBigInt(pool.lpBdv));
 
   return retval;
+}
+
+export function mockPreReplantBeanEthPrice(price: BigDecimal): void {
+  // Fix eth to $3000
+  const ethPrice = BigDecimal.fromString("3000");
+  mockPreReplantETHPrice(ethPrice);
+
+  // price = wethReserves.times(wethPrice).div(beanReserves)
+
+  // Fix weth reserves as 10k eth
+  const wethReserves = BigInt.fromI32(100000).times(BI_10.pow(18));
+  const beanReserves = BigInt.fromString(
+    toDecimal(wethReserves, 18).times(ethPrice).div(price).times(BigDecimal.fromString("1000000")).truncate(0).toString()
+  );
+  mockUniswapV2Reserves(BEAN_WETH_V1, beanReserves, wethReserves);
+}
+
+export function mockPreReplantETHPrice(price: BigDecimal): void {
+  // price = toDecimal(reserves[0]).div(toDecimal(reserves[1], 18));
+  // Fix reserves[1] as 100k weth.
+  const wethReserves = BigInt.fromI32(100000).times(BI_10.pow(18));
+  const usdcReserves = BigInt.fromString(
+    price.times(toDecimal(wethReserves, 18)).times(BigDecimal.fromString("1000000")).truncate(0).toString()
+  );
+  mockUniswapV2Reserves(WETH_USDC_PAIR, usdcReserves, wethReserves);
+}
+
+export function mockUniswapV2Reserves(contract: Address, reserve0: BigInt, reserve1: BigInt): void {
+  createMockedFunction(contract, "getReserves", "getReserves():(uint112,uint112,uint32)")
+    .withArgs([])
+    // Ignoring third return value (last updated time?) for now
+    .returns([ethereum.Value.fromUnsignedBigInt(reserve0), ethereum.Value.fromUnsignedBigInt(reserve1), ethereum.Value.fromI32(0)]);
 }

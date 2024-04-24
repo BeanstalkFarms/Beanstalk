@@ -135,4 +135,5 @@ export function checkPegCrossEth(block: ethereum.Block): void {
   }
 
   // TODO: if crossed, update weth token price
+  // TODO: check for overall Bean price cross.
 }
