@@ -475,69 +475,6 @@ library LibLegacyTokenSilo {
         return 0;
     }
 
-    ////////////////////////// CLAIM ///////////////////////////////
-
-    /**
-     * @notice DEPRECATED. Internal logic for claiming a singular deposit.
-     *
-     * @dev The Zero Withdraw update removed the two-step withdraw & claim process.
-     * These internal functions are left for backwards compatibility, to allow pending
-     * withdrawals from before the update to be claimed.
-     */
-    function _claimWithdrawal(
-        address account,
-        address token,
-        uint32 season
-    ) internal returns (uint256) {
-        AppStorage storage s = LibAppStorage.diamondStorage();
-        uint256 amount = _removeTokenWithdrawal(account, token, season);
-        s.siloBalances[token].withdrawn = s.siloBalances[token].withdrawn.sub(amount);
-        emit RemoveWithdrawal(msg.sender, token, season, amount);
-        return amount;
-    }
-
-    /**
-     * @notice DEPRECATED. Internal logic for claiming multiple deposits.
-     *
-     * @dev The Zero Withdraw update removed the two-step withdraw & claim process.
-     * These internal functions are left for backwards compatibility, to allow pending
-     * withdrawals from before the update to be claimed.
-     */
-    function _claimWithdrawals(
-        address account,
-        address token,
-        uint32[] calldata seasons
-    ) internal returns (uint256 amount) {
-        AppStorage storage s = LibAppStorage.diamondStorage();
-
-        for (uint256 i; i < seasons.length; ++i) {
-            amount = amount.add(_removeTokenWithdrawal(account, token, seasons[i]));
-        }
-        s.siloBalances[token].withdrawn = s.siloBalances[token].withdrawn.sub(amount);
-        emit RemoveWithdrawals(msg.sender, token, seasons, amount);
-        return amount;
-    }
-
-    /**
-     * @notice DEPRECATED. Internal logic for removing the claim multiple deposits.
-     *
-     * @dev The Zero Withdraw update removed the two-step withdraw & claim process.
-     * These internal functions are left for backwards compatibility, to allow pending
-     * withdrawals from before the update to be claimed.
-     */
-    function _removeTokenWithdrawal(
-        address account,
-        address token,
-        uint32 season
-    ) private returns (uint256) {
-        AppStorage storage s = LibAppStorage.diamondStorage();
-
-        require(season <= s.season.current, "Claim: Withdrawal not receivable");
-        uint256 amount = s.a[account].withdrawals[token][season];
-        delete s.a[account].withdrawals[token][season];
-        return amount;
-    }
-
     /**
      * @dev Increments the Migrated BDV counter for a given `token` by `bdv`.
      * The `depositedBdv` variable in `Storage.AssetSilo` does not include unmigrated BDV and thus is not accurrate.

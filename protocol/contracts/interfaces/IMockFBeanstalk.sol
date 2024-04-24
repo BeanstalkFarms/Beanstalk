@@ -346,8 +346,6 @@ interface IMockFBeanstalk {
     function claimFertilized(uint256[] memory ids, uint8 mode) external payable;
     function claimOwnership() external;
     function claimPlenty() external payable;
-    function claimWithdrawal(address token, uint32 season, uint8 mode) external payable;
-    function claimWithdrawals(address token, uint32[] memory seasons, uint8 mode) external payable;
     function convert(bytes memory convertData, int96[] memory stems, uint256[] memory amounts)
         external
         payable
