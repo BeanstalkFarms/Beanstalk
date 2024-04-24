@@ -222,12 +222,6 @@ contract ConvertFacet is ReentrancyGuard {
         (deltaB, instReserves, ratios) = LibWellMinting.cappedReservesDeltaB(well);
     }
 
-    // public function for the below
-    function calculateStalkPenalty(int256 beforeDeltaB, int256 afterDeltaB, uint256 bdvConverted, uint256 cappedDeltaB)
-        external returns (uint256 stalkPenaltyBdv) {
-        return LibConvert.calculateStalkPenalty(beforeDeltaB, afterDeltaB, bdvConverted, cappedDeltaB);
-    }
-
     /**
      * @notice Returns currently available convert power for this block
      * @return convertCapacity The amount of convert power available for this block

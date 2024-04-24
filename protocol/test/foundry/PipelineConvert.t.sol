@@ -27,6 +27,7 @@ import {LibWell} from "contracts/libraries/Well/LibWell.sol";
 import {ICappedReservesPump} from "contracts/interfaces/basin/pumps/ICappedReservesPump.sol";
 import {LibClipboard} from "contracts/libraries/LibClipboard.sol";
 import {LibWellMinting} from "contracts/libraries/Minting/LibWellMinting.sol";
+import {LibConvert} from "contracts/libraries/Convert/LibConvert.sol";
 import "forge-std/Test.sol";
 
 contract MiscHelperContract {
@@ -803,7 +804,7 @@ contract PipelineConvertTest is TestHelper {
         int256 afterDeltaB = 0;
         uint256 bdvRemoved = 100;
         uint256 cappedDeltaB = 100;
-        uint256 penalty = convert.calculateStalkPenalty(beforeDeltaB, afterDeltaB, bdvRemoved, cappedDeltaB);
+        uint256 penalty = LibConvert.calculateStalkPenalty(beforeDeltaB, afterDeltaB, bdvRemoved, cappedDeltaB);
         assertEq(penalty, 0);
     }
 
@@ -812,7 +813,7 @@ contract PipelineConvertTest is TestHelper {
         int256 afterDeltaB = -100;
         uint256 bdvRemoved = 100;
         uint256 cappedDeltaB = 100;
-        uint256 penalty = convert.calculateStalkPenalty(beforeDeltaB, afterDeltaB, bdvRemoved, cappedDeltaB);
+        uint256 penalty = LibConvert.calculateStalkPenalty(beforeDeltaB, afterDeltaB, bdvRemoved, cappedDeltaB);
         assertEq(penalty, 0);
     }
 
@@ -821,7 +822,7 @@ contract PipelineConvertTest is TestHelper {
         int256 afterDeltaB = 0;
         uint256 bdvRemoved = 100;
         uint256 cappedDeltaB = 100;
-        uint256 penalty = convert.calculateStalkPenalty(beforeDeltaB, afterDeltaB, bdvRemoved, cappedDeltaB);
+        uint256 penalty = LibConvert.calculateStalkPenalty(beforeDeltaB, afterDeltaB, bdvRemoved, cappedDeltaB);
         assertEq(penalty, 0);
     }
 
@@ -830,7 +831,7 @@ contract PipelineConvertTest is TestHelper {
         int256 afterDeltaB = 100;
         uint256 bdvRemoved = 100;
         uint256 cappedDeltaB = 100;
-        uint256 penalty = convert.calculateStalkPenalty(beforeDeltaB, afterDeltaB, bdvRemoved, cappedDeltaB);
+        uint256 penalty = LibConvert.calculateStalkPenalty(beforeDeltaB, afterDeltaB, bdvRemoved, cappedDeltaB);
         assertEq(penalty, 0);
     }
 
@@ -839,7 +840,7 @@ contract PipelineConvertTest is TestHelper {
         int256 afterDeltaB = 50;
         uint256 bdvRemoved = 100;
         uint256 cappedDeltaB = 50;
-        uint256 penalty = convert.calculateStalkPenalty(beforeDeltaB, afterDeltaB, bdvRemoved, cappedDeltaB);
+        uint256 penalty = LibConvert.calculateStalkPenalty(beforeDeltaB, afterDeltaB, bdvRemoved, cappedDeltaB);
         assertEq(penalty, 50);
     }
 
@@ -848,7 +849,7 @@ contract PipelineConvertTest is TestHelper {
         int256 afterDeltaB = -50;
         uint256 bdvRemoved = 100;
         uint256 cappedDeltaB = 50;
-        uint256 penalty = convert.calculateStalkPenalty(beforeDeltaB, afterDeltaB, bdvRemoved, cappedDeltaB);
+        uint256 penalty = LibConvert.calculateStalkPenalty(beforeDeltaB, afterDeltaB, bdvRemoved, cappedDeltaB);
         assertEq(penalty, 50);
     }
 
@@ -857,7 +858,7 @@ contract PipelineConvertTest is TestHelper {
         int256 afterDeltaB = 0;
         uint256 bdvRemoved = 100;
         uint256 cappedDeltaB = 0;
-        uint256 penalty = convert.calculateStalkPenalty(beforeDeltaB, afterDeltaB, bdvRemoved, cappedDeltaB);
+        uint256 penalty = LibConvert.calculateStalkPenalty(beforeDeltaB, afterDeltaB, bdvRemoved, cappedDeltaB);
         assertEq(penalty, 100);
     }
 
@@ -866,7 +867,7 @@ contract PipelineConvertTest is TestHelper {
         int256 afterDeltaB = 1;
         uint256 bdvRemoved = 100;
         uint256 cappedDeltaB = 0;
-        uint256 penalty = convert.calculateStalkPenalty(beforeDeltaB, afterDeltaB, bdvRemoved, cappedDeltaB);
+        uint256 penalty = LibConvert.calculateStalkPenalty(beforeDeltaB, afterDeltaB, bdvRemoved, cappedDeltaB);
         assertEq(penalty, 100);
     }
 
@@ -875,7 +876,7 @@ contract PipelineConvertTest is TestHelper {
         int256 afterDeltaB = 1;
         uint256 bdvRemoved = 100;
         uint256 cappedDeltaB = 50;
-        uint256 penalty = convert.calculateStalkPenalty(beforeDeltaB, afterDeltaB, bdvRemoved, cappedDeltaB);
+        uint256 penalty = LibConvert.calculateStalkPenalty(beforeDeltaB, afterDeltaB, bdvRemoved, cappedDeltaB);
         assertEq(penalty, 50);
     }
 
@@ -884,7 +885,7 @@ contract PipelineConvertTest is TestHelper {
         int256 afterDeltaB = 0;
         uint256 bdvRemoved = 100;
         uint256 cappedDeltaB = 50;
-        uint256 penalty = convert.calculateStalkPenalty(beforeDeltaB, afterDeltaB, bdvRemoved, cappedDeltaB);
+        uint256 penalty = LibConvert.calculateStalkPenalty(beforeDeltaB, afterDeltaB, bdvRemoved, cappedDeltaB);
         assertEq(penalty, 50);
     }
 
@@ -893,7 +894,7 @@ contract PipelineConvertTest is TestHelper {
         int256 afterDeltaB = 101;
         uint256 bdvRemoved = 100;
         uint256 cappedDeltaB = 100;
-        uint256 penalty = convert.calculateStalkPenalty(beforeDeltaB, afterDeltaB, bdvRemoved, cappedDeltaB);
+        uint256 penalty = LibConvert.calculateStalkPenalty(beforeDeltaB, afterDeltaB, bdvRemoved, cappedDeltaB);
         assertEq(penalty, 1);
     }
 
@@ -902,7 +903,7 @@ contract PipelineConvertTest is TestHelper {
         int256 afterDeltaB = 151;
         uint256 bdvRemoved = 100;
         uint256 cappedDeltaB = 0;
-        uint256 penalty = convert.calculateStalkPenalty(beforeDeltaB, afterDeltaB, bdvRemoved, cappedDeltaB);
+        uint256 penalty = LibConvert.calculateStalkPenalty(beforeDeltaB, afterDeltaB, bdvRemoved, cappedDeltaB);
         assertEq(penalty, 51);
     }
 
