@@ -97,7 +97,9 @@ library C {
     uint80 internal constant SLOT_SIZE = 32;
     uint80 internal constant ARGS_START_INDEX = SELECTOR_SIZE + SLOT_SIZE;
     uint80 internal constant ADDR_SLOT_OFFSET = 12;
+    // Special index to indicate the data to copy is the publisher address.
     uint80 internal constant PUBLISHER_COPY_INDEX = type(uint80).max;
+    // Special index to indicate the data to copy is the operator address.
     uint80 internal constant OPERATOR_COPY_INDEX = type(uint80).max - 1;
 
     function getSeasonPeriod() internal pure returns (uint256) {
