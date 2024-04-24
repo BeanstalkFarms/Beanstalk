@@ -238,7 +238,8 @@ async function bipSeedGauge(mock = true, account = undefined, verbose = true) {
         "BDVFacet", // update bdv functions
         "SiloGettersFacet", // add silo getters
         "LiquidityWeightFacet", // add liquidity weight facet
-        "EnrootFacet" // update stem functions
+        "EnrootFacet", // update stem functions
+        "MigrationFacet" // update migration functions
       ],
       initFacetName: "InitBipSeedGauge",
       selectorsToRemove: [],
