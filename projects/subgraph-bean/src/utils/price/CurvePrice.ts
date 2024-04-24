@@ -138,7 +138,8 @@ export function curveTwaDeltaBAndPrice(twaBalances: BigInt[], beanPool: Address,
 
   return {
     deltaB: deltaFromD(D, twaBalances[0]),
-    price: priceFromY(y, xp[1])
+    price: priceFromY(y, xp[1]),
+    token2Price: null
   };
 }
 

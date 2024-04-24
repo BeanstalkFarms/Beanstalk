@@ -196,8 +196,10 @@ type PoolHourlySnapshot @entity {
   pool: Pool!
   reserves: [BigInt!]!
   lastPrice: BigDecimal!
-  "Time-Weighted price over the previous season"
+  "Time-Weighted bean price over the previous season"
   twaPrice: BigDecimal!
+  "Time-Weighted price of the other token in the pool over the previous season, if applicable"
+  twaToken2Price: BigDecimal
   volume: BigInt!
   volumeUSD: BigDecimal!
   liquidityUSD: BigDecimal!
@@ -225,6 +227,8 @@ type PoolDailySnapshot @entity {
   lastPrice: BigDecimal!
   "Time-Weighted price over the previous season"
   twaPrice: BigDecimal!
+  "Time-Weighted price of the other token in the pool over the previous season, if applicable"
+  twaToken2Price: BigDecimal
   volume: BigInt!
   volumeUSD: BigDecimal!
   liquidityUSD: BigDecimal!

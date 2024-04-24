@@ -9,6 +9,7 @@ export enum TWAType {
 export class DeltaBAndPrice {
   deltaB: BigInt;
   price: BigDecimal;
+  token2Price: BigDecimal | null;
 }
 
 export class DeltaBPriceLiquidity {

@@ -8,20 +8,13 @@ import {
   TokenExchangeUnderlying
 } from "../generated/Bean3CRV/Bean3CRV";
 import { loadBean, updateBeanSupplyPegPercent, updateBeanValues } from "./utils/Bean";
-import { BEAN_3CRV_V1, BEAN_ERC20_V1, BEAN_LUSD_V1, CRV3_POOL, LUSD_3POOL } from "../../subgraph-core/utils/Constants";
+import { BEAN_ERC20_V1, BEAN_LUSD_V1 } from "../../subgraph-core/utils/Constants";
 import { toDecimal, ZERO_BD, ZERO_BI } from "../../subgraph-core/utils/Decimals";
-import {
-  loadOrCreatePool,
-  loadOrCreatePoolDailySnapshot,
-  loadOrCreatePoolHourlySnapshot,
-  setPoolReserves,
-  updatePoolPrice,
-  updatePoolValues
-} from "./utils/Pool";
+import { loadOrCreatePool, setPoolReserves, updatePoolPrice, updatePoolValues } from "./utils/Pool";
 import { Bean3CRV } from "../generated/Bean3CRV-V1/Bean3CRV";
 import { ERC20 } from "../generated/Bean3CRV-V1/ERC20";
 import { checkBeanCross } from "./utils/Cross";
-import { curveDeltaBUsingVPrice, curvePriceAndLp, curveTwaDeltaBAndPrice } from "./utils/price/CurvePrice";
+import { curveDeltaBUsingVPrice, curvePriceAndLp } from "./utils/price/CurvePrice";
 import { manualTwa } from "./utils/price/TwaOracle";
 
 export function handleTokenExchange(event: TokenExchange): void {

@@ -55,11 +55,15 @@ export function setWellTwa(wellAddress: string, twaDeltaB: BigInt, timestamp: Bi
 
 function wellTwaDeltaBAndPrice(twaBalances: BigInt[], twaDeltaB: BigInt): DeltaBAndPrice {
   // Use known twaDeltaB to infer the twa eth price
+  // This approach of determining price/token2Price is technically "incorrect", in that it is affected
+  // by the issue resolved in EBIP-11 https://github.com/BeanstalkFarms/Beanstalk-Governance-Proposals/blob/master/bip/ebip/ebip-11-upgrade-eth-usd-minting-oracle.md
+  // However, these were the values reported by the contract at the time, so we use those twa deltas/prices.
   const twaEthPrice = cpToken2PriceFromDeltaB(toDecimal(twaBalances[0]), toDecimal(twaBalances[1], 18), toDecimal(twaDeltaB));
 
   return {
     deltaB: twaDeltaB,
-    price: constantProductPrice(toDecimal(twaBalances[0]), toDecimal(twaBalances[1], 18), twaEthPrice)
+    price: constantProductPrice(toDecimal(twaBalances[0]), toDecimal(twaBalances[1], 18), twaEthPrice),
+    token2Price: twaEthPrice
   };
 }
 

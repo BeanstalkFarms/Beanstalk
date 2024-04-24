@@ -121,7 +121,8 @@ export function uniswapTwaDeltaBAndPrice(prices: BigInt[], blockNumber: BigInt):
 
   return {
     deltaB: deltaB,
-    price: twaPrice
+    price: twaPrice,
+    token2Price: null
   };
 }
 

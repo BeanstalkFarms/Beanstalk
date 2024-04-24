@@ -175,6 +175,7 @@ describe("DeltaB", () => {
       assert.fieldEquals("TwaOracle", BEAN_WETH_CP2_WELL.toHexString(), "priceCumulativeLast", "[880768318, 1483096961]");
       assert.fieldEquals("PoolHourlySnapshot", prefixWell + h1, "twaDeltaBeans", event2.params.deltaB.toString());
       assert.fieldEquals("PoolHourlySnapshot", prefixWell + h1, "twaPrice", "0.9128867742860822655628687132162919");
+      assert.fieldEquals("PoolHourlySnapshot", prefixWell + h1, "twaToken2Price", "3204.340276349048918425043871982445");
     });
   });
 });

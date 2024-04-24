@@ -238,8 +238,11 @@ export function setPoolTwa(poolAddress: string, twaValues: DeltaBAndPrice, times
   let poolDaily = loadOrCreatePoolDailySnapshot(poolAddress, timestamp, blockNumber);
   poolHourly.twaDeltaBeans = twaValues.deltaB;
   poolHourly.twaPrice = twaValues.price;
+  poolHourly.twaToken2Price = twaValues.token2Price;
+  // NOTE: ideally this would be a twa of the entire day
   poolDaily.twaDeltaBeans = twaValues.deltaB;
   poolDaily.twaPrice = twaValues.price;
+  poolDaily.twaToken2Price = twaValues.token2Price;
   poolHourly.save();
   poolDaily.save();
 }
