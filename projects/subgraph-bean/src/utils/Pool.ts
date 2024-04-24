@@ -2,7 +2,7 @@ import { BigDecimal, BigInt, log } from "@graphprotocol/graph-ts";
 import { Pool, PoolDailySnapshot, PoolHourlySnapshot } from "../../generated/schema";
 import { dayFromTimestamp, hourFromTimestamp } from "../../../subgraph-core/utils/Dates";
 import { emptyBigIntArray, ZERO_BD, ZERO_BI } from "../../../subgraph-core/utils/Decimals";
-import { getBeanTokenAddress, loadBean, loadOrCreateBeanDailySnapshot, updateInstDeltaB } from "./Bean";
+import { getBeanTokenAddress, loadBean, updateInstDeltaB } from "./Bean";
 import { checkPoolCross } from "./Cross";
 import { DeltaBAndPrice } from "./price/Types";
 

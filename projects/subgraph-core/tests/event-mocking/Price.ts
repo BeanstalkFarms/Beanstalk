@@ -10,7 +10,7 @@ import {
   WETH,
   WETH_USDC_PAIR
 } from "../../utils/Constants";
-import { BI_10, toDecimal, ZERO_BI } from "../../utils/Decimals";
+import { BD_10, BI_10, pow, toDecimal, ZERO_BI } from "../../utils/Decimals";
 
 // These 2 classes are analagous to structs used by BeanstalkPrice contract
 class Prices {
@@ -136,15 +136,17 @@ function toPoolStruct(pool: Pool): ethereum.Tuple {
   return retval;
 }
 
-export function mockPreReplantBeanEthPrice(price: BigDecimal): void {
+export function mockPreReplantBeanEthPriceAndLiquidity(price: BigDecimal, liquidity: BigDecimal = BigDecimal.fromString("5000000")): void {
   // Fix eth to $3000
   const ethPrice = BigDecimal.fromString("3000");
   mockPreReplantETHPrice(ethPrice);
 
   // price = wethReserves.times(wethPrice).div(beanReserves)
 
-  // Fix weth reserves as 10k eth
-  const wethReserves = BigInt.fromI32(100000).times(BI_10.pow(18));
+  // Fix weth reserves according to requested liquidity
+  const wethReserves = BigInt.fromString(
+    liquidity.div(ethPrice).div(BigDecimal.fromString("2")).times(pow(BD_10, 18)).truncate(0).toString()
+  );
   const beanReserves = BigInt.fromString(
     toDecimal(wethReserves, 18).times(ethPrice).div(price).times(BigDecimal.fromString("1000000")).truncate(0).toString()
   );

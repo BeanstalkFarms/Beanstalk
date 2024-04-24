@@ -1,4 +1,4 @@
-import { BigDecimal, BigInt, ethereum } from "@graphprotocol/graph-ts";
+import { BigDecimal, BigInt, ethereum, log } from "@graphprotocol/graph-ts";
 import { Swap, Sync } from "../generated/BeanUniswapV2Pair/UniswapV2Pair";
 import { getLastBeanPrice, calcLiquidityWeightedBeanPrice, loadBean, updateBeanSupplyPegPercent, updateBeanValues } from "./utils/Bean";
 import { BEAN_ERC20_V1, BEAN_WETH_V1, WETH } from "../../subgraph-core/utils/Constants";
@@ -138,6 +138,7 @@ export function checkPegCrossEth(block: ethereum.Block): void {
   // Check for overall Bean cross
   const oldBeanPrice = getLastBeanPrice(BEAN_ERC20_V1.toHexString());
   const newBeanPrice = calcLiquidityWeightedBeanPrice(BEAN_ERC20_V1.toHexString());
+  // log.info("old {} new bp {}", [oldBeanPrice.toString(), newBeanPrice.toString()]);
   const beanCrossed = checkBeanCross(BEAN_ERC20_V1.toHexString(), block.timestamp, block.number, oldBeanPrice, newBeanPrice);
   if (beanCrossed) {
     updateBeanValues(

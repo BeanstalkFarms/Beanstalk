@@ -1,4 +1,4 @@
-import { BigDecimal, BigInt } from "@graphprotocol/graph-ts";
+import { BigDecimal, BigInt, log } from "@graphprotocol/graph-ts";
 import { Bean, BeanDailySnapshot, BeanHourlySnapshot, Pool } from "../../generated/schema";
 import {
   BEAN_3CRV,
@@ -170,9 +170,10 @@ export function calcLiquidityWeightedBeanPrice(token: string): BigDecimal {
   for (let i = 0; i < bean.pools.length; ++i) {
     let pool = Pool.load(bean.pools[i])!;
     weightedPrice = weightedPrice.plus(pool.lastPrice.times(pool.liquidityUSD));
+    // log.debug("price | liquidity {} | {}", [pool.lastPrice.toString(), pool.liquidityUSD.toString()]);
     totalLiquidity = totalLiquidity.plus(pool.liquidityUSD);
   }
-  return weightedPrice.div(totalLiquidity);
+  return weightedPrice.div(totalLiquidity == ZERO_BD ? ONE_BD : totalLiquidity);
 }
 
 export function getBeanTokenAddress(blockNumber: BigInt): string {
