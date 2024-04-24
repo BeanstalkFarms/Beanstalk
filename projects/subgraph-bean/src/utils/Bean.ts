@@ -156,6 +156,25 @@ export function updateBeanSeason(token: string, timestamp: BigInt, season: i32):
   beanDaily.save();
 }
 
+// Returns the last stored bean price
+export function getLastBeanPrice(token: string): BigDecimal {
+  let bean = loadBean(token);
+  return bean.price;
+}
+
+// Returns the liquidity-weighted bean price across all of the whitelisted pools.
+export function calcLiquidityWeightedBeanPrice(token: string): BigDecimal {
+  let bean = loadBean(token);
+  let weightedPrice = ZERO_BD;
+  let totalLiquidity = ZERO_BD;
+  for (let i = 0; i < bean.pools.length; ++i) {
+    let pool = Pool.load(bean.pools[i])!;
+    weightedPrice = weightedPrice.plus(pool.lastPrice.times(pool.liquidityUSD));
+    totalLiquidity = totalLiquidity.plus(pool.liquidityUSD);
+  }
+  return weightedPrice.div(totalLiquidity);
+}
+
 export function getBeanTokenAddress(blockNumber: BigInt): string {
   return blockNumber < BigInt.fromString("15278082") ? BEAN_ERC20_V1.toHexString() : BEAN_ERC20.toHexString();
 }

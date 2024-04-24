@@ -1,6 +1,6 @@
 import { BigDecimal, BigInt, ethereum } from "@graphprotocol/graph-ts";
 import { Swap, Sync } from "../generated/BeanUniswapV2Pair/UniswapV2Pair";
-import { loadBean, updateBeanSupplyPegPercent, updateBeanValues } from "./utils/Bean";
+import { getLastBeanPrice, calcLiquidityWeightedBeanPrice, loadBean, updateBeanSupplyPegPercent, updateBeanValues } from "./utils/Bean";
 import { BEAN_ERC20_V1, BEAN_WETH_V1, WETH } from "../../subgraph-core/utils/Constants";
 import { toDecimal, ZERO_BD, ZERO_BI } from "../../subgraph-core/utils/Decimals";
 import { loadOrCreatePool, setPoolReserves, updatePoolPrice, updatePoolValues } from "./utils/Pool";
@@ -63,6 +63,7 @@ export function handleSwap(event: Swap): void {
 
   updateBeanSupplyPegPercent(event.block.number);
 
+  // TODO: fix bean price here
   updateBeanValues(BEAN_ERC20_V1.toHexString(), event.block.timestamp, pool.lastPrice, ZERO_BI, ZERO_BI, usdVolume, ZERO_BD);
 }
 
@@ -102,38 +103,51 @@ export function handleSync(event: Sync): void {
 
   updateBeanSupplyPegPercent(event.block.number);
 
+  // TODO: fix bean price here
   updateBeanValues(BEAN_ERC20_V1.toHexString(), event.block.timestamp, currentBeanPrice, ZERO_BI, ZERO_BI, ZERO_BD, deltaLiquidityUSD);
 }
 
 export function checkPegCrossEth(block: ethereum.Block): void {
   const pool = loadOrCreatePool(BEAN_WETH_V1.toHexString(), block.number);
-  const prevPrice = pool.lastPrice;
+  const prevPoolPrice = pool.lastPrice;
 
   const reserves = uniswapV2Reserves(BEAN_WETH_V1);
   const ethPrice = getPreReplantPriceETH();
-  const newPrice = constantProductPrice(toDecimal(reserves[0]), toDecimal(reserves[1], 18), ethPrice);
+  const newPoolPrice = constantProductPrice(toDecimal(reserves[0]), toDecimal(reserves[1], 18), ethPrice);
 
   // log.debug("Prev/New bean price {} / {}", [prevPrice.toString(), newPrice.toString()]);
 
   // Check for pool peg cross
-  const poolCrossed = checkPoolCross(BEAN_WETH_V1.toHexString(), block.timestamp, block.number, prevPrice, newPrice);
+  const poolCrossed = checkPoolCross(BEAN_WETH_V1.toHexString(), block.timestamp, block.number, prevPoolPrice, newPoolPrice);
 
+  let deltaLiquidityUSD = ZERO_BD;
   if (poolCrossed) {
     // Update price for the pool
     const newLiquidity = toDecimal(reserves[1], 18).times(ethPrice).times(BigDecimal.fromString("2"));
+    deltaLiquidityUSD = newLiquidity.minus(pool.liquidityUSD);
     const deltaB = uniswapV2DeltaB(toDecimal(reserves[0]), toDecimal(reserves[1], 18), ethPrice);
-    updatePoolValues(
-      BEAN_WETH_V1.toHexString(),
-      block.timestamp,
-      block.number,
-      ZERO_BI,
-      ZERO_BD,
-      newLiquidity.minus(pool.liquidityUSD),
-      deltaB
-    );
-    updatePoolPrice(BEAN_WETH_V1.toHexString(), block.timestamp, block.number, newPrice, false);
+    updatePoolValues(BEAN_WETH_V1.toHexString(), block.timestamp, block.number, ZERO_BI, ZERO_BD, deltaLiquidityUSD, deltaB);
+    updatePoolPrice(BEAN_WETH_V1.toHexString(), block.timestamp, block.number, newPoolPrice, false);
+
+    // Update weth token price
+    let token = loadOrCreateToken(WETH.toHexString());
+    token.lastPriceUSD = ethPrice;
+    token.save();
   }
 
-  // TODO: if crossed, update weth token price
-  // TODO: check for overall Bean price cross.
+  // Check for overall Bean cross
+  const oldBeanPrice = getLastBeanPrice(BEAN_ERC20_V1.toHexString());
+  const newBeanPrice = calcLiquidityWeightedBeanPrice(BEAN_ERC20_V1.toHexString());
+  const beanCrossed = checkBeanCross(BEAN_ERC20_V1.toHexString(), block.timestamp, block.number, oldBeanPrice, newBeanPrice);
+  if (beanCrossed) {
+    updateBeanValues(
+      BEAN_ERC20_V1.toHexString(),
+      block.timestamp,
+      newBeanPrice,
+      ZERO_BI,
+      ZERO_BI,
+      ZERO_BD,
+      deltaLiquidityUSD // Assumption is that 3crv/lusd prices are constant
+    );
+  }
 }

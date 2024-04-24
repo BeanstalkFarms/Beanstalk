@@ -50,6 +50,7 @@ export function handleSunrise(event: Sunrise): void {
 
       let deltaBeanLiquidity = toDecimal(beanstalkQuery.value.liquidity).minus(oldBeanLiquidity);
 
+      // TODO: adjust beanPrice if any of the pools in the BeanstalkPrice response have since been dewhitelisted
       let beanPrice = toDecimal(beanstalkQuery.value.price);
       // Overall Bean update
       updateBeanValues(BEAN_ERC20.toHexString(), event.block.timestamp, beanPrice, ZERO_BI, ZERO_BI, ZERO_BD, deltaBeanLiquidity);
