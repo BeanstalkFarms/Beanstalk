@@ -92,6 +92,7 @@ library C {
     address internal constant WSTETH_ETH_UNIV3_01_POOL = 0x109830a1AAaD605BbF02a9dFA7B0B92EC2FB7dAa; // 0.01% pool
     
     //////////////////// Tractor ////////////////////
+
     uint80 internal constant SELECTOR_SIZE = 4;
     uint80 internal constant SLOT_SIZE = 32;
     uint80 internal constant ARGS_START_INDEX = SELECTOR_SIZE + SLOT_SIZE;

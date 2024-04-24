@@ -9,8 +9,8 @@ import "@openzeppelin/contracts/math/SafeMath.sol";
 import "../../beanstalk/silo/SiloFacet/SiloFacet.sol";
 import "../../libraries/Silo/LibWhitelist.sol";
 import "../../libraries/Silo/LibLegacyTokenSilo.sol";
-import "contracts/libraries/Silo/LibWhitelistedTokens.sol";
-import "contracts/libraries/Well/LibWell.sol";
+import "../../libraries/Silo/LibWhitelistedTokens.sol";
+import "../../libraries/Well/LibWell.sol";
 import "../../libraries/LibTractor.sol";
 
 /**
