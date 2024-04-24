@@ -24,8 +24,7 @@ const {
   impersonateUniswapV3,
   impersonateWsteth,
   impersonatePipeline,
-  impersonateToken,
-  impersonateDepot
+  impersonateToken
 } = require("./impersonate.js");
 
 const { deployBasin } = require("./basin");
@@ -100,7 +99,6 @@ async function main(
     await impersonateBlockBasefee() // Block fee contract (sunrise)
     await impersonatePrice() // BeanstalkPrice contract (frontend price)
     await impersonatePipeline() // Pipeline contract.
-    await impersonateDepot() // Depot contract.
   }
 
   if (basin) { 
