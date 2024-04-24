@@ -146,8 +146,8 @@ describe("DeltaB", () => {
       // https://etherscan.io/tx/0xe62ebdb74a9908760f709408944ab2d50f0bc4fd95614a05dcc053a7117e6b33#eventlog
       const event1 = createWellOracleEvent(
         BigInt.fromI32(21076),
-        "0xbea0e11282e2bb5893bece110cf199501e872bad",
-        ZERO_BI,
+        BEAN_WETH_CP2_WELL.toHexString(),
+        BigInt.fromString("-714987531242"),
         Bytes.fromHexString(
           "0000000000000000000000000000000000000000000000000000000000000060000000000000000000000000000000000000000000000000000000000000008000000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000002401ca3e863ef477b955382fabeb6239e00000000000000000000000000000000401d61893f2d4f8972713291748d66f700000000000000000000000000000000"
         )
@@ -155,17 +155,26 @@ describe("DeltaB", () => {
       event1.block = mockBlock(BigInt.fromI32(19200000), BigInt.fromI32(1713920000));
       handleWellOracle(event1);
 
+      assert.fieldEquals("TwaOracle", BEAN_WETH_CP2_WELL.toHexString(), "priceCumulativeLast", "[880610429, 1482837963]");
+      // No sense checking prices during initialization
+
       // https://etherscan.io/tx/0x0b872f5503d732f3c9f736e914368791ab3c8da8d9fcd87f071574f0e9b7ca6f#eventlog
       const event2 = createWellOracleEvent(
         BigInt.fromI32(21077),
-        "0xbea0e11282e2bb5893bece110cf199501e872bad",
-        ZERO_BI,
+        BEAN_WETH_CP2_WELL.toHexString(),
+        BigInt.fromString("-710276445645"),
         Bytes.fromHexString(
           "0000000000000000000000000000000000000000000000000000000000000060000000000000000000000000000000000000000000000000000000000000008000000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000002401ca3fba9f61fac686ea2125d43bc8800000000000000000000000000000000401d61990e063036b2da05122259d76c00000000000000000000000000000000"
         )
       );
       event2.block = mockBlock(BigInt.fromI32(19200000), BigInt.fromI32(1713923600));
       handleWellOracle(event2);
+
+      const prefixWell = BEAN_WETH_CP2_WELL.toHexString() + "-";
+      const h1 = hourFromTimestamp(event2.block.timestamp).toString();
+      assert.fieldEquals("TwaOracle", BEAN_WETH_CP2_WELL.toHexString(), "priceCumulativeLast", "[880768318, 1483096961]");
+      assert.fieldEquals("PoolHourlySnapshot", prefixWell + h1, "twaDeltaBeans", event2.params.deltaB.toString());
+      assert.fieldEquals("PoolHourlySnapshot", prefixWell + h1, "twaPrice", "0.9128867742860822655628687132162919");
     });
   });
 });

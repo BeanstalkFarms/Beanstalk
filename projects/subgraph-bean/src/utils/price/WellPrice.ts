@@ -4,7 +4,7 @@ import { ABDK_toUInt, pow2toX } from "../../../../subgraph-core/utils/ABDKMathQu
 import { DeltaBAndPrice, TWAType } from "./Types";
 import { setPoolTwa } from "../Pool";
 import { constantProductPrice } from "./UniswapPrice";
-import { ONE_BI, toDecimal, ZERO_BD, ZERO_BI } from "../../../../subgraph-core/utils/Decimals";
+import { ONE_BI, pow, toDecimal, ZERO_BD, ZERO_BI } from "../../../../subgraph-core/utils/Decimals";
 
 // Cumulative Well reserves are abi encoded as a bytes16[]. This decodes into BigInt[] in uint format
 export function decodeCumulativeWellReserves(data: Bytes): BigInt[] {
@@ -55,7 +55,7 @@ export function setWellTwa(wellAddress: string, twaDeltaB: BigInt, timestamp: Bi
 
 function wellTwaDeltaBAndPrice(twaBalances: BigInt[], twaDeltaB: BigInt): DeltaBAndPrice {
   // Use known twaDeltaB to infer the twa eth price
-  const twaEthPrice = cpToken2PriceFromDeltaB(twaBalances[0], twaBalances[1], twaDeltaB);
+  const twaEthPrice = cpToken2PriceFromDeltaB(toDecimal(twaBalances[0]), toDecimal(twaBalances[1], 18), toDecimal(twaDeltaB));
 
   return {
     deltaB: twaDeltaB,
@@ -64,8 +64,8 @@ function wellTwaDeltaBAndPrice(twaBalances: BigInt[], twaDeltaB: BigInt): DeltaB
 }
 
 // Calculates the price of the non-bean token in a constant product pool, when only the deltaB is known
-function cpToken2PriceFromDeltaB(beanReserves: BigInt, token2Reserves: BigInt, deltaB: BigInt): BigDecimal {
-  const constantProduct = new BigDecimal(beanReserves.times(token2Reserves));
-  const token2Price = new BigDecimal(deltaB.plus(beanReserves).pow(2)).div(constantProduct);
+function cpToken2PriceFromDeltaB(beanReserves: BigDecimal, token2Reserves: BigDecimal, deltaB: BigDecimal): BigDecimal {
+  const constantProduct = beanReserves.times(token2Reserves);
+  const token2Price = pow(deltaB.plus(beanReserves), 2).div(constantProduct);
   return token2Price;
 }
