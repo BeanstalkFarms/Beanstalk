@@ -821,6 +821,38 @@ contract PipelineConvertTest is TestHelper {
         assertEq(amountAgainstPeg, 100);
     }
 
+    function testCalculateConvertedTowardsPeg() public {
+        int256 beforeDeltaB = -100;
+        int256 afterDeltaB = 0;
+        uint256 amountInDirectionOfPeg = LibConvert.calculateConvertedTowardsPeg(beforeDeltaB, afterDeltaB);
+        assertEq(amountInDirectionOfPeg, 100);
+
+        beforeDeltaB = 100;
+        afterDeltaB = 0;
+        amountInDirectionOfPeg = LibConvert.calculateConvertedTowardsPeg(beforeDeltaB, afterDeltaB);
+        assertEq(amountInDirectionOfPeg, 100);
+
+        beforeDeltaB = -50;
+        afterDeltaB = 50;
+        amountInDirectionOfPeg = LibConvert.calculateConvertedTowardsPeg(beforeDeltaB, afterDeltaB);
+        assertEq(amountInDirectionOfPeg, 50);
+
+        beforeDeltaB = 50;
+        afterDeltaB = -50;
+        amountInDirectionOfPeg = LibConvert.calculateConvertedTowardsPeg(beforeDeltaB, afterDeltaB);
+        assertEq(amountInDirectionOfPeg, 50);
+
+        beforeDeltaB = 0;
+        afterDeltaB = 100;
+        amountInDirectionOfPeg = LibConvert.calculateConvertedTowardsPeg(beforeDeltaB, afterDeltaB);
+        assertEq(amountInDirectionOfPeg, 0);
+
+        beforeDeltaB = 0;
+        afterDeltaB = -100;
+        amountInDirectionOfPeg = LibConvert.calculateConvertedTowardsPeg(beforeDeltaB, afterDeltaB);
+        assertEq(amountInDirectionOfPeg, 0);
+    }
+
     function testCalculateStalkPenaltyUpwardsToZero() public {
         LibConvert.DeltaBStorage memory dbs;
         dbs.beforeOverallDeltaB = -100;
