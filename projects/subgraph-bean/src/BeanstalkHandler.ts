@@ -21,6 +21,7 @@ import { MetapoolOracle, WellOracle } from "../generated/TWAPOracles/BIP37";
 import { DeltaBPriceLiquidity } from "./utils/price/Types";
 import { setTwaLast } from "./utils/price/TwaOracle";
 import { decodeCumulativeWellReserves, setWellTwa } from "./utils/price/WellPrice";
+import { BeanstalkPrice_try_price } from "./utils/price/BeanstalkPrice";
 
 export function handleSunrise(event: Sunrise): void {
   // Update the season for hourly and daily liquidity metrics
@@ -40,7 +41,7 @@ export function handleSunrise(event: Sunrise): void {
   if (event.params.season > BigInt.fromI32(6074)) {
     // Attempt to pull from Beanstalk Price contract first for the overall Bean price update
     let beanstalkPrice = BeanstalkPrice.bind(BEANSTALK_PRICE);
-    let beanstalkQuery = beanstalkPrice.try_price();
+    let beanstalkQuery = BeanstalkPrice_try_price(BEAN_ERC20, event.block.number);
 
     if (!beanstalkQuery.reverted) {
       // We can use the Beanstalk Price contract to update overall price, and call the updates for Curve and Well price updates
@@ -50,7 +51,6 @@ export function handleSunrise(event: Sunrise): void {
 
       let deltaBeanLiquidity = toDecimal(beanstalkQuery.value.liquidity).minus(oldBeanLiquidity);
 
-      // TODO: adjust beanPrice if any of the pools in the BeanstalkPrice response have since been dewhitelisted
       let beanPrice = toDecimal(beanstalkQuery.value.price);
       // Overall Bean update
       updateBeanValues(BEAN_ERC20.toHexString(), event.block.timestamp, beanPrice, ZERO_BI, ZERO_BI, ZERO_BD, deltaBeanLiquidity);

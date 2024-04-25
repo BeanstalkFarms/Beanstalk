@@ -6,6 +6,7 @@ import { toDecimal, ZERO_BD, ZERO_BI } from "../../subgraph-core/utils/Decimals"
 import { BeanstalkPrice } from "../generated/Bean3CRV/BeanstalkPrice";
 import { checkBeanCross, checkPoolCross } from "./utils/Cross";
 import { loadOrCreatePool, updatePoolPrice, updatePoolValues } from "./utils/Pool";
+import { BeanstalkPrice_try_price } from "./utils/price/BeanstalkPrice";
 
 // Processing as each new ethereum block is created
 export function handleBlock(block: ethereum.Block): void {
@@ -18,8 +19,7 @@ export function handleBlock(block: ethereum.Block): void {
 
 // Using the BeanstalkPrice contract, checks for peg crosses
 function beanstalkPrice_checkPegCross(block: ethereum.Block): void {
-  const beanstalkPrice = BeanstalkPrice.bind(BEANSTALK_PRICE);
-  const priceResult = beanstalkPrice.try_price();
+  const priceResult = BeanstalkPrice_try_price(BEAN_ERC20, block.number);
   if (priceResult.reverted) {
     // Price contract was unavailable briefly after well deployment
     return;
