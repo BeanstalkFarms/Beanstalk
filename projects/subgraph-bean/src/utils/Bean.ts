@@ -214,6 +214,7 @@ export function updateBeanSupplyPegPercent(blockNumber: BigInt): void {
     let pegSupply = ZERO_BI;
     for (let i = 0; i < bean.pools.length; ++i) {
       let pool = loadOrCreatePool(bean.pools[i], blockNumber);
+      // Assumption that beans is in the 0 index for all pools, this may need to be revisited.
       pegSupply = pegSupply.plus(pool.reserves[0]);
     }
     bean.lockedBeans = calcLockedBeans();
