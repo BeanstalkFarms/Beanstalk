@@ -1,5 +1,5 @@
 import { Address, BigInt } from "@graphprotocol/graph-ts";
-import { Sunrise } from "../generated/Beanstalk/Beanstalk";
+import { DewhitelistToken, Sunrise } from "../generated/Beanstalk/Beanstalk";
 import { getBeanTokenAddress, loadBean, updateBeanSeason, updateBeanTwa, updateBeanValues } from "./utils/Bean";
 import { loadOrCreatePool, updatePoolPrice, updatePoolSeason, updatePoolValues } from "./utils/Pool";
 import { BeanstalkPrice } from "../generated/Beanstalk/BeanstalkPrice";
@@ -148,6 +148,16 @@ export function handleSunrise(event: Sunrise): void {
     checkBeanCross(BEAN_ERC20_V1.toHexString(), event.block.timestamp, event.block.number, bean.price, totalPrice);
     updateBeanTwa(event.block.timestamp, event.block.number);
   }
+}
+
+// Assumption is that the whitelisted token corresponds to a pool lp. If not, this method will simply do nothing.
+export function handleDewhitelistToken(event: DewhitelistToken): void {
+  let bean = loadBean(getBeanTokenAddress(event.block.number));
+  let index = bean.pools.indexOf(event.params.token.toHexString());
+  const newPools = bean.pools;
+  newPools.splice(index, 1);
+  bean.pools = newPools;
+  bean.save();
 }
 
 // POST REPLANT TWA DELTAB //

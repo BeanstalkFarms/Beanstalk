@@ -113,6 +113,8 @@ dataSources:
       eventHandlers:
         - event: Sunrise(indexed uint256)
           handler: handleSunrise
+        - event: DewhitelistToken(indexed address)
+          handler: dewhitelistToken
       file: ./src/BeanstalkHandler.ts
   - kind: ethereum/contract
     name: BeanUniswapV2Pair
