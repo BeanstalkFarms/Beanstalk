@@ -798,6 +798,52 @@ contract PipelineConvertTest is TestHelper {
     // bonus todo: setup a test that reads remaining convert power from block and uses it when determining how much to convert
     // there are already tests that exercise depleting convert power, but might be cool to show how you can use it in a convert
 
+    function testAmountAgainstPeg() public {
+        uint256 amountAgainstPeg;
+        uint256 crossoverAmount;
+
+        (amountAgainstPeg) = LibConvert.calculateAmountAgainstPeg(-500, -400);
+        assertEq(amountAgainstPeg, 0);
+
+        (amountAgainstPeg) = LibConvert.calculateAmountAgainstPeg(-100, 0);
+        assertEq(amountAgainstPeg, 0);
+
+        (amountAgainstPeg) = LibConvert.calculateAmountAgainstPeg(100, 0);
+        assertEq(amountAgainstPeg, 0);
+
+        (amountAgainstPeg) = LibConvert.calculateAmountAgainstPeg(1, 101);
+        assertEq(amountAgainstPeg, 100);
+
+        (amountAgainstPeg) = LibConvert.calculateAmountAgainstPeg(0, 100);
+        assertEq(amountAgainstPeg, 100);
+
+        (amountAgainstPeg) = LibConvert.calculateAmountAgainstPeg(0, -100);
+        assertEq(amountAgainstPeg, 100);
+    }
+
+    function testCalculateStalkPenaltyUpwardsToZero() public {
+        LibConvert.DeltaBStorage memory dbs;
+        dbs.beforeOverallDeltaB = -100;
+        dbs.afterOverallDeltaB = 0;
+        dbs.beforeInputTokenDeltaB = -100;
+        dbs.afterInputTokenDeltaB = 0;
+        dbs.beforeOutputTokenDeltaB = 0;
+        dbs.afterOutputTokenDeltaB = 0;
+        uint256 bdvConverted = 100;
+        uint256 overallConvertCapacity = 100;
+        address inputToken = C.BEAN_ETH_WELL;
+        address outputToken = C.BEAN;
+
+        uint256 penalty = LibConvert.calculateStalkPenalty(
+            dbs,
+            bdvConverted,
+            overallConvertCapacity,
+            inputToken,
+            outputToken
+        );
+        assertEq(penalty, 0);
+    }
+
 /*
     function testCalculateStalkPenaltyUpwardsToZero() public {
         int256 beforeOverallDeltaB = -100;

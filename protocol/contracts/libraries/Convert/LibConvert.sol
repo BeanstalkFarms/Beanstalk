@@ -17,6 +17,7 @@ import {AppStorage, LibAppStorage, Storage} from "contracts/libraries/LibAppStor
 import {SignedSafeMath} from "@openzeppelin/contracts/math/SignedSafeMath.sol";
 import {LibWellMinting} from "contracts/libraries/Minting/LibWellMinting.sol";
 import {C} from "contracts/C.sol";
+import {console} from "forge-std/console.sol";
 
 /**
  * @title LibConvert
@@ -42,13 +43,9 @@ library LibConvert {
         uint256 inputTokenAmountInDirectionOfPeg;
         uint256 outputTokenAmountInDirectionOfPeg;
         uint256 overallAmountAgainstPeg;
-        uint256 overallCrossoverAmount;
         uint256 inputTokenAmountAgainstPeg;
-        uint256 inputTokenCrossoverAmount;
         uint256 outputTokenAmountAgainstPeg;
-        uint256 outputTokenCrossoverAmount;
         uint256 higherAmountAgainstPeg;
-        uint256 higherInputTokenCrossoverAmount;
         uint256 convertCapacityPenalty;
     }
 
@@ -203,30 +200,44 @@ library LibConvert {
     ) internal returns (uint256 stalkPenaltyBdv) {
         StalkPenaltyData memory spd;
 
+        // todo: combine this set of 3 lines with the ones below it (one function return all 3 values)
         spd.overallAmountInDirectionOfPeg = calculateConvertedTowardsPeg(dbs.beforeOverallDeltaB, dbs.afterOverallDeltaB);
         spd.inputTokenAmountInDirectionOfPeg = calculateConvertedTowardsPeg(dbs.beforeInputTokenDeltaB, dbs.afterInputTokenDeltaB);
         spd.outputTokenAmountInDirectionOfPeg = calculateConvertedTowardsPeg(dbs.beforeOutputTokenDeltaB, dbs.afterOutputTokenDeltaB);
 
-        (spd.overallAmountAgainstPeg, spd.overallCrossoverAmount) = calculateAmountAgainstPegAndCrossover(dbs.beforeOverallDeltaB, dbs.afterOverallDeltaB);
-        (spd.inputTokenAmountAgainstPeg, spd.inputTokenCrossoverAmount) = calculateAmountAgainstPegAndCrossover(dbs.beforeOverallDeltaB, dbs.afterOverallDeltaB);
-        (spd.outputTokenAmountAgainstPeg, spd.outputTokenCrossoverAmount) = calculateAmountAgainstPegAndCrossover(dbs.beforeOverallDeltaB, dbs.afterOverallDeltaB);
+        spd.overallAmountAgainstPeg = calculateAmountAgainstPeg(dbs.beforeOverallDeltaB, dbs.afterOverallDeltaB);
+        spd.inputTokenAmountAgainstPeg = calculateAmountAgainstPeg(dbs.beforeInputTokenDeltaB, dbs.afterInputTokenDeltaB);
+        spd.outputTokenAmountAgainstPeg = calculateAmountAgainstPeg(dbs.beforeOutputTokenDeltaB, dbs.afterOutputTokenDeltaB);
+
+        console.log('spd.overallAmountAgainstPeg: ', spd.overallAmountAgainstPeg);
+        console.log('spd.inputTokenAmountAgainstPeg: ', spd.inputTokenAmountAgainstPeg);
+        console.log('spd.outputTokenAmountAgainstPeg: ', spd.outputTokenAmountAgainstPeg);
+
 
         spd.higherAmountAgainstPeg = Math.max(spd.overallAmountAgainstPeg, spd.inputTokenAmountAgainstPeg.add(spd.outputTokenAmountAgainstPeg));
-        spd.higherInputTokenCrossoverAmount = Math.max(spd.overallCrossoverAmount, spd.inputTokenCrossoverAmount.add(spd.outputTokenCrossoverAmount));
+
+        console.log('spd.higherAmountAgainstPeg: ', spd.higherAmountAgainstPeg);
 
         spd.convertCapacityPenalty = calculateConvertCapacityPenalty(overallConvertCapacity, spd.overallAmountInDirectionOfPeg, inputToken, spd.inputTokenAmountInDirectionOfPeg, outputToken, spd.outputTokenAmountInDirectionOfPeg);
 
-        stalkPenaltyBdv = Math.min(spd.higherAmountAgainstPeg.add(spd.higherInputTokenCrossoverAmount).add(spd.convertCapacityPenalty), bdvConverted);
+        console.log('spd.convertCapacityPenalty: ', spd.convertCapacityPenalty);
+
+        stalkPenaltyBdv = Math.min(spd.higherAmountAgainstPeg.add(spd.convertCapacityPenalty), bdvConverted);
     }
 
-    function calculateAmountAgainstPegAndCrossover(int256 beforeDeltaB, int256 afterDeltaB) internal pure returns (uint256 amountAgainstPeg, uint256 crossoverAmount) {
-        amountAgainstPeg = abs(afterDeltaB.sub(beforeDeltaB));
+    // should be view
+    function calculateAmountAgainstPeg(int256 beforeDeltaB, int256 afterDeltaB) internal view returns (uint256 amountAgainstPeg) {
 
         // Check if the signs of beforeDeltaB and afterDeltaB are different,
         // indicating that deltaB has crossed zero
         if ((beforeDeltaB > 0 && afterDeltaB < 0) || (beforeDeltaB < 0 && afterDeltaB > 0)) {
-            // Calculate how far past peg we went - this is just abs of new deltaB
-            crossoverAmount = abs(afterDeltaB);
+            amountAgainstPeg = abs(afterDeltaB);
+        } else {
+            if (afterDeltaB <= 0 && beforeDeltaB <= 0 || afterDeltaB >= 0 && beforeDeltaB >= 0) {
+                if (abs(beforeDeltaB) < abs(afterDeltaB)) {
+                    amountAgainstPeg =  abs(afterDeltaB).sub(abs(beforeDeltaB));
+                }
+            }
         }
     }
 
