@@ -4,6 +4,7 @@ pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
 import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
+import "@openzeppelin/contracts/math/Math.sol";
 import {LibCurveConvert} from "./LibCurveConvert.sol";
 import {LibUnripeConvert} from "./LibUnripeConvert.sol";
 import {LibLambdaConvert} from "./LibLambdaConvert.sol";
@@ -12,8 +13,9 @@ import {LibWellConvert} from "./LibWellConvert.sol";
 import {LibChopConvert} from "./LibChopConvert.sol";
 import {LibWell} from "contracts/libraries/Well/LibWell.sol";
 import {LibBarnRaise} from "contracts/libraries/LibBarnRaise.sol";
-import {AppStorage, LibAppStorage} from "contracts/libraries/LibAppStorage.sol";
+import {AppStorage, LibAppStorage, Storage} from "contracts/libraries/LibAppStorage.sol";
 import {SignedSafeMath} from "@openzeppelin/contracts/math/SignedSafeMath.sol";
+import {LibWellMinting} from "contracts/libraries/Minting/LibWellMinting.sol";
 import {C} from "contracts/C.sol";
 
 /**
@@ -25,6 +27,30 @@ library LibConvert {
     using LibConvertData for bytes;
     using LibWell for address;
     using SignedSafeMath for int256;
+
+    struct DeltaBStorage {
+        int256 beforeInputTokenDeltaB;
+        int256 afterInputTokenDeltaB;
+        int256 beforeOutputTokenDeltaB;
+        int256 afterOutputTokenDeltaB;
+        int256 beforeOverallDeltaB;
+        int256 afterOverallDeltaB;
+    }
+
+    struct StalkPenaltyData {
+        uint256 overallAmountInDirectionOfPeg;
+        uint256 inputTokenAmountInDirectionOfPeg;
+        uint256 outputTokenAmountInDirectionOfPeg;
+        uint256 overallAmountAgainstPeg;
+        uint256 overallCrossoverAmount;
+        uint256 inputTokenAmountAgainstPeg;
+        uint256 inputTokenCrossoverAmount;
+        uint256 outputTokenAmountAgainstPeg;
+        uint256 outputTokenCrossoverAmount;
+        uint256 higherAmountAgainstPeg;
+        uint256 higherInputTokenCrossoverAmount;
+        uint256 convertCapacityPenalty;
+    }
 
     /**
      * @notice Takes in bytes object that has convert input data encoded into it for a particular convert for
@@ -167,78 +193,113 @@ library LibConvert {
 
     /**
      * @notice Calculates the percentStalkPenalty for a given convert.
-     * @dev The percentStalkPenalty is the amount of Stalk that is lost as a result of converting against
-     * or past peg.
-     * @param beforeDeltaB The deltaB before the deposit.
-     * @param afterDeltaB The deltaB after the deposit.
-     * @param bdvConverted The amount of BDVs that were removed, will be summed in this function.
-     * @param cappedDeltaB The absolute value of capped deltaB, used to setup per-block conversion limits.
-     * @return stalkPenaltyBdv The BDV amount that should be penalized, 0 means no penalty, full bdv returned means all bdv penalized
      */
-    function calculateStalkPenalty(int256 beforeDeltaB, int256 afterDeltaB, uint256 bdvConverted, uint256 cappedDeltaB) internal returns (uint256 stalkPenaltyBdv) {
-        AppStorage storage s = LibAppStorage.diamondStorage();
+    function calculateStalkPenalty(
+        DeltaBStorage memory dbs,
+        uint256 bdvConverted,
+        uint256 overallConvertCapacity,
+        address inputToken,
+        address outputToken
+    ) internal returns (uint256 stalkPenaltyBdv) {
+        StalkPenaltyData memory spd;
 
-        // represents how far past peg deltaB was moved
-        uint256 crossoverAmount;
+        spd.overallAmountInDirectionOfPeg = calculateConvertedTowardsPeg(dbs.beforeOverallDeltaB, dbs.afterOverallDeltaB);
+        spd.inputTokenAmountInDirectionOfPeg = calculateConvertedTowardsPeg(dbs.beforeInputTokenDeltaB, dbs.afterInputTokenDeltaB);
+        spd.outputTokenAmountInDirectionOfPeg = calculateConvertedTowardsPeg(dbs.beforeOutputTokenDeltaB, dbs.afterOutputTokenDeltaB);
 
-        // the bdv amount that was converted against peg
-        uint256 amountAgainstPeg = abs(afterDeltaB.sub(beforeDeltaB));
+        (spd.overallAmountAgainstPeg, spd.overallCrossoverAmount) = calculateAmountAgainstPegAndCrossover(dbs.beforeOverallDeltaB, dbs.afterOverallDeltaB);
+        (spd.inputTokenAmountAgainstPeg, spd.inputTokenCrossoverAmount) = calculateAmountAgainstPegAndCrossover(dbs.beforeOverallDeltaB, dbs.afterOverallDeltaB);
+        (spd.outputTokenAmountAgainstPeg, spd.outputTokenCrossoverAmount) = calculateAmountAgainstPegAndCrossover(dbs.beforeOverallDeltaB, dbs.afterOverallDeltaB);
 
-        // we could potentially be right at zero often with automated tractor converts
-        if (beforeDeltaB == 0 && afterDeltaB != 0) {
-            //this means we converted away from peg, so amount against peg is penalty
-            return amountAgainstPeg;
-        }
+        spd.higherAmountAgainstPeg = Math.max(spd.overallAmountAgainstPeg, spd.inputTokenAmountAgainstPeg.add(spd.outputTokenAmountAgainstPeg));
+        spd.higherInputTokenCrossoverAmount = Math.max(spd.overallCrossoverAmount, spd.inputTokenCrossoverAmount.add(spd.outputTokenCrossoverAmount));
+
+        spd.convertCapacityPenalty = calculateConvertCapacityPenalty(overallConvertCapacity, spd.overallAmountInDirectionOfPeg, inputToken, spd.inputTokenAmountInDirectionOfPeg, outputToken, spd.outputTokenAmountInDirectionOfPeg);
+
+        stalkPenaltyBdv = Math.min(spd.higherAmountAgainstPeg.add(spd.higherInputTokenCrossoverAmount).add(spd.convertCapacityPenalty), bdvConverted);
+    }
+
+    function calculateAmountAgainstPegAndCrossover(int256 beforeDeltaB, int256 afterDeltaB) internal pure returns (uint256 amountAgainstPeg, uint256 crossoverAmount) {
+        amountAgainstPeg = abs(afterDeltaB.sub(beforeDeltaB));
 
         // Check if the signs of beforeDeltaB and afterDeltaB are different,
         // indicating that deltaB has crossed zero
         if ((beforeDeltaB > 0 && afterDeltaB < 0) || (beforeDeltaB < 0 && afterDeltaB > 0)) {
-            // Calculate how far past peg we went - so actually this is just abs of new deltaB
+            // Calculate how far past peg we went - this is just abs of new deltaB
             crossoverAmount = abs(afterDeltaB);
+        }
+    }
 
-            // Check if the crossoverAmount is greater than or equal to bdvConverted
-            // TODO: see if we can find cases where bdcConverted doesn't match the deltaB diff? should always in theory afaict
-            if (crossoverAmount > bdvConverted) {
-                // If the entire bdvConverted amount crossed over, something is fishy, bdv amounts wrong?
-                revert("Convert: converted farther than bdv");
-            } else {
-                return crossoverAmount;
+    function calculateConvertCapacityPenalty(
+        uint256 overallCappedDeltaB,
+        uint256 overallAmountInDirectionOfPeg,
+        address inputToken,
+        uint256 inputTokenAmountInDirectionOfPeg,
+        address outputToken,
+        uint256 outputTokenAmountInDirectionOfPeg
+    ) internal returns (uint256 cumulativePenalty) {
+        AppStorage storage s = LibAppStorage.diamondStorage();
+        
+        Storage.ConvertCapacity storage convertCap = s.convertCapacity[block.number];
+        
+        // first check overall convert capacity, if none remaining then full penalty for amount in direction of peg
+        if (convertCap.overallConvertCapacityUsed >= overallCappedDeltaB) {
+            return overallAmountInDirectionOfPeg;
+        }
+        
+        // update overall remaining convert capacity
+        convertCap.overallConvertCapacityUsed = convertCap.overallConvertCapacityUsed.add(overallAmountInDirectionOfPeg);
+
+
+        // add to penalty how far past capacity was used
+        if (convertCap.overallConvertCapacityUsed > overallCappedDeltaB) {
+            cumulativePenalty = overallCappedDeltaB.sub(convertCap.overallConvertCapacityUsed);
+        }
+
+        // update per-well convert capacity
+
+        if (inputToken != C.BEAN && inputTokenAmountInDirectionOfPeg > 0) {
+            uint256 inputTokenWellCapacity = abs(LibWellMinting.cappedReservesDeltaB(inputToken));
+            convertCap.wellConvertCapacityUsed[inputToken] = convertCap.wellConvertCapacityUsed[inputToken].add(inputTokenAmountInDirectionOfPeg);
+            if (convertCap.wellConvertCapacityUsed[inputToken] > inputTokenWellCapacity) {
+                cumulativePenalty = cumulativePenalty.add(convertCap.wellConvertCapacityUsed[inputToken].sub(inputTokenWellCapacity));
             }
-        } else if (beforeDeltaB <= 0 && afterDeltaB < beforeDeltaB) {
-            return amountAgainstPeg;
-        } else if (beforeDeltaB >= 0 && afterDeltaB > beforeDeltaB) {
-            return amountAgainstPeg;
         }
 
-        // at this point we are converting in direction of peg, but we may have gone past it
-
-        // Setup convert power for this block if it has not already been setup
-        if (s.convertCapacity[block.number].hasConvertHappenedThisBlock == false) {
-            // use capped deltaB for flashloan resistance
-            s.convertCapacity[block.number].convertCapacity = uint248(cappedDeltaB);
-            s.convertCapacity[block.number].hasConvertHappenedThisBlock = true;
+        if (outputToken != C.BEAN && outputTokenAmountInDirectionOfPeg > 0) {
+            uint256 outputTokenWellCapacity = abs(LibWellMinting.cappedReservesDeltaB(outputToken));
+            convertCap.wellConvertCapacityUsed[outputToken] = convertCap.wellConvertCapacityUsed[outputToken].add(outputTokenAmountInDirectionOfPeg);
+            if (convertCap.wellConvertCapacityUsed[outputToken] > outputTokenWellCapacity) {
+                cumulativePenalty = cumulativePenalty.add(convertCap.wellConvertCapacityUsed[outputToken].sub(outputTokenWellCapacity));
+            }
         }
 
-        // calculate how much deltaB convert is happening with this convert
-        uint256 convertAmountInDirectionOfPeg = abs(beforeDeltaB.sub(afterDeltaB));
+        if (cumulativePenalty > overallAmountInDirectionOfPeg) {
+            cumulativePenalty = overallAmountInDirectionOfPeg; // perhaps not necessary to cap since stalkPenaltyBdv is capped by bdvConverted?
+        }
+    }
 
-        if (convertAmountInDirectionOfPeg <= s.convertCapacity[block.number].convertCapacity) {
-            // all good, you're using less than the available convert power
-
-            // subtract from convert power available for this block
-            s.convertCapacity[block.number].convertCapacity -= uint248(convertAmountInDirectionOfPeg);
-
-            return crossoverAmount;
+    /**
+     * @notice Takes before/after deltaB's and calculates how much was converted towards, but not past, peg.
+     */
+    function calculateConvertedTowardsPeg(int256 beforeTokenDeltaB, int256 afterTokenDeltaB) internal pure returns (uint256) {
+        // Calculate absolute values of beforeInputTokenDeltaB and afterInputTokenDeltaB using the abs() function
+        uint256 beforeDeltaAbs = abs(beforeTokenDeltaB);
+        uint256 afterDeltaAbs = abs(afterTokenDeltaB);
+        
+        // Check if afterInputTokenDeltaB and beforeInputTokenDeltaB have the same sign
+        if ((beforeTokenDeltaB >= 0 && afterTokenDeltaB >= 0) || (beforeTokenDeltaB < 0 && afterTokenDeltaB < 0)) {
+            // If they have the same sign, compare the absolute values
+            if (afterDeltaAbs < beforeDeltaAbs) {
+                // Return the difference between beforeDeltaAbs and afterDeltaAbs
+                return beforeDeltaAbs.sub(afterDeltaAbs);
+            } else {
+                // If afterInputTokenDeltaB is further from or equal to zero, return zero
+                return 0;
+            }
         } else {
-            // you're using more than the available convert power
-
-            // penalty will be how far past peg you went, but any remaining convert power is used to reduce the penalty
-            uint256 penalty = convertAmountInDirectionOfPeg - s.convertCapacity[block.number].convertCapacity;
-
-            // all convert power for this block is used up
-            s.convertCapacity[block.number].convertCapacity = 0;
-
-            return penalty.add(crossoverAmount); // should this be capped at bdvConverted?
+            // This means it crossed peg, return how far it went towards peg, which is the abs of input token deltaB
+            return beforeDeltaAbs;
         }
     }
 

@@ -45,10 +45,14 @@ contract ConvertFacet is ReentrancyGuard {
 
     struct PipelineConvertData {
         uint256 grownStalk;
-        int256 startingCombinedDeltaB;
-        int256 endingCombinedDeltaB;
+        int256 beforeInputTokenDeltaB;
+        int256 afterInputTokenDeltaB;
+        int256 beforeOutputTokenDeltaB;
+        int256 afterOutputTokenDeltaB;
+        int256 beforeOverallDeltaB;
+        int256 afterOverallDeltaB;
         uint256 inputAmount;
-        int256 cappedDeltaB;
+        uint256 overallConvertCapacity;
         uint256 stalkPenaltyBdv;
         address user;
         uint256 newBdv;
@@ -170,19 +174,25 @@ contract ConvertFacet is ReentrancyGuard {
         
         // Calculate the maximum amount of tokens to withdraw
         for (uint256 i = 0; i < stems.length; i++) {
-            pipeData.inputAmount = pipeData.inputAmount.add(amounts[i]);
+            fromAmount = fromAmount.add(amounts[i]);
         }
 
         (pipeData.grownStalk, fromBdv) = _withdrawTokens(
             inputToken,
             stems,
             amounts,
-            pipeData.inputAmount
+            fromAmount
         );
 
-        pipeData.startingCombinedDeltaB = getCombinedDeltaBForTokens(inputToken, outputToken);
+        // Store the capped overall deltaB, this limits the overall convert power for the block
+        pipeData.overallConvertCapacity = LibConvert.abs(LibWellMinting.overallCappedDeltaB());
 
-        IERC20(inputToken).transfer(C.PIPELINE, pipeData.inputAmount);
+        // Store the pre-convert insta deltaB's both overall and for each well
+        pipeData.beforeOverallDeltaB = LibWellMinting.overallInstantaneousDeltaB();
+        pipeData.beforeInputTokenDeltaB = getInstaDeltaB(inputToken);
+        pipeData.beforeOutputTokenDeltaB = getInstaDeltaB(outputToken);
+
+        IERC20(inputToken).transfer(C.PIPELINE, fromAmount);
         executeAdvancedFarmCalls(advancedFarmCalls);
 
         // user MUST leave final assets in pipeline, allowing us to verify that the farm has been called successfully.
@@ -190,16 +200,9 @@ contract ConvertFacet is ReentrancyGuard {
         toAmount = transferTokensFromPipeline(outputToken);
 
 
-        // We want the capped deltaB from all the wells, this is what sets up/limits the overall convert power for the block
-        // Converts that either cross peg, OR occur when convert power has been exhausted, will be stalk penalized
-        pipeData.cappedDeltaB = LibWellMinting.overallCappedDeltaB();
-
-
-        pipeData.endingCombinedDeltaB = getCombinedDeltaBForTokens(inputToken, outputToken);
-
         // Calculate stalk penalty using start/finish deltaB of pools, and the capped deltaB is
         // passed in to setup max convert power.
-        pipeData.stalkPenaltyBdv = LibConvert.calculateStalkPenalty(pipeData.startingCombinedDeltaB, pipeData.endingCombinedDeltaB, fromBdv, LibConvert.abs(pipeData.cappedDeltaB));
+        pipeData.stalkPenaltyBdv = prepareStalkPenaltyCalculation(inputToken, outputToken, pipeData.beforeInputTokenDeltaB, pipeData.beforeOutputTokenDeltaB, pipeData.beforeOverallDeltaB, pipeData.overallConvertCapacity, fromBdv);
         
         // Update grownStalk amount with penalty applied
         pipeData.grownStalk = pipeData.grownStalk.sub(pipeData.stalkPenaltyBdv);
@@ -208,7 +211,35 @@ contract ConvertFacet is ReentrancyGuard {
 
         toStem = _depositTokensForConvert(outputToken, toAmount, pipeData.newBdv, pipeData.grownStalk);
 
-        emit Convert(pipeData.user, inputToken, outputToken, pipeData.inputAmount, toAmount);
+        emit Convert(pipeData.user, inputToken, outputToken, fromAmount, toAmount);
+    }
+
+    function prepareStalkPenaltyCalculation(
+        address inputToken,
+        address outputToken,
+        int256 beforeInputTokenDeltaB,
+        int256 beforeOutputTokenDeltaB,
+        int256 beforeOverallDeltaB,
+        uint256 overallConvertCapacity,
+        uint256 fromBdv
+    ) internal returns (uint256 penalty) {
+
+        LibConvert.DeltaBStorage memory deltaBStorage;
+
+        deltaBStorage.beforeInputTokenDeltaB = beforeInputTokenDeltaB;
+        deltaBStorage.afterInputTokenDeltaB = getInstaDeltaB(inputToken);
+        deltaBStorage.beforeOutputTokenDeltaB = beforeOutputTokenDeltaB;
+        deltaBStorage.afterOutputTokenDeltaB = getInstaDeltaB(outputToken);
+        deltaBStorage.beforeOverallDeltaB = beforeOverallDeltaB;
+        deltaBStorage.afterOverallDeltaB = LibWellMinting.overallInstantaneousDeltaB();
+
+        return LibConvert.calculateStalkPenalty(
+            deltaBStorage,
+            fromBdv,
+            overallConvertCapacity,
+            inputToken,
+            outputToken
+        );
     }
 
     /**
@@ -218,8 +249,8 @@ contract ConvertFacet is ReentrancyGuard {
      */
     function cappedReservesDeltaB(
         address well
-    ) public view returns (int256 deltaB, uint256[] memory instReserves, uint256[] memory ratios) {
-        (deltaB, instReserves, ratios) = LibWellMinting.cappedReservesDeltaB(well);
+    ) external view returns (int256 deltaB) {
+        return LibWellMinting.cappedReservesDeltaB(well);
     }
 
     /**
@@ -227,11 +258,7 @@ contract ConvertFacet is ReentrancyGuard {
      * @return convertCapacity The amount of convert power available for this block
      */
     function getConvertCapacity() external view returns (uint256) {
-        if (s.convertCapacity[block.number].hasConvertHappenedThisBlock == false) {
-            // if convert power has not been initialized for this block, use the overall deltaB
-            return LibConvert.abs(LibWellMinting.overallCappedDeltaB());
-        }
-        return s.convertCapacity[block.number].convertCapacity;
+        return LibConvert.abs(LibWellMinting.overallCappedDeltaB()).sub(s.convertCapacity[block.number].overallConvertCapacityUsed);
     }
 
     /**
@@ -320,6 +347,7 @@ contract ConvertFacet is ReentrancyGuard {
 
         AssetsRemovedConvert memory a;
         uint256 i = 0;
+        address user = LibTractor._user();
 
         // a bracket is included here to avoid the "stack too deep" error.
         {
@@ -342,7 +370,7 @@ contract ConvertFacet is ReentrancyGuard {
                 if (a.active.tokens.add(amounts[i]) >= maxTokens) amounts[i] = maxTokens.sub(a.active.tokens);
                 
                 a.bdvsRemoved[i] = LibTokenSilo.removeDepositFromAccount(
-                        LibTractor._user(),
+                        user,
                         token,
                         stems[i],
                         amounts[i]
@@ -367,7 +395,7 @@ contract ConvertFacet is ReentrancyGuard {
             for (i; i < stems.length; ++i) amounts[i] = 0;
             
             emit RemoveDeposits(
-                LibTractor._user(),
+                user,
                 token,
                 stems,
                 amounts,
@@ -376,8 +404,8 @@ contract ConvertFacet is ReentrancyGuard {
             );
 
             emit LibSilo.TransferBatch(
-                LibTractor._user(), 
-                LibTractor._user(),
+                user, 
+                user,
                 address(0), 
                 a.depositIds, 
                 amounts
@@ -392,7 +420,7 @@ contract ConvertFacet is ReentrancyGuard {
 
         // all deposits converted are not germinating.
         LibSilo.burnActiveStalk(
-            LibTractor._user(),
+            user,
             a.active.stalk.add(a.active.bdv.mul(s.ss[token].stalkIssuedPerBdv))
         );
         return (a.active.stalk, a.active.bdv);

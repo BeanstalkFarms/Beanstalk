@@ -210,7 +210,6 @@ library LibWellMinting {
      */
     function instantaneousDeltaB(address well) internal view returns
         (int256) {
-        AppStorage storage s = LibAppStorage.diamondStorage();
         IERC20[] memory tokens = IWell(well).tokens();
         uint256[] memory reserves = IWell(well).getReserves();
 
@@ -234,15 +233,21 @@ library LibWellMinting {
         )).sub(int256(reserves[beanIndex]));
     }
 
+    function overallInstantaneousDeltaB() internal view returns (int256 deltaB) {
+        address[] memory tokens = LibWhitelistedTokens.getWhitelistedWellLpTokens();
+        for (uint256 i = 0; i < tokens.length; i++) {
+            if (tokens[i] == C.BEAN) continue;
+            (int256 wellDeltaB) = instantaneousDeltaB(tokens[i]);
+            deltaB = deltaB.add(wellDeltaB);
+        }
+    }
     
     function cappedReservesDeltaB(address well) internal view returns 
-        (int256, uint256[] memory, uint256[] memory) {
+        (int256) {
 
         if (well == C.BEAN) {
-            return (0, new uint256[](0), new uint256[](0));
+            return 0;
         }
-
-        AppStorage storage s = LibAppStorage.diamondStorage();
 
         // get first pump from well
         Call[] memory pumps = IWell(well).pumps();
@@ -263,12 +268,12 @@ library LibWellMinting {
         // HANDLE FAILURE
         // If the Bean reserve is less than the minimum, the minting oracle should be considered off.
         if (instReserves[beanIndex] < C.WELL_MINIMUM_BEAN_BALANCE) {
-            return (0, new uint256[](0), new uint256[](0));
+            return 0;
         }
 
         // If the USD Oracle oracle call fails, the minting oracle should be considered off.
         if (!success) {
-            return (0, instReserves, new uint256[](0));
+            return 0;
         }
 
         // Get well function
@@ -283,7 +288,7 @@ library LibWellMinting {
             wellFunction.data
         )).sub(int256(instReserves[beanIndex]));
 
-        return (deltaB, instReserves, ratios);
+        return deltaB;
     }
 
     // Calculates overall deltaB, used by convert for stalk penalty purposes
@@ -291,7 +296,7 @@ library LibWellMinting {
         address[] memory tokens = LibWhitelistedTokens.getWhitelistedWellLpTokens();
         for (uint256 i = 0; i < tokens.length; i++) {
             if (tokens[i] == C.BEAN) continue;
-            (int256 cappedDeltaB, , ) = cappedReservesDeltaB(tokens[i]);
+            int256 cappedDeltaB = cappedReservesDeltaB(tokens[i]);
             deltaB = deltaB.add(cappedDeltaB);
         }
     }

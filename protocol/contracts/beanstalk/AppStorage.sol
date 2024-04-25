@@ -513,10 +513,9 @@ contract Storage {
 	    uint128 roots;
     }
 
-
     struct ConvertCapacity {
-        uint248 convertCapacity;
-        bool hasConvertHappenedThisBlock; // todo: better name? but bools default to false.
+        uint256 overallConvertCapacityUsed;
+        mapping(address => uint256) wellConvertCapacityUsed;
     }
 }
 
