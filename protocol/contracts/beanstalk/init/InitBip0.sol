@@ -13,9 +13,8 @@ import "../../C.sol";
 /**
  * @author Publius
  * @title Init Diamond initializes the Beanstalk Diamond.
-**/
+ **/
 contract InitBip0 {
-
     using SafeMath for uint256;
 
     AppStorage internal s;
@@ -28,24 +27,20 @@ contract InitBip0 {
 
     function init() external {
         // AppStorageOld storage sOld = diamondStorageOld();
-
         // Update Silo
         // uint256 seeds = sOld.s.seeds;
         // uint256 stalk = sOld.s.stalk;
         // delete sOld.s;
         // s.s.seeds = seeds;
         // s.s.stalk = stalk;
-
         // Update Silo Increase
         // uint256 siBeans = sOld.si.increase;
         // uint256 siStalk = sOld.si.stalk;
         // delete sOld.si;
-
         // Update Rain + SOP
         // delete sOld.r;
         // uint256 weth = sOld.sop.weth;
         // delete sOld.sop;
-
         // Migrate State Variables
         // s.sop.weth = weth;
         // s.si.beans = siBeans;
@@ -53,7 +48,6 @@ contract InitBip0 {
         // s.s.seeds = seeds;
         // s.s.stalk = stalk;
         // s.s.roots = s.s.stalk.sub(siStalk).mul(C.getRootsBase());
-
         // migrate bips to new model
         // for (uint256 i256 = 0; i256 < sOld.g.bipIndex; ++i256) {
         //     uint32 i = uint32(i256);

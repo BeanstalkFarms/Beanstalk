@@ -59,26 +59,16 @@ library LibTransfer {
                 amount,
                 mode != From.INTERNAL
             );
-            if (amount == receivedAmount || mode == From.INTERNAL_TOLERANT)
-                return receivedAmount;
+            if (amount == receivedAmount || mode == From.INTERNAL_TOLERANT) return receivedAmount;
         }
         uint256 beforeBalance = token.balanceOf(address(this));
         token.safeTransferFrom(sender, address(this), amount - receivedAmount);
-        return
-            receivedAmount.add(
-                token.balanceOf(address(this)).sub(beforeBalance)
-            );
+        return receivedAmount.add(token.balanceOf(address(this)).sub(beforeBalance));
     }
 
-    function sendToken(
-        IERC20 token,
-        uint256 amount,
-        address recipient,
-        To mode
-    ) internal {
+    function sendToken(IERC20 token, uint256 amount, address recipient, To mode) internal {
         if (amount == 0) return;
-        if (mode == To.INTERNAL)
-            LibBalance.increaseInternalBalance(recipient, token, amount);
+        if (mode == To.INTERNAL) LibBalance.increaseInternalBalance(recipient, token, amount);
         else token.safeTransfer(recipient, amount);
     }
 
@@ -100,12 +90,7 @@ library LibTransfer {
         }
     }
 
-    function mintToken(
-        IBean token,
-        uint256 amount,
-        address recipient,
-        To mode
-    ) internal {
+    function mintToken(IBean token, uint256 amount, address recipient, To mode) internal {
         if (mode == To.EXTERNAL) {
             token.mint(recipient, amount);
         } else {

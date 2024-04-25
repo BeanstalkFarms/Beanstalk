@@ -18,7 +18,6 @@ import "@openzeppelin/contracts/token/ERC721/ERC721Holder.sol";
  **/
 
 contract Pipeline is IPipeline, ERC1155Holder, ERC721Holder {
-
     /**
      * @dev So Pipeline can receive Ether.
      */
@@ -36,27 +35,19 @@ contract Pipeline is IPipeline, ERC1155Holder, ERC721Holder {
      * Supports sending Ether through msg.value
      * @param p PipeCall to execute
      * @return result return value of PipeCall
-    **/
-    function pipe(PipeCall calldata p)
-        external
-        payable
-        override
-        returns (bytes memory result)
-    {
+     **/
+    function pipe(PipeCall calldata p) external payable override returns (bytes memory result) {
         result = _pipe(p.target, p.data, msg.value);
     }
-    
+
     /**
      * @notice Execute a list of executes a list of PipeCalls.
      * @param pipes list of PipeCalls to execute
      * @return results list of return values for each PipeCall
-    **/
-    function multiPipe(PipeCall[] calldata pipes)
-        external
-        payable
-        override
-        returns (bytes[] memory results)
-    {
+     **/
+    function multiPipe(
+        PipeCall[] calldata pipes
+    ) external payable override returns (bytes[] memory results) {
         results = new bytes[](pipes.length);
         for (uint256 i = 0; i < pipes.length; i++) {
             results[i] = _pipe(pipes[i].target, pipes[i].data, 0);
@@ -67,17 +58,15 @@ contract Pipeline is IPipeline, ERC1155Holder, ERC721Holder {
      * @notice Execute a list of AdvancedPipeCalls.
      * @param pipes list of AdvancedPipeCalls to execute
      * @return results list of return values for each AdvancedPipeCalls
-    **/
-    function advancedPipe(AdvancedPipeCall[] calldata pipes)
-        external
-        payable
-        override
-        returns (bytes[] memory results) {
-            results = new bytes[](pipes.length);
-            for (uint256 i = 0; i < pipes.length; ++i) {
-                results[i] = _advancedPipe(pipes[i], results);
-            }
+     **/
+    function advancedPipe(
+        AdvancedPipeCall[] calldata pipes
+    ) external payable override returns (bytes[] memory results) {
+        results = new bytes[](pipes.length);
+        for (uint256 i = 0; i < pipes.length; ++i) {
+            results[i] = _advancedPipe(pipes[i], results);
         }
+    }
 
     // Execute function call using calldata
     function _pipe(
@@ -123,6 +112,8 @@ contract Pipeline is IPipeline, ERC1155Holder, ERC721Holder {
     // else -> return the last 32 bytes of clipboard
     function getEthValue(bytes calldata clipboard) private pure returns (uint256 value) {
         if (clipboard[1] == 0x00) return 0;
-        assembly { value := calldataload(sub(add(clipboard.offset, clipboard.length), 32))}
+        assembly {
+            value := calldataload(sub(add(clipboard.offset, clipboard.length), 32))
+        }
     }
 }

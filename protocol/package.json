@@ -63,6 +63,8 @@
     "keccak256": "^1.0.6",
     "mathjs": "^11.0.1",
     "merkletreejs": "^0.2.31",
+    "prettier": "3.2.5",
+    "prettier-plugin-solidity": "1.3.1",
     "uniswap": "^0.0.1"
   }
 }

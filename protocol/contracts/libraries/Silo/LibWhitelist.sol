@@ -19,7 +19,6 @@ import {LibSafeMath32} from "contracts/libraries/LibSafeMath32.sol";
  * @notice Handles adding and removing ERC-20 tokens from the Silo Whitelist.
  */
 library LibWhitelist {
-    
     using LibSafeMath32 for uint32;
 
     /**
@@ -193,11 +192,13 @@ library LibWhitelist {
         if (stalkEarnedPerSeason == 0) stalkEarnedPerSeason = 1;
 
         // update milestone stem and season.
-        s.ss[token].milestoneStem = LibTokenSilo.stemTipForToken(token); 
+        s.ss[token].milestoneStem = LibTokenSilo.stemTipForToken(token);
         s.ss[token].milestoneSeason = s.season.current;
-       
+
         // stalkEarnedPerSeason is set to int32 before casting down.
-        s.ss[token].deltaStalkEarnedPerSeason = int24(int32(stalkEarnedPerSeason) - int32(s.ss[token].stalkEarnedPerSeason)); // calculate delta
+        s.ss[token].deltaStalkEarnedPerSeason = int24(
+            int32(stalkEarnedPerSeason) - int32(s.ss[token].stalkEarnedPerSeason)
+        ); // calculate delta
         s.ss[token].stalkEarnedPerSeason = stalkEarnedPerSeason;
 
         emit UpdatedStalkPerBdvPerSeason(token, stalkEarnedPerSeason, s.season.current);
@@ -205,14 +206,14 @@ library LibWhitelist {
 
     /**
      * @notice Removes an ERC-20 token from the Silo Whitelist.
-     * 
+     *
      */
     function dewhitelistToken(address token) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
 
         // before dewhitelisting, verify that `libWhitelistedTokens` are updated.
         LibWhitelistedTokens.updateWhitelistStatus(token, false, false, false);
-        
+
         // set the stalkEarnedPerSeason to 1 and update milestone stem.
         // stalkEarnedPerSeason requires a min value of 1.
         updateStalkPerBdvPerSeasonForToken(token, 1);
@@ -220,13 +221,13 @@ library LibWhitelist {
         // delete the selector and encodeType.
         delete s.ss[token].selector;
         delete s.ss[token].encodeType;
-        
+
         // delete gaugePoints, gaugePointSelector, liquidityWeightSelector, and optimalPercentDepositedBdv.
         delete s.ss[token].gaugePoints;
         delete s.ss[token].gpSelector;
         delete s.ss[token].lwSelector;
         delete s.ss[token].optimalPercentDepositedBdv;
-        
+
         emit DewhitelistToken(token);
     }
 
@@ -257,5 +258,4 @@ library LibWhitelist {
         (bool success, ) = address(this).staticcall(abi.encodeWithSelector(selector));
         require(success, "Whitelist: Invalid LiquidityWeight selector");
     }
-    
 }

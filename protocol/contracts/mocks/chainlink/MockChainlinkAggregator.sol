@@ -32,7 +32,7 @@ contract MockChainlinkAggregator is IChainlinkAggregator {
 
     function getRoundData(
         uint80 _roundId
-    ) 
+    )
         external
         view
         override
@@ -99,9 +99,7 @@ contract MockChainlinkAggregator is IChainlinkAggregator {
         answeredInRounds[roundId] = answeredInRound;
     }
 
-    function setDecimals(
-        uint8 __decimals
-    ) external {
+    function setDecimals(uint8 __decimals) external {
         _decimals = __decimals;
     }
 }

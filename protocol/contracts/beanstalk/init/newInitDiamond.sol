@@ -10,11 +10,11 @@ import {C} from "contracts/C.sol";
 
 /**
  * @author Publius, Brean
- * @title InitDiamond 
+ * @title InitDiamond
  * @notice InitDiamond initializes the Beanstalk Diamond.
  * A new bean token and bean:TOKEN well are deployed.
- * 
-**/
+ *
+ **/
 contract InitDiamond is InitalizeDiamond {
     // inital reward for deploying beanstalk.
     uint256 constant INIT_SUPPLY = 100e6;

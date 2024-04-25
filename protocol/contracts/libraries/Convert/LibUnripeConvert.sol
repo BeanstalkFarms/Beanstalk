@@ -19,15 +19,9 @@ library LibUnripeConvert {
     using LibConvertData for bytes;
     using SafeMath for uint256;
 
-    function convertLPToBeans(bytes memory convertData)
-        internal
-        returns (
-            address tokenOut,
-            address tokenIn,
-            uint256 amountOut,
-            uint256 amountIn
-        )
-    {
+    function convertLPToBeans(
+        bytes memory convertData
+    ) internal returns (address tokenOut, address tokenIn, uint256 amountOut, uint256 amountIn) {
         tokenOut = C.UNRIPE_BEAN;
         tokenIn = C.UNRIPE_LP;
         (uint256 lp, uint256 minBeans) = convertData.basicConvert();
@@ -35,10 +29,8 @@ library LibUnripeConvert {
             .unripeToUnderlying(tokenOut, minBeans, IBean(C.UNRIPE_BEAN).totalSupply())
             .mul(LibUnripe.percentLPRecapped())
             .div(LibUnripe.percentBeansRecapped());
-        (
-            uint256 outUnderlyingAmount,
-            uint256 inUnderlyingAmount
-        ) = LibWellConvert._wellRemoveLiquidityTowardsPeg(
+        (uint256 outUnderlyingAmount, uint256 inUnderlyingAmount) = LibWellConvert
+            ._wellRemoveLiquidityTowardsPeg(
                 LibUnripe.unripeToUnderlying(tokenIn, lp, IBean(C.UNRIPE_LP).totalSupply()),
                 minAmountOut,
                 LibBarnRaise.getBarnRaiseWell()
@@ -56,15 +48,9 @@ library LibUnripeConvert {
         IBean(tokenOut).mint(address(this), amountOut);
     }
 
-    function convertBeansToLP(bytes memory convertData)
-        internal
-        returns (
-            address tokenOut,
-            address tokenIn,
-            uint256 amountOut,
-            uint256 amountIn
-        )
-    {
+    function convertBeansToLP(
+        bytes memory convertData
+    ) internal returns (address tokenOut, address tokenIn, uint256 amountOut, uint256 amountIn) {
         tokenIn = C.UNRIPE_BEAN;
         tokenOut = C.UNRIPE_LP;
         (uint256 beans, uint256 minLP) = convertData.basicConvert();
@@ -72,10 +58,8 @@ library LibUnripeConvert {
             .unripeToUnderlying(tokenOut, minLP, IBean(C.UNRIPE_LP).totalSupply())
             .mul(LibUnripe.percentBeansRecapped())
             .div(LibUnripe.percentLPRecapped());
-        (
-            uint256 outUnderlyingAmount,
-            uint256 inUnderlyingAmount
-        ) = LibWellConvert._wellAddLiquidityTowardsPeg(
+        (uint256 outUnderlyingAmount, uint256 inUnderlyingAmount) = LibWellConvert
+            ._wellAddLiquidityTowardsPeg(
                 LibUnripe.unripeToUnderlying(tokenIn, beans, IBean(C.UNRIPE_BEAN).totalSupply()),
                 minAmountOut,
                 LibBarnRaise.getBarnRaiseWell()
@@ -94,44 +78,28 @@ library LibUnripeConvert {
     }
 
     function beansToPeg() internal view returns (uint256 beans) {
-        uint256 underlyingBeans = LibWellConvert.beansToPeg(
-            LibBarnRaise.getBarnRaiseWell()
-        );
-        beans = LibUnripe.underlyingToUnripe(
-            C.UNRIPE_BEAN,
-            underlyingBeans
-        );
+        uint256 underlyingBeans = LibWellConvert.beansToPeg(LibBarnRaise.getBarnRaiseWell());
+        beans = LibUnripe.underlyingToUnripe(C.UNRIPE_BEAN, underlyingBeans);
     }
 
     function lpToPeg() internal view returns (uint256 lp) {
-        uint256 underlyingLP = LibWellConvert.lpToPeg(
-            LibBarnRaise.getBarnRaiseWell()
-        );
+        uint256 underlyingLP = LibWellConvert.lpToPeg(LibBarnRaise.getBarnRaiseWell());
         lp = LibUnripe.underlyingToUnripe(C.UNRIPE_LP, underlyingLP);
     }
 
-    function getLPAmountOut(uint256 amountIn)
-        internal
-        view
-        returns (uint256 lp)
-    {
+    function getLPAmountOut(uint256 amountIn) internal view returns (uint256 lp) {
         uint256 beans = LibUnripe.unripeToUnderlying(
             C.UNRIPE_BEAN,
             amountIn,
             IBean(C.UNRIPE_BEAN).totalSupply()
         );
         lp = LibWellConvert.getLPAmountOut(LibBarnRaise.getBarnRaiseWell(), beans);
-        lp = LibUnripe
-            .underlyingToUnripe(C.UNRIPE_LP, lp)
-            .mul(LibUnripe.percentLPRecapped())
-            .div(LibUnripe.percentBeansRecapped());
+        lp = LibUnripe.underlyingToUnripe(C.UNRIPE_LP, lp).mul(LibUnripe.percentLPRecapped()).div(
+            LibUnripe.percentBeansRecapped()
+        );
     }
 
-    function getBeanAmountOut(uint256 amountIn)
-        internal
-        view
-        returns (uint256 bean)
-    {
+    function getBeanAmountOut(uint256 amountIn) internal view returns (uint256 bean) {
         uint256 lp = LibUnripe.unripeToUnderlying(
             C.UNRIPE_LP,
             amountIn,

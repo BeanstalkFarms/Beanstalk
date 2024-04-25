@@ -173,7 +173,11 @@ contract UnripeFacet is ReentrancyGuard {
         uint256 amount
     ) public view returns (uint256 redeem) {
         return
-            LibUnripe._getPenalizedUnderlying(unripeToken, amount, IBean(unripeToken).totalSupply());
+            LibUnripe._getPenalizedUnderlying(
+                unripeToken,
+                amount,
+                IBean(unripeToken).totalSupply()
+            );
     }
 
     function _getPenalizedUnderlying(
@@ -255,33 +259,24 @@ contract UnripeFacet is ReentrancyGuard {
      * @notice Returns the amount of Ripe Tokens that underly a single Unripe Token.
      * @dev has 6 decimals of precision.
      * @param unripeToken The address of the unripe token.
-     * @return underlyingPerToken The underlying ripe token per unripe token. 
+     * @return underlyingPerToken The underlying ripe token per unripe token.
      */
-    function getUnderlyingPerUnripeToken(address unripeToken)
-        external
-        view
-        returns (uint256 underlyingPerToken)
-    {
-        underlyingPerToken = s
-            .u[unripeToken]
-            .balanceOfUnderlying
-            .mul(LibUnripe.DECIMALS)
-            .div(IERC20(unripeToken).totalSupply());
+    function getUnderlyingPerUnripeToken(
+        address unripeToken
+    ) external view returns (uint256 underlyingPerToken) {
+        underlyingPerToken = s.u[unripeToken].balanceOfUnderlying.mul(LibUnripe.DECIMALS).div(
+            IERC20(unripeToken).totalSupply()
+        );
     }
 
     /**
      * @notice Returns the total amount of Ripe Tokens for a given Unripe Token.
      * @param unripeToken The address of the unripe token.
-     * @return underlying The total balance of the token. 
+     * @return underlying The total balance of the token.
      */
-    function getTotalUnderlying(address unripeToken)
-        external
-        view
-        returns (uint256 underlying)
-    {
+    function getTotalUnderlying(address unripeToken) external view returns (uint256 underlying) {
         return s.u[unripeToken].balanceOfUnderlying;
     }
-
 
     /**
      * @notice Adds an Unripe Token to Beanstalk.
@@ -305,11 +300,9 @@ contract UnripeFacet is ReentrancyGuard {
      * @param unripeToken The address of the Unripe Token.
      * @return underlyingToken The address of the Ripe Token.
      */
-    function getUnderlyingToken(address unripeToken)
-        external
-        view
-        returns (address underlyingToken)
-    {
+    function getUnderlyingToken(
+        address unripeToken
+    ) external view returns (address underlyingToken) {
         return s.u[unripeToken].underlyingToken;
     }
 
@@ -356,7 +349,9 @@ contract UnripeFacet is ReentrancyGuard {
      * Tokens.
      */
     function getLockedBeans() external view returns (uint256) {
-        uint256[] memory twaReserves = LibWell.getTwaReservesFromBeanstalkPump(LibBarnRaise.getBarnRaiseWell());
+        uint256[] memory twaReserves = LibWell.getTwaReservesFromBeanstalkPump(
+            LibBarnRaise.getBarnRaiseWell()
+        );
         return LibUnripe.getLockedBeans(twaReserves);
     }
 
@@ -364,17 +359,20 @@ contract UnripeFacet is ReentrancyGuard {
      * @notice Returns the number of Beans that are locked underneath the Unripe Bean token.
      */
     function getLockedBeansUnderlyingUnripeBean() external view returns (uint256) {
-        return LibLockedUnderlying.getLockedUnderlying(
-            C.UNRIPE_BEAN,
-            LibUnripe.getRecapPaidPercentAmount(1e6)
-        );
+        return
+            LibLockedUnderlying.getLockedUnderlying(
+                C.UNRIPE_BEAN,
+                LibUnripe.getRecapPaidPercentAmount(1e6)
+            );
     }
 
     /**
      * @notice Returns the number of Beans that are locked underneath the Unripe LP Token.
      */
     function getLockedBeansUnderlyingUnripeLP() external view returns (uint256) {
-        uint256[] memory twaReserves = LibWell.getTwaReservesFromBeanstalkPump(LibBarnRaise.getBarnRaiseWell());
+        uint256[] memory twaReserves = LibWell.getTwaReservesFromBeanstalkPump(
+            LibBarnRaise.getBarnRaiseWell()
+        );
         return LibUnripe.getLockedBeansFromLP(twaReserves);
     }
 }

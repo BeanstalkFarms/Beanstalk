@@ -10,7 +10,7 @@ import "../interfaces/IDiamondCut.sol";
 /**
  * @author Publius
  * @title App Storage Old defines the legacy state object for Beanstalk. It is used for migration.
-**/
+ **/
 contract AccountOld {
     struct Field {
         mapping(uint256 => uint256) plots;
@@ -196,10 +196,10 @@ struct AppStorageOld {
     StorageOld.AssetSilo lp; // 2 slots
     StorageOld.IncreaseSilo si; // 5 slots
     StorageOld.SeasonOfPlenty sop; // 3 slots
-    mapping (uint32 => SeasonOld.State) seasons;
-    mapping (uint32 => SeasonOld.SeasonOfPlenty) sops;
-    mapping (uint32 => SeasonOld.ResetBases) rbs;
-    mapping (address => AccountOld.State) a;
+    mapping(uint32 => SeasonOld.State) seasons;
+    mapping(uint32 => SeasonOld.SeasonOfPlenty) sops;
+    mapping(uint32 => SeasonOld.ResetBases) rbs;
+    mapping(address => AccountOld.State) a;
 }
 
 /*

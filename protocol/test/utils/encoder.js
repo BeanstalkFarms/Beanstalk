@@ -1,4 +1,4 @@
-const { defaultAbiCoder } = require('@ethersproject/abi');
+const { defaultAbiCoder } = require("@ethersproject/abi");
 
 const ConvertKind = {
   BEANS_TO_CURVE_LP: 0,
@@ -9,7 +9,7 @@ const ConvertKind = {
   BEANS_TO_WELL_LP: 5,
   WELL_LP_TO_BEANS: 6,
   UNRIPE_TO_RIPE: 7
-}
+};
 
 class ConvertEncoder {
   /**
@@ -26,52 +26,52 @@ class ConvertEncoder {
    * @param address - the address of the token converting into
    */
   static convertCurveLPToBeans = (lp, minBeans, address) =>
-  defaultAbiCoder.encode(
-    ['uint256', 'uint256', 'uint256', 'address'],
-    [ConvertKind.CURVE_LP_TO_BEANS, lp, minBeans, address]
-  );
+    defaultAbiCoder.encode(
+      ["uint256", "uint256", "uint256", "address"],
+      [ConvertKind.CURVE_LP_TO_BEANS, lp, minBeans, address]
+    );
 
   /**
    * Encodes the userData parameter for removing BEAN/ETH lp, then converting that Bean to LP using Curve Pool
    * @param beans - amount of beans to convert to Curve LP
    * @param minLP - min amount of Curve LP to receive
-     * @param address - the address of the token converting into
+   * @param address - the address of the token converting into
    */
   static convertBeansToCurveLP = (beans, minLP, address) =>
     defaultAbiCoder.encode(
-    ['uint256', 'uint256', 'uint256', 'address'],
-    [ConvertKind.BEANS_TO_CURVE_LP, beans, minLP, address]
-  );
+      ["uint256", "uint256", "uint256", "address"],
+      [ConvertKind.BEANS_TO_CURVE_LP, beans, minLP, address]
+    );
 
-   static convertUnripeLPToBeans = (lp, minBeans) =>
-   defaultAbiCoder.encode(
-     ['uint256', 'uint256', 'uint256'],
-     [ConvertKind.UNRIPE_LP_TO_BEANS, lp, minBeans]
-   );
- 
-   static convertUnripeBeansToLP = (beans, minLP) =>
-     defaultAbiCoder.encode(
-     ['uint256', 'uint256', 'uint256'],
-     [ConvertKind.UNRIPE_BEANS_TO_LP, beans, minLP]
-   );
-
-   static convertLambdaToLambda = (amount, token) =>
+  static convertUnripeLPToBeans = (lp, minBeans) =>
     defaultAbiCoder.encode(
-      ['uint256', 'uint256', 'address'],
+      ["uint256", "uint256", "uint256"],
+      [ConvertKind.UNRIPE_LP_TO_BEANS, lp, minBeans]
+    );
+
+  static convertUnripeBeansToLP = (beans, minLP) =>
+    defaultAbiCoder.encode(
+      ["uint256", "uint256", "uint256"],
+      [ConvertKind.UNRIPE_BEANS_TO_LP, beans, minLP]
+    );
+
+  static convertLambdaToLambda = (amount, token) =>
+    defaultAbiCoder.encode(
+      ["uint256", "uint256", "address"],
       [ConvertKind.LAMBDA_LAMBDA, amount, token]
     );
 
   static convertWellLPToBeans = (lp, minBeans, address) =>
-  defaultAbiCoder.encode(
-    ['uint256', 'uint256', 'uint256', 'address'],
-    [ConvertKind.WELL_LP_TO_BEANS, lp, minBeans, address]
-  );
+    defaultAbiCoder.encode(
+      ["uint256", "uint256", "uint256", "address"],
+      [ConvertKind.WELL_LP_TO_BEANS, lp, minBeans, address]
+    );
 
   static convertBeansToWellLP = (beans, minLP, address) =>
     defaultAbiCoder.encode(
-    ['uint256', 'uint256', 'uint256', 'address'],
-    [ConvertKind.BEANS_TO_WELL_LP, beans, minLP, address]
-  );
+      ["uint256", "uint256", "uint256", "address"],
+      [ConvertKind.BEANS_TO_WELL_LP, beans, minLP, address]
+    );
 
   /**
    * Encodes the userData parameter for performing an Unripe-->Ripe convert
@@ -79,10 +79,10 @@ class ConvertEncoder {
    * @param unripeToken - the address of the unripe asset
    */
   static convertUnripeToRipe = (unripeAmount, unripeToken) =>
-  defaultAbiCoder.encode(
-    ['uint256', 'uint256', 'address'],
-    [ConvertKind.UNRIPE_TO_RIPE, unripeAmount, unripeToken]
-  );
+    defaultAbiCoder.encode(
+      ["uint256", "uint256", "address"],
+      [ConvertKind.UNRIPE_TO_RIPE, unripeAmount, unripeToken]
+    );
 }
 
-exports.ConvertEncoder = ConvertEncoder
+exports.ConvertEncoder = ConvertEncoder;

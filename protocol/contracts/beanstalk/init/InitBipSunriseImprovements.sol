@@ -7,15 +7,15 @@ pragma experimental ABIEncoderV2;
 import "contracts/beanstalk/AppStorage.sol";
 /**
  * @author Publius, Brean
- * @title InitBip33 re-initalizes the weather struct for BIP-33, for gas efficency  
+ * @title InitBip33 re-initalizes the weather struct for BIP-33, for gas efficency
  **/
 
-contract InitBipSunriseImprovements {    
+contract InitBipSunriseImprovements {
     AppStorage internal s;
-    
+
     struct OldWeather {
         uint256 startSoil; // slot 1
-        uint256 lastDSoil; // slot 2 
+        uint256 lastDSoil; // slot 2
         uint96 lastSoilPercent; // gone
         uint32 lastSowTime; // slot 3
         uint32 thisSowTime; // slot 3

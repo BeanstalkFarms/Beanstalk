@@ -109,11 +109,7 @@ library LibClipboard {
         require(typeId == 0x01 || typeId == 0x02, "Clipboard: Type not supported");
         data = callData;
         for (uint256 i; i < returnPasteParams.length; i++) {
-            LibBytes.pasteBytesClipboard(
-                returnPasteParams[i],
-                returnData,
-                data
-            );
+            LibBytes.pasteBytesClipboard(returnPasteParams[i], returnData, data);
         }
     }
 }

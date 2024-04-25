@@ -8,7 +8,7 @@ pragma experimental ABIEncoderV2;
 /**
  * @author Publius
  * @title InitFundraiser creates a fundraiser.
-**/
+ **/
 
 interface IBS {
     function whitelistToken(address token, bytes4 selector, uint32 stalk, uint32 seeds) external;

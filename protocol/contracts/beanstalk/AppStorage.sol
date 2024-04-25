@@ -11,7 +11,7 @@ import "@openzeppelin/contracts/utils/Counters.sol";
  * @title Account
  * @author Publius
  * @notice Stores Farmer-level Beanstalk state.
- * @dev {Account.State} is the primary struct that is referenced from {Storage.State}. 
+ * @dev {Account.State} is the primary struct that is referenced from {Storage.State}.
  * All other structs in {Account} are referenced in {Account.State}. Each unique
  * Ethereum address is a Farmer.
  */
@@ -58,7 +58,7 @@ contract Account {
         uint256 stalk;
         uint256 seeds;
     }
-    
+
     /**
      * @notice Stores a Farmer's germinating stalk.
      * @param odd - stalk from assets deposited in odd seasons.
@@ -68,13 +68,13 @@ contract Account {
         uint128 odd;
         uint128 even;
     }
-    
+
     /**
-     * @notice This struct stores the mow status for each Silo-able token, for each farmer. 
+     * @notice This struct stores the mow status for each Silo-able token, for each farmer.
      * This gets updated each time a farmer mows, or adds/removes deposits.
      * @param lastStem The last cumulative grown stalk per bdv index at which the farmer mowed.
      * @param bdv The bdv of all of a farmer's deposits of this token type.
-     * 
+     *
      */
     struct MowStatus {
         int96 lastStem; // ───┐ 12
@@ -92,7 +92,7 @@ contract Account {
         uint256 plentyPerRoot;
         uint256 plenty;
     }
-    
+
     /**
      * @notice Defines the state object for a Farmer.
      * @param field A Farmer's Field storage.
@@ -124,7 +124,6 @@ contract Account {
      */
     struct State {
         Field field; // A Farmer's Field storage.
-
         /*
          * @dev (Silo V1) A Farmer's Unripe Bean Deposits only as a result of Replant
          *
@@ -133,32 +132,29 @@ contract Account {
          * NOTE: While the Silo V1 format is now deprecated, this storage slot is used for gas
          * efficiency to store Unripe BEAN deposits. See {LibUnripeSilo} for more.
          */
-        AssetSilo bean; 
-
+        AssetSilo bean;
         /*
          * @dev (Silo V1) Unripe LP Deposits as a result of Replant.
-         * 
+         *
          * Previously held the V1 Silo Deposits/Withdrawals for BEAN:ETH Uniswap v2 LP Tokens.
-         * 
+         *
          * BEAN:3CRV and BEAN:LUSD tokens prior to Replant were stored in the Silo V2
          * format in the `s.a[account].legacyV2Deposits` mapping.
          *
          * NOTE: While the Silo V1 format is now deprecated, unmigrated Silo V1 deposits are still
          * stored in this storage slot. See {LibUnripeSilo} for more.
-         * 
+         *
          */
-        AssetSilo lp; 
-
+        AssetSilo lp;
         /*
          * @dev Holds Silo specific state for each account.
          */
         Silo s;
-        
         uint32 votedUntil; // DEPRECATED – Replant removed on-chain governance including the ability to vote on BIPs.
         uint32 lastUpdate; // The Season in which the Farmer last updated their Silo.
         uint32 lastSop; // The last Season that a SOP occured at the time the Farmer last updated their Silo.
         uint32 lastRain; // The last Season that it started Raining at the time the Farmer last updated their Silo.
-        uint128 deprecated_deltaRoots; // DEPRECATED - BIP-39 introduced germination. 
+        uint128 deprecated_deltaRoots; // DEPRECATED - BIP-39 introduced germination.
         SeasonOfPlenty deprecated; // DEPRECATED – Replant reset the Season of Plenty mechanism
         uint256 roots; // A Farmer's Root balance.
         uint256 deprecated_wrappedBeans; // DEPRECATED – Replant generalized Internal Balances. Wrapped Beans are now stored at the AppStorage level.
@@ -171,11 +167,9 @@ contract Account {
         uint256 tokenPermitNonces; // A Farmer's current token permit nonce
         mapping(uint256 => Deposit) legacyV3Deposits; // NOTE: Legacy SiloV3 Deposits stored as a map from uint256 to Deposit. This is an concat of the token address and the CGSPBDV for a ERC20 deposit.
         mapping(address => MowStatus) mowStatuses; // Store a MowStatus for each Whitelisted Silo token
-        mapping(address => bool) isApprovedForAll; // ERC1155 isApprovedForAll mapping 
-        
+        mapping(address => bool) isApprovedForAll; // ERC1155 isApprovedForAll mapping
         // Germination
         FarmerGerminatingStalk farmerGerminating; // A Farmer's germinating stalk.
-
         // Silo v3.1
         mapping(uint256 => Deposit) deposits; // Silo v3.1 Deposits stored as a map from uint256 to Deposit. This is an concat of the token address and the stem for a ERC20 deposit.
     }
@@ -217,14 +211,14 @@ contract Storage {
     /**
      * @notice DEPRECATED: Contained data about each BIP (Beanstalk Improvement Proposal).
      * @dev Replant moved governance off-chain. This struct is left for future reference.
-     * 
+     *
      */
     struct Bip {
         address proposer; // ───┐ 20
         uint32 start; //        │ 4 (24)
         uint32 period; //       │ 4 (28)
         bool executed; // ──────┘ 1 (29/32)
-        int pauseOrUnpause; 
+        int pauseOrUnpause;
         uint128 timestamp;
         uint256 roots;
         uint256 endTotalRoots;
@@ -262,8 +256,8 @@ contract Storage {
      * @dev {Storage.State} contains a mapping from Token address => AssetSilo.
      * Currently, the bdv of deposits are asynchronous, and require an on-chain transaction to update.
      * Thus, the total bdv of deposits cannot be calculated, and must be stored and updated upon a bdv change.
-     * 
-     * 
+     *
+     *
      * Note that "Withdrawn" refers to the amount of Tokens that have been Withdrawn
      * but not yet Claimed. This will be removed in a future BIP.
      */
@@ -297,7 +291,7 @@ contract Storage {
      */
     struct Silo {
         uint256 stalk;
-        uint256 deprecated_seeds; 
+        uint256 deprecated_seeds;
         uint256 roots;
     }
 
@@ -349,7 +343,7 @@ contract Storage {
      * @param timestamp The timestamp of the start of the current Season.
      */
     struct Season {
-        uint32 current; // ─────────────────┐ 4  
+        uint32 current; // ─────────────────┐ 4
         uint32 lastSop; //                  │ 4 (8)
         uint8 withdrawSeasons; //           │ 1 (9)
         uint32 lastSopSeason; //            │ 4 (13)
@@ -376,7 +370,7 @@ contract Storage {
      */
     struct Weather {
         uint256[2] deprecated;
-        uint128 lastDSoil;  // ───┐ 16 (16)
+        uint128 lastDSoil; // ───┐ 16 (16)
         uint32 lastSowTime; //    │ 4  (20)
         uint32 thisSowTime; //    │ 4  (24)
         uint32 t; // ─────────────┘ 4  (28/32)
@@ -442,7 +436,7 @@ contract Storage {
         int96 milestoneStem; //                 │ 12 (28)
         bytes1 encodeType; //                   │ 1  (29)
         int24 deltaStalkEarnedPerSeason; // ────┘ 3  (32)
-        bytes4 gpSelector; //    ────────────────┐ 4  
+        bytes4 gpSelector; //    ────────────────┐ 4
         bytes4 lwSelector; //                    │ 4  (8)
         uint128 gaugePoints; //                  │ 16 (24)
         uint64 optimalPercentDepositedBdv; //  ──┘ 8  (32)
@@ -456,13 +450,13 @@ contract Storage {
      * @dev An Unripe Token is a vesting Token that is redeemable for a a pro rata share
      * of the `balanceOfUnderlying`, subject to a penalty based on the percent of
      * Unfertilized Beans paid back.
-     * 
-     * There were two Unripe Tokens added at Replant: 
+     *
+     * There were two Unripe Tokens added at Replant:
      *  - Unripe Bean, with its `underlyingToken` as BEAN;
      *  - Unripe LP, with its `underlyingToken` as BEAN:3CRV LP.
-     * 
+     *
      * Unripe Tokens are initially distributed through the use of a `merkleRoot`.
-     * 
+     *
      * The existence of a non-zero {UnripeSettings} implies that a Token is an Unripe Token.
      */
     struct UnripeSettings {
@@ -473,9 +467,9 @@ contract Storage {
 
     /**
      * @notice System level variables used in the seed Gauge System.
-     * @param averageGrownStalkPerBdvPerSeason The average Grown Stalk Per BDV 
+     * @param averageGrownStalkPerBdvPerSeason The average Grown Stalk Per BDV
      * that beanstalk issues each season.
-     * @param beanToMaxLpGpPerBdvRatio a scalar of the gauge points(GP) per bdv 
+     * @param beanToMaxLpGpPerBdvRatio a scalar of the gauge points(GP) per bdv
      * issued to the largest LP share and Bean. 6 decimal precision.
      * @dev a beanToMaxLpGpPerBdvRatio of 0 means LP should be incentivized the most,
      * and that beans will have the minimum seeds ratio. see {LibGauge.getBeanToMaxLpGpPerBdvRatioScaled}
@@ -501,7 +495,7 @@ contract Storage {
         uint128 bdv;
     }
 
-    /** 
+    /**
      * @notice Stores the system level germination data.
      */
     struct TotalGerminating {
@@ -509,8 +503,8 @@ contract Storage {
     }
 
     struct Sr {
-	    uint128 stalk;
-	    uint128 roots;
+        uint128 stalk;
+        uint128 roots;
     }
 }
 
@@ -538,7 +532,7 @@ contract Storage {
  * @param deprecated_hotFix3Start DEPRECATED - hotFix3Start was used to aid in a migration that occured alongside HOTFIX-3.
  * @param fundraisers A mapping from Fundraiser ID to Storage.Fundraiser.
  * @param fundraiserIndex The number of Fundraisers that have occured.
- * @param deprecated_isBudget DEPRECATED - Budget Facet was removed in BIP-14. 
+ * @param deprecated_isBudget DEPRECATED - Budget Facet was removed in BIP-14.
  * @param podListings A mapping from Plot Index to the hash of the Pod Listing.
  * @param podOrders A mapping from the hash of a Pod Order to the amount of Pods that the Pod Order is still willing to buy.
  * @param siloBalances A mapping from Token address to Silo Balance storage (amount deposited and withdrawn).
@@ -554,8 +548,8 @@ contract Storage {
  * @param activeFertilizer The number of active Fertilizer.
  * @param fertilizedIndex The total number of Fertilizer Beans.
  * @param unfertilizedIndex The total number of Unfertilized Beans ever.
- * @param fFirst The lowest active Fertilizer Id (start of linked list that is stored by nextFid). 
- * @param fLast The highest active Fertilizer Id (end of linked list that is stored by nextFid). 
+ * @param fFirst The lowest active Fertilizer Id (start of linked list that is stored by nextFid).
+ * @param fLast The highest active Fertilizer Id (end of linked list that is stored by nextFid).
  * @param bpf The cumulative Beans Per Fertilizer (bfp) minted over all Season.
  * @param deprecated_vestingPeriodRoots deprecated - removed in BIP-39 in favor of germination.
  * @param recapitalized The number of USDC that has been recapitalized in the Barn Raise.
@@ -576,8 +570,8 @@ contract Storage {
  */
 struct AppStorage {
     uint8 deprecated_index;
-    int8[32] deprecated_cases; 
-    bool paused; // ────────┐ 1 
+    int8[32] deprecated_cases;
+    bool paused; // ────────┐ 1
     uint128 pausedAt; // ───┘ 16 (17/32)
     Storage.Season season;
     Storage.Contracts c;
@@ -588,15 +582,14 @@ struct AppStorage {
     Storage.Silo s;
     uint256 reentrantStatus;
     Storage.Weather w;
-
     uint256 earnedBeans;
     uint256[14] deprecated;
-    mapping (address => Account.State) a;
+    mapping(address => Account.State) a;
     uint32 deprecated_bip0Start; // ─────┐ 4
     uint32 deprecated_hotFix3Start; // ──┘ 4 (8/32)
-    mapping (uint32 => Storage.Deprecated_Fundraiser) deprecated_fundraisers;
+    mapping(uint32 => Storage.Deprecated_Fundraiser) deprecated_fundraisers;
     uint32 deprecated_fundraiserIndex; // 4 (4/32)
-    mapping (address => bool) deprecated_isBudget;
+    mapping(address => bool) deprecated_isBudget;
     mapping(uint256 => bytes32) podListings;
     mapping(bytes32 => uint256) podOrders;
     mapping(address => Storage.AssetSilo) siloBalances;
@@ -604,15 +597,12 @@ struct AppStorage {
     uint256[2] deprecated2;
     uint128 deprecated_newEarnedStalk; // ──────┐ 16
     uint128 deprecated_vestingPeriodRoots; // ──┘ 16 (32/32)
-    mapping (uint32 => uint256) sops;
-
+    mapping(uint32 => uint256) sops;
     // Internal Balances
     mapping(address => mapping(IERC20 => uint256)) internalTokenBalance;
-
     // Unripe
     mapping(address => mapping(address => bool)) unripeClaimed;
     mapping(address => Storage.UnripeSettings) u;
-
     // Fertilizer
     mapping(uint128 => uint256) fertilizer;
     mapping(uint128 => uint128) nextFid;
@@ -623,37 +613,26 @@ struct AppStorage {
     uint128 fLast;
     uint128 bpf;
     uint256 recapitalized;
-
     // Farm
     uint256 isFarm;
-
     // Ownership
     address ownerCandidate;
-
     // Well
     mapping(address => bytes) wellOracleSnapshots;
-
     uint256 deprecated_beanEthPrice;
-
     // Silo V3 BDV Migration
     mapping(address => uint256) migratedBdvs;
-
     // Well/Curve + USD Price Oracle
     mapping(address => Storage.TwaReserves) twaReserves;
     mapping(address => uint256) usdTokenPrice;
-
     // Seed Gauge
     Storage.SeedGauge seedGauge;
     bytes32[144] casesV2;
-
     // Germination
     Storage.TotalGerminating oddGerminating;
     Storage.TotalGerminating evenGerminating;
-
-    // mapping from season => unclaimed germinating stalk and roots 
+    // mapping from season => unclaimed germinating stalk and roots
     mapping(uint32 => Storage.Sr) unclaimedGerminating;
-
     Storage.WhitelistStatus[] whitelistStatuses;
-
     address sopWell;
 }

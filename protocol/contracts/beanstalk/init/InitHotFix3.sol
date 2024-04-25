@@ -17,5 +17,4 @@ contract InitHotFix3 {
         // s.v1SI.beans = s.si.beans;
         // s.si.beans = 0;
     }
-
 }

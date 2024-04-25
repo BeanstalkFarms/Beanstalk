@@ -12,7 +12,7 @@ import "contracts/libraries/LibTractor.sol";
 /**
  * @author Publius
  * @title Mock Unripe Facet
-**/
+ **/
 contract MockUnripeFacet is UnripeFacet {
     using SafeERC20 for IERC20;
     using SafeMath for uint256;
@@ -21,34 +21,18 @@ contract MockUnripeFacet is UnripeFacet {
         s.u[unripeToken].merkleRoot = root;
     }
 
-    function addUnderlying(address unripeToken, uint256 amount)
-        external
-        payable
-        nonReentrant
-    {
+    function addUnderlying(address unripeToken, uint256 amount) external payable nonReentrant {
         address underlyingToken = s.u[unripeToken].underlyingToken;
-        IERC20(underlyingToken).safeTransferFrom(
-            LibTractor._user(),
-            address(this),
-            amount
-        );
-        s.u[unripeToken].balanceOfUnderlying = s
-            .u[unripeToken]
-            .balanceOfUnderlying
-            .add(amount);
+        IERC20(underlyingToken).safeTransferFrom(LibTractor._user(), address(this), amount);
+        s.u[unripeToken].balanceOfUnderlying = s.u[unripeToken].balanceOfUnderlying.add(amount);
     }
 
-    function addUnderlyingWithRecap(address unripeToken, uint256 amount)
-        external
-        payable
-        nonReentrant
-    {
+    function addUnderlyingWithRecap(
+        address unripeToken,
+        uint256 amount
+    ) external payable nonReentrant {
         address underlyingToken = s.u[unripeToken].underlyingToken;
-        IERC20(underlyingToken).safeTransferFrom(
-            LibTractor._user(),
-            address(this),
-            amount
-        );
+        IERC20(underlyingToken).safeTransferFrom(LibTractor._user(), address(this), amount);
         LibUnripe.addUnderlying(unripeToken, amount);
     }
 }

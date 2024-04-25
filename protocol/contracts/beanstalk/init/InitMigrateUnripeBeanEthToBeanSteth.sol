@@ -23,7 +23,6 @@ import {IGaugePointFacet} from "contracts/beanstalk/sun/GaugePointFacet.sol";
  * - Migrates the Unripe LP underlying tokens from Bean:Eth to Bean:Wsteth
  */
 contract InitMigrateUnripeBeanEthToBeanSteth {
-
     // The initial gauge points for Bean:WstETH.
     uint128 internal constant BEAN_WSTETH_INITIAL_GAUGE_POINTS = 100e18;
 
@@ -31,18 +30,17 @@ contract InitMigrateUnripeBeanEthToBeanSteth {
     uint32 constant BEAN_ETH_PUMP_CATCH_UP_SEASONS = 24;
 
     // The initial Stalk issued per BDV for all whitelisted Silo tokens.
-    uint32 constant private STALK_ISSUED_PER_BDV = 10000;
+    uint32 private constant STALK_ISSUED_PER_BDV = 10000;
 
     // The optimal percent deposited for Bean:Wsteth.
-    uint64 constant private OPTIMAL_PERCENT_DEPOSITED_BDV = 5e6;
+    uint64 private constant OPTIMAL_PERCENT_DEPOSITED_BDV = 5e6;
 
     // The total percent deposited BDV.
-    uint64 constant private MAX_PERCENT_DEPOSITED_BDV = 100e6;
+    uint64 private constant MAX_PERCENT_DEPOSITED_BDV = 100e6;
 
     AppStorage internal s;
 
     function init() external {
-
         // Turn off Bean:Eth Minting while Multi Flow Pump catches up
         delete s.wellOracleSnapshots[C.BEAN_ETH_WELL];
         s.season.beanEthStartMintingSeason = s.season.current + BEAN_ETH_PUMP_CATCH_UP_SEASONS;
@@ -65,6 +63,5 @@ contract InitMigrateUnripeBeanEthToBeanSteth {
         );
 
         LibFertilizer.beginBarnRaiseMigration(C.BEAN_WSTETH_WELL);
-
     }
 }

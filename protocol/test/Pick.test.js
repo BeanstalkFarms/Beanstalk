@@ -35,49 +35,36 @@ const initializeMerkleTree = async () => {
 
   data1 = users.map((user) => ({
     user,
-    amount: ethers.utils.parseEther(
-      generateRandomNumber(100, 10000).toString()
-    ),
+    amount: ethers.utils.parseEther(generateRandomNumber(100, 10000).toString())
   }));
   leafNodes1 = data1.map((item) =>
-    ethers.utils.solidityKeccak256(
-      ["address", "uint256"],
-      [item.user.address, item.amount]
-    )
+    ethers.utils.solidityKeccak256(["address", "uint256"], [item.user.address, item.amount])
   );
   merkleTree1 = new MerkleTree(leafNodes1, keccak256, {
-    sortPairs: true,
+    sortPairs: true
   });
 
   data2 = users.map((user) => ({
     user,
-    amount: ethers.utils.parseEther(
-      generateRandomNumber(100, 10000).toString()
-    ),
+    amount: ethers.utils.parseEther(generateRandomNumber(100, 10000).toString())
   }));
   leafNodes2 = data2.map((item) =>
-    ethers.utils.solidityKeccak256(
-      ["address", "uint256"],
-      [item.user.address, item.amount]
-    )
+    ethers.utils.solidityKeccak256(["address", "uint256"], [item.user.address, item.amount])
   );
   merkleTree2 = new MerkleTree(leafNodes2, keccak256, {
-    sortPairs: true,
+    sortPairs: true
   });
 };
 
 describe("UnripeClaim", function () {
   before(async function () {
     [owner, user, user2, user3, user4, user5] = await ethers.getSigners();
-    const contracts = await deploy(verbose=false, mock=true, reset=true);
+    const contracts = await deploy((verbose = false), (mock = true), (reset = true));
     this.diamond = contracts.beanstalkDiamond;
     // `beanstalk` contains all functions that the regualar beanstalk has.
     // `mockBeanstalk` has functions that are only available in the mockFacets.
-    [ beanstalk, mockBeanstalk ] = await getAllBeanstalkContracts(this.diamond.address);
-    this.unripeClaim = await ethers.getContractAt(
-      "MockUnripeFacet",
-      this.diamond.address
-    );
+    [beanstalk, mockBeanstalk] = await getAllBeanstalkContracts(this.diamond.address);
+    this.unripeClaim = await ethers.getContractAt("MockUnripeFacet", this.diamond.address);
 
     this.unripeToken1 = await ethers.getContractFactory("MockToken");
     this.unripeToken1 = await this.unripeToken1.deploy("UnripeToken1", "UT1");
@@ -87,14 +74,8 @@ describe("UnripeClaim", function () {
     this.unripeToken2 = await this.unripeToken2.deploy("UnripeToken2", "UT2");
     await this.unripeToken2.deployed();
 
-    this.unripeToken1.mint(
-      this.diamond.address,
-      ethers.utils.parseEther("100000")
-    );
-    this.unripeToken2.mint(
-      this.diamond.address,
-      ethers.utils.parseEther("100000")
-    );
+    this.unripeToken1.mint(this.diamond.address, ethers.utils.parseEther("100000"));
+    this.unripeToken2.mint(this.diamond.address, ethers.utils.parseEther("100000"));
 
     await initializeMerkleTree();
 
@@ -177,9 +158,7 @@ describe("UnripeClaim", function () {
     const proof = merkleTree1.getHexProof(leaf);
 
     await expect(
-      this.unripeClaim
-        .connect(user2)
-        .pick(this.unripeToken1.address, user.amount, proof, EXTERNAL)
+      this.unripeClaim.connect(user2).pick(this.unripeToken1.address, user.amount, proof, EXTERNAL)
     ).to.be.revertedWith("UnripeClaim: invalid proof");
   });
 });

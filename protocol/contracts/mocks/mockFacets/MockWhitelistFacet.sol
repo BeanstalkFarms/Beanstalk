@@ -11,9 +11,8 @@ import {LibWhitelistedTokens} from "contracts/libraries/Silo/LibWhitelistedToken
 /**
  * @author Brean
  * @title Mock Whitelist Facet
-**/
+ **/
 contract MockWhitelistFacet is WhitelistFacet {
-
     /**
      * @notice Emitted when a token is added to the Silo Whitelist.
      * @param token ERC-20 token being added to the Silo Whitelist.
@@ -63,7 +62,7 @@ contract MockWhitelistFacet is WhitelistFacet {
         uint32 season
     );
 
-    /** 
+    /**
      * @notice Emitted when a Whitelis Status is added.
      */
     event AddWhitelistStatus(
@@ -77,10 +76,7 @@ contract MockWhitelistFacet is WhitelistFacet {
     /**
      * @notice Emitted when a Whitelist Status is removed.
      */
-    event RemoveWhitelistStatus(
-        address token,
-        uint256 index
-    );
+    event RemoveWhitelistStatus(address token, uint256 index);
 
     /**
      * @notice Emitted when a Whitelist Status is updated.
@@ -99,16 +95,35 @@ contract MockWhitelistFacet is WhitelistFacet {
      */
     event DewhitelistToken(address indexed token);
 
-    function updateWhitelistStatus(address token, bool isWhitelisted, bool isWhitelistedLp, bool isWhitelistedWell) external {
-        LibWhitelistedTokens.updateWhitelistStatus(token, isWhitelisted, isWhitelistedLp, isWhitelistedWell);
+    function updateWhitelistStatus(
+        address token,
+        bool isWhitelisted,
+        bool isWhitelistedLp,
+        bool isWhitelistedWell
+    ) external {
+        LibWhitelistedTokens.updateWhitelistStatus(
+            token,
+            isWhitelisted,
+            isWhitelistedLp,
+            isWhitelistedWell
+        );
     }
 
     function removeWhitelistStatus(address token) external {
         LibWhitelistedTokens.removeWhitelistStatus(token);
     }
 
-    function addWhitelistStatus(address token, bool isWhitelisted, bool isWhitelistedLp, bool isWhitelistedWell) external {
-        LibWhitelistedTokens.addWhitelistStatus(token, isWhitelisted, isWhitelistedLp, isWhitelistedWell);
+    function addWhitelistStatus(
+        address token,
+        bool isWhitelisted,
+        bool isWhitelistedLp,
+        bool isWhitelistedWell
+    ) external {
+        LibWhitelistedTokens.addWhitelistStatus(
+            token,
+            isWhitelisted,
+            isWhitelistedLp,
+            isWhitelistedWell
+        );
     }
-
 }
