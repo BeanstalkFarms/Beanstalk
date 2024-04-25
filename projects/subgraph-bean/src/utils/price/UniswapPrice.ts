@@ -34,10 +34,14 @@ export function calcUniswapV2Inst(pool: Pool): DeltaBPriceLiquidity {
   const wethToken = updatePreReplantPriceETH();
   const weth_bd = toDecimal(pool.reserves[0], 18);
   const bean_bd = toDecimal(pool.reserves[1]);
+  return calcUniswapV2Inst_2(bean_bd, weth_bd, wethToken.lastPriceUSD);
+}
+
+export function calcUniswapV2Inst_2(beanReserves: BigDecimal, token2Reserves: BigDecimal, token2Price: BigDecimal): DeltaBPriceLiquidity {
   return {
-    price: constantProductPrice(bean_bd, weth_bd, wethToken.lastPriceUSD),
-    liquidity: weth_bd.times(wethToken.lastPriceUSD),
-    deltaB: uniswapV2DeltaB(bean_bd, weth_bd, wethToken.lastPriceUSD)
+    price: constantProductPrice(beanReserves, token2Reserves, token2Price),
+    liquidity: token2Reserves.times(token2Price).times(BigDecimal.fromString("2")),
+    deltaB: uniswapV2DeltaB(beanReserves, token2Reserves, token2Price)
   };
 }
 

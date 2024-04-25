@@ -1,4 +1,4 @@
-import { BigDecimal, BigInt, ethereum, log } from "@graphprotocol/graph-ts";
+import { BigDecimal, BigInt, ethereum, Address, log } from "@graphprotocol/graph-ts";
 import { Swap, Sync } from "../generated/BeanUniswapV2Pair/UniswapV2Pair";
 import { getLastBeanPrice, calcLiquidityWeightedBeanPrice, loadBean, updateBeanSupplyPegPercent, updateBeanValues } from "./utils/Bean";
 import { BEAN_ERC20_V1, BEAN_WETH_V1, WETH } from "../../subgraph-core/utils/Constants";
@@ -11,7 +11,8 @@ import {
   uniswapV2DeltaB,
   constantProductPrice,
   uniswapV2Reserves,
-  updatePreReplantPriceETH
+  updatePreReplantPriceETH,
+  calcUniswapV2Inst_2
 } from "./utils/price/UniswapPrice";
 
 // export function handleMint(event: Mint): void {
@@ -105,27 +106,40 @@ export function handleSync(event: Sync): void {
   updateBeanValues(BEAN_ERC20_V1.toHexString(), event.block.timestamp, newBeanPrice, ZERO_BI, ZERO_BI, ZERO_BD, deltaLiquidityUSD);
 }
 
+// Update pool price/liquidity/deltaB. This is for updating the price when another swap occurs and there is no peg
+// cross in this pool. No need to check a peg cross again because the blockHandler will have already run before any events.
+// The caller is expected to update overall bean prices after this function completes.
+export function externalUpdatePoolPrice(poolAddr: Address, timestamp: BigInt, blockNumber: BigInt): void {
+  const pool = loadOrCreatePool(poolAddr.toHexString(), blockNumber);
+
+  const reserves = uniswapV2Reserves(poolAddr);
+  const ethPrice = getPreReplantPriceETH();
+  const newPoolPrices = calcUniswapV2Inst_2(toDecimal(reserves[1]), toDecimal(reserves[0], 18), ethPrice);
+  const deltaLiquidityUSD = newPoolPrices.liquidity.minus(pool.liquidityUSD);
+
+  updatePoolValues(BEAN_WETH_V1.toHexString(), timestamp, blockNumber, ZERO_BI, ZERO_BD, deltaLiquidityUSD, newPoolPrices.deltaB);
+  updatePoolPrice(BEAN_WETH_V1.toHexString(), timestamp, blockNumber, newPoolPrices.price, false);
+}
+
 export function checkPegCrossEth(block: ethereum.Block): void {
   const pool = loadOrCreatePool(BEAN_WETH_V1.toHexString(), block.number);
   const prevPoolPrice = pool.lastPrice;
 
   const reserves = uniswapV2Reserves(BEAN_WETH_V1);
   const ethPrice = getPreReplantPriceETH();
-  const newPoolPrice = constantProductPrice(toDecimal(reserves[1]), toDecimal(reserves[0], 18), ethPrice);
+  const newPoolPrices = calcUniswapV2Inst_2(toDecimal(reserves[1]), toDecimal(reserves[0], 18), ethPrice);
 
   // log.debug("Prev/New bean price {} / {}", [prevPrice.toString(), newPrice.toString()]);
 
   // Check for pool peg cross
-  const poolCrossed = checkPoolCross(BEAN_WETH_V1.toHexString(), block.timestamp, block.number, prevPoolPrice, newPoolPrice);
+  const poolCrossed = checkPoolCross(BEAN_WETH_V1.toHexString(), block.timestamp, block.number, prevPoolPrice, newPoolPrices.price);
 
   let deltaLiquidityUSD = ZERO_BD;
   if (poolCrossed) {
     // Update price for the pool
-    const newLiquidity = toDecimal(reserves[0], 18).times(ethPrice).times(BigDecimal.fromString("2"));
-    deltaLiquidityUSD = newLiquidity.minus(pool.liquidityUSD);
-    const deltaB = uniswapV2DeltaB(toDecimal(reserves[1]), toDecimal(reserves[0], 18), ethPrice);
-    updatePoolValues(BEAN_WETH_V1.toHexString(), block.timestamp, block.number, ZERO_BI, ZERO_BD, deltaLiquidityUSD, deltaB);
-    updatePoolPrice(BEAN_WETH_V1.toHexString(), block.timestamp, block.number, newPoolPrice, false);
+    deltaLiquidityUSD = newPoolPrices.liquidity.minus(pool.liquidityUSD);
+    updatePoolValues(BEAN_WETH_V1.toHexString(), block.timestamp, block.number, ZERO_BI, ZERO_BD, deltaLiquidityUSD, newPoolPrices.deltaB);
+    updatePoolPrice(BEAN_WETH_V1.toHexString(), block.timestamp, block.number, newPoolPrices.price, false);
 
     // Update weth token price
     let token = loadOrCreateToken(WETH.toHexString());

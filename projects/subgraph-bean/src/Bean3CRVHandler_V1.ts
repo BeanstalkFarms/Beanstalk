@@ -6,9 +6,9 @@ import {
   RemoveLiquidityOne,
   TokenExchange,
   TokenExchangeUnderlying
-} from "../generated/Bean3CRV/Bean3CRV";
+} from "../generated/Bean3CRV-V1/Bean3CRV";
 import { calcLiquidityWeightedBeanPrice, getLastBeanPrice, loadBean, updateBeanSupplyPegPercent, updateBeanValues } from "./utils/Bean";
-import { BEAN_ERC20_V1, BEAN_LUSD_V1 } from "../../subgraph-core/utils/Constants";
+import { BEAN_ERC20_V1, BEAN_LUSD_V1, BEAN_WETH_V1 } from "../../subgraph-core/utils/Constants";
 import { toDecimal, ZERO_BD, ZERO_BI } from "../../subgraph-core/utils/Decimals";
 import { loadOrCreatePool, setPoolReserves, updatePoolPrice, updatePoolValues } from "./utils/Pool";
 import { Bean3CRV } from "../generated/Bean3CRV-V1/Bean3CRV";
@@ -16,6 +16,7 @@ import { ERC20 } from "../generated/Bean3CRV-V1/ERC20";
 import { checkBeanCross } from "./utils/Cross";
 import { curveDeltaBUsingVPrice, curvePriceAndLp } from "./utils/price/CurvePrice";
 import { manualTwa } from "./utils/price/TwaOracle";
+import { externalUpdatePoolPrice as univ2_externalUpdatePoolPrice } from "./UniswapV2Handler";
 
 export function handleTokenExchange(event: TokenExchange): void {
   // Do not index post-exploit data
@@ -112,8 +113,6 @@ function handleLiquidityChange(
   let newPoolPrice = priceAndLp[0];
   let lpValue = priceAndLp[1];
 
-  let oldBeanPrice = getLastBeanPrice(BEAN_ERC20_V1.toHexString());
-
   let beanContract = ERC20.bind(BEAN_ERC20_V1);
   let beanHolding = toDecimal(beanContract.balanceOf(Address.fromString(poolAddress)));
   let beanValue = beanHolding.times(newPoolPrice);
@@ -140,16 +139,11 @@ function handleLiquidityChange(
     }
   }
 
-  let deltaB = curveDeltaBUsingVPrice(Address.fromString(poolAddress), reserveBalances.value[0]);
-
   updateBeanSupplyPegPercent(blockNumber);
 
-  updatePoolValues(poolAddress, timestamp, blockNumber, volumeBean, volumeUSD, deltaLiquidityUSD, deltaB);
-  updatePoolPrice(poolAddress, timestamp, blockNumber, newPoolPrice);
+  let deltaB = curveDeltaBUsingVPrice(Address.fromString(poolAddress), reserveBalances.value[0]);
 
-  const newBeanPrice = calcLiquidityWeightedBeanPrice(BEAN_ERC20_V1.toHexString());
-  updateBeanValues(BEAN_ERC20_V1.toHexString(), timestamp, newBeanPrice, ZERO_BI, volumeBean, volumeUSD, deltaLiquidityUSD);
-  checkBeanCross(BEAN_ERC20_V1.toHexString(), timestamp, blockNumber, oldBeanPrice, newBeanPrice);
+  updatePricesAndCheckCrosses(poolAddress, newPoolPrice, volumeBean, volumeUSD, deltaLiquidityUSD, deltaB, timestamp, blockNumber);
 }
 
 function handleSwap(
@@ -168,8 +162,6 @@ function handleSwap(
   let priceAndLp = curvePriceAndLp(Address.fromString(poolAddress));
   let newPoolPrice = priceAndLp[0];
   let lpValue = priceAndLp[1];
-
-  let oldBeanPrice = getLastBeanPrice(BEAN_ERC20_V1.toHexString());
 
   let beanContract = ERC20.bind(BEAN_ERC20_V1);
   let beanHolding = toDecimal(beanContract.balanceOf(Address.fromString(poolAddress)));
@@ -199,9 +191,27 @@ function handleSwap(
 
   let volumeUSD = toDecimal(volumeBean).times(newPoolPrice);
 
+  updatePricesAndCheckCrosses(poolAddress, newPoolPrice, volumeBean, volumeUSD, deltaLiquidityUSD, deltaB, timestamp, blockNumber);
+}
+
+export function updatePricesAndCheckCrosses(
+  poolAddress: string,
+  newPoolPrice: BigDecimal,
+  volumeBean: BigInt,
+  volumeUSD: BigDecimal,
+  deltaLiquidityUSD: BigDecimal,
+  deltaB: BigInt,
+  timestamp: BigInt,
+  blockNumber: BigInt
+): void {
   updatePoolValues(poolAddress, timestamp, blockNumber, volumeBean, volumeUSD, deltaLiquidityUSD, deltaB);
   updatePoolPrice(poolAddress, timestamp, blockNumber, newPoolPrice);
 
+  // Update volatile pools (in practice, for pre-replant its beaneth only)
+  univ2_externalUpdatePoolPrice(BEAN_WETH_V1, timestamp, blockNumber);
+
+  // Check for bean peg cross
+  let oldBeanPrice = getLastBeanPrice(BEAN_ERC20_V1.toHexString());
   const newBeanPrice = calcLiquidityWeightedBeanPrice(BEAN_ERC20_V1.toHexString());
   updateBeanValues(BEAN_ERC20_V1.toHexString(), timestamp, newBeanPrice, ZERO_BI, volumeBean, volumeUSD, deltaLiquidityUSD);
   checkBeanCross(BEAN_ERC20_V1.toHexString(), timestamp, blockNumber, oldBeanPrice, newBeanPrice);
