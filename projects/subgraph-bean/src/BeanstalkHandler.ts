@@ -21,7 +21,8 @@ import { MetapoolOracle, WellOracle } from "../generated/TWAPOracles/BIP37";
 import { DeltaBPriceLiquidity } from "./utils/price/Types";
 import { setTwaLast } from "./utils/price/TwaOracle";
 import { decodeCumulativeWellReserves, setWellTwa } from "./utils/price/WellPrice";
-import { BeanstalkPrice_try_price } from "./utils/price/BeanstalkPrice";
+import { BeanstalkPrice_try_price, getPoolPrice } from "./utils/price/BeanstalkPrice";
+import { beanstalkPrice_updatePoolPrices } from "./BlockHandler";
 
 export function handleSunrise(event: Sunrise): void {
   // Update the season for hourly and daily liquidity metrics
@@ -37,52 +38,13 @@ export function handleSunrise(event: Sunrise): void {
     updatePoolSeason(bean.pools[i], event.block.timestamp, event.block.number, event.params.season.toI32());
   }
 
-  // Fetch price from price contract to capture any 3CRV movements against peg.
+  // Fetch price from price contract to capture any non-bean token price movevements
   if (event.params.season > BigInt.fromI32(6074)) {
     // Attempt to pull from Beanstalk Price contract first for the overall Bean price update
-    let beanstalkPrice = BeanstalkPrice.bind(BEANSTALK_PRICE);
-    let beanstalkQuery = BeanstalkPrice_try_price(BEAN_ERC20, event.block.number);
+    // Update the current price regardless of a peg cross
+    let updatedPrices = beanstalkPrice_updatePoolPrices(false, event.block);
 
-    if (!beanstalkQuery.reverted) {
-      // We can use the Beanstalk Price contract to update overall price, and call the updates for Curve and Well price updates
-      // We also know that the additional calls should not revert at this point
-      let beanCurve = loadOrCreatePool(BEAN_3CRV.toHexString(), event.block.number);
-      let beanWell = loadOrCreatePool(BEAN_WETH_CP2_WELL.toHexString(), event.block.number);
-
-      let deltaBeanLiquidity = toDecimal(beanstalkQuery.value.liquidity).minus(oldBeanLiquidity);
-
-      let beanPrice = toDecimal(beanstalkQuery.value.price);
-      // Overall Bean update
-      updateBeanValues(BEAN_ERC20.toHexString(), event.block.timestamp, beanPrice, ZERO_BI, ZERO_BI, ZERO_BD, deltaBeanLiquidity);
-
-      // Curve pool update
-      let curvePrice = beanstalkPrice.getCurve();
-      updatePoolValues(
-        BEAN_3CRV.toHexString(),
-        event.block.timestamp,
-        event.block.number,
-        ZERO_BI,
-        ZERO_BD,
-        toDecimal(curvePrice.liquidity).minus(beanCurve.liquidityUSD),
-        curvePrice.deltaB
-      );
-      updatePoolPrice(BEAN_3CRV.toHexString(), event.block.timestamp, event.block.number, toDecimal(curvePrice.price));
-
-      // Well pool update
-      let wellPrice = beanstalkPrice.getConstantProductWell(BEAN_WETH_CP2_WELL);
-      updatePoolValues(
-        BEAN_WETH_CP2_WELL.toHexString(),
-        event.block.timestamp,
-        event.block.number,
-        ZERO_BI,
-        ZERO_BD,
-        toDecimal(wellPrice.liquidity).minus(beanWell.liquidityUSD),
-        wellPrice.deltaB
-      );
-      updatePoolPrice(BEAN_WETH_CP2_WELL.toHexString(), event.block.timestamp, event.block.number, toDecimal(wellPrice.price));
-
-      checkBeanCross(BEAN_ERC20.toHexString(), event.block.timestamp, event.block.number, oldBeanPrice, beanPrice);
-    } else {
+    if (!updatedPrices) {
       // Pre Basin deployment - Use original Curve price contract to update on each season.
       let curvePrice = CurvePrice.bind(CURVE_PRICE);
       let curve = curvePrice.try_getCurve();

@@ -13,16 +13,21 @@ export function handleBlock(block: ethereum.Block): void {
   if (block.number < EXPLOIT_BLOCK) {
     univ2_checkPegCrossEth(block);
   } else if (block.number >= BEAN_WETH_CP2_WELL_BLOCK) {
-    beanstalkPrice_checkPegCross(block);
+    beanstalkPrice_updatePoolPrices(true, block);
   }
 }
 
-// Using the BeanstalkPrice contract, checks for peg crosses
-function beanstalkPrice_checkPegCross(block: ethereum.Block): void {
+/**
+ * Using the BeanstalkPrice contract, updates pool prices and checks for peg crosses
+ * @param priceOnlyOnCross - true if the pool price should only be updated on a peg cross
+ * @param block
+ * @returns false if the price contract reverted
+ */
+export function beanstalkPrice_updatePoolPrices(priceOnlyOnCross: boolean, block: ethereum.Block): boolean {
   const priceResult = BeanstalkPrice_try_price(BEAN_ERC20, block.number);
   if (priceResult.reverted) {
     // Price contract was unavailable briefly after well deployment
-    return;
+    return false;
   }
   const bean = loadBean(BEAN_ERC20.toHexString());
   const prevPrice = bean.price;
@@ -47,7 +52,7 @@ function beanstalkPrice_checkPegCross(block: ethereum.Block): void {
       toDecimal(poolPriceInfo.price)
     );
 
-    if (poolCrossed || beanCrossed) {
+    if (!priceOnlyOnCross || poolCrossed || beanCrossed) {
       totalLiquidity = totalLiquidity.plus(toDecimal(poolPriceInfo.liquidity));
       updatePoolValues(
         poolPriceInfo.pool.toHexString(),
@@ -63,7 +68,7 @@ function beanstalkPrice_checkPegCross(block: ethereum.Block): void {
   }
 
   // Update bean values at the end now that the summation of pool liquidity is known
-  if (beanCrossed) {
+  if (!priceOnlyOnCross || beanCrossed) {
     updateBeanValues(
       BEAN_ERC20.toHexString(),
       block.timestamp,
@@ -74,4 +79,5 @@ function beanstalkPrice_checkPegCross(block: ethereum.Block): void {
       totalLiquidity.minus(bean.liquidityUSD)
     );
   }
+  return true;
 }
