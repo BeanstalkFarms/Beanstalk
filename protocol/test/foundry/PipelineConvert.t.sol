@@ -876,6 +876,30 @@ contract PipelineConvertTest is TestHelper {
         assertEq(penalty, 0);
     }
 
+    function testCalculateConvertCapacityPenalty() public {
+        addEthToWell(users[1], 1 ether);
+        // Update the pump so that eth added above is reflected.
+        updateMockPumpUsingWellReserves(C.BEAN_ETH_WELL);
+
+        uint256 overallCappedDeltaB = 100;
+        uint256 overallAmountInDirectionOfPeg = 100;
+        address inputToken = C.BEAN_ETH_WELL;
+        uint256 inputTokenAmountInDirectionOfPeg = 100;
+        address outputToken = C.BEAN;
+        uint256 outputTokenAmountInDirectionOfPeg = 100;
+
+        uint256 penalty = LibConvert.calculateConvertCapacityPenalty(
+            overallCappedDeltaB,
+            overallAmountInDirectionOfPeg,
+            inputToken,
+            inputTokenAmountInDirectionOfPeg,
+            outputToken,
+            outputTokenAmountInDirectionOfPeg
+        );
+        assertEq(penalty, 0);
+
+    }
+
 /*
     function testCalculateStalkPenaltyUpwardsToZero() public {
         int256 beforeOverallDeltaB = -100;

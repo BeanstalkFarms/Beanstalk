@@ -255,12 +255,17 @@ library LibConvert {
         
         // first check overall convert capacity, if none remaining then full penalty for amount in direction of peg
         if (convertCap.overallConvertCapacityUsed >= overallCappedDeltaB) {
+            console.log('convertCap.overallConvertCapacityUsed >= overallCappedDeltaB');
+            console.log('overallAmountInDirectionOfPeg: ', overallAmountInDirectionOfPeg);
             return overallAmountInDirectionOfPeg;
         }
+
+        console.log('overallAmountInDirectionOfPeg: ', overallAmountInDirectionOfPeg);
         
         // update overall remaining convert capacity
         convertCap.overallConvertCapacityUsed = convertCap.overallConvertCapacityUsed.add(overallAmountInDirectionOfPeg);
 
+        console.log('convertCap.overallConvertCapacityUsed: ', convertCap.overallConvertCapacityUsed);
 
         // add to penalty how far past capacity was used
         if (convertCap.overallConvertCapacityUsed > overallCappedDeltaB) {
@@ -271,6 +276,7 @@ library LibConvert {
 
         if (inputToken != C.BEAN && inputTokenAmountInDirectionOfPeg > 0) {
             uint256 inputTokenWellCapacity = abs(LibWellMinting.cappedReservesDeltaB(inputToken));
+            console.log('inputTokenWellCapacity: ', inputTokenWellCapacity);
             convertCap.wellConvertCapacityUsed[inputToken] = convertCap.wellConvertCapacityUsed[inputToken].add(inputTokenAmountInDirectionOfPeg);
             if (convertCap.wellConvertCapacityUsed[inputToken] > inputTokenWellCapacity) {
                 cumulativePenalty = cumulativePenalty.add(convertCap.wellConvertCapacityUsed[inputToken].sub(inputTokenWellCapacity));
@@ -279,11 +285,15 @@ library LibConvert {
 
         if (outputToken != C.BEAN && outputTokenAmountInDirectionOfPeg > 0) {
             uint256 outputTokenWellCapacity = abs(LibWellMinting.cappedReservesDeltaB(outputToken));
+            console.log('outputTokenWellCapacity: ', outputTokenWellCapacity);
             convertCap.wellConvertCapacityUsed[outputToken] = convertCap.wellConvertCapacityUsed[outputToken].add(outputTokenAmountInDirectionOfPeg);
             if (convertCap.wellConvertCapacityUsed[outputToken] > outputTokenWellCapacity) {
                 cumulativePenalty = cumulativePenalty.add(convertCap.wellConvertCapacityUsed[outputToken].sub(outputTokenWellCapacity));
             }
         }
+
+        console.log('cumulativePenalty: ', cumulativePenalty);
+        console.log('overallAmountInDirectionOfPeg: ', overallAmountInDirectionOfPeg);
 
         if (cumulativePenalty > overallAmountInDirectionOfPeg) {
             cumulativePenalty = overallAmountInDirectionOfPeg; // perhaps not necessary to cap since stalkPenaltyBdv is capped by bdvConverted?
