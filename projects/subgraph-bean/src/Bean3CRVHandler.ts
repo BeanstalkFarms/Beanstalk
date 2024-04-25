@@ -23,6 +23,7 @@ import {
 } from "./utils/Pool";
 import { BeanstalkPrice } from "../generated/Bean3CRV/BeanstalkPrice";
 import { checkBeanCross } from "./utils/Cross";
+import { BeanstalkPrice_try_price } from "./utils/price/BeanstalkPrice";
 
 export function handleTokenExchange(event: TokenExchange): void {
   handleSwap(
@@ -97,17 +98,6 @@ function handleLiquidityChange(
     return;
   }
 
-  let beanPrice = toDecimal(curve.value.price);
-
-  // Attempt to pull from Beanstalk Price contract first for the overall Bean price update
-  let beanstalkPrice = BeanstalkPrice.bind(BEANSTALK_PRICE);
-  let beanstalkQuery = beanstalkPrice.try_price();
-  if (!beanstalkQuery.reverted) {
-    beanPrice = toDecimal(beanstalkQuery.value.price);
-  }
-
-  let bean = loadBean(BEAN_ERC20.toHexString());
-  let oldBeanPrice = bean.price;
   let startingLiquidity = getPoolLiquidityUSD(poolAddress, blockNumber);
 
   let newPrice = toDecimal(curve.value.price);
@@ -125,13 +115,10 @@ function handleLiquidityChange(
   }
 
   setPoolReserves(poolAddress, curve.value.balances, timestamp, blockNumber);
-  updateBeanSupplyPegPercent(blockNumber);
-
-  updateBeanValues(BEAN_ERC20.toHexString(), timestamp, beanPrice, ZERO_BI, volumeBean, volumeUSD, deltaLiquidityUSD);
-
   updatePoolValues(poolAddress, timestamp, blockNumber, volumeBean, volumeUSD, deltaLiquidityUSD, curve.value.deltaB);
   updatePoolPrice(poolAddress, timestamp, blockNumber, newPrice);
-  checkBeanCross(BEAN_ERC20.toHexString(), timestamp, blockNumber, oldBeanPrice, beanPrice);
+
+  updateBeanStats(poolAddress, toDecimal(curve.value.price), volumeBean, volumeUSD, deltaLiquidityUSD, timestamp, blockNumber);
 }
 
 function handleSwap(
@@ -151,17 +138,6 @@ function handleSwap(
     return;
   }
 
-  let beanPrice = toDecimal(curve.value.price);
-
-  // Attempt to pull from Beanstalk Price contract first for the overall Bean price update
-  let beanstalkPrice = BeanstalkPrice.bind(BEANSTALK_PRICE);
-  let beanstalkQuery = beanstalkPrice.try_price();
-  if (!beanstalkQuery.reverted) {
-    beanPrice = toDecimal(beanstalkQuery.value.price);
-  }
-
-  let bean = loadBean(BEAN_ERC20.toHexString());
-  let oldBeanPrice = bean.price;
   let startingLiquidity = getPoolLiquidityUSD(poolAddress, blockNumber);
 
   let newPrice = toDecimal(curve.value.price);
@@ -176,11 +152,35 @@ function handleSwap(
   let deltaLiquidityUSD = toDecimal(curve.value.liquidity).minus(startingLiquidity);
 
   setPoolReserves(poolAddress, curve.value.balances, timestamp, blockNumber);
-  updateBeanSupplyPegPercent(blockNumber);
-
-  updateBeanValues(BEAN_ERC20.toHexString(), timestamp, beanPrice, ZERO_BI, volumeBean, volumeUSD, deltaLiquidityUSD);
-
   updatePoolValues(poolAddress, timestamp, blockNumber, volumeBean, volumeUSD, deltaLiquidityUSD, curve.value.deltaB);
   updatePoolPrice(poolAddress, timestamp, blockNumber, newPrice);
-  checkBeanCross(BEAN_ERC20.toHexString(), timestamp, blockNumber, oldBeanPrice, beanPrice);
+
+  updateBeanStats(poolAddress, toDecimal(curve.value.price), volumeBean, volumeUSD, deltaLiquidityUSD, timestamp, blockNumber);
+}
+
+// Update bean information if the pool is still whitelisted
+function updateBeanStats(
+  poolAddress: string,
+  poolPrice: BigDecimal,
+  volumeBean: BigInt,
+  volumeUSD: BigDecimal,
+  deltaLiquidityUSD: BigDecimal,
+  timestamp: BigInt,
+  blockNumber: BigInt
+) {
+  let bean = loadBean(BEAN_ERC20.toHexString());
+  if (bean.pools.indexOf(poolAddress) >= 0) {
+    let oldBeanPrice = bean.price;
+    let beanPrice = poolPrice;
+
+    // Attempt to pull from Beanstalk Price contract for the overall Bean price
+    let beanstalkPrice = BeanstalkPrice_try_price(BEAN_ERC20, blockNumber);
+    if (!beanstalkPrice.reverted) {
+      beanPrice = toDecimal(beanstalkPrice.value.price);
+    }
+
+    updateBeanSupplyPegPercent(blockNumber);
+    updateBeanValues(BEAN_ERC20.toHexString(), timestamp, beanPrice, ZERO_BI, volumeBean, volumeUSD, deltaLiquidityUSD);
+    checkBeanCross(BEAN_ERC20.toHexString(), timestamp, blockNumber, oldBeanPrice, beanPrice);
+  }
 }
