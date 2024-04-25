@@ -31,7 +31,8 @@ library LibChop {
     ) internal returns (address underlyingToken, uint256 underlyingAmount) {
         AppStorage storage s = LibAppStorage.diamondStorage();
         underlyingAmount = LibUnripe.getPenalizedUnderlying(unripeToken, amount, supply);
-        LibUnripe.decrementUnderlying(unripeToken, underlyingAmount);
+        // remove the underlying amount and decrease s.recapitalized if token is unripe LP
+        LibUnripe.removeUnderlying(unripeToken, underlyingAmount);
         underlyingToken = s.u[unripeToken].underlyingToken;
     }
 }
