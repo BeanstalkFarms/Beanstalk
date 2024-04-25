@@ -8,7 +8,7 @@ import {
   TokenExchangeUnderlying
 } from "../generated/Bean3CRV/Bean3CRV";
 import { CurvePrice } from "../generated/Bean3CRV/CurvePrice";
-import { loadBean, updateBeanSupplyPegPercent, updateBeanValues } from "./utils/Bean";
+import { loadBean, updateBeanAfterPoolSwap, updateBeanSupplyPegPercent, updateBeanValues } from "./utils/Bean";
 import { BEANSTALK_PRICE, BEAN_ERC20, CRV3_POOL, CURVE_PRICE } from "../../subgraph-core/utils/Constants";
 import { toDecimal, ZERO_BD, ZERO_BI } from "../../subgraph-core/utils/Decimals";
 import {
@@ -118,7 +118,7 @@ function handleLiquidityChange(
   updatePoolValues(poolAddress, timestamp, blockNumber, volumeBean, volumeUSD, deltaLiquidityUSD, curve.value.deltaB);
   updatePoolPrice(poolAddress, timestamp, blockNumber, newPrice);
 
-  updateBeanStats(poolAddress, toDecimal(curve.value.price), volumeBean, volumeUSD, deltaLiquidityUSD, timestamp, blockNumber);
+  updateBeanAfterPoolSwap(poolAddress, toDecimal(curve.value.price), volumeBean, volumeUSD, deltaLiquidityUSD, timestamp, blockNumber);
 }
 
 function handleSwap(
@@ -155,32 +155,5 @@ function handleSwap(
   updatePoolValues(poolAddress, timestamp, blockNumber, volumeBean, volumeUSD, deltaLiquidityUSD, curve.value.deltaB);
   updatePoolPrice(poolAddress, timestamp, blockNumber, newPrice);
 
-  updateBeanStats(poolAddress, toDecimal(curve.value.price), volumeBean, volumeUSD, deltaLiquidityUSD, timestamp, blockNumber);
-}
-
-// Update bean information if the pool is still whitelisted
-function updateBeanStats(
-  poolAddress: string,
-  poolPrice: BigDecimal,
-  volumeBean: BigInt,
-  volumeUSD: BigDecimal,
-  deltaLiquidityUSD: BigDecimal,
-  timestamp: BigInt,
-  blockNumber: BigInt
-) {
-  let bean = loadBean(BEAN_ERC20.toHexString());
-  if (bean.pools.indexOf(poolAddress) >= 0) {
-    let oldBeanPrice = bean.price;
-    let beanPrice = poolPrice;
-
-    // Attempt to pull from Beanstalk Price contract for the overall Bean price
-    let beanstalkPrice = BeanstalkPrice_try_price(BEAN_ERC20, blockNumber);
-    if (!beanstalkPrice.reverted) {
-      beanPrice = toDecimal(beanstalkPrice.value.price);
-    }
-
-    updateBeanSupplyPegPercent(blockNumber);
-    updateBeanValues(BEAN_ERC20.toHexString(), timestamp, beanPrice, ZERO_BI, volumeBean, volumeUSD, deltaLiquidityUSD);
-    checkBeanCross(BEAN_ERC20.toHexString(), timestamp, blockNumber, oldBeanPrice, beanPrice);
-  }
+  updateBeanAfterPoolSwap(poolAddress, toDecimal(curve.value.price), volumeBean, volumeUSD, deltaLiquidityUSD, timestamp, blockNumber);
 }

@@ -11,8 +11,9 @@ import {
 } from "../../../subgraph-core/utils/Constants";
 import { dayFromTimestamp, hourFromTimestamp } from "../../../subgraph-core/utils/Dates";
 import { ONE_BD, toDecimal, ZERO_BD, ZERO_BI } from "../../../subgraph-core/utils/Decimals";
-import { getV1Crosses } from "./Cross";
+import { checkBeanCross, getV1Crosses } from "./Cross";
 import { loadOrCreatePool, loadOrCreatePoolHourlySnapshot } from "./Pool";
+import { BeanstalkPrice_try_price, BeanstalkPriceResult } from "./price/BeanstalkPrice";
 
 export function loadBean(token: string): Bean {
   let bean = Bean.load(token);
@@ -211,6 +212,36 @@ export function updateBeanSupplyPegPercent(blockNumber: BigInt): void {
     }
     bean.supplyInPegLP = toDecimal(pegSupply).div(toDecimal(bean.supply));
     bean.save();
+  }
+}
+
+// Update bean information if the pool is still whitelisted
+export function updateBeanAfterPoolSwap(
+  poolAddress: string,
+  poolPrice: BigDecimal,
+  volumeBean: BigInt,
+  volumeUSD: BigDecimal,
+  deltaLiquidityUSD: BigDecimal,
+  timestamp: BigInt,
+  blockNumber: BigInt,
+  priceContractResult: BeanstalkPriceResult | null = null
+): void {
+  let bean = loadBean(BEAN_ERC20.toHexString());
+  if (bean.pools.indexOf(poolAddress) >= 0) {
+    let oldBeanPrice = bean.price;
+    let beanPrice = poolPrice;
+
+    // Get overall price from price contract if a result was not already provided
+    if (priceContractResult === null) {
+      priceContractResult = BeanstalkPrice_try_price(BEAN_ERC20, blockNumber);
+    }
+    if (!priceContractResult.reverted) {
+      beanPrice = toDecimal(priceContractResult.value.price);
+    }
+
+    updateBeanSupplyPegPercent(blockNumber);
+    updateBeanValues(BEAN_ERC20.toHexString(), timestamp, beanPrice, ZERO_BI, volumeBean, volumeUSD, deltaLiquidityUSD);
+    checkBeanCross(BEAN_ERC20.toHexString(), timestamp, blockNumber, oldBeanPrice, beanPrice);
   }
 }
 
