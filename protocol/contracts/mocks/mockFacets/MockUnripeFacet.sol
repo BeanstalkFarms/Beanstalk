@@ -20,6 +20,10 @@ contract MockUnripeFacet is UnripeFacet {
         s.u[unripeToken].merkleRoot = root;
     }
 
+    function getRecapitalized() external view returns (uint256) {
+        return s.recapitalized;
+    }
+
     function addUnderlying(address unripeToken, uint256 amount)
         external
         payable

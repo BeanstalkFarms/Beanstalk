@@ -557,7 +557,7 @@ describe('Unripe Convert', function () {
   });
 
   // Unripe to Ripe test
-  describe.only('convert unripe beans to beans', async function () {
+  describe('convert unripe beans to beans', async function () {
 
     beforeEach(async function () {
       // GO TO SEASON 10

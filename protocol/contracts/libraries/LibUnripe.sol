@@ -13,7 +13,7 @@ import {Call, IWell} from "contracts/interfaces/basin/IWell.sol";
 import {IWellFunction} from "contracts/interfaces/basin/IWellFunction.sol";
 import {LibLockedUnderlying} from "./LibLockedUnderlying.sol";
 import {LibFertilizer} from "./LibFertilizer.sol";
-
+import "hardhat/console.sol";
 /**
  * @title LibUnripe
  * @author Publius
@@ -154,8 +154,17 @@ library LibUnripe {
         require(isUnripe(unripeToken), "not vesting");
         AppStorage storage s = LibAppStorage.diamondStorage();
         uint256 usdValueRaised = s.recapitalized;
-	    uint256 totalUsdNeeded = LibFertilizer.getTotalRecapDollarsNeeded();
+        // !!!!!!!!!!!!!! getTotalRecapDollarsNeeded() queries for the total urLP supply which is burned in UnripeFacet.sol
+        // TODO: Modify getTotalRecapDollarsNeeded() to accept the total LP supply as a parameter?
+        // note: Supply here is the total supply querited before the burn
+	    uint256 totalUsdNeeded = unripeToken == C.UNRIPE_LP ? LibFertilizer.getTotalRecapDollarsNeeded(supply) : LibFertilizer.getTotalRecapDollarsNeeded();
         uint256 currentRipeUnderlying = s.u[unripeToken].balanceOfUnderlying;
+        console.log("currentRipeUnderlying", currentRipeUnderlying);
+        console.log("usdValueRaised", usdValueRaised);
+        console.log("totalUsdNeeded", totalUsdNeeded);
+        console.log("amount", amount);
+        console.log("supply", supply);
+        console.log("s.recapitalized", s.recapitalized);
         // total redeemable * %DollarRecapitalized^2 * share of unripe tokens
         // redeem = totalRipeUnderlying *  (usdValueRaised/totalUsdNeeded)^2 * UnripeAmountIn/UnripeSupply;
         // But totalRipeUnderlying = CurrentUnderlying * totalUsdNeeded/usdValueRaised to get the total underlying

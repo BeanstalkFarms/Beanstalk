@@ -351,6 +351,75 @@ describe('Unripe', function () {
       )
     })
   })
+
+
+  // ### Example 3: balanceOfUnderlying Max ≠ Unripe Total Supply, TotalSupply > 100
+  // When all fertilizer is sold, balanceOfUnderlying is 100 tokens.
+  // Total Supply of unripeLP is 189. Assume 1 Fertilizer increases balanceOfUnderlying by 1 token.
+  // If 25% of Fertilizer is sold, balanceOfUnderlying should be 25. 
+  // We want the user to redeem 25%^2 = 6.25% of the underlying.
+  // If ~half the supply was chopped, they should get 3.30 tokens.
+  // formula: redeem = currentRipeUnderlying * (usdValueRaised/totalUsdNeeded) * UnripeAmountIn/UnripeSupply;
+  // redeem = 25 * 0.25 * 100/189 ~= 3.30 --> slighly more than with urBean due to small supply discrepancy
+  // since supply is smaller the user is entitled to more underlying per UnripeLP
+
+  describe('LP chop half the supply, balanceOfUnderlying Max ≠ Unripe Total Supply, TotalSupply > 100, fert 25% sold', async function () {
+    beforeEach(async function () {
+      // totalDollarsneeded = 47
+      await this.unripeLP.mint(userAddress, to6('189'))
+      await this.unripe.connect(owner).addUnderlying(
+        UNRIPE_LP,
+        to6('25') // balanceOfUnderlying is 25
+      )            
+                                                      // s.recapitalized=25
+      await this.fertilizer.connect(user).setPenaltyParams(to6('25'), to6('100'))
+
+      // remaining recapitalization = totalDollarsNeeded - s.recapitalized = 100 - 25 = 75
+      expect(await this.fertilizer.remainingRecapitalization()).to.be.equal(to6('75'))
+      // s.recapitalized = 25
+      expect(await this.unripe.getRecapitalized()).to.be.equal(to6('25'))
+
+      // user chops ~ half the unripe LP supply
+      this.result = await this.unripe.connect(user).chop(UNRIPE_LP, to6('100'), EXTERNAL, EXTERNAL)
+
+    })
+
+    it('getters', async function () {
+      expect(await this.unripe.getUnderlyingPerUnripeToken(UNRIPE_LP)).to.be.equal(to6('0.243742'))
+      expect(await this.unripe.getPenalty(UNRIPE_LP)).to.be.equal(to6('0.112500'))
+      expect(await this.unripe.getPenalizedUnderlying(UNRIPE_LP, to6('1'))).to.be.equal(to6('0.112500'))
+      expect(await this.unripe.getUnderlying(UNRIPE_LP, to6('1'))).to.be.equal(to6('0.243742'))
+      expect(await this.unripe.balanceOfUnderlying(UNRIPE_LP, userAddress)).to.be.equal(to6('21.693122'))
+      // 89 * 0.112500 = 10.0125
+      expect(await this.unripe.balanceOfPenalizedUnderlying(UNRIPE_LP, userAddress)).to.be.equal(to6('10.012586'))      
+      expect(await this.unripe.getRecapPaidPercent()).to.be.equal(to6('0.01'))
+      expect(await this.unripe.getTotalUnderlying(UNRIPE_LP)).to.be.equal(to6('21.693122'))
+      expect(await this.unripe.isUnripe(UNRIPE_LP)).to.be.equal(true)
+    })
+
+    it('reduces s.recapitalized proportionally to the amount LP chopped', async function () {
+      // recapitalization has reduced proportionally to the dollar amount of unripe LP chopped
+      expect(await this.unripe.getRecapitalized()).to.be.equal(to6('21.693122'))
+      expect(await this.fertilizer.remainingRecapitalization()).to.be.equal(to6('25.306878'))
+    })
+
+    it('changes balaces', async function () {
+      expect(await this.unripeLP.balanceOf(userAddress)).to.be.equal(to6('89'))
+      expect(await this.bean.balanceOf(userAddress)).to.be.equal(to6('3.306878'));
+      expect(await this.unripeLP.totalSupply()).to.be.equal(to6('89'));
+      // 25 underlying at the start - 3.306878 redeemed = 21.693122
+      expect(await this.bean.balanceOf(this.unripe.address)).to.be.equal(to6('21.693122'))
+    })
+
+    it('emits an event', async function () {
+      await expect(this.result).to.emit(this.unripe, 'Chop').withArgs(
+        user.address,
+        UNRIPE_LP,
+        to6('100'),
+        to6('3.306878')
+      )
+    })
+  })
   
   // Same as above but with different transfer modes used
   describe('chop, different transfer modes, half the supply, balanceOfUnderlying Max ≠ Unripe Total Supply, TotalSupply > 100, fert 25% sold', async function () {

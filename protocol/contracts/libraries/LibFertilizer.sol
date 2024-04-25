@@ -239,6 +239,20 @@ library LibFertilizer {
     }
 
     /**
+     * @dev Returns the total dollar amount needed to recapitalize Beanstalk
+     * for the supply of Unripe LP.
+     * @return totalDollars The total dollar amount.
+     */
+    function getTotalRecapDollarsNeeded(uint256 urLPsupply) internal view returns(uint256) {
+	    uint256 totalDollars = C
+            .dollarPerUnripeLP()
+            .mul(urLPsupply)
+            .div(DECIMALS);
+        totalDollars = totalDollars / 1e6 * 1e6; // round down to nearest USDC
+        return totalDollars;
+    }
+    
+    /**
      * @dev Removes the first fertilizer id in the queue.
      * fFirst is the lowest active Fertilizer Id (see AppStorage)
      * (start of linked list that is stored by nextFid).
