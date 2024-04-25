@@ -14,6 +14,7 @@ import { ONE_BD, toDecimal, ZERO_BD, ZERO_BI } from "../../../subgraph-core/util
 import { checkBeanCross, getV1Crosses } from "./Cross";
 import { loadOrCreatePool, loadOrCreatePoolHourlySnapshot } from "./Pool";
 import { BeanstalkPrice_try_price, BeanstalkPriceResult } from "./price/BeanstalkPrice";
+import { calcLockedBeans } from "./LockedBeans";
 
 export function loadBean(token: string): Bean {
   let bean = Bean.load(token);
@@ -21,6 +22,7 @@ export function loadBean(token: string): Bean {
     bean = new Bean(token);
     bean.supply = ZERO_BI;
     bean.marketCap = ZERO_BD;
+    bean.lockedBeans = ZERO_BI;
     bean.supplyInPegLP = ZERO_BD;
     bean.volume = ZERO_BI;
     bean.volumeUSD = ZERO_BD;
@@ -45,6 +47,7 @@ export function loadOrCreateBeanHourlySnapshot(token: string, timestamp: BigInt,
     snapshot.bean = bean.id;
     snapshot.supply = bean.supply;
     snapshot.marketCap = bean.marketCap;
+    snapshot.lockedBeans = bean.lockedBeans;
     snapshot.supplyInPegLP = bean.supplyInPegLP;
     snapshot.instantaneousDeltaB = ZERO_BI;
     snapshot.twaDeltaB = ZERO_BI;
@@ -75,6 +78,7 @@ export function loadOrCreateBeanDailySnapshot(token: string, timestamp: BigInt):
     snapshot.bean = bean.id;
     snapshot.supply = bean.supply;
     snapshot.marketCap = bean.marketCap;
+    snapshot.lockedBeans = bean.lockedBeans;
     snapshot.supplyInPegLP = bean.supplyInPegLP;
     snapshot.instantaneousDeltaB = ZERO_BI;
     snapshot.twaDeltaB = ZERO_BI;
@@ -123,6 +127,7 @@ export function updateBeanValues(
   beanHourly.price = bean.price;
   beanHourly.supply = bean.supply;
   beanHourly.marketCap = bean.marketCap;
+  beanHourly.lockedBeans = bean.lockedBeans;
   beanHourly.supplyInPegLP = bean.supplyInPegLP;
   beanHourly.deltaVolume = beanHourly.deltaVolume.plus(deltaVolume);
   beanHourly.deltaVolumeUSD = beanHourly.deltaVolumeUSD.plus(deltaVolumeUSD);
@@ -135,6 +140,7 @@ export function updateBeanValues(
   beanDaily.price = bean.price;
   beanDaily.supply = bean.supply;
   beanDaily.marketCap = bean.marketCap;
+  beanDaily.lockedBeans = bean.lockedBeans;
   beanDaily.supplyInPegLP = bean.supplyInPegLP;
   beanDaily.deltaVolume = beanDaily.deltaVolume.plus(deltaVolume);
   beanDaily.deltaVolumeUSD = beanDaily.deltaVolumeUSD.plus(deltaVolumeUSD);
@@ -210,7 +216,8 @@ export function updateBeanSupplyPegPercent(blockNumber: BigInt): void {
       let pool = loadOrCreatePool(bean.pools[i], blockNumber);
       pegSupply = pegSupply.plus(pool.reserves[0]);
     }
-    bean.supplyInPegLP = toDecimal(pegSupply).div(toDecimal(bean.supply));
+    bean.lockedBeans = calcLockedBeans();
+    bean.supplyInPegLP = toDecimal(pegSupply).div(toDecimal(bean.supply.minus(bean.lockedBeans)));
     bean.save();
   }
 }

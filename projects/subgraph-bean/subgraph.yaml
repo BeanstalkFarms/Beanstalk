@@ -96,6 +96,8 @@ dataSources:
       abis:
         - name: Beanstalk
           file: ../subgraph-core/abis/Beanstalk/Beanstalk-Replanted.json
+        - name: SeedGauge
+          file: ../subgraph-core/abis/Beanstalk/Beanstalk-BIP42.json
         - name: PreReplant
           file: ../subgraph-core/abis/Beanstalk/Beanstalk-Pre-Replant.json
         - name: BeanstalkPrice
@@ -115,6 +117,10 @@ dataSources:
           handler: handleSunrise
         - event: DewhitelistToken(indexed address)
           handler: dewhitelistToken
+        - event: Reward(indexed uint32,uint256,uint256,uint256)
+          handler: handleRewardMint
+        - event: Chop(indexed address,indexed address,uint256,uint256)
+          handler: handleChop
       file: ./src/BeanstalkHandler.ts
   - kind: ethereum/contract
     name: BeanUniswapV2Pair

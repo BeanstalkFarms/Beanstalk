@@ -1,6 +1,6 @@
 import { Address, BigInt } from "@graphprotocol/graph-ts";
-import { DewhitelistToken, Sunrise } from "../generated/Beanstalk/Beanstalk";
-import { getBeanTokenAddress, loadBean, updateBeanSeason, updateBeanTwa, updateBeanValues } from "./utils/Bean";
+import { Chop, DewhitelistToken, Reward, Sunrise } from "../generated/Beanstalk/Beanstalk";
+import { getBeanTokenAddress, loadBean, updateBeanSeason, updateBeanSupplyPegPercent, updateBeanTwa, updateBeanValues } from "./utils/Bean";
 import { loadOrCreatePool, updatePoolPrice, updatePoolSeason, updatePoolValues } from "./utils/Pool";
 import { BeanstalkPrice } from "../generated/Beanstalk/BeanstalkPrice";
 import {
@@ -134,4 +134,18 @@ export function handleWellOracle(event: WellOracle): void {
   setTwaLast(event.params.well.toHexString(), decodeCumulativeWellReserves(event.params.cumulativeReserves), event.block.timestamp);
   setWellTwa(event.params.well.toHexString(), event.params.deltaB, event.block.timestamp, event.block.number);
   updateBeanTwa(event.block.timestamp, event.block.number);
+}
+
+// LOCKED BEANS //
+
+// Locked beans are a function of the number of unripe assets, and the chop rate.
+// In addition to during a swap, it should be updated according to chops, bean mints, and fertilizer purchases.
+// The result of fertilizer purchases will be included by the AddLiquidity event
+
+export function handleChop(event: Chop): void {
+  updateBeanSupplyPegPercent(event.block.number);
+}
+
+export function handleReward(event: Reward): void {
+  updateBeanSupplyPegPercent(event.block.number);
 }

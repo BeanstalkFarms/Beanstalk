@@ -22,6 +22,9 @@ type Bean @entity {
   "Current market cap"
   marketCap: BigDecimal!
 
+  "Amount of the supply which is considered Locked Beans (untradeable due to chop rate)"
+  lockedBeans: BigInt!
+
   "Percent of supply in LP used for peg maintenance"
   supplyInPegLP: BigDecimal!
 
@@ -68,6 +71,9 @@ type BeanHourlySnapshot @entity {
 
   "Current market cap"
   marketCap: BigDecimal!
+
+  "Amount of the supply which is considered Locked Beans (untradeable due to chop rate)"
+  lockedBeans: BigInt!
 
   "Percent of supply in LP used for peg maintenance"
   supplyInPegLP: BigDecimal!
@@ -127,6 +133,8 @@ type BeanDailySnapshot @entity {
   supply: BigInt!
   marketCap: BigDecimal!
 
+  "Amount of the supply which is considered Locked Beans (untradeable due to chop rate)"
+  lockedBeans: BigInt!
   "Percent of supply in LP used for peg maintenance"
   supplyInPegLP: BigDecimal!
   "Instantaneous deltaB across all whitelisted pools"
