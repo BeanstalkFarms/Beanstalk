@@ -18,7 +18,6 @@ import {LibGerminate} from "contracts/libraries/Silo/LibGerminate.sol";
 import {LibWhitelistedTokens} from "contracts/libraries/Silo/LibWhitelistedTokens.sol";
 import {LibTractor} from "contracts/libraries/LibTractor.sol";
 
-
 import "contracts/libraries/LibStrings.sol";
 /**
  * @title LibTokenSilo
@@ -38,7 +37,6 @@ library LibTokenSilo {
     using LibSafeMathSigned96 for int96;
 
     uint256 constant PRECISION = 1e6; // increased precision from to silo v3.1.
-
 
     //////////////////////// ENUM ////////////////////////
     /**
@@ -161,9 +159,9 @@ library LibTokenSilo {
         germinate.deposited[token].bdv = germinate.deposited[token].bdv.sub(bdv.toUint128());
 
         emit LibGerminate.TotalGerminatingBalanceChanged(
-            LibGerminate.getSeasonGerminationState() == germ ? 
-                s.season.current : 
-                s.season.current - 1,
+            LibGerminate.getSeasonGerminationState() == germ
+                ? s.season.current
+                : s.season.current - 1,
             token,
             -int256(amount),
             -int256(bdv)
@@ -195,9 +193,9 @@ library LibTokenSilo {
         }
 
         emit LibGerminate.TotalGerminatingBalanceChanged(
-            LibGerminate.getSeasonGerminationState() == germ ? 
-                s.season.current : 
-                s.season.current - 1,
+            LibGerminate.getSeasonGerminationState() == germ
+                ? s.season.current
+                : s.season.current - 1,
             token,
             0,
             int256(bdv)
@@ -281,15 +279,8 @@ library LibTokenSilo {
 
         // all new deposits will increment total germination.
         incrementTotalGerminating(token, amount, bdv, germ);
-        
-        addDepositToAccount(
-            account,
-            token,
-            stem,
-            amount,
-            bdv,
-            Transfer.emitTransferSingle
-        );
+
+        addDepositToAccount(account, token, stem, amount, bdv, Transfer.emitTransferSingle);
 
         stalk = bdv.mul(s.ss[token].stalkIssuedPerBdv);
     }
@@ -385,7 +376,7 @@ library LibTokenSilo {
         uint256 crateAmount = s.a[account].deposits[depositId].amount;
         crateBDV = s.a[account].deposits[depositId].bdv;
         // if amount is > crateAmount, check if user has a legacy deposit:
-        if (amount > crateAmount) { 
+        if (amount > crateAmount) {
             // get the absolute stem value.
             uint256 absStem = stem > 0 ? uint256(stem) : uint256(-stem);
             // only stems with modulo 1e6 can have a legacy deposit.
@@ -409,11 +400,11 @@ library LibTokenSilo {
             uint256 updatedBDV = crateBDV.sub(removedBDV);
             uint256 updatedAmount = crateAmount.sub(amount);
 
-            // SafeCast unnecessary b/c updatedAmount <= crateAmount and updatedBDV <= crateBDV, 
+            // SafeCast unnecessary b/c updatedAmount <= crateAmount and updatedBDV <= crateBDV,
             // which are both <= type(uint128).max
             s.a[account].deposits[depositId].amount = uint128(updatedAmount);
             s.a[account].deposits[depositId].bdv = uint128(updatedBDV);
-            
+
             s.a[account].mowStatuses[token].bdv = s.a[account].mowStatuses[token].bdv.sub(
                 uint128(removedBDV)
             );
@@ -517,9 +508,7 @@ library LibTokenSilo {
     /**
      * @dev returns the cumulative stalk per BDV (stemTip) for a whitelisted token.
      */
-    function stemTipForToken(
-        address token
-    ) internal view returns (int96 _stemTip) {
+    function stemTipForToken(address token) internal view returns (int96 _stemTip) {
         AppStorage storage s = LibAppStorage.diamondStorage();
         // SafeCast unnecessary because all casted variables are types smaller that int96.
         _stemTip =
@@ -602,15 +591,15 @@ library LibTokenSilo {
 
     /**
      * @notice internal logic for migrating a legacy deposit.
-     * @dev 
+     * @dev
      */
     function migrateLegacyStemDeposit(
-        address account, 
+        address account,
         address token,
         int96 newStem,
         uint256 crateAmount,
         uint256 crateBdv
-    ) internal returns (uint256, uint256) { 
+    ) internal returns (uint256, uint256) {
         AppStorage storage s = LibAppStorage.diamondStorage();
         // divide the newStem by 1e6 to get the legacy stem.
         uint256 legacyDepositId = LibBytes.packAddressAndStem(token, newStem.div(1e6));
@@ -621,21 +610,9 @@ library LibTokenSilo {
         delete s.a[account].legacyV3Deposits[legacyDepositId];
 
         // Emit burn events.
-        emit TransferSingle(
-            LibTractor._user(),
-            account,
-            address(0),
-            legacyDepositId,
-            legacyAmount
-        );
+        emit TransferSingle(LibTractor._user(), account, address(0), legacyDepositId, legacyAmount);
 
-        emit RemoveDeposit(
-            account,
-            token,
-            newStem.div(1e6),
-            legacyAmount,
-            legacyBdv
-        );
+        emit RemoveDeposit(account, token, newStem.div(1e6), legacyAmount, legacyBdv);
 
         // Emit mint events.
         emit TransferSingle(
@@ -646,13 +623,7 @@ library LibTokenSilo {
             legacyAmount
         );
 
-        emit AddDeposit(
-            account,
-            token,
-            newStem,
-            legacyAmount,
-            legacyBdv
-        );
+        emit AddDeposit(account, token, newStem, legacyAmount, legacyBdv);
 
         return (crateAmount, crateBdv);
     }

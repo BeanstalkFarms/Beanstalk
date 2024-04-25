@@ -24,23 +24,13 @@ library LibChopConvert {
      * @return amountOut The amount of Ripe Tokens received after the Convert.
      * @return amountIn The amount of Unripe Tokens to be converted.
      */
-    function convertUnripeToRipe(bytes memory convertData)
-        internal
-        returns (
-            address tokenOut,
-            address tokenIn,
-            uint256 amountOut,
-            uint256 amountIn
-        )
-    {
+    function convertUnripeToRipe(
+        bytes memory convertData
+    ) internal returns (address tokenOut, address tokenIn, uint256 amountOut, uint256 amountIn) {
         // Decode convertdata
         (amountIn, tokenIn) = convertData.lambdaConvert();
-       
-        (tokenOut, amountOut) = LibChop.chop(
-            tokenIn, 
-            amountIn, 
-            IBean(tokenIn).totalSupply()
-        );
+
+        (tokenOut, amountOut) = LibChop.chop(tokenIn, amountIn, IBean(tokenIn).totalSupply());
 
         IBean(tokenIn).burn(amountIn);
     }
@@ -50,12 +40,11 @@ library LibChopConvert {
      * @param tokenIn The address of the unripe token converted
      * @param amountIn The amount of the unripe asset converted
      */
-    function getConvertedUnderlyingOut(address tokenIn, uint256 amountIn) internal view returns(uint256 amount) {
+    function getConvertedUnderlyingOut(
+        address tokenIn,
+        uint256 amountIn
+    ) internal view returns (uint256 amount) {
         // tokenIn == unripe bean address
-        amount = LibUnripe._getPenalizedUnderlying(
-            tokenIn,
-            amountIn, 
-            IBean(tokenIn).totalSupply()
-        );
+        amount = LibUnripe._getPenalizedUnderlying(tokenIn, amountIn, IBean(tokenIn).totalSupply());
     }
 }

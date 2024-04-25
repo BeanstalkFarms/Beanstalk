@@ -23,7 +23,11 @@ import {ERC20Permit} from "./ERC20Permit.sol";
  * roles, as well as the default admin role, which will let it grant both minter
  * and pauser roles to other accounts.
  */
-contract BeanstalkERC20 is ERC20Permit, ERC20Burnable, AccessControl { // removed Context,
+contract BeanstalkERC20 is
+    ERC20Permit,
+    ERC20Burnable,
+    AccessControl // removed Context,
+{
     bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
 
     /**
@@ -31,10 +35,11 @@ contract BeanstalkERC20 is ERC20Permit, ERC20Burnable, AccessControl { // remove
      * account that deploys the contract.
      * See {ERC20-constructor}.
      */
-    constructor(address admin, string memory name, string memory symbol) 
-        ERC20(name, symbol) 
-        ERC20Permit(name) 
-    {
+    constructor(
+        address admin,
+        string memory name,
+        string memory symbol
+    ) ERC20(name, symbol) ERC20Permit(name) {
         _setupRole(DEFAULT_ADMIN_ROLE, admin);
         _setupRole(MINTER_ROLE, admin);
     }

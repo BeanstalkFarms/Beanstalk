@@ -136,5 +136,4 @@ contract WhitelistFacet is WhitelistedTokens {
             optimalPercentDepositedBdv
         );
     }
-    
 }

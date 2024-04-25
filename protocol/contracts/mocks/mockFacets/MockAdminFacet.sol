@@ -13,10 +13,9 @@ import {LibCurveMinting} from "contracts/libraries/Minting/LibCurveMinting.sol";
 /**
  * @author Publius
  * @title MockAdminFacet provides various mock functionality
-**/
+ **/
 
 contract MockAdminFacet is Sun {
-
     function mintBeans(address to, uint256 amount) external {
         C.bean().mint(to, amount);
     }
@@ -53,13 +52,13 @@ contract MockAdminFacet is Sun {
         updateStart();
         s.season.current += 1;
         C.bean().mint(address(this), amount);
-        rewardToFertilizer(amount*3);
+        rewardToFertilizer(amount * 3);
     }
 
     function updateStart() private {
         SeasonFacet sf = SeasonFacet(address(this));
         int256 sa = s.season.current - sf.seasonTime();
-        if (sa >= 0) s.season.start -= 3600 * (uint256(sa)+1);
+        if (sa >= 0) s.season.start -= 3600 * (uint256(sa) + 1);
     }
 
     function update3CRVOracle() public {
@@ -70,16 +69,15 @@ contract MockAdminFacet is Sun {
         s.season.stemScaleSeason = season;
     }
 
-    function updateStems() public { 
+    function updateStems() public {
         address[] memory siloTokens = LibWhitelistedTokens.getSiloTokens();
         for (uint256 i = 0; i < siloTokens.length; i++) {
             s.ss[siloTokens[i]].milestoneStem = int96(s.ss[siloTokens[i]].milestoneStem * 1e6);
         }
     }
 
-    function upgradeStems() public { 
+    function upgradeStems() public {
         updateStemScaleSeason(uint16(s.season.current));
         updateStems();
     }
-
 }

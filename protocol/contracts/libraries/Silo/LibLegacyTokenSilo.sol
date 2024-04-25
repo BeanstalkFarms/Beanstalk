@@ -259,7 +259,6 @@ library LibLegacyTokenSilo {
         uint32[][] calldata seasons,
         uint256[][] calldata amounts
     ) internal returns (uint256) {
-        
         // Validates whether a user needs to perform migration.
         checkForMigration(account);
 
@@ -390,10 +389,7 @@ library LibLegacyTokenSilo {
             // emit the stalk variance.
             // all deposits in siloV2 are not germinating.
             if (currentStalkDiff > 0) {
-                LibSilo.burnActiveStalk(
-                    account,
-                    currentStalkDiff
-                );
+                LibSilo.burnActiveStalk(account, currentStalkDiff);
             }
         }
     }
@@ -492,14 +488,10 @@ library LibLegacyTokenSilo {
      * @dev placed in seperate function to avoid stack errors.
      */
     function checkForMigration(address account) internal view {
-
         // The balanceOfSeeds(account) > 0 check is necessary if someone updates their Silo
         // in the same Season as BIP execution. Such that s.a[account].lastUpdate == s.season.stemStartSeason,
         // but they have not migrated yet
         (bool needsMigration, ) = LibSilo.migrationNeeded(account);
-        require(
-            (needsMigration || balanceOfSeeds(account) > 0),
-            "no migration needed"
-        );
+        require((needsMigration || balanceOfSeeds(account) > 0), "no migration needed");
     }
 }

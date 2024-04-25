@@ -21,15 +21,12 @@ import {MockToken} from "../../mocks/MockToken.sol";
 import {Weather} from "contracts/beanstalk/sun/SeasonFacet/Weather.sol";
 import {LibIncentive} from "contracts/libraries/LibIncentive.sol";
 
-
-
 /**
  * @author Publius
- * @title InitDiamond 
+ * @title InitDiamond
  * @notice InitDiamond initializes the Beanstalk Diamond.
-**/
+ **/
 contract InitDiamond is Weather {
-
     address private constant PEG_PAIR = address(0xB4e16d0168e52d35CaCD2c6185b44281Ec28C9Dc);
 
     function init() external {
@@ -52,9 +49,9 @@ contract InitDiamond is Weather {
         s.season.withdrawSeasons = 25;
         s.season.period = C.getSeasonPeriod();
         s.season.timestamp = block.timestamp;
-        s.season.start = s.season.period > 0 ?
-            (block.timestamp / s.season.period) * s.season.period :
-            block.timestamp;
+        s.season.start = s.season.period > 0
+            ? (block.timestamp / s.season.period) * s.season.period
+            : block.timestamp;
 
         s.w.thisSowTime = type(uint32).max;
         s.w.lastSowTime = type(uint32).max;
@@ -67,10 +64,15 @@ contract InitDiamond is Weather {
         s.seedGauge.beanToMaxLpGpPerBdvRatio = 50e18; // 50%
         s.seedGauge.averageGrownStalkPerBdvPerSeason = 3e6;
 
-        emit BeanToMaxLpGpPerBdvRatioChange(s.season.current, type(uint256).max, int80(s.seedGauge.beanToMaxLpGpPerBdvRatio));
-        emit LibGauge.UpdateAverageStalkPerBdvPerSeason(s.seedGauge.averageGrownStalkPerBdvPerSeason);
+        emit BeanToMaxLpGpPerBdvRatioChange(
+            s.season.current,
+            type(uint256).max,
+            int80(s.seedGauge.beanToMaxLpGpPerBdvRatio)
+        );
+        emit LibGauge.UpdateAverageStalkPerBdvPerSeason(
+            s.seedGauge.averageGrownStalkPerBdvPerSeason
+        );
         C.bean().mint(msg.sender, LibIncentive.MAX_REWARD);
         emit LibIncentive.Incentivization(msg.sender, LibIncentive.MAX_REWARD);
     }
-
 }

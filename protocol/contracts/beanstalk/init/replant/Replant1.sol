@@ -14,15 +14,15 @@ import "../../../C.sol";
 /**
  * @author Publius
  * @title Replant1 whips the exploiter's balances.
- * The steps to whip out the exploiter's balances are as follows: 
+ * The steps to whip out the exploiter's balances are as follows:
  * 1. Remove Deposits and emit Remove event
  * 2. Decrement Total Deposited amount
  * 3. Decrement Stalk, Seed, Root balance from totals
  * 4. Reset Stalk, Seed, Root balance
- * 
+ *
  * There are two addresses involved in the Beanstalk exploit.
  * The address that proposed the BIP and the address that voted and committed the BIP
- * 
+ *
  * ------------------------------------------------------------------------------------
  * The address that proposed the BIP is:
  * 0x1c5dCdd006EA78a7E4783f9e6021C32935a10fb4
@@ -32,11 +32,11 @@ import "../../../C.sol";
  * name:    BeanDeposit
  * season:  6046
  * beans:   212858495697
- * 
+ *
  * ------------------------------------------------------------------------------------
  * The address that voted on and committed the BIP is:
  * 0x79224bC0bf70EC34F0ef56ed8251619499a59dEf
- * 
+ *
  * This address has 2 Silo Deposits to remove both in the same transaction:
  * transactionHash: 0xcd314668aaa9bbfebaf1a0bd2b6553d01dd58899c508d4729fa7311dc5d33ad7
  *
@@ -57,12 +57,7 @@ contract Replant1 {
     using SafeMath for uint256;
     AppStorageOld internal s;
 
-    event BeanRemove(
-        address indexed account,
-        uint32[] crates,
-        uint256[] crateBeans,
-        uint256 beans
-    );
+    event BeanRemove(address indexed account, uint32[] crates, uint256[] crateBeans, uint256 beans);
     event RemoveSeason(
         address indexed account,
         address indexed token,
@@ -89,12 +84,7 @@ contract Replant1 {
             EXPLOITER_SEASON,
             EXPLOITER_AMOUNT_1
         );
-        emit RemoveSeason(
-            EXPLOITER,
-            EXPLOITER_TOKEN_1,
-            EXPLOITER_SEASON,
-            EXPLOITER_AMOUNT_1
-        );
+        emit RemoveSeason(EXPLOITER, EXPLOITER_TOKEN_1, EXPLOITER_SEASON, EXPLOITER_AMOUNT_1);
 
         LibTokenSilo.removeDepositFromAccount(
             EXPLOITER,
@@ -102,12 +92,7 @@ contract Replant1 {
             EXPLOITER_SEASON,
             EXPLOITER_AMOUNT_2
         );
-        emit RemoveSeason(
-            EXPLOITER,
-            EXPLOITER_TOKEN_2,
-            EXPLOITER_SEASON,
-            EXPLOITER_AMOUNT_2
-        );
+        emit RemoveSeason(EXPLOITER, EXPLOITER_TOKEN_2, EXPLOITER_SEASON, EXPLOITER_AMOUNT_2);
 
         // LibBeanSilo.removeBeanDeposit(PROPOSER, PROPOSER_SEASON, PROPOSER_AMOUNT);
         // uint32[] memory seasons = new uint32[](1);
@@ -121,7 +106,7 @@ contract Replant1 {
         LibTokenSilo.decrementTotalDeposited(EXPLOITER_TOKEN_2, EXPLOITER_AMOUNT_2, 0);
         // LibBeanSilo.decrementDepositedBeans(PROPOSER_AMOUNT);
 
-        // 3. Decrement total Stalk, Seeds, Roots 
+        // 3. Decrement total Stalk, Seeds, Roots
         s.s.stalk = s.s.stalk.sub(s.a[PROPOSER].s.stalk).sub(s.a[EXPLOITER].s.stalk);
         s.s.seeds = s.s.seeds.sub(s.a[PROPOSER].s.seeds).sub(s.a[EXPLOITER].s.seeds);
         s.s.roots = s.s.roots.sub(s.a[PROPOSER].roots).sub(s.a[EXPLOITER].roots);

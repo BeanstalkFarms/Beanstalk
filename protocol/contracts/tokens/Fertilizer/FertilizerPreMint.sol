@@ -10,29 +10,27 @@ import "contracts/interfaces/IWETH.sol";
 
 /**
  * @author publius
- * @title Barn Raiser 
+ * @title Barn Raiser
  */
 
 contract FertilizerPreMint is Internalizer {
-
     using SafeERC20Upgradeable for IERC20;
 
     // Mainnet Settings
-    address constant public WETH = 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2;
-    address constant public USDC = 0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48;
+    address public constant WETH = 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2;
+    address public constant USDC = 0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48;
     uint256 constant START_TIMESTAMP = 1654531200;
 
     // Global Settings
-    address constant CUSTODIAN   = 0xa9bA2C40b263843C04d344727b954A545c81D043;
-    uint256 constant DECIMALS        = 1e6;
-    IERC20 constant IUSDC            = IERC20(USDC);
+    address constant CUSTODIAN = 0xa9bA2C40b263843C04d344727b954A545c81D043;
+    uint256 constant DECIMALS = 1e6;
+    IERC20 constant IUSDC = IERC20(USDC);
 
     // Uniswap Settings
     address constant SWAP_ROUTER = 0xE592427A0AEce92De3Edee1F18E0157C05861564;
-    address constant QUOTER      = 0xb27308f9F90D607463bb33eA1BeBb41C27CE5AB6;
-    uint24 constant POOL_FEE     = 500;
-    uint128 constant MAX_RAISE  = 77_000_000_000_000; // 77 million in USDC
-
+    address constant QUOTER = 0xb27308f9F90D607463bb33eA1BeBb41C27CE5AB6;
+    uint24 constant POOL_FEE = 500;
+    uint128 constant MAX_RAISE = 77_000_000_000_000; // 77 million in USDC
 
     function initialize(string memory _uri) public initializer {
         IERC20(WETH).approve(SWAP_ROUTER, type(uint256).max);
@@ -56,12 +54,7 @@ contract FertilizerPreMint is Internalizer {
 
     function __mint(uint256 amount) private {
         require(started(), "Fertilizer: Not started");
-        _safeMint(
-            msg.sender,
-            getMintId(),
-            amount/DECIMALS,
-            bytes('0')
-        );
+        _safeMint(msg.sender, getMintId(), amount / DECIMALS, bytes("0"));
     }
 
     function started() public view returns (bool) {
@@ -88,31 +81,27 @@ contract FertilizerPreMint is Internalizer {
 
     function buy(uint256 minAmountOut) private returns (uint256 amountOut) {
         IWETH(WETH).deposit{value: msg.value}();
-        ISwapRouter.ExactInputSingleParams memory params =
-            ISwapRouter.ExactInputSingleParams({
-                tokenIn: WETH,
-                tokenOut: USDC,
-                fee: POOL_FEE,
-                recipient: CUSTODIAN,
-                deadline: block.timestamp,
-                amountIn: msg.value,
-                amountOutMinimum: minAmountOut,
-                sqrtPriceLimitX96: 0
-            });
+        ISwapRouter.ExactInputSingleParams memory params = ISwapRouter.ExactInputSingleParams({
+            tokenIn: WETH,
+            tokenOut: USDC,
+            fee: POOL_FEE,
+            recipient: CUSTODIAN,
+            deadline: block.timestamp,
+            amountIn: msg.value,
+            amountOutMinimum: minAmountOut,
+            sqrtPriceLimitX96: 0
+        });
         amountOut = ISwapRouter(SWAP_ROUTER).exactInputSingle(params);
     }
 
     function getUsdcOut(uint ethAmount) public payable returns (uint256) {
-        return IQuoter(QUOTER).quoteExactInputSingle(
-            WETH,
-            USDC,
-            POOL_FEE,
-            ethAmount,
-            0
-        );
+        return IQuoter(QUOTER).quoteExactInputSingle(WETH, USDC, POOL_FEE, ethAmount, 0);
     }
 
-    function getUsdcOutWithSlippage(uint ethAmount, uint slippage) external payable returns (uint256) {
-        return getUsdcOut(ethAmount) * 10000/(10000+slippage);
+    function getUsdcOutWithSlippage(
+        uint ethAmount,
+        uint slippage
+    ) external payable returns (uint256) {
+        return (getUsdcOut(ethAmount) * 10000) / (10000 + slippage);
     }
 }

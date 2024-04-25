@@ -27,34 +27,20 @@ library LibBalance {
      * @param token Which token balance changed.
      * @param delta The amount the balance increased (if positive) or decreased (if negative).
      */
-    event InternalBalanceChanged(
-        address indexed account,
-        IERC20 indexed token,
-        int256 delta
-    );
+    event InternalBalanceChanged(address indexed account, IERC20 indexed token, int256 delta);
 
     /**
      * @dev Returns the sum of `account`'s Internal and External (ERC20) balance of `token`
      */
-    function getBalance(address account, IERC20 token)
-        internal
-        view
-        returns (uint256 balance)
-    {
-        balance = token.balanceOf(account).add(
-            getInternalBalance(account, token)
-        );
+    function getBalance(address account, IERC20 token) internal view returns (uint256 balance) {
+        balance = token.balanceOf(account).add(getInternalBalance(account, token));
         return balance;
     }
 
     /**
      * @dev Increases `account`'s Internal Balance of `token` by `amount`.
      */
-    function increaseInternalBalance(
-        address account,
-        IERC20 token,
-        uint256 amount
-    ) internal {
+    function increaseInternalBalance(address account, IERC20 token, uint256 amount) internal {
         uint256 currentBalance = getInternalBalance(account, token);
         uint256 newBalance = currentBalance.add(amount);
         setInternalBalance(account, token, newBalance, amount.toInt256());
@@ -78,7 +64,7 @@ library LibBalance {
         );
 
         deducted = Math.min(currentBalance, amount);
-        // By construction, `deducted` is lower or equal to `currentBalance`, 
+        // By construction, `deducted` is lower or equal to `currentBalance`,
         // so we don't need to use checked arithmetic.
         uint256 newBalance = currentBalance - deducted;
         setInternalBalance(account, token, newBalance, -(deducted.toInt256()));
@@ -105,11 +91,10 @@ library LibBalance {
     /**
      * @dev Returns `account`'s Internal Balance of `token`.
      */
-    function getInternalBalance(address account, IERC20 token)
-        internal
-        view
-        returns (uint256 balance)
-    {
+    function getInternalBalance(
+        address account,
+        IERC20 token
+    ) internal view returns (uint256 balance) {
         AppStorage storage s = LibAppStorage.diamondStorage();
         balance = s.internalTokenBalance[account][token];
     }

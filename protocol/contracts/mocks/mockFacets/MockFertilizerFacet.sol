@@ -10,13 +10,12 @@ import "contracts/beanstalk/barn/FertilizerFacet.sol";
 /**
  * @author Publius
  * @title Mock Fertilizer Facet
-**/
+ **/
 
 contract MockFertilizerFacet is FertilizerFacet {
-
     function addFertilizerOwner(
         uint128 id,
-        uint128 tokenAmountIn,  
+        uint128 tokenAmountIn,
         uint256 minLpOut
     ) external payable {
         LibDiamond.enforceIsContractOwner();
@@ -39,10 +38,13 @@ contract MockFertilizerFacet is FertilizerFacet {
 
     function addFertilizer(
         uint128 seasonAdded,
-        uint128 tokenAmountIn,  
+        uint128 tokenAmountIn,
         uint256 minLpOut
     ) public payable {
-        uint256 fertilizerAmount = _getMintFertilizerOut(tokenAmountIn, LibBarnRaise.getBarnRaiseToken());
+        uint256 fertilizerAmount = _getMintFertilizerOut(
+            tokenAmountIn,
+            LibBarnRaise.getBarnRaiseToken()
+        );
         LibFertilizer.addFertilizer(seasonAdded, tokenAmountIn, fertilizerAmount, minLpOut);
     }
 }

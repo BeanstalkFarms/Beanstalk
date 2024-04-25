@@ -14,7 +14,6 @@ interface ILiquidityWeightFacet {
     function maxWeight() external pure returns (uint256);
 }
 
-
 contract LiquidityWeightFacet {
     uint256 constant MAX_WEIGHT = 1e18;
 

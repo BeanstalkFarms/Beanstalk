@@ -60,11 +60,13 @@ const convertFacetInterface = new ethers.utils.Interface([
 const farmFacetInterface = async () => (await ethers.getContractFactory("FarmFacet")).interface;
 const tokenFacetInterface = async () => (await ethers.getContractFactory("TokenFacet")).interface;
 const siloFacetInterface = async () => (await ethers.getContractFactory("SiloFacet")).interface;
-const siloGettersFacetInterface = async () => (await ethers.getContractFactory("SiloGettersFacet")).interface;
+const siloGettersFacetInterface = async () =>
+  (await ethers.getContractFactory("SiloGettersFacet")).interface;
 // const convertFacetInterface = async () => (await ethers.getContractFactory("ConvertFacet")).interface;
 const junctionInterface = async () => (await ethers.getContractFactory("Junction")).interface;
 const pipelineInterface = async () => (await ethers.getContractFactory("Pipeline")).interface;
-const tractorFacetInterface = async () => (await ethers.getContractFactory("TractorFacet")).interface;
+const tractorFacetInterface = async () =>
+  (await ethers.getContractFactory("TractorFacet")).interface;
 
 // Need to actually execute the logic in Drafter pure functions.
 // TODO replace Drafter contract with TS SDK drafter.
@@ -160,7 +162,9 @@ const draftBalanceOfStalk = async (callNumber) => {
   let tmpAdvancedFarmCalls = [];
   let tmpOperatorPasteInstrs = [];
   tmpAdvancedFarmCalls.push({
-    callData: (await siloGettersFacetInterface()).encodeFunctionData("balanceOfStalk", [ZERO_ADDRESS]),
+    callData: (await siloGettersFacetInterface()).encodeFunctionData("balanceOfStalk", [
+      ZERO_ADDRESS
+    ]),
     clipboard: ethers.utils.hexlify("0x000000")
   });
   tmpOperatorPasteInstrs.push(
@@ -303,11 +307,11 @@ const draftDepositInternalBeanBalance = async (tip, verbose = false) => {
     )
   );
 
-  if (verbose) { 
+  if (verbose) {
     console.log(advancedFarmCalls);
     console.log(operatorPasteInstrs);
   }
-  
+
   return [advancedFarmCalls, operatorPasteInstrs];
 };
 
@@ -485,7 +489,6 @@ const draftPlant = async (rewardRatio, verbose = false) => {
     console.log(advancedFarmCalls);
     console.log(operatorPasteInstrs);
   }
-  
 
   return [advancedFarmCalls, operatorPasteInstrs];
 };
@@ -519,7 +522,10 @@ const draftConvertUrBeanToUrLP = async (tip, minOutLpPerBean, verbose = false) =
 
   // Call[1] - Junction get deposit balance in Beans.
   advancedFarmCalls.push({
-    callData: (await siloGettersFacetInterface()).encodeFunctionData("balanceOf", [ZERO_ADDRESS, TO_FILL]),
+    callData: (await siloGettersFacetInterface()).encodeFunctionData("balanceOf", [
+      ZERO_ADDRESS,
+      TO_FILL
+    ]),
     clipboard: await drafter().then(
       async (drafter) =>
         await drafter.encodeClipboard(0, [
@@ -640,9 +646,7 @@ const draftConvert = async (tip, minUrLpPerUrBeanRatio, minUrBeanPerUrLpRatio, v
   advancedFarmCalls.push({
     callData: await wrapExternalCall(
       junctionAddr,
-      (
-        await junctionInterface()
-      ).encodeFunctionData("bytes32Switch", [
+      (await junctionInterface()).encodeFunctionData("bytes32Switch", [
         TO_FILL,
         [
           ethers.utils.hexZeroPad(0, 32),
@@ -677,9 +681,7 @@ const draftConvert = async (tip, minUrLpPerUrBeanRatio, minUrBeanPerUrLpRatio, v
   advancedFarmCalls.push({
     callData: await wrapExternalCall(
       junctionAddr,
-      (
-        await junctionInterface()
-      ).encodeFunctionData("bytes32Switch", [
+      (await junctionInterface()).encodeFunctionData("bytes32Switch", [
         TO_FILL,
         [
           ethers.constants.MaxUint256,
@@ -728,7 +730,10 @@ const draftConvert = async (tip, minUrLpPerUrBeanRatio, minUrBeanPerUrLpRatio, v
 
   // Call[3] - Get deposit amount.
   advancedFarmCalls.push({
-    callData: (await siloGettersFacetInterface()).encodeFunctionData("balanceOf", [ZERO_ADDRESS, TO_FILL]),
+    callData: (await siloGettersFacetInterface()).encodeFunctionData("balanceOf", [
+      ZERO_ADDRESS,
+      TO_FILL
+    ]),
     clipboard: await drafter().then(
       async (drafter) =>
         await drafter.encodeClipboard(0, [

@@ -20,7 +20,6 @@ import "../../../libraries/Silo/LibTokenSilo.sol";
  **/
 
 contract Replant7 {
-
     AppStorage internal s;
 
     using SafeMath for uint256;
@@ -35,16 +34,9 @@ contract Replant7 {
         uint256 seeds;
     }
 
-    event SeedsBalanceChanged(
-        address indexed account,
-        int256 delta
-    );
+    event SeedsBalanceChanged(address indexed account, int256 delta);
 
-    event StalkBalanceChanged(
-        address indexed account,
-        int256 delta,
-        int256 deltaRoots
-    );
+    event StalkBalanceChanged(address indexed account, int256 delta, int256 deltaRoots);
 
     function init(Earned[] calldata earned) external {
         for (uint256 i; i < earned.length; ++i) {
@@ -57,7 +49,7 @@ contract Replant7 {
                 REPLANT_SEASON,
                 earned[i].earnedBeans,
                 earnedBeans.mul(C.initialRecap()).div(1e18),
-                LibTokenSilo.Transfer.noEmitTransferSingle 
+                LibTokenSilo.Transfer.noEmitTransferSingle
             );
 
             prune(earned[i]);
@@ -69,10 +61,7 @@ contract Replant7 {
         s.a[e.account].s.seeds = e.seeds;
         s.a[e.account].roots = s.a[e.account].s.stalk.mul(ROOTS_PADDING);
 
-        emit SeedsBalanceChanged(
-            e.account,
-            int256(s.a[e.account].s.seeds)
-        );
+        emit SeedsBalanceChanged(e.account, int256(s.a[e.account].s.seeds));
 
         emit StalkBalanceChanged(
             e.account,

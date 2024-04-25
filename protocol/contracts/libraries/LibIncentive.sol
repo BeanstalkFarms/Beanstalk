@@ -62,12 +62,11 @@ library LibIncentive {
      * BEAN:ETH price. This function is called at the end of {sunriseTo()} after all
      * "step" functions have been executed.
      */
-    function determineReward(uint256 initialGasLeft, uint256 blocksLate, uint256 beanEthPrice)
-        external
-        view
-        returns (uint256)
-    {
-
+    function determineReward(
+        uint256 initialGasLeft,
+        uint256 blocksLate,
+        uint256 beanEthPrice
+    ) external view returns (uint256) {
         // Cap the maximum number of blocks late. If the sunrise is later than
         // this, Beanstalk will pay the same amount. Prevents unbounded return value.
         if (blocksLate > MAX_BLOCKS_LATE) {
@@ -83,14 +82,20 @@ library LibIncentive {
         //  - 21K for base transaction cost
         //  - 29K for calculations following the below line, like {fracExp}
         // Max gas which Beanstalk will pay for = 500K.
-        uint256 gasUsed = Math.min(initialGasLeft.sub(gasleft()) + SUNRISE_GAS_OVERHEAD, MAX_SUNRISE_GAS);
+        uint256 gasUsed = Math.min(
+            initialGasLeft.sub(gasleft()) + SUNRISE_GAS_OVERHEAD,
+            MAX_SUNRISE_GAS
+        );
 
         // Calculate the current cost in Wei of `gasUsed` gas.
         // {block_basefee()} returns the base fee of the current block in Wei.
         // Adds a buffer for priority fee.
-        uint256 gasCostWei = IBlockBasefee(BASE_FEE_CONTRACT).block_basefee().add(PRIORITY_FEE_BUFFER).mul(gasUsed); // (BASE_FEE
-            // + PRIORITY_FEE_BUFFER)
-            // * GAS_USED
+        uint256 gasCostWei = IBlockBasefee(BASE_FEE_CONTRACT)
+            .block_basefee()
+            .add(PRIORITY_FEE_BUFFER)
+            .mul(gasUsed); // (BASE_FEE
+        // + PRIORITY_FEE_BUFFER)
+        // * GAS_USED
 
         // Calculates the Sunrise reward to pay in BEAN.
         uint256 sunriseReward = Math.min(
@@ -112,7 +117,10 @@ library LibIncentive {
      * since block time is capped at 25 blocks,
      * we only need to check cases 0 - 25
      */
-    function fracExp(uint256 beans, uint256 blocksLate) internal pure returns (uint256 scaledSunriseReward) {
+    function fracExp(
+        uint256 beans,
+        uint256 blocksLate
+    ) internal pure returns (uint256 scaledSunriseReward) {
         // check most likely case first
         if (blocksLate == 0) {
             return beans;

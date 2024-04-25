@@ -11,7 +11,7 @@ import {SafeCast} from "@openzeppelin/contracts/utils/SafeCast.sol";
 import {LibBeanMetaCurve} from "contracts/libraries/Curve/LibBeanMetaCurve.sol";
 
 /**
- * @dev Curve metapool functions used by {LibCurveMinting}. 
+ * @dev Curve metapool functions used by {LibCurveMinting}.
  */
 interface IMeta3CurveOracle {
     function block_timestamp_last() external view returns (uint256);
@@ -33,7 +33,7 @@ interface IMeta3CurveOracle {
  * Each Capture stores the encoded cumulative balances returned by the Pump in `s.co`.
  * Because Curve pools use `balances` refer to the quantity of tokens in each pool, {LibCurveMinting}
  * does as well.
- * 
+ *
  * NOTE: with the bean:3crv dewhitelisting, LibCurveMinting is no longer used and is kept for historical purposes.
  */
 library LibCurveMinting {
@@ -45,13 +45,9 @@ library LibCurveMinting {
      * @notice Emitted when the Curve Minting Oracle is captured.
      * @param season The Season in which the oracle was updated.
      * @param deltaB The deltaB
-     * @param balances The TWA 
+     * @param balances The TWA
      */
-    event MetapoolOracle(
-        uint32 indexed season,
-        int256 deltaB,
-        uint256[2] balances
-    );
+    event MetapoolOracle(uint32 indexed season, int256 deltaB, uint256[2] balances);
 
     //////////////////// CHECK ////////////////////
 
@@ -73,7 +69,7 @@ library LibCurveMinting {
 
     //////////////////// CAPTURE ////////////////////
 
-    /** 
+    /**
      * @dev Returns the time weighted average delta B in a given Well
      * since the last Sunrise and snapshots the current cumulative reserves.
      * @return deltaB The time weighted average delta B balance since the last `capture` call.
@@ -101,7 +97,7 @@ library LibCurveMinting {
         uint256[2] memory balances = IMeta3CurveOracle(C.CURVE_BEAN_METAPOOL)
             .get_price_cumulative_last();
         uint256 timestamp = IMeta3CurveOracle(C.CURVE_BEAN_METAPOOL).block_timestamp_last();
-        
+
         if (balances[0] != 0 && balances[1] != 0 && timestamp != 0) {
             o.balances = getCumulative();
             o.initialized = true;
@@ -175,11 +171,7 @@ library LibCurveMinting {
     /**
      * @dev calcualte the current cumulative balances in the Bean:3Crv Curve Metapool.
      */
-    function getCumulative()
-        private
-        view
-        returns (uint256[2] memory cumulativeBalances)
-    {
+    function getCumulative() private view returns (uint256[2] memory cumulativeBalances) {
         cumulativeBalances = IMeta3CurveOracle(C.CURVE_BEAN_METAPOOL).get_price_cumulative_last();
         uint256[2] memory balances = IMeta3CurveOracle(C.CURVE_BEAN_METAPOOL).get_balances();
         uint256 lastTimestamp = IMeta3CurveOracle(C.CURVE_BEAN_METAPOOL).block_timestamp_last();

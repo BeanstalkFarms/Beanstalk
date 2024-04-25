@@ -13,7 +13,6 @@ import {C} from "contracts/C.sol";
  * @notice Contains Helper Fucntions for Minting related functionality.
  **/
 library LibMinting {
-
     using SafeMath for uint256;
 
     uint256 private constant MAX_DELTA_B_DENOMINATOR = 100;
@@ -23,5 +22,4 @@ library LibMinting {
         if (deltaB < 0) return deltaB > -maxDeltaB ? deltaB : -maxDeltaB;
         return deltaB < maxDeltaB ? deltaB : maxDeltaB;
     }
-
 }

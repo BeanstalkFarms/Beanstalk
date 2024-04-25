@@ -60,25 +60,32 @@ library LibWstethEthOracle {
      * Returns 0 if the either the Chainlink Oracle or Uniswap Oracle cannot fetch a valid price.
      **/
     function getWstethEthPrice(uint256 lookback) internal view returns (uint256 wstethEthPrice) {
-
-        uint256 chainlinkPrice = lookback == 0 ? 
-            LibChainlinkOracle.getPrice(C.WSTETH_ETH_CHAINLINK_PRICE_AGGREGATOR, LibChainlinkOracle.FOUR_DAY_TIMEOUT) :
-            LibChainlinkOracle.getTwap(C.WSTETH_ETH_CHAINLINK_PRICE_AGGREGATOR, LibChainlinkOracle.FOUR_DAY_TIMEOUT, lookback);
+        uint256 chainlinkPrice = lookback == 0
+            ? LibChainlinkOracle.getPrice(
+                C.WSTETH_ETH_CHAINLINK_PRICE_AGGREGATOR,
+                LibChainlinkOracle.FOUR_DAY_TIMEOUT
+            )
+            : LibChainlinkOracle.getTwap(
+                C.WSTETH_ETH_CHAINLINK_PRICE_AGGREGATOR,
+                LibChainlinkOracle.FOUR_DAY_TIMEOUT,
+                lookback
+            );
 
         // Check if the chainlink price is broken or frozen.
         if (chainlinkPrice == 0) return 0;
 
         uint256 stethPerWsteth = IWsteth(C.WSTETH).stEthPerToken();
-        
-        chainlinkPrice = chainlinkPrice.mul(stethPerWsteth).div(CHAINLINK_DENOMINATOR);
 
+        chainlinkPrice = chainlinkPrice.mul(stethPerWsteth).div(CHAINLINK_DENOMINATOR);
 
         // Uniswap V3 only supports a uint32 lookback.
         if (lookback > type(uint32).max) return 0;
         uint256 uniswapPrice = LibUniswapOracle.getTwap(
-            lookback == 0 ? LibUniswapOracle.FIFTEEN_MINUTES :
-            uint32(lookback),
-            C.WSTETH_ETH_UNIV3_01_POOL, C.WSTETH, C.WETH, ONE
+            lookback == 0 ? LibUniswapOracle.FIFTEEN_MINUTES : uint32(lookback),
+            C.WSTETH_ETH_UNIV3_01_POOL,
+            C.WSTETH,
+            C.WETH,
+            ONE
         );
 
         // Check if the uniswapPrice oracle fails.

@@ -8,8 +8,7 @@ import {Utils, console} from "test/foundry/utils/Utils.sol";
 import {Fertilizer} from "contracts/tokens/Fertilizer/Fertilizer.sol";
 import {C} from "contracts/C.sol";
 
-
-interface IOwner { 
+interface IOwner {
     function transferOwnership(address newOwner) external;
     function owner() external returns (address);
 }
@@ -20,9 +19,8 @@ interface IOwner {
  * @notice Test helper contract to deploy Fertilizer.
  */
 contract FertilizerDeployer is Utils {
-
     function initFertilizer(bool verbose) internal {
-        address fertilizerAddress =  C.fertilizerAddress();
+        address fertilizerAddress = C.fertilizerAddress();
         deployCodeTo("Fertilizer", fertilizerAddress);
         if (verbose) console.log("Fertilizer deployed at: ", fertilizerAddress);
     }
@@ -35,11 +33,7 @@ contract FertilizerDeployer is Utils {
 
     function mintFertilizer() internal {} // TODO
 
-    function mockMintFertilizer() internal {
+    function mockMintFertilizer() internal {}
 
-    }
-
-    function mockIncrementFertilizer() internal {
-
-    }
+    function mockIncrementFertilizer() internal {}
 }

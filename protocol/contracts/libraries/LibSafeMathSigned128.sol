@@ -7,7 +7,7 @@ pragma solidity >=0.6.0 <0.8.0;
  * @dev Signed math operations with safety checks that revert on error.
  */
 library LibSafeMathSigned128 {
-    int128 constant private _INT128_MIN = -2**127;
+    int128 private constant _INT128_MIN = -2 ** 127;
 
     /**
      * @dev Returns the multiplication of two signed integers, reverting on
