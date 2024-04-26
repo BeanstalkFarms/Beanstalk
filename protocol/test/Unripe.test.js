@@ -212,6 +212,11 @@ describe('Unripe', function () {
       expect(await this.bean.balanceOf(this.unripe.address)).to.be.equal(to6('12.5'))
     })
 
+    it('urBean chop does not affect recapitalization', async function () {
+      expect(await this.unripe.getRecapitalized()).to.be.equal(to6('25'))
+      expect(await this.fertilizer.remainingRecapitalization()).to.be.equal(to6('25'))
+    })
+
     it('emits an event', async function () {
       await expect(this.result).to.emit(this.unripe, 'Chop').withArgs(
         user.address,
@@ -278,6 +283,11 @@ describe('Unripe', function () {
       expect(await this.bean.balanceOf(this.unripe.address)).to.be.equal(to6('9.375'))
     })
 
+    it('urBean chop does not affect recapitalization', async function () {
+      expect(await this.unripe.getRecapitalized()).to.be.equal(to6('12.5'))
+      expect(await this.fertilizer.remainingRecapitalization()).to.be.equal(to6('37.5'))
+    })
+
     it('emits an event', async function () {
       await expect(this.result).to.emit(this.unripe, 'Chop').withArgs(
         user.address,
@@ -340,6 +350,11 @@ describe('Unripe', function () {
       expect(await this.unripeBean.totalSupply()).to.be.equal(to6('100'));
       // 25 underlying at the start - 3.125 redeemed = 21.875
       expect(await this.bean.balanceOf(this.unripe.address)).to.be.equal(to6('21.875'))
+    })
+
+    it('urBean chop does not affect recapitalization', async function () {
+      expect(await this.unripe.getRecapitalized()).to.be.equal(to6('25'))
+      expect(await this.fertilizer.remainingRecapitalization()).to.be.equal(to6('75'))
     })
 
     it('emits an event', async function () {
