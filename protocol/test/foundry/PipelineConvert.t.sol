@@ -854,6 +854,10 @@ contract PipelineConvertTest is TestHelper {
     }
 
     function testCalculateStalkPenaltyUpwardsToZero() public {
+        addEthToWell(users[1], 1 ether);
+        // Update the pump so that eth added above is reflected.
+        updateMockPumpUsingWellReserves(C.BEAN_ETH_WELL);
+
         LibConvert.DeltaBStorage memory dbs;
         dbs.beforeOverallDeltaB = -100;
         dbs.afterOverallDeltaB = 0;
@@ -887,7 +891,6 @@ contract PipelineConvertTest is TestHelper {
         uint256 inputTokenAmountInDirectionOfPeg = 100;
         address outputToken = C.BEAN;
         uint256 outputTokenAmountInDirectionOfPeg = 100;
-
         uint256 penalty = LibConvert.calculateConvertCapacityPenalty(
             overallCappedDeltaB,
             overallAmountInDirectionOfPeg,
@@ -898,6 +901,81 @@ contract PipelineConvertTest is TestHelper {
         );
         assertEq(penalty, 0);
 
+        // test with zero capped deltaB
+        overallCappedDeltaB = 0;
+        overallAmountInDirectionOfPeg = 100;
+        inputToken = C.BEAN_ETH_WELL;
+        inputTokenAmountInDirectionOfPeg = 100;
+        outputToken = C.BEAN;
+        outputTokenAmountInDirectionOfPeg = 100;
+        penalty = LibConvert.calculateConvertCapacityPenalty(
+            overallCappedDeltaB,
+            overallAmountInDirectionOfPeg,
+            inputToken,
+            inputTokenAmountInDirectionOfPeg,
+            outputToken,
+            outputTokenAmountInDirectionOfPeg
+        );
+        assertEq(penalty, 100);
+
+        // test with zero overall amount in direction of peg
+        overallCappedDeltaB = 100;
+        overallAmountInDirectionOfPeg = 0;
+        inputToken = C.BEAN_ETH_WELL;
+        inputTokenAmountInDirectionOfPeg = 0;
+        outputToken = C.BEAN;
+        outputTokenAmountInDirectionOfPeg = 0;
+        penalty = LibConvert.calculateConvertCapacityPenalty(
+            overallCappedDeltaB,
+            overallAmountInDirectionOfPeg,
+            inputToken,
+            inputTokenAmountInDirectionOfPeg,
+            outputToken,
+            outputTokenAmountInDirectionOfPeg
+        );
+        assertEq(penalty, 0);
+
+
+
+
+    }
+
+    function testCalculateConvertCapacityPenaltyCapZeroInputToken() public {
+        // test with input token zero convert capacity
+        uint256 overallCappedDeltaB = 100;
+        uint256 overallAmountInDirectionOfPeg = 100;
+        address inputToken = C.BEAN_ETH_WELL;
+        uint256 inputTokenAmountInDirectionOfPeg = 100;
+        address outputToken = C.BEAN;
+        uint256 outputTokenAmountInDirectionOfPeg = 0;
+        uint256 penalty = LibConvert.calculateConvertCapacityPenalty(
+            overallCappedDeltaB,
+            overallAmountInDirectionOfPeg,
+            inputToken,
+            inputTokenAmountInDirectionOfPeg,
+            outputToken,
+            outputTokenAmountInDirectionOfPeg
+        );
+        assertEq(penalty, 100);
+    }
+
+    function testCalculateConvertCapacityPenaltyCapZeroOutputToken() public {
+        // test with input token zero convert capacity
+        uint256 overallCappedDeltaB = 100;
+        uint256 overallAmountInDirectionOfPeg = 100;
+        address inputToken = C.BEAN;
+        uint256 inputTokenAmountInDirectionOfPeg = 0;
+        address outputToken = C.BEAN_ETH_WELL;
+        uint256 outputTokenAmountInDirectionOfPeg = 100;
+        uint256 penalty = LibConvert.calculateConvertCapacityPenalty(
+            overallCappedDeltaB,
+            overallAmountInDirectionOfPeg,
+            inputToken,
+            inputTokenAmountInDirectionOfPeg,
+            outputToken,
+            outputTokenAmountInDirectionOfPeg
+        );
+        assertEq(penalty, 100);
     }
 
 /*
@@ -1259,6 +1337,27 @@ contract PipelineConvertTest is TestHelper {
 
         vm.prank(user);
         lpAmountOut = IWell(C.BEAN_ETH_WELL).addLiquidity(tokenAmountsIn, 0, user, type(uint256).max);
+
+        // approve spending well token to beanstalk
+        vm.prank(user);
+        MockToken(C.BEAN_ETH_WELL).approve(BEANSTALK, type(uint256).max);
+    }
+
+    function removeEthFromWell(address user, uint256 amount) public returns (uint256 lpAmountOut) {
+        MockToken(C.WETH).mint(user, amount);
+
+        vm.prank(user);
+        MockToken(C.WETH).approve(C.BEAN_ETH_WELL, amount);
+
+        uint256[] memory tokenAmountsIn = new uint256[](2);
+        tokenAmountsIn[0] = 0;
+        tokenAmountsIn[1] = amount;
+
+        vm.prank(user);
+        // lpAmountOut = IWell(C.BEAN_ETH_WELL).addLiquidity(tokenAmountsIn, 0, user, type(uint256).max);
+        lpAmountOut = IWell(C.BEAN_ETH_WELL).removeLiquidityOneToken(amount, IERC20(C.WETH), 0, user, type(uint256).max);
+
+        console.log('lpAmountOut: ', lpAmountOut);
 
         // approve spending well token to beanstalk
         vm.prank(user);
