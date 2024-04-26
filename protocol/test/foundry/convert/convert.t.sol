@@ -8,6 +8,8 @@ import {MockSeasonFacet} from "contracts/mocks/mockFacets/MockSeasonFacet.sol";
 import {MockConvertFacet} from "contracts/mocks/mockFacets/MockConvertFacet.sol";
 import {LibConvertData} from "contracts/libraries/Convert/LibConvertData.sol";
 import {MockToken} from "contracts/mocks/MockToken.sol";
+import {LibWell} from "contracts/libraries/Well/LibWell.sol";
+
 
 /**
  * @title ConvertTest
@@ -49,6 +51,12 @@ contract ConvertTest is TestHelper {
             well,
             10000e6, // 10,000 Beans
             10 ether // 10 ether.
+        );
+
+        addInitialLiquidity(
+            C.BEAN_WSTETH_WELL,
+            10000e6, // 10,000 bean,
+            10 ether  // 10 WETH of wstETH
         );
     }
 
@@ -727,6 +735,56 @@ contract ConvertTest is TestHelper {
     //////////// UNRIPE_LP TO UNRIPE_BEAN ////////////
 
 
+
+    //////////// REVERT ON PENALTY ////////////
+
+    // function test_convertWellToBeanRevert(uint256 deltaB, uint256 lpConverted) public {
+    //     uint256 minLp = getMinLPin(); 
+    //     uint256 lpMinted = multipleWellDepositSetup();
+        
+    //     deltaB = bound(deltaB, 1e6, 1000 ether);
+    //     setReserves(well, bean.balanceOf(well) + deltaB, weth.balanceOf(well));
+    //     uint256 initalWellBeanBalance = bean.balanceOf(well);
+    //     uint256 initalLPbalance = MockToken(well).totalSupply();
+    //     uint256 initalBeanBalance = bean.balanceOf(BEANSTALK);
+
+    //     uint256 maxLpIn = bs.getMaxAmountIn(well, C.BEAN);
+    //     lpConverted = bound(lpConverted, minLp, lpMinted / 2);
+
+    //     // if the maximum LP that can be used is less than 
+    //     // the amount that the user wants to convert,
+    //     // cap the amount to the maximum LP that can be used.
+    //     if (lpConverted > maxLpIn) lpConverted = maxLpIn;
+        
+    //     uint256 expectedAmtOut = bs.getAmountOut(well, C.BEAN, lpConverted);
+
+    //     // create encoding for a well -> bean convert.
+    //     bytes memory convertData = convertEncoder(
+    //         LibConvertData.ConvertKind.WELL_LP_TO_BEANS,
+    //         well, // well
+    //         lpConverted, // amountIn
+    //         0 // minOut
+    //     );
+
+    //     uint256[] memory amounts = new uint256[](1);
+    //     amounts[0] = lpConverted;
+
+    //     vm.expectEmit();
+    //     emit Convert(farmers[0], well, C.BEAN, lpConverted, expectedAmtOut);
+    //     vm.prank(farmers[0]);
+    //     convert.convert(
+    //         convertData,
+    //         new int96[](1),
+    //         amounts
+    //     );
+
+    //     // the new maximum amount out should be the difference between the deltaB and the expected amount out.
+    //     assertEq(bs.getAmountOut(well, C.BEAN, bs.getMaxAmountIn(well, C.BEAN)), deltaB - expectedAmtOut, 'amountOut does not equal deltaB - expectedAmtOut');
+    //     assertEq(bean.balanceOf(well), initalWellBeanBalance - expectedAmtOut, 'well bean balance does not equal initalWellBeanBalance - expectedAmtOut');
+    //     assertEq(MockToken(well).totalSupply(), initalLPbalance - lpConverted, 'well LP balance does not equal initalLPbalance - lpConverted');
+    //     assertEq(bean.balanceOf(BEANSTALK), initalBeanBalance + expectedAmtOut, 'bean balance does not equal initalBeanBalance + expectedAmtOut');
+    // }
+
     //////////////// CONVERT HELPERS /////////////////
 
     function convertEncoder(
@@ -742,5 +800,24 @@ contract ConvertTest is TestHelper {
             // default encoding
             return abi.encode(kind, amountIn, minAmountOut, token); 
         }
+    }
+
+    /**
+     * @notice assumes a CP2 well with bean as one of the tokens.
+     */
+    function addInitialLiquidity(
+        address well,
+        uint256 beanAmount,
+        uint256 nonBeanTokenAmount
+    ) internal { 
+        (address nonBeanToken, ) = LibWell.getNonBeanTokenAndIndexFromWell(
+            well
+        );
+        
+        // mint and sync.
+        MockToken(C.BEAN).mint(well, beanAmount);
+        MockToken(nonBeanToken).mint(well, nonBeanTokenAmount);
+
+        IWell(well).sync(msg.sender, 0);
     }
 }

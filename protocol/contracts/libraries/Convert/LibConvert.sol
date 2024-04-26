@@ -209,6 +209,11 @@ library LibConvert {
         spd.inputTokenAmountAgainstPeg = calculateAmountAgainstPeg(dbs.beforeInputTokenDeltaB, dbs.afterInputTokenDeltaB);
         spd.outputTokenAmountAgainstPeg = calculateAmountAgainstPeg(dbs.beforeOutputTokenDeltaB, dbs.afterOutputTokenDeltaB);
 
+        console.log('dbs.beforeOverallDeltaB: ');
+        console.logInt(dbs.beforeOverallDeltaB);
+        console.log('dbs.afterOverallDeltaB: ');
+        console.logInt(dbs.afterOverallDeltaB);
+
         console.log('spd.overallAmountAgainstPeg: ', spd.overallAmountAgainstPeg);
         console.log('spd.inputTokenAmountAgainstPeg: ', spd.inputTokenAmountAgainstPeg);
         console.log('spd.outputTokenAmountAgainstPeg: ', spd.outputTokenAmountAgainstPeg);

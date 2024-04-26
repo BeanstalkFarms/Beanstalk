@@ -24,7 +24,8 @@ import {IPipeline, PipeCall} from "contracts/interfaces/IPipeline.sol";
 import {SignedSafeMath} from "@openzeppelin/contracts/math/SignedSafeMath.sol";
 import {LibFunction} from "contracts/libraries/LibFunction.sol";
 import {LibGerminate} from "contracts/libraries/Silo/LibGerminate.sol";
-
+import {LibConvertData} from "contracts/libraries/Convert/LibConvertData.sol";
+import {console} from "forge-std/console.sol";
 
 /**
  * @author Publius, Brean, DeadManWalking, pizzaman1337, funderberker
@@ -35,6 +36,7 @@ contract ConvertFacet is ReentrancyGuard {
     using SignedSafeMath for int256;
     using SafeCast for uint256;
     using LibSafeMath32 for uint32;
+    using LibConvertData for bytes;
     
     struct AssetsRemovedConvert {
         LibSilo.Removed active;
@@ -107,8 +109,34 @@ contract ConvertFacet is ReentrancyGuard {
         nonReentrant
         returns (int96 toStem, uint256 fromAmount, uint256 toAmount, uint256 fromBdv, uint256 toBdv)
     {
-
         address toToken; address fromToken; uint256 grownStalk;
+
+        // Only used by Bean<>Well converts for potential stalk penalty
+        PipelineConvertData memory pipeData;
+
+        // this setup is unfortunate because the convertData will be parsed again later
+        LibConvertData.ConvertKind kind = convertData.convertKind();
+        if (kind == LibConvertData.ConvertKind.BEANS_TO_WELL_LP || kind == LibConvertData.ConvertKind.WELL_LP_TO_BEANS) {
+            console.log('doign well or lp convert');
+            if (kind == LibConvertData.ConvertKind.BEANS_TO_WELL_LP) {
+                (, , toToken) = convertData.convertWithAddress();
+                fromToken = C.BEAN;
+            } else {
+                (, , fromToken) = convertData.convertWithAddress();
+                toToken = C.BEAN;
+            }
+
+            console.log('got kind');
+
+            // Store the pre-convert insta deltaB's both overall and for each well
+            pipeData.beforeOverallDeltaB = LibWellMinting.overallInstantaneousDeltaB();
+            pipeData.beforeInputTokenDeltaB = getInstaDeltaB(fromToken);
+            pipeData.beforeOutputTokenDeltaB = getInstaDeltaB(toToken);
+
+            console.log('stored initial data');
+        }
+
+
         (toToken, fromToken, toAmount, fromAmount) = LibConvert.convert(convertData);
 
         require(fromAmount > 0, "Convert: From amount is 0.");
@@ -122,6 +150,21 @@ contract ConvertFacet is ReentrancyGuard {
             amounts,
             fromAmount
         );
+
+        // check for potential penalty
+        if (kind == LibConvertData.ConvertKind.BEANS_TO_WELL_LP || kind == LibConvertData.ConvertKind.WELL_LP_TO_BEANS) {
+            console.log('post convert now checking penalty');
+
+            pipeData.overallConvertCapacity = LibConvert.abs(LibWellMinting.overallCappedDeltaB());
+
+            console.log('pipeData.overallConvertCapacity: ', pipeData.overallConvertCapacity);
+
+            pipeData.stalkPenaltyBdv = prepareStalkPenaltyCalculation(fromToken, toToken, pipeData.beforeInputTokenDeltaB, pipeData.beforeOutputTokenDeltaB, pipeData.beforeOverallDeltaB, pipeData.overallConvertCapacity, fromBdv);
+
+            console.log('penalty is', pipeData.stalkPenaltyBdv);
+
+            require(pipeData.stalkPenaltyBdv == 0, "Convert: Penalty would be applied to this convert, use pipeline convert");
+        }
 
         uint256 newBdv = LibTokenSilo.beanDenominatedValue(toToken, toAmount);
         toBdv = newBdv > fromBdv ? newBdv : fromBdv;
