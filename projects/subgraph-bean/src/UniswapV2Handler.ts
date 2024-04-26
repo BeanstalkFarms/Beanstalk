@@ -121,8 +121,6 @@ export function checkPegCrossEth(block: ethereum.Block): void {
     deltaLiquidityUSD = newPoolPrices.liquidity.minus(pool.liquidityUSD);
     updatePoolValues(BEAN_WETH_V1.toHexString(), block.timestamp, block.number, ZERO_BI, ZERO_BD, deltaLiquidityUSD, newPoolPrices.deltaB);
     updatePoolPrice(BEAN_WETH_V1.toHexString(), block.timestamp, block.number, newPoolPrices.price, false);
-
-    updateTokenPrice(WETH.toHexString(), ethPrice);
   }
 
   // Check for overall Bean cross
@@ -140,6 +138,9 @@ export function checkPegCrossEth(block: ethereum.Block): void {
       ZERO_BD,
       deltaLiquidityUSD // Assumption is that 3crv/lusd prices are constant
     );
+  }
+
+  if (poolCrossed || beanCrossed) {
     updateTokenPrice(WETH.toHexString(), ethPrice);
   }
 }
