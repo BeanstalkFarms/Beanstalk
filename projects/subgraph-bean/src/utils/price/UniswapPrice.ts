@@ -9,16 +9,16 @@ import { DeltaBAndPrice, DeltaBPriceLiquidity, TWAType } from "./Types";
 import { setPoolTwa } from "../Pool";
 import { getTWAPrices } from "./TwaOracle";
 
-export function updatePreReplantPriceETH(): Token {
+export function updatePreReplantPriceETH(): BigDecimal {
   let token = loadOrCreateToken(WETH.toHexString());
   let price = getPreReplantPriceETH();
   if (price.lt(ZERO_BD)) {
-    return token;
+    return token.lastPriceUSD;
   }
 
   token.lastPriceUSD = price;
   token.save();
-  return token;
+  return token.lastPriceUSD;
 }
 
 export function getPreReplantPriceETH(): BigDecimal {
@@ -31,10 +31,10 @@ export function getPreReplantPriceETH(): BigDecimal {
 }
 
 export function calcUniswapV2Inst(pool: Pool): DeltaBPriceLiquidity {
-  const wethToken = updatePreReplantPriceETH();
+  const wethPrice = updatePreReplantPriceETH();
   const weth_bd = toDecimal(pool.reserves[0], 18);
   const bean_bd = toDecimal(pool.reserves[1]);
-  return calcUniswapV2Inst_2(bean_bd, weth_bd, wethToken.lastPriceUSD);
+  return calcUniswapV2Inst_2(bean_bd, weth_bd, wethPrice);
 }
 
 export function calcUniswapV2Inst_2(beanReserves: BigDecimal, token2Reserves: BigDecimal, token2Price: BigDecimal): DeltaBPriceLiquidity {
