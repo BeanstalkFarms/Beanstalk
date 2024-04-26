@@ -13,7 +13,7 @@ import {Call, IWell} from "contracts/interfaces/basin/IWell.sol";
 import {IWellFunction} from "contracts/interfaces/basin/IWellFunction.sol";
 import {LibLockedUnderlying} from "./LibLockedUnderlying.sol";
 import {LibFertilizer} from "./LibFertilizer.sol";
-import "hardhat/console.sol";
+
 /**
  * @title LibUnripe
  * @author Publius
@@ -153,23 +153,17 @@ library LibUnripe {
     ) internal view returns (uint256 redeem) {
         require(isUnripe(unripeToken), "not vesting");
         AppStorage storage s = LibAppStorage.diamondStorage();
-        uint256 usdValueRaised = s.recapitalized;
-        // !!!!!!!!!!!!!! getTotalRecapDollarsNeeded() queries for the total urLP supply which is burned in UnripeFacet.sol
-        // TODO: Modify getTotalRecapDollarsNeeded() to accept the total LP supply as a parameter?
-        // note: Supply here is the total supply querited before the burn
-	    uint256 totalUsdNeeded = unripeToken == C.UNRIPE_LP ? LibFertilizer.getTotalRecapDollarsNeeded(supply) : LibFertilizer.getTotalRecapDollarsNeeded();
-        uint256 currentRipeUnderlying = s.u[unripeToken].balanceOfUnderlying;
-        console.log("currentRipeUnderlying", currentRipeUnderlying);
-        console.log("usdValueRaised", usdValueRaised);
-        console.log("totalUsdNeeded", totalUsdNeeded);
-        console.log("amount", amount);
-        console.log("supply", supply);
-        console.log("s.recapitalized", s.recapitalized);
-        // total redeemable * %DollarRecapitalized^2 * share of unripe tokens
+        // getTotalRecapDollarsNeeded() queries for the total urLP supply which is burned upon a chop
+        // If the token being chopped is unripeLP, getting the current supply here is inaccurate due to the burn
+        // Instead, we use the supply passed in as an argument to getTotalRecapDollarsNeeded since the supply variable
+        // here is the total urToken supply queried before burnning the unripe token
+	    uint256 totalUsdNeeded = unripeToken == C.UNRIPE_LP ? LibFertilizer.getTotalRecapDollarsNeeded(supply) 
+            : LibFertilizer.getTotalRecapDollarsNeeded();
+        // chop rate = total redeemable * %DollarRecapitalized^2 * share of unripe tokens
         // redeem = totalRipeUnderlying *  (usdValueRaised/totalUsdNeeded)^2 * UnripeAmountIn/UnripeSupply;
         // But totalRipeUnderlying = CurrentUnderlying * totalUsdNeeded/usdValueRaised to get the total underlying
         // So eventually redeem = currentRipeUnderlying * (usdValueRaised/totalUsdNeeded) * UnripeAmountIn/UnripeSupply
-        redeem = currentRipeUnderlying.mul(usdValueRaised).div(totalUsdNeeded).mul(amount).div(supply);
+        redeem = s.u[unripeToken].balanceOfUnderlying.mul(s.recapitalized).div(totalUsdNeeded).mul(amount).div(supply);
     }
 
     /**

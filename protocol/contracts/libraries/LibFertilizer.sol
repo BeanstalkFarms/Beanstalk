@@ -18,7 +18,6 @@ import {LibDiamond} from "contracts/libraries/LibDiamond.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
 import {LibWell} from "contracts/libraries/Well/LibWell.sol";
 import {LibUsdOracle} from "contracts/libraries/Oracle/LibUsdOracle.sol";
-import "hardhat/console.sol";
 
 /**
  * @author Publius

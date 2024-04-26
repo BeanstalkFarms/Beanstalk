@@ -154,7 +154,6 @@ describe('Unripe', function () {
 
   //////////////////////////////////// CHOPS //////////////////////////////////////////////
 
-  //////////////// THIS PASSES //////////////////////
   // Example 2: balanceOfUnderlying Max ≠ Unripe Total Supply, balanceOfUnderlying < 100 
 
   // When all fertilizer is sold, balanceOfUnderlying is 50 tokens (totalusdneeded = 50)
@@ -185,9 +184,6 @@ describe('Unripe', function () {
       await this.fertilizer.connect(owner).setPenaltyParams(to6('25'), to6('100'))
       // user chops the whole unripe bean supply
       this.result = await this.unripe.connect(user).chop(UNRIPE_BEAN, to6('100'), EXTERNAL, EXTERNAL)
-
-      // formula: redeem = currentRipeUnderlying *  (usdValueRaised/totalUsdNeeded) * UnripeAmountIn/UnripeSupply;
-      // redeem = 25 * 0.5 * 100/100 = 12.5
     })
 
     it('getters', async function () {
@@ -227,8 +223,8 @@ describe('Unripe', function () {
     })
   })
 
-  //////////////// THIS PASSES //////////////////////
-  // Still Example 2
+  // Still Example 2:
+
   // When all fertilizer is sold, balanceOfUnderlying is 50 tokens.
   // Total Supply of unripe is 100.
   // Assume 1 Fertilizer increases balanceOfUnderlying by 1 token.
@@ -258,8 +254,6 @@ describe('Unripe', function () {
       await this.fertilizer.connect(owner).setPenaltyParams(to6('12.5'), to6('100'))
       // user chops the whole unripe bean supply
       this.result = await this.unripe.connect(user).chop(UNRIPE_BEAN, to6('100'), EXTERNAL, EXTERNAL)
-      // formula: redeem = currentRipeUnderlying *  (usdValueRaised/totalUsdNeeded) * UnripeAmountIn/UnripeSupply;
-      // redeem = 12.5 * 0.25 * 100/100 = 3.125
     })
 
     it('getters', async function () {
@@ -271,6 +265,7 @@ describe('Unripe', function () {
       // expect(await this.unripe.balanceOfUnderlying(UNRIPE_BEAN, userAddress)).to.be.equal(to6('99.99'))
       // expect(await this.unripe.balanceOfPenalizedUnderlying(UNRIPE_BEAN, userAddress)).to.be.equal(to6('10.008008'))
       // s.fertilizedIndex.mul(amount).div(s.unfertilizedIndex);
+
       expect(await this.unripe.getRecapPaidPercent()).to.be.equal(to6('0.01'))
       expect(await this.unripe.getTotalUnderlying(UNRIPE_BEAN)).to.be.equal(to6('9.375'))
       expect(await this.unripe.isUnripe(UNRIPE_BEAN)).to.be.equal(true)
@@ -324,8 +319,6 @@ describe('Unripe', function () {
       await this.fertilizer.connect(owner).setPenaltyParams(to6('25'), to6('100'))
       // user chops half the unripe bean supply
       this.result = await this.unripe.connect(user).chop(UNRIPE_BEAN, to6('100'), EXTERNAL, EXTERNAL)
-      // formula: redeem = currentRipeUnderlying * (usdValueRaised/totalUsdNeeded) * UnripeAmountIn/UnripeSupply;
-      // redeem = 25 * 0.25 * 100/200 = 3.125
     })
 
     it('getters', async function () {
