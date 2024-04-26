@@ -6,7 +6,7 @@ import { ONE_BD, ZERO_BD, ZERO_BI } from "../../../subgraph-core/utils/Decimals"
 import { loadOrCreatePool, loadOrCreatePoolDailySnapshot, loadOrCreatePoolHourlySnapshot } from "./Pool";
 import { BEAN_ERC20_V1 } from "../../../subgraph-core/utils/Constants";
 
-export function loadOrCreateBeanCross(id: i32, bean: string, timestamp: BigInt): BeanCross {
+export function loadOrCreateBeanCross(id: i32, bean: string, blockNumber: BigInt, timestamp: BigInt): BeanCross {
   let cross = BeanCross.load(id.toString());
   if (cross == null) {
     let hour = hourFromTimestamp(timestamp).toString();
@@ -14,6 +14,7 @@ export function loadOrCreateBeanCross(id: i32, bean: string, timestamp: BigInt):
     cross = new BeanCross(id.toString());
     cross.bean = bean;
     cross.price = ZERO_BD;
+    cross.blockNumber = blockNumber;
     cross.timestamp = timestamp;
     cross.timeSinceLastCross = ZERO_BI;
     cross.above = false;
@@ -24,7 +25,7 @@ export function loadOrCreateBeanCross(id: i32, bean: string, timestamp: BigInt):
   return cross as BeanCross;
 }
 
-export function loadOrCreatePoolCross(id: i32, pool: string, timestamp: BigInt): PoolCross {
+export function loadOrCreatePoolCross(id: i32, pool: string, blockNumber: BigInt, timestamp: BigInt): PoolCross {
   let crossID = pool + "-" + id.toString();
   let cross = PoolCross.load(crossID);
   if (cross == null) {
@@ -33,6 +34,7 @@ export function loadOrCreatePoolCross(id: i32, pool: string, timestamp: BigInt):
     cross = new PoolCross(crossID);
     cross.pool = pool;
     cross.price = ZERO_BD;
+    cross.blockNumber = blockNumber;
     cross.timestamp = timestamp;
     cross.timeSinceLastCross = ZERO_BI;
     cross.above = false;
@@ -53,7 +55,7 @@ export function checkPoolCross(pool: string, timestamp: BigInt, blockNumber: Big
   // log.debug("Prev/New well price {} / {}", [oldPrice.toString(), newPrice.toString()]);
 
   if (oldPrice >= ONE_BD && newPrice < ONE_BD) {
-    let cross = loadOrCreatePoolCross(poolInfo.crosses, pool, timestamp);
+    let cross = loadOrCreatePoolCross(poolInfo.crosses, pool, blockNumber, timestamp);
 
     cross.price = newPrice;
     cross.timeSinceLastCross = timestamp.minus(poolInfo.lastCross);
@@ -73,7 +75,7 @@ export function checkPoolCross(pool: string, timestamp: BigInt, blockNumber: Big
     poolDaily.save();
     return true;
   } else if (oldPrice < ONE_BD && newPrice >= ONE_BD) {
-    let cross = loadOrCreatePoolCross(poolInfo.crosses, pool, timestamp);
+    let cross = loadOrCreatePoolCross(poolInfo.crosses, pool, blockNumber, timestamp);
 
     cross.price = newPrice;
     cross.timeSinceLastCross = timestamp.minus(poolInfo.lastCross);
@@ -102,7 +104,7 @@ export function checkBeanCross(token: string, timestamp: BigInt, blockNumber: Bi
   let beanDaily = loadOrCreateBeanDailySnapshot(token, timestamp);
 
   if (oldPrice >= ONE_BD && newPrice < ONE_BD) {
-    let cross = loadOrCreateBeanCross(bean.crosses, token, timestamp);
+    let cross = loadOrCreateBeanCross(bean.crosses, token, blockNumber, timestamp);
 
     cross.price = newPrice;
     cross.timeSinceLastCross = timestamp.minus(bean.lastCross);
@@ -122,7 +124,7 @@ export function checkBeanCross(token: string, timestamp: BigInt, blockNumber: Bi
     beanDaily.save();
     return true;
   } else if (oldPrice < ONE_BD && newPrice >= ONE_BD) {
-    let cross = loadOrCreateBeanCross(bean.crosses, token, timestamp);
+    let cross = loadOrCreateBeanCross(bean.crosses, token, blockNumber, timestamp);
 
     cross.price = newPrice;
     cross.timeSinceLastCross = timestamp.minus(bean.lastCross);
