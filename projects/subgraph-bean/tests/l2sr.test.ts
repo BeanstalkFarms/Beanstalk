@@ -13,7 +13,6 @@ import { BI_10, ONE_BI, ZERO_BI } from "../../subgraph-core/utils/Decimals";
 import {
   mockGetRecapPaidPercent,
   mockGetTotalUnderlying,
-  mockPreGaugeLockedBeans,
   mockSeedGaugeLockedBeans,
   mockSeedGaugeLockedBeansReverts
 } from "./call-mocking/Beanstalk";

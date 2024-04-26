@@ -108,12 +108,18 @@ describe("DeltaB", () => {
       const h1 = hourFromTimestamp(t1).toString();
       const h2 = hourFromTimestamp(t2).toString();
       const h3 = hourFromTimestamp(t3).toString();
-      // 100, 110
+      // 100, 100
       const reserves1 = [BigInt.fromString("100000000"), BigInt.fromString("100000000000000000000")];
       // 200, 210
-      const reserves2 = [BigInt.fromString("300000000"), BigInt.fromString("310000000000000000000")];
+      const reserves2 = [
+        reserves1[0].plus(BigInt.fromString("200000000").times(BigInt.fromU32(3600))),
+        reserves1[1].plus(BigInt.fromString("210000000000000000000").times(BigInt.fromU32(3600)))
+      ];
       // 200, 200
-      const reserves3 = [BigInt.fromString("500000000"), BigInt.fromString("510000000000000000000")];
+      const reserves3 = [
+        reserves2[0].plus(BigInt.fromString("200000000").times(BigInt.fromU32(3600))),
+        reserves2[1].plus(BigInt.fromString("200000000000000000000").times(BigInt.fromU32(3600)))
+      ];
 
       // Set liquidity so weighted twa prices can be set
       let pool = loadOrCreatePool(BEAN_3CRV.toHexString(), b2.number);
@@ -131,14 +137,19 @@ describe("DeltaB", () => {
       assert.fieldEquals("BeanHourlySnapshot", BEAN_ERC20.toHexString() + "-6074", "twaDeltaB", "0");
 
       handleMetapoolOracle(createMetapoolOracleEvent(ONE_BI, ZERO_BI, reserves2, b2));
-      assert.fieldEquals("TwaOracle", BEAN_3CRV.toHexString(), "priceCumulativeLast", "[300000000, 310000000000000000000]");
-      assert.fieldEquals("PoolHourlySnapshot", prefixCurve + h2, "twaDeltaBeans", "1380"); // TODO: check this, seems small
-      assert.fieldEquals("PoolHourlySnapshot", prefixCurve + h2, "twaPrice", "1.02469666391");
-      assert.fieldEquals("BeanHourlySnapshot", BEAN_ERC20.toHexString() + "-6074", "twaPrice", "1.02469666391");
+      assert.fieldEquals(
+        "TwaOracle",
+        BEAN_3CRV.toHexString(),
+        "priceCumulativeLast",
+        "[" + reserves2[0].toString() + ", " + reserves2[1].toString() + "]"
+      );
+      assert.fieldEquals("PoolHourlySnapshot", prefixCurve + h2, "twaDeltaBeans", "4969504");
+      assert.fieldEquals("PoolHourlySnapshot", prefixCurve + h2, "twaPrice", "1.024700651737");
+      assert.fieldEquals("BeanHourlySnapshot", BEAN_ERC20.toHexString() + "-6074", "twaPrice", "1.024700651737");
 
       handleMetapoolOracle(createMetapoolOracleEvent(ONE_BI, ZERO_BI, reserves3, b3));
       assert.fieldEquals("PoolHourlySnapshot", prefixCurve + h3, "twaDeltaBeans", "0");
-      assert.fieldEquals("PoolHourlySnapshot", prefixCurve + h3, "twaPrice", "0.999996000005");
+      assert.fieldEquals("PoolHourlySnapshot", prefixCurve + h3, "twaPrice", "0.9999999975");
     });
 
     test("WellOracle", () => {
