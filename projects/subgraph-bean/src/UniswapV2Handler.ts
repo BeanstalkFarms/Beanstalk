@@ -86,8 +86,7 @@ export function handleSync(event: Sync): void {
   updateBeanValues(BEAN_ERC20_V1.toHexString(), event.block.timestamp, newBeanPrice, ZERO_BI, ZERO_BI, ZERO_BD, deltaLiquidityUSD);
 }
 
-// Update pool price/liquidity/deltaB. This is for updating the price when another swap occurs and there is no peg
-// cross in this pool. No need to check a peg cross again because the blockHandler will have already run before any events.
+// Update pool price/liquidity/deltaB. This is for updating the price when a swap occurs in another pool.
 // The caller is expected to update overall bean prices after this function completes.
 export function externalUpdatePoolPrice(poolAddr: Address, timestamp: BigInt, blockNumber: BigInt): void {
   const pool = loadOrCreatePool(poolAddr.toHexString(), blockNumber);
@@ -97,7 +96,7 @@ export function externalUpdatePoolPrice(poolAddr: Address, timestamp: BigInt, bl
   const deltaLiquidityUSD = newPoolPrices.liquidity.minus(pool.liquidityUSD);
 
   updatePoolValues(BEAN_WETH_V1.toHexString(), timestamp, blockNumber, ZERO_BI, ZERO_BD, deltaLiquidityUSD, newPoolPrices.deltaB);
-  updatePoolPrice(BEAN_WETH_V1.toHexString(), timestamp, blockNumber, newPoolPrices.price, false);
+  updatePoolPrice(BEAN_WETH_V1.toHexString(), timestamp, blockNumber, newPoolPrices.price);
 }
 
 export function checkPegCrossEth(block: ethereum.Block): void {
