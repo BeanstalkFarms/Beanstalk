@@ -1,11 +1,9 @@
 import { Address, BigDecimal, BigInt } from "@graphprotocol/graph-ts";
-import { BEANSTALK_PRICE, BEAN_ERC20 } from "../../subgraph-core/utils/Constants";
+import { BEAN_ERC20 } from "../../subgraph-core/utils/Constants";
 import { ZERO_BD, ZERO_BI, deltaBigIntArray, toDecimal } from "../../subgraph-core/utils/Decimals";
-import { BeanstalkPrice } from "../generated/BeanWETHCP2w/BeanstalkPrice";
 import { AddLiquidity, RemoveLiquidity, RemoveLiquidityOneToken, Shift, Swap, Sync } from "../generated/BeanWETHCP2w/Well";
-import { loadBean, updateBeanAfterPoolSwap, updateBeanSupplyPegPercent, updateBeanValues } from "./utils/Bean";
+import { updateBeanAfterPoolSwap } from "./utils/Bean";
 import { getPoolLiquidityUSD, loadOrCreatePool, setPoolReserves, updatePoolPrice, updatePoolValues } from "./utils/Pool";
-import { checkBeanCross } from "./utils/Cross";
 import { BeanstalkPrice_try_price, getPoolPrice } from "./utils/price/BeanstalkPrice";
 
 export function handleAddLiquidity(event: AddLiquidity): void {

@@ -8,22 +8,10 @@ import {
   TokenExchangeUnderlying
 } from "../generated/Bean3CRV/Bean3CRV";
 import { CurvePrice } from "../generated/Bean3CRV/CurvePrice";
-import { loadBean, updateBeanAfterPoolSwap, updateBeanSupplyPegPercent, updateBeanValues } from "./utils/Bean";
-import { BEANSTALK_PRICE, BEAN_ERC20, CRV3_POOL, CURVE_PRICE } from "../../subgraph-core/utils/Constants";
+import { updateBeanAfterPoolSwap } from "./utils/Bean";
+import { CURVE_PRICE } from "../../subgraph-core/utils/Constants";
 import { toDecimal, ZERO_BD, ZERO_BI } from "../../subgraph-core/utils/Decimals";
-import {
-  getPoolLiquidityUSD,
-  loadOrCreatePool,
-  loadOrCreatePoolDailySnapshot,
-  loadOrCreatePoolHourlySnapshot,
-  setPoolReserves,
-  setPoolTwa,
-  updatePoolPrice,
-  updatePoolValues
-} from "./utils/Pool";
-import { BeanstalkPrice } from "../generated/Bean3CRV/BeanstalkPrice";
-import { checkBeanCross } from "./utils/Cross";
-import { BeanstalkPrice_try_price } from "./utils/price/BeanstalkPrice";
+import { getPoolLiquidityUSD, setPoolReserves, updatePoolPrice, updatePoolValues } from "./utils/Pool";
 
 export function handleTokenExchange(event: TokenExchange): void {
   handleSwap(
