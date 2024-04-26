@@ -103,7 +103,7 @@ export function loadOrCreateBeanDailySnapshot(token: string, timestamp: BigInt):
 export function updateBeanValues(
   token: string,
   timestamp: BigInt,
-  newPrice: BigDecimal,
+  newPrice: BigDecimal | null,
   deltaSupply: BigInt,
   deltaVolume: BigInt,
   deltaVolumeUSD: BigDecimal,
@@ -113,7 +113,9 @@ export function updateBeanValues(
   let beanHourly = loadOrCreateBeanHourlySnapshot(token, timestamp, bean.lastSeason);
   let beanDaily = loadOrCreateBeanDailySnapshot(token, timestamp);
 
-  bean.price = newPrice;
+  if (newPrice != null) {
+    bean.price = newPrice;
+  }
   bean.supply = bean.supply.plus(deltaSupply);
   bean.marketCap = toDecimal(bean.supply).times(bean.price);
   bean.volume = bean.volume.plus(deltaVolume);

@@ -32,19 +32,16 @@ import {
 //   updateBeanSupplyPegPercent(event.block.number);
 // }
 
-// Liquidity and cross checks happen on the Sync event handler
+// Reserves/price already updated by Sync event. Sync event is always emitted prior to a swap.
+// Just update the volume for usd/bean
 export function handleSwap(event: Swap): void {
   // Do not index post-exploit data
   if (event.block.number >= BigInt.fromI32(14602790)) return;
 
   let weth = loadOrCreateToken(WETH.toHexString());
-
-  let pool = loadOrCreatePool(event.address.toHexString(), event.block.number);
-
   let usdVolume = toDecimal(event.params.amount0In.plus(event.params.amount0Out), 18).times(weth.lastPriceUSD);
 
-  // Token 0 is WETH and Token 1 is BEAN
-
+  let pool = loadOrCreatePool(event.address.toHexString(), event.block.number);
   updatePoolValues(
     event.address.toHexString(),
     event.block.timestamp,
@@ -55,17 +52,7 @@ export function handleSwap(event: Swap): void {
     pool.deltaBeans
   );
 
-  let newReserves = [
-    pool.reserves[0].plus(event.params.amount0In.minus(event.params.amount0Out)),
-    pool.reserves[1].plus(event.params.amount1In.minus(event.params.amount1Out))
-  ];
-
-  setPoolReserves(event.address.toHexString(), newReserves, event.block.timestamp, event.block.number);
-
-  updateBeanSupplyPegPercent(event.block.number);
-
-  const newBeanPrice = calcLiquidityWeightedBeanPrice(BEAN_ERC20_V1.toHexString());
-  updateBeanValues(BEAN_ERC20_V1.toHexString(), event.block.timestamp, newBeanPrice, ZERO_BI, ZERO_BI, usdVolume, ZERO_BD);
+  updateBeanValues(BEAN_ERC20_V1.toHexString(), event.block.timestamp, null, ZERO_BI, ZERO_BI, usdVolume, ZERO_BD);
 }
 
 // Sync is called in UniswapV2 on any liquidity or swap transaction.
@@ -78,7 +65,7 @@ export function handleSync(event: Sync): void {
   const oldBeanPrice = getLastBeanPrice(BEAN_ERC20_V1.toHexString());
 
   // Token 0 is WETH and Token 1 is BEAN
-  let reserves = uniswapV2Reserves(event.address);
+  let reserves = [event.params.reserve0, event.params.reserve1];
 
   let weth = updatePreReplantPriceETH();
 
@@ -125,7 +112,7 @@ export function checkPegCrossEth(block: ethereum.Block): void {
   const pool = loadOrCreatePool(BEAN_WETH_V1.toHexString(), block.number);
   const prevPoolPrice = pool.lastPrice;
 
-  const reserves = uniswapV2Reserves(BEAN_WETH_V1);
+  const reserves = pool.reserves;
   if (reserves[0] == ZERO_BI || reserves[1] == ZERO_BI) {
     return;
   }
