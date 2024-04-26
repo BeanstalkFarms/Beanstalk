@@ -136,7 +136,10 @@ function toPoolStruct(pool: Pool): ethereum.Tuple {
   return retval;
 }
 
-export function mockPreReplantBeanEthPriceAndLiquidity(price: BigDecimal, liquidity: BigDecimal = BigDecimal.fromString("5000000")): void {
+export function mockPreReplantBeanEthPriceAndLiquidity(
+  price: BigDecimal,
+  liquidity: BigDecimal = BigDecimal.fromString("5000000")
+): BigInt[] {
   // Fix eth to $3000
   const ethPrice = BigDecimal.fromString("3000");
   mockPreReplantETHPrice(ethPrice);
@@ -151,6 +154,7 @@ export function mockPreReplantBeanEthPriceAndLiquidity(price: BigDecimal, liquid
     toDecimal(wethReserves, 18).times(ethPrice).div(price).times(BigDecimal.fromString("1000000")).truncate(0).toString()
   );
   mockUniswapV2Reserves(BEAN_WETH_V1, wethReserves, beanReserves);
+  return [wethReserves, beanReserves];
 }
 
 export function mockPreReplantETHPrice(price: BigDecimal): void {

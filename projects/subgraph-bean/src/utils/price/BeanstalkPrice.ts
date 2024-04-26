@@ -66,15 +66,17 @@ export class BeanstalkPriceResult {
       }
 
       // Recalculate overall price/liquidity/delta
-      this._value!.price = ZERO_BI;
-      this._value!.liquidity = ZERO_BI;
-      this._value!.deltaB = ZERO_BI;
-      for (let i = 0; i < this._value!.ps.length; ++i) {
-        this._value!.price = this._value!.price.plus(this._value!.ps[i].price.times(this._value!.ps[i].liquidity));
-        this._value!.liquidity = this._value!.liquidity.plus(this._value!.ps[i].liquidity);
-        this._value!.deltaB = this._value!.deltaB.plus(this._value!.ps[i].deltaB);
+      if (anyDewhitelisted) {
+        this._value!.price = ZERO_BI;
+        this._value!.liquidity = ZERO_BI;
+        this._value!.deltaB = ZERO_BI;
+        for (let i = 0; i < this._value!.ps.length; ++i) {
+          this._value!.price = this._value!.price.plus(this._value!.ps[i].price.times(this._value!.ps[i].liquidity));
+          this._value!.liquidity = this._value!.liquidity.plus(this._value!.ps[i].liquidity);
+          this._value!.deltaB = this._value!.deltaB.plus(this._value!.ps[i].deltaB);
+        }
+        this._value!.price = this._value!.price.div(this._value!.liquidity);
       }
-      this._value!.price = this._value!.price.div(this._value!.liquidity);
     }
   }
 

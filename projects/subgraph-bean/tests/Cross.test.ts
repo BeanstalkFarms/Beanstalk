@@ -5,13 +5,10 @@ import { BigDecimal, Address } from "@graphprotocol/graph-ts";
 
 import { handleBlock } from "../src/BlockHandler";
 import { mockBlock } from "../../subgraph-core/tests/event-mocking/Block";
-import {
-  mockPreReplantBeanEthPriceAndLiquidity,
-  mockPreReplantETHPrice,
-  simpleMockPrice
-} from "../../subgraph-core/tests/event-mocking/Price";
+import { mockPreReplantETHPrice, simpleMockPrice } from "../../subgraph-core/tests/event-mocking/Price";
 
 import {
+  BEAN_3CRV,
   BEAN_3CRV_V1,
   BEAN_ERC20,
   BEAN_ERC20_V1,
@@ -24,8 +21,9 @@ import { BD_10, ONE_BD, ONE_BI, toDecimal, ZERO_BD, ZERO_BI } from "../../subgra
 
 import { loadBean } from "../src/utils/Bean";
 import { getPreReplantPriceETH, constantProductPrice, uniswapV2Reserves } from "../src/utils/price/UniswapPrice";
-import { mockPoolPriceAndLiquidity } from "./entity-mocking/MockPool";
+import { mockPoolPriceAndLiquidity, mockPreReplantBeanEthPriceAndLiquidityWithPoolReserves } from "./entity-mocking/MockPool";
 import { updatePricesAndCheckCrosses as crv_updatePricesAndCheckCrosses } from "../src/Bean3CRVHandler_V1";
+import { setWhitelistedPools } from "./entity-mocking/MockBean";
 
 const wellCrossId = (n: u32): string => {
   return BEAN_WETH_CP2_WELL.toHexString() + "-" + n.toString();
@@ -67,7 +65,7 @@ describe("Peg Crosses", () => {
       assert.assertTrue(getPreReplantPriceETH().equals(ethPrice));
 
       const beanPrice = BigDecimal.fromString("1.6057");
-      mockPreReplantBeanEthPriceAndLiquidity(beanPrice);
+      mockPreReplantBeanEthPriceAndLiquidityWithPoolReserves(beanPrice);
 
       const reserves = uniswapV2Reserves(BEAN_WETH_V1);
       const ethPriceNow = getPreReplantPriceETH();
@@ -77,7 +75,7 @@ describe("Peg Crosses", () => {
 
       const beanPrice2 = BigDecimal.fromString("0.7652");
       const liquidity2 = BigDecimal.fromString("1234567");
-      mockPreReplantBeanEthPriceAndLiquidity(beanPrice2, liquidity2);
+      mockPreReplantBeanEthPriceAndLiquidityWithPoolReserves(beanPrice2, liquidity2);
 
       const reserves2 = uniswapV2Reserves(BEAN_WETH_V1);
       const ethPriceNow2 = getPreReplantPriceETH();
@@ -90,13 +88,13 @@ describe("Peg Crosses", () => {
     });
 
     test("UniswapV2/Bean cross above", () => {
-      mockPreReplantBeanEthPriceAndLiquidity(BigDecimal.fromString("0.99"));
+      mockPreReplantBeanEthPriceAndLiquidityWithPoolReserves(BigDecimal.fromString("0.99"));
       handleBlock(mockBlock(BEANSTALK_BLOCK));
 
       assert.notInStore("BeanCross", "0");
       assert.notInStore("PoolCross", univ2CrossId(0));
 
-      mockPreReplantBeanEthPriceAndLiquidity(BigDecimal.fromString("1.01"));
+      mockPreReplantBeanEthPriceAndLiquidityWithPoolReserves(BigDecimal.fromString("1.01"));
       handleBlock(mockBlock(BEANSTALK_BLOCK));
 
       assert.fieldEquals("BeanCross", "0", "above", "true");
@@ -104,13 +102,13 @@ describe("Peg Crosses", () => {
     });
 
     test("UniswapV2/Bean cross below", () => {
-      mockPreReplantBeanEthPriceAndLiquidity(BigDecimal.fromString("1.25"));
+      mockPreReplantBeanEthPriceAndLiquidityWithPoolReserves(BigDecimal.fromString("1.25"));
       handleBlock(mockBlock(BEANSTALK_BLOCK));
 
       assert.fieldEquals("BeanCross", "0", "above", "true");
       assert.fieldEquals("PoolCross", univ2CrossId(0), "above", "true");
 
-      mockPreReplantBeanEthPriceAndLiquidity(BigDecimal.fromString("0.8"));
+      mockPreReplantBeanEthPriceAndLiquidityWithPoolReserves(BigDecimal.fromString("0.8"));
       handleBlock(mockBlock(BEANSTALK_BLOCK));
 
       assert.fieldEquals("BeanCross", "1", "above", "false");
@@ -119,7 +117,7 @@ describe("Peg Crosses", () => {
 
     test("UniswapV2/Bean cross above (separately)", () => {
       const liquidity = BigDecimal.fromString("5000000");
-      mockPreReplantBeanEthPriceAndLiquidity(BigDecimal.fromString("0.95"), liquidity);
+      mockPreReplantBeanEthPriceAndLiquidityWithPoolReserves(BigDecimal.fromString("0.95"), liquidity);
       mockPoolPriceAndLiquidity(BEAN_3CRV_V1, BigDecimal.fromString("0.99"), liquidity, BEANSTALK_BLOCK);
       handleBlock(mockBlock(BEANSTALK_BLOCK));
 
@@ -127,7 +125,7 @@ describe("Peg Crosses", () => {
       assert.notInStore("PoolCross", univ2CrossId(0));
       assert.notInStore("PoolCross", crvV1CrossId(0));
 
-      mockPreReplantBeanEthPriceAndLiquidity(BigDecimal.fromString("1.02"), liquidity);
+      mockPreReplantBeanEthPriceAndLiquidityWithPoolReserves(BigDecimal.fromString("1.02"), liquidity);
       mockPoolPriceAndLiquidity(BEAN_3CRV_V1, BigDecimal.fromString("0.9"), liquidity, BEANSTALK_BLOCK);
       handleBlock(mockBlock(BEANSTALK_BLOCK));
 
@@ -135,7 +133,7 @@ describe("Peg Crosses", () => {
       assert.fieldEquals("PoolCross", univ2CrossId(0), "above", "true");
       assert.notInStore("PoolCross", crvV1CrossId(0));
 
-      mockPreReplantBeanEthPriceAndLiquidity(BigDecimal.fromString("1.06"), liquidity);
+      mockPreReplantBeanEthPriceAndLiquidityWithPoolReserves(BigDecimal.fromString("1.06"), liquidity);
       // Requires a curve swap to update since the uniswap pool already crossed. Swap content is irrelevant
       // This doesnt perform the full swap logic but is sufficient
       crv_updatePricesAndCheckCrosses(
@@ -157,7 +155,7 @@ describe("Peg Crosses", () => {
 
     test("UniswapV2/Bean cross below (separately)", () => {
       const liquidity = BigDecimal.fromString("5000000");
-      mockPreReplantBeanEthPriceAndLiquidity(BigDecimal.fromString("1.05"), liquidity);
+      mockPreReplantBeanEthPriceAndLiquidityWithPoolReserves(BigDecimal.fromString("1.05"), liquidity);
       // mockPoolPriceAndLiquidity(BEAN_3CRV_V1, BigDecimal.fromString("1.01"), liquidity, BEANSTALK_BLOCK);
       handleBlock(mockBlock(BEANSTALK_BLOCK));
       crv_updatePricesAndCheckCrosses(
@@ -175,7 +173,7 @@ describe("Peg Crosses", () => {
       assert.fieldEquals("PoolCross", univ2CrossId(0), "above", "true");
       assert.fieldEquals("PoolCross", crvV1CrossId(0), "above", "true");
 
-      mockPreReplantBeanEthPriceAndLiquidity(BigDecimal.fromString("0.97"), liquidity);
+      mockPreReplantBeanEthPriceAndLiquidityWithPoolReserves(BigDecimal.fromString("0.97"), liquidity);
       mockPoolPriceAndLiquidity(BEAN_3CRV_V1, BigDecimal.fromString("1.05"), liquidity, BEANSTALK_BLOCK);
       handleBlock(mockBlock(BEANSTALK_BLOCK));
 
@@ -183,7 +181,7 @@ describe("Peg Crosses", () => {
       assert.fieldEquals("PoolCross", univ2CrossId(1), "above", "false");
       assert.notInStore("PoolCross", crvV1CrossId(1));
 
-      mockPreReplantBeanEthPriceAndLiquidity(BigDecimal.fromString("0.92"), liquidity);
+      mockPreReplantBeanEthPriceAndLiquidityWithPoolReserves(BigDecimal.fromString("0.92"), liquidity);
       // Requires a curve swap to update since the uniswap pool already crossed. Swap content is irrelevant
       // This doesnt perform the full swap logic but is sufficient
       crv_updatePricesAndCheckCrosses(
@@ -207,7 +205,7 @@ describe("Peg Crosses", () => {
       const liquidity = BigDecimal.fromString("5000000");
       const crvConstantPrice = BigDecimal.fromString("1.01");
       const crvLiquidity2 = liquidity.times(BD_10);
-      mockPreReplantBeanEthPriceAndLiquidity(BigDecimal.fromString("0.95"), liquidity);
+      mockPreReplantBeanEthPriceAndLiquidityWithPoolReserves(BigDecimal.fromString("0.95"), liquidity);
       crv_updatePricesAndCheckCrosses(
         BEAN_3CRV_V1.toHexString(),
         crvConstantPrice,
@@ -259,6 +257,10 @@ describe("Peg Crosses", () => {
   });
 
   describe("BEAN:ETH Well", () => {
+    beforeEach(() => {
+      setWhitelistedPools([BEAN_WETH_CP2_WELL.toHexString()]);
+    });
+
     test("Well/Bean cross above", () => {
       simpleMockPrice(0.99, 0.99);
       handleBlock(mockBlock(BEAN_WETH_CP2_WELL_BLOCK));

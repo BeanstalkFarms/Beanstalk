@@ -113,7 +113,7 @@ export function updateBeanValues(
   let beanHourly = loadOrCreateBeanHourlySnapshot(token, timestamp, bean.lastSeason);
   let beanDaily = loadOrCreateBeanDailySnapshot(token, timestamp);
 
-  if (newPrice != null) {
+  if (newPrice !== null) {
     bean.price = newPrice;
   }
   bean.supply = bean.supply.plus(deltaSupply);
