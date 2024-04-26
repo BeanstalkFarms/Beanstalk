@@ -28,6 +28,7 @@ contract WhitelistTest is TestHelper {
         uint128 gaugePoints,
         uint64 optimalPercentDepositedBdv
     );
+    event DewhitelistToken(address indexed token);
 
     function setUp() public {
         initializeBeanstalkTestState(true, false);
@@ -209,7 +210,10 @@ contract WhitelistTest is TestHelper {
             gaugePointSelector,
             liquidityWeightSelector,
             gaugePoints,
-            optimalPercentDepositedBdv
+            optimalPercentDepositedBdv,
+            true,
+            true,
+            false
         );
     }
 
@@ -258,8 +262,35 @@ contract WhitelistTest is TestHelper {
             gaugePointSelector,
             liquidityWeightSelector,
             gaugePoints,
-            optimalPercentDepositedBdv
+            optimalPercentDepositedBdv,
+            true,
+            true,
+            false
         );
+    }
+
+    /**
+     * @notice validates general dewhitelist functionality.
+     */
+    function test_dewhitelist(uint256 i, uint256 season) public prank(BEANSTALK) {
+        season = bound(season, 1, type(uint32).max);
+        bs.teleportSunrise(uint32(season));
+        address[] memory tokens = bs.getWhitelistedTokens();
+        i = bound(i, 0, tokens.length - 1);
+        address token = tokens[i];
+        // initial milestone stem and season
+        IMockFBeanstalk.SiloSettings memory ss = bs.tokenSettings(token);
+
+        vm.expectEmit();
+        emit DewhitelistToken(token);
+        bs.dewhitelistToken(token);
+
+        verifyWhitelistState(token, 0, 1, 10000, 0, 0, 0, 0, false, false, false);
+        // verify that the milestone stem and season are updated and are kept, as
+        // existing deposits are still valid.
+        IMockFBeanstalk.SiloSettings memory newSS = bs.tokenSettings(token);
+        assertEq(int256(newSS.milestoneStem), bs.stemTipForToken(token));
+        assertEq(uint256(newSS.milestoneSeason), season);
     }
 
     function verifyWhitelistEvents(
@@ -295,7 +326,10 @@ contract WhitelistTest is TestHelper {
         bytes4 gaugePointSelector,
         bytes4 liquidityWeightSelector,
         uint128 gaugePoints,
-        uint64 optimalPercentDepositedBdv
+        uint64 optimalPercentDepositedBdv,
+        bool isWhitelisted,
+        bool isWhitelistedLp,
+        bool isWhitelistedWell
     ) internal view {
         IMockFBeanstalk.SiloSettings memory ss = bs.tokenSettings(token);
         assertEq(ss.selector, bdvSelector);
@@ -309,8 +343,9 @@ contract WhitelistTest is TestHelper {
         
         IMockFBeanstalk.WhitelistStatus memory ws = bs.getWhitelistStatus(token);
         assertEq(ws.token, token);
-        assertEq(ws.isWhitelisted, true);
-        assertEq(ws.isWhitelistedLp, true);
-        assertEq(ws.isWhitelistedWell, false);
+        assertEq(ws.isWhitelisted, isWhitelisted);
+        assertEq(ws.isWhitelistedLp, isWhitelistedLp);
+        assertEq(ws.isWhitelistedWell, isWhitelistedWell);
     }
+
 }
