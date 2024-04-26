@@ -217,7 +217,7 @@ export function updateBeanSupplyPegPercent(blockNumber: BigInt): void {
       // Assumption that beans is in the 0 index for all pools, this may need to be revisited.
       pegSupply = pegSupply.plus(pool.reserves[0]);
     }
-    bean.lockedBeans = calcLockedBeans();
+    bean.lockedBeans = calcLockedBeans(blockNumber);
     bean.supplyInPegLP = toDecimal(pegSupply).div(toDecimal(bean.supply.minus(bean.lockedBeans)));
     bean.save();
   }
