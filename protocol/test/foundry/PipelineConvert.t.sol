@@ -1196,6 +1196,74 @@ contract PipelineConvertTest is TestHelper {
         assertEq(penalty, 51);
     }*/
 
+    function testCalcStalkPenaltyUpToPeg() public {
+        (LibConvert.DeltaBStorage memory dbs, address inputToken, address outputToken, uint256 bdvConverted, uint256 overallConvertCapacity) = setupTowardsPegDeltaBStorageNegative();
+
+        uint256 stalkPenaltyBdv = LibConvert.calculateStalkPenalty(dbs, bdvConverted, overallConvertCapacity, inputToken, outputToken);
+        assertEq(stalkPenaltyBdv, 0);
+    }
+
+    function testCalcStalkPenaltyDownToPeg() public {
+        (LibConvert.DeltaBStorage memory dbs, address inputToken, address outputToken, uint256 bdvConverted, uint256 overallConvertCapacity) = setupTowardsPegDeltaBStorageNegative();
+
+        dbs.beforeInputTokenDeltaB = 100;
+        dbs.beforeOutputTokenDeltaB = 100;
+
+        uint256 stalkPenaltyBdv = LibConvert.calculateStalkPenalty(dbs, bdvConverted, overallConvertCapacity, inputToken, outputToken);
+        assertEq(stalkPenaltyBdv, 0);
+    }
+
+    function testCalcStalkPenaltyNoOverallCap() public {
+        (LibConvert.DeltaBStorage memory dbs, address inputToken, address outputToken, uint256 bdvConverted, uint256 overallConvertCapacity) = setupTowardsPegDeltaBStorageNegative();
+
+        overallConvertCapacity = 0;
+        dbs.beforeOverallDeltaB = -100;
+
+        uint256 stalkPenaltyBdv = LibConvert.calculateStalkPenalty(dbs, bdvConverted, overallConvertCapacity, inputToken, outputToken);
+        assertEq(stalkPenaltyBdv, 100);
+    }
+
+    function testCalcStalkPenaltyNoInputTokenCap() public {
+        (LibConvert.DeltaBStorage memory dbs, address inputToken, address outputToken, uint256 bdvConverted, uint256 overallConvertCapacity) = setupTowardsPegDeltaBStorageNegative();
+
+        dbs.beforeOverallDeltaB = -100;
+
+        uint256 stalkPenaltyBdv = LibConvert.calculateStalkPenalty(dbs, bdvConverted, overallConvertCapacity, inputToken, outputToken);
+        assertEq(stalkPenaltyBdv, 100);
+    }
+
+    function testCalcStalkPenaltyNoOutputTokenCap() public {
+        (LibConvert.DeltaBStorage memory dbs, address inputToken, address outputToken, uint256 bdvConverted, uint256 overallConvertCapacity) = setupTowardsPegDeltaBStorageNegative();
+
+        inputToken = C.BEAN;
+        outputToken = C.BEAN_ETH_WELL;
+        dbs.beforeOverallDeltaB = -100;
+
+        uint256 stalkPenaltyBdv = LibConvert.calculateStalkPenalty(dbs, bdvConverted, overallConvertCapacity, inputToken, outputToken);
+        assertEq(stalkPenaltyBdv, 100);
+    }
+
+    function setupTowardsPegDeltaBStorageNegative() public pure returns (
+        LibConvert.DeltaBStorage memory dbs,
+        address inputToken,
+        address outputToken,
+        uint256 bdvConverted,
+        uint256 overallConvertCapacity
+    ) {
+        dbs.beforeInputTokenDeltaB = -100;
+        dbs.afterInputTokenDeltaB = 0;
+        dbs.beforeOutputTokenDeltaB = -100;
+        dbs.afterOutputTokenDeltaB = 0;
+        dbs.beforeOverallDeltaB = 0;
+        dbs.afterOverallDeltaB = 0;
+
+        inputToken = C.BEAN_ETH_WELL;
+        outputToken = C.BEAN;
+
+        bdvConverted = 100;
+        overallConvertCapacity = 100;
+    }
+
 
     ////// SILO TEST HELPERS //////
 
