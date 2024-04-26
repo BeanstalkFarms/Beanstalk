@@ -116,7 +116,7 @@ dataSources:
         - event: Sunrise(indexed uint256)
           handler: handleSunrise
         - event: DewhitelistToken(indexed address)
-          handler: dewhitelistToken
+          handler: handleDewhitelistToken
         - event: Reward(indexed uint32,uint256,uint256,uint256)
           handler: handleRewardMint
         - event: Chop(indexed address,indexed address,uint256,uint256)

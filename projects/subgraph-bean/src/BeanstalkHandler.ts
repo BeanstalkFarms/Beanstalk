@@ -146,6 +146,6 @@ export function handleChop(event: Chop): void {
   updateBeanSupplyPegPercent(event.block.number);
 }
 
-export function handleReward(event: Reward): void {
+export function handleRewardMint(event: Reward): void {
   updateBeanSupplyPegPercent(event.block.number);
 }

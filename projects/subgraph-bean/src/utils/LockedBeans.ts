@@ -15,7 +15,7 @@ import { loadOrCreatePool } from "./Pool";
 
 export function calcLockedBeans(blockNumber: BigInt): BigInt {
   // If BIP42 is deployed - return the result from the contract
-  // Future improvement when deployment block is known, can check block and avoid this call.
+  // Future improvement when deployment block is known, can check block and avoid this call in earlier blocks.
   let beanstalkBIP42 = SeedGauge.bind(BEANSTALK);
   let lockedBeans = beanstalkBIP42.try_getLockedBeans();
   if (!lockedBeans.reverted) {
