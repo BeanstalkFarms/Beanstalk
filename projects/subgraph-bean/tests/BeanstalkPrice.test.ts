@@ -1,4 +1,4 @@
-import { beforeEach, beforeAll, afterEach, assert, clearStore, describe, test } from "matchstick-as/assembly/index";
+import { beforeEach, beforeAll, afterEach, assert, clearStore, describe, test, log } from "matchstick-as/assembly/index";
 import { loadBean } from "../src/utils/Bean";
 import { BEAN_3CRV, BEAN_ERC20, BEAN_WETH_CP2_WELL, BEAN_WETH_CP2_WELL_BLOCK, CRV3_TOKEN, WETH } from "../../subgraph-core/utils/Constants";
 import { handleDewhitelistToken } from "../src/BeanstalkHandler";
@@ -61,6 +61,8 @@ describe("BeanstalkPrice", () => {
   test("Can set the price", () => {
     const priceResult = BeanstalkPrice_try_price(BEAN_ERC20, BEAN_WETH_CP2_WELL_BLOCK);
     assert.assertTrue(priceResult.value.price.equals(overallPrice));
+    assert.assertTrue(priceResult.value.ps.length == 2);
+    assert.assertTrue(priceResult.dewhitelistedPools.length == 0);
   });
 
   test("Extract pool price", () => {
@@ -72,7 +74,6 @@ describe("BeanstalkPrice", () => {
     assert.assertTrue(beanEthPriceResult.price.equals(beanEthPrice));
   });
 
-  // NOTE: this test may need to change - if a new price contract is used. As such it is failing for now.
   test("Price response only includes whitelisted tokens", () => {
     const event = createDewhitelistTokenEvent(BEAN_3CRV.toHexString());
     event.block.number = BEAN_WETH_CP2_WELL_BLOCK;
@@ -80,7 +81,9 @@ describe("BeanstalkPrice", () => {
 
     const priceResult = BeanstalkPrice_try_price(BEAN_ERC20, BEAN_WETH_CP2_WELL_BLOCK);
     const curvePriceResult = getPoolPrice(priceResult, BEAN_3CRV);
-    assert.assertTrue(curvePriceResult === null);
+    assert.assertTrue(priceResult.value.ps.length == 1);
+    assert.assertTrue(priceResult.dewhitelistedPools.length == 1);
+    assert.assertTrue(curvePriceResult !== null);
     assert.assertTrue(priceResult.value.price.equals(beanEthPrice));
   });
 });

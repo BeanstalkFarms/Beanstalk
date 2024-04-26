@@ -126,6 +126,9 @@ export function checkPegCrossEth(block: ethereum.Block): void {
   const prevPoolPrice = pool.lastPrice;
 
   const reserves = uniswapV2Reserves(BEAN_WETH_V1);
+  if (reserves[0] == ZERO_BI || reserves[1] == ZERO_BI) {
+    return;
+  }
   const ethPrice = getPreReplantPriceETH();
   const newPoolPrices = calcUniswapV2Inst_2(toDecimal(reserves[1]), toDecimal(reserves[0], 18), ethPrice);
 
