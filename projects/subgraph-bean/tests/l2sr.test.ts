@@ -51,7 +51,7 @@ describe("L2SR", () => {
       mockERC20TokenSupply(BEAN_WETH_CP2_WELL, BigInt.fromString("256164804872196346760208"));
 
       const lockedBeans = calcLockedBeans(BEAN_WETH_UNRIPE_MIGRATION_BLOCK);
-      log.debug("answer {}", [lockedBeans.toString()]);
+      assert.assertTrue(lockedBeans.equals(BigInt.fromString("25548711698424")));
     });
   });
 
