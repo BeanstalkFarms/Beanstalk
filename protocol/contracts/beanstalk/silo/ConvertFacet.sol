@@ -136,6 +136,9 @@ contract ConvertFacet is ReentrancyGuard {
             console.log('pipeData.beforeOverallDeltaB: ');
             console.logInt(pipeData.beforeOverallDeltaB);
 
+            console.log('pipeData.beforeInputTokenDeltaB: ');
+            console.logInt(pipeData.beforeInputTokenDeltaB);
+
             console.log('stored initial data');
         }
 

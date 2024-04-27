@@ -220,11 +220,23 @@ library LibWellMinting {
             uint256[] memory ratios,
             uint256 beanIndex,
         ) = LibWell.getRatiosAndBeanIndex(tokens, 0);
+        
+        
 
         // Converts cannot be performed, if the Bean reserve is less than the minimum
         if (reserves[beanIndex] < C.WELL_MINIMUM_BEAN_BALANCE) {
             return (0);
         }
+
+
+        console.log('part 1:', (IBeanstalkWellFunction(wellFunction.target).calcReserveAtRatioSwap(
+            reserves,
+            beanIndex,
+            ratios,
+            wellFunction.data
+        )));
+
+        console.log('part 2: ', reserves[beanIndex]);
 
         return int256(IBeanstalkWellFunction(wellFunction.target).calcReserveAtRatioSwap(
             reserves,
