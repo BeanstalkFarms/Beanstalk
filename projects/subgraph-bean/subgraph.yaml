@@ -175,6 +175,8 @@ dataSources:
           file: ../subgraph-core/abis/CalculationsCurve.json
         - name: ERC20
           file: ../subgraph-core/abis/ERC20.json
+        - name: UniswapV2Pair
+          file: ../subgraph-core/abis/UniswapV2Pair.json
       eventHandlers:
         - event: TokenExchange(indexed address,int128,uint256,int128,uint256)
           handler: handleTokenExchange
@@ -209,6 +211,8 @@ dataSources:
           file: ../subgraph-core/abis/CalculationsCurve.json
         - name: ERC20
           file: ../subgraph-core/abis/ERC20.json
+        - name: UniswapV2Pair
+          file: ../subgraph-core/abis/UniswapV2Pair.json
       eventHandlers:
         - event: TokenExchange(indexed address,int128,uint256,int128,uint256)
           handler: handleTokenExchange
