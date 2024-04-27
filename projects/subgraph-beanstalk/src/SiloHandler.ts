@@ -585,6 +585,8 @@ export function handlePlant(event: Plant): void {
   );
 }
 
+// These two calls are according to the Replant abi, before stems were included.
+// They are not in use anymore and therefore it is unclear whether or not they are actually needed.
 export function handleTransferDepositCall(call: TransferDepositCall): void {
   let beanstalk = loadBeanstalk(BEANSTALK);
   let updateFarmers = beanstalk.farmersToUpdate;
@@ -885,6 +887,7 @@ export function updateStalkWithCalls(season: i32, timestamp: BigInt, blockNumber
       timestamp,
       blockNumber
     );
+    // balanceOfSeeds function was removed in silov2
     updateSeedsBalances(account, season, beanstalk_call.balanceOfSeeds(account).minus(silo.seeds), timestamp, blockNumber);
   }
   beanstalk.farmersToUpdate = [];
