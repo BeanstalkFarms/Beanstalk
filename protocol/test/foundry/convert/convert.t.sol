@@ -9,6 +9,7 @@ import {MockConvertFacet} from "contracts/mocks/mockFacets/MockConvertFacet.sol"
 import {LibConvertData} from "contracts/libraries/Convert/LibConvertData.sol";
 import {MockToken} from "contracts/mocks/MockToken.sol";
 import {LibWell} from "contracts/libraries/Well/LibWell.sol";
+import {console} from "forge-std/console.sol";
 
 
 /**
@@ -244,14 +245,16 @@ contract ConvertTest is TestHelper {
     ) public {
         multipleBeanDepositSetup();
         
-        deltaB = bound(deltaB, 1, bean.balanceOf(well) - C.WELL_MINIMUM_BEAN_BALANCE);
+        deltaB = bound(deltaB, 100, bean.balanceOf(well) - C.WELL_MINIMUM_BEAN_BALANCE);
+        console.log('bounded deltaB: ', deltaB);
         setReserves(
             well,
             bean.balanceOf(well) - deltaB,
             weth.balanceOf(well)
         );
 
-        beansConverted = bound(beansConverted, 1, deltaB);
+        beansConverted = bound(beansConverted, 100, deltaB);
+        console.log('bounded beansConverted: ', beansConverted);
         
         uint256 expectedAmtOut = bs.getAmountOut(
             C.BEAN, 

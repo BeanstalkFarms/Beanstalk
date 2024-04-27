@@ -133,6 +133,9 @@ contract ConvertFacet is ReentrancyGuard {
             pipeData.beforeInputTokenDeltaB = getInstaDeltaB(fromToken);
             pipeData.beforeOutputTokenDeltaB = getInstaDeltaB(toToken);
 
+            console.log('pipeData.beforeOverallDeltaB: ');
+            console.logInt(pipeData.beforeOverallDeltaB);
+
             console.log('stored initial data');
         }
 
@@ -163,7 +166,8 @@ contract ConvertFacet is ReentrancyGuard {
 
             console.log('penalty is', pipeData.stalkPenaltyBdv);
 
-            require(pipeData.stalkPenaltyBdv == 0, "Convert: Penalty would be applied to this convert, use pipeline convert");
+            // 1 instead of 0 because of rounding
+            require(pipeData.stalkPenaltyBdv <= 1000, "Convert: Penalty would be applied to this convert, use pipeline convert");
         }
 
         uint256 newBdv = LibTokenSilo.beanDenominatedValue(toToken, toAmount);

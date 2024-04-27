@@ -240,7 +240,11 @@ library LibWellMinting {
             if (tokens[i] == C.BEAN) continue;
             (int256 wellDeltaB) = instantaneousDeltaB(tokens[i]);
             deltaB = deltaB.add(wellDeltaB);
+            console.log('overallInstantaneousDeltaB for token: ', tokens[i]);
+            console.logInt(wellDeltaB);
         }
+        console.log('final overallInstantaneousDeltaB: ');
+        console.logInt(deltaB);
     }
     
     function cappedReservesDeltaB(address well) internal view returns 
