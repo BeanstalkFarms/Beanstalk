@@ -19,7 +19,7 @@ import { calcUniswapV2Inst, setUniswapV2Twa } from "./utils/price/UniswapPrice";
 import { calcCurveInst, setCurveTwa } from "./utils/price/CurvePrice";
 import { MetapoolOracle, WellOracle } from "../generated/TWAPOracles/BIP37";
 import { DeltaBPriceLiquidity } from "./utils/price/Types";
-import { setTwaLast } from "./utils/price/TwaOracle";
+import { setRawWellReserves, setTwaLast } from "./utils/price/TwaOracle";
 import { decodeCumulativeWellReserves, setWellTwa } from "./utils/price/WellPrice";
 import { BeanstalkPrice_try_price, getPoolPrice } from "./utils/price/BeanstalkPrice";
 import { beanstalkPrice_updatePoolPrices } from "./BlockHandler";
@@ -131,6 +131,7 @@ export function handleMetapoolOracle(event: MetapoolOracle): void {
 }
 
 export function handleWellOracle(event: WellOracle): void {
+  setRawWellReserves(event);
   setTwaLast(event.params.well.toHexString(), decodeCumulativeWellReserves(event.params.cumulativeReserves), event.block.timestamp);
   setWellTwa(event.params.well.toHexString(), event.params.deltaB, event.block.timestamp, event.block.number);
   updateBeanTwa(event.block.timestamp, event.block.number);

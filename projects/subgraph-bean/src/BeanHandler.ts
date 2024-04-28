@@ -1,6 +1,6 @@
 import { Transfer } from "../generated/Bean/Bean";
 import { loadBean, updateBeanSupplyPegPercent } from "./utils/Bean";
-import { ADDRESS_ZERO } from "../../subgraph-core/utils/Constants";
+import { ADDRESS_ZERO, BEAN_ERC20_V1 } from "../../subgraph-core/utils/Constants";
 
 export function handleTransfer(event: Transfer): void {
   if (event.params.from == ADDRESS_ZERO || event.params.to == ADDRESS_ZERO) {
@@ -15,6 +15,8 @@ export function handleTransfer(event: Transfer): void {
     }
     bean.save();
 
-    updateBeanSupplyPegPercent(event.block.number);
+    if (event.address != BEAN_ERC20_V1) {
+      updateBeanSupplyPegPercent(event.block.number);
+    }
   }
 }

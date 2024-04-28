@@ -187,6 +187,26 @@ describe("DeltaB", () => {
       assert.fieldEquals("PoolHourlySnapshot", prefixWell + h1, "twaDeltaBeans", event2.params.deltaB.toString());
       assert.fieldEquals("PoolHourlySnapshot", prefixWell + h1, "twaPrice", "0.9128867742860822655628687132162919");
       assert.fieldEquals("PoolHourlySnapshot", prefixWell + h1, "twaToken2Price", "3204.340276349048918425043871982445");
+
+      assert.fieldEquals(
+        "TwaOracle",
+        BEAN_WETH_CP2_WELL.toHexString(),
+        "cumulativeWellReserves",
+        event2.params.cumulativeReserves.toHexString()
+      );
+      assert.fieldEquals("TwaOracle", BEAN_WETH_CP2_WELL.toHexString(), "cumulativeWellReservesTime", event2.block.timestamp.toString());
+      assert.fieldEquals(
+        "TwaOracle",
+        BEAN_WETH_CP2_WELL.toHexString(),
+        "cumulativeWellReservesPrev",
+        event1.params.cumulativeReserves.toHexString()
+      );
+      assert.fieldEquals(
+        "TwaOracle",
+        BEAN_WETH_CP2_WELL.toHexString(),
+        "cumulativeWellReservesPrevTime",
+        event1.block.timestamp.toString()
+      );
     });
   });
 });

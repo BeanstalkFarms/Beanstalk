@@ -1,4 +1,4 @@
-import { BigInt, Address, BigDecimal, log } from "@graphprotocol/graph-ts";
+import { BigInt, Address, BigDecimal, Bytes, log } from "@graphprotocol/graph-ts";
 import { TwaOracle } from "../../../generated/schema";
 import { BI_10, emptyBigIntArray, ONE_BI, ZERO_BI } from "../../../../subgraph-core/utils/Decimals";
 import { uniswapCumulativePrice } from "./UniswapPrice";
@@ -6,6 +6,7 @@ import { WETH_USDC_PAIR } from "../../../../subgraph-core/utils/Constants";
 import { curveCumulativePrices } from "./CurvePrice";
 import { TWAType } from "./Types";
 import { wellCumulativePrices, wellTwaReserves } from "./WellPrice";
+import { WellOracle } from "../../../generated/TWAPOracles/BIP37";
 
 export function loadOrCreateTwaOracle(poolAddress: string): TwaOracle {
   let twaOracle = TwaOracle.load(poolAddress);
@@ -17,6 +18,10 @@ export function loadOrCreateTwaOracle(poolAddress: string): TwaOracle {
     twaOracle.priceCumulativeLast = emptyBigIntArray(2);
     twaOracle.lastBalances = emptyBigIntArray(2);
     twaOracle.lastUpdated = ZERO_BI;
+    twaOracle.cumulativeWellReserves = Bytes.empty();
+    twaOracle.cumulativeWellReservesTime = ZERO_BI;
+    twaOracle.cumulativeWellReservesPrev = Bytes.empty();
+    twaOracle.cumulativeWellReservesPrevTime = ZERO_BI;
     twaOracle.save();
   }
   return twaOracle as TwaOracle;
@@ -39,6 +44,15 @@ export function setTwaLast(poolAddress: string, newCumulative: BigInt[], timesta
   let twaOracle = loadOrCreateTwaOracle(poolAddress);
   twaOracle.priceCumulativeLast = newCumulative;
   twaOracle.lastUpdated = timestamp;
+  twaOracle.save();
+}
+
+export function setRawWellReserves(event: WellOracle): void {
+  let twaOracle = loadOrCreateTwaOracle(event.params.well.toHexString());
+  twaOracle.cumulativeWellReservesPrev = twaOracle.cumulativeWellReserves;
+  twaOracle.cumulativeWellReservesPrevTime = twaOracle.cumulativeWellReservesTime;
+  twaOracle.cumulativeWellReserves = event.params.cumulativeReserves;
+  twaOracle.cumulativeWellReservesTime = event.block.timestamp;
   twaOracle.save();
 }
 

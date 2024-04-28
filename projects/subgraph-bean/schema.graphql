@@ -259,8 +259,7 @@ type PoolDailySnapshot @entity {
   updatedAt: BigInt!
 }
 
-# For tracking twa balances as the seasons progress.
-# This is only relevant for pre-replant where this information is not directly accessible.
+# For tracking twa balances as the seasons progress
 type TwaOracle @entity {
   id: ID!
   pool: Pool!
@@ -268,9 +267,15 @@ type TwaOracle @entity {
   # priceCumulativeSun is the value of priceCumulativeLast at the time of the previous sunrise (lastSun)
   priceCumulativeSun: [BigInt!]!
   lastSun: BigInt!
-  # These three fields are for when manual calculation of price cumulative last is required (beanlusd)
+  # These three fields are for when manual calculation of price cumulative last is required (beanlusd, wells)
   # Otherwise the equivalent values are derived from the corresponding contract functions.
   priceCumulativeLast: [BigInt!]!
   lastBalances: [BigInt!]!
   lastUpdated: BigInt!
+  # These four fields are for saving the raw Well reserves outputted by the WellOracle event
+  # The previous two seasons are needed because in the same block as a new season starts, the newest value cannot be used.
+  cumulativeWellReserves: Bytes!
+  cumulativeWellReservesTime: BigInt!
+  cumulativeWellReservesPrev: Bytes!
+  cumulativeWellReservesPrevTime: BigInt!
 }
