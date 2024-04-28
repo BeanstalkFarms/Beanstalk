@@ -229,20 +229,16 @@ library LibFertilizer {
      * @return totalDollars The total dollar amount.
      */
     function getTotalRecapDollarsNeeded() internal view returns(uint256) {
-	    uint256 totalDollars = C
-            .dollarPerUnripeLP()
-            .mul(C.unripeLP().totalSupply())
-            .div(DECIMALS);
-        totalDollars = totalDollars / 1e6 * 1e6; // round down to nearest USDC
-        return totalDollars;
+        return getTotalRecapDollarsNeeded(C.unripeLP().totalSupply());
     }
 
     /**
      * @dev Returns the total dollar amount needed to recapitalize Beanstalk
      * for the supply of Unripe LP.
+     * @param urLPsupply The supply of Unripe LP.
      * @return totalDollars The total dollar amount.
      */
-    function getTotalRecapDollarsNeeded(uint256 urLPsupply) internal view returns(uint256) {
+    function getTotalRecapDollarsNeeded(uint256 urLPsupply) internal pure returns(uint256) {
 	    uint256 totalDollars = C
             .dollarPerUnripeLP()
             .mul(urLPsupply)

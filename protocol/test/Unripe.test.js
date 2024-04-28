@@ -9,7 +9,7 @@ const ZERO_BYTES = ethers.utils.formatBytes32String('0x0')
 let user, user2, owner;
 let userAddress, ownerAddress, user2Address;
 
-describe('Unripe', function () {
+describe.only('Unripe', function () {
   before(async function () {
     [owner, user, user2] = await ethers.getSigners()
     userAddress = user.address;
@@ -164,13 +164,13 @@ describe('Unripe', function () {
 
   // formula: redeem = currentRipeUnderlying *  (usdValueRaised/totalUsdNeeded) * UnripeAmountIn/UnripeSupply;
   // redeem = 25 * 0.5 * 100/100 = 12.5
-
   describe('chop whole supply with balanceOfUnderlying Max ≠ Unripe Total Supply, balanceOfUnderlying < 100, fert 50% sold', async function () {
     beforeEach(async function () {
       // we need total dollars needed to be 50 * 1e6
       // but totalDollarsneeded = dollarPerUnripeLP * C.unripeLP().totalSupply() / DECIMALS
       // 50 * 1e6 = 530618 * supply / 1e6
       // solve for supply --> we get 94229747,2 --> round to nearest usdc = 95
+      // (contract rounds down, thus we round up when issuing unripeLP tokens).
       await this.unripeLP.mint(userAddress, to6('95'))
       // unripe bean supply == 100
       await this.unripeBean.mint(userAddress, to6('100'))
@@ -187,21 +187,14 @@ describe('Unripe', function () {
     })
 
     it('getters', async function () {
-      // this divides by total supply so ---> "SafeMath: division by zero" when chop amount == total supply
-      // expect(await this.unripe.getUnderlyingPerUnripeToken(UNRIPE_BEAN)).to.be.equal('100090')
-      // expect(await this.unripe.getPenalty(UNRIPE_BEAN)).to.be.equal(to6('0.010018'))
-      // expect(await this.unripe.getPenalizedUnderlying(UNRIPE_BEAN, to6('1'))).to.be.equal(to6('0.010018'))
-      // expect(await this.unripe.getUnderlying(UNRIPE_BEAN, to6('1'))).to.be.equal(to6('0.10009'))
-      // expect(await this.unripe.balanceOfUnderlying(UNRIPE_BEAN, userAddress)).to.be.equal(to6('99.99'))
-      // expect(await this.unripe.balanceOfPenalizedUnderlying(UNRIPE_BEAN, userAddress)).to.be.equal(to6('10.008008'))
-
-      // s.fertilizedIndex.mul(amount).div(s.unfertilizedIndex);
+      // fertilizer recapitalization is independent of the recapitalization of unripe.
       expect(await this.unripe.getRecapPaidPercent()).to.be.equal(to6('0.01'))
+      
       expect(await this.unripe.getTotalUnderlying(UNRIPE_BEAN)).to.be.equal(to6('12.5'))
       expect(await this.unripe.isUnripe(UNRIPE_BEAN)).to.be.equal(true)
     })
 
-    it('changes balaces', async function () {
+    it('changes balances', async function () {
       expect(await this.unripeBean.balanceOf(userAddress)).to.be.equal(to6('0'))
       expect(await this.bean.balanceOf(userAddress)).to.be.equal(to6('12.5'));
       expect(await this.unripeBean.totalSupply()).to.be.equal(to6('0'));
@@ -234,7 +227,6 @@ describe('Unripe', function () {
 
   // formula: redeem = currentRipeUnderlying *  (usdValueRaised/totalUsdNeeded) * UnripeAmountIn/UnripeSupply;
   // redeem = 12.5 * 0.25 * 100/100 = 3.125
-
   describe('chop whole supply with balanceOfUnderlying Max ≠ Unripe Total Supply, balanceOfUnderlying < 100, fert 25% sold', async function () {
     beforeEach(async function () {
       // we need total dollars needed to be 50 * 1e6
@@ -257,21 +249,13 @@ describe('Unripe', function () {
     })
 
     it('getters', async function () {
-      // this divides by total supply so ---> "SafeMath: division by zero" when chop amount == total supply
-      // expect(await this.unripe.getUnderlyingPerUnripeToken(UNRIPE_BEAN)).to.be.equal('100090')
-      // expect(await this.unripe.getPenalty(UNRIPE_BEAN)).to.be.equal(to6('0.010018'))
-      // expect(await this.unripe.getPenalizedUnderlying(UNRIPE_BEAN, to6('1'))).to.be.equal(to6('0.010018'))
-      // expect(await this.unripe.getUnderlying(UNRIPE_BEAN, to6('1'))).to.be.equal(to6('0.10009'))
-      // expect(await this.unripe.balanceOfUnderlying(UNRIPE_BEAN, userAddress)).to.be.equal(to6('99.99'))
-      // expect(await this.unripe.balanceOfPenalizedUnderlying(UNRIPE_BEAN, userAddress)).to.be.equal(to6('10.008008'))
-      // s.fertilizedIndex.mul(amount).div(s.unfertilizedIndex);
-
       expect(await this.unripe.getRecapPaidPercent()).to.be.equal(to6('0.01'))
+      // 12.5 - 3.125 = 9.375
       expect(await this.unripe.getTotalUnderlying(UNRIPE_BEAN)).to.be.equal(to6('9.375'))
       expect(await this.unripe.isUnripe(UNRIPE_BEAN)).to.be.equal(true)
     })
 
-    it('changes balaces', async function () {
+    it('changes balances', async function () {
       expect(await this.unripeBean.balanceOf(userAddress)).to.be.equal(to6('0'));
       expect(await this.bean.balanceOf(userAddress)).to.be.equal(to6('3.125'));
       expect(await this.unripeBean.totalSupply()).to.be.equal(to6('0'));
@@ -302,7 +286,6 @@ describe('Unripe', function () {
 
   // formula: redeem = currentRipeUnderlying * (usdValueRaised/totalUsdNeeded) * UnripeAmountIn/UnripeSupply;
   // redeem = 25 * 0.25 * 100/200 = 3.125
-
   describe('chop half the supply balanceOfUnderlying Max ≠ Unripe Total Supply, TotalSupply > 100, fert 25% sold', async function () {
     beforeEach(async function () {
       // but totalDollarsneeded = dollarPerUnripeLP * C.unripeLP().totalSupply() / DECIMALS
@@ -337,7 +320,7 @@ describe('Unripe', function () {
       expect(await this.unripe.isUnripe(UNRIPE_BEAN)).to.be.equal(true)
     })
 
-    it('changes balaces', async function () {
+    it('changes balances', async function () {
       expect(await this.unripeBean.balanceOf(userAddress)).to.be.equal(to6('100'))
       expect(await this.bean.balanceOf(userAddress)).to.be.equal(to6('3.125'));
       expect(await this.unripeBean.totalSupply()).to.be.equal(to6('100'));
@@ -362,15 +345,14 @@ describe('Unripe', function () {
 
 
   // ### Example 3: balanceOfUnderlying Max ≠ Unripe Total Supply, TotalSupply > 100
-  // When all fertilizer is sold, balanceOfUnderlying is 100 tokens.
+  // When all fertilizer is sold, balanceOfUnderlying is 189 tokens.
   // Total Supply of unripeLP is 189. Assume 1 Fertilizer increases balanceOfUnderlying by 1 token.
   // If 25% of Fertilizer is sold, balanceOfUnderlying should be 25. 
   // We want the user to redeem 25%^2 = 6.25% of the underlying.
-  // If ~half the supply was chopped, they should get 3.30 tokens.
+  // If ~half the supply was chopped, they should get 3.125 tokens.
   // formula: redeem = currentRipeUnderlying * (usdValueRaised/totalUsdNeeded) * UnripeAmountIn/UnripeSupply;
-  // redeem = 25 * 0.25 * 100/189 ~= 3.30 --> slighly more than with urBean due to small supply discrepancy
+  // redeem = 25 * 0.25 * 1/2 ~= 3.125 --> slightly more than with urBean due to small supply discrepancy
   // since supply is smaller the user is entitled to more underlying per UnripeLP
-
   describe('LP chop half the supply, balanceOfUnderlying Max ≠ Unripe Total Supply, TotalSupply > 100, fert 25% sold', async function () {
     beforeEach(async function () {
       // totalDollarsneeded = 47
@@ -386,45 +368,53 @@ describe('Unripe', function () {
       expect(await this.fertilizer.remainingRecapitalization()).to.be.equal(to6('75'))
       // s.recapitalized = 25
       expect(await this.unripe.getRecapitalized()).to.be.equal(to6('25'))
-
+      
+      // 25 * 0.25 * 1/189 ~= 0.03306878307
+      expect(await this.unripe.getPenalty(UNRIPE_LP)).to.be.equal(to6('0.033068'))
       // user chops ~ half the unripe LP supply
-      this.result = await this.unripe.connect(user).chop(UNRIPE_LP, to6('100'), EXTERNAL, EXTERNAL)
+      this.result = await this.unripe.connect(user).chop(UNRIPE_LP, to6('94.5'), EXTERNAL, EXTERNAL)
 
     })
 
     it('getters', async function () {
-      expect(await this.unripe.getUnderlyingPerUnripeToken(UNRIPE_LP)).to.be.equal(to6('0.243742'))
-      expect(await this.unripe.getPenalty(UNRIPE_LP)).to.be.equal(to6('0.112500'))
-      expect(await this.unripe.getPenalizedUnderlying(UNRIPE_LP, to6('1'))).to.be.equal(to6('0.112500'))
-      expect(await this.unripe.getUnderlying(UNRIPE_LP, to6('1'))).to.be.equal(to6('0.243742'))
-      expect(await this.unripe.balanceOfUnderlying(UNRIPE_LP, userAddress)).to.be.equal(to6('21.693122'))
-      // 89 * 0.112500 = 10.0125
-      expect(await this.unripe.balanceOfPenalizedUnderlying(UNRIPE_LP, userAddress)).to.be.equal(to6('10.012586'))      
+      // 21.875 / 94.5
+      expect(await this.unripe.getUnderlyingPerUnripeToken(UNRIPE_LP)).to.be.equal(to6('0.231481'))
+      // 21.876 * 0.43752 * 1/94.5 ~= 0.03306878307
+      expect(await this.unripe.getPenalty(UNRIPE_LP)).to.be.equal(to6('0.101273'))
+
+      expect(await this.unripe.getPenalizedUnderlying(UNRIPE_LP, to6('1'))).to.be.equal(to6('0.101273'))
+      expect(await this.unripe.getUnderlying(UNRIPE_LP, to6('1'))).to.be.equal(to6('0.231481'))
+      expect(await this.unripe.balanceOfUnderlying(UNRIPE_LP, userAddress)).to.be.equal(to6('21.875000'))
+      // 94.5 * 0.101273 = 9.5702985
+      expect(await this.unripe.balanceOfPenalizedUnderlying(UNRIPE_LP, userAddress)).to.be.equal(to6('9.570312')) 
       expect(await this.unripe.getRecapPaidPercent()).to.be.equal(to6('0.01'))
-      expect(await this.unripe.getTotalUnderlying(UNRIPE_LP)).to.be.equal(to6('21.693122'))
+      expect(await this.unripe.getTotalUnderlying(UNRIPE_LP)).to.be.equal(to6('21.875000'))
       expect(await this.unripe.isUnripe(UNRIPE_LP)).to.be.equal(true)
     })
 
     it('reduces s.recapitalized proportionally to the amount LP chopped', async function () {
       // recapitalization has reduced proportionally to the dollar amount of unripe LP chopped
-      expect(await this.unripe.getRecapitalized()).to.be.equal(to6('21.693122'))
-      expect(await this.fertilizer.remainingRecapitalization()).to.be.equal(to6('25.306878'))
+      // 21.875000/25 = 0.87500000
+      // 12.5% or 3.125
+      expect(await this.unripe.getRecapitalized()).to.be.equal(to6('21.875000'))
+      // 50 - 21.875 = 28.125
+      expect(await this.fertilizer.remainingRecapitalization()).to.be.equal(to6('28.125000'))
     })
 
-    it('changes balaces', async function () {
-      expect(await this.unripeLP.balanceOf(userAddress)).to.be.equal(to6('89'))
-      expect(await this.bean.balanceOf(userAddress)).to.be.equal(to6('3.306878'));
-      expect(await this.unripeLP.totalSupply()).to.be.equal(to6('89'));
-      // 25 underlying at the start - 3.306878 redeemed = 21.693122
-      expect(await this.bean.balanceOf(this.unripe.address)).to.be.equal(to6('21.693122'))
+    it('changes balances', async function () {
+      expect(await this.unripeLP.balanceOf(userAddress)).to.be.equal(to6('94.5'))
+      expect(await this.bean.balanceOf(userAddress)).to.be.equal(to6('3.125'));
+      expect(await this.unripeLP.totalSupply()).to.be.equal(to6('94.5'));
+      // 25 underlying at the start - 3.125 redeemed = 21.875000
+      expect(await this.bean.balanceOf(this.unripe.address)).to.be.equal(to6('21.875000'))
     })
 
     it('emits an event', async function () {
       await expect(this.result).to.emit(this.unripe, 'Chop').withArgs(
         user.address,
         UNRIPE_LP,
-        to6('100'),
-        to6('3.306878')
+        to6('94.5'),
+        to6('3.125')
       )
     })
   })
