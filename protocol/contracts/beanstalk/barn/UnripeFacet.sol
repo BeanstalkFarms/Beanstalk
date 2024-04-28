@@ -359,6 +359,22 @@ contract UnripeFacet is ReentrancyGuard {
     }
 
     /**
+     * @notice returns the locked beans given the cumulative reserves and timestamp.
+     */
+    function getLockedBeansFromTwaReserves(
+        bytes memory cumulativeReserves,
+        uint40 timestamp
+    ) external view returns (uint256) {
+        address underlyingUrLpWell = s.u[C.UNRIPE_LP].underlyingToken;
+        uint256[] memory twaReserves = LibWell.getTwaReservesFromPump(
+            underlyingUrLpWell,
+            cumulativeReserves,
+            timestamp
+        );
+        return LibUnripe.getLockedBeans(twaReserves);
+    }
+
+    /**
      * @notice Returns the number of Beans that are locked underneath the Unripe Bean token.
      */
     function getLockedBeansUnderlyingUnripeBean() external view returns (uint256) {

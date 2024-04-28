@@ -8,7 +8,7 @@ pragma experimental ABIEncoderV2;
 import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
 import {ICumulativePump} from "contracts/interfaces/basin/pumps/ICumulativePump.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import {IWell} from "contracts/interfaces/basin/IWell.sol";
+import {IWell, Call} from "contracts/interfaces/basin/IWell.sol";
 import {C} from "contracts/C.sol";
 import {AppStorage, LibAppStorage, Storage} from "../LibAppStorage.sol";
 import {LibUsdOracle} from "contracts/libraries/Oracle/LibUsdOracle.sol";
@@ -257,11 +257,29 @@ library LibWell {
         address well
     ) internal view returns (uint256[] memory) {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        try ICumulativePump(C.BEANSTALK_PUMP).readTwaReserves(
+        return getTwaReservesFromPump(
+            well, 
+            s.wellOracleSnapshots[well], 
+            uint40(s.season.timestamp)
+        );
+    }
+
+    /**
+     * @notice returns the twa reserves for well, 
+     * given the cumulative reserves and timestamp.
+     * @dev wrapped in a try/catch to return gracefully.
+     */
+    function getTwaReservesFromPump(
+        address well,
+        bytes memory cumulativeReserves,
+        uint40 timestamp
+    ) internal view returns (uint256[] memory) {
+        Call[] memory pump = IWell(well).pumps();
+        try ICumulativePump(pump[0].target).readTwaReserves(
             well,
-            s.wellOracleSnapshots[well],
-            uint40(s.season.timestamp),
-            C.BYTES_ZERO
+            cumulativeReserves,
+            timestamp,
+            pump[0].data
         ) returns (uint[] memory twaReserves, bytes memory) {
             return twaReserves;
         } catch {
