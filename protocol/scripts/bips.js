@@ -327,6 +327,7 @@ async function bipMiscellaneousImprovements(mock = true, account = undefined, ve
       "UnripeFacet",
       "ConvertFacet",
       "SeasonFacet",
+      "FertilizerFacet"
     ],
     libraryNames: [
       'LibChopConvert',
@@ -351,7 +352,6 @@ async function bipMiscellaneousImprovements(mock = true, account = undefined, ve
         'LibWellMinting',
       ]
     },
-    initFacetName: "InitMiscellaneousImprovements",
     selectorsToRemove: [],
     bip: false,
     object: !mock,

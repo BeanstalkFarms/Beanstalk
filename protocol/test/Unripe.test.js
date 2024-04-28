@@ -9,7 +9,7 @@ const ZERO_BYTES = ethers.utils.formatBytes32String('0x0')
 let user, user2, owner;
 let userAddress, ownerAddress, user2Address;
 
-describe.only('Unripe', function () {
+describe('Unripe', function () {
   before(async function () {
     [owner, user, user2] = await ethers.getSigners()
     userAddress = user.address;
