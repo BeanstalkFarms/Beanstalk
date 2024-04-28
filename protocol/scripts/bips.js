@@ -242,7 +242,13 @@ async function bipSeedGauge(mock = true, account = undefined, verbose = true) {
         "MigrationFacet" // update migration functions
       ],
       initFacetName: "InitBipSeedGauge",
-      selectorsToRemove: [],
+      selectorsToRemove: [
+        '0xd8a6aafe', // remove old whitelist
+        '0xb4f55be8', // remove old whitelistWithEncodeType
+        '0x07a3b202', // remove Curve Oracle
+        '0x9f9962e4', // remove getSeedsPerToken
+        '0x0b2939d1' // remove InVestingPeriod
+      ],
       libraryNames: [
         'LibGauge', 'LibConvert', 'LibLockedUnderlying', 'LibIncentive', 'LibGerminate'
       ],
