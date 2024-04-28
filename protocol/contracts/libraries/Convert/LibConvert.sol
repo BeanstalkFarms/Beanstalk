@@ -272,6 +272,8 @@ library LibConvert {
 
         console.log('convertCap.overallConvertCapacityUsed: ', convertCap.overallConvertCapacityUsed);
 
+        console.log('overallCappedDeltaB: ', overallCappedDeltaB);
+
         // add to penalty how far past capacity was used
         if (convertCap.overallConvertCapacityUsed > overallCappedDeltaB) {
             cumulativePenalty = overallCappedDeltaB.sub(convertCap.overallConvertCapacityUsed);

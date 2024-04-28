@@ -221,7 +221,8 @@ library LibWellMinting {
             uint256 beanIndex,
         ) = LibWell.getRatiosAndBeanIndex(tokens, 0);
         
-        
+
+        // console.log('reserves[beanIndex]: ', reserves[beanIndex]);
 
         // Converts cannot be performed, if the Bean reserve is less than the minimum
         if (reserves[beanIndex] < C.WELL_MINIMUM_BEAN_BALANCE) {
@@ -316,5 +317,10 @@ library LibWellMinting {
             int256 cappedDeltaB = cappedReservesDeltaB(tokens[i]);
             deltaB = deltaB.add(cappedDeltaB);
         }
+    }
+
+    // returns the scaled deltaB, experimental
+    function scaledDeltaB(uint256 beforeLpTokenSupply, uint256 afterLpTokenSupply, int256 deltaB) internal pure returns (int256) {
+        return deltaB.mul(int256(beforeLpTokenSupply)).div(int(afterLpTokenSupply));
     }
 }

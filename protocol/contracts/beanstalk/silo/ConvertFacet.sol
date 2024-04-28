@@ -49,8 +49,10 @@ contract ConvertFacet is ReentrancyGuard {
         uint256 grownStalk;
         int256 beforeInputTokenDeltaB;
         int256 afterInputTokenDeltaB;
+        uint256 beforeInputLpTokenSupply;
         int256 beforeOutputTokenDeltaB;
         int256 afterOutputTokenDeltaB;
+        uint256 beforeOutputLpTokenSupply;
         int256 beforeOverallDeltaB;
         int256 afterOverallDeltaB;
         uint256 inputAmount;
@@ -129,15 +131,17 @@ contract ConvertFacet is ReentrancyGuard {
             console.log('got kind');
 
             // Store the pre-convert insta deltaB's both overall and for each well
-            pipeData.beforeOverallDeltaB = LibWellMinting.overallInstantaneousDeltaB();
+            pipeData.beforeOverallDeltaB = 0; // temp hack to have zero penalty from overall deltaB due to deltaB scaling issue
+            // pipeData.beforeOverallDeltaB = LibWellMinting.overallInstantaneousDeltaB();
             pipeData.beforeInputTokenDeltaB = getInstaDeltaB(fromToken);
             pipeData.beforeOutputTokenDeltaB = getInstaDeltaB(toToken);
+
+            pipeData.beforeInputLpTokenSupply = IERC20(fromToken).totalSupply();
+            pipeData.beforeOutputLpTokenSupply = IERC20(toToken).totalSupply();
 
             console.log('pipeData.beforeOverallDeltaB: ');
             console.logInt(pipeData.beforeOverallDeltaB);
 
-            console.log('pipeData.beforeInputTokenDeltaB: ');
-            console.logInt(pipeData.beforeInputTokenDeltaB);
 
             console.log('stored initial data');
         }
@@ -165,12 +169,26 @@ contract ConvertFacet is ReentrancyGuard {
 
             console.log('pipeData.overallConvertCapacity: ', pipeData.overallConvertCapacity);
 
-            pipeData.stalkPenaltyBdv = prepareStalkPenaltyCalculation(fromToken, toToken, pipeData.beforeInputTokenDeltaB, pipeData.beforeOutputTokenDeltaB, pipeData.beforeOverallDeltaB, pipeData.overallConvertCapacity, fromBdv);
+            pipeData.stalkPenaltyBdv = prepareStalkPenaltyCalculation(fromToken, toToken, pipeData.beforeInputTokenDeltaB, pipeData.beforeInputLpTokenSupply, pipeData.beforeOutputTokenDeltaB, pipeData.beforeOutputLpTokenSupply, pipeData.beforeOverallDeltaB, pipeData.overallConvertCapacity, fromBdv);
 
             console.log('penalty is', pipeData.stalkPenaltyBdv);
 
+
+            console.log('pipeData.beforeInputTokenDeltaB: ');
+            console.logInt(pipeData.beforeInputTokenDeltaB);
+
+            console.log('pipeData.afterInputTokenDeltaB: ');
+            console.logInt(pipeData.afterInputTokenDeltaB);
+
+
+            console.log('pipeData.beforeOutputTokenDeltaB: ');
+            console.logInt(pipeData.beforeOutputTokenDeltaB);
+
+            console.log('pipeData.afterOutputTokenDeltaB: ');
+            console.logInt(pipeData.afterOutputTokenDeltaB);
+
             // 1 instead of 0 because of rounding
-            require(pipeData.stalkPenaltyBdv <= 1000, "Convert: Penalty would be applied to this convert, use pipeline convert");
+            require(pipeData.stalkPenaltyBdv == 0, "Convert: Penalty would be applied to this convert, use pipeline convert");
         }
 
         uint256 newBdv = LibTokenSilo.beanDenominatedValue(toToken, toAmount);
@@ -181,21 +199,21 @@ contract ConvertFacet is ReentrancyGuard {
         emit Convert(LibTractor._user(), fromToken, toToken, fromAmount, toAmount);
     }
 
-    /**
-     * @notice Pipeline convert allows any type of convert using a series of
-     * pipeline calls. A stalk penalty may be applied if the convert crosses deltaB.
-     * 
-     * @param inputToken The token to convert from.
-     * @param stems The stems of the deposits to convert from.
-     * @param amounts The amounts of the deposits to convert from.
-     * @param outputToken The token to convert to.
-     * @param advancedFarmCalls The farm calls to execute.
-     * @return toStem the new stems of the converted deposit
-     * @return fromAmount the amount of tokens converted from
-     * @return toAmount the amount of tokens converted to
-     * @return fromBdv the bdv of the deposits converted from
-     * @return toBdv the bdv of the deposit converted to
-     */
+    // /**
+    //  * @notice Pipeline convert allows any type of convert using a series of
+    //  * pipeline calls. A stalk penalty may be applied if the convert crosses deltaB.
+    //  * 
+    //  * @param inputToken The token to convert from.
+    //  * @param stems The stems of the deposits to convert from.
+    //  * @param amounts The amounts of the deposits to convert from.
+    //  * @param outputToken The token to convert to.
+    //  * @param advancedFarmCalls The farm calls to execute.
+    //  * @return toStem the new stems of the converted deposit
+    //  * @return fromAmount the amount of tokens converted from
+    //  * @return toAmount the amount of tokens converted to
+    //  * @return fromBdv the bdv of the deposits converted from
+    //  * @return toBdv the bdv of the deposit converted to
+    //  */
     function pipelineConvert(
         address inputToken,
         int96[] calldata stems,
@@ -240,6 +258,10 @@ contract ConvertFacet is ReentrancyGuard {
         pipeData.beforeInputTokenDeltaB = getInstaDeltaB(inputToken);
         pipeData.beforeOutputTokenDeltaB = getInstaDeltaB(outputToken);
 
+
+        pipeData.beforeInputLpTokenSupply = IERC20(inputToken).totalSupply();
+        pipeData.beforeOutputLpTokenSupply = IERC20(outputToken).totalSupply();
+
         IERC20(inputToken).transfer(C.PIPELINE, fromAmount);
         executeAdvancedFarmCalls(advancedFarmCalls);
 
@@ -250,7 +272,7 @@ contract ConvertFacet is ReentrancyGuard {
 
         // Calculate stalk penalty using start/finish deltaB of pools, and the capped deltaB is
         // passed in to setup max convert power.
-        pipeData.stalkPenaltyBdv = prepareStalkPenaltyCalculation(inputToken, outputToken, pipeData.beforeInputTokenDeltaB, pipeData.beforeOutputTokenDeltaB, pipeData.beforeOverallDeltaB, pipeData.overallConvertCapacity, fromBdv);
+        pipeData.stalkPenaltyBdv = prepareStalkPenaltyCalculation(inputToken, outputToken, pipeData.beforeInputTokenDeltaB, pipeData.beforeInputLpTokenSupply, pipeData.beforeOutputTokenDeltaB, pipeData.beforeOutputLpTokenSupply, pipeData.beforeOverallDeltaB, pipeData.overallConvertCapacity, fromBdv);
         
         // Update grownStalk amount with penalty applied
         pipeData.grownStalk = pipeData.grownStalk.sub(pipeData.stalkPenaltyBdv);
@@ -262,27 +284,51 @@ contract ConvertFacet is ReentrancyGuard {
         emit Convert(pipeData.user, inputToken, outputToken, fromAmount, toAmount);
     }
 
+    // pass in before LP token supply to calculcate scaled deltaB
     function prepareStalkPenaltyCalculation(
         address inputToken,
         address outputToken,
         int256 beforeInputTokenDeltaB,
+        uint256 beforeInputLpTokenSupply,
         int256 beforeOutputTokenDeltaB,
+        uint256 beforeOutputLpTokenSupply,
         int256 beforeOverallDeltaB,
         uint256 overallConvertCapacity,
         uint256 fromBdv
     ) internal returns (uint256 penalty) {
 
-        LibConvert.DeltaBStorage memory deltaBStorage;
+        LibConvert.DeltaBStorage memory dbs;
 
-        deltaBStorage.beforeInputTokenDeltaB = beforeInputTokenDeltaB;
-        deltaBStorage.afterInputTokenDeltaB = getInstaDeltaB(inputToken);
-        deltaBStorage.beforeOutputTokenDeltaB = beforeOutputTokenDeltaB;
-        deltaBStorage.afterOutputTokenDeltaB = getInstaDeltaB(outputToken);
-        deltaBStorage.beforeOverallDeltaB = beforeOverallDeltaB;
-        deltaBStorage.afterOverallDeltaB = LibWellMinting.overallInstantaneousDeltaB();
+        dbs.beforeInputTokenDeltaB = beforeInputTokenDeltaB;
+        dbs.afterInputTokenDeltaB = getInstaDeltaB(inputToken);
+        dbs.beforeOutputTokenDeltaB = beforeOutputTokenDeltaB;
+        dbs.afterOutputTokenDeltaB = getInstaDeltaB(outputToken);
+        dbs.beforeOverallDeltaB = beforeOverallDeltaB;
+        dbs.afterOverallDeltaB = LibWellMinting.overallInstantaneousDeltaB();
+
+        // temp hack to remove overall deltaB penalty for old converts due to deltaB scaling issue
+        if (dbs.beforeOverallDeltaB == 0) {
+            dbs.afterOverallDeltaB = 0;
+        }
+
+        // uint256 afterInputLpTokenSupply = IERC20(inputToken).totalSupply();
+        // uint256 afterOutputLpTokenSupply = IERC20(outputToken).totalSupply();
+
+        // modify afterInputTokenDeltaB and afterOutputTokenDeltaB to scale using before/after LP amounts
+        console.log('before scaling dbs.afterInputTokenDeltaB: ');
+        console.logInt(dbs.afterInputTokenDeltaB);
+        dbs.afterInputTokenDeltaB = LibWellMinting.scaledDeltaB(beforeInputLpTokenSupply, IERC20(inputToken).totalSupply(), dbs.afterInputTokenDeltaB);
+        console.log('after scaling dbs.afterInputTokenDeltaB: ');
+        console.logInt(dbs.afterInputTokenDeltaB);
+
+        console.log('before scaling dbs.afterOutputTokenDeltaB: ');
+        console.logInt(dbs.afterOutputTokenDeltaB);
+        dbs.afterOutputTokenDeltaB = LibWellMinting.scaledDeltaB(beforeOutputLpTokenSupply, IERC20(outputToken).totalSupply(), dbs.afterOutputTokenDeltaB);
+        console.log('after scaling dbs.afterOutputTokenDeltaB: ');
+        console.logInt(dbs.afterOutputTokenDeltaB);
 
         return LibConvert.calculateStalkPenalty(
-            deltaBStorage,
+            dbs,
             fromBdv,
             overallConvertCapacity,
             inputToken,

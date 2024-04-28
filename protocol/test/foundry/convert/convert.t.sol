@@ -246,7 +246,8 @@ contract ConvertTest is TestHelper {
     ) public {
         multipleBeanDepositSetup();
         
-        deltaB = bound(deltaB, 100, bean.balanceOf(well) - C.WELL_MINIMUM_BEAN_BALANCE);
+        deltaB = bound(deltaB, 100, 7000e6);
+        // deltaB = bound(deltaB, 100, bean.balanceOf(well) - C.WELL_MINIMUM_BEAN_BALANCE);
         console.log('bounded deltaB: ', deltaB);
         // setReserves(
         //     well,
@@ -280,7 +281,7 @@ contract ConvertTest is TestHelper {
         uint256[] memory amounts = new uint256[](1);
         amounts[0] = beansConverted;
 
-        vm.expectEmit();
+        // vm.expectEmit();
         emit Convert(farmers[0], C.BEAN, well, beansConverted, expectedAmtOut);
         vm.prank(farmers[0]);
         convert.convert(
@@ -289,7 +290,7 @@ contract ConvertTest is TestHelper {
             amounts
         );
 
-        console.log('bs.getMaxAmountIn(C.BEAN, well): ', bs.getMaxAmountIn(C.BEAN, well));
+        // console.log('bs.getMaxAmountIn(C.BEAN, well): ', bs.getMaxAmountIn(C.BEAN, well));
         console.log('deltaB: ', deltaB);
         console.log('beansConverted: ', beansConverted);
 

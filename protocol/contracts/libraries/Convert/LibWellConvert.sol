@@ -12,6 +12,7 @@ import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {C} from "contracts/C.sol";
 import {Call, IWell} from "contracts/interfaces/basin/IWell.sol";
 import {IBeanstalkWellFunction} from "contracts/interfaces/basin/IBeanstalkWellFunction.sol";
+import {console} from "forge-std/console.sol";
 
 /**
  * @title Well Convert Library
@@ -50,9 +51,14 @@ library LibWellConvert {
             wellFunction.data
         );
 
+        console.log('reserves[beanIndex]: ', reserves[beanIndex]);
+
+
         if (beansAtPeg <= reserves[beanIndex]) return (0, beanIndex);
         // SafeMath is unnecessary as above line performs the check
         beans = beansAtPeg - reserves[beanIndex];
+
+        console.log('_beansToPeg: ', beans);
     }
 
     /**
