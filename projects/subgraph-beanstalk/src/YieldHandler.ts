@@ -6,16 +6,16 @@ import { loadFertilizer } from "./utils/Fertilizer";
 import { loadFertilizerYield } from "./utils/FertilizerYield";
 import {
   loadSilo,
-  loadSiloAsset,
   loadSiloHourlySnapshot,
   loadSiloYield,
   loadTokenYield,
-  loadWhitelistTokenSetting
+  loadWhitelistTokenSetting,
+  SiloAsset_findIndex_token
 } from "./utils/SiloEntities";
 import { BigDecimal_max, BigDecimal_sum, BigInt_max, BigInt_sum } from "../../subgraph-core/utils/ArrayMath";
 import { getGerminatingBdvs, tryLoadBothGerminating } from "./utils/Germinating";
 import { getCurrentSeason } from "./utils/Season";
-import { WhitelistTokenSetting } from "../generated/schema";
+import { SiloAsset, WhitelistTokenSetting } from "../generated/schema";
 
 const ROLLING_24_WINDOW = 24;
 const ROLLING_7_DAY_WINDOW = 168;
@@ -141,10 +141,12 @@ export function updateSiloVAPYs(t: i32, timestamp: BigInt, window: i32): void {
 
     let staticSeeds: Array<BigDecimal | null> = [];
 
+    const depositedAssets = silo.assets.load().filter((s) => s.depositedBDV != ZERO_BI);
     for (let i = 0; i < whitelistSettings.length; ++i) {
-      // Get the total deposited bdv of this asset
-      const siloAsset = loadSiloAsset(BEANSTALK, Address.fromBytes(whitelistSettings[i].id));
-      const depositedBdv = toDecimal(siloAsset.depositedBDV);
+      // Get the total deposited bdv of this asset. Remove whitelsited assets from the list as they are encountered
+      const depositedIndex = SiloAsset_findIndex_token(depositedAssets, whitelistSettings[i].id.toHexString());
+      const depositedAsset = depositedAssets.splice(depositedIndex, 1)[0];
+      const depositedBdv = toDecimal(depositedAsset.depositedBDV);
 
       const germinating = getGerminatingBdvs(Address.fromBytes(whitelistSettings[i].id));
 
@@ -170,6 +172,11 @@ export function updateSiloVAPYs(t: i32, timestamp: BigInt, window: i32): void {
       }
     }
 
+    // Remaining assets in the depositedAssets list must have been dewhitelisted. Include in nonGaugeBdv.
+    for (let i = 0; i < depositedAssets.length; ++i) {
+      nonGaugeDepositedBdv = nonGaugeDepositedBdv.plus(toDecimal(depositedAssets[i].depositedBDV));
+    }
+
     const CATCH_UP_RATE = BigDecimal.fromString("4320");
     apys = calculateGaugeVAPYs(
       tokens,
@@ -192,6 +199,7 @@ export function updateSiloVAPYs(t: i32, timestamp: BigInt, window: i32): void {
 
   // Save the apys
   for (let i = 0; i < apys.length; ++i) {
+    //FIXME
     let tokenYield = loadTokenYield(Address.fromBytes(whitelistSettings[i].id), t, window);
     tokenYield.beanAPY = apys[i][0];
     tokenYield.stalkAPY = apys[i][1];

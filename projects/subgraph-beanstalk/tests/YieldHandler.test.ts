@@ -3,7 +3,15 @@ import { afterEach, assert, clearStore, describe, test } from "matchstick-as/ass
 import * as YieldHandler from "../src/YieldHandler";
 import { ZERO_BD, ZERO_BI } from "../../subgraph-core/utils/Decimals";
 import { loadSilo, loadSiloAsset, loadSiloYield, loadTokenYield, loadWhitelistTokenSetting } from "../src/utils/SiloEntities";
-import { BEAN_3CRV, BEAN_ERC20, BEAN_WETH_CP2_WELL, BEANSTALK, UNRIPE_BEAN, UNRIPE_BEAN_3CRV } from "../../subgraph-core/utils/Constants";
+import {
+  BEAN_3CRV,
+  BEAN_ERC20,
+  BEAN_WETH_CP2_WELL,
+  BEANSTALK,
+  UNRIPE_BEAN,
+  UNRIPE_BEAN_3CRV,
+  LUSD_3POOL
+} from "../../subgraph-core/utils/Constants";
 import { setSeason } from "./event-mocking/Season";
 
 describe("APY Calculations", () => {
@@ -177,6 +185,11 @@ describe("APY Calculations", () => {
       let urlpSiloAsset = loadSiloAsset(BEANSTALK, UNRIPE_BEAN_3CRV);
       urlpSiloAsset.depositedBDV = BigInt.fromString("24417908000000");
       urlpSiloAsset.save();
+
+      // Nondeposited silo asset, should not have any effect
+      let farmAsset = loadSiloAsset(BEANSTALK, LUSD_3POOL);
+      farmAsset.farmAmount = BigInt.fromString("1234567890000");
+      farmAsset.save();
 
       /// Set EMA, whitelisted tokens
       // bean3crv intentionally not whitelisted. It should still be included in non-gauge deposited bdv

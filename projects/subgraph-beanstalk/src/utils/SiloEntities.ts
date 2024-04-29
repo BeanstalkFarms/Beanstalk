@@ -361,3 +361,12 @@ export function loadTokenYield(token: Address, season: i32, window: i32): TokenY
   }
   return tokenYield as TokenYield;
 }
+
+export function SiloAsset_findIndex_token(a: SiloAsset[], targetToken: string): i32 {
+  for (let j = 0; j < a.length; j++) {
+    if (a[j].token == targetToken) {
+      return j;
+    }
+  }
+  return -1;
+}
