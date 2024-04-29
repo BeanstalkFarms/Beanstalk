@@ -444,12 +444,6 @@ interface IMockFBeanstalk {
     ) external;
     function cancelPodListing(uint256 index) external payable;
     function cancelPodOrder(
-        uint24 pricePerPod,
-        uint256 maxPlaceInLine,
-        uint256 minFillAmount,
-        uint8 mode
-    ) external payable;
-    function cancelPodOrderV2(
         uint256 maxPlaceInLine,
         uint256 minFillAmount,
         bytes memory pricingFunction,
@@ -492,28 +486,12 @@ interface IMockFBeanstalk {
         uint256 index,
         uint256 start,
         uint256 amount,
-        uint24 pricePerPod,
-        uint256 maxHarvestableIndex,
-        uint256 minFillAmount,
-        uint8 mode
-    ) external payable;
-    function createPodListingV2(
-        uint256 index,
-        uint256 start,
-        uint256 amount,
         uint256 maxHarvestableIndex,
         uint256 minFillAmount,
         bytes memory pricingFunction,
         uint8 mode
     ) external payable;
     function createPodOrder(
-        uint256 beanAmount,
-        uint24 pricePerPod,
-        uint256 maxPlaceInLine,
-        uint256 minFillAmount,
-        uint8 mode
-    ) external payable returns (bytes32 id);
-    function createPodOrderV2(
         uint256 beanAmount,
         uint256 maxPlaceInLine,
         uint256 minFillAmount,
@@ -616,21 +594,13 @@ interface IMockFBeanstalk {
     function fastForward(uint32 _s) external;
     function fertilize(uint256 amount) external;
     function fertilizerSunrise(uint256 amount) external;
-    function fillPodListing(PodListing memory l, uint256 beanAmount, uint8 mode) external payable;
-    function fillPodListingV2(
+    function fillPodListing(
         PodListing memory l,
         uint256 beanAmount,
         bytes memory pricingFunction,
         uint8 mode
     ) external payable;
     function fillPodOrder(
-        PodOrder memory o,
-        uint256 index,
-        uint256 start,
-        uint256 amount,
-        uint8 mode
-    ) external payable;
-    function fillPodOrderV2(
         PodOrder memory o,
         uint256 index,
         uint256 start,
@@ -654,7 +624,7 @@ interface IMockFBeanstalk {
         address account,
         address[] memory tokens
     ) external view returns (Balance[] memory balances);
-    function getAmountBeansToFillOrderV2(
+    function getAmountBeansToFillOrder(
         uint256 placeInLine,
         uint256 amountPodsFromOrder,
         bytes memory pricingFunction
@@ -664,7 +634,7 @@ interface IMockFBeanstalk {
         address tokenOut,
         uint256 amountIn
     ) external view returns (uint256 amountOut);
-    function getAmountPodsFromFillListingV2(
+    function getAmountPodsFromFillListing(
         uint256 placeInLine,
         uint256 podListingAmount,
         uint256 fillBeanAmount,
@@ -1025,14 +995,8 @@ interface IMockFBeanstalk {
     function plot(address account, uint256 index) external view returns (uint256);
     function podIndex() external view returns (uint256);
     function podListing(uint256 index) external view returns (bytes32);
-    function podOrder(
-        address account,
-        uint24 pricePerPod,
-        uint256 maxPlaceInLine,
-        uint256 minFillAmount
-    ) external view returns (uint256);
     function podOrderById(bytes32 id) external view returns (uint256);
-    function podOrderV2(
+    function podOrder(
         address account,
         uint256 maxPlaceInLine,
         uint256 minFillAmount,
