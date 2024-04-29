@@ -47,9 +47,6 @@ library LibConvert {
     {
         LibConvertData.ConvertKind kind = convertData.convertKind();
 
-        // if (kind == LibConvertData.ConvertKind.BEANS_TO_CURVE_LP) {
-        //     (cp.toToken, cp.fromToken, cp.toAmount, cp.fromAmount) = LibCurveConvert
-        //         .convertBeansToLP(convertData);
         if (kind == LibConvertData.ConvertKind.BEANS_TO_WELL_LP) {
             (cp.toToken, cp.fromToken, cp.toAmount, cp.fromAmount) = LibWellConvert
                 .convertBeansToLP(convertData);

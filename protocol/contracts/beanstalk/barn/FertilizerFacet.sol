@@ -253,4 +253,11 @@ contract FertilizerFacet {
         LibDiamond.enforceIsOwnerOrContract();
         LibFertilizer.beginBarnRaiseMigration(well);
     }
+
+    /**
+     * @notice returns the total recapitalization dollars needed to recapitalize the Barn Raise.
+     */
+    function getTotalRecapDollarsNeeded() external view returns (uint256) {
+        return LibFertilizer.getTotalRecapDollarsNeeded();
+    }
 }

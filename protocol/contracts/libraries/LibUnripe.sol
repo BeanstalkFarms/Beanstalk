@@ -159,10 +159,10 @@ library LibUnripe {
         // here is the total urToken supply queried before burnning the unripe token
 	    uint256 totalUsdNeeded = unripeToken == C.UNRIPE_LP ? LibFertilizer.getTotalRecapDollarsNeeded(supply) 
             : LibFertilizer.getTotalRecapDollarsNeeded();
-        // chop rate = total redeemable * %DollarRecapitalized^2 * share of unripe tokens
-        // redeem = totalRipeUnderlying *  (usdValueRaised/totalUsdNeeded)^2 * UnripeAmountIn/UnripeSupply;
+        // chop rate = total redeemable * (%DollarRecapitalized)^2 * share of unripe tokens
+        // redeem = totalRipeUnderlying * (usdValueRaised/totalUsdNeeded)^2 * UnripeAmountIn/UnripeSupply;
         // But totalRipeUnderlying = CurrentUnderlying * totalUsdNeeded/usdValueRaised to get the total underlying
-        // So eventually redeem = currentRipeUnderlying * (usdValueRaised/totalUsdNeeded) * UnripeAmountIn/UnripeSupply
+        // redeem = currentRipeUnderlying * (usdValueRaised/totalUsdNeeded) * UnripeAmountIn/UnripeSupply
         redeem = s.u[unripeToken].balanceOfUnderlying.mul(s.recapitalized).div(totalUsdNeeded).mul(amount).div(supply);
     }
 
@@ -228,5 +228,9 @@ library LibUnripe {
     function isUnripe(address unripeToken) internal view returns (bool unripe) {
         AppStorage storage s = LibAppStorage.diamondStorage();
         unripe = s.u[unripeToken].underlyingToken != address(0);
+    }
+
+    function getTotalRecapDollarsNeeded() internal view returns (uint256 totalUsdNeeded) {
+        return LibFertilizer.getTotalRecapDollarsNeeded();
     }
 }
