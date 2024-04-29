@@ -466,7 +466,7 @@ describe("newField", function () {
         await mockBeanstalk.incrementTotalHarvestableE(to6("101"));
         this.result = await beanstalk
           .connect(user)
-          .createPodListingV2("0", "0", "500", to6("200"), "0", this.f.packedFunction, INTERNAL)
+          .createPodListing("0", "0", "500", to6("200"), "0", this.f.packedFunction, INTERNAL)
         this.result = await beanstalk.connect(user).harvest(["0"], EXTERNAL);
       });
 

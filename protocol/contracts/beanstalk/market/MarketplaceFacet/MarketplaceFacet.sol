@@ -10,7 +10,7 @@ import "contracts/libraries/LibTractor.sol";
 
 /**
  * @author Beanjoyer, Malteasy
- * @title Pod Marketplace v2
+ * @title Pod Marketplace
  **/
 
 contract MarketplaceFacet is Order {
@@ -18,7 +18,7 @@ contract MarketplaceFacet is Order {
      * Pod Listing
      */
 
-    function createPodListingV2(
+    function createPodListing(
         uint256 index,
         uint256 start,
         uint256 amount,
@@ -27,7 +27,7 @@ contract MarketplaceFacet is Order {
         bytes calldata pricingFunction,
         LibTransfer.To mode
     ) external payable {
-        _createPodListingV2(
+        _createPodListing(
             index,
             start,
             amount,
@@ -39,7 +39,7 @@ contract MarketplaceFacet is Order {
     }
 
     // Fill
-    function fillPodListingV2(
+    function fillPodListing(
         PodListing calldata l,
         uint256 beanAmount,
         bytes calldata pricingFunction,
@@ -53,7 +53,7 @@ contract MarketplaceFacet is Order {
             mode,
             l.mode
         );
-        _fillListingV2(l, beanAmount, pricingFunction);
+        _fillListing(l, beanAmount, pricingFunction);
     }
 
     // Cancel
@@ -71,7 +71,7 @@ contract MarketplaceFacet is Order {
      */
 
     // Create
-    function createPodOrderV2(
+    function createPodOrder(
         uint256 beanAmount,
         uint256 maxPlaceInLine,
         uint256 minFillAmount,
@@ -79,11 +79,11 @@ contract MarketplaceFacet is Order {
         LibTransfer.From mode
     ) external payable returns (bytes32 id) {
         beanAmount = LibTransfer.receiveToken(C.bean(), beanAmount, LibTractor._user(), mode);
-        return _createPodOrderV2(beanAmount, maxPlaceInLine, minFillAmount, pricingFunction);
+        return _createPodOrder(beanAmount, maxPlaceInLine, minFillAmount, pricingFunction);
     }
 
     // Fill
-    function fillPodOrderV2(
+    function fillPodOrder(
         PodOrder calldata o,
         uint256 index,
         uint256 start,
@@ -91,21 +91,21 @@ contract MarketplaceFacet is Order {
         bytes calldata pricingFunction,
         LibTransfer.To mode
     ) external payable {
-        _fillPodOrderV2(o, index, start, amount, pricingFunction, mode);
+        _fillPodOrder(o, index, start, amount, pricingFunction, mode);
     }
 
     // Cancel
-    function cancelPodOrderV2(
+    function cancelPodOrder(
         uint256 maxPlaceInLine,
         uint256 minFillAmount,
         bytes calldata pricingFunction,
         LibTransfer.To mode
     ) external payable {
-        _cancelPodOrderV2(maxPlaceInLine, minFillAmount, pricingFunction, mode);
+        _cancelPodOrder(maxPlaceInLine, minFillAmount, pricingFunction, mode);
     }
 
     // Get
-    function podOrderV2(
+    function podOrder(
         address account,
         uint256 maxPlaceInLine,
         uint256 minFillAmount,
@@ -113,7 +113,7 @@ contract MarketplaceFacet is Order {
     ) external view returns (uint256) {
         return
             s.podOrders[
-                createOrderIdV2(account, 0, maxPlaceInLine, minFillAmount, pricingFunction)
+                createOrderId(account, 0, maxPlaceInLine, minFillAmount, pricingFunction)
             ];
     }
 

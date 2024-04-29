@@ -12,7 +12,7 @@ import "contracts/libraries/LibTractor.sol";
 
 /**
  * @author Beanjoyer, Malteasy
- * @title Pod Marketplace v2
+ * @title Pod Marketplace
  **/
 
 contract Listing is PodTransfer {
@@ -57,7 +57,7 @@ contract Listing is PodTransfer {
      * Create
      */
 
-    function _createPodListingV2(
+    function _createPodListing(
         uint256 index,
         uint256 start,
         uint256 amount,
@@ -73,7 +73,7 @@ contract Listing is PodTransfer {
 
         if (s.podListings[index] != bytes32(0)) _cancelPodListing(LibTractor._user(), index);
 
-        s.podListings[index] = hashListingV2(
+        s.podListings[index] = hashListing(
             start,
             amount,
             0,
@@ -101,12 +101,12 @@ contract Listing is PodTransfer {
      * Fill
      */
 
-    function _fillListingV2(
+    function _fillListing(
         PodListing calldata l,
         uint256 beanAmount,
         bytes calldata pricingFunction
     ) internal {
-        bytes32 lHash = hashListingV2(
+        bytes32 lHash = hashListing(
             l.start,
             l.amount,
             l.pricePerPod,
@@ -126,18 +126,18 @@ contract Listing is PodTransfer {
         );
         require(s.f.harvestable <= l.maxHarvestableIndex, "Marketplace: Listing has expired.");
 
-        uint256 amount = getAmountPodsFromFillListingV2(
+        uint256 amount = getAmountPodsFromFillListing(
             l.index.add(l.start).sub(s.f.harvestable),
             l.amount,
             beanAmount,
             pricingFunction
         );
 
-        __fillListingV2(LibTractor._user(), l, pricingFunction, amount, beanAmount);
+        __fillListing(LibTractor._user(), l, pricingFunction, amount, beanAmount);
         _transferPlot(l.account, LibTractor._user(), l.index, l.start, amount);
     }
 
-    function __fillListingV2(
+    function __fillListing(
         address to,
         PodListing calldata l,
         bytes calldata pricingFunction,
@@ -150,7 +150,7 @@ contract Listing is PodTransfer {
         delete s.podListings[l.index];
 
         if (l.amount > amount) {
-            s.podListings[l.index.add(amount).add(l.start)] = hashListingV2(
+            s.podListings[l.index.add(amount).add(l.start)] = hashListing(
                 0,
                 l.amount.sub(amount),
                 l.pricePerPod,
@@ -180,7 +180,7 @@ contract Listing is PodTransfer {
      * Helpers
      */
 
-    function getAmountPodsFromFillListingV2(
+    function getAmountPodsFromFillListing(
         uint256 placeInLine,
         uint256 podListingAmount,
         uint256 fillBeanAmount,
@@ -199,7 +199,7 @@ contract Listing is PodTransfer {
         if (remainingAmount <= (1000000 / pricePerPod)) amount = podListingAmount;
     }
 
-    function hashListingV2(
+    function hashListing(
         uint256 start,
         uint256 amount,
         uint24 pricePerPod,

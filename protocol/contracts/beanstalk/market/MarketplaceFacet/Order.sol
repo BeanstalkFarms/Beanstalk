@@ -9,7 +9,7 @@ import "./Listing.sol";
 
 /**
  * @author Beanjoyer, Malteasy
- * @title Pod Marketplace v2
+ * @title Pod Marketplace
  **/
 
 contract Order is Listing {
@@ -52,16 +52,16 @@ contract Order is Listing {
     /* Note: Fixed pod orders store at s.podOrders[id] the amount of pods that they order
      * whereas dynamic orders store the amount of beans used to make the order
      */
-    function _createPodOrderV2(
+    function _createPodOrder(
         uint256 beanAmount,
         uint256 maxPlaceInLine,
         uint256 minFillAmount,
         bytes calldata pricingFunction
     ) internal returns (bytes32 id) {
         require(beanAmount > 0, "Marketplace: Order amount must be > 0.");
-        id = createOrderIdV2(LibTractor._user(), 0, maxPlaceInLine, minFillAmount, pricingFunction);
+        id = createOrderId(LibTractor._user(), 0, maxPlaceInLine, minFillAmount, pricingFunction);
         if (s.podOrders[id] > 0)
-            _cancelPodOrderV2(
+            _cancelPodOrder(
                 maxPlaceInLine,
                 minFillAmount,
                 pricingFunction,
@@ -85,7 +85,7 @@ contract Order is Listing {
      * Fill
      */
 
-    function _fillPodOrderV2(
+    function _fillPodOrder(
         PodOrder calldata o,
         uint256 index,
         uint256 start,
@@ -103,14 +103,14 @@ contract Order is Listing {
             "Marketplace: Plot too far in line."
         );
 
-        bytes32 id = createOrderIdV2(
+        bytes32 id = createOrderId(
             o.account,
             0,
             o.maxPlaceInLine,
             o.minFillAmount,
             pricingFunction
         );
-        uint256 costInBeans = getAmountBeansToFillOrderV2(
+        uint256 costInBeans = getAmountBeansToFillOrder(
             index.add(start).sub(s.f.harvestable),
             amount,
             pricingFunction
@@ -135,13 +135,13 @@ contract Order is Listing {
      * Cancel
      */
 
-    function _cancelPodOrderV2(
+    function _cancelPodOrder(
         uint256 maxPlaceInLine,
         uint256 minFillAmount,
         bytes calldata pricingFunction,
         LibTransfer.To mode
     ) internal {
-        bytes32 id = createOrderIdV2(
+        bytes32 id = createOrderId(
             LibTractor._user(),
             0,
             maxPlaceInLine,
@@ -168,7 +168,7 @@ contract Order is Listing {
      * @notice Calculates the amount of beans needed to fill an order.
      * @dev Integration over a range that falls within piecewise domain.
      */
-    function getAmountBeansToFillOrderV2(
+    function getAmountBeansToFillOrder(
         uint256 placeInLine,
         uint256 amountPodsFromOrder,
         bytes calldata pricingFunction
@@ -185,7 +185,7 @@ contract Order is Listing {
      * Helpers
      */
 
-    function createOrderIdV2(
+    function createOrderId(
         address account,
         uint24 pricePerPod,
         uint256 maxPlaceInLine,
