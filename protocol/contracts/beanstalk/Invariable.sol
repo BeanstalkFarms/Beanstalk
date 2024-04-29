@@ -174,6 +174,8 @@ abstract contract Invariable {
             entitlements[i] =
                 s.siloBalances[tokens[i]].deposited +
                 s.siloBalances[tokens[i]].withdrawn +
+                s.evenGerminating.deposited[tokens[i]].amount +
+                s.oddGerminating.deposited[tokens[i]].amount +
                 s.internalTokenBalanceTotal[IERC20(tokens[i])];
             if (tokens[i] == C.BEAN) {
                 entitlements[i] +=
