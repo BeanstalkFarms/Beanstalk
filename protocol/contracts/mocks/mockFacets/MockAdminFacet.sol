@@ -138,7 +138,7 @@ contract MockAdminFacet is Sun, Invariable {
         LibTransfer.sendToken(IERC20(C.BEAN), 10_000_000_000, msg.sender, LibTransfer.To.EXTERNAL);
         LibTransfer.sendToken(
             IERC20(C.UNRIPE_LP),
-            10_000_000_000,
+            10_000_000,
             msg.sender,
             LibTransfer.To.EXTERNAL
         );

@@ -8359,7 +8359,13 @@
     "type": "function"
   },
   {
-    "inputs": [],
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "sopWell",
+        "type": "address"
+      }
+    ],
     "name": "exploitSop",
     "outputs": [],
     "stateMutability": "nonpayable",
