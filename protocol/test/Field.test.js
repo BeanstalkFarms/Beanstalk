@@ -6,6 +6,7 @@ const { to6 } = require("./utils/helpers.js");
 const { MAX_UINT32, MAX_UINT256 } = require("./utils/constants.js");
 const { takeSnapshot, revertToSnapshot } = require("./utils/snapshot");
 const { getAllBeanstalkContracts } = require("../utils/contracts");
+const { interpolatePoints } = require("./utils/interpolater.js");
 const {
   initalizeUsersForToken,
   endGermination,
@@ -461,10 +462,11 @@ describe("newField", function () {
 
     describe("Full With Listing", async function () {
       beforeEach(async function () {
+        this.f = interpolatePoints([100, 200, 300, 400], [0, 0, 0, 0]);
         await mockBeanstalk.incrementTotalHarvestableE(to6("101"));
         this.result = await beanstalk
           .connect(user)
-          .createPodListing("0", "0", "500", "500000", to6("200"), 0, EXTERNAL);
+          .createPodListingV2("0", "0", "500", to6("200"), "0", this.f.packedFunction, INTERNAL)
         this.result = await beanstalk.connect(user).harvest(["0"], EXTERNAL);
       });
 
