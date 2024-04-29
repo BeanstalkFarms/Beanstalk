@@ -86,15 +86,21 @@ describe("Invariants", function () {
     await setWstethUsdPrice("1001");
 
     // Deposits tokens from 2 users.
+    expect(await mockBeanstalk.entitlementsMatchBalances()).true;
     await beanstalk.connect(user).deposit(BEAN, to6("2000"), EXTERNAL);
+    expect(await mockBeanstalk.entitlementsMatchBalances()).true;
     await beanstalk.connect(user).deposit(BEAN, to6("3000"), EXTERNAL);
+    expect(await mockBeanstalk.entitlementsMatchBalances()).true;
     await beanstalk.connect(user).deposit(UNRIPE_BEAN, to6("6000"), EXTERNAL);
+    expect(await mockBeanstalk.entitlementsMatchBalances()).true;
     await beanstalk.connect(user).deposit(UNRIPE_LP, to6("7000"), EXTERNAL);
+    expect(await mockBeanstalk.entitlementsMatchBalances()).true;
 
     // With the germination update, the users deposit will not be active until the remainder of the season + 1 has passed.
     await endGermination();
+    expect(await mockBeanstalk.entitlementsMatchBalances()).true;
   });
-
+  
   describe("Reverts exploits", async function () {
     it("reverts at internal accounting exploit", async function () {
       await expect(mockBeanstalk.exploitUserInternalTokenBalance()).to.be.revertedWith(
