@@ -41,7 +41,7 @@ describe("Invariants", function () {
     await mintEth(owner.address);
     await upgradeWithNewFacets({
       diamondAddress: this.diamond.address,
-      facetNames: ["MockAdminFacet"],
+      facetNames: ["MockExploitFacet"],
       bip: false,
       object: false,
       verbose: false,

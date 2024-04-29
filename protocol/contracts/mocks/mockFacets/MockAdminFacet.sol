@@ -10,7 +10,6 @@ import "contracts/beanstalk/sun/SeasonFacet/SeasonFacet.sol";
 import "contracts/beanstalk/sun/SeasonFacet/Sun.sol";
 import {LibCurveMinting} from "contracts/libraries/Minting/LibCurveMinting.sol";
 import {LibTransfer} from "contracts/libraries/Token/LibTransfer.sol";
-import {Invariable} from "contracts/beanstalk/Invariable.sol";
 import {LibBalance} from "contracts/libraries/Token/LibBalance.sol";
 
 /**
@@ -18,7 +17,7 @@ import {LibBalance} from "contracts/libraries/Token/LibBalance.sol";
  * @title MockAdminFacet provides various mock functionality
  **/
 
-contract MockAdminFacet is Sun, Invariable {
+contract MockAdminFacet is Sun {
     function mintBeans(address to, uint256 amount) external {
         C.bean().mint(to, amount);
     }
@@ -84,93 +83,4 @@ contract MockAdminFacet is Sun, Invariable {
         updateStems();
     }
 
-    // function getInternalTokenBalanceTotal(address token) public view returns (uint256) {
-    //     return s.internalTokenBalanceTotal[token];
-    // }
-
-    // function getFertilizedPaidIndex(address token) public view returns (uint256) {
-    //     return s.fertilizedPaidIndex;
-    // }
-
-    // function getPlenty() public view returns (uint256) {
-    //     return s.plenty;
-    // }
-
-    // Internal token accounting exploits.
-
-    function exploitUserInternalTokenBalance() public fundsSafu {
-        LibBalance.increaseInternalBalance(msg.sender, IERC20(C.UNRIPE_LP), 100_000_000);
-    }
-
-    function exploitUserSendTokenInternal() public fundsSafu {
-        LibTransfer.sendToken(
-            IERC20(C.BEAN_ETH_WELL),
-            100_000_000_000,
-            msg.sender,
-            LibTransfer.To.INTERNAL
-        );
-    }
-
-    function exploitFertilizer() public fundsSafu {
-        s.fertilizedIndex += 100_000_000_000;
-    }
-
-    function exploitSop(address sopWell) public fundsSafu {
-        s.sopWell = sopWell;
-        s.plenty = 100_000_000;
-    }
-
-    // Token flow exploits.
-
-    function exploitTokenBalance() public noNetFlow {
-        C.bean().transferFrom(msg.sender, address(this), 1_000_000);
-    }
-
-    function exploitUserSendTokenExternal0() public noNetFlow {
-        LibTransfer.sendToken(IERC20(C.BEAN), 10_000_000_000, msg.sender, LibTransfer.To.EXTERNAL);
-    }
-
-    function exploitUserSendTokenExternal1() public noOutFlow {
-        LibTransfer.sendToken(IERC20(C.BEAN), 10_000_000_000, msg.sender, LibTransfer.To.EXTERNAL);
-    }
-
-    function exploitUserDoubleSendTokenExternal() public oneOutFlow(C.BEAN) {
-        LibTransfer.sendToken(IERC20(C.BEAN), 10_000_000_000, msg.sender, LibTransfer.To.EXTERNAL);
-        LibTransfer.sendToken(
-            IERC20(C.UNRIPE_LP),
-            10_000_000,
-            msg.sender,
-            LibTransfer.To.EXTERNAL
-        );
-    }
-
-    function exploitBurnStalk0() public noNetFlow {
-        s.s.stalk -= 1_000_000_000;
-    }
-
-    function exploitBurnStalk1() public noOutFlow {
-        s.s.stalk -= 1_000_000_000;
-    }
-
-    // Bean supply exploits.
-
-    function exploitBurnBeans() public noSupplyChange {
-        C.bean().burn(100_000_000);
-    }
-
-    function exploitMintBeans0() public noSupplyChange {
-        C.bean().mint(msg.sender, 100_000_000);
-    }
-
-    function exploitMintBeans1() public noSupplyChange {
-        C.bean().mint(address(this), 100_000_000);
-    }
-
-    function exploitMintBeans2() public noSupplyIncrease {
-        C.bean().mint(msg.sender, 100_000_000);
-    }
-
-    function exploitMintBeans3() public noSupplyIncrease {
-        C.bean().mint(address(this), 100_000_000);
-    }
 }
