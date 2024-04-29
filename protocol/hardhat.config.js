@@ -14,7 +14,8 @@ require("@nomiclabs/hardhat-etherscan");
 
 // BIP 39 
 const { bipSeedGauge } = require("./scripts/bips.js");
-//
+// BIP Misc Improvements
+const { bipMiscellaneousImprovements } = require("./scripts/bips.js");
 
 const { upgradeWithNewFacets } = require("./scripts/diamond");
 const {
@@ -225,6 +226,10 @@ task("deployBip39", async function () {
   await bipSeedGauge();
 });
 
+task("deployBipMiscImprovements", async function () {
+  await bipMiscellaneousImprovements();
+});
+
 task("ebip14", async function () {
   await ebip14();
 })
@@ -318,7 +323,7 @@ module.exports = {
         version: "0.8.17",
         settings: {
           optimizer: {
-            enabled: true,
+            enabled: false,
             runs: 1000
           }
         }
