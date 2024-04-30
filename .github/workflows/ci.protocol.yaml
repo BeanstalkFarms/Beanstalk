@@ -15,7 +15,7 @@ jobs:
           ref: ${{ github.head_ref }}
       - uses: actions/setup-node@v3
         with:
-          node-version: "18"
+          node-version: "16"
       - name: Cache Node Modules
         id: node-modules-cache
         uses: actions/cache@v3
@@ -38,7 +38,7 @@ jobs:
       - name: Protocol Tests
         uses: actions/setup-node@v3
         with:
-          node-version: "18"
+          node-version: "16"
       - name: Cache Node Modules
         id: node-modules-cache
         uses: actions/cache@v3
@@ -47,7 +47,7 @@ jobs:
           key: ${{ runner.os }}-modules-${{ hashFiles('**/yarn.lock') }}
       - name: Install Dependencies
         if: steps.node-modules-cache.outputs.cache-hit != 'true'
-        run: yarn install --immutable
+        run: yarn install --no-immutable
       - run: yarn generate
         working-directory: protocol
       - run: yarn test
