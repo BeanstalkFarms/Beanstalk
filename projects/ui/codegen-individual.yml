@@ -1,0 +1,27 @@
+overwrite: true
+generates:
+  ./src/graph/schema-beanstalk.graphql:
+    schema:
+      - https://api.studio.thegraph.com/query/69878/beanstalkdev/v2.2.0
+    plugins:
+      - "schema-ast"
+  ./src/graph/schema-bean.graphql:
+    schema:
+      - https://graph.node.bean.money/subgraphs/name/bean
+    plugins:
+      - "schema-ast"
+  ./src/graph/schema-snapshot1.graphql:
+    schema:
+      - https://hub.snapshot.org/graphql
+    plugins:
+      - "schema-ast"
+  ./src/graph/schema-snapshot2.graphql:
+    schema:
+      - https://api.thegraph.com/subgraphs/name/snapshot-labs/snapshot
+    plugins:
+      - "schema-ast"
+  ./src/graph/schema-beanft.graphql:
+    schema:
+      - https://graph.node.bean.money/subgraphs/name/beanft
+    plugins:
+      - "schema-ast"

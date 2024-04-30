@@ -12,7 +12,7 @@ import { LineChartProps } from '~/components/Common/Charts/LineChart';
 import { FC } from '~/types';
 
 const getValue = (season: SnapshotData<SeasonalSeedsQuery>) =>
-  toTokenUnitsBN(season.grownStalkPerBdvPerSeason, SEEDS.decimals).toNumber();
+  toTokenUnitsBN(season.grownStalkPerSeason, SEEDS.decimals).toNumber();
 const formatValue = (value: number) =>
   `${value.toLocaleString('en-US', { maximumFractionDigits: 0 })}`;
 const statProps = {

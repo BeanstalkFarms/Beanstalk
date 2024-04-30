@@ -34,7 +34,7 @@ export function loadSilo(account: Address): Silo {
     silo.stalk = ZERO_BI;
     silo.plantableStalk = ZERO_BI;
     silo.seeds = ZERO_BI;
-    silo.grownStalkPerBdvPerSeason = ZERO_BI;
+    silo.grownStalkPerSeason = ZERO_BI;
     silo.roots = ZERO_BI;
     silo.germinatingStalk = ZERO_BI;
     silo.beanMints = ZERO_BI;
@@ -56,7 +56,7 @@ export function loadSiloHourlySnapshot(account: Address, season: i32, timestamp:
     snapshot.stalk = silo.stalk;
     snapshot.plantableStalk = silo.plantableStalk;
     snapshot.seeds = silo.seeds;
-    snapshot.grownStalkPerBdvPerSeason = silo.grownStalkPerBdvPerSeason;
+    snapshot.grownStalkPerSeason = silo.grownStalkPerSeason;
     snapshot.roots = silo.roots;
     snapshot.germinatingStalk = silo.germinatingStalk;
     snapshot.beanToMaxLpGpPerBdvRatio = silo.beanToMaxLpGpPerBdvRatio;
@@ -90,7 +90,7 @@ export function loadSiloDailySnapshot(account: Address, timestamp: BigInt): Silo
     snapshot.stalk = silo.stalk;
     snapshot.plantableStalk = silo.plantableStalk;
     snapshot.seeds = silo.seeds;
-    snapshot.grownStalkPerBdvPerSeason = silo.grownStalkPerBdvPerSeason;
+    snapshot.grownStalkPerSeason = silo.grownStalkPerSeason;
     snapshot.roots = silo.roots;
     snapshot.germinatingStalk = silo.germinatingStalk;
     snapshot.beanToMaxLpGpPerBdvRatio = silo.beanToMaxLpGpPerBdvRatio;

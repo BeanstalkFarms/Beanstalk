@@ -2,6 +2,7 @@ import { Address, BigInt, log } from "@graphprotocol/graph-ts";
 import {
   AddDeposit,
   StalkBalanceChanged,
+  SeedsBalanceChanged,
   AddWithdrawal,
   RemoveDeposit,
   RemoveDeposits,
@@ -525,7 +526,7 @@ export function handleStalkBalanceChanged(event: StalkBalanceChanged): void {
   removal.save();
 }
 
-export function handleSeedsBalanceChanged(event: StalkBalanceChanged): void {
+export function handleSeedsBalanceChanged(event: SeedsBalanceChanged): void {
   // Exclude BIP-24 emission of missed past events
   if (event.transaction.hash.toHexString() == "0xa89638aeb0d6c4afb4f367ea7a806a4c8b3b2a6eeac773e8cc4eda10bfa804fc") return;
 
@@ -618,19 +619,22 @@ function addDepositToSilo(
   let siloDaily = loadSiloDailySnapshot(account, timestamp);
 
   silo.depositedBDV = silo.depositedBDV.plus(bdv);
-  silo.grownStalkPerBdvPerSeason = silo.grownStalkPerBdvPerSeason.plus(grownStalkPerBDV);
+  // Individual farmer seeds cannot be directly tracked due to seed gauge
+  if (account == BEANSTALK) {
+    silo.grownStalkPerSeason = silo.grownStalkPerSeason.plus(grownStalkPerBDV);
+  }
   silo.save();
 
   siloHourly.deltaDepositedBDV = siloHourly.deltaDepositedBDV.plus(bdv);
   siloHourly.depositedBDV = silo.depositedBDV;
-  siloHourly.grownStalkPerBdvPerSeason = silo.grownStalkPerBdvPerSeason;
+  siloHourly.grownStalkPerSeason = silo.grownStalkPerSeason;
   siloHourly.updatedAt = timestamp;
   siloHourly.save();
 
   siloDaily.season = season;
   siloDaily.deltaDepositedBDV = siloDaily.deltaDepositedBDV.plus(bdv);
   siloDaily.depositedBDV = silo.depositedBDV;
-  siloDaily.grownStalkPerBdvPerSeason = silo.grownStalkPerBdvPerSeason;
+  siloDaily.grownStalkPerSeason = silo.grownStalkPerSeason;
   siloDaily.updatedAt = timestamp;
   siloDaily.save();
 }
@@ -648,19 +652,22 @@ function removeDepositFromSilo(
   let siloDaily = loadSiloDailySnapshot(account, timestamp);
 
   silo.depositedBDV = silo.depositedBDV.minus(bdv);
-  silo.grownStalkPerBdvPerSeason = silo.grownStalkPerBdvPerSeason.minus(grownStalkPerBDV);
+  // Individual farmer seeds cannot be directly tracked due to seed gauge
+  if (account == BEANSTALK) {
+    silo.grownStalkPerSeason = silo.grownStalkPerSeason.minus(grownStalkPerBDV);
+  }
   silo.save();
 
   siloHourly.deltaDepositedBDV = siloHourly.deltaDepositedBDV.minus(bdv);
   siloHourly.depositedBDV = silo.depositedBDV;
-  siloHourly.grownStalkPerBdvPerSeason = silo.grownStalkPerBdvPerSeason;
+  siloHourly.grownStalkPerSeason = silo.grownStalkPerSeason;
   siloHourly.updatedAt = timestamp;
   siloHourly.save();
 
   siloDaily.season = season;
   siloDaily.deltaDepositedBDV = siloDaily.deltaDepositedBDV.minus(bdv);
   siloDaily.depositedBDV = silo.depositedBDV;
-  siloDaily.grownStalkPerBdvPerSeason = silo.grownStalkPerBdvPerSeason;
+  siloDaily.grownStalkPerSeason = silo.grownStalkPerSeason;
   siloDaily.updatedAt = timestamp;
   siloDaily.save();
 }

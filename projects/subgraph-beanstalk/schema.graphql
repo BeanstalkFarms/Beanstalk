@@ -120,8 +120,8 @@ type Silo @entity {
   plantableStalk: BigInt!
   "Current seeds balance"
   seeds: BigInt!
-  "Current average grown stalk per bdv per season"
-  grownStalkPerBdvPerSeason: BigInt!
+  "Current grown stalk per season"
+  grownStalkPerSeason: BigInt!
   "Current roots balance"
   roots: BigInt!
   "[Seed Gauge] Stalk that is currently Germinating"
@@ -153,8 +153,8 @@ type SiloHourlySnapshot @entity {
   plantableStalk: BigInt!
   "Point in time current seeds balance"
   seeds: BigInt!
-  "Point in time average grown stalk per bdv per season"
-  grownStalkPerBdvPerSeason: BigInt!
+  "Point in time grown stalk per season"
+  grownStalkPerSeason: BigInt!
   "Point in time current roots balance"
   roots: BigInt!
   "[Seed Gauge] Stalk that is currently Germinating"
@@ -204,8 +204,8 @@ type SiloDailySnapshot @entity {
   plantableStalk: BigInt!
   "Point in time current seeds balance"
   seeds: BigInt!
-  "Point in time average grown stalk per bdv per season"
-  grownStalkPerBdvPerSeason: BigInt!
+  "Point in time grown stalk per season"
+  grownStalkPerSeason: BigInt!
   "Point in time current roots balance"
   roots: BigInt!
   "[Seed Gauge] Stalk that is currently Germinating"

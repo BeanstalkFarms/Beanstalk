@@ -59,7 +59,7 @@ export const addBufferSeasons = (
                     return prev;
                   }, {})
                 : undefined),
-            } as BaseDataPoint)
+            }) as BaseDataPoint
         ),
         ...points,
       ]
@@ -96,7 +96,7 @@ export const interpolateFarmerStalk = (
       // Use the corresponding total stalk value.
       currStalk = toTokenUnitsBN(snapshots[j].stalk, STALK.decimals);
       currSeeds = toTokenUnitsBN(
-        snapshots[j].grownStalkPerBdvPerSeason,
+        snapshots[j].grownStalkPerSeason,
         SEEDS.decimals
       );
       currTimestamp = DateTime.fromJSDate(
