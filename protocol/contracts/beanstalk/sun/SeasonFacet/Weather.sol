@@ -214,6 +214,7 @@ contract Weather is Sun {
             address(this),
             type(uint256).max
         );
+        s.plenty += amountOut;
         rewardSop(amountOut);
         emit SeasonOfPlenty(
             s.season.current,

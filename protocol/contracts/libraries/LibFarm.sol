@@ -24,26 +24,6 @@ struct AdvancedFarmCall {
 
 library LibFarm {
     function _advancedFarm(
-        AdvancedFarmCall calldata data,
-        bytes[] memory returnData
-    ) internal returns (bytes memory result) {
-        bytes1 pipeType = data.clipboard[0];
-        // 0x00 -> Static Call - Execute static call
-        // else > Advanced Call - Use clipboard on and execute call
-        if (pipeType == 0x00) {
-            result = _farm(data.callData);
-        } else {
-            bytes memory callData = LibClipboard.useClipboard(
-                data.callData,
-                data.clipboard,
-                returnData
-            );
-            result = _farmMem(callData);
-        }
-    }
-
-    // solidity kind of the worst for this
-    function _advancedFarmMem(
         AdvancedFarmCall memory data,
         bytes[] memory returnData
     ) internal returns (bytes memory result) {
@@ -51,7 +31,7 @@ library LibFarm {
         // 0x00 -> Static Call - Execute static call
         // else > Advanced Call - Use clipboard on and execute call.
         if (pipeType == 0x00) {
-            result = _farmMem(data.callData);
+            result = _farm(data.callData);
         } else {
             bytes memory callData = LibClipboard.useClipboard(
                 data.callData,
@@ -60,24 +40,12 @@ library LibFarm {
                 data.clipboard,
                 returnData
             );
-            result = _farmMem(callData);
+            result = _farm(callData);
         }
-    }
-
-    // delegatecall a Beanstalk function using calldata data
-    function _farm(bytes calldata data) internal returns (bytes memory result) {
-        bytes4 selector;
-        bool success;
-        assembly {
-            selector := calldataload(data.offset)
-        }
-        address facet = LibFunction.facetForSelector(selector);
-        (success, result) = facet.delegatecall(data);
-        LibFunction.checkReturn(success, result);
     }
 
     // delegatecall a Beanstalk function using memory data
-    function _farmMem(bytes memory data) internal returns (bytes memory result) {
+    function _farm(bytes memory data) internal returns (bytes memory result) {
         bytes4 selector;
         bool success;
         assembly {

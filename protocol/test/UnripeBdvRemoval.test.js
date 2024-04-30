@@ -79,6 +79,9 @@ describe("Silo Enroot", function () {
     await this.siloToken.connect(owner).approve(beanstalk.address, to18("10000"));
     await this.siloToken.mint(ownerAddress, to18("10000"));
 
+    // Needed to appease invariants when underlying asset of urBean != Bean.
+    await mockBeanstalk.removeWhitelistStatus(BEAN);
+
     this.unripeBeans = await ethers.getContractAt("MockToken", UNRIPE_BEAN);
     await this.unripeBeans.connect(user).mint(user.address, to6("10000"));
     await this.unripeBeans.connect(user).approve(beanstalk.address, to18("10000"));

@@ -57,11 +57,10 @@ async function fastForwardHour() {
 // Skipping because this migration already occured.
 describe.skip("Bean:Eth to Bean:Wsteth Migration", function () {
   before(async function () {
-
     // Skipping because this migration already occured.
     return;
 
-    [user, user2] = await ethers.getSigners()
+    [user, user2] = await ethers.getSigners();
 
     try {
       await network.provider.request({
@@ -129,8 +128,7 @@ describe.skip("Bean:Eth to Bean:Wsteth Migration", function () {
     await revertToSnapshot(snapshotId);
   });
 
-  describe.skip('Initializes migration', async function () {
-
+  describe.skip("Initializes migration", async function () {
     describe("Bean Eth minting", async function () {
       it("resets well oracle snapshot", async function () {
         expect(await beanstalk.wellOracleSnapshot(BEAN_ETH_WELL)).to.be.equal("0x");
@@ -228,7 +226,25 @@ describe.skip("Bean:Eth to Bean:Wsteth Migration", function () {
         ).to.be.revertedWith("SafeMath: division by zero");
       });
 
-  describe.skip('Completes Migration', async function () {
+      it("convert Unripe LP to Bean fails", async function () {
+        const liquidityAdder = await impersonateSigner(
+          "0x7eaE23DD0f0d8289d38653BCE11b92F7807eFB64",
+          true
+        );
+        await expect(
+          beanstalk
+            .connect(publius)
+            .convert(
+              ConvertEncoder.convertUnripeLPToBeans(to6("200"), "0"),
+              ["-56836000000"],
+              [to6("200")]
+            )
+        ).to.be.revertedWith("SafeMath: division by zero");
+      });
+    });
+  });
+
+  describe.skip("Completes Migration", async function () {
     beforeEach(async function () {
       this.beanWstethUnderlying = await finishWstethMigration(true, false);
     });
