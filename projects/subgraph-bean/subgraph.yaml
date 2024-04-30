@@ -296,6 +296,10 @@ dataSources:
         # Indexing of this source should begin prior to BIP37 deployment.
         - name: BIP37
           file: ../subgraph-core/abis/Beanstalk/Beanstalk-BIP37.json
+        - name: Bean3CRV
+          file: ../subgraph-core/abis/Bean3CRV.json
+        - name: Well
+          file: ../subgraph-core/abis/Well.json
       eventHandlers:
         - event: MetapoolOracle(indexed uint32,int256,uint256[2])
           handler: handleMetapoolOracle
