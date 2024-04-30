@@ -6,10 +6,12 @@ import {TestHelper, LibTransfer, IMockFBeanstalk, C} from "test/foundry/utils/Te
 import {IWell, IERC20} from "contracts/interfaces/basin/IWell.sol";
 import {MockSeasonFacet} from "contracts/mocks/mockFacets/MockSeasonFacet.sol";
 import {MockConvertFacet} from "contracts/mocks/mockFacets/MockConvertFacet.sol";
+import {MockFieldFacet} from "contracts/mocks/mockFacets/MockFieldFacet.sol";
 import {LibConvertData} from "contracts/libraries/Convert/LibConvertData.sol";
 import {MockToken} from "contracts/mocks/MockToken.sol";
 import {Storage} from "contracts/libraries/LibAppStorage.sol";
 import {SeasonGettersFacet} from "contracts/beanstalk/sun/SeasonFacet/SeasonGettersFacet.sol";
+import {SiloGettersFacet} from "contracts/beanstalk/silo/SiloFacet/SiloGettersFacet.sol";
 import {console} from "forge-std/console.sol";
 
 /**
@@ -21,6 +23,8 @@ contract FloodTest is TestHelper {
     // Interfaces.
     MockSeasonFacet season = MockSeasonFacet(BEANSTALK);
     SeasonGettersFacet seasonGetters = SeasonGettersFacet(BEANSTALK);
+    MockFieldFacet field = MockFieldFacet(BEANSTALK);
+    SiloGettersFacet siloGetters = SiloGettersFacet(BEANSTALK);
 
     // MockTokens.
     MockToken bean = MockToken(C.BEAN);
@@ -58,6 +62,25 @@ contract FloodTest is TestHelper {
         Storage.Season memory s = seasonGetters.time();
 
         assertFalse(s.raining);
+    }
+
+    function testRaining() public {
+        field.incrementTotalPodsE(1000e18);
+        season.rainSunrise();
+        bs.mow(users[1], C.BEAN);
+
+        Storage.Rain memory rain = seasonGetters.rain();
+        Storage.Season memory s = seasonGetters.time();
+
+        assertTrue(s.rainStart == s.current);
+        assertTrue(s.raining);
+        assertEq(rain.pods, bs.totalPods());
+        assertEq(rain.roots, 20008000000000000000000000);
+
+        SiloGettersFacet.AccountSeasonOfPlenty memory sop = siloGetters.balanceOfSop(users[1]);
+
+        assertTrue(sop.lastRain == s.rainStart);
+        assertTrue(sop.roots == 10004000000000000000000000);
     }
 
     //////////// Helpers ////////////
