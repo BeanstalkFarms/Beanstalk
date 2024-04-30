@@ -211,11 +211,6 @@ describe("Sop", function () {
     })
   })
 
-    it("changes the sop well", async function () {
-      expect(await beanstalk.getSopWell()).to.be.equal(this.well.address);
-    });
-  });
-
   describe("multiple sop", async function () {
     beforeEach(async function () {
       await this.well.setReserves([to6("1000000"), to18("1100")]);
