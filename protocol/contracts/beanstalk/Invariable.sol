@@ -15,8 +15,6 @@ import {LibWhitelistedTokens} from "contracts/libraries/Silo/LibWhitelistedToken
 import {LibUnripe} from "contracts/libraries/LibUnripe.sol";
 import {LibSilo} from "contracts/libraries/Silo/LibSilo.sol";
 
-import {console} from "hardhat/console.sol";
-
 /**
  * @author funderbrker
  * @title Invariable
@@ -41,10 +39,6 @@ abstract contract Invariable {
             uint256[] memory balances
         ) = getTokenEntitlementsAndBalances(tokens);
         for (uint256 i; i < tokens.length; i++) {
-            console.log("token: ", tokens[i]);
-            console.log("entitlements: ", entitlements[i]);
-            console.log("balances: ", balances[i]);
-
             require(balances[i] >= entitlements[i], "INV: Insufficient token balance");
         }
     }
