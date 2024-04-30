@@ -19,6 +19,18 @@ const WINDOWS = [
   { label: 'ALL', index: 2 },
 ];
 
+const WINDOWS_ALT = [
+  { label: '1D', index: 3 },
+  { label: '1W', index: 0 },
+  { label: '1M', index: 1 },
+  { label: '3M', index: 4 },
+  { label: '6M', index: 5 },
+  { label: 'YTD', index: 6 },
+  { label: '1Y', index: 7 },
+  { label: '2Y', index: 8 },
+  { label: 'ALL', index: 2 },
+];
+
 export type TimeTabState = [SeasonAggregation, SeasonRange];
 
 export interface TimeTabProps {
@@ -26,6 +38,7 @@ export interface TimeTabProps {
   setState: (s: TimeTabState) => void;
   aggregation?: boolean;
   windows?: boolean;
+  useExpandedWindows?: boolean;
 }
 
 const TimeTabs: FC<TimeTabProps & StackProps> = ({
@@ -34,6 +47,7 @@ const TimeTabs: FC<TimeTabProps & StackProps> = ({
   state,
   aggregation = true,
   windows = true,
+  useExpandedWindows
 }) => {
   const handleChange0 = useCallback(
     (i: number) => {
@@ -83,7 +97,7 @@ const TimeTabs: FC<TimeTabProps & StackProps> = ({
         />
       ) : null}
       {windows
-        ? WINDOWS.map((w) => (
+        ? (useExpandedWindows ? WINDOWS_ALT : WINDOWS).map((w) => (
             <Button
               onClick={() => handleChange1(w.index)}
               key={w.label}

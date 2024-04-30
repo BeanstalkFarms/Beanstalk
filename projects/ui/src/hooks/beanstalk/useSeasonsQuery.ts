@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { DocumentNode, QueryOptions, useLazyQuery } from '@apollo/client';
+import { DocumentNode, QueryOptions, gql, useLazyQuery } from '@apollo/client';
 import { apolloClient } from '~/graph/client';
 
 const PAGE_SIZE = 1000;
@@ -13,6 +13,12 @@ export enum SeasonRange {
   WEEK = 0,
   MONTH = 1,
   ALL = 2,
+  DAY = 3,
+  THREE_MONTHS = 4,
+  SIX_MONTHS = 5,
+  YTD = 6,
+  ONE_YEAR = 7,
+  TWO_YEARS = 8
 }
 
 export const SEASON_RANGE_TO_COUNT: {
@@ -21,6 +27,12 @@ export const SEASON_RANGE_TO_COUNT: {
   [SeasonRange.WEEK]: 168, // 7*24
   [SeasonRange.MONTH]: 672, // 28*24
   [SeasonRange.ALL]: undefined,
+  [SeasonRange.DAY]: 24,
+  [SeasonRange.THREE_MONTHS]: 2160,
+  [SeasonRange.SIX_MONTHS]: 4320,
+  [SeasonRange.YTD]: 2000,
+  [SeasonRange.ONE_YEAR]: 8760,
+  [SeasonRange.TWO_YEARS]: 17520
 } as const;
 
 /**
@@ -56,7 +68,7 @@ export type SnapshotData<T extends MinimumViableSnapshotQuery> =
  * @returns QueryDocument
  */
 const useSeasonsQuery = <T extends MinimumViableSnapshotQuery>(
-  document: DocumentNode,
+  document: DocumentNode = gql`query MyQuery { _meta { hasIndexingErrors } }`,
   range: SeasonRange,
   queryConfig?: Partial<QueryOptions>
 ) => {
@@ -65,7 +77,7 @@ const useSeasonsQuery = <T extends MinimumViableSnapshotQuery>(
 
   /// Execute generic lazy query
   const [get, query] = useLazyQuery<T>(document, { variables: {} });
-
+  
   useEffect(() => {
     (async () => {
       console.debug(`[useSeasonsQuery] initializing with range = ${range}`);
