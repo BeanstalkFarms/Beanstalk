@@ -14,12 +14,13 @@ import "contracts/libraries/Silo/LibTokenSilo.sol";
 import "contracts/libraries/Silo/LibLegacyTokenSilo.sol";
 import "contracts/libraries/Convert/LibConvert.sol";
 import "contracts/libraries/LibSafeMath32.sol";
+import {Invariable} from "contracts/beanstalk/Invariable.sol";
 
 /**
  * @author pizzaman1337
  * @title Handles Migration related functions for the new Silo
  **/
-contract MigrationFacet is ReentrancyGuard {
+contract MigrationFacet is Invariable, ReentrancyGuard {
     /**
      * @notice Migrates farmer's deposits from old (seasons based) to new silo (stems based).
      * @param account Address of the account to migrate
@@ -45,7 +46,14 @@ contract MigrationFacet is ReentrancyGuard {
         uint256 stalkDiff,
         uint256 seedsDiff,
         bytes32[] calldata proof
-    ) external payable {
+    )
+        external
+        payable
+        // NOTE: Stack too deep when using noNetFlow invariant.
+        fundsSafu
+        noSupplyChange
+    {
+        // noNetFlow
         uint256 seedsVariance = LibLegacyTokenSilo._mowAndMigrate(
             account,
             tokens,
@@ -70,7 +78,9 @@ contract MigrationFacet is ReentrancyGuard {
      * but they currently have no deposits, then this function can be used to migrate
      * their account to the new silo using less gas.
      */
-    function mowAndMigrateNoDeposits(address account) external payable {
+    function mowAndMigrateNoDeposits(
+        address account
+    ) external payable fundsSafu noNetFlow noSupplyChange {
         LibLegacyTokenSilo._migrateNoDeposits(account);
     }
 

@@ -14,12 +14,13 @@ import "contracts/libraries/Token/LibTokenPermit.sol";
 import "contracts/libraries/Token/LibTokenApprove.sol";
 import "../AppStorage.sol";
 import "../ReentrancyGuard.sol";
+import {Invariable} from "contracts/beanstalk/Invariable.sol";
 
 /**
  * @author Publius
  * @title TokenFacet handles transfers of assets
  */
-contract TokenFacet is IERC1155Receiver, ReentrancyGuard {
+contract TokenFacet is Invariable, IERC1155Receiver, ReentrancyGuard {
     struct Balance {
         uint256 internalBalance;
         uint256 externalBalance;
@@ -56,12 +57,12 @@ contract TokenFacet is IERC1155Receiver, ReentrancyGuard {
         uint256 amount,
         LibTransfer.From fromMode,
         LibTransfer.To toMode
-    ) external payable {
+    ) external payable fundsSafu noSupplyChange oneOutFlow(address(token)) {
         LibTransfer.transferToken(token, LibTractor._user(), recipient, amount, fromMode, toMode);
     }
 
     /**
-     * @notice transfers a token from `sender` to an `recipient` Internal balance.
+     * @notice transfers a token from `sender` to an `recipient` from Internal balance.
      * @dev differs from transferToken as sender != user.
      */
     function transferInternalTokenFrom(
@@ -70,7 +71,7 @@ contract TokenFacet is IERC1155Receiver, ReentrancyGuard {
         address recipient,
         uint256 amount,
         LibTransfer.To toMode
-    ) external payable nonReentrant {
+    ) external payable fundsSafu noSupplyChange oneOutFlow(address(token)) nonReentrant {
         LibTransfer.transferToken(
             token,
             sender,
@@ -95,7 +96,7 @@ contract TokenFacet is IERC1155Receiver, ReentrancyGuard {
         address spender,
         IERC20 token,
         uint256 amount
-    ) external payable nonReentrant {
+    ) external payable fundsSafu noNetFlow noSupplyChange nonReentrant {
         LibTokenApprove.approve(LibTractor._user(), spender, token, amount);
     }
 
@@ -106,7 +107,7 @@ contract TokenFacet is IERC1155Receiver, ReentrancyGuard {
         address spender,
         IERC20 token,
         uint256 addedValue
-    ) public virtual nonReentrant returns (bool) {
+    ) public virtual fundsSafu noNetFlow noSupplyChange nonReentrant returns (bool) {
         LibTokenApprove.approve(
             LibTractor._user(),
             spender,
@@ -123,7 +124,7 @@ contract TokenFacet is IERC1155Receiver, ReentrancyGuard {
         address spender,
         IERC20 token,
         uint256 subtractedValue
-    ) public virtual nonReentrant returns (bool) {
+    ) public virtual fundsSafu noNetFlow noSupplyChange nonReentrant returns (bool) {
         uint256 currentAllowance = LibTokenApprove.allowance(LibTractor._user(), spender, token);
         require(currentAllowance >= subtractedValue, "Silo: decreased allowance below zero");
         LibTokenApprove.approve(
@@ -160,7 +161,7 @@ contract TokenFacet is IERC1155Receiver, ReentrancyGuard {
         uint8 v,
         bytes32 r,
         bytes32 s
-    ) external payable nonReentrant {
+    ) external payable fundsSafu noNetFlow noSupplyChange nonReentrant {
         LibTokenPermit.permit(owner, spender, token, value, deadline, v, r, s);
         LibTokenApprove.approve(owner, spender, IERC20(token), value);
     }
@@ -219,7 +220,10 @@ contract TokenFacet is IERC1155Receiver, ReentrancyGuard {
     /**
      * @notice wraps ETH into WETH.
      */
-    function wrapEth(uint256 amount, LibTransfer.To mode) external payable {
+    function wrapEth(
+        uint256 amount,
+        LibTransfer.To mode
+    ) external payable fundsSafu noNetFlow noSupplyChange {
         LibWeth.wrap(amount, mode);
         LibEth.refundEth();
     }
@@ -227,7 +231,10 @@ contract TokenFacet is IERC1155Receiver, ReentrancyGuard {
     /**
      * @notice unwraps WETH into ETH.
      */
-    function unwrapEth(uint256 amount, LibTransfer.From mode) external payable {
+    function unwrapEth(
+        uint256 amount,
+        LibTransfer.From mode
+    ) external payable fundsSafu noNetFlow noSupplyChange {
         LibWeth.unwrap(amount, mode);
     }
 

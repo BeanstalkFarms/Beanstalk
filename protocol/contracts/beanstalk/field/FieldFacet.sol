@@ -15,13 +15,14 @@ import {LibPRBMath} from "contracts/libraries/LibPRBMath.sol";
 import {LibSafeMath32} from "contracts/libraries/LibSafeMath32.sol";
 import {LibSafeMath128} from "contracts/libraries/LibSafeMath128.sol";
 import {ReentrancyGuard} from "../ReentrancyGuard.sol";
+import {Invariable} from "contracts/beanstalk/Invariable.sol";
 
 /**
  * @title FieldFacet
  * @author Publius, Brean
  * @notice The Field is where Beans are Sown and Pods are Harvested.
  */
-contract FieldFacet is ReentrancyGuard {
+contract FieldFacet is Invariable, ReentrancyGuard {
     using SafeMath for uint256;
     using LibPRBMath for uint256;
     using LibSafeMath32 for uint32;
@@ -75,7 +76,7 @@ contract FieldFacet is ReentrancyGuard {
         uint256 beans,
         uint256 minTemperature,
         LibTransfer.From mode
-    ) external payable returns (uint256 pods) {
+    ) external payable fundsSafu noSupplyIncrease oneOutFlow(C.BEAN) returns (uint256 pods) {
         pods = sowWithMin(beans, minTemperature, beans, mode);
     }
 
@@ -93,7 +94,7 @@ contract FieldFacet is ReentrancyGuard {
         uint256 minTemperature,
         uint256 minSoil,
         LibTransfer.From mode
-    ) public payable returns (uint256 pods) {
+    ) public payable fundsSafu noSupplyIncrease oneOutFlow(C.BEAN) returns (uint256 pods) {
         // `soil` is the remaining Soil
         (uint256 soil, uint256 _morningTemperature, bool abovePeg) = _totalSoilAndTemperature();
 
@@ -139,7 +140,10 @@ contract FieldFacet is ReentrancyGuard {
      * Pods are "burned" when the corresponding Plot is deleted from
      * `s.a[account].field.plots`.
      */
-    function harvest(uint256[] calldata plots, LibTransfer.To mode) external payable {
+    function harvest(
+        uint256[] calldata plots,
+        LibTransfer.To mode
+    ) external payable fundsSafu noSupplyChange oneOutFlow(C.BEAN) {
         uint256 beansHarvested = _harvest(plots);
         LibTransfer.sendToken(C.bean(), beansHarvested, LibTractor._user(), mode);
     }

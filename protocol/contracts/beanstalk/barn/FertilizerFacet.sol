@@ -19,13 +19,14 @@ import {C} from "contracts/C.sol";
 import {LibDiamond} from "contracts/libraries/LibDiamond.sol";
 import {IWell} from "contracts/interfaces/basin/IWell.sol";
 import {LibBarnRaise} from "contracts/libraries/LibBarnRaise.sol";
+import {Invariable} from "contracts/beanstalk/Invariable.sol";
 
 /**
  * @author Publius
  * @title FertilizerFacet handles Minting Fertilizer and Rinsing Sprouts earned from Fertilizer.
  **/
 
-contract FertilizerFacet {
+contract FertilizerFacet is Invariable {
     using SafeMath for uint256;
     using SafeCast for uint256;
     using LibSafeMath128 for uint128;
@@ -46,8 +47,12 @@ contract FertilizerFacet {
      * @param ids The ids of the Fertilizer to rinse.
      * @param mode The balance to transfer Beans to; see {LibTrasfer.To}
      */
-    function claimFertilized(uint256[] calldata ids, LibTransfer.To mode) external payable {
+    function claimFertilized(
+        uint256[] calldata ids,
+        LibTransfer.To mode
+    ) external payable fundsSafu noSupplyChange oneOutFlow(C.BEAN) {
         uint256 amount = C.fertilizer().beanstalkUpdate(LibTractor._user(), ids, s.bpf);
+        s.fertilizedPaidIndex += amount;
         LibTransfer.sendToken(C.bean(), amount, LibTractor._user(), mode);
     }
 
@@ -62,7 +67,7 @@ contract FertilizerFacet {
         uint256 tokenAmountIn,
         uint256 minFertilizerOut,
         uint256 minLPTokensOut
-    ) external payable returns (uint256 fertilizerAmountOut) {
+    ) external payable fundsSafu noOutFlow returns (uint256 fertilizerAmountOut) {
         fertilizerAmountOut = _getMintFertilizerOut(
             tokenAmountIn,
             LibBarnRaise.getBarnRaiseToken()
@@ -91,8 +96,12 @@ contract FertilizerFacet {
     /**
      * @dev Callback from Fertilizer contract in `claimFertilized` function.
      */
-    function payFertilizer(address account, uint256 amount) external payable {
+    function payFertilizer(
+        address account,
+        uint256 amount
+    ) external payable fundsSafu noSupplyChange oneOutFlow(C.BEAN) {
         require(msg.sender == C.fertilizerAddress());
+        s.fertilizedPaidIndex += amount;
         LibTransfer.sendToken(C.bean(), amount, account, LibTransfer.To.INTERNAL);
     }
 

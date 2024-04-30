@@ -11,8 +11,9 @@ pragma solidity =0.7.6;
 
 import {IDiamondCut} from "contracts/interfaces/IDiamondCut.sol";
 import {LibDiamond} from "contracts/libraries/LibDiamond.sol";
+import {Invariable} from "contracts/beanstalk/Invariable.sol";
 
-contract DiamondCutFacet is IDiamondCut {
+contract DiamondCutFacet is Invariable, IDiamondCut {
     /// @notice Add/replace/remove any number of functions and optionally execute
     ///         a function with delegatecall
     /// @param _diamondCut Contains the facet addresses and function selectors

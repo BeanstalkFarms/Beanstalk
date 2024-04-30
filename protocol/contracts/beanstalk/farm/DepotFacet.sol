@@ -8,6 +8,7 @@ pragma experimental ABIEncoderV2;
 import "contracts/interfaces/IPipeline.sol";
 import "contracts/libraries/LibFunction.sol";
 import "contracts/libraries/Token/LibEth.sol";
+import {Invariable} from "contracts/beanstalk/Invariable.sol";
 
 /**
  * @title Depot Facet
@@ -16,7 +17,7 @@ import "contracts/libraries/Token/LibEth.sol";
  * in the same transaction that loads Ether, Pipes calls to other protocols and unloads Pipeline.
  **/
 
-contract DepotFacet {
+contract DepotFacet is Invariable {
     // Pipeline V1.0.1
     address private constant PIPELINE = 0xb1bE0000C6B3C62749b5F0c92480146452D15423;
 
@@ -25,7 +26,9 @@ contract DepotFacet {
      * @param p PipeCall to pipe through Pipeline
      * @return result PipeCall return value
      **/
-    function pipe(PipeCall calldata p) external payable returns (bytes memory result) {
+    function pipe(
+        PipeCall calldata p
+    ) external payable fundsSafu noSupplyIncrease returns (bytes memory result) {
         result = IPipeline(PIPELINE).pipe(p);
     }
 
@@ -37,7 +40,7 @@ contract DepotFacet {
      **/
     function multiPipe(
         PipeCall[] calldata pipes
-    ) external payable returns (bytes[] memory results) {
+    ) external payable fundsSafu noSupplyIncrease returns (bytes[] memory results) {
         results = IPipeline(PIPELINE).multiPipe(pipes);
     }
 
@@ -49,7 +52,7 @@ contract DepotFacet {
     function advancedPipe(
         AdvancedPipeCall[] calldata pipes,
         uint256 value
-    ) external payable returns (bytes[] memory results) {
+    ) external payable fundsSafu noSupplyIncrease returns (bytes[] memory results) {
         results = IPipeline(PIPELINE).advancedPipe{value: value}(pipes);
         LibEth.refundEth();
     }
@@ -63,7 +66,7 @@ contract DepotFacet {
     function etherPipe(
         PipeCall calldata p,
         uint256 value
-    ) external payable returns (bytes memory result) {
+    ) external payable fundsSafu noSupplyIncrease returns (bytes memory result) {
         result = IPipeline(PIPELINE).pipe{value: value}(p);
         LibEth.refundEth();
     }

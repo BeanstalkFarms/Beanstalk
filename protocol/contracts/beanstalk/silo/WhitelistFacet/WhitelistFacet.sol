@@ -9,6 +9,7 @@ import {LibDiamond} from "contracts/libraries/LibDiamond.sol";
 import {LibWhitelist} from "contracts/libraries/Silo/LibWhitelist.sol";
 import {AppStorage} from "contracts/beanstalk/AppStorage.sol";
 import {WhitelistedTokens} from "contracts/beanstalk/silo/WhitelistFacet/WhitelistedTokens.sol";
+import {Invariable} from "contracts/beanstalk/Invariable.sol";
 
 /**
  * @author Publius
@@ -16,12 +17,12 @@ import {WhitelistedTokens} from "contracts/beanstalk/silo/WhitelistFacet/Whiteli
  * @notice Manages the Silo Whitelist including Adding to, Updating
  * and Removing from the Silo Whitelist
  **/
-contract WhitelistFacet is WhitelistedTokens {
+contract WhitelistFacet is Invariable, WhitelistedTokens {
     /**
      * @notice Removes a token from the Silo Whitelist.
      * @dev Can only be called by Beanstalk or Beanstalk owner.
      */
-    function dewhitelistToken(address token) external payable {
+    function dewhitelistToken(address token) external payable fundsSafu noNetFlow noSupplyChange {
         LibDiamond.enforceIsOwnerOrContract();
         LibWhitelist.dewhitelistToken(token);
     }
@@ -50,7 +51,7 @@ contract WhitelistFacet is WhitelistedTokens {
         bytes4 liquidityWeightSelector,
         uint128 gaugePoints,
         uint64 optimalPercentDepositedBdv
-    ) external payable {
+    ) external payable fundsSafu noNetFlow noSupplyChange {
         LibDiamond.enforceIsOwnerOrContract();
         LibWhitelist.whitelistToken(
             token,
@@ -89,7 +90,7 @@ contract WhitelistFacet is WhitelistedTokens {
         bytes4 liquidityWeightSelector,
         uint128 gaugePoints,
         uint64 optimalPercentDepositedBdv
-    ) external payable {
+    ) external payable fundsSafu noNetFlow noSupplyChange {
         LibDiamond.enforceIsOwnerOrContract();
         LibWhitelist.whitelistToken(
             token,
@@ -113,7 +114,7 @@ contract WhitelistFacet is WhitelistedTokens {
     function updateStalkPerBdvPerSeasonForToken(
         address token,
         uint32 stalkEarnedPerSeason
-    ) external payable {
+    ) external payable fundsSafu noNetFlow noSupplyChange {
         LibDiamond.enforceIsOwnerOrContract();
         LibWhitelist.updateStalkPerBdvPerSeasonForToken(token, stalkEarnedPerSeason);
     }
@@ -127,7 +128,7 @@ contract WhitelistFacet is WhitelistedTokens {
         bytes4 gaugePointSelector,
         bytes4 liquidityWeightSelector,
         uint64 optimalPercentDepositedBdv
-    ) external payable {
+    ) external payable fundsSafu noNetFlow noSupplyChange {
         LibDiamond.enforceIsOwnerOrContract();
         LibWhitelist.updateGaugeForToken(
             token,
