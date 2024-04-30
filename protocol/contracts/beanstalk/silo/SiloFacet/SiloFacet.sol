@@ -9,6 +9,7 @@ import "./TokenSilo.sol";
 import {LibTractor} from "contracts/libraries/LibTractor.sol";
 import "contracts/libraries/Token/LibTransfer.sol";
 import "contracts/libraries/Silo/LibSiloPermit.sol";
+import {Invariable} from "contracts/beanstalk/Invariable.sol";
 
 /**
  * @title SiloFacet
@@ -24,7 +25,7 @@ import "contracts/libraries/Silo/LibSiloPermit.sol";
  *
  *
  */
-contract SiloFacet is TokenSilo {
+contract SiloFacet is Invariable, TokenSilo {
     using SafeMath for uint256;
     using LibSafeMath32 for uint32;
 
@@ -52,6 +53,9 @@ contract SiloFacet is TokenSilo {
     )
         external
         payable
+        fundsSafu
+        noSupplyChange
+        noOutFlow
         nonReentrant
         mowSender(token)
         returns (uint256 amount, uint256 _bdv, int96 stem)
@@ -87,7 +91,7 @@ contract SiloFacet is TokenSilo {
         int96 stem,
         uint256 amount,
         LibTransfer.To mode
-    ) external payable mowSender(token) nonReentrant {
+    ) external payable fundsSafu noSupplyChange oneOutFlow(token) mowSender(token) nonReentrant {
         _withdrawDeposit(LibTractor._user(), token, stem, amount);
         LibTransfer.sendToken(IERC20(token), amount, LibTractor._user(), mode);
     }
@@ -111,7 +115,7 @@ contract SiloFacet is TokenSilo {
         int96[] calldata stems,
         uint256[] calldata amounts,
         LibTransfer.To mode
-    ) external payable mowSender(token) nonReentrant {
+    ) external payable fundsSafu noSupplyChange oneOutFlow(token) mowSender(token) nonReentrant {
         uint256 amount = _withdrawDeposits(LibTractor._user(), token, stems, amounts);
         LibTransfer.sendToken(IERC20(token), amount, LibTractor._user(), mode);
     }
@@ -139,7 +143,7 @@ contract SiloFacet is TokenSilo {
         address token,
         int96 stem,
         uint256 amount
-    ) public payable nonReentrant returns (uint256 _bdv) {
+    ) public payable fundsSafu noNetFlow noSupplyChange nonReentrant returns (uint256 _bdv) {
         if (sender != LibTractor._user()) {
             LibSiloPermit._spendDepositAllowance(sender, LibTractor._user(), token, amount);
         }
@@ -171,7 +175,15 @@ contract SiloFacet is TokenSilo {
         address token,
         int96[] calldata stem,
         uint256[] calldata amounts
-    ) public payable nonReentrant returns (uint256[] memory bdvs) {
+    )
+        public
+        payable
+        fundsSafu
+        noNetFlow
+        noSupplyChange
+        nonReentrant
+        returns (uint256[] memory bdvs)
+    {
         require(amounts.length > 0, "Silo: amounts array is empty");
         uint256 totalAmount;
         for (uint256 i = 0; i < amounts.length; ++i) {
@@ -207,7 +219,7 @@ contract SiloFacet is TokenSilo {
         uint256 depositId,
         uint256 amount,
         bytes calldata
-    ) external {
+    ) external fundsSafu noNetFlow noSupplyChange {
         require(recipient != address(0), "ERC1155: transfer to the zero address");
         // allowance requirements are checked in transferDeposit
         (address token, int96 cumulativeGrownStalkPerBDV) = LibBytes.unpackAddressAndStem(
@@ -233,7 +245,7 @@ contract SiloFacet is TokenSilo {
         uint256[] calldata depositIds,
         uint256[] calldata amounts,
         bytes calldata
-    ) external {
+    ) external fundsSafu noNetFlow noSupplyChange {
         require(
             depositIds.length == amounts.length,
             "Silo: depositIDs and amounts arrays must be the same length"
@@ -254,12 +266,18 @@ contract SiloFacet is TokenSilo {
      * @notice Claim Grown Stalk for `account`.
      * @dev See {Silo-_mow}.
      */
-    function mow(address account, address token) external payable {
+    function mow(
+        address account,
+        address token
+    ) external payable fundsSafu noNetFlow noSupplyChange {
         LibSilo._mow(account, token);
     }
 
     //function to mow multiple tokens given an address
-    function mowMultiple(address account, address[] calldata tokens) external payable {
+    function mowMultiple(
+        address account,
+        address[] calldata tokens
+    ) external payable fundsSafu noNetFlow noSupplyChange {
         for (uint256 i; i < tokens.length; ++i) {
             LibSilo._mow(account, tokens[i]);
         }
@@ -280,14 +298,27 @@ contract SiloFacet is TokenSilo {
      * In practice, when Seeds are Planted, all Earned Beans are Deposited in
      * the current Season.
      */
-    function plant() external payable returns (uint256 beans, int96 stem) {
+    function plant()
+        external
+        payable
+        fundsSafu
+        noNetFlow
+        noSupplyChange
+        returns (uint256 beans, int96 stem)
+    {
         return _plant(LibTractor._user());
     }
 
     /**
      * @notice Claim rewards from a Flood (Was Season of Plenty)
      */
-    function claimPlenty() external payable {
+    function claimPlenty()
+        external
+        payable
+        fundsSafu
+        noSupplyChange
+        oneOutFlow(address(LibSilo.getSopToken()))
+    {
         _claimPlenty(LibTractor._user());
     }
 }

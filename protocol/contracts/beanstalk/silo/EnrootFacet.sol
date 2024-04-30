@@ -11,12 +11,13 @@ import "contracts/libraries/Silo/LibTokenSilo.sol";
 import "./SiloFacet/Silo.sol";
 import "contracts/libraries/LibSafeMath32.sol";
 import "../ReentrancyGuard.sol";
+import {Invariable} from "contracts/beanstalk/Invariable.sol";
 
 /**
  * @author Publius
  * @title Enroot Facet handles enrooting Update Deposits
  **/
-contract EnrootFacet is ReentrancyGuard {
+contract EnrootFacet is Invariable, ReentrancyGuard {
     using SafeMath for uint256;
     using SafeCast for uint256;
 
@@ -77,34 +78,37 @@ contract EnrootFacet is ReentrancyGuard {
         address token,
         int96 stem,
         uint256 amount
-    ) external payable nonReentrant mowSender(token) {
+    ) external payable fundsSafu noNetFlow noSupplyChange nonReentrant mowSender(token) {
         require(s.u[token].underlyingToken != address(0), "Silo: token not unripe");
 
-        // remove Deposit and Redeposit with new BDV
-        uint256 ogBDV = LibTokenSilo.removeDepositFromAccount(
-            LibTractor._user(),
-            token,
-            stem,
-            amount
-        );
+        uint256 deltaBDV;
+        {
+            // remove Deposit and Redeposit with new BDV
+            uint256 ogBDV = LibTokenSilo.removeDepositFromAccount(
+                LibTractor._user(),
+                token,
+                stem,
+                amount
+            );
 
-        // Remove Deposit does not emit an event, while Add Deposit does.
-        emit RemoveDeposit(LibTractor._user(), token, stem, amount, ogBDV);
+            // Remove Deposit does not emit an event, while Add Deposit does.
+            emit RemoveDeposit(LibTractor._user(), token, stem, amount, ogBDV);
 
-        // Calculate the current BDV for `amount` of `token` and add a Deposit.
-        uint256 newBDV = LibTokenSilo.beanDenominatedValue(token, amount);
+            // Calculate the current BDV for `amount` of `token` and add a Deposit.
+            uint256 newBDV = LibTokenSilo.beanDenominatedValue(token, amount);
 
-        LibTokenSilo.addDepositToAccount(
-            LibTractor._user(),
-            token,
-            stem,
-            amount,
-            newBDV,
-            LibTokenSilo.Transfer.noEmitTransferSingle
-        ); // emits AddDeposit event
+            LibTokenSilo.addDepositToAccount(
+                LibTractor._user(),
+                token,
+                stem,
+                amount,
+                newBDV,
+                LibTokenSilo.Transfer.noEmitTransferSingle
+            ); // emits AddDeposit event
 
-        // Calculate the difference in BDV. Reverts if `ogBDV > newBDV`.
-        uint256 deltaBDV = newBDV.sub(ogBDV);
+            // Calculate the difference in BDV. Reverts if `ogBDV > newBDV`.
+            deltaBDV = newBDV.sub(ogBDV);
+        }
 
         LibTokenSilo.incrementTotalDepositedBdv(token, deltaBDV);
 
@@ -134,7 +138,7 @@ contract EnrootFacet is ReentrancyGuard {
         address token,
         int96[] calldata stems,
         uint256[] calldata amounts
-    ) external payable nonReentrant mowSender(token) {
+    ) external payable fundsSafu noNetFlow noSupplyChange nonReentrant mowSender(token) {
         require(s.u[token].underlyingToken != address(0), "Silo: token not unripe");
         // First, remove Deposits because every deposit is in a different season,
         // we need to get the total Stalk, not just BDV.

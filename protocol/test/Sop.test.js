@@ -201,14 +201,15 @@ describe("Sop", function () {
     it("claims user plenty", async function () {
       await beanstalk.mow(user2.address, this.well.address);
       await beanstalk.connect(user2).claimPlenty();
-      expect(await beanstalk.balanceOfPlenty(user2.address)).to.be.equal("0");
-      expect(await this.weth.balanceOf(user2.address)).to.be.equal(to18("25.595575914848452999"));
-    });
-
-    it("changes the sop well", async function () {
-      expect(await beanstalk.getSopWell()).to.be.equal(this.well.address);
-    });
-  });
+      expect(await beanstalk.balanceOfPlenty(user2.address)).to.be.equal('0')
+      expect(await this.weth.balanceOf(user2.address)).to.be.equal(to18('25.595575914848452999'))
+    })
+    
+    it('changes the sop well', async function () {
+      expect(await beanstalk.getSopWell()).to.not.be.equal(ZERO_ADDRESS)
+      expect(await beanstalk.getSopWell()).to.be.equal(this.well.address)
+    })
+  })
 
   describe("multiple sop", async function () {
     beforeEach(async function () {
@@ -336,12 +337,13 @@ describe("Sop", function () {
     it("claims user plenty", async function () {
       await beanstalk.mow(user2.address, this.well.address);
       await beanstalk.connect(user2).claimPlenty();
-      expect(await beanstalk.balanceOfPlenty(user2.address)).to.be.equal("0");
-      expect(await this.weth.balanceOf(user2.address)).to.be.equal(to18("25.595575914848452999"));
-    });
-
-    it("changes the sop well", async function () {
-      expect(await beanstalk.getSopWell()).to.be.equal(this.well.address);
-    });
-  });
-});
+      expect(await beanstalk.balanceOfPlenty(user2.address)).to.be.equal('0')
+      expect(await this.weth.balanceOf(user2.address)).to.be.equal(to18('25.595575914848452999'))
+    })
+    
+    it('changes the sop well', async function () {
+      expect(await beanstalk.getSopWell()).to.not.be.equal(ZERO_ADDRESS)
+      expect(await beanstalk.getSopWell()).to.be.equal(this.well.address)
+    })
+  })
+})
