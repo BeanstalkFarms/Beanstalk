@@ -22,14 +22,14 @@ jobs:
         with:
           path: "**/node_modules"
           key: ${{ runner.os }}-modules-${{ hashFiles('**/yarn.lock') }}
-      - run: shopt -s globstar; yarn dlx -p prettier prettier --write --config .prettierrc --plugin=prettier-plugin-solidity protocol/**/*.sol || true
+      - run: shopt -s globstar; yarn dlx -p prettier -p prettier-plugin-solidity prettier --write --config .prettierrc --plugin=prettier-plugin-solidity protocol/**/*.sol || true
       - name: Commit changes
         uses: stefanzweifel/git-auto-commit-action@v4
         with:
           commit_message: prettier auto formatting changes
           branch: ${{ github.head_ref }}
       - name: check format
-        run: shopt -s globstar; yarn dlx -p prettier prettier --check --config .prettierrc --plugin=prettier-plugin-solidity protocol/**/*.sol
+        run: shopt -s globstar; yarn dlx -p prettier -p prettier-plugin-solidity prettier --check --config .prettierrc --plugin=prettier-plugin-solidity protocol/**/*.sol
   test:
     needs: format
     runs-on: ubuntu-latest
