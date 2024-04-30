@@ -46,6 +46,7 @@ import {
 } from "../generated/schema";
 import { loadBeanstalk } from "./utils/Beanstalk";
 import { BEANSTALK, BEAN_ERC20, UNRIPE_BEAN, UNRIPE_BEAN_3CRV } from "../../subgraph-core/utils/Constants";
+import { getCurrentSeason } from "./utils/Season";
 
 /**
  * SILO V2 (REPLANT) HANDLERS
@@ -904,14 +905,6 @@ export function updateStalkWithCalls(season: i32, timestamp: BigInt, blockNumber
 export function handleWhitelistToken(event: WhitelistToken): void {
   let silo = loadSilo(event.address);
   let currentList = silo.whitelistedTokens;
-  if (currentList.length == 0) {
-    // Push unripe bean and unripe bean:3crv upon the initial whitelisting.
-    currentList.push(UNRIPE_BEAN.toHexString());
-    loadWhitelistTokenSetting(UNRIPE_BEAN);
-
-    currentList.push(UNRIPE_BEAN_3CRV.toHexString());
-    loadWhitelistTokenSetting(UNRIPE_BEAN_3CRV);
-  }
   currentList.push(event.params.token.toHexString());
   silo.whitelistedTokens = currentList;
   silo.save();
@@ -921,6 +914,9 @@ export function handleWhitelistToken(event: WhitelistToken): void {
   setting.stalkIssuedPerBdv = BigInt.fromString("10000000000");
   setting.stalkEarnedPerSeason = event.params.stalk.times(BigInt.fromI32(1000000));
   setting.save();
+
+  loadWhitelistTokenHourlySnapshot(event.params.token, getCurrentSeason(event.address), event.block.timestamp);
+  loadWhitelistTokenDailySnapshot(event.params.token, event.block.timestamp);
 
   let id = "whitelistToken-" + event.transaction.hash.toHexString() + "-" + event.logIndex.toString();
   let rawEvent = new WhitelistTokenEntity(id);
@@ -936,24 +932,6 @@ export function handleWhitelistToken(event: WhitelistToken): void {
   rawEvent.save();
 }
 
-export function handleUpdatedStalkPerBdvPerSeason(event: UpdatedStalkPerBdvPerSeason): void {
-  let siloSettings = loadWhitelistTokenSetting(event.params.token);
-  siloSettings.milestoneSeason = event.params.season.toI32();
-  siloSettings.stalkEarnedPerSeason = event.params.stalkEarnedPerSeason;
-  siloSettings.updatedAt = event.block.timestamp;
-  siloSettings.save();
-
-  let hourly = loadWhitelistTokenHourlySnapshot(event.params.token, event.params.season.toI32(), event.block.timestamp);
-  hourly.milestoneSeason = siloSettings.milestoneSeason;
-  hourly.stalkEarnedPerSeason = siloSettings.stalkEarnedPerSeason;
-  hourly.save();
-
-  let daily = loadWhitelistTokenDailySnapshot(event.params.token, event.block.timestamp);
-  daily.milestoneSeason = siloSettings.milestoneSeason;
-  daily.stalkEarnedPerSeason = siloSettings.stalkEarnedPerSeason;
-  daily.save();
-}
-
 export function handleWhitelistToken_V3(event: WhitelistToken_V3): void {
   let silo = loadSilo(event.address);
   let currentList = silo.whitelistedTokens;
@@ -967,6 +945,9 @@ export function handleWhitelistToken_V3(event: WhitelistToken_V3): void {
   setting.stalkIssuedPerBdv = event.params.stalk.times(BigInt.fromI32(1_000_000));
   setting.stalkEarnedPerSeason = event.params.stalkEarnedPerSeason;
   setting.save();
+
+  loadWhitelistTokenHourlySnapshot(event.params.token, getCurrentSeason(event.address), event.block.timestamp);
+  loadWhitelistTokenDailySnapshot(event.params.token, event.block.timestamp);
 
   let id = "whitelistToken-" + event.transaction.hash.toHexString() + "-" + event.logIndex.toString();
   let rawEvent = new WhitelistTokenEntity(id);
@@ -1000,4 +981,22 @@ export function handleDewhitelistToken(event: DewhitelistToken): void {
   rawEvent.blockNumber = event.block.number;
   rawEvent.createdAt = event.block.timestamp;
   rawEvent.save();
+}
+
+export function handleUpdatedStalkPerBdvPerSeason(event: UpdatedStalkPerBdvPerSeason): void {
+  let siloSettings = loadWhitelistTokenSetting(event.params.token);
+  siloSettings.milestoneSeason = event.params.season.toI32();
+  siloSettings.stalkEarnedPerSeason = event.params.stalkEarnedPerSeason;
+  siloSettings.updatedAt = event.block.timestamp;
+  siloSettings.save();
+
+  let hourly = loadWhitelistTokenHourlySnapshot(event.params.token, event.params.season.toI32(), event.block.timestamp);
+  hourly.milestoneSeason = siloSettings.milestoneSeason;
+  hourly.stalkEarnedPerSeason = siloSettings.stalkEarnedPerSeason;
+  hourly.save();
+
+  let daily = loadWhitelistTokenDailySnapshot(event.params.token, event.block.timestamp);
+  daily.milestoneSeason = siloSettings.milestoneSeason;
+  daily.stalkEarnedPerSeason = siloSettings.stalkEarnedPerSeason;
+  daily.save();
 }

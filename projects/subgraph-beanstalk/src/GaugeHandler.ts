@@ -23,6 +23,7 @@ import { deleteGerminating, loadGerminating, loadOrCreateGerminating } from "./u
 import { ZERO_BI } from "../../subgraph-core/utils/Decimals";
 import { updateStalkBalances } from "./SiloHandler";
 import { getCurrentSeason } from "./utils/Season";
+import { WhitelistToken as WhitelistTokenEntity } from "../generated/schema";
 
 export function handleTemperatureChange(event: TemperatureChange): void {
   handleRateChange(event.address, event.block, event.params.season, event.params.caseId, event.params.absChange);
@@ -177,27 +178,18 @@ export function handleWhitelistToken_BIP42(event: WhitelistToken): void {
   siloSettings.updatedAt = event.block.timestamp;
   siloSettings.save();
 
-  let hourly = loadWhitelistTokenHourlySnapshot(event.params.token, getCurrentSeason(event.address), event.block.timestamp);
-  hourly.selector = siloSettings.selector;
-  hourly.stalkEarnedPerSeason = siloSettings.stalkEarnedPerSeason;
-  hourly.stalkIssuedPerBdv = siloSettings.stalkIssuedPerBdv;
-  hourly.gaugePoints = siloSettings.gaugePoints;
-  hourly.gpSelector = siloSettings.gpSelector;
-  hourly.lwSelector = siloSettings.lwSelector;
-  hourly.optimalPercentDepositedBdv = siloSettings.optimalPercentDepositedBdv;
-  hourly.updatedAt = siloSettings.updatedAt;
-  hourly.save();
+  loadWhitelistTokenHourlySnapshot(event.params.token, getCurrentSeason(event.address), event.block.timestamp);
+  loadWhitelistTokenDailySnapshot(event.params.token, event.block.timestamp);
 
-  let daily = loadWhitelistTokenDailySnapshot(event.params.token, event.block.timestamp);
-  daily.selector = siloSettings.selector;
-  daily.stalkEarnedPerSeason = siloSettings.stalkEarnedPerSeason;
-  daily.stalkIssuedPerBdv = siloSettings.stalkIssuedPerBdv;
-  daily.gaugePoints = siloSettings.gaugePoints;
-  daily.gpSelector = siloSettings.gpSelector;
-  daily.lwSelector = siloSettings.lwSelector;
-  daily.optimalPercentDepositedBdv = siloSettings.optimalPercentDepositedBdv;
-  daily.updatedAt = siloSettings.updatedAt;
-  daily.save();
+  let id = "whitelistToken-" + event.transaction.hash.toHexString() + "-" + event.logIndex.toString();
+  let rawEvent = new WhitelistTokenEntity(id);
+  rawEvent.hash = event.transaction.hash.toHexString();
+  rawEvent.logIndex = event.logIndex.toI32();
+  rawEvent.protocol = event.address.toHexString();
+  rawEvent.token = event.params.token.toHexString();
+  rawEvent.blockNumber = event.block.number;
+  rawEvent.createdAt = event.block.timestamp;
+  rawEvent.save();
 }
 
 export function handleUpdateGaugeSettings(event: UpdateGaugeSettings): void {
