@@ -49,7 +49,7 @@ library LibFarm {
     ) internal returns (bytes memory result) {
         bytes1 pipeType = data.clipboard[0];
         // 0x00 -> Static Call - Execute static call
-        // else > Advanced Call - Use clipboard on and execute call
+        // else > Advanced Call - Use clipboard on and execute call.
         if (pipeType == 0x00) {
             result = _farmMem(data.callData);
         } else {
