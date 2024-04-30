@@ -190,7 +190,7 @@ contract ApprovalFacet is Invariable, ReentrancyGuard {
 
     // ERC1155 Approvals
     function setApprovalForAll(
-        address spender, 
+        address spender,
         bool approved
     ) external fundsSafu noNetFlow noSupplyChange {
         s.a[LibTractor._user()].isApprovedForAll[spender] = approved;

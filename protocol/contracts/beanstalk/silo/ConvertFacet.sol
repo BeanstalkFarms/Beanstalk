@@ -74,7 +74,8 @@ contract ConvertFacet is Invariable, ReentrancyGuard {
     )
         external
         payable
-        fundsSafu noSupplyChange
+        fundsSafu
+        noSupplyChange
         // TODO: add oneOutFlow(tokenIn) when pipelineConvert merges.
         nonReentrant
         returns (int96 toStem, uint256 fromAmount, uint256 toAmount, uint256 fromBdv, uint256 toBdv)

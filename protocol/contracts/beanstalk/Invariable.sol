@@ -55,7 +55,10 @@ abstract contract Invariable {
         _;
         uint256[] memory finalProtocolTokenBalances = getTokenBalances(tokens);
 
-        require(LibAppStorage.diamondStorage().s.stalk >= initialStalk, "INV: noNetFlow Stalk decreased");
+        require(
+            LibAppStorage.diamondStorage().s.stalk >= initialStalk,
+            "INV: noNetFlow Stalk decreased"
+        );
         for (uint256 i; i < tokens.length; i++) {
             require(
                 initialProtocolTokenBalances[i] == finalProtocolTokenBalances[i],
@@ -75,7 +78,10 @@ abstract contract Invariable {
         _;
         uint256[] memory finalProtocolTokenBalances = getTokenBalances(tokens);
 
-        require(LibAppStorage.diamondStorage().s.stalk >= initialStalk, "INV: noOutFlow Stalk decreased");
+        require(
+            LibAppStorage.diamondStorage().s.stalk >= initialStalk,
+            "INV: noOutFlow Stalk decreased"
+        );
         for (uint256 i; i < tokens.length; i++) {
             require(
                 initialProtocolTokenBalances[i] <= finalProtocolTokenBalances[i],
@@ -176,8 +182,7 @@ abstract contract Invariable {
                     s.f.harvestable.sub(s.f.harvested) + // unharvestable harvestable beans
                     s.fertilizedIndex.sub(s.fertilizedPaidIndex) + // unrinsed rinsable beans
                     s.u[C.UNRIPE_BEAN].balanceOfUnderlying; // unchopped underlying beans
-            }
-            else if (tokens[i] == LibUnripe._getUnderlyingToken(C.UNRIPE_LP)) {
+            } else if (tokens[i] == LibUnripe._getUnderlyingToken(C.UNRIPE_LP)) {
                 entitlements[i] += s.u[C.UNRIPE_LP].balanceOfUnderlying;
             }
             if (s.sopWell != address(0) && tokens[i] == address(LibSilo.getSopToken())) {

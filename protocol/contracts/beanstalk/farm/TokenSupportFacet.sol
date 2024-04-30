@@ -50,7 +50,7 @@ contract TokenSupportFacet is Invariable {
     /**
      * @notice Execute an ERC-721 token transfer
      * @dev Wraps {IERC721-safeBatchTransferFrom}.
-    **/
+     **/
     function transferERC721(
         IERC721 token,
         address to,

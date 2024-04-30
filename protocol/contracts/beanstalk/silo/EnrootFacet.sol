@@ -92,15 +92,15 @@ contract EnrootFacet is Invariable, ReentrancyGuard {
             );
 
             // Remove Deposit does not emit an event, while Add Deposit does.
-            emit RemoveDeposit(LibTractor._user(), token, stem, amount, ogBDV); 
+            emit RemoveDeposit(LibTractor._user(), token, stem, amount, ogBDV);
 
             // Calculate the current BDV for `amount` of `token` and add a Deposit.
             uint256 newBDV = LibTokenSilo.beanDenominatedValue(token, amount);
 
             LibTokenSilo.addDepositToAccount(
-                LibTractor._user(), 
-                token, 
-                stem, 
+                LibTractor._user(),
+                token,
+                stem,
                 amount,
                 newBDV,
                 LibTokenSilo.Transfer.noEmitTransferSingle

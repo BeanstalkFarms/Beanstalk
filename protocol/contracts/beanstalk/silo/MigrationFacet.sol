@@ -46,8 +46,14 @@ contract MigrationFacet is Invariable, ReentrancyGuard {
         uint256 stalkDiff,
         uint256 seedsDiff,
         bytes32[] calldata proof
-    // NOTE: Stack too deep when using noNetFlow invariant.
-    ) external payable fundsSafu noSupplyChange { // noNetFlow
+    )
+        external
+        payable
+        // NOTE: Stack too deep when using noNetFlow invariant.
+        fundsSafu
+        noSupplyChange
+    {
+        // noNetFlow
         uint256 seedsVariance = LibLegacyTokenSilo._mowAndMigrate(
             account,
             tokens,
@@ -72,7 +78,9 @@ contract MigrationFacet is Invariable, ReentrancyGuard {
      * but they currently have no deposits, then this function can be used to migrate
      * their account to the new silo using less gas.
      */
-    function mowAndMigrateNoDeposits(address account) external payable fundsSafu noNetFlow noSupplyChange {
+    function mowAndMigrateNoDeposits(
+        address account
+    ) external payable fundsSafu noNetFlow noSupplyChange {
         LibLegacyTokenSilo._migrateNoDeposits(account);
     }
 

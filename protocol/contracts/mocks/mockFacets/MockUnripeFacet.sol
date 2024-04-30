@@ -21,11 +21,7 @@ contract MockUnripeFacet is UnripeFacet {
         s.u[unripeToken].merkleRoot = root;
     }
 
-    function addUnderlying(address unripeToken, uint256 amount)
-        external
-        payable
-        nonReentrant
-    {
+    function addUnderlying(address unripeToken, uint256 amount) external payable nonReentrant {
         address underlyingToken = s.u[unripeToken].underlyingToken;
         IERC20(underlyingToken).safeTransferFrom(LibTractor._user(), address(this), amount);
         s.u[unripeToken].balanceOfUnderlying = s.u[unripeToken].balanceOfUnderlying.add(amount);

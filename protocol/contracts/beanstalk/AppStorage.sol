@@ -638,11 +638,8 @@ struct AppStorage {
     mapping(uint32 => Storage.Sr) unclaimedGerminating;
     Storage.WhitelistStatus[] whitelistStatuses;
     address sopWell;
-
     // Cumulative internal Balance of tokens.
     mapping(IERC20 => uint256) internalTokenBalanceTotal;
-
     uint256 fertilizedPaidIndex;
-
     uint256 plenty;
 }

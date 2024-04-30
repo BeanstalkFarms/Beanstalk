@@ -28,9 +28,7 @@ contract InitInvariants {
         // TODO: Get exact amount. May be 0.
         // TODO: Ensure SopWell/SopToken initialization is compatible with the logic between here and there.
         s.plenty = 0;
-
     }
-
 
     function setInternalTokenBalances() internal {
         // TODO: Deconstruct s.internalTokenBalance offchain and set all tokens and all totals here.

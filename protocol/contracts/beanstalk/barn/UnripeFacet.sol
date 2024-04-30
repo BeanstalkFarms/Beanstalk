@@ -83,14 +83,7 @@ contract UnripeFacet is Invariable, ReentrancyGuard {
         uint256 amount,
         LibTransfer.From fromMode,
         LibTransfer.To toMode
-    )
-        external
-        payable
-        fundsSafu
-        noSupplyChange
-        nonReentrant
-        returns (uint256)
-    {
+    ) external payable fundsSafu noSupplyChange nonReentrant returns (uint256) {
         // burn the token from the user address
         uint256 supply = IBean(unripeToken).totalSupply();
         amount = LibTransfer.burnToken(IBean(unripeToken), amount, LibTractor._user(), fromMode);
@@ -308,11 +301,9 @@ contract UnripeFacet is Invariable, ReentrancyGuard {
      * @param unripeToken The address of the Unripe Token.
      * @return underlyingToken The address of the Ripe Token.
      */
-    function getUnderlyingToken(address unripeToken)
-        external
-        view
-        returns (address underlyingToken)
-    {
+    function getUnderlyingToken(
+        address unripeToken
+    ) external view returns (address underlyingToken) {
         return LibUnripe._getUnderlyingToken(unripeToken);
     }
 

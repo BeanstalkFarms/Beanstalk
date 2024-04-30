@@ -84,9 +84,13 @@ library LibBalance {
         int256 delta
     ) private {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        delta >= 0 ?
-            s.internalTokenBalanceTotal[token] = s.internalTokenBalanceTotal[token].add(uint256(delta)): 
-            s.internalTokenBalanceTotal[token] = s.internalTokenBalanceTotal[token].sub(uint256(-delta));
+        delta >= 0
+            ? s.internalTokenBalanceTotal[token] = s.internalTokenBalanceTotal[token].add(
+                uint256(delta)
+            )
+            : s.internalTokenBalanceTotal[token] = s.internalTokenBalanceTotal[token].sub(
+            uint256(-delta)
+        );
         s.internalTokenBalance[account][token] = newBalance;
         emit InternalBalanceChanged(account, token, delta);
     }
