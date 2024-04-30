@@ -82,5 +82,4 @@ contract MockAdminFacet is Sun {
         updateStemScaleSeason(uint16(s.season.current));
         updateStems();
     }
-
 }

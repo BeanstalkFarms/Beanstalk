@@ -39,8 +39,8 @@ contract MigrationFacet is Invariable, ReentrancyGuard {
      * lots of deposits may take a considerable amount of gas to migrate.
      */
     function mowAndMigrate(
-        address account, 
-        address[] calldata tokens, 
+        address account,
+        address[] calldata tokens,
         uint32[][] calldata seasons,
         uint256[][] calldata amounts,
         uint256 stalkDiff,
@@ -55,10 +55,16 @@ contract MigrationFacet is Invariable, ReentrancyGuard {
             amounts
         );
         //had to break up the migration function into two parts to avoid stack too deep errors
-        LibLegacyTokenSilo._mowAndMigrateMerkleCheck(account, stalkDiff, seedsDiff, proof, seedsVariance);
+        LibLegacyTokenSilo._mowAndMigrateMerkleCheck(
+            account,
+            stalkDiff,
+            seedsDiff,
+            proof,
+            seedsVariance
+        );
     }
 
-    /** 
+    /**
      * @notice Migrates farmer's deposits from old (seasons based) to new silo (stems based).
      * @param account Address of the account to migrate
      *
@@ -74,20 +80,18 @@ contract MigrationFacet is Invariable, ReentrancyGuard {
         return LibLegacyTokenSilo.balanceOfSeeds(account);
     }
 
-    function balanceOfGrownStalkUpToStemsDeployment(address account)
-        external
-        view
-        returns (uint256)
-    {
+    function balanceOfGrownStalkUpToStemsDeployment(
+        address account
+    ) external view returns (uint256) {
         return LibLegacyTokenSilo.balanceOfGrownStalkUpToStemsDeployment(account);
     }
 
     /**
      * @dev Locate the `amount` and `bdv` for a user's Deposit in legacy storage.
-     * 
+     *
      * Silo V2 Deposits are stored within each {Account} as a mapping of:
      *  `address token => uint32 season => { uint128 amount, uint128 bdv }`
-     * 
+     *
      * Unripe BEAN and Unripe LP are handled independently so that data
      * stored in the legacy Silo V1 format and the new Silo V2 format can
      * be appropriately merged. See {LibUnripeSilo} for more information.
@@ -100,11 +104,11 @@ contract MigrationFacet is Invariable, ReentrancyGuard {
     ) external view returns (uint128, uint128) {
         AppStorage storage s = LibAppStorage.diamondStorage();
 
-        if (LibUnripeSilo.isUnripeBean(token)){
+        if (LibUnripeSilo.isUnripeBean(token)) {
             (uint256 amount, uint256 bdv) = LibUnripeSilo.unripeBeanDeposit(account, season);
             return (uint128(amount), uint128(bdv));
         }
-        if (LibUnripeSilo.isUnripeLP(token)){
+        if (LibUnripeSilo.isUnripeLP(token)) {
             (uint256 amount, uint256 bdv) = LibUnripeSilo.unripeLPDeposit(account, season);
             return (uint128(amount), uint128(bdv));
         }
@@ -122,5 +126,4 @@ contract MigrationFacet is Invariable, ReentrancyGuard {
         AppStorage storage s = LibAppStorage.diamondStorage();
         return s.migratedBdvs[token];
     }
-
 }

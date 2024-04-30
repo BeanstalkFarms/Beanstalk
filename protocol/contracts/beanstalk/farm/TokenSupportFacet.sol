@@ -14,16 +14,16 @@ import {LibTractor} from "../../libraries/LibTractor.sol";
 
 /**
  * @author Publius
- * @title TokenSupportFacet 
+ * @title TokenSupportFacet
  * @notice Permit ERC-20 and ERC-721 tokens and transfer ERC-721 and ERC-1155 tokens.
  * @dev To transfer ERC-20 tokens, use {TokenFacet.transferToken}.
  **/
 
 contract TokenSupportFacet is Invariable {
     /**
-     * 
+     *
      * ERC-20
-     * 
+     *
      */
 
     /// @notice permitERC20 is wrapper function for permit of ERC20Permit token

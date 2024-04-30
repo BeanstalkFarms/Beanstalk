@@ -29,7 +29,7 @@ interface IMeta3Curve {
 library LibMetaCurve {
     using SafeMath for uint256;
     using SafeCast for uint256;
-    
+
     /**
      * @dev Used in {LibBeanMetaCurve}.
      */
@@ -37,11 +37,7 @@ library LibMetaCurve {
         uint256[2] memory balances,
         uint256 padding
     ) internal view returns (uint256[2] memory) {
-        return LibCurve.getXP(
-            balances,
-            padding,
-            C.curve3Pool().get_virtual_price()
-        );
+        return LibCurve.getXP(balances, padding, C.curve3Pool().get_virtual_price());
     }
 
     /**
@@ -52,10 +48,6 @@ library LibMetaCurve {
         uint256[2] memory balances,
         uint256 padding
     ) internal view returns (uint256) {
-        return LibCurve.getD(
-            getXP(balances, padding),
-            IMeta3Curve(pool).A_precise()
-        );
+        return LibCurve.getD(getXP(balances, padding), IMeta3Curve(pool).A_precise());
     }
-
 }

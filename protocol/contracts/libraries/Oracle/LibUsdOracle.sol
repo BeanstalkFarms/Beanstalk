@@ -17,7 +17,6 @@ import {C} from "contracts/C.sol";
  * - ETH/USD price
  **/
 library LibUsdOracle {
-
     using SafeMath for uint256;
 
     function getUsdPrice(address token) internal view returns (uint256) {
@@ -55,7 +54,7 @@ library LibUsdOracle {
      * (ignoring decimal precision)
      */
     function getTokenPrice(address token, uint256 lookback) internal view returns (uint256) {
-         if (token == C.WETH) {
+        if (token == C.WETH) {
             uint256 ethUsdPrice = LibEthUsdOracle.getEthUsdPrice(lookback);
             if (ethUsdPrice == 0) return 0;
             return ethUsdPrice;
@@ -67,9 +66,4 @@ library LibUsdOracle {
         }
         revert("Oracle: Token not supported.");
     }
-
-
-
-
-
 }

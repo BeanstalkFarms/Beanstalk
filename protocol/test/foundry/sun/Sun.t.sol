@@ -9,14 +9,13 @@ import {console} from "forge-std/console.sol";
  * @notice Tests the functionality of the sun, the distrubution of beans and soil.
  */
 contract SunTest is TestHelper {
-    
     // Events
     event Soil(uint32 indexed season, uint256 soil);
     event Reward(uint32 indexed season, uint256 toField, uint256 toSilo, uint256 toFertilizer);
-    
+
     // Interfaces
     MockSeasonFacet season = MockSeasonFacet(BEANSTALK);
-    
+
     function setUp() public {
         initializeBeanstalkTestState(true, true);
     }
@@ -25,10 +24,7 @@ contract SunTest is TestHelper {
      * @notice tests bean issuance with only the silo.
      * @dev 100% of new bean signorage should be issued to the silo.
      */
-    function test_sunOnlySilo(
-        int256 deltaB,
-        uint256 caseId
-    ) public {
+    function test_sunOnlySilo(int256 deltaB, uint256 caseId) public {
         uint32 currentSeason = bs.season();
         uint256 initialBeanBalance = C.bean().balanceOf(BEANSTALK);
         uint256 initalPods = bs.totalUnharvestable();
@@ -36,7 +32,7 @@ contract SunTest is TestHelper {
         caseId = bound(caseId, 0, 143);
         // deltaB cannot exceed uint128 max.
         deltaB = bound(deltaB, -int256(type(uint128).max), int256(type(uint128).max));
-        
+
         // soil event check.
         uint256 soilIssued;
         if (deltaB > 0) {
@@ -51,9 +47,9 @@ contract SunTest is TestHelper {
 
         season.sunSunrise(deltaB, caseId);
 
-        // if deltaB is positive, 
-        // 1) beans are minted equal to deltaB. 
-        // 2) soil is equal to the amount of soil 
+        // if deltaB is positive,
+        // 1) beans are minted equal to deltaB.
+        // 2) soil is equal to the amount of soil
         // needed to equal the newly paid off pods (scaled up or down).
         // 3) no pods should be paid off.
         if (deltaB >= 0) {
@@ -62,11 +58,14 @@ contract SunTest is TestHelper {
         // if deltaB is negative, soil is issued equal to deltaB.
         // no beans should be minted.
         if (deltaB <= 0) {
-            assertEq(initialBeanBalance - C.bean().balanceOf(BEANSTALK), 0, "invalid bean minted -deltaB");
-            
+            assertEq(
+                initialBeanBalance - C.bean().balanceOf(BEANSTALK),
+                0,
+                "invalid bean minted -deltaB"
+            );
         }
 
-        // in both cases, soil should be issued, 
+        // in both cases, soil should be issued,
         // and pods should remain 0.
         assertEq(bs.totalSoil(), soilIssued, "invalid soil issued");
         assertEq(bs.totalUnharvestable(), 0, "invalid pods");
@@ -74,15 +73,11 @@ contract SunTest is TestHelper {
 
     /**
      * @notice tests bean issuance with a field and silo.
-     * @dev bean mints are split between the field and silo 50/50. 
+     * @dev bean mints are split between the field and silo 50/50.
      * In the case that the field is paid off with the new bean issuance,
      * the remaining bean issuance is given to the silo.
      */
-    function test_sunFieldAndSilo(
-        uint256 podsInField,
-        int256 deltaB,
-        uint256 caseId
-    ) public {
+    function test_sunFieldAndSilo(uint256 podsInField, int256 deltaB, uint256 caseId) public {
         uint32 currentSeason = bs.season();
         uint256 initialBeanBalance = C.bean().balanceOf(BEANSTALK);
         // cases can only range between 0 and 143.
@@ -91,10 +86,10 @@ contract SunTest is TestHelper {
         deltaB = bound(deltaB, -int256(type(uint128).max), int256(type(uint128).max));
         // increase pods in field.
         bs.incrementTotalPodsE(podsInField);
-        
+
         // soil event check.
         uint256 soilIssued;
-        uint256 beansToField; 
+        uint256 beansToField;
         uint256 beansToSilo;
         if (deltaB > 0) {
             (beansToField, beansToSilo) = calcBeansToFieldAndSilo(uint256(deltaB), podsInField);
@@ -109,9 +104,9 @@ contract SunTest is TestHelper {
 
         season.sunSunrise(deltaB, caseId);
 
-        // if deltaB is positive, 
-        // 1) beans are minted equal to deltaB. 
-        // 2) soil is equal to the amount of soil 
+        // if deltaB is positive,
+        // 1) beans are minted equal to deltaB.
+        // 2) soil is equal to the amount of soil
         // needed to equal the newly paid off pods (scaled up or down).
         // 3) totalunharvestable() should decrease by the amount issued to the field.
         if (deltaB >= 0) {
@@ -122,7 +117,11 @@ contract SunTest is TestHelper {
         // if deltaB is negative, soil is issued equal to deltaB.
         // no beans should be minted.
         if (deltaB <= 0) {
-            assertEq(initialBeanBalance - C.bean().balanceOf(BEANSTALK), 0, "invalid bean minted -deltaB");
+            assertEq(
+                initialBeanBalance - C.bean().balanceOf(BEANSTALK),
+                0,
+                "invalid bean minted -deltaB"
+            );
             assertEq(bs.totalSoil(), soilIssued, "invalid soil @ -deltaB");
             assertEq(bs.totalUnharvestable(), podsInField, "invalid pods @ -deltaB");
         }
@@ -130,7 +129,7 @@ contract SunTest is TestHelper {
 
     /**
      * @notice tests bean issuance with a field, silo, and fertilizer.
-     * @dev bean mints are split between the field, silo, and fertilizer 1/3, 1/3, 1/3. 
+     * @dev bean mints are split between the field, silo, and fertilizer 1/3, 1/3, 1/3.
      * In the case that the fertilizer is paid off with the new bean issuance,
      * the remaining bean issuance is split between field and silo.
      */
@@ -145,13 +144,13 @@ contract SunTest is TestHelper {
         caseId = bound(caseId, 0, 143);
         // deltaB cannot exceed uint128 max.
         deltaB = bound(deltaB, -int256(type(uint128).max), int256(type(uint128).max));
-        
+
         // test is capped to CP2 constraints. See {ConstantProduct2.sol}
         sproutsInBarn = bound(sproutsInBarn, 0, type(uint72).max);
 
         // increase pods in field.
         bs.incrementTotalPodsE(podsInField);
-        
+
         // initialize farmer with unripe tokens in order for fertilizer to function.
         initializeUnripeTokens(users[0], 100e6, 100e18);
         uint256 fertilizerMinted;
@@ -163,7 +162,7 @@ contract SunTest is TestHelper {
         uint256 beansToSilo;
         if (deltaB > 0) {
             (beansToFertilizer, beansToField, beansToSilo) = calcBeansToFertilizerFieldAndSilo(
-                uint256(deltaB), 
+                uint256(deltaB),
                 sproutsInBarn,
                 podsInField
             );
@@ -182,28 +181,39 @@ contract SunTest is TestHelper {
 
         season.sunSunrise(deltaB, caseId);
 
-        // if deltaB is positive, 
-        // 1) beans are minted equal to deltaB. 
-        // 2) soil is equal to the amount of soil 
+        // if deltaB is positive,
+        // 1) beans are minted equal to deltaB.
+        // 2) soil is equal to the amount of soil
         // needed to equal the newly paid off pods (scaled up or down).
         // 3) totalunharvestable() should decrease by the amount issued to the field.
         // 4) totalUnfertilizedBeans() should decrease by the amount issued to the barn.
         if (deltaB >= 0) {
-            assertEq(C.bean().balanceOf(BEANSTALK) - beansInBeanstalk, uint256(deltaB), "invalid bean minted +deltaB");
+            assertEq(
+                C.bean().balanceOf(BEANSTALK) - beansInBeanstalk,
+                uint256(deltaB),
+                "invalid bean minted +deltaB"
+            );
             assertEq(bs.totalSoil(), soilIssued, "invalid soil @ +deltaB");
             assertEq(bs.totalUnharvestable(), podsInField - beansToField, "invalid pods @ +deltaB");
-            assertEq(bs.totalUnfertilizedBeans(), sproutsInBarn - beansToFertilizer, "invalid sprouts @ +deltaB");
+            assertEq(
+                bs.totalUnfertilizedBeans(),
+                sproutsInBarn - beansToFertilizer,
+                "invalid sprouts @ +deltaB"
+            );
         }
         // if deltaB is negative, soil is issued equal to deltaB.
         // no beans should be minted.
         if (deltaB <= 0) {
-            assertEq(C.bean().balanceOf(BEANSTALK) - beansInBeanstalk, 0, "invalid bean minted -deltaB");
+            assertEq(
+                C.bean().balanceOf(BEANSTALK) - beansInBeanstalk,
+                0,
+                "invalid bean minted -deltaB"
+            );
             assertEq(bs.totalSoil(), soilIssued, "invalid soil @ -deltaB");
             assertEq(bs.totalUnharvestable(), podsInField, "invalid pods @ -deltaB");
             assertEq(bs.totalUnfertilizedBeans(), sproutsInBarn, "invalid sprouts @ +deltaB");
         }
     }
-
 
     ////// HELPER FUNCTIONS //////
 
@@ -218,16 +228,18 @@ contract SunTest is TestHelper {
     ) internal returns (uint256 beansToFertilizer, uint256 beansToField, uint256 beansToSilo) {
         console.log("beansIssued:", beansIssued);
         console.log("sproutsInBarn:", sproutsInBarn);
-        
+
         // Fertilizer gets 1/3 of bean issuance. Only enabled if fert is purchased.
-        if( bs.getActiveFertilizer() > 0) {
-             beansToFertilizer = beansIssued / 3;
+        if (bs.getActiveFertilizer() > 0) {
+            beansToFertilizer = beansIssued / 3;
             // Fertilizer Issuance rounds down to the nearest activeFertilizer (see Sun.rewardToFertilizer).
-            beansToFertilizer = beansToFertilizer / bs.getActiveFertilizer() * bs.getActiveFertilizer();
+            beansToFertilizer =
+                (beansToFertilizer / bs.getActiveFertilizer()) *
+                bs.getActiveFertilizer();
             // Cap fertilizer issuance is to the number of sprouts in the barn.
-            if(beansToFertilizer > sproutsInBarn) beansToFertilizer = sproutsInBarn;
+            if (beansToFertilizer > sproutsInBarn) beansToFertilizer = sproutsInBarn;
         }
-       
+
         console.log("beansToFertilizer:", beansToFertilizer);
         beansIssued -= beansToFertilizer;
         console.log("beansIssued:", beansIssued);
@@ -247,19 +259,19 @@ contract SunTest is TestHelper {
     }
 
     /**
-     * @notice calculates the amount of soil issued above peg. 
+     * @notice calculates the amount of soil issued above peg.
      * @dev see {Sun.sol}.
      */
     function getSoilIssuedAbovePeg(
-        uint256 podsInField, 
+        uint256 podsInField,
         uint256 podsRipened,
         uint256 caseId
     ) internal view returns (uint256 soilIssued) {
-        soilIssued = podsRipened * 100 / (100 +  (bs.maxTemperature() / 1e6));
+        soilIssued = (podsRipened * 100) / (100 + (bs.maxTemperature() / 1e6));
         if (caseId >= 24) {
-            soilIssued = soilIssued * 0.5e18 / 1e18; // high podrate
+            soilIssued = (soilIssued * 0.5e18) / 1e18; // high podrate
         } else if (caseId < 8) {
-            soilIssued = soilIssued * 1.5e18 / 1e18; // low podrate
+            soilIssued = (soilIssued * 1.5e18) / 1e18; // low podrate
         }
     }
 }

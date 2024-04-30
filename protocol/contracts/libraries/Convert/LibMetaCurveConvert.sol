@@ -18,21 +18,17 @@ library LibMetaCurveConvert {
     using SafeMath for uint256;
     using LibConvertData for bytes;
 
-    uint256 constant private N_COINS = 2;
-    uint256 constant private FEED2 = 2000000;
-    uint256 constant private ADMIN_FEE = 5e9;
-    uint256 constant private FEE_DENOMINATOR = 1e10;
+    uint256 private constant N_COINS = 2;
+    uint256 private constant FEED2 = 2000000;
+    uint256 private constant ADMIN_FEE = 5e9;
+    uint256 private constant FEE_DENOMINATOR = 1e10;
 
     /**
      * @notice Calculate the amount of BEAN that would exist in a Curve metapool
      * if it were "at peg", i.e. if there was 1 BEAN per 1 USD of 3CRV.
      * @dev Assumes that `balances[1]` is 3CRV.
      */
-    function beansAtPeg(uint256[2] memory balances)
-        internal
-        view
-        returns (uint256 beans)
-    {
+    function beansAtPeg(uint256[2] memory balances) internal view returns (uint256 beans) {
         return balances[1].mul(C.curve3Pool().get_virtual_price()).div(1e30);
     }
 
@@ -82,8 +78,6 @@ library LibMetaCurveConvert {
         dy = LibBeanMetaCurve.getX0(dy.sub(1));
         uint256 dy_0 = LibBeanMetaCurve.getX0(xp[0].sub(new_y));
 
-        return dy_0.add(
-            dy_0.sub(dy).mul(ADMIN_FEE).div(FEE_DENOMINATOR)
-        );
+        return dy_0.add(dy_0.sub(dy).mul(ADMIN_FEE).div(FEE_DENOMINATOR));
     }
 }

@@ -32,15 +32,12 @@ library LibGerminate {
     using LibSafeMath128 for uint128;
     using LibSafeMathSigned96 for int96;
 
-    //////////////////////// EVENTS ////////////////////////    
+    //////////////////////// EVENTS ////////////////////////
 
     /**
      * @notice emitted when the farmers germinating stalk changes.
      */
-    event FarmerGerminatingStalkBalanceChanged(
-        address indexed account,
-        int256 delta
-    );
+    event FarmerGerminatingStalkBalanceChanged(address indexed account, int256 delta);
 
     /**
      * @notice emitted when the total germinating amount/bdv changes.
@@ -80,19 +77,21 @@ library LibGerminate {
         if (season < 2) return;
 
         // base roots are used if there are no roots in the silo.
-        // root calculation is skipped if no deposits have been made 
+        // root calculation is skipped if no deposits have been made
         // in the season.
         if (s.s.roots == 0) {
             // casted to uint256 and downcasted to uint128 to prevent overflow.
-            s.unclaimedGerminating[season.sub(2)].roots =
-                s.unclaimedGerminating[season.sub(2)].stalk
+            s.unclaimedGerminating[season.sub(2)].roots = s
+                .unclaimedGerminating[season.sub(2)]
+                .stalk
                 .mul(uint128(C.getRootsBase()));
         } else if (s.unclaimedGerminating[season.sub(2)].stalk > 0) {
             s.unclaimedGerminating[season.sub(2)].roots = s
-            .s.roots
-            .mul(s.unclaimedGerminating[season.sub(2)].stalk)
-            .div(s.s.stalk)
-            .toUint128();
+                .s
+                .roots
+                .mul(s.unclaimedGerminating[season.sub(2)].stalk)
+                .div(s.s.stalk)
+                .toUint128();
         }
         // increment total stalk and roots based on unclaimed values.
         s.s.stalk = s.s.stalk.add(s.unclaimedGerminating[season.sub(2)].stalk);
@@ -139,7 +138,7 @@ library LibGerminate {
      * and roots created in the season closest to the current season.
      * i.e if a user deposited in season 10 and 11, the `first` stalk
      * would be season 11.
-     * 
+     *
      * the germination process:
      * - increments the assoicated values (bdv, stalk, roots)
      * - clears the germination struct for the account.
@@ -228,9 +227,10 @@ library LibGerminate {
             roots = s.unclaimedGerminating[season].roots;
         } else {
             // calculate the roots:
-            roots = stalk.mul(s.unclaimedGerminating[season].roots).div(
-                s.unclaimedGerminating[season].stalk
-            ).toUint128();
+            roots = stalk
+                .mul(s.unclaimedGerminating[season].roots)
+                .div(s.unclaimedGerminating[season].stalk)
+                .toUint128();
         }
     }
 

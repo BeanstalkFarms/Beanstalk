@@ -15,7 +15,6 @@ import {LibWhitelistedTokens} from "contracts/libraries/Silo/LibWhitelistedToken
  * @notice Tracks the Delta B in available pools.
  */
 contract Oracle is ReentrancyGuard {
-    
     using SignedSafeMath for int256;
 
     //////////////////// ORACLE INTERNAL ////////////////////

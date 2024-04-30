@@ -12,17 +12,16 @@ import {ERC20Permit} from "../tokens/ERC20/ERC20Permit.sol";
 /**
  * @author Publius
  * @title Mock Token
-**/
+ **/
 contract MockToken is ERC20, ERC20Burnable, ERC20Permit {
-
     uint8 private _decimals = 18;
     string private _symbol = "MOCK";
     string private _name = "MockToken";
 
-    constructor(string memory name, string memory __symbol)
-    ERC20(name, __symbol)
-    ERC20Permit(name)
-    { }
+    constructor(
+        string memory name,
+        string memory __symbol
+    ) ERC20(name, __symbol) ERC20Permit(name) {}
 
     function mint(address account, uint256 amount) external returns (bool) {
         _mint(account, amount);
@@ -52,7 +51,7 @@ contract MockToken is ERC20, ERC20Burnable, ERC20Permit {
     function symbol() public view virtual override returns (string memory) {
         return _symbol;
     }
-    
+
     function setName(string memory name_) public {
         _name = name_;
     }

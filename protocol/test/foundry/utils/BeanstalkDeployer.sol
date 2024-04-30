@@ -10,7 +10,7 @@ import {Utils, console} from "test/foundry/utils/Utils.sol";
 import {Diamond} from "contracts/beanstalk/Diamond.sol";
 import {IDiamondCut} from "contracts/interfaces/IDiamondCut.sol";
 import {MockInitDiamond} from "contracts/mocks/newMockInitDiamond.sol";
-import {InitDiamond} from "contracts/mocks/newInitDiamond.sol";
+import {InitDiamond} from "contracts/beanstalk/init/newInitDiamond.sol";
 import {DiamondLoupeFacet} from "contracts/beanstalk/diamond/DiamondLoupeFacet.sol";
 
 /// Beanstalk Contracts w/external libraries.
@@ -25,42 +25,40 @@ import {SeasonGettersFacet} from "contracts/beanstalk/sun/SeasonFacet/SeasonGett
  * @notice Test helper contract for Beanstalk tests.
  */
 contract BeanstalkDeployer is Utils {
-
     // beanstalk
-    address payable constant BEANSTALK  = payable(address(0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5));
+    address payable constant BEANSTALK =
+        payable(address(0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5));
 
     address constant BASE_FEE_CONTRACT = address(0x84292919cB64b590C0131550483707E43Ef223aC);
-  
+
     address internal deployer;
 
     // add or remove facets here. Facets here do not have mocks.
     string[] facets = [
-        "BDVFacet", 
-        "CurveFacet", 
-        "FarmFacet", 
-        "PauseFacet", 
-        "OwnershipFacet", 
-        "TokenFacet", 
-        "TokenSupportFacet", 
-        "GaugePointFacet", 
-        "LiquidityWeightFacet", 
-        "SiloGettersFacet", 
-        "ConvertGettersFacet", 
-        "MetadataFacet", 
+        "BDVFacet",
+        "FarmFacet",
+        "PauseFacet",
+        "OwnershipFacet",
+        "TokenFacet",
+        "TokenSupportFacet",
+        "GaugePointFacet",
+        "LiquidityWeightFacet",
+        "SiloGettersFacet",
+        "ConvertGettersFacet",
+        "MetadataFacet",
         "SeasonGettersFacet",
         "DepotFacet"
     ];
 
     // Facets that have a mock counter part should be appended here.
     string[] mockFacets = [
-        "FertilizerFacet", 
-        "FieldFacet", 
-        "FundraiserFacet", 
-        "MarketplaceFacet", 
-        "WhitelistFacet", 
-        "SiloFacet", 
-        "UnripeFacet", 
-        "ConvertFacet", 
+        "FertilizerFacet",
+        "FieldFacet",
+        "MarketplaceFacet",
+        "WhitelistFacet",
+        "SiloFacet",
+        "UnripeFacet",
+        "ConvertFacet",
         "SeasonFacet"
     ];
     address[] facetAddresses;
@@ -73,37 +71,37 @@ contract BeanstalkDeployer is Utils {
         deployer = users[0];
         vm.label(deployer, "Deployer");
         vm.label(BEANSTALK, "Beanstalk");
-        
+
         // Create cuts.
 
-        // Facets that require external libraries need to be deployed by 
+        // Facets that require external libraries need to be deployed by
         // `address(new Facet())`
         // otherwise, use deployCode() to speed up test compiles.
-        for(uint i; i < facets.length; i++) {
+        for (uint i; i < facets.length; i++) {
             // for facets with external libraries, deploy the facet,
-            // rather than deploying using the bytecode. 
+            // rather than deploying using the bytecode.
             string memory facetName = facets[i];
-            if(keccak256(abi.encode(facetName))  == keccak256(abi.encode("SeasonGettersFacet"))) {
+            if (keccak256(abi.encode(facetName)) == keccak256(abi.encode("SeasonGettersFacet"))) {
                 facetAddresses.push(address(new SeasonGettersFacet()));
             } else {
                 facetAddresses.push(address(deployCode(facetName)));
             }
         }
 
-        for(uint i; i < mockFacets.length; i++) {
+        for (uint i; i < mockFacets.length; i++) {
             // for facets with external libraries, deploy the facet,
-            // rather than deploying using the bytecode. 
+            // rather than deploying using the bytecode.
             string memory facet = mockFacets[i];
             // append "Mock" to the facet name.
-            if(mock) facet = string(abi.encodePacked("Mock", facet));
+            if (mock) facet = string(abi.encodePacked("Mock", facet));
             // Facets with an external library should be placed here.
             bytes32 hashedName = keccak256(abi.encode(mockFacets[i]));
             address facetAddress;
-            if(hashedName == keccak256(abi.encode("UnripeFacet"))) {
+            if (hashedName == keccak256(abi.encode("UnripeFacet"))) {
                 facetAddress = address(new MockUnripeFacet());
-            } else if(hashedName == keccak256(abi.encode("ConvertFacet"))) {
+            } else if (hashedName == keccak256(abi.encode("ConvertFacet"))) {
                 facetAddress = address(new MockConvertFacet());
-            } else if(hashedName == keccak256(abi.encode("SeasonFacet"))) {
+            } else if (hashedName == keccak256(abi.encode("SeasonFacet"))) {
                 facetAddress = address(new MockSeasonFacet());
             } else {
                 facetAddress = address(deployCode(facet));
@@ -120,7 +118,7 @@ contract BeanstalkDeployer is Utils {
         // if mocking, set the diamond address to
         // the canonical beanstalk address.
         address initDiamondAddress;
-        if (mock) { 
+        if (mock) {
             initDiamondAddress = address(new MockInitDiamond());
         } else {
             initDiamondAddress = address(new InitDiamond());
@@ -133,18 +131,18 @@ contract BeanstalkDeployer is Utils {
             abi.encodeWithSignature("init()")
         );
 
-        if(verbose) console.log("Diamond deployed at: ", address(d));
+        if (verbose) console.log("Diamond deployed at: ", address(d));
     }
 
     /**
      * @notice upgrades a diamond contract with new facets.
      * @param diamondAddress the address of the diamond contract.
      * @param newFacetNames the names of the new facets. Used to generate selectors.
-     * @param newFacetAddresses the addresses of the new facets. 
+     * @param newFacetAddresses the addresses of the new facets.
      * @param initAddress the address of the init diamond contract.
      * @param selectorsToRemove the selectors to remove.
      * .
-     * @dev the hardhat deploy script should be used when deploying to mainnet. 
+     * @dev the hardhat deploy script should be used when deploying to mainnet.
      * This is used in the scope of testing.
      */
     function upgradeWithNewFacets(
@@ -160,20 +158,12 @@ contract BeanstalkDeployer is Utils {
 
         // create facet cuts
         IDiamondCut.FacetCut[] memory cut = new IDiamondCut.FacetCut[](newFacetNames.length + 1);
-        
+
         // generate cut for new facets:
-        cut = _multiCutWithSelectorRemovals(
-            newFacetNames, 
-            newFacetAddresses,
-            selectorsToRemove
-        );
-    
+        cut = _multiCutWithSelectorRemovals(newFacetNames, newFacetAddresses, selectorsToRemove);
+
         // call diamondcut
-        IDiamondCut(diamondAddress).diamondCut(
-            cut,
-            initAddress,
-            initFunctionCall
-        );
+        IDiamondCut(diamondAddress).diamondCut(cut, initAddress, initFunctionCall);
         vm.stopPrank();
     }
 
@@ -182,7 +172,10 @@ contract BeanstalkDeployer is Utils {
     /**
      * @notice deploys a diamond contract at an address.
      */
-    function deployDiamondAtAddress(address _deployer, address payable beanstalkAddress) internal returns (Diamond d) {
+    function deployDiamondAtAddress(
+        address _deployer,
+        address payable beanstalkAddress
+    ) internal returns (Diamond d) {
         vm.prank(_deployer);
         deployCodeTo("Diamond.sol", abi.encode(_deployer), beanstalkAddress);
         return Diamond(beanstalkAddress);
@@ -192,13 +185,13 @@ contract BeanstalkDeployer is Utils {
      * @notice generates the diamond cut array for multiple facets.
      * @dev optimized such that ffi is only called once.
      */
-    function _multiCut(string[] memory _facetNames, address[] memory _facetAddresses)
-        internal
-        returns (IDiamondCut.FacetCut[] memory cutArray) 
-    {
+    function _multiCut(
+        string[] memory _facetNames,
+        address[] memory _facetAddresses
+    ) internal returns (IDiamondCut.FacetCut[] memory cutArray) {
         cutArray = new IDiamondCut.FacetCut[](_facetNames.length);
         bytes4[][] memory functionSelectorsArray = _generateMultiSelectors(_facetNames);
-        for(uint i; i < _facetNames.length; i++) {
+        for (uint i; i < _facetNames.length; i++) {
             cutArray[i] = IDiamondCut.FacetCut({
                 facetAddress: _facetAddresses[i],
                 action: IDiamondCut.FacetCutAction.Add,
@@ -219,7 +212,7 @@ contract BeanstalkDeployer is Utils {
         cutArray = _multiCut(_facetNames, _facetAddresses);
 
         // generate cuts for selectors to remove.
-        if(_selectorsToRemove.length != 0) {
+        if (_selectorsToRemove.length != 0) {
             assembly {
                 mstore(cutArray, add(mload(cutArray), 1))
             }
@@ -228,13 +221,13 @@ contract BeanstalkDeployer is Utils {
                 address(0),
                 IDiamondCut.FacetCutAction.Remove,
                 _selectorsToRemove
-            ); 
+            );
         }
     }
 
     /**
      * @notice generates the selectors for multiple facets.
-     * @dev optimized such that ffi is only called once to 
+     * @dev optimized such that ffi is only called once to
      * optimize on compile time.
      */
     function _generateMultiSelectors(

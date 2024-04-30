@@ -16,7 +16,7 @@ import "../../../C.sol";
  * Harvestable Plots
  * Pod Listings corresponding to Harvestable Plots
  * Pod Orders
- * Bean Withdrawals 
+ * Bean Withdrawals
  * ------------------------------------------------------------------------------------
  **/
 contract Replant3 {
@@ -77,30 +77,26 @@ contract Replant3 {
         }
     }
 
-    function claimWithdrawals(address account, uint32[] calldata withdrawals, uint256 amount)
-        private
-    {
+    function claimWithdrawals(
+        address account,
+        uint32[] calldata withdrawals,
+        uint256 amount
+    ) private {
         emit BeanClaim(account, withdrawals, amount);
     }
 
-    function harvest(address account, uint256[] calldata plots, uint256 amount)
-        private
-    {
+    function harvest(address account, uint256[] calldata plots, uint256 amount) private {
         for (uint256 i; i < plots.length; ++i) {
             delete s.a[account].field.plots[plots[i]];
         }
         emit Harvest(account, plots, amount);
     }
 
-    function harvestPartial(address account, uint256 plotId)
-        private
-    {
+    function harvestPartial(address account, uint256 plotId) private {
         uint256 pods = s.a[account].field.plots[plotId];
         uint256 beansHarvested = s.f.harvestable.sub(plotId);
         delete s.a[account].field.plots[plotId];
-        s.a[account].field.plots[plotId.add(beansHarvested)] = pods.sub(
-            beansHarvested
-        );
+        s.a[account].field.plots[plotId.add(beansHarvested)] = pods.sub(beansHarvested);
         uint256[] memory plots = new uint256[](1);
         plots[0] = plotId;
         emit Harvest(account, plots, beansHarvested);

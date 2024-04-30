@@ -12,8 +12,6 @@ import {LibSafeMath32} from "contracts/libraries/LibSafeMath32.sol";
 import {LibWell} from "contracts/libraries/Well/LibWell.sol";
 import {LibBarnRaise} from "contracts/libraries/LibBarnRaise.sol";
 
-
-
 /**
  * @author Brean
  * @title LibEvaluate calculates the caseId based on the state of Beanstalk.
@@ -25,14 +23,14 @@ import {LibBarnRaise} from "contracts/libraries/LibBarnRaise.sol";
  *
  * based on the caseId, Beanstalk adjusts:
  * - the Temperature
- * - the ratio of the gaugePoints per BDV of bean and the largest GpPerBdv for a given LP token. 
+ * - the ratio of the gaugePoints per BDV of bean and the largest GpPerBdv for a given LP token.
  */
 
 library DecimalExtended {
     uint256 private constant PERCENT_BASE = 1e18;
 
     function toDecimal(uint256 a) internal pure returns (Decimal.D256 memory) {
-        return Decimal.D256({ value: a });
+        return Decimal.D256({value: a});
     }
 }
 
@@ -84,7 +82,7 @@ library LibEvaluate {
      * @notice updates the caseId based on the price of bean (deltaB)
      * @param deltaB the amount of beans needed to be sold or bought to get bean to peg.
      * @param podRate the length of the podline (debt), divided by the bean supply.
-     * @param well the well address to get the bean price from. 
+     * @param well the well address to get the bean price from.
      */
     function evalPrice(
         int256 deltaB,
@@ -101,8 +99,9 @@ library LibEvaluate {
             // deltaB > 0 implies that address(well) != address(0).
             uint256 beanTknPrice = LibWell.getWellPriceFromTwaReserves(well);
             if (beanTknPrice > 1) {
-                uint256 beanUsdPrice = uint256(1e30).div(LibWell.getUsdTokenPriceForWell(well)
-                    .mul(beanTknPrice));
+                uint256 beanUsdPrice = uint256(1e30).div(
+                    LibWell.getUsdTokenPriceForWell(well).mul(beanTknPrice)
+                );
                 if (beanUsdPrice > EXCESSIVE_PRICE_THRESHOLD) {
                     // p > EXCESSIVE_PRICE_THRESHOLD
                     return caseId = 6;
@@ -123,7 +122,7 @@ library LibEvaluate {
         // increasing
         if (deltaPodDemand.greaterThanOrEqualTo(DELTA_POD_DEMAND_UPPER_BOUND.toDecimal())) {
             caseId = 2;
-        // steady
+            // steady
         } else if (deltaPodDemand.greaterThanOrEqualTo(DELTA_POD_DEMAND_LOWER_BOUND.toDecimal())) {
             caseId = 1;
         }
@@ -133,7 +132,7 @@ library LibEvaluate {
     /**
      * @notice Evaluates the lp to supply ratio and returns the caseId.
      * @param lpToSupplyRatio The ratio of liquidity to supply.
-     * 
+     *
      * @dev 'liquidity' is definied as the non-bean value in a pool that trades beans.
      */
     function evalLpToSupplyRatio(
@@ -142,10 +141,10 @@ library LibEvaluate {
         // Extremely High
         if (lpToSupplyRatio.greaterThanOrEqualTo(LP_TO_SUPPLY_RATIO_UPPER_BOUND.toDecimal())) {
             caseId = 108;
-        // Reasonably High
+            // Reasonably High
         } else if (lpToSupplyRatio.greaterThanOrEqualTo(LP_TO_SUPPLY_RATIO_OPTIMAL.toDecimal())) {
             caseId = 72;
-        // Reasonably Low
+            // Reasonably Low
         } else if (
             lpToSupplyRatio.greaterThanOrEqualTo(LP_TO_SUPPLY_RATIO_LOWER_BOUND.toDecimal())
         ) {
@@ -224,18 +223,16 @@ library LibEvaluate {
         for (uint256 i; i < pools.length; i++) {
             // get the liquidity weight.
             liquidityWeight = getLiquidityWeight(s.ss[pools[i]].lwSelector);
-            
+
             // get the non-bean value in an LP.
-            twaReserves = LibWell.getTwaReservesFromStorageOrBeanstalkPump(
-                pools[i]
-            );
+            twaReserves = LibWell.getTwaReservesFromStorageOrBeanstalkPump(pools[i]);
 
             // calculate the non-bean liqudity in the pool.
-            wellLiquidity = liquidityWeight.mul(
-                LibWell.getWellTwaUsdLiquidityFromReserves(pools[i], twaReserves)
-            ).div(1e18);
+            wellLiquidity = liquidityWeight
+                .mul(LibWell.getWellTwaUsdLiquidityFromReserves(pools[i], twaReserves))
+                .div(1e18);
 
-            // if the liquidity is the largest, update `largestLiqWell`,  
+            // if the liquidity is the largest, update `largestLiqWell`,
             // and add the liquidity to the total.
             // `largestLiqWell` is only used to initialize `s.sopWell` upon a sop,
             // but a hot storage load to skip the block below 
@@ -245,17 +242,17 @@ library LibEvaluate {
                 largestLiqWell = pools[i];
             }
             totalUsdLiquidity = totalUsdLiquidity.add(wellLiquidity);
-            
+
             if (pools[i] == LibBarnRaise.getBarnRaiseWell()) {
                 // Scale down bean supply by the locked beans, if there is fertilizer to be paid off.
-                // Note: This statement is put into the for loop to prevent another extraneous read of 
+                // Note: This statement is put into the for loop to prevent another extraneous read of
                 // the twaReserves from storage as `twaReserves` are already loaded into memory.
                 if (LibAppStorage.diamondStorage().season.fertilizing == true) {
                     beanSupply = beanSupply.sub(LibUnripe.getLockedBeans(twaReserves));
                 }
             }
-            
-            // If a new non-Well LP is added, functionality to calculate the USD value of the 
+
+            // If a new non-Well LP is added, functionality to calculate the USD value of the
             // liquidity should be added here.
         }
 
@@ -290,9 +287,7 @@ library LibEvaluate {
         s.w.lastDSoil = uint128(dsoil); // SafeCast not necessary as `s.f.beanSown` is uint128.
 
         // Calculate Lp To Supply Ratio, fetching the twaReserves in storage:
-        (lpToSupplyRatio, largestLiqWell) = calcLPToSupplyRatio(
-            beanSupply
-        );
+        (lpToSupplyRatio, largestLiqWell) = calcLPToSupplyRatio(beanSupply);
 
         // Calculate PodRate
         podRate = Decimal.ratio(s.f.pods.sub(s.f.harvestable), beanSupply); // Pod Rate
@@ -314,9 +309,9 @@ library LibEvaluate {
         ) = getBeanstalkState(beanSupply);
         uint256 caseId = evalPodRate(podRate) // Evaluate Pod Rate
         .add(evalPrice(deltaB, podRate, largestLiqWell)) // Evaluate Price
-        .add(evalDeltaPodDemand(deltaPodDemand)) // Evaluate Delta Soil Demand 
-        .add(evalLpToSupplyRatio(lpToSupplyRatio)); // Evaluate LP to Supply Ratio
-        return(caseId, largestLiqWell);
+            .add(evalDeltaPodDemand(deltaPodDemand))
+            .add(evalLpToSupplyRatio(lpToSupplyRatio)); // Evaluate Delta Soil Demand // Evaluate LP to Supply Ratio
+        return (caseId, largestLiqWell);
     }
 
     /**
@@ -324,12 +319,10 @@ library LibEvaluate {
      * @dev the liquidity weight determines the percentage of
      * liquidity is considered in evaluating the liquidity of bean.
      * At 0, no liquidity is added. at 1e18, all liquidity is added.
-     * 
+     *
      * if failure, returns 0 (no liquidity is considered) instead of reverting.
      */
-    function getLiquidityWeight(
-        bytes4 lwSelector
-    ) internal view returns (uint256 liquidityWeight) {
+    function getLiquidityWeight(bytes4 lwSelector) internal view returns (uint256 liquidityWeight) {
         bytes memory callData = abi.encodeWithSelector(lwSelector);
         (bool success, bytes memory data) = address(this).staticcall(callData);
         if (!success) {

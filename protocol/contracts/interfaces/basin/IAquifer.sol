@@ -12,7 +12,6 @@ import {IWell, Call} from "./IWell.sol";
  * @notice Interface for the Aquifer, a permissionless Well deployer and registry.
  */
 interface IAquifer {
-
     /**
      * @notice Emitted when a Well is deployed.
      * @param well The address of the new Well
@@ -23,7 +22,12 @@ interface IAquifer {
      * @param wellData The Well data to implement into the Well
      */
     event BoreWell(
-        address well, address implementation, IERC20[] tokens, Call wellFunction, Call[] pumps, bytes wellData
+        address well,
+        address implementation,
+        IERC20[] tokens,
+        Call wellFunction,
+        Call[] pumps,
+        bytes wellData
     );
 
     /**

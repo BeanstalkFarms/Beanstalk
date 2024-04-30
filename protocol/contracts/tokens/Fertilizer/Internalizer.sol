@@ -3,7 +3,6 @@
 pragma solidity ^0.7.6;
 pragma experimental ABIEncoderV2;
 
-
 import "@openzeppelin/contracts-upgradeable/utils/StringsUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC20/SafeERC20Upgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
@@ -19,7 +18,6 @@ import "contracts/libraries/LibSafeMath128.sol";
  */
 
 contract Internalizer is OwnableUpgradeable, ReentrancyGuardUpgradeable, Fertilizer1155 {
-
     using SafeERC20Upgradeable for IERC20;
     using LibSafeMath128 for uint128;
 
@@ -64,7 +62,10 @@ contract Internalizer is OwnableUpgradeable, ReentrancyGuardUpgradeable, Fertili
         return _balances[id][account];
     }
 
-    function lastBalanceOfBatch(address[] memory accounts, uint256[] memory ids) external view returns (Balance[] memory balances) {
+    function lastBalanceOfBatch(
+        address[] memory accounts,
+        uint256[] memory ids
+    ) external view returns (Balance[] memory balances) {
         balances = new Balance[](accounts.length);
         for (uint256 i; i < accounts.length; ++i) {
             balances[i] = lastBalanceOf(accounts[i], ids[i]);

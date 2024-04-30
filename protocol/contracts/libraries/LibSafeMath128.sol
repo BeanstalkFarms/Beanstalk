@@ -5,7 +5,7 @@ pragma solidity >=0.6.0 <0.8.0;
 /**
  * @author Publius
  * @title LibSafeMath128 is a uint128 variation of Open Zeppelin's Safe Math library.
-**/
+ **/
 library LibSafeMath128 {
     /**
      * @dev Returns the addition of two unsigned integers, with an overflow flag.

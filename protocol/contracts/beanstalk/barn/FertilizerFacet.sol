@@ -121,9 +121,7 @@ contract FertilizerFacet is Invariable {
         uint256 tokenAmountIn,
         address barnRaiseToken
     ) public view returns (uint256 fertilizerAmountOut) {
-        fertilizerAmountOut = tokenAmountIn.div(
-            LibUsdOracle.getUsdPrice(barnRaiseToken)
-        );
+        fertilizerAmountOut = tokenAmountIn.div(LibUsdOracle.getUsdPrice(barnRaiseToken));
     }
 
     function totalFertilizedBeans() external view returns (uint256 beans) {
@@ -182,27 +180,24 @@ contract FertilizerFacet is Invariable {
         return LibFertilizer.remainingRecapitalization();
     }
 
-    function balanceOfUnfertilized(address account, uint256[] memory ids)
-        external
-        view
-        returns (uint256 beans)
-    {
+    function balanceOfUnfertilized(
+        address account,
+        uint256[] memory ids
+    ) external view returns (uint256 beans) {
         return C.fertilizer().balanceOfUnfertilized(account, ids);
     }
 
-    function balanceOfFertilized(address account, uint256[] memory ids)
-        external
-        view
-        returns (uint256 beans)
-    {
+    function balanceOfFertilized(
+        address account,
+        uint256[] memory ids
+    ) external view returns (uint256 beans) {
         return C.fertilizer().balanceOfFertilized(account, ids);
     }
 
-    function balanceOfFertilizer(address account, uint256 id)
-        external
-        view
-        returns (IFertilizer.Balance memory)
-    {
+    function balanceOfFertilizer(
+        address account,
+        uint256 id
+    ) external view returns (IFertilizer.Balance memory) {
         return C.fertilizer().lastBalanceOf(account, id);
     }
 

@@ -11,5 +11,5 @@ const revertToSnapshot = async (snapshotId) => {
 
 module.exports = {
   takeSnapshot,
-  revertToSnapshot,
+  revertToSnapshot
 };

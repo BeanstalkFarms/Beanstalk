@@ -29,19 +29,14 @@ contract FieldFacet is Invariable, ReentrancyGuard {
     using LibSafeMath128 for uint128;
 
     /**
-     * @notice Emitted from {LibDibbler.sow} when an `account` creates a plot. 
-     * A Plot is a set of Pods created in from a single {sow} or {fund} call. 
+     * @notice Emitted from {LibDibbler.sow} when an `account` creates a plot.
+     * A Plot is a set of Pods created in from a single {sow} or {fund} call.
      * @param account The account that sowed Beans for Pods
      * @param index The place in line of the Plot
      * @param beans The amount of Beans burnt to create the Plot
      * @param pods The amount of Pods assocated with the created Plot
      */
-    event Sow(
-        address indexed account,
-        uint256 index,
-        uint256 beans,
-        uint256 pods
-    );
+    event Sow(address indexed account, uint256 index, uint256 beans, uint256 pods);
 
     /**
      * @notice Emitted when `account` claims the Beans associated with Harvestable Pods.
@@ -66,14 +61,14 @@ contract FieldFacet is Invariable, ReentrancyGuard {
      * @param minTemperature The minimum Temperature at which to Sow
      * @param mode The balance to transfer Beans from; see {LibTransfer.From}
      * @return pods The number of Pods received
-     * @dev 
-     * 
+     * @dev
+     *
      * `minTemperature` has precision of 1e6. Wraps {sowWithMin} with `minSoil = beans`.
-     * 
+     *
      * NOTE: previously minTemperature was measured to 1e2 (1% = 1)
-     * 
+     *
      * Rationale for {sow} accepting a `minTemperature` parameter:
-     * If someone sends a Sow transaction at the end of a Season, it could be 
+     * If someone sends a Sow transaction at the end of a Season, it could be
      * executed early in the following Season, at which time the temperature may be
      * significantly lower due to Morning Auction functionality.
      */
@@ -89,7 +84,7 @@ contract FieldFacet is Invariable, ReentrancyGuard {
      * @notice Sow Beans in exchange for Pods. Use at least `minSoil`.
      * @param beans The number of Beans to Sow
      * @param minTemperature The minimum Temperature at which to Sow
-     * @param minSoil The minimum amount of Soil to use; reverts if there is 
+     * @param minSoil The minimum amount of Soil to use; reverts if there is
      * less than this much Soil available upon execution
      * @param mode The balance to transfer Beans from; see {LibTrasfer.From}
      * @return pods The number of Pods received
@@ -103,18 +98,12 @@ contract FieldFacet is Invariable, ReentrancyGuard {
         // `soil` is the remaining Soil
         (uint256 soil, uint256 _morningTemperature, bool abovePeg) = _totalSoilAndTemperature();
 
-        require(
-            soil >= minSoil && beans >= minSoil,
-            "Field: Soil Slippage"
-        );
-        require(
-            _morningTemperature >= minTemperature,
-            "Field: Temperature Slippage"
-        );
+        require(soil >= minSoil && beans >= minSoil, "Field: Soil Slippage");
+        require(_morningTemperature >= minTemperature, "Field: Temperature Slippage");
 
         // If beans >= soil, Sow all of the remaining Soil
         if (beans < soil) {
-            soil = beans; 
+            soil = beans;
         }
 
         // 1 Bean is Sown in 1 Soil, i.e. soil = beans
@@ -125,10 +114,12 @@ contract FieldFacet is Invariable, ReentrancyGuard {
      * @dev Burn Beans, Sows at the provided `_morningTemperature`, increments the total
      * number of `beanSown`.
      */
-    function _sow(uint256 beans, uint256 _morningTemperature, bool peg, LibTransfer.From mode)
-        internal
-        returns (uint256 pods)
-    {
+    function _sow(
+        uint256 beans,
+        uint256 _morningTemperature,
+        bool peg,
+        LibTransfer.From mode
+    ) internal returns (uint256 pods) {
         beans = LibTransfer.burnToken(C.bean(), beans, LibTractor._user(), mode);
         pods = LibDibbler.sow(beans, _morningTemperature, LibTractor._user(), peg);
         s.f.beanSown = s.f.beanSown + SafeCast.toUint128(beans); // SafeMath not needed
@@ -158,10 +149,7 @@ contract FieldFacet is Invariable, ReentrancyGuard {
      * @dev Ensure that each Plot is at least partially harvestable, burn the Plot,
      * update the total harvested, and emit a {Harvest} event.
      */
-    function _harvest(uint256[] calldata plots)
-        internal
-        returns (uint256 beansHarvested)
-    {
+    function _harvest(uint256[] calldata plots) internal returns (uint256 beansHarvested) {
         for (uint256 i; i < plots.length; ++i) {
             // The Plot is partially harvestable if its index is less than
             // the current harvestable index.
@@ -177,22 +165,22 @@ contract FieldFacet is Invariable, ReentrancyGuard {
      * @dev Check if a Plot is at least partially Harvestable; calculate how many
      * Pods are Harvestable, create a new Plot if necessary.
      */
-    function _harvestPlot(address account, uint256 index)
-        private
-        returns (uint256 harvestablePods)
-    {
+    function _harvestPlot(
+        address account,
+        uint256 index
+    ) private returns (uint256 harvestablePods) {
         // Check that `account` holds this Plot.
         uint256 pods = s.a[account].field.plots[index];
         require(pods > 0, "Field: no plot");
 
-        // Calculate how many Pods are harvestable. 
-        // The upstream _harvest function checks that at least some Pods 
+        // Calculate how many Pods are harvestable.
+        // The upstream _harvest function checks that at least some Pods
         // are harvestable.
         harvestablePods = s.f.harvestable.sub(index);
         delete s.a[account].field.plots[index];
 
         // Cancel any active Pod Listings active for this Plot.
-        // Note: duplicate of {Listing._cancelPodListing} without the 
+        // Note: duplicate of {Listing._cancelPodListing} without the
         // ownership check, which is done above.
         if (s.podListings[index] > 0) {
             delete s.podListings[index];
@@ -203,11 +191,9 @@ contract FieldFacet is Invariable, ReentrancyGuard {
         if (harvestablePods >= pods) {
             return pods;
         }
-        
+
         // Create a new Plot with remaining Pods.
-        s.a[account].field.plots[index.add(harvestablePods)] = pods.sub(
-            harvestablePods
-        );
+        s.a[account].field.plots[index.add(harvestablePods)] = pods.sub(harvestablePods);
     }
 
     //////////////////// GETTERS ////////////////////
@@ -262,31 +248,30 @@ contract FieldFacet is Invariable, ReentrancyGuard {
      * @notice Returns the number of Pods remaining in a Plot.
      * @dev Plots are only stored in the `s.a[account].field.plots` mapping.
      */
-    function plot(address account, uint256 index)
-        public
-        view
-        returns (uint256)
-    {
+    function plot(address account, uint256 index) public view returns (uint256) {
         return s.a[account].field.plots[index];
     }
 
     /**
-     * @dev Gets the current `soil`, `_morningTemperature` and `abovePeg`. Provided as a gas 
-     * optimization to prevent recalculation of {LibDibbler.morningTemperature} for 
+     * @dev Gets the current `soil`, `_morningTemperature` and `abovePeg`. Provided as a gas
+     * optimization to prevent recalculation of {LibDibbler.morningTemperature} for
      * upstream functions.
      * Note: the `soil` return value is symmetric with `totalSoil`.
      */
-    function _totalSoilAndTemperature() private view returns (uint256 soil, uint256 _morningTemperature, bool abovePeg) {
+    function _totalSoilAndTemperature()
+        private
+        view
+        returns (uint256 soil, uint256 _morningTemperature, bool abovePeg)
+    {
         _morningTemperature = LibDibbler.morningTemperature();
         abovePeg = s.season.abovePeg;
 
         // Below peg: Soil is fixed to the amount set during {calcCaseId}.
-        // Morning Temperature is dynamic, starting small and logarithmically 
+        // Morning Temperature is dynamic, starting small and logarithmically
         // increasing to `s.w.t` across the first 25 blocks of the Season.
         if (!abovePeg) {
             soil = uint256(s.f.soil);
-        } 
-        
+        }
         // Above peg: the maximum amount of Pods that Beanstalk is willing to mint
         // stays fixed; since {morningTemperature} is scaled down when `delta < 25`, we
         // need to scale up the amount of Soil to hold Pods constant.
@@ -314,25 +299,27 @@ contract FieldFacet is Invariable, ReentrancyGuard {
         }
 
         // Above peg: Soil is dynamic
-        return LibDibbler.scaleSoilUp(
-            uint256(s.f.soil), // min soil
-            uint256(s.w.t).mul(LibDibbler.TEMPERATURE_PRECISION), // max temperature
-            LibDibbler.morningTemperature() // temperature adjusted by number of blocks since Sunrise
-        );
+        return
+            LibDibbler.scaleSoilUp(
+                uint256(s.f.soil), // min soil
+                uint256(s.w.t).mul(LibDibbler.TEMPERATURE_PRECISION), // max temperature
+                LibDibbler.morningTemperature() // temperature adjusted by number of blocks since Sunrise
+            );
     }
 
     //////////////////// GETTERS: TEMPERATURE ////////////////////
 
     /**
-     * @notice DEPRECATED: Returns the current yield (aka "Temperature") offered 
+     * @notice DEPRECATED: Returns the current yield (aka "Temperature") offered
      * by Beanstalk when burning Beans in exchange for Pods.
-     * @dev Left for backwards compatibility. Scales down the {morningTemperature}. 
+     * @dev Left for backwards compatibility. Scales down the {morningTemperature}.
      * There is a loss of precision (max 1%) during this operation.
      */
     function yield() external view returns (uint32) {
-        return SafeCast.toUint32(
-            LibDibbler.morningTemperature().div(LibDibbler.TEMPERATURE_PRECISION)
-        );
+        return
+            SafeCast.toUint32(
+                LibDibbler.morningTemperature().div(LibDibbler.TEMPERATURE_PRECISION)
+            );
     }
 
     /**
@@ -346,7 +333,7 @@ contract FieldFacet is Invariable, ReentrancyGuard {
     /**
      * @notice Returns the max Temperature that Beanstalk is willing to offer this Season.
      * @dev For gas efficiency, Beanstalk stores `s.w.t` as a uint32 with precision of 1e2.
-     * Here we convert to uint256 and scale up by TEMPERATURE_PRECISION to match the 
+     * Here we convert to uint256 and scale up by TEMPERATURE_PRECISION to match the
      * precision needed for the Morning Auction functionality.
      */
     function maxTemperature() external view returns (uint256) {
@@ -354,7 +341,7 @@ contract FieldFacet is Invariable, ReentrancyGuard {
     }
 
     //////////////////// GETTERS: PODS ////////////////////
-    
+
     /**
      * @notice Returns the remaining Pods that could be issued this Season.
      */

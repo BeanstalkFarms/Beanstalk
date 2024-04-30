@@ -10,9 +10,8 @@ import "../interfaces/IBlockBasefee.sol";
 /**
  * @author Chaikitty
  * @title MockBlockBasefee is a Mock version of Block basefee contract for getting current block's base fee
-**/
-contract MockBlockBasefee is IBlockBasefee  {
-
+ **/
+contract MockBlockBasefee is IBlockBasefee {
     uint256 private answer;
 
     function block_basefee() external view override returns (uint256) {

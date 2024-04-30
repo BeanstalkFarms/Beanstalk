@@ -1,4 +1,6 @@
-/// SPDX-License-Identifier: MIT
+/**
+ * SPDX-License-Identifier: MIT
+ **/
 
 pragma solidity ^0.7.6;
 pragma experimental ABIEncoderV2;
@@ -12,29 +14,21 @@ import {AdvancedFarmCall, LibFarm} from "../../libraries/LibFarm.sol";
 import {LibBytes} from "contracts/libraries/LibBytes.sol";
 /**
  * @title TractorFacet handles tractor and blueprint operations.
- * @author 0xm00neth, funderberker
+ * @author funderberker, 0xm00neth
  */
 contract TractorFacet {
     using LibBytes for bytes32;
     using SafeMath for uint256;
 
-    /**********/
-    /* Events */
-    /**********/
-
-    /// @dev Emitted on publishRequisition()
     event PublishRequisition(LibTractor.Requisition requisition);
 
-    /// @dev Emitted on cancelBlueprint()
     event CancelBlueprint(bytes32 blueprintHash);
 
-    /// @dev Emitted on tractor()
     event Tractor(address indexed operator, bytes32 blueprintHash);
 
-    /*************/
-    /* Modifiers */
-    /*************/
-
+    /**
+     * @notice Ensure requisition hash matches blueprint data and signer is publisher.
+     */
     modifier verifyRequisition(LibTractor.Requisition calldata requisition) {
         bytes32 blueprintHash = LibTractor._getBlueprintHash(requisition.blueprint);
         require(blueprintHash == requisition.blueprintHash, "TractorFacet: invalid hash");
@@ -46,7 +40,9 @@ contract TractorFacet {
         _;
     }
 
-    /// @notice Check blueprint nonce, increment nonce, handle active publisher.
+    /**
+     * @notice Verify nonce and time are acceptable, increment nonce, set publisher, clear publisher.
+     */
     modifier runBlueprint(LibTractor.Requisition calldata requisition) {
         require(
             LibTractor._getBlueprintNonce(requisition.blueprintHash) <
@@ -64,20 +60,18 @@ contract TractorFacet {
         LibTractor._resetPublisher();
     }
 
-    /******************/
-    /* User Functions */
-    /******************/
-
-    /// @notice Publish new blueprint
-    /// Emits {PublishRequisition} event
+    /**
+     * @notice Publish a new blueprint by emitting its data in an event.
+     */
     function publishRequisition(
         LibTractor.Requisition calldata requisition
     ) external verifyRequisition(requisition) {
         emit PublishRequisition(requisition);
     }
 
-    /// @notice Destroy existing blueprint
-    /// Emits {CancelBlueprint} event
+    /**
+     * @notice Destroy existing blueprint
+     */
     function cancelBlueprint(
         LibTractor.Requisition calldata requisition
     ) external verifyRequisition(requisition) {
@@ -86,8 +80,9 @@ contract TractorFacet {
         emit CancelBlueprint(requisition.blueprintHash);
     }
 
-    /// @notice Tractor Operation
-    /// Emits {Tractor} event
+    /**
+     * @notice Execute a Tractor blueprint as an operator.
+     */
     function tractor(
         LibTractor.Requisition calldata requisition,
         bytes memory operatorData
@@ -113,8 +108,6 @@ contract TractorFacet {
             uint80 pasteCallIndex = operatorPasteInstr.getIndex1();
             require(calls.length > pasteCallIndex, "Tractor: pasteCallIndex OOB");
 
-            // note: calls[..] reverts if operatorPasteInstr.getPasteCallIndex()
-            // is an invalid index.
             LibBytes.pasteBytesTractor(
                 operatorPasteInstr,
                 operatorData,
@@ -125,13 +118,15 @@ contract TractorFacet {
         results = new bytes[](calls.length);
         for (uint256 i = 0; i < calls.length; ++i) {
             require(calls[i].callData.length != 0, "Tractor: empty AdvancedFarmCall");
-            results[i] = LibFarm._advancedFarmMem(calls[i], results);
+            results[i] = LibFarm._advancedFarm(calls[i], results);
         }
         emit Tractor(msg.sender, requisition.blueprintHash);
     }
 
-    /// @notice get counter count
-    /// @return count counter count
+    /**
+     * @notice Get current counter value.
+     * @return count Counter value
+     */
     function getCounter(bytes32 counterId) public view returns (uint256 count) {
         return
             LibTractor._tractorStorage().blueprintCounters[
@@ -139,8 +134,10 @@ contract TractorFacet {
             ][counterId];
     }
 
-    /// @notice update counter count
-    /// @return count counter count
+    /**
+     * @notice Update counter value.
+     * @return count New value of counter
+     */
     function updateCounter(
         bytes32 counterId,
         LibTractor.CounterUpdateType updateType,
@@ -158,14 +155,18 @@ contract TractorFacet {
         return newCount;
     }
 
-    /// @notice return current blueprint nonce
-    /// @return nonce current blueprint nonce
+    /**
+     * @notice Get current blueprint nonce.
+     * @return nonce current blueprint nonce
+     */
     function getBlueprintNonce(bytes32 blueprintHash) external view returns (uint256) {
         return LibTractor._getBlueprintNonce(blueprintHash);
     }
 
-    /// @notice return EIP712 hash of the blueprint
-    /// @return hash calculated Blueprint hash
+    /**
+     * @notice Get EIP712 compliant hash of the blueprint.
+     * @return hash Hash of Blueprint
+     */
     function getBlueprintHash(
         LibTractor.Blueprint calldata blueprint
     ) external view returns (bytes32) {

@@ -26,7 +26,9 @@ contract DepotFacet is Invariable {
      * @param p PipeCall to pipe through Pipeline
      * @return result PipeCall return value
      **/
-    function pipe(PipeCall calldata p) external payable fundsSafu noSupplyIncrease returns (bytes memory result) {
+    function pipe(
+        PipeCall calldata p
+    ) external payable fundsSafu noSupplyIncrease returns (bytes memory result) {
         result = IPipeline(PIPELINE).pipe(p);
     }
 
@@ -73,12 +75,8 @@ contract DepotFacet is Invariable {
      * @notice Return the return value of a PipeCall without executing it.
      * @param p PipeCall to execute with a staticcall
      * @return result PipeCall return value
-    **/
-    function readPipe(PipeCall calldata p)
-        external
-        view
-        returns (bytes memory result)
-    {
+     **/
+    function readPipe(PipeCall calldata p) external view returns (bytes memory result) {
         bool success;
         // Use a static call to ensure no state modification
         (success, result) = p.target.staticcall(p.data);

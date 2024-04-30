@@ -10,11 +10,9 @@ import "contracts/tokens/Fertilizer/Fertilizer.sol";
 /**
  * @author Publius
  * @title MockFertilizer is a Mock version of Fertilizer
-**/
-contract MockFertilizer is Fertilizer  {
-
+ **/
+contract MockFertilizer is Fertilizer {
     function initialize() public initializer {
         __Internallize_init("");
     }
-
 }

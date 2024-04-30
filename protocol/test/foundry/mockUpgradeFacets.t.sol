@@ -16,7 +16,6 @@ import {IMockFBeanstalk} from "contracts/interfaces/IMockFBeanstalk.sol";
  * @dev Tests total/farmer values and validates the germination process.
  */
 contract MockUpgradeFacets is TestHelper {
-    
     // test accounts
     address[] farmers;
 
@@ -71,7 +70,7 @@ contract MockUpgradeFacets is TestHelper {
             IMockFBeanstalk(BEANSTALK).owner(), // fetch beanstalk owner.
             new string[](0),
             new address[](0),
-            address(0), 
+            address(0),
             new bytes(0),
             removeSelectors
         );
@@ -80,5 +79,4 @@ contract MockUpgradeFacets is TestHelper {
         vm.expectRevert(bytes("Diamond: Function does not exist"));
         MockUpgradeFacet(BEANSTALK).woohoo();
     }
-
 }

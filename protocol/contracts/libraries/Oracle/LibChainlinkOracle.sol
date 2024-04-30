@@ -124,12 +124,14 @@ library LibChainlinkOracle {
                     roundId -= 1;
                     t.lastTimestamp = timestamp;
                     (answer, timestamp) = getRoundData(priceAggregator, roundId);
-                    if (checkForInvalidTimestampOrAnswer(
+                    if (
+                        checkForInvalidTimestampOrAnswer(
                             timestamp,
                             answer,
                             t.lastTimestamp,
                             maxTimeout
-                    )) {
+                        )
+                    ) {
                         return 0;
                     }
                 }
@@ -149,11 +151,11 @@ library LibChainlinkOracle {
         uint80 roundId
     ) private view returns (int256, uint256) {
         try priceAggregator.getRoundData(roundId) returns (
-                uint80 /* roundId */,
-                int256 _answer,
-                uint256 /* startedAt */,
-                uint256 _timestamp,
-                uint80 /* answeredInRound */
+            uint80 /* roundId */,
+            int256 _answer,
+            uint256 /* startedAt */,
+            uint256 _timestamp,
+            uint80 /* answeredInRound */
         ) {
             return (_answer, _timestamp);
         } catch {

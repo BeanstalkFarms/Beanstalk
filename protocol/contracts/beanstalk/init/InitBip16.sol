@@ -10,7 +10,7 @@ import {IBean} from "../../interfaces/IBean.sol";
 /**
  * @author Publius
  * @title InitBip16 initializes BIP-16: It whitelists the Bean:LUSD Curve Plain Pool into the Silo and pays the publius address 5,000 Beans.
-**/
+ **/
 
 interface IBS {
     function whitelistToken(address token, bytes4 selector, uint32 stalk, uint32 seeds) external;
@@ -22,7 +22,8 @@ contract InitBip16 {
     address private constant PUBLIUS_ADDRESS = address(0x925753106FCdB6D2f30C3db295328a0A1c5fD1D1);
     uint256 private constant PAYMENT = 5000000000;
 
-    address private constant BEAN_LUSD_ADDRESS = address(0xD652c40fBb3f06d6B58Cb9aa9CFF063eE63d465D);
+    address private constant BEAN_LUSD_ADDRESS =
+        address(0xD652c40fBb3f06d6B58Cb9aa9CFF063eE63d465D);
     uint32 private constant STALK = 10000;
     uint32 private constant SEEDS = 3;
 

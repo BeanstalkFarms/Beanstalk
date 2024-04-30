@@ -33,14 +33,13 @@ contract ApprovalFacet is Invariable, ReentrancyGuard {
     );
     event ApprovalForAll(address indexed account, address indexed operator, bool approved);
 
-
     //////////////////////// APPROVE ////////////////////////
 
-    /** 
-     * @notice Approve `spender` to Transfer Deposits for user.     
+    /**
+     * @notice Approve `spender` to Transfer Deposits for user.
      *
      * Sets the allowance to `amount`.
-     * 
+     *
      * @dev Gas optimization: We neglect to check whether `token` is actually
      * whitelisted. If a token is not whitelisted, it cannot be Deposited,
      * therefore it cannot be Transferred.
@@ -76,9 +75,9 @@ contract ApprovalFacet is Invariable, ReentrancyGuard {
         return true;
     }
 
-    /** 
+    /**
      * @notice Decrease the Transfer allowance for `spender`.
-     * 
+     *
      * @dev Gas optimization: We neglect to check whether `token` is actually
      * whitelisted. If a token is not whitelisted, it cannot be Deposited,
      * therefore it cannot be Transferred.
@@ -90,26 +89,31 @@ contract ApprovalFacet is Invariable, ReentrancyGuard {
     ) public virtual fundsSafu noNetFlow noSupplyChange nonReentrant returns (bool) {
         uint256 currentAllowance = depositAllowance(LibTractor._user(), spender, token);
         require(currentAllowance >= subtractedValue, "Silo: decreased allowance below zero");
-        LibSiloPermit._approveDeposit(LibTractor._user(), spender, token, currentAllowance.sub(subtractedValue));
+        LibSiloPermit._approveDeposit(
+            LibTractor._user(),
+            spender,
+            token,
+            currentAllowance.sub(subtractedValue)
+        );
         return true;
     }
 
     //////////////////////// PERMIT ////////////////////////
 
     /*
-     * Farm balances and silo deposits support EIP-2612 permits, 
-     * which allows Farmers to delegate use of their Farm balances 
+     * Farm balances and silo deposits support EIP-2612 permits,
+     * which allows Farmers to delegate use of their Farm balances
      * through permits without the need for a separate transaction.
-     * https://eips.ethereum.org/EIPS/eip-2612 
+     * https://eips.ethereum.org/EIPS/eip-2612
      */
-    
-    /** 
+
+    /**
      * @notice permits multiple deposits.
      * @param owner address to give permit
      * @param spender address to permit
      * @param tokens array of ERC20s to permit
      * @param values array of amount (corresponding to tokens) to permit
-     * @param deadline expiration of signature (unix time) 
+     * @param deadline expiration of signature (unix time)
      * @param v recovery id
      * @param r ECDSA signature output
      * @param s ECDSA signature output
@@ -130,14 +134,14 @@ contract ApprovalFacet is Invariable, ReentrancyGuard {
         }
     }
 
-    /** 
+    /**
      * @notice Increases the Deposit Transfer allowance of `spender`.
-     * 
+     *
      * @param owner address to give permit
      * @param spender address to permit
      * @param token ERC20 to permit
      * @param value amount to permit
-     * @param deadline expiration of signature (unix time) 
+     * @param deadline expiration of signature (unix time)
      * @param v recovery id
      * @param r ECDSA signature output
      * @param s ECDSA signature output
@@ -170,10 +174,9 @@ contract ApprovalFacet is Invariable, ReentrancyGuard {
         return LibSiloPermit._domainSeparatorV4();
     }
 
-
     /**
      * @notice Returns how much of a `token` Deposit that `spender` can transfer on behalf of `owner`.
-     * @param owner The account that has given `spender` approval to transfer Deposits. 
+     * @param owner The account that has given `spender` approval to transfer Deposits.
      * @param spender The address (contract or EOA) that is allowed to transfer Deposits on behalf of `owner`.
      * @param token Whitelisted ERC20 token.
      */
@@ -194,10 +197,7 @@ contract ApprovalFacet is Invariable, ReentrancyGuard {
         emit ApprovalForAll(LibTractor._user(), spender, approved);
     }
 
-    function isApprovedForAll(
-        address _owner, 
-        address _operator
-    ) external view returns (bool) {
+    function isApprovedForAll(address _owner, address _operator) external view returns (bool) {
         return s.a[_owner].isApprovedForAll[_operator];
     }
 }

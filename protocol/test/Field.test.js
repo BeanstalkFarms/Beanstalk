@@ -6,22 +6,26 @@ const { to6 } = require("./utils/helpers.js");
 const { MAX_UINT32, MAX_UINT256 } = require("./utils/constants.js");
 const { takeSnapshot, revertToSnapshot } = require("./utils/snapshot");
 const { getAllBeanstalkContracts } = require("../utils/contracts");
-const { initalizeUsersForToken, endGermination, addMockUnderlying, endGerminationWithMockToken } = require('./utils/testHelpers.js')
+const {
+  initalizeUsersForToken,
+  endGermination,
+  addMockUnderlying,
+  endGerminationWithMockToken
+} = require("./utils/testHelpers.js");
 
 let user, user2, owner;
 
 describe("newField", function () {
   before(async function () {
     [owner, user, user2] = await ethers.getSigners();
-    const contracts = await deploy(verbose = false, mock = true, reset = true);
+    const contracts = await deploy((verbose = false), (mock = true), (reset = true));
     owner.address = contracts.account;
     this.diamond = contracts.beanstalkDiamond;
     // `beanstalk` contains all functions that the regualar beanstalk has.
     // `mockBeanstalk` has functions that are only available in the mockFacets.
-    [ beanstalk, mockBeanstalk ] = await getAllBeanstalkContracts(this.diamond.address);
+    [beanstalk, mockBeanstalk] = await getAllBeanstalkContracts(this.diamond.address);
 
     bean = await initalizeUsersForToken(BEAN, [user, user2], to6("10000"));
-
   });
 
   beforeEach(async function () {
@@ -34,23 +38,23 @@ describe("newField", function () {
 
   describe("Reverts", function () {
     it("No Soil", async function () {
-      await expect(beanstalk.connect(user).sow("1",'1',EXTERNAL)).to.be.revertedWith(
+      await expect(beanstalk.connect(user).sow("1", "1", EXTERNAL)).to.be.revertedWith(
         "Field: Soil Slippage"
       );
     });
 
     it("minSoil > minBeans", async function () {
-      await expect(beanstalk.connect(user).sowWithMin("0", '1', '1', EXTERNAL)).to.be.revertedWith(
+      await expect(beanstalk.connect(user).sowWithMin("0", "1", "1", EXTERNAL)).to.be.revertedWith(
         "Field: Soil Slippage"
       );
     });
 
     it("minTemp > temp", async function () {
-        await mockBeanstalk.incrementTotalSoilE(to6("100"));
-        await expect(beanstalk.connect(user).sowWithMin("1", to6('2'), '1', EXTERNAL)).to.be.revertedWith(
-          "Field: Temperature Slippage"
-        );
-      });
+      await mockBeanstalk.incrementTotalSoilE(to6("100"));
+      await expect(
+        beanstalk.connect(user).sowWithMin("1", to6("2"), "1", EXTERNAL)
+      ).to.be.revertedWith("Field: Temperature Slippage");
+    });
   });
 
   /**
@@ -61,11 +65,7 @@ describe("newField", function () {
     describe("all soil", async function () {
       beforeEach(async function () {
         await mockBeanstalk.incrementTotalSoilE(to6("100"));
-        this.result = await beanstalk.connect(user).sow(
-            to6("100"),
-            0,
-            EXTERNAL
-        );
+        this.result = await beanstalk.connect(user).sow(to6("100"), 0, EXTERNAL);
       });
 
       it("updates user's balance", async function () {
@@ -93,11 +93,7 @@ describe("newField", function () {
     describe("some soil", async function () {
       beforeEach(async function () {
         await mockBeanstalk.incrementTotalSoilE(to6("200"));
-        this.result = await beanstalk.connect(user).sow(
-            to6("100"),
-            0, 
-            EXTERNAL
-        );
+        this.result = await beanstalk.connect(user).sow(to6("100"), 0, EXTERNAL);
       });
 
       it("updates user's balance", async function () {
@@ -128,11 +124,7 @@ describe("newField", function () {
         await beanstalk
           .connect(user)
           .transferToken(bean.address, user.address, to6("100"), EXTERNAL, INTERNAL);
-        this.result = await beanstalk.connect(user).sow(
-            to6("100"), 
-            0,
-            INTERNAL
-        );
+        this.result = await beanstalk.connect(user).sow(to6("100"), 0, INTERNAL);
       });
 
       it("updates user's balance", async function () {
@@ -163,11 +155,7 @@ describe("newField", function () {
         await beanstalk
           .connect(user)
           .transferToken(bean.address, user.address, to6("50"), EXTERNAL, INTERNAL);
-        this.result = await beanstalk.connect(user).sow(
-            to6("100"), 
-            0, 
-            INTERNAL_TOLERANT
-        );
+        this.result = await beanstalk.connect(user).sow(to6("100"), 0, INTERNAL_TOLERANT);
       });
 
       it("updates user's balance", async function () {
@@ -195,12 +183,7 @@ describe("newField", function () {
     describe("with min", async function () {
       beforeEach(async function () {
         await mockBeanstalk.incrementTotalSoilE(to6("100"));
-        this.result = await beanstalk.connect(user).sowWithMin(
-            to6("200"), 
-            0,
-            to6("100"),
-            EXTERNAL
-        );
+        this.result = await beanstalk.connect(user).sowWithMin(to6("200"), 0, to6("100"), EXTERNAL);
       });
 
       it("updates user's balance", async function () {
@@ -228,12 +211,7 @@ describe("newField", function () {
     describe("with min, but enough soil", async function () {
       beforeEach(async function () {
         await mockBeanstalk.incrementTotalSoilE(to6("200"));
-        this.result = await beanstalk.connect(user).sowWithMin(
-            to6("100"),
-            0, 
-            to6("50"), 
-            EXTERNAL
-        );
+        this.result = await beanstalk.connect(user).sowWithMin(to6("100"), 0, to6("50"), EXTERNAL);
       });
 
       it("updates user's balance", async function () {
@@ -289,84 +267,81 @@ describe("newField", function () {
   });
 
   describe("Morning Auction", async function () {
-    it('correctly scales up the temperature', async function () {
-        let ScaleValues = [
-            '1000000', // Delta = 0
-            '279415312704', // Delta = 1
-            '409336034395', // 2
-            '494912626048', // 3
-            '558830625409', // 4
-            '609868162219', // 5
-            '652355825780', // 6
-            '688751347100', // 7
-            '720584687295', // 8
-            '748873234524', // 9
-            '774327938752', // 10
-            '797465225780', // 11
-            '818672068791', // 12
-            '838245938114', // 13
-            '856420437864', // 14
-            '873382373802', // 15
-            '889283474924', // 16
-            '904248660443', // 17
-            '918382006208', // 18
-            '931771138485', // 19
-            '944490527707', // 20
-            '956603996980', // 21
-            '968166659804', // 22
-            '979226436102', // 23
-            '989825252096', // 24
-            '1000000000000' // 25
-        ];
+    it("correctly scales up the temperature", async function () {
+      let ScaleValues = [
+        "1000000", // Delta = 0
+        "279415312704", // Delta = 1
+        "409336034395", // 2
+        "494912626048", // 3
+        "558830625409", // 4
+        "609868162219", // 5
+        "652355825780", // 6
+        "688751347100", // 7
+        "720584687295", // 8
+        "748873234524", // 9
+        "774327938752", // 10
+        "797465225780", // 11
+        "818672068791", // 12
+        "838245938114", // 13
+        "856420437864", // 14
+        "873382373802", // 15
+        "889283474924", // 16
+        "904248660443", // 17
+        "918382006208", // 18
+        "931771138485", // 19
+        "944490527707", // 20
+        "956603996980", // 21
+        "968166659804", // 22
+        "979226436102", // 23
+        "989825252096", // 24
+        "1000000000000" // 25
+      ];
 
-        // loop from i = 0 to 25:
-        initTemp = 100
-        for (let i = 0; i <= 25; i++) {
-            temperature = await mockBeanstalk.mockGetMorningTemp(
-                to6('100'),
-                i
-            )
-            if(i == 0) {
-                expect(temperature).to.be.equal(ScaleValues[i])
-            } else {
-                expect(temperature).to.be.equal(ScaleValues[i] * initTemp)
-            }
+      // loop from i = 0 to 25:
+      initTemp = 100;
+      for (let i = 0; i <= 25; i++) {
+        temperature = await mockBeanstalk.mockGetMorningTemp(to6("100"), i);
+        if (i == 0) {
+          expect(temperature).to.be.equal(ScaleValues[i]);
+        } else {
+          expect(temperature).to.be.equal(ScaleValues[i] * initTemp);
         }
-    })
+      }
+    });
 
-    // Above peg, beanstalk can issue a certain amount 
-    // of pods in order to measure soil demand. 
+    // Above peg, beanstalk can issue a certain amount
+    // of pods in order to measure soil demand.
     // this is calculated as s.f.soil_inital * (s.w.t + 100) .
-    // Since the morning auction raises the temperature from 1% to s.w.t, 
+    // Since the morning auction raises the temperature from 1% to s.w.t,
     // the soil that can be issued should increase.
-    // rather than increase the soil, we decrease the amount of soil 
+    // rather than increase the soil, we decrease the amount of soil
     // that is sown per bean. (during non-morning conditions, 1 bean = 1 soil)
     // ex: if morning temp is 50% of max, then 1 bean is sown for 0.5 soil
-    it('decrements soil above peg', async function () {
-        const morningTemperature = to6("50")
-        const maxTemperature = 200;
-        await mockBeanstalk.incrementTotalSoilE(to6("10"));
-        // 200% temperature
-        await mockBeanstalk.setMaxTemp(maxTemperature);
-        
-        expect(await beanstalk.totalSoil()).to.eq(to6("10"));
-        expect(await mockBeanstalk.totalSoilAtMorningTemp(morningTemperature)).to.eq(to6('20'))
-        // sow 10 beans at half the max temp:
-        // max temp: 200 + 100 = 300%
-        // morning temp: 50 + 100 = 150%
-        await mockBeanstalk.mockSow(
-            to6("10"), // beans burnt
-            morningTemperature, // morning temp
-            200, // max temp (note max temp is stored with 1e2 precision)
-            true // above peg?
-        )
-        
-        // 10 soil was sown out of 20, 50% of the inital soil was sown. 
-        expect(await beanstalk.totalSoil()).to.eq(to6("5"));
-        expect(await mockBeanstalk.totalSoilAtMorningTemp(morningTemperature)).to.eq(to6('10'))
-        // 10 * 150% = 15 pods.
-        expect(await beanstalk.totalPods()).to.eq(to6("15"));
-    })
+    it("decrements soil above peg", async function () {
+      const morningTemperature = to6("50");
+      const maxTemperature = 200;
+      await mockBeanstalk.incrementTotalSoilE(to6("10"));
+      // 200% temperature
+      await mockBeanstalk.setMaxTemp(maxTemperature);
+
+      expect(await beanstalk.totalSoil()).to.eq(to6("10"));
+      expect(await mockBeanstalk.totalSoilAtMorningTemp(morningTemperature)).to.eq(to6("20"));
+      // sow 10 beans at half the max temp:
+      // max temp: 200 + 100 = 300%
+      // morning temp: 50 + 100 = 150%
+      await mockBeanstalk.mockSow(
+        to6("10"), // beans burnt
+        morningTemperature, // morning temp
+        200, // max temp (note max temp is stored with 1e2 precision)
+        true // above peg?
+      );
+
+      // 10 soil was sown out of 20, 50% of the inital soil was sown.
+      expect(await beanstalk.totalSoil()).to.eq(to6("5"));
+      expect(await mockBeanstalk.totalSoilAtMorningTemp(morningTemperature)).to.eq(to6("10"));
+      // 10 * 150% = 15 pods.
+      expect(await beanstalk.totalPods()).to.eq(to6("15"));
+    });
   });
 
   describe("complex DPD", async function () {
@@ -523,7 +498,5 @@ describe("newField", function () {
   });
 });
 
-// when beanstalk is above peg, and soil is 
-async function setSoilAndSow() {
-
-}
+// when beanstalk is above peg, and soil is
+async function setSoilAndSow() {}

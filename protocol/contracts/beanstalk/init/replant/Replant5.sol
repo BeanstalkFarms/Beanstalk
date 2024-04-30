@@ -19,12 +19,7 @@ contract Replant5 {
 
     using SafeMath for uint256;
 
-    event BeanRemove(
-        address indexed account,
-        uint32[] crates,
-        uint256[] crateBeans,
-        uint256 beans
-    );
+    event BeanRemove(address indexed account, uint32[] crates, uint256[] crateBeans, uint256 beans);
 
     event AddDeposit(
         address indexed account,

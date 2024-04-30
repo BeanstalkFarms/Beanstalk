@@ -46,10 +46,7 @@ contract Utils is Test {
     }
 
     // create users with 100 ether balance
-    function createUsers(uint256 userNum)
-        public
-        returns (address payable[] memory)
-    {
+    function createUsers(uint256 userNum) public returns (address payable[] memory) {
         address payable[] memory _users = new address payable[](userNum);
         for (uint256 i = 0; i < userNum; i++) {
             address payable user = this.getNextUserAddress();

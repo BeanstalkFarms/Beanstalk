@@ -7,7 +7,6 @@ import {LibDiamond} from "contracts/libraries/LibDiamond.sol";
 import {AppStorage} from "../AppStorage.sol";
 
 contract OwnershipFacet {
-
     AppStorage internal s;
 
     event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);

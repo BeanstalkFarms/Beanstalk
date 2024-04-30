@@ -19,9 +19,9 @@ import "hardhat/console.sol";
 
 /**
  * @author Publius, Brean
- * @title InitalizeDiamond 
+ * @title InitalizeDiamond
  * @notice InitalizeDiamond provides helper functions to initalize beanstalk.
-**/
+ **/
 
 contract InitalizeDiamond {
     AppStorage internal s;
@@ -49,48 +49,45 @@ contract InitalizeDiamond {
         initalizeField();
         initalizeSilo(uint16(s.season.current));
         initalizeSeedGauge(INIT_BEAN_TO_MAX_LP_GP_RATIO, INIT_AVG_GSPBDV);
-        
+
         address[] memory tokens = new address[](2);
         tokens[0] = bean;
         tokens[1] = beanTokenWell;
-        
-        // note: bean and assets that are not in the gauge system 
+
+        // note: bean and assets that are not in the gauge system
         // do not need to initalize the gauge system.
         Storage.SiloSettings[] memory siloSettings = new Storage.SiloSettings[](2);
         siloSettings[0] = Storage.SiloSettings({
-                selector: BDVFacet.beanToBDV.selector,
-                stalkEarnedPerSeason: INIT_BEAN_STALK_EARNED_PER_SEASON,
-                stalkIssuedPerBdv: INIT_STALK_ISSUED_PER_BDV,
-                milestoneSeason: s.season.current,
-                milestoneStem: 0,
-                encodeType: 0x00,
-                deltaStalkEarnedPerSeason: 0,
-                gpSelector: bytes4(0),
-                lwSelector: bytes4(0),
-                gaugePoints: 0,
-                optimalPercentDepositedBdv: 0
-            });
-        
+            selector: BDVFacet.beanToBDV.selector,
+            stalkEarnedPerSeason: INIT_BEAN_STALK_EARNED_PER_SEASON,
+            stalkIssuedPerBdv: INIT_STALK_ISSUED_PER_BDV,
+            milestoneSeason: s.season.current,
+            milestoneStem: 0,
+            encodeType: 0x00,
+            deltaStalkEarnedPerSeason: 0,
+            gpSelector: bytes4(0),
+            lwSelector: bytes4(0),
+            gaugePoints: 0,
+            optimalPercentDepositedBdv: 0
+        });
+
         siloSettings[1] = Storage.SiloSettings({
-                selector: BDVFacet.wellBdv.selector,
-                stalkEarnedPerSeason: INIT_BEAN_TOKEN_WELL_STALK_EARNED_PER_SEASON,
-                stalkIssuedPerBdv: INIT_STALK_ISSUED_PER_BDV,
-                milestoneSeason: s.season.current,
-                milestoneStem: 0,
-                encodeType: 0x01,
-                deltaStalkEarnedPerSeason: 0,
-                gpSelector: IGaugePointFacet.defaultGaugePointFunction.selector,
-                lwSelector: ILiquidityWeightFacet.maxWeight.selector,
-                gaugePoints: INIT_TOKEN_G_POINTS,
-                optimalPercentDepositedBdv: INIT_BEAN_TOKEN_WELL_PERCENT_TARGET
-            });
+            selector: BDVFacet.wellBdv.selector,
+            stalkEarnedPerSeason: INIT_BEAN_TOKEN_WELL_STALK_EARNED_PER_SEASON,
+            stalkIssuedPerBdv: INIT_STALK_ISSUED_PER_BDV,
+            milestoneSeason: s.season.current,
+            milestoneStem: 0,
+            encodeType: 0x01,
+            deltaStalkEarnedPerSeason: 0,
+            gpSelector: IGaugePointFacet.defaultGaugePointFunction.selector,
+            lwSelector: ILiquidityWeightFacet.maxWeight.selector,
+            gaugePoints: INIT_TOKEN_G_POINTS,
+            optimalPercentDepositedBdv: INIT_BEAN_TOKEN_WELL_PERCENT_TARGET
+        });
 
-        whitelistPools(
-            tokens,
-            siloSettings
-        );
+        whitelistPools(tokens, siloSettings);
 
-        // init usdTokenPrice. C.Bean_eth_well should be 
+        // init usdTokenPrice. C.Bean_eth_well should be
         // a bean well w/ the native token of the network.
         s.usdTokenPrice[C.BEAN_ETH_WELL] = 1;
         s.twaReserves[beanTokenWell].reserve0 = 1;
@@ -102,7 +99,7 @@ contract InitalizeDiamond {
      */
     function addInterfaces() internal {
         LibDiamond.DiamondStorage storage ds = LibDiamond.diamondStorage();
-        
+
         ds.supportedInterfaces[0xd9b67a26] = true; // ERC1155
         ds.supportedInterfaces[0x0e89341c] = true; // ERC1155Metadata
     }
@@ -123,7 +120,7 @@ contract InitalizeDiamond {
     function initalizeSeason() internal {
         // set current season to 1.
         s.season.current = 1;
-        
+
         // set withdraw seasons to 0. Kept here for verbosity.
         s.season.withdrawSeasons = 0;
 
@@ -133,14 +130,14 @@ contract InitalizeDiamond {
         // initalize current timestamp.
         s.season.timestamp = block.timestamp;
 
-        // initalize the start timestamp. 
-        // Rounds down to the nearest hour 
+        // initalize the start timestamp.
+        // Rounds down to the nearest hour
         // if needed.
-        s.season.start = s.season.period > 0 ?
-            block.timestamp / s.season.period * s.season.period :
-            block.timestamp;
+        s.season.start = s.season.period > 0
+            ? (block.timestamp / s.season.period) * s.season.period
+            : block.timestamp;
 
-        // initalizes the cases that beanstalk uses 
+        // initalizes the cases that beanstalk uses
         // to change certain parameters of itself.
         setCases();
     }
@@ -162,20 +159,24 @@ contract InitalizeDiamond {
     }
 
     function initalizeSeedGauge(
-        uint128 beanToMaxLpGpRatio, 
+        uint128 beanToMaxLpGpRatio,
         uint128 averageGrownStalkPerBdvPerSeason
     ) internal {
         // initalize the ratio of bean to max lp gp per bdv.
-        s.seedGauge.beanToMaxLpGpPerBdvRatio = 
-            beanToMaxLpGpRatio;
+        s.seedGauge.beanToMaxLpGpPerBdvRatio = beanToMaxLpGpRatio;
 
         // initalize the average grown stalk per bdv per season.
-        s.seedGauge.averageGrownStalkPerBdvPerSeason = 
-            averageGrownStalkPerBdvPerSeason;
+        s.seedGauge.averageGrownStalkPerBdvPerSeason = averageGrownStalkPerBdvPerSeason;
 
         // emit events.
-        emit BeanToMaxLpGpPerBdvRatioChange(s.season.current, type(uint256).max, int80(s.seedGauge.beanToMaxLpGpPerBdvRatio));
-        emit LibGauge.UpdateAverageStalkPerBdvPerSeason(s.seedGauge.averageGrownStalkPerBdvPerSeason);
+        emit BeanToMaxLpGpPerBdvRatioChange(
+            s.season.current,
+            type(uint256).max,
+            int80(s.seedGauge.beanToMaxLpGpPerBdvRatio)
+        );
+        emit LibGauge.UpdateAverageStalkPerBdvPerSeason(
+            s.seedGauge.averageGrownStalkPerBdvPerSeason
+        );
     }
 
     /**
@@ -186,16 +187,16 @@ contract InitalizeDiamond {
         address[] memory tokens,
         Storage.SiloSettings[] memory siloSettings
     ) internal {
-        for(uint256 i = 0; i < tokens.length; i++) {
+        for (uint256 i = 0; i < tokens.length; i++) {
             // note: no error checking.
             s.ss[tokens[i]] = siloSettings[i];
 
             bool isLPandWell = true;
-            if(tokens[i] == C.BEAN) { 
+            if (tokens[i] == C.BEAN) {
                 isLPandWell = false;
             }
 
-            // All tokens (excluding bean) are assumed to be 
+            // All tokens (excluding bean) are assumed to be
             // - whitelisted,
             // - an LP and well.
             LibWhitelistedTokens.addWhitelistStatus(
@@ -204,12 +205,6 @@ contract InitalizeDiamond {
                 isLPandWell,
                 isLPandWell
             );
-            
         }
     }
-
-
-
-
-
 }

@@ -164,7 +164,9 @@ library LibGauge {
 
             // Gauge points has 18 decimal precision (GP_PRECISION = 1%)
             // Deposited BDV has 6 decimal precision (1e6 = 1 unit of BDV)
-            uint256 gpPerBdv = depositedBdv > 0 ? newGaugePoints.mul(BDV_PRECISION).div(depositedBdv) : 0;
+            uint256 gpPerBdv = depositedBdv > 0
+                ? newGaugePoints.mul(BDV_PRECISION).div(depositedBdv)
+                : 0;
 
             // gpPerBdv has 18 decimal precision.
             if (gpPerBdv > maxLpGpPerBdv) maxLpGpPerBdv = gpPerBdv;
@@ -289,7 +291,7 @@ library LibGauge {
 
     /**
      * @notice Updates the UpdateAverageStalkPerBdvPerSeason in the seed gauge.
-     * @dev The function updates the targetGrownStalkPerBdvPerSeason such that 
+     * @dev The function updates the targetGrownStalkPerBdvPerSeason such that
      * it will take 6 months for the average new depositer to catch up to the current
      * average grown stalk per BDV.
      */

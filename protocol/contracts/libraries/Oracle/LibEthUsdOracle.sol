@@ -38,7 +38,11 @@ library LibEthUsdOracle {
      * Returns 0 if the ETH/USD Chainlink Oracle is broken or frozen.
      **/
     function getEthUsdPrice() internal view returns (uint256) {
-        return LibChainlinkOracle.getPrice(C.ETH_USD_CHAINLINK_PRICE_AGGREGATOR, LibChainlinkOracle.FOUR_HOUR_TIMEOUT);
+        return
+            LibChainlinkOracle.getPrice(
+                C.ETH_USD_CHAINLINK_PRICE_AGGREGATOR,
+                LibChainlinkOracle.FOUR_HOUR_TIMEOUT
+            );
     }
 
     /**

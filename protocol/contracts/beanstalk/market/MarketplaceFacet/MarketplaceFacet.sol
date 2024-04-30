@@ -16,12 +16,12 @@ import {LibTractor} from "contracts/libraries/LibTractor.sol";
 
 contract MarketplaceFacet is Invariable, Order {
     /*
-    * Pod Listing
-    */
-    
+     * Pod Listing
+     */
+
     /*
-    * @notice **LEGACY**
-    */
+     * @notice **LEGACY**
+     */
     function createPodListing(
         uint256 index,
         uint256 start,
@@ -182,14 +182,7 @@ contract MarketplaceFacet is Invariable, Order {
         uint256 maxPlaceInLine,
         uint256 minFillAmount
     ) external view returns (uint256) {
-        return s.podOrders[
-            createOrderId(
-                account, 
-                pricePerPod, 
-                maxPlaceInLine,
-                minFillAmount
-            )
-        ];
+        return s.podOrders[createOrderId(account, pricePerPod, maxPlaceInLine, minFillAmount)];
     }
 
     function podOrderV2(
@@ -198,15 +191,10 @@ contract MarketplaceFacet is Invariable, Order {
         uint256 minFillAmount,
         bytes calldata pricingFunction
     ) external view returns (uint256) {
-        return s.podOrders[
-            createOrderIdV2(
-                account, 
-                0,
-                maxPlaceInLine, 
-                minFillAmount,
-                pricingFunction
-            )
-        ];
+        return
+            s.podOrders[
+                createOrderIdV2(account, 0, maxPlaceInLine, minFillAmount, pricingFunction)
+            ];
     }
 
     function podOrderById(bytes32 id) external view returns (uint256) {
@@ -232,8 +220,10 @@ contract MarketplaceFacet is Invariable, Order {
         require(amount > 0, "Field: Plot not owned by user.");
         require(end > start && amount >= end, "Field: Pod range invalid.");
         amount = end - start; // Note: SafeMath is redundant here.
-        if (LibTractor._user() != sender && allowancePods(sender, LibTractor._user()) != uint256(-1)) {
-                decrementAllowancePods(sender, LibTractor._user(), amount);
+        if (
+            LibTractor._user() != sender && allowancePods(sender, LibTractor._user()) != uint256(-1)
+        ) {
+            decrementAllowancePods(sender, LibTractor._user(), amount);
         }
 
         if (s.podListings[id] != bytes32(0)) {
@@ -242,7 +232,10 @@ contract MarketplaceFacet is Invariable, Order {
         _transferPlot(sender, recipient, id, start, amount);
     }
 
-    function approvePods(address spender, uint256 amount) external payable fundsSafu noNetFlow noSupplyChange nonReentrant {
+    function approvePods(
+        address spender,
+        uint256 amount
+    ) external payable fundsSafu noNetFlow noSupplyChange nonReentrant {
         require(spender != address(0), "Field: Pod Approve to 0 address.");
         setAllowancePods(LibTractor._user(), spender, amount);
         emit PodApproval(LibTractor._user(), spender, amount);

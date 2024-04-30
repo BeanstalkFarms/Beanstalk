@@ -12,7 +12,6 @@ import {LibWstethEthOracle} from "contracts/libraries/Oracle/LibWstethEthOracle.
  * @notice Holds functions to query USD prices of tokens.
  */
 contract UsdOracle {
-    
     // USD : Token
 
     function getUsdTokenPrice(address token) external view returns (uint256) {
@@ -62,5 +61,4 @@ contract UsdOracle {
     function getWstethEthTwap(uint256 lookback) external view returns (uint256) {
         return LibWstethEthOracle.getWstethEthPrice(lookback);
     }
-
 }

@@ -8,16 +8,12 @@ import {C} from "contracts/C.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {AppStorage, LibAppStorage} from "contracts/libraries/LibAppStorage.sol";
 
-
-
-
 /**
  * @title LibBarnRaise
  * @author Brendan
  * @notice Library fetching Barn Raise Token
  */
 library LibBarnRaise {
-
     function getBarnRaiseToken() internal view returns (address) {
         IERC20[] memory tokens = IWell(getBarnRaiseWell()).tokens();
         return address(address(tokens[0]) == C.BEAN ? tokens[1] : tokens[0]);

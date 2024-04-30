@@ -15,13 +15,8 @@ import "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
 library LibApprove {
     using SafeERC20 for IERC20;
 
-    function approveToken(
-        IERC20 token,
-        address spender,
-        uint256 amount
-    ) internal {
-        if (token.allowance(address(this), spender) == type(uint256).max)
-            return;
+    function approveToken(IERC20 token, address spender, uint256 amount) internal {
+        if (token.allowance(address(this), spender) == type(uint256).max) return;
         token.safeApprove(spender, 0);
         token.safeApprove(spender, amount);
     }

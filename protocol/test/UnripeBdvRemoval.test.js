@@ -3,13 +3,20 @@ const { deploy } = require("../scripts/deploy.js");
 const { readPrune, toBN } = require("../utils");
 const { getBeanstalk } = require("../utils/contracts.js");
 const { EXTERNAL } = require("./utils/balances.js");
-const { BEAN, THREE_POOL, BEAN_3_CURVE, UNRIPE_LP, UNRIPE_BEAN, THREE_CURVE, ZERO_BYTES } = require("./utils/constants");
+const {
+  BEAN,
+  THREE_POOL,
+  BEAN_3_CURVE,
+  UNRIPE_LP,
+  UNRIPE_BEAN,
+  THREE_CURVE,
+  ZERO_BYTES
+} = require("./utils/constants");
 const { to18, toStalk, to6 } = require("./utils/helpers.js");
 const { takeSnapshot, revertToSnapshot } = require("./utils/snapshot");
 const { getAllBeanstalkContracts } = require("../utils/contracts");
 
 let user, user2, owner;
-
 
 let pru;
 
@@ -29,20 +36,23 @@ describe("Silo Enroot", function () {
   before(async function () {
     pru = await readPrune();
     [owner, user, user2] = await ethers.getSigners();
-    
-    const contracts = await deploy(verbose = false, mock = true, reset = true)    
+
+    const contracts = await deploy((verbose = false), (mock = true), (reset = true));
     ownerAddress = contracts.account;
     this.diamond = contracts.beanstalkDiamond;
     // `beanstalk` contains all functions that the regualar beanstalk has.
     // `mockBeanstalk` has functions that are only available in the mockFacets.
-    [ beanstalk, mockBeanstalk ] = await getAllBeanstalkContracts(this.diamond.address);
+    [beanstalk, mockBeanstalk] = await getAllBeanstalkContracts(this.diamond.address);
 
-    this.migrate = await ethers.getContractAt('MigrationFacet', this.diamond.address);
+    this.migrate = await ethers.getContractAt("MigrationFacet", this.diamond.address);
 
     this.threeCurve = await ethers.getContractAt("MockToken", THREE_CURVE);
     this.beanMetapool = await ethers.getContractAt("IMockCurvePool", BEAN_3_CURVE);
     await this.beanMetapool.set_supply(ethers.utils.parseUnits("2000000", 6));
-    await this.beanMetapool.set_balances([ethers.utils.parseUnits("1000000", 6), ethers.utils.parseEther("1000000")]);
+    await this.beanMetapool.set_balances([
+      ethers.utils.parseUnits("1000000", 6),
+      ethers.utils.parseEther("1000000")
+    ]);
 
     const SiloToken = await ethers.getContractFactory("MockToken");
     this.siloToken = await SiloToken.deploy("Silo", "SILO");
@@ -51,7 +61,12 @@ describe("Silo Enroot", function () {
     this.siloToken2 = await SiloToken.deploy("Silo", "SILO");
     await this.siloToken2.deployed();
 
-    await mockBeanstalk.mockWhitelistToken(this.siloToken.address, mockBeanstalk.interface.getSighash("mockBDV(uint256 amount)"), "10000", "1");
+    await mockBeanstalk.mockWhitelistToken(
+      this.siloToken.address,
+      mockBeanstalk.interface.getSighash("mockBDV(uint256 amount)"),
+      "10000",
+      "1"
+    );
 
     await mockBeanstalk.siloSunrise(0);
     await this.siloToken.connect(user).approve(beanstalk.address, "100000000000");
@@ -71,7 +86,9 @@ describe("Silo Enroot", function () {
     await this.unripeBeans.connect(user).mint(user.address, to6("10000"));
     await this.unripeBeans.connect(user).approve(beanstalk.address, to18("10000"));
     await mockBeanstalk.addUnripeToken(UNRIPE_BEAN, this.siloToken.address, ZERO_BYTES);
-    await mockBeanstalk.connect(owner).addUnderlying(UNRIPE_BEAN, to6("10000").mul(toBN(pru)).div(to18("1")));
+    await mockBeanstalk
+      .connect(owner)
+      .addUnderlying(UNRIPE_BEAN, to6("10000").mul(toBN(pru)).div(to18("1")));
 
     this.unripeLP = await ethers.getContractAt("MockToken", UNRIPE_LP);
     await this.unripeLP.connect(user).mint(user.address, to6("10000"));
@@ -81,8 +98,14 @@ describe("Silo Enroot", function () {
 
     this.beanThreeCurve = await ethers.getContractAt("MockMeta3Curve", BEAN_3_CURVE);
     await this.beanThreeCurve.set_supply(ethers.utils.parseEther("2000000"));
-    await this.beanThreeCurve.set_balances([ethers.utils.parseUnits("1000000", 6), ethers.utils.parseEther("1000000")]);
-    await this.beanThreeCurve.set_balances([ethers.utils.parseUnits("1200000", 6), ethers.utils.parseEther("1000000")]);
+    await this.beanThreeCurve.set_balances([
+      ethers.utils.parseUnits("1000000", 6),
+      ethers.utils.parseEther("1000000")
+    ]);
+    await this.beanThreeCurve.set_balances([
+      ethers.utils.parseUnits("1200000", 6),
+      ethers.utils.parseEther("1000000")
+    ]);
 
     season = await beanstalk.season();
   });
@@ -97,37 +120,46 @@ describe("Silo Enroot", function () {
 
   describe("Unripe Bean Removal", async function () {
     describe("All but 1", async function () {
-        beforeEach(async function () {
-            // 158328 * 0.185564685220298701 ~= 29380.085
-            // 158327 * 0.185564685220298701 ~= 29379.899
-            // floor(29380.085) - floor(29379.899) = 1
-            await mockBeanstalk.connect(user).mockUnripeBeanDeposit(season, '158328')
+      beforeEach(async function () {
+        // 158328 * 0.185564685220298701 ~= 29380.085
+        // 158327 * 0.185564685220298701 ~= 29379.899
+        // floor(29380.085) - floor(29379.899) = 1
+        await mockBeanstalk.connect(user).mockUnripeBeanDeposit(season, "158328");
 
-            mockBeanstalk.deployStemsUpgrade();
-            this.stem = await mockBeanstalk.mockSeasonToStem(UNRIPE_BEAN, season);
+        mockBeanstalk.deployStemsUpgrade();
+        this.stem = await mockBeanstalk.mockSeasonToStem(UNRIPE_BEAN, season);
 
-            // call sunrise twice to avoid germination error. 
-            // note that `mockUnripeBeanDeposit` increments correctly,
-            // and the error is only thrown due to the stem being a germinating stem.
-            await mockBeanstalk.siloSunrise(0);
-            await mockBeanstalk.siloSunrise(0);
+        // call sunrise twice to avoid germination error.
+        // note that `mockUnripeBeanDeposit` increments correctly,
+        // and the error is only thrown due to the stem being a germinating stem.
+        await mockBeanstalk.siloSunrise(0);
+        await mockBeanstalk.siloSunrise(0);
 
-            await this.migrate.mowAndMigrate(user.address, [UNRIPE_BEAN], [[season]], [[158328]], 0, 0, []);
+        await this.migrate.mowAndMigrate(
+          user.address,
+          [UNRIPE_BEAN],
+          [[season]],
+          [[158328]],
+          0,
+          0,
+          []
+        );
 
-            await beanstalk.connect(user).withdrawDeposit(UNRIPE_BEAN, this.stem, '158327', EXTERNAL);
-        })
-        it("should remove most of the deposit", async function () {
-            const deposit = await beanstalk.connect(user).getDeposit(user.address, UNRIPE_BEAN, this.stem)
-            // bdv != amt due to bdv removals rounding up. acceptable.
-            expect(deposit[0]).to.equal('1') // amt 
-            expect(deposit[1]).to.equal('0') // bdv
-        });
+        await beanstalk.connect(user).withdrawDeposit(UNRIPE_BEAN, this.stem, "158327", EXTERNAL);
+      });
+      it("should remove most of the deposit", async function () {
+        const deposit = await beanstalk
+          .connect(user)
+          .getDeposit(user.address, UNRIPE_BEAN, this.stem);
+        // bdv != amt due to bdv removals rounding up. acceptable.
+        expect(deposit[0]).to.equal("1"); // amt
+        expect(deposit[1]).to.equal("0"); // bdv
+      });
 
-        it("removes all stalk", async function () {
-            const stalk = await beanstalk.balanceOfStalk(user.address)
-            expect(stalk).to.equal('0')
-        })
-
-    })
-  })
+      it("removes all stalk", async function () {
+        const stalk = await beanstalk.balanceOfStalk(user.address);
+        expect(stalk).to.equal("0");
+      });
+    });
+  });
 });
