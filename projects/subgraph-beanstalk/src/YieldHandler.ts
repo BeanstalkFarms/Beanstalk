@@ -1,7 +1,7 @@
 import { Address, BigDecimal, BigInt, log } from "@graphprotocol/graph-ts";
 import { Beanstalk } from "../generated/Season-Replanted/Beanstalk";
 import { BEANSTALK, BEAN_ERC20, FERTILIZER } from "../../subgraph-core/utils/Constants";
-import { ONE_BD, ONE_BI, toDecimal, ZERO_BD, ZERO_BI } from "../../subgraph-core/utils/Decimals";
+import { ONE_BD, ONE_BI, toBigInt, toDecimal, ZERO_BD, ZERO_BI } from "../../subgraph-core/utils/Decimals";
 import { loadFertilizer } from "./utils/Fertilizer";
 import { loadFertilizerYield } from "./utils/FertilizerYield";
 import {
@@ -328,102 +328,116 @@ export function calculateGaugeVAPYs(
   nonGaugeGerminatingBdv: BigDecimal[],
   staticSeeds: Array<BigDecimal | null>
 ): BigDecimal[][] {
+  // Fixed-point arithmetic is used here to achieve >40% speedup over using BigDecimal
+  // Everything is still passed to this function as BigDecimal so we can normalize the precision as set here
+  const PRECISION = 12;
+  const PRECISION_BI = toBigInt(ONE_BD, PRECISION);
+  // A larger precision is required for tracking user balances as they can be highly fractional
+  const BALANCES_PRECISION = 18;
+  const BALANCES_PRECISION_BI = toBigInt(ONE_BD, BALANCES_PRECISION);
+
   // Current percentages allocations of each LP
-  let currentPercentLpBdv: BigDecimal[] = [];
+  let currentPercentLpBdv: BigInt[] = [];
   const sumLpBdv = BigDecimal_sum(gaugeLpDepositedBdv);
   for (let i = 0; i < gaugeLpDepositedBdv.length; ++i) {
-    currentPercentLpBdv.push(gaugeLpDepositedBdv[i].div(sumLpBdv));
+    currentPercentLpBdv.push(toBigInt(gaugeLpDepositedBdv[i].div(sumLpBdv), PRECISION));
   }
 
   // Current LP GP allocation per BDV
-  let lpGpPerBdv: BigDecimal[] = [];
+  let lpGpPerBdv: BigInt[] = [];
   // Copy these input
-  let gaugeLpPointsCopy: BigDecimal[] = [];
-  let gaugeLpDepositedBdvCopy: BigDecimal[] = [];
+  let gaugeLpPointsCopy: BigInt[] = [];
+  let gaugeLpDepositedBdvCopy: BigInt[] = [];
   for (let i = 0; i < gaugeLpPoints.length; ++i) {
-    lpGpPerBdv.push(gaugeLpPoints[i].div(gaugeLpDepositedBdv[i]));
-    gaugeLpDepositedBdvCopy.push(gaugeLpDepositedBdv[i]);
-    gaugeLpPointsCopy.push(gaugeLpPoints[i]);
+    lpGpPerBdv.push(toBigInt(gaugeLpPoints[i].div(gaugeLpDepositedBdv[i]), PRECISION));
+    gaugeLpDepositedBdvCopy.push(toBigInt(gaugeLpDepositedBdv[i], PRECISION));
+    gaugeLpPointsCopy.push(toBigInt(gaugeLpPoints[i], PRECISION));
   }
 
   let r = initialR;
-  let beanBdv = siloDepositedBeanBdv;
-  let totalStalk = siloStalk;
-  let gaugeBdv = beanBdv.plus(BigDecimal_sum(gaugeLpDepositedBdvCopy));
-  let totalBdv = gaugeBdv.plus(nonGaugeDepositedBdv);
-  let largestLpGpPerBdv = BigDecimal_max(lpGpPerBdv);
+  let catchUpSeasons = toBigInt(catchUpRate, PRECISION);
+  let siloReward = toBigInt(earnedBeans, PRECISION);
+  let beanBdv = toBigInt(siloDepositedBeanBdv, PRECISION);
+  let totalStalk = toBigInt(siloStalk, PRECISION);
+  let gaugeBdv = beanBdv.plus(BigInt_sum(gaugeLpDepositedBdvCopy));
+  let nonGaugeDepositedBdv_ = toBigInt(nonGaugeDepositedBdv, PRECISION);
+  let totalBdv = gaugeBdv.plus(nonGaugeDepositedBdv_);
+  let largestLpGpPerBdv = BigInt_max(lpGpPerBdv);
 
-  let userBeans: BigDecimal[] = [];
-  let userLp: BigDecimal[] = [];
-  let userStalk: BigDecimal[] = [];
+  let userBeans: BigInt[] = [];
+  let userLp: BigInt[] = [];
+  let userStalk: BigInt[] = [];
   for (let i = 0; i < tokens.length; ++i) {
-    userBeans.push(tokens[i] == -1 ? ONE_BD : ZERO_BD);
-    userLp.push(tokens[i] == -1 ? ZERO_BD : ONE_BD);
-    userStalk.push(ONE_BD);
+    userBeans.push(toBigInt(tokens[i] == -1 ? ONE_BD : ZERO_BD, BALANCES_PRECISION));
+    userLp.push(toBigInt(tokens[i] == -1 ? ZERO_BD : ONE_BD, BALANCES_PRECISION));
+    userStalk.push(toBigInt(ONE_BD, BALANCES_PRECISION));
   }
 
-  const SEED_PRECISION = BigDecimal.fromString("10000");
+  const SEED_PRECISION = toBigInt(BigDecimal.fromString("10000"), PRECISION);
   const ONE_YEAR = 8760;
   for (let i = 0; i < ONE_YEAR; ++i) {
     r = updateR(r, deltaRFromState(earnedBeans));
-    const rScaled = scaleR(r);
+    const rScaled = toBigInt(scaleR(r), PRECISION);
 
     // Add germinating bdv to actual bdv in the first 2 simulated seasons
     if (i < 2) {
       const index = season.mod(BigInt.fromString("2")) == ZERO_BI ? 1 : 0;
-      beanBdv = beanBdv.plus(germinatingBeanBdv[index]);
+      beanBdv = beanBdv.plus(toBigInt(germinatingBeanBdv[index], PRECISION));
       for (let j = 0; j < gaugeLpDepositedBdvCopy.length; ++j) {
-        gaugeLpDepositedBdvCopy[j] = gaugeLpDepositedBdvCopy[j].plus(gaugeLpGerminatingBdv[j][index]);
+        gaugeLpDepositedBdvCopy[j] = gaugeLpDepositedBdvCopy[j].plus(toBigInt(gaugeLpGerminatingBdv[j][index], PRECISION));
       }
-      gaugeBdv = beanBdv.plus(BigDecimal_sum(gaugeLpDepositedBdvCopy));
-      nonGaugeDepositedBdv.plus(nonGaugeGerminatingBdv[index]);
-      totalBdv = gaugeBdv.plus(nonGaugeDepositedBdv);
+      gaugeBdv = beanBdv.plus(BigInt_sum(gaugeLpDepositedBdvCopy));
+      nonGaugeDepositedBdv_ = nonGaugeDepositedBdv_.plus(toBigInt(nonGaugeGerminatingBdv[index], PRECISION));
+      totalBdv = gaugeBdv.plus(nonGaugeDepositedBdv_);
     }
 
     if (gaugeLpPoints.length > 1) {
       for (let j = 0; j < gaugeLpDepositedBdvCopy.length; ++i) {
         gaugeLpPointsCopy[j] = updateGaugePoints(gaugeLpPointsCopy[j], currentPercentLpBdv[j], gaugeLpOptimalPercentBdv[j]);
-        lpGpPerBdv[j] = gaugeLpPointsCopy[j].div(gaugeLpDepositedBdvCopy[j]);
+        lpGpPerBdv[j] = gaugeLpPointsCopy[j].times(PRECISION_BI).div(gaugeLpDepositedBdvCopy[j]);
       }
-      largestLpGpPerBdv = BigDecimal_max(lpGpPerBdv);
+      largestLpGpPerBdv = BigInt_max(lpGpPerBdv);
     }
 
-    const beanGpPerBdv = largestLpGpPerBdv.times(rScaled);
-    const gpTotal = BigDecimal_sum(gaugeLpPointsCopy).plus(beanGpPerBdv.times(beanBdv));
-    const avgGsPerBdv = totalStalk.div(totalBdv).minus(ONE_BD);
-    const gs = avgGsPerBdv.div(catchUpRate).times(gaugeBdv);
-    const beanSeeds = gs.div(gpTotal).times(beanGpPerBdv).times(SEED_PRECISION);
+    const beanGpPerBdv = largestLpGpPerBdv.times(rScaled).div(PRECISION_BI);
+    const gpTotal = BigInt_sum(gaugeLpPointsCopy).plus(beanGpPerBdv.times(beanBdv).div(PRECISION_BI));
+    const avgGsPerBdv = totalStalk.times(PRECISION_BI).div(totalBdv).minus(toBigInt(ONE_BD, PRECISION));
+    const gs = avgGsPerBdv.times(PRECISION_BI).div(catchUpSeasons).times(gaugeBdv).div(PRECISION_BI);
+    const beanSeeds = gs.times(PRECISION_BI).div(gpTotal).times(beanGpPerBdv).div(PRECISION_BI).times(SEED_PRECISION);
 
-    totalStalk = totalStalk.plus(gs).plus(earnedBeans);
-    gaugeBdv = gaugeBdv.plus(earnedBeans);
-    totalBdv = totalBdv.plus(earnedBeans);
-    beanBdv = beanBdv.plus(earnedBeans);
+    totalStalk = totalStalk.plus(gs).plus(siloReward);
+    gaugeBdv = gaugeBdv.plus(siloReward);
+    totalBdv = totalBdv.plus(siloReward);
+    beanBdv = beanBdv.plus(siloReward);
 
     for (let j = 0; j < tokens.length; ++j) {
       // Set this equal to the number of seeds for whichever is the user' deposited lp asset
-      let lpSeeds = ZERO_BD;
+      let lpSeeds = toBigInt(ZERO_BD, PRECISION);
       if (tokens[j] != -1) {
         if (tokens[j] < 0) {
-          lpSeeds = staticSeeds[j]!;
+          lpSeeds = toBigInt(staticSeeds[j]!, PRECISION);
         } else {
-          lpSeeds = gs.div(gpTotal).times(lpGpPerBdv[tokens[j]]).times(SEED_PRECISION);
+          lpSeeds = gs.times(PRECISION_BI).div(gpTotal).times(lpGpPerBdv[tokens[j]]).div(PRECISION_BI).times(SEED_PRECISION);
         }
       }
 
       // No bean rewards while the new deposit is germinating, but stalk can grow
-      const userBeanShare = i < 2 ? ZERO_BD : earnedBeans.times(userStalk[j]).div(totalStalk);
+      const userBeanShare = i < 2 ? toBigInt(ZERO_BD, PRECISION) : siloReward.times(userStalk[j]).div(totalStalk);
       userStalk[j] = userStalk[j]
         .plus(userBeanShare)
-        .plus(userBeans[j].times(beanSeeds).plus(userLp[j].times(lpSeeds)).div(SEED_PRECISION));
+        .plus(userBeans[j].times(beanSeeds).div(PRECISION_BI).plus(userLp[j].times(lpSeeds).div(PRECISION_BI)).div(SEED_PRECISION));
       userBeans[j] = userBeans[j].plus(userBeanShare);
     }
   }
 
   let retval: BigDecimal[][] = [];
   for (let i = 0; i < tokens.length; ++i) {
-    const beanApy = userBeans[i].plus(userLp[i]).minus(ONE_BD).times(BigDecimal.fromString("100"));
-    const stalkApy = userStalk[i].minus(ONE_BD).times(BigDecimal.fromString("100"));
-    retval.push([beanApy, stalkApy]);
+    const beanApy = userBeans[i]
+      .plus(userLp[i])
+      .minus(BALANCES_PRECISION_BI)
+      .times(toBigInt(BigDecimal.fromString("100"), PRECISION));
+    const stalkApy = userStalk[i].minus(BALANCES_PRECISION_BI).times(toBigInt(BigDecimal.fromString("100"), PRECISION));
+    retval.push([toDecimal(beanApy, PRECISION + BALANCES_PRECISION), toDecimal(stalkApy, PRECISION + BALANCES_PRECISION)]);
   }
 
   return retval;
@@ -484,6 +498,6 @@ function deltaRFromState(earnedBeans: BigDecimal): BigDecimal {
 // TODO: implement the various gauge point functions and choose which one to call based on the stored selector
 // see {GaugePointFacet.defaultGaugePointFunction} for implementation.
 // This will become relevant once there are multiple functions implemented in the contract.
-function updateGaugePoints(gaugePoints: BigDecimal, currentPercent: BigDecimal, optimalPercent: BigDecimal): BigDecimal {
+function updateGaugePoints(gaugePoints: BigInt, currentPercent: BigInt, optimalPercent: BigDecimal): BigInt {
   return gaugePoints;
 }
