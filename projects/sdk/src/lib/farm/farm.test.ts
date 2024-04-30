@@ -118,7 +118,7 @@ describe("Workflow", () => {
       it("copies to a new instance with same steps", async () => {
         const farm2 = farm1.copy();
         await farm2.estimate(ethers.BigNumber.from(100));
-        expect(farm1).not.toBe(farm2); // diff instances
+        expect(farm1).not.toBe(farm2); // diff instances  .
         expect(farm1.length).toEqual(1);
         expect(farm2.length).toEqual(1);
         // @ts-ignore
