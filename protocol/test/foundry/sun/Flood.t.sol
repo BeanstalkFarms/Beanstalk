@@ -3,7 +3,8 @@ pragma solidity >=0.6.0 <0.9.0;
 pragma abicoder v2;
 
 import {TestHelper, LibTransfer, IMockFBeanstalk, C} from "test/foundry/utils/TestHelper.sol";
-import {IWell, IERC20} from "contracts/interfaces/basin/IWell.sol";
+import {IWell, IERC20, Call} from "contracts/interfaces/basin/IWell.sol";
+import {MockPump} from "contracts/mocks/well/MockPump.sol";
 import {MockSeasonFacet} from "contracts/mocks/mockFacets/MockSeasonFacet.sol";
 import {MockConvertFacet} from "contracts/mocks/mockFacets/MockConvertFacet.sol";
 import {MockFieldFacet} from "contracts/mocks/mockFacets/MockFieldFacet.sol";
@@ -56,6 +57,9 @@ contract FloodTest is TestHelper {
         // users 1 and 2 deposits 1000 beans into the silo.
         depostBeansForUser(users[1], 1000e6);
         depostBeansForUser(users[2], 1000e6);
+
+        // without this, 25 rainSunrises runs out of gas
+        vm.pauseGasMetering();
     }
 
     function testNotRaining() public {
@@ -98,6 +102,25 @@ contract FloodTest is TestHelper {
         assertTrue(sop.lastRain == 0);
     }
 
+    function testSopsWhenAtPeg() public {
+        season.rainSunrises(25);
+        Storage.Season memory s = seasonGetters.time();
+
+        assertTrue(s.lastSop == 0);
+        assertTrue(s.lastSopSeason == 0);
+    }
+
+    function testSopsBelowPeg() public {
+        setDeltaBforWell(-1000e6, C.BEAN_ETH_WELL, C.WETH);
+        // update pumps
+        updateMockPumpUsingWellReserves(C.BEAN_ETH_WELL);
+        season.rainSunrises(25);
+
+        Storage.Season memory s = seasonGetters.time();
+        assertTrue(s.lastSop == 0);
+        assertTrue(s.lastSopSeason == 0);
+    }
+
     //////////// Helpers ////////////
 
     function depostBeansForUser(address user, uint256 beans) public {
@@ -116,5 +139,15 @@ contract FloodTest is TestHelper {
         // mow, so that lastUpdated has been called at least once
         vm.prank(user);
         bs.mow(user, C.BEAN);
+    }
+
+    function updateMockPumpUsingWellReserves(address well) public {
+        Call[] memory pumps = IWell(well).pumps();
+        for (uint i = 0; i < pumps.length; i++) {
+            address pump = pumps[i].target;
+            // pass to the pump the reserves that we actually have in the well
+            uint[] memory reserves = IWell(well).getReserves();
+            MockPump(pump).update(well, reserves, new bytes(0));
+        }
     }
 }
