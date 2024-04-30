@@ -25,7 +25,7 @@ jobs:
           commit_message: prettier auto formatting changes
           branch: ${{ github.head_ref }}
       - name: check format
-        run: shopt -s globstar; yarn prettier --write --config .prettierrc --plugin=prettier-plugin-solidity protocol/**/*.sol || true
+        run: shopt -s globstar; yarn prettier --check --config .prettierrc --plugin=prettier-plugin-solidity protocol/**/*.sol
   test:
     needs: format
     runs-on: ubuntu-latest
