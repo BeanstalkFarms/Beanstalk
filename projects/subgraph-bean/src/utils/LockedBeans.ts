@@ -12,19 +12,37 @@ import { ONE_BI, ZERO_BD, ZERO_BI } from "../../../subgraph-core/utils/Decimals"
 import { ERC20 } from "../../generated/Beanstalk/ERC20";
 import { Beanstalk } from "../../generated/Beanstalk/Beanstalk";
 import { loadOrCreatePool } from "./Pool";
+import { loadOrCreateTwaOracle } from "./price/TwaOracle";
 
 export function calcLockedBeans(blockNumber: BigInt): BigInt {
   // If BIP42 is deployed - return the result from the contract
-  // Future improvement when deployment block is known, can check block and avoid this call in earlier blocks.
-  let beanstalkBIP42 = SeedGauge.bind(BEANSTALK);
-  let lockedBeans = beanstalkBIP42.try_getLockedBeans();
-  if (!lockedBeans.reverted) {
-    return lockedBeans.value;
+  // Future improvement when actual deployment block is known, can check block and avoid this call in earlier blocks.
+  if (blockNumber > BigInt.fromU32(19764699)) {
+    // If we are trying to calculate locked beans on the same block as the sunrise, use the values from the previous hour
+    const twaOracle = loadOrCreateTwaOracle(getUnderlyingUnripe(blockNumber).toHexString());
+    const twaReserves =
+      blockNumber == twaOracle.cumulativeWellReservesBlock ? twaOracle.cumulativeWellReservesPrev : twaOracle.cumulativeWellReserves;
+    const twaTime =
+      blockNumber == twaOracle.cumulativeWellReservesBlock
+        ? twaOracle.cumulativeWellReservesPrevTime
+        : twaOracle.cumulativeWellReservesTime;
+
+    let beanstalkBIP42 = SeedGauge.bind(BEANSTALK);
+    let lockedBeans = beanstalkBIP42.try_getLockedBeansFromTwaReserves(twaReserves, twaTime);
+    if (!lockedBeans.reverted) {
+      return lockedBeans.value;
+    }
   }
 
   // Pre-gauge there was no lockedBeans contract function, instead we recreate the same calculation.
   let beanstalk = Beanstalk.bind(BEANSTALK);
-  const recapPaidPercent = new BigDecimal(beanstalk.getRecapPaidPercent()).div(BigDecimal.fromString("1000000"));
+  const recapPercentResult = beanstalk.try_getRecapPaidPercent();
+  if (recapPercentResult.reverted) {
+    // This function was made available later in the Replant process, for a few hundred blocks it is unavailable
+    return ZERO_BI;
+  }
+
+  const recapPaidPercent = new BigDecimal(recapPercentResult.value).div(BigDecimal.fromString("1000000"));
   const lockedBeansUrBean = LibLockedUnderlying_getLockedUnderlying(UNRIPE_BEAN, recapPaidPercent);
   const lockedUnripeLp = LibLockedUnderlying_getLockedUnderlying(UNRIPE_BEAN_3CRV, recapPaidPercent);
   const underlyingLpPool = getUnderlyingUnripe(blockNumber);

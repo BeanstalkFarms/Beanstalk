@@ -7,7 +7,7 @@ dataSources:
     network: mainnet
     source:
       address: "0xDC59ac4FeFa32293A95889Dc396682858d52e5Db"
-      abi: Bean
+      abi: ERC20
       startBlock: 12974077
     mapping:
       kind: ethereum/events
@@ -16,10 +16,8 @@ dataSources:
       entities:
         - Bean
       abis:
-        - name: Bean
+        - name: ERC20
           file: ../subgraph-core/abis/ERC20.json
-        - name: CurvePrice
-          file: ../subgraph-core/abis/CurvePrice.json
         - name: Beanstalk
           file: ../subgraph-core/abis/Beanstalk/Beanstalk-Replanted.json
         - name: SeedGauge
@@ -33,7 +31,7 @@ dataSources:
     network: mainnet
     source:
       address: "0xBEA0000029AD1c77D3d5D23Ba2D8893dB9d1Efab"
-      abi: Bean
+      abi: ERC20
       startBlock: 15278082
     mapping:
       kind: ethereum/events
@@ -42,10 +40,8 @@ dataSources:
       entities:
         - Bean
       abis:
-        - name: Bean
+        - name: ERC20
           file: ../subgraph-core/abis/ERC20.json
-        - name: CurvePrice
-          file: ../subgraph-core/abis/CurvePrice.json
         - name: Beanstalk
           file: ../subgraph-core/abis/Beanstalk/Beanstalk-Replanted.json
         - name: SeedGauge
@@ -74,6 +70,8 @@ dataSources:
           file: ../subgraph-core/abis/BeanstalkPrice.json
         - name: CurvePrice
           file: ../subgraph-core/abis/CurvePrice.json
+        - name: ERC20
+          file: ../subgraph-core/abis/ERC20.json
         - name: Beanstalk
           file: ../subgraph-core/abis/Beanstalk/Beanstalk-Replanted.json
         - name: SeedGauge

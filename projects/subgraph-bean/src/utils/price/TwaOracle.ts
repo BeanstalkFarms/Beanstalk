@@ -20,8 +20,10 @@ export function loadOrCreateTwaOracle(poolAddress: string): TwaOracle {
     twaOracle.lastUpdated = ZERO_BI;
     twaOracle.cumulativeWellReserves = Bytes.empty();
     twaOracle.cumulativeWellReservesTime = ZERO_BI;
+    twaOracle.cumulativeWellReservesBlock = ZERO_BI;
     twaOracle.cumulativeWellReservesPrev = Bytes.empty();
     twaOracle.cumulativeWellReservesPrevTime = ZERO_BI;
+    twaOracle.cumulativeWellReservesPrevBlock = ZERO_BI;
     twaOracle.save();
   }
   return twaOracle as TwaOracle;
@@ -51,8 +53,10 @@ export function setRawWellReserves(event: WellOracle): void {
   let twaOracle = loadOrCreateTwaOracle(event.params.well.toHexString());
   twaOracle.cumulativeWellReservesPrev = twaOracle.cumulativeWellReserves;
   twaOracle.cumulativeWellReservesPrevTime = twaOracle.cumulativeWellReservesTime;
+  twaOracle.cumulativeWellReservesPrevBlock = twaOracle.cumulativeWellReservesBlock;
   twaOracle.cumulativeWellReserves = event.params.cumulativeReserves;
   twaOracle.cumulativeWellReservesTime = event.block.timestamp;
+  twaOracle.cumulativeWellReservesBlock = event.block.number;
   twaOracle.save();
 }
 

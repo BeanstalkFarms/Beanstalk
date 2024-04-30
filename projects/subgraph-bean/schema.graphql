@@ -272,10 +272,12 @@ type TwaOracle @entity {
   priceCumulativeLast: [BigInt!]!
   lastBalances: [BigInt!]!
   lastUpdated: BigInt!
-  # These four fields are for saving the raw Well reserves outputted by the WellOracle event
+  # These fields are for saving the raw Well reserves outputted by the WellOracle event
   # The previous two seasons are needed because in the same block as a new season starts, the newest value cannot be used.
   cumulativeWellReserves: Bytes!
   cumulativeWellReservesTime: BigInt!
+  cumulativeWellReservesBlock: BigInt!
   cumulativeWellReservesPrev: Bytes!
   cumulativeWellReservesPrevTime: BigInt!
+  cumulativeWellReservesPrevBlock: BigInt!
 }
