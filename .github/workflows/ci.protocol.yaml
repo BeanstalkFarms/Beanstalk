@@ -16,13 +16,9 @@ jobs:
       - uses: actions/setup-node@v3
         with:
           node-version: "18"
-      - name: Cache Node Modules
-        id: node-modules-cache
-        uses: actions/cache@v3
-        with:
-          path: "**/node_modules"
-          key: ${{ runner.os }}-modules-${{ hashFiles('**/yarn.lock') }}
+      - run: yarn add prettier prettier-plugin-solidity
       - run: shopt -s globstar; yarn dlx -p prettier prettier --write --config .prettierrc --plugin=prettier-plugin-solidity protocol/**/*.sol || true
+      - run: yarn prettier --write --config .prettierrc --plugin=prettier-plugin-solidity protocol/**/*.sol || true
       - name: Commit changes
         uses: stefanzweifel/git-auto-commit-action@v4
         with:
