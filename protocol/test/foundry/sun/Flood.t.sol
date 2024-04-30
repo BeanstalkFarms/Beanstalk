@@ -83,6 +83,21 @@ contract FloodTest is TestHelper {
         assertTrue(sop.roots == 10004000000000000000000000);
     }
 
+    function testStopsRaining() public {
+        field.incrementTotalPodsE(1000e18);
+        season.rainSunrise();
+        bs.mow(users[1], C.BEAN);
+
+        season.droughtSunrise();
+        bs.mow(users[1], C.BEAN);
+
+        Storage.Season memory s = seasonGetters.time();
+        assertTrue(s.rainStart == s.current - 1);
+
+        SiloGettersFacet.AccountSeasonOfPlenty memory sop = siloGetters.balanceOfSop(users[1]);
+        assertTrue(sop.lastRain == 0);
+    }
+
     //////////// Helpers ////////////
 
     function depostBeansForUser(address user, uint256 beans) public {
