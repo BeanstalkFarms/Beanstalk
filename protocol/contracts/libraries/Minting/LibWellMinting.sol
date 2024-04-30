@@ -215,29 +215,15 @@ library LibWellMinting {
         uint256[] memory reserves = IWell(well).getReserves();
 
         Call memory wellFunction = IWell(well).wellFunction();
-
         (
             uint256[] memory ratios,
             uint256 beanIndex,
         ) = LibWell.getRatiosAndBeanIndex(tokens, 0);
-        
-
-        // console.log('reserves[beanIndex]: ', reserves[beanIndex]);
 
         // Converts cannot be performed, if the Bean reserve is less than the minimum
         if (reserves[beanIndex] < C.WELL_MINIMUM_BEAN_BALANCE) {
             return (0);
         }
-
-
-        console.log('part 1:', (IBeanstalkWellFunction(wellFunction.target).calcReserveAtRatioSwap(
-            reserves,
-            beanIndex,
-            ratios,
-            wellFunction.data
-        )));
-
-        console.log('part 2: ', reserves[beanIndex]);
 
         return int256(IBeanstalkWellFunction(wellFunction.target).calcReserveAtRatioSwap(
             reserves,
@@ -319,7 +305,39 @@ library LibWellMinting {
         }
     }
 
-    // returns the scaled deltaB, experimental
+    /*
+     * @notice returns the LP supply for each whitelisted well
+     */
+    function getLpSupply() internal view returns (uint256[] memory lpSupply) {
+        address[] memory tokens = LibWhitelistedTokens.getWhitelistedWellLpTokens();
+        lpSupply = new uint256[](tokens.length);
+        for (uint256 i = 0; i < tokens.length; i++) {
+            lpSupply[i] = IERC20(tokens[i]).totalSupply();
+        }
+    }
+
+    function scaledOverallInstantaneousDeltaB(
+        uint256[] memory lpSupply
+    ) internal view returns (int256 deltaB) {
+        address[] memory tokens = LibWhitelistedTokens.getWhitelistedWellLpTokens();
+        for (uint256 i = 0; i < tokens.length; i++) {
+            if (tokens[i] == C.BEAN) continue;
+            (int256 wellDeltaB) = scaledInstantaneousDeltaB(tokens[i], lpSupply[i]);
+            deltaB = deltaB.add(wellDeltaB);
+        }
+    }
+
+    function scaledInstantaneousDeltaB(
+        address well,
+        uint256 lpSupply
+    ) internal view returns (int256 wellDeltaB) {
+        wellDeltaB = instantaneousDeltaB(well);
+        wellDeltaB = scaledDeltaB(lpSupply, IERC20(well).totalSupply(), wellDeltaB);
+    }
+
+    /*
+     * @notice returns the scaled deltaB, based on LP supply before and after convert
+     */
     function scaledDeltaB(uint256 beforeLpTokenSupply, uint256 afterLpTokenSupply, int256 deltaB) internal pure returns (int256) {
         return deltaB.mul(int256(beforeLpTokenSupply)).div(int(afterLpTokenSupply));
     }
