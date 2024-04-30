@@ -35,17 +35,17 @@ contract BeanstalkDeployer is Utils {
 
     // add or remove facets here. Facets here do not have mocks.
     string[] facets = [
-        "BDVFacet", 
-        "FarmFacet", 
-        "PauseFacet", 
-        "OwnershipFacet", 
-        "TokenFacet", 
-        "TokenSupportFacet", 
-        "GaugePointFacet", 
-        "LiquidityWeightFacet", 
-        "SiloGettersFacet", 
-        "ConvertGettersFacet", 
-        "MetadataFacet", 
+        "BDVFacet",
+        "FarmFacet",
+        "PauseFacet",
+        "OwnershipFacet",
+        "TokenFacet",
+        "TokenSupportFacet",
+        "GaugePointFacet",
+        "LiquidityWeightFacet",
+        "SiloGettersFacet",
+        "ConvertGettersFacet",
+        "MetadataFacet",
         "SeasonGettersFacet",
         "DepotFacet"
     ];
