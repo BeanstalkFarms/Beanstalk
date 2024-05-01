@@ -49,8 +49,6 @@ export function checkPoolCross(pool: string, timestamp: BigInt, blockNumber: Big
   let poolInfo = loadOrCreatePool(pool, blockNumber);
   let token = poolInfo.bean;
   let bean = loadBean(token);
-  let poolHourly = loadOrCreatePoolHourlySnapshot(pool, timestamp, BigInt.fromI32(bean.lastSeason));
-  let poolDaily = loadOrCreatePoolDailySnapshot(pool, timestamp, blockNumber);
 
   // log.debug("Prev/New well price {} / {}", [oldPrice.toString(), newPrice.toString()]);
 
@@ -65,6 +63,9 @@ export function checkPoolCross(pool: string, timestamp: BigInt, blockNumber: Big
     poolInfo.lastCross = timestamp;
     poolInfo.crosses += 1;
     poolInfo.save();
+
+    let poolHourly = loadOrCreatePoolHourlySnapshot(pool, timestamp, BigInt.fromI32(bean.lastSeason));
+    let poolDaily = loadOrCreatePoolDailySnapshot(pool, timestamp, blockNumber);
 
     poolHourly.crosses += 1;
     poolHourly.deltaCrosses += 1;
@@ -86,6 +87,9 @@ export function checkPoolCross(pool: string, timestamp: BigInt, blockNumber: Big
     poolInfo.crosses += 1;
     poolInfo.save();
 
+    let poolHourly = loadOrCreatePoolHourlySnapshot(pool, timestamp, BigInt.fromI32(bean.lastSeason));
+    let poolDaily = loadOrCreatePoolDailySnapshot(pool, timestamp, blockNumber);
+
     poolHourly.crosses += 1;
     poolHourly.deltaCrosses += 1;
     poolHourly.save();
@@ -100,8 +104,6 @@ export function checkPoolCross(pool: string, timestamp: BigInt, blockNumber: Big
 
 export function checkBeanCross(token: string, timestamp: BigInt, blockNumber: BigInt, oldPrice: BigDecimal, newPrice: BigDecimal): boolean {
   let bean = loadBean(token);
-  let beanHourly = loadOrCreateBeanHourlySnapshot(token, timestamp, bean.lastSeason);
-  let beanDaily = loadOrCreateBeanDailySnapshot(token, timestamp);
 
   if (oldPrice >= ONE_BD && newPrice < ONE_BD) {
     let cross = loadOrCreateBeanCross(bean.crosses, token, blockNumber, timestamp);
@@ -114,6 +116,9 @@ export function checkBeanCross(token: string, timestamp: BigInt, blockNumber: Bi
     bean.lastCross = timestamp;
     bean.crosses += 1;
     bean.save();
+
+    let beanHourly = loadOrCreateBeanHourlySnapshot(token, timestamp, bean.lastSeason);
+    let beanDaily = loadOrCreateBeanDailySnapshot(token, timestamp);
 
     beanHourly.crosses += 1;
     beanHourly.deltaCrosses += 1;
@@ -134,6 +139,9 @@ export function checkBeanCross(token: string, timestamp: BigInt, blockNumber: Bi
     bean.lastCross = timestamp;
     bean.crosses += 1;
     bean.save();
+
+    let beanHourly = loadOrCreateBeanHourlySnapshot(token, timestamp, bean.lastSeason);
+    let beanDaily = loadOrCreateBeanDailySnapshot(token, timestamp);
 
     beanHourly.crosses += 1;
     beanHourly.deltaCrosses += 1;

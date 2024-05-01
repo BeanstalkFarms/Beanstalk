@@ -3,17 +3,22 @@ import { BEAN_ERC20, BEAN_WETH_CP2_WELL_BLOCK, BEANSTALK_PRICE, EXPLOIT_BLOCK } 
 import { checkPegCrossEth as univ2_checkPegCrossEth } from "./UniswapV2Handler";
 import { loadBean, updateBeanValues } from "./utils/Bean";
 import { toDecimal, ZERO_BD, ZERO_BI } from "../../subgraph-core/utils/Decimals";
-import { BeanstalkPrice } from "../generated/Bean3CRV/BeanstalkPrice";
 import { checkBeanCross, checkPoolCross } from "./utils/Cross";
 import { loadOrCreatePool, updatePoolPrice, updatePoolValues } from "./utils/Pool";
 import { BeanstalkPrice_try_price } from "./utils/price/BeanstalkPrice";
+import { PEG_CROSS_BLOCKS, PEG_CROSS_BLOCKS_LAST } from "./cache/PegCrossBlocks";
+import { u32_binarySearchIndex } from "../../subgraph-core/utils/Math";
 
 // Processing as each new ethereum block is created
 export function handleBlock(block: ethereum.Block): void {
-  if (block.number < EXPLOIT_BLOCK) {
-    univ2_checkPegCrossEth(block);
-  } else if (block.number >= BEAN_WETH_CP2_WELL_BLOCK) {
-    beanstalkPrice_updatePoolPrices(true, block);
+  // Avoid checking for peg crosses on blocks which are already known to not have any cross.
+  // The underlying methods do not write any data unless there is a cross
+  if (block.number.toU32() > PEG_CROSS_BLOCKS_LAST || u32_binarySearchIndex(PEG_CROSS_BLOCKS, block.number.toU32()) != -1) {
+    if (block.number < EXPLOIT_BLOCK) {
+      univ2_checkPegCrossEth(block);
+    } else if (block.number >= BEAN_WETH_CP2_WELL_BLOCK) {
+      beanstalkPrice_updatePoolPrices(true, block);
+    }
   }
 }
 

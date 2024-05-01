@@ -1,22 +1,13 @@
 import { beforeEach, afterEach, assert, clearStore, describe, test } from "matchstick-as/assembly/index";
 import { log } from "matchstick-as/assembly/log";
 
-import { BigDecimal, Address } from "@graphprotocol/graph-ts";
+import { BigDecimal, BigInt } from "@graphprotocol/graph-ts";
 
 import { handleBlock } from "../src/BlockHandler";
 import { mockBlock } from "../../subgraph-core/tests/event-mocking/Block";
 import { mockPreReplantETHPrice, simpleMockPrice } from "../../subgraph-core/tests/event-mocking/Price";
 
-import {
-  BEAN_3CRV,
-  BEAN_3CRV_V1,
-  BEAN_ERC20,
-  BEAN_ERC20_V1,
-  BEAN_WETH_CP2_WELL,
-  BEAN_WETH_CP2_WELL_BLOCK,
-  BEAN_WETH_V1,
-  BEANSTALK_BLOCK
-} from "../../subgraph-core/utils/Constants";
+import { BEAN_3CRV_V1, BEAN_ERC20, BEAN_ERC20_V1, BEAN_WETH_CP2_WELL, BEAN_WETH_V1 } from "../../subgraph-core/utils/Constants";
 import { BD_10, ONE_BD, ONE_BI, toDecimal, ZERO_BD, ZERO_BI } from "../../subgraph-core/utils/Decimals";
 
 import { loadBean } from "../src/utils/Bean";
@@ -24,6 +15,8 @@ import { getPreReplantPriceETH, constantProductPrice, uniswapV2Reserves } from "
 import { mockPoolPriceAndLiquidity, mockPreReplantBeanEthPriceAndLiquidityWithPoolReserves } from "./entity-mocking/MockPool";
 import { updatePricesAndCheckCrosses as crv_updatePricesAndCheckCrosses } from "../src/Bean3CRVHandler_V1";
 import { setWhitelistedPools } from "./entity-mocking/MockBean";
+import { PEG_CROSS_BLOCKS } from "../src/cache/PegCrossBlocks";
+import { u32_binarySearchIndex } from "../../subgraph-core/utils/Math";
 
 const wellCrossId = (n: u32): string => {
   return BEAN_WETH_CP2_WELL.toHexString() + "-" + n.toString();
@@ -36,6 +29,9 @@ const univ2CrossId = (n: u32): string => {
 const crvV1CrossId = (n: u32): string => {
   return BEAN_3CRV_V1.toHexString() + "-" + n.toString();
 };
+
+const UNIV2_CROSS_BLOCK = BigInt.fromU32(12984310);
+const WELL_CROSS_BLOCK = BigInt.fromU32(18965881);
 
 describe("Peg Crosses", () => {
   beforeEach(() => {
@@ -56,6 +52,15 @@ describe("Peg Crosses", () => {
   afterEach(() => {
     log.debug("clearing the store", []);
     clearStore();
+  });
+
+  describe("Cache", () => {
+    test("PEG_CROSS_BLOCKS", () => {
+      const notFound = u32_binarySearchIndex(PEG_CROSS_BLOCKS, 14934659);
+      const found = u32_binarySearchIndex(PEG_CROSS_BLOCKS, 19252859);
+      assert.assertTrue(notFound == -1);
+      assert.assertTrue(found != -1);
+    });
   });
 
   describe("UniswapV2", () => {
@@ -89,13 +94,13 @@ describe("Peg Crosses", () => {
 
     test("UniswapV2/Bean cross above", () => {
       mockPreReplantBeanEthPriceAndLiquidityWithPoolReserves(BigDecimal.fromString("0.99"));
-      handleBlock(mockBlock(BEANSTALK_BLOCK));
+      handleBlock(mockBlock(UNIV2_CROSS_BLOCK));
 
       assert.notInStore("BeanCross", "0");
       assert.notInStore("PoolCross", univ2CrossId(0));
 
       mockPreReplantBeanEthPriceAndLiquidityWithPoolReserves(BigDecimal.fromString("1.01"));
-      handleBlock(mockBlock(BEANSTALK_BLOCK));
+      handleBlock(mockBlock(UNIV2_CROSS_BLOCK));
 
       assert.fieldEquals("BeanCross", "0", "above", "true");
       assert.fieldEquals("PoolCross", univ2CrossId(0), "above", "true");
@@ -103,13 +108,13 @@ describe("Peg Crosses", () => {
 
     test("UniswapV2/Bean cross below", () => {
       mockPreReplantBeanEthPriceAndLiquidityWithPoolReserves(BigDecimal.fromString("1.25"));
-      handleBlock(mockBlock(BEANSTALK_BLOCK));
+      handleBlock(mockBlock(UNIV2_CROSS_BLOCK));
 
       assert.fieldEquals("BeanCross", "0", "above", "true");
       assert.fieldEquals("PoolCross", univ2CrossId(0), "above", "true");
 
       mockPreReplantBeanEthPriceAndLiquidityWithPoolReserves(BigDecimal.fromString("0.8"));
-      handleBlock(mockBlock(BEANSTALK_BLOCK));
+      handleBlock(mockBlock(UNIV2_CROSS_BLOCK));
 
       assert.fieldEquals("BeanCross", "1", "above", "false");
       assert.fieldEquals("PoolCross", univ2CrossId(1), "above", "false");
@@ -118,16 +123,16 @@ describe("Peg Crosses", () => {
     test("UniswapV2/Bean cross above (separately)", () => {
       const liquidity = BigDecimal.fromString("5000000");
       mockPreReplantBeanEthPriceAndLiquidityWithPoolReserves(BigDecimal.fromString("0.95"), liquidity);
-      mockPoolPriceAndLiquidity(BEAN_3CRV_V1, BigDecimal.fromString("0.99"), liquidity, BEANSTALK_BLOCK);
-      handleBlock(mockBlock(BEANSTALK_BLOCK));
+      mockPoolPriceAndLiquidity(BEAN_3CRV_V1, BigDecimal.fromString("0.99"), liquidity, UNIV2_CROSS_BLOCK);
+      handleBlock(mockBlock(UNIV2_CROSS_BLOCK));
 
       assert.notInStore("BeanCross", "0");
       assert.notInStore("PoolCross", univ2CrossId(0));
       assert.notInStore("PoolCross", crvV1CrossId(0));
 
       mockPreReplantBeanEthPriceAndLiquidityWithPoolReserves(BigDecimal.fromString("1.02"), liquidity);
-      mockPoolPriceAndLiquidity(BEAN_3CRV_V1, BigDecimal.fromString("0.9"), liquidity, BEANSTALK_BLOCK);
-      handleBlock(mockBlock(BEANSTALK_BLOCK));
+      mockPoolPriceAndLiquidity(BEAN_3CRV_V1, BigDecimal.fromString("0.9"), liquidity, UNIV2_CROSS_BLOCK);
+      handleBlock(mockBlock(UNIV2_CROSS_BLOCK));
 
       assert.notInStore("BeanCross", "0");
       assert.fieldEquals("PoolCross", univ2CrossId(0), "above", "true");
@@ -144,7 +149,7 @@ describe("Peg Crosses", () => {
         ONE_BD,
         ZERO_BI,
         ZERO_BI,
-        BEANSTALK_BLOCK
+        UNIV2_CROSS_BLOCK
       );
 
       assert.fieldEquals("BeanCross", "0", "above", "true");
@@ -156,8 +161,8 @@ describe("Peg Crosses", () => {
     test("UniswapV2/Bean cross below (separately)", () => {
       const liquidity = BigDecimal.fromString("5000000");
       mockPreReplantBeanEthPriceAndLiquidityWithPoolReserves(BigDecimal.fromString("1.05"), liquidity);
-      // mockPoolPriceAndLiquidity(BEAN_3CRV_V1, BigDecimal.fromString("1.01"), liquidity, BEANSTALK_BLOCK);
-      handleBlock(mockBlock(BEANSTALK_BLOCK));
+      // mockPoolPriceAndLiquidity(BEAN_3CRV_V1, BigDecimal.fromString("1.01"), liquidity, UNIV2_CROSS_BLOCK);
+      handleBlock(mockBlock(UNIV2_CROSS_BLOCK));
       crv_updatePricesAndCheckCrosses(
         BEAN_3CRV_V1.toHexString(),
         BigDecimal.fromString("1.01"),
@@ -166,7 +171,7 @@ describe("Peg Crosses", () => {
         ONE_BD,
         ZERO_BI,
         ZERO_BI,
-        BEANSTALK_BLOCK
+        UNIV2_CROSS_BLOCK
       );
 
       assert.fieldEquals("BeanCross", "0", "above", "true");
@@ -174,8 +179,8 @@ describe("Peg Crosses", () => {
       assert.fieldEquals("PoolCross", crvV1CrossId(0), "above", "true");
 
       mockPreReplantBeanEthPriceAndLiquidityWithPoolReserves(BigDecimal.fromString("0.97"), liquidity);
-      mockPoolPriceAndLiquidity(BEAN_3CRV_V1, BigDecimal.fromString("1.05"), liquidity, BEANSTALK_BLOCK);
-      handleBlock(mockBlock(BEANSTALK_BLOCK));
+      mockPoolPriceAndLiquidity(BEAN_3CRV_V1, BigDecimal.fromString("1.05"), liquidity, UNIV2_CROSS_BLOCK);
+      handleBlock(mockBlock(UNIV2_CROSS_BLOCK));
 
       assert.notInStore("BeanCross", "1");
       assert.fieldEquals("PoolCross", univ2CrossId(1), "above", "false");
@@ -192,7 +197,7 @@ describe("Peg Crosses", () => {
         ONE_BD,
         ZERO_BI,
         ZERO_BI,
-        BEANSTALK_BLOCK
+        UNIV2_CROSS_BLOCK
       );
 
       assert.fieldEquals("BeanCross", "1", "above", "false");
@@ -214,15 +219,15 @@ describe("Peg Crosses", () => {
         ONE_BD,
         ZERO_BI,
         ZERO_BI,
-        BEANSTALK_BLOCK
+        UNIV2_CROSS_BLOCK
       );
-      handleBlock(mockBlock(BEANSTALK_BLOCK));
+      handleBlock(mockBlock(UNIV2_CROSS_BLOCK));
 
       assert.notInStore("BeanCross", "0");
       assert.notInStore("PoolCross", univ2CrossId(0));
       assert.fieldEquals("PoolCross", crvV1CrossId(0), "above", "true");
 
-      mockPoolPriceAndLiquidity(BEAN_3CRV_V1, crvConstantPrice, crvLiquidity2, BEANSTALK_BLOCK);
+      mockPoolPriceAndLiquidity(BEAN_3CRV_V1, crvConstantPrice, crvLiquidity2, UNIV2_CROSS_BLOCK);
       crv_updatePricesAndCheckCrosses(
         BEAN_3CRV_V1.toHexString(),
         crvConstantPrice,
@@ -231,14 +236,14 @@ describe("Peg Crosses", () => {
         ONE_BD,
         ZERO_BI,
         ZERO_BI,
-        BEANSTALK_BLOCK
+        UNIV2_CROSS_BLOCK
       );
 
       assert.fieldEquals("BeanCross", "0", "above", "true");
       assert.notInStore("PoolCross", univ2CrossId(0));
       assert.notInStore("PoolCross", crvV1CrossId(1));
 
-      mockPoolPriceAndLiquidity(BEAN_3CRV_V1, crvConstantPrice, liquidity, BEANSTALK_BLOCK);
+      mockPoolPriceAndLiquidity(BEAN_3CRV_V1, crvConstantPrice, liquidity, UNIV2_CROSS_BLOCK);
       crv_updatePricesAndCheckCrosses(
         BEAN_3CRV_V1.toHexString(),
         crvConstantPrice,
@@ -247,7 +252,7 @@ describe("Peg Crosses", () => {
         ONE_BD,
         ZERO_BI,
         ZERO_BI,
-        BEANSTALK_BLOCK
+        UNIV2_CROSS_BLOCK
       );
 
       assert.fieldEquals("BeanCross", "1", "above", "false");
@@ -263,13 +268,13 @@ describe("Peg Crosses", () => {
 
     test("Well/Bean cross above", () => {
       simpleMockPrice(0.99, 0.99);
-      handleBlock(mockBlock(BEAN_WETH_CP2_WELL_BLOCK));
+      handleBlock(mockBlock(WELL_CROSS_BLOCK));
 
       assert.notInStore("BeanCross", "0");
       assert.notInStore("PoolCross", wellCrossId(0));
 
       simpleMockPrice(1.01, 1.01);
-      handleBlock(mockBlock(BEAN_WETH_CP2_WELL_BLOCK));
+      handleBlock(mockBlock(WELL_CROSS_BLOCK));
 
       assert.fieldEquals("BeanCross", "0", "above", "true");
       assert.fieldEquals("PoolCross", wellCrossId(0), "above", "true");
@@ -277,13 +282,13 @@ describe("Peg Crosses", () => {
 
     test("Well/Bean cross below", () => {
       simpleMockPrice(1.25, 1.25);
-      handleBlock(mockBlock(BEAN_WETH_CP2_WELL_BLOCK));
+      handleBlock(mockBlock(WELL_CROSS_BLOCK));
 
       assert.fieldEquals("BeanCross", "0", "above", "true");
       assert.fieldEquals("PoolCross", wellCrossId(0), "above", "true");
 
       simpleMockPrice(0.8, 0.8);
-      handleBlock(mockBlock(BEAN_WETH_CP2_WELL_BLOCK));
+      handleBlock(mockBlock(WELL_CROSS_BLOCK));
 
       assert.fieldEquals("BeanCross", "1", "above", "false");
       assert.fieldEquals("PoolCross", wellCrossId(1), "above", "false");
@@ -291,19 +296,19 @@ describe("Peg Crosses", () => {
 
     test("Well/Bean cross above (separately)", () => {
       simpleMockPrice(0.95, 0.99);
-      handleBlock(mockBlock(BEAN_WETH_CP2_WELL_BLOCK));
+      handleBlock(mockBlock(WELL_CROSS_BLOCK));
 
       assert.notInStore("BeanCross", "0");
       assert.notInStore("PoolCross", wellCrossId(0));
 
       simpleMockPrice(0.98, 1.02);
-      handleBlock(mockBlock(BEAN_WETH_CP2_WELL_BLOCK));
+      handleBlock(mockBlock(WELL_CROSS_BLOCK));
 
       assert.notInStore("BeanCross", "0");
       assert.fieldEquals("PoolCross", wellCrossId(0), "above", "true");
 
       simpleMockPrice(1.02, 1.07);
-      handleBlock(mockBlock(BEAN_WETH_CP2_WELL_BLOCK));
+      handleBlock(mockBlock(WELL_CROSS_BLOCK));
 
       assert.fieldEquals("BeanCross", "0", "above", "true");
       assert.notInStore("PoolCross", wellCrossId(1));
@@ -311,19 +316,19 @@ describe("Peg Crosses", () => {
 
     test("Well/Bean cross below (separately)", () => {
       simpleMockPrice(1.05, 1.01);
-      handleBlock(mockBlock(BEAN_WETH_CP2_WELL_BLOCK));
+      handleBlock(mockBlock(WELL_CROSS_BLOCK));
 
       assert.fieldEquals("BeanCross", "0", "above", "true");
       assert.fieldEquals("PoolCross", wellCrossId(0), "above", "true");
 
       simpleMockPrice(1.02, 0.98);
-      handleBlock(mockBlock(BEAN_WETH_CP2_WELL_BLOCK));
+      handleBlock(mockBlock(WELL_CROSS_BLOCK));
 
       assert.notInStore("BeanCross", "1");
       assert.fieldEquals("PoolCross", wellCrossId(1), "above", "false");
 
       simpleMockPrice(0.97, 0.92);
-      handleBlock(mockBlock(BEAN_WETH_CP2_WELL_BLOCK));
+      handleBlock(mockBlock(WELL_CROSS_BLOCK));
 
       assert.fieldEquals("BeanCross", "1", "above", "false");
       assert.notInStore("PoolCross", wellCrossId(2));
