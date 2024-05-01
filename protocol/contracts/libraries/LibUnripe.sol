@@ -163,7 +163,11 @@ library LibUnripe {
         // redeem = totalRipeUnderlying * (usdValueRaised/totalUsdNeeded)^2 * UnripeAmountIn/UnripeSupply;
         // But totalRipeUnderlying = CurrentUnderlying * totalUsdNeeded/usdValueRaised to get the total underlying
         // redeem = currentRipeUnderlying * (usdValueRaised/totalUsdNeeded) * UnripeAmountIn/UnripeSupply
-        redeem = s.u[unripeToken].balanceOfUnderlying.mul(s.recapitalized).div(totalUsdNeeded).mul(amount).div(supply);
+        uint256 underlyingAmount = s.u[unripeToken].balanceOfUnderlying;
+        redeem = underlyingAmount.mul(s.recapitalized).div(totalUsdNeeded).mul(amount).div(supply);
+        // cap `redeem to `balanceOfUnderlying in the case that `s.recapitalized` exceeds `totalUsdNeeded`.
+        // this can occur due to unripe LP chops.
+        if(redeem > underlyingAmount) redeem = underlyingAmount;
     }
 
     /**
