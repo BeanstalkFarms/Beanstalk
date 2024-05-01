@@ -1,15 +1,17 @@
-import { BigDecimal, BigInt, ethereum, Address } from "@graphprotocol/graph-ts";
+import { BigDecimal, BigInt, ethereum, Address, Bytes } from "@graphprotocol/graph-ts";
 import { createMockedFunction } from "matchstick-as/assembly/index";
 import { BEANSTALK } from "../../../subgraph-core/utils/Constants";
 
-export function mockSeedGaugeLockedBeans(lockedBeans: BigInt): void {
-  createMockedFunction(BEANSTALK, "getLockedBeans", "getLockedBeans():(uint256)")
-    .withArgs([])
+export function mockSeedGaugeLockedBeans(reserveBytes: Bytes, twaTimestamp: BigInt, lockedBeans: BigInt): void {
+  createMockedFunction(BEANSTALK, "getLockedBeansFromTwaReserves", "getLockedBeansFromTwaReserves(bytes,uint40):(uint256)")
+    .withArgs([ethereum.Value.fromBytes(reserveBytes), ethereum.Value.fromUnsignedBigInt(twaTimestamp)])
     .returns([ethereum.Value.fromUnsignedBigInt(lockedBeans)]);
 }
 
-export function mockSeedGaugeLockedBeansReverts(): void {
-  createMockedFunction(BEANSTALK, "getLockedBeans", "getLockedBeans():(uint256)").withArgs([]).reverts();
+export function mockSeedGaugeLockedBeansReverts(reserveBytes: Bytes, twaTimestamp: BigInt): void {
+  createMockedFunction(BEANSTALK, "getLockedBeansFromTwaReserves", "getLockedBeansFromTwaReserves(bytes,uint40):(uint256)")
+    .withArgs([ethereum.Value.fromBytes(reserveBytes), ethereum.Value.fromUnsignedBigInt(twaTimestamp)])
+    .reverts();
 }
 
 export function mockGetRecapPaidPercent(repaidPercent: BigDecimal): void {
