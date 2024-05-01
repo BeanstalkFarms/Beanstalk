@@ -121,6 +121,71 @@ contract FloodTest is TestHelper {
         assertTrue(s.lastSopSeason == 0);
     }
 
+    function testOneSop() public {
+        // verify sop well is not initalized in storage prior to sop.
+        assertTrue(bs.getSopWell() == address(0));
+
+        // setDeltaBforWell(1000e6, C.BEAN_ETH_WELL, C.WETH);
+
+        setReserves(C.BEAN_ETH_WELL, 1000000e6, 1100e18);
+
+        // update pumps
+        updateMockPumpUsingWellReserves(C.BEAN_ETH_WELL);
+
+        season.rainSunrise();
+        bs.mow(users[1], C.BEAN);
+        season.rainSunrise();
+
+        Storage.Season memory s = seasonGetters.time();
+        IWell well = IWell(bs.getSopWell());
+
+        assertTrue(s.lastSop == s.rainStart);
+        assertTrue(s.lastSopSeason == s.current);
+        // check weth balance of beanstalk
+        assertEq(IERC20(C.WETH).balanceOf(BEANSTALK), 51191151829696906017);
+        // after the swap, the composition of the pools are
+        uint256[] memory balances = well.getReserves();
+        assertTrue(balances[0] == 1048808848170);
+        assertTrue(balances[1] == 1048808848170303093983);
+
+        // tracks user plenty before update
+        uint256 userPlenty = bs.balanceOfPlenty(users[1]);
+        assertEq(userPlenty, 25595575914848452999);
+
+        // tracks user plenty after update
+        bs.mow(users[1], C.BEAN);
+
+        SiloGettersFacet.AccountSeasonOfPlenty memory userSop = siloGetters.balanceOfSop(users[1]);
+        assertTrue(userSop.lastRain == 6);
+        assertTrue(userSop.lastSop == 6);
+        assertTrue(userSop.roots == 10004000000000000000000000);
+        assertTrue(userSop.plenty == 25595575914848452999);
+        assertTrue(userSop.plentyPerRoot == 2558534177813719812);
+
+        // each user should get half of the eth gained
+        assertTrue(bs.balanceOfPlenty(users[2]) == 25595575914848452999);
+
+        // tracks user2 plenty after update
+        bs.mow(users[2], C.BEAN);
+        userSop = siloGetters.balanceOfSop(users[2]);
+        assertTrue(userSop.lastRain == 6);
+        assertTrue(userSop.lastSop == 6);
+        assertTrue(userSop.roots == 10004000000000000000000000);
+        assertTrue(userSop.plenty == 25595575914848452999);
+        assertTrue(userSop.plentyPerRoot == 2558534177813719812);
+
+        // claims user plenty
+        bs.mow(users[2], C.BEAN);
+        vm.prank(users[2]);
+        bs.claimPlenty();
+        assertTrue(bs.balanceOfPlenty(users[2]) == 0);
+        assertEq(IERC20(C.WETH).balanceOf(users[2]), 25595575914848452999);
+
+        // changes the sop well
+        assertTrue(bs.getSopWell() != address(0));
+        assertTrue(bs.getSopWell() == C.BEAN_ETH_WELL);
+    }
+
     //////////// Helpers ////////////
 
     function depostBeansForUser(address user, uint256 beans) public {
