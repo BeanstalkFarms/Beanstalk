@@ -194,6 +194,11 @@ describe("APY Calculations", () => {
       farmAsset.farmAmount = BigInt.fromString("1234567890000");
       farmAsset.save();
 
+      // Individual farmer's silo asset, should not have any effect
+      let farmerDeposit = loadSiloAsset(LUSD_3POOL, UNRIPE_BEAN);
+      farmerDeposit.depositedBDV = BigInt.fromString("1234567890000");
+      farmerDeposit.save();
+
       /// Set EMA, whitelisted tokens
       // bean3crv intentionally not whitelisted. It should still be included in non-gauge deposited bdv
       let siloYield = loadSiloYield(20000, 720);

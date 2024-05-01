@@ -30,6 +30,7 @@ export function loadSilo(account: Address): Silo {
       silo.farmer = account.toHexString();
     }
     silo.whitelistedTokens = [];
+    silo.dewhitelistedTokens = [];
     silo.depositedBDV = ZERO_BI;
     silo.stalk = ZERO_BI;
     silo.plantableStalk = ZERO_BI;

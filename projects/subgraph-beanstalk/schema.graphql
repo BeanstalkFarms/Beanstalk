@@ -110,6 +110,8 @@ type Silo @entity {
   farmer: Farmer
   "Tokens whitelisted for deposit within the silo"
   whitelistedTokens: [String!]!
+  "Tokens that have been removed from the silo deposit whitelist"
+  dewhitelistedTokens: [String!]!
   "Link to all silo assets currently associated with this silo"
   assets: [SiloAsset!]! @derivedFrom(field: "silo")
   "Current BDV of all deposited assets"

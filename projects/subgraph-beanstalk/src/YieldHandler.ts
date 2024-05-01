@@ -141,8 +141,13 @@ export function updateSiloVAPYs(t: i32, timestamp: BigInt, window: i32): void {
 
     let staticSeeds: Array<BigDecimal | null> = [];
 
+    // TODO:
+    // Maintain a list of all time whitelisted tokens on the silo
+    // Use those to look up each potential silo asset
+    // Handle a null case where nothing is deposited yet
+
     // TODO: need a solution for this that doesnt use .load(), for now deploying with it disabled
-    const depositedAssets: SiloAsset[] = [];
+    const depositedAssets: SiloAsset[] = store.get;
     // const depositedAssets = silo.assets.load().filter((s) => s.depositedBDV != ZERO_BI);
     for (let i = 0; i < whitelistSettings.length; ++i) {
       // Get the total deposited bdv of this asset. Remove whitelsited assets from the list as they are encountered

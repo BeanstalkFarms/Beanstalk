@@ -26,7 +26,7 @@ import {
   createUpdateAverageStalkPerBdvPerSeasonEvent,
   createUpdateGaugeSettingsEvent
 } from "./event-mocking/SeedGauge";
-import { createWhitelistTokenEventBIP42 } from "./event-mocking/Whitelist";
+import { createWhitelistTokenV4Event } from "./event-mocking/Whitelist";
 import { createTemperatureChangeEvent } from "./event-mocking/Field";
 import { simpleMockPrice } from "../../subgraph-core/tests/event-mocking/Prices";
 import { loadSilo } from "../src/utils/SiloEntities";
@@ -174,7 +174,7 @@ describe("Seed Gauge", () => {
   describe("Owner Configuration", () => {
     test("event: WhitelistToken", () => {
       handleWhitelistToken_BIP42(
-        createWhitelistTokenEventBIP42(
+        createWhitelistTokenV4Event(
           BEAN_ERC20.toHexString(),
           "0x12345678",
           BigInt.fromU64(35000000000),
