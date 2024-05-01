@@ -15,7 +15,6 @@ export interface SelectDialogProps {
 };
 
 const SelectDialog: FC<SelectDialogProps> = ({ handleClose, selected, setSelected }) => {
-    const lmao = null; // remove
     const chartSetupData = useChartSetupData();
     return (
         <Box sx={{ p: 2, display: 'flex', flexDirection: 'column', gap: 1, height: 400 }}>
@@ -103,10 +102,10 @@ const SelectDialog: FC<SelectDialogProps> = ({ handleClose, selected, setSelecte
             </Box>
             <Divider />
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5, overflowY: 'auto' }}>
-                {chartSetupData.map((data) => {
+                {chartSetupData.map((data, index) => {
                     const isSelected = selected ? selected.includes(data.index) : false;
                     return (
-                    <Row gap={0.3} p={0.25} sx={{ backgroundColor: (isSelected ? 'red' : undefined), '&:hover': { backgroundColor: 'primary.light', cursor: 'pointer' } }}>
+                    <Row key={`chartSelectList${index}`} gap={0.3} p={0.25} sx={{ backgroundColor: (isSelected ? 'red' : undefined), '&:hover': { backgroundColor: 'primary.light', cursor: 'pointer' } }}>
                         {data.type === 'Bean' ? (
                             <img src={beanIcon} alt="Bean" style={{ height: 16, width: 16 }} /> 
                         ) : data.type === 'Silo' ? (

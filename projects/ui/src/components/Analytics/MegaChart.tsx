@@ -53,11 +53,12 @@ const MegaChart: FC<{}> = () => {
           </Card>
         <Box p={1.5} sx={{ borderBottom: '0.5px', borderColor: 'divider', borderBottomStyle: 'solid', display: 'flex', flexDirection: 'row', justifyContent: 'space-between' }}>
           <Box sx={{ display: 'flex', gap: 1 }}>
-            {selectedCharts.map((selection) =>(
+            {selectedCharts.map((selection, index) =>(
             <Button
               variant='outlined-secondary'
               color='secondary'
               size='small'
+              key={`selectedChartsButton${index}`}
               sx={{
                 display: 'inline-flex',
                 alignItems: 'center',

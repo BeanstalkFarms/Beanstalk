@@ -1,4 +1,4 @@
-import React, { useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   Box,
   Tooltip,
@@ -91,7 +91,7 @@ const ChartV2: FC<ChartV2DataProps> = ({
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const chartSetupData = useChartSetupData();
 
-  useMemo(() => {
+  useEffect(() => {
     if (!chartContainerRef.current || !chartHeight) return;
     const chartOptions = {
       layout: {
@@ -193,8 +193,6 @@ const ChartV2: FC<ChartV2DataProps> = ({
       };
     };
 
-
-
     window.addEventListener('resize', handleResize);
 
     return () => {
@@ -203,7 +201,17 @@ const ChartV2: FC<ChartV2DataProps> = ({
     };
   }, [theme, drawPegLine, size, chartHeight, formattedData, chartSetupData, selected]);
 
-  useMemo(() => {
+  useEffect(() => {
+    if (!chart.current || !formattedData) return;
+    const numberOfCharts = formattedData.length;
+    for (let i = 0; i < numberOfCharts; i+=1) {
+      areaSeries.current[i].setData(formattedData[i]);
+    };
+    chart.current.timeScale().fitContent();
+  }, [formattedData]);
+
+  /* useEffect(() => {
+    if (!chart.current || !formattedData || !extraData) return
     function getMergedData(commonData: { time: Number; value: Number }) {
       const date = commonData
         ? new Date((commonData.time as number) * 1000)
@@ -222,23 +230,18 @@ const ChartV2: FC<ChartV2DataProps> = ({
       };
     }
 
-    const numberOfCharts = formattedData.length;
-    for (let i = 0; i < numberOfCharts; i+=1) {
-      areaSeries.current[i].setData(formattedData[i]);
-      chart.current.timeScale().fitContent();
-      const lastCommonDataPoint = formattedData[i][formattedData[i].length - 1];
-      setLastDataPoint(getMergedData(lastCommonDataPoint));
-    };
+    const lastCommonDataPoint = formattedData[0][formattedData[0].length - 1];
+    setLastDataPoint(getMergedData(lastCommonDataPoint));
 
-    // chart.current.subscribeCrosshairMove((param: any) => {
-    //  const hoveredDataPoint = param.seriesData.get(areaSeries.current[0]) || null;
-    //  setDataPoint(getMergedData(hoveredDataPoint));
-    // });
+    chart.current.subscribeCrosshairMove((param: any) => {
+      const hoveredDataPoint = param.seriesData.get(areaSeries.current[0]) || null;
+      setDataPoint(getMergedData(hoveredDataPoint));
+    });
 
     return () => {
-      // chart.current.unsubscribeCrosshairMove();
+      chart.current.unsubscribeCrosshairMove();
     };
-  }, [formattedData, extraData]);
+  }, [formattedData, extraData]) */
 
   return (
     <Box>
@@ -308,7 +311,7 @@ const ChartV2: FC<ChartV2DataProps> = ({
         ref={chartContainerRef}
         id="container"
         sx={{
-          height: chartHeight - 120,
+          height: chartHeight - 20,
         }}
       />
     </Box>
