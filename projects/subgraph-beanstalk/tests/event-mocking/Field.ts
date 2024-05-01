@@ -1,7 +1,7 @@
 import { Address, BigInt, Bytes, ethereum } from "@graphprotocol/graph-ts";
 import { newMockEvent } from "matchstick-as/assembly/index";
 import { Sow, PlotTransfer } from "../../generated/Field/Beanstalk";
-import { TemperatureChange } from "../../generated/BIP42-SeedGauge/Beanstalk";
+import { TemperatureChange } from "../../generated/BIP44-SeedGauge/Beanstalk";
 
 import { BEANSTALK } from "../../../subgraph-core/utils/Constants";
 
@@ -14,7 +14,7 @@ const mockBeanstalkEvent = (): ethereum.Event => {
 
 export function createWeatherChangeEvent(season: BigInt, caseID: BigInt, change: i32): void {}
 
-// BIP42 renamed
+// BIP44 renamed
 export function createTemperatureChangeEvent(season: BigInt, caseId: BigInt, absChange: i32): TemperatureChange {
   let event = changetype<TemperatureChange>(mockBeanstalkEvent());
   event.parameters = new Array();

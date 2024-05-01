@@ -9,7 +9,7 @@ import {
   WhitelistToken,
   TotalGerminatingStalkChanged,
   TotalStalkChangedFromGermination
-} from "../generated/BIP42-SeedGauge/Beanstalk";
+} from "../generated/BIP44-SeedGauge/Beanstalk";
 import { handleRateChange } from "./utils/Field";
 import {
   loadSilo,
@@ -165,7 +165,7 @@ export function handleTotalStalkChangedFromGermination(event: TotalStalkChangedF
 
 // WHITELIST / GAUGE CONFIGURATION SETTINGS //
 
-export function handleWhitelistToken_BIP42(event: WhitelistToken): void {
+export function handleWhitelistToken_BIP44(event: WhitelistToken): void {
   let siloSettings = loadWhitelistTokenSetting(event.params.token);
 
   siloSettings.selector = event.params.selector;
