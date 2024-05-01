@@ -1,9 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { FC } from '~/types';
-import { SeasonalPriceDocument } from '~/generated/graphql';
 import { Box, Button, Card, CircularProgress } from '@mui/material';
-import useSdk from '~/hooks/sdk';
-import { formatUnits } from 'viem';
 import useSeasonsQuery from '~/hooks/beanstalk/useSeasonsQuery';
 import useTimeTabState from '~/hooks/app/useTimeTabState';
 import AddRoundedIcon from '@mui/icons-material/AddRounded';
@@ -17,16 +14,13 @@ import { useChartSetupData } from './useChartSetupData';
 
 const MegaChart: FC<{}> = () => {
 
-  const sdk = useSdk();
-  const BEAN = sdk.tokens.BEAN;
-
   const chartSetupData = useChartSetupData();
 
   const timeTabParams = useTimeTabState();
   const selectedTimePeriod = timeTabParams[0][1];
 
   const [dialogOpen, showDialog, hideDialog] = useToggle();
-  const [selectedCharts, setSelectedCharts] = useState([0, 1]);
+  const [selectedCharts, setSelectedCharts] = useState([0, 1, 2]);
 
   const query0Config = useMemo(() => ( chartSetupData[selectedCharts[0]]?.queryConfig ), [selectedCharts]);
   const query1Config = useMemo(() => ( chartSetupData[selectedCharts[1]]?.queryConfig ), [selectedCharts]);
@@ -43,13 +37,6 @@ const MegaChart: FC<{}> = () => {
     selectedCharts,
     chartSetupData
   );
-
-  console.log("queries: ", query0, query1, query2)
-
-  console.log("priceformatted:", priceFormattedData, extraData )
-
-  const formatBeanValue = (value: any) => Number(formatUnits(value, BEAN.decimals)).toLocaleString('en-US', { maximumFractionDigits: 0 });
-  const formatDollarValue = (value: any) => `$${value.toLocaleString('en-US', { maximumFractionDigits: 0 })}`;
 
   const loading = query0.loading && query1.loading && query2.loading;
 

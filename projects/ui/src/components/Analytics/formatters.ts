@@ -25,10 +25,13 @@ export const getFormattedAndExtraData = (queries: any, selectedCharts: number[],
     const queryData = queries[index].data;
     if (!queryData?.seasons) return;
     const _formattedQuery: { time: number; value: number }[] = [];
-    queryData.seasons.forEach((seasonData: any) => {
-      const timestamp = Number(seasonData[chartSetupData[selectionIndex].timeScaleKey])
+    queryData.seasons.forEach((seasonData: any, timestampIndex: number) => {
+      // TODO: Use season to set timestamp
+      const timestamp = Number(queries[0].data.seasons[timestampIndex][chartSetupData[selectedCharts[0]].timeScaleKey]);
       const value = chartSetupData[selectionIndex].valueFormatter(seasonData[chartSetupData[selectionIndex].priceScaleKey])
-      _extraData.set(timestamp, seasonData.season);
+      if (index === 0) {
+        _extraData.set(timestamp, seasonData.season);
+      };
       _formattedQuery.unshift({
         time: timestamp,
         value: value,

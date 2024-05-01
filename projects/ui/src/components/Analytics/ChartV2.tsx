@@ -11,6 +11,7 @@ import { createChart } from 'lightweight-charts';
 import { hexToRgba } from '~/util/UI';
 import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
 import { useChartSetupData } from './useChartSetupData';
+import { BeanstalkPalette } from '../App/muiTheme';
 /*
     List of Variables:
     tooltipTitle
@@ -81,7 +82,7 @@ const ChartV2: FC<ChartV2DataProps> = ({
   const chart = useRef<any>();
   const areaSeries = useRef<any>([]);
   const tooltip = useRef<any>();
-  const chartHeight = containerHeight - ((tooltip.current?.clientHeight || 0 ) + 20);
+  const chartHeight = containerHeight - ((tooltip.current?.clientHeight || 0 ));
 
   const [lastDataPoint, setLastDataPoint] = useState<any>();
   const [dataPoint, setDataPoint] = useState<any>();
@@ -92,7 +93,6 @@ const ChartV2: FC<ChartV2DataProps> = ({
 
   useMemo(() => {
     if (!chartContainerRef.current || !chartHeight) return;
-
     const chartOptions = {
       layout: {
         fontFamily: theme.typography.fontFamily,
@@ -121,7 +121,8 @@ const ChartV2: FC<ChartV2DataProps> = ({
         borderVisible: false,
         visible: !(size === 'mini')
       },
-      leftPriceScale: {
+      leftPriceScale: selected.length < 2 ?  undefined : 
+      {
         borderVisible: false,
         visible: !(size === 'mini')
       },
@@ -133,31 +134,62 @@ const ChartV2: FC<ChartV2DataProps> = ({
       });
     };
 
+    const chartColors = [
+      {
+        lineColor: BeanstalkPalette.logoGreen,
+        topColor: hexToRgba(BeanstalkPalette.logoGreen, 0.8),
+        bottomColor: hexToRgba(BeanstalkPalette.logoGreen, 0.2),
+      },
+      {
+        lineColor: BeanstalkPalette.blue,
+        topColor: hexToRgba(BeanstalkPalette.blue, 0.8),
+        bottomColor: hexToRgba(BeanstalkPalette.blue, 0.2),
+      },
+      {
+        lineColor: BeanstalkPalette.washedRed,
+        topColor: hexToRgba(BeanstalkPalette.washedRed, 0.8),
+        bottomColor: hexToRgba(BeanstalkPalette.washedRed, 0.2),
+      },
+      {
+        lineColor: BeanstalkPalette.yellow,
+        topColor: hexToRgba(BeanstalkPalette.yellow, 0.8),
+        bottomColor: hexToRgba(BeanstalkPalette.yellow, 0.2),
+      },
+      {
+        lineColor: BeanstalkPalette.yellow,
+        topColor: hexToRgba(BeanstalkPalette.yellow, 0.8),
+        bottomColor: hexToRgba(BeanstalkPalette.yellow, 0.2),
+      }
+    ];
+
     chart.current = createChart(chartContainerRef.current, chartOptions);
     const numberOfCharts = formattedData.length;
-    for (let i = 0; i < numberOfCharts; i+=1) {
-      areaSeries.current[i] = chart.current.addAreaSeries({
-        lineColor: theme.palette.primary.main,
-        topColor: hexToRgba(theme.palette.primary.main, 0.8),
-        bottomColor: hexToRgba(theme.palette.primary.light, 0.2),
-        lineWidth: 2,
-        priceScaleId: i === 0 ? 'right' : i === 1 ? 'left' : '',
-        priceFormat: {
-          type: 'custom',
-          formatter: chartSetupData[selected[i]].tickFormatter
-        }
-      });
+    if (numberOfCharts > 0 ) {
+      for (let i = 0; i < numberOfCharts; i+=1) {
+        areaSeries.current[i] = chart.current.addLineSeries({
+          color: chartColors[i].lineColor,
+          // topColor: chartColors[i].topColor,
+          // bottomColor: chartColors[i].bottomColor,
+          lineWidth: 2,
+          priceScaleId: i === 0 ? 'right' : i === 1 ? 'left' : '',
+          priceFormat: {
+            type: 'custom',
+            formatter: chartSetupData[selected[i]].tickFormatter
+          }
+        });
+      
 
-      if (drawPegLine) {
-        const pegLine = {
-          price: 1,
-          color: theme.palette.primary.dark,
-          lineWidth: 1,
-          lineStyle: 3, // LineStyle.Dashed
-          axisLabelVisible: false,
-          // title: 'line label here',
+        if (drawPegLine) {
+          const pegLine = {
+            price: 1,
+            color: theme.palette.primary.dark,
+            lineWidth: 1,
+            lineStyle: 3, // LineStyle.Dashed
+            axisLabelVisible: false,
+            // title: 'line label here',
+          };
+          areaSeries.current[i].createPriceLine(pegLine);
         };
-        areaSeries.current[i].createPriceLine(pegLine);
       };
     };
 
@@ -169,7 +201,7 @@ const ChartV2: FC<ChartV2DataProps> = ({
       window.removeEventListener('resize', handleResize);
       chart.current.remove();
     };
-  }, [theme, drawPegLine, size, chartHeight, formattedData.length, chartSetupData, selected]);
+  }, [theme, drawPegLine, size, chartHeight, formattedData, chartSetupData, selected]);
 
   useMemo(() => {
     function getMergedData(commonData: { time: Number; value: Number }) {
@@ -276,7 +308,7 @@ const ChartV2: FC<ChartV2DataProps> = ({
         ref={chartContainerRef}
         id="container"
         sx={{
-          height: chartHeight,
+          height: chartHeight - 120,
         }}
       />
     </Box>
