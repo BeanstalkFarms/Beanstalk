@@ -328,23 +328,25 @@ describe('Gauge', function () {
       it('< 1m unripe lockedBeans calculation:', async function () {
         // current unripe LP and unripe Bean supply each: 10,000. 
         // under 1m unripe bean and LP, all supply is unlocked:
-        expect(await this.unripe.getLockedBeansUnderlyingUnripeBean()).to.be.eq(to6('0'))
-        expect(await this.unripe.getLockedBeansUnderlyingUnripeBeanEth()).to.be.eq(to6('0'))
-        expect(await this.unripe.getLockedBeans()).to.be.eq(to6('0'))
-        expect(
-          await this.seasonGetters.getLiquidityToSupplyRatio()
-          ).to.be.eq(to18('1'))
+        const getLockedBeansUnderlyingUnripeBean = await this.unripe.getLockedBeansUnderlyingUnripeBean()
+        const getLockedBeansUnderlyingUrLP = await this.unripe.getLockedBeansUnderlyingUnripeBeanEth()
+        const lockedBeans = await this.unripe.getLockedBeans()
+        const L2SR = await this.seasonGetters.getLiquidityToSupplyRatio()
+
+        expect(getLockedBeansUnderlyingUnripeBean).to.be.eq('0')
+        expect(getLockedBeansUnderlyingUrLP).to.be.eq('0')
+        expect(lockedBeans).to.be.eq('0')
+        expect(L2SR).to.be.eq(to18('1'))
 
         //  set urBean and urLP to 1m and verify values do not change:
-        await this.unripeLP.mint(ownerAddress, to6('990000'))
-        await this.unripeBean.mint(ownerAddress, to6('990000'))
+        await this.unripeLP.mint(ownerAddress, to6('989999'))
+        await this.unripeBean.mint(ownerAddress, to6('989999'))
 
-        expect(await this.unripe.getLockedBeansUnderlyingUnripeBean()).to.be.eq(to6('0'))
-        expect(await this.unripe.getLockedBeansUnderlyingUnripeBeanEth()).to.be.eq(to6('0'))
-        expect(await this.unripe.getLockedBeans()).to.be.eq(to6('0'))
-        expect(
-          await this.seasonGetters.getLiquidityToSupplyRatio()
-          ).to.be.eq(to18('1'))
+        expect(await this.unripe.getLockedBeansUnderlyingUnripeBean()).to.be.eq(getLockedBeansUnderlyingUnripeBean)
+        expect(await this.unripe.getLockedBeansUnderlyingUnripeBeanEth()).to.be.eq(getLockedBeansUnderlyingUrLP)
+        expect(await this.unripe.getLockedBeans()).to.be.eq(lockedBeans)
+        expect(await this.seasonGetters.getLiquidityToSupplyRatio()
+          ).to.be.eq(L2SR)
       })
 
       it('< 5m unripe lockedBeans calculation:', async function () {
@@ -353,26 +355,26 @@ describe('Gauge', function () {
         await this.unripeBean.mint(ownerAddress, to6('1000000'))
 
         // verify locked beans amount changed: 
-        expect(await this.unripe.getLockedBeansUnderlyingUnripeBean()).to.be.eq(to6('579.500817'))
-        expect(await this.unripe.getLockedBeansUnderlyingUnripeBeanEth()).to.be.eq(to6('579.500817'))
-        expect(await this.unripe.getLockedBeans()).to.be.eq(to6('1159.001634'))
+        const getLockedBeansUnderlyingUnripeBean = await this.unripe.getLockedBeansUnderlyingUnripeBean()
+        const getLockedBeansUnderlyingUrLP = await this.unripe.getLockedBeansUnderlyingUnripeBeanEth()
+        const lockedBeans = await this.unripe.getLockedBeans()
+        const L2SR = await this.seasonGetters.getLiquidityToSupplyRatio()
+        expect(getLockedBeansUnderlyingUnripeBean).to.be.eq(to6('579.500817'))
+        expect(getLockedBeansUnderlyingUrLP).to.be.eq(to6('579.500817'))
+        expect(lockedBeans).to.be.eq(to6('1159.001634'))
 
         // verify L2SR increased:
-        expect(
-          await this.seasonGetters.getLiquidityToSupplyRatio()
-          ).to.be.eq(to18('1.001160346477463386'))
+        expect(L2SR).to.be.eq(to18('1.001160346477463386'))
         
         //  set urBean and urLP to 5m and verify values do not change:
         await this.unripeLP.mint(ownerAddress, to6('3990000'))
         await this.unripeBean.mint(ownerAddress, to6('3990000'))
 
-        expect(await this.unripe.getLockedBeansUnderlyingUnripeBean()).to.be.eq(to6('579.500817'))
-        expect(await this.unripe.getLockedBeansUnderlyingUnripeBeanEth()).to.be.eq(to6('579.500817'))
-        expect(await this.unripe.getLockedBeans()).to.be.eq(to6('1159.001634'))
+        expect(await this.unripe.getLockedBeansUnderlyingUnripeBean()).to.be.eq(getLockedBeansUnderlyingUnripeBean)
+        expect(await this.unripe.getLockedBeansUnderlyingUnripeBeanEth()).to.be.eq(getLockedBeansUnderlyingUrLP)
+        expect(await this.unripe.getLockedBeans()).to.be.eq(lockedBeans)
 
-        expect(
-          await this.seasonGetters.getLiquidityToSupplyRatio()
-          ).to.be.eq(to18('1.001160346477463386'))
+        expect(await this.seasonGetters.getLiquidityToSupplyRatio()).to.be.eq(L2SR)
       })
 
       it('< 10m unripe lockedBeans calculation:', async function () {
@@ -381,26 +383,26 @@ describe('Gauge', function () {
         await this.unripeBean.mint(ownerAddress, to6('5000000'))
 
         // verify locked beans amount changed: 
-        expect(await this.unripe.getLockedBeansUnderlyingUnripeBean()).to.be.eq(to6('515.604791'))
-        expect(await this.unripe.getLockedBeansUnderlyingUnripeBeanEth()).to.be.eq(to6('515.604791'))
-        expect(await this.unripe.getLockedBeans()).to.be.eq(to6('1031.209582'))
+        const getLockedBeansUnderlyingUnripeBean = await this.unripe.getLockedBeansUnderlyingUnripeBean()
+        const getLockedBeansUnderlyingUrLP = await this.unripe.getLockedBeansUnderlyingUnripeBeanEth()
+        const lockedBeans = await this.unripe.getLockedBeans()
+        const L2SR = await this.seasonGetters.getLiquidityToSupplyRatio()
+        expect(getLockedBeansUnderlyingUnripeBean).to.be.eq(to6('515.604791'))
+        expect(getLockedBeansUnderlyingUrLP).to.be.eq(to6('515.604791'))
+        expect(lockedBeans).to.be.eq(to6('1031.209582'))
 
         // verify L2SR increased:
-        expect(
-          await this.seasonGetters.getLiquidityToSupplyRatio()
-          ).to.be.eq(to18('1.001032274072915240'))
+        expect(L2SR).to.be.eq(to18('1.001032274072915240'))
 
         //  set urBean and urLP to 10m and verify values do not change:
         await this.unripeLP.mint(ownerAddress, to6('4990000'))
         await this.unripeBean.mint(ownerAddress, to6('4990000'))
 
-        expect(await this.unripe.getLockedBeansUnderlyingUnripeBean()).to.be.eq(to6('579.500817'))
-        expect(await this.unripe.getLockedBeansUnderlyingUnripeBeanEth()).to.be.eq(to6('579.500817'))
-        expect(await this.unripe.getLockedBeans()).to.be.eq(to6('1159.001634'))
+        expect(await this.unripe.getLockedBeansUnderlyingUnripeBean()).to.be.eq(getLockedBeansUnderlyingUnripeBean)
+        expect(await this.unripe.getLockedBeansUnderlyingUnripeBeanEth()).to.be.eq(getLockedBeansUnderlyingUrLP)
+        expect(await this.unripe.getLockedBeans()).to.be.eq(lockedBeans)
 
-        expect(
-          await this.seasonGetters.getLiquidityToSupplyRatio()
-          ).to.be.eq(to18('1.001160346477463386'))
+        expect(await this.seasonGetters.getLiquidityToSupplyRatio()).to.be.eq(L2SR)
       })
 
       it('< 10m unripe lockedBeans calculation:', async function () {
