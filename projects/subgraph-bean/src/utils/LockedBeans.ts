@@ -15,7 +15,7 @@ import { loadOrCreatePool } from "./Pool";
 import { loadOrCreateTwaOracle } from "./price/TwaOracle";
 
 export function calcLockedBeans(blockNumber: BigInt): BigInt {
-  // If BIP42 is deployed - return the result from the contract
+  // If BIP44 is deployed - return the result from the contract
   // Future improvement when actual deployment block is known, can check block and avoid this call in earlier blocks.
   if (blockNumber > BigInt.fromU32(19764699)) {
     // If we are trying to calculate locked beans on the same block as the sunrise, use the values from the previous hour
@@ -27,8 +27,8 @@ export function calcLockedBeans(blockNumber: BigInt): BigInt {
         ? twaOracle.cumulativeWellReservesPrevTime
         : twaOracle.cumulativeWellReservesTime;
 
-    let beanstalkBIP42 = SeedGauge.bind(BEANSTALK);
-    let lockedBeans = beanstalkBIP42.try_getLockedBeansFromTwaReserves(twaReserves, twaTime);
+    let beanstalkBIP44 = SeedGauge.bind(BEANSTALK);
+    let lockedBeans = beanstalkBIP44.try_getLockedBeansFromTwaReserves(twaReserves, twaTime);
     if (!lockedBeans.reverted) {
       return lockedBeans.value;
     }
@@ -72,7 +72,7 @@ export function LibLockedUnderlying_getLockedUnderlying(unripeToken: Address, re
 // Returns a fraction of the underlying token that is locked for the given unripe token at this recap percent
 // Compared to the contract's implementation, the result already has div 1e18 applied.
 export function LibLockedUnderlying_getPercentLockedUnderlying(unripeToken: Address, recapPercentPaid: BigDecimal): BigDecimal {
-  const unripeSupply = ERC20.bind(unripeToken).totalSupply();
+  const unripeSupply = ERC20.bind(unripeToken).totalSupply().div(BigInt.fromString("1000000"));
   if (unripeSupply < BigInt.fromString("1000000")) {
     return ZERO_BD; // If < 1,000,000 Assume all supply is unlocked.
   }

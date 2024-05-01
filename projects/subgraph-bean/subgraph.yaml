@@ -21,7 +21,7 @@ dataSources:
         - name: Beanstalk
           file: ../subgraph-core/abis/Beanstalk/Beanstalk-Replanted.json
         - name: SeedGauge
-          file: ../subgraph-core/abis/Beanstalk/Beanstalk-BIP42.json
+          file: ../subgraph-core/abis/Beanstalk/Beanstalk-BIP44.json
       eventHandlers:
         - event: Transfer(indexed address,indexed address,uint256)
           handler: handleTransfer
@@ -45,7 +45,7 @@ dataSources:
         - name: Beanstalk
           file: ../subgraph-core/abis/Beanstalk/Beanstalk-Replanted.json
         - name: SeedGauge
-          file: ../subgraph-core/abis/Beanstalk/Beanstalk-BIP42.json
+          file: ../subgraph-core/abis/Beanstalk/Beanstalk-BIP44.json
       eventHandlers:
         - event: Transfer(indexed address,indexed address,uint256)
           handler: handleTransfer
@@ -75,7 +75,7 @@ dataSources:
         - name: Beanstalk
           file: ../subgraph-core/abis/Beanstalk/Beanstalk-Replanted.json
         - name: SeedGauge
-          file: ../subgraph-core/abis/Beanstalk/Beanstalk-BIP42.json
+          file: ../subgraph-core/abis/Beanstalk/Beanstalk-BIP44.json
       eventHandlers:
         - event: TokenExchange(indexed address,int128,uint256,int128,uint256)
           handler: handleTokenExchange
@@ -107,7 +107,7 @@ dataSources:
         - name: Beanstalk
           file: ../subgraph-core/abis/Beanstalk/Beanstalk-Replanted.json
         - name: SeedGauge
-          file: ../subgraph-core/abis/Beanstalk/Beanstalk-BIP42.json
+          file: ../subgraph-core/abis/Beanstalk/Beanstalk-BIP44.json
         - name: PreReplant
           file: ../subgraph-core/abis/Beanstalk/Beanstalk-Pre-Replant.json
         - name: BeanstalkPrice
@@ -260,7 +260,7 @@ dataSources:
         - name: Beanstalk
           file: ../subgraph-core/abis/Beanstalk/Beanstalk-Replanted.json
         - name: SeedGauge
-          file: ../subgraph-core/abis/Beanstalk/Beanstalk-BIP42.json
+          file: ../subgraph-core/abis/Beanstalk/Beanstalk-BIP44.json
       eventHandlers:
         - event: AddLiquidity(uint256[],uint256,address)
           handler: handleAddLiquidity
