@@ -14,7 +14,6 @@ import "contracts/libraries/LibSafeMath128.sol";
 
 /**
  * @author publius
- * @title Fertilizer before the Unpause
  */
 
 contract Internalizer is OwnableUpgradeable, ReentrancyGuardUpgradeable, Fertilizer1155 {
