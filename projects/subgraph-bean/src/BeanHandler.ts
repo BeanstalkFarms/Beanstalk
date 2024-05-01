@@ -1,4 +1,4 @@
-import { Transfer } from "../generated/Bean/Bean";
+import { Transfer } from "../generated/Bean/ERC20";
 import { loadBean, updateBeanSupplyPegPercent } from "./utils/Bean";
 import { ADDRESS_ZERO, BEAN_ERC20_V1 } from "../../subgraph-core/utils/Constants";
 
