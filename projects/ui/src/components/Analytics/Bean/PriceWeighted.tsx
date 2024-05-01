@@ -18,7 +18,7 @@ const formatValue = (value: number) => `$${value.toFixed(4)}`;
 const statProps = {
   title: 'TWA Bean Price',
   titleTooltip:
-    'The cumulative liquidity and time weighted average USD price of 1 Bean at the beginning of every Season. Pre-exploit values include the TWA price in all pools on the Deposit Whitelist.',
+    'The cumulative liquidity and time weighted average USD price of 1 Bean at the beginning of every Season. Values during liquidity migrations are omitted. Pre-exploit values include the TWA price in all pools on the Deposit Whitelist.',
   gap: 0.25,
 };
 
