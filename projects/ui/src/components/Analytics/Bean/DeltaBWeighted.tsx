@@ -21,7 +21,7 @@ const formatValue = (value: number) =>
 const statProps = {
   title: 'Cumulative TWA deltaB',
   titleTooltip:
-    'The cumulative liquidity and time weighted average shortage of Beans in liquidity pools on the Minting Whitelist at the beginning of every Season.',
+    'The cumulative liquidity and time weighted average shortage of Beans in liquidity pools on the Minting Whitelist at the beginning of every Season. Pre-exploit values include the TWA deltaB in all pools on the Deposit Whitelist.',
   gap: 0.25,
 };
 

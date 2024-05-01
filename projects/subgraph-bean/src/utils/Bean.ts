@@ -38,7 +38,6 @@ export function loadBean(token: string): Bean {
 }
 
 export function loadOrCreateBeanHourlySnapshot(token: string, timestamp: BigInt, season: i32): BeanHourlySnapshot {
-  let hour = hourFromTimestamp(timestamp);
   let id = token + "-" + season.toString();
   let snapshot = BeanHourlySnapshot.load(id);
   if (snapshot == null) {
@@ -110,9 +109,6 @@ export function updateBeanValues(
   deltaLiquidityUSD: BigDecimal
 ): void {
   let bean = loadBean(token);
-  let beanHourly = loadOrCreateBeanHourlySnapshot(token, timestamp, bean.lastSeason);
-  let beanDaily = loadOrCreateBeanDailySnapshot(token, timestamp);
-
   if (newPrice !== null) {
     bean.price = newPrice;
   }
@@ -123,10 +119,12 @@ export function updateBeanValues(
   bean.liquidityUSD = bean.liquidityUSD.plus(deltaLiquidityUSD);
   bean.save();
 
+  let beanHourly = loadOrCreateBeanHourlySnapshot(token, timestamp, bean.lastSeason);
+  let beanDaily = loadOrCreateBeanDailySnapshot(token, timestamp);
+
   beanHourly.volume = bean.volume;
   beanHourly.volumeUSD = bean.volumeUSD;
   beanHourly.liquidityUSD = bean.liquidityUSD;
-  beanHourly.price = bean.price;
   beanHourly.supply = bean.supply;
   beanHourly.marketCap = bean.marketCap;
   beanHourly.lockedBeans = bean.lockedBeans;
@@ -139,7 +137,6 @@ export function updateBeanValues(
   beanDaily.volume = bean.volume;
   beanDaily.volumeUSD = bean.volumeUSD;
   beanDaily.liquidityUSD = bean.liquidityUSD;
-  beanDaily.price = bean.price;
   beanDaily.supply = bean.supply;
   beanDaily.marketCap = bean.marketCap;
   beanDaily.lockedBeans = bean.lockedBeans;

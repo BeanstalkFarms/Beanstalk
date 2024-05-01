@@ -10,8 +10,9 @@ import React from 'react';
 import Supply from '~/components/Analytics/Bean/Supply';
 import VolumeChart from '~/components/Analytics/Bean/VolumeChart';
 import useTabs from '~/hooks/display/useTabs';
-import Price from './Price';
+import Price from './PriceInstant';
 import LiquiditySupplyRatio from './LiquiditySupplyRatio';
+import PriceWeighted from './PriceWeighted';
 
 const SLUGS = [
   'price',
@@ -43,6 +44,7 @@ const BeanAnalytics: FC<{}> = () => {
         <Tab label="Crosses" />
         <Tab label="Inst. deltaB" />
         <Tab label="TWA deltaB" />
+        <Tab label="TWA Bean Price" />
         <Tab label="L2SR" />
       </Tabs>
       {/* 
@@ -59,7 +61,8 @@ const BeanAnalytics: FC<{}> = () => {
       {tab === 5 && <Crosses height={CHART_HEIGHT} />}
       {tab === 6 && <DeltaBInstant height={CHART_HEIGHT} />}
       {tab === 7 && <DeltaBWeighted height={CHART_HEIGHT} />}
-      {tab === 8 && <LiquiditySupplyRatio height={CHART_HEIGHT} />}
+      {tab === 8 && <PriceWeighted height={CHART_HEIGHT} />}
+      {tab === 9 && <LiquiditySupplyRatio height={CHART_HEIGHT} />}
     </Card>
   );
 };

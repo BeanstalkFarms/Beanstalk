@@ -1,5 +1,5 @@
 import {
-  SeasonalPriceDocument,
+  SeasonalInstantPriceDocument,
   useFarmerSiloAssetSnapshotsQuery,
   useFarmerSiloRewardsQuery,
 } from '~/generated/graphql';
@@ -25,7 +25,10 @@ const useFarmerSiloHistory = (
     skip: !account,
     fetchPolicy: 'cache-and-network',
   });
-  const priceQuery = useSeasonsQuery(SeasonalPriceDocument, SeasonRange.ALL);
+  const priceQuery = useSeasonsQuery(
+    SeasonalInstantPriceDocument,
+    SeasonRange.ALL
+  );
 
   /// Interpolate
   const depositData = useInterpolateDeposits(
