@@ -6,6 +6,7 @@ import { loadFertilizer } from "./utils/Fertilizer";
 import { loadFertilizerYield } from "./utils/FertilizerYield";
 import {
   loadSilo,
+  loadSiloAsset,
   loadSiloHourlySnapshot,
   loadSiloYield,
   loadTokenYield,
@@ -141,14 +142,16 @@ export function updateSiloVAPYs(t: i32, timestamp: BigInt, window: i32): void {
 
     let staticSeeds: Array<BigDecimal | null> = [];
 
-    // TODO:
-    // Maintain a list of all time whitelisted tokens on the silo
-    // Use those to look up each potential silo asset
-    // Handle a null case where nothing is deposited yet
+    // All tokens that are/could have been deposited in the silo
+    const siloTokens = siloYield.whitelistedTokens.concat(silo.dewhitelistedTokens);
+    const depositedAssets: SiloAsset[] = [];
+    for (let i = 0; i < siloTokens.length; ++i) {
+      depositedAssets.push(loadSiloAsset(BEANSTALK, Address.fromString(siloTokens[i])));
+    }
 
-    // TODO: need a solution for this that doesnt use .load(), for now deploying with it disabled
-    const depositedAssets: SiloAsset[] = store.get;
-    // const depositedAssets = silo.assets.load().filter((s) => s.depositedBDV != ZERO_BI);
+    // .load() is not supported on graph-node v0.30.0. Instead the above derivation of depositedAssets is used
+    // const depositedAssets = silo.assets.load();
+
     for (let i = 0; i < whitelistSettings.length; ++i) {
       // Get the total deposited bdv of this asset. Remove whitelsited assets from the list as they are encountered
       const depositedIndex = SiloAsset_findIndex_token(depositedAssets, whitelistSettings[i].id.toHexString());

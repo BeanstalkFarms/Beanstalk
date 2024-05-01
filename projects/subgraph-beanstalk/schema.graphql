@@ -1716,13 +1716,13 @@ type WhitelistToken implements SiloEvent @entity(immutable: true) {
   "Token address whitelisted"
   token: String!
   "Stalk per BDV"
-  stalk: BigInt!
+  stalk: BigInt
   "Seeds per BDV"
-  seeds: BigInt!
+  seeds: BigInt
   "Stalk earned per season"
   stalkPerSeason: BigInt
   "Selector for token"
-  selector: String!
+  selector: String
   " Block number of this event "
   blockNumber: BigInt!
   " Timestamp of this event "

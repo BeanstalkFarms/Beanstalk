@@ -144,6 +144,13 @@ describe("APY Calculations", () => {
       let silo = loadSilo(BEANSTALK);
       silo.stalk = BigInt.fromString("161540879000000");
       silo.beanToMaxLpGpPerBdvRatio = BigInt.fromString("33000000000000000000");
+      silo.whitelistedTokens = [
+        BEAN_ERC20.toHexString(),
+        BEAN_WETH_CP2_WELL.toHexString(),
+        UNRIPE_BEAN.toHexString(),
+        UNRIPE_BEAN_3CRV.toHexString()
+      ];
+      silo.dewhitelistedTokens = [BEAN_3CRV.toHexString()];
       silo.save();
 
       setSeason(20000);
@@ -203,12 +210,7 @@ describe("APY Calculations", () => {
       // bean3crv intentionally not whitelisted. It should still be included in non-gauge deposited bdv
       let siloYield = loadSiloYield(20000, 720);
       siloYield.beansPerSeasonEMA = BigDecimal.fromString("100");
-      siloYield.whitelistedTokens = [
-        BEAN_ERC20.toHexString(),
-        BEAN_WETH_CP2_WELL.toHexString(),
-        UNRIPE_BEAN.toHexString(),
-        UNRIPE_BEAN_3CRV.toHexString()
-      ];
+      siloYield.whitelistedTokens = silo.whitelistedTokens;
       siloYield.save();
 
       /// Actual entity-based calculation here
