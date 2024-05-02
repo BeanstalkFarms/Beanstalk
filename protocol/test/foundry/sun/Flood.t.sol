@@ -135,9 +135,6 @@ contract FloodTest is TestHelper {
     }
 
     function testOneSop() public {
-        // verify sop well is not initalized in storage prior to sop.
-        assertTrue(bs.getSopWell() == address(0));
-
         // setDeltaBforWell(1000e6, C.BEAN_ETH_WELL, C.WETH);
 
         setReserves(C.BEAN_ETH_WELL, 1000000e6, 1100e18);
@@ -150,19 +147,18 @@ contract FloodTest is TestHelper {
         season.rainSunrise();
 
         Storage.Season memory s = seasonGetters.time();
-        IWell well = IWell(bs.getSopWell());
 
         assertTrue(s.lastSop == s.rainStart);
         assertTrue(s.lastSopSeason == s.current);
         // check weth balance of beanstalk
         assertEq(IERC20(C.WETH).balanceOf(BEANSTALK), 51191151829696906017);
         // after the swap, the composition of the pools are
-        uint256[] memory balances = well.getReserves();
+        uint256[] memory balances = IWell(C.BEAN_ETH_WELL).getReserves();
         assertTrue(balances[0] == 1048808848170);
         assertTrue(balances[1] == 1048808848170303093983);
 
         // tracks user plenty before update
-        uint256 userPlenty = bs.balanceOfPlenty(users[1]);
+        uint256 userPlenty = bs.balanceOfPlenty(users[1], C.BEAN_ETH_WELL);
         assertEq(userPlenty, 25595575914848452999);
 
         // tracks user plenty after update
@@ -176,7 +172,7 @@ contract FloodTest is TestHelper {
         // assertTrue(userSop.plentyPerRoot == 2558534177813719812); // update to per-well
 
         // each user should get half of the eth gained
-        assertTrue(bs.balanceOfPlenty(users[2]) == 25595575914848452999);
+        assertTrue(bs.balanceOfPlenty(users[2], C.BEAN_ETH_WELL) == 25595575914848452999);
 
         // tracks user2 plenty after update
         bs.mow(users[2], C.BEAN);
@@ -190,13 +186,9 @@ contract FloodTest is TestHelper {
         // claims user plenty
         bs.mow(users[2], C.BEAN);
         vm.prank(users[2]);
-        bs.claimPlenty();
-        assertTrue(bs.balanceOfPlenty(users[2]) == 0);
+        bs.claimPlenty(C.BEAN_ETH_WELL);
+        assertTrue(bs.balanceOfPlenty(users[2], C.BEAN_ETH_WELL) == 0);
         assertEq(IERC20(C.WETH).balanceOf(users[2]), 25595575914848452999);
-
-        // changes the sop well
-        assertTrue(bs.getSopWell() != address(0));
-        assertTrue(bs.getSopWell() == C.BEAN_ETH_WELL);
     }
 
     function testMultipleSop() public {
@@ -219,8 +211,7 @@ contract FloodTest is TestHelper {
 
         // sops p > 1
         Storage.Season memory s = seasonGetters.time();
-        IWell well = IWell(bs.getSopWell());
-        uint256[] memory reserves = well.getReserves();
+        uint256[] memory reserves = IWell(C.BEAN_ETH_WELL).getReserves();
 
         assertTrue(s.lastSop == s.rainStart);
         assertTrue(s.lastSopSeason == s.current);
@@ -230,7 +221,7 @@ contract FloodTest is TestHelper {
         assertTrue(reserves[1] == 1074099498644727997417);
 
         // tracks user plenty before update
-        uint256 userPlenty = bs.balanceOfPlenty(users[1]);
+        uint256 userPlenty = bs.balanceOfPlenty(users[1], C.BEAN_ETH_WELL);
         assertEq(userPlenty, 38544532214605630101);
 
         // tracks user plenty after update
@@ -245,7 +236,7 @@ contract FloodTest is TestHelper {
         // assertTrue(userSop.plentyPerRoot == 3852912056637907847); // update to per-well
 
         // tracks user2 plenty
-        uint256 user2Plenty = bs.balanceOfPlenty(users[2]);
+        uint256 user2Plenty = bs.balanceOfPlenty(users[2], C.BEAN_ETH_WELL);
         assertEq(user2Plenty, 38547120970363278477);
 
         // tracks user2 plenty after update
@@ -260,9 +251,6 @@ contract FloodTest is TestHelper {
     }
 
     function testWithCurrentBalances() public {
-        // expect sop well to be zero
-        assertEq(bs.getSopWell(), address(0));
-
         setReserves(C.BEAN_ETH_WELL, 1_000_000e6, 1_100e18);
         updateMockPumpUsingWellReserves(C.BEAN_ETH_WELL);
 
@@ -276,8 +264,7 @@ contract FloodTest is TestHelper {
 
         // sops p > 1
         Storage.Season memory s = seasonGetters.time();
-        IWell well = IWell(bs.getSopWell());
-        uint256[] memory reserves = well.getReserves();
+        uint256[] memory reserves = IWell(C.BEAN_ETH_WELL).getReserves();
 
         assertTrue(s.lastSop == s.rainStart);
         assertTrue(s.lastSopSeason == s.current);
@@ -287,7 +274,7 @@ contract FloodTest is TestHelper {
         assertTrue(reserves[1] == 1048808848170303093983);
 
         // tracks user plenty before update
-        uint256 userPlenty = bs.balanceOfPlenty(users[1]);
+        uint256 userPlenty = bs.balanceOfPlenty(users[1], C.BEAN_ETH_WELL);
         assertEq(userPlenty, 25595575914848452999);
 
         // tracks user plenty after update
@@ -301,7 +288,7 @@ contract FloodTest is TestHelper {
         // assertTrue(userSop.plentyPerRoot == 2558534177813719812); // update to per-well
 
         // tracks user2 plenty
-        uint256 user2Plenty = bs.balanceOfPlenty(users[2]);
+        uint256 user2Plenty = bs.balanceOfPlenty(users[2], C.BEAN_ETH_WELL);
         assertEq(user2Plenty, 25595575914848452999);
 
         // tracks user2 plenty after update
@@ -317,13 +304,9 @@ contract FloodTest is TestHelper {
         // claims user plenty
         bs.mow(users[2], C.BEAN_ETH_WELL);
         vm.prank(users[2]);
-        bs.claimPlenty();
-        assertTrue(bs.balanceOfPlenty(users[2]) == 0);
+        bs.claimPlenty(C.BEAN_ETH_WELL);
+        assertTrue(bs.balanceOfPlenty(users[2], C.BEAN_ETH_WELL) == 0);
         assertEq(IERC20(C.WETH).balanceOf(users[2]), 25595575914848452999);
-
-        // changes the sop well
-        assertTrue(bs.getSopWell() != address(0));
-        assertTrue(bs.getSopWell() == C.BEAN_ETH_WELL);
     }
 
     //////////// Helpers ////////////

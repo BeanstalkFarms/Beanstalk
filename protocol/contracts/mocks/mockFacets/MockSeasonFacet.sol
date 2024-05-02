@@ -45,7 +45,9 @@ interface ResetPool {
 
 interface IMockPump {
     function update(uint256[] memory _reserves, bytes memory) external;
+
     function update(address well, uint256[] memory _reserves, bytes memory) external;
+
     function readInstantaneousReserves(
         address well,
         bytes memory data
@@ -119,7 +121,7 @@ contract MockSeasonFacet is SeasonFacet {
         s.season.sunriseBlock = uint32(block.number);
         // update last snapshot in beanstalk.
         stepOracle();
-        handleRain(2, C.BEAN_ETH_WELL);
+        handleRain(2);
     }
 
     function rainSiloSunrise(uint256 amount) public {
@@ -561,7 +563,7 @@ contract MockSeasonFacet is SeasonFacet {
     }
 
     function mockStartSop() internal {
-        handleRain(3, C.BEAN_ETH_WELL);
+        handleRain(3);
     }
 
     function mockSetSopWell(address well) external {

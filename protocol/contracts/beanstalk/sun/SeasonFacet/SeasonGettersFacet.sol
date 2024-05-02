@@ -317,10 +317,6 @@ contract SeasonGettersFacet {
         return well;
     }
 
-    function getSopWell() external view returns (address) {
-        return s.sopWell;
-    }
-
     //////////////////// CASES ////////////////////
 
     function getCases() external view returns (bytes32[144] memory cases) {

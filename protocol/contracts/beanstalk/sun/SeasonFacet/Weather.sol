@@ -14,6 +14,7 @@ import {IWell, Call} from "contracts/interfaces/basin/IWell.sol";
 import {IInstantaneousPump} from "contracts/interfaces/basin/pumps/IInstantaneousPump.sol";
 import {SignedSafeMath} from "@openzeppelin/contracts/math/SignedSafeMath.sol";
 import {LibWhitelistedTokens} from "contracts/libraries/Silo/LibWhitelistedTokens.sol";
+import {console} from "forge-std/console.sol";
 
 /**
  * @title Weather
@@ -79,9 +80,9 @@ contract Weather is Sun {
             return 9; // Reasonably low
         }
         // Calculate Case Id
-        (uint256 caseId, address sopWell) = LibEvaluate.evaluateBeanstalk(deltaB, beanSupply);
+        (uint256 caseId, ) = LibEvaluate.evaluateBeanstalk(deltaB, beanSupply);
         updateTemperatureAndBeanToMaxLpGpPerBdvRatio(caseId);
-        handleRain(caseId, sopWell);
+        handleRain(caseId);
         return caseId;
     }
 
@@ -151,7 +152,7 @@ contract Weather is Sun {
      * Pod Rate is less than 5%, the Farm is Oversaturated. If it is Oversaturated
      * for a Season, each Season in which it continues to be Oversaturated, it Floods.
      */
-    function handleRain(uint256 caseId, address well) internal {
+    function handleRain(uint256 caseId) internal {
         // cases % 36  3-8 represent the case where the pod rate is less than 5% and P > 1.
         if (caseId.mod(36) < 3 || caseId.mod(36) > 8) {
             if (s.season.raining) {
@@ -216,8 +217,12 @@ contract Weather is Sun {
 
         uint256 sopBeans = uint256(newBeans);
 
+        // TODO: pre-calc total amount of beans to mint and mint them all at once
+        C.bean().mint(address(this), sopBeans);
+
         // Approve and Swap Beans for the non-bean token of the SOP well.
         C.bean().approve(well, sopBeans);
+        console.log("approved, now swapping");
         uint256 amountOut = IWell(well).swapFrom(
             C.bean(),
             sopToken,
