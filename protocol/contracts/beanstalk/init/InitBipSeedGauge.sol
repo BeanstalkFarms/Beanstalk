@@ -142,7 +142,7 @@ contract InitBipSeedGauge is Weather, InitWhitelistStatuses {
      * @notice initalizes the average grown stalk per BDV, based on the total BDV.
      */
     function initializeAverageGrownStalkPerBdv(uint256 totalBdv) internal view returns (uint128) {
-        uint256 averageGrownStalkPerBdv = s.s.stalk.div(totalBdv).sub(10000);
+        uint256 averageGrownStalkPerBdv = s.s.stalk.div(totalBdv) - 10000;
         return uint128(averageGrownStalkPerBdv.mul(PRECISION).div(TARGET_SEASONS_TO_CATCHUP));
     }
 }

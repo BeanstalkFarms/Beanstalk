@@ -574,8 +574,8 @@ contract Storage {
 struct AppStorage {
     uint8 deprecated_index;
     int8[32] deprecated_cases;
-    bool paused; // ────────┐ 1
-    uint128 pausedAt; // ───┘ 16 (17/32)
+    bool paused;
+    uint256 pausedAt;
     Storage.Season season;
     Storage.Contracts c;
     Storage.Field f;

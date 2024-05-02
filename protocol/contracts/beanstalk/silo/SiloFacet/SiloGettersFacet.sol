@@ -7,11 +7,9 @@ pragma experimental ABIEncoderV2;
 
 import {AppStorage, Storage, Account} from "contracts/beanstalk/AppStorage.sol";
 import {LibLegacyTokenSilo} from "contracts/libraries/Silo/LibLegacyTokenSilo.sol";
-import {LibSafeMath128} from "contracts/libraries/LibSafeMath128.sol";
 import {LibGerminate} from "contracts/libraries/Silo/LibGerminate.sol";
 import {ReentrancyGuard} from "contracts/beanstalk/ReentrancyGuard.sol";
 import {LibTokenSilo} from "contracts/libraries/Silo/LibTokenSilo.sol";
-import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
 import {LibBytes} from "contracts/libraries/LibBytes.sol";
 import {LibSilo} from "contracts/libraries/Silo/LibSilo.sol";
 import {C} from "contracts/C.sol";
@@ -21,9 +19,6 @@ import {C} from "contracts/C.sol";
  * @title SiloGettersFacet contains view functions related to the silo.
  **/
 contract SiloGettersFacet is ReentrancyGuard {
-    using SafeMath for uint256;
-    using LibSafeMath128 for uint128;
-
     /**
      * @dev Stores account-level Season of Plenty balances.
      *
@@ -192,9 +187,8 @@ contract SiloGettersFacet is ReentrancyGuard {
      */
     function getTotalGerminatingStalk() external view returns (uint256) {
         return
-            s.unclaimedGerminating[s.season.current].stalk.add(
-                s.unclaimedGerminating[s.season.current - 1].stalk
-            );
+            s.unclaimedGerminating[s.season.current].stalk +
+            s.unclaimedGerminating[s.season.current - 1].stalk;
     }
 
     /**
@@ -221,14 +215,14 @@ contract SiloGettersFacet is ReentrancyGuard {
      */
     function getTotalGerminatingAmount(address token) external view returns (uint256) {
         return
-            s.oddGerminating.deposited[token].amount.add(s.evenGerminating.deposited[token].amount);
+            s.oddGerminating.deposited[token].amount + s.evenGerminating.deposited[token].amount;
     }
 
     /**
      * @notice gets the total amount of bdv germinating for a given `token`.
      */
     function getTotalGerminatingBdv(address token) external view returns (uint256) {
-        return s.oddGerminating.deposited[token].bdv.add(s.evenGerminating.deposited[token].bdv);
+        return s.oddGerminating.deposited[token].bdv + s.evenGerminating.deposited[token].bdv;
     }
 
     /**
@@ -292,7 +286,7 @@ contract SiloGettersFacet is ReentrancyGuard {
             s.a[account].lastUpdate,
             s.season.current
         );
-        return s.a[account].s.stalk.add(germinatingStalk).add(balanceOfEarnedStalk(account));
+        return s.a[account].s.stalk + germinatingStalk + balanceOfEarnedStalk(account);
     }
 
     /**
@@ -346,7 +340,7 @@ contract SiloGettersFacet is ReentrancyGuard {
             s.a[account].lastUpdate,
             s.season.current
         );
-        return s.a[account].roots.add(germinatingRoots);
+        return s.a[account].roots + germinatingRoots;
     }
 
     /**
@@ -391,8 +385,8 @@ contract SiloGettersFacet is ReentrancyGuard {
                 s.a[account].lastUpdate,
                 s.season.current
             );
-        uint256 accountStalk = s.a[account].s.stalk.add(germinatingStalk);
-        uint256 accountRoots = s.a[account].roots.add(germinatingRoots);
+        uint256 accountStalk = s.a[account].s.stalk + germinatingStalk;
+        uint256 accountRoots = s.a[account].roots + germinatingRoots;
         beans = LibSilo._balanceOfEarnedBeans(accountStalk, accountRoots);
     }
 
@@ -403,7 +397,7 @@ contract SiloGettersFacet is ReentrancyGuard {
      * 1 Bean => 1 Stalk. See {C-getStalkPerBean}.
      */
     function balanceOfEarnedStalk(address account) public view returns (uint256) {
-        return balanceOfEarnedBeans(account).mul(C.STALK_PER_BEAN);
+        return balanceOfEarnedBeans(account) * C.STALK_PER_BEAN;
     }
 
     /**
@@ -500,7 +494,7 @@ contract SiloGettersFacet is ReentrancyGuard {
      * kept for legacy reasons.
      */
     function seasonToStem(address token, uint32 season) external view returns (int96 stem) {
-        uint256 seedsPerBdv = getLegacySeedsPerToken(token).mul(1e6);
+        uint256 seedsPerBdv = getLegacySeedsPerToken(token) * 1e6;
         stem = LibLegacyTokenSilo.seasonToStem(seedsPerBdv, season);
     }
 

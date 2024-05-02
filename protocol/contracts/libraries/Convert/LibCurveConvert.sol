@@ -3,7 +3,6 @@
 pragma solidity ^0.8.20;
 pragma experimental ABIEncoderV2;
 
-import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
 import {ICurvePool} from "contracts/interfaces/ICurve.sol";
 import {LibAppStorage, AppStorage} from "../LibAppStorage.sol";
 import {LibConvertData} from "./LibConvertData.sol";
@@ -16,7 +15,6 @@ import {C} from "contracts/C.sol";
  * in the direction of the Peg.
  **/
 library LibCurveConvert {
-    using SafeMath for uint256;
     using LibConvertData for bytes;
 
     //////////////////// GETTERS ////////////////////
@@ -31,7 +29,7 @@ library LibCurveConvert {
         uint256[2] memory balances = ICurvePool(pool).get_balances();
         uint256 xp1 = _getBeansAtPeg(pool, balances);
         if (xp1 <= balances[0]) return 0;
-        beans = xp1.sub(balances[0]);
+        beans = xp1 - balances[0];
     }
 
     /**

@@ -8,7 +8,6 @@ pragma experimental ABIEncoderV2;
 import {MerkleProof} from "@openzeppelin/contracts/cryptography/MerkleProof.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
-import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
 import {IBean} from "contracts/interfaces/IBean.sol";
 import {LibDiamond} from "contracts/libraries/LibDiamond.sol";
 import {LibUnripe} from "contracts/libraries/LibUnripe.sol";
@@ -32,7 +31,6 @@ import {LibTractor} from "contracts/libraries/LibTractor.sol";
 contract UnripeFacet is Invariable, ReentrancyGuard {
     using SafeERC20 for IERC20;
     using LibTransfer for IERC20;
-    using SafeMath for uint256;
 
     /**
      * @notice Emitted when a new unripe token is added to Beanstalk.
@@ -265,9 +263,9 @@ contract UnripeFacet is Invariable, ReentrancyGuard {
     function getUnderlyingPerUnripeToken(
         address unripeToken
     ) external view returns (uint256 underlyingPerToken) {
-        underlyingPerToken = s.u[unripeToken].balanceOfUnderlying.mul(LibUnripe.DECIMALS).div(
-            IERC20(unripeToken).totalSupply()
-        );
+        underlyingPerToken =
+            (s.u[unripeToken].balanceOfUnderlying * LibUnripe.DECIMALS) /
+            IERC20(unripeToken).totalSupply();
     }
 
     /**

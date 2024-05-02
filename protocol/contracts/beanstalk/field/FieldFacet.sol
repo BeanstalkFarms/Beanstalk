@@ -6,14 +6,11 @@ pragma solidity ^0.8.20;
 pragma experimental ABIEncoderV2;
 
 import {C} from "contracts/C.sol";
-import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
 import {SafeCast} from "@openzeppelin/contracts/utils/SafeCast.sol";
 import { UD60x18 } from "@prb/math/src/UD60x18.sol";
 import {LibTractor} from "contracts/libraries/LibTractor.sol";
 import {LibTransfer} from "contracts/libraries/Token/LibTransfer.sol";
 import {LibDibbler} from "contracts/libraries/LibDibbler.sol";
-import {LibSafeMath32} from "contracts/libraries/LibSafeMath32.sol";
-import {LibSafeMath128} from "contracts/libraries/LibSafeMath128.sol";
 import {ReentrancyGuard} from "../ReentrancyGuard.sol";
 import {Invariable} from "contracts/beanstalk/Invariable.sol";
 
@@ -23,10 +20,7 @@ import {Invariable} from "contracts/beanstalk/Invariable.sol";
  * @notice The Field is where Beans are Sown and Pods are Harvested.
  */
 contract FieldFacet is Invariable, ReentrancyGuard {
-    using SafeMath for uint256;
     using UD60x18 for uint256;
-    using LibSafeMath32 for uint32;
-    using LibSafeMath128 for uint128;
 
     /**
      * @notice Emitted from {LibDibbler.sow} when an `account` creates a plot.
@@ -122,7 +116,7 @@ contract FieldFacet is Invariable, ReentrancyGuard {
     ) internal returns (uint256 pods) {
         beans = LibTransfer.burnToken(C.bean(), beans, LibTractor._user(), mode);
         pods = LibDibbler.sow(beans, _morningTemperature, LibTractor._user(), peg);
-        s.f.beanSown = s.f.beanSown + SafeCast.toUint128(beans); // SafeMath not needed
+        s.f.beanSown = s.f.beanSown + SafeCast.toUint128(beans);
     }
 
     //////////////////// HARVEST ////////////////////
@@ -158,9 +152,9 @@ contract FieldFacet is Invariable, ReentrancyGuard {
             // the current harvestable index.
             require(plots[i] < s.f.harvestable, "Field: Plot not Harvestable");
             uint256 harvested = _harvestPlot(LibTractor._user(), plots[i]);
-            beansHarvested = beansHarvested.add(harvested);
+            beansHarvested = beansHarvested + harvested;
         }
-        s.f.harvested = s.f.harvested.add(beansHarvested);
+        s.f.harvested = s.f.harvested + beansHarvested;
         emit Harvest(LibTractor._user(), plots, beansHarvested);
     }
 
@@ -179,7 +173,7 @@ contract FieldFacet is Invariable, ReentrancyGuard {
         // Calculate how many Pods are harvestable.
         // The upstream _harvest function checks that at least some Pods
         // are harvestable.
-        harvestablePods = s.f.harvestable.sub(index);
+        harvestablePods = s.f.harvestable - index;
         delete s.a[account].field.plots[index];
 
         // Cancel any active Pod Listings active for this Plot.
@@ -196,7 +190,7 @@ contract FieldFacet is Invariable, ReentrancyGuard {
         }
 
         // Create a new Plot with remaining Pods.
-        s.a[account].field.plots[index.add(harvestablePods)] = pods.sub(harvestablePods);
+        s.a[account].field.plots[index + harvestablePods] = pods - harvestablePods;
     }
 
     //////////////////// GETTERS ////////////////////
@@ -220,7 +214,7 @@ contract FieldFacet is Invariable, ReentrancyGuard {
      * currently Harvestable but have not yet been Harvested.
      */
     function totalPods() public view returns (uint256) {
-        return s.f.pods.sub(s.f.harvested);
+        return s.f.pods - s.f.harvested;
     }
 
     /**
@@ -237,14 +231,14 @@ contract FieldFacet is Invariable, ReentrancyGuard {
      * but that haven’t yet been claimed via the `harvest()` function.
      */
     function totalHarvestable() public view returns (uint256) {
-        return s.f.harvestable.sub(s.f.harvested);
+        return s.f.harvestable - s.f.harvested;
     }
 
     /**
      * @notice Returns the number of Pods that are not yet Harvestable. Also known as the Pod Line.
      */
     function totalUnharvestable() public view returns (uint256) {
-        return s.f.pods.sub(s.f.harvestable);
+        return s.f.pods - s.f.harvestable;
     }
 
     /**
@@ -281,7 +275,7 @@ contract FieldFacet is Invariable, ReentrancyGuard {
         else {
             soil = LibDibbler.scaleSoilUp(
                 uint256(s.f.soil), // max soil offered this Season, reached when `t >= 25`
-                uint256(s.w.t).mul(LibDibbler.TEMPERATURE_PRECISION), // max temperature
+                uint256(s.w.t) * LibDibbler.TEMPERATURE_PRECISION, // max temperature
                 _morningTemperature // temperature adjusted by number of blocks since Sunrise
             );
         }
@@ -305,7 +299,7 @@ contract FieldFacet is Invariable, ReentrancyGuard {
         return
             LibDibbler.scaleSoilUp(
                 uint256(s.f.soil), // min soil
-                uint256(s.w.t).mul(LibDibbler.TEMPERATURE_PRECISION), // max temperature
+                uint256(s.w.t) * LibDibbler.TEMPERATURE_PRECISION, // max temperature
                 LibDibbler.morningTemperature() // temperature adjusted by number of blocks since Sunrise
             );
     }
@@ -327,7 +321,7 @@ contract FieldFacet is Invariable, ReentrancyGuard {
      * precision needed for the Morning Auction functionality.
      */
     function maxTemperature() external view returns (uint256) {
-        return uint256(s.w.t).mul(LibDibbler.TEMPERATURE_PRECISION);
+        return uint256(s.w.t) * LibDibbler.TEMPERATURE_PRECISION;
     }
 
     //////////////////// GETTERS: PODS ////////////////////

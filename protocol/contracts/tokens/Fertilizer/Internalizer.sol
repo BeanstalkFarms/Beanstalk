@@ -9,8 +9,6 @@ import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "./Fertilizer1155.sol";
-import "contracts/libraries/LibSafeMath32.sol";
-import "contracts/libraries/LibSafeMath128.sol";
 
 /**
  * @author publius
@@ -18,7 +16,6 @@ import "contracts/libraries/LibSafeMath128.sol";
 
 contract Internalizer is OwnableUpgradeable, ReentrancyGuardUpgradeable, Fertilizer1155 {
     using SafeERC20Upgradeable for IERC20;
-    using LibSafeMath128 for uint128;
 
     struct Balance {
         uint128 amount;
@@ -84,6 +81,6 @@ contract Internalizer is OwnableUpgradeable, ReentrancyGuardUpgradeable, Fertili
             // Because we know fromBalance >= amount, we know amount < type(uint128).max
             _balances[id][from].amount = fromBalance - _amount;
         }
-        _balances[id][to].amount = _balances[id][to].amount.add(_amount);
+        _balances[id][to].amount = _balances[id][to].amount + _amount;
     }
 }

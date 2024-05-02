@@ -7,7 +7,6 @@ pragma experimental ABIEncoderV2;
 
 import {LibEthUsdOracle} from "./LibEthUsdOracle.sol";
 import {LibWstethUsdOracle} from "./LibWstethUsdOracle.sol";
-import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
 import {C} from "contracts/C.sol";
 
 /**
@@ -17,7 +16,6 @@ import {C} from "contracts/C.sol";
  * - ETH/USD price
  **/
 library LibUsdOracle {
-    using SafeMath for uint256;
 
     function getUsdPrice(address token) internal view returns (uint256) {
         return getUsdPrice(token, 0);
@@ -34,12 +32,12 @@ library LibUsdOracle {
         if (token == C.WETH) {
             uint256 ethUsdPrice = LibEthUsdOracle.getEthUsdPrice(lookback);
             if (ethUsdPrice == 0) return 0;
-            return uint256(1e24).div(ethUsdPrice);
+            return uint256(1e24) / ethUsdPrice;
         }
         if (token == C.WSTETH) {
             uint256 wstethUsdPrice = LibWstethUsdOracle.getWstethUsdPrice(lookback);
             if (wstethUsdPrice == 0) return 0;
-            return uint256(1e24).div(wstethUsdPrice);
+            return uint256(1e24) / wstethUsdPrice;
         }
         revert("Oracle: Token not supported.");
     }

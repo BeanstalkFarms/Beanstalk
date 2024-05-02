@@ -12,8 +12,6 @@ import "./Listing.sol";
  **/
 
 contract Order is Listing {
-    using SafeMath for uint256;
-
     struct PodOrder {
         address account;
         uint24 pricePerPod;
@@ -91,20 +89,18 @@ contract Order is Listing {
     ) internal {
         require(amount >= o.minFillAmount, "Marketplace: Fill must be >= minimum amount.");
         require(
-            s.a[LibTractor._user()].field.plots[index] >= (start.add(amount)),
+            s.a[LibTractor._user()].field.plots[index] >= (start + amount),
             "Marketplace: Invalid Plot."
         );
         require(
-            index.add(start).add(amount).sub(s.f.harvestable) <= o.maxPlaceInLine,
+            index + start + amount - s.f.harvestable <= o.maxPlaceInLine,
             "Marketplace: Plot too far in line."
         );
 
         bytes32 id = createOrderId(o.account, o.pricePerPod, o.maxPlaceInLine, o.minFillAmount);
-        uint256 costInBeans = amount.mul(o.pricePerPod).div(1000000);
-        s.podOrders[id] = s.podOrders[id].sub(
-            costInBeans,
-            "Marketplace: Not enough beans in order."
-        );
+        uint256 costInBeans = (amount * o.pricePerPod) / 1000000;
+        require(s.podOrders[id] >= costInBeans, "Marketplace: Not enough beans in order.");
+        s.podOrders[id] = s.podOrders[id] - costInBeans
 
         LibTransfer.sendToken(C.bean(), costInBeans, LibTractor._user(), mode);
 
@@ -150,5 +146,4 @@ contract Order is Listing {
             id = keccak256(abi.encodePacked(account, pricePerPod, maxPlaceInLine, minFillAmount));
         else id = keccak256(abi.encodePacked(account, pricePerPod, maxPlaceInLine));
     }
-
 }

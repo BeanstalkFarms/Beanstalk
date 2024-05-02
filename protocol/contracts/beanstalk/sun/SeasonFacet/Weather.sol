@@ -4,15 +4,13 @@ pragma solidity ^0.8.20;
 pragma experimental ABIEncoderV2;
 
 import {LibEvaluate} from "contracts/libraries/LibEvaluate.sol";
-import {LibSafeMath128} from "contracts/libraries/LibSafeMath128.sol";
 import {LibCases} from "contracts/libraries/LibCases.sol";
-import {Sun, SafeMath, C} from "./Sun.sol";
+import {Sun, C} from "./Sun.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {IBeanstalkWellFunction} from "contracts/interfaces/basin/IBeanstalkWellFunction.sol";
 import {LibWell} from "contracts/libraries/Well/LibWell.sol";
 import {IWell, Call} from "contracts/interfaces/basin/IWell.sol";
 import {IInstantaneousPump} from "contracts/interfaces/basin/pumps/IInstantaneousPump.sol";
-import {SignedSafeMath} from "@openzeppelin/contracts/math/SignedSafeMath.sol";
 
 /**
  * @title Weather
@@ -20,10 +18,6 @@ import {SignedSafeMath} from "@openzeppelin/contracts/math/SignedSafeMath.sol";
  * @notice Weather controls the Temperature and Grown Stalk to LP on the Farm.
  */
 contract Weather is Sun {
-    using SafeMath for uint256;
-    using SignedSafeMath for int256;
-    using LibSafeMath128 for uint128;
-
     uint128 internal constant MAX_BEAN_LP_GP_PER_BDV_RATIO = 100e18;
 
     /**
@@ -128,16 +122,16 @@ contract Weather is Sun {
                 bL = -int80(beanToMaxLpGpPerBdvRatio);
                 s.seedGauge.beanToMaxLpGpPerBdvRatio = 0;
             } else {
-                s.seedGauge.beanToMaxLpGpPerBdvRatio = beanToMaxLpGpPerBdvRatio.sub(uint128(-bL));
+                s.seedGauge.beanToMaxLpGpPerBdvRatio = beanToMaxLpGpPerBdvRatio - uint128(-bL);
             }
         } else {
-            if (beanToMaxLpGpPerBdvRatio.add(uint128(bL)) >= MAX_BEAN_LP_GP_PER_BDV_RATIO) {
+            if (beanToMaxLpGpPerBdvRatio + uint128(bL) >= MAX_BEAN_LP_GP_PER_BDV_RATIO) {
                 // if (change > 0 && 100e18 - beanToMaxLpGpPerBdvRatio <= bL),
                 // then bL cannot overflow.
-                bL = int80(MAX_BEAN_LP_GP_PER_BDV_RATIO.sub(beanToMaxLpGpPerBdvRatio));
+                bL = int80(MAX_BEAN_LP_GP_PER_BDV_RATIO - beanToMaxLpGpPerBdvRatio);
                 s.seedGauge.beanToMaxLpGpPerBdvRatio = MAX_BEAN_LP_GP_PER_BDV_RATIO;
             } else {
-                s.seedGauge.beanToMaxLpGpPerBdvRatio = beanToMaxLpGpPerBdvRatio.add(uint128(bL));
+                s.seedGauge.beanToMaxLpGpPerBdvRatio = beanToMaxLpGpPerBdvRatio + uint128(bL);
             }
         }
 
@@ -152,7 +146,7 @@ contract Weather is Sun {
      */
     function handleRain(uint256 caseId, address well) internal {
         // cases % 36  3-8 represent the case where the pod rate is less than 5% and P > 1.
-        if (caseId.mod(36) < 3 || caseId.mod(36) > 8) {
+        if (caseId % 36 < 3 || caseId % 36 > 8) {
             if (s.season.raining) {
                 s.season.raining = false;
             }
@@ -198,8 +192,8 @@ contract Weather is Sun {
         // Pay off remaining Pods if any exist.
         if (s.f.harvestable < s.r.pods) {
             newHarvestable = s.r.pods - s.f.harvestable;
-            s.f.harvestable = s.f.harvestable.add(newHarvestable);
-            C.bean().mint(address(this), newHarvestable.add(sopBeans));
+            s.f.harvestable = s.f.harvestable + newHarvestable;
+            C.bean().mint(address(this), newHarvestable + sopBeans);
         } else {
             C.bean().mint(address(this), sopBeans);
         }
@@ -229,9 +223,9 @@ contract Weather is Sun {
      * @dev Allocate `sop token` during a Season of Plenty.
      */
     function rewardSop(uint256 amount) private {
-        s.sops[s.season.rainStart] = s.sops[s.season.lastSop].add(
-            amount.mul(C.SOP_PRECISION).div(s.r.roots)
-        );
+        s.sops[s.season.rainStart] =
+            s.sops[s.season.lastSop] +
+            ((amount * C.SOP_PRECISION) / s.r.roots);
         s.season.lastSop = s.season.rainStart;
         s.season.lastSopSeason = s.season.current;
     }
@@ -272,10 +266,9 @@ contract Weather is Sun {
             .calcReserveAtRatioSwap(currentReserves, beanIndex, ratios, wellFunction.data);
 
         // Calculate the signed Sop beans for the two reserves.
-        int256 lowestSopBeans = int256(instantaneousBeansAtPeg).sub(
-            int256(instantaneousReserves[beanIndex])
-        );
-        int256 currentSopBeans = int256(currentBeansAtPeg).sub(int256(currentReserves[beanIndex]));
+        int256 lowestSopBeans = int256(instantaneousBeansAtPeg) -
+            int256(instantaneousReserves[beanIndex]);
+        int256 currentSopBeans = int256(currentBeansAtPeg) - int256(currentReserves[beanIndex]);
 
         // Use the minimum of the two.
         if (lowestSopBeans > currentSopBeans) {

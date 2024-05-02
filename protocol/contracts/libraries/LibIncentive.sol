@@ -3,7 +3,6 @@
 pragma solidity ^0.8.20;
 pragma experimental ABIEncoderV2;
 
-import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
 import {IBlockBasefee} from "../interfaces/IBlockBasefee.sol";
 import "@openzeppelin/contracts/math/Math.sol";
 import "../C.sol";
@@ -15,8 +14,6 @@ import "../C.sol";
  * and scales the reward up when the Sunrise is called late.
  */
 library LibIncentive {
-    using SafeMath for uint256;
-
     /**
      * @notice Emitted when Beanstalk pays `beans` to `account` as a reward for calling `sunrise()`.
      * @param account The address to which the reward Beans were sent
@@ -83,23 +80,22 @@ library LibIncentive {
         //  - 29K for calculations following the below line, like {fracExp}
         // Max gas which Beanstalk will pay for = 500K.
         uint256 gasUsed = Math.min(
-            initialGasLeft.sub(gasleft()) + SUNRISE_GAS_OVERHEAD,
+            initialGasLeft - gasleft() + SUNRISE_GAS_OVERHEAD,
             MAX_SUNRISE_GAS
         );
 
         // Calculate the current cost in Wei of `gasUsed` gas.
         // {block_basefee()} returns the base fee of the current block in Wei.
         // Adds a buffer for priority fee.
-        uint256 gasCostWei = IBlockBasefee(BASE_FEE_CONTRACT)
-            .block_basefee()
-            .add(PRIORITY_FEE_BUFFER)
-            .mul(gasUsed); // (BASE_FEE
+        uint256 gasCostWei = (IBlockBasefee(BASE_FEE_CONTRACT).block_basefee() +
+            PRIORITY_FEE_BUFFER) * gasUsed;
+        // (BASE_FEE
         // + PRIORITY_FEE_BUFFER)
         // * GAS_USED
 
         // Calculates the Sunrise reward to pay in BEAN.
         uint256 sunriseReward = Math.min(
-            BASE_REWARD + gasCostWei.mul(beanEthPrice).div(1e18), // divide by 1e18 to convert wei to eth
+            BASE_REWARD + gasCostWei * beanEthPrice / 1e18, // divide by 1e18 to convert wei to eth
             MAX_REWARD
         );
 
@@ -233,6 +229,6 @@ library LibIncentive {
     }
 
     function _scaleReward(uint256 beans, uint256 scaler) private pure returns (uint256) {
-        return beans.mul(scaler).div(FRAC_EXP_PRECISION);
+        return beans * scaler / FRAC_EXP_PRECISION;
     }
 }

@@ -5,7 +5,6 @@
 pragma solidity ^0.8.20;
 pragma experimental ABIEncoderV2;
 
-import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
 import {IInstantaneousPump} from "contracts/interfaces/basin/pumps/IInstantaneousPump.sol";
 import {Call, IWell} from "contracts/interfaces/basin/IWell.sol";
 import {IWellFunction} from "contracts/interfaces/basin/IWellFunction.sol";
@@ -17,8 +16,6 @@ import {C} from "contracts/C.sol";
  * @notice contains a function to calulate the BDV of a given Well LP Token
  **/
 library LibWellBdv {
-    using SafeMath for uint256;
-
     uint private constant BEAN_UNIT = 1e6;
 
     /**
@@ -45,10 +42,9 @@ library LibWellBdv {
             reserves,
             wellFunction.data
         );
-        reserves[beanIndex] = reserves[beanIndex].sub(BEAN_UNIT); // remove one Bean
-        uint deltaLPTokenSupply = lpTokenSupplyBefore.sub(
-            IWellFunction(wellFunction.target).calcLpTokenSupply(reserves, wellFunction.data)
-        );
-        _bdv = amount.mul(BEAN_UNIT).div(deltaLPTokenSupply);
+        reserves[beanIndex] = reserves[beanIndex] - BEAN_UNIT; // remove one Bean
+        uint deltaLPTokenSupply = lpTokenSupplyBefore -
+            IWellFunction(wellFunction.target).calcLpTokenSupply(reserves, wellFunction.data);
+        _bdv = (amount * BEAN_UNIT) / deltaLPTokenSupply;
     }
 }

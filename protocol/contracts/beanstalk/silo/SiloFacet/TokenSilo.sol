@@ -19,9 +19,7 @@ import "contracts/libraries/LibTractor.sol";
  * is created. See "Finish Removal".
  */
 contract TokenSilo is Silo {
-    using SafeMath for uint256;
     using SafeCast for uint256;
-    using LibSafeMath32 for uint32;
 
     /**
      * @notice Emitted when `account` adds a single Deposit to the Silo.
@@ -184,7 +182,7 @@ contract TokenSilo is Silo {
                 token,
                 amount,
                 bdvRemoved,
-                initalStalkRemoved.add(grownStalkRemoved)
+                initalStalkRemoved + grownStalkRemoved
             );
         } else {
             // remove deposit from germination, and burn the grown stalk.
@@ -257,7 +255,7 @@ contract TokenSilo is Silo {
 
         // we return the summation of all tokens removed from the silo.
         // to be used in {SiloFacet.withdrawDeposits}.
-        return ar.active.tokens.add(ar.odd.tokens).add(ar.even.tokens);
+        return ar.active.tokens + ar.odd.tokens + ar.even.tokens;
     }
 
     /**
@@ -331,7 +329,7 @@ contract TokenSilo is Silo {
         );
 
         if (germ == LibGerminate.Germinate.NOT_GERMINATING) {
-            LibSilo.transferStalk(sender, recipient, initalStalk.add(grownStalk));
+            LibSilo.transferStalk(sender, recipient, initalStalk + grownStalk);
         } else {
             LibSilo.transferGerminatingStalk(sender, recipient, initalStalk, germ);
             if (grownStalk > 0) {
@@ -404,17 +402,17 @@ contract TokenSilo is Silo {
 
             // if the deposit is germinating, increment germinating bdv and stalk,
             // otherwise increment deposited values.
-            ar.active.tokens = ar.active.tokens.add(amounts[i]);
+            ar.active.tokens = ar.active.tokens + amounts[i];
             if (germ == LibGerminate.Germinate.NOT_GERMINATING) {
-                ar.active.bdv = ar.active.bdv.add(crateBdv);
-                ar.active.stalk = ar.active.stalk.add(crateStalk);
+                ar.active.bdv = ar.active.bdv + crateBdv;
+                ar.active.stalk = ar.active.stalk + crateStalk;
             } else {
                 if (germ == LibGerminate.Germinate.ODD) {
-                    ar.odd.bdv = ar.odd.bdv.add(crateBdv);
-                    ar.odd.stalk = ar.odd.stalk.add(crateStalk);
+                    ar.odd.bdv = ar.odd.bdv + crateBdv;
+                    ar.odd.stalk = ar.odd.stalk + crateStalk;
                 } else {
-                    ar.even.bdv = ar.even.bdv.add(crateBdv);
-                    ar.even.stalk = ar.even.stalk.add(crateStalk);
+                    ar.even.bdv = ar.even.bdv + crateBdv;
+                    ar.even.stalk = ar.even.stalk + crateStalk;
                 }
             }
             bdvs[i] = crateBdv;

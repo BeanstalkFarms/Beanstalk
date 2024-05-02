@@ -4,7 +4,6 @@ pragma solidity ^0.8.20;
 pragma experimental ABIEncoderV2;
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
 import {Math} from "@openzeppelin/contracts/math/Math.sol";
 import {SafeCast} from "@openzeppelin/contracts/utils/SafeCast.sol";
@@ -18,7 +17,6 @@ import {AppStorage, LibAppStorage} from "../LibAppStorage.sol";
  */
 library LibBalance {
     using SafeERC20 for IERC20;
-    using SafeMath for uint256;
     using SafeCast for uint256;
 
     /**
@@ -33,7 +31,7 @@ library LibBalance {
      * @dev Returns the sum of `account`'s Internal and External (ERC20) balance of `token`
      */
     function getBalance(address account, IERC20 token) internal view returns (uint256 balance) {
-        balance = token.balanceOf(account).add(getInternalBalance(account, token));
+        balance = token.balanceOf(account) + getInternalBalance(account, token);
         return balance;
     }
 
@@ -42,7 +40,7 @@ library LibBalance {
      */
     function increaseInternalBalance(address account, IERC20 token, uint256 amount) internal {
         uint256 currentBalance = getInternalBalance(account, token);
-        uint256 newBalance = currentBalance.add(amount);
+        uint256 newBalance = currentBalance + amount;
         setInternalBalance(account, token, newBalance, amount.toInt256());
     }
 
@@ -85,12 +83,12 @@ library LibBalance {
     ) private {
         AppStorage storage s = LibAppStorage.diamondStorage();
         delta >= 0
-            ? s.internalTokenBalanceTotal[token] = s.internalTokenBalanceTotal[token].add(
+            ? s.internalTokenBalanceTotal[token] =
+                s.internalTokenBalanceTotal[token] +
                 uint256(delta)
-            )
-            : s.internalTokenBalanceTotal[token] = s.internalTokenBalanceTotal[token].sub(
-            uint256(-delta)
-        );
+            : s.internalTokenBalanceTotal[token] =
+            s.internalTokenBalanceTotal[token] -
+            uint256(-delta);
         s.internalTokenBalance[account][token] = newBalance;
         emit InternalBalanceChanged(account, token, delta);
     }

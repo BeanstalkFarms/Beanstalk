@@ -5,17 +5,14 @@
 pragma solidity ^0.8.20;
 pragma experimental ABIEncoderV2;
 
-import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
-
 /**
  * @title Decimal
  * @author dYdX
  *
  * Library that defines a fixed-point number with 18 decimal places.
+ * https://github.com/ourzora/core/blob/master/contracts/Decimal.sol
  */
 library Decimal {
-    using SafeMath for uint256;
-
     // ============ Constants ============
 
     uint256 constant BASE = 10 ** 18;
@@ -37,7 +34,7 @@ library Decimal {
     }
 
     function from(uint256 a) internal pure returns (D256 memory) {
-        return D256({value: a.mul(BASE)});
+        return D256({value: a * BASE});
     }
 
     function ratio(uint256 a, uint256 b) internal pure returns (D256 memory) {
@@ -47,11 +44,11 @@ library Decimal {
     // ============ Self Functions ============
 
     function add(D256 memory self, uint256 b) internal pure returns (D256 memory) {
-        return D256({value: self.value.add(b.mul(BASE))});
+        return D256({value: self.value + (b * BASE)});
     }
 
     function sub(D256 memory self, uint256 b) internal pure returns (D256 memory) {
-        return D256({value: self.value.sub(b.mul(BASE))});
+        return D256({value: self.value - (b * BASE)});
     }
 
     function sub(
@@ -59,15 +56,19 @@ library Decimal {
         uint256 b,
         string memory reason
     ) internal pure returns (D256 memory) {
-        return D256({value: self.value.sub(b.mul(BASE), reason)});
+        uint256 intermediate = b * BASE;
+        if (self.value < intermediate) {
+            revert(reason);
+        }
+        return D256({value: self.value - intermediate});
     }
 
     function mul(D256 memory self, uint256 b) internal pure returns (D256 memory) {
-        return D256({value: self.value.mul(b)});
+        return D256({value: self.value * b});
     }
 
     function div(D256 memory self, uint256 b) internal pure returns (D256 memory) {
-        return D256({value: self.value.div(b)});
+        return D256({value: self.value / b});
     }
 
     function pow(D256 memory self, uint256 b) internal pure returns (D256 memory) {
@@ -84,11 +85,11 @@ library Decimal {
     }
 
     function add(D256 memory self, D256 memory b) internal pure returns (D256 memory) {
-        return D256({value: self.value.add(b.value)});
+        return D256({value: self.value + b.value});
     }
 
     function sub(D256 memory self, D256 memory b) internal pure returns (D256 memory) {
-        return D256({value: self.value.sub(b.value)});
+        return D256({value: self.value - b.value});
     }
 
     function sub(
@@ -96,7 +97,10 @@ library Decimal {
         D256 memory b,
         string memory reason
     ) internal pure returns (D256 memory) {
-        return D256({value: self.value.sub(b.value, reason)});
+        if (self.value < b.value) {
+            revert(reason);
+        }
+        return D256({value: self.value - b.value});
     }
 
     function mul(D256 memory self, D256 memory b) internal pure returns (D256 memory) {
@@ -132,7 +136,7 @@ library Decimal {
     }
 
     function asUint256(D256 memory self) internal pure returns (uint256) {
-        return self.value.div(BASE);
+        return self.value / BASE;
     }
 
     // ============ Core Methods ============
@@ -142,7 +146,7 @@ library Decimal {
         uint256 numerator,
         uint256 denominator
     ) private pure returns (uint256) {
-        return target.mul(numerator).div(denominator);
+        return (target * numerator) / denominator;
     }
 
     function compareTo(D256 memory a, D256 memory b) private pure returns (uint256) {

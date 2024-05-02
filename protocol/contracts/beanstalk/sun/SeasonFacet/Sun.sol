@@ -4,8 +4,7 @@ pragma solidity ^0.8.20;
 pragma experimental ABIEncoderV2;
 
 import {SafeCast} from "@openzeppelin/contracts/utils/SafeCast.sol";
-import {LibFertilizer, SafeMath} from "contracts/libraries/LibFertilizer.sol";
-import {LibSafeMath128} from "contracts/libraries/LibSafeMath128.sol";
+import {LibFertilizer} from "contracts/libraries/LibFertilizer.sol";
 import {Oracle, C} from "./Oracle.sol";
 
 /**
@@ -15,8 +14,6 @@ import {Oracle, C} from "./Oracle.sol";
  */
 contract Sun is Oracle {
     using SafeCast for uint256;
-    using SafeMath for uint256;
-    using LibSafeMath128 for uint128;
 
     /// @dev When Fertilizer is Active, it receives 1/3 of new Bean mints.
     uint256 private constant FERTILIZER_DENOMINATOR = 3;
@@ -79,13 +76,13 @@ contract Sun is Oracle {
         // Distribute first to Fertilizer if some Fertilizer are active
         if (s.season.fertilizing) {
             newFertilized = rewardToFertilizer(newSupply);
-            newSupply = newSupply.sub(newFertilized);
+            newSupply = newSupply - newFertilized;
         }
 
         // Distribute next to the Field if some Pods are still outstanding
         if (s.f.harvestable < s.f.pods) {
             newHarvestable = rewardToHarvestable(newSupply);
-            newSupply = newSupply.sub(newHarvestable);
+            newSupply = newSupply - newHarvestable;
         }
 
         // Distribute remainder to the Silo
@@ -99,12 +96,12 @@ contract Sun is Oracle {
      */
     function rewardToFertilizer(uint256 amount) internal returns (uint256 newFertilized) {
         // 1/3 of new Beans being minted
-        uint256 maxNewFertilized = amount.div(FERTILIZER_DENOMINATOR);
+        uint256 maxNewFertilized = amount / FERTILIZER_DENOMINATOR;
 
         // Get the new Beans per Fertilizer and the total new Beans per Fertilizer
-        uint256 newBpf = maxNewFertilized.div(s.activeFertilizer);
+        uint256 newBpf = maxNewFertilized / s.activeFertilizer;
         uint256 oldTotalBpf = s.bpf;
-        uint256 newTotalBpf = oldTotalBpf.add(newBpf);
+        uint256 newTotalBpf = oldTotalBpf + newBpf;
 
         // Get the end Beans per Fertilizer of the first Fertilizer to run out.
         uint256 firstEndBpf = s.fFirst;
@@ -112,28 +109,28 @@ contract Sun is Oracle {
         // If the next fertilizer is going to run out, then step BPF according
         while (newTotalBpf >= firstEndBpf) {
             // Calculate BPF and new Fertilized when the next Fertilizer ID ends
-            newBpf = firstEndBpf.sub(oldTotalBpf);
-            newFertilized = newFertilized.add(newBpf.mul(s.activeFertilizer));
+            newBpf = firstEndBpf - oldTotalBpf;
+            newFertilized = newFertilized + newBpf * s.activeFertilizer;
 
             // If there is no more fertilizer, end
             if (!LibFertilizer.pop()) {
                 s.bpf = uint128(firstEndBpf); // SafeCast unnecessary here.
-                s.fertilizedIndex = s.fertilizedIndex.add(newFertilized);
+                s.fertilizedIndex = s.fertilizedIndex + newFertilized;
                 require(s.fertilizedIndex == s.unfertilizedIndex, "Paid != owed");
                 return newFertilized;
             }
 
             // Calculate new Beans per Fertilizer values
-            newBpf = maxNewFertilized.sub(newFertilized).div(s.activeFertilizer);
+            newBpf = (maxNewFertilized - newFertilized) / s.activeFertilizer;
             oldTotalBpf = firstEndBpf;
-            newTotalBpf = oldTotalBpf.add(newBpf);
+            newTotalBpf = oldTotalBpf + newBpf;
             firstEndBpf = s.fFirst;
         }
 
         // Distribute the rest of the Fertilized Beans
         s.bpf = uint128(newTotalBpf); // SafeCast unnecessary here.
-        newFertilized = newFertilized.add(newBpf.mul(s.activeFertilizer));
-        s.fertilizedIndex = s.fertilizedIndex.add(newFertilized);
+        newFertilized = newFertilized + newBpf.m * s.activeFertilizer;
+        s.fertilizedIndex = s.fertilizedIndex + newFertilized;
     }
 
     /**
@@ -141,10 +138,10 @@ contract Sun is Oracle {
      * become Harvestable.
      */
     function rewardToHarvestable(uint256 amount) internal returns (uint256 newHarvestable) {
-        uint256 notHarvestable = s.f.pods - s.f.harvestable; // Note: SafeMath is redundant here.
-        newHarvestable = amount.div(HARVEST_DENOMINATOR);
+        uint256 notHarvestable = s.f.pods - s.f.harvestable;
+        newHarvestable = amount / HARVEST_DENOMINATOR;
         newHarvestable = newHarvestable > notHarvestable ? notHarvestable : newHarvestable;
-        s.f.harvestable = s.f.harvestable.add(newHarvestable);
+        s.f.harvestable = s.f.harvestable + newHarvestable;
     }
 
     /**
@@ -158,7 +155,7 @@ contract Sun is Oracle {
         // of Earned Beans that are claimable by Stalkholders. When claimed via `plant()`,
         // it is decremented. See {Silo.sol:_plant} for more details.
         // SafeCast not necessary as `seasonStalk.toUint128();` will fail if amount > type(uint128).max.
-        s.earnedBeans = s.earnedBeans.add(amount.toUint128());
+        s.earnedBeans = s.earnedBeans + amount.toUint128();
 
         // Mint Stalk (as Earned Stalk). Farmers can claim their Earned Stalk via {SiloFacet.sol:plant}.
         //
@@ -166,18 +163,16 @@ contract Sun is Oracle {
         // Beans that are allocated to the Silo will receive Stalk.
         // Constant is used here rather than s.ss[BEAN].stalkIssuedPerBdv
         // for gas savings.
-        s.s.stalk = s.s.stalk.add(amount.mul(C.STALK_PER_BEAN));
+        s.s.stalk = s.s.stalk + amount * C.STALK_PER_BEAN;
 
         // removed at ebip-13. Will be replaced upon seed gauge BIP.
         // s.newEarnedStalk = seasonStalk.toUint128();
         // s.vestingPeriodRoots = 0;
 
-        s.siloBalances[C.BEAN].deposited = s.siloBalances[C.BEAN].deposited.add(amount.toUint128());
+        s.siloBalances[C.BEAN].deposited = s.siloBalances[C.BEAN].deposited + amount.toUint128();
 
         // SafeCast not necessary as the block above will fail if amount > type(uint128).max.
-        s.siloBalances[C.BEAN].depositedBdv = s.siloBalances[C.BEAN].depositedBdv.add(
-            uint128(amount)
-        );
+        s.siloBalances[C.BEAN].depositedBdv = s.siloBalances[C.BEAN].depositedBdv + uint128(amount);
     }
 
     //////////////////// SET SOIL ////////////////////
@@ -193,11 +188,11 @@ contract Sun is Oracle {
      * When the Pod Rate is low, Beanstalk issues more Soil.
      */
     function setSoilAbovePeg(uint256 newHarvestable, uint256 caseId) internal {
-        uint256 newSoil = newHarvestable.mul(100).div(100 + s.w.t);
+        uint256 newSoil = (newHarvestable * 100) / (100 + s.w.t);
         if (caseId >= 24) {
-            newSoil = newSoil.mul(SOIL_COEFFICIENT_HIGH).div(C.PRECISION); // high podrate
+            newSoil = (newSoil * SOIL_COEFFICIENT_HIGH) / C.PRECISION; // high podrate
         } else if (caseId < 8) {
-            newSoil = newSoil.mul(SOIL_COEFFICIENT_LOW).div(C.PRECISION); // low podrate
+            newSoil = (newSoil * SOIL_COEFFICIENT_LOW) / C.PRECISION; // low podrate
         }
         setSoil(newSoil);
     }

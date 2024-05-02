@@ -5,7 +5,6 @@
 pragma solidity ^0.8.20;
 pragma experimental ABIEncoderV2;
 
-import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
 import {LibGauge} from "contracts/libraries/LibGauge.sol";
 
 /**
@@ -22,8 +21,6 @@ interface IGaugePointFacet {
 }
 
 contract GaugePointFacet {
-    using SafeMath for uint256;
-
     uint256 private constant ONE_POINT = 1e18;
     uint256 private constant MAX_GAUGE_POINTS = 1000e18;
 
@@ -48,16 +45,16 @@ contract GaugePointFacet {
     ) external pure returns (uint256 newGaugePoints) {
         if (
             percentOfDepositedBdv >
-            optimalPercentDepositedBdv.mul(UPPER_THRESHOLD).div(THRESHOLD_PRECISION)
+            (optimalPercentDepositedBdv * UPPER_THRESHOLD) / THRESHOLD_PRECISION
         ) {
             // gauge points cannot go below 0.
             if (currentGaugePoints <= ONE_POINT) return 0;
-            newGaugePoints = currentGaugePoints.sub(ONE_POINT);
+            newGaugePoints = currentGaugePoints - ONE_POINT;
         } else if (
             percentOfDepositedBdv <
-            optimalPercentDepositedBdv.mul(LOWER_THRESHOLD).div(THRESHOLD_PRECISION)
+            (optimalPercentDepositedBdv * LOWER_THRESHOLD) / THRESHOLD_PRECISION
         ) {
-            newGaugePoints = currentGaugePoints.add(ONE_POINT);
+            newGaugePoints = currentGaugePoints + ONE_POINT;
 
             // Cap gaugePoints to MAX_GAUGE_POINTS if it exceeds.
             if (newGaugePoints > MAX_GAUGE_POINTS) return MAX_GAUGE_POINTS;

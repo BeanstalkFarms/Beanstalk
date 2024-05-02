@@ -4,7 +4,6 @@ pragma solidity ^0.8.20;
 pragma experimental ABIEncoderV2;
 
 import {AppStorage, LibAppStorage, Storage} from "../LibAppStorage.sol";
-import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
 import {LibMetaCurve, IMeta3Curve} from "./LibMetaCurve.sol";
 import {LibCurve} from "./LibCurve.sol";
 import "contracts/C.sol";
@@ -15,7 +14,6 @@ import "contracts/C.sol";
  * @notice Calculates BDV and deltaB for the BEAN:3CRV Metapool.
  */
 library LibBeanMetaCurve {
-    using SafeMath for uint256;
 
     uint256 private constant RATE_MULTIPLIER = 1e12; // Bean has 6 Decimals => 1e(18 - delta decimals)
     uint256 private constant PRECISION = 1e18;
@@ -39,10 +37,10 @@ library LibBeanMetaCurve {
         uint256 D = LibCurve.getD(xp, a);
         uint256 price = LibCurve.getPrice(xp, a, D, RATE_MULTIPLIER);
         uint256 totalSupply = (D * PRECISION) / virtualPrice;
-        uint256 beanValue = balances[0].mul(amount).div(totalSupply);
-        uint256 curveValue = xp[1].mul(amount).div(totalSupply).div(price);
+        uint256 beanValue = balances[0] * amount / totalSupply;
+        uint256 curveValue = xp[1] * amount / totalSupply / price;
 
-        return beanValue.add(curveValue);
+        return beanValue + curveValue;
     }
 
     function getDeltaB() internal view returns (int256 deltaB) {
@@ -81,13 +79,13 @@ library LibBeanMetaCurve {
      * @dev Convert from `balance` -> `xp0`, which is scaled up by `RATE_MULTIPLIER`.
      */
     function getXP0(uint256 balance) internal pure returns (uint256 xp0) {
-        xp0 = balance.mul(RATE_MULTIPLIER);
+        xp0 = balance * RATE_MULTIPLIER;
     }
 
     /**
      * @dev Convert from `xp0` -> `balance`, which is scaled down by `RATE_MULTIPLIER`.
      */
     function getX0(uint256 xp0) internal pure returns (uint256 balance0) {
-        balance0 = xp0.div(RATE_MULTIPLIER);
+        balance0 = xp0 / RATE_MULTIPLIER;
     }
 }

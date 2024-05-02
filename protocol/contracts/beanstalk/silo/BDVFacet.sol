@@ -17,7 +17,6 @@ import {LibBarnRaise} from "contracts/libraries/LibBarnRaise.sol";
  * @notice Calculates BDV for whitelisted Silo tokens.
  */
 contract BDVFacet {
-    using SafeMath for uint256;
 
     /**
      * @dev Returns the BDV of a given `amount` of Bean:3Crv LP tokens.

@@ -5,7 +5,6 @@
 pragma solidity ^0.8.20;
 pragma experimental ABIEncoderV2;
 
-import "@openzeppelin/contracts/math/SafeMath.sol";
 import "../../beanstalk/silo/SiloFacet/SiloFacet.sol";
 import "../../libraries/Silo/LibWhitelist.sol";
 import "../../libraries/Silo/LibLegacyTokenSilo.sol";
@@ -24,8 +23,6 @@ contract MockSiloFacet is SiloFacet {
     uint256 private constant AMOUNT_TO_BDV_BEAN_LUSD = 983108;
 
     using SafeCast for uint256;
-    using LibSafeMath128 for uint128;
-    using SafeMath for uint256;
 
     /**
      * @notice emitted when the farmers germinating stalk changes.
@@ -47,30 +44,29 @@ contract MockSiloFacet is SiloFacet {
     }
 
     function mockBDVIncrease(uint256 amount) external pure returns (uint256) {
-        return amount.mul(3).div(2);
+        return (amount * 3) / 2;
     }
 
     function mockUnripeLPDeposit(uint256 t, uint32 _s, uint256 amount, uint256 bdv) external {
         _mowLegacy(LibTractor._user());
         if (t == 0) {
             s.a[LibTractor._user()].lp.deposits[_s] += amount;
-            s.a[LibTractor._user()].lp.depositSeeds[_s] += bdv.mul(4);
+            s.a[LibTractor._user()].lp.depositSeeds[_s] += bdv * 4;
         } else if (t == 1)
             addDepositToAccountLegacy(LibTractor._user(), C.unripeLPPool1(), _s, amount, bdv);
         else if (t == 2)
             addDepositToAccountLegacy(LibTractor._user(), C.unripeLPPool2(), _s, amount, bdv);
         uint256 unripeLP = getUnripeForAmount(t, amount);
-        bdv = bdv.mul(C.initialRecap()).div(1e18);
+        bdv = (bdv * C.initialRecap()) / 1e18;
         incrementTotalDepositedAmount(C.UNRIPE_LP, unripeLP);
 
         // from the seed gauge on, mowAndMigrate does not increment BDV. instead, the init script has a one-time
         // bdv increment of all unripe assets. Thus, we increment total deposited here for testing purposes.
         incrementTotalDepositedBDV(C.UNRIPE_LP, bdv);
 
-        uint256 seeds = bdv.mul(LibLegacyTokenSilo.getLegacySeedsPerToken(C.UNRIPE_LP));
-        uint256 stalk = bdv.mul(s.ss[C.UNRIPE_LP].stalkIssuedPerBdv).add(
-            stalkRewardLegacy(seeds, s.season.current - _s)
-        );
+        uint256 seeds = bdv * LibLegacyTokenSilo.getLegacySeedsPerToken(C.UNRIPE_LP);
+        uint256 stalk = (bdv * s.ss[C.UNRIPE_LP].stalkIssuedPerBdv) +
+            stalkRewardLegacy(seeds, s.season.current - _s);
         // not germinating because this is a old deposit.
         LibSilo.mintActiveStalk(LibTractor._user(), stalk);
         mintSeeds(LibTractor._user(), seeds);
@@ -85,17 +81,16 @@ contract MockSiloFacet is SiloFacet {
     function mockUnripeBeanDeposit(uint32 _s, uint256 amount) external {
         _mowLegacy(LibTractor._user());
         s.a[LibTractor._user()].bean.deposits[_s] += amount;
-        uint256 partialAmount = amount.mul(C.initialRecap()).div(1e18);
+        uint256 partialAmount = (amount * C.initialRecap()) / 1e18;
         incrementTotalDepositedAmount(C.UNRIPE_BEAN, amount);
 
         // from the seed gauge on, mowAndMigrate does not increment BDV. instead, the init script has a one-time
         // bdv increment of all unripe assets. Thus, we increment total deposited here for testing purposes.
         incrementTotalDepositedBDV(C.UNRIPE_BEAN, partialAmount);
 
-        uint256 seeds = partialAmount.mul(LibLegacyTokenSilo.getLegacySeedsPerToken(C.UNRIPE_BEAN));
-        uint256 stalk = partialAmount.mul(s.ss[C.UNRIPE_BEAN].stalkIssuedPerBdv).add(
-            stalkRewardLegacy(seeds, s.season.current - _s)
-        );
+        uint256 seeds = partialAmount * LibLegacyTokenSilo.getLegacySeedsPerToken(C.UNRIPE_BEAN);
+        uint256 stalk = (partialAmount * s.ss[C.UNRIPE_BEAN].stalkIssuedPerBdv) +
+            stalkRewardLegacy(seeds, s.season.current - _s);
 
         LibSilo.mintActiveStalk(LibTractor._user(), stalk);
         mintSeeds(LibTractor._user(), seeds);
@@ -195,16 +190,16 @@ contract MockSiloFacet is SiloFacet {
         AppStorage storage s = LibAppStorage.diamondStorage();
 
         // Increase supply of Seeds; Add Seeds to the balance of `account`
-        s.s.deprecated_seeds = s.s.deprecated_seeds.add(seeds);
-        s.a[account].s.seeds = s.a[account].s.seeds.add(seeds);
+        s.s.deprecated_seeds = s.s.deprecated_seeds + seeds;
+        s.a[account].s.seeds = s.a[account].s.seeds + seeds;
 
         // emit SeedsBalanceChanged(account, int256(seeds)); //don't really care about the event for unit testing purposes of unripe stuff
     }
 
     function getUnripeForAmount(uint256 t, uint256 amount) private pure returns (uint256) {
-        if (t == 0) return amount.mul(AMOUNT_TO_BDV_BEAN_ETH).div(1e18);
-        else if (t == 1) return amount.mul(AMOUNT_TO_BDV_BEAN_3CRV).div(1e18);
-        else return amount.mul(AMOUNT_TO_BDV_BEAN_LUSD).div(1e18);
+        if (t == 0) return (amount * AMOUNT_TO_BDV_BEAN_ETH) / 1e18;
+        else if (t == 1) return (amount * AMOUNT_TO_BDV_BEAN_3CRV) / 1e18;
+        else return (amount * AMOUNT_TO_BDV_BEAN_LUSD) / 1e18;
     }
 
     /**
@@ -300,10 +295,9 @@ contract MockSiloFacet is SiloFacet {
         incrementTotalDepositedBDV(token, bdv);
         addDepositToAccountLegacy(account, token, season, amount, bdv); // Add to Account
 
-        return (
-            bdv.mul(mockGetSeedsPerToken(token)), //for adequate testing may need to grab seeds per token
-            bdv.mul(s.ss[token].stalkIssuedPerBdv)
-        );
+        return 
+            bdv * mockGetSeedsPerToken(token), //for adequate testing may need to grab seeds per token
+            bdv * s.ss[token].stalkIssuedPerBdv;
     }
 
     function beanDenominatedValueLegacy(
@@ -417,7 +411,7 @@ contract MockSiloFacet is SiloFacet {
      * kept for legacy reasons.
      */
     function mockSeasonToStem(address token, uint32 season) external view returns (int96 stem) {
-        stem = LibLegacyTokenSilo.seasonToStem(mockGetSeedsPerToken(token).mul(1e6), season);
+        stem = LibLegacyTokenSilo.seasonToStem(mockGetSeedsPerToken(token) * 1e6, season);
     }
 
     function mockGetSeedsPerToken(address token) public pure returns (uint256) {
@@ -435,18 +429,17 @@ contract MockSiloFacet is SiloFacet {
     }
 
     function stalkRewardLegacy(uint256 seeds, uint32 seasons) internal pure returns (uint256) {
-        return seeds.mul(seasons);
+        return seeds * seasons;
     }
 
     function incrementTotalDepositedAmount(address token, uint256 amount) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        s.siloBalances[token].deposited = s.siloBalances[token].deposited.add(amount.toUint128());
+        s.siloBalances[token].deposited = s.siloBalances[token].deposited + amount.toUint128();
     }
 
     function incrementTotalDepositedBDV(address token, uint256 amount) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        s.siloBalances[token].depositedBdv = s.siloBalances[token].depositedBdv.add(
-            amount.toUint128()
-        );
+        s.siloBalances[token].depositedBdv = s.siloBalances[token].depositedBdv + 
+            amount.toUint128();
     }
 }

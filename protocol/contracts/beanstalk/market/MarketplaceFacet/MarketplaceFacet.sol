@@ -138,7 +138,7 @@ contract MarketplaceFacet is Invariable, Order {
         uint256 amount = s.a[sender].field.plots[id];
         require(amount > 0, "Field: Plot not owned by user.");
         require(end > start && amount >= end, "Field: Pod range invalid.");
-        amount = end - start; // Note: SafeMath is redundant here.
+        amount = end - start;
         if (
             LibTractor._user() != sender && allowancePods(sender, LibTractor._user()) != uint256(-1)
         ) {

@@ -26,8 +26,6 @@ import {Invariable} from "contracts/beanstalk/Invariable.sol";
  *
  */
 contract SiloFacet is Invariable, TokenSilo {
-    using SafeMath for uint256;
-    using LibSafeMath32 for uint32;
 
     //////////////////////// DEPOSIT ////////////////////////
 
@@ -188,7 +186,7 @@ contract SiloFacet is Invariable, TokenSilo {
         uint256 totalAmount;
         for (uint256 i = 0; i < amounts.length; ++i) {
             require(amounts[i] > 0, "Silo: amount in array is 0");
-            totalAmount = totalAmount.add(amounts[i]);
+            totalAmount = totalAmount + amounts[i];
         }
 
         // Tractor operator does not use allowance.

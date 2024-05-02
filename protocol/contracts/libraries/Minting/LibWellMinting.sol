@@ -6,13 +6,12 @@ pragma solidity ^0.8.20;
 pragma experimental ABIEncoderV2;
 
 import {LibAppStorage, AppStorage} from "../LibAppStorage.sol";
-import {SafeMath, C, LibMinting} from "./LibMinting.sol";
+import {C, LibMinting} from "./LibMinting.sol";
 import {ICumulativePump} from "contracts/interfaces/basin/pumps/ICumulativePump.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {Call, IWell} from "contracts/interfaces/basin/IWell.sol";
 import {LibWell} from "contracts/libraries/Well/LibWell.sol";
 import {IBeanstalkWellFunction} from "contracts/interfaces/basin/IBeanstalkWellFunction.sol";
-import {SignedSafeMath} from "@openzeppelin/contracts/math/SignedSafeMath.sol";
 import {LibEthUsdOracle} from "contracts/libraries/Oracle/LibEthUsdOracle.sol";
 
 /**
@@ -28,8 +27,6 @@ import {LibEthUsdOracle} from "contracts/libraries/Oracle/LibEthUsdOracle.sol";
  **/
 
 library LibWellMinting {
-    using SignedSafeMath for int256;
-
     /**
      * @notice Emitted when a Well Minting Oracle is captured.
      * @param season The season that the Well was captured.
@@ -38,8 +35,6 @@ library LibWellMinting {
      * @param cumulativeReserves The encoded cumulative reserves that were snapshotted most by the Oracle capture.
      */
     event WellOracle(uint32 indexed season, address well, int256 deltaB, bytes cumulativeReserves);
-
-    using SafeMath for uint256;
 
     //////////////////// CHECK ////////////////////
 
@@ -152,7 +147,7 @@ library LibWellMinting {
         returns (uint[] memory twaReserves, bytes memory snapshot) {
             IERC20[] memory tokens = IWell(well).tokens();
             (uint256[] memory ratios, uint256 beanIndex, bool success) = LibWell
-                .getRatiosAndBeanIndex(tokens, block.timestamp.sub(s.season.timestamp));
+                .getRatiosAndBeanIndex(tokens, block.timestamp - s.season.timestamp);
 
             // If the Bean reserve is less than the minimum, the minting oracle should be considered off.
             if (twaReserves[beanIndex] < C.WELL_MINIMUM_BEAN_BALANCE) {
@@ -174,7 +169,7 @@ library LibWellMinting {
                     ratios,
                     wellFunction.data
                 )
-            ).sub(int256(twaReserves[beanIndex]));
+            ) - int256(twaReserves[beanIndex]);
 
             return (deltaB, snapshot, twaReserves, ratios);
         } catch {

@@ -9,10 +9,8 @@ import {C} from "contracts/C.sol";
 import {LibTractor} from "contracts/libraries/LibTractor.sol";
 import {LibSilo} from "contracts/libraries/Silo/LibSilo.sol";
 import {LibTokenSilo} from "contracts/libraries/Silo/LibTokenSilo.sol";
-import {LibSafeMath32} from "contracts/libraries/LibSafeMath32.sol";
 import {ReentrancyGuard} from "../ReentrancyGuard.sol";
 import {LibBytes} from "contracts/libraries/LibBytes.sol";
-import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
 import {SafeCast} from "@openzeppelin/contracts/utils/SafeCast.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {LibConvert} from "contracts/libraries/Convert/LibConvert.sol";
@@ -24,9 +22,7 @@ import {Invariable} from "contracts/beanstalk/Invariable.sol";
  * @title ConvertFacet handles converting Deposited assets within the Silo.
  **/
 contract ConvertFacet is Invariable, ReentrancyGuard {
-    using SafeMath for uint256;
     using SafeCast for uint256;
-    using LibSafeMath32 for uint32;
 
     event Convert(
         address indexed account,
@@ -140,8 +136,8 @@ contract ConvertFacet is Invariable, ReentrancyGuard {
                     continue;
                 }
 
-                if (a.active.tokens.add(amounts[i]) >= maxTokens)
-                    amounts[i] = maxTokens.sub(a.active.tokens);
+                if (a.active.tokens + amounts[i] >= maxTokens)
+                    amounts[i] = maxTokens - a.active.tokens;
                 depositBDV = LibTokenSilo.removeDepositFromAccount(
                     LibTractor._user(),
                     token,
@@ -149,12 +145,12 @@ contract ConvertFacet is Invariable, ReentrancyGuard {
                     amounts[i]
                 );
                 bdvsRemoved[i] = depositBDV;
-                a.active.stalk = a.active.stalk.add(
-                    LibSilo.stalkReward(stems[i], germStem.stemTip, depositBDV.toUint128())
-                );
+                a.active.stalk =
+                    a.active.stalk +
+                    LibSilo.stalkReward(stems[i], germStem.stemTip, depositBDV.toUint128());
 
-                a.active.tokens = a.active.tokens.add(amounts[i]);
-                a.active.bdv = a.active.bdv.add(depositBDV);
+                a.active.tokens = a.active.tokens + amounts[i];
+                a.active.bdv = a.active.bdv + depositBDV;
 
                 depositIds[i] = uint256(LibBytes.packAddressAndStem(token, stems[i]));
                 i++;
@@ -185,7 +181,7 @@ contract ConvertFacet is Invariable, ReentrancyGuard {
         // all deposits converted are not germinating.
         LibSilo.burnActiveStalk(
             LibTractor._user(),
-            a.active.stalk.add(a.active.bdv.mul(s.ss[token].stalkIssuedPerBdv))
+            (a.active.stalk + a.active.bdv) * s.ss[token].stalkIssuedPerBdv
         );
         return (a.active.stalk, a.active.bdv);
     }
@@ -222,14 +218,14 @@ contract ConvertFacet is Invariable, ReentrancyGuard {
             LibTokenSilo.incrementTotalDeposited(token, amount, bdv);
             LibSilo.mintActiveStalk(
                 LibTractor._user(),
-                bdv.mul(LibTokenSilo.stalkIssuedPerBdv(token)).add(grownStalk)
+                bdv * LibTokenSilo.stalkIssuedPerBdv(token) + grownStalk
             );
         } else {
             LibTokenSilo.incrementTotalGerminating(token, amount, bdv, germ);
             // safeCast not needed as stalk is <= max(uint128)
             LibSilo.mintGerminatingStalk(
                 LibTractor._user(),
-                uint128(bdv.mul(LibTokenSilo.stalkIssuedPerBdv(token))),
+                uint128(bdv * LibTokenSilo.stalkIssuedPerBdv(token)),
                 germ
             );
             LibSilo.mintActiveStalk(LibTractor._user(), grownStalk);

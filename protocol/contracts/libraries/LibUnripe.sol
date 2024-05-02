@@ -4,7 +4,6 @@ pragma solidity ^0.8.20;
 pragma experimental ABIEncoderV2;
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
 import {IBean} from "../interfaces/IBean.sol";
 import {AppStorage, LibAppStorage} from "./LibAppStorage.sol";
 import {C} from "../C.sol";
@@ -19,8 +18,6 @@ import {LibLockedUnderlying} from "./LibLockedUnderlying.sol";
  * @notice Library for handling functionality related to Unripe Tokens and their Ripe Tokens.
  */
 library LibUnripe {
-    using SafeMath for uint256;
-
     event ChangeUnderlying(address indexed token, int256 underlying);
     event SwitchUnderlyingToken(address indexed token, address indexed underlyingToken);
 
@@ -31,8 +28,7 @@ library LibUnripe {
      */
     function percentBeansRecapped() internal view returns (uint256 percent) {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        return
-            s.u[C.UNRIPE_BEAN].balanceOfUnderlying.mul(DECIMALS).div(C.unripeBean().totalSupply());
+        return (s.u[C.UNRIPE_BEAN].balanceOfUnderlying * DECIMALS) / C.unripeBean().totalSupply();
     }
 
     /**
@@ -40,7 +36,7 @@ library LibUnripe {
      */
     function percentLPRecapped() internal view returns (uint256 percent) {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        return C.unripeLPPerDollar().mul(s.recapitalized).div(C.unripeLP().totalSupply());
+        return (C.unripeLPPerDollar() * s.recapitalized) / C.unripeLP().totalSupply();
     }
 
     /**
@@ -50,7 +46,7 @@ library LibUnripe {
      */
     function incrementUnderlying(address token, uint256 amount) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        s.u[token].balanceOfUnderlying = s.u[token].balanceOfUnderlying.add(amount);
+        s.u[token].balanceOfUnderlying = s.u[token].balanceOfUnderlying + amount;
         emit ChangeUnderlying(token, int256(amount));
     }
 
@@ -61,7 +57,7 @@ library LibUnripe {
      */
     function decrementUnderlying(address token, uint256 amount) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        s.u[token].balanceOfUnderlying = s.u[token].balanceOfUnderlying.sub(amount);
+        s.u[token].balanceOfUnderlying = s.u[token].balanceOfUnderlying - amount;
         emit ChangeUnderlying(token, -int256(amount));
     }
 
@@ -77,7 +73,7 @@ library LibUnripe {
         uint256 supply
     ) internal view returns (uint256 underlying) {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        underlying = s.u[unripeToken].balanceOfUnderlying.mul(unripe).div(supply);
+        underlying = (s.u[unripeToken].balanceOfUnderlying * unripe) / supply;
     }
 
     /**
@@ -91,9 +87,9 @@ library LibUnripe {
         uint256 underlying
     ) internal view returns (uint256 unripe) {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        unripe = IBean(unripeToken).totalSupply().mul(underlying).div(
-            s.u[unripeToken].balanceOfUnderlying
-        );
+        unripe =
+            (IBean(unripeToken).totalSupply() * underlying) /
+            s.u[unripeToken].balanceOfUnderlying;
     }
 
     /**
@@ -105,10 +101,9 @@ library LibUnripe {
     function addUnderlying(address token, uint256 underlying) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
         if (token == C.UNRIPE_LP) {
-            uint256 recapped = underlying.mul(s.recapitalized).div(
-                s.u[C.UNRIPE_LP].balanceOfUnderlying
-            );
-            s.recapitalized = s.recapitalized.add(recapped);
+            uint256 recapped = (underlying * s.recapitalized) /
+                s.u[C.UNRIPE_LP].balanceOfUnderlying;
+            s.recapitalized = s.recapitalized + recapped;
         }
         incrementUnderlying(token, underlying);
     }
@@ -122,10 +117,9 @@ library LibUnripe {
     function removeUnderlying(address token, uint256 underlying) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
         if (token == C.UNRIPE_LP) {
-            uint256 recapped = underlying.mul(s.recapitalized).div(
-                s.u[C.UNRIPE_LP].balanceOfUnderlying
-            );
-            s.recapitalized = s.recapitalized.sub(recapped);
+            uint256 recapped = (underlying * s.recapitalized) /
+                s.u[C.UNRIPE_LP].balanceOfUnderlying;
+            s.recapitalized = s.recapitalized - recapped;
         }
         decrementUnderlying(token, underlying);
     }
@@ -171,9 +165,9 @@ library LibUnripe {
     function getLockedBeans(
         uint256[] memory reserves
     ) internal view returns (uint256 lockedAmount) {
-        lockedAmount = LibLockedUnderlying
-            .getLockedUnderlying(C.UNRIPE_BEAN, getRecapPaidPercentAmount(1e6))
-            .add(getLockedBeansFromLP(reserves));
+        lockedAmount =
+            LibLockedUnderlying.getLockedUnderlying(C.UNRIPE_BEAN, getRecapPaidPercentAmount(1e6)) +
+            getLockedBeansFromLP(reserves);
     }
 
     /**
@@ -202,7 +196,7 @@ library LibUnripe {
             reserves,
             wellFunction.data
         );
-        lockedBeanAmount = lockedLpAmount.mul(reserves[beanIndex]).div(lpTokenSupply);
+        lockedBeanAmount = lockedLpAmount * reserves[beanIndex] / lpTokenSupply;
     }
 
     /**
@@ -215,7 +209,7 @@ library LibUnripe {
         uint256 amount
     ) internal view returns (uint256 penalizedAmount) {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        return s.fertilizedIndex.mul(amount).div(s.unfertilizedIndex);
+        return s.fertilizedIndex * amount / s.unfertilizedIndex;
     }
 
     /**
@@ -235,7 +229,7 @@ library LibUnripe {
         uint256 supply
     ) internal view returns (uint256 redeem) {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        redeem = s.u[unripeToken].balanceOfUnderlying.mul(amount).div(supply);
+        redeem = s.u[unripeToken].balanceOfUnderlying * amount / supply;
     }
 
     function _getUnderlyingToken(

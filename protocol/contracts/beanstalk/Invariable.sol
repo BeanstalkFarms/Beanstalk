@@ -4,8 +4,6 @@ pragma solidity ^0.8.20;
 pragma experimental ABIEncoderV2;
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
-import {SignedSafeMath} from "@openzeppelin/contracts/math/SignedSafeMath.sol";
 import {SafeCast} from "@openzeppelin/contracts/utils/SafeCast.sol";
 
 import {C} from "contracts/C.sol";
@@ -23,8 +21,6 @@ import {LibSilo} from "contracts/libraries/Silo/LibSilo.sol";
  * @dev https://www.nascent.xyz/idea/youre-writing-require-statements-wrong
  **/
 abstract contract Invariable {
-    using SafeMath for uint256;
-    using SignedSafeMath for int256;
     using SafeCast for uint256;
 
     /**
@@ -179,8 +175,8 @@ abstract contract Invariable {
                 s.internalTokenBalanceTotal[IERC20(tokens[i])];
             if (tokens[i] == C.BEAN) {
                 entitlements[i] +=
-                    s.f.harvestable.sub(s.f.harvested) + // unharvestable harvestable beans
-                    s.fertilizedIndex.sub(s.fertilizedPaidIndex) + // unrinsed rinsable beans
+                    s.f.harvestable - s.f.harvested + // unharvestable harvestable beans
+                    s.fertilizedIndex - s.fertilizedPaidIndex + // unrinsed rinsable beans
                     s.u[C.UNRIPE_BEAN].balanceOfUnderlying; // unchopped underlying beans
             } else if (tokens[i] == LibUnripe._getUnderlyingToken(C.UNRIPE_LP)) {
                 entitlements[i] += s.u[C.UNRIPE_LP].balanceOfUnderlying;

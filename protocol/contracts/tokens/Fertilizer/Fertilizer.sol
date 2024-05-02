@@ -21,8 +21,6 @@ contract Fertilizer is Internalizer {
     event ClaimFertilizer(uint256[] ids, uint256 beans);
 
     using SafeERC20Upgradeable for IERC20;
-    using SafeMathUpgradeable for uint256;
-    using LibSafeMath128 for uint128;
 
     function beanstalkUpdate(
         address account,
@@ -74,7 +72,7 @@ contract Fertilizer is Internalizer {
             uint256 stopBpf = bpf < ids[i] ? bpf : ids[i];
             uint256 deltaBpf = stopBpf - _balances[ids[i]][account].lastBpf;
             if (deltaBpf > 0) {
-                beans = beans.add(deltaBpf.mul(_balances[ids[i]][account].amount));
+                beans = beans + (deltaBpf * _balances[ids[i]][account].amount);
                 _balances[ids[i]][account].lastBpf = uint128(stopBpf);
             }
         }
@@ -89,7 +87,7 @@ contract Fertilizer is Internalizer {
         for (uint256 i; i < ids.length; ++i) {
             uint256 stopBpf = bpf < ids[i] ? bpf : ids[i];
             uint256 deltaBpf = stopBpf - _balances[ids[i]][account].lastBpf;
-            beans = beans.add(deltaBpf.mul(_balances[ids[i]][account].amount));
+            beans = beans + (deltaBpf * _balances[ids[i]][account].amount);
         }
     }
 
@@ -99,8 +97,7 @@ contract Fertilizer is Internalizer {
     ) external view returns (uint256 beans) {
         uint256 bpf = uint256(IBS(owner()).beansPerFertilizer());
         for (uint256 i; i < ids.length; ++i) {
-            if (ids[i] > bpf)
-                beans = beans.add(ids[i].sub(bpf).mul(_balances[ids[i]][account].amount));
+            if (ids[i] > bpf) beans = beans + (ids[i] - bpf) * _balances[ids[i]][account].amount;
         }
     }
 

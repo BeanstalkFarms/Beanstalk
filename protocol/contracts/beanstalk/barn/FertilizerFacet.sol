@@ -7,14 +7,12 @@ pragma experimental ABIEncoderV2;
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {SafeCast} from "@openzeppelin/contracts/utils/SafeCast.sol";
-import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
 import {IFertilizer} from "contracts/interfaces/IFertilizer.sol";
 import {AppStorage} from "../AppStorage.sol";
 import {LibTractor} from "contracts/libraries/LibTractor.sol";
 import {LibTransfer} from "contracts/libraries/Token/LibTransfer.sol";
 import {LibUsdOracle} from "contracts/libraries/Oracle/LibUsdOracle.sol";
 import {LibFertilizer} from "contracts/libraries/LibFertilizer.sol";
-import {LibSafeMath128} from "contracts/libraries/LibSafeMath128.sol";
 import {C} from "contracts/C.sol";
 import {LibDiamond} from "contracts/libraries/LibDiamond.sol";
 import {IWell} from "contracts/interfaces/basin/IWell.sol";
@@ -27,9 +25,7 @@ import {Invariable} from "contracts/beanstalk/Invariable.sol";
  **/
 
 contract FertilizerFacet is Invariable {
-    using SafeMath for uint256;
     using SafeCast for uint256;
-    using LibSafeMath128 for uint128;
 
     event SetFertilizer(uint128 id, uint128 bpf);
 
@@ -76,7 +72,7 @@ contract FertilizerFacet is Invariable {
         require(fertilizerAmountOut >= minFertilizerOut, "Fertilizer: Not enough bought.");
         require(fertilizerAmountOut > 0, "Fertilizer: None bought.");
 
-        uint128 remaining = uint128(LibFertilizer.remainingRecapitalization().div(1e6)); // remaining <= 77_000_000 so downcasting is safe.
+        uint256 remaining = LibFertilizer.remainingRecapitalization() / 1e6;
         require(fertilizerAmountOut <= remaining, "Fertilizer: Not enough remaining.");
 
         uint128 id = LibFertilizer.addFertilizer(
@@ -121,7 +117,7 @@ contract FertilizerFacet is Invariable {
         uint256 tokenAmountIn,
         address barnRaiseToken
     ) public view returns (uint256 fertilizerAmountOut) {
-        fertilizerAmountOut = tokenAmountIn.div(LibUsdOracle.getUsdPrice(barnRaiseToken));
+        fertilizerAmountOut = tokenAmountIn / LibUsdOracle.getUsdPrice(barnRaiseToken);
     }
 
     function totalFertilizedBeans() external view returns (uint256 beans) {
@@ -173,7 +169,7 @@ contract FertilizerFacet is Invariable {
     }
 
     function getEndBpf() external view returns (uint128 endBpf) {
-        endBpf = s.bpf.add(LibFertilizer.getBpf(uint128(s.season.current)));
+        endBpf = s.bpf + LibFertilizer.getBpf(uint128(s.season.current));
     }
 
     function remainingRecapitalization() external view returns (uint256) {
@@ -212,7 +208,7 @@ contract FertilizerFacet is Invariable {
         uint256 numFerts = 0;
         uint128 idx = s.fFirst;
         while (idx > 0) {
-            numFerts = numFerts.add(1);
+            numFerts = numFerts + 1;
             idx = LibFertilizer.getNext(idx);
         }
         fertilizers = new Supply[](numFerts);
@@ -221,7 +217,7 @@ contract FertilizerFacet is Invariable {
         while (idx > 0) {
             fertilizers[numFerts].endBpf = idx;
             fertilizers[numFerts].supply = LibFertilizer.getAmount(idx);
-            numFerts = numFerts.add(1);
+            numFerts = numFerts + 1;
             idx = LibFertilizer.getNext(idx);
         }
     }

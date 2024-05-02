@@ -13,7 +13,6 @@ import "contracts/libraries/Silo/LibSilo.sol";
 import "contracts/libraries/Silo/LibTokenSilo.sol";
 import "contracts/libraries/Silo/LibLegacyTokenSilo.sol";
 import "contracts/libraries/Convert/LibConvert.sol";
-import "contracts/libraries/LibSafeMath32.sol";
 import {Invariable} from "contracts/beanstalk/Invariable.sol";
 
 /**

@@ -5,7 +5,6 @@
 pragma solidity ^0.8.20;
 pragma experimental ABIEncoderV2;
 
-import "@openzeppelin/contracts/math/SafeMath.sol";
 import {LibDiamond} from "contracts/libraries/LibDiamond.sol";
 import {AppStorage} from "../AppStorage.sol";
 
@@ -15,8 +14,6 @@ import {AppStorage} from "../AppStorage.sol";
  **/
 contract PauseFacet {
     AppStorage internal s;
-
-    using SafeMath for uint256;
 
     event Pause(uint256 timestamp);
     event Unpause(uint256 timestamp, uint256 timePassed);
@@ -38,9 +35,9 @@ contract PauseFacet {
         LibDiamond.enforceIsOwnerOrContract();
         require(s.paused, "Pause: not paused.");
         s.paused = false;
-        uint256 timePassed = block.timestamp.sub(uint256(s.pausedAt));
-        timePassed = (timePassed.div(3600).add(1)).mul(3600);
-        s.season.start = s.season.start.add(timePassed);
+        uint256 timePassed = block.timestamp - s.pausedAt;
+        timePassed = (timePassed / 3600 + 1) * 3600;
+        s.season.start = s.season.start + timePassed;
         emit Unpause(block.timestamp, timePassed);
     }
 }

@@ -5,7 +5,6 @@
 pragma solidity ^0.8.20;
 pragma experimental ABIEncoderV2;
 
-import "@openzeppelin/contracts/math/SafeMath.sol";
 import { UD60x18 } from "@prb/math/src/UD60x18.sol";
 import "contracts/beanstalk/field/FieldFacet.sol";
 
@@ -14,17 +13,15 @@ import "contracts/beanstalk/field/FieldFacet.sol";
  * @title Mock Field Facet
  **/
 contract MockFieldFacet is FieldFacet {
-    using SafeMath for uint256;
     using UD60x18 for uint256;
-    using LibSafeMath128 for uint128;
 
     function incrementTotalSoilE(uint128 amount) external {
-        s.f.soil = s.f.soil.add(amount);
+        s.f.soil = s.f.soil + amount;
     }
 
     function incrementTotalHarvestableE(uint256 amount) external {
         C.bean().mint(address(this), amount);
-        s.f.harvestable = s.f.harvestable.add(amount);
+        s.f.harvestable = s.f.harvestable + amount;
     }
 
     function incrementTotalPodsE(uint256 amount) external {
@@ -49,7 +46,7 @@ contract MockFieldFacet is FieldFacet {
     ) external pure returns (uint256 scaledTemperature) {
         // check most likely case first
         if (delta > 24) {
-            return uint256(initalTemp).mul(LibDibbler.TEMPERATURE_PRECISION);
+            return uint256(initalTemp) * LibDibbler.TEMPERATURE_PRECISION;
         }
 
         // Binary Search
@@ -203,7 +200,7 @@ contract MockFieldFacet is FieldFacet {
         return
             LibDibbler.scaleSoilUp(
                 uint256(s.f.soil), // min soil
-                uint256(s.w.t).mul(LibDibbler.TEMPERATURE_PRECISION), // max temperature
+                uint256(s.w.t) * LibDibbler.TEMPERATURE_PRECISION, // max temperature
                 morningTemperature // temperature adjusted by number of blocks since Sunrise
             );
     }

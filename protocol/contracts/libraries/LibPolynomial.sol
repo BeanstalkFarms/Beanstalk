@@ -4,7 +4,6 @@
 
 pragma solidity ^0.8.20;
 
-import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
 import "./LibBytes.sol";
 
 /*
@@ -13,7 +12,6 @@ import "./LibBytes.sol";
  */
 
 library LibPolynomial {
-    using SafeMath for uint256;
 
     using LibBytes for bytes;
 

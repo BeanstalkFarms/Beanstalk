@@ -4,11 +4,10 @@ pragma solidity ^0.8.20;
 pragma experimental ABIEncoderV2;
 
 import {LibAppStorage, AppStorage} from "./LibAppStorage.sol";
-import {Decimal, SafeMath} from "contracts/libraries/Decimal.sol";
+import {Decimal} from "contracts/libraries/Decimal.sol";
 import {LibWhitelistedTokens, C} from "contracts/libraries/Silo/LibWhitelistedTokens.sol";
 import {LibUnripe} from "contracts/libraries/LibUnripe.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import {LibSafeMath32} from "contracts/libraries/LibSafeMath32.sol";
 import {LibWell} from "contracts/libraries/Well/LibWell.sol";
 import {LibBarnRaise} from "contracts/libraries/LibBarnRaise.sol";
 
@@ -35,10 +34,8 @@ library DecimalExtended {
 }
 
 library LibEvaluate {
-    using SafeMath for uint256;
     using DecimalExtended for uint256;
     using Decimal for Decimal.D256;
-    using LibSafeMath32 for uint32;
 
     // Pod rate bounds
     uint256 internal constant POD_RATE_LOWER_BOUND = 0.05e18; // 5%
@@ -99,9 +96,8 @@ library LibEvaluate {
             // deltaB > 0 implies that address(well) != address(0).
             uint256 beanTknPrice = LibWell.getWellPriceFromTwaReserves(well);
             if (beanTknPrice > 1) {
-                uint256 beanUsdPrice = uint256(1e30).div(
-                    LibWell.getUsdTokenPriceForWell(well).mul(beanTknPrice)
-                );
+                uint256 beanUsdPrice = uint256(1e30) /
+                    (LibWell.getUsdTokenPriceForWell(well) * beanTknPrice);
                 if (beanUsdPrice > EXCESSIVE_PRICE_THRESHOLD) {
                     // p > EXCESSIVE_PRICE_THRESHOLD
                     return caseId = 6;
@@ -174,10 +170,10 @@ library LibEvaluate {
                 s.w.lastSowTime == type(uint32).max || // Didn't Sow all last Season
                 s.w.thisSowTime < SOW_TIME_DEMAND_INCR || // Sow'd all instantly this Season
                 (s.w.lastSowTime > SOW_TIME_STEADY &&
-                    s.w.thisSowTime < s.w.lastSowTime.sub(SOW_TIME_STEADY)) // Sow'd all faster
+                    s.w.thisSowTime < s.w.lastSowTime - SOW_TIME_STEADY) // Sow'd all faster
             ) {
                 deltaPodDemand = Decimal.from(1e18);
-            } else if (s.w.thisSowTime <= s.w.lastSowTime.add(SOW_TIME_STEADY)) {
+            } else if (s.w.thisSowTime <= s.w.lastSowTime + SOW_TIME_STEADY) {
                 // Sow'd all in same time
                 deltaPodDemand = Decimal.one();
             } else {
@@ -228,9 +224,10 @@ library LibEvaluate {
             twaReserves = LibWell.getTwaReservesFromStorageOrBeanstalkPump(pools[i]);
 
             // calculate the non-bean liqudity in the pool.
-            wellLiquidity = liquidityWeight
-                .mul(LibWell.getWellTwaUsdLiquidityFromReserves(pools[i], twaReserves))
-                .div(1e18);
+            wellLiquidity =
+                (liquidityWeight *
+                    LibWell.getWellTwaUsdLiquidityFromReserves(pools[i], twaReserves)) /
+                1e18;
 
             // if the liquidity is the largest, update `largestLiqWell`,
             // and add the liquidity to the total.
@@ -241,14 +238,14 @@ library LibEvaluate {
                 largestLiq = wellLiquidity;
                 largestLiqWell = pools[i];
             }
-            totalUsdLiquidity = totalUsdLiquidity.add(wellLiquidity);
+            totalUsdLiquidity = totalUsdLiquidity + wellLiquidity;
 
             if (pools[i] == LibBarnRaise.getBarnRaiseWell()) {
                 // Scale down bean supply by the locked beans, if there is fertilizer to be paid off.
                 // Note: This statement is put into the for loop to prevent another extraneous read of
                 // the twaReserves from storage as `twaReserves` are already loaded into memory.
                 if (LibAppStorage.diamondStorage().season.fertilizing == true) {
-                    beanSupply = beanSupply.sub(LibUnripe.getLockedBeans(twaReserves));
+                    beanSupply = beanSupply - LibUnripe.getLockedBeans(twaReserves);
                 }
             }
 
@@ -261,7 +258,7 @@ library LibEvaluate {
         if (totalUsdLiquidity == 0) return (Decimal.zero(), address(0));
 
         // USD liquidity is scaled down from 1e18 to match Bean precision (1e6).
-        lpToSupplyRatio = Decimal.ratio(totalUsdLiquidity.div(LIQUIDITY_PRECISION), beanSupply);
+        lpToSupplyRatio = Decimal.ratio(totalUsdLiquidity / LIQUIDITY_PRECISION), beanSupply;
     }
 
     /**
@@ -290,7 +287,7 @@ library LibEvaluate {
         (lpToSupplyRatio, largestLiqWell) = calcLPToSupplyRatio(beanSupply);
 
         // Calculate PodRate
-        podRate = Decimal.ratio(s.f.pods.sub(s.f.harvestable), beanSupply); // Pod Rate
+        podRate = Decimal.ratio(s.f.pods - s.f.harvestable), beanSupply; // Pod Rate
     }
 
     /**
@@ -308,9 +305,9 @@ library LibEvaluate {
             address largestLiqWell
         ) = getBeanstalkState(beanSupply);
         uint256 caseId = evalPodRate(podRate) // Evaluate Pod Rate
-        .add(evalPrice(deltaB, podRate, largestLiqWell)) // Evaluate Price
-            .add(evalDeltaPodDemand(deltaPodDemand))
-            .add(evalLpToSupplyRatio(lpToSupplyRatio)); // Evaluate Delta Soil Demand // Evaluate LP to Supply Ratio
+        + evalPrice(deltaB, podRate, largestLiqWell) // Evaluate Price
+            + evalDeltaPodDemand(deltaPodDemand)
+            + evalLpToSupplyRatio(lpToSupplyRatio); // Evaluate Delta Soil Demand // Evaluate LP to Supply Ratio
         return (caseId, largestLiqWell);
     }
 

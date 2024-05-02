@@ -6,7 +6,6 @@ pragma solidity ^0.8.20;
 pragma experimental ABIEncoderV2;
 
 import {LibChainlinkOracle} from "./LibChainlinkOracle.sol";
-import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
 import {LibAppStorage, AppStorage} from "contracts/libraries/LibAppStorage.sol";
 import {C} from "contracts/C.sol";
 import {LibOracleHelpers} from "contracts/libraries/Oracle/LibOracleHelpers.sol";
@@ -19,7 +18,6 @@ import {LibOracleHelpers} from "contracts/libraries/Oracle/LibOracleHelpers.sol"
  * The oracle will fail (return 0) if the Chainlink Oracle is broken or frozen (See: {LibChainlinkOracle}).
  **/
 library LibEthUsdOracle {
-    using SafeMath for uint256;
 
     function getEthUsdPriceFromStorageIfSaved() internal view returns (uint256) {
         AppStorage storage s = LibAppStorage.diamondStorage();

@@ -9,7 +9,6 @@ import {LibTractor} from "contracts/libraries/LibTractor.sol";
 import "contracts/libraries/Silo/LibSilo.sol";
 import "contracts/libraries/Silo/LibTokenSilo.sol";
 import "./SiloFacet/Silo.sol";
-import "contracts/libraries/LibSafeMath32.sol";
 import "../ReentrancyGuard.sol";
 import {Invariable} from "contracts/beanstalk/Invariable.sol";
 
@@ -18,7 +17,6 @@ import {Invariable} from "contracts/beanstalk/Invariable.sol";
  * @title Enroot Facet handles enrooting Update Deposits
  **/
 contract EnrootFacet is Invariable, ReentrancyGuard {
-    using SafeMath for uint256;
     using SafeCast for uint256;
 
     event RemoveDeposit(
@@ -107,16 +105,15 @@ contract EnrootFacet is Invariable, ReentrancyGuard {
             ); // emits AddDeposit event
 
             // Calculate the difference in BDV. Reverts if `ogBDV > newBDV`.
-            deltaBDV = newBDV.sub(ogBDV);
+            deltaBDV = newBDV - ogBDV;
         }
 
         LibTokenSilo.incrementTotalDepositedBdv(token, deltaBDV);
 
         // enroots should mint active stalk,
         // as unripe assets have been in the system for at least 1 season.
-        uint256 deltaStalk = deltaBDV.mul(s.ss[token].stalkIssuedPerBdv).add(
-            LibSilo.stalkReward(stem, LibTokenSilo.stemTipForToken(token), uint128(deltaBDV))
-        );
+        uint256 deltaStalk = (deltaBDV * s.ss[token].stalkIssuedPerBdv) +
+            LibSilo.stalkReward(stem, LibTokenSilo.stemTipForToken(token), uint128(deltaBDV));
 
         LibSilo.mintActiveStalk(LibTractor._user(), deltaStalk.toUint128());
     }
@@ -159,16 +156,15 @@ contract EnrootFacet is Invariable, ReentrancyGuard {
             if (i + 1 == stems.length) {
                 // Ensure that a rounding error does not occur by using the
                 // remainder BDV for the last Deposit
-                depositBdv = enrootData.newTotalBdv.sub(enrootData.bdvAdded);
+                depositBdv = enrootData.newTotalBdv - enrootData.bdvAdded;
             } else {
                 // depositBdv is a proportional amount of the total bdv.
                 // Cheaper than calling the BDV function multiple times.
-                depositBdv = amounts[i].mul(enrootData.newTotalBdv).div(
-                    enrootData.totalAmountRemoved
-                );
+                depositBdv = (amounts[i] * enrootData.newTotalBdv) / enrootData.totalAmountRemoved;
             }
 
-            enrootData.stalkAdded = enrootData.stalkAdded.add(
+            enrootData.stalkAdded =
+                enrootData.stalkAdded +
                 addDepositAndCalculateStalk(
                     token,
                     stems[i],
@@ -176,10 +172,9 @@ contract EnrootFacet is Invariable, ReentrancyGuard {
                     depositBdv,
                     enrootData.stemTip,
                     enrootData.stalkPerBdv
-                )
-            );
+                );
 
-            enrootData.bdvAdded = enrootData.bdvAdded.add(depositBdv);
+            enrootData.bdvAdded = enrootData.bdvAdded + depositBdv;
         }
 
         // increment bdv and mint stalk.
@@ -188,15 +183,12 @@ contract EnrootFacet is Invariable, ReentrancyGuard {
         // reverts if bdvAdded < bdvRemoved.
         LibTokenSilo.incrementTotalDepositedBdv(
             token,
-            enrootData.bdvAdded.sub(ar.active.bdv.add(ar.even.bdv).add(ar.odd.bdv))
+            enrootData.bdvAdded - (ar.active.bdv + ar.even.bdv + ar.odd.bdv)
         );
         LibSilo.mintActiveStalk(
             LibTractor._user(),
-            enrootData.stalkAdded.sub(
-                ar.active.stalk.add(ar.even.stalk).add(ar.odd.stalk).add(
-                    ar.grownStalkFromGermDeposits
-                )
-            )
+            enrootData.stalkAdded -
+                (ar.active.stalk + ar.even.stalk + ar.odd.stalk + ar.grownStalkFromGermDeposits)
         );
     }
 
@@ -211,10 +203,10 @@ contract EnrootFacet is Invariable, ReentrancyGuard {
         // get the new total bdv.
         enrootData.newTotalBdv = LibTokenSilo.beanDenominatedValue(
             token,
-            ar.active.tokens.add(ar.odd.tokens).add(ar.even.tokens)
+            ar.active.tokens + ar.odd.tokens + ar.even.tokens
         );
         // summate the total amount removed.
-        enrootData.totalAmountRemoved = ar.active.tokens.add(ar.odd.tokens).add(ar.even.tokens);
+        enrootData.totalAmountRemoved = ar.active.tokens + ar.odd.tokens + ar.even.tokens;
 
         // get the stemTip and stalkPerBdv.
         enrootData.stemTip = LibTokenSilo.stemTipForToken(token);
@@ -244,12 +236,11 @@ contract EnrootFacet is Invariable, ReentrancyGuard {
         );
 
         return
-            bdv.mul(stalkPerBdv).add(
-                LibSilo.stalkReward(
-                    stem,
-                    stemTip,
-                    uint128(bdv) // safeCast not needed because bdv is already uint128.
-                )
+            (bdv * stalkPerBdv) +
+            LibSilo.stalkReward(
+                stem,
+                stemTip,
+                uint128(bdv) // safeCast not needed because bdv is already uint128.
             );
     }
 }

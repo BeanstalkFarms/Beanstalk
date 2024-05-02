@@ -5,14 +5,12 @@
 pragma solidity ^0.8.20;
 pragma experimental ABIEncoderV2;
 
-import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
 /**
  * @title Oracle Helpers Library
  * @author brendan
  * @notice Contains functionalty common to multiple Oracle libraries.
  **/
 library LibOracleHelpers {
-    using SafeMath for uint256;
 
     uint256 constant ONE = 1e18;
 
@@ -24,7 +22,7 @@ library LibOracleHelpers {
         uint x,
         uint y
     ) internal pure returns (uint256 percentDifference) {
-        percentDifference = x.mul(ONE).div(y);
-        percentDifference = x > y ? percentDifference - ONE : ONE - percentDifference; // SafeMath unnecessary due to conditional check
+        percentDifference = x * ONE / y;
+        percentDifference = x > y ? percentDifference - ONE : ONE - percentDifference;
     }
 }

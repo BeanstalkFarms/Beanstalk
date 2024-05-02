@@ -8,13 +8,10 @@ pragma abicoder v2;
 import {AppStorage, Storage} from "contracts/beanstalk/AppStorage.sol";
 import {SafeERC20, IERC20} from "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
 import {ReentrancyGuard} from "contracts/beanstalk/ReentrancyGuard.sol";
-import {LibSafeMath128} from "contracts/libraries/LibSafeMath128.sol";
-import {LibSafeMath32} from "contracts/libraries/LibSafeMath32.sol";
 import {LibGerminate} from "contracts/libraries/Silo/LibGerminate.sol";
 import {LibTokenSilo} from "contracts/libraries/Silo/LibTokenSilo.sol";
 import {LibSilo} from "contracts/libraries/Silo/LibSilo.sol";
 import {LibTractor} from "contracts/libraries/LibTractor.sol";
-import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
 import {SafeCast} from "@openzeppelin/contracts/utils/SafeCast.sol";
 import {LibBytes} from "contracts/libraries/LibBytes.sol";
 import {C} from "contracts/C.sol";
@@ -34,9 +31,7 @@ import {IWell} from "contracts/interfaces/basin/IWell.sol";
  */
 
 contract Silo is ReentrancyGuard {
-    using SafeMath for uint256;
     using SafeERC20 for IERC20;
-    using LibSafeMath128 for uint128;
 
     //////////////////////// EVENTS ////////////////////////
 
@@ -108,7 +103,7 @@ contract Silo is ReentrancyGuard {
 
         // Reduce the Silo's supply of Earned Beans.
         // SafeCast unnecessary because beans is <= s.earnedBeans.
-        s.earnedBeans = s.earnedBeans.sub(uint128(beans));
+        s.earnedBeans = s.earnedBeans - uint128(beans);
 
         // Deposit Earned Beans if there are any. Note that 1 Bean = 1 BDV.
         LibTokenSilo.addDepositToAccount(
@@ -126,8 +121,8 @@ contract Silo is ReentrancyGuard {
         // The following lines allocate Earned Stalk that has already been minted to `account`.
         // Constant is used here rather than s.ss[BEAN].stalkIssuedPerBdv
         // for gas savings.
-        uint256 stalk = beans.mul(C.STALK_PER_BEAN);
-        s.a[account].s.stalk = accountStalk.add(stalk);
+        uint256 stalk = beans * C.STALK_PER_BEAN;
+        s.a[account].s.stalk = accountStalk + stalk;
 
         emit StalkBalanceChanged(account, int256(stalk), 0);
         emit Plant(account, beans);

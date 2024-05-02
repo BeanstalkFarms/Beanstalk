@@ -7,7 +7,6 @@ pragma experimental ABIEncoderV2;
 
 import {LibChainlinkOracle} from "./LibChainlinkOracle.sol";
 import {LibUniswapOracle} from "./LibUniswapOracle.sol";
-import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
 import {LibAppStorage, AppStorage} from "contracts/libraries/LibAppStorage.sol";
 import {C} from "contracts/C.sol";
 import {LibOracleHelpers} from "contracts/libraries/Oracle/LibOracleHelpers.sol";
@@ -36,8 +35,6 @@ interface IWsteth {
  * if (1) and (2) are within `MAX_DIFFERENCE` from each other or (1).
  **/
 library LibWstethEthOracle {
-    using SafeMath for uint256;
-
     // The maximum percent difference such that the oracle assumes no manipulation is occuring.
     uint256 constant MAX_DIFFERENCE = 0.01e18; // 1%
     uint256 constant CHAINLINK_DENOMINATOR = 1e6;
@@ -76,7 +73,7 @@ library LibWstethEthOracle {
 
         uint256 stethPerWsteth = IWsteth(C.WSTETH).stEthPerToken();
 
-        chainlinkPrice = chainlinkPrice.mul(stethPerWsteth).div(CHAINLINK_DENOMINATOR);
+        chainlinkPrice = (chainlinkPrice * stethPerWsteth) / CHAINLINK_DENOMINATOR;
 
         // Uniswap V3 only supports a uint32 lookback.
         if (lookback > type(uint32).max) return 0;
@@ -92,9 +89,9 @@ library LibWstethEthOracle {
         if (uniswapPrice == 0) return 0;
 
         if (LibOracleHelpers.getPercentDifference(chainlinkPrice, uniswapPrice) < MAX_DIFFERENCE) {
-            wstethEthPrice = chainlinkPrice.add(uniswapPrice).div(AVERAGE_DENOMINATOR);
+            wstethEthPrice = (chainlinkPrice + uniswapPrice) / AVERAGE_DENOMINATOR;
             if (wstethEthPrice > stethPerWsteth) wstethEthPrice = stethPerWsteth;
-            wstethEthPrice = wstethEthPrice.div(PRECISION_DENOMINATOR);
+            wstethEthPrice = wstethEthPrice / PRECISION_DENOMINATOR;
         }
     }
 }

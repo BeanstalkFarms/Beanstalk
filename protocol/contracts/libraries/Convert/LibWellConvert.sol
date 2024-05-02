@@ -5,7 +5,6 @@
 pragma solidity ^0.8.20;
 pragma experimental ABIEncoderV2;
 
-import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
 import {LibConvertData} from "contracts/libraries/Convert/LibConvertData.sol";
 import {LibWell} from "contracts/libraries/Well/LibWell.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
@@ -19,7 +18,6 @@ import {IBeanstalkWellFunction} from "contracts/interfaces/basin/IBeanstalkWellF
  * in the direction of the Peg.
  **/
 library LibWellConvert {
-    using SafeMath for uint256;
     using LibConvertData for bytes;
 
     /**
@@ -48,7 +46,6 @@ library LibWellConvert {
             .calcReserveAtRatioLiquidity(reserves, beanIndex, ratios, wellFunction.data);
 
         if (beansAtPeg <= reserves[beanIndex]) return (0, beanIndex);
-        // SafeMath is unnecessary as above line performs the check
         beans = beansAtPeg - reserves[beanIndex];
     }
 
@@ -78,11 +75,10 @@ library LibWellConvert {
 
         reserves[beanIndex] = beansAtPeg;
         return
-            lpSupplyNow.sub(
-                IBeanstalkWellFunction(wellFunction.target).calcLpTokenSupply(
-                    reserves,
-                    wellFunction.data
-                )
+            lpSupplyNow -
+            IBeanstalkWellFunction(wellFunction.target).calcLpTokenSupply(
+                reserves,
+                wellFunction.data
             );
     }
 

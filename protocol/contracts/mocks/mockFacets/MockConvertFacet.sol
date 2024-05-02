@@ -15,7 +15,6 @@ import {LibTractor} from "../../libraries/LibTractor.sol";
  * @title Mock Convert Facet
  **/
 contract MockConvertFacet is ConvertFacet {
-    using SafeMath for uint256;
     using SafeERC20 for IERC20;
 
     event MockConvert(uint256 stalkRemoved, uint256 bdvRemoved);

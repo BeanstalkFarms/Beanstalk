@@ -5,7 +5,7 @@
 pragma solidity ^0.8.20;
 pragma experimental ABIEncoderV2;
 
-import {IWsteth, LibWstethEthOracle, SafeMath} from "contracts/libraries/Oracle/LibWstethEthOracle.sol";
+import {IWsteth, LibWstethEthOracle} from "contracts/libraries/Oracle/LibWstethEthOracle.sol";
 import {LibEthUsdOracle} from "contracts/libraries/Oracle/LibEthUsdOracle.sol";
 
 /**
@@ -20,8 +20,6 @@ import {LibEthUsdOracle} from "contracts/libraries/Oracle/LibEthUsdOracle.sol";
  * The wStEth:USD price is computed as: a * b
  **/
 library LibWstethUsdOracle {
-    using SafeMath for uint256;
-
     uint256 constant ORACLE_PRECISION = 1e6;
 
     /**
@@ -40,9 +38,7 @@ library LibWstethUsdOracle {
      **/
     function getWstethUsdPrice(uint256 lookback) internal view returns (uint256) {
         return
-            LibWstethEthOracle
-                .getWstethEthPrice(lookback)
-                .mul(LibEthUsdOracle.getEthUsdPrice(lookback))
-                .div(ORACLE_PRECISION);
+            (LibWstethEthOracle.getWstethEthPrice(lookback) *
+                LibEthUsdOracle.getEthUsdPrice(lookback)) / ORACLE_PRECISION;
     }
 }

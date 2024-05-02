@@ -15,7 +15,6 @@ import "contracts/libraries/LibTractor.sol";
  **/
 contract MockUnripeFacet is UnripeFacet {
     using SafeERC20 for IERC20;
-    using SafeMath for uint256;
 
     function setMerkleRootE(address unripeToken, bytes32 root) external {
         s.u[unripeToken].merkleRoot = root;
@@ -24,7 +23,7 @@ contract MockUnripeFacet is UnripeFacet {
     function addUnderlying(address unripeToken, uint256 amount) external payable nonReentrant {
         address underlyingToken = s.u[unripeToken].underlyingToken;
         IERC20(underlyingToken).safeTransferFrom(LibTractor._user(), address(this), amount);
-        s.u[unripeToken].balanceOfUnderlying = s.u[unripeToken].balanceOfUnderlying.add(amount);
+        s.u[unripeToken].balanceOfUnderlying = s.u[unripeToken].balanceOfUnderlying + amount;
     }
 
     function addUnderlyingWithRecap(

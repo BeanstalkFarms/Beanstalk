@@ -8,7 +8,6 @@ pragma experimental ABIEncoderV2;
 import "contracts/beanstalk/metadata/MetadataImage.sol";
 import {LibBytes} from "contracts/libraries/LibBytes.sol";
 import {LibTokenSilo} from "contracts/libraries/Silo/LibTokenSilo.sol";
-import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
 
 /**
  * @author brean
@@ -20,8 +19,6 @@ import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
  * (MockMetadataFacet with ERC1155 exceeds the contract size limit.)
  **/
 contract TestnetMetadataFacet is MetadataImage {
-    using SafeMath for uint256;
-
     // inital conditions: 2 seeds, 1000 seasons has elapsed from milestone season.
     uint256 public stalkEarnedPerSeason = 2e6;
     uint256 public seasonsElapsed = 1000;
@@ -41,7 +38,7 @@ contract TestnetMetadataFacet is MetadataImage {
      */
     function uri(uint256 depositId) external view returns (string memory) {
         (address token, int96 stem) = LibBytes.unpackAddressAndStem(depositId);
-        int96 stemTip = int96(stalkEarnedPerSeason.mul(seasonsElapsed));
+        int96 stemTip = int96(stalkEarnedPerSeason * seasonsElapsed);
         bytes memory attributes = abi.encodePacked(
             ', "attributes": [ { "trait_type": "Token", "value": "',
             getTokenName(token),

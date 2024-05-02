@@ -4,7 +4,6 @@
 pragma solidity ^0.8.20;
 pragma experimental ABIEncoderV2;
 
-import "@openzeppelin/contracts/math/SafeMath.sol";
 import "contracts/beanstalk/sun/SeasonFacet/SeasonFacet.sol";
 import {LibDiamond} from "contracts/libraries/LibDiamond.sol";
 import {IERC1155} from "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
@@ -16,9 +15,7 @@ import {LibWstethEthOracle} from "contracts/libraries/Oracle/LibWstethEthOracle.
 import {LibWstethUsdOracle} from "contracts/libraries/Oracle/LibWstethUsdOracle.sol";
 import {LibUsdOracle} from "contracts/libraries/Oracle/LibUsdOracle.sol";
 import {LibAppStorage, Storage} from "contracts/libraries/LibAppStorage.sol";
-import {SignedSafeMath} from "@openzeppelin/contracts/math/SignedSafeMath.sol";
 import {LibGauge} from "contracts/libraries/LibGauge.sol";
-import {LibSafeMath32} from "contracts/libraries/LibSafeMath32.sol";
 import {LibCurveMinting} from "contracts/libraries/Minting/LibCurveMinting.sol";
 import {LibWellMinting} from "contracts/libraries/Minting/LibWellMinting.sol";
 import {LibEvaluate} from "contracts/libraries/LibEvaluate.sol";
@@ -53,10 +50,6 @@ interface IMockPump {
 }
 
 contract MockSeasonFacet is SeasonFacet {
-    using SafeMath for uint256;
-    using LibSafeMath32 for uint32;
-    using SignedSafeMath for int256;
-
     event UpdateTWAPs(uint256[2] balances);
     event DeltaB(int256 deltaB);
     event GaugePointChange(uint256 indexed season, address indexed token, uint256 gaugePoints);
@@ -315,8 +308,8 @@ contract MockSeasonFacet is SeasonFacet {
             reserves[1] = uint256(119e18);
         }
         uint256 beanEthPrice = 1000e6;
-        uint256 l2srBeans = beanEthPrice.mul(1000);
-        reserves[0] = reserves[1].mul(beanEthPrice).div(1e18);
+        uint256 l2srBeans = beanEthPrice * 1000;
+        reserves[0] = (reserves[1] * beanEthPrice) / 1e18;
         if (l2srBeans > C.bean().totalSupply()) {
             C.bean().mint(address(this), l2srBeans - C.bean().totalSupply());
         }
@@ -327,7 +320,7 @@ contract MockSeasonFacet is SeasonFacet {
         s.usdTokenPrice[C.BEAN_ETH_WELL] = 0.001e18;
         if (aboveQ) {
             // increase bean price
-            s.twaReserves[C.BEAN_ETH_WELL].reserve0 = uint128(reserves[0].mul(10).div(11));
+            s.twaReserves[C.BEAN_ETH_WELL].reserve0 = uint128((reserves[0] * 10) / 11);
         } else {
             // decrease bean price
             s.twaReserves[C.BEAN_ETH_WELL].reserve0 = uint128(reserves[0]);
@@ -336,7 +329,7 @@ contract MockSeasonFacet is SeasonFacet {
         /// FIELD ///
         s.season.raining = raining;
         s.r.roots = rainRoots ? 1 : 0;
-        s.f.pods = (pods.mul(C.bean().totalSupply()) / 1000); // previous tests used 1000 as the total supply.
+        s.f.pods = (pods * C.bean().totalSupply()) / 1000; // previous tests used 1000 as the total supply.
         s.w.lastDSoil = uint128(_lastDSoil);
         s.f.beanSown = beanSown;
         s.f.soil = endSoil;
@@ -344,7 +337,7 @@ contract MockSeasonFacet is SeasonFacet {
     }
 
     function resetSeasonStart(uint256 amount) public {
-        s.season.start = block.timestamp.sub(amount + 3600 * 2);
+        s.season.start = block.timestamp - amount + 3600 * 2;
     }
 
     function captureE() external returns (int256 deltaB) {
@@ -630,7 +623,7 @@ contract MockSeasonFacet is SeasonFacet {
                 // excessively above peg
 
                 // to get Q, decrease s.reserve0 of the well to be >1.05.
-                s.twaReserves[targetWell].reserve0 = uint128(reserves[0].mul(90).div(100));
+                s.twaReserves[targetWell].reserve0 = uint128((reserves[0] * 90) / 100);
             }
         }
     }
@@ -643,16 +636,16 @@ contract MockSeasonFacet is SeasonFacet {
         uint256 beanSupply = C.bean().totalSupply();
         if (podRate == 0) {
             // < 5%
-            s.f.pods = beanSupply.mul(49).div(1000);
+            s.f.pods = (beanSupply * 49) / 1000;
         } else if (podRate == 1) {
             // < 15%
-            s.f.pods = beanSupply.mul(149).div(1000);
+            s.f.pods = (beanSupply * 149) / 1000;
         } else if (podRate == 2) {
             // < 25%
-            s.f.pods = beanSupply.mul(249).div(1000);
+            s.f.pods = (beanSupply * 249) / 1000;
         } else {
             // > 25%
-            s.f.pods = beanSupply.mul(251).div(1000);
+            s.f.pods = (beanSupply * 251) / 1000;
         }
     }
 
@@ -683,7 +676,7 @@ contract MockSeasonFacet is SeasonFacet {
     function setL2SR(uint256 liquidityToSupplyRatio, address targetWell) public {
         uint256 beansInWell = C.bean().balanceOf(targetWell);
         uint256 beanSupply = C.bean().totalSupply();
-        uint currentL2SR = beansInWell.mul(1e18).div(beanSupply);
+        uint currentL2SR = beansInWell * 1e18 / beanSupply;
 
         // issue beans to sender based on ratio and supply of well.
         uint256 ratio = 1e18;
@@ -701,7 +694,7 @@ contract MockSeasonFacet is SeasonFacet {
         }
 
         // mint new beans outside of the well for the L2SR to change.
-        uint256 newSupply = beansInWell.mul(currentL2SR).div(ratio).sub(beansInWell);
+        uint256 newSupply = beansInWell * currentL2SR / ratio - beansInWell;
         beanSupply += newSupply;
 
         C.bean().mint(msg.sender, newSupply);

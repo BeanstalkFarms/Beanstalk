@@ -7,7 +7,6 @@ pragma experimental ABIEncoderV2;
 
 import {C} from "contracts/C.sol";
 import {IChainlinkAggregator} from "contracts/interfaces/chainlink/IChainlinkAggregator.sol";
-import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
 
 /**
  * @title Chainlink Oracle Library
@@ -16,7 +15,6 @@ import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
  * - ETH/USD price feed
  **/
 library LibChainlinkOracle {
-    using SafeMath for uint256;
 
     uint256 constant PRECISION = 1e6; // use 6 decimal precision.
 
@@ -65,7 +63,7 @@ library LibChainlinkOracle {
                 return 0;
             }
             // Adjust to 6 decimal precision.
-            return uint256(answer).mul(PRECISION).div(10 ** decimals);
+            return uint256(answer) * PRECISION / (10 ** decimals);
         } catch {
             // If call to Chainlink aggregator reverts, return a price of 0 indicating failure
             return 0;
@@ -109,17 +107,17 @@ library LibChainlinkOracle {
 
             TwapVariables memory t;
 
-            t.endTimestamp = block.timestamp.sub(lookback);
+            t.endTimestamp = block.timestamp - lookback;
             // Check if last round was more than `lookback` ago.
             if (timestamp <= t.endTimestamp) {
-                return uint256(answer).mul(PRECISION).div(10 ** decimals);
+                return uint256(answer) * PRECISION / (10 ** decimals);
             } else {
                 t.lastTimestamp = block.timestamp;
                 // Loop through previous rounds and compute cumulative sum until
                 // a round at least `lookback` seconds ago is reached.
                 while (timestamp > t.endTimestamp) {
-                    t.cumulativePrice = t.cumulativePrice.add(
-                        uint256(answer).mul(t.lastTimestamp.sub(timestamp))
+                    t.cumulativePrice = t.cumulativePrice + (
+                        uint256(answer) * (t.lastTimestamp - timestamp)
                     );
                     roundId -= 1;
                     t.lastTimestamp = timestamp;
@@ -135,10 +133,10 @@ library LibChainlinkOracle {
                         return 0;
                     }
                 }
-                t.cumulativePrice = t.cumulativePrice.add(
-                    uint256(answer).mul(t.lastTimestamp.sub(t.endTimestamp))
+                t.cumulativePrice = t.cumulativePrice + (
+                    uint256(answer) * (t.lastTimestamp - t.endTimestamp)
                 );
-                return t.cumulativePrice.mul(PRECISION).div(10 ** decimals).div(lookback);
+                return t.cumulativePrice * PRECISION / (10 ** decimals) / lookback;
             }
         } catch {
             // If call to Chainlink aggregator reverts, return a price of 0 indicating failure
@@ -172,7 +170,7 @@ library LibChainlinkOracle {
         // Check for an invalid timeStamp that is 0, or in the future
         if (timestamp == 0 || timestamp > currentTimestamp) return true;
         // Check if Chainlink's price feed has timed out
-        if (currentTimestamp.sub(timestamp) > maxTimeout) return true;
+        if (currentTimestamp - timestamp > maxTimeout) return true;
         // Check for non-positive price
         if (answer <= 0) return true;
 

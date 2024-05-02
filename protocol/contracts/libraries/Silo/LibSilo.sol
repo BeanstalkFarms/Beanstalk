@@ -7,13 +7,9 @@ pragma abicoder v2;
 
 import "../LibAppStorage.sol";
 import {C} from "../../C.sol";
-import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
 import {SafeCast} from "@openzeppelin/contracts/utils/SafeCast.sol";
 import {LibBytes} from "../LibBytes.sol";
 import {LibTokenSilo} from "./LibTokenSilo.sol";
-import {LibSafeMath128} from "../LibSafeMath128.sol";
-import {LibSafeMath32} from "../LibSafeMath32.sol";
-import {LibSafeMathSigned96} from "../LibSafeMathSigned96.sol";
 import {LibGerminate} from "./LibGerminate.sol";
 import {LibWhitelistedTokens} from "./LibWhitelistedTokens.sol";
 import {LibTractor} from "../LibTractor.sol";
@@ -40,10 +36,6 @@ import {IWell} from "contracts/interfaces/basin/IWell.sol";
  * to use "mint" in the same sense.
  */
 library LibSilo {
-    using SafeMath for uint256;
-    using LibSafeMath128 for uint128;
-    using LibSafeMathSigned96 for int96;
-    using LibSafeMath32 for uint32;
     using SafeCast for uint256;
 
     uint128 internal constant PRECISION = 1e6;
@@ -164,20 +156,20 @@ library LibSilo {
         AppStorage storage s = LibAppStorage.diamondStorage();
         uint256 roots;
         if (s.s.roots == 0) {
-            roots = uint256(stalk.mul(C.getRootsBase()));
+            roots = uint256(stalk * C.getRootsBase());
         } else {
             // germinating assets should be considered
             // when calculating roots
-            roots = s.s.roots.mul(stalk).div(s.s.stalk);
+            roots = (s.s.roots * stalk) / s.s.stalk;
         }
 
         // increment user and total stalk;
-        s.s.stalk = s.s.stalk.add(stalk);
-        s.a[account].s.stalk = s.a[account].s.stalk.add(stalk);
+        s.s.stalk = s.s.stalk + stalk;
+        s.a[account].s.stalk = s.a[account].s.stalk + stalk;
 
         // increment user and total roots
-        s.s.roots = s.s.roots.add(roots);
-        s.a[account].roots = s.a[account].roots.add(roots);
+        s.s.roots = s.s.roots + roots;
+        s.a[account].roots = s.a[account].roots + roots;
 
         emit StalkBalanceChanged(account, int256(stalk), int256(roots));
     }
@@ -199,21 +191,20 @@ library LibSilo {
         AppStorage storage s = LibAppStorage.diamondStorage();
 
         if (germ == LibGerminate.Germinate.ODD) {
-            s.a[account].farmerGerminating.odd = s.a[account].farmerGerminating.odd.add(stalk);
+            s.a[account].farmerGerminating.odd = s.a[account].farmerGerminating.odd + stalk;
         } else {
-            s.a[account].farmerGerminating.even = s.a[account].farmerGerminating.even.add(stalk);
+            s.a[account].farmerGerminating.even = s.a[account].farmerGerminating.even + stalk;
         }
 
         // germinating stalk are either newly germinating, or partially germinated.
         // Thus they can only be incremented in the latest or previous season.
         uint32 season = s.season.current;
         if (LibGerminate.getSeasonGerminationState() == germ) {
-            s.unclaimedGerminating[season].stalk = s.unclaimedGerminating[season].stalk.add(stalk);
+            s.unclaimedGerminating[season].stalk = s.unclaimedGerminating[season].stalk + stalk;
         } else {
-            s.unclaimedGerminating[season.sub(1)].stalk = s
-                .unclaimedGerminating[season.sub(1)]
-                .stalk
-                .add(stalk);
+            s.unclaimedGerminating[season - 1].stalk =
+                s.unclaimedGerminating[season - 1].stalk +
+                stalk;
         }
 
         // emit event.
@@ -241,7 +232,7 @@ library LibSilo {
             // account's and Beanstalk's Oversaturated Roots balances.
             // For more info on Oversaturation, See {Weather.handleRain}
             if (s.season.raining) {
-                s.r.roots = s.r.roots.sub(roots);
+                s.r.roots = s.r.roots - roots;
                 s.a[account].sop.roots = s.a[account].roots;
             }
         } else {
@@ -257,16 +248,16 @@ library LibSilo {
         if (stalk == 0) return 0;
 
         // Calculate the amount of Roots for the given amount of Stalk.
-        roots = s.s.roots.mul(stalk).div(s.s.stalk);
+        roots = (s.s.roots * stalk) / s.s.stalk;
         if (roots > s.a[account].roots) roots = s.a[account].roots;
 
         // Decrease supply of Stalk; Remove Stalk from the balance of `account`
-        s.s.stalk = s.s.stalk.sub(stalk);
-        s.a[account].s.stalk = s.a[account].s.stalk.sub(stalk);
+        s.s.stalk = s.s.stalk - stalk;
+        s.a[account].s.stalk = s.a[account].s.stalk - stalk;
 
         // Decrease supply of Roots; Remove Roots from the balance of `account`
-        s.s.roots = s.s.roots.sub(roots);
-        s.a[account].roots = s.a[account].roots.sub(roots);
+        s.s.roots = s.s.roots - roots;
+        s.a[account].roots = s.a[account].roots - roots;
 
         // emit event.
         emit StalkBalanceChanged(account, -int256(stalk), -int256(roots));
@@ -284,21 +275,20 @@ library LibSilo {
         AppStorage storage s = LibAppStorage.diamondStorage();
 
         if (germ == LibGerminate.Germinate.ODD) {
-            s.a[account].farmerGerminating.odd = s.a[account].farmerGerminating.odd.sub(stalk);
+            s.a[account].farmerGerminating.odd = s.a[account].farmerGerminating.odd - stalk;
         } else {
-            s.a[account].farmerGerminating.even = s.a[account].farmerGerminating.even.sub(stalk);
+            s.a[account].farmerGerminating.even = s.a[account].farmerGerminating.even - stalk;
         }
 
         // germinating stalk are either newly germinating, or partially germinated.
         // Thus they can only be decremented in the latest or previous season.
         uint32 season = s.season.current;
         if (LibGerminate.getSeasonGerminationState() == germ) {
-            s.unclaimedGerminating[season].stalk = s.unclaimedGerminating[season].stalk.sub(stalk);
+            s.unclaimedGerminating[season].stalk = s.unclaimedGerminating[season].stalk - stalk;
         } else {
-            s.unclaimedGerminating[season.sub(1)].stalk = s
-                .unclaimedGerminating[season.sub(1)]
-                .stalk
-                .sub(stalk);
+            s.unclaimedGerminating[season - 1].stalk =
+                s.unclaimedGerminating[season - 1].stalk -
+                stalk;
         }
 
         // emit events.
@@ -317,16 +307,16 @@ library LibSilo {
         uint256 roots;
         roots = stalk == s.a[sender].s.stalk
             ? s.a[sender].roots
-            : s.s.roots.sub(1).mul(stalk).div(s.s.stalk).add(1);
+            : (((s.s.roots - 1) * stalk) / s.s.stalk) + 1;
 
         // Subtract Stalk and Roots from the 'sender' balance.
-        s.a[sender].s.stalk = s.a[sender].s.stalk.sub(stalk);
-        s.a[sender].roots = s.a[sender].roots.sub(roots);
+        s.a[sender].s.stalk = s.a[sender].s.stalk - stalk;
+        s.a[sender].roots = s.a[sender].roots - roots;
         emit StalkBalanceChanged(sender, -int256(stalk), -int256(roots));
 
         // Add Stalk and Roots to the 'recipient' balance.
-        s.a[recipient].s.stalk = s.a[recipient].s.stalk.add(stalk);
-        s.a[recipient].roots = s.a[recipient].roots.add(roots);
+        s.a[recipient].s.stalk = s.a[recipient].s.stalk + stalk;
+        s.a[recipient].roots = s.a[recipient].roots + roots;
         emit StalkBalanceChanged(recipient, int256(stalk), int256(roots));
     }
 
@@ -344,19 +334,19 @@ library LibSilo {
         // Subtract Germinating Stalk from the 'sender' balance,
         // and Add to the 'recipient' balance.
         if (GermState == LibGerminate.Germinate.ODD) {
-            s.a[sender].farmerGerminating.odd = s.a[sender].farmerGerminating.odd.sub(
-                stalk.toUint128()
-            );
-            s.a[recipient].farmerGerminating.odd = s.a[recipient].farmerGerminating.odd.add(
-                stalk.toUint128()
-            );
+            s.a[sender].farmerGerminating.odd =
+                s.a[sender].farmerGerminating.odd -
+                stalk.toUint128();
+            s.a[recipient].farmerGerminating.odd =
+                s.a[recipient].farmerGerminating.odd +
+                stalk.toUint128();
         } else {
-            s.a[sender].farmerGerminating.even = s.a[sender].farmerGerminating.even.sub(
-                stalk.toUint128()
-            );
-            s.a[recipient].farmerGerminating.even = s.a[recipient].farmerGerminating.even.add(
-                stalk.toUint128()
-            );
+            s.a[sender].farmerGerminating.even =
+                s.a[sender].farmerGerminating.even -
+                stalk.toUint128();
+            s.a[recipient].farmerGerminating.even =
+                s.a[recipient].farmerGerminating.even +
+                stalk.toUint128();
         }
 
         // emit events.
@@ -380,17 +370,17 @@ library LibSilo {
         // a germinating deposit may have active grown stalk,
         // but no active stalk from bdv.
         if (ar.active.stalk > 0) {
-            ar.active.stalk = ar.active.stalk.add(ar.active.bdv.mul(stalkPerBDV));
+            ar.active.stalk = ar.active.stalk + (ar.active.bdv * stalkPerBDV);
             transferStalk(sender, recipient, ar.active.stalk);
         }
 
         if (ar.odd.bdv > 0) {
-            ar.odd.stalk = ar.odd.stalk.add(ar.odd.bdv.mul(stalkPerBDV));
+            ar.odd.stalk = ar.odd.stalk + (ar.odd.bdv * stalkPerBDV);
             transferGerminatingStalk(sender, recipient, ar.odd.stalk, LibGerminate.Germinate.ODD);
         }
 
         if (ar.even.bdv > 0) {
-            ar.even.stalk = ar.even.stalk.add(ar.even.bdv.mul(stalkPerBDV));
+            ar.even.stalk = ar.even.stalk + (ar.even.bdv * stalkPerBDV);
             transferGerminatingStalk(sender, recipient, ar.even.stalk, LibGerminate.Germinate.EVEN);
         }
     }
@@ -565,7 +555,7 @@ library LibSilo {
             if (lastRainPPR > previousPPR) {
                 uint256 plentyPerRoot = lastRainPPR - previousPPR;
                 previousPPR = lastRainPPR;
-                plenty = plenty.add(plentyPerRoot.mul(s.a[account].sop.roots).div(C.SOP_PRECISION));
+                plenty = plenty + ((plentyPerRoot * s.a[account].sop.roots) / C.SOP_PRECISION);
             }
         } else {
             // If it was not raining, just use the PPR at previous SOP.
@@ -574,8 +564,8 @@ library LibSilo {
 
         // Handle and SOPs that started + ended before after last Silo update.
         if (s.season.lastSop > _lastUpdate(account)) {
-            uint256 plentyPerRoot = s.sops[s.season.lastSop].sub(previousPPR);
-            plenty = plenty.add(plentyPerRoot.mul(s.a[account].roots).div(C.SOP_PRECISION));
+            uint256 plentyPerRoot = s.sops[s.season.lastSop] - previousPPR;
+            plenty = plenty + ((plentyPerRoot * s.a[account].roots) / C.SOP_PRECISION);
         }
     }
 
@@ -611,7 +601,7 @@ library LibSilo {
 
         // the inital and grown stalk are as there are instances where the inital stalk is
         // germinating, but the grown stalk is not.
-        initalStalkRemoved = bdvRemoved.mul(s.ss[token].stalkIssuedPerBdv);
+        initalStalkRemoved = bdvRemoved * s.ss[token].stalkIssuedPerBdv;
 
         grownStalkRemoved = stalkReward(stem, stemTip, bdvRemoved.toUint128());
         /**
@@ -674,20 +664,20 @@ library LibSilo {
             // if the deposit is germinating, decrement germinating values,
             // otherwise increment deposited values.
             if (germState == LibGerminate.Germinate.NOT_GERMINATING) {
-                ar.active.bdv = ar.active.bdv.add(crateBdv);
-                ar.active.stalk = ar.active.stalk.add(crateStalk);
-                ar.active.tokens = ar.active.tokens.add(amounts[i]);
+                ar.active.bdv = ar.active.bdv + crateBdv;
+                ar.active.stalk = ar.active.stalk + crateStalk;
+                ar.active.tokens = ar.active.tokens + amounts[i];
             } else {
                 if (germState == LibGerminate.Germinate.ODD) {
-                    ar.odd.bdv = ar.odd.bdv.add(crateBdv);
-                    ar.odd.tokens = ar.odd.tokens.add(amounts[i]);
+                    ar.odd.bdv = ar.odd.bdv + crateBdv;
+                    ar.odd.tokens = ar.odd.tokens + amounts[i];
                 } else {
-                    ar.even.bdv = ar.even.bdv.add(crateBdv);
-                    ar.even.tokens = ar.even.tokens.add(amounts[i]);
+                    ar.even.bdv = ar.even.bdv + crateBdv;
+                    ar.even.tokens = ar.even.tokens + amounts[i];
                 }
                 // grown stalk from germinating deposits do not germinate,
                 // and thus must be added to the grown stalk.
-                ar.grownStalkFromGermDeposits = ar.grownStalkFromGermDeposits.add(crateStalk);
+                ar.grownStalkFromGermDeposits = ar.grownStalkFromGermDeposits + crateStalk;
             }
         }
 
@@ -695,15 +685,15 @@ library LibSilo {
         {
             uint256 stalkIssuedPerBdv = s.ss[token].stalkIssuedPerBdv;
             if (ar.active.tokens > 0) {
-                ar.active.stalk = ar.active.stalk.add(ar.active.bdv.mul(stalkIssuedPerBdv));
+                ar.active.stalk = ar.active.stalk + (ar.active.bdv * stalkIssuedPerBdv);
             }
 
             if (ar.odd.tokens > 0) {
-                ar.odd.stalk = ar.odd.bdv.mul(stalkIssuedPerBdv);
+                ar.odd.stalk = ar.odd.bdv * stalkIssuedPerBdv;
             }
 
             if (ar.even.tokens > 0) {
-                ar.even.stalk = ar.even.bdv.mul(stalkIssuedPerBdv);
+                ar.even.stalk = ar.even.bdv * stalkIssuedPerBdv;
             }
         }
 
@@ -714,7 +704,7 @@ library LibSilo {
             token,
             stems,
             amounts,
-            ar.active.tokens.add(ar.odd.tokens).add(ar.even.tokens),
+            ar.active.tokens + ar.odd.tokens + ar.even.tokens,
             bdvsRemoved
         );
     }
@@ -737,7 +727,7 @@ library LibSilo {
         int96 endStem,
         uint128 bdv
     ) internal pure returns (uint256) {
-        uint128 reward = uint128(endStem.sub(startStem)).mul(bdv).div(PRECISION);
+        uint128 reward = (uint128(endStem - startStem) * bdv) / PRECISION;
 
         return reward;
     }
@@ -771,7 +761,7 @@ library LibSilo {
         // There will be no Roots before the first Deposit is made.
         if (s.s.roots == 0) return 0;
 
-        uint256 stalk = s.s.stalk.mul(accountRoots).div(s.s.roots);
+        uint256 stalk = (s.s.stalk * accountRoots) / s.s.roots;
 
         // Beanstalk rounds down when minting Roots. Thus, it is possible that
         // balanceOfRoots / totalRoots * totalStalk < s.a[account].s.stalk.
@@ -780,7 +770,7 @@ library LibSilo {
         if (stalk <= accountStalk) return 0;
 
         // Calculate Earned Stalk and convert to Earned Beans.
-        beans = (stalk - accountStalk).div(C.STALK_PER_BEAN); // Note: SafeMath is redundant here.
+        beans = (stalk - accountStalk) / C.STALK_PER_BEAN;
         if (beans > s.earnedBeans) return s.earnedBeans;
 
         return beans;
@@ -797,11 +787,9 @@ library LibSilo {
         for (uint i; i < siloTokens.length; i++) {
             // scale lastStem by 1e6, if the user has a lastStem.
             if (s.a[account].mowStatuses[siloTokens[i]].lastStem > 0) {
-                s.a[account].mowStatuses[siloTokens[i]].lastStem = s
-                    .a[account]
-                    .mowStatuses[siloTokens[i]]
-                    .lastStem
-                    .mul(int96(PRECISION));
+                s.a[account].mowStatuses[siloTokens[i]].lastStem =
+                    s.a[account].mowStatuses[siloTokens[i]].lastStem *
+                    int96(PRECISION);
             }
         }
     }
@@ -821,7 +809,7 @@ library LibSilo {
         for (uint i; i < siloTokens.length; i++) {
             int96 lastStem = s.a[account].mowStatuses[siloTokens[i]].lastStem;
             if (lastStem > 0) {
-                if (LibTokenSilo.stemTipForToken(siloTokens[i]).div(lastStem) >= int96(PRECISION)) {
+                if (LibTokenSilo.stemTipForToken(siloTokens[i]) / lastStem >= int96(PRECISION)) {
                     return true;
                 }
             }

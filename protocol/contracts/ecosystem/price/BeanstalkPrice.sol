@@ -2,14 +2,13 @@
 pragma solidity ^0.8.20;
 pragma experimental ABIEncoderV2;
 
-import {WellPrice, P, C, SafeMath} from "./WellPrice.sol";
+import {WellPrice, P, C} from "./WellPrice.sol";
 
 interface IWhitelistFacet {
     function getWhitelistedWellLpTokens() external view returns (address[] memory tokens);
 }
 
 contract BeanstalkPrice is WellPrice {
-    using SafeMath for uint256;
 
     address immutable _beanstalk;
 
@@ -42,10 +41,10 @@ contract BeanstalkPrice is WellPrice {
 
         // assumes that liquidity and prices on all pools uses the same precision.
         for (uint256 i = 0; i < p.ps.length; i++) {
-            p.price += p.ps[i].price.mul(p.ps[i].liquidity);
+            p.price += p.ps[i].price * p.ps[i].liquidity;
             p.liquidity += p.ps[i].liquidity;
             p.deltaB += p.ps[i].deltaB;
         }
-        p.price = p.price.div(p.liquidity);
+        p.price = p.price / p.liquidity;
     }
 }

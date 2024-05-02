@@ -3,7 +3,6 @@ pragma solidity ^0.8.20;
 pragma experimental ABIEncoderV2;
 
 import {P} from "./P.sol";
-import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
 import {SafeCast} from "@openzeppelin/contracts/utils/SafeCast.sol";
 import {Call, IWell, IERC20} from "../../interfaces/basin/IWell.sol";
 import {IBeanstalkWellFunction} from "../../interfaces/basin/IBeanstalkWellFunction.sol";
@@ -22,7 +21,6 @@ interface dec {
 }
 
 contract WellPrice {
-    using SafeMath for uint256;
     using SafeCast for uint256;
 
     IBeanstalk private constant BEANSTALK = IBeanstalk(0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5);
@@ -62,18 +60,18 @@ contract WellPrice {
         // price = amtOut/tknOutPrice
         uint256 assetPrice = LibUsdOracle.getUsdPrice(pool.tokens[tknIndex]);
         if (assetPrice > 0) {
-            pool.price = well
-                .getSwapOut(wellTokens[beanIndex], wellTokens[tknIndex], 1e6)
-                .mul(PRICE_PRECISION)
-                .div(assetPrice);
+            pool.price =
+                (well.getSwapOut(wellTokens[beanIndex], wellTokens[tknIndex], 1e6) *
+                    PRICE_PRECISION) /
+                assetPrice;
         }
 
         // liquidity is calculated by getting the usd value of the bean portion of the pool,
         // and multiplying by 2 to get the total liquidity of the pool.
-        pool.liquidity = pool.balances[beanIndex].mul(pool.price).mul(2).div(PRICE_PRECISION);
+        pool.liquidity = pool.balances[beanIndex] * pool.price * 2 / PRICE_PRECISION;
 
         pool.deltaB = getDeltaB(wellAddress, wellTokens, wellBalances);
-        pool.lpUsd = pool.liquidity.mul(WELL_DECIMALS).div(IERC20(wellAddress).totalSupply());
+        pool.lpUsd = pool.liquidity * WELL_DECIMALS / IERC20(wellAddress).totalSupply();
         try BEANSTALK.bdv(wellAddress, WELL_DECIMALS) returns (uint256 bdv) {
             pool.lpBdv = bdv;
         } catch {}

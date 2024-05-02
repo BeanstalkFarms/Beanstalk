@@ -4,7 +4,6 @@ pragma solidity ^0.8.20;
 import "../AppStorage.sol";
 import {LibBytes64} from "contracts/libraries/LibBytes64.sol";
 import {LibStrings} from "contracts/libraries/LibStrings.sol";
-import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
 import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import {C} from "../../C.sol";
 
@@ -20,7 +19,6 @@ contract MetadataImage {
 
     using LibStrings for uint256;
     using LibStrings for int256;
-    using SafeMath for uint256;
 
     string constant LEAF_COLOR_0 = "#A8C83A";
     string constant LEAF_COLOR_1 = "#89A62F";
@@ -69,7 +67,7 @@ contract MetadataImage {
 
     function defs(int96 stemTip) internal pure returns (string memory) {
         (uint256 sprouts, ) = getNumStemsAndPlots(stemTip);
-        uint256 sproutsInFinalRow = sprouts.mod(4);
+        uint256 sproutsInFinalRow = sprouts % 4;
         return
             string(
                 abi.encodePacked(
@@ -184,9 +182,9 @@ contract MetadataImage {
     }
 
     function partialLeafPlot(int96 stalkPerBDV) internal pure returns (string memory _plot) {
-        uint256 totalSprouts = uint256(stalkPerBDV).div(STALK_GROWTH).add(16);
-        uint256 numRows = uint256(totalSprouts).div(4).mod(4);
-        uint256 numSprouts = uint256(totalSprouts).mod(4);
+        uint256 totalSprouts = (uint256(stalkPerBDV) / STALK_GROWTH) + 16;
+        uint256 numRows = (uint256(totalSprouts) / 4) % 4;
+        uint256 numSprouts = uint256(totalSprouts) % 4;
         if (numRows == 0) {
             if (numSprouts > 0) {
                 _plot = string(
@@ -599,9 +597,9 @@ contract MetadataImage {
         return
             string(
                 abi.encodePacked(
-                    stem.div(10 ** exponent).toString(),
+                    stem / (10 ** exponent).toString(),
                     ".",
-                    stem.div(10 ** exponent.sub(5)).mod(1e5).toString(),
+                    ((stem / (10 ** (exponent - 5))) % 1e5).toString(),
                     "e",
                     exponent.toString()
                 )
@@ -656,8 +654,8 @@ contract MetadataImage {
         int96 grownStalkPerBDV
     ) internal pure returns (uint256 numStems, uint256 plots) {
         // 1 sprout on the image is equal to 0.02 stalk
-        numStems = uint256(grownStalkPerBDV).div(STALK_GROWTH);
-        plots = numStems.div(16).add(1);
-        if (numStems.mod(16) > 0) plots = plots.add(1);
+        numStems = uint256(grownStalkPerBDV) / STALK_GROWTH;
+        plots = (numStems / 16) + 1;
+        if (numStems % 16 > 0) plots = plots + 1;
     }
 }

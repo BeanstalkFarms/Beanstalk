@@ -5,12 +5,11 @@ pragma experimental ABIEncoderV2;
 
 import {AppStorage, Storage} from "../../AppStorage.sol";
 import {C} from "../../../C.sol";
-import {Decimal, SafeMath} from "contracts/libraries/Decimal.sol";
+import {Decimal} from "contracts/libraries/Decimal.sol";
 import {LibEvaluate} from "contracts/libraries/LibEvaluate.sol";
 import {LibUsdOracle} from "contracts/libraries/Oracle/LibUsdOracle.sol";
 import {LibWellMinting} from "contracts/libraries/Minting/LibWellMinting.sol";
 import {LibWell} from "contracts/libraries/Well/LibWell.sol";
-import {SignedSafeMath} from "@openzeppelin/contracts/math/SignedSafeMath.sol";
 import {LibWhitelistedTokens} from "contracts/libraries/Silo/LibWhitelistedTokens.sol";
 import {LibGauge} from "contracts/libraries/LibGauge.sol";
 import {LibCases} from "contracts/libraries/LibCases.sol";
@@ -21,9 +20,6 @@ import {LibCases} from "contracts/libraries/LibCases.sol";
  * @notice Holds Getter view functions for the SeasonFacet.
  */
 contract SeasonGettersFacet {
-    using SafeMath for uint256;
-    using SignedSafeMath for int256;
-
     AppStorage internal s;
 
     //////////////////// SEASON GETTERS ////////////////////
@@ -182,7 +178,7 @@ contract SeasonGettersFacet {
         if (LibWell.isWell(well)) {
             uint256 wellGaugePoints = s.ss[well].gaugePoints;
             uint256 wellDepositedBdv = s.siloBalances[well].depositedBdv;
-            return wellGaugePoints.mul(LibGauge.BDV_PRECISION).div(wellDepositedBdv);
+            return (wellGaugePoints * LibGauge.BDV_PRECISION) / wellDepositedBdv;
         } else {
             revert("Token not supported");
         }
@@ -200,7 +196,7 @@ contract SeasonGettersFacet {
      */
     function getBeanGaugePointsPerBdv() public view returns (uint256) {
         uint256 beanToMaxLpGpPerBdvRatio = getBeanToMaxLpGpPerBdvRatioScaled();
-        return getBeanEthGaugePointsPerBdv().mul(beanToMaxLpGpPerBdvRatio).div(100e18);
+        return (getBeanEthGaugePointsPerBdv() * beanToMaxLpGpPerBdvRatio) / 100e18;
     }
 
     /**
@@ -210,12 +206,11 @@ contract SeasonGettersFacet {
         address[] memory lpGaugeTokens = LibWhitelistedTokens.getWhitelistedLpTokens();
         uint256 totalLpBdv;
         for (uint i; i < lpGaugeTokens.length; i++) {
-            totalLpBdv = totalLpBdv.add(s.siloBalances[lpGaugeTokens[i]].depositedBdv);
+            totalLpBdv = totalLpBdv + s.siloBalances[lpGaugeTokens[i]].depositedBdv;
         }
         return
-            uint256(s.seedGauge.averageGrownStalkPerBdvPerSeason)
-                .mul(totalLpBdv.add(s.siloBalances[C.BEAN].depositedBdv))
-                .div(LibGauge.BDV_PRECISION);
+            (uint256(s.seedGauge.averageGrownStalkPerBdvPerSeason) *
+                (totalLpBdv + s.siloBalances[C.BEAN].depositedBdv)) / LibGauge.BDV_PRECISION;
     }
 
     /**
@@ -225,15 +220,14 @@ contract SeasonGettersFacet {
         address[] memory lpGaugeTokens = LibWhitelistedTokens.getWhitelistedLpTokens();
         uint256 totalGaugePoints;
         for (uint i; i < lpGaugeTokens.length; i++) {
-            totalGaugePoints = totalGaugePoints.add(s.ss[lpGaugeTokens[i]].gaugePoints);
+            totalGaugePoints = totalGaugePoints + s.ss[lpGaugeTokens[i]].gaugePoints;
         }
         uint256 newGrownStalk = getGrownStalkIssuedPerSeason();
-        totalGaugePoints = totalGaugePoints.add(
-            getBeanGaugePointsPerBdv().mul(s.siloBalances[C.BEAN].depositedBdv).div(
-                LibGauge.BDV_PRECISION
-            )
-        );
-        return newGrownStalk.mul(1e18).div(totalGaugePoints);
+        totalGaugePoints =
+            totalGaugePoints +
+            ((getBeanGaugePointsPerBdv() * s.siloBalances[C.BEAN].depositedBdv) /
+                LibGauge.BDV_PRECISION);
+        return (newGrownStalk * 1e18) / totalGaugePoints;
     }
 
     /**
@@ -241,7 +235,7 @@ contract SeasonGettersFacet {
      */
     function getPodRate() external view returns (uint256) {
         uint256 beanSupply = C.bean().totalSupply();
-        return Decimal.ratio(s.f.pods.sub(s.f.harvestable), beanSupply).value;
+        return Decimal.ratio(s.f.pods - s.f.harvestable, beanSupply).value;
     }
 
     /**
@@ -276,10 +270,8 @@ contract SeasonGettersFacet {
      */
     function getWeightedTwaLiquidityForWell(address well) public view returns (uint256) {
         return
-            LibEvaluate
-                .getLiquidityWeight(s.ss[well].lwSelector)
-                .mul(getTwaLiquidityForWell(well))
-                .div(1e18);
+            (LibEvaluate.getLiquidityWeight(s.ss[well].lwSelector) * getTwaLiquidityForWell(well)) /
+            1e18;
     }
 
     /**
@@ -288,7 +280,7 @@ contract SeasonGettersFacet {
     function getTotalUsdLiquidity() external view returns (uint256 totalLiquidity) {
         address[] memory wells = LibWhitelistedTokens.getWhitelistedWellLpTokens();
         for (uint i; i < wells.length; i++) {
-            totalLiquidity = totalLiquidity.add(getTwaLiquidityForWell(wells[i]));
+            totalLiquidity = totalLiquidity + getTwaLiquidityForWell(wells[i]);
         }
     }
 
@@ -298,9 +290,9 @@ contract SeasonGettersFacet {
     function getTotalWeightedUsdLiquidity() external view returns (uint256 totalWeightedLiquidity) {
         address[] memory wells = LibWhitelistedTokens.getWhitelistedWellLpTokens();
         for (uint i; i < wells.length; i++) {
-            totalWeightedLiquidity = totalWeightedLiquidity.add(
-                getWeightedTwaLiquidityForWell(wells[i])
-            );
+            totalWeightedLiquidity =
+                totalWeightedLiquidity +
+                getWeightedTwaLiquidityForWell(wells[i]);
         }
     }
 

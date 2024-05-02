@@ -13,8 +13,6 @@ import "@openzeppelin/contracts/token/ERC20/ERC20Burnable.sol";
  * @title MockSiloToken is a mintable ERC-20 Token.
  **/
 contract MockSiloToken is Ownable, ERC20Burnable {
-    using SafeMath for uint256;
-
     constructor() ERC20("Bean3Crv", "BEAN3CRV") {}
 
     function mint(address account, uint256 amount) public onlyOwner returns (bool) {
@@ -28,15 +26,10 @@ contract MockSiloToken is Ownable, ERC20Burnable {
         uint256 amount
     ) public override returns (bool) {
         _transfer(sender, recipient, amount);
+        uint256 allowance = allowance(sender, _msgSender());
+        require(allowance >= amount, "Bean: Transfer amount exceeds allowance.");
         if (allowance(sender, _msgSender()) != uint256(-1)) {
-            _approve(
-                sender,
-                _msgSender(),
-                allowance(sender, _msgSender()).sub(
-                    amount,
-                    "Bean: Transfer amount exceeds allowance."
-                )
-            );
+            _approve(sender, _msgSender(), allowance - amount);
         }
         return true;
     }

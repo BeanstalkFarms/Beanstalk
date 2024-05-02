@@ -7,7 +7,6 @@ pragma experimental ABIEncoderV2;
 
 import {ECDSA} from "@openzeppelin/contracts/cryptography/ECDSA.sol";
 import {LibBytes} from "../../libraries/LibBytes.sol";
-import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
 
 import {LibTractor} from "../../libraries/LibTractor.sol";
 import {AdvancedFarmCall, LibFarm} from "../../libraries/LibFarm.sol";
@@ -18,7 +17,6 @@ import {LibBytes} from "contracts/libraries/LibBytes.sol";
  */
 contract TractorFacet {
     using LibBytes for bytes32;
-    using SafeMath for uint256;
 
     event PublishRequisition(LibTractor.Requisition requisition);
 
@@ -145,9 +143,9 @@ contract TractorFacet {
     ) external returns (uint256 count) {
         uint256 newCount;
         if (updateType == LibTractor.CounterUpdateType.INCREASE) {
-            newCount = getCounter(counterId).add(amount);
+            newCount = getCounter(counterId) + amount;
         } else if (updateType == LibTractor.CounterUpdateType.DECREASE) {
-            newCount = getCounter(counterId).sub(amount);
+            newCount = getCounter(counterId) - amount;
         }
         LibTractor._tractorStorage().blueprintCounters[
             LibTractor._tractorStorage().activePublisher

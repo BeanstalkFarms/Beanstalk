@@ -16,8 +16,6 @@ interface IBDV {
 }
 
 contract CurvePrice {
-    using SafeMath for uint256;
-
     //-------------------------------------------------------------------------------------------------------------------
     // Mainnet
     address private constant POOL = 0xc9C32cd16Bf7eFB85Ff14e0c8603cc90F6F2eE49;
@@ -52,7 +50,7 @@ contract CurvePrice {
         uint256 D = getD(xp, a);
 
         pool.price = LibCurve.getPrice(xp, rates, a, D);
-        rates[0] = rates[0].mul(pool.price).div(1e6);
+        rates[0] = (rates[0] * pool.price) / 1e6;
         pool.liquidity = getCurveUSDValue(balances, rates);
         pool.deltaB = getCurveDeltaB(balances[0], D);
         pool.lpUsd = (pool.liquidity * 1e18) / ICurvePool(POOL).totalSupply();

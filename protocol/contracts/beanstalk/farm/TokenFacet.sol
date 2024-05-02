@@ -28,7 +28,6 @@ contract TokenFacet is Invariable, IERC1155Receiver, ReentrancyGuard {
     }
 
     using SafeERC20 for IERC20;
-    using SafeMath for uint256;
 
     event InternalBalanceChanged(address indexed user, IERC20 indexed token, int256 delta);
 
@@ -112,7 +111,7 @@ contract TokenFacet is Invariable, IERC1155Receiver, ReentrancyGuard {
             LibTractor._user(),
             spender,
             token,
-            LibTokenApprove.allowance(LibTractor._user(), spender, token).add(addedValue)
+            LibTokenApprove.allowance(LibTractor._user(), spender, token) + addedValue
         );
         return true;
     }
@@ -131,7 +130,7 @@ contract TokenFacet is Invariable, IERC1155Receiver, ReentrancyGuard {
             LibTractor._user(),
             spender,
             token,
-            currentAllowance.sub(subtractedValue)
+            currentAllowance - subtractedValue
         );
         return true;
     }
@@ -317,7 +316,7 @@ contract TokenFacet is Invariable, IERC1155Receiver, ReentrancyGuard {
     function getAllBalance(address account, IERC20 token) public view returns (Balance memory b) {
         b.internalBalance = getInternalBalance(account, token);
         b.externalBalance = getExternalBalance(account, token);
-        b.totalBalance = b.internalBalance.add(b.externalBalance);
+        b.totalBalance = b.internalBalance + b.externalBalance;
     }
 
     /**

@@ -6,10 +6,8 @@ pragma solidity ^0.8.20;
 pragma experimental ABIEncoderV2;
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
 import {SafeCast} from "@openzeppelin/contracts/utils/SafeCast.sol";
 import {AppStorage, LibAppStorage} from "./LibAppStorage.sol";
-import {LibSafeMath128} from "./LibSafeMath128.sol";
 import {C} from "../C.sol";
 import {LibUnripe} from "./LibUnripe.sol";
 import {IWell} from "contracts/interfaces/basin/IWell.sol";
@@ -26,8 +24,6 @@ import {LibTractor} from "contracts/libraries/LibTractor.sol";
  **/
 
 library LibFertilizer {
-    using SafeMath for uint256;
-    using LibSafeMath128 for uint128;
     using SafeCast for uint256;
     using SafeERC20 for IERC20;
     using LibWell for address;
@@ -53,14 +49,14 @@ library LibFertilizer {
 
         // Calculate Beans Per Fertilizer and add to total owed
         uint128 bpf = getBpf(season);
-        s.unfertilizedIndex = s.unfertilizedIndex.add(fertilizerAmount.mul(bpf));
+        s.unfertilizedIndex = s.unfertilizedIndex + (fertilizerAmount * bpf);
         // Get id
-        id = s.bpf.add(bpf);
+        id = s.bpf + bpf;
         // Update Total and Season supply
-        s.fertilizer[id] = s.fertilizer[id].add(fertilizerAmount128);
-        s.activeFertilizer = s.activeFertilizer.add(fertilizerAmount);
+        s.fertilizer[id] = s.fertilizer[id] + fertilizerAmount128;
+        s.activeFertilizer = s.activeFertilizer + fertilizerAmount;
         // Add underlying to Unripe Beans and Unripe LP
-        addUnderlying(tokenAmountIn, fertilizerAmount.mul(DECIMALS), minLP);
+        addUnderlying(tokenAmountIn, fertilizerAmount * DECIMALS, minLP);
         // If not first time adding Fertilizer with this id, return
         if (s.fertilizer[id] > fertilizerAmount128) return id;
         // If first time, log end Beans Per Fertilizer and add to Season queue.
@@ -69,14 +65,14 @@ library LibFertilizer {
     }
 
     function getBpf(uint128 id) internal pure returns (uint128 bpf) {
-        bpf = getHumidity(id).add(1000).mul(PADDING);
+        bpf = (getHumidity(id) + 1000) * PADDING;
     }
 
     function getHumidity(uint128 id) internal pure returns (uint128 humidity) {
         if (id == 0) return 5000;
         if (id >= END_DECREASE_SEASON) return 200;
-        uint128 humidityDecrease = id.sub(REPLANT_SEASON).mul(5);
-        humidity = RESTART_HUMIDITY.sub(humidityDecrease);
+        uint128 humidityDecrease = (id - REPLANT_SEASON) * 5;
+        humidity = RESTART_HUMIDITY - humidityDecrease;
     }
 
     /**
@@ -90,18 +86,18 @@ library LibFertilizer {
     ) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
         // Calculate how many new Deposited Beans will be minted
-        uint256 percentToFill = usdAmount.mul(C.precision()).div(remainingRecapitalization());
+        uint256 percentToFill = (usdAmount * C.precision()) / remainingRecapitalization();
 
         uint256 newDepositedBeans;
         if (C.unripeBean().totalSupply() > s.u[C.UNRIPE_BEAN].balanceOfUnderlying) {
-            newDepositedBeans = (C.unripeBean().totalSupply()).sub(
-                s.u[C.UNRIPE_BEAN].balanceOfUnderlying
-            );
-            newDepositedBeans = newDepositedBeans.mul(percentToFill).div(C.precision());
+            newDepositedBeans =
+                C.unripeBean().totalSupply() -
+                s.u[C.UNRIPE_BEAN].balanceOfUnderlying;
+            newDepositedBeans = newDepositedBeans * percentToFill / C.precision();
         }
 
         // Calculate how many Beans to add as LP
-        uint256 newDepositedLPBeans = usdAmount.mul(C.exploitAddLPRatio()).div(DECIMALS);
+        uint256 newDepositedLPBeans = usdAmount * C.exploitAddLPRatio() / DECIMALS;
 
         // Mint the Deposited Beans to Beanstalk.
         C.bean().mint(address(this), newDepositedBeans);
@@ -138,7 +134,7 @@ library LibFertilizer {
         LibUnripe.incrementUnderlying(C.UNRIPE_BEAN, newDepositedBeans);
         LibUnripe.incrementUnderlying(C.UNRIPE_LP, newLP);
 
-        s.recapitalized = s.recapitalized.add(usdAmount);
+        s.recapitalized = s.recapitalized + usdAmount;
     }
 
     function push(uint128 id) internal {
@@ -172,16 +168,16 @@ library LibFertilizer {
 
     function remainingRecapitalization() internal view returns (uint256 remaining) {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        uint256 totalDollars = C.dollarPerUnripeLP().mul(C.unripeLP().totalSupply()).div(DECIMALS);
+        uint256 totalDollars = C.dollarPerUnripeLP() * C.unripeLP().totalSupply() / DECIMALS;
         totalDollars = (totalDollars / 1e6) * 1e6; // round down to nearest USDC
         if (s.recapitalized >= totalDollars) return 0;
-        return totalDollars.sub(s.recapitalized);
+        return totalDollars - s.recapitalized;
     }
 
     function pop() internal returns (bool) {
         AppStorage storage s = LibAppStorage.diamondStorage();
         uint128 first = s.fFirst;
-        s.activeFertilizer = s.activeFertilizer.sub(getAmount(first));
+        s.activeFertilizer = s.activeFertilizer - getAmount(first);
         uint128 next = getNext(first);
         if (next == 0) {
             // If all Unfertilized Beans have been fertilized, delete line.

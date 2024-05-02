@@ -5,22 +5,18 @@
 pragma solidity ^0.8.20;
 pragma experimental ABIEncoderV2;
 
-import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
 import {ICumulativePump} from "contracts/interfaces/basin/pumps/ICumulativePump.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {IWell, Call} from "contracts/interfaces/basin/IWell.sol";
 import {C} from "contracts/C.sol";
 import {AppStorage, LibAppStorage, Storage} from "../LibAppStorage.sol";
 import {LibUsdOracle} from "contracts/libraries/Oracle/LibUsdOracle.sol";
-import {LibSafeMath128} from "contracts/libraries/LibSafeMath128.sol";
 
 /**
  * @title Well Library
  * Contains helper functions for common Well related functionality.
  **/
 library LibWell {
-    using SafeMath for uint256;
-    using LibSafeMath128 for uint128;
 
     // The BDV Selector that all Wells should be whitelisted with.
     bytes4 internal constant WELL_BDV_SELECTOR = 0xc84c7727;
@@ -121,7 +117,7 @@ library LibWell {
         uint256 tokenUsd = getUsdTokenPriceForWell(well);
         (address token, uint256 j) = getNonBeanTokenAndIndexFromWell(well);
         if (tokenUsd > 1) {
-            return twaReserves[j].mul(1e18).div(tokenUsd);
+            return twaReserves[j] * 1e18 / tokenUsd;
         }
 
         // if tokenUsd == 0, then the beanstalk could not compute a valid eth price,
@@ -134,7 +130,7 @@ library LibWell {
         // (i.e, seasonGetterFacet.getLiquidityToSupplyRatio()).We use LibUsdOracle
         // to get the price. This should never be reached during sunrise and thus
         // should not impact gas.
-        return LibUsdOracle.getTokenPrice(token).mul(twaReserves[j]).div(1e6);
+        return LibUsdOracle.getTokenPrice(token) * twaReserves[j] / 1e6;
     }
 
     /**
@@ -224,7 +220,7 @@ library LibWell {
         if (s.twaReserves[well].reserve0 == 0 || s.twaReserves[well].reserve1 == 0) {
             price = 0;
         } else {
-            price = s.twaReserves[well].reserve0.mul(1e18).div(s.twaReserves[well].reserve1);
+            price = s.twaReserves[well].reserve0 * 1e18 / s.twaReserves[well].reserve1);
         }
     }
 
@@ -283,7 +279,7 @@ library LibWell {
                 pumps[0].data
             )
         returns (uint[] memory twaReserves, bytes memory) {
-            usdLiquidity = tokenUsdPrice.mul(twaReserves[j]).div(1e6);
+            usdLiquidity = tokenUsdPrice * twaReserves[j] / 1e6;
         } catch {
             // if pump fails to return a value, return 0.
             usdLiquidity = 0;

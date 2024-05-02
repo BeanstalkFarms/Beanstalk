@@ -5,9 +5,7 @@ pragma experimental ABIEncoderV2;
 
 import { UD60x18 } from "@prb/math/src/UD60x18.sol";
 import {LibAppStorage, AppStorage} from "./LibAppStorage.sol";
-import {LibSafeMath128} from "./LibSafeMath128.sol";
-import {LibSafeMath32} from "./LibSafeMath32.sol";
-import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
+
 /**
  * @title LibDibbler
  * @author Publius, Brean
@@ -16,10 +14,7 @@ import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
  * Morning Auction functionality. Provides math helpers for scaling Soil.
  */
 library LibDibbler {
-    using SafeMath for uint256;
     using UD60x18 for uint256;
-    using LibSafeMath32 for uint32;
-    using LibSafeMath128 for uint128;
 
     /// @dev Morning Auction scales temperature by 1e6.
     uint256 internal constant TEMPERATURE_PRECISION = 1e6;
@@ -70,7 +65,7 @@ library LibDibbler {
 
         uint256 pods;
         if (abovePeg) {
-            uint256 maxTemperature = uint256(s.w.t).mul(TEMPERATURE_PRECISION);
+            uint256 maxTemperature = uint256(s.w.t) * TEMPERATURE_PRECISION;
             // amount sown is rounded up, because
             // 1: temperature is rounded down.
             // 2: pods are rounded down.
@@ -86,7 +81,7 @@ library LibDibbler {
         s.a[account].field.plots[s.f.pods] = pods;
         emit Sow(account, s.f.pods, beans, pods);
 
-        s.f.pods = s.f.pods.add(pods);
+        s.f.pods = s.f.pods + pods;
         _saveSowTime();
         return pods;
     }

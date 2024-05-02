@@ -5,10 +5,8 @@
 pragma solidity ^0.8.20;
 pragma experimental ABIEncoderV2;
 
-import "@openzeppelin/contracts/math/SafeMath.sol";
 import "contracts/beanstalk/AppStorage.sol";
 import "contracts/interfaces/IBean.sol";
-import "contracts/libraries/LibSafeMath32.sol";
 import "contracts/beanstalk/ReentrancyGuard.sol";
 import "contracts/C.sol";
 
@@ -18,9 +16,6 @@ import "contracts/C.sol";
  **/
 
 contract PodTransfer is ReentrancyGuard {
-    using SafeMath for uint256;
-    using LibSafeMath32 for uint32;
-
     event PlotTransfer(address indexed from, address indexed to, uint256 indexed id, uint256 pods);
     event PodApproval(address indexed owner, address indexed spender, uint256 pods);
 
@@ -44,9 +39,9 @@ contract PodTransfer is ReentrancyGuard {
         uint256 amount
     ) internal {
         require(from != to, "Field: Cannot transfer Pods to oneself.");
-        insertPlot(to, index.add(start), amount);
-        removePlot(from, index, start, amount.add(start));
-        emit PlotTransfer(from, to, index.add(start), amount);
+        insertPlot(to, index + start, amount);
+        removePlot(from, index, start, amount + start);
+        emit PlotTransfer(from, to, index + start, amount);
     }
 
     function insertPlot(address account, uint256 id, uint256 amount) internal {
@@ -57,15 +52,19 @@ contract PodTransfer is ReentrancyGuard {
         uint256 amount = s.a[account].field.plots[id];
         if (start == 0) delete s.a[account].field.plots[id];
         else s.a[account].field.plots[id] = start;
-        if (end != amount) s.a[account].field.plots[id.add(end)] = amount.sub(end);
+        if (end != amount) s.a[account].field.plots[id + end] = amount - end;
     }
 
     function decrementAllowancePods(address owner, address spender, uint256 amount) internal {
         uint256 currentAllowance = allowancePods(owner, spender);
+        require(
+            currentAllowance >= amount,
+            "Field: Insufficient approval."
+        );
         setAllowancePods(
             owner,
             spender,
-            currentAllowance.sub(amount, "Field: Insufficient approval.")
+            currentAllowance - amount
         );
     }
 
