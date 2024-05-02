@@ -13,6 +13,7 @@ import {LibWell} from "contracts/libraries/Well/LibWell.sol";
 import {IWell, Call} from "contracts/interfaces/basin/IWell.sol";
 import {IInstantaneousPump} from "contracts/interfaces/basin/pumps/IInstantaneousPump.sol";
 import {SignedSafeMath} from "@openzeppelin/contracts/math/SignedSafeMath.sol";
+import {LibWhitelistedTokens} from "contracts/libraries/Silo/LibWhitelistedTokens.sol";
 
 /**
  * @title Weather
@@ -159,18 +160,40 @@ contract Weather is Sun {
             return;
         } else if (!s.season.raining) {
             s.season.raining = true;
+            address[] memory wells = LibWhitelistedTokens.getWhitelistedWellLpTokens();
             // Set the plenty per root equal to previous rain start.
-            s.sops[s.season.current] = s.sops[s.season.rainStart];
+            uint32 season = s.season.current;
+            uint32 rainstartSeason = s.season.rainStart;
+            for (uint i; i < wells.length; i++) {
+                s.sops[season][wells[i]] = s.sops[rainstartSeason][wells[i]];
+            }
             s.season.rainStart = s.season.current;
             s.r.pods = s.f.pods;
             s.r.roots = s.s.roots;
         } else {
             if (s.r.roots > 0) {
-                // initalize sopWell if it is not already set.
-                if (s.sopWell == address(0)) s.sopWell = well;
-                sop();
+                address[] memory wells = LibWhitelistedTokens.getWhitelistedWellLpTokens();
+                for (uint i; i < wells.length; i++) {
+                    sop(wells[i]);
+                }
             }
+            floodPodline();
         }
+    }
+
+    function floodPodline() private {
+        // uint256 sopBeans = uint256(newBeans);
+        // uint256 newHarvestable;
+        // TODO: if podline is 1% or less of total bean supply,
+        // then make 0.1% of the total bean supply worth of pods harvestable.
+        // Pay off remaining Pods if any exist.
+        /*if (s.f.harvestable < s.r.pods) {
+            newHarvestable = s.r.pods - s.f.harvestable;
+            s.f.harvestable = s.f.harvestable.add(newHarvestable);
+            C.bean().mint(address(this), newHarvestable.add(sopBeans));
+        } else {
+            C.bean().mint(address(this), sopBeans);
+        }*/
     }
 
     /**
@@ -184,29 +207,18 @@ contract Weather is Sun {
      * and become Harvestable.
      * For more information On Oversaturation see {Weather.handleRain}.
      */
-    function sop() private {
+    function sop(address well) private {
         // calculate the beans from a sop.
         // sop beans uses the min of the current and instantaneous reserves of the sop well,
         // rather than the twaReserves in order to get bean back to peg.
-        address sopWell = s.sopWell;
-        (uint256 newBeans, IERC20 sopToken) = calculateSop(sopWell);
+        (uint256 newBeans, IERC20 sopToken) = calculateSop(well);
         if (newBeans == 0) return;
 
         uint256 sopBeans = uint256(newBeans);
-        uint256 newHarvestable;
-
-        // Pay off remaining Pods if any exist.
-        if (s.f.harvestable < s.r.pods) {
-            newHarvestable = s.r.pods - s.f.harvestable;
-            s.f.harvestable = s.f.harvestable.add(newHarvestable);
-            C.bean().mint(address(this), newHarvestable.add(sopBeans));
-        } else {
-            C.bean().mint(address(this), sopBeans);
-        }
 
         // Approve and Swap Beans for the non-bean token of the SOP well.
-        C.bean().approve(sopWell, sopBeans);
-        uint256 amountOut = IWell(sopWell).swapFrom(
+        C.bean().approve(well, sopBeans);
+        uint256 amountOut = IWell(well).swapFrom(
             C.bean(),
             sopToken,
             sopBeans,
@@ -215,21 +227,16 @@ contract Weather is Sun {
             type(uint256).max
         );
         s.plenty += amountOut;
-        rewardSop(amountOut);
-        emit SeasonOfPlenty(
-            s.season.current,
-            sopWell,
-            address(sopToken),
-            amountOut,
-            newHarvestable
-        );
+        rewardSop(well, amountOut);
+        // TODO: emit events, but because we have multiple wells, perhaps we need an event per well, and a separate event for harvest pods.
+        // emit SeasonOfPlenty(s.season.current, well, address(sopToken), amountOut, newHarvestable);
     }
 
     /**
      * @dev Allocate `sop token` during a Season of Plenty.
      */
-    function rewardSop(uint256 amount) private {
-        s.sops[s.season.rainStart] = s.sops[s.season.lastSop].add(
+    function rewardSop(address well, uint256 amount) private {
+        s.sops[s.season.rainStart][well] = s.sops[s.season.lastSop][well].add(
             amount.mul(C.SOP_PRECISION).div(s.r.roots)
         );
         s.season.lastSop = s.season.rainStart;

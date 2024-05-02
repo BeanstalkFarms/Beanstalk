@@ -140,13 +140,12 @@ contract Silo is ReentrancyGuard {
      * if `s.a[account].sop.plenty == 0`. This would emit a ClaimPlenty event
      * with an amount of 0.
      */
-    function _claimPlenty(address account) internal {
-        // Plenty is earned in the form of the non-Bean token in the SOP Well.
-        uint256 plenty = s.a[account].sop.plenty;
-        IERC20 sopToken = LibSilo.getSopToken();
+    function _claimPlenty(address account, address well) internal {
+        uint256 plenty = s.a[account].sop[well].plenty;
+        IERC20[] memory tokens = IWell(well).tokens();
+        IERC20 sopToken = tokens[0] != C.bean() ? tokens[0] : tokens[1];
         sopToken.safeTransfer(account, plenty);
-        delete s.a[account].sop.plenty;
-        s.plenty -= plenty;
+        s.a[account].sop[well].plenty = 0;
 
         emit ClaimPlenty(account, address(sopToken), plenty);
     }

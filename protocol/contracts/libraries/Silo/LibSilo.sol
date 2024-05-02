@@ -242,7 +242,7 @@ library LibSilo {
             // For more info on Oversaturation, See {Weather.handleRain}
             if (s.season.raining) {
                 s.r.roots = s.r.roots.sub(roots);
-                s.a[account].sop.roots = s.a[account].roots;
+                s.a[account].rainRoots = s.a[account].roots;
             }
         } else {
             burnGerminatingStalk(account, uint128(stalk), germ);
@@ -510,19 +510,25 @@ library LibSilo {
         }
         // If a Sop has occured since last update, calculate rewards and set last Sop.
         if (s.season.lastSopSeason > lastUpdate) {
-            s.a[account].sop.plenty = balanceOfPlenty(account);
+            address[] memory tokens = LibWhitelistedTokens.getWhitelistedWellLpTokens();
+            for (uint i; i < tokens.length; i++) {
+                s.a[account].sop[tokens[i]].plenty = balanceOfPlenty(account, tokens[i]);
+            }
             s.a[account].lastSop = s.season.lastSop;
         }
         if (s.season.raining) {
             // If rain started after update, set account variables to track rain.
             if (s.season.rainStart > lastUpdate) {
                 s.a[account].lastRain = s.season.rainStart;
-                s.a[account].sop.roots = s.a[account].roots;
+                s.a[account].rainRoots = s.a[account].roots;
             }
             // If there has been a Sop since rain started,
             // save plentyPerRoot in case another SOP happens during rain.
             if (s.season.lastSop == s.season.rainStart) {
-                s.a[account].sop.plentyPerRoot = s.sops[s.season.lastSop];
+                address[] memory tokens = LibWhitelistedTokens.getWhitelistedWellLpTokens();
+                for (uint i; i < tokens.length; i++) {
+                    s.a[account].sop[tokens[i]].plentyPerRoot = s.sops[s.season.lastSop][tokens[i]];
+                }
             }
         } else if (s.a[account].lastRain > 0) {
             // Reset Last Rain if not raining.
@@ -547,34 +553,37 @@ library LibSilo {
     /**
      * @dev returns the amount of `plenty` an account has.
      */
-    function balanceOfPlenty(address account) internal view returns (uint256 plenty) {
+    function balanceOfPlenty(address account, address well) internal view returns (uint256 plenty) {
         AppStorage storage s = LibAppStorage.diamondStorage();
         Account.State storage a = s.a[account];
-        plenty = a.sop.plenty;
+        plenty = a.sop[well].plenty;
         uint256 previousPPR;
 
         // If lastRain > 0, then check if SOP occured during the rain period.
         if (s.a[account].lastRain > 0) {
             // if the last processed SOP = the lastRain processed season,
             // then we use the stored roots to get the delta.
-            if (a.lastSop == a.lastRain) previousPPR = a.sop.plentyPerRoot;
-            else previousPPR = s.sops[a.lastSop];
-            uint256 lastRainPPR = s.sops[s.a[account].lastRain];
+            if (a.lastSop == a.lastRain) {
+                previousPPR = a.sop[well].plentyPerRoot;
+            } else {
+                previousPPR = s.sops[a.lastSop][well];
+            }
+            uint256 lastRainPPR = s.sops[s.a[account].lastRain][well];
 
             // If there has been a SOP duing the rain sesssion since last update, process SOP.
             if (lastRainPPR > previousPPR) {
                 uint256 plentyPerRoot = lastRainPPR - previousPPR;
                 previousPPR = lastRainPPR;
-                plenty = plenty.add(plentyPerRoot.mul(s.a[account].sop.roots).div(C.SOP_PRECISION));
+                plenty = plenty.add(plentyPerRoot.mul(s.a[account].rainRoots).div(C.SOP_PRECISION));
             }
         } else {
             // If it was not raining, just use the PPR at previous SOP.
-            previousPPR = s.sops[s.a[account].lastSop];
+            previousPPR = s.sops[s.a[account].lastSop][well];
         }
 
         // Handle and SOPs that started + ended before after last Silo update.
         if (s.season.lastSop > _lastUpdate(account)) {
-            uint256 plentyPerRoot = s.sops[s.season.lastSop].sub(previousPPR);
+            uint256 plentyPerRoot = s.sops[s.season.lastSop][well].sub(previousPPR);
             plenty = plenty.add(plentyPerRoot.mul(s.a[account].roots).div(C.SOP_PRECISION));
         }
     }

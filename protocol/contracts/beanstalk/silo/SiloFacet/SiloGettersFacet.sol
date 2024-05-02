@@ -15,6 +15,7 @@ import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
 import {LibBytes} from "contracts/libraries/LibBytes.sol";
 import {LibSilo} from "contracts/libraries/Silo/LibSilo.sol";
 import {C} from "contracts/C.sol";
+import {LibWhitelistedTokens} from "contracts/libraries/Silo/LibWhitelistedTokens.sol";
 
 /**
  * @author Brean
@@ -39,9 +40,13 @@ contract SiloGettersFacet is ReentrancyGuard {
         uint256 roots;
         // The global Plenty per Root at the last Season in which `account`
         // updated their Silo.
-        uint256 plentyPerRoot;
+        // uint256 plentyPerRoot;
         // `account` balance of unclaimed Bean:3Crv from Seasons of Plenty.
-        uint256 plenty;
+        // uint256 plenty;
+        // code review note: would have been great to return a mapping of Account.SeasonOfPlenty, but that spits out this error:
+        // Types containing (nested) mappings can only be parameters or return variables of internal or library functions.
+        // therefore, we're returning 2 separate mappings.
+        Account.SeasonOfPlenty[] wellsPlenty;
     }
 
     //////////////////////// GETTERS ////////////////////////
@@ -452,8 +457,8 @@ contract SiloGettersFacet is ReentrancyGuard {
      * @notice Returns the `account` balance of unclaimed BEAN:3CRV earned from
      * Seasons of Plenty.
      */
-    function balanceOfPlenty(address account) external view returns (uint256 plenty) {
-        return LibSilo.balanceOfPlenty(account);
+    function balanceOfPlenty(address account, address well) external view returns (uint256 plenty) {
+        return LibSilo.balanceOfPlenty(account, well);
     }
 
     /**
@@ -461,7 +466,7 @@ contract SiloGettersFacet is ReentrancyGuard {
      * Raining during a Silo update.
      */
     function balanceOfRainRoots(address account) external view returns (uint256) {
-        return s.a[account].sop.roots;
+        return s.a[account].rainRoots;
     }
 
     /**
@@ -473,9 +478,14 @@ contract SiloGettersFacet is ReentrancyGuard {
     ) external view returns (AccountSeasonOfPlenty memory sop) {
         sop.lastRain = s.a[account].lastRain;
         sop.lastSop = s.a[account].lastSop;
-        sop.roots = s.a[account].sop.roots;
-        sop.plenty = LibSilo.balanceOfPlenty(account);
-        sop.plentyPerRoot = s.a[account].sop.plentyPerRoot;
+        sop.roots = s.a[account].rainRoots;
+        address[] memory wells = LibWhitelistedTokens.getWhitelistedWellLpTokens();
+        sop.wellsPlenty = new Account.SeasonOfPlenty[](wells.length);
+        for (uint i; i < wells.length; i++) {
+            Account.SeasonOfPlenty memory wellSop = s.a[account].sop[wells[i]];
+            // sop.wellsPlenty.push(wellSop);
+            sop.wellsPlenty[i] = wellSop;
+        }
     }
 
     //////////////////////// STEM ////////////////////////

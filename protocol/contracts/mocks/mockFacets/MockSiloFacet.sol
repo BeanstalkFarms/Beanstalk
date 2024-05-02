@@ -137,7 +137,7 @@ contract MockSiloFacet is SiloFacet {
 
         // Increments `plenty` for `account` if a Flood has occured.
         // Saves Rain Roots for `account` if it is Raining.
-        handleRainAndSopsLegacy(account, _lastUpdate);
+        // handleRainAndSopsLegacy(account, _lastUpdate); //commenting out for gen flood
 
         // Calculate the amount of Grown Stalk claimable by `account`.
         // Increase the account's balance of Stalk and Roots.
@@ -154,7 +154,7 @@ contract MockSiloFacet is SiloFacet {
         LibSilo.mintActiveStalk(account, balanceOfGrownStalkLegacy(account));
     }
 
-    function handleRainAndSopsLegacy(address account, uint32 _lastUpdate) private {
+    /*function handleRainAndSopsLegacy(address account, uint32 _lastUpdate) private {
         // If no roots, reset Sop counters variables
         if (s.a[account].roots == 0) {
             s.a[account].lastSop = s.season.rainStart;
@@ -170,7 +170,7 @@ contract MockSiloFacet is SiloFacet {
             // If rain started after update, set account variables to track rain.
             if (s.season.rainStart > _lastUpdate) {
                 s.a[account].lastRain = s.season.rainStart;
-                s.a[account].sop.roots = s.a[account].roots;
+                s.a[account].rainRoots = s.a[account].roots;
             }
             // If there has been a Sop since rain started,
             // save plentyPerRoot in case another SOP happens during rain.
@@ -180,7 +180,7 @@ contract MockSiloFacet is SiloFacet {
             // Reset Last Rain if not raining.
             s.a[account].lastRain = 0;
         }
-    }
+    }*/
 
     function balanceOfGrownStalkLegacy(address account) public view returns (uint256) {
         return

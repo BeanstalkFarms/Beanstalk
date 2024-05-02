@@ -83,12 +83,10 @@ contract Account {
 
     /**
      * @notice Stores a Farmer's Season of Plenty (SOP) balances.
-     * @param roots The number of Roots a Farmer had when it started Raining.
-     * @param plentyPerRoot The global Plenty Per Root index at the last time a Farmer updated their Silo.
-     * @param plenty The balance of a Farmer's plenty. Plenty can be claimed directly for 3CRV.
+     * @param plentyPerRoot The Plenty Per Root index for this well at the last time a Farmer updated their Silo.
+     * @param plenty The balance of a Farmer's plenty. Plenty can be claimed directly for the well's non-Bean token.
      */
     struct SeasonOfPlenty {
-        uint256 roots;
         uint256 plentyPerRoot;
         uint256 plenty;
     }
@@ -160,7 +158,7 @@ contract Account {
         uint256 deprecated_wrappedBeans; // DEPRECATED – Replant generalized Internal Balances. Wrapped Beans are now stored at the AppStorage level.
         mapping(address => mapping(uint32 => Deposit)) legacyV2Deposits; // Legacy Silo V2 Deposits stored as a map from Token address to Season of Deposit to Deposit. NOTE: While the Silo V2 format is now deprecated, unmigrated Silo V2 deposits are still stored in this mapping.
         mapping(address => mapping(uint32 => uint256)) withdrawals; // Zero withdraw eliminates a need for withdraw mapping, but is kept for legacy
-        SeasonOfPlenty sop; // A Farmer's Season Of Plenty storage.
+        SeasonOfPlenty oldSop; // DEPRECATED - Generalized Flood uses per-well storage.
         mapping(address => mapping(address => uint256)) depositAllowances; // Spender => Silo Token
         mapping(address => mapping(IERC20 => uint256)) tokenAllowances; // Token allowances
         uint256 depositPermitNonces; // A Farmer's current deposit permit nonce
@@ -172,6 +170,8 @@ contract Account {
         FarmerGerminatingStalk farmerGerminating; // A Farmer's germinating stalk.
         // Silo v3.1
         mapping(uint256 => Deposit) deposits; // Silo v3.1 Deposits stored as a map from uint256 to Deposit. This is an concat of the token address and the stem for a ERC20 deposit.
+        uint256 rainRoots; // The number of Roots a Farmer had when it started Raining.
+        mapping(address => SeasonOfPlenty) sop; // a mapping from well to plentyPerRoot and plenty.
     }
 }
 
@@ -539,7 +539,7 @@ contract Storage {
  * @param ss A mapping from Token address to Silo Settings for each Whitelisted Token. If a non-zero storage exists, a Token is whitelisted.
  * @param deprecated2 DEPRECATED - 2 slots that used to store state variables which have been deprecated through various updates. Storage slots can be left alone or reused.
  * @param deprecated_newEarnedStalk the amount of earned stalk issued this season. Since 1 stalk = 1 bean, it represents the earned beans as well.
- * @param sops A mapping from Season to Plenty Per Root (PPR) in that Season. Plenty Per Root is 0 if a Season of Plenty did not occur.
+ * @param oldSops DEPRECATED - A mapping from Season to Plenty Per Root (PPR) in that Season. Plenty Per Root is 0 if a Season of Plenty did not occur.
  * @param internalTokenBalance A mapping from Farmer address to Token address to Internal Balance. It stores the amount of the Token that the Farmer has stored as an Internal Balance in Beanstalk.
  * @param unripeClaimed True if a Farmer has Claimed an Unripe Token. A mapping from Farmer to Unripe Token to its Claim status.
  * @param u Unripe Settings for a given Token address. The existence of a non-zero Unripe Settings implies that the token is an Unripe Token. The mapping is from Token address to Unripe Settings.
@@ -570,6 +570,7 @@ contract Storage {
  * @param barnRaiseWell Stores the well that the Barn Raise adds liquidity to.
  * @param fertilizedPaidIndex The total number of Fertilizer Beans that have been sent out to users.
  * @param plenty The amount of plenty token held by the contract.
+ * @param sops mapping of season to a mapping of wells to plentyPerRoot
  */
 struct AppStorage {
     uint8 deprecated_index;
@@ -600,7 +601,7 @@ struct AppStorage {
     uint256[2] deprecated2;
     uint128 deprecated_newEarnedStalk; // ──────┐ 16
     uint128 deprecated_vestingPeriodRoots; // ──┘ 16 (32/32)
-    mapping(uint32 => uint256) sops;
+    mapping(uint32 => uint256) oldSops;
     // Internal Balances
     mapping(address => mapping(IERC20 => uint256)) internalTokenBalance;
     // Unripe
@@ -642,4 +643,5 @@ struct AppStorage {
     mapping(IERC20 => uint256) internalTokenBalanceTotal;
     uint256 fertilizedPaidIndex;
     uint256 plenty;
+    mapping(uint32 => mapping(address => uint256)) sops;
 }
