@@ -2288,6 +2288,7 @@ __metadata:
     "@openzeppelin/contracts-upgradeable": ^3.4.0
     "@openzeppelin/contracts-upgradeable-8": "npm:@openzeppelin/contracts-upgradeable@^4.7.3"
     "@openzeppelin/hardhat-upgrades": ^1.17.0
+    "@prb/math": 4.0.2
     "@uniswap/v3-core": ^1.0.1
     "@uniswap/v3-periphery": ^1.4.3
     axios: 1.6.7
@@ -8584,6 +8585,13 @@ __metadata:
   version: 2.11.6
   resolution: "@popperjs/core@npm:2.11.6"
   checksum: 47fb328cec1924559d759b48235c78574f2d71a8a6c4c03edb6de5d7074078371633b91e39bbf3f901b32aa8af9b9d8f82834856d2f5737a23475036b16817f0
+  languageName: node
+  linkType: hard
+
+"@prb/math@npm:4.0.2":
+  version: 4.0.2
+  resolution: "@prb/math@npm:4.0.2"
+  checksum: a55126d03c8a9be8d5b9a0274de40b80018b3bdf877e249f891e04c555983b30fa948e42b9846594387bcc271967368e85f2434fd39de1bac17bf3bf7d3eb0ab
   languageName: node
   linkType: hard
 

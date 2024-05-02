@@ -6,6 +6,7 @@ pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
 import "@openzeppelin/contracts/math/SafeMath.sol";
+import { UD60x18 } from "@prb/math/src/UD60x18.sol";
 import "contracts/beanstalk/field/FieldFacet.sol";
 
 /**
@@ -14,7 +15,7 @@ import "contracts/beanstalk/field/FieldFacet.sol";
  **/
 contract MockFieldFacet is FieldFacet {
     using SafeMath for uint256;
-    using LibPRBMath for uint256;
+    using UD60x18 for uint256;
     using LibSafeMath128 for uint128;
 
     function incrementTotalSoilE(uint128 amount) external {
@@ -165,14 +166,14 @@ contract MockFieldFacet is FieldFacet {
         uint256 pct,
         uint256 initalTemp
     ) private pure returns (uint256 scaledTemperature) {
-        scaledTemperature = LibPRBMath.max(
+        scaledTemperature = UD60x18.max(
             // To save gas, `pct` is pre-calculated to 12 digits. Here we
             // perform the following transformation:
             // (1e2)    maxTemperature
             // (1e12)    * pct
             // (1e6)     / TEMPERATURE_PRECISION
             // (1e8)     = scaledYield
-            initalTemp.mulDiv(pct, LibDibbler.TEMPERATURE_PRECISION, LibPRBMath.Rounding.Up),
+            initalTemp.mulDiv(pct, LibDibbler.TEMPERATURE_PRECISION, UD60x18.Rounding.Up),
             // Floor at TEMPERATURE_PRECISION (1%)
             LibDibbler.TEMPERATURE_PRECISION
         );

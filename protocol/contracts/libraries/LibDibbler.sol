@@ -3,10 +3,10 @@
 pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
+import { UD60x18 } from "@prb/math/src/UD60x18.sol";
 import {LibAppStorage, AppStorage} from "./LibAppStorage.sol";
 import {LibSafeMath128} from "./LibSafeMath128.sol";
 import {LibSafeMath32} from "./LibSafeMath32.sol";
-import {LibPRBMath} from "./LibPRBMath.sol";
 import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
 /**
  * @title LibDibbler
@@ -17,7 +17,7 @@ import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
  */
 library LibDibbler {
     using SafeMath for uint256;
-    using LibPRBMath for uint256;
+    using UD60x18 for uint256;
     using LibSafeMath32 for uint32;
     using LibSafeMath128 for uint128;
 
@@ -264,14 +264,14 @@ library LibDibbler {
         uint256 maxTemperature = s.w.t;
         if (maxTemperature == 0) return 0;
 
-        scaledTemperature = LibPRBMath.max(
+        scaledTemperature = UD60x18.max(
             // To save gas, `pct` is pre-calculated to 12 digits. Here we
             // perform the following transformation:
             // (1e2)    maxTemperature
             // (1e12)    * pct
             // (1e6)     / TEMPERATURE_PRECISION
             // (1e8)     = scaledYield
-            maxTemperature.mulDiv(pct, TEMPERATURE_PRECISION, LibPRBMath.Rounding.Up),
+            maxTemperature.mulDiv(pct, TEMPERATURE_PRECISION, UD60x18.Rounding.Up),
             // Floor at TEMPERATURE_PRECISION (1%)
             TEMPERATURE_PRECISION
         );
@@ -337,7 +337,7 @@ library LibDibbler {
             soil.mulDiv(
                 _morningTemperature.add(ONE_HUNDRED_PCT),
                 maxTemperature.add(ONE_HUNDRED_PCT),
-                LibPRBMath.Rounding.Up
+                UD60x18.Rounding.Up
             );
     }
 
