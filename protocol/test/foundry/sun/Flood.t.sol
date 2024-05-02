@@ -259,6 +259,73 @@ contract FloodTest is TestHelper {
         assertTrue(userSop.plentyPerRoot == 3852912056637907847);
     }
 
+    function testWithCurrentBalances() public {
+        // expect sop well to be zero
+        assertEq(bs.getSopWell(), address(0));
+
+        setReserves(C.BEAN_ETH_WELL, 1_000_000e6, 1_100e18);
+        updateMockPumpUsingWellReserves(C.BEAN_ETH_WELL);
+
+        // set instantaneous reserves differently
+        setInstantaneousReserves(C.BEAN_ETH_WELL, 900_000e6, 1_100e18);
+
+        season.rainSunrise();
+        bs.mow(users[2], C.BEAN_ETH_WELL);
+        season.rainSunrise();
+        // end before each from hardhat test
+
+        // sops p > 1
+        Storage.Season memory s = seasonGetters.time();
+        IWell well = IWell(bs.getSopWell());
+        uint256[] memory reserves = well.getReserves();
+
+        assertTrue(s.lastSop == s.rainStart);
+        assertTrue(s.lastSopSeason == s.current);
+        assertEq(IERC20(C.WETH).balanceOf(BEANSTALK), 51191151829696906017);
+
+        assertTrue(reserves[0] == 1048808848170);
+        assertTrue(reserves[1] == 1048808848170303093983);
+
+        // tracks user plenty before update
+        uint256 userPlenty = bs.balanceOfPlenty(users[1]);
+        assertEq(userPlenty, 25595575914848452999);
+
+        // tracks user plenty after update
+        bs.mow(users[1], C.BEAN);
+        SiloGettersFacet.AccountSeasonOfPlenty memory userSop = siloGetters.balanceOfSop(users[1]);
+
+        assertTrue(userSop.lastRain == 6);
+        assertTrue(userSop.lastSop == 6);
+        assertTrue(userSop.roots == 10004000000000000000000000);
+        assertTrue(userSop.plenty == 25595575914848452999);
+        assertTrue(userSop.plentyPerRoot == 2558534177813719812);
+
+        // tracks user2 plenty
+        uint256 user2Plenty = bs.balanceOfPlenty(users[2]);
+        assertEq(user2Plenty, 25595575914848452999);
+
+        // tracks user2 plenty after update
+        bs.mow(users[2], C.BEAN_ETH_WELL);
+        bs.mow(users[2], C.BEAN);
+        userSop = siloGetters.balanceOfSop(users[2]);
+        assertTrue(userSop.lastRain == 6);
+        assertTrue(userSop.lastSop == 6);
+        assertTrue(userSop.roots == 10004000000000000000000000);
+        assertTrue(userSop.plenty == 25595575914848452999);
+        assertTrue(userSop.plentyPerRoot == 2558534177813719812);
+
+        // claims user plenty
+        bs.mow(users[2], C.BEAN_ETH_WELL);
+        vm.prank(users[2]);
+        bs.claimPlenty();
+        assertTrue(bs.balanceOfPlenty(users[2]) == 0);
+        assertEq(IERC20(C.WETH).balanceOf(users[2]), 25595575914848452999);
+
+        // changes the sop well
+        assertTrue(bs.getSopWell() != address(0));
+        assertTrue(bs.getSopWell() == C.BEAN_ETH_WELL);
+    }
+
     //////////// Helpers ////////////
 
     function depostBeansForUsers(
@@ -292,6 +359,19 @@ contract FloodTest is TestHelper {
             // pass to the pump the reserves that we actually have in the well
             uint[] memory reserves = IWell(well).getReserves();
             MockPump(pump).update(well, reserves, new bytes(0));
+        }
+    }
+
+    function setInstantaneousReserves(address well, uint256 reserve0, uint256 reserve1) public {
+        Call[] memory pumps = IWell(well).pumps();
+        for (uint256 i = 0; i < pumps.length; i++) {
+            address pump = pumps[i].target;
+            // pass to the pump the reserves that we actually have in the well
+            uint256[] memory reserves = new uint256[](2);
+            reserves[0] = reserve0;
+            reserves[1] = reserve1;
+
+            MockPump(pump).setInstantaneousReserves(well, reserves);
         }
     }
 }
