@@ -7,7 +7,6 @@ pragma experimental ABIEncoderV2;
 
 import "./PodTransfer.sol";
 import "contracts/libraries/Token/LibTransfer.sol";
-import "contracts/libraries/LibPolynomial.sol";
 import "contracts/libraries/LibTractor.sol";
 
 /**
@@ -36,9 +35,7 @@ contract Listing is PodTransfer {
         uint24 pricePerPod,
         uint256 maxHarvestableIndex,
         uint256 minFillAmount,
-        bytes pricingFunction,
-        LibTransfer.To mode,
-        LibPolynomial.PriceType pricingType
+        LibTransfer.To mode
     );
 
     event PodListingFilled(
@@ -82,8 +79,6 @@ contract Listing is PodTransfer {
             mode
         );
 
-        bytes memory f;
-
         emit PodListingCreated(
             LibTractor._user(),
             index,
@@ -92,9 +87,7 @@ contract Listing is PodTransfer {
             pricePerPod,
             maxHarvestableIndex,
             minFillAmount,
-            f,
-            mode,
-            LibPolynomial.PriceType.Fixed
+            mode
         );
     }
 
