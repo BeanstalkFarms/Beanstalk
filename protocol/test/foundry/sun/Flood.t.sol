@@ -48,18 +48,36 @@ contract FloodTest is TestHelper {
         // Initialize well to balances. (1000 BEAN/ETH)
         addLiquidityToWell(
             well,
+            1000000e6, // 10,000 Beans
+            1000 ether // 10 ether.
+        );
+
+        addLiquidityToWell(
+            C.BEAN_WSTETH_WELL,
             10000e6, // 10,000 Beans
             10 ether // 10 ether.
         );
 
-        // init wsteth well too
+        season.siloSunrise(0);
+        season.siloSunrise(0);
 
         // users 1 and 2 deposits 1000 beans into the silo.
-        depostBeansForUser(users[1], 1000e6);
-        depostBeansForUser(users[2], 1000e6);
+        address[] memory depositUsers = new address[](2);
+        depositUsers[0] = users[1];
+        depositUsers[1] = users[2];
+        depostBeansForUsers(depositUsers, 1_000e6, 10_000e6);
+        // depostBeansForUser(users[2], 1000e6);
+
+        // give user2 some eth
+        vm.deal(users[2], 10 ether);
 
         // without this, 25 rainSunrises runs out of gas
         vm.pauseGasMetering();
+
+        // log user plenty
+
+        uint256 userPlenty = bs.balanceOfPlenty(users[1]);
+        console.log("userPlenty: ", userPlenty);
     }
 
     function testNotRaining() public {
@@ -186,24 +204,123 @@ contract FloodTest is TestHelper {
         assertTrue(bs.getSopWell() == C.BEAN_ETH_WELL);
     }
 
+    function testMultipleSop() public {
+        uint256 userPlentyStart = bs.balanceOfPlenty(users[1]);
+        console.log("start of test userPlenty: ", userPlentyStart);
+        // catch up to where we are in hardhat version of the test
+
+        // mow both users
+        bs.mow(users[1], C.BEAN);
+        bs.mow(users[2], C.BEAN);
+
+        console.log("first s.current: ", seasonGetters.season());
+
+        uint256 userPlentyBeforeFirst = bs.balanceOfPlenty(users[1]);
+        console.log("userPlentyBeforeFirst: ", userPlentyBeforeFirst);
+
+        setReserves(C.BEAN_ETH_WELL, 1000000e6, 1100e18);
+        updateMockPumpUsingWellReserves(C.BEAN_ETH_WELL);
+
+        console.log("user plenty a1: ", bs.balanceOfPlenty(users[1]));
+        season.rainSunrise();
+        console.log("user plenty a2: ", bs.balanceOfPlenty(users[1]));
+        bs.mow(users[2], C.BEAN);
+        console.log("user plenty a3: ", bs.balanceOfPlenty(users[1]));
+        season.rainSunrise();
+        console.log("user plenty a4: ", bs.balanceOfPlenty(users[1]));
+        season.droughtSunrise();
+        console.log("user plenty a5: ", bs.balanceOfPlenty(users[1]));
+
+        setReserves(C.BEAN_ETH_WELL, 1048808848170, 1100e18);
+        updateMockPumpUsingWellReserves(C.BEAN_ETH_WELL);
+
+        season.rainSunrises(2);
+        console.log("second s.current: ", seasonGetters.season());
+
+        uint256 userPlentyBefore = bs.balanceOfPlenty(users[1]);
+        console.log("userPlentyBefore: ", userPlentyBefore);
+
+        // sops p > 1
+        Storage.Season memory s = seasonGetters.time();
+        IWell well = IWell(bs.getSopWell());
+        uint256[] memory reserves = well.getReserves();
+
+        assertTrue(s.lastSop == s.rainStart);
+        assertTrue(s.lastSopSeason == s.current);
+        assertEq(IERC20(C.WETH).balanceOf(BEANSTALK), 77091653184968908600);
+
+        assertTrue(reserves[0] == 1074099498643);
+        assertTrue(reserves[1] == 1074099498644727997417);
+
+        // tracks user plenty before update
+        uint256 userPlenty = bs.balanceOfPlenty(users[1]);
+        assertEq(userPlenty, 38544532214605630101);
+
+        SiloGettersFacet.AccountSeasonOfPlenty memory userSopBefore = siloGetters.balanceOfSop(
+            users[1]
+        );
+
+        console.log("userSopBefore.lastRain: ", userSopBefore.lastRain);
+
+        // tracks user plenty after update
+        bs.mow(users[1], C.BEAN);
+        SiloGettersFacet.AccountSeasonOfPlenty memory userSop = siloGetters.balanceOfSop(users[1]);
+
+        console.log("s.current: ", seasonGetters.season());
+        console.log("userSop.lastRain: ", userSop.lastRain);
+        assertTrue(userSop.lastRain == 9);
+
+        // return;
+
+        assertTrue(userSop.lastSop == 9);
+        assertTrue(userSop.roots == 10004000000000000000000000);
+        assertTrue(userSop.plenty == 38544532214605630101);
+        assertTrue(userSop.plentyPerRoot == 3852912056637907847);
+
+        // tracks user2 plenty
+        uint256 user2Plenty = bs.balanceOfPlenty(users[2]);
+        console.log("plenty check");
+        assertEq(user2Plenty, 38547120970363278477);
+
+        // tracks user2 plenty after update
+        bs.mow(users[2], C.BEAN_ETH_WELL);
+        bs.mow(users[2], C.BEAN);
+        userSop = siloGetters.balanceOfSop(users[2]);
+        console.log("userSop.lastRain: ", userSop.lastRain);
+        assertTrue(userSop.lastRain == 9);
+        assertTrue(userSop.lastSop == 9);
+        console.log("userSop.lastSop: ", userSop.lastSop);
+        assertTrue(userSop.roots == 10006000000000000000000000);
+        console.log("userSop.plenty: ", userSop.plenty);
+        assertTrue(userSop.plenty == 38547120970363278477);
+        assertTrue(userSop.plentyPerRoot == 3852912056637907847);
+    }
+
     //////////// Helpers ////////////
 
-    function depostBeansForUser(address user, uint256 beans) public {
-        // Create 1 deposit,  1000 Beans to user
-        C.bean().mint(user, beans);
-
-        vm.prank(user);
-        C.bean().approve(BEANSTALK, type(uint256).max);
-        vm.prank(user);
-        bs.deposit(C.BEAN, beans, 0);
+    function depostBeansForUsers(
+        address[] memory users,
+        uint256 beansDeposit,
+        uint256 beansMint
+    ) public {
+        console.log("depositing at season: ", seasonGetters.season());
+        for (uint i = 0; i < users.length; i++) {
+            C.bean().mint(users[i], beansMint);
+            vm.prank(users[i]);
+            C.bean().approve(BEANSTALK, type(uint256).max);
+            vm.prank(users[i]);
+            bs.deposit(C.BEAN, beansDeposit, 0);
+        }
 
         // pass germination process
         season.siloSunrise(0);
         season.siloSunrise(0);
 
-        // mow, so that lastUpdated has been called at least once
-        vm.prank(user);
-        bs.mow(user, C.BEAN);
+        for (uint i = 0; i < users.length; i++) {
+            // mow, so that lastUpdated has been called at least once
+            vm.prank(users[i]);
+            bs.mow(users[i], C.BEAN);
+        }
     }
 
     function updateMockPumpUsingWellReserves(address well) public {
