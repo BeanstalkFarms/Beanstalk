@@ -11,7 +11,6 @@ import {LibTractor} from "contracts/libraries/LibTractor.sol";
 
 /**
  * @author Beanjoyer, Malteasy
- * @title Pod Marketplace v2
  **/
 
 contract MarketplaceFacet is Invariable, Order {
@@ -42,26 +41,6 @@ contract MarketplaceFacet is Invariable, Order {
         );
     }
 
-    function createPodListingV2(
-        uint256 index,
-        uint256 start,
-        uint256 amount,
-        uint256 maxHarvestableIndex,
-        uint256 minFillAmount,
-        bytes calldata pricingFunction,
-        LibTransfer.To mode
-    ) external payable fundsSafu noNetFlow noSupplyChange {
-        _createPodListingV2(
-            index,
-            start,
-            amount,
-            maxHarvestableIndex,
-            minFillAmount,
-            pricingFunction,
-            mode
-        );
-    }
-
     // Fill
     function fillPodListing(
         PodListing calldata l,
@@ -77,23 +56,6 @@ contract MarketplaceFacet is Invariable, Order {
             l.mode
         );
         _fillListing(l, beanAmount);
-    }
-
-    function fillPodListingV2(
-        PodListing calldata l,
-        uint256 beanAmount,
-        bytes calldata pricingFunction,
-        LibTransfer.From mode
-    ) external payable fundsSafu noSupplyChange oneOutFlow(C.BEAN) {
-        beanAmount = LibTransfer.transferToken(
-            C.bean(),
-            LibTractor._user(),
-            l.account,
-            beanAmount,
-            mode,
-            l.mode
-        );
-        _fillListingV2(l, beanAmount, pricingFunction);
     }
 
     // Cancel
@@ -122,17 +84,6 @@ contract MarketplaceFacet is Invariable, Order {
         return _createPodOrder(beanAmount, pricePerPod, maxPlaceInLine, minFillAmount);
     }
 
-    function createPodOrderV2(
-        uint256 beanAmount,
-        uint256 maxPlaceInLine,
-        uint256 minFillAmount,
-        bytes calldata pricingFunction,
-        LibTransfer.From mode
-    ) external payable fundsSafu noSupplyChange noOutFlow returns (bytes32 id) {
-        beanAmount = LibTransfer.receiveToken(C.bean(), beanAmount, LibTractor._user(), mode);
-        return _createPodOrderV2(beanAmount, maxPlaceInLine, minFillAmount, pricingFunction);
-    }
-
     // Fill
     function fillPodOrder(
         PodOrder calldata o,
@@ -142,17 +93,6 @@ contract MarketplaceFacet is Invariable, Order {
         LibTransfer.To mode
     ) external payable fundsSafu noSupplyChange oneOutFlow(C.BEAN) {
         _fillPodOrder(o, index, start, amount, mode);
-    }
-
-    function fillPodOrderV2(
-        PodOrder calldata o,
-        uint256 index,
-        uint256 start,
-        uint256 amount,
-        bytes calldata pricingFunction,
-        LibTransfer.To mode
-    ) external payable fundsSafu noSupplyChange oneOutFlow(C.BEAN) {
-        _fillPodOrderV2(o, index, start, amount, pricingFunction, mode);
     }
 
     // Cancel
@@ -165,15 +105,6 @@ contract MarketplaceFacet is Invariable, Order {
         _cancelPodOrder(pricePerPod, maxPlaceInLine, minFillAmount, mode);
     }
 
-    function cancelPodOrderV2(
-        uint256 maxPlaceInLine,
-        uint256 minFillAmount,
-        bytes calldata pricingFunction,
-        LibTransfer.To mode
-    ) external payable fundsSafu noSupplyChange oneOutFlow(C.BEAN) {
-        _cancelPodOrderV2(maxPlaceInLine, minFillAmount, pricingFunction, mode);
-    }
-
     // Get
 
     function podOrder(
@@ -183,18 +114,6 @@ contract MarketplaceFacet is Invariable, Order {
         uint256 minFillAmount
     ) external view returns (uint256) {
         return s.podOrders[createOrderId(account, pricePerPod, maxPlaceInLine, minFillAmount)];
-    }
-
-    function podOrderV2(
-        address account,
-        uint256 maxPlaceInLine,
-        uint256 minFillAmount,
-        bytes calldata pricingFunction
-    ) external view returns (uint256) {
-        return
-            s.podOrders[
-                createOrderIdV2(account, 0, maxPlaceInLine, minFillAmount, pricingFunction)
-            ];
     }
 
     function podOrderById(bytes32 id) external view returns (uint256) {
