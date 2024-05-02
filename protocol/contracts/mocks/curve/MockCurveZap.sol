@@ -6,7 +6,7 @@ import "../MockToken.sol";
 import "../../interfaces/ICurve.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
-pragma solidity ^0.7.6;
+pragma solidity ^0.8.20;
 pragma experimental ABIEncoderV2;
 
 contract MockCurveZap {

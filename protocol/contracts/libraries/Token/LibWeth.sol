@@ -3,7 +3,7 @@
 */
 
 pragma experimental ABIEncoderV2;
-pragma solidity =0.7.6;
+pragma solidity ^0.8.20;
 import "../../interfaces/IWETH.sol";
 import "./LibTransfer.sol";
 

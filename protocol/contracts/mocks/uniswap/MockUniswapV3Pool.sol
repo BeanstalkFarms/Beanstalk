@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity ^0.7.6;
+pragma solidity ^0.8.20;
 
 import "@uniswap/v3-core/contracts/libraries/Tick.sol";
 import "@uniswap/v3-core/contracts/libraries/Oracle.sol";

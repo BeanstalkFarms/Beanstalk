@@ -3,7 +3,7 @@
  *
  */
 
-pragma solidity =0.7.6;
+pragma solidity ^0.8.20;
 pragma experimental ABIEncoderV2;
 
 import {IInstantaneousPump} from "contracts/interfaces/basin/pumps/IInstantaneousPump.sol";
