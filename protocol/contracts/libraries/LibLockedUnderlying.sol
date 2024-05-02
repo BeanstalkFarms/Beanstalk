@@ -6,7 +6,7 @@ pragma experimental ABIEncoderV2;
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
 import {AppStorage, LibAppStorage} from "./LibAppStorage.sol";
-
+// import "hardhat/console.sol";
 /**
  * @title LibLockedUnderlying
  * @author Brendan
@@ -25,6 +25,9 @@ library LibLockedUnderlying {
         uint256 recapPercentPaid
     ) external view returns (uint256 lockedUnderlying) {
         AppStorage storage s = LibAppStorage.diamondStorage();
+        // console.log("token:", unripeToken);
+        // console.log("balance of underlying:", s.u[unripeToken].balanceOfUnderlying);
+        // console.log("get percent locked underlying:", getPercentLockedUnderlying(unripeToken, recapPercentPaid));
         return
             s
                 .u[unripeToken]

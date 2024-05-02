@@ -65,7 +65,7 @@ describe('Gauge', function () {
     // add unripe
     this.unripeBean = await ethers.getContractAt('MockToken', UNRIPE_BEAN)
     this.unripeLP = await ethers.getContractAt('MockToken', UNRIPE_LP)
-    await this.unripeLP.mint(ownerAddress, to18('10000'))
+    await this.unripeLP.mint(ownerAddress, to6('10000'))
     await this.unripeBean.mint(ownerAddress, to6('10000'))
     await this.unripeLP.connect(owner).approve(this.diamond.address, to6('100000000'))
     await this.unripeBean.connect(owner).approve(this.diamond.address, to6('100000000'))

@@ -356,7 +356,7 @@ contract UnripeFacet is ReentrancyGuard {
     function getLockedBeansUnderlyingUnripeBean() external view returns (uint256) {
         return LibLockedUnderlying.getLockedUnderlying(
             C.UNRIPE_BEAN,
-            LibUnripe.getRecapPaidPercentAmount(1e6)
+            LibUnripe.getTotalRecapitalizedPercent()
         );
     }
 
@@ -366,5 +366,12 @@ contract UnripeFacet is ReentrancyGuard {
     function getLockedBeansUnderlyingUnripeLP() external view returns (uint256) {
         uint256[] memory twaReserves = LibWell.getTwaReservesFromBeanstalkPump(LibBarnRaise.getBarnRaiseWell());
         return LibUnripe.getLockedBeansFromLP(twaReserves);
+    }
+
+    /**
+     * @notice returns the amount of dollars recapitalized in the barn raise.
+     */
+    function getRecapitalized() external view returns (uint256) {
+        return s.recapitalized;
     }
 }
