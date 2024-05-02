@@ -1,5 +1,5 @@
 // AssemblyScript code for a binary search on an array of u32
-export function u32_binarySearchIndex(arr: u32[], target: u32): u32 {
+export function u32_binarySearchIndex(arr: u32[], target: u32): i32 {
   let low: u32 = 0;
   let high: u32 = arr.length - 1;
 
@@ -8,7 +8,7 @@ export function u32_binarySearchIndex(arr: u32[], target: u32): u32 {
 
     // Check if target is present at mid
     if (arr[mid] === target) {
-      return mid;
+      return mid as i32;
     }
 
     // If target greater, ignore left half
@@ -17,6 +17,10 @@ export function u32_binarySearchIndex(arr: u32[], target: u32): u32 {
     }
     // If target is smaller, ignore right half
     else {
+      if (mid == 0) {
+        // Prevents underflow if mid is zero and target is smaller
+        break;
+      }
       high = mid - 1;
     }
   }
