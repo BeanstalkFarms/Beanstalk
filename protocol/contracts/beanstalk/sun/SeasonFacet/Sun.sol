@@ -4,8 +4,9 @@ pragma solidity ^0.8.20;
 pragma experimental ABIEncoderV2;
 
 import {SafeCast} from "@openzeppelin/contracts/utils/SafeCast.sol";
-import {LibFertilizer, SafeMath} from "contracts/libraries/LibFertilizer.sol";
-import {LibSafeMath128} from "contracts/libraries/LibSafeMath128.sol";
+import {LibFertilizer} from "contracts/libraries/LibFertilizer.sol";
+import {LibRedundantMath128} from "contracts/libraries/LibRedundantMath128.sol";
+import {LibRedundantMath256} from "contracts/libraries/LibRedundantMath256.sol";
 import {Oracle, C} from "./Oracle.sol";
 
 /**
@@ -15,8 +16,8 @@ import {Oracle, C} from "./Oracle.sol";
  */
 contract Sun is Oracle {
     using SafeCast for uint256;
-    using SafeMath for uint256;
-    using LibSafeMath128 for uint128;
+    using LibRedundantMath256 for uint256;
+    using LibRedundantMath128 for uint128;
 
     /// @dev When Fertilizer is Active, it receives 1/3 of new Bean mints.
     uint256 private constant FERTILIZER_DENOMINATOR = 3;
@@ -141,7 +142,7 @@ contract Sun is Oracle {
      * become Harvestable.
      */
     function rewardToHarvestable(uint256 amount) internal returns (uint256 newHarvestable) {
-        uint256 notHarvestable = s.f.pods - s.f.harvestable; // Note: SafeMath is redundant here.
+        uint256 notHarvestable = s.f.pods - s.f.harvestable;
         newHarvestable = amount.div(HARVEST_DENOMINATOR);
         newHarvestable = newHarvestable > notHarvestable ? notHarvestable : newHarvestable;
         s.f.harvestable = s.f.harvestable.add(newHarvestable);

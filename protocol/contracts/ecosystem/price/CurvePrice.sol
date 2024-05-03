@@ -16,7 +16,7 @@ interface IBDV {
 }
 
 contract CurvePrice {
-    using SafeMath for uint256;
+    using LibRedundantMath256 for uint256;
 
     //-------------------------------------------------------------------------------------------------------------------
     // Mainnet

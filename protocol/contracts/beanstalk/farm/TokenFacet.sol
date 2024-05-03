@@ -28,7 +28,7 @@ contract TokenFacet is Invariable, IERC1155Receiver, ReentrancyGuard {
     }
 
     using SafeERC20 for IERC20;
-    using SafeMath for uint256;
+    using LibRedundantMath256 for uint256;
 
     event InternalBalanceChanged(address indexed user, IERC20 indexed token, int256 delta);
 

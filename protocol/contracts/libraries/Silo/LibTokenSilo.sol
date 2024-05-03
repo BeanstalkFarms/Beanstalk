@@ -5,14 +5,14 @@
 pragma solidity ^0.8.20;
 pragma experimental ABIEncoderV2;
 
-import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
+import {LibRedundantMath256} from "contracts/libraries/LibRedundantMath256.sol";
 import {SafeCast} from "@openzeppelin/contracts/utils/SafeCast.sol";
 import {LibAppStorage, Storage, AppStorage, Account} from "../LibAppStorage.sol";
 import {C} from "../../C.sol";
-import {LibSafeMath32} from "contracts/libraries/LibSafeMath32.sol";
-import {LibSafeMath128} from "contracts/libraries/LibSafeMath128.sol";
-import {LibSafeMathSigned128} from "contracts/libraries/LibSafeMathSigned128.sol";
-import {LibSafeMathSigned96} from "contracts/libraries/LibSafeMathSigned96.sol";
+import {LibRedundantMath32} from "contracts/libraries/LibRedundantMath32.sol";
+import {LibRedundantMath128} from "contracts/libraries/LibRedundantMath128.sol";
+import {LibRedundantMathSigned128} from "contracts/libraries/LibRedundantMathSigned128.sol";
+import {LibRedundantMathSigned96} from "contracts/libraries/LibRedundantMathSigned96.sol";
 import {LibBytes} from "contracts/libraries/LibBytes.sol";
 import {LibGerminate} from "contracts/libraries/Silo/LibGerminate.sol";
 import {LibWhitelistedTokens} from "contracts/libraries/Silo/LibWhitelistedTokens.sol";
@@ -28,13 +28,13 @@ import "contracts/libraries/LibStrings.sol";
  * For functionality related to Stalk, and Roots, see {LibSilo}.
  */
 library LibTokenSilo {
-    using SafeMath for uint256;
-    using LibSafeMath128 for uint128;
-    using LibSafeMath32 for uint32;
-    using LibSafeMathSigned128 for int128;
+    using LibRedundantMath256 for uint256;
+    using LibRedundantMath128 for uint128;
+    using LibRedundantMath32 for uint32;
+    using LibRedundantMathSigned128 for int128;
     using SafeCast for int128;
     using SafeCast for uint256;
-    using LibSafeMathSigned96 for int96;
+    using LibRedundantMathSigned96 for int96;
 
     uint256 constant PRECISION = 1e6; // increased precision from to silo v3.1.
 
@@ -320,7 +320,7 @@ library LibTokenSilo {
             bdv.toUint128()
         );
 
-        // SafeMath unnecessary b/c crateBDV <= type(uint128).max
+        // Will not overflow b/c crateBDV <= type(uint128).max
         s.a[account].mowStatuses[token].bdv = s.a[account].mowStatuses[token].bdv.add(
             bdv.toUint128()
         );
@@ -414,7 +414,7 @@ library LibTokenSilo {
         // Full remove
         if (crateAmount > 0) delete s.a[account].deposits[depositId];
 
-        // SafeMath unnecessary b/c crateBDV <= type(uint128).max
+        // Will not overflow b/c crateBDV <= type(uint128).max
         s.a[account].mowStatuses[token].bdv = s.a[account].mowStatuses[token].bdv.sub(
             uint128(crateBDV)
         );

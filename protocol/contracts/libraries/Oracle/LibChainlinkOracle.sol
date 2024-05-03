@@ -7,7 +7,7 @@ pragma experimental ABIEncoderV2;
 
 import {C} from "contracts/C.sol";
 import {IChainlinkAggregator} from "contracts/interfaces/chainlink/IChainlinkAggregator.sol";
-import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
+import {LibRedundantMath256} from "contracts/libraries/LibRedundantMath256.sol";
 
 /**
  * @title Chainlink Oracle Library
@@ -16,7 +16,7 @@ import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
  * - ETH/USD price feed
  **/
 library LibChainlinkOracle {
-    using SafeMath for uint256;
+    using LibRedundantMath256 for uint256;
 
     uint256 constant PRECISION = 1e6; // use 6 decimal precision.
 

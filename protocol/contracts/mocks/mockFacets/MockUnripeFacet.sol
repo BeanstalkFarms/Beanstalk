@@ -15,7 +15,7 @@ import "contracts/libraries/LibTractor.sol";
  **/
 contract MockUnripeFacet is UnripeFacet {
     using SafeERC20 for IERC20;
-    using SafeMath for uint256;
+    using LibRedundantMath256 for uint256;
 
     function setMerkleRootE(address unripeToken, bytes32 root) external {
         s.u[unripeToken].merkleRoot = root;

@@ -7,11 +7,11 @@ pragma experimental ABIEncoderV2;
 
 import {AppStorage, Storage, Account} from "contracts/beanstalk/AppStorage.sol";
 import {LibLegacyTokenSilo} from "contracts/libraries/Silo/LibLegacyTokenSilo.sol";
-import {LibSafeMath128} from "contracts/libraries/LibSafeMath128.sol";
+import {LibRedundantMath128} from "contracts/libraries/LibRedundantMath128.sol";
 import {LibGerminate} from "contracts/libraries/Silo/LibGerminate.sol";
 import {ReentrancyGuard} from "contracts/beanstalk/ReentrancyGuard.sol";
 import {LibTokenSilo} from "contracts/libraries/Silo/LibTokenSilo.sol";
-import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
+import {LibRedundantMath256} from "contracts/libraries/LibRedundantMath256.sol";
 import {LibBytes} from "contracts/libraries/LibBytes.sol";
 import {LibSilo} from "contracts/libraries/Silo/LibSilo.sol";
 import {C} from "contracts/C.sol";
@@ -21,8 +21,8 @@ import {C} from "contracts/C.sol";
  * @title SiloGettersFacet contains view functions related to the silo.
  **/
 contract SiloGettersFacet is ReentrancyGuard {
-    using SafeMath for uint256;
-    using LibSafeMath128 for uint128;
+    using LibRedundantMath256 for uint256;
+    using LibRedundantMath128 for uint128;
 
     /**
      * @dev Stores account-level Season of Plenty balances.

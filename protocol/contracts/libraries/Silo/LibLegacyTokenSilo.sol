@@ -9,10 +9,10 @@ import "../../C.sol";
 import "./LibSilo.sol";
 import "./LibUnripeSilo.sol";
 import "../LibAppStorage.sol";
-import {LibSafeMathSigned128} from "contracts/libraries/LibSafeMathSigned128.sol";
-import {LibSafeMath32} from "contracts/libraries/LibSafeMath32.sol";
-import {LibSafeMath128} from "contracts/libraries/LibSafeMath128.sol";
-import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
+import {LibRedundantMathSigned128} from "contracts/libraries/LibRedundantMathSigned128.sol";
+import {LibRedundantMath32} from "contracts/libraries/LibRedundantMath32.sol";
+import {LibRedundantMath128} from "contracts/libraries/LibRedundantMath128.sol";
+import {LibRedundantMath256} from "contracts/libraries/LibRedundantMath256.sol";
 import {SafeCast} from "@openzeppelin/contracts/utils/SafeCast.sol";
 import {LibBytes} from "contracts/libraries/LibBytes.sol";
 import "@openzeppelin/contracts/cryptography/MerkleProof.sol";
@@ -28,12 +28,12 @@ import "@openzeppelin/contracts/cryptography/MerkleProof.sol";
  * library should no longer be necessary.
  */
 library LibLegacyTokenSilo {
-    using SafeMath for uint256;
+    using LibRedundantMath256 for uint256;
     using SafeCast for uint256;
-    using LibSafeMathSigned128 for int128;
-    using LibSafeMathSigned96 for int96;
-    using LibSafeMath32 for uint32;
-    using LibSafeMath128 for uint128;
+    using LibRedundantMathSigned128 for int128;
+    using LibRedundantMathSigned96 for int96;
+    using LibRedundantMath32 for uint32;
+    using LibRedundantMath128 for uint128;
 
     //to get the new root, run `node scripts/silov3-merkle/stems_merkle.js`
     bytes32 constant DISCREPANCY_MERKLE_ROOT =

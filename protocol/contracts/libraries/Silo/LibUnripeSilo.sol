@@ -3,9 +3,9 @@
 pragma solidity ^0.8.20;
 pragma experimental ABIEncoderV2;
 
-import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
+import {LibRedundantMath256} from "contracts/libraries/LibRedundantMath256.sol";
 import {AppStorage, LibAppStorage, Account} from "../LibAppStorage.sol";
-import {LibSafeMath128} from "../LibSafeMath128.sol";
+import {LibRedundantMath128} from "../LibRedundantMath128.sol";
 import {C} from "contracts/C.sol";
 
 /**
@@ -47,8 +47,8 @@ import {C} from "contracts/C.sol";
  * BEAN:3CRV Deposits are stored in the expected Silo V2 storage location.
  */
 library LibUnripeSilo {
-    using SafeMath for uint256;
-    using LibSafeMath128 for uint128;
+    using LibRedundantMath256 for uint256;
+    using LibRedundantMath128 for uint128;
 
     /*
      * The values below represent the {LibTokenSilo-beanDenominatedValue} of

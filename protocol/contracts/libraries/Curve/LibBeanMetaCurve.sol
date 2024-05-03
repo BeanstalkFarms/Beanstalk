@@ -4,7 +4,7 @@ pragma solidity ^0.8.20;
 pragma experimental ABIEncoderV2;
 
 import {AppStorage, LibAppStorage, Storage} from "../LibAppStorage.sol";
-import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
+import {LibRedundantMath256} from "contracts/libraries/LibRedundantMath256.sol";
 import {LibMetaCurve, IMeta3Curve} from "./LibMetaCurve.sol";
 import {LibCurve} from "./LibCurve.sol";
 import "contracts/C.sol";
@@ -15,7 +15,7 @@ import "contracts/C.sol";
  * @notice Calculates BDV and deltaB for the BEAN:3CRV Metapool.
  */
 library LibBeanMetaCurve {
-    using SafeMath for uint256;
+    using LibRedundantMath256 for uint256;
 
     uint256 private constant RATE_MULTIPLIER = 1e12; // Bean has 6 Decimals => 1e(18 - delta decimals)
     uint256 private constant PRECISION = 1e18;

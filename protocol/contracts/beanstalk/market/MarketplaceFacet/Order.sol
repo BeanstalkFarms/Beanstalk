@@ -12,7 +12,7 @@ import "./Listing.sol";
  **/
 
 contract Order is Listing {
-    using SafeMath for uint256;
+    using LibRedundantMath256 for uint256;
 
     struct PodOrder {
         address account;
@@ -150,5 +150,4 @@ contract Order is Listing {
             id = keccak256(abi.encodePacked(account, pricePerPod, maxPlaceInLine, minFillAmount));
         else id = keccak256(abi.encodePacked(account, pricePerPod, maxPlaceInLine));
     }
-
 }

@@ -4,7 +4,7 @@ pragma solidity ^0.8.20;
 pragma experimental ABIEncoderV2;
 
 import {AppStorage, LibAppStorage, Storage} from "../LibAppStorage.sol";
-import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
+import {LibRedundantMath256} from "contracts/libraries/LibRedundantMath256.sol";
 import {SafeCast} from "@openzeppelin/contracts/utils/SafeCast.sol";
 import {LibCurve} from "./LibCurve.sol";
 import {LibCurveMinting} from "contracts/libraries/Minting/LibCurveMinting.sol";
@@ -27,7 +27,7 @@ interface IMeta3Curve {
  * retrieving, and resetting the bean3crv twa reserves.
  */
 library LibMetaCurve {
-    using SafeMath for uint256;
+    using LibRedundantMath256 for uint256;
     using SafeCast for uint256;
 
     /**

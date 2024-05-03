@@ -4,7 +4,7 @@ pragma solidity ^0.8.20;
 import "../AppStorage.sol";
 import {LibBytes64} from "contracts/libraries/LibBytes64.sol";
 import {LibStrings} from "contracts/libraries/LibStrings.sol";
-import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
+import {LibRedundantMath256} from "contracts/libraries/LibRedundantMath256.sol";
 import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import {C} from "../../C.sol";
 
@@ -20,7 +20,7 @@ contract MetadataImage {
 
     using LibStrings for uint256;
     using LibStrings for int256;
-    using SafeMath for uint256;
+    using LibRedundantMath256 for uint256;
 
     string constant LEAF_COLOR_0 = "#A8C83A";
     string constant LEAF_COLOR_1 = "#89A62F";

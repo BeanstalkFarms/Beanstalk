@@ -5,7 +5,7 @@
 pragma solidity ^0.8.20;
 pragma experimental ABIEncoderV2;
 
-import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
+import {LibRedundantMath256} from "contracts/libraries/LibRedundantMath256.sol";
 
 /**
  * @title Decimal
@@ -14,7 +14,7 @@ import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
  * Library that defines a fixed-point number with 18 decimal places.
  */
 library Decimal {
-    using SafeMath for uint256;
+    using LibRedundantMath256 for uint256;
 
     // ============ Constants ============
 

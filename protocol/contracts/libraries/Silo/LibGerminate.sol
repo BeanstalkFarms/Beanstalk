@@ -3,13 +3,13 @@ pragma solidity ^0.8.20;
 pragma experimental ABIEncoderV2;
 
 import {LibAppStorage, Storage, AppStorage, Account} from "../LibAppStorage.sol";
-import {LibSafeMath128} from "../LibSafeMath128.sol";
-import {LibSafeMath32} from "../LibSafeMath32.sol";
-import {LibSafeMathSigned96} from "../LibSafeMathSigned96.sol";
+import {LibRedundantMath128} from "../LibRedundantMath128.sol";
+import {LibRedundantMath32} from "../LibRedundantMath32.sol";
+import {LibRedundantMathSigned96} from "../LibRedundantMathSigned96.sol";
 import {LibTokenSilo} from "./LibTokenSilo.sol";
 import {LibSilo} from "./LibSilo.sol";
 import {SafeCast} from "@openzeppelin/contracts/utils/SafeCast.sol";
-import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
+import {LibRedundantMath256} from "contracts/libraries/LibRedundantMath256.sol";
 import {C} from "../../C.sol";
 
 /**
@@ -26,11 +26,11 @@ import {C} from "../../C.sol";
  * - new bdv introduced in the silo.
  */
 library LibGerminate {
-    using SafeMath for uint256;
+    using LibRedundantMath256 for uint256;
     using SafeCast for uint256;
-    using LibSafeMath32 for uint32;
-    using LibSafeMath128 for uint128;
-    using LibSafeMathSigned96 for int96;
+    using LibRedundantMath32 for uint32;
+    using LibRedundantMath128 for uint128;
+    using LibRedundantMathSigned96 for int96;
 
     //////////////////////// EVENTS ////////////////////////
 

@@ -3,11 +3,11 @@
 pragma solidity ^0.8.20;
 pragma experimental ABIEncoderV2;
 
-import { UD60x18 } from "@prb/math/src/UD60x18.sol";
+import {UD60x18} from "@prb/math/src/UD60x18.sol";
 import {LibAppStorage, AppStorage} from "./LibAppStorage.sol";
-import {LibSafeMath128} from "./LibSafeMath128.sol";
-import {LibSafeMath32} from "./LibSafeMath32.sol";
-import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
+import {LibRedundantMath128} from "./LibRedundantMath128.sol";
+import {LibRedundantMath32} from "./LibRedundantMath32.sol";
+import {LibRedundantMath256} from "contracts/libraries/LibRedundantMath256.sol";
 /**
  * @title LibDibbler
  * @author Publius, Brean
@@ -16,10 +16,10 @@ import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
  * Morning Auction functionality. Provides math helpers for scaling Soil.
  */
 library LibDibbler {
-    using SafeMath for uint256;
+    using LibRedundantMath256 for uint256;
     using UD60x18 for uint256;
-    using LibSafeMath32 for uint32;
-    using LibSafeMath128 for uint128;
+    using LibRedundantMath32 for uint32;
+    using LibRedundantMath128 for uint128;
 
     /// @dev Morning Auction scales temperature by 1e6.
     uint256 internal constant TEMPERATURE_PRECISION = 1e6;

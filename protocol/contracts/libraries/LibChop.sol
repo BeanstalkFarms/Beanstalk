@@ -3,17 +3,18 @@
 pragma solidity ^0.8.20;
 pragma experimental ABIEncoderV2;
 
-import {LibUnripe, SafeMath, AppStorage} from "contracts/libraries/LibUnripe.sol";
+import {LibUnripe, AppStorage} from "contracts/libraries/LibUnripe.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {IBean} from "contracts/interfaces/IBean.sol";
 import {LibAppStorage} from "./LibAppStorage.sol";
+import {LibRedundantMath256} from "contracts/libraries/LibRedundantMath256.sol";
 
 /**
  * @title LibChop
  * @author deadmanwalking
  */
 library LibChop {
-    using SafeMath for uint256;
+    using LibRedundantMath256 for uint256;
 
     /**
      * @notice Chops an Unripe Token into its Ripe Token.

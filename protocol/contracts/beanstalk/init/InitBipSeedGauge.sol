@@ -8,13 +8,13 @@ import {AppStorage, Storage} from "contracts/beanstalk/AppStorage.sol";
 import {C} from "../../C.sol";
 import {LibWhitelistedTokens} from "contracts/libraries/Silo/LibWhitelistedTokens.sol";
 import {LibTokenSilo} from "contracts/libraries/Silo/LibTokenSilo.sol";
-import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
+import {LibRedundantMath256} from "contracts/libraries/LibRedundantMath256.sol";
 import {LibCases} from "contracts/libraries/LibCases.sol";
 import {LibWhitelist} from "contracts/libraries/Silo/LibWhitelist.sol";
 import {LibGauge} from "contracts/libraries/LibGauge.sol";
 import {Weather} from "contracts/beanstalk/sun/SeasonFacet/Weather.sol";
-import {LibSafeMathSigned96} from "contracts/libraries/LibSafeMathSigned96.sol";
-import {LibSafeMath128} from "contracts/libraries/LibSafeMath128.sol";
+import {LibRedundantMathSigned96} from "contracts/libraries/LibRedundantMathSigned96.sol";
+import {LibRedundantMath128} from "contracts/libraries/LibRedundantMath128.sol";
 import {SafeCast} from "@openzeppelin/contracts/utils/SafeCast.sol";
 import {ILiquidityWeightFacet} from "contracts/beanstalk/sun/LiquidityWeightFacet.sol";
 import {IGaugePointFacet} from "contracts/beanstalk/sun/GaugePointFacet.sol";
@@ -25,9 +25,9 @@ import {InitWhitelistStatuses} from "contracts/beanstalk/init/InitWhitelistStatu
  * @title InitBipSeedGauge initalizes the seed gauge, updates siloSetting Struct
  **/
 contract InitBipSeedGauge is Weather, InitWhitelistStatuses {
-    using SafeMath for uint256;
-    using LibSafeMathSigned96 for int96;
-    using LibSafeMath128 for uint128;
+    using LibRedundantMath256 for uint256;
+    using LibRedundantMathSigned96 for int96;
+    using LibRedundantMath128 for uint128;
     using SafeCast for uint256;
 
     uint256 private constant TARGET_SEASONS_TO_CATCHUP = 4320;

@@ -3,7 +3,7 @@
 pragma solidity ^0.8.20;
 pragma experimental ABIEncoderV2;
 
-import {Weather, SafeMath, C} from "./Weather.sol";
+import {Weather, C} from "./Weather.sol";
 import {LibIncentive} from "contracts/libraries/LibIncentive.sol";
 import {LibTransfer} from "contracts/libraries/Token/LibTransfer.sol";
 import {LibWell} from "contracts/libraries/Well/LibWell.sol";
@@ -12,6 +12,7 @@ import {LibWhitelistedTokens} from "contracts/libraries/Silo/LibWhitelistedToken
 import {LibGerminate} from "contracts/libraries/Silo/LibGerminate.sol";
 import {Invariable} from "contracts/beanstalk/Invariable.sol";
 import {LibTractor} from "contracts/libraries/LibTractor.sol";
+import {LibRedundantMath256} from "contracts/libraries/LibRedundantMath256.sol";
 
 /**
  * @title SeasonFacet
@@ -19,7 +20,7 @@ import {LibTractor} from "contracts/libraries/LibTractor.sol";
  * @notice Holds the Sunrise function and handles all logic for Season changes.
  */
 contract SeasonFacet is Invariable, Weather {
-    using SafeMath for uint256;
+    using LibRedundantMath256 for uint256;
 
     /**
      * @notice Emitted when the Season changes.
@@ -71,7 +72,7 @@ contract SeasonFacet is Invariable, Weather {
     function seasonTime() public view virtual returns (uint32) {
         if (block.timestamp < s.season.start) return 0;
         if (s.season.period == 0) return type(uint32).max;
-        return uint32((block.timestamp - s.season.start) / s.season.period); // Note: SafeMath is redundant here.
+        return uint32((block.timestamp - s.season.start) / s.season.period);
     }
 
     //////////////////// SEASON INTERNAL ////////////////////

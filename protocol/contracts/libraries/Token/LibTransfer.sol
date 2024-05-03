@@ -14,7 +14,7 @@ import "./LibBalance.sol";
  */
 library LibTransfer {
     using SafeERC20 for IERC20;
-    using SafeMath for uint256;
+    using LibRedundantMath256 for uint256;
 
     enum From {
         EXTERNAL,

@@ -7,7 +7,7 @@ pragma experimental ABIEncoderV2;
 
 import {ECDSA} from "@openzeppelin/contracts/cryptography/ECDSA.sol";
 import {LibBytes} from "../../libraries/LibBytes.sol";
-import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
+import {LibRedundantMath256} from "contracts/libraries/LibRedundantMath256.sol";
 
 import {LibTractor} from "../../libraries/LibTractor.sol";
 import {AdvancedFarmCall, LibFarm} from "../../libraries/LibFarm.sol";
@@ -18,7 +18,7 @@ import {LibBytes} from "contracts/libraries/LibBytes.sol";
  */
 contract TractorFacet {
     using LibBytes for bytes32;
-    using SafeMath for uint256;
+    using LibRedundantMath256 for uint256;
 
     event PublishRequisition(LibTractor.Requisition requisition);
 

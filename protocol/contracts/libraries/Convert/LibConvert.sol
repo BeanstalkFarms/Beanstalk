@@ -3,7 +3,7 @@
 pragma solidity ^0.8.20;
 pragma experimental ABIEncoderV2;
 
-import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
+import {LibRedundantMath256} from "contracts/libraries/LibRedundantMath256.sol";
 import {LibCurveConvert} from "./LibCurveConvert.sol";
 import {LibUnripeConvert} from "./LibUnripeConvert.sol";
 import {LibLambdaConvert} from "./LibLambdaConvert.sol";
@@ -19,7 +19,7 @@ import {C} from "contracts/C.sol";
  * @author Publius
  */
 library LibConvert {
-    using SafeMath for uint256;
+    using LibRedundantMath256 for uint256;
     using LibConvertData for bytes;
     using LibWell for address;
 

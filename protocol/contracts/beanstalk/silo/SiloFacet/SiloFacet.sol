@@ -26,8 +26,8 @@ import {Invariable} from "contracts/beanstalk/Invariable.sol";
  *
  */
 contract SiloFacet is Invariable, TokenSilo {
-    using SafeMath for uint256;
-    using LibSafeMath32 for uint32;
+    using LibRedundantMath256 for uint256;
+    using LibRedundantMath32 for uint32;
 
     //////////////////////// DEPOSIT ////////////////////////
 

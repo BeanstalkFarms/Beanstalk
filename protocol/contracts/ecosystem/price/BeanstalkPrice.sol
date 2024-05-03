@@ -2,14 +2,15 @@
 pragma solidity ^0.8.20;
 pragma experimental ABIEncoderV2;
 
-import {WellPrice, P, C, SafeMath} from "./WellPrice.sol";
+import {LibRedundantMath256} from "contracts/libraries/LibRedundantMath256.sol";
+import {WellPrice, P, C} from "./WellPrice.sol";
 
 interface IWhitelistFacet {
     function getWhitelistedWellLpTokens() external view returns (address[] memory tokens);
 }
 
 contract BeanstalkPrice is WellPrice {
-    using SafeMath for uint256;
+    using LibRedundantMath256 for uint256;
 
     address immutable _beanstalk;
 

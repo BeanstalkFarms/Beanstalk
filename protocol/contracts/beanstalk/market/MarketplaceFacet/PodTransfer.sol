@@ -5,10 +5,10 @@
 pragma solidity ^0.8.20;
 pragma experimental ABIEncoderV2;
 
-import "@openzeppelin/contracts/math/SafeMath.sol";
+import "contracts/libraries/LibRedundantMath256.sol";
 import "contracts/beanstalk/AppStorage.sol";
 import "contracts/interfaces/IBean.sol";
-import "contracts/libraries/LibSafeMath32.sol";
+import "contracts/libraries/LibRedundantMath32.sol";
 import "contracts/beanstalk/ReentrancyGuard.sol";
 import "contracts/C.sol";
 
@@ -18,8 +18,8 @@ import "contracts/C.sol";
  **/
 
 contract PodTransfer is ReentrancyGuard {
-    using SafeMath for uint256;
-    using LibSafeMath32 for uint32;
+    using LibRedundantMath256 for uint256;
+    using LibRedundantMath32 for uint32;
 
     event PlotTransfer(address indexed from, address indexed to, uint256 indexed id, uint256 pods);
     event PodApproval(address indexed owner, address indexed spender, uint256 pods);

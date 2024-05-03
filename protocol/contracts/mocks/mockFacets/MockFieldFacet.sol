@@ -5,8 +5,8 @@
 pragma solidity ^0.8.20;
 pragma experimental ABIEncoderV2;
 
-import "@openzeppelin/contracts/math/SafeMath.sol";
-import { UD60x18 } from "@prb/math/src/UD60x18.sol";
+import "contracts/libraries/LibRedundantMath256.sol";
+import {UD60x18} from "@prb/math/src/UD60x18.sol";
 import "contracts/beanstalk/field/FieldFacet.sol";
 
 /**
@@ -14,9 +14,9 @@ import "contracts/beanstalk/field/FieldFacet.sol";
  * @title Mock Field Facet
  **/
 contract MockFieldFacet is FieldFacet {
-    using SafeMath for uint256;
+    using LibRedundantMath256 for uint256;
     using UD60x18 for uint256;
-    using LibSafeMath128 for uint128;
+    using LibRedundantMath128 for uint128;
 
     function incrementTotalSoilE(uint128 amount) external {
         s.f.soil = s.f.soil.add(amount);

@@ -4,7 +4,7 @@ pragma solidity ^0.8.20;
 pragma experimental ABIEncoderV2;
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
+import {LibRedundantMath256} from "contracts/libraries/LibRedundantMath256.sol";
 import {IBean} from "../interfaces/IBean.sol";
 import {AppStorage, LibAppStorage} from "./LibAppStorage.sol";
 import {C} from "../C.sol";
@@ -19,7 +19,7 @@ import {LibLockedUnderlying} from "./LibLockedUnderlying.sol";
  * @notice Library for handling functionality related to Unripe Tokens and their Ripe Tokens.
  */
 library LibUnripe {
-    using SafeMath for uint256;
+    using LibRedundantMath256 for uint256;
 
     event ChangeUnderlying(address indexed token, int256 underlying);
     event SwitchUnderlyingToken(address indexed token, address indexed underlyingToken);

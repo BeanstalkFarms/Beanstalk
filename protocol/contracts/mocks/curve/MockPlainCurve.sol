@@ -5,7 +5,7 @@
 pragma solidity ^0.8.20;
 pragma experimental ABIEncoderV2;
 
-import "@openzeppelin/contracts/math/SafeMath.sol";
+import "contracts/libraries/LibRedundantMath256.sol";
 import "../../interfaces/IBean.sol";
 import "../MockToken.sol";
 
@@ -19,7 +19,7 @@ interface I3Curve {
 }
 
 contract MockPlainCurve {
-    using SafeMath for uint256;
+    using LibRedundantMath256 for uint256;
 
     event Approval(address indexed owner, address indexed spender, uint value);
     event Transfer(address indexed from, address indexed to, uint value);

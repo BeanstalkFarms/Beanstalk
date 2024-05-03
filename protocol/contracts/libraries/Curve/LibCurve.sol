@@ -3,7 +3,7 @@
 pragma solidity ^0.8.20;
 pragma experimental ABIEncoderV2;
 
-import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
+import {LibRedundantMath256} from "contracts/libraries/LibRedundantMath256.sol";
 
 /**
  * @title LibCurve
@@ -11,7 +11,7 @@ import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
  * @notice Low-level Curve swap math for a 2-token StableSwap pool.
  */
 library LibCurve {
-    using SafeMath for uint256;
+    using LibRedundantMath256 for uint256;
 
     uint256 private constant A_PRECISION = 100;
     uint256 private constant N_COINS = 2;

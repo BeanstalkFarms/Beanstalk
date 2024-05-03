@@ -9,8 +9,8 @@ import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "./Fertilizer1155.sol";
-import "contracts/libraries/LibSafeMath32.sol";
-import "contracts/libraries/LibSafeMath128.sol";
+import "contracts/libraries/LibRedundantMath32.sol";
+import "contracts/libraries/LibRedundantMath128.sol";
 
 /**
  * @author publius
@@ -18,7 +18,7 @@ import "contracts/libraries/LibSafeMath128.sol";
 
 contract Internalizer is OwnableUpgradeable, ReentrancyGuardUpgradeable, Fertilizer1155 {
     using SafeERC20Upgradeable for IERC20;
-    using LibSafeMath128 for uint128;
+    using LibRedundantMath128 for uint128;
 
     struct Balance {
         uint128 amount;

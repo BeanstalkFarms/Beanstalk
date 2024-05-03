@@ -3,7 +3,7 @@
 pragma solidity ^0.8.20;
 pragma experimental ABIEncoderV2;
 
-import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
+import {LibRedundantMath256} from "contracts/libraries/LibRedundantMath256.sol";
 import {IBlockBasefee} from "../interfaces/IBlockBasefee.sol";
 import "@openzeppelin/contracts/math/Math.sol";
 import "../C.sol";
@@ -15,7 +15,7 @@ import "../C.sol";
  * and scales the reward up when the Sunrise is called late.
  */
 library LibIncentive {
-    using SafeMath for uint256;
+    using LibRedundantMath256 for uint256;
 
     /**
      * @notice Emitted when Beanstalk pays `beans` to `account` as a reward for calling `sunrise()`.

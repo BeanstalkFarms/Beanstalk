@@ -4,6 +4,7 @@ pragma solidity ^0.8.20;
 pragma experimental ABIEncoderV2;
 
 import "./Internalizer.sol";
+import {LibRedundantMath256} from "../LibRedundantMath256.sol";
 
 /**
  * @author publius
@@ -21,8 +22,8 @@ contract Fertilizer is Internalizer {
     event ClaimFertilizer(uint256[] ids, uint256 beans);
 
     using SafeERC20Upgradeable for IERC20;
-    using SafeMathUpgradeable for uint256;
-    using LibSafeMath128 for uint128;
+    using LibRedundantMath256 for uint256;
+    using LibRedundantMath128 for uint128;
 
     function beanstalkUpdate(
         address account,

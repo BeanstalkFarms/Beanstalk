@@ -4,15 +4,16 @@ pragma solidity ^0.8.20;
 pragma experimental ABIEncoderV2;
 
 import {LibEvaluate} from "contracts/libraries/LibEvaluate.sol";
-import {LibSafeMath128} from "contracts/libraries/LibSafeMath128.sol";
+import {LibRedundantMath128} from "contracts/libraries/LibRedundantMath128.sol";
 import {LibCases} from "contracts/libraries/LibCases.sol";
-import {Sun, SafeMath, C} from "./Sun.sol";
+import {Sun, C} from "./Sun.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {IBeanstalkWellFunction} from "contracts/interfaces/basin/IBeanstalkWellFunction.sol";
 import {LibWell} from "contracts/libraries/Well/LibWell.sol";
 import {IWell, Call} from "contracts/interfaces/basin/IWell.sol";
 import {IInstantaneousPump} from "contracts/interfaces/basin/pumps/IInstantaneousPump.sol";
-import {SignedSafeMath} from "@openzeppelin/contracts/math/SignedSafeMath.sol";
+import {LibRedundantMath256} from "contracts/libraries/LibRedundantMath256.sol";
+import {LibRedundantMathSigned256} from "contracts/libraries/LibRedundantMathSigned256.sol";
 
 /**
  * @title Weather
@@ -20,9 +21,9 @@ import {SignedSafeMath} from "@openzeppelin/contracts/math/SignedSafeMath.sol";
  * @notice Weather controls the Temperature and Grown Stalk to LP on the Farm.
  */
 contract Weather is Sun {
-    using SafeMath for uint256;
-    using SignedSafeMath for int256;
-    using LibSafeMath128 for uint128;
+    using LibRedundantMath256 for uint256;
+    using LibRedundantMathSigned256 for int256;
+    using LibRedundantMath128 for uint128;
 
     uint128 internal constant MAX_BEAN_LP_GP_PER_BDV_RATIO = 100e18;
 

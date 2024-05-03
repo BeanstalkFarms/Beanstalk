@@ -15,7 +15,7 @@ import "contracts/libraries/LibTractor.sol";
  **/
 
 contract Listing is PodTransfer {
-    using SafeMath for uint256;
+    using LibRedundantMath256 for uint256;
 
     struct PodListing {
         address account;

@@ -7,7 +7,7 @@ pragma experimental ABIEncoderV2;
 
 import {LibEthUsdOracle} from "./LibEthUsdOracle.sol";
 import {LibWstethUsdOracle} from "./LibWstethUsdOracle.sol";
-import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
+import {LibRedundantMath256} from "contracts/libraries/LibRedundantMath256.sol";
 import {C} from "contracts/C.sol";
 
 /**
@@ -17,7 +17,7 @@ import {C} from "contracts/C.sol";
  * - ETH/USD price
  **/
 library LibUsdOracle {
-    using SafeMath for uint256;
+    using LibRedundantMath256 for uint256;
 
     function getUsdPrice(address token) internal view returns (uint256) {
         return getUsdPrice(token, 0);

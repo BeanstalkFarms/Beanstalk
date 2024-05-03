@@ -4,7 +4,7 @@ pragma solidity ^0.8.20;
 pragma experimental ABIEncoderV2;
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
+import {LibRedundantMath256} from "contracts/libraries/LibRedundantMath256.sol";
 import {AppStorage, LibAppStorage} from "./LibAppStorage.sol";
 
 /**
@@ -14,7 +14,7 @@ import {AppStorage, LibAppStorage} from "./LibAppStorage.sol";
  * the Unripe Tokens are Chopped.
  */
 library LibLockedUnderlying {
-    using SafeMath for uint256;
+    using LibRedundantMath256 for uint256;
 
     /**
      * @notice Return the amount of Underlying Tokens that would be locked if all of the Unripe Tokens

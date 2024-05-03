@@ -8,7 +8,7 @@ pragma experimental ABIEncoderV2;
 import "contracts/beanstalk/metadata/MetadataImage.sol";
 import {LibBytes} from "contracts/libraries/LibBytes.sol";
 import {LibTokenSilo} from "contracts/libraries/Silo/LibTokenSilo.sol";
-import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
+import {LibRedundantMath256} from "contracts/libraries/LibRedundantMath256.sol";
 
 /**
  * @author brean
@@ -20,7 +20,7 @@ import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
  * (MockMetadataFacet with ERC1155 exceeds the contract size limit.)
  **/
 contract TestnetMetadataFacet is MetadataImage {
-    using SafeMath for uint256;
+    using LibRedundantMath256 for uint256;
 
     // inital conditions: 2 seeds, 1000 seasons has elapsed from milestone season.
     uint256 public stalkEarnedPerSeason = 2e6;

@@ -13,7 +13,7 @@ import "@openzeppelin/contracts/token/ERC20/ERC20Burnable.sol";
  * @title MockSiloToken is a mintable ERC-20 Token.
  **/
 contract MockSiloToken is Ownable, ERC20Burnable {
-    using SafeMath for uint256;
+    using LibRedundantMath256 for uint256;
 
     constructor() ERC20("Bean3Crv", "BEAN3CRV") {}
 

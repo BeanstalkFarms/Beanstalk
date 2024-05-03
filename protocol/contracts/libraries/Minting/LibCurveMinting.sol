@@ -4,7 +4,7 @@ pragma solidity ^0.8.20;
 pragma experimental ABIEncoderV2;
 
 import "../LibAppStorage.sol";
-import "../LibSafeMath32.sol";
+import "../LibRedundantMath32.sol";
 import "./LibMinting.sol";
 import "contracts/libraries/Curve/LibMetaCurve.sol";
 import {SafeCast} from "@openzeppelin/contracts/utils/SafeCast.sol";
@@ -37,9 +37,9 @@ interface IMeta3CurveOracle {
  * NOTE: with the bean:3crv dewhitelisting, LibCurveMinting is no longer used and is kept for historical purposes.
  */
 library LibCurveMinting {
-    using SafeMath for uint256;
+    using LibRedundantMath256 for uint256;
     using SafeCast for uint256;
-    using LibSafeMath32 for uint32;
+    using LibRedundantMath32 for uint32;
 
     /**
      * @notice Emitted when the Curve Minting Oracle is captured.
