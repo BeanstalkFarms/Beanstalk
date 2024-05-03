@@ -327,30 +327,35 @@ async function bipMiscellaneousImprovements(mock = true, account = undefined, ve
       "UnripeFacet",
       "ConvertFacet",
       "SeasonFacet",
+      "SeasonGettersFacet",
       "FertilizerFacet"
     ],
     libraryNames: [
-      'LibChopConvert',
-      'LibConvert',
-      'LibConvertData',
-      'LibLambdaConvert',
-      'LibChop',
-      'LibFertilizer',
-      'LibStrings',
-      'LibUnripe',
+      'LibGauge',
+      'LibIncentive',
+      'LibLockedUnderlying',
       'LibWellMinting',
+      'LibGerminate',
+      'LibConvert'
     ],
     facetLibraries: {
       'UnripeFacet': [
-        'LibUnripe',
-        'LibChop'
+        'LibLockedUnderlying'
       ],
       'ConvertFacet': [
         'LibConvert',
       ],
       'SeasonFacet': [
+        'LibGauge',
+        'LibIncentive',
+        'LibLockedUnderlying',
         'LibWellMinting',
-      ]
+        'LibGerminate'
+      ],
+      'SeasonGettersFacet': [
+        'LibLockedUnderlying',
+        'LibWellMinting',
+      ],
     },
     selectorsToRemove: [],
     bip: false,

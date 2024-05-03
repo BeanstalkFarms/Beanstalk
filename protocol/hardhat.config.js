@@ -250,6 +250,34 @@ task("ebip9", async function () {
   await ebip9();
 })
 
+task("check", async function () {
+  const owner = await impersonateBeanstalkOwner();
+  await mintEth(owner.address);
+  await upgradeWithNewFacets({
+    diamondAddress: BEANSTALK,
+    facetNames: [
+      "UnripeFacet",
+      "FertilizerFacet"
+    ],
+    libraryNames: [
+      'LibLockedUnderlying'
+    ],
+    facetLibraries: {
+      'UnripeFacet': [
+        'LibLockedUnderlying'
+      ]
+    },
+    initArgs: [],
+    bip: false,
+    verbose: true,
+    account: owner
+  });
+  beanstalk = await getBeanstalk()
+  console.log("s.recapitalized:", await beanstalk.getRecapitalized())
+  console.log("remaining recapitalization :",await beanstalk.remainingRecapitalization())
+  console.log("total dollars needed to be raised:" , await beanstalk.getTotalRecapDollarsNeeded())
+})
+
 //////////////////////// SUBTASK CONFIGURATION ////////////////////////
 
 // Add a subtask that sets the action for the TASK_COMPILE_SOLIDITY_GET_SOURCE_PATHS task
@@ -337,7 +365,7 @@ module.exports = {
     }
   },
   gasReporter: {
-    enabled: true
+    enabled: false
   },
   mocha: {
     timeout: 100000000
