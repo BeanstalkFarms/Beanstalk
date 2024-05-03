@@ -98,6 +98,19 @@ contract FloodTest is TestHelper {
 
         assertTrue(sop.lastRain == s.rainStart);
         assertTrue(sop.roots == 10004000000000000000000000);
+
+        assertTrue(sop.farmerSops.length > 0);
+
+        assertTrue(sop.farmerSops[0].well == C.BEAN_ETH_WELL);
+        console.log("sop.farmerSops[0].well: ", sop.farmerSops[0].well);
+        console.log(
+            "sop.farmerSops[0].wellsPlenty.plentyPerRoot: ",
+            sop.farmerSops[0].wellsPlenty.plentyPerRoot
+        );
+        // assertTrue(sop.farmerSops[0].wellsPlenty.plentyPerRoot == 10004000000000000000000000);
+        console.log("sop.farmerSops[0].wellsPlenty.plenty: ", sop.farmerSops[0].wellsPlenty.plenty);
+        // return;
+        // assertTrue(sop.farmerSops[0].wellsPlenty.plenty == 10004000000000000000000000);
     }
 
     function testStopsRaining() public {

@@ -46,7 +46,12 @@ contract SiloGettersFacet is ReentrancyGuard {
         // code review note: would have been great to return a mapping of Account.SeasonOfPlenty, but that spits out this error:
         // Types containing (nested) mappings can only be parameters or return variables of internal or library functions.
         // therefore, we're returning 2 separate mappings.
-        Account.SeasonOfPlenty[] wellsPlenty;
+        FarmerSops[] farmerSops;
+    }
+
+    struct FarmerSops {
+        address well;
+        Account.SeasonOfPlenty wellsPlenty;
     }
 
     //////////////////////// GETTERS ////////////////////////
@@ -480,11 +485,11 @@ contract SiloGettersFacet is ReentrancyGuard {
         sop.lastSop = s.a[account].lastSop;
         sop.roots = s.a[account].rainRoots;
         address[] memory wells = LibWhitelistedTokens.getWhitelistedWellLpTokens();
-        sop.wellsPlenty = new Account.SeasonOfPlenty[](wells.length);
-        for (uint i; i < wells.length; i++) {
+        sop.farmerSops = new FarmerSops[](wells.length);
+        for (uint256 i; i < wells.length; i++) {
             Account.SeasonOfPlenty memory wellSop = s.a[account].sop[wells[i]];
-            // sop.wellsPlenty.push(wellSop);
-            sop.wellsPlenty[i] = wellSop;
+            FarmerSops memory farmerSops = FarmerSops(wells[i], wellSop);
+            sop.farmerSops[i] = farmerSops;
         }
     }
 
