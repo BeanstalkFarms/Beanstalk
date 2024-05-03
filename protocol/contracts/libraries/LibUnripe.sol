@@ -14,7 +14,6 @@ import {IWellFunction} from "contracts/interfaces/basin/IWellFunction.sol";
 import {LibLockedUnderlying} from "./LibLockedUnderlying.sol";
 import {LibFertilizer} from "./LibFertilizer.sol";
 
-// import "hardhat/console.sol";
 
 /**
  * @title LibUnripe
@@ -166,8 +165,6 @@ library LibUnripe {
         // But totalRipeUnderlying = CurrentUnderlying * totalUsdNeeded/usdValueRaised to get the total underlying
         // redeem = currentRipeUnderlying * (usdValueRaised/totalUsdNeeded) * UnripeAmountIn/UnripeSupply
         uint256 underlyingAmount = s.u[unripeToken].balanceOfUnderlying;
-        // 18 * 6 / 18 * 18 / 18 = 6
-        // 6 * 6 / 18 * 18 / 18 = 6
         redeem = underlyingAmount.mul(s.recapitalized).div(totalUsdNeeded).mul(amount).div(supply);
         // cap `redeem to `balanceOfUnderlying in the case that `s.recapitalized` exceeds `totalUsdNeeded`.
         // this can occur due to unripe LP chops.
@@ -182,8 +179,6 @@ library LibUnripe {
     function getTotalRecapitalizedPercent() internal view returns (uint256 recapitalizedPercent) {
         AppStorage storage s = LibAppStorage.diamondStorage();
         uint256 totalUsdNeeded = LibFertilizer.getTotalRecapDollarsNeeded();
-        // console.log("totalUsdNeeded:", totalUsdNeeded);
-        // console.log("s.recapitalized:", s.recapitalized);
         if(totalUsdNeeded == 0) return 0;
         return s.recapitalized.mul(DECIMALS).div(totalUsdNeeded);
     }
@@ -213,7 +208,6 @@ library LibUnripe {
         
         // if reserves return 0, then skip calculations.
         if (reserves[0] == 0) return 0;
-        // console.log("get recap %:", getTotalRecapitalizedPercent());
         uint256 lockedLpAmount = LibLockedUnderlying.getLockedUnderlying(
             C.UNRIPE_LP,
             getTotalRecapitalizedPercent()

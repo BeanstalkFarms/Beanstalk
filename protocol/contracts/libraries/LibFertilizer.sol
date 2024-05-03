@@ -19,7 +19,6 @@ import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
 import {LibWell} from "contracts/libraries/Well/LibWell.sol";
 import {LibUsdOracle} from "contracts/libraries/Oracle/LibUsdOracle.sol";
 
-// import "hardhat/console.sol";
 
 /**
  * @author Publius
@@ -231,7 +230,6 @@ library LibFertilizer {
      * @return totalDollars The total dollar amount.
      */
     function getTotalRecapDollarsNeeded() internal view returns(uint256) {
-        // console.log("urLPSupply:", C.unripeLP().totalSupply());
         return getTotalRecapDollarsNeeded(C.unripeLP().totalSupply());
     }
 

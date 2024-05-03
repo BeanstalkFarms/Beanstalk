@@ -228,9 +228,22 @@ contract UnripeFacet is ReentrancyGuard {
      * @notice Returns the % penalty of Chopping an Unripe Token into its Ripe Token.
      * @param unripeToken The address of the Unripe Token.
      * @return penalty The penalty % of Chopping derived from %Recapitalized^2.
+     * @dev `address` parameter retained for backwards compatiability.
      */
     function getPercentPenalty(address unripeToken) external view returns (uint256 penalty) {
-        return LibUnripe.getPenalizedUnderlying(unripeToken, LibUnripe.DECIMALS, IERC20(unripeToken).totalSupply());
+        if (unripeToken == C.UNRIPE_BEAN) { 
+            return LibUnripe.getPenalizedUnderlying(
+                unripeToken,
+                LibUnripe.DECIMALS,
+                IERC20(unripeToken).totalSupply()
+            );
+        }
+        
+        if (unripeToken == C.UNRIPE_LP) { 
+            return LibUnripe.getTotalRecapitalizedPercent()
+                .mul(LibUnripe.getTotalRecapitalizedPercent())
+                .div(LibUnripe.DECIMALS);
+        }
     }
 
     /**
