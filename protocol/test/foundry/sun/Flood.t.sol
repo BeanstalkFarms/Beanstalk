@@ -98,19 +98,6 @@ contract FloodTest is TestHelper {
 
         assertTrue(sop.lastRain == s.rainStart);
         assertTrue(sop.roots == 10004000000000000000000000);
-
-        assertTrue(sop.farmerSops.length > 0);
-
-        assertTrue(sop.farmerSops[0].well == C.BEAN_ETH_WELL);
-        console.log("sop.farmerSops[0].well: ", sop.farmerSops[0].well);
-        console.log(
-            "sop.farmerSops[0].wellsPlenty.plentyPerRoot: ",
-            sop.farmerSops[0].wellsPlenty.plentyPerRoot
-        );
-        // assertTrue(sop.farmerSops[0].wellsPlenty.plentyPerRoot == 10004000000000000000000000);
-        console.log("sop.farmerSops[0].wellsPlenty.plenty: ", sop.farmerSops[0].wellsPlenty.plenty);
-        // return;
-        // assertTrue(sop.farmerSops[0].wellsPlenty.plenty == 10004000000000000000000000);
     }
 
     function testStopsRaining() public {
@@ -181,8 +168,12 @@ contract FloodTest is TestHelper {
         assertTrue(userSop.lastRain == 6);
         assertTrue(userSop.lastSop == 6);
         assertTrue(userSop.roots == 10004000000000000000000000);
-        // assertTrue(userSop.plenty == 25595575914848452999); // update to per-well
-        // assertTrue(userSop.plentyPerRoot == 2558534177813719812); // update to per-well
+
+        assertTrue(userSop.farmerSops.length > 0);
+
+        assertTrue(userSop.farmerSops[0].well == C.BEAN_ETH_WELL);
+        assertTrue(userSop.farmerSops[0].wellsPlenty.plenty == 25595575914848452999);
+        assertTrue(userSop.farmerSops[0].wellsPlenty.plentyPerRoot == 2558534177813719812);
 
         // each user should get half of the eth gained
         assertTrue(bs.balanceOfPlenty(users[2], C.BEAN_ETH_WELL) == 25595575914848452999);
@@ -193,8 +184,9 @@ contract FloodTest is TestHelper {
         assertTrue(userSop.lastRain == 6);
         assertTrue(userSop.lastSop == 6);
         assertTrue(userSop.roots == 10004000000000000000000000);
-        // assertTrue(userSop.plenty == 25595575914848452999); // update to per-well
-        // assertTrue(userSop.plentyPerRoot == 2558534177813719812); // update to per-well
+        assertTrue(userSop.farmerSops[0].well == C.BEAN_ETH_WELL);
+        assertTrue(userSop.farmerSops[0].wellsPlenty.plenty == 25595575914848452999);
+        assertTrue(userSop.farmerSops[0].wellsPlenty.plentyPerRoot == 2558534177813719812);
 
         // claims user plenty
         bs.mow(users[2], C.BEAN);
@@ -245,8 +237,9 @@ contract FloodTest is TestHelper {
 
         assertTrue(userSop.lastSop == 9);
         assertTrue(userSop.roots == 10004000000000000000000000);
-        // assertTrue(userSop.plenty == 38544532214605630101); // update to per-well
-        // assertTrue(userSop.plentyPerRoot == 3852912056637907847); // update to per-well
+        assertTrue(userSop.farmerSops[0].well == C.BEAN_ETH_WELL);
+        assertTrue(userSop.farmerSops[0].wellsPlenty.plenty == 38544532214605630101);
+        assertTrue(userSop.farmerSops[0].wellsPlenty.plentyPerRoot == 3852912056637907847);
 
         // tracks user2 plenty
         uint256 user2Plenty = bs.balanceOfPlenty(users[2], C.BEAN_ETH_WELL);
@@ -259,8 +252,8 @@ contract FloodTest is TestHelper {
         assertTrue(userSop.lastRain == 9);
         assertTrue(userSop.lastSop == 9);
         assertTrue(userSop.roots == 10006000000000000000000000);
-        // assertTrue(userSop.plenty == 38547120970363278477); // update to per-well
-        // assertTrue(userSop.plentyPerRoot == 3852912056637907847); // update to per-well
+        assertTrue(userSop.farmerSops[0].wellsPlenty.plenty == 38547120970363278477);
+        assertTrue(userSop.farmerSops[0].wellsPlenty.plentyPerRoot == 3852912056637907847);
     }
 
     function testWithCurrentBalances() public {
@@ -297,8 +290,8 @@ contract FloodTest is TestHelper {
         assertTrue(userSop.lastRain == 6);
         assertTrue(userSop.lastSop == 6);
         assertTrue(userSop.roots == 10004000000000000000000000);
-        // assertTrue(userSop.plenty == 25595575914848452999); // update to per-well
-        // assertTrue(userSop.plentyPerRoot == 2558534177813719812); // update to per-well
+        assertTrue(userSop.farmerSops[0].wellsPlenty.plenty == 25595575914848452999);
+        assertTrue(userSop.farmerSops[0].wellsPlenty.plentyPerRoot == 2558534177813719812);
 
         // tracks user2 plenty
         uint256 user2Plenty = bs.balanceOfPlenty(users[2], C.BEAN_ETH_WELL);
@@ -311,8 +304,8 @@ contract FloodTest is TestHelper {
         assertTrue(userSop.lastRain == 6);
         assertTrue(userSop.lastSop == 6);
         assertTrue(userSop.roots == 10004000000000000000000000);
-        // assertTrue(userSop.plenty == 25595575914848452999); // update to per-well
-        // assertTrue(userSop.plentyPerRoot == 2558534177813719812); // update to per-well
+        assertTrue(userSop.farmerSops[0].wellsPlenty.plenty == 25595575914848452999);
+        assertTrue(userSop.farmerSops[0].wellsPlenty.plentyPerRoot == 2558534177813719812);
 
         // claims user plenty
         bs.mow(users[2], C.BEAN_ETH_WELL);

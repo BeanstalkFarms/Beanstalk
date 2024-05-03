@@ -222,7 +222,6 @@ contract Weather is Sun {
 
         // Approve and Swap Beans for the non-bean token of the SOP well.
         C.bean().approve(well, sopBeans);
-        console.log("approved, now swapping");
         uint256 amountOut = IWell(well).swapFrom(
             C.bean(),
             sopToken,
