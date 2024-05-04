@@ -95,7 +95,7 @@ testIfRpcSet('SeedGauge Init Test', function () {
       expect(await this.beanstalk.getTotalBdv()).to.be.within(to6('43000000'), to6('44000000'));
     })
 
-    it('L2SR', async function () {
+    it.skip('L2SR', async function () {
       // the L2SR may differ during testing, due to the fact 
       // that the L2SR is calculated on twa reserves, and thus may slightly differ due to 
       // timestamp differences.

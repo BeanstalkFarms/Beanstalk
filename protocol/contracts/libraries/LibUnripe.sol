@@ -14,7 +14,6 @@ import {IWellFunction} from "contracts/interfaces/basin/IWellFunction.sol";
 import {LibLockedUnderlying} from "./LibLockedUnderlying.sol";
 import {LibFertilizer} from "./LibFertilizer.sol";
 
-
 /**
  * @title LibUnripe
  * @author Publius
