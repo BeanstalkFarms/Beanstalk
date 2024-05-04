@@ -248,65 +248,13 @@ contract Weather is Sun {
         s.season.lastSopSeason = s.season.current;
     }
 
-    // reduce the deltaBs of positive wells to the same amount so that the total is zero, and return the amount by which each deltaB was reduced
-    /*function calculateSopPerWell(int256[] wellDeltaBs) private view returns (uint256[] memory) {
-        int256 totalDeltaB = 0;
-        uint256 positiveDeltaB = 0;
-        for (uint256 i = 0; i < wellDeltaBs.length; i++) {
-            totalDeltaB += wellDeltaBs[i];
-            if (wellDeltaBs[i] > 0) {
-                positiveDeltaB += wellDeltaBs[i];
-            }
-        }
-
-        // this means there were no negative deltaBs, so we need to reduce each one by the same amount so that the total is zero
-        if (totalDeltaB == positiveDeltaB) {
-            return wellDeltaBs;
-        }
-
-        // all the positive deltaBs need to be flooded to the same deltaB
-    }*/
-
-    /*function calculateSopPerWell(
-        int256[] memory wellDeltaBs
-    ) external view returns (uint256[] memory) {
-        int256 totalDeltaB = 0;
-        int256 totalPositiveDeltaB = 0;
-        int256 totalNegativeDeltaB = 0;
-        uint256 positiveDeltaBCount = 0;
-
-        for (uint256 i = 0; i < wellDeltaBs.length; i++) {
-            totalDeltaB += wellDeltaBs[i];
-            if (wellDeltaBs[i] > 0) {
-                totalPositiveDeltaB += wellDeltaBs[i];
-                positiveDeltaBCount++;
-            } else {
-                totalNegativeDeltaB += wellDeltaBs[i];
-            }
-        }
-
-        if (positiveDeltaBCount == 0) {
-            // No positive values, return an array of zeros
-            uint256[] memory reductionAmounts = new uint256[](wellDeltaBs.length);
-            return reductionAmounts;
-        }
-
-        int256 targetPositiveDeltaB = -totalNegativeDeltaB / int256(positiveDeltaBCount);
-        console.log("targetPositiveDeltaB: ");
-        console.logInt(targetPositiveDeltaB);
-
-        uint256[] memory reductionAmounts = new uint256[](wellDeltaBs.length);
-
-        for (uint256 i = 0; i < wellDeltaBs.length; i++) {
-            if (wellDeltaBs[i] > targetPositiveDeltaB) {
-                reductionAmounts[i] = uint256(wellDeltaBs[i] - targetPositiveDeltaB);
-                console.log("reductionAmounts[i]: ", reductionAmounts[i]);
-            }
-        }
-
-        return reductionAmounts;
-    }*/
-
+    /*
+     * @notice Calculates the amount of beans per well that should be minted in a sop.
+     * @param wellDeltaBs The deltaBs of all whitelisted wells in which to flood. Must be sorted in descending order.
+     * @return reductionAmounts The amount of beans per well that should be minted in a sop.
+     */
+    // code review note: have some casual comments here for just understanding the code, happy to
+    // change this function to make it more efficient based on feedback.
     function calculateSopPerWell(
         int256[] memory wellDeltaBs
     ) external view returns (uint256[] memory) {
@@ -323,6 +271,16 @@ contract Weather is Sun {
             }
         }
 
+        // most likely case is that all deltaBs are positive
+        if (positiveDeltaBCount == wellDeltaBs.length) {
+            // if all deltaBs are positive, need to sop all to zero
+            uint256[] memory reductionAmounts = new uint256[](wellDeltaBs.length);
+            for (uint256 i = 0; i < wellDeltaBs.length; i++) {
+                reductionAmounts[i] = uint256(wellDeltaBs[i]);
+            }
+            return reductionAmounts;
+        }
+
         if (positiveDeltaBCount == 0) {
             // No positive values, should never happen, revert (or don't revert because this prevents sunrise?)
             revert("Flood: No positive deltaB pools to flood");
@@ -334,34 +292,35 @@ contract Weather is Sun {
         }
 
         uint256 shaveOff = totalPositiveDeltaB - totalNegativeDeltaB;
-        uint256 previousDeltaB;
         uint256 cumulativeTotal;
         uint256 shaveToLevel;
 
         uint256[] memory reductionAmounts = new uint256[](wellDeltaBs.length);
 
         for (uint256 i = 0; i <= positiveDeltaBCount; i++) {
-            console.logInt(wellDeltaBs[i]);
+            console.log("i: ", i);
             if (positiveDeltaBCount == 1 || i == 0) {
-                previousDeltaB = uint256(wellDeltaBs[i]);
+                // reduce enough to equal the negative deltaB
+                if (positiveDeltaBCount == 1) {
+                    reductionAmounts[i] = uint256(wellDeltaBs[i]).sub(totalNegativeDeltaB);
+                    return reductionAmounts;
+                }
             } else {
-                // regular loop where we already have previousDeltaB setup
-                uint256 diffToPrevious = previousDeltaB - uint256(wellDeltaBs[i]);
+                uint256 diffToPrevious = wellDeltaBs[i] > 0
+                    ? uint256(wellDeltaBs[i - 1]).sub(uint256(wellDeltaBs[i]))
+                    : 0;
 
-                previousDeltaB = uint256(wellDeltaBs[i]);
-
-                if (cumulativeTotal.add(diffToPrevious.mul(i)) >= shaveOff) {
+                if (
+                    cumulativeTotal.add(diffToPrevious.mul(i)) >= shaveOff ||
+                    i == positiveDeltaBCount
+                ) {
                     // we have enough to shave off using the already processed wells
                     // no need to dip into this one we're currently processing
-                    // just need to calculate what the shave to deltaB is
-
-                    // calculate how much remaining we need to take to get the cumulativeTotal equal to shaveOff
+                    // just need to calculate what the shave-to level is
                     uint256 remaining = shaveOff - cumulativeTotal;
                     // this remaining needs to be distributed equally taken from all the wells processed
-                    uint256 proportionalReduction = remaining / i;
-
-                    // this proportional reduction can be used to subtract from the current well and find the shave-to level
-                    shaveToLevel = uint(wellDeltaBs[i - 1]) - proportionalReduction;
+                    // this proportional reduction can be used to subtract from the current well deltaB and find the shave-to level
+                    shaveToLevel = uint(wellDeltaBs[i - 1]) - remaining.div(i);
                     break;
                 } else {
                     cumulativeTotal = cumulativeTotal.add(diffToPrevious.mul(i));
@@ -369,6 +328,7 @@ contract Weather is Sun {
             }
         }
 
+        // return the amount of beans that need to be flooded per well
         for (uint256 i = 0; i < positiveDeltaBCount; i++) {
             reductionAmounts[i] = wellDeltaBs[i] > int256(shaveToLevel)
                 ? uint256(wellDeltaBs[i]) - shaveToLevel

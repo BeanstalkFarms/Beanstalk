@@ -367,6 +367,28 @@ contract FloodTest is TestHelper {
         // expect revert because overall deltaB is negative
         vm.expectRevert("Flood: Overall deltaB is negative");
         weather.calculateSopPerWell(wellDeltaBs);
+
+        // test just one well
+        wellDeltaBs = new int256[](1);
+        wellDeltaBs[0] = 90;
+        reductionAmounts = weather.calculateSopPerWell(wellDeltaBs);
+        assertEq(reductionAmounts[0], 90);
+
+        // test just 2 wells, all positive
+        wellDeltaBs = new int256[](2);
+        wellDeltaBs[0] = 90;
+        wellDeltaBs[1] = 80;
+        reductionAmounts = weather.calculateSopPerWell(wellDeltaBs);
+        assertEq(reductionAmounts[0], 90);
+        assertEq(reductionAmounts[1], 80);
+
+        // test just 2 wells, one negative
+        wellDeltaBs = new int256[](2);
+        wellDeltaBs[0] = 90;
+        wellDeltaBs[1] = -80;
+        reductionAmounts = weather.calculateSopPerWell(wellDeltaBs);
+        assertEq(reductionAmounts[0], 10);
+        assertEq(reductionAmounts[1], 0);
     }
 
     //////////// Helpers ////////////
