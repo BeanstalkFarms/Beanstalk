@@ -13,6 +13,7 @@ import {MockToken} from "contracts/mocks/MockToken.sol";
 import {Storage} from "contracts/libraries/LibAppStorage.sol";
 import {SeasonGettersFacet} from "contracts/beanstalk/sun/SeasonFacet/SeasonGettersFacet.sol";
 import {SiloGettersFacet} from "contracts/beanstalk/silo/SiloFacet/SiloGettersFacet.sol";
+import {Weather} from "contracts/beanstalk/sun/SeasonFacet/Weather.sol";
 import {console} from "forge-std/console.sol";
 
 /**
@@ -26,6 +27,7 @@ contract FloodTest is TestHelper {
     SeasonGettersFacet seasonGetters = SeasonGettersFacet(BEANSTALK);
     MockFieldFacet field = MockFieldFacet(BEANSTALK);
     SiloGettersFacet siloGetters = SiloGettersFacet(BEANSTALK);
+    Weather weather = Weather(BEANSTALK);
 
     // MockTokens.
     MockToken bean = MockToken(C.BEAN);
@@ -34,12 +36,9 @@ contract FloodTest is TestHelper {
     // test accounts
     address[] farmers;
 
-    // well in test:
-    address well;
-
     function setUp() public {
         initializeBeanstalkTestState(true, false);
-        well = C.BEAN_ETH_WELL;
+        address well = C.BEAN_ETH_WELL;
         // init user.
         farmers.push(users[1]);
         vm.prank(farmers[0]);
@@ -313,6 +312,61 @@ contract FloodTest is TestHelper {
         bs.claimPlenty(C.BEAN_ETH_WELL);
         assertTrue(bs.balanceOfPlenty(users[2], C.BEAN_ETH_WELL) == 0);
         assertEq(IERC20(C.WETH).balanceOf(users[2]), 25595575914848452999);
+    }
+
+    function testCalculateSopPerWell() public {
+        int256[] memory wellDeltaBs = new int256[](3);
+        wellDeltaBs[0] = 100;
+        wellDeltaBs[1] = 100;
+        wellDeltaBs[2] = -100;
+
+        uint256[] memory reductionAmounts = weather.calculateSopPerWell(wellDeltaBs);
+
+        assertEq(reductionAmounts[0], 50);
+        assertEq(reductionAmounts[1], 50);
+        assertEq(reductionAmounts[2], 0);
+
+        wellDeltaBs = new int256[](4);
+        wellDeltaBs[0] = 90;
+        wellDeltaBs[1] = 80;
+        wellDeltaBs[2] = 20;
+        wellDeltaBs[3] = -120;
+
+        reductionAmounts = weather.calculateSopPerWell(wellDeltaBs);
+
+        assertEq(reductionAmounts[0], 40);
+        assertEq(reductionAmounts[1], 30);
+        assertEq(reductionAmounts[2], 0);
+        assertEq(reductionAmounts[3], 0);
+
+        wellDeltaBs = new int256[](7);
+        wellDeltaBs[0] = 90;
+        wellDeltaBs[1] = 80;
+        wellDeltaBs[2] = 70;
+        wellDeltaBs[3] = 60;
+        wellDeltaBs[4] = 50;
+        wellDeltaBs[5] = 40;
+        wellDeltaBs[6] = -120;
+
+        reductionAmounts = weather.calculateSopPerWell(wellDeltaBs);
+
+        assertEq(reductionAmounts[0], 70);
+        assertEq(reductionAmounts[1], 60);
+        assertEq(reductionAmounts[2], 50);
+        assertEq(reductionAmounts[3], 40);
+        assertEq(reductionAmounts[4], 30);
+        assertEq(reductionAmounts[5], 20);
+        assertEq(reductionAmounts[6], 0);
+
+        wellDeltaBs = new int256[](4);
+        wellDeltaBs[0] = 90;
+        wellDeltaBs[1] = 80;
+        wellDeltaBs[2] = -70;
+        wellDeltaBs[3] = -200;
+
+        // expect revert because overall deltaB is negative
+        vm.expectRevert("Flood: Overall deltaB is negative");
+        weather.calculateSopPerWell(wellDeltaBs);
     }
 
     //////////// Helpers ////////////

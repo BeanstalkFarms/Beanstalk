@@ -14,6 +14,7 @@ import {IWell, Call} from "contracts/interfaces/basin/IWell.sol";
 import {IInstantaneousPump} from "contracts/interfaces/basin/pumps/IInstantaneousPump.sol";
 import {SignedSafeMath} from "@openzeppelin/contracts/math/SignedSafeMath.sol";
 import {LibWhitelistedTokens} from "contracts/libraries/Silo/LibWhitelistedTokens.sol";
+import {Math} from "@openzeppelin/contracts/math/Math.sol";
 import {console} from "forge-std/console.sol";
 
 /**
@@ -245,6 +246,136 @@ contract Weather is Sun {
         );
         s.season.lastSop = s.season.rainStart;
         s.season.lastSopSeason = s.season.current;
+    }
+
+    // reduce the deltaBs of positive wells to the same amount so that the total is zero, and return the amount by which each deltaB was reduced
+    /*function calculateSopPerWell(int256[] wellDeltaBs) private view returns (uint256[] memory) {
+        int256 totalDeltaB = 0;
+        uint256 positiveDeltaB = 0;
+        for (uint256 i = 0; i < wellDeltaBs.length; i++) {
+            totalDeltaB += wellDeltaBs[i];
+            if (wellDeltaBs[i] > 0) {
+                positiveDeltaB += wellDeltaBs[i];
+            }
+        }
+
+        // this means there were no negative deltaBs, so we need to reduce each one by the same amount so that the total is zero
+        if (totalDeltaB == positiveDeltaB) {
+            return wellDeltaBs;
+        }
+
+        // all the positive deltaBs need to be flooded to the same deltaB
+    }*/
+
+    /*function calculateSopPerWell(
+        int256[] memory wellDeltaBs
+    ) external view returns (uint256[] memory) {
+        int256 totalDeltaB = 0;
+        int256 totalPositiveDeltaB = 0;
+        int256 totalNegativeDeltaB = 0;
+        uint256 positiveDeltaBCount = 0;
+
+        for (uint256 i = 0; i < wellDeltaBs.length; i++) {
+            totalDeltaB += wellDeltaBs[i];
+            if (wellDeltaBs[i] > 0) {
+                totalPositiveDeltaB += wellDeltaBs[i];
+                positiveDeltaBCount++;
+            } else {
+                totalNegativeDeltaB += wellDeltaBs[i];
+            }
+        }
+
+        if (positiveDeltaBCount == 0) {
+            // No positive values, return an array of zeros
+            uint256[] memory reductionAmounts = new uint256[](wellDeltaBs.length);
+            return reductionAmounts;
+        }
+
+        int256 targetPositiveDeltaB = -totalNegativeDeltaB / int256(positiveDeltaBCount);
+        console.log("targetPositiveDeltaB: ");
+        console.logInt(targetPositiveDeltaB);
+
+        uint256[] memory reductionAmounts = new uint256[](wellDeltaBs.length);
+
+        for (uint256 i = 0; i < wellDeltaBs.length; i++) {
+            if (wellDeltaBs[i] > targetPositiveDeltaB) {
+                reductionAmounts[i] = uint256(wellDeltaBs[i] - targetPositiveDeltaB);
+                console.log("reductionAmounts[i]: ", reductionAmounts[i]);
+            }
+        }
+
+        return reductionAmounts;
+    }*/
+
+    function calculateSopPerWell(
+        int256[] memory wellDeltaBs
+    ) external view returns (uint256[] memory) {
+        uint256 totalPositiveDeltaB = 0;
+        uint256 totalNegativeDeltaB = 0;
+        uint256 positiveDeltaBCount = 0;
+
+        for (uint256 i = 0; i < wellDeltaBs.length; i++) {
+            if (wellDeltaBs[i] > 0) {
+                totalPositiveDeltaB += uint256(wellDeltaBs[i]);
+                positiveDeltaBCount++;
+            } else {
+                totalNegativeDeltaB += uint256(-wellDeltaBs[i]);
+            }
+        }
+
+        if (positiveDeltaBCount == 0) {
+            // No positive values, should never happen, revert (or don't revert because this prevents sunrise?)
+            revert("Flood: No positive deltaB pools to flood");
+        }
+
+        if (totalPositiveDeltaB < totalNegativeDeltaB) {
+            // in theory this should never happen because overall deltaB is required for sop
+            revert("Flood: Overall deltaB is negative");
+        }
+
+        uint256 shaveOff = totalPositiveDeltaB - totalNegativeDeltaB;
+        uint256 previousDeltaB;
+        uint256 cumulativeTotal;
+        uint256 shaveToLevel;
+
+        uint256[] memory reductionAmounts = new uint256[](wellDeltaBs.length);
+
+        for (uint256 i = 0; i <= positiveDeltaBCount; i++) {
+            console.logInt(wellDeltaBs[i]);
+            if (positiveDeltaBCount == 1 || i == 0) {
+                previousDeltaB = uint256(wellDeltaBs[i]);
+            } else {
+                // regular loop where we already have previousDeltaB setup
+                uint256 diffToPrevious = previousDeltaB - uint256(wellDeltaBs[i]);
+
+                previousDeltaB = uint256(wellDeltaBs[i]);
+
+                if (cumulativeTotal.add(diffToPrevious.mul(i)) >= shaveOff) {
+                    // we have enough to shave off using the already processed wells
+                    // no need to dip into this one we're currently processing
+                    // just need to calculate what the shave to deltaB is
+
+                    // calculate how much remaining we need to take to get the cumulativeTotal equal to shaveOff
+                    uint256 remaining = shaveOff - cumulativeTotal;
+                    // this remaining needs to be distributed equally taken from all the wells processed
+                    uint256 proportionalReduction = remaining / i;
+
+                    // this proportional reduction can be used to subtract from the current well and find the shave-to level
+                    shaveToLevel = uint(wellDeltaBs[i - 1]) - proportionalReduction;
+                    break;
+                } else {
+                    cumulativeTotal = cumulativeTotal.add(diffToPrevious.mul(i));
+                }
+            }
+        }
+
+        for (uint256 i = 0; i < positiveDeltaBCount; i++) {
+            reductionAmounts[i] = wellDeltaBs[i] > int256(shaveToLevel)
+                ? uint256(wellDeltaBs[i]) - shaveToLevel
+                : 0;
+        }
+
+        return reductionAmounts;
     }
 
     /**
