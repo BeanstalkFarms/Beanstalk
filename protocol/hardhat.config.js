@@ -337,7 +337,7 @@ module.exports = {
     }
   },
   gasReporter: {
-    enabled: true
+    enabled: false
   },
   mocha: {
     timeout: 100000000

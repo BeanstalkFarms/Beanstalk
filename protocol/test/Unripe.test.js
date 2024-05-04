@@ -106,7 +106,7 @@ describe('Unripe', function () {
       expect(await this.unripe.getRecapFundedPercent(UNRIPE_BEAN)).to.be.equal(to6('1'))
       expect(await this.unripe.getRecapFundedPercent(UNRIPE_LP)).to.be.equal(to6('0.498569'))
       expect(await this.unripe.getPercentPenalty(UNRIPE_BEAN)).to.be.equal(to6('0.5'))
-      expect(await this.unripe.getPercentPenalty(UNRIPE_LP)).to.be.equal(to6('0.264550'))
+      expect(await this.unripe.getPercentPenalty(UNRIPE_LP)).to.be.equal(to6('0.25'))
     })
   })
 
@@ -148,7 +148,7 @@ describe('Unripe', function () {
       expect(await this.unripe.getRecapFundedPercent(UNRIPE_BEAN)).to.be.equal(to6('0.1'))
       expect(await this.unripe.getRecapFundedPercent(UNRIPE_LP)).to.be.equal(to6('0.997138'))
       expect(await this.unripe.getPercentPenalty(UNRIPE_BEAN)).to.be.equal(to6('0.1'))
-      expect(await this.unripe.getPercentPenalty(UNRIPE_LP)).to.be.equal(to6('0.529100'))
+      expect(await this.unripe.getPercentPenalty(UNRIPE_LP)).to.be.equal(to6('1'))
     })
   })
 
@@ -379,7 +379,7 @@ describe('Unripe', function () {
     it('getters', async function () {
       // 21.875 / 94.5
       expect(await this.unripe.getUnderlyingPerUnripeToken(UNRIPE_LP)).to.be.equal(to6('0.231481'))
-      // 21.876 * 0.43752 * 1/94.5 ~= 0.03306878307
+      // 21.876 * 0.43752 * 1/94.5 ~= 0.1012824076
       expect(await this.unripe.getPenalty(UNRIPE_LP)).to.be.equal(to6('0.101273'))
 
       expect(await this.unripe.getPenalizedUnderlying(UNRIPE_LP, to6('1'))).to.be.equal(to6('0.101273'))

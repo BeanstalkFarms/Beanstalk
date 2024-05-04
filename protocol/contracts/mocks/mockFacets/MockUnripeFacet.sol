@@ -20,10 +20,6 @@ contract MockUnripeFacet is UnripeFacet {
         s.u[unripeToken].merkleRoot = root;
     }
 
-    function getRecapitalized() external view returns (uint256) {
-        return s.recapitalized;
-    }
-
     function addUnderlying(address unripeToken, uint256 amount)
         external
         payable
@@ -53,5 +49,19 @@ contract MockUnripeFacet is UnripeFacet {
             amount
         );
         LibUnripe.addUnderlying(unripeToken, amount);
+    }
+
+    function getLegacyLockedUnderlyingBean() public view returns (uint256) {
+        return LibLockedUnderlying.getLockedUnderlying(
+            C.UNRIPE_BEAN,
+            LibUnripe.getRecapPaidPercentAmount(1e6)
+        );
+    }
+
+    function getLegacyLockedUnderlyingLP() public view returns (uint256) {
+        return LibLockedUnderlying.getLockedUnderlying(
+            C.UNRIPE_LP,
+            LibUnripe.getRecapPaidPercentAmount(1e6)
+        );
     }
 }

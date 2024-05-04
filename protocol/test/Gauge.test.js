@@ -65,7 +65,7 @@ describe('Gauge', function () {
     // add unripe
     this.unripeBean = await ethers.getContractAt('MockToken', UNRIPE_BEAN)
     this.unripeLP = await ethers.getContractAt('MockToken', UNRIPE_LP)
-    await this.unripeLP.mint(ownerAddress, to18('10000'))
+    await this.unripeLP.mint(ownerAddress, to6('10000'))
     await this.unripeBean.mint(ownerAddress, to6('10000'))
     await this.unripeLP.connect(owner).approve(this.diamond.address, to6('100000000'))
     await this.unripeBean.connect(owner).approve(this.diamond.address, to6('100000000'))
@@ -310,11 +310,23 @@ describe('Gauge', function () {
           to18('31.62277663')
         )
 
-        // add 1000 LP to 10,000 unripe
-        await this.fertilizer.connect(owner).setPenaltyParams(to6('100'), to6('1000'))
+        /// set s.recapitalized to 1% of `getTotalRecapDollarsNeeded()`, such that
+        // the recap rate is 1%.
+        // note: chop rate is independent of fertilizer paid back (chop rate affects l2sr 
+        // via locked beans.)
+        let recap = (await this.fertilizer.getTotalRecapDollarsNeeded()).div('10')
+        await this.fertilizer.connect(owner).setPenaltyParams(recap, to6('1000'))
       })
 
       it('getters', async function () {
+        // issue unripe such that unripe supply > 10m. 
+        await this.unripeLP.mint(ownerAddress, to6('10000000'))
+        await this.unripeBean.mint(ownerAddress, to6('10000000'))
+
+        // update s.recapitalized due to unripe LP change: 
+        let recap = (await this.fertilizer.getTotalRecapDollarsNeeded()).div('10')
+        await this.fertilizer.connect(owner).setPenaltyParams(recap, to6('1000'))
+
         // urBean supply * 10% recapitalization (underlyingBean/UrBean) * 10% (fertilizerIndex/totalFertilizer)
         // = 10000 urBEAN * 10% = 1000 BEAN * (100-10%) = 900 beans locked.
         // urLP supply * 0.1% recapitalization (underlyingBEANETH/UrBEANETH) * 10% (fertilizerIndex/totalFertilizer)
@@ -327,9 +339,139 @@ describe('Gauge', function () {
         expect(
           await this.seasonGetters.getLiquidityToSupplyRatio()
           ).to.be.eq(to18('1.000873426417975035'))
+
+      })
+      
+      it('< 1m unripe lockedBeans calculation:', async function () {
+        // current unripe LP and unripe Bean supply each: 10,000. 
+        // under 1m unripe bean and LP, all supply is unlocked:
+        const getLockedBeansUnderlyingUnripeBean = await this.unripe.getLockedBeansUnderlyingUnripeBean()
+        const getLockedBeansUnderlyingUrLP = await this.unripe.getLockedBeansUnderlyingUnripeLP()
+        const lockedBeans = await this.unripe.getLockedBeans()
+        const L2SR = await this.seasonGetters.getLiquidityToSupplyRatio()
+
+        expect(getLockedBeansUnderlyingUnripeBean).to.be.eq('0')
+        expect(getLockedBeansUnderlyingUrLP).to.be.eq('0')
+        expect(lockedBeans).to.be.eq('0')
+        expect(L2SR).to.be.eq(to18('1'))
+
+        //  set urBean and urLP to 1m and verify values do not change:
+        await this.unripeLP.mint(ownerAddress, to6('989999'))
+        await this.unripeBean.mint(ownerAddress, to6('989999'))
+
+        // readjust recap rate (due to new lp being issued:)
+        let recap = (await this.fertilizer.getTotalRecapDollarsNeeded()).div('10')
+        await this.fertilizer.connect(owner).setPenaltyParams(recap, to6('1000'))
+
+        expect(await this.unripe.getLockedBeansUnderlyingUnripeBean()).to.be.eq(getLockedBeansUnderlyingUnripeBean)
+        expect(await this.unripe.getLockedBeansUnderlyingUnripeLP()).to.be.eq(getLockedBeansUnderlyingUrLP)
+        expect(await this.unripe.getLockedBeans()).to.be.eq(lockedBeans)
+        expect(await this.seasonGetters.getLiquidityToSupplyRatio()
+          ).to.be.eq(L2SR)
+      })
+
+      it('< 5m unripe lockedBeans calculation:', async function () {
+        // mint unripe bean and LP such that 5m > supply > 1m.
+        await this.unripeLP.mint(ownerAddress, to6('1000000'))
+        await this.unripeBean.mint(ownerAddress, to6('1000000'))
+
+        // readjust recap rate (due to new lp being issued:)
+        let recap = (await this.fertilizer.getTotalRecapDollarsNeeded()).div('10')
+        await this.fertilizer.connect(owner).setPenaltyParams(recap, to6('1000'))
+
+        // verify locked beans amount changed: 
+        const getLockedBeansUnderlyingUnripeBean = await this.unripe.getLockedBeansUnderlyingUnripeBean()
+        const getLockedBeansUnderlyingUrLP = await this.unripe.getLockedBeansUnderlyingUnripeLP()
+        const lockedBeans = await this.unripe.getLockedBeans()
+        const L2SR = await this.seasonGetters.getLiquidityToSupplyRatio()
+        expect(getLockedBeansUnderlyingUnripeBean).to.be.eq(to6('579.500817'))
+        expect(getLockedBeansUnderlyingUrLP).to.be.eq(to6('579.500817'))
+        expect(lockedBeans).to.be.eq(to6('1159.001634'))
+
+        // verify L2SR increased:
+        expect(L2SR).to.be.eq(to18('1.001160346477463386'))
+        
+        //  set urBean and urLP to 5m and verify values do not change:
+        await this.unripeLP.mint(ownerAddress, to6('3990000'))
+        await this.unripeBean.mint(ownerAddress, to6('3990000'))
+
+        // readjust recap rate (due to new lp being issued:)
+        recap = (await this.fertilizer.getTotalRecapDollarsNeeded()).div('10')
+        await this.fertilizer.connect(owner).setPenaltyParams(recap, to6('1000'))
+
+        expect(await this.unripe.getLockedBeansUnderlyingUnripeBean()).to.be.eq(getLockedBeansUnderlyingUnripeBean)
+        expect(await this.unripe.getLockedBeansUnderlyingUnripeLP()).to.be.eq(getLockedBeansUnderlyingUrLP)
+        expect(await this.unripe.getLockedBeans()).to.be.eq(lockedBeans)
+
+        expect(await this.seasonGetters.getLiquidityToSupplyRatio()).to.be.eq(L2SR)
+      })
+
+      it('< 10m unripe lockedBeans calculation:', async function () {
+        // mint unripe bean and LP such that 10m > supply > 5m.
+        await this.unripeLP.mint(ownerAddress, to6('5000000'))
+        await this.unripeBean.mint(ownerAddress, to6('5000000'))
+
+        // readjust recap rate (due to new lp being issued:)
+        let recap = (await this.fertilizer.getTotalRecapDollarsNeeded()).div('10')
+        await this.fertilizer.connect(owner).setPenaltyParams(recap, to6('1000'))
+
+
+        // verify locked beans amount changed: 
+        const getLockedBeansUnderlyingUnripeBean = await this.unripe.getLockedBeansUnderlyingUnripeBean()
+        const getLockedBeansUnderlyingUrLP = await this.unripe.getLockedBeansUnderlyingUnripeLP()
+        const lockedBeans = await this.unripe.getLockedBeans()
+        const L2SR = await this.seasonGetters.getLiquidityToSupplyRatio()
+        expect(getLockedBeansUnderlyingUnripeBean).to.be.eq(to6('515.604791'))
+        expect(getLockedBeansUnderlyingUrLP).to.be.eq(to6('515.604791'))
+        expect(lockedBeans).to.be.eq(to6('1031.209582'))
+
+        // verify L2SR increased:
+        expect(L2SR).to.be.eq(to18('1.001032274072915240'))
+
+        //  set urBean and urLP to 10m and verify values do not change:
+        await this.unripeLP.mint(ownerAddress, to6('4990000'))
+        await this.unripeBean.mint(ownerAddress, to6('4990000'))
+
+        // readjust recap rate (due to new lp being issued:)
+        recap = (await this.fertilizer.getTotalRecapDollarsNeeded()).div('10')
+        await this.fertilizer.connect(owner).setPenaltyParams(recap, to6('1000'))
+
+        expect(await this.unripe.getLockedBeansUnderlyingUnripeBean()).to.be.eq(getLockedBeansUnderlyingUnripeBean)
+        expect(await this.unripe.getLockedBeansUnderlyingUnripeLP()).to.be.eq(getLockedBeansUnderlyingUrLP)
+        expect(await this.unripe.getLockedBeans()).to.be.eq(lockedBeans)
+
+        expect(await this.seasonGetters.getLiquidityToSupplyRatio()).to.be.eq(L2SR)
+      })
+
+      it('< 10m unripe lockedBeans calculation:', async function () {
+        // mint unripe bean and LP such that supply > 10m.
+        await this.unripeLP.mint(ownerAddress, to6('10000000'))
+        await this.unripeBean.mint(ownerAddress, to6('10000000'))
+
+        // readjust recap rate (due to new lp being issued:)
+        let recap = (await this.fertilizer.getTotalRecapDollarsNeeded()).div('10')
+        await this.fertilizer.connect(owner).setPenaltyParams(recap, to6('1000'))
+
+        // verify locked beans amount changed: 
+        expect(await this.unripe.getLockedBeansUnderlyingUnripeBean()).to.be.eq(to6('436.332105'))
+        expect(await this.unripe.getLockedBeansUnderlyingUnripeLP()).to.be.eq(to6('436.332105'))
+        expect(await this.unripe.getLockedBeans()).to.be.eq(to6('872.664210'))
+
+        // verify L2SR increased:
+        expect(
+          await this.seasonGetters.getLiquidityToSupplyRatio()
+          ).to.be.eq(to18('1.000873426417975035'))
       })
 
       it('is MEV resistant', async function () {
+        // issue unripe such that unripe supply > 10m. 
+        await this.unripeLP.mint(ownerAddress, to6('10000000'))
+        await this.unripeBean.mint(ownerAddress, to6('10000000'))
+
+        // readjust recap rate (due to new lp being issued:)
+        let recap = (await this.fertilizer.getTotalRecapDollarsNeeded()).div('10')
+        await this.fertilizer.connect(owner).setPenaltyParams(recap, to6('1000'))
+
         expect(await this.unripe.getLockedBeansUnderlyingUnripeLP()).to.be.eq(to6('436.332105'))
 
         await this.well.mint(ownerAddress, to18('1000'))

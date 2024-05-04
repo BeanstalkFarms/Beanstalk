@@ -171,6 +171,18 @@ library LibUnripe {
     }
 
     /**
+     * @notice returns the total percentage that beanstalk has recapitalized.
+     * @dev this is calculated by the ratio of s.recapitalized and the total dollars the barnraise needs to raise.
+     * returns the same precision as `getRecapPaidPercentAmount` (100% recapitalized = 1e6).
+     */
+    function getTotalRecapitalizedPercent() internal view returns (uint256 recapitalizedPercent) {
+        AppStorage storage s = LibAppStorage.diamondStorage();
+        uint256 totalUsdNeeded = LibFertilizer.getTotalRecapDollarsNeeded();
+        if(totalUsdNeeded == 0) return 0;
+        return s.recapitalized.mul(DECIMALS).div(totalUsdNeeded);
+    }
+
+    /**
      * @notice Returns the amount of beans that are locked in the unripe token.
      * @dev Locked beans are the beans that are forfeited if the unripe token is chopped.
      * @param reserves the reserves of the LP that underly the unripe token.
@@ -180,7 +192,7 @@ library LibUnripe {
         uint256[] memory reserves
     ) internal view returns (uint256 lockedAmount) {
         lockedAmount = LibLockedUnderlying
-            .getLockedUnderlying(C.UNRIPE_BEAN, getRecapPaidPercentAmount(1e6))
+            .getLockedUnderlying(C.UNRIPE_BEAN, getTotalRecapitalizedPercent())
             .add(getLockedBeansFromLP(reserves));
     }
 
@@ -195,10 +207,9 @@ library LibUnripe {
         
         // if reserves return 0, then skip calculations.
         if (reserves[0] == 0) return 0;
-        
         uint256 lockedLpAmount = LibLockedUnderlying.getLockedUnderlying(
             C.UNRIPE_LP,
-            getRecapPaidPercentAmount(1e6)
+            getTotalRecapitalizedPercent()
         );
         address underlying = s.u[C.UNRIPE_LP].underlyingToken;
         uint256 beanIndex = LibWell.getBeanIndexFromWell(underlying);
