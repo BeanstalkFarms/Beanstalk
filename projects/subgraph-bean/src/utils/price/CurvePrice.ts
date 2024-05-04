@@ -202,7 +202,7 @@ export function getD(xp: BigInt[], a: BigInt): BigInt {
   log.debug("curve_error xp[0] {}", [xp[0].toString()]);
   log.debug("curve_error xp[1] {}", [xp[1].toString()]);
   log.debug("curve_error a {}", [a.toString()]);
-  throw new Error("Price: Convergence false");
+  throw new Error("Price: Convergence failed");
 }
 
 const i = 0;
@@ -243,5 +243,5 @@ export function getY(x: BigInt, xp: BigInt[], a: BigInt, D: BigInt): BigInt {
   log.debug("curve_error xp[1] {}", [xp[1].toString()]);
   log.debug("curve_error a {}", [a.toString()]);
   log.debug("curve_error D {}", [D.toString()]);
-  throw new Error("Price: Convergence false");
+  throw new Error("Price: Convergence failed");
 }
