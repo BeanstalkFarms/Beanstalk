@@ -20,7 +20,7 @@ const MegaChart: FC<{}> = () => {
   const selectedTimePeriod = timeTabParams[0][1];
 
   const [dialogOpen, showDialog, hideDialog] = useToggle();
-  const [selectedCharts, setSelectedCharts] = useState([0, 1, 2]);
+  const [selectedCharts, setSelectedCharts] = useState([0]);
 
   const query0Config = useMemo(() => ( chartSetupData[selectedCharts[0]]?.queryConfig ), [selectedCharts]);
   const query1Config = useMemo(() => ( chartSetupData[selectedCharts[1]]?.queryConfig ), [selectedCharts]);

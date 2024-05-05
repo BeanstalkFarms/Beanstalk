@@ -15,7 +15,9 @@ export interface SelectDialogProps {
 };
 
 const SelectDialog: FC<SelectDialogProps> = ({ handleClose, selected, setSelected }) => {
+
     const chartSetupData = useChartSetupData();
+    
     return (
         <Box sx={{ p: 2, display: 'flex', flexDirection: 'column', gap: 1, height: 400 }}>
             <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between' }}>
@@ -103,9 +105,12 @@ const SelectDialog: FC<SelectDialogProps> = ({ handleClose, selected, setSelecte
             <Divider />
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5, overflowY: 'auto' }}>
                 {chartSetupData.map((data, index) => {
-                    const isSelected = selected ? selected.includes(data.index) : false;
+                    const selectedItems = [...selected];
+                    const indexInSelection = selectedItems.findIndex((selectionIndex) => data.index === selectionIndex);
+                    const isSelected = indexInSelection > -1;
+                    isSelected ? selectedItems.splice(indexInSelection, 1) : selectedItems.push(data.index);
                     return (
-                    <Row key={`chartSelectList${index}`} gap={0.3} p={0.25} sx={{ backgroundColor: (isSelected ? 'red' : undefined), '&:hover': { backgroundColor: 'primary.light', cursor: 'pointer' } }}>
+                    <Row key={`chartSelectList${index}`} onClick={() => setSelected(selectedItems.length > 0 ? selectedItems : [0]) } gap={0.3} p={0.25} sx={{ backgroundColor: (isSelected ? 'primary.light' : undefined), '&:hover': { backgroundColor: '#F5F5F5', cursor: 'pointer' } }}>
                         {data.type === 'Bean' ? (
                             <img src={beanIcon} alt="Bean" style={{ height: 16, width: 16 }} /> 
                         ) : data.type === 'Silo' ? (
