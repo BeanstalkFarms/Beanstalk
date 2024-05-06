@@ -22,9 +22,9 @@ const MegaChart: FC<{}> = () => {
   const [dialogOpen, showDialog, hideDialog] = useToggle();
   const [selectedCharts, setSelectedCharts] = useState([0]);
 
-  const query0Config = useMemo(() => ( chartSetupData[selectedCharts[0]]?.queryConfig ), [selectedCharts]);
-  const query1Config = useMemo(() => ( chartSetupData[selectedCharts[1]]?.queryConfig ), [selectedCharts]);
-  const query2Config = useMemo(() => ( chartSetupData[selectedCharts[2]]?.queryConfig ), [selectedCharts]);
+  const query0Config = useMemo(() => ( chartSetupData[selectedCharts[0]]?.queryConfig ), [selectedCharts, chartSetupData]);
+  const query1Config = useMemo(() => ( chartSetupData[selectedCharts[1]]?.queryConfig ), [selectedCharts, chartSetupData]);
+  const query2Config = useMemo(() => ( chartSetupData[selectedCharts[2]]?.queryConfig ), [selectedCharts, chartSetupData]);
 
   // Subgraph queries
   const query0 = useSeasonsQuery(chartSetupData[selectedCharts[0]]?.document, selectedTimePeriod, query0Config);
@@ -77,28 +77,31 @@ const MegaChart: FC<{}> = () => {
               {chartSetupData[selection].name}
             </Button>
             ))}
-            <Button
-              variant='contained'
-              color='primary'
-              size='small'
-              sx={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                cursor: 'pointer',
-                fontWeight: 'normal',
-                color: 'primary.main',
-                backgroundColor: 'secondary.main',
-                boxSizing: 'border-box',
-                paddingY: 0.25,
-                paddingX: 0.75,
-                '&:hover': {
-                  color: 'primary.contrastText',
-                },
-              }}
-              endIcon={<AddRoundedIcon fontSize="small" color="inherit" />}
-            >
-              Add another
-            </Button>
+            {selectedCharts.length < 6 && (
+              <Button
+                variant='contained'
+                color='primary'
+                size='small'
+                sx={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  cursor: 'pointer',
+                  fontWeight: 'normal',
+                  color: 'primary.main',
+                  backgroundColor: 'secondary.main',
+                  boxSizing: 'border-box',
+                  paddingY: 0.25,
+                  paddingX: 0.75,
+                  '&:hover': {
+                    color: 'primary.contrastText',
+                  },
+                }}
+                endIcon={<AddRoundedIcon fontSize="small" color="inherit" />}
+                onClick={showDialog}
+              >
+                Add another
+              </Button>
+            )}
           </Box>
           <TimeTabs
             state={timeTabParams[0]}
