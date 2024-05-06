@@ -2,7 +2,7 @@
  SPDX-License-Identifier: MIT
 */
 
-pragma solidity =0.7.6;
+pragma solidity ^0.8.20;
 pragma experimental ABIEncoderV2;
 import {AppStorage, Storage} from "contracts/beanstalk/AppStorage.sol";
 import {C} from "../../C.sol";
@@ -15,7 +15,7 @@ import {LibGauge} from "contracts/libraries/LibGauge.sol";
 import {Weather} from "contracts/beanstalk/sun/SeasonFacet/Weather.sol";
 import {LibRedundantMathSigned96} from "contracts/libraries/LibRedundantMathSigned96.sol";
 import {LibRedundantMath128} from "contracts/libraries/LibRedundantMath128.sol";
-import {SafeCast} from "@openzeppelin/contracts/utils/SafeCast.sol";
+import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
 import {ILiquidityWeightFacet} from "contracts/beanstalk/sun/LiquidityWeightFacet.sol";
 import {IGaugePointFacet} from "contracts/beanstalk/sun/GaugePointFacet.sol";
 import {InitWhitelistStatuses} from "contracts/beanstalk/init/InitWhitelistStatuses.sol";
