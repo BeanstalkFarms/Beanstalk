@@ -7,7 +7,7 @@ import "../LibAppStorage.sol";
 import "../LibRedundantMath32.sol";
 import "./LibMinting.sol";
 import "contracts/libraries/Curve/LibMetaCurve.sol";
-import {SafeCast} from "@openzeppelin/contracts/utils/SafeCast.sol";
+import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
 import {LibBeanMetaCurve} from "contracts/libraries/Curve/LibBeanMetaCurve.sol";
 
 /**

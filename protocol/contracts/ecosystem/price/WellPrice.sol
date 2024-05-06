@@ -4,7 +4,7 @@ pragma experimental ABIEncoderV2;
 
 import {P} from "./P.sol";
 import {LibRedundantMath256} from "contracts/libraries/LibRedundantMath256.sol";
-import {SafeCast} from "@openzeppelin/contracts/utils/SafeCast.sol";
+import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
 import {Call, IWell, IERC20} from "../../interfaces/basin/IWell.sol";
 import {IBeanstalkWellFunction} from "../../interfaces/basin/IBeanstalkWellFunction.sol";
 import {LibUsdOracle} from "../../libraries/Oracle/LibUsdOracle.sol";

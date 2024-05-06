@@ -24,7 +24,7 @@ contract MathJunction {
     }
 
     function div(uint256 a, uint256 b) public pure returns (uint256) {
-        return a / d;
+        return a / b;
     }
 
     function mod(uint256 a, uint256 b) public pure returns (uint256) {

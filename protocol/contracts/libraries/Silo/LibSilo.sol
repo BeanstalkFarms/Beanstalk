@@ -8,7 +8,7 @@ pragma abicoder v2;
 import "../LibAppStorage.sol";
 import {C} from "../../C.sol";
 import {LibRedundantMath256} from "contracts/libraries/LibRedundantMath256.sol";
-import {SafeCast} from "@openzeppelin/contracts/utils/SafeCast.sol";
+import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
 import {LibBytes} from "../LibBytes.sol";
 import {LibTokenSilo} from "./LibTokenSilo.sol";
 import {LibRedundantMath128} from "../LibRedundantMath128.sol";

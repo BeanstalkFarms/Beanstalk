@@ -16,7 +16,6 @@ import "./libraries/Decimal.sol";
  */
 library C {
     using Decimal for Decimal.D256;
-    using LibRedundantMath256 for uint256;
 
     //////////////////// Globals ////////////////////
 

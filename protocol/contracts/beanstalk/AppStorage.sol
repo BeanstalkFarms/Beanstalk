@@ -5,7 +5,6 @@ pragma experimental ABIEncoderV2;
 
 import "../interfaces/IDiamondCut.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "@openzeppelin/contracts/utils/Counters.sol";
 
 /**
  * @title Account

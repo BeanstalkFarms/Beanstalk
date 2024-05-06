@@ -5,7 +5,7 @@ pragma experimental ABIEncoderV2;
 
 import {AppStorage, LibAppStorage, Storage} from "../LibAppStorage.sol";
 import {LibRedundantMath256} from "contracts/libraries/LibRedundantMath256.sol";
-import {SafeCast} from "@openzeppelin/contracts/utils/SafeCast.sol";
+import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
 import {LibCurve} from "./LibCurve.sol";
 import {LibCurveMinting} from "contracts/libraries/Minting/LibCurveMinting.sol";
 import "../../C.sol";

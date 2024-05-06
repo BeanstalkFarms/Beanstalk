@@ -7,8 +7,7 @@ pragma experimental ABIEncoderV2;
 
 import {C} from "contracts/C.sol";
 import {LibRedundantMath256} from "contracts/libraries/LibRedundantMath256.sol";
-import {SafeCast} from "@openzeppelin/contracts/utils/SafeCast.sol";
-import {UD60x18} from "@prb/math/src/UD60x18.sol";
+import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
 import {LibTractor} from "contracts/libraries/LibTractor.sol";
 import {LibTransfer} from "contracts/libraries/Token/LibTransfer.sol";
 import {LibDibbler} from "contracts/libraries/LibDibbler.sol";
@@ -24,7 +23,6 @@ import {Invariable} from "contracts/beanstalk/Invariable.sol";
  */
 contract FieldFacet is Invariable, ReentrancyGuard {
     using LibRedundantMath256 for uint256;
-    using UD60x18 for uint256;
     using LibRedundantMath32 for uint32;
     using LibRedundantMath128 for uint128;
 

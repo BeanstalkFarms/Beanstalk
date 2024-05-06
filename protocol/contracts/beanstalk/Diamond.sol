@@ -13,7 +13,6 @@ import {DiamondCutFacet} from "./diamond/DiamondCutFacet.sol";
 import {DiamondLoupeFacet} from "./diamond/DiamondLoupeFacet.sol";
 import {OwnershipFacet} from "./diamond/OwnershipFacet.sol";
 import {AppStorage} from "./AppStorage.sol";
-import {IERC165} from "../interfaces/IERC165.sol";
 import {IDiamondCut} from "../interfaces/IDiamondCut.sol";
 import {IDiamondLoupe} from "../interfaces/IDiamondLoupe.sol";
 

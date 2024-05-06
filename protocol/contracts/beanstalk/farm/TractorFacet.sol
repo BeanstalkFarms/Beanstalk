@@ -5,7 +5,7 @@
 pragma solidity ^0.8.20;
 pragma experimental ABIEncoderV2;
 
-import {ECDSA} from "@openzeppelin/contracts/cryptography/ECDSA.sol";
+import {ECDSA} from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 import {LibBytes} from "../../libraries/LibBytes.sol";
 import {LibRedundantMath256} from "contracts/libraries/LibRedundantMath256.sol";
 

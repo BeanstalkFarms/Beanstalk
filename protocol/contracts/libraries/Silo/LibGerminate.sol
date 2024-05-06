@@ -8,7 +8,7 @@ import {LibRedundantMath32} from "../LibRedundantMath32.sol";
 import {LibRedundantMathSigned96} from "../LibRedundantMathSigned96.sol";
 import {LibTokenSilo} from "./LibTokenSilo.sol";
 import {LibSilo} from "./LibSilo.sol";
-import {SafeCast} from "@openzeppelin/contracts/utils/SafeCast.sol";
+import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
 import {LibRedundantMath256} from "contracts/libraries/LibRedundantMath256.sol";
 import {C} from "../../C.sol";
 

@@ -5,7 +5,7 @@ pragma experimental ABIEncoderV2;
 
 import {LibRedundantMath256} from "contracts/libraries/LibRedundantMath256.sol";
 import {IBlockBasefee} from "../interfaces/IBlockBasefee.sol";
-import "@openzeppelin/contracts/math/Math.sol";
+import "@openzeppelin/contracts/utils/math/Math.sol";
 import "../C.sol";
 
 /**

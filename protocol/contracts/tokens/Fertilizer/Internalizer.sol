@@ -3,8 +3,7 @@
 pragma solidity ^0.8.20;
 pragma experimental ABIEncoderV2;
 
-import "@openzeppelin/contracts-upgradeable/utils/StringsUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/token/ERC20/SafeERC20Upgradeable.sol";
+import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
@@ -17,7 +16,6 @@ import "contracts/libraries/LibRedundantMath128.sol";
  */
 
 contract Internalizer is OwnableUpgradeable, ReentrancyGuardUpgradeable, Fertilizer1155 {
-    using SafeERC20Upgradeable for IERC20;
     using LibRedundantMath128 for uint128;
 
     struct Balance {
@@ -36,7 +34,7 @@ contract Internalizer is OwnableUpgradeable, ReentrancyGuardUpgradeable, Fertili
     string private _uri;
 
     function uri(uint256 _id) external view virtual override returns (string memory) {
-        return string(abi.encodePacked(_uri, StringsUpgradeable.toString(_id)));
+        return string(abi.encodePacked(_uri, Strings.toString(_id)));
     }
 
     function setURI(string calldata newuri) public onlyOwner {

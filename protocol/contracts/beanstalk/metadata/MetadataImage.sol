@@ -1,9 +1,10 @@
 // SPDX-License-Identifier: MIT
 
 pragma solidity ^0.8.20;
+
+import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
 import "../AppStorage.sol";
 import {LibBytes64} from "contracts/libraries/LibBytes64.sol";
-import {LibStrings} from "contracts/libraries/LibStrings.sol";
 import {LibRedundantMath256} from "contracts/libraries/LibRedundantMath256.sol";
 import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import {C} from "../../C.sol";
@@ -18,8 +19,8 @@ import {C} from "../../C.sol";
 contract MetadataImage {
     AppStorage internal s;
 
-    using LibStrings for uint256;
-    using LibStrings for int256;
+    using Strings for uint256;
+    using Strings for int256;
     using LibRedundantMath256 for uint256;
 
     string constant LEAF_COLOR_0 = "#A8C83A";
@@ -625,11 +626,11 @@ contract MetadataImage {
                 abi.encodePacked(
                     '<text x="127" y="343" font-size="10" fill="White" text-anchor="middle" font-family="futura">',
                     '<tspan><animate attributeName="x" from="375" to="50" dur="10s" repeatCount="indefinite" />',
-                    LibStrings.toHexString(token),
+                    Strings.toHexString(token),
                     "</tspan></text>",
                     '<text x="127" y="343" font-size="10" fill="White" text-anchor="middle" font-family="futura">',
                     '<tspan><animate attributeName="x" from="50" to="-275" dur="10s" repeatCount="indefinite" />',
-                    LibStrings.toHexString(token),
+                    Strings.toHexString(token),
                     "</tspan></text>"
                 )
             );

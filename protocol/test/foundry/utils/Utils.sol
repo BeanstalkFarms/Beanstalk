@@ -3,14 +3,14 @@ pragma solidity ^0.8.20;
 pragma abicoder v2;
 
 import "forge-std/Test.sol";
-import {LibStrings} from "contracts/libraries/LibStrings.sol";
+import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
 
 /**
  * @dev common utilities for forge tests
  */
 contract Utils is Test {
-    using LibStrings for uint256;
-    using LibStrings for bytes;
+    using Strings for uint256;
+    using Strings for bytes;
     address payable[] internal users;
 
     bytes32 internal nextUser = keccak256(abi.encodePacked("user address"));

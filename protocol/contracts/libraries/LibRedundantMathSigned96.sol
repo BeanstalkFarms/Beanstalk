@@ -13,7 +13,7 @@ pragma solidity ^0.8.20;
  * deemed too likely to introduce logic errors. Instead, the original syntax was kept
  * and the underlying logic updated to be 0.8 appropriate.
  **/
-library LibRedundantMath96 {
+library LibRedundantMathSigned96 {
     /**
      * @dev Returns the addition of two unsigned integers, reverting on
      * overflow.

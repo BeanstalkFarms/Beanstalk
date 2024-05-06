@@ -5,6 +5,7 @@
 pragma solidity ^0.8.20;
 pragma experimental ABIEncoderV2;
 
+import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
 import "contracts/beanstalk/metadata/MetadataImage.sol";
 import {LibBytes} from "contracts/libraries/LibBytes.sol";
 import {LibTokenSilo} from "contracts/libraries/Silo/LibTokenSilo.sol";
@@ -27,8 +28,8 @@ contract TestnetMetadataFacet is MetadataImage {
     uint256 public seasonsElapsed = 1000;
     uint256 public stalkIssuedPerBdv = 10000;
 
-    using LibStrings for uint256;
-    using LibStrings for int256;
+    using Strings for uint256;
+    using Strings for int256;
 
     event URI(string _uri, uint256 indexed _id);
 
@@ -46,7 +47,7 @@ contract TestnetMetadataFacet is MetadataImage {
             ', "attributes": [ { "trait_type": "Token", "value": "',
             getTokenName(token),
             '"}, { "trait_type": "Token Address", "value": "',
-            LibStrings.toHexString(uint256(token), 20),
+            Strings.toHexString(uint256(token), 20),
             '"}, { "trait_type": "Id", "value": "',
             depositId.toHexString(32),
             '"}, { "trait_type": "stem", "display_type": "number", "value": ',
