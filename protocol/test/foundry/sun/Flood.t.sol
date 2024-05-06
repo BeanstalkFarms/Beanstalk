@@ -315,80 +315,71 @@ contract FloodTest is TestHelper {
     }
 
     function testCalculateSopPerWell() public {
-        int256[] memory wellDeltaBs = new int256[](3);
-        wellDeltaBs[0] = 100;
-        wellDeltaBs[1] = 100;
-        wellDeltaBs[2] = -100;
+        Weather.WellDeltaB[] memory wellDeltaBs = new Weather.WellDeltaB[](3);
+        wellDeltaBs[0].deltaB = 100;
+        wellDeltaBs[1].deltaB = 100;
+        wellDeltaBs[2].deltaB = -100;
+        wellDeltaBs = weather.calculateSopPerWell(wellDeltaBs);
+        assertEq(wellDeltaBs[0].reductionAmount, 50);
+        assertEq(wellDeltaBs[1].reductionAmount, 50);
+        assertEq(wellDeltaBs[2].reductionAmount, 0);
 
-        uint256[] memory reductionAmounts = weather.calculateSopPerWell(wellDeltaBs);
+        wellDeltaBs = new Weather.WellDeltaB[](4);
+        wellDeltaBs[0].deltaB = 90;
+        wellDeltaBs[1].deltaB = 80;
+        wellDeltaBs[2].deltaB = 20;
+        wellDeltaBs[3].deltaB = -120;
+        wellDeltaBs = weather.calculateSopPerWell(wellDeltaBs);
+        assertEq(wellDeltaBs[0].reductionAmount, 40);
+        assertEq(wellDeltaBs[1].reductionAmount, 30);
+        assertEq(wellDeltaBs[2].reductionAmount, 0);
+        assertEq(wellDeltaBs[3].reductionAmount, 0);
 
-        assertEq(reductionAmounts[0], 50);
-        assertEq(reductionAmounts[1], 50);
-        assertEq(reductionAmounts[2], 0);
+        wellDeltaBs = new Weather.WellDeltaB[](7);
+        wellDeltaBs[0].deltaB = 90;
+        wellDeltaBs[1].deltaB = 80;
+        wellDeltaBs[2].deltaB = 70;
+        wellDeltaBs[3].deltaB = 60;
+        wellDeltaBs[4].deltaB = 50;
+        wellDeltaBs[5].deltaB = 40;
+        wellDeltaBs[6].deltaB = -120;
+        wellDeltaBs = weather.calculateSopPerWell(wellDeltaBs);
+        assertEq(wellDeltaBs[0].reductionAmount, 70);
+        assertEq(wellDeltaBs[1].reductionAmount, 60);
+        assertEq(wellDeltaBs[2].reductionAmount, 50);
+        assertEq(wellDeltaBs[3].reductionAmount, 40);
+        assertEq(wellDeltaBs[4].reductionAmount, 30);
+        assertEq(wellDeltaBs[5].reductionAmount, 20);
+        assertEq(wellDeltaBs[6].reductionAmount, 0);
 
-        wellDeltaBs = new int256[](4);
-        wellDeltaBs[0] = 90;
-        wellDeltaBs[1] = 80;
-        wellDeltaBs[2] = 20;
-        wellDeltaBs[3] = -120;
-
-        reductionAmounts = weather.calculateSopPerWell(wellDeltaBs);
-
-        assertEq(reductionAmounts[0], 40);
-        assertEq(reductionAmounts[1], 30);
-        assertEq(reductionAmounts[2], 0);
-        assertEq(reductionAmounts[3], 0);
-
-        wellDeltaBs = new int256[](7);
-        wellDeltaBs[0] = 90;
-        wellDeltaBs[1] = 80;
-        wellDeltaBs[2] = 70;
-        wellDeltaBs[3] = 60;
-        wellDeltaBs[4] = 50;
-        wellDeltaBs[5] = 40;
-        wellDeltaBs[6] = -120;
-
-        reductionAmounts = weather.calculateSopPerWell(wellDeltaBs);
-
-        assertEq(reductionAmounts[0], 70);
-        assertEq(reductionAmounts[1], 60);
-        assertEq(reductionAmounts[2], 50);
-        assertEq(reductionAmounts[3], 40);
-        assertEq(reductionAmounts[4], 30);
-        assertEq(reductionAmounts[5], 20);
-        assertEq(reductionAmounts[6], 0);
-
-        wellDeltaBs = new int256[](4);
-        wellDeltaBs[0] = 90;
-        wellDeltaBs[1] = 80;
-        wellDeltaBs[2] = -70;
-        wellDeltaBs[3] = -200;
-
-        // expect revert because overall deltaB is negative
+        wellDeltaBs = new Weather.WellDeltaB[](4);
+        wellDeltaBs[0].deltaB = 90;
+        wellDeltaBs[1].deltaB = 80;
+        wellDeltaBs[2].deltaB = -70;
+        wellDeltaBs[3].deltaB = -200;
         vm.expectRevert("Flood: Overall deltaB is negative");
-        weather.calculateSopPerWell(wellDeltaBs);
+        wellDeltaBs = weather.calculateSopPerWell(wellDeltaBs);
 
-        // test just one well
-        wellDeltaBs = new int256[](1);
-        wellDeltaBs[0] = 90;
-        reductionAmounts = weather.calculateSopPerWell(wellDeltaBs);
-        assertEq(reductionAmounts[0], 90);
+        wellDeltaBs = new Weather.WellDeltaB[](1);
+        wellDeltaBs[0].deltaB = 90;
+        wellDeltaBs = weather.calculateSopPerWell(wellDeltaBs);
+        assertEq(wellDeltaBs[0].reductionAmount, 90);
 
         // test just 2 wells, all positive
-        wellDeltaBs = new int256[](2);
-        wellDeltaBs[0] = 90;
-        wellDeltaBs[1] = 80;
-        reductionAmounts = weather.calculateSopPerWell(wellDeltaBs);
-        assertEq(reductionAmounts[0], 90);
-        assertEq(reductionAmounts[1], 80);
+        wellDeltaBs = new Weather.WellDeltaB[](2);
+        wellDeltaBs[0].deltaB = 90;
+        wellDeltaBs[1].deltaB = 80;
+        wellDeltaBs = weather.calculateSopPerWell(wellDeltaBs);
+        assertEq(wellDeltaBs[0].reductionAmount, 90);
+        assertEq(wellDeltaBs[1].reductionAmount, 80);
 
         // test just 2 wells, one negative
-        wellDeltaBs = new int256[](2);
-        wellDeltaBs[0] = 90;
-        wellDeltaBs[1] = -80;
-        reductionAmounts = weather.calculateSopPerWell(wellDeltaBs);
-        assertEq(reductionAmounts[0], 10);
-        assertEq(reductionAmounts[1], 0);
+        wellDeltaBs = new Weather.WellDeltaB[](2);
+        wellDeltaBs[0].deltaB = 90;
+        wellDeltaBs[1].deltaB = -80;
+        wellDeltaBs = weather.calculateSopPerWell(wellDeltaBs);
+        assertEq(wellDeltaBs[0].reductionAmount, 10);
+        assertEq(wellDeltaBs[1].reductionAmount, 0);
     }
 
     //////////// Helpers ////////////

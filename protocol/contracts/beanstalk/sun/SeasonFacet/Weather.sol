@@ -15,6 +15,7 @@ import {IInstantaneousPump} from "contracts/interfaces/basin/pumps/IInstantaneou
 import {SignedSafeMath} from "@openzeppelin/contracts/math/SignedSafeMath.sol";
 import {LibWhitelistedTokens} from "contracts/libraries/Silo/LibWhitelistedTokens.sol";
 import {Math} from "@openzeppelin/contracts/math/Math.sol";
+import {LibWellMinting} from "contracts/libraries/Minting/LibWellMinting.sol";
 import {console} from "forge-std/console.sol";
 
 /**
@@ -28,6 +29,12 @@ contract Weather is Sun {
     using LibSafeMath128 for uint128;
 
     uint128 internal constant MAX_BEAN_LP_GP_PER_BDV_RATIO = 100e18;
+
+    struct WellDeltaB {
+        address well;
+        int256 deltaB; // reviewer note: worth squishing these into one slot?
+        uint256 reductionAmount;
+    }
 
     /**
      * @notice Emitted when the Temperature (fka "Weather") changes.
@@ -174,9 +181,11 @@ contract Weather is Sun {
             s.r.roots = s.s.roots;
         } else {
             if (s.r.roots > 0) {
-                address[] memory wells = LibWhitelistedTokens.getWhitelistedWellLpTokens();
-                for (uint i; i < wells.length; i++) {
-                    sop(wells[i]);
+                WellDeltaB[] memory wellDeltaBs = getWellsByDeltaB();
+                wellDeltaBs = calculateSopPerWell(wellDeltaBs);
+
+                for (uint i; i < wellDeltaBs.length; i++) {
+                    sop(wellDeltaBs[i]);
                 }
             }
             floodPodline();
@@ -198,6 +207,37 @@ contract Weather is Sun {
         }*/
     }
 
+    function getWellsByDeltaB() private view returns (WellDeltaB[] memory) {
+        address[] memory wells = LibWhitelistedTokens.getWhitelistedWellLpTokens();
+        WellDeltaB[] memory wellDeltaBs = new WellDeltaB[](wells.length);
+        for (uint i = 0; i < wells.length; i++) {
+            wellDeltaBs[i] = WellDeltaB(wells[i], LibWellMinting.cappedReservesDeltaB(wells[i]), 0);
+        }
+
+        // Sort the wellDeltaBs array using QuickSort
+        quickSort(wellDeltaBs, 0, int(wellDeltaBs.length - 1));
+
+        return wellDeltaBs;
+    }
+
+    function quickSort(WellDeltaB[] memory arr, int left, int right) private pure {
+        int i = left;
+        int j = right;
+        if (i == j) return;
+        int pivot = arr[uint(left + (right - left) / 2)].deltaB;
+        while (i <= j) {
+            while (arr[uint(i)].deltaB > pivot) i++;
+            while (pivot > arr[uint(j)].deltaB) j--;
+            if (i <= j) {
+                (arr[uint(i)], arr[uint(j)]) = (arr[uint(j)], arr[uint(i)]);
+                i++;
+                j--;
+            }
+        }
+        if (left < j) quickSort(arr, left, j);
+        if (i < right) quickSort(arr, i, right);
+    }
+
     /**
      * @dev Flood was previously called a "Season of Plenty" (SOP for short).
      * When Beanstalk has been Oversaturated for a Season, Beanstalk returns the
@@ -209,21 +249,18 @@ contract Weather is Sun {
      * and become Harvestable.
      * For more information On Oversaturation see {Weather.handleRain}.
      */
-    function sop(address well) private {
-        // calculate the beans from a sop.
-        // sop beans uses the min of the current and instantaneous reserves of the sop well,
-        // rather than the twaReserves in order to get bean back to peg.
-        (uint256 newBeans, IERC20 sopToken) = calculateSop(well);
-        if (newBeans == 0) return;
+    function sop(WellDeltaB memory wellDeltaB) private {
+        if (wellDeltaB.reductionAmount == 0) return;
+        IERC20 sopToken = LibWell.getNonBeanTokenFromWell(wellDeltaB.well);
 
-        uint256 sopBeans = uint256(newBeans);
+        uint256 sopBeans = wellDeltaB.reductionAmount;
 
-        // TODO: pre-calc total amount of beans to mint and mint them all at once
+        // code reviewer note: pre-calc total amount of beans to mint and mint them all at once?
         C.bean().mint(address(this), sopBeans);
 
         // Approve and Swap Beans for the non-bean token of the SOP well.
-        C.bean().approve(well, sopBeans);
-        uint256 amountOut = IWell(well).swapFrom(
+        C.bean().approve(wellDeltaB.well, sopBeans);
+        uint256 amountOut = IWell(wellDeltaB.well).swapFrom(
             C.bean(),
             sopToken,
             sopBeans,
@@ -232,7 +269,7 @@ contract Weather is Sun {
             type(uint256).max
         );
         s.plenty += amountOut;
-        rewardSop(well, amountOut);
+        rewardSop(wellDeltaB.well, amountOut);
         // TODO: emit events, but because we have multiple wells, perhaps we need an event per well, and a separate event for harvest pods.
         // emit SeasonOfPlenty(s.season.current, well, address(sopToken), amountOut, newHarvestable);
     }
@@ -251,34 +288,32 @@ contract Weather is Sun {
     /*
      * @notice Calculates the amount of beans per well that should be minted in a sop.
      * @param wellDeltaBs The deltaBs of all whitelisted wells in which to flood. Must be sorted in descending order.
-     * @return reductionAmounts The amount of beans per well that should be minted in a sop.
      */
     // code review note: have some casual comments here for just understanding the code, happy to
     // change this function to make it more efficient based on feedback.
     function calculateSopPerWell(
-        int256[] memory wellDeltaBs
-    ) external view returns (uint256[] memory) {
+        WellDeltaB[] memory wellDeltaBs
+    ) public view returns (WellDeltaB[] memory) {
         uint256 totalPositiveDeltaB = 0;
         uint256 totalNegativeDeltaB = 0;
         uint256 positiveDeltaBCount = 0;
 
         for (uint256 i = 0; i < wellDeltaBs.length; i++) {
-            if (wellDeltaBs[i] > 0) {
-                totalPositiveDeltaB += uint256(wellDeltaBs[i]);
+            if (wellDeltaBs[i].deltaB > 0) {
+                totalPositiveDeltaB += uint256(wellDeltaBs[i].deltaB);
                 positiveDeltaBCount++;
             } else {
-                totalNegativeDeltaB += uint256(-wellDeltaBs[i]);
+                totalNegativeDeltaB += uint256(-wellDeltaBs[i].deltaB);
             }
         }
 
         // most likely case is that all deltaBs are positive
         if (positiveDeltaBCount == wellDeltaBs.length) {
             // if all deltaBs are positive, need to sop all to zero
-            uint256[] memory reductionAmounts = new uint256[](wellDeltaBs.length);
             for (uint256 i = 0; i < wellDeltaBs.length; i++) {
-                reductionAmounts[i] = uint256(wellDeltaBs[i]);
+                wellDeltaBs[i].reductionAmount = uint256(wellDeltaBs[i].deltaB);
             }
-            return reductionAmounts;
+            return wellDeltaBs;
         }
 
         if (positiveDeltaBCount == 0) {
@@ -302,12 +337,14 @@ contract Weather is Sun {
             if (positiveDeltaBCount == 1 || i == 0) {
                 // reduce enough to equal the negative deltaB
                 if (positiveDeltaBCount == 1) {
-                    reductionAmounts[i] = uint256(wellDeltaBs[i]).sub(totalNegativeDeltaB);
-                    return reductionAmounts;
+                    wellDeltaBs[i].reductionAmount = uint256(wellDeltaBs[i].deltaB).sub(
+                        totalNegativeDeltaB
+                    );
+                    return wellDeltaBs;
                 }
             } else {
-                uint256 diffToPrevious = wellDeltaBs[i] > 0
-                    ? uint256(wellDeltaBs[i - 1]).sub(uint256(wellDeltaBs[i]))
+                uint256 diffToPrevious = wellDeltaBs[i].deltaB > 0
+                    ? uint256(wellDeltaBs[i - 1].deltaB).sub(uint256(wellDeltaBs[i].deltaB))
                     : 0;
 
                 if (
@@ -320,7 +357,7 @@ contract Weather is Sun {
                     uint256 remaining = shaveOff - cumulativeTotal;
                     // this remaining needs to be distributed equally taken from all the wells processed
                     // this proportional reduction can be used to subtract from the current well deltaB and find the shave-to level
-                    shaveToLevel = uint(wellDeltaBs[i - 1]) - remaining.div(i);
+                    shaveToLevel = uint(wellDeltaBs[i - 1].deltaB) - remaining.div(i);
                     break;
                 } else {
                     cumulativeTotal = cumulativeTotal.add(diffToPrevious.mul(i));
@@ -328,14 +365,20 @@ contract Weather is Sun {
             }
         }
 
+        console.log("shaveToLevel: ", shaveToLevel);
+
         // return the amount of beans that need to be flooded per well
         for (uint256 i = 0; i < positiveDeltaBCount; i++) {
-            reductionAmounts[i] = wellDeltaBs[i] > int256(shaveToLevel)
-                ? uint256(wellDeltaBs[i]) - shaveToLevel
+            // reductionAmounts[i] = wellDeltaBs.deltaB[i] > int256(shaveToLevel)
+            //     ? uint256(wellDeltaBs.deltaB[i]) - shaveToLevel
+            //     : 0;
+            wellDeltaBs[i].reductionAmount = wellDeltaBs[i].deltaB > int256(shaveToLevel)
+                ? uint256(wellDeltaBs[i].deltaB) - shaveToLevel
                 : 0;
-        }
 
-        return reductionAmounts;
+            console.log("setting up final reductionAmounts[i]: ", wellDeltaBs[i].reductionAmount);
+        }
+        return wellDeltaBs;
     }
 
     /**
