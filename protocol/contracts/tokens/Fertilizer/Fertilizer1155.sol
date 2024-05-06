@@ -5,14 +5,17 @@
 pragma solidity ^0.8.20;
 pragma experimental ABIEncoderV2;
 
-import "@openzeppelin/contracts-upgradeable/token/ERC1155/ERC1155Upgradeable.sol";
+import {ERC1155Upgradeable} from "@openzeppelin/contracts-upgradeable/token/ERC1155/ERC1155Upgradeable.sol";
+import {IERC1155Receiver} from "@openzeppelin/contracts/token/ERC1155/IERC1155Receiver.sol";
+import {Address} from "@openzeppelin/contracts/utils/Address.sol";
+
 /**
  * @author Publius
  * @dev Fertilizer tailored implemetation of the ERC-1155 standard.
  * We rewrite transfer and mint functions to allow the balance transfer function be overwritten as well.
  */
 contract Fertilizer1155 is ERC1155Upgradeable {
-    using AddressUpgradeable for address;
+    using Address for address;
 
     function safeTransferFrom(
         address from,
@@ -100,9 +103,9 @@ contract Fertilizer1155 is ERC1155Upgradeable {
     ) private {
         if (to.isContract()) {
             try
-                IERC1155ReceiverUpgradeable(to).onERC1155Received(operator, from, id, amount, data)
+                IERC1155Receiver(to).onERC1155Received(operator, from, id, amount, data)
             returns (bytes4 response) {
-                if (response != IERC1155ReceiverUpgradeable.onERC1155Received.selector) {
+                if (response != IERC1155Receiver.onERC1155Received.selector) {
                     revert("ERC1155: ERC1155Receiver rejected tokens");
                 }
             } catch Error(string memory reason) {
@@ -123,7 +126,7 @@ contract Fertilizer1155 is ERC1155Upgradeable {
     ) private {
         if (to.isContract()) {
             try
-                IERC1155ReceiverUpgradeable(to).onERC1155BatchReceived(
+                IERC1155Receiver(to).onERC1155BatchReceived(
                     operator,
                     from,
                     ids,
@@ -131,7 +134,7 @@ contract Fertilizer1155 is ERC1155Upgradeable {
                     data
                 )
             returns (bytes4 response) {
-                if (response != IERC1155ReceiverUpgradeable.onERC1155BatchReceived.selector) {
+                if (response != IERC1155Receiver.onERC1155BatchReceived.selector) {
                     revert("ERC1155: ERC1155Receiver rejected tokens");
                 }
             } catch Error(string memory reason) {
@@ -148,4 +151,17 @@ contract Fertilizer1155 is ERC1155Upgradeable {
 
         return array;
     }
+
+    // Following the 1155 design from OpenZeppelin Contracts < 5.x.
+    function _beforeTokenTransfer(
+        address operator,
+        address from,
+        address to,
+        uint256[] memory ids,
+        uint256[] memory amounts,
+        bytes memory data
+    )
+        internal
+        virtual
+    { }
 }
