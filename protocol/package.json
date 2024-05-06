@@ -49,7 +49,7 @@
     "@nomicfoundation/hardhat-network-helpers": "^1.0.7",
     "@openzeppelin/contracts": "5.0.2",
     "@openzeppelin/contracts-upgradeable": "5.0.2",
-    "@prb/math": "4.0.2",
+    "@prb/math": "v2.5.0",
     "@uniswap/v3-core": "https://github.com/Uniswap/v3-core.git#0.8",
     "@uniswap/v3-periphery": "https://github.com/Uniswap/v3-periphery#0.8",
     "axios": "1.6.7",

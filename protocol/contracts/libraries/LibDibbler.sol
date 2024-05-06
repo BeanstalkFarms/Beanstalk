@@ -3,7 +3,9 @@
 pragma solidity ^0.8.20;
 pragma experimental ABIEncoderV2;
 
-import {UD60x18} from "@prb/math/src/UD60x18.sol";
+import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
+import {PRBMath} from "@prb/math/contracts/PRBMath.sol";
+import {LibPRBMathRoundable} from "contracts/libraries/LibPRBMathRoundable.sol";
 import {LibAppStorage, AppStorage} from "./LibAppStorage.sol";
 import {LibRedundantMath128} from "./LibRedundantMath128.sol";
 import {LibRedundantMath32} from "./LibRedundantMath32.sol";
@@ -16,8 +18,9 @@ import {LibRedundantMath256} from "contracts/libraries/LibRedundantMath256.sol";
  * Morning Auction functionality. Provides math helpers for scaling Soil.
  */
 library LibDibbler {
+    using PRBMath for uint256;
+    using LibPRBMathRoundable for uint256;
     using LibRedundantMath256 for uint256;
-    using UD60x18 for uint256;
     using LibRedundantMath32 for uint32;
     using LibRedundantMath128 for uint128;
 
@@ -264,14 +267,14 @@ library LibDibbler {
         uint256 maxTemperature = s.w.t;
         if (maxTemperature == 0) return 0;
 
-        scaledTemperature = UD60x18.max(
+        scaledTemperature = Math.max(
             // To save gas, `pct` is pre-calculated to 12 digits. Here we
             // perform the following transformation:
             // (1e2)    maxTemperature
             // (1e12)    * pct
             // (1e6)     / TEMPERATURE_PRECISION
             // (1e8)     = scaledYield
-            maxTemperature.mulDiv(pct, TEMPERATURE_PRECISION, UD60x18.Rounding.Up),
+            maxTemperature.mulDiv(pct, TEMPERATURE_PRECISION, LibPRBMathRoundable.Rounding.Up),
             // Floor at TEMPERATURE_PRECISION (1%)
             TEMPERATURE_PRECISION
         );
@@ -337,7 +340,7 @@ library LibDibbler {
             soil.mulDiv(
                 _morningTemperature.add(ONE_HUNDRED_PCT),
                 maxTemperature.add(ONE_HUNDRED_PCT),
-                UD60x18.Rounding.Up
+                LibPRBMathRoundable.Rounding.Up
             );
     }
 
