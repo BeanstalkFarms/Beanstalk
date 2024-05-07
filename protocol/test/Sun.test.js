@@ -375,13 +375,13 @@ describe("Sun", function () {
   it("rewards more than type(uint128).max/10000 to silo", async function () {
     await expect(
       mockBeanstalk.siloSunrise("340282366920938463463374607431768211456")
-    ).to.be.revertedWith("SafeCast: value doesn't fit in 128 bits");
+    ).to.be.revertedWith("SafeCastOverflowedUintDowncast");
   });
 
   it("rewards more than type(uint128).max Soil below peg", async function () {
     await expect(
       mockBeanstalk.sunSunrise("-340282366920938463463374607431768211456", "0")
-    ).to.be.revertedWith("SafeCast: value doesn't fit in 128 bits");
+    ).to.be.revertedWith("SafeCastOverflowedUintDowncast");
   });
 });
 

@@ -445,7 +445,7 @@ contract MockPlainCurve {
      * `amount`.
      */
     function transferFrom(address sender, address recipient, uint256 amount) public returns (bool) {
-        require(amount <= _allowances[sender][msg.sender], "ERC20: transfer amount exceeds allowance");
+        require(amount <= _allowances[sender][msg.sender], "ERC20InsufficientAllowance");
         _transfer(sender, recipient, amount);
         _approve(
             sender,

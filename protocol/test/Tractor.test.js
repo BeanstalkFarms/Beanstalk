@@ -140,7 +140,7 @@ describe("Tractor", function () {
       this.requisition.signature = "0x0000";
       await expect(
         this.tractorFacet.connect(publisher).publishRequisition(this.requisition)
-      ).to.be.revertedWith("ECDSA: invalid signature length");
+      ).to.be.revertedWith("ECDSAInvalidSignatureLength");
     });
 
     it("should fail when signature is invalid #2", async function () {
@@ -148,7 +148,7 @@ describe("Tractor", function () {
         "0x0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000";
       await expect(
         this.tractorFacet.connect(publisher).publishRequisition(this.requisition)
-      ).to.be.revertedWith("ECDSA: invalid signature 'v' value");
+      ).to.be.revertedWith("ECDSAInvalidSignature");
     });
 
     it("should fail when signature is invalid #3", async function () {
@@ -169,7 +169,7 @@ describe("Tractor", function () {
       this.requisition.signature = "0x0000";
       await expect(
         this.tractorFacet.connect(publisher).cancelBlueprint(this.requisition)
-      ).to.be.revertedWith("ECDSA: invalid signature length");
+      ).to.be.revertedWith("ECDSAInvalidSignatureLength");
     });
 
     it("should fail when signature is invalid #2", async function () {
@@ -177,7 +177,7 @@ describe("Tractor", function () {
         "0x0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000";
       await expect(
         this.tractorFacet.connect(publisher).cancelBlueprint(this.requisition)
-      ).to.be.revertedWith("ECDSA: invalid signature 'v' value");
+      ).to.be.revertedWith("ECDSAInvalidSignature");
     });
 
     it("should fail when signature is invalid #3", async function () {
