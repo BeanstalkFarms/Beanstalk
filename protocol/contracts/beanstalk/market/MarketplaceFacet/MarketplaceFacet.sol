@@ -140,7 +140,7 @@ contract MarketplaceFacet is Invariable, Order {
         require(end > start && amount >= end, "Field: Pod range invalid.");
         amount = end - start;
         if (
-            LibTractor._user() != sender && allowancePods(sender, LibTractor._user()) != uint256(-1)
+            LibTractor._user() != sender && allowancePods(sender, LibTractor._user()) != type(uint256).max
         ) {
             decrementAllowancePods(sender, LibTractor._user(), amount);
         }

@@ -3,6 +3,7 @@
 pragma solidity ^0.8.20;
 pragma experimental ABIEncoderV2;
 
+import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
 import {LibEvaluate} from "contracts/libraries/LibEvaluate.sol";
 import {LibRedundantMath128} from "contracts/libraries/LibRedundantMath128.sol";
 import {LibCases} from "contracts/libraries/LibCases.sol";
@@ -102,17 +103,17 @@ contract Weather is Sun {
     function updateTemperature(int8 bT, uint256 caseId) private {
         uint256 t = s.w.t;
         if (bT < 0) {
-            if (t <= uint256(-bT)) {
+            if (t <= uint256(int256(-bT))) {
                 // if (change < 0 && t <= uint32(-change)),
                 // then 0 <= t <= type(int8).max because change is an int8.
                 // Thus, downcasting t to an int8 will not cause overflow.
-                bT = 1 - int8(t);
+                bT = 1 - int8(int256(t));
                 s.w.t = 1;
             } else {
-                s.w.t = uint32(t - uint256(-bT));
+                s.w.t = uint32(t - uint256(int256(-bT)));
             }
         } else {
-            s.w.t = uint32(t + uint256(bT));
+            s.w.t = uint32(t + uint256(int256(bT)));
         }
 
         emit TemperatureChange(s.season.current, caseId, bT);
@@ -125,20 +126,22 @@ contract Weather is Sun {
     function updateBeanToMaxLPRatio(int80 bL, uint256 caseId) private {
         uint128 beanToMaxLpGpPerBdvRatio = s.seedGauge.beanToMaxLpGpPerBdvRatio;
         if (bL < 0) {
-            if (beanToMaxLpGpPerBdvRatio <= uint128(-bL)) {
-                bL = -int80(beanToMaxLpGpPerBdvRatio);
+            if (beanToMaxLpGpPerBdvRatio <= uint128(int128(-bL))) {
+                bL = -SafeCast.toInt80(int256(uint256(beanToMaxLpGpPerBdvRatio)));
                 s.seedGauge.beanToMaxLpGpPerBdvRatio = 0;
             } else {
-                s.seedGauge.beanToMaxLpGpPerBdvRatio = beanToMaxLpGpPerBdvRatio.sub(uint128(-bL));
+                s.seedGauge.beanToMaxLpGpPerBdvRatio = beanToMaxLpGpPerBdvRatio.sub(uint128(int128(-bL)));
             }
         } else {
-            if (beanToMaxLpGpPerBdvRatio.add(uint128(bL)) >= MAX_BEAN_LP_GP_PER_BDV_RATIO) {
+            if (beanToMaxLpGpPerBdvRatio.add(uint128(int128(bL))) >= MAX_BEAN_LP_GP_PER_BDV_RATIO) {
                 // if (change > 0 && 100e18 - beanToMaxLpGpPerBdvRatio <= bL),
                 // then bL cannot overflow.
-                bL = int80(MAX_BEAN_LP_GP_PER_BDV_RATIO.sub(beanToMaxLpGpPerBdvRatio));
+                bL = int80(SafeCast.toInt80(int256(uint256(MAX_BEAN_LP_GP_PER_BDV_RATIO.sub(beanToMaxLpGpPerBdvRatio)))));
                 s.seedGauge.beanToMaxLpGpPerBdvRatio = MAX_BEAN_LP_GP_PER_BDV_RATIO;
             } else {
-                s.seedGauge.beanToMaxLpGpPerBdvRatio = beanToMaxLpGpPerBdvRatio.add(uint128(bL));
+                s.seedGauge.beanToMaxLpGpPerBdvRatio = beanToMaxLpGpPerBdvRatio.add(
+                    uint128(int128(bL))
+                );
             }
         }
 
@@ -246,7 +249,7 @@ contract Weather is Sun {
      */
     function calculateSop(address well) private view returns (uint256 sopBeans, IERC20 sopToken) {
         // if the sopWell was not initalized, the should not occur.
-        if (well == address(0)) return (0, IERC20(0));
+        if (well == address(0)) return (0, IERC20(address(0)));
         IWell sopWell = IWell(well);
         IERC20[] memory tokens = sopWell.tokens();
         Call[] memory pumps = sopWell.pumps();
@@ -262,7 +265,7 @@ contract Weather is Sun {
         );
         // If the USD Oracle oracle call fails, the sop should not occur.
         // return 0 rather than revert to prevent sunrise from failing.
-        if (!success) return (0, IERC20(0));
+        if (!success) return (0, IERC20(address(0)));
 
         // compare the beans at peg using the instantaneous reserves,
         // and the current reserves.
@@ -284,7 +287,7 @@ contract Weather is Sun {
         }
 
         // If the sopBeans is negative, the sop should not occur.
-        if (lowestSopBeans < 0) return (0, IERC20(0));
+        if (lowestSopBeans < 0) return (0, IERC20(address(0)));
 
         // SafeCast not necessary due to above check.
         sopBeans = uint256(lowestSopBeans);

@@ -5,6 +5,7 @@
 pragma solidity ^0.8.20;
 pragma experimental ABIEncoderV2;
 
+import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
 import {C} from "contracts/C.sol";
 import {OracleLibrary} from "@uniswap/v3-periphery/contracts/libraries/OracleLibrary.sol";
 import "@uniswap/v3-core/contracts/interfaces/IUniswapV3Pool.sol";
@@ -58,9 +59,9 @@ library LibUniswapOracle {
             uint160[] memory
         ) {
             int56 tickCumulativesDelta = tickCumulatives[1] - tickCumulatives[0];
-            arithmeticMeanTick = int24(tickCumulativesDelta / secondsAgo);
+            arithmeticMeanTick = SafeCast.toInt24(int256(tickCumulativesDelta / int56(uint56(secondsAgo))));
             // Always round to negative infinity
-            if (tickCumulativesDelta < 0 && (tickCumulativesDelta % secondsAgo != 0))
+            if (tickCumulativesDelta < 0 && (tickCumulativesDelta % int56(uint56(secondsAgo)) != 0))
                 arithmeticMeanTick--;
             success = true;
         } catch {}

@@ -232,7 +232,7 @@ contract MockSiloFacet is SiloFacet {
         s.a[account].legacyV2Deposits[token][season].amount += uint128(amount);
         s.a[account].legacyV2Deposits[token][season].bdv += uint128(bdv);
 
-        emit AddDeposit(account, token, season, amount, bdv);
+        emit AddDeposit(account, token, int96(uint96(season)), amount, bdv);
     }
 
     //////////////////////// ADD DEPOSIT ////////////////////////

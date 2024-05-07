@@ -203,7 +203,7 @@ contract MockPlainCurve {
         uint256 _min_received
     ) external returns (uint256) {
         _update();
-        uint256 i = uint256(_i_);
+        uint256 i = uint256(int256(_i_));
         (uint256 dy, uint256 dy_fee) = _calc_withdraw_one_coin(_burn_amount, _i_, balances);
         require(dy >= _min_received, "Curve: Insufficient Output");
 
@@ -223,7 +223,7 @@ contract MockPlainCurve {
         // First, need to calculate
         //  Get current D
         // Solve Eqn against y_i for D - _token_amount
-        uint256 i = uint256(_i_);
+        uint256 i = uint256(int256(_i_));
         uint256 amp = a;
         uint256[N_COINS] memory rates = rate_multipliers;
         uint256[N_COINS] memory xp = _xp_mem(rates, _balances);

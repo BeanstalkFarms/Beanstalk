@@ -87,7 +87,7 @@ library LibDibbler {
         if (s.f.soil < beans) {
             s.f.soil = 0;
         } else {
-            (, s.f.soil) = s.f.soil.sub(uint128(beans));
+            s.f.soil = s.f.soil.sub(uint128(beans));
         }
 
         s.a[account].field.plots[s.f.pods] = pods;

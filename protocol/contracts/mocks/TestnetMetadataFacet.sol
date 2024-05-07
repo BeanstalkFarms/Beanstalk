@@ -42,7 +42,7 @@ contract TestnetMetadataFacet is MetadataImage {
      */
     function uri(uint256 depositId) public view returns (string memory) {
         (address token, int96 stem) = LibBytes.unpackAddressAndStem(depositId);
-        int96 stemTip = int96(stalkEarnedPerSeason.mul(seasonsElapsed));
+        int96 stemTip = int96(int256(stalkEarnedPerSeason.mul(seasonsElapsed)));
         bytes memory attributes = abi.encodePacked(
             ', "attributes": [ { "trait_type": "Token", "value": "',
             getTokenName(token),
@@ -55,7 +55,7 @@ contract TestnetMetadataFacet is MetadataImage {
             '}, { "trait_type": "inital stalk per BDV", "display_type": "number", "value": ',
             stalkIssuedPerBdv.toString(),
             '}, { "trait_type": "grown stalk per BDV", "display_type": "number", "value": ',
-            uint256(stemTip - stem).toString(),
+            uint256(int256(stemTip - stem)).toString(),
             '}, { "trait_type": "stalk grown per BDV per season", "display_type": "number", "value": ',
             stalkEarnedPerSeason.toString()
         );

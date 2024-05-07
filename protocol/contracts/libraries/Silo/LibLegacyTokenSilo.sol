@@ -136,7 +136,7 @@ library LibLegacyTokenSilo {
             uint256 updatedBDV = crateBDV.sub(removedBDV);
             uint256 updatedAmount = crateAmount.sub(amount);
             require(
-                updatedBDV <= uint128(-1) && updatedAmount <= uint128(-1),
+                updatedBDV <= type(uint128).max && updatedAmount <= type(uint128).max,
                 "Silo: uint128 overflow."
             );
 
@@ -215,7 +215,7 @@ library LibLegacyTokenSilo {
         //negative grown stalk index.
 
         //find the difference between the input season and the Silo v3 epoch season
-        stem = (int96(season).sub(int96(s.season.stemStartSeason))).mul(int96(seedsPerBdv));
+        stem = (int96(uint96(season)).sub(int96(uint96(s.season.stemStartSeason)))).mul(int96(int256(seedsPerBdv)));
     }
 
     /**

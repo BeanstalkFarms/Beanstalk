@@ -70,7 +70,7 @@ contract MockUniswapV3Pool {
             }
             tickCumulatives[i] =
                 int56(manual_ticks) *
-                int56(secondsAgos[secondsAgos.length - 1 - i]);
+                int56(uint56(secondsAgos[secondsAgos.length - 1 - i]));
             secondsPerLiquidityCumulativeX128s[i] = 1;
         }
     }

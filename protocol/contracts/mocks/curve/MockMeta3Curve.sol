@@ -201,8 +201,8 @@ contract MockMeta3Curve {
         uint256 min_dy,
         address _receiver
     ) public returns (uint256) {
-        uint256 i = uint256(_i_);
-        uint256 j = uint256(_j_);
+        uint256 i = uint256(int256(_i_));
+        uint256 j = uint256(int256(_j_));
         _update();
         uint256[N_COINS] memory rates = [rate_multiplier, I3Curve(BASE_POOL).get_virtual_price()];
         uint256[N_COINS] memory xp = _xp_mem(rates, balances);
@@ -402,7 +402,7 @@ contract MockMeta3Curve {
         address _receiver
     ) public returns (uint256) {
         _update();
-        uint256 i = uint256(_i_);
+        uint256 i = uint256(int256(_i_));
         (uint256 dy, uint256 dy_fee) = _calc_withdraw_one_coin(_burn_amount, _i_, balances);
         require(dy >= _min_received, "Curve: Insufficient Output");
 
@@ -422,7 +422,7 @@ contract MockMeta3Curve {
         // First, need to calculate
         //  Get current D
         // Solve Eqn against y_i for D - _token_amount
-        uint256 i = uint256(_i_);
+        uint256 i = uint256(int256(_i_));
         uint256 amp = a;
         uint256[N_COINS] memory rates = [rate_multiplier, I3Curve(BASE_POOL).get_virtual_price()];
         uint256[N_COINS] memory xp = _xp_mem(rates, _balances);
