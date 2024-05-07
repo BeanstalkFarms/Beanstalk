@@ -145,5 +145,4 @@ contract Order is Listing {
             id = keccak256(abi.encodePacked(account, pricePerPod, maxPlaceInLine, minFillAmount));
         else id = keccak256(abi.encodePacked(account, pricePerPod, maxPlaceInLine));
     }
-
 }
