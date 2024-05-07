@@ -30,6 +30,8 @@ contract Weather is Sun {
 
     uint128 internal constant MAX_BEAN_LP_GP_PER_BDV_RATIO = 100e18;
 
+    uint256 internal constant FLOOD_PODLINE_PERCENT_DENOMINATOR = 1000;
+
     struct WellDeltaB {
         address well;
         int256 deltaB; // reviewer note: worth squishing these into one slot?
@@ -55,20 +57,19 @@ contract Weather is Sun {
     event BeanToMaxLpGpPerBdvRatioChange(uint256 indexed season, uint256 caseId, int80 absChange);
 
     /**
-     * @notice Emitted when Beans are minted during the Season of Plenty.
+     * @notice Emitted when Beans are minted to a Well during the Season of Plenty.
      * @param season The Season in which Beans were minted for distribution.
      * @param well The Well that the SOP occurred in.
      * @param token The token that was swapped for Beans.
-     * @param amount The amount of 3CRV which was received for swapping Beans.
+     * @param amount The amount of tokens which was received for swapping Beans.
+     */
+    event SeasonOfPlentyWell(uint256 indexed season, address well, address token, uint256 amount);
+
+    /**
+     * @notice Emitted when Beans are minted to the Field during the Season of Plenty.
      * @param toField The amount of Beans which were distributed to remaining Pods in the Field.
      */
-    event SeasonOfPlenty(
-        uint256 indexed season,
-        address well,
-        address token,
-        uint256 amount,
-        uint256 toField
-    );
+    event SeasonOfPlentyField(uint256 toField);
 
     //////////////////// WEATHER INTERNAL ////////////////////
 
@@ -180,6 +181,9 @@ contract Weather is Sun {
             s.r.pods = s.f.pods;
             s.r.roots = s.s.roots;
         } else {
+            // flood podline first, because it checks current Bean supply
+            floodPodline();
+
             if (s.r.roots > 0) {
                 WellDeltaB[] memory wellDeltaBs = getWellsByDeltaB();
                 wellDeltaBs = calculateSopPerWell(wellDeltaBs);
@@ -188,23 +192,22 @@ contract Weather is Sun {
                     sop(wellDeltaBs[i]);
                 }
             }
-            floodPodline();
         }
     }
 
     function floodPodline() private {
-        // uint256 sopBeans = uint256(newBeans);
-        // uint256 newHarvestable;
-        // TODO: if podline is 1% or less of total bean supply,
-        // then make 0.1% of the total bean supply worth of pods harvestable.
-        // Pay off remaining Pods if any exist.
-        /*if (s.f.harvestable < s.r.pods) {
-            newHarvestable = s.r.pods - s.f.harvestable;
-            s.f.harvestable = s.f.harvestable.add(newHarvestable);
-            C.bean().mint(address(this), newHarvestable.add(sopBeans));
-        } else {
-            C.bean().mint(address(this), sopBeans);
-        }*/
+        // Make 0.1% of the total bean supply worth of pods harvestable.
+
+        uint256 totalBeanSupply = C.bean().totalSupply();
+        uint256 sopFieldBeans = totalBeanSupply.div(FLOOD_PODLINE_PERCENT_DENOMINATOR); // 1/1000 = 0.1% of total supply
+
+        uint256 maxHarvestable = s.f.pods.sub(s.f.harvestable);
+        sopFieldBeans = sopFieldBeans > maxHarvestable ? maxHarvestable : sopFieldBeans;
+
+        s.f.harvestable = s.f.harvestable.add(sopFieldBeans);
+        C.bean().mint(address(this), sopFieldBeans);
+
+        emit SeasonOfPlentyField(sopFieldBeans);
     }
 
     function getWellsByDeltaB() private view returns (WellDeltaB[] memory) {
@@ -271,7 +274,7 @@ contract Weather is Sun {
         s.plenty += amountOut;
         rewardSop(wellDeltaB.well, amountOut);
         // TODO: emit events, but because we have multiple wells, perhaps we need an event per well, and a separate event for harvest pods.
-        // emit SeasonOfPlenty(s.season.current, well, address(sopToken), amountOut, newHarvestable);
+        emit SeasonOfPlentyWell(s.season.current, wellDeltaB.well, address(sopToken), amountOut);
     }
 
     /**

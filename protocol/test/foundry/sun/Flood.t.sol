@@ -382,6 +382,58 @@ contract FloodTest is TestHelper {
         assertEq(wellDeltaBs[1].reductionAmount, 0);
     }
 
+    // test making Beans harvestable
+    function testHarvestablePodlineLessThanPointOnePercent() public {
+        setReserves(C.BEAN_ETH_WELL, 1000000e6, 1100e18);
+
+        // "buy" some pods
+        bs.incrementTotalPodsE(1_000e6);
+
+        uint256 initialBeanSupply = C.bean().totalSupply();
+        uint256 initialPodLine = bs.podIndex();
+        uint256 initialHarvestable = bs.totalHarvestable();
+
+        // update pumps
+        updateMockPumpUsingWellReserves(C.BEAN_ETH_WELL);
+        season.rainSunrise();
+        bs.mow(users[1], C.BEAN);
+        season.rainSunrise();
+
+        uint256 newHarvestable = bs.totalHarvestable();
+        uint256 newBeanSupply = C.bean().totalSupply();
+        uint256 newPodLine = bs.podIndex();
+
+        assertTrue(newBeanSupply > initialBeanSupply); // Beans were minted
+        assertTrue(newHarvestable == initialPodLine); // Pods cleared to end of podline because podline was <0.1% of supply
+        assertTrue(initialPodLine > 0); // Start of test had a podline
+        assertTrue(newHarvestable <= newPodLine); // All pods became harvestable, but nore more than the podline
+        assertTrue(initialHarvestable == 0); // Before flood, no pods were harvestable
+    }
+
+    function testHarvestablePodlineMoreThanPointOnePercent() public {
+        setReserves(C.BEAN_ETH_WELL, 1_000_000e6, 1_100e18);
+
+        bs.incrementTotalPodsE(10_000e6);
+        uint256 initialBeanSupply = C.bean().totalSupply();
+        uint256 initialPodLine = bs.podIndex();
+        uint256 initialHarvestable = bs.totalHarvestable();
+
+        updateMockPumpUsingWellReserves(C.BEAN_ETH_WELL);
+        season.rainSunrise();
+        bs.mow(users[1], C.BEAN);
+        season.rainSunrise();
+
+        uint256 newHarvestable = bs.totalHarvestable();
+        uint256 newBeanSupply = C.bean().totalSupply();
+        uint256 newPodLine = bs.podIndex();
+
+        assertTrue(newBeanSupply > initialBeanSupply); // Beans were minted
+        assertTrue(newHarvestable < newPodLine); // Pods didn't clear to end of podline because podline was >0.1% of supply
+        assertTrue(initialPodLine > 0); // Start of test had a podline
+        assertTrue(initialHarvestable == 0); // Before flood, no pods were harvestable
+        assertApproxEqAbs(initialBeanSupply / 1000, newHarvestable, 1);
+    }
+
     //////////// Helpers ////////////
 
     function depostBeansForUsers(
