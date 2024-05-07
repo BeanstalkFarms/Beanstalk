@@ -40,9 +40,6 @@ import {MockSeasonFacet, SeasonFacet} from "contracts/mocks/mockFacets/MockSeaso
 // import {ConvertGettersFacet} from "contracts/beanstalk/silo/ConvertGettersFacet.sol";
 import {SeasonGettersFacet} from "contracts/beanstalk/sun/SeasonFacet/SeasonGettersFacet.sol";
 
-// Potential removals for L2 migration.
-// import {MockMarketplaceFacet, MarketplaceFacet} from "contracts/mocks/mockFacets/MockMarketplaceFacet.sol";
-
 // constants.
 import "contracts/C.sol";
 

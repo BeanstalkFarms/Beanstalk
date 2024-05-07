@@ -27,9 +27,7 @@ contract Order is Listing {
         uint256 amount,
         uint24 pricePerPod,
         uint256 maxPlaceInLine,
-        uint256 minFillAmount,
-        bytes pricingFunction,
-        LibPolynomial.PriceType priceType
+        uint256 minFillAmount
     );
 
     event PodOrderFilled(
@@ -66,16 +64,13 @@ contract Order is Listing {
             _cancelPodOrder(pricePerPod, maxPlaceInLine, minFillAmount, LibTransfer.To.INTERNAL);
         s.podOrders[id] = beanAmount;
 
-        bytes memory emptyPricingFunction;
         emit PodOrderCreated(
             LibTractor._user(),
             id,
             beanAmount,
             pricePerPod,
             maxPlaceInLine,
-            minFillAmount,
-            emptyPricingFunction,
-            LibPolynomial.PriceType.Fixed
+            minFillAmount
         );
     }
 
