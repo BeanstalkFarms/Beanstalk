@@ -1,13 +1,6 @@
 const { EXTERNAL, INTERNAL } = require("./utils/balances.js");
 const { Fixed, Dynamic } = require("./utils/priceTypes.js");
 const { interpolatePoints } = require("./utils/interpolater.js");
-const {
-  getNumPieces,
-  evaluatePolynomial,
-  evaluatePolynomialIntegration,
-  getAmountOrder,
-  getValueArray
-} = require("./utils/libPolynomialHelpers.js");
 const { expect, use } = require("chai");
 const { waffleChai } = require("@ethereum-waffle/chai");
 use(waffleChai);
@@ -60,20 +53,7 @@ describe("Marketplace", function () {
     var args = (receipt.events?.filter((x) => {
       return x.event == "PodListingCreated";
     }))[0]?.args;
-    if (args.pricingType == Dynamic) {
-      return ethers.utils.solidityKeccak256(
-        ["uint256", "uint256", "uint24", "uint256", "uint256", "bool", "bytes"],
-        [
-          args.start,
-          args.amount,
-          args.pricePerPod,
-          args.maxHarvestableIndex,
-          args.minFillAmount,
-          args.mode == EXTERNAL,
-          args.pricingFunction
-        ]
-      );
-    } else if (args.minFillAmount > 0) {
+    if (args.minFillAmount > 0) {
       return ethers.utils.solidityKeccak256(
         ["uint256", "uint256", "uint24", "uint256", "uint256", "bool"],
         [
@@ -195,580 +175,6 @@ describe("Marketplace", function () {
     await revertToSnapshot(snapshotId);
   });
 
-  describe("Functions", async function () {
-    describe("Piece Index Search", async function () {
-      describe("4 Piece Index Search", async function () {
-        beforeEach(async function () {
-          this.f = interpolatePoints([100, 200, 300, 400], [0, 0, 0, 0]);
-        });
-        it("correctly finds interval at 0", async function () {
-          expect(
-            await mockBeanstalk
-              .connect(user)
-              .findPiecewiseIndex(
-                this.f.packedFunction,
-                "0",
-                getNumPieces(this.f.breakpoints, 4) - 1
-              )
-          ).to.be.equal(0);
-        });
-
-        it("finds interval between breakpoints", async function () {
-          expect(
-            await mockBeanstalk
-              .connect(user)
-              .findPiecewiseIndex(
-                this.f.packedFunction,
-                "150",
-                getNumPieces(this.f.breakpoints, 4) - 1
-              )
-          ).to.be.equal(0);
-          expect(
-            await mockBeanstalk
-              .connect(user)
-              .findPiecewiseIndex(
-                this.f.packedFunction,
-                "250",
-                getNumPieces(this.f.breakpoints, 4) - 1
-              )
-          ).to.be.equal(1);
-          expect(
-            await mockBeanstalk
-              .connect(user)
-              .findPiecewiseIndex(
-                this.f.packedFunction,
-                "350",
-                getNumPieces(this.f.breakpoints, 4) - 1
-              )
-          ).to.be.equal(2);
-        });
-        it("finds interval at breakpoints", async function () {
-          expect(
-            await mockBeanstalk
-              .connect(user)
-              .findPiecewiseIndex(
-                this.f.packedFunction,
-                "100",
-                getNumPieces(this.f.breakpoints, 4) - 1
-              )
-          ).to.be.equal(0);
-          expect(
-            await mockBeanstalk
-              .connect(user)
-              .findPiecewiseIndex(
-                this.f.packedFunction,
-                "200",
-                getNumPieces(this.f.breakpoints, 4) - 1
-              )
-          ).to.be.equal(1);
-          expect(
-            await mockBeanstalk
-              .connect(user)
-              .findPiecewiseIndex(
-                this.f.packedFunction,
-                "300",
-                getNumPieces(this.f.breakpoints, 4) - 1
-              )
-          ).to.be.equal(2);
-        });
-        it("finds interval at end", async function () {
-          expect(
-            await mockBeanstalk
-              .connect(user)
-              .findPiecewiseIndex(
-                this.f.packedFunction,
-                "400",
-                getNumPieces(this.f.breakpoints, 4) - 1
-              )
-          ).to.be.equal(2);
-        });
-        it("finds interval past end", async function () {
-          expect(
-            await mockBeanstalk
-              .connect(user)
-              .findPiecewiseIndex(
-                this.f.packedFunction,
-                "401",
-                getNumPieces(this.f.breakpoints, 4) - 1
-              )
-          ).to.be.equal(2);
-        });
-      });
-
-      describe("16 Piece Index Search", async function () {
-        beforeEach(async function () {
-          this.f = interpolatePoints(set_16Pieces.xs, set_16Pieces.ys);
-        });
-        it("correctly finds interval at 0", async function () {
-          expect(
-            await mockBeanstalk
-              .connect(user)
-              .findPiecewiseIndex(
-                this.f.packedFunction,
-                "0",
-                getNumPieces(this.f.breakpoints, 16) - 1
-              )
-          ).to.be.equal(0);
-        });
-
-        it("finds interval between breakpoints", async function () {
-          expect(
-            await mockBeanstalk
-              .connect(user)
-              .findPiecewiseIndex(
-                this.f.packedFunction,
-                "250",
-                getNumPieces(this.f.breakpoints, 16) - 1
-              )
-          ).to.be.equal(1);
-          expect(
-            await mockBeanstalk
-              .connect(user)
-              .findPiecewiseIndex(
-                this.f.packedFunction,
-                "420",
-                getNumPieces(this.f.breakpoints, 16) - 1
-              )
-          ).to.be.equal(2);
-          expect(
-            await mockBeanstalk
-              .connect(user)
-              .findPiecewiseIndex(
-                this.f.packedFunction,
-                "2900",
-                getNumPieces(this.f.breakpoints, 16) - 1
-              )
-          ).to.be.equal(14);
-        });
-        it("finds interval at breakpoints", async function () {
-          expect(
-            await mockBeanstalk
-              .connect(user)
-              .findPiecewiseIndex(
-                this.f.packedFunction,
-                "200",
-                getNumPieces(this.f.breakpoints, 16) - 1
-              )
-          ).to.be.equal(1);
-          expect(
-            await mockBeanstalk
-              .connect(user)
-              .findPiecewiseIndex(
-                this.f.packedFunction,
-                "400",
-                getNumPieces(this.f.breakpoints, 16) - 1
-              )
-          ).to.be.equal(2);
-          expect(
-            await mockBeanstalk
-              .connect(user)
-              .findPiecewiseIndex(
-                this.f.packedFunction,
-                "2600",
-                getNumPieces(this.f.breakpoints, 16) - 1
-              )
-          ).to.be.equal(13);
-        });
-        it("finds interval at end", async function () {
-          expect(
-            await mockBeanstalk
-              .connect(user)
-              .findPiecewiseIndex(
-                this.f.packedFunction,
-                "3000",
-                getNumPieces(this.f.breakpoints, 16) - 1
-              )
-          ).to.be.equal(14);
-        });
-        it("finds interval past end", async function () {
-          expect(
-            await mockBeanstalk
-              .connect(user)
-              .findPiecewiseIndex(
-                this.f.packedFunction,
-                "3001",
-                getNumPieces(this.f.breakpoints, 16) - 1
-              )
-          ).to.be.equal(14);
-        });
-      });
-
-      describe("64 Piece Index Search", async function () {
-        beforeEach(async function () {
-          this.f = interpolatePoints(staticset_64Pieces_500000.xs, staticset_64Pieces_500000.ys);
-        });
-        it("correctly finds interval at 0", async function () {
-          expect(
-            await mockBeanstalk
-              .connect(user)
-              .findPiecewiseIndex(
-                this.f.packedFunction,
-                "0",
-                getNumPieces(this.f.breakpoints, 64) - 1
-              )
-          ).to.be.equal(0);
-        });
-
-        it("finds interval between breakpoints", async function () {
-          expect(
-            await mockBeanstalk
-              .connect(user)
-              .findPiecewiseIndex(
-                this.f.packedFunction,
-                "1250",
-                getNumPieces(this.f.breakpoints, 64) - 1
-              )
-          ).to.be.equal(1);
-          expect(
-            await mockBeanstalk
-              .connect(user)
-              .findPiecewiseIndex(
-                this.f.packedFunction,
-                "2420",
-                getNumPieces(this.f.breakpoints, 64) - 1
-              )
-          ).to.be.equal(2);
-          expect(
-            await mockBeanstalk
-              .connect(user)
-              .findPiecewiseIndex(
-                this.f.packedFunction,
-                "45500",
-                getNumPieces(this.f.breakpoints, 64) - 1
-              )
-          ).to.be.equal(45);
-        });
-        it("finds interval at breakpoints", async function () {
-          expect(
-            await mockBeanstalk
-              .connect(user)
-              .findPiecewiseIndex(
-                this.f.packedFunction,
-                "1000",
-                getNumPieces(this.f.breakpoints, 64) - 1
-              )
-          ).to.be.equal(1);
-          expect(
-            await mockBeanstalk
-              .connect(user)
-              .findPiecewiseIndex(
-                this.f.packedFunction,
-                "2000",
-                getNumPieces(this.f.breakpoints, 64) - 1
-              )
-          ).to.be.equal(2);
-          expect(
-            await mockBeanstalk
-              .connect(user)
-              .findPiecewiseIndex(
-                this.f.packedFunction,
-                "13000",
-                getNumPieces(this.f.breakpoints, 64) - 1
-              )
-          ).to.be.equal(13);
-        });
-        it("finds interval at end", async function () {
-          expect(
-            await mockBeanstalk
-              .connect(user)
-              .findPiecewiseIndex(
-                this.f.packedFunction,
-                "63000",
-                getNumPieces(this.f.breakpoints, 64) - 1
-              )
-          ).to.be.equal(62);
-        });
-        it("finds interval past end", async function () {
-          expect(
-            await mockBeanstalk
-              .connect(user)
-              .findPiecewiseIndex(
-                this.f.packedFunction,
-                "63001",
-                getNumPieces(this.f.breakpoints, 64) - 1
-              )
-          ).to.be.equal(62);
-        });
-      });
-    });
-
-    describe("Polynomial Evaluation", async function () {
-      describe("Evaluate Normal Values", async function () {
-        describe("evaluation at piecewise breakpoints", async function () {
-          beforeEach(async function () {
-            this.f = interpolatePoints(set_13Pieces.xs, set_13Pieces.ys);
-          });
-
-          it("first breakpoint", async function () {
-            const x = 1000;
-            expect(
-              await mockBeanstalk
-                .connect(user)
-                .evaluatePolynomialPiecewise(this.f.packedFunction, x)
-            ).to.be.equal(set_13Pieces.ys[0]);
-          });
-
-          it("second breakpoint", async function () {
-            const x = 5000;
-            expect(
-              await mockBeanstalk
-                .connect(user)
-                .evaluatePolynomialPiecewise(this.f.packedFunction, x)
-            ).to.be.equal(set_13Pieces.ys[1]);
-          });
-
-          it("second last breakpoint", async function () {
-            var x = 18000;
-            expect(
-              await mockBeanstalk
-                .connect(user)
-                .evaluatePolynomialPiecewise(this.f.packedFunction, x)
-            ).to.be.equal(set_13Pieces.ys[11]);
-          });
-
-          it("last breakpoint", async function () {
-            const x = 20000;
-            expect(
-              await mockBeanstalk
-                .connect(user)
-                .evaluatePolynomialPiecewise(this.f.packedFunction, x)
-            ).to.be.equal(set_13Pieces.ys[12]);
-          });
-        });
-        describe("evaluation between piecewise breakpoints", async function () {
-          beforeEach(async function () {
-            this.f = interpolatePoints(set_13Pieces.xs, set_13Pieces.ys);
-          });
-          it("within first interval", async function () {
-            const x = 2500;
-            const pieceIndex = 0;
-            expect(
-              await mockBeanstalk
-                .connect(user)
-                .evaluatePolynomialPiecewise(this.f.packedFunction, x)
-            ).to.be.equal(evaluatePolynomial(this.f, x, pieceIndex));
-          });
-          it("within second interval", async function () {
-            const x = 5750;
-            const pieceIndex = 1;
-            expect(
-              await mockBeanstalk
-                .connect(user)
-                .evaluatePolynomialPiecewise(this.f.packedFunction, x)
-            ).to.be.equal(evaluatePolynomial(this.f, x, pieceIndex));
-          });
-          it("within second last interval", async function () {
-            const x = 14999;
-            const pieceIndex = 10;
-            expect(
-              await mockBeanstalk
-                .connect(user)
-                .evaluatePolynomialPiecewise(this.f.packedFunction, x)
-            ).to.be.equal(evaluatePolynomial(this.f, x, pieceIndex));
-          });
-          it("within last interval", async function () {
-            const x = 19410;
-            const pieceIndex = 11;
-            expect(
-              await mockBeanstalk
-                .connect(user)
-                .evaluatePolynomialPiecewise(this.f.packedFunction, x)
-            ).to.be.equal(evaluatePolynomial(this.f, x, pieceIndex));
-          });
-        });
-      });
-
-      describe("Evaluate Huge Values", async function () {
-        describe("evaluation at piecewise breakpoints", async function () {
-          beforeEach(async function () {
-            this.f = interpolatePoints(hugeValueSet_13Pieces.xs, hugeValueSet_13Pieces.ys);
-          });
-
-          it("correctly evaluates at first breakpoint", async function () {
-            const x = 10000000000000;
-            expect(
-              await mockBeanstalk
-                .connect(user)
-                .evaluatePolynomialPiecewise(this.f.packedFunction, x)
-            ).to.be.equal(hugeValueSet_13Pieces.ys[0]);
-          });
-
-          it("correctly evaluates at second breakpoint", async function () {
-            const x = 50000000000000;
-            expect(
-              await mockBeanstalk
-                .connect(user)
-                .evaluatePolynomialPiecewise(this.f.packedFunction, x)
-            ).to.be.equal(hugeValueSet_13Pieces.ys[1]);
-          });
-
-          it("correctly evaluates at second last breakpoint", async function () {
-            const x = 180000000000000;
-            expect(
-              await mockBeanstalk
-                .connect(user)
-                .evaluatePolynomialPiecewise(this.f.packedFunction, x)
-            ).to.be.equal(hugeValueSet_13Pieces.ys[11]);
-          });
-
-          it("correctly evaluates at last breakpoint", async function () {
-            const x = 200000000000000;
-            expect(
-              await mockBeanstalk
-                .connect(user)
-                .evaluatePolynomialPiecewise(this.f.packedFunction, x)
-            ).to.be.equal(hugeValueSet_13Pieces.ys[12]);
-          });
-        });
-        describe("evaluation in between piecewise breakpoints", async function () {
-          beforeEach(async function () {
-            this.f = interpolatePoints(hugeValueSet_13Pieces.xs, hugeValueSet_13Pieces.ys);
-          });
-          it("correctly evaluates within first interval", async function () {
-            const x = 14567200000500;
-            const pieceIndex = 0;
-            expect(
-              await mockBeanstalk
-                .connect(user)
-                .evaluatePolynomialPiecewise(this.f.packedFunction, x)
-            ).to.be.equal(evaluatePolynomial(this.f, x, pieceIndex));
-          });
-          it("correctly evaluates within second interval", async function () {
-            const x = 59555200441200;
-            const pieceIndex = 1;
-            expect(
-              await mockBeanstalk
-                .connect(user)
-                .evaluatePolynomialPiecewise(this.f.packedFunction, x)
-            ).to.be.equal(evaluatePolynomial(this.f, x, pieceIndex));
-          });
-          it("correctly evaluates within second last interval", async function () {
-            const x = 140567200000500;
-            const pieceIndex = 10;
-            expect(
-              await mockBeanstalk
-                .connect(user)
-                .evaluatePolynomialPiecewise(this.f.packedFunction, x)
-            ).to.be.equal(evaluatePolynomial(this.f, x, pieceIndex));
-          });
-          it("correctly evaluates within last interval", async function () {
-            const x = 185069299999500;
-            const pieceIndex = 11;
-            expect(
-              await mockBeanstalk
-                .connect(user)
-                .evaluatePolynomialPiecewise(this.f.packedFunction, x)
-            ).to.be.equal(evaluatePolynomial(this.f, x, pieceIndex));
-          });
-        });
-      });
-    });
-
-    describe("Polynomial Integral Evaluation", async function () {
-      describe("Integrate Normal Values", async function () {
-        describe("correctly evaluates a single polynomial integration", async function () {
-          beforeEach(async function () {
-            this.f = interpolatePoints(set_13Pieces.xs, set_13Pieces.ys);
-          });
-
-          it("first interval", async function () {
-            const start = 1000;
-            const end = 4000;
-            const pieceIndex = 0;
-            expect(
-              await mockBeanstalk
-                .connect(user)
-                .evaluatePolynomialIntegrationPiecewise(this.f.packedFunction, start, end)
-            ).to.be.equal(evaluatePolynomialIntegration(this.f, start, end, pieceIndex));
-          });
-
-          it("second interval", async function () {
-            const start = 5200;
-            const end = 5999;
-            const pieceIndex = 1;
-            expect(
-              await mockBeanstalk
-                .connect(user)
-                .evaluatePolynomialIntegrationPiecewise(this.f.packedFunction, start, end)
-            ).to.be.equal(evaluatePolynomialIntegration(this.f, start, end, pieceIndex));
-          });
-
-          it("second last interval", async function () {
-            const start = 14500;
-            const end = 16603;
-            const pieceIndex = 10;
-            expect(
-              await mockBeanstalk
-                .connect(user)
-                .evaluatePolynomialIntegrationPiecewise(this.f.packedFunction, start, end)
-            ).to.be.equal(evaluatePolynomialIntegration(this.f, start, end, pieceIndex));
-          });
-          it("last interval", async function () {
-            const start = 18100;
-            const end = 19004;
-            const pieceIndex = 11;
-            expect(
-              await mockBeanstalk
-                .connect(user)
-                .evaluatePolynomialIntegrationPiecewise(this.f.packedFunction, start, end)
-            ).to.be.equal(evaluatePolynomialIntegration(this.f, start, end, pieceIndex));
-          });
-        });
-      });
-
-      describe("Integrate Huge Values", async function () {
-        describe("correctly evaluates a single polynomial integration", async function () {
-          beforeEach(async function () {
-            this.f = interpolatePoints(hugeValueSet_13Pieces.xs, hugeValueSet_13Pieces.ys);
-          });
-
-          it("first interval", async function () {
-            const start = 10000000000000;
-            const end = 12000000000000;
-            const pieceIndex = 0;
-            expect(
-              await mockBeanstalk
-                .connect(user)
-                .evaluatePolynomialIntegrationPiecewise(this.f.packedFunction, start, end)
-            ).to.be.equal(evaluatePolynomialIntegration(this.f, start, end, pieceIndex));
-          });
-
-          it("second interval", async function () {
-            const start = 55000000000000;
-            const end = 58000000000000;
-            const pieceIndex = 1;
-            expect(
-              await mockBeanstalk
-                .connect(user)
-                .evaluatePolynomialIntegrationPiecewise(this.f.packedFunction, start, end)
-            ).to.be.equal(evaluatePolynomialIntegration(this.f, start, end, pieceIndex));
-          });
-
-          it("second last interval", async function () {
-            const start = 145000000000000;
-            const end = 178000000000016;
-            const pieceIndex = 10;
-            expect(
-              await mockBeanstalk
-                .connect(user)
-                .evaluatePolynomialIntegrationPiecewise(this.f.packedFunction, start, end)
-            ).to.be.equal(evaluatePolynomialIntegration(this.f, start, end, pieceIndex));
-          });
-          it("last interval", async function () {
-            const start = 180000000000000;
-            const end = 195999999999990; //this overflows easily
-            const pieceIndex = 11;
-            expect(
-              await mockBeanstalk
-                .connect(user)
-                .evaluatePolynomialIntegrationPiecewise(this.f.packedFunction, start, end)
-            ).to.be.equal(evaluatePolynomialIntegration(this.f, start, end, pieceIndex));
-          });
-        });
-      });
-    });
-  });
-
   describe("Pod Listings", async function () {
     describe("Fixed Price", async function () {
       describe("Create", async function () {
@@ -827,7 +233,7 @@ describe("Marketplace", function () {
           it("Emits event", async function () {
             await expect(this.result)
               .to.emit(mockBeanstalk, "PodListingCreated")
-              .withArgs(user.address, "0", "0", "1000", 500000, "0", "0", "0x", 0, Fixed);
+              .withArgs(user.address, "0", "0", "1000", 500000, "0", "0", 0);
           });
         });
 
@@ -845,7 +251,7 @@ describe("Marketplace", function () {
           it("Emits event", async function () {
             await expect(this.result)
               .to.emit(mockBeanstalk, "PodListingCreated")
-              .withArgs(user.address, "0", "0", "1000", 500000, "0", "100", "0x", 0, Fixed);
+              .withArgs(user.address, "0", "0", "1000", 500000, "0", "100", 0);
           });
         });
 
@@ -866,7 +272,7 @@ describe("Marketplace", function () {
           it("Emits event", async function () {
             await expect(this.result)
               .to.emit(mockBeanstalk, "PodListingCreated")
-              .withArgs(user.address, 0, 0, "500", 500000, 0, "0", "0x", 0, Fixed);
+              .withArgs(user.address, 0, 0, "500", 500000, 0, "0", 0);
           });
         });
 
@@ -884,7 +290,7 @@ describe("Marketplace", function () {
           it("Emits event", async function () {
             await expect(this.result)
               .to.emit(mockBeanstalk, "PodListingCreated")
-              .withArgs(user.address, 0, 500, "500", 500000, 2000, "0", "0x", 1, Fixed);
+              .withArgs(user.address, 0, 500, "500", 500000, 2000, "0", 1);
           });
         });
 
@@ -908,7 +314,7 @@ describe("Marketplace", function () {
               .withArgs(user.address, 0);
             await expect(this.result)
               .to.emit(mockBeanstalk, "PodListingCreated")
-              .withArgs(user.address, 0, 500, "100", 500000, 2000, "0", "0x", 1, Fixed);
+              .withArgs(user.address, 0, 500, "100", 500000, 2000, "0", 1);
           });
         });
 
@@ -932,7 +338,7 @@ describe("Marketplace", function () {
               .withArgs(user.address, 0);
             await expect(this.result)
               .to.emit(mockBeanstalk, "PodListingCreated")
-              .withArgs(user.address, 0, 500, "100", 500000, 2000, "100", "0x", 1, Fixed);
+              .withArgs(user.address, 0, 500, "100", 500000, 2000, "100", 1);
           });
         });
       });
@@ -1273,7 +679,7 @@ describe("Marketplace", function () {
             .createPodListing("0", "0", "1000", "200000", "2000", "0", INTERNAL);
           await expect(result)
             .to.emit(mockBeanstalk, "PodListingCreated")
-            .withArgs(user.address, "0", 0, 1000, 200000, 2000, "0", "0x", 1, Fixed);
+            .withArgs(user.address, "0", 0, 1000, 200000, 2000, "0", 1);
           await expect(result)
             .to.emit(mockBeanstalk, "PodListingCancelled")
             .withArgs(user.address, "0");
