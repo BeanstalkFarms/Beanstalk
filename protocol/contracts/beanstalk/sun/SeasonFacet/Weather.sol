@@ -317,8 +317,8 @@ contract Weather is Sun {
         }
 
         if (positiveDeltaBCount == 0) {
-            // No positive values, should never happen, revert (or don't revert because this prevents sunrise?)
-            revert("Flood: No positive deltaB pools to flood");
+            // No positive values, so no well flooding needed
+            return wellDeltaBs;
         }
 
         if (totalPositiveDeltaB < totalNegativeDeltaB) {
