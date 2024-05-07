@@ -101,10 +101,10 @@ contract Order is Listing {
 
         bytes32 id = createOrderId(o.account, o.pricePerPod, o.maxPlaceInLine, o.minFillAmount);
         uint256 costInBeans = amount.mul(o.pricePerPod).div(1000000);
-        s.podOrders[id] = s.podOrders[id].sub(
-            costInBeans,
-            "Marketplace: Not enough beans in order."
-        );
+        if (costInBeans > s.podOrders[id]) {
+            revert("Marketplace: Not enough beans in order.");
+        }
+        s.podOrders[id] = s.podOrders[id].sub(costInBeans);
 
         LibTransfer.sendToken(C.bean(), costInBeans, LibTractor._user(), mode);
 

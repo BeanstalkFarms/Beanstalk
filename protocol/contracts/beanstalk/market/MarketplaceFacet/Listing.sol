@@ -174,10 +174,10 @@ contract Listing is PodTransfer {
     ) internal pure returns (uint256 amount) {
         amount = (fillBeanAmount * 1000000) / pricePerPod;
 
-        uint256 remainingAmount = podListingAmount.sub(
-            amount,
-            "Marketplace: Not enough pods in Listing."
-        );
+        if (amount > podListingAmount) {
+            revert("Marketplace: Not enough pods in Listing.");
+        }
+        uint256 remainingAmount = podListingAmount.sub(amount);
         if (remainingAmount <= (1000000 / pricePerPod)) amount = podListingAmount;
     }
 

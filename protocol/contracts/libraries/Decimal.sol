@@ -59,7 +59,10 @@ library Decimal {
         uint256 b,
         string memory reason
     ) internal pure returns (D256 memory) {
-        return D256({value: self.value.sub(b.mul(BASE), reason)});
+        if (b.mul(BASE) > self.value) {
+            revert(reason);
+        }
+        return D256({value: self.value.sub(b.mul(BASE))});
     }
 
     function mul(D256 memory self, uint256 b) internal pure returns (D256 memory) {
@@ -96,7 +99,10 @@ library Decimal {
         D256 memory b,
         string memory reason
     ) internal pure returns (D256 memory) {
-        return D256({value: self.value.sub(b.value, reason)});
+        if (greaterThan(b, self)) {
+            revert(reason);
+        }
+        return D256({value: self.value.sub(b.value)});
     }
 
     function mul(D256 memory self, D256 memory b) internal pure returns (D256 memory) {

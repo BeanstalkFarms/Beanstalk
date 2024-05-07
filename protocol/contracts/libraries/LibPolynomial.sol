@@ -96,8 +96,7 @@ library LibPolynomial {
             pieceIndex,
             numPieces,
             x.sub(
-                getPiecewiseBreakpoint(f, pieceIndex),
-                "Evaluation must be within piecewise bounds"
+                getPiecewiseBreakpoint(f, pieceIndex)
             )
         );
     }
@@ -176,10 +175,10 @@ library LibPolynomial {
                 integrateToEnd = true;
             }
 
-            uint256 startIntegration = start.sub(
-                currentPieceStart,
-                "Evaluation must be within piecewise bounds."
-            );
+            if (currentPieceStart > start) {
+                revert("Evaluation must be within piecewise bounds.");
+            }
+            uint256 startIntegration = start.sub(currentPieceStart);
             uint256 endIntegration = integrateToEnd
                 ? end.sub(currentPieceStart)
                 : nextPieceStart.sub(currentPieceStart);

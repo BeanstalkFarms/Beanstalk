@@ -83,8 +83,12 @@ library LibDibbler {
             pods = beansToPods(beans, _morningTemperature);
         }
 
-        // we use trySub here because in the case of an overflow, its equivalent to having no soil left.
-        (, s.f.soil) = s.f.soil.trySub(uint128(beans));
+        // In the case of an overflow, its equivalent to having no soil left.
+        if (s.f.soil < beans) {
+            s.f.soil = 0;
+        } else {
+            (, s.f.soil) = s.f.soil.sub(uint128(beans));
+        }
 
         s.a[account].field.plots[s.f.pods] = pods;
         emit Sow(account, s.f.pods, beans, pods);

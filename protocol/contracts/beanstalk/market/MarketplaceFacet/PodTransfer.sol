@@ -62,10 +62,13 @@ contract PodTransfer is ReentrancyGuard {
 
     function decrementAllowancePods(address owner, address spender, uint256 amount) internal {
         uint256 currentAllowance = allowancePods(owner, spender);
+        if (currentAllowance < amount) {
+            revert("Field: Insufficient approval.");
+        }
         setAllowancePods(
             owner,
             spender,
-            currentAllowance.sub(amount, "Field: Insufficient approval.")
+            currentAllowance.sub(amount)
         );
     }
 
