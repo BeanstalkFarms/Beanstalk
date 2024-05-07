@@ -377,7 +377,7 @@ library LibTokenSilo {
         // if amount is > crateAmount, check if user has a legacy deposit:
         if (amount > crateAmount) {
             // get the absolute stem value.
-            uint256 absStem = stem > 0 ? uint256(stem) : uint256(-stem);
+            uint256 absStem = stem > 0 ? uint256(int256(stem)) : uint256(int256(-stem));
             // only stems with modulo 1e6 can have a legacy deposit.
             if (absStem.mod(1e6) == 0) {
                 (crateAmount, crateBDV) = migrateLegacyStemDeposit(
@@ -509,11 +509,11 @@ library LibTokenSilo {
      */
     function stemTipForToken(address token) internal view returns (int96 _stemTip) {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        // SafeCast unnecessary because all casted variables are types smaller that int96.
+        // Will not over/underflow because all casted variables are types smaller that int96.
         _stemTip =
             s.ss[token].milestoneStem +
-            int96(s.ss[token].stalkEarnedPerSeason).mul(
-                int96(s.season.current).sub(int96(s.ss[token].milestoneSeason))
+            toInt96(s.ss[token].stalkEarnedPerSeason).mul(
+                toInt96(s.season.current).sub(toInt96(s.ss[token].milestoneSeason))
             );
     }
 
@@ -524,16 +524,16 @@ library LibTokenSilo {
         address account,
         address token,
         int96 stem
-    ) internal view returns (uint grownStalk) {
+    ) internal view returns (uint256 grownStalk) {
         // stemTipForToken(token) > depositGrownStalkPerBdv for all valid Deposits
         int96 _stemTip = stemTipForToken(token);
         require(stem <= _stemTip, "Silo: Invalid Deposit");
         // The check in the above line guarantees that subtraction result is positive
         // and thus the cast to `uint256` is safe.
-        uint deltaStemTip = uint256(_stemTip.sub(stem));
+        uint256 deltaStemTip = uint256(int256(_stemTip.sub(stem)));
         // no stalk has grown if the stem is equal to the stemTip.
         if (deltaStemTip == 0) return 0;
-        (, uint bdv) = getDeposit(account, token, stem);
+        (, uint256 bdv) = getDeposit(account, token, stem);
 
         grownStalk = deltaStemTip.mul(bdv).div(PRECISION);
     }
@@ -549,7 +549,10 @@ library LibTokenSilo {
         // current latest grown stalk index
         int96 _stemTipForToken = stemTipForToken(address(token));
 
-        return _stemTipForToken.sub(grownStalkIndexOfDeposit).mul(toInt96(bdv));
+        return
+            _stemTipForToken.sub(grownStalkIndexOfDeposit).mul(
+                SafeCast.toInt96(SafeCast.toInt256(bdv))
+            );
     }
 
     /**
@@ -562,7 +565,9 @@ library LibTokenSilo {
         uint256 bdv
     ) internal view returns (int96 stem, LibGerminate.Germinate germ) {
         LibGerminate.GermStem memory germStem = LibGerminate.getGerminatingStem(token);
-        stem = germStem.stemTip.sub(toInt96(grownStalk.mul(PRECISION).div(bdv)));
+        stem = germStem.stemTip.sub(
+            SafeCast.toInt96(SafeCast.toInt256(grownStalk.mul(PRECISION).div(bdv)))
+        );
         germ = LibGerminate._getGerminationState(stem, germStem);
     }
 
@@ -582,7 +587,9 @@ library LibTokenSilo {
         // end up rounding to zero, then you get a divide by zero error and can't migrate without losing that deposit
 
         // prevent divide by zero error
-        int96 grownStalkPerBdv = bdv > 0 ? toInt96(grownStalk.mul(PRECISION).div(bdv)) : 0;
+        int96 grownStalkPerBdv = bdv > 0
+            ? SafeCast.toInt96(SafeCast.toInt256(grownStalk.mul(PRECISION).div(bdv)))
+            : int96(0);
 
         // subtract from the current latest index, so we get the index the deposit should have happened at
         return _stemTipForToken.sub(grownStalkPerBdv);
@@ -628,7 +635,6 @@ library LibTokenSilo {
     }
 
     function toInt96(uint256 value) internal pure returns (int96) {
-        require(value <= uint256(type(int96).max), "SafeCast: value doesn't fit in an int96");
-        return int96(value);
+        return SafeCast.toInt96(SafeCast.toInt256(value));
     }
 }

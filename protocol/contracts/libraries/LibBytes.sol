@@ -138,7 +138,7 @@ library LibBytes {
     ///////// DEPOSIT ID /////////
 
     function packAddressAndStem(address _address, int96 stem) internal pure returns (uint256) {
-        return (uint256(_address) << 96) | uint96(stem);
+        return (uint256(uint160(_address)) << 96) | uint96(stem);
     }
 
     function unpackAddressAndStem(uint256 data) internal pure returns (address, int96) {
@@ -187,10 +187,12 @@ library LibBytes {
         // if copyByteIndex matches the publisher or operator index,
         // replace data with the publisher/operator address.
         if (copyByteIndex == C.PUBLISHER_COPY_INDEX) {
-            copyFromData = abi.encodePacked(uint256(LibTractor._tractorStorage().activePublisher));
+            copyFromData = abi.encodePacked(
+                uint256(uint160(address(LibTractor._tractorStorage().activePublisher)))
+            );
             copyByteIndex = C.SLOT_SIZE;
         } else if (copyByteIndex == C.OPERATOR_COPY_INDEX) {
-            copyFromData = abi.encodePacked(uint256(msg.sender));
+            copyFromData = abi.encodePacked(uint256(uint160(msg.sender)));
             copyByteIndex = C.SLOT_SIZE;
         }
 

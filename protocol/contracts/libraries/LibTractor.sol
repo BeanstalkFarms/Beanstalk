@@ -92,7 +92,7 @@ library LibTractor {
      */
     function _setPublisher(address payable publisher) internal {
         TractorStorage storage ts = _tractorStorage();
-        require(uint160(bytes20(ts.activePublisher)) <= 1, "LibTractor: publisher already set");
+        require(uint160(bytes20(address(ts.activePublisher))) <= 1, "LibTractor: publisher already set");
         ts.activePublisher = publisher;
     }
 
@@ -100,7 +100,7 @@ library LibTractor {
      * @notice Reset blueprint publisher address.
      */
     function _resetPublisher() internal {
-        _tractorStorage().activePublisher = address(1);
+        _tractorStorage().activePublisher = payable(address(1));
     }
 
     /** @notice Return current activePublisher address.
@@ -115,8 +115,8 @@ library LibTractor {
      */
     function _user() internal view returns (address payable user) {
         user = _getActivePublisher();
-        if (uint160(bytes20(user)) <= 1) {
-            user = msg.sender;
+        if (uint160(bytes20(address(user))) <= 1) {
+            user = payable(msg.sender);
         }
     }
 

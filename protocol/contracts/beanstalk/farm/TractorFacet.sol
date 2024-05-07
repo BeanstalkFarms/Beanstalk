@@ -6,6 +6,7 @@ pragma solidity ^0.8.20;
 pragma experimental ABIEncoderV2;
 
 import {ECDSA} from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
+import {MessageHashUtils} from "@openzeppelin/contracts/utils/cryptography/MessageHashUtils.sol";
 import {LibBytes} from "../../libraries/LibBytes.sol";
 import {LibRedundantMath256} from "contracts/libraries/LibRedundantMath256.sol";
 
@@ -33,7 +34,7 @@ contract TractorFacet {
         bytes32 blueprintHash = LibTractor._getBlueprintHash(requisition.blueprint);
         require(blueprintHash == requisition.blueprintHash, "TractorFacet: invalid hash");
         address signer = ECDSA.recover(
-            ECDSA.toEthSignedMessageHash(requisition.blueprintHash),
+            MessageHashUtils.toEthSignedMessageHash(requisition.blueprintHash),
             requisition.signature
         );
         require(signer == requisition.blueprint.publisher, "TractorFacet: signer mismatch");

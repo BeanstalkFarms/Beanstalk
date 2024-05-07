@@ -95,9 +95,7 @@ library LibPolynomial {
             f,
             pieceIndex,
             numPieces,
-            x.sub(
-                getPiecewiseBreakpoint(f, pieceIndex)
-            )
+            x.sub(getPiecewiseBreakpoint(f, pieceIndex))
         );
     }
 

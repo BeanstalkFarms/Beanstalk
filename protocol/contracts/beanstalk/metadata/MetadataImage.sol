@@ -185,7 +185,7 @@ contract MetadataImage {
     }
 
     function partialLeafPlot(int96 stalkPerBDV) internal pure returns (string memory _plot) {
-        uint256 totalSprouts = uint256(stalkPerBDV).div(STALK_GROWTH).add(16);
+        uint256 totalSprouts = uint256(int256(stalkPerBDV)).div(STALK_GROWTH).add(16);
         uint256 numRows = uint256(totalSprouts).div(4).mod(4);
         uint256 numSprouts = uint256(totalSprouts).mod(4);
         if (numRows == 0) {
@@ -525,16 +525,16 @@ contract MetadataImage {
         if (stem >= 0) {
             // if stem is greater than 1e5, use scientific notation
             if (stem > 100_000) {
-                return powerOfTen(uint256(stem));
+                return powerOfTen(uint256(int256(stem)));
             } else {
-                return uint256(stem).toString();
+                return uint256(int256(stem)).toString();
             }
         } else {
             // if stem is less than -1e5, use scientific notation
             if (-stem > 100_000) {
-                return string(abi.encodePacked("-", powerOfTen(uint256(-stem))));
+                return string(abi.encodePacked("-", powerOfTen(uint256(int256(-stem)))));
             } else {
-                return int256(stem).toString();
+                return int256(stem).toStringSigned();
             }
         }
     }
@@ -657,7 +657,7 @@ contract MetadataImage {
         int96 grownStalkPerBDV
     ) internal pure returns (uint256 numStems, uint256 plots) {
         // 1 sprout on the image is equal to 0.02 stalk
-        numStems = uint256(grownStalkPerBDV).div(STALK_GROWTH);
+        numStems = uint256(int256(grownStalkPerBDV)).div(STALK_GROWTH);
         plots = numStems.div(16).add(1);
         if (numStems.mod(16) > 0) plots = plots.add(1);
     }

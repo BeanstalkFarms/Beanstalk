@@ -33,7 +33,7 @@ contract Internalizer is OwnableUpgradeable, ReentrancyGuardUpgradeable, Fertili
 
     string private _uri;
 
-    function uri(uint256 _id) external view virtual override returns (string memory) {
+    function uri(uint256 _id) public view virtual override returns (string memory) {
         return string(abi.encodePacked(_uri, Strings.toString(_id)));
     }
 

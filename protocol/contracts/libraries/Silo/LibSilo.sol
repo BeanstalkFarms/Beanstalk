@@ -217,7 +217,7 @@ library LibSilo {
         }
 
         // emit event.
-        emit LibGerminate.FarmerGerminatingStalkBalanceChanged(account, stalk);
+        emit LibGerminate.FarmerGerminatingStalkBalanceChanged(account, int256(uint256(stalk)));
     }
 
     //////////////////////// BURN ////////////////////////
@@ -302,7 +302,7 @@ library LibSilo {
         }
 
         // emit events.
-        emit LibGerminate.FarmerGerminatingStalkBalanceChanged(account, -int256(stalk));
+        emit LibGerminate.FarmerGerminatingStalkBalanceChanged(account, -int256(uint256(stalk)));
     }
 
     //////////////////////// TRANSFER ////////////////////////
@@ -737,7 +737,7 @@ library LibSilo {
         int96 endStem,
         uint128 bdv
     ) internal pure returns (uint256) {
-        uint128 reward = uint128(endStem.sub(startStem)).mul(bdv).div(PRECISION);
+        uint128 reward = uint128(uint96(endStem.sub(startStem))).mul(bdv).div(PRECISION);
 
         return reward;
     }
@@ -801,7 +801,7 @@ library LibSilo {
                     .a[account]
                     .mowStatuses[siloTokens[i]]
                     .lastStem
-                    .mul(int96(PRECISION));
+                    .mul(int96(uint96(PRECISION)));
             }
         }
     }
@@ -821,7 +821,7 @@ library LibSilo {
         for (uint i; i < siloTokens.length; i++) {
             int96 lastStem = s.a[account].mowStatuses[siloTokens[i]].lastStem;
             if (lastStem > 0) {
-                if (LibTokenSilo.stemTipForToken(siloTokens[i]).div(lastStem) >= int96(PRECISION)) {
+                if (LibTokenSilo.stemTipForToken(siloTokens[i]).div(lastStem) >= int96(uint96(PRECISION))) {
                     return true;
                 }
             }

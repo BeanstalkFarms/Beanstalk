@@ -13,6 +13,6 @@ contract MockERC721 is ERC721 {
     }
 
     function permit(address spender, uint256 tokenId, uint256, bytes memory) public {
-        _approve(spender, tokenId);
+        _approve(spender, tokenId, address(0));
     }
 }

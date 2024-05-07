@@ -120,8 +120,8 @@ library LibGerminate {
             emit TotalGerminatingBalanceChanged(
                 season,
                 tokens[i],
-                -int256(totalGerm.deposited[tokens[i]].amount),
-                -int256(totalGerm.deposited[tokens[i]].bdv)
+                -int256(uint256(totalGerm.deposited[tokens[i]].amount)),
+                -int256(uint256(totalGerm.deposited[tokens[i]].bdv))
             );
 
             // clear deposited values.
@@ -175,8 +175,8 @@ library LibGerminate {
             s.a[account].roots = s.a[account].roots.add(roots);
 
             // emit events. Active stalk is incremented, germinating stalk is decremented.
-            emit LibSilo.StalkBalanceChanged(account, int256(germinatingStalk), int256(roots));
-            emit FarmerGerminatingStalkBalanceChanged(account, -int256(germinatingStalk));
+            emit LibSilo.StalkBalanceChanged(account, int256(uint256(germinatingStalk)), int256(uint256(roots)));
+            emit FarmerGerminatingStalkBalanceChanged(account, -int256(uint256(germinatingStalk)));
         }
     }
 
@@ -368,7 +368,7 @@ library LibGerminate {
      * equal or higher than this value are germinating.
      */
     function _getGerminatingStem(address token, int96 stemTip) internal view returns (int96 stem) {
-        return __getGerminatingStem(stemTip, getPrevStalkEarnedPerSeason(token));
+        return __getGerminatingStem(stemTip, int96(uint96(getPrevStalkEarnedPerSeason(token))));
     }
 
     /**
@@ -401,11 +401,11 @@ library LibGerminate {
             if (deltaStalkEarnedPerSeason >= 0) {
                 prevStalkEarnedPerSeason =
                     s.ss[token].stalkEarnedPerSeason -
-                    uint32(deltaStalkEarnedPerSeason);
+                    uint32(int32(deltaStalkEarnedPerSeason));
             } else {
                 prevStalkEarnedPerSeason =
                     s.ss[token].stalkEarnedPerSeason +
-                    uint32(-deltaStalkEarnedPerSeason);
+                    uint32(int32(-deltaStalkEarnedPerSeason));
             }
         }
     }

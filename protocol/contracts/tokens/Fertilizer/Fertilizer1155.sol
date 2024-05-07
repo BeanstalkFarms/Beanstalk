@@ -7,7 +7,7 @@ pragma experimental ABIEncoderV2;
 
 import {ERC1155Upgradeable} from "@openzeppelin/contracts-upgradeable/token/ERC1155/ERC1155Upgradeable.sol";
 import {IERC1155Receiver} from "@openzeppelin/contracts/token/ERC1155/IERC1155Receiver.sol";
-import {Address} from "@openzeppelin/contracts/utils/Address.sol";
+import {LibFertilizer} from "contracts/libraries/LibFertilizer.sol";
 
 /**
  * @author Publius
@@ -15,7 +15,7 @@ import {Address} from "@openzeppelin/contracts/utils/Address.sol";
  * We rewrite transfer and mint functions to allow the balance transfer function be overwritten as well.
  */
 contract Fertilizer1155 is ERC1155Upgradeable {
-    using Address for address;
+    // using Address for address;
 
     function safeTransferFrom(
         address from,
@@ -101,7 +101,7 @@ contract Fertilizer1155 is ERC1155Upgradeable {
         uint256 amount,
         bytes memory data
     ) private {
-        if (to.isContract()) {
+        if (LibFertilizer.isContract(to)) {
             try
                 IERC1155Receiver(to).onERC1155Received(operator, from, id, amount, data)
             returns (bytes4 response) {
@@ -124,7 +124,7 @@ contract Fertilizer1155 is ERC1155Upgradeable {
         uint256[] memory amounts,
         bytes memory data
     ) private {
-        if (to.isContract()) {
+        if (LibFertilizer.isContract(to)) {
             try
                 IERC1155Receiver(to).onERC1155BatchReceived(
                     operator,

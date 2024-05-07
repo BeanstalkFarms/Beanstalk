@@ -40,7 +40,7 @@ contract TestnetMetadataFacet is MetadataImage {
      * Deposits are stored as a mapping of a uint256 to a Deposit struct.
      * ERC20 deposits are represented by the concatination of the token address and the stem. (20 + 12 bytes).
      */
-    function uri(uint256 depositId) external view returns (string memory) {
+    function uri(uint256 depositId) public view returns (string memory) {
         (address token, int96 stem) = LibBytes.unpackAddressAndStem(depositId);
         int96 stemTip = int96(stalkEarnedPerSeason.mul(seasonsElapsed));
         bytes memory attributes = abi.encodePacked(
