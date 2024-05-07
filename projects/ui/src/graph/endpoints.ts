@@ -37,7 +37,7 @@ export const SUBGRAPH_ENVIRONMENTS: Record<SGEnvironments, SGEnvironment> = {
     subgraphs: {
       beanstalk:
         'https://graph.node.bean.money/subgraphs/name/beanstalk-testing',
-      bean: 'https://api.studio.thegraph.com/query/69878/beangrafted/v2.2.0.12g',
+      bean: 'https://graph.node.bean.money/subgraphs/name/bean-testing',
       beanft: 'https://graph.node.bean.money/subgraphs/name/beanft-dev',
     },
   },

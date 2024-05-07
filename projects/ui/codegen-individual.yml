@@ -10,7 +10,7 @@ generates:
       - "schema-ast"
   # ./src/graph/schema-bean.graphql:
   #   schema:
-  #     - https://api.studio.thegraph.com/query/69878/beangrafted/v2.2.0.12g
+  #     - https://graph.node.bean.money/subgraphs/name/bean-testing
   #   plugins:
   #     - "schema-ast"
   ./src/graph/schema-snapshot1.graphql:
