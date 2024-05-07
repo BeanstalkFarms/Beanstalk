@@ -678,12 +678,13 @@ contract MockMeta3Curve {
      * `amount`.
      */
     function transferFrom(address sender, address recipient, uint256 amount) public returns (bool) {
-        _transfer(sender, recipient, amount);
-        _approve(
-            sender,
-            msg.sender,
-            _allowances[sender][msg.sender].sub(amount, "ERC20: transfer amount exceeds allowance")
+        require(
+            amount <= _allowances[sender][msg.sender],
+            "ERC20: Transfer amount exceeds allowance."
         );
+
+        _transfer(sender, recipient, amount);
+        _approve(sender, msg.sender, _allowances[sender][msg.sender].sub(amount));
         return true;
     }
 
@@ -719,14 +720,7 @@ contract MockMeta3Curve {
      * `subtractedValue`.
      */
     function decreaseAllowance(address spender, uint256 subtractedValue) public returns (bool) {
-        _approve(
-            msg.sender,
-            spender,
-            _allowances[msg.sender][spender].sub(
-                subtractedValue,
-                "ERC20: decreased allowance below zero"
-            )
-        );
+        _approve(msg.sender, spender, _allowances[msg.sender][spender].sub(subtractedValue));
         return true;
     }
 
@@ -747,11 +741,9 @@ contract MockMeta3Curve {
     function _transfer(address sender, address recipient, uint256 amount) internal {
         require(sender != address(0), "ERC20: transfer from the zero address");
         require(recipient != address(0), "ERC20: transfer to the zero address");
+        require(amount <= _balanceOf[sender], "ERC20: Transfer amount exceeds balance.");
 
-        _balanceOf[sender] = _balanceOf[sender].sub(
-            amount,
-            "ERC20: transfer amount exceeds balance"
-        );
+        _balanceOf[sender] = _balanceOf[sender].sub(amount);
         _balanceOf[recipient] = _balanceOf[recipient].add(amount);
         emit Transfer(sender, recipient, amount);
     }
