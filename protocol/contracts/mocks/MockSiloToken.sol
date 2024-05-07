@@ -16,7 +16,7 @@ import {LibRedundantMath256} from "contracts/libraries/LibRedundantMath256.sol";
 contract MockSiloToken is Ownable, ERC20Burnable {
     using LibRedundantMath256 for uint256;
 
-    constructor() ERC20("Bean3Crv", "BEAN3CRV") {}
+    constructor() ERC20("Bean3Crv", "BEAN3CRV") Ownable(msg.sender) {}
 
     function mint(address account, uint256 amount) public onlyOwner returns (bool) {
         _mint(account, amount);
@@ -29,15 +29,12 @@ contract MockSiloToken is Ownable, ERC20Burnable {
         uint256 amount
     ) public override returns (bool) {
         _transfer(sender, recipient, amount);
-        if (allowance(sender, _msgSender()) != uint256(-1)) {
-            _approve(
-                sender,
-                _msgSender(),
-                allowance(sender, _msgSender()).sub(
-                    amount,
-                    "Bean: Transfer amount exceeds allowance."
-                )
-            );
+        if (allowance(sender, _msgSender()) != type(uint256).max) {
+            uint256 allowance = allowance(sender, _msgSender());
+            if (amount > allowance) {
+                revert("Bean: Transfer amount exceeds allowance.");
+            }
+            _approve(sender, _msgSender(), allowance.sub(amount));
         }
         return true;
     }

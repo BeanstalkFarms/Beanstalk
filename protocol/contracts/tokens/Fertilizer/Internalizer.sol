@@ -24,7 +24,7 @@ contract Internalizer is OwnableUpgradeable, ReentrancyGuardUpgradeable, Fertili
     }
 
     function __Internallize_init(string memory uri_) internal {
-        __Ownable_init();
+        __Ownable_init(msg.sender);
         __ERC1155_init(uri_);
         __ReentrancyGuard_init();
     }

@@ -6,6 +6,7 @@ pragma solidity ^0.8.20;
 pragma experimental ABIEncoderV2;
 
 import {IERC1155Receiver} from "@openzeppelin/contracts/token/ERC1155/IERC1155Receiver.sol";
+import {ERC165} from "@openzeppelin/contracts/utils/introspection/ERC165.sol";
 import {LibTractor} from "contracts/libraries/LibTractor.sol";
 import "contracts/libraries/Token/LibTransfer.sol";
 import "contracts/libraries/Token/LibWeth.sol";
@@ -20,7 +21,7 @@ import {Invariable} from "contracts/beanstalk/Invariable.sol";
  * @author Publius
  * @title TokenFacet handles transfers of assets
  */
-contract TokenFacet is Invariable, IERC1155Receiver, ReentrancyGuard {
+contract TokenFacet is Invariable, IERC1155Receiver, ReentrancyGuard, ERC165 {
     struct Balance {
         uint256 internalBalance;
         uint256 externalBalance;
