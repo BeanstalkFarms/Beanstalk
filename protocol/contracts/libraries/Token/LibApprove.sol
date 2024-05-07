@@ -17,7 +17,6 @@ library LibApprove {
 
     function approveToken(IERC20 token, address spender, uint256 amount) internal {
         if (token.allowance(address(this), spender) == type(uint256).max) return;
-        token.safeApprove(spender, 0);
-        token.safeApprove(spender, amount);
+        token.forceApprove(spender, amount);
     }
 }
