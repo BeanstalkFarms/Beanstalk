@@ -210,35 +210,56 @@ contract Weather is Sun {
         emit SeasonOfPlentyField(sopFieldBeans);
     }
 
-    function getWellsByDeltaB() private view returns (WellDeltaB[] memory) {
+    function getWellsByDeltaB() public view returns (WellDeltaB[] memory) {
         address[] memory wells = LibWhitelistedTokens.getWhitelistedWellLpTokens();
         WellDeltaB[] memory wellDeltaBs = new WellDeltaB[](wells.length);
         for (uint i = 0; i < wells.length; i++) {
             wellDeltaBs[i] = WellDeltaB(wells[i], LibWellMinting.cappedReservesDeltaB(wells[i]), 0);
         }
 
-        // Sort the wellDeltaBs array using QuickSort
+        // Sort the wellDeltaBs array
         quickSort(wellDeltaBs, 0, int(wellDeltaBs.length - 1));
 
         return wellDeltaBs;
     }
 
-    function quickSort(WellDeltaB[] memory arr, int left, int right) private pure {
+    // Reviewer note: This works, but there's got to be a way to make this more gas efficient
+    function quickSort(
+        WellDeltaB[] memory arr,
+        int left,
+        int right
+    ) public pure returns (WellDeltaB[] memory) {
+        if (left >= right) return arr;
+
+        // Choose the median of left, right, and middle as pivot (improves performance on random data)
+        uint mid = uint(left) + (uint(right) - uint(left)) / 2;
+        WellDeltaB memory pivot = arr[uint(left)].deltaB > arr[uint(mid)].deltaB
+            ? (
+                arr[uint(left)].deltaB < arr[uint(right)].deltaB
+                    ? arr[uint(left)]
+                    : arr[uint(right)]
+            )
+            : (arr[uint(mid)].deltaB < arr[uint(right)].deltaB ? arr[uint(mid)] : arr[uint(right)]);
+
         int i = left;
         int j = right;
-        if (i == j) return;
-        int pivot = arr[uint(left + (right - left) / 2)].deltaB;
         while (i <= j) {
-            while (arr[uint(i)].deltaB > pivot) i++;
-            while (pivot > arr[uint(j)].deltaB) j--;
+            while (arr[uint(i)].deltaB > pivot.deltaB) i++;
+            while (pivot.deltaB > arr[uint(j)].deltaB) j--;
             if (i <= j) {
                 (arr[uint(i)], arr[uint(j)]) = (arr[uint(j)], arr[uint(i)]);
                 i++;
                 j--;
             }
         }
-        if (left < j) quickSort(arr, left, j);
-        if (i < right) quickSort(arr, i, right);
+
+        if (left < j) {
+            return quickSort(arr, left, j);
+        }
+        if (i < right) {
+            return quickSort(arr, i, right);
+        }
+        return arr;
     }
 
     /**

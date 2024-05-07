@@ -434,6 +434,49 @@ contract FloodTest is TestHelper {
         assertApproxEqAbs(initialBeanSupply / 1000, newHarvestable, 1);
     }
 
+    // TODO test with more wells?
+    function testGetWellsByDeltaB() public {
+        //set up wells to test
+        addLiquidityToWell(C.BEAN_ETH_WELL, 13000e6, 10 ether);
+        addLiquidityToWell(C.BEAN_WSTETH_WELL, 12000e6, 10 ether);
+
+        Weather.WellDeltaB[] memory wells = weather.getWellsByDeltaB();
+
+        //verify wells are in descending deltaB
+        for (uint256 i = 0; i < wells.length - 1; i++) {
+            assertGt(wells[i].deltaB, wells[i + 1].deltaB);
+        }
+    }
+
+    function testQuickSort() public {
+        Weather.WellDeltaB[] memory wells = new Weather.WellDeltaB[](5);
+        wells[0] = Weather.WellDeltaB(C.BEAN_ETH_WELL, 100, 0);
+        wells[1] = Weather.WellDeltaB(C.BEAN_WSTETH_WELL, 200, 0);
+        wells[2] = Weather.WellDeltaB(C.BEAN_ETH_WELL, -300, 0);
+        wells[3] = Weather.WellDeltaB(C.BEAN_ETH_WELL, 400, 0);
+        wells[4] = Weather.WellDeltaB(C.BEAN_ETH_WELL, -500, 0);
+        wells = weather.quickSort(wells, 0, int(wells.length - 1));
+        assertEq(wells[0].deltaB, 400);
+        assertEq(wells[1].deltaB, 200);
+        assertEq(wells[2].deltaB, 100);
+        assertEq(wells[3].deltaB, -300);
+        assertEq(wells[4].deltaB, -500);
+
+        wells = new Weather.WellDeltaB[](2);
+        wells[0] = Weather.WellDeltaB(C.BEAN_ETH_WELL, 200, 0);
+        wells[1] = Weather.WellDeltaB(C.BEAN_WSTETH_WELL, 100, 0);
+        wells = weather.quickSort(wells, 0, int(wells.length - 1));
+        assertEq(wells[0].deltaB, 200);
+        assertEq(wells[1].deltaB, 100);
+
+        wells = new Weather.WellDeltaB[](2);
+        wells[0] = Weather.WellDeltaB(C.BEAN_ETH_WELL, 100, 0);
+        wells[1] = Weather.WellDeltaB(C.BEAN_WSTETH_WELL, 200, 0);
+        wells = weather.quickSort(wells, 0, int(wells.length - 1));
+        assertEq(wells[0].deltaB, 200);
+        assertEq(wells[1].deltaB, 100);
+    }
+
     //////////// Helpers ////////////
 
     function depostBeansForUsers(
