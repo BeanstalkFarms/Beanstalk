@@ -295,7 +295,6 @@ library LibWellMinting {
     function overallCappedDeltaB() internal view returns (int256 deltaB) {
         address[] memory tokens = LibWhitelistedTokens.getWhitelistedWellLpTokens();
         for (uint256 i = 0; i < tokens.length; i++) {
-            if (tokens[i] == C.BEAN) continue;
             int256 cappedDeltaB = cappedReservesDeltaB(tokens[i]);
             deltaB = deltaB.add(cappedDeltaB);
         }

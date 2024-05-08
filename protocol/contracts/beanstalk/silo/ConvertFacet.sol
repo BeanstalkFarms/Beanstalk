@@ -177,6 +177,7 @@ contract ConvertFacet is ReentrancyGuard {
             fromAmount = fromAmount.add(amounts[i]);
         }
 
+        // withdraw tokens from deposits and calculate the total grown stalk and bdv.
         (pipeData.grownStalk, fromBdv) = _withdrawTokens(
             inputToken,
             stems,
