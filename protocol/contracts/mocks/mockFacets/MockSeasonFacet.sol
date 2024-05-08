@@ -25,6 +25,7 @@ import {LibWellMinting} from "contracts/libraries/Minting/LibWellMinting.sol";
 import {LibEvaluate} from "contracts/libraries/LibEvaluate.sol";
 import {LibTokenSilo} from "contracts/libraries/Silo/LibTokenSilo.sol";
 import {LibSilo} from "contracts/libraries/Silo/LibSilo.sol";
+import {IWell, Call} from "contracts/interfaces/basin/IWell.sol";
 
 /**
  * @author Publius
@@ -309,7 +310,11 @@ contract MockSeasonFacet is SeasonFacet  {
         if(l2srBeans > C.bean().totalSupply()) {
             C.bean().mint(address(this), l2srBeans - C.bean().totalSupply());
         }
-        IMockPump(C.BEANSTALK_PUMP).update(reserves, new bytes(0));
+        
+        {
+            Call memory pumpData = IWell(C.BEAN_ETH_WELL).pumps()[0];
+            IMockPump(pumpData.target).update(reserves, pumpData.data);
+        }
         s.twaReserves[C.BEAN_ETH_WELL].reserve0 = uint128(reserves[0]);
         s.twaReserves[C.BEAN_ETH_WELL].reserve1 = uint128(reserves[1]);
         s.usdTokenPrice[C.BEAN_ETH_WELL] = 0.001e18;
