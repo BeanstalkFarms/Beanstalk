@@ -1,13 +1,6 @@
 const { EXTERNAL, INTERNAL } = require("./utils/balances.js");
 const { Fixed, Dynamic } = require("./utils/priceTypes.js");
 const { interpolatePoints } = require("./utils/interpolater.js");
-const {
-  getNumPieces,
-  evaluatePolynomial,
-  evaluatePolynomialIntegration,
-  getAmountOrder,
-  getValueArray
-} = require("./utils/libPolynomialHelpers.js");
 const { expect, use } = require("chai");
 const { waffleChai } = require("@ethereum-waffle/chai");
 use(waffleChai);
@@ -60,20 +53,7 @@ describe("Marketplace", function () {
     var args = (receipt.events?.filter((x) => {
       return x.event == "PodListingCreated";
     }))[0]?.args;
-    if (args.pricingType == Dynamic) {
-      return ethers.utils.solidityKeccak256(
-        ["uint256", "uint256", "uint24", "uint256", "uint256", "bool", "bytes"],
-        [
-          args.start,
-          args.amount,
-          args.pricePerPod,
-          args.maxHarvestableIndex,
-          args.minFillAmount,
-          args.mode == EXTERNAL,
-          args.pricingFunction
-        ]
-      );
-    } else if (args.minFillAmount > 0) {
+    if (args.minFillAmount > 0) {
       return ethers.utils.solidityKeccak256(
         ["uint256", "uint256", "uint24", "uint256", "uint256", "bool"],
         [
@@ -253,7 +233,7 @@ describe("Marketplace", function () {
           it("Emits event", async function () {
             await expect(this.result)
               .to.emit(mockBeanstalk, "PodListingCreated")
-              .withArgs(user.address, "0", "0", "1000", 500000, "0", "0", "0x", 0, Fixed);
+              .withArgs(user.address, "0", "0", "1000", 500000, "0", "0", 0);
           });
         });
 
@@ -271,7 +251,7 @@ describe("Marketplace", function () {
           it("Emits event", async function () {
             await expect(this.result)
               .to.emit(mockBeanstalk, "PodListingCreated")
-              .withArgs(user.address, "0", "0", "1000", 500000, "0", "100", "0x", 0, Fixed);
+              .withArgs(user.address, "0", "0", "1000", 500000, "0", "100", 0);
           });
         });
 
@@ -292,7 +272,7 @@ describe("Marketplace", function () {
           it("Emits event", async function () {
             await expect(this.result)
               .to.emit(mockBeanstalk, "PodListingCreated")
-              .withArgs(user.address, 0, 0, "500", 500000, 0, "0", "0x", 0, Fixed);
+              .withArgs(user.address, 0, 0, "500", 500000, 0, "0", 0);
           });
         });
 
@@ -310,7 +290,7 @@ describe("Marketplace", function () {
           it("Emits event", async function () {
             await expect(this.result)
               .to.emit(mockBeanstalk, "PodListingCreated")
-              .withArgs(user.address, 0, 500, "500", 500000, 2000, "0", "0x", 1, Fixed);
+              .withArgs(user.address, 0, 500, "500", 500000, 2000, "0", 1);
           });
         });
 
@@ -334,7 +314,7 @@ describe("Marketplace", function () {
               .withArgs(user.address, 0);
             await expect(this.result)
               .to.emit(mockBeanstalk, "PodListingCreated")
-              .withArgs(user.address, 0, 500, "100", 500000, 2000, "0", "0x", 1, Fixed);
+              .withArgs(user.address, 0, 500, "100", 500000, 2000, "0", 1);
           });
         });
 
@@ -358,7 +338,7 @@ describe("Marketplace", function () {
               .withArgs(user.address, 0);
             await expect(this.result)
               .to.emit(mockBeanstalk, "PodListingCreated")
-              .withArgs(user.address, 0, 500, "100", 500000, 2000, "100", "0x", 1, Fixed);
+              .withArgs(user.address, 0, 500, "100", 500000, 2000, "100", 1);
           });
         });
       });
@@ -699,7 +679,7 @@ describe("Marketplace", function () {
             .createPodListing("0", "0", "1000", "200000", "2000", "0", INTERNAL);
           await expect(result)
             .to.emit(mockBeanstalk, "PodListingCreated")
-            .withArgs(user.address, "0", 0, 1000, 200000, 2000, "0", "0x", 1, Fixed);
+            .withArgs(user.address, "0", 0, 1000, 200000, 2000, "0", 1);
           await expect(result)
             .to.emit(mockBeanstalk, "PodListingCancelled")
             .withArgs(user.address, "0");
