@@ -61,11 +61,11 @@ contract Listing is PodTransfer {
         uint256 minFillAmount,
         LibTransfer.To mode
     ) internal {
-        uint256 plotSize = s.a[LibTractor._user()].field.plots[index];
+        uint256 plotSize = s.accountStates[LibTractor._user()].field.plots[index];
 
         require(plotSize >= (start.add(amount)) && amount > 0, "Marketplace: Invalid Plot/Amount.");
         require(pricePerPod > 0, "Marketplace: Pod price must be greater than 0.");
-        require(s.f.harvestable <= maxHarvestableIndex, "Marketplace: Expired.");
+        require(s.field.harvestable <= maxHarvestableIndex, "Marketplace: Expired.");
 
         if (s.podListings[index] != bytes32(0)) _cancelPodListing(LibTractor._user(), index);
 
@@ -105,12 +105,12 @@ contract Listing is PodTransfer {
         );
 
         require(s.podListings[l.index] == lHash, "Marketplace: Listing does not exist.");
-        uint256 plotSize = s.a[l.account].field.plots[l.index];
+        uint256 plotSize = s.accountStates[l.account].field.plots[l.index];
         require(
             plotSize >= (l.start.add(l.amount)) && l.amount > 0,
             "Marketplace: Invalid Plot/Amount."
         );
-        require(s.f.harvestable <= l.maxHarvestableIndex, "Marketplace: Listing has expired.");
+        require(s.field.harvestable <= l.maxHarvestableIndex, "Marketplace: Listing has expired.");
 
         uint256 amount = getAmountPodsFromFillListing(l.pricePerPod, l.amount, beanAmount);
 
@@ -148,7 +148,10 @@ contract Listing is PodTransfer {
      */
 
     function _cancelPodListing(address account, uint256 index) internal {
-        require(s.a[account].field.plots[index] > 0, "Marketplace: Listing not owned by sender.");
+        require(
+            s.accountStates[account].field.plots[index] > 0,
+            "Marketplace: Listing not owned by sender."
+        );
 
         delete s.podListings[index];
 

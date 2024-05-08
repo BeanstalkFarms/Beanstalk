@@ -121,8 +121,8 @@ contract MigrationFacet is Invariable, ReentrancyGuard {
         }
 
         return (
-            s.a[account].legacyV2Deposits[token][season].amount,
-            s.a[account].legacyV2Deposits[token][season].bdv
+            s.accountStates[account].legacyV2Deposits[token][season].amount,
+            s.accountStates[account].legacyV2Deposits[token][season].bdv
         );
     }
 

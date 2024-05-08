@@ -33,7 +33,7 @@ contract InitBipNewSilo {
         ds.supportedInterfaces[type(IERC1155).interfaceId] = true;
 
         // // Clear the storage variable
-        // delete s.s.deprecated_seeds;
+        // delete s.silo.deprecated_seeds;
 
         // set the withdrawTimer to 0:
         s.season.withdrawSeasons = 0;
@@ -42,25 +42,25 @@ contract InitBipNewSilo {
 
         uint32 currentSeason = s.season.current;
 
-        s.ss[C.BEAN].stalkEarnedPerSeason = BEAN_SEEDS_PER_BDV;
-        s.ss[C.BEAN].stalkIssuedPerBdv = STALK_ISSUED_PER_BDV;
-        s.ss[C.BEAN].milestoneSeason = currentSeason;
-        s.ss[C.BEAN].milestoneStem = 0;
+        s.siloSettings[C.BEAN].stalkEarnedPerSeason = BEAN_SEEDS_PER_BDV;
+        s.siloSettings[C.BEAN].stalkIssuedPerBdv = STALK_ISSUED_PER_BDV;
+        s.siloSettings[C.BEAN].milestoneSeason = currentSeason;
+        s.siloSettings[C.BEAN].milestoneStem = 0;
 
-        s.ss[C.CURVE_BEAN_METAPOOL].stalkEarnedPerSeason = BEAN_3CRV_SEEDS_PER_BDV;
-        s.ss[C.CURVE_BEAN_METAPOOL].stalkIssuedPerBdv = STALK_ISSUED_PER_BDV;
-        s.ss[C.CURVE_BEAN_METAPOOL].milestoneSeason = currentSeason;
-        s.ss[C.CURVE_BEAN_METAPOOL].milestoneStem = 0;
+        s.siloSettings[C.CURVE_BEAN_METAPOOL].stalkEarnedPerSeason = BEAN_3CRV_SEEDS_PER_BDV;
+        s.siloSettings[C.CURVE_BEAN_METAPOOL].stalkIssuedPerBdv = STALK_ISSUED_PER_BDV;
+        s.siloSettings[C.CURVE_BEAN_METAPOOL].milestoneSeason = currentSeason;
+        s.siloSettings[C.CURVE_BEAN_METAPOOL].milestoneStem = 0;
 
-        s.ss[C.UNRIPE_BEAN].stalkEarnedPerSeason = UNRIPE_BEAN_SEEDS_PER_BDV;
-        s.ss[C.UNRIPE_BEAN].stalkIssuedPerBdv = STALK_ISSUED_PER_BDV;
-        s.ss[C.UNRIPE_BEAN].milestoneSeason = currentSeason;
-        s.ss[C.UNRIPE_BEAN].milestoneStem = 0;
+        s.siloSettings[C.UNRIPE_BEAN].stalkEarnedPerSeason = UNRIPE_BEAN_SEEDS_PER_BDV;
+        s.siloSettings[C.UNRIPE_BEAN].stalkIssuedPerBdv = STALK_ISSUED_PER_BDV;
+        s.siloSettings[C.UNRIPE_BEAN].milestoneSeason = currentSeason;
+        s.siloSettings[C.UNRIPE_BEAN].milestoneStem = 0;
 
-        s.ss[address(C.unripeLP())].stalkEarnedPerSeason = UNRIPE_BEAN_3CRV_SEEDS_PER_BDV;
-        s.ss[address(C.unripeLP())].stalkIssuedPerBdv = STALK_ISSUED_PER_BDV;
-        s.ss[address(C.unripeLP())].milestoneSeason = currentSeason;
-        s.ss[address(C.unripeLP())].milestoneStem = 0;
+        s.siloSettings[address(C.unripeLP())].stalkEarnedPerSeason = UNRIPE_BEAN_3CRV_SEEDS_PER_BDV;
+        s.siloSettings[address(C.unripeLP())].stalkIssuedPerBdv = STALK_ISSUED_PER_BDV;
+        s.siloSettings[address(C.unripeLP())].milestoneSeason = currentSeason;
+        s.siloSettings[address(C.unripeLP())].milestoneStem = 0;
 
         //emit event for unripe LP/Beans from 4 to 1 grown stalk per bdv per season
         emit LibWhitelist.UpdatedStalkPerBdvPerSeason(

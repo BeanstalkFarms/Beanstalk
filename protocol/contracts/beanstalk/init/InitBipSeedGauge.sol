@@ -45,8 +45,8 @@ contract InitBipSeedGauge is Weather, InitWhitelistStatuses {
     function init() external {
         // Update milestone season decimal precision
         // prior to dewhitelisting Bean3CRV.
-        s.ss[C.CURVE_BEAN_METAPOOL].milestoneStem = int96(
-            s.ss[C.CURVE_BEAN_METAPOOL].milestoneStem.mul(1e6)
+        s.siloSettings[C.CURVE_BEAN_METAPOOL].milestoneStem = int96(
+            s.siloSettings[C.CURVE_BEAN_METAPOOL].milestoneStem.mul(1e6)
         );
 
         addWhitelistStatuses(true);
@@ -89,17 +89,21 @@ contract InitBipSeedGauge is Weather, InitWhitelistStatuses {
             // previously, the milestone stem was stored truncated. The seed gauge system now stores
             // the value untruncated, and thus needs to update all previous milestone stems.
             // This is a one time update, and will not be needed in the future.
-            s.ss[siloTokens[i]].milestoneStem = int96(s.ss[siloTokens[i]].milestoneStem.mul(1e6));
+            s.siloSettings[siloTokens[i]].milestoneStem = int96(
+                s.siloSettings[siloTokens[i]].milestoneStem.mul(1e6)
+            );
 
             // update gpSelector, lwSelector, gaugePoint,and optimalPercentDepositedBdv
-            s.ss[siloTokens[i]].gpSelector = gpSelectors[i];
-            s.ss[siloTokens[i]].lwSelector = lwSelectors[i];
-            s.ss[siloTokens[i]].gaugePoints = gaugePoints[i];
-            s.ss[siloTokens[i]].optimalPercentDepositedBdv = optimalPercentDepositedBdv[i];
+            s.siloSettings[siloTokens[i]].gpSelector = gpSelectors[i];
+            s.siloSettings[siloTokens[i]].lwSelector = lwSelectors[i];
+            s.siloSettings[siloTokens[i]].gaugePoints = gaugePoints[i];
+            s.siloSettings[siloTokens[i]].optimalPercentDepositedBdv = optimalPercentDepositedBdv[
+                i
+            ];
 
             // if the silo token has a stalkEarnedPerSeason of 0,
             // update to 1.
-            if (s.ss[siloTokens[i]].stalkEarnedPerSeason == 0) {
+            if (s.siloSettings[siloTokens[i]].stalkEarnedPerSeason == 0) {
                 LibWhitelist.updateStalkPerBdvPerSeasonForToken(siloTokens[i], 1);
             }
             // get depositedBDV to use later:
@@ -142,7 +146,7 @@ contract InitBipSeedGauge is Weather, InitWhitelistStatuses {
      * @notice initalizes the average grown stalk per BDV, based on the total BDV.
      */
     function initializeAverageGrownStalkPerBdv(uint256 totalBdv) internal view returns (uint128) {
-        uint256 averageGrownStalkPerBdv = s.s.stalk.div(totalBdv).sub(10000);
+        uint256 averageGrownStalkPerBdv = s.silo.stalk.div(totalBdv).sub(10000);
         return uint128(averageGrownStalkPerBdv.mul(PRECISION).div(TARGET_SEASONS_TO_CATCHUP));
     }
 }

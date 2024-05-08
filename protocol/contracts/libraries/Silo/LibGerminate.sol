@@ -78,7 +78,7 @@ library LibGerminate {
         // base roots are used if there are no roots in the silo.
         // root calculation is skipped if no deposits have been made
         // in the season.
-        if (s.s.roots == 0) {
+        if (s.silo.roots == 0) {
             // casted to uint256 and downcasted to uint128 to prevent overflow.
             s.unclaimedGerminating[season.sub(2)].roots = s
                 .unclaimedGerminating[season.sub(2)]
@@ -86,15 +86,15 @@ library LibGerminate {
                 .mul(uint128(C.getRootsBase()));
         } else if (s.unclaimedGerminating[season.sub(2)].stalk > 0) {
             s.unclaimedGerminating[season.sub(2)].roots = s
-                .s
+                .silo
                 .roots
                 .mul(s.unclaimedGerminating[season.sub(2)].stalk)
-                .div(s.s.stalk)
+                .div(s.silo.stalk)
                 .toUint128();
         }
         // increment total stalk and roots based on unclaimed values.
-        s.s.stalk = s.s.stalk.add(s.unclaimedGerminating[season.sub(2)].stalk);
-        s.s.roots = s.s.roots.add(s.unclaimedGerminating[season.sub(2)].roots);
+        s.silo.stalk = s.silo.stalk.add(s.unclaimedGerminating[season.sub(2)].stalk);
+        s.silo.roots = s.silo.roots.add(s.unclaimedGerminating[season.sub(2)].roots);
 
         // increment total deposited and amounts for each token.
         Storage.TotalGerminating storage totalGerm;
@@ -170,8 +170,10 @@ library LibGerminate {
 
         // increment users stalk and roots.
         if (germinatingStalk > 0) {
-            s.a[account].s.stalk = s.a[account].s.stalk.add(germinatingStalk);
-            s.a[account].roots = s.a[account].roots.add(roots);
+            s.accountStates[account].silo.stalk = s.accountStates[account].silo.stalk.add(
+                germinatingStalk
+            );
+            s.accountStates[account].roots = s.accountStates[account].roots.add(roots);
 
             // emit events. Active stalk is incremented, germinating stalk is decremented.
             emit LibSilo.StalkBalanceChanged(
@@ -203,9 +205,9 @@ library LibGerminate {
         roots = calculateGerminatingRoots(season, stalk);
 
         if (clearOdd) {
-            delete s.a[account].farmerGerminating.odd;
+            delete s.accountStates[account].farmerGerminating.odd;
         } else {
-            delete s.a[account].farmerGerminating.even;
+            delete s.accountStates[account].farmerGerminating.even;
         }
 
         // deduct from unclaimed values.
@@ -248,11 +250,11 @@ library LibGerminate {
     ) internal view returns (uint128 firstStalk, uint128 secondStalk) {
         AppStorage storage s = LibAppStorage.diamondStorage();
         if (lastUpdateOdd) {
-            firstStalk = s.a[account].farmerGerminating.odd;
-            secondStalk = s.a[account].farmerGerminating.even;
+            firstStalk = s.accountStates[account].farmerGerminating.odd;
+            secondStalk = s.accountStates[account].farmerGerminating.even;
         } else {
-            firstStalk = s.a[account].farmerGerminating.even;
-            secondStalk = s.a[account].farmerGerminating.odd;
+            firstStalk = s.accountStates[account].farmerGerminating.even;
+            secondStalk = s.accountStates[account].farmerGerminating.odd;
         }
     }
 
@@ -322,7 +324,7 @@ library LibGerminate {
      */
     function getUnclaimedGerminatingStalkAndRoots(
         uint32 season
-    ) internal view returns (Storage.Sr memory unclaimed) {
+    ) internal view returns (Storage.GerminatingSilo memory unclaimed) {
         AppStorage storage s = LibAppStorage.diamondStorage();
         unclaimed = s.unclaimedGerminating[season];
     }
@@ -397,17 +399,17 @@ library LibGerminate {
     ) private view returns (uint32 prevStalkEarnedPerSeason) {
         AppStorage storage s = LibAppStorage.diamondStorage();
 
-        if (s.ss[token].milestoneSeason < s.season.current) {
-            prevStalkEarnedPerSeason = s.ss[token].stalkEarnedPerSeason;
+        if (s.siloSettings[token].milestoneSeason < s.season.current) {
+            prevStalkEarnedPerSeason = s.siloSettings[token].stalkEarnedPerSeason;
         } else {
-            int24 deltaStalkEarnedPerSeason = s.ss[token].deltaStalkEarnedPerSeason;
+            int24 deltaStalkEarnedPerSeason = s.siloSettings[token].deltaStalkEarnedPerSeason;
             if (deltaStalkEarnedPerSeason >= 0) {
                 prevStalkEarnedPerSeason =
-                    s.ss[token].stalkEarnedPerSeason -
+                    s.siloSettings[token].stalkEarnedPerSeason -
                     uint32(int32(deltaStalkEarnedPerSeason));
             } else {
                 prevStalkEarnedPerSeason =
-                    s.ss[token].stalkEarnedPerSeason +
+                    s.siloSettings[token].stalkEarnedPerSeason +
                     uint32(int32(-deltaStalkEarnedPerSeason));
             }
         }

@@ -19,7 +19,7 @@ library LibTokenApprove {
 
     function approve(address account, address spender, IERC20 token, uint256 amount) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        s.a[account].tokenAllowances[spender][token] = amount;
+        s.accountStates[account].tokenAllowances[spender][token] = amount;
         emit TokenApproval(account, spender, token, amount);
     }
 
@@ -29,7 +29,7 @@ library LibTokenApprove {
         IERC20 token
     ) internal view returns (uint256) {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        return s.a[account].tokenAllowances[spender][token];
+        return s.accountStates[account].tokenAllowances[spender][token];
     }
 
     function spendAllowance(address owner, address spender, IERC20 token, uint256 amount) internal {

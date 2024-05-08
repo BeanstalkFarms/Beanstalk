@@ -42,7 +42,7 @@ contract InitDiamond is Weather {
         C.usdc().approve(C.curveZapAddress(), type(uint256).max);
 
         LibCases.setCasesV2();
-        s.w.t = 1;
+        s.weather.t = 1;
 
         s.season.current = 1;
         s.season.withdrawSeasons = 25;
@@ -52,8 +52,8 @@ contract InitDiamond is Weather {
             ? (block.timestamp / s.season.period) * s.season.period
             : block.timestamp;
 
-        s.w.thisSowTime = type(uint32).max;
-        s.w.lastSowTime = type(uint32).max;
+        s.weather.thisSowTime = type(uint32).max;
+        s.weather.lastSowTime = type(uint32).max;
         s.isFarm = 1;
 
         s.usdTokenPrice[C.BEAN_ETH_WELL] = 1;

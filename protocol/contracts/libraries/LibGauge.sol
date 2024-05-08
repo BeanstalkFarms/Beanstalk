@@ -106,7 +106,7 @@ library LibGauge {
             ) {
                 return (maxLpGpPerBdv, lpGpData, totalGaugePoints, type(uint256).max);
             }
-            uint256 gaugePoints = s.ss[whitelistedLpTokens[0]].gaugePoints;
+            uint256 gaugePoints = s.siloSettings[whitelistedLpTokens[0]].gaugePoints;
 
             lpGpData[0].lpToken = whitelistedLpTokens[0];
             // If nothing has been deposited, skip gauge point update.
@@ -141,7 +141,7 @@ library LibGauge {
 
         // Calculate and update the gauge points for each LP.
         for (uint256 i; i < whitelistedLpTokens.length; ++i) {
-            Storage.SiloSettings storage ss = s.ss[whitelistedLpTokens[i]];
+            Storage.SiloSettings storage ss = s.siloSettings[whitelistedLpTokens[i]];
 
             uint256 depositedBdv = s.siloBalances[whitelistedLpTokens[i]].depositedBdv;
 
@@ -328,7 +328,7 @@ library LibGauge {
         AppStorage storage s = LibAppStorage.diamondStorage();
         uint256 totalBdv = getTotalBdv();
         if (totalBdv == 0) return 0;
-        return s.s.stalk.div(totalBdv).sub(STALK_BDV_PRECISION);
+        return s.silo.stalk.div(totalBdv).sub(STALK_BDV_PRECISION);
     }
 
     /**

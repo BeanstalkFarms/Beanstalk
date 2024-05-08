@@ -17,25 +17,28 @@ contract MockUnripeFacet is UnripeFacet {
     using LibRedundantMath256 for uint256;
 
     function setMerkleRootE(address unripeToken, bytes32 root) external {
-        s.u[unripeToken].merkleRoot = root;
+        s.unripeSettings[unripeToken].merkleRoot = root;
     }
 
     function addUnderlying(address unripeToken, uint256 amount) external payable nonReentrant {
-        address underlyingToken = s.u[unripeToken].underlyingToken;
+        address underlyingToken = s.unripeSettings[unripeToken].underlyingToken;
         IERC20(underlyingToken).safeTransferFrom(LibTractor._user(), address(this), amount);
-        s.u[unripeToken].balanceOfUnderlying = s.u[unripeToken].balanceOfUnderlying.add(amount);
+        s.unripeSettings[unripeToken].balanceOfUnderlying = s
+            .unripeSettings[unripeToken]
+            .balanceOfUnderlying
+            .add(amount);
     }
 
     function addUnderlyingWithRecap(
         address unripeToken,
         uint256 amount
     ) external payable nonReentrant {
-        address underlyingToken = s.u[unripeToken].underlyingToken;
+        address underlyingToken = s.unripeSettings[unripeToken].underlyingToken;
         IERC20(underlyingToken).safeTransferFrom(LibTractor._user(), address(this), amount);
         LibUnripe.addUnderlying(unripeToken, amount);
     }
 
     function resetUnderlying(address unripeToken) external {
-        s.u[unripeToken].balanceOfUnderlying = 0;
+        s.unripeSettings[unripeToken].balanceOfUnderlying = 0;
     }
 }

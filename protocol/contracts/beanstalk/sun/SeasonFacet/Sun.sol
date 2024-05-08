@@ -83,7 +83,7 @@ contract Sun is Oracle {
         }
 
         // Distribute next to the Field if some Pods are still outstanding
-        if (s.f.harvestable < s.f.pods) {
+        if (s.field.harvestable < s.field.pods) {
             newHarvestable = rewardToHarvestable(newSupply);
             newSupply = newSupply.sub(newHarvestable);
         }
@@ -141,10 +141,10 @@ contract Sun is Oracle {
      * become Harvestable.
      */
     function rewardToHarvestable(uint256 amount) internal returns (uint256 newHarvestable) {
-        uint256 notHarvestable = s.f.pods - s.f.harvestable;
+        uint256 notHarvestable = s.field.pods - s.field.harvestable;
         newHarvestable = amount.div(HARVEST_DENOMINATOR);
         newHarvestable = newHarvestable > notHarvestable ? notHarvestable : newHarvestable;
-        s.f.harvestable = s.f.harvestable.add(newHarvestable);
+        s.field.harvestable = s.field.harvestable.add(newHarvestable);
     }
 
     /**
@@ -164,9 +164,9 @@ contract Sun is Oracle {
         //
         // Stalk is created here, rather than in {rewardBeans}, because only
         // Beans that are allocated to the Silo will receive Stalk.
-        // Constant is used here rather than s.ss[BEAN].stalkIssuedPerBdv
+        // Constant is used here rather than s.siloSettings[BEAN].stalkIssuedPerBdv
         // for gas savings.
-        s.s.stalk = s.s.stalk.add(amount.mul(C.STALK_PER_BEAN));
+        s.silo.stalk = s.silo.stalk.add(amount.mul(C.STALK_PER_BEAN));
 
         // removed at ebip-13. Will be replaced upon seed gauge BIP.
         // s.newEarnedStalk = seasonStalk.toUint128();
@@ -193,7 +193,7 @@ contract Sun is Oracle {
      * When the Pod Rate is low, Beanstalk issues more Soil.
      */
     function setSoilAbovePeg(uint256 newHarvestable, uint256 caseId) internal {
-        uint256 newSoil = newHarvestable.mul(100).div(100 + s.w.t);
+        uint256 newSoil = newHarvestable.mul(100).div(100 + s.weather.t);
         if (caseId >= 24) {
             newSoil = newSoil.mul(SOIL_COEFFICIENT_HIGH).div(C.PRECISION); // high podrate
         } else if (caseId < 8) {
@@ -203,7 +203,7 @@ contract Sun is Oracle {
     }
 
     function setSoil(uint256 amount) internal {
-        s.f.soil = amount.toUint128();
+        s.field.soil = amount.toUint128();
         emit Soil(s.season.current, amount.toUint128());
     }
 }

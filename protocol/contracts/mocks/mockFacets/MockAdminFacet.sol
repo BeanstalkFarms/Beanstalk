@@ -73,7 +73,9 @@ contract MockAdminFacet is Sun {
     function updateStems() public {
         address[] memory siloTokens = LibWhitelistedTokens.getSiloTokens();
         for (uint256 i = 0; i < siloTokens.length; i++) {
-            s.ss[siloTokens[i]].milestoneStem = int96(s.ss[siloTokens[i]].milestoneStem * 1e6);
+            s.siloSettings[siloTokens[i]].milestoneStem = int96(
+                s.siloSettings[siloTokens[i]].milestoneStem * 1e6
+            );
         }
     }
 

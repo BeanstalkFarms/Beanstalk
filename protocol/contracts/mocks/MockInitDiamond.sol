@@ -32,10 +32,10 @@ contract MockInitDiamond is InitWhitelist, InitWhitelistStatuses, Weather {
         ds.supportedInterfaces[0x0e89341c] = true; // ERC1155Metadata
 
         LibCases.setCasesV2();
-        s.w.t = 1;
+        s.weather.t = 1;
 
-        s.w.thisSowTime = type(uint32).max;
-        s.w.lastSowTime = type(uint32).max;
+        s.weather.thisSowTime = type(uint32).max;
+        s.weather.lastSowTime = type(uint32).max;
 
         s.season.current = 1;
         s.season.withdrawSeasons = 25;
@@ -56,7 +56,7 @@ contract MockInitDiamond is InitWhitelist, InitWhitelistStatuses, Weather {
 
         LibTractor._resetPublisher();
 
-        s.u[C.UNRIPE_LP].underlyingToken = C.BEAN_WSTETH_WELL;
+        s.unripeSettings[C.UNRIPE_LP].underlyingToken = C.BEAN_WSTETH_WELL;
 
         emit BeanToMaxLpGpPerBdvRatioChange(
             s.season.current,

@@ -45,11 +45,11 @@ library LibLegacyWhitelist {
     ) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
 
-        s.ss[token].selector = selector;
-        s.ss[token].stalkIssuedPerBdv = stalkIssuedPerBdv; //previously just called "stalk"
-        s.ss[token].stalkEarnedPerSeason = stalkEarnedPerSeason; //previously called "seeds"
+        s.siloSettings[token].selector = selector;
+        s.siloSettings[token].stalkIssuedPerBdv = stalkIssuedPerBdv; //previously just called "stalk"
+        s.siloSettings[token].stalkEarnedPerSeason = stalkEarnedPerSeason; //previously called "seeds"
 
-        s.ss[token].milestoneSeason = s.season.current;
+        s.siloSettings[token].milestoneSeason = s.season.current;
 
         emit WhitelistToken(token, selector, stalkEarnedPerSeason, stalkIssuedPerBdv);
     }

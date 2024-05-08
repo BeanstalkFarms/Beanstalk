@@ -128,7 +128,7 @@ contract Account {
          * Previously held the V1 Silo Deposits/Withdrawals for BEAN:ETH Uniswap v2 LP Tokens.
          *
          * BEAN:3CRV and BEAN:LUSD tokens prior to Replant were stored in the Silo V2
-         * format in the `s.a[account].legacyV2Deposits` mapping.
+         * format in the `s.accountStates[account].legacyV2Deposits` mapping.
          *
          * NOTE: While the Silo V1 format is now deprecated, unmigrated Silo V1 deposits are still
          * stored in this storage slot. See {LibUnripeSilo} for more.
@@ -138,7 +138,7 @@ contract Account {
         /*
          * @dev Holds Silo specific state for each account.
          */
-        Silo s;
+        Silo silo;
         uint32 lastUpdate; // The Season in which the Farmer last updated their Silo.
         uint32 lastSop; // The last Season that a SOP occured at the time the Farmer last updated their Silo.
         uint32 lastRain; // The last Season that it started Raining at the time the Farmer last updated their Silo.
@@ -166,7 +166,6 @@ contract Account {
  * @notice Stores system-level Beanstalk state.
  */
 contract Storage {
-
     /**
      * @notice System-level Field state variables.
      * @param soil The number of Soil currently available. Adjusted during {Sun.stepSun}.
@@ -187,19 +186,15 @@ contract Storage {
      * @notice System-level Silo state; contains deposit and withdrawal data for a particular whitelisted Token.
      * @param deposited The total amount of this Token currently Deposited in the Silo.
      * @param depositedBdv The total bdv of this Token currently Deposited in the Silo.
-     * @param withdrawn The total amount of this Token currently Withdrawn From the Silo.
      * @dev {Storage.State} contains a mapping from Token address => AssetSilo.
      * Currently, the bdv of deposits are asynchronous, and require an on-chain transaction to update.
      * Thus, the total bdv of deposits cannot be calculated, and must be stored and updated upon a bdv change.
      *
      *
-     * Note that "Withdrawn" refers to the amount of Tokens that have been Withdrawn
-     * but not yet Claimed. This will be removed in a future BIP.
      */
     struct AssetSilo {
         uint128 deposited;
         uint128 depositedBdv;
-        uint256 withdrawn;
     }
 
     /**
@@ -413,7 +408,7 @@ contract Storage {
         mapping(address => Deposited) deposited;
     }
 
-    struct Sr {
+    struct GerminatingSilo {
         uint128 stalk;
         uint128 roots;
     }
@@ -426,13 +421,12 @@ contract Storage {
  * @param paused True if Beanstalk is Paused.
  * @param pausedAt The timestamp at which Beanstalk was last paused.
  * @param season Storage.Season
- * @param c Storage.Contracts
- * @param f Storage.Field
+ * @param field Storage.Field
  * @param co Storage.CurveMetapoolOracle
- * @param r Storage.Rain
- * @param s Storage.Silo
+ * @param rain Storage.Rain
+ * @param silo Storage.Silo
  * @param reentrantStatus An intra-transaction state variable to protect against reentrance.
- * @param w Storage.Weather
+ * @param weather Storage.Weather
  * @param earnedBeans The number of Beans distributed to the Silo that have not yet been Deposited as a result of the Earn function being called.
  * @param a mapping (address => Account.State)
  * @param podListings A mapping from Plot Index to the hash of the Pod Listing.
@@ -473,24 +467,24 @@ struct AppStorage {
     bool paused; // ────────┐ 1
     uint128 pausedAt; // ───┘ 16 (17/32)
     Storage.Season season;
-    Storage.Field f;
+    Storage.Field field;
     Storage.CurveMetapoolOracle co;
-    Storage.Rain r;
-    Storage.Silo s;
+    Storage.Rain rain;
+    Storage.Silo silo;
     uint256 reentrantStatus;
-    Storage.Weather w;
+    Storage.Weather weather;
     uint256 earnedBeans;
-    mapping(address => Account.State) a;
+    mapping(address => Account.State) accountStates;
     mapping(uint256 => bytes32) podListings;
     mapping(bytes32 => uint256) podOrders;
     mapping(address => Storage.AssetSilo) siloBalances;
-    mapping(address => Storage.SiloSettings) ss;
+    mapping(address => Storage.SiloSettings) siloSettings;
     mapping(uint32 => uint256) sops;
     // Internal Balances
     mapping(address => mapping(IERC20 => uint256)) internalTokenBalance;
     // Unripe
     mapping(address => mapping(address => bool)) unripeClaimed;
-    mapping(address => Storage.UnripeSettings) u;
+    mapping(address => Storage.UnripeSettings) unripeSettings;
     // Fertilizer
     mapping(uint128 => uint256) fertilizer;
     mapping(uint128 => uint128) nextFid;
@@ -519,7 +513,7 @@ struct AppStorage {
     Storage.TotalGerminating oddGerminating;
     Storage.TotalGerminating evenGerminating;
     // mapping from season => unclaimed germinating stalk and roots
-    mapping(uint32 => Storage.Sr) unclaimedGerminating;
+    mapping(uint32 => Storage.GerminatingSilo) unclaimedGerminating;
     Storage.WhitelistStatus[] whitelistStatuses;
     address sopWell;
     // Cumulative internal Balance of tokens.

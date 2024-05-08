@@ -75,7 +75,7 @@ contract Weather is Sun {
         uint256 beanSupply = C.bean().totalSupply();
         // prevents infinite L2SR and podrate
         if (beanSupply == 0) {
-            s.w.t = 1;
+            s.weather.t = 1;
             return 9; // Reasonably low
         }
         // Calculate Case Id
@@ -96,23 +96,23 @@ contract Weather is Sun {
     }
 
     /**
-     * @notice Changes the current Temperature `s.w.t` based on the Case Id.
+     * @notice Changes the current Temperature `s.weather.t` based on the Case Id.
      * @dev bT are set during edge cases such that the event emitted is valid.
      */
     function updateTemperature(int8 bT, uint256 caseId) private {
-        uint256 t = s.w.t;
+        uint256 t = s.weather.t;
         if (bT < 0) {
             if (t <= uint256(int256(-bT))) {
                 // if (change < 0 && t <= uint32(-change)),
                 // then 0 <= t <= type(int8).max because change is an int8.
                 // Thus, downcasting t to an int8 will not cause overflow.
                 bT = 1 - int8(int256(t));
-                s.w.t = 1;
+                s.weather.t = 1;
             } else {
-                s.w.t = uint32(t - uint256(int256(-bT)));
+                s.weather.t = uint32(t - uint256(int256(-bT)));
             }
         } else {
-            s.w.t = uint32(t + uint256(int256(bT)));
+            s.weather.t = uint32(t + uint256(int256(bT)));
         }
 
         emit TemperatureChange(s.season.current, caseId, bT);
@@ -171,10 +171,10 @@ contract Weather is Sun {
             // Set the plenty per root equal to previous rain start.
             s.sops[s.season.current] = s.sops[s.season.rainStart];
             s.season.rainStart = s.season.current;
-            s.r.pods = s.f.pods;
-            s.r.roots = s.s.roots;
+            s.rain.pods = s.field.pods;
+            s.rain.roots = s.silo.roots;
         } else {
-            if (s.r.roots > 0) {
+            if (s.rain.roots > 0) {
                 // initalize sopWell if it is not already set.
                 if (s.sopWell == address(0)) s.sopWell = well;
                 sop();
@@ -205,9 +205,9 @@ contract Weather is Sun {
         uint256 newHarvestable;
 
         // Pay off remaining Pods if any exist.
-        if (s.f.harvestable < s.r.pods) {
-            newHarvestable = s.r.pods - s.f.harvestable;
-            s.f.harvestable = s.f.harvestable.add(newHarvestable);
+        if (s.field.harvestable < s.rain.pods) {
+            newHarvestable = s.rain.pods - s.field.harvestable;
+            s.field.harvestable = s.field.harvestable.add(newHarvestable);
             C.bean().mint(address(this), newHarvestable.add(sopBeans));
         } else {
             C.bean().mint(address(this), sopBeans);
@@ -239,7 +239,7 @@ contract Weather is Sun {
      */
     function rewardSop(uint256 amount) private {
         s.sops[s.season.rainStart] = s.sops[s.season.lastSop].add(
-            amount.mul(C.SOP_PRECISION).div(s.r.roots)
+            amount.mul(C.SOP_PRECISION).div(s.rain.roots)
         );
         s.season.lastSop = s.season.rainStart;
         s.season.lastSopSeason = s.season.current;

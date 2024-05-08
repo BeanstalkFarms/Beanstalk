@@ -73,7 +73,7 @@ contract MockSeasonFacet is SeasonFacet {
     }
 
     function setYieldE(uint256 t) public {
-        s.w.t = uint32(t);
+        s.weather.t = uint32(t);
     }
 
     function siloSunrise(uint256 amount) public {
@@ -159,7 +159,7 @@ contract MockSeasonFacet is SeasonFacet {
     function sunTemperatureSunrise(int256 deltaB, uint256 caseId, uint32 t) public {
         require(!s.paused, "Season: Paused.");
         s.season.current += 1;
-        s.w.t = t;
+        s.weather.t = t;
         s.season.sunriseBlock = uint32(block.number);
         stepSun(deltaB, caseId);
     }
@@ -229,7 +229,7 @@ contract MockSeasonFacet is SeasonFacet {
     }
 
     function setMaxTempE(uint32 number) public {
-        s.w.t = number;
+        s.weather.t = number;
     }
 
     function setAbovePegE(bool peg) public {
@@ -237,15 +237,15 @@ contract MockSeasonFacet is SeasonFacet {
     }
 
     function setLastDSoilE(uint128 number) public {
-        s.w.lastDSoil = number;
+        s.weather.lastDSoil = number;
     }
 
     function setNextSowTimeE(uint32 _time) public {
-        s.w.thisSowTime = _time;
+        s.weather.thisSowTime = _time;
     }
 
     function setLastSowTimeE(uint32 number) public {
-        s.w.lastSowTime = number;
+        s.weather.lastSowTime = number;
     }
 
     function setSoilE(uint256 amount) public {
@@ -253,19 +253,17 @@ contract MockSeasonFacet is SeasonFacet {
     }
 
     function resetState() public {
-
-        delete s.f;
-        delete s.s;
-        delete s.w;
-        s.w.lastSowTime = type(uint32).max;
-        s.w.thisSowTime = type(uint32).max;
-        delete s.g;
-        delete s.r;
+        delete s.field;
+        delete s.silo;
+        delete s.weather;
+        s.weather.lastSowTime = type(uint32).max;
+        s.weather.thisSowTime = type(uint32).max;
+        delete s.rain;
         delete s.co;
         delete s.season;
         s.season.start = block.timestamp;
         s.season.timestamp = block.timestamp;
-        s.s.stalk = 0;
+        s.silo.stalk = 0;
         s.season.withdrawSeasons = 25;
         s.season.current = 1;
         s.paused = false;
@@ -273,8 +271,8 @@ contract MockSeasonFacet is SeasonFacet {
     }
 
     function calcCaseIdE(int256 deltaB, uint128 endSoil) external {
-        s.f.soil = endSoil;
-        s.f.beanSown = endSoil;
+        s.field.soil = endSoil;
+        s.field.beanSown = endSoil;
         calcCaseIdandUpdate(deltaB);
     }
 
@@ -330,11 +328,11 @@ contract MockSeasonFacet is SeasonFacet {
 
         /// FIELD ///
         s.season.raining = raining;
-        s.r.roots = rainRoots ? 1 : 0;
-        s.f.pods = (pods.mul(C.bean().totalSupply()) / 1000); // previous tests used 1000 as the total supply.
-        s.w.lastDSoil = uint128(_lastDSoil);
-        s.f.beanSown = beanSown;
-        s.f.soil = endSoil;
+        s.rain.roots = rainRoots ? 1 : 0;
+        s.field.pods = (pods.mul(C.bean().totalSupply()) / 1000); // previous tests used 1000 as the total supply.
+        s.weather.lastDSoil = uint128(_lastDSoil);
+        s.field.beanSown = beanSown;
+        s.field.soil = endSoil;
         calcCaseIdandUpdate(deltaB);
     }
 
@@ -389,25 +387,25 @@ contract MockSeasonFacet is SeasonFacet {
 
         uint24 currentSeason = uint24(s.season.current);
 
-        s.ss[C.BEAN].stalkEarnedPerSeason = 2 * 1e6;
-        s.ss[C.BEAN].stalkIssuedPerBdv = 10000;
-        s.ss[C.BEAN].milestoneSeason = currentSeason;
-        s.ss[C.BEAN].milestoneStem = 0;
+        s.siloSettings[C.BEAN].stalkEarnedPerSeason = 2 * 1e6;
+        s.siloSettings[C.BEAN].stalkIssuedPerBdv = 10000;
+        s.siloSettings[C.BEAN].milestoneSeason = currentSeason;
+        s.siloSettings[C.BEAN].milestoneStem = 0;
 
-        s.ss[C.CURVE_BEAN_METAPOOL].stalkEarnedPerSeason = 4 * 1e6;
-        s.ss[C.CURVE_BEAN_METAPOOL].stalkIssuedPerBdv = 10000;
-        s.ss[C.CURVE_BEAN_METAPOOL].milestoneSeason = currentSeason;
-        s.ss[C.CURVE_BEAN_METAPOOL].milestoneStem = 0;
+        s.siloSettings[C.CURVE_BEAN_METAPOOL].stalkEarnedPerSeason = 4 * 1e6;
+        s.siloSettings[C.CURVE_BEAN_METAPOOL].stalkIssuedPerBdv = 10000;
+        s.siloSettings[C.CURVE_BEAN_METAPOOL].milestoneSeason = currentSeason;
+        s.siloSettings[C.CURVE_BEAN_METAPOOL].milestoneStem = 0;
 
-        s.ss[C.UNRIPE_BEAN].stalkEarnedPerSeason = 2 * 1e6;
-        s.ss[C.UNRIPE_BEAN].stalkIssuedPerBdv = 10000;
-        s.ss[C.UNRIPE_BEAN].milestoneSeason = currentSeason;
-        s.ss[C.UNRIPE_BEAN].milestoneStem = 0;
+        s.siloSettings[C.UNRIPE_BEAN].stalkEarnedPerSeason = 2 * 1e6;
+        s.siloSettings[C.UNRIPE_BEAN].stalkIssuedPerBdv = 10000;
+        s.siloSettings[C.UNRIPE_BEAN].milestoneSeason = currentSeason;
+        s.siloSettings[C.UNRIPE_BEAN].milestoneStem = 0;
 
-        s.ss[address(C.unripeLP())].stalkEarnedPerSeason = 2 * 1e6;
-        s.ss[address(C.unripeLP())].stalkIssuedPerBdv = 10000;
-        s.ss[address(C.unripeLP())].milestoneSeason = currentSeason;
-        s.ss[address(C.unripeLP())].milestoneStem = 0;
+        s.siloSettings[address(C.unripeLP())].stalkEarnedPerSeason = 2 * 1e6;
+        s.siloSettings[address(C.unripeLP())].stalkIssuedPerBdv = 10000;
+        s.siloSettings[address(C.unripeLP())].milestoneSeason = currentSeason;
+        s.siloSettings[address(C.unripeLP())].milestoneStem = 0;
 
         s.season.stemStartSeason = uint16(s.season.current);
     }
@@ -415,19 +413,19 @@ contract MockSeasonFacet is SeasonFacet {
     //constants for old seeds values
 
     function lastDSoil() external view returns (uint256) {
-        return uint256(s.w.lastDSoil);
+        return uint256(s.weather.lastDSoil);
     }
 
     function lastSowTime() external view returns (uint256) {
-        return uint256(s.w.lastSowTime);
+        return uint256(s.weather.lastSowTime);
     }
 
     function thisSowTime() external view returns (uint256) {
-        return uint256(s.w.thisSowTime);
+        return uint256(s.weather.thisSowTime);
     }
 
     function getT() external view returns (uint256) {
-        return uint256(s.w.t);
+        return uint256(s.weather.t);
     }
 
     function getUsdPrice(address token) external view returns (uint256) {
@@ -516,7 +514,7 @@ contract MockSeasonFacet is SeasonFacet {
         uint96 gaugePoints,
         uint64 optimalPercentDepositedBdv
     ) external {
-        Storage.SiloSettings storage ss = LibAppStorage.diamondStorage().ss[token];
+        Storage.SiloSettings storage ss = LibAppStorage.diamondStorage().siloSettings[token];
         ss.gpSelector = gaugePointSelector;
         ss.gaugePoints = gaugePoints;
         ss.optimalPercentDepositedBdv = optimalPercentDepositedBdv;
@@ -635,16 +633,16 @@ contract MockSeasonFacet is SeasonFacet {
         uint256 beanSupply = C.bean().totalSupply();
         if (podRate == 0) {
             // < 5%
-            s.f.pods = beanSupply.mul(49).div(1000);
+            s.field.pods = beanSupply.mul(49).div(1000);
         } else if (podRate == 1) {
             // < 15%
-            s.f.pods = beanSupply.mul(149).div(1000);
+            s.field.pods = beanSupply.mul(149).div(1000);
         } else if (podRate == 2) {
             // < 25%
-            s.f.pods = beanSupply.mul(249).div(1000);
+            s.field.pods = beanSupply.mul(249).div(1000);
         } else {
             // > 25%
-            s.f.pods = beanSupply.mul(251).div(1000);
+            s.field.pods = beanSupply.mul(251).div(1000);
         }
     }
 
@@ -655,16 +653,16 @@ contract MockSeasonFacet is SeasonFacet {
     function setChangeInSoilDemand(uint256 changeInSoilDemand) public {
         if (changeInSoilDemand == 0) {
             // decreasing demand
-            s.w.lastSowTime = 600; // last season, everything was sown in 10 minutes.
-            s.w.thisSowTime = 1200; // this season, everything was sown in 20 minutes.
+            s.weather.lastSowTime = 600; // last season, everything was sown in 10 minutes.
+            s.weather.thisSowTime = 1200; // this season, everything was sown in 20 minutes.
         } else if (changeInSoilDemand == 1) {
             // steady demand
-            s.w.lastSowTime = 600; // last season, everything was sown in 10 minutes.
-            s.w.thisSowTime = 600; // this season, everything was sown in 10 minutes.
+            s.weather.lastSowTime = 600; // last season, everything was sown in 10 minutes.
+            s.weather.thisSowTime = 600; // this season, everything was sown in 10 minutes.
         } else {
             // increasing demand
-            s.w.lastSowTime = type(uint32).max; // last season, no one sow'd
-            s.w.thisSowTime = type(uint32).max - 1; // this season, someone sow'd
+            s.weather.lastSowTime = type(uint32).max; // last season, no one sow'd
+            s.weather.thisSowTime = type(uint32).max - 1; // this season, someone sow'd
         }
     }
 

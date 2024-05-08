@@ -31,7 +31,9 @@ library LibUnripe {
     function percentBeansRecapped() internal view returns (uint256 percent) {
         AppStorage storage s = LibAppStorage.diamondStorage();
         return
-            s.u[C.UNRIPE_BEAN].balanceOfUnderlying.mul(DECIMALS).div(C.unripeBean().totalSupply());
+            s.unripeSettings[C.UNRIPE_BEAN].balanceOfUnderlying.mul(DECIMALS).div(
+                C.unripeBean().totalSupply()
+            );
     }
 
     /**
@@ -49,7 +51,10 @@ library LibUnripe {
      */
     function incrementUnderlying(address token, uint256 amount) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        s.u[token].balanceOfUnderlying = s.u[token].balanceOfUnderlying.add(amount);
+        s.unripeSettings[token].balanceOfUnderlying = s
+            .unripeSettings[token]
+            .balanceOfUnderlying
+            .add(amount);
         emit ChangeUnderlying(token, int256(amount));
     }
 
@@ -60,7 +65,10 @@ library LibUnripe {
      */
     function decrementUnderlying(address token, uint256 amount) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        s.u[token].balanceOfUnderlying = s.u[token].balanceOfUnderlying.sub(amount);
+        s.unripeSettings[token].balanceOfUnderlying = s
+            .unripeSettings[token]
+            .balanceOfUnderlying
+            .sub(amount);
         emit ChangeUnderlying(token, -int256(amount));
     }
 
@@ -76,7 +84,7 @@ library LibUnripe {
         uint256 supply
     ) internal view returns (uint256 underlying) {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        underlying = s.u[unripeToken].balanceOfUnderlying.mul(unripe).div(supply);
+        underlying = s.unripeSettings[unripeToken].balanceOfUnderlying.mul(unripe).div(supply);
     }
 
     /**
@@ -91,7 +99,7 @@ library LibUnripe {
     ) internal view returns (uint256 unripe) {
         AppStorage storage s = LibAppStorage.diamondStorage();
         unripe = IBean(unripeToken).totalSupply().mul(underlying).div(
-            s.u[unripeToken].balanceOfUnderlying
+            s.unripeSettings[unripeToken].balanceOfUnderlying
         );
     }
 
@@ -105,7 +113,7 @@ library LibUnripe {
         AppStorage storage s = LibAppStorage.diamondStorage();
         if (token == C.UNRIPE_LP) {
             uint256 recapped = underlying.mul(s.recapitalized).div(
-                s.u[C.UNRIPE_LP].balanceOfUnderlying
+                s.unripeSettings[C.UNRIPE_LP].balanceOfUnderlying
             );
             s.recapitalized = s.recapitalized.add(recapped);
         }
@@ -122,7 +130,7 @@ library LibUnripe {
         AppStorage storage s = LibAppStorage.diamondStorage();
         if (token == C.UNRIPE_LP) {
             uint256 recapped = underlying.mul(s.recapitalized).div(
-                s.u[C.UNRIPE_LP].balanceOfUnderlying
+                s.unripeSettings[C.UNRIPE_LP].balanceOfUnderlying
             );
             s.recapitalized = s.recapitalized.sub(recapped);
         }
@@ -131,11 +139,11 @@ library LibUnripe {
 
     /**
      * @dev Switches the underlying token of an unripe token.
-     * Should only be called if `s.u[unripeToken].balanceOfUnderlying == 0`.
+     * Should only be called if `s.unripeSettings[unripeToken].balanceOfUnderlying == 0`.
      */
     function switchUnderlyingToken(address unripeToken, address newUnderlyingToken) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        s.u[unripeToken].underlyingToken = newUnderlyingToken;
+        s.unripeSettings[unripeToken].underlyingToken = newUnderlyingToken;
         emit SwitchUnderlyingToken(unripeToken, newUnderlyingToken);
     }
 
@@ -191,7 +199,7 @@ library LibUnripe {
             C.UNRIPE_LP,
             getRecapPaidPercentAmount(1e6)
         );
-        address underlying = s.u[C.UNRIPE_LP].underlyingToken;
+        address underlying = s.unripeSettings[C.UNRIPE_LP].underlyingToken;
         uint256 beanIndex = LibWell.getBeanIndexFromWell(underlying);
 
         // lpTokenSupply is calculated rather than calling totalSupply(),
@@ -222,7 +230,7 @@ library LibUnripe {
      */
     function isUnripe(address unripeToken) internal view returns (bool unripe) {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        unripe = s.u[unripeToken].underlyingToken != address(0);
+        unripe = s.unripeSettings[unripeToken].underlyingToken != address(0);
     }
 
     /**
@@ -234,13 +242,13 @@ library LibUnripe {
         uint256 supply
     ) internal view returns (uint256 redeem) {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        redeem = s.u[unripeToken].balanceOfUnderlying.mul(amount).div(supply);
+        redeem = s.unripeSettings[unripeToken].balanceOfUnderlying.mul(amount).div(supply);
     }
 
     function _getUnderlyingToken(
         address unripeToken
     ) internal view returns (address underlyingToken) {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        return s.u[unripeToken].underlyingToken;
+        return s.unripeSettings[unripeToken].underlyingToken;
     }
 }

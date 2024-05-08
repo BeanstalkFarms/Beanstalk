@@ -260,7 +260,7 @@ library LibTokenSilo {
      * @dev Once the BDV received for Depositing `amount` of `token` is known,
      * add a Deposit for `account` and update the total amount Deposited.
      *
-     * `s.ss[token].stalkIssuedPerBdv` stores the number of Stalk per BDV for `token`.
+     * `s.siloSettings[token].stalkIssuedPerBdv` stores the number of Stalk per BDV for `token`.
      */
     function depositWithBDV(
         address account,
@@ -280,7 +280,7 @@ library LibTokenSilo {
 
         addDepositToAccount(account, token, stem, amount, bdv, Transfer.emitTransferSingle);
 
-        stalk = bdv.mul(s.ss[token].stalkIssuedPerBdv);
+        stalk = bdv.mul(s.siloSettings[token].stalkIssuedPerBdv);
     }
 
     /**
@@ -311,17 +311,23 @@ library LibTokenSilo {
         uint256 depositId = LibBytes.packAddressAndStem(token, stem);
 
         // add amount and bdv to the deposits.
-        s.a[account].deposits[depositId].amount = s.a[account].deposits[depositId].amount.add(
-            amount.toUint128()
-        );
-        s.a[account].deposits[depositId].bdv = s.a[account].deposits[depositId].bdv.add(
-            bdv.toUint128()
-        );
+        s.accountStates[account].deposits[depositId].amount = s
+            .accountStates[account]
+            .deposits[depositId]
+            .amount
+            .add(amount.toUint128());
+        s.accountStates[account].deposits[depositId].bdv = s
+            .accountStates[account]
+            .deposits[depositId]
+            .bdv
+            .add(bdv.toUint128());
 
         // Will not overflow b/c crateBDV <= type(uint128).max
-        s.a[account].mowStatuses[token].bdv = s.a[account].mowStatuses[token].bdv.add(
-            bdv.toUint128()
-        );
+        s.accountStates[account].mowStatuses[token].bdv = s
+            .accountStates[account]
+            .mowStatuses[token]
+            .bdv
+            .add(bdv.toUint128());
 
         /**
          *  {addDepositToAccount} is used for both depositing and transferring deposits.
@@ -348,7 +354,7 @@ library LibTokenSilo {
      * @dev Remove `amount` of `token` from a user's Deposit in `stem`.
      *
      * A "Crate" refers to the existing Deposit in storage at:
-     *  `s.a[account].deposits[token][stem]`
+     *  `s.accountStates[account].deposits[token][stem]`
      *
      * Partially removing a Deposit should scale its BDV proportionally. For ex.
      * removing 80% of the tokens from a Deposit should reduce its BDV by 80%.
@@ -371,8 +377,8 @@ library LibTokenSilo {
         AppStorage storage s = LibAppStorage.diamondStorage();
         uint256 depositId = LibBytes.packAddressAndStem(token, stem);
 
-        uint256 crateAmount = s.a[account].deposits[depositId].amount;
-        crateBDV = s.a[account].deposits[depositId].bdv;
+        uint256 crateAmount = s.accountStates[account].deposits[depositId].amount;
+        crateBDV = s.accountStates[account].deposits[depositId].bdv;
         // if amount is > crateAmount, check if user has a legacy deposit:
         if (amount > crateAmount) {
             // get the absolute stem value.
@@ -400,22 +406,26 @@ library LibTokenSilo {
 
             // SafeCast unnecessary b/c updatedAmount <= crateAmount and updatedBDV <= crateBDV,
             // which are both <= type(uint128).max
-            s.a[account].deposits[depositId].amount = uint128(updatedAmount);
-            s.a[account].deposits[depositId].bdv = uint128(updatedBDV);
+            s.accountStates[account].deposits[depositId].amount = uint128(updatedAmount);
+            s.accountStates[account].deposits[depositId].bdv = uint128(updatedBDV);
 
-            s.a[account].mowStatuses[token].bdv = s.a[account].mowStatuses[token].bdv.sub(
-                uint128(removedBDV)
-            );
+            s.accountStates[account].mowStatuses[token].bdv = s
+                .accountStates[account]
+                .mowStatuses[token]
+                .bdv
+                .sub(uint128(removedBDV));
 
             return removedBDV;
         }
         // Full remove
-        if (crateAmount > 0) delete s.a[account].deposits[depositId];
+        if (crateAmount > 0) delete s.accountStates[account].deposits[depositId];
 
         // Will not overflow b/c crateBDV <= type(uint128).max
-        s.a[account].mowStatuses[token].bdv = s.a[account].mowStatuses[token].bdv.sub(
-            uint128(crateBDV)
-        );
+        s.accountStates[account].mowStatuses[token].bdv = s
+            .accountStates[account]
+            .mowStatuses[token]
+            .bdv
+            .sub(uint128(crateBDV));
     }
 
     //////////////////////// GETTERS ////////////////////////
@@ -431,10 +441,15 @@ library LibTokenSilo {
         uint256 amount
     ) internal view returns (uint256 bdv) {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        require(s.ss[token].selector != bytes4(0), "Silo: Token not whitelisted");
+        require(s.siloSettings[token].selector != bytes4(0), "Silo: Token not whitelisted");
 
         (bool success, bytes memory data) = address(this).staticcall(
-            encodeBdvFunction(token, s.ss[token].encodeType, s.ss[token].selector, amount)
+            encodeBdvFunction(
+                token,
+                s.siloSettings[token].encodeType,
+                s.siloSettings[token].selector,
+                amount
+            )
         );
 
         if (!success) {
@@ -482,8 +497,8 @@ library LibTokenSilo {
     ) internal view returns (uint256 amount, uint256 bdv) {
         AppStorage storage s = LibAppStorage.diamondStorage();
         uint256 depositId = LibBytes.packAddressAndStem(token, stem);
-        amount = s.a[account].deposits[depositId].amount;
-        bdv = s.a[account].deposits[depositId].bdv;
+        amount = s.accountStates[account].deposits[depositId].amount;
+        bdv = s.accountStates[account].deposits[depositId].bdv;
     }
 
     /**
@@ -492,7 +507,7 @@ library LibTokenSilo {
      */
     function stalkEarnedPerSeason(address token) internal view returns (uint256) {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        return uint256(s.ss[token].stalkEarnedPerSeason);
+        return uint256(s.siloSettings[token].stalkEarnedPerSeason);
     }
 
     /**
@@ -500,7 +515,7 @@ library LibTokenSilo {
      */
     function stalkIssuedPerBdv(address token) internal view returns (uint256) {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        return uint256(s.ss[token].stalkIssuedPerBdv);
+        return uint256(s.siloSettings[token].stalkIssuedPerBdv);
     }
 
     /**
@@ -510,9 +525,9 @@ library LibTokenSilo {
         AppStorage storage s = LibAppStorage.diamondStorage();
         // Will not over/underflow because all casted variables are types smaller that int96.
         _stemTip =
-            s.ss[token].milestoneStem +
-            toInt96(s.ss[token].stalkEarnedPerSeason).mul(
-                toInt96(s.season.current).sub(toInt96(s.ss[token].milestoneSeason))
+            s.siloSettings[token].milestoneStem +
+            toInt96(s.siloSettings[token].stalkEarnedPerSeason).mul(
+                toInt96(s.season.current).sub(toInt96(s.siloSettings[token].milestoneSeason))
             );
     }
 
@@ -608,11 +623,11 @@ library LibTokenSilo {
         AppStorage storage s = LibAppStorage.diamondStorage();
         // divide the newStem by 1e6 to get the legacy stem.
         uint256 legacyDepositId = LibBytes.packAddressAndStem(token, newStem.div(1e6));
-        uint256 legacyAmount = s.a[account].legacyV3Deposits[legacyDepositId].amount;
-        uint256 legacyBdv = s.a[account].legacyV3Deposits[legacyDepositId].bdv;
+        uint256 legacyAmount = s.accountStates[account].legacyV3Deposits[legacyDepositId].amount;
+        uint256 legacyBdv = s.accountStates[account].legacyV3Deposits[legacyDepositId].bdv;
         crateAmount = crateAmount.add(legacyAmount);
         crateBdv = crateBdv.add(legacyBdv);
-        delete s.a[account].legacyV3Deposits[legacyDepositId];
+        delete s.accountStates[account].legacyV3Deposits[legacyDepositId];
 
         // Emit burn events.
         emit TransferSingle(LibTractor._user(), account, address(0), legacyDepositId, legacyAmount);

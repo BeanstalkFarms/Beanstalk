@@ -67,14 +67,14 @@ contract SeasonGettersFacet {
      * @notice Returns the current Weather struct. See {AppStorage:Storage.Weather}.
      */
     function weather() public view returns (Storage.Weather memory) {
-        return s.w;
+        return s.weather;
     }
 
     /**
      * @notice Returns the current Rain struct. See {AppStorage:Storage.Rain}.
      */
     function rain() public view returns (Storage.Rain memory) {
-        return s.r;
+        return s.rain;
     }
 
     /**
@@ -180,7 +180,7 @@ contract SeasonGettersFacet {
      */
     function getGaugePointsPerBdvForWell(address well) public view returns (uint256) {
         if (LibWell.isWell(well)) {
-            uint256 wellGaugePoints = s.ss[well].gaugePoints;
+            uint256 wellGaugePoints = s.siloSettings[well].gaugePoints;
             uint256 wellDepositedBdv = s.siloBalances[well].depositedBdv;
             return wellGaugePoints.mul(LibGauge.BDV_PRECISION).div(wellDepositedBdv);
         } else {
@@ -225,7 +225,7 @@ contract SeasonGettersFacet {
         address[] memory lpGaugeTokens = LibWhitelistedTokens.getWhitelistedLpTokens();
         uint256 totalGaugePoints;
         for (uint i; i < lpGaugeTokens.length; i++) {
-            totalGaugePoints = totalGaugePoints.add(s.ss[lpGaugeTokens[i]].gaugePoints);
+            totalGaugePoints = totalGaugePoints.add(s.siloSettings[lpGaugeTokens[i]].gaugePoints);
         }
         uint256 newGrownStalk = getGrownStalkIssuedPerSeason();
         totalGaugePoints = totalGaugePoints.add(
@@ -241,7 +241,7 @@ contract SeasonGettersFacet {
      */
     function getPodRate() external view returns (uint256) {
         uint256 beanSupply = C.bean().totalSupply();
-        return Decimal.ratio(s.f.pods.sub(s.f.harvestable), beanSupply).value;
+        return Decimal.ratio(s.field.pods.sub(s.field.harvestable), beanSupply).value;
     }
 
     /**
@@ -258,7 +258,7 @@ contract SeasonGettersFacet {
      */
     function getDeltaPodDemand() external view returns (uint256) {
         Decimal.D256 memory deltaPodDemand;
-        (deltaPodDemand, , ) = LibEvaluate.calcDeltaPodDemand(s.f.beanSown);
+        (deltaPodDemand, , ) = LibEvaluate.calcDeltaPodDemand(s.field.beanSown);
         return deltaPodDemand.value;
     }
 
@@ -277,7 +277,7 @@ contract SeasonGettersFacet {
     function getWeightedTwaLiquidityForWell(address well) public view returns (uint256) {
         return
             LibEvaluate
-                .getLiquidityWeight(s.ss[well].lwSelector)
+                .getLiquidityWeight(s.siloSettings[well].lwSelector)
                 .mul(getTwaLiquidityForWell(well))
                 .div(1e18);
     }
@@ -308,7 +308,7 @@ contract SeasonGettersFacet {
      * @notice Returns the current gauge points of a token.
      */
     function getGaugePoints(address token) external view returns (uint256) {
-        return s.ss[token].gaugePoints;
+        return s.siloSettings[token].gaugePoints;
     }
 
     function getLargestLiqWell() external view returns (address) {

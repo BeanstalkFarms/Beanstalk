@@ -119,7 +119,7 @@ contract FieldFacet is Invariable, ReentrancyGuard {
     ) internal returns (uint256 pods) {
         beans = LibTransfer.burnToken(C.bean(), beans, LibTractor._user(), mode);
         pods = LibDibbler.sow(beans, _morningTemperature, LibTractor._user(), peg);
-        s.f.beanSown = s.f.beanSown + SafeCast.toUint128(beans);
+        s.field.beanSown = s.field.beanSown + SafeCast.toUint128(beans);
     }
 
     //////////////////// HARVEST ////////////////////
@@ -135,7 +135,7 @@ contract FieldFacet is Invariable, ReentrancyGuard {
      * Beanstalk holds these Beans until `harvest()` is called.
      *
      * Pods are "burned" when the corresponding Plot is deleted from
-     * `s.a[account].field.plots`.
+     * `s.accountStates[account].field.plots`.
      */
     function harvest(
         uint256[] calldata plots,
@@ -153,11 +153,11 @@ contract FieldFacet is Invariable, ReentrancyGuard {
         for (uint256 i; i < plots.length; ++i) {
             // The Plot is partially harvestable if its index is less than
             // the current harvestable index.
-            require(plots[i] < s.f.harvestable, "Field: Plot not Harvestable");
+            require(plots[i] < s.field.harvestable, "Field: Plot not Harvestable");
             uint256 harvested = _harvestPlot(LibTractor._user(), plots[i]);
             beansHarvested = beansHarvested.add(harvested);
         }
-        s.f.harvested = s.f.harvested.add(beansHarvested);
+        s.field.harvested = s.field.harvested.add(beansHarvested);
         emit Harvest(LibTractor._user(), plots, beansHarvested);
     }
 
@@ -170,14 +170,14 @@ contract FieldFacet is Invariable, ReentrancyGuard {
         uint256 index
     ) private returns (uint256 harvestablePods) {
         // Check that `account` holds this Plot.
-        uint256 pods = s.a[account].field.plots[index];
+        uint256 pods = s.accountStates[account].field.plots[index];
         require(pods > 0, "Field: no plot");
 
         // Calculate how many Pods are harvestable.
         // The upstream _harvest function checks that at least some Pods
         // are harvestable.
-        harvestablePods = s.f.harvestable.sub(index);
-        delete s.a[account].field.plots[index];
+        harvestablePods = s.field.harvestable.sub(index);
+        delete s.accountStates[account].field.plots[index];
 
         // Cancel any active Pod Listings active for this Plot.
         // Note: duplicate of {Listing._cancelPodListing} without the
@@ -193,7 +193,9 @@ contract FieldFacet is Invariable, ReentrancyGuard {
         }
 
         // Create a new Plot with remaining Pods.
-        s.a[account].field.plots[index.add(harvestablePods)] = pods.sub(harvestablePods);
+        s.accountStates[account].field.plots[index.add(harvestablePods)] = pods.sub(
+            harvestablePods
+        );
     }
 
     //////////////////// GETTERS ////////////////////
@@ -202,14 +204,14 @@ contract FieldFacet is Invariable, ReentrancyGuard {
      * @notice Returns the total number of Pods ever minted.
      */
     function podIndex() public view returns (uint256) {
-        return s.f.pods;
+        return s.field.pods;
     }
 
     /**
      * @notice Returns the index below which Pods are Harvestable.
      */
     function harvestableIndex() public view returns (uint256) {
-        return s.f.harvestable;
+        return s.field.harvestable;
     }
 
     /**
@@ -217,14 +219,14 @@ contract FieldFacet is Invariable, ReentrancyGuard {
      * currently Harvestable but have not yet been Harvested.
      */
     function totalPods() public view returns (uint256) {
-        return s.f.pods.sub(s.f.harvested);
+        return s.field.pods.sub(s.field.harvested);
     }
 
     /**
      * @notice Returns the number of Pods that have ever been Harvested.
      */
     function totalHarvested() public view returns (uint256) {
-        return s.f.harvested;
+        return s.field.harvested;
     }
 
     /**
@@ -234,22 +236,22 @@ contract FieldFacet is Invariable, ReentrancyGuard {
      * but that haven’t yet been claimed via the `harvest()` function.
      */
     function totalHarvestable() public view returns (uint256) {
-        return s.f.harvestable.sub(s.f.harvested);
+        return s.field.harvestable.sub(s.field.harvested);
     }
 
     /**
      * @notice Returns the number of Pods that are not yet Harvestable. Also known as the Pod Line.
      */
     function totalUnharvestable() public view returns (uint256) {
-        return s.f.pods.sub(s.f.harvestable);
+        return s.field.pods.sub(s.field.harvestable);
     }
 
     /**
      * @notice Returns the number of Pods remaining in a Plot.
-     * @dev Plots are only stored in the `s.a[account].field.plots` mapping.
+     * @dev Plots are only stored in the `s.accountStates[account].field.plots` mapping.
      */
     function plot(address account, uint256 index) public view returns (uint256) {
-        return s.a[account].field.plots[index];
+        return s.accountStates[account].field.plots[index];
     }
 
     /**
@@ -268,17 +270,17 @@ contract FieldFacet is Invariable, ReentrancyGuard {
 
         // Below peg: Soil is fixed to the amount set during {calcCaseId}.
         // Morning Temperature is dynamic, starting small and logarithmically
-        // increasing to `s.w.t` across the first 25 blocks of the Season.
+        // increasing to `s.weather.t` across the first 25 blocks of the Season.
         if (!abovePeg) {
-            soil = uint256(s.f.soil);
+            soil = uint256(s.field.soil);
         }
         // Above peg: the maximum amount of Pods that Beanstalk is willing to mint
         // stays fixed; since {morningTemperature} is scaled down when `delta < 25`, we
         // need to scale up the amount of Soil to hold Pods constant.
         else {
             soil = LibDibbler.scaleSoilUp(
-                uint256(s.f.soil), // max soil offered this Season, reached when `t >= 25`
-                uint256(s.w.t).mul(LibDibbler.TEMPERATURE_PRECISION), // max temperature
+                uint256(s.field.soil), // max soil offered this Season, reached when `t >= 25`
+                uint256(s.weather.t).mul(LibDibbler.TEMPERATURE_PRECISION), // max temperature
                 _morningTemperature // temperature adjusted by number of blocks since Sunrise
             );
         }
@@ -295,14 +297,14 @@ contract FieldFacet is Invariable, ReentrancyGuard {
     function totalSoil() external view returns (uint256) {
         // Below peg: Soil is fixed to the amount set during {calcCaseId}.
         if (!s.season.abovePeg) {
-            return uint256(s.f.soil);
+            return uint256(s.field.soil);
         }
 
         // Above peg: Soil is dynamic
         return
             LibDibbler.scaleSoilUp(
-                uint256(s.f.soil), // min soil
-                uint256(s.w.t).mul(LibDibbler.TEMPERATURE_PRECISION), // max temperature
+                uint256(s.field.soil), // min soil
+                uint256(s.weather.t).mul(LibDibbler.TEMPERATURE_PRECISION), // max temperature
                 LibDibbler.morningTemperature() // temperature adjusted by number of blocks since Sunrise
             );
     }
@@ -319,12 +321,12 @@ contract FieldFacet is Invariable, ReentrancyGuard {
 
     /**
      * @notice Returns the max Temperature that Beanstalk is willing to offer this Season.
-     * @dev For gas efficiency, Beanstalk stores `s.w.t` as a uint32 with precision of 1e2.
+     * @dev For gas efficiency, Beanstalk stores `s.weather.t` as a uint32 with precision of 1e2.
      * Here we convert to uint256 and scale up by TEMPERATURE_PRECISION to match the
      * precision needed for the Morning Auction functionality.
      */
     function maxTemperature() external view returns (uint256) {
-        return uint256(s.w.t).mul(LibDibbler.TEMPERATURE_PRECISION);
+        return uint256(s.weather.t).mul(LibDibbler.TEMPERATURE_PRECISION);
     }
 
     //////////////////// GETTERS: PODS ////////////////////

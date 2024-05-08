@@ -107,9 +107,9 @@ contract InitalizeDiamond {
      * @notice Initalizes field parameters.
      */
     function initalizeField() internal {
-        s.w.t = 1;
-        s.w.thisSowTime = type(uint32).max;
-        s.w.lastSowTime = type(uint32).max;
+        s.weather.t = 1;
+        s.weather.thisSowTime = type(uint32).max;
+        s.weather.lastSowTime = type(uint32).max;
         s.isFarm = 1;
     }
 
@@ -188,7 +188,7 @@ contract InitalizeDiamond {
     ) internal {
         for (uint256 i = 0; i < tokens.length; i++) {
             // note: no error checking.
-            s.ss[tokens[i]] = siloSettings[i];
+            s.siloSettings[tokens[i]] = siloSettings[i];
 
             bool isLPandWell = true;
             if (tokens[i] == C.BEAN) {

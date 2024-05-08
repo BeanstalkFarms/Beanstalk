@@ -98,7 +98,7 @@ library LibWell {
      */
     function isWell(address well) internal view returns (bool _isWell) {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        return s.ss[well].selector == WELL_BDV_SELECTOR;
+        return s.siloSettings[well].selector == WELL_BDV_SELECTOR;
     }
 
     /**

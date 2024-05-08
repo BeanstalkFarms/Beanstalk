@@ -61,7 +61,7 @@ contract MockInitDiamond is InitalizeDiamond {
     ) internal {
         for (uint i; i < tokens.length; i++) {
             // sets the silo settings for each token.
-            s.ss[tokens[i]] = siloSettings[i];
+            s.siloSettings[tokens[i]] = siloSettings[i];
             // note: unripeLP is not an LP token (only the underlying is)
             LibWhitelistedTokens.addWhitelistStatus(
                 tokens[i],
@@ -87,7 +87,7 @@ contract MockInitDiamond is InitalizeDiamond {
         }
 
         // sets the barn raise token to the underlying of the unripe LP.
-        s.u[unripeToken[underlyingToken.length - 1]].underlyingToken = barnRaiseWell;
+        s.unripeSettings[unripeToken[underlyingToken.length - 1]].underlyingToken = barnRaiseWell;
     }
 
     /**
@@ -150,7 +150,7 @@ contract MockInitDiamond is InitalizeDiamond {
     function whitelistUnderlyingUrLPWell(address well) internal {
         // whitelist bean:stETH well
         // note: no error checking:
-        s.ss[well] = Storage.SiloSettings({
+        s.siloSettings[well] = Storage.SiloSettings({
             selector: BDVFacet.wellBdv.selector,
             stalkEarnedPerSeason: INIT_BEAN_WSTETH_WELL_STALK_EARNED_PER_SEASON,
             stalkIssuedPerBdv: INIT_STALK_ISSUED_PER_BDV,

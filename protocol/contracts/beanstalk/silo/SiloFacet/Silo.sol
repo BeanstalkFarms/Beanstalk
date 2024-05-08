@@ -99,10 +99,10 @@ contract Silo is ReentrancyGuard {
         // Earned Beans.
 
         LibSilo._mow(account, C.BEAN);
-        uint256 accountStalk = s.a[account].s.stalk;
+        uint256 accountStalk = s.accountStates[account].silo.stalk;
 
         // Calculate balance of Earned Beans.
-        beans = LibSilo._balanceOfEarnedBeans(accountStalk, s.a[account].roots);
+        beans = LibSilo._balanceOfEarnedBeans(accountStalk, s.accountStates[account].roots);
         stemTip = LibTokenSilo.stemTipForToken(C.BEAN);
         if (beans == 0) return (0, stemTip);
 
@@ -124,10 +124,10 @@ contract Silo is ReentrancyGuard {
         // Earned Stalk are minted when Earned Beans are minted during Sunrise. See {Sun.sol:rewardToSilo} for details.
         // Similarly, `account` does not receive additional Roots from Earned Stalk during a Plant.
         // The following lines allocate Earned Stalk that has already been minted to `account`.
-        // Constant is used here rather than s.ss[BEAN].stalkIssuedPerBdv
+        // Constant is used here rather than s.siloSettings[BEAN].stalkIssuedPerBdv
         // for gas savings.
         uint256 stalk = beans.mul(C.STALK_PER_BEAN);
-        s.a[account].s.stalk = accountStalk.add(stalk);
+        s.accountStates[account].silo.stalk = accountStalk.add(stalk);
 
         emit StalkBalanceChanged(account, int256(stalk), 0);
         emit Plant(account, beans);
@@ -137,15 +137,15 @@ contract Silo is ReentrancyGuard {
 
     /**
      * @dev Gas optimization: An account can call `{SiloFacet:claimPlenty}` even
-     * if `s.a[account].sop.plenty == 0`. This would emit a ClaimPlenty event
+     * if `s.accountStates[account].sop.plenty == 0`. This would emit a ClaimPlenty event
      * with an amount of 0.
      */
     function _claimPlenty(address account) internal {
         // Plenty is earned in the form of the non-Bean token in the SOP Well.
-        uint256 plenty = s.a[account].sop.plenty;
+        uint256 plenty = s.accountStates[account].sop.plenty;
         IERC20 sopToken = LibSilo.getSopToken();
         sopToken.safeTransfer(account, plenty);
-        delete s.a[account].sop.plenty;
+        delete s.accountStates[account].sop.plenty;
         s.plenty -= plenty;
 
         emit ClaimPlenty(account, address(sopToken), plenty);

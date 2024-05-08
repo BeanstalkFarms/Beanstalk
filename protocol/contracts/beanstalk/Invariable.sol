@@ -48,14 +48,14 @@ abstract contract Invariable {
      * @dev Roughly akin to a view only check where only routine modifications are allowed (ie mowing).
      */
     modifier noNetFlow() {
-        uint256 initialStalk = LibAppStorage.diamondStorage().s.stalk;
+        uint256 initialStalk = LibAppStorage.diamondStorage().silo.stalk;
         address[] memory tokens = getTokensOfInterest();
         uint256[] memory initialProtocolTokenBalances = getTokenBalances(tokens);
         _;
         uint256[] memory finalProtocolTokenBalances = getTokenBalances(tokens);
 
         require(
-            LibAppStorage.diamondStorage().s.stalk >= initialStalk,
+            LibAppStorage.diamondStorage().silo.stalk >= initialStalk,
             "INV: noNetFlow Stalk decreased"
         );
         for (uint256 i; i < tokens.length; i++) {
@@ -71,14 +71,14 @@ abstract contract Invariable {
      * @dev Favor noNetFlow where applicable.
      */
     modifier noOutFlow() {
-        uint256 initialStalk = LibAppStorage.diamondStorage().s.stalk;
+        uint256 initialStalk = LibAppStorage.diamondStorage().silo.stalk;
         address[] memory tokens = getTokensOfInterest();
         uint256[] memory initialProtocolTokenBalances = getTokenBalances(tokens);
         _;
         uint256[] memory finalProtocolTokenBalances = getTokenBalances(tokens);
 
         require(
-            LibAppStorage.diamondStorage().s.stalk >= initialStalk,
+            LibAppStorage.diamondStorage().silo.stalk >= initialStalk,
             "INV: noOutFlow Stalk decreased"
         );
         for (uint256 i; i < tokens.length; i++) {
@@ -172,17 +172,16 @@ abstract contract Invariable {
         for (uint256 i; i < tokens.length; i++) {
             entitlements[i] =
                 s.siloBalances[tokens[i]].deposited +
-                s.siloBalances[tokens[i]].withdrawn +
                 s.evenGerminating.deposited[tokens[i]].amount +
                 s.oddGerminating.deposited[tokens[i]].amount +
                 s.internalTokenBalanceTotal[IERC20(tokens[i])];
             if (tokens[i] == C.BEAN) {
                 entitlements[i] +=
-                    s.f.harvestable.sub(s.f.harvested) + // unharvestable harvestable beans
+                    s.field.harvestable.sub(s.field.harvested) + // unharvestable harvestable beans
                     s.fertilizedIndex.sub(s.fertilizedPaidIndex) + // unrinsed rinsable beans
-                    s.u[C.UNRIPE_BEAN].balanceOfUnderlying; // unchopped underlying beans
+                    s.unripeSettings[C.UNRIPE_BEAN].balanceOfUnderlying; // unchopped underlying beans
             } else if (tokens[i] == LibUnripe._getUnderlyingToken(C.UNRIPE_LP)) {
-                entitlements[i] += s.u[C.UNRIPE_LP].balanceOfUnderlying;
+                entitlements[i] += s.unripeSettings[C.UNRIPE_LP].balanceOfUnderlying;
             }
             if (s.sopWell != address(0) && tokens[i] == address(LibSilo.getSopToken())) {
                 entitlements[i] += s.plenty;
