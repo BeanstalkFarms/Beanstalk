@@ -41,7 +41,7 @@ library LibLegacyTokenSilo {
     uint32 constant ENROOT_FIX_SEASON = 12793; //season in which enroot ebip-8 fix was deployed
 
     //this is the legacy seasons-based remove deposits event, emitted on migration
-    event RemoveDeposit(
+    event RemoveDepositLegacy(
         address indexed account,
         address indexed token,
         uint32 season,
@@ -332,7 +332,7 @@ library LibLegacyTokenSilo {
                 );
 
                 // emit legacy RemoveDeposit event
-                emit RemoveDeposit(
+                emit RemoveDepositLegacy(
                     account,
                     perTokenData.token,
                     perDepositData.season,
