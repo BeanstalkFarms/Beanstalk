@@ -39,17 +39,14 @@ library LibWellConvert {
         IERC20[] memory tokens = IWell(well).tokens();
         uint256[] memory reserves = IWell(well).getReserves();
         Call memory wellFunction = IWell(well).wellFunction();
-        uint256[] memory ratios; bool success;
+        uint256[] memory ratios;
+        bool success;
         (ratios, beanIndex, success) = LibWell.getRatiosAndBeanIndex(tokens);
         // If the USD Oracle oracle call fails, the convert should not be allowed.
         require(success, "Convert: USD Oracle failed");
 
-        uint256 beansAtPeg = IBeanstalkWellFunction(wellFunction.target).calcReserveAtRatioLiquidity(
-            reserves,
-            beanIndex,
-            ratios,
-            wellFunction.data
-        );
+        uint256 beansAtPeg = IBeanstalkWellFunction(wellFunction.target)
+            .calcReserveAtRatioLiquidity(reserves, beanIndex, ratios, wellFunction.data);
 
 
         if (beansAtPeg <= reserves[beanIndex]) return (0, beanIndex);
@@ -58,23 +55,21 @@ library LibWellConvert {
     }
 
     /**
-     * @dev Calculates the maximum amount of LP Tokens of a given `well` that can be 
+     * @dev Calculates the maximum amount of LP Tokens of a given `well` that can be
      * converted to Beans while maintaining a delta B <= 0.
      */
     function lpToPeg(address well) internal view returns (uint256 lp) {
         IERC20[] memory tokens = IWell(well).tokens();
         uint256[] memory reserves = IWell(well).getReserves();
         Call memory wellFunction = IWell(well).wellFunction();
-        (uint256[] memory ratios, uint256 beanIndex, bool success) = LibWell.getRatiosAndBeanIndex(tokens);
+        (uint256[] memory ratios, uint256 beanIndex, bool success) = LibWell.getRatiosAndBeanIndex(
+            tokens
+        );
         // If the USD Oracle oracle call fails, the convert should not be allowed.
         require(success, "Convert: USD Oracle failed");
 
-        uint256 beansAtPeg = IBeanstalkWellFunction(wellFunction.target).calcReserveAtRatioLiquidity(
-            reserves,
-            beanIndex,
-            ratios,
-            wellFunction.data
-        );
+        uint256 beansAtPeg = IBeanstalkWellFunction(wellFunction.target)
+            .calcReserveAtRatioLiquidity(reserves, beanIndex, ratios, wellFunction.data);
 
         if (reserves[beanIndex] <= beansAtPeg) return 0;
 
@@ -84,17 +79,23 @@ library LibWellConvert {
         );
 
         reserves[beanIndex] = beansAtPeg;
-        return lpSupplyNow.sub(IBeanstalkWellFunction(wellFunction.target).calcLpTokenSupply(
-            reserves,
-            wellFunction.data
-        ));
+        return
+            lpSupplyNow.sub(
+                IBeanstalkWellFunction(wellFunction.target).calcLpTokenSupply(
+                    reserves,
+                    wellFunction.data
+                )
+            );
     }
 
     /**
      * @dev Calculates the amount of Beans recieved from converting
      * `amountIn` LP Tokens of a given `well`.
      */
-    function getBeanAmountOut(address well, uint256 amountIn) internal view returns(uint256 beans) {
+    function getBeanAmountOut(
+        address well,
+        uint256 amountIn
+    ) internal view returns (uint256 beans) {
         beans = IWell(well).getRemoveLiquidityOneTokenOut(amountIn, IERC20(C.BEAN));
     }
 
@@ -102,7 +103,7 @@ library LibWellConvert {
      * @dev Calculates the amount of LP Tokens of a given `well` recieved from converting
      * `amountIn` Beans.
      */
-    function getLPAmountOut(address well, uint256 amountIn) internal view returns(uint256 lp) {
+    function getLPAmountOut(address well, uint256 amountIn) internal view returns (uint256 lp) {
         IERC20[] memory tokens = IWell(well).tokens();
         uint256[] memory amounts = new uint256[](tokens.length);
         amounts[LibWell.getBeanIndex(tokens)] = amountIn;
@@ -118,15 +119,9 @@ library LibWellConvert {
      * @return amountOut The number of `tokenOut` convert to
      * @return amountIn The number of `tokenIn` converted from
      */
-    function convertLPToBeans(bytes memory convertData)
-        internal
-        returns (
-            address tokenOut,
-            address tokenIn,
-            uint256 amountOut,
-            uint256 amountIn
-        )
-    {
+    function convertLPToBeans(
+        bytes memory convertData
+    ) internal returns (address tokenOut, address tokenIn, uint256 amountOut, uint256 amountIn) {
         (uint256 lp, uint256 minBeans, address well) = convertData.convertWithAddress();
 
         require(LibWell.isWell(well), "Convert: Invalid Well");
@@ -166,28 +161,17 @@ library LibWellConvert {
      * @return amountOut The number of `tokenOut` convert to
      * @return amountIn The number of `tokenIn` converted from
      */
-    function convertBeansToLP(bytes memory convertData)
-        internal
-        returns (
-            address tokenOut,
-            address tokenIn,
-            uint256 amountOut,
-            uint256 amountIn
-        )
-    {
-        (uint256 beans, uint256 minLP, address well) = convertData
-            .convertWithAddress();
+    function convertBeansToLP(
+        bytes memory convertData
+    ) internal returns (address tokenOut, address tokenIn, uint256 amountOut, uint256 amountIn) {
+        (uint256 beans, uint256 minLP, address well) = convertData.convertWithAddress();
 
         require(LibWell.isWell(well), "Convert: Invalid Well");
-    
+
         tokenOut = well;
         tokenIn = C.BEAN;
 
-        (amountOut, amountIn) = _wellAddLiquidityTowardsPeg(
-            beans,
-            minLP,
-            well
-        );
+        (amountOut, amountIn) = _wellAddLiquidityTowardsPeg(beans, minLP, well);
     }
 
     /**
@@ -202,9 +186,6 @@ library LibWellConvert {
         require(maxBeans > 0, "Convert: P must be >= 1.");
         beansConverted = beans > maxBeans ? maxBeans : beans;
         C.bean().transfer(well, beansConverted);
-        lp = IWell(well).sync(
-            address(this),
-            minLP
-        );
+        lp = IWell(well).sync(address(this), minLP);
     }
 }

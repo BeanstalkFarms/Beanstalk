@@ -12,15 +12,13 @@ import {AppStorage, Storage, LibAppStorage} from "contracts/libraries/LibAppStor
  * @title LibWhitelistedTokens
  * @author Brean, Brendan
  * @notice LibWhitelistedTokens holds different lists of types of Whitelisted Tokens.
- * 
+ *
  * @dev manages the WhitelistStatuses for all tokens in the Silo in order to track lists.
  * Note: dewhitelisting a token doesn't remove it's WhitelistStatus entirely–It just modifies it.
  * Once a token has no more Deposits in the Silo, it's WhitelistStatus should be removed through calling `removeWhitelistStatus`.
  */
 library LibWhitelistedTokens {
-
-
-    /** 
+    /**
      * @notice Emitted when a Whitelis Status is added.
      */
     event AddWhitelistStatus(
@@ -34,10 +32,7 @@ library LibWhitelistedTokens {
     /**
      * @notice Emitted when a Whitelist Status is removed.
      */
-    event RemoveWhitelistStatus(
-        address token,
-        uint256 index
-    );
+    event RemoveWhitelistStatus(address token, uint256 index);
 
     /**
      * @notice Emitted when a Whitelist Status is updated.
@@ -51,7 +46,7 @@ library LibWhitelistedTokens {
     );
 
     /**
-     * @notice Returns all tokens that are currently or previously in the silo, 
+     * @notice Returns all tokens that are currently or previously in the silo,
      * including Unripe tokens.
      * @dev includes Dewhitelisted tokens with existing Deposits.
      */
@@ -73,7 +68,7 @@ library LibWhitelistedTokens {
         AppStorage storage s = LibAppStorage.diamondStorage();
         uint256 numberOfSiloTokens = s.whitelistStatuses.length;
         uint256 tokensLength;
-    
+
         tokens = new address[](numberOfSiloTokens);
 
         for (uint256 i = 0; i < numberOfSiloTokens; i++) {
@@ -87,7 +82,7 @@ library LibWhitelistedTokens {
     }
 
     /**
-     * @notice Returns the current Whitelisted LP tokens. 
+     * @notice Returns the current Whitelisted LP tokens.
      * @dev Unripe LP is not an LP token.
      */
     function getWhitelistedLpTokens() internal view returns (address[] memory tokens) {
@@ -133,7 +128,11 @@ library LibWhitelistedTokens {
     /**
      * @notice Returns the Whitelist statues for all tokens that have been whitelisted and not manually removed.
      */
-    function getWhitelistedStatuses() internal view returns (Storage.WhitelistStatus[] memory _whitelistStatuses) {
+    function getWhitelistedStatuses()
+        internal
+        view
+        returns (Storage.WhitelistStatus[] memory _whitelistStatuses)
+    {
         AppStorage storage s = LibAppStorage.diamondStorage();
         _whitelistStatuses = s.whitelistStatuses;
     }
@@ -141,7 +140,9 @@ library LibWhitelistedTokens {
     /**
      * @notice Returns the Whitelist status for a given token.
      */
-    function getWhitelistedStatus(address token) internal view returns (Storage.WhitelistStatus memory _whitelistStatus) {
+    function getWhitelistedStatus(
+        address token
+    ) internal view returns (Storage.WhitelistStatus memory _whitelistStatus) {
         AppStorage storage s = LibAppStorage.diamondStorage();
         uint256 tokenStatusIndex = findWhitelistStatusIndex(token);
         _whitelistStatus = s.whitelistStatuses[tokenStatusIndex];
@@ -150,22 +151,35 @@ library LibWhitelistedTokens {
     /**
      * @notice Adds a Whitelist Status for a given `token`.
      */
-    function addWhitelistStatus(address token, bool isWhitelisted, bool isWhitelistedLp, bool isWhitelistedWell) internal {
+    function addWhitelistStatus(
+        address token,
+        bool isWhitelisted,
+        bool isWhitelistedLp,
+        bool isWhitelistedWell
+    ) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        s.whitelistStatuses.push(Storage.WhitelistStatus(
+        s.whitelistStatuses.push(
+            Storage.WhitelistStatus(token, isWhitelisted, isWhitelistedLp, isWhitelistedWell)
+        );
+
+        emit AddWhitelistStatus(
             token,
+            s.whitelistStatuses.length - 1,
             isWhitelisted,
             isWhitelistedLp,
             isWhitelistedWell
-        ));
-
-        emit AddWhitelistStatus(token, s.whitelistStatuses.length - 1, isWhitelisted, isWhitelistedLp, isWhitelistedWell);
+        );
     }
 
     /**
      * @notice Modifies the exisiting Whitelist Status of `token`.
      */
-    function updateWhitelistStatus(address token, bool isWhitelisted, bool isWhitelistedLp, bool isWhitelistedWell) internal {
+    function updateWhitelistStatus(
+        address token,
+        bool isWhitelisted,
+        bool isWhitelistedLp,
+        bool isWhitelistedWell
+    ) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
         uint256 tokenStatusIndex = findWhitelistStatusIndex(token);
         s.whitelistStatuses[tokenStatusIndex].isWhitelisted = isWhitelisted;

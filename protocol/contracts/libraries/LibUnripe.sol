@@ -13,8 +13,6 @@ import {Call, IWell} from "contracts/interfaces/basin/IWell.sol";
 import {IWellFunction} from "contracts/interfaces/basin/IWellFunction.sol";
 import {LibLockedUnderlying} from "./LibLockedUnderlying.sol";
 
-
-
 /**
  * @title LibUnripe
  * @author Publius
@@ -186,10 +184,10 @@ library LibUnripe {
         uint256[] memory reserves
     ) internal view returns (uint256 lockedBeanAmount) {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        
+
         // if reserves return 0, then skip calculations.
         if (reserves[0] == 0) return 0;
-        
+
         uint256 lockedLpAmount = LibLockedUnderlying.getLockedUnderlying(
             C.UNRIPE_LP,
             getRecapPaidPercentAmount(1e6)
@@ -238,5 +236,12 @@ library LibUnripe {
     ) internal view returns (uint256 redeem) {
         AppStorage storage s = LibAppStorage.diamondStorage();
         redeem = s.u[unripeToken].balanceOfUnderlying.mul(amount).div(supply);
+    }
+
+    function _getUnderlyingToken(
+        address unripeToken
+    ) internal view returns (address underlyingToken) {
+        AppStorage storage s = LibAppStorage.diamondStorage();
+        return s.u[unripeToken].underlyingToken;
     }
 }

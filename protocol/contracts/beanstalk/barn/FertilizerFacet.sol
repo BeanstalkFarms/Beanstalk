@@ -19,13 +19,14 @@ import {C} from "contracts/C.sol";
 import {LibDiamond} from "contracts/libraries/LibDiamond.sol";
 import {IWell} from "contracts/interfaces/basin/IWell.sol";
 import {LibBarnRaise} from "contracts/libraries/LibBarnRaise.sol";
+import {Invariable} from "contracts/beanstalk/Invariable.sol";
 
 /**
  * @author Publius
  * @title FertilizerFacet handles Minting Fertilizer and Rinsing Sprouts earned from Fertilizer.
  **/
 
-contract FertilizerFacet {
+contract FertilizerFacet is Invariable {
     using SafeMath for uint256;
     using SafeCast for uint256;
     using LibSafeMath128 for uint128;
@@ -41,17 +42,17 @@ contract FertilizerFacet {
         uint256 supply;
     }
 
-
     /**
      * @notice Rinses Rinsable Sprouts earned from Fertilizer.
      * @param ids The ids of the Fertilizer to rinse.
      * @param mode The balance to transfer Beans to; see {LibTrasfer.To}
      */
-    function claimFertilized(uint256[] calldata ids, LibTransfer.To mode)
-        external
-        payable
-    {
+    function claimFertilized(
+        uint256[] calldata ids,
+        LibTransfer.To mode
+    ) external payable fundsSafu noSupplyChange oneOutFlow(C.BEAN) {
         uint256 amount = C.fertilizer().beanstalkUpdate(LibTractor._user(), ids, s.bpf);
+        s.fertilizedPaidIndex += amount;
         LibTransfer.sendToken(C.bean(), amount, LibTractor._user(), mode);
     }
 
@@ -66,8 +67,11 @@ contract FertilizerFacet {
         uint256 tokenAmountIn,
         uint256 minFertilizerOut,
         uint256 minLPTokensOut
-    ) external payable returns (uint256 fertilizerAmountOut) {
-        fertilizerAmountOut = _getMintFertilizerOut(tokenAmountIn, LibBarnRaise.getBarnRaiseToken());
+    ) external payable fundsSafu noOutFlow returns (uint256 fertilizerAmountOut) {
+        fertilizerAmountOut = _getMintFertilizerOut(
+            tokenAmountIn,
+            LibBarnRaise.getBarnRaiseToken()
+        );
 
         require(fertilizerAmountOut >= minFertilizerOut, "Fertilizer: Not enough bought.");
         require(fertilizerAmountOut > 0, "Fertilizer: None bought.");
@@ -81,20 +85,24 @@ contract FertilizerFacet {
             fertilizerAmountOut,
             minLPTokensOut
         );
-        C.fertilizer().beanstalkMint(LibTractor._user(), uint256(id), (fertilizerAmountOut).toUint128(), s.bpf);
+        C.fertilizer().beanstalkMint(
+            LibTractor._user(),
+            uint256(id),
+            (fertilizerAmountOut).toUint128(),
+            s.bpf
+        );
     }
 
     /**
      * @dev Callback from Fertilizer contract in `claimFertilized` function.
      */
-    function payFertilizer(address account, uint256 amount) external payable {
+    function payFertilizer(
+        address account,
+        uint256 amount
+    ) external payable fundsSafu noSupplyChange oneOutFlow(C.BEAN) {
         require(msg.sender == C.fertilizerAddress());
-        LibTransfer.sendToken(
-            C.bean(),
-            amount,
-            account,
-            LibTransfer.To.INTERNAL
-        );
+        s.fertilizedPaidIndex += amount;
+        LibTransfer.sendToken(C.bean(), amount, account, LibTransfer.To.INTERNAL);
     }
 
     /**
@@ -102,11 +110,9 @@ contract FertilizerFacet {
      * Can be used to help calculate `minFertilizerOut` in `mintFertilizer`.
      * `tokenAmountIn` has 18 decimals, `getEthUsdPrice()` has 6 decimals and `fertilizerAmountOut` has 0 decimals.
      */
-    function getMintFertilizerOut(uint256 tokenAmountIn)
-        external
-        view
-        returns (uint256 fertilizerAmountOut)
-    {
+    function getMintFertilizerOut(
+        uint256 tokenAmountIn
+    ) external view returns (uint256 fertilizerAmountOut) {
         address barnRaiseToken = LibBarnRaise.getBarnRaiseToken();
         return _getMintFertilizerOut(tokenAmountIn, barnRaiseToken);
     }
@@ -115,9 +121,7 @@ contract FertilizerFacet {
         uint256 tokenAmountIn,
         address barnRaiseToken
     ) public view returns (uint256 fertilizerAmountOut) {
-        fertilizerAmountOut = tokenAmountIn.div(
-            LibUsdOracle.getUsdPrice(barnRaiseToken)
-        );
+        fertilizerAmountOut = tokenAmountIn.div(LibUsdOracle.getUsdPrice(barnRaiseToken));
     }
 
     function totalFertilizedBeans() external view returns (uint256 beans) {
@@ -176,27 +180,24 @@ contract FertilizerFacet {
         return LibFertilizer.remainingRecapitalization();
     }
 
-    function balanceOfUnfertilized(address account, uint256[] memory ids)
-        external
-        view
-        returns (uint256 beans)
-    {
+    function balanceOfUnfertilized(
+        address account,
+        uint256[] memory ids
+    ) external view returns (uint256 beans) {
         return C.fertilizer().balanceOfUnfertilized(account, ids);
     }
 
-    function balanceOfFertilized(address account, uint256[] memory ids)
-        external
-        view
-        returns (uint256 beans)
-    {
+    function balanceOfFertilized(
+        address account,
+        uint256[] memory ids
+    ) external view returns (uint256 beans) {
         return C.fertilizer().balanceOfFertilized(account, ids);
     }
 
-    function balanceOfFertilizer(address account, uint256 id)
-        external
-        view
-        returns (IFertilizer.Balance memory)
-    {
+    function balanceOfFertilizer(
+        address account,
+        uint256 id
+    ) external view returns (IFertilizer.Balance memory) {
         return C.fertilizer().lastBalanceOf(account, id);
     }
 
@@ -207,11 +208,7 @@ contract FertilizerFacet {
         return C.fertilizer().lastBalanceOfBatch(accounts, ids);
     }
 
-    function getFertilizers()
-        external
-        view
-        returns (Supply[] memory fertilizers)
-    {
+    function getFertilizers() external view returns (Supply[] memory fertilizers) {
         uint256 numFerts = 0;
         uint128 idx = s.fFirst;
         while (idx > 0) {

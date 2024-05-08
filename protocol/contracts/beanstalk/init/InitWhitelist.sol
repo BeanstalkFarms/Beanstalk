@@ -12,10 +12,9 @@ import {BDVFacet} from "contracts/beanstalk/silo/BDVFacet.sol";
 /**
  * @author Publius
  * @title InitBip8 runs the code for BIP-8.
-**/
+ **/
 
 contract InitWhitelist {
-
     uint32 private constant BEAN_3CRV_STALK = 10000;
     uint32 private constant BEAN_3CRV_SEEDS = 4;
 

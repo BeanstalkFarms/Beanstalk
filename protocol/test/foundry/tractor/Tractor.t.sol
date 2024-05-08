@@ -27,137 +27,135 @@
 // This is the default size of arrays containing stems/deposits. Operators can populate the array up to the size.
 uint80 constant ARRAY_LENGTH = 5;
 
-
 // NOTE: These tests are deprecated in favor of JS tests. They are kept here for reference only.
 //       They do not compile and are not necessarily correct.
 //       Testing tractor in Solidity is undesirable due to the difficulty of managing arrays and bytes in Solidity.
-/*
-contract TractorTest is TestHelper {
-    uint256 private constant PUBLISHER_PRIVATE_KEY = 123456789;
 
-    address private PUBLISHER;
-    address private constant OPERATOR = address(982340983475);
+// contract TractorTest is TestHelper {
+//     uint256 private constant PUBLISHER_PRIVATE_KEY = 123456789;
 
-    address private constant BEANSTALK = address(0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5);
-    address private constant BEANSTALK_OWNER = address(0xa9bA2C40b263843C04d344727b954A545c81D043);
+//     address private PUBLISHER;
+//     address private constant OPERATOR = address(982340983475);
 
-    IBeanstalk beanstalk;
-    IERC20 bean;
+//     address private constant BEANSTALK = address(0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5);
+//     address private constant BEANSTALK_OWNER = address(0xa9bA2C40b263843C04d344727b954A545c81D043);
 
-    TractorFacet tractorFacet;
-    JunctionFacet junctionFacet;
-    TokenFacet tokenFacet;
+//     IBeanstalk beanstalk;
+//     IERC20 bean;
 
-    function setUp() public {
-        vm.createSelectFork({urlOrAlias: "mainnet", blockNumber: 18_686_631});
+//     TractorFacet tractorFacet;
+//     JunctionFacet junctionFacet;
+//     TokenFacet tokenFacet;
 
-        beanstalk = IBeanstalk(BEANSTALK);
-        bean = IERC20(C.BEAN);
-        tokenFacet = TokenFacet(BEANSTALK);
+//     function setUp() public {
+//         vm.createSelectFork({urlOrAlias: "mainnet", blockNumber: 18_686_631});
 
-        PUBLISHER = vm.addr(PUBLISHER_PRIVATE_KEY);
+//         beanstalk = IBeanstalk(BEANSTALK);
+//         bean = IERC20(C.BEAN);
+//         tokenFacet = TokenFacet(BEANSTALK);
 
-        // Cut and init TractorFacet.
-        IDiamondCut.FacetCut[] memory cut = new IDiamondCut.FacetCut[](1);
-        cut[0] = _cut("TractorFacet", address(new TractorFacet()));
-        vm.prank(BEANSTALK_OWNER); // LibAppStorage.diamondStorage().contractOwner
-        IDiamondCut(BEANSTALK).diamondCut(
-            cut,
-            address(0), // address of contract with init() function
-            abi.encodeWithSignature("init()")
-        );
-        tractorFacet = TractorFacet(BEANSTALK);
+//         PUBLISHER = vm.addr(PUBLISHER_PRIVATE_KEY);
 
-        // Cut and init JunctionFacet.
-        cut = new IDiamondCut.FacetCut[](1);
-        cut[0] = _cut("JunctionFacet", address(new JunctionFacet()));
-        vm.prank(BEANSTALK_OWNER); // LibAppStorage.diamondStorage().contractOwner
-        IDiamondCut(BEANSTALK).diamondCut(
-            cut,
-            address(0), // address of contract with init() function
-            ""
-        );
-        junctionFacet = JunctionFacet(BEANSTALK);
+//         // Cut and init TractorFacet.
+//         IDiamondCut.FacetCut[] memory cut = new IDiamondCut.FacetCut[](1);
+//         cut[0] = _cut("TractorFacet", address(new TractorFacet()));
+//         vm.prank(BEANSTALK_OWNER); // LibAppStorage.diamondStorage().contractOwner
+//         IDiamondCut(BEANSTALK).diamondCut(
+//             cut,
+//             address(0), // address of contract with init() function
+//             abi.encodeWithSignature("init()")
+//         );
+//         tractorFacet = TractorFacet(BEANSTALK);
 
-        // Mint beans
-        // vm.prank(0x62d69f6867A0A084C6d313943dC22023Bc263691);
-        deal(C.BEAN, PUBLISHER, 5000e6);
-        console.log("Bean supply is", C.bean().totalSupply());
+//         // Cut and init JunctionFacet.
+//         cut = new IDiamondCut.FacetCut[](1);
+//         cut[0] = _cut("JunctionFacet", address(new JunctionFacet()));
+//         vm.prank(BEANSTALK_OWNER); // LibAppStorage.diamondStorage().contractOwner
+//         IDiamondCut(BEANSTALK).diamondCut(
+//             cut,
+//             address(0), // address of contract with init() function
+//             ""
+//         );
+//         junctionFacet = JunctionFacet(BEANSTALK);
 
-        // Operator position is unimportant, verify no held Beans.
-        assertEq(C.bean().balanceOf(OPERATOR), 0);
-    }
+//         // Mint beans
+//         // vm.prank(0x62d69f6867A0A084C6d313943dC22023Bc263691);
+//         deal(C.BEAN, PUBLISHER, 5000e6);
+//         console.log("Bean supply is", C.bean().totalSupply());
 
-    function test_depositAllBeans() public {
-        uint256 tip = 10e6;
+//         // Operator position is unimportant, verify no held Beans.
+//         assertEq(C.bean().balanceOf(OPERATOR), 0);
+//     }
 
-        // Move publisher Beans to internal balance.
-        uint256 beanBalance = bean.balanceOf(PUBLISHER);
-        vm.prank(PUBLISHER);
-        // tokenFacet.approveToken(BEANSTALK, bean, beanBalance);
-        bean.approve(BEANSTALK, beanBalance);
-        vm.prank(PUBLISHER);
-        beanstalk.transferToken(
-            bean,
-            PUBLISHER,
-            beanBalance,
-            LibTransfer.From.EXTERNAL,
-            LibTransfer.To.INTERNAL
-        );
-        assertEq(
-            tokenFacet.getInternalBalance(PUBLISHER, bean),
-            beanBalance,
-            "Internal balance init failure"
-        );
+//     function test_depositAllBeans() public {
+//         uint256 tip = 10e6;
 
-        // User creates a Requisition containing a blueprint with instructions to Enroot.
-        LibTractor.Requisition memory requisition;
-        (bytes memory data, bytes32[] memory operatorPasteInstrs) = LibDrafter.draftDepositAllBeans(
-            tip
-        );
-        requisition.blueprint = LibTractor.Blueprint({
-            publisher: PUBLISHER,
-            data: data,
-            operatorPasteInstrs: operatorPasteInstrs,
-            maxNonce: 100,
-            startTime: 0,
-            endTime: type(uint256).max
-        });
+//         // Move publisher Beans to internal balance.
+//         uint256 beanBalance = bean.balanceOf(PUBLISHER);
+//         vm.prank(PUBLISHER);
+//         // tokenFacet.approveToken(BEANSTALK, bean, beanBalance);
+//         bean.approve(BEANSTALK, beanBalance);
+//         vm.prank(PUBLISHER);
+//         beanstalk.transferToken(
+//             bean,
+//             PUBLISHER,
+//             beanBalance,
+//             LibTransfer.From.EXTERNAL,
+//             LibTransfer.To.INTERNAL
+//         );
+//         assertEq(
+//             tokenFacet.getInternalBalance(PUBLISHER, bean),
+//             beanBalance,
+//             "Internal balance init failure"
+//         );
 
-        requisition.blueprintHash = tractorFacet.getBlueprintHash(requisition.blueprint);
-        (uint8 v, bytes32 r, bytes32 s) = vm.sign(PUBLISHER_PRIVATE_KEY, requisition.blueprintHash);
-        requisition.signature = abi.encodePacked(r, s, v);
+//         // User creates a Requisition containing a blueprint with instructions to Enroot.
+//         LibTractor.Requisition memory requisition;
+//         (bytes memory data, bytes32[] memory operatorPasteInstrs) = LibDrafter.draftDepositAllBeans(
+//             tip
+//         );
+//         requisition.blueprint = LibTractor.Blueprint({
+//             publisher: PUBLISHER,
+//             data: data,
+//             operatorPasteInstrs: operatorPasteInstrs,
+//             maxNonce: 100,
+//             startTime: 0,
+//             endTime: type(uint256).max
+//         });
 
-        // No operator calldata used.
-        bytes memory operatorData;
+//         requisition.blueprintHash = tractorFacet.getBlueprintHash(requisition.blueprint);
+//         (uint8 v, bytes32 r, bytes32 s) = vm.sign(PUBLISHER_PRIVATE_KEY, requisition.blueprintHash);
+//         requisition.signature = abi.encodePacked(r, s, v);
 
-        // Operator executes the Blueprint, enrooting the user.
-        vm.prank(OPERATOR);
-        tractorFacet.tractor(requisition, operatorData);
+//         // No operator calldata used.
+//         bytes memory operatorData;
 
-        // Verify state of User and Operator.
-        assertEq(bean.balanceOf(OPERATOR), tip);
-        assertEq(bean.balanceOf(PUBLISHER), uint256(0));
-        // check logs, get deposit ID, verify internal balance.
-        // vm.assertEq(BEANSTALK.INTERNALBALANCE(PUBLISHER), xxx);
-    }
-}
+//         // Operator executes the Blueprint, enrooting the user.
+//         vm.prank(OPERATOR);
+//         tractorFacet.tractor(requisition, operatorData);
 
-// NOTE how to encode dynamically sized data? Not possible, without either:
-//    1. Telling the contract how to extract data (i.e. unique functions for each call type)
-//    2. Using a fixed size data structure (i.e. uint256[10] instead of uint256[]) with all possible types (ew)
-//    3. Manually composing the data? by pasting the location, length, and then each item individually.....
-//          - This is not possible bc the size of the data is not known ahead of time, therefore the location
-//            of the data is not known ahead of time. So the blueprint copyData cannot be configured in a
-//            generalized way.
+//         // Verify state of User and Operator.
+//         assertEq(bean.balanceOf(OPERATOR), tip);
+//         assertEq(bean.balanceOf(PUBLISHER), uint256(0));
+//         // check logs, get deposit ID, verify internal balance.
+//         // vm.assertEq(BEANSTALK.INTERNALBALANCE(PUBLISHER), xxx);
+//     }
+// }
 
-TODO: reimplment.
-/**
- * @title Lib Drafter
- * @author funderbrker
- * @notice Standard library for generating common blueprints in a standard configuration.
- * @dev Not gas optimized for on-chain usage. These functions are intended to be standardized client helpers.
- **/
+// // NOTE how to encode dynamically sized data? Not possible, without either:
+// //    1. Telling the contract how to extract data (i.e. unique functions for each call type)
+// //    2. Using a fixed size data structure (i.e. uint256[10] instead of uint256[]) with all possible types (ew)
+// //    3. Manually composing the data? by pasting the location, length, and then each item individually.....
+// //          - This is not possible bc the size of the data is not known ahead of time, therefore the location
+// //            of the data is not known ahead of time. So the blueprint copyData cannot be configured in a
+// //            generalized way.
+
+// /**
+//  * @title Lib Drafter
+//  * @author funderbrker
+//  * @notice Standard library for generating common blueprints in a standard configuration.
+//  * @dev Not gas optimized for on-chain usage. These functions are intended to be standardized client helpers.
+//  **/
 // library LibDrafter {
 //     using LibBytes for bytes;
 

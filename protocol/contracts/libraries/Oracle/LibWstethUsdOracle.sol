@@ -8,7 +8,6 @@ pragma experimental ABIEncoderV2;
 import {IWsteth, LibWstethEthOracle, SafeMath} from "contracts/libraries/Oracle/LibWstethEthOracle.sol";
 import {LibEthUsdOracle} from "contracts/libraries/Oracle/LibEthUsdOracle.sol";
 
-
 /**
  * @title Wsteth USD Oracle Library
  * @author brendan
@@ -40,8 +39,10 @@ library LibWstethUsdOracle {
      * Returns 0 if the either LibWstethEthOracle or LibEthUsdOracle cannot fetch a valid price.
      **/
     function getWstethUsdPrice(uint256 lookback) internal view returns (uint256) {
-        return LibWstethEthOracle.getWstethEthPrice(lookback).mul(
-            LibEthUsdOracle.getEthUsdPrice(lookback)
-        ).div(ORACLE_PRECISION);
+        return
+            LibWstethEthOracle
+                .getWstethEthPrice(lookback)
+                .mul(LibEthUsdOracle.getEthUsdPrice(lookback))
+                .div(ORACLE_PRECISION);
     }
 }

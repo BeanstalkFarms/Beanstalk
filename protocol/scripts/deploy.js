@@ -24,8 +24,7 @@ const {
   impersonateUniswapV3,
   impersonateWsteth,
   impersonatePipeline,
-  impersonateToken,
-  impersonateDepot
+  impersonateToken
 } = require("./impersonate.js");
 
 const { deployBasin } = require("./basin");
@@ -89,10 +88,10 @@ async function main(
   // Fetch init diamond contract
   const initDiamondArg = mock
     ? "contracts/mocks/newMockInitDiamond.sol:MockInitDiamond"
-    : "contracts/mocks/newInitDiamond.sol:InitDiamond";
-  // eslint-disable-next-line no-unused-vars
+    : "contracts/beanstalk/init/newInitDiamond.sol:InitDiamond";
   
-
+  
+  // eslint-disable-next-line no-unused-vars
   // Impersonate various contracts that beanstalk interacts with.
   // These should be impersonated on a fresh network state.
   let basinComponents = []
@@ -100,7 +99,6 @@ async function main(
     await impersonateBlockBasefee() // Block fee contract (sunrise)
     await impersonatePrice() // BeanstalkPrice contract (frontend price)
     await impersonatePipeline() // Pipeline contract.
-    await impersonateDepot() // Depot contract.
   }
 
   if (basin) { 

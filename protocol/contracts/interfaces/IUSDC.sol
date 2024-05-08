@@ -10,7 +10,7 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 /**
  * @author Publius
  * @title WETH Interface
-**/
+ **/
 
 interface IUSDC is IERC20 {
     function masterMinter() external view returns (address);

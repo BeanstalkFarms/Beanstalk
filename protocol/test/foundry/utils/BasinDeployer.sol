@@ -17,7 +17,6 @@ import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
  * @notice Test helper contract for Beanstalk tests.
  */
 contract BasinDeployer is Utils {
-    
     struct DeployData {
         string name;
         address functionAddress;
@@ -88,11 +87,7 @@ contract BasinDeployer is Utils {
             abi.encode(MAX_LP_SUPPLY_INCREASE, MAX_LP_SUPPLY_DECREASE, CAP_INTERVAL, ALPHA)
         );
         // mock pump for testing purposes.
-        pumpsDeployData[1] = DeployData(
-            "MockPump.sol",
-            address(0),
-            new bytes(0)
-        );
+        pumpsDeployData[1] = DeployData("MockPump.sol", address(0), new bytes(0));
 
         // new well implmentations should be added here.
         DeployData[] memory wellImplmentationDeployData = new DeployData[](1);
@@ -110,7 +105,7 @@ contract BasinDeployer is Utils {
             verbose
         );
     }
-    
+
     /**
      * @notice deploys basin contracts, and adds to the registry.
      */
@@ -150,7 +145,7 @@ contract BasinDeployer is Utils {
             if (verbose) console.log("Well Implm", i, "Deployed at:", wellImplmentations[i]);
         }
 
-        // optional labels for testing. 
+        // optional labels for testing.
         vm.label(CP2, "Constant Product 2");
         vm.label(MFP, "MultiFlowPump");
         vm.label(pumps[1], "MockPump");
@@ -164,7 +159,7 @@ contract BasinDeployer is Utils {
      */
     function deployWells(bool mock, bool verbose) internal {
         address _pump;
-        
+
         if (mock) {
             // mock pump.
             _pump = pumps[1];
@@ -177,7 +172,7 @@ contract BasinDeployer is Utils {
         wells.push(deployBeanCp2Well([C.BEAN_ETH_WELL, C.WETH], _pump));
         if (verbose) console.log("Bean Eth well deployed at:", wells[0]);
         vm.label(C.BEAN_ETH_WELL, "BEAN/ETH Well");
-        
+
         // deploy bean wsteth well:
         wells.push(deployBeanCp2Well([C.BEAN_WSTETH_WELL, C.WSTETH], _pump));
         if (verbose) console.log("Bean wstEth well deployed at:", wells[1]);
@@ -185,7 +180,7 @@ contract BasinDeployer is Utils {
     }
 
     /**
-     * @notice deploys a well with a 
+     * @notice deploys a well with a
      * Constant product 2 well function and pump.
      * @param wellAddressAndNonBeanToken [wellAddress, nonBeanToken]
      * @param pump address of the pump.
@@ -194,14 +189,15 @@ contract BasinDeployer is Utils {
         address[2] memory wellAddressAndNonBeanToken,
         address pump
     ) internal returns (address) {
-        return deployWellAtAddressNoData(
-            wellAddressAndNonBeanToken[0],
-            C.BEAN,
-            wellAddressAndNonBeanToken[1],
-            wellFunctions[0],
-            pump,
-            wellImplmentations[0]
-        );
+        return
+            deployWellAtAddressNoData(
+                wellAddressAndNonBeanToken[0],
+                C.BEAN,
+                wellAddressAndNonBeanToken[1],
+                wellFunctions[0],
+                pump,
+                wellImplmentations[0]
+            );
     }
 
     function deployWellAtAddressNoData(
@@ -212,17 +208,18 @@ contract BasinDeployer is Utils {
         address pumpAddress,
         address wellImplementation
     ) internal returns (address) {
-        return deployWellAtAddress(
-            targetAddress,
-            token0,
-            token1,
-            wellFunction,
-            new bytes(0),
-            pumpAddress,
-            new bytes(0),
-            wellImplementation,
-            bytes32(0)
-        );
+        return
+            deployWellAtAddress(
+                targetAddress,
+                token0,
+                token1,
+                wellFunction,
+                new bytes(0),
+                pumpAddress,
+                new bytes(0),
+                wellImplementation,
+                bytes32(0)
+            );
     }
 
     /**
@@ -248,17 +245,13 @@ contract BasinDeployer is Utils {
             pumpAddress,
             pumpData
         );
-        string memory wellName = string(abi.encodePacked(
-            ERC20(token0).name(),
-            ERC20(token1).name(),
-            "Well"
-        ));
+        string memory wellName = string(
+            abi.encodePacked(ERC20(token0).name(), ERC20(token1).name(), "Well")
+        );
 
-        string memory wellSymbol = string(abi.encodePacked(
-            ERC20(token0).name(),
-            ERC20(token1).name(),
-            "Well"
-        ));
+        string memory wellSymbol = string(
+            abi.encodePacked(ERC20(token0).name(), ERC20(token1).name(), "Well")
+        );
         // Bore Well
         address wellAddress = IAquifer(aquifer).boreWell(
             wellImplementation,
@@ -268,7 +261,7 @@ contract BasinDeployer is Utils {
         );
 
         // etch to address if specified.
-        if (targetAddress != address(0)) { 
+        if (targetAddress != address(0)) {
             vm.etch(targetAddress, getBytecodeAt(wellAddress));
             return targetAddress;
         } else {
@@ -293,11 +286,7 @@ contract BasinDeployer is Utils {
         Call[] memory pumpData = new Call[](1);
         pumpData[0].target = pump;
         pumpData[0].data = pumpDataInPump;
-        wellParameters = DeployWellData(
-            tokens,
-            Call(wellFunction, wellFunctionData),
-            pumpData
-        );
+        wellParameters = DeployWellData(tokens, Call(wellFunction, wellFunctionData), pumpData);
     }
 
     /**

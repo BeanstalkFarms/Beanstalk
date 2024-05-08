@@ -52,7 +52,13 @@ contract Weather is Sun {
      * @param amount The amount of 3CRV which was received for swapping Beans.
      * @param toField The amount of Beans which were distributed to remaining Pods in the Field.
      */
-    event SeasonOfPlenty(uint256 indexed season, address well, address token, uint256 amount, uint256 toField);
+    event SeasonOfPlenty(
+        uint256 indexed season,
+        address well,
+        address token,
+        uint256 amount,
+        uint256 toField
+    );
 
     //////////////////// WEATHER INTERNAL ////////////////////
 
@@ -203,14 +209,21 @@ contract Weather is Sun {
         C.bean().approve(sopWell, sopBeans);
         uint256 amountOut = IWell(sopWell).swapFrom(
             C.bean(),
-            sopToken, 
-            sopBeans, 
+            sopToken,
+            sopBeans,
             0,
             address(this),
             type(uint256).max
         );
+        s.plenty += amountOut;
         rewardSop(amountOut);
-        emit SeasonOfPlenty(s.season.current, sopWell, address(sopToken), amountOut, newHarvestable);
+        emit SeasonOfPlenty(
+            s.season.current,
+            sopWell,
+            address(sopToken),
+            amountOut,
+            newHarvestable
+        );
     }
 
     /**
@@ -224,30 +237,30 @@ contract Weather is Sun {
         s.season.lastSop = s.season.rainStart;
         s.season.lastSopSeason = s.season.current;
     }
-    
+
     /**
-     * Calculates the amount of beans that should be minted in a sop. 
+     * Calculates the amount of beans that should be minted in a sop.
      * @dev the instanteous EMA reserves are used rather than the twa reserves
      * as the twa reserves are not indiciative of the current deltaB in the pool.
-     * 
+     *
      * Generalized for a single well. Sop does not support multiple wells.
      */
-    function calculateSop(address well) private view returns (uint256 sopBeans, IERC20 sopToken){
-
+    function calculateSop(address well) private view returns (uint256 sopBeans, IERC20 sopToken) {
         // if the sopWell was not initalized, the should not occur.
         if (well == address(0)) return (0, IERC20(0));
         IWell sopWell = IWell(well);
         IERC20[] memory tokens = sopWell.tokens();
         Call[] memory pumps = sopWell.pumps();
         IInstantaneousPump pump = IInstantaneousPump(pumps[0].target);
-        uint256[] memory instantaneousReserves = pump.readInstantaneousReserves(well, pumps[0].data);
+        uint256[] memory instantaneousReserves = pump.readInstantaneousReserves(
+            well,
+            pumps[0].data
+        );
         uint256[] memory currentReserves = sopWell.getReserves();
         Call memory wellFunction = sopWell.wellFunction();
-        (
-            uint256[] memory ratios, 
-            uint256 beanIndex, 
-            bool success
-        ) = LibWell.getRatiosAndBeanIndex(tokens);
+        (uint256[] memory ratios, uint256 beanIndex, bool success) = LibWell.getRatiosAndBeanIndex(
+            tokens
+        );
         // If the USD Oracle oracle call fails, the sop should not occur.
         // return 0 rather than revert to prevent sunrise from failing.
         if (!success) return (0, IERC20(0));
@@ -255,23 +268,15 @@ contract Weather is Sun {
         // compare the beans at peg using the instantaneous reserves,
         // and the current reserves.
         uint256 instantaneousBeansAtPeg = IBeanstalkWellFunction(wellFunction.target)
-            .calcReserveAtRatioSwap(
-                instantaneousReserves,
-                beanIndex,
-                ratios,
-                wellFunction.data
-            );
-        
+            .calcReserveAtRatioSwap(instantaneousReserves, beanIndex, ratios, wellFunction.data);
+
         uint256 currentBeansAtPeg = IBeanstalkWellFunction(wellFunction.target)
-            .calcReserveAtRatioSwap(
-                currentReserves,
-                beanIndex,
-                ratios,
-                wellFunction.data
-            );
+            .calcReserveAtRatioSwap(currentReserves, beanIndex, ratios, wellFunction.data);
 
         // Calculate the signed Sop beans for the two reserves.
-        int256 lowestSopBeans = int256(instantaneousBeansAtPeg).sub(int256(instantaneousReserves[beanIndex]));
+        int256 lowestSopBeans = int256(instantaneousBeansAtPeg).sub(
+            int256(instantaneousReserves[beanIndex])
+        );
         int256 currentSopBeans = int256(currentBeansAtPeg).sub(int256(currentReserves[beanIndex]));
 
         // Use the minimum of the two.

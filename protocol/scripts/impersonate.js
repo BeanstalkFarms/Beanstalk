@@ -28,7 +28,6 @@ const {
   WSTETH
 } = require('../test/utils/constants');
 const { impersonatePipeline } = require('./pipeline');
-const { impersonateDepot } = require('./depot');
 const { impersonateSigner, mintEth } = require('../utils');
 const { to18 } = require('../test/utils/helpers');
 
@@ -284,4 +283,3 @@ exports.impersonateContract = impersonateContract
 exports.impersonateUniswapV3 = uniswapV3
 exports.impersonateWsteth = wsteth
 exports.impersonatePipeline = impersonatePipeline
-exports.impersonateDepot = impersonateDepot

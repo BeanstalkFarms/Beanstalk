@@ -14,7 +14,6 @@ import {ICumulativePump} from "contracts/interfaces/basin/pumps/ICumulativePump.
  */
 
 contract MockPump is IInstantaneousPump, ICumulativePump {
-
     struct ReservesData {
         uint256[] instantaneousReserves;
         uint256[] cumulativeReserves;
@@ -23,18 +22,21 @@ contract MockPump is IInstantaneousPump, ICumulativePump {
 
     mapping(address => ReservesData) reservesData;
 
-    function setInstantaneousReserves(
-        address well, 
-        uint[] memory _instantaneousReserves
-    ) external {
+    function setInstantaneousReserves(address well, uint[] memory _instantaneousReserves) external {
         reservesData[well].instantaneousReserves = _instantaneousReserves;
     }
 
-    function readInstantaneousReserves(address well, bytes memory) external override view returns (uint[] memory reserves) {
+    function readInstantaneousReserves(
+        address well,
+        bytes memory
+    ) external view override returns (uint[] memory reserves) {
         return reservesData[well].instantaneousReserves;
     }
 
-    function readCappedReserves(address well, bytes memory) external view returns (uint[] memory reserves) {
+    function readCappedReserves(
+        address well,
+        bytes memory
+    ) external view returns (uint[] memory reserves) {
         return reservesData[well].cappedReserves;
     }
 
@@ -64,8 +66,12 @@ contract MockPump is IInstantaneousPump, ICumulativePump {
     function readCumulativeReserves(
         address well,
         bytes memory
-    ) external override view returns (bytes memory) {
-        return abi.encodePacked(reservesData[well].cumulativeReserves[0], reservesData[well].cumulativeReserves[1]);
+    ) external view override returns (bytes memory) {
+        return
+            abi.encodePacked(
+                reservesData[well].cumulativeReserves[0],
+                reservesData[well].cumulativeReserves[1]
+            );
     }
 
     function readTwaReserves(
@@ -73,7 +79,7 @@ contract MockPump is IInstantaneousPump, ICumulativePump {
         bytes calldata,
         uint,
         bytes memory
-    ) external override view returns (uint[] memory twaReserves, bytes memory _cumulativeReserves){
+    ) external view override returns (uint[] memory twaReserves, bytes memory _cumulativeReserves) {
         twaReserves = reservesData[well].cumulativeReserves;
         _cumulativeReserves = abi.encodePacked(twaReserves[0], twaReserves[1]);
     }

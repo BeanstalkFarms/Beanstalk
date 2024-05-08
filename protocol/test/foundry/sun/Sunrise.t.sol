@@ -9,20 +9,19 @@ import {IWell, Call, IERC20} from "contracts/interfaces/basin/IWell.sol";
 import {C} from "contracts/C.sol";
 
 /**
- * @notice Tests the various parts of sunrise. 
+ * @notice Tests the various parts of sunrise.
  * @dev `Sunrise` is the function that advances the season, and issues rewards.
- * 
- * The Sunrise can be seperated into the following parts: 
+ *
+ * The Sunrise can be seperated into the following parts:
  * - stepSeason() - increments season.
  * - stepOracle() - reads oracles from whitelisted silo wells.
  * - calcCaseIdAndUpdate() - determines and evaluates the beanstalk state, and updates temperature and bean to max lp gp per bdv ratio.
  * - endTotalGermination() - ends the germination process for all whitelisted tokens.
  * - stepGauge() - iterates through the gauge system.
- * - stepSun() - distrbuted newly minted beans to the barn, field, and silo, and issues new soil to the field. 
+ * - stepSun() - distrbuted newly minted beans to the barn, field, and silo, and issues new soil to the field.
  * - Incentive() - rewards beans to the caller.
  */
 contract SunriseTest is TestHelper {
-
     // Events
     event Sunrise(uint256 indexed season);
     event Soil(uint32 indexed season, uint256 soil);
@@ -30,7 +29,12 @@ contract SunriseTest is TestHelper {
     event TemperatureChange(uint256 indexed season, uint256 caseId, int8 absChange);
     event BeanToMaxLpGpPerBdvRatioChange(uint256 indexed season, uint256 caseId, int80 absChange);
     event WellOracle(uint32 indexed season, address well, int256 deltaB, bytes cumulativeReserves);
-    event TotalGerminatingBalanceChanged(uint256 season, address indexed token, int256 delta, int256 deltaBdv);
+    event TotalGerminatingBalanceChanged(
+        uint256 season,
+        address indexed token,
+        int256 delta,
+        int256 deltaBdv
+    );
 
     // Interfaces.
     MockSeasonFacet season = MockSeasonFacet(BEANSTALK);
@@ -38,11 +42,11 @@ contract SunriseTest is TestHelper {
     // test accounts.
     address[] farmers;
 
-    // whitelisted LP tokens: 
+    // whitelisted LP tokens:
     address[] lps;
 
     uint256 constant SEASON_DURATION = 3600;
-    
+
     function setUp() public {
         initializeBeanstalkTestState(true, false);
         farmers.push(users[1]);
@@ -69,27 +73,23 @@ contract SunriseTest is TestHelper {
         // // the `sunrise` function can only be called at the top of the hour.
         // // {initializeBeanstalkTestState} initializes beanstalk at START_TIMESTAMP {See testHelper.sol}
         // // since beanstalk starts at season 1, 2 hours need to pass in order for the first season to end.
-        // skip(SEASON_DURATION); 
+        // skip(SEASON_DURATION);
 
         // upon the first sunrise call of a well, the well cumulative reserves are initialized,
         // and will not return a deltaB. We initialize the well cumulative reserves here.
         // See: {LibWellMinting.capture}
-        season.initOracleForAllWhitelistedWells(); 
+        season.initOracleForAllWhitelistedWells();
 
         // chainlink oracles need to be initialized for the wells.
-        initializeChainlinkOraclesForWhitelistedWells();   
+        initializeChainlinkOraclesForWhitelistedWells();
     }
-
 
     /**
      * @notice tests that the sunrise will revert, if not enough time has elapsed.
      * @dev `s` hours need to elapse from the start of beanstalk in order for beanstalk
      * to accept a sunrise call. `s` is the current season, found at s.season.current.
      */
-    function test_sunriseRevert(
-        uint256 s,
-        uint256 timestamp
-    ) public {
+    function test_sunriseRevert(uint256 s, uint256 timestamp) public {
         s = bound(s, 1, type(uint32).max);
         timestamp = bound(timestamp, 0, (s * SEASON_DURATION) - 1);
         skip(timestamp);
@@ -111,7 +111,7 @@ contract SunriseTest is TestHelper {
      */
     function test_sunriseNoWells() public {
         warpToNextSeasonTimestamp();
-        
+
         uninitializeWellPumps();
         callSunriseAndCheckEvents();
     }
@@ -122,7 +122,7 @@ contract SunriseTest is TestHelper {
      */
     function test_sunriseOracleFailure(uint256 oracleIndex) public {
         warpToNextSeasonTimestamp();
-        
+
         // see OracleDeployer.sol for the chainlink oracles.
         // create an invalid round to one of the wells.
         oracleIndex = bound(oracleIndex, 0, chainlinkOracles.length - 1);
@@ -130,16 +130,13 @@ contract SunriseTest is TestHelper {
 
         callSunriseAndCheckEvents();
     }
-    
+
     /**
      * @notice general sunrise test. Verfies that the sunrise function
      * can be executed no matter how late the call is.
      */
-    function test_lateSunrise(
-        uint256 s,
-        uint256 secondsLate
-    ) public {
-        // max season is type(uint32).max - 2. 
+    function test_lateSunrise(uint256 s, uint256 secondsLate) public {
+        // max season is type(uint32).max - 2.
         s = bound(s, 1, type(uint32).max - 2);
         season.setCurrentSeasonE(uint32(s));
         warpToNextSeasonTimestamp();
@@ -162,14 +159,12 @@ contract SunriseTest is TestHelper {
         vm.expectEmit();
         emit Sunrise(s + 1);
         season.mockStepSeason();
-        
+
         assertEq(bs.season(), s + 1);
         assertEq(bs.sunriseBlock(), block.number);
     }
 
     ///////// STEP ORACLE /////////
-
-
 
     ///////// BEANSTALK EVALUATION AND UPDATE /////////
 
@@ -178,29 +173,27 @@ contract SunriseTest is TestHelper {
      */
 
     ///////// GERMINATION /////////
-    
+
     /**
      * @notice see {Germination.t.sol}
      */
 
     ///////// GAUGE /////////
-    
+
     /**
      * @notice see {Gauge.t.sol}
      */
 
     ///////// Sun /////////
-    
+
     /**
      * @notice see {Sun.t.sol}
      */
-
 
     ///////// INCENTIVE /////////
 
     // TODO: foundry tests cannot properly test the sunrise incentive,
     // due to gasLeft() bugs. https://github.com/foundry-rs/foundry/issues/5621
-
 
     ////// HELPER FUNCTIONS //////
 
@@ -241,7 +234,7 @@ contract SunriseTest is TestHelper {
      */
     function uninitializeWellPumps() internal noGasMetering {
         address[] memory lp = bs.getWhitelistedLpTokens();
-        for(uint i; i < lp.length; i++) {
+        for (uint i; i < lp.length; i++) {
             MockPump(IWell(lp[i]).pumps()[0].target).clearReserves(lp[i]);
         }
     }

@@ -10,12 +10,44 @@ import {AppStorage} from "../AppStorage.sol";
 /**
  * @author Publius
  * @title InitBip2 runs the code for BIP-2. It adjusts the Weather Cases
-**/
+ **/
 contract InitBip2 {
-
     AppStorage internal s;
 
     function init() external {
-        s.deprecated_cases = [int8(3),1,0,0,-1,-3,-3,0,3,1,0,0,-1,-3,-3,0,3,3,1,0,0,-1,-3,0,3,3,1,0,1,-1,-3,0];
+        s.deprecated_cases = [
+            int8(3),
+            1,
+            0,
+            0,
+            -1,
+            -3,
+            -3,
+            0,
+            3,
+            1,
+            0,
+            0,
+            -1,
+            -3,
+            -3,
+            0,
+            3,
+            3,
+            1,
+            0,
+            0,
+            -1,
+            -3,
+            0,
+            3,
+            3,
+            1,
+            0,
+            1,
+            -1,
+            -3,
+            0
+        ];
     }
 }

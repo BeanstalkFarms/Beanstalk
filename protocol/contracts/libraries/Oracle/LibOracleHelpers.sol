@@ -12,7 +12,6 @@ import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
  * @notice Contains functionalty common to multiple Oracle libraries.
  **/
 library LibOracleHelpers {
-
     using SafeMath for uint256;
 
     uint256 constant ONE = 1e18;

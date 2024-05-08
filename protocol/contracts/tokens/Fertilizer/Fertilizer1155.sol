@@ -20,11 +20,7 @@ contract Fertilizer1155 is ERC1155Upgradeable {
         uint256 id,
         uint256 amount,
         bytes memory data
-    )
-        public
-        virtual
-        override
-    {
+    ) public virtual override {
         require(to != address(0), "ERC1155: transfer to the zero address");
         require(
             from == _msgSender() || isApprovedForAll(from, _msgSender()),
@@ -33,7 +29,14 @@ contract Fertilizer1155 is ERC1155Upgradeable {
 
         address operator = _msgSender();
 
-        _beforeTokenTransfer(operator, from, to, __asSingletonArray(id), __asSingletonArray(amount), data);
+        _beforeTokenTransfer(
+            operator,
+            from,
+            to,
+            __asSingletonArray(id),
+            __asSingletonArray(amount),
+            data
+        );
 
         _transfer(from, to, id, amount);
 
@@ -48,11 +51,7 @@ contract Fertilizer1155 is ERC1155Upgradeable {
         uint256[] memory ids,
         uint256[] memory amounts,
         bytes memory data
-    )
-        public
-        virtual
-        override
-    {
+    ) public virtual override {
         require(ids.length == amounts.length, "ERC1155: ids and amounts length mismatch");
         require(to != address(0), "ERC1155: transfer to the zero address");
         require(
@@ -73,15 +72,9 @@ contract Fertilizer1155 is ERC1155Upgradeable {
         __doSafeBatchTransferAcceptanceCheck(operator, from, to, ids, amounts, data);
     }
 
-    function _transfer(
-        address from,
-        address to,
-        uint256 id,
-        uint256 amount
-    ) internal virtual {
-    }
+    function _transfer(address from, address to, uint256 id, uint256 amount) internal virtual {}
 
-    function _safeMint(address to, uint256 id, uint256 amount, bytes memory data) internal virtual  {
+    function _safeMint(address to, uint256 id, uint256 amount, bytes memory data) internal virtual {
         require(to != address(0), "ERC1155: mint to the zero address");
 
         address operator = _msgSender();
@@ -106,7 +99,9 @@ contract Fertilizer1155 is ERC1155Upgradeable {
         bytes memory data
     ) private {
         if (to.isContract()) {
-            try IERC1155ReceiverUpgradeable(to).onERC1155Received(operator, from, id, amount, data) returns (bytes4 response) {
+            try
+                IERC1155ReceiverUpgradeable(to).onERC1155Received(operator, from, id, amount, data)
+            returns (bytes4 response) {
                 if (response != IERC1155ReceiverUpgradeable.onERC1155Received.selector) {
                     revert("ERC1155: ERC1155Receiver rejected tokens");
                 }
@@ -127,9 +122,15 @@ contract Fertilizer1155 is ERC1155Upgradeable {
         bytes memory data
     ) private {
         if (to.isContract()) {
-            try IERC1155ReceiverUpgradeable(to).onERC1155BatchReceived(operator, from, ids, amounts, data) returns (
-                bytes4 response
-            ) {
+            try
+                IERC1155ReceiverUpgradeable(to).onERC1155BatchReceived(
+                    operator,
+                    from,
+                    ids,
+                    amounts,
+                    data
+                )
+            returns (bytes4 response) {
                 if (response != IERC1155ReceiverUpgradeable.onERC1155BatchReceived.selector) {
                     revert("ERC1155: ERC1155Receiver rejected tokens");
                 }

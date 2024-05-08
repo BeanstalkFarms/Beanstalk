@@ -11,7 +11,7 @@ import "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
  * 1: deploy MockMetadataFacet
  * 2: deploy MetadataMockERC1155 with the address of the MockMetadataFacet.
  * (MockMetadataFacet with ERC1155 exceeds the contract size limit.)
-**/
+ **/
 
 interface IMetadataFacet {
     function uri(uint256 depositId) external view returns (string memory);
@@ -22,10 +22,9 @@ interface IMetadataFacet {
 }
 
 contract MockMetadataERC1155 is ERC1155 {
+    address public mockMetadataFacetaddress;
 
-    address public mockMetadataFacetaddress; 
-
-    constructor (string memory name, address metadataAddress) ERC1155(name) {
+    constructor(string memory name, address metadataAddress) ERC1155(name) {
         mockMetadataFacetaddress = metadataAddress;
     }
 
@@ -37,11 +36,11 @@ contract MockMetadataERC1155 is ERC1155 {
         mockMetadataFacetaddress = metadataAddress;
     }
 
-    function uri(uint256 depositId) external override view returns (string memory) {
+    function uri(uint256 depositId) external view override returns (string memory) {
         return IMetadataFacet(mockMetadataFacetaddress).uri(depositId);
     }
 
-    function symbol() external view returns (string memory){
+    function symbol() external view returns (string memory) {
         return IMetadataFacet(mockMetadataFacetaddress).symbol();
     }
 }

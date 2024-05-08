@@ -28,9 +28,7 @@ contract UnwrapAndSendETH {
         uint256 wethBalance = IWETH(WETH).balanceOf(address(this));
         require(wethBalance > 0, "Insufficient WETH");
         IWETH(WETH).withdraw(wethBalance);
-        (bool success, ) = to.call{value: address(this).balance}(
-            new bytes(0)
-        );
+        (bool success, ) = to.call{value: address(this).balance}(new bytes(0));
         require(success, "Eth transfer Failed.");
     }
 }

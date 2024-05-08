@@ -42,10 +42,6 @@ async function getBeanMetapool() {
   return await ethers.getContractAt("ICurvePool", BEAN_3_CURVE);
 }
 
-async function getFertilizerPreMint() {
-  return await ethers.getContractAt("FertilizerPreMint", FERTILIZER);
-}
-
 async function getFertilizer() {
   return await ethers.getContractAt("Fertilizer", FERTILIZER);
 }
@@ -57,7 +53,6 @@ exports.getUsdc = getUsdc;
 exports.getPrice = getPrice;
 exports.getBeanMetapool = getBeanMetapool;
 exports.getBeanstalkAdminControls = getBeanstalkAdminControls;
-exports.getFertilizerPreMint = getFertilizerPreMint;
 exports.getFertilizer = getFertilizer;
 exports.getBeanstalk = getBeanstalk;
 exports.getMockBeanstalk = getMockBeanstalk;

@@ -43,11 +43,11 @@ contract InitBipSeedGauge is Weather, InitWhitelistStatuses {
     uint128 internal constant BEAN_ETH_INITIAL_GAUGE_POINTS = 100e18;
 
     function init() external {
-
-        // Update milestone season decimal precision 
+        // Update milestone season decimal precision
         // prior to dewhitelisting Bean3CRV.
-        s.ss[C.CURVE_BEAN_METAPOOL].milestoneStem = 
-            int96(s.ss[C.CURVE_BEAN_METAPOOL].milestoneStem.mul(1e6));
+        s.ss[C.CURVE_BEAN_METAPOOL].milestoneStem = int96(
+            s.ss[C.CURVE_BEAN_METAPOOL].milestoneStem.mul(1e6)
+        );
 
         addWhitelistStatuses(true);
 
@@ -78,27 +78,26 @@ contract InitBipSeedGauge is Weather, InitWhitelistStatuses {
 
         bytes4 gpSelector = IGaugePointFacet.defaultGaugePointFunction.selector;
         bytes4 lwSelector = ILiquidityWeightFacet.maxWeight.selector;
-        
+
         bytes4[4] memory gpSelectors = [bytes4(0), gpSelector, 0, 0];
         bytes4[4] memory lwSelectors = [bytes4(0), lwSelector, 0, 0];
         uint128[4] memory gaugePoints = [uint128(0), BEAN_ETH_INITIAL_GAUGE_POINTS, 0, 0];
         uint64[4] memory optimalPercentDepositedBdv = [uint64(0), 100e6, 0, 0];
-        
+
         uint128 totalBdv;
         for (uint i = 0; i < siloTokens.length; i++) {
-
             // previously, the milestone stem was stored truncated. The seed gauge system now stores
             // the value untruncated, and thus needs to update all previous milestone stems.
             // This is a one time update, and will not be needed in the future.
             s.ss[siloTokens[i]].milestoneStem = int96(s.ss[siloTokens[i]].milestoneStem.mul(1e6));
 
-            // update gpSelector, lwSelector, gaugePoint,and optimalPercentDepositedBdv 
+            // update gpSelector, lwSelector, gaugePoint,and optimalPercentDepositedBdv
             s.ss[siloTokens[i]].gpSelector = gpSelectors[i];
             s.ss[siloTokens[i]].lwSelector = lwSelectors[i];
             s.ss[siloTokens[i]].gaugePoints = gaugePoints[i];
             s.ss[siloTokens[i]].optimalPercentDepositedBdv = optimalPercentDepositedBdv[i];
 
-            // if the silo token has a stalkEarnedPerSeason of 0, 
+            // if the silo token has a stalkEarnedPerSeason of 0,
             // update to 1.
             if (s.ss[siloTokens[i]].stalkEarnedPerSeason == 0) {
                 LibWhitelist.updateStalkPerBdvPerSeasonForToken(siloTokens[i], 1);

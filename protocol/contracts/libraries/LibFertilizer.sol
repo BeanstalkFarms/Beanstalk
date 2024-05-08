@@ -53,9 +53,7 @@ library LibFertilizer {
 
         // Calculate Beans Per Fertilizer and add to total owed
         uint128 bpf = getBpf(season);
-        s.unfertilizedIndex = s.unfertilizedIndex.add(
-            fertilizerAmount.mul(bpf)
-        );
+        s.unfertilizedIndex = s.unfertilizedIndex.add(fertilizerAmount.mul(bpf));
         // Get id
         id = s.bpf.add(bpf);
         // Update Total and Season supply
@@ -85,42 +83,34 @@ library LibFertilizer {
      * @dev Any token contributions should already be transferred to the Barn Raise Well to allow for a gas efficient liquidity
      * addition through the use of `sync`. See {FertilizerFacet.mintFertilizer} for an example.
      */
-    function addUnderlying(uint256 tokenAmountIn, uint256 usdAmount, uint256 minAmountOut) internal {
+    function addUnderlying(
+        uint256 tokenAmountIn,
+        uint256 usdAmount,
+        uint256 minAmountOut
+    ) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
         // Calculate how many new Deposited Beans will be minted
-        uint256 percentToFill = usdAmount.mul(C.precision()).div(
-            remainingRecapitalization()
-        );
+        uint256 percentToFill = usdAmount.mul(C.precision()).div(remainingRecapitalization());
 
         uint256 newDepositedBeans;
         if (C.unripeBean().totalSupply() > s.u[C.UNRIPE_BEAN].balanceOfUnderlying) {
             newDepositedBeans = (C.unripeBean().totalSupply()).sub(
                 s.u[C.UNRIPE_BEAN].balanceOfUnderlying
             );
-            newDepositedBeans = newDepositedBeans.mul(percentToFill).div(
-                C.precision()
-            );
+            newDepositedBeans = newDepositedBeans.mul(percentToFill).div(C.precision());
         }
 
         // Calculate how many Beans to add as LP
-        uint256 newDepositedLPBeans = usdAmount.mul(C.exploitAddLPRatio()).div(
-            DECIMALS
-        );
+        uint256 newDepositedLPBeans = usdAmount.mul(C.exploitAddLPRatio()).div(DECIMALS);
 
         // Mint the Deposited Beans to Beanstalk.
-        C.bean().mint(
-            address(this),
-            newDepositedBeans
-        );
+        C.bean().mint(address(this), newDepositedBeans);
 
         // Mint the LP Beans and add liquidity to the well.
         address barnRaiseWell = LibBarnRaise.getBarnRaiseWell();
         address barnRaiseToken = LibBarnRaise.getBarnRaiseToken();
 
-        C.bean().mint(
-            address(this),
-            newDepositedLPBeans
-        );
+        C.bean().mint(address(this), newDepositedLPBeans);
 
         IERC20(barnRaiseToken).transferFrom(
             LibTractor._user(),
@@ -133,9 +123,9 @@ library LibFertilizer {
 
         uint256[] memory tokenAmountsIn = new uint256[](2);
         IERC20[] memory tokens = IWell(barnRaiseWell).tokens();
-        (tokenAmountsIn[0], tokenAmountsIn[1]) = tokens[0] == C.bean() ?
-            (newDepositedLPBeans, tokenAmountIn) :
-            (tokenAmountIn, newDepositedLPBeans);
+        (tokenAmountsIn[0], tokenAmountsIn[1]) = tokens[0] == C.bean()
+            ? (newDepositedLPBeans, tokenAmountIn)
+            : (tokenAmountIn, newDepositedLPBeans);
 
         uint256 newLP = IWell(barnRaiseWell).addLiquidity(
             tokenAmountsIn,
@@ -180,17 +170,10 @@ library LibFertilizer {
         }
     }
 
-    function remainingRecapitalization()
-        internal
-        view
-        returns (uint256 remaining)
-    {
+    function remainingRecapitalization() internal view returns (uint256 remaining) {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        uint256 totalDollars = C
-            .dollarPerUnripeLP()
-            .mul(C.unripeLP().totalSupply())
-            .div(DECIMALS);
-        totalDollars = totalDollars / 1e6 * 1e6; // round down to nearest USDC
+        uint256 totalDollars = C.dollarPerUnripeLP().mul(C.unripeLP().totalSupply()).div(DECIMALS);
+        totalDollars = (totalDollars / 1e6) * 1e6; // round down to nearest USDC
         if (s.recapitalized >= totalDollars) return 0;
         return totalDollars.sub(s.recapitalized);
     }
@@ -235,10 +218,7 @@ library LibFertilizer {
         // other is supported by the Lib Usd Oracle.
         IERC20[] memory tokens = IWell(well).tokens();
         require(tokens.length == 2, "Fertilizer: Well must have 2 tokens.");
-        require(
-            tokens[0] == C.bean() || tokens[1] == C.bean(),
-            "Fertilizer: Well must have BEAN."
-        );
+        require(tokens[0] == C.bean() || tokens[1] == C.bean(), "Fertilizer: Well must have BEAN.");
         // Check that Lib Usd Oracle supports the non-Bean token in the Well.
         LibUsdOracle.getTokenPrice(address(tokens[tokens[0] == C.bean() ? 1 : 0]));
 

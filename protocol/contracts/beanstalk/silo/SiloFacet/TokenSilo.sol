@@ -167,9 +167,9 @@ contract TokenSilo is Silo {
     function _withdrawDeposit(address account, address token, int96 stem, uint256 amount) internal {
         // Remove the Deposit from `account`.
         (
-            uint256 initalStalkRemoved, 
-            uint256 grownStalkRemoved, 
-            uint256 bdvRemoved, 
+            uint256 initalStalkRemoved,
+            uint256 grownStalkRemoved,
+            uint256 bdvRemoved,
             LibGerminate.Germinate germinate
         ) = LibSilo._removeDepositFromAccount(
                 account,
@@ -180,24 +180,20 @@ contract TokenSilo is Silo {
             );
         if (germinate == LibGerminate.Germinate.NOT_GERMINATING) {
             // remove the deposit from totals
-            _withdraw(account, token, amount, bdvRemoved, initalStalkRemoved.add(grownStalkRemoved));
-        } else {
-            // remove deposit from germination, and burn the grown stalk.
-            // grown stalk does not germinate and is not counted in germinating totals.
-            _withdrawGerminating(
+            _withdraw(
                 account,
                 token,
                 amount,
                 bdvRemoved,
-                initalStalkRemoved,
-                germinate
+                initalStalkRemoved.add(grownStalkRemoved)
             );
+        } else {
+            // remove deposit from germination, and burn the grown stalk.
+            // grown stalk does not germinate and is not counted in germinating totals.
+            _withdrawGerminating(account, token, amount, bdvRemoved, initalStalkRemoved, germinate);
 
             if (grownStalkRemoved > 0) {
-                LibSilo.burnActiveStalk(
-                    account, 
-                    grownStalkRemoved
-                ); 
+                LibSilo.burnActiveStalk(account, grownStalkRemoved);
             }
         }
     }
@@ -231,7 +227,7 @@ contract TokenSilo is Silo {
         if (ar.active.tokens > 0) {
             _withdraw(account, token, ar.active.tokens, ar.active.bdv, ar.active.stalk);
         }
-       
+
         // withdraw Germinating deposits from odd seasons
         if (ar.odd.tokens > 0) {
             _withdrawGerminating(
@@ -257,10 +253,7 @@ contract TokenSilo is Silo {
         }
 
         if (ar.grownStalkFromGermDeposits > 0) {
-            LibSilo.burnActiveStalk(
-                account, 
-                ar.grownStalkFromGermDeposits
-            ); 
+            LibSilo.burnActiveStalk(account, ar.grownStalkFromGermDeposits);
         }
 
         // we return the summation of all tokens removed from the silo.
@@ -281,7 +274,7 @@ contract TokenSilo is Silo {
         // Decrement total deposited in the silo.
         LibTokenSilo.decrementTotalDeposited(token, amount, bdv);
         // Burn stalk and roots associated with the stalk.
-        LibSilo.burnActiveStalk(account, stalk); 
+        LibSilo.burnActiveStalk(account, stalk);
     }
 
     /**
@@ -343,11 +336,7 @@ contract TokenSilo is Silo {
         } else {
             LibSilo.transferGerminatingStalk(sender, recipient, initalStalk, germ);
             if (grownStalk > 0) {
-                LibSilo.transferStalk(
-                    sender,
-                    recipient, 
-                    grownStalk
-                ); 
+                LibSilo.transferStalk(sender, recipient, grownStalk);
             }
         }
 
@@ -393,10 +382,7 @@ contract TokenSilo is Silo {
         // Similar to {removeDepositsFromAccount}, however the Deposit is also
         // added to the recipient's account during each iteration.
         for (uint256 i; i < stems.length; ++i) {
-            LibGerminate.Germinate germ = LibGerminate._getGerminationState(
-                stems[i],
-                germStem
-            );
+            LibGerminate.Germinate germ = LibGerminate._getGerminationState(stems[i], germStem);
             uint256 crateBdv = LibTokenSilo.removeDepositFromAccount(
                 sender,
                 token,
@@ -445,18 +431,16 @@ contract TokenSilo is Silo {
          *  However, the ERC1155 standard has a dedicated {batchTransfer} event,
          *  which is used here.
          */
-        emit LibSilo.TransferBatch(LibTractor._user(), sender, recipient, removedDepositIDs, amounts);
-        // emit RemoveDeposits event (tokens removed are summation).
-        emit RemoveDeposits(
+        emit LibSilo.TransferBatch(
+            LibTractor._user(),
             sender,
-            token,
-            stems, 
-            amounts,
-            ar.active.tokens, 
-            bdvs
+            recipient,
+            removedDepositIDs,
+            amounts
         );
+        // emit RemoveDeposits event (tokens removed are summation).
+        emit RemoveDeposits(sender, token, stems, amounts, ar.active.tokens, bdvs);
 
         return bdvs;
     }
-
 }

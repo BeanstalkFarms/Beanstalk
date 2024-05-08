@@ -13,15 +13,13 @@ import {LibWellMinting} from "contracts/libraries/Minting/LibWellMinting.sol";
  * @title ConvertGettersFacet contains view functions related to converting Deposited assets.
  **/
 contract ConvertGettersFacet {
-
     /**
      * @notice Returns the maximum amount that can be converted of `tokenIn` to `tokenOut`.
      */
-    function getMaxAmountIn(address tokenIn, address tokenOut)
-        external
-        view
-        returns (uint256 amountIn)
-    {
+    function getMaxAmountIn(
+        address tokenIn,
+        address tokenOut
+    ) external view returns (uint256 amountIn) {
         return LibConvert.getMaxAmountIn(tokenIn, tokenOut);
     }
 

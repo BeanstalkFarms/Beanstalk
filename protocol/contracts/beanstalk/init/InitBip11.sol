@@ -11,14 +11,13 @@ import {AppStorage} from "../AppStorage.sol";
 /**
  * @author Publius
  * @title InitBip11 runs the code for BIP-11.
-**/
+ **/
 
 contract InitBip11 {
-
     AppStorage internal s;
 
     address private constant BEAN_ADDRESS = address(0xDC59ac4FeFa32293A95889Dc396682858d52e5Db);
-    
+
     address private constant PUBLIUS_ADDRESS = address(0x925753106FCdB6D2f30C3db295328a0A1c5fD1D1);
     uint256 private constant PAYMENT = 4000000000;
 

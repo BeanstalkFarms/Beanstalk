@@ -6,7 +6,6 @@ pragma solidity >=0.6.0 <0.8.0;
  * @dev String operations.
  */
 library LibStrings {
-
     bytes16 private constant _SYMBOLS = "0123456789abcdef";
     uint8 private constant _ADDRESS_LENGTH = 20;
 
@@ -30,13 +29,13 @@ library LibStrings {
         uint256 index = digits - 1;
         temp = value;
         while (temp != 0) {
-            buffer[index--] = bytes1(uint8(48 + temp % 10));
+            buffer[index--] = bytes1(uint8(48 + (temp % 10)));
             temp /= 10;
         }
         return string(buffer);
     }
 
-     function toHexString(uint256 value, uint256 length) internal pure returns (string memory) {
+    function toHexString(uint256 value, uint256 length) internal pure returns (string memory) {
         bytes memory buffer = new bytes(2 * length + 2);
         buffer[0] = "0";
         buffer[1] = "x";
@@ -55,8 +54,8 @@ library LibStrings {
     /**
      * @dev Converts a `int256` to its ASCII `string` representation.
      */
-    function toString(int256 value) internal pure returns(string memory){
-        if (value > 0){
+    function toString(int256 value) internal pure returns (string memory) {
+        if (value > 0) {
             return toString(uint256(value));
         } else {
             return string(abi.encodePacked("-", toString(uint256(-value))));

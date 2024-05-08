@@ -80,11 +80,7 @@ library LibCurve {
         require(false, "Price: Convergence false");
     }
 
-    function getD(uint256[2] memory xp, uint256 a)
-        internal
-        pure
-        returns (uint256 D)
-    {
+    function getD(uint256[2] memory xp, uint256 a) internal pure returns (uint256 D) {
         // Solution is taken from pool contract: 0xc9C32cd16Bf7eFB85Ff14e0c8603cc90F6F2eE49
         uint256 S;
         uint256 Dprev;
@@ -147,7 +143,7 @@ library LibCurve {
     /**
      * @dev Return the `xp` array for two tokens. Adjusts `balances[0]` by `padding`
      * and `balances[1]` by `rate / PRECISION`.
-     * 
+     *
      * This is provided as a gas optimization when `rates[0] * PRECISION` has been
      * pre-computed.
      */

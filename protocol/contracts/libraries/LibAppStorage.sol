@@ -7,7 +7,7 @@ pragma experimental ABIEncoderV2;
 import "../beanstalk/AppStorage.sol";
 
 /**
- * @title LibAppStorage 
+ * @title LibAppStorage
  * @author Publius
  * @notice Allows libaries to access Beanstalk's state.
  */

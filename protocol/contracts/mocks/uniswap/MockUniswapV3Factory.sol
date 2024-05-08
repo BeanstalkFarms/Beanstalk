@@ -1,15 +1,13 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.7.6;
 
-import './MockUniswapV3Deployer.sol';
-import './MockUniswapV3Pool.sol';
-
+import "./MockUniswapV3Deployer.sol";
+import "./MockUniswapV3Pool.sol";
 
 /// @title Canonical Uniswap V3 factory
 /// @notice Deploys Uniswap V3 pools and manages ownership and control over pool protocol fees
 
 contract MockUniswapV3Factory is MockUniswapV3PoolDeployer {
-
     event OwnerChanged(address indexed oldOwner, address indexed newOwner);
 
     event FeeAmountEnabled(uint24 indexed fee, int24 indexed tickSpacing);
