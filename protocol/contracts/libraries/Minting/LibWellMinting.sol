@@ -204,11 +204,11 @@ library LibWellMinting {
     }
 
     /**
-     * @dev Calculates the instantaneous delta B for a given Well address.
+     * @dev Calculates the current deltaB for a given Well address.
      * @param well The address of the Well.
-     * @return The instantaneous delta B balance since the last `capture` call.
+     * @return The instantaneous deltaB uses the current reserves in the well.
      */
-    function instantaneousDeltaB(address well) internal view returns
+    function currentDeltaB(address well) internal view returns
         (int256) {
         IERC20[] memory tokens = IWell(well).tokens();
         uint256[] memory reserves = IWell(well).getReserves();
@@ -233,15 +233,21 @@ library LibWellMinting {
         )).sub(int256(reserves[beanIndex]));
     }
 
-    function overallInstantaneousDeltaB() internal view returns (int256 deltaB) {
+    /**
+     * @notice returns the overall current deltaB for all whitelisted well tokens.
+     */
+    function overallcurrentDeltaB() internal view returns (int256 deltaB) {
         address[] memory tokens = LibWhitelistedTokens.getWhitelistedWellLpTokens();
         for (uint256 i = 0; i < tokens.length; i++) {
             if (tokens[i] == C.BEAN) continue;
-            (int256 wellDeltaB) = instantaneousDeltaB(tokens[i]);
+            (int256 wellDeltaB) = currentDeltaB(tokens[i]);
             deltaB = deltaB.add(wellDeltaB);
         }
     }
     
+    /**
+     * @notice returns the overall cappedReserves deltaB for all whitelisted well tokens.
+     */
     function cappedReservesDeltaB(address well) internal view returns 
         (int256) {
 

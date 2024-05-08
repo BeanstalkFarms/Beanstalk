@@ -189,9 +189,9 @@ contract ConvertFacet is ReentrancyGuard {
         pipeData.overallConvertCapacity = LibConvert.abs(LibWellMinting.overallCappedDeltaB());
 
         // Store the pre-convert insta deltaB's both overall and for each well
-        pipeData.beforeOverallDeltaB = LibWellMinting.overallInstantaneousDeltaB();
-        pipeData.beforeInputTokenDeltaB = getInstaDeltaB(inputToken);
-        pipeData.beforeOutputTokenDeltaB = getInstaDeltaB(outputToken);
+        pipeData.beforeOverallDeltaB = LibWellMinting.overallcurrentDeltaB();
+        pipeData.beforeInputTokenDeltaB = getCurrentDeltaB(inputToken);
+        pipeData.beforeOutputTokenDeltaB = getCurrentDeltaB(outputToken);
 
         IERC20(inputToken).transfer(C.PIPELINE, fromAmount);
         executeAdvancedFarmCalls(advancedFarmCalls);
@@ -228,11 +228,11 @@ contract ConvertFacet is ReentrancyGuard {
         LibConvert.DeltaBStorage memory deltaBStorage;
 
         deltaBStorage.beforeInputTokenDeltaB = beforeInputTokenDeltaB;
-        deltaBStorage.afterInputTokenDeltaB = getInstaDeltaB(inputToken);
+        deltaBStorage.afterInputTokenDeltaB = getCurrentDeltaB(inputToken);
         deltaBStorage.beforeOutputTokenDeltaB = beforeOutputTokenDeltaB;
-        deltaBStorage.afterOutputTokenDeltaB = getInstaDeltaB(outputToken);
+        deltaBStorage.afterOutputTokenDeltaB = getCurrentDeltaB(outputToken);
         deltaBStorage.beforeOverallDeltaB = beforeOverallDeltaB;
-        deltaBStorage.afterOverallDeltaB = LibWellMinting.overallInstantaneousDeltaB();
+        deltaBStorage.afterOverallDeltaB = LibWellMinting.overallcurrentDeltaB();
 
         return LibConvert.calculateStalkPenalty(
             deltaBStorage,
@@ -269,19 +269,18 @@ contract ConvertFacet is ReentrancyGuard {
      */
     function getCombinedDeltaBForTokens(address inputToken, address outputToken) internal view
         returns (int256 combinedDeltaBinsta) {
-        combinedDeltaBinsta = getInstaDeltaB(inputToken).add(getInstaDeltaB(outputToken));
+        combinedDeltaBinsta = getCurrentDeltaB(inputToken).add(getCurrentDeltaB(outputToken));
     }
 
     /**
      * @param token The token to get the deltaB of.
      * @return instDeltaB The deltaB of the token, for Bean it returns 0.
      */
-    function getInstaDeltaB(address token) internal view returns (int256 instDeltaB) {
+    function getCurrentDeltaB(address token) internal view returns (int256 instDeltaB) {
         if (token == address(C.bean())) {
             return 0;
         }
-        instDeltaB = LibWellMinting.instantaneousDeltaB(token);
-        return instDeltaB;
+        return LibWellMinting.currentDeltaB(token);
     }
 
     /**

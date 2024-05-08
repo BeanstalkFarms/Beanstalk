@@ -789,7 +789,7 @@ interface IMockFBeanstalk {
         view
         returns (uint256);
     function poolDeltaB(address pool) external view returns (int256);
-    function poolDeltaBInsta(address pool) external view returns (int256 deltaB);
+    function poolCurrentDeltaB(address pool) external view returns (int256 deltaB);
     function publishRequisition(Requisition memory requisition) external;
     function rain() external view returns (Rain memory);
     function rainSiloSunrise(uint256 amount) external;
