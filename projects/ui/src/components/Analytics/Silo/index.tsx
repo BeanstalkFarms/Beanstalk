@@ -22,11 +22,11 @@ const SLUGS = [
   'deposited_urlp',
   'stalk',
   // 'seeds',
-  'bean_vAPY',
-  'bean_3crv_vAPY',
-  'bean_eth_well_vAPY',
-  'ur_bean_vAPY',
-  'ur_bean_eth_vAPY',
+  'bean_30d_vapy',
+  'bean3crv_30d_vapy',
+  'beaneth_30d_vapy',
+  'urbean_vapy',
+  'urbeaneth_vapy',
 ];
 
 const SiloAnalytics: FC<{}> = () => {
@@ -45,11 +45,11 @@ const SiloAnalytics: FC<{}> = () => {
         <Tab label="Deposited urBEANETH" />
         <Tab label="Stalk" />
         {/* <Tab label="Seeds" /> */}
-        <Tab label="BEAN vAPY" />
-        <Tab label="BEAN3CRV vAPY" />
-        <Tab label="BEANETH vAPY" />
-        <Tab label="urBEAN vAPY" />
-        <Tab label="urBEANETH vAPY" />
+        <Tab label="BEAN 30D vAPY" />
+        <Tab label="BEAN3CRV 30D vAPY" />
+        <Tab label="BEANETH 30D vAPY" />
+        <Tab label="urBEAN 30D vAPY" />
+        <Tab label="urBEANETH 30D vAPY" />
       </Tabs>
       {tab === 0 && (
         <DepositedAsset

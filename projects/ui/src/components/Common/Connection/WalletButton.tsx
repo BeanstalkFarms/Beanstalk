@@ -1,10 +1,6 @@
 import React from 'react';
 //  import { Link as RouterLink } from 'react-router-dom';
-import {
-  useDisconnect,
-  useNetwork,
-  useAccount as useWagmiAccount,
-} from 'wagmi';
+import { useDisconnect, useAccount as useWagmiAccount } from 'wagmi';
 import {
   Box,
   Button,
@@ -19,7 +15,7 @@ import {
 } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
-import { IMPERSONATED_ACCOUNT, trimAddress } from '~/util';
+import { trimAddress } from '~/util';
 import useChainConstant from '~/hooks/chain/useChainConstant';
 import gearIcon from '~/img/beanstalk/interface/nav/gear.svg';
 //  import historyIcon from '~/img/beanstalk/interface/nav/history.svg';
@@ -29,22 +25,22 @@ import useAnchor from '~/hooks/display/useAnchor';
 import useToggle from '~/hooks/display/useToggle';
 import useAccount from '~/hooks/ledger/useAccount';
 import { CHAIN_INFO } from '~/constants';
-import WalletDialog from './WalletDialog';
 import PickBeansDialog from '~/components/Farmer/Unripe/PickDialog';
 import AddressIcon from '~/components/Common/AddressIcon';
 import useGlobal from '~/hooks/app/useGlobal';
 import Row from '~/components/Common/Row';
 import FolderMenu from '~/components/Nav/FolderMenu';
-
 import { FC } from '~/types';
 import { BeanstalkPalette } from '~/components/App/muiTheme';
+import useSetting from '~/hooks/app/useSetting';
+import WalletDialog from './WalletDialog';
 
 const WalletButton: FC<{ showFullText?: boolean } & ButtonProps> = ({
   ...props
 }) => {
   const account = useAccount();
-  const { address } = useWagmiAccount();
-  const { chain: _chain } = useNetwork();
+  const impersonatedAccount = useSetting('impersonatedAccount')[0];
+  const { address, chain: _chain } = useWagmiAccount();
   const { disconnect } = useDisconnect();
   const chain = useChainConstant(CHAIN_INFO);
 
@@ -54,7 +50,7 @@ const WalletButton: FC<{ showFullText?: boolean } & ButtonProps> = ({
 
   /// Menu
   const [menuAnchor, toggleMenuAnchor] = useAnchor();
-  const menuVisible = Boolean(menuAnchor);
+  // const menuVisible = Boolean(menuAnchor);
 
   /// Dialog: Wallet
   const [selectingWallet, showWallets, hideWallets] = useToggle();
@@ -130,7 +126,7 @@ const WalletButton: FC<{ showFullText?: boolean } & ButtonProps> = ({
       </MenuItem> */}
       <MenuItem
         component="a"
-        href={`${chain.explorer}/address/${account}`}
+        href={`${chain.explorer}/address/${impersonatedAccount || account}`}
         target="_blank"
         rel="noreferrer"
       >
@@ -212,7 +208,7 @@ const WalletButton: FC<{ showFullText?: boolean } & ButtonProps> = ({
           >
             {/* Use `accountRaw` to match capitalization of wallet provider
              * assert existence of accountRaw.address since we check `account` prior. */}
-            {trimAddress(IMPERSONATED_ACCOUNT || address || '')}
+            {trimAddress(impersonatedAccount || address || '')}
           </Typography>
         }
         startIcon={<AddressIcon address={account} />}
@@ -225,7 +221,7 @@ const WalletButton: FC<{ showFullText?: boolean } & ButtonProps> = ({
         popoverPlacement="bottom-end"
         zeroTopRightRadius
         sx={
-          import.meta.env.VITE_OVERRIDE_FARMER_ACCOUNT
+          impersonatedAccount
             ? {
                 color: 'text.primary',
                 borderBottomColor: 'red',

@@ -124,7 +124,7 @@ export abstract class Token {
    * @param amount A string value in blockchain format
    * @returns TokenValue
    */
-  fromBlockchain(amount: string | number | BigNumber): TokenValue {
+  fromBlockchain(amount: string | number | BigNumber | BigInt): TokenValue {
     return TokenValue.fromBlockchain(amount, this.decimals);
   }
 

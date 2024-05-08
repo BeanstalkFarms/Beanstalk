@@ -35,6 +35,7 @@ import NetworkButton from '~/components/Common/Connection/NetworkButton';
  */
 import { FC } from '~/types';
 import { getNewToOldToken } from '~/hooks/sdk';
+import useSetting from '~/hooks/app/useSetting';
 
 const CONTRACT_NAMES: { [address: string]: string } = {
   [BEANSTALK_ADDRESSES[SupportedChainId.MAINNET]]: 'Beanstalk',
@@ -114,6 +115,9 @@ const SmartSubmitButton: FC<
     nextApprovalIndex > -1 ? selectedTokens[nextApprovalIndex] : null;
   const isApproving = !!values?.approving;
 
+  // Are we impersonating a different account while not in dev mode
+  const isImpersonating = !!useSetting('impersonatedAccount')[0] && !import.meta.env.DEV;
+
   // Dialog state and handlers
   const [open, setOpen] = useState(false);
   const handleOpen = useCallback(() => setOpen(true), []);
@@ -191,6 +195,12 @@ const SmartSubmitButton: FC<
       />
     );
   }
+
+  if (isImpersonating) {
+    return (
+      <LoadingButton {...props} disabled >Impersonating Account</LoadingButton>
+    );
+  };
 
   if (!SupportedChainId[chainId]) {
     return (

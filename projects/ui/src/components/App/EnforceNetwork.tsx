@@ -1,7 +1,7 @@
 import React from 'react';
+import { useAccount } from 'wagmi';
 import NetworkDialog from '~/components/Common/Connection/NetworkDialog';
 import { SupportedChainId } from '~/constants';
-import useChainId from '~/hooks/chain/useChainId';
 
 const BackdropProps = {
   sx: {
@@ -10,10 +10,10 @@ const BackdropProps = {
 };
 
 const EnforceNetwork: React.FC = () => {
-  const chainId = useChainId();
-  const isValid = !!SupportedChainId[chainId];
+  const { isConnected, chain } = useAccount();
+  const isValid = !!chain?.id && !!SupportedChainId[chain?.id];
 
-  if (isValid) return null;
+  if (!isConnected || isValid) return null;
 
   return (
     <NetworkDialog open handleClose={undefined} BackdropProps={BackdropProps} />

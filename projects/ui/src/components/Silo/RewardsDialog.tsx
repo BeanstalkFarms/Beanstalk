@@ -20,6 +20,7 @@ import useFarmerSiloBalances from '~/hooks/farmer/useFarmerSiloBalances';
 import useGetChainToken from '~/hooks/chain/useGetChainToken';
 import { FC } from '~/types';
 import RewardsForm, { ClaimCalls, ClaimGasResults } from './RewardsForm';
+import useSetting from '~/hooks/app/useSetting';
 
 export type SendFormValues = {
   to?: string;
@@ -70,6 +71,9 @@ const ClaimRewardsForm: FC<
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const getChainToken = useGetChainToken();
+
+  // Are we impersonating a different account while not in dev mode
+  const isImpersonating = !!useSetting('impersonatedAccount')[0] && !import.meta.env.DEV;
 
   /// State
   const balances = useFarmerSiloBalances();
@@ -200,10 +204,12 @@ const ClaimRewardsForm: FC<
           fullWidth
           size="large"
           loading={isSubmitting}
-          disabled={isSubmitting || values.action === undefined}
+          disabled={isSubmitting || values.action === undefined || isImpersonating}
           onClick={submitForm}
         >
-          {selectedAction === undefined
+          {isImpersonating 
+            ? 'Impersonating Account'
+            : selectedAction === undefined 
             ? 'Select Claim type'
             : `${options[selectedAction].title}`}
         </LoadingButton>

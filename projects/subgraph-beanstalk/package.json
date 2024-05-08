@@ -11,6 +11,8 @@
     "codegen": "graph codegen",
     "build": "graph build",
     "test": "graph test",
+    "testd": "docker run -it --rm --mount type=bind,source=\"$(pwd)\"/matchstick.yaml.docker,target=/matchstick/matchstick.yaml --mount type=bind,source=\"$(pwd)\"/../../,target=/matchstick/repo-mounted/ matchstick",
+    "testd-named": "./tests/scripts/docker-run-named.sh",
     "deploy": "graph deploy --node https://api.studio.thegraph.com/deploy/ beanstalk",
     "create-local": "graph create --node http://127.0.0.1:8020/ beanstalk",
     "deploy-local": "graph deploy --node http://127.0.0.1:8020/ --ipfs http://127.0.0.1:5001 beanstalk",
@@ -25,9 +27,9 @@
     "deploy-hosted-test": "graph deploy --node http://graph.node.bean.money:8020/ --ipfs http://graph.node.bean.money:5001 beanstalk-testing"
   },
   "dependencies": {
-    "@graphprotocol/graph-cli": "0.56.0",
-    "@graphprotocol/graph-ts": "0.31.0",
-    "matchstick-as": "^0.5.0"
+    "@graphprotocol/graph-cli": "0.69.0",
+    "@graphprotocol/graph-ts": "0.34.0",
+    "matchstick-as": "^0.6.0"
   },
   "private": true
 }
