@@ -32,8 +32,8 @@ contract InitBipNewSilo {
         // this adds the ERC1155 indentifier to the diamond:
         ds.supportedInterfaces[type(IERC1155).interfaceId] = true;
 
-        // Clear the storage variable
-        delete s.s.deprecated_seeds;
+        // // Clear the storage variable
+        // delete s.s.deprecated_seeds;
 
         // set the withdrawTimer to 0:
         s.season.withdrawSeasons = 0;

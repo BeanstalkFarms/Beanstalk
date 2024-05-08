@@ -194,7 +194,6 @@ contract MockSiloFacet is SiloFacet {
         AppStorage storage s = LibAppStorage.diamondStorage();
 
         // Increase supply of Seeds; Add Seeds to the balance of `account`
-        s.s.deprecated_seeds = s.s.deprecated_seeds.add(seeds);
         s.a[account].s.seeds = s.a[account].s.seeds.add(seeds);
 
         // emit SeedsBalanceChanged(account, int256(seeds)); //don't really care about the event for unit testing purposes of unripe stuff
@@ -330,10 +329,6 @@ contract MockSiloFacet is SiloFacet {
 
     function balanceOfSeeds(address account) public view returns (uint256) {
         return s.a[account].s.seeds;
-    }
-
-    function totalSeeds() public view returns (uint256) {
-        return s.s.deprecated_seeds;
     }
 
     /**

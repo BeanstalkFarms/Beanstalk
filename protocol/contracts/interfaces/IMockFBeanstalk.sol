@@ -1123,7 +1123,6 @@ interface IMockFBeanstalk {
     function totalPods() external view returns (uint256);
     function totalRealSoil() external view returns (uint256);
     function totalRoots() external view returns (uint256);
-    function totalSeeds() external view returns (uint256);
     function totalSoil() external view returns (uint256);
     function totalSoilAtMorningTemp(
         uint256 morningTemperature

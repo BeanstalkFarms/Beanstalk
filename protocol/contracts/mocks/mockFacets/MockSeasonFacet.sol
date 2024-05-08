@@ -253,10 +253,6 @@ contract MockSeasonFacet is SeasonFacet {
     }
 
     function resetState() public {
-        for (uint32 i; i < s.g.bipIndex; ++i) {
-            delete s.g.bips[i];
-            delete s.g.diamondCuts[i];
-        }
 
         delete s.f;
         delete s.s;
@@ -392,9 +388,6 @@ contract MockSeasonFacet is SeasonFacet {
         ds.supportedInterfaces[0x0e89341c] = true;
 
         uint24 currentSeason = uint24(s.season.current);
-
-        // Clear the storage variable
-        delete s.s.deprecated_seeds;
 
         s.ss[C.BEAN].stalkEarnedPerSeason = 2 * 1e6;
         s.ss[C.BEAN].stalkIssuedPerBdv = 10000;
