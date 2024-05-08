@@ -25,7 +25,6 @@ import {SignedSafeMath} from "@openzeppelin/contracts/math/SignedSafeMath.sol";
 import {LibFunction} from "contracts/libraries/LibFunction.sol";
 import {LibGerminate} from "contracts/libraries/Silo/LibGerminate.sol";
 import {LibConvertData} from "contracts/libraries/Convert/LibConvertData.sol";
-import {console} from "forge-std/console.sol";
 
 /**
  * @author Publius, Brean, DeadManWalking, pizzaman1337, funderberker
@@ -123,9 +122,11 @@ contract ConvertFacet is ReentrancyGuard {
             if (kind == LibConvertData.ConvertKind.BEANS_TO_WELL_LP) {
                 (, , toToken) = convertData.convertWithAddress();
                 fromToken = C.BEAN;
+                require(LibWell.isWell(toToken), "Convert: Invalid Well");
             } else {
                 (, , fromToken) = convertData.convertWithAddress();
                 toToken = C.BEAN;
+                require(LibWell.isWell(fromToken), "Convert: Invalid Well");
             }
 
             pipeData.beforeOverallDeltaB = LibWellMinting.overallInstantaneousDeltaB();
@@ -136,14 +137,7 @@ contract ConvertFacet is ReentrancyGuard {
             pipeData.beforeInputLpTokenSupply = IERC20(fromToken).totalSupply();
             pipeData.beforeOutputLpTokenSupply = IERC20(toToken).totalSupply();
             pipeData.initialLpSupply = LibWellMinting.getLpSupply();
-
-            console.log('pipeData.beforeOverallDeltaB: ');
-            console.logInt(pipeData.beforeOverallDeltaB);
-
-
-            console.log('stored initial data');
         }
-
 
         (toToken, fromToken, toAmount, fromAmount) = LibConvert.convert(convertData);
 
@@ -161,30 +155,9 @@ contract ConvertFacet is ReentrancyGuard {
 
         // check for potential penalty
         if (kind == LibConvertData.ConvertKind.BEANS_TO_WELL_LP || kind == LibConvertData.ConvertKind.WELL_LP_TO_BEANS) {
-            console.log('post convert now checking penalty');
-
             pipeData.overallConvertCapacity = LibConvert.abs(LibWellMinting.overallCappedDeltaB());
 
-            console.log('pipeData.overallConvertCapacity: ', pipeData.overallConvertCapacity);
-
             pipeData.stalkPenaltyBdv = prepareStalkPenaltyCalculation(fromToken, toToken, pipeData.beforeInputTokenDeltaB, pipeData.beforeInputLpTokenSupply, pipeData.beforeOutputTokenDeltaB, pipeData.beforeOutputLpTokenSupply, pipeData.beforeOverallDeltaB, pipeData.overallConvertCapacity, fromBdv, pipeData.initialLpSupply);
-
-            console.log('penalty is', pipeData.stalkPenaltyBdv);
-
-
-            console.log('pipeData.beforeInputTokenDeltaB: ');
-            console.logInt(pipeData.beforeInputTokenDeltaB);
-
-            console.log('pipeData.afterInputTokenDeltaB: ');
-            console.logInt(pipeData.afterInputTokenDeltaB);
-
-
-            console.log('pipeData.beforeOutputTokenDeltaB: ');
-            console.logInt(pipeData.beforeOutputTokenDeltaB);
-
-            console.log('pipeData.afterOutputTokenDeltaB: ');
-            console.logInt(pipeData.afterOutputTokenDeltaB);
-
 
             require(pipeData.stalkPenaltyBdv == 0, "Convert: Penalty would be applied to this convert, use pipeline convert");
         }
@@ -296,7 +269,6 @@ contract ConvertFacet is ReentrancyGuard {
         uint256 fromBdv,
         uint256[] memory initialLpSupply
     ) internal returns (uint256 penalty) {
-
         LibConvert.DeltaBStorage memory dbs;
 
         dbs.beforeInputTokenDeltaB = beforeInputTokenDeltaB;
@@ -306,22 +278,9 @@ contract ConvertFacet is ReentrancyGuard {
         dbs.beforeOverallDeltaB = beforeOverallDeltaB;
         dbs.afterOverallDeltaB = LibWellMinting.scaledOverallInstantaneousDeltaB(initialLpSupply);
 
-
-        // uint256 afterInputLpTokenSupply = IERC20(inputToken).totalSupply();
-        // uint256 afterOutputLpTokenSupply = IERC20(outputToken).totalSupply();
-
         // modify afterInputTokenDeltaB and afterOutputTokenDeltaB to scale using before/after LP amounts
-        console.log('before scaling dbs.afterInputTokenDeltaB: ');
-        console.logInt(dbs.afterInputTokenDeltaB);
         dbs.afterInputTokenDeltaB = LibWellMinting.scaledDeltaB(beforeInputLpTokenSupply, IERC20(inputToken).totalSupply(), dbs.afterInputTokenDeltaB);
-        console.log('after scaling dbs.afterInputTokenDeltaB: ');
-        console.logInt(dbs.afterInputTokenDeltaB);
-
-        console.log('before scaling dbs.afterOutputTokenDeltaB: ');
-        console.logInt(dbs.afterOutputTokenDeltaB);
         dbs.afterOutputTokenDeltaB = LibWellMinting.scaledDeltaB(beforeOutputLpTokenSupply, IERC20(outputToken).totalSupply(), dbs.afterOutputTokenDeltaB);
-        console.log('after scaling dbs.afterOutputTokenDeltaB: ');
-        console.logInt(dbs.afterOutputTokenDeltaB);
 
         return LibConvert.calculateStalkPenalty(
             dbs,
