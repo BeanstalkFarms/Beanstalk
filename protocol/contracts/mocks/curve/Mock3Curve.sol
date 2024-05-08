@@ -3,7 +3,6 @@
 */
 
 pragma solidity ^0.8.20;
-pragma experimental ABIEncoderV2;
 
 contract Mock3Curve {
     uint256 virtual_price;

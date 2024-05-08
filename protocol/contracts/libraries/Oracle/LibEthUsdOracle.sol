@@ -3,7 +3,6 @@
  **/
 
 pragma solidity ^0.8.20;
-pragma experimental ABIEncoderV2;
 
 import {LibChainlinkOracle} from "./LibChainlinkOracle.sol";
 import {LibRedundantMath256} from "contracts/libraries/LibRedundantMath256.sol";

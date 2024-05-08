@@ -3,7 +3,6 @@
 */
 
 pragma solidity ^0.8.20;
-pragma experimental ABIEncoderV2;
 
 import {AppStorage, Storage} from "contracts/beanstalk/AppStorage.sol";
 import "contracts/beanstalk/init/InitalizeDiamond.sol";

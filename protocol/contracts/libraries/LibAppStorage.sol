@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: MIT
 
 pragma solidity ^0.8.20;
-pragma experimental ABIEncoderV2;
 
 // Import all of AppStorage to give importers of LibAppStorage access to {Account}, etc.
 import "../beanstalk/AppStorage.sol";

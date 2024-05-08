@@ -3,7 +3,6 @@
 */
 
 pragma solidity ^0.8.20;
-pragma experimental ABIEncoderV2;
 
 import {ILiquidityWeightFacet} from "contracts/beanstalk/sun/LiquidityWeightFacet.sol";
 import {LibWhitelistedTokens} from "contracts/libraries/Silo/LibWhitelistedTokens.sol";

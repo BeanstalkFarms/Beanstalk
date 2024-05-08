@@ -3,7 +3,6 @@
 */
 
 pragma solidity ^0.8.20;
-pragma experimental ABIEncoderV2;
 
 import "contracts/beanstalk/silo/WhitelistFacet/WhitelistFacet.sol";
 import {LibWhitelistedTokens} from "contracts/libraries/Silo/LibWhitelistedTokens.sol";

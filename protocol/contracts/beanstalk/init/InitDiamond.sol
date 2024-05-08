@@ -3,7 +3,6 @@
 */
 
 pragma solidity ^0.8.20;
-pragma experimental ABIEncoderV2;
 
 import {AppStorage, Storage} from "../AppStorage.sol";
 import {IERC165} from "@openzeppelin/contracts/utils/introspection/IERC165.sol";

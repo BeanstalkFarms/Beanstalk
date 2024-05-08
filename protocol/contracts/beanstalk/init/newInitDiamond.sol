@@ -3,7 +3,6 @@
 */
 
 pragma solidity ^0.8.20;
-pragma experimental ABIEncoderV2;
 
 import {InitalizeDiamond} from "contracts/beanstalk/init/InitalizeDiamond.sol";
 import {C} from "contracts/C.sol";

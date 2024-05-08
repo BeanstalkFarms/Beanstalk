@@ -3,7 +3,6 @@
  **/
 
 pragma solidity ^0.8.20;
-pragma experimental ABIEncoderV2;
 
 import {AppStorage, Storage, Account} from "contracts/beanstalk/AppStorage.sol";
 import {LibLegacyTokenSilo} from "contracts/libraries/Silo/LibLegacyTokenSilo.sol";

@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
-pragma experimental ABIEncoderV2;
 
 ///////// DEPRECATED IN FAVOR OF JS TESTS /////////
 

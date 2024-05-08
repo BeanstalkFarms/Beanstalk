@@ -1,6 +1,5 @@
 //SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
-pragma experimental ABIEncoderV2;
 
 import {LibClipboard} from "contracts/libraries/LibClipboard.sol";
 import {LibBytes} from "contracts/libraries/LibBytes.sol";

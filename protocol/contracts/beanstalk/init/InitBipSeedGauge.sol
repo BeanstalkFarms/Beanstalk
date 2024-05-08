@@ -3,7 +3,7 @@
 */
 
 pragma solidity ^0.8.20;
-pragma experimental ABIEncoderV2;
+
 import {AppStorage, Storage} from "contracts/beanstalk/AppStorage.sol";
 import {C} from "../../C.sol";
 import {LibWhitelistedTokens} from "contracts/libraries/Silo/LibWhitelistedTokens.sol";

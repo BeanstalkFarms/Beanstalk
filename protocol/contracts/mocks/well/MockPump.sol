@@ -4,7 +4,6 @@
  */
 
 pragma solidity ^0.8.20;
-pragma experimental ABIEncoderV2;
 
 import {IInstantaneousPump} from "contracts/interfaces/basin/pumps/IInstantaneousPump.sol";
 import {ICumulativePump} from "contracts/interfaces/basin/pumps/ICumulativePump.sol";

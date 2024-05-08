@@ -3,7 +3,6 @@
 */
 
 pragma solidity ^0.8.20;
-pragma experimental ABIEncoderV2;
 
 import "contracts/libraries/LibRedundantMath256.sol";
 import "../../interfaces/IBean.sol";
@@ -678,10 +677,7 @@ contract MockMeta3Curve {
      * `amount`.
      */
     function transferFrom(address sender, address recipient, uint256 amount) public returns (bool) {
-        require(
-            amount <= _allowances[sender][msg.sender],
-            "ERC20InsufficientAllowance"
-        );
+        require(amount <= _allowances[sender][msg.sender], "ERC20InsufficientAllowance");
 
         _transfer(sender, recipient, amount);
         _approve(sender, msg.sender, _allowances[sender][msg.sender].sub(amount));

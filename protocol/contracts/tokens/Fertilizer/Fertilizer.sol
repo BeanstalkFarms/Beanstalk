@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: MIT
 
 pragma solidity ^0.8.20;
-pragma experimental ABIEncoderV2;
 
 import "./Internalizer.sol";
 import {LibRedundantMath128} from "contracts/libraries/LibRedundantMath128.sol";

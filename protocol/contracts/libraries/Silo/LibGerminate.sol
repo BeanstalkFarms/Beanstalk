@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
-pragma experimental ABIEncoderV2;
 
 import {LibAppStorage, Storage, AppStorage, Account} from "../LibAppStorage.sol";
 import {LibRedundantMath128} from "../LibRedundantMath128.sol";
@@ -175,7 +174,11 @@ library LibGerminate {
             s.a[account].roots = s.a[account].roots.add(roots);
 
             // emit events. Active stalk is incremented, germinating stalk is decremented.
-            emit LibSilo.StalkBalanceChanged(account, int256(uint256(germinatingStalk)), int256(uint256(roots)));
+            emit LibSilo.StalkBalanceChanged(
+                account,
+                int256(uint256(germinatingStalk)),
+                int256(uint256(roots))
+            );
             emit FarmerGerminatingStalkBalanceChanged(account, -int256(uint256(germinatingStalk)));
         }
     }

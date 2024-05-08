@@ -3,7 +3,6 @@
  **/
 
 pragma solidity ^0.8.20;
-pragma experimental ABIEncoderV2;
 
 import {ECDSA} from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 import {MessageHashUtils} from "@openzeppelin/contracts/utils/cryptography/MessageHashUtils.sol";

@@ -1,6 +1,5 @@
 //SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
-pragma experimental ABIEncoderV2;
 
 import {P} from "./P.sol";
 import "contracts/interfaces/ICurve.sol";

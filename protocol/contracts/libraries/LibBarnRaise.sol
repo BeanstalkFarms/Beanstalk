@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: MIT
 
 pragma solidity ^0.8.20;
-pragma experimental ABIEncoderV2;
 
 import {IWell} from "contracts/interfaces/basin/IWell.sol";
 import {C} from "contracts/C.sol";

@@ -3,7 +3,6 @@
  **/
 
 pragma solidity ^0.8.20;
-pragma experimental ABIEncoderV2;
 
 import "../../C.sol";
 import "./LibSilo.sol";
@@ -215,7 +214,9 @@ library LibLegacyTokenSilo {
         //negative grown stalk index.
 
         //find the difference between the input season and the Silo v3 epoch season
-        stem = (int96(uint96(season)).sub(int96(uint96(s.season.stemStartSeason)))).mul(int96(int256(seedsPerBdv)));
+        stem = (int96(uint96(season)).sub(int96(uint96(s.season.stemStartSeason)))).mul(
+            int96(int256(seedsPerBdv))
+        );
     }
 
     /**

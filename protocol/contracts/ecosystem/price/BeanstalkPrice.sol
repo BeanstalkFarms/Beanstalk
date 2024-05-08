@@ -1,6 +1,5 @@
 //SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
-pragma experimental ABIEncoderV2;
 
 import {LibRedundantMath256} from "contracts/libraries/LibRedundantMath256.sol";
 import {WellPrice, P, C} from "./WellPrice.sol";

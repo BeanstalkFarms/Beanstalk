@@ -3,7 +3,6 @@
  **/
 
 pragma solidity ^0.8.20;
-pragma experimental ABIEncoderV2;
 
 import {IWsteth, LibWstethEthOracle} from "contracts/libraries/Oracle/LibWstethEthOracle.sol";
 import {LibEthUsdOracle} from "contracts/libraries/Oracle/LibEthUsdOracle.sol";

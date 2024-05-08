@@ -3,7 +3,6 @@
 */
 
 pragma solidity ^0.8.20;
-pragma experimental ABIEncoderV2;
 
 import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 import {LibPRBMathRoundable} from "contracts/libraries/LibPRBMathRoundable.sol";
@@ -174,7 +173,11 @@ contract MockFieldFacet is FieldFacet {
             // (1e12)    * pct
             // (1e6)     / TEMPERATURE_PRECISION
             // (1e8)     = scaledYield
-            initalTemp.mulDiv(pct, LibDibbler.TEMPERATURE_PRECISION, LibPRBMathRoundable.Rounding.Up),
+            initalTemp.mulDiv(
+                pct,
+                LibDibbler.TEMPERATURE_PRECISION,
+                LibPRBMathRoundable.Rounding.Up
+            ),
             // Floor at TEMPERATURE_PRECISION (1%)
             LibDibbler.TEMPERATURE_PRECISION
         );

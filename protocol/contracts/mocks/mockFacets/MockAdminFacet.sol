@@ -2,7 +2,6 @@
  SPDX-License-Identifier: MIT
 */
 pragma solidity ^0.8.20;
-pragma experimental ABIEncoderV2;
 
 import "contracts/C.sol";
 import "contracts/libraries/Token/LibTransfer.sol";

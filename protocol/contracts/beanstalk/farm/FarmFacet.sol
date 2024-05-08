@@ -3,7 +3,6 @@
  **/
 
 pragma solidity ^0.8.20;
-pragma experimental ABIEncoderV2;
 
 import {AppStorage} from "../AppStorage.sol";
 import {LibDiamond} from "../../libraries/LibDiamond.sol";

@@ -3,13 +3,11 @@
  */
 
 pragma solidity ^0.8.20;
-pragma experimental ABIEncoderV2;
 
 import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
 import "./MetadataImage.sol";
 import {LibBytes} from "contracts/libraries/LibBytes.sol";
 import {LibTokenSilo} from "contracts/libraries/Silo/LibTokenSilo.sol";
-
 
 /**
  * @title MetadataFacet

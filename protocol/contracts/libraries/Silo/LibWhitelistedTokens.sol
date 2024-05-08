@@ -3,7 +3,6 @@
 */
 
 pragma solidity ^0.8.20;
-pragma experimental ABIEncoderV2;
 
 import {C} from "../../C.sol";
 import {AppStorage, Storage, LibAppStorage} from "contracts/libraries/LibAppStorage.sol";

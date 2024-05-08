@@ -3,7 +3,6 @@
 */
 
 pragma solidity ^0.8.20;
-pragma experimental ABIEncoderV2;
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {LibRedundantMath256} from "contracts/libraries/LibRedundantMath256.sol";
@@ -254,7 +253,9 @@ library LibFertilizer {
         // construction, since the code is only stored at the end of the
         // constructor execution.
         uint256 size;
-        assembly { size := extcodesize(account) }
+        assembly {
+            size := extcodesize(account)
+        }
         return size > 0;
     }
 }

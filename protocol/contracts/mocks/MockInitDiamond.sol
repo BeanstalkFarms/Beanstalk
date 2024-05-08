@@ -3,7 +3,6 @@
 */
 
 pragma solidity ^0.8.20;
-pragma experimental ABIEncoderV2;
 
 import {IBean} from "../interfaces/IBean.sol";
 import {IWETH} from "../interfaces/IWETH.sol";

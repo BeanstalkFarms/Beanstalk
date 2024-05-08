@@ -3,7 +3,6 @@
 */
 
 pragma solidity ^0.8.20;
-pragma experimental ABIEncoderV2;
 
 import "contracts/beanstalk/barn/UnripeFacet.sol";
 import "contracts/libraries/LibAppStorage.sol";

@@ -3,7 +3,6 @@
  **/
 
 pragma solidity ^0.8.20;
-pragma experimental ABIEncoderV2;
 
 import "contracts/libraries/LibRedundantMath256.sol";
 import "contracts/beanstalk/AppStorage.sol";
@@ -65,11 +64,7 @@ contract PodTransfer is ReentrancyGuard {
         if (currentAllowance < amount) {
             revert("Field: Insufficient approval.");
         }
-        setAllowancePods(
-            owner,
-            spender,
-            currentAllowance.sub(amount)
-        );
+        setAllowancePods(owner, spender, currentAllowance.sub(amount));
     }
 
     function setAllowancePods(address owner, address spender, uint256 amount) internal {

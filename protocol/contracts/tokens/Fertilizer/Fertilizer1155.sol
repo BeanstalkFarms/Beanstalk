@@ -3,7 +3,6 @@
  **/
 
 pragma solidity ^0.8.20;
-pragma experimental ABIEncoderV2;
 
 import {ERC1155Upgradeable} from "@openzeppelin/contracts-upgradeable/token/ERC1155/ERC1155Upgradeable.sol";
 import {IERC1155Receiver} from "@openzeppelin/contracts/token/ERC1155/IERC1155Receiver.sol";
@@ -102,9 +101,9 @@ contract Fertilizer1155 is ERC1155Upgradeable {
         bytes memory data
     ) private {
         if (LibFertilizer.isContract(to)) {
-            try
-                IERC1155Receiver(to).onERC1155Received(operator, from, id, amount, data)
-            returns (bytes4 response) {
+            try IERC1155Receiver(to).onERC1155Received(operator, from, id, amount, data) returns (
+                bytes4 response
+            ) {
                 if (response != IERC1155Receiver.onERC1155Received.selector) {
                     revert("ERC1155: ERC1155Receiver rejected tokens");
                 }
@@ -126,13 +125,7 @@ contract Fertilizer1155 is ERC1155Upgradeable {
     ) private {
         if (LibFertilizer.isContract(to)) {
             try
-                IERC1155Receiver(to).onERC1155BatchReceived(
-                    operator,
-                    from,
-                    ids,
-                    amounts,
-                    data
-                )
+                IERC1155Receiver(to).onERC1155BatchReceived(operator, from, ids, amounts, data)
             returns (bytes4 response) {
                 if (response != IERC1155Receiver.onERC1155BatchReceived.selector) {
                     revert("ERC1155: ERC1155Receiver rejected tokens");
@@ -160,8 +153,5 @@ contract Fertilizer1155 is ERC1155Upgradeable {
         uint256[] memory ids,
         uint256[] memory amounts,
         bytes memory data
-    )
-        internal
-        virtual
-    { }
+    ) internal virtual {}
 }

@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: MIT
 
 pragma solidity ^0.8.20;
-pragma experimental ABIEncoderV2;
 
 import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
 import {LibEvaluate} from "contracts/libraries/LibEvaluate.sol";
@@ -130,13 +129,19 @@ contract Weather is Sun {
                 bL = -SafeCast.toInt80(int256(uint256(beanToMaxLpGpPerBdvRatio)));
                 s.seedGauge.beanToMaxLpGpPerBdvRatio = 0;
             } else {
-                s.seedGauge.beanToMaxLpGpPerBdvRatio = beanToMaxLpGpPerBdvRatio.sub(uint128(int128(-bL)));
+                s.seedGauge.beanToMaxLpGpPerBdvRatio = beanToMaxLpGpPerBdvRatio.sub(
+                    uint128(int128(-bL))
+                );
             }
         } else {
             if (beanToMaxLpGpPerBdvRatio.add(uint128(int128(bL))) >= MAX_BEAN_LP_GP_PER_BDV_RATIO) {
                 // if (change > 0 && 100e18 - beanToMaxLpGpPerBdvRatio <= bL),
                 // then bL cannot overflow.
-                bL = int80(SafeCast.toInt80(int256(uint256(MAX_BEAN_LP_GP_PER_BDV_RATIO.sub(beanToMaxLpGpPerBdvRatio)))));
+                bL = int80(
+                    SafeCast.toInt80(
+                        int256(uint256(MAX_BEAN_LP_GP_PER_BDV_RATIO.sub(beanToMaxLpGpPerBdvRatio)))
+                    )
+                );
                 s.seedGauge.beanToMaxLpGpPerBdvRatio = MAX_BEAN_LP_GP_PER_BDV_RATIO;
             } else {
                 s.seedGauge.beanToMaxLpGpPerBdvRatio = beanToMaxLpGpPerBdvRatio.add(
