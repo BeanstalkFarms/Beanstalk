@@ -277,7 +277,7 @@ contract TestHelper is
         deltaBPerWell = new int256[](lps.length);
         for (uint i; i < lps.length; i++) {
             // unix time is used to generate an unique deltaB upon every test.
-            int256 deltaB = int256(keccak256(abi.encode(entropy, i, vm.unixTime())));
+            int256 deltaB = int256(uint256(keccak256(abi.encode(entropy, i, vm.unixTime()))));
             deltaB = bound(deltaB, -1000e6, 1000e6);
             (address tokenInWell, ) = LibWell.getNonBeanTokenAndIndexFromWell(lps[i]);
             setDeltaBforWell(deltaB, lps[i], tokenInWell);
