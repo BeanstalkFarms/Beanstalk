@@ -51,14 +51,10 @@ library LibWellConvert {
             wellFunction.data
         );
 
-        console.log('reserves[beanIndex]: ', reserves[beanIndex]);
-
 
         if (beansAtPeg <= reserves[beanIndex]) return (0, beanIndex);
         // SafeMath is unnecessary as above line performs the check
         beans = beansAtPeg - reserves[beanIndex];
-
-        console.log('_beansToPeg: ', beans);
     }
 
     /**

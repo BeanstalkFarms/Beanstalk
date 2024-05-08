@@ -55,10 +55,10 @@ contract ConvertTest is TestHelper {
             10 ether // 10 ether.
         );
 
-        addInitialLiquidity(
+        addLiquidityToWell(
             C.BEAN_WSTETH_WELL,
-            10000e6, // 10,000 bean,
-            10 ether  // 10 WETH of wstETH
+            10000e6, // 10,000 Beans
+            10 ether // 10 WETH of wstETH
         );
     }
 
@@ -819,24 +819,5 @@ contract ConvertTest is TestHelper {
             // default encoding
             return abi.encode(kind, amountIn, minAmountOut, token); 
         }
-    }
-
-    /**
-     * @notice assumes a CP2 well with bean as one of the tokens.
-     */
-    function addInitialLiquidity(
-        address well,
-        uint256 beanAmount,
-        uint256 nonBeanTokenAmount
-    ) internal { 
-        (address nonBeanToken, ) = LibWell.getNonBeanTokenAndIndexFromWell(
-            well
-        );
-        
-        // mint and sync.
-        MockToken(C.BEAN).mint(well, beanAmount);
-        MockToken(nonBeanToken).mint(well, nonBeanTokenAmount);
-
-        IWell(well).sync(msg.sender, 0);
     }
 }
