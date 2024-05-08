@@ -219,14 +219,22 @@ library LibWell {
         s.twaReserves[well].reserve1 = 1;
     }
 
-    function getWellPriceFromTwaReserves(address well) internal view returns (uint256 price) {
+    /**
+     * @notice returns the price in terms of TKN/BEAN. 
+     * (if eth is 1000 beans, this function will return 1000e6);
+     */
+    function getBeanTokenPriceFromTwaReserves(address well) internal view returns (uint256 price) {
         AppStorage storage s = LibAppStorage.diamondStorage();
         // s.twaReserve[well] should be set prior to this function being called.
-        // 'price' is in terms of reserve0:reserve1.
         if (s.twaReserves[well].reserve0 == 0 || s.twaReserves[well].reserve1 == 0) {
             price = 0;
         } else {
-            price = s.twaReserves[well].reserve0.mul(1e18).div(s.twaReserves[well].reserve1);
+            // fetch the bean index from the well in order to properly return the bean price.
+            if (getBeanIndexFromWell(well) == 0) { 
+                price = uint256(s.twaReserves[well].reserve0).mul(1e18).div(s.twaReserves[well].reserve1);
+            } else { 
+                price = uint256(s.twaReserves[well].reserve1).mul(1e18).div(s.twaReserves[well].reserve0);
+            }
         }
     }
 
@@ -242,19 +250,36 @@ library LibWell {
     /**
      * @notice gets the TwaReserves of a given well.
      * @dev only supports wells that are whitelisted in beanstalk.
-     * the inital timestamp and reserves is the timestamp of the start
+     * the initial timestamp and reserves is the timestamp of the start
      * of the last season. wrapped in try/catch to return gracefully.
      */
     function getTwaReservesFromBeanstalkPump(
         address well
     ) internal view returns (uint256[] memory) {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        Call[] memory pumps = IWell(well).pumps();
-        try ICumulativePump(pumps[0].target).readTwaReserves(
+        return getTwaReservesFromPump(
+            well, 
+            s.wellOracleSnapshots[well], 
+            uint40(s.season.timestamp)
+        );
+    }
+
+    /**
+     * @notice returns the twa reserves for well, 
+     * given the cumulative reserves and timestamp.
+     * @dev wrapped in a try/catch to return gracefully.
+     */
+    function getTwaReservesFromPump(
+        address well,
+        bytes memory cumulativeReserves,
+        uint40 timestamp
+    ) internal view returns (uint256[] memory) {
+        Call[] memory pump = IWell(well).pumps();
+        try ICumulativePump(pump[0].target).readTwaReserves(
             well,
-            s.wellOracleSnapshots[well],
-            uint40(s.season.timestamp),
-            pumps[0].data
+            cumulativeReserves,
+            timestamp,
+            pump[0].data
         ) returns (uint[] memory twaReserves, bytes memory) {
             return twaReserves;
         } catch {
@@ -265,7 +290,7 @@ library LibWell {
     /**
      * @notice gets the TwaLiquidity of a given well.
      * @dev only supports wells that are whitelisted in beanstalk.
-     * the inital timestamp and reserves is the timestamp of the start
+     * the initial timestamp and reserves is the timestamp of the start
      * of the last season.
      */
     function getTwaLiquidityFromBeanstalkPump(

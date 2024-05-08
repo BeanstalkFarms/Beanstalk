@@ -98,7 +98,7 @@ contract SeasonFacet is Weather {
             .div(C.BLOCK_LENGTH_SECONDS);
 
         // Read the Bean / Eth price calculated by the Minting Well.
-        uint256 beanEthPrice = LibWell.getWellPriceFromTwaReserves(C.BEAN_ETH_WELL);
+        uint256 beanEthPrice = LibWell.getBeanTokenPriceFromTwaReserves(C.BEAN_ETH_WELL);
 
         // reset USD Token prices and TWA reserves in storage for all whitelisted Well LP Tokens.
         address[] memory whitelistedWells = LibWhitelistedTokens.getWhitelistedWellLpTokens();

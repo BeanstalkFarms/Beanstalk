@@ -12,11 +12,6 @@ require("@openzeppelin/hardhat-upgrades");
 require("dotenv").config();
 require("@nomiclabs/hardhat-etherscan");
 
-// BIP 39 
-const { bipSeedGauge } = require("./scripts/bips.js");
-//
-
-const { upgradeWithNewFacets } = require("./scripts/diamond");
 const {
   impersonateSigner,
   mintUsdc,
@@ -29,13 +24,11 @@ const {
   mintEth,
   getBeanstalk
 } = require("./utils");
-const { EXTERNAL, INTERNAL, INTERNAL_EXTERNAL, INTERNAL_TOLERANT } = require("./test/utils/balances.js");
-const { BEANSTALK, PUBLIUS, BEAN_3_CURVE, BEAN_ETH_WELL } = require("./test/utils/constants.js");
-const { to6 } = require("./test/utils/helpers.js");
-//const { replant } = require("./replant/replant.js")
+const { upgradeWithNewFacets } = require("./scripts/diamond");
+const { BEANSTALK, PUBLIUS, BEAN_3_CURVE, PRICE } = require("./test/utils/constants.js");
 const { task } = require("hardhat/config");
 const { TASK_COMPILE_SOLIDITY_GET_SOURCE_PATHS } = require("hardhat/builtin-tasks/task-names");
-const { bipNewSilo, mockBeanstalkAdmin } = require("./scripts/bips.js");
+const { bipNewSilo, bipMorningAuction, bipSeedGauge } = require("./scripts/bips.js");
 const { ebip9, ebip10, ebip11, ebip13, ebip14 } = require("./scripts/ebips.js");
 
 //////////////////////// UTILITIES ////////////////////////
@@ -152,6 +145,9 @@ task("diamondABI", "Generates ABI file for diamond, includes all ABIs of facets"
       files.push("contracts/libraries/Silo/LibWhitelist.sol")
       files.push("contracts/libraries/LibGauge.sol")
       files.push("contracts/libraries/Silo/LibLegacyTokenSilo.sol")
+      files.push("contracts/libraries/Silo/LibGerminate.sol")
+      files.push("contracts/libraries/Silo/LibWhitelistedTokens.sol")
+      files.push("contracts/libraries/Minting/LibWellMinting.sol")
     }
     files.forEach((file) => {
       const facetName = getFacetName(file);
@@ -182,6 +178,7 @@ task("diamondABI", "Generates ABI file for diamond, includes all ABIs of facets"
   console.log("ABI written to abi/Beanstalk.json");
 });
 
+// BIP //
 task("marketplace", async function () {
   const owner = await impersonateBeanstalkOwner();
   await mintEth(owner.address);
@@ -194,7 +191,7 @@ task("marketplace", async function () {
   });
 });
 
-task("bip34", async function () {
+task("deployMorningAuction", async function () {
   const owner = await impersonateBeanstalkOwner();
   await mintEth(owner.address);
   await upgradeWithNewFacets({
@@ -213,17 +210,16 @@ task("bip34", async function () {
   });
 });
 
-task("silov3", async function () {
+task("deploySiloV3", async function () {
   await bipNewSilo();
 });
 
-task("beanstalkAdmin", async function () {
-  await mockBeanstalkAdmin();
-});
-
-task("deployBip39", async function () {
+task("deploySeedGauge", async function () {
   await bipSeedGauge();
 });
+
+
+/// EBIPS /// 
 
 task("ebip14", async function () {
   await ebip14();

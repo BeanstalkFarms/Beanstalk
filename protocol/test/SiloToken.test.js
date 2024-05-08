@@ -2,7 +2,7 @@ const { expect } = require("chai");
 const { deploy } = require("../scripts/deploy.js");
 const { readPrune, toBN, signSiloDepositTokenPermit, signSiloDepositTokensPermit } = require("../utils");
 const { EXTERNAL, INTERNAL, INTERNAL_EXTERNAL, INTERNAL_TOLERANT } = require("./utils/balances.js");
-const { BEAN, THREE_POOL, BEAN_3_CURVE, UNRIPE_LP, UNRIPE_BEAN, THREE_CURVE } = require("./utils/constants");
+const { BEAN, THREE_POOL, BEAN_3_CURVE, UNRIPE_LP, UNRIPE_BEAN, THREE_CURVE, ZERO_ADDRESS } = require("./utils/constants");
 const { to18, to6, toStalk, toBean } = require("./utils/helpers.js");
 const { takeSnapshot, revertToSnapshot } = require("./utils/snapshot");
 const { time, mineUpTo, mine } = require("@nomicfoundation/hardhat-network-helpers");
@@ -409,6 +409,26 @@ describe("Silo Token", function () {
             ['500', '1000']
           );
         });
+
+        it('emits TransferBatch event', async function () {
+          const stem0 = await this.silo.mockSeasonToStem(
+            this.siloToken.address, 
+            toBN(await this.seasonGetters.season()).sub('1')
+          );
+          const stem1 = await this.silo.mockSeasonToStem(
+            this.siloToken.address, 
+            toBN(await this.seasonGetters.season())
+          );
+          const depositID0 = await this.siloGetters.getDepositId(this.siloToken.address, stem0)
+          const depositID1 = await this.siloGetters.getDepositId(this.siloToken.address, stem1)
+          await expect(this.result).to.emit(this.silo, 'TransferBatch').withArgs(
+            userAddress,
+            userAddress,
+            ZERO_ADDRESS,
+            [depositID0, depositID1], 
+            ['500', '1000']
+          )
+        });
       });
 
       describe("2 token crates", function () {
@@ -469,6 +489,26 @@ describe("Silo Token", function () {
             '2000', 
             ['1000', '1000']
           );
+        });
+
+        it('emits TransferBatch event', async function () {
+          const stem0 = await this.silo.mockSeasonToStem(
+            this.siloToken.address, 
+            toBN(await this.seasonGetters.season()).sub('1')
+          );
+          const stem1 = await this.silo.mockSeasonToStem(
+            this.siloToken.address, 
+            toBN(await this.seasonGetters.season())
+          );
+          const depositID0 = await this.siloGetters.getDepositId(this.siloToken.address, stem0)
+          const depositID1 = await this.siloGetters.getDepositId(this.siloToken.address, stem1)
+          await expect(this.result).to.emit(this.silo, 'TransferBatch').withArgs(
+            userAddress,
+            userAddress,
+            ZERO_ADDRESS,
+            [depositID0, depositID1], 
+            ['1000', '1000']
+          )
         });
       });
     });

@@ -111,6 +111,15 @@ describe('Sun', function () {
     expect(await this.field.totalSoil()).to.be.equal('14850');
   })
 
+  it("delta B > 1, low pod rate, High L2SR", async function () {
+    await this.season.setAbovePegE(true);
+    await this.field.incrementTotalPodsE('10000');
+    this.result = await this.season.sunSunrise('30000', 108);
+    expect(await this.field.totalSoil()).to.be.equal('14850');
+  })
+
+  
+
   it("delta B > 1, medium pod rate", async function () {
     await this.field.incrementTotalPodsE('10000');
     this.result = await this.season.sunSunrise('30000', 8);
@@ -120,6 +129,13 @@ describe('Sun', function () {
   it("delta B > 1, high pod rate", async function () {
     await this.field.incrementTotalPodsE('10000');
     this.result = await this.season.sunSunrise('30000', 25);
+    expect(await this.field.totalSoil()).to.be.equal('4950');
+    await expect(this.result).to.emit(this.season, 'Soil').withArgs(3, '4950');
+  })
+
+  it("delta B > 1, high pod rate, High L2SR", async function () {
+    await this.field.incrementTotalPodsE('10000');
+    this.result = await this.season.sunSunrise('30000', 133);
     expect(await this.field.totalSoil()).to.be.equal('4950');
     await expect(this.result).to.emit(this.season, 'Soil').withArgs(3, '4950');
   })
@@ -341,23 +357,21 @@ describe('Sun', function () {
   it('ends germination', async function () {
 
     await this.season.teleportSunrise(5);
-    await this.season.mockIncrementGermination(
-      BEAN,
-      to6('1000'),
-      to6('1000'),
-      1
-    );
+    await this.season.mockIncrementGermination(userAddress, BEAN, to6('1000'), to6('1000'), 1);
     expect((await this.siloGetters.getEvenGerminating(BEAN))[0]).to.be.equal(to6('1000'));
     expect((await this.siloGetters.getEvenGerminating(BEAN))[1]).to.be.equal(to6('1000'));
     this.result = await this.season.siloSunrise(0);
-    
     await expect(this.result).to.emit(this.silo, 'TotalGerminatingBalanceChanged')
       .withArgs(
-        '6',
+        '4',
         BEAN, 
         to6('-1000'), 
         to6('-1000')
       );
+      await expect(this.result).to.emit(this.season, 'TotalGerminatingStalkChanged')
+      .withArgs('4', toStalk('-1000'));
+      await expect(this.result).to.emit(this.season, 'TotalStalkChangedFromGermination')
+      .withArgs(toStalk('1000'), toStalk('1000000000000000'));
     expect((await this.siloGetters.getEvenGerminating(BEAN))[0]).to.be.equal(to6('0'));
     expect((await this.siloGetters.getEvenGerminating(BEAN))[1]).to.be.equal(to6('0'));
   });
