@@ -1457,6 +1457,7 @@ contract PipelineConvertTest is TestHelper {
         MockToken(nonBeanToken).mint(well, nonBeanTokenAmount);
 
         IWell(well).sync(msg.sender, 0);
+        IWell(well).sync(msg.sender, 0);
     }
 
     /**
