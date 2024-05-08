@@ -33,6 +33,9 @@ import {LibWhitelistedTokens} from "contracts/libraries/Silo/LibWhitelistedToken
 library LibWellMinting {
 
     using SignedSafeMath for int256;
+    using SafeMath for uint256;
+
+    uint256 internal constant ZERO_LOOKBACK = 0;
 
     /**
      * @notice Emitted when a Well Minting Oracle is captured.
@@ -47,8 +50,6 @@ library LibWellMinting {
         int256 deltaB,
         bytes cumulativeReserves
     );
-
-    using SafeMath for uint256;
 
     //////////////////// CHECK ////////////////////
 
@@ -206,31 +207,11 @@ library LibWellMinting {
     /**
      * @dev Calculates the current deltaB for a given Well address.
      * @param well The address of the Well.
-     * @return The instantaneous deltaB uses the current reserves in the well.
+     * @return The current deltaB uses the current reserves in the well.
      */
-    function currentDeltaB(address well) internal view returns
-        (int256) {
-        IERC20[] memory tokens = IWell(well).tokens();
+    function currentDeltaB(address well) internal view returns (int256) {
         uint256[] memory reserves = IWell(well).getReserves();
-
-        Call memory wellFunction = IWell(well).wellFunction();
-
-        (
-            uint256[] memory ratios,
-            uint256 beanIndex,
-        ) = LibWell.getRatiosAndBeanIndex(tokens, 0);
-
-        // Converts cannot be performed, if the Bean reserve is less than the minimum
-        if (reserves[beanIndex] < C.WELL_MINIMUM_BEAN_BALANCE) {
-            return (0);
-        }
-
-        return int256(IBeanstalkWellFunction(wellFunction.target).calcReserveAtRatioSwap(
-            reserves,
-            beanIndex,
-            ratios,
-            wellFunction.data
-        )).sub(int256(reserves[beanIndex]));
+        return calculateDeltaBFromReserves(well, reserves, ZERO_LOOKBACK);
     }
 
     /**
@@ -248,8 +229,7 @@ library LibWellMinting {
     /**
      * @notice returns the overall cappedReserves deltaB for all whitelisted well tokens.
      */
-    function cappedReservesDeltaB(address well) internal view returns 
-        (int256) {
+    function cappedReservesDeltaB(address well) internal view returns (int256) {
 
         if (well == C.BEAN) {
             return 0;
@@ -261,40 +241,9 @@ library LibWellMinting {
 
         // well address , data[]
         uint256[] memory instReserves = ICappedReservesPump(pump).readCappedReserves(well, pumps[0].data);
-        // Get well tokens
-        IERC20[] memory tokens = IWell(well).tokens();
 
-        // Get ratios and bean index
-        (
-            uint256[] memory ratios,
-            uint256 beanIndex,
-            bool success
-        ) = LibWell.getRatiosAndBeanIndex(tokens);
-
-        // HANDLE FAILURE
-        // If the Bean reserve is less than the minimum, the minting oracle should be considered off.
-        if (instReserves[beanIndex] < C.WELL_MINIMUM_BEAN_BALANCE) {
-            return 0;
-        }
-
-        // If the USD Oracle oracle call fails, the minting oracle should be considered off.
-        if (!success) {
-            return 0;
-        }
-
-        // Get well function
-        Call memory wellFunction = IWell(well).wellFunction();
-
-        // Delta B is the difference between the target Bean reserve at the peg price
-        // and the instantaneous Bean balance in the Well.
-        int256 deltaB = int256(IBeanstalkWellFunction(wellFunction.target).calcReserveAtRatioSwap(
-            instReserves,
-            beanIndex,
-            ratios,
-            wellFunction.data
-        )).sub(int256(instReserves[beanIndex]));
-
-        return deltaB;
+        // calculate deltaB.
+        return calculateDeltaBFromReserves(well, instReserves, ZERO_LOOKBACK);
     }
 
     // Calculates overall deltaB, used by convert for stalk penalty purposes
@@ -304,5 +253,43 @@ library LibWellMinting {
             int256 cappedDeltaB = cappedReservesDeltaB(tokens[i]);
             deltaB = deltaB.add(cappedDeltaB);
         }
+    }
+
+    /**
+     * @notice calculates the deltaB for a given well using the reserves. 
+     * @dev reverts if the bean reserve is less than the minimum,
+     * or if the usd oracle fails. 
+     * This differs from the twaDeltaB, as this function should not be used within the sunrise function.
+     */
+    function calculateDeltaBFromReserves(
+        address well, 
+        uint256[] memory reserves,
+        uint256 lookback
+    ) internal view returns (int256) {
+        IERC20[] memory tokens = IWell(well).tokens();
+        Call memory wellFunction = IWell(well).wellFunction();
+
+        (
+            uint256[] memory ratios,
+            uint256 beanIndex,
+            bool success
+        ) = LibWell.getRatiosAndBeanIndex(tokens, lookback);
+
+        // Converts cannot be performed, if the Bean reserve is less than the minimum
+        if (reserves[beanIndex] < C.WELL_MINIMUM_BEAN_BALANCE) {
+            revert("Well: Bean reserve is less than the minimum");
+        }
+
+        // If the USD Oracle call fails, a deltaB cannot be determined.
+        if (!success) {
+            revert("Well: USD Oracle call failed");
+        }
+
+        return int256(IBeanstalkWellFunction(wellFunction.target).calcReserveAtRatioSwap(
+            reserves,
+            beanIndex,
+            ratios,
+            wellFunction.data
+        )).sub(int256(reserves[beanIndex]));
     }
 }
