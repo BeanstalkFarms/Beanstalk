@@ -294,7 +294,7 @@ contract ConvertTest is TestHelper {
         console.log('deltaB: ', deltaB);
         console.log('beansConverted: ', beansConverted);
 
-        int256 newDeltaB = LibWellMinting.instantaneousDeltaB(well);
+        int256 newDeltaB = LibWellMinting.currentDeltaB(well);
         console.log('newDeltaB: ');
         console.logInt(newDeltaB);
 

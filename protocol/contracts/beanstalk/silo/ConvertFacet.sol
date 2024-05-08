@@ -129,10 +129,10 @@ contract ConvertFacet is ReentrancyGuard {
                 require(LibWell.isWell(fromToken), "Convert: Invalid Well");
             }
 
-            pipeData.beforeOverallDeltaB = LibWellMinting.overallInstantaneousDeltaB();
+            pipeData.beforeOverallDeltaB = LibWellMinting.overallcurrentDeltaB();
             pipeData.initialLpSupply = LibWellMinting.getLpSupply();
-            pipeData.beforeInputTokenDeltaB = getInstaDeltaB(fromToken);
-            pipeData.beforeOutputTokenDeltaB = getInstaDeltaB(toToken);
+            pipeData.beforeInputTokenDeltaB = getCurrentDeltaB(fromToken);
+            pipeData.beforeOutputTokenDeltaB = getCurrentDeltaB(toToken);
 
             pipeData.beforeInputLpTokenSupply = IERC20(fromToken).totalSupply();
             pipeData.beforeOutputLpTokenSupply = IERC20(toToken).totalSupply();
@@ -214,6 +214,7 @@ contract ConvertFacet is ReentrancyGuard {
             fromAmount = fromAmount.add(amounts[i]);
         }
 
+        // withdraw tokens from deposits and calculate the total grown stalk and bdv.
         (pipeData.grownStalk, fromBdv) = _withdrawTokens(
             inputToken,
             stems,
@@ -225,9 +226,9 @@ contract ConvertFacet is ReentrancyGuard {
         pipeData.overallConvertCapacity = LibConvert.abs(LibWellMinting.overallCappedDeltaB());
 
         // Store the pre-convert insta deltaB's both overall and for each well
-        pipeData.beforeOverallDeltaB = LibWellMinting.overallInstantaneousDeltaB();
-        pipeData.beforeInputTokenDeltaB = getInstaDeltaB(inputToken);
-        pipeData.beforeOutputTokenDeltaB = getInstaDeltaB(outputToken);
+        pipeData.beforeOverallDeltaB = LibWellMinting.overallcurrentDeltaB();
+        pipeData.beforeInputTokenDeltaB = getCurrentDeltaB(inputToken);
+        pipeData.beforeOutputTokenDeltaB = getCurrentDeltaB(outputToken);
 
 
         pipeData.beforeInputLpTokenSupply = IERC20(inputToken).totalSupply();
@@ -272,9 +273,9 @@ contract ConvertFacet is ReentrancyGuard {
         LibConvert.DeltaBStorage memory dbs;
 
         dbs.beforeInputTokenDeltaB = beforeInputTokenDeltaB;
-        dbs.afterInputTokenDeltaB = getInstaDeltaB(inputToken);
+        dbs.afterInputTokenDeltaB = getCurrentDeltaB(inputToken);
         dbs.beforeOutputTokenDeltaB = beforeOutputTokenDeltaB;
-        dbs.afterOutputTokenDeltaB = getInstaDeltaB(outputToken);
+        dbs.afterOutputTokenDeltaB = getCurrentDeltaB(outputToken);
         dbs.beforeOverallDeltaB = beforeOverallDeltaB;
         dbs.afterOverallDeltaB = LibWellMinting.scaledOverallInstantaneousDeltaB(initialLpSupply);
 
@@ -317,19 +318,18 @@ contract ConvertFacet is ReentrancyGuard {
      */
     function getCombinedDeltaBForTokens(address inputToken, address outputToken) internal view
         returns (int256 combinedDeltaBinsta) {
-        combinedDeltaBinsta = getInstaDeltaB(inputToken).add(getInstaDeltaB(outputToken));
+        combinedDeltaBinsta = getCurrentDeltaB(inputToken).add(getCurrentDeltaB(outputToken));
     }
 
     /**
      * @param token The token to get the deltaB of.
      * @return instDeltaB The deltaB of the token, for Bean it returns 0.
      */
-    function getInstaDeltaB(address token) internal view returns (int256 instDeltaB) {
+    function getCurrentDeltaB(address token) internal view returns (int256 instDeltaB) {
         if (token == address(C.bean())) {
             return 0;
         }
-        instDeltaB = LibWellMinting.instantaneousDeltaB(token);
-        return instDeltaB;
+        return LibWellMinting.currentDeltaB(token);
     }
 
     /**
