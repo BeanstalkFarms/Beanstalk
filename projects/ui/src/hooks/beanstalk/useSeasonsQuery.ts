@@ -165,7 +165,9 @@ const useSeasonsQuery = <T extends MinimumViableSnapshotQuery>(
                     r.data,
                     { variables: thisVariables, document }
                   );
-                  output.push(r.data.seasons);
+                  r.data.seasons.forEach((seasonData: any) => {
+                    output[seasonData.season] = seasonData;
+                  });
                 })
             );
           }
@@ -174,7 +176,7 @@ const useSeasonsQuery = <T extends MinimumViableSnapshotQuery>(
            * Wait for queries to complete
            */
           await Promise.all(promises);
-          setAllSeasonsOutput(output.flat(Infinity));
+          setAllSeasonsOutput(output.filter(Boolean).reverse());
           setLoading(false);
         }
       } catch (e) {
