@@ -394,24 +394,11 @@ contract ConvertFacet is Invariable, ReentrancyGuard {
      */
     function transferTokensFromPipeline(address tokenOut) private returns (uint256 amountOut) {
         amountOut = IERC20(tokenOut).balanceOf(C.PIPELINE);
-
         require(amountOut > 0, "Convert: No output tokens left in pipeline");
 
-        // todo investigate not using the entire interface but just using the function selector here
         PipeCall memory p;
-        p.target = address(tokenOut); //contract that pipeline will call
-        p.data = abi.encodeWithSignature("transfer(address,uint256)", address(this), amountOut);
-
-        //todo: see if we can find a way to spit out a custom error saying it failed here, rather than a generic ERC20 revert
-        // bool success;
-        // bytes memory result;
-        // (success, result) = p.target.staticcall(p.data);
-        // if (!success) {
-        //     revert("Failed to transfer tokens from pipeline");
-        // }
-        //I don't think calling checkReturn here is necessary if success is false?
-        // LibFunction.checkReturn(success, result);
-
+        p.target = address(tokenOut);
+        p.data = abi.encodeWithSelector(IERC20.transfer.selector, address(this), amountOut);
         IPipeline(C.PIPELINE).pipe(p);
     }
 
