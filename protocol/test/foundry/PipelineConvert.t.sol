@@ -132,7 +132,7 @@ contract PipelineConvertTest is TestHelper {
 
         // do the convert
 
-        // Create arrays for stem and amount. Tried just passing in [stem] and it's like nope.
+        // Create arrays for stem and amount
         int96[] memory stems = new int96[](1);
         stems[0] = stem;
 
@@ -1685,7 +1685,7 @@ contract PipelineConvertTest is TestHelper {
             abi.encode(0) // clipboard
         );
 
-        // Action 2: Add One sided Liquidity into the well.
+        // Action 2: Remove One sided Liquidity into the well.
         advancedPipeCalls[1] = AdvancedPipeCall(
             C.BEAN_ETH_WELL, // target
             removeLiquidityEncoded, // calldata
@@ -1736,8 +1736,6 @@ contract PipelineConvertTest is TestHelper {
         );
 
         uint256[] memory emptyAmountsIn = new uint256[](2);
-        emptyAmountsIn[0] = 0;
-        emptyAmountsIn[1] = 0; // need to paste in here
 
         // encode add liquidity
         bytes memory addLiquidityEncoded = abi.encodeWithSelector(
