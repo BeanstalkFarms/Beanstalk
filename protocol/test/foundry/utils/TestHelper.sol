@@ -350,4 +350,13 @@ contract TestHelper is
             bs.addFertilizer(season, tokenAmountIn, 0);
         }
     }
+
+    /**
+     * @notice Calls sunrise twice to pass the germination process.
+     */
+    function passGermination() public {
+        // call sunrise twice to end the germination process.
+        bs.siloSunrise(0);
+        bs.siloSunrise(0);
+    }
 }

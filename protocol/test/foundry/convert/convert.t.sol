@@ -316,9 +316,7 @@ contract ConvertTest is TestHelper {
         bs.deposit(C.BEAN, 10000e6, 0);
 
         // Germinating deposits cannot convert (see {LibGerminate}).
-        // End germination process.
-        season.siloSunrise(0);
-        season.siloSunrise(0);
+        passGermination();
     }
 
     //////////// WELL -> BEAN ////////////
@@ -534,9 +532,7 @@ contract ConvertTest is TestHelper {
         bs.deposit(well, lpMinted - (lpMinted / 2), 0);
 
         // Germinating deposits cannot convert (see {LibGerminate}).
-        // End germination process.
-        season.siloSunrise(0);
-        season.siloSunrise(0);
+        passGermination();
         vm.stopPrank();
     }
 

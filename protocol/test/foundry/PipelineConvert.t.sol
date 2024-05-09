@@ -1555,12 +1555,6 @@ contract PipelineConvertTest is TestHelper {
         MockToken(C.BEAN_ETH_WELL).approve(BEANSTALK, type(uint256).max);
     }
 
-    function passGermination() public {
-        // call sunrise twice to end the germination process.
-        season.siloSunrise(0);
-        season.siloSunrise(0);
-    }
-
     /**
      * @notice assumes a CP2 well with bean as one of the tokens.
      */
