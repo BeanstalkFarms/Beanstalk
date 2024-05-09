@@ -12,14 +12,10 @@ import {MockPump} from "contracts/mocks/well/MockPump.sol";
 import {ConvertFacet} from "contracts/beanstalk/silo/ConvertFacet.sol";
 import {Bean} from "contracts/tokens/Bean.sol";
 import {IWell, Call} from "contracts/interfaces/basin/IWell.sol";
-import {FarmFacet} from "contracts/beanstalk/farm/FarmFacet.sol";
-import {SeasonGettersFacet} from "contracts/beanstalk/sun/SeasonFacet/SeasonGettersFacet.sol";
-import {ConvertGettersFacet} from "contracts/beanstalk/silo/ConvertGettersFacet.sol";
 import {MockToken} from "contracts/mocks/MockToken.sol";
 import {Pipeline} from "contracts/pipeline/Pipeline.sol";
 import {DepotFacet, AdvancedPipeCall} from "contracts/beanstalk/farm/DepotFacet.sol";
 import {AdvancedFarmCall} from "contracts/libraries/LibFarm.sol";
-import {SiloGettersFacet} from "contracts/beanstalk/silo/SiloFacet/SiloGettersFacet.sol";
 import {C} from "contracts/C.sol";
 import {console} from "forge-std/console.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
@@ -50,10 +46,6 @@ contract PipelineConvertTest is TestHelper {
     ConvertFacet convert = ConvertFacet(BEANSTALK);
     MockSeasonFacet season = MockSeasonFacet(BEANSTALK);
     DepotFacet depot = DepotFacet(BEANSTALK);
-    FarmFacet farm = FarmFacet(BEANSTALK);
-    SeasonGettersFacet seasonGetters = SeasonGettersFacet(BEANSTALK);
-    ConvertGettersFacet convertGetters = ConvertGettersFacet(BEANSTALK);
-    SiloGettersFacet siloGetters = SiloGettersFacet(BEANSTALK);
     MockToken bean = MockToken(C.BEAN);
     MockToken beanEthWell = MockToken(C.BEAN_ETH_WELL);
     Pipeline pipeline = Pipeline(PIPELINE);
@@ -228,8 +220,8 @@ contract PipelineConvertTest is TestHelper {
         mineBlockAndUpdatePumps();
 
         // log deltaB for this well before convert
-        int256 beforeDeltaBEth = seasonGetters.poolCurrentDeltaB(C.BEAN_ETH_WELL);
-        int256 beforeDeltaBwsteth = seasonGetters.poolCurrentDeltaB(C.BEAN_WSTETH_WELL);
+        int256 beforeDeltaBEth = bs.poolCurrentDeltaB(C.BEAN_ETH_WELL);
+        int256 beforeDeltaBwsteth = bs.poolCurrentDeltaB(C.BEAN_WSTETH_WELL);
 
         // uint256 beforeGrownStalk = bs.balanceOfGrownStalk(users[1], C.BEAN_ETH_WELL);
         uint256 beforeBalanceOfStalk = bs.balanceOfStalk(users[1]);
@@ -255,8 +247,8 @@ contract PipelineConvertTest is TestHelper {
             farmCalls // farmData
         );
 
-        int256 afterDeltaBEth = seasonGetters.poolCurrentDeltaB(C.BEAN_ETH_WELL);
-        int256 afterDeltaBwsteth = seasonGetters.poolCurrentDeltaB(C.BEAN_WSTETH_WELL);
+        int256 afterDeltaBEth = bs.poolCurrentDeltaB(C.BEAN_ETH_WELL);
+        int256 afterDeltaBwsteth = bs.poolCurrentDeltaB(C.BEAN_WSTETH_WELL);
 
         // make sure deltaB's moved in the way we expect them to
         assertTrue(beforeDeltaBEth < afterDeltaBEth);
@@ -274,17 +266,17 @@ contract PipelineConvertTest is TestHelper {
         depositLPAndPassGermination(amount);
         mineBlockAndUpdatePumps();
 
-        int256 overallCappedDeltaB = convertGetters.overallCappedDeltaB();
+        int256 overallCappedDeltaB = bs.overallCappedDeltaB();
         assertTrue(overallCappedDeltaB != 0);
     }
 
     function testDeltaBChangeBeanToLP(uint256 amount) public {
         amount = bound(amount, 1e6, 5000e6);
-        int256 beforeDeltaB = seasonGetters.poolCurrentDeltaB(C.BEAN_ETH_WELL);
+        int256 beforeDeltaB = bs.poolCurrentDeltaB(C.BEAN_ETH_WELL);
 
         doBasicBeanToLP(amount, users[1]);
 
-        int256 afterDeltaB = seasonGetters.poolCurrentDeltaB(C.BEAN_ETH_WELL);
+        int256 afterDeltaB = bs.poolCurrentDeltaB(C.BEAN_ETH_WELL);
         assertTrue(afterDeltaB < beforeDeltaB);
         assertTrue(beforeDeltaB - int256(amount) * 2 < afterDeltaB);
         // would be great to calcuate exactly what the new deltaB should be after convert
@@ -354,7 +346,7 @@ contract PipelineConvertTest is TestHelper {
         uint256 lpAmountOut = IWell(C.BEAN_ETH_WELL).addLiquidity(tokenAmountsIn, 0, users[1], type(uint256).max);
 
         // get new deltaB
-        int256 beforeDeltaB = seasonGetters.poolCurrentDeltaB(C.BEAN_ETH_WELL);
+        int256 beforeDeltaB = bs.poolCurrentDeltaB(C.BEAN_ETH_WELL);
         
         int96 stem = beanToLPDepositSetup(amount, users[1]);
         uint256 grownStalkBefore = bs.balanceOfGrownStalk(users[1], C.BEAN);

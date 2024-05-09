@@ -1251,6 +1251,8 @@ interface IMockFBeanstalk {
         bytes memory
     ) external pure returns (bytes4);
 
+    function overallCappedDeltaB() external view returns (int256 deltaB);
+
     function owner() external view returns (address owner_);
 
     function ownerCandidate() external view returns (address ownerCandidate_);
