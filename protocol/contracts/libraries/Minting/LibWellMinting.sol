@@ -17,7 +17,6 @@ import {IBeanstalkWellFunction} from "contracts/interfaces/basin/IBeanstalkWellF
 import {SignedSafeMath} from "@openzeppelin/contracts/math/SignedSafeMath.sol";
 import {LibEthUsdOracle} from "contracts/libraries/Oracle/LibEthUsdOracle.sol";
 import {LibWhitelistedTokens} from "contracts/libraries/Silo/LibWhitelistedTokens.sol";
-import {console} from "forge-std/console.sol";
 
 /**
  * @title Well Minting Oracle Library
@@ -198,14 +197,9 @@ library LibWellMinting {
     function overallcurrentDeltaB() internal view returns (int256 deltaB) {
         address[] memory tokens = LibWhitelistedTokens.getWhitelistedWellLpTokens();
         for (uint256 i = 0; i < tokens.length; i++) {
-            if (tokens[i] == C.BEAN) continue;
             int256 wellDeltaB = currentDeltaB(tokens[i]);
             deltaB = deltaB.add(wellDeltaB);
-            console.log("overallInstantaneousDeltaB for token: ", tokens[i]);
-            console.logInt(wellDeltaB);
         }
-        console.log("final overallInstantaneousDeltaB: ");
-        console.logInt(deltaB);
     }
 
     /**
