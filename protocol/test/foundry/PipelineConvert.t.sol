@@ -97,13 +97,13 @@ contract PipelineConvertTest is TestHelper {
         // add inital liquidity to bean eth well:
         // prank beanstalk deployer (can be anyone)
         vm.prank(users[0]);
-        addInitialLiquidity(
+        addLiquidityToWell(
             C.BEAN_ETH_WELL,
             10000e6, // 10,000 bean,
             10 ether // 10 WETH
         );
 
-        addInitialLiquidity(
+        addLiquidityToWell(
             C.BEAN_WSTETH_WELL,
             10000e6, // 10,000 bean,
             10 ether // 10 WETH of wstETH
@@ -1553,24 +1553,6 @@ contract PipelineConvertTest is TestHelper {
         // approve spending well token to beanstalk
         vm.prank(user);
         MockToken(C.BEAN_ETH_WELL).approve(BEANSTALK, type(uint256).max);
-    }
-
-    /**
-     * @notice assumes a CP2 well with bean as one of the tokens.
-     */
-    function addInitialLiquidity(
-        address well,
-        uint256 beanAmount,
-        uint256 nonBeanTokenAmount
-    ) internal {
-        (address nonBeanToken, ) = LibWell.getNonBeanTokenAndIndexFromWell(well);
-
-        // mint and sync.
-        MockToken(C.BEAN).mint(well, beanAmount);
-        MockToken(nonBeanToken).mint(well, nonBeanTokenAmount);
-
-        IWell(well).sync(msg.sender, 0);
-        IWell(well).sync(msg.sender, 0);
     }
 
     /**
