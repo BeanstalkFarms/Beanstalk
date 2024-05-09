@@ -13,7 +13,6 @@ import {ConvertFacet} from "contracts/beanstalk/silo/ConvertFacet.sol";
 import {Bean} from "contracts/tokens/Bean.sol";
 import {IWell, Call} from "contracts/interfaces/basin/IWell.sol";
 import {MockToken} from "contracts/mocks/MockToken.sol";
-import {Pipeline} from "contracts/pipeline/Pipeline.sol";
 import {DepotFacet, AdvancedPipeCall} from "contracts/beanstalk/farm/DepotFacet.sol";
 import {AdvancedFarmCall} from "contracts/libraries/LibFarm.sol";
 import {C} from "contracts/C.sol";
@@ -48,7 +47,6 @@ contract PipelineConvertTest is TestHelper {
     DepotFacet depot = DepotFacet(BEANSTALK);
     MockToken bean = MockToken(C.BEAN);
     MockToken beanEthWell = MockToken(C.BEAN_ETH_WELL);
-    Pipeline pipeline = Pipeline(PIPELINE);
     MiscHelperContract miscHelper = new MiscHelperContract();
 
     // test accounts

@@ -25,6 +25,7 @@ import {LibTransfer} from "contracts/libraries/Token/LibTransfer.sol";
 
 ///// ECOSYSTEM //////
 import {UsdOracle} from "contracts/ecosystem/oracles/UsdOracle.sol";
+import {Pipeline} from "contracts/pipeline/Pipeline.sol";
 
 /**
  * @title TestHelper
@@ -44,6 +45,8 @@ contract TestHelper is
 
     // usdOracle contract.
     UsdOracle usdOracle;
+
+    Pipeline pipeline;
 
     // ideally, timestamp should be set to 1_000_000.
     // however, beanstalk rounds down to the nearest hour.
@@ -249,6 +252,7 @@ contract TestHelper is
     function initMisc() internal {
         deployCodeTo("MockBlockBasefee", BASE_FEE_CONTRACT);
         usdOracle = UsdOracle(deployCode("UsdOracle"));
+        pipeline = Pipeline(PIPELINE);
     }
 
     function abs(int256 x) internal pure returns (int256) {
