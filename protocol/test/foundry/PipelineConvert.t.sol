@@ -137,7 +137,10 @@ contract PipelineConvertTest is TestHelper {
         stems[0] = stem;
 
         AdvancedFarmCall[] memory farmCalls = new AdvancedFarmCall[](1);
-        AdvancedFarmCall[] memory beanToLPFarmCalls = createBeanToLPFarmCalls(amount);
+        AdvancedFarmCall[] memory beanToLPFarmCalls = createBeanToLPFarmCalls(
+            amount,
+            new AdvancedPipeCall[](0)
+        );
         farmCalls[0] = beanToLPFarmCalls[0]; // Assign the first element of the returned array
 
         uint256[] memory amounts = new uint256[](1);
@@ -462,7 +465,10 @@ contract PipelineConvertTest is TestHelper {
         uint256[] memory amounts = new uint256[](1);
         amounts[0] = amount;
         AdvancedFarmCall[] memory farmCalls = new AdvancedFarmCall[](1);
-        AdvancedFarmCall[] memory beanToLPFarmCalls = createBeanToLPFarmCalls(amount);
+        AdvancedFarmCall[] memory beanToLPFarmCalls = createBeanToLPFarmCalls(
+            amount,
+            new AdvancedPipeCall[](0)
+        );
         farmCalls[0] = beanToLPFarmCalls[0]; // Assign the first element of the returned array
         vm.expectRevert("Convert: Output token must be Bean or a well");
         // convert non-whitelisted asset to lp
@@ -484,7 +490,10 @@ contract PipelineConvertTest is TestHelper {
         uint256[] memory amounts = new uint256[](1);
         amounts[0] = amount;
         AdvancedFarmCall[] memory farmCalls = new AdvancedFarmCall[](1);
-        AdvancedFarmCall[] memory beanToLPFarmCalls = createBeanToLPFarmCalls(amount);
+        AdvancedFarmCall[] memory beanToLPFarmCalls = createBeanToLPFarmCalls(
+            amount,
+            new AdvancedPipeCall[](0)
+        );
         farmCalls[0] = beanToLPFarmCalls[0]; // Assign the first element of the returned array
         vm.expectRevert("Convert: Input token must be Bean or a well");
         // convert non-whitelisted asset to lp
@@ -1448,7 +1457,10 @@ contract PipelineConvertTest is TestHelper {
         stems[0] = stem;
 
         AdvancedFarmCall[] memory farmCalls = new AdvancedFarmCall[](1);
-        AdvancedFarmCall[] memory beanToLPFarmCalls = createBeanToLPFarmCalls(amount);
+        AdvancedFarmCall[] memory beanToLPFarmCalls = createBeanToLPFarmCalls(
+            amount,
+            new AdvancedPipeCall[](0)
+        );
         farmCalls[0] = beanToLPFarmCalls[0]; // Assign the first element of the returned array
 
         uint256[] memory amounts = new uint256[](1);
@@ -1551,16 +1563,15 @@ contract PipelineConvertTest is TestHelper {
         MockToken(C.BEAN_ETH_WELL).approve(BEANSTALK, type(uint256).max);
     }
 
-    function createBeanToLPFarmCalls(
-        uint256 amountOfBean
-    ) public returns (AdvancedFarmCall[] memory output) {
-        return createBeanToLPFarmCalls(amountOfBean, new AdvancedPipeCall[](0));
-    }
-
+    /**
+     * @notice Creates a pipeline calls for converting a bean to LP.
+     * @param amountOfBean The amount of bean to convert.
+     * @param extraPipeCalls Any additional pipe calls to add to the pipeline.
+     */
     function createBeanToLPFarmCalls(
         uint256 amountOfBean,
         AdvancedPipeCall[] memory extraPipeCalls
-    ) public view returns (AdvancedFarmCall[] memory output) {
+    ) internal view returns (AdvancedFarmCall[] memory output) {
         // first setup the pipeline calls
 
         // setup approve max call
