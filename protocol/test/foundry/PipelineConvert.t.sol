@@ -1547,7 +1547,6 @@ contract PipelineConvertTest is TestHelper {
         tokenAmountsIn[1] = amount;
 
         vm.prank(user);
-        // lpAmountOut = IWell(C.BEAN_ETH_WELL).addLiquidity(tokenAmountsIn, 0, user, type(uint256).max);
         lpAmountOut = IWell(C.BEAN_ETH_WELL).removeLiquidityOneToken(
             amount,
             IERC20(C.WETH),
@@ -1619,7 +1618,6 @@ contract PipelineConvertTest is TestHelper {
         }
 
         // Encode into a AdvancedFarmCall. NOTE: advancedFarmCall != advancedPipeCall.
-
         // AdvancedFarmCall calls any function on the beanstalk diamond.
         // advancedPipe is one of the functions that its calling.
         // AdvancedFarmCall cannot call approve/addLiquidity, but can call AdvancedPipe.
@@ -1633,15 +1631,12 @@ contract PipelineConvertTest is TestHelper {
         );
 
         advancedFarmCalls[0] = AdvancedFarmCall(advancedPipeCalldata, new bytes(0));
-
-        // encode into bytes.
-        // output = abi.encode(advancedFarmCalls);
         return advancedFarmCalls;
     }
 
     function createAdvancedFarmCallsFromAdvancedPipeCalls(
         AdvancedPipeCall[] memory advancedPipeCalls
-    ) public view returns (AdvancedFarmCall[] memory) {
+    ) private view returns (AdvancedFarmCall[] memory) {
         AdvancedFarmCall[] memory advancedFarmCalls = new AdvancedFarmCall[](1);
         bytes memory advancedPipeCalldata = abi.encodeWithSelector(
             depot.advancedPipe.selector,
@@ -1655,7 +1650,7 @@ contract PipelineConvertTest is TestHelper {
 
     function createLPToBeanFarmCalls(
         uint256 amountOfLP
-    ) public returns (AdvancedFarmCall[] memory output) {
+    ) private view returns (AdvancedFarmCall[] memory output) {
         console.log("createLPToBean amountOfLP: ", amountOfLP);
         // first setup the pipeline calls
 
@@ -1720,7 +1715,7 @@ contract PipelineConvertTest is TestHelper {
 
     function createLPToLPFarmCalls(
         uint256 amountOfLP
-    ) public returns (AdvancedFarmCall[] memory output) {
+    ) private returns (AdvancedFarmCall[] memory output) {
         console.log("createLPToBean amountOfLP: ", amountOfLP);
 
         // setup approve max call
