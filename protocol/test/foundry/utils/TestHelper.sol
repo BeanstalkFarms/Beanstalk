@@ -55,6 +55,11 @@ contract TestHelper is
     uint256 constant START_TIMESTAMP = 1_000_000;
     uint256 constant INITIAL_TIMESTAMP = (START_TIMESTAMP / PERIOD) * PERIOD;
 
+    // The largest deposit that can occur on the first season.
+    // Given the supply of beans should starts at 0,
+    // this should never occur.
+    uint256 constant MAX_DEPOSIT_BOUND = 1.7e22; // 2 ** 128 / 2e16
+
     struct initERC20params {
         address targetAddr;
         string name;
@@ -358,5 +363,40 @@ contract TestHelper is
         // call sunrise twice to end the germination process.
         bs.siloSunrise(0);
         bs.siloSunrise(0);
+    }
+
+    /**
+     * @notice Set up the silo deposit test by depositing beans to the silo from multiple users.
+     * @param amount The amount of beans to deposit.
+     * @return _amount The actual amount of beans deposited.
+     * @return stem The stem tip for the deposited beans.
+     */
+    function setUpSiloDepositTest(
+        uint256 amount,
+        address[] memory _farmers
+    ) public returns (uint256 _amount, int96 stem) {
+        _amount = bound(amount, 1, MAX_DEPOSIT_BOUND);
+
+        depositForUsers(_farmers, C.BEAN, _amount, LibTransfer.From.EXTERNAL);
+        stem = bs.stemTipForToken(C.BEAN);
+    }
+
+    /**
+     * @notice Deposit beans to the silo from multiple users.
+     * @param users The users to deposit beans from.
+     * @param token The token to deposit.
+     * @param amount The amount of beans to deposit.
+     * @param mode The deposit mode.
+     */
+    function depositForUsers(
+        address[] memory users,
+        address token,
+        uint256 amount,
+        LibTransfer.From mode
+    ) public {
+        for (uint256 i = 0; i < users.length; i++) {
+            vm.prank(users[i]);
+            bs.deposit(token, amount, uint8(mode)); // switching from silo.deposit to bs.deposit, but bs does not have a From enum, so casting to uint8.
+        }
     }
 }
