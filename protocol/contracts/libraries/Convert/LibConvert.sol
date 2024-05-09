@@ -184,46 +184,80 @@ library LibConvert {
         StalkPenaltyData memory spd;
 
         // todo: combine this set of 3 lines with the ones below it (one function return all 3 values)
-        spd.overallAmountInDirectionOfPeg = calculateConvertedTowardsPeg(dbs.beforeOverallDeltaB, dbs.afterOverallDeltaB);
-        spd.inputTokenAmountInDirectionOfPeg = calculateConvertedTowardsPeg(dbs.beforeInputTokenDeltaB, dbs.afterInputTokenDeltaB);
-        spd.outputTokenAmountInDirectionOfPeg = calculateConvertedTowardsPeg(dbs.beforeOutputTokenDeltaB, dbs.afterOutputTokenDeltaB);
+        spd.overallAmountInDirectionOfPeg = calculateConvertedTowardsPeg(
+            dbs.beforeOverallDeltaB,
+            dbs.afterOverallDeltaB
+        );
+        spd.inputTokenAmountInDirectionOfPeg = calculateConvertedTowardsPeg(
+            dbs.beforeInputTokenDeltaB,
+            dbs.afterInputTokenDeltaB
+        );
+        spd.outputTokenAmountInDirectionOfPeg = calculateConvertedTowardsPeg(
+            dbs.beforeOutputTokenDeltaB,
+            dbs.afterOutputTokenDeltaB
+        );
 
-        spd.overallAmountAgainstPeg = calculateAmountAgainstPeg(dbs.beforeOverallDeltaB, dbs.afterOverallDeltaB);
-        spd.inputTokenAmountAgainstPeg = calculateAmountAgainstPeg(dbs.beforeInputTokenDeltaB, dbs.afterInputTokenDeltaB);
-        spd.outputTokenAmountAgainstPeg = calculateAmountAgainstPeg(dbs.beforeOutputTokenDeltaB, dbs.afterOutputTokenDeltaB);
+        spd.overallAmountAgainstPeg = calculateAmountAgainstPeg(
+            dbs.beforeOverallDeltaB,
+            dbs.afterOverallDeltaB
+        );
+        spd.inputTokenAmountAgainstPeg = calculateAmountAgainstPeg(
+            dbs.beforeInputTokenDeltaB,
+            dbs.afterInputTokenDeltaB
+        );
+        spd.outputTokenAmountAgainstPeg = calculateAmountAgainstPeg(
+            dbs.beforeOutputTokenDeltaB,
+            dbs.afterOutputTokenDeltaB
+        );
 
-        console.log('dbs.beforeOverallDeltaB: ');
+        console.log("dbs.beforeOverallDeltaB: ");
         console.logInt(dbs.beforeOverallDeltaB);
-        console.log('dbs.afterOverallDeltaB: ');
+        console.log("dbs.afterOverallDeltaB: ");
         console.logInt(dbs.afterOverallDeltaB);
 
-        console.log('spd.overallAmountAgainstPeg: ', spd.overallAmountAgainstPeg);
-        console.log('spd.inputTokenAmountAgainstPeg: ', spd.inputTokenAmountAgainstPeg);
-        console.log('spd.outputTokenAmountAgainstPeg: ', spd.outputTokenAmountAgainstPeg);
+        console.log("spd.overallAmountAgainstPeg: ", spd.overallAmountAgainstPeg);
+        console.log("spd.inputTokenAmountAgainstPeg: ", spd.inputTokenAmountAgainstPeg);
+        console.log("spd.outputTokenAmountAgainstPeg: ", spd.outputTokenAmountAgainstPeg);
 
+        spd.higherAmountAgainstPeg = Math.max(
+            spd.overallAmountAgainstPeg,
+            spd.inputTokenAmountAgainstPeg.add(spd.outputTokenAmountAgainstPeg)
+        );
 
-        spd.higherAmountAgainstPeg = Math.max(spd.overallAmountAgainstPeg, spd.inputTokenAmountAgainstPeg.add(spd.outputTokenAmountAgainstPeg));
+        console.log("spd.higherAmountAgainstPeg: ", spd.higherAmountAgainstPeg);
 
-        console.log('spd.higherAmountAgainstPeg: ', spd.higherAmountAgainstPeg);
+        spd.convertCapacityPenalty = calculateConvertCapacityPenalty(
+            overallConvertCapacity,
+            spd.overallAmountInDirectionOfPeg,
+            inputToken,
+            spd.inputTokenAmountInDirectionOfPeg,
+            outputToken,
+            spd.outputTokenAmountInDirectionOfPeg
+        );
 
-        spd.convertCapacityPenalty = calculateConvertCapacityPenalty(overallConvertCapacity, spd.overallAmountInDirectionOfPeg, inputToken, spd.inputTokenAmountInDirectionOfPeg, outputToken, spd.outputTokenAmountInDirectionOfPeg);
+        console.log("spd.convertCapacityPenalty: ", spd.convertCapacityPenalty);
 
-        console.log('spd.convertCapacityPenalty: ', spd.convertCapacityPenalty);
-
-        stalkPenaltyBdv = Math.min(spd.higherAmountAgainstPeg.add(spd.convertCapacityPenalty), bdvConverted);
+        stalkPenaltyBdv = Math.min(
+            spd.higherAmountAgainstPeg.add(spd.convertCapacityPenalty),
+            bdvConverted
+        );
     }
 
     // should be view
-    function calculateAmountAgainstPeg(int256 beforeDeltaB, int256 afterDeltaB) internal view returns (uint256 amountAgainstPeg) {
-
+    function calculateAmountAgainstPeg(
+        int256 beforeDeltaB,
+        int256 afterDeltaB
+    ) internal view returns (uint256 amountAgainstPeg) {
         // Check if the signs of beforeDeltaB and afterDeltaB are different,
         // indicating that deltaB has crossed zero
         if ((beforeDeltaB > 0 && afterDeltaB < 0) || (beforeDeltaB < 0 && afterDeltaB > 0)) {
             amountAgainstPeg = abs(afterDeltaB);
         } else {
-            if (afterDeltaB <= 0 && beforeDeltaB <= 0 || afterDeltaB >= 0 && beforeDeltaB >= 0) {
+            if (
+                (afterDeltaB <= 0 && beforeDeltaB <= 0) || (afterDeltaB >= 0 && beforeDeltaB >= 0)
+            ) {
                 if (abs(beforeDeltaB) < abs(afterDeltaB)) {
-                    amountAgainstPeg =  abs(afterDeltaB).sub(abs(beforeDeltaB));
+                    amountAgainstPeg = abs(afterDeltaB).sub(abs(beforeDeltaB));
                 }
             }
         }
@@ -238,24 +272,29 @@ library LibConvert {
         uint256 outputTokenAmountInDirectionOfPeg
     ) internal returns (uint256 cumulativePenalty) {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        
+
         Storage.ConvertCapacity storage convertCap = s.convertCapacity[block.number];
-        
+
         // first check overall convert capacity, if none remaining then full penalty for amount in direction of peg
         if (convertCap.overallConvertCapacityUsed >= overallCappedDeltaB) {
-            console.log('convertCap.overallConvertCapacityUsed >= overallCappedDeltaB');
-            console.log('overallAmountInDirectionOfPeg: ', overallAmountInDirectionOfPeg);
+            console.log("convertCap.overallConvertCapacityUsed >= overallCappedDeltaB");
+            console.log("overallAmountInDirectionOfPeg: ", overallAmountInDirectionOfPeg);
             return overallAmountInDirectionOfPeg;
         }
 
-        console.log('overallAmountInDirectionOfPeg: ', overallAmountInDirectionOfPeg);
-        
+        console.log("overallAmountInDirectionOfPeg: ", overallAmountInDirectionOfPeg);
+
         // update overall remaining convert capacity
-        convertCap.overallConvertCapacityUsed = convertCap.overallConvertCapacityUsed.add(overallAmountInDirectionOfPeg);
+        convertCap.overallConvertCapacityUsed = convertCap.overallConvertCapacityUsed.add(
+            overallAmountInDirectionOfPeg
+        );
 
-        console.log('convertCap.overallConvertCapacityUsed: ', convertCap.overallConvertCapacityUsed);
+        console.log(
+            "convertCap.overallConvertCapacityUsed: ",
+            convertCap.overallConvertCapacityUsed
+        );
 
-        console.log('overallCappedDeltaB: ', overallCappedDeltaB);
+        console.log("overallCappedDeltaB: ", overallCappedDeltaB);
 
         // add to penalty how far past capacity was used
         if (convertCap.overallConvertCapacityUsed > overallCappedDeltaB) {
@@ -266,24 +305,32 @@ library LibConvert {
 
         if (inputToken != C.BEAN && inputTokenAmountInDirectionOfPeg > 0) {
             uint256 inputTokenWellCapacity = abs(LibWellMinting.cappedReservesDeltaB(inputToken));
-            console.log('inputTokenWellCapacity: ', inputTokenWellCapacity);
-            convertCap.wellConvertCapacityUsed[inputToken] = convertCap.wellConvertCapacityUsed[inputToken].add(inputTokenAmountInDirectionOfPeg);
+            console.log("inputTokenWellCapacity: ", inputTokenWellCapacity);
+            convertCap.wellConvertCapacityUsed[inputToken] = convertCap
+                .wellConvertCapacityUsed[inputToken]
+                .add(inputTokenAmountInDirectionOfPeg);
             if (convertCap.wellConvertCapacityUsed[inputToken] > inputTokenWellCapacity) {
-                cumulativePenalty = cumulativePenalty.add(convertCap.wellConvertCapacityUsed[inputToken].sub(inputTokenWellCapacity));
+                cumulativePenalty = cumulativePenalty.add(
+                    convertCap.wellConvertCapacityUsed[inputToken].sub(inputTokenWellCapacity)
+                );
             }
         }
 
         if (outputToken != C.BEAN && outputTokenAmountInDirectionOfPeg > 0) {
             uint256 outputTokenWellCapacity = abs(LibWellMinting.cappedReservesDeltaB(outputToken));
-            console.log('outputTokenWellCapacity: ', outputTokenWellCapacity);
-            convertCap.wellConvertCapacityUsed[outputToken] = convertCap.wellConvertCapacityUsed[outputToken].add(outputTokenAmountInDirectionOfPeg);
+            console.log("outputTokenWellCapacity: ", outputTokenWellCapacity);
+            convertCap.wellConvertCapacityUsed[outputToken] = convertCap
+                .wellConvertCapacityUsed[outputToken]
+                .add(outputTokenAmountInDirectionOfPeg);
             if (convertCap.wellConvertCapacityUsed[outputToken] > outputTokenWellCapacity) {
-                cumulativePenalty = cumulativePenalty.add(convertCap.wellConvertCapacityUsed[outputToken].sub(outputTokenWellCapacity));
+                cumulativePenalty = cumulativePenalty.add(
+                    convertCap.wellConvertCapacityUsed[outputToken].sub(outputTokenWellCapacity)
+                );
             }
         }
 
-        console.log('cumulativePenalty: ', cumulativePenalty);
-        console.log('overallAmountInDirectionOfPeg: ', overallAmountInDirectionOfPeg);
+        console.log("cumulativePenalty: ", cumulativePenalty);
+        console.log("overallAmountInDirectionOfPeg: ", overallAmountInDirectionOfPeg);
 
         if (cumulativePenalty > overallAmountInDirectionOfPeg) {
             cumulativePenalty = overallAmountInDirectionOfPeg; // perhaps not necessary to cap since stalkPenaltyBdv is capped by bdvConverted?
@@ -293,13 +340,19 @@ library LibConvert {
     /**
      * @notice Takes before/after deltaB's and calculates how much was converted towards, but not past, peg.
      */
-    function calculateConvertedTowardsPeg(int256 beforeTokenDeltaB, int256 afterTokenDeltaB) internal pure returns (uint256) {
+    function calculateConvertedTowardsPeg(
+        int256 beforeTokenDeltaB,
+        int256 afterTokenDeltaB
+    ) internal pure returns (uint256) {
         // Calculate absolute values of beforeInputTokenDeltaB and afterInputTokenDeltaB using the abs() function
         uint256 beforeDeltaAbs = abs(beforeTokenDeltaB);
         uint256 afterDeltaAbs = abs(afterTokenDeltaB);
-        
+
         // Check if afterInputTokenDeltaB and beforeInputTokenDeltaB have the same sign
-        if ((beforeTokenDeltaB >= 0 && afterTokenDeltaB >= 0) || (beforeTokenDeltaB < 0 && afterTokenDeltaB < 0)) {
+        if (
+            (beforeTokenDeltaB >= 0 && afterTokenDeltaB >= 0) ||
+            (beforeTokenDeltaB < 0 && afterTokenDeltaB < 0)
+        ) {
             // If they have the same sign, compare the absolute values
             if (afterDeltaAbs < beforeDeltaAbs) {
                 // Return the difference between beforeDeltaAbs and afterDeltaAbs
