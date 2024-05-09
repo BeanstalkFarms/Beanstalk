@@ -34,11 +34,6 @@ describe("Well BDV", function () {
   });
 
   it("get BDV at 1:1", async function () {
-<<<<<<< HEAD
-    expect(await beanstalk.wellBdv(this.well.address, to6('1000000'))).to.be.within('1999999', '2000001')
-    expect(await beanstalk.bdv(this.well.address, to6('1000000'))).to.be.within('1999999', '2000001')
-  })
-=======
     expect(await beanstalk.wellBdv(this.well.address, to6("1000000"))).to.be.within(
       "1999999",
       "2000001"
@@ -52,7 +47,6 @@ describe("Well BDV", function () {
       "2000001"
     );
   });
->>>>>>> secure-beanstalk
 
   it("Gets BDV at 4:1", async function () {
     await this.pump.setInstantaneousReserves(this.well.address, [to18("4"), to18("1")]);
