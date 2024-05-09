@@ -367,10 +367,10 @@ contract ConvertFacet is Invariable, ReentrancyGuard {
 
     /**
      * @param token The token to get the deltaB of.
-     * @return instDeltaB The deltaB of the token, for Bean it returns 0.
+     * @return The deltaB of the token, for Bean it returns 0.
      */
-    function getCurrentDeltaB(address token) internal view returns (int256 instDeltaB) {
-        if (token == address(C.bean())) {
+    function getCurrentDeltaB(address token) internal view returns (int256) {
+        if (token == C.BEAN) {
             return 0;
         }
         return LibWellMinting.currentDeltaB(token);
