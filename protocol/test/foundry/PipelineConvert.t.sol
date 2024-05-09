@@ -925,13 +925,49 @@ contract PipelineConvertTest is TestHelper {
             outputToken,
             outputTokenAmountInDirectionOfPeg
         );
-        assertEq(penalty, 100);
+        assertEq(penalty, 200);
+    }
 
+    function testCalculateConvertCapacityPenaltyZeroOverallAmountInDirectionOfPeg() public {
         // test with zero overall amount in direction of peg
-        overallCappedDeltaB = 100;
+        uint256 overallCappedDeltaB = 100;
+        uint256 overallAmountInDirectionOfPeg = 0;
+        address inputToken = C.BEAN_ETH_WELL;
+        uint256 inputTokenAmountInDirectionOfPeg = 0;
+        address outputToken = C.BEAN;
+        uint256 outputTokenAmountInDirectionOfPeg = 0;
+        uint256 penalty = LibConvert.calculateConvertCapacityPenalty(
+            overallCappedDeltaB,
+            overallAmountInDirectionOfPeg,
+            inputToken,
+            inputTokenAmountInDirectionOfPeg,
+            outputToken,
+            outputTokenAmountInDirectionOfPeg
+        );
+        assertEq(penalty, 0);
+    }
+
+    function testOnePositivePoolOneNegativeZeroOverallDeltaB() public {
+        uint256 overallCappedDeltaB = 0;
+        uint256 overallAmountInDirectionOfPeg = 0;
+        address inputToken = C.BEAN_ETH_WELL;
+        uint256 inputTokenAmountInDirectionOfPeg = 0;
+        address outputToken = C.BEAN;
+        uint256 outputTokenAmountInDirectionOfPeg = 0;
+        uint256 penalty = LibConvert.calculateConvertCapacityPenalty(
+            overallCappedDeltaB,
+            overallAmountInDirectionOfPeg,
+            inputToken,
+            inputTokenAmountInDirectionOfPeg,
+            outputToken,
+            outputTokenAmountInDirectionOfPeg
+        );
+        assertEq(penalty, 0);
+
+        overallCappedDeltaB = 0;
         overallAmountInDirectionOfPeg = 0;
         inputToken = C.BEAN_ETH_WELL;
-        inputTokenAmountInDirectionOfPeg = 0;
+        inputTokenAmountInDirectionOfPeg = 100;
         outputToken = C.BEAN;
         outputTokenAmountInDirectionOfPeg = 0;
         penalty = LibConvert.calculateConvertCapacityPenalty(
@@ -942,7 +978,7 @@ contract PipelineConvertTest is TestHelper {
             outputToken,
             outputTokenAmountInDirectionOfPeg
         );
-        assertEq(penalty, 0);
+        assertEq(penalty, 100);
     }
 
     function testCalculateConvertCapacityPenaltyCapZeroInputToken() public {
@@ -1202,6 +1238,8 @@ contract PipelineConvertTest is TestHelper {
     }*/
 
     function testCalcStalkPenaltyUpToPeg() public {
+        // make C.BEAN_ETH_WELL have negative deltaB so that it has convert capacity
+        setDeltaBforWell(-1000e6, C.BEAN_ETH_WELL, C.WETH);
         (
             LibConvert.DeltaBStorage memory dbs,
             address inputToken,
@@ -1221,6 +1259,9 @@ contract PipelineConvertTest is TestHelper {
     }
 
     function testCalcStalkPenaltyDownToPeg() public {
+        // make C.BEAN_ETH_WELL have positive deltaB so that it has convert capacity
+        setDeltaBforWell(1000e6, C.BEAN_ETH_WELL, C.WETH);
+
         (
             LibConvert.DeltaBStorage memory dbs,
             address inputToken,
@@ -1308,6 +1349,8 @@ contract PipelineConvertTest is TestHelper {
         assertEq(stalkPenaltyBdv, 100);
     }
 
+    ////// CONVERT TEST HELPERS //////
+
     function setupTowardsPegDeltaBStorageNegative()
         public
         pure
@@ -1332,8 +1375,6 @@ contract PipelineConvertTest is TestHelper {
         bdvConverted = 100;
         overallConvertCapacity = 100;
     }
-
-    ////// SILO TEST HELPERS //////
 
     function mineBlockAndUpdatePumps() public {
         // mine a block so convert power is updated
