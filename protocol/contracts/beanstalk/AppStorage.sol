@@ -412,6 +412,29 @@ contract Storage {
         uint128 stalk;
         uint128 roots;
     }
+
+
+    enum Recipient {
+        Silo,
+        Field,
+        Barn
+    }
+
+    /**
+     * @param planContract The address of the contract containing the plan getter view function.
+     * @param planSelector The selector of the plan getter view function.
+     * @param recipient The recipient enum of the shipment. See {Receiving.Recipient}.
+     * @param data The data to be passed to both the plan getter function and the receive function.
+     */
+    struct ShipmentRoute {
+        address planContract;
+        bytes4 planSelector;
+        
+        Recipient recipient;
+        
+        bytes data;
+    }
+
 }
 
 /**
@@ -462,6 +485,7 @@ contract Storage {
  * @param barnRaiseWell Stores the well that the Barn Raise adds liquidity to.
  * @param fertilizedPaidIndex The total number of Fertilizer Beans that have been sent out to users.
  * @param plenty The amount of plenty token held by the contract.
+ * @param shipmentRoutes Define the distribution of newly minted Beans.
  */
 struct AppStorage {
     bool paused; // ────────┐ 1
@@ -520,4 +544,6 @@ struct AppStorage {
     mapping(IERC20 => uint256) internalTokenBalanceTotal;
     uint256 fertilizedPaidIndex;
     uint256 plenty;
+    // Distribution.
+    Storage.ShipmentRoute[] shipmentRoutes;
 }

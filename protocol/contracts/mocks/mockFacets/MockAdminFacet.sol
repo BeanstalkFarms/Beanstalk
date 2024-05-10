@@ -10,6 +10,7 @@ import "contracts/beanstalk/sun/SeasonFacet/Sun.sol";
 import {LibCurveMinting} from "contracts/libraries/Minting/LibCurveMinting.sol";
 import {LibTransfer} from "contracts/libraries/Token/LibTransfer.sol";
 import {LibBalance} from "contracts/libraries/Token/LibBalance.sol";
+import {Storage} from "contracts/beanstalk/AppStorage.sol";
 
 /**
  * @author Publius
@@ -23,17 +24,17 @@ contract MockAdminFacet is Sun {
 
     function ripen(uint256 amount) external {
         C.bean().mint(address(this), amount);
-        rewardToHarvestable(amount);
+        receiveShipment(Storage.Recipient.Field, amount, bytes(""));
     }
 
     function fertilize(uint256 amount) external {
         C.bean().mint(address(this), amount);
-        rewardToFertilizer(amount);
+        receiveShipment(Storage.Recipient.Barn, amount, bytes(""));
     }
 
     function rewardSilo(uint256 amount) external {
         C.bean().mint(address(this), amount);
-        rewardToSilo(amount);
+        receiveShipment(Storage.Recipient.Silo, amount, bytes(""));
     }
 
     function forceSunrise() external {
@@ -46,14 +47,14 @@ contract MockAdminFacet is Sun {
         updateStart();
         s.season.current += 1;
         C.bean().mint(address(this), amount);
-        rewardBeans(amount);
+        ship(amount);
     }
 
     function fertilizerSunrise(uint256 amount) public {
         updateStart();
         s.season.current += 1;
         C.bean().mint(address(this), amount);
-        rewardToFertilizer(amount * 3);
+        receiveShipment(Storage.Recipient.Barn, amount * 3, bytes(""));
     }
 
     function updateStart() private {

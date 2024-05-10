@@ -23,6 +23,7 @@ import {LibWellMinting} from "contracts/libraries/Minting/LibWellMinting.sol";
 import {LibEvaluate} from "contracts/libraries/LibEvaluate.sol";
 import {LibTokenSilo} from "contracts/libraries/Silo/LibTokenSilo.sol";
 import {IWell, Call} from "contracts/interfaces/basin/IWell.sol";
+import {Storage} from "contracts/beanstalk/AppStorage.sol";
 
 import "forge-std/console.sol";
 /**
@@ -90,7 +91,7 @@ contract MockSeasonFacet is SeasonFacet {
 
     function mockStepSilo(uint256 amount) public {
         C.bean().mint(address(this), amount);
-        rewardToSilo(amount);
+        receiveShipment(Storage.Recipient.Silo, amount, bytes(""));
     }
 
     function rainSunrise() public {
@@ -370,7 +371,7 @@ contract MockSeasonFacet is SeasonFacet {
     }
 
     function rewardToFertilizerE(uint256 amount) external {
-        rewardToFertilizer(amount * 3);
+        receiveShipment(Storage.Recipient.Field, amount * 3, bytes(""));
         C.bean().mint(address(this), amount);
     }
 
