@@ -64,7 +64,10 @@ const useSeasonsQuery = <T extends MinimumViableSnapshotQuery>(
   const [loading, setLoading] = useState(false);
 
   /// Execute generic lazy query
-  const [get, query] = useLazyQuery<T>(document, { variables: {} });
+  const [get, query] = useLazyQuery<T>(document, {
+    variables: queryConfig?.variables ?? {},
+    context: { subgraph: queryConfig?.context?.subgraph ?? 'beanstalk' },
+  });
 
   /// Output used when user requests all data
   const [allSeasonsOutput, setAllSeasonsOutput] = useState<any[]>([]);
@@ -192,7 +195,7 @@ const useSeasonsQuery = <T extends MinimumViableSnapshotQuery>(
       data: { seasons: allSeasonsOutput },
       loading: loading || query.loading,
     };
-  };
+  }
 
   return {
     ...query,

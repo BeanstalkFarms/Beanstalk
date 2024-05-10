@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import {
   SeasonalInstantPriceDocument,
   useFarmerSiloAssetSnapshotsQuery,
@@ -25,10 +26,19 @@ const useFarmerSiloHistory = (
     skip: !account,
     fetchPolicy: 'cache-and-network',
   });
+
+  const queryConfig = useMemo(
+    () => ({
+      variables: { season_gte: 1 },
+      context: { subgraph: 'bean' },
+    }),
+    []
+  );
+
   const priceQuery = useSeasonsQuery(
     SeasonalInstantPriceDocument,
     SeasonRange.ALL,
-    { context: { subgraph: 'bean' } }
+    queryConfig
   );
 
   /// Interpolate
