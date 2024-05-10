@@ -36,7 +36,7 @@ export const SUBGRAPH_ENVIRONMENTS: Record<SGEnvironments, SGEnvironment> = {
     name: 'Beanstalk Farms / Test',
     subgraphs: {
       beanstalk:
-        'https://graph.node.bean.money/subgraphs/name/beanstalk-testing',
+        'https://graph.node.bean.money/subgraphs/name/beanstalk', // fixme 
       bean: 'https://graph.node.bean.money/subgraphs/name/bean-testing',
       beanft: 'https://graph.node.bean.money/subgraphs/name/beanft-dev',
     },
