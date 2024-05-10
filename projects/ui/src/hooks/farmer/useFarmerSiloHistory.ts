@@ -27,7 +27,8 @@ const useFarmerSiloHistory = (
   });
   const priceQuery = useSeasonsQuery(
     SeasonalInstantPriceDocument,
-    SeasonRange.ALL
+    SeasonRange.ALL,
+    { context: { subgraph: 'bean' } }
   );
 
   /// Interpolate
