@@ -117,18 +117,8 @@ contract PipelineConvertTest is TestHelper {
         // well is initalized with 10000 beans. cap add liquidity
         // to reasonable amounts.
         amount = bound(amount, 10e6, 5000e6);
-        // deposits bean into the silo.
-        bean.mint(users[1], 5000e6);
 
-        address[] memory setupUsers = new address[](1);
-        setupUsers[0] = users[1];
-
-        (amount, stem) = setUpSiloDepositTest(amount, setupUsers);
-        console.log("stem: ");
-        console.logInt(stem);
-        console.log("amount: ", amount);
-
-        passGermination();
+        depositBeanAndPassGermination(amount, users[1]);
 
         // do the convert
 
@@ -277,7 +267,7 @@ contract PipelineConvertTest is TestHelper {
 
     function testTotalStalkAmountDidNotIncrease(uint256 amount) public {
         amount = bound(amount, 1e6, 5000e6);
-        int96 stem = beanToLPDepositSetup(amount, users[1]);
+        int96 stem = depositBeanAndPassGermination(amount, users[1]);
         uint256 beforeTotalStalk = bs.totalStalk();
         beanToLPDoConvert(amount, stem, users[1]);
 
@@ -287,7 +277,7 @@ contract PipelineConvertTest is TestHelper {
 
     function testUserStalkAmountDidNotIncrease(uint256 amount) public {
         amount = bound(amount, 1e6, 5000e6);
-        int96 stem = beanToLPDepositSetup(amount, users[1]);
+        int96 stem = depositBeanAndPassGermination(amount, users[1]);
         uint256 beforeUserStalk = bs.balanceOfStalk(users[1]);
         beanToLPDoConvert(amount, stem, users[1]);
 
@@ -297,7 +287,7 @@ contract PipelineConvertTest is TestHelper {
 
     function testUserBDVDidNotIncrease(uint256 amount) public {
         amount = bound(amount, 1e6, 5000e6);
-        int96 stem = beanToLPDepositSetup(amount, users[1]);
+        int96 stem = depositBeanAndPassGermination(amount, users[1]);
         uint256 beforeUserDeposit = bs.balanceOfDepositedBdv(users[1], C.BEAN);
         beanToLPDoConvert(amount, stem, users[1]);
 
@@ -308,7 +298,7 @@ contract PipelineConvertTest is TestHelper {
     function testConvertAgainstPegAndLoseStalk(uint256 amount) public {
         amount = bound(amount, 5000e6, 5000e6); // todo: update for range
 
-        int96 stem = beanToLPDepositSetup(amount, users[1]);
+        int96 stem = depositBeanAndPassGermination(amount, users[1]);
         // uint256 beforeTotalStalk = bs.totalStalk();
         uint256 grownStalkBefore = bs.balanceOfGrownStalk(users[1], C.BEAN);
 
@@ -365,7 +355,7 @@ contract PipelineConvertTest is TestHelper {
         // then we pull our initial eth back out and we converted when we shouldn't have been able to (if we do in one tx)
 
         // setup initial bean deposit
-        int96 stem = beanToLPDepositSetup(amount, users[1]);
+        int96 stem = depositBeanAndPassGermination(amount, users[1]);
 
         // mint user 10 eth
         uint256 ethAmount = 10e18;
@@ -455,7 +445,7 @@ contract PipelineConvertTest is TestHelper {
 
     function testConvertingOutputTokenNotWell(uint256 amount) public {
         amount = bound(amount, 1, 1000e6);
-        int96 stem = beanToLPDepositSetup(amount, users[1]);
+        int96 stem = depositBeanAndPassGermination(amount, users[1]);
         int96[] memory stems = new int96[](1);
         stems[0] = stem;
         uint256[] memory amounts = new uint256[](1);
@@ -478,7 +468,7 @@ contract PipelineConvertTest is TestHelper {
 
     function testConvertingInputTokenNotWell(uint256 amount) public {
         amount = bound(amount, 1, 1000e6);
-        int96 stem = beanToLPDepositSetup(amount, users[1]);
+        int96 stem = depositBeanAndPassGermination(amount, users[1]);
         int96[] memory stems = new int96[](1);
         stems[0] = stem;
         uint256[] memory amounts = new uint256[](1);
@@ -542,7 +532,7 @@ contract PipelineConvertTest is TestHelper {
     function testBeanToBeanConvert(uint256 amount) public {
         amount = bound(amount, 1000e6, 1000e6);
 
-        int96 stem = beanToLPDepositSetup(amount, users[1]);
+        int96 stem = depositBeanAndPassGermination(amount, users[1]);
         int96[] memory stems = new int96[](1);
         stems[0] = stem;
         uint256[] memory amounts = new uint256[](1);
@@ -581,7 +571,7 @@ contract PipelineConvertTest is TestHelper {
     function testBeanToBeanConvertLessBdv(uint256 amount) public {
         amount = bound(amount, 1000e6, 1000e6);
 
-        int96 stem = beanToLPDepositSetup(amount, users[1]);
+        int96 stem = depositBeanAndPassGermination(amount, users[1]);
         int96[] memory stems = new int96[](1);
         stems[0] = stem;
         uint256[] memory amounts = new uint256[](1);
@@ -633,7 +623,7 @@ contract PipelineConvertTest is TestHelper {
         // mint extra beans to pipeline so we can snatch them on convert back into beanstalk
         bean.mint(C.PIPELINE, amount.div(2));
 
-        int96 stem = beanToLPDepositSetup(amount, users[1]);
+        int96 stem = depositBeanAndPassGermination(amount, users[1]);
         int96[] memory stems = new int96[](1);
         stems[0] = stem;
         uint256[] memory amounts = new uint256[](1);
@@ -676,7 +666,7 @@ contract PipelineConvertTest is TestHelper {
     function testBeanToBeanConvertNoneLeftInPipeline(uint256 amount) public {
         amount = bound(amount, 1000e6, 1000e6);
 
-        int96 stem = beanToLPDepositSetup(amount, users[1]);
+        int96 stem = depositBeanAndPassGermination(amount, users[1]);
         int96[] memory stems = new int96[](1);
         stems[0] = stem;
         uint256[] memory amounts = new uint256[](1);
@@ -1386,11 +1376,14 @@ contract PipelineConvertTest is TestHelper {
     }
 
     function doBasicBeanToLP(uint256 amount, address user) public {
-        int96 stem = beanToLPDepositSetup(amount, user);
+        int96 stem = depositBeanAndPassGermination(amount, user);
         beanToLPDoConvert(amount, stem, user);
     }
 
-    function beanToLPDepositSetup(uint256 amount, address user) public returns (int96 stem) {
+    function depositBeanAndPassGermination(
+        uint256 amount,
+        address user
+    ) public returns (int96 stem) {
         vm.pauseGasMetering();
         // amount = bound(amount, 1e6, 5000e6);
         bean.mint(user, amount);
