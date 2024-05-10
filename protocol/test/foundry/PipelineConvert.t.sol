@@ -1594,27 +1594,31 @@ contract PipelineConvertTest is TestHelper {
         );
 
         // Fabricate advancePipes:
-        AdvancedPipeCall[] memory advancedPipeCalls = new AdvancedPipeCall[](
-            2 + extraPipeCalls.length
-        );
+        AdvancedPipeCall[] memory advancedPipeCalls = new AdvancedPipeCall[](100);
+
+        uint256 i = 0;
 
         // Action 0: approve the Bean-Eth well to spend pipeline's bean.
-        advancedPipeCalls[0] = AdvancedPipeCall(
+        advancedPipeCalls[i++] = AdvancedPipeCall(
             C.BEAN, // target
             approveEncoded, // calldata
             abi.encode(0) // clipboard
         );
 
         // Action 2: Add One sided Liquidity into the well.
-        advancedPipeCalls[1] = AdvancedPipeCall(
+        advancedPipeCalls[i++] = AdvancedPipeCall(
             C.BEAN_ETH_WELL, // target
             addLiquidityEncoded, // calldata
             abi.encode(0) // clipboard
         );
 
         // append any extra pipe calls
-        for (uint i; i < extraPipeCalls.length; i++) {
-            advancedPipeCalls[2 + i] = extraPipeCalls[i];
+        for (uint j; j < extraPipeCalls.length; j++) {
+            advancedPipeCalls[i++] = extraPipeCalls[j];
+        }
+
+        assembly {
+            mstore(advancedPipeCalls, i)
         }
 
         // Encode into a AdvancedFarmCall. NOTE: advancedFarmCall != advancedPipeCall.
