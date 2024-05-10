@@ -136,12 +136,10 @@ contract PipelineConvertTest is TestHelper {
         int96[] memory stems = new int96[](1);
         stems[0] = stem;
 
-        AdvancedFarmCall[] memory farmCalls = new AdvancedFarmCall[](1);
         AdvancedFarmCall[] memory beanToLPFarmCalls = createBeanToLPFarmCalls(
             amount,
             new AdvancedPipeCall[](0)
         );
-        farmCalls[0] = beanToLPFarmCalls[0]; // Assign the first element of the returned array
 
         uint256[] memory amounts = new uint256[](1);
         amounts[0] = amount;
@@ -170,7 +168,7 @@ contract PipelineConvertTest is TestHelper {
             stems, // stems
             amounts, // amount
             C.BEAN_ETH_WELL, // token out
-            farmCalls // farmData
+            beanToLPFarmCalls // farmData
         );
     }
 
@@ -187,9 +185,7 @@ contract PipelineConvertTest is TestHelper {
         int96[] memory stems = new int96[](1);
         stems[0] = stem;
 
-        AdvancedFarmCall[] memory farmCalls = new AdvancedFarmCall[](1);
         AdvancedFarmCall[] memory beanToLPFarmCalls = createLPToBeanFarmCalls(lpAmountOut);
-        farmCalls[0] = beanToLPFarmCalls[0]; // Assign the first element of the returned array
 
         uint256[] memory amounts = new uint256[](1);
         amounts[0] = lpAmountOut;
@@ -201,7 +197,7 @@ contract PipelineConvertTest is TestHelper {
             stems, // stems
             amounts, // amount
             C.BEAN, // token out
-            farmCalls // farmData
+            beanToLPFarmCalls // farmData
         );
     }
 
@@ -464,12 +460,10 @@ contract PipelineConvertTest is TestHelper {
         stems[0] = stem;
         uint256[] memory amounts = new uint256[](1);
         amounts[0] = amount;
-        AdvancedFarmCall[] memory farmCalls = new AdvancedFarmCall[](1);
         AdvancedFarmCall[] memory beanToLPFarmCalls = createBeanToLPFarmCalls(
             amount,
             new AdvancedPipeCall[](0)
         );
-        farmCalls[0] = beanToLPFarmCalls[0]; // Assign the first element of the returned array
         vm.expectRevert("Convert: Output token must be Bean or a well");
         // convert non-whitelisted asset to lp
         vm.prank(users[1]);
@@ -478,7 +472,7 @@ contract PipelineConvertTest is TestHelper {
             stems, // stem
             amounts, // amount
             C.UNRIPE_LP, // token out
-            farmCalls // farmData
+            beanToLPFarmCalls // farmData
         );
     }
 
@@ -489,12 +483,10 @@ contract PipelineConvertTest is TestHelper {
         stems[0] = stem;
         uint256[] memory amounts = new uint256[](1);
         amounts[0] = amount;
-        AdvancedFarmCall[] memory farmCalls = new AdvancedFarmCall[](1);
         AdvancedFarmCall[] memory beanToLPFarmCalls = createBeanToLPFarmCalls(
             amount,
             new AdvancedPipeCall[](0)
         );
-        farmCalls[0] = beanToLPFarmCalls[0]; // Assign the first element of the returned array
         vm.expectRevert("Convert: Input token must be Bean or a well");
         // convert non-whitelisted asset to lp
         vm.prank(users[1]);
@@ -503,7 +495,7 @@ contract PipelineConvertTest is TestHelper {
             stems, // stem
             amounts, // amount
             C.BEAN, // token out
-            farmCalls // farmData
+            beanToLPFarmCalls // farmData
         );
     }
 
@@ -533,9 +525,7 @@ contract PipelineConvertTest is TestHelper {
             abi.encode(0) // clipboard
         );
 
-        AdvancedFarmCall[] memory farmCalls = new AdvancedFarmCall[](1);
         AdvancedFarmCall[] memory beanToLPFarmCalls = createBeanToLPFarmCalls(amount, extraPipeCalls);
-        farmCalls[0] = beanToLPFarmCalls[0]; // Assign the first element of the returned array
 
         vm.expectRevert("ERC20: transfer amount exceeds balance");
 
@@ -545,7 +535,7 @@ contract PipelineConvertTest is TestHelper {
             stems, // stem
             amounts, // amount
             C.BEAN_ETH_WELL, // token out
-            farmCalls // farmData
+            beanToLPFarmCalls // farmData
         );
     }*/
 
@@ -1456,12 +1446,10 @@ contract PipelineConvertTest is TestHelper {
         int96[] memory stems = new int96[](1);
         stems[0] = stem;
 
-        AdvancedFarmCall[] memory farmCalls = new AdvancedFarmCall[](1);
         AdvancedFarmCall[] memory beanToLPFarmCalls = createBeanToLPFarmCalls(
             amount,
             new AdvancedPipeCall[](0)
         );
-        farmCalls[0] = beanToLPFarmCalls[0]; // Assign the first element of the returned array
 
         uint256[] memory amounts = new uint256[](1);
         amounts[0] = amount;
@@ -1473,7 +1461,7 @@ contract PipelineConvertTest is TestHelper {
             stems, // stems
             amounts, // amount
             C.BEAN_ETH_WELL, // token out
-            farmCalls // farmData
+            beanToLPFarmCalls // farmData
         );
     }
 
@@ -1486,9 +1474,7 @@ contract PipelineConvertTest is TestHelper {
         int96[] memory stems = new int96[](1);
         stems[0] = stem;
 
-        AdvancedFarmCall[] memory farmCalls = new AdvancedFarmCall[](1);
         AdvancedFarmCall[] memory beanToLPFarmCalls = createLPToBeanFarmCalls(lpAmountOut);
-        farmCalls[0] = beanToLPFarmCalls[0]; // Assign the first element of the returned array
 
         uint256[] memory amounts = new uint256[](1);
         amounts[0] = lpAmountOut;
@@ -1500,7 +1486,7 @@ contract PipelineConvertTest is TestHelper {
             stems, // stems
             amounts, // amount
             C.BEAN, // token out
-            farmCalls // farmData
+            beanToLPFarmCalls // farmData
         );
     }
 
