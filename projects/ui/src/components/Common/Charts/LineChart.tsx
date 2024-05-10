@@ -303,6 +303,7 @@ const Graph: React.FC<GraphProps> = (props) => {
                   cx={tooltipLeftAttached}
                   cy={tdTop}
                   r={4}
+                  key={`lineChartCircle${i}`}
                   fill="black"
                   fillOpacity={0.1}
                   stroke="black"
