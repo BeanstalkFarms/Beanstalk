@@ -144,7 +144,7 @@ contract PipelineConvertTest is TestHelper {
         uint256[] memory amounts = new uint256[](1);
         amounts[0] = amount;
 
-        // get well amount out if we deposit 200 beans
+        // get well amount out if we deposit amount of beans
         uint256 wellAmountOut = getWellAmountOutForAddingBeans(amount);
 
         // verify convert
