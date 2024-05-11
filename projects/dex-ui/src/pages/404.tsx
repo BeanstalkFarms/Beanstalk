@@ -1,5 +1,6 @@
 import React from "react";
 import styled from "styled-components";
+import { Settings } from "src/settings";
 
 export const NotFound = () => {
   return (
@@ -11,6 +12,7 @@ export const NotFound = () => {
         <SmallText>
           Page Not Found
         </SmallText>
+        <SmallText>{Settings.NETLIFY_CONTEXT}</SmallText>
       </NotFoundContainer>
     </>
   );
