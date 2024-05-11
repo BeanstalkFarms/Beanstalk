@@ -19,28 +19,32 @@ import { WellDetailLoadingRow, WellDetailRow } from "src/components/Well/Table/W
 import { MyWellPositionLoadingRow, MyWellPositionRow } from "src/components/Well/Table/MyWellPositionRow";
 import { useBeanstalkSiloAPYs } from "src/wells/useBeanstalkSiloAPYs";
 import { useLagLoading } from "src/utils/ui/useLagLoading";
+import useBasinStats from "src/wells/useBasinStats";
 
 export const Wells = () => {
   const { data: wells, isLoading, error } = useWells();
+  const { data: wellStats, isLoading: isLoadingStats } = useBasinStats();
   const sdk = useSdk();
 
   const [wellLiquidity, setWellLiquidity] = useState<(TokenValue | undefined)[]>([]);
   const [wellFunctionNames, setWellFunctionNames] = useState<string[]>([]);
+  const [wellTokenPrices, setWellTokenPrices] = useState<(TokenValue | null)[][]>([]);
   const [tab, showTab] = useState<number>(0);
 
   const { data: lpTokenPrices } = useWellLPTokenPrice(wells);
   const { hasPositions, getPositionWithWell, isLoading: positionsLoading } = useLPPositionSummary();
   const { isLoading: apysLoading } = useBeanstalkSiloAPYs();
-
-  const loading = useLagLoading(isLoading || apysLoading || positionsLoading);
+  const [isLoadingWellData, setIsLoadingWellData] = useState<boolean>(true);
 
   useMemo(() => {
     const run = async () => {
       if (!wells || !wells.length) return;
       let _wellsLiquidityUSD = [];
+      let _wellsTokenPrices = [];
       for (let i = 0; i < wells.length; i++) {
         if (!wells[i].tokens) return;
         const _tokenPrices = await Promise.all(wells[i].tokens!.map((token) => getPrice(token, sdk)));
+        _wellsTokenPrices[i] = _tokenPrices;
         const _reserveValues = wells[i].reserves?.map((tokenReserve, index) =>
           tokenReserve.mul((_tokenPrices[index] as TokenValue) || TokenValue.ZERO)
         );
@@ -49,6 +53,7 @@ export const Wells = () => {
         _wellsLiquidityUSD[i] = _totalWellLiquidity;
       }
       setWellLiquidity(_wellsLiquidityUSD);
+      setWellTokenPrices(_wellsTokenPrices);
 
       let _wellsFunctionNames = [];
       for (let i = 0; i < wells.length; i++) {
@@ -57,10 +62,13 @@ export const Wells = () => {
         _wellsFunctionNames[i] = _wellName;
       }
       setWellFunctionNames(_wellsFunctionNames);
+      setIsLoadingWellData(false);
     };
 
     run();
   }, [sdk, wells]);
+
+  const loading = useLagLoading(isLoading || apysLoading || positionsLoading || isLoadingWellData || isLoadingStats);
 
   if (error) {
     return <Error message={error?.message} errorOnly />;
@@ -89,6 +97,8 @@ export const Wells = () => {
               <DesktopHeader>Well Function</DesktopHeader>
               <DesktopHeader align="right">Yield</DesktopHeader>
               <DesktopHeader align="right">Total Liquidity</DesktopHeader>
+              <DesktopHeader align="right">Price</DesktopHeader>
+              <DesktopHeader align="right">24H Volume</DesktopHeader>
               <DesktopHeader align="right">Reserves</DesktopHeader>
               <MobileHeader>All Wells</MobileHeader>
             </TableRow>
@@ -130,11 +140,19 @@ export const Wells = () => {
                 </>
               ) : (
                 wells?.map((well, index) => {
+                  let price = undefined;
+                  let volume = undefined;
+                  if (wellStats && well.tokens && wellTokenPrices[index]) {
+                    price = well.tokens[1].fromHuman(wellStats[index].last_price).mul(wellTokenPrices[index][1] as TokenValue);
+                    volume =  well.tokens[1].fromHuman(wellStats[index].target_volume).mul(wellTokenPrices[index][1] as TokenValue);
+                  };
                   return tab === 0 ? (
                     <WellDetailRow
                       well={well}
                       liquidity={wellLiquidity?.[index]}
                       functionName={wellFunctionNames?.[index]}
+                      price={price}
+                      volume={volume}
                       key={`well-detail-row-${well.address}-${index}`}
                     />
                   ) : (
@@ -183,6 +201,25 @@ const MobileHeader = styled(Th)`
 `;
 
 const DesktopHeader = styled(Th)`
+  :nth-child(1) {
+    width: 12em
+  }
+  :nth-child(2) {
+    width: 12em
+  }
+  :nth-child(3) {
+    width: 12em
+  }
+  :nth-child(5) {
+    @media (max-width: ${size.desktop}) {
+      display: none;
+    }
+  }
+  :nth-child(6) {
+    @media (max-width: ${size.desktop}) {
+      display: none;
+    }
+  }
   @media (max-width: ${size.mobile}) {
     display: none;
   }
