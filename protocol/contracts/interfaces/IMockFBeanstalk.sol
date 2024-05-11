@@ -5,6 +5,12 @@ pragma solidity >=0.7.6 <0.9.0;
 pragma abicoder v2;
 
 interface IMockFBeanstalk {
+    enum Germinate {
+        ODD,
+        EVEN,
+        NOT_GERMINATING
+    }
+
     struct AccountSeasonOfPlenty {
         uint32 lastRain;
         uint32 lastSop;
@@ -513,6 +519,12 @@ interface IMockFBeanstalk {
         bool aboveQ,
         uint256 L2SRState
     ) external;
+
+    function calculateStemForTokenFromGrownStalk(
+        address token,
+        uint256 grownStalk,
+        uint256 bdvOfDeposit
+    ) external view returns (int96 stem, Germinate germ);
 
     function cancelPodListing(uint256 index) external payable;
 

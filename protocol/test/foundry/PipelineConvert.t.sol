@@ -114,9 +114,12 @@ contract PipelineConvertTest is TestHelper {
     function testBasicConvertBeanToLP(uint256 amount) public {
         vm.pauseGasMetering();
         int96 stem;
-        // well is initalized with 10000 beans. cap add liquidity
-        // to reasonable amounts.
+
         amount = bound(amount, 10e6, 5000e6);
+
+        // manipulate well so we won't have a penalty applied
+        // TODO: add a test that also calculates proper penalty and verifies?
+        setDeltaBforWell(int256(amount), C.BEAN_ETH_WELL, C.WETH);
 
         depositBeanAndPassGermination(amount, users[1]);
 
@@ -137,19 +140,24 @@ contract PipelineConvertTest is TestHelper {
         // get well amount out if we deposit amount of beans
         uint256 wellAmountOut = getWellAmountOutForAddingBeans(amount);
 
+        uint256 grownStalkForDeposit = bs.grownStalkForDeposit(users[1], C.BEAN, stem);
+
+        uint256 bdvOfAmountOut = bs.bdv(C.BEAN_ETH_WELL, wellAmountOut);
+        (int96 outputStem, ) = bs.calculateStemForTokenFromGrownStalk(
+            C.BEAN_ETH_WELL,
+            grownStalkForDeposit,
+            bdvOfAmountOut
+        );
+
+        vm.expectEmit(true, false, false, true);
+        emit RemoveDeposits(users[1], C.BEAN, stems, amounts, amount, amounts);
+
+        vm.expectEmit(true, false, false, true);
+        emit AddDeposit(users[1], C.BEAN_ETH_WELL, outputStem, wellAmountOut, bdvOfAmountOut);
+
         // verify convert
         vm.expectEmit(true, false, false, true);
         emit Convert(users[1], C.BEAN, C.BEAN_ETH_WELL, amount, wellAmountOut);
-
-        // vm.expectEmit(true, false, false, true);
-        // emit RemoveDeposits(users[1], C.BEAN, stems, amounts, amount, amounts);
-
-        // get bdv of this well amount out for later comparison
-        // FIXME: the well amount out reverts because pumps returning zero, maybe need a helper to update pumps?
-        // uint256 bdvOfThisWellAmountOut = bs.bdv(C.BEAN_ETH_WELL, wellAmountOut);
-
-        // vm.expectEmit(true, false, false, true);
-        // emit AddDeposit(users[1], C.BEAN_ETH_WELL, stem, wellAmountOut, amount);
 
         vm.resumeGasMetering();
         vm.prank(users[1]); // do this as user 1
@@ -179,6 +187,8 @@ contract PipelineConvertTest is TestHelper {
 
         uint256[] memory amounts = new uint256[](1);
         amounts[0] = lpAmountOut;
+
+        // todo: add events verification
 
         vm.resumeGasMetering();
         vm.prank(users[1]); // do this as user 1
@@ -218,6 +228,8 @@ contract PipelineConvertTest is TestHelper {
 
         uint256[] memory amounts = new uint256[](1);
         amounts[0] = lpAmountOut;
+
+        // todo: add events verification
 
         vm.resumeGasMetering();
         vm.prank(users[1]);
