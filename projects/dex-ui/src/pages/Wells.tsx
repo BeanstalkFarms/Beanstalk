@@ -18,7 +18,6 @@ import { useLPPositionSummary } from "src/tokens/useLPPositionSummary";
 import { WellDetailLoadingRow, WellDetailRow } from "src/components/Well/Table/WellDetailRow";
 import { MyWellPositionLoadingRow, MyWellPositionRow } from "src/components/Well/Table/MyWellPositionRow";
 import { useBeanstalkSiloAPYs } from "src/wells/useBeanstalkSiloAPYs";
-import { useLagLoading } from "src/utils/ui/useLagLoading";
 import useBasinStats from "src/wells/useBasinStats";
 
 export const Wells = () => {
@@ -68,7 +67,7 @@ export const Wells = () => {
     run();
   }, [sdk, wells]);
 
-  const loading = useLagLoading(isLoading || apysLoading || positionsLoading || isLoadingWellData || isLoadingStats);
+  const loading = isLoading || apysLoading || positionsLoading || isLoadingWellData || isLoadingStats;
 
   if (error) {
     return <Error message={error?.message} errorOnly />;

@@ -8,7 +8,7 @@ const useBasinStats = () => {
     queryKey: ["wells", "basinStats"],
 
     queryFn: async () => {
-        let output;
+        let output: BasinAPIResponse[] = [];
         try {
             const apiQuery = await fetch('https://api.bean.money/basin/tickers', {
                     headers: {
