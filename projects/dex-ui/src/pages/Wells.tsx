@@ -18,11 +18,12 @@ import { useLPPositionSummary } from "src/tokens/useLPPositionSummary";
 import { WellDetailLoadingRow, WellDetailRow } from "src/components/Well/Table/WellDetailRow";
 import { MyWellPositionLoadingRow, MyWellPositionRow } from "src/components/Well/Table/MyWellPositionRow";
 import { useBeanstalkSiloAPYs } from "src/wells/useBeanstalkSiloAPYs";
+import { useLagLoading } from "src/utils/ui/useLagLoading";
 import useBasinStats from "src/wells/useBasinStats";
 
 export const Wells = () => {
   const { data: wells, isLoading, error } = useWells();
-  const { data: wellStats, isLoading: isLoadingStats } = useBasinStats();
+  const { data: wellStats } = useBasinStats();
   const sdk = useSdk();
 
   const [wellLiquidity, setWellLiquidity] = useState<(TokenValue | undefined)[]>([]);
@@ -33,7 +34,7 @@ export const Wells = () => {
   const { data: lpTokenPrices } = useWellLPTokenPrice(wells);
   const { hasPositions, getPositionWithWell, isLoading: positionsLoading } = useLPPositionSummary();
   const { isLoading: apysLoading } = useBeanstalkSiloAPYs();
-  const [isLoadingWellData, setIsLoadingWellData] = useState<boolean>(true);
+  // const [isLoadingWellData, setIsLoadingWellData] = useState<boolean>(true);
 
   useMemo(() => {
     const run = async () => {
@@ -61,13 +62,13 @@ export const Wells = () => {
         _wellsFunctionNames[i] = _wellName;
       }
       setWellFunctionNames(_wellsFunctionNames);
-      setIsLoadingWellData(false);
+      // setIsLoadingWellData(false);
     };
 
     run();
   }, [sdk, wells]);
 
-  const loading = isLoading || apysLoading || positionsLoading || isLoadingWellData || isLoadingStats;
+  const loading = useLagLoading(isLoading || apysLoading || positionsLoading);
 
   if (error) {
     return <Error message={error?.message} errorOnly />;
