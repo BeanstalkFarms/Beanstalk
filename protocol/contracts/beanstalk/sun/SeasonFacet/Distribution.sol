@@ -27,6 +27,12 @@ contract Distribution is Receiving {
         uint256[] shipmentAmounts
     );
 
+    /**
+     * @notice Emitted when the shipment routes in storage are replaced with a new set of routes.
+     * @param newShipmentRoutes New set of ShipmentRoutes.
+     */
+    event ShipmentRoutesSet(ShipmentRoutes[] newShipmentRoutes);
+
     //////////////////// REWARD BEANS ////////////////////
 
     /**
@@ -106,23 +112,17 @@ contract Distribution is Receiving {
             totalPoints += shipmentPlans[i].points;
         }
     }
+
     /**
-     * @notice Determines the amount of Beans to distribute to each shipping route based on points.
-     * @dev Does not factor in route cap.
-     * @dev If points are 0, does not alter the associated shippingAmount.
-     * @dev Assumes shipmentAmounts and shipmentRoutes have matching shape and ordering.
+     * @notice Replaces the entire set of ShipmentRoutes with a new set.
+     * @dev Changes take effect immediately and will be seen at the next sunrise mint.
      */
-    function getBeansFromPoints(
-        uint256[] memory shipmentAmounts,
-        ShipmentPlan[] memory shipmentPlans,
-        uint256 totalPoints,
-        uint256 beansToShip
-    ) private pure {
-        for (uint256 i; i < shipmentPlans.length; i++) {
-            // Do not modify amount for streams with 0 points. They either are zero or have already been set.
-            if (shipmentPlans[i].points == 0) continue;
-            shipmentAmounts[i] = (beansToShip * shipmentPlans[i].points) / totalPoints; // round down
+    function setShipmentRoutes(ShipmentRoutes[] shipmentRoutes) {
+        delete s.shipmentRoutes;
+        for (uint256 i; i < shipmentRoutes.length; i++) {
+            s.shipmentRoutes.push(shipmentRoutes[i]);
         }
+        emit ShipmentRoutesSet(shipmentRoutes);
     }
 
     //////////////////////////////////// SHIPPING PLAN GETTERS ////////////////////////////////////
