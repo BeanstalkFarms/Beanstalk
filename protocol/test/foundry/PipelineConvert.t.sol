@@ -401,11 +401,11 @@ contract PipelineConvertTest is TestHelper {
 
     // double convert uses up convert power so we should be left at no grown stalk after second convert
     // (but still have grown stalk after first convert)
-    /*function testFlashloanManipulationLoseGrownStalkBecauseDoubleConvert(uint256 amount) public {
+    function testFlashloanManipulationLoseGrownStalkBecauseDoubleConvert(uint256 amount) public {
         amount = bound(amount, 1000e6, 1000e6); // todo: update for range
 
         // do initial pump update
-        updateMockPumpUsingWellReserves(beanEthWell);
+        updateMockPumpUsingWellReserves(address(beanEthWell));
 
         // the main idea is that we start some positive deltaB, so a limited amount of converts are possible (1.2 eth worth)
         // User One does a convert down, and that uses up convert power for this block
@@ -413,25 +413,29 @@ contract PipelineConvertTest is TestHelper {
         // then User Two tries to do a convert down, but at that point the convert power has been used up, so they lose their grown stalk
 
         // setup initial bean deposit
-        int96 stem = beanToLPDepositSetup(amount, users[1]);
+        int96 stem = depositBeanAndPassGermination(amount, users[1]);
 
         // then setup a convert from user 2
-        int96 stem2 = beanToLPDepositSetup(amount, users[2]);
+        int96 stem2 = depositBeanAndPassGermination(amount, users[2]);
 
         // if you deposited amount of beans into well, how many eth would you get?
-        uint256 ethAmount = IWell(beanEthWell).getSwapOut(IERC20(C.BEAN), IERC20(C.WETH), amount);
+        uint256 ethAmount = IWell(address(beanEthWell)).getSwapOut(
+            IERC20(C.BEAN),
+            IERC20(C.WETH),
+            amount
+        );
 
         ethAmount = ethAmount.mul(12000).div(10000); // I need a better way to calculate how much eth out there should be to make sure we can swap and be over peg
 
         addEthToWell(users[1], ethAmount);
-        
+
         // go to next block
         vm.roll(block.number + 1);
 
         uint256 grownStalkBefore = bs.balanceOfGrownStalk(users[2], C.BEAN);
 
         // update pump
-        updateMockPumpUsingWellReserves(beanEthWell);
+        updateMockPumpUsingWellReserves(address(beanEthWell));
 
         // convert.cappedReservesDeltaB(beanEthWell);
 
@@ -451,11 +455,11 @@ contract PipelineConvertTest is TestHelper {
         uint256 convertCapacityStage3 = convert.getConvertCapacity();
         assertTrue(convertCapacityStage3 < convertCapacityStage2);
 
-        uint256 grownStalkAfter = bs.balanceOfGrownStalk(users[2], beanEthWell);
+        uint256 grownStalkAfter = bs.balanceOfGrownStalk(users[2], address(beanEthWell));
 
         assertTrue(grownStalkAfter == 0); // all grown stalk was lost because no convert power left
         assertTrue(grownStalkBefore > 0);
-    }*/
+    }
 
     function testConvertingOutputTokenNotWell(uint256 amount) public {
         amount = bound(amount, 1, 1000e6);

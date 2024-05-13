@@ -26,6 +26,7 @@ import {LibFunction} from "contracts/libraries/LibFunction.sol";
 import {LibGerminate} from "contracts/libraries/Silo/LibGerminate.sol";
 import {LibConvertData} from "contracts/libraries/Convert/LibConvertData.sol";
 import {Invariable} from "contracts/beanstalk/Invariable.sol";
+import {console} from "forge-std/console.sol";
 
 /**
  * @author Publius, Brean, DeadManWalking, pizzaman1337, funderberker
@@ -347,10 +348,14 @@ contract ConvertFacet is Invariable, ReentrancyGuard {
      * @return convertCapacity The amount of convert power available for this block
      */
     function getConvertCapacity() external view returns (uint256) {
+        uint256 overallCappedDeltaB = LibConvert.abs(LibWellMinting.overallCappedDeltaB());
+        uint256 overallConvertCapacityUsed = s
+            .convertCapacity[block.number]
+            .overallConvertCapacityUsed;
         return
-            LibConvert.abs(LibWellMinting.overallCappedDeltaB()).sub(
-                s.convertCapacity[block.number].overallConvertCapacityUsed
-            );
+            overallConvertCapacityUsed > overallCappedDeltaB
+                ? 0
+                : overallCappedDeltaB.sub(overallConvertCapacityUsed);
     }
 
     /**
