@@ -1408,6 +1408,10 @@ contract PipelineConvertTest is TestHelper {
         passGermination();
     }
 
+    /**
+     * @notice Deposits into Bean:ETH well and passes germination.
+     * @param amount The amount of beans added to well, single-sided.
+     */
     function depositLPAndPassGermination(
         uint256 amount
     ) public returns (int96 stem, uint256 lpAmountOut) {
