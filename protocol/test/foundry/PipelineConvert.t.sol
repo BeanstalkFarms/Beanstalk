@@ -210,8 +210,6 @@ contract PipelineConvertTest is TestHelper {
 
         (int96 stem, uint256 lpAmountOut) = depositLPAndPassGermination(amount);
 
-        mineBlockAndUpdatePumps();
-
         // log deltaB for this well before convert
         int256 beforeDeltaBEth = bs.poolCurrentDeltaB(C.BEAN_ETH_WELL);
         int256 beforeDeltaBwsteth = bs.poolCurrentDeltaB(C.BEAN_WSTETH_WELL);
