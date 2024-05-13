@@ -119,7 +119,7 @@ export function handlePodListingCreated(event: PodListingCreated_v1): void {
 export function handlePodListingCancelled(event: PodListingCancelled): void {
   let listing = loadPodListing(event.params.account, event.params.index);
 
-  updateMarketListingBalances(event.address, event.params.index, ZERO_BI, ZERO_BI, ZERO_BI, listing.remainingAmount, event.block.timestamp);
+  updateMarketListingBalances(event.address, event.params.index, ZERO_BI, listing.remainingAmount, ZERO_BI, ZERO_BI, event.block.timestamp);
 
   listing.status = "CANCELLED"; // TODO: consider whether this should be CANCELLED_PARTIAL similarly to pod orders
   listing.cancelledAmount = listing.remainingAmount;

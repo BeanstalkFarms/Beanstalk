@@ -153,10 +153,13 @@ describe("Marketplace", () => {
         const event = createPodListingCancelledEvent(account, listingIndex);
         handlePodListingCancelled(event);
 
+        const cancelledAmount = sowedPods.minus(beans_BI(500));
         const listingID = event.params.account.toHexString() + "-" + event.params.index.toString();
         assert.fieldEquals("PodListing", listingID, "status", "CANCELLED");
-        assert.fieldEquals("PodListing", listingID, "cancelledAmount", sowedPods.minus(beans_BI(500)).toString());
+        assert.fieldEquals("PodListing", listingID, "cancelledAmount", cancelledAmount.toString());
         assert.fieldEquals("PodListing", listingID, "remainingAmount", "0");
+
+        assertMarketState(BEANSTALK.toHexString(), [], cancelledAmount, ZERO_BI, cancelledAmount, ZERO_BI, ZERO_BI, ZERO_BI);
       });
 
       test("Cancel pod listing - partial", () => {
