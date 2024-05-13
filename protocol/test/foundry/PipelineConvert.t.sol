@@ -54,6 +54,7 @@ contract PipelineConvertTest is TestHelper {
     address[] farmers;
 
     uint256 constant MAX_UINT256 = type(uint256).max;
+    uint256 constant BDV_TO_STALK = 1e4;
 
     bytes constant noData = abi.encode(0);
 
@@ -321,40 +322,42 @@ contract PipelineConvertTest is TestHelper {
         assertTrue(grownStalkBefore > 0);
     }
 
-    /*function testConvertWithPegAndKeepStalk(uint256 amount) public {
-        amount = bound(amount, 5000e6, 5000e6); // todo: update for range
+    function testConvertWithPegAndKeepStalk(uint256 amount) public {
+        amount = bound(amount, 10e6, 5000e6);
+
+        setDeltaBforWell(int256(amount), address(beanEthWell), C.WETH);
 
         // how many eth would we get if we swapped this amount in the well
-        uint256 ethAmount = IWell(beanEthWell).getSwapOut(IERC20(C.BEAN), IERC20(C.WETH), amount);
-        ethAmount = ethAmount.mul(2); // I need a better way to calculate how much eth out there should be to make sure we can swap and be over peg
+        uint256 ethAmount = IWell(address(beanEthWell)).getSwapOut(
+            IERC20(C.BEAN),
+            IERC20(C.WETH),
+            amount
+        );
 
         MockToken(C.WETH).mint(users[1], ethAmount);
         vm.prank(users[1]);
-        MockToken(C.WETH).approve(beanEthWell, ethAmount);
+        MockToken(C.WETH).approve(address(beanEthWell), ethAmount);
 
         uint256[] memory tokenAmountsIn = new uint256[](2);
         tokenAmountsIn[0] = 0;
         tokenAmountsIn[1] = ethAmount;
 
         vm.prank(users[1]);
-        uint256 lpAmountOut = IWell(beanEthWell).addLiquidity(tokenAmountsIn, 0, users[1], type(uint256).max);
+        IWell(address(beanEthWell)).addLiquidity(tokenAmountsIn, 0, users[1], type(uint256).max);
 
-        // get new deltaB
-        int256 beforeDeltaB = bs.poolCurrentDeltaB(beanEthWell);
-        
-        int96 stem = beanToLPDepositSetup(amount, users[1]);
+        int96 stem = depositBeanAndPassGermination(amount, users[1]);
         uint256 grownStalkBefore = bs.balanceOfGrownStalk(users[1], C.BEAN);
-
 
         beanToLPDoConvert(amount, stem, users[1]);
 
         uint256 totalStalkAfter = bs.balanceOfStalk(users[1]);
 
         // get balance of deposited bdv for this user
-        uint256 bdvBalance = bs.balanceOfDepositedBdv(users[1], beanEthWell) * 1e4; // convert to stalk amount
+        uint256 bdvBalance = bs.balanceOfDepositedBdv(users[1], address(beanEthWell)) *
+            BDV_TO_STALK; // convert to stalk amount
 
-        assertTrue(totalStalkAfter == bdvBalance + grownStalkBefore); // all grown stalk was lost
-    }*/
+        assertTrue(totalStalkAfter == bdvBalance + grownStalkBefore); // all grown stalk was kept
+    }
 
     function testFlashloanManipulationLoseGrownStalkBecauseZeroConvertCapacity(
         uint256 amount
