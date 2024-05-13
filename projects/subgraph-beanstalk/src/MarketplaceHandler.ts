@@ -121,7 +121,7 @@ export function handlePodListingCancelled(event: PodListingCancelled): void {
 
   updateMarketListingBalances(event.address, event.params.index, ZERO_BI, ZERO_BI, ZERO_BI, listing.remainingAmount, event.block.timestamp);
 
-  listing.status = "CANCELLED";
+  listing.status = "CANCELLED"; // TODO: consider whether this should be CANCELLED_PARTIAL similarly to pod orders
   listing.cancelledAmount = listing.remainingAmount;
   listing.remainingAmount = ZERO_BI;
   listing.updatedAt = event.block.timestamp;
@@ -748,14 +748,16 @@ function updateMarketListingBalances(
   let marketHourly = loadPodMarketplaceHourlySnapshot(marketAddress, market.season, timestamp);
   let marketDaily = loadPodMarketplaceDailySnapshot(marketAddress, timestamp);
 
+  let marketIndexes = market.listingIndexes;
+
   // Update Listing indexes
   if (newPodAmount > ZERO_BI) {
-    market.listingIndexes.push(plotIndex);
-    market.listingIndexes.sort();
+    marketIndexes.push(plotIndex);
+    marketIndexes.sort();
   }
   if (cancelledPodAmount > ZERO_BI || filledPodAmount > ZERO_BI) {
     let listingIndex = market.listingIndexes.indexOf(plotIndex);
-    market.listingIndexes.splice(listingIndex, 1);
+    marketIndexes.splice(listingIndex, 1);
   }
   market.listedPods = market.listedPods.plus(newPodAmount);
   market.availableListedPods = market.availableListedPods.plus(newPodAmount).minus(cancelledPodAmount).minus(filledPodAmount);
@@ -763,6 +765,7 @@ function updateMarketListingBalances(
   market.filledListedPods = market.filledListedPods.plus(filledPodAmount);
   market.podVolume = market.podVolume.plus(filledPodAmount);
   market.beanVolume = market.beanVolume.plus(filledBeanAmount);
+  market.listingIndexes = marketIndexes;
   market.save();
 
   marketHourly.season = market.season;
@@ -821,18 +824,21 @@ function updateMarketOrderBalances(
   let marketHourly = loadPodMarketplaceHourlySnapshot(marketAddress, market.season, timestamp);
   let marketDaily = loadPodMarketplaceDailySnapshot(marketAddress, timestamp);
 
+  let marketOrders = market.orders;
+
   if (newPodAmount > ZERO_BI) {
-    market.orders.push(orderID);
+    marketOrders.push(orderID);
   }
   if (cancelledPodAmount > ZERO_BI) {
     let orderIndex = market.orders.indexOf(orderID);
-    market.listingIndexes.splice(orderIndex, 1);
+    marketOrders.splice(orderIndex, 1);
   }
   market.orderedPods = market.orderedPods.plus(newPodAmount);
   market.filledOrderedPods = market.filledOrderedPods.plus(filledPodAmount);
   market.podVolume = market.podVolume.plus(filledPodAmount);
   market.beanVolume = market.beanVolume.plus(filledBeanAmount);
   market.cancelledOrderedPods = market.cancelledOrderedPods.plus(cancelledPodAmount);
+  market.orders = marketOrders;
   market.save();
 
   marketHourly.deltaOrderedPods = marketHourly.deltaOrderedPods.plus(newPodAmount);

@@ -1,12 +1,14 @@
 import { BigInt, Bytes, log } from "@graphprotocol/graph-ts";
 import { afterEach, assert, beforeEach, clearStore, describe, test } from "matchstick-as/assembly/index";
 import { handleSow } from "../src/FieldHandler";
-import { handlePodListingCreated_v2 } from "../src/MarketplaceHandler";
+import { handlePodListingCancelled, handlePodListingCreated_v2 } from "../src/MarketplaceHandler";
 import { createSowEvent } from "./event-mocking/Field";
-import { createPodListingCreatedEvent_v2 } from "./event-mocking/Marketplace";
+import { createPodListingCancelledEvent, createPodListingCreatedEvent_v2 } from "./event-mocking/Marketplace";
 import { beans_BI, podlineMil_BI } from "../../subgraph-core/tests/Values";
-import { ZERO_BI } from "../../subgraph-core/utils/Decimals";
+import { BI_10, ONE_BI, ZERO_BI } from "../../subgraph-core/utils/Decimals";
 import { PodListingCreated as PodListingCreated_v2 } from "../generated/BIP29-PodMarketplace/Beanstalk";
+import { BEANSTALK } from "../../subgraph-core/utils/Constants";
+import { Sow } from "../generated/Field/Beanstalk";
 
 let account = "0x1234567890abcdef1234567890abcdef12345678".toLowerCase();
 let listingIndex = podlineMil_BI(1);
@@ -18,9 +20,31 @@ let sowedBeans = beans_BI(5000);
 // 3x temp
 let sowedPods = sowedBeans.times(BigInt.fromString("3"));
 
+const sow = (account: string, index: BigInt, beans: BigInt, pods: BigInt): Sow => {
+  const event = createSowEvent(account, index, beans, pods);
+  handleSow(event);
+  return event;
+};
+
+const createListing_v2 = (account: string, index: BigInt, plotTotalPods: BigInt, start: BigInt): PodListingCreated_v2 => {
+  const event = createPodListingCreatedEvent_v2(
+    account,
+    index,
+    start,
+    plotTotalPods.minus(start),
+    BigInt.fromString("250000"),
+    BigInt.fromString("300000000000000"),
+    BigInt.fromString("10000000"),
+    pricingFunction,
+    BigInt.fromI32(0),
+    BigInt.fromI32(1)
+  );
+  handlePodListingCreated_v2(event);
+  return event;
+};
+
 const assertListingCreated_v2 = (event: PodListingCreated_v2): void => {
   let listingID = event.params.account.toHexString() + "-" + event.params.index.toString();
-  assert.entityCount("PodListing", 1);
   assert.fieldEquals("PodListing", listingID, "plot", event.params.index.toString());
   assert.fieldEquals("PodListing", listingID, "farmer", event.params.account.toHexString());
   assert.fieldEquals("PodListing", listingID, "status", "ACTIVE");
@@ -38,11 +62,28 @@ const assertListingCreated_v2 = (event: PodListingCreated_v2): void => {
   assert.fieldEquals("PodListing", listingID, "pricingType", event.params.pricingType.toString());
 };
 
+const assertMarketState = (
+  address: string,
+  listings: BigInt[],
+  listedPods: BigInt,
+  availableListedPods: BigInt,
+  cancelledListedPods: BigInt,
+  filledListedPods: BigInt,
+  podVolume: BigInt,
+  beanVolume: BigInt
+): void => {
+  assert.fieldEquals("PodMarketplace", address, "listingIndexes", "[" + listings.join(", ") + "]");
+  assert.fieldEquals("PodMarketplace", address, "listedPods", listedPods.toString());
+  assert.fieldEquals("PodMarketplace", address, "availableListedPods", availableListedPods.toString());
+  assert.fieldEquals("PodMarketplace", address, "cancelledListedPods", cancelledListedPods.toString());
+  assert.fieldEquals("PodMarketplace", address, "filledListedPods", filledListedPods.toString());
+  assert.fieldEquals("PodMarketplace", address, "podVolume", podVolume.toString());
+  assert.fieldEquals("PodMarketplace", address, "beanVolume", beanVolume.toString());
+};
+
 describe("Marketplace", () => {
   beforeEach(() => {
-    // Create a plot with the listing index
-    let event = createSowEvent(account, listingIndex, sowedBeans, sowedPods);
-    handleSow(event);
+    sow(account, listingIndex, sowedBeans, sowedPods);
   });
 
   afterEach(() => {
@@ -50,11 +91,11 @@ describe("Marketplace", () => {
   });
 
   // TODO tests:
-  // create listing - full
-  // create listing - partial
-  // cancel listing
+  // cancel listing - full
+  // cancel listing - partial
   // create order
-  // cancel order
+  // cancel order - full
+  // cancel order - partial
   // fill listing - full
   // fill listing - partial
   // fill order - full
@@ -70,38 +111,59 @@ describe("Marketplace", () => {
 
   describe("Marketplace v2", () => {
     test("Create a pod listing - full plot", () => {
-      const event = createPodListingCreatedEvent_v2(
-        account,
-        listingIndex,
-        ZERO_BI,
-        sowedBeans,
-        BigInt.fromString("550000"),
-        BigInt.fromString("200000000000000"),
-        BigInt.fromString("5000000"),
-        pricingFunction,
-        BigInt.fromI32(1),
-        BigInt.fromI32(0)
-      );
-      handlePodListingCreated_v2(event);
+      const event = createListing_v2(account, listingIndex, sowedPods, ZERO_BI);
       assertListingCreated_v2(event);
+      assertMarketState(BEANSTALK.toHexString(), [listingIndex], sowedPods, sowedPods, ZERO_BI, ZERO_BI, ZERO_BI, ZERO_BI);
+
+      // Create a second listing to assert the market state again
+      const listing2Index = listingIndex.times(BI_10);
+      sow(account, listing2Index, sowedBeans, sowedPods);
+      const event2 = createListing_v2(account, listing2Index, sowedPods, ZERO_BI);
+      assertListingCreated_v2(event2);
+      assertMarketState(
+        BEANSTALK.toHexString(),
+        [listingIndex, listing2Index],
+        sowedPods.times(BigInt.fromI32(2)),
+        sowedPods.times(BigInt.fromI32(2)),
+        ZERO_BI,
+        ZERO_BI,
+        ZERO_BI,
+        ZERO_BI
+      );
     });
 
     test("Create a pod listing - partial plot", () => {
-      const start = beans_BI(500);
-      const event = createPodListingCreatedEvent_v2(
-        account,
-        listingIndex,
-        start,
-        sowedBeans.minus(start),
-        BigInt.fromString("250000"),
-        BigInt.fromString("300000000000000"),
-        BigInt.fromString("10000000"),
-        pricingFunction,
-        BigInt.fromI32(0),
-        BigInt.fromI32(1)
-      );
-      handlePodListingCreated_v2(event);
+      const event = createListing_v2(account, listingIndex, sowedPods, beans_BI(500));
+      const listedPods = sowedPods.minus(beans_BI(500));
       assertListingCreated_v2(event);
+      assertMarketState(BEANSTALK.toHexString(), [listingIndex], listedPods, listedPods, ZERO_BI, ZERO_BI, ZERO_BI, ZERO_BI);
+    });
+
+    describe("Tests requiring listing", () => {
+      beforeEach(() => {
+        const event = createListing_v2(account, listingIndex, sowedPods, beans_BI(500));
+      });
+
+      test("Fill listing - full", () => {});
+
+      test("Fill listing - partial", () => {});
+
+      // Cancellation isnt unique to pod market v2, consider including in the v1 section
+      test("Cancel pod listing - full", () => {
+        const event = createPodListingCancelledEvent(account, listingIndex);
+        handlePodListingCancelled(event);
+
+        const listingID = event.params.account.toHexString() + "-" + event.params.index.toString();
+        assert.fieldEquals("PodListing", listingID, "status", "CANCELLED");
+        assert.fieldEquals("PodListing", listingID, "cancelledAmount", sowedPods.minus(beans_BI(500)).toString());
+        assert.fieldEquals("PodListing", listingID, "remainingAmount", "0");
+      });
+
+      test("Cancel pod listing - partial", () => {
+        // TODO: some sold already
+        const event = createPodListingCancelledEvent(account, listingIndex);
+        handlePodListingCancelled(event);
+      });
     });
   });
 });
