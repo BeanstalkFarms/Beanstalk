@@ -9,16 +9,6 @@ import {LibFertilizer} from "contracts/libraries/LibFertilizer.sol";
 import {ReentrancyGuard} from "contracts/beanstalk/ReentrancyGuard.sol";
 
 /**
- * @notice Constraints of how many Beans to send to a given route at the current time.
- * @param points Weight of this shipment route relative to all routes.
- * @param cap Maximum Beans that can be received by this stream at this time.
- */
-struct ShipmentPlan {
-    uint256 points;
-    uint256 cap;
-}
-
-/**
  * @title Receiving
  * @author funderbrker
  * @notice Holds the functions responsible for receiving Bean shipments after mints. These
@@ -32,6 +22,12 @@ struct ShipmentPlan {
 contract Receiving is ReentrancyGuard {
     using SafeCast for uint256;
 
+    /**
+     * @notice General entry point to receive Beans at a given component of the system.
+     * @param recipient The Beanstalk component that will receive the Beans.
+     * @param amount The amount of Beans to receive.
+     * @param data Additional data to pass to the receiving function.
+     */
     function receiveShipment(Storage.Recipient recipient, uint256 amount, bytes memory data) internal {
         if (recipient == Storage.Recipient.Silo) {
             siloReceive(amount, data);
@@ -44,6 +40,8 @@ contract Receiving is ReentrancyGuard {
 
     /**
      * @notice Receive Beans at the Silo, distributing Stalk & Earned Beans.
+     * @dev Data param not used.
+     * @param amount Amount of Beans to receive.
      */
     function siloReceive(uint256 amount, bytes memory) private {
         // `s.earnedBeans` is an accounting mechanism that tracks the total number
@@ -55,6 +53,7 @@ contract Receiving is ReentrancyGuard {
         // Stalk is created here because only Beans that are allocated to the Silo receive Stalk.
         s.silo.stalk = s.silo.stalk + (amount * C.STALK_PER_BEAN);
 
+        // SafeCast unnecessary here because of prior safe cast.
         s.siloBalances[C.BEAN].deposited = s.siloBalances[C.BEAN].deposited + uint128(amount);
         s.siloBalances[C.BEAN].depositedBdv = s.siloBalances[C.BEAN].depositedBdv + uint128(amount);
     }
@@ -62,6 +61,8 @@ contract Receiving is ReentrancyGuard {
     /**
      * @notice Receive Beans at the Field. The next `amount` Pods become harvestable.
      * @dev Amount should never exceed the number of Pods that are not yet Harvestable.
+     * @dev Data param not used.
+     * @param amount Amount of Beans to receive.
      */
     function fieldReceive(uint256 amount, bytes memory) private {
         s.field.harvestable = s.field.harvestable + amount;
@@ -69,6 +70,8 @@ contract Receiving is ReentrancyGuard {
 
     /**
      * @notice Receive Beans at the Barn. Amount of Sprouts become Rinsible.
+     * @dev Data param not used.
+     * @param amount Amount of Beans to receive.
      */
     function barnReceive(uint256 amount, bytes memory) private {
         uint256 deltaFertilized;

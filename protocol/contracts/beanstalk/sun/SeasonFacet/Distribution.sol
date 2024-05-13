@@ -2,10 +2,13 @@
 
 pragma solidity ^0.8.20;
 
-import {C} from "contracts/C.sol";
 import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
+
+import {C} from "contracts/C.sol";
 import {AppStorage, Storage} from "contracts/beanstalk/AppStorage.sol";
-import {ShipmentPlan, Receiving} from "./Receiving.sol";
+import {Receiving} from "contracts/beanstalk/sun/SeasonFacet/Receiving.sol";
+import {ShipmentPlan} from "contracts/ecosystem/ShipmentPlanner.sol";
+import {LibDiamond} from "contracts/libraries/LibDiamond.sol";
 
 /**
  * @title Distribution
@@ -31,7 +34,7 @@ contract Distribution is Receiving {
      * @notice Emitted when the shipment routes in storage are replaced with a new set of routes.
      * @param newShipmentRoutes New set of ShipmentRoutes.
      */
-    event ShipmentRoutesSet(ShipmentRoutes[] newShipmentRoutes);
+    event ShipmentRoutesSet(Storage.ShipmentRoute[] newShipmentRoutes);
 
     //////////////////// REWARD BEANS ////////////////////
 
@@ -92,6 +95,39 @@ contract Distribution is Receiving {
     }
 
     /**
+     * @notice Determines the amount of Beans to distribute to each shipping route based on points.
+     * @dev Does not factor in route cap.
+     * @dev If points are 0, does not alter the associated shippingAmount.
+     * @dev Assumes shipmentAmounts and shipmentRoutes have matching shape and ordering.
+     */
+    function getBeansFromPoints(
+        uint256[] memory shipmentAmounts,
+        ShipmentPlan[] memory shipmentPlans,
+        uint256 totalPoints,
+        uint256 beansToShip
+    ) private pure {
+        for (uint256 i; i < shipmentPlans.length; i++) {
+            // Do not modify amount for streams with 0 points. They either are zero or have already been set.
+            if (shipmentPlans[i].points == 0) continue;
+            shipmentAmounts[i] = (beansToShip * shipmentPlans[i].points) / totalPoints; // round down
+        }
+    }
+
+    function hashShipmentRoute(
+        Storage.ShipmentRoute memory shipmentRoute
+    ) public pure returns (bytes32 hash) {
+        return
+            keccak256(
+                abi.encode(
+                    shipmentRoute.planContract,
+                    shipmentRoute.planSelector,
+                    uint8(shipmentRoute.recipient),
+                    keccak256(shipmentRoute.data)
+                )
+            );
+    }
+
+    /**
      * @notice Gets the shipping plan for all shipping routes.
      * @dev Determines which routes are active and how many Beans they will receive.
      * @dev GetPlan functions should never fail/revert. Else they will have no Beans allocated.
@@ -117,39 +153,12 @@ contract Distribution is Receiving {
      * @notice Replaces the entire set of ShipmentRoutes with a new set.
      * @dev Changes take effect immediately and will be seen at the next sunrise mint.
      */
-    function setShipmentRoutes(ShipmentRoutes[] shipmentRoutes) external {
+    function setShipmentRoutes(Storage.ShipmentRoute[] calldata shipmentRoutes) external {
         LibDiamond.enforceIsContractOwner();
         delete s.shipmentRoutes;
         for (uint256 i; i < shipmentRoutes.length; i++) {
             s.shipmentRoutes.push(shipmentRoutes[i]);
         }
         emit ShipmentRoutesSet(shipmentRoutes);
-    }
-
-    //////////////////////////////////// SHIPPING PLAN GETTERS ////////////////////////////////////
-    // These getters do *not* need to live inside of the Beanstalk Diamond. However, this initial
-    // set of getters is placed here for simplicity. It is possible to add a new Shipping Route
-    // and dynamic Plan without modifying Beanstalk Contract logic.
-
-    /**
-     * @notice Get the current points and cap for Barn shipments.
-     */
-    function getBarnPlan(bytes memory) external view returns (ShipmentPlan memory shipmentPlan) {
-        return ShipmentPlan({points: 333_333, cap: s.unfertilizedIndex - s.fertilizedIndex});
-    }
-
-    /**
-     * @notice Get the current points and cap for Field shipments.
-     */
-    function getFieldPlan(bytes memory) external view returns (ShipmentPlan memory shipmentPlan) {
-        return ShipmentPlan({points: 333_333, cap: s.field.pods - s.field.harvestable});
-    }
-
-    /**
-     * @notice Get the current points and cap for Silo shipments.
-     * @dev The Silo has no cap.
-     */
-    function getSiloPlan(bytes memory) external pure returns (ShipmentPlan memory shipmentPlan) {
-        return ShipmentPlan({points: 333_333, cap: type(uint256).max});
     }
 }
