@@ -13,13 +13,10 @@ import { handleSow, handlePlotTransfer } from "../src/FieldHandler";
 import { handleIncentive } from "../src/SeasonHandler";
 import { BEANSTALK } from "../../subgraph-core/utils/Constants";
 import { ZERO_BI } from "../../subgraph-core/utils/Decimals";
+import { beans_BI as beans, podlineMil_BI as mil } from "../../subgraph-core/tests/Values";
 
 const ANVIL_ADDR_1 = "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266".toLowerCase();
 const ANVIL_ADDR_2 = "0x70997970C51812dc3A010C7d01b50e0d17dc79C8".toLowerCase();
-
-// These functions may exist elsewhere but I dont know of them
-const beans = (b: number): BigInt => BigInt.fromI32(<i32>b).times(BigInt.fromI32(10).pow(6));
-const mil = (m: number): BigInt => BigInt.fromI32(<i32>m).times(BigInt.fromI32(10).pow(12));
 
 // 2 plots: each sow 500 for 7500 at 10m and 15m in line.
 const plot1Start = mil(10);
@@ -79,9 +76,9 @@ const assertFieldHas = (field: string, unharvestable: BigInt, harvestable: BigIn
 };
 
 const setHarvestable = (harvestableIndex: BigInt): BigInt => {
-  createMockedFunction(BEANSTALK, "harvestableIndex", "harvestableIndex():(uint256)")
-    // @ts-expect-error:2322
-    .returns([ethereum.Value.fromUnsignedBigInt(harvestableIndex)]);
+  createMockedFunction(BEANSTALK, "harvestableIndex", "harvestableIndex():(uint256)").returns([
+    ethereum.Value.fromUnsignedBigInt(harvestableIndex)
+  ]);
 
   // Incentivization event triggers update of harvestable amount of each plot
   handleIncentive(createIncentivizationEvent(ANVIL_ADDR_1, BigInt.fromI32(123456)));
@@ -106,7 +103,6 @@ describe("Field: Plot Transfer", () => {
   });
 
   afterEach(() => {
-    log.debug("clearing the store", []);
     clearStore();
   });
 

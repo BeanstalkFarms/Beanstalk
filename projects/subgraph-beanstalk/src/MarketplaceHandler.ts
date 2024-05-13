@@ -76,7 +76,7 @@ export function handlePodListingCreated(event: PodListingCreated_v1): void {
   listing.pricePerPod = event.params.pricePerPod;
 
   // Amounts [Relative to Original]
-  listing.originalIndex = event.params.index;
+  listing.originalIndex = event.params.index; // TODO: I think this should be +start
   listing.originalAmount = event.params.amount;
 
   // Amounts [Relative to Child]
