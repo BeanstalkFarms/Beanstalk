@@ -117,7 +117,8 @@ contract Distribution is Receiving {
      * @notice Replaces the entire set of ShipmentRoutes with a new set.
      * @dev Changes take effect immediately and will be seen at the next sunrise mint.
      */
-    function setShipmentRoutes(ShipmentRoutes[] shipmentRoutes) {
+    function setShipmentRoutes(ShipmentRoutes[] shipmentRoutes) external {
+        LibDiamond.enforceIsContractOwner();
         delete s.shipmentRoutes;
         for (uint256 i; i < shipmentRoutes.length; i++) {
             s.shipmentRoutes.push(shipmentRoutes[i]);
