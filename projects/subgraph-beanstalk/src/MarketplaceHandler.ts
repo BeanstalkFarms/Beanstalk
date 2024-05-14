@@ -94,7 +94,7 @@ export function handlePodListingCreated(event: PodListingCreated_v1): void {
   plot.save();
 
   /// Update market totals
-  updateMarketListingBalances(event.address, plot.index, false, event.params.amount, ZERO_BI, ZERO_BI, ZERO_BI, event.block.timestamp);
+  updateMarketListingBalances(event.address, plot.index, event.params.amount, ZERO_BI, ZERO_BI, ZERO_BI, event.block.timestamp);
 
   /// Save raw event data
   let id = "podListingCreated-" + event.transaction.hash.toHexString() + "-" + event.logIndex.toString();
@@ -119,16 +119,7 @@ export function handlePodListingCreated(event: PodListingCreated_v1): void {
 export function handlePodListingCancelled(event: PodListingCancelled): void {
   let listing = loadPodListing(event.params.account, event.params.index);
 
-  updateMarketListingBalances(
-    event.address,
-    event.params.index,
-    false,
-    ZERO_BI,
-    listing.remainingAmount,
-    ZERO_BI,
-    ZERO_BI,
-    event.block.timestamp
-  );
+  updateMarketListingBalances(event.address, event.params.index, ZERO_BI, listing.remainingAmount, ZERO_BI, ZERO_BI, event.block.timestamp);
 
   listing.status = listing.filled == ZERO_BI ? "CANCELLED" : "CANCELLED_PARTIAL";
   listing.cancelledAmount = listing.remainingAmount;
@@ -155,16 +146,7 @@ export function handlePodListingFilled(event: PodListingFilled_v1): void {
 
   let beanAmount = BigInt.fromI32(listing.pricePerPod).times(event.params.amount).div(BigInt.fromI32(1000000));
 
-  updateMarketListingBalances(
-    event.address,
-    event.params.index,
-    false,
-    ZERO_BI,
-    ZERO_BI,
-    event.params.amount,
-    beanAmount,
-    event.block.timestamp
-  );
+  updateMarketListingBalances(event.address, event.params.index, ZERO_BI, ZERO_BI, event.params.amount, beanAmount, event.block.timestamp);
 
   listing.filledAmount = event.params.amount;
   listing.remainingAmount = listing.remainingAmount.minus(event.params.amount);
@@ -254,7 +236,7 @@ export function handlePodOrderCreated(event: PodOrderCreated_v1): void {
   order.creationHash = event.transaction.hash.toHexString();
   order.save();
 
-  updateMarketOrderBalances(event.address, order.id, false, order.beanAmount, ZERO_BI, ZERO_BI, ZERO_BI, event.block.timestamp);
+  updateMarketOrderBalances(event.address, order.id, order.beanAmount, ZERO_BI, ZERO_BI, ZERO_BI, event.block.timestamp);
 
   // Save the raw event data
   let id = "podOrderCreated-" + event.transaction.hash.toHexString() + "-" + event.logIndex.toString();
@@ -298,7 +280,7 @@ export function handlePodOrderFilled(event: PodOrderFilled_v1): void {
   fill.costInBeans = beanAmount;
   fill.save();
 
-  updateMarketOrderBalances(event.address, order.id, false, ZERO_BI, ZERO_BI, event.params.amount, beanAmount, event.block.timestamp);
+  updateMarketOrderBalances(event.address, order.id, ZERO_BI, ZERO_BI, event.params.amount, beanAmount, event.block.timestamp);
 
   if (order.status == "FILLED") {
     let market = loadPodMarketplace(event.address);
@@ -343,7 +325,6 @@ export function handlePodOrderCancelled(event: PodOrderCancelled): void {
     updateMarketOrderBalances(
       event.address,
       order.id,
-      false,
       ZERO_BI,
       order.beanAmount.minus(order.beanAmountFilled),
       ZERO_BI,
@@ -424,7 +405,7 @@ export function handlePodListingCreated_v1_1(event: PodListingCreated_v1_1): voi
   plot.save();
 
   /// Update market totals
-  updateMarketListingBalances(event.address, plot.index, false, event.params.amount, ZERO_BI, ZERO_BI, ZERO_BI, event.block.timestamp);
+  updateMarketListingBalances(event.address, plot.index, event.params.amount, ZERO_BI, ZERO_BI, ZERO_BI, event.block.timestamp);
 
   /// Save raw event data
   let id = "podListingCreated-" + event.transaction.hash.toHexString() + "-" + event.logIndex.toString();
@@ -506,7 +487,7 @@ export function handlePodListingCreated_v2(event: PodListingCreated_v2): void {
   plot.save();
 
   /// Update market totals
-  updateMarketListingBalances(event.address, plot.index, false, event.params.amount, ZERO_BI, ZERO_BI, ZERO_BI, event.block.timestamp);
+  updateMarketListingBalances(event.address, plot.index, event.params.amount, ZERO_BI, ZERO_BI, ZERO_BI, event.block.timestamp);
 
   /// Save  raw event data
   let id = "podListingCreated-" + event.transaction.hash.toHexString() + "-" + event.logIndex.toString();
@@ -536,7 +517,6 @@ export function handlePodListingFilled_v2(event: PodListingFilled_v2): void {
   updateMarketListingBalances(
     event.address,
     event.params.index,
-    false,
     ZERO_BI,
     ZERO_BI,
     event.params.amount,
@@ -617,9 +597,8 @@ export function handlePodOrderCreated_v2(event: PodOrderCreated_v2): void {
   let order = loadPodOrder(event.params.id);
   let farmer = loadFarmer(event.params.account);
 
-  let historicalOrder: PodOrder | null = null;
   if (order.status != "") {
-    historicalOrder = createHistoricalPodOrder(order);
+    createHistoricalPodOrder(order);
   }
 
   order.historyID = order.id + "-" + event.block.timestamp.toString();
@@ -637,16 +616,7 @@ export function handlePodOrderCreated_v2(event: PodOrderCreated_v2): void {
   order.creationHash = event.transaction.hash.toHexString();
   order.save();
 
-  updateMarketOrderBalances(
-    event.address,
-    order.id,
-    historicalOrder !== null,
-    event.params.amount,
-    ZERO_BI,
-    ZERO_BI,
-    ZERO_BI,
-    event.block.timestamp
-  );
+  updateMarketOrderBalances(event.address, order.id, event.params.amount, ZERO_BI, ZERO_BI, ZERO_BI, event.block.timestamp);
 
   // Save the raw event data
   let id = "podOrderCreated-" + event.transaction.hash.toHexString() + "-" + event.logIndex.toString();
@@ -693,7 +663,6 @@ export function handlePodOrderFilled_v2(event: PodOrderFilled_v2): void {
   updateMarketOrderBalances(
     event.address,
     order.id,
-    false,
     ZERO_BI,
     ZERO_BI,
     event.params.amount,
@@ -739,7 +708,6 @@ export function handlePodOrderFilled_v2(event: PodOrderFilled_v2): void {
 function updateMarketListingBalances(
   marketAddress: Address,
   plotIndex: BigInt,
-  isRelisting: boolean,
   newPodAmount: BigInt,
   cancelledPodAmount: BigInt,
   filledPodAmount: BigInt,
@@ -750,17 +718,16 @@ function updateMarketListingBalances(
   let marketHourly = loadPodMarketplaceHourlySnapshot(marketAddress, market.season, timestamp);
   let marketDaily = loadPodMarketplaceDailySnapshot(marketAddress, timestamp);
 
-  if (!isRelisting) {
-    // Update Listing indexes
-    let marketIndexes = market.listingIndexes;
-    if (newPodAmount > ZERO_BI) {
-      marketIndexes.push(plotIndex);
-      marketIndexes.sort();
-    }
-    if (cancelledPodAmount > ZERO_BI || filledPodAmount > ZERO_BI) {
-      marketIndexes.splice(market.listingIndexes.indexOf(plotIndex), 1);
-    }
-    market.listingIndexes = marketIndexes;
+  let marketIndexes = market.listingIndexes;
+
+  // Update Listing indexes
+  if (newPodAmount > ZERO_BI) {
+    marketIndexes.push(plotIndex);
+    marketIndexes.sort();
+  }
+  if (cancelledPodAmount > ZERO_BI || filledPodAmount > ZERO_BI) {
+    let listingIndex = market.listingIndexes.indexOf(plotIndex);
+    marketIndexes.splice(listingIndex, 1);
   }
   market.listedPods = market.listedPods.plus(newPodAmount);
   market.availableListedPods = market.availableListedPods.plus(newPodAmount).minus(cancelledPodAmount).minus(filledPodAmount);
@@ -768,6 +735,7 @@ function updateMarketListingBalances(
   market.filledListedPods = market.filledListedPods.plus(filledPodAmount);
   market.podVolume = market.podVolume.plus(filledPodAmount);
   market.beanVolume = market.beanVolume.plus(filledBeanAmount);
+  market.listingIndexes = marketIndexes;
   market.save();
 
   marketHourly.season = market.season;
@@ -812,7 +780,6 @@ function updateMarketListingBalances(
 function updateMarketOrderBalances(
   marketAddress: Address,
   orderID: string,
-  isReorder: boolean,
   newBeanAmount: BigInt,
   cancelledBeanAmount: BigInt,
   filledPodAmount: BigInt,
@@ -823,16 +790,14 @@ function updateMarketOrderBalances(
   let marketHourly = loadPodMarketplaceHourlySnapshot(marketAddress, market.season, timestamp);
   let marketDaily = loadPodMarketplaceDailySnapshot(marketAddress, timestamp);
 
-  if (!isReorder) {
-    // Update Order indexes
-    let marketOrders = market.orders;
-    if (newBeanAmount > ZERO_BI) {
-      marketOrders.push(orderID);
-    }
-    if (cancelledBeanAmount > ZERO_BI) {
-      marketOrders.splice(market.orders.indexOf(orderID), 1);
-    }
-    market.orders = marketOrders;
+  let marketOrders = market.orders;
+
+  if (newBeanAmount > ZERO_BI) {
+    marketOrders.push(orderID);
+  }
+  if (cancelledBeanAmount > ZERO_BI) {
+    let orderIndex = market.orders.indexOf(orderID);
+    marketOrders.splice(orderIndex, 1);
   }
   market.orderBeans = market.orderBeans.plus(newBeanAmount);
   market.filledOrderedPods = market.filledOrderedPods.plus(filledPodAmount);
@@ -840,6 +805,7 @@ function updateMarketOrderBalances(
   market.podVolume = market.podVolume.plus(filledPodAmount);
   market.beanVolume = market.beanVolume.plus(filledBeanAmount);
   market.cancelledOrderBeans = market.cancelledOrderBeans.plus(cancelledBeanAmount);
+  market.orders = marketOrders;
   market.save();
 
   marketHourly.deltaOrderBeans = marketHourly.deltaOrderBeans.plus(newBeanAmount);
