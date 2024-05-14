@@ -2,8 +2,7 @@
  * SPDX-License-Identifier: MIT
  **/
 
-pragma solidity =0.7.6;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.20;
 
 import "./PodTransfer.sol";
 import "contracts/libraries/Token/LibTransfer.sol";
@@ -14,7 +13,7 @@ import "contracts/libraries/LibTractor.sol";
  **/
 
 contract Listing is PodTransfer {
-    using SafeMath for uint256;
+    using LibRedundantMath256 for uint256;
 
     struct PodListing {
         address account;
@@ -167,10 +166,10 @@ contract Listing is PodTransfer {
     ) internal pure returns (uint256 amount) {
         amount = (fillBeanAmount * 1000000) / pricePerPod;
 
-        uint256 remainingAmount = podListingAmount.sub(
-            amount,
-            "Marketplace: Not enough pods in Listing."
-        );
+        if (amount > podListingAmount) {
+            revert("Marketplace: Not enough pods in Listing.");
+        }
+        uint256 remainingAmount = podListingAmount.sub(amount);
         if (remainingAmount <= (1000000 / pricePerPod)) amount = podListingAmount;
     }
 

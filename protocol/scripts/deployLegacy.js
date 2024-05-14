@@ -7,7 +7,6 @@ const {
   impersonateWeth, 
   impersonateUnripe, 
   impersonatePrice,
-  impersonateBlockBasefee,
   impersonateEthUsdcUniswap,
   impersonateEthUsdtUniswap,
   impersonateChainlinkAggregator,
@@ -255,7 +254,6 @@ async function main(scriptName, verbose = true, mock = false, reset = true) {
     }
     await impersonateBean3CrvMetapool()
     await impersonateUnripe()
-    await impersonateBlockBasefee();
   }
 
   const [beanstalkDiamond, diamondCut] = await diamond.deploy({

@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity =0.7.6;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.20;
 
 import "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
 
@@ -36,7 +35,7 @@ contract MockMetadataERC1155 is ERC1155 {
         mockMetadataFacetaddress = metadataAddress;
     }
 
-    function uri(uint256 depositId) external view override returns (string memory) {
+    function uri(uint256 depositId) public view override returns (string memory) {
         return IMetadataFacet(mockMetadataFacetaddress).uri(depositId);
     }
 

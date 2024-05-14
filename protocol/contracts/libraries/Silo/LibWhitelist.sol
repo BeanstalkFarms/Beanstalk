@@ -2,8 +2,7 @@
  SPDX-License-Identifier: MIT
 */
 
-pragma solidity =0.7.6;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.20;
 
 import {C} from "../../C.sol";
 import {LibAppStorage, AppStorage, Storage} from "../LibAppStorage.sol";
@@ -11,7 +10,7 @@ import {LibTokenSilo} from "contracts/libraries/Silo/LibTokenSilo.sol";
 import {LibWhitelistedTokens} from "contracts/libraries/Silo/LibWhitelistedTokens.sol";
 import {LibUnripe} from "contracts/libraries/LibUnripe.sol";
 import {LibWell, IWell} from "contracts/libraries/Well/LibWell.sol";
-import {LibSafeMath32} from "contracts/libraries/LibSafeMath32.sol";
+import {LibRedundantMath32} from "contracts/libraries/LibRedundantMath32.sol";
 
 /**
  * @title LibWhitelist
@@ -19,7 +18,7 @@ import {LibSafeMath32} from "contracts/libraries/LibSafeMath32.sol";
  * @notice Handles adding and removing ERC-20 tokens from the Silo Whitelist.
  */
 library LibWhitelist {
-    using LibSafeMath32 for uint32;
+    using LibRedundantMath32 for uint32;
 
     /**
      * @notice Emitted when a token is added to the Silo Whitelist.

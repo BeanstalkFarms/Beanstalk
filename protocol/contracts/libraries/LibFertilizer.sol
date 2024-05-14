@@ -2,20 +2,19 @@
  SPDX-License-Identifier: MIT
 */
 
-pragma solidity =0.7.6;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.20;
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
-import {SafeCast} from "@openzeppelin/contracts/utils/SafeCast.sol";
+import {LibRedundantMath256} from "contracts/libraries/LibRedundantMath256.sol";
+import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
 import {AppStorage, LibAppStorage} from "./LibAppStorage.sol";
-import {LibSafeMath128} from "./LibSafeMath128.sol";
+import {LibRedundantMath128} from "./LibRedundantMath128.sol";
 import {C} from "../C.sol";
 import {LibUnripe} from "./LibUnripe.sol";
 import {IWell} from "contracts/interfaces/basin/IWell.sol";
 import {LibBarnRaise} from "./LibBarnRaise.sol";
 import {LibDiamond} from "contracts/libraries/LibDiamond.sol";
-import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
+import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {LibWell} from "contracts/libraries/Well/LibWell.sol";
 import {LibUsdOracle} from "contracts/libraries/Oracle/LibUsdOracle.sol";
 import {LibTractor} from "contracts/libraries/LibTractor.sol";
@@ -26,8 +25,8 @@ import {LibTractor} from "contracts/libraries/LibTractor.sol";
  **/
 
 library LibFertilizer {
-    using SafeMath for uint256;
-    using LibSafeMath128 for uint128;
+    using LibRedundantMath256 for uint256;
+    using LibRedundantMath128 for uint128;
     using SafeCast for uint256;
     using SafeERC20 for IERC20;
     using LibWell for address;
@@ -229,5 +228,34 @@ library LibFertilizer {
         );
         LibUnripe.decrementUnderlying(C.UNRIPE_LP, balanceOfUnderlying);
         LibUnripe.switchUnderlyingToken(C.UNRIPE_LP, well);
+    }
+
+    /**
+     * Taken from previous versions of OpenZeppelin Library.
+     * @dev Returns true if `account` is a contract.
+     *
+     * [IMPORTANT]
+     * ====
+     * It is unsafe to assume that an address for which this function returns
+     * false is an externally-owned account (EOA) and not a contract.
+     *
+     * Among others, `isContract` will return false for the following
+     * types of addresses:
+     *
+     *  - an externally-owned account
+     *  - a contract in construction
+     *  - an address where a contract will be created
+     *  - an address where a contract lived, but was destroyed
+     * ====
+     */
+    function isContract(address account) internal view returns (bool) {
+        // This method relies on extcodesize, which returns 0 for contracts in
+        // construction, since the code is only stored at the end of the
+        // constructor execution.
+        uint256 size;
+        assembly {
+            size := extcodesize(account)
+        }
+        return size > 0;
     }
 }

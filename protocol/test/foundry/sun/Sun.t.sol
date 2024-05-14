@@ -31,7 +31,11 @@ contract SunTest is TestHelper {
         // cases can only range between 0 and 143.
         caseId = bound(caseId, 0, 143);
         // deltaB cannot exceed uint128 max.
-        deltaB = bound(deltaB, -int256(type(uint128).max), int256(type(uint128).max));
+        deltaB = bound(
+            deltaB,
+            -int256(uint256(type(uint128).max)),
+            int256(uint256(type(uint128).max))
+        );
 
         // soil event check.
         uint256 soilIssued;
@@ -83,7 +87,11 @@ contract SunTest is TestHelper {
         // cases can only range between 0 and 143.
         caseId = bound(caseId, 0, 143);
         // deltaB cannot exceed uint128 max.
-        deltaB = bound(deltaB, -int256(type(uint128).max), int256(type(uint128).max));
+        deltaB = bound(
+            deltaB,
+            -int256(uint256(type(uint128).max)),
+            int256(uint256(type(uint128).max))
+        );
         // increase pods in field.
         bs.incrementTotalPodsE(podsInField);
 
@@ -143,7 +151,11 @@ contract SunTest is TestHelper {
         // cases can only range between 0 and 143.
         caseId = bound(caseId, 0, 143);
         // deltaB cannot exceed uint128 max.
-        deltaB = bound(deltaB, -int256(type(uint128).max), int256(type(uint128).max));
+        deltaB = bound(
+            deltaB,
+            -int256(uint256(type(uint128).max)),
+            int256(uint256(type(uint128).max))
+        );
 
         // test is capped to CP2 constraints. See {ConstantProduct2.sol}
         sproutsInBarn = bound(sproutsInBarn, 0, type(uint72).max);

@@ -2,13 +2,13 @@
  SPDX-License-Identifier: MIT
 */
 
-pragma solidity =0.7.6;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.20;
 
+import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
 import "contracts/beanstalk/metadata/MetadataImage.sol";
 import {LibBytes} from "contracts/libraries/LibBytes.sol";
 import {LibTokenSilo} from "contracts/libraries/Silo/LibTokenSilo.sol";
-import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
+import {LibRedundantMath256} from "contracts/libraries/LibRedundantMath256.sol";
 
 /**
  * @author brean
@@ -20,15 +20,15 @@ import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
  * (MockMetadataFacet with ERC1155 exceeds the contract size limit.)
  **/
 contract TestnetMetadataFacet is MetadataImage {
-    using SafeMath for uint256;
+    using LibRedundantMath256 for uint256;
 
     // inital conditions: 2 seeds, 1000 seasons has elapsed from milestone season.
     uint256 public stalkEarnedPerSeason = 2e6;
     uint256 public seasonsElapsed = 1000;
     uint256 public stalkIssuedPerBdv = 10000;
 
-    using LibStrings for uint256;
-    using LibStrings for int256;
+    using Strings for uint256;
+    using Strings for int256;
 
     event URI(string _uri, uint256 indexed _id);
 
@@ -39,22 +39,22 @@ contract TestnetMetadataFacet is MetadataImage {
      * Deposits are stored as a mapping of a uint256 to a Deposit struct.
      * ERC20 deposits are represented by the concatination of the token address and the stem. (20 + 12 bytes).
      */
-    function uri(uint256 depositId) external view returns (string memory) {
+    function uri(uint256 depositId) public view returns (string memory) {
         (address token, int96 stem) = LibBytes.unpackAddressAndStem(depositId);
-        int96 stemTip = int96(stalkEarnedPerSeason.mul(seasonsElapsed));
+        int96 stemTip = int96(int256(stalkEarnedPerSeason.mul(seasonsElapsed)));
         bytes memory attributes = abi.encodePacked(
             ', "attributes": [ { "trait_type": "Token", "value": "',
             getTokenName(token),
             '"}, { "trait_type": "Token Address", "value": "',
-            LibStrings.toHexString(uint256(token), 20),
+            Strings.toHexString(uint256(uint160(token)), 20),
             '"}, { "trait_type": "Id", "value": "',
             depositId.toHexString(32),
             '"}, { "trait_type": "stem", "display_type": "number", "value": ',
-            int256(stem).toString(),
+            int256(stem).toStringSigned(),
             '}, { "trait_type": "inital stalk per BDV", "display_type": "number", "value": ',
             stalkIssuedPerBdv.toString(),
             '}, { "trait_type": "grown stalk per BDV", "display_type": "number", "value": ',
-            uint256(stemTip - stem).toString(),
+            uint256(int256(stemTip - stem)).toString(),
             '}, { "trait_type": "stalk grown per BDV per season", "display_type": "number", "value": ',
             stalkEarnedPerSeason.toString()
         );

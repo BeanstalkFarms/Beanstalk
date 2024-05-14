@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: MIT
-pragma experimental ABIEncoderV2;
-pragma solidity =0.7.6;
 
-import "@openzeppelin/contracts/drafts/IERC20Permit.sol";
+pragma solidity ^0.8.20;
+
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 enum From {

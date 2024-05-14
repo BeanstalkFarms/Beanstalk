@@ -2,8 +2,7 @@
  * SPDX-License-Identifier: MIT
  **/
 
-pragma solidity =0.7.6;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.20;
 
 import "./Order.sol";
 import {Invariable} from "contracts/beanstalk/Invariable.sol";
@@ -138,9 +137,10 @@ contract MarketplaceFacet is Invariable, Order {
         uint256 amount = s.a[sender].field.plots[id];
         require(amount > 0, "Field: Plot not owned by user.");
         require(end > start && amount >= end, "Field: Pod range invalid.");
-        amount = end - start; // Note: SafeMath is redundant here.
+        amount = end - start;
         if (
-            LibTractor._user() != sender && allowancePods(sender, LibTractor._user()) != uint256(-1)
+            LibTractor._user() != sender &&
+            allowancePods(sender, LibTractor._user()) != type(uint256).max
         ) {
             decrementAllowancePods(sender, LibTractor._user(), amount);
         }

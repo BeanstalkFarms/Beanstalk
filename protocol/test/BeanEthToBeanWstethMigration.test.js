@@ -191,13 +191,13 @@ describe.skip("Bean:Eth to Bean:Wsteth Migration", function () {
       it("enrootDeposit fails", async function () {
         await expect(
           beanstalk.connect(publius).enrootDeposit(UNRIPE_LP, "-56836000000", to6("1"))
-        ).to.be.revertedWith("SafeMath: subtraction overflow");
+        ).to.be.revertedWith("panic code 0x11");
       });
 
       it("enrootDeposits fails", async function () {
         await expect(
           beanstalk.connect(publius).enrootDeposits(UNRIPE_LP, ["-56836000000"], [to6("1")])
-        ).to.be.revertedWith("SafeMath: subtraction overflow");
+        ).to.be.revertedWith("panic code 0x11");
       });
 
       it("convert Unripe Bean to LP fails", async function () {
@@ -223,7 +223,7 @@ describe.skip("Bean:Eth to Bean:Wsteth Migration", function () {
               ["-16272000000"],
               [to6("200")]
             )
-        ).to.be.revertedWith("SafeMath: division by zero");
+        ).to.be.revertedWith("panic code 0x12");
       });
 
       it("convert Unripe LP to Bean fails", async function () {
@@ -239,7 +239,7 @@ describe.skip("Bean:Eth to Bean:Wsteth Migration", function () {
               ["-56836000000"],
               [to6("200")]
             )
-        ).to.be.revertedWith("SafeMath: division by zero");
+        ).to.be.revertedWith("panic code 0x12");
       });
     });
   });

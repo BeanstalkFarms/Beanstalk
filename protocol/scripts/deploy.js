@@ -19,7 +19,6 @@ const {
   impersonateWeth,
   impersonateUnripe,
   impersonatePrice,
-  impersonateBlockBasefee,
   impersonateChainlinkAggregator,
   impersonateUniswapV3,
   impersonateWsteth,
@@ -96,7 +95,6 @@ async function main(
   // These should be impersonated on a fresh network state.
   let basinComponents = []
   if (reset) {
-    await impersonateBlockBasefee() // Block fee contract (sunrise)
     await impersonatePrice() // BeanstalkPrice contract (frontend price)
     await impersonatePipeline() // Pipeline contract.
   }

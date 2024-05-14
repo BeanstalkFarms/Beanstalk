@@ -2,10 +2,9 @@
  SPDX-License-Identifier: MIT
 */
 
-pragma solidity =0.7.6;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.20;
 
-import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
+import {LibRedundantMath256} from "contracts/libraries/LibRedundantMath256.sol";
 
 /**
  * @title Decimal
@@ -14,7 +13,7 @@ import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
  * Library that defines a fixed-point number with 18 decimal places.
  */
 library Decimal {
-    using SafeMath for uint256;
+    using LibRedundantMath256 for uint256;
 
     // ============ Constants ============
 
@@ -59,7 +58,10 @@ library Decimal {
         uint256 b,
         string memory reason
     ) internal pure returns (D256 memory) {
-        return D256({value: self.value.sub(b.mul(BASE), reason)});
+        if (b.mul(BASE) > self.value) {
+            revert(reason);
+        }
+        return D256({value: self.value.sub(b.mul(BASE))});
     }
 
     function mul(D256 memory self, uint256 b) internal pure returns (D256 memory) {
@@ -96,7 +98,10 @@ library Decimal {
         D256 memory b,
         string memory reason
     ) internal pure returns (D256 memory) {
-        return D256({value: self.value.sub(b.value, reason)});
+        if (greaterThan(b, self)) {
+            revert(reason);
+        }
+        return D256({value: self.value.sub(b.value)});
     }
 
     function mul(D256 memory self, D256 memory b) internal pure returns (D256 memory) {

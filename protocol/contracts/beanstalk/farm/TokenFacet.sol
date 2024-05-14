@@ -2,16 +2,15 @@
  * SPDX-License-Identifier: MIT
  **/
 
-pragma solidity =0.7.6;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.20;
 
-import {IERC1155Receiver} from "contracts/interfaces/IERC1155Receiver.sol";
 import {LibTractor} from "contracts/libraries/LibTractor.sol";
 import "contracts/libraries/Token/LibTransfer.sol";
 import "contracts/libraries/Token/LibWeth.sol";
 import "contracts/libraries/Token/LibEth.sol";
 import "contracts/libraries/Token/LibTokenPermit.sol";
 import "contracts/libraries/Token/LibTokenApprove.sol";
+import {IERC1155Receiver} from "contracts/interfaces/IERC1155Receiver.sol";
 import "../AppStorage.sol";
 import "../ReentrancyGuard.sol";
 import {Invariable} from "contracts/beanstalk/Invariable.sol";
@@ -28,7 +27,7 @@ contract TokenFacet is Invariable, IERC1155Receiver, ReentrancyGuard {
     }
 
     using SafeERC20 for IERC20;
-    using SafeMath for uint256;
+    using LibRedundantMath256 for uint256;
 
     event InternalBalanceChanged(address indexed user, IERC20 indexed token, int256 delta);
 

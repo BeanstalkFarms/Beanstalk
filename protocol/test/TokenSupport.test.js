@@ -79,7 +79,7 @@ describe("External Token", function () {
             fakeResult.r,
             fakeResult.s
           )
-      ).to.be.revertedWith("ERC20Permit: invalid signature");
+      ).to.be.revertedWith("ERC2612InvalidSigner");
     });
 
     it("revert deadline passed", async function () {
@@ -105,7 +105,7 @@ describe("External Token", function () {
             endedResult.r,
             endedResult.s
           )
-      ).to.be.revertedWith("ERC20Permit: expired deadline");
+      ).to.be.revertedWith("ERC2612ExpiredSignature");
     });
   });
 

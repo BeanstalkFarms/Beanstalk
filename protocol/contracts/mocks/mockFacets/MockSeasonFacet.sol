@@ -1,10 +1,9 @@
 /*
  SPDX-License-Identifier: MIT*/
 
-pragma solidity ^0.7.6;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.20;
 
-import "@openzeppelin/contracts/math/SafeMath.sol";
+import "contracts/libraries/LibRedundantMath256.sol";
 import "contracts/beanstalk/sun/SeasonFacet/SeasonFacet.sol";
 import {LibDiamond} from "contracts/libraries/LibDiamond.sol";
 import {IERC1155} from "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
@@ -16,9 +15,9 @@ import {LibWstethEthOracle} from "contracts/libraries/Oracle/LibWstethEthOracle.
 import {LibWstethUsdOracle} from "contracts/libraries/Oracle/LibWstethUsdOracle.sol";
 import {LibUsdOracle} from "contracts/libraries/Oracle/LibUsdOracle.sol";
 import {LibAppStorage, Storage} from "contracts/libraries/LibAppStorage.sol";
-import {SignedSafeMath} from "@openzeppelin/contracts/math/SignedSafeMath.sol";
+import {LibRedundantMathSigned256} from "contracts/libraries/LibRedundantMathSigned256.sol";
 import {LibGauge} from "contracts/libraries/LibGauge.sol";
-import {LibSafeMath32} from "contracts/libraries/LibSafeMath32.sol";
+import {LibRedundantMath32} from "contracts/libraries/LibRedundantMath32.sol";
 import {LibCurveMinting} from "contracts/libraries/Minting/LibCurveMinting.sol";
 import {LibWellMinting} from "contracts/libraries/Minting/LibWellMinting.sol";
 import {LibEvaluate} from "contracts/libraries/LibEvaluate.sol";
@@ -53,9 +52,9 @@ interface IMockPump {
 }
 
 contract MockSeasonFacet is SeasonFacet {
-    using SafeMath for uint256;
-    using LibSafeMath32 for uint32;
-    using SignedSafeMath for int256;
+    using LibRedundantMath256 for uint256;
+    using LibRedundantMath32 for uint32;
+    using LibRedundantMathSigned256 for int256;
 
     event UpdateTWAPs(uint256[2] balances);
     event DeltaB(int256 deltaB);

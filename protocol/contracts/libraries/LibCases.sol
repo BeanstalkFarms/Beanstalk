@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity =0.7.6;
+pragma solidity ^0.8.20;
 import {LibAppStorage, AppStorage} from "./LibAppStorage.sol";
 
 /**
@@ -106,9 +106,9 @@ library LibCases {
     function decodeCaseData(uint256 caseId) internal view returns (CaseData memory cd) {
         bytes32 _caseData = getDataFromCase(caseId);
         // cd.mT = uint32(bytes4(_caseData)); Uncomment if you want to use mT
-        cd.bT = int8(bytes1(_caseData << 32));
+        cd.bT = int8(uint8(bytes1(_caseData << 32)));
         // cd.mL = uint80(bytes10(_caseData << 40)); Uncomment if you want to use mL
-        cd.bL = int80(bytes10(_caseData << 120));
+        cd.bL = int80(uint80(bytes10(_caseData << 120)));
     }
 
     function setCasesV2() internal {

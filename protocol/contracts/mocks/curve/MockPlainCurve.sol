@@ -2,10 +2,9 @@
  SPDX-License-Identifier: MIT
 */
 
-pragma solidity ^0.7.6;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.20;
 
-import "@openzeppelin/contracts/math/SafeMath.sol";
+import "contracts/libraries/LibRedundantMath256.sol";
 import "../../interfaces/IBean.sol";
 import "../MockToken.sol";
 
@@ -19,7 +18,7 @@ interface I3Curve {
 }
 
 contract MockPlainCurve {
-    using SafeMath for uint256;
+    using LibRedundantMath256 for uint256;
 
     event Approval(address indexed owner, address indexed spender, uint value);
     event Transfer(address indexed from, address indexed to, uint value);
@@ -203,7 +202,7 @@ contract MockPlainCurve {
         uint256 _min_received
     ) external returns (uint256) {
         _update();
-        uint256 i = uint256(_i_);
+        uint256 i = uint256(int256(_i_));
         (uint256 dy, uint256 dy_fee) = _calc_withdraw_one_coin(_burn_amount, _i_, balances);
         require(dy >= _min_received, "Curve: Insufficient Output");
 
@@ -223,7 +222,7 @@ contract MockPlainCurve {
         // First, need to calculate
         //  Get current D
         // Solve Eqn against y_i for D - _token_amount
-        uint256 i = uint256(_i_);
+        uint256 i = uint256(int256(_i_));
         uint256 amp = a;
         uint256[N_COINS] memory rates = rate_multipliers;
         uint256[N_COINS] memory xp = _xp_mem(rates, _balances);
@@ -445,12 +444,9 @@ contract MockPlainCurve {
      * `amount`.
      */
     function transferFrom(address sender, address recipient, uint256 amount) public returns (bool) {
+        require(amount <= _allowances[sender][msg.sender], "ERC20InsufficientAllowance");
         _transfer(sender, recipient, amount);
-        _approve(
-            sender,
-            msg.sender,
-            _allowances[sender][msg.sender].sub(amount, "ERC20: transfer amount exceeds allowance")
-        );
+        _approve(sender, msg.sender, _allowances[sender][msg.sender].sub(amount));
         return true;
     }
 
@@ -486,14 +482,7 @@ contract MockPlainCurve {
      * `subtractedValue`.
      */
     function decreaseAllowance(address spender, uint256 subtractedValue) public returns (bool) {
-        _approve(
-            msg.sender,
-            spender,
-            _allowances[msg.sender][spender].sub(
-                subtractedValue,
-                "ERC20: decreased allowance below zero"
-            )
-        );
+        _approve(msg.sender, spender, _allowances[msg.sender][spender].sub(subtractedValue));
         return true;
     }
 
@@ -514,11 +503,9 @@ contract MockPlainCurve {
     function _transfer(address sender, address recipient, uint256 amount) internal {
         require(sender != address(0), "ERC20: transfer from the zero address");
         require(recipient != address(0), "ERC20: transfer to the zero address");
+        require(amount <= _balanceOf[sender], "ERC20: transfer amount exceeds balance");
 
-        _balanceOf[sender] = _balanceOf[sender].sub(
-            amount,
-            "ERC20: transfer amount exceeds balance"
-        );
+        _balanceOf[sender] = _balanceOf[sender].sub(amount);
         _balanceOf[recipient] = _balanceOf[recipient].add(amount);
         emit Transfer(sender, recipient, amount);
     }

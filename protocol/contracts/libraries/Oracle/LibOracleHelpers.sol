@@ -2,17 +2,16 @@
  * SPDX-License-Identifier: MIT
  **/
 
-pragma solidity =0.7.6;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.20;
 
-import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
+import {LibRedundantMath256} from "contracts/libraries/LibRedundantMath256.sol";
 /**
  * @title Oracle Helpers Library
  * @author brendan
  * @notice Contains functionalty common to multiple Oracle libraries.
  **/
 library LibOracleHelpers {
-    using SafeMath for uint256;
+    using LibRedundantMath256 for uint256;
 
     uint256 constant ONE = 1e18;
 
@@ -25,6 +24,6 @@ library LibOracleHelpers {
         uint y
     ) internal pure returns (uint256 percentDifference) {
         percentDifference = x.mul(ONE).div(y);
-        percentDifference = x > y ? percentDifference - ONE : ONE - percentDifference; // SafeMath unnecessary due to conditional check
+        percentDifference = x > y ? percentDifference - ONE : ONE - percentDifference;
     }
 }

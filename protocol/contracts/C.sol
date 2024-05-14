@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity =0.7.6;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.20;
 
 import "./interfaces/IBean.sol";
 import "./interfaces/ICurve.sol";
@@ -16,7 +15,6 @@ import "./libraries/Decimal.sol";
  */
 library C {
     using Decimal for Decimal.D256;
-    using SafeMath for uint256;
 
     //////////////////// Globals ////////////////////
 
@@ -72,9 +70,6 @@ library C {
     address internal constant USDT = 0xdAC17F958D2ee523a2206206994597C13D831ec7;
     address internal constant WETH = 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2;
     address internal constant WSTETH = 0x7f39C581F595B53c5cb19bD0b3f8dA6c935E2Ca0;
-
-    // Use external contract for block.basefee as to avoid upgrading existing contracts to solidity v8
-    address private constant BASE_FEE_CONTRACT = 0x84292919cB64b590C0131550483707E43Ef223aC;
 
     //////////////////// Well ////////////////////
 

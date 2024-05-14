@@ -1,9 +1,8 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity =0.7.6;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.20;
 
-import "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "../../interfaces/IBean.sol";
 import "./LibBalance.sol";
 
@@ -14,7 +13,7 @@ import "./LibBalance.sol";
  */
 library LibTransfer {
     using SafeERC20 for IERC20;
-    using SafeMath for uint256;
+    using LibRedundantMath256 for uint256;
 
     enum From {
         EXTERNAL,

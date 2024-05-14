@@ -1,12 +1,11 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity =0.7.6;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.20;
 
 import {C} from "contracts/C.sol";
 import {ReentrancyGuard} from "contracts/beanstalk/ReentrancyGuard.sol";
 import {LibWellMinting} from "contracts/libraries/Minting/LibWellMinting.sol";
-import {SignedSafeMath} from "@openzeppelin/contracts/math/SignedSafeMath.sol";
+import {LibRedundantMathSigned256} from "contracts/libraries/LibRedundantMathSigned256.sol";
 import {LibWhitelistedTokens} from "contracts/libraries/Silo/LibWhitelistedTokens.sol";
 
 /**
@@ -15,7 +14,7 @@ import {LibWhitelistedTokens} from "contracts/libraries/Silo/LibWhitelistedToken
  * @notice Tracks the Delta B in available pools.
  */
 contract Oracle is ReentrancyGuard {
-    using SignedSafeMath for int256;
+    using LibRedundantMathSigned256 for int256;
 
     //////////////////// ORACLE INTERNAL ////////////////////
 

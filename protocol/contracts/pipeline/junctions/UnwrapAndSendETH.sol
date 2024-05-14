@@ -3,7 +3,6 @@
  **/
 
 pragma solidity ^0.8.17;
-pragma experimental ABIEncoderV2;
 
 interface IWETH {
     function withdraw(uint256) external;

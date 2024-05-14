@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: MIT
  */
 
-pragma solidity =0.7.6;
+pragma solidity ^0.8.20;
 pragma abicoder v2;
 
 import "./TokenSilo.sol";
@@ -26,8 +26,8 @@ import {Invariable} from "contracts/beanstalk/Invariable.sol";
  *
  */
 contract SiloFacet is Invariable, TokenSilo {
-    using SafeMath for uint256;
-    using LibSafeMath32 for uint32;
+    using LibRedundantMath256 for uint256;
+    using LibRedundantMath32 for uint32;
 
     //////////////////////// DEPOSIT ////////////////////////
 
