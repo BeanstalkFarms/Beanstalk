@@ -6,7 +6,6 @@ export const ZERO_BI = BigInt.fromI32(0);
 export const ONE_BI = BigInt.fromI32(1);
 export const BI_6 = BigInt.fromI32(6);
 export const BI_10 = BigInt.fromI32(10);
-export const BI_18 = BigInt.fromI32(18);
 export const BI_MAX = BigInt.fromUnsignedBytes(Bytes.fromHexString("0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"));
 export const ZERO_BD = BigDecimal.fromString("0");
 export const ONE_BD = BigDecimal.fromString("1");
