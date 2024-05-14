@@ -8,7 +8,6 @@ const {
   UNRIPE_LP,
   BEAN,
   ETH_USDC_UNISWAP_V3,
-  BASE_FEE_CONTRACT,
   THREE_CURVE,
   THREE_POOL,
   BEAN_3_CURVE,
@@ -42,7 +41,6 @@ describe("Sun", function () {
     this.wsteth = await ethers.getContractAt("MockToken", WSTETH);
 
     // These are needed for sunrise incentive test
-    this.basefee = await ethers.getContractAt("MockBlockBasefee", BASE_FEE_CONTRACT);
     bean = await getBean();
     this.threeCurve = await ethers.getContractAt("MockToken", THREE_CURVE);
     this.threePool = await ethers.getContractAt("Mock3Curve", THREE_POOL);
@@ -263,8 +261,8 @@ describe("Sun", function () {
 
   it("sunrise reward", async function () {
     const VERBOSE = false;
-    // [[pool balances], base fee, secondsLate, toMode]
 
+    // [[pool balances], base fee, secondsLate, toMode]
     const mockedValues = [
       [[to6("10000"), to18("6.666666")], 50 * Math.pow(10, 9), 0, EXTERNAL],
       [[to6("10000"), to18("4.51949333333335")], 30 * Math.pow(10, 9), 0, EXTERNAL],
@@ -273,8 +271,9 @@ describe("Sun", function () {
       [[to6("10000"), to18("6.66666")], 50 * Math.pow(10, 9), 24, INTERNAL],
       [[to6("10000"), to18("6.666666")], 50 * Math.pow(10, 9), 500, INTERNAL]
     ];
-    let START_TIME = (await ethers.provider.getBlock('latest')).timestamp;
-    await timeSkip(START_TIME + 60*60*3);
+
+    let START_TIME = (await ethers.provider.getBlock("latest")).timestamp;
+    await timeSkip(START_TIME + 60 * 60 * 3);
     // This also accomplishes initializing curve oracle
     const initial = await beanstalk.connect(owner).sunrise();
     const block = await ethers.provider.getBlock(initial.blockNumber);
@@ -293,11 +292,12 @@ describe("Sun", function () {
       // Time skip an hour after setting new balance (twap will be very close to whats in mockVal)
       await timeSkip(START_TIME + 60 * 60);
 
-      await this.basefee.setAnswer(mockVal[1]);
-
       const secondsLate = mockVal[2];
       const effectiveSecondsLate = Math.min(secondsLate, 300);
       await mockBeanstalk.resetSeasonStart(secondsLate);
+
+      // NOTE: This test does not account for on-chain base fee cost of transaction, since
+      //       wells are not properly initialized.
 
       // SUNRISE
       if (mockVal[3] == EXTERNAL) {
@@ -305,7 +305,7 @@ describe("Sun", function () {
       } else {
         this.result = await beanstalk.gm(owner.address, mockVal[3]);
       }
-      
+
       // Verify that sunrise was profitable assuming a 50% average success rate
 
       const beanBalance =
@@ -317,12 +317,9 @@ describe("Sun", function () {
       const txReceipt = await ethers.provider.getTransactionReceipt(this.result.hash);
       const gasUsed = txReceipt.gasUsed.toNumber();
 
-      const blockBaseFee = (await this.basefee.block_basefee()) / Math.pow(10, 9);
+      const blockBaseFee = mockVal[1] / Math.pow(10, 9);
       const GasCostInETH = (blockBaseFee * gasUsed) / Math.pow(10, 9);
 
-      // Get mocked eth/bean prices
-      const ethPrice = mockVal[1] / Math.pow(10, 6);
-      const beanPrice = (await this.beanThreeCurve.get_bean_price()).toNumber() / Math.pow(10, 6);
       // How many beans are required to purchase 1 eth
       const beanEthPrice = (mockVal[0][0] * 1e12) / mockVal[0][1];
 
@@ -334,22 +331,18 @@ describe("Sun", function () {
         const logs = await ethers.provider.getLogs(this.result.hash);
         viewGenericUint256Logs(logs);
         console.log("reward beans: ", rewardAmount);
-        console.log("eth price", ethPrice);
-        console.log("bean price", beanPrice);
         console.log("gas used", gasUsed);
         console.log("to mode", mockVal[4]);
         console.log("base fee", blockBaseFee);
-        console.log("failure adjusted gas cost (eth)", GasCostInETH);
-        console.log("failure adjusted cost (bean)", GasCostBean);
+        console.log("gas cost (eth)", GasCostInETH);
+        console.log("gas cost (bean)", GasCostBean);
         console.log(
-          "failure adjusted cost * late exponent (bean)",
+          "cost * late exponent (bean)",
           GasCostBean * Math.pow(1.01, effectiveSecondsLate)
         );
       }
 
-      expect(rewardAmount * beanPrice).to.greaterThan(
-        GasCostBean * Math.pow(1.01, effectiveSecondsLate)
-      );
+      expect(rewardAmount).to.greaterThan(GasCostBean * Math.pow(1.01, effectiveSecondsLate));
 
       await expect(this.result)
         .to.emit(beanstalk, "Incentivization")
