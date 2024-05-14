@@ -1079,21 +1079,16 @@ type PodOrder @entity {
   ######################## Amounts ########################
 
   """
-  The original number of Pods requested by this PodOrder.
+  The original number of Beans locked in the PodOrder.
 
   Does NOT change as Fills occur.
-  Not deterministic for PodOrders with pricingType = DYNAMIC.
+  Always deterministic, since the Farmer must lock Beans for PodOrder fulfillment.
 
-  If pricingType = FIXED:
-    Set to the number of Pods which can be purchased by the Order.
-    If FIXED (V1): `amount` field emitted in PodOrderCreated.
-    If FIXED (V2): `amount / pricePerPod` fields emitted in PodOrderCreated.
-
-  If pricingType = DYNAMIC:
-    Set to `0`. The number of Pods that will be provided is unknown, since
-    the price is calculated based on the place in line of supplied Pods.
+  If FIXED (V1): `amount * pricePerPod` fields emitted in PodOrderCreated.
+  If FIXED (V2): `amount` field emitted in PodOrderCreated.
+  If DYNAMIC (V2): `amount` field emitted in PodOrderCreated.
   """
-  podAmount: BigInt!
+  beanAmount: BigInt!
 
   """
   The current number of Pods that have been purchased by this PodOrder.
@@ -1105,18 +1100,6 @@ type PodOrder @entity {
   Upon PodOrder cancellation, this value is locked.
   """
   podAmountFilled: BigInt!
-
-  """
-  The original number of Beans locked in the PodOrder.
-
-  Does NOT change as Fills occur.
-  Always deterministic, since the Farmer must lock Beans for PodOrder fulfillment.
-
-  If FIXED (V1): `amount * pricePerPod` fields emitted in PodOrderCreated.
-  If FIXED (V2): `amount` field emitted in PodOrderCreated.
-  If DYNAMIC (V2): `amount` field emitted in PodOrderCreated.
-  """
-  beanAmount: BigInt!
 
   """
   The current number of Beans spent to acquire Pods.

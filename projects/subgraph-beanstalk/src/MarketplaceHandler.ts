@@ -229,7 +229,6 @@ export function handlePodOrderCreated(event: PodOrderCreated_v1): void {
   order.createdAt = event.block.timestamp;
   order.updatedAt = event.block.timestamp;
   order.status = "ACTIVE";
-  order.podAmount = event.params.amount;
   order.beanAmount = event.params.amount.times(BigInt.fromI32(event.params.pricePerPod)).div(BigInt.fromString("1000000"));
   order.podAmountFilled = ZERO_BI;
   order.maxPlaceInLine = event.params.maxPlaceInLine;
@@ -265,7 +264,7 @@ export function handlePodOrderFilled(event: PodOrderFilled_v1): void {
   order.updatedAt = event.block.timestamp;
   order.podAmountFilled = order.podAmountFilled.plus(event.params.amount);
   order.beanAmountFilled = order.beanAmountFilled.plus(beanAmount);
-  order.status = order.podAmount == order.podAmountFilled ? "FILLED" : "ACTIVE";
+  order.status = order.beanAmount == order.beanAmountFilled ? "FILLED" : "ACTIVE";
   let newFills = order.fills;
   newFills.push(fill.id);
   order.fills = newFills;
@@ -283,7 +282,7 @@ export function handlePodOrderFilled(event: PodOrderFilled_v1): void {
 
   updateMarketOrderBalances(event.address, order.id, ZERO_BI, ZERO_BI, event.params.amount, beanAmount, event.block.timestamp);
 
-  if (order.podAmountFilled == order.podAmount) {
+  if (order.status == "FILLED") {
     let market = loadPodMarketplace(event.address);
 
     let orderIndex = market.orders.indexOf(order.id);
@@ -600,11 +599,6 @@ export function handlePodOrderCreated_v2(event: PodOrderCreated_v2): void {
 
   if (order.status != "") {
     createHistoricalPodOrder(order);
-  }
-
-  // Store the pod amount if the order is a FIXED pricingType
-  if (event.params.priceType == 0) {
-    order.podAmount = event.params.amount.times(BigInt.fromI32(1000000)).div(BigInt.fromI32(event.params.pricePerPod));
   }
 
   order.historyID = order.id + "-" + event.block.timestamp.toString();
