@@ -121,7 +121,7 @@ export function handlePodListingCancelled(event: PodListingCancelled): void {
 
   updateMarketListingBalances(event.address, event.params.index, ZERO_BI, listing.remainingAmount, ZERO_BI, ZERO_BI, event.block.timestamp);
 
-  listing.status = "CANCELLED"; // TODO: consider whether this should be CANCELLED_PARTIAL similarly to pod orders
+  listing.status = listing.filled == ZERO_BI ? "CANCELLED" : "CANCELLED_PARTIAL";
   listing.cancelledAmount = listing.remainingAmount;
   listing.remainingAmount = ZERO_BI;
   listing.updatedAt = event.block.timestamp;

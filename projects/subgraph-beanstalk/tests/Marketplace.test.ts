@@ -259,7 +259,7 @@ describe("Marketplace", () => {
         handlePodListingCancelled(event);
 
         const newListingID = event.params.account.toHexString() + "-" + event.params.index.toString();
-        assert.fieldEquals("PodListing", newListingID, "status", "CANCELLED");
+        assert.fieldEquals("PodListing", newListingID, "status", "CANCELLED_PARTIAL");
         assert.fieldEquals("PodListing", newListingID, "cancelledAmount", remaining.toString());
         assert.fieldEquals("PodListing", newListingID, "remainingAmount", "0");
 
