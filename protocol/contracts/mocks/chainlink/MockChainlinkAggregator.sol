@@ -101,4 +101,8 @@ contract MockChainlinkAggregator is IChainlinkAggregator {
     function setDecimals(uint8 __decimals) external {
         _decimals = __decimals;
     }
+
+    function setOracleFailure() external {
+        lastRound = 0;
+    }
 }

@@ -178,6 +178,7 @@ contract MockInitDiamond is InitalizeDiamond {
             true // is well
         );
 
+        s.usdTokenPrice[well] = 1;
         s.twaReserves[well].reserve0 = 1;
         s.twaReserves[well].reserve1 = 1;
     }
