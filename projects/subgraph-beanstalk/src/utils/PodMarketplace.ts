@@ -3,6 +3,7 @@ import { PodMarketplace, PodMarketplaceHourlySnapshot, PodMarketplaceDailySnapsh
 import { dayFromTimestamp, hourFromTimestamp } from "./Dates";
 import { ZERO_BI } from "../../../subgraph-core/utils/Decimals";
 import { loadField } from "./Field";
+import { expirePodListing, loadPodListing } from "./PodListing";
 
 export function loadPodMarketplace(diamondAddress: Address): PodMarketplace {
   let marketplace = PodMarketplace.load(diamondAddress.toHexString());
@@ -103,4 +104,27 @@ export function loadPodMarketplaceDailySnapshot(diamondAddress: Address, timesta
     snapshot.save();
   }
   return snapshot;
+}
+
+export function updateExpiredPlots(harvestableIndex: BigInt, diamondAddress: Address, timestamp: BigInt): void {
+  let market = loadPodMarketplace(diamondAddress);
+  let remainingListings = market.listingIndexes;
+
+  // Cancel any pod marketplace listings beyond the index
+  for (let i = 0; i < remainingListings.length; i++) {
+    if (remainingListings[i] < harvestableIndex) {
+      expirePodListing(diamondAddress, timestamp, remainingListings[i]);
+      remainingListings.splice(i--, 1);
+    } else {
+      let listing = loadPodListing(diamondAddress, remainingListings[i]);
+      if (listing.maxHarvestableIndex < harvestableIndex) {
+        expirePodListing(diamondAddress, timestamp, remainingListings[i]);
+        remainingListings.splice(i--, 1);
+      }
+    }
+  }
+
+  remainingListings.sort();
+  market.listingIndexes = remainingListings;
+  market.save();
 }

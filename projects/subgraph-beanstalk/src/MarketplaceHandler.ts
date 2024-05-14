@@ -180,6 +180,7 @@ export function handlePodListingFilled(event: PodListingFilled_v1): void {
 
     const marketListings = market.listingIndexes;
     marketListings.push(remainingListing.index);
+    marketListings.sort();
     market.listingIndexes = marketListings;
     market.save();
   }
@@ -554,6 +555,7 @@ export function handlePodListingFilled_v2(event: PodListingFilled_v2): void {
 
     const marketListings = market.listingIndexes;
     marketListings.push(remainingListing.index);
+    marketListings.sort();
     market.listingIndexes = marketListings;
     market.save();
   }
