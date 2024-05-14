@@ -5,6 +5,7 @@ import {
   handlePodListingCancelled,
   handlePodListingCreated_v2,
   handlePodListingFilled_v2,
+  handlePodOrderCancelled,
   handlePodOrderCreated_v2,
   handlePodOrderFilled_v2
 } from "../src/MarketplaceHandler";
@@ -13,6 +14,7 @@ import {
   createPodListingCancelledEvent,
   createPodListingCreatedEvent_v2,
   createPodListingFilledEvent_v2,
+  createPodOrderCancelledEvent,
   createPodOrderCreatedEvent_v2,
   createPodOrderFilledEvent_v2
 } from "./event-mocking/Marketplace";
@@ -389,7 +391,17 @@ describe("Marketplace", () => {
 
       // test("Fill order - partial", () => {});
 
-      test("Cancel order - full", () => {});
+      test("Cancel order - full", () => {
+        const event = createPodOrderCancelledEvent(account, orderId);
+        handlePodOrderCancelled(event);
+
+        assert.fieldEquals("PodOrder", orderId.toHexString(), "status", "CANCELLED");
+        assert.fieldEquals("PodOrder", orderId.toHexString(), "beanAmountFilled", "0");
+        assert.fieldEquals("PodOrder", orderId.toHexString(), "podAmountFilled", "0");
+        assert.fieldEquals("PodOrder", orderId.toHexString(), "fills", "[]");
+
+        assertMarketOrdersState(BEANSTALK.toHexString(), [], orderBeans, ZERO_BI, ZERO_BI, orderBeans, ZERO_BI, ZERO_BI);
+      });
 
       // test("Cancel order - partial", () => {});
     });
