@@ -313,19 +313,6 @@ contract FieldFacet is Invariable, ReentrancyGuard {
     //////////////////// GETTERS: TEMPERATURE ////////////////////
 
     /**
-     * @notice DEPRECATED: Returns the current yield (aka "Temperature") offered
-     * by Beanstalk when burning Beans in exchange for Pods.
-     * @dev Left for backwards compatibility. Scales down the {morningTemperature}.
-     * There is a loss of precision (max 1%) during this operation.
-     */
-    function yield() external view returns (uint32) {
-        return
-            SafeCast.toUint32(
-                LibDibbler.morningTemperature().div(LibDibbler.TEMPERATURE_PRECISION)
-            );
-    }
-
-    /**
      * @notice Returns the current Temperature, the interest rate offered by Beanstalk.
      * The Temperature scales up during the first 25 blocks after Sunrise.
      */

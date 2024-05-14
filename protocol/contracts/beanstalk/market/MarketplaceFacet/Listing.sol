@@ -7,12 +7,10 @@ pragma experimental ABIEncoderV2;
 
 import "./PodTransfer.sol";
 import "contracts/libraries/Token/LibTransfer.sol";
-import "contracts/libraries/LibPolynomial.sol";
 import "contracts/libraries/LibTractor.sol";
 
 /**
  * @author Beanjoyer, Malteasy
- * @title Pod Marketplace v2
  **/
 
 contract Listing is PodTransfer {
@@ -37,9 +35,7 @@ contract Listing is PodTransfer {
         uint24 pricePerPod,
         uint256 maxHarvestableIndex,
         uint256 minFillAmount,
-        bytes pricingFunction,
-        LibTransfer.To mode,
-        LibPolynomial.PriceType pricingType
+        LibTransfer.To mode
     );
 
     event PodListingFilled(
@@ -83,8 +79,6 @@ contract Listing is PodTransfer {
             mode
         );
 
-        bytes memory f;
-
         emit PodListingCreated(
             LibTractor._user(),
             index,
@@ -93,49 +87,7 @@ contract Listing is PodTransfer {
             pricePerPod,
             maxHarvestableIndex,
             minFillAmount,
-            f,
-            mode,
-            LibPolynomial.PriceType.Fixed
-        );
-    }
-
-    function _createPodListingV2(
-        uint256 index,
-        uint256 start,
-        uint256 amount,
-        uint256 maxHarvestableIndex,
-        uint256 minFillAmount,
-        bytes calldata pricingFunction,
-        LibTransfer.To mode
-    ) internal {
-        uint256 plotSize = s.a[LibTractor._user()].field.plots[index];
-
-        require(plotSize >= (start.add(amount)) && amount > 0, "Marketplace: Invalid Plot/Amount.");
-        require(s.f.harvestable <= maxHarvestableIndex, "Marketplace: Expired.");
-
-        if (s.podListings[index] != bytes32(0)) _cancelPodListing(LibTractor._user(), index);
-
-        s.podListings[index] = hashListingV2(
-            start,
-            amount,
-            0,
-            maxHarvestableIndex,
-            minFillAmount,
-            pricingFunction,
             mode
-        );
-
-        emit PodListingCreated(
-            LibTractor._user(),
-            index,
-            start,
-            amount,
-            0,
-            maxHarvestableIndex,
-            minFillAmount,
-            pricingFunction,
-            mode,
-            LibPolynomial.PriceType.Dynamic
         );
     }
 
@@ -167,42 +119,6 @@ contract Listing is PodTransfer {
         _transferPlot(l.account, LibTractor._user(), l.index, l.start, amount);
     }
 
-    function _fillListingV2(
-        PodListing calldata l,
-        uint256 beanAmount,
-        bytes calldata pricingFunction
-    ) internal {
-        bytes32 lHash = hashListingV2(
-            l.start,
-            l.amount,
-            l.pricePerPod,
-            l.maxHarvestableIndex,
-            l.minFillAmount,
-            pricingFunction,
-            l.mode
-        );
-
-        require(s.podListings[l.index] == lHash, "Marketplace: Listing does not exist.");
-
-        uint256 plotSize = s.a[l.account].field.plots[l.index];
-
-        require(
-            plotSize >= (l.start.add(l.amount)) && l.amount > 0,
-            "Marketplace: Invalid Plot/Amount."
-        );
-        require(s.f.harvestable <= l.maxHarvestableIndex, "Marketplace: Listing has expired.");
-
-        uint256 amount = getAmountPodsFromFillListingV2(
-            l.index.add(l.start).sub(s.f.harvestable),
-            l.amount,
-            beanAmount,
-            pricingFunction
-        );
-
-        __fillListingV2(LibTractor._user(), l, pricingFunction, amount, beanAmount);
-        _transferPlot(l.account, LibTractor._user(), l.index, l.start, amount);
-    }
-
     function __fillListing(
         address to,
         PodListing calldata l,
@@ -221,33 +137,6 @@ contract Listing is PodTransfer {
                 l.pricePerPod,
                 l.maxHarvestableIndex,
                 l.minFillAmount,
-                l.mode
-            );
-        }
-
-        emit PodListingFilled(l.account, to, l.index, l.start, amount, beanAmount);
-    }
-
-    function __fillListingV2(
-        address to,
-        PodListing calldata l,
-        bytes calldata pricingFunction,
-        uint256 amount,
-        uint256 beanAmount
-    ) private {
-        require(amount >= l.minFillAmount, "Marketplace: Fill must be >= minimum amount.");
-        require(l.amount >= amount, "Marketplace: Not enough pods in Listing.");
-
-        delete s.podListings[l.index];
-
-        if (l.amount > amount) {
-            s.podListings[l.index.add(amount).add(l.start)] = hashListingV2(
-                0,
-                l.amount.sub(amount),
-                l.pricePerPod,
-                l.maxHarvestableIndex,
-                l.minFillAmount,
-                pricingFunction,
                 l.mode
             );
         }
@@ -285,25 +174,6 @@ contract Listing is PodTransfer {
         if (remainingAmount <= (1000000 / pricePerPod)) amount = podListingAmount;
     }
 
-    function getAmountPodsFromFillListingV2(
-        uint256 placeInLine,
-        uint256 podListingAmount,
-        uint256 fillBeanAmount,
-        bytes calldata pricingFunction
-    ) public pure returns (uint256 amount) {
-        uint256 pricePerPod = LibPolynomial.evaluatePolynomialPiecewise(
-            pricingFunction,
-            placeInLine
-        );
-        amount = (fillBeanAmount.mul(1000000)) / pricePerPod;
-
-        uint256 remainingAmount = podListingAmount.sub(
-            amount,
-            "Marketplace: Not enough pods in Listing."
-        );
-        if (remainingAmount <= (1000000 / pricePerPod)) amount = podListingAmount;
-    }
-
     function hashListing(
         uint256 start,
         uint256 amount,
@@ -333,31 +203,5 @@ contract Listing is PodTransfer {
                     mode == LibTransfer.To.EXTERNAL
                 )
             );
-    }
-
-    function hashListingV2(
-        uint256 start,
-        uint256 amount,
-        uint24 pricePerPod,
-        uint256 maxHarvestableIndex,
-        uint256 minFillAmount,
-        bytes calldata pricingFunction,
-        LibTransfer.To mode
-    ) internal pure returns (bytes32 lHash) {
-        require(
-            pricingFunction.length == LibPolynomial.getNumPieces(pricingFunction).mul(168).add(32),
-            "Marketplace: Invalid pricing function."
-        );
-        lHash = keccak256(
-            abi.encodePacked(
-                start,
-                amount,
-                pricePerPod,
-                maxHarvestableIndex,
-                minFillAmount,
-                mode == LibTransfer.To.EXTERNAL,
-                pricingFunction
-            )
-        );
     }
 }

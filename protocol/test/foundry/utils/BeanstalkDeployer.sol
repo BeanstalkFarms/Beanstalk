@@ -52,14 +52,13 @@ contract BeanstalkDeployer is Utils {
 
     // Facets that have a mock counter part should be appended here.
     string[] mockFacets = [
-        "FertilizerFacet",
-        "FieldFacet",
-        "MarketplaceFacet",
-        "WhitelistFacet",
-        "SiloFacet",
-        "UnripeFacet",
-        "ConvertFacet",
-        "SeasonFacet"
+        "FertilizerFacet", // MockFertilizerFacet
+        "FieldFacet", // MockFieldFacet
+        "WhitelistFacet", // MockWhitelistFacet
+        "SiloFacet", // MockSiloFacet
+        "UnripeFacet", // MockUnripeFacet
+        "ConvertFacet", // MockConvertFacet
+        "SeasonFacet" // MockSeasonFacet
     ];
     address[] facetAddresses;
     /**

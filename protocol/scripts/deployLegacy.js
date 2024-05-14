@@ -181,7 +181,6 @@ async function main(scriptName, verbose = true, mock = false, reset = true) {
       'FarmFacet',
       'MockFieldFacet',
       'MockFundraiserFacet',
-      'MockMarketplaceFacet',
       'PauseFacet',
       'DepotFacet',
       'MockSeasonFacet',
