@@ -197,10 +197,7 @@ describe("Marketplace", () => {
   });
 
   // TODO tests:
-  // cancel order - full
   // cancel order - partial
-  // fill order - full
-  // fill order - partial
   // fill order with pods that are also listed
   // listing expires due to podline advancing
   // order expires due to podline advancing
@@ -389,7 +386,48 @@ describe("Marketplace", () => {
         assertMarketOrdersState(BEANSTALK.toHexString(), [], orderBeans, orderBeans, orderedPods, ZERO_BI, orderedPods, orderBeans);
       });
 
-      // test("Fill order - partial", () => {});
+      test("Fill order - partial", () => {
+        const orderPlotIndex = podlineMil_BI(15);
+        const orderedPods = orderBeans.times(BigInt.fromU32(1000000)).div(orderPricePerPod);
+        const soldToOrder1 = orderedPods.div(BigInt.fromU32(5));
+        const orderBeans1 = orderBeans.div(BigInt.fromU32(5));
+        sow(account2, orderPlotIndex, sowedBeans, orderedPods.times(BigInt.fromU32(2)));
+        const event = fillOrder_v2(orderId, orderPlotIndex, beans_BI(1000), soldToOrder1, orderBeans1);
+
+        assert.fieldEquals("PodOrder", orderId.toHexString(), "status", "ACTIVE");
+        assert.fieldEquals("PodOrder", orderId.toHexString(), "beanAmountFilled", orderBeans1.toString());
+        assert.fieldEquals("PodOrder", orderId.toHexString(), "podAmountFilled", soldToOrder1.toString());
+        assert.fieldEquals("PodOrder", orderId.toHexString(), "fills", "[" + getPodFillId(orderPlotIndex, event) + "]");
+
+        assertMarketOrdersState(
+          BEANSTALK.toHexString(),
+          [event.params.id.toHexString()],
+          orderBeans,
+          orderBeans1,
+          soldToOrder1,
+          ZERO_BI,
+          soldToOrder1,
+          orderBeans1
+        );
+
+        // Now fill the rest
+        const newOrderPlotIndex = orderPlotIndex.plus(beans_BI(1000)).plus(soldToOrder1);
+        const soldToOrder2 = orderedPods.minus(soldToOrder1);
+        const orderBeans2 = orderBeans.minus(orderBeans1);
+        const event2 = fillOrder_v2(orderId, newOrderPlotIndex, ZERO_BI, soldToOrder2, orderBeans2);
+
+        assert.fieldEquals("PodOrder", orderId.toHexString(), "status", "FILLED");
+        assert.fieldEquals("PodOrder", orderId.toHexString(), "beanAmountFilled", orderBeans.toString());
+        assert.fieldEquals("PodOrder", orderId.toHexString(), "podAmountFilled", orderedPods.toString());
+        assert.fieldEquals(
+          "PodOrder",
+          orderId.toHexString(),
+          "fills",
+          "[" + getPodFillId(orderPlotIndex, event) + ", " + getPodFillId(newOrderPlotIndex, event2) + "]"
+        );
+
+        assertMarketOrdersState(BEANSTALK.toHexString(), [], orderBeans, orderBeans, orderedPods, ZERO_BI, orderedPods, orderBeans);
+      });
 
       test("Cancel order - full", () => {
         const event = createPodOrderCancelledEvent(account, orderId);
