@@ -825,6 +825,7 @@ function updateMarketOrderBalances(
   timestamp: BigInt
 ): void {
   // Need to account for v2 bean amounts
+  // TODO: remove newPodAmount/orderedPods entirely
 
   let market = loadPodMarketplace(marketAddress);
   let marketHourly = loadPodMarketplaceHourlySnapshot(marketAddress, market.season, timestamp);
@@ -832,7 +833,7 @@ function updateMarketOrderBalances(
 
   let marketOrders = market.orders;
 
-  if (newPodAmount > ZERO_BI) {
+  if (newBeanAmount > ZERO_BI) {
     marketOrders.push(orderID);
   }
   if (cancelledPodAmount > ZERO_BI) {

@@ -234,7 +234,7 @@ export function createPodListingFilledEvent_v2(
 export function createPodOrderCreatedEvent_v2(
   account: string,
   id: Bytes,
-  amount: BigInt,
+  beanAmount: BigInt,
   pricePerPod: BigInt,
   maxPlaceInLine: BigInt,
   minFillAmount: BigInt,
@@ -246,7 +246,7 @@ export function createPodOrderCreatedEvent_v2(
 
   let param1 = new ethereum.EventParam("account", ethereum.Value.fromAddress(Address.fromString(account)));
   let param2 = new ethereum.EventParam("id", ethereum.Value.fromBytes(id));
-  let param3 = new ethereum.EventParam("amount", ethereum.Value.fromUnsignedBigInt(amount));
+  let param3 = new ethereum.EventParam("amount", ethereum.Value.fromUnsignedBigInt(beanAmount));
   let param4 = new ethereum.EventParam("pricePerPod", ethereum.Value.fromUnsignedBigInt(pricePerPod));
   let param5 = new ethereum.EventParam("maxPlaceInLine", ethereum.Value.fromUnsignedBigInt(maxPlaceInLine));
   let param6 = new ethereum.EventParam("minFillAmount", ethereum.Value.fromUnsignedBigInt(minFillAmount));
