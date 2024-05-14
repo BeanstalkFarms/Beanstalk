@@ -246,9 +246,24 @@ describe("Marketplace", () => {
       });
 
       test("Cancel pod listing - partial", () => {
-        // TODO: some sold already
-        const event = createPodListingCancelledEvent(account, listingIndex);
+        const listingStart = beans_BI(500);
+        const listedPods = sowedPods.minus(listingStart);
+        const filledPods = listedPods.div(BigInt.fromString("4"));
+        const filledBeans = beans_BI(2000);
+        const fillEvent = fillListing_v2(listingIndex, listingStart, filledPods, filledBeans);
+
+        const remaining = listedPods.minus(filledPods);
+        const newListingIndex = fillEvent.params.index.plus(listingStart).plus(filledPods);
+
+        const event = createPodListingCancelledEvent(account, newListingIndex);
         handlePodListingCancelled(event);
+
+        const newListingID = event.params.account.toHexString() + "-" + event.params.index.toString();
+        assert.fieldEquals("PodListing", newListingID, "status", "CANCELLED");
+        assert.fieldEquals("PodListing", newListingID, "cancelledAmount", remaining.toString());
+        assert.fieldEquals("PodListing", newListingID, "remainingAmount", "0");
+
+        assertMarketState(BEANSTALK.toHexString(), [], listedPods, ZERO_BI, remaining, filledPods, filledPods, filledBeans);
       });
     });
   });
