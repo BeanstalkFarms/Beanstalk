@@ -1,5 +1,4 @@
 import { Address, BigInt, Bytes, ethereum } from "@graphprotocol/graph-ts";
-import { newMockEvent } from "matchstick-as/assembly/index";
 
 import {
   PodListingCancelled,
@@ -16,15 +15,7 @@ import {
   PodOrderCreated as PodOrderCreated_v2,
   PodOrderFilled as PodOrderFilled_v2
 } from "../../generated/BIP29-PodMarketplace/Beanstalk";
-import { BEANSTALK } from "../../../subgraph-core/utils/Constants";
-
-// Default mock to include beanstalk address
-// TODO: update to use the subgraph-core one after merge
-const mockBeanstalkEvent = (): ethereum.Event => {
-  let e = changetype<ethereum.Event>(newMockEvent());
-  e.address = BEANSTALK;
-  return e;
-};
+import { mockBeanstalkEvent } from "../../../subgraph-core/tests/event-mocking/Util";
 
 /** ===== Marketplace V1 Events ===== */
 export function createPodListingCreatedEvent(

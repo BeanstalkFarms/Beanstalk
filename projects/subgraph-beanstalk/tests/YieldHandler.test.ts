@@ -12,7 +12,7 @@ import {
   UNRIPE_BEAN_3CRV,
   LUSD_3POOL
 } from "../../subgraph-core/utils/Constants";
-import { setSeason } from "./event-mocking/Season";
+import { setSeason } from "./utils/Season";
 
 describe("APY Calculations", () => {
   describe("Pre-Gauge", () => {

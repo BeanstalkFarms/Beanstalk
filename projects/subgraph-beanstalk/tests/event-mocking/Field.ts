@@ -1,16 +1,8 @@
 import { Address, BigInt, Bytes, ethereum } from "@graphprotocol/graph-ts";
-import { newMockEvent } from "matchstick-as/assembly/index";
 import { Sow, PlotTransfer } from "../../generated/Field/Beanstalk";
 import { TemperatureChange } from "../../generated/BIP44-SeedGauge/Beanstalk";
 
-import { BEANSTALK } from "../../../subgraph-core/utils/Constants";
-
-// Default mock to include beanstalk address
-const mockBeanstalkEvent = (): ethereum.Event => {
-  let e = changetype<ethereum.Event>(newMockEvent());
-  e.address = BEANSTALK;
-  return e;
-};
+import { mockBeanstalkEvent } from "../../../subgraph-core/tests/event-mocking/Util";
 
 export function createWeatherChangeEvent(season: BigInt, caseID: BigInt, change: i32): void {}
 
