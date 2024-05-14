@@ -26,11 +26,9 @@ export function loadPodOrder(orderID: Bytes): PodOrder {
   return order;
 }
 
-export function createHistoricalPodOrder(order: PodOrder): void {
-  let created = false;
-  let id = order.id;
-  for (let i = 0; !created; i++) {
-    id = order.id + "-" + i.toString();
+export function createHistoricalPodOrder(order: PodOrder): PodOrder {
+  for (let i = 0; ; i++) {
+    let id = order.id + "-" + i.toString();
     let newOrder = PodOrder.load(id);
     if (newOrder == null) {
       newOrder = new PodOrder(id);
@@ -49,7 +47,9 @@ export function createHistoricalPodOrder(order: PodOrder): void {
       newOrder.creationHash = order.creationHash;
       newOrder.fills = order.fills;
       newOrder.save();
-      created = true;
+      return newOrder;
     }
   }
+  // This unreachable error is required for compilation
+  throw new Error();
 }
