@@ -467,11 +467,21 @@ describe("Marketplace", () => {
       });
 
       test("Recreate order", () => {
+        handlePodOrderCancelled(createPodOrderCancelledEvent(account, orderId));
         createOrder_v2(orderId, orderBeans, orderPricePerPod);
 
         assert.fieldEquals("PodOrder", orderId.toHexString() + "-0", "fills", "[]");
 
-        assertMarketOrdersState(BEANSTALK.toHexString(), [orderId.toHexString()], orderBeans, ZERO_BI, ZERO_BI, ZERO_BI, ZERO_BI, ZERO_BI);
+        assertMarketOrdersState(
+          BEANSTALK.toHexString(),
+          [orderId.toHexString()],
+          orderBeans.times(BigInt.fromU32(2)),
+          ZERO_BI,
+          ZERO_BI,
+          orderBeans,
+          ZERO_BI,
+          ZERO_BI
+        );
 
         // Recreate after a partial fill
         const orderPlotIndex = podlineMil_BI(15);
@@ -481,6 +491,7 @@ describe("Marketplace", () => {
         sow(account2, orderPlotIndex, sowedBeans, orderedPods.times(BigInt.fromU32(2)));
         const fillEvent = fillOrder_v2(orderId, orderPlotIndex, beans_BI(1000), soldToOrder1, orderBeans1);
 
+        handlePodOrderCancelled(createPodOrderCancelledEvent(account, orderId));
         createOrder_v2(orderId, orderBeans, orderPricePerPod);
 
         // The historical order has one fill
@@ -488,14 +499,14 @@ describe("Marketplace", () => {
         // The recreated order has no fills
         assert.fieldEquals("PodOrder", orderId.toHexString(), "fills", "[]");
 
-        // The same amount of beans were re-ordered, which is on net an increase in the beans ordered
+        // The same amount of beans were re-ordered, but fewer were cancelled
         assertMarketOrdersState(
           BEANSTALK.toHexString(),
           [orderId.toHexString()],
-          orderBeans.plus(orderBeans1),
+          orderBeans.times(BigInt.fromU32(3)),
           orderBeans1,
           soldToOrder1,
-          ZERO_BI,
+          orderBeans.plus(orderBeans.minus(orderBeans1)),
           soldToOrder1,
           orderBeans1
         );

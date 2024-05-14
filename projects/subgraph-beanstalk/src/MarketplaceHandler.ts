@@ -614,6 +614,7 @@ export function handlePodOrderCreated_v2(event: PodOrderCreated_v2): void {
   order.pricingFunction = event.params.pricingFunction;
   order.pricingType = event.params.priceType;
   order.creationHash = event.transaction.hash.toHexString();
+  order.fills = [];
   order.save();
 
   updateMarketOrderBalances(event.address, order.id, event.params.amount, ZERO_BI, ZERO_BI, ZERO_BI, event.block.timestamp);
