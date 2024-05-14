@@ -5,22 +5,23 @@
 pragma solidity ^0.8.20;
 
 import {C} from "contracts/C.sol";
+import {LibRedundantMath32} from "contracts/libraries/LibRedundantMath32.sol";
+import {LibRedundantMath128} from "contracts/libraries/LibRedundantMath128.sol";
 import {LibRedundantMath256} from "contracts/libraries/LibRedundantMath256.sol";
 import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
 import {LibTractor} from "contracts/libraries/LibTractor.sol";
 import {LibTransfer} from "contracts/libraries/Token/LibTransfer.sol";
 import {LibDibbler} from "contracts/libraries/LibDibbler.sol";
-import {LibRedundantMath32} from "contracts/libraries/LibRedundantMath32.sol";
-import {LibRedundantMath128} from "contracts/libraries/LibRedundantMath128.sol";
 import {ReentrancyGuard} from "../ReentrancyGuard.sol";
 import {Invariable} from "contracts/beanstalk/Invariable.sol";
+import {Listing} from "contracts/beanstalk/market/MarketplaceFacet/Listing.sol";
 
 /**
  * @title FieldFacet
  * @author Publius, Brean
  * @notice The Field is where Beans are Sown and Pods are Harvested.
  */
-contract FieldFacet is Invariable, ReentrancyGuard {
+contract FieldFacet is Invariable, Listing {
     using LibRedundantMath256 for uint256;
     using LibRedundantMath32 for uint32;
     using LibRedundantMath128 for uint128;
@@ -42,13 +43,6 @@ contract FieldFacet is Invariable, ReentrancyGuard {
      * @param beans The amount of Beans transferred to `account`
      */
     event Harvest(address indexed account, uint256[] plots, uint256 beans);
-
-    /**
-     * @param account The account that created the Pod Listing
-     * @param index The index of the Plot listed
-     * @dev NOTE: must mirror {Listing.PodListingCancelled}
-     */
-    event PodListingCancelled(address indexed account, uint256 index);
 
     //////////////////// SOW ////////////////////
 
@@ -176,16 +170,9 @@ contract FieldFacet is Invariable, ReentrancyGuard {
         // Calculate how many Pods are harvestable.
         // The upstream _harvest function checks that at least some Pods
         // are harvestable.
-        harvestablePods = s.field.harvestable.sub(index);
-        delete s.accounts[account].field.plots[index];
-
-        // Cancel any active Pod Listings active for this Plot.
-        // Note: duplicate of {Listing._cancelPodListing} without the
-        // ownership check, which is done above.
-        if (s.podListings[index] > 0) {
-            delete s.podListings[index];
-            emit PodListingCancelled(LibTractor._user(), index);
-        }
+        harvestablePods = s.fields[fieldIndex].harvestable.sub(index);
+        _cancelPodListing(LibTractor._user(), fieldIndex, index);
+        delete s.accountStates[account].fields[fieldIndex].plots[index];
 
         // If the entire Plot was harvested, exit.
         if (harvestablePods >= pods) {
