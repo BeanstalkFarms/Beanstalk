@@ -441,7 +441,33 @@ describe("Marketplace", () => {
         assertMarketOrdersState(BEANSTALK.toHexString(), [], orderBeans, ZERO_BI, ZERO_BI, orderBeans, ZERO_BI, ZERO_BI);
       });
 
-      // test("Cancel order - partial", () => {});
+      test("Cancel order - partial", () => {
+        const orderPlotIndex = podlineMil_BI(15);
+        const orderedPods = orderBeans.times(BigInt.fromU32(1000000)).div(orderPricePerPod);
+        const soldToOrder1 = orderedPods.div(BigInt.fromU32(5));
+        const orderBeans1 = orderBeans.div(BigInt.fromU32(5));
+        sow(account2, orderPlotIndex, sowedBeans, orderedPods.times(BigInt.fromU32(2)));
+        const orderEvent = fillOrder_v2(orderId, orderPlotIndex, beans_BI(1000), soldToOrder1, orderBeans1);
+
+        const event = createPodOrderCancelledEvent(account, orderId);
+        handlePodOrderCancelled(event);
+
+        assert.fieldEquals("PodOrder", orderId.toHexString(), "status", "CANCELLED_PARTIAL");
+        assert.fieldEquals("PodOrder", orderId.toHexString(), "beanAmountFilled", orderBeans1.toString());
+        assert.fieldEquals("PodOrder", orderId.toHexString(), "podAmountFilled", soldToOrder1.toString());
+        assert.fieldEquals("PodOrder", orderId.toHexString(), "fills", "[" + getPodFillId(orderPlotIndex, orderEvent) + "]");
+
+        assertMarketOrdersState(
+          BEANSTALK.toHexString(),
+          [],
+          orderBeans,
+          orderBeans1,
+          soldToOrder1,
+          orderBeans.minus(orderBeans1),
+          soldToOrder1,
+          orderBeans1
+        );
+      });
     });
   });
 });
