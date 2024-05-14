@@ -237,17 +237,7 @@ export function handlePodOrderCreated(event: PodOrderCreated_v1): void {
   order.creationHash = event.transaction.hash.toHexString();
   order.save();
 
-  updateMarketOrderBalances(
-    event.address,
-    order.id,
-    event.params.amount,
-    ZERO_BI,
-    ZERO_BI,
-    ZERO_BI,
-    ZERO_BI,
-    ZERO_BI,
-    event.block.timestamp
-  );
+  updateMarketOrderBalances(event.address, order.id, order.beanAmount, ZERO_BI, ZERO_BI, ZERO_BI, event.block.timestamp);
 
   // Save the raw event data
   let id = "podOrderCreated-" + event.transaction.hash.toHexString() + "-" + event.logIndex.toString();
@@ -291,17 +281,7 @@ export function handlePodOrderFilled(event: PodOrderFilled_v1): void {
   fill.costInBeans = beanAmount;
   fill.save();
 
-  updateMarketOrderBalances(
-    event.address,
-    order.id,
-    ZERO_BI,
-    ZERO_BI,
-    ZERO_BI,
-    ZERO_BI,
-    event.params.amount,
-    beanAmount,
-    event.block.timestamp
-  );
+  updateMarketOrderBalances(event.address, order.id, ZERO_BI, ZERO_BI, event.params.amount, beanAmount, event.block.timestamp);
 
   if (order.podAmountFilled == order.podAmount) {
     let market = loadPodMarketplace(event.address);
@@ -346,8 +326,6 @@ export function handlePodOrderCancelled(event: PodOrderCancelled): void {
     updateMarketOrderBalances(
       event.address,
       order.id,
-      ZERO_BI,
-      order.podAmount.minus(order.podAmountFilled),
       ZERO_BI,
       order.beanAmount.minus(order.beanAmountFilled),
       ZERO_BI,
@@ -644,17 +622,7 @@ export function handlePodOrderCreated_v2(event: PodOrderCreated_v2): void {
   order.creationHash = event.transaction.hash.toHexString();
   order.save();
 
-  updateMarketOrderBalances(
-    event.address,
-    order.id,
-    ZERO_BI,
-    ZERO_BI,
-    event.params.amount,
-    ZERO_BI,
-    ZERO_BI,
-    ZERO_BI,
-    event.block.timestamp
-  );
+  updateMarketOrderBalances(event.address, order.id, event.params.amount, ZERO_BI, ZERO_BI, ZERO_BI, event.block.timestamp);
 
   // Save the raw event data
   let id = "podOrderCreated-" + event.transaction.hash.toHexString() + "-" + event.logIndex.toString();
@@ -701,8 +669,6 @@ export function handlePodOrderFilled_v2(event: PodOrderFilled_v2): void {
   updateMarketOrderBalances(
     event.address,
     order.id,
-    ZERO_BI,
-    ZERO_BI,
     ZERO_BI,
     ZERO_BI,
     event.params.amount,
@@ -820,17 +786,12 @@ function updateMarketListingBalances(
 function updateMarketOrderBalances(
   marketAddress: Address,
   orderID: string,
-  newPodAmount: BigInt,
-  cancelledPodAmount: BigInt,
   newBeanAmount: BigInt,
   cancelledBeanAmount: BigInt,
   filledPodAmount: BigInt,
   filledBeanAmount: BigInt,
   timestamp: BigInt
 ): void {
-  // Need to account for v2 bean amounts
-  // TODO: remove newPodAmount/orderedPods entirely
-
   let market = loadPodMarketplace(marketAddress);
   let marketHourly = loadPodMarketplaceHourlySnapshot(marketAddress, market.season, timestamp);
   let marketDaily = loadPodMarketplaceDailySnapshot(marketAddress, timestamp);
@@ -840,41 +801,46 @@ function updateMarketOrderBalances(
   if (newBeanAmount > ZERO_BI) {
     marketOrders.push(orderID);
   }
-  if (cancelledPodAmount > ZERO_BI) {
+  if (cancelledBeanAmount > ZERO_BI) {
     let orderIndex = market.orders.indexOf(orderID);
     marketOrders.splice(orderIndex, 1);
   }
-  market.orderedPods = market.orderedPods.plus(newPodAmount);
+  market.orderBeans = market.orderBeans.plus(newBeanAmount);
   market.filledOrderedPods = market.filledOrderedPods.plus(filledPodAmount);
+  market.filledOrderBeans = market.filledOrderBeans.plus(filledBeanAmount);
   market.podVolume = market.podVolume.plus(filledPodAmount);
   market.beanVolume = market.beanVolume.plus(filledBeanAmount);
-  market.cancelledOrderedPods = market.cancelledOrderedPods.plus(cancelledPodAmount);
+  market.cancelledOrderBeans = market.cancelledOrderBeans.plus(cancelledBeanAmount);
   market.orders = marketOrders;
   market.save();
 
-  marketHourly.deltaOrderedPods = marketHourly.deltaOrderedPods.plus(newPodAmount);
-  marketHourly.orderedPods = market.orderedPods;
+  marketHourly.deltaOrderBeans = marketHourly.deltaOrderBeans.plus(newBeanAmount);
+  marketHourly.orderBeans = market.orderBeans;
   marketHourly.deltaFilledOrderedPods = marketHourly.deltaFilledOrderedPods.plus(filledPodAmount);
   marketHourly.filledOrderedPods = market.filledOrderedPods;
+  marketHourly.deltaFilledOrderBeans = marketHourly.deltaFilledOrderBeans.plus(filledBeanAmount);
+  marketHourly.filledOrderBeans = market.filledOrderBeans;
   marketHourly.deltaPodVolume = marketHourly.deltaPodVolume.plus(filledPodAmount);
   marketHourly.podVolume = market.podVolume;
   marketHourly.deltaBeanVolume = marketHourly.deltaBeanVolume.plus(filledBeanAmount);
   marketHourly.beanVolume = market.beanVolume;
-  marketHourly.deltaCancelledOrderedPods = marketHourly.deltaCancelledOrderedPods.plus(cancelledPodAmount);
-  marketHourly.cancelledOrderedPods = market.cancelledOrderedPods;
+  marketHourly.deltaCancelledOrderBeans = marketHourly.deltaCancelledOrderBeans.plus(cancelledBeanAmount);
+  marketHourly.cancelledOrderBeans = market.cancelledOrderBeans;
   marketHourly.updatedAt = timestamp;
   marketHourly.save();
 
-  marketDaily.deltaOrderedPods = marketDaily.deltaOrderedPods.plus(newPodAmount);
-  marketDaily.orderedPods = market.orderedPods;
+  marketDaily.deltaOrderBeans = marketDaily.deltaOrderBeans.plus(newBeanAmount);
+  marketDaily.orderBeans = market.orderBeans;
   marketDaily.deltaFilledOrderedPods = marketDaily.deltaFilledOrderedPods.plus(filledPodAmount);
   marketDaily.filledOrderedPods = market.filledOrderedPods;
+  marketDaily.deltaFilledOrderBeans = marketHourly.deltaFilledOrderBeans.plus(filledBeanAmount);
+  marketDaily.filledOrderBeans = market.filledOrderBeans;
   marketDaily.deltaPodVolume = marketDaily.deltaPodVolume.plus(filledPodAmount);
   marketDaily.podVolume = market.podVolume;
   marketDaily.deltaBeanVolume = marketDaily.deltaBeanVolume.plus(filledBeanAmount);
   marketDaily.beanVolume = market.beanVolume;
-  marketDaily.deltaCancelledOrderedPods = marketDaily.deltaCancelledOrderedPods.plus(cancelledPodAmount);
-  marketDaily.cancelledOrderedPods = market.cancelledOrderedPods;
+  marketDaily.deltaCancelledOrderBeans = marketDaily.deltaCancelledOrderBeans.plus(cancelledBeanAmount);
+  marketDaily.cancelledOrderBeans = market.cancelledOrderBeans;
   marketDaily.updatedAt = timestamp;
   marketDaily.save();
 }

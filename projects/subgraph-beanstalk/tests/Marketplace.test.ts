@@ -178,11 +178,10 @@ const assertMarketOrdersState = (
   beanVolume: BigInt
 ): void => {
   assert.fieldEquals("PodMarketplace", address, "orders", "[" + orders.join(", ") + "]");
-  // TODO: re-enable these once implemented
-  // assert.fieldEquals("PodMarketplace", address, "orderBeans", orderBeans.toString());
-  // assert.fieldEquals("PodMarketplace", address, "filledOrderBeans", filledOrderBeans.toString());
+  assert.fieldEquals("PodMarketplace", address, "orderBeans", orderBeans.toString());
+  assert.fieldEquals("PodMarketplace", address, "filledOrderBeans", filledOrderBeans.toString());
   assert.fieldEquals("PodMarketplace", address, "filledOrderedPods", filledOrderedPods.toString());
-  // assert.fieldEquals("PodMarketplace", address, "cancelledOrderBeans", cancelledOrderBeans.toString());
+  assert.fieldEquals("PodMarketplace", address, "cancelledOrderBeans", cancelledOrderBeans.toString());
   assert.fieldEquals("PodMarketplace", address, "podVolume", podVolume.toString());
   assert.fieldEquals("PodMarketplace", address, "beanVolume", beanVolume.toString());
 };
