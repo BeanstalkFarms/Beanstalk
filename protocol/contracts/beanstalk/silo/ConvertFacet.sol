@@ -136,7 +136,7 @@ contract ConvertFacet is Invariable, ReentrancyGuard {
                 require(LibWell.isWell(fromToken), "Convert: Invalid Well");
             }
 
-            pipeData.beforeOverallDeltaB = LibWellMinting.overallcurrentDeltaB();
+            pipeData.beforeOverallDeltaB = LibWellMinting.overallCurrentDeltaB();
             pipeData.initialLpSupply = LibWellMinting.getLpSupply();
             pipeData.beforeInputTokenDeltaB = getCurrentDeltaB(fromToken);
             pipeData.beforeOutputTokenDeltaB = getCurrentDeltaB(toToken);
@@ -245,7 +245,7 @@ contract ConvertFacet is Invariable, ReentrancyGuard {
         pipeData.overallConvertCapacity = LibConvert.abs(LibWellMinting.overallCappedDeltaB());
 
         // Store the pre-convert insta deltaB's both overall and for each well
-        pipeData.beforeOverallDeltaB = LibWellMinting.overallcurrentDeltaB();
+        pipeData.beforeOverallDeltaB = LibWellMinting.overallCurrentDeltaB();
         pipeData.beforeInputTokenDeltaB = getCurrentDeltaB(inputToken);
         pipeData.beforeOutputTokenDeltaB = getCurrentDeltaB(outputToken);
 
@@ -311,6 +311,19 @@ contract ConvertFacet is Invariable, ReentrancyGuard {
         dbs.afterOutputTokenDeltaB = getCurrentDeltaB(outputToken);
         dbs.beforeOverallDeltaB = beforeOverallDeltaB;
         dbs.afterOverallDeltaB = LibWellMinting.scaledOverallInstantaneousDeltaB(initialLpSupply);
+
+        console.log("dbs.beforeInputTokenDeltaB: ");
+        console.logInt(dbs.beforeInputTokenDeltaB);
+        console.log("dbs.afterInputTokenDeltaB: ");
+        console.logInt(dbs.afterInputTokenDeltaB);
+        console.log("dbs.beforeOutputTokenDeltaB: ");
+        console.logInt(dbs.beforeOutputTokenDeltaB);
+        console.log("dbs.afterOutputTokenDeltaB: ");
+        console.logInt(dbs.afterOutputTokenDeltaB);
+        console.log("dbs.beforeOverallDeltaB: ");
+        console.logInt(dbs.beforeOverallDeltaB);
+        console.log("dbs.afterOverallDeltaB: ");
+        console.logInt(dbs.afterOverallDeltaB);
 
         // modify afterInputTokenDeltaB and afterOutputTokenDeltaB to scale using before/after LP amounts
         dbs.afterInputTokenDeltaB = LibWellMinting.scaledDeltaB(
@@ -378,7 +391,12 @@ contract ConvertFacet is Invariable, ReentrancyGuard {
         if (token == C.BEAN) {
             return 0;
         }
-        return LibWellMinting.currentDeltaB(token);
+        // return LibWellMinting.currentDeltaB(token);
+        
+        int256 deltaB = LibWellMinting.currentDeltaB(token);
+        console.log("getCurrentDeltaB for token: ", token);
+        console.logInt(deltaB);
+        return deltaB;
     }
 
     /**
@@ -527,5 +545,9 @@ contract ConvertFacet is Invariable, ReentrancyGuard {
             bdv,
             LibTokenSilo.Transfer.emitTransferSingle
         );
+    }
+
+    function overallCurrentDeltaB() external view returns (int256 deltaB) {
+        return LibWellMinting.overallCurrentDeltaB();
     }
 }

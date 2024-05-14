@@ -194,7 +194,7 @@ library LibWellMinting {
     /**
      * @notice returns the overall current deltaB for all whitelisted well tokens.
      */
-    function overallcurrentDeltaB() internal view returns (int256 deltaB) {
+    function overallCurrentDeltaB() internal view returns (int256 deltaB) {
         address[] memory tokens = LibWhitelistedTokens.getWhitelistedWellLpTokens();
         for (uint256 i = 0; i < tokens.length; i++) {
             int256 wellDeltaB = currentDeltaB(tokens[i]);

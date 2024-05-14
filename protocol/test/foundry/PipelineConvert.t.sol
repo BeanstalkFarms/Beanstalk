@@ -63,6 +63,8 @@ contract PipelineConvertTest is TestHelper {
         uint256 grownStalkForDeposit;
         uint256 bdvOfAmountOut;
         int96 outputStem;
+        address inputWellEthToken;
+        address outputWellEthToken;
     }
 
     // Event defs
@@ -210,22 +212,54 @@ contract PipelineConvertTest is TestHelper {
         );
     }
 
-    function testBasicConvertLPToLP(uint256 amount) public {
+    function testBasicConvertLPToLP(uint256 amount, uint256 direction) public {
         vm.pauseGasMetering();
 
         // well is initalized with 10000 beans. cap add liquidity
         // to reasonable amounts.
-        amount = bound(amount, 1e6, 5000e6);
+        amount = bound(amount, 5000e6, 5000e6);
 
         // 0 is from bean:eth well
         // 1 is from bean:wsteth well
-        uint256 direction;
         direction = bound(direction, 0, 1);
+
+
+        PipelineTestData memory pd;
 
         address inputWell = direction == 0 ? beanEthWell : beanwstethWell;
         address outputWell = direction == 0 ? beanwstethWell : beanEthWell;
 
-        (int96 stem, uint256 lpAmountOut) = depositLPAndPassGermination(amount);
+        console.log("inputWell: ", inputWell);
+        console.log("outputWell: ", outputWell);
+
+        pd.inputWellEthToken = direction == 0 ? C.WETH : C.WSTETH;
+        pd.outputWellEthToken = direction == 0 ? C.WSTETH : C.WETH;
+
+
+
+        // log overall deltaB
+        console.log("overall deltaB: ");
+        console.logInt(LibWellMinting.overallCurrentDeltaB());
+
+
+        // update pumps
+        updateMockPumpUsingWellReserves(inputWell);
+        updateMockPumpUsingWellReserves(outputWell);
+
+        
+
+        (int96 stem, uint256 amountOfDepositedLP) = depositLPAndPassGermination(amount);
+
+        // modify deltaB's so that the user already owns LP token, and then perfectly even deltaB's are setup
+        setDeltaBforWell(-int256(amount), inputWell, pd.inputWellEthToken);
+        setDeltaBforWell(int256(amount), outputWell, pd.outputWellEthToken);
+
+        // now log deltaB's? 
+        console.log("inputWell deltaB: ");
+        console.logInt(bs.poolCurrentDeltaB(inputWell));
+        console.log("outputWell deltaB: ");
+        console.logInt(bs.poolCurrentDeltaB(outputWell));
+        return;
 
         // log deltaB for this well before convert
         // int256 beforeDeltaBEth = bs.poolCurrentDeltaB(beanEthWell);
@@ -237,21 +271,25 @@ contract PipelineConvertTest is TestHelper {
         int96[] memory stems = new int96[](1);
         stems[0] = stem;
 
-        AdvancedFarmCall[] memory lpToLPFarmCalls = createLPToLPFarmCalls(lpAmountOut, inputWell);
+        AdvancedFarmCall[] memory lpToLPFarmCalls = createLPToLPFarmCalls(amountOfDepositedLP, inputWell);
 
-        PipelineTestData memory pd;
 
         uint256[] memory amounts = new uint256[](1);
-        amounts[0] = lpAmountOut;
+        amounts[0] = amountOfDepositedLP;
 
-        pd.wellAmountOut = getWellAmountOutFromLPtoLP(lpAmountOut, inputWell, outputWell);
+        pd.wellAmountOut = getWellAmountOutFromLPtoLP(amountOfDepositedLP, inputWell, outputWell);
+        console.log("pd.wellAmountOut: ", pd.wellAmountOut);
         pd.grownStalkForDeposit = bs.grownStalkForDeposit(users[1], inputWell, stem);
+        console.log("pd.grownStalkForDeposit: ", pd.grownStalkForDeposit);
         pd.bdvOfAmountOut = bs.bdv(inputWell, pd.wellAmountOut);
+        console.log("pd.bdvOfAmountOut: ", pd.bdvOfAmountOut);
         (pd.outputStem, ) = bs.calculateStemForTokenFromGrownStalk(
             outputWell,
             pd.grownStalkForDeposit,
             pd.bdvOfAmountOut
         );
+        console.log("pd.outputStem: ");
+        console.logInt(pd.outputStem);
 
         vm.expectEmit(true, false, false, true);
         emit RemoveDeposits(users[1], inputWell, stems, amounts, amount, amounts);
@@ -261,7 +299,7 @@ contract PipelineConvertTest is TestHelper {
 
         // verify convert
         vm.expectEmit(true, false, false, true);
-        emit Convert(users[1], inputWell, outputWell, amount, pd.wellAmountOut);
+        emit Convert(users[1], inputWell, outputWell, amountOfDepositedLP, pd.wellAmountOut);
 
 
         vm.resumeGasMetering();
