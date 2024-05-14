@@ -1,49 +1,31 @@
 import { Address, BigInt, ethereum } from "@graphprotocol/graph-ts";
 import { createMockedFunction } from "matchstick-as";
-import { BEANSTALK_PRICE, BEAN_ERC20, BEAN_WETH_CP2_WELL, CURVE_PRICE, WETH } from "../../../subgraph-core/utils/Constants";
+import { BEAN_3CRV, BEAN_ERC20, BEAN_WETH_CP2_WELL, CRV3_POOL_V1, WETH } from "../../../subgraph-core/utils/Constants";
 import { BEAN_USD_PRICE, WELL } from "./Constants";
+import { setMockCurvePrice, setMockWellPrice } from "../../../subgraph-core/tests/event-mocking/Price";
 
 export function createContractCallMocks(): void {
-  let priceReturn = new ethereum.Tuple();
+  setMockCurvePrice({
+    contract: BEAN_3CRV,
+    tokens: [BEAN_ERC20, CRV3_POOL_V1],
+    balances: [BigInt.fromString("14306013160240"), BigInt.fromString("12306817594155799426763734")],
+    price: BEAN_USD_PRICE,
+    liquidity: BigInt.fromString("26025239751318"),
+    deltaB: BigInt.fromString("-866349934591"),
+    lpUsd: BigInt.fromString("969328"),
+    lpBdv: BigInt.fromString("1032515")
+  });
 
-  priceReturn.push(ethereum.Value.fromAddress(Address.fromString("0xc9C32cd16Bf7eFB85Ff14e0c8603cc90F6F2eE49")));
-  priceReturn.push(
-    ethereum.Value.fromArray([
-      ethereum.Value.fromAddress(Address.fromString("0xBEA0000029AD1c77D3d5D23Ba2D8893dB9d1Efab")),
-      ethereum.Value.fromAddress(Address.fromString("0x6c3F90f043a72FA612cbac8115EE7e52BDe6E490"))
-    ])
-  );
-  priceReturn.push(
-    ethereum.Value.fromUnsignedBigIntArray([BigInt.fromString("14306013160240"), BigInt.fromString("12306817594155799426763734")])
-  );
-  priceReturn.push(ethereum.Value.fromUnsignedBigInt(BEAN_USD_PRICE));
-  priceReturn.push(ethereum.Value.fromUnsignedBigInt(BigInt.fromString("26025239751318")));
-  priceReturn.push(ethereum.Value.fromSignedBigInt(BigInt.fromString("-866349934591")));
-  priceReturn.push(ethereum.Value.fromUnsignedBigInt(BigInt.fromString("969328")));
-  priceReturn.push(ethereum.Value.fromUnsignedBigInt(BigInt.fromString("1032515")));
-
-  let wellPriceReturn = new ethereum.Tuple();
-
-  wellPriceReturn.push(ethereum.Value.fromAddress(BEAN_WETH_CP2_WELL));
-  wellPriceReturn.push(ethereum.Value.fromArray([ethereum.Value.fromAddress(BEAN_ERC20), ethereum.Value.fromAddress(WETH)]));
-  wellPriceReturn.push(ethereum.Value.fromUnsignedBigIntArray([BigInt.fromString("2000000000"), BigInt.fromString("1500000000000000000")]));
-  wellPriceReturn.push(ethereum.Value.fromUnsignedBigInt(BEAN_USD_PRICE));
-  wellPriceReturn.push(ethereum.Value.fromUnsignedBigInt(BigInt.fromString("26025239751318")));
-  wellPriceReturn.push(ethereum.Value.fromSignedBigInt(BigInt.fromString("-866349934591")));
-  wellPriceReturn.push(ethereum.Value.fromUnsignedBigInt(BigInt.fromString("969328")));
-  wellPriceReturn.push(ethereum.Value.fromUnsignedBigInt(BigInt.fromString("1032515")));
-
-  createMockedFunction(CURVE_PRICE, "getCurve", "getCurve():((address,address[2],uint256[2],uint256,uint256,int256,uint256,uint256))")
-    .withArgs([])
-    .returns([ethereum.Value.fromTuple(priceReturn)]);
-
-  createMockedFunction(
-    BEANSTALK_PRICE,
-    "getConstantProductWell",
-    "getConstantProductWell(address):((address,address[2],uint256[2],uint256,uint256,int256,uint256,uint256))"
-  )
-    .withArgs([ethereum.Value.fromAddress(BEAN_WETH_CP2_WELL)])
-    .returns([ethereum.Value.fromTuple(wellPriceReturn)]);
+  setMockWellPrice({
+    contract: BEAN_WETH_CP2_WELL,
+    tokens: [BEAN_ERC20, WETH],
+    balances: [BigInt.fromString("2000000000"), BigInt.fromString("1500000000000000000")],
+    price: BEAN_USD_PRICE,
+    liquidity: BigInt.fromString("26025239751318"),
+    deltaB: BigInt.fromString("-866349934591"),
+    lpUsd: BigInt.fromString("969328"),
+    lpBdv: BigInt.fromString("1032515")
+  });
 
   createMockedFunction(BEAN_ERC20, "name", "name():(string)")
     .withArgs([])

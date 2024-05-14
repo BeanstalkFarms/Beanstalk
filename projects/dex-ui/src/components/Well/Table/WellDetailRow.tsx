@@ -24,7 +24,9 @@ export const WellDetailRow: FC<{
   well: Well | undefined;
   liquidity: TokenValue | undefined;
   functionName: string | undefined;
-}> = ({ well, liquidity, functionName }) => {
+  price: TokenValue | undefined;
+  volume: TokenValue | undefined;
+}> = ({ well, liquidity, functionName, price, volume }) => {
   const navigate = useNavigate();
 
   if (!well) return null;
@@ -62,6 +64,12 @@ export const WellDetailRow: FC<{
       </DesktopContainer>
       <DesktopContainer align="right">
         <Amount>${liquidity ? liquidity.toHuman("short") : "-.--"}</Amount>
+      </DesktopContainer>
+      <DesktopContainer align="right">
+        <Amount>${price ? price.toHuman("short") : "-.--"}</Amount>
+      </DesktopContainer>
+      <DesktopContainer align="right">
+        <Amount>${volume ? volume.toHuman("short") : "-.--"}</Amount>
       </DesktopContainer>
       <DesktopContainer align="right">
         <Reserves>
@@ -104,6 +112,12 @@ export const WellDetailLoadingRow: FC<{}> = () => {
         <Skeleton height={24} width={90} />
       </DesktopContainer>
       <DesktopContainer align="right">
+        <Skeleton height={24} width={90} />
+      </DesktopContainer>
+      <DesktopContainer align="right">
+        <Skeleton height={24} width={90} />
+      </DesktopContainer>
+      <DesktopContainer align="right">
         <LoadingColumn align="right">
           <Skeleton height={24} width={50} />
           <Skeleton height={24} width={50} />
@@ -139,6 +153,16 @@ const TableRow = styled(Row)`
 `;
 
 const DesktopContainer = styled(Td)`
+  :nth-child(5) {
+    @media (max-width: ${size.desktop}) {
+      display: none;
+    }
+  }
+  :nth-child(6) {
+    @media (max-width: ${size.desktop}) {
+      display: none;
+    }
+  }
   @media (max-width: ${size.mobile}) {
     display: none;
   }
