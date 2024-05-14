@@ -75,6 +75,7 @@ const assertFieldHas = (field: string, unharvestable: BigInt, harvestable: BigIn
   assert.fieldEquals("Field", field, "harvestablePods", harvestable.toString());
 };
 
+// TODO: move this into a shared location
 const setHarvestable = (harvestableIndex: BigInt): BigInt => {
   createMockedFunction(BEANSTALK, "harvestableIndex", "harvestableIndex():(uint256)").returns([
     ethereum.Value.fromUnsignedBigInt(harvestableIndex)
