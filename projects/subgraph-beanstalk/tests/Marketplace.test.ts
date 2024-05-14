@@ -1,18 +1,20 @@
-import { BigInt, Bytes, log } from "@graphprotocol/graph-ts";
+import { BigInt, Bytes, ethereum, log } from "@graphprotocol/graph-ts";
 import { afterEach, assert, beforeEach, clearStore, describe, test } from "matchstick-as/assembly/index";
 import { handleSow } from "../src/FieldHandler";
 import {
   handlePodListingCancelled,
   handlePodListingCreated_v2,
   handlePodListingFilled_v2,
-  handlePodOrderCreated_v2
+  handlePodOrderCreated_v2,
+  handlePodOrderFilled_v2
 } from "../src/MarketplaceHandler";
 import { createSowEvent } from "./event-mocking/Field";
 import {
   createPodListingCancelledEvent,
   createPodListingCreatedEvent_v2,
   createPodListingFilledEvent_v2,
-  createPodOrderCreatedEvent_v2
+  createPodOrderCreatedEvent_v2,
+  createPodOrderFilledEvent_v2
 } from "./event-mocking/Marketplace";
 import { beans_BI, podlineMil_BI } from "../../subgraph-core/tests/Values";
 import { BI_10, ONE_BI, ZERO_BI } from "../../subgraph-core/utils/Decimals";
@@ -38,6 +40,9 @@ const sowedPods = sowedBeans.times(BigInt.fromString("3"));
 
 const orderBeans = beans_BI(80000);
 const orderPricePerPod = BigInt.fromString("500000"); // 0.5 beans
+const orderId = Bytes.fromHexString("0xabcd");
+
+// TODO: organize these elsewhere
 
 const sow = (account: string, index: BigInt, beans: BigInt, pods: BigInt): Sow => {
   const event = createSowEvent(account, index, beans, pods);
@@ -45,19 +50,40 @@ const sow = (account: string, index: BigInt, beans: BigInt, pods: BigInt): Sow =
   return event;
 };
 
+const getPodFillId = (index: BigInt, event: ethereum.Event): string => {
+  return BEANSTALK.toHexString() + "-" + index.toString() + "-" + event.transaction.hash.toHexString();
+};
+
 const fillListing_v2 = (listingIndex: BigInt, listingStart: BigInt, podAmount: BigInt, costInBeans: BigInt): PodListingFilled_v2 => {
   const event = createPodListingFilledEvent_v2(account, account2, listingIndex, listingStart, podAmount, costInBeans);
   handlePodListingFilled_v2(event);
 
   // Assert PodFill
-  const podFillId = BEANSTALK.toHexString() + "-" + listingIndex.toString() + "-" + event.transaction.hash.toHexString();
-  assert.fieldEquals("PodFill", podFillId, "listing", event.params.from.toHexString() + "-" + listingIndex.toString());
-  assert.fieldEquals("PodFill", podFillId, "from", account);
-  assert.fieldEquals("PodFill", podFillId, "to", account2);
-  assert.fieldEquals("PodFill", podFillId, "amount", podAmount.toString());
-  assert.fieldEquals("PodFill", podFillId, "index", listingIndex.toString());
-  assert.fieldEquals("PodFill", podFillId, "start", listingStart.toString());
-  assert.fieldEquals("PodFill", podFillId, "costInBeans", costInBeans.toString());
+  const podFillId = getPodFillId(event.params.index, event);
+  assert.fieldEquals("PodFill", podFillId, "listing", event.params.from.toHexString() + "-" + event.params.index.toString());
+  assert.fieldEquals("PodFill", podFillId, "from", event.params.from.toHexString());
+  assert.fieldEquals("PodFill", podFillId, "to", event.params.to.toHexString());
+  assert.fieldEquals("PodFill", podFillId, "amount", event.params.amount.toString());
+  assert.fieldEquals("PodFill", podFillId, "index", event.params.index.toString());
+  assert.fieldEquals("PodFill", podFillId, "start", event.params.start.toString());
+  assert.fieldEquals("PodFill", podFillId, "costInBeans", event.params.costInBeans.toString());
+
+  return event;
+};
+
+const fillOrder_v2 = (orderId: Bytes, index: BigInt, start: BigInt, podAmount: BigInt, costInBeans: BigInt): PodOrderFilled_v2 => {
+  const event = createPodOrderFilledEvent_v2(account2, account, orderId, index, start, podAmount, costInBeans);
+  handlePodOrderFilled_v2(event);
+
+  // Assert PodFill
+  const podFillId = getPodFillId(index, event);
+  assert.fieldEquals("PodFill", podFillId, "order", event.params.id.toHexString());
+  assert.fieldEquals("PodFill", podFillId, "from", event.params.from.toHexString());
+  assert.fieldEquals("PodFill", podFillId, "to", event.params.to.toHexString());
+  assert.fieldEquals("PodFill", podFillId, "amount", event.params.amount.toString());
+  assert.fieldEquals("PodFill", podFillId, "index", event.params.index.toString());
+  assert.fieldEquals("PodFill", podFillId, "start", event.params.start.toString());
+  assert.fieldEquals("PodFill", podFillId, "costInBeans", event.params.costInBeans.toString());
 
   return event;
 };
@@ -113,8 +139,7 @@ const createListing_v2 = (account: string, index: BigInt, plotTotalPods: BigInt,
   return event;
 };
 
-const createOrder_v2 = (beans: BigInt, pricePerPod: BigInt): PodOrderCreated_v2 => {
-  const id = Bytes.fromByteArray(Bytes.fromBigInt(beans.plus(pricePerPod)));
+const createOrder_v2 = (id: Bytes, beans: BigInt, pricePerPod: BigInt): PodOrderCreated_v2 => {
   const event = createPodOrderCreatedEvent_v2(account, id, beans, pricePerPod, maxHarvestableIndex, ONE_BI, pricingFunction, ZERO_BI);
   handlePodOrderCreated_v2(event);
   assertOrderCreated_v2(event);
@@ -213,8 +238,7 @@ describe("Marketplace", () => {
     });
 
     test("Create a pod order", () => {
-      const event = createOrder_v2(orderBeans, orderPricePerPod);
-      assertMarketListingsState(BEANSTALK.toHexString(), [], ZERO_BI, ZERO_BI, ZERO_BI, ZERO_BI, ZERO_BI, ZERO_BI);
+      const event = createOrder_v2(orderId, orderBeans, orderPricePerPod);
       assertMarketOrdersState(
         BEANSTALK.toHexString(),
         [event.params.id.toHexString()],
@@ -227,9 +251,9 @@ describe("Marketplace", () => {
       );
     });
 
-    describe("Tests requiring listing", () => {
+    describe("Tests requiring Listing", () => {
       beforeEach(() => {
-        const event = createListing_v2(account, listingIndex, sowedPods, beans_BI(500));
+        createListing_v2(account, listingIndex, sowedPods, beans_BI(500));
       });
 
       test("Fill listing - full", () => {
@@ -309,7 +333,7 @@ describe("Marketplace", () => {
       });
 
       // Cancellation isnt unique to pod market v2, consider including in the v1 section
-      test("Cancel pod listing - full", () => {
+      test("Cancel listing - full", () => {
         const event = createPodListingCancelledEvent(account, listingIndex);
         handlePodListingCancelled(event);
 
@@ -322,7 +346,7 @@ describe("Marketplace", () => {
         assertMarketListingsState(BEANSTALK.toHexString(), [], cancelledAmount, ZERO_BI, cancelledAmount, ZERO_BI, ZERO_BI, ZERO_BI);
       });
 
-      test("Cancel pod listing - partial", () => {
+      test("Cancel listing - partial", () => {
         const listingStart = beans_BI(500);
         const listedPods = sowedPods.minus(listingStart);
         const filledPods = listedPods.div(BigInt.fromString("4"));
@@ -342,6 +366,32 @@ describe("Marketplace", () => {
 
         assertMarketListingsState(BEANSTALK.toHexString(), [], listedPods, ZERO_BI, remaining, filledPods, filledPods, filledBeans);
       });
+    });
+
+    describe("Tests requiring Order", () => {
+      beforeEach(() => {
+        createOrder_v2(orderId, orderBeans, orderPricePerPod);
+      });
+
+      test("Fill order - full", () => {
+        const orderPlotIndex = podlineMil_BI(15);
+        const orderedPods = orderBeans.times(BigInt.fromU32(1000000)).div(orderPricePerPod);
+        sow(account2, orderPlotIndex, sowedBeans, orderedPods);
+        const event = fillOrder_v2(orderId, orderPlotIndex, ZERO_BI, orderedPods, orderBeans);
+
+        assert.fieldEquals("PodOrder", orderId.toHexString(), "status", "FILLED");
+        assert.fieldEquals("PodOrder", orderId.toHexString(), "beanAmountFilled", orderBeans.toString());
+        assert.fieldEquals("PodOrder", orderId.toHexString(), "podAmountFilled", orderedPods.toString());
+        assert.fieldEquals("PodOrder", orderId.toHexString(), "fills", "[" + getPodFillId(orderPlotIndex, event) + "]");
+
+        assertMarketOrdersState(BEANSTALK.toHexString(), [], orderBeans, orderBeans, orderedPods, ZERO_BI, orderedPods, orderBeans);
+      });
+
+      // test("Fill order - partial", () => {});
+
+      test("Cancel order - full", () => {});
+
+      // test("Cancel order - partial", () => {});
     });
   });
 });
