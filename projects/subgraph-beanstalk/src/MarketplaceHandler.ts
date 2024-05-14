@@ -1,4 +1,4 @@
-import { Address, BigInt } from "@graphprotocol/graph-ts";
+import { Address, BigInt, log } from "@graphprotocol/graph-ts";
 import {
   PodListingCancelled,
   PodListingCreated as PodListingCreated_v1,
@@ -437,19 +437,16 @@ export function handlePodListingCreated_v1_1(event: PodListingCreated_v1_1): voi
  */
 
 export function handlePodListingCreated_v2(event: PodListingCreated_v2): void {
-  let plotCheck = Plot.load(event.params.index.toString());
-  if (plotCheck == null) {
+  let plot = Plot.load(event.params.index.toString());
+  if (plot == null) {
     return;
   }
-  let plot = loadPlot(event.address, event.params.index);
 
   /// Upsert PodListing
   let listing = loadPodListing(event.params.account, event.params.index);
   if (listing.createdAt !== ZERO_BI) {
     // Re-listed prior plot with new info
     createHistoricalPodListing(listing);
-    listing.status = "ACTIVE";
-    listing.createdAt = ZERO_BI;
     listing.fill = null;
     listing.filled = ZERO_BI;
     listing.filledAmount = ZERO_BI;

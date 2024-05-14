@@ -1,6 +1,6 @@
 import { BigInt, Bytes, ethereum, log } from "@graphprotocol/graph-ts";
 import { afterEach, assert, beforeEach, clearStore, describe, test } from "matchstick-as/assembly/index";
-import { handleSow } from "../src/FieldHandler";
+import { handlePlotTransfer, handleSow } from "../src/FieldHandler";
 import {
   handlePodListingCancelled,
   handlePodListingCreated_v2,
@@ -9,7 +9,7 @@ import {
   handlePodOrderCreated_v2,
   handlePodOrderFilled_v2
 } from "../src/MarketplaceHandler";
-import { createSowEvent } from "./event-mocking/Field";
+import { createPlotTransferEvent, createSowEvent } from "./event-mocking/Field";
 import {
   createPodListingCancelledEvent,
   createPodListingCreatedEvent_v2,
@@ -59,6 +59,9 @@ const getPodFillId = (index: BigInt, event: ethereum.Event): string => {
 const fillListing_v2 = (listingIndex: BigInt, listingStart: BigInt, podAmount: BigInt, costInBeans: BigInt): PodListingFilled_v2 => {
   const event = createPodListingFilledEvent_v2(account, account2, listingIndex, listingStart, podAmount, costInBeans);
   handlePodListingFilled_v2(event);
+
+  // Perform plot transfer (necessary for market - assumption is this is tested/working via PlotTransfer.test.ts)
+  handlePlotTransfer(createPlotTransferEvent(account, account2, listingIndex.plus(listingStart), podAmount));
 
   // Assert PodFill
   const podFillId = getPodFillId(event.params.index, event);
@@ -199,7 +202,6 @@ describe("Marketplace", () => {
   // fill order with pods that are also listed
   // listing expires due to podline advancing
   // order expires due to podline advancing
-  // re-list pods (historical listing)
 
   // describe("Marketplace v1", () => {
   //   test("Create a pod listing - full plot", () => {});
@@ -361,6 +363,62 @@ describe("Marketplace", () => {
         assert.fieldEquals("PodListing", newListingID, "remainingAmount", "0");
 
         assertMarketListingsState(BEANSTALK.toHexString(), [], listedPods, ZERO_BI, remaining, filledPods, filledPods, filledBeans);
+      });
+
+      test("Recreate listing", () => {
+        const listingStart = beans_BI(500);
+        const listedPods = sowedPods.minus(listingStart);
+        handlePodListingCancelled(createPodListingCancelledEvent(account, listingIndex));
+        const listEvent = createListing_v2(account, listingIndex, sowedPods, listingStart);
+
+        const listingID = listEvent.params.account.toHexString() + "-" + listEvent.params.index.toString();
+        assert.fieldEquals("PodListing", listingID, "status", "ACTIVE");
+        assert.fieldEquals("PodListing", listingID + "-0", "status", "CANCELLED");
+        assert.fieldEquals("PodListing", listingID + "-0", "filled", "0");
+        assert.fieldEquals("PodListing", listingID + "-0", "cancelledAmount", listedPods.toString());
+
+        assertMarketListingsState(
+          BEANSTALK.toHexString(),
+          [listingIndex],
+          listedPods.times(BigInt.fromU32(2)),
+          listedPods,
+          listedPods,
+          ZERO_BI,
+          ZERO_BI,
+          ZERO_BI
+        );
+
+        // Partial fill, then recreate again
+        const filledPods = listedPods.div(BigInt.fromString("4"));
+        const filledBeans = beans_BI(2000);
+        const fillEvent = fillListing_v2(listingIndex, listingStart, filledPods, filledBeans);
+
+        const remaining = listedPods.minus(filledPods);
+        const newListingIndex = fillEvent.params.index.plus(listingStart).plus(filledPods);
+        const newListingAmount = listedPods.minus(filledPods);
+        handlePodListingCancelled(createPodListingCancelledEvent(account, newListingIndex));
+        const newListEvent = createListing_v2(account, newListingIndex, remaining, ZERO_BI);
+
+        const newListingID = newListEvent.params.account.toHexString() + "-" + newListEvent.params.index.toString();
+        assert.notInStore("PodListing", listingID + "-1");
+        assert.notInStore("PodListing", newListingID + "-1");
+        assert.fieldEquals("PodListing", newListingID + "-0", "status", "CANCELLED_PARTIAL");
+        assert.fieldEquals("PodListing", newListingID + "-0", "filled", filledPods.toString());
+        assert.fieldEquals("PodListing", newListingID + "-0", "cancelledAmount", newListingAmount.toString());
+        assert.fieldEquals("PodListing", newListingID, "status", "ACTIVE");
+        assert.fieldEquals("PodListing", newListingID, "filled", "0");
+        assert.fieldEquals("PodListing", newListingID, "remainingAmount", newListingAmount.toString());
+
+        assertMarketListingsState(
+          BEANSTALK.toHexString(),
+          [newListingIndex],
+          listedPods.times(BigInt.fromU32(2)).plus(newListingAmount),
+          newListingAmount,
+          listedPods.plus(newListingAmount),
+          filledPods,
+          filledPods,
+          filledBeans
+        );
       });
     });
 
