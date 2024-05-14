@@ -308,7 +308,9 @@ export function handlePodOrderFilled(event: PodOrderFilled_v1): void {
 
     let orderIndex = market.orders.indexOf(order.id);
     if (orderIndex !== -1) {
-      market.orders.splice(orderIndex, 1);
+      let marketOrders = market.orders;
+      marketOrders.splice(orderIndex, 1);
+      market.orders = marketOrders;
     }
     market.save();
   }
@@ -713,7 +715,9 @@ export function handlePodOrderFilled_v2(event: PodOrderFilled_v2): void {
 
     let orderIndex = market.orders.indexOf(order.id);
     if (orderIndex !== -1) {
-      market.orders.splice(orderIndex, 1);
+      let marketOrders = market.orders;
+      marketOrders.splice(orderIndex, 1);
+      market.orders = marketOrders;
     }
     market.save();
   }
