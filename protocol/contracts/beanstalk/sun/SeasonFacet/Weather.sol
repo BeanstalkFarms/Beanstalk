@@ -171,7 +171,7 @@ contract Weather is Sun {
             // Set the plenty per root equal to previous rain start.
             s.sops[s.season.current] = s.sops[s.season.rainStart];
             s.season.rainStart = s.season.current;
-            s.rain.pods = s.field.pods;
+            s.rain.pods = s.fields[s.activeField].pods;
             s.rain.roots = s.silo.roots;
         } else {
             if (s.rain.roots > 0) {
@@ -205,9 +205,11 @@ contract Weather is Sun {
         uint256 newHarvestable;
 
         // Pay off remaining Pods if any exist.
-        if (s.field.harvestable < s.rain.pods) {
-            newHarvestable = s.rain.pods - s.field.harvestable;
-            s.field.harvestable = s.field.harvestable.add(newHarvestable);
+        if (s.fields[s.activeField].harvestable < s.rain.pods) {
+            newHarvestable = s.rain.pods - s.fields[s.activeField].harvestable;
+            s.fields[s.activeField].harvestable =
+                s.fields[s.activeField].harvestable +
+                newHarvestable;
             C.bean().mint(address(this), newHarvestable.add(sopBeans));
         } else {
             C.bean().mint(address(this), sopBeans);

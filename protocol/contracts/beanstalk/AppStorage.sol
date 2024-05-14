@@ -112,7 +112,7 @@ contract Account {
      * @param deposits SiloV3.1 deposits. A mapping from depositId to Deposit. SiloV3.1 introduces greater precision for deposits.
      */
     struct State {
-        Field field; // A Farmer's Field storage.
+        Field[] fields; // A Farmer's Field storages.
         /*
          * @dev (Silo V1) A Farmer's Unripe Bean Deposits only as a result of Replant
          *
@@ -175,8 +175,6 @@ contract Storage {
      * @param harvestable The harvestable index; the total number of Pods that have ever been Harvestable. Included previously Harvested Beans.
      */
     struct Field {
-        uint128 soil; // ──────┐ 16
-        uint128 beanSown; // ──┘ 16 (32/32)
         uint256 pods;
         uint256 harvested;
         uint256 harvestable;
@@ -414,6 +412,9 @@ contract Storage {
     }
 
 
+    /**
+     * @notice Details which Beanstalk component receives the shipment.
+     */
     enum Recipient {
         Silo,
         Field,
@@ -423,7 +424,7 @@ contract Storage {
     /**
      * @param planContract The address of the contract containing the plan getter view function.
      * @param planSelector The selector of the plan getter view function.
-     * @param recipient The recipient enum of the shipment. See {Receiving.Recipient}.
+     * @param recipient The recipient enum of the shipment.
      * @param data The data to be passed to both the plan getter function and the receive function.
      */
     struct ShipmentRoute {
@@ -444,7 +445,8 @@ contract Storage {
  * @param paused True if Beanstalk is Paused.
  * @param pausedAt The timestamp at which Beanstalk was last paused.
  * @param season Storage.Season
- * @param field Storage.Field
+ * @param fields Storage.Field[]
+ * @param activeField Index of the active Field.
  * @param co Storage.CurveMetapoolOracle
  * @param rain Storage.Rain
  * @param silo Storage.Silo
@@ -452,8 +454,8 @@ contract Storage {
  * @param weather Storage.Weather
  * @param earnedBeans The number of Beans distributed to the Silo that have not yet been Deposited as a result of the Earn function being called.
  * @param a mapping (address => Account.State)
- * @param podListings A mapping from Plot Index to the hash of the Pod Listing.
- * @param podOrders A mapping from the hash of a Pod Order to the amount of Pods that the Pod Order is still willing to buy.
+ * @param podListings A mapping from listing id to bool indicating if the listing exists.
+ * @param podOrders A mapping from hash of a Pod Order to the amount of Pods that the Pod Order is still willing to buy.
  * @param siloBalances A mapping from Token address to Silo Balance storage (amount deposited and withdrawn).
  * @param ss A mapping from Token address to Silo Settings for each Whitelisted Token. If a non-zero storage exists, a Token is whitelisted.
  * @param sops A mapping from Season to Plenty Per Root (PPR) in that Season. Plenty Per Root is 0 if a Season of Plenty did not occur.
@@ -491,15 +493,18 @@ struct AppStorage {
     bool paused; // ────────┐ 1
     uint128 pausedAt; // ───┘ 16 (17/32)
     Storage.Season season;
-    Storage.Field field;
+    Storage.Field[] fields;
+    uint256 activeField;
+    uint128 soil;
+    uint128 beanSown; 
     Storage.CurveMetapoolOracle co;
     Storage.Rain rain;
     Storage.Silo silo;
     uint256 reentrantStatus;
     Storage.Weather weather;
     uint256 earnedBeans;
-    mapping(address => Account.State) accounts;
-    mapping(uint256 => bytes32) podListings;
+    mapping(address => Account.State) accountStates;
+    mapping(bytes32 => bool) podListings;
     mapping(bytes32 => uint256) podOrders;
     mapping(address => Storage.AssetSilo) siloBalances;
     mapping(address => Storage.SiloSettings) siloSettings;

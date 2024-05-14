@@ -184,45 +184,45 @@ interface IMockFBeanstalk {
     event Plant(address indexed account, uint256 beans);
     event PlotTransfer(address indexed from, address indexed to, uint256 indexed id, uint256 pods);
     event PodApproval(address indexed owner, address indexed spender, uint256 pods);
-    event PodListingCancelled(address indexed account, uint256 index);
+    event PodListingCancelled(address indexed lister, uint256 fieldIndex, uint256 index);
     event PodListingCreated(
-        address indexed account,
+        address indexed lister,
+        uint256 fieldIndex,
         uint256 index,
         uint256 start,
-        uint256 amount,
+        uint256 podAmount,
         uint24 pricePerPod,
         uint256 maxHarvestableIndex,
         uint256 minFillAmount,
-        bytes pricingFunction,
-        uint8 mode,
-        uint8 pricingType
+        uint8 mode
     );
     event PodListingFilled(
-        address indexed from,
-        address indexed to,
+        address indexed filler,
+        address indexed lister,
+        uint256 fieldIndex,
         uint256 index,
         uint256 start,
-        uint256 amount,
+        uint256 podAmount,
         uint256 costInBeans
     );
-    event PodOrderCancelled(address indexed account, bytes32 id);
+    event PodOrderCancelled(address indexed orderer, uint256 fieldIndex, bytes32 id);
     event PodOrderCreated(
-        address indexed account,
+        address indexed orderer,
         bytes32 id,
-        uint256 amount,
+        uint256 beanAmount,
+        uint256 fieldIndex,
         uint24 pricePerPod,
         uint256 maxPlaceInLine,
-        uint256 minFillAmount,
-        bytes pricingFunction,
-        uint8 priceType
+        uint256 minFillAmount
     );
     event PodOrderFilled(
-        address indexed from,
-        address indexed to,
+        address indexed filler,
+        address indexed orderer,
         bytes32 id,
+        uint256 fieldIndex,
         uint256 index,
         uint256 start,
-        uint256 amount,
+        uint256 podAmount,
         uint256 costInBeans
     );
     event RemoveDeposit(
@@ -597,6 +597,7 @@ interface IMockFBeanstalk {
     function fillPodListing(PodListing memory l, uint256 beanAmount, uint8 mode) external payable;
     function fillPodOrder(
         PodOrder memory o,
+        uint256 fieldIndex,
         uint256 index,
         uint256 start,
         uint256 amount,

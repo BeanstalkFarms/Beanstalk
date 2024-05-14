@@ -48,7 +48,7 @@ library LibDibbler {
      *
      * ## Above Peg
      *
-     * | t   | Max pods  | s.field.soil              | soil                    | temperature              | maxTemperature |
+     * | t   | Max pods  | s.soil                | soil                    | temperature              | maxTemperature |
      * |-----|-----------|-----------------------|-------------------------|--------------------------|----------------|
      * | 0   | 500e6     | ~37e6 500e6/(1+1250%) | ~495e6 500e6/(1+1%))    | 1e6 (1%)                 | 1250 (1250%)   |
      * | 12  | 500e6     | ~37e6                 | ~111e6 500e6/(1+348%))  | 348.75e6 (27.9% * 1250)  | 1250           |
@@ -83,16 +83,16 @@ library LibDibbler {
         }
 
         // In the case of an overflow, its equivalent to having no soil left.
-        if (s.field.soil < beans) {
-            s.field.soil = 0;
+        if (s.soil < beans) {
+            s.soil = 0;
         } else {
-            s.field.soil = s.field.soil.sub(uint128(beans));
+            s.soil = s.soil.sub(uint128(beans));
         }
 
-        s.accounts[account].field.plots[s.field.pods] = pods;
-        emit Sow(account, s.field.pods, beans, pods);
+        s.accountStates[account].fields[s.activeField].plots[s.fields[s.activeField].pods] = pods;
+        emit Sow(account, s.fields[s.activeField].pods, beans, pods);
 
-        s.field.pods = s.field.pods.add(pods);
+        s.fields[s.activeField].pods += pods;
         _saveSowTime();
         return pods;
     }
@@ -115,14 +115,14 @@ library LibDibbler {
      *  (b) it has not yet been updated this Season.
      *
      * Note that:
-     *  - `s.field.soil` was decremented in the upstream {sow} function.
+     *  - `s.soil` was decremented in the upstream {sow} function.
      *  - `s.weather.thisSowTime` is set to `type(uint32).max` during {sunrise}.
      */
     function _saveSowTime() private {
         AppStorage storage s = LibAppStorage.diamondStorage();
 
-        // s.field.soil is now the soil remaining after this Sow.
-        if (s.field.soil > SOIL_SOLD_OUT_THRESHOLD || s.weather.thisSowTime < type(uint32).max) {
+        // s.soil is now the soil remaining after this Sow.
+        if (s.soil > SOIL_SOLD_OUT_THRESHOLD || s.weather.thisSowTime < type(uint32).max) {
             // haven't sold enough soil, or already set thisSowTime for this Season.
             return;
         }
@@ -329,7 +329,7 @@ library LibDibbler {
      *  Soil = `500*(100 + 100%)/(100 + 1%)` = 990.09901 soil
      *
      * If someone sow'd ~495 soil, it's equilivant to sowing 250 soil at t > 25.
-     * Thus when someone sows during this time, the amount subtracted from s.field.soil
+     * Thus when someone sows during this time, the amount subtracted from s.soil
      * should be scaled down.
      *
      * Note: param ordering matches the mulDiv operation
@@ -357,14 +357,14 @@ library LibDibbler {
         if (s.season.abovePeg) {
             return
                 beansToPods(
-                    s.field.soil, // 1 bean = 1 soil
+                    s.soil, // 1 bean = 1 soil
                     uint256(s.weather.t).mul(TEMPERATURE_PRECISION) // 1e2 -> 1e8
                 );
         } else {
             // Below peg: amount of Soil is fixed, temperature adjusts
             return
                 beansToPods(
-                    s.field.soil, // 1 bean = 1 soil
+                    s.soil, // 1 bean = 1 soil
                     morningTemperature()
                 );
         }

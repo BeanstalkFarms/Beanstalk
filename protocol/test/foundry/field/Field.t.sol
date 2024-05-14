@@ -339,7 +339,7 @@ contract FieldTest is TestHelper {
 
     // /**
     //  * a farmer cannot harvest an unharvestable plot.
-    //  * a plot is unharvestable if the index of plot > s.field.harvestable.
+    //  * a plot is unharvestable if the index of plot > s.field[].harvestable.
     //  */
     // function testCannotHarvestUnharvestablePlot() public {
     //     _beforeEachHarvest();
@@ -600,8 +600,8 @@ contract FieldTest is TestHelper {
     // /**
     //  * check that the Soil decreases over 25 blocks, then stays stagent
     //  * when beanstalk is above peg, the soil issued is now:
-    //  * `availableSoil` = s.field.soil * (1+ s.weather.t)/(1+ yield())
-    //  * `availableSoil` should always be greater or equal to s.field.soil
+    //  * `availableSoil` = s.soil * (1+ s.weather.t)/(1+ yield())
+    //  * `availableSoil` should always be greater or equal to s.soil
     //  */
     // function testSoilDecrementsOverDutchAbovePeg(uint256 startingSoil) public {
     //     _beforeEachMorningAuction();
@@ -646,7 +646,7 @@ contract FieldTest is TestHelper {
     //     vm.prank(brean);
     //     field.sow(totalSoil, 1e6, LibTransfer.From.EXTERNAL);
     //     assertEq(uint256(field.totalSoil()), 0, "totalSoil greater than 0");
-    //     assertEq(uint256(field.totalRealSoil()), 0, "s.field.soil greater than 0");
+    //     assertEq(uint256(field.totalRealSoil()), 0, "s.soil greater than 0");
     //     assertEq(field.totalUnharvestable(), remainingPods, "Unharvestable pods does not Equal Expected.");
     // }
 

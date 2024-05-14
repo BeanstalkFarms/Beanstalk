@@ -50,6 +50,7 @@ contract InitDistribution {
             bytes("")
         );
 
-        BEANSTALK.delegatecall(abi.encodeWithSelector(beanstalk.setShipmentRoutes.selector, shipmentRoutes));
+        (bool success, ) = BEANSTALK.delegatecall(abi.encodeWithSelector(beanstalk.setShipmentRoutes.selector, shipmentRoutes));
+        require(success, "InitDistribution: Failed to set shipment routes.");
     }
 }

@@ -55,9 +55,9 @@ contract Sun is Oracle, Distribution {
     function stepSun(int256 deltaB, uint256 caseId) internal {
         // Above peg
         if (deltaB > 0) {
-            uint256 priorHarvestable = s.field.harvestable;
+            uint256 priorHarvestable = s.fields[s.activeField].harvestable;
             ship(uint256(deltaB));
-            setSoilAbovePeg(s.field.harvestable - priorHarvestable, caseId);
+            setSoilAbovePeg(s.fields[s.activeField].harvestable - priorHarvestable, caseId);
             s.season.abovePeg = true;
         }
         // Below peg
@@ -90,7 +90,7 @@ contract Sun is Oracle, Distribution {
     }
 
     function setSoil(uint256 amount) internal {
-        s.field.soil = amount.toUint128();
+        s.soil = amount.toUint128();
         emit Soil(s.season.current, amount.toUint128());
     }
 }

@@ -61,11 +61,12 @@ contract Receiving is ReentrancyGuard {
     /**
      * @notice Receive Beans at the Field. The next `amount` Pods become harvestable.
      * @dev Amount should never exceed the number of Pods that are not yet Harvestable.
-     * @dev Data param not used.
      * @param amount Amount of Beans to receive.
+     * @param data Encoded uin256 containing the index of the Field to receive the Beans.
      */
-    function fieldReceive(uint256 amount, bytes memory) private {
-        s.field.harvestable = s.field.harvestable + amount;
+    function fieldReceive(uint256 amount, bytes memory data) private {
+        uint256 fieldIndex = abi.decode(data, (uint256));
+        s.fields[fieldIndex].harvestable += amount;
     }
 
     /**

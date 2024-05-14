@@ -177,9 +177,11 @@ abstract contract Invariable {
                 s.internalTokenBalanceTotal[IERC20(tokens[i])];
             if (tokens[i] == C.BEAN) {
                 entitlements[i] +=
-                    s.field.harvestable.sub(s.field.harvested) + // unharvestable harvestable beans
                     s.fertilizedIndex.sub(s.fertilizedPaidIndex) + // unrinsed rinsable beans
-                    s.unripe[C.UNRIPE_BEAN].balanceOfUnderlying; // unchopped underlying beans
+                    s.unripeSettings[C.UNRIPE_BEAN].balanceOfUnderlying; // unchopped underlying beans
+                for (uint256 j; j < s.fields.length; j++) {
+                    entitlements[i] += s.fields[j].harvestable.sub(s.fields[j].harvested); // unharvestable harvestable beans
+                }
             } else if (tokens[i] == LibUnripe._getUnderlyingToken(C.UNRIPE_LP)) {
                 entitlements[i] += s.unripe[C.UNRIPE_LP].balanceOfUnderlying;
             }

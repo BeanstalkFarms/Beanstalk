@@ -254,7 +254,7 @@ contract MockSeasonFacet is SeasonFacet {
     }
 
     function resetState() public {
-        delete s.field;
+        delete s.fields;
         delete s.silo;
         delete s.weather;
         s.weather.lastSowTime = type(uint32).max;
@@ -272,8 +272,8 @@ contract MockSeasonFacet is SeasonFacet {
     }
 
     function calcCaseIdE(int256 deltaB, uint128 endSoil) external {
-        s.field.soil = endSoil;
-        s.field.beanSown = endSoil;
+        s.soil = endSoil;
+        s.beanSown = endSoil;
         calcCaseIdandUpdate(deltaB);
     }
 
@@ -330,10 +330,10 @@ contract MockSeasonFacet is SeasonFacet {
         /// FIELD ///
         s.season.raining = raining;
         s.rain.roots = rainRoots ? 1 : 0;
-        s.field.pods = (pods.mul(C.bean().totalSupply()) / 1000); // previous tests used 1000 as the total supply.
+        s.fields[s.activeField].pods = (pods.mul(C.bean().totalSupply()) / 1000); // previous tests used 1000 as the total supply.
         s.weather.lastDSoil = uint128(_lastDSoil);
-        s.field.beanSown = beanSown;
-        s.field.soil = endSoil;
+        s.beanSown = beanSown;
+        s.soil = endSoil;
         calcCaseIdandUpdate(deltaB);
     }
 
@@ -634,16 +634,16 @@ contract MockSeasonFacet is SeasonFacet {
         uint256 beanSupply = C.bean().totalSupply();
         if (podRate == 0) {
             // < 5%
-            s.field.pods = beanSupply.mul(49).div(1000);
+            s.fields[s.activeField].pods = beanSupply.mul(49).div(1000);
         } else if (podRate == 1) {
             // < 15%
-            s.field.pods = beanSupply.mul(149).div(1000);
+            s.fields[s.activeField].pods = beanSupply.mul(149).div(1000);
         } else if (podRate == 2) {
             // < 25%
-            s.field.pods = beanSupply.mul(249).div(1000);
+            s.fields[s.activeField].pods = beanSupply.mul(249).div(1000);
         } else {
             // > 25%
-            s.field.pods = beanSupply.mul(251).div(1000);
+            s.fields[s.activeField].pods = beanSupply.mul(251).div(1000);
         }
     }
 

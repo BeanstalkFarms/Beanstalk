@@ -268,7 +268,7 @@ library LibEvaluate {
      * @notice Get the deltaPodDemand, lpToSupplyRatio, and podRate, and update soil demand
      * parameters.
      */
-    function getBeanstalkState(
+    function updateAndGetBeanstalkState(
         uint256 beanSupply
     )
         internal
@@ -281,16 +281,19 @@ library LibEvaluate {
     {
         AppStorage storage s = LibAppStorage.diamondStorage();
         // Calculate Delta Soil Demand
-        uint256 dsoil = s.field.beanSown;
-        s.field.beanSown = 0;
+        uint256 dsoil = s.beanSown;
+        s.beanSown = 0;
         (deltaPodDemand, s.weather.lastSowTime, s.weather.thisSowTime) = calcDeltaPodDemand(dsoil);
-        s.weather.lastDSoil = uint128(dsoil); // SafeCast not necessary as `s.field.beanSown` is uint128.
+        s.weather.lastDSoil = uint128(dsoil); // SafeCast not necessary as `s.beanSown` is uint128.
 
         // Calculate Lp To Supply Ratio, fetching the twaReserves in storage:
         (lpToSupplyRatio, largestLiqWell) = calcLPToSupplyRatio(beanSupply);
 
         // Calculate PodRate
-        podRate = Decimal.ratio(s.field.pods.sub(s.field.harvestable), beanSupply); // Pod Rate
+        podRate = Decimal.ratio(
+            s.fields[s.activeField].pods.sub(s.fields[s.activeField].harvestable),
+            beanSupply
+        ); // Pod Rate
     }
 
     /**
@@ -306,7 +309,7 @@ library LibEvaluate {
             Decimal.D256 memory lpToSupplyRatio,
             Decimal.D256 memory podRate,
             address largestLiqWell
-        ) = getBeanstalkState(beanSupply);
+        ) = updateAndGetBeanstalkState(beanSupply);
         uint256 caseId = evalPodRate(podRate) // Evaluate Pod Rate
         .add(evalPrice(deltaB, podRate, largestLiqWell)) // Evaluate Price
             .add(evalDeltaPodDemand(deltaPodDemand))
