@@ -1,16 +1,24 @@
 import { BigInt, Bytes, log } from "@graphprotocol/graph-ts";
 import { afterEach, assert, beforeEach, clearStore, describe, test } from "matchstick-as/assembly/index";
 import { handleSow } from "../src/FieldHandler";
-import { handlePodListingCancelled, handlePodListingCreated_v2 } from "../src/MarketplaceHandler";
+import { handlePodListingCancelled, handlePodListingCreated_v2, handlePodListingFilled_v2 } from "../src/MarketplaceHandler";
 import { createSowEvent } from "./event-mocking/Field";
-import { createPodListingCancelledEvent, createPodListingCreatedEvent_v2 } from "./event-mocking/Marketplace";
+import {
+  createPodListingCancelledEvent,
+  createPodListingCreatedEvent_v2,
+  createPodListingFilledEvent_v2
+} from "./event-mocking/Marketplace";
 import { beans_BI, podlineMil_BI } from "../../subgraph-core/tests/Values";
 import { BI_10, ONE_BI, ZERO_BI } from "../../subgraph-core/utils/Decimals";
-import { PodListingCreated as PodListingCreated_v2 } from "../generated/BIP29-PodMarketplace/Beanstalk";
+import {
+  PodListingCreated as PodListingCreated_v2,
+  PodListingFilled as PodListingFilled_v2
+} from "../generated/BIP29-PodMarketplace/Beanstalk";
 import { BEANSTALK } from "../../subgraph-core/utils/Constants";
 import { Sow } from "../generated/Field/Beanstalk";
 
-let account = "0x1234567890abcdef1234567890abcdef12345678".toLowerCase();
+const account = "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266".toLowerCase();
+const account2 = "0x70997970C51812dc3A010C7d01b50e0d17dc79C8".toLowerCase();
 let listingIndex = podlineMil_BI(1);
 let pricingFunction = Bytes.fromHexString(
   "0x0000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000006400000000000000000000000000000000000000000000000000000000000000c8000000000000000000000000000000000000000000000000000000000000012c000000000000000000000000000000000000000000000000000000000000019000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001010101010101010101010101010000"
@@ -40,6 +48,23 @@ const createListing_v2 = (account: string, index: BigInt, plotTotalPods: BigInt,
     BigInt.fromI32(1)
   );
   handlePodListingCreated_v2(event);
+  return event;
+};
+
+const fillListing_v2 = (listingIndex: BigInt, listingStart: BigInt, podAmount: BigInt, costInBeans: BigInt): PodListingFilled_v2 => {
+  const event = createPodListingFilledEvent_v2(account, account2, listingIndex, listingStart, podAmount, costInBeans);
+  handlePodListingFilled_v2(event);
+
+  // Assert PodFill
+  const podFillId = BEANSTALK.toHexString() + "-" + listingIndex.toString() + "-" + event.transaction.hash.toHexString();
+  assert.fieldEquals("PodFill", podFillId, "listing", event.params.from.toHexString() + "-" + listingIndex.toString());
+  assert.fieldEquals("PodFill", podFillId, "from", account);
+  assert.fieldEquals("PodFill", podFillId, "to", account2);
+  assert.fieldEquals("PodFill", podFillId, "amount", podAmount.toString());
+  assert.fieldEquals("PodFill", podFillId, "index", listingIndex.toString());
+  assert.fieldEquals("PodFill", podFillId, "start", listingStart.toString());
+  assert.fieldEquals("PodFill", podFillId, "costInBeans", costInBeans.toString());
+
   return event;
 };
 
@@ -91,23 +116,18 @@ describe("Marketplace", () => {
   });
 
   // TODO tests:
-  // cancel listing - full
   // cancel listing - partial
   // create order
   // cancel order - full
   // cancel order - partial
-  // fill listing - full
-  // fill listing - partial
   // fill order - full
   // fill order - partial
+  // fill order with pods that are also listed
 
-  describe("Marketplace v1", () => {
-    test("Create a pod listing - full plot", () => {
-      // const
-    });
-
-    test("Create a pod listing - partial plot", () => {});
-  });
+  // describe("Marketplace v1", () => {
+  //   test("Create a pod listing - full plot", () => {});
+  //   test("Create a pod listing - partial plot", () => {});
+  // });
 
   describe("Marketplace v2", () => {
     test("Create a pod listing - full plot", () => {
@@ -144,9 +164,72 @@ describe("Marketplace", () => {
         const event = createListing_v2(account, listingIndex, sowedPods, beans_BI(500));
       });
 
-      test("Fill listing - full", () => {});
+      test("Fill listing - full", () => {
+        const listingStart = beans_BI(500);
+        const listedPods = sowedPods.minus(listingStart);
+        const filledBeans = beans_BI(7000);
+        const event = fillListing_v2(listingIndex, listingStart, listedPods, filledBeans);
 
-      test("Fill listing - partial", () => {});
+        let listingID = event.params.from.toHexString() + "-" + event.params.index.toString();
+        assert.fieldEquals("PodListing", listingID, "status", "FILLED");
+        assert.fieldEquals("PodListing", listingID, "filledAmount", listedPods.toString());
+        assert.fieldEquals("PodListing", listingID, "remainingAmount", "0");
+        assert.fieldEquals("PodListing", listingID, "filled", listedPods.toString());
+        assert.entityCount("PodListing", 1);
+
+        assertMarketState(BEANSTALK.toHexString(), [], listedPods, ZERO_BI, ZERO_BI, listedPods, listedPods, filledBeans);
+      });
+
+      test("Fill listing - partial, then full", () => {
+        const listingStart = beans_BI(500);
+        const listedPods = sowedPods.minus(listingStart);
+        const filledPods = listedPods.div(BigInt.fromString("4"));
+        const filledBeans = beans_BI(2000);
+        const event = fillListing_v2(listingIndex, listingStart, filledPods, filledBeans);
+
+        const remaining = listedPods.minus(filledPods);
+        const listingID = event.params.from.toHexString() + "-" + event.params.index.toString();
+        assert.fieldEquals("PodListing", listingID, "status", "FILLED_PARTIAL");
+        assert.fieldEquals("PodListing", listingID, "filledAmount", filledPods.toString());
+        assert.fieldEquals("PodListing", listingID, "remainingAmount", remaining.toString());
+        assert.fieldEquals("PodListing", listingID, "filled", filledPods.toString());
+        assert.entityCount("PodListing", 2);
+
+        const newListingIndex = event.params.index.plus(listingStart).plus(filledPods);
+        const derivedListingID = event.params.from.toHexString() + "-" + newListingIndex.toString();
+        assert.fieldEquals("PodListing", derivedListingID, "status", "ACTIVE");
+        assert.fieldEquals("PodListing", derivedListingID, "filledAmount", "0");
+        assert.fieldEquals("PodListing", derivedListingID, "remainingAmount", remaining.toString());
+        assert.fieldEquals("PodListing", derivedListingID, "originalIndex", listingIndex.toString());
+        assert.fieldEquals("PodListing", derivedListingID, "originalAmount", listedPods.toString());
+        assert.fieldEquals("PodListing", derivedListingID, "filled", filledPods.toString());
+
+        assertMarketState(BEANSTALK.toHexString(), [newListingIndex], listedPods, remaining, ZERO_BI, filledPods, filledPods, filledBeans);
+
+        // Now sell the rest
+        const newFilledBeans = beans_BI(4000);
+        const event2 = fillListing_v2(newListingIndex, ZERO_BI, remaining, newFilledBeans);
+
+        assert.entityCount("PodListing", 2);
+        assert.fieldEquals("PodListing", derivedListingID, "status", "FILLED");
+        assert.fieldEquals("PodListing", derivedListingID, "filledAmount", remaining.toString());
+        assert.fieldEquals("PodListing", derivedListingID, "remainingAmount", "0");
+        assert.fieldEquals("PodListing", derivedListingID, "filled", listedPods.toString());
+        // Original should be unchanged
+        assert.fieldEquals("PodListing", listingID, "status", "FILLED_PARTIAL");
+        assert.fieldEquals("PodListing", listingID, "filled", filledPods.toString());
+
+        assertMarketState(
+          BEANSTALK.toHexString(),
+          [],
+          listedPods,
+          ZERO_BI,
+          ZERO_BI,
+          listedPods,
+          listedPods,
+          filledBeans.plus(newFilledBeans)
+        );
+      });
 
       // Cancellation isnt unique to pod market v2, consider including in the v1 section
       test("Cancel pod listing - full", () => {

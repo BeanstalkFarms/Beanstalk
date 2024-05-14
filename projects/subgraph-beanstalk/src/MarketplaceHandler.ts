@@ -177,7 +177,10 @@ export function handlePodListingFilled(event: PodListingFilled_v1): void {
     remainingListing.mode = listing.mode;
     remainingListing.creationHash = event.transaction.hash.toHexString();
     remainingListing.save();
-    market.listingIndexes.push(remainingListing.index);
+
+    const marketListings = market.listingIndexes;
+    marketListings.push(remainingListing.index);
+    market.listingIndexes = marketListings;
     market.save();
   }
 
@@ -572,7 +575,10 @@ export function handlePodListingFilled_v2(event: PodListingFilled_v2): void {
     remainingListing.creationHash = event.transaction.hash.toHexString();
     remainingListing.minFillAmount = listing.minFillAmount;
     remainingListing.save();
-    market.listingIndexes.push(remainingListing.index);
+
+    const marketListings = market.listingIndexes;
+    marketListings.push(remainingListing.index);
+    market.listingIndexes = marketListings;
     market.save();
   }
 
