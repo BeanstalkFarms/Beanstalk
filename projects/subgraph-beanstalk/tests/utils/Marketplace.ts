@@ -201,7 +201,6 @@ export function assertMarketOrdersState(
   filledOrderBeans: BigInt,
   filledOrderedPods: BigInt,
   cancelledOrderBeans: BigInt,
-  expiredOrderBeans: BigInt,
   podVolume: BigInt,
   beanVolume: BigInt
 ): void {
@@ -211,7 +210,6 @@ export function assertMarketOrdersState(
   assert.fieldEquals("PodMarketplace", address, "filledOrderBeans", filledOrderBeans.toString());
   assert.fieldEquals("PodMarketplace", address, "filledOrderedPods", filledOrderedPods.toString());
   assert.fieldEquals("PodMarketplace", address, "cancelledOrderBeans", cancelledOrderBeans.toString());
-  assert.fieldEquals("PodMarketplace", address, "expiredOrderBeans", expiredOrderBeans.toString());
   assert.fieldEquals("PodMarketplace", address, "podVolume", podVolume.toString());
   assert.fieldEquals("PodMarketplace", address, "beanVolume", beanVolume.toString());
 }

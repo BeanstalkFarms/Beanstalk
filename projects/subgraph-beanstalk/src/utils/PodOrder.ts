@@ -2,7 +2,6 @@ import { Bytes, BigInt, Address } from "@graphprotocol/graph-ts";
 import { PodOrder } from "../../generated/schema";
 import { BEANSTALK } from "../../../subgraph-core/utils/Constants";
 import { ZERO_BI } from "../../../subgraph-core/utils/Decimals";
-import { loadPodMarketplace, loadPodMarketplaceDailySnapshot, loadPodMarketplaceHourlySnapshot } from "./PodMarketplace";
 
 export function loadPodOrder(orderID: Bytes): PodOrder {
   let order = PodOrder.load(orderID.toHexString());
@@ -55,34 +54,35 @@ export function createHistoricalPodOrder(order: PodOrder): void {
   }
 }
 
-export function expirePodOrder(diamondAddress: Address, orderId: string, timestamp: BigInt, activeOrderIndex: i32): void {
-  let order = loadPodOrder(Bytes.fromHexString(orderId));
-  order.status = "EXPIRED";
-  order.save();
-
-  let market = loadPodMarketplace(diamondAddress);
-  let marketHourly = loadPodMarketplaceHourlySnapshot(diamondAddress, market.season, timestamp);
-  let marketDaily = loadPodMarketplaceDailySnapshot(diamondAddress, timestamp);
-
-  const expiredBeans = order.beanAmount.minus(order.beanAmountFilled);
-  market.expiredOrderBeans = market.expiredOrderBeans.plus(expiredBeans);
-  market.availableOrderBeans = market.availableOrderBeans.minus(expiredBeans);
-  let activeOrders = market.activeOrders;
-  activeOrders.splice(activeOrderIndex, 1);
-  market.activeOrders = activeOrders;
-  market.save();
-
-  marketHourly.season = market.season;
-  marketHourly.deltaExpiredOrderBeans = marketHourly.deltaExpiredOrderBeans.plus(expiredBeans);
-  marketHourly.expiredOrderBeans = market.expiredListedPods;
-  marketHourly.deltaAvailableOrderBeans = marketHourly.deltaAvailableOrderBeans.minus(expiredBeans);
-  marketHourly.availableOrderBeans = market.availableOrderBeans;
-  marketHourly.save();
-
-  marketDaily.season = market.season;
-  marketDaily.deltaExpiredOrderBeans = marketDaily.deltaExpiredOrderBeans.plus(expiredBeans);
-  marketDaily.expiredOrderBeans = market.expiredListedPods;
-  marketDaily.deltaAvailableOrderBeans = marketDaily.deltaAvailableOrderBeans.minus(expiredBeans);
-  marketDaily.availableOrderBeans = market.availableOrderBeans;
-  marketDaily.save();
-}
+// Currently there is no concept of an expired pod order, but there may be in the future
+// export function expirePodOrder(diamondAddress: Address, orderId: string, timestamp: BigInt, activeOrderIndex: i32): void {
+//   let order = loadPodOrder(Bytes.fromHexString(orderId));
+//   order.status = "EXPIRED";
+//   order.save();
+//
+//   let market = loadPodMarketplace(diamondAddress);
+//   let marketHourly = loadPodMarketplaceHourlySnapshot(diamondAddress, market.season, timestamp);
+//   let marketDaily = loadPodMarketplaceDailySnapshot(diamondAddress, timestamp);
+//
+//   const expiredBeans = order.beanAmount.minus(order.beanAmountFilled);
+//   market.expiredOrderBeans = market.expiredOrderBeans.plus(expiredBeans);
+//   market.availableOrderBeans = market.availableOrderBeans.minus(expiredBeans);
+//   let activeOrders = market.activeOrders;
+//   activeOrders.splice(activeOrderIndex, 1);
+//   market.activeOrders = activeOrders;
+//   market.save();
+//
+//   marketHourly.season = market.season;
+//   marketHourly.deltaExpiredOrderBeans = marketHourly.deltaExpiredOrderBeans.plus(expiredBeans);
+//   marketHourly.expiredOrderBeans = market.expiredListedPods;
+//   marketHourly.deltaAvailableOrderBeans = marketHourly.deltaAvailableOrderBeans.minus(expiredBeans);
+//   marketHourly.availableOrderBeans = market.availableOrderBeans;
+//   marketHourly.save();
+//
+//   marketDaily.season = market.season;
+//   marketDaily.deltaExpiredOrderBeans = marketDaily.deltaExpiredOrderBeans.plus(expiredBeans);
+//   marketDaily.expiredOrderBeans = market.expiredListedPods;
+//   marketDaily.deltaAvailableOrderBeans = marketDaily.deltaAvailableOrderBeans.minus(expiredBeans);
+//   marketDaily.availableOrderBeans = market.availableOrderBeans;
+//   marketDaily.save();
+// }

@@ -703,7 +703,7 @@ type PodMarketplace @entity {
   season: Int!
   "Information about the active pod listings. Each entry of the form 'account-index-expiry'"
   activeListings: [String!]!
-  "Information about the active pod orders. Each entry of the form 'account-index-expiry'"
+  "Information about the active pod orders. Each entry of the form 'orderId-maxPlaceInLine'"
   activeOrders: [String!]!
   "All historical listings"
   allListings: [PodListing!]! @derivedFrom(field: "podMarketplace")
@@ -731,8 +731,6 @@ type PodMarketplace @entity {
   filledOrderedPods: BigInt!
   "Current cumulative beans in pod orders cancelled"
   cancelledOrderBeans: BigInt!
-  "Current cumulative beans in pod orders expired"
-  expiredOrderBeans: BigInt!
   "Cumulative pod volume between listings and orders"
   podVolume: BigInt!
   "Cumulative bean volume between listings and orders"
@@ -770,8 +768,6 @@ type PodMarketplaceHourlySnapshot @entity {
   filledOrderedPods: BigInt!
   "Current cumulative beans in pod orders cancelled"
   cancelledOrderBeans: BigInt!
-  "Current cumulative beans in pod orders expired"
-  expiredOrderBeans: BigInt!
   "Point in time current cumulative pod volume between listings and orders"
   podVolume: BigInt!
   "Point in time current cumulative bean volume between listings and orders"
@@ -796,8 +792,6 @@ type PodMarketplaceHourlySnapshot @entity {
   deltaFilledOrderedPods: BigInt!
   "Point in time current delta cancelled ordered beans in pod orders"
   deltaCancelledOrderBeans: BigInt!
-  "Point in time current delta expired ordered beans in pod orders"
-  deltaExpiredOrderBeans: BigInt!
   "Point in time current delta pod volume between listings and orders"
   deltaPodVolume: BigInt!
   "Point in time current delta bean volume between listings and orders"
@@ -835,8 +829,6 @@ type PodMarketplaceDailySnapshot @entity {
   filledOrderedPods: BigInt!
   "Current cumulative beans in pod orders cancelled"
   cancelledOrderBeans: BigInt!
-  "Current cumulative beans in pod orders expired"
-  expiredOrderBeans: BigInt!
   "Point in time current cumulative pod volume between listings and orders"
   podVolume: BigInt!
   "Point in time current cumulative bean volume between listings and orders"
@@ -861,8 +853,6 @@ type PodMarketplaceDailySnapshot @entity {
   deltaFilledOrderedPods: BigInt!
   "Point in time current delta cancelled ordered beans in pod orders"
   deltaCancelledOrderBeans: BigInt!
-  "Point in time current delta expired ordered beans in pod orders"
-  deltaExpiredOrderBeans: BigInt!
   "Point in time current delta pod volume between listings and orders"
   deltaPodVolume: BigInt!
   "Point in time current delta bean volume between listings and orders"
