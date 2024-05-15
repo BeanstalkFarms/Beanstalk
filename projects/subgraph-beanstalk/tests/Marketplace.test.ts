@@ -295,8 +295,9 @@ describe("Marketplace", () => {
         const listedPods = sowedPods.minus(listingStart);
         const listingID = account + "-" + listingIndex.toString();
         assert.fieldEquals("PodListing", listingID, "status", "ACTIVE");
+        assert.fieldEquals("PodListing", listingID, "maxHarvestableIndex", maxHarvestableIndex.toString());
 
-        // Expires due to listed becoming harvestable
+        // Expires due to exceeding max harvestable index
         setHarvestable(listingIndex);
         assert.fieldEquals("PodListing", listingID, "status", "ACTIVE");
         setHarvestable(listingIndex.plus(ONE_BI));
@@ -305,8 +306,8 @@ describe("Marketplace", () => {
 
         assertMarketListingsState(BEANSTALK.toHexString(), [], listedPods, ZERO_BI, ZERO_BI, listedPods, ZERO_BI, ZERO_BI, ZERO_BI);
 
-        // TODO: partial expire
-        // TODO: expire due to exceeding maxHarvestableIndex
+        // TODO: expire after a partial sale
+        // TODO: expire due to listed being harvested
       });
     });
 

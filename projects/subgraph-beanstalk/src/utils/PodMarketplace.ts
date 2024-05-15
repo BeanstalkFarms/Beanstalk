@@ -1,4 +1,4 @@
-import { Address, BigInt } from "@graphprotocol/graph-ts";
+import { Address, BigInt, log } from "@graphprotocol/graph-ts";
 import { PodMarketplace, PodMarketplaceHourlySnapshot, PodMarketplaceDailySnapshot } from "../../generated/schema";
 import { dayFromTimestamp, hourFromTimestamp } from "./Dates";
 import { ZERO_BI } from "../../../subgraph-core/utils/Decimals";
@@ -110,17 +110,17 @@ export function updateExpiredPlots(harvestableIndex: BigInt, diamondAddress: Add
   let market = loadPodMarketplace(diamondAddress);
   let remainingListings = market.listingIndexes;
 
+  // TODO: expire plot upon harvest rather than the line moving past the start index
+  // TODO: consider saving either a separate list or within this list, the indices that they expire
+  //    this will prevent having to load every listing upon each season
+
   // Cancel any pod marketplace listings beyond the index
   for (let i = 0; i < remainingListings.length; i++) {
-    if (remainingListings[i] < harvestableIndex) {
+    // TODO: this needs to be the user account
+    let listing = loadPodListing(diamondAddress, remainingListings[i]);
+    if (harvestableIndex > listing.maxHarvestableIndex) {
       expirePodListing(diamondAddress, timestamp, remainingListings[i]);
       remainingListings.splice(i--, 1);
-    } else {
-      let listing = loadPodListing(diamondAddress, remainingListings[i]);
-      if (listing.maxHarvestableIndex < harvestableIndex) {
-        expirePodListing(diamondAddress, timestamp, remainingListings[i]);
-        remainingListings.splice(i--, 1);
-      }
     }
   }
 

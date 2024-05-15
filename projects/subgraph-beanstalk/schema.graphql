@@ -1142,9 +1142,9 @@ type PodFill @entity {
   listing: PodListing
   "Associated order, if any"
   order: PodOrder
-  "Account fulfilling the order"
+  "Account that is sending pods"
   from: String! # These are already referenced via the listing and order entities.
-  "Account filling the order"
+  "Account that is receiving pods"
   to: Farmer!
   "Number of pods filled"
   amount: BigInt!

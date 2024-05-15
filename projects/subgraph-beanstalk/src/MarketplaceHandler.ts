@@ -312,9 +312,9 @@ export function handlePodOrderFilled(event: PodOrderFilled_v1): void {
   rawEvent.save();
 }
 
-let historyID = "";
-
 export function handlePodOrderCancelled(event: PodOrderCancelled): void {
+  let historyID = "";
+
   let orderCheck = PodOrder.load(event.params.id.toHexString());
   if (orderCheck !== null) {
     let order = loadPodOrder(event.params.id);
