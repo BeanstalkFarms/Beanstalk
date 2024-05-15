@@ -319,9 +319,41 @@ describe("Marketplace", () => {
 
         assertMarketListingsState(BEANSTALK.toHexString(), [], listedPods, ZERO_BI, ZERO_BI, listedPods, ZERO_BI, ZERO_BI, ZERO_BI);
 
-        // TODO: expire after a partial sale
-        // TODO: expire due to listed being harvested
+        // Test expiration after a partial sale
+        setHarvestable(maxHarvestableIndex);
+        createListing_v2(account, listingIndex, sowedPods, beans_BI(500), maxHarvestableIndex);
+
+        const filledPods = listedPods.div(BigInt.fromString("4"));
+        const filledBeans = beans_BI(2000);
+        const fillEvent = fillListing_v2(account, account2, listingIndex, listingStart, filledPods, filledBeans);
+
+        const remaining = listedPods.minus(filledPods);
+        const newListingIndex = fillEvent.params.index.plus(listingStart).plus(filledPods);
+        const newListingID = account + "-" + newListingIndex.toString();
+
+        setHarvestable(maxHarvestableIndex.plus(ONE_BI));
+        assert.fieldEquals("PodListing", listingID, "status", "FILLED_PARTIAL");
+        assert.fieldEquals("PodListing", listingID, "filled", filledPods.toString());
+        assert.fieldEquals("PodListing", newListingID, "status", "EXPIRED");
+        assert.fieldEquals("PodListing", newListingID, "filled", filledPods.toString());
+        assert.fieldEquals("PodListing", newListingID, "remainingAmount", "0");
+
+        assertMarketListingsState(
+          BEANSTALK.toHexString(),
+          [],
+          listedPods.times(BigInt.fromU32(2)),
+          ZERO_BI,
+          ZERO_BI,
+          listedPods.plus(remaining),
+          filledPods,
+          filledPods,
+          filledBeans
+        );
       });
+
+      // test("Listing expires due to plot harvesting", () => {
+      //   // TODO: expire due to listed being harvested
+      // });
     });
 
     describe("Tests requiring Order", () => {
