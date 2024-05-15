@@ -1,4 +1,4 @@
-import { Address, BigInt, Bytes, log } from "@graphprotocol/graph-ts";
+import { Address, BigInt, Bytes, ethereum, log } from "@graphprotocol/graph-ts";
 import {
   PodListingCancelled,
   PodListingCreated as PodListingCreated_v1,
@@ -26,7 +26,7 @@ import {
   PodOrder,
   PodListing
 } from "../generated/schema";
-import { toDecimal, ZERO_BI } from "../../subgraph-core/utils/Decimals";
+import { ZERO_BI } from "../../subgraph-core/utils/Decimals";
 import { loadFarmer } from "./utils/Farmer";
 import { loadPlot } from "./utils/Plot";
 import { loadPodFill } from "./utils/PodFill";
@@ -41,9 +41,8 @@ import {
 } from "./utils/PodMarketplace";
 import { createHistoricalPodOrder, loadPodOrder } from "./utils/PodOrder";
 
-// TODO: write v1 tests first
-/*
 class PodListingCreatedParams {
+  event: ethereum.Event;
   account: Address;
   index: BigInt;
   start: BigInt;
@@ -60,7 +59,33 @@ class PodListingCreatedParams {
   // mode: i32;
   pricingType: i32;
 }
-*/
+
+class PodOrderCreatedParams {
+  event: ethereum.Event;
+  account: Address;
+  id: Bytes;
+  amount: BigInt;
+  pricePerPod: i32;
+  maxPlaceInLine: BigInt;
+
+  // v2
+  minFillAmount: BigInt;
+  pricingFunction: Bytes;
+  pricingType: i32;
+}
+
+// This one is the same for both listing/order fills.
+class MarketFillParams {
+  event: ethereum.Event;
+  from: Address;
+  to: Address;
+  index: BigInt;
+  start: BigInt;
+  amount: BigInt;
+
+  //v2
+  costInBeans: BigInt;
+}
 
 /* ------------------------------------
  * POD MARKETPLACE V1
@@ -188,94 +213,17 @@ export function handlePodListingCancelled(event: PodListingCancelled): void {
 
 export function handlePodListingFilled(event: PodListingFilled_v1): void {
   let listing = loadPodListing(event.params.from, event.params.index);
+  const beanAmount = BigInt.fromI32(listing.pricePerPod).times(event.params.amount).div(BigInt.fromI32(1000000));
 
-  let beanAmount = BigInt.fromI32(listing.pricePerPod).times(event.params.amount).div(BigInt.fromI32(1000000));
-
-  updateMarketListingBalances(event.address, ZERO_BI, ZERO_BI, event.params.amount, beanAmount, event.block.timestamp);
-
-  listing.filledAmount = event.params.amount;
-  listing.remainingAmount = listing.remainingAmount.minus(event.params.amount);
-  listing.filled = listing.filled.plus(event.params.amount);
-  listing.updatedAt = event.block.timestamp;
-
-  let originalHistoryID = listing.historyID;
-  if (listing.remainingAmount == ZERO_BI) {
-    listing.status = "FILLED";
-    updateActiveListings(
-      event.address,
-      MarketplaceAction.FILLED_FULL,
-      event.params.from.toHexString(),
-      listing.index,
-      listing.maxHarvestableIndex
-    );
-  } else {
-    let market = loadPodMarketplace(event.address);
-
-    listing.status = "FILLED_PARTIAL";
-    let remainingListing = loadPodListing(Address.fromString(listing.farmer), listing.index.plus(event.params.amount).plus(listing.start));
-
-    remainingListing.historyID = remainingListing.id + "-" + event.block.timestamp.toString();
-    remainingListing.plot = listing.index.plus(event.params.amount).plus(listing.start).toString();
-    remainingListing.createdAt = listing.createdAt;
-    remainingListing.updatedAt = event.block.timestamp;
-    remainingListing.originalIndex = listing.originalIndex;
-    remainingListing.start = ZERO_BI;
-    remainingListing.amount = listing.remainingAmount;
-    remainingListing.originalAmount = listing.originalAmount;
-    remainingListing.filled = listing.filled;
-    remainingListing.remainingAmount = listing.remainingAmount;
-    remainingListing.pricePerPod = listing.pricePerPod;
-    remainingListing.maxHarvestableIndex = listing.maxHarvestableIndex;
-    remainingListing.mode = listing.mode;
-    remainingListing.creationHash = event.transaction.hash.toHexString();
-    remainingListing.save();
-
-    updateActiveListings(
-      event.address,
-      MarketplaceAction.FILLED_PARTIAL,
-      event.params.from.toHexString(),
-      listing.index,
-      listing.maxHarvestableIndex
-    );
-    updateActiveListings(
-      event.address,
-      MarketplaceAction.CREATED,
-      event.params.from.toHexString(),
-      remainingListing.index,
-      remainingListing.maxHarvestableIndex
-    );
-  }
-
-  /// Save pod fill
-  let fill = loadPodFill(event.address, event.params.index, event.transaction.hash.toHexString());
-  fill.createdAt = event.block.timestamp;
-  fill.listing = listing.id;
-  fill.from = event.params.from.toHexString();
-  fill.to = event.params.to.toHexString();
-  fill.amount = event.params.amount;
-  fill.index = event.params.index;
-  fill.start = event.params.start;
-  fill.costInBeans = beanAmount;
-  fill.save();
-
-  listing.fill = fill.id;
-  listing.save();
-
-  // Save the raw event data
-  let id = "podListingFilled-" + event.transaction.hash.toHexString() + "-" + event.logIndex.toString();
-  let rawEvent = new PodListingFilledEvent(id);
-  rawEvent.hash = event.transaction.hash.toHexString();
-  rawEvent.logIndex = event.logIndex.toI32();
-  rawEvent.protocol = event.address.toHexString();
-  rawEvent.historyID = originalHistoryID;
-  rawEvent.from = event.params.from.toHexString();
-  rawEvent.to = event.params.to.toHexString();
-  rawEvent.index = event.params.index;
-  rawEvent.start = event.params.start;
-  rawEvent.amount = event.params.amount;
-  rawEvent.blockNumber = event.block.number;
-  rawEvent.createdAt = event.block.timestamp;
-  rawEvent.save();
+  podListingFilled({
+    event: event,
+    from: event.params.from,
+    to: event.params.to,
+    index: event.params.index,
+    start: event.params.start,
+    amount: event.params.amount,
+    costInBeans: beanAmount
+  });
 }
 
 export function handlePodOrderCreated(event: PodOrderCreated_v1): void {
@@ -575,93 +523,15 @@ export function handlePodListingCreated_v2(event: PodListingCreated_v2): void {
 }
 
 export function handlePodListingFilled_v2(event: PodListingFilled_v2): void {
-  let listing = loadPodListing(event.params.from, event.params.index);
-
-  updateMarketListingBalances(event.address, ZERO_BI, ZERO_BI, event.params.amount, event.params.costInBeans, event.block.timestamp);
-
-  listing.filledAmount = event.params.amount;
-  listing.remainingAmount = listing.remainingAmount.minus(event.params.amount);
-  listing.filled = listing.filled.plus(event.params.amount);
-  listing.updatedAt = event.block.timestamp;
-
-  let originalHistoryID = listing.historyID;
-  if (listing.remainingAmount == ZERO_BI) {
-    listing.status = "FILLED";
-    updateActiveListings(
-      event.address,
-      MarketplaceAction.FILLED_FULL,
-      event.params.from.toHexString(),
-      listing.index,
-      listing.maxHarvestableIndex
-    );
-  } else {
-    listing.status = "FILLED_PARTIAL";
-
-    let remainingListing = loadPodListing(Address.fromString(listing.farmer), listing.index.plus(event.params.amount).plus(listing.start));
-    remainingListing.historyID = remainingListing.id + "-" + event.block.timestamp.toString();
-    remainingListing.plot = listing.index.plus(event.params.amount).plus(listing.start).toString();
-    remainingListing.createdAt = listing.createdAt;
-    remainingListing.updatedAt = event.block.timestamp;
-    remainingListing.originalIndex = listing.originalIndex;
-    remainingListing.start = ZERO_BI;
-    remainingListing.amount = listing.remainingAmount;
-    remainingListing.originalAmount = listing.originalAmount;
-    remainingListing.filled = listing.filled;
-    remainingListing.remainingAmount = listing.remainingAmount;
-    remainingListing.pricePerPod = listing.pricePerPod;
-    remainingListing.maxHarvestableIndex = listing.maxHarvestableIndex;
-    remainingListing.mode = listing.mode;
-    remainingListing.creationHash = event.transaction.hash.toHexString();
-    remainingListing.minFillAmount = listing.minFillAmount;
-    remainingListing.save();
-
-    // Process the partial fill on the prev listing, and the new listing
-    updateActiveListings(
-      event.address,
-      MarketplaceAction.FILLED_PARTIAL,
-      event.params.from.toHexString(),
-      listing.index,
-      listing.maxHarvestableIndex
-    );
-    updateActiveListings(
-      event.address,
-      MarketplaceAction.CREATED,
-      event.params.from.toHexString(),
-      remainingListing.index,
-      remainingListing.maxHarvestableIndex
-    );
-  }
-
-  let fill = loadPodFill(event.address, event.params.index, event.transaction.hash.toHexString());
-  fill.createdAt = event.block.timestamp;
-  fill.listing = listing.id;
-  fill.from = event.params.from.toHexString();
-  fill.to = event.params.to.toHexString();
-  fill.amount = event.params.amount;
-  fill.index = event.params.index;
-  fill.start = event.params.start;
-  fill.costInBeans = event.params.costInBeans;
-  fill.save();
-
-  listing.fill = fill.id;
-  listing.save();
-
-  // Save the raw event data
-  let id = "podListingFilled-" + event.transaction.hash.toHexString() + "-" + event.logIndex.toString();
-  let rawEvent = new PodListingFilledEvent(id);
-  rawEvent.hash = event.transaction.hash.toHexString();
-  rawEvent.logIndex = event.logIndex.toI32();
-  rawEvent.protocol = event.address.toHexString();
-  rawEvent.historyID = originalHistoryID;
-  rawEvent.from = event.params.from.toHexString();
-  rawEvent.to = event.params.to.toHexString();
-  rawEvent.index = event.params.index;
-  rawEvent.start = event.params.start;
-  rawEvent.amount = event.params.amount;
-  rawEvent.costInBeans = event.params.costInBeans;
-  rawEvent.blockNumber = event.block.number;
-  rawEvent.createdAt = event.block.timestamp;
-  rawEvent.save();
+  podListingFilled({
+    event: event,
+    from: event.params.from,
+    to: event.params.to,
+    index: event.params.index,
+    start: event.params.start,
+    amount: event.params.amount,
+    costInBeans: event.params.costInBeans
+  });
 }
 
 export function handlePodOrderCreated_v2(event: PodOrderCreated_v2): void {
@@ -762,6 +632,97 @@ export function handlePodOrderFilled_v2(event: PodOrderFilled_v2): void {
  * ------------------------------------
  */
 
+function podListingFilled(params: MarketFillParams): void {
+  let listing = loadPodListing(params.from, params.index);
+
+  updateMarketListingBalances(params.event.address, ZERO_BI, ZERO_BI, params.amount, params.costInBeans, params.event.block.timestamp);
+
+  listing.filledAmount = params.amount;
+  listing.remainingAmount = listing.remainingAmount.minus(params.amount);
+  listing.filled = listing.filled.plus(params.amount);
+  listing.updatedAt = params.event.block.timestamp;
+
+  let originalHistoryID = listing.historyID;
+  if (listing.remainingAmount == ZERO_BI) {
+    listing.status = "FILLED";
+    updateActiveListings(
+      params.event.address,
+      MarketplaceAction.FILLED_FULL,
+      params.from.toHexString(),
+      listing.index,
+      listing.maxHarvestableIndex
+    );
+  } else {
+    listing.status = "FILLED_PARTIAL";
+
+    let remainingListing = loadPodListing(Address.fromString(listing.farmer), listing.index.plus(params.amount).plus(listing.start));
+    remainingListing.historyID = remainingListing.id + "-" + params.event.block.timestamp.toString();
+    remainingListing.plot = listing.index.plus(params.amount).plus(listing.start).toString();
+    remainingListing.createdAt = listing.createdAt;
+    remainingListing.updatedAt = params.event.block.timestamp;
+    remainingListing.originalIndex = listing.originalIndex;
+    remainingListing.start = ZERO_BI;
+    remainingListing.amount = listing.remainingAmount;
+    remainingListing.originalAmount = listing.originalAmount;
+    remainingListing.filled = listing.filled;
+    remainingListing.remainingAmount = listing.remainingAmount;
+    remainingListing.pricePerPod = listing.pricePerPod;
+    remainingListing.maxHarvestableIndex = listing.maxHarvestableIndex;
+    remainingListing.mode = listing.mode;
+    remainingListing.creationHash = params.event.transaction.hash.toHexString();
+    remainingListing.minFillAmount = listing.minFillAmount;
+    remainingListing.save();
+
+    // Process the partial fill on the prev listing, and the new listing
+    updateActiveListings(
+      params.event.address,
+      MarketplaceAction.FILLED_PARTIAL,
+      params.from.toHexString(),
+      listing.index,
+      listing.maxHarvestableIndex
+    );
+    updateActiveListings(
+      params.event.address,
+      MarketplaceAction.CREATED,
+      params.from.toHexString(),
+      remainingListing.index,
+      remainingListing.maxHarvestableIndex
+    );
+  }
+
+  let fill = loadPodFill(params.event.address, params.index, params.event.transaction.hash.toHexString());
+  fill.createdAt = params.event.block.timestamp;
+  fill.listing = listing.id;
+  fill.from = params.from.toHexString();
+  fill.to = params.to.toHexString();
+  fill.amount = params.amount;
+  fill.index = params.index;
+  fill.start = params.start;
+  fill.costInBeans = params.costInBeans;
+  fill.save();
+
+  listing.fill = fill.id;
+  listing.save();
+
+  // Save the raw event data
+  let id = "podListingFilled-" + params.event.transaction.hash.toHexString() + "-" + params.event.logIndex.toString();
+  let rawEvent = new PodListingFilledEvent(id);
+  rawEvent.hash = params.event.transaction.hash.toHexString();
+  rawEvent.logIndex = params.event.logIndex.toI32();
+  rawEvent.protocol = params.event.address.toHexString();
+  rawEvent.historyID = originalHistoryID;
+  rawEvent.from = params.from.toHexString();
+  rawEvent.to = params.to.toHexString();
+  rawEvent.index = params.index;
+  rawEvent.start = params.start;
+  rawEvent.amount = params.amount;
+  rawEvent.costInBeans = params.costInBeans;
+  rawEvent.blockNumber = params.event.block.number;
+  rawEvent.createdAt = params.event.block.timestamp;
+  rawEvent.save();
+}
+
+// TODO: move these final 2 elsewhere.
 function updateMarketListingBalances(
   marketAddress: Address,
   newPodAmount: BigInt,
