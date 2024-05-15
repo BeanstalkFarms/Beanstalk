@@ -4,6 +4,7 @@ import { dayFromTimestamp } from "./Dates";
 import { ZERO_BI } from "../../../subgraph-core/utils/Decimals";
 import { loadField } from "./Field";
 import { expirePodListingIfExists, loadPodListing } from "./PodListing";
+import { expirePodOrder } from "./PodOrder";
 
 export enum MarketplaceAction {
   CREATED,
@@ -22,11 +23,12 @@ export function loadPodMarketplace(diamondAddress: Address): PodMarketplace {
     marketplace.activeListings = [];
     marketplace.activeOrders = [];
     marketplace.listedPods = ZERO_BI;
+    marketplace.availableListedPods = ZERO_BI;
     marketplace.filledListedPods = ZERO_BI;
     marketplace.expiredListedPods = ZERO_BI;
     marketplace.cancelledListedPods = ZERO_BI;
-    marketplace.availableListedPods = ZERO_BI;
     marketplace.orderBeans = ZERO_BI;
+    marketplace.availableOrderBeans = ZERO_BI;
     marketplace.filledOrderedPods = ZERO_BI;
     marketplace.filledOrderBeans = ZERO_BI;
     marketplace.cancelledOrderBeans = ZERO_BI;
@@ -50,16 +52,18 @@ export function loadPodMarketplaceHourlySnapshot(diamondAddress: Address, season
     snapshot.podMarketplace = diamondAddress.toHexString();
     snapshot.deltaListedPods = ZERO_BI;
     snapshot.listedPods = marketplace.listedPods;
+    snapshot.deltaAvailableListedPods = ZERO_BI;
+    snapshot.availableListedPods = marketplace.availableListedPods;
     snapshot.deltaFilledListedPods = ZERO_BI;
     snapshot.filledListedPods = marketplace.filledListedPods;
     snapshot.deltaExpiredListedPods = ZERO_BI;
     snapshot.expiredListedPods = marketplace.expiredListedPods;
     snapshot.deltaCancelledListedPods = ZERO_BI;
     snapshot.cancelledListedPods = marketplace.cancelledListedPods;
-    snapshot.deltaAvailableListedPods = ZERO_BI;
-    snapshot.availableListedPods = marketplace.availableListedPods;
     snapshot.deltaOrderBeans = ZERO_BI;
     snapshot.orderBeans = marketplace.orderBeans;
+    snapshot.deltaAvailableOrderBeans = ZERO_BI;
+    snapshot.availableOrderBeans = marketplace.availableOrderBeans;
     snapshot.deltaFilledOrderedPods = ZERO_BI;
     snapshot.filledOrderedPods = marketplace.filledOrderedPods;
     snapshot.deltaFilledOrderBeans = ZERO_BI;
@@ -90,16 +94,18 @@ export function loadPodMarketplaceDailySnapshot(diamondAddress: Address, timesta
     snapshot.podMarketplace = diamondAddress.toHexString();
     snapshot.deltaListedPods = ZERO_BI;
     snapshot.listedPods = marketplace.listedPods;
+    snapshot.deltaAvailableListedPods = ZERO_BI;
+    snapshot.availableListedPods = marketplace.availableListedPods;
     snapshot.deltaFilledListedPods = ZERO_BI;
     snapshot.filledListedPods = marketplace.filledListedPods;
     snapshot.deltaExpiredListedPods = ZERO_BI;
     snapshot.expiredListedPods = marketplace.expiredListedPods;
     snapshot.deltaCancelledListedPods = ZERO_BI;
     snapshot.cancelledListedPods = marketplace.cancelledListedPods;
-    snapshot.deltaAvailableListedPods = ZERO_BI;
-    snapshot.availableListedPods = marketplace.availableListedPods;
     snapshot.deltaOrderBeans = ZERO_BI;
     snapshot.orderBeans = marketplace.orderBeans;
+    snapshot.deltaAvailableOrderBeans = ZERO_BI;
+    snapshot.availableOrderBeans = marketplace.availableOrderBeans;
     snapshot.deltaFilledOrderedPods = ZERO_BI;
     snapshot.filledOrderedPods = marketplace.filledOrderedPods;
     snapshot.deltaFilledOrderBeans = ZERO_BI;
@@ -132,6 +138,23 @@ export function updateExpiredPlots(harvestableIndex: BigInt, diamondAddress: Add
       expirePodListingIfExists(diamondAddress, destructured[0], BigInt.fromString(destructured[1]), timestamp, i);
       // A similar splice is done here also to track the updated index on the underlying array.
       remainingListings.splice(i--, 1);
+    }
+  }
+}
+
+export function updateExpiredOrders(harvestableIndex: BigInt, diamondAddress: Address, timestamp: BigInt): void {
+  let market = loadPodMarketplace(diamondAddress);
+  let remainingOrders = market.activeOrders;
+
+  // Cancel any pod marketplace orders beyond the index
+  for (let i = 0; i < remainingOrders.length; i++) {
+    const destructured = remainingOrders[i].split("-");
+    const maxHarvestableIndex = BigInt.fromString(destructured[1]);
+    if (harvestableIndex > maxHarvestableIndex) {
+      // This method updates the marketplace entity, so it will perform the splice.
+      expirePodOrder(diamondAddress, destructured[0], timestamp, i);
+      // A similar splice is done here also to track the updated index on the underlying array.
+      remainingOrders.splice(i--, 1);
     }
   }
 }

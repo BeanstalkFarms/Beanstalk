@@ -13,6 +13,7 @@ import {
   loadPodMarketplace,
   loadPodMarketplaceDailySnapshot,
   loadPodMarketplaceHourlySnapshot,
+  updateExpiredOrders,
   updateExpiredPlots
 } from "./utils/PodMarketplace";
 import { loadSeason } from "./utils/Season";
@@ -239,5 +240,6 @@ export function handleIncentive(event: Incentivization): void {
   season.save();
 
   updateExpiredPlots(season.harvestableIndex, event.address, event.block.timestamp);
+  updateExpiredOrders(season.harvestableIndex, event.address, event.block.timestamp);
   updateHarvestablePlots(season.harvestableIndex, event.block.timestamp, event.block.number);
 }

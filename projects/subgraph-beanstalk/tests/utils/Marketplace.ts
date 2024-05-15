@@ -189,6 +189,7 @@ export function assertMarketOrdersState(
   address: string,
   orders: string[],
   orderBeans: BigInt,
+  availableOrderBeans: BigInt,
   filledOrderBeans: BigInt,
   filledOrderedPods: BigInt,
   cancelledOrderBeans: BigInt,
@@ -198,6 +199,7 @@ export function assertMarketOrdersState(
 ): void {
   assert.fieldEquals("PodMarketplace", address, "activeOrders", arrayToString(orders));
   assert.fieldEquals("PodMarketplace", address, "orderBeans", orderBeans.toString());
+  assert.fieldEquals("PodMarketplace", address, "availableOrderBeans", availableOrderBeans.toString());
   assert.fieldEquals("PodMarketplace", address, "filledOrderBeans", filledOrderBeans.toString());
   assert.fieldEquals("PodMarketplace", address, "filledOrderedPods", filledOrderedPods.toString());
   assert.fieldEquals("PodMarketplace", address, "cancelledOrderBeans", cancelledOrderBeans.toString());
