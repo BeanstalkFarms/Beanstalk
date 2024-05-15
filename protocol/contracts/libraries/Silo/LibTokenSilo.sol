@@ -18,6 +18,7 @@ import {LibGerminate} from "contracts/libraries/Silo/LibGerminate.sol";
 import {LibWhitelistedTokens} from "contracts/libraries/Silo/LibWhitelistedTokens.sol";
 import {LibTractor} from "contracts/libraries/LibTractor.sol";
 import "contracts/libraries/LibStrings.sol";
+import {console} from "forge-std/console.sol";
 
 /**
  * @title LibTokenSilo
@@ -419,6 +420,7 @@ library LibTokenSilo {
         s.a[account].mowStatuses[token].bdv = s.a[account].mowStatuses[token].bdv.sub(
             uint128(crateBDV)
         );
+        console.log("final removed crateBDV: ", crateBDV);
     }
 
     //////////////////////// GETTERS ////////////////////////
@@ -527,8 +529,16 @@ library LibTokenSilo {
         address token,
         int96 stem
     ) internal view returns (uint grownStalk) {
+        console.log("grownStalkForDeposit");
+        console.log("account: ", account);
+        console.log("token: ", token);
+        console.log("stem: ");
+        console.logInt(stem);
+
         // stemTipForToken(token) > depositGrownStalkPerBdv for all valid Deposits
         int96 _stemTip = stemTipForToken(token);
+        console.log("yo _stemTip: ");
+        console.logInt(_stemTip);
         require(stem <= _stemTip, "Silo: Invalid Deposit");
         // The check in the above line guarantees that subtraction result is positive
         // and thus the cast to `uint256` is safe.
@@ -563,6 +573,10 @@ library LibTokenSilo {
         uint256 grownStalk,
         uint256 bdv
     ) internal view returns (int96 stem, LibGerminate.Germinate germ) {
+        console.log("calculateStemForTokenFromGrownStalk");
+        console.log("token: ", token);
+        console.log("grownStalk: ", grownStalk);
+        console.log("bdv: ", bdv);
         LibGerminate.GermStem memory germStem = LibGerminate.getGerminatingStem(token);
         stem = germStem.stemTip.sub(toInt96(grownStalk.mul(PRECISION).div(bdv)));
         germ = LibGerminate._getGerminationState(stem, germStem);

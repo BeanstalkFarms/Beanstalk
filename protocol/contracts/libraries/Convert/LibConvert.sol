@@ -47,6 +47,9 @@ library LibConvert {
         uint256 outputTokenAmountAgainstPeg;
         uint256 higherAmountAgainstPeg;
         uint256 convertCapacityPenalty;
+        uint256 overallConvertCapacityUsed;
+        uint256 inputTokenAmountUsed;
+        uint256 outputTokenAmountUsed;
     }
 
     /**
@@ -171,6 +174,44 @@ library LibConvert {
         revert("Convert: Tokens not supported");
     }
 
+    function applyStalkPenalty(
+        DeltaBStorage memory dbs,
+        uint256 bdvConverted,
+        uint256 overallConvertCapacity,
+        address inputToken,
+        address outputToken
+    ) internal returns (uint256 stalkPenaltyBdv) {
+        uint256 overallConvertCapacityUsed;
+        uint256 inputTokenAmountUsed;
+        uint256 outputTokenAmountUsed;
+
+        (
+            stalkPenaltyBdv,
+            overallConvertCapacityUsed,
+            inputTokenAmountUsed,
+            outputTokenAmountUsed
+        ) = calculateStalkPenalty(
+            dbs,
+            bdvConverted,
+            overallConvertCapacity,
+            inputToken,
+            outputToken
+        );
+
+        // Update penalties in storage
+        AppStorage storage s = LibAppStorage.diamondStorage();
+        Storage.ConvertCapacity storage convertCap = s.convertCapacity[block.number];
+        convertCap.overallConvertCapacityUsed = convertCap.overallConvertCapacityUsed.add(
+            overallConvertCapacityUsed
+        );
+        convertCap.wellConvertCapacityUsed[inputToken] = convertCap
+            .wellConvertCapacityUsed[inputToken]
+            .add(inputTokenAmountUsed);
+        convertCap.wellConvertCapacityUsed[outputToken] = convertCap
+            .wellConvertCapacityUsed[outputToken]
+            .add(outputTokenAmountUsed);
+    }
+
     /**
      * @notice Calculates the percentStalkPenalty for a given convert.
      */
@@ -180,7 +221,16 @@ library LibConvert {
         uint256 overallConvertCapacity,
         address inputToken,
         address outputToken
-    ) internal returns (uint256 stalkPenaltyBdv) {
+    )
+        internal
+        view
+        returns (
+            uint256 stalkPenaltyBdv,
+            uint256 overallConvertCapacityUsed,
+            uint256 inputTokenAmountUsed,
+            uint256 outputTokenAmountUsed
+        )
+    {
         StalkPenaltyData memory spd;
 
         // todo: combine this set of 3 lines with the ones below it (one function return all 3 values)
@@ -226,7 +276,12 @@ library LibConvert {
 
         console.log("spd.higherAmountAgainstPeg: ", spd.higherAmountAgainstPeg);
 
-        spd.convertCapacityPenalty = calculateConvertCapacityPenalty(
+        (
+            spd.convertCapacityPenalty,
+            spd.overallConvertCapacityUsed,
+            spd.inputTokenAmountUsed,
+            spd.outputTokenAmountUsed
+        ) = calculateConvertCapacityPenalty(
             overallConvertCapacity,
             spd.overallAmountInDirectionOfPeg,
             inputToken,
@@ -240,6 +295,13 @@ library LibConvert {
         stalkPenaltyBdv = Math.min(
             spd.higherAmountAgainstPeg.add(spd.convertCapacityPenalty),
             bdvConverted
+        );
+        console.log("final stalkPenaltyBdv: ", stalkPenaltyBdv);
+        return (
+            stalkPenaltyBdv,
+            spd.overallConvertCapacityUsed,
+            spd.inputTokenAmountUsed,
+            spd.outputTokenAmountUsed
         );
     }
 
@@ -279,7 +341,16 @@ library LibConvert {
         uint256 inputTokenAmountInDirectionOfPeg,
         address outputToken,
         uint256 outputTokenAmountInDirectionOfPeg
-    ) internal returns (uint256 cumulativePenalty) {
+    )
+        internal
+        view
+        returns (
+            uint256 cumulativePenalty,
+            uint256 overallConvertCapacityUsed,
+            uint256 inputTokenAmountUsed,
+            uint256 outputTokenAmountUsed
+        )
+    {
         AppStorage storage s = LibAppStorage.diamondStorage();
 
         Storage.ConvertCapacity storage convertCap = s.convertCapacity[block.number];
@@ -294,9 +365,12 @@ library LibConvert {
         console.log("overallAmountInDirectionOfPeg: ", overallAmountInDirectionOfPeg);
 
         // update overall remaining convert capacity
-        convertCap.overallConvertCapacityUsed = convertCap.overallConvertCapacityUsed.add(
+        overallConvertCapacityUsed = convertCap.overallConvertCapacityUsed.add(
             overallAmountInDirectionOfPeg
         );
+        // convertCap.overallConvertCapacityUsed = convertCap.overallConvertCapacityUsed.add(
+        //     overallAmountInDirectionOfPeg
+        // );
 
         console.log(
             "convertCap.overallConvertCapacityUsed: ",
@@ -322,12 +396,12 @@ library LibConvert {
         if (inputToken != C.BEAN && inputTokenAmountInDirectionOfPeg > 0) {
             uint256 inputTokenWellCapacity = abs(LibWellMinting.cappedReservesDeltaB(inputToken));
             console.log("inputTokenWellCapacity: ", inputTokenWellCapacity);
-            convertCap.wellConvertCapacityUsed[inputToken] = convertCap
-                .wellConvertCapacityUsed[inputToken]
-                .add(inputTokenAmountInDirectionOfPeg);
-            if (convertCap.wellConvertCapacityUsed[inputToken] > inputTokenWellCapacity) {
+            inputTokenAmountUsed = convertCap.wellConvertCapacityUsed[inputToken].add(
+                inputTokenAmountInDirectionOfPeg
+            );
+            if (inputTokenAmountUsed > inputTokenWellCapacity) {
                 cumulativePenalty = cumulativePenalty.add(
-                    convertCap.wellConvertCapacityUsed[inputToken].sub(inputTokenWellCapacity)
+                    inputTokenAmountUsed.sub(inputTokenWellCapacity)
                 );
                 console.log("cumulativePenalty after input token well cap: ", cumulativePenalty);
             }
@@ -336,12 +410,12 @@ library LibConvert {
         if (outputToken != C.BEAN && outputTokenAmountInDirectionOfPeg > 0) {
             uint256 outputTokenWellCapacity = abs(LibWellMinting.cappedReservesDeltaB(outputToken));
             console.log("outputTokenWellCapacity: ", outputTokenWellCapacity);
-            convertCap.wellConvertCapacityUsed[outputToken] = convertCap
-                .wellConvertCapacityUsed[outputToken]
-                .add(outputTokenAmountInDirectionOfPeg);
-            if (convertCap.wellConvertCapacityUsed[outputToken] > outputTokenWellCapacity) {
+            outputTokenAmountUsed = convertCap.wellConvertCapacityUsed[outputToken].add(
+                outputTokenAmountInDirectionOfPeg
+            );
+            if (outputTokenAmountUsed > outputTokenWellCapacity) {
                 cumulativePenalty = cumulativePenalty.add(
-                    convertCap.wellConvertCapacityUsed[outputToken].sub(outputTokenWellCapacity)
+                    outputTokenAmountUsed.sub(outputTokenWellCapacity)
                 );
             }
         }

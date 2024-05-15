@@ -275,10 +275,16 @@ contract ConvertFacet is Invariable, ReentrancyGuard {
             pipeData.initialLpSupply
         );
 
+        console.log("before penalty pipeData.grownStalk: ", pipeData.grownStalk);
+
         // Update grownStalk amount with penalty applied
         pipeData.grownStalk = pipeData.grownStalk.sub(pipeData.stalkPenaltyBdv);
 
+        console.log("after penalty pipeData.grownStalk: ", pipeData.grownStalk);
+
         pipeData.newBdv = LibTokenSilo.beanDenominatedValue(outputToken, toAmount);
+
+        console.log("after penalty pipeData.newBdv: ", pipeData.newBdv);
 
         toStem = _depositTokensForConvert(
             outputToken,
@@ -302,7 +308,7 @@ contract ConvertFacet is Invariable, ReentrancyGuard {
         uint256 overallConvertCapacity,
         uint256 fromBdv,
         uint256[] memory initialLpSupply
-    ) internal returns (uint256 penalty) {
+    ) internal returns (uint256) {
         LibConvert.DeltaBStorage memory dbs;
 
         dbs.beforeInputTokenDeltaB = beforeInputTokenDeltaB;
@@ -331,14 +337,18 @@ contract ConvertFacet is Invariable, ReentrancyGuard {
             IERC20(inputToken).totalSupply(),
             dbs.afterInputTokenDeltaB
         );
+        console.log("dbs.afterInputTokenDeltaB: ");
+        console.logInt(dbs.afterInputTokenDeltaB);
         dbs.afterOutputTokenDeltaB = LibWellMinting.scaledDeltaB(
             beforeOutputLpTokenSupply,
             IERC20(outputToken).totalSupply(),
             dbs.afterOutputTokenDeltaB
         );
+        console.log("dbs.afterOutputTokenDeltaB: ");
+        console.logInt(dbs.afterOutputTokenDeltaB);
 
         return
-            LibConvert.calculateStalkPenalty(
+            LibConvert.applyStalkPenalty(
                 dbs,
                 fromBdv,
                 overallConvertCapacity,
@@ -392,7 +402,7 @@ contract ConvertFacet is Invariable, ReentrancyGuard {
             return 0;
         }
         // return LibWellMinting.currentDeltaB(token);
-        
+
         int256 deltaB = LibWellMinting.currentDeltaB(token);
         console.log("getCurrentDeltaB for token: ", token);
         console.logInt(deltaB);
@@ -473,11 +483,19 @@ contract ConvertFacet is Invariable, ReentrancyGuard {
                     amounts[i]
                 );
 
+                console.log("LibSilo.stalkReward ");
+                console.log("stems[i]: ");
+                console.logInt(stems[i]);
+                console.log("germStem.stemTip");
+                console.logInt(germStem.stemTip);
+                console.log("a.bdvsRemoved[i]: ", a.bdvsRemoved[i]);
+
                 a.stalksRemoved[i] = LibSilo.stalkReward(
                     stems[i],
                     germStem.stemTip,
                     a.bdvsRemoved[i].toUint128()
                 );
+                console.log("calculated a.stalksRemoved[i]: ", a.stalksRemoved[i]);
                 a.active.stalk = a.active.stalk.add(a.stalksRemoved[i]);
 
                 a.active.tokens = a.active.tokens.add(amounts[i]);

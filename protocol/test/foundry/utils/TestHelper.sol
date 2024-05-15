@@ -300,29 +300,27 @@ contract TestHelper is
      * executing in the same block.
      */
     function setDeltaBforWell(int256 deltaB, address wellAddress, address tokenInWell) internal {
-        console.log("attempting to set deltaB for well: ", wellAddress);
-        console.log("deltaB: ");
-        console.logInt(deltaB);
         IWell well = IWell(wellAddress);
         IERC20 tokenOut;
-        
-        // force well update before setting deltaB
-        // well.shift(C.bean(), 0, users[1]);
+        int256 initialDeltaB = bs.poolCurrentDeltaB(wellAddress);
 
-        uint256 initalBeanBalance = C.bean().balanceOf(wellAddress);
-        if (deltaB > 0) {
-            uint256 tokenAmountIn = well.getSwapIn(IERC20(tokenInWell), C.bean(), uint256(deltaB));
+        // find difference between initial and final deltaB
+        int256 deltaBdiff = deltaB - initialDeltaB;
+
+        if (deltaBdiff > 0) {
+            uint256 tokenAmountIn = well.getSwapIn(
+                IERC20(tokenInWell),
+                C.bean(),
+                uint256(deltaBdiff)
+            );
             MockToken(tokenInWell).mint(wellAddress, tokenAmountIn);
             tokenOut = C.bean();
         } else {
-            C.bean().mint(wellAddress, uint256(-deltaB));
+            C.bean().mint(wellAddress, uint256(-deltaBdiff));
             tokenOut = IERC20(tokenInWell);
         }
         uint256 amountOut = well.shift(tokenOut, 0, users[1]);
         well.shift(tokenOut, 0, users[1]);
-
-        console.log("actual resulting deltaB: ");
-        console.logInt(bs.poolCurrentDeltaB(wellAddress));
     }
 
     /**
