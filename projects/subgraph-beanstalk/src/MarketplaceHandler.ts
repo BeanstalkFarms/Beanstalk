@@ -1,4 +1,4 @@
-import { Address, BigInt, log } from "@graphprotocol/graph-ts";
+import { Address, BigInt, Bytes, log } from "@graphprotocol/graph-ts";
 import {
   PodListingCancelled,
   PodListingCreated as PodListingCreated_v1,
@@ -40,6 +40,27 @@ import {
   updateActiveOrders
 } from "./utils/PodMarketplace";
 import { createHistoricalPodOrder, loadPodOrder } from "./utils/PodOrder";
+
+// TODO: write v1 tests first
+/*
+class PodListingCreatedParams {
+  account: Address;
+  index: BigInt;
+  start: BigInt;
+  amount: BigInt;
+  pricePerPod: i32;
+  maxHarvestableIndex: BigInt;
+
+  toWallet: boolean; // v1
+  mode: i32; // v1.1
+
+  // v2
+  minFillAmount: BigInt;
+  pricingFunction: Bytes;
+  // mode: i32;
+  pricingType: i32;
+}
+*/
 
 /* ------------------------------------
  * POD MARKETPLACE V1
