@@ -18,6 +18,7 @@ import { loadPlot } from "./utils/Plot";
 import { savePodTransfer } from "./utils/PodTransfer";
 import { loadSeason } from "./utils/Season";
 import { loadBeanstalk } from "./utils/Beanstalk";
+import { expirePodListingIfExists } from "./utils/PodListing";
 
 export function handleWeatherChange(event: WeatherChange): void {
   handleRateChange(event.address, event.block, event.params.season, event.params.caseId, event.params.change);
@@ -102,6 +103,8 @@ export function handleHarvest(event: Harvest): void {
   for (let i = 0; i < event.params.plots.length; i++) {
     // Plot should exist
     let plot = loadPlot(event.address, event.params.plots[i]);
+
+    expirePodListingIfExists(event.address, plot.farmer, plot.index, event.block.timestamp);
 
     let harvestablePods = season.harvestableIndex.minus(plot.index);
 

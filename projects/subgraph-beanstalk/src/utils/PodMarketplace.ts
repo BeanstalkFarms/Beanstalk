@@ -3,7 +3,7 @@ import { PodMarketplace, PodMarketplaceHourlySnapshot, PodMarketplaceDailySnapsh
 import { dayFromTimestamp } from "./Dates";
 import { ZERO_BI } from "../../../subgraph-core/utils/Decimals";
 import { loadField } from "./Field";
-import { expirePodListing, loadPodListing } from "./PodListing";
+import { expirePodListingIfExists, loadPodListing } from "./PodListing";
 
 export enum MarketplaceAction {
   CREATED,
@@ -124,7 +124,7 @@ export function updateExpiredPlots(harvestableIndex: BigInt, diamondAddress: Add
     const maxHarvestableIndex = BigInt.fromString(destructured[2]);
     if (harvestableIndex > maxHarvestableIndex) {
       // This method updates the marketplace entity, so it will perform the splice.
-      expirePodListing(diamondAddress, destructured[0], BigInt.fromString(destructured[1]), i, timestamp);
+      expirePodListingIfExists(diamondAddress, destructured[0], BigInt.fromString(destructured[1]), timestamp, i);
       // A similar splice is done here also to track the updated index on the underlying array.
       remainingListings.splice(i--, 1);
     }

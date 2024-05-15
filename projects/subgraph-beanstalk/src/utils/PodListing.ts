@@ -44,18 +44,34 @@ export function loadPodListing(account: Address, index: BigInt): PodListing {
   return listing;
 }
 
-export function expirePodListing(
+export function expirePodListingIfExists(
   diamondAddress: Address,
   farmer: string,
   listedPlotIndex: BigInt,
-  activeListingIndex: i32,
-  timestamp: BigInt
+  timestamp: BigInt,
+  activeListingIndex: i32 = -1 // If provided, avoids having to lookup the index
 ): void {
+  let listing = PodListing.load(farmer + "-" + listedPlotIndex.toString());
+  if (listing == null || listing.status != "ACTIVE") {
+    return;
+  }
+
   let market = loadPodMarketplace(diamondAddress);
+
+  if (activeListingIndex == -1) {
+    // There should always be a matching entry in this list because it is verified that the listing is ACTIVE
+    for (let i = 0; i < market.activeListings.length; i++) {
+      const destructured = market.activeListings[i].split("-");
+      // Unnecessary to check if the account matches.
+      if (destructured[1] == listedPlotIndex.toString()) {
+        activeListingIndex = i;
+        break;
+      }
+    }
+  }
+
   let marketHourly = loadPodMarketplaceHourlySnapshot(diamondAddress, market.season, timestamp);
   let marketDaily = loadPodMarketplaceDailySnapshot(diamondAddress, timestamp);
-
-  let listing = loadPodListing(Address.fromString(farmer), listedPlotIndex);
 
   market.expiredListedPods = market.expiredListedPods.plus(listing.remainingAmount);
   market.availableListedPods = market.availableListedPods.minus(listing.remainingAmount);

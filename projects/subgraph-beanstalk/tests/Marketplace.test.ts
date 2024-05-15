@@ -363,6 +363,8 @@ describe("Marketplace", () => {
         harvest(account, [listingIndex], sowedPods);
         assert.fieldEquals("PodListing", listingID, "status", "EXPIRED");
         assert.fieldEquals("PodListing", listingID, "remainingAmount", "0");
+
+        assertMarketListingsState(BEANSTALK.toHexString(), [], listedPods, ZERO_BI, ZERO_BI, listedPods, ZERO_BI, ZERO_BI, ZERO_BI);
       });
     });
 
