@@ -1008,11 +1008,6 @@ type PodListing @entity {
   """
   filledAmount: BigInt!
 
-  """
-  The number of Pods that were remaining in *this* PodListing when it was Cancelled.
-  """
-  cancelledAmount: BigInt!
-
   ######################## Activity ########################
 
   "Any Fills associated with this PodListing."

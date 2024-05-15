@@ -31,7 +31,6 @@ export function loadPodListing(account: Address, index: BigInt): PodListing {
     listing.amount = ZERO_BI;
     listing.remainingAmount = ZERO_BI;
     listing.filledAmount = ZERO_BI;
-    listing.cancelledAmount = ZERO_BI;
 
     listing.status = "ACTIVE";
     listing.createdAt = ZERO_BI;
@@ -55,6 +54,8 @@ export function expirePodListingIfExists(
   if (listing == null || listing.status != "ACTIVE") {
     return;
   }
+  listing.status = "EXPIRED";
+  listing.save();
 
   let market = loadPodMarketplace(diamondAddress);
 
@@ -93,10 +94,6 @@ export function expirePodListingIfExists(
   marketDaily.deltaAvailableListedPods = marketDaily.deltaAvailableListedPods.minus(listing.remainingAmount);
   marketDaily.availableListedPods = market.availableListedPods;
   marketDaily.save();
-
-  listing.status = "EXPIRED";
-  listing.remainingAmount = ZERO_BI;
-  listing.save();
 }
 
 export function createHistoricalPodListing(listing: PodListing): void {
@@ -128,7 +125,6 @@ export function createHistoricalPodListing(listing: PodListing): void {
       newListing.amount = listing.amount;
       newListing.remainingAmount = listing.remainingAmount;
       newListing.filledAmount = listing.filledAmount;
-      newListing.cancelledAmount = listing.cancelledAmount;
 
       newListing.fill = listing.fill;
 

@@ -55,80 +55,34 @@ export function createHistoricalPodOrder(order: PodOrder): void {
   }
 }
 
-export function expirePodOrder(diamondAddress: Address, orderId: string, timestamp: BigInt, activeListingIndex: i32): void {
-  // let order = loadPodOrder(Bytes.fromHexString(orderId));
-  // let market = loadPodMarketplace(diamondAddress);
-  // let marketHourly = loadPodMarketplaceHourlySnapshot(diamondAddress, market.season, timestamp);
-  // let marketDaily = loadPodMarketplaceDailySnapshot(diamondAddress, timestamp);
-  // const expiredBeans = order.beanAmount.minus(order.beanAmountFilled);
-  // market.expiredOrderBeans = market.expiredOrderBeans.plus(expiredBeans);
-  // ///
-  // market.availableListedPods = market.availableListedPods.minus(listing.remainingAmount);
-  // let activeListings = market.activeListings;
-  // activeListings.splice(activeListingIndex, 1);
-  // market.activeListings = activeListings;
-  // market.save();
-  // marketHourly.season = market.season;
-  // marketHourly.deltaExpiredListedPods = marketHourly.deltaExpiredListedPods.plus(listing.remainingAmount);
-  // marketHourly.expiredListedPods = market.expiredListedPods;
-  // marketHourly.deltaAvailableListedPods = marketHourly.deltaAvailableListedPods.minus(listing.remainingAmount);
-  // marketHourly.availableListedPods = market.availableListedPods;
-  // marketHourly.save();
-  // marketDaily.season = market.season;
-  // marketDaily.deltaExpiredListedPods = marketDaily.deltaExpiredListedPods.plus(listing.remainingAmount);
-  // marketDaily.expiredListedPods = market.expiredListedPods;
-  // marketDaily.deltaAvailableListedPods = marketDaily.deltaAvailableListedPods.minus(listing.remainingAmount);
-  // marketDaily.availableListedPods = market.availableListedPods;
-  // marketDaily.save();
-  // listing.status = "EXPIRED";
-  // listing.remainingAmount = ZERO_BI;
-  // listing.save();
-  /**
- * let listing = PodListing.load(farmer + "-" + listedPlotIndex.toString());
-  if (listing == null || listing.status != "ACTIVE") {
-    return;
-  }
+export function expirePodOrder(diamondAddress: Address, orderId: string, timestamp: BigInt, activeOrderIndex: i32): void {
+  let order = loadPodOrder(Bytes.fromHexString(orderId));
+  order.status = "EXPIRED";
+  order.save();
 
   let market = loadPodMarketplace(diamondAddress);
-
-  if (activeListingIndex == -1) {
-    // There should always be a matching entry in this list because it is verified that the listing is ACTIVE
-    for (let i = 0; i < market.activeListings.length; i++) {
-      const destructured = market.activeListings[i].split("-");
-      // Unnecessary to check if the account matches.
-      if (destructured[1] == listedPlotIndex.toString()) {
-        activeListingIndex = i;
-        break;
-      }
-    }
-  }
-
   let marketHourly = loadPodMarketplaceHourlySnapshot(diamondAddress, market.season, timestamp);
   let marketDaily = loadPodMarketplaceDailySnapshot(diamondAddress, timestamp);
 
-  market.expiredListedPods = market.expiredListedPods.plus(listing.remainingAmount);
-  market.availableListedPods = market.availableListedPods.minus(listing.remainingAmount);
-  let activeListings = market.activeListings;
-  activeListings.splice(activeListingIndex, 1);
-  market.activeListings = activeListings;
+  const expiredBeans = order.beanAmount.minus(order.beanAmountFilled);
+  market.expiredOrderBeans = market.expiredOrderBeans.plus(expiredBeans);
+  market.availableOrderBeans = market.availableOrderBeans.minus(expiredBeans);
+  let activeOrders = market.activeOrders;
+  activeOrders.splice(activeOrderIndex, 1);
+  market.activeOrders = activeOrders;
   market.save();
 
   marketHourly.season = market.season;
-  marketHourly.deltaExpiredListedPods = marketHourly.deltaExpiredListedPods.plus(listing.remainingAmount);
-  marketHourly.expiredListedPods = market.expiredListedPods;
-  marketHourly.deltaAvailableListedPods = marketHourly.deltaAvailableListedPods.minus(listing.remainingAmount);
-  marketHourly.availableListedPods = market.availableListedPods;
+  marketHourly.deltaExpiredOrderBeans = marketHourly.deltaExpiredOrderBeans.plus(expiredBeans);
+  marketHourly.expiredOrderBeans = market.expiredListedPods;
+  marketHourly.deltaAvailableOrderBeans = marketHourly.deltaAvailableOrderBeans.minus(expiredBeans);
+  marketHourly.availableOrderBeans = market.availableOrderBeans;
   marketHourly.save();
 
   marketDaily.season = market.season;
-  marketDaily.deltaExpiredListedPods = marketDaily.deltaExpiredListedPods.plus(listing.remainingAmount);
-  marketDaily.expiredListedPods = market.expiredListedPods;
-  marketDaily.deltaAvailableListedPods = marketDaily.deltaAvailableListedPods.minus(listing.remainingAmount);
-  marketDaily.availableListedPods = market.availableListedPods;
+  marketDaily.deltaExpiredOrderBeans = marketDaily.deltaExpiredOrderBeans.plus(expiredBeans);
+  marketDaily.expiredOrderBeans = market.expiredListedPods;
+  marketDaily.deltaAvailableOrderBeans = marketDaily.deltaAvailableOrderBeans.minus(expiredBeans);
+  marketDaily.availableOrderBeans = market.availableOrderBeans;
   marketDaily.save();
-
-  listing.status = "EXPIRED";
-  listing.remainingAmount = ZERO_BI;
-  listing.save();
- */
 }

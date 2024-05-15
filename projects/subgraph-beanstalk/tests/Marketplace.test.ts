@@ -200,8 +200,7 @@ describe("Marketplace", () => {
         const cancelledAmount = sowedPods.minus(beans_BI(500));
         const listingID = event.params.account.toHexString() + "-" + event.params.index.toString();
         assert.fieldEquals("PodListing", listingID, "status", "CANCELLED");
-        assert.fieldEquals("PodListing", listingID, "cancelledAmount", cancelledAmount.toString());
-        assert.fieldEquals("PodListing", listingID, "remainingAmount", "0");
+        assert.fieldEquals("PodListing", listingID, "remainingAmount", cancelledAmount.toString());
 
         assertMarketListingsState(
           BEANSTALK.toHexString(),
@@ -231,8 +230,7 @@ describe("Marketplace", () => {
 
         const newListingID = event.params.account.toHexString() + "-" + event.params.index.toString();
         assert.fieldEquals("PodListing", newListingID, "status", "CANCELLED_PARTIAL");
-        assert.fieldEquals("PodListing", newListingID, "cancelledAmount", remaining.toString());
-        assert.fieldEquals("PodListing", newListingID, "remainingAmount", "0");
+        assert.fieldEquals("PodListing", newListingID, "remainingAmount", remaining.toString());
 
         assertMarketListingsState(
           BEANSTALK.toHexString(),
@@ -257,7 +255,6 @@ describe("Marketplace", () => {
         assert.fieldEquals("PodListing", listingID, "status", "ACTIVE");
         assert.fieldEquals("PodListing", listingID + "-0", "status", "CANCELLED");
         assert.fieldEquals("PodListing", listingID + "-0", "filled", "0");
-        assert.fieldEquals("PodListing", listingID + "-0", "cancelledAmount", listedPods.toString());
 
         assertMarketListingsState(
           BEANSTALK.toHexString(),
@@ -287,7 +284,6 @@ describe("Marketplace", () => {
         assert.notInStore("PodListing", newListingID + "-1");
         assert.fieldEquals("PodListing", newListingID + "-0", "status", "CANCELLED_PARTIAL");
         assert.fieldEquals("PodListing", newListingID + "-0", "filled", filledPods.toString());
-        assert.fieldEquals("PodListing", newListingID + "-0", "cancelledAmount", newListingAmount.toString());
         assert.fieldEquals("PodListing", newListingID, "status", "ACTIVE");
         assert.fieldEquals("PodListing", newListingID, "filled", "0");
         assert.fieldEquals("PodListing", newListingID, "remainingAmount", newListingAmount.toString());
@@ -317,7 +313,7 @@ describe("Marketplace", () => {
         assert.fieldEquals("PodListing", listingID, "status", "ACTIVE");
         setHarvestable(maxHarvestableIndex.plus(ONE_BI));
         assert.fieldEquals("PodListing", listingID, "status", "EXPIRED");
-        assert.fieldEquals("PodListing", listingID, "remainingAmount", "0");
+        assert.fieldEquals("PodListing", listingID, "remainingAmount", listedPods.toString());
 
         assertMarketListingsState(BEANSTALK.toHexString(), [], listedPods, ZERO_BI, ZERO_BI, listedPods, ZERO_BI, ZERO_BI, ZERO_BI);
 
@@ -338,7 +334,7 @@ describe("Marketplace", () => {
         assert.fieldEquals("PodListing", listingID, "filled", filledPods.toString());
         assert.fieldEquals("PodListing", newListingID, "status", "EXPIRED");
         assert.fieldEquals("PodListing", newListingID, "filled", filledPods.toString());
-        assert.fieldEquals("PodListing", newListingID, "remainingAmount", "0");
+        assert.fieldEquals("PodListing", newListingID, "remainingAmount", listedPods.minus(filledPods).toString());
 
         assertMarketListingsState(
           BEANSTALK.toHexString(),
@@ -365,7 +361,7 @@ describe("Marketplace", () => {
         // Plot harvests, now expired
         harvest(account, [listingIndex], sowedPods);
         assert.fieldEquals("PodListing", listingID, "status", "EXPIRED");
-        assert.fieldEquals("PodListing", listingID, "remainingAmount", "0");
+        assert.fieldEquals("PodListing", listingID, "remainingAmount", listedPods.toString());
 
         assertMarketListingsState(BEANSTALK.toHexString(), [], listedPods, ZERO_BI, ZERO_BI, listedPods, ZERO_BI, ZERO_BI, ZERO_BI);
       });

@@ -65,7 +65,6 @@ export function handlePodListingCreated(event: PodListingCreated_v1): void {
     listing.fill = null;
     listing.filled = ZERO_BI;
     listing.filledAmount = ZERO_BI;
-    listing.cancelledAmount = ZERO_BI;
   }
 
   // Identifiers
@@ -143,8 +142,6 @@ export function handlePodListingCancelled(event: PodListingCancelled): void {
   updateMarketListingBalances(event.address, ZERO_BI, listing.remainingAmount, ZERO_BI, ZERO_BI, event.block.timestamp);
 
   listing.status = listing.filled == ZERO_BI ? "CANCELLED" : "CANCELLED_PARTIAL";
-  listing.cancelledAmount = listing.remainingAmount;
-  listing.remainingAmount = ZERO_BI;
   listing.updatedAt = event.block.timestamp;
   listing.save();
 
@@ -405,7 +402,6 @@ export function handlePodListingCreated_v1_1(event: PodListingCreated_v1_1): voi
     listing.fill = null;
     listing.filled = ZERO_BI;
     listing.filledAmount = ZERO_BI;
-    listing.cancelledAmount = ZERO_BI;
   }
 
   listing.historyID = listing.id + "-" + event.block.timestamp.toString();
@@ -487,7 +483,6 @@ export function handlePodListingCreated_v2(event: PodListingCreated_v2): void {
     listing.fill = null;
     listing.filled = ZERO_BI;
     listing.filledAmount = ZERO_BI;
-    listing.cancelledAmount = ZERO_BI;
   }
 
   listing.historyID = listing.id + "-" + event.block.timestamp.toString();
