@@ -32,12 +32,11 @@ import { loadPlot } from "./utils/Plot";
 import { loadPodFill } from "./utils/PodFill";
 import { createHistoricalPodListing, loadPodListing } from "./utils/PodListing";
 import {
-  loadPodMarketplace,
-  loadPodMarketplaceDailySnapshot,
-  loadPodMarketplaceHourlySnapshot,
   MarketplaceAction,
   updateActiveListings,
-  updateActiveOrders
+  updateActiveOrders,
+  updateMarketListingBalances,
+  updateMarketOrderBalances
 } from "./utils/PodMarketplace";
 import { createHistoricalPodOrder, loadPodOrder } from "./utils/PodOrder";
 
@@ -79,11 +78,11 @@ class MarketFillParams {
   event: ethereum.Event;
   from: Address;
   to: Address;
+  id: Bytes | null; // For pod order
   index: BigInt;
   start: BigInt;
   amount: BigInt;
-
-  //v2
+  // v2; for v1, it can be computed and provided that way
   costInBeans: BigInt;
 }
 
@@ -219,6 +218,7 @@ export function handlePodListingFilled(event: PodListingFilled_v1): void {
     event: event,
     from: event.params.from,
     to: event.params.to,
+    id: null,
     index: event.params.index,
     start: event.params.start,
     amount: event.params.amount,
@@ -270,49 +270,18 @@ export function handlePodOrderCreated(event: PodOrderCreated_v1): void {
 
 export function handlePodOrderFilled(event: PodOrderFilled_v1): void {
   let order = loadPodOrder(event.params.id);
-  let fill = loadPodFill(event.address, event.params.index, event.transaction.hash.toHexString());
-
   let beanAmount = BigInt.fromI32(order.pricePerPod).times(event.params.amount).div(BigInt.fromI32(1000000));
 
-  order.updatedAt = event.block.timestamp;
-  order.podAmountFilled = order.podAmountFilled.plus(event.params.amount);
-  order.beanAmountFilled = order.beanAmountFilled.plus(beanAmount);
-  order.status = order.beanAmount == order.beanAmountFilled ? "FILLED" : "ACTIVE";
-  let newFills = order.fills;
-  newFills.push(fill.id);
-  order.fills = newFills;
-  order.save();
-
-  fill.createdAt = event.block.timestamp;
-  fill.order = order.id;
-  fill.from = event.params.from.toHexString();
-  fill.to = event.params.to.toHexString();
-  fill.amount = event.params.amount;
-  fill.index = event.params.index;
-  fill.start = event.params.start;
-  fill.costInBeans = beanAmount;
-  fill.save();
-
-  if (order.status == "FILLED") {
-    updateActiveOrders(event.address, MarketplaceAction.FILLED_FULL, order.id, order.maxPlaceInLine);
-  }
-  updateMarketOrderBalances(event.address, ZERO_BI, ZERO_BI, event.params.amount, beanAmount, event.block.timestamp);
-
-  // Save the raw event data
-  let id = "podOrderFilled-" + event.transaction.hash.toHexString() + "-" + event.logIndex.toString();
-  let rawEvent = new PodOrderFilledEvent(id);
-  rawEvent.hash = event.transaction.hash.toHexString();
-  rawEvent.logIndex = event.logIndex.toI32();
-  rawEvent.protocol = event.address.toHexString();
-  rawEvent.historyID = order.historyID;
-  rawEvent.from = event.params.from.toHexString();
-  rawEvent.to = event.params.to.toHexString();
-  rawEvent.index = event.params.index;
-  rawEvent.start = event.params.start;
-  rawEvent.amount = event.params.amount;
-  rawEvent.blockNumber = event.block.number;
-  rawEvent.createdAt = event.block.timestamp;
-  rawEvent.save();
+  podOrderFilled({
+    event: event,
+    from: event.params.from,
+    to: event.params.to,
+    id: event.params.id,
+    index: event.params.index,
+    start: event.params.start,
+    amount: event.params.amount,
+    costInBeans: beanAmount
+  });
 }
 
 export function handlePodOrderCancelled(event: PodOrderCancelled): void {
@@ -527,6 +496,7 @@ export function handlePodListingFilled_v2(event: PodListingFilled_v2): void {
     event: event,
     from: event.params.from,
     to: event.params.to,
+    id: null,
     index: event.params.index,
     start: event.params.start,
     amount: event.params.amount,
@@ -581,50 +551,16 @@ export function handlePodOrderCreated_v2(event: PodOrderCreated_v2): void {
 }
 
 export function handlePodOrderFilled_v2(event: PodOrderFilled_v2): void {
-  let order = loadPodOrder(event.params.id);
-  let fill = loadPodFill(event.address, event.params.index, event.transaction.hash.toHexString());
-
-  order.updatedAt = event.block.timestamp;
-  order.beanAmountFilled = order.beanAmountFilled.plus(event.params.costInBeans);
-  order.podAmountFilled = order.podAmountFilled.plus(event.params.amount);
-  order.status = order.beanAmount == order.beanAmountFilled ? "FILLED" : "ACTIVE";
-  let newFills = order.fills;
-  newFills.push(fill.id);
-  order.fills = newFills;
-  order.save();
-
-  fill.createdAt = event.block.timestamp;
-  fill.order = order.id;
-  fill.from = event.params.from.toHexString();
-  fill.to = event.params.to.toHexString();
-  fill.amount = event.params.amount;
-  fill.index = event.params.index;
-  fill.start = event.params.start;
-  fill.costInBeans = event.params.costInBeans;
-  fill.save();
-
-  if (order.beanAmountFilled == order.beanAmount) {
-    updateActiveOrders(event.address, MarketplaceAction.FILLED_FULL, order.id, order.maxPlaceInLine);
-  }
-
-  updateMarketOrderBalances(event.address, ZERO_BI, ZERO_BI, event.params.amount, event.params.costInBeans, event.block.timestamp);
-
-  // Save the raw event data
-  let id = "podOrderFilled-" + event.transaction.hash.toHexString() + "-" + event.logIndex.toString();
-  let rawEvent = new PodOrderFilledEvent(id);
-  rawEvent.hash = event.transaction.hash.toHexString();
-  rawEvent.logIndex = event.logIndex.toI32();
-  rawEvent.protocol = event.address.toHexString();
-  rawEvent.historyID = order.historyID;
-  rawEvent.from = event.params.from.toHexString();
-  rawEvent.to = event.params.to.toHexString();
-  rawEvent.index = event.params.index;
-  rawEvent.start = event.params.start;
-  rawEvent.amount = event.params.amount;
-  rawEvent.costInBeans = event.params.costInBeans;
-  rawEvent.blockNumber = event.block.number;
-  rawEvent.createdAt = event.block.timestamp;
-  rawEvent.save();
+  podOrderFilled({
+    event: event,
+    from: event.params.from,
+    to: event.params.to,
+    id: event.params.id,
+    index: event.params.index,
+    start: event.params.start,
+    amount: event.params.amount,
+    costInBeans: event.params.costInBeans
+  });
 }
 
 /* ------------------------------------
@@ -722,116 +658,49 @@ function podListingFilled(params: MarketFillParams): void {
   rawEvent.save();
 }
 
-// TODO: move these final 2 elsewhere.
-function updateMarketListingBalances(
-  marketAddress: Address,
-  newPodAmount: BigInt,
-  cancelledPodAmount: BigInt,
-  filledPodAmount: BigInt,
-  filledBeanAmount: BigInt,
-  timestamp: BigInt
-): void {
-  let market = loadPodMarketplace(marketAddress);
-  let marketHourly = loadPodMarketplaceHourlySnapshot(marketAddress, market.season, timestamp);
-  let marketDaily = loadPodMarketplaceDailySnapshot(marketAddress, timestamp);
+function podOrderFilled(params: MarketFillParams): void {
+  let order = loadPodOrder(params.id!);
+  let fill = loadPodFill(params.event.address, params.index, params.event.transaction.hash.toHexString());
 
-  const netListingChange = newPodAmount.minus(cancelledPodAmount).minus(filledPodAmount);
+  order.updatedAt = params.event.block.timestamp;
+  order.beanAmountFilled = order.beanAmountFilled.plus(params.costInBeans);
+  order.podAmountFilled = order.podAmountFilled.plus(params.amount);
+  order.status = order.beanAmount == order.beanAmountFilled ? "FILLED" : "ACTIVE";
+  let newFills = order.fills;
+  newFills.push(fill.id);
+  order.fills = newFills;
+  order.save();
 
-  market.listedPods = market.listedPods.plus(newPodAmount);
-  market.availableListedPods = market.availableListedPods.plus(netListingChange);
-  market.cancelledListedPods = market.cancelledListedPods.plus(cancelledPodAmount);
-  market.filledListedPods = market.filledListedPods.plus(filledPodAmount);
-  market.podVolume = market.podVolume.plus(filledPodAmount);
-  market.beanVolume = market.beanVolume.plus(filledBeanAmount);
-  market.save();
+  fill.createdAt = params.event.block.timestamp;
+  fill.order = order.id;
+  fill.from = params.from.toHexString();
+  fill.to = params.to.toHexString();
+  fill.amount = params.amount;
+  fill.index = params.index;
+  fill.start = params.start;
+  fill.costInBeans = params.costInBeans;
+  fill.save();
 
-  marketHourly.season = market.season;
-  marketHourly.deltaListedPods = marketHourly.deltaListedPods.plus(newPodAmount);
-  marketHourly.listedPods = market.listedPods;
-  marketHourly.deltaAvailableListedPods = marketHourly.deltaAvailableListedPods.plus(netListingChange);
-  marketHourly.availableListedPods = market.availableListedPods;
-  marketHourly.deltaCancelledListedPods = marketHourly.deltaCancelledListedPods.plus(cancelledPodAmount);
-  marketHourly.cancelledListedPods = market.cancelledListedPods;
-  marketHourly.deltaFilledListedPods = marketHourly.deltaFilledListedPods.plus(filledPodAmount);
-  marketHourly.filledListedPods = market.filledListedPods;
-  marketHourly.deltaPodVolume = marketHourly.deltaPodVolume.plus(filledPodAmount);
-  marketHourly.podVolume = market.podVolume;
-  marketHourly.deltaBeanVolume = marketHourly.deltaBeanVolume.plus(filledBeanAmount);
-  marketHourly.beanVolume = market.beanVolume;
-  marketHourly.updatedAt = timestamp;
-  marketHourly.save();
+  if (order.status == "FILLED") {
+    updateActiveOrders(params.event.address, MarketplaceAction.FILLED_FULL, order.id, order.maxPlaceInLine);
+  }
 
-  marketDaily.season = market.season;
-  marketDaily.deltaListedPods = marketDaily.deltaListedPods.plus(newPodAmount);
-  marketDaily.listedPods = market.listedPods;
-  marketDaily.deltaAvailableListedPods = marketDaily.deltaAvailableListedPods.plus(netListingChange);
-  marketDaily.availableListedPods = market.availableListedPods;
-  marketDaily.deltaCancelledListedPods = marketDaily.deltaCancelledListedPods.plus(cancelledPodAmount);
-  marketDaily.cancelledListedPods = market.cancelledListedPods;
-  marketDaily.deltaFilledListedPods = marketDaily.deltaFilledListedPods.plus(filledPodAmount);
-  marketDaily.filledListedPods = market.filledListedPods;
-  marketDaily.deltaPodVolume = marketDaily.deltaPodVolume.plus(filledPodAmount);
-  marketDaily.podVolume = market.podVolume;
-  marketDaily.deltaBeanVolume = marketDaily.deltaBeanVolume.plus(filledBeanAmount);
-  marketDaily.beanVolume = market.beanVolume;
-  marketDaily.updatedAt = timestamp;
-  marketDaily.save();
-}
+  updateMarketOrderBalances(params.event.address, ZERO_BI, ZERO_BI, params.amount, params.costInBeans, params.event.block.timestamp);
 
-function updateMarketOrderBalances(
-  marketAddress: Address,
-  newBeanAmount: BigInt,
-  cancelledBeanAmount: BigInt,
-  filledPodAmount: BigInt,
-  filledBeanAmount: BigInt,
-  timestamp: BigInt
-): void {
-  let market = loadPodMarketplace(marketAddress);
-  let marketHourly = loadPodMarketplaceHourlySnapshot(marketAddress, market.season, timestamp);
-  let marketDaily = loadPodMarketplaceDailySnapshot(marketAddress, timestamp);
-
-  const netOrderChange = newBeanAmount.minus(cancelledBeanAmount).minus(filledBeanAmount);
-
-  market.orderBeans = market.orderBeans.plus(newBeanAmount);
-  market.availableOrderBeans = market.availableOrderBeans.plus(netOrderChange);
-  market.filledOrderedPods = market.filledOrderedPods.plus(filledPodAmount);
-  market.filledOrderBeans = market.filledOrderBeans.plus(filledBeanAmount);
-  market.podVolume = market.podVolume.plus(filledPodAmount);
-  market.beanVolume = market.beanVolume.plus(filledBeanAmount);
-  market.cancelledOrderBeans = market.cancelledOrderBeans.plus(cancelledBeanAmount);
-  market.save();
-
-  marketHourly.deltaOrderBeans = marketHourly.deltaOrderBeans.plus(newBeanAmount);
-  marketHourly.orderBeans = market.orderBeans;
-  marketHourly.deltaAvailableOrderBeans = marketHourly.deltaAvailableOrderBeans.plus(netOrderChange);
-  marketHourly.availableOrderBeans = market.availableOrderBeans;
-  marketHourly.deltaFilledOrderedPods = marketHourly.deltaFilledOrderedPods.plus(filledPodAmount);
-  marketHourly.filledOrderedPods = market.filledOrderedPods;
-  marketHourly.deltaFilledOrderBeans = marketHourly.deltaFilledOrderBeans.plus(filledBeanAmount);
-  marketHourly.filledOrderBeans = market.filledOrderBeans;
-  marketHourly.deltaPodVolume = marketHourly.deltaPodVolume.plus(filledPodAmount);
-  marketHourly.podVolume = market.podVolume;
-  marketHourly.deltaBeanVolume = marketHourly.deltaBeanVolume.plus(filledBeanAmount);
-  marketHourly.beanVolume = market.beanVolume;
-  marketHourly.deltaCancelledOrderBeans = marketHourly.deltaCancelledOrderBeans.plus(cancelledBeanAmount);
-  marketHourly.cancelledOrderBeans = market.cancelledOrderBeans;
-  marketHourly.updatedAt = timestamp;
-  marketHourly.save();
-
-  marketDaily.deltaOrderBeans = marketDaily.deltaOrderBeans.plus(newBeanAmount);
-  marketDaily.orderBeans = market.orderBeans;
-  marketDaily.deltaAvailableOrderBeans = marketHourly.deltaAvailableOrderBeans.plus(netOrderChange);
-  marketDaily.availableOrderBeans = market.availableOrderBeans;
-  marketDaily.deltaFilledOrderedPods = marketDaily.deltaFilledOrderedPods.plus(filledPodAmount);
-  marketDaily.filledOrderedPods = market.filledOrderedPods;
-  marketDaily.deltaFilledOrderBeans = marketHourly.deltaFilledOrderBeans.plus(filledBeanAmount);
-  marketDaily.filledOrderBeans = market.filledOrderBeans;
-  marketDaily.deltaPodVolume = marketDaily.deltaPodVolume.plus(filledPodAmount);
-  marketDaily.podVolume = market.podVolume;
-  marketDaily.deltaBeanVolume = marketDaily.deltaBeanVolume.plus(filledBeanAmount);
-  marketDaily.beanVolume = market.beanVolume;
-  marketDaily.deltaCancelledOrderBeans = marketDaily.deltaCancelledOrderBeans.plus(cancelledBeanAmount);
-  marketDaily.cancelledOrderBeans = market.cancelledOrderBeans;
-  marketDaily.updatedAt = timestamp;
-  marketDaily.save();
+  // Save the raw event data
+  let id = "podOrderFilled-" + params.event.transaction.hash.toHexString() + "-" + params.event.logIndex.toString();
+  let rawEvent = new PodOrderFilledEvent(id);
+  rawEvent.hash = params.event.transaction.hash.toHexString();
+  rawEvent.logIndex = params.event.logIndex.toI32();
+  rawEvent.protocol = params.event.address.toHexString();
+  rawEvent.historyID = order.historyID;
+  rawEvent.from = params.from.toHexString();
+  rawEvent.to = params.to.toHexString();
+  rawEvent.index = params.index;
+  rawEvent.start = params.start;
+  rawEvent.amount = params.amount;
+  rawEvent.costInBeans = params.costInBeans;
+  rawEvent.blockNumber = params.event.block.number;
+  rawEvent.createdAt = params.event.block.timestamp;
+  rawEvent.save();
 }

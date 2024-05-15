@@ -119,6 +119,119 @@ export function loadPodMarketplaceDailySnapshot(diamondAddress: Address, timesta
   return snapshot;
 }
 
+export function updateMarketListingBalances(
+  marketAddress: Address,
+  newPodAmount: BigInt,
+  cancelledPodAmount: BigInt,
+  filledPodAmount: BigInt,
+  filledBeanAmount: BigInt,
+  timestamp: BigInt
+): void {
+  let market = loadPodMarketplace(marketAddress);
+  let marketHourly = loadPodMarketplaceHourlySnapshot(marketAddress, market.season, timestamp);
+  let marketDaily = loadPodMarketplaceDailySnapshot(marketAddress, timestamp);
+
+  const netListingChange = newPodAmount.minus(cancelledPodAmount).minus(filledPodAmount);
+
+  market.listedPods = market.listedPods.plus(newPodAmount);
+  market.availableListedPods = market.availableListedPods.plus(netListingChange);
+  market.cancelledListedPods = market.cancelledListedPods.plus(cancelledPodAmount);
+  market.filledListedPods = market.filledListedPods.plus(filledPodAmount);
+  market.podVolume = market.podVolume.plus(filledPodAmount);
+  market.beanVolume = market.beanVolume.plus(filledBeanAmount);
+  market.save();
+
+  marketHourly.season = market.season;
+  marketHourly.deltaListedPods = marketHourly.deltaListedPods.plus(newPodAmount);
+  marketHourly.listedPods = market.listedPods;
+  marketHourly.deltaAvailableListedPods = marketHourly.deltaAvailableListedPods.plus(netListingChange);
+  marketHourly.availableListedPods = market.availableListedPods;
+  marketHourly.deltaCancelledListedPods = marketHourly.deltaCancelledListedPods.plus(cancelledPodAmount);
+  marketHourly.cancelledListedPods = market.cancelledListedPods;
+  marketHourly.deltaFilledListedPods = marketHourly.deltaFilledListedPods.plus(filledPodAmount);
+  marketHourly.filledListedPods = market.filledListedPods;
+  marketHourly.deltaPodVolume = marketHourly.deltaPodVolume.plus(filledPodAmount);
+  marketHourly.podVolume = market.podVolume;
+  marketHourly.deltaBeanVolume = marketHourly.deltaBeanVolume.plus(filledBeanAmount);
+  marketHourly.beanVolume = market.beanVolume;
+  marketHourly.updatedAt = timestamp;
+  marketHourly.save();
+
+  marketDaily.season = market.season;
+  marketDaily.deltaListedPods = marketDaily.deltaListedPods.plus(newPodAmount);
+  marketDaily.listedPods = market.listedPods;
+  marketDaily.deltaAvailableListedPods = marketDaily.deltaAvailableListedPods.plus(netListingChange);
+  marketDaily.availableListedPods = market.availableListedPods;
+  marketDaily.deltaCancelledListedPods = marketDaily.deltaCancelledListedPods.plus(cancelledPodAmount);
+  marketDaily.cancelledListedPods = market.cancelledListedPods;
+  marketDaily.deltaFilledListedPods = marketDaily.deltaFilledListedPods.plus(filledPodAmount);
+  marketDaily.filledListedPods = market.filledListedPods;
+  marketDaily.deltaPodVolume = marketDaily.deltaPodVolume.plus(filledPodAmount);
+  marketDaily.podVolume = market.podVolume;
+  marketDaily.deltaBeanVolume = marketDaily.deltaBeanVolume.plus(filledBeanAmount);
+  marketDaily.beanVolume = market.beanVolume;
+  marketDaily.updatedAt = timestamp;
+  marketDaily.save();
+}
+
+export function updateMarketOrderBalances(
+  marketAddress: Address,
+  newBeanAmount: BigInt,
+  cancelledBeanAmount: BigInt,
+  filledPodAmount: BigInt,
+  filledBeanAmount: BigInt,
+  timestamp: BigInt
+): void {
+  let market = loadPodMarketplace(marketAddress);
+  let marketHourly = loadPodMarketplaceHourlySnapshot(marketAddress, market.season, timestamp);
+  let marketDaily = loadPodMarketplaceDailySnapshot(marketAddress, timestamp);
+
+  const netOrderChange = newBeanAmount.minus(cancelledBeanAmount).minus(filledBeanAmount);
+
+  market.orderBeans = market.orderBeans.plus(newBeanAmount);
+  market.availableOrderBeans = market.availableOrderBeans.plus(netOrderChange);
+  market.filledOrderedPods = market.filledOrderedPods.plus(filledPodAmount);
+  market.filledOrderBeans = market.filledOrderBeans.plus(filledBeanAmount);
+  market.podVolume = market.podVolume.plus(filledPodAmount);
+  market.beanVolume = market.beanVolume.plus(filledBeanAmount);
+  market.cancelledOrderBeans = market.cancelledOrderBeans.plus(cancelledBeanAmount);
+  market.save();
+
+  marketHourly.deltaOrderBeans = marketHourly.deltaOrderBeans.plus(newBeanAmount);
+  marketHourly.orderBeans = market.orderBeans;
+  marketHourly.deltaAvailableOrderBeans = marketHourly.deltaAvailableOrderBeans.plus(netOrderChange);
+  marketHourly.availableOrderBeans = market.availableOrderBeans;
+  marketHourly.deltaFilledOrderedPods = marketHourly.deltaFilledOrderedPods.plus(filledPodAmount);
+  marketHourly.filledOrderedPods = market.filledOrderedPods;
+  marketHourly.deltaFilledOrderBeans = marketHourly.deltaFilledOrderBeans.plus(filledBeanAmount);
+  marketHourly.filledOrderBeans = market.filledOrderBeans;
+  marketHourly.deltaPodVolume = marketHourly.deltaPodVolume.plus(filledPodAmount);
+  marketHourly.podVolume = market.podVolume;
+  marketHourly.deltaBeanVolume = marketHourly.deltaBeanVolume.plus(filledBeanAmount);
+  marketHourly.beanVolume = market.beanVolume;
+  marketHourly.deltaCancelledOrderBeans = marketHourly.deltaCancelledOrderBeans.plus(cancelledBeanAmount);
+  marketHourly.cancelledOrderBeans = market.cancelledOrderBeans;
+  marketHourly.updatedAt = timestamp;
+  marketHourly.save();
+
+  marketDaily.deltaOrderBeans = marketDaily.deltaOrderBeans.plus(newBeanAmount);
+  marketDaily.orderBeans = market.orderBeans;
+  marketDaily.deltaAvailableOrderBeans = marketHourly.deltaAvailableOrderBeans.plus(netOrderChange);
+  marketDaily.availableOrderBeans = market.availableOrderBeans;
+  marketDaily.deltaFilledOrderedPods = marketDaily.deltaFilledOrderedPods.plus(filledPodAmount);
+  marketDaily.filledOrderedPods = market.filledOrderedPods;
+  marketDaily.deltaFilledOrderBeans = marketHourly.deltaFilledOrderBeans.plus(filledBeanAmount);
+  marketDaily.filledOrderBeans = market.filledOrderBeans;
+  marketDaily.deltaPodVolume = marketDaily.deltaPodVolume.plus(filledPodAmount);
+  marketDaily.podVolume = market.podVolume;
+  marketDaily.deltaBeanVolume = marketDaily.deltaBeanVolume.plus(filledBeanAmount);
+  marketDaily.beanVolume = market.beanVolume;
+  marketDaily.deltaCancelledOrderBeans = marketDaily.deltaCancelledOrderBeans.plus(cancelledBeanAmount);
+  marketDaily.cancelledOrderBeans = market.cancelledOrderBeans;
+  marketDaily.updatedAt = timestamp;
+  marketDaily.save();
+}
+
 export function updateExpiredPlots(harvestableIndex: BigInt, diamondAddress: Address, timestamp: BigInt): void {
   let market = loadPodMarketplace(diamondAddress);
   let remainingListings = market.activeListings;
