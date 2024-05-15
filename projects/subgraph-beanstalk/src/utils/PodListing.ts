@@ -1,8 +1,7 @@
-import { Address, BigInt } from "@graphprotocol/graph-ts";
+import { Address, BigInt, log } from "@graphprotocol/graph-ts";
 import { PodListing } from "../../generated/schema";
 import { BEANSTALK } from "../../../subgraph-core/utils/Constants";
 import { ZERO_BI } from "../../../subgraph-core/utils/Decimals";
-import { loadPlot } from "./Plot";
 import { loadPodMarketplace, loadPodMarketplaceDailySnapshot, loadPodMarketplaceHourlySnapshot } from "./PodMarketplace";
 
 export function loadPodListing(account: Address, index: BigInt): PodListing {
@@ -45,16 +44,24 @@ export function loadPodListing(account: Address, index: BigInt): PodListing {
   return listing;
 }
 
-export function expirePodListing(diamondAddress: Address, timestamp: BigInt, listingIndex: BigInt): void {
+export function expirePodListing(
+  diamondAddress: Address,
+  farmer: string,
+  listedPlotIndex: BigInt,
+  activeListingIndex: i32,
+  timestamp: BigInt
+): void {
   let market = loadPodMarketplace(diamondAddress);
   let marketHourly = loadPodMarketplaceHourlySnapshot(diamondAddress, market.season, timestamp);
   let marketDaily = loadPodMarketplaceDailySnapshot(diamondAddress, timestamp);
-  //farmer info
-  let plot = loadPlot(diamondAddress, listingIndex);
-  let listing = loadPodListing(Address.fromString(plot.farmer), listingIndex);
+
+  let listing = loadPodListing(Address.fromString(farmer), listedPlotIndex);
 
   market.expiredListedPods = market.expiredListedPods.plus(listing.remainingAmount);
   market.availableListedPods = market.availableListedPods.minus(listing.remainingAmount);
+  let activeListings = market.activeListings;
+  activeListings.splice(activeListingIndex, 1);
+  market.activeListings = activeListings;
   market.save();
 
   marketHourly.season = market.season;

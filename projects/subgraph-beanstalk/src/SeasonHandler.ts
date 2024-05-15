@@ -9,7 +9,6 @@ import { Reward as RewardEntity, MetapoolOracle as MetapoolOracleEntity, WellOra
 import { BEANSTALK, BEANSTALK_PRICE, BEAN_ERC20, CURVE_PRICE } from "../../subgraph-core/utils/Constants";
 import { ONE_BI, toDecimal, ZERO_BD, ZERO_BI } from "../../subgraph-core/utils/Decimals";
 import { loadField, loadFieldDaily, loadFieldHourly } from "./utils/Field";
-import { expirePodListing, loadPodListing } from "./utils/PodListing";
 import {
   loadPodMarketplace,
   loadPodMarketplaceDailySnapshot,

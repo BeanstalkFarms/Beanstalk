@@ -3,6 +3,7 @@ import { PodMarketplace, PodMarketplaceHourlySnapshot, PodMarketplaceDailySnapsh
 import { dayFromTimestamp } from "./Dates";
 import { ZERO_BI } from "../../../subgraph-core/utils/Decimals";
 import { loadField } from "./Field";
+import { expirePodListing, loadPodListing } from "./PodListing";
 
 export enum MarketplaceAction {
   CREATED,
@@ -113,25 +114,23 @@ export function loadPodMarketplaceDailySnapshot(diamondAddress: Address, timesta
   return snapshot;
 }
 
-// TODO: reimplement with new format
 export function updateExpiredPlots(harvestableIndex: BigInt, diamondAddress: Address, timestamp: BigInt): void {
-  // let market = loadPodMarketplace(diamondAddress);
-  // let remainingListings = market.listingIndexes;
-  // // TODO: expire plot upon harvest rather than the line moving past the start index
-  // // TODO: consider saving either a separate list or within this list, the indices that they expire
-  // //    this will prevent having to load every listing upon each season
-  // // Cancel any pod marketplace listings beyond the index
-  // for (let i = 0; i < remainingListings.length; i++) {
-  //   // TODO: this needs to be the user account
-  //   let listing = loadPodListing(diamondAddress, remainingListings[i]);
-  //   if (harvestableIndex > listing.maxHarvestableIndex) {
-  //     expirePodListing(diamondAddress, timestamp, remainingListings[i]);
-  //     remainingListings.splice(i--, 1);
-  //   }
-  // }
-  // remainingListings.sort();
-  // market.listingIndexes = remainingListings;
-  // market.save();
+  let market = loadPodMarketplace(diamondAddress);
+  let remainingListings = market.activeListings;
+
+  // TODO: expire listing upon harvest
+
+  // Cancel any pod marketplace listings beyond the index
+  for (let i = 0; i < remainingListings.length; i++) {
+    const destructured = remainingListings[i].split("-");
+    const maxHarvestableIndex = BigInt.fromString(destructured[2]);
+    if (harvestableIndex > maxHarvestableIndex) {
+      // This method updates the marketplace entity, so it will perform the splice.
+      expirePodListing(diamondAddress, destructured[0], BigInt.fromString(destructured[1]), i, timestamp);
+      // A similar splice is done here also to track the updated index on the underlying array.
+      remainingListings.splice(i--, 1);
+    }
+  }
 }
 
 export function updateActiveListings(

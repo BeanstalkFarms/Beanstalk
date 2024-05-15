@@ -311,9 +311,9 @@ describe("Marketplace", () => {
         assert.fieldEquals("PodListing", listingID, "maxHarvestableIndex", maxHarvestableIndex.toString());
 
         // Expires due to exceeding max harvestable index
-        setHarvestable(listingIndex);
+        setHarvestable(maxHarvestableIndex);
         assert.fieldEquals("PodListing", listingID, "status", "ACTIVE");
-        setHarvestable(listingIndex.plus(ONE_BI));
+        setHarvestable(maxHarvestableIndex.plus(ONE_BI));
         assert.fieldEquals("PodListing", listingID, "status", "EXPIRED");
         assert.fieldEquals("PodListing", listingID, "remainingAmount", "0");
 
