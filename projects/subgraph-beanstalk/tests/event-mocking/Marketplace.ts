@@ -71,7 +71,7 @@ export function createPodListingFilledEvent(from: string, to: string, index: Big
 export function createPodOrderCreatedEvent(
   account: string,
   id: Bytes,
-  amount: BigInt,
+  podsOrdered: BigInt,
   pricePerPod: BigInt,
   maxPlaceInLine: BigInt
 ): PodOrderCreated_v1 {
@@ -80,7 +80,7 @@ export function createPodOrderCreatedEvent(
 
   let param1 = new ethereum.EventParam("account", ethereum.Value.fromAddress(Address.fromString(account)));
   let param2 = new ethereum.EventParam("id", ethereum.Value.fromBytes(id));
-  let param3 = new ethereum.EventParam("amount", ethereum.Value.fromUnsignedBigInt(amount));
+  let param3 = new ethereum.EventParam("amount", ethereum.Value.fromUnsignedBigInt(podsOrdered));
   let param4 = new ethereum.EventParam("pricePerPod", ethereum.Value.fromUnsignedBigInt(pricePerPod));
   let param5 = new ethereum.EventParam("maxPlaceInLine", ethereum.Value.fromUnsignedBigInt(maxPlaceInLine));
 

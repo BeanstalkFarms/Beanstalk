@@ -292,10 +292,12 @@ export function handlePodOrderCreated(event: PodOrderCreated_v1): void {
   order.updatedAt = event.block.timestamp;
   order.status = "ACTIVE";
   order.beanAmount = event.params.amount.times(BigInt.fromI32(event.params.pricePerPod)).div(BigInt.fromString("1000000"));
+  order.beanAmountFilled = ZERO_BI;
   order.podAmountFilled = ZERO_BI;
   order.maxPlaceInLine = event.params.maxPlaceInLine;
   order.pricePerPod = event.params.pricePerPod;
   order.creationHash = event.transaction.hash.toHexString();
+  order.fills = [];
   order.save();
 
   updateActiveOrders(event.address, MarketplaceAction.CREATED, order.id, order.maxPlaceInLine);
