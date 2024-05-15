@@ -3,12 +3,14 @@ import { assert } from "matchstick-as/assembly/index";
 import {
   handlePodListingCreated_v2,
   handlePodListingFilled_v2,
+  handlePodOrderCancelled,
   handlePodOrderCreated_v2,
   handlePodOrderFilled_v2
 } from "../../src/MarketplaceHandler";
 import {
   createPodListingCreatedEvent_v2,
   createPodListingFilledEvent_v2,
+  createPodOrderCancelledEvent,
   createPodOrderCreatedEvent_v2,
   createPodOrderFilledEvent_v2
 } from "../event-mocking/Marketplace";
@@ -21,6 +23,7 @@ import {
 } from "../../generated/BIP29-PodMarketplace/Beanstalk";
 import { BEANSTALK } from "../../../subgraph-core/utils/Constants";
 import { transferPlot } from "./Field";
+import { PodOrderCancelled } from "../../generated/Field/Beanstalk";
 
 const pricingFunction = Bytes.fromHexString(
   "0x0000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000006400000000000000000000000000000000000000000000000000000000000000c8000000000000000000000000000000000000000000000000000000000000012c000000000000000000000000000000000000000000000000000000000000019000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001010101010101010101010101010000"
@@ -82,6 +85,12 @@ export function fillOrder_v2(
   assert.fieldEquals("PodFill", podFillId, "start", event.params.start.toString());
   assert.fieldEquals("PodFill", podFillId, "costInBeans", event.params.costInBeans.toString());
 
+  return event;
+}
+
+export function cancelOrder(account: string, orderId: Bytes): PodOrderCancelled {
+  const event = createPodOrderCancelledEvent(account, orderId);
+  handlePodOrderCancelled(event);
   return event;
 }
 
@@ -183,6 +192,7 @@ export function assertMarketOrdersState(
   filledOrderBeans: BigInt,
   filledOrderedPods: BigInt,
   cancelledOrderBeans: BigInt,
+  expiredOrderBeans: BigInt,
   podVolume: BigInt,
   beanVolume: BigInt
 ): void {
@@ -191,6 +201,7 @@ export function assertMarketOrdersState(
   assert.fieldEquals("PodMarketplace", address, "filledOrderBeans", filledOrderBeans.toString());
   assert.fieldEquals("PodMarketplace", address, "filledOrderedPods", filledOrderedPods.toString());
   assert.fieldEquals("PodMarketplace", address, "cancelledOrderBeans", cancelledOrderBeans.toString());
+  assert.fieldEquals("PodMarketplace", address, "expiredOrderBeans", expiredOrderBeans.toString());
   assert.fieldEquals("PodMarketplace", address, "podVolume", podVolume.toString());
   assert.fieldEquals("PodMarketplace", address, "beanVolume", beanVolume.toString());
 }

@@ -30,6 +30,7 @@ export function loadPodMarketplace(diamondAddress: Address): PodMarketplace {
     marketplace.filledOrderedPods = ZERO_BI;
     marketplace.filledOrderBeans = ZERO_BI;
     marketplace.cancelledOrderBeans = ZERO_BI;
+    marketplace.expiredOrderBeans = ZERO_BI;
     marketplace.podVolume = ZERO_BI;
     marketplace.beanVolume = ZERO_BI;
     marketplace.save();
@@ -65,6 +66,8 @@ export function loadPodMarketplaceHourlySnapshot(diamondAddress: Address, season
     snapshot.filledOrderBeans = marketplace.filledOrderBeans;
     snapshot.deltaCancelledOrderBeans = ZERO_BI;
     snapshot.cancelledOrderBeans = marketplace.cancelledOrderBeans;
+    snapshot.deltaExpiredOrderBeans = ZERO_BI;
+    snapshot.expiredOrderBeans = marketplace.expiredOrderBeans;
     snapshot.deltaPodVolume = ZERO_BI;
     snapshot.podVolume = marketplace.podVolume;
     snapshot.deltaBeanVolume = ZERO_BI;
@@ -103,6 +106,8 @@ export function loadPodMarketplaceDailySnapshot(diamondAddress: Address, timesta
     snapshot.filledOrderBeans = marketplace.filledOrderBeans;
     snapshot.deltaCancelledOrderBeans = ZERO_BI;
     snapshot.cancelledOrderBeans = marketplace.cancelledOrderBeans;
+    snapshot.deltaExpiredOrderBeans = ZERO_BI;
+    snapshot.expiredOrderBeans = marketplace.expiredOrderBeans;
     snapshot.deltaPodVolume = ZERO_BI;
     snapshot.podVolume = marketplace.podVolume;
     snapshot.deltaBeanVolume = ZERO_BI;

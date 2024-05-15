@@ -1,13 +1,14 @@
 import { BigInt, Bytes, log } from "@graphprotocol/graph-ts";
 import { afterEach, assert, beforeEach, clearStore, describe, test } from "matchstick-as/assembly/index";
-import { handlePodListingCancelled, handlePodOrderCancelled } from "../src/MarketplaceHandler";
-import { createPodListingCancelledEvent, createPodOrderCancelledEvent } from "./event-mocking/Marketplace";
+import { handlePodListingCancelled } from "../src/MarketplaceHandler";
+import { createPodListingCancelledEvent } from "./event-mocking/Marketplace";
 import { beans_BI, podlineMil_BI } from "../../subgraph-core/tests/Values";
 import { BI_10, ONE_BI, ZERO_BI } from "../../subgraph-core/utils/Decimals";
 import { BEANSTALK } from "../../subgraph-core/utils/Constants";
 import {
   assertMarketListingsState,
   assertMarketOrdersState,
+  cancelOrder,
   createListing_v2,
   createOrder_v2,
   fillListing_v2,
@@ -98,6 +99,7 @@ describe("Marketplace", () => {
         BEANSTALK.toHexString(),
         [event.params.id.toHexString() + "-" + maxHarvestableIndex.toString()],
         orderBeans,
+        ZERO_BI,
         ZERO_BI,
         ZERO_BI,
         ZERO_BI,
@@ -384,7 +386,17 @@ describe("Marketplace", () => {
         assert.fieldEquals("PodOrder", orderId.toHexString(), "podAmountFilled", orderedPods.toString());
         assert.fieldEquals("PodOrder", orderId.toHexString(), "fills", "[" + getPodFillId(orderPlotIndex, event) + "]");
 
-        assertMarketOrdersState(BEANSTALK.toHexString(), [], orderBeans, orderBeans, orderedPods, ZERO_BI, orderedPods, orderBeans);
+        assertMarketOrdersState(
+          BEANSTALK.toHexString(),
+          [],
+          orderBeans,
+          orderBeans,
+          orderedPods,
+          ZERO_BI,
+          ZERO_BI,
+          orderedPods,
+          orderBeans
+        );
       });
 
       test("Fill order - partial", () => {
@@ -407,6 +419,7 @@ describe("Marketplace", () => {
           orderBeans1,
           soldToOrder1,
           ZERO_BI,
+          ZERO_BI,
           soldToOrder1,
           orderBeans1
         );
@@ -427,19 +440,28 @@ describe("Marketplace", () => {
           "[" + getPodFillId(orderPlotIndex, event) + ", " + getPodFillId(newOrderPlotIndex, event2) + "]"
         );
 
-        assertMarketOrdersState(BEANSTALK.toHexString(), [], orderBeans, orderBeans, orderedPods, ZERO_BI, orderedPods, orderBeans);
+        assertMarketOrdersState(
+          BEANSTALK.toHexString(),
+          [],
+          orderBeans,
+          orderBeans,
+          orderedPods,
+          ZERO_BI,
+          ZERO_BI,
+          orderedPods,
+          orderBeans
+        );
       });
 
       test("Cancel order - full", () => {
-        const event = createPodOrderCancelledEvent(account, orderId);
-        handlePodOrderCancelled(event);
+        cancelOrder(account, orderId);
 
         assert.fieldEquals("PodOrder", orderId.toHexString(), "status", "CANCELLED");
         assert.fieldEquals("PodOrder", orderId.toHexString(), "beanAmountFilled", "0");
         assert.fieldEquals("PodOrder", orderId.toHexString(), "podAmountFilled", "0");
         assert.fieldEquals("PodOrder", orderId.toHexString(), "fills", "[]");
 
-        assertMarketOrdersState(BEANSTALK.toHexString(), [], orderBeans, ZERO_BI, ZERO_BI, orderBeans, ZERO_BI, ZERO_BI);
+        assertMarketOrdersState(BEANSTALK.toHexString(), [], orderBeans, ZERO_BI, ZERO_BI, orderBeans, ZERO_BI, ZERO_BI, ZERO_BI);
       });
 
       test("Cancel order - partial", () => {
@@ -450,8 +472,7 @@ describe("Marketplace", () => {
         sow(account2, orderPlotIndex, sowedBeans, orderedPods.times(BigInt.fromU32(2)));
         const fillEvent = fillOrder_v2(account2, account, orderId, orderPlotIndex, beans_BI(1000), soldToOrder1, orderBeans1);
 
-        const event = createPodOrderCancelledEvent(account, orderId);
-        handlePodOrderCancelled(event);
+        cancelOrder(account, orderId);
 
         assert.fieldEquals("PodOrder", orderId.toHexString(), "status", "CANCELLED_PARTIAL");
         assert.fieldEquals("PodOrder", orderId.toHexString(), "beanAmountFilled", orderBeans1.toString());
@@ -465,13 +486,14 @@ describe("Marketplace", () => {
           orderBeans1,
           soldToOrder1,
           orderBeans.minus(orderBeans1),
+          ZERO_BI,
           soldToOrder1,
           orderBeans1
         );
       });
 
       test("Recreate order", () => {
-        handlePodOrderCancelled(createPodOrderCancelledEvent(account, orderId));
+        cancelOrder(account, orderId);
         createOrder_v2(account, orderId, orderBeans, orderPricePerPod, maxHarvestableIndex);
 
         assert.fieldEquals("PodOrder", orderId.toHexString() + "-0", "fills", "[]");
@@ -484,6 +506,7 @@ describe("Marketplace", () => {
           ZERO_BI,
           orderBeans,
           ZERO_BI,
+          ZERO_BI,
           ZERO_BI
         );
 
@@ -495,7 +518,7 @@ describe("Marketplace", () => {
         sow(account2, orderPlotIndex, sowedBeans, orderedPods.times(BigInt.fromU32(2)));
         const fillEvent = fillOrder_v2(account2, account, orderId, orderPlotIndex, beans_BI(1000), soldToOrder1, orderBeans1);
 
-        handlePodOrderCancelled(createPodOrderCancelledEvent(account, orderId));
+        cancelOrder(account, orderId);
         createOrder_v2(account, orderId, orderBeans, orderPricePerPod, maxHarvestableIndex);
 
         // The historical order has one fill
@@ -511,9 +534,19 @@ describe("Marketplace", () => {
           orderBeans1,
           soldToOrder1,
           orderBeans.plus(orderBeans.minus(orderBeans1)),
+          ZERO_BI,
           soldToOrder1,
           orderBeans1
         );
+      });
+
+      test("Order expires due to moving podline", () => {
+        setHarvestable(maxHarvestableIndex);
+        assert.fieldEquals("PodOrder", orderId.toHexString(), "status", "ACTIVE");
+        setHarvestable(maxHarvestableIndex.plus(ONE_BI));
+        assert.fieldEquals("PodOrder", orderId.toHexString(), "status", "EXPIRED");
+
+        assertMarketOrdersState(BEANSTALK.toHexString(), [], orderBeans, ZERO_BI, ZERO_BI, ZERO_BI, orderBeans, ZERO_BI, ZERO_BI);
       });
     });
   });
