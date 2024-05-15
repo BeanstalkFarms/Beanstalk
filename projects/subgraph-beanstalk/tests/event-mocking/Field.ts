@@ -1,5 +1,5 @@
 import { Address, BigInt, Bytes, ethereum } from "@graphprotocol/graph-ts";
-import { Sow, PlotTransfer } from "../../generated/Field/Beanstalk";
+import { Sow, PlotTransfer, Harvest } from "../../generated/Field/Beanstalk";
 import { TemperatureChange } from "../../generated/BIP44-SeedGauge/Beanstalk";
 
 import { mockBeanstalkEvent } from "../../../subgraph-core/tests/event-mocking/Util";
@@ -38,7 +38,26 @@ export function createSowEvent(account: string, index: BigInt, beans: BigInt, po
 
   return event as Sow;
 }
-export function createHarvestEvent(account: string, plots: BigInt[], beans: BigInt): void {}
+export function createHarvestEvent(account: string, plots: BigInt[], beans: BigInt): Harvest {
+  let event = changetype<Harvest>(mockBeanstalkEvent());
+  event.parameters = new Array();
+
+  let plotsArray: ethereum.Value[] = [];
+  for (let i = 0; i < plots.length; ++i) {
+    plotsArray.push(ethereum.Value.fromUnsignedBigInt(plots[i]));
+  }
+
+  let param1 = new ethereum.EventParam("account", ethereum.Value.fromAddress(Address.fromString(account)));
+  let param2 = new ethereum.EventParam("plots", ethereum.Value.fromArray(plotsArray));
+  let param3 = new ethereum.EventParam("beans", ethereum.Value.fromUnsignedBigInt(beans));
+
+  event.parameters.push(param1);
+  event.parameters.push(param2);
+  event.parameters.push(param3);
+
+  return event as Harvest;
+}
+
 export function createPlotTransferEvent(from: string, to: string, id: BigInt, pods: BigInt): PlotTransfer {
   let event = changetype<PlotTransfer>(mockBeanstalkEvent());
   event.parameters = new Array();

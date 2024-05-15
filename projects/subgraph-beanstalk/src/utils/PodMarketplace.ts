@@ -118,8 +118,6 @@ export function updateExpiredPlots(harvestableIndex: BigInt, diamondAddress: Add
   let market = loadPodMarketplace(diamondAddress);
   let remainingListings = market.activeListings;
 
-  // TODO: expire listing upon harvest
-
   // Cancel any pod marketplace listings beyond the index
   for (let i = 0; i < remainingListings.length; i++) {
     const destructured = remainingListings[i].split("-");

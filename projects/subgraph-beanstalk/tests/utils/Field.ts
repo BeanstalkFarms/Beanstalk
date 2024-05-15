@@ -1,7 +1,7 @@
 import { BigInt, ethereum, log } from "@graphprotocol/graph-ts";
 import { assert, createMockedFunction } from "matchstick-as/assembly/index";
-import { createPlotTransferEvent, createSowEvent } from "../event-mocking/Field";
-import { handlePlotTransfer, handleSow } from "../../src/FieldHandler";
+import { createHarvestEvent, createPlotTransferEvent, createSowEvent } from "../event-mocking/Field";
+import { handleHarvest, handlePlotTransfer, handleSow } from "../../src/FieldHandler";
 import { createIncentivizationEvent } from "../event-mocking/Season";
 import { handleIncentive } from "../../src/SeasonHandler";
 import { ZERO_BI } from "../../../subgraph-core/utils/Decimals";
@@ -11,6 +11,10 @@ const account = "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266".toLowerCase();
 
 export function sow(account: string, index: BigInt, beans: BigInt, pods: BigInt): void {
   handleSow(createSowEvent(account, index, beans, pods));
+}
+
+export function harvest(account: string, plotIndexex: BigInt[], beans: BigInt): void {
+  handleHarvest(createHarvestEvent(account, plotIndexex, beans));
 }
 
 export function transferPlot(from: string, to: string, id: BigInt, amount: BigInt): void {

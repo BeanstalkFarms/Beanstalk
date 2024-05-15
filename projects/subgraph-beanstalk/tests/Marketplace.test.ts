@@ -14,7 +14,7 @@ import {
   fillOrder_v2,
   getPodFillId
 } from "./utils/Marketplace";
-import { setHarvestable, sow } from "./utils/Field";
+import { harvest, setHarvestable, sow } from "./utils/Field";
 
 const account = "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266".toLowerCase();
 const account2 = "0x70997970C51812dc3A010C7d01b50e0d17dc79C8".toLowerCase();
@@ -39,7 +39,6 @@ describe("Marketplace", () => {
 
   // TODO tests:
   // fill order with pods that are also listed
-  // listing expires due to podline advancing
   // order expires due to podline advancing
 
   describe("Marketplace v2", () => {
@@ -351,9 +350,20 @@ describe("Marketplace", () => {
         );
       });
 
-      // test("Listing expires due to plot harvesting", () => {
-      //   // TODO: expire due to listed being harvested
-      // });
+      test("Listing expires due to plot harvesting", () => {
+        const listingStart = beans_BI(500);
+        const listedPods = sowedPods.minus(listingStart);
+        const listingID = account + "-" + listingIndex.toString();
+        assert.fieldEquals("PodListing", listingID, "status", "ACTIVE");
+
+        // Plot is harvestable, but still active
+        setHarvestable(listingIndex.plus(sowedPods));
+        assert.fieldEquals("PodListing", listingID, "status", "ACTIVE");
+        // Plot harvests, now expired
+        harvest(account, [listingIndex], sowedPods);
+        assert.fieldEquals("PodListing", listingID, "status", "EXPIRED");
+        assert.fieldEquals("PodListing", listingID, "remainingAmount", "0");
+      });
     });
 
     describe("Tests requiring Order", () => {
