@@ -5380,9 +5380,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@graphprotocol/graph-cli@npm:0.69.0":
-  version: 0.69.0
-  resolution: "@graphprotocol/graph-cli@npm:0.69.0"
+"@graphprotocol/graph-cli@npm:0.71.2":
+  version: 0.71.2
+  resolution: "@graphprotocol/graph-cli@npm:0.71.2"
   dependencies:
     "@float-capital/float-subgraph-uncrashable": "npm:^0.0.0-alpha.4"
     "@oclif/core": "npm:2.8.6"
@@ -5413,7 +5413,7 @@ __metadata:
     yaml: "npm:1.10.2"
   bin:
     graph: bin/run
-  checksum: 10/55c1dcc2396530171ade4dde5444395f0a78755292237a67fdd5122b3390bcbc547bf5509427950ccdfb41ed22de7455aecb4573a4faa643c793633ee8535765
+  checksum: 10/a6268236ecac2fac890221dc6414e7bc837f63168c329d13a7cf1c3607571823e9f9ab57a079ac8dd6e0c0be00ede5b178f4caa5733e841c9028ee0ddbae08d3
   languageName: node
   linkType: hard
 
@@ -5426,12 +5426,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@graphprotocol/graph-ts@npm:0.34.0":
-  version: 0.34.0
-  resolution: "@graphprotocol/graph-ts@npm:0.34.0"
+"@graphprotocol/graph-ts@npm:0.35.1":
+  version: 0.35.1
+  resolution: "@graphprotocol/graph-ts@npm:0.35.1"
   dependencies:
     assemblyscript: "npm:0.19.10"
-  checksum: 10/0aa26453002bb7b5342010877ba1148b9173603f4a3ce6db00afe77da5982f1d9a964ea86a79218c9b0615e2b3b459ed036eabc8e0d866ed9524c93396bf37de
+  checksum: 10/a1c83c689c96748c0565693eceb388a0a10872b71fe1daa4c0cf41504374fe8fdb227f92183353f3429361541771b6cabc0c213d7ebcbd94112c89a483435476
   languageName: node
   linkType: hard
 
@@ -40881,8 +40881,8 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "subgraph-beanstalk@workspace:projects/subgraph-beanstalk"
   dependencies:
-    "@graphprotocol/graph-cli": "npm:0.69.0"
-    "@graphprotocol/graph-ts": "npm:0.34.0"
+    "@graphprotocol/graph-cli": "npm:0.71.2"
+    "@graphprotocol/graph-ts": "npm:0.35.1"
     matchstick-as: "npm:^0.6.0"
   languageName: unknown
   linkType: soft

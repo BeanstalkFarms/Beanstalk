@@ -1,9 +1,16 @@
-import { Address, BigInt, log } from "@graphprotocol/graph-ts";
+import { Address, BigInt, Bytes, log } from "@graphprotocol/graph-ts";
 import { PodMarketplace, PodMarketplaceHourlySnapshot, PodMarketplaceDailySnapshot } from "../../generated/schema";
-import { dayFromTimestamp, hourFromTimestamp } from "./Dates";
+import { dayFromTimestamp } from "./Dates";
 import { ZERO_BI } from "../../../subgraph-core/utils/Decimals";
 import { loadField } from "./Field";
-import { expirePodListing, loadPodListing } from "./PodListing";
+
+export enum MarketplaceAction {
+  CREATED,
+  FILLED_PARTIAL,
+  FILLED_FULL,
+  CANCELLED,
+  EXPIRED
+}
 
 export function loadPodMarketplace(diamondAddress: Address): PodMarketplace {
   let marketplace = PodMarketplace.load(diamondAddress.toHexString());
@@ -11,8 +18,8 @@ export function loadPodMarketplace(diamondAddress: Address): PodMarketplace {
     let field = loadField(diamondAddress);
     marketplace = new PodMarketplace(diamondAddress.toHexString());
     marketplace.season = field.season;
-    marketplace.listingIndexes = [];
-    marketplace.orders = [];
+    marketplace.activeListings = [];
+    marketplace.activeOrders = [];
     marketplace.listedPods = ZERO_BI;
     marketplace.filledListedPods = ZERO_BI;
     marketplace.expiredListedPods = ZERO_BI;
@@ -106,25 +113,79 @@ export function loadPodMarketplaceDailySnapshot(diamondAddress: Address, timesta
   return snapshot;
 }
 
+// TODO: reimplement with new format
 export function updateExpiredPlots(harvestableIndex: BigInt, diamondAddress: Address, timestamp: BigInt): void {
+  // let market = loadPodMarketplace(diamondAddress);
+  // let remainingListings = market.listingIndexes;
+  // // TODO: expire plot upon harvest rather than the line moving past the start index
+  // // TODO: consider saving either a separate list or within this list, the indices that they expire
+  // //    this will prevent having to load every listing upon each season
+  // // Cancel any pod marketplace listings beyond the index
+  // for (let i = 0; i < remainingListings.length; i++) {
+  //   // TODO: this needs to be the user account
+  //   let listing = loadPodListing(diamondAddress, remainingListings[i]);
+  //   if (harvestableIndex > listing.maxHarvestableIndex) {
+  //     expirePodListing(diamondAddress, timestamp, remainingListings[i]);
+  //     remainingListings.splice(i--, 1);
+  //   }
+  // }
+  // remainingListings.sort();
+  // market.listingIndexes = remainingListings;
+  // market.save();
+}
+
+export function updateActiveListings(
+  diamondAddress: Address,
+  action: MarketplaceAction,
+  farmer: string,
+  plotIndex: BigInt,
+  expiryIndex: BigInt
+): void {
   let market = loadPodMarketplace(diamondAddress);
-  let remainingListings = market.listingIndexes;
+  let listings = market.activeListings;
 
-  // TODO: expire plot upon harvest rather than the line moving past the start index
-  // TODO: consider saving either a separate list or within this list, the indices that they expire
-  //    this will prevent having to load every listing upon each season
-
-  // Cancel any pod marketplace listings beyond the index
-  for (let i = 0; i < remainingListings.length; i++) {
-    // TODO: this needs to be the user account
-    let listing = loadPodListing(diamondAddress, remainingListings[i]);
-    if (harvestableIndex > listing.maxHarvestableIndex) {
-      expirePodListing(diamondAddress, timestamp, remainingListings[i]);
-      remainingListings.splice(i--, 1);
-    }
+  if (action == MarketplaceAction.CREATED) {
+    listings.push(farmer + "-" + plotIndex.toString() + "-" + expiryIndex.toString());
+  }
+  if ([MarketplaceAction.CANCELLED, MarketplaceAction.FILLED_PARTIAL, MarketplaceAction.FILLED_FULL].includes(action)) {
+    listings.splice(Marketplace_findIndex_listing(listings, plotIndex), 1);
   }
 
-  remainingListings.sort();
-  market.listingIndexes = remainingListings;
+  market.activeListings = listings;
   market.save();
+}
+
+export function updateActiveOrders(diamondAddress: Address, action: MarketplaceAction, orderId: string, expiryIndex: BigInt): void {
+  let market = loadPodMarketplace(diamondAddress);
+  let orders = market.activeOrders;
+
+  if (action == MarketplaceAction.CREATED) {
+    orders.push(orderId + "-" + expiryIndex.toString());
+  }
+  if ([MarketplaceAction.CANCELLED, MarketplaceAction.FILLED_FULL].includes(action)) {
+    orders.splice(Marketplace_findIndex_order(orders, orderId), 1);
+  }
+
+  market.activeOrders = orders;
+  market.save();
+}
+
+export function Marketplace_findIndex_listing(listings: string[], plotIndex: BigInt): i32 {
+  for (let i = 0; i < listings.length; i++) {
+    const values = listings[i].split("-");
+    if (BigInt.fromString(values[1]) == plotIndex) {
+      return i;
+    }
+  }
+  return -1;
+}
+
+export function Marketplace_findIndex_order(orders: string[], orderId: string): i32 {
+  for (let i = 0; i < orders.length; i++) {
+    const values = orders[i].split("-");
+    if (values[0] == orderId) {
+      return i;
+    }
+  }
+  return -1;
 }

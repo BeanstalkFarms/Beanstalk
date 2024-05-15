@@ -41,7 +41,7 @@ export function fillListing_v2(
   const event = createPodListingFilledEvent_v2(from, to, listingIndex, listingStart, podAmount, costInBeans);
   handlePodListingFilled_v2(event);
 
-  // Perform plot transfer (necessary for market - assumption is this is tested/working via PlotTransfer.test.ts)
+  // Perform plot transfer
   transferPlot(from, to, listingIndex.plus(listingStart), podAmount);
 
   // Assert PodFill
@@ -68,6 +68,9 @@ export function fillOrder_v2(
 ): PodOrderFilled_v2 {
   const event = createPodOrderFilledEvent_v2(from, to, orderId, index, start, podAmount, costInBeans);
   handlePodOrderFilled_v2(event);
+
+  // Perform plot transfer
+  transferPlot(from, to, index.plus(start), podAmount);
 
   // Assert PodFill
   const podFillId = getPodFillId(index, event);
@@ -154,7 +157,7 @@ export function createOrder_v2(
 
 export function assertMarketListingsState(
   address: string,
-  listings: BigInt[],
+  listings: string[],
   listedPods: BigInt,
   availableListedPods: BigInt,
   cancelledListedPods: BigInt,
@@ -163,7 +166,7 @@ export function assertMarketListingsState(
   podVolume: BigInt,
   beanVolume: BigInt
 ): void {
-  assert.fieldEquals("PodMarketplace", address, "listingIndexes", "[" + listings.join(", ") + "]");
+  assert.fieldEquals("PodMarketplace", address, "activeListings", arrayToString(listings));
   assert.fieldEquals("PodMarketplace", address, "listedPods", listedPods.toString());
   assert.fieldEquals("PodMarketplace", address, "availableListedPods", availableListedPods.toString());
   assert.fieldEquals("PodMarketplace", address, "cancelledListedPods", cancelledListedPods.toString());
@@ -183,11 +186,15 @@ export function assertMarketOrdersState(
   podVolume: BigInt,
   beanVolume: BigInt
 ): void {
-  assert.fieldEquals("PodMarketplace", address, "orders", "[" + orders.join(", ") + "]");
+  assert.fieldEquals("PodMarketplace", address, "activeOrders", arrayToString(orders));
   assert.fieldEquals("PodMarketplace", address, "orderBeans", orderBeans.toString());
   assert.fieldEquals("PodMarketplace", address, "filledOrderBeans", filledOrderBeans.toString());
   assert.fieldEquals("PodMarketplace", address, "filledOrderedPods", filledOrderedPods.toString());
   assert.fieldEquals("PodMarketplace", address, "cancelledOrderBeans", cancelledOrderBeans.toString());
   assert.fieldEquals("PodMarketplace", address, "podVolume", podVolume.toString());
   assert.fieldEquals("PodMarketplace", address, "beanVolume", beanVolume.toString());
+}
+
+function arrayToString(a: string[]): string {
+  return "[" + a.join(", ") + "]";
 }

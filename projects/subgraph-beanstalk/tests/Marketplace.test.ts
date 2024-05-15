@@ -45,7 +45,17 @@ describe("Marketplace", () => {
   describe("Marketplace v2", () => {
     test("Create a pod listing - full plot", () => {
       const event = createListing_v2(account, listingIndex, sowedPods, ZERO_BI, maxHarvestableIndex);
-      assertMarketListingsState(BEANSTALK.toHexString(), [listingIndex], sowedPods, sowedPods, ZERO_BI, ZERO_BI, ZERO_BI, ZERO_BI, ZERO_BI);
+      assertMarketListingsState(
+        BEANSTALK.toHexString(),
+        [account + "-" + listingIndex.toString() + "-" + maxHarvestableIndex.toString()],
+        sowedPods,
+        sowedPods,
+        ZERO_BI,
+        ZERO_BI,
+        ZERO_BI,
+        ZERO_BI,
+        ZERO_BI
+      );
 
       // Create a second listing to assert the market state again
       const listing2Index = listingIndex.times(BI_10);
@@ -53,7 +63,10 @@ describe("Marketplace", () => {
       const event2 = createListing_v2(account, listing2Index, sowedPods, ZERO_BI, maxHarvestableIndex);
       assertMarketListingsState(
         BEANSTALK.toHexString(),
-        [listingIndex, listing2Index],
+        [
+          account + "-" + listingIndex.toString() + "-" + maxHarvestableIndex.toString(),
+          account + "-" + listing2Index.toString() + "-" + maxHarvestableIndex.toString()
+        ],
         sowedPods.times(BigInt.fromI32(2)),
         sowedPods.times(BigInt.fromI32(2)),
         ZERO_BI,
@@ -69,7 +82,7 @@ describe("Marketplace", () => {
       const listedPods = sowedPods.minus(beans_BI(500));
       assertMarketListingsState(
         BEANSTALK.toHexString(),
-        [listingIndex],
+        [account + "-" + listingIndex.toString() + "-" + maxHarvestableIndex.toString()],
         listedPods,
         listedPods,
         ZERO_BI,
@@ -84,7 +97,7 @@ describe("Marketplace", () => {
       const event = createOrder_v2(account, orderId, orderBeans, orderPricePerPod, maxHarvestableIndex);
       assertMarketOrdersState(
         BEANSTALK.toHexString(),
-        [event.params.id.toHexString()],
+        [event.params.id.toHexString() + "-" + maxHarvestableIndex.toString()],
         orderBeans,
         ZERO_BI,
         ZERO_BI,
@@ -141,7 +154,7 @@ describe("Marketplace", () => {
 
         assertMarketListingsState(
           BEANSTALK.toHexString(),
-          [newListingIndex],
+          [account + "-" + newListingIndex.toString() + "-" + maxHarvestableIndex.toString()],
           listedPods,
           remaining,
           ZERO_BI,
@@ -246,7 +259,7 @@ describe("Marketplace", () => {
 
         assertMarketListingsState(
           BEANSTALK.toHexString(),
-          [listingIndex],
+          [account + "-" + listingIndex.toString() + "-" + maxHarvestableIndex.toString()],
           listedPods.times(BigInt.fromU32(2)),
           listedPods,
           listedPods,
@@ -279,7 +292,7 @@ describe("Marketplace", () => {
 
         assertMarketListingsState(
           BEANSTALK.toHexString(),
-          [newListingIndex],
+          [account + "-" + newListingIndex.toString() + "-" + maxHarvestableIndex.toString()],
           listedPods.times(BigInt.fromU32(2)).plus(newListingAmount),
           newListingAmount,
           listedPods.plus(newListingAmount),
@@ -345,7 +358,7 @@ describe("Marketplace", () => {
 
         assertMarketOrdersState(
           BEANSTALK.toHexString(),
-          [event.params.id.toHexString()],
+          [event.params.id.toHexString() + "-" + maxHarvestableIndex.toString()],
           orderBeans,
           orderBeans1,
           soldToOrder1,
@@ -421,7 +434,7 @@ describe("Marketplace", () => {
 
         assertMarketOrdersState(
           BEANSTALK.toHexString(),
-          [orderId.toHexString()],
+          [orderId.toHexString() + "-" + maxHarvestableIndex.toString()],
           orderBeans.times(BigInt.fromU32(2)),
           ZERO_BI,
           ZERO_BI,
@@ -449,7 +462,7 @@ describe("Marketplace", () => {
         // The same amount of beans were re-ordered, but fewer were cancelled
         assertMarketOrdersState(
           BEANSTALK.toHexString(),
-          [orderId.toHexString()],
+          [orderId.toHexString() + "-" + maxHarvestableIndex.toString()],
           orderBeans.times(BigInt.fromU32(3)),
           orderBeans1,
           soldToOrder1,

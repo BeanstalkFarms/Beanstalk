@@ -701,10 +701,10 @@ type PodMarketplace @entity {
   id: ID!
   "Current season of the marketplace"
   season: Int!
-  "Indexes of actively listed plots"
-  listingIndexes: [BigInt!]!
-  "Active pod order IDs"
-  orders: [PodOrder!]!
+  "Information about the active pod listings. Each entry of the form 'account-index-expiry'"
+  activeListings: [String!]!
+  "Information about the active pod orders. Each entry of the form 'account-index-expiry'"
+  activeOrders: [String!]!
   "All historical listings"
   allListings: [PodListing!]! @derivedFrom(field: "podMarketplace")
   "All historical orders"
