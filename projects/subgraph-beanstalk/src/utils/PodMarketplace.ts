@@ -172,7 +172,11 @@ export function updateActiveListings(
   if (action == MarketplaceAction.CREATED) {
     listings.push(farmer + "-" + plotIndex.toString() + "-" + expiryIndex.toString());
   }
-  if ([MarketplaceAction.CANCELLED, MarketplaceAction.FILLED_PARTIAL, MarketplaceAction.FILLED_FULL].includes(action)) {
+  if (
+    [MarketplaceAction.CANCELLED, MarketplaceAction.FILLED_PARTIAL, MarketplaceAction.FILLED_FULL, MarketplaceAction.EXPIRED].includes(
+      action
+    )
+  ) {
     listings.splice(Marketplace_findIndex_listing(listings, plotIndex), 1);
   }
 
@@ -187,7 +191,7 @@ export function updateActiveOrders(diamondAddress: Address, action: MarketplaceA
   if (action == MarketplaceAction.CREATED) {
     orders.push(orderId + "-" + expiryIndex.toString());
   }
-  if ([MarketplaceAction.CANCELLED, MarketplaceAction.FILLED_FULL].includes(action)) {
+  if ([MarketplaceAction.CANCELLED, MarketplaceAction.FILLED_FULL, MarketplaceAction.EXPIRED].includes(action)) {
     orders.splice(Marketplace_findIndex_order(orders, orderId), 1);
   }
 

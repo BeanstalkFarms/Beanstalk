@@ -309,7 +309,7 @@ export function handlePlotTransfer(event: PlotTransfer): void {
     sourcePlot.farmer = event.params.to.toHexString();
     sourcePlot.updatedAt = event.block.timestamp;
     sourcePlot.save();
-    log.debug("\nPodTransfer: Sending full plot\n", []);
+    // log.debug("\nPodTransfer: Sending full plot\n", []);
   } else if (sourceIndex == event.params.id) {
     // We are only needing to split this plot once to send
     // Start value of zero

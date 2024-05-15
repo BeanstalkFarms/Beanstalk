@@ -23,7 +23,8 @@ import {
   PodOrderCreated as PodOrderCreatedEvent,
   PodOrderFilled as PodOrderFilledEvent,
   PodOrderCancelled as PodOrderCancelledEvent,
-  PodOrder
+  PodOrder,
+  PodListing
 } from "../generated/schema";
 import { toDecimal, ZERO_BI } from "../../subgraph-core/utils/Decimals";
 import { loadFarmer } from "./utils/Farmer";
@@ -130,28 +131,33 @@ export function handlePodListingCreated(event: PodListingCreated_v1): void {
 }
 
 export function handlePodListingCancelled(event: PodListingCancelled): void {
-  let listing = loadPodListing(event.params.account, event.params.index);
+  let historyID = "";
+  let listing = PodListing.load(event.params.account.toHexString() + "-" + event.params.index.toString());
+  if (listing !== null && listing.status == "ACTIVE") {
+    updateActiveListings(
+      event.address,
+      MarketplaceAction.CANCELLED,
+      event.params.account.toHexString(),
+      listing.index,
+      listing.maxHarvestableIndex
+    );
+    updateMarketListingBalances(event.address, ZERO_BI, listing.remainingAmount, ZERO_BI, ZERO_BI, event.block.timestamp);
 
-  updateActiveListings(
-    event.address,
-    MarketplaceAction.CANCELLED,
-    event.params.account.toHexString(),
-    listing.index,
-    listing.maxHarvestableIndex
-  );
-  updateMarketListingBalances(event.address, ZERO_BI, listing.remainingAmount, ZERO_BI, ZERO_BI, event.block.timestamp);
+    listing.status = listing.filled == ZERO_BI ? "CANCELLED" : "CANCELLED_PARTIAL";
+    listing.updatedAt = event.block.timestamp;
+    listing.save();
 
-  listing.status = listing.filled == ZERO_BI ? "CANCELLED" : "CANCELLED_PARTIAL";
-  listing.updatedAt = event.block.timestamp;
-  listing.save();
+    historyID = listing.historyID;
+  }
 
+  // Unclear whether this should possibly be omitted if the listing was invalid
   // Save the raw event data
   let id = "podListingCancelled-" + event.transaction.hash.toHexString() + "-" + event.logIndex.toString();
   let rawEvent = new PodListingCancelledEvent(id);
   rawEvent.hash = event.transaction.hash.toHexString();
   rawEvent.logIndex = event.logIndex.toI32();
   rawEvent.protocol = event.address.toHexString();
-  rawEvent.historyID = listing.historyID;
+  rawEvent.historyID = historyID;
   rawEvent.account = event.params.account.toHexString();
   rawEvent.index = event.params.index;
   rawEvent.blockNumber = event.block.number;
@@ -340,11 +346,8 @@ export function handlePodOrderFilled(event: PodOrderFilled_v1): void {
 
 export function handlePodOrderCancelled(event: PodOrderCancelled): void {
   let historyID = "";
-
-  let orderCheck = PodOrder.load(event.params.id.toHexString());
-  if (orderCheck !== null) {
-    let order = loadPodOrder(event.params.id);
-
+  let order = PodOrder.load(event.params.id.toHexString());
+  if (order !== null && order.status == "ACTIVE") {
     order.status = order.podAmountFilled == ZERO_BI ? "CANCELLED" : "CANCELLED_PARTIAL";
     order.updatedAt = event.block.timestamp;
     order.save();
@@ -361,6 +364,7 @@ export function handlePodOrderCancelled(event: PodOrderCancelled): void {
 
     historyID = order.historyID;
   }
+  // Unclear whether this should possibly be omitted if the listing was invalid
   // Save the raw event data
   let id = "podOrderCancelled-" + event.transaction.hash.toHexString() + "-" + event.logIndex.toString();
   let rawEvent = new PodOrderCancelledEvent(id);

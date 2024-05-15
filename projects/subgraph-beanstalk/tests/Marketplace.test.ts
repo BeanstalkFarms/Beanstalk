@@ -1,13 +1,12 @@
 import { BigInt, Bytes, log } from "@graphprotocol/graph-ts";
 import { afterEach, assert, beforeEach, clearStore, describe, test } from "matchstick-as/assembly/index";
-import { handlePodListingCancelled } from "../src/MarketplaceHandler";
-import { createPodListingCancelledEvent } from "./event-mocking/Marketplace";
 import { beans_BI, podlineMil_BI } from "../../subgraph-core/tests/Values";
 import { BI_10, ONE_BI, ZERO_BI } from "../../subgraph-core/utils/Decimals";
 import { BEANSTALK } from "../../subgraph-core/utils/Constants";
 import {
   assertMarketListingsState,
   assertMarketOrdersState,
+  cancelListing,
   cancelOrder,
   createListing_v2,
   createOrder_v2,
@@ -40,7 +39,6 @@ describe("Marketplace", () => {
 
   // TODO tests:
   // fill order with pods that are also listed
-  // order expires due to podline advancing
 
   describe("Marketplace v2", () => {
     test("Create a pod listing - full plot", () => {
@@ -194,9 +192,7 @@ describe("Marketplace", () => {
 
       // Cancellation isnt unique to pod market v2, consider including in the v1 section
       test("Cancel listing - full", () => {
-        const event = createPodListingCancelledEvent(account, listingIndex);
-        handlePodListingCancelled(event);
-
+        const event = cancelListing(account, listingIndex);
         const cancelledAmount = sowedPods.minus(beans_BI(500));
         const listingID = event.params.account.toHexString() + "-" + event.params.index.toString();
         assert.fieldEquals("PodListing", listingID, "status", "CANCELLED");
@@ -225,8 +221,7 @@ describe("Marketplace", () => {
         const remaining = listedPods.minus(filledPods);
         const newListingIndex = fillEvent.params.index.plus(listingStart).plus(filledPods);
 
-        const event = createPodListingCancelledEvent(account, newListingIndex);
-        handlePodListingCancelled(event);
+        const event = cancelListing(account, newListingIndex);
 
         const newListingID = event.params.account.toHexString() + "-" + event.params.index.toString();
         assert.fieldEquals("PodListing", newListingID, "status", "CANCELLED_PARTIAL");
@@ -248,7 +243,7 @@ describe("Marketplace", () => {
       test("Recreate listing", () => {
         const listingStart = beans_BI(500);
         const listedPods = sowedPods.minus(listingStart);
-        handlePodListingCancelled(createPodListingCancelledEvent(account, listingIndex));
+        cancelListing(account, listingIndex);
         const listEvent = createListing_v2(account, listingIndex, sowedPods, listingStart, maxHarvestableIndex);
 
         const listingID = listEvent.params.account.toHexString() + "-" + listEvent.params.index.toString();
@@ -276,7 +271,7 @@ describe("Marketplace", () => {
         const remaining = listedPods.minus(filledPods);
         const newListingIndex = fillEvent.params.index.plus(listingStart).plus(filledPods);
         const newListingAmount = listedPods.minus(filledPods);
-        handlePodListingCancelled(createPodListingCancelledEvent(account, newListingIndex));
+        cancelListing(account, newListingIndex);
         const newListEvent = createListing_v2(account, newListingIndex, remaining, ZERO_BI, maxHarvestableIndex);
 
         const newListingID = newListEvent.params.account.toHexString() + "-" + newListEvent.params.index.toString();
@@ -363,6 +358,20 @@ describe("Marketplace", () => {
         assert.fieldEquals("PodListing", listingID, "status", "EXPIRED");
         assert.fieldEquals("PodListing", listingID, "remainingAmount", listedPods.toString());
 
+        assertMarketListingsState(BEANSTALK.toHexString(), [], listedPods, ZERO_BI, ZERO_BI, listedPods, ZERO_BI, ZERO_BI, ZERO_BI);
+      });
+
+      test("Cancel expired/nonexistent listing", () => {
+        const listingStart = beans_BI(500);
+        const listedPods = sowedPods.minus(listingStart);
+        setHarvestable(maxHarvestableIndex.plus(ONE_BI));
+        const listingID = account + "-" + listingIndex.toString();
+        assert.fieldEquals("PodListing", listingID, "status", "EXPIRED");
+
+        // Cancelling listing is still possible, nothing should change in market
+        cancelListing(account, listingIndex);
+
+        assert.fieldEquals("PodListing", listingID, "status", "EXPIRED");
         assertMarketListingsState(BEANSTALK.toHexString(), [], listedPods, ZERO_BI, ZERO_BI, listedPods, ZERO_BI, ZERO_BI, ZERO_BI);
       });
     });
@@ -550,8 +559,15 @@ describe("Marketplace", () => {
         assert.fieldEquals("PodOrder", orderId.toHexString(), "status", "EXPIRED");
 
         assertMarketOrdersState(BEANSTALK.toHexString(), [], orderBeans, ZERO_BI, ZERO_BI, ZERO_BI, ZERO_BI, orderBeans, ZERO_BI, ZERO_BI);
+      });
 
-        // TODO: need to test the situation when the user cancels the expired order to retrieve their beans
+      test("Cancel expired/nonexistent order", () => {
+        // User may still cancel the order to retrieve their beans. Nothing should change in market
+        setHarvestable(maxHarvestableIndex.plus(ONE_BI));
+        cancelOrder(account, orderId);
+        assert.fieldEquals("PodOrder", orderId.toHexString(), "status", "EXPIRED");
+
+        assertMarketOrdersState(BEANSTALK.toHexString(), [], orderBeans, ZERO_BI, ZERO_BI, ZERO_BI, ZERO_BI, orderBeans, ZERO_BI, ZERO_BI);
       });
     });
   });
