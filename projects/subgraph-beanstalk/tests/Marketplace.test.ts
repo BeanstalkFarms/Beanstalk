@@ -558,8 +558,6 @@ describe("Marketplace", () => {
           ZERO_BI
         );
       });
-
-      test("Fill order with pods that are also listed", () => {});
     });
   });
 });

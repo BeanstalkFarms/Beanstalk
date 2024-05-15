@@ -209,7 +209,6 @@ export function updateSiloVAPYs(t: i32, timestamp: BigInt, window: i32): void {
 
   // Save the apys
   for (let i = 0; i < apys.length; ++i) {
-    //FIXME
     let tokenYield = loadTokenYield(Address.fromBytes(whitelistSettings[i].id), t, window);
     tokenYield.beanAPY = apys[i][0];
     tokenYield.stalkAPY = apys[i][1];
