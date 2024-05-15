@@ -135,7 +135,7 @@ contract FieldFacet is Invariable, ReentrancyGuard {
      * Beanstalk holds these Beans until `harvest()` is called.
      *
      * Pods are "burned" when the corresponding Plot is deleted from
-     * `s.accountStates[account].field.plots`.
+     * `s.accounts[account].field.plots`.
      */
     function harvest(
         uint256[] calldata plots,
@@ -170,14 +170,14 @@ contract FieldFacet is Invariable, ReentrancyGuard {
         uint256 index
     ) private returns (uint256 harvestablePods) {
         // Check that `account` holds this Plot.
-        uint256 pods = s.accountStates[account].field.plots[index];
+        uint256 pods = s.accounts[account].field.plots[index];
         require(pods > 0, "Field: no plot");
 
         // Calculate how many Pods are harvestable.
         // The upstream _harvest function checks that at least some Pods
         // are harvestable.
         harvestablePods = s.field.harvestable.sub(index);
-        delete s.accountStates[account].field.plots[index];
+        delete s.accounts[account].field.plots[index];
 
         // Cancel any active Pod Listings active for this Plot.
         // Note: duplicate of {Listing._cancelPodListing} without the
@@ -193,9 +193,7 @@ contract FieldFacet is Invariable, ReentrancyGuard {
         }
 
         // Create a new Plot with remaining Pods.
-        s.accountStates[account].field.plots[index.add(harvestablePods)] = pods.sub(
-            harvestablePods
-        );
+        s.accounts[account].field.plots[index.add(harvestablePods)] = pods.sub(harvestablePods);
     }
 
     //////////////////// GETTERS ////////////////////
@@ -248,10 +246,10 @@ contract FieldFacet is Invariable, ReentrancyGuard {
 
     /**
      * @notice Returns the number of Pods remaining in a Plot.
-     * @dev Plots are only stored in the `s.accountStates[account].field.plots` mapping.
+     * @dev Plots are only stored in the `s.accounts[account].field.plots` mapping.
      */
     function plot(address account, uint256 index) public view returns (uint256) {
-        return s.accountStates[account].field.plots[index];
+        return s.accounts[account].field.plots[index];
     }
 
     /**

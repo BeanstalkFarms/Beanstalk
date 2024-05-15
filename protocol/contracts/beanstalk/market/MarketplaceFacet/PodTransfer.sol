@@ -28,7 +28,7 @@ contract PodTransfer is ReentrancyGuard {
      **/
 
     function allowancePods(address owner, address spender) public view returns (uint256) {
-        return s.accountStates[owner].field.podAllowances[spender];
+        return s.accounts[owner].field.podAllowances[spender];
     }
 
     /**
@@ -49,14 +49,14 @@ contract PodTransfer is ReentrancyGuard {
     }
 
     function insertPlot(address account, uint256 id, uint256 amount) internal {
-        s.accountStates[account].field.plots[id] = amount;
+        s.accounts[account].field.plots[id] = amount;
     }
 
     function removePlot(address account, uint256 id, uint256 start, uint256 end) internal {
-        uint256 amount = s.accountStates[account].field.plots[id];
-        if (start == 0) delete s.accountStates[account].field.plots[id];
-        else s.accountStates[account].field.plots[id] = start;
-        if (end != amount) s.accountStates[account].field.plots[id.add(end)] = amount.sub(end);
+        uint256 amount = s.accounts[account].field.plots[id];
+        if (start == 0) delete s.accounts[account].field.plots[id];
+        else s.accounts[account].field.plots[id] = start;
+        if (end != amount) s.accounts[account].field.plots[id.add(end)] = amount.sub(end);
     }
 
     function decrementAllowancePods(address owner, address spender, uint256 amount) internal {
@@ -68,6 +68,6 @@ contract PodTransfer is ReentrancyGuard {
     }
 
     function setAllowancePods(address owner, address spender, uint256 amount) internal {
-        s.accountStates[owner].field.podAllowances[spender] = amount;
+        s.accounts[owner].field.podAllowances[spender] = amount;
     }
 }

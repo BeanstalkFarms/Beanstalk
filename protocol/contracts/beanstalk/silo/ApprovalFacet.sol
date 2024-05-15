@@ -184,7 +184,7 @@ contract ApprovalFacet is Invariable, ReentrancyGuard {
         address spender,
         address token
     ) public view virtual returns (uint256) {
-        return s.accountStates[owner].depositAllowances[spender][token];
+        return s.accounts[owner].depositAllowances[spender][token];
     }
 
     // ERC1155 Approvals
@@ -192,11 +192,11 @@ contract ApprovalFacet is Invariable, ReentrancyGuard {
         address spender,
         bool approved
     ) external fundsSafu noNetFlow noSupplyChange {
-        s.accountStates[LibTractor._user()].isApprovedForAll[spender] = approved;
+        s.accounts[LibTractor._user()].isApprovedForAll[spender] = approved;
         emit ApprovalForAll(LibTractor._user(), spender, approved);
     }
 
     function isApprovedForAll(address _owner, address _operator) external view returns (bool) {
-        return s.accountStates[_owner].isApprovedForAll[_operator];
+        return s.accounts[_owner].isApprovedForAll[_operator];
     }
 }

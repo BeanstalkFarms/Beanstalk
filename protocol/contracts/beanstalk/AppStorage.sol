@@ -128,7 +128,7 @@ contract Account {
          * Previously held the V1 Silo Deposits/Withdrawals for BEAN:ETH Uniswap v2 LP Tokens.
          *
          * BEAN:3CRV and BEAN:LUSD tokens prior to Replant were stored in the Silo V2
-         * format in the `s.accountStates[account].legacyV2Deposits` mapping.
+         * format in the `s.accounts[account].legacyV2Deposits` mapping.
          *
          * NOTE: While the Silo V1 format is now deprecated, unmigrated Silo V1 deposits are still
          * stored in this storage slot. See {LibUnripeSilo} for more.
@@ -474,7 +474,7 @@ struct AppStorage {
     uint256 reentrantStatus;
     Storage.Weather weather;
     uint256 earnedBeans;
-    mapping(address => Account.State) accountStates;
+    mapping(address => Account.State) accounts;
     mapping(uint256 => bytes32) podListings;
     mapping(bytes32 => uint256) podOrders;
     mapping(address => Storage.AssetSilo) siloBalances;

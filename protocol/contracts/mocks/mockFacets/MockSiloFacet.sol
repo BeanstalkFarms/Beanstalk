@@ -52,8 +52,8 @@ contract MockSiloFacet is SiloFacet {
     function mockUnripeLPDeposit(uint256 t, uint32 _s, uint256 amount, uint256 bdv) external {
         _mowLegacy(LibTractor._user());
         if (t == 0) {
-            s.accountStates[LibTractor._user()].lp.deposits[_s] += amount;
-            s.accountStates[LibTractor._user()].lp.depositSeeds[_s] += bdv.mul(4);
+            s.accounts[LibTractor._user()].lp.deposits[_s] += amount;
+            s.accounts[LibTractor._user()].lp.depositSeeds[_s] += bdv.mul(4);
         } else if (t == 1)
             addDepositToAccountLegacy(LibTractor._user(), C.unripeLPPool1(), _s, amount, bdv);
         else if (t == 2)
@@ -83,7 +83,7 @@ contract MockSiloFacet is SiloFacet {
 
     function mockUnripeBeanDeposit(uint32 _s, uint256 amount) external {
         _mowLegacy(LibTractor._user());
-        s.accountStates[LibTractor._user()].bean.deposits[_s] += amount;
+        s.accounts[LibTractor._user()].bean.deposits[_s] += amount;
         uint256 partialAmount = amount.mul(C.initialRecap()).div(1e18);
         incrementTotalDepositedAmount(C.UNRIPE_BEAN, amount);
 
@@ -128,7 +128,7 @@ contract MockSiloFacet is SiloFacet {
      *  - {SiloFacet-transferDeposit(s)}
      */
     function _mowLegacy(address account) internal {
-        uint32 _lastUpdate = s.accountStates[account].lastUpdate;
+        uint32 _lastUpdate = s.accounts[account].lastUpdate;
 
         // If `account` was already updated this Season, there's no Stalk to Mow.
         // _lastUpdate > s.season.current should not be possible, but it is checked anyway.
@@ -144,48 +144,48 @@ contract MockSiloFacet is SiloFacet {
 
         // Reset timer so that Grown Stalk for a particular Season can only be
         // claimed one time.
-        s.accountStates[account].lastUpdate = s.season.current;
+        s.accounts[account].lastUpdate = s.season.current;
     }
 
     function __mowLegacy(address account) private {
         // If this `account` has no Seeds, skip to save gas.
-        if (s.accountStates[account].silo.seeds == 0) return;
+        if (s.accounts[account].silo.seeds == 0) return;
         LibSilo.mintActiveStalk(account, balanceOfGrownStalkLegacy(account));
     }
 
     function handleRainAndSopsLegacy(address account, uint32 _lastUpdate) private {
         // If no roots, reset Sop counters variables
-        if (s.accountStates[account].roots == 0) {
-            s.accountStates[account].lastSop = s.season.rainStart;
-            s.accountStates[account].lastRain = 0;
+        if (s.accounts[account].roots == 0) {
+            s.accounts[account].lastSop = s.season.rainStart;
+            s.accounts[account].lastRain = 0;
             return;
         }
         // If a Sop has occured since last update, calculate rewards and set last Sop.
         if (s.season.lastSopSeason > _lastUpdate) {
-            s.accountStates[account].sop.plenty = LibSilo.balanceOfPlenty(account);
-            s.accountStates[account].lastSop = s.season.lastSop;
+            s.accounts[account].sop.plenty = LibSilo.balanceOfPlenty(account);
+            s.accounts[account].lastSop = s.season.lastSop;
         }
         if (s.season.raining) {
             // If rain started after update, set account variables to track rain.
             if (s.season.rainStart > _lastUpdate) {
-                s.accountStates[account].lastRain = s.season.rainStart;
-                s.accountStates[account].sop.roots = s.accountStates[account].roots;
+                s.accounts[account].lastRain = s.season.rainStart;
+                s.accounts[account].sop.roots = s.accounts[account].roots;
             }
             // If there has been a Sop since rain started,
             // save plentyPerRoot in case another SOP happens during rain.
             if (s.season.lastSop == s.season.rainStart)
-                s.accountStates[account].sop.plentyPerRoot = s.sops[s.season.lastSop];
-        } else if (s.accountStates[account].lastRain > 0) {
+                s.accounts[account].sop.plentyPerRoot = s.sops[s.season.lastSop];
+        } else if (s.accounts[account].lastRain > 0) {
             // Reset Last Rain if not raining.
-            s.accountStates[account].lastRain = 0;
+            s.accounts[account].lastRain = 0;
         }
     }
 
     function balanceOfGrownStalkLegacy(address account) public view returns (uint256) {
         return
             LibLegacyTokenSilo.stalkReward(
-                s.accountStates[account].silo.seeds,
-                s.season.current - s.accountStates[account].lastUpdate
+                s.accounts[account].silo.seeds,
+                s.season.current - s.accounts[account].lastUpdate
             );
     }
 
@@ -194,7 +194,7 @@ contract MockSiloFacet is SiloFacet {
         AppStorage storage s = LibAppStorage.diamondStorage();
 
         // Increase supply of Seeds; Add Seeds to the balance of `account`
-        s.accountStates[account].silo.seeds = s.accountStates[account].silo.seeds.add(seeds);
+        s.accounts[account].silo.seeds = s.accounts[account].silo.seeds.add(seeds);
 
         // emit SeedsBalanceChanged(account, int256(seeds)); //don't really care about the event for unit testing purposes of unripe stuff
     }
@@ -227,8 +227,8 @@ contract MockSiloFacet is SiloFacet {
     ) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
 
-        s.accountStates[account].legacyV2Deposits[token][season].amount += uint128(amount);
-        s.accountStates[account].legacyV2Deposits[token][season].bdv += uint128(bdv);
+        s.accounts[account].legacyV2Deposits[token][season].amount += uint128(amount);
+        s.accounts[account].legacyV2Deposits[token][season].bdv += uint128(bdv);
 
         emit AddDeposit(account, token, int96(uint96(season)), amount, bdv);
     }
@@ -328,7 +328,7 @@ contract MockSiloFacet is SiloFacet {
     }
 
     function balanceOfSeeds(address account) public view returns (uint256) {
-        return s.accountStates[account].silo.seeds;
+        return s.accounts[account].silo.seeds;
     }
 
     /**

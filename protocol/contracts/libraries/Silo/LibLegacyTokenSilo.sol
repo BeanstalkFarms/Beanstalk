@@ -89,7 +89,7 @@ library LibLegacyTokenSilo {
      * @dev Remove `amount` of `token` from a user's Deposit in `season`.
      *
      * A "Crate" refers to the existing Deposit in storage at:
-     *  `s.accountStates[account].legacyV2Deposits[token][season]`
+     *  `s.accounts[account].legacyV2Deposits[token][season]`
      *
      * Partially removing a Deposit should scale its BDV proportionally. For ex.
      * removing 80% of the tokens from a Deposit should reduce its BDV by 80%.
@@ -112,8 +112,8 @@ library LibLegacyTokenSilo {
 
         uint256 crateAmount;
         (crateAmount, crateBDV) = (
-            s.accountStates[account].legacyV2Deposits[token][season].amount,
-            s.accountStates[account].legacyV2Deposits[token][season].bdv
+            s.accounts[account].legacyV2Deposits[token][season].amount,
+            s.accounts[account].legacyV2Deposits[token][season].bdv
         );
 
         // If amount to remove is greater than the amount in the Deposit, migrate legacy Deposit to new Deposit
@@ -139,16 +139,14 @@ library LibLegacyTokenSilo {
                 "Silo: uint128 overflow."
             );
 
-            s.accountStates[account].legacyV2Deposits[token][season].amount = uint128(
-                updatedAmount
-            );
-            s.accountStates[account].legacyV2Deposits[token][season].bdv = uint128(updatedBDV);
+            s.accounts[account].legacyV2Deposits[token][season].amount = uint128(updatedAmount);
+            s.accounts[account].legacyV2Deposits[token][season].bdv = uint128(updatedBDV);
 
             return removedBDV;
         }
 
         // Full Remove
-        delete s.accountStates[account].legacyV2Deposits[token][season];
+        delete s.accounts[account].legacyV2Deposits[token][season];
     }
 
     //////////////////////// GETTERS ////////////////////////
@@ -169,10 +167,10 @@ library LibLegacyTokenSilo {
         AppStorage storage s = LibAppStorage.diamondStorage();
 
         uint32 stemStartSeason = uint32(s.season.stemStartSeason);
-        uint32 lastUpdate = s.accountStates[account].lastUpdate;
+        uint32 lastUpdate = s.accounts[account].lastUpdate;
 
         if (lastUpdate > stemStartSeason) return 0;
-        return stalkReward(s.accountStates[account].silo.seeds, stemStartSeason.sub(lastUpdate));
+        return stalkReward(s.accounts[account].silo.seeds, stemStartSeason.sub(lastUpdate));
     }
 
     /**
@@ -231,11 +229,11 @@ library LibLegacyTokenSilo {
      */
     function _migrateNoDeposits(address account) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        require(s.accountStates[account].silo.seeds == 0, "only for zero seeds");
+        require(s.accounts[account].silo.seeds == 0, "only for zero seeds");
         (bool needsMigration, ) = LibSilo.migrationNeeded(account);
         require(needsMigration, "no migration needed");
 
-        s.accountStates[account].lastUpdate = s.season.stemStartSeason;
+        s.accounts[account].lastUpdate = s.season.stemStartSeason;
     }
 
     /**
@@ -377,7 +375,7 @@ library LibLegacyTokenSilo {
         AppStorage storage s = LibAppStorage.diamondStorage();
 
         // emit that all their seeds are gone, note need to take into account seedsDiff
-        emit SeedsBalanceChanged(account, -int256(s.accountStates[account].silo.seeds));
+        emit SeedsBalanceChanged(account, -int256(s.accounts[account].silo.seeds));
 
         // and wipe out old seed balances (all your seeds are belong to stem)
         setBalanceOfSeeds(account, 0);
@@ -402,7 +400,7 @@ library LibLegacyTokenSilo {
      */
     function setMowStatus(address account, address token, int96 stemTip) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        s.accountStates[account].mowStatuses[token].lastStem = stemTip;
+        s.accounts[account].mowStatuses[token].lastStem = stemTip;
     }
 
     /**
@@ -422,7 +420,7 @@ library LibLegacyTokenSilo {
      */
     function balanceOfSeeds(address account) internal view returns (uint256) {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        return s.accountStates[account].silo.seeds;
+        return s.accounts[account].silo.seeds;
     }
 
     /**
@@ -434,7 +432,7 @@ library LibLegacyTokenSilo {
      */
     function setBalanceOfSeeds(address account, uint256 seeds) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        s.accountStates[account].silo.seeds = seeds;
+        s.accounts[account].silo.seeds = seeds;
     }
 
     /**
@@ -442,7 +440,7 @@ library LibLegacyTokenSilo {
      */
     function updateLastUpdateToNow(address account) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        s.accountStates[account].lastUpdate = _season();
+        s.accounts[account].lastUpdate = _season();
     }
 
     /**
@@ -492,7 +490,7 @@ library LibLegacyTokenSilo {
      */
     function checkForMigration(address account) internal view {
         // The balanceOfSeeds(account) > 0 check is necessary if someone updates their Silo
-        // in the same Season as BIP execution. Such that s.accountStates[account].lastUpdate == s.season.stemStartSeason,
+        // in the same Season as BIP execution. Such that s.accounts[account].lastUpdate == s.season.stemStartSeason,
         // but they have not migrated yet
         (bool needsMigration, ) = LibSilo.migrationNeeded(account);
         require((needsMigration || balanceOfSeeds(account) > 0), "no migration needed");

@@ -170,10 +170,8 @@ library LibGerminate {
 
         // increment users stalk and roots.
         if (germinatingStalk > 0) {
-            s.accountStates[account].silo.stalk = s.accountStates[account].silo.stalk.add(
-                germinatingStalk
-            );
-            s.accountStates[account].roots = s.accountStates[account].roots.add(roots);
+            s.accounts[account].silo.stalk = s.accounts[account].silo.stalk.add(germinatingStalk);
+            s.accounts[account].roots = s.accounts[account].roots.add(roots);
 
             // emit events. Active stalk is incremented, germinating stalk is decremented.
             emit LibSilo.StalkBalanceChanged(
@@ -205,9 +203,9 @@ library LibGerminate {
         roots = calculateGerminatingRoots(season, stalk);
 
         if (clearOdd) {
-            delete s.accountStates[account].farmerGerminating.odd;
+            delete s.accounts[account].farmerGerminating.odd;
         } else {
-            delete s.accountStates[account].farmerGerminating.even;
+            delete s.accounts[account].farmerGerminating.even;
         }
 
         // deduct from unclaimed values.
@@ -250,11 +248,11 @@ library LibGerminate {
     ) internal view returns (uint128 firstStalk, uint128 secondStalk) {
         AppStorage storage s = LibAppStorage.diamondStorage();
         if (lastUpdateOdd) {
-            firstStalk = s.accountStates[account].farmerGerminating.odd;
-            secondStalk = s.accountStates[account].farmerGerminating.even;
+            firstStalk = s.accounts[account].farmerGerminating.odd;
+            secondStalk = s.accounts[account].farmerGerminating.even;
         } else {
-            firstStalk = s.accountStates[account].farmerGerminating.even;
-            secondStalk = s.accountStates[account].farmerGerminating.odd;
+            firstStalk = s.accounts[account].farmerGerminating.even;
+            secondStalk = s.accounts[account].farmerGerminating.odd;
         }
     }
 

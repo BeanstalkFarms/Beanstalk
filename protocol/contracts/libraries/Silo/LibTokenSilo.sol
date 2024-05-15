@@ -311,23 +311,21 @@ library LibTokenSilo {
         uint256 depositId = LibBytes.packAddressAndStem(token, stem);
 
         // add amount and bdv to the deposits.
-        s.accountStates[account].deposits[depositId].amount = s
-            .accountStates[account]
+        s.accounts[account].deposits[depositId].amount = s
+            .accounts[account]
             .deposits[depositId]
             .amount
             .add(amount.toUint128());
-        s.accountStates[account].deposits[depositId].bdv = s
-            .accountStates[account]
+        s.accounts[account].deposits[depositId].bdv = s
+            .accounts[account]
             .deposits[depositId]
             .bdv
             .add(bdv.toUint128());
 
         // Will not overflow b/c crateBDV <= type(uint128).max
-        s.accountStates[account].mowStatuses[token].bdv = s
-            .accountStates[account]
-            .mowStatuses[token]
-            .bdv
-            .add(bdv.toUint128());
+        s.accounts[account].mowStatuses[token].bdv = s.accounts[account].mowStatuses[token].bdv.add(
+            bdv.toUint128()
+        );
 
         /**
          *  {addDepositToAccount} is used for both depositing and transferring deposits.
@@ -354,7 +352,7 @@ library LibTokenSilo {
      * @dev Remove `amount` of `token` from a user's Deposit in `stem`.
      *
      * A "Crate" refers to the existing Deposit in storage at:
-     *  `s.accountStates[account].deposits[token][stem]`
+     *  `s.accounts[account].deposits[token][stem]`
      *
      * Partially removing a Deposit should scale its BDV proportionally. For ex.
      * removing 80% of the tokens from a Deposit should reduce its BDV by 80%.
@@ -377,8 +375,8 @@ library LibTokenSilo {
         AppStorage storage s = LibAppStorage.diamondStorage();
         uint256 depositId = LibBytes.packAddressAndStem(token, stem);
 
-        uint256 crateAmount = s.accountStates[account].deposits[depositId].amount;
-        crateBDV = s.accountStates[account].deposits[depositId].bdv;
+        uint256 crateAmount = s.accounts[account].deposits[depositId].amount;
+        crateBDV = s.accounts[account].deposits[depositId].bdv;
         // if amount is > crateAmount, check if user has a legacy deposit:
         if (amount > crateAmount) {
             // get the absolute stem value.
@@ -406,11 +404,11 @@ library LibTokenSilo {
 
             // SafeCast unnecessary b/c updatedAmount <= crateAmount and updatedBDV <= crateBDV,
             // which are both <= type(uint128).max
-            s.accountStates[account].deposits[depositId].amount = uint128(updatedAmount);
-            s.accountStates[account].deposits[depositId].bdv = uint128(updatedBDV);
+            s.accounts[account].deposits[depositId].amount = uint128(updatedAmount);
+            s.accounts[account].deposits[depositId].bdv = uint128(updatedBDV);
 
-            s.accountStates[account].mowStatuses[token].bdv = s
-                .accountStates[account]
+            s.accounts[account].mowStatuses[token].bdv = s
+                .accounts[account]
                 .mowStatuses[token]
                 .bdv
                 .sub(uint128(removedBDV));
@@ -418,14 +416,12 @@ library LibTokenSilo {
             return removedBDV;
         }
         // Full remove
-        if (crateAmount > 0) delete s.accountStates[account].deposits[depositId];
+        if (crateAmount > 0) delete s.accounts[account].deposits[depositId];
 
         // Will not overflow b/c crateBDV <= type(uint128).max
-        s.accountStates[account].mowStatuses[token].bdv = s
-            .accountStates[account]
-            .mowStatuses[token]
-            .bdv
-            .sub(uint128(crateBDV));
+        s.accounts[account].mowStatuses[token].bdv = s.accounts[account].mowStatuses[token].bdv.sub(
+            uint128(crateBDV)
+        );
     }
 
     //////////////////////// GETTERS ////////////////////////
@@ -497,8 +493,8 @@ library LibTokenSilo {
     ) internal view returns (uint256 amount, uint256 bdv) {
         AppStorage storage s = LibAppStorage.diamondStorage();
         uint256 depositId = LibBytes.packAddressAndStem(token, stem);
-        amount = s.accountStates[account].deposits[depositId].amount;
-        bdv = s.accountStates[account].deposits[depositId].bdv;
+        amount = s.accounts[account].deposits[depositId].amount;
+        bdv = s.accounts[account].deposits[depositId].bdv;
     }
 
     /**
@@ -623,11 +619,11 @@ library LibTokenSilo {
         AppStorage storage s = LibAppStorage.diamondStorage();
         // divide the newStem by 1e6 to get the legacy stem.
         uint256 legacyDepositId = LibBytes.packAddressAndStem(token, newStem.div(1e6));
-        uint256 legacyAmount = s.accountStates[account].legacyV3Deposits[legacyDepositId].amount;
-        uint256 legacyBdv = s.accountStates[account].legacyV3Deposits[legacyDepositId].bdv;
+        uint256 legacyAmount = s.accounts[account].legacyV3Deposits[legacyDepositId].amount;
+        uint256 legacyBdv = s.accounts[account].legacyV3Deposits[legacyDepositId].bdv;
         crateAmount = crateAmount.add(legacyAmount);
         crateBdv = crateBdv.add(legacyBdv);
-        delete s.accountStates[account].legacyV3Deposits[legacyDepositId];
+        delete s.accounts[account].legacyV3Deposits[legacyDepositId];
 
         // Emit burn events.
         emit TransferSingle(LibTractor._user(), account, address(0), legacyDepositId, legacyAmount);

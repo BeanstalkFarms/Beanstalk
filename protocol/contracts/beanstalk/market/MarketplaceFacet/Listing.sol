@@ -61,7 +61,7 @@ contract Listing is PodTransfer {
         uint256 minFillAmount,
         LibTransfer.To mode
     ) internal {
-        uint256 plotSize = s.accountStates[LibTractor._user()].field.plots[index];
+        uint256 plotSize = s.accounts[LibTractor._user()].field.plots[index];
 
         require(plotSize >= (start.add(amount)) && amount > 0, "Marketplace: Invalid Plot/Amount.");
         require(pricePerPod > 0, "Marketplace: Pod price must be greater than 0.");
@@ -105,7 +105,7 @@ contract Listing is PodTransfer {
         );
 
         require(s.podListings[l.index] == lHash, "Marketplace: Listing does not exist.");
-        uint256 plotSize = s.accountStates[l.account].field.plots[l.index];
+        uint256 plotSize = s.accounts[l.account].field.plots[l.index];
         require(
             plotSize >= (l.start.add(l.amount)) && l.amount > 0,
             "Marketplace: Invalid Plot/Amount."
@@ -149,7 +149,7 @@ contract Listing is PodTransfer {
 
     function _cancelPodListing(address account, uint256 index) internal {
         require(
-            s.accountStates[account].field.plots[index] > 0,
+            s.accounts[account].field.plots[index] > 0,
             "Marketplace: Listing not owned by sender."
         );
 

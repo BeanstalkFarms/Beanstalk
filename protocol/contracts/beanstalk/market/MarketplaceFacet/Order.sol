@@ -85,7 +85,7 @@ contract Order is Listing {
     ) internal {
         require(amount >= o.minFillAmount, "Marketplace: Fill must be >= minimum amount.");
         require(
-            s.accountStates[LibTractor._user()].field.plots[index] >= (start.add(amount)),
+            s.accounts[LibTractor._user()].field.plots[index] >= (start.add(amount)),
             "Marketplace: Invalid Plot."
         );
         require(
