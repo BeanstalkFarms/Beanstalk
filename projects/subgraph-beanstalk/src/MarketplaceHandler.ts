@@ -63,14 +63,13 @@ class PodOrderCreatedParams {
   event: ethereum.Event;
   account: Address;
   id: Bytes;
-  amount: BigInt;
+  beanAmount: BigInt;
   pricePerPod: i32;
   maxPlaceInLine: BigInt;
-
   // v2
-  minFillAmount: BigInt;
-  pricingFunction: Bytes;
-  pricingType: i32;
+  minFillAmount: BigInt; // for v1, always 0
+  pricingFunction: Bytes | null;
+  pricingType: i32; // for v1, always 0
 }
 
 // This one is the same for both listing/order fills.
@@ -227,45 +226,18 @@ export function handlePodListingFilled(event: PodListingFilled_v1): void {
 }
 
 export function handlePodOrderCreated(event: PodOrderCreated_v1): void {
-  let order = loadPodOrder(event.params.id);
-  let farmer = loadFarmer(event.params.account);
-
-  if (order.status != "") {
-    createHistoricalPodOrder(order);
-  }
-
-  order.historyID = order.id + "-" + event.block.timestamp.toString();
-  order.farmer = event.params.account.toHexString();
-  order.createdAt = event.block.timestamp;
-  order.updatedAt = event.block.timestamp;
-  order.status = "ACTIVE";
-  order.beanAmount = event.params.amount.times(BigInt.fromI32(event.params.pricePerPod)).div(BigInt.fromString("1000000"));
-  order.beanAmountFilled = ZERO_BI;
-  order.podAmountFilled = ZERO_BI;
-  order.maxPlaceInLine = event.params.maxPlaceInLine;
-  order.pricePerPod = event.params.pricePerPod;
-  order.creationHash = event.transaction.hash.toHexString();
-  order.fills = [];
-  order.save();
-
-  updateActiveOrders(event.address, MarketplaceAction.CREATED, order.id, order.maxPlaceInLine);
-  updateMarketOrderBalances(event.address, order.beanAmount, ZERO_BI, ZERO_BI, ZERO_BI, event.block.timestamp);
-
-  // Save the raw event data
-  let id = "podOrderCreated-" + event.transaction.hash.toHexString() + "-" + event.logIndex.toString();
-  let rawEvent = new PodOrderCreatedEvent(id);
-  rawEvent.hash = event.transaction.hash.toHexString();
-  rawEvent.logIndex = event.logIndex.toI32();
-  rawEvent.protocol = event.address.toHexString();
-  rawEvent.historyID = order.historyID;
-  rawEvent.account = event.params.account.toHexString();
-  rawEvent.orderId = event.params.id.toHexString();
-  rawEvent.amount = event.params.amount;
-  rawEvent.pricePerPod = event.params.pricePerPod;
-  rawEvent.maxPlaceInLine = event.params.maxPlaceInLine;
-  rawEvent.blockNumber = event.block.number;
-  rawEvent.createdAt = event.block.timestamp;
-  rawEvent.save();
+  const beanAmount = event.params.amount.times(BigInt.fromI32(event.params.pricePerPod)).div(BigInt.fromString("1000000"));
+  podOrderCreated({
+    event: event,
+    account: event.params.account,
+    id: event.params.id,
+    beanAmount: beanAmount,
+    pricePerPod: event.params.pricePerPod,
+    maxPlaceInLine: event.params.maxPlaceInLine,
+    minFillAmount: ZERO_BI,
+    pricingFunction: null,
+    pricingType: 0
+  });
 }
 
 export function handlePodOrderFilled(event: PodOrderFilled_v1): void {
@@ -505,49 +477,17 @@ export function handlePodListingFilled_v2(event: PodListingFilled_v2): void {
 }
 
 export function handlePodOrderCreated_v2(event: PodOrderCreated_v2): void {
-  let order = loadPodOrder(event.params.id);
-  let farmer = loadFarmer(event.params.account);
-
-  if (order.status != "") {
-    createHistoricalPodOrder(order);
-  }
-
-  order.historyID = order.id + "-" + event.block.timestamp.toString();
-  order.farmer = event.params.account.toHexString();
-  order.createdAt = event.block.timestamp;
-  order.updatedAt = event.block.timestamp;
-  order.status = "ACTIVE";
-  order.beanAmount = event.params.amount;
-  order.beanAmountFilled = ZERO_BI;
-  order.minFillAmount = event.params.minFillAmount;
-  order.maxPlaceInLine = event.params.maxPlaceInLine;
-  order.pricePerPod = event.params.pricePerPod;
-  order.pricingFunction = event.params.pricingFunction;
-  order.pricingType = event.params.priceType;
-  order.creationHash = event.transaction.hash.toHexString();
-  order.fills = [];
-  order.save();
-
-  updateActiveOrders(event.address, MarketplaceAction.CREATED, order.id, order.maxPlaceInLine);
-  updateMarketOrderBalances(event.address, event.params.amount, ZERO_BI, ZERO_BI, ZERO_BI, event.block.timestamp);
-
-  // Save the raw event data
-  let id = "podOrderCreated-" + event.transaction.hash.toHexString() + "-" + event.logIndex.toString();
-  let rawEvent = new PodOrderCreatedEvent(id);
-  rawEvent.hash = event.transaction.hash.toHexString();
-  rawEvent.logIndex = event.logIndex.toI32();
-  rawEvent.protocol = event.address.toHexString();
-  rawEvent.historyID = order.historyID;
-  rawEvent.account = event.params.account.toHexString();
-  rawEvent.orderId = event.params.id.toHexString();
-  rawEvent.amount = event.params.amount;
-  rawEvent.pricePerPod = event.params.pricePerPod;
-  rawEvent.maxPlaceInLine = event.params.maxPlaceInLine;
-  rawEvent.pricingFunction = event.params.pricingFunction;
-  rawEvent.pricingType = event.params.priceType;
-  rawEvent.blockNumber = event.block.number;
-  rawEvent.createdAt = event.block.timestamp;
-  rawEvent.save();
+  podOrderCreated({
+    event: event,
+    account: event.params.account,
+    id: event.params.id,
+    beanAmount: event.params.amount,
+    pricePerPod: event.params.pricePerPod,
+    maxPlaceInLine: event.params.maxPlaceInLine,
+    minFillAmount: event.params.minFillAmount,
+    pricingFunction: event.params.pricingFunction,
+    pricingType: event.params.priceType
+  });
 }
 
 export function handlePodOrderFilled_v2(event: PodOrderFilled_v2): void {
@@ -653,6 +593,53 @@ function podListingFilled(params: MarketFillParams): void {
   rawEvent.start = params.start;
   rawEvent.amount = params.amount;
   rawEvent.costInBeans = params.costInBeans;
+  rawEvent.blockNumber = params.event.block.number;
+  rawEvent.createdAt = params.event.block.timestamp;
+  rawEvent.save();
+}
+
+function podOrderCreated(params: PodOrderCreatedParams): void {
+  let order = loadPodOrder(params.id);
+  loadFarmer(params.account);
+
+  if (order.status != "") {
+    createHistoricalPodOrder(order);
+  }
+
+  order.historyID = order.id + "-" + params.event.block.timestamp.toString();
+  order.farmer = params.account.toHexString();
+  order.createdAt = params.event.block.timestamp;
+  order.updatedAt = params.event.block.timestamp;
+  order.status = "ACTIVE";
+  order.beanAmount = params.beanAmount;
+  order.beanAmountFilled = ZERO_BI;
+  order.podAmountFilled = ZERO_BI;
+  order.minFillAmount = params.minFillAmount;
+  order.maxPlaceInLine = params.maxPlaceInLine;
+  order.pricePerPod = params.pricePerPod;
+  order.pricingFunction = params.pricingFunction;
+  order.pricingType = params.pricingType;
+  order.creationHash = params.event.transaction.hash.toHexString();
+  order.fills = [];
+  order.save();
+
+  updateActiveOrders(params.event.address, MarketplaceAction.CREATED, order.id, order.maxPlaceInLine);
+  updateMarketOrderBalances(params.event.address, params.beanAmount, ZERO_BI, ZERO_BI, ZERO_BI, params.event.block.timestamp);
+
+  // Save the raw event data
+  let id = "podOrderCreated-" + params.event.transaction.hash.toHexString() + "-" + params.event.logIndex.toString();
+  let rawEvent = new PodOrderCreatedEvent(id);
+  rawEvent.hash = params.event.transaction.hash.toHexString();
+  rawEvent.logIndex = params.event.logIndex.toI32();
+  rawEvent.protocol = params.event.address.toHexString();
+  rawEvent.historyID = order.historyID;
+  rawEvent.account = params.account.toHexString();
+  rawEvent.orderId = params.id.toHexString();
+  rawEvent.amount = params.beanAmount;
+  rawEvent.pricePerPod = params.pricePerPod;
+  rawEvent.maxPlaceInLine = params.maxPlaceInLine;
+  rawEvent.pricingFunction = params.pricingFunction;
+  rawEvent.pricingType = params.pricingType;
   rawEvent.blockNumber = params.event.block.number;
   rawEvent.createdAt = params.event.block.timestamp;
   rawEvent.save();
