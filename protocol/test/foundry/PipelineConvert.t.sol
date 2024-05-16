@@ -75,6 +75,9 @@ contract PipelineConvertTest is TestHelper {
         uint256 afterInputTokenLPSupply;
         uint256 beforeOutputTokenLPSupply;
         uint256 afterOutputTokenLPSupply;
+        uint256 beforeInputWellCapacity;
+        uint256 beforeOutputWellCapacity;
+        uint256 beforeOverallCapacity;
     }
 
     // Event defs
@@ -278,6 +281,11 @@ contract PipelineConvertTest is TestHelper {
             pd.inputWell
         );
 
+        // store convert capacities for later comparison
+        pd.beforeInputWellCapacity = convert.getWellConvertCapacity(pd.inputWell);
+        pd.beforeOutputWellCapacity = convert.getWellConvertCapacity(pd.outputWell);
+        pd.beforeOverallCapacity = convert.getOverallConvertCapacity();
+
         uint256 bdvOfDepositedLp = bs.bdv(pd.inputWell, amountOfDepositedLP);
         uint256[] memory bdvAmountsDeposited = new uint256[](1);
         bdvAmountsDeposited[0] = bdvOfDepositedLp;
@@ -395,6 +403,13 @@ contract PipelineConvertTest is TestHelper {
             pd.outputWell, // token out
             lpToLPFarmCalls // farmData
         );
+
+        // In this test overall convert capacity before and after should be 0.
+        assertEq(convert.getOverallConvertCapacity(), 0);
+        assertEq(pd.beforeOverallCapacity, 0);
+        // Per-well capacities were used
+        assertGt(convert.getWellConvertCapacity(pd.inputWell), pd.beforeInputWellCapacity);
+        assertGt(convert.getWellConvertCapacity(pd.outputWell), pd.beforeOutputWellCapacity);
     }
 
     function testUpdatingOverallDeltaB(uint256 amount) public {
@@ -571,12 +586,12 @@ contract PipelineConvertTest is TestHelper {
 
         // convert.cappedReservesDeltaB(beanEthWell);
 
-        uint256 convertCapacityStage1 = convert.getConvertCapacity();
+        uint256 convertCapacityStage1 = convert.getOverallConvertCapacity();
 
         // convert beans to lp
         beanToLPDoConvert(amount, stem, users[1]);
 
-        uint256 convertCapacityStage2 = convert.getConvertCapacity();
+        uint256 convertCapacityStage2 = convert.getOverallConvertCapacity();
         assertTrue(convertCapacityStage2 < convertCapacityStage1);
 
         // add more eth to well again
@@ -584,7 +599,7 @@ contract PipelineConvertTest is TestHelper {
 
         beanToLPDoConvert(amount, stem2, users[2]);
 
-        uint256 convertCapacityStage3 = convert.getConvertCapacity();
+        uint256 convertCapacityStage3 = convert.getOverallConvertCapacity();
         assertTrue(convertCapacityStage3 < convertCapacityStage2);
 
         uint256 grownStalkAfter = bs.balanceOfGrownStalk(users[2], beanEthWell);

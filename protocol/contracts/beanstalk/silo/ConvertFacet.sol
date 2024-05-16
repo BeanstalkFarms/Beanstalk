@@ -370,7 +370,7 @@ contract ConvertFacet is Invariable, ReentrancyGuard {
      * @notice Returns currently available convert power for this block
      * @return convertCapacity The amount of convert power available for this block
      */
-    function getConvertCapacity() external view returns (uint256) {
+    function getOverallConvertCapacity() external view returns (uint256) {
         uint256 overallCappedDeltaB = LibConvert.abs(LibWellMinting.overallCappedDeltaB());
         uint256 overallConvertCapacityUsed = s
             .convertCapacity[block.number]
@@ -379,6 +379,13 @@ contract ConvertFacet is Invariable, ReentrancyGuard {
             overallConvertCapacityUsed > overallCappedDeltaB
                 ? 0
                 : overallCappedDeltaB.sub(overallConvertCapacityUsed);
+    }
+
+    function getWellConvertCapacity(address well) external view returns (uint256) {
+        return
+            LibConvert.abs(LibWellMinting.cappedReservesDeltaB(well)).sub(
+                s.convertCapacity[block.number].wellConvertCapacityUsed[well]
+            );
     }
 
     /**
