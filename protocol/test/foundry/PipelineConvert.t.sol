@@ -552,18 +552,16 @@ contract PipelineConvertTest is TestHelper {
         assertTrue(grownStalkBefore > 0);
     }
 
-    // double convert uses up convert power so we should be left at no grown stalk after second convert
-    // (but still have grown stalk after first convert)
+    /**
+     * @notice the main idea is that we start some positive deltaB, so a limited amount of converts are possible (1.2 eth worth)
+     * User One does a convert down, and that uses up convert power for this block
+     * someone adds more eth to the well, which means we're back too far over peg
+     * then User Two tries to do a convert down, but at that point the convert power has been used up, so they lose their grown stalk
+     * double convert uses up convert power so we should be left at no grown stalk after second convert
+     * (but still have grown stalk after first convert)
+     */
     function testFlashloanManipulationLoseGrownStalkBecauseDoubleConvert(uint256 amount) public {
         amount = bound(amount, 1000e6, 5000e6); // todo: update for range
-
-        // do initial pump update
-        updateMockPumpUsingWellReserves(beanEthWell);
-
-        // the main idea is that we start some positive deltaB, so a limited amount of converts are possible (1.2 eth worth)
-        // User One does a convert down, and that uses up convert power for this block
-        // someone adds more eth to the well, which means we're back too far over peg
-        // then User Two tries to do a convert down, but at that point the convert power has been used up, so they lose their grown stalk
 
         // setup initial bean deposit
         int96 stem = depositBeanAndPassGermination(amount, users[1]);
@@ -574,7 +572,8 @@ contract PipelineConvertTest is TestHelper {
         // if you deposited amount of beans into well, how many eth would you get?
         uint256 ethAmount = IWell(beanEthWell).getSwapOut(IERC20(C.BEAN), IERC20(C.WETH), amount);
 
-        ethAmount = ethAmount.mul(15000).div(10000); // I need a better way to calculate how much eth out there should be to make sure we can swap and be over peg
+        // Need a better way to calculate how much eth out there should be to make sure it can swap and be over peg
+        ethAmount = ethAmount.mul(15000).div(10000);
 
         addEthToWell(users[1], ethAmount);
 
