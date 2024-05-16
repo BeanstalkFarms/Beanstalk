@@ -1,48 +1,111 @@
 [profile.default]
-# Project
-# https://book.getfoundry.sh/reference/config/project
-src = 'contracts'
-test = 'test'
-no_match_test = "testDiff"
-out = 'out'
-libs = [
-  'node_modules',
-  'lib'
-]
-cache = true
-cache_path = 'cache'
-force = false
+  src = "contracts"
+  test = "test/foundry"
+  script = "scripts"
+  out = "out"
+  libs = [
+    "node_modules",
+    "lib"
+  ]
+  auto_detect_remappings = true
+  gas_reports = ["*"]
+  no_match_test = "testDiff"
+  ffi = true
+  fs_permissions = [
+    { access = "read", path = "out" },
+    { access = "read", path = "out-optimized" }
+  ]
+  sender = "0x00a329c0648769a73afac7f9381e08fb43dbea72" # The value of `msg.sender` in tests.
+  tx_origin = "0x00a329c0648769a73afac7f9381e08fb43dbea72" # The value of `tx.origin` in tests.
+  # Cache to `$HOME/.foundry/cache/<chain id>/<block number>`.
+  no_storage_caching = false
+  cache = true
+  cache_path = "cache"
 
 # Compiler
 # https://book.getfoundry.sh/reference/config/solidity-compiler
-libraries = []
-auto_detect_solc = true
-ignored_error_codes = [1878, 2837]
-optimizer = true
-optimizer_runs = 200
-via_ir = false
-bytecode_hash = 'ipfs'
+  auto_detect_solc = true
+  optimizer = true
+  optimizer_runs = 200
+  via_ir = false
+  bytecode_hash = "none"
+  cbor_metadata = false
 
-# Testing
-# https://book.getfoundry.sh/reference/config/testing
-verbosity = 0
-ffi = true
-fs_permissions = [{ access = "read", path = "./out" }]
-sender = '0x00a329c0648769a73afac7f9381e08fb43dbea72' # The value of `msg.sender` in tests.
-tx_origin = '0x00a329c0648769a73afac7f9381e08fb43dbea72' # The value of `tx.origin` in tests.
-gas_reports = ['*']
- # Cache to `$HOME/.foundry/cache/<chain id>/<block number>`.
-no_storage_caching = false
- 
+[profile.default.fuzz]
+  max_test_rejects = 1_000_000 # Number of times `vm.assume` can fail
+  runs = 50
+
 [profile.differential]
-match_test = "testDiff"
-no_match_test = "a^"
+  match_test = "testDiff"
+  no_match_test = "a^"
 
-# Formatter
-# https://book.getfoundry.sh/reference/config/formatter
-# ...pass...
-[profile.default.rpc_storage_caching]
-chains = 'all'
-endpoints = 'all'
+[profile.default.invariant]
+  call_override = false # Override unsafe external calls to perform reentrancy checks
+  depth = 20            # Number of calls executed in one run
+  fail_on_revert = true
+  runs = 20
 
+# Speed up compilation and tests during development
+[profile.lite]
+  optimizer = false
 
+# Compile only the production code and the test mocks with via IR
+[profile.optimized]
+  out = "out-optimized"
+  test = "test/mocks"
+  via_ir = true
+
+# See "SMTChecker and Formal Verification" in the Solidity docs
+[profile.smt]
+  ignored_error_codes = [
+    7737, # Disable inline assembly warnings
+  ]
+  out = "out-optimized"
+  script = "contracts"
+  test = "contracts"
+  via_ir = true
+
+[profile.smt.model_checker]
+  engine = "chc" # constrained Horn clauses
+  invariants = ["contract", "reentrancy"]
+  show_unproved = true
+  timeout = 100_000 # in milliseconds, per solving query
+  targets = [
+    "assert",
+    "constantCondition",
+    "divByZero",
+    "outOfBounds",
+    "overflow",
+    "underflow",
+  ]
+
+[profile.smt.model_checker.contracts]
+  # "src/SablierV2LockupDynamic.sol" = ["SablierV2LockupDynamic"]
+  # "src/SablierV2LockupLinear.sol" = ["SablierV2LockupLinear"]
+  # "src/SablierV2NFTDescriptor.sol" = ["SablierV2NFTDescriptor"]
+
+# Test the optimized contracts without re-compiling them
+[profile.test-optimized]
+  src = "test"
+
+[doc]
+  ignore = ["**/*.t.sol"]
+  out = "docs"
+  repository = "https://github.com/BeanstalkFarms/Beanstalk"
+
+[etherscan]
+  mainnet = { key = "${API_KEY_ETHERSCAN}" }
+
+[fmt]
+  bracket_spacing = true
+  int_types = "long"
+  line_length = 120
+  multiline_func_header = "all"
+  number_underscore = "thousands"
+  quote_style = "double"
+  tab_width = 4
+  wrap_comments = true
+
+[rpc_endpoints]
+  localhost = "http://localhost:8545"
+  mainnet = "${RPC_URL_MAINNET}"
