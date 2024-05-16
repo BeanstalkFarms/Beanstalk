@@ -1153,6 +1153,8 @@ type PodFill @entity {
   to: Farmer!
   "Number of pods filled"
   amount: BigInt!
+  "Where these pods were in line when filled"
+  placeInLine: BigInt!
   "Index of plot transferred"
   index: BigInt!
   "Start of plot transferred"
@@ -1543,6 +1545,8 @@ type PodListingCreated implements MarketplaceEvent @entity(immutable: true) {
   historyID: String!
   " Account creating the listing"
   account: String!
+  "Where these pods were in line when listed"
+  placeInLine: BigInt!
   " Index of the plot listed"
   index: BigInt!
   " Start value of the plot listed "
@@ -1582,6 +1586,8 @@ type PodListingFilled implements MarketplaceEvent @entity(immutable: true) {
   from: String!
   "Account buying pods"
   to: String!
+  "Where these pods were in line when filled"
+  placeInLine: BigInt!
   "Index of the plot transferred"
   index: BigInt!
   "Start of the plot transferred"
@@ -1609,6 +1615,8 @@ type PodListingCancelled implements MarketplaceEvent @entity(immutable: true) {
   historyID: String!
   " Account cancelling listing"
   account: String!
+  "Where these pods were in line when cancelled"
+  placeInLine: BigInt!
   " Index of plot listing being cancelled"
   index: BigInt!
   " Block number of this event "
@@ -1667,6 +1675,8 @@ type PodOrderFilled implements MarketplaceEvent @entity(immutable: true) {
   from: String!
   "Account buying pods"
   to: String!
+  "Where these pods were in line when filled"
+  placeInLine: BigInt!
   "Index of the plot transferred"
   index: BigInt!
   "Start of the plot transferred"
