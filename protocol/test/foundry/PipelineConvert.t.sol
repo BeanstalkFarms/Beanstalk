@@ -325,7 +325,7 @@ contract PipelineConvertTest is TestHelper {
             pd.inputWell
         );
 
-        (pd.outputWellNewDeltaB, pd.lpOut) = calculateDeltaBForWellAfterSwapFromBean(
+        (pd.outputWellNewDeltaB, pd.lpOut) = calculateDeltaBForWellAfterAddingBean(
             pd.beansOut,
             pd.outputWell
         );
@@ -412,28 +412,49 @@ contract PipelineConvertTest is TestHelper {
         assertGt(convert.getWellConvertCapacity(pd.outputWell), pd.beforeOutputWellCapacity);
     }
 
-    function testUpdatingOverallDeltaB(uint256 amount, uint256 wellIndex) public {
+    function testUpdatingOverallDeltaB(uint256 amount, uint256 wellIndex, uint256 both) public {
         amount = bound(amount, 1e6, 5000e6);
         wellIndex = bound(wellIndex, 0, 1);
+        both = bound(both, 0, 1);
 
         address[] memory convertWells = new address[](2);
         convertWells[0] = C.BEAN_ETH_WELL;
         convertWells[1] = C.BEAN_WSTETH_WELL;
 
-        depositLPAndPassGermination(amount, convertWells[wellIndex]);
+        int256 calculatedNewDeltaB;
+
+        if (both == 0) {
+            (calculatedNewDeltaB, ) = calculateDeltaBForWellAfterAddingBean(
+                amount,
+                convertWells[wellIndex]
+            );
+            depositLPAndPassGermination(amount, convertWells[wellIndex]);
+        } else {
+            (int256 firstWellDeltaB, ) = calculateDeltaBForWellAfterAddingBean(
+                amount,
+                convertWells[0]
+            );
+            (int256 secondWellDeltaB, ) = calculateDeltaBForWellAfterAddingBean(
+                amount,
+                convertWells[1]
+            );
+            calculatedNewDeltaB = firstWellDeltaB + secondWellDeltaB;
+
+            depositLPAndPassGermination(amount, convertWells[0]);
+            depositLPAndPassGermination(amount, convertWells[1]);
+        }
         mineBlockAndUpdatePumps();
 
-        int256 overallCappedDeltaB = bs.overallCappedDeltaB();
-        assertLt(overallCappedDeltaB, 0);
+        int256 afterOverallDeltaB = bs.overallCurrentDeltaB();
+        assertLt(afterOverallDeltaB, 0);
+
+        assertEq(afterOverallDeltaB, calculatedNewDeltaB);
     }
 
     function testDeltaBChangeBeanToLP(uint256 amount) public {
         amount = bound(amount, 1e6, 5000e6);
         int256 beforeDeltaB = bs.poolCurrentDeltaB(beanEthWell);
-        (int256 calculatedNewDeltaB, ) = calculateDeltaBForWellAfterSwapFromBean(
-            amount,
-            beanEthWell
-        );
+        (int256 calculatedNewDeltaB, ) = calculateDeltaBForWellAfterAddingBean(amount, beanEthWell);
 
         doBasicBeanToLP(amount, users[1]);
 
@@ -2026,7 +2047,7 @@ contract PipelineConvertTest is TestHelper {
         deltaB = LibWellMinting.calculateDeltaBFromReserves(well, reserves, 0);
     }
 
-    function calculateDeltaBForWellAfterSwapFromBean(
+    function calculateDeltaBForWellAfterAddingBean(
         uint256 beansIn,
         address well
     ) public view returns (int256 deltaB, uint256 lpOut) {
