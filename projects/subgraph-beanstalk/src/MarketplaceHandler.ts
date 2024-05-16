@@ -39,6 +39,7 @@ import {
   updateMarketOrderBalances
 } from "./utils/PodMarketplace";
 import { createHistoricalPodOrder, loadPodOrder } from "./utils/PodOrder";
+import { getHarvestableIndex } from "./utils/Season";
 
 class PodListingCreatedParams {
   event: ethereum.Event;
@@ -107,7 +108,6 @@ export function handlePodListingCreated(event: PodListingCreated_v1): void {
 }
 
 export function handlePodListingCancelled(event: PodListingCancelled): void {
-  let historyID = "";
   let listing = PodListing.load(event.params.account.toHexString() + "-" + event.params.index.toString());
   if (listing !== null && listing.status == "ACTIVE") {
     updateActiveListings(
@@ -123,22 +123,20 @@ export function handlePodListingCancelled(event: PodListingCancelled): void {
     listing.updatedAt = event.block.timestamp;
     listing.save();
 
-    historyID = listing.historyID;
+    // Save the raw event data
+    let id = "podListingCancelled-" + event.transaction.hash.toHexString() + "-" + event.logIndex.toString();
+    let rawEvent = new PodListingCancelledEvent(id);
+    rawEvent.hash = event.transaction.hash.toHexString();
+    rawEvent.logIndex = event.logIndex.toI32();
+    rawEvent.protocol = event.address.toHexString();
+    rawEvent.historyID = listing.historyID;
+    rawEvent.account = event.params.account.toHexString();
+    rawEvent.placeInLine = event.params.index.plus(listing.start).minus(getHarvestableIndex(event.address));
+    rawEvent.index = event.params.index;
+    rawEvent.blockNumber = event.block.number;
+    rawEvent.createdAt = event.block.timestamp;
+    rawEvent.save();
   }
-
-  // Unclear whether this should possibly be omitted if the listing was invalid
-  // Save the raw event data
-  let id = "podListingCancelled-" + event.transaction.hash.toHexString() + "-" + event.logIndex.toString();
-  let rawEvent = new PodListingCancelledEvent(id);
-  rawEvent.hash = event.transaction.hash.toHexString();
-  rawEvent.logIndex = event.logIndex.toI32();
-  rawEvent.protocol = event.address.toHexString();
-  rawEvent.historyID = historyID;
-  rawEvent.account = event.params.account.toHexString();
-  rawEvent.index = event.params.index;
-  rawEvent.blockNumber = event.block.number;
-  rawEvent.createdAt = event.block.timestamp;
-  rawEvent.save();
 }
 
 export function handlePodListingFilled(event: PodListingFilled_v1): void {
@@ -189,7 +187,6 @@ export function handlePodOrderFilled(event: PodOrderFilled_v1): void {
 }
 
 export function handlePodOrderCancelled(event: PodOrderCancelled): void {
-  let historyID = "";
   let order = PodOrder.load(event.params.id.toHexString());
   if (order !== null && order.status == "ACTIVE") {
     order.status = order.podAmountFilled == ZERO_BI ? "CANCELLED" : "CANCELLED_PARTIAL";
@@ -206,21 +203,19 @@ export function handlePodOrderCancelled(event: PodOrderCancelled): void {
       event.block.timestamp
     );
 
-    historyID = order.historyID;
+    // Save the raw event data
+    let id = "podOrderCancelled-" + event.transaction.hash.toHexString() + "-" + event.logIndex.toString();
+    let rawEvent = new PodOrderCancelledEvent(id);
+    rawEvent.hash = event.transaction.hash.toHexString();
+    rawEvent.logIndex = event.logIndex.toI32();
+    rawEvent.protocol = event.address.toHexString();
+    rawEvent.historyID = order.historyID;
+    rawEvent.account = event.params.account.toHexString();
+    rawEvent.orderId = event.params.id.toHexString();
+    rawEvent.blockNumber = event.block.number;
+    rawEvent.createdAt = event.block.timestamp;
+    rawEvent.save();
   }
-  // Unclear whether this should possibly be omitted if the listing was invalid
-  // Save the raw event data
-  let id = "podOrderCancelled-" + event.transaction.hash.toHexString() + "-" + event.logIndex.toString();
-  let rawEvent = new PodOrderCancelledEvent(id);
-  rawEvent.hash = event.transaction.hash.toHexString();
-  rawEvent.logIndex = event.logIndex.toI32();
-  rawEvent.protocol = event.address.toHexString();
-  rawEvent.historyID = historyID;
-  rawEvent.account = event.params.account.toHexString();
-  rawEvent.orderId = event.params.id.toHexString();
-  rawEvent.blockNumber = event.block.number;
-  rawEvent.createdAt = event.block.timestamp;
-  rawEvent.save();
 }
 
 /* ------------------------------------
@@ -383,6 +378,7 @@ function podListingCreated(params: PodListingCreatedParams): void {
   rawEvent.protocol = params.event.address.toHexString();
   rawEvent.historyID = listing.historyID;
   rawEvent.account = params.account.toHexString();
+  rawEvent.placeInLine = params.index.plus(params.start).minus(getHarvestableIndex(params.event.address));
   rawEvent.index = params.index;
   rawEvent.start = params.start;
   rawEvent.amount = params.amount;
@@ -461,6 +457,7 @@ function podListingFilled(params: MarketFillParams): void {
   fill.from = params.from.toHexString();
   fill.to = params.to.toHexString();
   fill.amount = params.amount;
+  fill.placeInLine = params.index.plus(params.start).minus(getHarvestableIndex(params.event.address));
   fill.index = params.index;
   fill.start = params.start;
   fill.costInBeans = params.costInBeans;
@@ -478,6 +475,7 @@ function podListingFilled(params: MarketFillParams): void {
   rawEvent.historyID = originalHistoryID;
   rawEvent.from = params.from.toHexString();
   rawEvent.to = params.to.toHexString();
+  rawEvent.placeInLine = fill.placeInLine;
   rawEvent.index = params.index;
   rawEvent.start = params.start;
   rawEvent.amount = params.amount;
@@ -552,6 +550,7 @@ function podOrderFilled(params: MarketFillParams): void {
   fill.from = params.from.toHexString();
   fill.to = params.to.toHexString();
   fill.amount = params.amount;
+  fill.placeInLine = params.index.plus(params.start).minus(getHarvestableIndex(params.event.address));
   fill.index = params.index;
   fill.start = params.start;
   fill.costInBeans = params.costInBeans;
@@ -572,6 +571,7 @@ function podOrderFilled(params: MarketFillParams): void {
   rawEvent.historyID = order.historyID;
   rawEvent.from = params.from.toHexString();
   rawEvent.to = params.to.toHexString();
+  rawEvent.placeInLine = params.index.plus(params.start).minus(getHarvestableIndex(params.event.address));
   rawEvent.index = params.index;
   rawEvent.start = params.start;
   rawEvent.amount = params.amount;
