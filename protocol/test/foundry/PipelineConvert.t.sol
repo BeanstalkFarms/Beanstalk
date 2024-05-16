@@ -623,6 +623,8 @@ contract PipelineConvertTest is TestHelper {
         uint256 convertCapacityStage3 = convert.getOverallConvertCapacity();
         assertLe(convertCapacityStage3, convertCapacityStage2);
 
+        assertEq(convertCapacityStage3, 0);
+
         uint256 grownStalkAfter = bs.balanceOfGrownStalk(users[2], beanEthWell);
 
         assertEq(grownStalkAfter, 0); // all grown stalk was lost because no convert power left
