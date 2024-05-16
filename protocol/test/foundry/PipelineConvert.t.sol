@@ -650,17 +650,12 @@ contract PipelineConvertTest is TestHelper {
         );
     }
 
-    function testConvertingInputTokenNotWell(uint256 amount) public {
-        amount = bound(amount, 1, 1000e6);
-        int96 stem = depositBeanAndPassGermination(amount, users[1]);
+    function testConvertingInputTokenNotWell() public {
         int96[] memory stems = new int96[](1);
-        stems[0] = stem;
+        stems[0] = 0;
         uint256[] memory amounts = new uint256[](1);
-        amounts[0] = amount;
-        AdvancedFarmCall[] memory beanToLPFarmCalls = createBeanToLPFarmCalls(
-            amount,
-            new AdvancedPipeCall[](0)
-        );
+        amounts[0] = 1000e6;
+
         vm.expectRevert("Convert: Input token must be Bean or a well");
         // convert non-whitelisted asset to lp
         vm.prank(users[1]);
@@ -669,7 +664,7 @@ contract PipelineConvertTest is TestHelper {
             stems, // stem
             amounts, // amount
             C.BEAN, // token out
-            beanToLPFarmCalls // farmData
+            new AdvancedFarmCall[](0) // farmData
         );
     }
 
