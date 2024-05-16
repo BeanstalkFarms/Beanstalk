@@ -444,47 +444,40 @@ contract PipelineConvertTest is TestHelper {
 
     function testTotalStalkAmountDidNotIncrease(uint256 amount) public {
         amount = bound(amount, 1e6, 5000e6);
-        int96 stem = depositBeanAndPassGermination(amount, users[1]);
-        uint256 beforeTotalStalk = bs.totalStalk();
-        beanToLPDoConvert(amount, stem, users[1]);
+
+        (uint256 beforeTotalStalk, , , ) = setupStalkTests(amount);
 
         uint256 afterTotalStalk = bs.totalStalk();
-        assertTrue(afterTotalStalk <= beforeTotalStalk);
+        assertLt(afterTotalStalk, beforeTotalStalk);
     }
 
     function testUserStalkAmountDidNotIncrease(uint256 amount) public {
         amount = bound(amount, 1e6, 5000e6);
-        int96 stem = depositBeanAndPassGermination(amount, users[1]);
-        uint256 beforeUserStalk = bs.balanceOfStalk(users[1]);
-        beanToLPDoConvert(amount, stem, users[1]);
+
+        (, uint256 beforeUserStalk, , ) = setupStalkTests(amount);
 
         uint256 afterUserStalk = bs.balanceOfStalk(users[1]);
-        assertTrue(afterUserStalk <= beforeUserStalk);
+        assertLt(afterUserStalk, beforeUserStalk);
     }
 
     function testUserBDVDidNotIncrease(uint256 amount) public {
         amount = bound(amount, 1e6, 5000e6);
-        int96 stem = depositBeanAndPassGermination(amount, users[1]);
-        uint256 beforeUserDeposit = bs.balanceOfDepositedBdv(users[1], C.BEAN);
-        beanToLPDoConvert(amount, stem, users[1]);
+
+        (, , uint256 beforeUserDeposit, ) = setupStalkTests(amount);
 
         uint256 afterUserDeposit = bs.balanceOfDepositedBdv(users[1], C.BEAN);
-        assertTrue(afterUserDeposit <= beforeUserDeposit);
+        assertLt(afterUserDeposit, beforeUserDeposit);
     }
 
     function testConvertAgainstPegAndLoseStalk(uint256 amount) public {
         amount = bound(amount, 5000e6, 5000e6); // todo: update for range
 
-        int96 stem = depositBeanAndPassGermination(amount, users[1]);
-        // uint256 beforeTotalStalk = bs.totalStalk();
-        uint256 grownStalkBefore = bs.balanceOfGrownStalk(users[1], C.BEAN);
-
-        beanToLPDoConvert(amount, stem, users[1]);
+        (, , , uint256 grownStalkBefore) = setupStalkTests(amount);
 
         uint256 grownStalkAfter = bs.balanceOfGrownStalk(users[1], beanEthWell);
 
-        assertTrue(grownStalkAfter == 0); // all grown stalk was lost
-        assertTrue(grownStalkBefore > 0);
+        assertEq(grownStalkAfter, 0); // all grown stalk was lost
+        assertGt(grownStalkBefore, 0);
     }
 
     function testConvertWithPegAndKeepStalk(uint256 amount) public {
@@ -1499,6 +1492,25 @@ contract PipelineConvertTest is TestHelper {
     }
 
     ////// CONVERT TEST HELPERS //////
+
+    function setupStalkTests(
+        uint256 amount
+    )
+        private
+        returns (
+            uint256 beforeTotalStalk,
+            uint256 beforeUserStalk,
+            uint256 beforeUserDeposit,
+            uint256 grownStalkBefore
+        )
+    {
+        int96 stem = depositBeanAndPassGermination(amount, users[1]);
+        beforeTotalStalk = bs.totalStalk();
+        beforeUserStalk = bs.balanceOfStalk(users[1]);
+        beforeUserDeposit = bs.balanceOfDepositedBdv(users[1], C.BEAN);
+        grownStalkBefore = bs.balanceOfGrownStalk(users[1], C.BEAN);
+        beanToLPDoConvert(amount, stem, users[1]);
+    }
 
     function setupTowardsPegDeltaBStorageNegative()
         public
