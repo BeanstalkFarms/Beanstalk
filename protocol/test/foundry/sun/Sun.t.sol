@@ -5,6 +5,7 @@ pragma abicoder v2;
 import {TestHelper, LibTransfer, C} from "test/foundry/utils/TestHelper.sol";
 import {MockSeasonFacet} from "contracts/mocks/mockFacets/MockSeasonFacet.sol";
 import {console} from "forge-std/console.sol";
+
 /**
  * @notice Tests the functionality of the sun, the distrubution of beans and soil.
  */
@@ -238,9 +239,6 @@ contract SunTest is TestHelper {
         uint256 sproutsInBarn,
         uint256 podsInField
     ) internal returns (uint256 beansToFertilizer, uint256 beansToField, uint256 beansToSilo) {
-        console.log("beansIssued:", beansIssued);
-        console.log("sproutsInBarn:", sproutsInBarn);
-
         // Fertilizer gets 1/3 of bean issuance. Only enabled if fert is purchased.
         if (bs.getActiveFertilizer() > 0) {
             beansToFertilizer = beansIssued / 3;
@@ -252,9 +250,7 @@ contract SunTest is TestHelper {
             if (beansToFertilizer > sproutsInBarn) beansToFertilizer = sproutsInBarn;
         }
 
-        console.log("beansToFertilizer:", beansToFertilizer);
         beansIssued -= beansToFertilizer;
-        console.log("beansIssued:", beansIssued);
         (beansToField, beansToSilo) = calcBeansToFieldAndSilo(beansIssued, podsInField);
     }
 

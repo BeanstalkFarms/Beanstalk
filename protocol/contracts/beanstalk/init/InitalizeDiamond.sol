@@ -14,8 +14,6 @@ import {LibGauge} from "contracts/libraries/LibGauge.sol";
 import {BDVFacet} from "contracts/beanstalk/silo/BDVFacet.sol";
 import {C} from "contracts/C.sol";
 
-import "hardhat/console.sol";
-
 /**
  * @author Publius, Brean
  * @title InitalizeDiamond
