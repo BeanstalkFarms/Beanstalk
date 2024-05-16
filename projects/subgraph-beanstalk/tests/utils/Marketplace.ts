@@ -61,11 +61,11 @@ export function fillListing_v1(
   podAmount: BigInt,
   pricePerPod: BigInt
 ): PodListingFilled_v1 {
-  const event = createPodListingFilledEvent(from, to, listingIndex, listingStart, podAmount);
-  handlePodListingFilled(event);
-
   // Perform plot transfer
   transferPlot(from, to, listingIndex.plus(listingStart), podAmount);
+
+  const event = createPodListingFilledEvent(from, to, listingIndex, listingStart, podAmount);
+  handlePodListingFilled(event);
 
   // Assert PodFill
   const podFillId = getPodFillId(event.params.index, event);
