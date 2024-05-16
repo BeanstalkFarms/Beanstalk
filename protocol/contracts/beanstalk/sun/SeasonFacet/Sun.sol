@@ -107,7 +107,7 @@ contract Sun is Oracle {
         uint256 newTotalBpf = oldTotalBpf.add(newBpf);
 
         // Get the end Beans per Fertilizer of the first Fertilizer to run out.
-        uint256 firstEndBpf = s.fFirst;
+        uint256 firstEndBpf = s.fertFirst;
 
         // If the next fertilizer is going to run out, then step BPF according
         while (newTotalBpf >= firstEndBpf) {
@@ -127,7 +127,7 @@ contract Sun is Oracle {
             newBpf = maxNewFertilized.sub(newFertilized).div(s.activeFertilizer);
             oldTotalBpf = firstEndBpf;
             newTotalBpf = oldTotalBpf.add(newBpf);
-            firstEndBpf = s.fFirst;
+            firstEndBpf = s.fertFirst;
         }
 
         // Distribute the rest of the Fertilized Beans

@@ -442,8 +442,8 @@ contract Storage {
  * @param activeFertilizer The number of active Fertilizer.
  * @param fertilizedIndex The total number of Fertilizer Beans.
  * @param unfertilizedIndex The total number of Unfertilized Beans ever.
- * @param fFirst The lowest active Fertilizer Id (start of linked list that is stored by nextFid).
- * @param fLast The highest active Fertilizer Id (end of linked list that is stored by nextFid).
+ * @param fertFirst The lowest active Fertilizer Id (start of linked list that is stored by nextFid).
+ * @param fertLast The highest active Fertilizer Id (end of linked list that is stored by nextFid).
  * @param bpf The cumulative Beans Per Fertilizer (bfp) minted over all Season.
  * @param recapitalized The number of USDC that has been recapitalized in the Barn Raise.
  * @param isFarm Stores whether the function is wrapped in the `farm` function (1 if not, 2 if it is).
@@ -491,8 +491,8 @@ struct AppStorage {
     uint256 activeFertilizer;
     uint256 fertilizedIndex;
     uint256 unfertilizedIndex;
-    uint128 fFirst;
-    uint128 fLast;
+    uint128 fertFirst;
+    uint128 fertLast;
     uint128 bpf;
     uint256 recapitalized;
     // Farm

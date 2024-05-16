@@ -144,11 +144,11 @@ contract FertilizerFacet is Invariable {
     }
 
     function getFirst() external view returns (uint128) {
-        return s.fFirst;
+        return s.fertFirst;
     }
 
     function getLast() external view returns (uint128) {
-        return s.fLast;
+        return s.fertLast;
     }
 
     function getActiveFertilizer() external view returns (uint256) {
@@ -209,14 +209,14 @@ contract FertilizerFacet is Invariable {
 
     function getFertilizers() external view returns (Supply[] memory fertilizers) {
         uint256 numFerts = 0;
-        uint128 idx = s.fFirst;
+        uint128 idx = s.fertFirst;
         while (idx > 0) {
             numFerts = numFerts.add(1);
             idx = LibFertilizer.getNext(idx);
         }
         fertilizers = new Supply[](numFerts);
         numFerts = 0;
-        idx = s.fFirst;
+        idx = s.fertFirst;
         while (idx > 0) {
             fertilizers[numFerts].endBpf = idx;
             fertilizers[numFerts].supply = LibFertilizer.getAmount(idx);

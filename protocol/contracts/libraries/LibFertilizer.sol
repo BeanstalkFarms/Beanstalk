@@ -142,22 +142,22 @@ library LibFertilizer {
 
     function push(uint128 id) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        if (s.fFirst == 0) {
+        if (s.fertFirst == 0) {
             // Queue is empty
             s.season.fertilizing = true;
-            s.fLast = id;
-            s.fFirst = id;
-        } else if (id <= s.fFirst) {
+            s.fertLast = id;
+            s.fertFirst = id;
+        } else if (id <= s.fertFirst) {
             // Add to front of queue
-            setNext(id, s.fFirst);
-            s.fFirst = id;
-        } else if (id >= s.fLast) {
+            setNext(id, s.fertFirst);
+            s.fertFirst = id;
+        } else if (id >= s.fertLast) {
             // Add to back of queue
-            setNext(s.fLast, id);
-            s.fLast = id;
+            setNext(s.fertLast, id);
+            s.fertLast = id;
         } else {
             // Add to middle of queue
-            uint128 prev = s.fFirst;
+            uint128 prev = s.fertFirst;
             uint128 next = getNext(prev);
             // Search for proper place in line
             while (id > next) {
@@ -179,18 +179,18 @@ library LibFertilizer {
 
     function pop() internal returns (bool) {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        uint128 first = s.fFirst;
+        uint128 first = s.fertFirst;
         s.activeFertilizer = s.activeFertilizer.sub(getAmount(first));
         uint128 next = getNext(first);
         if (next == 0) {
             // If all Unfertilized Beans have been fertilized, delete line.
             require(s.activeFertilizer == 0, "Still active fertilizer");
-            s.fFirst = 0;
-            s.fLast = 0;
+            s.fertFirst = 0;
+            s.fertLast = 0;
             s.season.fertilizing = false;
             return false;
         }
-        s.fFirst = getNext(first);
+        s.fertFirst = getNext(first);
         return true;
     }
 

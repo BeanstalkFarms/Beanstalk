@@ -26,6 +26,10 @@ let snapshotId;
 
 testIfRpcSet("SeedGauge Init Test", function () {
   before(async function () {
+
+    // Not running this test post seed gauge deployment.
+    return;
+
     [user, user2] = await ethers.getSigners();
 
     try {
