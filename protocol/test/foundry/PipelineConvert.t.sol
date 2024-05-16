@@ -607,8 +607,6 @@ contract PipelineConvertTest is TestHelper {
         // update pump
         updateMockPumpUsingWellReserves(beanEthWell);
 
-        // convert.cappedReservesDeltaB(beanEthWell);
-
         uint256 convertCapacityStage1 = convert.getOverallConvertCapacity();
 
         // convert beans to lp
