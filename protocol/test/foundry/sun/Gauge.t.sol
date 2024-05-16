@@ -368,9 +368,9 @@ contract GaugeTest is TestHelper {
         // bound beanToMaxLpRatio.
         beanToMaxLpRatio = bound(beanToMaxLpRatio, 0, 100e18);
         // bound averageGrownStalkPerBdvPerSeason to reasonable values.
-        // note: at 3500e6, the average bdv has grown 3500 stalk. even at an average of 10 seeds per BDV,
-        // it would take ~400 years to overflow.
-        avgGsPerBdvPerSeason = bound(avgGsPerBdvPerSeason, 3e6, 3500e6);
+        // note: at 3000e6, the average bdv has grown 3000 stalk. even at an average of 10 seeds per BDV,
+        // it would take ~350 years to overflow.
+        avgGsPerBdvPerSeason = bound(avgGsPerBdvPerSeason, 3e6, 3000e6);
 
         // set values.
         bs.mockSetAverageGrownStalkPerBdvPerSeason(uint128(avgGsPerBdvPerSeason));
