@@ -9,7 +9,7 @@ import {
   handleUpdateAverageStalkPerBdvPerSeason,
   handleFarmerGerminatingStalkBalanceChanged,
   handleTotalGerminatingBalanceChanged,
-  handleWhitelistToken_BIP42,
+  handleWhitelistToken_BIP44,
   handleUpdateGaugeSettings,
   handleTotalGerminatingStalkChanged,
   handleTotalStalkChangedFromGermination
@@ -26,7 +26,7 @@ import {
   createUpdateAverageStalkPerBdvPerSeasonEvent,
   createUpdateGaugeSettingsEvent
 } from "./event-mocking/SeedGauge";
-import { createWhitelistTokenEventBIP42 } from "./event-mocking/Whitelist";
+import { createWhitelistTokenV4Event } from "./event-mocking/Whitelist";
 import { createTemperatureChangeEvent } from "./event-mocking/Field";
 import { simpleMockPrice } from "../../subgraph-core/tests/event-mocking/Prices";
 import { loadSilo } from "../src/utils/SiloEntities";
@@ -102,7 +102,7 @@ describe("Seed Gauge", () => {
       initialSilo.save();
 
       handleUpdateAverageStalkPerBdvPerSeason(createUpdateAverageStalkPerBdvPerSeasonEvent(BigInt.fromU32(3456)));
-      assert.fieldEquals("Silo", BEANSTALK.toHexString(), "grownStalkPerBdvPerSeason", "3456000");
+      assert.fieldEquals("Silo", BEANSTALK.toHexString(), "grownStalkPerSeason", "3456000");
     });
   });
 
@@ -173,8 +173,8 @@ describe("Seed Gauge", () => {
 
   describe("Owner Configuration", () => {
     test("event: WhitelistToken", () => {
-      handleWhitelistToken_BIP42(
-        createWhitelistTokenEventBIP42(
+      handleWhitelistToken_BIP44(
+        createWhitelistTokenV4Event(
           BEAN_ERC20.toHexString(),
           "0x12345678",
           BigInt.fromU64(35000000000),

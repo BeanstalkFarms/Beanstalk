@@ -133,5 +133,7 @@ export function createWhitelistTokenEvent(token: string, selector: Bytes, seeds:
 export function createDewhitelistTokenEvent(token: string): DewhitelistToken {
   let event = changetype<DewhitelistToken>(newMockEvent());
   event.parameters = new Array();
+  let param1 = new ethereum.EventParam("token", ethereum.Value.fromAddress(Address.fromString(token)));
+  event.parameters.push(param1);
   return event as DewhitelistToken;
 }

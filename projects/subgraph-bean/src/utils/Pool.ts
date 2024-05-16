@@ -1,9 +1,10 @@
-import { BigDecimal, BigInt } from "@graphprotocol/graph-ts";
+import { BigDecimal, BigInt, log } from "@graphprotocol/graph-ts";
 import { Pool, PoolDailySnapshot, PoolHourlySnapshot } from "../../generated/schema";
 import { dayFromTimestamp, hourFromTimestamp } from "../../../subgraph-core/utils/Dates";
 import { emptyBigIntArray, ZERO_BD, ZERO_BI } from "../../../subgraph-core/utils/Decimals";
-import { getBeanTokenAddress, loadBean } from "./Bean";
+import { getBeanTokenAddress, loadBean, updateInstDeltaB } from "./Bean";
 import { checkPoolCross } from "./Cross";
+import { DeltaBAndPrice } from "./price/Types";
 
 export function loadOrCreatePool(poolAddress: string, blockNumber: BigInt): Pool {
   let pool = Pool.load(poolAddress);
@@ -43,12 +44,14 @@ export function loadOrCreatePoolHourlySnapshot(pool: string, timestamp: BigInt, 
     snapshot.pool = pool;
     snapshot.reserves = currentPool.reserves;
     snapshot.lastPrice = currentPool.lastPrice;
+    snapshot.twaPrice = ZERO_BD;
     snapshot.volume = currentPool.volume;
     snapshot.volumeUSD = currentPool.volumeUSD;
     snapshot.liquidityUSD = currentPool.liquidityUSD;
     snapshot.crosses = currentPool.crosses;
     snapshot.utilization = ZERO_BD;
     snapshot.deltaBeans = ZERO_BI;
+    snapshot.twaDeltaBeans = ZERO_BI;
     snapshot.deltaReserves = emptyBigIntArray(2);
     snapshot.deltaVolume = ZERO_BI;
     snapshot.deltaVolumeUSD = ZERO_BD;
@@ -73,12 +76,14 @@ export function loadOrCreatePoolDailySnapshot(pool: string, timestamp: BigInt, b
     snapshot.pool = pool;
     snapshot.reserves = currentPool.reserves;
     snapshot.lastPrice = currentPool.lastPrice;
+    snapshot.twaPrice = ZERO_BD;
     snapshot.volume = currentPool.volume;
     snapshot.volumeUSD = currentPool.volumeUSD;
     snapshot.liquidityUSD = currentPool.liquidityUSD;
     snapshot.crosses = currentPool.crosses;
     snapshot.utilization = ZERO_BD;
     snapshot.deltaBeans = ZERO_BI;
+    snapshot.twaDeltaBeans = ZERO_BI;
     snapshot.deltaReserves = emptyBigIntArray(2);
     snapshot.deltaVolume = ZERO_BI;
     snapshot.deltaVolumeUSD = ZERO_BD;
@@ -132,6 +137,8 @@ export function updatePoolValues(
   poolDaily.utilization = poolDaily.deltaVolumeUSD.div(poolDaily.liquidityUSD);
   poolDaily.updatedAt = timestamp;
   poolDaily.save();
+
+  updateInstDeltaB(pool.bean, blockNumber, timestamp);
 }
 
 export function incrementPoolCross(poolAddress: string, timestamp: BigInt, blockNumber: BigInt): void {
@@ -157,16 +164,21 @@ export function updatePoolSeason(poolAddress: string, timestamp: BigInt, blockNu
   let poolDaily = loadOrCreatePoolDailySnapshot(poolAddress, timestamp, blockNumber);
 
   pool.lastSeason = season;
-  pool.save();
-
   poolHourly.season = season;
-  poolHourly.save();
-
   poolDaily.season = season;
+
+  pool.save();
+  poolHourly.save();
   poolDaily.save();
 }
 
-export function updatePoolPrice(poolAddress: string, timestamp: BigInt, blockNumber: BigInt, price: BigDecimal): void {
+export function updatePoolPrice(
+  poolAddress: string,
+  timestamp: BigInt,
+  blockNumber: BigInt,
+  price: BigDecimal,
+  checkCross: boolean = true
+): void {
   let pool = loadOrCreatePool(poolAddress, blockNumber);
   let poolHourly = loadOrCreatePoolHourlySnapshot(poolAddress, timestamp, blockNumber);
   let poolDaily = loadOrCreatePoolDailySnapshot(poolAddress, timestamp, blockNumber);
@@ -182,26 +194,55 @@ export function updatePoolPrice(poolAddress: string, timestamp: BigInt, blockNum
   poolDaily.lastPrice = price;
   poolDaily.save();
 
-  checkPoolCross(poolAddress, timestamp, blockNumber, oldPrice, price);
+  if (checkCross) {
+    checkPoolCross(poolAddress, timestamp, blockNumber, oldPrice, price);
+  }
 }
 
-export function updatePoolReserves(poolAddress: string, deltaAmount0: BigInt, deltaAmount1: BigInt, blockNumber: BigInt): void {
-  // All pools with BEAN to date are 2 token pools
+export function setPoolReserves(poolAddress: string, reserves: BigInt[], timestamp: BigInt, blockNumber: BigInt): void {
   let pool = loadOrCreatePool(poolAddress, blockNumber);
-  let reserves = pool.reserves;
-  reserves[0] = reserves[0].plus(deltaAmount0);
-  reserves[1] = reserves[1].plus(deltaAmount1);
-  pool.reserves = reserves;
-  pool.save();
-}
+  let poolHourly = loadOrCreatePoolHourlySnapshot(poolAddress, timestamp, blockNumber);
+  let poolDaily = loadOrCreatePoolDailySnapshot(poolAddress, timestamp, blockNumber);
 
-export function setPoolReserves(poolAddress: string, reserves: BigInt[], blockNumber: BigInt): void {
-  let pool = loadOrCreatePool(poolAddress, blockNumber);
+  let deltaReserves: BigInt[] = [];
+  for (let i = 0; i < reserves.length; ++i) {
+    deltaReserves.push(reserves[i].minus(pool.reserves[i]));
+  }
+
   pool.reserves = reserves;
+  poolHourly.reserves = reserves;
+  poolDaily.reserves = reserves;
+
+  let newHourlyDelta: BigInt[] = [];
+  let newDailyDelta: BigInt[] = [];
+  for (let i = 0; i < reserves.length; ++i) {
+    newHourlyDelta.push(poolHourly.deltaReserves[i].plus(deltaReserves[i]));
+    newDailyDelta.push(poolDaily.deltaReserves[i].plus(deltaReserves[i]));
+  }
+
+  poolHourly.deltaReserves = newHourlyDelta;
+  poolDaily.deltaReserves = newDailyDelta;
+
   pool.save();
+  poolHourly.save();
+  poolDaily.save();
 }
 
 export function getPoolLiquidityUSD(poolAddress: string, blockNumber: BigInt): BigDecimal {
   let pool = loadOrCreatePool(poolAddress, blockNumber);
   return pool.liquidityUSD;
+}
+
+export function setPoolTwa(poolAddress: string, twaValues: DeltaBAndPrice, timestamp: BigInt, blockNumber: BigInt): void {
+  let poolHourly = loadOrCreatePoolHourlySnapshot(poolAddress, timestamp, blockNumber);
+  let poolDaily = loadOrCreatePoolDailySnapshot(poolAddress, timestamp, blockNumber);
+  poolHourly.twaDeltaBeans = twaValues.deltaB;
+  poolHourly.twaPrice = twaValues.price;
+  poolHourly.twaToken2Price = twaValues.token2Price;
+  // NOTE: ideally this would be a twa of the entire day
+  poolDaily.twaDeltaBeans = twaValues.deltaB;
+  poolDaily.twaPrice = twaValues.price;
+  poolDaily.twaToken2Price = twaValues.token2Price;
+  poolHourly.save();
+  poolDaily.save();
 }
