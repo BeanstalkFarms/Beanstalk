@@ -534,7 +534,8 @@ contract PipelineConvertTest is TestHelper {
     }
 
     function testFlashloanManipulationLoseGrownStalkBecauseZeroConvertCapacity(
-        uint256 amount
+        uint256 amount,
+        uint256 ethAmount
     ) public {
         amount = bound(amount, 10e6, 5000e6);
 
@@ -545,8 +546,8 @@ contract PipelineConvertTest is TestHelper {
         // setup initial bean deposit
         int96 stem = depositBeanAndPassGermination(amount, users[1]);
 
-        // mint user 10 eth
-        uint256 ethAmount = 10e18;
+        // mint user eth
+        ethAmount = bound(ethAmount, 10e18, 500e18);
         MockToken(C.WETH).mint(users[1], ethAmount);
 
         vm.prank(users[1]);
