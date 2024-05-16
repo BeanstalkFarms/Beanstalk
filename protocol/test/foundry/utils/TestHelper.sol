@@ -8,7 +8,6 @@ import "forge-std/Test.sol";
 
 ////// Mocks //////
 import {MockToken} from "contracts/mocks/MockToken.sol";
-import {MockBlockBasefee} from "contracts/mocks/MockBlockBasefee.sol";
 import {IMockFBeanstalk} from "contracts/interfaces/IMockFBeanstalk.sol";
 
 ///// TEST HELPERS //////
@@ -69,9 +68,6 @@ contract TestHelper is
         // sets block.timestamp to 1_000_000,
         // as starting from an timestamp of 0 can cause issues.
         vm.warp(INITIAL_TIMESTAMP);
-
-        // set block base fee to 1 gwei.
-        MockBlockBasefee(BASE_FEE_CONTRACT).setAnswer(1e9);
 
         // initalize mock tokens.
         initMockTokens(verbose);
@@ -247,7 +243,6 @@ contract TestHelper is
     }
 
     function initMisc() internal {
-        deployCodeTo("MockBlockBasefee", BASE_FEE_CONTRACT);
         usdOracle = UsdOracle(deployCode("UsdOracle"));
     }
 
