@@ -26,7 +26,7 @@ import {
   PodOrder,
   PodListing
 } from "../generated/schema";
-import { ZERO_BI } from "../../subgraph-core/utils/Decimals";
+import { BI_10, ZERO_BI } from "../../subgraph-core/utils/Decimals";
 import { loadFarmer } from "./utils/Farmer";
 import { loadPodFill } from "./utils/PodFill";
 import { createHistoricalPodListing, loadPodListing } from "./utils/PodListing";
@@ -39,6 +39,7 @@ import {
 } from "./utils/PodMarketplace";
 import { createHistoricalPodOrder, loadPodOrder } from "./utils/PodOrder";
 import { getHarvestableIndex } from "./utils/Season";
+import { loadPlot } from "./utils/Plot";
 
 class PodListingCreatedParams {
   event: ethereum.Event;
@@ -465,6 +466,8 @@ function podListingFilled(params: MarketFillParams): void {
   listing.fill = fill.id;
   listing.save();
 
+  setBeansPerPodAfterFill(params.event, fill.index, fill.start, fill.amount, fill.costInBeans);
+
   // Save the raw event data
   let id = "podListingFilled-" + params.event.transaction.hash.toHexString() + "-" + params.event.logIndex.toString();
   let rawEvent = new PodListingFilledEvent(id);
@@ -555,6 +558,8 @@ function podOrderFilled(params: MarketFillParams): void {
   fill.costInBeans = params.costInBeans;
   fill.save();
 
+  setBeansPerPodAfterFill(params.event, fill.index, fill.start, fill.amount, fill.costInBeans);
+
   if (order.status == "FILLED") {
     updateActiveOrders(params.event.address, MarketplaceAction.FILLED_FULL, order.id, order.maxPlaceInLine);
   }
@@ -578,4 +583,26 @@ function podOrderFilled(params: MarketFillParams): void {
   rawEvent.blockNumber = params.event.block.number;
   rawEvent.createdAt = params.event.block.timestamp;
   rawEvent.save();
+}
+
+function setBeansPerPodAfterFill(event: ethereum.Event, plotIndex: BigInt, start: BigInt, length: BigInt, costInBeans: BigInt): void {
+  // Load the plot that is being sent. It may or may not have been created already, depending
+  // on whether the PlotTransfer event has already been processed (sometims its emitted after the market transfer).
+  let fillPlot = loadPlot(event.address, plotIndex.plus(start));
+
+  if (start == ZERO_BI) {
+    // When sending the start of a plot via market, these cannot be set in any subsequent transfer,
+    // since the start plot has already been modified.
+    let remainderPlot = loadPlot(event.address, plotIndex.plus(length));
+    remainderPlot.sourceHash = fillPlot.sourceHash;
+    remainderPlot.beansPerPod = fillPlot.beansPerPod;
+    remainderPlot.source = fillPlot.source;
+    remainderPlot.save();
+  }
+
+  // Update source/cost per pod of the sold plot
+  fillPlot.beansPerPod = costInBeans.times(BI_10.pow(6)).div(length);
+  fillPlot.source = "MARKET";
+  fillPlot.sourceHash = event.transaction.hash.toHexString();
+  fillPlot.save();
 }

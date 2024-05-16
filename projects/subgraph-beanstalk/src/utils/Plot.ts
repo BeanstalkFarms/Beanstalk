@@ -23,7 +23,6 @@ export function loadPlot(diamondAddress: Address, index: BigInt): Plot {
     plot.harvestablePods = ZERO_BI;
     plot.harvestedPods = ZERO_BI;
     plot.fullyHarvested = false;
-    plot.internalUseOnly = "";
     plot.save();
 
     let field = loadField(diamondAddress);

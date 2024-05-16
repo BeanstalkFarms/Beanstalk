@@ -694,8 +694,6 @@ type Plot @entity {
   harvestedPods: BigInt!
   "Flag for if plot is fully harvested"
   fullyHarvested: Boolean!
-  "This field is required for correct indexing but has no meaning externally. Do not reference."
-  internalUseOnly: String!
 }
 
 type PodMarketplace @entity {

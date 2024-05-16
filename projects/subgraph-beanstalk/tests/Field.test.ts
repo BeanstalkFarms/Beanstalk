@@ -1,7 +1,4 @@
-/// <reference path="../../../node_modules/assemblyscript/dist/assemblyscript.d.ts" />
-
 import { afterEach, assert, clearStore, describe, test } from "matchstick-as/assembly/index";
-import { log } from "matchstick-as/assembly/log";
 import { BigInt } from "@graphprotocol/graph-ts";
 
 import { BEANSTALK } from "../../subgraph-core/utils/Constants";
