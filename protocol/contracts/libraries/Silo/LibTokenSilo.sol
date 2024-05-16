@@ -529,16 +529,8 @@ library LibTokenSilo {
         address token,
         int96 stem
     ) internal view returns (uint grownStalk) {
-        console.log("grownStalkForDeposit");
-        console.log("account: ", account);
-        console.log("token: ", token);
-        console.log("stem: ");
-        console.logInt(stem);
-
         // stemTipForToken(token) > depositGrownStalkPerBdv for all valid Deposits
         int96 _stemTip = stemTipForToken(token);
-        console.log("yo _stemTip: ");
-        console.logInt(_stemTip);
         require(stem <= _stemTip, "Silo: Invalid Deposit");
         // The check in the above line guarantees that subtraction result is positive
         // and thus the cast to `uint256` is safe.

@@ -198,7 +198,7 @@ contract PipelineConvertTest is TestHelper {
         // to reasonable amounts.
         amount = bound(amount, 1e6, 10000e6);
 
-        (int96 stem, uint256 lpAmountOut) = depositLPAndPassGermination(amount);
+        (int96 stem, uint256 lpAmountOut) = depositLPAndPassGermination(amount, beanEthWell);
 
         // Create arrays for stem and amount. Tried just passing in [stem] and it's like nope.
         int96[] memory stems = new int96[](1);
@@ -252,7 +252,11 @@ contract PipelineConvertTest is TestHelper {
         updateMockPumpUsingWellReserves(pd.inputWell);
         updateMockPumpUsingWellReserves(pd.outputWell);
 
-        (int96 stem, uint256 amountOfDepositedLP) = depositLPAndPassGermination(amount);
+        (int96 stem, uint256 amountOfDepositedLP) = depositLPAndPassGermination(
+            amount,
+            pd.inputWell
+        );
+        console.log("amountOfDepositedLP: ", amountOfDepositedLP);
         uint256 bdvOfDepositedLp = bs.bdv(pd.inputWell, amountOfDepositedLP);
         uint256[] memory bdvAmountsDeposited = new uint256[](1);
         bdvAmountsDeposited[0] = bdvOfDepositedLp;
@@ -282,7 +286,8 @@ contract PipelineConvertTest is TestHelper {
 
         AdvancedFarmCall[] memory lpToLPFarmCalls = createLPToLPFarmCalls(
             amountOfDepositedLP,
-            pd.inputWell
+            pd.inputWell,
+            pd.outputWell
         );
 
         uint256[] memory amounts = new uint256[](1);
@@ -298,11 +303,6 @@ contract PipelineConvertTest is TestHelper {
         console.log("pd.grownStalkForDeposit: ", pd.grownStalkForDeposit);
         pd.bdvOfAmountOut = bs.bdv(pd.outputWell, pd.wellAmountOut);
         console.log("pd.bdvOfAmountOut: ", pd.bdvOfAmountOut);
-        (pd.outputStem, ) = bs.calculateStemForTokenFromGrownStalk(
-            pd.outputWell,
-            pd.grownStalkForDeposit,
-            pd.bdvOfAmountOut
-        );
 
         // calculate new reserves for well using get swap out and manually figure out what deltaB would be
         (pd.inputWellNewDeltaB, pd.beansOut) = calculateDeltaBForWellAfterSwapFromLP(
@@ -323,21 +323,43 @@ contract PipelineConvertTest is TestHelper {
         LibConvert.DeltaBStorage memory dbs;
 
         dbs.beforeInputTokenDeltaB = LibWellMinting.currentDeltaB(pd.inputWell);
+        console.log("test scaledDeltaB input token");
         dbs.afterInputTokenDeltaB = LibWellMinting.scaledDeltaB(
             pd.beforeInputTokenLPSupply,
             pd.afterInputTokenLPSupply,
             pd.inputWellNewDeltaB
         );
         dbs.beforeOutputTokenDeltaB = LibWellMinting.currentDeltaB(pd.outputWell);
+        console.log("test scaledDeltaB output token");
         dbs.afterOutputTokenDeltaB = LibWellMinting.scaledDeltaB(
             pd.beforeOutputTokenLPSupply,
             pd.afterOutputTokenLPSupply,
             pd.outputWellNewDeltaB
         );
         dbs.beforeOverallDeltaB = LibWellMinting.overallCurrentDeltaB();
-        dbs.afterOverallDeltaB = 0; // update and for scaled deltaB
+        dbs.afterOverallDeltaB = dbs.afterInputTokenDeltaB + dbs.afterOutputTokenDeltaB; // update and for scaled deltaB
+
+        console.log("test dbs.afterOverallDeltaB: ");
+        console.logInt(dbs.afterOverallDeltaB);
 
         // todo: calculateStalkPenalty and subtract penalty from grown stalk, which affects pd.outputStem
+
+        (uint256 stalkPenalty, , , ) = LibConvert.calculateStalkPenalty(
+            dbs,
+            bdvOfDepositedLp,
+            LibConvert.abs(LibWellMinting.overallCappedDeltaB()), // overall convert capacity
+            pd.inputWell,
+            pd.outputWell
+        );
+
+        console.log("stalkPenalty: ", stalkPenalty);
+        console.log("pd.grownStalkForDeposit: ", pd.grownStalkForDeposit);
+
+        (pd.outputStem, ) = bs.calculateStemForTokenFromGrownStalk(
+            pd.outputWell,
+            pd.grownStalkForDeposit.sub(stalkPenalty),
+            pd.bdvOfAmountOut
+        );
 
         // console.log("pd.outputStem: ");
         // console.logInt(pd.outputStem);
@@ -397,7 +419,7 @@ contract PipelineConvertTest is TestHelper {
 
     function testUpdatingOverallDeltaB(uint256 amount) public {
         amount = bound(amount, 1e6, 5000e6);
-        depositLPAndPassGermination(amount);
+        depositLPAndPassGermination(amount, beanEthWell);
         mineBlockAndUpdatePumps();
 
         int256 overallCappedDeltaB = bs.overallCappedDeltaB();
@@ -1550,32 +1572,38 @@ contract PipelineConvertTest is TestHelper {
      * @param amount The amount of beans added to well, single-sided.
      */
     function depositLPAndPassGermination(
-        uint256 amount
+        uint256 amount,
+        address well
     ) public returns (int96 stem, uint256 lpAmountOut) {
         // mint beans to user 1
         bean.mint(users[1], amount);
         // user 1 deposits bean into bean:eth well, first approve
         vm.prank(users[1]);
-        bean.approve(beanEthWell, type(uint256).max);
+        bean.approve(well, type(uint256).max);
 
         uint256[] memory tokenAmountsIn = new uint256[](2);
         tokenAmountsIn[0] = amount;
         tokenAmountsIn[1] = 0;
 
         vm.prank(users[1]);
-        lpAmountOut = IWell(beanEthWell).addLiquidity(
-            tokenAmountsIn,
-            0,
-            users[1],
-            type(uint256).max
-        );
+        lpAmountOut = IWell(well).addLiquidity(tokenAmountsIn, 0, users[1], type(uint256).max);
 
         // approve spending well token to beanstalk
         vm.prank(users[1]);
-        MockToken(beanEthWell).approve(BEANSTALK, type(uint256).max);
+        MockToken(well).approve(BEANSTALK, type(uint256).max);
 
         vm.prank(users[1]);
-        (, , stem) = silo.deposit(beanEthWell, lpAmountOut, LibTransfer.From.EXTERNAL);
+        (uint256 depositedAmount, uint256 _bdv, int96 theStem) = silo.deposit(
+            well,
+            lpAmountOut,
+            LibTransfer.From.EXTERNAL
+        );
+        console.log("setup, depositedAmount: ", depositedAmount);
+        console.log("_bdv: ", _bdv);
+        console.log("stem: ");
+        console.logInt(stem);
+
+        stem = theStem;
 
         passGermination();
     }
@@ -1873,14 +1901,15 @@ contract PipelineConvertTest is TestHelper {
 
     function createLPToLPFarmCalls(
         uint256 amountOfLP,
-        address well
+        address inputWell,
+        address outputWell
     ) private returns (AdvancedFarmCall[] memory output) {
         console.log("createLPToBean amountOfLP: ", amountOfLP);
 
         // setup approve max call
         bytes memory approveEncoded = abi.encodeWithSelector(
             IERC20.approve.selector,
-            beanwstethWell,
+            outputWell,
             MAX_UINT256
         );
 
@@ -1917,7 +1946,7 @@ contract PipelineConvertTest is TestHelper {
 
         // Action 1: remove beans from well.
         advancedPipeCalls[1] = AdvancedPipeCall(
-            well, // target
+            inputWell, // target
             removeLiquidityEncoded, // calldata
             abi.encode(0) // clipboard
         );
@@ -1932,7 +1961,7 @@ contract PipelineConvertTest is TestHelper {
 
         // Action 2: add beans to wsteth:bean well.
         advancedPipeCalls[2] = AdvancedPipeCall(
-            beanwstethWell, // target
+            outputWell, // target
             addLiquidityEncoded, // calldata
             clipboard
         );
@@ -1977,7 +2006,7 @@ contract PipelineConvertTest is TestHelper {
 
         // remove beanOut from reserves bean index
         reserves[beanIndex] = reserves[beanIndex].sub(beansOut);
-        reserves[nonBeanIndex] = reserves[nonBeanIndex].add(amountIn);
+        // reserves[nonBeanIndex] = reserves[nonBeanIndex].add(amountIn);
 
         // get new deltaB
         deltaB = LibWellMinting.calculateDeltaBFromReserves(well, reserves, 0);

@@ -260,6 +260,16 @@ library LibConvert {
             dbs.afterOutputTokenDeltaB
         );
 
+        console.log("dbs.beforeInputTokenDeltaB: ");
+        console.logInt(dbs.beforeInputTokenDeltaB);
+        console.log("dbs.afterInputTokenDeltaB: ");
+        console.logInt(dbs.afterInputTokenDeltaB);
+
+        console.log("dbs.beforeOutputTokenDeltaB: ");
+        console.logInt(dbs.beforeOutputTokenDeltaB);
+        console.log("dbs.afterOutputTokenDeltaB: ");
+        console.logInt(dbs.afterOutputTokenDeltaB);
+
         console.log("dbs.beforeOverallDeltaB: ");
         console.logInt(dbs.beforeOverallDeltaB);
         console.log("dbs.afterOverallDeltaB: ");
