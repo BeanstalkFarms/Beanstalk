@@ -116,18 +116,32 @@ contract PipelineConvertTest is TestHelper {
         vm.prank(users[0]);
         addLiquidityToWell(
             beanEthWell,
-            10000e6, // 10,000 bean,
+            10_000e6, // 10,000 bean,
             10 ether // 10 WETH
         );
 
         addLiquidityToWell(
             beanwstethWell,
-            10000e6, // 10,000 bean,
+            10_000e6, // 10,000 bean,
             10 ether // 10 WETH of wstETH
         );
 
         // mint 1000 beans to farmers (user 0 is the beanstalk deployer).
         mintTokensToUsers(farmers, C.BEAN, MAX_DEPOSIT_BOUND);
+
+        deployExtraWells(true, true);
+
+        addLiquidityToWell(
+            BEAN_USDC_WELL,
+            10_000e6, // 10,000 Beans
+            10_000e6 // 10,000 USDC
+        );
+
+        addLiquidityToWell(
+            BEAN_USDT_WELL,
+            10_000e6, // 10,000 Beans
+            10_000e6 // 10,000 USDT
+        );
     }
 
     //////////// CONVERTS ////////////
@@ -222,31 +236,38 @@ contract PipelineConvertTest is TestHelper {
         );
     }
 
-    function testConvertLPToLP(uint256 amount, uint256 direction) public {
+    function testConvertLPToLP(uint256 amount, uint256 inputIndex, uint256 outputIndex) public {
         vm.pauseGasMetering();
 
         // well is initalized with 10000 beans. cap add liquidity
         // to reasonable amounts.
-        amount = bound(amount, 5000e6, 5000e6);
+        amount = bound(amount, 10e6, 5000e6);
 
-        // 0 is from bean:eth well
-        // 1 is from bean:wsteth well
-        direction = bound(direction, 0, 1);
+        inputIndex = bound(inputIndex, 0, 1); // update to 0-3 when more wells supported/whitelisted
+        outputIndex = bound(outputIndex, 0, 1); // update to 0-3 when more wells supported/whitelisted
+
+        if (inputIndex == outputIndex) {
+            return; // skip converting between same wells for now, but could setup later
+        }
+
+        address[] memory convertWells = new address[](4);
+        convertWells[0] = C.BEAN_ETH_WELL;
+        convertWells[1] = C.BEAN_WSTETH_WELL;
+        convertWells[2] = BEAN_USDC_WELL;
+        convertWells[3] = BEAN_USDT_WELL;
+
+        address[] memory convertTokens = new address[](4);
+        convertTokens[0] = C.WETH;
+        convertTokens[1] = C.WSTETH;
+        convertTokens[2] = C.USDC;
+        convertTokens[3] = C.USDT;
 
         PipelineTestData memory pd;
+        pd.inputWell = convertWells[inputIndex];
+        pd.outputWell = convertWells[outputIndex];
 
-        pd.inputWell = direction == 0 ? beanEthWell : beanwstethWell;
-        pd.outputWell = direction == 0 ? beanwstethWell : beanEthWell;
-
-        console.log("inputWell: ", pd.inputWell);
-        console.log("outputWell: ", pd.outputWell);
-
-        pd.inputWellEthToken = direction == 0 ? C.WETH : C.WSTETH;
-        pd.outputWellEthToken = direction == 0 ? C.WSTETH : C.WETH;
-
-        // log overall deltaB
-        console.log("overall deltaB: ");
-        console.logInt(LibWellMinting.overallCurrentDeltaB());
+        pd.inputWellEthToken = convertTokens[inputIndex];
+        pd.outputWellEthToken = convertTokens[outputIndex];
 
         // update pumps
         updateMockPumpUsingWellReserves(pd.inputWell);
@@ -256,7 +277,7 @@ contract PipelineConvertTest is TestHelper {
             amount,
             pd.inputWell
         );
-        console.log("amountOfDepositedLP: ", amountOfDepositedLP);
+
         uint256 bdvOfDepositedLp = bs.bdv(pd.inputWell, amountOfDepositedLP);
         uint256[] memory bdvAmountsDeposited = new uint256[](1);
         bdvAmountsDeposited[0] = bdvOfDepositedLp;
@@ -267,18 +288,6 @@ contract PipelineConvertTest is TestHelper {
 
         setDeltaBforWell(int256(amount), pd.outputWell, pd.outputWellEthToken);
 
-        // now log deltaB's?
-        // console.log("inputWell deltaB: ");
-        // console.logInt(bs.poolCurrentDeltaB(inputWell));
-        // console.log("outputWell deltaB: ");
-        // console.logInt(bs.poolCurrentDeltaB(outputWell));
-        // return;
-
-        // log deltaB for this well before convert
-        // int256 beforeDeltaBEth = bs.poolCurrentDeltaB(beanEthWell);
-        // int256 beforeDeltaBwsteth = bs.poolCurrentDeltaB(beanwstethWell);
-
-        // uint256 beforeGrownStalk = bs.balanceOfGrownStalk(users[1], beanEthWell);
         uint256 beforeBalanceOfStalk = bs.balanceOfStalk(users[1]);
 
         int96[] memory stems = new int96[](1);
@@ -298,11 +307,9 @@ contract PipelineConvertTest is TestHelper {
             pd.inputWell,
             pd.outputWell
         );
-        console.log("pd.wellAmountOut: ", pd.wellAmountOut);
+
         pd.grownStalkForDeposit = bs.grownStalkForDeposit(users[1], pd.inputWell, stem);
-        console.log("pd.grownStalkForDeposit: ", pd.grownStalkForDeposit);
         pd.bdvOfAmountOut = bs.bdv(pd.outputWell, pd.wellAmountOut);
-        console.log("pd.bdvOfAmountOut: ", pd.bdvOfAmountOut);
 
         // calculate new reserves for well using get swap out and manually figure out what deltaB would be
         (pd.inputWellNewDeltaB, pd.beansOut) = calculateDeltaBForWellAfterSwapFromLP(
@@ -323,14 +330,14 @@ contract PipelineConvertTest is TestHelper {
         LibConvert.DeltaBStorage memory dbs;
 
         dbs.beforeInputTokenDeltaB = LibWellMinting.currentDeltaB(pd.inputWell);
-        console.log("test scaledDeltaB input token");
+
         dbs.afterInputTokenDeltaB = LibWellMinting.scaledDeltaB(
             pd.beforeInputTokenLPSupply,
             pd.afterInputTokenLPSupply,
             pd.inputWellNewDeltaB
         );
         dbs.beforeOutputTokenDeltaB = LibWellMinting.currentDeltaB(pd.outputWell);
-        console.log("test scaledDeltaB output token");
+
         dbs.afterOutputTokenDeltaB = LibWellMinting.scaledDeltaB(
             pd.beforeOutputTokenLPSupply,
             pd.afterOutputTokenLPSupply,
@@ -338,9 +345,6 @@ contract PipelineConvertTest is TestHelper {
         );
         dbs.beforeOverallDeltaB = LibWellMinting.overallCurrentDeltaB();
         dbs.afterOverallDeltaB = dbs.afterInputTokenDeltaB + dbs.afterOutputTokenDeltaB; // update and for scaled deltaB
-
-        console.log("test dbs.afterOverallDeltaB: ");
-        console.logInt(dbs.afterOverallDeltaB);
 
         // todo: calculateStalkPenalty and subtract penalty from grown stalk, which affects pd.outputStem
 
@@ -352,17 +356,11 @@ contract PipelineConvertTest is TestHelper {
             pd.outputWell
         );
 
-        console.log("stalkPenalty: ", stalkPenalty);
-        console.log("pd.grownStalkForDeposit: ", pd.grownStalkForDeposit);
-
         (pd.outputStem, ) = bs.calculateStemForTokenFromGrownStalk(
             pd.outputWell,
             pd.grownStalkForDeposit.sub(stalkPenalty),
             pd.bdvOfAmountOut
         );
-
-        // console.log("pd.outputStem: ");
-        // console.logInt(pd.outputStem);
 
         vm.expectEmit(true, false, false, true);
         emit RemoveDeposits(
@@ -397,24 +395,6 @@ contract PipelineConvertTest is TestHelper {
             pd.outputWell, // token out
             lpToLPFarmCalls // farmData
         );
-
-        console.log("inputWellNewDeltaB: ");
-        console.logInt(pd.inputWellNewDeltaB);
-        console.log("outputWellNewDeltaB: ");
-        console.logInt(pd.outputWellNewDeltaB);
-
-        // int256 afterDeltaBEth = bs.poolCurrentDeltaB(inputWell);
-        // int256 afterDeltaBwsteth = bs.poolCurrentDeltaB(outputWell);
-
-        // // make sure deltaB's moved in the way we expect them to
-        // assertTrue(beforeDeltaBEth < afterDeltaBEth);
-        // assertTrue(afterDeltaBwsteth < beforeDeltaBwsteth);
-
-        // uint256 totalStalkAfter = bs.balanceOfStalk(users[1]);
-
-        // since we didn't cross peg and there was convert power, we expect full remaining grown stalk
-        // (plus a little from the convert benefit)
-        // assertTrue(totalStalkAfter >= beforeBalanceOfStalk);
     }
 
     function testUpdatingOverallDeltaB(uint256 amount) public {

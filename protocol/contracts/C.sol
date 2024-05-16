@@ -93,6 +93,8 @@ library C {
         0x5f4eC3Df9cbd43714FE2740f5E3616155c5b8419;
     address constant WSTETH_ETH_CHAINLINK_PRICE_AGGREGATOR =
         0x86392dC19c0b719886221c78AB11eb8Cf5c52812;
+    address constant USDC_CHAINLINK_PRICE_AGGREGATOR = 0x8fFfFfd4AfB6115b954Bd326cbe7B4BA576818f6;
+    address constant USDT_CHAINLINK_PRICE_AGGREGATOR = 0x3E7d1eAB13ad0104d2750B8863b489D65364e32D;
 
     //////////////////// Uniswap Oracles //////////////////////
     address internal constant WSTETH_ETH_UNIV3_01_POOL = 0x109830a1AAaD605BbF02a9dFA7B0B92EC2FB7dAa; // 0.01% pool

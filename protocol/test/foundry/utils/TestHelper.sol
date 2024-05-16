@@ -125,12 +125,14 @@ contract TestHelper is
      * which allows for arbitary minting for testing purposes.
      */
     function initMockTokens(bool verbose) internal {
-        initERC20params[5] memory tokens = [
+        initERC20params[7] memory tokens = [
             initERC20params(C.BEAN, "Bean", "BEAN", 6),
             initERC20params(C.UNRIPE_BEAN, "Unripe Bean", "UrBEAN", 6),
             initERC20params(C.UNRIPE_LP, "Unripe BEAN3CRV", "UrBEAN3CRV", 18),
             initERC20params(C.WETH, "Weth", "WETH", 18),
-            initERC20params(C.WSTETH, "wstETH", "WSTETH", 18)
+            initERC20params(C.WSTETH, "wstETH", "WSTETH", 18),
+            initERC20params(C.USDC, "USDC", "USDC", 6),
+            initERC20params(C.USDT, "USDT", "USDT", 6)
         ];
 
         for (uint i; i < tokens.length; i++) {
