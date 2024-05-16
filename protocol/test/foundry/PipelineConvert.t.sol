@@ -470,7 +470,7 @@ contract PipelineConvertTest is TestHelper {
     }
 
     function testConvertAgainstPegAndLoseStalk(uint256 amount) public {
-        amount = bound(amount, 5000e6, 5000e6); // todo: update for range
+        amount = bound(amount, 10e6, 5000e6);
 
         (, , , uint256 grownStalkBefore) = setupStalkTests(amount);
 
@@ -515,7 +515,7 @@ contract PipelineConvertTest is TestHelper {
     function testFlashloanManipulationLoseGrownStalkBecauseZeroConvertCapacity(
         uint256 amount
     ) public {
-        amount = bound(amount, 5000e6, 5000e6); // todo: update for range
+        amount = bound(amount, 10e6, 5000e6);
 
         // the main idea is that we start at deltaB of zero, so converts should not be possible
         // we add eth to the well to push it over peg, then we convert our beans back down to lp
