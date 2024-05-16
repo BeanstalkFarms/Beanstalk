@@ -11,8 +11,8 @@ enum MarketStatus {
 
 enum PlotSource {
   SOW
-  HARVEST
   TRANSFER
+  MARKET
 }
 
 enum EmaWindow {
@@ -666,13 +666,15 @@ type Plot @entity {
   field: Field!
   "Farmer who owns this plot"
   farmer: Farmer!
-  "Transaction source for this plot"
+  "Transaction source for this plot. Not the same as creationHash which can include plots splitting from transfer or harvest without the owner changing"
   source: PlotSource!
+  "Transaction hash corresponding to source"
+  sourceHash: String!
   "Associated plot listing"
   listing: PodListing
   "Season when created"
   season: Int!
-  "Creation transaction hash"
+  "Transaction hash of when this plot entity was created"
   creationHash: String!
   "Timestamp of creation"
   createdAt: BigInt!

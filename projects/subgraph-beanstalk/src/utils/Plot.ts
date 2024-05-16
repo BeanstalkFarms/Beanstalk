@@ -11,6 +11,7 @@ export function loadPlot(diamondAddress: Address, index: BigInt): Plot {
     plot.field = diamondAddress.toHexString();
     plot.farmer = ADDRESS_ZERO.toHexString();
     plot.source = "SOW"; // Should be overwritten in case of a transfer creating a new plot
+    plot.sourceHash = "";
     plot.season = 0;
     plot.creationHash = "";
     plot.createdAt = ZERO_BI;
