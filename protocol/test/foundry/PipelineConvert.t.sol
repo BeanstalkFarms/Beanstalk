@@ -412,13 +412,19 @@ contract PipelineConvertTest is TestHelper {
         assertGt(convert.getWellConvertCapacity(pd.outputWell), pd.beforeOutputWellCapacity);
     }
 
-    function testUpdatingOverallDeltaB(uint256 amount) public {
+    function testUpdatingOverallDeltaB(uint256 amount, uint256 wellIndex) public {
         amount = bound(amount, 1e6, 5000e6);
-        depositLPAndPassGermination(amount, beanEthWell);
+        wellIndex = bound(wellIndex, 0, 1);
+
+        address[] memory convertWells = new address[](2);
+        convertWells[0] = C.BEAN_ETH_WELL;
+        convertWells[1] = C.BEAN_WSTETH_WELL;
+
+        depositLPAndPassGermination(amount, convertWells[wellIndex]);
         mineBlockAndUpdatePumps();
 
         int256 overallCappedDeltaB = bs.overallCappedDeltaB();
-        assertTrue(overallCappedDeltaB != 0);
+        assertLt(overallCappedDeltaB, 0);
     }
 
     function testDeltaBChangeBeanToLP(uint256 amount) public {
