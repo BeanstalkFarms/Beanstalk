@@ -28,7 +28,11 @@ contract Receiving is ReentrancyGuard {
      * @param amount The amount of Beans to receive.
      * @param data Additional data to pass to the receiving function.
      */
-    function receiveShipment(Storage.Recipient recipient, uint256 amount, bytes memory data) internal {
+    function receiveShipment(
+        Storage.Recipient recipient,
+        uint256 amount,
+        bytes memory data
+    ) internal {
         if (recipient == Storage.Recipient.Silo) {
             siloReceive(amount, data);
         } else if (recipient == Storage.Recipient.Field) {
@@ -83,7 +87,7 @@ contract Receiving is ReentrancyGuard {
         uint256 newBpf = oldBpf + remainingBpf;
 
         // Get the end BPF of the first Fertilizer to run out.
-        uint256 firstEndBpf = s.fFirst;
+        uint256 firstEndBpf = s.fertFirst;
 
         // If the next fertilizer is going to run out, then step BPF according
         while (newBpf >= firstEndBpf) {
@@ -92,7 +96,7 @@ contract Receiving is ReentrancyGuard {
 
             if (LibFertilizer.pop()) {
                 oldBpf = firstEndBpf;
-                firstEndBpf = s.fFirst;
+                firstEndBpf = s.fertFirst;
                 // Calculate BPF beyond the first Fertilizer edge.
                 remainingBpf = (amount - deltaFertilized) / s.activeFertilizer;
                 newBpf = oldBpf + remainingBpf;

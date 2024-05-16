@@ -121,7 +121,7 @@ contract MarketplaceFacet is Invariable, Order {
             sender != address(0) && recipient != address(0),
             "Field: Transfer to/from 0 address."
         );
-        uint256 amountInPlot = s.accountStates[sender].fields[fieldIndex].plots[index];
+        uint256 amountInPlot = s.accounts[sender].fields[fieldIndex].plots[index];
         require(amountInPlot > 0, "Field: Plot not owned by user.");
         require(end > start && amountInPlot >= end, "Field: Pod range invalid.");
         uint256 transferAmount = end - start;

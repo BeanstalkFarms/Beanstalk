@@ -87,7 +87,7 @@ contract Order is Listing {
             "Marketplace: Fill must be >= minimum amount."
         );
         require(
-            s.accountStates[filler].fields[podOrder.fieldIndex].plots[index] >= (start + podAmount),
+            s.accounts[filler].fields[podOrder.fieldIndex].plots[index] >= (start + podAmount),
             "Marketplace: Invalid Plot."
         );
         require(
@@ -138,7 +138,7 @@ contract Order is Listing {
     /*
      * Get
      */
-     
+
     function _getOrderId(PodOrder memory podOrder) internal pure returns (bytes32 id) {
         return
             keccak256(

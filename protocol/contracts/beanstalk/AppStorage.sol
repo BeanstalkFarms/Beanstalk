@@ -503,7 +503,7 @@ struct AppStorage {
     uint256 reentrantStatus;
     Storage.Weather weather;
     uint256 earnedBeans;
-    mapping(address => Account.State) accountStates;
+    mapping(address => Account.State) accounts;
     mapping(bytes32 => bool) podListings;
     mapping(bytes32 => uint256) podOrders;
     mapping(address => Storage.AssetSilo) siloBalances;

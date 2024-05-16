@@ -130,7 +130,7 @@ contract FieldFacet is Invariable, Listing {
      * Beanstalk holds these Beans until `harvest()` is called.
      *
      * Pods are "burned" when the corresponding Plot is deleted from
-     * `s.accountStates[account].fields[fieldIndex].plots`.
+     * `s.accounts[account].fields[fieldIndex].plots`.
      */
     function harvest(
         uint256 fieldIndex,
@@ -170,7 +170,7 @@ contract FieldFacet is Invariable, Listing {
         uint256 index
     ) private returns (uint256 harvestablePods) {
         // Check that `account` holds this Plot.
-        uint256 pods = s.accountStates[account].fields[fieldIndex].plots[index];
+        uint256 pods = s.accounts[account].fields[fieldIndex].plots[index];
         require(pods > 0, "Field: no plot");
 
         // Calculate how many Pods are harvestable.
@@ -178,7 +178,7 @@ contract FieldFacet is Invariable, Listing {
         // are harvestable.
         harvestablePods = s.fields[fieldIndex].harvestable.sub(index);
         _cancelPodListing(LibTractor._user(), fieldIndex, index);
-        delete s.accountStates[account].fields[fieldIndex].plots[index];
+        delete s.accounts[account].fields[fieldIndex].plots[index];
 
         // If the entire Plot was harvested, exit.
         if (harvestablePods >= pods) {
@@ -186,7 +186,7 @@ contract FieldFacet is Invariable, Listing {
         }
 
         // Create a new Plot with remaining Pods.
-        s.accountStates[account].fields[fieldIndex].plots[index.add(harvestablePods)] = pods.sub(
+        s.accounts[account].fields[fieldIndex].plots[index.add(harvestablePods)] = pods.sub(
             harvestablePods
         );
     }
@@ -247,7 +247,7 @@ contract FieldFacet is Invariable, Listing {
 
     /**
      * @notice Returns the number of Pods remaining in a Plot.
-     * @dev Plots are only stored in the `s.accountStates[account].fields[fieldIndex].plots` mapping.
+     * @dev Plots are only stored in the `s.accounts[account].fields[fieldIndex].plots` mapping.
      * @param fieldIndex The index of the Field to query.
      */
     function plot(
@@ -255,7 +255,7 @@ contract FieldFacet is Invariable, Listing {
         uint256 fieldIndex,
         uint256 index
     ) public view returns (uint256) {
-        return s.accountStates[account].fields[fieldIndex].plots[index];
+        return s.accounts[account].fields[fieldIndex].plots[index];
     }
 
     /**

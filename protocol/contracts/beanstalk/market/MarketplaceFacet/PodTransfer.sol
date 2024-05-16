@@ -36,7 +36,7 @@ contract PodTransfer is ReentrancyGuard {
         address spender,
         uint256 fieldIndex
     ) public view returns (uint256) {
-        return s.accountStates[owner].fields[fieldIndex].podAllowances[spender];
+        return s.accounts[owner].fields[fieldIndex].podAllowances[spender];
     }
 
     /**
@@ -63,7 +63,7 @@ contract PodTransfer is ReentrancyGuard {
         uint256 index,
         uint256 amount
     ) internal {
-        s.accountStates[account].fields[fieldIndex].plots[index] = amount;
+        s.accounts[account].fields[fieldIndex].plots[index] = amount;
     }
 
     function removePlot(
@@ -73,16 +73,16 @@ contract PodTransfer is ReentrancyGuard {
         uint256 start,
         uint256 end
     ) internal {
-        uint256 amountAfterEnd = s.accountStates[account].fields[fieldIndex].plots[index] - end;
+        uint256 amountAfterEnd = s.accounts[account].fields[fieldIndex].plots[index] - end;
 
         if (start > 0) {
-            s.accountStates[account].fields[fieldIndex].plots[index] = start;
+            s.accounts[account].fields[fieldIndex].plots[index] = start;
         } else {
-            delete s.accountStates[account].fields[fieldIndex].plots[index];
+            delete s.accounts[account].fields[fieldIndex].plots[index];
         }
 
         if (amountAfterEnd > 0) {
-            s.accountStates[account].fields[fieldIndex].plots[index + end] = amountAfterEnd;
+            s.accounts[account].fields[fieldIndex].plots[index + end] = amountAfterEnd;
         }
     }
 
@@ -105,6 +105,6 @@ contract PodTransfer is ReentrancyGuard {
         uint256 fieldIndex,
         uint256 amount
     ) internal {
-        s.accountStates[owner].fields[fieldIndex].podAllowances[spender] = amount;
+        s.accounts[owner].fields[fieldIndex].podAllowances[spender] = amount;
     }
 }

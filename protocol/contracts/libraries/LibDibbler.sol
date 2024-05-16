@@ -89,7 +89,7 @@ library LibDibbler {
             s.soil = s.soil.sub(uint128(beans));
         }
 
-        s.accountStates[account].fields[s.activeField].plots[s.fields[s.activeField].pods] = pods;
+        s.accounts[account].fields[s.activeField].plots[s.fields[s.activeField].pods] = pods;
         emit Sow(account, s.fields[s.activeField].pods, beans, pods);
 
         s.fields[s.activeField].pods += pods;

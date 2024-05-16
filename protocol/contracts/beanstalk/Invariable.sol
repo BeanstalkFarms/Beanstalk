@@ -178,7 +178,7 @@ abstract contract Invariable {
             if (tokens[i] == C.BEAN) {
                 entitlements[i] +=
                     s.fertilizedIndex.sub(s.fertilizedPaidIndex) + // unrinsed rinsable beans
-                    s.unripeSettings[C.UNRIPE_BEAN].balanceOfUnderlying; // unchopped underlying beans
+                    s.unripe[C.UNRIPE_BEAN].balanceOfUnderlying; // unchopped underlying beans
                 for (uint256 j; j < s.fields.length; j++) {
                     entitlements[i] += s.fields[j].harvestable.sub(s.fields[j].harvested); // unharvestable harvestable beans
                 }

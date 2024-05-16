@@ -53,7 +53,7 @@ contract Listing is PodTransfer {
      */
 
     function _createPodListing(PodListing calldata podListing) internal {
-        uint256 plotSize = s.accountStates[podListing.lister].fields[podListing.fieldIndex].plots[
+        uint256 plotSize = s.accounts[podListing.lister].fields[podListing.fieldIndex].plots[
             podListing.index
         ];
 
@@ -97,7 +97,7 @@ contract Listing is PodTransfer {
     ) internal {
         bytes32 id = _getListingId(podListing.fieldIndex, podListing.index);
         require(s.podListings[id] == true, "Marketplace: Listing does not exist.");
-        uint256 plotSize = s.accountStates[podListing.lister].fields[podListing.fieldIndex].plots[
+        uint256 plotSize = s.accounts[podListing.lister].fields[podListing.fieldIndex].plots[
             podListing.index
         ];
         require(
@@ -166,7 +166,7 @@ contract Listing is PodTransfer {
 
     function _cancelPodListing(address account, uint256 fieldIndex, uint256 index) internal {
         require(
-            s.accountStates[account].fields[fieldIndex].plots[index] > 0,
+            s.accounts[account].fields[fieldIndex].plots[index] > 0,
             "Marketplace: Listing not owned by sender."
         );
 
