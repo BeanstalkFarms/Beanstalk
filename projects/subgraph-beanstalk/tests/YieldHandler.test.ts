@@ -1,9 +1,17 @@
 import { BigInt, BigDecimal, log, Bytes } from "@graphprotocol/graph-ts";
 import { afterEach, assert, clearStore, describe, test } from "matchstick-as/assembly/index";
 import * as YieldHandler from "../src/YieldHandler";
-import { ZERO_BD, ZERO_BI } from "../../subgraph-core/utils/Decimals";
+import { BigDecimal_isClose, ZERO_BD, ZERO_BI } from "../../subgraph-core/utils/Decimals";
 import { loadSilo, loadSiloAsset, loadSiloYield, loadTokenYield, loadWhitelistTokenSetting } from "../src/utils/SiloEntities";
-import { BEAN_ERC20, BEAN_WETH_CP2_WELL, BEANSTALK, UNRIPE_BEAN, UNRIPE_BEAN_3CRV } from "../../subgraph-core/utils/Constants";
+import {
+  BEAN_3CRV,
+  BEAN_ERC20,
+  BEAN_WETH_CP2_WELL,
+  BEANSTALK,
+  UNRIPE_BEAN,
+  UNRIPE_BEAN_3CRV,
+  LUSD_3POOL
+} from "../../subgraph-core/utils/Constants";
 import { setSeason } from "./event-mocking/Season";
 
 describe("APY Calculations", () => {
@@ -52,14 +60,13 @@ describe("APY Calculations", () => {
 
   describe("With Seed Gauge", () => {
     test("Token yields - direct calculation", () => {
-      // return;
-      // Calculated in a single call - 5000 ms
+      // using non-gauge bdv 19556945 + 24417908 + 164986 (Unripe + 3crv after dewhitelisted)
       const apy = YieldHandler.calculateGaugeVAPYs(
         [-1, 0, -2],
         BigDecimal.fromString("100"),
         [BigDecimal.fromString("100")],
         [BigDecimal.fromString("899088")],
-        BigDecimal.fromString("43974853"),
+        BigDecimal.fromString("44139839"),
         [BigDecimal.fromString("100")],
         BigDecimal.fromString("0.33"),
         BigDecimal.fromString("2798474"),
@@ -78,11 +85,15 @@ describe("APY Calculations", () => {
       }
 
       // Bean apy
-      assert.assertTrue(apy[0][0].equals(BigDecimal.fromString("1.5511649479957717076555093556872")));
-      assert.assertTrue(apy[0][1].equals(BigDecimal.fromString("433.6788615349604685422129945937972")));
+      const desiredPrecision = BigDecimal.fromString("0.0001");
+      assert.assertTrue(BigDecimal_isClose(apy[0][0], BigDecimal.fromString("1.54644190080929820744293897629"), desiredPrecision));
+      assert.assertTrue(BigDecimal_isClose(apy[0][1], BigDecimal.fromString("431.437897488823610478263760573224"), desiredPrecision));
 
+      // Profiling:
+      // Calculated in a single call + fixed point arithmetic: 2900ms
+      // Pre fixed-point:
+      // Calculated in a single call - 5000 ms
       // Calculated separately - 8750ms
-      // using unripe bdv 19556945+24417908
       // for (let i = -1; i <= 0; ++i) {
       //   const apy = YieldHandler.calculateGaugeVAPYs(
       //     [i],
@@ -133,6 +144,13 @@ describe("APY Calculations", () => {
       let silo = loadSilo(BEANSTALK);
       silo.stalk = BigInt.fromString("161540879000000");
       silo.beanToMaxLpGpPerBdvRatio = BigInt.fromString("33000000000000000000");
+      silo.whitelistedTokens = [
+        BEAN_ERC20.toHexString(),
+        BEAN_WETH_CP2_WELL.toHexString(),
+        UNRIPE_BEAN.toHexString(),
+        UNRIPE_BEAN_3CRV.toHexString()
+      ];
+      silo.dewhitelistedTokens = [BEAN_3CRV.toHexString()];
       silo.save();
 
       setSeason(20000);
@@ -166,6 +184,10 @@ describe("APY Calculations", () => {
       beanEthSiloAsset.depositedBDV = BigInt.fromString("899088000000");
       beanEthSiloAsset.save();
 
+      let bean3crvSiloAsset = loadSiloAsset(BEANSTALK, BEAN_3CRV);
+      bean3crvSiloAsset.depositedBDV = BigInt.fromString("164986000000");
+      bean3crvSiloAsset.save();
+
       let urbeanSiloAsset = loadSiloAsset(BEANSTALK, UNRIPE_BEAN);
       urbeanSiloAsset.depositedBDV = BigInt.fromString("19556945000000");
       urbeanSiloAsset.save();
@@ -174,37 +196,54 @@ describe("APY Calculations", () => {
       urlpSiloAsset.depositedBDV = BigInt.fromString("24417908000000");
       urlpSiloAsset.save();
 
-      /// EMA, whitelisted tokens
+      // Nondeposited silo asset, should not have any effect
+      let farmAsset = loadSiloAsset(BEANSTALK, LUSD_3POOL);
+      farmAsset.farmAmount = BigInt.fromString("1234567890000");
+      farmAsset.save();
+
+      // Individual farmer's silo asset, should not have any effect
+      let farmerDeposit = loadSiloAsset(LUSD_3POOL, UNRIPE_BEAN);
+      farmerDeposit.depositedBDV = BigInt.fromString("1234567890000");
+      farmerDeposit.save();
+
+      /// Set EMA, whitelisted tokens
+      // bean3crv intentionally not whitelisted. It should still be included in non-gauge deposited bdv
       let siloYield = loadSiloYield(20000, 720);
       siloYield.beansPerSeasonEMA = BigDecimal.fromString("100");
-      siloYield.whitelistedTokens = [
-        BEAN_ERC20.toHexString(),
-        BEAN_WETH_CP2_WELL.toHexString(),
-        UNRIPE_BEAN.toHexString(),
-        UNRIPE_BEAN_3CRV.toHexString()
-      ];
+      siloYield.whitelistedTokens = silo.whitelistedTokens;
       siloYield.save();
 
       /// Actual entity-based calculation here
       YieldHandler.updateSiloVAPYs(20000, ZERO_BI, 720);
 
+      const desiredPrecision = BigDecimal.fromString("0.0001");
       const beanResult = loadTokenYield(BEAN_ERC20, 20000, 720);
       log.info("bean apy {}", [beanResult.beanAPY.toString()]);
       log.info("stalk apy {}", [beanResult.stalkAPY.toString()]);
-      assert.assertTrue(beanResult.beanAPY.equals(BigDecimal.fromString("1.5511649479957717076555093556872")));
-      assert.assertTrue(beanResult.stalkAPY.equals(BigDecimal.fromString("433.6788615349604685422129945937972")));
+      assert.assertTrue(BigDecimal_isClose(beanResult.beanAPY, BigDecimal.fromString("1.54644190080929820744293897629"), desiredPrecision));
+      assert.assertTrue(
+        BigDecimal_isClose(beanResult.stalkAPY, BigDecimal.fromString("431.437897488823610478263760573224"), desiredPrecision)
+      );
 
       const wethResult = loadTokenYield(BEAN_WETH_CP2_WELL, 20000, 720);
       log.info("bean apy {}", [wethResult.beanAPY.toString()]);
       log.info("stalk apy {}", [wethResult.stalkAPY.toString()]);
-      assert.assertTrue(wethResult.beanAPY.equals(BigDecimal.fromString("2.5875980281221788705641371871859")));
-      assert.assertTrue(wethResult.stalkAPY.equals(BigDecimal.fromString("865.2659562348489010480536951671097")));
+      assert.assertTrue(
+        BigDecimal_isClose(wethResult.beanAPY, BigDecimal.fromString("2.5780234580234848544328050648487"), desiredPrecision)
+      );
+      assert.assertTrue(
+        BigDecimal_isClose(wethResult.stalkAPY, BigDecimal.fromString("860.7918339311777507447195117507077"), desiredPrecision)
+      );
 
       const zeroGsResult = loadTokenYield(UNRIPE_BEAN, 20000, 720);
       log.info("bean apy {}", [zeroGsResult.beanAPY.toString()]);
       log.info("stalk apy {}", [zeroGsResult.stalkAPY.toString()]);
-      assert.assertTrue(zeroGsResult.beanAPY.equals(BigDecimal.fromString("0.5126032843732415644388075671834")));
-      assert.assertTrue(zeroGsResult.stalkAPY.equals(BigDecimal.fromString("1.6690960621226467247354746725237")));
+      assert.assertTrue(
+        BigDecimal_isClose(zeroGsResult.beanAPY, BigDecimal.fromString("0.5127416037336945664701332044003"), desiredPrecision)
+      );
+      assert.assertTrue(
+        BigDecimal_isClose(zeroGsResult.stalkAPY, BigDecimal.fromString("1.6633821505548202866916203490403"), desiredPrecision)
+      );
     });
   });
 });

@@ -59,7 +59,7 @@ export function toDecimal(value: BigInt, decimals: number = DEFAULT_DECIMALS): B
 }
 
 export function toBigInt(value: BigDecimal, decimals: number = DEFAULT_DECIMALS): BigInt {
-  let precision = 10 * decimals;
+  let precision = 10 ** decimals;
   return BigInt.fromString(value.times(BigDecimal.fromString(precision.toString())).truncate(0).toString());
 }
 
@@ -95,4 +95,8 @@ export function getBigDecimalArrayTotal(detail: BigDecimal[]): BigDecimal {
   let total = ZERO_BD;
   for (let i = 0; i < detail.length; i++) total = total.plus(detail[i]);
   return total;
+}
+
+export function BigDecimal_isClose(value: BigDecimal, target: BigDecimal, window: BigDecimal): boolean {
+  return target.minus(window) < value && value < target.plus(window);
 }

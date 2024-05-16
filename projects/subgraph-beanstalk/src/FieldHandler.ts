@@ -62,7 +62,7 @@ export function handleSow(event: Sow): void {
   );
 
   let field = loadField(event.address);
-  let farmer = loadFarmer(event.params.account);
+  loadFarmer(event.params.account);
   let plot = loadPlot(event.address, event.params.index);
 
   let newIndexes = field.plotIndexes;
@@ -218,8 +218,8 @@ export function handlePlotTransfer(event: PlotTransfer): void {
   let season = loadSeason(event.address, BigInt.fromI32(beanstalk.lastSeason));
 
   // Ensure both farmer entites exist
-  let fromFarmer = loadFarmer(event.params.from);
-  let toFarmer = loadFarmer(event.params.to);
+  loadFarmer(event.params.from);
+  loadFarmer(event.params.to);
 
   // Update farmer field data
   updateFieldTotals(
@@ -289,16 +289,16 @@ export function handlePlotTransfer(event: PlotTransfer): void {
 
   let transferredHarvestable = calcHarvestable(event.params.id, event.params.pods, season.harvestableIndex);
 
-  log.debug("\nPodTransfer: ===================\n", []);
-  log.debug("\nPodTransfer: Transfer Season - {}\n", [field.season.toString()]);
-  log.debug("\nPodTransfer: Transfer Index - {}\n", [event.params.id.toString()]);
-  log.debug("\nPodTransfer: Transfer Pods - {}\n", [event.params.pods.toString()]);
-  log.debug("\nPodTransfer: Transfer Harvestable Pods - {}\n", [transferredHarvestable.toString()]);
-  log.debug("\nPodTransfer: Transfer Ending Index - {}\n", [event.params.id.plus(event.params.pods).toString()]);
-  log.debug("\nPodTransfer: Source Index - {}\n", [sourceIndex.toString()]);
-  log.debug("\nPodTransfer: Source Ending Index - {}\n", [sourceIndex.plus(sourcePlot.pods).toString()]);
-  log.debug("\nPodTransfer: Source Harvestable Pods - {}\n", [sourcePlot.harvestablePods.toString()]);
-  log.debug("\nPodTransfer: Starting Source Pods - {}\n", [sourcePlot.pods.toString()]);
+  // log.debug("\nPodTransfer: ===================\n", []);
+  // log.debug("\nPodTransfer: Transfer Season - {}\n", [field.season.toString()]);
+  // log.debug("\nPodTransfer: Transfer Index - {}\n", [event.params.id.toString()]);
+  // log.debug("\nPodTransfer: Transfer Pods - {}\n", [event.params.pods.toString()]);
+  // log.debug("\nPodTransfer: Transfer Harvestable Pods - {}\n", [transferredHarvestable.toString()]);
+  // log.debug("\nPodTransfer: Transfer Ending Index - {}\n", [event.params.id.plus(event.params.pods).toString()]);
+  // log.debug("\nPodTransfer: Source Index - {}\n", [sourceIndex.toString()]);
+  // log.debug("\nPodTransfer: Source Ending Index - {}\n", [sourceIndex.plus(sourcePlot.pods).toString()]);
+  // log.debug("\nPodTransfer: Source Harvestable Pods - {}\n", [sourcePlot.harvestablePods.toString()]);
+  // log.debug("\nPodTransfer: Starting Source Pods - {}\n", [sourcePlot.pods.toString()]);
 
   // Actually transfer the plots
   if (sourcePlot.pods == event.params.pods) {
@@ -332,10 +332,10 @@ export function handlePlotTransfer(event: PlotTransfer): void {
     remainderPlot.temperature = sourcePlot.temperature;
     remainderPlot.save();
 
-    log.debug("\nPodTransfer: sourceIndex == transferIndex\n", []);
-    log.debug("\nPodTransfer: Remainder Index - {}\n", [remainderIndex.toString()]);
-    log.debug("\nPodTransfer: Source Pods - {}\n", [sourcePlot.pods.toString()]);
-    log.debug("\nPodTransfer: Remainder Pods - {}\n", [remainderPlot.pods.toString()]);
+    // log.debug("\nPodTransfer: sourceIndex == transferIndex\n", []);
+    // log.debug("\nPodTransfer: Remainder Index - {}\n", [remainderIndex.toString()]);
+    // log.debug("\nPodTransfer: Source Pods - {}\n", [sourcePlot.pods.toString()]);
+    // log.debug("\nPodTransfer: Remainder Pods - {}\n", [remainderPlot.pods.toString()]);
   } else if (sourceEndIndex == transferEndIndex) {
     // We are only needing to split this plot once to send
     // Non-zero start value. Sending to end of plot
@@ -359,8 +359,8 @@ export function handlePlotTransfer(event: PlotTransfer): void {
     toPlot.temperature = sourcePlot.temperature;
     toPlot.save();
 
-    log.debug("\nPodTransfer: sourceEndIndex == transferEndIndex\n", []);
-    log.debug("\nPodTransfer: Updated Source Pods - {}\n", [sourcePlot.pods.toString()]);
+    // log.debug("\nPodTransfer: sourceEndIndex == transferEndIndex\n", []);
+    // log.debug("\nPodTransfer: Updated Source Pods - {}\n", [sourcePlot.pods.toString()]);
   } else {
     // We have to split this plot twice to send
     let remainderIndex = event.params.id.plus(event.params.pods);
@@ -399,10 +399,10 @@ export function handlePlotTransfer(event: PlotTransfer): void {
     remainderPlot.temperature = sourcePlot.temperature;
     remainderPlot.save();
 
-    log.debug("\nPodTransfer: split source twice\n", []);
-    log.debug("\nPodTransfer: Updated Source Pods - {}\n", [sourcePlot.pods.toString()]);
-    log.debug("\nPodTransfer: Transferred Pods - {}\n", [toPlot.pods.toString()]);
-    log.debug("\nPodTransfer: Remainder Pods - {}\n", [remainderPlot.pods.toString()]);
+    // log.debug("\nPodTransfer: split source twice\n", []);
+    // log.debug("\nPodTransfer: Updated Source Pods - {}\n", [sourcePlot.pods.toString()]);
+    // log.debug("\nPodTransfer: Transferred Pods - {}\n", [toPlot.pods.toString()]);
+    // log.debug("\nPodTransfer: Remainder Pods - {}\n", [remainderPlot.pods.toString()]);
   }
   sortedPlots.sort();
   field.plotIndexes = sortedPlots;

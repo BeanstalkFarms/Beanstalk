@@ -9,7 +9,7 @@ import {
   UpdateGaugeSettings,
   TotalGerminatingStalkChanged,
   TotalStalkChangedFromGermination
-} from "../../generated/BIP42-SeedGauge/Beanstalk";
+} from "../../generated/BIP44-SeedGauge/Beanstalk";
 
 import { BEANSTALK } from "../../../subgraph-core/utils/Constants";
 

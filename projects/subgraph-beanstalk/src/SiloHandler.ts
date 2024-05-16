@@ -2,6 +2,7 @@ import { Address, BigInt, log } from "@graphprotocol/graph-ts";
 import {
   AddDeposit,
   StalkBalanceChanged,
+  SeedsBalanceChanged,
   AddWithdrawal,
   RemoveDeposit,
   RemoveDeposits,
@@ -45,6 +46,7 @@ import {
 } from "../generated/schema";
 import { loadBeanstalk } from "./utils/Beanstalk";
 import { BEANSTALK, BEAN_ERC20, UNRIPE_BEAN, UNRIPE_BEAN_3CRV } from "../../subgraph-core/utils/Constants";
+import { getCurrentSeason } from "./utils/Season";
 
 /**
  * SILO V2 (REPLANT) HANDLERS
@@ -525,7 +527,7 @@ export function handleStalkBalanceChanged(event: StalkBalanceChanged): void {
   removal.save();
 }
 
-export function handleSeedsBalanceChanged(event: StalkBalanceChanged): void {
+export function handleSeedsBalanceChanged(event: SeedsBalanceChanged): void {
   // Exclude BIP-24 emission of missed past events
   if (event.transaction.hash.toHexString() == "0xa89638aeb0d6c4afb4f367ea7a806a4c8b3b2a6eeac773e8cc4eda10bfa804fc") return;
 
@@ -585,6 +587,8 @@ export function handlePlant(event: Plant): void {
   );
 }
 
+// These two calls are according to the Replant abi, before stems were included.
+// They are not in use anymore and therefore it is unclear whether or not they are actually needed.
 export function handleTransferDepositCall(call: TransferDepositCall): void {
   let beanstalk = loadBeanstalk(BEANSTALK);
   let updateFarmers = beanstalk.farmersToUpdate;
@@ -616,19 +620,22 @@ function addDepositToSilo(
   let siloDaily = loadSiloDailySnapshot(account, timestamp);
 
   silo.depositedBDV = silo.depositedBDV.plus(bdv);
-  silo.grownStalkPerBdvPerSeason = silo.grownStalkPerBdvPerSeason.plus(grownStalkPerBDV);
+  // Individual farmer seeds cannot be directly tracked due to seed gauge
+  if (account == BEANSTALK) {
+    silo.grownStalkPerSeason = silo.grownStalkPerSeason.plus(grownStalkPerBDV);
+  }
   silo.save();
 
   siloHourly.deltaDepositedBDV = siloHourly.deltaDepositedBDV.plus(bdv);
   siloHourly.depositedBDV = silo.depositedBDV;
-  siloHourly.grownStalkPerBdvPerSeason = silo.grownStalkPerBdvPerSeason;
+  siloHourly.grownStalkPerSeason = silo.grownStalkPerSeason;
   siloHourly.updatedAt = timestamp;
   siloHourly.save();
 
   siloDaily.season = season;
   siloDaily.deltaDepositedBDV = siloDaily.deltaDepositedBDV.plus(bdv);
   siloDaily.depositedBDV = silo.depositedBDV;
-  siloDaily.grownStalkPerBdvPerSeason = silo.grownStalkPerBdvPerSeason;
+  siloDaily.grownStalkPerSeason = silo.grownStalkPerSeason;
   siloDaily.updatedAt = timestamp;
   siloDaily.save();
 }
@@ -646,19 +653,22 @@ function removeDepositFromSilo(
   let siloDaily = loadSiloDailySnapshot(account, timestamp);
 
   silo.depositedBDV = silo.depositedBDV.minus(bdv);
-  silo.grownStalkPerBdvPerSeason = silo.grownStalkPerBdvPerSeason.minus(grownStalkPerBDV);
+  // Individual farmer seeds cannot be directly tracked due to seed gauge
+  if (account == BEANSTALK) {
+    silo.grownStalkPerSeason = silo.grownStalkPerSeason.minus(grownStalkPerBDV);
+  }
   silo.save();
 
   siloHourly.deltaDepositedBDV = siloHourly.deltaDepositedBDV.minus(bdv);
   siloHourly.depositedBDV = silo.depositedBDV;
-  siloHourly.grownStalkPerBdvPerSeason = silo.grownStalkPerBdvPerSeason;
+  siloHourly.grownStalkPerSeason = silo.grownStalkPerSeason;
   siloHourly.updatedAt = timestamp;
   siloHourly.save();
 
   siloDaily.season = season;
   siloDaily.deltaDepositedBDV = siloDaily.deltaDepositedBDV.minus(bdv);
   siloDaily.depositedBDV = silo.depositedBDV;
-  siloDaily.grownStalkPerBdvPerSeason = silo.grownStalkPerBdvPerSeason;
+  siloDaily.grownStalkPerSeason = silo.grownStalkPerSeason;
   siloDaily.updatedAt = timestamp;
   siloDaily.save();
 }
@@ -885,6 +895,7 @@ export function updateStalkWithCalls(season: i32, timestamp: BigInt, blockNumber
       timestamp,
       blockNumber
     );
+    // balanceOfSeeds function was removed in silov2
     updateSeedsBalances(account, season, beanstalk_call.balanceOfSeeds(account).minus(silo.seeds), timestamp, blockNumber);
   }
   beanstalk.farmersToUpdate = [];
@@ -894,14 +905,6 @@ export function updateStalkWithCalls(season: i32, timestamp: BigInt, blockNumber
 export function handleWhitelistToken(event: WhitelistToken): void {
   let silo = loadSilo(event.address);
   let currentList = silo.whitelistedTokens;
-  if (currentList.length == 0) {
-    // Push unripe bean and unripe bean:3crv upon the initial whitelisting.
-    currentList.push(UNRIPE_BEAN.toHexString());
-    loadWhitelistTokenSetting(UNRIPE_BEAN);
-
-    currentList.push(UNRIPE_BEAN_3CRV.toHexString());
-    loadWhitelistTokenSetting(UNRIPE_BEAN_3CRV);
-  }
   currentList.push(event.params.token.toHexString());
   silo.whitelistedTokens = currentList;
   silo.save();
@@ -912,6 +915,9 @@ export function handleWhitelistToken(event: WhitelistToken): void {
   setting.stalkEarnedPerSeason = event.params.stalk.times(BigInt.fromI32(1000000));
   setting.save();
 
+  loadWhitelistTokenHourlySnapshot(event.params.token, getCurrentSeason(event.address), event.block.timestamp);
+  loadWhitelistTokenDailySnapshot(event.params.token, event.block.timestamp);
+
   let id = "whitelistToken-" + event.transaction.hash.toHexString() + "-" + event.logIndex.toString();
   let rawEvent = new WhitelistTokenEntity(id);
   rawEvent.hash = event.transaction.hash.toHexString();
@@ -921,6 +927,59 @@ export function handleWhitelistToken(event: WhitelistToken): void {
   rawEvent.stalk = event.params.stalk;
   rawEvent.seeds = event.params.seeds;
   rawEvent.selector = event.params.selector.toHexString();
+  rawEvent.blockNumber = event.block.number;
+  rawEvent.createdAt = event.block.timestamp;
+  rawEvent.save();
+}
+
+export function handleWhitelistToken_V3(event: WhitelistToken_V3): void {
+  let silo = loadSilo(event.address);
+  let currentList = silo.whitelistedTokens;
+
+  currentList.push(event.params.token.toHexString());
+  silo.whitelistedTokens = currentList;
+  silo.save();
+
+  let setting = loadWhitelistTokenSetting(event.params.token);
+  setting.selector = event.params.selector;
+  setting.stalkIssuedPerBdv = event.params.stalk.times(BigInt.fromI32(1_000_000));
+  setting.stalkEarnedPerSeason = event.params.stalkEarnedPerSeason;
+  setting.save();
+
+  loadWhitelistTokenHourlySnapshot(event.params.token, getCurrentSeason(event.address), event.block.timestamp);
+  loadWhitelistTokenDailySnapshot(event.params.token, event.block.timestamp);
+
+  let id = "whitelistToken-" + event.transaction.hash.toHexString() + "-" + event.logIndex.toString();
+  let rawEvent = new WhitelistTokenEntity(id);
+  rawEvent.hash = event.transaction.hash.toHexString();
+  rawEvent.logIndex = event.logIndex.toI32();
+  rawEvent.protocol = event.address.toHexString();
+  rawEvent.token = event.params.token.toHexString();
+  rawEvent.stalk = event.params.stalk;
+  rawEvent.seeds = ZERO_BI;
+  rawEvent.stalkPerSeason = event.params.stalkEarnedPerSeason;
+  rawEvent.selector = event.params.selector.toHexString();
+  rawEvent.blockNumber = event.block.number;
+  rawEvent.createdAt = event.block.timestamp;
+  rawEvent.save();
+}
+
+export function handleDewhitelistToken(event: DewhitelistToken): void {
+  let silo = loadSilo(event.address);
+  let currentWhitelist = silo.whitelistedTokens;
+  let currentDewhitelist = silo.dewhitelistedTokens;
+  let index = currentWhitelist.indexOf(event.params.token.toHexString());
+  currentDewhitelist.push(currentWhitelist.splice(index, 1)[0]);
+  silo.whitelistedTokens = currentWhitelist;
+  silo.dewhitelistedTokens = currentDewhitelist;
+  silo.save();
+
+  let id = "dewhitelistToken-" + event.transaction.hash.toHexString() + "-" + event.logIndex.toString();
+  let rawEvent = new DewhitelistTokenEntity(id);
+  rawEvent.hash = event.transaction.hash.toHexString();
+  rawEvent.logIndex = event.logIndex.toI32();
+  rawEvent.protocol = event.address.toHexString();
+  rawEvent.token = event.params.token.toHexString();
   rawEvent.blockNumber = event.block.number;
   rawEvent.createdAt = event.block.timestamp;
   rawEvent.save();
@@ -942,52 +1001,4 @@ export function handleUpdatedStalkPerBdvPerSeason(event: UpdatedStalkPerBdvPerSe
   daily.milestoneSeason = siloSettings.milestoneSeason;
   daily.stalkEarnedPerSeason = siloSettings.stalkEarnedPerSeason;
   daily.save();
-}
-
-export function handleWhitelistToken_V3(event: WhitelistToken_V3): void {
-  let silo = loadSilo(event.address);
-  let currentList = silo.whitelistedTokens;
-
-  currentList.push(event.params.token.toHexString());
-  silo.whitelistedTokens = currentList;
-  silo.save();
-
-  let setting = loadWhitelistTokenSetting(event.params.token);
-  setting.selector = event.params.selector;
-  setting.stalkIssuedPerBdv = event.params.stalk.times(BigInt.fromI32(1_000_000));
-  setting.stalkEarnedPerSeason = event.params.stalkEarnedPerSeason;
-  setting.save();
-
-  let id = "whitelistToken-" + event.transaction.hash.toHexString() + "-" + event.logIndex.toString();
-  let rawEvent = new WhitelistTokenEntity(id);
-  rawEvent.hash = event.transaction.hash.toHexString();
-  rawEvent.logIndex = event.logIndex.toI32();
-  rawEvent.protocol = event.address.toHexString();
-  rawEvent.token = event.params.token.toHexString();
-  rawEvent.stalk = event.params.stalk;
-  rawEvent.seeds = ZERO_BI;
-  rawEvent.stalkPerSeason = event.params.stalkEarnedPerSeason;
-  rawEvent.selector = event.params.selector.toHexString();
-  rawEvent.blockNumber = event.block.number;
-  rawEvent.createdAt = event.block.timestamp;
-  rawEvent.save();
-}
-
-export function handleDewhitelistToken(event: DewhitelistToken): void {
-  let silo = loadSilo(event.address);
-  let currentList = silo.whitelistedTokens;
-  let index = currentList.indexOf(event.params.token.toHexString());
-  currentList.splice(index, 1);
-  silo.whitelistedTokens = currentList;
-  silo.save();
-
-  let id = "dewhitelistToken-" + event.transaction.hash.toHexString() + "-" + event.logIndex.toString();
-  let rawEvent = new DewhitelistTokenEntity(id);
-  rawEvent.hash = event.transaction.hash.toHexString();
-  rawEvent.logIndex = event.logIndex.toI32();
-  rawEvent.protocol = event.address.toHexString();
-  rawEvent.token = event.params.token.toHexString();
-  rawEvent.blockNumber = event.block.number;
-  rawEvent.createdAt = event.block.timestamp;
-  rawEvent.save();
 }

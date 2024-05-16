@@ -30,11 +30,12 @@ export function loadSilo(account: Address): Silo {
       silo.farmer = account.toHexString();
     }
     silo.whitelistedTokens = [];
+    silo.dewhitelistedTokens = [];
     silo.depositedBDV = ZERO_BI;
     silo.stalk = ZERO_BI;
     silo.plantableStalk = ZERO_BI;
     silo.seeds = ZERO_BI;
-    silo.grownStalkPerBdvPerSeason = ZERO_BI;
+    silo.grownStalkPerSeason = ZERO_BI;
     silo.roots = ZERO_BI;
     silo.germinatingStalk = ZERO_BI;
     silo.beanMints = ZERO_BI;
@@ -56,7 +57,7 @@ export function loadSiloHourlySnapshot(account: Address, season: i32, timestamp:
     snapshot.stalk = silo.stalk;
     snapshot.plantableStalk = silo.plantableStalk;
     snapshot.seeds = silo.seeds;
-    snapshot.grownStalkPerBdvPerSeason = silo.grownStalkPerBdvPerSeason;
+    snapshot.grownStalkPerSeason = silo.grownStalkPerSeason;
     snapshot.roots = silo.roots;
     snapshot.germinatingStalk = silo.germinatingStalk;
     snapshot.beanToMaxLpGpPerBdvRatio = silo.beanToMaxLpGpPerBdvRatio;
@@ -90,7 +91,7 @@ export function loadSiloDailySnapshot(account: Address, timestamp: BigInt): Silo
     snapshot.stalk = silo.stalk;
     snapshot.plantableStalk = silo.plantableStalk;
     snapshot.seeds = silo.seeds;
-    snapshot.grownStalkPerBdvPerSeason = silo.grownStalkPerBdvPerSeason;
+    snapshot.grownStalkPerSeason = silo.grownStalkPerSeason;
     snapshot.roots = silo.roots;
     snapshot.germinatingStalk = silo.germinatingStalk;
     snapshot.beanToMaxLpGpPerBdvRatio = silo.beanToMaxLpGpPerBdvRatio;
@@ -360,4 +361,13 @@ export function loadTokenYield(token: Address, season: i32, window: i32): TokenY
     tokenYield.save();
   }
   return tokenYield as TokenYield;
+}
+
+export function SiloAsset_findIndex_token(a: SiloAsset[], targetToken: string): i32 {
+  for (let j = 0; j < a.length; j++) {
+    if (a[j].token == targetToken) {
+      return j;
+    }
+  }
+  return -1;
 }
