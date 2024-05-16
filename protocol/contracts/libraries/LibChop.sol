@@ -32,6 +32,6 @@ library LibChop {
         AppStorage storage s = LibAppStorage.diamondStorage();
         underlyingAmount = LibUnripe._getPenalizedUnderlying(unripeToken, amount, supply);
         LibUnripe.decrementUnderlying(unripeToken, underlyingAmount);
-        underlyingToken = s.unripeSettings[unripeToken].underlyingToken;
+        underlyingToken = s.unripe[unripeToken].underlyingToken;
     }
 }

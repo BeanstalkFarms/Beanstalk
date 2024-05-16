@@ -56,7 +56,7 @@ contract MockInitDiamond is InitWhitelist, InitWhitelistStatuses, Weather {
 
         LibTractor._resetPublisher();
 
-        s.unripeSettings[C.UNRIPE_LP].underlyingToken = C.BEAN_WSTETH_WELL;
+        s.unripe[C.UNRIPE_LP].underlyingToken = C.BEAN_WSTETH_WELL;
 
         emit BeanToMaxLpGpPerBdvRatioChange(
             s.season.current,

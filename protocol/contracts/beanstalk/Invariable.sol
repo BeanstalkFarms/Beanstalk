@@ -179,9 +179,9 @@ abstract contract Invariable {
                 entitlements[i] +=
                     s.field.harvestable.sub(s.field.harvested) + // unharvestable harvestable beans
                     s.fertilizedIndex.sub(s.fertilizedPaidIndex) + // unrinsed rinsable beans
-                    s.unripeSettings[C.UNRIPE_BEAN].balanceOfUnderlying; // unchopped underlying beans
+                    s.unripe[C.UNRIPE_BEAN].balanceOfUnderlying; // unchopped underlying beans
             } else if (tokens[i] == LibUnripe._getUnderlyingToken(C.UNRIPE_LP)) {
-                entitlements[i] += s.unripeSettings[C.UNRIPE_LP].balanceOfUnderlying;
+                entitlements[i] += s.unripe[C.UNRIPE_LP].balanceOfUnderlying;
             }
             if (s.sopWell != address(0) && tokens[i] == address(LibSilo.getSopToken())) {
                 entitlements[i] += s.plenty;

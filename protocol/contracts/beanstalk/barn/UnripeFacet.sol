@@ -114,7 +114,7 @@ contract UnripeFacet is Invariable, ReentrancyGuard {
         bytes32[] memory proof,
         LibTransfer.To mode
     ) external payable fundsSafu noSupplyChange oneOutFlow(token) nonReentrant {
-        bytes32 root = s.unripeSettings[token].merkleRoot;
+        bytes32 root = s.unripe[token].merkleRoot;
         require(root != bytes32(0), "UnripeClaim: invalid token");
         require(!picked(LibTractor._user(), token), "UnripeClaim: already picked");
 
@@ -264,11 +264,9 @@ contract UnripeFacet is Invariable, ReentrancyGuard {
     function getUnderlyingPerUnripeToken(
         address unripeToken
     ) external view returns (uint256 underlyingPerToken) {
-        underlyingPerToken = s
-            .unripeSettings[unripeToken]
-            .balanceOfUnderlying
-            .mul(LibUnripe.DECIMALS)
-            .div(IERC20(unripeToken).totalSupply());
+        underlyingPerToken = s.unripe[unripeToken].balanceOfUnderlying.mul(LibUnripe.DECIMALS).div(
+            IERC20(unripeToken).totalSupply()
+        );
     }
 
     /**
@@ -277,7 +275,7 @@ contract UnripeFacet is Invariable, ReentrancyGuard {
      * @return underlying The total balance of the token.
      */
     function getTotalUnderlying(address unripeToken) external view returns (uint256 underlying) {
-        return s.unripeSettings[unripeToken].balanceOfUnderlying;
+        return s.unripe[unripeToken].balanceOfUnderlying;
     }
 
     /**
@@ -292,8 +290,8 @@ contract UnripeFacet is Invariable, ReentrancyGuard {
         bytes32 root
     ) external payable fundsSafu noNetFlow noSupplyChange nonReentrant {
         LibDiamond.enforceIsOwnerOrContract();
-        s.unripeSettings[unripeToken].underlyingToken = underlyingToken;
-        s.unripeSettings[unripeToken].merkleRoot = root;
+        s.unripe[unripeToken].underlyingToken = underlyingToken;
+        s.unripe[unripeToken].merkleRoot = root;
         emit AddUnripeToken(unripeToken, underlyingToken, root);
     }
 
@@ -322,7 +320,7 @@ contract UnripeFacet is Invariable, ReentrancyGuard {
         uint256 amount
     ) external payable fundsSafu noNetFlow noSupplyChange nonReentrant {
         LibDiamond.enforceIsContractOwner();
-        IERC20(s.unripeSettings[unripeToken].underlyingToken).safeTransferFrom(
+        IERC20(s.unripe[unripeToken].underlyingToken).safeTransferFrom(
             LibTractor._user(),
             address(this),
             amount
@@ -334,17 +332,14 @@ contract UnripeFacet is Invariable, ReentrancyGuard {
      * @notice Switches the Ripe Token of an Unripe Token.
      * @param unripeToken The Unripe Token to switch the Ripe Token of.
      * @param newUnderlyingToken The new Ripe Token to switch to.
-     * @dev `s.unripeSettings[unripeToken].balanceOfUnderlying` must be 0.
+     * @dev `s.unripe[unripeToken].balanceOfUnderlying` must be 0.
      */
     function switchUnderlyingToken(
         address unripeToken,
         address newUnderlyingToken
     ) external payable fundsSafu noNetFlow noSupplyChange {
         LibDiamond.enforceIsContractOwner();
-        require(
-            s.unripeSettings[unripeToken].balanceOfUnderlying == 0,
-            "Unripe: Underlying balance > 0"
-        );
+        require(s.unripe[unripeToken].balanceOfUnderlying == 0, "Unripe: Underlying balance > 0");
         LibUnripe.switchUnderlyingToken(unripeToken, newUnderlyingToken);
     }
 

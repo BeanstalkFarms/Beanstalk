@@ -87,7 +87,7 @@ contract MockInitDiamond is InitalizeDiamond {
         }
 
         // sets the barn raise token to the underlying of the unripe LP.
-        s.unripeSettings[unripeToken[underlyingToken.length - 1]].underlyingToken = barnRaiseWell;
+        s.unripe[unripeToken[underlyingToken.length - 1]].underlyingToken = barnRaiseWell;
     }
 
     /**

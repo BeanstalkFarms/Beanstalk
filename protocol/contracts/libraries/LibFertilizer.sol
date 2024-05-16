@@ -92,9 +92,9 @@ library LibFertilizer {
         uint256 percentToFill = usdAmount.mul(C.precision()).div(remainingRecapitalization());
 
         uint256 newDepositedBeans;
-        if (C.unripeBean().totalSupply() > s.unripeSettings[C.UNRIPE_BEAN].balanceOfUnderlying) {
+        if (C.unripeBean().totalSupply() > s.unripe[C.UNRIPE_BEAN].balanceOfUnderlying) {
             newDepositedBeans = (C.unripeBean().totalSupply()).sub(
-                s.unripeSettings[C.UNRIPE_BEAN].balanceOfUnderlying
+                s.unripe[C.UNRIPE_BEAN].balanceOfUnderlying
             );
             newDepositedBeans = newDepositedBeans.mul(percentToFill).div(C.precision());
         }
@@ -221,8 +221,8 @@ library LibFertilizer {
         // Check that Lib Usd Oracle supports the non-Bean token in the Well.
         LibUsdOracle.getTokenPrice(address(tokens[tokens[0] == C.bean() ? 1 : 0]));
 
-        uint256 balanceOfUnderlying = s.unripeSettings[C.UNRIPE_LP].balanceOfUnderlying;
-        IERC20(s.unripeSettings[C.UNRIPE_LP].underlyingToken).safeTransfer(
+        uint256 balanceOfUnderlying = s.unripe[C.UNRIPE_LP].balanceOfUnderlying;
+        IERC20(s.unripe[C.UNRIPE_LP].underlyingToken).safeTransfer(
             LibDiamond.diamondStorage().contractOwner,
             balanceOfUnderlying
         );

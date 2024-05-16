@@ -484,7 +484,7 @@ struct AppStorage {
     mapping(address => mapping(IERC20 => uint256)) internalTokenBalance;
     // Unripe
     mapping(address => mapping(address => bool)) unripeClaimed;
-    mapping(address => Storage.UnripeSettings) unripeSettings;
+    mapping(address => Storage.UnripeSettings) unripe;
     // Fertilizer
     mapping(uint128 => uint256) fertilizer;
     mapping(uint128 => uint128) nextFid;
