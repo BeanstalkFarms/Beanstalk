@@ -229,8 +229,8 @@ export function handlePodOrderCancelled(event: PodOrderCancelled): void {
  * When Beanstalk was Replanted, `event.params.mode` was changed from
  * `bool` to `uint8`.
  *
- * Proposal: ...
- * Deployed: ... at block 15277986
+ * Proposal: BIP-21
+ * Deployed: 08/05/2022 at block 15278963
  * ------------------------------------
  */
 
@@ -254,7 +254,7 @@ export function handlePodListingCreated_v1_1(event: PodListingCreated_v1_1): voi
  * POD MARKETPLACE V2
  *
  * Proposal: BIP-29 https://bean.money/bip-29
- * Deployed: 11/12/2022 @ block 15277986
+ * Deployed: 11/12/2022 @ block 15951072
  * ------------------------------------
  */
 
