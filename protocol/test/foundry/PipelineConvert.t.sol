@@ -55,6 +55,7 @@ contract PipelineConvertTest is TestHelper {
 
     uint256 constant MAX_UINT256 = type(uint256).max;
     uint256 constant BDV_TO_STALK = 1e4;
+    address constant EXTRACT_VALUE_ADDRESS = 0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045;
 
     bytes constant noData = abi.encode(0);
 
@@ -775,7 +776,7 @@ contract PipelineConvertTest is TestHelper {
         // send half our beans from pipeline to Vitalik address (for some reason zero address gave an evm error)
         bytes memory sendBeans = abi.encodeWithSelector(
             bean.transfer.selector,
-            0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045,
+            EXTRACT_VALUE_ADDRESS,
             amount.div(2)
         );
         extraPipeCalls[0] = AdvancedPipeCall(
