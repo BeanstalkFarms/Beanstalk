@@ -430,13 +430,16 @@ contract PipelineConvertTest is TestHelper {
     function testDeltaBChangeBeanToLP(uint256 amount) public {
         amount = bound(amount, 1e6, 5000e6);
         int256 beforeDeltaB = bs.poolCurrentDeltaB(beanEthWell);
+        (int256 calculatedNewDeltaB, ) = calculateDeltaBForWellAfterSwapFromBean(
+            amount,
+            beanEthWell
+        );
 
         doBasicBeanToLP(amount, users[1]);
 
         int256 afterDeltaB = bs.poolCurrentDeltaB(beanEthWell);
         assertTrue(afterDeltaB < beforeDeltaB);
-        assertTrue(beforeDeltaB - int256(amount) * 2 < afterDeltaB);
-        // would be great to calcuate exactly what the new deltaB should be after convert
+        assertEq(afterDeltaB, calculatedNewDeltaB);
     }
 
     function testTotalStalkAmountDidNotIncrease(uint256 amount) public {
@@ -2007,12 +2010,9 @@ contract PipelineConvertTest is TestHelper {
 
         // remove beanOut from reserves bean index
         reserves[beanIndex] = reserves[beanIndex].sub(beansOut);
-        // reserves[nonBeanIndex] = reserves[nonBeanIndex].add(amountIn);
 
         // get new deltaB
         deltaB = LibWellMinting.calculateDeltaBFromReserves(well, reserves, 0);
-        console.log("deltaB: ");
-        console.logInt(deltaB);
     }
 
     function calculateDeltaBForWellAfterSwapFromBean(
@@ -2029,35 +2029,11 @@ contract PipelineConvertTest is TestHelper {
         );
         uint256[] memory tokenAmountsIn = new uint256[](2);
         tokenAmountsIn[0] = beansIn;
-        tokenAmountsIn[1] = 0;
         lpOut = IWell(well).getAddLiquidityOut(tokenAmountsIn);
-
-        console.log("beanIndex: ");
-        console.log(beanIndex);
-        console.log("nonBeanIndex: ");
-        console.log(nonBeanIndex);
-
-        console.log("reserve0: ");
-        console.log(reserves[0]);
-        console.log("reserve1: ");
-        console.log(reserves[1]);
-
-        console.log("lpOut: ");
-        console.log(lpOut);
-        console.log("beansIn: ");
-        console.log(beansIn);
 
         // add to bean index (no beans out on this one)
         reserves[beanIndex] = reserves[beanIndex].add(beansIn);
-
-        console.log("updated reserve0: ");
-        console.log(reserves[0]);
-        console.log("updated reserve1: ");
-        console.log(reserves[1]);
-
         // get new deltaB
         deltaB = LibWellMinting.calculateDeltaBFromReserves(well, reserves, 0);
-        console.log("deltaB: ");
-        console.logInt(deltaB);
     }
 }
