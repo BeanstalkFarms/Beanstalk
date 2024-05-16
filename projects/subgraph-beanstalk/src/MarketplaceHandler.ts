@@ -48,15 +48,11 @@ class PodListingCreatedParams {
   amount: BigInt;
   pricePerPod: i32;
   maxHarvestableIndex: BigInt;
-
-  toWallet: boolean; // v1
-  mode: i32; // v1.1
-
+  mode: i32; // in v1, its called toWallet
   // v2
-  minFillAmount: BigInt;
-  pricingFunction: Bytes;
-  // mode: i32;
-  pricingType: i32;
+  minFillAmount: BigInt; // for v1, always 0
+  pricingFunction: Bytes | null;
+  pricingType: i32; // for v1, always 0
 }
 
 class PodOrderCreatedParams {
@@ -95,83 +91,19 @@ class MarketFillParams {
  */
 
 export function handlePodListingCreated(event: PodListingCreated_v1): void {
-  let plotCheck = Plot.load(event.params.index.toString());
-  if (plotCheck == null) {
-    return;
-  }
-  let plot = loadPlot(event.address, event.params.index);
-
-  /// Upsert pod listing
-  let listing = loadPodListing(event.params.account, event.params.index);
-  if (listing.createdAt !== ZERO_BI) {
-    createHistoricalPodListing(listing);
-    listing.status = "ACTIVE";
-    listing.createdAt = ZERO_BI;
-    listing.fill = null;
-    listing.filled = ZERO_BI;
-    listing.filledAmount = ZERO_BI;
-  }
-
-  // Identifiers
-  listing.historyID = listing.id + "-" + event.block.timestamp.toString();
-  listing.plot = plot.id;
-
-  // Configuration
-  listing.start = event.params.start;
-  listing.mode = event.params.toWallet === true ? 0 : 1;
-
-  // Constraints
-  listing.maxHarvestableIndex = event.params.maxHarvestableIndex;
-
-  // Pricing
-  listing.pricePerPod = event.params.pricePerPod;
-
-  // Amounts [Relative to Original]
-  listing.originalIndex = event.params.index;
-  listing.originalAmount = event.params.amount;
-
-  // Amounts [Relative to Child]
-  listing.amount = event.params.amount; // in Pods
-  listing.remainingAmount = listing.originalAmount;
-
-  // Metadata
-  listing.createdAt = listing.createdAt == ZERO_BI ? event.block.timestamp : listing.createdAt;
-  listing.updatedAt = event.block.timestamp;
-  listing.creationHash = event.transaction.hash.toHexString();
-  listing.save();
-
-  /// Update plot
-  plot.listing = listing.id;
-  plot.save();
-
-  /// Update market totals
-  updateActiveListings(
-    event.address,
-    MarketplaceAction.CREATED,
-    event.params.account.toHexString(),
-    listing.index,
-    listing.maxHarvestableIndex
-  );
-  updateMarketListingBalances(event.address, event.params.amount, ZERO_BI, ZERO_BI, ZERO_BI, event.block.timestamp);
-
-  /// Save raw event data
-  let id = "podListingCreated-" + event.transaction.hash.toHexString() + "-" + event.logIndex.toString();
-  let rawEvent = new PodListingCreatedEvent(id);
-  rawEvent.hash = event.transaction.hash.toHexString();
-  rawEvent.logIndex = event.logIndex.toI32();
-  rawEvent.protocol = event.address.toHexString();
-  rawEvent.historyID = listing.historyID;
-  rawEvent.account = event.params.account.toHexString();
-  rawEvent.index = event.params.index;
-  rawEvent.start = event.params.start;
-  rawEvent.amount = event.params.amount;
-  rawEvent.pricePerPod = event.params.pricePerPod;
-  rawEvent.maxHarvestableIndex = event.params.maxHarvestableIndex;
-  rawEvent.minFillAmount = ZERO_BI;
-  rawEvent.mode = event.params.toWallet;
-  rawEvent.blockNumber = event.block.number;
-  rawEvent.createdAt = event.block.timestamp;
-  rawEvent.save();
+  podListingCreated({
+    event: event,
+    account: event.params.account,
+    index: event.params.index,
+    start: event.params.start,
+    amount: event.params.amount,
+    pricePerPod: event.params.pricePerPod,
+    maxHarvestableIndex: event.params.maxHarvestableIndex,
+    mode: event.params.toWallet ? 0 : 1,
+    minFillAmount: ZERO_BI,
+    pricingFunction: null,
+    pricingType: 0
+  });
 }
 
 export function handlePodListingCancelled(event: PodListingCancelled): void {
@@ -303,78 +235,19 @@ export function handlePodOrderCancelled(event: PodOrderCancelled): void {
  */
 
 export function handlePodListingCreated_v1_1(event: PodListingCreated_v1_1): void {
-  let plotCheck = Plot.load(event.params.index.toString());
-  if (plotCheck == null) {
-    return;
-  }
-  let plot = loadPlot(event.address, event.params.index);
-
-  /// Upsert pod listing
-  let listing = loadPodListing(event.params.account, event.params.index);
-  if (listing.createdAt !== ZERO_BI) {
-    createHistoricalPodListing(listing);
-    listing.status = "ACTIVE";
-    listing.createdAt = ZERO_BI;
-    listing.fill = null;
-    listing.filled = ZERO_BI;
-    listing.filledAmount = ZERO_BI;
-  }
-
-  listing.historyID = listing.id + "-" + event.block.timestamp.toString();
-  listing.plot = plot.id;
-
-  listing.start = event.params.start;
-  listing.mode = event.params.mode;
-
-  listing.pricePerPod = event.params.pricePerPod;
-  listing.maxHarvestableIndex = event.params.maxHarvestableIndex;
-
-  listing.originalIndex = event.params.index;
-  listing.originalAmount = event.params.amount;
-
-  listing.amount = event.params.amount;
-  listing.remainingAmount = listing.originalAmount;
-
-  listing.status = "ACTIVE";
-  listing.createdAt = listing.createdAt == ZERO_BI ? event.block.timestamp : listing.createdAt;
-  listing.updatedAt = event.block.timestamp;
-  listing.creationHash = event.transaction.hash.toHexString();
-
-  listing.save();
-
-  /// Update plot
-  plot.listing = listing.id;
-  plot.save();
-
-  /// Update market totals
-  updateActiveListings(
-    event.address,
-    MarketplaceAction.CREATED,
-    event.params.account.toHexString(),
-    listing.index,
-    listing.maxHarvestableIndex
-  );
-  updateMarketListingBalances(event.address, event.params.amount, ZERO_BI, ZERO_BI, ZERO_BI, event.block.timestamp);
-
-  /// Save raw event data
-  let id = "podListingCreated-" + event.transaction.hash.toHexString() + "-" + event.logIndex.toString();
-  let rawEvent = new PodListingCreatedEvent(id);
-  rawEvent.hash = event.transaction.hash.toHexString();
-  rawEvent.logIndex = event.logIndex.toI32();
-  rawEvent.protocol = event.address.toHexString();
-  rawEvent.historyID = listing.historyID;
-  rawEvent.account = event.params.account.toHexString();
-  rawEvent.index = event.params.index;
-  rawEvent.start = event.params.start;
-  rawEvent.amount = event.params.amount;
-  rawEvent.pricePerPod = event.params.pricePerPod;
-  rawEvent.maxHarvestableIndex = event.params.maxHarvestableIndex;
-  rawEvent.maxHarvestableIndex = ZERO_BI;
-  rawEvent.minFillAmount = ZERO_BI;
-  rawEvent.mode = event.params.mode;
-  rawEvent.blockNumber = event.block.number;
-  rawEvent.createdAt = event.block.timestamp;
-  rawEvent.save();
+  podListingCreated({
+    event: event,
+    account: event.params.account,
+    index: event.params.index,
+    start: event.params.start,
+    amount: event.params.amount,
+    pricePerPod: event.params.pricePerPod,
+    maxHarvestableIndex: event.params.maxHarvestableIndex,
+    mode: event.params.mode,
+    minFillAmount: ZERO_BI,
+    pricingFunction: null,
+    pricingType: 0
+  });
 }
 
 /* ------------------------------------
@@ -386,81 +259,19 @@ export function handlePodListingCreated_v1_1(event: PodListingCreated_v1_1): voi
  */
 
 export function handlePodListingCreated_v2(event: PodListingCreated_v2): void {
-  let plot = Plot.load(event.params.index.toString());
-  if (plot == null) {
-    return;
-  }
-
-  /// Upsert PodListing
-  let listing = loadPodListing(event.params.account, event.params.index);
-  if (listing.createdAt !== ZERO_BI) {
-    // Re-listed prior plot with new info
-    createHistoricalPodListing(listing);
-    listing.fill = null;
-    listing.filled = ZERO_BI;
-    listing.filledAmount = ZERO_BI;
-  }
-
-  listing.historyID = listing.id + "-" + event.block.timestamp.toString();
-  listing.plot = plot.id;
-
-  listing.start = event.params.start;
-  listing.mode = event.params.mode;
-
-  listing.minFillAmount = event.params.minFillAmount;
-  listing.maxHarvestableIndex = event.params.maxHarvestableIndex;
-
-  listing.pricingType = event.params.pricingType;
-  listing.pricePerPod = event.params.pricePerPod;
-  listing.pricingFunction = event.params.pricingFunction;
-
-  listing.originalIndex = event.params.index;
-  listing.originalAmount = event.params.amount;
-
-  listing.amount = event.params.amount;
-  listing.remainingAmount = listing.originalAmount;
-
-  listing.status = "ACTIVE";
-  listing.createdAt = listing.createdAt == ZERO_BI ? event.block.timestamp : listing.createdAt;
-  listing.updatedAt = event.block.timestamp;
-  listing.creationHash = event.transaction.hash.toHexString();
-
-  listing.save();
-
-  /// Update plot
-  plot.listing = listing.id;
-  plot.save();
-
-  /// Update market totals
-  updateActiveListings(
-    event.address,
-    MarketplaceAction.CREATED,
-    event.params.account.toHexString(),
-    listing.index,
-    listing.maxHarvestableIndex
-  );
-  updateMarketListingBalances(event.address, event.params.amount, ZERO_BI, ZERO_BI, ZERO_BI, event.block.timestamp);
-
-  /// Save  raw event data
-  let id = "podListingCreated-" + event.transaction.hash.toHexString() + "-" + event.logIndex.toString();
-  let rawEvent = new PodListingCreatedEvent(id);
-  rawEvent.hash = event.transaction.hash.toHexString();
-  rawEvent.logIndex = event.logIndex.toI32();
-  rawEvent.protocol = event.address.toHexString();
-  rawEvent.historyID = listing.historyID;
-  rawEvent.account = event.params.account.toHexString();
-  rawEvent.index = event.params.index;
-  rawEvent.start = event.params.start;
-  rawEvent.amount = event.params.amount;
-  rawEvent.pricePerPod = event.params.pricePerPod;
-  rawEvent.maxHarvestableIndex = event.params.maxHarvestableIndex;
-  rawEvent.minFillAmount = event.params.minFillAmount;
-  rawEvent.mode = event.params.mode;
-  rawEvent.pricingFunction = event.params.pricingFunction;
-  rawEvent.pricingType = event.params.pricingType;
-  rawEvent.blockNumber = event.block.number;
-  rawEvent.createdAt = event.block.timestamp;
-  rawEvent.save();
+  podListingCreated({
+    event: event,
+    account: event.params.account,
+    index: event.params.index,
+    start: event.params.start,
+    amount: event.params.amount,
+    pricePerPod: event.params.pricePerPod,
+    maxHarvestableIndex: event.params.maxHarvestableIndex,
+    mode: event.params.mode,
+    minFillAmount: event.params.minFillAmount,
+    pricingFunction: event.params.pricingFunction,
+    pricingType: event.params.pricingType
+  });
 }
 
 export function handlePodListingFilled_v2(event: PodListingFilled_v2): void {
@@ -507,6 +318,84 @@ export function handlePodOrderFilled_v2(event: PodOrderFilled_v2): void {
  * SHARED FUNCTIONS
  * ------------------------------------
  */
+
+function podListingCreated(params: PodListingCreatedParams): void {
+  let plot = Plot.load(params.index.toString());
+  if (plot == null) {
+    return;
+  }
+
+  /// Upsert PodListing
+  let listing = loadPodListing(params.account, params.index);
+  if (listing.createdAt !== ZERO_BI) {
+    // Re-listed prior plot with new info
+    createHistoricalPodListing(listing);
+    listing.fill = null;
+    listing.filled = ZERO_BI;
+    listing.filledAmount = ZERO_BI;
+  }
+
+  listing.historyID = listing.id + "-" + params.event.block.timestamp.toString();
+  listing.plot = plot.id;
+
+  listing.start = params.start;
+  listing.mode = params.mode;
+
+  listing.minFillAmount = params.minFillAmount;
+  listing.maxHarvestableIndex = params.maxHarvestableIndex;
+
+  listing.pricingType = params.pricingType;
+  listing.pricePerPod = params.pricePerPod;
+  listing.pricingFunction = params.pricingFunction;
+
+  listing.originalIndex = params.index;
+  listing.originalAmount = params.amount;
+
+  listing.amount = params.amount;
+  listing.remainingAmount = listing.originalAmount;
+
+  listing.status = "ACTIVE";
+  listing.createdAt = listing.createdAt == ZERO_BI ? params.event.block.timestamp : listing.createdAt;
+  listing.updatedAt = params.event.block.timestamp;
+  listing.creationHash = params.event.transaction.hash.toHexString();
+
+  listing.save();
+
+  /// Update plot
+  plot.listing = listing.id;
+  plot.save();
+
+  /// Update market totals
+  updateActiveListings(
+    params.event.address,
+    MarketplaceAction.CREATED,
+    params.account.toHexString(),
+    listing.index,
+    listing.maxHarvestableIndex
+  );
+  updateMarketListingBalances(params.event.address, params.amount, ZERO_BI, ZERO_BI, ZERO_BI, params.event.block.timestamp);
+
+  /// Save  raw event data
+  let id = "podListingCreated-" + params.event.transaction.hash.toHexString() + "-" + params.event.logIndex.toString();
+  let rawEvent = new PodListingCreatedEvent(id);
+  rawEvent.hash = params.event.transaction.hash.toHexString();
+  rawEvent.logIndex = params.event.logIndex.toI32();
+  rawEvent.protocol = params.event.address.toHexString();
+  rawEvent.historyID = listing.historyID;
+  rawEvent.account = params.account.toHexString();
+  rawEvent.index = params.index;
+  rawEvent.start = params.start;
+  rawEvent.amount = params.amount;
+  rawEvent.pricePerPod = params.pricePerPod;
+  rawEvent.maxHarvestableIndex = params.maxHarvestableIndex;
+  rawEvent.minFillAmount = params.minFillAmount;
+  rawEvent.mode = params.mode;
+  rawEvent.pricingFunction = params.pricingFunction;
+  rawEvent.pricingType = params.pricingType;
+  rawEvent.blockNumber = params.event.block.number;
+  rawEvent.createdAt = params.event.block.timestamp;
+  rawEvent.save();
+}
 
 function podListingFilled(params: MarketFillParams): void {
   let listing = loadPodListing(params.from, params.index);
