@@ -678,22 +678,22 @@ type Plot @entity {
   createdAt: BigInt!
   "Timestamp when updated"
   updatedAt: BigInt!
+  "Block when updated"
+  updatedAtBlock: BigInt!
   "Plot Index"
   index: BigInt!
-  "Beans used to sow, if any"
-  beans: BigInt!
   "Total pods in plot"
   pods: BigInt!
-  "Total pods that were sown, if any"
-  sownPods: BigInt!
-  "Temperature when the plot was sown"
-  temperature: Int!
+  "Number of beans spent for each pod, whether through sowing or on the marketplace"
+  beansPerPod: BigInt!
   "Number of pods harvestable"
   harvestablePods: BigInt!
   "Number of pods harvested"
   harvestedPods: BigInt!
   "Flag for if plot is fully harvested"
   fullyHarvested: Boolean!
+  "This field is required for correct indexing but has no meaning externally. Do not reference."
+  internalUseOnly: String!
 }
 
 type PodMarketplace @entity {

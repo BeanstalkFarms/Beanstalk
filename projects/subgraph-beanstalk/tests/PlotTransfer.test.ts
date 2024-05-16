@@ -99,6 +99,11 @@ describe("Field: Plot Transfer", () => {
       assertFieldHas(ANVIL_ADDR_2, initialPlots[0].pods.minus(harvestableAmount), harvestableAmount);
       assertFieldHas(BEANSTALK.toHexString(), initialPlots[0].pods.minus(harvestableAmount).plus(initialPlots[1].pods), harvestableAmount);
     });
+
+    test("F: Plot Source", () => {
+      transferPlot(ANVIL_ADDR_1, ANVIL_ADDR_2, initialPlots[0].plotStart, initialPlots[0].pods);
+      assert.fieldEquals("Plot", initialPlots[0].plotStart.toString(), "source", "TRANSFER");
+    });
   });
 
   // Transfers the first third of the plot
@@ -151,6 +156,14 @@ describe("Field: Plot Transfer", () => {
       assertFieldHas(ANVIL_ADDR_1, initialPlots[0].pods.minus(transferredAmount).plus(initialPlots[1].pods), ZERO_BI);
       assertFieldHas(ANVIL_ADDR_2, transferredUnharvestable, harvestableAmount);
       assertFieldHas(BEANSTALK.toHexString(), initialPlots[0].pods.minus(harvestableAmount).plus(initialPlots[1].pods), harvestableAmount);
+    });
+
+    test("S: Plot Source", () => {
+      const transferredIndex = initialPlots[0].plotStart;
+      const transferredAmount = initialPlots[0].pods.div(BigInt.fromI32(3));
+      transferPlot(ANVIL_ADDR_1, ANVIL_ADDR_2, transferredIndex, transferredAmount);
+      assert.fieldEquals("Plot", initialPlots[0].plotStart.toString(), "source", "TRANSFER");
+      assert.fieldEquals("Plot", transferredIndex.plus(transferredAmount).toString(), "source", "SOW");
     });
   });
 
@@ -209,6 +222,14 @@ describe("Field: Plot Transfer", () => {
       assertFieldHas(ANVIL_ADDR_2, initialPlots[0].pods.minus(harvestableAmount), transferredHarvestable);
       assertFieldHas(BEANSTALK.toHexString(), initialPlots[0].pods.minus(harvestableAmount).plus(initialPlots[1].pods), harvestableAmount);
     });
+
+    test("E: Plot Source", () => {
+      const transferredAmount = initialPlots[0].pods.div(BigInt.fromI32(3));
+      const transferredIndex = initialPlots[0].plotEnd.minus(transferredAmount);
+      transferPlot(ANVIL_ADDR_1, ANVIL_ADDR_2, transferredIndex, transferredAmount);
+      assert.fieldEquals("Plot", initialPlots[0].plotStart.toString(), "source", "SOW");
+      assert.fieldEquals("Plot", transferredIndex.toString(), "source", "TRANSFER");
+    });
   });
 
   // Transfers the middle third of the plot
@@ -263,17 +284,14 @@ describe("Field: Plot Transfer", () => {
       assertFieldHas(ANVIL_ADDR_2, transferredHarvestable, transferredHarvestable);
       assertFieldHas(BEANSTALK.toHexString(), initialPlots[0].pods.plus(initialPlots[1].pods).minus(harvestableAmount), harvestableAmount);
     });
-  });
 
-  // Unclear whether tests like this are actually necessary
-  // describe("Invalid Transfers", () => {
-  //   test("Too Many", () => {
-  //     // Try to send 1/10^6 more pods.
-  //     handlePlotTransfer(createPlotTransferEvent(ANVIL_ADDR_1, ANVIL_ADDR_2, initialPlots[0].plotStart, initialPlots[0].pods.plus(BigInt.fromI32(1))));
-  //   });
-  //   test("Unowned Plot", () => {
-  //     // Try to send someone else's plot
-  //     handlePlotTransfer(createPlotTransferEvent(ANVIL_ADDR_2, ANVIL_ADDR_1, initialPlots[0].plotStart, initialPlots[0].pods));
-  //   });
-  // });
+    test("M: Plot Source", () => {
+      const transferredAmount = initialPlots[0].pods.div(BigInt.fromI32(3));
+      const transferredIndex = initialPlots[0].plotStart.plus(transferredAmount);
+      transferPlot(ANVIL_ADDR_1, ANVIL_ADDR_2, transferredIndex, transferredAmount);
+      assert.fieldEquals("Plot", initialPlots[0].plotStart.toString(), "source", "SOW");
+      assert.fieldEquals("Plot", transferredIndex.toString(), "source", "TRANSFER");
+      assert.fieldEquals("Plot", transferredIndex.plus(transferredAmount).toString(), "source", "SOW");
+    });
+  });
 });

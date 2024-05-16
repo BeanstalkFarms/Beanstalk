@@ -10,19 +10,19 @@ export function loadPlot(diamondAddress: Address, index: BigInt): Plot {
     plot = new Plot(index.toString());
     plot.field = diamondAddress.toHexString();
     plot.farmer = ADDRESS_ZERO.toHexString();
-    plot.source = "SOW"; // Assume new plots come from sowing
+    plot.source = "SOW"; // Should be overwritten in case of a transfer creating a new plot
     plot.season = 0;
     plot.creationHash = "";
     plot.createdAt = ZERO_BI;
     plot.updatedAt = ZERO_BI;
+    plot.updatedAtBlock = ZERO_BI;
     plot.index = index;
-    plot.beans = ZERO_BI;
     plot.pods = ZERO_BI;
-    plot.sownPods = ZERO_BI;
-    plot.temperature = 0;
+    plot.beansPerPod = ZERO_BI;
     plot.harvestablePods = ZERO_BI;
     plot.harvestedPods = ZERO_BI;
     plot.fullyHarvested = false;
+    plot.internalUseOnly = "";
     plot.save();
 
     let field = loadField(diamondAddress);

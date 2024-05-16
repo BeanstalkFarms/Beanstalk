@@ -28,7 +28,6 @@ import {
 } from "../generated/schema";
 import { ZERO_BI } from "../../subgraph-core/utils/Decimals";
 import { loadFarmer } from "./utils/Farmer";
-import { loadPlot } from "./utils/Plot";
 import { loadPodFill } from "./utils/PodFill";
 import { createHistoricalPodListing, loadPodListing } from "./utils/PodListing";
 import {
