@@ -304,7 +304,6 @@ contract Weather is Sun {
         );
         s.plenty += amountOut;
         rewardSop(wellDeltaB.well, amountOut);
-        // TODO: emit events, but because we have multiple wells, perhaps we need an event per well, and a separate event for harvest pods.
         emit SeasonOfPlentyWell(s.season.current, wellDeltaB.well, address(sopToken), amountOut);
     }
 
@@ -327,7 +326,7 @@ contract Weather is Sun {
     // change this function to make it more efficient based on feedback.
     function calculateSopPerWell(
         WellDeltaB[] memory wellDeltaBs
-    ) public view returns (WellDeltaB[] memory) {
+    ) public pure returns (WellDeltaB[] memory) {
         uint256 totalPositiveDeltaB = 0;
         uint256 totalNegativeDeltaB = 0;
         uint256 positiveDeltaBCount = 0;
@@ -364,10 +363,7 @@ contract Weather is Sun {
         uint256 cumulativeTotal;
         uint256 shaveToLevel;
 
-        uint256[] memory reductionAmounts = new uint256[](wellDeltaBs.length);
-
         for (uint256 i = 0; i <= positiveDeltaBCount; i++) {
-            console.log("i: ", i);
             if (positiveDeltaBCount == 1 || i == 0) {
                 // reduce enough to equal the negative deltaB
                 if (positiveDeltaBCount == 1) {
@@ -385,11 +381,10 @@ contract Weather is Sun {
                     cumulativeTotal.add(diffToPrevious.mul(i)) >= shaveOff ||
                     i == positiveDeltaBCount
                 ) {
-                    // we have enough to shave off using the already processed wells
-                    // no need to dip into this one we're currently processing
-                    // just need to calculate what the shave-to level is
+                    // There is enough to shave off using the already processed wells
+                    // No need to dip into this one currently processing
                     uint256 remaining = shaveOff - cumulativeTotal;
-                    // this remaining needs to be distributed equally taken from all the wells processed
+                    // The remaining needs to be distributed equally taken from all the wells processed
                     // this proportional reduction can be used to subtract from the current well deltaB and find the shave-to level
                     shaveToLevel = uint(wellDeltaBs[i - 1].deltaB) - remaining.div(i);
                     break;
@@ -399,18 +394,11 @@ contract Weather is Sun {
             }
         }
 
-        console.log("shaveToLevel: ", shaveToLevel);
-
         // return the amount of beans that need to be flooded per well
         for (uint256 i = 0; i < positiveDeltaBCount; i++) {
-            // reductionAmounts[i] = wellDeltaBs.deltaB[i] > int256(shaveToLevel)
-            //     ? uint256(wellDeltaBs.deltaB[i]) - shaveToLevel
-            //     : 0;
             wellDeltaBs[i].reductionAmount = wellDeltaBs[i].deltaB > int256(shaveToLevel)
                 ? uint256(wellDeltaBs[i].deltaB) - shaveToLevel
                 : 0;
-
-            console.log("setting up final reductionAmounts[i]: ", wellDeltaBs[i].reductionAmount);
         }
         return wellDeltaBs;
     }
