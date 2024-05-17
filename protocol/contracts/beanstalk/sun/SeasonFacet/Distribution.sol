@@ -151,6 +151,13 @@ contract Distribution is Receiving {
     }
 
     /**
+     * @notice Gets the current set of ShipmentRoutes.
+     */
+    function getShipmentRoutes() public view returns (Storage.ShipmentRoute[] memory) {
+        return s.shipmentRoutes;
+    }
+
+    /**
      * @notice Replaces the entire set of ShipmentRoutes with a new set.
      * @dev Changes take effect immediately and will be seen at the next sunrise mint.
      */
