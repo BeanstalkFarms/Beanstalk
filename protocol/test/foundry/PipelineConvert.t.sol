@@ -1065,20 +1065,21 @@ contract PipelineConvertTest is TestHelper {
         assertEq(amountInDirectionOfPeg, 0);
     }
 
-    function testCalculateStalkPenaltyUpwardsToZero() public {
+    function testCalculateStalkPenaltyUpwardsToZero(uint256 amount) public {
+        amount = bound(amount, 1, 1e8);
         addEthToWell(users[1], 1 ether);
         // Update the pump so that eth added above is reflected.
         updateMockPumpUsingWellReserves(beanEthWell);
 
         LibConvert.DeltaBStorage memory dbs;
-        dbs.beforeOverallDeltaB = -100;
+        dbs.beforeOverallDeltaB = -int256(amount);
         dbs.afterOverallDeltaB = 0;
-        dbs.beforeInputTokenDeltaB = -100;
+        dbs.beforeInputTokenDeltaB = -int256(amount);
         dbs.afterInputTokenDeltaB = 0;
         dbs.beforeOutputTokenDeltaB = 0;
         dbs.afterOutputTokenDeltaB = 0;
-        uint256 bdvConverted = 100;
-        uint256 overallConvertCapacity = 100;
+        uint256 bdvConverted = amount;
+        uint256 overallConvertCapacity = amount;
         address inputToken = beanEthWell;
         address outputToken = C.BEAN;
 
@@ -1092,17 +1093,18 @@ contract PipelineConvertTest is TestHelper {
         assertEq(penalty, 0);
     }
 
-    function testCalculateConvertCapacityPenalty() public {
+    function testCalculateConvertCapacityPenalty(uint256 amount) public {
+        amount = bound(amount, 1, 1e8);
         addEthToWell(users[1], 1 ether);
         // Update the pump so that eth added above is reflected.
         updateMockPumpUsingWellReserves(beanEthWell);
 
-        uint256 overallCappedDeltaB = 100;
-        uint256 overallAmountInDirectionOfPeg = 100;
+        uint256 overallCappedDeltaB = amount;
+        uint256 overallAmountInDirectionOfPeg = amount;
         address inputToken = beanEthWell;
-        uint256 inputTokenAmountInDirectionOfPeg = 100;
+        uint256 inputTokenAmountInDirectionOfPeg = amount;
         address outputToken = C.BEAN;
-        uint256 outputTokenAmountInDirectionOfPeg = 100;
+        uint256 outputTokenAmountInDirectionOfPeg = amount;
         (uint256 penalty, , , ) = LibConvert.calculateConvertCapacityPenalty(
             overallCappedDeltaB,
             overallAmountInDirectionOfPeg,
@@ -1115,11 +1117,11 @@ contract PipelineConvertTest is TestHelper {
 
         // test with zero capped deltaB
         overallCappedDeltaB = 0;
-        overallAmountInDirectionOfPeg = 100;
+        overallAmountInDirectionOfPeg = amount;
         inputToken = beanEthWell;
-        inputTokenAmountInDirectionOfPeg = 100;
+        inputTokenAmountInDirectionOfPeg = amount;
         outputToken = C.BEAN;
-        outputTokenAmountInDirectionOfPeg = 100;
+        outputTokenAmountInDirectionOfPeg = amount;
         (penalty, , , ) = LibConvert.calculateConvertCapacityPenalty(
             overallCappedDeltaB,
             overallAmountInDirectionOfPeg,
@@ -1128,12 +1130,15 @@ contract PipelineConvertTest is TestHelper {
             outputToken,
             outputTokenAmountInDirectionOfPeg
         );
-        assertEq(penalty, 100);
+        assertEq(penalty, amount);
     }
 
-    function testCalculateConvertCapacityPenaltyZeroOverallAmountInDirectionOfPeg() public {
+    function testCalculateConvertCapacityPenaltyZeroOverallAmountInDirectionOfPeg(
+        uint256 amount
+    ) public view {
+        amount = bound(amount, 1, 1e8);
         // test with zero overall amount in direction of peg
-        uint256 overallCappedDeltaB = 100;
+        uint256 overallCappedDeltaB = amount;
         uint256 overallAmountInDirectionOfPeg = 0;
         address inputToken = beanEthWell;
         uint256 inputTokenAmountInDirectionOfPeg = 0;
@@ -1150,7 +1155,8 @@ contract PipelineConvertTest is TestHelper {
         assertEq(penalty, 0);
     }
 
-    function testOnePositivePoolOneNegativeZeroOverallDeltaB() public {
+    function testOnePositivePoolOneNegativeZeroOverallDeltaB(uint256 amount) public view {
+        amount = bound(amount, 1, 1e8);
         uint256 overallCappedDeltaB = 0;
         uint256 overallAmountInDirectionOfPeg = 0;
         address inputToken = beanEthWell;
@@ -1170,7 +1176,7 @@ contract PipelineConvertTest is TestHelper {
         overallCappedDeltaB = 0;
         overallAmountInDirectionOfPeg = 0;
         inputToken = beanEthWell;
-        inputTokenAmountInDirectionOfPeg = 100;
+        inputTokenAmountInDirectionOfPeg = amount;
         outputToken = C.BEAN;
         outputTokenAmountInDirectionOfPeg = 0;
         (penalty, , , ) = LibConvert.calculateConvertCapacityPenalty(
@@ -1181,15 +1187,16 @@ contract PipelineConvertTest is TestHelper {
             outputToken,
             outputTokenAmountInDirectionOfPeg
         );
-        assertEq(penalty, 100);
+        assertEq(penalty, amount);
     }
 
-    function testCalculateConvertCapacityPenaltyCapZeroInputToken() public {
+    function testCalculateConvertCapacityPenaltyCapZeroInputToken(uint256 amount) public view {
+        amount = bound(amount, 1, 1e8);
         // test with input token zero convert capacity
-        uint256 overallCappedDeltaB = 100;
-        uint256 overallAmountInDirectionOfPeg = 100;
+        uint256 overallCappedDeltaB = amount;
+        uint256 overallAmountInDirectionOfPeg = amount;
         address inputToken = beanEthWell;
-        uint256 inputTokenAmountInDirectionOfPeg = 100;
+        uint256 inputTokenAmountInDirectionOfPeg = amount;
         address outputToken = C.BEAN;
         uint256 outputTokenAmountInDirectionOfPeg = 0;
         (uint256 penalty, , , ) = LibConvert.calculateConvertCapacityPenalty(
@@ -1200,17 +1207,18 @@ contract PipelineConvertTest is TestHelper {
             outputToken,
             outputTokenAmountInDirectionOfPeg
         );
-        assertEq(penalty, 100);
+        assertEq(penalty, amount);
     }
 
-    function testCalculateConvertCapacityPenaltyCapZeroOutputToken() public {
+    function testCalculateConvertCapacityPenaltyCapZeroOutputToken(uint256 amount) public view {
+        amount = bound(amount, 1, 1e8);
         // test with input token zero convert capacity
-        uint256 overallCappedDeltaB = 100;
-        uint256 overallAmountInDirectionOfPeg = 100;
+        uint256 overallCappedDeltaB = amount;
+        uint256 overallAmountInDirectionOfPeg = amount;
         address inputToken = C.BEAN;
         uint256 inputTokenAmountInDirectionOfPeg = 0;
         address outputToken = beanEthWell;
-        uint256 outputTokenAmountInDirectionOfPeg = 100;
+        uint256 outputTokenAmountInDirectionOfPeg = amount;
         (uint256 penalty, , , ) = LibConvert.calculateConvertCapacityPenalty(
             overallCappedDeltaB,
             overallAmountInDirectionOfPeg,
@@ -1219,37 +1227,11 @@ contract PipelineConvertTest is TestHelper {
             outputToken,
             outputTokenAmountInDirectionOfPeg
         );
-        assertEq(penalty, 100);
+        assertEq(penalty, amount);
     }
 
     /*
-    function testCalculateStalkPenaltyUpwardsToZero() public {
-        int256 beforeOverallDeltaB = -100;
-        int256 afterOverallDeltaB = 0;
-        int256 beforeInputTokenDeltaB = -100;
-        int256 beforeOutputTokenDeltaB = 0;
-        int256 afterInputTokenDeltaB = 0;
-        int256 afterOutputTokenDeltaB = 0;
-        uint256 bdvConverted = 100;
-        uint256 overallCappedDeltaB = 100;
-        address inputToken = beanEthWell;
-        address outputToken = C.BEAN;
-
-        uint256 penalty = LibConvert.calculateStalkPenalty(
-            beforeOverallDeltaB,
-            afterOverallDeltaB,
-            beforeInputTokenDeltaB,
-            beforeOutputTokenDeltaB,
-            afterInputTokenDeltaB,
-            afterOutputTokenDeltaB,
-            bdvConverted,
-            overallCappedDeltaB,
-            inputToken,
-            outputToken
-        );
-        assertEq(penalty, 0);
-    }
-
+    // These tests broke when calculateStalkPenalty had more variables added, would be nice to update but should already be covered by tests above.
     function testCalculateStalkPenaltyUpwardsNonZero() public {
         int256 beforeOverallDeltaB = -200;
         int256 afterOverallDeltaB = -100;
