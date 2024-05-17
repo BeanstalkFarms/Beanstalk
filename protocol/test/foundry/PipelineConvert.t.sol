@@ -81,6 +81,17 @@ contract PipelineConvertTest is TestHelper {
         uint256 beforeOverallCapacity;
     }
 
+    struct BeanToBeanTestData {
+        uint256 lpAmountBefore;
+        int256 calculatedDeltaBAfter;
+        uint256 lpAmountOut;
+        uint256 lpAmountAfter;
+        uint256 bdvOfDepositedLp;
+        uint256 calculatedStalkPenalty;
+        int96 calculatedStem;
+        uint256 grownStalkForDeposit;
+    }
+
     // Event defs
 
     event Convert(
@@ -880,12 +891,14 @@ contract PipelineConvertTest is TestHelper {
         );
     }
 
-    // test bean to bean convert, but deltaB is affected against them and there is convert power left in the block
-    // because the deltaB of "bean" is not affected, no stalk loss should occur
-    /*function testBeanToBeanConvertAffectDeltaB(uint256 amount) public {
+    /**
+     * @notice test bean to bean convert, but deltaB is affected against them and there is convert power left in the block
+     *
+     * */
+    function testBeanToBeanConvertAffectDeltaB(uint256 amount) public {
         amount = bound(amount, 1000e6, 1000e6);
 
-        int96 stem = beanToLPDepositSetup(amount, users[1]);
+        int96 stem = depositBeanAndPassGermination(amount, users[1]);
         int96[] memory stems = new int96[](1);
         stems[0] = stem;
         uint256[] memory amounts = new uint256[](1);
@@ -902,8 +915,46 @@ contract PipelineConvertTest is TestHelper {
         // move foward 10 seasons so we have grown stalk
         season.siloSunrise(10);
 
-        // store stalk before
-        uint256 beforeStalk = bs.balanceOfStalk(users[1]) + bs.grownStalkForDeposit(users[1], C.BEAN, stem);
+        BeanToBeanTestData memory td;
+        td.grownStalkForDeposit = bs.grownStalkForDeposit(users[1], C.BEAN, stem);
+
+        // calculate what the stalk penalty would be
+        IMockFBeanstalk.DeltaBStorage memory dbs;
+
+        // dbs before/after input/output token deltaB should all be zero/unchanged (because bean<>bean convert)
+        // however overall deltaB will be be affected by adding eth to the well, so total affect
+        // on deltaB needs to be calculated
+
+        // store total amount of bean:eth well LP token before convert
+        td.lpAmountBefore = IERC20(beanEthWell).totalSupply();
+        (td.calculatedDeltaBAfter, td.lpAmountOut) = calculateDeltaBForWellAfterAddingNonBean(
+            ethAmount,
+            beanEthWell
+        );
+        td.lpAmountAfter = td.lpAmountBefore.add(td.lpAmountOut);
+        dbs.beforeOverallDeltaB = bs.overallCurrentDeltaB();
+        // calculate scaled overall deltaB, based on just the well affected
+        dbs.afterOverallDeltaB = LibWellMinting.scaledDeltaB(
+            td.lpAmountBefore,
+            td.lpAmountAfter,
+            td.calculatedDeltaBAfter
+        );
+        td.bdvOfDepositedLp = bs.bdv(beanEthWell, td.lpAmountBefore);
+
+        (td.calculatedStalkPenalty, , , ) = bs.calculateStalkPenalty(
+            dbs,
+            td.bdvOfDepositedLp,
+            LibConvert.abs(bs.overallCappedDeltaB()), // overall convert capacity
+            C.BEAN,
+            C.BEAN
+        );
+
+        // using stalk penalty, calculate what the new stem should be
+        (td.calculatedStem, ) = bs.calculateStemForTokenFromGrownStalk(
+            C.BEAN,
+            td.grownStalkForDeposit.sub(td.calculatedStalkPenalty),
+            amount
+        );
 
         // make a pipeline call where the only thing it does is return how many beans are in pipeline
         AdvancedPipeCall[] memory extraPipeCalls = new AdvancedPipeCall[](2);
@@ -937,10 +988,12 @@ contract PipelineConvertTest is TestHelper {
             abi.encode(0) // clipboard
         );
 
-        AdvancedFarmCall[] memory farmCalls = createAdvancedFarmCallsFromAdvancedPipeCalls(extraPipeCalls);
+        AdvancedFarmCall[] memory farmCalls = createAdvancedFarmCallsFromAdvancedPipeCalls(
+            extraPipeCalls
+        );
 
         vm.prank(users[1]);
-        convert.pipelineConvert(
+        (int96 outputStem, , , , ) = convert.pipelineConvert(
             C.BEAN, // input token
             stems, // stem
             amounts, // amount
@@ -948,12 +1001,8 @@ contract PipelineConvertTest is TestHelper {
             farmCalls
         );
 
-        // after stalk
-        uint256 afterStalk = bs.balanceOfStalk(users[1]);
-
-        // check that the deltaB is correct
-        assertEq(afterStalk, beforeStalk);
-    }*/
+        assertEq(td.calculatedStem, outputStem);
+    }
 
     // bonus todo: setup a test that reads remaining convert power from block and uses it when determining how much to convert
     // there are already tests that exercise depleting convert power, but might be cool to show how you can use it in a convert
@@ -2057,6 +2106,26 @@ contract PipelineConvertTest is TestHelper {
 
         // add to bean index (no beans out on this one)
         reserves[beanIndex] = reserves[beanIndex].add(beansIn);
+        // get new deltaB
+        deltaB = LibWellMinting.calculateDeltaBFromReserves(well, reserves, 0);
+    }
+
+    function calculateDeltaBForWellAfterAddingNonBean(
+        uint256 amountIn,
+        address well
+    ) public view returns (int256 deltaB, uint256 lpOut) {
+        // get reserves before simulated swap
+        uint256[] memory reserves = IWell(well).getReserves();
+
+        (, uint256 nonBeanIndex) = LibWell.getNonBeanTokenAndIndexFromWell(well);
+        uint256[] memory tokenAmountsIn = new uint256[](2);
+        tokenAmountsIn[0] = 0;
+        tokenAmountsIn[1] = amountIn;
+        lpOut = IWell(well).getAddLiquidityOut(tokenAmountsIn);
+
+        // add eth to reserves to be able to calculate new deltaB
+        reserves[nonBeanIndex] = reserves[nonBeanIndex].add(amountIn);
+
         // get new deltaB
         deltaB = LibWellMinting.calculateDeltaBFromReserves(well, reserves, 0);
     }

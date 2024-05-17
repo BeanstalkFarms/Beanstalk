@@ -416,6 +416,32 @@ contract ConvertFacet is Invariable, ReentrancyGuard {
         return deltaB;
     }
 
+    function calculateStalkPenalty(
+        LibConvert.DeltaBStorage memory dbs,
+        uint256 bdvConverted,
+        uint256 overallConvertCapacity,
+        address inputToken,
+        address outputToken
+    )
+        external
+        view
+        returns (
+            uint256 stalkPenaltyBdv,
+            uint256 overallConvertCapacityUsed,
+            uint256 inputTokenAmountUsed,
+            uint256 outputTokenAmountUsed
+        )
+    {
+        return
+            LibConvert.calculateStalkPenalty(
+                dbs,
+                bdvConverted,
+                overallConvertCapacity,
+                inputToken,
+                outputToken
+            );
+    }
+
     /**
      * @param calls The advanced farm calls to execute.
      */

@@ -44,6 +44,15 @@ interface IMockFBeanstalk {
         uint256 endTime;
     }
 
+    struct DeltaBStorage {
+        int256 beforeInputTokenDeltaB;
+        int256 afterInputTokenDeltaB;
+        int256 beforeOutputTokenDeltaB;
+        int256 afterOutputTokenDeltaB;
+        int256 beforeOverallDeltaB;
+        int256 afterOverallDeltaB;
+    }
+
     struct Facet {
         address facetAddress;
         bytes4[] functionSelectors;
@@ -519,6 +528,22 @@ interface IMockFBeanstalk {
         bool aboveQ,
         uint256 L2SRState
     ) external;
+
+    function calculateStalkPenalty(
+        DeltaBStorage memory dbs,
+        uint256 bdvConverted,
+        uint256 overallConvertCapacity,
+        address inputToken,
+        address outputToken
+    )
+        external
+        view
+        returns (
+            uint256 stalkPenaltyBdv,
+            uint256 overallConvertCapacityUsed,
+            uint256 inputTokenAmountUsed,
+            uint256 outputTokenAmountUsed
+        );
 
     function calculateStemForTokenFromGrownStalk(
         address token,

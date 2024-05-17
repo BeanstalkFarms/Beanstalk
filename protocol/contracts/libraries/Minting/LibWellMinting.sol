@@ -271,6 +271,7 @@ library LibWellMinting {
 
     /*
      * @notice returns the scaled deltaB, based on LP supply before and after convert
+     * TODO: expose this function to the public?
      */
     function scaledDeltaB(
         uint256 beforeLpTokenSupply,
