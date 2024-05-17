@@ -37,14 +37,6 @@ contract SiloGettersFacet is ReentrancyGuard {
         uint32 lastSop;
         // `account` balance of Roots when it started raining.
         uint256 roots;
-        // The global Plenty per Root at the last Season in which `account`
-        // updated their Silo.
-        // uint256 plentyPerRoot;
-        // `account` balance of unclaimed Bean:3Crv from Seasons of Plenty.
-        // uint256 plenty;
-        // code review note: would have been great to return a mapping of Account.SeasonOfPlenty, but that spits out this error:
-        // Types containing (nested) mappings can only be parameters or return variables of internal or library functions.
-        // therefore, we're returning 2 separate mappings.
         FarmerSops[] farmerSops;
     }
 
