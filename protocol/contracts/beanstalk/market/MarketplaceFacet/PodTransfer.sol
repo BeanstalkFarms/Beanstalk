@@ -23,7 +23,7 @@ contract PodTransfer is ReentrancyGuard {
     event PodApproval(
         address indexed owner,
         address indexed spender,
-        uint256 fieldIndex,
+        uint256 fieldId,
         uint256 amount
     );
 
@@ -34,9 +34,9 @@ contract PodTransfer is ReentrancyGuard {
     function allowancePods(
         address owner,
         address spender,
-        uint256 fieldIndex
+        uint256 fieldId
     ) public view returns (uint256) {
-        return s.accounts[owner].fields[fieldIndex].podAllowances[spender];
+        return s.accounts[owner].fields[fieldId].podAllowances[spender];
     }
 
     /**
@@ -46,65 +46,60 @@ contract PodTransfer is ReentrancyGuard {
     function _transferPlot(
         address from,
         address to,
-        uint256 fieldIndex,
+        uint256 fieldId,
         uint256 index,
         uint256 start,
         uint256 amount
     ) internal {
         require(from != to, "Field: Cannot transfer Pods to oneself.");
-        insertPlot(to, fieldIndex, index + start, amount);
-        removePlot(from, fieldIndex, index, start, amount + start);
+        insertPlot(to, fieldId, index + start, amount);
+        removePlot(from, fieldId, index, start, amount + start);
         emit PlotTransfer(from, to, index + start, amount);
     }
 
-    function insertPlot(
-        address account,
-        uint256 fieldIndex,
-        uint256 index,
-        uint256 amount
-    ) internal {
-        s.accounts[account].fields[fieldIndex].plots[index] = amount;
+    function insertPlot(address account, uint256 fieldId, uint256 index, uint256 amount) internal {
+        s.accounts[account].fields[fieldId].plots[index] = amount;
     }
 
     function removePlot(
         address account,
-        uint256 fieldIndex,
+        uint256 fieldId,
         uint256 index,
         uint256 start,
         uint256 end
     ) internal {
-        uint256 amountAfterEnd = s.accounts[account].fields[fieldIndex].plots[index] - end;
+        uint256 amountAfterEnd = s.accounts[account].fields[fieldId].plots[index] - end;
 
         if (start > 0) {
-            s.accounts[account].fields[fieldIndex].plots[index] = start;
+            s.accounts[account].fields[fieldId].plots[index] = start;
         } else {
-            delete s.accounts[account].fields[fieldIndex].plots[index];
+            delete s.accounts[account].fields[fieldId].plots[index];
         }
 
         if (amountAfterEnd > 0) {
-            s.accounts[account].fields[fieldIndex].plots[index + end] = amountAfterEnd;
+            s.accounts[account].fields[fieldId].plots[index + end] = amountAfterEnd;
         }
     }
 
     function decrementAllowancePods(
         address owner,
         address spender,
-        uint256 fieldIndex,
+        uint256 fieldId,
         uint256 amount
     ) internal {
-        uint256 currentAllowance = allowancePods(owner, spender, fieldIndex);
+        uint256 currentAllowance = allowancePods(owner, spender, fieldId);
         if (currentAllowance < amount) {
             revert("Field: Insufficient approval.");
         }
-        setAllowancePods(owner, spender, fieldIndex, currentAllowance - amount);
+        setAllowancePods(owner, spender, fieldId, currentAllowance - amount);
     }
 
     function setAllowancePods(
         address owner,
         address spender,
-        uint256 fieldIndex,
+        uint256 fieldId,
         uint256 amount
     ) internal {
-        s.accounts[owner].fields[fieldIndex].podAllowances[spender] = amount;
+        s.accounts[owner].fields[fieldId].podAllowances[spender] = amount;
     }
 }

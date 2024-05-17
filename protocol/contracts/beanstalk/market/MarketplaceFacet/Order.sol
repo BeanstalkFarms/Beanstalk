@@ -15,7 +15,7 @@ import {C} from "contracts/C.sol";
 contract Order is Listing {
     struct PodOrder {
         address orderer;
-        uint256 fieldIndex;
+        uint256 fieldId;
         uint24 pricePerPod;
         uint256 maxPlaceInLine;
         uint256 minFillAmount;
@@ -25,7 +25,7 @@ contract Order is Listing {
         address indexed orderer,
         bytes32 id,
         uint256 beanAmount,
-        uint256 fieldIndex,
+        uint256 fieldId,
         uint24 pricePerPod,
         uint256 maxPlaceInLine,
         uint256 minFillAmount
@@ -35,14 +35,14 @@ contract Order is Listing {
         address indexed filler,
         address indexed orderer,
         bytes32 id,
-        uint256 fieldIndex,
+        uint256 fieldId,
         uint256 index,
         uint256 start,
         uint256 podAmount,
         uint256 costInBeans
     );
 
-    event PodOrderCancelled(address indexed orderer, uint256 fieldIndex, bytes32 id);
+    event PodOrderCancelled(address indexed orderer, bytes32 id);
 
     /*
      * Create
@@ -63,7 +63,7 @@ contract Order is Listing {
             podOrder.orderer,
             id,
             beanAmount,
-            podOrder.fieldIndex,
+            podOrder.fieldId,
             podOrder.pricePerPod,
             podOrder.maxPlaceInLine,
             podOrder.minFillAmount
@@ -73,6 +73,7 @@ contract Order is Listing {
     /*
      * Fill
      * @param index The index of the plot in the order.
+     * @dev Verification that sender == filler should be handled before calling this function.
      */
     function _fillPodOrder(
         PodOrder calldata podOrder,
@@ -87,11 +88,11 @@ contract Order is Listing {
             "Marketplace: Fill must be >= minimum amount."
         );
         require(
-            s.accounts[filler].fields[podOrder.fieldIndex].plots[index] >= (start + podAmount),
+            s.accounts[filler].fields[podOrder.fieldId].plots[index] >= (start + podAmount),
             "Marketplace: Invalid Plot."
         );
         require(
-            (index + start + podAmount - s.fields[podOrder.fieldIndex].harvestable) <=
+            (index + start + podAmount - s.fields[podOrder.fieldId].harvestable) <=
                 podOrder.maxPlaceInLine,
             "Marketplace: Plot too far in line."
         );
@@ -104,19 +105,21 @@ contract Order is Listing {
 
         LibTransfer.sendToken(C.bean(), costInBeans, filler, mode);
 
-        if (s.podListings[_getListingId(podOrder.fieldIndex, index)] == true) {
-            _cancelPodListing(filler, podOrder.fieldIndex, index);
+        if (s.podListings[podOrder.fieldId][index] != bytes32(0)) {
+            _cancelPodListing(filler, podOrder.fieldId, index);
         }
 
-        _transferPlot(filler, podOrder.orderer, podOrder.fieldIndex, index, start, podAmount);
+        _transferPlot(filler, podOrder.orderer, podOrder.fieldId, index, start, podAmount);
 
-        if (s.podOrders[id] == 0) delete s.podOrders[id];
+        if (s.podOrders[id] == 0) {
+            delete s.podOrders[id];
+        }
 
         emit PodOrderFilled(
             filler,
             podOrder.orderer,
             id,
-            podOrder.fieldIndex,
+            podOrder.fieldId,
             index,
             start,
             podAmount,
@@ -132,7 +135,7 @@ contract Order is Listing {
         uint256 amountBeans = s.podOrders[id];
         LibTransfer.sendToken(C.bean(), amountBeans, podOrder.orderer, mode);
         delete s.podOrders[id];
-        emit PodOrderCancelled(podOrder.orderer, podOrder.fieldIndex, id);
+        emit PodOrderCancelled(podOrder.orderer, id);
     }
 
     /*
@@ -144,7 +147,7 @@ contract Order is Listing {
             keccak256(
                 abi.encodePacked(
                     podOrder.orderer,
-                    podOrder.fieldIndex,
+                    podOrder.fieldId,
                     podOrder.pricePerPod,
                     podOrder.maxPlaceInLine,
                     podOrder.minFillAmount

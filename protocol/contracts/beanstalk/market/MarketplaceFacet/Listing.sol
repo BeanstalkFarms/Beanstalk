@@ -14,7 +14,7 @@ import {LibTransfer} from "contracts/libraries/Token/LibTransfer.sol";
 contract Listing is PodTransfer {
     struct PodListing {
         address lister;
-        uint256 fieldIndex;
+        uint256 fieldId;
         uint256 index;
         uint256 start;
         uint256 podAmount;
@@ -26,7 +26,7 @@ contract Listing is PodTransfer {
 
     event PodListingCreated(
         address indexed lister,
-        uint256 fieldIndex,
+        uint256 fieldId,
         uint256 index,
         uint256 start,
         uint256 podAmount,
@@ -39,43 +39,43 @@ contract Listing is PodTransfer {
     event PodListingFilled(
         address indexed filler,
         address indexed lister,
-        uint256 fieldIndex,
+        uint256 fieldId,
         uint256 index,
         uint256 start,
         uint256 podAmount,
         uint256 costInBeans
     );
 
-    event PodListingCancelled(address indexed lister, uint256 fieldIndex, uint256 index);
+    event PodListingCancelled(address indexed lister, uint256 fieldId, uint256 index);
 
     /*
      * Create
      */
 
     function _createPodListing(PodListing calldata podListing) internal {
-        uint256 plotSize = s.accounts[podListing.lister].fields[podListing.fieldIndex].plots[
+        uint256 plotSize = s.accounts[podListing.lister].fields[podListing.fieldId].plots[
             podListing.index
         ];
 
+        require(podListing.podAmount > 0, "Marketplace: Invalid Amount.");
         require(
-            plotSize >= (podListing.start + podListing.podAmount) && podListing.podAmount > 0,
-            "Marketplace: Invalid Plot/Amount."
+            plotSize >= (podListing.start + podListing.podAmount),
+            "Marketplace: Invalid Plot."
         );
         require(podListing.pricePerPod > 0, "Marketplace: Pod price must be greater than 0.");
         require(
-            s.fields[podListing.fieldIndex].harvestable <= podListing.maxHarvestableIndex,
+            s.fields[podListing.fieldId].harvestable <= podListing.maxHarvestableIndex,
             "Marketplace: Expired."
         );
 
-        bytes32 id = _getListingId(podListing.fieldIndex, podListing.index);
-        if (s.podListings[id] == true)
-            _cancelPodListing(podListing.lister, podListing.fieldIndex, podListing.index);
+        if (s.podListings[podListing.fieldId][podListing.index] != bytes32(0))
+            _cancelPodListing(podListing.lister, podListing.fieldId, podListing.index);
 
-        s.podListings[id] = true;
+        s.podListings[podListing.fieldId][podListing.index] = _hashListing(podListing);
 
         emit PodListingCreated(
             podListing.lister,
-            podListing.fieldIndex,
+            podListing.fieldId,
             podListing.index,
             podListing.start,
             podListing.podAmount,
@@ -95,17 +95,20 @@ contract Listing is PodTransfer {
         address filler,
         uint256 beanPayAmount
     ) internal {
-        bytes32 id = _getListingId(podListing.fieldIndex, podListing.index);
-        require(s.podListings[id] == true, "Marketplace: Listing does not exist.");
-        uint256 plotSize = s.accounts[podListing.lister].fields[podListing.fieldIndex].plots[
+        require(
+            s.podListings[podListing.fieldId][podListing.index] == _hashListing(podListing),
+            "Marketplace: Listing does not exist."
+        );
+        uint256 plotSize = s.accounts[podListing.lister].fields[podListing.fieldId].plots[
             podListing.index
         ];
+        require(podListing.podAmount > 0, "Marketplace: Invalid Amount.");
         require(
-            plotSize >= (podListing.start + podListing.podAmount) && podListing.podAmount > 0,
-            "Marketplace: Invalid Plot/Amount."
+            plotSize >= (podListing.start + podListing.podAmount),
+            "Marketplace: Invalid Plot."
         );
         require(
-            s.fields[podListing.fieldIndex].harvestable <= podListing.maxHarvestableIndex,
+            s.fields[podListing.fieldId].harvestable <= podListing.maxHarvestableIndex,
             "Marketplace: Listing has expired."
         );
 
@@ -124,26 +127,31 @@ contract Listing is PodTransfer {
             podReceiveAmount >= podListing.minFillAmount,
             "Marketplace: Fill must be >= minimum amount."
         );
-        require(
-            podReceiveAmount <= podListing.podAmount,
-            "Marketplace: Not enough pods in Listing."
-        );
 
-        delete s.podListings[id];
+        // Remove old listing and create new listing if necessary.
+        delete s.podListings[podListing.fieldId][podListing.index];
 
-        if (podListing.podAmount > podReceiveAmount) {
-            s.podListings[
-                _getListingId(
-                    podListing.fieldIndex,
-                    podListing.index + podReceiveAmount + podListing.start
+        if (podReceiveAmount < podListing.podAmount) {
+            uint256 newIndex = podListing.index + podReceiveAmount + podListing.start;
+            s.podListings[podListing.fieldId][newIndex] = _hashListing(
+                PodListing(
+                    podListing.lister,
+                    podListing.fieldId,
+                    newIndex,
+                    0,
+                    podListing.podAmount - podReceiveAmount,
+                    podListing.pricePerPod,
+                    podListing.maxHarvestableIndex,
+                    podListing.minFillAmount,
+                    podListing.mode
                 )
-            ] = true;
+            );
         }
 
         emit PodListingFilled(
             filler,
             podListing.lister,
-            podListing.fieldIndex,
+            podListing.fieldId,
             podListing.index,
             podListing.start,
             podReceiveAmount,
@@ -153,7 +161,7 @@ contract Listing is PodTransfer {
         _transferPlot(
             podListing.lister,
             filler,
-            podListing.fieldIndex,
+            podListing.fieldId,
             podListing.index,
             podListing.start,
             podReceiveAmount
@@ -164,22 +172,35 @@ contract Listing is PodTransfer {
      * Cancel
      */
 
-    function _cancelPodListing(address account, uint256 fieldIndex, uint256 index) internal {
+    function _cancelPodListing(address lister, uint256 fieldId, uint256 index) internal {
         require(
-            s.accounts[account].fields[fieldIndex].plots[index] > 0,
+            s.accounts[lister].fields[fieldId].plots[index] > 0,
             "Marketplace: Listing not owned by sender."
         );
 
-        delete s.podListings[_getListingId(fieldIndex, index)];
+        delete s.podListings[fieldId][index];
 
-        emit PodListingCancelled(account, fieldIndex, index);
+        emit PodListingCancelled(lister, fieldId, index);
     }
 
     /*
      * Get
      */
 
-    function _getListingId(uint256 fieldIndex, uint256 index) internal pure returns (bytes32 id) {
-        return keccak256(abi.encodePacked(fieldIndex, index));
+    function _hashListing(PodListing memory podListing) internal pure returns (bytes32 hash) {
+        return
+            keccak256(
+                abi.encodePacked(
+                    podListing.lister,
+                    podListing.fieldId,
+                    podListing.index,
+                    podListing.start,
+                    podListing.podAmount,
+                    podListing.pricePerPod,
+                    podListing.maxHarvestableIndex,
+                    podListing.minFillAmount,
+                    podListing.mode
+                )
+            );
     }
 }

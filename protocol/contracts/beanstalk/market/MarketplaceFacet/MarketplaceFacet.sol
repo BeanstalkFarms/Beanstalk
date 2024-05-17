@@ -45,19 +45,14 @@ contract MarketplaceFacet is Invariable, Order {
 
     // Cancel
     function cancelPodListing(
-        uint256 fieldIndex,
+        uint256 fieldId,
         uint256 index
     ) external payable fundsSafu noNetFlow noSupplyChange {
-        _cancelPodListing(LibTractor._user(), fieldIndex, index);
+        _cancelPodListing(LibTractor._user(), fieldId, index);
     }
 
-    // Get
-    function listingId(uint256 fieldIndex, uint256 index) external pure returns (bytes32 id) {
-        return _getListingId(fieldIndex, index);
-    }
-
-    function podListing(bytes32 id) external view returns (bool) {
-        return s.podListings[id];
+    function podListing(uint256 fieldId, uint256 index) external view returns (bytes32 id) {
+        return s.podListings[fieldId][index];
     }
 
     /*
@@ -112,7 +107,7 @@ contract MarketplaceFacet is Invariable, Order {
     function transferPlot(
         address sender,
         address recipient,
-        uint256 fieldIndex,
+        uint256 fieldId,
         uint256 index,
         uint256 start,
         uint256 end
@@ -121,30 +116,30 @@ contract MarketplaceFacet is Invariable, Order {
             sender != address(0) && recipient != address(0),
             "Field: Transfer to/from 0 address."
         );
-        uint256 amountInPlot = s.accounts[sender].fields[fieldIndex].plots[index];
+        uint256 amountInPlot = s.accounts[sender].fields[fieldId].plots[index];
         require(amountInPlot > 0, "Field: Plot not owned by user.");
         require(end > start && amountInPlot >= end, "Field: Pod range invalid.");
         uint256 transferAmount = end - start;
         if (
             LibTractor._user() != sender &&
-            allowancePods(sender, LibTractor._user(), fieldIndex) != type(uint256).max
+            allowancePods(sender, LibTractor._user(), fieldId) != type(uint256).max
         ) {
-            decrementAllowancePods(sender, LibTractor._user(), fieldIndex, transferAmount);
+            decrementAllowancePods(sender, LibTractor._user(), fieldId, transferAmount);
         }
 
-        if (s.podListings[_getListingId(fieldIndex, index)] == true) {
-            _cancelPodListing(sender, fieldIndex, index);
+        if (s.podListings[fieldId][index] != bytes32(0)) {
+            _cancelPodListing(sender, fieldId, index);
         }
-        _transferPlot(sender, recipient, fieldIndex, index, start, transferAmount);
+        _transferPlot(sender, recipient, fieldId, index, start, transferAmount);
     }
 
     function approvePods(
         address spender,
-        uint256 fieldIndex,
+        uint256 fieldId,
         uint256 amount
     ) external payable fundsSafu noNetFlow noSupplyChange nonReentrant {
         require(spender != address(0), "Field: Pod Approve to 0 address.");
-        setAllowancePods(LibTractor._user(), spender, fieldIndex, amount);
-        emit PodApproval(LibTractor._user(), spender, fieldIndex, amount);
+        setAllowancePods(LibTractor._user(), spender, fieldId, amount);
+        emit PodApproval(LibTractor._user(), spender, fieldId, amount);
     }
 }
