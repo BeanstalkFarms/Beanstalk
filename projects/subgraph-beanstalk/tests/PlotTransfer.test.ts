@@ -108,6 +108,29 @@ describe("Field: Plot Transfer", () => {
       transferPlot(account, account2, initialPlots[0].plotStart, initialPlots[0].pods);
       assert.fieldEquals("Plot", initialPlots[0].plotStart.toString(), "source", "TRANSFER");
     });
+
+    test("F: Marketplace Listing", () => {
+      const fillBeans = beans(7500);
+      createListing_v2(account, initialPlots[0].plotStart, initialPlots[0].pods, ZERO_BI, maxHarvestableIndex);
+      fillListing_v2(account, account2, initialPlots[0].plotStart, ZERO_BI, initialPlots[0].pods, fillBeans);
+
+      const filledBeansPerPod = fillBeans.times(BI_10.pow(6)).div(initialPlots[0].pods).toString();
+      assert.entityCount("Plot", 2);
+      assert.fieldEquals("Plot", initialPlots[0].plotStart.toString(), "beansPerPod", filledBeansPerPod);
+      assert.fieldEquals("Plot", initialPlots[0].plotStart.toString(), "source", "MARKET");
+    });
+
+    test("F: Marketplace Order", () => {
+      const fillBeans = beans(8500);
+      const orderPricePerPod = BigInt.fromString("1234");
+      createOrder_v2(account, orderId, beans(10000), orderPricePerPod, maxHarvestableIndex);
+      fillOrder_v2(account2, account, orderId, initialPlots[0].plotStart, ZERO_BI, initialPlots[0].pods, fillBeans);
+
+      const filledBeansPerPod = fillBeans.times(BI_10.pow(6)).div(initialPlots[0].pods).toString();
+      assert.entityCount("Plot", 2);
+      assert.fieldEquals("Plot", initialPlots[0].plotStart.toString(), "beansPerPod", filledBeansPerPod);
+      assert.fieldEquals("Plot", initialPlots[0].plotStart.toString(), "source", "MARKET");
+    });
   });
 
   // Transfers the first third of the plot
@@ -168,6 +191,37 @@ describe("Field: Plot Transfer", () => {
       transferPlot(account, account2, transferredIndex, transferredAmount);
       assert.fieldEquals("Plot", initialPlots[0].plotStart.toString(), "source", "TRANSFER");
       assert.fieldEquals("Plot", transferredIndex.plus(transferredAmount).toString(), "source", "SOW");
+    });
+
+    test("S: Marketplace Listing", () => {
+      const listingAmount = initialPlots[0].pods.div(BigInt.fromI32(4));
+      const fillBeans = beans(7500);
+      createListing_v2(account, initialPlots[0].plotStart, listingAmount, ZERO_BI, maxHarvestableIndex);
+      fillListing_v2(account, account2, initialPlots[0].plotStart, ZERO_BI, listingAmount, fillBeans);
+
+      const initialBeansPerPod = BI_10.pow(6).div(BigInt.fromU32(temperature)).toString();
+      const filledBeansPerPod = fillBeans.times(BI_10.pow(6)).div(listingAmount).toString();
+      assert.entityCount("Plot", 3);
+      assert.fieldEquals("Plot", initialPlots[0].plotStart.toString(), "beansPerPod", filledBeansPerPod);
+      assert.fieldEquals("Plot", initialPlots[0].plotStart.toString(), "source", "MARKET");
+      assert.fieldEquals("Plot", initialPlots[0].plotStart.plus(listingAmount).toString(), "beansPerPod", initialBeansPerPod);
+      assert.fieldEquals("Plot", initialPlots[0].plotStart.plus(listingAmount).toString(), "source", "SOW");
+    });
+
+    test("S: Marketplace Order", () => {
+      const fillAmount = initialPlots[0].pods.div(BigInt.fromI32(4));
+      const fillBeans = beans(8500);
+      const orderPricePerPod = BigInt.fromString("1234");
+      createOrder_v2(account, orderId, beans(10000), orderPricePerPod, maxHarvestableIndex);
+      fillOrder_v2(account2, account, orderId, initialPlots[0].plotStart, ZERO_BI, fillAmount, fillBeans);
+
+      const initialBeansPerPod = BI_10.pow(6).div(BigInt.fromU32(temperature)).toString();
+      const filledBeansPerPod = fillBeans.times(BI_10.pow(6)).div(fillAmount).toString();
+      assert.entityCount("Plot", 3);
+      assert.fieldEquals("Plot", initialPlots[0].plotStart.toString(), "beansPerPod", filledBeansPerPod);
+      assert.fieldEquals("Plot", initialPlots[0].plotStart.toString(), "source", "MARKET");
+      assert.fieldEquals("Plot", initialPlots[0].plotStart.plus(fillAmount).toString(), "beansPerPod", initialBeansPerPod);
+      assert.fieldEquals("Plot", initialPlots[0].plotStart.plus(fillAmount).toString(), "source", "SOW");
     });
   });
 
@@ -233,6 +287,39 @@ describe("Field: Plot Transfer", () => {
       transferPlot(account, account2, transferredIndex, transferredAmount);
       assert.fieldEquals("Plot", initialPlots[0].plotStart.toString(), "source", "SOW");
       assert.fieldEquals("Plot", transferredIndex.toString(), "source", "TRANSFER");
+    });
+
+    test("E: Marketplace Listing", () => {
+      const listingStart = initialPlots[0].pods.div(BigInt.fromI32(3));
+      const listingAmount = initialPlots[0].pods.minus(listingStart);
+      const fillBeans = beans(5500);
+      createListing_v2(account, initialPlots[0].plotStart, listingAmount, listingStart, maxHarvestableIndex);
+      fillListing_v2(account, account2, initialPlots[0].plotStart, listingStart, listingAmount, fillBeans);
+
+      const initialBeansPerPod = BI_10.pow(6).div(BigInt.fromU32(temperature)).toString();
+      const filledBeansPerPod = fillBeans.times(BI_10.pow(6)).div(listingAmount).toString();
+      assert.entityCount("Plot", 3);
+      assert.fieldEquals("Plot", initialPlots[0].plotStart.toString(), "beansPerPod", initialBeansPerPod);
+      assert.fieldEquals("Plot", initialPlots[0].plotStart.toString(), "source", "SOW");
+      assert.fieldEquals("Plot", initialPlots[0].plotStart.plus(listingStart).toString(), "beansPerPod", filledBeansPerPod);
+      assert.fieldEquals("Plot", initialPlots[0].plotStart.plus(listingStart).toString(), "source", "MARKET");
+    });
+
+    test("E: Marketplace Order", () => {
+      const fillStart = initialPlots[0].pods.div(BigInt.fromI32(3));
+      const fillAmount = initialPlots[0].pods.minus(fillStart);
+      const fillBeans = beans(5500);
+      const orderPricePerPod = BigInt.fromString("1234");
+      createOrder_v2(account, orderId, beans(10000), orderPricePerPod, maxHarvestableIndex);
+      fillOrder_v2(account2, account, orderId, initialPlots[0].plotStart, fillStart, fillAmount, fillBeans);
+
+      const initialBeansPerPod = BI_10.pow(6).div(BigInt.fromU32(temperature)).toString();
+      const filledBeansPerPod = fillBeans.times(BI_10.pow(6)).div(fillAmount).toString();
+      assert.entityCount("Plot", 3);
+      assert.fieldEquals("Plot", initialPlots[0].plotStart.toString(), "beansPerPod", initialBeansPerPod);
+      assert.fieldEquals("Plot", initialPlots[0].plotStart.toString(), "source", "SOW");
+      assert.fieldEquals("Plot", initialPlots[0].plotStart.plus(fillStart).toString(), "beansPerPod", filledBeansPerPod);
+      assert.fieldEquals("Plot", initialPlots[0].plotStart.plus(fillStart).toString(), "source", "MARKET");
     });
   });
 

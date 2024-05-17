@@ -590,7 +590,7 @@ function setBeansPerPodAfterFill(event: ethereum.Event, plotIndex: BigInt, start
   // on whether the PlotTransfer event has already been processed (sometims its emitted after the market transfer).
   let fillPlot = loadPlot(event.address, plotIndex.plus(start));
 
-  if (start == ZERO_BI) {
+  if (start == ZERO_BI && length < fillPlot.pods) {
     // When sending the start of a plot via market, these cannot be set in any subsequent transfer,
     // since the start plot has already been modified.
     let remainderPlot = loadPlot(event.address, plotIndex.plus(length));
