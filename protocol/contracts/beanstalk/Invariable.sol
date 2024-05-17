@@ -8,7 +8,7 @@ import {LibRedundantMathSigned256} from "contracts/libraries/LibRedundantMathSig
 import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
 
 import {C} from "contracts/C.sol";
-import {AppStorage} from "contracts/beanstalk/AppStorage.sol";
+import {AppStorage, Storage} from "contracts/beanstalk/AppStorage.sol";
 import {LibAppStorage} from "contracts/libraries/LibAppStorage.sol";
 import {LibWhitelistedTokens} from "contracts/libraries/Silo/LibWhitelistedTokens.sol";
 import {LibUnripe} from "contracts/libraries/LibUnripe.sol";
@@ -179,8 +179,10 @@ abstract contract Invariable {
                 entitlements[i] +=
                     s.fertilizedIndex.sub(s.fertilizedPaidIndex) + // unrinsed rinsable beans
                     s.unripe[C.UNRIPE_BEAN].balanceOfUnderlying; // unchopped underlying beans
-                for (uint256 j; j < s.fields.length; j++) {
-                    entitlements[i] += s.fields[j].harvestable.sub(s.fields[j].harvested); // unharvestable harvestable beans
+                for (uint256 j; j < s.fieldList.length; j++) {
+                    entitlements[i] += s.fields[s.fieldList[j]].harvestable.sub(
+                        s.fields[s.fieldList[j]].harvested
+                    ); // unharvested harvestable beans
                 }
             } else if (tokens[i] == LibUnripe._getUnderlyingToken(C.UNRIPE_LP)) {
                 entitlements[i] += s.unripe[C.UNRIPE_LP].balanceOfUnderlying;

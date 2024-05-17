@@ -112,7 +112,7 @@ contract Account {
      * @param deposits SiloV3.1 deposits. A mapping from depositId to Deposit. SiloV3.1 introduces greater precision for deposits.
      */
     struct State {
-        Field[] fields; // A Farmer's Field storages.
+        mapping(uint256 => Field) fields; // A Farmer's Field storages.
         /*
          * @dev (Silo V1) A Farmer's Unripe Bean Deposits only as a result of Replant
          *
@@ -415,7 +415,7 @@ contract Storage {
     /**
      * @notice Details which Beanstalk component receives the shipment.
      */
-    enum Recipient {
+    enum ShipmentRecipient {
         Silo,
         Field,
         Barn
@@ -431,7 +431,7 @@ contract Storage {
         address planContract;
         bytes4 planSelector;
         
-        Recipient recipient;
+        ShipmentRecipient recipient;
         
         bytes data;
     }
@@ -445,8 +445,9 @@ contract Storage {
  * @param paused True if Beanstalk is Paused.
  * @param pausedAt The timestamp at which Beanstalk was last paused.
  * @param season Storage.Season
- * @param fields Storage.Field[]
- * @param activeField Index of the active Field.
+ * @param fields mapping of Field ID to Storage.Field.
+ * @param activeField ID of the active Field.
+ * @param fieldList Array of all Field IDs.
  * @param co Storage.CurveMetapoolOracle
  * @param rain Storage.Rain
  * @param silo Storage.Silo
@@ -454,7 +455,7 @@ contract Storage {
  * @param weather Storage.Weather
  * @param earnedBeans The number of Beans distributed to the Silo that have not yet been Deposited as a result of the Earn function being called.
  * @param a mapping (address => Account.State)
- * @param podListings A mapping from listing id to bool indicating if the listing exists.
+ * @param podListings A mapping from fieldId to index to hash of Listing.
  * @param podOrders A mapping from hash of a Pod Order to the amount of Pods that the Pod Order is still willing to buy.
  * @param siloBalances A mapping from Token address to Silo Balance storage (amount deposited and withdrawn).
  * @param ss A mapping from Token address to Silo Settings for each Whitelisted Token. If a non-zero storage exists, a Token is whitelisted.
@@ -493,10 +494,7 @@ struct AppStorage {
     bool paused; // ────────┐ 1
     uint128 pausedAt; // ───┘ 16 (17/32)
     Storage.Season season;
-    Storage.Field[] fields;
-    uint256 activeField;
-    uint128 soil;
-    uint128 beanSown; 
+    mapping(uint256 => Storage.Field) fields;
     Storage.CurveMetapoolOracle co;
     Storage.Rain rain;
     Storage.Silo silo;
@@ -504,7 +502,7 @@ struct AppStorage {
     Storage.Weather weather;
     uint256 earnedBeans;
     mapping(address => Account.State) accounts;
-    mapping(bytes32 => bool) podListings;
+    mapping(uint256 => mapping(uint256 => bytes32)) podListings;
     mapping(bytes32 => uint256) podOrders;
     mapping(address => Storage.AssetSilo) siloBalances;
     mapping(address => Storage.SiloSettings) siloSettings;
@@ -551,4 +549,9 @@ struct AppStorage {
     uint256 plenty;
     // Distribution.
     Storage.ShipmentRoute[] shipmentRoutes;
+    // Fields.
+    uint256 activeField;
+    uint256[] fieldList;
+    uint128 soil;
+    uint128 beanSown; 
 }

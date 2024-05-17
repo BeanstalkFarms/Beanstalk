@@ -24,6 +24,7 @@ import {LibEvaluate} from "contracts/libraries/LibEvaluate.sol";
 import {LibTokenSilo} from "contracts/libraries/Silo/LibTokenSilo.sol";
 import {IWell, Call} from "contracts/interfaces/basin/IWell.sol";
 import {Storage} from "contracts/beanstalk/AppStorage.sol";
+import {BARN_POINTS} from "contracts/ecosystem/ShipmentPlanner.sol";
 
 import "forge-std/console.sol";
 /**
@@ -91,7 +92,7 @@ contract MockSeasonFacet is SeasonFacet {
 
     function mockStepSilo(uint256 amount) public {
         C.bean().mint(address(this), amount);
-        receiveShipment(Storage.Recipient.Silo, amount, bytes(""));
+        receiveShipment(Storage.ShipmentRecipient.Silo, amount, bytes(""));
     }
 
     function rainSunrise() public {
@@ -254,7 +255,9 @@ contract MockSeasonFacet is SeasonFacet {
     }
 
     function resetState() public {
-        delete s.fields;
+        for (uint256 i; i < s.fieldList.length; i++) {
+            s.fields[s.fieldList[i]] = Storage.Field(0, 0, 0);
+        }
         delete s.silo;
         delete s.weather;
         s.weather.lastSowTime = type(uint32).max;
@@ -371,8 +374,12 @@ contract MockSeasonFacet is SeasonFacet {
     }
 
     function rewardToFertilizerE(uint256 amount) external {
-        receiveShipment(Storage.Recipient.Field, amount * 3, bytes(""));
+        // Simulate the ShipmentPlan cap.
+        uint256 unfertilizedBeans = s.unfertilizedIndex - s.fertilizedIndex;
+        require(unfertilizedBeans >= amount, "rewardToFertilizerE: amount greater than outstanding Fert");
+
         C.bean().mint(address(this), amount);
+        receiveShipment(Storage.ShipmentRecipient.Barn, amount, bytes(""));
     }
 
     function setSunriseBlock(uint256 _block) external {

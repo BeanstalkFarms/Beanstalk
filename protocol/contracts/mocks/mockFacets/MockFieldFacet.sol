@@ -22,13 +22,13 @@ contract MockFieldFacet is FieldFacet {
         s.soil += amount;
     }
 
-    function incrementTotalHarvestableE(uint256 fieldIndex, uint256 amount) external {
+    function incrementTotalHarvestableE(uint256 fieldId, uint256 amount) external {
         C.bean().mint(address(this), amount);
-        s.fields[fieldIndex].harvestable += amount;
+        s.fields[fieldId].harvestable += amount;
     }
 
-    function incrementTotalPodsE(uint256 fieldIndex, uint256 amount) external {
-        s.fields[fieldIndex].pods += amount;
+    function incrementTotalPodsE(uint256 fieldId, uint256 amount) external {
+        s.fields[fieldId].pods += amount;
     }
 
     function totalRealSoil() external view returns (uint256) {

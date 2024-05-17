@@ -29,15 +29,15 @@ contract Receiving is ReentrancyGuard {
      * @param data Additional data to pass to the receiving function.
      */
     function receiveShipment(
-        Storage.Recipient recipient,
+        Storage.ShipmentRecipient recipient,
         uint256 amount,
         bytes memory data
     ) internal {
-        if (recipient == Storage.Recipient.Silo) {
+        if (recipient == Storage.ShipmentRecipient.Silo) {
             siloReceive(amount, data);
-        } else if (recipient == Storage.Recipient.Field) {
+        } else if (recipient == Storage.ShipmentRecipient.Field) {
             fieldReceive(amount, data);
-        } else if (recipient == Storage.Recipient.Barn) {
+        } else if (recipient == Storage.ShipmentRecipient.Barn) {
             barnReceive(amount, data);
         }
     }
@@ -66,11 +66,11 @@ contract Receiving is ReentrancyGuard {
      * @notice Receive Beans at the Field. The next `amount` Pods become harvestable.
      * @dev Amount should never exceed the number of Pods that are not yet Harvestable.
      * @param amount Amount of Beans to receive.
-     * @param data Encoded uin256 containing the index of the Field to receive the Beans.
+     * @param data Encoded uint256 containing the index of the Field to receive the Beans.
      */
     function fieldReceive(uint256 amount, bytes memory data) private {
-        uint256 fieldIndex = abi.decode(data, (uint256));
-        s.fields[fieldIndex].harvestable += amount;
+        uint256 fieldId = abi.decode(data, (uint256));
+        s.fields[fieldId].harvestable += amount;
     }
 
     /**
@@ -87,26 +87,25 @@ contract Receiving is ReentrancyGuard {
         uint256 newBpf = oldBpf + remainingBpf;
 
         // Get the end BPF of the first Fertilizer to run out.
-        uint256 firstEndBpf = s.fertFirst;
+        uint256 firstBpf = s.fertFirst;
 
         // If the next fertilizer is going to run out, then step BPF according
-        while (newBpf >= firstEndBpf) {
+        while (newBpf >= firstBpf) {
             // Increment the cumulative change in Fertilized.
-            deltaFertilized += (firstEndBpf - oldBpf) * s.activeFertilizer; // fertilizer between init and next cliff
+            deltaFertilized += (firstBpf - oldBpf) * s.activeFertilizer; // fertilizer between init and next cliff
 
             if (LibFertilizer.pop()) {
-                oldBpf = firstEndBpf;
-                firstEndBpf = s.fertFirst;
+                oldBpf = firstBpf;
+                firstBpf = s.fertFirst;
                 // Calculate BPF beyond the first Fertilizer edge.
                 remainingBpf = (amount - deltaFertilized) / s.activeFertilizer;
                 newBpf = oldBpf + remainingBpf;
             }
-            // Else, if there is no more fertilizer (should never happen, due to cap).
+            // Else, if there is no more fertilizer. Matches plan cap.
             else {
-                // NOTE Should confirmed that deltaFertilized == amount??? NOTE
-
-                s.bpf = uint128(firstEndBpf); // SafeCast unnecessary here.
+                s.bpf = uint128(firstBpf); // SafeCast unnecessary here.
                 s.fertilizedIndex = s.fertilizedIndex + deltaFertilized;
+                require(amount == deltaFertilized, "Inexact amount of Beans at Barn");
                 require(s.fertilizedIndex == s.unfertilizedIndex, "Paid != owed");
                 return;
             }

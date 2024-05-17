@@ -14,14 +14,17 @@ import {LibTransfer} from "contracts/libraries/Token/LibTransfer.sol";
 import {LibDibbler} from "contracts/libraries/LibDibbler.sol";
 import {ReentrancyGuard} from "../ReentrancyGuard.sol";
 import {Invariable} from "contracts/beanstalk/Invariable.sol";
-import {Listing} from "contracts/beanstalk/market/MarketplaceFacet/Listing.sol";
+
+interface IBeanstalk {
+    function cancelPodListing(uint256 fieldId, uint256 index) external;
+}
 
 /**
  * @title FieldFacet
  * @author Publius, Brean
  * @notice The Field is where Beans are Sown and Pods are Harvested.
  */
-contract FieldFacet is Invariable, Listing {
+contract FieldFacet is Invariable, ReentrancyGuard {
     using LibRedundantMath256 for uint256;
     using LibRedundantMath32 for uint32;
     using LibRedundantMath128 for uint128;
@@ -120,7 +123,7 @@ contract FieldFacet is Invariable, Listing {
 
     /**
      * @notice Harvest Pods from the Field.
-     * @param fieldIndex The index of the Field to Harvest from.
+     * @param fieldId The index of the Field to Harvest from.
      * @param plots List of plot IDs to Harvest
      * @param mode The balance to transfer Beans to; see {LibTrasfer.To}
      * @dev Redeems Pods for Beans. When Pods become Harvestable, they are
@@ -130,14 +133,14 @@ contract FieldFacet is Invariable, Listing {
      * Beanstalk holds these Beans until `harvest()` is called.
      *
      * Pods are "burned" when the corresponding Plot is deleted from
-     * `s.accounts[account].fields[fieldIndex].plots`.
+     * `s.accounts[account].fields[fieldId].plots`.
      */
     function harvest(
-        uint256 fieldIndex,
+        uint256 fieldId,
         uint256[] calldata plots,
         LibTransfer.To mode
     ) external payable fundsSafu noSupplyChange oneOutFlow(C.BEAN) {
-        uint256 beansHarvested = _harvest(fieldIndex, plots);
+        uint256 beansHarvested = _harvest(fieldId, plots);
         LibTransfer.sendToken(C.bean(), beansHarvested, LibTractor._user(), mode);
     }
 
@@ -146,17 +149,17 @@ contract FieldFacet is Invariable, Listing {
      * update the total harvested, and emit a {Harvest} event.
      */
     function _harvest(
-        uint256 fieldIndex,
+        uint256 fieldId,
         uint256[] calldata plots
     ) internal returns (uint256 beansHarvested) {
         for (uint256 i; i < plots.length; ++i) {
             // The Plot is partially harvestable if its index is less than
             // the current harvestable index.
-            require(plots[i] < s.fields[fieldIndex].harvestable, "Field: Plot not Harvestable");
-            uint256 harvested = _harvestPlot(LibTractor._user(), fieldIndex, plots[i]);
+            require(plots[i] < s.fields[fieldId].harvestable, "Field: Plot not Harvestable");
+            uint256 harvested = _harvestPlot(LibTractor._user(), fieldId, plots[i]);
             beansHarvested += harvested;
         }
-        s.fields[fieldIndex].harvested += beansHarvested;
+        s.fields[fieldId].harvested += beansHarvested;
         emit Harvest(LibTractor._user(), plots, beansHarvested);
     }
 
@@ -166,19 +169,25 @@ contract FieldFacet is Invariable, Listing {
      */
     function _harvestPlot(
         address account,
-        uint256 fieldIndex,
+        uint256 fieldId,
         uint256 index
     ) private returns (uint256 harvestablePods) {
         // Check that `account` holds this Plot.
-        uint256 pods = s.accounts[account].fields[fieldIndex].plots[index];
+        uint256 pods = s.accounts[account].fields[fieldId].plots[index];
         require(pods > 0, "Field: no plot");
 
         // Calculate how many Pods are harvestable.
         // The upstream _harvest function checks that at least some Pods
         // are harvestable.
-        harvestablePods = s.fields[fieldIndex].harvestable.sub(index);
-        _cancelPodListing(LibTractor._user(), fieldIndex, index);
-        delete s.accounts[account].fields[fieldIndex].plots[index];
+        harvestablePods = s.fields[fieldId].harvestable.sub(index);
+
+        // TODO: Verify this works. Solicit review.
+        // _cancelPodListing(LibTractor._user(), fieldId, index);
+        address(this).delegatecall(
+            abi.encodeWithSelector(IBeanstalk.cancelPodListing.selector, fieldId, index)
+        );
+
+        delete s.accounts[account].fields[fieldId].plots[index];
 
         // If the entire Plot was harvested, exit.
         if (harvestablePods >= pods) {
@@ -186,7 +195,7 @@ contract FieldFacet is Invariable, Listing {
         }
 
         // Create a new Plot with remaining Pods.
-        s.accounts[account].fields[fieldIndex].plots[index.add(harvestablePods)] = pods.sub(
+        s.accounts[account].fields[fieldId].plots[index.add(harvestablePods)] = pods.sub(
             harvestablePods
         );
     }
@@ -195,35 +204,35 @@ contract FieldFacet is Invariable, Listing {
 
     /**
      * @notice Returns the total number of Pods ever minted in the Field.
-     * @param fieldIndex The index of the Field to query.
+     * @param fieldId The index of the Field to query.
      */
-    function podIndex(uint256 fieldIndex) public view returns (uint256) {
-        return s.fields[fieldIndex].pods;
+    function podIndex(uint256 fieldId) public view returns (uint256) {
+        return s.fields[fieldId].pods;
     }
 
     /**
      * @notice Returns the index below which Pods are Harvestable.
-     * @param fieldIndex The index of the Field to query.
+     * @param fieldId The index of the Field to query.
      */
-    function harvestableIndex(uint256 fieldIndex) public view returns (uint256) {
-        return s.fields[fieldIndex].harvestable;
+    function harvestableIndex(uint256 fieldId) public view returns (uint256) {
+        return s.fields[fieldId].harvestable;
     }
 
     /**
      * @notice Returns the number of outstanding Pods. Includes Pods that are
      * currently Harvestable but have not yet been Harvested.
-     * @param fieldIndex The index of the Field to query.
+     * @param fieldId The index of the Field to query.
      */
-    function totalPods(uint256 fieldIndex) public view returns (uint256) {
-        return s.fields[fieldIndex].pods - s.fields[fieldIndex].harvested;
+    function totalPods(uint256 fieldId) public view returns (uint256) {
+        return s.fields[fieldId].pods - s.fields[fieldId].harvested;
     }
 
     /**
      * @notice Returns the number of Pods that have ever been Harvested.
-     * @param fieldIndex The index of the Field to query.
+     * @param fieldId The index of the Field to query.
      */
-    function totalHarvested(uint256 fieldIndex) public view returns (uint256) {
-        return s.fields[fieldIndex].harvested;
+    function totalHarvested(uint256 fieldId) public view returns (uint256) {
+        return s.fields[fieldId].harvested;
     }
 
     /**
@@ -231,31 +240,31 @@ contract FieldFacet is Invariable, Listing {
      * have not yet been Harvested.
      * @dev This is the number of Pods that Beanstalk is prepared to pay back,
      * but that haven’t yet been claimed via the `harvest()` function.
-     * @param fieldIndex The index of the Field to query.
+     * @param fieldId The index of the Field to query.
      */
-    function totalHarvestable(uint256 fieldIndex) public view returns (uint256) {
-        return s.fields[fieldIndex].harvestable - s.fields[fieldIndex].harvested;
+    function totalHarvestable(uint256 fieldId) public view returns (uint256) {
+        return s.fields[fieldId].harvestable - s.fields[fieldId].harvested;
     }
 
     /**
      * @notice Returns the number of Pods that are not yet Harvestable. Also known as the Pod Line.
-     * @param fieldIndex The index of the Field to query.
+     * @param fieldId The index of the Field to query.
      */
-    function totalUnharvestable(uint256 fieldIndex) public view returns (uint256) {
-        return s.fields[fieldIndex].pods - s.fields[fieldIndex].harvestable;
+    function totalUnharvestable(uint256 fieldId) public view returns (uint256) {
+        return s.fields[fieldId].pods - s.fields[fieldId].harvestable;
+    }
+
+    function isHarvesting(uint256 fieldId) public view returns (bool) {
+        return s.fields[fieldId].harvestable < s.fields[fieldId].pods;
     }
 
     /**
      * @notice Returns the number of Pods remaining in a Plot.
-     * @dev Plots are only stored in the `s.accounts[account].fields[fieldIndex].plots` mapping.
-     * @param fieldIndex The index of the Field to query.
+     * @dev Plots are only stored in the `s.accounts[account].fields[fieldId].plots` mapping.
+     * @param fieldId The index of the Field to query.
      */
-    function plot(
-        address account,
-        uint256 fieldIndex,
-        uint256 index
-    ) public view returns (uint256) {
-        return s.accounts[account].fields[fieldIndex].plots[index];
+    function plot(address account, uint256 fieldId, uint256 index) public view returns (uint256) {
+        return s.accounts[account].fields[fieldId].plots[index];
     }
 
     /**

@@ -61,7 +61,7 @@ contract Distribution is Receiving {
             // iterate though each stream, checking that the cap is not exceeded.
             for (uint256 j; j < shipmentAmounts.length; j++) {
                 // If shipment amount exceeds plan cap, adjust plan and totals before recomputing.
-                if (shipmentAmounts[j] >= shipmentPlans[j].cap) {
+                if (shipmentAmounts[j] > shipmentPlans[j].cap) {
                     shipmentAmounts[j] = shipmentPlans[j].cap;
                     beansToShip -= shipmentPlans[j].cap;
                     totalPoints -= shipmentPlans[j].points;
@@ -75,6 +75,7 @@ contract Distribution is Receiving {
 
         // Ship it.
         for (uint256 i; i < shipmentAmounts.length; i++) {
+            if (shipmentAmounts[i] == 0) continue;
             // Success is not verified here. Receive functions should be designed to never revert.
             // address(this).call(
             //     abi.encodeWithSelector(
@@ -115,7 +116,7 @@ contract Distribution is Receiving {
 
     function hashShipmentRoute(
         Storage.ShipmentRoute memory shipmentRoute
-    ) public pure returns (bytes32 hash) {
+    ) internal pure returns (bytes32 hash) {
         return
             keccak256(
                 abi.encode(
@@ -136,7 +137,7 @@ contract Distribution is Receiving {
         Storage.ShipmentRoute[] memory shipmentRoutes
     ) private view returns (ShipmentPlan[] memory shipmentPlans, uint256 totalPoints) {
         shipmentPlans = new ShipmentPlan[](shipmentRoutes.length);
-        for (uint i; i < shipmentRoutes.length; i++) {
+        for (uint256 i; i < shipmentRoutes.length; i++) {
             (bool success, bytes memory returnData) = shipmentRoutes[i].planContract.staticcall(
                 abi.encodeWithSelector(shipmentRoutes[i].planSelector, shipmentRoutes[i].data)
             );
@@ -153,8 +154,8 @@ contract Distribution is Receiving {
      * @notice Replaces the entire set of ShipmentRoutes with a new set.
      * @dev Changes take effect immediately and will be seen at the next sunrise mint.
      */
-    function setShipmentRoutes(Storage.ShipmentRoute[] calldata shipmentRoutes) external {
-        LibDiamond.enforceIsContractOwner();
+    function setShipmentRoutes(Storage.ShipmentRoute[] calldata shipmentRoutes) public {
+        LibDiamond.enforceIsOwnerOrContract();
         delete s.shipmentRoutes;
         for (uint256 i; i < shipmentRoutes.length; i++) {
             s.shipmentRoutes.push(shipmentRoutes[i]);

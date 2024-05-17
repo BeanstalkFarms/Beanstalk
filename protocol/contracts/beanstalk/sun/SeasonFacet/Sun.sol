@@ -31,15 +31,6 @@ contract Sun is Oracle, Distribution {
     uint256 private constant SOIL_COEFFICIENT_LOW = 1.5e18;
 
     /**
-     * @notice Emitted during Sunrise when Beans are distributed to the Field, the Silo, and Fertilizer.
-     * @param season The Season in which Beans were distributed.
-     * @param toField The number of Beans distributed to the Field.
-     * @param toSilo The number of Beans distributed to the Silo.
-     * @param toFertilizer The number of Beans distributed to Fertilizer.
-     */
-    event Reward(uint32 indexed season, uint256 toField, uint256 toSilo, uint256 toFertilizer);
-
-    /**
      * @notice Emitted during Sunrise when Beanstalk adjusts the amount of available Soil.
      * @param season The Season in which Soil was adjusted.
      * @param soil The new amount of Soil available.

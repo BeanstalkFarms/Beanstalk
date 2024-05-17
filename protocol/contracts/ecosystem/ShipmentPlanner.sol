@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: MIT
 
+pragma solidity ^0.8.20;
+
 /**
  * @notice Constraints of how many Beans to send to a given route at the current time.
  * @param points Weight of this shipment route relative to all routes. Expects precision of 1e18.
@@ -11,10 +13,16 @@ struct ShipmentPlan {
 }
 
 interface IBeanstalk {
+    function isFertilizing() external view returns (bool);
     function totalUnfertilizedBeans() external view returns (uint256);
 
-    function totalUnharvestable() external view returns (uint256);
+    function isHarvesting(uint256 fieldId) external view returns (bool);
+    function totalUnharvestable(uint256 fieldId) external view returns (uint256);
 }
+
+uint256  constant BARN_POINTS = 333_333_333_333_333_333;
+uint256  constant FIELD_POINTS = 333_333_333_333_333_333;
+uint256  constant SILO_POINTS = 333_333_333_333_333_333;
 
 /**
  * @title ShipmentPlanner
@@ -25,10 +33,6 @@ interface IBeanstalk {
 contract ShipmentPlanner {
     address constant BEANSTALK = 0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5;
 
-    uint256 constant BARN_POINTS = 333_333_333_333_333_333;
-    uint256 constant FIELD_POINTS = 333_333_333_333_333_333;
-    uint256 constant SILO_POINTS = 333_333_333_333_333_333;
-
     IBeanstalk beanstalk = IBeanstalk(BEANSTALK);
 
     /**
@@ -37,16 +41,21 @@ contract ShipmentPlanner {
      * @dev data param is unused data to configure plan details.
      */
     function getBarnPlan(bytes memory) external view returns (ShipmentPlan memory shipmentPlan) {
+        if (!beanstalk.isFertilizing()) return shipmentPlan;
         return ShipmentPlan({points: BARN_POINTS, cap: beanstalk.totalUnfertilizedBeans()});
     }
 
     /**
      * @notice Get the current points and cap for Field shipments.
      * @dev The Field cap is the amount of outstanding Pods unharvestable pods.
-     * @dev data param is unused data to configure plan details.
+     * @param data Encoded uint256 containing the index of the Field to receive the Beans.
      */
-    function getFieldPlan(bytes memory) external view returns (ShipmentPlan memory shipmentPlan) {
-        return ShipmentPlan({points: FIELD_POINTS, cap: beanstalk.totalUnharvestable()});
+    function getFieldPlan(
+        bytes memory data
+    ) external view returns (ShipmentPlan memory shipmentPlan) {
+        uint256 fieldId = abi.decode(data, (uint256));
+        if (!beanstalk.isHarvesting(fieldId)) return shipmentPlan;
+        return ShipmentPlan({points: FIELD_POINTS, cap: beanstalk.totalUnharvestable(fieldId)});
     }
 
     /**

@@ -239,12 +239,10 @@ contract SeasonGettersFacet {
     /**
      * @notice Returns the pod rate (unharvestable pods / total bean supply).
      */
-    function getPodRate(uint256 fieldIndex) external view returns (uint256) {
+    function getPodRate(uint256 fieldId) external view returns (uint256) {
         uint256 beanSupply = C.bean().totalSupply();
         return
-            Decimal
-                .ratio(s.fields[fieldIndex].pods - s.fields[fieldIndex].harvestable, beanSupply)
-                .value;
+            Decimal.ratio(s.fields[fieldId].pods - s.fields[fieldId].harvestable, beanSupply).value;
     }
 
     /**
