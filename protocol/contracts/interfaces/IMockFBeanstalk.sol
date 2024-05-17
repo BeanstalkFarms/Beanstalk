@@ -249,6 +249,8 @@ interface IMockFBeanstalk {
         uint256 amount,
         uint256 toField
     );
+    event SeasonOfPlentyField(uint256 toField);
+    event SeasonOfPlentyWell(uint256 indexed season, address well, address token, uint256 amount);
     event SetFertilizer(uint128 id, uint128 bpf);
     event Soil(uint32 indexed season, uint256 soil);
     event Sow(address indexed account, uint256 index, uint256 beans, uint256 pods);

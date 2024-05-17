@@ -211,6 +211,8 @@ contract Weather is Sun {
         uint256 totalBeanSupply = C.bean().totalSupply();
         uint256 sopFieldBeans = totalBeanSupply.div(FLOOD_PODLINE_PERCENT_DENOMINATOR); // 1/1000 = 0.1% of total supply
 
+        // Note there may be cases where zero harvestable pods are available. For clarity, the code will still emit an event
+        // but with zero sop field beans.
         uint256 maxHarvestable = s.f.pods.sub(s.f.harvestable);
         sopFieldBeans = sopFieldBeans > maxHarvestable ? maxHarvestable : sopFieldBeans;
 

@@ -36,6 +36,9 @@ contract FloodTest is TestHelper {
     // test accounts
     address[] farmers;
 
+    event SeasonOfPlentyWell(uint256 indexed season, address well, address token, uint256 amount);
+    event SeasonOfPlentyField(uint256 toField);
+
     function setUp() public {
         initializeBeanstalkTestState(true, false);
         address well = C.BEAN_ETH_WELL;
@@ -134,8 +137,6 @@ contract FloodTest is TestHelper {
     }
 
     function testOneSop() public {
-        // setDeltaBforWell(1000e6, C.BEAN_ETH_WELL, C.WETH);
-
         setReserves(C.BEAN_ETH_WELL, 1000000e6, 1100e18);
 
         // update pumps
@@ -143,6 +144,18 @@ contract FloodTest is TestHelper {
 
         season.rainSunrise();
         bs.mow(users[1], C.BEAN);
+
+        vm.expectEmit();
+        emit SeasonOfPlentyField(0); // zero in this test since no beans in podline
+
+        vm.expectEmit();
+        emit SeasonOfPlentyWell(
+            seasonGetters.time().current + 1, // flood will happen next season
+            C.BEAN_ETH_WELL,
+            C.WETH,
+            51191151829696906017
+        );
+
         season.rainSunrise();
 
         Storage.Season memory s = seasonGetters.time();
@@ -211,6 +224,17 @@ contract FloodTest is TestHelper {
         setReserves(C.BEAN_ETH_WELL, 1048808848170, 1100e18);
         updateMockPumpUsingWellReserves(C.BEAN_ETH_WELL);
 
+        vm.expectEmit();
+        emit SeasonOfPlentyField(0); // zero in this test since no beans in podline
+
+        vm.expectEmit();
+        emit SeasonOfPlentyWell(
+            seasonGetters.time().current + 2, // flood will happen in two seasons
+            C.BEAN_ETH_WELL,
+            C.WETH,
+            25900501355272002583
+        );
+
         season.rainSunrises(2);
 
         // sops p > 1
@@ -264,6 +288,18 @@ contract FloodTest is TestHelper {
 
         season.rainSunrise();
         bs.mow(users[2], C.BEAN_ETH_WELL);
+
+        vm.expectEmit();
+        emit SeasonOfPlentyField(0); // zero in this test since no beans in podline
+
+        vm.expectEmit();
+        emit SeasonOfPlentyWell(
+            seasonGetters.time().current + 1, // flood will happen in two seasons
+            C.BEAN_ETH_WELL,
+            C.WETH,
+            51191151829696906017
+        );
+
         season.rainSunrise();
         // end before each from hardhat test
 
@@ -383,11 +419,13 @@ contract FloodTest is TestHelper {
     }
 
     // test making Beans harvestable
-    function testHarvestablePodlineLessThanPointOnePercent() public {
+    function testHarvestablePodlineLessThanPointOnePercent(uint256 amount) public {
         setReserves(C.BEAN_ETH_WELL, 1000000e6, 1100e18);
 
+        amount = bound(amount, 1, 1_000e6);
+
         // "buy" some pods
-        bs.incrementTotalPodsE(1_000e6);
+        bs.incrementTotalPodsE(amount);
 
         uint256 initialBeanSupply = C.bean().totalSupply();
         uint256 initialPodLine = bs.podIndex();
@@ -397,6 +435,10 @@ contract FloodTest is TestHelper {
         updateMockPumpUsingWellReserves(C.BEAN_ETH_WELL);
         season.rainSunrise();
         bs.mow(users[1], C.BEAN);
+
+        vm.expectEmit();
+        emit SeasonOfPlentyField(amount);
+
         season.rainSunrise();
 
         uint256 newHarvestable = bs.totalHarvestable();
@@ -410,10 +452,12 @@ contract FloodTest is TestHelper {
         assertTrue(initialHarvestable == 0); // Before flood, no pods were harvestable
     }
 
-    function testHarvestablePodlineMoreThanPointOnePercent() public {
+    function testHarvestablePodlineMoreThanPointOnePercent(uint256 amount) public {
         setReserves(C.BEAN_ETH_WELL, 1_000_000e6, 1_100e18);
 
-        bs.incrementTotalPodsE(10_000e6);
+        amount = bound(amount, 10_000e6, 100_000e6);
+
+        bs.incrementTotalPodsE(amount);
         uint256 initialBeanSupply = C.bean().totalSupply();
         uint256 initialPodLine = bs.podIndex();
         uint256 initialHarvestable = bs.totalHarvestable();
@@ -421,6 +465,10 @@ contract FloodTest is TestHelper {
         updateMockPumpUsingWellReserves(C.BEAN_ETH_WELL);
         season.rainSunrise();
         bs.mow(users[1], C.BEAN);
+
+        vm.expectEmit();
+        emit SeasonOfPlentyField(initialBeanSupply / 1000);
+
         season.rainSunrise();
 
         uint256 newHarvestable = bs.totalHarvestable();
