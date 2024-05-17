@@ -2,8 +2,7 @@
  * SPDX-License-Identifier: MIT
  */
 
-pragma solidity =0.7.6;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.20;
 
 import "contracts/C.sol";
 import "contracts/libraries/Curve/LibBeanMetaCurve.sol";
@@ -17,7 +16,7 @@ import {LibBarnRaise} from "contracts/libraries/LibBarnRaise.sol";
  * @notice Calculates BDV for whitelisted Silo tokens.
  */
 contract BDVFacet {
-    using SafeMath for uint256;
+    using LibRedundantMath256 for uint256;
 
     /**
      * @dev Returns the BDV of a given `amount` of Bean:3Crv LP tokens.

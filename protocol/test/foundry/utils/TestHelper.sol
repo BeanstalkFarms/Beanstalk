@@ -1,14 +1,13 @@
 /**
  * SPDX-License-Identifier: MIT
  **/
-pragma solidity >=0.7.6 <0.9.0;
+pragma solidity ^0.8.20;
 pragma abicoder v2;
 
 import "forge-std/Test.sol";
 
 ////// Mocks //////
 import {MockToken} from "contracts/mocks/MockToken.sol";
-import {MockBlockBasefee} from "contracts/mocks/MockBlockBasefee.sol";
 import {IMockFBeanstalk} from "contracts/interfaces/IMockFBeanstalk.sol";
 
 ///// TEST HELPERS //////
@@ -69,9 +68,6 @@ contract TestHelper is
         // sets block.timestamp to 1_000_000,
         // as starting from an timestamp of 0 can cause issues.
         vm.warp(INITIAL_TIMESTAMP);
-
-        // set block base fee to 1 gwei.
-        MockBlockBasefee(BASE_FEE_CONTRACT).setAnswer(1e9);
 
         // initalize mock tokens.
         initMockTokens(verbose);
@@ -175,25 +171,33 @@ contract TestHelper is
         MockToken(token).approve(BEANSTALK, type(uint256).max);
     }
 
-    /**
-     * @notice assumes a CP2 well with bean as one of the tokens.
-     */
     function addLiquidityToWell(
         address well,
         uint256 beanAmount,
         uint256 nonBeanTokenAmount
-    ) internal {
+    ) internal returns (uint256) {
+        return addLiquidityToWell(users[0], well, beanAmount, nonBeanTokenAmount);
+    }
+
+    /**
+     * @notice assumes a CP2 well with bean as one of the tokens.
+     */
+    function addLiquidityToWell(
+        address user,
+        address well,
+        uint256 beanAmount,
+        uint256 nonBeanTokenAmount
+    ) internal returns (uint256 lpOut) {
         (address nonBeanToken, ) = LibWell.getNonBeanTokenAndIndexFromWell(well);
 
         // mint and sync.
         MockToken(C.BEAN).mint(well, beanAmount);
         MockToken(nonBeanToken).mint(well, nonBeanTokenAmount);
 
-        // inital liquidity owned by beanstalk deployer.
-        IWell(well).sync(users[0], 0);
+        lpOut = IWell(well).sync(user, 0);
 
         // sync again to update reserves.
-        IWell(well).sync(users[0], 0);
+        IWell(well).sync(user, 0);
     }
 
     /**
@@ -248,8 +252,59 @@ contract TestHelper is
         IWell(well).sync(users[0], 0);
     }
 
+    /**
+     * @notice mints `amount` and deposits it to beanstalk.
+     * @dev if 'token' is a well, 'amount' corresponds to the amount of non-bean tokens underlying the output amount.
+     */
+    function depositForUser(
+        address user,
+        address token,
+        uint256 amount
+    ) internal prank(user) returns (uint256 outputAmount) {
+        address[] memory tokens = bs.getWhitelistedWellLpTokens();
+        bool isWell;
+        for (uint i; i < tokens.length; i++) {
+            if (tokens[i] == token) {
+                isWell = true;
+                break;
+            }
+        }
+        if (isWell) {
+            (amount, ) = addLiquidityToWellAtCurrentPrice(user, token, amount);
+        } else {
+            MockToken(token).mint(user, amount);
+        }
+        outputAmount = amount;
+        MockToken(token).approve(BEANSTALK, amount);
+        bs.deposit(token, amount, 0);
+    }
+
+    /**
+     * @notice adds an amount of non-bean tokens in the well,
+     * and adds the amount of beans such that the well matches the price oracles.
+     */
+    function addLiquidityToWellAtCurrentPrice(
+        address well,
+        uint256 amount
+    ) internal returns (uint256 lpAmountOut, address tokenInWell) {
+        (lpAmountOut, tokenInWell) = addLiquidityToWellAtCurrentPrice(users[0], well, amount);
+    }
+
+    /**
+     * @notice adds an amount of non-bean tokens in the well,
+     * and adds the amount of beans such that the well matches the price oracles.
+     */
+    function addLiquidityToWellAtCurrentPrice(
+        address user,
+        address well,
+        uint256 amount
+    ) internal returns (uint256 lpAmountOut, address tokenInWell) {
+        (tokenInWell, ) = LibWell.getNonBeanTokenAndIndexFromWell(well);
+        uint256 beanAmount = (amount * 1e6) / usdOracle.getUsdTokenPrice(tokenInWell);
+        lpAmountOut = addLiquidityToWell(user, well, beanAmount, amount);
+    }
+
     function initMisc() internal {
-        deployCodeTo("MockBlockBasefee", BASE_FEE_CONTRACT);
         usdOracle = UsdOracle(deployCode("UsdOracle"));
     }
 
@@ -279,7 +334,7 @@ contract TestHelper is
         deltaBPerWell = new int256[](lps.length);
         for (uint i; i < lps.length; i++) {
             // unix time is used to generate an unique deltaB upon every test.
-            int256 deltaB = int256(keccak256(abi.encode(entropy, i, vm.unixTime())));
+            int256 deltaB = int256(uint256(keccak256(abi.encode(entropy, i, vm.unixTime()))));
             deltaB = bound(deltaB, -1000e6, 1000e6);
             (address tokenInWell, ) = LibWell.getNonBeanTokenAndIndexFromWell(lps[i]);
             setDeltaBforWell(deltaB, lps[i], tokenInWell);
@@ -343,7 +398,6 @@ contract TestHelper is
         address barnRaiseToken = bs.getBarnRaiseToken();
         mintTokensToUser(address(this), barnRaiseToken, tokenAmountIn);
         // add fertilizer.
-        console.log("tokenAmountIn", tokenAmountIn);
         if (tokenAmountIn > 0) {
             bs.addFertilizer(season, tokenAmountIn, 0);
         }

@@ -1,9 +1,10 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity ^0.7.6;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.20;
 
 import "./Internalizer.sol";
+import {LibRedundantMath128} from "contracts/libraries/LibRedundantMath128.sol";
+import {LibRedundantMath256} from "contracts/libraries/LibRedundantMath256.sol";
 
 /**
  * @author publius
@@ -20,9 +21,8 @@ interface IBS {
 contract Fertilizer is Internalizer {
     event ClaimFertilizer(uint256[] ids, uint256 beans);
 
-    using SafeERC20Upgradeable for IERC20;
-    using SafeMathUpgradeable for uint256;
-    using LibSafeMath128 for uint128;
+    using LibRedundantMath256 for uint256;
+    using LibRedundantMath128 for uint128;
 
     function beanstalkUpdate(
         address account,

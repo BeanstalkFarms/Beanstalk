@@ -2,12 +2,12 @@
  * SPDX-License-Identifier: MIT
  **/
 
-pragma solidity ^0.7.6;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.20;
 
-import {ECDSA} from "@openzeppelin/contracts/cryptography/ECDSA.sol";
+import {ECDSA} from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
+import {MessageHashUtils} from "@openzeppelin/contracts/utils/cryptography/MessageHashUtils.sol";
 import {LibBytes} from "../../libraries/LibBytes.sol";
-import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
+import {LibRedundantMath256} from "contracts/libraries/LibRedundantMath256.sol";
 
 import {LibTractor} from "../../libraries/LibTractor.sol";
 import {AdvancedFarmCall, LibFarm} from "../../libraries/LibFarm.sol";
@@ -18,7 +18,7 @@ import {LibBytes} from "contracts/libraries/LibBytes.sol";
  */
 contract TractorFacet {
     using LibBytes for bytes32;
-    using SafeMath for uint256;
+    using LibRedundantMath256 for uint256;
 
     event PublishRequisition(LibTractor.Requisition requisition);
 
@@ -33,7 +33,7 @@ contract TractorFacet {
         bytes32 blueprintHash = LibTractor._getBlueprintHash(requisition.blueprint);
         require(blueprintHash == requisition.blueprintHash, "TractorFacet: invalid hash");
         address signer = ECDSA.recover(
-            ECDSA.toEthSignedMessageHash(requisition.blueprintHash),
+            MessageHashUtils.toEthSignedMessageHash(requisition.blueprintHash),
             requisition.signature
         );
         require(signer == requisition.blueprint.publisher, "TractorFacet: signer mismatch");

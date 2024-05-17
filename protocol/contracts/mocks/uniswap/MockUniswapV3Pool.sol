@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity ^0.7.6;
+pragma solidity ^0.8.20;
 
 import "@uniswap/v3-core/contracts/libraries/Tick.sol";
 import "@uniswap/v3-core/contracts/libraries/Oracle.sol";
@@ -70,7 +70,7 @@ contract MockUniswapV3Pool {
             }
             tickCumulatives[i] =
                 int56(manual_ticks) *
-                int56(secondsAgos[secondsAgos.length - 1 - i]);
+                int56(uint56(secondsAgos[secondsAgos.length - 1 - i]));
             secondsPerLiquidityCumulativeX128s[i] = 1;
         }
     }

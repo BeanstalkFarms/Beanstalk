@@ -2,8 +2,7 @@
  SPDX-License-Identifier: MIT
 */
 
-pragma solidity =0.7.6;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.20;
 
 import {ILiquidityWeightFacet} from "contracts/beanstalk/sun/LiquidityWeightFacet.sol";
 import {LibWhitelistedTokens} from "contracts/libraries/Silo/LibWhitelistedTokens.sol";
@@ -14,8 +13,6 @@ import {LibCases} from "contracts/libraries/LibCases.sol";
 import {LibGauge} from "contracts/libraries/LibGauge.sol";
 import {BDVFacet} from "contracts/beanstalk/silo/BDVFacet.sol";
 import {C} from "contracts/C.sol";
-
-import "hardhat/console.sol";
 
 /**
  * @author Publius, Brean
@@ -172,7 +169,7 @@ contract InitalizeDiamond {
         emit BeanToMaxLpGpPerBdvRatioChange(
             s.season.current,
             type(uint256).max,
-            int80(s.seedGauge.beanToMaxLpGpPerBdvRatio)
+            int80(int128(s.seedGauge.beanToMaxLpGpPerBdvRatio))
         );
         emit LibGauge.UpdateAverageStalkPerBdvPerSeason(
             s.seedGauge.averageGrownStalkPerBdvPerSeason

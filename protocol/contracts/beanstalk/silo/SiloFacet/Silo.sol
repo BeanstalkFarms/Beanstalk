@@ -2,20 +2,20 @@
  * SPDX-License-Identifier: MIT
  **/
 
-pragma solidity =0.7.6;
+pragma solidity ^0.8.20;
 pragma abicoder v2;
 
 import {AppStorage, Storage} from "contracts/beanstalk/AppStorage.sol";
-import {SafeERC20, IERC20} from "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
+import {SafeERC20, IERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {ReentrancyGuard} from "contracts/beanstalk/ReentrancyGuard.sol";
-import {LibSafeMath128} from "contracts/libraries/LibSafeMath128.sol";
-import {LibSafeMath32} from "contracts/libraries/LibSafeMath32.sol";
+import {LibRedundantMath128} from "contracts/libraries/LibRedundantMath128.sol";
+import {LibRedundantMath32} from "contracts/libraries/LibRedundantMath32.sol";
 import {LibGerminate} from "contracts/libraries/Silo/LibGerminate.sol";
 import {LibTokenSilo} from "contracts/libraries/Silo/LibTokenSilo.sol";
 import {LibSilo} from "contracts/libraries/Silo/LibSilo.sol";
 import {LibTractor} from "contracts/libraries/LibTractor.sol";
-import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
-import {SafeCast} from "@openzeppelin/contracts/utils/SafeCast.sol";
+import {LibRedundantMath256} from "contracts/libraries/LibRedundantMath256.sol";
+import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
 import {LibBytes} from "contracts/libraries/LibBytes.sol";
 import {C} from "contracts/C.sol";
 import {IWell} from "contracts/interfaces/basin/IWell.sol";
@@ -34,9 +34,9 @@ import {IWell} from "contracts/interfaces/basin/IWell.sol";
  */
 
 contract Silo is ReentrancyGuard {
-    using SafeMath for uint256;
+    using LibRedundantMath256 for uint256;
     using SafeERC20 for IERC20;
-    using LibSafeMath128 for uint128;
+    using LibRedundantMath128 for uint128;
 
     //////////////////////// EVENTS ////////////////////////
 

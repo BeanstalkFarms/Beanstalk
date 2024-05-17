@@ -2,18 +2,16 @@
  * SPDX-License-Identifier: MIT
  **/
 
-pragma solidity =0.7.6;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.20;
 
 import {C} from "contracts/C.sol";
-import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
-import {SafeCast} from "@openzeppelin/contracts/utils/SafeCast.sol";
+import {LibRedundantMath256} from "contracts/libraries/LibRedundantMath256.sol";
+import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
 import {LibTractor} from "contracts/libraries/LibTractor.sol";
 import {LibTransfer} from "contracts/libraries/Token/LibTransfer.sol";
 import {LibDibbler} from "contracts/libraries/LibDibbler.sol";
-import {LibPRBMath} from "contracts/libraries/LibPRBMath.sol";
-import {LibSafeMath32} from "contracts/libraries/LibSafeMath32.sol";
-import {LibSafeMath128} from "contracts/libraries/LibSafeMath128.sol";
+import {LibRedundantMath32} from "contracts/libraries/LibRedundantMath32.sol";
+import {LibRedundantMath128} from "contracts/libraries/LibRedundantMath128.sol";
 import {ReentrancyGuard} from "../ReentrancyGuard.sol";
 import {Invariable} from "contracts/beanstalk/Invariable.sol";
 
@@ -23,10 +21,9 @@ import {Invariable} from "contracts/beanstalk/Invariable.sol";
  * @notice The Field is where Beans are Sown and Pods are Harvested.
  */
 contract FieldFacet is Invariable, ReentrancyGuard {
-    using SafeMath for uint256;
-    using LibPRBMath for uint256;
-    using LibSafeMath32 for uint32;
-    using LibSafeMath128 for uint128;
+    using LibRedundantMath256 for uint256;
+    using LibRedundantMath32 for uint32;
+    using LibRedundantMath128 for uint128;
 
     /**
      * @notice Emitted from {LibDibbler.sow} when an `account` creates a plot.
@@ -122,7 +119,7 @@ contract FieldFacet is Invariable, ReentrancyGuard {
     ) internal returns (uint256 pods) {
         beans = LibTransfer.burnToken(C.bean(), beans, LibTractor._user(), mode);
         pods = LibDibbler.sow(beans, _morningTemperature, LibTractor._user(), peg);
-        s.f.beanSown = s.f.beanSown + SafeCast.toUint128(beans); // SafeMath not needed
+        s.f.beanSown = s.f.beanSown + SafeCast.toUint128(beans);
     }
 
     //////////////////// HARVEST ////////////////////
@@ -311,19 +308,6 @@ contract FieldFacet is Invariable, ReentrancyGuard {
     }
 
     //////////////////// GETTERS: TEMPERATURE ////////////////////
-
-    /**
-     * @notice DEPRECATED: Returns the current yield (aka "Temperature") offered
-     * by Beanstalk when burning Beans in exchange for Pods.
-     * @dev Left for backwards compatibility. Scales down the {morningTemperature}.
-     * There is a loss of precision (max 1%) during this operation.
-     */
-    function yield() external view returns (uint32) {
-        return
-            SafeCast.toUint32(
-                LibDibbler.morningTemperature().div(LibDibbler.TEMPERATURE_PRECISION)
-            );
-    }
 
     /**
      * @notice Returns the current Temperature, the interest rate offered by Beanstalk.

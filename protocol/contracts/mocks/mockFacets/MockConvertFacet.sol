@@ -2,11 +2,10 @@
  SPDX-License-Identifier: MIT
 */
 
-pragma solidity ^0.7.6;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.20;
 
 import "../../beanstalk/silo/ConvertFacet.sol";
-import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
+import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {LibConvert} from "../../libraries/Convert/LibConvert.sol";
 import {LibTractor} from "../../libraries/LibTractor.sol";
 
@@ -15,7 +14,7 @@ import {LibTractor} from "../../libraries/LibTractor.sol";
  * @title Mock Convert Facet
  **/
 contract MockConvertFacet is ConvertFacet {
-    using SafeMath for uint256;
+    using LibRedundantMath256 for uint256;
     using SafeERC20 for IERC20;
 
     event MockConvert(uint256 stalkRemoved, uint256 bdvRemoved);

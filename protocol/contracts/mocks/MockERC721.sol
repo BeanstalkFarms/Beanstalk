@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity =0.7.6;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.20;
 
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 
@@ -13,6 +12,6 @@ contract MockERC721 is ERC721 {
     }
 
     function permit(address spender, uint256 tokenId, uint256, bytes memory) public {
-        _approve(spender, tokenId);
+        _approve(spender, tokenId, address(0));
     }
 }

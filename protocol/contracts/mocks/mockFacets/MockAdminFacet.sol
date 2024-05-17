@@ -1,8 +1,7 @@
 /*
  SPDX-License-Identifier: MIT
 */
-pragma solidity =0.7.6;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.20;
 
 import "contracts/C.sol";
 import "contracts/libraries/Token/LibTransfer.sol";
@@ -59,7 +58,7 @@ contract MockAdminFacet is Sun {
 
     function updateStart() private {
         SeasonFacet sf = SeasonFacet(address(this));
-        int256 sa = s.season.current - sf.seasonTime();
+        int256 sa = int256(uint256(s.season.current - sf.seasonTime()));
         if (sa >= 0) s.season.start -= 3600 * (uint256(sa) + 1);
     }
 

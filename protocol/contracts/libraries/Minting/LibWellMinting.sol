@@ -2,19 +2,19 @@
  * SPDX-License-Identifier: MIT
  **/
 
-pragma solidity =0.7.6;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.20;
 
 import {LibAppStorage, AppStorage} from "../LibAppStorage.sol";
-import {SafeMath, C, LibMinting} from "./LibMinting.sol";
+import {C, LibMinting} from "./LibMinting.sol";
 import {ICumulativePump} from "contracts/interfaces/basin/pumps/ICumulativePump.sol";
 import {ICappedReservesPump} from "contracts/interfaces/basin/pumps/ICappedReservesPump.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {Call, IWell} from "contracts/interfaces/basin/IWell.sol";
 import {LibWell} from "contracts/libraries/Well/LibWell.sol";
 import {IBeanstalkWellFunction} from "contracts/interfaces/basin/IBeanstalkWellFunction.sol";
-import {SignedSafeMath} from "@openzeppelin/contracts/math/SignedSafeMath.sol";
+import {LibRedundantMathSigned256} from "contracts/libraries/LibRedundantMathSigned256.sol";
 import {LibEthUsdOracle} from "contracts/libraries/Oracle/LibEthUsdOracle.sol";
+import {LibRedundantMath256} from "contracts/libraries/LibRedundantMath256.sol";
 
 /**
  * @title Well Minting Oracle Library
@@ -29,7 +29,7 @@ import {LibEthUsdOracle} from "contracts/libraries/Oracle/LibEthUsdOracle.sol";
  **/
 
 library LibWellMinting {
-    using SignedSafeMath for int256;
+    using LibRedundantMathSigned256 for int256;
 
     /**
      * @notice Emitted when a Well Minting Oracle is captured.
@@ -40,7 +40,7 @@ library LibWellMinting {
      */
     event WellOracle(uint32 indexed season, address well, int256 deltaB, bytes cumulativeReserves);
 
-    using SafeMath for uint256;
+    using LibRedundantMath256 for uint256;
 
     //////////////////// CHECK ////////////////////
 

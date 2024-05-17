@@ -1,9 +1,8 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity =0.7.6;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.20;
 
-import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
+import {LibRedundantMath256} from "contracts/libraries/LibRedundantMath256.sol";
 import {ICurvePool} from "contracts/interfaces/ICurve.sol";
 import {LibAppStorage, AppStorage} from "../LibAppStorage.sol";
 import {LibConvertData} from "./LibConvertData.sol";
@@ -16,7 +15,7 @@ import {C} from "contracts/C.sol";
  * in the direction of the Peg.
  **/
 library LibCurveConvert {
-    using SafeMath for uint256;
+    using LibRedundantMath256 for uint256;
     using LibConvertData for bytes;
 
     //////////////////// GETTERS ////////////////////

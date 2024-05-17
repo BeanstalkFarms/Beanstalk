@@ -1,11 +1,10 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity =0.7.6;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.20;
 
 import {AppStorage, LibAppStorage, Storage} from "../LibAppStorage.sol";
-import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
-import {SafeCast} from "@openzeppelin/contracts/utils/SafeCast.sol";
+import {LibRedundantMath256} from "contracts/libraries/LibRedundantMath256.sol";
+import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
 import {LibCurve} from "./LibCurve.sol";
 import {LibCurveMinting} from "contracts/libraries/Minting/LibCurveMinting.sol";
 import "../../C.sol";
@@ -27,7 +26,7 @@ interface IMeta3Curve {
  * retrieving, and resetting the bean3crv twa reserves.
  */
 library LibMetaCurve {
-    using SafeMath for uint256;
+    using LibRedundantMath256 for uint256;
     using SafeCast for uint256;
 
     /**

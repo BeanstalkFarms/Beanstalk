@@ -2,10 +2,9 @@
  * SPDX-License-Identifier: MIT
  */
 
-pragma solidity =0.7.6;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.20;
 
-import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
+import {LibRedundantMath256} from "contracts/libraries/LibRedundantMath256.sol";
 import {LibGauge} from "contracts/libraries/LibGauge.sol";
 
 /**
@@ -22,7 +21,7 @@ interface IGaugePointFacet {
 }
 
 contract GaugePointFacet {
-    using SafeMath for uint256;
+    using LibRedundantMath256 for uint256;
 
     uint256 private constant ONE_POINT = 1e18;
     uint256 private constant MAX_GAUGE_POINTS = 1000e18;

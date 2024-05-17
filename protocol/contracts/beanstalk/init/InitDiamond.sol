@@ -2,11 +2,10 @@
  SPDX-License-Identifier: MIT
 */
 
-pragma solidity =0.7.6;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.20;
 
 import {AppStorage, Storage} from "../AppStorage.sol";
-import {IERC165} from "../../interfaces/IERC165.sol";
+import {IERC165} from "@openzeppelin/contracts/utils/introspection/IERC165.sol";
 import {IERC1155} from "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
 import {IDiamondCut} from "../../interfaces/IDiamondCut.sol";
 import {IDiamondLoupe} from "../../interfaces/IDiamondLoupe.sol";
@@ -67,7 +66,7 @@ contract InitDiamond is Weather {
         emit BeanToMaxLpGpPerBdvRatioChange(
             s.season.current,
             type(uint256).max,
-            int80(s.seedGauge.beanToMaxLpGpPerBdvRatio)
+            int80(int128(s.seedGauge.beanToMaxLpGpPerBdvRatio))
         );
         emit LibGauge.UpdateAverageStalkPerBdvPerSeason(
             s.seedGauge.averageGrownStalkPerBdvPerSeason

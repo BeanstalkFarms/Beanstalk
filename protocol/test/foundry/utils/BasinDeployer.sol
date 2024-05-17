@@ -1,7 +1,7 @@
 /**
  * SPDX-License-Identifier: MIT
  **/
-pragma solidity >=0.7.6 <0.9.0;
+pragma solidity ^0.8.20;
 pragma abicoder v2;
 
 import {Utils, console} from "test/foundry/utils/Utils.sol";
@@ -262,7 +262,7 @@ contract BasinDeployer is Utils {
 
         // etch to address if specified.
         if (targetAddress != address(0)) {
-            vm.etch(targetAddress, getBytecodeAt(wellAddress));
+            vm.etch(targetAddress, wellAddress.code);
             return targetAddress;
         } else {
             return wellAddress;

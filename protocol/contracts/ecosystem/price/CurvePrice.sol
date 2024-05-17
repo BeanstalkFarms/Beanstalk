@@ -1,6 +1,5 @@
 //SPDX-License-Identifier: MIT
-pragma solidity =0.7.6;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.20;
 
 import {P} from "./P.sol";
 import "contracts/interfaces/ICurve.sol";
@@ -16,7 +15,7 @@ interface IBDV {
 }
 
 contract CurvePrice {
-    using SafeMath for uint256;
+    using LibRedundantMath256 for uint256;
 
     //-------------------------------------------------------------------------------------------------------------------
     // Mainnet

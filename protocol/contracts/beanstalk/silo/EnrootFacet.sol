@@ -2,14 +2,13 @@
  * SPDX-License-Identifier: MIT
  **/
 
-pragma solidity =0.7.6;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.20;
 
 import {LibTractor} from "contracts/libraries/LibTractor.sol";
 import "contracts/libraries/Silo/LibSilo.sol";
 import "contracts/libraries/Silo/LibTokenSilo.sol";
 import "./SiloFacet/Silo.sol";
-import "contracts/libraries/LibSafeMath32.sol";
+import "contracts/libraries/LibRedundantMath32.sol";
 import "../ReentrancyGuard.sol";
 import {Invariable} from "contracts/beanstalk/Invariable.sol";
 
@@ -18,7 +17,7 @@ import {Invariable} from "contracts/beanstalk/Invariable.sol";
  * @title Enroot Facet handles enrooting Update Deposits
  **/
 contract EnrootFacet is Invariable, ReentrancyGuard {
-    using SafeMath for uint256;
+    using LibRedundantMath256 for uint256;
     using SafeCast for uint256;
 
     event RemoveDeposit(

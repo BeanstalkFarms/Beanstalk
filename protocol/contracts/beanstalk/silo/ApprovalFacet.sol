@@ -2,8 +2,7 @@
  * SPDX-License-Identifier: MIT
  **/
 
-pragma solidity =0.7.6;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.20;
 
 import "contracts/C.sol";
 import "contracts/libraries/Silo/LibSilo.sol";
@@ -12,7 +11,7 @@ import "contracts/libraries/Silo/LibSiloPermit.sol";
 import "contracts/libraries/Silo/LibLegacyTokenSilo.sol";
 import "./SiloFacet/Silo.sol";
 import "./SiloFacet/TokenSilo.sol";
-import "contracts/libraries/LibSafeMath32.sol";
+import "contracts/libraries/LibRedundantMath32.sol";
 import "contracts/libraries/Convert/LibConvert.sol";
 import "../ReentrancyGuard.sol";
 import {Invariable} from "contracts/beanstalk/Invariable.sol";
@@ -23,7 +22,7 @@ import {LibTractor} from "contracts/libraries/LibTractor.sol";
  * @title Handles Approval related functions for the Silo
  **/
 contract ApprovalFacet is Invariable, ReentrancyGuard {
-    using SafeMath for uint256;
+    using LibRedundantMath256 for uint256;
 
     event DepositApproval(
         address indexed owner,

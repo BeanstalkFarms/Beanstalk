@@ -2,10 +2,9 @@
  SPDX-License-Identifier: MIT
 */
 
-pragma solidity =0.7.6;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.20;
 
-import "@openzeppelin/contracts/math/SafeMath.sol";
+import "contracts/libraries/LibRedundantMath256.sol";
 import "../../beanstalk/silo/SiloFacet/SiloFacet.sol";
 import "../../libraries/Silo/LibWhitelist.sol";
 import "../../libraries/Silo/LibLegacyTokenSilo.sol";
@@ -24,8 +23,8 @@ contract MockSiloFacet is SiloFacet {
     uint256 private constant AMOUNT_TO_BDV_BEAN_LUSD = 983108;
 
     using SafeCast for uint256;
-    using LibSafeMath128 for uint128;
-    using SafeMath for uint256;
+    using LibRedundantMath128 for uint128;
+    using LibRedundantMath256 for uint256;
 
     /**
      * @notice emitted when the farmers germinating stalk changes.
@@ -232,7 +231,7 @@ contract MockSiloFacet is SiloFacet {
         s.a[account].legacyV2Deposits[token][season].amount += uint128(amount);
         s.a[account].legacyV2Deposits[token][season].bdv += uint128(bdv);
 
-        emit AddDeposit(account, token, season, amount, bdv);
+        emit AddDeposit(account, token, int96(uint96(season)), amount, bdv);
     }
 
     //////////////////////// ADD DEPOSIT ////////////////////////

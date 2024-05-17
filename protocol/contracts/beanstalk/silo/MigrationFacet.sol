@@ -2,8 +2,7 @@
  * SPDX-License-Identifier: MIT
  **/
 
-pragma solidity =0.7.6;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.20;
 
 import "contracts/C.sol";
 import "../ReentrancyGuard.sol";
@@ -13,7 +12,7 @@ import "contracts/libraries/Silo/LibSilo.sol";
 import "contracts/libraries/Silo/LibTokenSilo.sol";
 import "contracts/libraries/Silo/LibLegacyTokenSilo.sol";
 import "contracts/libraries/Convert/LibConvert.sol";
-import "contracts/libraries/LibSafeMath32.sol";
+import "contracts/libraries/LibRedundantMath32.sol";
 import {Invariable} from "contracts/beanstalk/Invariable.sol";
 
 /**

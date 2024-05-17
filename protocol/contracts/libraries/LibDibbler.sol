@@ -1,13 +1,14 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity =0.7.6;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.20;
 
+import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
+import {PRBMath} from "@prb/math/contracts/PRBMath.sol";
+import {LibPRBMathRoundable} from "contracts/libraries/LibPRBMathRoundable.sol";
 import {LibAppStorage, AppStorage} from "./LibAppStorage.sol";
-import {LibSafeMath128} from "./LibSafeMath128.sol";
-import {LibSafeMath32} from "./LibSafeMath32.sol";
-import {LibPRBMath} from "./LibPRBMath.sol";
-import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
+import {LibRedundantMath128} from "./LibRedundantMath128.sol";
+import {LibRedundantMath32} from "./LibRedundantMath32.sol";
+import {LibRedundantMath256} from "contracts/libraries/LibRedundantMath256.sol";
 /**
  * @title LibDibbler
  * @author Publius, Brean
@@ -16,10 +17,11 @@ import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
  * Morning Auction functionality. Provides math helpers for scaling Soil.
  */
 library LibDibbler {
-    using SafeMath for uint256;
-    using LibPRBMath for uint256;
-    using LibSafeMath32 for uint32;
-    using LibSafeMath128 for uint128;
+    using PRBMath for uint256;
+    using LibPRBMathRoundable for uint256;
+    using LibRedundantMath256 for uint256;
+    using LibRedundantMath32 for uint32;
+    using LibRedundantMath128 for uint128;
 
     /// @dev Morning Auction scales temperature by 1e6.
     uint256 internal constant TEMPERATURE_PRECISION = 1e6;
@@ -80,8 +82,12 @@ library LibDibbler {
             pods = beansToPods(beans, _morningTemperature);
         }
 
-        // we use trySub here because in the case of an overflow, its equivalent to having no soil left.
-        (, s.f.soil) = s.f.soil.trySub(uint128(beans));
+        // In the case of an overflow, its equivalent to having no soil left.
+        if (s.f.soil < beans) {
+            s.f.soil = 0;
+        } else {
+            s.f.soil = s.f.soil.sub(uint128(beans));
+        }
 
         s.a[account].field.plots[s.f.pods] = pods;
         emit Sow(account, s.f.pods, beans, pods);
@@ -264,14 +270,14 @@ library LibDibbler {
         uint256 maxTemperature = s.w.t;
         if (maxTemperature == 0) return 0;
 
-        scaledTemperature = LibPRBMath.max(
+        scaledTemperature = Math.max(
             // To save gas, `pct` is pre-calculated to 12 digits. Here we
             // perform the following transformation:
             // (1e2)    maxTemperature
             // (1e12)    * pct
             // (1e6)     / TEMPERATURE_PRECISION
             // (1e8)     = scaledYield
-            maxTemperature.mulDiv(pct, TEMPERATURE_PRECISION, LibPRBMath.Rounding.Up),
+            maxTemperature.mulDiv(pct, TEMPERATURE_PRECISION, LibPRBMathRoundable.Rounding.Up),
             // Floor at TEMPERATURE_PRECISION (1%)
             TEMPERATURE_PRECISION
         );
@@ -337,7 +343,7 @@ library LibDibbler {
             soil.mulDiv(
                 _morningTemperature.add(ONE_HUNDRED_PCT),
                 maxTemperature.add(ONE_HUNDRED_PCT),
-                LibPRBMath.Rounding.Up
+                LibPRBMathRoundable.Rounding.Up
             );
     }
 
