@@ -24,7 +24,8 @@ const listingStart = beans_BI(500);
 const currentHarvestable = podlineMil_BI(4);
 const maxHarvestableIndex = podlineMil_BI(100);
 const sowedBeans = beans_BI(5000);
-const sowedPods = sowedBeans.times(BigInt.fromString("3"));
+const temperature = 37;
+const sowedPods = sowedBeans.times(BigInt.fromU32(temperature));
 
 const orderBeans = beans_BI(80000);
 const orderPricePerPod = BigInt.fromString("500000"); // 0.5 beans
@@ -76,8 +77,8 @@ describe("Marketplace", () => {
     });
 
     test("Create a pod listing - partial plot", () => {
-      const event = createListing_v2(account, listingIndex, sowedPods, beans_BI(500), maxHarvestableIndex);
-      const listedPods = sowedPods.minus(beans_BI(500));
+      const listedPods = sowedPods.minus(listingStart);
+      const event = createListing_v2(account, listingIndex, listedPods, listingStart, maxHarvestableIndex);
       assertMarketListingsState(
         BEANSTALK.toHexString(),
         [account + "-" + listingIndex.toString() + "-" + maxHarvestableIndex.toString()],
@@ -109,7 +110,7 @@ describe("Marketplace", () => {
     test("Market events correctly track place in line", () => {
       let placeInLine = listingIndex.plus(listingStart).minus(currentHarvestable);
       const listedPods = sowedPods.minus(listingStart);
-      const createEvent = createListing_v2(account, listingIndex, sowedPods, listingStart, maxHarvestableIndex);
+      const createEvent = createListing_v2(account, listingIndex, listedPods, listingStart, maxHarvestableIndex);
       const createListingId = "podListingCreated-" + createEvent.transaction.hash.toHexString() + "-" + createEvent.logIndex.toString();
       assert.fieldEquals("PodListingCreated", createListingId, "placeInLine", placeInLine.toString());
 
@@ -146,7 +147,7 @@ describe("Marketplace", () => {
 
     describe("Listing tests", () => {
       beforeEach(() => {
-        createListing_v2(account, listingIndex, sowedPods, beans_BI(500), maxHarvestableIndex);
+        createListing_v2(account, listingIndex, sowedPods.minus(beans_BI(500)), beans_BI(500), maxHarvestableIndex);
       });
 
       test("Fill listing - full", () => {
@@ -256,7 +257,7 @@ describe("Marketplace", () => {
       test("Recreate listing", () => {
         const listedPods = sowedPods.minus(listingStart);
         cancelListing(account, listingIndex);
-        const listEvent = createListing_v2(account, listingIndex, sowedPods, listingStart, maxHarvestableIndex);
+        const listEvent = createListing_v2(account, listingIndex, listedPods, listingStart, maxHarvestableIndex);
 
         const listingID = listEvent.params.account.toHexString() + "-" + listEvent.params.index.toString();
         assert.fieldEquals("PodListing", listingID, "status", "ACTIVE");
@@ -325,7 +326,7 @@ describe("Marketplace", () => {
 
         // Test expiration after a partial sale
         setHarvestable(maxHarvestableIndex);
-        createListing_v2(account, listingIndex, sowedPods, beans_BI(500), maxHarvestableIndex);
+        createListing_v2(account, listingIndex, listedPods, listingStart, maxHarvestableIndex);
 
         const filledPods = listedPods.div(BigInt.fromString("4"));
         const filledBeans = beans_BI(2000);

@@ -15,6 +15,7 @@ export function loadPodFill(diamondAddress: Address, index: BigInt, hash: String
     fill.amount = ZERO_BI;
     fill.index = ZERO_BI;
     fill.start = ZERO_BI;
+    fill.costInBeans = ZERO_BI;
     fill.save();
   }
   return fill;

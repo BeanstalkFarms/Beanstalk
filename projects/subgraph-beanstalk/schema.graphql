@@ -1160,7 +1160,7 @@ type PodFill @entity {
   "Start of plot transferred"
   start: BigInt!
   "Total beans used to fill listing/order"
-  costInBeans: BigInt
+  costInBeans: BigInt!
 }
 
 ##################################

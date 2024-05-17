@@ -327,13 +327,14 @@ export function handlePlotTransfer(event: PlotTransfer): void {
 
     const isMarket = sourcePlot.source == "MARKET" && sourcePlot.sourceHash == event.transaction.hash.toHexString();
     if (!isMarket) {
-      sourcePlot.source = "TRANSFER";
-      sourcePlot.sourceHash = event.transaction.hash.toHexString();
-      sourcePlot.beansPerPod = sourcePlot.beansPerPod;
       // When sending the start of the plot via market, these cannot be derived from sourcePlot.
       remainderPlot.source = sourcePlot.source;
       remainderPlot.sourceHash = sourcePlot.sourceHash;
       remainderPlot.beansPerPod = sourcePlot.beansPerPod;
+
+      sourcePlot.source = "TRANSFER";
+      sourcePlot.sourceHash = event.transaction.hash.toHexString();
+      sourcePlot.beansPerPod = sourcePlot.beansPerPod;
     }
     sourcePlot.farmer = event.params.to.toHexString();
     sourcePlot.updatedAt = event.block.timestamp;

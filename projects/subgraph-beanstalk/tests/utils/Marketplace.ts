@@ -259,12 +259,12 @@ function assertOrderCreated_v2(account: string, event: PodOrderCreated_v2): void
 export function createListing_v1(
   account: string,
   index: BigInt,
-  plotTotalPods: BigInt,
+  listedPods: BigInt,
   start: BigInt,
   pricePerPod: BigInt,
   maxHarvestableIndex: BigInt
 ): PodListingCreated_v1 {
-  const event = createPodListingCreatedEvent(account, index, start, plotTotalPods.minus(start), pricePerPod, maxHarvestableIndex, true);
+  const event = createPodListingCreatedEvent(account, index, start, listedPods, pricePerPod, maxHarvestableIndex, true);
   handlePodListingCreated(event);
   assertListingCreated_v1(event);
   return event;
@@ -273,20 +273,12 @@ export function createListing_v1(
 export function createListing_v1_1(
   account: string,
   index: BigInt,
-  plotTotalPods: BigInt,
+  listedPods: BigInt,
   start: BigInt,
   pricePerPod: BigInt,
   maxHarvestableIndex: BigInt
 ): PodListingCreated_v1_1 {
-  const event = createPodListingCreatedEvent_v1_1(
-    account,
-    index,
-    start,
-    plotTotalPods.minus(start),
-    pricePerPod,
-    maxHarvestableIndex,
-    ZERO_BI
-  );
+  const event = createPodListingCreatedEvent_v1_1(account, index, start, listedPods, pricePerPod, maxHarvestableIndex, ZERO_BI);
   handlePodListingCreated_v1_1(event);
   assertListingCreated_v1_1(event);
   return event;
@@ -295,7 +287,7 @@ export function createListing_v1_1(
 export function createListing_v2(
   account: string,
   index: BigInt,
-  plotTotalPods: BigInt,
+  listedPods: BigInt,
   start: BigInt,
   maxHarvestableIndex: BigInt
 ): PodListingCreated_v2 {
@@ -303,7 +295,7 @@ export function createListing_v2(
     account,
     index,
     start,
-    plotTotalPods.minus(start),
+    listedPods,
     BigInt.fromString("250000"),
     maxHarvestableIndex,
     BigInt.fromString("10000000"),

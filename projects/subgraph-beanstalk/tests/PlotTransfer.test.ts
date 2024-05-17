@@ -2,22 +2,26 @@
 
 import { beforeEach, afterEach, assert, clearStore, describe, test, createMockedFunction } from "matchstick-as/assembly/index";
 import { log } from "matchstick-as/assembly/log";
-import { BigInt } from "@graphprotocol/graph-ts";
+import { BigInt, Bytes } from "@graphprotocol/graph-ts";
 
 import { BEANSTALK } from "../../subgraph-core/utils/Constants";
-import { ZERO_BI } from "../../subgraph-core/utils/Decimals";
-import { beans_BI as beans, podlineMil_BI as mil } from "../../subgraph-core/tests/Values";
+import { BI_10, ZERO_BI } from "../../subgraph-core/utils/Decimals";
+import { beans_BI as beans, podlineMil_BI } from "../../subgraph-core/tests/Values";
 import { assertFarmerHasPlot, assertFieldHas, setHarvestable, sow, transferPlot } from "./utils/Field";
+import { createListing_v2, createOrder_v2, fillListing_v2, fillOrder_v2 } from "./utils/Marketplace";
 
-const ANVIL_ADDR_1 = "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266".toLowerCase();
-const ANVIL_ADDR_2 = "0x70997970C51812dc3A010C7d01b50e0d17dc79C8".toLowerCase();
+const account = "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266".toLowerCase();
+const account2 = "0x70997970C51812dc3A010C7d01b50e0d17dc79C8".toLowerCase();
 
 // 2 plots: each sow 500 for 7500 at 10m and 15m in line.
-const plot1Start = mil(10);
-const plot2Start = mil(15);
+const plot1Start = podlineMil_BI(10);
+const plot2Start = podlineMil_BI(15);
 const beansSown = beans(500);
 const temperature = 15;
 const pods = beansSown.times(BigInt.fromI32(temperature));
+
+const maxHarvestableIndex = podlineMil_BI(100);
+const orderId = Bytes.fromHexString("0xabcd");
 
 class Plot {
   plotStart: BigInt;
@@ -49,12 +53,12 @@ describe("Field: Plot Transfer", () => {
   beforeEach(() => {
     // Create two equally sized plots next to each other
     for (let i = 0; i < initialPlots.length; ++i) {
-      sow(ANVIL_ADDR_1, initialPlots[i].plotStart, initialPlots[i].beansSown, initialPlots[i].pods);
+      sow(account, initialPlots[i].plotStart, initialPlots[i].beansSown, initialPlots[i].pods);
     }
     // Ensure setup was done correctly
-    assertFarmerHasPlot(ANVIL_ADDR_1, initialPlots[0].plotStart, initialPlots[0].pods);
-    assertFieldHas(ANVIL_ADDR_1, initialPlots[0].pods.plus(initialPlots[1].pods), ZERO_BI);
-    assert.notInStore("Field", ANVIL_ADDR_2);
+    assertFarmerHasPlot(account, initialPlots[0].plotStart, initialPlots[0].pods);
+    assertFieldHas(account, initialPlots[0].pods.plus(initialPlots[1].pods), ZERO_BI);
+    assert.notInStore("Field", account2);
     assertFieldHas(BEANSTALK.toHexString(), initialPlots[0].pods.plus(initialPlots[1].pods), ZERO_BI);
 
     log.info("Initial data populated", []);
@@ -67,11 +71,11 @@ describe("Field: Plot Transfer", () => {
   // Transfers entire first plot
   describe("Full Plot", () => {
     test("F: Unharvestable", () => {
-      transferPlot(ANVIL_ADDR_1, ANVIL_ADDR_2, initialPlots[0].plotStart, initialPlots[0].pods);
+      transferPlot(account, account2, initialPlots[0].plotStart, initialPlots[0].pods);
 
-      assertFarmerHasPlot(ANVIL_ADDR_2, initialPlots[0].plotStart, initialPlots[0].pods);
-      assertFieldHas(ANVIL_ADDR_1, initialPlots[1].pods, ZERO_BI);
-      assertFieldHas(ANVIL_ADDR_2, initialPlots[0].pods, ZERO_BI);
+      assertFarmerHasPlot(account2, initialPlots[0].plotStart, initialPlots[0].pods);
+      assertFieldHas(account, initialPlots[1].pods, ZERO_BI);
+      assertFieldHas(account2, initialPlots[0].pods, ZERO_BI);
       assertFieldHas(BEANSTALK.toHexString(), initialPlots[0].pods.plus(initialPlots[1].pods), ZERO_BI);
     });
 
@@ -79,11 +83,11 @@ describe("Field: Plot Transfer", () => {
       // Entire first plot is harvestable
       setHarvestable(initialPlots[0].plotStart.plus(initialPlots[0].pods));
 
-      transferPlot(ANVIL_ADDR_1, ANVIL_ADDR_2, initialPlots[0].plotStart, initialPlots[0].pods);
+      transferPlot(account, account2, initialPlots[0].plotStart, initialPlots[0].pods);
 
-      assertFarmerHasPlot(ANVIL_ADDR_2, initialPlots[0].plotStart, initialPlots[0].pods, initialPlots[0].pods);
-      assertFieldHas(ANVIL_ADDR_1, initialPlots[1].pods, ZERO_BI);
-      assertFieldHas(ANVIL_ADDR_2, ZERO_BI, initialPlots[0].pods);
+      assertFarmerHasPlot(account2, initialPlots[0].plotStart, initialPlots[0].pods, initialPlots[0].pods);
+      assertFieldHas(account, initialPlots[1].pods, ZERO_BI);
+      assertFieldHas(account2, ZERO_BI, initialPlots[0].pods);
       assertFieldHas(BEANSTALK.toHexString(), initialPlots[1].pods, initialPlots[0].pods);
     });
 
@@ -92,16 +96,16 @@ describe("Field: Plot Transfer", () => {
       const harvestableAmount = initialPlots[0].pods.div(BigInt.fromI32(3));
       setHarvestable(initialPlots[0].plotStart.plus(harvestableAmount));
 
-      transferPlot(ANVIL_ADDR_1, ANVIL_ADDR_2, initialPlots[0].plotStart, initialPlots[0].pods);
+      transferPlot(account, account2, initialPlots[0].plotStart, initialPlots[0].pods);
 
-      assertFarmerHasPlot(ANVIL_ADDR_2, initialPlots[0].plotStart, initialPlots[0].pods, harvestableAmount);
-      assertFieldHas(ANVIL_ADDR_1, initialPlots[1].pods, ZERO_BI);
-      assertFieldHas(ANVIL_ADDR_2, initialPlots[0].pods.minus(harvestableAmount), harvestableAmount);
+      assertFarmerHasPlot(account2, initialPlots[0].plotStart, initialPlots[0].pods, harvestableAmount);
+      assertFieldHas(account, initialPlots[1].pods, ZERO_BI);
+      assertFieldHas(account2, initialPlots[0].pods.minus(harvestableAmount), harvestableAmount);
       assertFieldHas(BEANSTALK.toHexString(), initialPlots[0].pods.minus(harvestableAmount).plus(initialPlots[1].pods), harvestableAmount);
     });
 
     test("F: Plot Source", () => {
-      transferPlot(ANVIL_ADDR_1, ANVIL_ADDR_2, initialPlots[0].plotStart, initialPlots[0].pods);
+      transferPlot(account, account2, initialPlots[0].plotStart, initialPlots[0].pods);
       assert.fieldEquals("Plot", initialPlots[0].plotStart.toString(), "source", "TRANSFER");
     });
   });
@@ -111,12 +115,12 @@ describe("Field: Plot Transfer", () => {
     test("S: Unharvestable", () => {
       const transferredIndex = initialPlots[0].plotStart;
       const transferredAmount = initialPlots[0].pods.div(BigInt.fromI32(3));
-      transferPlot(ANVIL_ADDR_1, ANVIL_ADDR_2, transferredIndex, transferredAmount);
+      transferPlot(account, account2, transferredIndex, transferredAmount);
 
-      assertFarmerHasPlot(ANVIL_ADDR_1, transferredIndex.plus(transferredAmount), initialPlots[0].pods.minus(transferredAmount));
-      assertFarmerHasPlot(ANVIL_ADDR_2, transferredIndex, transferredAmount);
-      assertFieldHas(ANVIL_ADDR_1, initialPlots[0].pods.minus(transferredAmount).plus(initialPlots[1].pods), ZERO_BI);
-      assertFieldHas(ANVIL_ADDR_2, transferredAmount, ZERO_BI);
+      assertFarmerHasPlot(account, transferredIndex.plus(transferredAmount), initialPlots[0].pods.minus(transferredAmount));
+      assertFarmerHasPlot(account2, transferredIndex, transferredAmount);
+      assertFieldHas(account, initialPlots[0].pods.minus(transferredAmount).plus(initialPlots[1].pods), ZERO_BI);
+      assertFieldHas(account2, transferredAmount, ZERO_BI);
       assertFieldHas(BEANSTALK.toHexString(), initialPlots[0].pods.plus(initialPlots[1].pods), ZERO_BI);
     });
 
@@ -126,17 +130,17 @@ describe("Field: Plot Transfer", () => {
 
       const transferredIndex = initialPlots[0].plotStart;
       const transferredAmount = initialPlots[0].pods.div(BigInt.fromI32(3));
-      transferPlot(ANVIL_ADDR_1, ANVIL_ADDR_2, transferredIndex, transferredAmount);
+      transferPlot(account, account2, transferredIndex, transferredAmount);
 
       assertFarmerHasPlot(
-        ANVIL_ADDR_1,
+        account,
         transferredIndex.plus(transferredAmount),
         initialPlots[0].pods.minus(transferredAmount),
         initialPlots[0].pods.minus(transferredAmount)
       );
-      assertFarmerHasPlot(ANVIL_ADDR_2, transferredIndex, transferredAmount, transferredAmount);
-      assertFieldHas(ANVIL_ADDR_1, initialPlots[1].pods, initialPlots[0].pods.minus(transferredAmount));
-      assertFieldHas(ANVIL_ADDR_2, ZERO_BI, transferredAmount);
+      assertFarmerHasPlot(account2, transferredIndex, transferredAmount, transferredAmount);
+      assertFieldHas(account, initialPlots[1].pods, initialPlots[0].pods.minus(transferredAmount));
+      assertFieldHas(account2, ZERO_BI, transferredAmount);
       assertFieldHas(BEANSTALK.toHexString(), initialPlots[1].pods, initialPlots[0].pods);
     });
 
@@ -148,20 +152,20 @@ describe("Field: Plot Transfer", () => {
       // Transfers first third of plot (only some of which is harvestable)
       const transferredIndex = initialPlots[0].plotStart;
       const transferredAmount = initialPlots[0].pods.div(BigInt.fromI32(3));
-      transferPlot(ANVIL_ADDR_1, ANVIL_ADDR_2, transferredIndex, transferredAmount);
+      transferPlot(account, account2, transferredIndex, transferredAmount);
 
       const transferredUnharvestable = transferredAmount.minus(harvestableAmount);
-      assertFarmerHasPlot(ANVIL_ADDR_1, transferredIndex.plus(transferredAmount), initialPlots[0].pods.minus(transferredAmount), ZERO_BI);
-      assertFarmerHasPlot(ANVIL_ADDR_2, transferredIndex, transferredAmount, harvestableAmount);
-      assertFieldHas(ANVIL_ADDR_1, initialPlots[0].pods.minus(transferredAmount).plus(initialPlots[1].pods), ZERO_BI);
-      assertFieldHas(ANVIL_ADDR_2, transferredUnharvestable, harvestableAmount);
+      assertFarmerHasPlot(account, transferredIndex.plus(transferredAmount), initialPlots[0].pods.minus(transferredAmount), ZERO_BI);
+      assertFarmerHasPlot(account2, transferredIndex, transferredAmount, harvestableAmount);
+      assertFieldHas(account, initialPlots[0].pods.minus(transferredAmount).plus(initialPlots[1].pods), ZERO_BI);
+      assertFieldHas(account2, transferredUnharvestable, harvestableAmount);
       assertFieldHas(BEANSTALK.toHexString(), initialPlots[0].pods.minus(harvestableAmount).plus(initialPlots[1].pods), harvestableAmount);
     });
 
     test("S: Plot Source", () => {
       const transferredIndex = initialPlots[0].plotStart;
       const transferredAmount = initialPlots[0].pods.div(BigInt.fromI32(3));
-      transferPlot(ANVIL_ADDR_1, ANVIL_ADDR_2, transferredIndex, transferredAmount);
+      transferPlot(account, account2, transferredIndex, transferredAmount);
       assert.fieldEquals("Plot", initialPlots[0].plotStart.toString(), "source", "TRANSFER");
       assert.fieldEquals("Plot", transferredIndex.plus(transferredAmount).toString(), "source", "SOW");
     });
@@ -172,12 +176,12 @@ describe("Field: Plot Transfer", () => {
     test("E: Unharvestable", () => {
       const transferredAmount = initialPlots[0].pods.div(BigInt.fromI32(3));
       const transferredIndex = initialPlots[0].plotEnd.minus(transferredAmount);
-      transferPlot(ANVIL_ADDR_1, ANVIL_ADDR_2, transferredIndex, transferredAmount);
+      transferPlot(account, account2, transferredIndex, transferredAmount);
 
-      assertFarmerHasPlot(ANVIL_ADDR_1, initialPlots[0].plotStart, initialPlots[0].pods.minus(transferredAmount));
-      assertFarmerHasPlot(ANVIL_ADDR_2, transferredIndex, transferredAmount);
-      assertFieldHas(ANVIL_ADDR_1, initialPlots[0].pods.minus(transferredAmount).plus(initialPlots[1].pods), ZERO_BI);
-      assertFieldHas(ANVIL_ADDR_2, transferredAmount, ZERO_BI);
+      assertFarmerHasPlot(account, initialPlots[0].plotStart, initialPlots[0].pods.minus(transferredAmount));
+      assertFarmerHasPlot(account2, transferredIndex, transferredAmount);
+      assertFieldHas(account, initialPlots[0].pods.minus(transferredAmount).plus(initialPlots[1].pods), ZERO_BI);
+      assertFieldHas(account2, transferredAmount, ZERO_BI);
       assertFieldHas(BEANSTALK.toHexString(), initialPlots[0].pods.plus(initialPlots[1].pods), ZERO_BI);
     });
 
@@ -187,17 +191,17 @@ describe("Field: Plot Transfer", () => {
 
       const transferredAmount = initialPlots[0].pods.div(BigInt.fromI32(3));
       const transferredIndex = initialPlots[0].plotEnd.minus(transferredAmount);
-      transferPlot(ANVIL_ADDR_1, ANVIL_ADDR_2, transferredIndex, transferredAmount);
+      transferPlot(account, account2, transferredIndex, transferredAmount);
 
       assertFarmerHasPlot(
-        ANVIL_ADDR_1,
+        account,
         initialPlots[0].plotStart,
         initialPlots[0].pods.minus(transferredAmount),
         initialPlots[0].pods.minus(transferredAmount)
       );
-      assertFarmerHasPlot(ANVIL_ADDR_2, transferredIndex, transferredAmount, transferredAmount);
-      assertFieldHas(ANVIL_ADDR_1, initialPlots[1].pods, initialPlots[0].pods.minus(transferredAmount));
-      assertFieldHas(ANVIL_ADDR_2, ZERO_BI, transferredAmount);
+      assertFarmerHasPlot(account2, transferredIndex, transferredAmount, transferredAmount);
+      assertFieldHas(account, initialPlots[1].pods, initialPlots[0].pods.minus(transferredAmount));
+      assertFieldHas(account2, ZERO_BI, transferredAmount);
       assertFieldHas(BEANSTALK.toHexString(), initialPlots[1].pods, initialPlots[0].pods);
     });
 
@@ -208,25 +212,25 @@ describe("Field: Plot Transfer", () => {
 
       const transferredAmount = initialPlots[0].pods.div(BigInt.fromI32(3));
       const transferredIndex = initialPlots[0].plotEnd.minus(transferredAmount);
-      transferPlot(ANVIL_ADDR_1, ANVIL_ADDR_2, transferredIndex, transferredAmount);
+      transferPlot(account, account2, transferredIndex, transferredAmount);
 
       const transferredHarvestable = harvestableIndex.minus(transferredIndex);
       assertFarmerHasPlot(
-        ANVIL_ADDR_1,
+        account,
         initialPlots[0].plotStart,
         initialPlots[0].pods.minus(transferredAmount),
         harvestableAmount.minus(transferredHarvestable)
       );
-      assertFarmerHasPlot(ANVIL_ADDR_2, transferredIndex, transferredAmount, transferredHarvestable);
-      assertFieldHas(ANVIL_ADDR_1, initialPlots[1].pods, harvestableAmount.minus(transferredHarvestable));
-      assertFieldHas(ANVIL_ADDR_2, initialPlots[0].pods.minus(harvestableAmount), transferredHarvestable);
+      assertFarmerHasPlot(account2, transferredIndex, transferredAmount, transferredHarvestable);
+      assertFieldHas(account, initialPlots[1].pods, harvestableAmount.minus(transferredHarvestable));
+      assertFieldHas(account2, initialPlots[0].pods.minus(harvestableAmount), transferredHarvestable);
       assertFieldHas(BEANSTALK.toHexString(), initialPlots[0].pods.minus(harvestableAmount).plus(initialPlots[1].pods), harvestableAmount);
     });
 
     test("E: Plot Source", () => {
       const transferredAmount = initialPlots[0].pods.div(BigInt.fromI32(3));
       const transferredIndex = initialPlots[0].plotEnd.minus(transferredAmount);
-      transferPlot(ANVIL_ADDR_1, ANVIL_ADDR_2, transferredIndex, transferredAmount);
+      transferPlot(account, account2, transferredIndex, transferredAmount);
       assert.fieldEquals("Plot", initialPlots[0].plotStart.toString(), "source", "SOW");
       assert.fieldEquals("Plot", transferredIndex.toString(), "source", "TRANSFER");
     });
@@ -237,13 +241,13 @@ describe("Field: Plot Transfer", () => {
     test("M: Unharvestable", () => {
       const transferredAmount = initialPlots[0].pods.div(BigInt.fromI32(3));
       const transferredIndex = initialPlots[0].plotStart.plus(transferredAmount);
-      transferPlot(ANVIL_ADDR_1, ANVIL_ADDR_2, transferredIndex, transferredAmount);
+      transferPlot(account, account2, transferredIndex, transferredAmount);
 
-      assertFarmerHasPlot(ANVIL_ADDR_1, initialPlots[0].plotStart, transferredAmount);
-      assertFarmerHasPlot(ANVIL_ADDR_1, initialPlots[0].plotEnd.minus(transferredAmount), transferredAmount);
-      assertFarmerHasPlot(ANVIL_ADDR_2, transferredIndex, transferredAmount);
-      assertFieldHas(ANVIL_ADDR_1, initialPlots[0].pods.minus(transferredAmount).plus(initialPlots[1].pods), ZERO_BI);
-      assertFieldHas(ANVIL_ADDR_2, transferredAmount, ZERO_BI);
+      assertFarmerHasPlot(account, initialPlots[0].plotStart, transferredAmount);
+      assertFarmerHasPlot(account, initialPlots[0].plotEnd.minus(transferredAmount), transferredAmount);
+      assertFarmerHasPlot(account2, transferredIndex, transferredAmount);
+      assertFieldHas(account, initialPlots[0].pods.minus(transferredAmount).plus(initialPlots[1].pods), ZERO_BI);
+      assertFieldHas(account2, transferredAmount, ZERO_BI);
       assertFieldHas(BEANSTALK.toHexString(), initialPlots[0].pods.plus(initialPlots[1].pods), ZERO_BI);
     });
 
@@ -253,13 +257,13 @@ describe("Field: Plot Transfer", () => {
 
       const transferredAmount = initialPlots[0].pods.div(BigInt.fromI32(3));
       const transferredIndex = initialPlots[0].plotStart.plus(transferredAmount);
-      transferPlot(ANVIL_ADDR_1, ANVIL_ADDR_2, transferredIndex, transferredAmount);
+      transferPlot(account, account2, transferredIndex, transferredAmount);
 
-      assertFarmerHasPlot(ANVIL_ADDR_1, initialPlots[0].plotStart, transferredAmount, transferredAmount);
-      assertFarmerHasPlot(ANVIL_ADDR_1, initialPlots[0].plotEnd.minus(transferredAmount), transferredAmount, transferredAmount);
-      assertFarmerHasPlot(ANVIL_ADDR_2, transferredIndex, transferredAmount, transferredAmount);
-      assertFieldHas(ANVIL_ADDR_1, initialPlots[1].pods, initialPlots[0].pods.minus(transferredAmount));
-      assertFieldHas(ANVIL_ADDR_2, ZERO_BI, transferredAmount);
+      assertFarmerHasPlot(account, initialPlots[0].plotStart, transferredAmount, transferredAmount);
+      assertFarmerHasPlot(account, initialPlots[0].plotEnd.minus(transferredAmount), transferredAmount, transferredAmount);
+      assertFarmerHasPlot(account2, transferredIndex, transferredAmount, transferredAmount);
+      assertFieldHas(account, initialPlots[1].pods, initialPlots[0].pods.minus(transferredAmount));
+      assertFieldHas(account2, ZERO_BI, transferredAmount);
       assertFieldHas(BEANSTALK.toHexString(), initialPlots[0].pods, initialPlots[1].pods);
     });
 
@@ -270,28 +274,70 @@ describe("Field: Plot Transfer", () => {
 
       const transferredAmount = initialPlots[0].pods.div(BigInt.fromI32(3));
       const transferredIndex = initialPlots[0].plotStart.plus(transferredAmount);
-      transferPlot(ANVIL_ADDR_1, ANVIL_ADDR_2, transferredIndex, transferredAmount);
+      transferPlot(account, account2, transferredIndex, transferredAmount);
 
       const transferredHarvestable = harvestableAmount.minus(transferredAmount);
-      assertFarmerHasPlot(ANVIL_ADDR_1, initialPlots[0].plotStart, transferredAmount, harvestableAmount.minus(transferredHarvestable));
-      assertFarmerHasPlot(ANVIL_ADDR_1, initialPlots[0].plotEnd.minus(transferredAmount), transferredAmount, ZERO_BI);
-      assertFarmerHasPlot(ANVIL_ADDR_2, transferredIndex, transferredAmount, transferredHarvestable);
+      assertFarmerHasPlot(account, initialPlots[0].plotStart, transferredAmount, harvestableAmount.minus(transferredHarvestable));
+      assertFarmerHasPlot(account, initialPlots[0].plotEnd.minus(transferredAmount), transferredAmount, ZERO_BI);
+      assertFarmerHasPlot(account2, transferredIndex, transferredAmount, transferredHarvestable);
       assertFieldHas(
-        ANVIL_ADDR_1,
+        account,
         initialPlots[0].pods.minus(harvestableAmount).minus(transferredHarvestable).plus(initialPlots[1].pods),
         harvestableAmount.minus(transferredHarvestable)
       );
-      assertFieldHas(ANVIL_ADDR_2, transferredHarvestable, transferredHarvestable);
+      assertFieldHas(account2, transferredHarvestable, transferredHarvestable);
       assertFieldHas(BEANSTALK.toHexString(), initialPlots[0].pods.plus(initialPlots[1].pods).minus(harvestableAmount), harvestableAmount);
     });
 
     test("M: Plot Source", () => {
       const transferredAmount = initialPlots[0].pods.div(BigInt.fromI32(3));
       const transferredIndex = initialPlots[0].plotStart.plus(transferredAmount);
-      transferPlot(ANVIL_ADDR_1, ANVIL_ADDR_2, transferredIndex, transferredAmount);
+      transferPlot(account, account2, transferredIndex, transferredAmount);
       assert.fieldEquals("Plot", initialPlots[0].plotStart.toString(), "source", "SOW");
       assert.fieldEquals("Plot", transferredIndex.toString(), "source", "TRANSFER");
       assert.fieldEquals("Plot", transferredIndex.plus(transferredAmount).toString(), "source", "SOW");
+    });
+
+    test("M: Marketplace Listing", () => {
+      const listingStart = initialPlots[0].pods.div(BigInt.fromI32(3));
+      const listingAmount = initialPlots[0].pods.div(BigInt.fromI32(3));
+      const fillBeans = beans(5500);
+      createListing_v2(account, initialPlots[0].plotStart, listingAmount, listingStart, maxHarvestableIndex);
+      fillListing_v2(account, account2, initialPlots[0].plotStart, listingStart, listingAmount, fillBeans);
+
+      const initialBeansPerPod = BI_10.pow(6).div(BigInt.fromU32(temperature)).toString();
+      const filledBeansPerPod = fillBeans.times(BI_10.pow(6)).div(listingAmount).toString();
+      assert.entityCount("Plot", 4);
+      assert.fieldEquals("Plot", initialPlots[0].plotStart.toString(), "beansPerPod", initialBeansPerPod);
+      assert.fieldEquals("Plot", initialPlots[0].plotStart.toString(), "source", "SOW");
+      assert.fieldEquals("Plot", initialPlots[0].plotStart.plus(listingStart).toString(), "beansPerPod", filledBeansPerPod);
+      assert.fieldEquals("Plot", initialPlots[0].plotStart.plus(listingStart).toString(), "source", "MARKET");
+      assert.fieldEquals(
+        "Plot",
+        initialPlots[0].plotStart.plus(listingStart).plus(listingAmount).toString(),
+        "beansPerPod",
+        initialBeansPerPod
+      );
+      assert.fieldEquals("Plot", initialPlots[0].plotStart.plus(listingStart).plus(listingAmount).toString(), "source", "SOW");
+    });
+
+    test("M: Marketplace Order", () => {
+      const fillStart = initialPlots[0].pods.div(BigInt.fromI32(3));
+      const fillAmount = initialPlots[0].pods.div(BigInt.fromI32(3));
+      const fillBeans = beans(5500);
+      const orderPricePerPod = BigInt.fromString("1234");
+      createOrder_v2(account, orderId, beans(10000), orderPricePerPod, maxHarvestableIndex);
+      fillOrder_v2(account2, account, orderId, initialPlots[0].plotStart, fillStart, fillAmount, fillBeans);
+
+      const initialBeansPerPod = BI_10.pow(6).div(BigInt.fromU32(temperature)).toString();
+      const filledBeansPerPod = fillBeans.times(BI_10.pow(6)).div(fillAmount).toString();
+      assert.entityCount("Plot", 4);
+      assert.fieldEquals("Plot", initialPlots[0].plotStart.toString(), "beansPerPod", initialBeansPerPod);
+      assert.fieldEquals("Plot", initialPlots[0].plotStart.toString(), "source", "SOW");
+      assert.fieldEquals("Plot", initialPlots[0].plotStart.plus(fillStart).toString(), "beansPerPod", filledBeansPerPod);
+      assert.fieldEquals("Plot", initialPlots[0].plotStart.plus(fillStart).toString(), "source", "MARKET");
+      assert.fieldEquals("Plot", initialPlots[0].plotStart.plus(fillStart).plus(fillAmount).toString(), "beansPerPod", initialBeansPerPod);
+      assert.fieldEquals("Plot", initialPlots[0].plotStart.plus(fillStart).plus(fillAmount).toString(), "source", "SOW");
     });
   });
 });

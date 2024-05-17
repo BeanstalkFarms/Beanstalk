@@ -78,8 +78,8 @@ describe("Marketplace", () => {
     });
 
     test("Create a pod listing - partial plot", () => {
-      const event = createListing_v1(account, listingIndex, sowedPods, beans_BI(500), listingPricePerPod, maxHarvestableIndex);
-      const listedPods = sowedPods.minus(beans_BI(500));
+      const listedPods = sowedPods.minus(listingStart);
+      const event = createListing_v1(account, listingIndex, listedPods, listingStart, listingPricePerPod, maxHarvestableIndex);
       assertMarketListingsState(
         BEANSTALK.toHexString(),
         [account + "-" + listingIndex.toString() + "-" + maxHarvestableIndex.toString()],
@@ -94,8 +94,8 @@ describe("Marketplace", () => {
     });
 
     test("Create a pod listing - partial plot", () => {
-      const event = createListing_v1(account, listingIndex, sowedPods, beans_BI(500), listingPricePerPod, maxHarvestableIndex);
-      const listedPods = sowedPods.minus(beans_BI(500));
+      const listedPods = sowedPods.minus(listingStart);
+      const event = createListing_v1(account, listingIndex, listedPods, listingStart, listingPricePerPod, maxHarvestableIndex);
       assertMarketListingsState(
         BEANSTALK.toHexString(),
         [account + "-" + listingIndex.toString() + "-" + maxHarvestableIndex.toString()],
@@ -127,7 +127,7 @@ describe("Marketplace", () => {
     test("Market events correctly track place in line", () => {
       let placeInLine = listingIndex.plus(listingStart).minus(currentHarvestable);
       const listedPods = sowedPods.minus(listingStart);
-      const createEvent = createListing_v1(account, listingIndex, sowedPods, listingStart, listingPricePerPod, maxHarvestableIndex);
+      const createEvent = createListing_v1(account, listingIndex, listedPods, listingStart, listingPricePerPod, maxHarvestableIndex);
       const createListingId = "podListingCreated-" + createEvent.transaction.hash.toHexString() + "-" + createEvent.logIndex.toString();
       assert.fieldEquals("PodListingCreated", createListingId, "placeInLine", placeInLine.toString());
 
@@ -164,7 +164,7 @@ describe("Marketplace", () => {
 
     describe("Tests requiring Listing", () => {
       beforeEach(() => {
-        createListing_v1(account, listingIndex, sowedPods, beans_BI(500), listingPricePerPod, maxHarvestableIndex);
+        createListing_v1(account, listingIndex, sowedPods.minus(beans_BI(500)), beans_BI(500), listingPricePerPod, maxHarvestableIndex);
       });
 
       test("Fill listing - full", () => {
@@ -294,7 +294,7 @@ describe("Marketplace", () => {
       test("Recreate listing", () => {
         const listedPods = sowedPods.minus(listingStart);
         cancelListing(account, listingIndex);
-        const listEvent = createListing_v1(account, listingIndex, sowedPods, listingStart, listingPricePerPod, maxHarvestableIndex);
+        const listEvent = createListing_v1(account, listingIndex, listedPods, listingStart, listingPricePerPod, maxHarvestableIndex);
 
         const listingID = listEvent.params.account.toHexString() + "-" + listEvent.params.index.toString();
         assert.fieldEquals("PodListing", listingID, "status", "ACTIVE");
@@ -363,7 +363,7 @@ describe("Marketplace", () => {
 
         // Test expiration after a partial sale
         setHarvestable(maxHarvestableIndex);
-        createListing_v1(account, listingIndex, sowedPods, beans_BI(500), listingPricePerPod, maxHarvestableIndex);
+        createListing_v1(account, listingIndex, listedPods, listingStart, listingPricePerPod, maxHarvestableIndex);
 
         const filledPods = listedPods.div(BigInt.fromString("4"));
         const filledBeans = filledPods.times(listingPricePerPod).div(BI_10.pow(6));
@@ -649,8 +649,8 @@ describe("Marketplace", () => {
     });
 
     test("Create a pod listing - partial plot", () => {
-      const event = createListing_v1_1(account, listingIndex, sowedPods, beans_BI(500), listingPricePerPod, maxHarvestableIndex);
-      const listedPods = sowedPods.minus(beans_BI(500));
+      const listedPods = sowedPods.minus(listingStart);
+      const event = createListing_v1_1(account, listingIndex, listedPods, listingStart, listingPricePerPod, maxHarvestableIndex);
       assertMarketListingsState(
         BEANSTALK.toHexString(),
         [account + "-" + listingIndex.toString() + "-" + maxHarvestableIndex.toString()],
