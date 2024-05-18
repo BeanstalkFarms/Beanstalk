@@ -679,46 +679,6 @@ contract PipelineConvertTest is TestHelper {
         );
     }
 
-    // test that leaves less ERC20 in the pipeline than is returned by the final function
-    // no longer necessary since we now check how many tokens were left in pipeline, leaving here in case it can be repurposed
-    /*function testNotEnoughTokensLeftInPipeline(uint256 amount) public {
-        amount = bound(amount, 1000e6, 1000e6);
-        int96 stem = beanToLPDepositSetup(amount, users[1]);
-        int96[] memory stems = new int96[](1);
-        stems[0] = stem;
-        uint256[] memory amounts = new uint256[](1);
-        amounts[0] = amount;
-
-        uint256 returnThisNumber = 5000e22;
-
-        bytes memory returnNumberEncoded = abi.encodeWithSelector(
-            MiscHelperContract.returnNumber.selector,
-            returnThisNumber
-        );
-
-        // create extra pipe calls
-        AdvancedPipeCall[] memory extraPipeCalls = new AdvancedPipeCall[](1);
-        // extra call will be to a function that returns a big number (more than amoutn of LP left in pipeline)
-        extraPipeCalls[0] = AdvancedPipeCall(
-            address(miscHelper), // target
-            returnNumberEncoded, // calldata
-            abi.encode(0) // clipboard
-        );
-
-        AdvancedFarmCall[] memory beanToLPFarmCalls = createBeanToLPFarmCalls(amount, extraPipeCalls);
-
-        vm.expectRevert("ERC20: transfer amount exceeds balance");
-
-        vm.prank(users[1]);
-        convert.pipelineConvert(
-            C.BEAN, // input token
-            stems, // stem
-            amounts, // amount
-            beanEthWell, // token out
-            beanToLPFarmCalls // farmData
-        );
-    }*/
-
     function testBeanToBeanConvert(uint256 amount) public {
         amount = bound(amount, 1000e6, 1000e6);
 
