@@ -250,6 +250,7 @@ contract TestHelper is
         }
 
         IWell(well).sync(users[0], 0);
+        IWell(well).sync(users[0], 0);
     }
 
     /**
