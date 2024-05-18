@@ -2,18 +2,15 @@
 pragma solidity >=0.6.0 <0.9.0;
 pragma abicoder v2;
 
-import {TestHelper, LibTransfer, IMockFBeanstalk, C} from "test/foundry/utils/TestHelper.sol";
+import {TestHelper, C} from "test/foundry/utils/TestHelper.sol";
 import {IWell, IERC20, Call} from "contracts/interfaces/basin/IWell.sol";
 import {MockPump} from "contracts/mocks/well/MockPump.sol";
-import {MockSeasonFacet} from "contracts/mocks/mockFacets/MockSeasonFacet.sol";
+import {MockSeasonFacet, Weather} from "contracts/mocks/mockFacets/MockSeasonFacet.sol";
 import {MockConvertFacet} from "contracts/mocks/mockFacets/MockConvertFacet.sol";
 import {MockFieldFacet} from "contracts/mocks/mockFacets/MockFieldFacet.sol";
-import {LibConvertData} from "contracts/libraries/Convert/LibConvertData.sol";
-import {MockToken} from "contracts/mocks/MockToken.sol";
 import {Storage} from "contracts/libraries/LibAppStorage.sol";
 import {SeasonGettersFacet} from "contracts/beanstalk/sun/SeasonFacet/SeasonGettersFacet.sol";
 import {SiloGettersFacet} from "contracts/beanstalk/silo/SiloFacet/SiloGettersFacet.sol";
-import {Weather} from "contracts/beanstalk/sun/SeasonFacet/Weather.sol";
 import {console} from "forge-std/console.sol";
 
 /**
@@ -27,11 +24,6 @@ contract FloodTest is TestHelper {
     SeasonGettersFacet seasonGetters = SeasonGettersFacet(BEANSTALK);
     MockFieldFacet field = MockFieldFacet(BEANSTALK);
     SiloGettersFacet siloGetters = SiloGettersFacet(BEANSTALK);
-    Weather weather = Weather(BEANSTALK);
-
-    // MockTokens.
-    MockToken bean = MockToken(C.BEAN);
-    MockToken weth = MockToken(C.WETH);
 
     // test accounts
     address[] farmers;
@@ -41,7 +33,6 @@ contract FloodTest is TestHelper {
 
     function setUp() public {
         initializeBeanstalkTestState(true, false);
-        address well = C.BEAN_ETH_WELL;
         // init user.
         farmers.push(users[1]);
         vm.prank(farmers[0]);
@@ -49,7 +40,7 @@ contract FloodTest is TestHelper {
 
         // Initialize well to balances. (1000 BEAN/ETH)
         addLiquidityToWell(
-            well,
+            C.BEAN_ETH_WELL,
             1000000e6, // 10,000 Beans
             1000 ether // 10 ether.
         );
@@ -68,18 +59,13 @@ contract FloodTest is TestHelper {
         depositUsers[0] = users[1];
         depositUsers[1] = users[2];
         depostBeansForUsers(depositUsers, 1_000e6, 10_000e6);
-        // depostBeansForUser(users[2], 1000e6);
 
         // give user2 some eth
         vm.deal(users[2], 10 ether);
-
-        // without this, 25 rainSunrises runs out of gas
-        vm.pauseGasMetering();
     }
 
     function testNotRaining() public {
         Storage.Season memory s = seasonGetters.time();
-
         assertFalse(s.raining);
     }
 
@@ -91,15 +77,15 @@ contract FloodTest is TestHelper {
         Storage.Rain memory rain = seasonGetters.rain();
         Storage.Season memory s = seasonGetters.time();
 
-        assertTrue(s.rainStart == s.current);
+        assertEq(s.rainStart, s.current);
         assertTrue(s.raining);
         assertEq(rain.pods, bs.totalPods());
-        assertEq(rain.roots, 20008000000000000000000000);
+        assertEq(rain.roots, 20008000e18);
 
         SiloGettersFacet.AccountSeasonOfPlenty memory sop = siloGetters.balanceOfSop(users[1]);
 
-        assertTrue(sop.lastRain == s.rainStart);
-        assertTrue(sop.roots == 10004000000000000000000000);
+        assertEq(sop.lastRain, s.rainStart);
+        assertEq(sop.roots, 10004000e18);
     }
 
     function testStopsRaining() public {
@@ -111,36 +97,34 @@ contract FloodTest is TestHelper {
         bs.mow(users[1], C.BEAN);
 
         Storage.Season memory s = seasonGetters.time();
-        assertTrue(s.rainStart == s.current - 1);
+        assertEq(s.rainStart, s.current - 1);
 
         SiloGettersFacet.AccountSeasonOfPlenty memory sop = siloGetters.balanceOfSop(users[1]);
-        assertTrue(sop.lastRain == 0);
+        assertEq(sop.lastRain, 0);
     }
 
     function testSopsWhenAtPeg() public {
         season.rainSunrises(25);
         Storage.Season memory s = seasonGetters.time();
 
-        assertTrue(s.lastSop == 0);
-        assertTrue(s.lastSopSeason == 0);
+        assertEq(s.lastSop, 0);
+        assertEq(s.lastSopSeason, 0);
     }
 
     function testSopsBelowPeg() public {
         setDeltaBforWell(-1000e6, C.BEAN_ETH_WELL, C.WETH);
-        // update pumps
-        updateMockPumpUsingWellReserves(C.BEAN_ETH_WELL);
         season.rainSunrises(25);
 
         Storage.Season memory s = seasonGetters.time();
-        assertTrue(s.lastSop == 0);
-        assertTrue(s.lastSopSeason == 0);
+        assertEq(s.lastSop, 0);
+        assertEq(s.lastSopSeason, 0);
     }
 
     function testOneSop() public {
-        setReserves(C.BEAN_ETH_WELL, 1000000e6, 1100e18);
-
-        // update pumps
-        updateMockPumpUsingWellReserves(C.BEAN_ETH_WELL);
+        uint256 userCalcPlenty = 25595575914848452999;
+        uint256 userCalcPlentyPerRoot = 2558534177813719812;
+        address sopWell = C.BEAN_ETH_WELL;
+        setReserves(sopWell, 1000000e6, 1100e18);
 
         season.rainSunrise();
         bs.mow(users[1], C.BEAN);
@@ -151,7 +135,7 @@ contract FloodTest is TestHelper {
         vm.expectEmit();
         emit SeasonOfPlentyWell(
             seasonGetters.time().current + 1, // flood will happen next season
-            C.BEAN_ETH_WELL,
+            sopWell,
             C.WETH,
             51191151829696906017
         );
@@ -160,69 +144,64 @@ contract FloodTest is TestHelper {
 
         Storage.Season memory s = seasonGetters.time();
 
-        assertTrue(s.lastSop == s.rainStart);
-        assertTrue(s.lastSopSeason == s.current);
+        assertEq(s.lastSop, s.rainStart);
+        assertEq(s.lastSopSeason, s.current);
         // check weth balance of beanstalk
         assertEq(IERC20(C.WETH).balanceOf(BEANSTALK), 51191151829696906017);
         // after the swap, the composition of the pools are
-        uint256[] memory balances = IWell(C.BEAN_ETH_WELL).getReserves();
-        assertTrue(balances[0] == 1048808848170);
-        assertTrue(balances[1] == 1048808848170303093983);
+        uint256[] memory balances = IWell(sopWell).getReserves();
+        assertEq(balances[0], 1048808848170);
+        assertEq(balances[1], 1048808848170303093983);
 
         // tracks user plenty before update
-        uint256 userPlenty = bs.balanceOfPlenty(users[1], C.BEAN_ETH_WELL);
-        assertEq(userPlenty, 25595575914848452999);
+        uint256 userPlenty = bs.balanceOfPlenty(users[1], sopWell);
+        assertEq(userPlenty, userCalcPlenty);
 
         // tracks user plenty after update
         bs.mow(users[1], C.BEAN);
 
         SiloGettersFacet.AccountSeasonOfPlenty memory userSop = siloGetters.balanceOfSop(users[1]);
-        assertTrue(userSop.lastRain == 6);
-        assertTrue(userSop.lastSop == 6);
-        assertTrue(userSop.roots == 10004000000000000000000000);
+        assertEq(userSop.lastRain, 6);
+        assertEq(userSop.lastSop, 6);
+        assertEq(userSop.roots, 10004000e18);
 
-        assertTrue(userSop.farmerSops.length > 0);
+        assertGt(userSop.farmerSops.length, 0);
 
-        assertTrue(userSop.farmerSops[0].well == C.BEAN_ETH_WELL);
-        assertTrue(userSop.farmerSops[0].wellsPlenty.plenty == 25595575914848452999);
-        assertTrue(userSop.farmerSops[0].wellsPlenty.plentyPerRoot == 2558534177813719812);
+        assertEq(userSop.farmerSops[0].well, sopWell);
+        assertEq(userSop.farmerSops[0].wellsPlenty.plenty, userCalcPlenty);
+        assertEq(userSop.farmerSops[0].wellsPlenty.plentyPerRoot, userCalcPlentyPerRoot);
 
         // each user should get half of the eth gained
-        assertTrue(bs.balanceOfPlenty(users[2], C.BEAN_ETH_WELL) == 25595575914848452999);
+        assertEq(bs.balanceOfPlenty(users[2], sopWell), userCalcPlenty);
 
         // tracks user2 plenty after update
         bs.mow(users[2], C.BEAN);
         userSop = siloGetters.balanceOfSop(users[2]);
-        assertTrue(userSop.lastRain == 6);
-        assertTrue(userSop.lastSop == 6);
-        assertTrue(userSop.roots == 10004000000000000000000000);
-        assertTrue(userSop.farmerSops[0].well == C.BEAN_ETH_WELL);
-        assertTrue(userSop.farmerSops[0].wellsPlenty.plenty == 25595575914848452999);
-        assertTrue(userSop.farmerSops[0].wellsPlenty.plentyPerRoot == 2558534177813719812);
+        assertEq(userSop.lastRain, 6);
+        assertEq(userSop.lastSop, 6);
+        assertEq(userSop.roots, 10004000e18);
+        assertEq(userSop.farmerSops[0].well, sopWell);
+        assertEq(userSop.farmerSops[0].wellsPlenty.plenty, userCalcPlenty);
+        assertEq(userSop.farmerSops[0].wellsPlenty.plentyPerRoot, userCalcPlentyPerRoot);
 
         // claims user plenty
         bs.mow(users[2], C.BEAN);
         vm.prank(users[2]);
-        bs.claimPlenty(C.BEAN_ETH_WELL);
-        assertTrue(bs.balanceOfPlenty(users[2], C.BEAN_ETH_WELL) == 0);
-        assertEq(IERC20(C.WETH).balanceOf(users[2]), 25595575914848452999);
+        bs.claimPlenty(sopWell);
+        assertEq(bs.balanceOfPlenty(users[2], sopWell), 0);
+        assertEq(IERC20(C.WETH).balanceOf(users[2]), userCalcPlenty);
     }
 
     function testMultipleSop() public {
-        // mow both users
-        bs.mow(users[1], C.BEAN);
-        bs.mow(users[2], C.BEAN);
-
-        setReserves(C.BEAN_ETH_WELL, 1000000e6, 1100e18);
-        updateMockPumpUsingWellReserves(C.BEAN_ETH_WELL);
+        address sopWell = C.BEAN_ETH_WELL;
+        setReserves(sopWell, 1000000e6, 1100e18);
 
         season.rainSunrise();
         bs.mow(users[2], C.BEAN);
         season.rainSunrise();
         season.droughtSunrise();
 
-        setReserves(C.BEAN_ETH_WELL, 1048808848170, 1100e18);
-        updateMockPumpUsingWellReserves(C.BEAN_ETH_WELL);
+        setReserves(sopWell, 1048808848170, 1100e18);
 
         vm.expectEmit();
         emit SeasonOfPlentyField(0); // zero in this test since no beans in podline
@@ -230,7 +209,7 @@ contract FloodTest is TestHelper {
         vm.expectEmit();
         emit SeasonOfPlentyWell(
             seasonGetters.time().current + 2, // flood will happen in two seasons
-            C.BEAN_ETH_WELL,
+            sopWell,
             C.WETH,
             25900501355272002583
         );
@@ -239,55 +218,53 @@ contract FloodTest is TestHelper {
 
         // sops p > 1
         Storage.Season memory s = seasonGetters.time();
-        uint256[] memory reserves = IWell(C.BEAN_ETH_WELL).getReserves();
+        uint256[] memory reserves = IWell(sopWell).getReserves();
 
-        assertTrue(s.lastSop == s.rainStart);
-        assertTrue(s.lastSopSeason == s.current);
+        assertEq(s.lastSop, s.rainStart);
+        assertEq(s.lastSopSeason, s.current);
         assertEq(IERC20(C.WETH).balanceOf(BEANSTALK), 77091653184968908600);
 
-        assertTrue(reserves[0] == 1074099498643);
-        assertTrue(reserves[1] == 1074099498644727997417);
+        assertEq(reserves[0], 1074099498643);
+        assertEq(reserves[1], 1074099498644727997417);
 
         // tracks user plenty before update
-        uint256 userPlenty = bs.balanceOfPlenty(users[1], C.BEAN_ETH_WELL);
+        uint256 userPlenty = bs.balanceOfPlenty(users[1], sopWell);
         assertEq(userPlenty, 38544532214605630101);
 
         // tracks user plenty after update
-        bs.mow(users[1], C.BEAN);
+        bs.mow(users[1], sopWell);
         SiloGettersFacet.AccountSeasonOfPlenty memory userSop = siloGetters.balanceOfSop(users[1]);
 
-        assertTrue(userSop.lastRain == 9);
-
-        assertTrue(userSop.lastSop == 9);
-        assertTrue(userSop.roots == 10004000000000000000000000);
-        assertTrue(userSop.farmerSops[0].well == C.BEAN_ETH_WELL);
-        assertTrue(userSop.farmerSops[0].wellsPlenty.plenty == 38544532214605630101);
-        assertTrue(userSop.farmerSops[0].wellsPlenty.plentyPerRoot == 3852912056637907847);
+        assertEq(userSop.lastRain, 9);
+        assertEq(userSop.lastSop, 9);
+        assertEq(userSop.roots, 10004000e18);
+        assertEq(userSop.farmerSops[0].well, sopWell);
+        assertEq(userSop.farmerSops[0].wellsPlenty.plenty, 38544532214605630101);
+        assertEq(userSop.farmerSops[0].wellsPlenty.plentyPerRoot, 3852912056637907847);
 
         // tracks user2 plenty
-        uint256 user2Plenty = bs.balanceOfPlenty(users[2], C.BEAN_ETH_WELL);
+        uint256 user2Plenty = bs.balanceOfPlenty(users[2], sopWell);
         assertEq(user2Plenty, 38547120970363278477);
 
         // tracks user2 plenty after update
-        bs.mow(users[2], C.BEAN_ETH_WELL);
-        bs.mow(users[2], C.BEAN);
+        bs.mow(users[2], sopWell);
         userSop = siloGetters.balanceOfSop(users[2]);
-        assertTrue(userSop.lastRain == 9);
-        assertTrue(userSop.lastSop == 9);
-        assertTrue(userSop.roots == 10006000000000000000000000);
-        assertTrue(userSop.farmerSops[0].wellsPlenty.plenty == 38547120970363278477);
-        assertTrue(userSop.farmerSops[0].wellsPlenty.plentyPerRoot == 3852912056637907847);
+        assertEq(userSop.lastRain, 9);
+        assertEq(userSop.lastSop, 9);
+        assertEq(userSop.roots, 10006000000000000000000000);
+        assertEq(userSop.farmerSops[0].wellsPlenty.plenty, 38547120970363278477);
+        assertEq(userSop.farmerSops[0].wellsPlenty.plentyPerRoot, 3852912056637907847);
     }
 
     function testWithCurrentBalances() public {
-        setReserves(C.BEAN_ETH_WELL, 1_000_000e6, 1_100e18);
-        updateMockPumpUsingWellReserves(C.BEAN_ETH_WELL);
+        address sopWell = C.BEAN_ETH_WELL;
+        setReserves(sopWell, 1_000_000e6, 1_100e18);
 
         // set instantaneous reserves differently
-        setInstantaneousReserves(C.BEAN_ETH_WELL, 900_000e6, 1_100e18);
+        setInstantaneousReserves(sopWell, 900_000e6, 1_100e18);
 
         season.rainSunrise();
-        bs.mow(users[2], C.BEAN_ETH_WELL);
+        bs.mow(users[2], sopWell);
 
         vm.expectEmit();
         emit SeasonOfPlentyField(0); // zero in this test since no beans in podline
@@ -295,7 +272,7 @@ contract FloodTest is TestHelper {
         vm.expectEmit();
         emit SeasonOfPlentyWell(
             seasonGetters.time().current + 1, // flood will happen in two seasons
-            C.BEAN_ETH_WELL,
+            sopWell,
             C.WETH,
             51191151829696906017
         );
@@ -305,48 +282,47 @@ contract FloodTest is TestHelper {
 
         // sops p > 1
         Storage.Season memory s = seasonGetters.time();
-        uint256[] memory reserves = IWell(C.BEAN_ETH_WELL).getReserves();
+        uint256[] memory reserves = IWell(sopWell).getReserves();
 
-        assertTrue(s.lastSop == s.rainStart);
-        assertTrue(s.lastSopSeason == s.current);
+        assertEq(s.lastSop, s.rainStart);
+        assertEq(s.lastSopSeason, s.current);
         assertEq(IERC20(C.WETH).balanceOf(BEANSTALK), 51191151829696906017);
 
-        assertTrue(reserves[0] == 1048808848170);
-        assertTrue(reserves[1] == 1048808848170303093983);
+        assertEq(reserves[0], 1048808848170);
+        assertEq(reserves[1], 1048808848170303093983);
 
         // tracks user plenty before update
-        uint256 userPlenty = bs.balanceOfPlenty(users[1], C.BEAN_ETH_WELL);
+        uint256 userPlenty = bs.balanceOfPlenty(users[1], sopWell);
         assertEq(userPlenty, 25595575914848452999);
 
         // tracks user plenty after update
         bs.mow(users[1], C.BEAN);
         SiloGettersFacet.AccountSeasonOfPlenty memory userSop = siloGetters.balanceOfSop(users[1]);
 
-        assertTrue(userSop.lastRain == 6);
-        assertTrue(userSop.lastSop == 6);
-        assertTrue(userSop.roots == 10004000000000000000000000);
-        assertTrue(userSop.farmerSops[0].wellsPlenty.plenty == 25595575914848452999);
-        assertTrue(userSop.farmerSops[0].wellsPlenty.plentyPerRoot == 2558534177813719812);
+        assertEq(userSop.lastRain, 6);
+        assertEq(userSop.lastSop, 6);
+        assertEq(userSop.roots, 10004000e18);
+        assertEq(userSop.farmerSops[0].wellsPlenty.plenty, 25595575914848452999);
+        assertEq(userSop.farmerSops[0].wellsPlenty.plentyPerRoot, 2558534177813719812);
 
         // tracks user2 plenty
-        uint256 user2Plenty = bs.balanceOfPlenty(users[2], C.BEAN_ETH_WELL);
+        uint256 user2Plenty = bs.balanceOfPlenty(users[2], sopWell);
         assertEq(user2Plenty, 25595575914848452999);
 
         // tracks user2 plenty after update
-        bs.mow(users[2], C.BEAN_ETH_WELL);
-        bs.mow(users[2], C.BEAN);
+        bs.mow(users[2], sopWell);
         userSop = siloGetters.balanceOfSop(users[2]);
-        assertTrue(userSop.lastRain == 6);
-        assertTrue(userSop.lastSop == 6);
-        assertTrue(userSop.roots == 10004000000000000000000000);
-        assertTrue(userSop.farmerSops[0].wellsPlenty.plenty == 25595575914848452999);
-        assertTrue(userSop.farmerSops[0].wellsPlenty.plentyPerRoot == 2558534177813719812);
+        assertEq(userSop.lastRain, 6);
+        assertEq(userSop.lastSop, 6);
+        assertEq(userSop.roots, 10004000e18);
+        assertEq(userSop.farmerSops[0].wellsPlenty.plenty, 25595575914848452999);
+        assertEq(userSop.farmerSops[0].wellsPlenty.plentyPerRoot, 2558534177813719812);
 
         // claims user plenty
-        bs.mow(users[2], C.BEAN_ETH_WELL);
+        bs.mow(users[2], sopWell);
         vm.prank(users[2]);
-        bs.claimPlenty(C.BEAN_ETH_WELL);
-        assertTrue(bs.balanceOfPlenty(users[2], C.BEAN_ETH_WELL) == 0);
+        bs.claimPlenty(sopWell);
+        assertEq(bs.balanceOfPlenty(users[2], sopWell), 0);
         assertEq(IERC20(C.WETH).balanceOf(users[2]), 25595575914848452999);
     }
 
@@ -355,7 +331,7 @@ contract FloodTest is TestHelper {
         wellDeltaBs[0].deltaB = 100;
         wellDeltaBs[1].deltaB = 100;
         wellDeltaBs[2].deltaB = -100;
-        wellDeltaBs = weather.calculateSopPerWell(wellDeltaBs);
+        wellDeltaBs = season.calculateSopPerWell(wellDeltaBs);
         assertEq(wellDeltaBs[0].reductionAmount, 50);
         assertEq(wellDeltaBs[1].reductionAmount, 50);
         assertEq(wellDeltaBs[2].reductionAmount, 0);
@@ -365,7 +341,7 @@ contract FloodTest is TestHelper {
         wellDeltaBs[1].deltaB = 80;
         wellDeltaBs[2].deltaB = 20;
         wellDeltaBs[3].deltaB = -120;
-        wellDeltaBs = weather.calculateSopPerWell(wellDeltaBs);
+        wellDeltaBs = season.calculateSopPerWell(wellDeltaBs);
         assertEq(wellDeltaBs[0].reductionAmount, 40);
         assertEq(wellDeltaBs[1].reductionAmount, 30);
         assertEq(wellDeltaBs[2].reductionAmount, 0);
@@ -379,7 +355,7 @@ contract FloodTest is TestHelper {
         wellDeltaBs[4].deltaB = 50;
         wellDeltaBs[5].deltaB = 40;
         wellDeltaBs[6].deltaB = -120;
-        wellDeltaBs = weather.calculateSopPerWell(wellDeltaBs);
+        wellDeltaBs = season.calculateSopPerWell(wellDeltaBs);
         assertEq(wellDeltaBs[0].reductionAmount, 70);
         assertEq(wellDeltaBs[1].reductionAmount, 60);
         assertEq(wellDeltaBs[2].reductionAmount, 50);
@@ -394,18 +370,18 @@ contract FloodTest is TestHelper {
         wellDeltaBs[2].deltaB = -70;
         wellDeltaBs[3].deltaB = -200;
         vm.expectRevert("Flood: Overall deltaB is negative");
-        wellDeltaBs = weather.calculateSopPerWell(wellDeltaBs);
+        wellDeltaBs = season.calculateSopPerWell(wellDeltaBs);
 
         wellDeltaBs = new Weather.WellDeltaB[](1);
         wellDeltaBs[0].deltaB = 90;
-        wellDeltaBs = weather.calculateSopPerWell(wellDeltaBs);
+        wellDeltaBs = season.calculateSopPerWell(wellDeltaBs);
         assertEq(wellDeltaBs[0].reductionAmount, 90);
 
         // test just 2 wells, all positive
         wellDeltaBs = new Weather.WellDeltaB[](2);
         wellDeltaBs[0].deltaB = 90;
         wellDeltaBs[1].deltaB = 80;
-        wellDeltaBs = weather.calculateSopPerWell(wellDeltaBs);
+        wellDeltaBs = season.calculateSopPerWell(wellDeltaBs);
         assertEq(wellDeltaBs[0].reductionAmount, 90);
         assertEq(wellDeltaBs[1].reductionAmount, 80);
 
@@ -413,7 +389,7 @@ contract FloodTest is TestHelper {
         wellDeltaBs = new Weather.WellDeltaB[](2);
         wellDeltaBs[0].deltaB = 90;
         wellDeltaBs[1].deltaB = -80;
-        wellDeltaBs = weather.calculateSopPerWell(wellDeltaBs);
+        wellDeltaBs = season.calculateSopPerWell(wellDeltaBs);
         assertEq(wellDeltaBs[0].reductionAmount, 10);
         assertEq(wellDeltaBs[1].reductionAmount, 0);
     }
@@ -431,8 +407,6 @@ contract FloodTest is TestHelper {
         uint256 initialPodLine = bs.podIndex();
         uint256 initialHarvestable = bs.totalHarvestable();
 
-        // update pumps
-        updateMockPumpUsingWellReserves(C.BEAN_ETH_WELL);
         season.rainSunrise();
         bs.mow(users[1], C.BEAN);
 
@@ -445,11 +419,11 @@ contract FloodTest is TestHelper {
         uint256 newBeanSupply = C.bean().totalSupply();
         uint256 newPodLine = bs.podIndex();
 
-        assertTrue(newBeanSupply > initialBeanSupply); // Beans were minted
-        assertTrue(newHarvestable == initialPodLine); // Pods cleared to end of podline because podline was <0.1% of supply
-        assertTrue(initialPodLine > 0); // Start of test had a podline
-        assertTrue(newHarvestable <= newPodLine); // All pods became harvestable, but nore more than the podline
-        assertTrue(initialHarvestable == 0); // Before flood, no pods were harvestable
+        assertGt(newBeanSupply, initialBeanSupply); // Beans were minted
+        assertEq(newHarvestable, initialPodLine); // Pods cleared to end of podline because podline was <0.1% of supply
+        assertGt(initialPodLine, 0); // Start of test had a podline
+        assertLe(newHarvestable, newPodLine); // All pods became harvestable, but nore more than the podline
+        assertEq(initialHarvestable, 0); // Before flood, no pods were harvestable
     }
 
     function testHarvestablePodlineMoreThanPointOnePercent(uint256 amount) public {
@@ -462,7 +436,6 @@ contract FloodTest is TestHelper {
         uint256 initialPodLine = bs.podIndex();
         uint256 initialHarvestable = bs.totalHarvestable();
 
-        updateMockPumpUsingWellReserves(C.BEAN_ETH_WELL);
         season.rainSunrise();
         bs.mow(users[1], C.BEAN);
 
@@ -475,10 +448,10 @@ contract FloodTest is TestHelper {
         uint256 newBeanSupply = C.bean().totalSupply();
         uint256 newPodLine = bs.podIndex();
 
-        assertTrue(newBeanSupply > initialBeanSupply); // Beans were minted
-        assertTrue(newHarvestable < newPodLine); // Pods didn't clear to end of podline because podline was >0.1% of supply
-        assertTrue(initialPodLine > 0); // Start of test had a podline
-        assertTrue(initialHarvestable == 0); // Before flood, no pods were harvestable
+        assertGt(newBeanSupply, initialBeanSupply); // Beans were minted
+        assertLt(newHarvestable, newPodLine); // Pods didn't clear to end of podline because podline was >0.1% of supply
+        assertGt(initialPodLine, 0); // Start of test had a podline
+        assertEq(initialHarvestable, 0); // Before flood, no pods were harvestable
         assertApproxEqAbs(initialBeanSupply / 1000, newHarvestable, 1);
     }
 
@@ -488,7 +461,7 @@ contract FloodTest is TestHelper {
         addLiquidityToWell(C.BEAN_ETH_WELL, 13000e6, 10 ether);
         addLiquidityToWell(C.BEAN_WSTETH_WELL, 12000e6, 10 ether);
 
-        Weather.WellDeltaB[] memory wells = weather.getWellsByDeltaB();
+        Weather.WellDeltaB[] memory wells = season.getWellsByDeltaB();
 
         //verify wells are in descending deltaB
         for (uint256 i = 0; i < wells.length - 1; i++) {
@@ -498,12 +471,13 @@ contract FloodTest is TestHelper {
 
     function testQuickSort() public {
         Weather.WellDeltaB[] memory wells = new Weather.WellDeltaB[](5);
-        wells[0] = Weather.WellDeltaB(C.BEAN_ETH_WELL, 100, 0);
-        wells[1] = Weather.WellDeltaB(C.BEAN_WSTETH_WELL, 200, 0);
-        wells[2] = Weather.WellDeltaB(C.BEAN_ETH_WELL, -300, 0);
-        wells[3] = Weather.WellDeltaB(C.BEAN_ETH_WELL, 400, 0);
-        wells[4] = Weather.WellDeltaB(C.BEAN_ETH_WELL, -500, 0);
-        wells = weather.quickSort(wells, 0, int(wells.length - 1));
+        int right = int(wells.length - 1);
+        wells[0] = Weather.WellDeltaB(address(0), 100, 0);
+        wells[1] = Weather.WellDeltaB(address(1), 200, 0);
+        wells[2] = Weather.WellDeltaB(address(2), -300, 0);
+        wells[3] = Weather.WellDeltaB(address(3), 400, 0);
+        wells[4] = Weather.WellDeltaB(address(4), -500, 0);
+        wells = season.quickSort(wells, 0, right);
         assertEq(wells[0].deltaB, 400);
         assertEq(wells[1].deltaB, 200);
         assertEq(wells[2].deltaB, 100);
@@ -511,16 +485,16 @@ contract FloodTest is TestHelper {
         assertEq(wells[4].deltaB, -500);
 
         wells = new Weather.WellDeltaB[](2);
-        wells[0] = Weather.WellDeltaB(C.BEAN_ETH_WELL, 200, 0);
-        wells[1] = Weather.WellDeltaB(C.BEAN_WSTETH_WELL, 100, 0);
-        wells = weather.quickSort(wells, 0, int(wells.length - 1));
+        right = int(wells.length - 1);
+        wells[0] = Weather.WellDeltaB(address(0), 200, 0);
+        wells[1] = Weather.WellDeltaB(address(1), 100, 0);
+        wells = season.quickSort(wells, 0, right);
         assertEq(wells[0].deltaB, 200);
         assertEq(wells[1].deltaB, 100);
 
-        wells = new Weather.WellDeltaB[](2);
-        wells[0] = Weather.WellDeltaB(C.BEAN_ETH_WELL, 100, 0);
-        wells[1] = Weather.WellDeltaB(C.BEAN_WSTETH_WELL, 200, 0);
-        wells = weather.quickSort(wells, 0, int(wells.length - 1));
+        wells[0] = Weather.WellDeltaB(address(0), 100, 0);
+        wells[1] = Weather.WellDeltaB(address(1), 200, 0);
+        wells = season.quickSort(wells, 0, right);
         assertEq(wells[0].deltaB, 200);
         assertEq(wells[1].deltaB, 100);
     }
@@ -548,16 +522,6 @@ contract FloodTest is TestHelper {
             // mow, so that lastUpdated has been called at least once
             vm.prank(users[i]);
             bs.mow(users[i], C.BEAN);
-        }
-    }
-
-    function updateMockPumpUsingWellReserves(address well) public {
-        Call[] memory pumps = IWell(well).pumps();
-        for (uint i = 0; i < pumps.length; i++) {
-            address pump = pumps[i].target;
-            // pass to the pump the reserves that we actually have in the well
-            uint[] memory reserves = IWell(well).getReserves();
-            MockPump(pump).update(well, reserves, new bytes(0));
         }
     }
 
