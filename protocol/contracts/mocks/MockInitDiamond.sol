@@ -2,8 +2,7 @@
  SPDX-License-Identifier: MIT
 */
 
-pragma solidity =0.7.6;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.20;
 
 import {IBean} from "../interfaces/IBean.sol";
 import {IWETH} from "../interfaces/IWETH.sol";
@@ -62,7 +61,7 @@ contract MockInitDiamond is InitWhitelist, InitWhitelistStatuses, Weather {
         emit BeanToMaxLpGpPerBdvRatioChange(
             s.season.current,
             type(uint256).max,
-            int80(s.seedGauge.beanToMaxLpGpPerBdvRatio)
+            int80(int128(s.seedGauge.beanToMaxLpGpPerBdvRatio))
         );
         emit LibGauge.UpdateAverageStalkPerBdvPerSeason(
             s.seedGauge.averageGrownStalkPerBdvPerSeason

@@ -2,20 +2,19 @@
  * SPDX-License-Identifier: MIT
  **/
 
-pragma solidity =0.7.6;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.20;
 
 import "../../C.sol";
 import "./LibSilo.sol";
 import "./LibUnripeSilo.sol";
 import "../LibAppStorage.sol";
-import {LibSafeMathSigned128} from "contracts/libraries/LibSafeMathSigned128.sol";
-import {LibSafeMath32} from "contracts/libraries/LibSafeMath32.sol";
-import {LibSafeMath128} from "contracts/libraries/LibSafeMath128.sol";
-import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
-import {SafeCast} from "@openzeppelin/contracts/utils/SafeCast.sol";
+import {LibRedundantMathSigned128} from "contracts/libraries/LibRedundantMathSigned128.sol";
+import {LibRedundantMath32} from "contracts/libraries/LibRedundantMath32.sol";
+import {LibRedundantMath128} from "contracts/libraries/LibRedundantMath128.sol";
+import {LibRedundantMath256} from "contracts/libraries/LibRedundantMath256.sol";
+import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
 import {LibBytes} from "contracts/libraries/LibBytes.sol";
-import "@openzeppelin/contracts/cryptography/MerkleProof.sol";
+import "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
 
 /**
  * @title LibLegacyTokenSilo
@@ -28,12 +27,12 @@ import "@openzeppelin/contracts/cryptography/MerkleProof.sol";
  * library should no longer be necessary.
  */
 library LibLegacyTokenSilo {
-    using SafeMath for uint256;
+    using LibRedundantMath256 for uint256;
     using SafeCast for uint256;
-    using LibSafeMathSigned128 for int128;
-    using LibSafeMathSigned96 for int96;
-    using LibSafeMath32 for uint32;
-    using LibSafeMath128 for uint128;
+    using LibRedundantMathSigned128 for int128;
+    using LibRedundantMathSigned96 for int96;
+    using LibRedundantMath32 for uint32;
+    using LibRedundantMath128 for uint128;
 
     //to get the new root, run `node scripts/silov3-merkle/stems_merkle.js`
     bytes32 constant DISCREPANCY_MERKLE_ROOT =
@@ -41,7 +40,7 @@ library LibLegacyTokenSilo {
     uint32 constant ENROOT_FIX_SEASON = 12793; //season in which enroot ebip-8 fix was deployed
 
     //this is the legacy seasons-based remove deposits event, emitted on migration
-    event RemoveDeposit(
+    event RemoveDepositLegacy(
         address indexed account,
         address indexed token,
         uint32 season,
@@ -136,7 +135,7 @@ library LibLegacyTokenSilo {
             uint256 updatedBDV = crateBDV.sub(removedBDV);
             uint256 updatedAmount = crateAmount.sub(amount);
             require(
-                updatedBDV <= uint128(-1) && updatedAmount <= uint128(-1),
+                updatedBDV <= type(uint128).max && updatedAmount <= type(uint128).max,
                 "Silo: uint128 overflow."
             );
 
@@ -215,7 +214,9 @@ library LibLegacyTokenSilo {
         //negative grown stalk index.
 
         //find the difference between the input season and the Silo v3 epoch season
-        stem = (int96(season).sub(int96(s.season.stemStartSeason))).mul(int96(seedsPerBdv));
+        stem = (int96(uint96(season)).sub(int96(uint96(s.season.stemStartSeason)))).mul(
+            int96(int256(seedsPerBdv))
+        );
     }
 
     /**
@@ -332,7 +333,7 @@ library LibLegacyTokenSilo {
                 );
 
                 // emit legacy RemoveDeposit event
-                emit RemoveDeposit(
+                emit RemoveDepositLegacy(
                     account,
                     perTokenData.token,
                     perDepositData.season,

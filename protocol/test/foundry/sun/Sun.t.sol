@@ -5,6 +5,7 @@ pragma abicoder v2;
 import {TestHelper, LibTransfer, C} from "test/foundry/utils/TestHelper.sol";
 import {MockSeasonFacet} from "contracts/mocks/mockFacets/MockSeasonFacet.sol";
 import {console} from "forge-std/console.sol";
+
 /**
  * @notice Tests the functionality of the sun, the distrubution of beans and soil.
  */
@@ -31,7 +32,11 @@ contract SunTest is TestHelper {
         // cases can only range between 0 and 143.
         caseId = bound(caseId, 0, 143);
         // deltaB cannot exceed uint128 max.
-        deltaB = bound(deltaB, -int256(type(uint128).max), int256(type(uint128).max));
+        deltaB = bound(
+            deltaB,
+            -int256(uint256(type(uint128).max)),
+            int256(uint256(type(uint128).max))
+        );
 
         // soil event check.
         uint256 soilIssued;
@@ -83,7 +88,11 @@ contract SunTest is TestHelper {
         // cases can only range between 0 and 143.
         caseId = bound(caseId, 0, 143);
         // deltaB cannot exceed uint128 max.
-        deltaB = bound(deltaB, -int256(type(uint128).max), int256(type(uint128).max));
+        deltaB = bound(
+            deltaB,
+            -int256(uint256(type(uint128).max)),
+            int256(uint256(type(uint128).max))
+        );
         // increase pods in field.
         bs.incrementTotalPodsE(podsInField);
 
@@ -143,7 +152,11 @@ contract SunTest is TestHelper {
         // cases can only range between 0 and 143.
         caseId = bound(caseId, 0, 143);
         // deltaB cannot exceed uint128 max.
-        deltaB = bound(deltaB, -int256(type(uint128).max), int256(type(uint128).max));
+        deltaB = bound(
+            deltaB,
+            -int256(uint256(type(uint128).max)),
+            int256(uint256(type(uint128).max))
+        );
 
         // test is capped to CP2 constraints. See {ConstantProduct2.sol}
         sproutsInBarn = bound(sproutsInBarn, 0, type(uint72).max);
@@ -226,9 +239,6 @@ contract SunTest is TestHelper {
         uint256 sproutsInBarn,
         uint256 podsInField
     ) internal returns (uint256 beansToFertilizer, uint256 beansToField, uint256 beansToSilo) {
-        console.log("beansIssued:", beansIssued);
-        console.log("sproutsInBarn:", sproutsInBarn);
-
         // Fertilizer gets 1/3 of bean issuance. Only enabled if fert is purchased.
         if (bs.getActiveFertilizer() > 0) {
             beansToFertilizer = beansIssued / 3;
@@ -240,9 +250,7 @@ contract SunTest is TestHelper {
             if (beansToFertilizer > sproutsInBarn) beansToFertilizer = sproutsInBarn;
         }
 
-        console.log("beansToFertilizer:", beansToFertilizer);
         beansIssued -= beansToFertilizer;
-        console.log("beansIssued:", beansIssued);
         (beansToField, beansToSilo) = calcBeansToFieldAndSilo(beansIssued, podsInField);
     }
 

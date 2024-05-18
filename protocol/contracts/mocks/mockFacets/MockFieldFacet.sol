@@ -2,10 +2,11 @@
  SPDX-License-Identifier: MIT
 */
 
-pragma solidity =0.7.6;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.20;
 
-import "@openzeppelin/contracts/math/SafeMath.sol";
+import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
+import {LibPRBMathRoundable} from "contracts/libraries/LibPRBMathRoundable.sol";
+import "contracts/libraries/LibRedundantMath256.sol";
 import "contracts/beanstalk/field/FieldFacet.sol";
 
 /**
@@ -13,9 +14,9 @@ import "contracts/beanstalk/field/FieldFacet.sol";
  * @title Mock Field Facet
  **/
 contract MockFieldFacet is FieldFacet {
-    using SafeMath for uint256;
-    using LibPRBMath for uint256;
-    using LibSafeMath128 for uint128;
+    using LibPRBMathRoundable for uint256;
+    using LibRedundantMath256 for uint256;
+    using LibRedundantMath128 for uint128;
 
     function incrementTotalSoilE(uint128 amount) external {
         s.f.soil = s.f.soil.add(amount);
@@ -165,14 +166,18 @@ contract MockFieldFacet is FieldFacet {
         uint256 pct,
         uint256 initalTemp
     ) private pure returns (uint256 scaledTemperature) {
-        scaledTemperature = LibPRBMath.max(
+        scaledTemperature = Math.max(
             // To save gas, `pct` is pre-calculated to 12 digits. Here we
             // perform the following transformation:
             // (1e2)    maxTemperature
             // (1e12)    * pct
             // (1e6)     / TEMPERATURE_PRECISION
             // (1e8)     = scaledYield
-            initalTemp.mulDiv(pct, LibDibbler.TEMPERATURE_PRECISION, LibPRBMath.Rounding.Up),
+            initalTemp.mulDiv(
+                pct,
+                LibDibbler.TEMPERATURE_PRECISION,
+                LibPRBMathRoundable.Rounding.Up
+            ),
             // Floor at TEMPERATURE_PRECISION (1%)
             LibDibbler.TEMPERATURE_PRECISION
         );

@@ -2,12 +2,11 @@
  * SPDX-License-Identifier: MIT
  **/
 
-pragma solidity =0.7.6;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.20;
 
 import {LibChainlinkOracle} from "./LibChainlinkOracle.sol";
 import {LibUniswapOracle} from "./LibUniswapOracle.sol";
-import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
+import {LibRedundantMath256} from "contracts/libraries/LibRedundantMath256.sol";
 import {LibAppStorage, AppStorage} from "contracts/libraries/LibAppStorage.sol";
 import {C} from "contracts/C.sol";
 import {LibOracleHelpers} from "contracts/libraries/Oracle/LibOracleHelpers.sol";
@@ -36,7 +35,7 @@ interface IWsteth {
  * if (1) and (2) are within `MAX_DIFFERENCE` from each other or (1).
  **/
 library LibWstethEthOracle {
-    using SafeMath for uint256;
+    using LibRedundantMath256 for uint256;
 
     // The maximum percent difference such that the oracle assumes no manipulation is occuring.
     uint256 constant MAX_DIFFERENCE = 0.01e18; // 1%

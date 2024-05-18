@@ -2,8 +2,7 @@
  SPDX-License-Identifier: MIT
 */
 
-pragma solidity ^0.7.6;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.20;
 
 import "contracts/beanstalk/barn/UnripeFacet.sol";
 import "contracts/libraries/LibAppStorage.sol";
@@ -15,7 +14,7 @@ import "contracts/libraries/LibTractor.sol";
  **/
 contract MockUnripeFacet is UnripeFacet {
     using SafeERC20 for IERC20;
-    using SafeMath for uint256;
+    using LibRedundantMath256 for uint256;
 
     function setMerkleRootE(address unripeToken, bytes32 root) external {
         s.u[unripeToken].merkleRoot = root;

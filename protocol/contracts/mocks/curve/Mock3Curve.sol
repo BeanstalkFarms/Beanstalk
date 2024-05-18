@@ -2,8 +2,7 @@
  SPDX-License-Identifier: MIT
 */
 
-pragma solidity ^0.7.6;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.20;
 
 contract Mock3Curve {
     uint256 virtual_price;

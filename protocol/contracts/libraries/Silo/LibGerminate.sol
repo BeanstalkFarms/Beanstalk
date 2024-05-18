@@ -1,15 +1,14 @@
 // SPDX-License-Identifier: MIT
-pragma solidity =0.7.6;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.20;
 
 import {LibAppStorage, Storage, AppStorage, Account} from "../LibAppStorage.sol";
-import {LibSafeMath128} from "../LibSafeMath128.sol";
-import {LibSafeMath32} from "../LibSafeMath32.sol";
-import {LibSafeMathSigned96} from "../LibSafeMathSigned96.sol";
+import {LibRedundantMath128} from "../LibRedundantMath128.sol";
+import {LibRedundantMath32} from "../LibRedundantMath32.sol";
+import {LibRedundantMathSigned96} from "../LibRedundantMathSigned96.sol";
 import {LibTokenSilo} from "./LibTokenSilo.sol";
 import {LibSilo} from "./LibSilo.sol";
-import {SafeCast} from "@openzeppelin/contracts/utils/SafeCast.sol";
-import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
+import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
+import {LibRedundantMath256} from "contracts/libraries/LibRedundantMath256.sol";
 import {C} from "../../C.sol";
 
 /**
@@ -26,11 +25,11 @@ import {C} from "../../C.sol";
  * - new bdv introduced in the silo.
  */
 library LibGerminate {
-    using SafeMath for uint256;
+    using LibRedundantMath256 for uint256;
     using SafeCast for uint256;
-    using LibSafeMath32 for uint32;
-    using LibSafeMath128 for uint128;
-    using LibSafeMathSigned96 for int96;
+    using LibRedundantMath32 for uint32;
+    using LibRedundantMath128 for uint128;
+    using LibRedundantMathSigned96 for int96;
 
     //////////////////////// EVENTS ////////////////////////
 
@@ -120,8 +119,8 @@ library LibGerminate {
             emit TotalGerminatingBalanceChanged(
                 season,
                 tokens[i],
-                -int256(totalGerm.deposited[tokens[i]].amount),
-                -int256(totalGerm.deposited[tokens[i]].bdv)
+                -int256(uint256(totalGerm.deposited[tokens[i]].amount)),
+                -int256(uint256(totalGerm.deposited[tokens[i]].bdv))
             );
 
             // clear deposited values.
@@ -175,8 +174,12 @@ library LibGerminate {
             s.a[account].roots = s.a[account].roots.add(roots);
 
             // emit events. Active stalk is incremented, germinating stalk is decremented.
-            emit LibSilo.StalkBalanceChanged(account, int256(germinatingStalk), int256(roots));
-            emit FarmerGerminatingStalkBalanceChanged(account, -int256(germinatingStalk));
+            emit LibSilo.StalkBalanceChanged(
+                account,
+                int256(uint256(germinatingStalk)),
+                int256(uint256(roots))
+            );
+            emit FarmerGerminatingStalkBalanceChanged(account, -int256(uint256(germinatingStalk)));
         }
     }
 
@@ -368,7 +371,7 @@ library LibGerminate {
      * equal or higher than this value are germinating.
      */
     function _getGerminatingStem(address token, int96 stemTip) internal view returns (int96 stem) {
-        return __getGerminatingStem(stemTip, getPrevStalkEarnedPerSeason(token));
+        return __getGerminatingStem(stemTip, int96(uint96(getPrevStalkEarnedPerSeason(token))));
     }
 
     /**
@@ -401,11 +404,11 @@ library LibGerminate {
             if (deltaStalkEarnedPerSeason >= 0) {
                 prevStalkEarnedPerSeason =
                     s.ss[token].stalkEarnedPerSeason -
-                    uint32(deltaStalkEarnedPerSeason);
+                    uint32(int32(deltaStalkEarnedPerSeason));
             } else {
                 prevStalkEarnedPerSeason =
                     s.ss[token].stalkEarnedPerSeason +
-                    uint32(-deltaStalkEarnedPerSeason);
+                    uint32(int32(-deltaStalkEarnedPerSeason));
             }
         }
     }

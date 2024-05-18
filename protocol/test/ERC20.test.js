@@ -86,7 +86,7 @@ describe("ERC-20", function () {
             fakeResult.r,
             fakeResult.s
           )
-      ).to.be.revertedWith("ERC20Permit: invalid signature");
+      ).to.be.revertedWith("ERC2612InvalidSigner");
     });
 
     it("revert when too much", async function () {
@@ -104,7 +104,7 @@ describe("ERC-20", function () {
 
       await expect(
         bean.connect(owner).transferFrom(user.address, user2.address, to6("20"))
-      ).to.be.revertedWith("ERC20: transfer amount exceeds allowance");
+      ).to.be.revertedWith("ERC20InsufficientAllowance");
     });
 
     it("revert deadline passed", async function () {
@@ -120,7 +120,7 @@ describe("ERC-20", function () {
             endedResult.r,
             endedResult.s
           )
-      ).to.be.revertedWith("ERC20Permit: expired deadline");
+      ).to.be.revertedWith("ERC2612ExpiredSignature");
     });
 
     it("transfers all", async function () {

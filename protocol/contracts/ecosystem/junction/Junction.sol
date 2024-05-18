@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: MIT
  **/
 
-pragma solidity =0.7.6;
+pragma solidity ^0.8.20;
 
 import {MathJunction} from "./MathJunction.sol";
 import {LogicJunction} from "./LogicJunction.sol";

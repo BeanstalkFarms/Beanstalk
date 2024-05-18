@@ -2,18 +2,18 @@
  * SPDX-License-Identifier: MIT
  **/
 
-pragma solidity =0.7.6;
+pragma solidity ^0.8.20;
 pragma abicoder v2;
 
 import "../LibAppStorage.sol";
 import {C} from "../../C.sol";
-import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
-import {SafeCast} from "@openzeppelin/contracts/utils/SafeCast.sol";
+import {LibRedundantMath256} from "contracts/libraries/LibRedundantMath256.sol";
+import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
 import {LibBytes} from "../LibBytes.sol";
 import {LibTokenSilo} from "./LibTokenSilo.sol";
-import {LibSafeMath128} from "../LibSafeMath128.sol";
-import {LibSafeMath32} from "../LibSafeMath32.sol";
-import {LibSafeMathSigned96} from "../LibSafeMathSigned96.sol";
+import {LibRedundantMath128} from "../LibRedundantMath128.sol";
+import {LibRedundantMath32} from "../LibRedundantMath32.sol";
+import {LibRedundantMathSigned96} from "../LibRedundantMathSigned96.sol";
 import {LibGerminate} from "./LibGerminate.sol";
 import {LibWhitelistedTokens} from "./LibWhitelistedTokens.sol";
 import {LibTractor} from "../LibTractor.sol";
@@ -40,10 +40,10 @@ import {IWell} from "contracts/interfaces/basin/IWell.sol";
  * to use "mint" in the same sense.
  */
 library LibSilo {
-    using SafeMath for uint256;
-    using LibSafeMath128 for uint128;
-    using LibSafeMathSigned96 for int96;
-    using LibSafeMath32 for uint32;
+    using LibRedundantMath256 for uint256;
+    using LibRedundantMath128 for uint128;
+    using LibRedundantMathSigned96 for int96;
+    using LibRedundantMath32 for uint32;
     using SafeCast for uint256;
 
     uint128 internal constant PRECISION = 1e6;
@@ -217,7 +217,7 @@ library LibSilo {
         }
 
         // emit event.
-        emit LibGerminate.FarmerGerminatingStalkBalanceChanged(account, stalk);
+        emit LibGerminate.FarmerGerminatingStalkBalanceChanged(account, int256(uint256(stalk)));
     }
 
     //////////////////////// BURN ////////////////////////
@@ -302,7 +302,7 @@ library LibSilo {
         }
 
         // emit events.
-        emit LibGerminate.FarmerGerminatingStalkBalanceChanged(account, -int256(stalk));
+        emit LibGerminate.FarmerGerminatingStalkBalanceChanged(account, -int256(uint256(stalk)));
     }
 
     //////////////////////// TRANSFER ////////////////////////
@@ -737,7 +737,7 @@ library LibSilo {
         int96 endStem,
         uint128 bdv
     ) internal pure returns (uint256) {
-        uint128 reward = uint128(endStem.sub(startStem)).mul(bdv).div(PRECISION);
+        uint128 reward = uint128(uint96(endStem.sub(startStem))).mul(bdv).div(PRECISION);
 
         return reward;
     }
@@ -780,7 +780,7 @@ library LibSilo {
         if (stalk <= accountStalk) return 0;
 
         // Calculate Earned Stalk and convert to Earned Beans.
-        beans = (stalk - accountStalk).div(C.STALK_PER_BEAN); // Note: SafeMath is redundant here.
+        beans = (stalk - accountStalk).div(C.STALK_PER_BEAN);
         if (beans > s.earnedBeans) return s.earnedBeans;
 
         return beans;
@@ -801,7 +801,7 @@ library LibSilo {
                     .a[account]
                     .mowStatuses[siloTokens[i]]
                     .lastStem
-                    .mul(int96(PRECISION));
+                    .mul(int96(uint96(PRECISION)));
             }
         }
     }
@@ -821,7 +821,7 @@ library LibSilo {
         for (uint i; i < siloTokens.length; i++) {
             int96 lastStem = s.a[account].mowStatuses[siloTokens[i]].lastStem;
             if (lastStem > 0) {
-                if (LibTokenSilo.stemTipForToken(siloTokens[i]).div(lastStem) >= int96(PRECISION)) {
+                if (LibTokenSilo.stemTipForToken(siloTokens[i]).div(lastStem) >= int96(uint96(PRECISION))) {
                     return true;
                 }
             }

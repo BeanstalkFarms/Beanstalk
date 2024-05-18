@@ -84,7 +84,7 @@ describe("Fertilize", function () {
 
   it("reverts if early Season", async function () {
     await expect(mockBeanstalk.connect(owner).addFertilizerOwner("1", "1", "0")).to.be.revertedWith(
-      "SafeMath: subtraction overflow"
+      "panic code 0x11"
     );
   });
 

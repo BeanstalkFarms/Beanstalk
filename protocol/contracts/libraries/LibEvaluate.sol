@@ -1,16 +1,16 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity =0.7.6;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.20;
 
 import {LibAppStorage, AppStorage} from "./LibAppStorage.sol";
-import {Decimal, SafeMath} from "contracts/libraries/Decimal.sol";
+import {Decimal} from "contracts/libraries/Decimal.sol";
 import {LibWhitelistedTokens, C} from "contracts/libraries/Silo/LibWhitelistedTokens.sol";
 import {LibUnripe} from "contracts/libraries/LibUnripe.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import {LibSafeMath32} from "contracts/libraries/LibSafeMath32.sol";
+import {LibRedundantMath32} from "contracts/libraries/LibRedundantMath32.sol";
 import {LibWell} from "contracts/libraries/Well/LibWell.sol";
 import {LibBarnRaise} from "contracts/libraries/LibBarnRaise.sol";
+import {LibRedundantMath256} from "contracts/libraries/LibRedundantMath256.sol";
 
 /**
  * @author Brean
@@ -35,10 +35,10 @@ library DecimalExtended {
 }
 
 library LibEvaluate {
-    using SafeMath for uint256;
+    using LibRedundantMath256 for uint256;
     using DecimalExtended for uint256;
     using Decimal for Decimal.D256;
-    using LibSafeMath32 for uint32;
+    using LibRedundantMath32 for uint32;
 
     // Pod rate bounds
     uint256 internal constant POD_RATE_LOWER_BOUND = 0.05e18; // 5%

@@ -1,7 +1,7 @@
 /**
  * SPDX-License-Identifier: MIT
  **/
-pragma solidity >=0.7.6 <0.9.0;
+pragma solidity ^0.8.20;
 pragma abicoder v2;
 
 import {Utils, console} from "test/foundry/utils/Utils.sol";
@@ -107,7 +107,7 @@ contract OracleDeployer is Utils {
         for (uint i; i < pools.length; i++) {
             address[] memory poolData = pools[i];
             address pool = uniFactory.createPool(poolData[1], poolData[2], 100);
-            vm.etch(poolData[0], getBytecodeAt(pool));
+            vm.etch(poolData[0], pool.code);
             if (verbose) console.log("Uniswap Oracle Deployed at:", poolData[0]);
             uint256 price = calcPrice(priceData[i][0], priceData[i][1]);
             MockUniswapV3Pool(poolData[0]).setOraclePrice(price, uint8(priceData[i][1]));

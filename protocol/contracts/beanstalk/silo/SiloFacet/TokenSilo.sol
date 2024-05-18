@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: MIT
  **/
 
-pragma solidity =0.7.6;
+pragma solidity ^0.8.20;
 pragma abicoder v2;
 
 import "./Silo.sol";
@@ -19,9 +19,9 @@ import "contracts/libraries/LibTractor.sol";
  * is created. See "Finish Removal".
  */
 contract TokenSilo is Silo {
-    using SafeMath for uint256;
+    using LibRedundantMath256 for uint256;
     using SafeCast for uint256;
-    using LibSafeMath32 for uint32;
+    using LibRedundantMath32 for uint32;
 
     /**
      * @notice Emitted when `account` adds a single Deposit to the Silo.

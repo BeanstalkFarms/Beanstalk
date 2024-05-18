@@ -2,18 +2,17 @@
  * SPDX-License-Identifier: MIT
  **/
 
-pragma solidity =0.7.6;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.20;
 
 import {C} from "contracts/C.sol";
 import {LibTractor} from "contracts/libraries/LibTractor.sol";
 import {LibSilo} from "contracts/libraries/Silo/LibSilo.sol";
 import {LibTokenSilo} from "contracts/libraries/Silo/LibTokenSilo.sol";
-import {LibSafeMath32} from "contracts/libraries/LibSafeMath32.sol";
+import {LibRedundantMath32} from "contracts/libraries/LibRedundantMath32.sol";
 import {ReentrancyGuard} from "../ReentrancyGuard.sol";
 import {LibBytes} from "contracts/libraries/LibBytes.sol";
-import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
-import {SafeCast} from "@openzeppelin/contracts/utils/SafeCast.sol";
+import {LibRedundantMath256} from "contracts/libraries/LibRedundantMath256.sol";
+import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {LibConvert} from "contracts/libraries/Convert/LibConvert.sol";
 import {LibGerminate} from "contracts/libraries/Silo/LibGerminate.sol";
@@ -24,9 +23,9 @@ import {Invariable} from "contracts/beanstalk/Invariable.sol";
  * @title ConvertFacet handles converting Deposited assets within the Silo.
  **/
 contract ConvertFacet is Invariable, ReentrancyGuard {
-    using SafeMath for uint256;
+    using LibRedundantMath256 for uint256;
     using SafeCast for uint256;
-    using LibSafeMath32 for uint32;
+    using LibRedundantMath32 for uint32;
 
     event Convert(
         address indexed account,

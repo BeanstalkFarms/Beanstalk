@@ -112,6 +112,10 @@ describe("Season", function () {
   describe("oracle not initialized, previous balance > 0", async function () {
     it("season incentive", async function () {
       await setToSecondsAfterHour(0);
+      // Set block base fee to a known value, since it effects the reward amount.
+      await network.provider.send("hardhat_setNextBlockBaseFeePerGas", [
+        "0x4A817C800" // 20 gwei
+      ]);
       await beanstalk.connect(owner).sunrise();
       expect(await bean.balanceOf(owner.address)).to.be.within("11600000", "18000000");
     });
@@ -123,6 +127,10 @@ describe("Season", function () {
       await setToSecondsAfterHour(0);
       await beanstalk.connect(user).sunrise();
       await setToSecondsAfterHour(0);
+      // Set block base fee to a known value, since it effects the reward amount.
+      await network.provider.send("hardhat_setNextBlockBaseFeePerGas", [
+        "0x4A817C800" // 20 gwei
+      ]);
       await beanstalk.connect(owner).sunrise();
 
       expect(await bean.balanceOf(owner.address)).to.be.within("15300000", "15600000");

@@ -410,7 +410,7 @@ module.exports = {
   solidity: {
     compilers: [
       {
-        version: "0.7.6",
+        version: "0.8.20",
         settings: {
           optimizer: {
             enabled: true,
@@ -419,21 +419,15 @@ module.exports = {
         }
       },
       {
-        version: "0.8.17",
+        version: "0.7.6",
         settings: {
           optimizer: {
             enabled: true,
-            runs: 1000
+            runs: 100
           }
         }
       }
-    ],
-    overrides: {
-      "@uniswap/v3-core/contracts/libraries/TickBitmap.sol": {
-        version: "0.7.6",
-        settings: {}
-      }
-    }
+    ]
   },
   gasReporter: {
     enabled: false

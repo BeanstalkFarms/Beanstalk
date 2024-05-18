@@ -1,12 +1,11 @@
 //SPDX-License-Identifier: MIT
-pragma solidity =0.7.6;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.20;
 
 import "../interfaces/IPipeline.sol";
 import "../libraries/LibFunction.sol";
 import "../libraries/LibClipboard.sol";
-import "@openzeppelin/contracts/token/ERC1155/ERC1155Holder.sol";
-import "@openzeppelin/contracts/token/ERC721/ERC721Holder.sol";
+import "@openzeppelin/contracts/token/ERC1155/utils/ERC1155Holder.sol";
+import "@openzeppelin/contracts/token/ERC721/utils/ERC721Holder.sol";
 
 /**
  * @title Pipeline

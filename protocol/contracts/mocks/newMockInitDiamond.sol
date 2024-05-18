@@ -2,8 +2,7 @@
  SPDX-License-Identifier: MIT
 */
 
-pragma solidity =0.7.6;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.20;
 
 import {AppStorage, Storage} from "contracts/beanstalk/AppStorage.sol";
 import "contracts/beanstalk/init/InitalizeDiamond.sol";
@@ -179,6 +178,7 @@ contract MockInitDiamond is InitalizeDiamond {
             true // is well
         );
 
+        s.usdTokenPrice[well] = 1;
         s.twaReserves[well].reserve0 = 1;
         s.twaReserves[well].reserve1 = 1;
     }
