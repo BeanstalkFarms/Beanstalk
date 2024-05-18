@@ -12,12 +12,9 @@ import {C} from "contracts/C.sol";
 /**
  * @author Brean
  * @notice Pauses beanstalk on L1, transfers liquidity to the BCM.
+ * @dev all bean LP tokens are transfered to the BCM, where they will be migrated onto L2.
+ * Non deposited LP tokens will be distrubuted to their initial owners, in their internal balances.
  */
-
-interface IBS {
-    function getTotalDeposited(address token) external returns (uint256);
-}
-
 contract ReseedL2Migration {
     // BCM.
     address internal constant BCM = address(0xa9bA2C40b263843C04d344727b954A545c81D043);
@@ -33,16 +30,19 @@ contract ReseedL2Migration {
         emit Pause(block.timestamp);
 
         // transfer the following whitelisted silo assets to the BCM:
-        // deposited BEAN:WETH
-        uint256 depositedBeanEth = IBS(address(this)).getTotalDeposited(C.BEAN_ETH_WELL);
-        IERC20(C.BEAN_ETH_WELL).transfer(BCM, depositedBeanEth);
+        // bean:eth
+        IERC20 beanEth = IERC20(C.BEAN_ETH_WELL);
+        uint256 beanEthBalance = beanEth.balanceOf(address(this));
+        beanEth.transfer(BCM, beanEthBalance);
 
         // BEAN:WstETH
-        uint256 depositedBeanWsteth = IBS(address(this)).getTotalDeposited(C.BEAN_WSTETH_WELL);
-        IERC20(C.BEAN_WSTETH_WELL).transfer(BCM, depositedBeanWsteth);
+        IERC20 beanwsteth = IERC20(C.BEAN_ETH_WELL);
+        uint256 beanwstethBalance = beanwsteth.balanceOf(address(this));
+        beanwsteth.transfer(BCM, beanwstethBalance);
 
         // BEAN:3CRV
-        uint256 depositedBean3CRV = IBS(address(this)).getTotalDeposited(C.CURVE_BEAN_METAPOOL);
-        IERC20(C.CURVE_BEAN_METAPOOL).transfer(BCM, depositedBean3CRV);
+        IERC20 bean3crv = IERC20(C.CURVE_BEAN_METAPOOL);
+        uint256 bean3crvBalance = bean3crv.balanceOf(address(this));
+        bean3crv.transfer(BCM, bean3crvBalance);
     }
 }
