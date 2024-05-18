@@ -107,7 +107,7 @@ contract Account {
      * @param deprecated_wrappedBeans DEPRECATED – Replant generalized Internal Balances. Wrapped Beans are now stored at the AppStorage level.
      * @param legacyV2Deposits DEPRECATED - SiloV2 was retired in favor of Silo V3. A Farmer's Silo Deposits stored as a map from Token address to Season of Deposit to Deposit.
      * @param withdrawals Withdraws were removed in zero withdraw upgrade - A Farmer's Withdrawals from the Silo stored as a map from Token address to Season the Withdrawal becomes Claimable to Withdrawn amount of Tokens.
-     * @param sop A Farmer's Season of Plenty storage.
+     * @param deprecated_sop DEPRECATED - Generalized Flood uses per-well storage
      * @param depositAllowances A mapping of `spender => Silo token address => amount`.
      * @param tokenAllowances Internal balance token allowances.
      * @param depositPermitNonces A Farmer's current deposit permit nonce
@@ -117,6 +117,8 @@ contract Account {
      * @param isApprovedForAll A mapping of ERC1155 operator to approved status. ERC1155 compatability.
      * @param farmerGerminating A Farmer's germinating stalk. Seperated into odd and even stalk.
      * @param deposits SiloV3.1 deposits. A mapping from depositId to Deposit. SiloV3.1 introduces greater precision for deposits.
+     * @param rainRoots The number of Roots a Farmer had when it started Raining.
+     * @param sop A mapping from well to plentyPerRoot and plenty
      */
     struct State {
         Field field; // A Farmer's Field storage.
@@ -156,7 +158,7 @@ contract Account {
         uint256 deprecated_wrappedBeans; // DEPRECATED – Replant generalized Internal Balances. Wrapped Beans are now stored at the AppStorage level.
         mapping(address => mapping(uint32 => Deposit)) legacyV2Deposits; // Legacy Silo V2 Deposits stored as a map from Token address to Season of Deposit to Deposit. NOTE: While the Silo V2 format is now deprecated, unmigrated Silo V2 deposits are still stored in this mapping.
         mapping(address => mapping(uint32 => uint256)) withdrawals; // Zero withdraw eliminates a need for withdraw mapping, but is kept for legacy
-        SeasonOfPlenty oldSop; // DEPRECATED - Generalized Flood uses per-well storage.
+        SeasonOfPlenty deprecated_sop; // DEPRECATED - Generalized Flood uses per-well storage.
         mapping(address => mapping(address => uint256)) depositAllowances; // Spender => Silo Token
         mapping(address => mapping(IERC20 => uint256)) tokenAllowances; // Token allowances
         uint256 depositPermitNonces; // A Farmer's current deposit permit nonce
