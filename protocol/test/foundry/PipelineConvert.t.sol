@@ -967,9 +967,8 @@ contract PipelineConvertTest is TestHelper {
     // bonus todo: setup a test that reads remaining convert power from block and uses it when determining how much to convert
     // there are already tests that exercise depleting convert power, but might be cool to show how you can use it in a convert
 
-    function testAmountAgainstPeg() public {
+    function testAmountAgainstPeg() public view {
         uint256 amountAgainstPeg;
-        uint256 crossoverAmount;
 
         (amountAgainstPeg) = LibConvert.calculateAmountAgainstPeg(-500, -400);
         assertEq(amountAgainstPeg, 0);
@@ -990,7 +989,7 @@ contract PipelineConvertTest is TestHelper {
         assertEq(amountAgainstPeg, 100);
     }
 
-    function testCalculateConvertedTowardsPeg() public {
+    function testCalculateConvertedTowardsPeg() public pure {
         int256 beforeDeltaB = -100;
         int256 afterDeltaB = 0;
         uint256 amountInDirectionOfPeg = LibConvert.calculateConvertedTowardsPeg(
@@ -1428,7 +1427,7 @@ contract PipelineConvertTest is TestHelper {
         assertEq(stalkPenaltyBdv, 0);
     }
 
-    function testCalcStalkPenaltyNoOverallCap() public {
+    function testCalcStalkPenaltyNoOverallCap() public view {
         (
             LibConvert.DeltaBStorage memory dbs,
             address inputToken,
@@ -1450,7 +1449,7 @@ contract PipelineConvertTest is TestHelper {
         assertEq(stalkPenaltyBdv, 100);
     }
 
-    function testCalcStalkPenaltyNoInputTokenCap() public {
+    function testCalcStalkPenaltyNoInputTokenCap() public view {
         (
             LibConvert.DeltaBStorage memory dbs,
             address inputToken,
@@ -1471,7 +1470,7 @@ contract PipelineConvertTest is TestHelper {
         assertEq(stalkPenaltyBdv, 100);
     }
 
-    function testCalcStalkPenaltyNoOutputTokenCap() public {
+    function testCalcStalkPenaltyNoOutputTokenCap() public view {
         (
             LibConvert.DeltaBStorage memory dbs,
             address inputToken,
@@ -1617,10 +1616,6 @@ contract PipelineConvertTest is TestHelper {
             lpAmountOut,
             LibTransfer.From.EXTERNAL
         );
-        console.log("setup, depositedAmount: ", depositedAmount);
-        console.log("_bdv: ", _bdv);
-        console.log("stem: ");
-        console.logInt(stem);
 
         stem = theStem;
 
@@ -1756,8 +1751,6 @@ contract PipelineConvertTest is TestHelper {
             type(uint256).max
         );
 
-        console.log("lpAmountOut: ", lpAmountOut);
-
         // approve spending well token to beanstalk
         vm.prank(user);
         MockToken(beanEthWell).approve(BEANSTALK, type(uint256).max);
@@ -1856,9 +1849,6 @@ contract PipelineConvertTest is TestHelper {
     function createLPToBeanFarmCalls(
         uint256 amountOfLP
     ) private view returns (AdvancedFarmCall[] memory output) {
-        console.log("createLPToBean amountOfLP: ", amountOfLP);
-        // first setup the pipeline calls
-
         // setup approve max call
         bytes memory approveEncoded = abi.encodeWithSelector(
             IERC20.approve.selector,
@@ -1912,9 +1902,6 @@ contract PipelineConvertTest is TestHelper {
         );
 
         advancedFarmCalls[0] = AdvancedFarmCall(advancedPipeCalldata, new bytes(0));
-
-        // encode into bytes.
-        // output = abi.encode(advancedFarmCalls);
         return advancedFarmCalls;
     }
 
@@ -1922,7 +1909,7 @@ contract PipelineConvertTest is TestHelper {
         uint256 amountOfLP,
         address inputWell,
         address outputWell
-    ) private returns (AdvancedFarmCall[] memory output) {
+    ) private view returns (AdvancedFarmCall[] memory output) {
         console.log("createLPToBean amountOfLP: ", amountOfLP);
 
         // setup approve max call
@@ -2019,9 +2006,6 @@ contract PipelineConvertTest is TestHelper {
 
         // get index of bean token
         uint256 beanIndex = LibWell.getBeanIndex(IWell(well).tokens());
-        (address nonBeanToken, uint256 nonBeanIndex) = LibWell.getNonBeanTokenAndIndexFromWell(
-            well
-        );
 
         // remove beanOut from reserves bean index
         reserves[beanIndex] = reserves[beanIndex].sub(beansOut);
@@ -2039,9 +2023,7 @@ contract PipelineConvertTest is TestHelper {
 
         // get index of bean token
         uint256 beanIndex = LibWell.getBeanIndex(IWell(well).tokens());
-        (address nonBeanToken, uint256 nonBeanIndex) = LibWell.getNonBeanTokenAndIndexFromWell(
-            well
-        );
+
         uint256[] memory tokenAmountsIn = new uint256[](2);
         tokenAmountsIn[0] = beansIn;
         lpOut = IWell(well).getAddLiquidityOut(tokenAmountsIn);
