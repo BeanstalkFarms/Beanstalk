@@ -1,4 +1,4 @@
-name: Deploy
+name: Deploy Subgraph
 
 on:
   workflow_dispatch:
