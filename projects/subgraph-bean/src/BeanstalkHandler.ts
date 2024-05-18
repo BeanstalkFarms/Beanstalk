@@ -12,7 +12,7 @@ import {
   BEAN_WETH_V1,
   CURVE_PRICE
 } from "../../subgraph-core/utils/Constants";
-import { ONE_BI, ZERO_BD, ZERO_BI, toDecimal } from "../../subgraph-core/utils/Decimals";
+import { ZERO_BD, ZERO_BI, toDecimal } from "../../subgraph-core/utils/Decimals";
 import { CurvePrice } from "../generated/Beanstalk/CurvePrice";
 import { checkBeanCross } from "./utils/Cross";
 import { calcUniswapV2Inst, setUniswapV2Twa } from "./utils/price/UniswapPrice";
@@ -56,7 +56,7 @@ export function handleSunrise(event: Sunrise): void {
           BEAN_3CRV.toHexString(),
           event.block.timestamp,
           event.block.number,
-          /* ZERO_BI, */ ONE_BI, // REVERT THIS ! temporary change for testing deployment
+          ZERO_BI,
           ZERO_BD,
           toDecimal(curve.value.liquidity).minus(beanCurve.liquidityUSD),
           curve.value.deltaB
