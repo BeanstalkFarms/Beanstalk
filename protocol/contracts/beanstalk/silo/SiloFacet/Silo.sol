@@ -19,6 +19,8 @@ import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
 import {LibBytes} from "contracts/libraries/LibBytes.sol";
 import {C} from "contracts/C.sol";
 import {IWell} from "contracts/interfaces/basin/IWell.sol";
+import {LibTokenApprove} from "contracts/libraries/Token/LibTokenApprove.sol";
+import "contracts/libraries/Token/LibTransfer.sol";
 
 /**
  * @title Silo
@@ -140,12 +142,12 @@ contract Silo is ReentrancyGuard {
      * if `s.a[account].sop.plenty == 0`. This would emit a ClaimPlenty event
      * with an amount of 0.
      */
-    function _claimPlenty(address account, address well) internal {
+    function _claimPlenty(address account, address well, LibTransfer.To toMode) internal {
         uint256 plenty = s.a[account].sop[well].plenty;
         if (plenty > 0) {
             IERC20[] memory tokens = IWell(well).tokens();
             IERC20 sopToken = tokens[0] != C.bean() ? tokens[0] : tokens[1];
-            sopToken.safeTransfer(account, plenty);
+            LibTransfer.sendToken(sopToken, plenty, LibTractor._user(), toMode);
             s.a[account].sop[well].plenty = 0;
 
             emit ClaimPlenty(account, address(sopToken), plenty);

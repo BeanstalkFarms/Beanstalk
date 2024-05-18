@@ -2,7 +2,7 @@
 pragma solidity >=0.6.0 <0.9.0;
 pragma abicoder v2;
 
-import {TestHelper, C} from "test/foundry/utils/TestHelper.sol";
+import {TestHelper, C, LibTransfer} from "test/foundry/utils/TestHelper.sol";
 import {IWell, IERC20, Call} from "contracts/interfaces/basin/IWell.sol";
 import {MockPump} from "contracts/mocks/well/MockPump.sol";
 import {MockSeasonFacet, Weather} from "contracts/mocks/mockFacets/MockSeasonFacet.sol";
@@ -11,6 +11,7 @@ import {MockFieldFacet} from "contracts/mocks/mockFacets/MockFieldFacet.sol";
 import {Storage} from "contracts/libraries/LibAppStorage.sol";
 import {SeasonGettersFacet} from "contracts/beanstalk/sun/SeasonFacet/SeasonGettersFacet.sol";
 import {SiloGettersFacet} from "contracts/beanstalk/silo/SiloFacet/SiloGettersFacet.sol";
+import {IMockFBeanstalk} from "contracts/interfaces/IMockFBeanstalk.sol";
 import {console} from "forge-std/console.sol";
 
 /**
@@ -187,7 +188,7 @@ contract FloodTest is TestHelper {
         // claims user plenty
         bs.mow(users[2], C.BEAN);
         vm.prank(users[2]);
-        bs.claimPlenty(sopWell);
+        bs.claimPlenty(sopWell, IMockFBeanstalk.To.EXTERNAL);
         assertEq(bs.balanceOfPlenty(users[2], sopWell), 0);
         assertEq(IERC20(C.WETH).balanceOf(users[2]), userCalcPlenty);
     }
@@ -321,7 +322,7 @@ contract FloodTest is TestHelper {
         // claims user plenty
         bs.mow(users[2], sopWell);
         vm.prank(users[2]);
-        bs.claimPlenty(sopWell);
+        bs.claimPlenty(sopWell, IMockFBeanstalk.To.EXTERNAL);
         assertEq(bs.balanceOfPlenty(users[2], sopWell), 0);
         assertEq(IERC20(C.WETH).balanceOf(users[2]), 25595575914848452999);
     }

@@ -5,6 +5,18 @@ pragma solidity ^0.8.20;
 pragma abicoder v2;
 
 interface IMockFBeanstalk {
+    // Is this the proper location for enums?
+    enum From {
+        EXTERNAL,
+        INTERNAL,
+        EXTERNAL_INTERNAL,
+        INTERNAL_TOLERANT
+    }
+    enum To {
+        EXTERNAL,
+        INTERNAL
+    }
+
     struct AccountSeasonOfPlenty {
         uint32 lastRain;
         uint32 lastSop;
@@ -519,7 +531,8 @@ interface IMockFBeanstalk {
 
     function claimOwnership() external;
 
-    function claimPlenty(address well) external payable;
+    function claimPlenty(address well, To toMode) external payable;
+    function claimAllPlenty(To toMode) external payable;
 
     function convert(
         bytes memory convertData,

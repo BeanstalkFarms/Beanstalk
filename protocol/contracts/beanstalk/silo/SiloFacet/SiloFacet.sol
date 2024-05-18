@@ -313,14 +313,14 @@ contract SiloFacet is Invariable, TokenSilo {
     /**
      * @notice Claim rewards from a Flood (Was Season of Plenty)
      */
-    function claimPlenty(address well) external payable {
-        _claimPlenty(LibTractor._user(), well);
+    function claimPlenty(address well, LibTransfer.To toMode) external payable {
+        _claimPlenty(LibTractor._user(), well, toMode);
     }
 
-    function claimAllPlenty() external payable {
+    function claimAllPlenty(LibTransfer.To toMode) external payable {
         address[] memory tokens = LibWhitelistedTokens.getWhitelistedWellLpTokens();
         for (uint i; i < tokens.length; i++) {
-            _claimPlenty(LibTractor._user(), tokens[i]);
+            _claimPlenty(LibTractor._user(), tokens[i], toMode);
         }
     }
 }
