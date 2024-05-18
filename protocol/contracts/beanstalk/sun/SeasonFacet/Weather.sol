@@ -88,7 +88,7 @@ contract Weather is Sun {
             return 9; // Reasonably low
         }
         // Calculate Case Id
-        (uint256 caseId, ) = LibEvaluate.evaluateBeanstalk(deltaB, beanSupply);
+        uint256 caseId = LibEvaluate.evaluateBeanstalk(deltaB, beanSupply);
         updateTemperatureAndBeanToMaxLpGpPerBdvRatio(caseId);
         handleRain(caseId);
         return caseId;
