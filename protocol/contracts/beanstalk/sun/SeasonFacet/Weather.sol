@@ -14,7 +14,6 @@ import {IWell, Call} from "contracts/interfaces/basin/IWell.sol";
 import {IInstantaneousPump} from "contracts/interfaces/basin/pumps/IInstantaneousPump.sol";
 import {LibWhitelistedTokens} from "contracts/libraries/Silo/LibWhitelistedTokens.sol";
 import {LibWellMinting} from "contracts/libraries/Minting/LibWellMinting.sol";
-import {console} from "forge-std/console.sol";
 import {LibRedundantMath256} from "contracts/libraries/LibRedundantMath256.sol";
 import {LibRedundantMathSigned256} from "contracts/libraries/LibRedundantMathSigned256.sol";
 
@@ -34,7 +33,7 @@ contract Weather is Sun {
 
     struct WellDeltaB {
         address well;
-        int256 deltaB; // reviewer note: worth squishing these into one slot?
+        int256 deltaB;
         uint256 reductionAmount;
     }
 
@@ -202,7 +201,9 @@ contract Weather is Sun {
             }
         }
     }
-
+    /**
+     * @notice Floods the field, up to 0.1% of the total Bean supply worth of pods.
+     */
     function floodPodline() private {
         // Make 0.1% of the total bean supply worth of pods harvestable.
 
