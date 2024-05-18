@@ -20,7 +20,7 @@ import {LibRedundantMathSigned256} from "contracts/libraries/LibRedundantMathSig
 
 /**
  * @title Weather
- * @author Publius
+ * @author Publius, pizzaman1337
  * @notice Weather controls the Temperature and Grown Stalk to LP on the Farm.
  */
 contract Weather is Sun {

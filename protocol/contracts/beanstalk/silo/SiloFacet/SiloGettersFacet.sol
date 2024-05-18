@@ -17,7 +17,7 @@ import {C} from "contracts/C.sol";
 import {LibWhitelistedTokens} from "contracts/libraries/Silo/LibWhitelistedTokens.sol";
 
 /**
- * @author Brean
+ * @author Brean, pizzaman1337
  * @title SiloGettersFacet contains view functions related to the silo.
  **/
 contract SiloGettersFacet is ReentrancyGuard {
