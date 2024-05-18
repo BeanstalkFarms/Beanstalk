@@ -142,11 +142,13 @@ contract Silo is ReentrancyGuard {
      */
     function _claimPlenty(address account, address well) internal {
         uint256 plenty = s.a[account].sop[well].plenty;
-        IERC20[] memory tokens = IWell(well).tokens();
-        IERC20 sopToken = tokens[0] != C.bean() ? tokens[0] : tokens[1];
-        sopToken.safeTransfer(account, plenty);
-        s.a[account].sop[well].plenty = 0;
+        if (plenty > 0) {
+            IERC20[] memory tokens = IWell(well).tokens();
+            IERC20 sopToken = tokens[0] != C.bean() ? tokens[0] : tokens[1];
+            sopToken.safeTransfer(account, plenty);
+            s.a[account].sop[well].plenty = 0;
 
-        emit ClaimPlenty(account, address(sopToken), plenty);
+            emit ClaimPlenty(account, address(sopToken), plenty);
+        }
     }
 }
