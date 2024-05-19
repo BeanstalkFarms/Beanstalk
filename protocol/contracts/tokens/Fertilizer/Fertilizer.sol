@@ -13,8 +13,11 @@ import {LibRedundantMath256} from "contracts/libraries/LibRedundantMath256.sol";
 
 interface IBS {
     function payFertilizer(address account, uint256 amount) external;
+
     function beansPerFertilizer() external view returns (uint128);
+
     function getEndBpf() external view returns (uint128);
+
     function remainingRecapitalization() external view returns (uint256);
 }
 
@@ -23,6 +26,15 @@ contract Fertilizer is Internalizer {
 
     using LibRedundantMath256 for uint256;
     using LibRedundantMath128 for uint128;
+
+    /**
+     * @notice Initializes the contract.
+     * @dev In a future update, the metadata will be fully on chain,
+     * and thus the uri will not need to be updated.
+     */
+    function init() external initializer {
+        __Internallize_init("");
+    }
 
     function beanstalkUpdate(
         address account,
