@@ -380,6 +380,14 @@ contract FloodTest is TestHelper {
         wellDeltaBs = calculateSopPerWellHelper(wellDeltaBs);
         assertEq(wellDeltaBs[0].reductionAmount, 90);
 
+        // This can occur if the twaDeltaB is positive, but the instanteous deltaB is negative or 0
+        // In this case, no reductions are needed.
+        wellDeltaBs = new Weather.WellDeltaB[](2);
+        wellDeltaBs[0].deltaB = 90;
+        wellDeltaBs[1].deltaB = -100;
+        wellDeltaBs = calculateSopPerWellHelper(wellDeltaBs);
+        assertEq(wellDeltaBs[0].reductionAmount, 0);
+
         // test just 2 wells, all positive
         wellDeltaBs = new Weather.WellDeltaB[](2);
         wellDeltaBs[0].deltaB = 90;
