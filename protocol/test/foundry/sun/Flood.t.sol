@@ -326,12 +326,12 @@ contract FloodTest is TestHelper {
         assertEq(IERC20(C.WETH).balanceOf(users[2]), 25595575914848452999);
     }
 
-    function testCalculateSopPerWell() public {
+    function testCalculateSopPerWell() public view {
         Weather.WellDeltaB[] memory wellDeltaBs = new Weather.WellDeltaB[](3);
         wellDeltaBs[0].deltaB = 100;
         wellDeltaBs[1].deltaB = 100;
         wellDeltaBs[2].deltaB = -100;
-        wellDeltaBs = season.calculateSopPerWell(wellDeltaBs);
+        wellDeltaBs = calculateSopPerWellHelper(wellDeltaBs);
         assertEq(wellDeltaBs[0].reductionAmount, 50);
         assertEq(wellDeltaBs[1].reductionAmount, 50);
         assertEq(wellDeltaBs[2].reductionAmount, 0);
@@ -341,7 +341,7 @@ contract FloodTest is TestHelper {
         wellDeltaBs[1].deltaB = 80;
         wellDeltaBs[2].deltaB = 20;
         wellDeltaBs[3].deltaB = -120;
-        wellDeltaBs = season.calculateSopPerWell(wellDeltaBs);
+        wellDeltaBs = calculateSopPerWellHelper(wellDeltaBs);
         assertEq(wellDeltaBs[0].reductionAmount, 40);
         assertEq(wellDeltaBs[1].reductionAmount, 30);
         assertEq(wellDeltaBs[2].reductionAmount, 0);
@@ -355,7 +355,7 @@ contract FloodTest is TestHelper {
         wellDeltaBs[4].deltaB = 50;
         wellDeltaBs[5].deltaB = 40;
         wellDeltaBs[6].deltaB = -120;
-        wellDeltaBs = season.calculateSopPerWell(wellDeltaBs);
+        wellDeltaBs = calculateSopPerWellHelper(wellDeltaBs);
         assertEq(wellDeltaBs[0].reductionAmount, 70);
         assertEq(wellDeltaBs[1].reductionAmount, 60);
         assertEq(wellDeltaBs[2].reductionAmount, 50);
@@ -369,7 +369,7 @@ contract FloodTest is TestHelper {
         wellDeltaBs[1].deltaB = 80;
         wellDeltaBs[2].deltaB = -70;
         wellDeltaBs[3].deltaB = -200;
-        wellDeltaBs = season.calculateSopPerWell(wellDeltaBs);
+        wellDeltaBs = calculateSopPerWellHelper(wellDeltaBs);
         assertEq(wellDeltaBs[0].reductionAmount, 0);
         assertEq(wellDeltaBs[1].reductionAmount, 0);
         assertEq(wellDeltaBs[2].reductionAmount, 0);
@@ -377,14 +377,14 @@ contract FloodTest is TestHelper {
 
         wellDeltaBs = new Weather.WellDeltaB[](1);
         wellDeltaBs[0].deltaB = 90;
-        wellDeltaBs = season.calculateSopPerWell(wellDeltaBs);
+        wellDeltaBs = calculateSopPerWellHelper(wellDeltaBs);
         assertEq(wellDeltaBs[0].reductionAmount, 90);
 
         // test just 2 wells, all positive
         wellDeltaBs = new Weather.WellDeltaB[](2);
         wellDeltaBs[0].deltaB = 90;
         wellDeltaBs[1].deltaB = 80;
-        wellDeltaBs = season.calculateSopPerWell(wellDeltaBs);
+        wellDeltaBs = calculateSopPerWellHelper(wellDeltaBs);
         assertEq(wellDeltaBs[0].reductionAmount, 90);
         assertEq(wellDeltaBs[1].reductionAmount, 80);
 
@@ -392,7 +392,7 @@ contract FloodTest is TestHelper {
         wellDeltaBs = new Weather.WellDeltaB[](2);
         wellDeltaBs[0].deltaB = 90;
         wellDeltaBs[1].deltaB = -80;
-        wellDeltaBs = season.calculateSopPerWell(wellDeltaBs);
+        wellDeltaBs = calculateSopPerWellHelper(wellDeltaBs);
         assertEq(wellDeltaBs[0].reductionAmount, 10);
         assertEq(wellDeltaBs[1].reductionAmount, 0);
     }
@@ -464,7 +464,7 @@ contract FloodTest is TestHelper {
         addLiquidityToWell(C.BEAN_ETH_WELL, 13000e6, 10 ether);
         addLiquidityToWell(C.BEAN_WSTETH_WELL, 12000e6, 10 ether);
 
-        Weather.WellDeltaB[] memory wells = season.getWellsByDeltaB();
+        (Weather.WellDeltaB[] memory wells, , , ) = season.getWellsByDeltaB();
 
         //verify wells are in descending deltaB
         for (uint256 i = 0; i < wells.length - 1; i++) {
@@ -472,7 +472,7 @@ contract FloodTest is TestHelper {
         }
     }
 
-    function testQuickSort() public {
+    function testQuickSort() public view {
         Weather.WellDeltaB[] memory wells = new Weather.WellDeltaB[](5);
         int right = int(wells.length - 1);
         wells[0] = Weather.WellDeltaB(address(0), 100, 0);
@@ -503,6 +503,36 @@ contract FloodTest is TestHelper {
     }
 
     //////////// Helpers ////////////
+
+    /**
+     * @dev Helper function to calculate totalPositiveDeltaB, totalNegativeDeltaB, positiveDeltaBCount
+     * @param wellDeltaBs The deltaBs of all whitelisted wells in which to flood
+     */
+    function calculateSopPerWellHelper(
+        Weather.WellDeltaB[] memory wellDeltaBs
+    ) private view returns (Weather.WellDeltaB[] memory) {
+        uint256 totalPositiveDeltaB;
+        uint256 totalNegativeDeltaB;
+        uint256 positiveDeltaBCount;
+
+        for (uint i = 0; i < wellDeltaBs.length; i++) {
+            console.logInt(wellDeltaBs[i].deltaB);
+            if (wellDeltaBs[i].deltaB > 0) {
+                totalPositiveDeltaB += uint256(wellDeltaBs[i].deltaB);
+                positiveDeltaBCount++;
+            } else {
+                totalNegativeDeltaB += uint256(-wellDeltaBs[i].deltaB);
+            }
+        }
+
+        return
+            season.calculateSopPerWell(
+                wellDeltaBs,
+                totalPositiveDeltaB,
+                totalNegativeDeltaB,
+                positiveDeltaBCount
+            );
+    }
 
     function depostBeansForUsers(
         address[] memory users,

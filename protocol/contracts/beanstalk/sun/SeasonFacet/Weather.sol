@@ -195,8 +195,18 @@ contract Weather is Sun {
             floodPodline();
 
             if (s.r.roots > 0) {
-                WellDeltaB[] memory wellDeltaBs = getWellsByDeltaB();
-                wellDeltaBs = calculateSopPerWell(wellDeltaBs);
+                (
+                    WellDeltaB[] memory wellDeltaBs,
+                    uint256 totalPositiveDeltaB,
+                    uint256 totalNegativeDeltaB,
+                    uint256 positiveDeltaBCount
+                ) = getWellsByDeltaB();
+                wellDeltaBs = calculateSopPerWell(
+                    wellDeltaBs,
+                    totalPositiveDeltaB,
+                    totalNegativeDeltaB,
+                    positiveDeltaBCount
+                );
 
                 for (uint i; i < wellDeltaBs.length; i++) {
                     sop(wellDeltaBs[i]);
@@ -224,17 +234,31 @@ contract Weather is Sun {
         emit SeasonOfPlentyField(sopFieldBeans);
     }
 
-    function getWellsByDeltaB() public view returns (WellDeltaB[] memory) {
+    function getWellsByDeltaB()
+        public
+        view
+        returns (
+            WellDeltaB[] memory wellDeltaBs,
+            uint256 totalPositiveDeltaB,
+            uint256 totalNegativeDeltaB,
+            uint256 positiveDeltaBCount
+        )
+    {
         address[] memory wells = LibWhitelistedTokens.getWhitelistedWellLpTokens();
-        WellDeltaB[] memory wellDeltaBs = new WellDeltaB[](wells.length);
+        wellDeltaBs = new WellDeltaB[](wells.length);
+
         for (uint i = 0; i < wells.length; i++) {
             wellDeltaBs[i] = WellDeltaB(wells[i], LibWellMinting.currentDeltaB(wells[i]), 0);
+            if (wellDeltaBs[i].deltaB > 0) {
+                totalPositiveDeltaB += uint256(wellDeltaBs[i].deltaB);
+                positiveDeltaBCount++;
+            } else {
+                totalNegativeDeltaB += uint256(-wellDeltaBs[i].deltaB);
+            }
         }
 
         // Sort the wellDeltaBs array
         quickSort(wellDeltaBs, 0, int(wellDeltaBs.length - 1));
-
-        return wellDeltaBs;
     }
 
     // Reviewer note: This works, but there's got to be a way to make this more gas efficient
@@ -329,21 +353,11 @@ contract Weather is Sun {
     // code review note: have some casual comments here for just understanding the code, happy to
     // change this function to make it more efficient based on feedback.
     function calculateSopPerWell(
-        WellDeltaB[] memory wellDeltaBs
+        WellDeltaB[] memory wellDeltaBs,
+        uint256 totalPositiveDeltaB,
+        uint256 totalNegativeDeltaB,
+        uint256 positiveDeltaBCount
     ) public pure returns (WellDeltaB[] memory) {
-        uint256 totalPositiveDeltaB = 0;
-        uint256 totalNegativeDeltaB = 0;
-        uint256 positiveDeltaBCount = 0;
-
-        for (uint256 i = 0; i < wellDeltaBs.length; i++) {
-            if (wellDeltaBs[i].deltaB > 0) {
-                totalPositiveDeltaB += uint256(wellDeltaBs[i].deltaB);
-                positiveDeltaBCount++;
-            } else {
-                totalNegativeDeltaB += uint256(-wellDeltaBs[i].deltaB);
-            }
-        }
-
         // most likely case is that all deltaBs are positive
         if (positiveDeltaBCount == wellDeltaBs.length) {
             // if all deltaBs are positive, need to sop all to zero
