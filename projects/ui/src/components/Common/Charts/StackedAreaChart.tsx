@@ -13,8 +13,9 @@ import {
 import { Box, Card, Stack, Typography } from '@mui/material';
 import ParentSize from '@visx/responsive/lib/components/ParentSize';
 import { BeanstalkPalette } from '~/components/App/muiTheme';
-
 import { displayBN } from '~/util';
+import useTokenMap from '~/hooks/chain/useTokenMap';
+import { SILO_WHITELIST } from '~/constants/tokens';
 import ChartPropProvider, {
   BaseChartProps,
   BaseDataPoint,
@@ -22,8 +23,6 @@ import ChartPropProvider, {
 } from './ChartPropProvider';
 import Row from '../Row';
 import { defaultValueFormatter } from './SeasonPlot';
-import useTokenMap from '~/hooks/chain/useTokenMap';
-import { SILO_WHITELIST } from '~/constants/tokens';
 
 type Props = {
   width: number;
@@ -40,6 +39,7 @@ const Graph = (props: Props) => {
     width,
     height,
     // props
+    useCustomTooltipNames,
     series,
     curve: _curve,
     keys,
@@ -133,7 +133,8 @@ const Graph = (props: Props) => {
       onCursor?.(
         pointerData.season,
         getDisplayValue([pointerData]),
-        pointerData.date
+        pointerData.date,
+        pointerData
       );
     },
     [
@@ -394,7 +395,7 @@ const Graph = (props: Props) => {
                                     }}
                                   />
                                   <Typography>
-                                    {siloTokens[key]?.symbol}
+                                    {useCustomTooltipNames ? useCustomTooltipNames[key] : siloTokens[key]?.symbol}
                                   </Typography>
                                 </Row>
                                 <Typography textAlign="right">

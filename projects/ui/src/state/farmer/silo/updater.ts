@@ -332,7 +332,7 @@ export const useFetchFarmerSilo = () => {
       );
       stalkForUnMigrated.total = stalkForUnMigrated.base
         .plus(stalkForUnMigrated.grown)
-        .plus(stalkForUnMigrated.earned);
+        // .plus(stalkForUnMigrated.earned);
       // End of un-migrated stalk calculation
 
       const earnedStalkBalance = sdk.tokens.BEAN.getStalk(earnedBeanBalance);
@@ -350,7 +350,7 @@ export const useFetchFarmerSilo = () => {
         },
         stalk: {
           active: migrationNeeded
-            ? stalkForUnMigrated.base.plus(stalkForUnMigrated.earned)
+            ? stalkForUnMigrated.base // .plus(stalkForUnMigrated.earned)
             : transform(activeStalkBalance, 'bnjs', sdk.tokens.STALK),
           earned: migrationNeeded
             ? stalkForUnMigrated.earned

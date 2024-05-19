@@ -47,7 +47,7 @@ const useFarmerSiloHistory = (
     priceQuery,
     itemizeByToken
   );
-  const [stalkData, seedsData] = useInterpolateStalk(
+  const [stalkData, seedsData, grownStalkData] = useInterpolateStalk(
     siloRewardsQuery,
     !includeStalk
   );
@@ -57,6 +57,7 @@ const useFarmerSiloHistory = (
       deposits: depositData,
       stalk: stalkData,
       seeds: seedsData,
+      grownStalk: grownStalkData,
     },
     loading:
       siloRewardsQuery.loading || siloAssetsQuery.loading || priceQuery.loading,
