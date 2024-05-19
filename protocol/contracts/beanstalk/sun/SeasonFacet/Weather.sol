@@ -29,8 +29,11 @@ contract Weather is Sun {
 
     uint128 internal constant MAX_BEAN_LP_GP_PER_BDV_RATIO = 100e18;
 
+    // @notice This controls the percentage of Bean supply that is flooded to the field.
+    // 1000 represents 1/1000, or 0.1% of total Bean supply.
     uint256 internal constant FLOOD_PODLINE_PERCENT_DENOMINATOR = 1000;
 
+    // @dev In-memory struct used to store current deltaB and reduction (flood) amount per-well.
     struct WellDeltaB {
         address well;
         int256 deltaB;
