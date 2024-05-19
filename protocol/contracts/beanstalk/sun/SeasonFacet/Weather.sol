@@ -383,7 +383,7 @@ contract Weather is Sun {
         uint256 shaveToLevel;
 
         for (uint256 i = 0; i <= positiveDeltaBCount; i++) {
-            if (positiveDeltaBCount == 1 || i == 0) {
+            if (i == 0) {
                 // reduce enough to equal the negative deltaB
                 if (positiveDeltaBCount == 1) {
                     wellDeltaBs[i].reductionAmount = uint256(wellDeltaBs[i].deltaB).sub(
