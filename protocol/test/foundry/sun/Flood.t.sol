@@ -12,7 +12,6 @@ import {Storage} from "contracts/libraries/LibAppStorage.sol";
 import {SeasonGettersFacet} from "contracts/beanstalk/sun/SeasonFacet/SeasonGettersFacet.sol";
 import {SiloGettersFacet} from "contracts/beanstalk/silo/SiloFacet/SiloGettersFacet.sol";
 import {IMockFBeanstalk} from "contracts/interfaces/IMockFBeanstalk.sol";
-import {console} from "forge-std/console.sol";
 
 /**
  * @title FloodTest
@@ -370,8 +369,11 @@ contract FloodTest is TestHelper {
         wellDeltaBs[1].deltaB = 80;
         wellDeltaBs[2].deltaB = -70;
         wellDeltaBs[3].deltaB = -200;
-        vm.expectRevert("Flood: Overall deltaB is negative");
         wellDeltaBs = season.calculateSopPerWell(wellDeltaBs);
+        assertEq(wellDeltaBs[0].reductionAmount, 0);
+        assertEq(wellDeltaBs[1].reductionAmount, 0);
+        assertEq(wellDeltaBs[2].reductionAmount, 0);
+        assertEq(wellDeltaBs[3].reductionAmount, 0);
 
         wellDeltaBs = new Weather.WellDeltaB[](1);
         wellDeltaBs[0].deltaB = 90;

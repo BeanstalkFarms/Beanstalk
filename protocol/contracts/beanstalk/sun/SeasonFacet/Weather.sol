@@ -359,8 +359,9 @@ contract Weather is Sun {
         }
 
         if (totalPositiveDeltaB < totalNegativeDeltaB) {
-            // in theory this should never happen because overall deltaB is required for sop
-            revert("Flood: Overall deltaB is negative");
+            // This can occur if the twaDeltaB is positive, but the instanteous deltaB is negative or 0
+            // In this case, no reductions are needed.
+            return wellDeltaBs;
         }
 
         uint256 shaveOff = totalPositiveDeltaB - totalNegativeDeltaB;
