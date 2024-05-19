@@ -225,7 +225,7 @@ contract Weather is Sun {
         address[] memory wells = LibWhitelistedTokens.getWhitelistedWellLpTokens();
         WellDeltaB[] memory wellDeltaBs = new WellDeltaB[](wells.length);
         for (uint i = 0; i < wells.length; i++) {
-            wellDeltaBs[i] = WellDeltaB(wells[i], LibWellMinting.cappedReservesDeltaB(wells[i]), 0);
+            wellDeltaBs[i] = WellDeltaB(wells[i], LibWellMinting.currentDeltaB(wells[i]), 0);
         }
 
         // Sort the wellDeltaBs array

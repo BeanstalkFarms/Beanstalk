@@ -31,6 +31,8 @@ import {LibRedundantMath256} from "contracts/libraries/LibRedundantMath256.sol";
 library LibWellMinting {
     using LibRedundantMathSigned256 for int256;
 
+    uint256 internal constant ZERO_LOOKBACK = 0;
+
     /**
      * @notice Emitted when a Well Minting Oracle is captured.
      * @param season The season that the Well was captured.
@@ -184,6 +186,16 @@ library LibWellMinting {
         }
     }
 
+    /**
+     * @dev Calculates the current deltaB for a given Well address.
+     * @param well The address of the Well.
+     * @return The current deltaB uses the current reserves in the well.
+     */
+    function currentDeltaB(address well) internal view returns (int256) {
+        uint256[] memory reserves = IWell(well).getReserves();
+        return calculateDeltaBFromReserves(well, reserves, ZERO_LOOKBACK);
+    }
+
     function cappedReservesDeltaB(address well) internal view returns (int256) {
         if (well == C.BEAN) {
             return 0;
@@ -243,5 +255,45 @@ library LibWellMinting {
             }
         }
         return true;
+    }
+
+    /**
+     * @notice calculates the deltaB for a given well using the reserves.
+     * @dev reverts if the bean reserve is less than the minimum,
+     * or if the usd oracle fails.
+     * This differs from the twaDeltaB, as this function should not be used within the sunrise function.
+     */
+    function calculateDeltaBFromReserves(
+        address well,
+        uint256[] memory reserves,
+        uint256 lookback
+    ) internal view returns (int256) {
+        IERC20[] memory tokens = IWell(well).tokens();
+        Call memory wellFunction = IWell(well).wellFunction();
+
+        (uint256[] memory ratios, uint256 beanIndex, bool success) = LibWell.getRatiosAndBeanIndex(
+            tokens,
+            lookback
+        );
+
+        // Converts cannot be performed, if the Bean reserve is less than the minimum
+        if (reserves[beanIndex] < C.WELL_MINIMUM_BEAN_BALANCE) {
+            revert("Well: Bean reserve is less than the minimum");
+        }
+
+        // If the USD Oracle call fails, a deltaB cannot be determined.
+        if (!success) {
+            revert("Well: USD Oracle call failed");
+        }
+
+        return
+            int256(
+                IBeanstalkWellFunction(wellFunction.target).calcReserveAtRatioSwap(
+                    reserves,
+                    beanIndex,
+                    ratios,
+                    wellFunction.data
+                )
+            ).sub(int256(reserves[beanIndex]));
     }
 }
