@@ -516,7 +516,6 @@ contract FloodTest is TestHelper {
         uint256 positiveDeltaBCount;
 
         for (uint i = 0; i < wellDeltaBs.length; i++) {
-            console.logInt(wellDeltaBs[i].deltaB);
             if (wellDeltaBs[i].deltaB > 0) {
                 totalPositiveDeltaB += uint256(wellDeltaBs[i].deltaB);
                 positiveDeltaBCount++;
