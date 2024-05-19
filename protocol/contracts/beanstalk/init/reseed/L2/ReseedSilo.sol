@@ -60,28 +60,6 @@ contract ReseedSilo {
         uint256 amount
     );
 
-    // Beanstalk cannot assume that contracts on L1 will have the ability to
-    // access their assets on L2. Thus, the silo is reseeded with only EOAs and
-    // contracts that have verified their ability to access their assets on L2.
-    // constants are set here for additional verification on L2.
-    uint128 internal constant BEAN_DEPOSITED_BY_CONTRACTS = 0;
-    uint128 internal constant BEAN_DEPOSITED_BDV_BY_CONTRACTS = 0;
-
-    uint128 internal constant BEAN_ETH_DEPOSITED_BY_CONTRACTS = 0;
-    uint128 internal constant BEAN_ETH_DEPOSITED_BDV_BY_CONTRACTS = 0;
-
-    uint128 internal constant BEAN_WSTETH_DEPOSITED_BY_CONTRACTS = 0;
-    uint128 internal constant BEAN_WSTETH_DEPOSITED_BDV_BY_CONTRACTS = 0;
-
-    uint128 internal constant BEAN_3CRV_DEPOSITED_BY_CONTRACTS = 0;
-    uint128 internal constant BEAN_3CRV_DEPOSITED_BDV_BY_CONTRACTS = 0;
-
-    uint128 internal constant UR_BEAN_DEPOSITED_BY_CONTRACTS = 0;
-    uint128 internal constant UR_BEAN_DEPOSITED_BDV_BY_CONTRACTS = 0;
-
-    uint128 internal constant UR_BEAN_LP_DEPOSITED_BY_CONTRACTS = 0;
-    uint128 internal constant UR_BEAN_LP_DEPOSITED_BDV_BY_CONTRACTS = 0;
-
     AppStorage internal s;
 
     /**
@@ -99,79 +77,47 @@ contract ReseedSilo {
         SiloDeposits calldata urBeanLpDeposits
     ) external {
         // initialize beanDeposits.
-        reseedSiloDeposit(
-            beanDeposits,
-            BEAN_DEPOSITED_BY_CONTRACTS,
-            BEAN_DEPOSITED_BDV_BY_CONTRACTS
-        );
+        reseedSiloDeposit(beanDeposits);
 
         // initialize beanEthDeposits.
-        reseedSiloDeposit(
-            beanEthDeposits,
-            BEAN_ETH_DEPOSITED_BY_CONTRACTS,
-            BEAN_ETH_DEPOSITED_BDV_BY_CONTRACTS
-        );
+        reseedSiloDeposit(beanEthDeposits);
 
         // initialize beanWstEthDeposits.
-        reseedSiloDeposit(
-            beanWstEthDeposits,
-            BEAN_WSTETH_DEPOSITED_BY_CONTRACTS,
-            BEAN_WSTETH_DEPOSITED_BDV_BY_CONTRACTS
-        );
+        reseedSiloDeposit(beanWstEthDeposits);
 
-        // initialize bean3CrvDeposits.
-        reseedSiloDeposit(
-            bean3CrvDeposits,
-            BEAN_3CRV_DEPOSITED_BY_CONTRACTS,
-            BEAN_3CRV_DEPOSITED_BDV_BY_CONTRACTS
-        );
+        // initialize beanStableDeposits.
+        reseedSiloDeposit(bean3CrvDeposits);
 
         // initialize urBeanDeposits.
-        reseedSiloDeposit(
-            urBeanDeposits,
-            UR_BEAN_DEPOSITED_BY_CONTRACTS,
-            UR_BEAN_DEPOSITED_BDV_BY_CONTRACTS
-        );
+        reseedSiloDeposit(urBeanDeposits);
 
         // initialize urBeanLpDeposits.
-        reseedSiloDeposit(
-            urBeanLpDeposits,
-            UR_BEAN_LP_DEPOSITED_BY_CONTRACTS,
-            UR_BEAN_LP_DEPOSITED_BDV_BY_CONTRACTS
-        );
+        reseedSiloDeposit(urBeanLpDeposits);
     }
 
     /**
      * @notice reseed the silo deposit for a given token.
      * @param siloDeposit The silo deposit data
-     * @param contractDeposited The total deposited by contracts.
-     * @param contractDepositedBdv The total deposited bdv by contracts.
      * @dev all deposits and accounts are mown to the current season.
      */
-    function reseedSiloDeposit(
-        SiloDeposits calldata siloDeposit,
-        uint128 contractDeposited,
-        uint128 contractDepositedBdv
-    ) internal {
-        address token = siloDeposit.token;
+    function reseedSiloDeposit(SiloDeposits calldata siloDeposit) internal {
         uint256 totalCalcDeposited;
         uint256 totalCalcDepositedBdv;
-        uint256 stalkIssuedPerBdv = s.ss[token].stalkIssuedPerBdv;
+        uint256 stalkIssuedPerBdv = s.ss[siloDeposit.token].stalkIssuedPerBdv;
         for (uint256 i; i < siloDeposit.siloDepositsAccount.length; i++) {
             AccountSiloDeposits memory deposits = siloDeposit.siloDepositsAccount[i];
-            address account = deposits.accounts;
             uint128 totalBdvForAccount;
             uint256 accountStalk;
             for (uint256 j; j < deposits.depositIds.length; j++) {
                 // verify that depositId is valid.
                 uint256 depositId = deposits.depositIds[j];
                 (address depositToken, int96 stem) = depositId.unpackAddressAndStem();
-                require(depositToken == token, "ReseedSilo: INVALID_DEPOSIT_ID");
+                require(depositToken == siloDeposit.token, "ReseedSilo: INVALID_DEPOSIT_ID");
                 require(siloDeposit.stemTip >= stem, "ReseedSilo: INVALID_STEM");
 
                 // add deposit to account.
-                s.a[account].deposits[depositId].amount = deposits.amounts[j];
-                s.a[account].deposits[depositId].bdv = deposits.bdvs[j];
+                s.a[deposits.accounts].deposits[depositId].amount = deposits.amounts[j];
+                s.a[deposits.accounts].deposits[depositId].bdv = deposits.bdvs[j];
 
                 // increment totalBdvForAccount by bdv of deposit:
                 totalBdvForAccount += deposits.bdvs[j];
@@ -184,39 +130,45 @@ contract ReseedSilo {
                 totalCalcDepositedBdv += deposits.bdvs[j];
 
                 // emit events.
-                emit AddDeposit(account, token, stem, deposits.amounts[j], deposits.bdvs[j]);
+                emit AddDeposit(
+                    deposits.accounts,
+                    siloDeposit.token,
+                    stem,
+                    deposits.amounts[j],
+                    deposits.bdvs[j]
+                );
                 emit TransferSingle(
-                    account, // operator
+                    deposits.accounts, // operator
                     address(0), // from
-                    account, // to
+                    deposits.accounts, // to
                     depositId, // depositID
                     deposits.amounts[j] // token amount
                 );
             }
             // update mowStatuses for account and token.
-            s.a[account].mowStatuses[token].bdv = totalBdvForAccount;
-            s.a[account].mowStatuses[token].lastStem = siloDeposit.stemTip;
+            s.a[deposits.accounts].mowStatuses[siloDeposit.token].bdv = totalBdvForAccount;
+            s.a[deposits.accounts].mowStatuses[siloDeposit.token].lastStem = siloDeposit.stemTip;
 
             // increment stalkForAccount by the stalk issued per BDV.
             // placed outside of loop for gas effiency.
             accountStalk += stalkIssuedPerBdv * totalBdvForAccount;
 
             // set stalk for account.
-            s.a[account].s.stalk = accountStalk;
+            s.a[deposits.accounts].s.stalk = accountStalk;
         }
 
         // verify that the total deposited and total deposited bdv are correct.
         require(
-            totalCalcDeposited == siloDeposit.totalDeposits - contractDeposited,
+            totalCalcDeposited == siloDeposit.totalDeposits,
             "ReseedSilo: INVALID_TOTAL_DEPOSITS"
         );
         require(
-            totalCalcDepositedBdv == siloDeposit.totalDepositedBdv - contractDepositedBdv,
+            totalCalcDepositedBdv == siloDeposit.totalDepositedBdv,
             "ReseedSilo: INVALID_TOTAL_DEPOSITED_BDV"
         );
 
         // set global state
-        s.siloBalances[token].deposited = siloDeposit.totalDeposits;
-        s.siloBalances[token].depositedBdv = siloDeposit.totalDepositedBdv;
+        s.siloBalances[siloDeposit.token].deposited = siloDeposit.totalDeposits;
+        s.siloBalances[siloDeposit.token].depositedBdv = siloDeposit.totalDepositedBdv;
     }
 }
