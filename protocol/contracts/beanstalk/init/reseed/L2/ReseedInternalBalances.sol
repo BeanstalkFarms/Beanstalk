@@ -16,5 +16,14 @@ import {C} from "contracts/C.sol";
 contract ReseedInternalBalances {
     AppStorage internal s;
 
-    function init() external {}
+    struct beanstalkInternalBalance {
+        address token;
+        address[] farmers;
+        uint256[] balances;
+    }
+
+    function init(
+        beanstalkInternalBalance calldata beanBalances,
+        beanstalkInternalbalance calldata beanStableBalances
+    ) external {}
 }
