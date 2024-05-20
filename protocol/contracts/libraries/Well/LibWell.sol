@@ -67,6 +67,9 @@ library LibWell {
         revert("Bean not in Well.");
     }
 
+    /**
+     * @dev Returns the first ERC20 well token that is not Bean.
+     */
     function getNonBeanIndex(IERC20[] memory tokens) internal pure returns (uint nonBeanIndex) {
         for (nonBeanIndex; nonBeanIndex < tokens.length; ++nonBeanIndex) {
             if (C.BEAN != address(tokens[nonBeanIndex])) {
