@@ -6,7 +6,7 @@ import { Footer } from "./Footer";
 import { Window } from "./Window";
 import { Settings } from "src/settings";
 import CustomToaster from "../TxnToast/CustomToaster";
-// import buildIcon from "src/assets/images/navbar/build.svg";
+import buildIcon from "src/assets/images/navbar/build.svg";
 import swapIcon from "src/assets/images/navbar/swap.svg";
 import wellsIcon from "src/assets/images/navbar/wells.svg";
 import { LinksNav } from "../Typography";
@@ -37,9 +37,9 @@ export const Frame: FC<{}> = ({ children }) => {
             <NavLink to="/wells" hovericon={wellsIcon}>
               Liquidity
             </NavLink>
-            {/* <NavLink to="/build" hovericon={buildIcon}>
+            <NavLink to="/build" hovericon={buildIcon}>
               Build
-            </NavLink> */}
+            </NavLink>
             <NavLink to="/swap" hovericon={swapIcon}>
               Swap
             </NavLink>
