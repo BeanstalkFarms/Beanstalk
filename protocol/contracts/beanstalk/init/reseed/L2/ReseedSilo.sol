@@ -6,6 +6,7 @@ pragma solidity ^0.8.20;
 pragma experimental ABIEncoderV2;
 
 import {AppStorage} from "contracts/beanstalk/AppStorage.sol";
+import {LibTokenSilo} from "contracts/libraries/Silo/LibTokenSilo.sol";
 import {LibBytes} from "contracts/libraries/LibBytes.sol";
 import {C} from "contracts/C.sol";
 
@@ -115,9 +116,10 @@ contract ReseedSilo {
                 require(depositToken == siloDeposit.token, "ReseedSilo: INVALID_DEPOSIT_ID");
                 require(siloDeposit.stemTip >= stem, "ReseedSilo: INVALID_STEM");
 
-                // add deposit to account.
+                // add deposit to account. Add to depositIdList.
                 s.a[deposits.accounts].deposits[depositId].amount = deposits.amounts[j];
                 s.a[deposits.accounts].deposits[depositId].bdv = deposits.bdvs[j];
+                s.a[deposits.accounts].depositIdList[siloDeposit.token].push(depositId);
 
                 // increment totalBdvForAccount by bdv of deposit:
                 totalBdvForAccount += deposits.bdvs[j];
