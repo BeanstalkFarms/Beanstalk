@@ -191,7 +191,7 @@ library LibWellMinting {
     }
 
     function cappedReservesDeltaB(address well) internal view returns (int256) {
-        if (well == C.BEAN) {
+        if (!LibWell.isWell(well)) {
             return 0;
         }
 
