@@ -67,7 +67,8 @@ contract MockInitDiamond is InitalizeDiamond {
                 tokens[i],
                 true, // is whitelisted,
                 false,
-                false
+                false,
+                false // is soppable
             );
         }
     }
@@ -175,7 +176,8 @@ contract MockInitDiamond is InitalizeDiamond {
             well,
             true, // is whitelisted,
             true, // is LP
-            true // is well
+            true, // is well
+            true // is soppable
         );
 
         s.usdTokenPrice[well] = 1;

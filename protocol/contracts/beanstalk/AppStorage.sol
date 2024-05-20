@@ -280,6 +280,7 @@ contract Storage {
         bool isWhitelisted;
         bool isWhitelistedLp;
         bool isWhitelistedWell;
+        bool isSoppable;
     }
 
     /**

@@ -355,7 +355,8 @@ contract MockSiloFacet is SiloFacet {
             token,
             true,
             true,
-            selector == LibWell.WELL_BDV_SELECTOR
+            selector == LibWell.WELL_BDV_SELECTOR,
+            false // is soppable
         );
 
         // emit WhitelistToken(token, selector, stalkEarnedPerSeason, stalkIssuedPerBdv);
@@ -391,7 +392,8 @@ contract MockSiloFacet is SiloFacet {
             token,
             true,
             true,
-            selector == LibWell.WELL_BDV_SELECTOR
+            selector == LibWell.WELL_BDV_SELECTOR,
+            true
         );
     }
 

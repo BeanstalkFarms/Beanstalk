@@ -22,22 +22,22 @@ contract InitWhitelistStatuses {
     }
 
     function addBean3CrvStatus() internal {
-        LibWhitelistedTokens.addWhitelistStatus(C.CURVE_BEAN_METAPOOL, true, true, false);
+        LibWhitelistedTokens.addWhitelistStatus(C.CURVE_BEAN_METAPOOL, true, true, false, false);
     }
 
     function addBeanStatus() internal {
-        LibWhitelistedTokens.addWhitelistStatus(C.BEAN, true, false, false);
+        LibWhitelistedTokens.addWhitelistStatus(C.BEAN, true, false, false, false);
     }
 
     function addUnripeBeanStatus() internal {
-        LibWhitelistedTokens.addWhitelistStatus(C.UNRIPE_BEAN, true, false, false);
+        LibWhitelistedTokens.addWhitelistStatus(C.UNRIPE_BEAN, true, false, false, false);
     }
 
     function addUnripeLPStatus() internal {
-        LibWhitelistedTokens.addWhitelistStatus(C.UNRIPE_LP, true, false, false);
+        LibWhitelistedTokens.addWhitelistStatus(C.UNRIPE_LP, true, false, false, false);
     }
 
     function addBeanEthStatus() internal {
-        LibWhitelistedTokens.addWhitelistStatus(C.BEAN_ETH_WELL, true, true, true);
+        LibWhitelistedTokens.addWhitelistStatus(C.BEAN_ETH_WELL, true, true, true, true);
     }
 }

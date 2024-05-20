@@ -12,6 +12,7 @@ import {LibDiamond} from "contracts/libraries/LibDiamond.sol";
 import {LibCases} from "contracts/libraries/LibCases.sol";
 import {LibGauge} from "contracts/libraries/LibGauge.sol";
 import {BDVFacet} from "contracts/beanstalk/silo/BDVFacet.sol";
+import {LibUnripe} from "contracts/libraries/LibUnripe.sol";
 import {C} from "contracts/C.sol";
 
 /**
@@ -192,6 +193,7 @@ contract InitalizeDiamond {
             if (tokens[i] == C.BEAN) {
                 isLPandWell = false;
             }
+            bool isUnripe = LibUnripe.isUnripe(tokens[i]);
 
             // All tokens (excluding bean) are assumed to be
             // - whitelisted,
@@ -200,7 +202,8 @@ contract InitalizeDiamond {
                 tokens[i],
                 true, // is whitelisted,
                 isLPandWell,
-                isLPandWell
+                isLPandWell,
+                !isUnripe && isLPandWell // assumes any non-unripe LP is soppable, may not be true in the future
             );
         }
     }

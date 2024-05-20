@@ -103,7 +103,8 @@ library LibWhitelist {
             token,
             true, // Whitelisted by default.
             token != address(C.bean()) && !LibUnripe.isUnripe(token), // Assumes tokens that are not Unripe and not Bean are LP tokens.
-            selector == LibWell.WELL_BDV_SELECTOR
+            selector == LibWell.WELL_BDV_SELECTOR,
+            token != address(C.bean()) && !LibUnripe.isUnripe(token) // Assumes tokens that are not Unripe and not Bean are soppable wells
         );
 
         // If an LP token, initialize oracle storage variables.
@@ -212,7 +213,7 @@ library LibWhitelist {
         AppStorage storage s = LibAppStorage.diamondStorage();
 
         // before dewhitelisting, verify that `libWhitelistedTokens` are updated.
-        LibWhitelistedTokens.updateWhitelistStatus(token, false, false, false);
+        LibWhitelistedTokens.updateWhitelistStatus(token, false, false, false, false);
 
         // set the stalkEarnedPerSeason to 1 and update milestone stem.
         // stalkEarnedPerSeason requires a min value of 1.

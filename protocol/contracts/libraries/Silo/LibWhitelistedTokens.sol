@@ -25,7 +25,8 @@ library LibWhitelistedTokens {
         uint256 index,
         bool isWhitelisted,
         bool isWhitelistedLp,
-        bool isWhitelistedWell
+        bool isWhitelistedWell,
+        bool isSoppable
     );
 
     /**
@@ -41,7 +42,8 @@ library LibWhitelistedTokens {
         uint256 index,
         bool isWhitelisted,
         bool isWhitelistedLp,
-        bool isWhitelistedWell
+        bool isWhitelistedWell,
+        bool isSoppable
     );
 
     /**
@@ -125,6 +127,26 @@ library LibWhitelistedTokens {
     }
 
     /**
+     * @notice Returns the current Whitelisted Well LP tokens.
+     */
+    function getSoppableWellLpTokens() internal view returns (address[] memory tokens) {
+        AppStorage storage s = LibAppStorage.diamondStorage();
+        uint256 numberOfSiloTokens = s.whitelistStatuses.length;
+        uint256 tokensLength;
+
+        tokens = new address[](numberOfSiloTokens);
+
+        for (uint256 i = 0; i < numberOfSiloTokens; i++) {
+            if (s.whitelistStatuses[i].isWhitelistedWell && s.whitelistStatuses[i].isSoppable) {
+                tokens[tokensLength++] = s.whitelistStatuses[i].token;
+            }
+        }
+        assembly {
+            mstore(tokens, tokensLength)
+        }
+    }
+
+    /**
      * @notice Returns the Whitelist statues for all tokens that have been whitelisted and not manually removed.
      */
     function getWhitelistedStatuses()
@@ -154,11 +176,18 @@ library LibWhitelistedTokens {
         address token,
         bool isWhitelisted,
         bool isWhitelistedLp,
-        bool isWhitelistedWell
+        bool isWhitelistedWell,
+        bool isSoppable
     ) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
         s.whitelistStatuses.push(
-            Storage.WhitelistStatus(token, isWhitelisted, isWhitelistedLp, isWhitelistedWell)
+            Storage.WhitelistStatus(
+                token,
+                isWhitelisted,
+                isWhitelistedLp,
+                isWhitelistedWell,
+                isSoppable
+            )
         );
 
         emit AddWhitelistStatus(
@@ -166,7 +195,8 @@ library LibWhitelistedTokens {
             s.whitelistStatuses.length - 1,
             isWhitelisted,
             isWhitelistedLp,
-            isWhitelistedWell
+            isWhitelistedWell,
+            isSoppable
         );
     }
 
@@ -177,20 +207,23 @@ library LibWhitelistedTokens {
         address token,
         bool isWhitelisted,
         bool isWhitelistedLp,
-        bool isWhitelistedWell
+        bool isWhitelistedWell,
+        bool isSoppable
     ) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
         uint256 tokenStatusIndex = findWhitelistStatusIndex(token);
         s.whitelistStatuses[tokenStatusIndex].isWhitelisted = isWhitelisted;
         s.whitelistStatuses[tokenStatusIndex].isWhitelistedLp = isWhitelistedLp;
         s.whitelistStatuses[tokenStatusIndex].isWhitelistedWell = isWhitelistedWell;
+        s.whitelistStatuses[tokenStatusIndex].isSoppable = isSoppable;
 
         emit UpdateWhitelistStatus(
             token,
             tokenStatusIndex,
             isWhitelisted,
             isWhitelistedLp,
-            isWhitelistedWell
+            isWhitelistedWell,
+            isSoppable
         );
     }
 
