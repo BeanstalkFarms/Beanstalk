@@ -447,7 +447,7 @@ contract Storage {
  * @param season Storage.Season
  * @param fields mapping of Field ID to Storage.Field.
  * @param activeField ID of the active Field.
- * @param fieldList Array of all Field IDs.
+ * @param fieldCount Number of Fields that have ever been initialized.
  * @param co Storage.CurveMetapoolOracle
  * @param rain Storage.Rain
  * @param silo Storage.Silo
@@ -551,7 +551,7 @@ struct AppStorage {
     Storage.ShipmentRoute[] shipmentRoutes;
     // Fields.
     uint256 activeField;
-    uint256[] fieldList;
+    uint256 fieldCount;
     uint128 soil;
     uint128 beanSown; 
 }

@@ -820,7 +820,6 @@ interface IMockFBeanstalk {
         uint256 addedValue
     ) external returns (bool);
     function addField() external returns (uint256 id);
-    function setActiveField(uint256 id) external;
     function incrementTotalHarvestableE(uint256 fieldId, uint256 amount) external;
     function incrementTotalPodsE(uint256 fieldId, uint256 amount) external;
     function incrementTotalSoilE(uint128 amount) external;

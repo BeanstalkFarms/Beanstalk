@@ -12,6 +12,10 @@ import {ShipmentPlanner} from "contracts/ecosystem/ShipmentPlanner.sol";
 
 interface IBeanstalk {
     function setShipmentRoutes(Storage.ShipmentRoute[] calldata shipmentRoutes) external;
+
+    function addField() external;
+
+    function setActiveField(uint256 fieldId) external;
 }
 
 /**
@@ -52,14 +56,18 @@ contract InitDistribution {
             bytes("")
         );
 
-        (bool success, ) = address(this).call(
+        bool success;
+        (success, ) = address(this).call(
             abi.encodeWithSelector(beanstalk.setShipmentRoutes.selector, shipmentRoutes)
         );
-        require(success, "InitDistribution: Failed to set shipment routes.");
+        require(success, "InitDistribution: setShipmentRoutes failed.");
+        (success, ) = address(this).call(abi.encodeWithSelector(beanstalk.addField.selector));
+        require(success, "InitDistribution: addField failed.");
+        (success, ) = address(this).call(
+            abi.encodeWithSelector(beanstalk.setActiveField.selector, 0)
+        );
+        require(success, "InitDistribution: setActiveField failed.");
 
         // TODO: Initialize Field values from priors.
-
-        s.fieldList.push(0);
-        s.activeField = 0;
     }
 }

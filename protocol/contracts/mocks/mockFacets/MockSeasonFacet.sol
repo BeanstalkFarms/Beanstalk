@@ -255,8 +255,8 @@ contract MockSeasonFacet is SeasonFacet {
     }
 
     function resetState() public {
-        for (uint256 i; i < s.fieldList.length; i++) {
-            s.fields[s.fieldList[i]] = Storage.Field(0, 0, 0);
+        for (uint256 i; i < s.fieldCount; i++) {
+            s.fields[i] = Storage.Field(0, 0, 0);
         }
         delete s.silo;
         delete s.weather;

@@ -179,10 +179,8 @@ abstract contract Invariable {
                 entitlements[i] +=
                     s.fertilizedIndex.sub(s.fertilizedPaidIndex) + // unrinsed rinsable beans
                     s.unripe[C.UNRIPE_BEAN].balanceOfUnderlying; // unchopped underlying beans
-                for (uint256 j; j < s.fieldList.length; j++) {
-                    entitlements[i] += s.fields[s.fieldList[j]].harvestable.sub(
-                        s.fields[s.fieldList[j]].harvested
-                    ); // unharvested harvestable beans
+                for (uint256 j; j < s.fieldCount; j++) {
+                    entitlements[i] += s.fields[j].harvestable.sub(s.fields[j].harvested); // unharvested harvestable beans
                 }
             } else if (tokens[i] == LibUnripe._getUnderlyingToken(C.UNRIPE_LP)) {
                 entitlements[i] += s.unripe[C.UNRIPE_LP].balanceOfUnderlying;

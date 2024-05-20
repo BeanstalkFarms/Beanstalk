@@ -14,6 +14,7 @@ import {LibTransfer} from "contracts/libraries/Token/LibTransfer.sol";
 import {LibDibbler} from "contracts/libraries/LibDibbler.sol";
 import {ReentrancyGuard} from "../ReentrancyGuard.sol";
 import {Invariable} from "contracts/beanstalk/Invariable.sol";
+import {LibDiamond} from "contracts/libraries/LibDiamond.sol";
 
 interface IBeanstalk {
     function cancelPodListing(uint256 fieldId, uint256 index) external;
@@ -28,6 +29,18 @@ contract FieldFacet is Invariable, ReentrancyGuard {
     using LibRedundantMath256 for uint256;
     using LibRedundantMath32 for uint32;
     using LibRedundantMath128 for uint128;
+
+    /**
+     * @notice Emitted when a new Field is added.
+     * @param fieldId The index of the Field that was added.
+     */
+    event FieldAdded(uint256 fieldId);
+
+    /**
+     * @notice Emitted when the active Field is modified.
+     * @param fieldId The index of the Field that was set to active.
+     */
+    event ActiveFieldSet(uint256 fieldId);
 
     /**
      * @notice Emitted from {LibDibbler.sow} when an `account` creates a plot.
@@ -198,6 +211,30 @@ contract FieldFacet is Invariable, ReentrancyGuard {
         s.accounts[account].fields[fieldId].plots[index.add(harvestablePods)] = pods.sub(
             harvestablePods
         );
+    }
+
+    //////////////////// CONFIG /////////////////////
+
+    /**
+     * @notice Add a new Field to the system.
+     * @dev It is not possible to remove a Field, but a Field's Plan can be nullified.
+     */
+    function addField() public fundsSafu noSupplyChange noNetFlow {
+        LibDiamond.enforceIsOwnerOrContract();
+        uint256 fieldId = s.fieldCount;
+        s.fieldCount++;
+        emit FieldAdded(fieldId);
+    }
+
+    /**
+     * @notice Set the active Field. Only the active field is accrues Soil.
+     * @param fieldId ID of the Field to set as active. ID is the Field Number.
+     */
+    function setActiveField(uint256 fieldId) public fundsSafu noSupplyChange noNetFlow {
+        LibDiamond.enforceIsOwnerOrContract();
+        require(fieldId < s.fieldCount, "Field: Field does not exist");
+        s.activeField = fieldId;
+        emit ActiveFieldSet(fieldId);
     }
 
     //////////////////// GETTERS ////////////////////
