@@ -16,11 +16,20 @@ import {C} from "contracts/C.sol";
  * @dev Fertilizer is re-issued to each holder. Barn raise is set to L1 state.
  */
 
-interface IFertilizerInternalizer {
+interface IFertilizer {
     function init() external;
 }
 
 contract ReseedBarn {
+    /**
+     * @dev Fertilizers contains the ids, accounts, amounts, and lastBpf of each fertilizer.
+     */
+    struct Fertilizers {
+        uint128 fertilizerId;
+        address[] accounts;
+        uint128[] amounts;
+        uint128[] lastBpf;
+    }
     AppStorage internal s;
 
     /**
@@ -28,10 +37,7 @@ contract ReseedBarn {
      * reissues fertilizer to each holder.
      */
     function init(
-        uint128[] calldata fertilizerIds,
-        address[][] calldata accounts,
-        uint128[][] calldata amounts,
-        uint128[][] calldata lastbpf,
+        Fertilizers[] calldata fertilizerIds,
         uint256 activeFertilizer,
         uint256 fertilizedIndex,
         uint256 unfertilizedIndex,
@@ -44,31 +50,35 @@ contract ReseedBarn {
         TransparentUpgradeableProxy fertilizerProxy = new TransparentUpgradeableProxy(
             address(fertilizer),
             address(this),
-            abi.encode(IFertilizerInternalizer.init.selector)
+            abi.encode(IFertilizer.init.selector)
         );
 
-        for (uint i; i < fertilizerIds.length; i++) {
-            // set s.firstFid, s.nextFid, s.lastFid
-            if (i == 0) s.fFirst = fertilizerIds[i];
-            if (i != 0) s.nextFid[fertilizerIds[i - 1]] = fertilizerIds[i];
-            if (i == fertilizerIds.length - 1) s.fLast = fertilizerIds[i];
-            // reissue fertilizer to each holder.
-            for (uint j; j < accounts[i].length; j++) {
-                // `id` only needs to be set once per account, but is set on each fertilizer
-                // as `Fertilizer` does not have a function to set `id` once on a batch.
-                Fertilizer(address(fertilizerProxy)).beanstalkMint(
-                    accounts[i][j],
-                    fertilizerIds[i],
-                    amounts[i][j],
-                    lastbpf[i][j]
-                );
-            }
-        }
-
+        mintFertilizers(Fertilizer(address(fertilizerProxy)), fertilizerIds);
         s.season.fertilizing = true;
         s.activeFertilizer = activeFertilizer;
         s.fertilizedIndex = fertilizedIndex;
         s.unfertilizedIndex = unfertilizedIndex;
         s.bpf = bpf;
+    }
+
+    function mintFertilizers(
+        Fertilizer fertilizerProxy,
+        Fertilizers[] calldata fertilizerIds
+    ) internal {
+        for (uint i; i < fertilizerIds.length; i++) {
+            Fertilizers memory f = fertilizerIds[i];
+            // set s.firstFid, s.nextFid, s.lastFid
+            uint128 fid = f.fertilizerId;
+            if (i == 0) s.fFirst = fid;
+            if (i != 0) s.nextFid[fertilizerIds[i - 1].fertilizerId] = fid;
+            if (i == fertilizerIds.length - 1) s.fLast = fid;
+
+            // reissue fertilizer to each holder.
+            for (uint j; j < fertilizerIds[i].accounts.length; j++) {
+                // `id` only needs to be set once per account, but is set on each fertilizer
+                // as `Fertilizer` does not have a function to set `id` once on a batch.
+                fertilizerProxy.beanstalkMint(f.accounts[j], fid, f.amounts[j], f.lastBpf[j]);
+            }
+        }
     }
 }

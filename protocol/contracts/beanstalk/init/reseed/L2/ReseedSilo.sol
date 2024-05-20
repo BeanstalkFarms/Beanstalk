@@ -24,7 +24,7 @@ contract ReseedSilo {
         address token;
         AccountSiloDeposits[] siloDepositsAccount;
         int96 stemTip;
-        uint128 totalDeposits;
+        uint128 totalDeposited;
         uint128 totalDepositedBdv;
     }
 
@@ -159,7 +159,7 @@ contract ReseedSilo {
 
         // verify that the total deposited and total deposited bdv are correct.
         require(
-            totalCalcDeposited == siloDeposit.totalDeposits,
+            totalCalcDeposited == siloDeposit.totalDeposited,
             "ReseedSilo: INVALID_TOTAL_DEPOSITS"
         );
         require(
@@ -168,7 +168,7 @@ contract ReseedSilo {
         );
 
         // set global state
-        s.siloBalances[siloDeposit.token].deposited = siloDeposit.totalDeposits;
+        s.siloBalances[siloDeposit.token].deposited = siloDeposit.totalDeposited;
         s.siloBalances[siloDeposit.token].depositedBdv = siloDeposit.totalDepositedBdv;
     }
 }
