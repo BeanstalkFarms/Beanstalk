@@ -9,6 +9,7 @@ import {Invariable} from "contracts/beanstalk/Invariable.sol";
 import {C} from "contracts/C.sol";
 import {LibTractor} from "contracts/libraries/LibTractor.sol";
 import {LibTransfer} from "contracts/libraries/Token/LibTransfer.sol";
+import {LibMarket} from "contracts/libraries/LibMarket.sol";
 
 /**
  * @author Beanjoyer, Malteasy
@@ -48,7 +49,7 @@ contract MarketplaceFacet is Invariable, Order {
         uint256 fieldId,
         uint256 index
     ) external payable fundsSafu noNetFlow noSupplyChange {
-        _cancelPodListing(LibTractor._user(), fieldId, index);
+        LibMarket._cancelPodListing(LibTractor._user(), fieldId, index);
     }
 
     function podListing(uint256 fieldId, uint256 index) external view returns (bytes32 id) {
@@ -128,7 +129,7 @@ contract MarketplaceFacet is Invariable, Order {
         }
 
         if (s.podListings[fieldId][index] != bytes32(0)) {
-            _cancelPodListing(sender, fieldId, index);
+            LibMarket._cancelPodListing(sender, fieldId, index);
         }
         _transferPlot(sender, recipient, fieldId, index, start, transferAmount);
     }

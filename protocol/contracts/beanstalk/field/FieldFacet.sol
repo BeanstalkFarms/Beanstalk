@@ -15,6 +15,7 @@ import {LibDibbler} from "contracts/libraries/LibDibbler.sol";
 import {ReentrancyGuard} from "../ReentrancyGuard.sol";
 import {Invariable} from "contracts/beanstalk/Invariable.sol";
 import {LibDiamond} from "contracts/libraries/LibDiamond.sol";
+import {LibMarket} from "contracts/libraries/LibMarket.sol";
 
 interface IBeanstalk {
     function cancelPodListing(uint256 fieldId, uint256 index) external;
@@ -194,11 +195,7 @@ contract FieldFacet is Invariable, ReentrancyGuard {
         // are harvestable.
         harvestablePods = s.fields[fieldId].harvestable.sub(index);
 
-        // TODO: Verify this works. Solicit review.
-        // _cancelPodListing(LibTractor._user(), fieldId, index);
-        address(this).delegatecall(
-            abi.encodeWithSelector(IBeanstalk.cancelPodListing.selector, fieldId, index)
-        );
+        LibMarket._cancelPodListing(LibTractor._user(), fieldId, index);
 
         delete s.accounts[account].fields[fieldId].plots[index];
 

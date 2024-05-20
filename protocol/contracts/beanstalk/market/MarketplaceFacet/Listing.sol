@@ -6,6 +6,7 @@ pragma solidity ^0.8.20;
 
 import {PodTransfer} from "./PodTransfer.sol";
 import {LibTransfer} from "contracts/libraries/Token/LibTransfer.sol";
+import {LibMarket} from "contracts/libraries/LibMarket.sol";
 
 /**
  * @author Beanjoyer, Malteasy, funderbrker
@@ -46,8 +47,6 @@ contract Listing is PodTransfer {
         uint256 costInBeans
     );
 
-    event PodListingCancelled(address indexed lister, uint256 fieldId, uint256 index);
-
     /*
      * Create
      */
@@ -69,7 +68,7 @@ contract Listing is PodTransfer {
         );
 
         if (s.podListings[podListing.fieldId][podListing.index] != bytes32(0))
-            _cancelPodListing(podListing.lister, podListing.fieldId, podListing.index);
+            LibMarket._cancelPodListing(podListing.lister, podListing.fieldId, podListing.index);
 
         s.podListings[podListing.fieldId][podListing.index] = _hashListing(podListing);
 
@@ -166,21 +165,6 @@ contract Listing is PodTransfer {
             podListing.start,
             podReceiveAmount
         );
-    }
-
-    /*
-     * Cancel
-     */
-
-    function _cancelPodListing(address lister, uint256 fieldId, uint256 index) internal {
-        require(
-            s.accounts[lister].fields[fieldId].plots[index] > 0,
-            "Marketplace: Listing not owned by sender."
-        );
-
-        delete s.podListings[fieldId][index];
-
-        emit PodListingCancelled(lister, fieldId, index);
     }
 
     /*

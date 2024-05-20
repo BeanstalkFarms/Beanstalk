@@ -4,9 +4,10 @@
 
 pragma solidity ^0.8.20;
 
-import {Listing} from "./Listing.sol";
-import {LibTransfer} from "contracts/libraries/Token/LibTransfer.sol";
 import {C} from "contracts/C.sol";
+import {LibTransfer} from "contracts/libraries/Token/LibTransfer.sol";
+import {LibMarket} from "contracts/libraries/LibMarket.sol";
+import {Listing} from "./Listing.sol";
 
 /**
  * @author Beanjoyer, Malteasy, funderbrker
@@ -106,7 +107,7 @@ contract Order is Listing {
         LibTransfer.sendToken(C.bean(), costInBeans, filler, mode);
 
         if (s.podListings[podOrder.fieldId][index] != bytes32(0)) {
-            _cancelPodListing(filler, podOrder.fieldId, index);
+            LibMarket._cancelPodListing(filler, podOrder.fieldId, index);
         }
 
         _transferPlot(filler, podOrder.orderer, podOrder.fieldId, index, start, podAmount);
