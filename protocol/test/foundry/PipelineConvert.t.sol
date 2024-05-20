@@ -1189,27 +1189,25 @@ contract PipelineConvertTest is TestHelper {
         assertEq(penalty, amount);
     }
 
-    /*
-    // These tests broke when calculateStalkPenalty had more variables added, would be nice to update but should already be covered by tests above.
     function testCalculateStalkPenaltyUpwardsNonZero() public {
-        int256 beforeOverallDeltaB = -200;
-        int256 afterOverallDeltaB = -100;
-        int256 beforeInputTokenDeltaB = -100;
-        int256 beforeOutputTokenDeltaB = 0;
-        int256 afterInputTokenDeltaB = 0;
-        int256 afterOutputTokenDeltaB = 0;
+        addEthToWell(users[1], 1 ether);
+        updateMockPumpUsingWellReserves(beanEthWell);
+
+        LibConvert.DeltaBStorage memory dbs;
+        dbs.beforeOverallDeltaB = -200;
+        dbs.afterOverallDeltaB = -100;
+        dbs.beforeInputTokenDeltaB = -100;
+        dbs.afterInputTokenDeltaB = 0;
+        dbs.beforeOutputTokenDeltaB = 0;
+        dbs.afterOutputTokenDeltaB = 0;
+
         uint256 bdvConverted = 100;
         uint256 overallCappedDeltaB = 100;
         address inputToken = beanEthWell;
         address outputToken = C.BEAN;
 
-        uint256 penalty = LibConvert.calculateStalkPenalty(
-            beforeOverallDeltaB,
-            afterOverallDeltaB,
-            beforeInputTokenDeltaB,
-            beforeOutputTokenDeltaB,
-            afterInputTokenDeltaB,
-            afterOutputTokenDeltaB,
+        (uint256 penalty, , , ) = LibConvert.calculateStalkPenalty(
+            dbs,
             bdvConverted,
             overallCappedDeltaB,
             inputToken,
@@ -1217,6 +1215,37 @@ contract PipelineConvertTest is TestHelper {
         );
         assertEq(penalty, 0);
     }
+
+    function testCalculateStalkPenaltyDownwardsToZero() public {
+        addEthToWell(users[1], 1 ether);
+        updateMockPumpUsingWellReserves(beanEthWell);
+
+        LibConvert.DeltaBStorage memory dbs;
+        dbs.beforeOverallDeltaB = 100;
+        dbs.afterOverallDeltaB = 0;
+        dbs.beforeInputTokenDeltaB = -100;
+        dbs.afterInputTokenDeltaB = 0;
+        dbs.beforeOutputTokenDeltaB = 0;
+        dbs.afterOutputTokenDeltaB = 0;
+
+        uint256 bdvConverted = 100;
+        uint256 overallCappedDeltaB = 100;
+        address inputToken = beanEthWell;
+        address outputToken = C.BEAN;
+
+        (uint256 penalty, , , ) = LibConvert.calculateStalkPenalty(
+            dbs,
+            bdvConverted,
+            overallCappedDeltaB,
+            inputToken,
+            outputToken
+        );
+        assertEq(penalty, 0);
+    }
+
+    /*
+    // These tests broke when calculateStalkPenalty had more variables added, would be nice to update but should already be covered by tests above.
+
 
     function testCalculateStalkPenaltyDownwardsToZero() public {
         int256 beforeOverallDeltaB = 100;
