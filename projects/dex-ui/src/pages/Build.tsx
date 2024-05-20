@@ -1,24 +1,26 @@
 import React from "react";
+import { useNavigate } from "react-router-dom";
+import { InfoActionRow } from "src/components/Common/InfoActionRow";
 import { Page } from "src/components/Page";
 import { Title } from "src/components/PageComponents/Title";
+import { Text } from "src/components/Typography";
 import styled from "styled-components";
 
 export const Build = () => {
+  const navigate = useNavigate();
+
+  const handleNavigate = () => {
+    navigate("/well-creator");
+  };
+
   return (
     <Page>
       <Title title="Build" />
-      <Box data-trace="true"></Box>
-      <Box data-trace="true"></Box>
+      <Text variant="h1">asdf</Text>
+      <Text variant="l" color="gray">
+        Basin has three unique components which can be composed together to create a custom liquidity pool, or Well.
+      </Text>
+      <InfoActionRow label="Use the Well Creator to deploy your own Wells." buttonLabel="Well Creator →" onClick={handleNavigate} />
     </Page>
   );
 };
-
-const Box = styled.div`
-  outline: 0.5px solid black;
-  outline-offset: -0.5px;
-  background-color: #ffffffff;
-  height: 96px;
-  width: 384px;
-  margin-left: 96px;
-  box-sizing: borderbox;
-`;
