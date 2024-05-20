@@ -16,6 +16,7 @@ import {LibWhitelistedTokens} from "contracts/libraries/Silo/LibWhitelistedToken
 import {LibWellMinting} from "contracts/libraries/Minting/LibWellMinting.sol";
 import {LibRedundantMath256} from "contracts/libraries/LibRedundantMath256.sol";
 import {LibRedundantMathSigned256} from "contracts/libraries/LibRedundantMathSigned256.sol";
+import {console} from "hardhat/console.sol";
 
 /**
  * @title Weather
@@ -357,7 +358,7 @@ contract Weather is Sun {
         uint256 totalPositiveDeltaB,
         uint256 totalNegativeDeltaB,
         uint256 positiveDeltaBCount
-    ) public pure returns (WellDeltaB[] memory) {
+    ) public view returns (WellDeltaB[] memory) {
         // most likely case is that all deltaBs are positive
         if (positiveDeltaBCount == wellDeltaBs.length) {
             // if all deltaBs are positive, need to sop all to zero
@@ -378,9 +379,34 @@ contract Weather is Sun {
             return wellDeltaBs;
         }
 
-        uint256 shaveOff = totalPositiveDeltaB - totalNegativeDeltaB;
-        uint256 cumulativeTotal;
-        uint256 shaveToLevel;
+        // uint256 shaveOff = totalPositiveDeltaB - totalNegativeDeltaB;
+        // uint256 cumulativeTotal;
+
+        uint256 shaveToLevel = totalNegativeDeltaB / positiveDeltaBCount;
+        console.log("shaveToLevel", shaveToLevel);
+        for (uint256 i = positiveDeltaBCount; i > 0; i--) {
+            console.log("i", i);
+            console.log("wellDeltaBs[i - 1].deltaB", uint256(wellDeltaBs[i - 1].deltaB));
+
+            if (shaveToLevel > uint256(wellDeltaBs[i - 1].deltaB)) {
+                shaveToLevel += (shaveToLevel - uint256(wellDeltaBs[i - 1].deltaB)) / i - 1;
+                console.log("new shaveToLevel", shaveToLevel);
+
+                // reduction amount does not need to be set here,
+                // but is written for demonstration.
+                wellDeltaBs[i - 1].reductionAmount = 0;
+            } else {
+                wellDeltaBs[i - 1].reductionAmount =
+                    uint256(wellDeltaBs[i - 1].deltaB) -
+                    shaveToLevel;
+                console.log(
+                    "wellDeltaBs[i - 1].reductionAmount",
+                    wellDeltaBs[i - 1].reductionAmount
+                );
+            }
+        }
+
+        /*uint256 shaveToLevel;
 
         for (uint256 i = 0; i <= positiveDeltaBCount; i++) {
             if (i == 0) {
@@ -411,14 +437,14 @@ contract Weather is Sun {
                     cumulativeTotal = cumulativeTotal.add(diffToPrevious.mul(i));
                 }
             }
-        }
+        }*/
 
         // return the amount of beans that need to be flooded per well
-        for (uint256 i = 0; i < positiveDeltaBCount; i++) {
+        /*for (uint256 i = 0; i < positiveDeltaBCount; i++) {
             wellDeltaBs[i].reductionAmount = wellDeltaBs[i].deltaB > int256(shaveToLevel)
                 ? uint256(wellDeltaBs[i].deltaB) - shaveToLevel
                 : 0;
-        }
+        }*/
         return wellDeltaBs;
     }
 }
