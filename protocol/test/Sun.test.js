@@ -24,6 +24,11 @@ const { deployBasinV1_1Upgrade } = require("../scripts/basinV1_1.js");
 const { getAllBeanstalkContracts } = require("../utils/contracts");
 const { getBean } = require("../utils/index.js");
 const { upgradeWithNewFacets } = require("../scripts/diamond.js");
+const { mockBeanstalkAdmin } = require("../scripts/bips.js");
+
+// TODO
+// Tests to add
+// - Route with no underlying field/receiver.
 
 let user, user2, owner;
 
@@ -38,14 +43,23 @@ describe("Sun", function () {
     // `mockBeanstalk` has functions that are only available in the mockFacets.
     [beanstalk, mockBeanstalk] = await getAllBeanstalkContracts(this.diamond.address);
 
+    let contractFactory = await ethers.getContractFactory("ShipmentPlanner", owner);
+    contractFactory = await contractFactory.deploy();
+    await contractFactory.deployed();
+    if (verbose) console.log(`ShipmentPlanner deployed at ${contractFactory.address}`);
+    this.shipmentPlanner = await ethers.getContractAt("ShipmentPlanner", contractFactory.address);
+
     await upgradeWithNewFacets({
       diamondAddress: this.diamond.address,
       initFacetName: "InitDistribution",
+      initArgs: [contractFactory.address],
       bip: false,
       object: false,
       verbose: false,
       account: owner
     });
+    this.shipmentRoutes = await beanstalk.getShipmentRoutes();
+    if (verbose) console.log(this.shipmentRoutes);
 
     this.usdc = await ethers.getContractAt("MockToken", USDC);
     this.wsteth = await ethers.getContractAt("MockToken", WSTETH);
@@ -220,10 +234,7 @@ describe("Sun", function () {
 
     expect(await beanstalk.totalStalk()).to.be.equal("7500000");
 
-    
     expect(await beanstalk.totalEarnedBeans()).to.be.equal("750");
-
-
   });
 
   it("some harvestable, some fertilizable", async function () {
@@ -274,6 +285,73 @@ describe("Sun", function () {
 
     expect(await beanstalk.totalStalk()).to.be.equal(toStalk("200"));
     expect(await beanstalk.totalEarnedBeans()).to.be.equal(to6("200"));
+  });
+
+  it("dynamic shipments, harvestable & fertilizable", async function () {
+    // increments pods by 1000
+    // temperature is 1%
+    await mockBeanstalk.incrementTotalPodsE(0, "2600");
+    // add 1 fertilizer owner, 1 fert (which is equal to 5 beans)
+    await mockBeanstalk.connect(owner).addFertilizerOwner("0", to18("0.001"), "0");
+    //sunrise with 1500 beans 500 given to field, silo, and barn
+    this.result = await mockBeanstalk.sunSunrise("1500", 8);
+    // emit a event that 495 soil was issued at season 3
+    // 500/1.01 = ~495 (rounded down)
+    await expect(this.result).to.emit(beanstalk, "Ship");
+    await expect(this.result).to.emit(beanstalk, "Soil").withArgs(3, "495");
+    expect(await beanstalk.totalSoil()).to.be.equal("495");
+
+    expect(await beanstalk.totalHarvestable(0)).to.be.equal("500");
+    expect(await mockBeanstalk.totalFertilizedBeans()).to.be.equal("500");
+    expect(await mockBeanstalk.beansPerFertilizer()).to.be.equal(500);
+    expect(await beanstalk.totalEarnedBeans()).to.be.equal("500");
+
+    expect(await mockBeanstalk.isFertilizing()).to.be.equal(true);
+
+    // Update shipping routes.
+    let newShipmentRoute = [...this.shipmentRoutes[1]];
+    newShipmentRoute[3] = ethers.utils.defaultAbiCoder.encode(["uint8"], [1]);
+    delete newShipmentRoute[7];
+    this.shipmentRoutes = [...this.shipmentRoutes, newShipmentRoute];
+    await mockBeanstalk.connect(owner).setShipmentRoutes(this.shipmentRoutes);
+    if (verbose) console.log(await beanstalk.getShipmentRoutes());
+
+    // Add and Set active field.
+    await mockBeanstalk.connect(owner).addField();
+    await mockBeanstalk.connect(owner).setActiveField(1);
+
+    // New season, new rewards. No pods in new Field.
+    this.result = await mockBeanstalk.sunSunrise("2400", 8);
+    await expect(this.result).to.emit(beanstalk, "Ship");
+
+    expect(await beanstalk.totalHarvestable(0)).to.be.equal("1300");
+    expect(await beanstalk.totalHarvestable(1)).to.be.equal("0");
+    expect(await mockBeanstalk.totalFertilizedBeans()).to.be.equal("1300");
+    expect(await mockBeanstalk.beansPerFertilizer()).to.be.equal(1300);
+    expect(await beanstalk.totalEarnedBeans()).to.be.equal("1300");
+
+    // Pods in both Fields.
+    await mockBeanstalk.incrementTotalPodsE(1, "5000");
+    this.result = await mockBeanstalk.sunSunrise("4000", 8);
+    await expect(this.result).to.emit(beanstalk, "Ship");
+
+    expect(await beanstalk.totalHarvestable(0)).to.be.equal("2300");
+    expect(await beanstalk.totalHarvestable(1)).to.be.equal("1000");
+    expect(await mockBeanstalk.totalFertilizedBeans()).to.be.equal("2300");
+    expect(await mockBeanstalk.beansPerFertilizer()).to.be.equal(2300);
+    expect(await beanstalk.totalEarnedBeans()).to.be.equal("2300");
+
+    // Field[0] at cap.
+    this.result = await mockBeanstalk.sunSunrise("4000", 8);
+    await expect(this.result).to.emit(beanstalk, "Ship");
+
+    expect(await beanstalk.totalHarvestable(0)).to.be.equal("2600");
+    expect(await beanstalk.totalHarvestable(1)).to.be.equal("2233");
+    expect(await mockBeanstalk.totalFertilizedBeans()).to.be.equal("3533");
+    expect(await mockBeanstalk.beansPerFertilizer()).to.be.equal(3533);
+    expect(await beanstalk.totalEarnedBeans()).to.be.equal("3533");
+
+    expect(await mockBeanstalk.isFertilizing()).to.be.equal(true);
   });
 
   it("sunrise reward", async function () {

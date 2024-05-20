@@ -13,6 +13,11 @@ const {
   endGerminationWithMockToken
 } = require("./utils/testHelpers.js");
 
+// TODO
+// Tests to add
+// - Harvest/Sow/Read from Field that does not exist.
+// - Alter Fields as owner/non-owner.
+
 let user, user2, owner;
 
 describe("newField", function () {
