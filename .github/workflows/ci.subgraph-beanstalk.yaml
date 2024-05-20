@@ -28,6 +28,7 @@ jobs:
       - name: Install Dependencies
         if: steps.node-modules-cache.outputs.cache-hit != 'true'
         run: yarn install --immutable
+        working-directory: projects/subgraph-beanstalk
 
       # Generate code and check for uncommitted changes
       # https://github.com/marketplace/actions/check-uncommitted-changes
@@ -65,6 +66,7 @@ jobs:
       - name: Install Dependencies
         if: steps.node-modules-cache.outputs.cache-hit != 'true'
         run: yarn install --immutable
+        working-directory: projects/subgraph-beanstalk
 
       - name: Generate Subgraph Code
         run: yarn codegen
