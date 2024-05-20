@@ -27,30 +27,31 @@ contract InitDistribution {
 
     AppStorage internal s;
     IBeanstalk beanstalk;
-    ShipmentPlanner shipmentPlanner;
 
-    function init() external {
+    function init(address shipmentPlanner) external {
         beanstalk = IBeanstalk(address(this));
-        shipmentPlanner = new ShipmentPlanner();
-        require(address(shipmentPlanner) != address(0), "InitDistribution: ShipmentPlanner deployment failed.");
+        require(
+            shipmentPlanner != address(0),
+            "InitDistribution: ShipmentPlanner deployment failed."
+        );
         Storage.ShipmentRoute[] memory shipmentRoutes = new Storage.ShipmentRoute[](3);
 
         shipmentRoutes[0] = Storage.ShipmentRoute(
-            address(shipmentPlanner),
+            shipmentPlanner,
             ShipmentPlanner.getSiloPlan.selector,
             Storage.ShipmentRecipient.Silo,
             bytes("")
         );
 
         shipmentRoutes[1] = Storage.ShipmentRoute(
-            address(shipmentPlanner),
+            shipmentPlanner,
             ShipmentPlanner.getFieldPlan.selector,
             Storage.ShipmentRecipient.Field,
             abi.encode(uint256(0))
         );
 
         shipmentRoutes[2] = Storage.ShipmentRoute(
-            address(shipmentPlanner),
+            shipmentPlanner,
             ShipmentPlanner.getBarnPlan.selector,
             Storage.ShipmentRecipient.Barn,
             bytes("")
