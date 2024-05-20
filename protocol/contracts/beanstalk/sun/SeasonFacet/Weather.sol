@@ -215,6 +215,7 @@ contract Weather is Sun {
             }
         }
     }
+
     /**
      * @notice Floods the field, up to 0.1% of the total Bean supply worth of pods.
      */
@@ -389,7 +390,7 @@ contract Weather is Sun {
             console.log("wellDeltaBs[i - 1].deltaB", uint256(wellDeltaBs[i - 1].deltaB));
 
             if (shaveToLevel > uint256(wellDeltaBs[i - 1].deltaB)) {
-                shaveToLevel += (shaveToLevel - uint256(wellDeltaBs[i - 1].deltaB)) / i - 1;
+                shaveToLevel += (shaveToLevel - uint256(wellDeltaBs[i - 1].deltaB)) / (i - 1);
                 console.log("new shaveToLevel", shaveToLevel);
 
                 // reduction amount does not need to be set here,
