@@ -39,6 +39,15 @@ contract MockFieldFacet is FieldFacet {
         return s.beanSown;
     }
 
+    function addField() external returns (uint256 id) {
+        id = s.fieldList.length;
+        s.fieldList.push(id);
+    }
+
+    function setActiveField(uint256 id) external {
+        s.activeField = id;
+    }
+
     /**
      * @dev used for testing purposes - refactor field facet upon next field deployment,
      * to avoid duplicate code.
