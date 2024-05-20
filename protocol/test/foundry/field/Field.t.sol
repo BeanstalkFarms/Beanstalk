@@ -9,8 +9,8 @@ import {C} from "contracts/C.sol";
 
 contract FieldTest is TestHelper {
     // events
-    event Harvest(address indexed account, uint256[] plots, uint256 beans);
-    event Sow(address indexed account, uint256 index, uint256 beans, uint256 pods);
+    event Harvest(address indexed account, uint256 fieldId, uint256[] plots, uint256 beans);
+    event Sow(address indexed account, uint256 fieldId, uint256 index, uint256 beans, uint256 pods);
 
     // Interfaces.
     MockFieldFacet field = MockFieldFacet(BEANSTALK);
@@ -735,7 +735,7 @@ contract FieldTest is TestHelper {
         vm.roll(30);
         season.setSoilE(soilAmount);
         vm.expectEmit();
-        emit Sow(farmers[0], 0, sowAmount, (sowAmount * 101) / 100);
+        emit Sow(farmers[0], 0, 0, sowAmount, (sowAmount * 101) / 100);
         vm.prank(farmers[0]);
         if (from == 0) {
             field.sow(sowAmount, 0, LibTransfer.From.EXTERNAL);
@@ -762,7 +762,7 @@ contract FieldTest is TestHelper {
         season.setSoilE(soilAmount);
         vm.expectEmit();
         if (internalBalance > sowAmount) internalBalance = sowAmount;
-        emit Sow(farmers[0], 0, internalBalance, (internalBalance * 101) / 100);
+        emit Sow(farmers[0], 0, 0, internalBalance, (internalBalance * 101) / 100);
         vm.prank(farmers[0]);
         field.sow(sowAmount, 0, LibTransfer.From.INTERNAL_TOLERANT);
     }
@@ -817,7 +817,7 @@ contract FieldTest is TestHelper {
 
         vm.startPrank(farmer0);
         vm.expectEmit(true, true, true, true);
-        emit Sow(farmer0, 0, amount0, (amount0 * 101) / 100);
+        emit Sow(farmer0, 0, 0, amount0, (amount0 * 101) / 100);
         field.sowWithMin(amount0, 0, 0, LibTransfer.From.EXTERNAL);
         vm.stopPrank();
 
@@ -828,7 +828,7 @@ contract FieldTest is TestHelper {
 
         vm.startPrank(farmer1);
         vm.expectEmit(true, true, true, true);
-        emit Sow(farmer1, (amount0 * 101) / 100, amount1, (amount1 * 101) / 100);
+        emit Sow(farmer1, 0, (amount0 * 101) / 100, amount1, (amount1 * 101) / 100);
         field.sowWithMin(amount1, 0, 0, LibTransfer.From.EXTERNAL);
         vm.stopPrank();
 

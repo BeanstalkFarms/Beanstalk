@@ -187,7 +187,7 @@ interface IMockFBeanstalk {
     event DiamondCut(FacetCut[] _diamondCut, address _init, bytes _calldata);
     event FarmerGerminatingStalkBalanceChanged(address indexed account, int256 delta);
     event GaugePointChange(uint256 indexed season, address indexed token, uint256 gaugePoints);
-    event Harvest(address indexed account, uint256[] plots, uint256 beans);
+    event Harvest(address indexed account, uint256 fieldId, uint256[] plots, uint256 beans);
     event Incentivization(address indexed account, uint256 beans);
     event InternalBalanceChanged(address indexed user, address indexed token, int256 delta);
     event MockConvert(uint256 stalkRemoved, uint256 bdvRemoved);
@@ -264,7 +264,7 @@ interface IMockFBeanstalk {
     );
     event SetFertilizer(uint128 id, uint128 bpf);
     event Soil(uint32 indexed season, uint256 soil);
-    event Sow(address indexed account, uint256 index, uint256 beans, uint256 pods);
+    event Sow(address indexed account, uint256 fieldId, uint256 index, uint256 beans, uint256 pods);
     event StalkBalanceChanged(address indexed account, int256 delta, int256 deltaRoots);
     event Sunrise(uint256 indexed season);
     event SwitchUnderlyingToken(address indexed token, address indexed underlyingToken);

@@ -37,7 +37,7 @@ contract FieldFacet is Invariable, ReentrancyGuard {
      * @param beans The amount of Beans burnt to create the Plot
      * @param pods The amount of Pods assocated with the created Plot
      */
-    event Sow(address indexed account, uint256 index, uint256 beans, uint256 pods);
+    event Sow(address indexed account, uint256 fieldId, uint256 index, uint256 beans, uint256 pods);
 
     /**
      * @notice Emitted when `account` claims the Beans associated with Harvestable Pods.
@@ -45,7 +45,7 @@ contract FieldFacet is Invariable, ReentrancyGuard {
      * @param plots The indices of Plots that were harvested
      * @param beans The amount of Beans transferred to `account`
      */
-    event Harvest(address indexed account, uint256[] plots, uint256 beans);
+    event Harvest(address indexed account, uint256 fieldId, uint256[] plots, uint256 beans);
 
     //////////////////// SOW ////////////////////
 
@@ -160,7 +160,7 @@ contract FieldFacet is Invariable, ReentrancyGuard {
             beansHarvested += harvested;
         }
         s.fields[fieldId].harvested += beansHarvested;
-        emit Harvest(LibTractor._user(), plots, beansHarvested);
+        emit Harvest(LibTractor._user(), fieldId, plots, beansHarvested);
     }
 
     /**

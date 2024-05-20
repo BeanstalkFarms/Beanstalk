@@ -35,7 +35,7 @@ library LibDibbler {
     /// Soil to be "sold out"; affects how Temperature is adjusted.
     uint256 private constant SOIL_SOLD_OUT_THRESHOLD = 1e6;
 
-    event Sow(address indexed account, uint256 index, uint256 beans, uint256 pods);
+    event Sow(address indexed account, uint256 fieldId, uint256 index, uint256 beans, uint256 pods);
 
     //////////////////// SOW ////////////////////
 
@@ -90,7 +90,7 @@ library LibDibbler {
         }
 
         s.accounts[account].fields[s.activeField].plots[s.fields[s.activeField].pods] = pods;
-        emit Sow(account, s.fields[s.activeField].pods, beans, pods);
+        emit Sow(account, s.activeField, s.fields[s.activeField].pods, beans, pods);
 
         s.fields[s.activeField].pods += pods;
         _saveSowTime();
