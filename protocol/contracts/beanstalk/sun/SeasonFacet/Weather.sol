@@ -11,7 +11,6 @@ import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {IBeanstalkWellFunction} from "contracts/interfaces/basin/IBeanstalkWellFunction.sol";
 import {LibWell} from "contracts/libraries/Well/LibWell.sol";
 import {IWell, Call} from "contracts/interfaces/basin/IWell.sol";
-import {IInstantaneousPump} from "contracts/interfaces/basin/pumps/IInstantaneousPump.sol";
 import {LibWhitelistedTokens} from "contracts/libraries/Silo/LibWhitelistedTokens.sol";
 import {LibWellMinting} from "contracts/libraries/Minting/LibWellMinting.sol";
 import {LibRedundantMath256} from "contracts/libraries/LibRedundantMath256.sol";
