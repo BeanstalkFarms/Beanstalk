@@ -19,6 +19,7 @@ library C {
     //////////////////// Globals ////////////////////
 
     uint256 internal constant PRECISION = 1e18;
+    uint256 private constant LEGACY_CHAIN_ID = 1;
     uint256 private constant CHAIN_ID = 1;
     bytes constant BYTES_ZERO = new bytes(0);
 
@@ -110,6 +111,10 @@ library C {
 
     function getChainId() internal pure returns (uint256) {
         return CHAIN_ID;
+    }
+
+    function getLegacyChainId() internal pure returns (uint256) {
+        return LEGACY_CHAIN_ID;
     }
 
     function getSeedsPerBean() internal pure returns (uint256) {
