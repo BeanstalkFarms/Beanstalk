@@ -1,10 +1,10 @@
-name: Subgraph Beanstalk
+name: Subgraph Basin
 
 on:
   pull_request:
     types: [opened, synchronize]
     paths:
-      - "projects/subgraph-beanstalk/**"
+      - "projects/subgraph-basin/**"
 
 jobs:
   compile:
@@ -29,21 +29,13 @@ jobs:
         if: steps.node-modules-cache.outputs.cache-hit != 'true'
         run: yarn install --immutable
 
-      # Generate code and check for uncommitted changes
-      # https://github.com/marketplace/actions/check-uncommitted-changes
       - name: Generate Subgraph Code
         run: yarn codegen
-        working-directory: projects/subgraph-beanstalk
-      - name: Check for uncommitted changes
-        id: check-changes
-        uses: mskri/check-uncommitted-changes-action@v1.0.1
-      - name: Evaluate if there are changes
-        if: steps.check-changes.outputs.outcome == failure()
-        run: echo "There are uncommitted changes - execute 'yarn codegen' locally and commit the generated files!"
+        working-directory: projects/subgraph-basin
 
       - name: Build Subgraph
         run: yarn build
-        working-directory: projects/subgraph-beanstalk
+        working-directory: projects/subgraph-basin
   test:
     runs-on: macos-latest
     name: Test
@@ -68,8 +60,8 @@ jobs:
 
       - name: Generate Subgraph Code
         run: yarn codegen
-        working-directory: projects/subgraph-beanstalk
+        working-directory: projects/subgraph-basin
 
       - name: Run Tests
         run: yarn test
-        working-directory: projects/subgraph-beanstalk
+        working-directory: projects/subgraph-basin
