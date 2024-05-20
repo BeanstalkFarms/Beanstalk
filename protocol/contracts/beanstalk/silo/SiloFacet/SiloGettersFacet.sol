@@ -25,17 +25,11 @@ contract SiloGettersFacet is ReentrancyGuard {
     using LibRedundantMath128 for uint128;
 
     /**
-     * @notice TokenDepositIds contains the DepositsIds for a given token.
+     * @notice TokenDepositId contains the DepositsIds for a given token.
      */
-    struct TokenDepositIds {
+    struct TokenDepositId {
         address token;
         uint256[] depositIds;
-    }
-    /**
-     * @notice TokenDeposit contains the Deposits for a given token.
-     */
-    struct TokenDeposit {
-        address token;
         Account.Deposit[] tokenDeposits;
     }
 
@@ -558,12 +552,11 @@ contract SiloGettersFacet is ReentrancyGuard {
      */
     function getDepositsForAccount(
         address account
-    ) external view returns (TokenDeposit[] memory deposits) {
+    ) external view returns (TokenDepositId[] memory deposits) {
         address[] memory tokens = LibWhitelistedTokens.getWhitelistedTokens();
-        deposits = new TokenDeposit[](tokens.length);
+        deposits = new TokenDepositId[](tokens.length);
         for (uint256 i; i < tokens.length; i++) {
-            deposits[i].token = tokens[i];
-            deposits[i].tokenDeposits = getTokenDepositsForAccount(account, tokens[i]);
+            deposits[i] = getTokenDepositsForAccount(account, tokens[i]);
         }
     }
 
@@ -573,25 +566,13 @@ contract SiloGettersFacet is ReentrancyGuard {
     function getTokenDepositsForAccount(
         address account,
         address token
-    ) public view returns (Account.Deposit[] memory deposits) {
+    ) public view returns (TokenDepositId memory deposits) {
         uint256[] memory depositIds = s.a[account].depositIdList[token];
+        deposits.token = token;
+        deposits.depositIds = depositIds;
+        deposits.tokenDeposits = new Account.Deposit[](depositIds.length);
         for (uint256 i; i < depositIds.length; i++) {
-            deposits[i] = s.a[account].deposits[depositIds[i]];
-        }
-    }
-
-    /**
-     * @notice returns the DepositList for all whitelistedTokens for a given account.
-     * @dev if a user has no deposits, the function will return an empty array.
-     */
-    function getDepositIdsForAccount(
-        address account
-    ) external view returns (TokenDepositIds[] memory tokenDepositIds) {
-        address[] memory tokens = LibWhitelistedTokens.getWhitelistedTokens();
-        tokenDepositIds = new TokenDepositIds[](tokens.length);
-        for (uint256 i; i < tokens.length; i++) {
-            tokenDepositIds[i].token = tokens[i];
-            tokenDepositIds[i].depositIds = getTokenDepositIdsForAccount(account, tokens[i]);
+            deposits.tokenDeposits[i] = s.a[account].deposits[depositIds[i]];
         }
     }
 
