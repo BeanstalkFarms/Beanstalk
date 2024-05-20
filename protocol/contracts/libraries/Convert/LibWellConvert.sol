@@ -2,10 +2,9 @@
  SPDX-License-Identifier: MIT
 */
 
-pragma solidity =0.7.6;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.20;
 
-import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
+import {LibRedundantMath256} from "contracts/libraries/LibRedundantMath256.sol";
 import {LibConvertData} from "contracts/libraries/Convert/LibConvertData.sol";
 import {LibWell} from "contracts/libraries/Well/LibWell.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
@@ -20,7 +19,7 @@ import {console} from "forge-std/console.sol";
  * in the direction of the Peg.
  **/
 library LibWellConvert {
-    using SafeMath for uint256;
+    using LibRedundantMath256 for uint256;
     using LibConvertData for bytes;
 
     /**
@@ -50,7 +49,6 @@ library LibWellConvert {
 
 
         if (beansAtPeg <= reserves[beanIndex]) return (0, beanIndex);
-        // SafeMath is unnecessary as above line performs the check
         beans = beansAtPeg - reserves[beanIndex];
     }
 

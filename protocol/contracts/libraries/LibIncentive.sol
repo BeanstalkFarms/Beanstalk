@@ -1,11 +1,9 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity =0.7.6;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.20;
 
-import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
-import {IBlockBasefee} from "../interfaces/IBlockBasefee.sol";
-import "@openzeppelin/contracts/math/Math.sol";
+import {LibRedundantMath256} from "contracts/libraries/LibRedundantMath256.sol";
+import "@openzeppelin/contracts/utils/math/Math.sol";
 import "../C.sol";
 
 /**
@@ -15,7 +13,7 @@ import "../C.sol";
  * and scales the reward up when the Sunrise is called late.
  */
 library LibIncentive {
-    using SafeMath for uint256;
+    using LibRedundantMath256 for uint256;
 
     /**
      * @notice Emitted when Beanstalk pays `beans` to `account` as a reward for calling `sunrise()`.
@@ -45,9 +43,6 @@ library LibIncentive {
     /// @dev Accounts for extra gas overhead for completing a Sunrise tranasaction.
     // 21k gas (base cost for a transction) + ~29 gas for other overhead
     uint256 internal constant SUNRISE_GAS_OVERHEAD = 50_000; // 50k gas
-
-    /// @dev Use external contract for block.basefee as to avoid upgrading existing contracts to solidity v8
-    address private constant BASE_FEE_CONTRACT = 0x84292919cB64b590C0131550483707E43Ef223aC;
 
     /// @dev `sunriseReward` is precomputed in {fracExp} using this precision.
     uint256 private constant FRAC_EXP_PRECISION = 1e18;
@@ -90,12 +85,7 @@ library LibIncentive {
         // Calculate the current cost in Wei of `gasUsed` gas.
         // {block_basefee()} returns the base fee of the current block in Wei.
         // Adds a buffer for priority fee.
-        uint256 gasCostWei = IBlockBasefee(BASE_FEE_CONTRACT)
-            .block_basefee()
-            .add(PRIORITY_FEE_BUFFER)
-            .mul(gasUsed); // (BASE_FEE
-        // + PRIORITY_FEE_BUFFER)
-        // * GAS_USED
+        uint256 gasCostWei = (block.basefee + PRIORITY_FEE_BUFFER) * gasUsed;
 
         // Calculates the Sunrise reward to pay in BEAN.
         uint256 sunriseReward = Math.min(

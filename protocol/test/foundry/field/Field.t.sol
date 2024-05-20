@@ -478,7 +478,7 @@ contract FieldTest is TestHelper {
     //     // (1e12)    * pct
     //     // (1e6)     / TEMPERATURE_PRECISION
     //     // (1e8)     = temperature
-    //     uint256 __temperature = uint256(season.weather().t).mulDiv(ScaleValues[blockNo - 1], 1e6, LibPRBMath.Rounding.Up);
+    //     uint256 __temperature = uint256(season.weather().t).mulDiv(ScaleValues[blockNo - 1], 1e6, UD60x18.Rounding.Up);
     //     // temperature is always 1% if a farmer sows at the same block
     //     // as the sunrise block, irregardless of temperature
     //     uint256 calcTemperature = blockNo == 1 ? 1e6 : max(__temperature, 1e6);

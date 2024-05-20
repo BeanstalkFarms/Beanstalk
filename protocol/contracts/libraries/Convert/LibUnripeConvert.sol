@@ -1,14 +1,13 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity =0.7.6;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.20;
 
 import {C} from "contracts/C.sol";
 import {IBean} from "contracts/interfaces/IBean.sol";
 import {LibWellConvert} from "./LibWellConvert.sol";
 import {LibUnripe} from "../LibUnripe.sol";
 import {LibConvertData} from "./LibConvertData.sol";
-import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
+import {LibRedundantMath256} from "contracts/libraries/LibRedundantMath256.sol";
 import {LibBarnRaise} from "contracts/libraries/LibBarnRaise.sol";
 
 /**
@@ -17,7 +16,7 @@ import {LibBarnRaise} from "contracts/libraries/LibBarnRaise.sol";
  */
 library LibUnripeConvert {
     using LibConvertData for bytes;
-    using SafeMath for uint256;
+    using LibRedundantMath256 for uint256;
 
     function convertLPToBeans(
         bytes memory convertData

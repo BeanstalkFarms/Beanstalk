@@ -2,14 +2,12 @@
  * SPDX-License-Identifier: MIT
  */
 
-pragma solidity ^0.7.6;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.20;
 
+import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
 import "./MetadataImage.sol";
 import {LibBytes} from "contracts/libraries/LibBytes.sol";
 import {LibTokenSilo} from "contracts/libraries/Silo/LibTokenSilo.sol";
-
-import "contracts/libraries/LibStrings.sol";
 
 /**
  * @title MetadataFacet
@@ -20,8 +18,8 @@ import "contracts/libraries/LibStrings.sol";
  * @dev Deposits are represented by a uint256, which is the concatination of the token address and the stem.
  */
 contract MetadataFacet is MetadataImage {
-    using LibStrings for uint256;
-    using LibStrings for int256;
+    using Strings for uint256;
+    using Strings for int256;
 
     event URI(string _uri, uint256 indexed _id);
 
@@ -48,15 +46,15 @@ contract MetadataFacet is MetadataImage {
             ', "attributes": [ { "trait_type": "Token", "value": "',
             getTokenName(token),
             '"}, { "trait_type": "Token Address", "value": "',
-            LibStrings.toHexString(uint256(token), 20),
+            Strings.toHexString(uint256(uint160(token)), 20),
             '"}, { "trait_type": "Id", "value": "',
             depositId.toHexString(32),
             '"}, { "trait_type": "stem", "display_type": "number", "value": ',
-            int256(stem).toString(),
+            int256(stem).toStringSigned(),
             '}, { "trait_type": "inital stalk per BDV", "display_type": "number", "value": ',
             uint256(LibTokenSilo.stalkIssuedPerBdv(token)).toString(),
             '}, { "trait_type": "grown stalk per BDV", "display_type": "number", "value": ',
-            uint256(stemTip - stem).toString(),
+            uint256(int256(stemTip - stem)).toString(),
             '}, { "trait_type": "stalk grown per BDV per season", "display_type": "number", "value": ',
             uint256(LibTokenSilo.stalkEarnedPerSeason(token)).toString()
         );

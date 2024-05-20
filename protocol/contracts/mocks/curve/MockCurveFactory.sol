@@ -2,10 +2,9 @@
  SPDX-License-Identifier: MIT
 */
 
-pragma solidity ^0.7.6;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.20;
 
-import "@openzeppelin/contracts/math/SafeMath.sol";
+import "contracts/libraries/LibRedundantMath256.sol";
 import "../../interfaces/IBean.sol";
 import "../MockToken.sol";
 

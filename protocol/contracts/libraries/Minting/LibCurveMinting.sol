@@ -1,13 +1,12 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity =0.7.6;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.20;
 
 import "../LibAppStorage.sol";
-import "../LibSafeMath32.sol";
+import "../LibRedundantMath32.sol";
 import "./LibMinting.sol";
 import "contracts/libraries/Curve/LibMetaCurve.sol";
-import {SafeCast} from "@openzeppelin/contracts/utils/SafeCast.sol";
+import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
 import {LibBeanMetaCurve} from "contracts/libraries/Curve/LibBeanMetaCurve.sol";
 
 /**
@@ -37,9 +36,9 @@ interface IMeta3CurveOracle {
  * NOTE: with the bean:3crv dewhitelisting, LibCurveMinting is no longer used and is kept for historical purposes.
  */
 library LibCurveMinting {
-    using SafeMath for uint256;
+    using LibRedundantMath256 for uint256;
     using SafeCast for uint256;
-    using LibSafeMath32 for uint32;
+    using LibRedundantMath32 for uint32;
 
     /**
      * @notice Emitted when the Curve Minting Oracle is captured.

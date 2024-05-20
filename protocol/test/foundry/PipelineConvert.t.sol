@@ -3,7 +3,6 @@ pragma solidity >=0.6.0 <0.9.0;
 pragma abicoder v2;
 
 import {TestHelper} from "./utils/TestHelper.sol";
-import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
 import {LibTransfer} from "contracts/libraries/Token/LibTransfer.sol";
 import {IMockFBeanstalk} from "contracts/interfaces/IMockFBeanstalk.sol";
 import {MockSeasonFacet} from "contracts/mocks/mockFacets/MockSeasonFacet.sol";
@@ -23,6 +22,7 @@ import {ICappedReservesPump} from "contracts/interfaces/basin/pumps/ICappedReser
 import {LibClipboard} from "contracts/libraries/LibClipboard.sol";
 import {LibWellMinting} from "contracts/libraries/Minting/LibWellMinting.sol";
 import {LibConvert} from "contracts/libraries/Convert/LibConvert.sol";
+import {LibRedundantMath256} from "contracts/libraries/LibRedundantMath256.sol";
 import "forge-std/Test.sol";
 
 contract MiscHelperContract {
@@ -37,7 +37,7 @@ contract MiscHelperContract {
  * @notice Test pipeline convert.
  */
 contract PipelineConvertTest is TestHelper {
-    using SafeMath for uint256;
+    using LibRedundantMath256 for uint256;
 
     // Interfaces.
     // IMockFBeanstalk bs = IMockFBeanstalk(BEANSTALK);

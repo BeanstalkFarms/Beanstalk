@@ -1,12 +1,11 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity =0.7.6;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.20;
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
-import {SignedSafeMath} from "@openzeppelin/contracts/math/SignedSafeMath.sol";
-import {SafeCast} from "@openzeppelin/contracts/utils/SafeCast.sol";
+import {LibRedundantMath256} from "contracts/libraries/LibRedundantMath256.sol";
+import {LibRedundantMathSigned256} from "contracts/libraries/LibRedundantMathSigned256.sol";
+import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
 
 import {C} from "contracts/C.sol";
 import {AppStorage} from "contracts/beanstalk/AppStorage.sol";
@@ -23,8 +22,8 @@ import {LibSilo} from "contracts/libraries/Silo/LibSilo.sol";
  * @dev https://www.nascent.xyz/idea/youre-writing-require-statements-wrong
  **/
 abstract contract Invariable {
-    using SafeMath for uint256;
-    using SignedSafeMath for int256;
+    using LibRedundantMath256 for uint256;
+    using LibRedundantMathSigned256 for int256;
     using SafeCast for uint256;
 
     /**

@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity =0.7.6;
+pragma solidity ^0.8.20;
 pragma experimental ABIEncoderV2;
 
 /**
@@ -9,7 +9,8 @@ pragma experimental ABIEncoderV2;
  * reserves through the use of a cumulative reserve.
  */
 interface ICappedReservesPump {
-
-    // TODO: Maybe not the best place to put this, perhaps in a MultiFlowPump interface?
-    function readCappedReserves(address well, bytes memory data) external view returns (uint256[] memory cappedReserves);
+    function readCappedReserves(
+        address well,
+        bytes memory data
+    ) external view returns (uint256[] memory cappedReserves);
 }

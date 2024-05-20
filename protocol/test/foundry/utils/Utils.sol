@@ -1,35 +1,19 @@
 // SPDX-License-Identifier: MIT
-pragma solidity >=0.7.6 <0.9.0;
+pragma solidity ^0.8.20;
 pragma abicoder v2;
 
 import "forge-std/Test.sol";
-import {LibStrings} from "contracts/libraries/LibStrings.sol";
+import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
 
 /**
  * @dev common utilities for forge tests
  */
 contract Utils is Test {
-    using LibStrings for uint256;
-    using LibStrings for bytes;
+    using Strings for uint256;
+    using Strings for bytes;
     address payable[] internal users;
 
     bytes32 internal nextUser = keccak256(abi.encodePacked("user address"));
-
-    // gets bytecode at specific address (cant use address.code as we're in 0.7.6)
-    function getBytecodeAt(address _addr) public view returns (bytes memory o_code) {
-        assembly {
-            // retrieve the size of the code
-            let size := extcodesize(_addr)
-            // allocate output byte array
-            // by using o_code = new bytes(size)
-            o_code := mload(0x40)
-            // new "memory end" including padding
-            mstore(0x40, add(o_code, and(add(add(size, 0x20), 0x1f), not(0x1f))))
-            // store length in memory
-            mstore(o_code, size)
-            extcodecopy(_addr, add(o_code, 0x20), 0, size)
-        }
-    }
 
     /// @dev impersonate `from`
     modifier prank(address from) {

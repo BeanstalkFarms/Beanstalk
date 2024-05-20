@@ -2,18 +2,17 @@
  * SPDX-License-Identifier: MIT
  **/
 
-pragma solidity =0.7.6;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.20;
 
 import {C} from "contracts/C.sol";
 import {LibTractor} from "contracts/libraries/LibTractor.sol";
 import {LibSilo} from "contracts/libraries/Silo/LibSilo.sol";
 import {LibTokenSilo} from "contracts/libraries/Silo/LibTokenSilo.sol";
-import {LibSafeMath32} from "contracts/libraries/LibSafeMath32.sol";
+import {LibRedundantMath32} from "contracts/libraries/LibRedundantMath32.sol";
 import {ReentrancyGuard} from "../ReentrancyGuard.sol";
 import {LibBytes} from "contracts/libraries/LibBytes.sol";
-import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
-import {SafeCast} from "@openzeppelin/contracts/utils/SafeCast.sol";
+import {LibRedundantMath256} from "contracts/libraries/LibRedundantMath256.sol";
+import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {LibConvert} from "contracts/libraries/Convert/LibConvert.sol";
 import {AppStorage, LibAppStorage} from "contracts/libraries/LibAppStorage.sol";
@@ -21,11 +20,11 @@ import {AdvancedFarmCall, LibFarm} from "../../libraries/LibFarm.sol";
 import {LibWellMinting} from "../../libraries/Minting/LibWellMinting.sol";
 import {LibWell} from "contracts/libraries/Well/LibWell.sol";
 import {IPipeline, PipeCall} from "contracts/interfaces/IPipeline.sol";
-import {SignedSafeMath} from "@openzeppelin/contracts/math/SignedSafeMath.sol";
 import {LibFunction} from "contracts/libraries/LibFunction.sol";
 import {LibGerminate} from "contracts/libraries/Silo/LibGerminate.sol";
 import {LibConvertData} from "contracts/libraries/Convert/LibConvertData.sol";
 import {Invariable} from "contracts/beanstalk/Invariable.sol";
+import {LibRedundantMathSigned256} from "contracts/libraries/LibRedundantMathSigned256.sol";
 import {console} from "forge-std/console.sol";
 
 /**
@@ -33,11 +32,12 @@ import {console} from "forge-std/console.sol";
  * @title ConvertFacet handles converting Deposited assets within the Silo.
  **/
 contract ConvertFacet is Invariable, ReentrancyGuard {
-    using SafeMath for uint256;
-    using SignedSafeMath for int256;
+    using LibRedundantMathSigned256 for int256;
     using SafeCast for uint256;
-    using LibSafeMath32 for uint32;
     using LibConvertData for bytes;
+    using LibRedundantMath256 for uint256;
+    using SafeCast for uint256;
+    using LibRedundantMath32 for uint32;
 
     struct AssetsRemovedConvert {
         LibSilo.Removed active;

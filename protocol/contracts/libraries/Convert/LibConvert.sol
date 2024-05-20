@@ -1,10 +1,8 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity =0.7.6;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.20;
 
-import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
-import "@openzeppelin/contracts/math/Math.sol";
+import {LibRedundantMath256} from "contracts/libraries/LibRedundantMath256.sol";
 import {LibCurveConvert} from "./LibCurveConvert.sol";
 import {LibUnripeConvert} from "./LibUnripeConvert.sol";
 import {LibLambdaConvert} from "./LibLambdaConvert.sol";
@@ -14,9 +12,10 @@ import {LibChopConvert} from "./LibChopConvert.sol";
 import {LibWell} from "contracts/libraries/Well/LibWell.sol";
 import {LibBarnRaise} from "contracts/libraries/LibBarnRaise.sol";
 import {AppStorage, LibAppStorage, Storage} from "contracts/libraries/LibAppStorage.sol";
-import {SignedSafeMath} from "@openzeppelin/contracts/math/SignedSafeMath.sol";
 import {LibWellMinting} from "contracts/libraries/Minting/LibWellMinting.sol";
 import {C} from "contracts/C.sol";
+import {LibRedundantMathSigned256} from "contracts/libraries/LibRedundantMathSigned256.sol";
+import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
 import {console} from "forge-std/console.sol";
 
 /**
@@ -24,10 +23,10 @@ import {console} from "forge-std/console.sol";
  * @author Publius
  */
 library LibConvert {
-    using SafeMath for uint256;
+    using LibRedundantMath256 for uint256;
     using LibConvertData for bytes;
     using LibWell for address;
-    using SignedSafeMath for int256;
+    using LibRedundantMathSigned256 for int256;
 
     struct DeltaBStorage {
         int256 beforeInputTokenDeltaB;
@@ -279,7 +278,7 @@ library LibConvert {
         console.log("spd.inputTokenAmountAgainstPeg: ", spd.inputTokenAmountAgainstPeg);
         console.log("spd.outputTokenAmountAgainstPeg: ", spd.outputTokenAmountAgainstPeg);
 
-        spd.higherAmountAgainstPeg = Math.max(
+        spd.higherAmountAgainstPeg = max(
             spd.overallAmountAgainstPeg,
             spd.inputTokenAmountAgainstPeg.add(spd.outputTokenAmountAgainstPeg)
         );
@@ -302,7 +301,7 @@ library LibConvert {
 
         console.log("spd.convertCapacityPenalty: ", spd.convertCapacityPenalty);
 
-        stalkPenaltyBdv = Math.min(
+        stalkPenaltyBdv = min(
             spd.higherAmountAgainstPeg.add(spd.convertCapacityPenalty),
             bdvConverted
         );
@@ -468,5 +467,19 @@ library LibConvert {
     // the verson of OpenZeppelin we're on does not support abs
     function abs(int256 a) internal pure returns (uint256) {
         return a >= 0 ? uint256(a) : uint256(-a);
+    }
+
+    /**
+     * @dev Returns the largest of two numbers.
+     */
+    function max(uint256 a, uint256 b) internal pure returns (uint256) {
+        return a > b ? a : b;
+    }
+
+    /**
+     * @dev Returns the smallest of two numbers.
+     */
+    function min(uint256 a, uint256 b) internal pure returns (uint256) {
+        return a < b ? a : b;
     }
 }
