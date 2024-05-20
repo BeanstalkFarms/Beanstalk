@@ -19,7 +19,9 @@
   },
   "dependencies": {
     "@graphprotocol/graph-cli": "0.69.0",
-    "@graphprotocol/graph-ts": "0.34.0",
+    "@graphprotocol/graph-ts": "0.34.0"
+  },
+  "devDependencies": {
     "matchstick-as": "^0.6.0"
   },
   "private": true
