@@ -57,17 +57,9 @@ contract InitDistribution {
             bytes("")
         );
 
-        bool success;
-        (success, ) = address(this).call(
-            abi.encodeWithSelector(beanstalk.setShipmentRoutes.selector, shipmentRoutes)
-        );
-        require(success, "InitDistribution: setShipmentRoutes failed.");
-        (success, ) = address(this).call(abi.encodeWithSelector(beanstalk.addField.selector));
-        require(success, "InitDistribution: addField failed.");
-        (success, ) = address(this).call(
-            abi.encodeWithSelector(beanstalk.setActiveField.selector, 0)
-        );
-        require(success, "InitDistribution: setActiveField failed.");
+        beanstalk.setShipmentRoutes(shipmentRoutes);
+        beanstalk.addField();
+        beanstalk.setActiveField(0);
 
         // TODO: Initialize Field values from priors.
     }
