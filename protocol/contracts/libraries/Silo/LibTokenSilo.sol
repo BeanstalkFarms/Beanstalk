@@ -310,6 +310,10 @@ library LibTokenSilo {
         AppStorage storage s = LibAppStorage.diamondStorage();
         uint256 depositId = LibBytes.packAddressAndStem(token, stem);
 
+        // add a depositId to an account's depositList, if there is not an existing deposit.
+        if (s.a[account].deposits[depositId].amount > 0) {
+            s.a[account].depositIdList[token].push(depositId);
+        }
         // add amount and bdv to the deposits.
         s.a[account].deposits[depositId].amount = s.a[account].deposits[depositId].amount.add(
             amount.toUint128()
@@ -410,7 +414,10 @@ library LibTokenSilo {
             return removedBDV;
         }
         // Full remove
-        if (crateAmount > 0) delete s.a[account].deposits[depositId];
+        if (crateAmount > 0) {
+            delete s.a[account].deposits[depositId];
+            removeDepositIDfromAccountList(account, token, depositId);
+        }
 
         // Will not overflow b/c crateBDV <= type(uint128).max
         s.a[account].mowStatuses[token].bdv = s.a[account].mowStatuses[token].bdv.sub(
@@ -631,6 +638,42 @@ library LibTokenSilo {
         emit AddDeposit(account, token, newStem, legacyAmount, legacyBdv);
 
         return (crateAmount, crateBdv);
+    }
+
+    /**
+     * @notice removes an depositID from an account's depositID list.
+     */
+    function removeDepositIDfromAccountList(
+        address account,
+        address token,
+        uint256 depositId
+    ) internal {
+        AppStorage storage s = LibAppStorage.diamondStorage();
+        uint256 i = findDepositIdForAccount(account, token, depositId);
+        s.a[account].depositIdList[token][i] = s.a[account].depositIdList[token][
+            s.a[account].depositIdList[token].length - 1
+        ];
+        s.a[account].depositIdList[token].pop();
+    }
+
+    /**
+     * @notice given an depositId, find the index of the depositId in the account's deposit list.
+     */
+    function findDepositIdForAccount(
+        address account,
+        address token,
+        uint256 depositId
+    ) internal view returns (uint256 i) {
+        AppStorage storage s = LibAppStorage.diamondStorage();
+        uint256[] memory depositIdList = s.a[account].depositIdList[token];
+        uint256 length = depositIdList.length;
+        while (depositIdList[i] != depositId) {
+            i++;
+            if (i >= length) {
+                revert("Id not found");
+            }
+        }
+        return i;
     }
 
     function toInt96(uint256 value) internal pure returns (int96) {
