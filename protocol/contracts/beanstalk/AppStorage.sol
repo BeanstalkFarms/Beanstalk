@@ -565,7 +565,7 @@ contract Storage {
  * @param oddGerminating Stores germinating data during odd seasons.
  * @param evenGerminating Stores germinating data during even seasons.
  * @param whitelistedStatues Stores a list of Whitelist Statues for all tokens that have been Whitelisted and have not had their Whitelist Status manually removed.
- * @param sopWell Stores the well that will be used upon a SOP. Unintialized until a SOP occurs, and is kept constant afterwards.
+ * @param deprecated_sopWell DEPRECATED - Stored the well that will be used upon a SOP. Unnecessary after generalized flood.
  * @param internalTokenBalanceTotal Sum of all users internalTokenBalance.
  * @param barnRaiseWell Stores the well that the Barn Raise adds liquidity to.
  * @param fertilizedPaidIndex The total number of Fertilizer Beans that have been sent out to users.
@@ -638,7 +638,7 @@ struct AppStorage {
     // mapping from season => unclaimed germinating stalk and roots
     mapping(uint32 => Storage.Sr) unclaimedGerminating;
     Storage.WhitelistStatus[] whitelistStatuses;
-    address sopWell;
+    address deprecated_sopWell;
     // Cumulative internal Balance of tokens.
     mapping(IERC20 => uint256) internalTokenBalanceTotal;
     uint256 fertilizedPaidIndex;

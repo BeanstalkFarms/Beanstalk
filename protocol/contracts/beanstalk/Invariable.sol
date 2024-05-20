@@ -184,7 +184,7 @@ abstract contract Invariable {
             } else if (tokens[i] == LibUnripe._getUnderlyingToken(C.UNRIPE_LP)) {
                 entitlements[i] += s.u[C.UNRIPE_LP].balanceOfUnderlying;
             }
-            if (s.sopWell != address(0) && tokens[i] == address(LibSilo.getSopToken())) {
+            if (s.deprecated_sopWell != address(0) && tokens[i] == address(LibSilo.getSopToken())) {
                 entitlements[i] += s.plenty;
             }
             balances[i] = IERC20(tokens[i]).balanceOf(address(this));

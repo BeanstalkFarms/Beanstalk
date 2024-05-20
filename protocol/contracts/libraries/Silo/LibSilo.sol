@@ -491,8 +491,8 @@ library LibSilo {
     function getSopToken() internal view returns (IERC20) {
         AppStorage storage s = LibAppStorage.diamondStorage();
         // sopWell may not yet be initialized.
-        if (s.sopWell == address(0)) return IERC20(address(0));
-        IWell well = IWell(s.sopWell);
+        if (s.deprecated_sopWell == address(0)) return IERC20(address(0));
+        IWell well = IWell(s.deprecated_sopWell);
         IERC20[] memory tokens = well.tokens();
         return tokens[0] != C.bean() ? tokens[0] : tokens[1];
     }
@@ -830,7 +830,10 @@ library LibSilo {
         for (uint i; i < siloTokens.length; i++) {
             int96 lastStem = s.a[account].mowStatuses[siloTokens[i]].lastStem;
             if (lastStem > 0) {
-                if (LibTokenSilo.stemTipForToken(siloTokens[i]).div(lastStem) >= int96(uint96(PRECISION))) {
+                if (
+                    LibTokenSilo.stemTipForToken(siloTokens[i]).div(lastStem) >=
+                    int96(uint96(PRECISION))
+                ) {
                     return true;
                 }
             }

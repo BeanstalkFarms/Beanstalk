@@ -583,7 +583,7 @@ contract MockSeasonFacet is SeasonFacet {
     }
 
     function mockSetSopWell(address well) external {
-        s.sopWell = well;
+        s.deprecated_sopWell = well;
     }
 
     function mockIncrementGermination(
