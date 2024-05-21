@@ -330,7 +330,7 @@ function podListingCreated(params: PodListingCreatedParams): void {
     listing.filledAmount = ZERO_BI;
   }
 
-  listing.historyID = listing.id + "-" + params.event.block.timestamp.toString();
+  listing.historyID = listing.id + "-" + params.event.block.timestamp.toString() + "-" + params.event.logIndex.toString();
   listing.plot = plot.id;
 
   listing.start = params.start;
@@ -417,7 +417,8 @@ function podListingFilled(params: MarketFillParams): void {
     listing.status = "FILLED_PARTIAL";
 
     let remainingListing = loadPodListing(Address.fromString(listing.farmer), listing.index.plus(params.amount).plus(listing.start));
-    remainingListing.historyID = remainingListing.id + "-" + params.event.block.timestamp.toString();
+    remainingListing.historyID =
+      remainingListing.id + "-" + params.event.block.timestamp.toString() + "-" + params.event.logIndex.toString();
     remainingListing.plot = listing.index.plus(params.amount).plus(listing.start).toString();
     remainingListing.createdAt = listing.createdAt;
     remainingListing.updatedAt = params.event.block.timestamp;
@@ -495,7 +496,7 @@ function podOrderCreated(params: PodOrderCreatedParams): void {
     createHistoricalPodOrder(order);
   }
 
-  order.historyID = order.id + "-" + params.event.block.timestamp.toString();
+  order.historyID = order.id + "-" + params.event.block.timestamp.toString() + "-" + params.event.logIndex.toString();
   order.farmer = params.account.toHexString();
   order.createdAt = params.event.block.timestamp;
   order.updatedAt = params.event.block.timestamp;
