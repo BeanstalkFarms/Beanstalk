@@ -13,7 +13,7 @@ import "contracts/C.sol";
 import "contracts/libraries/LibDibbler.sol";
 
 /**
- * @author Publius
+ * @author Publius, Brean
  * @title Pod Transfer
  **/
 
