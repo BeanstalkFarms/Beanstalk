@@ -1,7 +1,7 @@
 import React from "react";
 import styled from "styled-components";
-import { FontVariant, getFontVariantStyles, Text } from "../Typography";
-import { theme } from "src/utils/ui";
+import { Text, TextProps } from "../Typography";
+import { theme } from "src/utils/ui/theme";
 
 export interface IInfoActionRow {
   label: string;
@@ -9,16 +9,16 @@ export interface IInfoActionRow {
   subLabel?: string;
   onClick: () => void;
 
-  labelVariant?: FontVariant;
-  subLabelVariant?: FontVariant;
+  labelProps?: TextProps;
+  subLabelProps?: TextProps;
 }
 
-export const InfoActionRow = ({ label, subLabel, buttonLabel, labelVariant = "l", subLabelVariant, onClick }: IInfoActionRow) => {
+export const InfoActionRow = ({ label, subLabel, buttonLabel, labelProps, subLabelProps, onClick }: IInfoActionRow) => {
   return (
     <Container>
       <Labels>
-        <Text variant={labelVariant}>{label}</Text>
-        {subLabel ? <Text variant={subLabelVariant}>{subLabel}</Text> : null}
+        <Text variant={labelProps?.variant ?? "l"}>{label}</Text>
+        {subLabel ? <Text variant={subLabelProps?.variant ?? "s"}>{subLabel}</Text> : null}
       </Labels>
       <Button onClick={onClick}>{buttonLabel}</Button>
     </Container>
@@ -54,7 +54,7 @@ const Button = styled.button`
   white-space: nowrap;
   cursor: pointer;
   box-sizing: border-box;
-  ${getFontVariantStyles("button-link")}
+  ${theme.font.styles.variant("button-link")}
 
   :hover {
     outline: 2px solid ${theme.colors.primary};
