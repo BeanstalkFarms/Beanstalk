@@ -1598,6 +1598,14 @@ interface IMockFBeanstalk {
         uint256 end
     ) external payable;
 
+    function transferPlots(
+        address sender,
+        address recipient,
+        uint256[] calldata ids,
+        uint256[] calldata starts,
+        uint256[] calldata ends
+    ) external payable;
+
     function transferToken(
         address token,
         address recipient,

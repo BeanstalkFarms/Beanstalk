@@ -462,10 +462,18 @@ contract FieldTest is TestHelper {
         // transfers a random amount of plots to farmer[1].
         uint256 transfers = rand(1, ((sows - 1) / 2) + 1);
 
-        vm.startPrank(farmers[0]);
-        for (uint256 i; i < transfers; i++) {
-            bs.transferPlot(farmers[0], farmers[1], i * pods, 0, pods);
+        uint256[] memory plotIndexes = field.getPlotIndexesFromAccount(farmers[0]);
+        assembly {
+            mstore(plotIndexes, transfers)
         }
+        uint256[] memory ends = new uint256[](transfers);
+
+        for (uint256 i; i < transfers; i++) {
+            ends[i] = pods;
+        }
+
+        vm.startPrank(farmers[0]);
+        bs.transferPlots(farmers[0], farmers[1], plotIndexes, new uint256[](transfers), ends);
         vm.stopPrank();
         verifyPlotIndexAndPlotLengths(farmers[0], sows - transfers);
 
