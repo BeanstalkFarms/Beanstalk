@@ -513,8 +513,8 @@ contract FieldTest is TestHelper {
      */
     function sowAmountForFarmer(address farmer, uint256 sowAmount) internal {
         season.setSoilE(sowAmount);
-        mintTokensToUser(farmers[0], C.BEAN, sowAmount);
-        vm.prank(farmers[0]);
+        mintTokensToUser(farmer, C.BEAN, sowAmount);
+        vm.prank(farmer);
         field.sow(sowAmount, 0, LibTransfer.From.EXTERNAL);
     }
 
