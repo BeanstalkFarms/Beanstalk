@@ -570,7 +570,7 @@ contract Storage {
  * @param internalTokenBalanceTotal Sum of all users internalTokenBalance.
  * @param barnRaiseWell Stores the well that the Barn Raise adds liquidity to.
  * @param fertilizedPaidIndex The total number of Fertilizer Beans that have been sent out to users.
- * @param plenty The amount of plenty token held by the contract.
+ * @param plentyPerSopToken The amount of plenty token held by the contract for each well.
  * @param sops mapping of season to a mapping of wells to plentyPerRoot
  */
 struct AppStorage {
@@ -643,6 +643,6 @@ struct AppStorage {
     // Cumulative internal Balance of tokens.
     mapping(IERC20 => uint256) internalTokenBalanceTotal;
     uint256 fertilizedPaidIndex;
-    uint256 plenty;
+    mapping(address => uint256) plentyPerSopToken;
     mapping(uint32 => mapping(address => uint256)) sops;
 }

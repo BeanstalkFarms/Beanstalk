@@ -13,6 +13,7 @@ import {LibAppStorage} from "contracts/libraries/LibAppStorage.sol";
 import {LibWhitelistedTokens} from "contracts/libraries/Silo/LibWhitelistedTokens.sol";
 import {LibUnripe} from "contracts/libraries/LibUnripe.sol";
 import {LibSilo} from "contracts/libraries/Silo/LibSilo.sol";
+import {Weather} from "contracts/beanstalk/sun/SeasonFacet/Weather.sol";
 
 /**
  * @author funderbrker
@@ -169,6 +170,7 @@ abstract contract Invariable {
         AppStorage storage s = LibAppStorage.diamondStorage();
         entitlements = new uint256[](tokens.length);
         balances = new uint256[](tokens.length);
+
         for (uint256 i; i < tokens.length; i++) {
             entitlements[i] =
                 s.siloBalances[tokens[i]].deposited +
@@ -184,9 +186,7 @@ abstract contract Invariable {
             } else if (tokens[i] == LibUnripe._getUnderlyingToken(C.UNRIPE_LP)) {
                 entitlements[i] += s.u[C.UNRIPE_LP].balanceOfUnderlying;
             }
-            if (s.deprecated_sopWell != address(0) && tokens[i] == address(LibSilo.getSopToken())) {
-                entitlements[i] += s.plenty;
-            }
+            entitlements[i] += s.plentyPerSopToken[tokens[i]];
             balances[i] = IERC20(tokens[i]).balanceOf(address(this));
         }
         return (entitlements, balances);

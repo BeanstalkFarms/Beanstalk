@@ -149,6 +149,9 @@ contract Silo is ReentrancyGuard {
             LibTransfer.sendToken(sopToken, plenty, LibTractor._user(), toMode);
             s.a[account].sop[well].plenty = 0;
 
+            // reduce from Beanstalk's total stored plenty for this well
+            s.plentyPerSopToken[address(sopToken)] -= plenty;
+
             emit ClaimPlenty(account, address(sopToken), plenty);
         }
     }

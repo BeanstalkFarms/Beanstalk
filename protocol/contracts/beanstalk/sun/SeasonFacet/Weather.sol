@@ -15,6 +15,7 @@ import {LibWhitelistedTokens} from "contracts/libraries/Silo/LibWhitelistedToken
 import {LibWellMinting} from "contracts/libraries/Minting/LibWellMinting.sol";
 import {LibRedundantMath256} from "contracts/libraries/LibRedundantMath256.sol";
 import {LibRedundantMathSigned256} from "contracts/libraries/LibRedundantMathSigned256.sol";
+import {AppStorage, LibAppStorage} from "contracts/libraries/LibAppStorage.sol";
 
 /**
  * @title Weather
@@ -179,7 +180,7 @@ contract Weather is Sun {
             return;
         } else if (!s.season.raining) {
             s.season.raining = true;
-            address[] memory wells = LibWhitelistedTokens.getWhitelistedWellLpTokens();
+            address[] memory wells = LibWhitelistedTokens.getCurrentlySoppableWellLpTokens();
             // Set the plenty per root equal to previous rain start.
             uint32 season = s.season.current;
             uint32 rainstartSeason = s.season.rainStart;
@@ -208,7 +209,7 @@ contract Weather is Sun {
                 );
 
                 for (uint i; i < wellDeltaBs.length; i++) {
-                    sop(wellDeltaBs[i]);
+                    sopWell(wellDeltaBs[i]);
                 }
             }
         }
@@ -243,7 +244,7 @@ contract Weather is Sun {
             uint256 positiveDeltaBCount
         )
     {
-        address[] memory wells = LibWhitelistedTokens.getWhitelistedWellLpTokens();
+        address[] memory wells = LibWhitelistedTokens.getCurrentlySoppableWellLpTokens();
         wellDeltaBs = new WellDeltaB[](wells.length);
 
         for (uint i = 0; i < wells.length; i++) {
@@ -310,13 +311,12 @@ contract Weather is Sun {
      * and become Harvestable.
      * For more information On Oversaturation see {Weather.handleRain}.
      */
-    function sop(WellDeltaB memory wellDeltaB) private {
+    function sopWell(WellDeltaB memory wellDeltaB) private {
         if (wellDeltaB.reductionAmount == 0) return;
+        AppStorage storage s = LibAppStorage.diamondStorage();
         IERC20 sopToken = LibWell.getNonBeanTokenFromWell(wellDeltaB.well);
 
         uint256 sopBeans = wellDeltaB.reductionAmount;
-
-        // code reviewer note: pre-calc total amount of beans to mint and mint them all at once?
         C.bean().mint(address(this), sopBeans);
 
         // Approve and Swap Beans for the non-bean token of the SOP well.
@@ -329,20 +329,22 @@ contract Weather is Sun {
             address(this),
             type(uint256).max
         );
-        s.plenty += amountOut;
-        rewardSop(wellDeltaB.well, amountOut);
+        rewardSop(wellDeltaB.well, amountOut, address(sopToken));
         emit SeasonOfPlentyWell(s.season.current, wellDeltaB.well, address(sopToken), amountOut);
     }
 
     /**
      * @dev Allocate `sop token` during a Season of Plenty.
      */
-    function rewardSop(address well, uint256 amount) private {
+    function rewardSop(address well, uint256 amount, address sopToken) private {
         s.sops[s.season.rainStart][well] = s.sops[s.season.lastSop][well].add(
             amount.mul(C.SOP_PRECISION).div(s.r.roots)
         );
         s.season.lastSop = s.season.rainStart;
         s.season.lastSopSeason = s.season.current;
+
+        // update Beanstalk's stored overall plenty for this well
+        s.plentyPerSopToken[sopToken] += amount;
     }
 
     /*

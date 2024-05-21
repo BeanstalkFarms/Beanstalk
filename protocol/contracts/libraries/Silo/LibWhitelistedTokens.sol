@@ -127,9 +127,30 @@ library LibWhitelistedTokens {
     }
 
     /**
-     * @notice Returns the current Whitelisted Well LP tokens.
+     * @notice Returns all tokens that are currently or previously soppable.
+     * Reviewer note: maybe need a better name for this function? Necessary if a sop happens for a well and it becomes de-whitelisted.
      */
     function getSoppableWellLpTokens() internal view returns (address[] memory tokens) {
+        AppStorage storage s = LibAppStorage.diamondStorage();
+        uint256 numberOfSiloTokens = s.whitelistStatuses.length;
+        uint256 tokensLength;
+
+        tokens = new address[](numberOfSiloTokens);
+
+        for (uint256 i = 0; i < numberOfSiloTokens; i++) {
+            if (s.whitelistStatuses[i].isWhitelistedWell && s.whitelistStatuses[i].isSoppable) {
+                tokens[tokensLength++] = s.whitelistStatuses[i].token;
+            }
+        }
+        assembly {
+            mstore(tokens, tokensLength)
+        }
+    }
+
+    /**
+     * @notice Returns all tokens that are currently soppable.
+     */
+    function getCurrentlySoppableWellLpTokens() internal view returns (address[] memory tokens) {
         AppStorage storage s = LibAppStorage.diamondStorage();
         uint256 numberOfSiloTokens = s.whitelistStatuses.length;
         uint256 tokensLength;
