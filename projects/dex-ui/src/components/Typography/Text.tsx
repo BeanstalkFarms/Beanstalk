@@ -1,4 +1,4 @@
-import React, { ElementType, HTMLAttributes } from "react";
+import React, { HTMLAttributes } from "react";
 import styled from "styled-components";
 import { getFontVariantStyles, getFontWeightStyles } from ".";
 import { FontVariant, FontWeight } from "./types";
@@ -9,7 +9,6 @@ export interface IText extends HTMLAttributes<HTMLElement> {
   weight?: FontWeight;
   className?: string;
   color?: FontColor;
-  as?: ElementType;
 }
 
 export const Text = ({ variant = "s", weight, color = "text.primary", className, ...rest }: IText) => {
