@@ -10,8 +10,14 @@ export const THEME_COLORS: Record<ThemeColor, string> = {
   lightGray: "#9ca3af"
 } as const;
 
-export type FontColor = "primary" | "black" | "white" | "gray";
+export type FontColor = "primary" | "text.primary" | "text.secondary";
+
+const FONT_COLORS: Record<FontColor, string> = {
+  ["text.primary"]: THEME_COLORS.black,
+  ["text.secondary"]: THEME_COLORS.gray,
+  primary: THEME_COLORS.primary
+};
 
 export const getFontColorStyles = (color: FontColor) => css`
-  color: ${THEME_COLORS[color]};
+  color: ${FONT_COLORS[color]};
 `;

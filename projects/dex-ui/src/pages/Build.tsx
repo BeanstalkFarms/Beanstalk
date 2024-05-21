@@ -16,11 +16,17 @@ export const Build = () => {
   return (
     <Page>
       <Title title="Build" />
-      <Text variant="h1">asdf</Text>
-      <Text variant="l" color="gray">
+      <Text variant="l" color="text.secondary">
         Basin has three unique components which can be composed together to create a custom liquidity pool, or Well.
       </Text>
       <InfoActionRow label="Use the Well Creator to deploy your own Wells." buttonLabel="Well Creator →" onClick={handleNavigate} />
+      <div>
+        <Text variant="h2">COMPONENT LIBRARY</Text>
+        <Text variant="l" color="text.secondary">
+          Use existing components which are already available for developers to extend, copy or compose together when building Wells. Select
+          a component to view its implementation.
+        </Text>
+      </div>
     </Page>
   );
 };
