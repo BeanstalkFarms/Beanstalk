@@ -1,10 +1,10 @@
-name: Subgraph Beanstalk
+name: Subgraph BeaNFT
 
 on:
   pull_request:
     types: [opened, synchronize]
     paths:
-      - "projects/subgraph-beanstalk/**"
+      - "projects/subgraph-beanft/**"
 
 jobs:
   compile:
@@ -28,13 +28,13 @@ jobs:
       - name: Install Dependencies
         if: steps.node-modules-cache.outputs.cache-hit != 'true'
         run: yarn install --immutable
-        working-directory: projects/subgraph-beanstalk
+        working-directory: projects/subgraph-beanft
 
       # Generate code and check for uncommitted changes
       # https://github.com/marketplace/actions/check-uncommitted-changes
       - name: Generate Subgraph Code
         run: yarn codegen
-        working-directory: projects/subgraph-beanstalk
+        working-directory: projects/subgraph-beanft
       - name: Check for uncommitted changes
         id: check-changes
         uses: mskri/check-uncommitted-changes-action@v1.0.1
@@ -44,7 +44,7 @@ jobs:
 
       - name: Build Subgraph
         run: yarn build
-        working-directory: projects/subgraph-beanstalk
+        working-directory: projects/subgraph-beanft
   test:
     runs-on: ubuntu-latest
     name: Test
@@ -66,12 +66,12 @@ jobs:
       - name: Install Dependencies
         if: steps.node-modules-cache.outputs.cache-hit != 'true'
         run: yarn install --immutable
-        working-directory: projects/subgraph-beanstalk
+        working-directory: projects/subgraph-beanft
 
       - name: Generate Subgraph Code
         run: yarn codegen
-        working-directory: projects/subgraph-beanstalk
+        working-directory: projects/subgraph-beanft
 
       - name: Run Tests
         run: yarn test
-        working-directory: projects/subgraph-beanstalk
+        working-directory: projects/subgraph-beanft
