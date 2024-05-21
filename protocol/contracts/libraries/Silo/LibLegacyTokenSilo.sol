@@ -471,18 +471,6 @@ library LibLegacyTokenSilo {
     }
 
     /**
-     * @dev Increments the Migrated BDV counter for a given `token` by `bdv`.
-     * The `depositedBdv` variable in `Storage.AssetSilo` does not include unmigrated BDV and thus is not accurrate.
-     * In a potential future update, it will be necessary for `depositedBdv` to include unmigrated BDV.
-     * By summating the `migratedBdv` counter, we can properly account for unmigrated BDV through
-     * a 2 step asynchronous upgrade process where adding this counter is the first step.
-     */
-    function incrementMigratedBdv(address token, uint256 bdv) private {
-        AppStorage storage s = LibAppStorage.diamondStorage();
-        s.migratedBdvs[token] = s.migratedBdvs[token].add(bdv);
-    }
-
-    /**
      * @notice internal logic for validating migration
      * @dev placed in seperate function to avoid stack errors.
      */

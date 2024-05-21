@@ -486,8 +486,6 @@ struct AppStorage {
     address ownerCandidate;
     // Well
     mapping(address => bytes) wellOracleSnapshots;
-    // Silo V3 BDV Migration
-    mapping(address => uint256) migratedBdvs;
     // Well + USD Price Oracle
     mapping(address => System.TwaReserves) twaReserves;
     mapping(address => uint256) usdTokenPrice;
