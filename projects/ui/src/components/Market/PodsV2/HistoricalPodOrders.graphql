@@ -15,7 +15,7 @@ query HistoricalPodOrders(
     maxPlaceInLine
 
     #// Amounts
-    podAmount
+    #podAmount # sk/fix/pod-market removed podAmount and added beanAmount
     podAmountFilled
     
     #// Metadata

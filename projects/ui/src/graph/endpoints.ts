@@ -35,7 +35,8 @@ export const SUBGRAPH_ENVIRONMENTS: Record<SGEnvironments, SGEnvironment> = {
   [SGEnvironments.BF_TEST]: {
     name: 'Beanstalk Farms / Test',
     subgraphs: {
-      beanstalk: 'https://graph.node.bean.money/subgraphs/name/beanstalk', // fixme
+      beanstalk:
+        'https://graph.node.bean.money/subgraphs/name/beanstalk-testing', // fixme
       bean: 'https://graph.node.bean.money/subgraphs/name/bean-testing',
       beanft: 'https://graph.node.bean.money/subgraphs/name/beanft-dev',
     },
@@ -43,7 +44,8 @@ export const SUBGRAPH_ENVIRONMENTS: Record<SGEnvironments, SGEnvironment> = {
   [SGEnvironments.BF_2_0_3]: {
     name: 'Beanstalk Farms / v2.0.3',
     subgraphs: {
-      beanstalk: 'https://graph.node.bean.money/subgraphs/name/beanstalk-2-0-3',
+      beanstalk:
+        'https://api.studio.thegraph.com/query/69878/beanstalkdev/v2.2.1.1',
       bean: 'https://graph.node.bean.money/subgraphs/name/bean', // fixme
       beanft: 'https://graph.node.bean.money/subgraphs/name/beanft-dev',
     },
