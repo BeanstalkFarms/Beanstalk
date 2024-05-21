@@ -115,7 +115,8 @@ const RewardsBar: FC<{
   const sdk = useSdk();
 
   // Are we impersonating a different account while not in dev mode
-  const isImpersonating = !!useSetting('impersonatedAccount')[0] && !import.meta.env.DEV;
+  const isImpersonating =
+    !!useSetting('impersonatedAccount')[0] && !import.meta.env.DEV;
 
   /// Calculate Unripe Silo Balance
   const urBean = getChainToken(UNRIPE_BEAN);
@@ -418,7 +419,13 @@ const RewardsBar: FC<{
             size="medium"
             variant="contained"
             sx={{ width: '100%', whiteSpace: 'nowrap' }}
-            endIcon={<DropdownIcon open={open && canClaim} disabled={!canClaim} light />}
+            endIcon={
+              <DropdownIcon
+                open={open && canClaim}
+                disabled={!canClaim}
+                light
+              />
+            }
             onClick={open ? hide : show}
             disabled={!canClaim}
           >
@@ -619,7 +626,9 @@ const RewardsBar: FC<{
                     size="large"
                     onClick={handleSubmit}
                   >
-                    {isImpersonating ? 'Impersonating Account' : 'Claim Rewards'}
+                    {isImpersonating
+                      ? 'Impersonating Account'
+                      : 'Claim Rewards'}
                   </Button>
                   <Row justifyContent="flex-end" spacing={0.5}>
                     {isEstimatingGas ? (

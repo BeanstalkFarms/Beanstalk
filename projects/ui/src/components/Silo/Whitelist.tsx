@@ -344,31 +344,29 @@ const Whitelist: FC<{
                   {/**
                    * Cell: Bean APY
                    */}
-                  {!isDeprecated && (
-                    <Grid
-                      item
-                      md={2}
-                      xs={0}
-                      display={{ xs: 'none', md: 'flex' }}
-                      justifyContent="center"
-                    >
-                      <SiloAssetApyChip token={token} metric="bean" />
-                    </Grid>
-                  )}
+                  <Grid
+                    item
+                    md={2}
+                    xs={0}
+                    display={{ xs: 'none', md: 'flex' }}
+                    justifyContent="center"
+                  >
+                    <SiloAssetApyChip token={token} metric="bean" />
+                  </Grid>
+
                   {/**
                    * Cell: Stalk APY
                    */}
-                  {!isDeprecated && (
-                    <Grid
-                      item
-                      md={1.25}
-                      xs={0}
-                      display={{ xs: 'none', md: 'flex' }}
-                      justifyContent="center"
-                    >
-                      <SiloAssetApyChip token={token} metric="stalk" />
-                    </Grid>
-                  )}
+                  <Grid
+                    item
+                    md={1.25}
+                    xs={0}
+                    display={{ xs: 'none', md: 'flex' }}
+                    justifyContent="center"
+                  >
+                    <SiloAssetApyChip token={token} metric="stalk" />
+                  </Grid>
+
                   {/**
                    * Cell: TVD
                    */}

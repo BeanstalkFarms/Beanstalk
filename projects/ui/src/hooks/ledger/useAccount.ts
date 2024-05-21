@@ -11,9 +11,9 @@ export default function useAccount() {
     if (account.address) {
       if (impersonatedAccount) {
         return getAccount(impersonatedAccount);
-      };
+      }
       return getAccount(account?.address);
-    };
+    }
     return undefined;
   }, [impersonatedAccount, account?.address]);
 }
