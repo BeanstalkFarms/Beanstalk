@@ -1,14 +1,13 @@
 import React, { HTMLAttributes } from "react";
 import styled, { FlattenSimpleInterpolation } from "styled-components";
-import { theme, FontWeight, FontColor, FontVariant, FontSize } from "src/utils/ui/theme";
+import { theme, FontWeight, FontColor, FontVariant, FontSize, CssProps } from "src/utils/ui/theme";
 
-export interface TextProps extends HTMLAttributes<HTMLElement> {
+export interface TextProps extends HTMLAttributes<HTMLDivElement>, CssProps {
   variant?: FontVariant;
   weight?: FontWeight;
   color?: FontColor;
   size?: FontSize;
   className?: string;
-  css?: FlattenSimpleInterpolation;
 }
 
 /**
