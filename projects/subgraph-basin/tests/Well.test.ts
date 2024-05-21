@@ -72,7 +72,7 @@ describe("Well Entity: Single Event Tests", () => {
     test("Previous day snapshot entity created", () => {
       createDefaultAddLiquidity();
 
-      let dayID = dayFromTimestamp(CURRENT_BLOCK_TIMESTAMP) - 1;
+      let dayID = dayFromTimestamp(CURRENT_BLOCK_TIMESTAMP, 8 * 60 * 60) - 1;
       let daySnapshotID = WELL.concatI32(dayID);
 
       let hourID = hourFromTimestamp(CURRENT_BLOCK_TIMESTAMP) - 1;
@@ -104,7 +104,7 @@ describe("Well Entity: Single Event Tests", () => {
     test("Previous day snapshot entity created", () => {
       createDefaultAddLiquidity();
 
-      let dayID = dayFromTimestamp(CURRENT_BLOCK_TIMESTAMP) - 1;
+      let dayID = dayFromTimestamp(CURRENT_BLOCK_TIMESTAMP, 8 * 60 * 60) - 1;
       let daySnapshotID = WELL.concatI32(dayID);
 
       let hourID = hourFromTimestamp(CURRENT_BLOCK_TIMESTAMP) - 1;
@@ -142,7 +142,7 @@ describe("Well Entity: Single Event Tests", () => {
     test("Previous day snapshot entity created", () => {
       createDefaultAddLiquidity();
 
-      let dayID = dayFromTimestamp(CURRENT_BLOCK_TIMESTAMP) - 1;
+      let dayID = dayFromTimestamp(CURRENT_BLOCK_TIMESTAMP, 8 * 60 * 60) - 1;
       let daySnapshotID = WELL.concatI32(dayID);
 
       let hourID = hourFromTimestamp(CURRENT_BLOCK_TIMESTAMP) - 1;
@@ -174,7 +174,7 @@ describe("Well Entity: Single Event Tests", () => {
     test("Previous day snapshot entity created", () => {
       createDefaultAddLiquidity();
 
-      let dayID = dayFromTimestamp(CURRENT_BLOCK_TIMESTAMP) - 1;
+      let dayID = dayFromTimestamp(CURRENT_BLOCK_TIMESTAMP, 8 * 60 * 60) - 1;
       let daySnapshotID = WELL.concatI32(dayID);
 
       let hourID = hourFromTimestamp(CURRENT_BLOCK_TIMESTAMP) - 1;
@@ -227,7 +227,7 @@ describe("Well Entity: Single Event Tests", () => {
     test("Previous day snapshot entity created", () => {
       createDefaultAddLiquidity();
 
-      let dayID = dayFromTimestamp(CURRENT_BLOCK_TIMESTAMP) - 1;
+      let dayID = dayFromTimestamp(CURRENT_BLOCK_TIMESTAMP, 8 * 60 * 60) - 1;
       let daySnapshotID = WELL.concatI32(dayID);
 
       let hourID = hourFromTimestamp(CURRENT_BLOCK_TIMESTAMP) - 1;
