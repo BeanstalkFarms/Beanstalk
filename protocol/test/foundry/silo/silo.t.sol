@@ -149,7 +149,7 @@ contract SiloTest is TestHelper {
     }
 
     /**
-     * @notice performs a series of actions to verify sows multiple times and verifies that the plot index is updated correctly.
+     * @notice performs a series of interactions with deposits and verifies that the depositlist is updated correctly.
      * 1. depositing properly increments the depositId index, if the deposit occured in different seasons.
      * 2. transfering a deposit properly decrements the senders' depositId,
      * and increments the recipients' depositId.
