@@ -248,7 +248,7 @@ contract SiloTest is TestHelper {
         IMockFBeanstalk.TokenDepositId memory deposit,
         address token,
         uint256 length
-    ) internal {
+    ) internal pure {
         assertEq(depositIds.length, length);
         assertEq(depositIds.length, deposit.depositIds.length);
         assertEq(depositIds.length, deposit.tokenDeposits.length);
