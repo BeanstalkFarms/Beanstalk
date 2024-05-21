@@ -200,7 +200,7 @@ contract Storage {
     /**
      * @notice Whitelist Status a token that has been Whitelisted before.
      * @param token the address of the token.
-     * @param a whether the address is whitelisted.
+     * @param isWhitelisted whether the address is whitelisted.
      * @param isWhitelistedLp whether the address is a whitelisted LP token.
      * @param isWhitelistedWell whether the address is a whitelisted Well token.
      */
@@ -428,15 +428,15 @@ contract Storage {
  * @param reentrantStatus An intra-transaction state variable to protect against reentrance.
  * @param weather Storage.Weather
  * @param earnedBeans The number of Beans distributed to the Silo that have not yet been Deposited as a result of the Earn function being called.
- * @param a mapping (address => Account.State)
+ * @param accounts mapping (address => Account.State)
  * @param podListings A mapping from Plot Index to the hash of the Pod Listing.
  * @param podOrders A mapping from the hash of a Pod Order to the amount of Pods that the Pod Order is still willing to buy.
  * @param siloBalances A mapping from Token address to Silo Balance storage (amount deposited and withdrawn).
- * @param ss A mapping from Token address to Silo Settings for each Whitelisted Token. If a non-zero storage exists, a Token is whitelisted.
+ * @param siloSettings A mapping from Token address to Silo Settings for each Whitelisted Token. If a non-zero storage exists, a Token is whitelisted.
  * @param sops A mapping from Season to Plenty Per Root (PPR) in that Season. Plenty Per Root is 0 if a Season of Plenty did not occur.
  * @param internalTokenBalance A mapping from Farmer address to Token address to Internal Balance. It stores the amount of the Token that the Farmer has stored as an Internal Balance in Beanstalk.
  * @param unripeClaimed True if a Farmer has Claimed an Unripe Token. A mapping from Farmer to Unripe Token to its Claim status.
- * @param u Unripe Settings for a given Token address. The existence of a non-zero Unripe Settings implies that the token is an Unripe Token. The mapping is from Token address to Unripe Settings.
+ * @param unripe Unripe Settings for a given Token address. The existence of a non-zero Unripe Settings implies that the token is an Unripe Token. The mapping is from Token address to Unripe Settings.
  * @param fertilizer A mapping from Fertilizer Id to the supply of Fertilizer for each Id.
  * @param nextFid A linked list of Fertilizer Ids ordered by Id number. Fertilizer Id is the Beans Per Fertilzer level at which the Fertilizer no longer receives Beans. Sort in order by which Fertilizer Id expires next.
  * @param activeFertilizer The number of active Fertilizer.
@@ -449,17 +449,17 @@ contract Storage {
  * @param isFarm Stores whether the function is wrapped in the `farm` function (1 if not, 2 if it is).
  * @param ownerCandidate Stores a candidate address to transfer ownership to. The owner must claim the ownership transfer.
  * @param wellOracleSnapshots A mapping from Well Oracle address to the Well Oracle Snapshot.
+  * @param migratedBdvs Stores the total migrated BDV since the implementation of the migrated BDV counter. See {LibLegacyTokenSilo.incrementMigratedBdv} for more info.
  * @param twaReserves A mapping from well to its twaReserves. Stores twaReserves during the sunrise function. Returns 1 otherwise for each asset. Currently supports 2 token wells.
- * @param migratedBdvs Stores the total migrated BDV since the implementation of the migrated BDV counter. See {LibLegacyTokenSilo.incrementMigratedBdv} for more info.
- * @param usdEthPrice  Stores the usdEthPrice during the sunrise() function. Returns 1 otherwise.
+ * @param usdTokenPrice A mapping from token address to usd price.
  * @param seedGauge Stores the seedGauge.
  * @param casesV2 Stores the 144 Weather and seedGauge cases.
  * @param oddGerminating Stores germinating data during odd seasons.
  * @param evenGerminating Stores germinating data during even seasons.
- * @param whitelistedStatues Stores a list of Whitelist Statues for all tokens that have been Whitelisted and have not had their Whitelist Status manually removed.
+ * @param unclaimedGerminating A mapping from season to object containing the stalk and roots that are germinating.
+ * @param whitelistStatuses Stores a list of Whitelist Statues for all tokens that have been Whitelisted and have not had their Whitelist Status manually removed.
  * @param sopWell Stores the well that will be used upon a SOP. Unintialized until a SOP occurs, and is kept constant afterwards.
  * @param internalTokenBalanceTotal Sum of all users internalTokenBalance.
- * @param barnRaiseWell Stores the well that the Barn Raise adds liquidity to.
  * @param fertilizedPaidIndex The total number of Fertilizer Beans that have been sent out to users.
  * @param plenty The amount of plenty token held by the contract.
  */
@@ -512,7 +512,6 @@ struct AppStorage {
     // Germination
     Storage.TotalGerminating oddGerminating;
     Storage.TotalGerminating evenGerminating;
-    // mapping from season => unclaimed germinating stalk and roots
     mapping(uint32 => Storage.GerminatingSilo) unclaimedGerminating;
     Storage.WhitelistStatus[] whitelistStatuses;
     address sopWell;
