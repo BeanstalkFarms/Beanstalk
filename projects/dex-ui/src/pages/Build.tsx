@@ -14,7 +14,7 @@ export const Build = () => {
 
   return (
     <Page>
-      <Title title="Build" />
+      <Title title="Build" fontWeight={"600"} largeOnMobile />
       <Text variant="l" color="text.secondary">
         Basin has three unique components which can be composed together to create a custom liquidity pool, or Well.
       </Text>
