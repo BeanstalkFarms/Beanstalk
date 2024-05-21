@@ -183,11 +183,11 @@ contract SiloTest is TestHelper {
         // transfers a random amount of deposits to farmer[1].
         uint256 transfers = rand(1, ((deposits - 1) / 2) + 1);
         vm.startPrank(farmers[0]);
-        uint256 stalkEarnedPerSeason = stalkEarnedPerSeason(C.BEAN);
+        uint256 _stalkEarnedPerSeason = stalkEarnedPerSeason(C.BEAN);
         int96[] memory stems = new int96[](transfers);
         uint256[] memory amounts = new uint256[](transfers);
         for (uint256 i; i < transfers; i++) {
-            stems[i] = int96(uint96(i * stalkEarnedPerSeason));
+            stems[i] = int96(uint96(i * _stalkEarnedPerSeason));
             amounts[i] = depositAmount;
         }
         bs.transferDeposits(farmers[0], farmers[1], C.BEAN, stems, amounts);
@@ -232,7 +232,7 @@ contract SiloTest is TestHelper {
         stems = new int96[](deposits - transfers);
         amounts = new uint256[](deposits - transfers);
         for (uint256 i; i < deposits - transfers; i++) {
-            stems[i] = int96(uint96((i + transfers) * stalkEarnedPerSeason));
+            stems[i] = int96(uint96((i + transfers) * _stalkEarnedPerSeason));
             amounts[i] = depositAmount;
         }
         vm.startPrank(farmers[0]);
