@@ -5,11 +5,8 @@ const { getBeanstalk } = require("../utils/contracts.js");
 const { EXTERNAL } = require("./utils/balances.js");
 const {
   BEAN,
-  THREE_POOL,
-  BEAN_3_CURVE,
   UNRIPE_LP,
   UNRIPE_BEAN,
-  THREE_CURVE,
   ZERO_BYTES
 } = require("./utils/constants");
 const { to18, toStalk, to6 } = require("./utils/helpers.js");
@@ -45,14 +42,6 @@ describe("Silo Enroot", function () {
     [beanstalk, mockBeanstalk] = await getAllBeanstalkContracts(this.diamond.address);
 
     this.migrate = await ethers.getContractAt("MigrationFacet", this.diamond.address);
-
-    this.threeCurve = await ethers.getContractAt("MockToken", THREE_CURVE);
-    this.beanMetapool = await ethers.getContractAt("IMockCurvePool", BEAN_3_CURVE);
-    await this.beanMetapool.set_supply(ethers.utils.parseUnits("2000000", 6));
-    await this.beanMetapool.set_balances([
-      ethers.utils.parseUnits("1000000", 6),
-      ethers.utils.parseEther("1000000")
-    ]);
 
     const SiloToken = await ethers.getContractFactory("MockToken");
     this.siloToken = await SiloToken.deploy("Silo", "SILO");
@@ -95,17 +84,6 @@ describe("Silo Enroot", function () {
     await this.unripeLP.connect(user).approve(beanstalk.address, to18("10000"));
     await mockBeanstalk.addUnripeToken(UNRIPE_LP, this.siloToken.address, ZERO_BYTES);
     await mockBeanstalk.connect(owner).addUnderlying(UNRIPE_LP, toBN(pru).mul(toBN("10000")));
-
-    this.beanThreeCurve = await ethers.getContractAt("MockMeta3Curve", BEAN_3_CURVE);
-    await this.beanThreeCurve.set_supply(ethers.utils.parseEther("2000000"));
-    await this.beanThreeCurve.set_balances([
-      ethers.utils.parseUnits("1000000", 6),
-      ethers.utils.parseEther("1000000")
-    ]);
-    await this.beanThreeCurve.set_balances([
-      ethers.utils.parseUnits("1200000", 6),
-      ethers.utils.parseEther("1000000")
-    ]);
 
     season = await beanstalk.season();
   });

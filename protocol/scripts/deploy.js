@@ -14,8 +14,6 @@ const {
 const diamond = require("./diamond.js");
 const {
   impersonateBean,
-  impersonateCurve,
-  impersonateBean3CrvMetapool,
   impersonateWeth,
   impersonateUnripe,
   impersonatePrice,
@@ -41,7 +39,6 @@ async function main(
   mock = true, // if true, deploy "Mock" versions of the facets
   reset = true, // if true, reset hardhat network
   impersonateERC20 = true, // if true, call `impersonateERC20s`
-  curve = true, // if true, deploy and impersonate curve
   unripe = true, // if true, deploy and impersonate unripe
   oracle = true, // if true, deploy and impersonate oracles
   basin = true, // if true, deploy and impersonate basin
@@ -125,12 +122,6 @@ async function main(
 
   // Impersonate oracles. Used within beanstalk to calculate BDV/DeltaB.
   if (oracle) await impersonateOracles();
-
-  // Impersonate Curve.
-  if (curve) {
-    await impersonateCurve(); 
-    await impersonateBean3CrvMetapool(); // Bean3crv metapool deployment.
-  }
 
   // deploy unripe tokens.
   if (unripe) await impersonateUnripe();

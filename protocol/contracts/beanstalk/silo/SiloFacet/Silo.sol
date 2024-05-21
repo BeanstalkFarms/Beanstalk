@@ -27,7 +27,7 @@ import {IWell} from "contracts/interfaces/basin/IWell.sol";
  *
  * - Grown Stalk (see "Mow")
  * - Earned Beans, Earned Stalk (see "Plant")
- * - 3CRV earned during a Flood (see "Flood")
+ * - Tokens earned during a Flood (see "Flood")
  *
  * For backwards compatibility, a Flood is sometimes referred to by its old name
  * "Season of Plenty".
@@ -49,9 +49,9 @@ contract Silo is ReentrancyGuard {
     event Plant(address indexed account, uint256 beans);
 
     /**
-     * @notice Emitted when 3CRV paid to `account` during a Flood is Claimed.
+     * @notice Emitted when Token paid to `account` during a Flood is Claimed.
      * @param account Owns and receives the assets paid during a Flood.
-     * @param plenty The amount of 3CRV claimed by `account`. This is the amount
+     * @param plenty The amount of Token claimed by `account`. This is the amount
      * that `account` has been paid since their last {ClaimPlenty}.
      *
      * @dev Flood was previously called a "Season of Plenty". For backwards

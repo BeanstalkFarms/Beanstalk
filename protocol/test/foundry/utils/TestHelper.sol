@@ -116,7 +116,7 @@ contract TestHelper is
         initERC20params[5] memory tokens = [
             initERC20params(C.BEAN, "Bean", "BEAN", 6),
             initERC20params(C.UNRIPE_BEAN, "Unripe Bean", "UrBEAN", 6),
-            initERC20params(C.UNRIPE_LP, "Unripe BEAN3CRV", "UrBEAN3CRV", 18),
+            initERC20params(C.UNRIPE_LP, "Unripe LP", "UrBEAN3CRV", 18),
             initERC20params(C.WETH, "Weth", "WETH", 18),
             initERC20params(C.WSTETH, "wstETH", "WSTETH", 18)
         ];

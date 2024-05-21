@@ -39,7 +39,7 @@ contract SiloGettersFacet is ReentrancyGuard {
         // The global Plenty per Root at the last Season in which `account`
         // updated their Silo.
         uint256 plentyPerRoot;
-        // `account` balance of unclaimed Bean:3Crv from Seasons of Plenty.
+        // `account` balance of unclaimed tokens from Seasons of Plenty.
         uint256 plenty;
     }
 
@@ -449,7 +449,7 @@ contract SiloGettersFacet is ReentrancyGuard {
     }
 
     /**
-     * @notice Returns the `account` balance of unclaimed BEAN:3CRV earned from
+     * @notice Returns the `account` balance of unclaimed tokens earned from
      * Seasons of Plenty.
      */
     function balanceOfPlenty(address account) external view returns (uint256 plenty) {

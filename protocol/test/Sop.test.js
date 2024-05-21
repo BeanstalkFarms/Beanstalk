@@ -3,8 +3,6 @@ const { deploy } = require("../scripts/deploy.js");
 const { EXTERNAL, INTERNAL, INTERNAL_EXTERNAL, INTERNAL_TOLERANT } = require("./utils/balances.js");
 const {
   BEAN,
-  THREE_CURVE,
-  THREE_POOL,
   BEAN_ETH_WELL,
   WETH,
   MAX_UINT256,

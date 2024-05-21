@@ -87,10 +87,7 @@ contract SeasonGettersFacet {
     //////////////////// ORACLE GETTERS ////////////////////
 
     /**
-     * @notice Returns the total Delta B across all whitelisted minting liquidity pools.
-     * @dev The whitelisted pools are:
-     * - the Bean:3Crv Metapool
-     * - the Bean:ETH Well
+     * @notice Returns the total Delta B across all whitelisted minting liquidity Wells.
      */
     function totalDeltaB() external view returns (int256 deltaB) {
         deltaB = LibWellMinting.check(C.BEAN_ETH_WELL);

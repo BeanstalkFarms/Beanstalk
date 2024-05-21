@@ -5,7 +5,6 @@
 pragma solidity ^0.8.20;
 
 import "contracts/C.sol";
-import "contracts/libraries/Curve/LibBeanMetaCurve.sol";
 import "contracts/libraries/LibUnripe.sol";
 import "contracts/libraries/Well/LibWellBdv.sol";
 import {LibBarnRaise} from "contracts/libraries/LibBarnRaise.sol";
@@ -18,12 +17,6 @@ import {LibBarnRaise} from "contracts/libraries/LibBarnRaise.sol";
 contract BDVFacet {
     using LibRedundantMath256 for uint256;
 
-    /**
-     * @dev Returns the BDV of a given `amount` of Bean:3Crv LP tokens.
-     */
-    function curveToBDV(uint256 amount) public view returns (uint256) {
-        return LibBeanMetaCurve.bdv(amount);
-    }
     /**
      * @dev Returns the BDV of a given `amount` of Beans.
      */

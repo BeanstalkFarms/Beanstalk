@@ -30,13 +30,6 @@ import "forge-std/console.sol";
  *
  */
 
-struct MockCurveMetapoolOracle {
-    bool initialized; // ────┐ 1
-    uint32 startSeason; // ──┘ 4 (5/32)
-    uint256[2] balances;
-    uint256 deprecated_timestamp;
-}
-
 interface ResetPool {
     function reset_cumulative() external;
 }
@@ -258,7 +251,6 @@ contract MockSeasonFacet is SeasonFacet {
         s.weather.lastSowTime = type(uint32).max;
         s.weather.thisSowTime = type(uint32).max;
         delete s.rain;
-        delete s.co;
         delete s.season;
         s.season.start = block.timestamp;
         s.season.timestamp = block.timestamp;
@@ -344,22 +336,10 @@ contract MockSeasonFacet is SeasonFacet {
         emit DeltaB(deltaB);
     }
 
-    function captureCurveE() external returns (int256 deltaB) {
-        deltaB = LibCurveMinting.capture();
-        s.season.timestamp = block.timestamp;
-        emit DeltaB(deltaB);
-    }
-
     function captureWellE(address well) external returns (int256 deltaB) {
         deltaB = LibWellMinting.capture(well);
         s.season.timestamp = block.timestamp;
         emit DeltaB(deltaB);
-    }
-
-    function updateTWAPCurveE() external returns (uint256[2] memory balances) {
-        (balances, s.co.balances) = LibCurveMinting.twaBalances();
-        s.season.timestamp = block.timestamp;
-        emit UpdateTWAPs(balances);
     }
 
     function resetPools(address[] calldata pools) external {
@@ -390,11 +370,6 @@ contract MockSeasonFacet is SeasonFacet {
         s.siloSettings[C.BEAN].stalkIssuedPerBdv = 10000;
         s.siloSettings[C.BEAN].milestoneSeason = currentSeason;
         s.siloSettings[C.BEAN].milestoneStem = 0;
-
-        s.siloSettings[C.CURVE_BEAN_METAPOOL].stalkEarnedPerSeason = 4 * 1e6;
-        s.siloSettings[C.CURVE_BEAN_METAPOOL].stalkIssuedPerBdv = 10000;
-        s.siloSettings[C.CURVE_BEAN_METAPOOL].milestoneSeason = currentSeason;
-        s.siloSettings[C.CURVE_BEAN_METAPOOL].milestoneStem = 0;
 
         s.siloSettings[C.UNRIPE_BEAN].stalkEarnedPerSeason = 2 * 1e6;
         s.siloSettings[C.UNRIPE_BEAN].stalkIssuedPerBdv = 10000;

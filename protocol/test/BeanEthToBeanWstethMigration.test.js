@@ -4,8 +4,6 @@ const {
   BEAN,
   FERTILIZER,
   USDC,
-  BEAN_3_CURVE,
-  THREE_CURVE,
   UNRIPE_BEAN,
   UNRIPE_LP,
   WETH,
@@ -20,7 +18,6 @@ const {
 const { setEthUsdcPrice, setEthUsdChainlinkPrice } = require("../utils/oracle.js");
 const { to6, to18 } = require("./utils/helpers.js");
 const {
-  bipMigrateUnripeBean3CrvToBeanEth,
   bipMigrateUnripeBeanEthToBeanSteth,
   bipSeedGauge
 } = require("../scripts/bips.js");

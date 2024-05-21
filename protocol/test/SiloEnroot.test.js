@@ -4,7 +4,6 @@ const { readPrune, toBN } = require("../utils");
 const { EXTERNAL } = require("./utils/balances.js");
 const {
   BEAN,
-  BEAN_3_CURVE,
   UNRIPE_LP,
   UNRIPE_BEAN,
   BEAN_WSTETH_WELL,

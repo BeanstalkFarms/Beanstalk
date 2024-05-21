@@ -50,7 +50,7 @@ contract Weather is Sun {
      * @param season The Season in which Beans were minted for distribution.
      * @param well The Well that the SOP occurred in.
      * @param token The token that was swapped for Beans.
-     * @param amount The amount of 3CRV which was received for swapping Beans.
+     * @param amount The amount of token which was received for swapping Beans.
      * @param toField The amount of Beans which were distributed to remaining Pods in the Field.
      */
     event SeasonOfPlenty(

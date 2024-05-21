@@ -28,7 +28,6 @@ contract PauseFacet {
         LibDiamond.enforceIsOwnerOrContract();
         require(!s.paused, "Pause: already paused.");
         s.paused = true;
-        s.co.initialized = false;
         s.pausedAt = uint128(block.timestamp);
         emit Pause(block.timestamp);
     }

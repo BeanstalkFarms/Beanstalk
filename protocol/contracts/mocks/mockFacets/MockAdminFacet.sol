@@ -7,7 +7,6 @@ import "contracts/C.sol";
 import "contracts/libraries/Token/LibTransfer.sol";
 import "contracts/beanstalk/sun/SeasonFacet/SeasonFacet.sol";
 import "contracts/beanstalk/sun/SeasonFacet/Sun.sol";
-import {LibCurveMinting} from "contracts/libraries/Minting/LibCurveMinting.sol";
 import {LibTransfer} from "contracts/libraries/Token/LibTransfer.sol";
 import {LibBalance} from "contracts/libraries/Token/LibBalance.sol";
 
@@ -60,10 +59,6 @@ contract MockAdminFacet is Sun {
         SeasonFacet sf = SeasonFacet(address(this));
         int256 sa = int256(uint256(s.season.current - sf.seasonTime()));
         if (sa >= 0) s.season.start -= 3600 * (uint256(sa) + 1);
-    }
-
-    function update3CRVOracle() public {
-        LibCurveMinting.updateOracle();
     }
 
     function updateStemScaleSeason(uint16 season) public {

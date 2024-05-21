@@ -421,8 +421,6 @@ contract MockSiloFacet is SiloFacet {
             return 2;
         } else if (token == C.UNRIPE_LP) {
             return 4;
-        } else if (token == C.CURVE_BEAN_METAPOOL) {
-            return 4;
         }
 
         return 1; //return 1 instead of zero so we can use 1 for testing purposes on stuff that hasn't been whitelisted (like in Convert.test)

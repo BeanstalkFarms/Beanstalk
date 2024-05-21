@@ -1,7 +1,7 @@
 const fs = require("fs");
 const beanstalkABI = require("../abi/Beanstalk.json");
 const mockBeanstalkABI = require("../abi/MockBeanstalk.json");
-const { BEANSTALK, BEAN, BEAN_3_CURVE, USDC, FERTILIZER, PRICE, WETH } = require('../test/utils/constants');
+const { BEANSTALK, BEAN, USDC, FERTILIZER, PRICE, WETH } = require('../test/utils/constants');
 
 async function getBeanstalk(contract = BEANSTALK) {
   return await ethers.getContractAt(beanstalkABI, contract);
@@ -42,10 +42,6 @@ async function getPrice() {
   return await ethers.getContractAt("BeanstalkPrice", PRICE);
 }
 
-async function getBeanMetapool() {
-  return await ethers.getContractAt("ICurvePool", BEAN_3_CURVE);
-}
-
 async function getFertilizer() {
   return await ethers.getContractAt("Fertilizer", FERTILIZER);
 }
@@ -55,7 +51,6 @@ exports.getBean = getBean;
 exports.getWeth = getWeth;
 exports.getUsdc = getUsdc;
 exports.getPrice = getPrice;
-exports.getBeanMetapool = getBeanMetapool;
 exports.getBeanstalkAdminControls = getBeanstalkAdminControls;
 exports.getFertilizer = getFertilizer;
 exports.getBeanstalk = getBeanstalk;

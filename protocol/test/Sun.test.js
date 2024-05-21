@@ -8,9 +8,6 @@ const {
   UNRIPE_LP,
   BEAN,
   ETH_USDC_UNISWAP_V3,
-  THREE_CURVE,
-  THREE_POOL,
-  BEAN_3_CURVE,
   BEAN_ETH_WELL,
   WSTETH,
   ZERO_BYTES,
@@ -42,17 +39,7 @@ describe("Sun", function () {
 
     // These are needed for sunrise incentive test
     bean = await getBean();
-    this.threeCurve = await ethers.getContractAt("MockToken", THREE_CURVE);
-    this.threePool = await ethers.getContractAt("Mock3Curve", THREE_POOL);
-    await this.threePool.set_virtual_price(to18("1"));
-    this.beanThreeCurve = await ethers.getContractAt("MockMeta3Curve", BEAN_3_CURVE);
     this.uniswapV3EthUsdc = await ethers.getContractAt("MockUniswapV3Pool", ETH_USDC_UNISWAP_V3);
-
-    await this.beanThreeCurve.set_supply(to6("100000"));
-    await this.beanThreeCurve.set_A_precise("1000");
-    await this.beanThreeCurve.set_virtual_price(to18("1"));
-    await this.beanThreeCurve.set_balances([to6("10000"), to18("10000")]);
-    await this.beanThreeCurve.reset_cumulative();
 
     await this.usdc.mint(owner.address, to6("10000"));
     await bean.mint(owner.address, to6("10000"));
@@ -274,7 +261,6 @@ describe("Sun", function () {
 
     let START_TIME = (await ethers.provider.getBlock("latest")).timestamp;
     await timeSkip(START_TIME + 60 * 60 * 3);
-    // This also accomplishes initializing curve oracle
     const initial = await beanstalk.connect(owner).sunrise();
     const block = await ethers.provider.getBlock(initial.blockNumber);
     START_TIME = (await ethers.provider.getBlock("latest")).timestamp;

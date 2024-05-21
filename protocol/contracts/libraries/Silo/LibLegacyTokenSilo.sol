@@ -466,8 +466,6 @@ library LibLegacyTokenSilo {
             return 2;
         } else if (token == C.UNRIPE_LP) {
             return 4;
-        } else if (token == C.CURVE_BEAN_METAPOOL) {
-            return 4;
         }
         return 0;
     }

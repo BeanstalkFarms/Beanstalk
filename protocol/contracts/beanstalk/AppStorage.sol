@@ -224,19 +224,6 @@ contract System {
     }
 
     /**
-     * @notice System-level Curve Metapool Oracle state variables.
-     * @param initialized True if the Oracle has been initialzed. It needs to be initialized on Deployment and re-initialized each Unpause.
-     * @param startSeason The Season the Oracle started minting. Used to ramp up delta b when oracle is first added.
-     * @param balances The cumulative reserve balances of the pool at the start of the Season (used for computing time weighted average delta b).
-     * @dev Currently refers to the time weighted average deltaB calculated from the BEAN:3CRV pool.
-     */
-    struct CurveMetapoolOracle {
-        bool initialized; // ────┐ 1
-        uint32 startSeason; // ──┘ 4 (5/32)
-        uint256[2] balances;
-    }
-
-    /**
      * @notice System-level Rain balances. Rain occurs when P > 1 and the Pod Rate Excessively Low.
      * @dev The `raining` storage variable is stored in the Season section for a gas efficient read operation.
      * @param pods The number of Pods when it last started Raining.

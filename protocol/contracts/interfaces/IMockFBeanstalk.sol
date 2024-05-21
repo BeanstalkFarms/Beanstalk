@@ -449,7 +449,6 @@ interface IMockFBeanstalk {
         uint256 minFillAmount,
         uint8 mode
     ) external payable;
-    function captureCurveE() external returns (int256 deltaB);
     function captureE() external returns (int256 deltaB);
     function captureWellE(address well) external returns (int256 deltaB);
     function chop(
@@ -498,7 +497,6 @@ interface IMockFBeanstalk {
         uint256 minFillAmount,
         uint8 mode
     ) external payable returns (bytes32 id);
-    function curveToBDV(uint256 amount) external view returns (uint256);
     function decreaseDepositAllowance(
         address spender,
         address token,
@@ -853,7 +851,6 @@ interface IMockFBeanstalk {
     function mockSetAverageGrownStalkPerBdvPerSeason(
         uint128 _averageGrownStalkPerBdvPerSeason
     ) external;
-    function mockSetBean3CrvOracle(uint256[2] memory reserves) external;
     function mockSetSopWell(address well) external;
     function mockSow(
         uint256 beans,
@@ -1172,7 +1169,6 @@ interface IMockFBeanstalk {
     function unripeBeanToBDV(uint256 amount) external view returns (uint256);
     function unripeLPToBDV(uint256 amount) external view returns (uint256);
     function unwrapEth(uint256 amount, uint8 mode) external payable;
-    function update3CRVOracle() external;
     function updateGaugeForToken(
         address token,
         bytes4 gaugePointSelector,
@@ -1185,7 +1181,6 @@ interface IMockFBeanstalk {
     ) external payable;
     function updateStemScaleSeason(uint16 season) external;
     function updateStems() external;
-    function updateTWAPCurveE() external returns (uint256[2] memory balances);
     function updateWhitelistStatus(
         address token,
         bool isWhitelisted,
