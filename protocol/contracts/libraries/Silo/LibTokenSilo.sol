@@ -311,7 +311,7 @@ library LibTokenSilo {
         uint256 depositId = LibBytes.packAddressAndStem(token, stem);
 
         // add a depositId to an account's depositList, if there is not an existing deposit.
-        if (s.a[account].deposits[depositId].amount > 0) {
+        if (s.a[account].deposits[depositId].amount == 0) {
             s.a[account].depositIdList[token].push(depositId);
         }
         // add amount and bdv to the deposits.

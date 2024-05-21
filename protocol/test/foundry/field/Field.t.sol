@@ -460,7 +460,7 @@ contract FieldTest is TestHelper {
         //////////// TRANSFER ////////////
 
         // transfers a random amount of plots to farmer[1].
-        uint256 transfers = rand(0, ((sows - 1) / 2) + 1);
+        uint256 transfers = rand(1, ((sows - 1) / 2) + 1);
 
         vm.startPrank(farmers[0]);
         for (uint256 i; i < transfers; i++) {
