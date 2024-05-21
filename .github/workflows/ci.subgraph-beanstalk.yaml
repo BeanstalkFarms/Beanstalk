@@ -46,7 +46,7 @@ jobs:
         run: yarn build
         working-directory: projects/subgraph-beanstalk
   test:
-    runs-on: macos-latest
+    runs-on: ubuntu-latest
     name: Test
     steps:
       - name: Check out source repository
