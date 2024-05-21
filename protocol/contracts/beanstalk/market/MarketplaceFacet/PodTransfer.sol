@@ -13,7 +13,7 @@ import "contracts/C.sol";
 import "contracts/libraries/LibDibbler.sol";
 
 /**
- * @author Publius
+ * @author Publius, Brean
  * @title Pod Transfer
  **/
 
@@ -49,11 +49,17 @@ contract PodTransfer is ReentrancyGuard {
         emit PlotTransfer(from, to, index.add(start), amount);
     }
 
+    /**
+     * @notice inserts a plot into an account's field state. Used in market to transfer plots.
+     */
     function insertPlot(address account, uint256 id, uint256 amount) internal {
         s.a[account].field.plots[id] = amount;
         s.a[account].field.plotIndexes.push(id);
     }
 
+    /**
+     * @notice removes a plot from an account's field state. Used in market to transfer plots.
+     */
     function removePlot(address account, uint256 id, uint256 start, uint256 end) internal {
         uint256 amount = s.a[account].field.plots[id];
         if (start == 0) {

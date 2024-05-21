@@ -158,7 +158,7 @@ contract Account {
         uint128 deprecated_deltaRoots; // DEPRECATED - BIP-39 introduced germination.
         SeasonOfPlenty deprecated; // DEPRECATED – Replant reset the Season of Plenty mechanism
         uint256 roots; // A Farmer's Root balance.
-        uint256 deprecated_wrappedBeans; // DEPRECATED – Replant generalized Internal Balances. Wrapped Beans are now stored at the s level.
+        uint256 deprecated_wrappedBeans; // DEPRECATED – Replant generalized Internal Balances. Wrapped Beans are now stored at the AppStorage level.
         mapping(address => mapping(uint32 => Deposit)) legacyV2Deposits; // Legacy Silo V2 Deposits stored as a map from Token address to Season of Deposit to Deposit. NOTE: While the Silo V2 format is now deprecated, unmigrated Silo V2 deposits are still stored in this mapping.
         mapping(address => mapping(uint32 => uint256)) withdrawals; // Zero withdraw eliminates a need for withdraw mapping, but is kept for legacy
         SeasonOfPlenty sop; // A Farmer's Season Of Plenty storage.
