@@ -138,7 +138,7 @@ library LibWhitelistedTokens {
         tokens = new address[](numberOfSiloTokens);
 
         for (uint256 i = 0; i < numberOfSiloTokens; i++) {
-            if (s.whitelistStatuses[i].isWhitelistedWell && s.whitelistStatuses[i].isSoppable) {
+            if (s.whitelistStatuses[i].isSoppable) {
                 tokens[tokensLength++] = s.whitelistStatuses[i].token;
             }
         }
