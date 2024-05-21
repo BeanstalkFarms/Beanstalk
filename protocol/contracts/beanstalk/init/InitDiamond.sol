@@ -4,7 +4,7 @@
 
 pragma solidity ^0.8.20;
 
-import {AppStorage, Storage} from "../AppStorage.sol";
+import {AppStorage, System} from "../AppStorage.sol";
 import {IERC165} from "@openzeppelin/contracts/utils/introspection/IERC165.sol";
 import {IERC1155} from "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
 import {IDiamondCut} from "../../interfaces/IDiamondCut.sol";
@@ -36,10 +36,6 @@ contract InitDiamond is Weather {
         ds.supportedInterfaces[type(IDiamondLoupe).interfaceId] = true;
         ds.supportedInterfaces[0xd9b67a26] = true; // ERC1155
         ds.supportedInterfaces[0x0e89341c] = true; // ERC1155Metadata
-
-        C.bean().approve(C.CURVE_BEAN_METAPOOL, type(uint256).max);
-        C.bean().approve(C.curveZapAddress(), type(uint256).max);
-        C.usdc().approve(C.curveZapAddress(), type(uint256).max);
 
         LibCases.setCasesV2();
         s.weather.t = 1;

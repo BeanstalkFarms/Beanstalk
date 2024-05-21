@@ -6,7 +6,7 @@ pragma solidity ^0.8.20;
 
 import {ILiquidityWeightFacet} from "contracts/beanstalk/sun/LiquidityWeightFacet.sol";
 import {LibWhitelistedTokens} from "contracts/libraries/Silo/LibWhitelistedTokens.sol";
-import {AppStorage, Storage} from "contracts/beanstalk/AppStorage.sol";
+import {AppStorage, System} from "contracts/beanstalk/AppStorage.sol";
 import {IGaugePointFacet} from "contracts/beanstalk/sun/GaugePointFacet.sol";
 import {LibDiamond} from "contracts/libraries/LibDiamond.sol";
 import {LibCases} from "contracts/libraries/LibCases.sol";
@@ -55,8 +55,8 @@ contract InitalizeDiamond {
 
         // note: bean and assets that are not in the gauge system
         // do not need to initalize the gauge system.
-        Storage.SiloSettings[] memory siloSettings = new Storage.SiloSettings[](2);
-        siloSettings[0] = Storage.SiloSettings({
+        System.SiloSettings[] memory siloSettings = new System.SiloSettings[](2);
+        siloSettings[0] = System.SiloSettings({
             selector: BDVFacet.beanToBDV.selector,
             stalkEarnedPerSeason: INIT_BEAN_STALK_EARNED_PER_SEASON,
             stalkIssuedPerBdv: INIT_STALK_ISSUED_PER_BDV,
@@ -70,7 +70,7 @@ contract InitalizeDiamond {
             optimalPercentDepositedBdv: 0
         });
 
-        siloSettings[1] = Storage.SiloSettings({
+        siloSettings[1] = System.SiloSettings({
             selector: BDVFacet.wellBdv.selector,
             stalkEarnedPerSeason: INIT_BEAN_TOKEN_WELL_STALK_EARNED_PER_SEASON,
             stalkIssuedPerBdv: INIT_STALK_ISSUED_PER_BDV,
@@ -184,7 +184,7 @@ contract InitalizeDiamond {
      */
     function whitelistPools(
         address[] memory tokens,
-        Storage.SiloSettings[] memory siloSettings
+        System.SiloSettings[] memory siloSettings
     ) internal {
         for (uint256 i = 0; i < tokens.length; i++) {
             // note: no error checking.

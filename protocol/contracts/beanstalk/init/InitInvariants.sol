@@ -33,7 +33,6 @@ contract InitInvariants {
         // TODO: Deconstruct s.internalTokenBalance offchain and set all tokens and all totals here.
         s.internalTokenBalanceTotal[IERC20(C.BEAN)] = 115611612399;
         s.internalTokenBalanceTotal[IERC20(C.BEAN_ETH_WELL)] = 0;
-        s.internalTokenBalanceTotal[IERC20(C.CURVE_BEAN_METAPOOL)] = 9238364833184139286;
         s.internalTokenBalanceTotal[IERC20(C.UNRIPE_BEAN)] = 9001888;
         s.internalTokenBalanceTotal[IERC20(C.UNRIPE_LP)] = 12672419462;
     }
