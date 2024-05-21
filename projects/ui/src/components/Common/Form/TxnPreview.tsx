@@ -530,7 +530,7 @@ const TxnPreview: FC<{
                   return null;
                 })}
                 {customOrder
-                  ? actions.map((action, index) => 
+                  ? actions.map((action, index) =>
                       action ? (
                         <TxnStep
                           key={index}

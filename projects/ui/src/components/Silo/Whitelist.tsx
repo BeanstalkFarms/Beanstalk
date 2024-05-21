@@ -111,18 +111,28 @@ const Whitelist: FC<{
               <Typography color="text.secondary">Rewards</Typography>
             </Tooltip>
           </Grid>
-          <Grid item md={2} xs={0} display={{ xs: 'none', md: 'flex' }} justifyContent='center'>
+          <Grid
+            item
+            md={2}
+            xs={0}
+            display={{ xs: 'none', md: 'flex' }}
+            justifyContent="center"
+          >
             <Tooltip title="Estimated annual Beans earned by a Stalkholder for Depositing an asset.">
               <Chip
                 variant="filled"
                 color="primary"
                 label={
                   <Row gap={0.5}>
-                    <TokenIcon token={BEAN[1]} /> 
-                    vAPY 24H 
-                    <Typography color='white' marginTop={-0.25}>|</Typography> 
-                    7D 
-                    <Typography color='white' marginTop={-0.25}>|</Typography> 
+                    <TokenIcon token={BEAN[1]} />
+                    vAPY 24H
+                    <Typography color="white" marginTop={-0.25}>
+                      |
+                    </Typography>
+                    7D
+                    <Typography color="white" marginTop={-0.25}>
+                      |
+                    </Typography>
                     30D
                   </Row>
                 }
@@ -131,15 +141,19 @@ const Whitelist: FC<{
               />
             </Tooltip>
           </Grid>
-          <Grid item md={1.25} xs={0} display={{ xs: 'none', md: 'flex' }} justifyContent='center'>
+          <Grid
+            item
+            md={1.25}
+            xs={0}
+            display={{ xs: 'none', md: 'flex' }}
+            justifyContent="center"
+          >
             <Tooltip title="Estimated annual growth in Stalk for Depositing an asset.">
               <Typography color="text.primary">
                 <TokenIcon
-                  token={
-                    { symbol: 'Stalk', logo: stalkIcon } as Token
-                  }
-                />
-                {' '}vAPY
+                  token={{ symbol: 'Stalk', logo: stalkIcon } as Token}
+                />{' '}
+                vAPY
               </Typography>
             </Tooltip>
           </Grid>
@@ -282,7 +296,7 @@ const Whitelist: FC<{
                     md={2}
                     xs={0}
                     display={{ xs: 'none', md: 'flex' }}
-                    justifyContent='center'
+                    justifyContent="center"
                   >
                     <SiloAssetApyChip token={token} metric="bean" />
                   </Grid>
@@ -295,7 +309,7 @@ const Whitelist: FC<{
                     md={1.25}
                     xs={0}
                     display={{ xs: 'none', md: 'flex' }}
-                    justifyContent='center'
+                    justifyContent="center"
                   >
                     <SiloAssetApyChip token={token} metric="stalk" />
                   </Grid>

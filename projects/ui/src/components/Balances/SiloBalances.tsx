@@ -20,17 +20,17 @@ import {
   UNRIPE_BEAN_WETH,
 } from '~/constants/tokens';
 import useWhitelist from '~/hooks/beanstalk/useWhitelist';
-import { BeanstalkPalette, IconSize } from '../App/muiTheme';
 import Fiat from '~/components/Common/Fiat';
 
-import Row from '../Common/Row';
 import { displayFullBN, displayTokenAmount } from '~/util';
-import TokenIcon from '../Common/TokenIcon';
 import { AppState } from '~/state';
 import { ONE_BN, ZERO_BN } from '~/constants';
 import useFarmerStalkByToken from '~/hooks/farmer/useFarmerStalkByToken';
 import useGetChainToken from '~/hooks/chain/useGetChainToken';
 import useUnripeUnderlyingMap from '~/hooks/beanstalk/useUnripeUnderlying';
+import TokenIcon from '../Common/TokenIcon';
+import Row from '../Common/Row';
+import { BeanstalkPalette, IconSize } from '../App/muiTheme';
 import Stat from '../Common/Stat';
 
 const ARROW_CONTAINER_WIDTH = 20;
@@ -243,7 +243,9 @@ const SiloBalances: React.FC<{}> = () => {
                       </Typography>
                     )}
                     <Box display={{ md: 'inline', xs: 'none' }}>
-                      <Typography component="span" color="text.primary">&nbsp;{token.symbol}</Typography>
+                      <Typography component="span" color="text.primary">
+                        &nbsp;{token.symbol}
+                      </Typography>
                     </Box>
                   </Grid>
                   {/**
