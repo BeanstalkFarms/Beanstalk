@@ -17,8 +17,14 @@ export const InfoActionRow = ({ label, subLabel, buttonLabel, labelProps, subLab
   return (
     <Container>
       <Labels>
-        <Text variant={labelProps?.variant ?? "l"}>{label}</Text>
-        {subLabel ? <Text variant={subLabelProps?.variant ?? "s"}>{subLabel}</Text> : null}
+        <Text {...labelProps} variant={labelProps?.variant ?? "l"}>
+          {label}
+        </Text>
+        {subLabel ? (
+          <Text {...subLabelProps} variant={subLabelProps?.variant ?? "s"}>
+            {subLabel}
+          </Text>
+        ) : null}
       </Labels>
       <Button onClick={onClick}>{buttonLabel}</Button>
     </Container>

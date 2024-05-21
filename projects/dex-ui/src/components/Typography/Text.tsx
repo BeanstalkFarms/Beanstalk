@@ -16,9 +16,10 @@ export interface TextProps extends HTMLAttributes<HTMLElement> {
  * - Defaults to BodySmall
  * - Any additional styles override variant styles
  */
-export const Text = ({ variant, color, size, weight, className, css, ...rest }: TextProps) => {
+export const Text = React.forwardRef<HTMLDivElement, TextProps>(({ variant, color, size, weight, className, css, ...rest }, ref) => {
   return (
     <TextComponent
+      ref={ref}
       $variant={variant ?? "s"}
       $color={color ?? "text.primary"}
       $weight={weight}
@@ -28,7 +29,7 @@ export const Text = ({ variant, color, size, weight, className, css, ...rest }: 
       {...rest}
     />
   );
-};
+});
 
 const TextComponent = styled.div<{
   $variant: FontVariant;
