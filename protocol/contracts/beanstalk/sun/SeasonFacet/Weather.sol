@@ -33,11 +33,10 @@ contract Weather is Sun {
     // 1000 represents 1/1000, or 0.1% of total Bean supply.
     uint256 internal constant FLOOD_PODLINE_PERCENT_DENOMINATOR = 1000;
 
-    // @dev In-memory struct used to store current deltaB and reduction (flood) amount per-well.
+    // @dev In-memory struct used to store current deltaB, and then reduction amount per-well.
     struct WellDeltaB {
         address well;
         int256 deltaB;
-        uint256 reductionAmount;
     }
 
     /**
@@ -249,7 +248,7 @@ contract Weather is Sun {
         wellDeltaBs = new WellDeltaB[](wells.length);
 
         for (uint i = 0; i < wells.length; i++) {
-            wellDeltaBs[i] = WellDeltaB(wells[i], LibWellMinting.currentDeltaB(wells[i]), 0);
+            wellDeltaBs[i] = WellDeltaB(wells[i], LibWellMinting.currentDeltaB(wells[i]));
             if (wellDeltaBs[i].deltaB > 0) {
                 totalPositiveDeltaB += uint256(wellDeltaBs[i].deltaB);
                 positiveDeltaBCount++;
@@ -313,25 +312,31 @@ contract Weather is Sun {
      * For more information On Oversaturation see {Weather.handleRain}.
      */
     function sopWell(WellDeltaB memory wellDeltaB) private {
-        if (wellDeltaB.reductionAmount == 0) return;
-        AppStorage storage s = LibAppStorage.diamondStorage();
-        IERC20 sopToken = LibWell.getNonBeanTokenFromWell(wellDeltaB.well);
+        if (wellDeltaB.deltaB > 0) {
+            AppStorage storage s = LibAppStorage.diamondStorage();
+            IERC20 sopToken = LibWell.getNonBeanTokenFromWell(wellDeltaB.well);
 
-        uint256 sopBeans = wellDeltaB.reductionAmount;
-        C.bean().mint(address(this), sopBeans);
+            uint256 sopBeans = uint256(wellDeltaB.deltaB);
+            C.bean().mint(address(this), sopBeans);
 
-        // Approve and Swap Beans for the non-bean token of the SOP well.
-        C.bean().approve(wellDeltaB.well, sopBeans);
-        uint256 amountOut = IWell(wellDeltaB.well).swapFrom(
-            C.bean(),
-            sopToken,
-            sopBeans,
-            0,
-            address(this),
-            type(uint256).max
-        );
-        rewardSop(wellDeltaB.well, amountOut, address(sopToken));
-        emit SeasonOfPlentyWell(s.season.current, wellDeltaB.well, address(sopToken), amountOut);
+            // Approve and Swap Beans for the non-bean token of the SOP well.
+            C.bean().approve(wellDeltaB.well, sopBeans);
+            uint256 amountOut = IWell(wellDeltaB.well).swapFrom(
+                C.bean(),
+                sopToken,
+                sopBeans,
+                0,
+                address(this),
+                type(uint256).max
+            );
+            rewardSop(wellDeltaB.well, amountOut, address(sopToken));
+            emit SeasonOfPlentyWell(
+                s.season.current,
+                wellDeltaB.well,
+                address(sopToken),
+                amountOut
+            );
+        }
     }
 
     /**
@@ -362,21 +367,24 @@ contract Weather is Sun {
     ) public pure returns (WellDeltaB[] memory) {
         // most likely case is that all deltaBs are positive
         if (positiveDeltaBCount == wellDeltaBs.length) {
-            // if all deltaBs are positive, need to sop all to zero
-            for (uint256 i = 0; i < wellDeltaBs.length; i++) {
-                wellDeltaBs[i].reductionAmount = uint256(wellDeltaBs[i].deltaB);
-            }
+            // if all deltaBs are positive, need to sop all to zero, so return existing deltaBs
             return wellDeltaBs;
         }
 
         if (positiveDeltaBCount == 0) {
-            // No positive values, so no well flooding needed
+            // No positive values, so no well flooding needed, return zeros
+            for (uint256 i = 0; i < positiveDeltaBCount; i++) {
+                wellDeltaBs[i].deltaB = 0;
+            }
             return wellDeltaBs;
         }
 
         if (totalPositiveDeltaB < totalNegativeDeltaB) {
             // This can occur if the twaDeltaB is positive, but the instanteous deltaB is negative or 0
             // In this case, no reductions are needed.
+            for (uint256 i = 0; i < positiveDeltaBCount; i++) {
+                wellDeltaBs[i].deltaB = 0;
+            }
             return wellDeltaBs;
         }
 
@@ -388,11 +396,9 @@ contract Weather is Sun {
 
                 // reduction amount does not need to be set here,
                 // but is written for demonstration.
-                wellDeltaBs[i - 1].reductionAmount = 0;
+                wellDeltaBs[i - 1].deltaB = 0;
             } else {
-                wellDeltaBs[i - 1].reductionAmount =
-                    uint256(wellDeltaBs[i - 1].deltaB) -
-                    shaveToLevel;
+                wellDeltaBs[i - 1].deltaB = wellDeltaBs[i - 1].deltaB - int256(shaveToLevel);
             }
         }
         return wellDeltaBs;

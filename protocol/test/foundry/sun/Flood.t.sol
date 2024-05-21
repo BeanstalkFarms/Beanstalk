@@ -331,12 +331,10 @@ contract FloodTest is TestHelper {
         wellDeltaBs[0].deltaB = 100;
         wellDeltaBs[1].deltaB = 100;
         wellDeltaBs[2].deltaB = -100;
-        // wellDeltaBs = calculateSopPerWellHelper(wellDeltaBs);
-        // assertEq(wellDeltaBs[0].reductionAmount, 50);
-        // assertEq(wellDeltaBs[1].reductionAmount, 50);
-        // assertEq(wellDeltaBs[2].reductionAmount, 0);
-
-        // return;
+        wellDeltaBs = calculateSopPerWellHelper(wellDeltaBs);
+        assertEq(wellDeltaBs[0].deltaB, 50);
+        assertEq(wellDeltaBs[1].deltaB, 50);
+        assertEq(wellDeltaBs[2].deltaB, -100);
 
         wellDeltaBs = new Weather.WellDeltaB[](4);
         wellDeltaBs[0].deltaB = 90;
@@ -344,12 +342,10 @@ contract FloodTest is TestHelper {
         wellDeltaBs[2].deltaB = 20;
         wellDeltaBs[3].deltaB = -120;
         wellDeltaBs = calculateSopPerWellHelper(wellDeltaBs);
-        assertEq(wellDeltaBs[0].reductionAmount, 40);
-        assertEq(wellDeltaBs[1].reductionAmount, 30);
-        assertEq(wellDeltaBs[2].reductionAmount, 0);
-        assertEq(wellDeltaBs[3].reductionAmount, 0);
-
-        return;
+        assertEq(wellDeltaBs[0].deltaB, 40);
+        assertEq(wellDeltaBs[1].deltaB, 30);
+        assertEq(wellDeltaBs[2].deltaB, 0);
+        assertEq(wellDeltaBs[3].deltaB, -120);
 
         wellDeltaBs = new Weather.WellDeltaB[](7);
         wellDeltaBs[0].deltaB = 90;
@@ -360,13 +356,13 @@ contract FloodTest is TestHelper {
         wellDeltaBs[5].deltaB = 40;
         wellDeltaBs[6].deltaB = -120;
         wellDeltaBs = calculateSopPerWellHelper(wellDeltaBs);
-        assertEq(wellDeltaBs[0].reductionAmount, 70);
-        assertEq(wellDeltaBs[1].reductionAmount, 60);
-        assertEq(wellDeltaBs[2].reductionAmount, 50);
-        assertEq(wellDeltaBs[3].reductionAmount, 40);
-        assertEq(wellDeltaBs[4].reductionAmount, 30);
-        assertEq(wellDeltaBs[5].reductionAmount, 20);
-        assertEq(wellDeltaBs[6].reductionAmount, 0);
+        assertEq(wellDeltaBs[0].deltaB, 70);
+        assertEq(wellDeltaBs[1].deltaB, 60);
+        assertEq(wellDeltaBs[2].deltaB, 50);
+        assertEq(wellDeltaBs[3].deltaB, 40);
+        assertEq(wellDeltaBs[4].deltaB, 30);
+        assertEq(wellDeltaBs[5].deltaB, 20);
+        assertEq(wellDeltaBs[6].deltaB, -120);
 
         wellDeltaBs = new Weather.WellDeltaB[](4);
         wellDeltaBs[0].deltaB = 90;
@@ -374,15 +370,15 @@ contract FloodTest is TestHelper {
         wellDeltaBs[2].deltaB = -70;
         wellDeltaBs[3].deltaB = -200;
         wellDeltaBs = calculateSopPerWellHelper(wellDeltaBs);
-        assertEq(wellDeltaBs[0].reductionAmount, 0);
-        assertEq(wellDeltaBs[1].reductionAmount, 0);
-        assertEq(wellDeltaBs[2].reductionAmount, 0);
-        assertEq(wellDeltaBs[3].reductionAmount, 0);
+        assertEq(wellDeltaBs[0].deltaB, 0);
+        assertEq(wellDeltaBs[1].deltaB, 0);
+        assertEq(wellDeltaBs[2].deltaB, -70);
+        assertEq(wellDeltaBs[3].deltaB, -200);
 
         wellDeltaBs = new Weather.WellDeltaB[](1);
         wellDeltaBs[0].deltaB = 90;
         wellDeltaBs = calculateSopPerWellHelper(wellDeltaBs);
-        assertEq(wellDeltaBs[0].reductionAmount, 90);
+        assertEq(wellDeltaBs[0].deltaB, 90);
 
         // This can occur if the twaDeltaB is positive, but the instanteous deltaB is negative or 0
         // In this case, no reductions are needed.
@@ -390,23 +386,23 @@ contract FloodTest is TestHelper {
         wellDeltaBs[0].deltaB = 90;
         wellDeltaBs[1].deltaB = -100;
         wellDeltaBs = calculateSopPerWellHelper(wellDeltaBs);
-        assertEq(wellDeltaBs[0].reductionAmount, 0);
+        assertEq(wellDeltaBs[0].deltaB, 0);
 
         // test just 2 wells, all positive
         wellDeltaBs = new Weather.WellDeltaB[](2);
         wellDeltaBs[0].deltaB = 90;
         wellDeltaBs[1].deltaB = 80;
         wellDeltaBs = calculateSopPerWellHelper(wellDeltaBs);
-        assertEq(wellDeltaBs[0].reductionAmount, 90);
-        assertEq(wellDeltaBs[1].reductionAmount, 80);
+        assertEq(wellDeltaBs[0].deltaB, 90);
+        assertEq(wellDeltaBs[1].deltaB, 80);
 
         // test just 2 wells, one negative
         wellDeltaBs = new Weather.WellDeltaB[](2);
         wellDeltaBs[0].deltaB = 90;
         wellDeltaBs[1].deltaB = -80;
         wellDeltaBs = calculateSopPerWellHelper(wellDeltaBs);
-        assertEq(wellDeltaBs[0].reductionAmount, 10);
-        assertEq(wellDeltaBs[1].reductionAmount, 0);
+        assertEq(wellDeltaBs[0].deltaB, 10);
+        assertEq(wellDeltaBs[1].deltaB, -80);
     }
 
     // test making Beans harvestable
@@ -487,11 +483,11 @@ contract FloodTest is TestHelper {
     function testQuickSort() public view {
         Weather.WellDeltaB[] memory wells = new Weather.WellDeltaB[](5);
         int right = int(wells.length - 1);
-        wells[0] = Weather.WellDeltaB(address(0), 100, 0);
-        wells[1] = Weather.WellDeltaB(address(1), 200, 0);
-        wells[2] = Weather.WellDeltaB(address(2), -300, 0);
-        wells[3] = Weather.WellDeltaB(address(3), 400, 0);
-        wells[4] = Weather.WellDeltaB(address(4), -500, 0);
+        wells[0] = Weather.WellDeltaB(address(0), 100);
+        wells[1] = Weather.WellDeltaB(address(1), 200);
+        wells[2] = Weather.WellDeltaB(address(2), -300);
+        wells[3] = Weather.WellDeltaB(address(3), 400);
+        wells[4] = Weather.WellDeltaB(address(4), -500);
         wells = season.quickSort(wells, 0, right);
         assertEq(wells[0].deltaB, 400);
         assertEq(wells[1].deltaB, 200);
@@ -501,14 +497,14 @@ contract FloodTest is TestHelper {
 
         wells = new Weather.WellDeltaB[](2);
         right = int(wells.length - 1);
-        wells[0] = Weather.WellDeltaB(address(0), 200, 0);
-        wells[1] = Weather.WellDeltaB(address(1), 100, 0);
+        wells[0] = Weather.WellDeltaB(address(0), 200);
+        wells[1] = Weather.WellDeltaB(address(1), 100);
         wells = season.quickSort(wells, 0, right);
         assertEq(wells[0].deltaB, 200);
         assertEq(wells[1].deltaB, 100);
 
-        wells[0] = Weather.WellDeltaB(address(0), 100, 0);
-        wells[1] = Weather.WellDeltaB(address(1), 200, 0);
+        wells[0] = Weather.WellDeltaB(address(0), 100);
+        wells[1] = Weather.WellDeltaB(address(1), 200);
         wells = season.quickSort(wells, 0, right);
         assertEq(wells[0].deltaB, 200);
         assertEq(wells[1].deltaB, 100);
