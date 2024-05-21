@@ -30,7 +30,7 @@ contract FieldFacet is Invariable, ReentrancyGuard {
      */
     struct Plot {
         uint256 index;
-        uint256 amt;
+        uint256 pods;
     }
 
     /**
@@ -360,8 +360,11 @@ contract FieldFacet is Invariable, ReentrancyGuard {
      * @notice returns the plots owned by `account`.
      */
     function getPlotsFromAccount(address account) external view returns (Plot[] memory plots) {
-        for (uint256 i = 0; i < s.a[account].field.plotIndexes.length; i++) {
-            uint256 index = s.a[account].field.plotIndexes[i];
+        uint256[] memory plotIndexes = s.a[account].field.plotIndexes;
+        if (plotIndexes.length == 0) return plots;
+        plots = new Plot[](plotIndexes.length);
+        for (uint256 i = 0; i < plotIndexes.length; i++) {
+            uint256 index = plotIndexes[i];
             plots[i] = Plot(index, s.a[account].field.plots[index]);
         }
     }

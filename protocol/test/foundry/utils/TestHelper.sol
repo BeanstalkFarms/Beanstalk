@@ -400,4 +400,20 @@ contract TestHelper is
             bs.addFertilizer(season, tokenAmountIn, 0);
         }
     }
+
+    function rand(uint256 lowerBound, uint256 upperBound) internal returns (uint256 rand) {
+        return bound(uint256(keccak256(abi.encode(vm.unixTime()))), lowerBound, upperBound);
+    }
+
+    /**
+     * @notice returns a random number between lowerBound and upperBound,
+     * using unix time and salt as the source of randomness.
+     */
+    function rand(
+        uint256 lowerBound,
+        uint256 upperBound,
+        bytes memory salt
+    ) internal returns (uint256 rand) {
+        return bound(uint256(keccak256(abi.encode(vm.unixTime(), salt))), lowerBound, upperBound);
+    }
 }

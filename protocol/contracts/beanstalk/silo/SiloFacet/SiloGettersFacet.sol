@@ -568,6 +568,7 @@ contract SiloGettersFacet is ReentrancyGuard {
         address token
     ) public view returns (TokenDepositId memory deposits) {
         uint256[] memory depositIds = s.a[account].depositIdList[token];
+        if (depositIds.length == 0) return deposits;
         deposits.token = token;
         deposits.depositIds = depositIds;
         deposits.tokenDeposits = new Account.Deposit[](depositIds.length);
