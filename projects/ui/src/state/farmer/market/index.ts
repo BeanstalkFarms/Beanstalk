@@ -26,8 +26,9 @@ export const castPodListing = (
   listing: PodListingFragment,
   harvestableIndex: BigNumber
 ): PodListing => {
-  const [account, id] = listing.id.split('-'); // Subgraph returns a conjoined ID
-  const index = toTokenUnitsBN(id, BEAN[1].decimals);
+  // Subgraph returns id of the form account-index(-relistCount if it got relisted).
+  const [account, listingIndex] = listing.id.split('-');
+  const index = toTokenUnitsBN(listingIndex, BEAN[1].decimals);
   const maxHarvestableIndex = toTokenUnitsBN(
     listing.maxHarvestableIndex,
     BEAN[1].decimals
@@ -35,7 +36,7 @@ export const castPodListing = (
 
   return {
     // Identifiers
-    id: id,
+    id: listing.id,
     account: listing.farmer.id || account,
 
     // Configuration

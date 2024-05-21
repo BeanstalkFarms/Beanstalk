@@ -350,7 +350,7 @@ function podListingCreated(params: PodListingCreatedParams): void {
   listing.remainingAmount = listing.originalAmount;
 
   listing.status = "ACTIVE";
-  listing.createdAt = listing.createdAt == ZERO_BI ? params.event.block.timestamp : listing.createdAt;
+  listing.createdAt = params.event.block.timestamp;
   listing.updatedAt = params.event.block.timestamp;
   listing.creationHash = params.event.transaction.hash.toHexString();
 
