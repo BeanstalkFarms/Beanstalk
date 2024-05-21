@@ -228,7 +228,7 @@ function assertListingCreated_v2(event: PodListingCreated_v2): void {
 
 function assertOrderCreated_v1(account: string, event: PodOrderCreated_v1): void {
   let orderID = event.params.id.toHexString();
-  assert.fieldEquals("PodOrder", orderID, "historyID", orderID + "-" + event.block.timestamp.toString());
+  assert.fieldEquals("PodOrder", orderID, "historyID", orderID + "-" + event.block.timestamp.toString() + "-" + event.logIndex.toString());
   assert.fieldEquals("PodOrder", orderID, "farmer", account);
   assert.fieldEquals("PodOrder", orderID, "status", "ACTIVE");
   assert.fieldEquals(
@@ -244,7 +244,7 @@ function assertOrderCreated_v1(account: string, event: PodOrderCreated_v1): void
 
 function assertOrderCreated_v2(account: string, event: PodOrderCreated_v2): void {
   let orderID = event.params.id.toHexString();
-  assert.fieldEquals("PodOrder", orderID, "historyID", orderID + "-" + event.block.timestamp.toString());
+  assert.fieldEquals("PodOrder", orderID, "historyID", orderID + "-" + event.block.timestamp.toString() + "-" + event.logIndex.toString());
   assert.fieldEquals("PodOrder", orderID, "farmer", account);
   assert.fieldEquals("PodOrder", orderID, "status", "ACTIVE");
   assert.fieldEquals("PodOrder", orderID, "beanAmount", event.params.amount.toString());
