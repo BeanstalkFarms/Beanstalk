@@ -1015,6 +1015,8 @@ interface IMockFBeanstalk {
 
     function getWeightedTwaLiquidityForWell(address well) external view returns (uint256);
 
+    function getWellConvertCapacity(address well) external view returns (uint256);
+
     function getWhitelistStatus(
         address token
     ) external view returns (WhitelistStatus memory _whitelistStatuses);

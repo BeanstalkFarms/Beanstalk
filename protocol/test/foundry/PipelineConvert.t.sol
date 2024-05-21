@@ -25,6 +25,16 @@ import {LibConvert} from "contracts/libraries/Convert/LibConvert.sol";
 import {LibRedundantMath256} from "contracts/libraries/LibRedundantMath256.sol";
 import "forge-std/Test.sol";
 
+contract MiscHelperContract {
+    function returnLesser(uint256 a, uint256 b) public pure returns (uint256) {
+        if (a < b) {
+            return a;
+        } else {
+            return b;
+        }
+    }
+}
+
 /**
  * @title PipelineConvertTest
  * @author pizzaman1337
@@ -42,6 +52,7 @@ contract PipelineConvertTest is TestHelper {
     MockToken bean = MockToken(C.BEAN);
     address beanEthWell = C.BEAN_ETH_WELL;
     address beanwstethWell = C.BEAN_WSTETH_WELL;
+    MiscHelperContract miscHelper = new MiscHelperContract();
 
     // test accounts
     address[] farmers;
@@ -161,7 +172,6 @@ contract PipelineConvertTest is TestHelper {
         amount = bound(amount, 10e6, 5000e6);
 
         // manipulate well so we won't have a penalty applied
-        // TODO: add a test that also calculates proper penalty and verifies?
         setDeltaBforWell(int256(amount), beanEthWell, C.WETH);
 
         depositBeanAndPassGermination(amount, users[1]);
@@ -359,8 +369,6 @@ contract PipelineConvertTest is TestHelper {
         dbs.beforeOverallDeltaB = LibWellMinting.overallCurrentDeltaB();
         dbs.afterOverallDeltaB = dbs.afterInputTokenDeltaB + dbs.afterOutputTokenDeltaB; // update and for scaled deltaB
 
-        // todo: calculateStalkPenalty and subtract penalty from grown stalk, which affects pd.outputStem
-
         (uint256 stalkPenalty, , , ) = LibConvert.calculateStalkPenalty(
             dbs,
             bdvOfDepositedLp,
@@ -415,6 +423,56 @@ contract PipelineConvertTest is TestHelper {
         // Per-well capacities were used
         assertGt(convert.getWellConvertCapacity(pd.inputWell), pd.beforeInputWellCapacity);
         assertGt(convert.getWellConvertCapacity(pd.outputWell), pd.beforeOutputWellCapacity);
+    }
+
+    function testBeanToLPUsingRemainingConvertCapacity(uint256 amount, uint256 tradeAmount) public {
+        vm.pauseGasMetering();
+
+        amount = bound(amount, 10e6, 5000e6);
+
+        tradeAmount = bound(tradeAmount, 10e6, 5000e6);
+
+        // apply a known deltaB to the well
+        setDeltaBforWell(5000e6, beanEthWell, C.WETH);
+
+        int96 stem = depositBeanAndPassGermination(amount, users[1]);
+        int96 secondUserStem = depositBeanAndPassGermination(tradeAmount, users[2]);
+
+        uint256 beforeCapacity = bs.getWellConvertCapacity(beanEthWell);
+
+        // user[2] does convert
+        beanToLPDoConvert(tradeAmount, secondUserStem, users[2]);
+
+        // log convert capacity for well remaining after
+        uint256 afterCapacity = bs.getWellConvertCapacity(beanEthWell);
+
+        assertLt(afterCapacity, beforeCapacity);
+
+        // do the convert
+
+        // Create arrays for stem and amount
+        int96[] memory stems = new int96[](1);
+        stems[0] = stem;
+
+        AdvancedFarmCall[] memory beanToLPFarmCalls = createBeanToLPFarmCallsUsingConvertCapacity(
+            amount
+        );
+
+        uint256[] memory amounts = new uint256[](1);
+        amounts[0] = amount;
+
+        // get well amount out if we deposit amount of beans
+        uint256 wellAmountOut = getWellAmountOutForAddingBeans(amount);
+
+        vm.resumeGasMetering();
+        vm.prank(users[1]); // do this as user 1
+        convert.pipelineConvert(
+            C.BEAN, // input token
+            stems, // stems
+            amounts, // amount
+            beanEthWell, // token out
+            beanToLPFarmCalls // farmData
+        );
     }
 
     function testUpdatingOverallDeltaB(uint256 amount, uint256 wellIndex, uint256 both) public {
@@ -956,9 +1014,6 @@ contract PipelineConvertTest is TestHelper {
 
         assertEq(td.calculatedStem, outputStem);
     }
-
-    // bonus todo: setup a test that reads remaining convert power from block and uses it when determining how much to convert
-    // there are already tests that exercise depleting convert power, but might be cool to show how you can use it in a convert
 
     function testAmountAgainstPeg() public view {
         uint256 amountAgainstPeg;
@@ -1664,7 +1719,7 @@ contract PipelineConvertTest is TestHelper {
         amounts[0] = amount;
 
         vm.resumeGasMetering();
-        vm.prank(user); // do this as user 1
+        vm.prank(user);
         (outputStem, outputAmount, , , ) = convert.pipelineConvert(
             C.BEAN, // input token
             stems, // stems
@@ -1689,7 +1744,7 @@ contract PipelineConvertTest is TestHelper {
         amounts[0] = lpAmountOut;
 
         vm.resumeGasMetering();
-        vm.prank(user); // do this as user 1
+        vm.prank(user);
         (outputStem, outputAmount, , , ) = convert.pipelineConvert(
             beanEthWell, // input token
             stems, // stems
@@ -1812,17 +1867,17 @@ contract PipelineConvertTest is TestHelper {
         // Fabricate advancePipes:
         AdvancedPipeCall[] memory advancedPipeCalls = new AdvancedPipeCall[](100);
 
-        uint256 i = 0;
+        uint256 callCounter = 0;
 
         // Action 0: approve the Bean-Eth well to spend pipeline's bean.
-        advancedPipeCalls[i++] = AdvancedPipeCall(
+        advancedPipeCalls[callCounter++] = AdvancedPipeCall(
             C.BEAN, // target
             approveEncoded, // calldata
             abi.encode(0) // clipboard
         );
 
         // Action 2: Add One sided Liquidity into the well.
-        advancedPipeCalls[i++] = AdvancedPipeCall(
+        advancedPipeCalls[callCounter++] = AdvancedPipeCall(
             beanEthWell, // target
             addLiquidityEncoded, // calldata
             abi.encode(0) // clipboard
@@ -1830,11 +1885,118 @@ contract PipelineConvertTest is TestHelper {
 
         // append any extra pipe calls
         for (uint j; j < extraPipeCalls.length; j++) {
-            advancedPipeCalls[i++] = extraPipeCalls[j];
+            advancedPipeCalls[callCounter++] = extraPipeCalls[j];
         }
 
         assembly {
-            mstore(advancedPipeCalls, i)
+            mstore(advancedPipeCalls, callCounter)
+        }
+
+        // Encode into a AdvancedFarmCall. NOTE: advancedFarmCall != advancedPipeCall.
+        // AdvancedFarmCall calls any function on the beanstalk diamond.
+        // advancedPipe is one of the functions that its calling.
+        // AdvancedFarmCall cannot call approve/addLiquidity, but can call AdvancedPipe.
+        // AdvancedPipe can call any arbitrary function.
+        AdvancedFarmCall[] memory advancedFarmCalls = new AdvancedFarmCall[](1);
+
+        bytes memory advancedPipeCalldata = abi.encodeWithSelector(
+            depot.advancedPipe.selector,
+            advancedPipeCalls,
+            0
+        );
+
+        advancedFarmCalls[0] = AdvancedFarmCall(advancedPipeCalldata, new bytes(0));
+        return advancedFarmCalls;
+    }
+
+    function createBeanToLPFarmCallsUsingConvertCapacity(
+        uint256 amount
+    ) internal view returns (AdvancedFarmCall[] memory output) {
+        // first setup the pipeline calls
+
+        // setup approve max call
+        bytes memory approveEncoded = abi.encodeWithSelector(
+            IERC20.approve.selector,
+            beanEthWell,
+            MAX_UINT256
+        );
+
+        uint256[] memory tokenAmountsIn = new uint256[](2);
+        tokenAmountsIn[0] = 0; // to be overwritten
+        tokenAmountsIn[1] = 0;
+
+        // encode Add liqudity.
+        bytes memory addLiquidityEncoded = abi.encodeWithSelector(
+            IWell.addLiquidity.selector,
+            tokenAmountsIn, // tokenAmountsIn
+            0, // min out
+            C.PIPELINE, // recipient
+            type(uint256).max // deadline
+        );
+
+        // encode get convert capacity for bean:eth well
+        bytes memory getConvertCapacityEncoded = abi.encodeWithSelector(
+            convert.getWellConvertCapacity.selector,
+            beanEthWell
+        );
+
+        // encode returnLesser on the miscHelper
+        bytes memory returnLesserEncoded = abi.encodeWithSelector(
+            miscHelper.returnLesser.selector,
+            0, // a, to be overwritten by clipboard
+            amount // b
+        );
+
+        // Fabricate advancePipes:
+        AdvancedPipeCall[] memory advancedPipeCalls = new AdvancedPipeCall[](100);
+
+        uint256 callCounter = 0;
+
+        // Action 0: approve the Bean-Eth well to spend pipeline's bean.
+        advancedPipeCalls[callCounter++] = AdvancedPipeCall(
+            C.BEAN, // target
+            approveEncoded, // calldata
+            abi.encode(0) // clipboard
+        );
+
+        // Action 1: get convert capacity for bean:eth well
+        advancedPipeCalls[callCounter++] = AdvancedPipeCall(
+            address(bs), // target
+            getConvertCapacityEncoded, // calldata
+            abi.encode(0) // clipboard
+        );
+
+        bytes memory clipboardReturnLesser = abi.encodePacked(
+            bytes2(0x0100), // clipboard type 1
+            uint80(1), // from result of call at index 1
+            uint80(32), // take the first param
+            uint80(36) // paste into the 1st 32 bytes of the clipboard (plus 4 bytes)
+        );
+
+        // Action 2: returnLesser of amount or convert capacity
+        advancedPipeCalls[callCounter++] = AdvancedPipeCall(
+            address(miscHelper), // target
+            returnLesserEncoded, // calldata
+            clipboardReturnLesser // clipboard
+        );
+
+        // returnDataItemIndex, copyIndex, pasteIndex
+        bytes memory clipboardAddLiquidity = abi.encodePacked(
+            bytes2(0x0100), // clipboard type 1
+            uint80(2), // from result of call at index 2
+            uint80(32), // take the first param
+            uint80(196) // paste into the 6th 32 bytes of the clipboard
+        );
+
+        // Action 2: Add One sided Liquidity into the well.
+        advancedPipeCalls[callCounter++] = AdvancedPipeCall(
+            beanEthWell, // target
+            addLiquidityEncoded, // calldata
+            clipboardAddLiquidity // clipboard
+        );
+
+        assembly {
+            mstore(advancedPipeCalls, callCounter)
         }
 
         // Encode into a AdvancedFarmCall. NOTE: advancedFarmCall != advancedPipeCall.
