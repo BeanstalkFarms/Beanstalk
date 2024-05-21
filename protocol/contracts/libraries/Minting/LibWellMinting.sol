@@ -16,7 +16,6 @@ import {IBeanstalkWellFunction} from "contracts/interfaces/basin/IBeanstalkWellF
 import {LibRedundantMathSigned256} from "contracts/libraries/LibRedundantMathSigned256.sol";
 import {LibEthUsdOracle} from "contracts/libraries/Oracle/LibEthUsdOracle.sol";
 import {LibWhitelistedTokens} from "contracts/libraries/Silo/LibWhitelistedTokens.sol";
-import {console} from "forge-std/console.sol";
 import {LibRedundantMath256} from "contracts/libraries/LibRedundantMath256.sol";
 
 /**
@@ -260,13 +259,8 @@ library LibWellMinting {
         address well,
         uint256 lpSupply
     ) internal view returns (int256 wellDeltaB) {
-        console.log("scaledInstantaneousDeltaB for well: ", well);
         wellDeltaB = currentDeltaB(well);
-        console.log("pre-scale wellDeltaB: ");
-        console.logInt(wellDeltaB);
         wellDeltaB = scaledDeltaB(lpSupply, IERC20(well).totalSupply(), wellDeltaB);
-        console.log("post-scale wellDeltaB: ");
-        console.logInt(wellDeltaB);
     }
 
     /*

@@ -16,7 +16,6 @@ import {LibBytes} from "contracts/libraries/LibBytes.sol";
 import {LibGerminate} from "contracts/libraries/Silo/LibGerminate.sol";
 import {LibWhitelistedTokens} from "contracts/libraries/Silo/LibWhitelistedTokens.sol";
 import {LibTractor} from "contracts/libraries/LibTractor.sol";
-import {console} from "forge-std/console.sol";
 
 /**
  * @title LibTokenSilo
@@ -418,7 +417,6 @@ library LibTokenSilo {
         s.a[account].mowStatuses[token].bdv = s.a[account].mowStatuses[token].bdv.sub(
             uint128(crateBDV)
         );
-        console.log("final removed crateBDV: ", crateBDV);
     }
 
     //////////////////////// GETTERS ////////////////////////
@@ -566,10 +564,6 @@ library LibTokenSilo {
         uint256 grownStalk,
         uint256 bdv
     ) internal view returns (int96 stem, LibGerminate.Germinate germ) {
-        console.log("calculateStemForTokenFromGrownStalk");
-        console.log("token: ", token);
-        console.log("grownStalk: ", grownStalk);
-        console.log("bdv: ", bdv);
         LibGerminate.GermStem memory germStem = LibGerminate.getGerminatingStem(token);
         stem = germStem.stemTip.sub(
             SafeCast.toInt96(SafeCast.toInt256(grownStalk.mul(PRECISION).div(bdv)))

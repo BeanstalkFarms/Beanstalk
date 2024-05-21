@@ -218,22 +218,9 @@ contract ConvertTest is TestHelper {
         multipleBeanDepositSetup();
 
         deltaB = bound(deltaB, 100, 7000e6);
-        // deltaB = bound(deltaB, 100, bean.balanceOf(well) - C.WELL_MINIMUM_BEAN_BALANCE);
-        console.log("bounded deltaB: ", deltaB);
-        // setReserves(
-        //     well,
-        //     bean.balanceOf(well) - deltaB,
-        //     weth.balanceOf(well)
-        // );
-
-        // int256 negativeDeltaB = -int256(deltaB);
-        // console.log('negativeDeltaB: ');
-        // console.logInt(negativeDeltaB);
-
         setDeltaBforWell(int256(deltaB), well, C.WETH);
 
         beansConverted = bound(beansConverted, 100, deltaB);
-        console.log("bounded beansConverted: ", beansConverted);
 
         uint256 expectedAmtOut = bs.getAmountOut(C.BEAN, well, beansConverted);
 
@@ -253,13 +240,7 @@ contract ConvertTest is TestHelper {
         vm.prank(farmers[0]);
         convert.convert(convertData, new int96[](1), amounts);
 
-        // console.log('bs.getMaxAmountIn(C.BEAN, well): ', bs.getMaxAmountIn(C.BEAN, well));
-        console.log("deltaB: ", deltaB);
-        console.log("beansConverted: ", beansConverted);
-
         int256 newDeltaB = LibWellMinting.currentDeltaB(well);
-        console.log("newDeltaB: ");
-        console.logInt(newDeltaB);
 
         // verify deltaB.
         // assertEq(bs.getMaxAmountIn(C.BEAN, well), deltaB - beansConverted, 'BEAN -> WELL maxAmountIn should be deltaB - beansConverted');

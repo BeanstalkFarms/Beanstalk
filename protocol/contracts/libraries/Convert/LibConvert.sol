@@ -16,7 +16,6 @@ import {LibWellMinting} from "contracts/libraries/Minting/LibWellMinting.sol";
 import {C} from "contracts/C.sol";
 import {LibRedundantMathSigned256} from "contracts/libraries/LibRedundantMathSigned256.sol";
 import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
-import {console} from "forge-std/console.sol";
 
 /**
  * @title LibConvert
@@ -259,31 +258,10 @@ library LibConvert {
             dbs.afterOutputTokenDeltaB
         );
 
-        console.log("dbs.beforeInputTokenDeltaB: ");
-        console.logInt(dbs.beforeInputTokenDeltaB);
-        console.log("dbs.afterInputTokenDeltaB: ");
-        console.logInt(dbs.afterInputTokenDeltaB);
-
-        console.log("dbs.beforeOutputTokenDeltaB: ");
-        console.logInt(dbs.beforeOutputTokenDeltaB);
-        console.log("dbs.afterOutputTokenDeltaB: ");
-        console.logInt(dbs.afterOutputTokenDeltaB);
-
-        console.log("dbs.beforeOverallDeltaB: ");
-        console.logInt(dbs.beforeOverallDeltaB);
-        console.log("dbs.afterOverallDeltaB: ");
-        console.logInt(dbs.afterOverallDeltaB);
-
-        console.log("spd.overallAmountAgainstPeg: ", spd.overallAmountAgainstPeg);
-        console.log("spd.inputTokenAmountAgainstPeg: ", spd.inputTokenAmountAgainstPeg);
-        console.log("spd.outputTokenAmountAgainstPeg: ", spd.outputTokenAmountAgainstPeg);
-
         spd.higherAmountAgainstPeg = max(
             spd.overallAmountAgainstPeg,
             spd.inputTokenAmountAgainstPeg.add(spd.outputTokenAmountAgainstPeg)
         );
-
-        console.log("spd.higherAmountAgainstPeg: ", spd.higherAmountAgainstPeg);
 
         (
             spd.convertCapacityPenalty,
@@ -299,13 +277,11 @@ library LibConvert {
             spd.outputTokenAmountInDirectionOfPeg
         );
 
-        console.log("spd.convertCapacityPenalty: ", spd.convertCapacityPenalty);
-
         stalkPenaltyBdv = min(
             spd.higherAmountAgainstPeg.add(spd.convertCapacityPenalty),
             bdvConverted
         );
-        console.log("final stalkPenaltyBdv: ", stalkPenaltyBdv);
+
         return (
             stalkPenaltyBdv,
             spd.overallConvertCapacityUsed,
@@ -366,45 +342,23 @@ library LibConvert {
 
         // first check overall convert capacity, if none remaining then full penalty for amount in direction of peg
         if (convertCap.overallConvertCapacityUsed >= overallCappedDeltaB) {
-            console.log("convertCap.overallConvertCapacityUsed >= overallCappedDeltaB");
-            console.log("overallAmountInDirectionOfPeg: ", overallAmountInDirectionOfPeg);
             cumulativePenalty = overallAmountInDirectionOfPeg;
         }
-
-        console.log("overallAmountInDirectionOfPeg: ", overallAmountInDirectionOfPeg);
 
         // update overall remaining convert capacity
         overallConvertCapacityUsed = convertCap.overallConvertCapacityUsed.add(
             overallAmountInDirectionOfPeg
         );
-        // convertCap.overallConvertCapacityUsed = convertCap.overallConvertCapacityUsed.add(
-        //     overallAmountInDirectionOfPeg
-        // );
-
-        console.log(
-            "convertCap.overallConvertCapacityUsed: ",
-            convertCap.overallConvertCapacityUsed
-        );
-
-        console.log("overallCappedDeltaB: ", overallCappedDeltaB);
 
         // add to penalty how far past capacity was used
         if (convertCap.overallConvertCapacityUsed > overallCappedDeltaB) {
-            console.log("cumulativePenalty: ", cumulativePenalty);
-            console.log("overallCappedDeltaB: ", overallCappedDeltaB);
-            console.log(
-                "convertCap.overallConvertCapacityUsed: ",
-                convertCap.overallConvertCapacityUsed
-            );
             cumulativePenalty = convertCap.overallConvertCapacityUsed.sub(overallCappedDeltaB);
-            // 100 = 0-100
         }
 
         // update per-well convert capacity
 
         if (inputToken != C.BEAN && inputTokenAmountInDirectionOfPeg > 0) {
             uint256 inputTokenWellCapacity = abs(LibWellMinting.cappedReservesDeltaB(inputToken));
-            console.log("inputTokenWellCapacity: ", inputTokenWellCapacity);
             inputTokenAmountUsed = convertCap.wellConvertCapacityUsed[inputToken].add(
                 inputTokenAmountInDirectionOfPeg
             );
@@ -412,13 +366,11 @@ library LibConvert {
                 cumulativePenalty = cumulativePenalty.add(
                     inputTokenAmountUsed.sub(inputTokenWellCapacity)
                 );
-                console.log("cumulativePenalty after input token well cap: ", cumulativePenalty);
             }
         }
 
         if (outputToken != C.BEAN && outputTokenAmountInDirectionOfPeg > 0) {
             uint256 outputTokenWellCapacity = abs(LibWellMinting.cappedReservesDeltaB(outputToken));
-            console.log("outputTokenWellCapacity: ", outputTokenWellCapacity);
             outputTokenAmountUsed = convertCap.wellConvertCapacityUsed[outputToken].add(
                 outputTokenAmountInDirectionOfPeg
             );
@@ -428,9 +380,6 @@ library LibConvert {
                 );
             }
         }
-
-        console.log("cumulativePenalty: ", cumulativePenalty);
-        console.log("overallAmountInDirectionOfPeg: ", overallAmountInDirectionOfPeg);
     }
 
     /**

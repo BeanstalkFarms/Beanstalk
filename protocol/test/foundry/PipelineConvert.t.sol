@@ -1630,13 +1630,6 @@ contract PipelineConvertTest is TestHelper {
             // pass to the pump the reserves that we actually have in the well
             uint[] memory reserves = IWell(well).getReserves();
             MockPump(pump).update(well, reserves, new bytes(0));
-
-            console.log("updated reserves for pump: ", pump);
-            console.log("well: ", well);
-            console.log("reserves: ");
-            for (uint j = 0; j < reserves.length; j++) {
-                console.log("reserves[j]: ", reserves[j]);
-            }
         }
     }
 
@@ -2094,8 +2087,6 @@ contract PipelineConvertTest is TestHelper {
         address inputWell,
         address outputWell
     ) private view returns (AdvancedFarmCall[] memory output) {
-        console.log("createLPToBean amountOfLP: ", amountOfLP);
-
         // setup approve max call
         bytes memory approveEncoded = abi.encodeWithSelector(
             IERC20.approve.selector,
