@@ -1,6 +1,6 @@
 import styled, { css } from "styled-components";
 import { size } from "src/breakpoints";
-import { FontVariant, FontWeight, TextAlign } from "./types";
+import { FontVariant } from "src/utils/ui/theme";
 
 export const H1 = styled.h1`
   font-style: normal;
@@ -130,27 +130,4 @@ export const getFontVariantStyles = (variant: FontVariant) => {
     default:
       return BodyS;
   }
-};
-
-export const getFontWeightStyles = (weight: FontWeight) => {
-  return css`
-    font-weight: ${() => {
-      switch (weight) {
-        case "normal":
-          return 400;
-        case "semi-bold":
-          return 600;
-        case "bold":
-          return 700;
-        default:
-          return 400;
-      }
-    }};
-  `;
-};
-
-export const getTextAlignStyles = (align: TextAlign) => {
-  return css`
-    text-align: ${align};
-  `;
 };
