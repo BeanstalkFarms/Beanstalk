@@ -1,13 +1,14 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
+import { ButtonPrimary } from "src/components/Button";
 
-import { InfoActionRow } from "src/components/Common/InfoActionRow";
-import { StyledDiv, Flex } from "src/components/Layout";
+import { Flex } from "src/components/Layout";
 import { Page } from "src/components/Page";
 import { Title } from "src/components/PageComponents/Title";
 import { Text } from "src/components/Typography";
+
 import { theme } from "src/utils/ui/theme";
-import { css } from "styled-components";
+import styled from "styled-components";
 
 export const Build = () => {
   const navigate = useNavigate();
@@ -18,24 +19,19 @@ export const Build = () => {
 
   return (
     <Page>
-      <Flex gap={0.5}>
+      <Flex $gap={0.5}>
         <Title title="Build" fontWeight={"600"} largeOnMobile />
-        <Text variant="l" color="text.secondary">
+        <Text $variant="l" color="text.secondary">
           Basin has three unique components which can be composed together to create a custom liquidity pool, or Well.
         </Text>
       </Flex>
-      <StyledDiv css={styles.infoActionRowWrapper}>
-        <InfoActionRow label="Use the Well Creator to deploy your own Wells." buttonLabel="Well Creator →" onClick={handleNavigate} />
-      </StyledDiv>
-      <Flex gap={0.5}>
-        <Text variant="h2">COMPONENT LIBRARY</Text>
-        <Text
-          variant="l"
-          color="text.secondary"
-          css={css`
-            margin-top: ${theme.spacing(0.5)};
-          `}
-        >
+      <ActionBanner>
+        <Text $variant="l">Use the Well Creator to deploy your own Wells.</Text>
+        <ButtonPrimary onClick={handleNavigate}>Well Creator →</ButtonPrimary>
+      </ActionBanner>
+      <Flex $gap={0.5} $mt={3}>
+        <Text $variant="h2">COMPONENT LIBRARY</Text>
+        <Text $variant="l" $color="text.secondary">
           Use existing components which are already available for developers to extend, copy or compose together when building Wells. Select
           a component to view its implementation.
         </Text>
@@ -44,8 +40,13 @@ export const Build = () => {
   );
 };
 
-const styles = {
-  infoActionRowWrapper: css`
-    margin-bottom: ${theme.spacing(3)};
-  `
-};
+const ActionBanner = styled(Flex).attrs({
+  $py: 3,
+  $px: 2,
+  $justifyContent: "space-between",
+  $alignItems: "center",
+  $direction: "row"
+})`
+  background: ${theme.colors.white};
+  border: 0.25px solid ${theme.colors.gray};
+`;
