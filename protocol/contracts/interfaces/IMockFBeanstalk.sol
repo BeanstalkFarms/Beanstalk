@@ -86,7 +86,7 @@ interface IMockFBeanstalk {
         bool abovePeg;
         uint16 stemStartSeason;
         uint16 stemScaleSeason;
-        uint32 beanEthStartMintingSeason;
+        uint32 deprecated;
         uint256 start;
         uint256 period;
         uint256 timestamp;
