@@ -1,5 +1,25 @@
 query LatestAPY {
-  siloYields(first: 1, orderBy: season, orderDirection: desc) {
+  day: siloYields(first: 1, orderBy: season, orderDirection: desc,  where: {window: ROLLING_24_HOUR}) {
+    id
+    season
+    beansPerSeasonEMA
+    tokenAPYS {
+      token
+      beanAPY
+      stalkAPY
+    }
+  }
+  week: siloYields(first: 1, orderBy: season, orderDirection: desc,  where: {window: ROLLING_7_DAY}) {
+    id
+    season
+    beansPerSeasonEMA
+    tokenAPYS {
+      token
+      beanAPY
+      stalkAPY
+    }
+  }
+  month: siloYields(first: 1, orderBy: season, orderDirection: desc,  where: {window: ROLLING_30_DAY}) {
     id
     season
     beansPerSeasonEMA

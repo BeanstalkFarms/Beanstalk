@@ -1,19 +1,24 @@
 overwrite: true
-schema:
-  [
-    "https://graph.node.bean.money/subgraphs/name/beanstalk",
-    "https://graph.node.bean.money/subgraphs/name/bean",
-    "https://hub.snapshot.org/graphql",
-    "https://api.thegraph.com/subgraphs/name/snapshot-labs/snapshot",
-    "https://graph.node.bean.money/subgraphs/name/beanft"
-  ]
-documents: "src/**/*.graphql"
 generates:
   ./src/generated/graphql.tsx:
+    documents: "src/**/*.graphql"
+    schema:
+      - src/graph/schema-beanstalk.graphql
+      - src/graph/schema-bean.graphql
+      - src/graph/schema-snapshot1.graphql
+      - src/graph/schema-snapshot2.graphql
+      - src/graph/schema-beanft.graphql
     plugins:
       - "typescript"
       - "typescript-operations"
       - "typescript-react-apollo"
   ./src/graph/graphql.schema.json:
+    documents: "src/**/*.graphql"
+    schema:
+      - src/graph/schema-beanstalk.graphql
+      - src/graph/schema-bean.graphql
+      - src/graph/schema-snapshot1.graphql
+      - src/graph/schema-snapshot2.graphql
+      - src/graph/schema-beanft.graphql
     plugins:
       - "introspection"

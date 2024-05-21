@@ -71,3 +71,4 @@ generated
 # matchstick binary download info
 tests/.latest.json
 tests/.bin
+tests/.docker
