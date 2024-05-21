@@ -5,7 +5,7 @@
 pragma solidity ^0.8.20;
 
 import {C} from "../../C.sol";
-import {LibAppStorage, AppStorage, Storage} from "../LibAppStorage.sol";
+import {LibAppStorage, AppStorage, System} from "../LibAppStorage.sol";
 import {LibTokenSilo} from "contracts/libraries/Silo/LibTokenSilo.sol";
 import {LibWhitelistedTokens} from "contracts/libraries/Silo/LibWhitelistedTokens.sol";
 import {LibUnripe} from "contracts/libraries/LibUnripe.sol";
@@ -145,7 +145,7 @@ library LibWhitelist {
         address token,
         uint64 optimalPercentDepositedBdv
     ) internal {
-        Storage.SiloSettings storage ss = LibAppStorage.diamondStorage().siloSettings[token];
+        System.SiloSettings storage ss = LibAppStorage.diamondStorage().siloSettings[token];
         updateGaugeForToken(token, ss.gpSelector, ss.lwSelector, optimalPercentDepositedBdv);
     }
 
@@ -159,7 +159,7 @@ library LibWhitelist {
         bytes4 liquidityWeightSelector,
         uint64 optimalPercentDepositedBdv
     ) internal {
-        Storage.SiloSettings storage ss = LibAppStorage.diamondStorage().siloSettings[token];
+        System.SiloSettings storage ss = LibAppStorage.diamondStorage().siloSettings[token];
         require(ss.selector != 0, "Whitelist: Token not whitelisted in Silo");
         verifyGaugePointSelector(gaugePointSelector);
         verifyLiquidityWeightSelector(liquidityWeightSelector);

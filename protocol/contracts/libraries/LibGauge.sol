@@ -4,7 +4,7 @@
 
 pragma solidity ^0.8.20;
 
-import {LibAppStorage, AppStorage, Storage} from "./LibAppStorage.sol";
+import {LibAppStorage, AppStorage, System} from "./LibAppStorage.sol";
 import {LibRedundantMath256} from "contracts/libraries/LibRedundantMath256.sol";
 import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
 import {LibWhitelistedTokens} from "contracts/libraries/Silo/LibWhitelistedTokens.sol";
@@ -141,7 +141,7 @@ library LibGauge {
 
         // Calculate and update the gauge points for each LP.
         for (uint256 i; i < whitelistedLpTokens.length; ++i) {
-            Storage.SiloSettings storage ss = s.siloSettings[whitelistedLpTokens[i]];
+            System.SiloSettings storage ss = s.siloSettings[whitelistedLpTokens[i]];
 
             uint256 depositedBdv = s.siloBalances[whitelistedLpTokens[i]].depositedBdv;
 

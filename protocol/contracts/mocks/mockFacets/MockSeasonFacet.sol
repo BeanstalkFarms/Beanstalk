@@ -14,11 +14,10 @@ import {LibEthUsdOracle} from "contracts/libraries/Oracle/LibEthUsdOracle.sol";
 import {LibWstethEthOracle} from "contracts/libraries/Oracle/LibWstethEthOracle.sol";
 import {LibWstethUsdOracle} from "contracts/libraries/Oracle/LibWstethUsdOracle.sol";
 import {LibUsdOracle} from "contracts/libraries/Oracle/LibUsdOracle.sol";
-import {LibAppStorage, Storage} from "contracts/libraries/LibAppStorage.sol";
+import {LibAppStorage, System} from "contracts/libraries/LibAppStorage.sol";
 import {LibRedundantMathSigned256} from "contracts/libraries/LibRedundantMathSigned256.sol";
 import {LibGauge} from "contracts/libraries/LibGauge.sol";
 import {LibRedundantMath32} from "contracts/libraries/LibRedundantMath32.sol";
-import {LibCurveMinting} from "contracts/libraries/Minting/LibCurveMinting.sol";
 import {LibWellMinting} from "contracts/libraries/Minting/LibWellMinting.sol";
 import {LibEvaluate} from "contracts/libraries/LibEvaluate.sol";
 import {LibTokenSilo} from "contracts/libraries/Silo/LibTokenSilo.sol";
@@ -514,7 +513,7 @@ contract MockSeasonFacet is SeasonFacet {
         uint96 gaugePoints,
         uint64 optimalPercentDepositedBdv
     ) external {
-        Storage.SiloSettings storage ss = LibAppStorage.diamondStorage().siloSettings[token];
+        System.SiloSettings storage ss = LibAppStorage.diamondStorage().siloSettings[token];
         ss.gpSelector = gaugePointSelector;
         ss.gaugePoints = gaugePoints;
         ss.optimalPercentDepositedBdv = optimalPercentDepositedBdv;
@@ -526,13 +525,9 @@ contract MockSeasonFacet is SeasonFacet {
         );
     }
 
-    function mockSetBean3CrvOracle(uint256[2] memory reserves) external {
-        s.co.balances = reserves;
-    }
-
     function mockEndTotalGerminationForToken(address token) external {
         // increment total deposited and amounts for each token.
-        Storage.TotalGerminating storage totalGerm;
+        System.TotalGerminating storage totalGerm;
         if (LibGerminate.getSeasonGerminationState() == LibGerminate.Germinate.ODD) {
             totalGerm = s.oddGerminating;
         } else {

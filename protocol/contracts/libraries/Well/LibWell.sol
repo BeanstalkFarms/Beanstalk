@@ -9,7 +9,7 @@ import {ICumulativePump} from "contracts/interfaces/basin/pumps/ICumulativePump.
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {IWell, Call} from "contracts/interfaces/basin/IWell.sol";
 import {C} from "contracts/C.sol";
-import {AppStorage, LibAppStorage, Storage} from "../LibAppStorage.sol";
+import {AppStorage, LibAppStorage, System} from "../LibAppStorage.sol";
 import {LibUsdOracle} from "contracts/libraries/Oracle/LibUsdOracle.sol";
 import {LibRedundantMath128} from "contracts/libraries/LibRedundantMath128.sol";
 

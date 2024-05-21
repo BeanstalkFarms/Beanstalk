@@ -6,7 +6,7 @@ pragma solidity ^0.8.20;
 
 import {LibRedundantMath256} from "contracts/libraries/LibRedundantMath256.sol";
 import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
-import {LibAppStorage, Storage, AppStorage, Account} from "../LibAppStorage.sol";
+import {LibAppStorage, System, AppStorage, Account} from "../LibAppStorage.sol";
 import {C} from "../../C.sol";
 import {LibRedundantMath32} from "contracts/libraries/LibRedundantMath32.sol";
 import {LibRedundantMath128} from "contracts/libraries/LibRedundantMath128.sol";
@@ -101,7 +101,7 @@ library LibTokenSilo {
         LibGerminate.Germinate germ
     ) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        Storage.TotalGerminating storage germinate;
+        System.TotalGerminating storage germinate;
 
         // verify germ is valid
         if (germ == LibGerminate.Germinate.ODD) {
@@ -139,7 +139,7 @@ library LibTokenSilo {
         LibGerminate.Germinate germ
     ) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        Storage.TotalGerminating storage germinate;
+        System.TotalGerminating storage germinate;
 
         // verify germ is valid
         if (germ == LibGerminate.Germinate.ODD) {

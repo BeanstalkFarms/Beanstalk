@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import {LibAppStorage, Storage, AppStorage, Account} from "../LibAppStorage.sol";
+import {LibAppStorage, System, AppStorage, Account} from "../LibAppStorage.sol";
 import {LibRedundantMath128} from "../LibRedundantMath128.sol";
 import {LibRedundantMath32} from "../LibRedundantMath32.sol";
 import {LibRedundantMathSigned96} from "../LibRedundantMathSigned96.sol";
@@ -97,7 +97,7 @@ library LibGerminate {
         s.silo.roots = s.silo.roots.add(s.unclaimedGerminating[season.sub(2)].roots);
 
         // increment total deposited and amounts for each token.
-        Storage.TotalGerminating storage totalGerm;
+        System.TotalGerminating storage totalGerm;
         if (getSeasonGerminationState() == Germinate.ODD) {
             totalGerm = s.oddGerminating;
         } else {
@@ -322,7 +322,7 @@ library LibGerminate {
      */
     function getUnclaimedGerminatingStalkAndRoots(
         uint32 season
-    ) internal view returns (Storage.GerminatingSilo memory unclaimed) {
+    ) internal view returns (System.GerminatingSilo memory unclaimed) {
         AppStorage storage s = LibAppStorage.diamondStorage();
         unclaimed = s.unclaimedGerminating[season];
     }

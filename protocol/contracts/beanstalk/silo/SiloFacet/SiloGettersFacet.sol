@@ -4,7 +4,7 @@
 
 pragma solidity ^0.8.20;
 
-import {AppStorage, Storage, Account} from "contracts/beanstalk/AppStorage.sol";
+import {AppStorage, System, Account} from "contracts/beanstalk/AppStorage.sol";
 import {LibLegacyTokenSilo} from "contracts/libraries/Silo/LibLegacyTokenSilo.sol";
 import {LibRedundantMath128} from "contracts/libraries/LibRedundantMath128.sol";
 import {LibGerminate} from "contracts/libraries/Silo/LibGerminate.sol";
@@ -92,7 +92,7 @@ contract SiloGettersFacet is ReentrancyGuard {
     }
 
     /**
-     * @notice Get the Storage.SiloSettings for a whitelisted Silo token.
+     * @notice Get the System.SiloSettings for a whitelisted Silo token.
      *
      * Contains:
      *  - the BDV function selector
@@ -101,7 +101,7 @@ contract SiloGettersFacet is ReentrancyGuard {
      *  - milestoneSeason
      *  - lastStem
      */
-    function tokenSettings(address token) external view returns (Storage.SiloSettings memory) {
+    function tokenSettings(address token) external view returns (System.SiloSettings memory) {
         return s.siloSettings[token];
     }
 

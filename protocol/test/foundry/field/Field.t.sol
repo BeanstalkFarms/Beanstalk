@@ -322,7 +322,7 @@ contract FieldTest is TestHelper {
     //     weather = season.weather();
     //     vm.prank(siloChad);
     //     field.sow(0.5e6, 1, LibTransfer.From.EXTERNAL);
-    //     Storage.Weather memory weather2 = season.weather();
+    //     System.Weather memory weather2 = season.weather();
     //     assertEq(uint256(weather2.thisSowTime), uint256(weather.thisSowTime));
     // }
 

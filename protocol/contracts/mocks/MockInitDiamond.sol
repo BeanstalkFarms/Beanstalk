@@ -7,7 +7,7 @@ pragma solidity ^0.8.20;
 import {IBean} from "../interfaces/IBean.sol";
 import {IWETH} from "../interfaces/IWETH.sol";
 import {MockToken} from "../mocks/MockToken.sol";
-import {AppStorage, Storage} from "../beanstalk/AppStorage.sol";
+import {AppStorage, System} from "../beanstalk/AppStorage.sol";
 import {C} from "../C.sol";
 import {InitWhitelist} from "contracts/beanstalk/init/InitWhitelist.sol";
 import {InitWhitelistStatuses} from "contracts/beanstalk/init/InitWhitelistStatuses.sol";

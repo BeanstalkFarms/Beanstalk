@@ -4,7 +4,7 @@
 
 pragma solidity ^0.8.20;
 
-import {AppStorage, Storage} from "contracts/beanstalk/AppStorage.sol";
+import {AppStorage, System} from "contracts/beanstalk/AppStorage.sol";
 import "contracts/beanstalk/init/InitalizeDiamond.sol";
 import {LibWhitelistedTokens} from "contracts/libraries/Silo/LibWhitelistedTokens.sol";
 import {LibWhitelist} from "contracts/libraries/Silo/LibWhitelist.sol";
@@ -57,7 +57,7 @@ contract MockInitDiamond is InitalizeDiamond {
      */
     function whitelistUnripeAssets(
         address[] memory tokens,
-        Storage.SiloSettings[] memory siloSettings
+        System.SiloSettings[] memory siloSettings
     ) internal {
         for (uint i; i < tokens.length; i++) {
             // sets the silo settings for each token.
@@ -98,10 +98,10 @@ contract MockInitDiamond is InitalizeDiamond {
     function initalUnripeSiloSettings()
         internal
         view
-        returns (Storage.SiloSettings[] memory siloSettings)
+        returns (System.SiloSettings[] memory siloSettings)
     {
-        siloSettings = new Storage.SiloSettings[](2);
-        siloSettings[0] = Storage.SiloSettings({
+        siloSettings = new System.SiloSettings[](2);
+        siloSettings[0] = System.SiloSettings({
             selector: BDVFacet.unripeBeanToBDV.selector,
             stalkEarnedPerSeason: INIT_UR_BEAN_STALK_EARNED_PER_SEASON,
             stalkIssuedPerBdv: INIT_STALK_ISSUED_PER_BDV,
@@ -114,7 +114,7 @@ contract MockInitDiamond is InitalizeDiamond {
             gaugePoints: 0,
             optimalPercentDepositedBdv: 0
         });
-        siloSettings[1] = Storage.SiloSettings({
+        siloSettings[1] = System.SiloSettings({
             selector: BDVFacet.unripeLPToBDV.selector,
             stalkEarnedPerSeason: INIT_UR_BEAN_STALK_EARNED_PER_SEASON,
             stalkIssuedPerBdv: INIT_STALK_ISSUED_PER_BDV,
@@ -150,7 +150,7 @@ contract MockInitDiamond is InitalizeDiamond {
     function whitelistUnderlyingUrLPWell(address well) internal {
         // whitelist bean:stETH well
         // note: no error checking:
-        s.siloSettings[well] = Storage.SiloSettings({
+        s.siloSettings[well] = System.SiloSettings({
             selector: BDVFacet.wellBdv.selector,
             stalkEarnedPerSeason: INIT_BEAN_WSTETH_WELL_STALK_EARNED_PER_SEASON,
             stalkIssuedPerBdv: INIT_STALK_ISSUED_PER_BDV,

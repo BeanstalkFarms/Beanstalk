@@ -8,7 +8,7 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
  * @title Account
  * @author Publius
  * @notice Stores Farmer-level Beanstalk state.
- * @dev {Account.State} is the primary struct that is referenced from {Storage.State}.
+ * @dev {Account.State} is the primary struct that is referenced from {System.State}.
  * All other structs in {Account} are referenced in {Account.State}. Each unique
  * Ethereum address is a Farmer.
  */
@@ -80,7 +80,7 @@ contract Account {
      * @notice Stores a Farmer's Season of Plenty (SOP) balances.
      * @param roots The number of Roots a Farmer had when it started Raining.
      * @param plentyPerRoot The global Plenty Per Root index at the last time a Farmer updated their Silo.
-     * @param plenty The balance of a Farmer's plenty. Plenty can be claimed directly for 3CRV.
+     * @param plenty The balance of a Farmer's plenty. Plenty can be claimed directly for tokens.
      */
     struct SeasonOfPlenty {
         uint256 roots;
@@ -161,11 +161,11 @@ contract Account {
 }
 
 /**
- * @title Storage
+ * @title System
  * @author Publius
  * @notice Stores system-level Beanstalk state.
  */
-contract Storage {
+contract System {
     /**
      * @notice System-level Field state variables.
      * @param soil The number of Soil currently available. Adjusted during {Sun.stepSun}.
@@ -186,7 +186,7 @@ contract Storage {
      * @notice System-level Silo state; contains deposit and withdrawal data for a particular whitelisted Token.
      * @param deposited The total amount of this Token currently Deposited in the Silo.
      * @param depositedBdv The total bdv of this Token currently Deposited in the Silo.
-     * @dev {Storage.State} contains a mapping from Token address => AssetSilo.
+     * @dev {System.State} contains a mapping from Token address => AssetSilo.
      * Currently, the bdv of deposits are asynchronous, and require an on-chain transaction to update.
      * Thus, the total bdv of deposits cannot be calculated, and must be stored and updated upon a bdv change.
      *
@@ -420,13 +420,12 @@ contract Storage {
  * @notice Defines the state object for Beanstalk.
  * @param paused True if Beanstalk is Paused.
  * @param pausedAt The timestamp at which Beanstalk was last paused.
- * @param season Storage.Season
- * @param field Storage.Field
- * @param co Storage.CurveMetapoolOracle
- * @param rain Storage.Rain
- * @param silo Storage.Silo
+ * @param season System.Season
+ * @param field System.Field
+ * @param rain System.Rain
+ * @param silo System.Silo
  * @param reentrantStatus An intra-transaction state variable to protect against reentrance.
- * @param weather Storage.Weather
+ * @param weather System.Weather
  * @param earnedBeans The number of Beans distributed to the Silo that have not yet been Deposited as a result of the Earn function being called.
  * @param accounts mapping (address => Account.State)
  * @param podListings A mapping from Plot Index to the hash of the Pod Listing.
@@ -449,7 +448,7 @@ contract Storage {
  * @param isFarm Stores whether the function is wrapped in the `farm` function (1 if not, 2 if it is).
  * @param ownerCandidate Stores a candidate address to transfer ownership to. The owner must claim the ownership transfer.
  * @param wellOracleSnapshots A mapping from Well Oracle address to the Well Oracle Snapshot.
-  * @param migratedBdvs Stores the total migrated BDV since the implementation of the migrated BDV counter. See {LibLegacyTokenSilo.incrementMigratedBdv} for more info.
+ * @param migratedBdvs Stores the total migrated BDV since the implementation of the migrated BDV counter. See {LibLegacyTokenSilo.incrementMigratedBdv} for more info.
  * @param twaReserves A mapping from well to its twaReserves. Stores twaReserves during the sunrise function. Returns 1 otherwise for each asset. Currently supports 2 token wells.
  * @param usdTokenPrice A mapping from token address to usd price.
  * @param seedGauge Stores the seedGauge.
@@ -466,25 +465,24 @@ contract Storage {
 struct AppStorage {
     bool paused; // ────────┐ 1
     uint128 pausedAt; // ───┘ 16 (17/32)
-    Storage.Season season;
-    Storage.Field field;
-    Storage.CurveMetapoolOracle co;
-    Storage.Rain rain;
-    Storage.Silo silo;
+    System.Season season;
+    System.Field field;
+    System.Rain rain;
+    System.Silo silo;
     uint256 reentrantStatus;
-    Storage.Weather weather;
+    System.Weather weather;
     uint256 earnedBeans;
     mapping(address => Account.State) accounts;
     mapping(uint256 => bytes32) podListings;
     mapping(bytes32 => uint256) podOrders;
-    mapping(address => Storage.AssetSilo) siloBalances;
-    mapping(address => Storage.SiloSettings) siloSettings;
+    mapping(address => System.AssetSilo) siloBalances;
+    mapping(address => System.SiloSettings) siloSettings;
     mapping(uint32 => uint256) sops;
     // Internal Balances
     mapping(address => mapping(IERC20 => uint256)) internalTokenBalance;
     // Unripe
     mapping(address => mapping(address => bool)) unripeClaimed;
-    mapping(address => Storage.UnripeSettings) unripe;
+    mapping(address => System.UnripeSettings) unripe;
     // Fertilizer
     mapping(uint128 => uint256) fertilizer;
     mapping(uint128 => uint128) nextFid;
@@ -503,17 +501,17 @@ struct AppStorage {
     mapping(address => bytes) wellOracleSnapshots;
     // Silo V3 BDV Migration
     mapping(address => uint256) migratedBdvs;
-    // Well/Curve + USD Price Oracle
-    mapping(address => Storage.TwaReserves) twaReserves;
+    // Well + USD Price Oracle
+    mapping(address => System.TwaReserves) twaReserves;
     mapping(address => uint256) usdTokenPrice;
     // Seed Gauge
-    Storage.SeedGauge seedGauge;
+    System.SeedGauge seedGauge;
     bytes32[144] casesV2;
     // Germination
-    Storage.TotalGerminating oddGerminating;
-    Storage.TotalGerminating evenGerminating;
-    mapping(uint32 => Storage.GerminatingSilo) unclaimedGerminating;
-    Storage.WhitelistStatus[] whitelistStatuses;
+    System.TotalGerminating oddGerminating;
+    System.TotalGerminating evenGerminating;
+    mapping(uint32 => System.GerminatingSilo) unclaimedGerminating;
+    System.WhitelistStatus[] whitelistStatuses;
     address sopWell;
     // Cumulative internal Balance of tokens.
     mapping(IERC20 => uint256) internalTokenBalanceTotal;

@@ -2,7 +2,7 @@
 
 pragma solidity ^0.8.20;
 
-import {AppStorage, Storage} from "../../AppStorage.sol";
+import {AppStorage, System} from "../../AppStorage.sol";
 import {C} from "../../../C.sol";
 import {Decimal} from "contracts/libraries/Decimal.sol";
 import {LibEvaluate} from "contracts/libraries/LibEvaluate.sol";
@@ -43,9 +43,9 @@ contract SeasonGettersFacet {
     }
 
     /**
-     * @notice Returns the Season struct. See {Storage.Season}.
+     * @notice Returns the Season struct. See {System.Season}.
      */
-    function time() external view returns (Storage.Season memory) {
+    function time() external view returns (System.Season memory) {
         return s.season;
     }
 
@@ -64,16 +64,16 @@ contract SeasonGettersFacet {
     }
 
     /**
-     * @notice Returns the current Weather struct. See {AppStorage:Storage.Weather}.
+     * @notice Returns the current Weather struct. See {AppStorage:System.Weather}.
      */
-    function weather() public view returns (Storage.Weather memory) {
+    function weather() public view returns (System.Weather memory) {
         return s.weather;
     }
 
     /**
-     * @notice Returns the current Rain struct. See {AppStorage:Storage.Rain}.
+     * @notice Returns the current Rain struct. See {AppStorage:System.Rain}.
      */
-    function rain() public view returns (Storage.Rain memory) {
+    function rain() public view returns (System.Rain memory) {
         return s.rain;
     }
 
@@ -133,7 +133,7 @@ contract SeasonGettersFacet {
     /**
      * @notice Returns the seed gauge struct.
      */
-    function getSeedGauge() external view returns (Storage.SeedGauge memory) {
+    function getSeedGauge() external view returns (System.SeedGauge memory) {
         return s.seedGauge;
     }
 
@@ -360,7 +360,7 @@ contract SeasonGettersFacet {
         return l;
     }
 
-    function getSeasonStruct() external view returns (Storage.Season memory) {
+    function getSeasonStruct() external view returns (System.Season memory) {
         return s.season;
     }
 

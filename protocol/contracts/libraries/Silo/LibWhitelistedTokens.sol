@@ -5,7 +5,7 @@
 pragma solidity ^0.8.20;
 
 import {C} from "../../C.sol";
-import {AppStorage, Storage, LibAppStorage} from "contracts/libraries/LibAppStorage.sol";
+import {AppStorage, System, LibAppStorage} from "contracts/libraries/LibAppStorage.sol";
 
 /**
  * @title LibWhitelistedTokens
@@ -130,7 +130,7 @@ library LibWhitelistedTokens {
     function getWhitelistedStatuses()
         internal
         view
-        returns (Storage.WhitelistStatus[] memory _whitelistStatuses)
+        returns (System.WhitelistStatus[] memory _whitelistStatuses)
     {
         AppStorage storage s = LibAppStorage.diamondStorage();
         _whitelistStatuses = s.whitelistStatuses;
@@ -141,7 +141,7 @@ library LibWhitelistedTokens {
      */
     function getWhitelistedStatus(
         address token
-    ) internal view returns (Storage.WhitelistStatus memory _whitelistStatus) {
+    ) internal view returns (System.WhitelistStatus memory _whitelistStatus) {
         AppStorage storage s = LibAppStorage.diamondStorage();
         uint256 tokenStatusIndex = findWhitelistStatusIndex(token);
         _whitelistStatus = s.whitelistStatuses[tokenStatusIndex];
@@ -158,7 +158,7 @@ library LibWhitelistedTokens {
     ) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
         s.whitelistStatuses.push(
-            Storage.WhitelistStatus(token, isWhitelisted, isWhitelistedLp, isWhitelistedWell)
+            System.WhitelistStatus(token, isWhitelisted, isWhitelistedLp, isWhitelistedWell)
         );
 
         emit AddWhitelistStatus(
