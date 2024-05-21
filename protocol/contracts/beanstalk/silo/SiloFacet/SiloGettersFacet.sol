@@ -13,6 +13,7 @@ import {LibTokenSilo} from "contracts/libraries/Silo/LibTokenSilo.sol";
 import {LibRedundantMath256} from "contracts/libraries/LibRedundantMath256.sol";
 import {LibBytes} from "contracts/libraries/LibBytes.sol";
 import {LibSilo} from "contracts/libraries/Silo/LibSilo.sol";
+import {LibWhitelistedTokens} from "contracts/libraries/Silo/LibWhitelistedTokens.sol";
 import {C} from "contracts/C.sol";
 
 /**
@@ -22,6 +23,15 @@ import {C} from "contracts/C.sol";
 contract SiloGettersFacet is ReentrancyGuard {
     using LibRedundantMath256 for uint256;
     using LibRedundantMath128 for uint128;
+
+    /**
+     * @notice TokenDepositId contains the DepositsIds for a given token.
+     */
+    struct TokenDepositId {
+        address token;
+        uint256[] depositIds;
+        Account.Deposit[] tokenDeposits;
+    }
 
     /**
      * @dev Stores account-level Season of Plenty balances.
@@ -534,5 +544,47 @@ contract SiloGettersFacet is ReentrancyGuard {
      */
     function _season() internal view returns (uint32) {
         return s.season.current;
+    }
+
+    /**
+     * @notice returns the deposits for an account for all whitelistedTokens.
+     * @notice if a user has no deposits, the function will return an empty array.
+     */
+    function getDepositsForAccount(
+        address account
+    ) external view returns (TokenDepositId[] memory deposits) {
+        address[] memory tokens = LibWhitelistedTokens.getWhitelistedTokens();
+        deposits = new TokenDepositId[](tokens.length);
+        for (uint256 i; i < tokens.length; i++) {
+            deposits[i] = getTokenDepositsForAccount(account, tokens[i]);
+        }
+    }
+
+    /**
+     * @notice returns an array of deposits for a given account and token.
+     */
+    function getTokenDepositsForAccount(
+        address account,
+        address token
+    ) public view returns (TokenDepositId memory deposits) {
+        uint256[] memory depositIds = s.a[account].depositIdList[token];
+        if (depositIds.length == 0)
+            return TokenDepositId(token, depositIds, new Account.Deposit[](0));
+        deposits.token = token;
+        deposits.depositIds = depositIds;
+        deposits.tokenDeposits = new Account.Deposit[](depositIds.length);
+        for (uint256 i; i < depositIds.length; i++) {
+            deposits.tokenDeposits[i] = s.a[account].deposits[depositIds[i]];
+        }
+    }
+
+    /**
+     * @notice returns the DepositList for a given account and token.
+     */
+    function getTokenDepositIdsForAccount(
+        address account,
+        address token
+    ) public view returns (uint256[] memory depositIds) {
+        return s.a[account].depositIdList[token];
     }
 }

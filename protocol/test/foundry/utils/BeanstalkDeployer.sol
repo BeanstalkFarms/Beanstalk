@@ -45,7 +45,8 @@ contract BeanstalkDeployer is Utils {
         "ConvertGettersFacet",
         "MetadataFacet",
         "SeasonGettersFacet",
-        "DepotFacet"
+        "DepotFacet",
+        "MarketplaceFacet"
     ];
 
     // Facets that have a mock counter part should be appended here.
@@ -59,6 +60,7 @@ contract BeanstalkDeployer is Utils {
         "SeasonFacet" // MockSeasonFacet
     ];
     address[] facetAddresses;
+
     /**
      * @notice deploys the beanstalk diamond contract.
      * @param mock if true, deploys all mocks and sets the diamond address to the canonical beanstalk address.

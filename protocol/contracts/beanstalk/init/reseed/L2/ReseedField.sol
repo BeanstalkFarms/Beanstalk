@@ -40,6 +40,7 @@ contract ReseedField {
         for (uint i; i < accounts.length; i++) {
             for (uint j; j < podIndex.length; i++) {
                 s.a[accounts[i]].field.plots[podIndex[i][j]] = podAmounts[i][j];
+                s.a[accounts[i]].field.plotIndexes.push(podIndex[i][j]);
 
                 emit MigratedPlot(accounts[i], podIndex[i][j], podAmounts[i][j]);
                 calculatedTotalPods += podAmounts[i][j];

@@ -8,6 +8,7 @@ import {ILiquidityWeightFacet} from "contracts/beanstalk/sun/LiquidityWeightFace
 import {LibWhitelistedTokens} from "contracts/libraries/Silo/LibWhitelistedTokens.sol";
 import {AppStorage, Storage} from "contracts/beanstalk/AppStorage.sol";
 import {IGaugePointFacet} from "contracts/beanstalk/sun/GaugePointFacet.sol";
+import {LibTractor} from "contracts/libraries/LibTractor.sol";
 import {LibDiamond} from "contracts/libraries/LibDiamond.sol";
 import {LibCases} from "contracts/libraries/LibCases.sol";
 import {LibGauge} from "contracts/libraries/LibGauge.sol";
@@ -89,6 +90,9 @@ contract InitalizeDiamond {
         s.usdTokenPrice[C.BEAN_ETH_WELL] = 1;
         s.twaReserves[beanTokenWell].reserve0 = 1;
         s.twaReserves[beanTokenWell].reserve1 = 1;
+
+        // init tractor.
+        LibTractor._tractorStorage().activePublisher = payable(address(1));
     }
 
     /**

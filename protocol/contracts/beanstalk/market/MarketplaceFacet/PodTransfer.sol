@@ -10,6 +10,7 @@ import "contracts/interfaces/IBean.sol";
 import "contracts/libraries/LibRedundantMath32.sol";
 import "contracts/beanstalk/ReentrancyGuard.sol";
 import "contracts/C.sol";
+import "contracts/libraries/LibDibbler.sol";
 
 /**
  * @author Publius
@@ -50,13 +51,22 @@ contract PodTransfer is ReentrancyGuard {
 
     function insertPlot(address account, uint256 id, uint256 amount) internal {
         s.a[account].field.plots[id] = amount;
+        s.a[account].field.plotIndexes.push(id);
     }
 
     function removePlot(address account, uint256 id, uint256 start, uint256 end) internal {
         uint256 amount = s.a[account].field.plots[id];
-        if (start == 0) delete s.a[account].field.plots[id];
-        else s.a[account].field.plots[id] = start;
-        if (end != amount) s.a[account].field.plots[id.add(end)] = amount.sub(end);
+        if (start == 0) {
+            delete s.a[account].field.plots[id];
+            LibDibbler.removePlotIndexFromAccount(account, id);
+        } else {
+            s.a[account].field.plots[id] = start;
+        }
+        if (end != amount) {
+            uint256 newIndex = id.add(end);
+            s.a[account].field.plots[newIndex] = amount.sub(end);
+            s.a[account].field.plotIndexes.push(newIndex);
+        }
     }
 
     function decrementAllowancePods(address owner, address spender, uint256 amount) internal {

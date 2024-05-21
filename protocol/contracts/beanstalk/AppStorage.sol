@@ -18,10 +18,12 @@ contract Account {
      * @notice Stores a Farmer's Plots and Pod allowances.
      * @param plots A Farmer's Plots. Maps from Plot index to Pod amount.
      * @param podAllowances An allowance mapping for Pods similar to that of the ERC-20 standard. Maps from spender address to allowance amount.
+     * @param plotIndexes An array of Plot indexes. Used to return the Farmer's Plots.
      */
     struct Field {
         mapping(uint256 => uint256) plots;
         mapping(address => uint256) podAllowances;
+        uint256[] plotIndexes;
     }
 
     /**
@@ -119,6 +121,7 @@ contract Account {
      * @param isApprovedForAll A mapping of ERC1155 operator to approved status. ERC1155 compatability.
      * @param farmerGerminating A Farmer's germinating stalk. Seperated into odd and even stalk.
      * @param deposits SiloV3.1 deposits. A mapping from depositId to Deposit. SiloV3.1 introduces greater precision for deposits.
+     * @param depositIdList A list of depositIds for each token owned by the account.
      */
     struct State {
         Field field; // A Farmer's Field storage.
@@ -155,7 +158,7 @@ contract Account {
         uint128 deprecated_deltaRoots; // DEPRECATED - BIP-39 introduced germination.
         SeasonOfPlenty deprecated; // DEPRECATED – Replant reset the Season of Plenty mechanism
         uint256 roots; // A Farmer's Root balance.
-        uint256 deprecated_wrappedBeans; // DEPRECATED – Replant generalized Internal Balances. Wrapped Beans are now stored at the AppStorage level.
+        uint256 deprecated_wrappedBeans; // DEPRECATED – Replant generalized Internal Balances. Wrapped Beans are now stored at the s level.
         mapping(address => mapping(uint32 => Deposit)) legacyV2Deposits; // Legacy Silo V2 Deposits stored as a map from Token address to Season of Deposit to Deposit. NOTE: While the Silo V2 format is now deprecated, unmigrated Silo V2 deposits are still stored in this mapping.
         mapping(address => mapping(uint32 => uint256)) withdrawals; // Zero withdraw eliminates a need for withdraw mapping, but is kept for legacy
         SeasonOfPlenty sop; // A Farmer's Season Of Plenty storage.
@@ -170,6 +173,7 @@ contract Account {
         FarmerGerminatingStalk farmerGerminating; // A Farmer's germinating stalk.
         // Silo v3.1
         mapping(uint256 => Deposit) deposits; // Silo v3.1 Deposits stored as a map from uint256 to Deposit. This is an concat of the token address and the stem for a ERC20 deposit.
+        mapping(address => uint256[]) depositIdList; // A list of depositIds for each token owned by the account.
     }
 }
 

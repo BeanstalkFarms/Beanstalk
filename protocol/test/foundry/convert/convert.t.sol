@@ -46,8 +46,7 @@ contract ConvertTest is TestHelper {
         well = C.BEAN_ETH_WELL;
         // init user.
         farmers.push(users[1]);
-        vm.prank(farmers[0]);
-        C.bean().approve(BEANSTALK, type(uint256).max);
+        maxApproveBeanstalk(farmers);
 
         // Initialize well to balances. (1000 BEAN/ETH)
         addLiquidityToWell(
@@ -682,21 +681,4 @@ contract ConvertTest is TestHelper {
     //////////// UNRIPE_BEAN TO UNRIPE_LP ////////////
 
     //////////// UNRIPE_LP TO UNRIPE_BEAN ////////////
-
-    //////////////// CONVERT HELPERS /////////////////
-
-    function convertEncoder(
-        LibConvertData.ConvertKind kind,
-        address token,
-        uint256 amountIn,
-        uint256 minAmountOut
-    ) internal pure returns (bytes memory) {
-        if (kind == LibConvertData.ConvertKind.LAMBDA_LAMBDA) {
-            // lamda_lamda encoding
-            return abi.encode(kind, amountIn, token);
-        } else {
-            // default encoding
-            return abi.encode(kind, amountIn, minAmountOut, token);
-        }
-    }
 }

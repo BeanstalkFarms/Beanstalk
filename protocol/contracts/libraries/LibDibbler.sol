@@ -9,12 +9,13 @@ import {LibAppStorage, AppStorage} from "./LibAppStorage.sol";
 import {LibRedundantMath128} from "./LibRedundantMath128.sol";
 import {LibRedundantMath32} from "./LibRedundantMath32.sol";
 import {LibRedundantMath256} from "contracts/libraries/LibRedundantMath256.sol";
+
 /**
  * @title LibDibbler
  * @author Publius, Brean
  * @notice Calculates the amount of Pods received for Sowing under certain conditions.
  * Provides functions to calculate the instantaneous Temperature, which is adjusted by the
- * Morning Auction functionality. Provides math helpers for scaling Soil.
+ * Morning Auction functionality. Provides additional functionality used by field/market.
  */
 library LibDibbler {
     using PRBMath for uint256;
@@ -90,6 +91,7 @@ library LibDibbler {
         }
 
         s.a[account].field.plots[s.f.pods] = pods;
+        s.a[account].field.plotIndexes.push(s.f.pods);
         emit Sow(account, s.f.pods, beans, pods);
 
         s.f.pods = s.f.pods.add(pods);
@@ -368,5 +370,36 @@ library LibDibbler {
                     morningTemperature()
                 );
         }
+    }
+
+    /**
+     * @notice removes a plot index from an accounts plotIndex list.
+     */
+    function removePlotIndexFromAccount(address account, uint256 plotIndex) internal {
+        AppStorage storage s = LibAppStorage.diamondStorage();
+        uint256 i = findPlotIndexForAccount(account, plotIndex);
+        s.a[account].field.plotIndexes[i] = s.a[account].field.plotIndexes[
+            s.a[account].field.plotIndexes.length - 1
+        ];
+        s.a[account].field.plotIndexes.pop();
+    }
+
+    /**
+     * @notice finds the index of a plot in an accounts plotIndex list.
+     */
+    function findPlotIndexForAccount(
+        address account,
+        uint256 plotIndex
+    ) internal view returns (uint256 i) {
+        AppStorage storage s = LibAppStorage.diamondStorage();
+        uint256[] memory plotIndexes = s.a[account].field.plotIndexes;
+        uint256 length = plotIndexes.length;
+        while (plotIndexes[i] != plotIndex) {
+            i++;
+            if (i >= length) {
+                revert("Id not found");
+            }
+        }
+        return i;
     }
 }
