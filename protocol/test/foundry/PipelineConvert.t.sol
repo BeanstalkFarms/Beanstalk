@@ -25,12 +25,6 @@ import {LibConvert} from "contracts/libraries/Convert/LibConvert.sol";
 import {LibRedundantMath256} from "contracts/libraries/LibRedundantMath256.sol";
 import "forge-std/Test.sol";
 
-contract MiscHelperContract {
-    function returnNumber(uint256 num) public pure returns (uint256) {
-        return num;
-    }
-}
-
 /**
  * @title PipelineConvertTest
  * @author pizzaman1337
@@ -48,7 +42,6 @@ contract PipelineConvertTest is TestHelper {
     MockToken bean = MockToken(C.BEAN);
     address beanEthWell = C.BEAN_ETH_WELL;
     address beanwstethWell = C.BEAN_WSTETH_WELL;
-    MiscHelperContract miscHelper = new MiscHelperContract();
 
     // test accounts
     address[] farmers;
