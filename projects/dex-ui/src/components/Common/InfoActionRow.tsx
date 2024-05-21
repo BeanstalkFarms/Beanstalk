@@ -7,10 +7,9 @@ export interface IInfoActionRow {
   label: string;
   buttonLabel: string | JSX.Element;
   subLabel?: string;
-  onClick: () => void;
-
   labelProps?: TextProps;
   subLabelProps?: TextProps;
+  onClick: () => void;
 }
 
 export const InfoActionRow = ({ label, subLabel, buttonLabel, labelProps, subLabelProps, onClick }: IInfoActionRow) => {
