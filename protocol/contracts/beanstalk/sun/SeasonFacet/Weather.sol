@@ -16,11 +16,10 @@ import {LibWellMinting} from "contracts/libraries/Minting/LibWellMinting.sol";
 import {LibRedundantMath256} from "contracts/libraries/LibRedundantMath256.sol";
 import {LibRedundantMathSigned256} from "contracts/libraries/LibRedundantMathSigned256.sol";
 import {AppStorage, LibAppStorage} from "contracts/libraries/LibAppStorage.sol";
-import {console} from "hardhat/console.sol";
 
 /**
  * @title Weather
- * @author Publius, pizzaman1337
+ * @author Publius, pizzaman1337, Brean
  * @notice Weather controls the Temperature and Grown Stalk to LP on the Farm.
  */
 contract Weather is Sun {
@@ -360,7 +359,7 @@ contract Weather is Sun {
         uint256 totalPositiveDeltaB,
         uint256 totalNegativeDeltaB,
         uint256 positiveDeltaBCount
-    ) public view returns (WellDeltaB[] memory) {
+    ) public pure returns (WellDeltaB[] memory) {
         // most likely case is that all deltaBs are positive
         if (positiveDeltaBCount == wellDeltaBs.length) {
             // if all deltaBs are positive, need to sop all to zero
@@ -381,18 +380,11 @@ contract Weather is Sun {
             return wellDeltaBs;
         }
 
-        // uint256 shaveOff = totalPositiveDeltaB - totalNegativeDeltaB;
-        // uint256 cumulativeTotal;
-
         uint256 shaveToLevel = totalNegativeDeltaB / positiveDeltaBCount;
-        console.log("shaveToLevel", shaveToLevel);
-        for (uint256 i = positiveDeltaBCount; i > 0; i--) {
-            console.log("i", i);
-            console.log("wellDeltaBs[i - 1].deltaB", uint256(wellDeltaBs[i - 1].deltaB));
 
+        for (uint256 i = positiveDeltaBCount; i > 0; i--) {
             if (shaveToLevel > uint256(wellDeltaBs[i - 1].deltaB)) {
                 shaveToLevel += (shaveToLevel - uint256(wellDeltaBs[i - 1].deltaB)) / (i - 1);
-                console.log("new shaveToLevel", shaveToLevel);
 
                 // reduction amount does not need to be set here,
                 // but is written for demonstration.
@@ -401,52 +393,8 @@ contract Weather is Sun {
                 wellDeltaBs[i - 1].reductionAmount =
                     uint256(wellDeltaBs[i - 1].deltaB) -
                     shaveToLevel;
-                console.log(
-                    "wellDeltaBs[i - 1].reductionAmount",
-                    wellDeltaBs[i - 1].reductionAmount
-                );
             }
         }
-
-        /*uint256 shaveToLevel;
-
-        for (uint256 i = 0; i <= positiveDeltaBCount; i++) {
-            if (i == 0) {
-                // reduce enough to equal the negative deltaB
-                if (positiveDeltaBCount == 1) {
-                    wellDeltaBs[i].reductionAmount = uint256(wellDeltaBs[i].deltaB).sub(
-                        totalNegativeDeltaB
-                    );
-                    return wellDeltaBs;
-                }
-            } else {
-                uint256 diffToPrevious = wellDeltaBs[i].deltaB > 0
-                    ? uint256(wellDeltaBs[i - 1].deltaB).sub(uint256(wellDeltaBs[i].deltaB))
-                    : 0;
-
-                if (
-                    cumulativeTotal.add(diffToPrevious.mul(i)) >= shaveOff ||
-                    i == positiveDeltaBCount
-                ) {
-                    // There is enough to shave off using the already processed wells
-                    // No need to dip into this one currently processing
-                    uint256 remaining = shaveOff - cumulativeTotal;
-                    // The remaining needs to be distributed equally taken from all the wells processed
-                    // this proportional reduction can be used to subtract from the current well deltaB and find the shave-to level
-                    shaveToLevel = uint(wellDeltaBs[i - 1].deltaB) - remaining.div(i);
-                    break;
-                } else {
-                    cumulativeTotal = cumulativeTotal.add(diffToPrevious.mul(i));
-                }
-            }
-        }*/
-
-        // return the amount of beans that need to be flooded per well
-        /*for (uint256 i = 0; i < positiveDeltaBCount; i++) {
-            wellDeltaBs[i].reductionAmount = wellDeltaBs[i].deltaB > int256(shaveToLevel)
-                ? uint256(wellDeltaBs[i].deltaB) - shaveToLevel
-                : 0;
-        }*/
         return wellDeltaBs;
     }
 }
