@@ -19,7 +19,8 @@ export type DexSettings = {
   NETLIFY_BUILD_ID?: string;
 };
 
-const temp = netlifyContext === "production" || "deploy-preview" ? ProdSettings : DevSettings;
+// const temp = netlifyContext === "production" || "deploy-preview" ? ProdSettings : DevSettings;
+const temp = DevSettings;
 
 export const Settings = {
   ...temp,

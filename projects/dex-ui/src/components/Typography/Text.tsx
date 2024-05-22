@@ -12,9 +12,9 @@ export interface TextProps extends HTMLAttributes<HTMLDivElement>, BoxModelProps
 
 export const Text = styled.div<TextProps>`
   ${(props) => theme.font.styles.variant(props.$variant || "s")}
-  ${(props) => props.$size && theme.font.styles.size(props.$size)}
-  ${(props) => props.$weight && theme.font.styles.weight(props.$weight)}
-  ${(props) => props.$color && theme.font.styles.color(props.$color || "text.primary")}
-  ${(props) => props.$css && props.$css}
+  ${(props) => (props.$size ? theme.font.styles.size(props.$size) : "")}
+  ${(props) => (props.$weight ? theme.font.styles.weight(props.$weight) : "")}
+  ${(props) => (props.$color ? theme.font.styles.color(props.$color || "text.primary") : "")}
+  ${(props) => (props.$css ? props.$css : "")}
   ${BoxModelBase}
 `;
