@@ -18,12 +18,16 @@ contract MockChainlinkAggregator is IChainlinkAggregator {
         return _decimals;
     }
 
-    function description() external view override returns (string memory) {
-        return "Mock CHainlink Aggregator";
+    function description() external pure override returns (string memory) {
+        return "Mock Chainlink Aggregator";
     }
 
-    function version() external view override returns (uint256) {
+    function version() external pure override returns (uint256) {
         return 1;
+    }
+
+    function getLatestRoundId() external view returns (uint80) {
+        return lastRound;
     }
 
     function getRoundData(

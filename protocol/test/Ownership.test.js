@@ -25,6 +25,7 @@ describe('Ownership', function () {
     this.whitelist = await ethers.getContractAt('WhitelistFacet', this.diamond.address);
     this.silo = await ethers.getContractAt('MockSiloFacet', this.diamond.address);
     this.season = await ethers.getContractAt('MockSeasonFacet', this.diamond.address);
+    this.seasonGetter = await ethers.getContractAt('SeasonGettersFacet', this.diamond.address);
     const SiloToken = await ethers.getContractFactory("MockToken");
     this.siloToken = await SiloToken.deploy("Silo", "SILO")
     await this.siloToken.deployed()
@@ -81,7 +82,7 @@ describe('Ownership', function () {
 
     it('pauses', async function () {
       this.result = await this.pause.connect(owner).pause()
-      expect(await this.season.paused()).to.equal(true)
+      expect(await this.seasonGetter.paused()).to.equal(true)
       await expect(this.result).to.emit(this.pause, 'Pause')
     })
   })
@@ -98,7 +99,7 @@ describe('Ownership', function () {
     it('unpauses', async function () {
       await this.pause.connect(owner).pause()
       this.result = await this.pause.connect(owner).unpause()
-      expect(await this.season.paused()).to.equal(false)
+      expect(await this.seasonGetter.paused()).to.equal(false)
       await expect(this.result).to.emit(this.pause, 'Unpause')
     })
   })

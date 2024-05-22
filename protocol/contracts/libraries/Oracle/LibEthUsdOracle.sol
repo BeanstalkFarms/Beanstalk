@@ -8,7 +8,8 @@ pragma experimental ABIEncoderV2;
 import {LibChainlinkOracle} from "./LibChainlinkOracle.sol";
 import {LibUniswapOracle} from "./LibUniswapOracle.sol";
 import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
-
+import {LibAppStorage, AppStorage} from "contracts/libraries/LibAppStorage.sol";
+import {C} from "contracts/C.sol";
 /**
  * @title Eth Usd Oracle Library
  * @notice Contains functionalty to fetch a manipulation resistant ETH/USD price.
