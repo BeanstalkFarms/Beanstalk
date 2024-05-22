@@ -6,6 +6,7 @@ pragma solidity ^0.8.20;
 
 import {LibConvert} from "contracts/libraries/Convert/LibConvert.sol";
 import {LibWellMinting} from "contracts/libraries/Minting/LibWellMinting.sol";
+import {LibDeltaB} from "contracts/libraries/Oracle/LibDeltaB.sol";
 
 /**
  * @author Publius
@@ -35,6 +36,6 @@ contract ConvertGettersFacet {
 
     // TODO: rename this function? somehow indicate that is uses capped reserves?
     function overallCappedDeltaB() external view returns (int256 deltaB) {
-        return LibWellMinting.overallCappedDeltaB();
+        return LibDeltaB.overallCappedDeltaB();
     }
 }

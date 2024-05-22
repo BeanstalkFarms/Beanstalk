@@ -10,6 +10,7 @@ import {LibConvertData} from "contracts/libraries/Convert/LibConvertData.sol";
 import {MockToken} from "contracts/mocks/MockToken.sol";
 import {LibWell} from "contracts/libraries/Well/LibWell.sol";
 import {LibWellMinting} from "contracts/libraries/Minting/LibWellMinting.sol";
+import {LibDeltaB} from "contracts/libraries/Oracle/LibDeltaB.sol";
 import {console} from "forge-std/console.sol";
 
 /**
@@ -240,7 +241,7 @@ contract ConvertTest is TestHelper {
         vm.prank(farmers[0]);
         convert.convert(convertData, new int96[](1), amounts);
 
-        int256 newDeltaB = LibWellMinting.currentDeltaB(well);
+        int256 newDeltaB = LibDeltaB.currentDeltaB(well);
 
         // verify deltaB.
         // assertEq(bs.getMaxAmountIn(C.BEAN, well), deltaB - beansConverted, 'BEAN -> WELL maxAmountIn should be deltaB - beansConverted');

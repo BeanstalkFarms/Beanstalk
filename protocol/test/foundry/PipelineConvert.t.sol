@@ -23,6 +23,7 @@ import {LibClipboard} from "contracts/libraries/LibClipboard.sol";
 import {LibWellMinting} from "contracts/libraries/Minting/LibWellMinting.sol";
 import {LibConvert} from "contracts/libraries/Convert/LibConvert.sol";
 import {LibRedundantMath256} from "contracts/libraries/LibRedundantMath256.sol";
+import {LibDeltaB} from "contracts/libraries/Oracle/LibDeltaB.sol";
 import "forge-std/Test.sol";
 
 contract MiscHelperContract {
@@ -352,27 +353,27 @@ contract PipelineConvertTest is TestHelper {
 
         LibConvert.DeltaBStorage memory dbs;
 
-        dbs.beforeInputTokenDeltaB = LibWellMinting.currentDeltaB(pd.inputWell);
+        dbs.beforeInputTokenDeltaB = LibDeltaB.currentDeltaB(pd.inputWell);
 
-        dbs.afterInputTokenDeltaB = LibWellMinting.scaledDeltaB(
+        dbs.afterInputTokenDeltaB = LibDeltaB.scaledDeltaB(
             pd.beforeInputTokenLPSupply,
             pd.afterInputTokenLPSupply,
             pd.inputWellNewDeltaB
         );
-        dbs.beforeOutputTokenDeltaB = LibWellMinting.currentDeltaB(pd.outputWell);
+        dbs.beforeOutputTokenDeltaB = LibDeltaB.currentDeltaB(pd.outputWell);
 
-        dbs.afterOutputTokenDeltaB = LibWellMinting.scaledDeltaB(
+        dbs.afterOutputTokenDeltaB = LibDeltaB.scaledDeltaB(
             pd.beforeOutputTokenLPSupply,
             pd.afterOutputTokenLPSupply,
             pd.outputWellNewDeltaB
         );
-        dbs.beforeOverallDeltaB = LibWellMinting.overallCurrentDeltaB();
+        dbs.beforeOverallDeltaB = LibDeltaB.overallCurrentDeltaB();
         dbs.afterOverallDeltaB = dbs.afterInputTokenDeltaB + dbs.afterOutputTokenDeltaB; // update and for scaled deltaB
 
         (uint256 stalkPenalty, , , ) = LibConvert.calculateStalkPenalty(
             dbs,
             bdvOfDepositedLp,
-            LibConvert.abs(LibWellMinting.overallCappedDeltaB()), // overall convert capacity
+            LibConvert.abs(LibDeltaB.overallCappedDeltaB()), // overall convert capacity
             pd.inputWell,
             pd.outputWell
         );
@@ -945,7 +946,7 @@ contract PipelineConvertTest is TestHelper {
         td.lpAmountAfter = td.lpAmountBefore.add(td.lpAmountOut);
         dbs.beforeOverallDeltaB = bs.overallCurrentDeltaB();
         // calculate scaled overall deltaB, based on just the well affected
-        dbs.afterOverallDeltaB = LibWellMinting.scaledDeltaB(
+        dbs.afterOverallDeltaB = LibDeltaB.scaledDeltaB(
             td.lpAmountBefore,
             td.lpAmountAfter,
             td.calculatedDeltaBAfter
@@ -2183,7 +2184,7 @@ contract PipelineConvertTest is TestHelper {
         reserves[beanIndex] = reserves[beanIndex].sub(beansOut);
 
         // get new deltaB
-        deltaB = LibWellMinting.calculateDeltaBFromReserves(well, reserves, 0);
+        deltaB = LibDeltaB.calculateDeltaBFromReserves(well, reserves, 0);
     }
 
     function calculateDeltaBForWellAfterAddingBean(
@@ -2203,7 +2204,7 @@ contract PipelineConvertTest is TestHelper {
         // add to bean index (no beans out on this one)
         reserves[beanIndex] = reserves[beanIndex].add(beansIn);
         // get new deltaB
-        deltaB = LibWellMinting.calculateDeltaBFromReserves(well, reserves, 0);
+        deltaB = LibDeltaB.calculateDeltaBFromReserves(well, reserves, 0);
     }
 
     function calculateDeltaBForWellAfterAddingNonBean(
@@ -2223,6 +2224,6 @@ contract PipelineConvertTest is TestHelper {
         reserves[nonBeanIndex] = reserves[nonBeanIndex].add(amountIn);
 
         // get new deltaB
-        deltaB = LibWellMinting.calculateDeltaBFromReserves(well, reserves, 0);
+        deltaB = LibDeltaB.calculateDeltaBFromReserves(well, reserves, 0);
     }
 }

@@ -16,6 +16,7 @@ import {LibWellMinting} from "contracts/libraries/Minting/LibWellMinting.sol";
 import {C} from "contracts/C.sol";
 import {LibRedundantMathSigned256} from "contracts/libraries/LibRedundantMathSigned256.sol";
 import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
+import {LibDeltaB} from "contracts/libraries/Oracle/LibDeltaB.sol";
 
 /**
  * @title LibConvert
@@ -303,7 +304,7 @@ library LibConvert {
         // update per-well convert capacity
 
         if (inputToken != C.BEAN && inputTokenAmountInDirectionOfPeg > 0) {
-            uint256 inputTokenWellCapacity = abs(LibWellMinting.cappedReservesDeltaB(inputToken));
+            uint256 inputTokenWellCapacity = abs(LibDeltaB.cappedReservesDeltaB(inputToken));
             pdCapacity.inputToken = convertCap.wellConvertCapacityUsed[inputToken].add(
                 inputTokenAmountInDirectionOfPeg
             );
@@ -315,7 +316,7 @@ library LibConvert {
         }
 
         if (outputToken != C.BEAN && outputTokenAmountInDirectionOfPeg > 0) {
-            uint256 outputTokenWellCapacity = abs(LibWellMinting.cappedReservesDeltaB(outputToken));
+            uint256 outputTokenWellCapacity = abs(LibDeltaB.cappedReservesDeltaB(outputToken));
             pdCapacity.outputToken = convertCap.wellConvertCapacityUsed[outputToken].add(
                 outputTokenAmountInDirectionOfPeg
             );
