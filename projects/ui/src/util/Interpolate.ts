@@ -114,10 +114,10 @@ export const interpolateFarmerStalk = (
       // Use the corresponding total stalk value.
       currStalk = toTokenUnitsBN(snapshots[j].stalk, STALK.decimals);
       currSeeds = toTokenUnitsBN(
-        snapshots[j].grownStalkPerBdvPerSeason,
+        snapshots[j].seeds,
         SEEDS.decimals
       );
-      currGrownStalk = toTokenUnitsBN(BigNumber(10000000000), STALK.decimals);
+      currGrownStalk = toTokenUnitsBN(BigNumber(0), STALK.decimals);
       currTimestamp = DateTime.fromJSDate(
         secondsToDate(snapshots[j].createdAt)
       );

@@ -2,17 +2,16 @@ import React from 'react';
 import SeasonPlot, {
   SeasonPlotBaseProps,
 } from '~/components/Common/Charts/SeasonPlot';
-import { SeasonalSeedsDocument, SeasonalSeedsQuery } from '~/generated/graphql';
 import { SnapshotData } from '~/hooks/beanstalk/useSeasonsQuery';
 import { toTokenUnitsBN } from '~/util';
 import { SEEDS } from '~/constants/tokens';
 import { tickFormatTruncated } from '~/components/Analytics/formatters';
 import { LineChartProps } from '~/components/Common/Charts/LineChart';
-
 import { FC } from '~/types';
+import { SeasonalSeedsDocument, SeasonalSeedsQuery } from '~/generated/graphql';
 
 const getValue = (season: SnapshotData<SeasonalSeedsQuery>) =>
-  toTokenUnitsBN(season.grownStalkPerBdvPerSeason, SEEDS.decimals).toNumber();
+  toTokenUnitsBN(season.seeds, SEEDS.decimals).toNumber();
 const formatValue = (value: number) =>
   `${value.toLocaleString('en-US', { maximumFractionDigits: 0 })}`;
 const statProps = {

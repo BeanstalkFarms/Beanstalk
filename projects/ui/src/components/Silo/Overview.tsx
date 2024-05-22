@@ -132,7 +132,7 @@ const Overview: FC<{
         <Stat
           title="Grown Stalk"
           titleTooltip="The total number of Mowable Grown Stalk your Deposits have accrued."
-          amount={displayStalk(BigNumber(_grownStalkValue, 10))}
+          amount={_grownStalkValue ? displayStalk(BigNumber(_grownStalkValue, 10)) : '-'}
           color="text.primary"
           gap={0.25}
           sx={{ minWidth: 120, ml: 0 }}
