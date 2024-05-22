@@ -1018,57 +1018,54 @@ contract PipelineConvertTest is TestHelper {
     function testAmountAgainstPeg() public view {
         uint256 amountAgainstPeg;
 
-        (amountAgainstPeg) = LibConvert.calculateAmountAgainstPeg(-500, -400);
+        (amountAgainstPeg) = LibConvert.calculateAgainstPeg(-500, -400);
         assertEq(amountAgainstPeg, 0);
 
-        (amountAgainstPeg) = LibConvert.calculateAmountAgainstPeg(-100, 0);
+        (amountAgainstPeg) = LibConvert.calculateAgainstPeg(-100, 0);
         assertEq(amountAgainstPeg, 0);
 
-        (amountAgainstPeg) = LibConvert.calculateAmountAgainstPeg(100, 0);
+        (amountAgainstPeg) = LibConvert.calculateAgainstPeg(100, 0);
         assertEq(amountAgainstPeg, 0);
 
-        (amountAgainstPeg) = LibConvert.calculateAmountAgainstPeg(1, 101);
+        (amountAgainstPeg) = LibConvert.calculateAgainstPeg(1, 101);
         assertEq(amountAgainstPeg, 100);
 
-        (amountAgainstPeg) = LibConvert.calculateAmountAgainstPeg(0, 100);
+        (amountAgainstPeg) = LibConvert.calculateAgainstPeg(0, 100);
         assertEq(amountAgainstPeg, 100);
 
-        (amountAgainstPeg) = LibConvert.calculateAmountAgainstPeg(0, -100);
+        (amountAgainstPeg) = LibConvert.calculateAgainstPeg(0, -100);
         assertEq(amountAgainstPeg, 100);
     }
 
     function testCalculateConvertedTowardsPeg() public pure {
         int256 beforeDeltaB = -100;
         int256 afterDeltaB = 0;
-        uint256 amountInDirectionOfPeg = LibConvert.calculateConvertedTowardsPeg(
-            beforeDeltaB,
-            afterDeltaB
-        );
+        uint256 amountInDirectionOfPeg = LibConvert.calculateTowardsPeg(beforeDeltaB, afterDeltaB);
         assertEq(amountInDirectionOfPeg, 100);
 
         beforeDeltaB = 100;
         afterDeltaB = 0;
-        amountInDirectionOfPeg = LibConvert.calculateConvertedTowardsPeg(beforeDeltaB, afterDeltaB);
+        amountInDirectionOfPeg = LibConvert.calculateTowardsPeg(beforeDeltaB, afterDeltaB);
         assertEq(amountInDirectionOfPeg, 100);
 
         beforeDeltaB = -50;
         afterDeltaB = 50;
-        amountInDirectionOfPeg = LibConvert.calculateConvertedTowardsPeg(beforeDeltaB, afterDeltaB);
+        amountInDirectionOfPeg = LibConvert.calculateTowardsPeg(beforeDeltaB, afterDeltaB);
         assertEq(amountInDirectionOfPeg, 50);
 
         beforeDeltaB = 50;
         afterDeltaB = -50;
-        amountInDirectionOfPeg = LibConvert.calculateConvertedTowardsPeg(beforeDeltaB, afterDeltaB);
+        amountInDirectionOfPeg = LibConvert.calculateTowardsPeg(beforeDeltaB, afterDeltaB);
         assertEq(amountInDirectionOfPeg, 50);
 
         beforeDeltaB = 0;
         afterDeltaB = 100;
-        amountInDirectionOfPeg = LibConvert.calculateConvertedTowardsPeg(beforeDeltaB, afterDeltaB);
+        amountInDirectionOfPeg = LibConvert.calculateTowardsPeg(beforeDeltaB, afterDeltaB);
         assertEq(amountInDirectionOfPeg, 0);
 
         beforeDeltaB = 0;
         afterDeltaB = -100;
-        amountInDirectionOfPeg = LibConvert.calculateConvertedTowardsPeg(beforeDeltaB, afterDeltaB);
+        amountInDirectionOfPeg = LibConvert.calculateTowardsPeg(beforeDeltaB, afterDeltaB);
         assertEq(amountInDirectionOfPeg, 0);
     }
 
@@ -1112,7 +1109,7 @@ contract PipelineConvertTest is TestHelper {
         uint256 inputTokenAmountInDirectionOfPeg = amount;
         address outputToken = C.BEAN;
         uint256 outputTokenAmountInDirectionOfPeg = amount;
-        (uint256 penalty, , , ) = LibConvert.calculateConvertCapacityPenalty(
+        (uint256 penalty, ) = LibConvert.calculateConvertCapacityPenalty(
             overallCappedDeltaB,
             overallAmountInDirectionOfPeg,
             inputToken,
@@ -1129,7 +1126,7 @@ contract PipelineConvertTest is TestHelper {
         inputTokenAmountInDirectionOfPeg = amount;
         outputToken = C.BEAN;
         outputTokenAmountInDirectionOfPeg = amount;
-        (penalty, , , ) = LibConvert.calculateConvertCapacityPenalty(
+        (penalty, ) = LibConvert.calculateConvertCapacityPenalty(
             overallCappedDeltaB,
             overallAmountInDirectionOfPeg,
             inputToken,
@@ -1151,7 +1148,7 @@ contract PipelineConvertTest is TestHelper {
         uint256 inputTokenAmountInDirectionOfPeg = 0;
         address outputToken = C.BEAN;
         uint256 outputTokenAmountInDirectionOfPeg = 0;
-        (uint256 penalty, , , ) = LibConvert.calculateConvertCapacityPenalty(
+        (uint256 penalty, ) = LibConvert.calculateConvertCapacityPenalty(
             overallCappedDeltaB,
             overallAmountInDirectionOfPeg,
             inputToken,
@@ -1170,7 +1167,7 @@ contract PipelineConvertTest is TestHelper {
         uint256 inputTokenAmountInDirectionOfPeg = 0;
         address outputToken = C.BEAN;
         uint256 outputTokenAmountInDirectionOfPeg = 0;
-        (uint256 penalty, , , ) = LibConvert.calculateConvertCapacityPenalty(
+        (uint256 penalty, ) = LibConvert.calculateConvertCapacityPenalty(
             overallCappedDeltaB,
             overallAmountInDirectionOfPeg,
             inputToken,
@@ -1186,7 +1183,7 @@ contract PipelineConvertTest is TestHelper {
         inputTokenAmountInDirectionOfPeg = amount;
         outputToken = C.BEAN;
         outputTokenAmountInDirectionOfPeg = 0;
-        (penalty, , , ) = LibConvert.calculateConvertCapacityPenalty(
+        (penalty, ) = LibConvert.calculateConvertCapacityPenalty(
             overallCappedDeltaB,
             overallAmountInDirectionOfPeg,
             inputToken,
@@ -1206,7 +1203,7 @@ contract PipelineConvertTest is TestHelper {
         uint256 inputTokenAmountInDirectionOfPeg = amount;
         address outputToken = C.BEAN;
         uint256 outputTokenAmountInDirectionOfPeg = 0;
-        (uint256 penalty, , , ) = LibConvert.calculateConvertCapacityPenalty(
+        (uint256 penalty, ) = LibConvert.calculateConvertCapacityPenalty(
             overallCappedDeltaB,
             overallAmountInDirectionOfPeg,
             inputToken,
@@ -1226,7 +1223,7 @@ contract PipelineConvertTest is TestHelper {
         uint256 inputTokenAmountInDirectionOfPeg = 0;
         address outputToken = beanEthWell;
         uint256 outputTokenAmountInDirectionOfPeg = amount;
-        (uint256 penalty, , , ) = LibConvert.calculateConvertCapacityPenalty(
+        (uint256 penalty, ) = LibConvert.calculateConvertCapacityPenalty(
             overallCappedDeltaB,
             overallAmountInDirectionOfPeg,
             inputToken,

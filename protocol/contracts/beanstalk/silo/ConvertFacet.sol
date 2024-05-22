@@ -25,6 +25,7 @@ import {LibGerminate} from "contracts/libraries/Silo/LibGerminate.sol";
 import {LibConvertData} from "contracts/libraries/Convert/LibConvertData.sol";
 import {Invariable} from "contracts/beanstalk/Invariable.sol";
 import {LibRedundantMathSigned256} from "contracts/libraries/LibRedundantMathSigned256.sol";
+import {LibWhitelistedTokens} from "contracts/libraries/Silo/LibWhitelistedTokens.sol";
 
 /**
  * @author Publius, Brean, DeadManWalking, pizzaman1337, funderberker
@@ -47,14 +48,7 @@ contract ConvertFacet is Invariable, ReentrancyGuard {
 
     struct PipelineConvertData {
         uint256 grownStalk;
-        int256 beforeInputTokenDeltaB;
-        int256 afterInputTokenDeltaB;
-        uint256 beforeInputLpTokenSupply;
-        int256 beforeOutputTokenDeltaB;
-        int256 afterOutputTokenDeltaB;
-        uint256 beforeOutputLpTokenSupply;
-        int256 beforeOverallDeltaB;
-        int256 afterOverallDeltaB;
+        LibConvert.DeltaBStorage deltaB;
         uint256 inputAmount;
         uint256 overallConvertCapacity;
         uint256 stalkPenaltyBdv;
@@ -135,13 +129,9 @@ contract ConvertFacet is Invariable, ReentrancyGuard {
                 require(LibWell.isWell(fromToken), "Convert: Invalid Well");
             }
 
-            pipeData.beforeOverallDeltaB = LibWellMinting.overallCurrentDeltaB();
-            pipeData.initialLpSupply = LibWellMinting.getLpSupply();
-            pipeData.beforeInputTokenDeltaB = getCurrentDeltaB(fromToken);
-            pipeData.beforeOutputTokenDeltaB = getCurrentDeltaB(toToken);
-
-            pipeData.beforeInputLpTokenSupply = IERC20(fromToken).totalSupply();
-            pipeData.beforeOutputLpTokenSupply = IERC20(toToken).totalSupply();
+            pipeData.deltaB.beforeOverallDeltaB = LibWellMinting.overallCurrentDeltaB();
+            pipeData.deltaB.beforeInputTokenDeltaB = getCurrentDeltaB(fromToken);
+            pipeData.deltaB.beforeOutputTokenDeltaB = getCurrentDeltaB(toToken);
             pipeData.initialLpSupply = LibWellMinting.getLpSupply();
         }
 
@@ -164,11 +154,7 @@ contract ConvertFacet is Invariable, ReentrancyGuard {
             pipeData.stalkPenaltyBdv = prepareStalkPenaltyCalculation(
                 fromToken,
                 toToken,
-                pipeData.beforeInputTokenDeltaB,
-                pipeData.beforeInputLpTokenSupply,
-                pipeData.beforeOutputTokenDeltaB,
-                pipeData.beforeOutputLpTokenSupply,
-                pipeData.beforeOverallDeltaB,
+                pipeData.deltaB,
                 pipeData.overallConvertCapacity,
                 fromBdv,
                 pipeData.initialLpSupply
@@ -188,21 +174,21 @@ contract ConvertFacet is Invariable, ReentrancyGuard {
         emit Convert(LibTractor._user(), fromToken, toToken, fromAmount, toAmount);
     }
 
-    // /**
-    //  * @notice Pipeline convert allows any type of convert using a series of
-    //  * pipeline calls. A stalk penalty may be applied if the convert crosses deltaB.
-    //  *
-    //  * @param inputToken The token to convert from.
-    //  * @param stems The stems of the deposits to convert from.
-    //  * @param amounts The amounts of the deposits to convert from.
-    //  * @param outputToken The token to convert to.
-    //  * @param advancedFarmCalls The farm calls to execute.
-    //  * @return toStem the new stems of the converted deposit
-    //  * @return fromAmount the amount of tokens converted from
-    //  * @return toAmount the amount of tokens converted to
-    //  * @return fromBdv the bdv of the deposits converted from
-    //  * @return toBdv the bdv of the deposit converted to
-    //  */
+    /**
+     * @notice Pipeline convert allows any type of convert using a series of
+     * pipeline calls. A stalk penalty may be applied if the convert crosses deltaB.
+     *
+     * @param inputToken The token to convert from.
+     * @param stems The stems of the deposits to convert from.
+     * @param amounts The amounts of the deposits to convert from.
+     * @param outputToken The token to convert to.
+     * @param advancedFarmCalls The farm calls to execute.
+     * @return toStem the new stems of the converted deposit
+     * @return fromAmount the amount of tokens converted from
+     * @return toAmount the amount of tokens converted to
+     * @return fromBdv the bdv of the deposits converted from
+     * @return toBdv the bdv of the deposit converted to
+     */
     function pipelineConvert(
         address inputToken,
         int96[] calldata stems,
@@ -244,12 +230,9 @@ contract ConvertFacet is Invariable, ReentrancyGuard {
         pipeData.overallConvertCapacity = LibConvert.abs(LibWellMinting.overallCappedDeltaB());
 
         // Store the pre-convert insta deltaB's both overall and for each well
-        pipeData.beforeOverallDeltaB = LibWellMinting.overallCurrentDeltaB();
-        pipeData.beforeInputTokenDeltaB = getCurrentDeltaB(inputToken);
-        pipeData.beforeOutputTokenDeltaB = getCurrentDeltaB(outputToken);
-
-        pipeData.beforeInputLpTokenSupply = IERC20(inputToken).totalSupply();
-        pipeData.beforeOutputLpTokenSupply = IERC20(outputToken).totalSupply();
+        pipeData.deltaB.beforeOverallDeltaB = LibWellMinting.overallCurrentDeltaB();
+        pipeData.deltaB.beforeInputTokenDeltaB = getCurrentDeltaB(inputToken);
+        pipeData.deltaB.beforeOutputTokenDeltaB = getCurrentDeltaB(outputToken);
         pipeData.initialLpSupply = LibWellMinting.getLpSupply();
 
         IERC20(inputToken).transfer(C.PIPELINE, fromAmount);
@@ -264,11 +247,7 @@ contract ConvertFacet is Invariable, ReentrancyGuard {
         pipeData.stalkPenaltyBdv = prepareStalkPenaltyCalculation(
             inputToken,
             outputToken,
-            pipeData.beforeInputTokenDeltaB,
-            pipeData.beforeInputLpTokenSupply,
-            pipeData.beforeOutputTokenDeltaB,
-            pipeData.beforeOutputLpTokenSupply,
-            pipeData.beforeOverallDeltaB,
+            pipeData.deltaB,
             pipeData.overallConvertCapacity,
             fromBdv,
             pipeData.initialLpSupply
@@ -285,44 +264,42 @@ contract ConvertFacet is Invariable, ReentrancyGuard {
             pipeData.newBdv,
             pipeData.grownStalk
         );
+        toBdv = pipeData.newBdv;
 
         emit Convert(pipeData.user, inputToken, outputToken, fromAmount, toAmount);
     }
 
-    // pass in before LP token supply to calculcate scaled deltaB
+    /**
+     * @notice Calculates the stalk penalty for a convert. Updates convert capacity used.
+     */
     function prepareStalkPenaltyCalculation(
         address inputToken,
         address outputToken,
-        int256 beforeInputTokenDeltaB,
-        uint256 beforeInputLpTokenSupply,
-        int256 beforeOutputTokenDeltaB,
-        uint256 beforeOutputLpTokenSupply,
-        int256 beforeOverallDeltaB,
+        LibConvert.DeltaBStorage memory dbs,
         uint256 overallConvertCapacity,
         uint256 fromBdv,
         uint256[] memory initialLpSupply
     ) internal returns (uint256) {
-        LibConvert.DeltaBStorage memory dbs;
-
-        dbs.beforeInputTokenDeltaB = beforeInputTokenDeltaB;
-        dbs.afterInputTokenDeltaB = getCurrentDeltaB(inputToken);
-        dbs.beforeOutputTokenDeltaB = beforeOutputTokenDeltaB;
-        dbs.afterOutputTokenDeltaB = getCurrentDeltaB(outputToken);
-        dbs.beforeOverallDeltaB = beforeOverallDeltaB;
         dbs.afterOverallDeltaB = LibWellMinting.scaledOverallInstantaneousDeltaB(initialLpSupply);
 
         // modify afterInputTokenDeltaB and afterOutputTokenDeltaB to scale using before/after LP amounts
-        dbs.afterInputTokenDeltaB = LibWellMinting.scaledDeltaB(
-            beforeInputLpTokenSupply,
-            IERC20(inputToken).totalSupply(),
-            dbs.afterInputTokenDeltaB
-        );
+        if (LibWell.isWell(inputToken)) {
+            uint256 i = LibWhitelistedTokens.getIndexFromWhitelistedWellLpTokens(inputToken);
+            dbs.afterInputTokenDeltaB = LibWellMinting.scaledDeltaB(
+                initialLpSupply[i],
+                IERC20(inputToken).totalSupply(),
+                getCurrentDeltaB(inputToken)
+            );
+        }
 
-        dbs.afterOutputTokenDeltaB = LibWellMinting.scaledDeltaB(
-            beforeOutputLpTokenSupply,
-            IERC20(outputToken).totalSupply(),
-            dbs.afterOutputTokenDeltaB
-        );
+        if (LibWell.isWell(outputToken)) {
+            uint256 i = LibWhitelistedTokens.getIndexFromWhitelistedWellLpTokens(outputToken);
+            dbs.afterOutputTokenDeltaB = LibWellMinting.scaledDeltaB(
+                initialLpSupply[i],
+                IERC20(outputToken).totalSupply(),
+                getCurrentDeltaB(outputToken)
+            );
+        }
 
         return
             LibConvert.applyStalkPenalty(

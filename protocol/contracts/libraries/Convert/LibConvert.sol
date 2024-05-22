@@ -36,18 +36,17 @@ library LibConvert {
         int256 afterOverallDeltaB;
     }
 
+    struct PenaltyData {
+        uint256 inputToken;
+        uint256 outputToken;
+        uint256 overall;
+    }
     struct StalkPenaltyData {
-        uint256 overallAmountInDirectionOfPeg;
-        uint256 inputTokenAmountInDirectionOfPeg;
-        uint256 outputTokenAmountInDirectionOfPeg;
-        uint256 overallAmountAgainstPeg;
-        uint256 inputTokenAmountAgainstPeg;
-        uint256 outputTokenAmountAgainstPeg;
+        PenaltyData directionOfPeg;
+        PenaltyData againstPeg;
+        PenaltyData capacity;
         uint256 higherAmountAgainstPeg;
         uint256 convertCapacityPenalty;
-        uint256 overallConvertCapacityUsed;
-        uint256 inputTokenAmountUsed;
-        uint256 outputTokenAmountUsed;
     }
 
     /**
@@ -172,6 +171,9 @@ library LibConvert {
         revert("Convert: Tokens not supported");
     }
 
+    /**
+     * @notice applies the stalk penalty and updates convert capacity.
+     */
     function applyStalkPenalty(
         DeltaBStorage memory dbs,
         uint256 bdvConverted,
@@ -179,6 +181,7 @@ library LibConvert {
         address inputToken,
         address outputToken
     ) internal returns (uint256 stalkPenaltyBdv) {
+        AppStorage storage s = LibAppStorage.diamondStorage();
         uint256 overallConvertCapacityUsed;
         uint256 inputTokenAmountUsed;
         uint256 outputTokenAmountUsed;
@@ -196,8 +199,7 @@ library LibConvert {
             outputToken
         );
 
-        // Update penalties in storage
-        AppStorage storage s = LibAppStorage.diamondStorage();
+        // Update penalties in storage.
         Storage.ConvertCapacity storage convertCap = s.convertCapacity[block.number];
         convertCap.overallConvertCapacityUsed = convertCap.overallConvertCapacityUsed.add(
             overallConvertCapacityUsed
@@ -231,50 +233,21 @@ library LibConvert {
     {
         StalkPenaltyData memory spd;
 
-        // todo: combine this set of 3 lines with the ones below it (one function return all 3 values)
-        spd.overallAmountInDirectionOfPeg = calculateConvertedTowardsPeg(
-            dbs.beforeOverallDeltaB,
-            dbs.afterOverallDeltaB
-        );
-        spd.inputTokenAmountInDirectionOfPeg = calculateConvertedTowardsPeg(
-            dbs.beforeInputTokenDeltaB,
-            dbs.afterInputTokenDeltaB
-        );
-        spd.outputTokenAmountInDirectionOfPeg = calculateConvertedTowardsPeg(
-            dbs.beforeOutputTokenDeltaB,
-            dbs.afterOutputTokenDeltaB
-        );
-
-        spd.overallAmountAgainstPeg = calculateAmountAgainstPeg(
-            dbs.beforeOverallDeltaB,
-            dbs.afterOverallDeltaB
-        );
-        spd.inputTokenAmountAgainstPeg = calculateAmountAgainstPeg(
-            dbs.beforeInputTokenDeltaB,
-            dbs.afterInputTokenDeltaB
-        );
-        spd.outputTokenAmountAgainstPeg = calculateAmountAgainstPeg(
-            dbs.beforeOutputTokenDeltaB,
-            dbs.afterOutputTokenDeltaB
-        );
+        spd.directionOfPeg = calculateConvertedTowardsPeg(dbs);
+        spd.againstPeg = calculateAmountAgainstPeg(dbs);
 
         spd.higherAmountAgainstPeg = max(
-            spd.overallAmountAgainstPeg,
-            spd.inputTokenAmountAgainstPeg.add(spd.outputTokenAmountAgainstPeg)
+            spd.againstPeg.overall,
+            spd.againstPeg.inputToken.add(spd.againstPeg.outputToken)
         );
 
-        (
-            spd.convertCapacityPenalty,
-            spd.overallConvertCapacityUsed,
-            spd.inputTokenAmountUsed,
-            spd.outputTokenAmountUsed
-        ) = calculateConvertCapacityPenalty(
+        (spd.convertCapacityPenalty, spd.capacity) = calculateConvertCapacityPenalty(
             overallConvertCapacity,
-            spd.overallAmountInDirectionOfPeg,
+            spd.directionOfPeg.overall,
             inputToken,
-            spd.inputTokenAmountInDirectionOfPeg,
+            spd.directionOfPeg.inputToken,
             outputToken,
-            spd.outputTokenAmountInDirectionOfPeg
+            spd.directionOfPeg.outputToken
         );
 
         stalkPenaltyBdv = min(
@@ -284,30 +257,10 @@ library LibConvert {
 
         return (
             stalkPenaltyBdv,
-            spd.overallConvertCapacityUsed,
-            spd.inputTokenAmountUsed,
-            spd.outputTokenAmountUsed
+            spd.capacity.overall,
+            spd.capacity.inputToken,
+            spd.capacity.outputToken
         );
-    }
-
-    // should be view
-    function calculateAmountAgainstPeg(
-        int256 beforeDeltaB,
-        int256 afterDeltaB
-    ) internal view returns (uint256 amountAgainstPeg) {
-        // Check if the signs of beforeDeltaB and afterDeltaB are different,
-        // indicating that deltaB has crossed zero
-        if ((beforeDeltaB > 0 && afterDeltaB < 0) || (beforeDeltaB < 0 && afterDeltaB > 0)) {
-            amountAgainstPeg = abs(afterDeltaB);
-        } else {
-            if (
-                (afterDeltaB <= 0 && beforeDeltaB <= 0) || (afterDeltaB >= 0 && beforeDeltaB >= 0)
-            ) {
-                if (abs(beforeDeltaB) < abs(afterDeltaB)) {
-                    amountAgainstPeg = abs(afterDeltaB).sub(abs(beforeDeltaB));
-                }
-            }
-        }
     }
 
     /**
@@ -326,16 +279,7 @@ library LibConvert {
         uint256 inputTokenAmountInDirectionOfPeg,
         address outputToken,
         uint256 outputTokenAmountInDirectionOfPeg
-    )
-        internal
-        view
-        returns (
-            uint256 cumulativePenalty,
-            uint256 overallConvertCapacityUsed,
-            uint256 inputTokenAmountUsed,
-            uint256 outputTokenAmountUsed
-        )
-    {
+    ) internal view returns (uint256 cumulativePenalty, PenaltyData memory pdCapacity) {
         AppStorage storage s = LibAppStorage.diamondStorage();
 
         Storage.ConvertCapacity storage convertCap = s.convertCapacity[block.number];
@@ -346,7 +290,7 @@ library LibConvert {
         }
 
         // update overall remaining convert capacity
-        overallConvertCapacityUsed = convertCap.overallConvertCapacityUsed.add(
+        pdCapacity.overall = convertCap.overallConvertCapacityUsed.add(
             overallAmountInDirectionOfPeg
         );
 
@@ -359,33 +303,83 @@ library LibConvert {
 
         if (inputToken != C.BEAN && inputTokenAmountInDirectionOfPeg > 0) {
             uint256 inputTokenWellCapacity = abs(LibWellMinting.cappedReservesDeltaB(inputToken));
-            inputTokenAmountUsed = convertCap.wellConvertCapacityUsed[inputToken].add(
+            pdCapacity.inputToken = convertCap.wellConvertCapacityUsed[inputToken].add(
                 inputTokenAmountInDirectionOfPeg
             );
-            if (inputTokenAmountUsed > inputTokenWellCapacity) {
+            if (pdCapacity.inputToken > inputTokenWellCapacity) {
                 cumulativePenalty = cumulativePenalty.add(
-                    inputTokenAmountUsed.sub(inputTokenWellCapacity)
+                    pdCapacity.inputToken.sub(inputTokenWellCapacity)
                 );
             }
         }
 
         if (outputToken != C.BEAN && outputTokenAmountInDirectionOfPeg > 0) {
             uint256 outputTokenWellCapacity = abs(LibWellMinting.cappedReservesDeltaB(outputToken));
-            outputTokenAmountUsed = convertCap.wellConvertCapacityUsed[outputToken].add(
+            pdCapacity.outputToken = convertCap.wellConvertCapacityUsed[outputToken].add(
                 outputTokenAmountInDirectionOfPeg
             );
-            if (outputTokenAmountUsed > outputTokenWellCapacity) {
+            if (pdCapacity.outputToken > outputTokenWellCapacity) {
                 cumulativePenalty = cumulativePenalty.add(
-                    outputTokenAmountUsed.sub(outputTokenWellCapacity)
+                    pdCapacity.outputToken.sub(outputTokenWellCapacity)
                 );
             }
         }
     }
 
     /**
-     * @notice Takes before/after deltaB's and calculates how much was converted towards, but not past, peg.
+     * @notice Performs `calculateAgainstPeg` for the overall, input token, and output token deltaB's.
+     */
+    function calculateAmountAgainstPeg(
+        DeltaBStorage memory dbs
+    ) internal pure returns (PenaltyData memory pd) {
+        pd.overall = calculateAgainstPeg(dbs.beforeOverallDeltaB, dbs.afterOverallDeltaB);
+        pd.inputToken = calculateAgainstPeg(dbs.beforeInputTokenDeltaB, dbs.afterInputTokenDeltaB);
+        pd.outputToken = calculateAgainstPeg(
+            dbs.beforeOutputTokenDeltaB,
+            dbs.afterOutputTokenDeltaB
+        );
+    }
+
+    /**
+     * @notice Takes before/after deltaB's and calculates how much was converted against peg.
+     */
+    function calculateAgainstPeg(
+        int256 beforeDeltaB,
+        int256 afterDeltaB
+    ) internal pure returns (uint256 amountAgainstPeg) {
+        // Check if the signs of beforeDeltaB and afterDeltaB are different,
+        // indicating that deltaB has crossed zero
+        if ((beforeDeltaB > 0 && afterDeltaB < 0) || (beforeDeltaB < 0 && afterDeltaB > 0)) {
+            amountAgainstPeg = abs(afterDeltaB);
+        } else {
+            if (
+                (afterDeltaB <= 0 && beforeDeltaB <= 0) || (afterDeltaB >= 0 && beforeDeltaB >= 0)
+            ) {
+                if (abs(beforeDeltaB) < abs(afterDeltaB)) {
+                    amountAgainstPeg = abs(afterDeltaB).sub(abs(beforeDeltaB));
+                }
+            }
+        }
+    }
+
+    /**
+     * @notice Performs `calculateTowardsPeg` for the overall, input token, and output token deltaB's.
      */
     function calculateConvertedTowardsPeg(
+        DeltaBStorage memory dbs
+    ) internal pure returns (PenaltyData memory pd) {
+        pd.overall = calculateTowardsPeg(dbs.beforeOverallDeltaB, dbs.afterOverallDeltaB);
+        pd.inputToken = calculateTowardsPeg(dbs.beforeInputTokenDeltaB, dbs.afterInputTokenDeltaB);
+        pd.outputToken = calculateTowardsPeg(
+            dbs.beforeOutputTokenDeltaB,
+            dbs.afterOutputTokenDeltaB
+        );
+    }
+
+    /**
+     * @notice Takes before/after deltaB's and calculates how much was converted towards, but not past, peg.
+     */
+    function calculateTowardsPeg(
         int256 beforeTokenDeltaB,
         int256 afterTokenDeltaB
     ) internal pure returns (uint256) {
