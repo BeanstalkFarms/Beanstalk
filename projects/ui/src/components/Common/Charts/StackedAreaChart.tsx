@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo } from 'react';
+import React, { useCallback, useEffect, useMemo } from 'react';
 import { AreaStack, Line, LinePath } from '@visx/shape';
 import { Group } from '@visx/group';
 
@@ -97,7 +97,7 @@ const Graph = (props: Props) => {
   }, [data, series, width]);
 
   // tooltip
-  const { containerRef, containerBounds } = useTooltipInPortal({
+  const { containerRef, containerBounds, forceRefreshBounds } = useTooltipInPortal({
     scroll: true,
     detectBounds: true,
   });
@@ -110,6 +110,10 @@ const Graph = (props: Props) => {
     tooltipLeft = 0,
   } = useTooltip<BaseDataPoint | undefined>();
 
+  useEffect(() => {
+    forceRefreshBounds();
+  }, [forceRefreshBounds]);
+
   const handleMouseLeave = useCallback(() => {
     hideTooltip();
     onCursor?.(undefined);
@@ -120,6 +124,7 @@ const Graph = (props: Props) => {
       event: React.TouchEvent<HTMLDivElement> | React.MouseEvent<HTMLDivElement>
     ) => {
       if (series[0].length === 0) return;
+      forceRefreshBounds();
       const containerX =
         ('clientX' in event ? event.clientX : 0) - containerBounds.left;
       const containerY =
@@ -139,6 +144,7 @@ const Graph = (props: Props) => {
     },
     [
       containerBounds,
+      forceRefreshBounds,
       getPointerValue,
       scales,
       series,
