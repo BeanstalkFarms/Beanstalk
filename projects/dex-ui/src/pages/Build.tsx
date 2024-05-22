@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { ButtonPrimary } from "src/components/Button";
 
@@ -9,6 +9,8 @@ import { Text } from "src/components/Typography";
 
 import { theme } from "src/utils/ui/theme";
 import styled from "styled-components";
+
+import { ComponentLibraryTable } from "src/components/Build/ComponentLibraryTable";
 
 export const Build = () => {
   const navigate = useNavigate();
@@ -21,7 +23,7 @@ export const Build = () => {
     <Page>
       <Flex $gap={0.5}>
         <Title title="Build" fontWeight={"600"} largeOnMobile />
-        <Text $variant="l" color="text.secondary">
+        <Text $variant="l" $color="text.secondary">
           Basin has three unique components which can be composed together to create a custom liquidity pool, or Well.
         </Text>
       </Flex>
@@ -36,13 +38,14 @@ export const Build = () => {
           a component to view its implementation.
         </Text>
       </Flex>
+      <ComponentLibraryTable />
     </Page>
   );
 };
 
 const ActionBanner = styled(Flex).attrs({
-  $py: 3,
-  $px: 2,
+  $py: 2,
+  $px: 3,
   $justifyContent: "space-between",
   $alignItems: "center",
   $direction: "row"
