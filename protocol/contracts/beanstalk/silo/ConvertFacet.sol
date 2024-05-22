@@ -25,6 +25,7 @@ import {LibGerminate} from "contracts/libraries/Silo/LibGerminate.sol";
 import {LibConvertData} from "contracts/libraries/Convert/LibConvertData.sol";
 import {Invariable} from "contracts/beanstalk/Invariable.sol";
 import {LibRedundantMathSigned256} from "contracts/libraries/LibRedundantMathSigned256.sol";
+import {LibWhitelistedTokens} from "contracts/libraries/Silo/LibWhitelistedTokens.sol";
 
 /**
  * @author Publius, Brean, DeadManWalking, pizzaman1337, funderberker
@@ -131,9 +132,6 @@ contract ConvertFacet is Invariable, ReentrancyGuard {
             pipeData.deltaB.beforeOverallDeltaB = LibWellMinting.overallCurrentDeltaB();
             pipeData.deltaB.beforeInputTokenDeltaB = getCurrentDeltaB(fromToken);
             pipeData.deltaB.beforeOutputTokenDeltaB = getCurrentDeltaB(toToken);
-            pipeData.deltaB.beforeInputLpTokenSupply = IERC20(fromToken).totalSupply();
-            pipeData.deltaB.beforeOutputLpTokenSupply = IERC20(toToken).totalSupply();
-
             pipeData.initialLpSupply = LibWellMinting.getLpSupply();
         }
 
@@ -235,9 +233,6 @@ contract ConvertFacet is Invariable, ReentrancyGuard {
         pipeData.deltaB.beforeOverallDeltaB = LibWellMinting.overallCurrentDeltaB();
         pipeData.deltaB.beforeInputTokenDeltaB = getCurrentDeltaB(inputToken);
         pipeData.deltaB.beforeOutputTokenDeltaB = getCurrentDeltaB(outputToken);
-
-        pipeData.deltaB.beforeInputLpTokenSupply = IERC20(inputToken).totalSupply();
-        pipeData.deltaB.beforeOutputLpTokenSupply = IERC20(outputToken).totalSupply();
         pipeData.initialLpSupply = LibWellMinting.getLpSupply();
 
         IERC20(inputToken).transfer(C.PIPELINE, fromAmount);
@@ -289,16 +284,18 @@ contract ConvertFacet is Invariable, ReentrancyGuard {
 
         // modify afterInputTokenDeltaB and afterOutputTokenDeltaB to scale using before/after LP amounts
         if (LibWell.isWell(inputToken)) {
+            uint256 i = LibWhitelistedTokens.getIndexFromWhitelistedWellLpTokens(inputToken);
             dbs.afterInputTokenDeltaB = LibWellMinting.scaledDeltaB(
-                dbs.beforeInputLpTokenSupply,
+                initialLpSupply[i],
                 IERC20(inputToken).totalSupply(),
                 getCurrentDeltaB(inputToken)
             );
         }
 
         if (LibWell.isWell(outputToken)) {
+            uint256 i = LibWhitelistedTokens.getIndexFromWhitelistedWellLpTokens(outputToken);
             dbs.afterOutputTokenDeltaB = LibWellMinting.scaledDeltaB(
-                dbs.beforeOutputLpTokenSupply,
+                initialLpSupply[i],
                 IERC20(outputToken).totalSupply(),
                 getCurrentDeltaB(outputToken)
             );

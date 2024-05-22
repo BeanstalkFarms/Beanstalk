@@ -49,8 +49,6 @@ interface IMockFBeanstalk {
         int256 afterInputTokenDeltaB;
         int256 beforeOutputTokenDeltaB;
         int256 afterOutputTokenDeltaB;
-        uint256 beforeInputLpTokenSupply;
-        uint256 beforeOutputLpTokenSupply;
         int256 beforeOverallDeltaB;
         int256 afterOverallDeltaB;
     }
