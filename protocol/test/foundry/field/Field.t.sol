@@ -181,7 +181,7 @@ contract FieldTest is TestHelper {
      * specify the minimum amount of soil they are willing to sow.
      */
     function testSowMin(uint256 minSoil, uint256 beans) public prank(farmers[0]) {
-        // bound variables s.t beans >= amount
+        // bound variables s.system.t beans >= amount
         minSoil = bound(minSoil, 100, type(uint128).max);
         beans = bound(beans, minSoil, type(uint128).max);
         C.bean().mint(farmers[0], beans);
@@ -339,7 +339,7 @@ contract FieldTest is TestHelper {
 
     // /**
     //  * a farmer cannot harvest an unharvestable plot.
-    //  * a plot is unharvestable if the index of plot > s.field.harvestable.
+    //  * a plot is unharvestable if the index of plot > s.system.field.harvestable.
     //  */
     // function testCannotHarvestUnharvestablePlot() public {
     //     _beforeEachHarvest();
@@ -600,8 +600,8 @@ contract FieldTest is TestHelper {
     // /**
     //  * check that the Soil decreases over 25 blocks, then stays stagent
     //  * when beanstalk is above peg, the soil issued is now:
-    //  * `availableSoil` = s.field.soil * (1+ s.weather.t)/(1+ yield())
-    //  * `availableSoil` should always be greater or equal to s.field.soil
+    //  * `availableSoil` = s.system.field.soil * (1+ s.system.weather.t)/(1+ yield())
+    //  * `availableSoil` should always be greater or equal to s.system.field.soil
     //  */
     // function testSoilDecrementsOverDutchAbovePeg(uint256 startingSoil) public {
     //     _beforeEachMorningAuction();

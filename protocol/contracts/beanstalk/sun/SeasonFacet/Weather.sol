@@ -75,7 +75,7 @@ contract Weather is Sun {
         uint256 beanSupply = C.bean().totalSupply();
         // prevents infinite L2SR and podrate
         if (beanSupply == 0) {
-            s.weather.t = 1;
+            s.system.weather.t = 1;
             return 9; // Reasonably low
         }
         // Calculate Case Id
@@ -100,22 +100,22 @@ contract Weather is Sun {
      * @dev bT are set during edge cases such that the event emitted is valid.
      */
     function updateTemperature(int8 bT, uint256 caseId) private {
-        uint256 t = s.weather.t;
+        uint256 t = s.system.weather.t;
         if (bT < 0) {
             if (t <= uint256(int256(-bT))) {
                 // if (change < 0 && t <= uint32(-change)),
                 // then 0 <= t <= type(int8).max because change is an int8.
                 // Thus, downcasting t to an int8 will not cause overflow.
                 bT = 1 - int8(int256(t));
-                s.weather.t = 1;
+                s.system.weather.t = 1;
             } else {
-                s.weather.t = uint32(t - uint256(int256(-bT)));
+                s.system.weather.t = uint32(t - uint256(int256(-bT)));
             }
         } else {
-            s.weather.t = uint32(t + uint256(int256(bT)));
+            s.system.weather.t = uint32(t + uint256(int256(bT)));
         }
 
-        emit TemperatureChange(s.season.current, caseId, bT);
+        emit TemperatureChange(s.system.season.current, caseId, bT);
     }
 
     /**
@@ -123,13 +123,13 @@ contract Weather is Sun {
      * @dev bL are set during edge cases such that the event emitted is valid.
      */
     function updateBeanToMaxLPRatio(int80 bL, uint256 caseId) private {
-        uint128 beanToMaxLpGpPerBdvRatio = s.seedGauge.beanToMaxLpGpPerBdvRatio;
+        uint128 beanToMaxLpGpPerBdvRatio = s.system.seedGauge.beanToMaxLpGpPerBdvRatio;
         if (bL < 0) {
             if (beanToMaxLpGpPerBdvRatio <= uint128(int128(-bL))) {
                 bL = -SafeCast.toInt80(int256(uint256(beanToMaxLpGpPerBdvRatio)));
-                s.seedGauge.beanToMaxLpGpPerBdvRatio = 0;
+                s.system.seedGauge.beanToMaxLpGpPerBdvRatio = 0;
             } else {
-                s.seedGauge.beanToMaxLpGpPerBdvRatio = beanToMaxLpGpPerBdvRatio.sub(
+                s.system.seedGauge.beanToMaxLpGpPerBdvRatio = beanToMaxLpGpPerBdvRatio.sub(
                     uint128(int128(-bL))
                 );
             }
@@ -142,15 +142,15 @@ contract Weather is Sun {
                         int256(uint256(MAX_BEAN_LP_GP_PER_BDV_RATIO.sub(beanToMaxLpGpPerBdvRatio)))
                     )
                 );
-                s.seedGauge.beanToMaxLpGpPerBdvRatio = MAX_BEAN_LP_GP_PER_BDV_RATIO;
+                s.system.seedGauge.beanToMaxLpGpPerBdvRatio = MAX_BEAN_LP_GP_PER_BDV_RATIO;
             } else {
-                s.seedGauge.beanToMaxLpGpPerBdvRatio = beanToMaxLpGpPerBdvRatio.add(
+                s.system.seedGauge.beanToMaxLpGpPerBdvRatio = beanToMaxLpGpPerBdvRatio.add(
                     uint128(int128(bL))
                 );
             }
         }
 
-        emit BeanToMaxLpGpPerBdvRatioChange(s.season.current, caseId, bL);
+        emit BeanToMaxLpGpPerBdvRatioChange(s.system.season.current, caseId, bL);
     }
 
     /**
@@ -162,21 +162,21 @@ contract Weather is Sun {
     function handleRain(uint256 caseId, address well) internal {
         // cases % 36  3-8 represent the case where the pod rate is less than 5% and P > 1.
         if (caseId.mod(36) < 3 || caseId.mod(36) > 8) {
-            if (s.season.raining) {
-                s.season.raining = false;
+            if (s.system.season.raining) {
+                s.system.season.raining = false;
             }
             return;
-        } else if (!s.season.raining) {
-            s.season.raining = true;
+        } else if (!s.system.season.raining) {
+            s.system.season.raining = true;
             // Set the plenty per root equal to previous rain start.
-            s.sops[s.season.current] = s.sops[s.season.rainStart];
-            s.season.rainStart = s.season.current;
-            s.rain.pods = s.field.pods;
-            s.rain.roots = s.silo.roots;
+            s.system.sops[s.system.season.current] = s.system.sops[s.system.season.rainStart];
+            s.system.season.rainStart = s.system.season.current;
+            s.system.rain.pods = s.system.field.pods;
+            s.system.rain.roots = s.system.silo.roots;
         } else {
-            if (s.rain.roots > 0) {
+            if (s.system.rain.roots > 0) {
                 // initalize sopWell if it is not already set.
-                if (s.sopWell == address(0)) s.sopWell = well;
+                if (s.system.sopWell == address(0)) s.system.sopWell = well;
                 sop();
             }
         }
@@ -197,7 +197,7 @@ contract Weather is Sun {
         // calculate the beans from a sop.
         // sop beans uses the min of the current and instantaneous reserves of the sop well,
         // rather than the twaReserves in order to get bean back to peg.
-        address sopWell = s.sopWell;
+        address sopWell = s.system.sopWell;
         (uint256 newBeans, IERC20 sopToken) = calculateSop(sopWell);
         if (newBeans == 0) return;
 
@@ -205,9 +205,9 @@ contract Weather is Sun {
         uint256 newHarvestable;
 
         // Pay off remaining Pods if any exist.
-        if (s.field.harvestable < s.rain.pods) {
-            newHarvestable = s.rain.pods - s.field.harvestable;
-            s.field.harvestable = s.field.harvestable.add(newHarvestable);
+        if (s.system.field.harvestable < s.system.rain.pods) {
+            newHarvestable = s.system.rain.pods - s.system.field.harvestable;
+            s.system.field.harvestable = s.system.field.harvestable.add(newHarvestable);
             C.bean().mint(address(this), newHarvestable.add(sopBeans));
         } else {
             C.bean().mint(address(this), sopBeans);
@@ -223,10 +223,10 @@ contract Weather is Sun {
             address(this),
             type(uint256).max
         );
-        s.plenty += amountOut;
+        s.system.plenty += amountOut;
         rewardSop(amountOut);
         emit SeasonOfPlenty(
-            s.season.current,
+            s.system.season.current,
             sopWell,
             address(sopToken),
             amountOut,
@@ -238,11 +238,11 @@ contract Weather is Sun {
      * @dev Allocate `sop token` during a Season of Plenty.
      */
     function rewardSop(uint256 amount) private {
-        s.sops[s.season.rainStart] = s.sops[s.season.lastSop].add(
-            amount.mul(C.SOP_PRECISION).div(s.rain.roots)
+        s.system.sops[s.system.season.rainStart] = s.system.sops[s.system.season.lastSop].add(
+            amount.mul(C.SOP_PRECISION).div(s.system.rain.roots)
         );
-        s.season.lastSop = s.season.rainStart;
-        s.season.lastSopSeason = s.season.current;
+        s.system.season.lastSop = s.system.season.rainStart;
+        s.system.season.lastSopSeason = s.system.season.current;
     }
 
     /**

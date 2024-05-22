@@ -6,7 +6,9 @@ pragma solidity ^0.8.20;
 
 import {LibRedundantMath256} from "contracts/libraries/LibRedundantMath256.sol";
 import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
-import {LibAppStorage, System, AppStorage, Account} from "../LibAppStorage.sol";
+import {LibAppStorage} from "../LibAppStorage.sol";
+import {AppStorage} from "contracts/beanstalk/storage/AppStorage.sol";
+import {TotalGerminating} from "contracts/beanstalk/storage/System.sol";
 import {C} from "../../C.sol";
 import {LibRedundantMath32} from "contracts/libraries/LibRedundantMath32.sol";
 import {LibRedundantMath128} from "contracts/libraries/LibRedundantMath128.sol";
@@ -101,13 +103,13 @@ library LibTokenSilo {
         LibGerminate.Germinate germ
     ) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        System.TotalGerminating storage germinate;
+        TotalGerminating storage germinate;
 
         // verify germ is valid
         if (germ == LibGerminate.Germinate.ODD) {
-            germinate = s.oddGerminating;
+            germinate = s.system.silo.oddGerminating;
         } else if (germ == LibGerminate.Germinate.EVEN) {
-            germinate = s.evenGerminating;
+            germinate = s.system.silo.evenGerminating;
         } else {
             revert("invalid germinationMode"); // should not ever get here
         }
@@ -120,7 +122,7 @@ library LibTokenSilo {
 
         // emit event.
         emit LibGerminate.TotalGerminatingBalanceChanged(
-            s.season.current,
+            s.system.season.current,
             token,
             int256(amount),
             int256(bdv)
@@ -139,13 +141,13 @@ library LibTokenSilo {
         LibGerminate.Germinate germ
     ) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        System.TotalGerminating storage germinate;
+        TotalGerminating storage germinate;
 
         // verify germ is valid
         if (germ == LibGerminate.Germinate.ODD) {
-            germinate = s.oddGerminating;
+            germinate = s.system.silo.oddGerminating;
         } else if (germ == LibGerminate.Germinate.EVEN) {
-            germinate = s.evenGerminating;
+            germinate = s.system.silo.evenGerminating;
         } else {
             revert("invalid germinationMode"); // should not ever get here
         }
@@ -158,8 +160,8 @@ library LibTokenSilo {
 
         emit LibGerminate.TotalGerminatingBalanceChanged(
             LibGerminate.getSeasonGerminationState() == germ
-                ? s.season.current
-                : s.season.current - 1,
+                ? s.system.season.current
+                : s.system.season.current - 1,
             token,
             -int256(amount),
             -int256(bdv)
@@ -178,22 +180,30 @@ library LibTokenSilo {
 
         if (germ == LibGerminate.Germinate.ODD) {
             // increment odd germinating
-            s.oddGerminating.deposited[token].bdv = s.oddGerminating.deposited[token].bdv.add(
-                bdv.toUint128()
-            );
+            s.system.silo.oddGerminating.deposited[token].bdv = s
+                .system
+                .silo
+                .oddGerminating
+                .deposited[token]
+                .bdv
+                .add(bdv.toUint128());
         } else if (germ == LibGerminate.Germinate.EVEN) {
             // increment even germinating
-            s.evenGerminating.deposited[token].bdv = s.evenGerminating.deposited[token].bdv.add(
-                bdv.toUint128()
-            );
+            s.system.silo.evenGerminating.deposited[token].bdv = s
+                .system
+                .silo
+                .evenGerminating
+                .deposited[token]
+                .bdv
+                .add(bdv.toUint128());
         } else {
             revert("invalid germinationMode"); // should not ever get here
         }
 
         emit LibGerminate.TotalGerminatingBalanceChanged(
             LibGerminate.getSeasonGerminationState() == germ
-                ? s.season.current
-                : s.season.current - 1,
+                ? s.system.season.current
+                : s.system.season.current - 1,
             token,
             0,
             int256(bdv)
@@ -209,8 +219,10 @@ library LibTokenSilo {
      */
     function incrementTotalDeposited(address token, uint256 amount, uint256 bdv) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        s.siloBalances[token].deposited = s.siloBalances[token].deposited.add(amount.toUint128());
-        s.siloBalances[token].depositedBdv = s.siloBalances[token].depositedBdv.add(
+        s.system.silo.balances[token].deposited = s.system.silo.balances[token].deposited.add(
+            amount.toUint128()
+        );
+        s.system.silo.balances[token].depositedBdv = s.system.silo.balances[token].depositedBdv.add(
             bdv.toUint128()
         );
     }
@@ -222,8 +234,10 @@ library LibTokenSilo {
      */
     function decrementTotalDeposited(address token, uint256 amount, uint256 bdv) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        s.siloBalances[token].deposited = s.siloBalances[token].deposited.sub(amount.toUint128());
-        s.siloBalances[token].depositedBdv = s.siloBalances[token].depositedBdv.sub(
+        s.system.silo.balances[token].deposited = s.system.silo.balances[token].deposited.sub(
+            amount.toUint128()
+        );
+        s.system.silo.balances[token].depositedBdv = s.system.silo.balances[token].depositedBdv.sub(
             bdv.toUint128()
         );
     }
@@ -233,7 +247,7 @@ library LibTokenSilo {
      */
     function incrementTotalDepositedBdv(address token, uint256 bdv) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        s.siloBalances[token].depositedBdv = s.siloBalances[token].depositedBdv.add(
+        s.system.silo.balances[token].depositedBdv = s.system.silo.balances[token].depositedBdv.add(
             bdv.toUint128()
         );
     }
@@ -260,7 +274,7 @@ library LibTokenSilo {
      * @dev Once the BDV received for Depositing `amount` of `token` is known,
      * add a Deposit for `account` and update the total amount Deposited.
      *
-     * `s.siloSettings[token].stalkIssuedPerBdv` stores the number of Stalk per BDV for `token`.
+     * `s.system.assetSettings[token].stalkIssuedPerBdv` stores the number of Stalk per BDV for `token`.
      */
     function depositWithBDV(
         address account,
@@ -280,7 +294,7 @@ library LibTokenSilo {
 
         addDepositToAccount(account, token, stem, amount, bdv, Transfer.emitTransferSingle);
 
-        stalk = bdv.mul(s.siloSettings[token].stalkIssuedPerBdv);
+        stalk = bdv.mul(s.system.silo.assetSettings[token].stalkIssuedPerBdv);
     }
 
     /**
@@ -429,21 +443,24 @@ library LibTokenSilo {
     /**
      * @dev Calculate the BDV ("Bean Denominated Value") for `amount` of `token`.
      *
-     * Makes a call to a BDV function defined in the SiloSettings for this
-     * `token`. See {AppStorage.sol:Storage-SiloSettings} for more information.
+     * Makes a call to a BDV function defined in the AssetSettings for this
+     * `token`. See {AppStorage.sol:Storage-AssetSettings} for more information.
      */
     function beanDenominatedValue(
         address token,
         uint256 amount
     ) internal view returns (uint256 bdv) {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        require(s.siloSettings[token].selector != bytes4(0), "Silo: Token not whitelisted");
+        require(
+            s.system.silo.assetSettings[token].selector != bytes4(0),
+            "Silo: Token not whitelisted"
+        );
 
         (bool success, bytes memory data) = address(this).staticcall(
             encodeBdvFunction(
                 token,
-                s.siloSettings[token].encodeType,
-                s.siloSettings[token].selector,
+                s.system.silo.assetSettings[token].encodeType,
+                s.system.silo.assetSettings[token].selector,
                 amount
             )
         );
@@ -503,7 +520,7 @@ library LibTokenSilo {
      */
     function stalkEarnedPerSeason(address token) internal view returns (uint256) {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        return uint256(s.siloSettings[token].stalkEarnedPerSeason);
+        return uint256(s.system.silo.assetSettings[token].stalkEarnedPerSeason);
     }
 
     /**
@@ -511,7 +528,7 @@ library LibTokenSilo {
      */
     function stalkIssuedPerBdv(address token) internal view returns (uint256) {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        return uint256(s.siloSettings[token].stalkIssuedPerBdv);
+        return uint256(s.system.silo.assetSettings[token].stalkIssuedPerBdv);
     }
 
     /**
@@ -521,9 +538,11 @@ library LibTokenSilo {
         AppStorage storage s = LibAppStorage.diamondStorage();
         // Will not over/underflow because all casted variables are types smaller that int96.
         _stemTip =
-            s.siloSettings[token].milestoneStem +
-            toInt96(s.siloSettings[token].stalkEarnedPerSeason).mul(
-                toInt96(s.season.current).sub(toInt96(s.siloSettings[token].milestoneSeason))
+            s.system.silo.assetSettings[token].milestoneStem +
+            toInt96(s.system.silo.assetSettings[token].stalkEarnedPerSeason).mul(
+                toInt96(s.system.season.current).sub(
+                    toInt96(s.system.silo.assetSettings[token].milestoneSeason)
+                )
             );
     }
 

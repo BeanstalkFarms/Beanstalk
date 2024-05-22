@@ -11,7 +11,7 @@ import {LibDiamond} from "../libraries/LibDiamond.sol";
 import {DiamondCutFacet} from "./diamond/DiamondCutFacet.sol";
 import {DiamondLoupeFacet} from "./diamond/DiamondLoupeFacet.sol";
 import {OwnershipFacet} from "./diamond/OwnershipFacet.sol";
-import {AppStorage} from "./AppStorage.sol";
+import {AppStorage} from "./storage/AppStorage.sol";
 import {IDiamondCut} from "../interfaces/IDiamondCut.sol";
 import {IDiamondLoupe} from "../interfaces/IDiamondLoupe.sol";
 

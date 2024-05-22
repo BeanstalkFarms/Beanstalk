@@ -19,24 +19,24 @@ contract MockFieldFacet is FieldFacet {
     using LibRedundantMath128 for uint128;
 
     function incrementTotalSoilE(uint128 amount) external {
-        s.field.soil = s.field.soil.add(amount);
+        s.system.field.soil = s.system.field.soil.add(amount);
     }
 
     function incrementTotalHarvestableE(uint256 amount) external {
         C.bean().mint(address(this), amount);
-        s.field.harvestable = s.field.harvestable.add(amount);
+        s.system.field.harvestable = s.system.field.harvestable.add(amount);
     }
 
     function incrementTotalPodsE(uint256 amount) external {
-        s.field.pods = s.field.pods + amount;
+        s.system.field.pods = s.system.field.pods + amount;
     }
 
     function totalRealSoil() external view returns (uint256) {
-        return s.field.soil;
+        return s.system.field.soil;
     }
 
     function beanSown() external view returns (uint256) {
-        return s.field.beanSown;
+        return s.system.field.beanSown;
     }
 
     /**
@@ -192,7 +192,7 @@ contract MockFieldFacet is FieldFacet {
         uint32 maxTemperature,
         bool abovePeg
     ) external returns (uint256 pods) {
-        s.weather.t = maxTemperature;
+        s.system.weather.t = maxTemperature;
         pods = LibDibbler.sow(beans, _morningTemperature, msg.sender, abovePeg);
         return pods;
     }
@@ -206,13 +206,13 @@ contract MockFieldFacet is FieldFacet {
         // Above peg: Soil is dynamic
         return
             LibDibbler.scaleSoilUp(
-                uint256(s.field.soil), // min soil
-                uint256(s.weather.t).mul(LibDibbler.TEMPERATURE_PRECISION), // max temperature
+                uint256(s.system.field.soil), // min soil
+                uint256(s.system.weather.t).mul(LibDibbler.TEMPERATURE_PRECISION), // max temperature
                 morningTemperature // temperature adjusted by number of blocks since Sunrise
             );
     }
 
     function setMaxTemp(uint32 t) external {
-        s.weather.t = t;
+        s.system.weather.t = t;
     }
 }

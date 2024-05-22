@@ -45,7 +45,7 @@ contract Order is Listing {
      * Create
      */
     // Note: Orders changed and now can accept an arbitary amount of beans, possibly higher than the value of the order
-    /* Note: Fixed pod orders store at s.podOrders[id] the amount of pods that they order
+    /* Note: Fixed pod orders store at s.system.podOrders[id] the amount of pods that they order
      * whereas dynamic orders store the amount of beans used to make the order
      */
     function _createPodOrder(
@@ -59,9 +59,9 @@ contract Order is Listing {
 
         id = createOrderId(LibTractor._user(), pricePerPod, maxPlaceInLine, minFillAmount);
 
-        if (s.podOrders[id] > 0)
+        if (s.system.podOrders[id] > 0)
             _cancelPodOrder(pricePerPod, maxPlaceInLine, minFillAmount, LibTransfer.To.INTERNAL);
-        s.podOrders[id] = beanAmount;
+        s.system.podOrders[id] = beanAmount;
 
         emit PodOrderCreated(
             LibTractor._user(),
@@ -89,24 +89,24 @@ contract Order is Listing {
             "Marketplace: Invalid Plot."
         );
         require(
-            index.add(start).add(amount).sub(s.field.harvestable) <= o.maxPlaceInLine,
+            index.add(start).add(amount).sub(s.system.field.harvestable) <= o.maxPlaceInLine,
             "Marketplace: Plot too far in line."
         );
 
         bytes32 id = createOrderId(o.account, o.pricePerPod, o.maxPlaceInLine, o.minFillAmount);
         uint256 costInBeans = amount.mul(o.pricePerPod).div(1000000);
-        if (costInBeans > s.podOrders[id]) {
+        if (costInBeans > s.system.podOrders[id]) {
             revert("Marketplace: Not enough beans in order.");
         }
-        s.podOrders[id] = s.podOrders[id].sub(costInBeans);
+        s.system.podOrders[id] = s.system.podOrders[id].sub(costInBeans);
 
         LibTransfer.sendToken(C.bean(), costInBeans, LibTractor._user(), mode);
 
-        if (s.podListings[index] != bytes32(0)) _cancelPodListing(LibTractor._user(), index);
+        if (s.system.podListings[index] != bytes32(0)) _cancelPodListing(LibTractor._user(), index);
 
         _transferPlot(LibTractor._user(), o.account, index, start, amount);
 
-        if (s.podOrders[id] == 0) delete s.podOrders[id];
+        if (s.system.podOrders[id] == 0) delete s.system.podOrders[id];
 
         emit PodOrderFilled(LibTractor._user(), o.account, id, index, start, amount, costInBeans);
     }
@@ -121,9 +121,9 @@ contract Order is Listing {
         LibTransfer.To mode
     ) internal {
         bytes32 id = createOrderId(LibTractor._user(), pricePerPod, maxPlaceInLine, minFillAmount);
-        uint256 amountBeans = s.podOrders[id];
+        uint256 amountBeans = s.system.podOrders[id];
         LibTransfer.sendToken(C.bean(), amountBeans, LibTractor._user(), mode);
-        delete s.podOrders[id];
+        delete s.system.podOrders[id];
         emit PodOrderCancelled(LibTractor._user(), id);
     }
 

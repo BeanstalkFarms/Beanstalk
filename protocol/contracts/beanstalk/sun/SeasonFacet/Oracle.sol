@@ -23,6 +23,6 @@ contract Oracle is ReentrancyGuard {
         for (uint256 i = 0; i < tokens.length; i++) {
             deltaB = deltaB.add(LibWellMinting.capture(tokens[i]));
         }
-        s.season.timestamp = block.timestamp;
+        s.system.season.timestamp = block.timestamp;
     }
 }

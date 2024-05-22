@@ -64,7 +64,7 @@ contract MarketplaceFacet is Invariable, Order {
 
     // Get
     function podListing(uint256 index) external view returns (bytes32) {
-        return s.podListings[index];
+        return s.system.podListings[index];
     }
 
     /*
@@ -112,11 +112,12 @@ contract MarketplaceFacet is Invariable, Order {
         uint256 maxPlaceInLine,
         uint256 minFillAmount
     ) external view returns (uint256) {
-        return s.podOrders[createOrderId(account, pricePerPod, maxPlaceInLine, minFillAmount)];
+        return
+            s.system.podOrders[createOrderId(account, pricePerPod, maxPlaceInLine, minFillAmount)];
     }
 
     function podOrderById(bytes32 id) external view returns (uint256) {
-        return s.podOrders[id];
+        return s.system.podOrders[id];
     }
 
     /*
@@ -145,7 +146,7 @@ contract MarketplaceFacet is Invariable, Order {
             decrementAllowancePods(sender, LibTractor._user(), amount);
         }
 
-        if (s.podListings[id] != bytes32(0)) {
+        if (s.system.podListings[id] != bytes32(0)) {
             _cancelPodListing(sender, id);
         }
         _transferPlot(sender, recipient, id, start, amount);

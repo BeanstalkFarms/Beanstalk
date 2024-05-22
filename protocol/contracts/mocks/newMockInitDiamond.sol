@@ -4,7 +4,8 @@
 
 pragma solidity ^0.8.20;
 
-import {AppStorage, System} from "contracts/beanstalk/AppStorage.sol";
+import {AppStorage} from "contracts/beanstalk/storage/AppStorage.sol";
+import {AssetSettings} from "contracts/beanstalk/storage/System.sol";
 import "contracts/beanstalk/init/InitalizeDiamond.sol";
 import {LibWhitelistedTokens} from "contracts/libraries/Silo/LibWhitelistedTokens.sol";
 import {LibWhitelist} from "contracts/libraries/Silo/LibWhitelist.sol";
@@ -49,7 +50,7 @@ contract MockInitDiamond is InitalizeDiamond {
         // set the underlying unripe tokens.
         setUnderlyingUnripe(unripeTokens, underlyingTokens, underlyingTokens[1]);
         // whitelist the unripe assets into the silo.
-        whitelistUnripeAssets(unripeTokens, initalUnripeSiloSettings());
+        whitelistUnripeAssets(unripeTokens, initalUnripeAssetSettings());
     }
 
     /**
@@ -57,11 +58,11 @@ contract MockInitDiamond is InitalizeDiamond {
      */
     function whitelistUnripeAssets(
         address[] memory tokens,
-        System.SiloSettings[] memory siloSettings
+        AssetSettings[] memory assetSettings
     ) internal {
         for (uint i; i < tokens.length; i++) {
             // sets the silo settings for each token.
-            s.siloSettings[tokens[i]] = siloSettings[i];
+            s.system.silo.assetSettings[tokens[i]] = assetSettings[i];
             // note: unripeLP is not an LP token (only the underlying is)
             LibWhitelistedTokens.addWhitelistStatus(
                 tokens[i],
@@ -87,7 +88,11 @@ contract MockInitDiamond is InitalizeDiamond {
         }
 
         // sets the barn raise token to the underlying of the unripe LP.
-        s.unripe[unripeToken[underlyingToken.length - 1]].underlyingToken = barnRaiseWell;
+        s
+            .system
+            .silo
+            .unripeSettings[unripeToken[underlyingToken.length - 1]]
+            .underlyingToken = barnRaiseWell;
     }
 
     /**
@@ -95,17 +100,17 @@ contract MockInitDiamond is InitalizeDiamond {
      * @dev unripe bean and unrpe lp has the same settings,
      * other than the BDV calculation.
      */
-    function initalUnripeSiloSettings()
+    function initalUnripeAssetSettings()
         internal
         view
-        returns (System.SiloSettings[] memory siloSettings)
+        returns (AssetSettings[] memory assetSettings)
     {
-        siloSettings = new System.SiloSettings[](2);
-        siloSettings[0] = System.SiloSettings({
+        assetSettings = new AssetSettings[](2);
+        assetSettings[0] = AssetSettings({
             selector: BDVFacet.unripeBeanToBDV.selector,
             stalkEarnedPerSeason: INIT_UR_BEAN_STALK_EARNED_PER_SEASON,
             stalkIssuedPerBdv: INIT_STALK_ISSUED_PER_BDV,
-            milestoneSeason: s.season.current,
+            milestoneSeason: s.system.season.current,
             milestoneStem: 0,
             encodeType: 0x00,
             deltaStalkEarnedPerSeason: 0,
@@ -114,11 +119,11 @@ contract MockInitDiamond is InitalizeDiamond {
             gaugePoints: 0,
             optimalPercentDepositedBdv: 0
         });
-        siloSettings[1] = System.SiloSettings({
+        assetSettings[1] = AssetSettings({
             selector: BDVFacet.unripeLPToBDV.selector,
             stalkEarnedPerSeason: INIT_UR_BEAN_STALK_EARNED_PER_SEASON,
             stalkIssuedPerBdv: INIT_STALK_ISSUED_PER_BDV,
-            milestoneSeason: s.season.current,
+            milestoneSeason: s.system.season.current,
             milestoneStem: 0,
             encodeType: 0x00,
             deltaStalkEarnedPerSeason: 0,
@@ -150,11 +155,11 @@ contract MockInitDiamond is InitalizeDiamond {
     function whitelistUnderlyingUrLPWell(address well) internal {
         // whitelist bean:stETH well
         // note: no error checking:
-        s.siloSettings[well] = System.SiloSettings({
+        s.system.silo.assetSettings[well] = AssetSettings({
             selector: BDVFacet.wellBdv.selector,
             stalkEarnedPerSeason: INIT_BEAN_WSTETH_WELL_STALK_EARNED_PER_SEASON,
             stalkIssuedPerBdv: INIT_STALK_ISSUED_PER_BDV,
-            milestoneSeason: s.season.current,
+            milestoneSeason: s.system.season.current,
             milestoneStem: 0,
             encodeType: 0x01,
             deltaStalkEarnedPerSeason: 0,
@@ -178,7 +183,7 @@ contract MockInitDiamond is InitalizeDiamond {
             true // is well
         );
 
-        s.twaReserves[well].reserve0 = 1;
-        s.twaReserves[well].reserve1 = 1;
+        s.system.twaReserves[well].reserve0 = 1;
+        s.system.twaReserves[well].reserve1 = 1;
     }
 }

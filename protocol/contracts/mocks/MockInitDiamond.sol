@@ -7,7 +7,7 @@ pragma solidity ^0.8.20;
 import {IBean} from "../interfaces/IBean.sol";
 import {IWETH} from "../interfaces/IWETH.sol";
 import {MockToken} from "../mocks/MockToken.sol";
-import {AppStorage, System} from "../beanstalk/AppStorage.sol";
+import {AppStorage} from "../beanstalk/storage/AppStorage.sol";
 import {C} from "../C.sol";
 import {InitWhitelist} from "contracts/beanstalk/init/InitWhitelist.sol";
 import {InitWhitelistStatuses} from "contracts/beanstalk/init/InitWhitelistStatuses.sol";
@@ -29,39 +29,39 @@ contract MockInitDiamond is InitWhitelist, InitWhitelistStatuses, Weather {
         ds.supportedInterfaces[0x0e89341c] = true; // ERC1155Metadata
 
         LibCases.setCasesV2();
-        s.weather.t = 1;
+        s.system.weather.t = 1;
 
-        s.weather.thisSowTime = type(uint32).max;
-        s.weather.lastSowTime = type(uint32).max;
+        s.system.weather.thisSowTime = type(uint32).max;
+        s.system.weather.lastSowTime = type(uint32).max;
 
-        s.season.current = 1;
-        s.season.withdrawSeasons = 25;
-        s.season.period = C.getSeasonPeriod();
-        s.season.timestamp = block.timestamp;
-        s.season.start = s.season.period > 0
-            ? (block.timestamp / s.season.period) * s.season.period
+        s.system.season.current = 1;
+        s.system.season.withdrawSeasons = 25;
+        s.system.season.period = C.getSeasonPeriod();
+        s.system.season.timestamp = block.timestamp;
+        s.system.season.start = s.system.season.period > 0
+            ? (block.timestamp / s.system.season.period) * s.system.season.period
             : block.timestamp;
-        s.isFarm = 1;
-        s.usdTokenPrice[C.BEAN_ETH_WELL] = 1;
-        s.twaReserves[C.BEAN_ETH_WELL].reserve0 = 1;
-        s.twaReserves[C.BEAN_ETH_WELL].reserve1 = 1;
+        s.system.isFarm = 1;
+        s.system.usdTokenPrice[C.BEAN_ETH_WELL] = 1;
+        s.system.twaReserves[C.BEAN_ETH_WELL].reserve0 = 1;
+        s.system.twaReserves[C.BEAN_ETH_WELL].reserve1 = 1;
 
-        s.season.stemStartSeason = uint16(s.season.current);
-        s.season.stemScaleSeason = uint16(s.season.current);
-        s.seedGauge.beanToMaxLpGpPerBdvRatio = 50e18; // 50%
-        s.seedGauge.averageGrownStalkPerBdvPerSeason = 3e6;
+        s.system.season.stemStartSeason = uint16(s.system.season.current);
+        s.system.season.stemScaleSeason = uint16(s.system.season.current);
+        s.system.seedGauge.beanToMaxLpGpPerBdvRatio = 50e18; // 50%
+        s.system.seedGauge.averageGrownStalkPerBdvPerSeason = 3e6;
 
         LibTractor._resetPublisher();
 
-        s.unripe[C.UNRIPE_LP].underlyingToken = C.BEAN_WSTETH_WELL;
+        s.system.silo.unripeSettings[C.UNRIPE_LP].underlyingToken = C.BEAN_WSTETH_WELL;
 
         emit BeanToMaxLpGpPerBdvRatioChange(
-            s.season.current,
+            s.system.season.current,
             type(uint256).max,
-            int80(int128(s.seedGauge.beanToMaxLpGpPerBdvRatio))
+            int80(int128(s.system.seedGauge.beanToMaxLpGpPerBdvRatio))
         );
         emit LibGauge.UpdateAverageStalkPerBdvPerSeason(
-            s.seedGauge.averageGrownStalkPerBdvPerSeason
+            s.system.seedGauge.averageGrownStalkPerBdvPerSeason
         );
 
         whitelistPools();

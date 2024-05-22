@@ -166,7 +166,7 @@ library LibLegacyTokenSilo {
     ) internal view returns (uint256) {
         AppStorage storage s = LibAppStorage.diamondStorage();
 
-        uint32 stemStartSeason = uint32(s.season.stemStartSeason);
+        uint32 stemStartSeason = uint32(s.system.season.stemStartSeason);
         uint32 lastUpdate = s.accounts[account].lastUpdate;
 
         if (lastUpdate > stemStartSeason) return 0;
@@ -214,7 +214,7 @@ library LibLegacyTokenSilo {
         //negative grown stalk index.
 
         //find the difference between the input season and the Silo v3 epoch season
-        stem = (int96(uint96(season)).sub(int96(uint96(s.season.stemStartSeason)))).mul(
+        stem = (int96(uint96(season)).sub(int96(uint96(s.system.season.stemStartSeason)))).mul(
             int96(int256(seedsPerBdv))
         );
     }
@@ -233,7 +233,7 @@ library LibLegacyTokenSilo {
         (bool needsMigration, ) = LibSilo.migrationNeeded(account);
         require(needsMigration, "no migration needed");
 
-        s.accounts[account].lastUpdate = s.season.stemStartSeason;
+        s.accounts[account].lastUpdate = s.system.season.stemStartSeason;
     }
 
     /**
@@ -383,7 +383,7 @@ library LibLegacyTokenSilo {
         // stalk diff was calculated based on ENROOT_FIX_SEASON, so we need to calculate
         // the amount of stalk that has grown since then
         if (seedsDiff > 0) {
-            uint256 currentStalkDiff = (uint256(s.season.current).sub(ENROOT_FIX_SEASON))
+            uint256 currentStalkDiff = (uint256(s.system.season.current).sub(ENROOT_FIX_SEASON))
                 .mul(seedsDiff)
                 .add(stalkDiff);
 
@@ -408,7 +408,7 @@ library LibLegacyTokenSilo {
      */
     function _season() internal view returns (uint32) {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        return s.season.current;
+        return s.system.season.current;
     }
 
     /**
@@ -451,7 +451,7 @@ library LibLegacyTokenSilo {
         uint32 season
     ) internal view returns (uint128 grownStalk) {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        return uint128(stalkReward(seedsForDeposit, s.season.stemStartSeason - season));
+        return uint128(stalkReward(seedsForDeposit, s.system.season.stemStartSeason - season));
     }
 
     /**
@@ -476,7 +476,7 @@ library LibLegacyTokenSilo {
      */
     function checkForMigration(address account) internal view {
         // The balanceOfSeeds(account) > 0 check is necessary if someone updates their Silo
-        // in the same Season as BIP execution. Such that s.accounts[account].lastUpdate == s.season.stemStartSeason,
+        // in the same Season as BIP execution. Such that s.accounts[account].lastUpdate == s.system.season.stemStartSeason,
         // but they have not migrated yet
         (bool needsMigration, ) = LibSilo.migrationNeeded(account);
         require((needsMigration || balanceOfSeeds(account) > 0), "no migration needed");

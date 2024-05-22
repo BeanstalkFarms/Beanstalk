@@ -97,7 +97,7 @@ interface IMockFBeanstalk {
         uint128 beanToMaxLpGpPerBdvRatio;
     }
 
-    struct SiloSettings {
+    struct AssetSettings {
         bytes4 selector;
         uint32 stalkEarnedPerSeason;
         uint32 stalkIssuedPerBdv;
@@ -1108,7 +1108,7 @@ interface IMockFBeanstalk {
     ) external view returns (uint256);
     function tokenPermitDomainSeparator() external view returns (bytes32);
     function tokenPermitNonces(address owner) external view returns (uint256);
-    function tokenSettings(address token) external view returns (SiloSettings memory);
+    function tokenSettings(address token) external view returns (AssetSettings memory);
     function totalDeltaB() external view returns (int256 deltaB);
     function totalEarnedBeans() external view returns (uint256);
     function totalFertilizedBeans() external view returns (uint256 beans);

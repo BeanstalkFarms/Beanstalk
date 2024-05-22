@@ -43,39 +43,39 @@ contract MockAdminFacet is Sun {
 
     function rewardSunrise(uint256 amount) public {
         updateStart();
-        s.season.current += 1;
+        s.system.season.current += 1;
         C.bean().mint(address(this), amount);
         rewardBeans(amount);
     }
 
     function fertilizerSunrise(uint256 amount) public {
         updateStart();
-        s.season.current += 1;
+        s.system.season.current += 1;
         C.bean().mint(address(this), amount);
         rewardToFertilizer(amount * 3);
     }
 
     function updateStart() private {
         SeasonFacet sf = SeasonFacet(address(this));
-        int256 sa = int256(uint256(s.season.current - sf.seasonTime()));
-        if (sa >= 0) s.season.start -= 3600 * (uint256(sa) + 1);
+        int256 sa = int256(uint256(s.system.season.current - sf.seasonTime()));
+        if (sa >= 0) s.system.season.start -= 3600 * (uint256(sa) + 1);
     }
 
     function updateStemScaleSeason(uint16 season) public {
-        s.season.stemScaleSeason = season;
+        s.system.season.stemScaleSeason = season;
     }
 
     function updateStems() public {
         address[] memory siloTokens = LibWhitelistedTokens.getSiloTokens();
         for (uint256 i = 0; i < siloTokens.length; i++) {
-            s.siloSettings[siloTokens[i]].milestoneStem = int96(
-                s.siloSettings[siloTokens[i]].milestoneStem * 1e6
+            s.system.silo.assetSettings[siloTokens[i]].milestoneStem = int96(
+                s.system.silo.assetSettings[siloTokens[i]].milestoneStem * 1e6
             );
         }
     }
 
     function upgradeStems() public {
-        updateStemScaleSeason(uint16(s.season.current));
+        updateStemScaleSeason(uint16(s.system.season.current));
         updateStems();
     }
 }

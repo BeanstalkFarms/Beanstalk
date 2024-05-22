@@ -5,6 +5,7 @@ pragma solidity ^0.8.20;
 
 import "contracts/libraries/LibRedundantMath256.sol";
 import "contracts/beanstalk/sun/SeasonFacet/SeasonFacet.sol";
+import {AssetSettings, TotalGerminating} from "contracts/beanstalk/storage/System.sol";
 import {LibDiamond} from "contracts/libraries/LibDiamond.sol";
 import {IERC1155} from "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
 import "../MockToken.sol";
@@ -14,7 +15,7 @@ import {LibEthUsdOracle} from "contracts/libraries/Oracle/LibEthUsdOracle.sol";
 import {LibWstethEthOracle} from "contracts/libraries/Oracle/LibWstethEthOracle.sol";
 import {LibWstethUsdOracle} from "contracts/libraries/Oracle/LibWstethUsdOracle.sol";
 import {LibUsdOracle} from "contracts/libraries/Oracle/LibUsdOracle.sol";
-import {LibAppStorage, System} from "contracts/libraries/LibAppStorage.sol";
+import {LibAppStorage} from "contracts/libraries/LibAppStorage.sol";
 import {LibRedundantMathSigned256} from "contracts/libraries/LibRedundantMathSigned256.sol";
 import {LibGauge} from "contracts/libraries/LibGauge.sol";
 import {LibRedundantMath32} from "contracts/libraries/LibRedundantMath32.sol";
@@ -65,17 +66,17 @@ contract MockSeasonFacet is SeasonFacet {
     }
 
     function setYieldE(uint256 t) public {
-        s.weather.t = uint32(t);
+        s.system.weather.t = uint32(t);
     }
 
     function siloSunrise(uint256 amount) public {
-        require(!s.paused, "Season: Paused.");
-        s.season.current += 1;
-        s.season.timestamp = block.timestamp;
-        s.season.sunriseBlock = uint32(block.number);
+        require(!s.system.paused, "Season: Paused.");
+        s.system.season.current += 1;
+        s.system.season.timestamp = block.timestamp;
+        s.system.season.sunriseBlock = uint32(block.number);
         mockStepSilo(amount);
         LibGerminate.endTotalGermination(
-            s.season.current,
+            s.system.season.current,
             LibWhitelistedTokens.getWhitelistedTokens()
         );
     }
@@ -86,37 +87,37 @@ contract MockSeasonFacet is SeasonFacet {
     }
 
     function rainSunrise() public {
-        require(!s.paused, "Season: Paused.");
-        s.season.current += 1;
-        s.season.sunriseBlock = uint32(block.number);
+        require(!s.system.paused, "Season: Paused.");
+        s.system.season.current += 1;
+        s.system.season.sunriseBlock = uint32(block.number);
         // update last snapshot in beanstalk.
         stepOracle();
         mockStartSop();
     }
 
     function rainSunrises(uint256 amount) public {
-        require(!s.paused, "Season: Paused.");
+        require(!s.system.paused, "Season: Paused.");
         for (uint256 i; i < amount; ++i) {
-            s.season.current += 1;
+            s.system.season.current += 1;
             stepOracle();
             mockStartSop();
         }
-        s.season.sunriseBlock = uint32(block.number);
+        s.system.season.sunriseBlock = uint32(block.number);
     }
 
     function droughtSunrise() public {
-        require(!s.paused, "Season: Paused.");
-        s.season.current += 1;
-        s.season.sunriseBlock = uint32(block.number);
+        require(!s.system.paused, "Season: Paused.");
+        s.system.season.current += 1;
+        s.system.season.sunriseBlock = uint32(block.number);
         // update last snapshot in beanstalk.
         stepOracle();
         handleRain(2, C.BEAN_ETH_WELL);
     }
 
     function rainSiloSunrise(uint256 amount) public {
-        require(!s.paused, "Season: Paused.");
-        s.season.current += 1;
-        s.season.sunriseBlock = uint32(block.number);
+        require(!s.system.paused, "Season: Paused.");
+        s.system.season.current += 1;
+        s.system.season.sunriseBlock = uint32(block.number);
         // update last snapshot in beanstalk.
         stepOracle();
         mockStartSop();
@@ -124,9 +125,9 @@ contract MockSeasonFacet is SeasonFacet {
     }
 
     function droughtSiloSunrise(uint256 amount) public {
-        require(!s.paused, "Season: Paused.");
-        s.season.current += 1;
-        s.season.sunriseBlock = uint32(block.number);
+        require(!s.system.paused, "Season: Paused.");
+        s.system.season.current += 1;
+        s.system.season.sunriseBlock = uint32(block.number);
         // update last snapshot in beanstalk.
         stepOracle();
         mockStartSop();
@@ -134,41 +135,41 @@ contract MockSeasonFacet is SeasonFacet {
     }
 
     function sunSunrise(int256 deltaB, uint256 caseId) public {
-        require(!s.paused, "Season: Paused.");
-        s.season.current += 1;
-        s.season.sunriseBlock = uint32(block.number);
+        require(!s.system.paused, "Season: Paused.");
+        s.system.season.current += 1;
+        s.system.season.sunriseBlock = uint32(block.number);
         stepSun(deltaB, caseId);
     }
 
     function seedGaugeSunSunrise(int256 deltaB, uint256 caseId) public {
-        require(!s.paused, "Season: Paused.");
-        s.season.current += 1;
-        s.season.sunriseBlock = uint32(block.number);
+        require(!s.system.paused, "Season: Paused.");
+        s.system.season.current += 1;
+        s.system.season.sunriseBlock = uint32(block.number);
         updateTemperatureAndBeanToMaxLpGpPerBdvRatio(caseId);
         stepSun(deltaB, caseId);
     }
 
     function sunTemperatureSunrise(int256 deltaB, uint256 caseId, uint32 t) public {
-        require(!s.paused, "Season: Paused.");
-        s.season.current += 1;
-        s.weather.t = t;
-        s.season.sunriseBlock = uint32(block.number);
+        require(!s.system.paused, "Season: Paused.");
+        s.system.season.current += 1;
+        s.system.weather.t = t;
+        s.system.season.sunriseBlock = uint32(block.number);
         stepSun(deltaB, caseId);
     }
 
     function lightSunrise() public {
-        require(!s.paused, "Season: Paused.");
-        s.season.current += 1;
-        s.season.sunriseBlock = uint32(block.number);
+        require(!s.system.paused, "Season: Paused.");
+        s.system.season.current += 1;
+        s.system.season.sunriseBlock = uint32(block.number);
     }
 
     /**
      * @dev Mocks the stepSeason function.
      */
     function mockStepSeason() public returns (uint32 season) {
-        s.season.current += 1;
-        season = s.season.current;
-        s.season.sunriseBlock = uint32(block.number); // Note: Will overflow in the year 3650.
+        s.system.season.current += 1;
+        season = s.system.season.current;
+        s.system.season.sunriseBlock = uint32(block.number); // Note: Will overflow in the year 3650.
         emit Sunrise(season);
     }
 
@@ -177,67 +178,67 @@ contract MockSeasonFacet is SeasonFacet {
         // end germination,
         // then teleport remainder of seasons.
         if (_s >= 2) {
-            s.season.current += 2;
+            s.system.season.current += 2;
             LibGerminate.endTotalGermination(
-                s.season.current,
+                s.system.season.current,
                 LibWhitelistedTokens.getWhitelistedTokens()
             );
-            s.season.current += _s - 2;
+            s.system.season.current += _s - 2;
         } else {
-            s.season.current += _s;
+            s.system.season.current += _s;
         }
     }
 
     function teleportSunrise(uint32 _s) public {
-        s.season.current = _s;
-        s.season.sunriseBlock = uint32(block.number);
+        s.system.season.current = _s;
+        s.system.season.sunriseBlock = uint32(block.number);
     }
 
     function farmSunrise() public {
-        require(!s.paused, "Season: Paused.");
-        s.season.current += 1;
-        s.season.timestamp = block.timestamp;
-        s.season.sunriseBlock = uint32(block.number);
+        require(!s.system.paused, "Season: Paused.");
+        s.system.season.current += 1;
+        s.system.season.timestamp = block.timestamp;
+        s.system.season.sunriseBlock = uint32(block.number);
         LibGerminate.endTotalGermination(
-            s.season.current,
+            s.system.season.current,
             LibWhitelistedTokens.getWhitelistedTokens()
         );
     }
 
     function farmSunrises(uint256 number) public {
-        require(!s.paused, "Season: Paused.");
+        require(!s.system.paused, "Season: Paused.");
         for (uint256 i; i < number; ++i) {
-            s.season.current += 1;
-            s.season.timestamp = block.timestamp;
+            s.system.season.current += 1;
+            s.system.season.timestamp = block.timestamp;
             // ending germination only needs to occur for the first two loops.
             if (i < 2) {
                 LibGerminate.endTotalGermination(
-                    s.season.current,
+                    s.system.season.current,
                     LibWhitelistedTokens.getWhitelistedTokens()
                 );
             }
         }
-        s.season.sunriseBlock = uint32(block.number);
+        s.system.season.sunriseBlock = uint32(block.number);
     }
 
     function setMaxTempE(uint32 number) public {
-        s.weather.t = number;
+        s.system.weather.t = number;
     }
 
     function setAbovePegE(bool peg) public {
-        s.season.abovePeg = peg;
+        s.system.season.abovePeg = peg;
     }
 
     function setLastDSoilE(uint128 number) public {
-        s.weather.lastDSoil = number;
+        s.system.weather.lastDSoil = number;
     }
 
     function setNextSowTimeE(uint32 _time) public {
-        s.weather.thisSowTime = _time;
+        s.system.weather.thisSowTime = _time;
     }
 
     function setLastSowTimeE(uint32 number) public {
-        s.weather.lastSowTime = number;
+        s.system.weather.lastSowTime = number;
     }
 
     function setSoilE(uint256 amount) public {
@@ -245,30 +246,30 @@ contract MockSeasonFacet is SeasonFacet {
     }
 
     function resetState() public {
-        delete s.field;
-        delete s.silo;
-        delete s.weather;
-        s.weather.lastSowTime = type(uint32).max;
-        s.weather.thisSowTime = type(uint32).max;
-        delete s.rain;
-        delete s.season;
-        s.season.start = block.timestamp;
-        s.season.timestamp = block.timestamp;
-        s.silo.stalk = 0;
-        s.season.withdrawSeasons = 25;
-        s.season.current = 1;
-        s.paused = false;
+        delete s.system.field;
+        delete s.system.silo;
+        delete s.system.weather;
+        s.system.weather.lastSowTime = type(uint32).max;
+        s.system.weather.thisSowTime = type(uint32).max;
+        delete s.system.rain;
+        delete s.system.season;
+        s.system.season.start = block.timestamp;
+        s.system.season.timestamp = block.timestamp;
+        s.system.silo.stalk = 0;
+        s.system.season.withdrawSeasons = 25;
+        s.system.season.current = 1;
+        s.system.paused = false;
         C.bean().burn(C.bean().balanceOf(address(this)));
     }
 
     function calcCaseIdE(int256 deltaB, uint128 endSoil) external {
-        s.field.soil = endSoil;
-        s.field.beanSown = endSoil;
+        s.system.field.soil = endSoil;
+        s.system.field.beanSown = endSoil;
         calcCaseIdandUpdate(deltaB);
     }
 
     function setCurrentSeasonE(uint32 _season) public {
-        s.season.current = _season;
+        s.system.season.current = _season;
     }
 
     function calcCaseIdWithParams(
@@ -306,29 +307,29 @@ contract MockSeasonFacet is SeasonFacet {
         }
         Call[] memory pump = IWell(C.BEAN_ETH_WELL).pumps();
         IMockPump(pump[0].target).update(pump[0].target, reserves, pump[0].data);
-        s.twaReserves[C.BEAN_ETH_WELL].reserve0 = uint128(reserves[0]);
-        s.twaReserves[C.BEAN_ETH_WELL].reserve1 = uint128(reserves[1]);
-        s.usdTokenPrice[C.BEAN_ETH_WELL] = 0.001e18;
+        s.system.twaReserves[C.BEAN_ETH_WELL].reserve0 = uint128(reserves[0]);
+        s.system.twaReserves[C.BEAN_ETH_WELL].reserve1 = uint128(reserves[1]);
+        s.system.usdTokenPrice[C.BEAN_ETH_WELL] = 0.001e18;
         if (aboveQ) {
             // increase bean price
-            s.twaReserves[C.BEAN_ETH_WELL].reserve0 = uint128(reserves[0].mul(10).div(11));
+            s.system.twaReserves[C.BEAN_ETH_WELL].reserve0 = uint128(reserves[0].mul(10).div(11));
         } else {
             // decrease bean price
-            s.twaReserves[C.BEAN_ETH_WELL].reserve0 = uint128(reserves[0]);
+            s.system.twaReserves[C.BEAN_ETH_WELL].reserve0 = uint128(reserves[0]);
         }
 
         /// FIELD ///
-        s.season.raining = raining;
-        s.rain.roots = rainRoots ? 1 : 0;
-        s.field.pods = (pods.mul(C.bean().totalSupply()) / 1000); // previous tests used 1000 as the total supply.
-        s.weather.lastDSoil = uint128(_lastDSoil);
-        s.field.beanSown = beanSown;
-        s.field.soil = endSoil;
+        s.system.season.raining = raining;
+        s.system.rain.roots = rainRoots ? 1 : 0;
+        s.system.field.pods = (pods.mul(C.bean().totalSupply()) / 1000); // previous tests used 1000 as the total supply.
+        s.system.weather.lastDSoil = uint128(_lastDSoil);
+        s.system.field.beanSown = beanSown;
+        s.system.field.soil = endSoil;
         calcCaseIdandUpdate(deltaB);
     }
 
     function resetSeasonStart(uint256 amount) public {
-        s.season.start = block.timestamp.sub(amount + 3600 * 2);
+        s.system.season.start = block.timestamp.sub(amount + 3600 * 2);
     }
 
     function captureE() external returns (int256 deltaB) {
@@ -338,7 +339,7 @@ contract MockSeasonFacet is SeasonFacet {
 
     function captureWellE(address well) external returns (int256 deltaB) {
         deltaB = LibWellMinting.capture(well);
-        s.season.timestamp = block.timestamp;
+        s.system.season.timestamp = block.timestamp;
         emit DeltaB(deltaB);
     }
 
@@ -354,7 +355,7 @@ contract MockSeasonFacet is SeasonFacet {
     }
 
     function setSunriseBlock(uint256 _block) external {
-        s.season.sunriseBlock = uint32(_block);
+        s.system.season.sunriseBlock = uint32(_block);
     }
 
     //fake the grown stalk per bdv deployment, does same as InitBipNewSilo
@@ -364,42 +365,42 @@ contract MockSeasonFacet is SeasonFacet {
         ds.supportedInterfaces[type(IERC1155).interfaceId] = true;
         ds.supportedInterfaces[0x0e89341c] = true;
 
-        uint24 currentSeason = uint24(s.season.current);
+        uint24 currentSeason = uint24(s.system.season.current);
 
-        s.siloSettings[C.BEAN].stalkEarnedPerSeason = 2 * 1e6;
-        s.siloSettings[C.BEAN].stalkIssuedPerBdv = 10000;
-        s.siloSettings[C.BEAN].milestoneSeason = currentSeason;
-        s.siloSettings[C.BEAN].milestoneStem = 0;
+        s.system.silo.assetSettings[C.BEAN].stalkEarnedPerSeason = 2 * 1e6;
+        s.system.silo.assetSettings[C.BEAN].stalkIssuedPerBdv = 10000;
+        s.system.silo.assetSettings[C.BEAN].milestoneSeason = currentSeason;
+        s.system.silo.assetSettings[C.BEAN].milestoneStem = 0;
 
-        s.siloSettings[C.UNRIPE_BEAN].stalkEarnedPerSeason = 2 * 1e6;
-        s.siloSettings[C.UNRIPE_BEAN].stalkIssuedPerBdv = 10000;
-        s.siloSettings[C.UNRIPE_BEAN].milestoneSeason = currentSeason;
-        s.siloSettings[C.UNRIPE_BEAN].milestoneStem = 0;
+        s.system.silo.assetSettings[C.UNRIPE_BEAN].stalkEarnedPerSeason = 2 * 1e6;
+        s.system.silo.assetSettings[C.UNRIPE_BEAN].stalkIssuedPerBdv = 10000;
+        s.system.silo.assetSettings[C.UNRIPE_BEAN].milestoneSeason = currentSeason;
+        s.system.silo.assetSettings[C.UNRIPE_BEAN].milestoneStem = 0;
 
-        s.siloSettings[address(C.unripeLP())].stalkEarnedPerSeason = 2 * 1e6;
-        s.siloSettings[address(C.unripeLP())].stalkIssuedPerBdv = 10000;
-        s.siloSettings[address(C.unripeLP())].milestoneSeason = currentSeason;
-        s.siloSettings[address(C.unripeLP())].milestoneStem = 0;
+        s.system.silo.assetSettings[address(C.unripeLP())].stalkEarnedPerSeason = 2 * 1e6;
+        s.system.silo.assetSettings[address(C.unripeLP())].stalkIssuedPerBdv = 10000;
+        s.system.silo.assetSettings[address(C.unripeLP())].milestoneSeason = currentSeason;
+        s.system.silo.assetSettings[address(C.unripeLP())].milestoneStem = 0;
 
-        s.season.stemStartSeason = uint16(s.season.current);
+        s.system.season.stemStartSeason = uint16(s.system.season.current);
     }
 
     //constants for old seeds values
 
     function lastDSoil() external view returns (uint256) {
-        return uint256(s.weather.lastDSoil);
+        return uint256(s.system.weather.lastDSoil);
     }
 
     function lastSowTime() external view returns (uint256) {
-        return uint256(s.weather.lastSowTime);
+        return uint256(s.system.weather.lastSowTime);
     }
 
     function thisSowTime() external view returns (uint256) {
-        return uint256(s.weather.thisSowTime);
+        return uint256(s.system.weather.thisSowTime);
     }
 
     function getT() external view returns (uint256) {
-        return uint256(s.weather.t);
+        return uint256(s.system.weather.t);
     }
 
     function getUsdPrice(address token) external view returns (uint256) {
@@ -448,11 +449,11 @@ contract MockSeasonFacet is SeasonFacet {
     }
 
     function setBeanToMaxLpGpPerBdvRatio(uint128 percent) external {
-        s.seedGauge.beanToMaxLpGpPerBdvRatio = percent;
+        s.system.seedGauge.beanToMaxLpGpPerBdvRatio = percent;
     }
 
     function setUsdEthPrice(uint256 price) external {
-        s.usdTokenPrice[C.BEAN_ETH_WELL] = price;
+        s.system.usdTokenPrice[C.BEAN_ETH_WELL] = price;
     }
 
     function mockStepGauge() external {
@@ -478,7 +479,7 @@ contract MockSeasonFacet is SeasonFacet {
     function mockSetAverageGrownStalkPerBdvPerSeason(
         uint128 _averageGrownStalkPerBdvPerSeason
     ) external {
-        s.seedGauge.averageGrownStalkPerBdvPerSeason = _averageGrownStalkPerBdvPerSeason;
+        s.system.seedGauge.averageGrownStalkPerBdvPerSeason = _averageGrownStalkPerBdvPerSeason;
     }
 
     function mockInitalizeGaugeForToken(
@@ -488,7 +489,7 @@ contract MockSeasonFacet is SeasonFacet {
         uint96 gaugePoints,
         uint64 optimalPercentDepositedBdv
     ) external {
-        System.SiloSettings storage ss = LibAppStorage.diamondStorage().siloSettings[token];
+        AssetSettings storage ss = LibAppStorage.diamondStorage().system.silo.assetSettings[token];
         ss.gpSelector = gaugePointSelector;
         ss.gaugePoints = gaugePoints;
         ss.optimalPercentDepositedBdv = optimalPercentDepositedBdv;
@@ -502,11 +503,11 @@ contract MockSeasonFacet is SeasonFacet {
 
     function mockEndTotalGerminationForToken(address token) external {
         // increment total deposited and amounts for each token.
-        System.TotalGerminating storage totalGerm;
+        TotalGerminating storage totalGerm;
         if (LibGerminate.getSeasonGerminationState() == LibGerminate.Germinate.ODD) {
-            totalGerm = s.oddGerminating;
+            totalGerm = s.system.silo.oddGerminating;
         } else {
-            totalGerm = s.evenGerminating;
+            totalGerm = s.system.silo.evenGerminating;
         }
         LibTokenSilo.incrementTotalDeposited(
             token,
@@ -525,7 +526,7 @@ contract MockSeasonFacet is SeasonFacet {
     }
 
     function mockSetSopWell(address well) external {
-        s.sopWell = well;
+        s.system.sopWell = well;
     }
 
     function mockIncrementGermination(
@@ -574,23 +575,23 @@ contract MockSeasonFacet is SeasonFacet {
     function setPrice(uint256 price, address targetWell) public returns (int256 deltaB) {
         // initalize beanTknPrice, and reserves.
         uint256 ethPrice = 1000e6;
-        s.usdTokenPrice[targetWell] = 1e24 / ethPrice;
+        s.system.usdTokenPrice[targetWell] = 1e24 / ethPrice;
         uint256[] memory reserves = IWell(targetWell).getReserves();
-        s.twaReserves[targetWell].reserve0 = uint128(reserves[0]);
-        s.twaReserves[targetWell].reserve1 = uint128(reserves[1]);
+        s.system.twaReserves[targetWell].reserve0 = uint128(reserves[0]);
+        s.system.twaReserves[targetWell].reserve1 = uint128(reserves[1]);
         if (price == 0) {
             // below peg
             deltaB = -1;
-            s.season.abovePeg = false;
+            s.system.season.abovePeg = false;
         } else {
             // above peg
             deltaB = 1;
-            s.season.abovePeg = true;
+            s.system.season.abovePeg = true;
             if (price == 2) {
                 // excessively above peg
 
-                // to get Q, decrease s.reserve0 of the well to be >1.05.
-                s.twaReserves[targetWell].reserve0 = uint128(reserves[0].mul(90).div(100));
+                // to get Q, decrease s.system.reserve0 of the well to be >1.05.
+                s.system.twaReserves[targetWell].reserve0 = uint128(reserves[0].mul(90).div(100));
             }
         }
     }
@@ -603,16 +604,16 @@ contract MockSeasonFacet is SeasonFacet {
         uint256 beanSupply = C.bean().totalSupply();
         if (podRate == 0) {
             // < 5%
-            s.field.pods = beanSupply.mul(49).div(1000);
+            s.system.field.pods = beanSupply.mul(49).div(1000);
         } else if (podRate == 1) {
             // < 15%
-            s.field.pods = beanSupply.mul(149).div(1000);
+            s.system.field.pods = beanSupply.mul(149).div(1000);
         } else if (podRate == 2) {
             // < 25%
-            s.field.pods = beanSupply.mul(249).div(1000);
+            s.system.field.pods = beanSupply.mul(249).div(1000);
         } else {
             // > 25%
-            s.field.pods = beanSupply.mul(251).div(1000);
+            s.system.field.pods = beanSupply.mul(251).div(1000);
         }
     }
 
@@ -623,16 +624,16 @@ contract MockSeasonFacet is SeasonFacet {
     function setChangeInSoilDemand(uint256 changeInSoilDemand) public {
         if (changeInSoilDemand == 0) {
             // decreasing demand
-            s.weather.lastSowTime = 600; // last season, everything was sown in 10 minutes.
-            s.weather.thisSowTime = 1200; // this season, everything was sown in 20 minutes.
+            s.system.weather.lastSowTime = 600; // last season, everything was sown in 10 minutes.
+            s.system.weather.thisSowTime = 1200; // this season, everything was sown in 20 minutes.
         } else if (changeInSoilDemand == 1) {
             // steady demand
-            s.weather.lastSowTime = 600; // last season, everything was sown in 10 minutes.
-            s.weather.thisSowTime = 600; // this season, everything was sown in 10 minutes.
+            s.system.weather.lastSowTime = 600; // last season, everything was sown in 10 minutes.
+            s.system.weather.thisSowTime = 600; // this season, everything was sown in 10 minutes.
         } else {
             // increasing demand
-            s.weather.lastSowTime = type(uint32).max; // last season, no one sow'd
-            s.weather.thisSowTime = type(uint32).max - 1; // this season, someone sow'd
+            s.system.weather.lastSowTime = type(uint32).max; // last season, no one sow'd
+            s.system.weather.thisSowTime = type(uint32).max - 1; // this season, someone sow'd
         }
     }
 
@@ -672,15 +673,15 @@ contract MockSeasonFacet is SeasonFacet {
     }
 
     function getSeasonStart() external view returns (uint256) {
-        return s.season.start;
+        return s.system.season.start;
     }
 
     /**
      * @notice returns the timestamp in which the next sunrise can be called.
      */
     function getNextSeasonStart() external view returns (uint256) {
-        uint256 currentSeason = s.season.current;
-        return s.season.start + ((currentSeason + 1) * 3600);
+        uint256 currentSeason = s.system.season.current;
+        return s.system.season.start + ((currentSeason + 1) * 3600);
     }
 
     /**
@@ -695,12 +696,15 @@ contract MockSeasonFacet is SeasonFacet {
     }
 
     function initOracleForWell(address well) internal {
-        require(s.wellOracleSnapshots[well].length == 0, "Season: Oracle already initialized.");
+        require(
+            s.system.wellOracleSnapshots[well].length == 0,
+            "Season: Oracle already initialized."
+        );
         LibWellMinting.initializeOracle(well);
     }
 
     function getPoolDeltaBWithoutCap(address well) external view returns (int256 deltaB) {
-        bytes memory lastSnapshot = LibAppStorage.diamondStorage().wellOracleSnapshots[well];
+        bytes memory lastSnapshot = LibAppStorage.diamondStorage().system.wellOracleSnapshots[well];
         // If the length of the stored Snapshot for a given Well is 0,
         // then the Oracle is not initialized.
         if (lastSnapshot.length > 0) {

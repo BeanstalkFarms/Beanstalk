@@ -39,7 +39,7 @@ contract MetadataFacet is MetadataImage {
         // 1) a token in the silo whitelist (by checking milestone season)
         // 2) a stem that is less than or equal to the stem tip
         require(
-            s.siloSettings[token].milestoneSeason != 0 && stemTip >= stem,
+            s.system.silo.assetSettings[token].milestoneSeason != 0 && stemTip >= stem,
             "Silo: metadata does not exist"
         );
         bytes memory attributes = abi.encodePacked(

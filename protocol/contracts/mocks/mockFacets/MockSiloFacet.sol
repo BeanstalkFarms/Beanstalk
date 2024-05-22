@@ -67,8 +67,8 @@ contract MockSiloFacet is SiloFacet {
         incrementTotalDepositedBDV(C.UNRIPE_LP, bdv);
 
         uint256 seeds = bdv.mul(LibLegacyTokenSilo.getLegacySeedsPerToken(C.UNRIPE_LP));
-        uint256 stalk = bdv.mul(s.siloSettings[C.UNRIPE_LP].stalkIssuedPerBdv).add(
-            stalkRewardLegacy(seeds, s.season.current - _s)
+        uint256 stalk = bdv.mul(s.system.silo.assetSettings[C.UNRIPE_LP].stalkIssuedPerBdv).add(
+            stalkRewardLegacy(seeds, s.system.season.current - _s)
         );
         // not germinating because this is a old deposit.
         LibSilo.mintActiveStalk(LibTractor._user(), stalk);
@@ -92,9 +92,9 @@ contract MockSiloFacet is SiloFacet {
         incrementTotalDepositedBDV(C.UNRIPE_BEAN, partialAmount);
 
         uint256 seeds = partialAmount.mul(LibLegacyTokenSilo.getLegacySeedsPerToken(C.UNRIPE_BEAN));
-        uint256 stalk = partialAmount.mul(s.siloSettings[C.UNRIPE_BEAN].stalkIssuedPerBdv).add(
-            stalkRewardLegacy(seeds, s.season.current - _s)
-        );
+        uint256 stalk = partialAmount
+            .mul(s.system.silo.assetSettings[C.UNRIPE_BEAN].stalkIssuedPerBdv)
+            .add(stalkRewardLegacy(seeds, s.system.season.current - _s));
 
         LibSilo.mintActiveStalk(LibTractor._user(), stalk);
         mintSeeds(LibTractor._user(), seeds);
@@ -131,8 +131,8 @@ contract MockSiloFacet is SiloFacet {
         uint32 _lastUpdate = s.accounts[account].lastUpdate;
 
         // If `account` was already updated this Season, there's no Stalk to Mow.
-        // _lastUpdate > s.season.current should not be possible, but it is checked anyway.
-        if (_lastUpdate >= s.season.current) return;
+        // _lastUpdate > s.system.season.current should not be possible, but it is checked anyway.
+        if (_lastUpdate >= s.system.season.current) return;
 
         // Increments `plenty` for `account` if a Flood has occured.
         // Saves Rain Roots for `account` if it is Raining.
@@ -144,7 +144,7 @@ contract MockSiloFacet is SiloFacet {
 
         // Reset timer so that Grown Stalk for a particular Season can only be
         // claimed one time.
-        s.accounts[account].lastUpdate = s.season.current;
+        s.accounts[account].lastUpdate = s.system.season.current;
     }
 
     function __mowLegacy(address account) private {
@@ -156,25 +156,25 @@ contract MockSiloFacet is SiloFacet {
     function handleRainAndSopsLegacy(address account, uint32 _lastUpdate) private {
         // If no roots, reset Sop counters variables
         if (s.accounts[account].roots == 0) {
-            s.accounts[account].lastSop = s.season.rainStart;
+            s.accounts[account].lastSop = s.system.season.rainStart;
             s.accounts[account].lastRain = 0;
             return;
         }
         // If a Sop has occured since last update, calculate rewards and set last Sop.
-        if (s.season.lastSopSeason > _lastUpdate) {
+        if (s.system.season.lastSopSeason > _lastUpdate) {
             s.accounts[account].sop.plenty = LibSilo.balanceOfPlenty(account);
-            s.accounts[account].lastSop = s.season.lastSop;
+            s.accounts[account].lastSop = s.system.season.lastSop;
         }
-        if (s.season.raining) {
+        if (s.system.season.raining) {
             // If rain started after update, set account variables to track rain.
-            if (s.season.rainStart > _lastUpdate) {
-                s.accounts[account].lastRain = s.season.rainStart;
+            if (s.system.season.rainStart > _lastUpdate) {
+                s.accounts[account].lastRain = s.system.season.rainStart;
                 s.accounts[account].sop.roots = s.accounts[account].roots;
             }
             // If there has been a Sop since rain started,
             // save plentyPerRoot in case another SOP happens during rain.
-            if (s.season.lastSop == s.season.rainStart)
-                s.accounts[account].sop.plentyPerRoot = s.sops[s.season.lastSop];
+            if (s.system.season.lastSop == s.system.season.rainStart)
+                s.accounts[account].sop.plentyPerRoot = s.system.sops[s.system.season.lastSop];
         } else if (s.accounts[account].lastRain > 0) {
             // Reset Last Rain if not raining.
             s.accounts[account].lastRain = 0;
@@ -185,7 +185,7 @@ contract MockSiloFacet is SiloFacet {
         return
             LibLegacyTokenSilo.stalkReward(
                 s.accounts[account].silo.seeds,
-                s.season.current - s.accounts[account].lastUpdate
+                s.system.season.current - s.accounts[account].lastUpdate
             );
     }
 
@@ -267,7 +267,7 @@ contract MockSiloFacet is SiloFacet {
         (uint256 seeds, uint256 stalk) = libTokenSiloDepositLegacy(
             account,
             token,
-            s.season.current,
+            s.system.season.current,
             amount
         );
         LibSilo.mintActiveStalk(account, stalk);
@@ -278,8 +278,8 @@ contract MockSiloFacet is SiloFacet {
      * @dev Once the BDV received for Depositing `amount` of `token` is known,
      * add a Deposit for `account` and update the total amount Deposited.
      *
-     * `s.siloSettings[token].seeds` stores the number of Seeds per BDV for `token`.
-     * `s.siloSettings[token].stalk` stores the number of Stalk per BDV for `token`.
+     * `system.silo.assetSettings[token].seeds` stores the number of Seeds per BDV for `token`.
+     * `system.silo.assetSettings[token].stalk` stores the number of Stalk per BDV for `token`.
      */
     function depositWithBDVLegacy(
         address account,
@@ -300,7 +300,7 @@ contract MockSiloFacet is SiloFacet {
 
         return (
             bdv.mul(mockGetSeedsPerToken(token)), //for adequate testing may need to grab seeds per token
-            bdv.mul(s.siloSettings[token].stalkIssuedPerBdv)
+            bdv.mul(s.system.silo.assetSettings[token].stalkIssuedPerBdv)
         );
     }
 
@@ -311,7 +311,10 @@ contract MockSiloFacet is SiloFacet {
         AppStorage storage s = LibAppStorage.diamondStorage();
 
         // BDV functions accept one argument: `uint256 amount`
-        bytes memory callData = abi.encodeWithSelector(s.siloSettings[token].selector, amount);
+        bytes memory callData = abi.encodeWithSelector(
+            s.system.silo.assetSettings[token].selector,
+            amount
+        );
 
         (bool success, bytes memory data) = address(this).staticcall(callData);
 
@@ -341,11 +344,11 @@ contract MockSiloFacet is SiloFacet {
         uint16 stalkIssuedPerBdv,
         uint24 stalkEarnedPerSeason
     ) external {
-        s.siloSettings[token].selector = selector;
-        s.siloSettings[token].stalkIssuedPerBdv = stalkIssuedPerBdv; //previously just called "stalk"
-        s.siloSettings[token].stalkEarnedPerSeason = stalkEarnedPerSeason; //previously called "seeds"
+        s.system.silo.assetSettings[token].selector = selector;
+        s.system.silo.assetSettings[token].stalkIssuedPerBdv = stalkIssuedPerBdv; //previously just called "stalk"
+        s.system.silo.assetSettings[token].stalkEarnedPerSeason = stalkEarnedPerSeason; //previously called "seeds"
 
-        s.siloSettings[token].milestoneSeason = uint24(s.season.current);
+        s.system.silo.assetSettings[token].milestoneSeason = uint24(s.system.season.current);
         LibWhitelistedTokens.addWhitelistStatus(
             token,
             true,
@@ -372,15 +375,15 @@ contract MockSiloFacet is SiloFacet {
         uint64 optimalPercentDepositedBdv
     ) external {
         if (stalkEarnedPerSeason == 0) stalkEarnedPerSeason = 1;
-        s.siloSettings[token].selector = selector;
-        s.siloSettings[token].stalkEarnedPerSeason = stalkEarnedPerSeason;
-        s.siloSettings[token].stalkIssuedPerBdv = stalkIssuedPerBdv;
-        s.siloSettings[token].milestoneSeason = uint32(s.season.current);
-        s.siloSettings[token].encodeType = encodeType;
-        s.siloSettings[token].gpSelector = gaugePointSelector;
-        s.siloSettings[token].lwSelector = liquidityWeightSelector;
-        s.siloSettings[token].gaugePoints = gaugePoints;
-        s.siloSettings[token].optimalPercentDepositedBdv = optimalPercentDepositedBdv;
+        s.system.silo.assetSettings[token].selector = selector;
+        s.system.silo.assetSettings[token].stalkEarnedPerSeason = stalkEarnedPerSeason;
+        s.system.silo.assetSettings[token].stalkIssuedPerBdv = stalkIssuedPerBdv;
+        s.system.silo.assetSettings[token].milestoneSeason = uint32(s.system.season.current);
+        s.system.silo.assetSettings[token].encodeType = encodeType;
+        s.system.silo.assetSettings[token].gpSelector = gaugePointSelector;
+        s.system.silo.assetSettings[token].lwSelector = liquidityWeightSelector;
+        s.system.silo.assetSettings[token].gaugePoints = gaugePoints;
+        s.system.silo.assetSettings[token].optimalPercentDepositedBdv = optimalPercentDepositedBdv;
 
         LibWhitelistedTokens.addWhitelistStatus(
             token,
@@ -391,11 +394,11 @@ contract MockSiloFacet is SiloFacet {
     }
 
     function addWhitelistSelector(address token, bytes4 selector) external {
-        s.siloSettings[token].selector = selector;
+        s.system.silo.assetSettings[token].selector = selector;
     }
 
     function removeWhitelistSelector(address token) external {
-        s.siloSettings[token].selector = 0x00000000;
+        s.system.silo.assetSettings[token].selector = 0x00000000;
     }
 
     function mockLiquidityWeight() external pure returns (uint256) {
@@ -403,7 +406,7 @@ contract MockSiloFacet is SiloFacet {
     }
 
     function mockUpdateLiquidityWeight(address token, bytes4 selector) external {
-        s.siloSettings[token].lwSelector = selector;
+        s.system.silo.assetSettings[token].lwSelector = selector;
     }
 
     /**
@@ -432,12 +435,14 @@ contract MockSiloFacet is SiloFacet {
 
     function incrementTotalDepositedAmount(address token, uint256 amount) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        s.siloBalances[token].deposited = s.siloBalances[token].deposited.add(amount.toUint128());
+        s.system.silo.balances[token].deposited = s.system.silo.balances[token].deposited.add(
+            amount.toUint128()
+        );
     }
 
     function incrementTotalDepositedBDV(address token, uint256 amount) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        s.siloBalances[token].depositedBdv = s.siloBalances[token].depositedBdv.add(
+        s.system.silo.balances[token].depositedBdv = s.system.silo.balances[token].depositedBdv.add(
             amount.toUint128()
         );
     }

@@ -5,7 +5,7 @@
 pragma solidity ^0.8.20;
 pragma abicoder v2;
 
-import {AppStorage, System} from "contracts/beanstalk/AppStorage.sol";
+import {AppStorage} from "contracts/beanstalk/storage/AppStorage.sol";
 import {SafeERC20, IERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {ReentrancyGuard} from "contracts/beanstalk/ReentrancyGuard.sol";
 import {LibRedundantMath128} from "contracts/libraries/LibRedundantMath128.sol";
@@ -107,8 +107,8 @@ contract Silo is ReentrancyGuard {
         if (beans == 0) return (0, stemTip);
 
         // Reduce the Silo's supply of Earned Beans.
-        // SafeCast unnecessary because beans is <= s.earnedBeans.
-        s.earnedBeans = s.earnedBeans.sub(uint128(beans));
+        // SafeCast unnecessary because beans is <= s.system.silo.earnedBeans.
+        s.system.silo.earnedBeans = s.system.silo.earnedBeans.sub(uint128(beans));
 
         // Deposit Earned Beans if there are any. Note that 1 Bean = 1 BDV.
         LibTokenSilo.addDepositToAccount(
@@ -124,7 +124,7 @@ contract Silo is ReentrancyGuard {
         // Earned Stalk are minted when Earned Beans are minted during Sunrise. See {Sun.sol:rewardToSilo} for details.
         // Similarly, `account` does not receive additional Roots from Earned Stalk during a Plant.
         // The following lines allocate Earned Stalk that has already been minted to `account`.
-        // Constant is used here rather than s.siloSettings[BEAN].stalkIssuedPerBdv
+        // Constant is used here rather than s.system.silo.assetSettings[BEAN].stalkIssuedPerBdv
         // for gas savings.
         uint256 stalk = beans.mul(C.STALK_PER_BEAN);
         s.accounts[account].silo.stalk = accountStalk.add(stalk);
@@ -146,7 +146,7 @@ contract Silo is ReentrancyGuard {
         IERC20 sopToken = LibSilo.getSopToken();
         sopToken.safeTransfer(account, plenty);
         delete s.accounts[account].sop.plenty;
-        s.plenty -= plenty;
+        s.system.plenty -= plenty;
 
         emit ClaimPlenty(account, address(sopToken), plenty);
     }

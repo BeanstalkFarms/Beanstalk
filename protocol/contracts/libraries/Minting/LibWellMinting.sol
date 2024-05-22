@@ -4,7 +4,8 @@
 
 pragma solidity ^0.8.20;
 
-import {LibAppStorage, AppStorage} from "../LibAppStorage.sol";
+import {LibAppStorage} from "../LibAppStorage.sol";
+import {AppStorage} from "contracts/beanstalk/storage/AppStorage.sol";
 import {C, LibMinting} from "./LibMinting.sol";
 import {ICumulativePump} from "contracts/interfaces/basin/pumps/ICumulativePump.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
@@ -49,7 +50,7 @@ library LibWellMinting {
      * @return deltaB The time weighted average delta B balance since the last `capture` call.
      */
     function check(address well) external view returns (int256 deltaB) {
-        bytes memory lastSnapshot = LibAppStorage.diamondStorage().wellOracleSnapshots[well];
+        bytes memory lastSnapshot = LibAppStorage.diamondStorage().system.wellOracleSnapshots[well];
         // If the length of the stored Snapshot for a given Well is 0,
         // then the Oracle is not initialized.
         if (lastSnapshot.length > 0) {
@@ -67,7 +68,7 @@ library LibWellMinting {
      * @return deltaB The time weighted average delta B balance since the last `capture` call.
      */
     function capture(address well) external returns (int256 deltaB) {
-        bytes memory lastSnapshot = LibAppStorage.diamondStorage().wellOracleSnapshots[well];
+        bytes memory lastSnapshot = LibAppStorage.diamondStorage().system.wellOracleSnapshots[well];
         // If the length of the stored Snapshot for a given Well is 0,
         // then the Oracle is not initialized.
         if (lastSnapshot.length > 0) {
@@ -94,10 +95,10 @@ library LibWellMinting {
         try ICumulativePump(pumps[0].target).readCumulativeReserves(well, pumps[0].data) returns (
             bytes memory lastSnapshot
         ) {
-            s.wellOracleSnapshots[well] = lastSnapshot;
-            emit WellOracle(s.season.current, well, 0, lastSnapshot);
+            s.system.wellOracleSnapshots[well] = lastSnapshot;
+            emit WellOracle(s.system.season.current, well, 0, lastSnapshot);
         } catch {
-            emit WellOracle(s.season.current, well, 0, new bytes(0));
+            emit WellOracle(s.system.season.current, well, 0, new bytes(0));
         }
     }
 
@@ -112,7 +113,10 @@ library LibWellMinting {
         AppStorage storage s = LibAppStorage.diamondStorage();
         uint256[] memory twaReserves;
         uint256[] memory ratios;
-        (deltaB, s.wellOracleSnapshots[well], twaReserves, ratios) = twaDeltaB(well, lastSnapshot);
+        (deltaB, s.system.wellOracleSnapshots[well], twaReserves, ratios) = twaDeltaB(
+            well,
+            lastSnapshot
+        );
 
         // Set the Well reserves in storage, so that it can be read when
         // 1) set the USD price of the non bean token so that it can be read when
@@ -121,7 +125,7 @@ library LibWellMinting {
         //    See {LibIncentive.determineReward}.
         LibWell.setTwaReservesForWell(well, twaReserves);
         LibWell.setUsdTokenPriceForWell(well, ratios);
-        emit WellOracle(s.season.current, well, deltaB, s.wellOracleSnapshots[well]);
+        emit WellOracle(s.system.season.current, well, deltaB, s.system.wellOracleSnapshots[well]);
     }
 
     /**
@@ -140,13 +144,13 @@ library LibWellMinting {
             ICumulativePump(pumps[0].target).readTwaReserves(
                 well,
                 lastSnapshot,
-                uint40(s.season.timestamp),
+                uint40(s.system.season.timestamp),
                 pumps[0].data
             )
         returns (uint[] memory twaReserves, bytes memory snapshot) {
             IERC20[] memory tokens = IWell(well).tokens();
             (uint256[] memory ratios, uint256 beanIndex, bool success) = LibWell
-                .getRatiosAndBeanIndex(tokens, block.timestamp.sub(s.season.timestamp));
+                .getRatiosAndBeanIndex(tokens, block.timestamp.sub(s.system.season.timestamp));
 
             // If the Bean reserve is less than the minimum, the minting oracle should be considered off.
             if (twaReserves[beanIndex] < C.WELL_MINIMUM_BEAN_BALANCE) {

@@ -57,12 +57,12 @@ contract Sun is Oracle {
         if (deltaB > 0) {
             uint256 newHarvestable = rewardBeans(uint256(deltaB));
             setSoilAbovePeg(newHarvestable, caseId);
-            s.season.abovePeg = true;
+            s.system.season.abovePeg = true;
         }
         // Below peg
         else {
             setSoil(uint256(-deltaB));
-            s.season.abovePeg = false;
+            s.system.season.abovePeg = false;
         }
     }
 
@@ -77,13 +77,13 @@ contract Sun is Oracle {
         C.bean().mint(address(this), newSupply);
 
         // Distribute first to Fertilizer if some Fertilizer are active
-        if (s.season.fertilizing) {
+        if (s.system.season.fertilizing) {
             newFertilized = rewardToFertilizer(newSupply);
             newSupply = newSupply.sub(newFertilized);
         }
 
         // Distribute next to the Field if some Pods are still outstanding
-        if (s.field.harvestable < s.field.pods) {
+        if (s.system.field.harvestable < s.system.field.pods) {
             newHarvestable = rewardToHarvestable(newSupply);
             newSupply = newSupply.sub(newHarvestable);
         }
@@ -91,7 +91,7 @@ contract Sun is Oracle {
         // Distribute remainder to the Silo
         rewardToSilo(newSupply);
 
-        emit Reward(s.season.current, newHarvestable, newSupply, newFertilized);
+        emit Reward(s.system.season.current, newHarvestable, newSupply, newFertilized);
     }
 
     /**
@@ -102,38 +102,41 @@ contract Sun is Oracle {
         uint256 maxNewFertilized = amount.div(FERTILIZER_DENOMINATOR);
 
         // Get the new Beans per Fertilizer and the total new Beans per Fertilizer
-        uint256 newBpf = maxNewFertilized.div(s.activeFertilizer);
-        uint256 oldTotalBpf = s.bpf;
+        uint256 newBpf = maxNewFertilized.div(s.system.fert.activeFertilizer);
+        uint256 oldTotalBpf = s.system.fert.bpf;
         uint256 newTotalBpf = oldTotalBpf.add(newBpf);
 
         // Get the end Beans per Fertilizer of the first Fertilizer to run out.
-        uint256 firstEndBpf = s.fertFirst;
+        uint256 firstEndBpf = s.system.fert.fertFirst;
 
         // If the next fertilizer is going to run out, then step BPF according
         while (newTotalBpf >= firstEndBpf) {
             // Calculate BPF and new Fertilized when the next Fertilizer ID ends
             newBpf = firstEndBpf.sub(oldTotalBpf);
-            newFertilized = newFertilized.add(newBpf.mul(s.activeFertilizer));
+            newFertilized = newFertilized.add(newBpf.mul(s.system.fert.activeFertilizer));
 
             // If there is no more fertilizer, end
             if (!LibFertilizer.pop()) {
-                s.bpf = uint128(firstEndBpf); // SafeCast unnecessary here.
-                s.fertilizedIndex = s.fertilizedIndex.add(newFertilized);
-                require(s.fertilizedIndex == s.unfertilizedIndex, "Paid != owed");
+                s.system.fert.bpf = uint128(firstEndBpf); // SafeCast unnecessary here.
+                s.system.fert.fertilizedIndex = s.system.fert.fertilizedIndex.add(newFertilized);
+                require(
+                    s.system.fert.fertilizedIndex == s.system.fert.unfertilizedIndex,
+                    "Paid != owed"
+                );
                 return newFertilized;
             }
 
             // Calculate new Beans per Fertilizer values
-            newBpf = maxNewFertilized.sub(newFertilized).div(s.activeFertilizer);
+            newBpf = maxNewFertilized.sub(newFertilized).div(s.system.fert.activeFertilizer);
             oldTotalBpf = firstEndBpf;
             newTotalBpf = oldTotalBpf.add(newBpf);
-            firstEndBpf = s.fertFirst;
+            firstEndBpf = s.system.fert.fertFirst;
         }
 
         // Distribute the rest of the Fertilized Beans
-        s.bpf = uint128(newTotalBpf); // SafeCast unnecessary here.
-        newFertilized = newFertilized.add(newBpf.mul(s.activeFertilizer));
-        s.fertilizedIndex = s.fertilizedIndex.add(newFertilized);
+        s.system.fert.bpf = uint128(newTotalBpf); // SafeCast unnecessary here.
+        newFertilized = newFertilized.add(newBpf.mul(s.system.fert.activeFertilizer));
+        s.system.fert.fertilizedIndex = s.system.fert.fertilizedIndex.add(newFertilized);
     }
 
     /**
@@ -141,10 +144,10 @@ contract Sun is Oracle {
      * become Harvestable.
      */
     function rewardToHarvestable(uint256 amount) internal returns (uint256 newHarvestable) {
-        uint256 notHarvestable = s.field.pods - s.field.harvestable;
+        uint256 notHarvestable = s.system.field.pods - s.system.field.harvestable;
         newHarvestable = amount.div(HARVEST_DENOMINATOR);
         newHarvestable = newHarvestable > notHarvestable ? notHarvestable : newHarvestable;
-        s.field.harvestable = s.field.harvestable.add(newHarvestable);
+        s.system.field.harvestable = s.system.field.harvestable.add(newHarvestable);
     }
 
     /**
@@ -158,26 +161,31 @@ contract Sun is Oracle {
         // of Earned Beans that are claimable by Stalkholders. When claimed via `plant()`,
         // it is decremented. See {Silo.sol:_plant} for more details.
         // SafeCast not necessary as `seasonStalk.toUint128();` will fail if amount > type(uint128).max.
-        s.earnedBeans = s.earnedBeans.add(amount.toUint128());
+        s.system.silo.earnedBeans = s.system.silo.earnedBeans.add(amount.toUint128());
 
         // Mint Stalk (as Earned Stalk). Farmers can claim their Earned Stalk via {SiloFacet.sol:plant}.
         //
         // Stalk is created here, rather than in {rewardBeans}, because only
         // Beans that are allocated to the Silo will receive Stalk.
-        // Constant is used here rather than s.siloSettings[BEAN].stalkIssuedPerBdv
+        // Constant is used here rather than s.system.silo.assetSettings[BEAN].stalkIssuedPerBdv
         // for gas savings.
-        s.silo.stalk = s.silo.stalk.add(amount.mul(C.STALK_PER_BEAN));
+        s.system.silo.stalk = s.system.silo.stalk.add(amount.mul(C.STALK_PER_BEAN));
 
         // removed at ebip-13. Will be replaced upon seed gauge BIP.
-        // s.newEarnedStalk = seasonStalk.toUint128();
-        // s.vestingPeriodRoots = 0;
+        // s.system.newEarnedStalk = seasonStalk.toUint128();
+        // s.system.vestingPeriodRoots = 0;
 
-        s.siloBalances[C.BEAN].deposited = s.siloBalances[C.BEAN].deposited.add(amount.toUint128());
+        s.system.silo.balances[C.BEAN].deposited = s.system.silo.balances[C.BEAN].deposited.add(
+            amount.toUint128()
+        );
 
         // SafeCast not necessary as the block above will fail if amount > type(uint128).max.
-        s.siloBalances[C.BEAN].depositedBdv = s.siloBalances[C.BEAN].depositedBdv.add(
-            uint128(amount)
-        );
+        s.system.silo.balances[C.BEAN].depositedBdv = s
+            .system
+            .silo
+            .balances[C.BEAN]
+            .depositedBdv
+            .add(uint128(amount));
     }
 
     //////////////////// SET SOIL ////////////////////
@@ -193,7 +201,7 @@ contract Sun is Oracle {
      * When the Pod Rate is low, Beanstalk issues more Soil.
      */
     function setSoilAbovePeg(uint256 newHarvestable, uint256 caseId) internal {
-        uint256 newSoil = newHarvestable.mul(100).div(100 + s.weather.t);
+        uint256 newSoil = newHarvestable.mul(100).div(100 + s.system.weather.t);
         if (caseId >= 24) {
             newSoil = newSoil.mul(SOIL_COEFFICIENT_HIGH).div(C.PRECISION); // high podrate
         } else if (caseId < 8) {
@@ -203,7 +211,7 @@ contract Sun is Oracle {
     }
 
     function setSoil(uint256 amount) internal {
-        s.field.soil = amount.toUint128();
-        emit Soil(s.season.current, amount.toUint128());
+        s.system.field.soil = amount.toUint128();
+        emit Soil(s.system.season.current, amount.toUint128());
     }
 }

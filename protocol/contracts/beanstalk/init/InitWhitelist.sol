@@ -5,7 +5,7 @@
 pragma solidity ^0.8.20;
 
 import "contracts/libraries/Silo/LibLegacyWhitelist.sol";
-import {AppStorage} from "../AppStorage.sol";
+import {AppStorage} from "../storage/AppStorage.sol";
 import {BDVFacet} from "contracts/beanstalk/silo/BDVFacet.sol";
 
 /**

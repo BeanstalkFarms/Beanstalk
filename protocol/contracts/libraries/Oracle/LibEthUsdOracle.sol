@@ -23,7 +23,7 @@ library LibEthUsdOracle {
     function getEthUsdPriceFromStorageIfSaved() internal view returns (uint256) {
         AppStorage storage s = LibAppStorage.diamondStorage();
 
-        uint256 priceInStorage = s.usdTokenPrice[C.BEAN_ETH_WELL];
+        uint256 priceInStorage = s.system.usdTokenPrice[C.BEAN_ETH_WELL];
 
         if (priceInStorage == 1) {
             return getEthUsdPrice();

@@ -5,7 +5,7 @@
 pragma solidity ^0.8.20;
 
 import {LibWhitelistedTokens} from "contracts/libraries/Silo/LibWhitelistedTokens.sol";
-import {System} from "contracts/beanstalk/AppStorage.sol";
+import {WhitelistStatus} from "contracts/beanstalk/storage/System.sol";
 
 /**
  * @title WhitelistedTokens
@@ -49,7 +49,7 @@ contract WhitelistedTokens {
     function getWhitelistStatuses()
         external
         view
-        returns (System.WhitelistStatus[] memory _whitelistStatuses)
+        returns (WhitelistStatus[] memory _whitelistStatuses)
     {
         return LibWhitelistedTokens.getWhitelistedStatuses();
     }
@@ -59,7 +59,7 @@ contract WhitelistedTokens {
      */
     function getWhitelistStatus(
         address token
-    ) external view returns (System.WhitelistStatus memory _whitelistStatuses) {
+    ) external view returns (WhitelistStatus memory _whitelistStatuses) {
         return LibWhitelistedTokens.getWhitelistedStatus(token);
     }
 }

@@ -65,11 +65,11 @@ contract Listing is PodTransfer {
 
         require(plotSize >= (start.add(amount)) && amount > 0, "Marketplace: Invalid Plot/Amount.");
         require(pricePerPod > 0, "Marketplace: Pod price must be greater than 0.");
-        require(s.field.harvestable <= maxHarvestableIndex, "Marketplace: Expired.");
+        require(s.system.field.harvestable <= maxHarvestableIndex, "Marketplace: Expired.");
 
-        if (s.podListings[index] != bytes32(0)) _cancelPodListing(LibTractor._user(), index);
+        if (s.system.podListings[index] != bytes32(0)) _cancelPodListing(LibTractor._user(), index);
 
-        s.podListings[index] = hashListing(
+        s.system.podListings[index] = hashListing(
             start,
             amount,
             pricePerPod,
@@ -104,13 +104,16 @@ contract Listing is PodTransfer {
             l.mode
         );
 
-        require(s.podListings[l.index] == lHash, "Marketplace: Listing does not exist.");
+        require(s.system.podListings[l.index] == lHash, "Marketplace: Listing does not exist.");
         uint256 plotSize = s.accounts[l.account].field.plots[l.index];
         require(
             plotSize >= (l.start.add(l.amount)) && l.amount > 0,
             "Marketplace: Invalid Plot/Amount."
         );
-        require(s.field.harvestable <= l.maxHarvestableIndex, "Marketplace: Listing has expired.");
+        require(
+            s.system.field.harvestable <= l.maxHarvestableIndex,
+            "Marketplace: Listing has expired."
+        );
 
         uint256 amount = getAmountPodsFromFillListing(l.pricePerPod, l.amount, beanAmount);
 
@@ -127,10 +130,10 @@ contract Listing is PodTransfer {
         require(amount >= l.minFillAmount, "Marketplace: Fill must be >= minimum amount.");
         require(l.amount >= amount, "Marketplace: Not enough pods in Listing.");
 
-        delete s.podListings[l.index];
+        delete s.system.podListings[l.index];
 
         if (l.amount > amount) {
-            s.podListings[l.index.add(amount).add(l.start)] = hashListing(
+            s.system.podListings[l.index.add(amount).add(l.start)] = hashListing(
                 0,
                 l.amount.sub(amount),
                 l.pricePerPod,
@@ -153,7 +156,7 @@ contract Listing is PodTransfer {
             "Marketplace: Listing not owned by sender."
         );
 
-        delete s.podListings[index];
+        delete s.system.podListings[index];
 
         emit PodListingCancelled(account, index);
     }

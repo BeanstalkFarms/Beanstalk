@@ -49,7 +49,7 @@ contract BDVFacet {
      * @dev Returns the BDV of a given `amount` of Well LP Tokens given a Well `token`.
      * A Well's `token` address is the same as the Well address.
      * Any Well `token` that uses the `wellBdv` function as its BDV function must have 
-     `encodeType = 1` in {System.SiloSettings}.
+     `encodeType = 1` in {AssetSettings}.
      */
     function wellBdv(address token, uint256 amount) external view returns (uint256) {
         return LibWellBdv.bdv(token, amount);
