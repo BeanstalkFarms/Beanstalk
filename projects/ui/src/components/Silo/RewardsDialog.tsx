@@ -13,14 +13,14 @@ import {
 import { ClaimRewardsAction } from '~/util';
 import { UNRIPE_BEAN, UNRIPE_BEAN_WETH } from '~/constants/tokens';
 import DescriptionButton from '~/components/Common/DescriptionButton';
-import RewardsSummary, { RewardsBarProps } from './RewardsSummary';
 import { hoverMap } from '~/constants/silo';
 import { BeanstalkPalette } from '~/components/App/muiTheme';
 import useFarmerSiloBalances from '~/hooks/farmer/useFarmerSiloBalances';
 import useGetChainToken from '~/hooks/chain/useGetChainToken';
 import { FC } from '~/types';
-import RewardsForm, { ClaimCalls, ClaimGasResults } from './RewardsForm';
 import useSetting from '~/hooks/app/useSetting';
+import RewardsForm, { ClaimCalls, ClaimGasResults } from './RewardsForm';
+import RewardsSummary, { RewardsBarProps } from './RewardsSummary';
 
 export type SendFormValues = {
   to?: string;
@@ -73,7 +73,8 @@ const ClaimRewardsForm: FC<
   const getChainToken = useGetChainToken();
 
   // Are we impersonating a different account while not in dev mode
-  const isImpersonating = !!useSetting('impersonatedAccount')[0] && !import.meta.env.DEV;
+  const isImpersonating =
+    !!useSetting('impersonatedAccount')[0] && !import.meta.env.DEV;
 
   /// State
   const balances = useFarmerSiloBalances();
@@ -108,8 +109,8 @@ const ClaimRewardsForm: FC<
     selectedAction !== undefined
       ? selectedAction
       : hoveredAction !== undefined
-      ? hoveredAction
-      : undefined;
+        ? hoveredAction
+        : undefined;
 
   // Checks if the current hoverState includes a given ClaimRewardsAction
   const isHovering = (c: ClaimRewardsAction) => {
@@ -204,14 +205,16 @@ const ClaimRewardsForm: FC<
           fullWidth
           size="large"
           loading={isSubmitting}
-          disabled={isSubmitting || values.action === undefined || isImpersonating}
+          disabled={
+            isSubmitting || values.action === undefined || isImpersonating
+          }
           onClick={submitForm}
         >
-          {isImpersonating 
+          {isImpersonating
             ? 'Impersonating Account'
-            : selectedAction === undefined 
-            ? 'Select Claim type'
-            : `${options[selectedAction].title}`}
+            : selectedAction === undefined
+              ? 'Select Claim type'
+              : `${options[selectedAction].title}`}
         </LoadingButton>
       </StyledDialogActions>
     </>

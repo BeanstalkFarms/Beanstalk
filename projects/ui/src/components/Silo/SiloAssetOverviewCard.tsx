@@ -27,7 +27,10 @@ const DepositRewards: FC<{ token: ERC20Token }> = ({ token }) => (
     <Row gap={1} justifyContent="start">
       <Row gap={0.5} justifyContent="center">
         <Typography variant="bodyLarge">
-          <TokenIcon token={STALK} css={{ marginTop: '7px', height: '0.7em' }} />
+          <TokenIcon
+            token={STALK}
+            css={{ marginTop: '7px', height: '0.7em' }}
+          />
           {token.rewards?.stalk}
         </Typography>
         <Row>
@@ -37,14 +40,17 @@ const DepositRewards: FC<{ token: ERC20Token }> = ({ token }) => (
       </Row>
       {/* This vAPY chip is only shown on larger screens */}
       <Row sx={{ display: { xs: 'none', sm: 'block' } }}>
-        <SiloAssetApyChip token={token as Token} metric="bean" variant="labeled" />
+        <SiloAssetApyChip
+          token={token as Token}
+          metric="bean"
+          variant="labeled"
+        />
       </Row>
     </Row>
   </Box>
 );
 
 const SiloAssetOverviewCard: FC<{ token: ERC20Token }> = ({ token }) => {
-
   const { total, tvdByToken } = useTVD();
   const whitelist = useWhitelist();
 
@@ -108,8 +114,15 @@ const SiloAssetOverviewCard: FC<{ token: ERC20Token }> = ({ token }) => {
             />
           </Row>
           {/* This vAPY chip is only shown on mobile screens */}
-          <Row justifyContent="center" sx={{ display: { xs: 'flex', sm: 'none' } }}>
-            <SiloAssetApyChip token={token as Token} metric="bean" variant="labeled" />
+          <Row
+            justifyContent="center"
+            sx={{ display: { xs: 'flex', sm: 'none' } }}
+          >
+            <SiloAssetApyChip
+              token={token as Token}
+              metric="bean"
+              variant="labeled"
+            />
           </Row>
           {/* Card Carousel */}
           <SiloCarousel token={token} />
