@@ -94,8 +94,11 @@ export const interpolateFarmerStalk = (
     secondsToDate(snapshots[j].createdAt)
   );
   let nextSeason: number | undefined = minSeason;
-  const lastSnapshotSeason = snapshots[snapshots.length - 1].season;
-
+  
+  // HACK: temporary setup for initial deployment, change this 
+  // to the actual seed gauge deployment season later
+  const deploySeason = snapshots.length > 9 ? snapshots[9].season : 99999;
+  
   // Add buffer points before the first snapshot
   const stalk: BaseDataPoint[] = [];
   const seeds: BaseDataPoint[] = [];
@@ -127,7 +130,7 @@ export const interpolateFarmerStalk = (
       j += 1;
       nextSeason = snapshots[j]?.season || undefined;
     } else {
-      if (s > lastSnapshotSeason) {
+      if (s >= deploySeason) {
         currSeeds = getSeedsPerBdv(s);
       };
       // Estimate actual amount of stalk / grown stalk using seeds
