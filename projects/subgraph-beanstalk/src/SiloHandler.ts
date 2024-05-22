@@ -905,14 +905,6 @@ export function updateStalkWithCalls(season: i32, timestamp: BigInt, blockNumber
 export function handleWhitelistToken(event: WhitelistToken): void {
   let silo = loadSilo(event.address);
   let currentList = silo.whitelistedTokens;
-  if (currentList.length == 0) {
-    // Push unripe bean and unripe bean:3crv upon the initial whitelisting.
-    currentList.push(UNRIPE_BEAN.toHexString());
-    loadWhitelistTokenSetting(UNRIPE_BEAN);
-
-    currentList.push(UNRIPE_BEAN_3CRV.toHexString());
-    loadWhitelistTokenSetting(UNRIPE_BEAN_3CRV);
-  }
   currentList.push(event.params.token.toHexString());
   silo.whitelistedTokens = currentList;
   silo.save();
@@ -977,10 +969,12 @@ export function handleDewhitelistToken(event: DewhitelistToken): void {
   let currentWhitelist = silo.whitelistedTokens;
   let currentDewhitelist = silo.dewhitelistedTokens;
   let index = currentWhitelist.indexOf(event.params.token.toHexString());
-  currentDewhitelist.push(currentWhitelist.splice(index, 1)[0]);
-  silo.whitelistedTokens = currentWhitelist;
-  silo.dewhitelistedTokens = currentDewhitelist;
-  silo.save();
+  if (index >= 0) {
+    currentDewhitelist.push(currentWhitelist.splice(index, 1)[0]);
+    silo.whitelistedTokens = currentWhitelist;
+    silo.dewhitelistedTokens = currentDewhitelist;
+    silo.save();
+  }
 
   let id = "dewhitelistToken-" + event.transaction.hash.toHexString() + "-" + event.logIndex.toString();
   let rawEvent = new DewhitelistTokenEntity(id);
