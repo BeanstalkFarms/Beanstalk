@@ -284,6 +284,7 @@ contract ConvertFacet is Invariable, ReentrancyGuard {
             pipeData.newBdv,
             pipeData.grownStalk
         );
+        toBdv = pipeData.newBdv;
 
         emit Convert(pipeData.user, inputToken, outputToken, fromAmount, toAmount);
     }
