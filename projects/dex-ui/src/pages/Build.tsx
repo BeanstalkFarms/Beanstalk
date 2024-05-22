@@ -10,7 +10,7 @@ import { Text } from "src/components/Typography";
 import { theme } from "src/utils/ui/theme";
 import styled from "styled-components";
 
-import { ComponentLibraryTable } from "src/components/Build/ComponentLibraryTable";
+import { ComponentLibraryTable } from "src/components/BuildWell/ComponentLibraryTable";
 
 export const Build = () => {
   const navigate = useNavigate();
