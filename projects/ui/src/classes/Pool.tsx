@@ -60,6 +60,8 @@ export default abstract class Pool {
 
   public readonly color: string;
 
+  public link?: string;
+
   /**
    * @param chainId the chain ID on which this currency resides
    * @param decimals decimals of the currency

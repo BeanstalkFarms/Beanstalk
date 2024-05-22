@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Box, Stack, Typography, Tooltip } from '@mui/material';
+import { Box, Stack, Typography, Tooltip, TextField } from '@mui/material';
 import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
 import { Form, Formik, FormikHelpers, FormikProps } from 'formik';
 import BigNumber from 'bignumber.js';
@@ -12,10 +12,12 @@ import {
   TokenValue,
   ConvertDetails,
 } from '@beanstalk/sdk';
+import { useSelector } from 'react-redux';
 import {
   FormStateNew,
   FormTxnsFormState,
   SettingInput,
+  SettingSwitch,
   SmartSubmitButton,
   TxnSettings,
 } from '~/components/Common/Form';
@@ -23,7 +25,7 @@ import TxnPreview from '~/components/Common/Form/TxnPreview';
 import TxnSeparator from '~/components/Common/Form/TxnSeparator';
 import PillRow from '~/components/Common/Form/PillRow';
 import { TokenSelectMode } from '~/components/Common/Form/TokenSelectDialog';
-import { displayFullBN, MaxBN, MinBN } from '~/util/Tokens';
+import { displayBN, displayFullBN, MaxBN, MinBN } from '~/util/Tokens';
 import { ZERO_BN } from '~/constants';
 import useToggle from '~/hooks/display/useToggle';
 import { tokenValueToBN, bnToTokenValue, transform } from '~/util';
@@ -54,12 +56,15 @@ import useFormTxnContext from '~/hooks/sdk/useFormTxnContext';
 import { FormTxn, ConvertFarmStep } from '~/lib/Txn';
 import usePlantAndDoX from '~/hooks/farmer/form-txn/usePlantAndDoX';
 import StatHorizontal from '~/components/Common/StatHorizontal';
+import { BeanstalkPalette, FontSize } from '~/components/App/muiTheme';
+import { AppState } from '~/state';
 
 // -----------------------------------------------------------------------
 
 type ConvertFormValues = FormStateNew & {
   settings: {
     slippage: number;
+    allowUnripeConvert: boolean;
   };
   maxAmountIn: BigNumber | undefined;
   tokenOut: Token | undefined;
@@ -72,12 +77,13 @@ type ConvertQuoteHandlerParams = {
 
 // -----------------------------------------------------------------------
 
-const INIT_CONVERSION = {
-  amount: ZERO_BN,
-  bdv: ZERO_BN,
-  stalk: ZERO_BN,
-  seeds: ZERO_BN,
-  actions: [],
+const filterTokenList = (
+  fromToken: Token,
+  allowUnripeConvert: boolean,
+  list: Token[]
+): Token[] => {
+  if (allowUnripeConvert || !fromToken.isUnripe) return list;
+  return list.filter((token) => token.isUnripe);
 };
 
 const ConvertForm: FC<
@@ -94,10 +100,9 @@ const ConvertForm: FC<
     plantAndDoX: ReturnType<typeof usePlantAndDoX>;
   }
 > = ({
-  tokenList,
+  tokenList: tokenListFull,
   siloBalances,
   handleQuote,
-  currentSeason,
   plantAndDoX,
   sdk,
   // Formik
@@ -109,6 +114,29 @@ const ConvertForm: FC<
   /// Local state
   const [isTokenSelectVisible, showTokenSelect, hideTokenSelect] = useToggle();
   const getBDV = useBDV();
+  const [isChopping, setIsChopping] = useState(false);
+  const [confirmText, setConfirmText] = useState('');
+  const [choppingConfirmed, setChoppingConfirmed] = useState(false);
+  const unripeTokens = useSelector<AppState, AppState['_bean']['unripe']>(
+    (_state) => _state._bean.unripe
+  );
+  const [tokenList, setTokenList] = useState(
+    filterTokenList(
+      values.tokens[0].token,
+      values.settings.allowUnripeConvert,
+      tokenListFull
+    )
+  );
+
+  useEffect(() => {
+    setTokenList(
+      filterTokenList(
+        values.tokens[0].token,
+        values.settings.allowUnripeConvert,
+        tokenListFull
+      )
+    );
+  }, [tokenListFull, values.settings.allowUnripeConvert, values.tokens]);
 
   const plantCrate = plantAndDoX?.crate?.bn;
 
@@ -122,7 +150,7 @@ const ConvertForm: FC<
 
   // FIXME: these use old structs instead of SDK
   const siloBalance = siloBalances[tokenIn.address];
-  const depositedAmount = siloBalance?.deposited.amount || ZERO_BN;
+  const depositedAmount = siloBalance?.deposited.convertibleAmount || ZERO_BN;
 
   const isQuoting = values.tokens[0].quoting || false;
   const slippage = values.settings.slippage;
@@ -165,7 +193,7 @@ const ConvertForm: FC<
   } else if (!canConvert) {
     // buttonContent = 'Pathway unavailable';
   } else {
-    buttonContent = 'Convert';
+    buttonContent = isChopping ? 'Chop and Convert' : 'Convert';
     if (
       tokenOut &&
       (amountOut?.gt(0) || isUsingPlanted) &&
@@ -190,6 +218,14 @@ const ConvertForm: FC<
       ); // seeds lost when converting
     }
   }
+
+  useEffect(() => {
+    if (confirmText.toUpperCase() === 'CHOP MY ASSETS') {
+      setChoppingConfirmed(true);
+    } else {
+      setChoppingConfirmed(false);
+    }
+  }, [confirmText, setChoppingConfirmed]);
 
   function getBDVTooltip(instantBDV: BigNumber, depositBDV: BigNumber) {
     return (
@@ -218,10 +254,15 @@ const ConvertForm: FC<
       if (tokenOut !== _tokenOut) {
         setFieldValue('tokenOut', _tokenOut);
         setFieldValue('maxAmountIn', null);
+        setConfirmText('');
       }
     },
     [setFieldValue, tokenOut]
   );
+
+  useEffect(() => {
+    setConfirmText('');
+  }, [amountIn]);
 
   /// When `tokenIn` or `tokenOut` changes, refresh the
   /// max amount that the user can input of `tokenIn`.
@@ -239,6 +280,16 @@ const ConvertForm: FC<
 
         const _maxAmountInStr = tokenIn.amount(_maxAmountIn.toString());
         console.debug('[Convert][maxAmountIn]: ', _maxAmountInStr);
+
+        // Figure out if we're chopping
+        const chopping =
+          (tokenIn.address === sdk.tokens.UNRIPE_BEAN.address &&
+            tokenOut?.address === sdk.tokens.BEAN.address) ||
+          (tokenIn.address === sdk.tokens.UNRIPE_BEAN_WETH.address &&
+            tokenOut?.address === sdk.tokens.BEAN_ETH_WELL_LP.address);
+
+        setIsChopping(chopping);
+        if (!chopping) setChoppingConfirmed(true);
       }
     })();
   }, [sdk, setFieldValue, tokenIn, tokenOut]);
@@ -274,6 +325,8 @@ const ConvertForm: FC<
 
     return message;
   };
+
+  const chopPercent = unripeTokens[tokenIn?.address || 0]?.chopPenalty || 0;
 
   return (
     <Form noValidate autoComplete="off">
@@ -326,7 +379,10 @@ const ConvertForm: FC<
           params={quoteHandlerParams}
         />
         {!canConvert && tokenOut && maxAmountIn ? null : (
-          <AddPlantTxnToggle plantAndDoX={plantAndDoX.plantAction} actionText='Convert' />
+          <AddPlantTxnToggle
+            plantAndDoX={plantAndDoX.plantAction}
+            actionText="Convert"
+          />
         )}
 
         {/* User Input: destination token */}
@@ -350,7 +406,6 @@ const ConvertForm: FC<
             </WarningAlert>
           </Box>
         ) : null}
-
         {/* Outputs */}
         {totalAmountIn &&
         tokenOut &&
@@ -358,7 +413,30 @@ const ConvertForm: FC<
         (amountOut?.gt(0) || isUsingPlanted) ? (
           <>
             <TxnSeparator mt={-1} />
-            <TokenOutput>
+            <TokenOutput danger={isChopping}>
+              {isChopping && (
+                <Typography
+                  sx={{
+                    fontSize: FontSize.sm,
+                    fontWeight: 'bold',
+                    color: BeanstalkPalette.trueRed,
+                    px: 0.5,
+                    mb: 0.25,
+                    '&:after': {
+                      content: "''",
+                      display: 'block',
+                      margin: '10px 10px',
+                      borderBottom: '1px solid #e9ccce',
+                    },
+                  }}
+                  component="span"
+                  display="inline-block"
+                >
+                  You will forfeit {displayBN(chopPercent)}% your claim to
+                  future Ripe assets through this transaction
+                  <br />
+                </Typography>
+              )}
               <TokenOutput.Row
                 token={tokenOut}
                 amount={amountOut || ZERO_BN}
@@ -448,13 +526,45 @@ const ConvertForm: FC<
           </>
         ) : null}
 
+        {isReady && isChopping && (
+          <Box sx={{ m: 1 }}>
+            <Typography
+              sx={{
+                fontSize: 'bodySmall',
+                px: 0.5,
+                mb: 0.25,
+              }}
+              component="span"
+              display="inline-block"
+            >
+              This conversion will effectively perform a CHOP opperation. Please
+              confirm you understand this by typing{' '}
+              <strong>&quot;CHOP MY ASSETS&quot;</strong>below.
+            </Typography>
+            <TextField
+              fullWidth
+              type="text"
+              name="confirm"
+              color="error"
+              value={confirmText}
+              onChange={(e) => setConfirmText(e.target.value)}
+              sx={{
+                background: '#f5d1d1',
+                borderRadius: '10px',
+                border: '1px solid red',
+                input: { color: '#880202', textTransform: 'uppercase' },
+              }}
+            />
+          </Box>
+        )}
+
         {/* Submit */}
         <SmartSubmitButton
           loading={buttonLoading || isQuoting}
-          disabled={!isReady || isSubmitting}
+          disabled={!isReady || isSubmitting || !choppingConfirmed}
           type="submit"
           variant="contained"
-          color="primary"
+          color={isChopping ? 'error' : 'primary'}
           size="large"
           tokens={[]}
           mode="auto"
@@ -520,6 +630,7 @@ const ConvertPropProvider: FC<{
       // Settings
       settings: {
         slippage: 0.05,
+        allowUnripeConvert: false,
       },
       // Token Inputs
       tokens: [
@@ -551,7 +662,7 @@ const ConvertPropProvider: FC<{
   >(
     async (tokenIn, _amountIn, tokenOut, { slippage, isConvertingPlanted }) => {
       try {
-        if (!farmerBalances?.deposits) {
+        if (!farmerBalances?.convertibleDeposits) {
           throw new Error('No balances found');
         }
         const { plantAction } = plantAndDoX;
@@ -560,7 +671,7 @@ const ConvertPropProvider: FC<{
 
         const result = await ConvertFarmStep._handleConversion(
           sdk,
-          farmerBalances.deposits,
+          farmerBalances.convertibleDeposits,
           tokenIn,
           tokenOut,
           tokenIn.amount(_amountIn.toString() || '0'),
@@ -577,7 +688,7 @@ const ConvertPropProvider: FC<{
         return new BigNumber('0');
       }
     },
-    [farmerBalances?.deposits, sdk, season, plantAndDoX]
+    [farmerBalances?.convertibleDeposits, sdk, season, plantAndDoX]
   );
 
   const onSubmit = useCallback(
@@ -612,17 +723,12 @@ const ConvertPropProvider: FC<{
         const isPlanting =
           plantAndDoX && values.farmActions.primary?.includes(FormTxn.PLANT);
 
-        const lpConversion =
-          tokenOut.equals(sdk.tokens.BEAN_ETH_WELL_LP) ||
-          tokenIn.address.toLowerCase() ===
-            sdk.tokens.BEAN_ETH_WELL_LP.address.toLowerCase();
-
         const convertTxn = new ConvertFarmStep(
           sdk,
           tokenIn,
           tokenOut,
           season.toNumber(),
-          farmerBalances.deposits
+          farmerBalances.convertibleDeposits
         );
 
         const { getEncoded, minAmountOut } = await convertTxn.handleConversion(
@@ -702,6 +808,14 @@ const ConvertPropProvider: FC<{
               label="Slippage Tolerance"
               endAdornment="%"
             />
+
+            {/* Only show the switch if we are on an an unripe silo's page */}
+            {fromToken.isUnripe && (
+              <SettingSwitch
+                name="settings.allowUnripeConvert"
+                label="Allow Converts to Ripe (Chop)"
+              />
+            )}
           </TxnSettings>
           <ConvertForm
             handleQuote={handleQuote}

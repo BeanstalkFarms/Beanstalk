@@ -11,11 +11,6 @@ directive @entity on OBJECT
 """Defined a Subgraph ID for an object type"""
 directive @subgraphId(id: String!) on OBJECT
 
-enum Aggregation_interval {
-  day
-  hour
-}
-
 type Bean {
   """Detailed cross events during this snapshot"""
   crossEvents(first: Int = 100, orderBy: BeanCross_orderBy, orderDirection: OrderDirection, skip: Int = 0, where: BeanCross_filter): [BeanCross!]!
@@ -40,11 +35,6 @@ type Bean {
 
   """Current liquidity in USD value"""
   liquidityUSD: BigDecimal!
-
-  """
-  Amount of the supply which is considered Locked Beans (untradeable due to chop rate)
-  """
-  lockedBeans: BigInt!
 
   """Current market cap"""
   marketCap: BigDecimal!
@@ -71,7 +61,6 @@ type Bean {
 type BeanCross {
   above: Boolean!
   bean: Bean!
-  blockNumber: BigInt!
   dailySnapshot: BeanDailySnapshot!
   hourlySnapshot: BeanHourlySnapshot!
   id: ID!
@@ -109,14 +98,6 @@ input BeanCross_filter {
   bean_not_starts_with_nocase: String
   bean_starts_with: String
   bean_starts_with_nocase: String
-  blockNumber: BigInt
-  blockNumber_gt: BigInt
-  blockNumber_gte: BigInt
-  blockNumber_in: [BigInt!]
-  blockNumber_lt: BigInt
-  blockNumber_lte: BigInt
-  blockNumber_not: BigInt
-  blockNumber_not_in: [BigInt!]
   dailySnapshot: String
   dailySnapshot_: BeanDailySnapshot_filter
   dailySnapshot_contains: String
@@ -202,54 +183,46 @@ enum BeanCross_orderBy {
   bean__lastCross
   bean__lastSeason
   bean__liquidityUSD
-  bean__lockedBeans
   bean__marketCap
   bean__price
   bean__supply
   bean__supplyInPegLP
   bean__volume
   bean__volumeUSD
-  blockNumber
   dailySnapshot
   dailySnapshot__blockNumber
   dailySnapshot__crosses
+  dailySnapshot__deltaBeans
   dailySnapshot__deltaCrosses
   dailySnapshot__deltaLiquidityUSD
   dailySnapshot__deltaVolume
   dailySnapshot__deltaVolumeUSD
   dailySnapshot__id
-  dailySnapshot__instantaneousDeltaB
   dailySnapshot__liquidityUSD
-  dailySnapshot__lockedBeans
   dailySnapshot__marketCap
   dailySnapshot__price
   dailySnapshot__season
   dailySnapshot__supply
   dailySnapshot__supplyInPegLP
   dailySnapshot__timestamp
-  dailySnapshot__twaDeltaB
-  dailySnapshot__twaPrice
   dailySnapshot__volume
   dailySnapshot__volumeUSD
   hourlySnapshot
   hourlySnapshot__blockNumber
   hourlySnapshot__crosses
+  hourlySnapshot__deltaBeans
   hourlySnapshot__deltaCrosses
   hourlySnapshot__deltaLiquidityUSD
   hourlySnapshot__deltaVolume
   hourlySnapshot__deltaVolumeUSD
   hourlySnapshot__id
-  hourlySnapshot__instantaneousDeltaB
   hourlySnapshot__liquidityUSD
-  hourlySnapshot__lockedBeans
   hourlySnapshot__marketCap
   hourlySnapshot__price
   hourlySnapshot__season
   hourlySnapshot__supply
   hourlySnapshot__supplyInPegLP
   hourlySnapshot__timestamp
-  hourlySnapshot__twaDeltaB
-  hourlySnapshot__twaPrice
   hourlySnapshot__volume
   hourlySnapshot__volumeUSD
   id
@@ -263,20 +236,13 @@ type BeanDailySnapshot {
   blockNumber: BigInt!
   crossEvents(first: Int = 100, orderBy: BeanCross_orderBy, orderDirection: OrderDirection, skip: Int = 0, where: BeanCross_filter): [BeanCross!]!
   crosses: Int!
+  deltaBeans: BigInt!
   deltaCrosses: Int!
   deltaLiquidityUSD: BigDecimal!
   deltaVolume: BigInt!
   deltaVolumeUSD: BigDecimal!
   id: ID!
-
-  """Instantaneous deltaB across all whitelisted pools"""
-  instantaneousDeltaB: BigInt!
   liquidityUSD: BigDecimal!
-
-  """
-  Amount of the supply which is considered Locked Beans (untradeable due to chop rate)
-  """
-  lockedBeans: BigInt!
   marketCap: BigDecimal!
   price: BigDecimal!
   season: Int!
@@ -285,12 +251,6 @@ type BeanDailySnapshot {
   """Percent of supply in LP used for peg maintenance"""
   supplyInPegLP: BigDecimal!
   timestamp: BigInt!
-
-  """Time-Weighted deltaB in whitelisted pools over the previous season"""
-  twaDeltaB: BigInt!
-
-  """Time-Weighted price over the previous season"""
-  twaPrice: BigDecimal!
   volume: BigInt!
   volumeUSD: BigDecimal!
 }
@@ -337,6 +297,14 @@ input BeanDailySnapshot_filter {
   crosses_lte: Int
   crosses_not: Int
   crosses_not_in: [Int!]
+  deltaBeans: BigInt
+  deltaBeans_gt: BigInt
+  deltaBeans_gte: BigInt
+  deltaBeans_in: [BigInt!]
+  deltaBeans_lt: BigInt
+  deltaBeans_lte: BigInt
+  deltaBeans_not: BigInt
+  deltaBeans_not_in: [BigInt!]
   deltaCrosses: Int
   deltaCrosses_gt: Int
   deltaCrosses_gte: Int
@@ -377,14 +345,6 @@ input BeanDailySnapshot_filter {
   id_lte: ID
   id_not: ID
   id_not_in: [ID!]
-  instantaneousDeltaB: BigInt
-  instantaneousDeltaB_gt: BigInt
-  instantaneousDeltaB_gte: BigInt
-  instantaneousDeltaB_in: [BigInt!]
-  instantaneousDeltaB_lt: BigInt
-  instantaneousDeltaB_lte: BigInt
-  instantaneousDeltaB_not: BigInt
-  instantaneousDeltaB_not_in: [BigInt!]
   liquidityUSD: BigDecimal
   liquidityUSD_gt: BigDecimal
   liquidityUSD_gte: BigDecimal
@@ -393,14 +353,6 @@ input BeanDailySnapshot_filter {
   liquidityUSD_lte: BigDecimal
   liquidityUSD_not: BigDecimal
   liquidityUSD_not_in: [BigDecimal!]
-  lockedBeans: BigInt
-  lockedBeans_gt: BigInt
-  lockedBeans_gte: BigInt
-  lockedBeans_in: [BigInt!]
-  lockedBeans_lt: BigInt
-  lockedBeans_lte: BigInt
-  lockedBeans_not: BigInt
-  lockedBeans_not_in: [BigInt!]
   marketCap: BigDecimal
   marketCap_gt: BigDecimal
   marketCap_gte: BigDecimal
@@ -450,22 +402,6 @@ input BeanDailySnapshot_filter {
   timestamp_lte: BigInt
   timestamp_not: BigInt
   timestamp_not_in: [BigInt!]
-  twaDeltaB: BigInt
-  twaDeltaB_gt: BigInt
-  twaDeltaB_gte: BigInt
-  twaDeltaB_in: [BigInt!]
-  twaDeltaB_lt: BigInt
-  twaDeltaB_lte: BigInt
-  twaDeltaB_not: BigInt
-  twaDeltaB_not_in: [BigInt!]
-  twaPrice: BigDecimal
-  twaPrice_gt: BigDecimal
-  twaPrice_gte: BigDecimal
-  twaPrice_in: [BigDecimal!]
-  twaPrice_lt: BigDecimal
-  twaPrice_lte: BigDecimal
-  twaPrice_not: BigDecimal
-  twaPrice_not_in: [BigDecimal!]
   volume: BigInt
   volumeUSD: BigDecimal
   volumeUSD_gt: BigDecimal
@@ -491,7 +427,6 @@ enum BeanDailySnapshot_orderBy {
   bean__lastCross
   bean__lastSeason
   bean__liquidityUSD
-  bean__lockedBeans
   bean__marketCap
   bean__price
   bean__supply
@@ -501,22 +436,19 @@ enum BeanDailySnapshot_orderBy {
   blockNumber
   crossEvents
   crosses
+  deltaBeans
   deltaCrosses
   deltaLiquidityUSD
   deltaVolume
   deltaVolumeUSD
   id
-  instantaneousDeltaB
   liquidityUSD
-  lockedBeans
   marketCap
   price
   season
   supply
   supplyInPegLP
   timestamp
-  twaDeltaB
-  twaPrice
   volume
   volumeUSD
 }
@@ -534,6 +466,9 @@ type BeanHourlySnapshot {
   """Cumulative number of crosses"""
   crosses: Int!
 
+  """Current deltaB for peg"""
+  deltaBeans: BigInt!
+
   """Crosses occuring in this snapshot"""
   deltaCrosses: Int!
 
@@ -549,16 +484,8 @@ type BeanHourlySnapshot {
   """{Token address}-{Season}"""
   id: ID!
 
-  """Instantaneous deltaB across all whitelisted pools"""
-  instantaneousDeltaB: BigInt!
-
   """Current liquidity in USD"""
   liquidityUSD: BigDecimal!
-
-  """
-  Amount of the supply which is considered Locked Beans (untradeable due to chop rate)
-  """
-  lockedBeans: BigInt!
 
   """Current market cap"""
   marketCap: BigDecimal!
@@ -577,12 +504,6 @@ type BeanHourlySnapshot {
 
   """Timestamp this snapshot was updated"""
   timestamp: BigInt!
-
-  """Time-Weighted deltaB in whitelisted pools over the previous season"""
-  twaDeltaB: BigInt!
-
-  """Time-Weighted price over the previous season"""
-  twaPrice: BigDecimal!
 
   """Cumulative volume in BEAN"""
   volume: BigInt!
@@ -633,6 +554,14 @@ input BeanHourlySnapshot_filter {
   crosses_lte: Int
   crosses_not: Int
   crosses_not_in: [Int!]
+  deltaBeans: BigInt
+  deltaBeans_gt: BigInt
+  deltaBeans_gte: BigInt
+  deltaBeans_in: [BigInt!]
+  deltaBeans_lt: BigInt
+  deltaBeans_lte: BigInt
+  deltaBeans_not: BigInt
+  deltaBeans_not_in: [BigInt!]
   deltaCrosses: Int
   deltaCrosses_gt: Int
   deltaCrosses_gte: Int
@@ -673,14 +602,6 @@ input BeanHourlySnapshot_filter {
   id_lte: ID
   id_not: ID
   id_not_in: [ID!]
-  instantaneousDeltaB: BigInt
-  instantaneousDeltaB_gt: BigInt
-  instantaneousDeltaB_gte: BigInt
-  instantaneousDeltaB_in: [BigInt!]
-  instantaneousDeltaB_lt: BigInt
-  instantaneousDeltaB_lte: BigInt
-  instantaneousDeltaB_not: BigInt
-  instantaneousDeltaB_not_in: [BigInt!]
   liquidityUSD: BigDecimal
   liquidityUSD_gt: BigDecimal
   liquidityUSD_gte: BigDecimal
@@ -689,14 +610,6 @@ input BeanHourlySnapshot_filter {
   liquidityUSD_lte: BigDecimal
   liquidityUSD_not: BigDecimal
   liquidityUSD_not_in: [BigDecimal!]
-  lockedBeans: BigInt
-  lockedBeans_gt: BigInt
-  lockedBeans_gte: BigInt
-  lockedBeans_in: [BigInt!]
-  lockedBeans_lt: BigInt
-  lockedBeans_lte: BigInt
-  lockedBeans_not: BigInt
-  lockedBeans_not_in: [BigInt!]
   marketCap: BigDecimal
   marketCap_gt: BigDecimal
   marketCap_gte: BigDecimal
@@ -746,22 +659,6 @@ input BeanHourlySnapshot_filter {
   timestamp_lte: BigInt
   timestamp_not: BigInt
   timestamp_not_in: [BigInt!]
-  twaDeltaB: BigInt
-  twaDeltaB_gt: BigInt
-  twaDeltaB_gte: BigInt
-  twaDeltaB_in: [BigInt!]
-  twaDeltaB_lt: BigInt
-  twaDeltaB_lte: BigInt
-  twaDeltaB_not: BigInt
-  twaDeltaB_not_in: [BigInt!]
-  twaPrice: BigDecimal
-  twaPrice_gt: BigDecimal
-  twaPrice_gte: BigDecimal
-  twaPrice_in: [BigDecimal!]
-  twaPrice_lt: BigDecimal
-  twaPrice_lte: BigDecimal
-  twaPrice_not: BigDecimal
-  twaPrice_not_in: [BigDecimal!]
   volume: BigInt
   volumeUSD: BigDecimal
   volumeUSD_gt: BigDecimal
@@ -787,7 +684,6 @@ enum BeanHourlySnapshot_orderBy {
   bean__lastCross
   bean__lastSeason
   bean__liquidityUSD
-  bean__lockedBeans
   bean__marketCap
   bean__price
   bean__supply
@@ -797,22 +693,19 @@ enum BeanHourlySnapshot_orderBy {
   blockNumber
   crossEvents
   crosses
+  deltaBeans
   deltaCrosses
   deltaLiquidityUSD
   deltaVolume
   deltaVolumeUSD
   id
-  instantaneousDeltaB
   liquidityUSD
-  lockedBeans
   marketCap
   price
   season
   supply
   supplyInPegLP
   timestamp
-  twaDeltaB
-  twaPrice
   volume
   volumeUSD
 }
@@ -864,14 +757,6 @@ input Bean_filter {
   liquidityUSD_lte: BigDecimal
   liquidityUSD_not: BigDecimal
   liquidityUSD_not_in: [BigDecimal!]
-  lockedBeans: BigInt
-  lockedBeans_gt: BigInt
-  lockedBeans_gte: BigInt
-  lockedBeans_in: [BigInt!]
-  lockedBeans_lt: BigInt
-  lockedBeans_lte: BigInt
-  lockedBeans_not: BigInt
-  lockedBeans_not_in: [BigInt!]
   marketCap: BigDecimal
   marketCap_gt: BigDecimal
   marketCap_gte: BigDecimal
@@ -939,7 +824,6 @@ enum Bean_orderBy {
   lastCross
   lastSeason
   liquidityUSD
-  lockedBeans
   marketCap
   pools
   price
@@ -965,9 +849,6 @@ input Block_height {
 
 scalar Bytes
 
-"8 bytes signed integer\n"
-scalar Int8
-
 """Defines the order direction, either ascending or descending"""
 enum OrderDirection {
   asc
@@ -979,8 +860,6 @@ type Pool {
   crossEvents(first: Int = 100, orderBy: PoolCross_orderBy, orderDirection: OrderDirection, skip: Int = 0, where: PoolCross_filter): [PoolCross!]!
   crosses: Int!
   dailySnapshot(first: Int = 100, orderBy: PoolDailySnapshot_orderBy, orderDirection: OrderDirection, skip: Int = 0, where: PoolDailySnapshot_filter): [PoolDailySnapshot!]!
-
-  """Instantaneous deltaB"""
   deltaBeans: BigInt!
   hourlySnapshot(first: Int = 100, orderBy: PoolHourlySnapshot_orderBy, orderDirection: OrderDirection, skip: Int = 0, where: PoolHourlySnapshot_filter): [PoolHourlySnapshot!]!
   id: ID!
@@ -997,7 +876,6 @@ type Pool {
 
 type PoolCross {
   above: Boolean!
-  blockNumber: BigInt!
   dailySnapshot: PoolDailySnapshot!
   hourlySnapshot: PoolHourlySnapshot!
   id: ID!
@@ -1015,14 +893,6 @@ input PoolCross_filter {
   above_not: Boolean
   above_not_in: [Boolean!]
   and: [PoolCross_filter]
-  blockNumber: BigInt
-  blockNumber_gt: BigInt
-  blockNumber_gte: BigInt
-  blockNumber_in: [BigInt!]
-  blockNumber_lt: BigInt
-  blockNumber_lte: BigInt
-  blockNumber_not: BigInt
-  blockNumber_not_in: [BigInt!]
   dailySnapshot: String
   dailySnapshot_: PoolDailySnapshot_filter
   dailySnapshot_contains: String
@@ -1123,7 +993,6 @@ input PoolCross_filter {
 
 enum PoolCross_orderBy {
   above
-  blockNumber
   dailySnapshot
   dailySnapshot__createdAt
   dailySnapshot__crosses
@@ -1136,9 +1005,6 @@ enum PoolCross_orderBy {
   dailySnapshot__lastPrice
   dailySnapshot__liquidityUSD
   dailySnapshot__season
-  dailySnapshot__twaDeltaBeans
-  dailySnapshot__twaPrice
-  dailySnapshot__twaToken2Price
   dailySnapshot__updatedAt
   dailySnapshot__utilization
   dailySnapshot__volume
@@ -1155,9 +1021,6 @@ enum PoolCross_orderBy {
   hourlySnapshot__lastPrice
   hourlySnapshot__liquidityUSD
   hourlySnapshot__season
-  hourlySnapshot__twaDeltaBeans
-  hourlySnapshot__twaPrice
-  hourlySnapshot__twaToken2Price
   hourlySnapshot__updatedAt
   hourlySnapshot__utilization
   hourlySnapshot__volume
@@ -1182,8 +1045,6 @@ type PoolDailySnapshot {
   createdAt: BigInt!
   crossEvents(first: Int = 100, orderBy: PoolCross_orderBy, orderDirection: OrderDirection, skip: Int = 0, where: PoolCross_filter): [PoolCross!]!
   crosses: Int!
-
-  """Instantaneous deltaB"""
   deltaBeans: BigInt!
   deltaCrosses: Int!
   deltaLiquidityUSD: BigDecimal!
@@ -1196,17 +1057,6 @@ type PoolDailySnapshot {
   pool: Pool!
   reserves: [BigInt!]!
   season: Int!
-
-  """Time-Weighted deltaB over the previous season"""
-  twaDeltaBeans: BigInt!
-
-  """Time-Weighted price over the previous season"""
-  twaPrice: BigDecimal!
-
-  """
-  Time-Weighted price of the other token in the pool over the previous season, if applicable
-  """
-  twaToken2Price: BigDecimal
   updatedAt: BigInt!
   utilization: BigDecimal!
   volume: BigInt!
@@ -1340,30 +1190,6 @@ input PoolDailySnapshot_filter {
   season_lte: Int
   season_not: Int
   season_not_in: [Int!]
-  twaDeltaBeans: BigInt
-  twaDeltaBeans_gt: BigInt
-  twaDeltaBeans_gte: BigInt
-  twaDeltaBeans_in: [BigInt!]
-  twaDeltaBeans_lt: BigInt
-  twaDeltaBeans_lte: BigInt
-  twaDeltaBeans_not: BigInt
-  twaDeltaBeans_not_in: [BigInt!]
-  twaPrice: BigDecimal
-  twaPrice_gt: BigDecimal
-  twaPrice_gte: BigDecimal
-  twaPrice_in: [BigDecimal!]
-  twaPrice_lt: BigDecimal
-  twaPrice_lte: BigDecimal
-  twaPrice_not: BigDecimal
-  twaPrice_not_in: [BigDecimal!]
-  twaToken2Price: BigDecimal
-  twaToken2Price_gt: BigDecimal
-  twaToken2Price_gte: BigDecimal
-  twaToken2Price_in: [BigDecimal!]
-  twaToken2Price_lt: BigDecimal
-  twaToken2Price_lte: BigDecimal
-  twaToken2Price_not: BigDecimal
-  twaToken2Price_not_in: [BigDecimal!]
   updatedAt: BigInt
   updatedAt_gt: BigInt
   updatedAt_gte: BigInt
@@ -1423,9 +1249,6 @@ enum PoolDailySnapshot_orderBy {
   pool__volumeUSD
   reserves
   season
-  twaDeltaBeans
-  twaPrice
-  twaToken2Price
   updatedAt
   utilization
   volume
@@ -1436,8 +1259,6 @@ type PoolHourlySnapshot {
   createdAt: BigInt!
   crossEvents(first: Int = 100, orderBy: PoolCross_orderBy, orderDirection: OrderDirection, skip: Int = 0, where: PoolCross_filter): [PoolCross!]!
   crosses: Int!
-
-  """Instantaneous deltaB"""
   deltaBeans: BigInt!
   deltaCrosses: Int!
   deltaLiquidityUSD: BigDecimal!
@@ -1450,17 +1271,6 @@ type PoolHourlySnapshot {
   pool: Pool!
   reserves: [BigInt!]!
   season: Int!
-
-  """Time-Weighted deltaB over the previous season"""
-  twaDeltaBeans: BigInt!
-
-  """Time-Weighted bean price over the previous season"""
-  twaPrice: BigDecimal!
-
-  """
-  Time-Weighted price of the other token in the pool over the previous season, if applicable
-  """
-  twaToken2Price: BigDecimal
   updatedAt: BigInt!
   utilization: BigDecimal!
   volume: BigInt!
@@ -1594,30 +1404,6 @@ input PoolHourlySnapshot_filter {
   season_lte: Int
   season_not: Int
   season_not_in: [Int!]
-  twaDeltaBeans: BigInt
-  twaDeltaBeans_gt: BigInt
-  twaDeltaBeans_gte: BigInt
-  twaDeltaBeans_in: [BigInt!]
-  twaDeltaBeans_lt: BigInt
-  twaDeltaBeans_lte: BigInt
-  twaDeltaBeans_not: BigInt
-  twaDeltaBeans_not_in: [BigInt!]
-  twaPrice: BigDecimal
-  twaPrice_gt: BigDecimal
-  twaPrice_gte: BigDecimal
-  twaPrice_in: [BigDecimal!]
-  twaPrice_lt: BigDecimal
-  twaPrice_lte: BigDecimal
-  twaPrice_not: BigDecimal
-  twaPrice_not_in: [BigDecimal!]
-  twaToken2Price: BigDecimal
-  twaToken2Price_gt: BigDecimal
-  twaToken2Price_gte: BigDecimal
-  twaToken2Price_in: [BigDecimal!]
-  twaToken2Price_lt: BigDecimal
-  twaToken2Price_lte: BigDecimal
-  twaToken2Price_not: BigDecimal
-  twaToken2Price_not_in: [BigDecimal!]
   updatedAt: BigInt
   updatedAt_gt: BigInt
   updatedAt_gte: BigInt
@@ -1677,9 +1463,6 @@ enum PoolHourlySnapshot_orderBy {
   pool__volumeUSD
   reserves
   season
-  twaDeltaBeans
-  twaPrice
-  twaToken2Price
   updatedAt
   utilization
   volume
@@ -1802,7 +1585,6 @@ enum Pool_orderBy {
   bean__lastCross
   bean__lastSeason
   bean__liquidityUSD
-  bean__lockedBeans
   bean__marketCap
   bean__price
   bean__supply
@@ -2079,34 +1861,6 @@ type Query {
     subgraphError: _SubgraphErrorPolicy_! = deny
     where: Token_filter
   ): [Token!]!
-  twaOracle(
-    """
-    The block at which the query should be executed. Can either be a `{ hash: Bytes }` value containing a block hash, a `{ number: Int }` containing the block number, or a `{ number_gte: Int }` containing the minimum block number. In the case of `number_gte`, the query will be executed on the latest block only if the subgraph has progressed to or past the minimum block number. Defaults to the latest block when omitted.
-    """
-    block: Block_height
-    id: ID!
-
-    """
-    Set to `allow` to receive data even if the subgraph has skipped over errors while syncing.
-    """
-    subgraphError: _SubgraphErrorPolicy_! = deny
-  ): TwaOracle
-  twaOracles(
-    """
-    The block at which the query should be executed. Can either be a `{ hash: Bytes }` value containing a block hash, a `{ number: Int }` containing the block number, or a `{ number_gte: Int }` containing the minimum block number. In the case of `number_gte`, the query will be executed on the latest block only if the subgraph has progressed to or past the minimum block number. Defaults to the latest block when omitted.
-    """
-    block: Block_height
-    first: Int = 100
-    orderBy: TwaOracle_orderBy
-    orderDirection: OrderDirection
-    skip: Int = 0
-
-    """
-    Set to `allow` to receive data even if the subgraph has skipped over errors while syncing.
-    """
-    subgraphError: _SubgraphErrorPolicy_! = deny
-    where: TwaOracle_filter
-  ): [TwaOracle!]!
 }
 
 type Subscription {
@@ -2364,38 +2118,7 @@ type Subscription {
     subgraphError: _SubgraphErrorPolicy_! = deny
     where: Token_filter
   ): [Token!]!
-  twaOracle(
-    """
-    The block at which the query should be executed. Can either be a `{ hash: Bytes }` value containing a block hash, a `{ number: Int }` containing the block number, or a `{ number_gte: Int }` containing the minimum block number. In the case of `number_gte`, the query will be executed on the latest block only if the subgraph has progressed to or past the minimum block number. Defaults to the latest block when omitted.
-    """
-    block: Block_height
-    id: ID!
-
-    """
-    Set to `allow` to receive data even if the subgraph has skipped over errors while syncing.
-    """
-    subgraphError: _SubgraphErrorPolicy_! = deny
-  ): TwaOracle
-  twaOracles(
-    """
-    The block at which the query should be executed. Can either be a `{ hash: Bytes }` value containing a block hash, a `{ number: Int }` containing the block number, or a `{ number_gte: Int }` containing the minimum block number. In the case of `number_gte`, the query will be executed on the latest block only if the subgraph has progressed to or past the minimum block number. Defaults to the latest block when omitted.
-    """
-    block: Block_height
-    first: Int = 100
-    orderBy: TwaOracle_orderBy
-    orderDirection: OrderDirection
-    skip: Int = 0
-
-    """
-    Set to `allow` to receive data even if the subgraph has skipped over errors while syncing.
-    """
-    subgraphError: _SubgraphErrorPolicy_! = deny
-    where: TwaOracle_filter
-  ): [TwaOracle!]!
 }
-
-"A string representation of microseconds UNIX timestamp (16 digits)\n"
-scalar Timestamp
 
 type Token {
   """Number of decimals"""
@@ -2445,178 +2168,12 @@ enum Token_orderBy {
   lastPriceUSD
 }
 
-type TwaOracle {
-  cumulativeWellReserves: Bytes!
-  cumulativeWellReservesBlock: BigInt
-  cumulativeWellReservesPrev: Bytes!
-  cumulativeWellReservesPrevBlock: BigInt
-  cumulativeWellReservesPrevTime: BigInt!
-  cumulativeWellReservesTime: BigInt!
-  id: ID!
-  lastBalances: [BigInt!]!
-  lastSun: BigInt!
-  lastUpdated: BigInt!
-  pool: Pool!
-  priceCumulativeLast: [BigInt!]!
-  priceCumulativeSun: [BigInt!]!
-}
-
-input TwaOracle_filter {
-  """Filter for the block changed event."""
-  _change_block: BlockChangedFilter
-  and: [TwaOracle_filter]
-  cumulativeWellReserves: Bytes
-  cumulativeWellReservesBlock: BigInt
-  cumulativeWellReservesBlock_gt: BigInt
-  cumulativeWellReservesBlock_gte: BigInt
-  cumulativeWellReservesBlock_in: [BigInt!]
-  cumulativeWellReservesBlock_lt: BigInt
-  cumulativeWellReservesBlock_lte: BigInt
-  cumulativeWellReservesBlock_not: BigInt
-  cumulativeWellReservesBlock_not_in: [BigInt!]
-  cumulativeWellReservesPrev: Bytes
-  cumulativeWellReservesPrevBlock: BigInt
-  cumulativeWellReservesPrevBlock_gt: BigInt
-  cumulativeWellReservesPrevBlock_gte: BigInt
-  cumulativeWellReservesPrevBlock_in: [BigInt!]
-  cumulativeWellReservesPrevBlock_lt: BigInt
-  cumulativeWellReservesPrevBlock_lte: BigInt
-  cumulativeWellReservesPrevBlock_not: BigInt
-  cumulativeWellReservesPrevBlock_not_in: [BigInt!]
-  cumulativeWellReservesPrevTime: BigInt
-  cumulativeWellReservesPrevTime_gt: BigInt
-  cumulativeWellReservesPrevTime_gte: BigInt
-  cumulativeWellReservesPrevTime_in: [BigInt!]
-  cumulativeWellReservesPrevTime_lt: BigInt
-  cumulativeWellReservesPrevTime_lte: BigInt
-  cumulativeWellReservesPrevTime_not: BigInt
-  cumulativeWellReservesPrevTime_not_in: [BigInt!]
-  cumulativeWellReservesPrev_contains: Bytes
-  cumulativeWellReservesPrev_gt: Bytes
-  cumulativeWellReservesPrev_gte: Bytes
-  cumulativeWellReservesPrev_in: [Bytes!]
-  cumulativeWellReservesPrev_lt: Bytes
-  cumulativeWellReservesPrev_lte: Bytes
-  cumulativeWellReservesPrev_not: Bytes
-  cumulativeWellReservesPrev_not_contains: Bytes
-  cumulativeWellReservesPrev_not_in: [Bytes!]
-  cumulativeWellReservesTime: BigInt
-  cumulativeWellReservesTime_gt: BigInt
-  cumulativeWellReservesTime_gte: BigInt
-  cumulativeWellReservesTime_in: [BigInt!]
-  cumulativeWellReservesTime_lt: BigInt
-  cumulativeWellReservesTime_lte: BigInt
-  cumulativeWellReservesTime_not: BigInt
-  cumulativeWellReservesTime_not_in: [BigInt!]
-  cumulativeWellReserves_contains: Bytes
-  cumulativeWellReserves_gt: Bytes
-  cumulativeWellReserves_gte: Bytes
-  cumulativeWellReserves_in: [Bytes!]
-  cumulativeWellReserves_lt: Bytes
-  cumulativeWellReserves_lte: Bytes
-  cumulativeWellReserves_not: Bytes
-  cumulativeWellReserves_not_contains: Bytes
-  cumulativeWellReserves_not_in: [Bytes!]
-  id: ID
-  id_gt: ID
-  id_gte: ID
-  id_in: [ID!]
-  id_lt: ID
-  id_lte: ID
-  id_not: ID
-  id_not_in: [ID!]
-  lastBalances: [BigInt!]
-  lastBalances_contains: [BigInt!]
-  lastBalances_contains_nocase: [BigInt!]
-  lastBalances_not: [BigInt!]
-  lastBalances_not_contains: [BigInt!]
-  lastBalances_not_contains_nocase: [BigInt!]
-  lastSun: BigInt
-  lastSun_gt: BigInt
-  lastSun_gte: BigInt
-  lastSun_in: [BigInt!]
-  lastSun_lt: BigInt
-  lastSun_lte: BigInt
-  lastSun_not: BigInt
-  lastSun_not_in: [BigInt!]
-  lastUpdated: BigInt
-  lastUpdated_gt: BigInt
-  lastUpdated_gte: BigInt
-  lastUpdated_in: [BigInt!]
-  lastUpdated_lt: BigInt
-  lastUpdated_lte: BigInt
-  lastUpdated_not: BigInt
-  lastUpdated_not_in: [BigInt!]
-  or: [TwaOracle_filter]
-  pool: String
-  pool_: Pool_filter
-  pool_contains: String
-  pool_contains_nocase: String
-  pool_ends_with: String
-  pool_ends_with_nocase: String
-  pool_gt: String
-  pool_gte: String
-  pool_in: [String!]
-  pool_lt: String
-  pool_lte: String
-  pool_not: String
-  pool_not_contains: String
-  pool_not_contains_nocase: String
-  pool_not_ends_with: String
-  pool_not_ends_with_nocase: String
-  pool_not_in: [String!]
-  pool_not_starts_with: String
-  pool_not_starts_with_nocase: String
-  pool_starts_with: String
-  pool_starts_with_nocase: String
-  priceCumulativeLast: [BigInt!]
-  priceCumulativeLast_contains: [BigInt!]
-  priceCumulativeLast_contains_nocase: [BigInt!]
-  priceCumulativeLast_not: [BigInt!]
-  priceCumulativeLast_not_contains: [BigInt!]
-  priceCumulativeLast_not_contains_nocase: [BigInt!]
-  priceCumulativeSun: [BigInt!]
-  priceCumulativeSun_contains: [BigInt!]
-  priceCumulativeSun_contains_nocase: [BigInt!]
-  priceCumulativeSun_not: [BigInt!]
-  priceCumulativeSun_not_contains: [BigInt!]
-  priceCumulativeSun_not_contains_nocase: [BigInt!]
-}
-
-enum TwaOracle_orderBy {
-  cumulativeWellReserves
-  cumulativeWellReservesBlock
-  cumulativeWellReservesPrev
-  cumulativeWellReservesPrevBlock
-  cumulativeWellReservesPrevTime
-  cumulativeWellReservesTime
-  id
-  lastBalances
-  lastSun
-  lastUpdated
-  pool
-  pool__crosses
-  pool__deltaBeans
-  pool__id
-  pool__lastCross
-  pool__lastPrice
-  pool__lastSeason
-  pool__liquidityUSD
-  pool__volume
-  pool__volumeUSD
-  priceCumulativeLast
-  priceCumulativeSun
-}
-
 type _Block_ {
   """The hash of the block"""
   hash: Bytes
 
   """The block number"""
   number: Int!
-
-  """The hash of the parent block"""
-  parentHash: Bytes
 
   """Integer representation of the timestamp stored in blocks for the chain"""
   timestamp: Int

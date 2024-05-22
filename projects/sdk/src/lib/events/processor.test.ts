@@ -32,11 +32,14 @@ const account = "0xFARMER";
  * and not the indices; this is more for consistency.
  */
 const propArray = (o: { [key: string]: any }) =>
-  Object.keys(o).reduce((prev, key) => {
-    prev[prev.length] = o[key];
-    prev[key] = o[key];
-    return prev;
-  }, [] as (keyof typeof o)[] & typeof o);
+  Object.keys(o).reduce(
+    (prev, key) => {
+      prev[prev.length] = o[key];
+      prev[key] = o[key];
+      return prev;
+    },
+    [] as (keyof typeof o)[] & typeof o
+  );
 
 const mockProcessor = () => new EventProcessor(sdk, account);
 
@@ -205,8 +208,8 @@ describe("the Silo", () => {
         bdv: bdv1
       })
     } as AddDepositEvent);
-
-    expect(p.deposits.get(Bean)?.["6074"]).toStrictEqual({
+    const t = p.deposits.get(Bean);
+    expect(p.deposits.get(Bean)?.["6074000000"]).toStrictEqual({
       amount: amount1,
       bdv: bdv1
     });
@@ -225,7 +228,7 @@ describe("the Silo", () => {
       })
     } as AddDepositEvent);
 
-    expect(p.deposits.get(Bean)?.["6074"]).toStrictEqual({
+    expect(p.deposits.get(Bean)?.["6074000000"]).toStrictEqual({
       amount: amount1.add(amount2),
       bdv: bdv1.add(bdv2)
     });
@@ -244,7 +247,7 @@ describe("the Silo", () => {
       })
     } as AddDepositEvent);
 
-    expect(p.deposits.get(BeanCrv3)?.["6100"]).toStrictEqual({
+    expect(p.deposits.get(BeanCrv3)?.["6100000000"]).toStrictEqual({
       amount: amount3,
       bdv: bdv3
     });
@@ -281,7 +284,7 @@ describe("the Silo", () => {
       })
     } as RemoveDepositEvent);
 
-    expect(p.deposits.get(Bean)?.["6074"]).toStrictEqual({
+    expect(p.deposits.get(Bean)?.["6074000000"]).toStrictEqual({
       amount: amount1.sub(amount2),
       bdv: bdv1.sub(bdv2)
     });
@@ -300,7 +303,7 @@ describe("the Silo", () => {
       })
     } as RemoveDepositEvent);
 
-    expect(p.deposits.get(Bean)?.["6074"]).toBeUndefined();
+    expect(p.deposits.get(Bean)?.["6074000000"]).toBeUndefined();
   });
 });
 

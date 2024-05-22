@@ -10,14 +10,17 @@ const SettingSwitch: FC<{
   name: string;
   label: string;
 }> = ({ name, label }) => (
-  <Field name={name}>
+  <Field name={name} type="checkbox">
     {(fieldProps: FieldProps) => (
       <Row gap={5} justifyContent="space-between">
-        <Typography color="text.secondary">{label}</Typography>
+        <Typography variant="body1">{label}</Typography>
         <Box>
           <Switch
             {...fieldProps.field}
             checked={fieldProps.field.value === true}
+            onChange={(event, checked) => {
+              fieldProps.form.setFieldValue(name, checked);
+            }}
           />
         </Box>
       </Row>

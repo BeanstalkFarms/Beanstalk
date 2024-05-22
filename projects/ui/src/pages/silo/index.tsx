@@ -248,14 +248,17 @@ const RewardsBar: FC<{
     return {
       empty: amountBean.eq(0) && amountStalk.eq(0) && amountSeeds.eq(0),
       output: new Map<Token, TokenValue>([
-        [sdk.tokens.BEAN, transform(amountBean, 'tokenValue', sdk.tokens.BEAN)],
+        [
+          sdk.tokens.BEAN, 
+          transform(amountBean.isNaN() ? ZERO_BN : amountBean, 'tokenValue', sdk.tokens.BEAN),
+        ],
         [
           sdk.tokens.STALK,
-          transform(amountStalk, 'tokenValue', sdk.tokens.STALK),
+          transform(amountStalk.isNaN() ? ZERO_BN : amountStalk, 'tokenValue', sdk.tokens.STALK),
         ],
         [
           sdk.tokens.SEEDS,
-          transform(amountSeeds, 'tokenValue', sdk.tokens.SEEDS),
+          transform(amountSeeds.isNaN() ? ZERO_BN : amountSeeds, 'tokenValue', sdk.tokens.SEEDS),
         ],
       ]),
     };
@@ -594,7 +597,7 @@ const RewardsBar: FC<{
               </Grid>
               <Grid item xs={12} md={4}>
                 <Stack spacing={1}>
-                  <TokenOutput>
+                  <TokenOutput danger={false}>
                     {empty && (
                       <Centered>
                         <Typography variant="body1" color="text.secondary">

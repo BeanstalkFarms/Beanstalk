@@ -1,10 +1,8 @@
 import { Address, BigInt, Bytes, ethereum } from "@graphprotocol/graph-ts";
 import { newMockEvent } from "matchstick-as/assembly/index";
 import { Sow, PlotTransfer } from "../../generated/Field/Beanstalk";
+import { TemperatureChange } from "../../generated/BIP44-SeedGauge/Beanstalk";
 
-import { AddDeposit, RemoveDeposit, RemoveDeposits } from "../../generated/Silo-Replanted/Beanstalk";
-import { handleAddDeposit } from "../../src/SiloHandler";
-import { BEAN_DECIMALS } from "../../../subgraph-core/utils/Constants";
 import { BEANSTALK } from "../../../subgraph-core/utils/Constants";
 
 // Default mock to include beanstalk address
@@ -15,6 +13,23 @@ const mockBeanstalkEvent = (): ethereum.Event => {
 };
 
 export function createWeatherChangeEvent(season: BigInt, caseID: BigInt, change: i32): void {}
+
+// BIP44 renamed
+export function createTemperatureChangeEvent(season: BigInt, caseId: BigInt, absChange: i32): TemperatureChange {
+  let event = changetype<TemperatureChange>(mockBeanstalkEvent());
+  event.parameters = new Array();
+
+  let param1 = new ethereum.EventParam("season", ethereum.Value.fromUnsignedBigInt(season));
+  let param2 = new ethereum.EventParam("caseId", ethereum.Value.fromUnsignedBigInt(caseId));
+  let param3 = new ethereum.EventParam("absChange", ethereum.Value.fromI32(absChange));
+
+  event.parameters.push(param1);
+  event.parameters.push(param2);
+  event.parameters.push(param3);
+
+  return event as TemperatureChange;
+}
+
 export function createSowEvent(account: string, index: BigInt, beans: BigInt, pods: BigInt): Sow {
   let event = changetype<Sow>(mockBeanstalkEvent());
   event.parameters = new Array();
