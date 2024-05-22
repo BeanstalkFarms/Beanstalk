@@ -1,4 +1,4 @@
-import { BigInt, BigDecimal, Address, log } from "@graphprotocol/graph-ts";
+import { BigInt, BigDecimal, Address } from "@graphprotocol/graph-ts";
 import {
   AddLiquidity,
   RemoveLiquidity,
@@ -6,22 +6,17 @@ import {
   RemoveLiquidityOne,
   TokenExchange,
   TokenExchangeUnderlying
-} from "../generated/Bean3CRV/Bean3CRV";
-import { loadBean, updateBeanSupplyPegPercent, updateBeanValues } from "./utils/Bean";
-import {
-  BEAN_3CRV_V1,
-  BEAN_ERC20_V1,
-  BEAN_LUSD_V1,
-  CALCULATIONS_CURVE,
-  CRV3_POOL_V1,
-  LUSD_3POOL
-} from "../../subgraph-core/utils/Constants";
+} from "../generated/Bean3CRV-V1/Bean3CRV";
+import { calcLiquidityWeightedBeanPrice, getLastBeanPrice, loadBean, updateBeanSupplyPegPercent, updateBeanValues } from "./utils/Bean";
+import { BEAN_ERC20_V1, BEAN_LUSD_V1, BEAN_WETH_V1 } from "../../subgraph-core/utils/Constants";
 import { toDecimal, ZERO_BD, ZERO_BI } from "../../subgraph-core/utils/Decimals";
 import { loadOrCreatePool, setPoolReserves, updatePoolPrice, updatePoolValues } from "./utils/Pool";
-import { CalculationsCurve } from "../generated/Bean3CRV-V1/CalculationsCurve";
 import { Bean3CRV } from "../generated/Bean3CRV-V1/Bean3CRV";
 import { ERC20 } from "../generated/Bean3CRV-V1/ERC20";
 import { checkBeanCross } from "./utils/Cross";
+import { curveDeltaBUsingVPrice, curvePriceAndLp } from "./utils/price/CurvePrice";
+import { manualTwa } from "./utils/price/TwaOracle";
+import { externalUpdatePoolPrice as univ2_externalUpdatePoolPrice } from "./UniswapV2Handler";
 
 export function handleTokenExchange(event: TokenExchange): void {
   // Do not index post-exploit data
@@ -96,9 +91,11 @@ export function handleRemoveLiquidityOne(event: RemoveLiquidityOne): void {
   // Do not index post-exploit data
   if (event.block.number >= BigInt.fromI32(14602790)) return;
 
-  if (event.params.provider == BEAN_ERC20_V1)
+  if (event.params.provider == BEAN_ERC20_V1) {
     handleLiquidityChange(event.address.toHexString(), event.block.timestamp, event.block.number, event.params.token_amount, ZERO_BI);
-  else handleLiquidityChange(event.address.toHexString(), event.block.timestamp, event.block.number, ZERO_BI, event.params.token_amount);
+  } else {
+    handleLiquidityChange(event.address.toHexString(), event.block.timestamp, event.block.number, ZERO_BI, event.params.token_amount);
+  }
 }
 
 function handleLiquidityChange(
@@ -110,64 +107,24 @@ function handleLiquidityChange(
 ): void {
   let pool = loadOrCreatePool(poolAddress, blockNumber);
 
-  // Get Curve Price Details
-  let curveCalc = CalculationsCurve.bind(CALCULATIONS_CURVE);
-  let metapoolPrice = toDecimal(curveCalc.getCurvePriceUsdc(CRV3_POOL_V1));
-
   let lpContract = Bean3CRV.bind(Address.fromString(poolAddress));
-  let beanCrvPrice = ZERO_BD;
-  let lusd3crvPrice = ZERO_BD;
 
-  if (poolAddress == BEAN_3CRV_V1.toHexString()) {
-    beanCrvPrice = toDecimal(lpContract.get_dy(ZERO_BI, BigInt.fromI32(1), BigInt.fromI32(1000000)), 18);
-  } else if (poolAddress == BEAN_LUSD_V1.toHexString()) {
-    // price in LUSD
-    let priceInLusd = toDecimal(lpContract.get_dy(ZERO_BI, BigInt.fromI32(1), BigInt.fromI32(1000000)), 18);
-    log.info("LiquidityChange: Bean LUSD price: {}", [priceInLusd.toString()]);
-
-    let lusdContract = Bean3CRV.bind(LUSD_3POOL);
-    log.info("LiquidityChange: LUSD Crv price {}", [
-      toDecimal(lusdContract.get_dy(ZERO_BI, BigInt.fromI32(1), BigInt.fromString("1000000000000000000")), 18).toString()
-    ]);
-
-    lusd3crvPrice = toDecimal(lusdContract.get_dy(ZERO_BI, BigInt.fromI32(1), BigInt.fromString("1000000000000000000")), 18);
-    beanCrvPrice = priceInLusd.times(lusd3crvPrice);
-  }
-
-  log.info("LiquidityChange: Bean Crv price: {}", [beanCrvPrice.toString()]);
-
-  let newPrice = metapoolPrice.times(beanCrvPrice);
-
-  log.info("LiquidityChange: Bean USD price: {}", [newPrice.toString()]);
-
-  let bean = loadBean(BEAN_ERC20_V1.toHexString());
-  let oldBeanPrice = bean.price;
+  let priceAndLp = curvePriceAndLp(Address.fromString(poolAddress));
+  let newPoolPrice = priceAndLp[0];
+  let lpValue = priceAndLp[1];
 
   let beanContract = ERC20.bind(BEAN_ERC20_V1);
-  let crv3PoolContract = ERC20.bind(CRV3_POOL_V1);
-  let lusdContract = ERC20.bind(LUSD_3POOL);
-
   let beanHolding = toDecimal(beanContract.balanceOf(Address.fromString(poolAddress)));
-  let crvHolding = toDecimal(crv3PoolContract.balanceOf(Address.fromString(poolAddress)), 18);
-  let lusdHolding = toDecimal(lusdContract.balanceOf(Address.fromString(poolAddress)), 18);
+  let beanValue = beanHolding.times(newPoolPrice);
 
-  let beanValue = beanHolding.times(newPrice);
-  let crvValue = crvHolding.times(metapoolPrice);
-  let lusdValue = lusdHolding.times(lusd3crvPrice).times(metapoolPrice);
-
-  let deltaB = BigInt.fromString(
-    crvValue.plus(lusdValue).minus(beanHolding).times(BigDecimal.fromString("1000000")).truncate(0).toString()
-  );
-
-  let liquidityUSD = beanValue.plus(crvValue).plus(lusdValue);
-
+  let liquidityUSD = beanValue.plus(lpValue);
   let deltaLiquidityUSD = liquidityUSD.minus(pool.liquidityUSD);
 
   let volumeUSD =
     deltaLiquidityUSD < ZERO_BD
       ? deltaLiquidityUSD.div(BigDecimal.fromString("2")).times(BigDecimal.fromString("-1"))
       : deltaLiquidityUSD.div(BigDecimal.fromString("2"));
-  let volumeBean = BigInt.fromString(volumeUSD.div(newPrice).times(BigDecimal.fromString("1000000")).truncate(0).toString());
+  let volumeBean = BigInt.fromString(volumeUSD.div(newPoolPrice).times(BigDecimal.fromString("1000000")).truncate(0).toString());
 
   if (token0Amount !== ZERO_BI && token1Amount !== ZERO_BI) {
     volumeUSD = ZERO_BD;
@@ -175,14 +132,18 @@ function handleLiquidityChange(
   }
 
   let reserveBalances = lpContract.try_get_balances();
-  if (!reserveBalances.reverted) setPoolReserves(poolAddress, reserveBalances.value, blockNumber);
+  if (!reserveBalances.reverted) {
+    setPoolReserves(poolAddress, reserveBalances.value, timestamp, blockNumber);
+    if (poolAddress == BEAN_LUSD_V1.toHexString()) {
+      manualTwa(poolAddress, reserveBalances.value, timestamp);
+    }
+  }
 
   updateBeanSupplyPegPercent(blockNumber);
 
-  updateBeanValues(BEAN_ERC20_V1.toHexString(), timestamp, newPrice, ZERO_BI, volumeBean, volumeUSD, deltaLiquidityUSD);
-  updatePoolValues(poolAddress, timestamp, blockNumber, volumeBean, volumeUSD, deltaLiquidityUSD, deltaB);
-  updatePoolPrice(poolAddress, timestamp, blockNumber, newPrice);
-  checkBeanCross(BEAN_ERC20_V1.toHexString(), timestamp, blockNumber, oldBeanPrice, newPrice);
+  let deltaB = curveDeltaBUsingVPrice(Address.fromString(poolAddress), reserveBalances.value[0]);
+
+  updatePricesAndCheckCrosses(poolAddress, newPoolPrice, volumeBean, volumeUSD, deltaLiquidityUSD, deltaB, timestamp, blockNumber);
 }
 
 function handleSwap(
@@ -196,57 +157,17 @@ function handleSwap(
 ): void {
   let pool = loadOrCreatePool(poolAddress, blockNumber);
 
-  // Get Curve Price Details
-  let curveCalc = CalculationsCurve.bind(CALCULATIONS_CURVE);
-  let metapoolPrice = toDecimal(curveCalc.getCurvePriceUsdc(CRV3_POOL_V1));
-
   let lpContract = Bean3CRV.bind(Address.fromString(poolAddress));
-  let beanCrvPrice = ZERO_BD;
-  let lusd3crvPrice = ZERO_BD;
 
-  if (poolAddress == BEAN_3CRV_V1.toHexString()) {
-    beanCrvPrice = toDecimal(lpContract.get_dy(ZERO_BI, BigInt.fromI32(1), BigInt.fromI32(1000000)), 18);
-  } else if (poolAddress == BEAN_LUSD_V1.toHexString()) {
-    // price in LUSD
-    let priceInLusd = toDecimal(lpContract.get_dy(ZERO_BI, BigInt.fromI32(1), BigInt.fromI32(1000000)), 18);
-    log.info("LiquidityChange: Bean LUSD price: {}", [priceInLusd.toString()]);
-
-    let lusdContract = Bean3CRV.bind(LUSD_3POOL);
-    log.info("LiquidityChange: LUSD Crv price {}", [
-      toDecimal(lusdContract.get_dy(ZERO_BI, BigInt.fromI32(1), BigInt.fromString("1000000000000000000")), 18).toString()
-    ]);
-
-    lusd3crvPrice = toDecimal(lusdContract.get_dy(ZERO_BI, BigInt.fromI32(1), BigInt.fromString("1000000000000000000")), 18);
-    beanCrvPrice = priceInLusd.times(lusd3crvPrice);
-  }
-
-  log.info("LiquidityChange: Bean Crv price: {}", [beanCrvPrice.toString()]);
-
-  let newPrice = metapoolPrice.times(beanCrvPrice);
-
-  log.info("LiquidityChange: Bean USD price: {}", [newPrice.toString()]);
-
-  let bean = loadBean(BEAN_ERC20_V1.toHexString());
-  let oldBeanPrice = bean.price;
+  let priceAndLp = curvePriceAndLp(Address.fromString(poolAddress));
+  let newPoolPrice = priceAndLp[0];
+  let lpValue = priceAndLp[1];
 
   let beanContract = ERC20.bind(BEAN_ERC20_V1);
-  let crv3PoolContract = ERC20.bind(CRV3_POOL_V1);
-  let lusdContract = ERC20.bind(LUSD_3POOL);
-
   let beanHolding = toDecimal(beanContract.balanceOf(Address.fromString(poolAddress)));
-  let crvHolding = toDecimal(crv3PoolContract.balanceOf(Address.fromString(poolAddress)), 18);
-  let lusdHolding = toDecimal(lusdContract.balanceOf(Address.fromString(poolAddress)), 18);
+  let beanValue = beanHolding.times(newPoolPrice);
 
-  let beanValue = beanHolding.times(newPrice);
-  let crvValue = crvHolding.times(metapoolPrice);
-  let lusdValue = lusdHolding.times(lusd3crvPrice).times(metapoolPrice);
-
-  let deltaB = BigInt.fromString(
-    crvValue.plus(lusdValue).minus(beanHolding).times(BigDecimal.fromString("1000000")).truncate(0).toString()
-  );
-
-  let liquidityUSD = beanValue.plus(crvValue);
-
+  let liquidityUSD = beanValue.plus(lpValue);
   let deltaLiquidityUSD = liquidityUSD.minus(pool.liquidityUSD);
 
   let volumeBean = ZERO_BI;
@@ -257,13 +178,41 @@ function handleSwap(
   }
 
   let reserveBalances = lpContract.try_get_balances();
-  if (!reserveBalances.reverted) setPoolReserves(poolAddress, reserveBalances.value, blockNumber);
+  if (!reserveBalances.reverted) {
+    setPoolReserves(poolAddress, reserveBalances.value, timestamp, blockNumber);
+    if (poolAddress == BEAN_LUSD_V1.toHexString()) {
+      manualTwa(poolAddress, reserveBalances.value, timestamp);
+    }
+  }
+
+  let deltaB = curveDeltaBUsingVPrice(Address.fromString(poolAddress), reserveBalances.value[0]);
 
   updateBeanSupplyPegPercent(blockNumber);
 
-  let volumeUSD = toDecimal(volumeBean).times(newPrice);
-  updateBeanValues(BEAN_ERC20_V1.toHexString(), timestamp, newPrice, ZERO_BI, volumeBean, volumeUSD, deltaLiquidityUSD);
+  let volumeUSD = toDecimal(volumeBean).times(newPoolPrice);
+
+  updatePricesAndCheckCrosses(poolAddress, newPoolPrice, volumeBean, volumeUSD, deltaLiquidityUSD, deltaB, timestamp, blockNumber);
+}
+
+export function updatePricesAndCheckCrosses(
+  poolAddress: string,
+  newPoolPrice: BigDecimal,
+  volumeBean: BigInt,
+  volumeUSD: BigDecimal,
+  deltaLiquidityUSD: BigDecimal,
+  deltaB: BigInt,
+  timestamp: BigInt,
+  blockNumber: BigInt
+): void {
   updatePoolValues(poolAddress, timestamp, blockNumber, volumeBean, volumeUSD, deltaLiquidityUSD, deltaB);
-  updatePoolPrice(poolAddress, timestamp, blockNumber, newPrice);
-  checkBeanCross(BEAN_ERC20_V1.toHexString(), timestamp, blockNumber, oldBeanPrice, newPrice);
+  updatePoolPrice(poolAddress, timestamp, blockNumber, newPoolPrice);
+
+  // Update volatile pools (in practice, for pre-replant its beaneth only)
+  univ2_externalUpdatePoolPrice(BEAN_WETH_V1, timestamp, blockNumber);
+
+  // Check for bean peg cross
+  let oldBeanPrice = getLastBeanPrice(BEAN_ERC20_V1.toHexString());
+  const newBeanPrice = calcLiquidityWeightedBeanPrice(BEAN_ERC20_V1.toHexString());
+  updateBeanValues(BEAN_ERC20_V1.toHexString(), timestamp, newBeanPrice, ZERO_BI, volumeBean, volumeUSD, deltaLiquidityUSD);
+  checkBeanCross(BEAN_ERC20_V1.toHexString(), timestamp, blockNumber, oldBeanPrice, newBeanPrice);
 }

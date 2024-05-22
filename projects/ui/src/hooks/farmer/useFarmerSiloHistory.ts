@@ -1,5 +1,6 @@
+import { useMemo } from 'react';
 import {
-  SeasonalPriceDocument,
+  SeasonalInstantPriceDocument,
   useFarmerSiloAssetSnapshotsQuery,
   useFarmerSiloRewardsQuery,
 } from '~/generated/graphql';
@@ -25,7 +26,20 @@ const useFarmerSiloHistory = (
     skip: !account,
     fetchPolicy: 'cache-and-network',
   });
-  const priceQuery = useSeasonsQuery(SeasonalPriceDocument, SeasonRange.ALL);
+
+  const queryConfig = useMemo(
+    () => ({
+      variables: { season_gte: 1 },
+      context: { subgraph: 'bean' },
+    }),
+    []
+  );
+
+  const priceQuery = useSeasonsQuery(
+    SeasonalInstantPriceDocument,
+    SeasonRange.ALL,
+    queryConfig
+  );
 
   /// Interpolate
   const depositData = useInterpolateDeposits(

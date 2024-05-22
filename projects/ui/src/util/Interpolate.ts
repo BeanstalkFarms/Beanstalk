@@ -4,7 +4,7 @@ import { TokenMap, ZERO_BN } from '~/constants';
 import { BEAN, SEEDS, SILO_WHITELIST, STALK } from '~/constants/tokens';
 import {
   FarmerSiloRewardsQuery,
-  SeasonalPriceQuery,
+  SeasonalInstantPriceQuery,
 } from '~/generated/graphql';
 import {
   secondsToDate,
@@ -136,7 +136,7 @@ export const interpolateFarmerStalk = (
  */
 export const interpolateFarmerDepositedValue = (
   snapshots: SnapshotBeanstalk[], // oldest season first
-  _prices: SeasonalPriceQuery['seasons'], // most recent season first
+  _prices: SeasonalInstantPriceQuery['seasons'], // most recent season first
   itemizeByToken: boolean = true,
   bufferSeasons: number = 24
 ) => {
@@ -175,7 +175,7 @@ export const interpolateFarmerDepositedValue = (
     const nextPriceEntity = prices[currPriceIndex + 1];
     const thisPriceBN = new BigNumber(thisPriceEntity.price);
     const thisTimestamp = DateTime.fromJSDate(
-      secondsToDate(thisPriceEntity.createdAt)
+      secondsToDate(thisPriceEntity.timestamp)
     );
     let thisBDV = currBDV;
 

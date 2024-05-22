@@ -52,7 +52,8 @@ const RewardsForm: React.FC<RewardsFormProps> = ({ open, children }) => {
   const { data: signer } = useSigner();
 
   // Are we impersonating a different account while not in dev mode
-  const isImpersonating = !!useSetting('impersonatedAccount')[0] && !import.meta.env.DEV;
+  const isImpersonating =
+    !!useSetting('impersonatedAccount')[0] && !import.meta.env.DEV;
 
   /// Helpers
   const unripeTokens = useTokenMap(UNRIPE_TOKENS);
@@ -208,7 +209,7 @@ const RewardsForm: React.FC<RewardsFormProps> = ({ open, children }) => {
     signer,
     siloBalances,
     unripeTokens,
-    isImpersonating
+    isImpersonating,
   ]);
 
   useTimedRefresh(estimateGas, 20 * 1000, open);

@@ -26,7 +26,8 @@ const NFTDialog: FC<NFTDialogProps> = ({
   const nftImage = <NFTImage nft={nft} />;
 
   // Are we impersonating a different account outside dev mode
-  const isImpersonating = !!useSetting('impersonatedAccount')[0] && !import.meta.env.DEV;
+  const isImpersonating =
+    !!useSetting('impersonatedAccount')[0] && !import.meta.env.DEV;
 
   return (
     <Dialog
@@ -58,7 +59,11 @@ const NFTDialog: FC<NFTDialogProps> = ({
           disabled={nft.claimed === ClaimStatus.CLAIMED || isImpersonating}
           sx={{ height: '45px', width: '100%' }}
         >
-          {nft.claimed === ClaimStatus.CLAIMED ? 'Minted' : isImpersonating ? 'Impersonating Account' : 'Mint'}
+          {nft.claimed === ClaimStatus.CLAIMED
+            ? 'Minted'
+            : isImpersonating
+              ? 'Impersonating Account'
+              : 'Mint'}
         </Button>
       </StyledDialogActions>
     </Dialog>

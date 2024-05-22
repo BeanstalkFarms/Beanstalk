@@ -21,7 +21,6 @@ type APYs = {
 };
 
 export default function useAPY() {
-
   const apyQuery = useLatestApyQuery({
     fetchPolicy: 'cache-and-network',
     nextFetchPolicy: 'cache-first',
@@ -29,7 +28,6 @@ export default function useAPY() {
 
   return useMemo(() => {
     if (apyQuery.data?.day?.[0]) {
-
       const siloYield24h = apyQuery.data.day[0];
       const siloYield7d = apyQuery.data.week[0];
       const siloYield30d = apyQuery.data.month[0];
