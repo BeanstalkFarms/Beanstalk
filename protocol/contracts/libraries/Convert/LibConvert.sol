@@ -38,18 +38,17 @@ library LibConvert {
         int256 afterOverallDeltaB;
     }
 
+    struct PenaltyData {
+        uint256 inputToken;
+        uint256 outputToken;
+        uint256 overall;
+    }
     struct StalkPenaltyData {
-        uint256 overallAmountInDirectionOfPeg;
-        uint256 inputTokenAmountInDirectionOfPeg;
-        uint256 outputTokenAmountInDirectionOfPeg;
-        uint256 overallAmountAgainstPeg;
-        uint256 inputTokenAmountAgainstPeg;
-        uint256 outputTokenAmountAgainstPeg;
+        PenaltyData directionOfPeg;
+        PenaltyData againstPeg;
+        PenaltyData capacity;
         uint256 higherAmountAgainstPeg;
         uint256 convertCapacityPenalty;
-        uint256 overallConvertCapacityUsed;
-        uint256 inputTokenAmountUsed;
-        uint256 outputTokenAmountUsed;
     }
 
     /**
@@ -237,49 +236,49 @@ library LibConvert {
         StalkPenaltyData memory spd;
 
         // todo: combine this set of 3 lines with the ones below it (one function return all 3 values)
-        spd.overallAmountInDirectionOfPeg = calculateConvertedTowardsPeg(
+        spd.directionOfPeg.overall = calculateConvertedTowardsPeg(
             dbs.beforeOverallDeltaB,
             dbs.afterOverallDeltaB
         );
-        spd.inputTokenAmountInDirectionOfPeg = calculateConvertedTowardsPeg(
+        spd.directionOfPeg.inputToken = calculateConvertedTowardsPeg(
             dbs.beforeInputTokenDeltaB,
             dbs.afterInputTokenDeltaB
         );
-        spd.outputTokenAmountInDirectionOfPeg = calculateConvertedTowardsPeg(
+        spd.directionOfPeg.outputToken = calculateConvertedTowardsPeg(
             dbs.beforeOutputTokenDeltaB,
             dbs.afterOutputTokenDeltaB
         );
 
-        spd.overallAmountAgainstPeg = calculateAmountAgainstPeg(
+        spd.againstPeg.overall = calculateAmountAgainstPeg(
             dbs.beforeOverallDeltaB,
             dbs.afterOverallDeltaB
         );
-        spd.inputTokenAmountAgainstPeg = calculateAmountAgainstPeg(
+        spd.againstPeg.inputToken = calculateAmountAgainstPeg(
             dbs.beforeInputTokenDeltaB,
             dbs.afterInputTokenDeltaB
         );
-        spd.outputTokenAmountAgainstPeg = calculateAmountAgainstPeg(
+        spd.againstPeg.outputToken = calculateAmountAgainstPeg(
             dbs.beforeOutputTokenDeltaB,
             dbs.afterOutputTokenDeltaB
         );
 
         spd.higherAmountAgainstPeg = max(
-            spd.overallAmountAgainstPeg,
-            spd.inputTokenAmountAgainstPeg.add(spd.outputTokenAmountAgainstPeg)
+            spd.againstPeg.overall,
+            spd.againstPeg.inputToken.add(spd.againstPeg.outputToken)
         );
 
         (
             spd.convertCapacityPenalty,
-            spd.overallConvertCapacityUsed,
-            spd.inputTokenAmountUsed,
-            spd.outputTokenAmountUsed
+            spd.capacity.overall,
+            spd.capacity.inputToken,
+            spd.capacity.outputToken
         ) = calculateConvertCapacityPenalty(
             overallConvertCapacity,
-            spd.overallAmountInDirectionOfPeg,
+            spd.directionOfPeg.overall,
             inputToken,
-            spd.inputTokenAmountInDirectionOfPeg,
+            spd.directionOfPeg.inputToken,
             outputToken,
-            spd.outputTokenAmountInDirectionOfPeg
+            spd.directionOfPeg.outputToken
         );
 
         stalkPenaltyBdv = min(
@@ -289,9 +288,9 @@ library LibConvert {
 
         return (
             stalkPenaltyBdv,
-            spd.overallConvertCapacityUsed,
-            spd.inputTokenAmountUsed,
-            spd.outputTokenAmountUsed
+            spd.capacity.overall,
+            spd.capacity.inputToken,
+            spd.capacity.outputToken
         );
     }
 
