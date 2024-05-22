@@ -136,7 +136,6 @@ contract ConvertFacet is Invariable, ReentrancyGuard {
             }
 
             pipeData.beforeOverallDeltaB = LibWellMinting.overallCurrentDeltaB();
-            pipeData.initialLpSupply = LibWellMinting.getLpSupply();
             pipeData.beforeInputTokenDeltaB = getCurrentDeltaB(fromToken);
             pipeData.beforeOutputTokenDeltaB = getCurrentDeltaB(toToken);
 
