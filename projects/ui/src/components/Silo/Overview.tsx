@@ -62,8 +62,7 @@ const Overview: FC<{
         stackedChartData.push(newData);
       });
     };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [data.stalk.length]);
+  }, [data.stalk, data.grownStalk, stackedChartData]);
 
   const keysAndTooltips = {
     'stalk': 'Stalk',
