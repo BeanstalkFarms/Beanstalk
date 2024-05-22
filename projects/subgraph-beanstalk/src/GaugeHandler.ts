@@ -20,10 +20,12 @@ import {
   loadWhitelistTokenHourlySnapshot
 } from "./utils/SiloEntities";
 import { deleteGerminating, loadGerminating, loadOrCreateGerminating } from "./utils/Germinating";
-import { ZERO_BI } from "../../subgraph-core/utils/Decimals";
+import { BI_10, ZERO_BI } from "../../subgraph-core/utils/Decimals";
 import { updateStalkBalances } from "./SiloHandler";
 import { getCurrentSeason } from "./utils/Season";
 import { WhitelistToken as WhitelistTokenEntity } from "../generated/schema";
+import { BigInt } from "@graphprotocol/graph-ts";
+import { BEAN_WETH_CP2_WELL } from "../../subgraph-core/utils/Constants";
 
 export function handleTemperatureChange(event: TemperatureChange): void {
   handleRateChange(event.address, event.block, event.params.season, event.params.caseId, event.params.absChange);
@@ -198,19 +200,29 @@ export function handleUpdateGaugeSettings(event: UpdateGaugeSettings): void {
   siloSettings.lwSelector = event.params.lwSelector;
   siloSettings.optimalPercentDepositedBdv = event.params.optimalPercentDepositedBdv;
   siloSettings.updatedAt = event.block.timestamp;
-  siloSettings.save();
 
   let hourly = loadWhitelistTokenHourlySnapshot(event.params.token, getCurrentSeason(event.address), event.block.timestamp);
   hourly.gpSelector = siloSettings.gpSelector;
   hourly.lwSelector = siloSettings.lwSelector;
   hourly.optimalPercentDepositedBdv = siloSettings.optimalPercentDepositedBdv;
   hourly.updatedAt = siloSettings.updatedAt;
-  hourly.save();
 
   let daily = loadWhitelistTokenDailySnapshot(event.params.token, event.block.timestamp);
   daily.gpSelector = siloSettings.gpSelector;
   daily.lwSelector = siloSettings.lwSelector;
   daily.optimalPercentDepositedBdv = siloSettings.optimalPercentDepositedBdv;
   daily.updatedAt = siloSettings.updatedAt;
+
+  // On initial gauge deployment, there was no GaugePointChange event emitted. Need to initialize BEANETH here
+  if (
+    event.params.token == BEAN_WETH_CP2_WELL &&
+    event.transaction.hash.toHexString() == "0x299a4b93b8d19f8587b648ce04e3f5e618ea461426bb2b2337993b5d6677f6a7"
+  ) {
+    siloSettings.gaugePoints = BI_10.pow(20);
+    hourly.gaugePoints = BI_10.pow(20);
+    daily.gaugePoints = BI_10.pow(20);
+  }
+  siloSettings.save();
+  hourly.save();
   daily.save();
 }
