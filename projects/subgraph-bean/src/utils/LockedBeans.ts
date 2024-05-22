@@ -4,6 +4,7 @@ import {
   BEAN_WETH_CP2_WELL,
   BEAN_WETH_UNRIPE_MIGRATION_BLOCK,
   BEANSTALK,
+  GAUGE_BIP45_BLOCK,
   UNRIPE_BEAN,
   UNRIPE_BEAN_3CRV
 } from "../../../subgraph-core/utils/Constants";
@@ -16,8 +17,7 @@ import { loadOrCreateTwaOracle } from "./price/TwaOracle";
 
 export function calcLockedBeans(blockNumber: BigInt): BigInt {
   // If BIP45 is deployed - return the result from the contract
-  // Future improvement when actual deployment block is known, can check block and avoid this call in earlier blocks.
-  if (blockNumber >= BigInt.fromU32(19922925)) {
+  if (blockNumber >= GAUGE_BIP45_BLOCK) {
     // If we are trying to calculate locked beans on the same block as the sunrise, use the values from the previous hour
     const twaOracle = loadOrCreateTwaOracle(getUnderlyingUnripe(blockNumber).toHexString());
     const twaReserves =

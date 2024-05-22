@@ -6,6 +6,7 @@ import {
   BEAN_WETH_CP2_WELL,
   BEAN_WETH_CP2_WELL_BLOCK,
   BEAN_WETH_UNRIPE_MIGRATION_BLOCK,
+  GAUGE_BIP45_BLOCK,
   UNRIPE_BEAN,
   UNRIPE_BEAN_3CRV
 } from "../../subgraph-core/utils/Constants";
@@ -84,7 +85,7 @@ describe("L2SR", () => {
       mockSeedGaugeLockedBeans(twaOracle.cumulativeWellReserves, twaOracle.cumulativeWellReservesTime, lockedBeans);
 
       const event = changetype<Chop>(mockBeanstalkEvent());
-      event.block.number = BigInt.fromString("19922925"); // this can be replaced with BIP45 deployment block
+      event.block.number = GAUGE_BIP45_BLOCK;
       handleChop(event);
 
       assert.fieldEquals("Bean", BEAN_ERC20.toHexString(), "lockedBeans", lockedBeans.toString());
@@ -97,7 +98,7 @@ describe("L2SR", () => {
       mockSeedGaugeLockedBeans(twaOracle.cumulativeWellReserves, twaOracle.cumulativeWellReservesTime, lockedBeans);
 
       const event = changetype<Chop>(mockBeanstalkEvent());
-      event.block.number = BigInt.fromString("19922925"); // this can be replaced with BIP45 deployment block
+      event.block.number = GAUGE_BIP45_BLOCK;
       handleChop(event);
 
       assert.fieldEquals("Bean", BEAN_ERC20.toHexString(), "lockedBeans", lockedBeans.toString());
