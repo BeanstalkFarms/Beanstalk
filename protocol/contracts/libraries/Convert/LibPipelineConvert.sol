@@ -28,7 +28,7 @@ library LibPipelineConvert {
         uint256 fromBdv,
         uint256[] memory initialLpSupply
     ) internal returns (uint256) {
-        dbs.afterOverallDeltaB = LibDeltaB.scaledOverallInstantaneousDeltaB(initialLpSupply);
+        dbs.afterOverallDeltaB = LibDeltaB.scaledOverallCurrentDeltaB(initialLpSupply);
 
         // modify afterInputTokenDeltaB and afterOutputTokenDeltaB to scale using before/after LP amounts
         if (LibWell.isWell(inputToken)) {

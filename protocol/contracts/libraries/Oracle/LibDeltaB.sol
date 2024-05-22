@@ -28,15 +28,13 @@ library LibDeltaB {
     /**
      * @param inputToken The input token for the convert.
      * @param outputToken The output token for the convert.
-     * @return combinedDeltaBinsta The combined deltaB of the input/output tokens.
+     * @return The combined deltaB of the input/output tokens.
      */
     function getCombinedDeltaBForTokens(
         address inputToken,
         address outputToken
-    ) internal view returns (int256 combinedDeltaBinsta) {
-        combinedDeltaBinsta = LibDeltaB.getCurrentDeltaB(inputToken).add(
-            getCurrentDeltaB(outputToken)
-        );
+    ) internal view returns (int256) {
+        return LibDeltaB.getCurrentDeltaB(inputToken).add(getCurrentDeltaB(outputToken));
     }
 
     /**
@@ -120,18 +118,18 @@ library LibDeltaB {
      * scaled by the change in LP supply.
      * @dev used in pipelineConvert.
      */
-    function scaledOverallInstantaneousDeltaB(
+    function scaledOverallCurrentDeltaB(
         uint256[] memory lpSupply
     ) internal view returns (int256 deltaB) {
         address[] memory tokens = LibWhitelistedTokens.getWhitelistedWellLpTokens();
         for (uint256 i = 0; i < tokens.length; i++) {
             if (tokens[i] == C.BEAN) continue;
-            int256 wellDeltaB = scaledInstantaneousDeltaB(tokens[i], lpSupply[i]);
+            int256 wellDeltaB = scaledCurrentDeltaB(tokens[i], lpSupply[i]);
             deltaB = deltaB.add(wellDeltaB);
         }
     }
 
-    function scaledInstantaneousDeltaB(
+    function scaledCurrentDeltaB(
         address well,
         uint256 lpSupply
     ) internal view returns (int256 wellDeltaB) {
