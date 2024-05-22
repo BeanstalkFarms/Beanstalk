@@ -13,10 +13,10 @@ jobs:
       - uses: actions/checkout@v3
         with:
           ref: ${{ github.head_ref }}
-      - uses: actions/setup-node@v3
+      - uses: actions/setup-node@v4
         with:
-          node-version: "16"
-      - run: yarn add prettier prettier-plugin-solidity
+          node-version: "16.20.2"
+      - run: yarn install
       # - run: shopt -s globstar; yarn dlx -p prettier prettier --write --config .prettierrc --plugin=prettier-plugin-solidity protocol/**/*.sol || true
       - run: shopt -s globstar; yarn prettier --write --config .prettierrc --plugin=prettier-plugin-solidity protocol/**/*.sol || true
       - name: Commit changes
@@ -34,7 +34,7 @@ jobs:
       - name: Protocol Tests
         uses: actions/setup-node@v3
         with:
-          node-version: "16"
+          node-version: "16.20.2"
       - name: Cache Node Modules
         id: node-modules-cache
         uses: actions/cache@v3
