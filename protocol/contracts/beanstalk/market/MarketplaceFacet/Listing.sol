@@ -26,8 +26,6 @@ contract Listing is PodTransfer {
         LibTransfer.To mode;
     }
 
-
-
     event PodListingCreated(
         address indexed account,
         uint256 index,
