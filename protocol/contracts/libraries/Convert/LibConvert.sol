@@ -290,11 +290,13 @@ library LibConvert {
         );
     }
 
-    // should be view
+    /**
+     * @notice Takes before/after deltaB's and calculates how much was converted against peg.
+     */
     function calculateAmountAgainstPeg(
         int256 beforeDeltaB,
         int256 afterDeltaB
-    ) internal view returns (uint256 amountAgainstPeg) {
+    ) internal pure returns (uint256 amountAgainstPeg) {
         // Check if the signs of beforeDeltaB and afterDeltaB are different,
         // indicating that deltaB has crossed zero
         if ((beforeDeltaB > 0 && afterDeltaB < 0) || (beforeDeltaB < 0 && afterDeltaB > 0)) {
