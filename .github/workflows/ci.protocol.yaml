@@ -17,8 +17,10 @@ jobs:
         with:
           node-version: "16.20.2"
           
-      - name: Install specific npm version
+      - name: Install global specific npm version
         run: npm install -g npm@8.19.4
+      - name: Install local specific npm version
+        run: npm install npm@8.19.4
         
       - run: yarn install
       # - run: shopt -s globstar; yarn dlx -p prettier prettier --write --config .prettierrc --plugin=prettier-plugin-solidity protocol/**/*.sol || true
