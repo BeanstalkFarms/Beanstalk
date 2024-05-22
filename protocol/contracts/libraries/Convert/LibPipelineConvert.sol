@@ -11,6 +11,7 @@ import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {LibWhitelistedTokens} from "contracts/libraries/Silo/LibWhitelistedTokens.sol";
 import {LibDeltaB} from "contracts/libraries/Oracle/LibDeltaB.sol";
 import {IPipeline, PipeCall} from "contracts/interfaces/IPipeline.sol";
+import {ConvertFacet} from "contracts/beanstalk/silo/ConvertFacet.sol";
 
 /**
  * @title LibPipelineConvert
@@ -83,5 +84,15 @@ library LibPipelineConvert {
         p.target = address(tokenOut);
         p.data = abi.encodeWithSelector(IERC20.transfer.selector, address(this), amountOut);
         IPipeline(C.PIPELINE).pipe(p);
+    }
+
+    function populatePipelineConvertData(
+        address fromToken,
+        address toToken
+    ) internal view returns (ConvertFacet.PipelineConvertData memory pipeData) {
+        pipeData.deltaB.beforeOverallDeltaB = LibDeltaB.overallCurrentDeltaB();
+        pipeData.deltaB.beforeInputTokenDeltaB = LibDeltaB.getCurrentDeltaB(fromToken);
+        pipeData.deltaB.beforeOutputTokenDeltaB = LibDeltaB.getCurrentDeltaB(toToken);
+        pipeData.initialLpSupply = LibDeltaB.getLpSupply();
     }
 }

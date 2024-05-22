@@ -131,10 +131,7 @@ contract ConvertFacet is Invariable, ReentrancyGuard {
                 require(LibWell.isWell(fromToken), "Convert: Invalid Well");
             }
 
-            pipeData.deltaB.beforeOverallDeltaB = LibDeltaB.overallCurrentDeltaB();
-            pipeData.deltaB.beforeInputTokenDeltaB = LibDeltaB.getCurrentDeltaB(fromToken);
-            pipeData.deltaB.beforeOutputTokenDeltaB = LibDeltaB.getCurrentDeltaB(toToken);
-            pipeData.initialLpSupply = LibDeltaB.getLpSupply();
+            pipeData = LibPipelineConvert.populatePipelineConvertData(fromToken, toToken);
         }
 
         (toToken, fromToken, toAmount, fromAmount) = LibConvert.convert(convertData);
@@ -213,7 +210,11 @@ contract ConvertFacet is Invariable, ReentrancyGuard {
             "Convert: Output token must be Bean or a well"
         );
 
-        PipelineConvertData memory pipeData;
+        PipelineConvertData memory pipeData = LibPipelineConvert.populatePipelineConvertData(
+            inputToken,
+            outputToken
+        );
+
         pipeData.user = LibTractor._user();
 
         // mow input and output tokens:
@@ -230,12 +231,6 @@ contract ConvertFacet is Invariable, ReentrancyGuard {
 
         // Store the capped overall deltaB, this limits the overall convert power for the block
         pipeData.overallConvertCapacity = LibConvert.abs(LibDeltaB.overallCappedDeltaB());
-
-        // Store the pre-convert insta deltaB's both overall and for each well
-        pipeData.deltaB.beforeOverallDeltaB = LibDeltaB.overallCurrentDeltaB();
-        pipeData.deltaB.beforeInputTokenDeltaB = LibDeltaB.getCurrentDeltaB(inputToken);
-        pipeData.deltaB.beforeOutputTokenDeltaB = LibDeltaB.getCurrentDeltaB(outputToken);
-        pipeData.initialLpSupply = LibDeltaB.getLpSupply();
 
         IERC20(inputToken).transfer(C.PIPELINE, fromAmount);
         LibPipelineConvert.executeAdvancedFarmCalls(advancedFarmCalls);
