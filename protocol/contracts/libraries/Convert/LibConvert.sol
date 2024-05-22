@@ -235,24 +235,8 @@ library LibConvert {
     {
         StalkPenaltyData memory spd;
 
-        // todo: combine this set of 3 lines with the ones below it (one function return all 3 values)
-        spd.directionOfPeg = calculateConvertedTowardsPeg(
-            dbs.beforeOverallDeltaB,
-            dbs.afterOverallDeltaB,
-            dbs.beforeInputTokenDeltaB,
-            dbs.afterInputTokenDeltaB,
-            dbs.beforeOutputTokenDeltaB,
-            dbs.afterOutputTokenDeltaB
-        );
-
-        spd.againstPeg = calculateAmountAgainstPeg(
-            dbs.beforeOverallDeltaB,
-            dbs.afterOverallDeltaB,
-            dbs.beforeInputTokenDeltaB,
-            dbs.afterInputTokenDeltaB,
-            dbs.beforeOutputTokenDeltaB,
-            dbs.afterOutputTokenDeltaB
-        );
+        spd.directionOfPeg = calculateConvertedTowardsPeg(dbs);
+        spd.againstPeg = calculateAmountAgainstPeg(dbs);
 
         spd.higherAmountAgainstPeg = max(
             spd.againstPeg.overall,
@@ -348,16 +332,14 @@ library LibConvert {
      * @notice Performs `calculateAgainstPeg` for the overall, input token, and output token deltaB's.
      */
     function calculateAmountAgainstPeg(
-        int256 beforeOverallDeltaB,
-        int256 afterOverallDeltaB,
-        int256 beforeInputTokenDeltaB,
-        int256 afterInputTokenDeltaB,
-        int256 beforeOutputTokenDeltaB,
-        int256 afterOutputTokenDeltaB
+        DeltaBStorage memory dbs
     ) internal pure returns (PenaltyData memory pd) {
-        pd.overall = calculateAgainstPeg(beforeOverallDeltaB, afterOverallDeltaB);
-        pd.inputToken = calculateAgainstPeg(beforeInputTokenDeltaB, afterInputTokenDeltaB);
-        pd.outputToken = calculateAgainstPeg(beforeOutputTokenDeltaB, afterOutputTokenDeltaB);
+        pd.overall = calculateAgainstPeg(dbs.beforeOverallDeltaB, dbs.afterOverallDeltaB);
+        pd.inputToken = calculateAgainstPeg(dbs.beforeInputTokenDeltaB, dbs.afterInputTokenDeltaB);
+        pd.outputToken = calculateAgainstPeg(
+            dbs.beforeOutputTokenDeltaB,
+            dbs.afterOutputTokenDeltaB
+        );
     }
 
     /**
@@ -386,16 +368,14 @@ library LibConvert {
      * @notice Performs `calculateTowardsPeg` for the overall, input token, and output token deltaB's.
      */
     function calculateConvertedTowardsPeg(
-        int256 beforeOverallDeltaB,
-        int256 afterOverallDeltaB,
-        int256 beforeInputTokenDeltaB,
-        int256 afterInputTokenDeltaB,
-        int256 beforeOutputTokenDeltaB,
-        int256 afterOutputTokenDeltaB
+        DeltaBStorage memory dbs
     ) internal pure returns (PenaltyData memory pd) {
-        pd.overall = calculateTowardsPeg(beforeOverallDeltaB, afterOverallDeltaB);
-        pd.inputToken = calculateTowardsPeg(beforeInputTokenDeltaB, afterInputTokenDeltaB);
-        pd.outputToken = calculateTowardsPeg(beforeOutputTokenDeltaB, afterOutputTokenDeltaB);
+        pd.overall = calculateTowardsPeg(dbs.beforeOverallDeltaB, dbs.afterOverallDeltaB);
+        pd.inputToken = calculateTowardsPeg(dbs.beforeInputTokenDeltaB, dbs.afterInputTokenDeltaB);
+        pd.outputToken = calculateTowardsPeg(
+            dbs.beforeOutputTokenDeltaB,
+            dbs.afterOutputTokenDeltaB
+        );
     }
 
     /**
