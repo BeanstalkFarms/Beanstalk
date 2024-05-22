@@ -5,12 +5,13 @@ import { BEAN, SEEDS, SILO_WHITELIST, STALK } from '~/constants/tokens';
 import {
   FarmerSiloRewardsQuery,
   SeasonalInstantPriceQuery,
+  WhitelistTokenRewardsQuery,
 } from '~/generated/graphql';
 import {
-  bnToTokenValue,
+  // bnToTokenValue,
   secondsToDate,
   toTokenUnitsBN,
-  tokenValueToBN,
+  // tokenValueToBN,
 } from '~/util';
 import { BaseDataPoint } from '~/components/Common/Charts/ChartPropProvider';
 import { FarmerSiloTokenBalance } from '~/state/farmer/silo';
@@ -75,6 +76,7 @@ export const addBufferSeasons = (
  */
 export const interpolateFarmerStalk = (
   snapshots: FarmerSiloRewardsQuery['snapshots'],
+  whitelistSnapshots: WhitelistTokenRewardsQuery['snapshots'],
   season: BigNumber,
   bufferSeasons: number = 24,
   farmerSiloBalances: TokenMap<FarmerSiloTokenBalance>,
@@ -92,31 +94,32 @@ export const interpolateFarmerStalk = (
     secondsToDate(snapshots[j].createdAt)
   );
   let nextSeason: number | undefined = minSeason;
+  const lastSnapshotSeason = snapshots[snapshots.length - 1].season;
 
   // Add buffer points before the first snapshot
   const stalk: BaseDataPoint[] = [];
   const seeds: BaseDataPoint[] = [];
   const grownStalk: BaseDataPoint[] = [];
 
-  // Seeds from ripe tokens
-  let seedsFromRipe: BigNumber = ZERO_BN;
-  siloWhitelist.forEach((token) => {
-    if (!token.isUnripe && farmerSiloBalances[token.address]) {
-      const deposits = farmerSiloBalances[token.address].deposited;
-      const _seeds = token.getSeeds(bnToTokenValue(sdk.tokens.BEAN, deposits.bdv));
-      seedsFromRipe = seedsFromRipe.plus(tokenValueToBN(_seeds));
-    };
-  });
+  function getSeedsPerBdv(_season: number) {
+    let _output: BigNumber = ZERO_BN;
+    siloWhitelist.forEach((token) => {
+      if (farmerSiloBalances[token.address]) {
+        const deposits = farmerSiloBalances[token.address].deposited;
+        const index = whitelistSnapshots.findLastIndex((snapshot) => snapshot.season <= _season && snapshot.token.id === token.address.toLowerCase());
+        const seedsPerBdv = BigNumber(whitelistSnapshots[index].stalkEarnedPerSeason).div(1_000_000);
+        _output = (seedsPerBdv).multipliedBy(deposits.bdv).plus(_output);
+      };
+    });
+    return _output;
+  };
 
   for (let s = minSeason; s <= maxSeason; s += 1) {
     if (s === nextSeason) {
       // Reached a data point for which we have a snapshot.
       // Use the corresponding total stalk value.
       currStalk = toTokenUnitsBN(snapshots[j].stalk, STALK.decimals);
-      currSeeds = toTokenUnitsBN(
-        snapshots[j].seeds,
-        SEEDS.decimals
-      );
+      currSeeds = toTokenUnitsBN(snapshots[j].seeds, SEEDS.decimals);
       currGrownStalk = toTokenUnitsBN(BigNumber(0), STALK.decimals);
       currTimestamp = DateTime.fromJSDate(
         secondsToDate(snapshots[j].createdAt)
@@ -124,10 +127,12 @@ export const interpolateFarmerStalk = (
       j += 1;
       nextSeason = snapshots[j]?.season || undefined;
     } else {
+      if (s > lastSnapshotSeason) {
+        currSeeds = getSeedsPerBdv(s);
+      };
       // Estimate actual amount of stalk / grown stalk using seeds
-      currGrownStalk = currGrownStalk.plus(
-        (s < 14210 ? currSeeds : seedsFromRipe).multipliedBy(1 / 10_000)
-      ); // Each Seed grows 1/10,000 Stalk per Season
+      // Each Seed grows 1/10,000 Stalk per Season
+      currGrownStalk = currGrownStalk.plus((currSeeds).multipliedBy(1 / 10_000));
       currTimestamp = currTimestamp.plus({ hours: 1 });
     };
     stalk.push({

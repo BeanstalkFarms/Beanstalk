@@ -105,8 +105,8 @@ const Overview: FC<{
 
     const _season = dataPoint ? dataPoint.season : season;
     const _date = dataPoint ? dataPoint.date : latestData ? latestData.date : '';
-    const _stalkValue = dataPoint ? dataPoint.stalk : farmerSilo.stalk.active;
-    const _grownStalkValue = dataPoint ? dataPoint.grownStalk : latestData ? latestData.grownStalk : '';
+    const _stalkValue = dataPoint ? dataPoint.stalk : account ? farmerSilo.stalk.active : '';
+    const _grownStalkValue = dataPoint ? dataPoint.grownStalk : latestData && account ? latestData.grownStalk : '';
 
     return (
       <>
@@ -115,7 +115,7 @@ const Overview: FC<{
           titleTooltip="Stalk is the governance token of the Beanstalk DAO. Stalk entitles holders to passive interest in the form of a share of future Bean mints, and the right to propose and vote on BIPs. Your Stalk is forfeited when you Withdraw your Deposited assets from the Silo."
           subtitle={`Season ${_season.toString()}`}
           secondSubtitle={_date.toLocaleString(undefined, { dateStyle: 'short', timeStyle: 'short' })}
-          amount={displayStalk(BigNumber(_stalkValue, 10))}
+          amount={_stalkValue ? displayStalk(BigNumber(_stalkValue, 10)) : '0'}
           color="text.primary"
           sx={{ minWidth: 220, ml: 0 }}
           gap={0.25}
@@ -123,7 +123,7 @@ const Overview: FC<{
         <Stat
           title="Stalk Ownership"
           titleTooltip="Your current ownership of Beanstalk is displayed as a percentage. Ownership is determined by your proportional ownership of the total Stalk supply."
-          amount={displayPercentage(ownership.multipliedBy(100))}
+          amount={account ? displayPercentage(ownership.multipliedBy(100)) : '0'}
           color="text.primary"
           gap={0.25}
           sx={{ minWidth: 200, ml: 0 }}
@@ -131,14 +131,14 @@ const Overview: FC<{
         <Stat
           title="Grown Stalk"
           titleTooltip="The total number of Mowable Grown Stalk your Deposits have accrued."
-          amount={_grownStalkValue ? displayStalk(BigNumber(_grownStalkValue, 10)) : '-'}
+          amount={account && _grownStalkValue ? displayStalk(BigNumber( _grownStalkValue, 10)) : '0'}
           color="text.primary"
           gap={0.25}
           sx={{ minWidth: 120, ml: 0 }}
         />
       </>
     )},
-    [farmerSilo.stalk.active, season, stackedChartData, ownership]
+    [farmerSilo.stalk.active, season, stackedChartData, ownership, account]
   );
 
   const seedsStats = useCallback((dataPoint: BaseDataPoint | undefined) => {
