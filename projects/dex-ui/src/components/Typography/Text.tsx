@@ -8,6 +8,7 @@ export interface TextProps extends HTMLAttributes<HTMLDivElement>, BoxModelProps
   $weight?: FontWeight;
   $color?: FontColor;
   $size?: FontSize;
+  $lineHeight?: number;
 }
 
 export const Text = styled.div<TextProps>`
@@ -16,5 +17,6 @@ export const Text = styled.div<TextProps>`
   ${(props) => (props.$weight ? theme.font.styles.weight(props.$weight) : "")}
   ${(props) => (props.$color ? theme.font.styles.color(props.$color || "text.primary") : "")}
   ${(props) => (props.$css ? props.$css : "")}
+  ${(props) => (props.$lineHeight ? `line-height: ${props.$lineHeight}px;` : "")}
   ${BoxModelBase}
 `;

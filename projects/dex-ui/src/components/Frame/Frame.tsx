@@ -22,8 +22,6 @@ export const Frame: FC<{}> = ({ children }) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { chain } = useAccount();
 
-  console.log("isNotProd: ", Settings);
-
   return (
     <Container id="frame">
       <NavContainer>
