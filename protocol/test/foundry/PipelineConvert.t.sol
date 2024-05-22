@@ -379,7 +379,7 @@ contract PipelineConvertTest is TestHelper {
 
         (pd.outputStem, ) = bs.calculateStemForTokenFromGrownStalk(
             pd.outputWell,
-            pd.grownStalkForDeposit * ((bdvOfDepositedLp - stalkPenalty) / bdvOfDepositedLp),
+            (pd.grownStalkForDeposit * (bdvOfDepositedLp - stalkPenalty)) / bdvOfDepositedLp,
             pd.bdvOfAmountOut
         );
 
@@ -963,7 +963,7 @@ contract PipelineConvertTest is TestHelper {
         // using stalk penalty, calculate what the new stem should be
         (td.calculatedStem, ) = bs.calculateStemForTokenFromGrownStalk(
             C.BEAN,
-            td.grownStalkForDeposit * ((amount - td.calculatedStalkPenalty) / amount),
+            (td.grownStalkForDeposit * (amount - td.calculatedStalkPenalty)) / amount,
             amount
         );
 

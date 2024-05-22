@@ -255,8 +255,8 @@ contract ConvertFacet is Invariable, ReentrancyGuard {
 
         // Update grownStalk amount with penalty applied
         pipeData.grownStalk =
-            pipeData.grownStalk *
-            ((fromBdv - pipeData.stalkPenaltyBdv) / fromBdv);
+            (pipeData.grownStalk * (fromBdv - pipeData.stalkPenaltyBdv)) /
+            fromBdv;
 
         pipeData.newBdv = LibTokenSilo.beanDenominatedValue(outputToken, toAmount);
 
