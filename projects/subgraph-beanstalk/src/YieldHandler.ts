@@ -1,7 +1,7 @@
 import { Address, BigDecimal, BigInt, log } from "@graphprotocol/graph-ts";
 import { Beanstalk } from "../generated/Season-Replanted/Beanstalk";
 import { BEANSTALK, BEAN_ERC20, FERTILIZER } from "../../subgraph-core/utils/Constants";
-import { ONE_BD, ONE_BI, toBigInt, toDecimal, ZERO_BD, ZERO_BI } from "../../subgraph-core/utils/Decimals";
+import { BI_10, ONE_BD, ONE_BI, toBigInt, toDecimal, ZERO_BD, ZERO_BI } from "../../subgraph-core/utils/Decimals";
 import { loadFertilizer } from "./utils/Fertilizer";
 import { loadFertilizerYield } from "./utils/FertilizerYield";
 import {
@@ -340,10 +340,10 @@ export function calculateGaugeVAPYs(
 ): BigDecimal[][] {
   // Fixed-point arithmetic is used here to achieve >40% speedup over using BigDecimal
   // Everything is still passed to this function as BigDecimal so we can normalize the precision as set here
-  const PRECISION = 12;
+  const PRECISION: u8 = 12;
   const PRECISION_BI = toBigInt(ONE_BD, PRECISION);
   // A larger precision is required for tracking user balances as they can be highly fractional
-  const BALANCES_PRECISION = 18;
+  const BALANCES_PRECISION: u8 = 18;
   const BALANCES_PRECISION_BI = toBigInt(ONE_BD, BALANCES_PRECISION);
 
   // Current percentages allocations of each LP
@@ -374,13 +374,15 @@ export function calculateGaugeVAPYs(
   let totalBdv = gaugeBdv.plus(nonGaugeDepositedBdv_);
   let largestLpGpPerBdv = BigInt_max(lpGpPerBdv);
 
+  const startingGrownStalk = totalStalk.times(PRECISION_BI).div(totalBdv).minus(toBigInt(ONE_BD, PRECISION));
   let userBeans: BigInt[] = [];
   let userLp: BigInt[] = [];
   let userStalk: BigInt[] = [];
   for (let i = 0; i < tokens.length; ++i) {
     userBeans.push(toBigInt(tokens[i] == -1 ? ONE_BD : ZERO_BD, BALANCES_PRECISION));
     userLp.push(toBigInt(tokens[i] == -1 ? ZERO_BD : ONE_BD, BALANCES_PRECISION));
-    userStalk.push(toBigInt(ONE_BD, BALANCES_PRECISION));
+    // Initial stalk from deposit + avg grown stalk
+    userStalk.push(toBigInt(ONE_BD, BALANCES_PRECISION).plus(startingGrownStalk.times(BI_10.pow(BALANCES_PRECISION - PRECISION))));
   }
 
   const SEED_PRECISION = toBigInt(BigDecimal.fromString("10000"), PRECISION);
