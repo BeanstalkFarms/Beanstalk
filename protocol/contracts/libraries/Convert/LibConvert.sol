@@ -172,6 +172,9 @@ library LibConvert {
         revert("Convert: Tokens not supported");
     }
 
+    /**
+     * @notice applies the stalk penalty and updates convert capacity.
+     */
     function applyStalkPenalty(
         DeltaBStorage memory dbs,
         uint256 bdvConverted,
