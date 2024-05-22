@@ -47,14 +47,7 @@ contract ConvertFacet is Invariable, ReentrancyGuard {
 
     struct PipelineConvertData {
         uint256 grownStalk;
-        int256 beforeInputTokenDeltaB;
-        int256 afterInputTokenDeltaB;
-        uint256 beforeInputLpTokenSupply;
-        int256 beforeOutputTokenDeltaB;
-        int256 afterOutputTokenDeltaB;
-        uint256 beforeOutputLpTokenSupply;
-        int256 beforeOverallDeltaB;
-        int256 afterOverallDeltaB;
+        LibConvert.DeltaBStorage deltaB;
         uint256 inputAmount;
         uint256 overallConvertCapacity;
         uint256 stalkPenaltyBdv;
@@ -135,12 +128,12 @@ contract ConvertFacet is Invariable, ReentrancyGuard {
                 require(LibWell.isWell(fromToken), "Convert: Invalid Well");
             }
 
-            pipeData.beforeOverallDeltaB = LibWellMinting.overallCurrentDeltaB();
-            pipeData.beforeInputTokenDeltaB = getCurrentDeltaB(fromToken);
-            pipeData.beforeOutputTokenDeltaB = getCurrentDeltaB(toToken);
+            pipeData.deltaB.beforeOverallDeltaB = LibWellMinting.overallCurrentDeltaB();
+            pipeData.deltaB.beforeInputTokenDeltaB = getCurrentDeltaB(fromToken);
+            pipeData.deltaB.beforeOutputTokenDeltaB = getCurrentDeltaB(toToken);
+            pipeData.deltaB.beforeInputLpTokenSupply = IERC20(fromToken).totalSupply();
+            pipeData.deltaB.beforeOutputLpTokenSupply = IERC20(toToken).totalSupply();
 
-            pipeData.beforeInputLpTokenSupply = IERC20(fromToken).totalSupply();
-            pipeData.beforeOutputLpTokenSupply = IERC20(toToken).totalSupply();
             pipeData.initialLpSupply = LibWellMinting.getLpSupply();
         }
 
@@ -163,11 +156,7 @@ contract ConvertFacet is Invariable, ReentrancyGuard {
             pipeData.stalkPenaltyBdv = prepareStalkPenaltyCalculation(
                 fromToken,
                 toToken,
-                pipeData.beforeInputTokenDeltaB,
-                pipeData.beforeInputLpTokenSupply,
-                pipeData.beforeOutputTokenDeltaB,
-                pipeData.beforeOutputLpTokenSupply,
-                pipeData.beforeOverallDeltaB,
+                pipeData.deltaB,
                 pipeData.overallConvertCapacity,
                 fromBdv,
                 pipeData.initialLpSupply
@@ -243,12 +232,12 @@ contract ConvertFacet is Invariable, ReentrancyGuard {
         pipeData.overallConvertCapacity = LibConvert.abs(LibWellMinting.overallCappedDeltaB());
 
         // Store the pre-convert insta deltaB's both overall and for each well
-        pipeData.beforeOverallDeltaB = LibWellMinting.overallCurrentDeltaB();
-        pipeData.beforeInputTokenDeltaB = getCurrentDeltaB(inputToken);
-        pipeData.beforeOutputTokenDeltaB = getCurrentDeltaB(outputToken);
+        pipeData.deltaB.beforeOverallDeltaB = LibWellMinting.overallCurrentDeltaB();
+        pipeData.deltaB.beforeInputTokenDeltaB = getCurrentDeltaB(inputToken);
+        pipeData.deltaB.beforeOutputTokenDeltaB = getCurrentDeltaB(outputToken);
 
-        pipeData.beforeInputLpTokenSupply = IERC20(inputToken).totalSupply();
-        pipeData.beforeOutputLpTokenSupply = IERC20(outputToken).totalSupply();
+        pipeData.deltaB.beforeInputLpTokenSupply = IERC20(inputToken).totalSupply();
+        pipeData.deltaB.beforeOutputLpTokenSupply = IERC20(outputToken).totalSupply();
         pipeData.initialLpSupply = LibWellMinting.getLpSupply();
 
         IERC20(inputToken).transfer(C.PIPELINE, fromAmount);
@@ -263,11 +252,7 @@ contract ConvertFacet is Invariable, ReentrancyGuard {
         pipeData.stalkPenaltyBdv = prepareStalkPenaltyCalculation(
             inputToken,
             outputToken,
-            pipeData.beforeInputTokenDeltaB,
-            pipeData.beforeInputLpTokenSupply,
-            pipeData.beforeOutputTokenDeltaB,
-            pipeData.beforeOutputLpTokenSupply,
-            pipeData.beforeOverallDeltaB,
+            pipeData.deltaB,
             pipeData.overallConvertCapacity,
             fromBdv,
             pipeData.initialLpSupply
@@ -295,33 +280,27 @@ contract ConvertFacet is Invariable, ReentrancyGuard {
     function prepareStalkPenaltyCalculation(
         address inputToken,
         address outputToken,
-        int256 beforeInputTokenDeltaB,
-        uint256 beforeInputLpTokenSupply,
-        int256 beforeOutputTokenDeltaB,
-        uint256 beforeOutputLpTokenSupply,
-        int256 beforeOverallDeltaB,
+        LibConvert.DeltaBStorage memory dbs,
         uint256 overallConvertCapacity,
         uint256 fromBdv,
         uint256[] memory initialLpSupply
     ) internal returns (uint256) {
-        LibConvert.DeltaBStorage memory dbs;
-
-        dbs.beforeInputTokenDeltaB = beforeInputTokenDeltaB;
+        // dbs.beforeInputTokenDeltaB = beforeInputTokenDeltaB;
         dbs.afterInputTokenDeltaB = getCurrentDeltaB(inputToken);
-        dbs.beforeOutputTokenDeltaB = beforeOutputTokenDeltaB;
+        // dbs.beforeOutputTokenDeltaB = beforeOutputTokenDeltaB;
         dbs.afterOutputTokenDeltaB = getCurrentDeltaB(outputToken);
-        dbs.beforeOverallDeltaB = beforeOverallDeltaB;
+        // dbs.beforeOverallDeltaB = beforeOverallDeltaB;
         dbs.afterOverallDeltaB = LibWellMinting.scaledOverallInstantaneousDeltaB(initialLpSupply);
 
         // modify afterInputTokenDeltaB and afterOutputTokenDeltaB to scale using before/after LP amounts
         dbs.afterInputTokenDeltaB = LibWellMinting.scaledDeltaB(
-            beforeInputLpTokenSupply,
+            dbs.beforeInputLpTokenSupply,
             IERC20(inputToken).totalSupply(),
             dbs.afterInputTokenDeltaB
         );
 
         dbs.afterOutputTokenDeltaB = LibWellMinting.scaledDeltaB(
-            beforeOutputLpTokenSupply,
+            dbs.beforeOutputLpTokenSupply,
             IERC20(outputToken).totalSupply(),
             dbs.afterOutputTokenDeltaB
         );
