@@ -233,7 +233,7 @@ library LibWellMinting {
         }
     }
 
-    /*
+    /**
      * @notice returns the LP supply for each whitelisted well
      */
     function getLpSupply() internal view returns (uint256[] memory lpSupply) {
@@ -244,6 +244,11 @@ library LibWellMinting {
         }
     }
 
+    /**
+     * @notice returns the overall instantaneous deltaB for all whitelisted well tokens,
+     * scaled by the change in LP supply.
+     * @dev used in pipelineConvert.
+     */
     function scaledOverallInstantaneousDeltaB(
         uint256[] memory lpSupply
     ) internal view returns (int256 deltaB) {
