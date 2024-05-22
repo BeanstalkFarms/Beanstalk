@@ -280,6 +280,17 @@ contract ConvertFacet is Invariable, ReentrancyGuard {
         return LibDeltaB.overallCurrentDeltaB();
     }
 
+    /*
+     * @notice returns the scaled deltaB, based on LP supply before and after convert
+     */
+    function scaledDeltaB(
+        uint256 beforeLpTokenSupply,
+        uint256 afterLpTokenSupply,
+        int256 deltaB
+    ) external pure returns (int256) {
+        return LibDeltaB.scaledDeltaB(beforeLpTokenSupply, afterLpTokenSupply, deltaB);
+    }
+
     /**
      * @notice Returns the multi-block MEV resistant deltaB for a given token using capped reserves from the well.
      * @param well The well for which to return the capped reserves deltaB
