@@ -84,7 +84,7 @@ describe("L2SR", () => {
       mockSeedGaugeLockedBeans(twaOracle.cumulativeWellReserves, twaOracle.cumulativeWellReservesTime, lockedBeans);
 
       const event = changetype<Chop>(mockBeanstalkEvent());
-      event.block.number = BigInt.fromString("19764800"); // this can be replaced with BIP42 deployment block
+      event.block.number = BigInt.fromString("19922925"); // this can be replaced with BIP45 deployment block
       handleChop(event);
 
       assert.fieldEquals("Bean", BEAN_ERC20.toHexString(), "lockedBeans", lockedBeans.toString());
@@ -97,7 +97,7 @@ describe("L2SR", () => {
       mockSeedGaugeLockedBeans(twaOracle.cumulativeWellReserves, twaOracle.cumulativeWellReservesTime, lockedBeans);
 
       const event = changetype<Chop>(mockBeanstalkEvent());
-      event.block.number = BigInt.fromString("19764800"); // this can be replaced with BIP42 deployment block
+      event.block.number = BigInt.fromString("19922925"); // this can be replaced with BIP45 deployment block
       handleChop(event);
 
       assert.fieldEquals("Bean", BEAN_ERC20.toHexString(), "lockedBeans", lockedBeans.toString());
