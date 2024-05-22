@@ -1,52 +1,85 @@
+import { exists } from "src/utils/check";
 import { css } from "styled-components";
 
 export type FontWeight = "normal" | "semi-bold" | "bold";
 
 export type TextAlign = "left" | "center" | "right" | "inherit";
 
-export type FontSize = "xxl" | "xl" | "l" | "s" | "xs";
+export type FontSize = "h1" | "h2" | "h3" | "l" | "s" | "xs";
 
-export type FontVariant = "h1" | "h2" | "h3" | "l" | "s" | "xs" | "button-link";
+export type FontVariant = FontSize | "button-link";
 
 const FONT_SIZE_MAP = {
-  xxl: 48,
-  xl: 24,
-  l: 20,
-  s: 16,
-  xs: 14
+  h1: 48, // H1
+  h2: 32, // H2
+  h3: 24, // H3
+  l: 20, // BodyL
+  s: 16, // BodyS
+  xs: 14 // BodyXS
 };
 
-export const getFontSizeStyles = (size: FontSize | number) => {
-  if (typeof size === "number") {
-    return css`
-      font-size: ${size}px;
+/// --------------- Font Size ---------------
+export const getFontSize = (_size: number | FontSize) => {
+  if (typeof _size === "number") return _size;
+  return FONT_SIZE_MAP[_size in FONT_SIZE_MAP ? _size : "s"];
+};
+
+export const FontSizeStyle = css<{ $size?: number | FontSize }>`
+  ${({ $size }) => {
+    if (!exists($size)) return "";
+    return `
+      font-size: ${getFontSize($size)}px;
     `;
+  }}
+`;
+
+export const LineHeightStyle = css<{ $lineHeight?: number | FontSize }>`
+  ${(props) => {
+    if (!exists(props.$lineHeight)) return "";
+    return `
+      line-height: ${getFontSize(props.$lineHeight)}px;
+    `;
+  }}
+`;
+
+// --------------- Font Weight ---------------
+export const getFontWeight = (weight: FontWeight) => {
+  switch (weight) {
+    case "semi-bold":
+      return 600;
+    case "bold":
+      return 700;
+    default:
+      return 400;
   }
-
-  return css`
-    font-size: ${typeof size === "number" ? size : FONT_SIZE_MAP[size in FONT_SIZE_MAP ? size : "s"]}px;
-  `;
 };
 
-export const getFontWeightStyles = (weight: FontWeight) => {
-  return css`
-    font-weight: ${() => {
-      switch (weight) {
-        case "normal":
-          return 400;
-        case "semi-bold":
-          return 600;
-        case "bold":
-          return 700;
-        default:
-          return 400;
-      }
-    }};
-  `;
-};
+export const FontWeightStyle = css<{ $weight?: FontWeight }>`
+  ${(props) => {
+    if (!exists(props.$weight)) return "";
+    return `
+      font-weight: ${getFontWeight(props.$weight)};
+    `;
+  }}
+`;
+
+// --------------- Text Align ---------------
+export const TextAlignStyle = css<{ $align?: TextAlign }>`
+  ${(props) => {
+    if (!exists(props.$align)) return "";
+    return `
+      text-align: ${props.$align};
+    `;
+  }}
+`;
 
 export const getTextAlignStyles = (align: TextAlign) => {
   return css`
     text-align: ${align};
   `;
+};
+
+export const FontUtil = {
+  size: getFontSize,
+  weight: getFontWeight
 };

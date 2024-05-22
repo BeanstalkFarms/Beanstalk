@@ -18,6 +18,11 @@ const FONT_COLORS: Record<FontColor, string> = {
   primary: THEME_COLORS.primary
 };
 
-export const getFontColorStyles = (color: FontColor) => css`
-  color: ${FONT_COLORS[color]};
+export const FontColorStyle = css<{ $color?: FontColor }>`
+  ${(props) => {
+    const color = props.$color || "text.primary";
+    return `
+      color: ${FONT_COLORS[color]};
+    `;
+  }}
 `;
