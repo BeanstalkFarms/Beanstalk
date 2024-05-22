@@ -104,6 +104,8 @@ contract Listing is PodTransfer {
             l.mode
         );
 
+
+
         require(s.podListings[l.index] == lHash, "Marketplace: Listing does not exist.");
         uint256 plotSize = s.a[l.account].field.plots[l.index];
         require(
