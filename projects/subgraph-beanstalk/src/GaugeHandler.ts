@@ -26,6 +26,7 @@ import { getCurrentSeason } from "./utils/Season";
 import { WhitelistToken as WhitelistTokenEntity } from "../generated/schema";
 import { BigInt } from "@graphprotocol/graph-ts";
 import { BEAN_WETH_CP2_WELL } from "../../subgraph-core/utils/Constants";
+import { Bytes4_emptyToNull } from "../../subgraph-core/utils/Bytes";
 
 export function handleTemperatureChange(event: TemperatureChange): void {
   handleRateChange(event.address, event.block, event.params.season, event.params.caseId, event.params.absChange);
@@ -174,8 +175,8 @@ export function handleWhitelistToken_BIP45(event: WhitelistToken): void {
   siloSettings.stalkEarnedPerSeason = event.params.stalkEarnedPerSeason;
   siloSettings.stalkIssuedPerBdv = event.params.stalkIssuedPerBdv;
   siloSettings.gaugePoints = event.params.gaugePoints;
-  siloSettings.gpSelector = event.params.gpSelector;
-  siloSettings.lwSelector = event.params.lwSelector;
+  siloSettings.gpSelector = Bytes4_emptyToNull(event.params.gpSelector);
+  siloSettings.lwSelector = Bytes4_emptyToNull(event.params.lwSelector);
   siloSettings.optimalPercentDepositedBdv = event.params.optimalPercentDepositedBdv;
   siloSettings.updatedAt = event.block.timestamp;
   siloSettings.save();
@@ -196,8 +197,8 @@ export function handleWhitelistToken_BIP45(event: WhitelistToken): void {
 
 export function handleUpdateGaugeSettings(event: UpdateGaugeSettings): void {
   let siloSettings = loadWhitelistTokenSetting(event.params.token);
-  siloSettings.gpSelector = event.params.gpSelector;
-  siloSettings.lwSelector = event.params.lwSelector;
+  siloSettings.gpSelector = Bytes4_emptyToNull(event.params.gpSelector);
+  siloSettings.lwSelector = Bytes4_emptyToNull(event.params.lwSelector);
   siloSettings.optimalPercentDepositedBdv = event.params.optimalPercentDepositedBdv;
   siloSettings.updatedAt = event.block.timestamp;
 
