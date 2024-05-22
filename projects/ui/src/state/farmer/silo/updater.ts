@@ -247,8 +247,10 @@ export const useFetchFarmerSilo = () => {
                   },
                   {
                     amount: ZERO_BN,
+                    convertibleAmount: ZERO_BN,
                     bdv: ZERO_BN,
                     crates: [] as LegacyDepositCrate[], // FIXME
+                    convertibleCrates: [] as LegacyDepositCrate[],
                   }
                 ),
               },

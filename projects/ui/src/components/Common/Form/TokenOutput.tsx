@@ -24,13 +24,13 @@ type SizeProps = {
 
 type Props = {
   children: React.ReactNode;
-  danger: boolean;
+  danger?: boolean;
 } & SizeProps;
 
 export default function TokenOutput({
   children,
   size = 'medium',
-  danger,
+  danger = false,
 }: Props) {
   const isMedium = size === 'medium';
 
