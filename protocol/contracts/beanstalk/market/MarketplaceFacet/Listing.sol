@@ -169,6 +169,8 @@ contract Listing is PodTransfer {
         if (amount > podListingAmount) {
             revert("Marketplace: Not enough pods in Listing.");
         }
+
+        
         uint256 remainingAmount = podListingAmount.sub(amount);
         if (remainingAmount <= (1000000 / pricePerPod)) amount = podListingAmount;
     }
