@@ -117,12 +117,14 @@ export const interpolateFarmerStalk = (
     return _output;
   };
 
+  let lastSeedsSnapshot: BigNumber = ZERO_BN;
   for (let s = minSeason; s <= maxSeason; s += 1) {
     if (s === nextSeason) {
       // Reached a data point for which we have a snapshot.
       // Use the corresponding total stalk value.
       currStalk = toTokenUnitsBN(snapshots[j].stalk, STALK.decimals);
       currSeeds = toTokenUnitsBN(snapshots[j].seeds, SEEDS.decimals);
+      lastSeedsSnapshot = toTokenUnitsBN(snapshots[j].seeds, SEEDS.decimals);
       currGrownStalk = toTokenUnitsBN(BigNumber(0), STALK.decimals);
       currTimestamp = DateTime.fromJSDate(
         secondsToDate(snapshots[j].createdAt)
@@ -130,12 +132,13 @@ export const interpolateFarmerStalk = (
       j += 1;
       nextSeason = snapshots[j]?.season || undefined;
     } else {
-      if (s >= deploySeason) {
-        currSeeds = getSeedsPerBdv(s);
-      };
+      currSeeds = getSeedsPerBdv(s);
       // Estimate actual amount of stalk / grown stalk using seeds
       // Each Seed grows 1/10,000 Stalk per Season
       currGrownStalk = currGrownStalk.plus((currSeeds).multipliedBy(1 / 10_000));
+      if (s < deploySeason) {
+        currSeeds = lastSeedsSnapshot;
+      };
       currTimestamp = currTimestamp.plus({ hours: 1 });
     };
     stalk.push({
