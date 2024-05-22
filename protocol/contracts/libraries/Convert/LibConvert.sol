@@ -179,6 +179,7 @@ library LibConvert {
         address inputToken,
         address outputToken
     ) internal returns (uint256 stalkPenaltyBdv) {
+        AppStorage storage s = LibAppStorage.diamondStorage();
         uint256 overallConvertCapacityUsed;
         uint256 inputTokenAmountUsed;
         uint256 outputTokenAmountUsed;
@@ -196,8 +197,7 @@ library LibConvert {
             outputToken
         );
 
-        // Update penalties in storage
-        AppStorage storage s = LibAppStorage.diamondStorage();
+        // Update penalties in storage.
         Storage.ConvertCapacity storage convertCap = s.convertCapacity[block.number];
         convertCap.overallConvertCapacityUsed = convertCap.overallConvertCapacityUsed.add(
             overallConvertCapacityUsed
