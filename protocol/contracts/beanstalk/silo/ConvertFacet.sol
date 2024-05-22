@@ -285,25 +285,24 @@ contract ConvertFacet is Invariable, ReentrancyGuard {
         uint256 fromBdv,
         uint256[] memory initialLpSupply
     ) internal returns (uint256) {
-        // dbs.beforeInputTokenDeltaB = beforeInputTokenDeltaB;
-        dbs.afterInputTokenDeltaB = getCurrentDeltaB(inputToken);
-        // dbs.beforeOutputTokenDeltaB = beforeOutputTokenDeltaB;
-        dbs.afterOutputTokenDeltaB = getCurrentDeltaB(outputToken);
-        // dbs.beforeOverallDeltaB = beforeOverallDeltaB;
         dbs.afterOverallDeltaB = LibWellMinting.scaledOverallInstantaneousDeltaB(initialLpSupply);
 
         // modify afterInputTokenDeltaB and afterOutputTokenDeltaB to scale using before/after LP amounts
-        dbs.afterInputTokenDeltaB = LibWellMinting.scaledDeltaB(
-            dbs.beforeInputLpTokenSupply,
-            IERC20(inputToken).totalSupply(),
-            dbs.afterInputTokenDeltaB
-        );
+        if (LibWell.isWell(inputToken)) {
+            dbs.afterInputTokenDeltaB = LibWellMinting.scaledDeltaB(
+                dbs.beforeInputLpTokenSupply,
+                IERC20(inputToken).totalSupply(),
+                getCurrentDeltaB(inputToken)
+            );
+        }
 
-        dbs.afterOutputTokenDeltaB = LibWellMinting.scaledDeltaB(
-            dbs.beforeOutputLpTokenSupply,
-            IERC20(outputToken).totalSupply(),
-            dbs.afterOutputTokenDeltaB
-        );
+        if (LibWell.isWell(outputToken)) {
+            dbs.afterOutputTokenDeltaB = LibWellMinting.scaledDeltaB(
+                dbs.beforeOutputLpTokenSupply,
+                IERC20(outputToken).totalSupply(),
+                getCurrentDeltaB(outputToken)
+            );
+        }
 
         return
             LibConvert.applyStalkPenalty(
