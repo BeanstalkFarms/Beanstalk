@@ -238,6 +238,7 @@ export const useFetchFarmerSilo = () => {
                         ),
                       },
                       seeds: transform(seedsTV, 'bnjs'),
+                      isGerminating: false
                     });
                     return dep;
                   },
