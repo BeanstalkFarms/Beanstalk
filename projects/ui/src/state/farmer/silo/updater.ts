@@ -183,7 +183,6 @@ export const useFetchFarmerSilo = () => {
                     // For simplicity we operate here with TokenValues using the SDK
                     const bdvTV = sdk.tokens.BEAN.fromBlockchain(crate.bdv);
                     const amountTV = token.fromBlockchain(crate.amount);
-                    const baseStalkTV = token.getStalk(bdvTV);
 
                     // HACK: since we set the seeds value to zero, need to
                     // use the old value here
@@ -202,6 +201,9 @@ export const useFetchFarmerSilo = () => {
 
                     // This token's stem tip
                     const tokenStemTip = stemTips.get(token.address);
+
+                    // This token's base stalk
+                    const baseStalkTV = bdvTV;
 
                     // Delta between this account's last Silo update and Silo V3 deployment
                     const updateDelta = TokenValue.fromHuman(14210 - lastUpdate, 0);
