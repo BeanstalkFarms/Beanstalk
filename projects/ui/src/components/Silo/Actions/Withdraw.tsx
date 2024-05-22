@@ -353,7 +353,6 @@ const WithdrawForm: FC<
                       withdrawSeasons,
                     },
                   ]}
-                  {...txActions}
                 />
               </TxnAccordion>
             </Box>

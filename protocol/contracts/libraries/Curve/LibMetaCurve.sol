@@ -52,4 +52,5 @@ library LibMetaCurve {
             IMeta3Curve(pool).A_precise()
         );
     }
+
 }

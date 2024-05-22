@@ -1,7 +1,7 @@
 const { BEAN, WETH, BEANSTALK_FARMS, ETH_USD_CHAINLINK_AGGREGATOR, PRICE_DEPLOYER } = require("../test/utils/constants");
 const { toX } = require("../test/utils/helpers");
 const { impersonateSigner, toBN, getBean, impersonateBeanstalkOwner } = require("../utils");
-const { deployWellContractAtNonce, encodeWellImmutableData, getWellContractAt } = require("../utils/well");
+const { deployWellContractAtNonce, encodeWellImmutableData, getWellContractAt, deployMockPump } = require("../utils/well");
 const { bipBasinIntegration } = require("./bips");
 const { deployContract } = require("./contracts");
 const { deployPriceContract } = require("./price");
@@ -99,7 +99,7 @@ async function deployBasin(mock = true, accounts = undefined, verbose = true, ju
     account = await getAccount(accounts, 'addLiquidity', ADD_LIQUIDITY_ADDRESS);
 
     const bean = await getBean();
-    const weth = await ethers.getContractAt("IWETH", WETH);
+    const weth = await ethers.getContractAt("contracts/interfaces/IWETH.sol:IWETH", WETH);
 
     const ethUsdChainlinkAggregator = await ethers.getContractAt('MockChainlinkAggregator', ETH_USD_CHAINLINK_AGGREGATOR)
     const beanEthPrice = (await ethUsdChainlinkAggregator.latestRoundData()).answer;
@@ -151,6 +151,116 @@ async function deployBasin(mock = true, accounts = undefined, verbose = true, ju
     if (verbose) console.log('')
 }
 
+async function deployBasinWithMockPump(mock = true, accounts = undefined, verbose = true, justDeploy = false) {
+
+    if (verbose) console.log("Deploying Basin...")
+
+    let account = await getAccount(accounts, 'aquifer', AQUIFER_DEPLOYER);
+    const aquifer = await deployWellContractAtNonce('Aquifer', AQUIFER_DEPLOY_NONCE, [], account, verbose);
+
+    account = await getAccount(accounts, 'constantProduct2', CONSTANT_PRODUCT_2_DEPLOYER);
+    const constantProduct2 = await deployWellContractAtNonce('ConstantProduct2', CONSTANT_PRODUCT_2_DEPLOY_NONCE, [], account, verbose);
+
+    account = await getAccount(accounts, 'multiFlowPump', MULTI_FLOW_PUMP_DEPLOYER);
+    let mockPump = await deployMockPump()
+
+    account = await getAccount(accounts, 'wellImplementation', WELL_IMPLEMENTATION_DEPLOYER);
+    const wellImplementation = await deployWellContractAtNonce('Well', WELL_IMPLEMENTATION_DEPLOY_NONCE, [], account, false);
+    if (verbose) console.log("Well Implementation Deployed at", wellImplementation.address);
+
+    account = await getAccount(accounts, 'well', WELL_DEPLOYER);
+    const immutableData = encodeWellImmutableData(
+        aquifer.address,
+        [BEAN, WETH],
+        { target: constantProduct2.address, data: '0x', length: 0 },
+        [{ target: mockPump.address, data: '0x', length: 0 }]
+    );
+
+    const initData = wellImplementation.interface.encodeFunctionData('init', [WELL_NAME, WELL_SYMBOL]);
+
+    const well = await getWellContractAt(
+        'Well',
+        await aquifer.connect(account).callStatic.boreWell(
+            wellImplementation.address,
+            immutableData,
+            initData,
+            WELL_DEPLOY_SALT
+        )
+    );
+
+    const wellTxn = await aquifer.connect(account).boreWell(
+        wellImplementation.address,
+        immutableData,
+        initData,
+        WELL_DEPLOY_SALT
+    );
+
+    await wellTxn.wait();
+
+    if (justDeploy) return well;
+
+    if (verbose) console.log("Bean:Eth Well Deployed at:", well.address);
+
+    if (verbose) console.log("");
+
+    if (verbose) console.log("Adding Liquidity to Well...")
+
+    account = await getAccount(accounts, 'addLiquidity', ADD_LIQUIDITY_ADDRESS);
+
+    const bean = await getBean();
+    const weth = await ethers.getContractAt("contracts/interfaces/IWETH.sol:IWETH", WETH);
+
+    const ethUsdChainlinkAggregator = await ethers.getContractAt('MockChainlinkAggregator', ETH_USD_CHAINLINK_AGGREGATOR)
+    const beanEthPrice = (await ethUsdChainlinkAggregator.latestRoundData()).answer;
+
+    if (verbose) console.log("Bean:Eth Price:", beanEthPrice.toString());
+
+    const amounts = [
+        toBN(INITIAL_BEAN_LIQUIDITY),
+        toBN(INITIAL_BEAN_LIQUIDITY).mul(toX('1', 20)).div(beanEthPrice)
+    ]
+
+    if (verbose) console.log("Bean Amount:", amounts[0].toString());
+    if (verbose) console.log("Eth Amount:", amounts[1].toString());
+
+    if (verbose) console.log(account.address)
+
+    if (verbose) onsole.log("Approving..");
+    await bean.connect(account).approve(well.address, amounts[0]);
+    await weth.connect(account).approve(well.address, amounts[1]);
+
+    if (verbose) console.log("Wrapping Eth..");
+    await weth.connect(account).deposit({ value: amounts[1] });
+
+    if (verbose) console.log('Adding Liquidity..')
+    const lpAmountOut = well.getAddLiquidityOut(amounts);
+    let txn = await well.connect(account).addLiquidity(amounts, lpAmountOut, account.address, ethers.constants.MaxUint256);
+    await txn.wait();
+    txn = await well.connect(account).addLiquidity([toBN('0'), toBN('0')], '0', account.address, ethers.constants.MaxUint256);
+    await txn.wait();
+
+    if (verbose) console.log('')
+
+    const reserves = await well.getReserves();
+    if (verbose) console.log("Well Statistics:")
+    if (verbose) console.log("Bean Reserve:", reserves[0].toString());
+    if (verbose) console.log("Eth Reserve:", reserves[1].toString());
+    if (verbose) console.log("LP Token Total Supply:", (await well.totalSupply()).toString());
+
+    if (verbose) console.log('')
+
+    if (verbose) console.log("Pump Statistics:")
+    const instantaneousReserves = await mockPump.readInstantaneousReserves(
+        well.address,
+        "0x"
+    );
+    if (verbose) console.log("Instantaneous Bean Reserve:", instantaneousReserves[0].toString());
+    if (verbose) console.log("Instantaneous WETH Reserve:", instantaneousReserves[1].toString());
+
+    if (verbose) console.log('')
+}
+
+
 async function getAccount(accounts, key, mockAddress) {
     if (accounts == undefined) {
         return await impersonateSigner(mockAddress, true);
@@ -159,4 +269,5 @@ async function getAccount(accounts, key, mockAddress) {
 }
 
 exports.deployBasin = deployBasin;
+exports.deployBasinWithMockPump = deployBasinWithMockPump;
 exports.deployBasinAndIntegrationBip = deployBasinAndIntegrationBip;

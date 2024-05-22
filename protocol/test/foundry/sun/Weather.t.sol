@@ -3,7 +3,7 @@ pragma solidity =0.7.6;
 pragma abicoder v2;
 
 
-import { Weather } from "~/beanstalk/sun/SeasonFacet/Weather.sol";
+import { Weather } from "contracts/beanstalk/sun/SeasonFacet/Weather.sol";
 import "test/foundry/utils/TestHelper.sol";
 import "test/foundry/utils/LibConstant.sol";
 
@@ -75,7 +75,7 @@ contract ComplexWeatherTest is Weather, TestHelper {
         
         season.setLastSowTimeE(data[i].lastSowTime);
         season.setNextSowTimeE(data[i].thisSowTime);
-        season.stepWeatherWithParams(pods, lastDSoil, uint128(startSoil-endSoil), endSoil, deltaB, raining, rainRoots);
+        season.calcCaseIdWithParams(pods, lastDSoil, uint128(startSoil-endSoil), endSoil, deltaB, raining, rainRoots);
 
         //check that the season weather is the same as the one specified in the array:
         assertEq(uint256(season.weather().t), uint256(data[i].newWeather));
@@ -120,7 +120,7 @@ contract ExtremeWeatherTest is Weather, TestHelper {
     _beforeEachExtremeWeatherTest();
     season.setLastSowTimeE(1);
     season.setNextSowTimeE(10);
-    season.stepWeatherE(1 ether,1);
+    season.calcCaseIdE(1 ether,1);
     Storage.Weather memory weather = season.weather();
     assertEq(uint256(weather.t),7);
     assertEq(uint256(weather.thisSowTime), LibConstant.MAX_UINT32);
@@ -132,7 +132,7 @@ contract ExtremeWeatherTest is Weather, TestHelper {
     console.log("LastSowTimeMax");
     season.setLastSowTimeE(LibConstant.MAX_UINT32);
     season.setNextSowTimeE(1000);
-    season.stepWeatherE(1 ether,1);
+    season.calcCaseIdE(1 ether,1);
     Storage.Weather memory weather = season.weather();
     assertEq(uint256(weather.t),7);
     assertEq(uint256(weather.thisSowTime), LibConstant.MAX_UINT32);
@@ -144,7 +144,7 @@ contract ExtremeWeatherTest is Weather, TestHelper {
     console.log("LastSowTime61Delta");
     season.setLastSowTimeE(1061);
     season.setNextSowTimeE(1000);
-    season.stepWeatherE(1 ether,1);
+    season.calcCaseIdE(1 ether,1);
     Storage.Weather memory weather = season.weather();
     assertEq(uint256(weather.t),7);
     assertEq(uint256(weather.thisSowTime), LibConstant.MAX_UINT32);
@@ -156,7 +156,7 @@ contract ExtremeWeatherTest is Weather, TestHelper {
     console.log("LastSowTime60Delta");
     season.setLastSowTimeE(1060);
     season.setNextSowTimeE(1000);
-    season.stepWeatherE(1 ether,1);
+    season.calcCaseIdE(1 ether,1);
     Storage.Weather memory weather = season.weather();
     assertEq(uint256(weather.t),9);
     assertEq(uint256(weather.thisSowTime), LibConstant.MAX_UINT32);
@@ -168,7 +168,7 @@ contract ExtremeWeatherTest is Weather, TestHelper {
     console.log("LastSowTimeNeg60Delta");
     season.setLastSowTimeE(940);
     season.setNextSowTimeE(1000);
-    season.stepWeatherE(1 ether,1);
+    season.calcCaseIdE(1 ether,1);
     Storage.Weather memory weather = season.weather();
     assertEq(uint256(weather.t),9);
     assertEq(uint256(weather.thisSowTime), LibConstant.MAX_UINT32);
@@ -180,7 +180,7 @@ contract ExtremeWeatherTest is Weather, TestHelper {
     console.log("LastSowTime100Delta");
     season.setLastSowTimeE(900);
     season.setNextSowTimeE(1000);
-    season.stepWeatherE(1 ether,1);
+    season.calcCaseIdE(1 ether,1);
     Storage.Weather memory weather = season.weather();
     assertEq(uint256(weather.t),10);
     assertEq(uint256(weather.thisSowTime), LibConstant.MAX_UINT32);
@@ -193,7 +193,7 @@ contract ExtremeWeatherTest is Weather, TestHelper {
     season.setLastDSoilE(1);  
     season.setLastSowTimeE(900);
     season.setNextSowTimeE(LibConstant.MAX_UINT32);
-    season.stepWeatherE(1 ether,1);
+    season.calcCaseIdE(1 ether,1);
     Storage.Weather memory weather = season.weather();
     assertEq(uint256(weather.t),9);
     assertEq(uint256(weather.thisSowTime), LibConstant.MAX_UINT32);
