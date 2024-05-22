@@ -5,6 +5,7 @@ on:
     types: [opened, synchronize]
     paths:
       - "projects/subgraph-bean/**"
+      - "projects/subgraph-core/**"
 
 jobs:
   compile:
