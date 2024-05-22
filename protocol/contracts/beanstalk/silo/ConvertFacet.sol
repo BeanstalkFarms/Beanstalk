@@ -187,21 +187,21 @@ contract ConvertFacet is Invariable, ReentrancyGuard {
         emit Convert(LibTractor._user(), fromToken, toToken, fromAmount, toAmount);
     }
 
-    // /**
-    //  * @notice Pipeline convert allows any type of convert using a series of
-    //  * pipeline calls. A stalk penalty may be applied if the convert crosses deltaB.
-    //  *
-    //  * @param inputToken The token to convert from.
-    //  * @param stems The stems of the deposits to convert from.
-    //  * @param amounts The amounts of the deposits to convert from.
-    //  * @param outputToken The token to convert to.
-    //  * @param advancedFarmCalls The farm calls to execute.
-    //  * @return toStem the new stems of the converted deposit
-    //  * @return fromAmount the amount of tokens converted from
-    //  * @return toAmount the amount of tokens converted to
-    //  * @return fromBdv the bdv of the deposits converted from
-    //  * @return toBdv the bdv of the deposit converted to
-    //  */
+    /**
+     * @notice Pipeline convert allows any type of convert using a series of
+     * pipeline calls. A stalk penalty may be applied if the convert crosses deltaB.
+     *
+     * @param inputToken The token to convert from.
+     * @param stems The stems of the deposits to convert from.
+     * @param amounts The amounts of the deposits to convert from.
+     * @param outputToken The token to convert to.
+     * @param advancedFarmCalls The farm calls to execute.
+     * @return toStem the new stems of the converted deposit
+     * @return fromAmount the amount of tokens converted from
+     * @return toAmount the amount of tokens converted to
+     * @return fromBdv the bdv of the deposits converted from
+     * @return toBdv the bdv of the deposit converted to
+     */
     function pipelineConvert(
         address inputToken,
         int96[] calldata stems,
