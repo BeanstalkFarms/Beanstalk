@@ -6,7 +6,7 @@ export type TextAlign = "left" | "center" | "right" | "inherit";
 
 export type FontSize = "xxl" | "xl" | "l" | "s" | "xs";
 
-export type FontVariant = "h1" | "h2" | "l" | "s" | "xs" | "button-link";
+export type FontVariant = "h1" | "h2" | "h3" | "l" | "s" | "xs" | "button-link";
 
 const FONT_SIZE_MAP = {
   xxl: 48,

@@ -13,6 +13,7 @@ export const theme = {
       weight: getFontWeightStyles,
       color: getFontColorStyles,
       textAlign: getTextAlignStyles
-    }
+    },
+    size: getFontSizeStyles
   }
 } as const;

@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React from "react";
 import { useNavigate } from "react-router-dom";
 import { ButtonPrimary } from "src/components/Button";
 
@@ -10,13 +10,13 @@ import { Text } from "src/components/Typography";
 import { theme } from "src/utils/ui/theme";
 import styled from "styled-components";
 
-import { ComponentLibraryTable } from "src/components/BuildWell/ComponentLibraryTable";
+import { ComponentLibraryTable } from "src/components/Create/ComponentLibraryTable";
 
 export const Build = () => {
   const navigate = useNavigate();
 
   const handleNavigate = () => {
-    navigate("/well-creator");
+    navigate("/create");
   };
 
   return (
@@ -32,7 +32,7 @@ export const Build = () => {
         <ButtonPrimary onClick={handleNavigate}>Well Creator →</ButtonPrimary>
       </ActionBanner>
       <Flex $gap={0.5} $mt={3}>
-        <Text $variant="h2">COMPONENT LIBRARY</Text>
+        <Text $variant="h3">COMPONENT LIBRARY</Text>
         <Text $variant="l" $color="text.secondary">
           Use existing components which are already available for developers to extend, copy or compose together when building Wells. Select
           a component to view its implementation.

@@ -2,27 +2,21 @@ import styled, { css } from "styled-components";
 import { size } from "src/breakpoints";
 import { FontVariant } from "src/utils/ui/theme";
 
-export const H1 = styled.h1`
+export const H1 = css`
   font-style: normal;
   font-weight: 400;
   font-size: 48px;
   line-height: 56px;
 `;
-export const H2 = styled.h2`
+
+export const H2 = css`
   font-style: normal;
+  font-size: 32px;
   font-weight: 600;
-  font-size: 24px;
-  line-height: 32px;
+  line-height: 40px;
 `;
 
-export const H1Styles = css`
-  font-style: normal;
-  font-weight: 400;
-  font-size: 48px;
-  line-height: 56px;
-`;
-
-export const H2Styles = css`
+export const H3 = css`
   font-style: normal;
   font-weight: 600;
   font-size: 24px;
@@ -116,9 +110,11 @@ export const TextNudge = styled.div<NudgeProps>`
 export const getFontVariantStyles = (variant: FontVariant) => {
   switch (variant) {
     case "h1":
-      return H1Styles;
+      return H1;
     case "h2":
-      return H2Styles;
+      return H2;
+    case "h3":
+      return H3;
     case "l":
       return BodyL;
     case "s":
