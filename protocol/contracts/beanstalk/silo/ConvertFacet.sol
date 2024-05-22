@@ -288,7 +288,9 @@ contract ConvertFacet is Invariable, ReentrancyGuard {
         emit Convert(pipeData.user, inputToken, outputToken, fromAmount, toAmount);
     }
 
-    // pass in before LP token supply to calculcate scaled deltaB
+    /**
+     * @notice Calculates the stalk penalty for a convert. Updates convert capacity used.
+     */
     function prepareStalkPenaltyCalculation(
         address inputToken,
         address outputToken,
