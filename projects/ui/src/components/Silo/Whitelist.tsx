@@ -295,7 +295,7 @@ const Whitelist: FC<{
                           padding: '15px 10px',
                         }}
                         size="small"
-                        label="Removed from Deposit Whitelist in BIP-42"
+                        label="Removed from Deposit Whitelist in BIP-45"
                       />
                     )}
                   </Grid>

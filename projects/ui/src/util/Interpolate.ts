@@ -110,8 +110,10 @@ export const interpolateFarmerStalk = (
       if (farmerSiloBalances[token.address]) {
         const deposits = farmerSiloBalances[token.address].deposited;
         const index = whitelistSnapshots.findLastIndex((snapshot) => snapshot.season <= _season && snapshot.token.id === token.address.toLowerCase());
-        const seedsPerBdv = BigNumber(whitelistSnapshots[index].stalkEarnedPerSeason).div(1_000_000);
-        _output = (seedsPerBdv).multipliedBy(deposits.bdv).plus(_output);
+        if (index >= 0) {
+          const seedsPerBdv = BigNumber(whitelistSnapshots[index].stalkEarnedPerSeason).div(1_000_000);
+          _output = (seedsPerBdv).multipliedBy(deposits.bdv).plus(_output);
+        };
       };
     });
     return _output;

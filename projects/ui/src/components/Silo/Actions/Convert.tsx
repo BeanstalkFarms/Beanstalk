@@ -50,7 +50,7 @@ import TxnAccordion from '~/components/Common/TxnAccordion';
 import AdditionalTxnsAccordion from '~/components/Common/Form/FormTxn/AdditionalTxnsAccordion';
 import useFarmerFormTxnsActions from '~/hooks/farmer/form-txn/useFarmerFormTxnActions';
 import useAsyncMemo from '~/hooks/display/useAsyncMemo';
-import AddPlantTxnToggle from '~/components/Common/Form/FormTxn/AddPlantTxnToggle';
+// import AddPlantTxnToggle from '~/components/Common/Form/FormTxn/AddPlantTxnToggle';
 import FormTxnProvider from '~/components/Common/Form/FormTxnProvider';
 import useFormTxnContext from '~/hooks/sdk/useFormTxnContext';
 import { FormTxn, ConvertFarmStep } from '~/lib/Txn';
@@ -155,10 +155,10 @@ const ConvertForm: FC<
   const isQuoting = values.tokens[0].quoting || false;
   const slippage = values.settings.slippage;
 
-  const isUsingPlanted = Boolean(
+  const isUsingPlanted = false /* Boolean(
     values.farmActions.primary?.includes(FormTxn.PLANT) &&
       sdk.tokens.BEAN.equals(tokenIn)
-  );
+  ); */
 
   const totalAmountIn =
     isUsingPlanted && plantCrate
@@ -378,13 +378,14 @@ const ConvertForm: FC<
           }
           params={quoteHandlerParams}
         />
+        {/*
         {!canConvert && tokenOut && maxAmountIn ? null : (
           <AddPlantTxnToggle
             plantAndDoX={plantAndDoX.plantAction}
             actionText="Convert"
           />
         )}
-
+        */}
         {/* User Input: destination token */}
         {depositedAmount.gt(0) ? (
           <PillRow
