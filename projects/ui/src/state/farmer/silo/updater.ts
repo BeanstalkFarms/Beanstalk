@@ -201,7 +201,7 @@ export const useFetchFarmerSilo = () => {
                     };
 
                     // This token's stem tip
-                    const tokenStemTip = TokenValue.fromHuman(stemTips.get(token.address)!.toString(), 0);
+                    const tokenStemTip = stemTips.get(token.address);
 
                     // Delta between this account's last Silo update and Silo V3 deployment
                     const updateDelta = TokenValue.fromHuman(14210 - lastUpdate, 0);
@@ -213,7 +213,8 @@ export const useFetchFarmerSilo = () => {
                     const grownBeforeStemsTV = TokenValue.fromBlockchain(seedsTV.mul(updateDelta).toBlockchain(), sdk.tokens.STALK.decimals);
 
                     // Stalk Grown after Silo V3 deployment
-                    const grownAfterStemsTV = TokenValue.fromBlockchain(tokenStemTip.sub(0).mul(bdvTV).toBlockchain(), 4);
+                    const ethersZERO = TokenValue.ZERO.toBigNumber();
+                    const grownAfterStemsTV = sdk.silo.calculateGrownStalk(tokenStemTip || ethersZERO, ethersZERO, bdvTV);
 
                     // Legacy BigNumberJS values
                     const bdv = transform(bdvTV, 'bnjs');
