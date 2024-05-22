@@ -9,7 +9,7 @@ import {
   handleUpdateAverageStalkPerBdvPerSeason,
   handleFarmerGerminatingStalkBalanceChanged,
   handleTotalGerminatingBalanceChanged,
-  handleWhitelistToken_BIP44,
+  handleWhitelistToken_BIP45,
   handleUpdateGaugeSettings,
   handleTotalGerminatingStalkChanged,
   handleTotalStalkChangedFromGermination
@@ -173,7 +173,7 @@ describe("Seed Gauge", () => {
 
   describe("Owner Configuration", () => {
     test("event: WhitelistToken", () => {
-      handleWhitelistToken_BIP44(
+      handleWhitelistToken_BIP45(
         createWhitelistTokenV4Event(
           BEAN_ERC20.toHexString(),
           "0x12345678",

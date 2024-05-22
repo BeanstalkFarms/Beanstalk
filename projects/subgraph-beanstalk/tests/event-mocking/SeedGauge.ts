@@ -8,7 +8,7 @@ import {
   UpdateGaugeSettings,
   TotalGerminatingStalkChanged,
   TotalStalkChangedFromGermination
-} from "../../generated/BIP44-SeedGauge/Beanstalk";
+} from "../../generated/BIP45-SeedGauge/Beanstalk";
 import { mockBeanstalkEvent } from "../../../subgraph-core/tests/event-mocking/Util";
 
 export function createBeanToMaxLpGpPerBdvRatioChangeEvent(

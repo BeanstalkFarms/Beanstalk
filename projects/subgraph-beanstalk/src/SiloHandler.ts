@@ -969,10 +969,12 @@ export function handleDewhitelistToken(event: DewhitelistToken): void {
   let currentWhitelist = silo.whitelistedTokens;
   let currentDewhitelist = silo.dewhitelistedTokens;
   let index = currentWhitelist.indexOf(event.params.token.toHexString());
-  currentDewhitelist.push(currentWhitelist.splice(index, 1)[0]);
-  silo.whitelistedTokens = currentWhitelist;
-  silo.dewhitelistedTokens = currentDewhitelist;
-  silo.save();
+  if (index >= 0) {
+    currentDewhitelist.push(currentWhitelist.splice(index, 1)[0]);
+    silo.whitelistedTokens = currentWhitelist;
+    silo.dewhitelistedTokens = currentDewhitelist;
+    silo.save();
+  }
 
   let id = "dewhitelistToken-" + event.transaction.hash.toHexString() + "-" + event.logIndex.toString();
   let rawEvent = new DewhitelistTokenEntity(id);
