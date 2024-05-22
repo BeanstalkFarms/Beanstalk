@@ -131,7 +131,7 @@ const RewardsSummary: FC<RewardsBarProps & { compact?: boolean }> = ({
         <RewardItem
           title="Revitalized Stalk"
           tooltip="Stalk that have vested for Unripe holders. Revitalized Stalk are minted as the BDV of Unripe assets increases. Revitalized Stalk does not contribute to Stalk ownership until Enrooted."
-          amount={revitalizedStalk}
+          amount={revitalizedStalk.isNaN() ? BigNumber(0) : revitalizedStalk}
           icon={stalkIcon}
           compact={compact}
           isClaimable={
