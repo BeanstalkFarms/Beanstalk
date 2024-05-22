@@ -905,6 +905,14 @@ export function updateStalkWithCalls(season: i32, timestamp: BigInt, blockNumber
 export function handleWhitelistToken(event: WhitelistToken): void {
   let silo = loadSilo(event.address);
   let currentList = silo.whitelistedTokens;
+  if (currentList.length == 0) {
+    // Push unripe bean and unripe bean:3crv upon the initial whitelisting.
+    currentList.push(UNRIPE_BEAN.toHexString());
+    loadWhitelistTokenSetting(UNRIPE_BEAN);
+
+    currentList.push(UNRIPE_BEAN_3CRV.toHexString());
+    loadWhitelistTokenSetting(UNRIPE_BEAN_3CRV);
+  }
   currentList.push(event.params.token.toHexString());
   silo.whitelistedTokens = currentList;
   silo.save();
