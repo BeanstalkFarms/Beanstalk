@@ -476,7 +476,7 @@ contract TokenSilo is Silo {
     /**
      * @notice Returns the amount of Germinating Beans, Germinating BDV and Germinating Stalk 
      * for a given Germinate enum.
-     * @dev When a Farmer attemps to withdraw Beans from a Deposit that has a Germinating Stem,
+     * @dev When a Farmer attempts to withdraw Beans from a Deposit that has a Germinating Stem,
      * `checkForEarnedBeans` is called to determine how many of the Beans were Planted vs Deposited.
      * If a Farmer withdraws a Germinating Deposit with Earned Beans, only subtract the Germinating Beans
      * from the Germinating Balances
