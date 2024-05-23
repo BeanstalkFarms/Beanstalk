@@ -7584,6 +7584,11 @@
         "components": [
           {
             "internalType": "uint256",
+            "name": "deprecated",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
             "name": "pods",
             "type": "uint256"
           },
@@ -7736,6 +7741,11 @@
     "outputs": [
       {
         "components": [
+          {
+            "internalType": "uint256[2]",
+            "name": "deprecated",
+            "type": "uint256[2]"
+          },
           {
             "internalType": "uint128",
             "name": "lastDSoil",
@@ -10168,6 +10178,19 @@
     "name": "removeWhitelistSelector",
     "outputs": [],
     "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "totalSeeds",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
     "type": "function"
   },
   {
