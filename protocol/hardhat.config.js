@@ -231,6 +231,12 @@ task('verifyEarnedBeans', async function () {
   );
 })
 
+task("balanceOfRoots", async function () {
+  this.beanstalk = await getBeanstalk();
+  console.log("Beanstalk:", this.beanstalk);
+  const balanceOfRoots = await this.beanstalk.balanceOfRoots('0x3C43674dfa916d791614827a50353fe65227B7f3');
+  console.log("Balance of Roots:", balanceOfRoots.toString());
+});
 
 /// EBIPS /// 
 

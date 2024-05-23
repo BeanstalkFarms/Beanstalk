@@ -155,11 +155,10 @@ async function ebip15(mock = true, account = undefined) {
 
   await upgradeWithNewFacets({
     diamondAddress: BEANSTALK,
-    facetNames: ["SiloFacet", "SiloGettersFacet"],
+    facetNames: ["SiloFacet"],
     libraryNames: ['LibSilo'],
     facetLibraries: {
-      'SiloFacet': ['LibSilo'],
-      "SiloGettersFacet": ['LibSilo']
+      'SiloFacet': ['LibSilo']
     },
     bip: false,
     object: !mock,
