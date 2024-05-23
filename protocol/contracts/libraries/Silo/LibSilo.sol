@@ -361,6 +361,10 @@ library LibSilo {
 
         if (ar.odd.bdv > 0) {
             uint256 germinatingStalk = ar.odd.bdv.mul(stalkPerBDV);
+
+            // check whether the Germinating Stalk transferred exceeds the farmers
+            // Germinating Stalk. If so, the difference is considered from Earned 
+            // Beans. Deduct the odd BDV and increment the activeBDV by the difference.
             uint256 farmersGerminatingStalk = checkForEarnedBeans(
                 sender,
                 germinatingStalk,
@@ -382,6 +386,9 @@ library LibSilo {
         }
 
         if (ar.even.bdv > 0) {
+            // check whether the Germinating Stalk transferred exceeds the farmers
+            // Germinating Stalk. If so, the difference is considered from Earned 
+            // Beans. Deduct the even BDV and increment the active BDV by the difference.
             uint256 germinatingStalk = ar.even.bdv.mul(stalkPerBDV);
             uint256 farmersGerminatingStalk = checkForEarnedBeans(
                 sender,
@@ -837,15 +844,13 @@ library LibSilo {
     }
 
     /**
-     * @notice verifies whether the germinating stalk being removed 
-     * is greater than the farmers germinating stalk.
-     * @dev this occurs when a user attempts to withdraw a bean deposit with a 
-     * germinating stem, where a portion of the deposit was sourced from a plant 
-     * (i.e Earned Beans). A deposit with Earned beans do not germinate, but their 
-     * stem matches that of a germinating deposit. If a user withdraws a deposit
-     * with Earned Beans, cap the germinating stalk, bdv, and amount by the farmers 
-     * germinating stalk.
-     * @return the germinating portion of stalk.
+     * @notice Returns the amount of Germinating Stalk 
+     * for a given Germinate enum.
+     * @dev When a Farmer attempts to withdraw Beans from a Deposit that has a Germinating Stem,
+     * `checkForEarnedBeans` is called to determine how many of the Beans were Planted vs Deposited.
+     * If a Farmer withdraws a Germinating Deposit with Earned Beans, only subtract the Germinating Beans
+     * from the Germinating Balances
+     * @return the germinating portion of stalk for a given Germinate enum.
      */
     function checkForEarnedBeans(
         address account,
