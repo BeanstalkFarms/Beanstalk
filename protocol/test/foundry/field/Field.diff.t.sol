@@ -7,9 +7,9 @@ import "forge-std/Test.sol";
 import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
 
-import { LibDibbler } from "~/libraries/LibDibbler.sol";
-import { LibIncentive } from "~/libraries/LibIncentive.sol";
-import { LibPRBMath } from "~/libraries/LibPRBMath.sol";
+import { LibDibbler } from "contracts/libraries/LibDibbler.sol";
+import { LibIncentive } from "contracts/libraries/LibIncentive.sol";
+import { LibPRBMath } from "contracts/libraries/LibPRBMath.sol";
 
 /**
  * @dev This is used to test {LibIncentive.fracExp} and 

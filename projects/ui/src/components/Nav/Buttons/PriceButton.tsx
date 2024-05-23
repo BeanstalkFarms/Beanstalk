@@ -153,6 +153,7 @@ const PriceButton: FC<ButtonProps> = ({ ...props }) => {
           key={`${pool.address}-${index}`}
           pool={pool}
           poolState={beanPools[pool.address]}
+          useTWA={showTWA}
           ButtonProps={{
             href: `${pool.link}`,
             target: '_blank',

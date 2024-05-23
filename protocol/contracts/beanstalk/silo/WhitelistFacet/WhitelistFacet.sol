@@ -7,48 +7,16 @@ pragma experimental ABIEncoderV2;
 
 import {LibDiamond} from "contracts/libraries/LibDiamond.sol";
 import {LibWhitelist} from "contracts/libraries/Silo/LibWhitelist.sol";
-import {AppStorage} from "../AppStorage.sol";
+import {AppStorage} from "contracts/beanstalk/AppStorage.sol";
+import {WhitelistedTokens} from "contracts/beanstalk/silo/WhitelistFacet/WhitelistedTokens.sol";
 
 /**
  * @author Publius
- * @title Whitelist Facet 
- * @notice Manages the Silo Whitelist including Adding to, Updating 
+ * @title Whitelist Facet
+ * @notice Manages the Silo Whitelist including Adding to, Updating
  * and Removing from the Silo Whitelist
  **/
-contract WhitelistFacet {
-
-    /**
-     * @notice Emitted when a token is Whitelisted into the Silo.
-     * @param token Address of the token that was Whitelisted.
-     * @param selector The function selector that is used to calculate the BDV of the token.
-     * @param stalkEarnedPerSeason The amount of Stalk earned per Season for each Deposited BDV.
-     * @param stalkIssuedPerBdv The amount of Stalk issued per BDV on Deposit.
-     */
-    event WhitelistToken(
-        address indexed token,
-        bytes4 selector,
-        uint32 stalkEarnedPerSeason,
-        uint256 stalkIssuedPerBdv
-    );
-
-    /**
-     * @notice Emitted whenever the `stalkEarnedPerSeason` changes for a token.
-     * @param token Address of the token that the `stalkEarnedPerSeason` is updated for.
-     * @param stalkEarnedPerSeason The new amount of Stalk earned per Season for each Deposited BDV.
-     * @param season The Season that the new `stalkEarnedPerSeason` comes into effect. 
-     */
-    event UpdatedStalkPerBdvPerSeason(
-        address indexed token,
-        uint32 stalkEarnedPerSeason,
-        uint32 season
-    );
-
-    /**
-     * @notice Emitted when a token is removed from the Silo Whitelist.
-     * @param token Address of the token that was removed from the Silo Whitelist.
-     */
-    event DewhitelistToken(address indexed token);
-
+contract WhitelistFacet is WhitelistedTokens {
     /**
      * @notice Removes a token from the Silo Whitelist.
      * @dev Can only be called by Beanstalk or Beanstalk owner.
@@ -64,15 +32,24 @@ contract WhitelistFacet {
      * @param selector The function selector that is used to calculate the BDV of the token.
      * @param stalkIssuedPerBdv The amount of Stalk issued per BDV on Deposit.
      * @param stalkEarnedPerSeason The amount of Stalk earned per Season for each Deposited BDV.
-     * @dev 
-     * Can only be called by Beanstalk or Beanstalk owner.
-     * Assumes an `encodeType` of 0.
+     * @param gaugePointSelector The function selector that is used to calculate the Gauge Points of the token.
+     * @param liquidityWeightSelector The function selector that outputs the liquidity weight of the token.
+     * @param gaugePoints The initial gauge points allocated to the token.
+     * @param optimalPercentDepositedBdv The target percentage
+     * of the total LP deposited BDV for this token. Only used if the token is an LP token.
+     * @dev Can only be called by Beanstalk or Beanstalk owner. Assumes an `encodeType` of 0.
+     * Note: The Beanstalk DAO should not whitelist Fee-on-transfer or rebasing tokens,
+     * as the Silo is not compatible with these tokens.
      */
     function whitelistToken(
         address token,
         bytes4 selector,
         uint32 stalkIssuedPerBdv,
-        uint32 stalkEarnedPerSeason
+        uint32 stalkEarnedPerSeason,
+        bytes4 gaugePointSelector,
+        bytes4 liquidityWeightSelector,
+        uint128 gaugePoints,
+        uint64 optimalPercentDepositedBdv
     ) external payable {
         LibDiamond.enforceIsOwnerOrContract();
         LibWhitelist.whitelistToken(
@@ -80,7 +57,11 @@ contract WhitelistFacet {
             selector,
             stalkIssuedPerBdv,
             stalkEarnedPerSeason,
-            0x00
+            0x00,
+            gaugePointSelector,
+            liquidityWeightSelector,
+            gaugePoints,
+            optimalPercentDepositedBdv
         );
     }
 
@@ -91,14 +72,25 @@ contract WhitelistFacet {
      * @param stalkIssuedPerBdv The amount of Stalk issued per BDV on Deposit.
      * @param stalkEarnedPerSeason The amount of Stalk earned per Season for each Deposited BDV.
      * @param encodeType The encode type that should be used to encode the BDV function call. See {LibTokenSilo.beanDenominatedValue}.
+     * @param gaugePointSelector The function selector that is used to calculate the Gauge Points of the token.
+     * @param gaugePoints The initial gauge points allocated to the token.
+     * @param optimalPercentDepositedBdv The target percentage
+     * of the total LP deposited BDV for this token. Only used if the token is an LP token.
+     *
      * @dev Can only be called by Beanstalk or Beanstalk owner.
+     * Note: The Beanstalk DAO should not whitelist Fee-on-transfer or rebasing tokens,
+     * as the Silo is not compatible with these tokens.
      */
     function whitelistTokenWithEncodeType(
         address token,
         bytes4 selector,
         uint32 stalkIssuedPerBdv,
         uint32 stalkEarnedPerSeason,
-        bytes1 encodeType
+        bytes1 encodeType,
+        bytes4 gaugePointSelector,
+        bytes4 liquidityWeightSelector,
+        uint128 gaugePoints,
+        uint64 optimalPercentDepositedBdv
     ) external payable {
         LibDiamond.enforceIsOwnerOrContract();
         LibWhitelist.whitelistToken(
@@ -106,7 +98,11 @@ contract WhitelistFacet {
             selector,
             stalkIssuedPerBdv,
             stalkEarnedPerSeason,
-            encodeType
+            encodeType,
+            gaugePointSelector,
+            liquidityWeightSelector,
+            gaugePoints,
+            optimalPercentDepositedBdv
         );
     }
 
@@ -121,9 +117,26 @@ contract WhitelistFacet {
         uint32 stalkEarnedPerSeason
     ) external payable {
         LibDiamond.enforceIsOwnerOrContract();
-        LibWhitelist.updateStalkPerBdvPerSeasonForToken(
+        LibWhitelist.updateStalkPerBdvPerSeasonForToken(token, stalkEarnedPerSeason);
+    }
+
+    /**
+     * @notice Updates gauge settings for token.
+     * @dev {LibWhitelistedTokens} must be updated to include the new token.
+     */
+    function updateGaugeForToken(
+        address token,
+        bytes4 gaugePointSelector,
+        bytes4 liquidityWeightSelector,
+        uint64 optimalPercentDepositedBdv
+    ) external payable {
+        LibDiamond.enforceIsOwnerOrContract();
+        LibWhitelist.updateGaugeForToken(
             token,
-            stalkEarnedPerSeason
+            gaugePointSelector,
+            liquidityWeightSelector,
+            optimalPercentDepositedBdv
         );
     }
+    
 }

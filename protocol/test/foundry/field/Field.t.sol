@@ -2,9 +2,9 @@
 pragma solidity =0.7.6;
 pragma abicoder v2;
 
-import {FieldFacet} from "~/beanstalk/field/FieldFacet.sol";
+import {FieldFacet} from "contracts/beanstalk/field/FieldFacet.sol";
 import "test/foundry/utils/LibConstant.sol";
-import "~/libraries/LibPRBMath.sol";
+import "contracts/libraries/LibPRBMath.sol";
 import "../utils/TestHelper.sol";
 
 contract FieldTest is FieldFacet, TestHelper {
@@ -452,7 +452,7 @@ contract FieldTest is FieldFacet, TestHelper {
         uint256 maxBeans = 5e6; // max beans that can be sown in a tx
         uint256 totalPodsMinted = 0;
         uint256 maxPods = 200e6; // maximum pods that should be issued
-        uint256 initalBal = C.bean().balanceOf(brean); // inital balance
+        uint256 initialBal = C.bean().balanceOf(brean); // initial balance
 
         while (field.totalSoil() > 0) {
             // we want to randomize the beans sown, 
@@ -479,7 +479,7 @@ contract FieldTest is FieldFacet, TestHelper {
         assertEq(totalSoilSown, 100e6, "totalSoilSown");
         assertEq(
             totalSoilSown, 
-            initalBal - C.bean().balanceOf(brean), 
+            initialBal - C.bean().balanceOf(brean), 
             "total bean used does not equal total soil sown"
         );
     }
@@ -518,7 +518,7 @@ contract FieldTest is FieldFacet, TestHelper {
         assertGt(
             totalSoilSown, 
             100e6, 
-            "Total soil sown is less than inital soil issued."
+            "Total soil sown is less than initial soil issued."
         ); 
     }
 

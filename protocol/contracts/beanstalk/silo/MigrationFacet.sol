@@ -104,8 +104,8 @@ contract MigrationFacet is ReentrancyGuard {
         }
 
         return (
-            s.a[account].legacyDeposits[token][season].amount,
-            s.a[account].legacyDeposits[token][season].bdv
+            s.a[account].legacyV2Deposits[token][season].amount,
+            s.a[account].legacyV2Deposits[token][season].bdv
         );
     }
 

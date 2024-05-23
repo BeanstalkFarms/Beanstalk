@@ -12,12 +12,6 @@ require("@openzeppelin/hardhat-upgrades");
 require("dotenv").config();
 require("@nomiclabs/hardhat-etherscan");
 
-// BIP 38 migration ----
-const { bipMigrateUnripeBean3CrvToBeanEth } = require("./scripts/bips.js");
-const { finishBeanEthMigration } = require("./scripts/beanEthMigration.js");
-// ----
-
-const { upgradeWithNewFacets } = require("./scripts/diamond");
 const {
   impersonateSigner,
   mintUsdc,
@@ -30,13 +24,11 @@ const {
   mintEth,
   getBeanstalk
 } = require("./utils");
-const { EXTERNAL, INTERNAL, INTERNAL_EXTERNAL, INTERNAL_TOLERANT } = require("./test/utils/balances.js");
-const { BEANSTALK, PUBLIUS, BEAN_3_CURVE, BEAN_ETH_WELL } = require("./test/utils/constants.js");
-const { to6 } = require("./test/utils/helpers.js");
-//const { replant } = require("./replant/replant.js")
+const { upgradeWithNewFacets } = require("./scripts/diamond");
+const { BEANSTALK, PUBLIUS, BEAN_3_CURVE, PRICE } = require("./test/utils/constants.js");
 const { task } = require("hardhat/config");
 const { TASK_COMPILE_SOLIDITY_GET_SOURCE_PATHS } = require("hardhat/builtin-tasks/task-names");
-const { bipNewSilo, mockBeanstalkAdmin } = require("./scripts/bips.js");
+const { bipNewSilo, bipMorningAuction, bipSeedGauge } = require("./scripts/bips.js");
 const { ebip9, ebip10, ebip11, ebip13, ebip14 } = require("./scripts/ebips.js");
 
 //////////////////////// UTILITIES ////////////////////////
@@ -58,7 +50,9 @@ task("buyBeans")
     await mintUsdc(PUBLIUS, args.amount);
     const signer = await impersonateSigner(PUBLIUS);
     await (await getUsdc()).connect(signer).approve(BEAN_3_CURVE, ethers.constants.MaxUint256);
-    const txn = await (await getBeanMetapool()).connect(signer).exchange_underlying("2", "0", args.amount, "0");
+    const txn = await (await getBeanMetapool())
+      .connect(signer)
+      .exchange_underlying("2", "0", args.amount, "0");
     const result = await txn.wait();
     console.log("Done", result);
   });
@@ -104,17 +98,17 @@ task("sunrise", async function () {
 });
 
 task("sunrise2", async function () {
-  const lastTimestamp = (await ethers.provider.getBlock('latest')).timestamp;
-  const hourTimestamp = parseInt(lastTimestamp/3600 + 1) * 3600
-  await network.provider.send("evm_setNextBlockTimestamp", [hourTimestamp])
+  const lastTimestamp = (await ethers.provider.getBlock("latest")).timestamp;
+  const hourTimestamp = parseInt(lastTimestamp / 3600 + 1) * 3600;
+  await network.provider.send("evm_setNextBlockTimestamp", [hourTimestamp]);
 
-  season = await ethers.getContractAt('SeasonFacet', BEANSTALK);
+  season = await ethers.getContractAt("SeasonFacet", BEANSTALK);
   await season.sunrise();
-})
+});
 
 task("getTime", async function () {
   this.season = await ethers.getContractAt("SeasonFacet", BEANSTALK);
-  console.log("Current time: ", await this.season.time());
+  console.log("Current time: ", await this.seasonGetter.time());
 });
 
 /*task('replant', async () => {
@@ -148,7 +142,15 @@ task("diamondABI", "Generates ABI file for diamond, includes all ABIs of facets"
   modules.forEach((module) => {
     const pattern = path.join(".", modulesDir, module, "**", "*Facet.sol");
     const files = glob.sync(pattern);
-
+    if (module == "silo") {
+      // Manually add in libraries that emit events
+      files.push("contracts/libraries/Silo/LibWhitelist.sol");
+      files.push("contracts/libraries/LibGauge.sol");
+      files.push("contracts/libraries/Silo/LibLegacyTokenSilo.sol");
+      files.push("contracts/libraries/Silo/LibGerminate.sol");
+      files.push("contracts/libraries/Silo/LibWhitelistedTokens.sol");
+      files.push("contracts/libraries/Minting/LibWellMinting.sol");
+    }
     files.forEach((file) => {
       const facetName = getFacetName(file);
       const jsonFileName = `${facetName}.json`;
@@ -178,6 +180,7 @@ task("diamondABI", "Generates ABI file for diamond, includes all ABIs of facets"
   console.log("ABI written to abi/Beanstalk.json");
 });
 
+// BIP //
 task("marketplace", async function () {
   const owner = await impersonateBeanstalkOwner();
   await mintEth(owner.address);
@@ -190,7 +193,7 @@ task("marketplace", async function () {
   });
 });
 
-task("bip34", async function () {
+task("deployMorningAuction", async function () {
   const owner = await impersonateBeanstalkOwner();
   await mintEth(owner.address);
   await upgradeWithNewFacets({
@@ -209,38 +212,35 @@ task("bip34", async function () {
   });
 });
 
-task("silov3", async function () {
+task("deploySiloV3", async function () {
   await bipNewSilo();
 });
 
-task("beanstalkAdmin", async function () {
-  await mockBeanstalkAdmin();
+task("deploySeedGauge", async function () {
+  await bipSeedGauge();
 });
 
-task("migrate-bip38", async function () {
-  await bipMigrateUnripeBean3CrvToBeanEth();
-  await finishBeanEthMigration();
-});
+/// EBIPS ///
 
 task("ebip14", async function () {
   await ebip14();
-})
+});
 
 task("ebip13", async function () {
   await ebip13();
-})
+});
 
 task("ebip11", async function () {
   await ebip11();
-})
+});
 
 task("ebip10", async function () {
   await ebip10();
-})
+});
 
 task("ebip9", async function () {
   await ebip9();
-})
+});
 
 //////////////////////// SUBTASK CONFIGURATION ////////////////////////
 

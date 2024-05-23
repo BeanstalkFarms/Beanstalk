@@ -24,7 +24,6 @@ contract BDVFacet {
     function curveToBDV(uint256 amount) public view returns (uint256) {
         return LibBeanMetaCurve.bdv(amount);
     }
-
     /**
      * @dev Returns the BDV of a given `amount` of Beans.
      */
@@ -36,7 +35,11 @@ contract BDVFacet {
      * @dev Returns the BDV of a given `amount` of Unripe Bean:3Crv LP Tokens.
      */
     function unripeLPToBDV(uint256 amount) public view returns (uint256) {
-        amount = LibUnripe.unripeToUnderlying(C.UNRIPE_LP, amount);
+        amount = LibUnripe.unripeToUnderlying(
+            C.UNRIPE_LP, 
+            amount, 
+            IBean(C.UNRIPE_LP).totalSupply()
+        );
         amount = LibWellBdv.bdv(C.BEAN_ETH_WELL, amount);
         return amount;
     }
@@ -45,7 +48,11 @@ contract BDVFacet {
      * @dev Returns the BDV of a given `amount` of Unripe Beans.
      */
     function unripeBeanToBDV(uint256 amount) public view returns (uint256) {
-        return LibUnripe.unripeToUnderlying(C.UNRIPE_BEAN, amount);
+        return LibUnripe.unripeToUnderlying(
+            C.UNRIPE_BEAN, 
+            amount, 
+            IBean(C.UNRIPE_BEAN).totalSupply()
+        );
     }
 
     /**

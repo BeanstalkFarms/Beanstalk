@@ -3,13 +3,17 @@
 pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
-import "contracts/libraries/Token/LibTransfer.sol";
-import "contracts/libraries/LibIncentive.sol";
-import "./Weather.sol";
+import {Weather, SafeMath, C} from "./Weather.sol";
+import {LibIncentive} from "contracts/libraries/LibIncentive.sol";
+import {LibTransfer} from "contracts/libraries/Token/LibTransfer.sol";
+import {LibWell} from "contracts/libraries/Well/LibWell.sol";
+import {LibGauge} from "contracts/libraries/LibGauge.sol";
+import {LibWhitelistedTokens} from "contracts/libraries/Silo/LibWhitelistedTokens.sol";
+import {LibGerminate} from "contracts/libraries/Silo/LibGerminate.sol";
 
 /**
  * @title SeasonFacet
- * @author Publius, Chaikitty
+ * @author Publius, Chaikitty, Brean
  * @notice Holds the Sunrise function and handles all logic for Season changes.
  */
 contract SeasonFacet is Weather {
@@ -20,13 +24,6 @@ contract SeasonFacet is Weather {
      * @param season The new Season number
      */
     event Sunrise(uint256 indexed season);
-
-    /**
-     * @notice Emitted when Beanstalk pays `beans` to `account` as a reward for calling `sunrise()`.
-     * @param account The address to which the reward Beans were sent
-     * @param beans The amount of Beans paid as a reward
-     */
-    event Incentivization(address indexed account, uint256 beans);
 
     //////////////////// SUNRISE ////////////////////
 
@@ -44,63 +41,24 @@ contract SeasonFacet is Weather {
      * @param mode Indicates whether the reward beans are sent to internal or circulating balance
      * @return reward The number of Beans minted to the caller.
      */
-    function gm(
-        address account,
-        LibTransfer.To mode
-    ) public payable returns (uint256) {
+    function gm(address account, LibTransfer.To mode) public payable returns (uint256) {
         uint256 initialGasLeft = gasleft();
 
-        require(!paused(), "Season: Paused.");
-        require(seasonTime() > season(), "Season: Still current Season.");
-
-        stepSeason();
+        require(!s.paused, "Season: Paused.");
+        require(seasonTime() > s.season.current, "Season: Still current Season.");
+        uint32 season = stepSeason();
         int256 deltaB = stepOracle();
-        uint256 caseId = stepWeather(deltaB);
+        uint256 caseId = calcCaseIdandUpdate(deltaB);
+        LibGerminate.endTotalGermination(season, LibWhitelistedTokens.getWhitelistedTokens());
+        LibGauge.stepGauge();
         stepSun(deltaB, caseId);
 
         return incentivize(account, initialGasLeft, mode);
     }
 
-    //////////////////// SEASON GETTERS ////////////////////
-
-    /**
-     * @notice Returns the current Season number.
-     */
-    function season() public view returns (uint32) {
-        return s.season.current;
-    }
-
-    /**
-     * @notice Returns whether Beanstalk is Paused. When Paused, the `sunrise()` function cannot be called.
-     */
-    function paused() public view returns (bool) {
-        return s.paused;
-    }
-
-    /**
-     * @notice Returns the Season struct. See {Storage.Season}.
-     */
-    function time() external view returns (Storage.Season memory) {
-        return s.season;
-    }
-
-    /**
-     * @notice Returns whether Beanstalk started this Season above or below peg.
-     */
-    function abovePeg() external view returns (bool) {
-        return s.season.abovePeg;
-    }
-
-    /**
-     * @notice Returns the block during which the current Season started.
-     */
-    function sunriseBlock() external view returns (uint32){
-        return s.season.sunriseBlock;
-    }
-
     /**
      * @notice Returns the expected Season number given the current block timestamp.
-     * {sunrise} can be called when `seasonTime() > season()`.
+     * {sunrise} can be called when `seasonTime() > s.season.current`.
      */
     function seasonTime() public view virtual returns (uint32) {
         if (block.timestamp < s.season.start) return 0;
@@ -113,10 +71,11 @@ contract SeasonFacet is Weather {
     /**
      * @dev Moves the Season forward by 1.
      */
-    function stepSeason() private {
+    function stepSeason() private returns (uint32 season) {
         s.season.current += 1;
+        season = s.season.current;
         s.season.sunriseBlock = uint32(block.number); // Note: Will overflow in the year 3650.
-        emit Sunrise(season());
+        emit Sunrise(season);
     }
 
     /**
@@ -133,18 +92,30 @@ contract SeasonFacet is Weather {
     ) private returns (uint256) {
         // Number of blocks the sunrise is late by
         // Assumes that each block timestamp is exactly `C.BLOCK_LENGTH_SECONDS` apart.
-        uint256 blocksLate = block.timestamp.sub(
-            s.season.start.add(s.season.period.mul(season()))
-        )
-        .div(C.BLOCK_LENGTH_SECONDS);
-        
-        uint256 incentiveAmount = LibIncentive.determineReward(initialGasLeft, blocksLate);
+        uint256 blocksLate = block
+            .timestamp
+            .sub(s.season.start.add(s.season.period.mul(s.season.current)))
+            .div(C.BLOCK_LENGTH_SECONDS);
+
+        // Read the Bean / Eth price calculated by the Minting Well.
+        uint256 beanEthPrice = LibWell.getBeanTokenPriceFromTwaReserves(C.BEAN_ETH_WELL);
+
+        // reset USD Token prices and TWA reserves in storage for all whitelisted Well LP Tokens.
+        address[] memory whitelistedWells = LibWhitelistedTokens.getWhitelistedWellLpTokens();
+        for (uint256 i; i < whitelistedWells.length; i++) {
+            LibWell.resetUsdTokenPriceForWell(whitelistedWells[i]);
+            LibWell.resetTwaReservesForWell(whitelistedWells[i]);
+        }
+
+        uint256 incentiveAmount = LibIncentive.determineReward(
+            initialGasLeft,
+            blocksLate,
+            beanEthPrice
+        );
 
         LibTransfer.mintToken(C.bean(), incentiveAmount, account, mode);
-        
-        emit Incentivization(account, incentiveAmount);
+
+        emit LibIncentive.Incentivization(account, incentiveAmount);
         return incentiveAmount;
     }
-
-
 }

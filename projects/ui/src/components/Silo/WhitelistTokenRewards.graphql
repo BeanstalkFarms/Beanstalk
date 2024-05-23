@@ -1,0 +1,9 @@
+query WhitelistTokenRewards {
+  snapshots: whitelistTokenHourlySnapshots(orderBy: season, orderDirection: asc, first: 1000) {
+    season
+    stalkEarnedPerSeason
+    token {
+      id
+    }
+  }
+}

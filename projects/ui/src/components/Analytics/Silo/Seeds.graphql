@@ -12,6 +12,6 @@ query SeasonalSeeds($season_lte: Int, $season_gt: Int, $first: Int) {
     id
     season
     createdAt
-    grownStalkPerSeason
+    seeds
   }
 }

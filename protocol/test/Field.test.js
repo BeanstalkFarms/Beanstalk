@@ -1,4 +1,4 @@
-// tests are inaccurate, as testing was done on foundry. 
+// tests are inaccurate, as testing was done on foundry.
 // coverage test for field can be check by doing `forge test --match-contract Field`
 
 // const { expect } = require('chai');
@@ -246,30 +246,30 @@
 //     it("Does not set thisSowTime if Soil > 1", async function () {
 //       this.season.setSoilE(to6('3'));
 //       await this.field.connect(user).sow(to6('1'), EXTERNAL)
-//       const weather = await this.season.weather()
+//       const weather = await this.seasonGetter.weather()
 //       expect(weather.thisSowTime).to.be.equal(parseInt(MAX_UINT32))
 //     })
 
 //     it("Does set thisSowTime if Soil = 1", async function () {
 //       this.season.setSoilE(to6('1'));
 //       await this.field.connect(user).sow(to6('1'), EXTERNAL)
-//       const weather = await this.season.weather()
+//       const weather = await this.seasonGetter.weather()
 //       expect(weather.thisSowTime).to.be.not.equal(parseInt(MAX_UINT32))
 //     })
 
 //     it("Does set thisSowTime if Soil < 1", async function () {
 //       this.season.setSoilE(to6('1.5'));
 //       await this.field.connect(user).sow(to6('1'), EXTERNAL)
-//       const weather = await this.season.weather()
+//       const weather = await this.seasonGetter.weather()
 //       expect(weather.thisSowTime).to.be.not.equal(parseInt(MAX_UINT32))
 //     })
 
 //     it("Does not set thisSowTime if Soil already < 1", async function () {
 //       this.season.setSoilE(to6('1.5'));
 //       await this.field.connect(user).sow(to6('1'), EXTERNAL)
-//       const weather = await this.season.weather()
+//       const weather = await this.seasonGetter.weather()
 //       await this.field.connect(user).sow(to6('0.5'), EXTERNAL)
-//       const weather2 = await this.season.weather()
+//       const weather2 = await this.seasonGetter.weather()
 //       expect(weather2.thisSowTime).to.be.equal(weather.thisSowTime)
 //     })
 //   })
@@ -344,12 +344,10 @@
 //         expect(await this.field.podIndex()).to.eq(to6('202'))
 //       })
 
-
 //       it('emits Sow event', async function () {
 //         await expect(this.result).to.emit(this.field, 'Harvest').withArgs(userAddress, ['0'], to6('50'))
 //       })
 //     })
-
 
 //     describe("Full With Listing", async function () {
 //       beforeEach(async function () {

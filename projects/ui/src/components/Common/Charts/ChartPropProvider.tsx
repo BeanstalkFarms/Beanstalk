@@ -75,8 +75,8 @@ type Scales = {
 };
 
 export type Scale = {
-  xScale: ReturnType<typeof SCALES[keyof typeof SCALES]>;
-  yScale: ReturnType<typeof SCALES[keyof typeof SCALES]>;
+  xScale: ReturnType<(typeof SCALES)[keyof typeof SCALES]>;
+  yScale: ReturnType<(typeof SCALES)[keyof typeof SCALES]>;
 };
 
 type ChartAccessorProps = {
@@ -141,7 +141,8 @@ export type BaseChartProps = {
   pegLine?: boolean;
   isTWAP?: boolean;
   useCustomTokenList?: ERC20Token[];
-  tokenPerSeasonFilter?: { [key: string]: { from: number, to: number } };
+  useCustomTooltipNames?: { [key: string]: string };
+  tokenPerSeasonFilter?: { [key: string]: { from: number; to: number } };
   horizontalLineNumber?: number;
   stylesConfig?: ChartMultiStyles;
   stackedArea?: boolean;
@@ -150,7 +151,8 @@ export type BaseChartProps = {
   onCursor?: (
     season: number | undefined,
     v?: number | undefined,
-    date?: Date | undefined
+    date?: Date | undefined,
+    dataPoint?: BaseDataPoint | undefined
   ) => void;
   children?: (props: ChartChildParams) => React.ReactElement | null;
   yTickFormat?: TickFormatter<NumberLike>;
@@ -242,7 +244,7 @@ const xTickLabelProps = () =>
     fontSize: 12,
     fontFamily: 'Futura PT',
     textAnchor: 'middle',
-  } as const);
+  }) as const;
 
 const yTickLabelProps = () =>
   ({
@@ -250,7 +252,7 @@ const yTickLabelProps = () =>
     fontSize: 12,
     fontFamily: 'Futura PT',
     textAnchor: 'end',
-  } as const);
+  }) as const;
 
 /**
  * chart curve types

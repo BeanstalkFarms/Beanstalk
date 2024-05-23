@@ -22,7 +22,7 @@ import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
 contract MockMetadataFacet is MetadataImage  {
     using SafeMath for uint256;
 
-    // inital conditions: 2 seeds, 1000 seasons has elapsed from milestone season.
+    // initial conditions: 2 seeds, 1000 seasons has elapsed from milestone season.
     uint256 public stalkEarnedPerSeason = 2e6;
     uint256 public seasonsElapsed = 1000;
     uint256 public stalkIssuedPerBdv = 10000;
@@ -47,7 +47,7 @@ contract MockMetadataFacet is MetadataImage  {
             '"}, { "trait_type": "Token Address", "value": "', LibStrings.toHexString(uint256(token), 20),
             '"}, { "trait_type": "Id", "value": "', depositId.toHexString(32),
             '"}, { "trait_type": "stem", "display_type": "number", "value": ', int256(stem).toString(),
-            '}, { "trait_type": "inital stalk per BDV", "display_type": "number", "value": ', stalkIssuedPerBdv.toString(),
+            '}, { "trait_type": "initial stalk per BDV", "display_type": "number", "value": ', stalkIssuedPerBdv.toString(),
             '}, { "trait_type": "grown stalk per BDV", "display_type": "number", "value": ', uint256(stemTip - stem).toString(),
             '}, { "trait_type": "stalk grown per BDV per season", "display_type": "number", "value": ', stalkEarnedPerSeason.toString()
         );

@@ -82,6 +82,7 @@ library LibFertilizer {
         uint256 percentToFill = usdAmount.mul(C.precision()).div(
             remainingRecapitalization()
         );
+
         uint256 newDepositedBeans;
         if (C.unripeBean().totalSupply() > s.u[C.UNRIPE_BEAN].balanceOfUnderlying) {
             newDepositedBeans = (C.unripeBean().totalSupply()).sub(
@@ -91,7 +92,6 @@ library LibFertilizer {
                 C.precision()
             );
         }
-
         // Calculate how many Beans to add as LP
         uint256 newDepositedLPBeans = usdAmount.mul(C.exploitAddLPRatio()).div(
             DECIMALS

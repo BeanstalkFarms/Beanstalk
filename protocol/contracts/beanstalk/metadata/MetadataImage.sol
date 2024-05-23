@@ -5,6 +5,7 @@ import "../AppStorage.sol";
 import {LibBytes64} from "contracts/libraries/LibBytes64.sol";
 import {LibStrings} from "contracts/libraries/LibStrings.sol";
 import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
+import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import {C} from "../../C.sol";
 
 
@@ -25,7 +26,7 @@ contract MetadataImage {
     string constant LEAF_COLOR_0 = '#A8C83A';
     string constant LEAF_COLOR_1 = '#89A62F';
     uint256 constant NUM_PLOTS = 21;
-    uint256 constant STALK_GROWTH = 2e2;
+    uint256 constant STALK_GROWTH = 2e8;
 
     function imageURI(address token, int96 stem, int96 stemTip) public view returns (string memory) {
         return string(
@@ -36,7 +37,7 @@ contract MetadataImage {
         );
     }
 
-    function generateImage(address token, int96 stem, int96 stemTip) internal pure returns (string memory) {
+    function generateImage(address token, int96 stem, int96 stemTip) internal view returns (string memory) {
         int96 grownStalkPerBdv = stemTip - stem;
         return string(
             abi.encodePacked(
@@ -49,6 +50,7 @@ contract MetadataImage {
             )
         );
     }
+
     function back() internal pure returns(string memory) {
         return string(abi.encodePacked(
             '<rect width="255" height="350" rx="10" fill="',
@@ -56,6 +58,7 @@ contract MetadataImage {
             '"/>'
         ));
     }
+
     function defs(int96 stemTip) internal pure returns(string memory) {
         (uint256 sprouts,) = getNumStemsAndPlots(stemTip);
         uint256 sproutsInFinalRow = sprouts.mod(4);
@@ -68,11 +71,6 @@ contract MetadataImage {
             partialLeafPlot(stemTip),
             leaf(),
             silo(),
-            beanToken(),
-            bean3CRVToken(),
-            urBeanToken(),
-            beanETHCP2WellToken(),
-            urBeanETHCP2WellToken(),
             fullLeafRow(),
             '</defs>'
         ));
@@ -286,7 +284,7 @@ contract MetadataImage {
         bytes memory _plot;
 
         (, uint256 numPlotsToFill) = getNumStemsAndPlots(stalkPerBDV);
-        
+
         // first plot should always be planted fully, and every 2% stalk adds a sprout to the next plot.
         for(uint256 i = 0; i < NUM_PLOTS; ++i) {
             uint256 plotNo = order[i];
@@ -405,62 +403,6 @@ contract MetadataImage {
         );
     }
 
-    function beanToken() internal pure returns (string memory) {
-        return beanTemplateToken(false);
-    }
-
-    function urBeanToken() internal pure returns (string memory) {
-        return beanTemplateToken(true);
-    }
-
-    function beanETHCP2WellToken() internal pure returns (string memory) {
-        return beanETHCP2WellTemplateToken(false);
-    }
-
-    function urBeanETHCP2WellToken() internal pure returns (string memory) {
-        return beanETHCP2WellTemplateToken(true);
-    }
-
-    function bean3CRVToken() internal pure returns (string memory) {
-        return string(abi.encodePacked(
-            '<g id="BEAN3CRV',
-            '"><rect y=".5" width="12" height="12" rx="6" fill="#46B955',
-            '"/><path d="m7.687 1.764-3.504 9.36S.298 4.499 7.687 1.765Z" fill="#fff"/>',
-            '<path d="M8.132 8.078c-.466.64-1.297 1.323-2.695 1.992l2.126-5.777c.089.09.193.204.3.338.303.375.625.891.744 1.484.117.583.04 1.253-.475 1.963Z" fill="url(#a)" stroke="#fff" stroke-width=".5"/>',
-            '<defs><linearGradient id="a" x1="6.95" y1="3.853" x2="6.95" y2="10.544" gradientUnits="userSpaceOnUse">',
-            '<stop stop-color="#820202"/><stop offset=".182" stop-color="#F71E05"/>',
-            '<stop offset=".516" stop-color="#F0F507"/><stop offset=".734" stop-color="#85CD75"/><stop offset="1" stop-color="#029DFB"/>',
-            '</linearGradient></defs>',
-            '</g>'
-            )
-        );
-    }
-
-    function beanTemplateToken(bool ripe) internal pure returns (string memory) {
-        return string(abi.encodePacked( 
-            '<g id="',
-            ripe ? 'urBEAN' : 'BEAN',
-            '"><rect width="12" height="12" rx="6" fill="',
-            ripe ? '#7F5533' : '#46B955',
-            '"/><path d="m7.687 1.265-3.504 9.36S.298 3.999 7.687 1.266Zm-2.691 8.78 2.462-6.691s4.538 3.67-2.462 6.691Z" fill="#fff"/>',
-            '</g>'
-            )
-        );
-    }
-
-    function beanETHCP2WellTemplateToken(bool ripe) internal pure returns (string memory) {
-        return string(abi.encodePacked(
-            '<g id="',
-            ripe ? 'urBEANETH' : 'BEANETH',
-            '"><rect width="12" height="12" rx="6" fill="',
-            ripe ? '#7F5533' : '#46B955',
-            '"/><path d="m7.684 1.265-3.505 9.36c.003 0-3.884-6.625 3.505-9.36Z" fill="#fff"/>',   
-            '<path d="M8.952 6.986a.063.063 0 0 1-.022.003c-.71.13-1.424.255-2.134.381-.281.052-.565.103-.846.152a.036.036 0 0 1-.026 0l2.14-5.625.004-.003c.297 1.702.59 3.394.884 5.092Zm-.187.478c-1.266.859-2.531 1.721-3.8 2.58l.781-2.054c.007.004.013 0 .023 0 .759-.132 1.514-.268 2.27-.4l.697-.126.03-.006c-.004.003 0 .006 0 .006Z" fill="#000"/>',
-            '</g>'
-            )
-        );
-    }
-
     function useAssetTransform(string memory assetName, int256 x, int256 y) internal pure returns (string memory) { 
         return string(abi.encodePacked(
             '<use xlink:href="#',
@@ -514,17 +456,14 @@ contract MetadataImage {
         );
     }
 
-    
-
-    function blackBars(address token, int96 stem) internal pure returns(string memory) {
+    function blackBars(address token, int96 stem) internal view returns(string memory) {
         return string(
             abi.encodePacked(
                 '<rect x="0" y="0" width="255" height="20" rx="5" fill="#242424"/>',
                 tokenName(token),
-                useAsset(getTokenName(token), 240, 4),
                 '<rect x="0" y="330" width="255" height="20" rx="5" fill="#242424"/>',
                 movingTokenAddress(token),
-                '<text x="235" y="14.5" font-size="12" fill="White" text-anchor="end" font-family="futura">Stem: ',
+                '<text x="245" y="14.5" font-size="12" fill="White" text-anchor="end" font-family="futura">Stem: ',
                 sciNotation(stem),
                 '</text>'
             )
@@ -550,6 +489,10 @@ contract MetadataImage {
     }
 
     function powerOfTen(uint256 stem) internal pure returns (string memory) {
+        // silo v3.1 increased the precision of stems by 1e6. 
+        // we truncate the stem by 6 decimal places in order to support a wider range of stems.
+        // the inaccuracy is acceptable given the stem is only used for cosmetic reasons. 
+        stem = stem / 1e6;
         // if else ladder to determine how many digits to show.
         if (stem < 1e6) {
             return stemDecimals(stem, 5);
@@ -612,12 +555,12 @@ contract MetadataImage {
         ));
     }
 
-    function tokenName(address token) internal pure returns (string memory) {
+    function tokenName(address token) internal view returns (string memory) {
         return string(
             abi.encodePacked(
                 '<text x="10" y="14.5" font-size="12" fill="White" text-anchor="start" font-family="futura">',
                 getTokenName(token),
-                ' Deposit</text>'
+                '</text>'
             )
         );
     }
@@ -648,23 +591,13 @@ contract MetadataImage {
         }        
     }
 
-    function getTokenName(address token) internal pure returns (string memory tokenString) {
-        if (token == C.BEAN) {
-            tokenString = "BEAN";
-        }
-        else if (token == C.CURVE_BEAN_METAPOOL) {
-            tokenString = "BEAN3CRV";
-        }
-        else if (token == C.UNRIPE_BEAN) {
-            tokenString = "urBEAN";
-        }
-        else if (token == C.UNRIPE_LP) {
-            tokenString = "urBEANETH";
-        }
-        else if (token == C.BEAN_ETH_WELL) {
-            tokenString = "BEANETH";
+    
+    function getTokenName(address token) internal view returns (string memory tokenString) {
+        // for unripe LP, return `urLP` given the current unripe name is inaccurate. 
+        if (token == C.UNRIPE_LP) {
+            tokenString = "urBEANLP";
         } else {
-            revert("token not whitelisted.");
+            tokenString = ERC20(token).symbol();
         }
     }
 

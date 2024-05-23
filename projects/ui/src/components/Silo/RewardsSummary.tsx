@@ -6,13 +6,12 @@ import stalkIcon from '~/img/beanstalk/stalk-icon-winter.svg';
 import seedIcon from '~/img/beanstalk/seed-icon-winter.svg';
 import { NEW_BN } from '~/constants';
 import { FarmerSiloRewards } from '~/state/farmer/silo';
+import Row from '~/components/Common/Row';
+import { FC } from '~/types';
+import useFarmerSiloVesting from '~/hooks/farmer/useFarmerSiloVesting';
 import RewardItem from './RewardItem';
 import { ClaimRewardsAction } from '../../util/Farm';
 import { hoverMap } from '../../constants/silo';
-import Row from '~/components/Common/Row';
-
-import { FC } from '~/types';
-import useFarmerSiloVesting from '~/hooks/farmer/useFarmerSiloVesting';
 
 export type RewardsBarProps = {
   beans: FarmerSiloRewards['beans'];
@@ -63,13 +62,13 @@ const RewardsSummary: FC<RewardsBarProps & { compact?: boolean }> = ({
       <Row gap={{ xs: GAP_XS, md: GAP_MD, lg: GAP_LG }}>
         <RewardItem
           title="Earned Beans"
-          tooltip={
-            `The number of Beans earned since your last Plant. Upon Plant, Earned Beans are Deposited. When Beans are 
+          tooltip={`The number of Beans earned since your last Plant. Upon Plant, Earned Beans are Deposited. When Beans are 
             minted to the Silo, they are Vesting until they become Earned Beans 2 minutes later. 
-            ${vesting.amount
+            ${
+              vesting.amount
                 ? vesting.amount.gt(0) && vesting.isVesting
-                  // TODO: Needs 'Beans in Vesting Period' function
-                  ? ``// `You have ${displayBN(vesting.amount)} Vesting Beans.`
+                  ? // TODO: Needs 'Beans in Vesting Period' function
+                    `` // `You have ${displayBN(vesting.amount)} Vesting Beans.`
                   : ``
                 : vesting.isVesting
                   ? `It is currently the Vesting Period.`
@@ -131,7 +130,7 @@ const RewardsSummary: FC<RewardsBarProps & { compact?: boolean }> = ({
         <RewardItem
           title="Revitalized Stalk"
           tooltip="Stalk that have vested for Unripe holders. Revitalized Stalk are minted as the BDV of Unripe assets increases. Revitalized Stalk does not contribute to Stalk ownership until Enrooted."
-          amount={revitalizedStalk}
+          amount={revitalizedStalk.isNaN() ? BigNumber(0) : revitalizedStalk}
           icon={stalkIcon}
           compact={compact}
           isClaimable={

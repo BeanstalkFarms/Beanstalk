@@ -97,6 +97,7 @@ const TableCard: FC<TableCardProps> = ({
   // Add the class names above in the StyledDataGrid definition.
   const customRowStyler = (params: GridRowParams<any>) => {
     if (params.row.isGerminating) return 'germinating-row';
+    return '';
   };
 
   return (

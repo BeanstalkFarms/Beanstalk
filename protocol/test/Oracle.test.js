@@ -48,7 +48,7 @@
 //     await this.season.siloSunrise(0);
 
 //     lastTimestamp = 1700000000;
-  
+
 //     this.threePool = await ethers.getContractAt('Mock3Curve', THREE_POOL);
 //     await this.threePool.set_virtual_price(to18('1'));
 //     this.beanThreeCurve = await ethers.getContractAt('MockMeta3Curve', BEAN_3_CURVE);
@@ -68,11 +68,11 @@
 //     await resetTime();
 //     await this.season.captureCurveE();
 //   });
-  
+
 //   describe("Curve", async function () {
 
 //     it('initializes the oracle', async function () {
-//       const o = await this.season.curveOracle();
+//       const o = await this.seasonGetter.curveOracle();
 //       expect(o.initialized).to.equal(true);
 //       expect(o.balances[0]).to.equal(toBean('100000001000000'));
 //       expect(o.balances[1]).to.equal(to18('100000001000000'));
@@ -86,7 +86,7 @@
 //         [toBean('1000000'), to18('1000000')]
 //       )
 //     });
-  
+
 //     it("tracks a TWAL with a change", async function () {
 //       await advanceTime(900)
 //       await this.beanThreeCurve.update([toBean('2000000'), to18('1000000')])
@@ -96,7 +96,7 @@
 //         [ethers.utils.parseUnits('1500000', 6), ethers.utils.parseEther('1000000')]
 //       )
 //     });
-  
+
 //     it("2 separate TWAL", async function () {
 //       await advanceTime(900)
 //       await this.beanThreeCurve.update([toBean('2000000'), to18('1000000')])
@@ -104,7 +104,7 @@
 //       await this.beanThreeCurve.update([toBean('1000000'), to18('1000000')])
 //       await advanceTime(1800)
 //       this.result = await this.season.updateTWAPCurveE();
-      
+
 //       await expect(this.result).to.emit(this.season, 'UpdateTWAPs').withArgs(
 //         [ethers.utils.parseUnits('1250000', 6), ethers.utils.parseEther('1000000')]
 //       )
@@ -112,7 +112,7 @@
 //       await this.beanThreeCurve.update([toBean('500000'), to18('1000000')])
 //       await advanceTime(900)
 //       this.result = await this.season.updateTWAPCurveE();
-      
+
 //       await expect(this.result).to.emit(this.season, 'UpdateTWAPs').withArgs(
 //         [toBean('750000'), to18('1000000')]
 //       )
@@ -163,14 +163,14 @@
 
 //     describe("Get Delta B", async function () {
 //       it('reverts if not a minting pool', async function () {
-//         await expect(this.season.poolDeltaB(BEAN)).to.be.revertedWith('Oracle: Pool not supported')
+//         await expect(this.seasonGetter.poolDeltaB(BEAN)).to.be.revertedWith('Oracle: Pool not supported')
 //       })
 
 //       it("tracks a basic Delta B", async function () {
 //         await advanceTime(900)
 //         await hre.network.provider.send("evm_mine")
-//         expect(await this.season.poolDeltaB(BEAN_3_CURVE)).to.equal('0');
-//         expect(await this.season.totalDeltaB()).to.equal('0');
+//         expect(await this.seasonGetter.poolDeltaB(BEAN_3_CURVE)).to.equal('0');
+//         expect(await this.seasonGetter.totalDeltaB()).to.equal('0');
 //       });
 
 //       it("tracks a TWAL with a change", async function () {
@@ -178,8 +178,8 @@
 //         await this.beanThreeCurve.update([toBean('2000000'), to18('1000000')])
 //         await advanceTime(900)
 //         await hre.network.provider.send("evm_mine")
-//         expect(await this.season.poolDeltaB(BEAN_3_CURVE)).to.equal('-252354675068');
-//         expect(await this.season.totalDeltaB()).to.equal('-252354675068');
+//         expect(await this.seasonGetter.poolDeltaB(BEAN_3_CURVE)).to.equal('-252354675068');
+//         expect(await this.seasonGetter.totalDeltaB()).to.equal('-252354675068');
 //       });
 //     });
 
@@ -236,8 +236,8 @@
 //       it("tracks a basic Delta B", async function () {
 //         await advanceTime(900)
 //         await hre.network.provider.send("evm_mine")
-//         expect(await this.season.poolDeltaB(BEAN_3_CURVE)).to.equal('0');
-//         expect(await this.season.totalDeltaB()).to.equal('0');
+//         expect(await this.seasonGetter.poolDeltaB(BEAN_3_CURVE)).to.equal('0');
+//         expect(await this.seasonGetter.totalDeltaB()).to.equal('0');
 //       });
 
 //       it("tracks a TWAL with a change", async function () {
@@ -245,8 +245,8 @@
 //         await this.beanThreeCurve.update([toBean('2000000'), to18('1000000')])
 //         await advanceTime(900)
 //         await hre.network.provider.send("evm_mine")
-//         expect(await this.season.poolDeltaB(BEAN_3_CURVE)).to.equal(to6('-1'));
-//         expect(await this.season.totalDeltaB()).to.equal(to6('-1'));
+//         expect(await this.seasonGetter.poolDeltaB(BEAN_3_CURVE)).to.equal(to6('-1'));
+//         expect(await this.seasonGetter.totalDeltaB()).to.equal(to6('-1'));
 //       });
 //     });
 //   });

@@ -63,7 +63,7 @@ contract WellPrice {
         // swap 1 bean of the opposite asset to get the usd price 
         // price = amtOut/tknOutPrice
         uint256 assetPrice = LibUsdOracle.getUsdPrice(pool.tokens[tknIndex]);
-        if(assetPrice > 0) {
+        if (assetPrice > 0) {
             pool.price = 
             well.getSwapOut(wellTokens[beanIndex], wellTokens[tknIndex], 1e6)
                 .mul(PRICE_PRECISION)
@@ -89,7 +89,7 @@ contract WellPrice {
         Call memory wellFunction = IWell(well).wellFunction();
         (uint256[] memory ratios, uint256 beanIndex, bool success) = LibWell.getRatiosAndBeanIndex(tokens);
         // If the USD Oracle oracle call fails, we can't compute deltaB
-        if(!success) return 0;
+        if (!success) return 0;
 
         uint256 beansAtPeg = IBeanstalkWellFunction(wellFunction.target).calcReserveAtRatioSwap(
             reserves,

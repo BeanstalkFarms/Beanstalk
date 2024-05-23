@@ -23,7 +23,8 @@ const PoolCard: FC<{
   pool: Pool;
   poolState: BeanPoolState;
   ButtonProps?: MuiButtonProps & LinkProps;
-}> = ({ pool, poolState, ButtonProps }) => {
+  useTWA?: boolean;
+}> = ({ pool, poolState, ButtonProps, useTWA = false }) => {
   const cardContent = (
     <Row justifyContent="space-between">
       <Row alignItems="center" gap={1.0}>
@@ -50,10 +51,19 @@ const PoolCard: FC<{
             deltaB:
           </Typography>
           <Row gap={0.25}>
-            <Typography variant="bodySmall">
-              {poolState?.deltaB?.gte(0) ? '+' : ''}
-              {displayBN(poolState?.deltaB || ZERO_BN, true)}
-            </Typography>
+            {useTWA ? (
+              <Typography variant="bodySmall">
+                {poolState?.twaDeltaB?.gte(0) ? '+' : ''}
+                {(poolState?.twaDeltaB || null) === null
+                  ? 'n/a'
+                  : displayBN(poolState?.twaDeltaB || ZERO_BN, true)}
+              </Typography>
+            ) : (
+              <Typography variant="bodySmall">
+                {poolState?.deltaB?.gte(0) ? '+' : ''}
+                {displayBN(poolState?.deltaB || ZERO_BN, true)}
+              </Typography>
+            )}
           </Row>
         </Row>
       </Stack>

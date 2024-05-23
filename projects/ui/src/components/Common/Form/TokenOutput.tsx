@@ -6,7 +6,6 @@ import { Token, TokenValue } from '@beanstalk/sdk';
 import BigNumber from 'bignumber.js';
 
 import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
-import EmbeddedCard from '../EmbeddedCard';
 import {
   BeanstalkPalette,
   FontSize,
@@ -14,6 +13,7 @@ import {
   IconSize,
 } from '~/components/App/muiTheme';
 import { displayFullBN, tokenValueToBN } from '~/util';
+import EmbeddedCard from '../EmbeddedCard';
 import IconWrapper from '../IconWrapper';
 import Row from '../Row';
 import TokenIcon from '../TokenIcon';
@@ -24,13 +24,13 @@ type SizeProps = {
 
 type Props = {
   children: React.ReactNode;
-  danger: boolean;
+  danger?: boolean;
 } & SizeProps;
 
 export default function TokenOutput({
   children,
   size = 'medium',
-  danger,
+  danger = false,
 }: Props) {
   const isMedium = size === 'medium';
 
@@ -67,7 +67,7 @@ const formatBN = (value?: BigNumber, _decimals?: number, suffix?: string) => {
   const prefix = value ? (value.gt(0) ? '+' : value.lt(0) ? '-' : '') : '';
   if (value.abs().lt(0.01) && value.abs().gt(0)) {
     return `${prefix} <0.01${suffix || ''}`;
-  };
+  }
   return `${prefix} ${displayFullBN(value.abs(), decimals, decimals)}${
     suffix || ''
   }`;
