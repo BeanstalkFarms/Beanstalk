@@ -1,4 +1,5 @@
 import React from "react";
+import { ChooseWellImplementation } from "src/components/Create/steps/ChooseWellImplementation";
 import { Flex } from "src/components/Layout";
 import { Page } from "src/components/Page";
 import { Text } from "src/components/Typography";
@@ -11,6 +12,9 @@ export const Create = () => {
       <Flex $gap={3} $fullWidth>
         <Text $variant="h2">Create a Well - Choose a Well Implementation</Text>
         <Flex $direction="row" $alignItems="flex-start" $gap={8}>
+          {/*
+           * Instruction
+           */}
           <InstructionContainer>
             <Text $color="text.secondary" $lineHeight="l">
               Deploy a Well using Aquifer, a Well factory contract.
@@ -22,9 +26,10 @@ export const Create = () => {
               Visit the documentation to learn more about Aquifers and Well Implementations.
             </Text>
           </InstructionContainer>
-          <Flex $gap={2}>
-            <Text $lineHeight="l">Which Well Implementation do you want to use?</Text>
-          </Flex>
+          {/*
+           * Well Implementation Selection
+           */}
+          <ChooseWellImplementation />
         </Flex>
       </Flex>
     </Page>
