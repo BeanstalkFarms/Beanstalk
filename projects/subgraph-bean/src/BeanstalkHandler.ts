@@ -54,6 +54,15 @@ export function handleSunrise(event: Sunrise): void {
     );
   }
 
+  for (let i = 0; i < bean.dewhitelistedPools.length; i++) {
+    updatePoolSeason(
+      bean.dewhitelistedPools[i],
+      event.block.timestamp,
+      event.block.number,
+      event.params.season.toI32()
+    );
+  }
+
   // Fetch price from price contract to capture any non-bean token price movevements
   if (event.params.season > BigInt.fromI32(6074)) {
     // Attempt to pull from Beanstalk Price contract first for the overall Bean price update
