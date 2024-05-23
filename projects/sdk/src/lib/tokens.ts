@@ -115,7 +115,7 @@ export class Tokens {
     );
     this.BEAN.rewards = {
       stalk: this.STALK.amount(1),
-      seeds: this.SEEDS.amount(2), // For testing purposes
+      seeds: null
     };
 
     this.BEAN_CRV3_LP = new ERC20Token(
@@ -133,7 +133,7 @@ export class Tokens {
     );
     this.BEAN_CRV3_LP.rewards = {
       stalk: this.STALK.amount(1),
-      seeds: this.SEEDS.amount(3), // For testing purposes
+      seeds: null
     };
 
     this.BEAN_ETH_WELL_LP = new ERC20Token(
@@ -151,7 +151,7 @@ export class Tokens {
     );
     this.BEAN_ETH_WELL_LP.rewards = {
       stalk: this.STALK.amount(1),
-      seeds: this.SEEDS.amount(4), // For testing purposes
+      seeds: null
     };
 
     this.UNRIPE_BEAN = new ERC20Token(
