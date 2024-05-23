@@ -18,7 +18,7 @@ function packAdvanced(data, preBytes = '0x0000') {
 // copyData = 
 //		 if type = 0, []
 //     if type = 1, [returnDataIndex, copyIndex, pasteIndex]
-//     if type = 2, [[returnDataIndex, copyIndex, pasteIndex]] (List of copyParams)
+//     if type = 2, [[returnDataIndex, copyIndex, pasteIndex], [returnDataIndex, copyIndex, pasteIndex]] (List of copyParams)
 function encodeAdvancedData(type, value = to6('0'), copyData = []) {
   let types = []
   let encodeData = []

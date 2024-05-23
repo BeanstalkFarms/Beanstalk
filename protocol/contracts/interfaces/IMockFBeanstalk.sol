@@ -5,6 +5,12 @@ pragma solidity ^0.8.20;
 pragma abicoder v2;
 
 interface IMockFBeanstalk {
+    enum Germinate {
+        ODD,
+        EVEN,
+        NOT_GERMINATING
+    }
+
     struct AccountSeasonOfPlenty {
         uint32 lastRain;
         uint32 lastSop;
@@ -27,6 +33,24 @@ interface IMockFBeanstalk {
     struct Balance {
         uint128 amount;
         uint128 lastBpf;
+    }
+
+    struct Blueprint {
+        address publisher;
+        bytes data;
+        bytes32[] operatorPasteInstrs;
+        uint256 maxNonce;
+        uint256 startTime;
+        uint256 endTime;
+    }
+
+    struct DeltaBStorage {
+        int256 beforeInputTokenDeltaB;
+        int256 afterInputTokenDeltaB;
+        int256 beforeOutputTokenDeltaB;
+        int256 afterOutputTokenDeltaB;
+        int256 beforeOverallDeltaB;
+        int256 afterOverallDeltaB;
     }
 
     struct Facet {
@@ -72,6 +96,12 @@ interface IMockFBeanstalk {
         uint256 deprecated;
         uint256 pods;
         uint256 roots;
+    }
+
+    struct Requisition {
+        Blueprint blueprint;
+        bytes32 blueprintHash;
+        bytes signature;
     }
 
     struct Season {
@@ -152,6 +182,7 @@ interface IMockFBeanstalk {
     );
     event ApprovalForAll(address indexed account, address indexed operator, bool approved);
     event BeanToMaxLpGpPerBdvRatioChange(uint256 indexed season, uint256 caseId, int80 absChange);
+    event CancelBlueprint(bytes32 blueprintHash);
     event ChangeUnderlying(address indexed token, int256 underlying);
     event Chop(address indexed account, address indexed token, uint256 amount, uint256 underlying);
     event ClaimPlenty(address indexed account, address token, uint256 plenty);
@@ -377,6 +408,12 @@ interface IMockFBeanstalk {
 
     function allowancePods(address owner, address spender) external view returns (uint256);
 
+    function applyPenaltyToGrownStalks(
+        uint256 penaltyBdv,
+        uint256[] memory bdvsRemoved,
+        uint256[] memory grownStalks
+    ) external view returns (uint256[] memory);
+
     function approveDeposit(address spender, address token, uint256 amount) external payable;
 
     function approvePods(address spender, uint256 amount) external payable;
@@ -492,6 +529,28 @@ interface IMockFBeanstalk {
         uint256 L2SRState
     ) external;
 
+    function calculateStalkPenalty(
+        DeltaBStorage memory dbs,
+        uint256 bdvConverted,
+        uint256 overallConvertCapacity,
+        address inputToken,
+        address outputToken
+    )
+        external
+        view
+        returns (
+            uint256 stalkPenaltyBdv,
+            uint256 overallConvertCapacityUsed,
+            uint256 inputTokenAmountUsed,
+            uint256 outputTokenAmountUsed
+        );
+
+    function calculateStemForTokenFromGrownStalk(
+        address token,
+        uint256 grownStalk,
+        uint256 bdvOfDeposit
+    ) external view returns (int96 stem, Germinate germ);
+
     function cancelPodListing(uint256 index) external payable;
 
     function cancelPodOrder(
@@ -500,6 +559,7 @@ interface IMockFBeanstalk {
         uint256 minFillAmount,
         uint8 mode
     ) external payable;
+
     function captureCurveE() external returns (int256 deltaB);
 
     function captureE() external returns (int256 deltaB);
@@ -553,6 +613,7 @@ interface IMockFBeanstalk {
         uint256 minFillAmount,
         uint8 mode
     ) external payable;
+
     function createPodOrder(
         uint256 beanAmount,
         uint24 pricePerPod,
@@ -560,6 +621,7 @@ interface IMockFBeanstalk {
         uint256 minFillAmount,
         uint8 mode
     ) external payable returns (bytes32 id);
+
     function curveToBDV(uint256 amount) external view returns (uint256);
 
     function decreaseDepositAllowance(
@@ -690,6 +752,7 @@ interface IMockFBeanstalk {
     function fertilizerSunrise(uint256 amount) external;
 
     function fillPodListing(PodListing memory l, uint256 beanAmount, uint8 mode) external payable;
+
     function fillPodOrder(
         PodOrder memory o,
         uint256 index,
@@ -697,6 +760,7 @@ interface IMockFBeanstalk {
         uint256 amount,
         uint8 mode
     ) external payable;
+
     function findPiecewiseIndex(
         bytes memory breakpoints,
         uint256 value,
@@ -719,11 +783,13 @@ interface IMockFBeanstalk {
         address account,
         address[] memory tokens
     ) external view returns (Balance[] memory balances);
+
     function getAmountOut(
         address tokenIn,
         address tokenOut,
         uint256 amountIn
     ) external view returns (uint256 amountOut);
+
     function getAverageGrownStalkPerBdv() external view returns (uint256);
 
     function getAverageGrownStalkPerBdvPerSeason() external view returns (uint128);
@@ -956,6 +1022,10 @@ interface IMockFBeanstalk {
 
     function getWeightedTwaLiquidityForWell(address well) external view returns (uint256);
 
+    function getWellConvertCapacity(address well) external view returns (uint256);
+
+    function getOverallConvertCapacity() external view returns (uint256);
+
     function getWhitelistStatus(
         address token
     ) external view returns (WhitelistStatus memory _whitelistStatuses);
@@ -1176,6 +1246,10 @@ interface IMockFBeanstalk {
         bytes memory
     ) external pure returns (bytes4);
 
+    function overallCappedDeltaB() external view returns (int256 deltaB);
+
+    function overallCurrentDeltaB() external view returns (int256 deltaB);
+
     function owner() external view returns (address owner_);
 
     function ownerCandidate() external view returns (address ownerCandidate_);
@@ -1249,6 +1323,14 @@ interface IMockFBeanstalk {
 
     function pipe(PipeCall memory p) external payable returns (bytes memory result);
 
+    function pipelineConvert(
+        address inputToken,
+        int96[] memory stems,
+        uint256[] memory amounts,
+        address outputToken,
+        AdvancedFarmCall[] memory farmCalls
+    ) external payable returns (int96[] memory outputStems, uint256[] memory outputAmounts);
+
     function plant() external payable returns (uint256 beans, int96 stem);
 
     function plentyPerRoot(uint32 _season) external view returns (uint256);
@@ -1267,7 +1349,10 @@ interface IMockFBeanstalk {
     ) external view returns (uint256);
 
     function podOrderById(bytes32 id) external view returns (uint256);
+
     function poolDeltaB(address pool) external view returns (int256);
+
+    function poolCurrentDeltaB(address pool) external view returns (int256 deltaB);
 
     function rain() external view returns (Rain memory);
 

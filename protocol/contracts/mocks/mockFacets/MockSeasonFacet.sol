@@ -566,6 +566,7 @@ contract MockSeasonFacet is SeasonFacet {
         } else {
             totalGerm = s.evenGerminating;
         }
+
         LibTokenSilo.incrementTotalDeposited(
             token,
             totalGerm.deposited[token].amount,

@@ -12,6 +12,7 @@ import {LibDiamond} from "contracts/libraries/LibDiamond.sol";
 import {LibCases} from "contracts/libraries/LibCases.sol";
 import {LibGauge} from "contracts/libraries/LibGauge.sol";
 import {BDVFacet} from "contracts/beanstalk/silo/BDVFacet.sol";
+import {LibTractor} from "contracts/libraries/LibTractor.sol";
 import {C} from "contracts/C.sol";
 
 /**
@@ -44,6 +45,7 @@ contract InitalizeDiamond {
         addInterfaces();
         initalizeSeason();
         initalizeField();
+        initalizeFarmAndTractor();
         initalizeSilo(uint16(s.season.current));
         initalizeSeedGauge(INIT_BEAN_TO_MAX_LP_GP_RATIO, INIT_AVG_GSPBDV);
 
@@ -108,7 +110,6 @@ contract InitalizeDiamond {
         s.w.t = 1;
         s.w.thisSowTime = type(uint32).max;
         s.w.lastSowTime = type(uint32).max;
-        s.isFarm = 1;
     }
 
     /**
@@ -203,5 +204,10 @@ contract InitalizeDiamond {
                 isLPandWell
             );
         }
+    }
+
+    function initalizeFarmAndTractor() public {
+        s.isFarm = 1;
+        LibTractor._resetPublisher();
     }
 }

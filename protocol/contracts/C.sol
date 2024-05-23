@@ -70,10 +70,12 @@ library C {
     address internal constant USDT = 0xdAC17F958D2ee523a2206206994597C13D831ec7;
     address internal constant WETH = 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2;
     address internal constant WSTETH = 0x7f39C581F595B53c5cb19bD0b3f8dA6c935E2Ca0;
+    address internal constant PIPELINE = 0xb1bE0000C6B3C62749b5F0c92480146452D15423;
 
     //////////////////// Well ////////////////////
 
     uint256 internal constant WELL_MINIMUM_BEAN_BALANCE = 1000_000_000; // 1,000 Beans
+    address internal constant MULTIFLOW_PUMP_V1 = 0xBA510f10E3095B83a0F33aa9ad2544E22570a87C;
     address internal constant BEAN_ETH_WELL = 0xBEA0e11282e2bB5893bEcE110cF199501e872bAd;
     address internal constant BEAN_WSTETH_WELL = 0xa61Ef2313C1eC9c8cf2E1cAC986539d136b1393E; // TODO: Set
     // The index of the Bean and Weth token addresses in all BEAN/ETH Wells.
@@ -85,6 +87,8 @@ library C {
         0x5f4eC3Df9cbd43714FE2740f5E3616155c5b8419;
     address constant WSTETH_ETH_CHAINLINK_PRICE_AGGREGATOR =
         0x86392dC19c0b719886221c78AB11eb8Cf5c52812;
+    address constant USDC_CHAINLINK_PRICE_AGGREGATOR = 0x8fFfFfd4AfB6115b954Bd326cbe7B4BA576818f6;
+    address constant USDT_CHAINLINK_PRICE_AGGREGATOR = 0x3E7d1eAB13ad0104d2750B8863b489D65364e32D;
 
     //////////////////// Uniswap Oracles //////////////////////
     address internal constant WSTETH_ETH_UNIV3_01_POOL = 0x109830a1AAaD605BbF02a9dFA7B0B92EC2FB7dAa; // 0.01% pool

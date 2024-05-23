@@ -8,12 +8,14 @@ import {LibAppStorage, AppStorage} from "../LibAppStorage.sol";
 import {C, LibMinting} from "./LibMinting.sol";
 import {ICumulativePump} from "contracts/interfaces/basin/pumps/ICumulativePump.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {IInstantaneousPump} from "contracts/interfaces/basin/pumps/IInstantaneousPump.sol";
 import {Call, IWell} from "contracts/interfaces/basin/IWell.sol";
 import {LibWell} from "contracts/libraries/Well/LibWell.sol";
-import {IBeanstalkWellFunction} from "contracts/interfaces/basin/IBeanstalkWellFunction.sol";
 import {LibRedundantMathSigned256} from "contracts/libraries/LibRedundantMathSigned256.sol";
 import {LibEthUsdOracle} from "contracts/libraries/Oracle/LibEthUsdOracle.sol";
+import {LibWhitelistedTokens} from "contracts/libraries/Silo/LibWhitelistedTokens.sol";
 import {LibRedundantMath256} from "contracts/libraries/LibRedundantMath256.sol";
+import {IBeanstalkWellFunction} from "contracts/interfaces/basin/IBeanstalkWellFunction.sol";
 
 /**
  * @title Well Minting Oracle Library
@@ -29,6 +31,7 @@ import {LibRedundantMath256} from "contracts/libraries/LibRedundantMath256.sol";
 
 library LibWellMinting {
     using LibRedundantMathSigned256 for int256;
+    using LibRedundantMath256 for uint256;
 
     /**
      * @notice Emitted when a Well Minting Oracle is captured.
@@ -38,8 +41,6 @@ library LibWellMinting {
      * @param cumulativeReserves The encoded cumulative reserves that were snapshotted most by the Oracle capture.
      */
     event WellOracle(uint32 indexed season, address well, int256 deltaB, bytes cumulativeReserves);
-
-    using LibRedundantMath256 for uint256;
 
     //////////////////// CHECK ////////////////////
 
@@ -87,12 +88,6 @@ library LibWellMinting {
      */
     function initializeOracle(address well) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
-
-        // Given Multi Flow Pump V 1.0 isn't resistant to large changes in balance,
-        // minting in the Bean:Eth Well needs to be turned off upon migration.
-        if (!checkShouldTurnOnMinting(well)) {
-            return;
-        }
 
         // If pump has not been initialized for `well`, `readCumulativeReserves` will revert.
         // Need to handle failure gracefully, so Sunrise does not revert.
@@ -181,16 +176,5 @@ library LibWellMinting {
             // if the pump fails, return all 0s to avoid the sunrise reverting.
             return (0, new bytes(0), new uint256[](0), new uint256[](0));
         }
-    }
-
-    // Remove in next BIP.
-    function checkShouldTurnOnMinting(address well) internal view returns (bool) {
-        AppStorage storage s = LibAppStorage.diamondStorage();
-        if (well == C.BEAN_ETH_WELL) {
-            if (s.season.current < s.season.beanEthStartMintingSeason) {
-                return false;
-            }
-        }
-        return true;
     }
 }

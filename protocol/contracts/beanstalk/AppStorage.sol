@@ -504,6 +504,11 @@ contract Storage {
         uint128 stalk;
         uint128 roots;
     }
+
+    struct ConvertCapacity {
+        uint256 overallConvertCapacityUsed;
+        mapping(address => uint256) wellConvertCapacityUsed;
+    }
 }
 
 /**
@@ -566,6 +571,7 @@ contract Storage {
  * @param sopWell Stores the well that will be used upon a SOP. Unintialized until a SOP occurs, and is kept constant afterwards.
  * @param internalTokenBalanceTotal Sum of all users internalTokenBalance.
  * @param barnRaiseWell Stores the well that the Barn Raise adds liquidity to.
+ * @param convertCapacity A mapping from block number to the amount of Beans that can be converted towards peg in this block before stalk penalty becomes applied.
  * @param fertilizedPaidIndex The total number of Fertilizer Beans that have been sent out to users.
  * @param plenty The amount of plenty token held by the contract.
  */
@@ -636,6 +642,7 @@ struct AppStorage {
     mapping(uint32 => Storage.Sr) unclaimedGerminating;
     Storage.WhitelistStatus[] whitelistStatuses;
     address sopWell;
+    mapping(uint256 => Storage.ConvertCapacity) convertCapacity;
     // Cumulative internal Balance of tokens.
     mapping(IERC20 => uint256) internalTokenBalanceTotal;
     uint256 fertilizedPaidIndex;

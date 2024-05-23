@@ -4439,6 +4439,19 @@
     "type": "function"
   },
   {
+    "inputs": [],
+    "name": "overallCappedDeltaB",
+    "outputs": [
+      {
+        "internalType": "int256",
+        "name": "deltaB",
+        "type": "int256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
     "anonymous": false,
     "inputs": [
       {
@@ -4509,6 +4522,25 @@
   {
     "inputs": [
       {
+        "internalType": "address",
+        "name": "well",
+        "type": "address"
+      }
+    ],
+    "name": "cappedReservesDeltaB",
+    "outputs": [
+      {
+        "internalType": "int256",
+        "name": "deltaB",
+        "type": "int256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
         "internalType": "bytes",
         "name": "convertData",
         "type": "bytes"
@@ -4525,6 +4557,90 @@
       }
     ],
     "name": "convert",
+    "outputs": [
+      {
+        "internalType": "int96",
+        "name": "toStem",
+        "type": "int96"
+      },
+      {
+        "internalType": "uint256",
+        "name": "fromAmount",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "toAmount",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "fromBdv",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "toBdv",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "payable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "getConvertCapacity",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "inputToken",
+        "type": "address"
+      },
+      {
+        "internalType": "int96[]",
+        "name": "stems",
+        "type": "int96[]"
+      },
+      {
+        "internalType": "uint256[]",
+        "name": "amounts",
+        "type": "uint256[]"
+      },
+      {
+        "internalType": "address",
+        "name": "outputToken",
+        "type": "address"
+      },
+      {
+        "components": [
+          {
+            "internalType": "bytes",
+            "name": "callData",
+            "type": "bytes"
+          },
+          {
+            "internalType": "bytes",
+            "name": "clipboard",
+            "type": "bytes"
+          }
+        ],
+        "internalType": "struct AdvancedFarmCall[]",
+        "name": "advancedFarmCalls",
+        "type": "tuple[]"
+      }
+    ],
+    "name": "pipelineConvert",
     "outputs": [
       {
         "internalType": "int96",
@@ -5819,6 +5935,40 @@
         "internalType": "uint256",
         "name": "_bdv",
         "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "token",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "grownStalk",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "bdvOfDeposit",
+        "type": "uint256"
+      }
+    ],
+    "name": "calculateStemForTokenFromGrownStalk",
+    "outputs": [
+      {
+        "internalType": "int96",
+        "name": "stem",
+        "type": "int96"
+      },
+      {
+        "internalType": "enum LibGerminate.Germinate",
+        "name": "germ",
+        "type": "uint8"
       }
     ],
     "stateMutability": "view",
@@ -7552,6 +7702,25 @@
         "internalType": "uint256",
         "name": "",
         "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "pool",
+        "type": "address"
+      }
+    ],
+    "name": "poolCurrentDeltaB",
+    "outputs": [
+      {
+        "internalType": "int256",
+        "name": "deltaB",
+        "type": "int256"
       }
     ],
     "stateMutability": "view",

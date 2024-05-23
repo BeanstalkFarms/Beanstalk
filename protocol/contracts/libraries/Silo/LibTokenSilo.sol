@@ -388,6 +388,7 @@ library LibTokenSilo {
                 );
             }
         }
+
         require(amount <= crateAmount, "Silo: Crate balance too low.");
 
         // Partial remove
