@@ -227,10 +227,17 @@ contract FieldFacet is Invariable, ReentrancyGuard {
      * @notice Set the active Field. Only the active field is accrues Soil.
      * @param fieldId ID of the Field to set as active. ID is the Field Number.
      */
-    function setActiveField(uint256 fieldId) public fundsSafu noSupplyChange noNetFlow {
+    function setActiveField(uint256 fieldId, uint32 temperature) public fundsSafu noSupplyChange noNetFlow {
         LibDiamond.enforceIsOwnerOrContract();
         require(fieldId < s.fieldCount, "Field: Field does not exist");
         s.activeField = fieldId;
+
+        // Reset weather.
+        s.weather.t = temperature;
+        s.weather.thisSowTime = 0;
+        s.weather.lastSowTime = 0;
+        s.weather.lastDSoil = 0;
+
         emit ActiveFieldSet(fieldId);
     }
 

@@ -15,7 +15,7 @@ interface IBeanstalk {
 
     function addField() external;
 
-    function setActiveField(uint256 fieldId) external;
+    function setActiveField(uint256 fieldId, uint32 temperature) external;
 }
 
 /**
@@ -59,7 +59,7 @@ contract InitDistribution {
 
         beanstalk.setShipmentRoutes(shipmentRoutes);
         beanstalk.addField();
-        beanstalk.setActiveField(0);
+        beanstalk.setActiveField(0, 1);
 
         // TODO: Initialize Field values from priors.
     }

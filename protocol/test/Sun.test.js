@@ -318,7 +318,7 @@ describe("Sun", function () {
 
     // Add and Set active field.
     await mockBeanstalk.connect(owner).addField();
-    await mockBeanstalk.connect(owner).setActiveField(1);
+    await mockBeanstalk.connect(owner).setActiveField(1, 1);
 
     // New season, new rewards. No pods in new Field.
     this.result = await mockBeanstalk.sunSunrise("2400", 8);
