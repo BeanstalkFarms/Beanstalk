@@ -27,7 +27,7 @@ contract InitInvariants {
         // TODO: Get exact amount. May be 0.
         // TODO: Ensure SopWell/SopToken initialization is compatible with the logic between here and there.
         // TODO: migrate old unclaimed plenty to here? or auto-claim plenty if there's any left unclaimed?
-        s.plentyPerSopToken[C.WETH] = 0;
+        s.sop.plentyPerSopToken[C.WETH] = 0;
     }
 
     function setInternalTokenBalances() internal {

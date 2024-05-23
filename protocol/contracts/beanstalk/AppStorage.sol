@@ -510,6 +510,15 @@ contract Storage {
         uint128 stalk;
         uint128 roots;
     }
+
+    /**
+     * @param perWellPlenty A mapping from well amount of plenty (flooded tokens) per well
+     * @param sops mapping of season to a mapping of wells to plentyPerRoot
+     */
+    struct SeasonOfPlenty {
+        mapping(address => uint256) plentyPerSopToken;
+        mapping(uint32 => mapping(address => uint256)) sops;
+    }
 }
 
 /**
@@ -574,7 +583,7 @@ contract Storage {
  * @param barnRaiseWell Stores the well that the Barn Raise adds liquidity to.
  * @param fertilizedPaidIndex The total number of Fertilizer Beans that have been sent out to users.
  * @param plentyPerSopToken The amount of plenty token held by the contract for each well.
- * @param sops mapping of season to a mapping of wells to plentyPerRoot
+ * @param sops struct containing plentyPerSopToken and sop
  */
 struct AppStorage {
     uint8 deprecated_index;
@@ -646,6 +655,5 @@ struct AppStorage {
     // Cumulative internal Balance of tokens.
     mapping(IERC20 => uint256) internalTokenBalanceTotal;
     uint256 fertilizedPaidIndex;
-    mapping(address => uint256) plentyPerSopToken;
-    mapping(uint32 => mapping(address => uint256)) sops;
+    Storage.SeasonOfPlenty sop;
 }

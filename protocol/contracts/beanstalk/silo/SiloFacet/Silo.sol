@@ -150,7 +150,7 @@ contract Silo is ReentrancyGuard {
             s.a[account].sop.perWellPlenty[well].plenty = 0;
 
             // reduce from Beanstalk's total stored plenty for this well
-            s.plentyPerSopToken[address(sopToken)] -= plenty;
+            s.sop.plentyPerSopToken[address(sopToken)] -= plenty;
 
             emit ClaimPlenty(account, address(sopToken), plenty);
         }

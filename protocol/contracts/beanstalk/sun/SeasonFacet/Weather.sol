@@ -184,7 +184,7 @@ contract Weather is Sun {
             uint32 season = s.season.current;
             uint32 rainstartSeason = s.season.rainStart;
             for (uint i; i < wells.length; i++) {
-                s.sops[season][wells[i]] = s.sops[rainstartSeason][wells[i]];
+                s.sop.sops[season][wells[i]] = s.sop.sops[rainstartSeason][wells[i]];
             }
             s.season.rainStart = s.season.current;
             s.r.pods = s.f.pods;
@@ -343,14 +343,14 @@ contract Weather is Sun {
      * @dev Allocate `sop token` during a Season of Plenty.
      */
     function rewardSop(address well, uint256 amount, address sopToken) private {
-        s.sops[s.season.rainStart][well] = s.sops[s.season.lastSop][well].add(
+        s.sop.sops[s.season.rainStart][well] = s.sop.sops[s.season.lastSop][well].add(
             amount.mul(C.SOP_PRECISION).div(s.r.roots)
         );
         s.season.lastSop = s.season.rainStart;
         s.season.lastSopSeason = s.season.current;
 
         // update Beanstalk's stored overall plenty for this well
-        s.plentyPerSopToken[sopToken] += amount;
+        s.sop.plentyPerSopToken[sopToken] += amount;
     }
 
     /*

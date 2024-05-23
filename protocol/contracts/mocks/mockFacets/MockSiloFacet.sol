@@ -174,7 +174,7 @@ contract MockSiloFacet is SiloFacet {
             // If there has been a Sop since rain started,
             // save plentyPerRoot in case another SOP happens during rain.
             if (s.season.lastSop == s.season.rainStart)
-                s.a[account].sop.plentyPerRoot = s.sops[s.season.lastSop];
+                s.a[account].sop.plentyPerRoot = s.sop.sops[s.season.lastSop];
         } else if (s.a[account].lastRain > 0) {
             // Reset Last Rain if not raining.
             s.a[account].lastRain = 0;

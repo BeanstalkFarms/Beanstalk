@@ -186,7 +186,7 @@ abstract contract Invariable {
             } else if (tokens[i] == LibUnripe._getUnderlyingToken(C.UNRIPE_LP)) {
                 entitlements[i] += s.u[C.UNRIPE_LP].balanceOfUnderlying;
             }
-            entitlements[i] += s.plentyPerSopToken[tokens[i]];
+            entitlements[i] += s.sop.plentyPerSopToken[tokens[i]];
             balances[i] = IERC20(tokens[i]).balanceOf(address(this));
         }
         return (entitlements, balances);

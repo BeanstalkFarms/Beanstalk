@@ -81,7 +81,7 @@ contract SeasonGettersFacet {
      * @notice Returns the Plenty per Root for `season`.
      */
     function plentyPerRoot(uint32 _season, address well) external view returns (uint256) {
-        return s.sops[_season][well];
+        return s.sop.sops[_season][well];
     }
 
     //////////////////// ORACLE GETTERS ////////////////////
