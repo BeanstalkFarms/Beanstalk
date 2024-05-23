@@ -12,11 +12,12 @@ export const THEME_COLORS: Record<ThemeColor, string> = {
   disabled: "#D1D5DB"
 } as const;
 
-export type FontColor = "primary" | "text.primary" | "text.secondary" | "disabled";
+export type FontColor = "primary" | "text.primary" | "text.secondary" | "text.light" | "disabled";
 
 const FONT_COLORS: Record<FontColor, string> = {
   ["text.primary"]: THEME_COLORS.black,
   ["text.secondary"]: THEME_COLORS.gray,
+  ["text.light"]: THEME_COLORS.lightGray,
   primary: THEME_COLORS.primary,
   disabled: THEME_COLORS.disabled
 };

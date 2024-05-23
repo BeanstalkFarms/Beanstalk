@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { theme } from "src/utils/ui/theme";
-import styled, { css } from "styled-components";
-import { Box, Flex } from "src/components/Layout";
+import styled from "styled-components";
+import { Flex } from "src/components/Layout";
 import { ChevronDown, CircleEmptyIcon, CircleFilledCheckIcon } from "../Icons";
 import { ImageButton } from "../ImageButton";
 
@@ -17,8 +17,6 @@ export const AccordionSelectCard = ({ selected, below, upper, defaultExpanded = 
   const [expanded, setExpanded] = useState(defaultExpanded);
 
   const toggle = () => setExpanded((prev) => !prev);
-
-  console.log("selected: ", selected);
 
   return (
     <ComponentWrapper $active={selected} onClick={onClick} $fullWidth>

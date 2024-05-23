@@ -6,5 +6,5 @@ export type DisplayStyleProps = {
 };
 
 export const BlockDisplayStyle = css<DisplayStyleProps>`
-  display: ${({ $display }) => $display || "block"};
+  ${({ $display }) => ($display ? `display: ${$display};` : "")}
 `;
