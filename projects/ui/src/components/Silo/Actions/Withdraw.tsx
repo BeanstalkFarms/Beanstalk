@@ -104,7 +104,10 @@ const WithdrawForm: FC<
     // FIXME: Temporarily disabled Withdraws of Bean:ETH LP in Bean/WETH, needs routing code
     () => [
       whitelistedToken,
-      ...(((whitelistedToken.isLP && whitelistedToken !== sdk.tokens.BEAN_ETH_WELL_LP) && pool?.tokens) || []),
+      ...((whitelistedToken.isLP &&
+        whitelistedToken !== sdk.tokens.BEAN_ETH_WELL_LP &&
+        pool?.tokens) ||
+        []),
     ],
     [pool, sdk.tokens, whitelistedToken]
   );
@@ -159,7 +162,7 @@ const WithdrawForm: FC<
   const { setDestination } = useFormTxnContext();
   useEffect(() => {
     setDestination(values.destination);
-  }, [values.destination, setDestination])
+  }, [values.destination, setDestination]);
 
   const [isTokenSelectVisible, showTokenSelect, hideTokenSelect] = useToggle();
 
@@ -351,7 +354,9 @@ const WithdrawForm: FC<
                     {
                       type: ActionType.IN_TRANSIT,
                       amount: toBN(withdrawResult.amount),
-                      token: getNewToOldToken(values.tokenOut || whitelistedToken),
+                      token: getNewToOldToken(
+                        values.tokenOut || whitelistedToken
+                      ),
                       destination: values.destination || FarmToMode.EXTERNAL,
                       withdrawSeasons,
                     },
@@ -524,7 +529,19 @@ const WithdrawPropProvider: FC<{
         formActions.resetForm();
       } catch (err) {
         if (txToast) {
-          txToast.error(err);
+          if (err instanceof Error) {
+            if (err.message.includes('SafeMath: subtraction overflow')) {
+              txToast.error({
+                code: 'CALL_EXCEPTION',
+                message:
+                  'Germinating Bean Deposits currently cannot be Withdrawn. A fix is being implemented. In the meantime, you can Withdraw in 2 Seasons once your Bean Deposits are no longer Germinating. See Discord for details.',
+              });
+            } else {
+              txToast.error(err);
+            }
+          } else {
+            txToast.error(err);
+          }
         } else {
           const toast = new TransactionToast({});
           toast.error(err);
