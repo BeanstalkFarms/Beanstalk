@@ -223,3 +223,16 @@ export const BurgerMenuIcon = ({ color = "#000", width = 24, height = 24 }: SVGP
     <line x1="4" y1="15" x2="20" y2="15" stroke={color} strokeWidth="2" />
   </svg>
 );
+
+export const CircleFilledCheckIcon = ({ color = "#000", width = 16, height = 16 }: SVGProps) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width={width} height={height} viewBox="0 0 16 16" fill="none">
+    <path d="M8 16C12.4183 16 16 12.4183 16 8C16 3.58172 12.4183 0 8 0C3.58172 0 0 3.58172 0 8C0 12.4183 3.58172 16 8 16Z" fill={color} />
+    <path d="M11.4375 6.125L6.85156 10.5L4.5625 8.3125" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+  </svg>
+);
+
+export const CircleEmptyIcon = ({ color = "#000", width = 16, height = 16 }: SVGProps) => (
+  <svg height={height} width={width} viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+    <circle cx="8" cy="8" r="7" stroke={color} strokeWidth="1" fill="none" />
+  </svg>
+);
