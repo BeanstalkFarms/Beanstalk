@@ -20,7 +20,10 @@ async function reseed(
   start = 0,
   end = 1
 ) {
-  reseeds = [reseed1, reseedDeployL2Beanstalk];
+  reseeds = [
+    reseed1, 
+    reseedDeployL2Beanstalk
+  ];
 
   console.clear();
   await printBeanstalk();
