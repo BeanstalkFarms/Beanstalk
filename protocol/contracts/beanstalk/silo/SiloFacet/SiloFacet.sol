@@ -11,6 +11,7 @@ import "contracts/libraries/Token/LibTransfer.sol";
 import "contracts/libraries/Silo/LibSiloPermit.sol";
 import {Invariable} from "contracts/beanstalk/Invariable.sol";
 import {LibWhitelistedTokens} from "contracts/libraries/Silo/LibWhitelistedTokens.sol";
+import {LibWell} from "contracts/libraries/Well/LibWell.sol";
 
 /**
  * @title SiloFacet
@@ -313,11 +314,20 @@ contract SiloFacet is Invariable, TokenSilo {
     /**
      * @notice Claim rewards from a Flood (Was Season of Plenty)
      */
-    function claimPlenty(address well, LibTransfer.To toMode) external payable {
+    function claimPlenty(
+        address well,
+        LibTransfer.To toMode
+    )
+        external
+        payable
+        fundsSafu
+        noSupplyChange
+        oneOutFlow(address(LibWell.getNonBeanTokenFromWell(well)))
+    {
         _claimPlenty(LibTractor._user(), well, toMode);
     }
 
-    function claimAllPlenty(LibTransfer.To toMode) external payable {
+    function claimAllPlenty(LibTransfer.To toMode) external payable fundsSafu noSupplyChange {
         address[] memory tokens = LibWhitelistedTokens.getWhitelistedWellLpTokens();
         for (uint i; i < tokens.length; i++) {
             _claimPlenty(LibTractor._user(), tokens[i], toMode);
