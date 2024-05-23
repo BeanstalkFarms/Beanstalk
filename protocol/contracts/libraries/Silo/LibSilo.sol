@@ -359,14 +359,19 @@ library LibSilo {
         AppStorage storage s = LibAppStorage.diamondStorage();
         uint256 stalkPerBDV = s.ss[token].stalkIssuedPerBdv;
 
-        // a germinating deposit may have active grown stalk,
-        // but no active stalk from bdv.
-        if (ar.active.stalk > 0) {
-            ar.active.stalk = ar.active.stalk.add(ar.active.bdv.mul(stalkPerBDV));
-            transferStalk(sender, recipient, ar.active.stalk);
-        }
-
         if (ar.odd.bdv > 0) {
+            uint256 germinatingStalk = ar.odd.bdv.mul(stalkPerBDV);
+            uint256 farmersGerminatingStalk = checkForEarnedBeans(
+                sender,
+                germinatingStalk,
+                LibGerminate.Germinate.ODD
+            );
+            if (germinatingStalk > farmersGerminatingStalk) {
+                // safe math not needed as germinatingStalk > removedGerminatingStalk
+                uint256 earnedBdv = (germinatingStalk - farmersGerminatingStalk).div(C.STALK_PER_BEAN);
+                ar.active.bdv += earnedBdv;
+                ar.odd.bdv -= earnedBdv;
+            }
             ar.odd.stalk = ar.odd.stalk.add(ar.odd.bdv.mul(stalkPerBDV));
             transferGerminatingStalk(
                 sender,
@@ -377,6 +382,18 @@ library LibSilo {
         }
 
         if (ar.even.bdv > 0) {
+            uint256 germinatingStalk = ar.even.bdv.mul(stalkPerBDV);
+            uint256 farmersGerminatingStalk = checkForEarnedBeans(
+                sender,
+                germinatingStalk,
+                LibGerminate.Germinate.EVEN
+            );
+            if (germinatingStalk > farmersGerminatingStalk) {
+                // safe math not needed as germinatingStalk > removedGerminatingStalk
+                uint256 earnedBdv = (germinatingStalk - farmersGerminatingStalk).div(C.STALK_PER_BEAN);
+                ar.active.bdv += earnedBdv;
+                ar.even.bdv -= earnedBdv;
+            }
             ar.even.stalk = ar.even.stalk.add(ar.even.bdv.mul(stalkPerBDV));
             transferGerminatingStalk(
                 sender,
@@ -384,6 +401,13 @@ library LibSilo {
                 ar.even.stalk,
                 LibGerminate.Germinate.EVEN
             );
+        }
+
+        // a germinating deposit may have active grown stalk,
+        // but no active stalk from bdv.
+        if (ar.active.stalk > 0) {
+            ar.active.stalk = ar.active.stalk.add(ar.active.bdv.mul(stalkPerBDV));
+            transferStalk(sender, recipient, ar.active.stalk);
         }
     }
 
@@ -810,5 +834,35 @@ library LibSilo {
             }
         }
         return false;
+    }
+
+    /**
+     * @notice verifies whether the germinating stalk being removed 
+     * is greater than the farmers germinating stalk.
+     * @dev this occurs when a user attempts to withdraw a bean deposit with a 
+     * germinating stem, where a portion of the deposit was sourced from a plant 
+     * (i.e Earned Beans). A deposit with Earned beans do not germinate, but their 
+     * stem matches that of a germinating deposit. If a user withdraws a deposit
+     * with Earned Beans, cap the germinating stalk, bdv, and amount by the farmers 
+     * germinating stalk.
+     * @return the germinating portion of stalk.
+     */
+    function checkForEarnedBeans(
+        address account,
+        uint256 stalk,
+        LibGerminate.Germinate germ
+    ) internal view returns (uint256) {
+        AppStorage storage s = LibAppStorage.diamondStorage();
+        uint256 farmerGerminatingStalk;
+        if (germ == LibGerminate.Germinate.ODD) {
+            farmerGerminatingStalk = s.a[account].farmerGerminating.odd;
+        } else {
+            farmerGerminatingStalk = s.a[account].farmerGerminating.even;
+        }
+        if (stalk > farmerGerminatingStalk) {
+            return farmerGerminatingStalk;
+        } else {
+            return stalk;
+        }
     }
 }

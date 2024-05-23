@@ -296,17 +296,14 @@ contract TokenSilo is Silo {
         LibGerminate.Germinate germinateState
     ) private {
         // deposited earned beans do not germinate,
-        // but the stem of a earned bean deposit may match the germination stem of a bean deposit.
+        // but the stem of a earned bean deposit may match the germination stem(s) of a bean deposit.
         // if the stalk is greater than the farmers germinating stalk, a portion
         // of the deposit was sourced from a plant.
         if (token == C.BEAN) {
-            (amount, bdv, stalk) = checkForEarnedBeans(
-                account,
-                amount,
-                bdv,
-                stalk,
-                germinateState
-            );
+            stalk = LibSilo.checkForEarnedBeans(account, stalk, germinateState);
+            // set the bdv and amount accordingly to the stalk.
+            bdv = stalk.div(C.STALK_PER_BEAN);
+            amount = bdv;
         }
         // Decrement from total germinating.
         LibTokenSilo.decrementTotalGerminating(token, amount, bdv, germinateState); // Decrement total Germinating in the silo.
@@ -353,7 +350,15 @@ contract TokenSilo is Silo {
         if (germ == LibGerminate.Germinate.NOT_GERMINATING) {
             LibSilo.transferStalk(sender, recipient, initialStalk.add(grownStalk));
         } else {
+            if (token == C.BEAN) {
+                uint256 senderGerminatingStalk = LibSilo.checkForEarnedBeans(sender, initialStalk, germ);
+                // delta of initial stalk and germinating stalk is the grown stalk from bean deposits.
+                grownStalk += initialStalk.sub(senderGerminatingStalk);
+                initialStalk = senderGerminatingStalk;
+            }
             LibSilo.transferGerminatingStalk(sender, recipient, initialStalk, germ);
+            // a germinating deposit may have grown stalk, or in the case of a Earned Bean Deposit,
+            // active stalk will need to be transferred.
             if (grownStalk > 0) {
                 LibSilo.transferStalk(
                     sender,
@@ -469,39 +474,6 @@ contract TokenSilo is Silo {
         );
 
         return bdvs;
-    }
-
-    /**
-     * @notice verifies whether the stalk is greater than the farmers germinating stalk.
-     * @dev this occurs when a user attempts to withdraw a bean deposit, where a portion
-     * of the deposit was sourced from a plant (i.e Earned Beans). A deposit with Earned
-     * beans do not germinate, but their stem matches a germinating deposit. If a user
-     * withdraws a deposit with Earned Beans, cap the germinating stalk, bdv, and amount
-     * by the farmers germinating stalk.
-     * @return the germinating portion of amount, bdv, and stalk.
-     */
-    function checkForEarnedBeans(
-        address account,
-        uint256 amount,
-        uint256 bdv,
-        uint256 stalk,
-        LibGerminate.Germinate germ
-    ) internal view returns (uint256, uint256, uint256) {
-        uint256 farmerGerminatingStalk;
-        if (germ == LibGerminate.Germinate.ODD) {
-            farmerGerminatingStalk = s.a[account].farmerGerminating.odd;
-        } else {
-            farmerGerminatingStalk = s.a[account].farmerGerminating.even;
-        }
-        if (stalk > farmerGerminatingStalk) {
-            return (
-                farmerGerminatingStalk.div(C.STALK_PER_BEAN),
-                farmerGerminatingStalk.div(C.STALK_PER_BEAN),
-                farmerGerminatingStalk
-            );
-        } else {
-            return (amount, bdv, stalk);
-        }
     }
 
 }

@@ -177,6 +177,16 @@ describe('Silo', function () {
       stemTip = await this.siloGetters.stemTipForToken(this.bean.address)
       await this.silo.connect(user).withdrawDeposit(this.bean.address, stemTip, to6('50'), EXTERNAL)
     });
+
+    it('user can transfer earned beans', async function () {
+      stemTip = await this.siloGetters.stemTipForToken(this.bean.address)
+      await this.silo.connect(user).transferDeposit(userAddress, user2Address, this.bean.address, stemTip, to6('50'))
+    });
+
+    it('user can transferDeposits earned beans', async function () {
+      stemTip = await this.siloGetters.stemTipForToken(this.bean.address)
+      await this.silo.connect(user).transferDeposits(userAddress, user2Address, this.bean.address, [stemTip], [to6('50')])
+    });
   });
 
   describe("ERC1155 Deposits", async function () {
