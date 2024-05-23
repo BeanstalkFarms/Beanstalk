@@ -268,7 +268,7 @@ library LibSilo {
         address account,
         uint128 stalk,
         LibGerminate.Germinate germ
-    ) internal {
+    ) external {
         AppStorage storage s = LibAppStorage.diamondStorage();
 
         if (germ == LibGerminate.Germinate.ODD) {

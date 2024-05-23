@@ -300,7 +300,7 @@ contract TokenSilo is Silo {
         // if the stalk is greater than the farmers germinating stalk, a portion
         // of the deposit was sourced from a plant.
         if (token == C.BEAN) {
-            (amount, bdv, stalk) = LibGerminate.checkForEarnedBeans(
+            (amount, bdv, stalk) = checkForEarnedBeans(
                 account,
                 amount,
                 bdv,
@@ -469,6 +469,39 @@ contract TokenSilo is Silo {
         );
 
         return bdvs;
+    }
+
+    /**
+     * @notice verifies whether the stalk is greater than the farmers germinating stalk.
+     * @dev this occurs when a user attempts to withdraw a bean deposit, where a portion
+     * of the deposit was sourced from a plant (i.e Earned Beans). A deposit with Earned
+     * beans do not germinate, but their stem matches a germinating deposit. If a user
+     * withdraws a deposit with Earned Beans, cap the germinating stalk, bdv, and amount
+     * by the farmers germinating stalk.
+     * @return the germinating portion of amount, bdv, and stalk.
+     */
+    function checkForEarnedBeans(
+        address account,
+        uint256 amount,
+        uint256 bdv,
+        uint256 stalk,
+        LibGerminate.Germinate germ
+    ) internal view returns (uint256, uint256, uint256) {
+        uint256 farmerGerminatingStalk;
+        if (germ == LibGerminate.Germinate.ODD) {
+            farmerGerminatingStalk = s.a[account].farmerGerminating.odd;
+        } else {
+            farmerGerminatingStalk = s.a[account].farmerGerminating.even;
+        }
+        if (stalk > farmerGerminatingStalk) {
+            return (
+                farmerGerminatingStalk.div(C.STALK_PER_BEAN),
+                farmerGerminatingStalk.div(C.STALK_PER_BEAN),
+                farmerGerminatingStalk
+            );
+        } else {
+            return (amount, bdv, stalk);
+        }
     }
 
 }
