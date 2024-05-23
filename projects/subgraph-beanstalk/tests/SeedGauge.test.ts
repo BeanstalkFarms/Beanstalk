@@ -180,7 +180,7 @@ describe("Seed Gauge", () => {
           BigInt.fromU64(35000000000),
           BigInt.fromU64(10000000000),
           "0xabcdabcd",
-          "0xdefdef1a",
+          "0x00000000",
           BigInt.fromU32(12345),
           BigInt.fromU32(66).times(ratioDecimals)
         )
@@ -189,7 +189,7 @@ describe("Seed Gauge", () => {
       assert.fieldEquals("WhitelistTokenSetting", BEAN_ERC20.toHexString(), "stalkEarnedPerSeason", BigInt.fromU64(35000000000).toString());
       assert.fieldEquals("WhitelistTokenSetting", BEAN_ERC20.toHexString(), "stalkIssuedPerBdv", BigInt.fromU64(10000000000).toString());
       assert.fieldEquals("WhitelistTokenSetting", BEAN_ERC20.toHexString(), "gpSelector", "0xabcdabcd");
-      assert.fieldEquals("WhitelistTokenSetting", BEAN_ERC20.toHexString(), "lwSelector", "0xdefdef1a");
+      assert.fieldEquals("WhitelistTokenSetting", BEAN_ERC20.toHexString(), "lwSelector", "null");
       assert.fieldEquals("WhitelistTokenSetting", BEAN_ERC20.toHexString(), "gaugePoints", BigInt.fromU32(12345).toString());
       assert.fieldEquals(
         "WhitelistTokenSetting",
@@ -211,6 +211,13 @@ describe("Seed Gauge", () => {
         "optimalPercentDepositedBdv",
         BigInt.fromU32(66).times(ratioDecimals).toString()
       );
+
+      // Setting to 0s should be interpreted as null
+      handleUpdateGaugeSettings(
+        createUpdateGaugeSettingsEvent(BEAN_ERC20.toHexString(), "0x00000000", "0x00000000", BigInt.fromU32(66).times(ratioDecimals))
+      );
+      assert.fieldEquals("WhitelistTokenSetting", BEAN_ERC20.toHexString(), "gpSelector", "null");
+      assert.fieldEquals("WhitelistTokenSetting", BEAN_ERC20.toHexString(), "lwSelector", "null");
     });
 
     test("WhitelistToken Snapshots Get Created", () => {

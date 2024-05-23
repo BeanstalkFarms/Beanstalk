@@ -1,5 +1,5 @@
 import { BigInt, Bytes, BigDecimal } from "@graphprotocol/graph-ts";
-import { BigInt_bigEndian } from "./BigEndian";
+import { BigInt_bigEndian } from "./Bytes";
 import { ZERO_BI } from "./Decimals";
 
 export function ABDK_toUInt(x: BigInt): BigInt {
