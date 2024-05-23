@@ -295,10 +295,12 @@ contract TokenSilo is Silo {
         uint256 stalk,
         LibGerminate.Germinate germinateState
     ) private {
-        // deposited earned beans do not germinate,
-        // but the stem of a earned bean deposit may match the germination stem(s) of a bean deposit.
-        // if the stalk is greater than the farmers germinating stalk, a portion
-        // of the deposit was sourced from a plant.
+        // Deposited Earned Beans do not germinate. Thus, when withdrawing a Bean Deposit
+        // with a Germinating Stem, Beanstalk needs to determine how many of the Beans
+        // were Planted vs Deposited from a Circulating/Farm balance. 
+        // If a Farmer's Germinating Stalk for a given Season is less than the number of 
+        // Deposited Beans in that Season, then it is assumed that the excess Beans were
+        // Planted.
         if (token == C.BEAN) {
             stalk = LibSilo.checkForEarnedBeans(account, stalk, germinateState);
             // set the bdv and amount accordingly to the stalk.
