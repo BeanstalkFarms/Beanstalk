@@ -330,7 +330,7 @@ contract TokenSilo is Silo {
     ) internal returns (uint256) {
         (
             uint256 initialStalk,
-            uint256 grownStalk,
+            uint256 activeStalk,
             uint256 bdv,
             LibGerminate.Germinate germ
         ) = LibSilo._removeDepositFromAccount(
@@ -350,22 +350,22 @@ contract TokenSilo is Silo {
         );
 
         if (germ == LibGerminate.Germinate.NOT_GERMINATING) {
-            LibSilo.transferStalk(sender, recipient, initialStalk.add(grownStalk));
+            LibSilo.transferStalk(sender, recipient, initialStalk.add(activeStalk));
         } else {
             if (token == C.BEAN) {
                 uint256 senderGerminatingStalk = LibSilo.checkForEarnedBeans(sender, initialStalk, germ);
                 // delta of initial stalk and germinating stalk is the grown stalk from bean deposits.
-                grownStalk += initialStalk.sub(senderGerminatingStalk);
+                activeStalk += initialStalk.sub(senderGerminatingStalk);
                 initialStalk = senderGerminatingStalk;
             }
             LibSilo.transferGerminatingStalk(sender, recipient, initialStalk, germ);
             // a germinating deposit may have grown stalk, or in the case of a Earned Bean Deposit,
             // active stalk will need to be transferred.
-            if (grownStalk > 0) {
+            if (activeStalk > 0) {
                 LibSilo.transferStalk(
                     sender,
                     recipient, 
-                    grownStalk
+                    activeStalk
                 ); 
             }
         }
