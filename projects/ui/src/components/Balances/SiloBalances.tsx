@@ -20,17 +20,17 @@ import {
   UNRIPE_BEAN_WETH,
 } from '~/constants/tokens';
 import useWhitelist from '~/hooks/beanstalk/useWhitelist';
-import { BeanstalkPalette, IconSize } from '../App/muiTheme';
 import Fiat from '~/components/Common/Fiat';
 
-import Row from '../Common/Row';
 import { displayFullBN, displayTokenAmount } from '~/util';
-import TokenIcon from '../Common/TokenIcon';
 import { AppState } from '~/state';
 import { ONE_BN, ZERO_BN } from '~/constants';
 import useFarmerStalkByToken from '~/hooks/farmer/useFarmerStalkByToken';
 import useGetChainToken from '~/hooks/chain/useGetChainToken';
 import useUnripeUnderlyingMap from '~/hooks/beanstalk/useUnripeUnderlying';
+import TokenIcon from '../Common/TokenIcon';
+import Row from '../Common/Row';
+import { BeanstalkPalette, IconSize } from '../App/muiTheme';
 import Stat from '../Common/Stat';
 
 const ARROW_CONTAINER_WIDTH = 20;
@@ -177,72 +177,76 @@ const SiloBalances: React.FC<{}> = () => {
                     display={{ xs: 'none', sm: 'block' }}
                     textAlign="left"
                   >
-                    <Typography color="text.primary">
-                      {token === Bean ? (
-                        <Tooltip
-                          title={
-                            <>
+                    {token === Bean ? (
+                      <Tooltip
+                        title={
+                          <>
+                            {displayFullBN(
+                              deposits?.amount || ZERO_BN,
+                              token.displayDecimals
+                            )}{' '}
+                            Deposited BEAN
+                            <br />
+                            +&nbsp;
+                            <Typography display="inline" color="primary">
                               {displayFullBN(
-                                deposits?.amount || ZERO_BN,
+                                farmerSilo.beans.earned || ZERO_BN,
                                 token.displayDecimals
-                              )}{' '}
-                              Deposited BEAN
-                              <br />
-                              +&nbsp;
-                              <Typography display="inline" color="primary">
-                                {displayFullBN(
-                                  farmerSilo.beans.earned || ZERO_BN,
-                                  token.displayDecimals
-                                )}
-                              </Typography>{' '}
-                              Earned BEAN
-                              <br />
-                              <Divider
-                                sx={{
-                                  my: 0.5,
-                                  opacity: 0.7,
-                                  borderBottomWidth: 0,
-                                  borderColor: 'divider',
-                                }}
-                              />
-                              ={' '}
-                              {displayFullBN(
-                                farmerSilo.beans.earned.plus(
-                                  deposits?.amount || ZERO_BN
-                                ),
-                                token.displayDecimals
-                              )}{' '}
-                              BEAN
-                              <br />
-                            </>
-                          }
-                        >
-                          <span>
+                              )}
+                            </Typography>{' '}
+                            Earned BEAN
+                            <br />
+                            <Divider
+                              sx={{
+                                my: 0.5,
+                                opacity: 0.7,
+                                borderBottomWidth: 0,
+                                borderColor: 'divider',
+                              }}
+                            />
+                            ={' '}
+                            {displayFullBN(
+                              farmerSilo.beans.earned.plus(
+                                deposits?.amount || ZERO_BN
+                              ),
+                              token.displayDecimals
+                            )}{' '}
+                            BEAN
+                            <br />
+                          </>
+                        }
+                      >
+                        <span>
+                          <Typography component="span" color="text.primary">
                             {displayFullBN(
                               deposits?.amount || ZERO_BN,
                               token.displayDecimals
                             )}
-                            {farmerSilo.beans.earned.gt(0) ? (
-                              <Typography component="span" color="primary.main">
-                                {' + '}
-                                {displayFullBN(
-                                  farmerSilo.beans.earned,
-                                  token.displayDecimals
-                                )}
-                              </Typography>
-                            ) : null}
-                          </span>
-                        </Tooltip>
-                      ) : (
-                        displayFullBN(
+                          </Typography>
+                          {farmerSilo.beans.earned.gt(0) ? (
+                            <Typography component="span" color="primary.main">
+                              {' + '}
+                              {displayFullBN(
+                                farmerSilo.beans.earned,
+                                token.displayDecimals
+                              )}
+                            </Typography>
+                          ) : null}
+                        </span>
+                      </Tooltip>
+                    ) : (
+                      <Typography component="span" color="text.primary">
+                        {displayFullBN(
                           deposits?.amount || ZERO_BN,
                           token.displayDecimals
-                        )
-                      )}
-                      <Box display={{ md: 'inline', xs: 'none' }}>
+                        )}
+                      </Typography>
+                    )}
+                    <Box display={{ md: 'inline', xs: 'none' }}>
+                      <Typography component="span" color="text.primary">
                         &nbsp;{token.symbol}
-                      </Box>
-                    </Typography>
+                      </Typography>
+                    </Box>
                   </Grid>
                   {/**
                    * Cell: Value of Deposited

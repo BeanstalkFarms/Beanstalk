@@ -64,7 +64,13 @@ const useSeasonsQuery = <T extends MinimumViableSnapshotQuery>(
   const [loading, setLoading] = useState(false);
 
   /// Execute generic lazy query
-  const [get, query] = useLazyQuery<T>(document, { variables: {} });
+  const [get, query] = useLazyQuery<T>(document, {
+    variables: queryConfig?.variables ?? {},
+    context: { subgraph: queryConfig?.context?.subgraph ?? 'beanstalk' },
+  });
+
+  /// Output used when user requests all data
+  const [allSeasonsOutput, setAllSeasonsOutput] = useState<any[]>([]);
 
   useEffect(() => {
     (async () => {
@@ -112,7 +118,7 @@ const useSeasonsQuery = <T extends MinimumViableSnapshotQuery>(
 
           console.debug(
             `[useSeasonsQuery] requested all seasons. current season is ${latestSubgraphSeason}. oldest loaded season ${
-              init.data.seasons[init.data.seasons.length - 1]
+              init.data.seasons[init.data.seasons.length - 1].season
             }`,
             init.data.seasons,
             queryConfig
@@ -134,6 +140,7 @@ const useSeasonsQuery = <T extends MinimumViableSnapshotQuery>(
             `[useSeasonsQuery] needs ${numQueries} calls to get ${latestSubgraphSeason} more seasons`
           );
           setLoading(true);
+          const output: any[] = [];
           for (let i = 0; i < numQueries; i += 1) {
             const season = Math.max(
               0, // always at least 0
@@ -161,7 +168,9 @@ const useSeasonsQuery = <T extends MinimumViableSnapshotQuery>(
                     r.data,
                     { variables: thisVariables, document }
                   );
-                  return r;
+                  r.data.seasons.forEach((seasonData: any) => {
+                    output[seasonData.season] = seasonData;
+                  });
                 })
             );
           }
@@ -170,6 +179,7 @@ const useSeasonsQuery = <T extends MinimumViableSnapshotQuery>(
            * Wait for queries to complete
            */
           await Promise.all(promises);
+          setAllSeasonsOutput(output.filter(Boolean).reverse());
           setLoading(false);
         }
       } catch (e) {
@@ -178,6 +188,14 @@ const useSeasonsQuery = <T extends MinimumViableSnapshotQuery>(
       }
     })();
   }, [range, get, queryConfig, document]);
+
+  if (range === SeasonRange.ALL) {
+    return {
+      ...query,
+      data: { seasons: allSeasonsOutput },
+      loading: loading || query.loading,
+    };
+  }
 
   return {
     ...query,

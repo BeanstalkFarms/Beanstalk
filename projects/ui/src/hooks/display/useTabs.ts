@@ -12,7 +12,11 @@ const useTabs = (
    * The URL key used to store the slug.
    * @default 'tab'
    */
-  key: string = 'tab'
+  key: string = 'tab',
+  /**
+   * default tab value
+   */
+  defaultValue: number = 0
 ) => {
   /// Search params
   const [params, update] = useSearchParams();
@@ -26,9 +30,9 @@ const useTabs = (
         const index = slugs!.indexOf(slug);
         if (index > -1) return index;
       }
-      return 0; // defualt to tab 0
+      return defaultValue; // default tab
     },
-    [slugs]
+    [defaultValue, slugs]
   );
 
   /// Init state

@@ -24,9 +24,14 @@ type SizeProps = {
 
 type Props = {
   children: React.ReactNode;
+  danger?: boolean;
 } & SizeProps;
 
-export default function TokenOutput({ children, size = 'medium' }: Props) {
+export default function TokenOutput({
+  children,
+  size = 'medium',
+  danger = false,
+}: Props) {
   const isMedium = size === 'medium';
 
   const px = isMedium ? 2 : 1;
@@ -34,7 +39,7 @@ export default function TokenOutput({ children, size = 'medium' }: Props) {
   const gap = isMedium ? 1 : 0.5;
 
   return (
-    <EmbeddedCard sx={{ px: px, py: py }}>
+    <EmbeddedCard sx={{ px: px, py: py }} danger={danger}>
       <Stack width="100%" gap={gap}>
         {children}
       </Stack>

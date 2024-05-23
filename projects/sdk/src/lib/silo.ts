@@ -187,10 +187,11 @@ export class Silo {
     options?: { source: DataSource.LEDGER } | { source: DataSource.SUBGRAPH }
   ): Promise<TokenSiloBalance> {
     const source = Silo.sdk.deriveConfig("source", options);
-    const [account, currentSeason, stemTip] = await Promise.all([
+    const [account, currentSeason, stemTip, germinatingStem] = await Promise.all([
       Silo.sdk.getAccount(_account),
       Silo.sdk.sun.getSeason(),
-      this.getStemTip(_token)
+      this.getStemTip(_token),
+      Silo.sdk.contracts.beanstalk.getGerminatingStem(_token.address)
     ]);
 
     if (!Silo.sdk.tokens.siloWhitelist.has(_token)) throw new Error(`${_token.address} is not whitelisted in the Silo`);
@@ -212,7 +213,8 @@ export class Silo {
         utils.applyDeposit(balance, _token, stemTip, {
           stem,
           amount: deposits[stem].amount,
-          bdv: deposits[stem].bdv
+          bdv: deposits[stem].bdv,
+          germinatingStem
         });
       }
 
@@ -237,7 +239,8 @@ export class Silo {
         utils.applyDeposit(balance, _token, stemTip, {
           stem: deposit.season, // FIXME
           amount: deposit.amount,
-          bdv: deposit.bdv
+          bdv: deposit.bdv,
+          germinatingStem
         })
       );
 
@@ -262,17 +265,25 @@ export class Silo {
     _account?: string,
     options?: { source: DataSource.LEDGER } | { source: DataSource.SUBGRAPH }
   ): Promise<Map<Token, TokenSiloBalance>> {
-    const source = Silo.sdk.deriveConfig("source", options);
-    const [account, currentSeason, stemTips] = await Promise.all([
-      Silo.sdk.getAccount(_account),
-      Silo.sdk.sun.getSeason(),
-      this.getStemTips([...Silo.sdk.tokens.siloWhitelist])
-    ]);
-
     /// SETUP
     const whitelist = Silo.sdk.tokens.siloWhitelist;
+    const whiteListTokens = Array.from(whitelist);
     const balances = new Map<Token, TokenSiloBalance>();
     whitelist.forEach((token) => balances.set(token, utils.makeTokenSiloBalance()));
+    const source = Silo.sdk.deriveConfig("source", options);
+
+    const [account, currentSeason, stemTips, germinatingStemsRaw] = await Promise.all([
+      Silo.sdk.getAccount(_account),
+      Silo.sdk.sun.getSeason(),
+      this.getStemTips([...Silo.sdk.tokens.siloWhitelist]),
+      Silo.sdk.contracts.beanstalk.getGerminatingStems(whiteListTokens.map((t) => t.address))
+    ]);
+
+    // Set germinatingStems
+    const germinatingStems = new Map<Token, BigNumber>();
+    for (let i = 0; i < germinatingStemsRaw.length; i++) {
+      germinatingStems.set(whiteListTokens[i], germinatingStemsRaw[i]);
+    }
 
     /// LEDGER
     if (source === DataSource.LEDGER) {
@@ -283,6 +294,9 @@ export class Silo {
       // Handle deposits.
       // Attach stalk & seed counts for each crate.
       depositsByToken.forEach((deposits, token) => {
+        const germinatingStem = germinatingStems.get(token)!;
+        if (!germinatingStem) throw new Error(`No germinatingStem found for ${token.symbol}`);
+
         // If we receive a token that wasn't on the SDK's known whitelist, create
         // a new balance object for it. (This shouldn't happen)
         if (!balances.has(token)) balances.set(token, utils.makeTokenSiloBalance());
@@ -296,7 +310,8 @@ export class Silo {
           utils.applyDeposit(balance, token, stemTip, {
             stem,
             amount: deposits[stem].amount,
-            bdv: deposits[stem].bdv
+            bdv: deposits[stem].bdv,
+            germinatingStem
           });
         }
 
@@ -319,9 +334,11 @@ export class Silo {
       const { deposited } = query.farmer;
 
       // Handle deposits.
-      deposited.forEach((deposit: typeof deposited[number]) => {
+      deposited.forEach((deposit: (typeof deposited)[number]) => {
         const token = Silo.sdk.tokens.findByAddress(deposit.token);
         if (!token) return; // FIXME: unknown token handling
+        const germinatingStem = germinatingStems.get(token)!;
+        if (!germinatingStem) throw new Error(`No germinatingStem found for ${token.symbol}`);
 
         // If we receive a token that wasn't on the SDK's known whitelist, create
         // a new balance object for it. (This shouldn't happen)
@@ -335,7 +352,8 @@ export class Silo {
         utils.applyDeposit(balance, token, stemTip, {
           stem: deposit.stem || deposit.season,
           amount: deposit.amount,
-          bdv: deposit.bdv
+          bdv: deposit.bdv,
+          germinatingStem
         });
       });
 

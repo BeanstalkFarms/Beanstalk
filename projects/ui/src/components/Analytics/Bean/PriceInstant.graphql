@@ -1,5 +1,5 @@
-query SeasonalDeltaB($season_lte: Int, $first: Int, $season_gte: Int) {
-  seasons: seasons(
+query SeasonalInstantPrice($season_lte: Int, $first: Int, $season_gte: Int) {
+  seasons: beanHourlySnapshots(
     where: { season_lte: $season_lte, season_gte: $season_gte }
     first: $first
     orderBy: season
@@ -7,7 +7,7 @@ query SeasonalDeltaB($season_lte: Int, $first: Int, $season_gte: Int) {
   ) {
     id
     season
-    createdAt
-    deltaB
+    timestamp
+    price
   }
 }

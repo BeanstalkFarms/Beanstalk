@@ -5,6 +5,7 @@ on:
     types: [opened, synchronize]
     paths:
       - "projects/subgraph-beanstalk/**"
+      - "projects/subgraph-core/**"
 
 jobs:
   compile:
@@ -16,7 +17,7 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v3
         with:
-          node-version: "18"
+          node-version: "20"
       - name: Cache Node Modules
         id: node-modules-cache
         uses: actions/cache@v3
@@ -28,6 +29,7 @@ jobs:
       - name: Install Dependencies
         if: steps.node-modules-cache.outputs.cache-hit != 'true'
         run: yarn install --immutable
+        working-directory: projects/subgraph-beanstalk
 
       # Generate code and check for uncommitted changes
       # https://github.com/marketplace/actions/check-uncommitted-changes
@@ -44,7 +46,33 @@ jobs:
       - name: Build Subgraph
         run: yarn build
         working-directory: projects/subgraph-beanstalk
-    # TODO: add matchstick test suite
-    #- name: Run Tests
-    #  run: yarn test
-    #  working-directory: "${{ matrix.value }}"
+  test:
+    runs-on: ubuntu-latest
+    name: Test
+    steps:
+      - name: Check out source repository
+        uses: actions/checkout@v3
+      - name: Setup Node
+        uses: actions/setup-node@v3
+        with:
+          node-version: "20"
+      - name: Cache Node Modules
+        id: node-modules-cache
+        uses: actions/cache@v3
+        with:
+          path: "**/node_modules"
+          key: ${{ runner.os }}-modules-${{ hashFiles('**/yarn.lock') }}
+      - name: Install The Graph CLI
+        run: npm install -g @graphprotocol/graph-cli
+      - name: Install Dependencies
+        if: steps.node-modules-cache.outputs.cache-hit != 'true'
+        run: yarn install --immutable
+        working-directory: projects/subgraph-beanstalk
+
+      - name: Generate Subgraph Code
+        run: yarn codegen
+        working-directory: projects/subgraph-beanstalk
+
+      - name: Run Tests
+        run: yarn test
+        working-directory: projects/subgraph-beanstalk
