@@ -2,8 +2,7 @@
  * SPDX-License-Identifier: MIT
  **/
 
-pragma solidity =0.7.6;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.20;
 
 import {LibConvert} from "contracts/libraries/Convert/LibConvert.sol";
 
@@ -12,15 +11,13 @@ import {LibConvert} from "contracts/libraries/Convert/LibConvert.sol";
  * @title ConvertGettersFacet contains view functions related to converting Deposited assets.
  **/
 contract ConvertGettersFacet {
-
     /**
      * @notice Returns the maximum amount that can be converted of `tokenIn` to `tokenOut`.
      */
-    function getMaxAmountIn(address tokenIn, address tokenOut)
-        external
-        view
-        returns (uint256 amountIn)
-    {
+    function getMaxAmountIn(
+        address tokenIn,
+        address tokenOut
+    ) external view returns (uint256 amountIn) {
         return LibConvert.getMaxAmountIn(tokenIn, tokenOut);
     }
 

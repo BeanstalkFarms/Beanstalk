@@ -1,19 +1,19 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity =0.7.6;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.20;
 
 import {AppStorage, Storage} from "../../AppStorage.sol";
 import {C} from "../../../C.sol";
-import {Decimal, SafeMath} from "contracts/libraries/Decimal.sol";
+import {Decimal} from "contracts/libraries/Decimal.sol";
 import {LibEvaluate} from "contracts/libraries/LibEvaluate.sol";
 import {LibUsdOracle} from "contracts/libraries/Oracle/LibUsdOracle.sol";
 import {LibWellMinting} from "contracts/libraries/Minting/LibWellMinting.sol";
 import {LibWell} from "contracts/libraries/Well/LibWell.sol";
-import {SignedSafeMath} from "@openzeppelin/contracts/math/SignedSafeMath.sol";
+import {LibRedundantMathSigned256} from "contracts/libraries/LibRedundantMathSigned256.sol";
 import {LibWhitelistedTokens} from "contracts/libraries/Silo/LibWhitelistedTokens.sol";
 import {LibGauge} from "contracts/libraries/LibGauge.sol";
 import {LibCases} from "contracts/libraries/LibCases.sol";
+import {LibRedundantMath256} from "contracts/libraries/LibRedundantMath256.sol";
 
 /**
  * @title SeasonGettersFacet
@@ -21,8 +21,8 @@ import {LibCases} from "contracts/libraries/LibCases.sol";
  * @notice Holds Getter view functions for the SeasonFacet.
  */
 contract SeasonGettersFacet {
-    using SafeMath for uint256;
-    using SignedSafeMath for int256;
+    using LibRedundantMath256 for uint256;
+    using LibRedundantMathSigned256 for int256;
 
     AppStorage internal s;
 
@@ -184,7 +184,7 @@ contract SeasonGettersFacet {
             uint256 wellDepositedBdv = s.siloBalances[well].depositedBdv;
             return wellGaugePoints.mul(LibGauge.BDV_PRECISION).div(wellDepositedBdv);
         } else {
-            revert ("Token not supported");
+            revert("Token not supported");
         }
     }
 
@@ -209,12 +209,13 @@ contract SeasonGettersFacet {
     function getGrownStalkIssuedPerSeason() public view returns (uint256) {
         address[] memory lpGaugeTokens = LibWhitelistedTokens.getWhitelistedLpTokens();
         uint256 totalLpBdv;
-        for(uint i; i < lpGaugeTokens.length; i++) {
+        for (uint i; i < lpGaugeTokens.length; i++) {
             totalLpBdv = totalLpBdv.add(s.siloBalances[lpGaugeTokens[i]].depositedBdv);
         }
-        return uint256(s.seedGauge.averageGrownStalkPerBdvPerSeason)
-            .mul(totalLpBdv.add(s.siloBalances[C.BEAN].depositedBdv))
-            .div(LibGauge.BDV_PRECISION);
+        return
+            uint256(s.seedGauge.averageGrownStalkPerBdvPerSeason)
+                .mul(totalLpBdv.add(s.siloBalances[C.BEAN].depositedBdv))
+                .div(LibGauge.BDV_PRECISION);
     }
 
     /**
@@ -223,16 +224,15 @@ contract SeasonGettersFacet {
     function getGrownStalkIssuedPerGp() external view returns (uint256) {
         address[] memory lpGaugeTokens = LibWhitelistedTokens.getWhitelistedLpTokens();
         uint256 totalGaugePoints;
-        for(uint i; i < lpGaugeTokens.length; i++) {
+        for (uint i; i < lpGaugeTokens.length; i++) {
             totalGaugePoints = totalGaugePoints.add(s.ss[lpGaugeTokens[i]].gaugePoints);
         }
         uint256 newGrownStalk = getGrownStalkIssuedPerSeason();
-        totalGaugePoints = totalGaugePoints
-            .add(
-                getBeanGaugePointsPerBdv()
-                    .mul(s.siloBalances[C.BEAN].depositedBdv)
-                    .div(LibGauge.BDV_PRECISION)
-                );
+        totalGaugePoints = totalGaugePoints.add(
+            getBeanGaugePointsPerBdv().mul(s.siloBalances[C.BEAN].depositedBdv).div(
+                LibGauge.BDV_PRECISION
+            )
+        );
         return newGrownStalk.mul(1e18).div(totalGaugePoints);
     }
 
@@ -267,10 +267,7 @@ contract SeasonGettersFacet {
      */
     function getTwaLiquidityForWell(address well) public view returns (uint256) {
         (address token, ) = LibWell.getNonBeanTokenAndIndexFromWell(well);
-        return LibWell.getTwaLiquidityFromBeanstalkPump(
-            well,
-            LibUsdOracle.getTokenPrice(token)
-        );
+        return LibWell.getTwaLiquidityFromBeanstalkPump(well, LibUsdOracle.getTokenPrice(token));
     }
 
     /**
@@ -278,9 +275,7 @@ contract SeasonGettersFacet {
      * @dev This is the liquidity used in the gauge system.
      */
     function getWeightedTwaLiquidityForWell(address well) public view returns (uint256) {
-        return LibEvaluate.getLiquidityWeight(well)
-            .mul(getTwaLiquidityForWell(well))
-            .div(1e18);
+        return LibEvaluate.getLiquidityWeight(well).mul(getTwaLiquidityForWell(well)).div(1e18);
     }
 
     /**
@@ -293,7 +288,7 @@ contract SeasonGettersFacet {
         }
     }
 
-    /** 
+    /**
      * @notice returns the total weighted liquidity of beanstalk.
      */
     function getTotalWeightedUsdLiquidity() external view returns (uint256 totalWeightedLiquidity) {
@@ -313,7 +308,7 @@ contract SeasonGettersFacet {
     }
 
     function getLargestLiqWell() external view returns (address) {
-       uint256 beanSupply = C.bean().totalSupply();
+        uint256 beanSupply = C.bean().totalSupply();
         (, address well) = LibEvaluate.calcLPToSupplyRatio(beanSupply);
         return well;
     }
@@ -324,12 +319,12 @@ contract SeasonGettersFacet {
 
     //////////////////// CASES ////////////////////
 
-    function getCases() external view returns(bytes32[144] memory cases) {
+    function getCases() external view returns (bytes32[144] memory cases) {
         return s.casesV2;
     }
 
     function getCaseData(uint256 caseId) external view returns (bytes32 casesData) {
-       return LibCases.getDataFromCase(caseId);
+        return LibCases.getDataFromCase(caseId);
     }
 
     function getChangeFromCaseId(uint256 caseId) public view returns (uint32, int8, uint80, int80) {
@@ -338,22 +333,26 @@ contract SeasonGettersFacet {
     }
 
     function getAbsTemperatureChangeFromCaseId(uint256 caseId) external view returns (int8 t) {
-        (, t,,) = getChangeFromCaseId(caseId);
+        (, t, , ) = getChangeFromCaseId(caseId);
         return t;
     }
 
     function getRelTemperatureChangeFromCaseId(uint256 caseId) external view returns (uint32 mt) {
-        (mt,,,) = getChangeFromCaseId(caseId);
+        (mt, , , ) = getChangeFromCaseId(caseId);
         return mt;
     }
 
-    function getAbsBeanToMaxLpRatioChangeFromCaseId(uint256 caseId) external view returns (uint80 ml) {
-        (,, ml,) = getChangeFromCaseId(caseId);
+    function getAbsBeanToMaxLpRatioChangeFromCaseId(
+        uint256 caseId
+    ) external view returns (uint80 ml) {
+        (, , ml, ) = getChangeFromCaseId(caseId);
         return ml;
     }
 
-    function getRelBeanToMaxLpRatioChangeFromCaseId(uint256 caseId) external view returns (int80 l) {
-        (,,,l) = getChangeFromCaseId(caseId);
+    function getRelBeanToMaxLpRatioChangeFromCaseId(
+        uint256 caseId
+    ) external view returns (int80 l) {
+        (, , , l) = getChangeFromCaseId(caseId);
         return l;
     }
 

@@ -2,13 +2,13 @@
  * SPDX-License-Identifier: MIT
  **/
 
-pragma solidity ^0.7.6;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.20;
 
 import {LibDiamond} from "contracts/libraries/LibDiamond.sol";
 import {LibWhitelist} from "contracts/libraries/Silo/LibWhitelist.sol";
 import {AppStorage, Storage} from "contracts/beanstalk/AppStorage.sol";
 import {WhitelistedTokens} from "contracts/beanstalk/silo/WhitelistFacet/WhitelistedTokens.sol";
+import {Invariable} from "contracts/beanstalk/Invariable.sol";
 
 /**
  * @author Publius
@@ -16,12 +16,12 @@ import {WhitelistedTokens} from "contracts/beanstalk/silo/WhitelistFacet/Whiteli
  * @notice Manages the Silo Whitelist including Adding to, Updating
  * and Removing from the Silo Whitelist
  **/
-contract WhitelistFacet is WhitelistedTokens {
+contract WhitelistFacet is Invariable, WhitelistedTokens {
     /**
      * @notice Removes a token from the Silo Whitelist.
      * @dev Can only be called by Beanstalk or Beanstalk owner.
      */
-    function dewhitelistToken(address token) external payable {
+    function dewhitelistToken(address token) external payable fundsSafu noNetFlow noSupplyChange {
         LibDiamond.enforceIsOwnerOrContract();
         LibWhitelist.dewhitelistToken(token);
     }
@@ -52,7 +52,7 @@ contract WhitelistFacet is WhitelistedTokens {
         bytes4 liquidityWeightSelector,
         uint128 gaugePoints,
         uint64 optimalPercentDepositedBdv
-    ) external payable {
+    ) external payable fundsSafu noNetFlow noSupplyChange {
         LibDiamond.enforceIsOwnerOrContract();
         LibWhitelist.whitelistToken(
             token,
@@ -91,7 +91,7 @@ contract WhitelistFacet is WhitelistedTokens {
         bytes4 liquidityWeightSelector,
         uint128 gaugePoints,
         uint64 optimalPercentDepositedBdv
-    ) external payable {
+    ) external payable fundsSafu noNetFlow noSupplyChange {
         LibDiamond.enforceIsOwnerOrContract();
         LibWhitelist.whitelistToken(
             token,
@@ -120,12 +120,12 @@ contract WhitelistFacet is WhitelistedTokens {
      * See {LibWhitelist.whitelistTokenWithExternalImplmenation} for more info on implmentation.
      * The selector MUST be a view function that returns an uint256 for all implmentation.
      * The oracleImplmentation selector should take:
-     *  - `lookback` parameter 
+     *  - `lookback` parameter
      *  (foo(uint256)).
      * The gaugePointImplmentation selector should take:
-     *  - current gauge points, 
-     *  - optimal deposited bdv, 
-     *  - percent depositedbdv 
+     *  - current gauge points,
+     *  - optimal deposited bdv,
+     *  - percent depositedbdv
      * (foo(uint256, uint256, uint256)).
      * The liquidityWeightImplmentation selector should take no parameters.
      * (foo()).
@@ -166,7 +166,7 @@ contract WhitelistFacet is WhitelistedTokens {
     function updateStalkPerBdvPerSeasonForToken(
         address token,
         uint32 stalkEarnedPerSeason
-    ) external payable {
+    ) external payable fundsSafu noNetFlow noSupplyChange {
         LibDiamond.enforceIsOwnerOrContract();
         LibWhitelist.updateStalkPerBdvPerSeasonForToken(token, stalkEarnedPerSeason);
     }
@@ -180,7 +180,7 @@ contract WhitelistFacet is WhitelistedTokens {
         bytes4 gaugePointSelector,
         bytes4 liquidityWeightSelector,
         uint64 optimalPercentDepositedBdv
-    ) external payable {
+    ) external payable fundsSafu noNetFlow noSupplyChange {
         LibDiamond.enforceIsOwnerOrContract();
         LibWhitelist.updateGaugeForToken(
             token,

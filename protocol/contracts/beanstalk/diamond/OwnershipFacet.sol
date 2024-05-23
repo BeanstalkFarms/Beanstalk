@@ -1,13 +1,11 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity =0.7.6;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.20;
 
 import {LibDiamond} from "contracts/libraries/LibDiamond.sol";
 import {AppStorage} from "../AppStorage.sol";
 
 contract OwnershipFacet {
-
     AppStorage internal s;
 
     event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);

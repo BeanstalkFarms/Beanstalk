@@ -1,13 +1,14 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity ^0.7.6;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.20;
 
 import "./Internalizer.sol";
+import {LibRedundantMath128} from "contracts/libraries/LibRedundantMath128.sol";
+import {LibRedundantMath256} from "contracts/libraries/LibRedundantMath256.sol";
 
 /**
  * @author publius
- * @title Barn Raiser 
+ * @title Barn Raiser
  */
 
 interface IBS {
@@ -18,12 +19,10 @@ interface IBS {
 }
 
 contract Fertilizer is Internalizer {
-
     event ClaimFertilizer(uint256[] ids, uint256 beans);
 
-    using SafeERC20Upgradeable for IERC20;
-    using SafeMathUpgradeable for uint256;
-    using LibSafeMath128 for uint128;
+    using LibRedundantMath256 for uint256;
+    using LibRedundantMath128 for uint128;
 
     function beanstalkUpdate(
         address account,
@@ -33,19 +32,19 @@ contract Fertilizer is Internalizer {
         return __update(account, ids, uint256(bpf));
     }
 
-    function beanstalkMint(address account, uint256 id, uint128 amount, uint128 bpf) external onlyOwner {
+    function beanstalkMint(
+        address account,
+        uint256 id,
+        uint128 amount,
+        uint128 bpf
+    ) external onlyOwner {
         if (_balances[id][account].amount > 0) {
             uint256[] memory ids = new uint256[](1);
             ids[0] = id;
             _update(account, ids, bpf);
         }
         _balances[id][account].lastBpf = bpf;
-        _safeMint(
-            account,
-            id,
-            amount,
-            bytes('0')
-        );
+        _safeMint(account, id, amount, bytes("0"));
     }
 
     function _beforeTokenTransfer(
@@ -61,11 +60,7 @@ contract Fertilizer is Internalizer {
         _update(to, ids, bpf);
     }
 
-    function _update(
-        address account,
-        uint256[] memory ids,
-        uint256 bpf
-    ) internal {
+    function _update(address account, uint256[] memory ids, uint256 bpf) internal {
         uint256 amount = __update(account, ids, bpf);
         if (amount > 0) IBS(owner()).payFertilizer(account, amount);
     }
@@ -86,7 +81,10 @@ contract Fertilizer is Internalizer {
         emit ClaimFertilizer(ids, beans);
     }
 
-    function balanceOfFertilized(address account, uint256[] memory ids) external view returns (uint256 beans) {
+    function balanceOfFertilized(
+        address account,
+        uint256[] memory ids
+    ) external view returns (uint256 beans) {
         uint256 bpf = uint256(IBS(owner()).beansPerFertilizer());
         for (uint256 i; i < ids.length; ++i) {
             uint256 stopBpf = bpf < ids[i] ? bpf : ids[i];
@@ -95,10 +93,14 @@ contract Fertilizer is Internalizer {
         }
     }
 
-    function balanceOfUnfertilized(address account, uint256[] memory ids) external view returns (uint256 beans) {
+    function balanceOfUnfertilized(
+        address account,
+        uint256[] memory ids
+    ) external view returns (uint256 beans) {
         uint256 bpf = uint256(IBS(owner()).beansPerFertilizer());
         for (uint256 i; i < ids.length; ++i) {
-            if (ids[i] > bpf) beans = beans.add(ids[i].sub(bpf).mul(_balances[ids[i]][account].amount));
+            if (ids[i] > bpf)
+                beans = beans.add(ids[i].sub(bpf).mul(_balances[ids[i]][account].amount));
         }
     }
 

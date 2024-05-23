@@ -1,15 +1,11 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity =0.7.6;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.20;
 
 import {IWell} from "contracts/interfaces/basin/IWell.sol";
 import {C} from "contracts/C.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {AppStorage, LibAppStorage} from "contracts/libraries/LibAppStorage.sol";
-
-
-
 
 /**
  * @title LibBarnRaise
@@ -17,7 +13,6 @@ import {AppStorage, LibAppStorage} from "contracts/libraries/LibAppStorage.sol";
  * @notice Library fetching Barn Raise Token
  */
 library LibBarnRaise {
-
     function getBarnRaiseToken() internal view returns (address) {
         IERC20[] memory tokens = IWell(getBarnRaiseWell()).tokens();
         return address(address(tokens[0]) == C.BEAN ? tokens[1] : tokens[0]);

@@ -1,9 +1,8 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity =0.7.6;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.20;
 
-import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
+import {LibRedundantMath256} from "contracts/libraries/LibRedundantMath256.sol";
 import {ICurvePool} from "contracts/interfaces/ICurve.sol";
 import {LibAppStorage, AppStorage} from "../LibAppStorage.sol";
 import {LibConvertData} from "./LibConvertData.sol";
@@ -16,7 +15,7 @@ import {C} from "contracts/C.sol";
  * in the direction of the Peg.
  **/
 library LibCurveConvert {
-    using SafeMath for uint256;
+    using LibRedundantMath256 for uint256;
     using LibConvertData for bytes;
 
     //////////////////// GETTERS ////////////////////
@@ -51,7 +50,10 @@ library LibCurveConvert {
      * @return beans The amount of BEAN received for removing `amountIn` LP tokens.
      * @dev Assumes that i=0 corresponds to BEAN.
      */
-    function getBeanAmountOut(address pool, uint256 amountIn) internal view returns(uint256 beans) {
+    function getBeanAmountOut(
+        address pool,
+        uint256 amountIn
+    ) internal view returns (uint256 beans) {
         beans = ICurvePool(pool).calc_withdraw_one_coin(amountIn, 0); // i=0 -> BEAN
     }
 
@@ -61,7 +63,7 @@ library LibCurveConvert {
      * @return lp The amount of LP received for depositing BEAN.
      * @dev Assumes that i=0 corresponds to BEAN.
      */
-    function getLPAmountOut(address pool, uint256 amountIn) internal view returns(uint256 lp) {
+    function getLPAmountOut(address pool, uint256 amountIn) internal view returns (uint256 lp) {
         lp = ICurvePool(pool).calc_token_amount([amountIn, 0], true); // i=0 -> BEAN
     }
 
@@ -71,17 +73,10 @@ library LibCurveConvert {
      * @notice Decodes convert data and increasing deltaB by removing liquidity as Beans.
      * @param convertData Contains convert input parameters for a Curve AddLPInBeans convert
      */
-    function convertLPToBeans(bytes memory convertData)
-        internal
-        returns (
-            address tokenOut,
-            address tokenIn,
-            uint256 amountOut,
-            uint256 amountIn
-        )
-    {
-        (uint256 lp, uint256 minBeans, address pool) = convertData
-            .convertWithAddress();
+    function convertLPToBeans(
+        bytes memory convertData
+    ) internal returns (address tokenOut, address tokenIn, uint256 amountOut, uint256 amountIn) {
+        (uint256 lp, uint256 minBeans, address pool) = convertData.convertWithAddress();
         (amountOut, amountIn) = curveRemoveLPTowardsPeg(lp, minBeans, pool);
         tokenOut = C.BEAN;
         tokenIn = pool;
@@ -91,22 +86,11 @@ library LibCurveConvert {
      * @notice Decodes convert data and decreases deltaB by adding Beans as 1-sided liquidity.
      * @param convertData Contains convert input parameters for a Curve AddBeansInLP convert
      */
-    function convertBeansToLP(bytes memory convertData)
-        internal
-        returns (
-            address tokenOut,
-            address tokenIn,
-            uint256 amountOut,
-            uint256 amountIn
-        )
-    {
-        (uint256 beans, uint256 minLP, address pool) = convertData
-            .convertWithAddress();
-        (amountOut, amountIn) = curveAddLiquidityTowardsPeg(
-            beans,
-            minLP,
-            pool
-        );
+    function convertBeansToLP(
+        bytes memory convertData
+    ) internal returns (address tokenOut, address tokenIn, uint256 amountOut, uint256 amountIn) {
+        (uint256 beans, uint256 minLP, address pool) = convertData.convertWithAddress();
+        (amountOut, amountIn) = curveAddLiquidityTowardsPeg(beans, minLP, pool);
         tokenOut = pool;
         tokenIn = C.BEAN;
     }
@@ -146,15 +130,11 @@ library LibCurveConvert {
         uint256 lpTo = lpToPeg(pool);
         require(lpTo > 0, "Convert: P must be < 1.");
         lpConverted = lp > lpTo ? lpTo : lp;
-        beans = ICurvePool(pool).remove_liquidity_one_coin(
-            lpConverted,
-            0,
-            minBeans
-        );
+        beans = ICurvePool(pool).remove_liquidity_one_coin(lpConverted, 0, minBeans);
     }
 
     //////////////////// INTERNAL ////////////////////
-    
+
     function _getBeansAtPeg(
         address pool,
         uint256[2] memory balances

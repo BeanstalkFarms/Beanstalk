@@ -1,24 +1,25 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity =0.7.6;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.20;
 
-import {Weather, SafeMath, C} from "./Weather.sol";
+import {Weather, C} from "./Weather.sol";
 import {LibIncentive} from "contracts/libraries/LibIncentive.sol";
 import {LibTransfer} from "contracts/libraries/Token/LibTransfer.sol";
 import {LibWell} from "contracts/libraries/Well/LibWell.sol";
 import {LibGauge} from "contracts/libraries/LibGauge.sol";
 import {LibWhitelistedTokens} from "contracts/libraries/Silo/LibWhitelistedTokens.sol";
 import {LibGerminate} from "contracts/libraries/Silo/LibGerminate.sol";
+import {Invariable} from "contracts/beanstalk/Invariable.sol";
 import {LibTractor} from "contracts/libraries/LibTractor.sol";
+import {LibRedundantMath256} from "contracts/libraries/LibRedundantMath256.sol";
 
 /**
  * @title SeasonFacet
  * @author Publius, Chaikitty, Brean
  * @notice Holds the Sunrise function and handles all logic for Season changes.
  */
-contract SeasonFacet is Weather {
-    using SafeMath for uint256;
+contract SeasonFacet is Invariable, Weather {
+    using LibRedundantMath256 for uint256;
 
     /**
      * @notice Emitted when the Season changes.
@@ -31,8 +32,10 @@ contract SeasonFacet is Weather {
     /**
      * @notice Advances Beanstalk to the next Season, sending reward Beans to the caller's circulating balance.
      * @return reward The number of beans minted to the caller.
+     * @dev No out flow because any externally sent reward beans are freshly minted.
      */
-    function sunrise() external payable returns (uint256) {
+    // TODO: FIx this. should be broken from noNetFlow bc balance of beanstalk will increase
+    function sunrise() external payable fundsSafu noOutFlow returns (uint256) {
         return gm(LibTractor._user(), LibTransfer.To.EXTERNAL);
     }
 
@@ -41,8 +44,12 @@ contract SeasonFacet is Weather {
      * @param account Indicates to which address reward Beans should be sent
      * @param mode Indicates whether the reward beans are sent to internal or circulating balance
      * @return reward The number of Beans minted to the caller.
+     * @dev No out flow because any externally sent reward beans are freshly minted.
      */
-    function gm(address account, LibTransfer.To mode) public payable returns (uint256) {
+    function gm(
+        address account,
+        LibTransfer.To mode
+    ) public payable fundsSafu noOutFlow returns (uint256) {
         uint256 initialGasLeft = gasleft();
 
         require(!s.paused, "Season: Paused.");
@@ -64,7 +71,7 @@ contract SeasonFacet is Weather {
     function seasonTime() public view virtual returns (uint32) {
         if (block.timestamp < s.season.start) return 0;
         if (s.season.period == 0) return type(uint32).max;
-        return uint32((block.timestamp - s.season.start) / s.season.period); // Note: SafeMath is redundant here.
+        return uint32((block.timestamp - s.season.start) / s.season.period);
     }
 
     //////////////////// SEASON INTERNAL ////////////////////

@@ -2,8 +2,7 @@
  SPDX-License-Identifier: MIT
 */
 
-pragma solidity =0.7.6;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.20;
 
 import "contracts/libraries/Silo/LibLegacyWhitelist.sol";
 import {AppStorage} from "../AppStorage.sol";
@@ -12,10 +11,9 @@ import {BDVFacet} from "contracts/beanstalk/silo/BDVFacet.sol";
 /**
  * @author Publius
  * @title InitBip8 runs the code for BIP-8.
-**/
+ **/
 
 contract InitWhitelist {
-
     uint32 private constant BEAN_3CRV_STALK = 10000;
     uint32 private constant BEAN_3CRV_SEEDS = 4;
 

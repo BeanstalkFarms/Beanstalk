@@ -2,12 +2,11 @@
  * SPDX-License-Identifier: MIT
  **/
 
-pragma solidity =0.7.6;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.20;
 
 import {LibChainlinkOracle} from "./LibChainlinkOracle.sol";
 import {LibUniswapOracle} from "./LibUniswapOracle.sol";
-import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
+import {LibRedundantMath256} from "contracts/libraries/LibRedundantMath256.sol";
 import {LibAppStorage, AppStorage} from "contracts/libraries/LibAppStorage.sol";
 import {C} from "contracts/C.sol";
 import {LibOracleHelpers} from "contracts/libraries/Oracle/LibOracleHelpers.sol";
@@ -36,7 +35,7 @@ interface IWsteth {
  * if (1) and (2) are within `MAX_DIFFERENCE` from each other or (1).
  **/
 library LibWstethEthOracle {
-    using SafeMath for uint256;
+    using LibRedundantMath256 for uint256;
 
     // The maximum percent difference such that the oracle assumes no manipulation is occuring.
     uint256 constant MAX_DIFFERENCE = 0.01e18; // 1%
@@ -60,25 +59,32 @@ library LibWstethEthOracle {
      * Returns 0 if the either the Chainlink Oracle or Uniswap Oracle cannot fetch a valid price.
      **/
     function getWstethEthPrice(uint256 lookback) internal view returns (uint256 wstethEthPrice) {
-
-        uint256 chainlinkPrice = lookback == 0 ? 
-            LibChainlinkOracle.getPrice(C.WSTETH_ETH_CHAINLINK_PRICE_AGGREGATOR, LibChainlinkOracle.FOUR_DAY_TIMEOUT) :
-            LibChainlinkOracle.getTwap(C.WSTETH_ETH_CHAINLINK_PRICE_AGGREGATOR, LibChainlinkOracle.FOUR_DAY_TIMEOUT, lookback);
+        uint256 chainlinkPrice = lookback == 0
+            ? LibChainlinkOracle.getPrice(
+                C.WSTETH_ETH_CHAINLINK_PRICE_AGGREGATOR,
+                LibChainlinkOracle.FOUR_DAY_TIMEOUT
+            )
+            : LibChainlinkOracle.getTwap(
+                C.WSTETH_ETH_CHAINLINK_PRICE_AGGREGATOR,
+                LibChainlinkOracle.FOUR_DAY_TIMEOUT,
+                lookback
+            );
 
         // Check if the chainlink price is broken or frozen.
         if (chainlinkPrice == 0) return 0;
 
         uint256 stethPerWsteth = IWsteth(C.WSTETH).stEthPerToken();
-        
-        chainlinkPrice = chainlinkPrice.mul(stethPerWsteth).div(CHAINLINK_DENOMINATOR);
 
+        chainlinkPrice = chainlinkPrice.mul(stethPerWsteth).div(CHAINLINK_DENOMINATOR);
 
         // Uniswap V3 only supports a uint32 lookback.
         if (lookback > type(uint32).max) return 0;
         uint256 uniswapPrice = LibUniswapOracle.getTwap(
-            lookback == 0 ? LibUniswapOracle.FIFTEEN_MINUTES :
-            uint32(lookback),
-            C.WSTETH_ETH_UNIV3_01_POOL, C.WSTETH, C.WETH, ONE
+            lookback == 0 ? LibUniswapOracle.FIFTEEN_MINUTES : uint32(lookback),
+            C.WSTETH_ETH_UNIV3_01_POOL,
+            C.WSTETH,
+            C.WETH,
+            ONE
         );
 
         // Check if the uniswapPrice oracle fails.

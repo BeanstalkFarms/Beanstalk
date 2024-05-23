@@ -2,8 +2,7 @@
  SPDX-License-Identifier: MIT
 */
 
-pragma solidity =0.7.6;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.20;
 
 import "../../C.sol";
 import "../LibAppStorage.sol";
@@ -15,17 +14,16 @@ import "contracts/libraries/Silo/LibTokenSilo.sol";
  * @notice Handles adding and removing ERC-20 tokens from the Legacy Silo Whitelist.
  */
 library LibLegacyWhitelist {
-
     /**
      * @notice Emitted when a token is added to the Silo Whitelist.
      * @param token ERC-20 token being added to the Silo Whitelist.
      * @param selector The function selector that returns the BDV of a given
      * amount of `token`. Must have signature:
-     * 
+     *
      * ```
      * function bdv(uint256 amount) public view returns (uint256);
      * ```
-     * 
+     *
      * @param stalkEarnedPerSeason The Stalk per BDV per Season received from depositing `token`.
      * @param stalk The Stalk per BDV received from depositing `token`.
      */

@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity ^0.7.6;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.20;
 
-import {SafeCast} from "@openzeppelin/contracts/utils/SafeCast.sol";
-import {LibFertilizer, SafeMath} from "contracts/libraries/LibFertilizer.sol";
-import {LibSafeMath128} from "contracts/libraries/LibSafeMath128.sol";
+import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
+import {LibFertilizer} from "contracts/libraries/LibFertilizer.sol";
+import {LibRedundantMath128} from "contracts/libraries/LibRedundantMath128.sol";
+import {LibRedundantMath256} from "contracts/libraries/LibRedundantMath256.sol";
 import {Oracle, C} from "./Oracle.sol";
 
 /**
@@ -15,18 +15,18 @@ import {Oracle, C} from "./Oracle.sol";
  */
 contract Sun is Oracle {
     using SafeCast for uint256;
-    using SafeMath for uint256;
-    using LibSafeMath128 for uint128;
+    using LibRedundantMath256 for uint256;
+    using LibRedundantMath128 for uint128;
 
     /// @dev When Fertilizer is Active, it receives 1/3 of new Bean mints.
     uint256 private constant FERTILIZER_DENOMINATOR = 3;
 
-    /// @dev After Fertilizer, Harvestable Pods receive 1/2 of new Bean mints. 
+    /// @dev After Fertilizer, Harvestable Pods receive 1/2 of new Bean mints.
     uint256 private constant HARVEST_DENOMINATOR = 2;
 
     /// @dev When the Pod Rate is high, issue less Soil.
     uint256 private constant SOIL_COEFFICIENT_HIGH = 0.5e18;
-    
+
     /// @dev When the Pod Rate is low, issue more Soil.
     uint256 private constant SOIL_COEFFICIENT_LOW = 1.5e18;
 
@@ -37,25 +37,17 @@ contract Sun is Oracle {
      * @param toSilo The number of Beans distributed to the Silo.
      * @param toFertilizer The number of Beans distributed to Fertilizer.
      */
-    event Reward(
-        uint32 indexed season,
-        uint256 toField,
-        uint256 toSilo,
-        uint256 toFertilizer
-    );
+    event Reward(uint32 indexed season, uint256 toField, uint256 toSilo, uint256 toFertilizer);
 
     /**
      * @notice Emitted during Sunrise when Beanstalk adjusts the amount of available Soil.
      * @param season The Season in which Soil was adjusted.
      * @param soil The new amount of Soil available.
      */
-    event Soil(
-        uint32 indexed season,
-        uint256 soil
-    );
+    event Soil(uint32 indexed season, uint256 soil);
 
     //////////////////// SUN INTERNAL ////////////////////
-    
+
     /**
      * @param deltaB Pre-calculated deltaB from {Oracle.stepOracle}.
      * @param caseId Pre-calculated Weather case from {Weather.calcCaseId}.
@@ -66,8 +58,7 @@ contract Sun is Oracle {
             uint256 newHarvestable = rewardBeans(uint256(deltaB));
             setSoilAbovePeg(newHarvestable, caseId);
             s.season.abovePeg = true;
-        } 
-
+        }
         // Below peg
         else {
             setSoil(uint256(-deltaB));
@@ -82,7 +73,7 @@ contract Sun is Oracle {
      */
     function rewardBeans(uint256 newSupply) internal returns (uint256 newHarvestable) {
         uint256 newFertilized;
-        
+
         C.bean().mint(address(this), newSupply);
 
         // Distribute first to Fertilizer if some Fertilizer are active
@@ -106,10 +97,7 @@ contract Sun is Oracle {
     /**
      * @dev Distributes Beans to Fertilizer.
      */
-    function rewardToFertilizer(uint256 amount)
-        internal
-        returns (uint256 newFertilized)
-    {
+    function rewardToFertilizer(uint256 amount) internal returns (uint256 newFertilized) {
         // 1/3 of new Beans being minted
         uint256 maxNewFertilized = amount.div(FERTILIZER_DENOMINATOR);
 
@@ -122,7 +110,7 @@ contract Sun is Oracle {
         uint256 firstEndBpf = s.fFirst;
 
         // If the next fertilizer is going to run out, then step BPF according
-        while(newTotalBpf >= firstEndBpf) {
+        while (newTotalBpf >= firstEndBpf) {
             // Calculate BPF and new Fertilized when the next Fertilizer ID ends
             newBpf = firstEndBpf.sub(oldTotalBpf);
             newFertilized = newFertilized.add(newBpf.mul(s.activeFertilizer));
@@ -152,15 +140,10 @@ contract Sun is Oracle {
      * @dev Distributes Beans to the Field. The next `amount` Pods in the Pod Line
      * become Harvestable.
      */
-    function rewardToHarvestable(uint256 amount)
-        internal    
-        returns (uint256 newHarvestable)
-    {
-        uint256 notHarvestable = s.f.pods - s.f.harvestable; // Note: SafeMath is redundant here.
+    function rewardToHarvestable(uint256 amount) internal returns (uint256 newHarvestable) {
+        uint256 notHarvestable = s.f.pods - s.f.harvestable;
         newHarvestable = amount.div(HARVEST_DENOMINATOR);
-        newHarvestable = newHarvestable > notHarvestable
-            ? notHarvestable
-            : newHarvestable;
+        newHarvestable = newHarvestable > notHarvestable ? notHarvestable : newHarvestable;
         s.f.harvestable = s.f.harvestable.add(newHarvestable);
     }
 
@@ -189,16 +172,12 @@ contract Sun is Oracle {
         // s.newEarnedStalk = seasonStalk.toUint128();
         // s.vestingPeriodRoots = 0;
 
-        s.siloBalances[C.BEAN].deposited = s
-            .siloBalances[C.BEAN]
-            .deposited
-            .add(amount.toUint128());
+        s.siloBalances[C.BEAN].deposited = s.siloBalances[C.BEAN].deposited.add(amount.toUint128());
 
         // SafeCast not necessary as the block above will fail if amount > type(uint128).max.
-        s.siloBalances[C.BEAN].depositedBdv = s
-            .siloBalances[C.BEAN]
-            .depositedBdv
-            .add(uint128(amount));
+        s.siloBalances[C.BEAN].depositedBdv = s.siloBalances[C.BEAN].depositedBdv.add(
+            uint128(amount)
+        );
     }
 
     //////////////////// SET SOIL ////////////////////
@@ -209,7 +188,7 @@ contract Sun is Oracle {
      * @dev When above peg, Beanstalk wants to gauge demand for Soil. Here it
      * issues the amount of Soil that would result in the same number of Pods
      * as became Harvestable during the last Season.
-     * 
+     *
      * When the Pod Rate is high, Beanstalk issues less Soil.
      * When the Pod Rate is low, Beanstalk issues more Soil.
      */
@@ -223,7 +202,6 @@ contract Sun is Oracle {
         setSoil(newSoil);
     }
 
-    
     function setSoil(uint256 amount) internal {
         s.f.soil = amount.toUint128();
         emit Soil(s.season.current, amount.toUint128());

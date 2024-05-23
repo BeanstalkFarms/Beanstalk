@@ -2,20 +2,20 @@
  * SPDX-License-Identifier: MIT
  **/
 
-pragma solidity =0.7.6;
+pragma solidity ^0.8.20;
 pragma abicoder v2;
 
 import {AppStorage, Storage} from "contracts/beanstalk/AppStorage.sol";
-import {SafeERC20, IERC20} from "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
+import {SafeERC20, IERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {ReentrancyGuard} from "contracts/beanstalk/ReentrancyGuard.sol";
-import {LibSafeMath128} from "contracts/libraries/LibSafeMath128.sol";
-import {LibSafeMath32} from "contracts/libraries/LibSafeMath32.sol";
+import {LibRedundantMath128} from "contracts/libraries/LibRedundantMath128.sol";
+import {LibRedundantMath32} from "contracts/libraries/LibRedundantMath32.sol";
 import {LibGerminate} from "contracts/libraries/Silo/LibGerminate.sol";
 import {LibTokenSilo} from "contracts/libraries/Silo/LibTokenSilo.sol";
 import {LibSilo} from "contracts/libraries/Silo/LibSilo.sol";
 import {LibTractor} from "contracts/libraries/LibTractor.sol";
-import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
-import {SafeCast} from "@openzeppelin/contracts/utils/SafeCast.sol";
+import {LibRedundantMath256} from "contracts/libraries/LibRedundantMath256.sol";
+import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
 import {LibBytes} from "contracts/libraries/LibBytes.sol";
 import {C} from "contracts/C.sol";
 import {IWell} from "contracts/interfaces/basin/IWell.sol";
@@ -32,13 +32,13 @@ import {IWell} from "contracts/interfaces/basin/IWell.sol";
  * For backwards compatibility, a Flood is sometimes referred to by its old name
  * "Season of Plenty".
  */
- 
-contract Silo is ReentrancyGuard {
-    using SafeMath for uint256;
-    using SafeERC20 for IERC20;
-    using LibSafeMath128 for uint128;
 
-    //////////////////////// EVENTS ////////////////////////    
+contract Silo is ReentrancyGuard {
+    using LibRedundantMath256 for uint256;
+    using SafeERC20 for IERC20;
+    using LibRedundantMath128 for uint128;
+
+    //////////////////////// EVENTS ////////////////////////
 
     /**
      * @notice Emitted when the deposit associated with the Earned Beans of
@@ -46,34 +46,26 @@ contract Silo is ReentrancyGuard {
      * @param account Owns the Earned Beans
      * @param beans The amount of Earned Beans claimed by `account`.
      */
-    event Plant(
-        address indexed account,
-        uint256 beans
-    );
+    event Plant(address indexed account, uint256 beans);
 
     /**
      * @notice Emitted when 3CRV paid to `account` during a Flood is Claimed.
      * @param account Owns and receives the assets paid during a Flood.
      * @param plenty The amount of 3CRV claimed by `account`. This is the amount
      * that `account` has been paid since their last {ClaimPlenty}.
-     * 
+     *
      * @dev Flood was previously called a "Season of Plenty". For backwards
-     * compatibility, the event has not been changed. For more information on 
+     * compatibility, the event has not been changed. For more information on
      * Flood, see: {Weather.sop}.
      */
-    event ClaimPlenty(
-        address indexed account,
-        address token,
-        uint256 plenty
-    );
-
+    event ClaimPlenty(address indexed account, address token, uint256 plenty);
 
     /**
      * @notice Emitted when `account` gains or loses Stalk.
      * @param account The account that gained or lost Stalk.
      * @param delta The change in Stalk.
      * @param deltaRoots The change in Roots.
-     *   
+     *
      * @dev {StalkBalanceChanged} should be emitted anytime a Deposit is added, removed or transferred AND
      * anytime an account Mows Grown Stalk.
      * @dev BIP-24 included a one-time re-emission of {SeedsBalanceChanged} for accounts that had
@@ -81,11 +73,7 @@ contract Silo is ReentrancyGuard {
      * [BIP-24](https://github.com/BeanstalkFarms/Beanstalk-Governance-Proposals/blob/master/bip/bip-24-fungible-bdv-support.md)
      * [Event-24-Event-Emission](https://github.com/BeanstalkFarms/Event-24-Event-Emission)
      */
-    event StalkBalanceChanged(
-        address indexed account,
-        int256 delta,
-        int256 deltaRoots
-    );
+    event StalkBalanceChanged(address indexed account, int256 delta, int256 deltaRoots);
 
     //////////////////////// INTERNAL: MOW ////////////////////////
 
@@ -102,14 +90,14 @@ contract Silo is ReentrancyGuard {
     /**
      * @dev Plants the Plantable BDV of `account` associated with its Earned
      * Beans.
-     * 
+     *
      * For more info on Planting, see: {SiloFacet-plant}
      */
-     
+
     function _plant(address account) internal returns (uint256 beans, int96 stemTip) {
-        // Need to Mow for `account` before we calculate the balance of 
+        // Need to Mow for `account` before we calculate the balance of
         // Earned Beans.
-    
+
         LibSilo._mow(account, C.BEAN);
         uint256 accountStalk = s.a[account].s.stalk;
 
@@ -117,11 +105,11 @@ contract Silo is ReentrancyGuard {
         beans = LibSilo._balanceOfEarnedBeans(accountStalk, s.a[account].roots);
         stemTip = LibTokenSilo.stemTipForToken(C.BEAN);
         if (beans == 0) return (0, stemTip);
-        
+
         // Reduce the Silo's supply of Earned Beans.
         // SafeCast unnecessary because beans is <= s.earnedBeans.
         s.earnedBeans = s.earnedBeans.sub(uint128(beans));
-        
+
         // Deposit Earned Beans if there are any. Note that 1 Bean = 1 BDV.
         LibTokenSilo.addDepositToAccount(
             account,
@@ -155,11 +143,10 @@ contract Silo is ReentrancyGuard {
     function _claimPlenty(address account) internal {
         // Plenty is earned in the form of the non-Bean token in the SOP Well.
         uint256 plenty = s.a[account].sop.plenty;
-        IWell well = IWell(s.sopWell);
-        IERC20[] memory tokens = well.tokens();
-        IERC20 sopToken = tokens[0] != C.bean() ? tokens[0] : tokens[1];
+        IERC20 sopToken = LibSilo.getSopToken();
         sopToken.safeTransfer(account, plenty);
         delete s.a[account].sop.plenty;
+        s.plenty -= plenty;
 
         emit ClaimPlenty(account, address(sopToken), plenty);
     }

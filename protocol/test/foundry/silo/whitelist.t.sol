@@ -231,7 +231,7 @@ contract WhitelistTest is TestHelper {
         bytes4 bdvSelector = IMockFBeanstalk.beanToBDV.selector;
         bytes4 gaugePointSelector = IMockFBeanstalk.defaultGaugePointFunction.selector;
         bytes4 liquidityWeightSelector = IMockFBeanstalk.maxWeight.selector;
-        encodeType = encodeType % 2;  // 0 or 1
+        encodeType = encodeType % 2; // 0 or 1
         verifyWhitelistEvents(
             token,
             bdvSelector,
@@ -334,13 +334,16 @@ contract WhitelistTest is TestHelper {
         IMockFBeanstalk.SiloSettings memory ss = bs.tokenSettings(token);
         assertEq(ss.selector, bdvSelector);
         assertEq(uint256(ss.stalkIssuedPerBdv), stalkIssuedPerBdv);
-        assertEq(uint256(ss.stalkEarnedPerSeason), stalkEarnedPerSeason == 0 ? 1 : stalkEarnedPerSeason);
+        assertEq(
+            uint256(ss.stalkEarnedPerSeason),
+            stalkEarnedPerSeason == 0 ? 1 : stalkEarnedPerSeason
+        );
         assertEq(uint256(ss.stalkIssuedPerBdv), stalkIssuedPerBdv);
         assertEq(ss.gpSelector, gaugePointSelector);
         assertEq(ss.lwSelector, liquidityWeightSelector);
         assertEq(uint256(ss.gaugePoints), gaugePoints);
         assertEq(uint256(ss.optimalPercentDepositedBdv), optimalPercentDepositedBdv);
-        
+
         IMockFBeanstalk.WhitelistStatus memory ws = bs.getWhitelistStatus(token);
         assertEq(ws.token, token);
         assertEq(ws.isWhitelisted, isWhitelisted);

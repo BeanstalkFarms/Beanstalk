@@ -4,7 +4,6 @@
 pragma solidity >=0.6.0 <0.9.0;
 pragma abicoder v2;
 
-
 /// Modules
 
 // Diamond
@@ -40,9 +39,6 @@ import {MockSeasonFacet, SeasonFacet} from "contracts/mocks/mockFacets/MockSeaso
 // import {SiloGettersFacet} from "contracts/beanstalk/silo/SiloFacet/SiloGettersFacet.sol";
 // import {ConvertGettersFacet} from "contracts/beanstalk/silo/ConvertGettersFacet.sol";
 import {SeasonGettersFacet} from "contracts/beanstalk/sun/SeasonFacet/SeasonGettersFacet.sol";
-
-// Potential removals for L2 migration.
-// import {MockMarketplaceFacet, MarketplaceFacet} from "contracts/mocks/mockFacets/MockMarketplaceFacet.sol";
 
 // constants.
 import "contracts/C.sol";

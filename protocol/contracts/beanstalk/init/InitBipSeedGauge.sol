@@ -2,20 +2,20 @@
  SPDX-License-Identifier: MIT
 */
 
-pragma solidity =0.7.6;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.20;
+
 import {AppStorage, Storage} from "contracts/beanstalk/AppStorage.sol";
 import {C} from "../../C.sol";
 import {LibWhitelistedTokens} from "contracts/libraries/Silo/LibWhitelistedTokens.sol";
 import {LibTokenSilo} from "contracts/libraries/Silo/LibTokenSilo.sol";
-import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
+import {LibRedundantMath256} from "contracts/libraries/LibRedundantMath256.sol";
 import {LibCases} from "contracts/libraries/LibCases.sol";
 import {LibWhitelist} from "contracts/libraries/Silo/LibWhitelist.sol";
 import {LibGauge} from "contracts/libraries/LibGauge.sol";
 import {Weather} from "contracts/beanstalk/sun/SeasonFacet/Weather.sol";
-import {LibSafeMathSigned96} from "contracts/libraries/LibSafeMathSigned96.sol";
-import {LibSafeMath128} from "contracts/libraries/LibSafeMath128.sol";
-import {SafeCast} from "@openzeppelin/contracts/utils/SafeCast.sol";
+import {LibRedundantMathSigned96} from "contracts/libraries/LibRedundantMathSigned96.sol";
+import {LibRedundantMath128} from "contracts/libraries/LibRedundantMath128.sol";
+import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
 import {ILiquidityWeightFacet} from "contracts/beanstalk/sun/LiquidityWeightFacet.sol";
 import {IGaugePointFacet} from "contracts/beanstalk/sun/GaugePointFacet.sol";
 import {InitWhitelistStatuses} from "contracts/beanstalk/init/InitWhitelistStatuses.sol";
@@ -25,9 +25,9 @@ import {InitWhitelistStatuses} from "contracts/beanstalk/init/InitWhitelistStatu
  * @title InitBipSeedGauge initalizes the seed gauge, updates siloSetting Struct
  **/
 contract InitBipSeedGauge is Weather, InitWhitelistStatuses {
-    using SafeMath for uint256;
-    using LibSafeMathSigned96 for int96;
-    using LibSafeMath128 for uint128;
+    using LibRedundantMath256 for uint256;
+    using LibRedundantMathSigned96 for int96;
+    using LibRedundantMath128 for uint128;
     using SafeCast for uint256;
 
     uint256 private constant TARGET_SEASONS_TO_CATCHUP = 4320;
@@ -43,11 +43,11 @@ contract InitBipSeedGauge is Weather, InitWhitelistStatuses {
     uint128 internal constant BEAN_ETH_INITIAL_GAUGE_POINTS = 100e18;
 
     function init() external {
-
-        // Update milestone season decimal precision 
+        // Update milestone season decimal precision
         // prior to dewhitelisting Bean3CRV.
-        s.ss[C.CURVE_BEAN_METAPOOL].milestoneStem = 
-            int96(s.ss[C.CURVE_BEAN_METAPOOL].milestoneStem.mul(1e6));
+        s.ss[C.CURVE_BEAN_METAPOOL].milestoneStem = int96(
+            s.ss[C.CURVE_BEAN_METAPOOL].milestoneStem.mul(1e6)
+        );
 
         addWhitelistStatuses(true);
 
@@ -78,27 +78,26 @@ contract InitBipSeedGauge is Weather, InitWhitelistStatuses {
 
         bytes4 gpSelector = IGaugePointFacet.defaultGaugePointFunction.selector;
         bytes4 lwSelector = ILiquidityWeightFacet.maxWeight.selector;
-        
+
         bytes4[4] memory gpSelectors = [bytes4(0), gpSelector, 0, 0];
         bytes4[4] memory lwSelectors = [bytes4(0), lwSelector, 0, 0];
         uint128[4] memory gaugePoints = [uint128(0), BEAN_ETH_INITIAL_GAUGE_POINTS, 0, 0];
         uint64[4] memory optimalPercentDepositedBdv = [uint64(0), 100e6, 0, 0];
-        
+
         uint128 totalBdv;
         for (uint i = 0; i < siloTokens.length; i++) {
-
             // previously, the milestone stem was stored truncated. The seed gauge system now stores
             // the value untruncated, and thus needs to update all previous milestone stems.
             // This is a one time update, and will not be needed in the future.
             s.ss[siloTokens[i]].milestoneStem = int96(s.ss[siloTokens[i]].milestoneStem.mul(1e6));
 
-            // update gpSelector, lwSelector, gaugePoint,and optimalPercentDepositedBdv 
+            // update gpSelector, lwSelector, gaugePoint,and optimalPercentDepositedBdv
             s.ss[siloTokens[i]].gpSelector = gpSelectors[i];
             s.ss[siloTokens[i]].lwSelector = lwSelectors[i];
             s.ss[siloTokens[i]].gaugePoints = gaugePoints[i];
             s.ss[siloTokens[i]].optimalPercentDepositedBdv = optimalPercentDepositedBdv[i];
 
-            // if the silo token has a stalkEarnedPerSeason of 0, 
+            // if the silo token has a stalkEarnedPerSeason of 0,
             // update to 1.
             if (s.ss[siloTokens[i]].stalkEarnedPerSeason == 0) {
                 LibWhitelist.updateStalkPerBdvPerSeasonForToken(siloTokens[i], 1);
@@ -121,7 +120,7 @@ contract InitBipSeedGauge is Weather, InitWhitelistStatuses {
         emit BeanToMaxLpGpPerBdvRatioChange(
             s.season.current,
             type(uint256).max,
-            int80(s.seedGauge.beanToMaxLpGpPerBdvRatio)
+            int80(int128(s.seedGauge.beanToMaxLpGpPerBdvRatio))
         );
 
         emit LibGauge.UpdateAverageStalkPerBdvPerSeason(

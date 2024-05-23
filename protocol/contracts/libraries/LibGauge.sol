@@ -2,15 +2,14 @@
  SPDX-License-Identifier: MIT
 */
 
-pragma solidity =0.7.6;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.20;
 
 import {LibAppStorage, AppStorage, Storage} from "./LibAppStorage.sol";
-import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
-import {SafeCast} from "@openzeppelin/contracts/utils/SafeCast.sol";
+import {LibRedundantMath256} from "contracts/libraries/LibRedundantMath256.sol";
+import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
 import {LibWhitelistedTokens} from "contracts/libraries/Silo/LibWhitelistedTokens.sol";
 import {LibWhitelist} from "contracts/libraries/Silo/LibWhitelist.sol";
-import {LibSafeMath32} from "contracts/libraries/LibSafeMath32.sol";
+import {LibRedundantMath32} from "contracts/libraries/LibRedundantMath32.sol";
 import {C} from "../C.sol";
 import {LibWell} from "contracts/libraries/Well/LibWell.sol";
 
@@ -21,8 +20,8 @@ import {LibWell} from "contracts/libraries/Well/LibWell.sol";
  */
 library LibGauge {
     using SafeCast for uint256;
-    using SafeMath for uint256;
-    using LibSafeMath32 for uint32;
+    using LibRedundantMath256 for uint256;
+    using LibRedundantMath32 for uint32;
 
     uint256 internal constant BDV_PRECISION = 1e6;
     uint256 internal constant GP_PRECISION = 1e18;
@@ -159,7 +158,9 @@ library LibGauge {
 
             // Gauge points has 18 decimal precision (GP_PRECISION = 1%)
             // Deposited BDV has 6 decimal precision (1e6 = 1 unit of BDV)
-            uint256 gpPerBdv = depositedBdv > 0 ? newGaugePoints.mul(BDV_PRECISION).div(depositedBdv) : 0;
+            uint256 gpPerBdv = depositedBdv > 0
+                ? newGaugePoints.mul(BDV_PRECISION).div(depositedBdv)
+                : 0;
 
             // gpPerBdv has 18 decimal precision.
             if (gpPerBdv > maxLpGpPerBdv) maxLpGpPerBdv = gpPerBdv;
@@ -298,7 +299,7 @@ library LibGauge {
 
     /**
      * @notice Updates the UpdateAverageStalkPerBdvPerSeason in the seed gauge.
-     * @dev The function updates the targetGrownStalkPerBdvPerSeason such that 
+     * @dev The function updates the targetGrownStalkPerBdvPerSeason such that
      * it will take 6 months for the average new depositer to catch up to the current
      * average grown stalk per BDV.
      */

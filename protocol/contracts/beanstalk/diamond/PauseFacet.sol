@@ -2,10 +2,9 @@
  * SPDX-License-Identifier: MIT
  **/
 
-pragma solidity ^0.7.6;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.20;
 
-import "@openzeppelin/contracts/math/SafeMath.sol";
+import "contracts/libraries/LibRedundantMath256.sol";
 import {LibDiamond} from "contracts/libraries/LibDiamond.sol";
 import {AppStorage} from "../AppStorage.sol";
 
@@ -16,7 +15,7 @@ import {AppStorage} from "../AppStorage.sol";
 contract PauseFacet {
     AppStorage internal s;
 
-    using SafeMath for uint256;
+    using LibRedundantMath256 for uint256;
 
     event Pause(uint256 timestamp);
     event Unpause(uint256 timestamp, uint256 timePassed);

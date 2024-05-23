@@ -2,10 +2,9 @@
  * SPDX-License-Identifier: MIT
  **/
 
-pragma solidity =0.7.6;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.20;
 
-import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
+import {LibRedundantMath256} from "contracts/libraries/LibRedundantMath256.sol";
 import {C} from "contracts/C.sol";
 
 /**
@@ -13,8 +12,7 @@ import {C} from "contracts/C.sol";
  * @notice Contains Helper Fucntions for Minting related functionality.
  **/
 library LibMinting {
-
-    using SafeMath for uint256;
+    using LibRedundantMath256 for uint256;
 
     uint256 private constant MAX_DELTA_B_DENOMINATOR = 100;
 
@@ -23,5 +21,4 @@ library LibMinting {
         if (deltaB < 0) return deltaB > -maxDeltaB ? deltaB : -maxDeltaB;
         return deltaB < maxDeltaB ? deltaB : maxDeltaB;
     }
-
 }

@@ -2,7 +2,7 @@
  SPDX-License-Identifier: MIT
 */
 
-pragma solidity =0.7.6;
+pragma solidity ^0.8.20;
 
 import "./MockToken.sol";
 import {IWsteth} from "contracts/libraries/Oracle/LibWstethEthOracle.sol";
@@ -10,9 +10,8 @@ import {IWsteth} from "contracts/libraries/Oracle/LibWstethEthOracle.sol";
 /**
  * @author Brendan
  * @title Mock WStEth
-**/
+ **/
 contract MockWsteth is MockToken {
-
     uint256 _stEthPerToken;
 
     constructor() MockToken("Wrapped Staked Ether", "WSTETH") {
@@ -26,6 +25,4 @@ contract MockWsteth is MockToken {
     function stEthPerToken() external view returns (uint256) {
         return _stEthPerToken;
     }
-
-
 }

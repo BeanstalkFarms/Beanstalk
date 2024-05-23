@@ -2,7 +2,7 @@ const { expect } = require("chai");
 const { deploy } = require("../scripts/deploy.js");
 const { setEthUsdcPrice, setEthUsdChainlinkPrice, printPrices } = require("../utils/oracle.js");
 const { getBean, getAllBeanstalkContracts } = require("../utils/contracts");
-const { setRecapitalizationParams } = require('./utils/testHelpers.js')
+const { setRecapitalizationParams } = require("./utils/testHelpers.js");
 const {
   initContracts,
   signRequisition,
@@ -49,7 +49,7 @@ describe("Tractor", function () {
     const contracts = await deploy(false, true);
     this.diamond = contracts.beanstalkDiamond;
     [beanstalk, mockBeanstalk] = await getAllBeanstalkContracts(this.diamond.address);
-    bean = await getBean()
+    bean = await getBean();
     this.tractorFacet = await ethers.getContractAt("TractorFacet", this.diamond.address);
     this.farmFacet = await ethers.getContractAt("FarmFacet", this.diamond.address);
     this.seasonFacet = await ethers.getContractAt("MockSeasonFacet", this.diamond.address);
@@ -106,7 +106,7 @@ describe("Tractor", function () {
       .addLiquidity([to6("1000000"), to18("2000")], 0, owner.address, ethers.constants.MaxUint256);
 
     // Set recapitalization parameters (see function for default values).
-    await setRecapitalizationParams(owner)
+    await setRecapitalizationParams(owner);
 
     this.blueprint = {
       publisher: publisher.address,
@@ -140,7 +140,7 @@ describe("Tractor", function () {
       this.requisition.signature = "0x0000";
       await expect(
         this.tractorFacet.connect(publisher).publishRequisition(this.requisition)
-      ).to.be.revertedWith("ECDSA: invalid signature length");
+      ).to.be.revertedWith("ECDSAInvalidSignatureLength");
     });
 
     it("should fail when signature is invalid #2", async function () {
@@ -148,7 +148,7 @@ describe("Tractor", function () {
         "0x0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000";
       await expect(
         this.tractorFacet.connect(publisher).publishRequisition(this.requisition)
-      ).to.be.revertedWith("ECDSA: invalid signature 'v' value");
+      ).to.be.revertedWith("ECDSAInvalidSignature");
     });
 
     it("should fail when signature is invalid #3", async function () {
@@ -169,7 +169,7 @@ describe("Tractor", function () {
       this.requisition.signature = "0x0000";
       await expect(
         this.tractorFacet.connect(publisher).cancelBlueprint(this.requisition)
-      ).to.be.revertedWith("ECDSA: invalid signature length");
+      ).to.be.revertedWith("ECDSAInvalidSignatureLength");
     });
 
     it("should fail when signature is invalid #2", async function () {
@@ -177,7 +177,7 @@ describe("Tractor", function () {
         "0x0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000";
       await expect(
         this.tractorFacet.connect(publisher).cancelBlueprint(this.requisition)
-      ).to.be.revertedWith("ECDSA: invalid signature 'v' value");
+      ).to.be.revertedWith("ECDSAInvalidSignature");
     });
 
     it("should fail when signature is invalid #3", async function () {
@@ -220,9 +220,9 @@ describe("Tractor", function () {
       mockBeanstalk
         .connect(publisher)
         .transferToken(bean.address, publisher.address, to6("1000"), 0, 1);
-      expect(
-        await this.tokenFacet.getInternalBalance(publisher.address, bean.address)
-      ).to.be.eq(to6("1000"));
+      expect(await this.tokenFacet.getInternalBalance(publisher.address, bean.address)).to.be.eq(
+        to6("1000")
+      );
 
       await this.tractorFacet.connect(publisher).publishRequisition(this.requisition);
 
@@ -231,9 +231,9 @@ describe("Tractor", function () {
       await this.tractorFacet.connect(operator).tractor(this.requisition, operatorData);
 
       // Confirm final state.
-      expect(
-        await this.tokenFacet.getInternalBalance(publisher.address, bean.address)
-      ).to.be.eq(to6("0"));
+      expect(await this.tokenFacet.getInternalBalance(publisher.address, bean.address)).to.be.eq(
+        to6("0")
+      );
       expect(await bean.balanceOf(operator.address)).to.be.eq(to6("10"));
     });
 
@@ -252,9 +252,9 @@ describe("Tractor", function () {
       mockBeanstalk
         .connect(publisher)
         .transferToken(bean.address, publisher.address, to6("2000"), 0, 1);
-      expect(
-        await this.tokenFacet.getInternalBalance(publisher.address, bean.address)
-      ).to.be.eq(to6("2000"));
+      expect(await this.tokenFacet.getInternalBalance(publisher.address, bean.address)).to.be.eq(
+        to6("2000")
+      );
 
       await this.tractorFacet.connect(publisher).publishRequisition(this.requisition);
 
@@ -269,9 +269,9 @@ describe("Tractor", function () {
       expect(
         this.tractorFacet.connect(operator).tractor(this.requisition, operatorData)
       ).to.be.revertedWith("Junction: check failed");
-      expect(
-        await this.tokenFacet.getInternalBalance(publisher.address, bean.address)
-      ).to.be.eq(to6("1000"));
+      expect(await this.tokenFacet.getInternalBalance(publisher.address, bean.address)).to.be.eq(
+        to6("1000")
+      );
     });
 
     it("Mow publisher", async function (verbose = false) {
@@ -282,9 +282,9 @@ describe("Tractor", function () {
       await this.seasonFacet.siloSunrise(to6("0"));
       await time.increase(3600); // wait until end of season to get earned
       await mine(25);
-      expect(await this.siloGettersFacet.balanceOfGrownStalk(publisher.address, bean.address)).to.eq(
-        toStalk("2")
-      );
+      expect(
+        await this.siloGettersFacet.balanceOfGrownStalk(publisher.address, bean.address)
+      ).to.eq(toStalk("2"));
 
       // Capture init state.
       const initPublisherStalk = await this.siloGettersFacet.balanceOfStalk(publisher.address);
@@ -321,7 +321,9 @@ describe("Tractor", function () {
         (await this.siloGettersFacet.balanceOfStalk(publisher.address)) - initPublisherStalk;
       const operatorPaid = (await bean.balanceOf(operator.address)) - initOperatorBeans;
       if (verbose) {
-        console.log("Publisher Stalk increase: " + ethers.utils.formatUnits(publisherStalkGain, 10));
+        console.log(
+          "Publisher Stalk increase: " + ethers.utils.formatUnits(publisherStalkGain, 10)
+        );
         console.log("Operator Payout: " + ethers.utils.formatUnits(operatorPaid, 6) + " Beans");
       }
 
@@ -348,7 +350,9 @@ describe("Tractor", function () {
       expect(await this.siloGettersFacet.balanceOfEarnedBeans(publisher.address)).to.gt(0);
 
       // Capture init state.
-      const initPublisherStalkBalance = await this.siloGettersFacet.balanceOfStalk(publisher.address);
+      const initPublisherStalkBalance = await this.siloGettersFacet.balanceOfStalk(
+        publisher.address
+      );
       const initPublisherBeans = await bean.balanceOf(publisher.address);
       const initOperatorBeans = await bean.balanceOf(operator.address);
 
@@ -380,7 +384,9 @@ describe("Tractor", function () {
         (await this.siloGettersFacet.balanceOfStalk(publisher.address)) - initPublisherStalkBalance;
       const operatorPaid = (await bean.balanceOf(operator.address)) - initOperatorBeans;
       if (verbose) {
-        console.log("Publisher Stalk increase: " + ethers.utils.formatUnits(publisherStalkGain, 10));
+        console.log(
+          "Publisher Stalk increase: " + ethers.utils.formatUnits(publisherStalkGain, 10)
+        );
         console.log("Operator Payout: " + ethers.utils.formatUnits(operatorPaid, 6) + " Beans");
       }
 
@@ -437,7 +443,11 @@ describe("Tractor", function () {
         "initial publisher balanceOfStalk"
       ).to.eq(toStalk("200"));
 
-      let deposit = await this.siloGettersFacet.getDeposit(publisher.address, this.unripeBean.address, 0);
+      let deposit = await this.siloGettersFacet.getDeposit(
+        publisher.address,
+        this.unripeBean.address,
+        0
+      );
       expect(deposit[0], "initial publisher urBean deposit amount").to.eq(to6("2000"));
       expect(deposit[1], "initial publisher urBean deposit BDV").to.eq(to6("200"));
       deposit = await this.siloGettersFacet.getDeposit(publisher.address, this.unripeLP.address, 0);
@@ -499,10 +509,18 @@ describe("Tractor", function () {
         "mid publisher balanceOfStalk"
       ).to.gt(toStalk("200"));
 
-      let deposit = await this.siloGettersFacet.getDeposit(publisher.address, this.unripeBean.address, 0);
+      let deposit = await this.siloGettersFacet.getDeposit(
+        publisher.address,
+        this.unripeBean.address,
+        0
+      );
       expect(deposit[0], "mid publisher urBean deposit amount").to.eq("0");
       expect(deposit[1], "mid publisher urBean deposit BDV").to.eq("0");
-      deposit = await this.siloGettersFacet.getDeposit(publisher.address, this.unripeLP.address, this.urBeanToUrLpDepositStem);
+      deposit = await this.siloGettersFacet.getDeposit(
+        publisher.address,
+        this.unripeLP.address,
+        this.urBeanToUrLpDepositStem
+      );
       expect(deposit[0], "mid publisher urLP deposit amount").to.gt("0");
       expect(deposit[1], "mid publisher urLP deposit BDV").to.gt(to6("200"));
     });
@@ -553,10 +571,18 @@ describe("Tractor", function () {
         await this.siloGettersFacet.balanceOfStalk(publisher.address),
         "mid publisher balanceOfStalk"
       ).to.gt(toStalk("200"));
-      let deposit = await this.siloGettersFacet.getDeposit(publisher.address, this.unripeBean.address, 0);
+      let deposit = await this.siloGettersFacet.getDeposit(
+        publisher.address,
+        this.unripeBean.address,
+        0
+      );
       expect(deposit[0], "mid publisher urBean deposit amount").to.eq("0");
       expect(deposit[1], "mid publisher urBean deposit BDV").to.eq("0");
-      deposit = await this.siloGettersFacet.getDeposit(publisher.address, this.unripeLP.address, this.urBeanToUrLpDepositStem);
+      deposit = await this.siloGettersFacet.getDeposit(
+        publisher.address,
+        this.unripeLP.address,
+        this.urBeanToUrLpDepositStem
+      );
       expect(deposit[0], "mid publisher urLP deposit amount").to.gt("1");
       expect(deposit[1], "mid publisher urLP deposit BDV").to.gt(to6("200"));
 
@@ -594,7 +620,11 @@ describe("Tractor", function () {
         await this.siloGettersFacet.balanceOfStalk(publisher.address),
         "final publisher balanceOfStalk"
       ).to.gt(toStalk("200"));
-      deposit = await this.siloGettersFacet.getDeposit(publisher.address, this.unripeBean.address, this.urBeanToUrLpToUrBeanStem);
+      deposit = await this.siloGettersFacet.getDeposit(
+        publisher.address,
+        this.unripeBean.address,
+        this.urBeanToUrLpToUrBeanStem
+      );
       expect(deposit[0], "final publisher urBean deposit amount").to.gt(to6("2000"));
       expect(deposit[1], "final publisher urBean deposit BDV").to.gt(to6("200"));
       deposit = await this.siloGettersFacet.getDeposit(publisher.address, this.unripeLP.address, 0);

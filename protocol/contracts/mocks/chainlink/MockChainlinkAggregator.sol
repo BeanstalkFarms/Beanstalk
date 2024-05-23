@@ -1,8 +1,7 @@
 /*
  SPDX-License-Identifier: MIT
 */
-pragma solidity =0.7.6;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.20;
 
 import "contracts/interfaces/chainlink/IChainlinkAggregator.sol";
 
@@ -32,7 +31,7 @@ contract MockChainlinkAggregator is IChainlinkAggregator {
 
     function getRoundData(
         uint80 _roundId
-    ) 
+    )
         external
         view
         override
@@ -99,9 +98,11 @@ contract MockChainlinkAggregator is IChainlinkAggregator {
         answeredInRounds[roundId] = answeredInRound;
     }
 
-    function setDecimals(
-        uint8 __decimals
-    ) external {
+    function setDecimals(uint8 __decimals) external {
         _decimals = __decimals;
+    }
+
+    function setOracleFailure() external {
+        lastRound = 0;
     }
 }

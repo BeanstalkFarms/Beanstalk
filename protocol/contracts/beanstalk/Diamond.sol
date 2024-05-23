@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity =0.7.6;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.20;
 
 /******************************************************************************\
 * Authors: Nick Mudge (https://twitter.com/mudgen)
@@ -13,7 +12,6 @@ import {DiamondCutFacet} from "./diamond/DiamondCutFacet.sol";
 import {DiamondLoupeFacet} from "./diamond/DiamondLoupeFacet.sol";
 import {OwnershipFacet} from "./diamond/OwnershipFacet.sol";
 import {AppStorage} from "./AppStorage.sol";
-import {IERC165} from "../interfaces/IERC165.sol";
 import {IDiamondCut} from "../interfaces/IDiamondCut.sol";
 import {IDiamondLoupe} from "../interfaces/IDiamondLoupe.sol";
 
@@ -45,12 +43,12 @@ contract Diamond {
             let result := delegatecall(gas(), facet, 0, calldatasize(), 0, 0)
             returndatacopy(0, 0, returndatasize())
             switch result
-                case 0 {
-                    revert(0, returndatasize())
-                }
-                default {
-                    return(0, returndatasize())
-                }
+            case 0 {
+                revert(0, returndatasize())
+            }
+            default {
+                return(0, returndatasize())
+            }
         }
     }
 }

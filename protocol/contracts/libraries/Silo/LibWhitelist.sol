@@ -2,8 +2,7 @@
  SPDX-License-Identifier: MIT
 */
 
-pragma solidity =0.7.6;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.20;
 
 import {C} from "../../C.sol";
 import {LibAppStorage, AppStorage, Storage} from "../LibAppStorage.sol";
@@ -11,8 +10,9 @@ import {LibTokenSilo} from "contracts/libraries/Silo/LibTokenSilo.sol";
 import {LibWhitelistedTokens} from "contracts/libraries/Silo/LibWhitelistedTokens.sol";
 import {LibUnripe} from "contracts/libraries/LibUnripe.sol";
 import {LibWell, IWell} from "contracts/libraries/Well/LibWell.sol";
-import {LibSafeMath32} from "contracts/libraries/LibSafeMath32.sol";
 import {IChainlinkAggregator} from "contracts/interfaces/chainlink/IChainlinkAggregator.sol";
+import {LibRedundantMath32} from "contracts/libraries/LibRedundantMath32.sol";
+import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
 
 /**
  * @title LibWhitelist
@@ -20,7 +20,8 @@ import {IChainlinkAggregator} from "contracts/interfaces/chainlink/IChainlinkAgg
  * @notice Handles adding and removing ERC-20 tokens from the Silo Whitelist.
  */
 library LibWhitelist {
-    using LibSafeMath32 for uint32;
+    using LibRedundantMath32 for uint32;
+    using SafeCast for int32;
 
     /**
      * @notice Emitted when a token is added to the Silo Whitelist.
@@ -69,7 +70,7 @@ library LibWhitelist {
         address indexed token,
         Storage.Implmentation gaugePointImplmentation
     );
-    
+
     /**
      * @notice Emitted when the liquidity weight implmentation for a token is updated.
      */
@@ -242,7 +243,11 @@ library LibWhitelist {
             optimalPercentDepositedBdv
         );
 
-        WhitelistTokenWithExternalImplmentation(oracleImplmentation, gpImplmentation, lwImplmentation);
+        emit WhitelistTokenWithExternalImplmentation(
+            oracleImplmentation,
+            gpImplmentation,
+            lwImplmentation
+        );
     }
 
     /**
@@ -308,6 +313,11 @@ library LibWhitelist {
         ); // calculate delta
         s.ss[token].stalkEarnedPerSeason = stalkEarnedPerSeason;
 
+        // stalkEarnedPerSeason is set to int32 before casting down.
+        s.ss[token].deltaStalkEarnedPerSeason = (int32(stalkEarnedPerSeason) -
+            int32(s.ss[token].stalkEarnedPerSeason)).toInt24();
+
+        s.ss[token].stalkEarnedPerSeason = stalkEarnedPerSeason;
         emit UpdatedStalkPerBdvPerSeason(token, stalkEarnedPerSeason, s.season.current);
     }
 
@@ -320,16 +330,16 @@ library LibWhitelist {
     ) internal {
         Storage.SiloSettings storage ss = LibAppStorage.diamondStorage().ss[token];
         require(ss.selector != 0, "Whitelist: Token not whitelisted in Silo");
-        
+
         // check that new implmentation is valid.
         verifyOracleImplmentation(
             oracleImplmentation.target,
             oracleImplmentation.selector,
             oracleImplmentation.encodeType
         );
-        
+
         ss.oracleImplmentation = oracleImplmentation;
-        
+
         emit UpdatedOracleImplmentationForToken(token, oracleImplmentation);
     }
 
@@ -342,15 +352,12 @@ library LibWhitelist {
     ) internal {
         Storage.SiloSettings storage ss = LibAppStorage.diamondStorage().ss[token];
         require(ss.selector != 0, "Whitelist: Token not whitelisted in Silo");
-        
+
         // check that new implmentation is valid.
-        verifyGaugePointImplmentation(
-            gpImplmentation.target,
-            gpImplmentation.selector
-        );
-        
+        verifyGaugePointImplmentation(gpImplmentation.target, gpImplmentation.selector);
+
         ss.gaugePointImplmentation = gpImplmentation;
-        
+
         emit UpdatedGaugePointImplmentationForToken(token, gpImplmentation);
     }
 
@@ -363,15 +370,12 @@ library LibWhitelist {
     ) internal {
         Storage.SiloSettings storage ss = LibAppStorage.diamondStorage().ss[token];
         require(ss.selector != 0, "Whitelist: Token not whitelisted in Silo");
-        
+
         // check that new implmentation is valid.
-        verifyLiquidityWeightImplmentation(
-            lwImplmentation.target,
-            lwImplmentation.selector
-        );
-        
+        verifyLiquidityWeightImplmentation(lwImplmentation.target, lwImplmentation.selector);
+
         ss.liquidityWeightImplmentation = lwImplmentation;
-        
+
         emit UpdatedLiqudityWeightImplmentationForToken(token, lwImplmentation);
     }
 
@@ -427,8 +431,8 @@ library LibWhitelist {
         bytes1 encodeType
     ) internal view {
         bool success;
-        // if the encode type is 0x01, verify using the chainlink implmentation. 
-        if(encodeType == bytes1(0x01)) {
+        // if the encode type is 0x01, verify using the chainlink implmentation.
+        if (encodeType == bytes1(0x01)) {
             (success, ) = oracleImplmentation.staticcall(
                 abi.encodeWithSelector(IChainlinkAggregator.decimals.selector)
             );
@@ -436,7 +440,7 @@ library LibWhitelist {
             // verify you passed in a callable oracle selector
             (success, ) = oracleImplmentation.staticcall(abi.encodeWithSelector(selector, 0));
         }
-        
+
         require(success, "Whitelist: Invalid Oracle Implmentation");
     }
 
@@ -451,10 +455,7 @@ library LibWhitelist {
      * @notice Verifies whether a gaugePointSelector at an external contract
      * is valid for the gauge system.
      */
-    function verifyGaugePointImplmentation(
-        address gpImplmentation,
-        bytes4 selector
-    ) internal view {
+    function verifyGaugePointImplmentation(address gpImplmentation, bytes4 selector) internal view {
         // verify you passed in a callable gaugePoint selector
         (bool success, ) = gpImplmentation.staticcall(abi.encodeWithSelector(selector, 0, 0, 0));
         require(success, "Whitelist: Invalid GaugePoint selector");

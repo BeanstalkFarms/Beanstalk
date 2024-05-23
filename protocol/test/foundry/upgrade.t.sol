@@ -14,7 +14,6 @@ import {IMockFBeanstalk} from "contracts/interfaces/IMockFBeanstalk.sol";
  * @notice Tests upgrading the diamond.
  */
 contract UpgradeDiamond is TestHelper {
-    
     // test accounts
     address[] farmers;
 
@@ -69,7 +68,7 @@ contract UpgradeDiamond is TestHelper {
             IMockFBeanstalk(BEANSTALK).owner(), // fetch beanstalk owner.
             new string[](0),
             new address[](0),
-            address(0), 
+            address(0),
             new bytes(0),
             removeSelectors
         );
@@ -78,5 +77,4 @@ contract UpgradeDiamond is TestHelper {
         vm.expectRevert(bytes("Diamond: Function does not exist"));
         MockUpgradeFacet(BEANSTALK).woohoo();
     }
-
 }

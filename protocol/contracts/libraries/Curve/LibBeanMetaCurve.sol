@@ -1,10 +1,9 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity =0.7.6;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.20;
 
 import {AppStorage, LibAppStorage, Storage} from "../LibAppStorage.sol";
-import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
+import {LibRedundantMath256} from "contracts/libraries/LibRedundantMath256.sol";
 import {LibMetaCurve, IMeta3Curve} from "./LibMetaCurve.sol";
 import {LibCurve} from "./LibCurve.sol";
 import "contracts/C.sol";
@@ -15,7 +14,7 @@ import "contracts/C.sol";
  * @notice Calculates BDV and deltaB for the BEAN:3CRV Metapool.
  */
 library LibBeanMetaCurve {
-    using SafeMath for uint256;
+    using LibRedundantMath256 for uint256;
 
     uint256 private constant RATE_MULTIPLIER = 1e12; // Bean has 6 Decimals => 1e(18 - delta decimals)
     uint256 private constant PRECISION = 1e18;
@@ -41,7 +40,7 @@ library LibBeanMetaCurve {
         uint256 totalSupply = (D * PRECISION) / virtualPrice;
         uint256 beanValue = balances[0].mul(amount).div(totalSupply);
         uint256 curveValue = xp[1].mul(amount).div(totalSupply).div(price);
-        
+
         return beanValue.add(curveValue);
     }
 
@@ -50,12 +49,8 @@ library LibBeanMetaCurve {
         uint256 d = getDFroms(balances);
         deltaB = getDeltaBWithD(balances[0], d);
     }
-    
-    function getDeltaBWithD(uint256 balance, uint256 D)
-        internal
-        pure
-        returns (int256 deltaB)
-    {
+
+    function getDeltaBWithD(uint256 balance, uint256 D) internal pure returns (int256 deltaB) {
         uint256 pegBeans = D / 2 / RATE_MULTIPLIER;
         deltaB = int256(pegBeans) - int256(balance);
     }
@@ -65,53 +60,33 @@ library LibBeanMetaCurve {
     /**
      * @dev D = the number of LP tokens times the virtual price.
      * LP supply = D / virtual price. D increases as pool accumulates fees.
-     * D = number of stable tokens in the pool when the pool is balanced. 
-     * 
+     * D = number of stable tokens in the pool when the pool is balanced.
+     *
      * Rate multiplier for BEAN is 1e12.
      * Rate multiplier for 3CRV is virtual price.
      */
-    function getDFroms(uint256[2] memory balances)
-        internal
-        view
-        returns (uint256)
-    {
-        return LibMetaCurve.getDFroms(
-            C.CURVE_BEAN_METAPOOL,
-            balances,
-            RATE_MULTIPLIER
-        );
+    function getDFroms(uint256[2] memory balances) internal view returns (uint256) {
+        return LibMetaCurve.getDFroms(C.CURVE_BEAN_METAPOOL, balances, RATE_MULTIPLIER);
     }
 
     /**
      * @dev `xp = balances * RATE_MULTIPLIER`
      */
-    function getXP(uint256[2] memory balances)
-        internal
-        view
-        returns (uint256[2] memory xp)
-    {
+    function getXP(uint256[2] memory balances) internal view returns (uint256[2] memory xp) {
         xp = LibMetaCurve.getXP(balances, RATE_MULTIPLIER);
     }
 
     /**
      * @dev Convert from `balance` -> `xp0`, which is scaled up by `RATE_MULTIPLIER`.
      */
-    function getXP0(uint256 balance)
-        internal
-        pure
-        returns (uint256 xp0)
-    {
+    function getXP0(uint256 balance) internal pure returns (uint256 xp0) {
         xp0 = balance.mul(RATE_MULTIPLIER);
     }
 
     /**
      * @dev Convert from `xp0` -> `balance`, which is scaled down by `RATE_MULTIPLIER`.
      */
-    function getX0(uint256 xp0)
-        internal
-        pure
-        returns (uint256 balance0)
-    {
+    function getX0(uint256 xp0) internal pure returns (uint256 balance0) {
         balance0 = xp0.div(RATE_MULTIPLIER);
     }
 }

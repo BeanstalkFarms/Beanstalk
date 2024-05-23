@@ -2,36 +2,31 @@
  SPDX-License-Identifier: MIT
 */
 
-pragma solidity =0.7.6;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.20;
 
-import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
+import {LibRedundantMath256} from "contracts/libraries/LibRedundantMath256.sol";
 import {ICumulativePump} from "contracts/interfaces/basin/pumps/ICumulativePump.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {IWell, Call} from "contracts/interfaces/basin/IWell.sol";
 import {C} from "contracts/C.sol";
 import {AppStorage, LibAppStorage, Storage} from "../LibAppStorage.sol";
 import {LibUsdOracle} from "contracts/libraries/Oracle/LibUsdOracle.sol";
-import {LibSafeMath128} from "contracts/libraries/LibSafeMath128.sol";
-
-
+import {LibRedundantMath128} from "contracts/libraries/LibRedundantMath128.sol";
 
 /**
  * @title Well Library
  * Contains helper functions for common Well related functionality.
  **/
 library LibWell {
-    using SafeMath for uint256;
-    using LibSafeMath128 for uint128;
+    using LibRedundantMath256 for uint256;
+    using LibRedundantMath128 for uint128;
 
     // The BDV Selector that all Wells should be whitelisted with.
     bytes4 internal constant WELL_BDV_SELECTOR = 0xc84c7727;
 
-    function getRatiosAndBeanIndex(IERC20[] memory tokens) internal view returns (
-        uint[] memory ratios,
-        uint beanIndex,
-        bool success
-    ) {
+    function getRatiosAndBeanIndex(
+        IERC20[] memory tokens
+    ) internal view returns (uint[] memory ratios, uint beanIndex, bool success) {
         return getRatiosAndBeanIndex(tokens, 0);
     }
 
@@ -39,11 +34,10 @@ library LibWell {
      * @dev Returns the price ratios between `tokens` and the index of Bean in `tokens`.
      * These actions are combined into a single function for gas efficiency.
      */
-    function getRatiosAndBeanIndex(IERC20[] memory tokens, uint256 lookback) internal view returns (
-        uint[] memory ratios,
-        uint beanIndex,
-        bool success
-    ) {
+    function getRatiosAndBeanIndex(
+        IERC20[] memory tokens,
+        uint256 lookback
+    ) internal view returns (uint[] memory ratios, uint beanIndex, bool success) {
         success = true;
         ratios = new uint[](tokens.length);
         beanIndex = type(uint256).max;
@@ -253,12 +247,14 @@ library LibWell {
     ) internal view returns (uint256[] memory) {
         AppStorage storage s = LibAppStorage.diamondStorage();
         Call[] memory pumps = IWell(well).pumps();
-        try ICumulativePump(pumps[0].target).readTwaReserves(
-            well,
-            s.wellOracleSnapshots[well],
-            uint40(s.season.timestamp),
-            pumps[0].data
-        ) returns (uint[] memory twaReserves, bytes memory) {
+        try
+            ICumulativePump(pumps[0].target).readTwaReserves(
+                well,
+                s.wellOracleSnapshots[well],
+                uint40(s.season.timestamp),
+                pumps[0].data
+            )
+        returns (uint[] memory twaReserves, bytes memory) {
             return twaReserves;
         } catch {
             return (new uint256[](2));
@@ -278,12 +274,14 @@ library LibWell {
         AppStorage storage s = LibAppStorage.diamondStorage();
         (, uint256 j) = getNonBeanTokenAndIndexFromWell(well);
         Call[] memory pumps = IWell(well).pumps();
-        try ICumulativePump(pumps[0].target).readTwaReserves(
-            well,
-            s.wellOracleSnapshots[well],
-            uint40(s.season.timestamp),
-            pumps[0].data
-        ) returns (uint[] memory twaReserves, bytes memory) {
+        try
+            ICumulativePump(pumps[0].target).readTwaReserves(
+                well,
+                s.wellOracleSnapshots[well],
+                uint40(s.season.timestamp),
+                pumps[0].data
+            )
+        returns (uint[] memory twaReserves, bytes memory) {
             usdLiquidity = tokenUsdPrice.mul(twaReserves[j]).div(1e6);
         } catch {
             // if pump fails to return a value, return 0.

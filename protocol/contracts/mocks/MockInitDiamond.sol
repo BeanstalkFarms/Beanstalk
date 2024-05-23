@@ -2,8 +2,7 @@
  SPDX-License-Identifier: MIT
 */
 
-pragma solidity =0.7.6;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.20;
 
 import {IBean} from "../interfaces/IBean.sol";
 import {IWETH} from "../interfaces/IWETH.sol";
@@ -21,9 +20,8 @@ import {Weather} from "contracts/beanstalk/sun/SeasonFacet/Weather.sol";
 /**
  * @author Publius
  * @title Mock Init Diamond
-**/
+ **/
 contract MockInitDiamond is InitWhitelist, InitWhitelistStatuses, Weather {
-
     function init() external {
         LibDiamond.DiamondStorage storage ds = LibDiamond.diamondStorage();
 
@@ -43,9 +41,9 @@ contract MockInitDiamond is InitWhitelist, InitWhitelistStatuses, Weather {
         s.season.withdrawSeasons = 25;
         s.season.period = C.getSeasonPeriod();
         s.season.timestamp = block.timestamp;
-        s.season.start = s.season.period > 0 ?
-            (block.timestamp / s.season.period) * s.season.period :
-            block.timestamp;
+        s.season.start = s.season.period > 0
+            ? (block.timestamp / s.season.period) * s.season.period
+            : block.timestamp;
         s.isFarm = 1;
         s.usdTokenPrice[C.BEAN_ETH_WELL] = 1;
         s.twaReserves[C.BEAN_ETH_WELL].reserve0 = 1;
@@ -57,14 +55,19 @@ contract MockInitDiamond is InitWhitelist, InitWhitelistStatuses, Weather {
         s.seedGauge.averageGrownStalkPerBdvPerSeason = 3e6;
 
         LibTractor._resetPublisher();
-        
+
         s.u[C.UNRIPE_LP].underlyingToken = C.BEAN_WSTETH_WELL;
 
-        emit BeanToMaxLpGpPerBdvRatioChange(s.season.current, type(uint256).max, int80(s.seedGauge.beanToMaxLpGpPerBdvRatio));
-        emit LibGauge.UpdateAverageStalkPerBdvPerSeason(s.seedGauge.averageGrownStalkPerBdvPerSeason);
+        emit BeanToMaxLpGpPerBdvRatioChange(
+            s.season.current,
+            type(uint256).max,
+            int80(int128(s.seedGauge.beanToMaxLpGpPerBdvRatio))
+        );
+        emit LibGauge.UpdateAverageStalkPerBdvPerSeason(
+            s.seedGauge.averageGrownStalkPerBdvPerSeason
+        );
 
         whitelistPools();
         addWhitelistStatuses(false);
     }
-
 }

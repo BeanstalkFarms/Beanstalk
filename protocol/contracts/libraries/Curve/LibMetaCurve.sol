@@ -1,11 +1,10 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity =0.7.6;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.20;
 
 import {AppStorage, LibAppStorage, Storage} from "../LibAppStorage.sol";
-import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
-import {SafeCast} from "@openzeppelin/contracts/utils/SafeCast.sol";
+import {LibRedundantMath256} from "contracts/libraries/LibRedundantMath256.sol";
+import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
 import {LibCurve} from "./LibCurve.sol";
 import {LibCurveMinting} from "contracts/libraries/Minting/LibCurveMinting.sol";
 import "../../C.sol";
@@ -27,9 +26,9 @@ interface IMeta3Curve {
  * retrieving, and resetting the bean3crv twa reserves.
  */
 library LibMetaCurve {
-    using SafeMath for uint256;
+    using LibRedundantMath256 for uint256;
     using SafeCast for uint256;
-    
+
     /**
      * @dev Used in {LibBeanMetaCurve}.
      */
@@ -37,11 +36,7 @@ library LibMetaCurve {
         uint256[2] memory balances,
         uint256 padding
     ) internal view returns (uint256[2] memory) {
-        return LibCurve.getXP(
-            balances,
-            padding,
-            C.curve3Pool().get_virtual_price()
-        );
+        return LibCurve.getXP(balances, padding, C.curve3Pool().get_virtual_price());
     }
 
     /**
@@ -52,10 +47,6 @@ library LibMetaCurve {
         uint256[2] memory balances,
         uint256 padding
     ) internal view returns (uint256) {
-        return LibCurve.getD(
-            getXP(balances, padding),
-            IMeta3Curve(pool).A_precise()
-        );
+        return LibCurve.getD(getXP(balances, padding), IMeta3Curve(pool).A_precise());
     }
-
 }

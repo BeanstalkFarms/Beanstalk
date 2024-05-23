@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity =0.7.6;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.20;
 
 import "./interfaces/IBean.sol";
 import "./interfaces/ICurve.sol";
@@ -16,7 +15,6 @@ import "./libraries/Decimal.sol";
  */
 library C {
     using Decimal for Decimal.D256;
-    using SafeMath for uint256;
 
     //////////////////// Globals ////////////////////
 
@@ -63,16 +61,15 @@ library C {
     address private constant TRI_CRYPTO_POOL = 0xD51a44d3FaE010294C616388b506AcdA1bfAAE46;
     address private constant CURVE_ZAP = 0xA79828DF1850E8a3A3064576f380D90aECDD3359;
 
-    address private constant UNRIPE_CURVE_BEAN_LUSD_POOL = 0xD652c40fBb3f06d6B58Cb9aa9CFF063eE63d465D;
-    address private constant UNRIPE_CURVE_BEAN_METAPOOL = 0x3a70DfA7d2262988064A2D051dd47521E43c9BdD;
+    address private constant UNRIPE_CURVE_BEAN_LUSD_POOL =
+        0xD652c40fBb3f06d6B58Cb9aa9CFF063eE63d465D;
+    address private constant UNRIPE_CURVE_BEAN_METAPOOL =
+        0x3a70DfA7d2262988064A2D051dd47521E43c9BdD;
 
     address internal constant USDC = 0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48;
     address internal constant USDT = 0xdAC17F958D2ee523a2206206994597C13D831ec7;
     address internal constant WETH = 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2;
     address internal constant WSTETH = 0x7f39C581F595B53c5cb19bD0b3f8dA6c935E2Ca0;
-
-    // Use external contract for block.basefee as to avoid upgrading existing contracts to solidity v8
-    address private constant BASE_FEE_CONTRACT = 0x84292919cB64b590C0131550483707E43Ef223aC;
 
     //////////////////// Well ////////////////////
 
@@ -83,20 +80,24 @@ library C {
     uint256 internal constant BEAN_INDEX = 0;
     uint256 internal constant ETH_INDEX = 1;
 
-
     //////////////////// Chainlink Oracles ////////////////////
-    address constant ETH_USD_CHAINLINK_PRICE_AGGREGATOR = 0x5f4eC3Df9cbd43714FE2740f5E3616155c5b8419;
-    address constant WSTETH_ETH_CHAINLINK_PRICE_AGGREGATOR = 0x86392dC19c0b719886221c78AB11eb8Cf5c52812;
+    address constant ETH_USD_CHAINLINK_PRICE_AGGREGATOR =
+        0x5f4eC3Df9cbd43714FE2740f5E3616155c5b8419;
+    address constant WSTETH_ETH_CHAINLINK_PRICE_AGGREGATOR =
+        0x86392dC19c0b719886221c78AB11eb8Cf5c52812;
 
     //////////////////// Uniswap Oracles //////////////////////
     address internal constant WSTETH_ETH_UNIV3_01_POOL = 0x109830a1AAaD605BbF02a9dFA7B0B92EC2FB7dAa; // 0.01% pool
-    
+
     //////////////////// Tractor ////////////////////
+
     uint80 internal constant SELECTOR_SIZE = 4;
     uint80 internal constant SLOT_SIZE = 32;
     uint80 internal constant ARGS_START_INDEX = SELECTOR_SIZE + SLOT_SIZE;
     uint80 internal constant ADDR_SLOT_OFFSET = 12;
+    // Special index to indicate the data to copy is the publisher address.
     uint80 internal constant PUBLISHER_COPY_INDEX = type(uint80).max;
+    // Special index to indicate the data to copy is the operator address.
     uint80 internal constant OPERATOR_COPY_INDEX = type(uint80).max - 1;
 
     function getSeasonPeriod() internal pure returns (uint256) {
@@ -116,7 +117,7 @@ library C {
     }
 
     function getStalkPerBean() internal pure returns (uint256) {
-      return STALK_PER_BEAN;
+        return STALK_PER_BEAN;
     }
 
     function getRootsBase() internal pure returns (uint256) {
@@ -160,7 +161,7 @@ library C {
     function curve3Pool() internal pure returns (I3Curve) {
         return I3Curve(CURVE_3_POOL);
     }
-    
+
     function curveZap() internal pure returns (ICurveZap) {
         return ICurveZap(CURVE_ZAP);
     }
@@ -202,7 +203,7 @@ library C {
     }
 
     function dollarPerUnripeLP() internal pure returns (uint256) {
-        return 1e12/UNRIPE_LP_PER_DOLLAR;
+        return 1e12 / UNRIPE_LP_PER_DOLLAR;
     }
 
     function exploitAddLPRatio() internal pure returns (uint256) {
@@ -216,5 +217,4 @@ library C {
     function initialRecap() internal pure returns (uint256) {
         return INITIAL_HAIRCUT;
     }
-
 }

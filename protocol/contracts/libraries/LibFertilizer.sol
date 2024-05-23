@@ -2,20 +2,19 @@
  SPDX-License-Identifier: MIT
 */
 
-pragma solidity =0.7.6;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.20;
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
-import {SafeCast} from "@openzeppelin/contracts/utils/SafeCast.sol";
+import {LibRedundantMath256} from "contracts/libraries/LibRedundantMath256.sol";
+import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
 import {AppStorage, LibAppStorage} from "./LibAppStorage.sol";
-import {LibSafeMath128} from "./LibSafeMath128.sol";
+import {LibRedundantMath128} from "./LibRedundantMath128.sol";
 import {C} from "../C.sol";
 import {LibUnripe} from "./LibUnripe.sol";
 import {IWell} from "contracts/interfaces/basin/IWell.sol";
 import {LibBarnRaise} from "./LibBarnRaise.sol";
 import {LibDiamond} from "contracts/libraries/LibDiamond.sol";
-import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
+import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {LibWell} from "contracts/libraries/Well/LibWell.sol";
 import {LibUsdOracle} from "contracts/libraries/Oracle/LibUsdOracle.sol";
 import {LibTractor} from "contracts/libraries/LibTractor.sol";
@@ -26,8 +25,8 @@ import {LibTractor} from "contracts/libraries/LibTractor.sol";
  **/
 
 library LibFertilizer {
-    using SafeMath for uint256;
-    using LibSafeMath128 for uint128;
+    using LibRedundantMath256 for uint256;
+    using LibRedundantMath128 for uint128;
     using SafeCast for uint256;
     using SafeERC20 for IERC20;
     using LibWell for address;
@@ -53,9 +52,7 @@ library LibFertilizer {
 
         // Calculate Beans Per Fertilizer and add to total owed
         uint128 bpf = getBpf(season);
-        s.unfertilizedIndex = s.unfertilizedIndex.add(
-            fertilizerAmount.mul(bpf)
-        );
+        s.unfertilizedIndex = s.unfertilizedIndex.add(fertilizerAmount.mul(bpf));
         // Get id
         id = s.bpf.add(bpf);
         // Update Total and Season supply
@@ -85,42 +82,34 @@ library LibFertilizer {
      * @dev Any token contributions should already be transferred to the Barn Raise Well to allow for a gas efficient liquidity
      * addition through the use of `sync`. See {FertilizerFacet.mintFertilizer} for an example.
      */
-    function addUnderlying(uint256 tokenAmountIn, uint256 usdAmount, uint256 minAmountOut) internal {
+    function addUnderlying(
+        uint256 tokenAmountIn,
+        uint256 usdAmount,
+        uint256 minAmountOut
+    ) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
         // Calculate how many new Deposited Beans will be minted
-        uint256 percentToFill = usdAmount.mul(C.precision()).div(
-            remainingRecapitalization()
-        );
+        uint256 percentToFill = usdAmount.mul(C.precision()).div(remainingRecapitalization());
 
         uint256 newDepositedBeans;
         if (C.unripeBean().totalSupply() > s.u[C.UNRIPE_BEAN].balanceOfUnderlying) {
             newDepositedBeans = (C.unripeBean().totalSupply()).sub(
                 s.u[C.UNRIPE_BEAN].balanceOfUnderlying
             );
-            newDepositedBeans = newDepositedBeans.mul(percentToFill).div(
-                C.precision()
-            );
+            newDepositedBeans = newDepositedBeans.mul(percentToFill).div(C.precision());
         }
 
         // Calculate how many Beans to add as LP
-        uint256 newDepositedLPBeans = usdAmount.mul(C.exploitAddLPRatio()).div(
-            DECIMALS
-        );
+        uint256 newDepositedLPBeans = usdAmount.mul(C.exploitAddLPRatio()).div(DECIMALS);
 
         // Mint the Deposited Beans to Beanstalk.
-        C.bean().mint(
-            address(this),
-            newDepositedBeans
-        );
+        C.bean().mint(address(this), newDepositedBeans);
 
         // Mint the LP Beans and add liquidity to the well.
         address barnRaiseWell = LibBarnRaise.getBarnRaiseWell();
         address barnRaiseToken = LibBarnRaise.getBarnRaiseToken();
 
-        C.bean().mint(
-            address(this),
-            newDepositedLPBeans
-        );
+        C.bean().mint(address(this), newDepositedLPBeans);
 
         IERC20(barnRaiseToken).transferFrom(
             LibTractor._user(),
@@ -133,9 +122,9 @@ library LibFertilizer {
 
         uint256[] memory tokenAmountsIn = new uint256[](2);
         IERC20[] memory tokens = IWell(barnRaiseWell).tokens();
-        (tokenAmountsIn[0], tokenAmountsIn[1]) = tokens[0] == C.bean() ?
-            (newDepositedLPBeans, tokenAmountIn) :
-            (tokenAmountIn, newDepositedLPBeans);
+        (tokenAmountsIn[0], tokenAmountsIn[1]) = tokens[0] == C.bean()
+            ? (newDepositedLPBeans, tokenAmountIn)
+            : (tokenAmountIn, newDepositedLPBeans);
 
         uint256 newLP = IWell(barnRaiseWell).addLiquidity(
             tokenAmountsIn,
@@ -180,17 +169,10 @@ library LibFertilizer {
         }
     }
 
-    function remainingRecapitalization()
-        internal
-        view
-        returns (uint256 remaining)
-    {
+    function remainingRecapitalization() internal view returns (uint256 remaining) {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        uint256 totalDollars = C
-            .dollarPerUnripeLP()
-            .mul(C.unripeLP().totalSupply())
-            .div(DECIMALS);
-        totalDollars = totalDollars / 1e6 * 1e6; // round down to nearest USDC
+        uint256 totalDollars = C.dollarPerUnripeLP().mul(C.unripeLP().totalSupply()).div(DECIMALS);
+        totalDollars = (totalDollars / 1e6) * 1e6; // round down to nearest USDC
         if (s.recapitalized >= totalDollars) return 0;
         return totalDollars.sub(s.recapitalized);
     }
@@ -235,10 +217,7 @@ library LibFertilizer {
         // other is supported by the Lib Usd Oracle.
         IERC20[] memory tokens = IWell(well).tokens();
         require(tokens.length == 2, "Fertilizer: Well must have 2 tokens.");
-        require(
-            tokens[0] == C.bean() || tokens[1] == C.bean(),
-            "Fertilizer: Well must have BEAN."
-        );
+        require(tokens[0] == C.bean() || tokens[1] == C.bean(), "Fertilizer: Well must have BEAN.");
         // Check that Lib Usd Oracle supports the non-Bean token in the Well.
         LibUsdOracle.getTokenPrice(address(tokens[tokens[0] == C.bean() ? 1 : 0]));
 
@@ -249,5 +228,34 @@ library LibFertilizer {
         );
         LibUnripe.decrementUnderlying(C.UNRIPE_LP, balanceOfUnderlying);
         LibUnripe.switchUnderlyingToken(C.UNRIPE_LP, well);
+    }
+
+    /**
+     * Taken from previous versions of OpenZeppelin Library.
+     * @dev Returns true if `account` is a contract.
+     *
+     * [IMPORTANT]
+     * ====
+     * It is unsafe to assume that an address for which this function returns
+     * false is an externally-owned account (EOA) and not a contract.
+     *
+     * Among others, `isContract` will return false for the following
+     * types of addresses:
+     *
+     *  - an externally-owned account
+     *  - a contract in construction
+     *  - an address where a contract will be created
+     *  - an address where a contract lived, but was destroyed
+     * ====
+     */
+    function isContract(address account) internal view returns (bool) {
+        // This method relies on extcodesize, which returns 0 for contracts in
+        // construction, since the code is only stored at the end of the
+        // constructor execution.
+        uint256 size;
+        assembly {
+            size := extcodesize(account)
+        }
+        return size > 0;
     }
 }

@@ -28,7 +28,6 @@ const {
   WSTETH
 } = require('../test/utils/constants');
 const { impersonatePipeline } = require('./pipeline');
-const { impersonateDepot } = require('./depot');
 const { impersonateSigner, mintEth } = require('../utils');
 const { to18 } = require('../test/utils/helpers');
 
@@ -204,16 +203,6 @@ async function impersonateBeanstalk(owner) {
   await beanstalk.mockInit(owner);
 }
 
-async function blockBasefee() {
-  await impersonateContractOnPath(
-    `./artifacts/contracts/mocks/MockBlockBasefee.sol/MockBlockBasefee.json`,
-    BASE_FEE_CONTRACT
-  )
-
-  const basefee = await ethers.getContractAt("MockBlockBasefee", BASE_FEE_CONTRACT);
-  await basefee.setAnswer(20 * Math.pow(10, 9));
-}
-
 async function ethUsdcUniswap() {
   await uniswapV3(ETH_USDC_UNISWAP_V3, WETH, USDC, 3000);
 }
@@ -275,7 +264,6 @@ exports.impersonateWeth = weth
 exports.impersonateUnripe = unripe
 exports.impersonateToken = token
 exports.impersonatePrice = price
-exports.impersonateBlockBasefee = blockBasefee;
 exports.impersonateEthUsdcUniswap = ethUsdcUniswap
 exports.impersonateEthUsdtUniswap = ethUsdtUniswap
 exports.impersonateBeanstalk = impersonateBeanstalk
@@ -284,4 +272,3 @@ exports.impersonateContract = impersonateContract
 exports.impersonateUniswapV3 = uniswapV3
 exports.impersonateWsteth = wsteth
 exports.impersonatePipeline = impersonatePipeline
-exports.impersonateDepot = impersonateDepot

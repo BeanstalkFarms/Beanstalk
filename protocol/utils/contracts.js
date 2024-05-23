@@ -30,6 +30,10 @@ async function getWeth() {
     return await ethers.getContractAt('contracts/interfaces/IWETH.sol:IWETH', WETH);
 }
 
+async function getWeth() {
+    return await ethers.getContractAt('contracts/interfaces/IWETH.sol:IWETH', WETH);
+}
+
 async function getUsdc() {
   return await ethers.getContractAt("IBean", USDC);
 }
@@ -40,10 +44,6 @@ async function getPrice() {
 
 async function getBeanMetapool() {
   return await ethers.getContractAt("ICurvePool", BEAN_3_CURVE);
-}
-
-async function getFertilizerPreMint() {
-  return await ethers.getContractAt("FertilizerPreMint", FERTILIZER);
 }
 
 async function getFertilizer() {
@@ -57,7 +57,6 @@ exports.getUsdc = getUsdc;
 exports.getPrice = getPrice;
 exports.getBeanMetapool = getBeanMetapool;
 exports.getBeanstalkAdminControls = getBeanstalkAdminControls;
-exports.getFertilizerPreMint = getFertilizerPreMint;
 exports.getFertilizer = getFertilizer;
 exports.getBeanstalk = getBeanstalk;
 exports.getMockBeanstalk = getMockBeanstalk;

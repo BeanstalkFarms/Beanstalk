@@ -1,11 +1,9 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity =0.7.6;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.20;
 
-import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
-import {IBlockBasefee} from "../interfaces/IBlockBasefee.sol";
-import "@openzeppelin/contracts/math/Math.sol";
+import {LibRedundantMath256} from "contracts/libraries/LibRedundantMath256.sol";
+import "@openzeppelin/contracts/utils/math/Math.sol";
 import "../C.sol";
 
 /**
@@ -15,7 +13,7 @@ import "../C.sol";
  * and scales the reward up when the Sunrise is called late.
  */
 library LibIncentive {
-    using SafeMath for uint256;
+    using LibRedundantMath256 for uint256;
 
     /**
      * @notice Emitted when Beanstalk pays `beans` to `account` as a reward for calling `sunrise()`.
@@ -46,9 +44,6 @@ library LibIncentive {
     // 21k gas (base cost for a transction) + ~29 gas for other overhead
     uint256 internal constant SUNRISE_GAS_OVERHEAD = 50_000; // 50k gas
 
-    /// @dev Use external contract for block.basefee as to avoid upgrading existing contracts to solidity v8
-    address private constant BASE_FEE_CONTRACT = 0x84292919cB64b590C0131550483707E43Ef223aC;
-
     /// @dev `sunriseReward` is precomputed in {fracExp} using this precision.
     uint256 private constant FRAC_EXP_PRECISION = 1e18;
 
@@ -62,12 +57,11 @@ library LibIncentive {
      * BEAN:ETH price. This function is called at the end of {sunriseTo()} after all
      * "step" functions have been executed.
      */
-    function determineReward(uint256 initialGasLeft, uint256 blocksLate, uint256 beanEthPrice)
-        external
-        view
-        returns (uint256)
-    {
-
+    function determineReward(
+        uint256 initialGasLeft,
+        uint256 blocksLate,
+        uint256 beanEthPrice
+    ) external view returns (uint256) {
         // Cap the maximum number of blocks late. If the sunrise is later than
         // this, Beanstalk will pay the same amount. Prevents unbounded return value.
         if (blocksLate > MAX_BLOCKS_LATE) {
@@ -83,14 +77,15 @@ library LibIncentive {
         //  - 21K for base transaction cost
         //  - 29K for calculations following the below line, like {fracExp}
         // Max gas which Beanstalk will pay for = 500K.
-        uint256 gasUsed = Math.min(initialGasLeft.sub(gasleft()) + SUNRISE_GAS_OVERHEAD, MAX_SUNRISE_GAS);
+        uint256 gasUsed = Math.min(
+            initialGasLeft.sub(gasleft()) + SUNRISE_GAS_OVERHEAD,
+            MAX_SUNRISE_GAS
+        );
 
         // Calculate the current cost in Wei of `gasUsed` gas.
         // {block_basefee()} returns the base fee of the current block in Wei.
         // Adds a buffer for priority fee.
-        uint256 gasCostWei = IBlockBasefee(BASE_FEE_CONTRACT).block_basefee().add(PRIORITY_FEE_BUFFER).mul(gasUsed); // (BASE_FEE
-            // + PRIORITY_FEE_BUFFER)
-            // * GAS_USED
+        uint256 gasCostWei = (block.basefee + PRIORITY_FEE_BUFFER) * gasUsed;
 
         // Calculates the Sunrise reward to pay in BEAN.
         uint256 sunriseReward = Math.min(
@@ -112,7 +107,10 @@ library LibIncentive {
      * since block time is capped at 25 blocks,
      * we only need to check cases 0 - 25
      */
-    function fracExp(uint256 beans, uint256 blocksLate) internal pure returns (uint256 scaledSunriseReward) {
+    function fracExp(
+        uint256 beans,
+        uint256 blocksLate
+    ) internal pure returns (uint256 scaledSunriseReward) {
         // check most likely case first
         if (blocksLate == 0) {
             return beans;

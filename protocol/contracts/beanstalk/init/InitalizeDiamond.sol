@@ -2,8 +2,7 @@
  SPDX-License-Identifier: MIT
 */
 
-pragma solidity =0.7.6;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.20;
 
 import {ILiquidityWeightFacet} from "contracts/beanstalk/sun/LiquidityWeightFacet.sol";
 import {LibWhitelistedTokens} from "contracts/libraries/Silo/LibWhitelistedTokens.sol";
@@ -15,13 +14,11 @@ import {LibGauge} from "contracts/libraries/LibGauge.sol";
 import {BDVFacet} from "contracts/beanstalk/silo/BDVFacet.sol";
 import {C} from "contracts/C.sol";
 
-import "hardhat/console.sol";
-
 /**
  * @author Publius, Brean
- * @title InitalizeDiamond 
+ * @title InitalizeDiamond
  * @notice InitalizeDiamond provides helper functions to initalize beanstalk.
-**/
+ **/
 
 contract InitalizeDiamond {
     AppStorage internal s;
@@ -49,12 +46,12 @@ contract InitalizeDiamond {
         initalizeField();
         initalizeSilo(uint16(s.season.current));
         initalizeSeedGauge(INIT_BEAN_TO_MAX_LP_GP_RATIO, INIT_AVG_GSPBDV);
-        
+
         address[] memory tokens = new address[](2);
         tokens[0] = bean;
         tokens[1] = beanTokenWell;
-        
-        // note: bean and assets that are not in the gauge system 
+
+        // note: bean and assets that are not in the gauge system
         // do not need to initalize the gauge system.
         Storage.Implmentation memory impl = Storage.Implmentation(address(0), bytes4(0), bytes1(0));
 
@@ -75,7 +72,7 @@ contract InitalizeDiamond {
             gaugePointImplmentation: impl,
             liquidityWeightImplmentation: impl
         });
-        
+
         siloSettings[1] = Storage.SiloSettings({
             selector: BDVFacet.wellBdv.selector,
             stalkEarnedPerSeason: INIT_BEAN_TOKEN_WELL_STALK_EARNED_PER_SEASON,
@@ -89,16 +86,13 @@ contract InitalizeDiamond {
             gaugePoints: INIT_TOKEN_G_POINTS,
             optimalPercentDepositedBdv: INIT_BEAN_TOKEN_WELL_PERCENT_TARGET,
             oracleImplmentation: impl,
-            gaugePointImplmentation: Storage.Implmentation(address(0), ILiquidityWeightFacet.maxWeight.selector, bytes1(0)),
-            liquidityWeightImplmentation: Storage.Implmentation(address(0), ILiquidityWeightFacet.maxWeight.selector, bytes1(0))
+            gaugePointImplmentation: impl,
+            liquidityWeightImplmentation: impl
         });
 
-        whitelistPools(
-            tokens,
-            siloSettings
-        );
+        whitelistPools(tokens, siloSettings);
 
-        // init usdTokenPrice. C.Bean_eth_well should be 
+        // init usdTokenPrice. C.Bean_eth_well should be
         // a bean well w/ the native token of the network.
         s.usdTokenPrice[C.BEAN_ETH_WELL] = 1;
         s.twaReserves[beanTokenWell].reserve0 = 1;
@@ -110,7 +104,7 @@ contract InitalizeDiamond {
      */
     function addInterfaces() internal {
         LibDiamond.DiamondStorage storage ds = LibDiamond.diamondStorage();
-        
+
         ds.supportedInterfaces[0xd9b67a26] = true; // ERC1155
         ds.supportedInterfaces[0x0e89341c] = true; // ERC1155Metadata
     }
@@ -131,7 +125,7 @@ contract InitalizeDiamond {
     function initalizeSeason() internal {
         // set current season to 1.
         s.season.current = 1;
-        
+
         // set withdraw seasons to 0. Kept here for verbosity.
         s.season.withdrawSeasons = 0;
 
@@ -141,14 +135,14 @@ contract InitalizeDiamond {
         // initalize current timestamp.
         s.season.timestamp = block.timestamp;
 
-        // initalize the start timestamp. 
-        // Rounds down to the nearest hour 
+        // initalize the start timestamp.
+        // Rounds down to the nearest hour
         // if needed.
-        s.season.start = s.season.period > 0 ?
-            block.timestamp / s.season.period * s.season.period :
-            block.timestamp;
+        s.season.start = s.season.period > 0
+            ? (block.timestamp / s.season.period) * s.season.period
+            : block.timestamp;
 
-        // initalizes the cases that beanstalk uses 
+        // initalizes the cases that beanstalk uses
         // to change certain parameters of itself.
         setCases();
     }
@@ -170,20 +164,24 @@ contract InitalizeDiamond {
     }
 
     function initalizeSeedGauge(
-        uint128 beanToMaxLpGpRatio, 
+        uint128 beanToMaxLpGpRatio,
         uint128 averageGrownStalkPerBdvPerSeason
     ) internal {
         // initalize the ratio of bean to max lp gp per bdv.
-        s.seedGauge.beanToMaxLpGpPerBdvRatio = 
-            beanToMaxLpGpRatio;
+        s.seedGauge.beanToMaxLpGpPerBdvRatio = beanToMaxLpGpRatio;
 
         // initalize the average grown stalk per bdv per season.
-        s.seedGauge.averageGrownStalkPerBdvPerSeason = 
-            averageGrownStalkPerBdvPerSeason;
+        s.seedGauge.averageGrownStalkPerBdvPerSeason = averageGrownStalkPerBdvPerSeason;
 
         // emit events.
-        emit BeanToMaxLpGpPerBdvRatioChange(s.season.current, type(uint256).max, int80(s.seedGauge.beanToMaxLpGpPerBdvRatio));
-        emit LibGauge.UpdateAverageStalkPerBdvPerSeason(s.seedGauge.averageGrownStalkPerBdvPerSeason);
+        emit BeanToMaxLpGpPerBdvRatioChange(
+            s.season.current,
+            type(uint256).max,
+            int80(int128(s.seedGauge.beanToMaxLpGpPerBdvRatio))
+        );
+        emit LibGauge.UpdateAverageStalkPerBdvPerSeason(
+            s.seedGauge.averageGrownStalkPerBdvPerSeason
+        );
     }
 
     /**
@@ -194,16 +192,16 @@ contract InitalizeDiamond {
         address[] memory tokens,
         Storage.SiloSettings[] memory siloSettings
     ) internal {
-        for(uint256 i = 0; i < tokens.length; i++) {
+        for (uint256 i = 0; i < tokens.length; i++) {
             // note: no error checking.
             s.ss[tokens[i]] = siloSettings[i];
 
             bool isLPandWell = true;
-            if(tokens[i] == C.BEAN) { 
+            if (tokens[i] == C.BEAN) {
                 isLPandWell = false;
             }
 
-            // All tokens (excluding bean) are assumed to be 
+            // All tokens (excluding bean) are assumed to be
             // - whitelisted,
             // - an LP and well.
             LibWhitelistedTokens.addWhitelistStatus(
@@ -212,12 +210,6 @@ contract InitalizeDiamond {
                 isLPandWell,
                 isLPandWell
             );
-            
         }
     }
-
-
-
-
-
 }

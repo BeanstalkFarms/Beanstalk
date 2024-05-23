@@ -2,14 +2,14 @@
  * SPDX-License-Identifier: MIT
  **/
 
-pragma solidity ^0.7.6;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.20;
 
 import {AppStorage} from "../AppStorage.sol";
 import {LibDiamond} from "../../libraries/LibDiamond.sol";
 import {LibEth} from "../../libraries/Token/LibEth.sol";
 import {AdvancedFarmCall, LibFarm} from "../../libraries/LibFarm.sol";
 import {LibFunction} from "../../libraries/LibFunction.sol";
+import {Invariable} from "contracts/beanstalk/Invariable.sol";
 
 /**
  * @title Farm Facet
@@ -18,7 +18,7 @@ import {LibFunction} from "../../libraries/LibFunction.sol";
  * Any function stored in Beanstalk's EIP-2535 DiamondStorage can be called as a Farm call. (https://eips.ethereum.org/EIPS/eip-2535)
  **/
 
-contract FarmFacet {
+contract FarmFacet is Invariable {
     AppStorage internal s;
 
     /**
@@ -26,7 +26,9 @@ contract FarmFacet {
      * @param data The encoded function data for each of the calls
      * @return results The return data from each of the calls
      **/
-    function farm(bytes[] calldata data) external payable withEth returns (bytes[] memory results) {
+    function farm(
+        bytes[] calldata data
+    ) external payable fundsSafu withEth returns (bytes[] memory results) {
         results = new bytes[](data.length);
         for (uint256 i; i < data.length; ++i) {
             results[i] = LibFarm._farm(data[i]);
@@ -41,7 +43,7 @@ contract FarmFacet {
      **/
     function advancedFarm(
         AdvancedFarmCall[] calldata data
-    ) external payable withEth returns (bytes[] memory results) {
+    ) external payable fundsSafu withEth returns (bytes[] memory results) {
         results = new bytes[](data.length);
         for (uint256 i = 0; i < data.length; ++i) {
             results[i] = LibFarm._advancedFarm(data[i], results);

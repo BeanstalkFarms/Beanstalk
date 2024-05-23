@@ -2,14 +2,13 @@
  * SPDX-License-Identifier: MIT
  **/
 
-pragma solidity =0.7.6;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.20;
 
 import {LibAppStorage, AppStorage, Storage} from "contracts/libraries/LibAppStorage.sol";
 import {LibChainlinkOracle} from "./LibChainlinkOracle.sol";
 import {LibEthUsdOracle} from "./LibEthUsdOracle.sol";
 import {LibWstethUsdOracle} from "./LibWstethUsdOracle.sol";
-import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
+import {LibRedundantMath256} from "contracts/libraries/LibRedundantMath256.sol";
 import {C} from "contracts/C.sol";
 
 /**
@@ -19,7 +18,7 @@ import {C} from "contracts/C.sol";
  * - ETH/USD price
  **/
 library LibUsdOracle {
-    using SafeMath for uint256;
+    using LibRedundantMath256 for uint256;
 
     function getUsdPrice(address token) internal view returns (uint256) {
         return getUsdPrice(token, 0);
@@ -43,7 +42,7 @@ library LibUsdOracle {
             if (wstethUsdPrice == 0) return 0;
             return uint256(1e24).div(wstethUsdPrice);
         }
-        
+
         uint256 tokenPrice = getTokenPriceFromExternal(token, lookback);
         if (tokenPrice == 0) return 0;
         return uint256(1e24).div(tokenPrice);
@@ -59,7 +58,6 @@ library LibUsdOracle {
      * (ignoring decimal precision)
      */
     function getTokenPrice(address token, uint256 lookback) internal view returns (uint256) {
-
         // oracles that are implmented within beanstalk should be placed here.
         if (token == C.WETH) {
             uint256 ethUsdPrice = LibEthUsdOracle.getEthUsdPrice(lookback);
@@ -92,8 +90,13 @@ library LibUsdOracle {
 
         // If the encode type is type 1, use the default chainlink implmentation instead.
         // `target` refers to the address of the price aggergator implmenation
-        if(oracleImpl.encodeType == bytes1(0x01)) {
-            return LibChainlinkOracle.getTokenPrice(oracleImpl.target, LibChainlinkOracle.FOUR_HOUR_TIMEOUT, lookback);
+        if (oracleImpl.encodeType == bytes1(0x01)) {
+            return
+                LibChainlinkOracle.getTokenPrice(
+                    oracleImpl.target,
+                    LibChainlinkOracle.FOUR_HOUR_TIMEOUT,
+                    lookback
+                );
         }
 
         // If the oracle implmentation address is not set, use the current contract.

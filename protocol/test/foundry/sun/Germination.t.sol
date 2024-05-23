@@ -14,26 +14,25 @@ import {C} from "contracts/C.sol";
  * @dev Tests total/farmer values and validates the germination process.
  */
 contract GerminationTest is TestHelper {
-
     // Interfaces.
     MockSiloFacet silo = MockSiloFacet(BEANSTALK);
     MockSeasonFacet season = MockSeasonFacet(BEANSTALK);
-    
+
     // test accounts
     address[] farmers;
 
-    // The largest deposit that can occur on the first season. 
+    // The largest deposit that can occur on the first season.
     // Given the supply of beans should starts at 0,
     // this should never occur.
     uint256 constant MAX_DEPOSIT_BOUND = 1.7e22; // 2 ** 128 / 2e16
-  
+
     function setUp() public {
         initializeBeanstalkTestState(true, false);
-        
+
         // mint 1000 beans to user 1 and user 2 (user 0 is the beanstalk deployer).
-        farmers.push(users[1]); 
+        farmers.push(users[1]);
         farmers.push(users[2]);
-        mintTokensToUsers(farmers, C.BEAN,  MAX_DEPOSIT_BOUND);
+        mintTokensToUsers(farmers, C.BEAN, MAX_DEPOSIT_BOUND);
     }
 
     //////////// DEPOSITS ////////////
@@ -58,7 +57,7 @@ contract GerminationTest is TestHelper {
         // deposits bean into the silo.
         (amount, ) = setUpSiloDepositTest(amount, farmers);
 
-        // call sunrise. 
+        // call sunrise.
         season.siloSunrise(0);
 
         // verify new state of silo.
@@ -92,13 +91,7 @@ contract GerminationTest is TestHelper {
         (amount, stem) = setUpSiloDepositTest(amount, farmers);
 
         // withdraw beans from silo from user 1 and 2.
-        withdrawDepositForUsers(
-            farmers,
-            C.BEAN, 
-            stem,
-            amount,
-            LibTransfer.To.EXTERNAL
-        );
+        withdrawDepositForUsers(farmers, C.BEAN, stem, amount, LibTransfer.To.EXTERNAL);
 
         // verify silo/farmer states.
         // verify new state of silo.
@@ -114,17 +107,11 @@ contract GerminationTest is TestHelper {
         int96 stem;
         (amount, stem) = setUpSiloDepositTest(amount, farmers);
 
-        // call sunrise. 
+        // call sunrise.
         season.siloSunrise(0);
 
         // withdraw beans from silo from user 1 and 2.
-        withdrawDepositForUsers(
-            farmers,
-            C.BEAN, 
-            stem,
-            amount,
-            LibTransfer.To.EXTERNAL
-        );
+        withdrawDepositForUsers(farmers, C.BEAN, stem, amount, LibTransfer.To.EXTERNAL);
 
         // verify silo/farmer states.
         // verify new state of silo.
@@ -142,15 +129,10 @@ contract GerminationTest is TestHelper {
         (amount, stem) = setUpSiloDepositTest(amount, farmers);
         uint256 grownStalk = bs.balanceOfGrownStalk(users[1], C.BEAN);
 
-        farmers.push(users[3]); 
+        farmers.push(users[3]);
         farmers.push(users[4]);
 
-        transferDepositFromUsersToUsers(
-            farmers,
-            stem,
-            C.BEAN,
-            amount
-        );
+        transferDepositFromUsersToUsers(farmers, stem, C.BEAN, amount);
 
         // verify silo/farmer states.
         // verify new state of silo.
@@ -166,26 +148,21 @@ contract GerminationTest is TestHelper {
         int96 stem;
         (amount, stem) = setUpSiloDepositTest(amount, farmers);
         season.siloSunrise(0);
-        farmers.push(users[3]); 
+        farmers.push(users[3]);
         farmers.push(users[4]);
 
         uint256 grownStalk = bs.balanceOfGrownStalk(users[1], C.BEAN);
-        
-        transferDepositFromUsersToUsers(
-            farmers,
-            stem,
-            C.BEAN,
-            amount
-        );
+
+        transferDepositFromUsersToUsers(farmers, stem, C.BEAN, amount);
 
         // verify silo/farmer states.
         // verify new state of silo.
         checkSiloAndUserWithGrownStalk(users[3], 0, amount, grownStalk);
     }
 
-    // The following two tests verify that germinating deposits do not gain signorage from earned beans. 
+    // The following two tests verify that germinating deposits do not gain signorage from earned beans.
     // however, there is an edge case where the first deposit of the beanstalk system will gain signorage.
-    // due to how roots are initally issued. Thus, earned beans tests assume prior deposits. 
+    // due to how roots are initally issued. Thus, earned beans tests assume prior deposits.
     function test_NoEarnedBeans(uint256 amount, uint256 sunriseBeans) public {
         sunriseBeans = bound(sunriseBeans, 0, MAX_DEPOSIT_BOUND);
 
@@ -196,10 +173,14 @@ contract GerminationTest is TestHelper {
         season.siloSunrise(sunriseBeans);
 
         // verify silo/farmer states. Check user has no earned beans.
-        assertEq(bs.totalStalk(), (2 * _amount + sunriseBeans) * C.STALK_PER_BEAN,  "TotalStalk");
+        assertEq(bs.totalStalk(), (2 * _amount + sunriseBeans) * C.STALK_PER_BEAN, "TotalStalk");
         assertEq(bs.balanceOfEarnedBeans(users[3]), 0, "balanceOfEarnedBeans");
         assertEq(bs.getTotalDeposited(C.BEAN), (2 * _amount + sunriseBeans), "TotalDeposited");
-        assertEq(bs.getTotalDepositedBdv(C.BEAN), (2 * _amount + sunriseBeans), "TotalDepositedBdv");
+        assertEq(
+            bs.getTotalDepositedBdv(C.BEAN),
+            (2 * _amount + sunriseBeans),
+            "TotalDepositedBdv"
+        );
         assertEq(bs.totalRoots(), 2 * _amount * C.STALK_PER_BEAN * C.getRootsBase(), "TotalRoots");
     }
 
@@ -221,7 +202,7 @@ contract GerminationTest is TestHelper {
 
     //     // calls sunrise (and finishes germination for user 3):
     //     season.siloSunrise(_sunriseBeans);
-        
+
     //     // verify silo/farmer states. Check user has no earned beans.
     //     // assertEq(bs.totalStalk(), (3 * _amount + 2 * sunriseBeans) * C.STALK_PER_BEAN,  "TotalStalk1");
     //     assertEq(bs.balanceOfEarnedBeans(users[3]), 0, "balanceOfEarnedBeans");
@@ -238,7 +219,7 @@ contract GerminationTest is TestHelper {
     //     // assertEq(bs.getTotalDepositedBdv(C.BEAN), (3 * _amount + 2 * sunriseBeans), "TotalDepositedBdv");
     //     // assertEq(bs.totalRoots(), 5 * _amount * C.STALK_PER_BEAN * C.getRootsBase()/ 2, "TotalRoots");
     // }
- 
+
     ////// SILO TEST HELPERS //////
 
     /**
@@ -247,7 +228,10 @@ contract GerminationTest is TestHelper {
      * @return _amount The actual amount of beans deposited.
      * @return stem The stem tip for the deposited beans.
      */
-    function setUpSiloDepositTest(uint256 amount, address[] memory _farmers) public returns (uint256 _amount, int96 stem) {
+    function setUpSiloDepositTest(
+        uint256 amount,
+        address[] memory _farmers
+    ) public returns (uint256 _amount, int96 stem) {
         _amount = bound(amount, 1, MAX_DEPOSIT_BOUND);
 
         // deposit beans to silo from user 1 and 2.
@@ -261,7 +245,7 @@ contract GerminationTest is TestHelper {
      * @param token The token to deposit.
      * @param amount The amount of beans to deposit.
      * @param mode The deposit mode.
-     */    
+     */
     function depositForUsers(
         address[] memory users,
         address token,
@@ -301,7 +285,7 @@ contract GerminationTest is TestHelper {
      * @param stem The stem tip for the deposited beans.
      * @param token The token to transfer.
      * @param amount The amount of beans to transfer
-     * @dev This function transfers a deposit from user 'i' to 
+     * @dev This function transfers a deposit from user 'i' to
      * user 'i + 2'. Fails with invalid array input.
      */
     function transferDepositFromUsersToUsers(
@@ -317,8 +301,8 @@ contract GerminationTest is TestHelper {
     }
 
     function initZeroEarnedBeansTest(
-        uint256 amount, 
-        address[] memory initalFarmers, 
+        uint256 amount,
+        address[] memory initalFarmers,
         address newFarmer
     ) public returns (uint256 _amount) {
         // deposit 'amount' beans to the silo.
@@ -331,13 +315,13 @@ contract GerminationTest is TestHelper {
         address[] memory farmer = new address[](1);
         farmer[0] = newFarmer;
         // mint token to new farmer.
-        mintTokensToUsers(farmer, C.BEAN,  MAX_DEPOSIT_BOUND);
+        mintTokensToUsers(farmer, C.BEAN, MAX_DEPOSIT_BOUND);
 
         // deposit into the silo.
         setUpSiloDepositTest(amount, farmer);
     }
 
-    ////// ASSERTIONS ////// 
+    ////// ASSERTIONS //////
 
     /**
      * @notice Verifies the following parameters:
@@ -360,10 +344,15 @@ contract GerminationTest is TestHelper {
     /**
      * @notice checks silo balances, with grown stalk added.
      * @dev when a user interacts with the silo, mow() is called,
-     * which credits the user with grown stalk. Tests which check 
+     * which credits the user with grown stalk. Tests which check
      * multi-season interactions should include the grown stalk.
      */
-    function checkSiloAndUserWithGrownStalk(address farmer, uint256 total, uint256 germTotal, uint256 grownStalk) public view {
+    function checkSiloAndUserWithGrownStalk(
+        address farmer,
+        uint256 total,
+        uint256 germTotal,
+        uint256 grownStalk
+    ) public view {
         checkTotalSiloBalancesWithGrownStalk(2 * total, 2 * grownStalk);
         checkFarmerSiloBalancesWithGrownStalk(farmer, total, grownStalk);
         checkTotalGerminatingBalances(2 * germTotal);
@@ -371,32 +360,63 @@ contract GerminationTest is TestHelper {
     }
 
     function checkTotalSiloBalances(uint256 expected) public view {
-       checkTotalSiloBalancesWithGrownStalk(expected, 0);
+        checkTotalSiloBalancesWithGrownStalk(expected, 0);
     }
 
-    function checkTotalSiloBalancesWithGrownStalk(uint256 expected, uint256 grownStalk) public view {
-        assertEq(bs.totalStalk(), expected * C.STALK_PER_BEAN + grownStalk,  "TotalStalk");
-        assertEq(bs.totalRoots(), ((expected * C.STALK_PER_BEAN) + grownStalk) * C.getRootsBase(), "TotalRoots");
+    function checkTotalSiloBalancesWithGrownStalk(
+        uint256 expected,
+        uint256 grownStalk
+    ) public view {
+        assertEq(bs.totalStalk(), expected * C.STALK_PER_BEAN + grownStalk, "TotalStalk");
+        assertEq(
+            bs.totalRoots(),
+            ((expected * C.STALK_PER_BEAN) + grownStalk) * C.getRootsBase(),
+            "TotalRoots"
+        );
         assertEq(bs.getTotalDeposited(C.BEAN), expected, "TotalDeposited");
         assertEq(bs.getTotalDepositedBdv(C.BEAN), expected, "TotalDepositedBdv");
     }
 
-    function checkFarmerSiloBalances(address farmer, uint256 expected) public view { 
+    function checkFarmerSiloBalances(address farmer, uint256 expected) public view {
         checkFarmerSiloBalancesWithGrownStalk(farmer, expected, 0);
     }
 
-    function checkFarmerSiloBalancesWithGrownStalk(address farmer, uint256 expected, uint256 grownStalk) public view { 
-        assertEq(bs.balanceOfStalk(farmer), (expected * C.STALK_PER_BEAN) + grownStalk, "FarmerStalk");
-        assertEq(bs.balanceOfRoots(farmer), ((expected * C.STALK_PER_BEAN) + grownStalk) * C.getRootsBase(), "FarmerRoots");
+    function checkFarmerSiloBalancesWithGrownStalk(
+        address farmer,
+        uint256 expected,
+        uint256 grownStalk
+    ) public view {
+        assertEq(
+            bs.balanceOfStalk(farmer),
+            (expected * C.STALK_PER_BEAN) + grownStalk,
+            "FarmerStalk"
+        );
+        assertEq(
+            bs.balanceOfRoots(farmer),
+            ((expected * C.STALK_PER_BEAN) + grownStalk) * C.getRootsBase(),
+            "FarmerRoots"
+        );
     }
 
     function checkTotalGerminatingBalances(uint256 expected) public view {
-        assertEq(bs.getTotalGerminatingStalk(), expected * C.STALK_PER_BEAN, "TotalGerminatingStalk");
+        assertEq(
+            bs.getTotalGerminatingStalk(),
+            expected * C.STALK_PER_BEAN,
+            "TotalGerminatingStalk"
+        );
         assertEq(bs.getGerminatingTotalDeposited(C.BEAN), expected, "getGerminatingTotalDeposited");
-        assertEq(bs.getGerminatingTotalDepositedBdv(C.BEAN), expected, "getGerminatingTotalDepositedBdv");
+        assertEq(
+            bs.getGerminatingTotalDepositedBdv(C.BEAN),
+            expected,
+            "getGerminatingTotalDepositedBdv"
+        );
     }
 
     function checkFarmerGerminatingBalances(address farmer, uint256 expected) public view {
-        assertEq(bs.balanceOfGerminatingStalk(farmer), C.STALK_PER_BEAN * expected, "balanceOfGerminatingStalk");
+        assertEq(
+            bs.balanceOfGerminatingStalk(farmer),
+            C.STALK_PER_BEAN * expected,
+            "balanceOfGerminatingStalk"
+        );
     }
 }
