@@ -533,7 +533,7 @@ describe("twoField", function () {
 
     // Set active field.
     this.activeField = 1;
-    mockBeanstalk.setActiveField(this.activeField, 100);
+    mockBeanstalk.setActiveField(this.activeField, 1);
 
     bean = await initalizeUsersForToken(BEAN, [user, user2], to6("10000"));
   });

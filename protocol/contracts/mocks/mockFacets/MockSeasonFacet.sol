@@ -24,7 +24,6 @@ import {LibEvaluate} from "contracts/libraries/LibEvaluate.sol";
 import {LibTokenSilo} from "contracts/libraries/Silo/LibTokenSilo.sol";
 import {IWell, Call} from "contracts/interfaces/basin/IWell.sol";
 import {Storage} from "contracts/beanstalk/AppStorage.sol";
-import {BARN_POINTS} from "contracts/ecosystem/ShipmentPlanner.sol";
 
 import "forge-std/console.sol";
 /**

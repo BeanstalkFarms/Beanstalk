@@ -24,6 +24,7 @@ contract Receiving is ReentrancyGuard {
 
     /**
      * @notice General entry point to receive Beans at a given component of the system.
+     * @dev Receive functions should be designed to never revert.
      * @param recipient The Beanstalk component that will receive the Beans.
      * @param amount The amount of Beans to receive.
      * @param data Additional data to pass to the receiving function.
@@ -40,6 +41,7 @@ contract Receiving is ReentrancyGuard {
         } else if (recipient == Storage.ShipmentRecipient.Barn) {
             barnReceive(amount, data);
         }
+        // New receiveShipment enum values should have a corresponding function call here.
     }
 
     /**
@@ -70,6 +72,7 @@ contract Receiving is ReentrancyGuard {
      */
     function fieldReceive(uint256 amount, bytes memory data) private {
         uint256 fieldId = abi.decode(data, (uint256));
+        require(fieldId < s.fieldCount, "Field does not exist");
         s.fields[fieldId].harvestable += amount;
     }
 

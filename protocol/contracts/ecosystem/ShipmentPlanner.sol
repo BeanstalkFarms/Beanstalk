@@ -18,22 +18,26 @@ interface IBeanstalk {
 
     function isHarvesting(uint256 fieldId) external view returns (bool);
     function totalUnharvestable(uint256 fieldId) external view returns (uint256);
+    function fieldCount() external view returns (uint256);
 }
-
-uint256  constant BARN_POINTS = 333_333_333_333_333_333;
-uint256  constant FIELD_POINTS = 333_333_333_333_333_333;
-uint256  constant SILO_POINTS = 333_333_333_333_333_333;
 
 /**
  * @title ShipmentPlanner
  * @notice Contains getters for retrieving ShipmentPlans for various Beanstalk components.
  * @dev Lives as a standalone immutable contract. Updating shipment plans requires deploying
- *      a new instance and updating the ShipmentRoute planContract addresses help in AppStorage.
+ * a new instance and updating the ShipmentRoute planContract addresses help in AppStorage.
+ * @dev Called via staticcall. New plan getters must be view/pure functions.
  */
 contract ShipmentPlanner {
-    address constant BEANSTALK = 0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5;
+    uint256 constant BARN_POINTS = 333_333_333_333_333_333;
+    uint256 constant FIELD_POINTS = 333_333_333_333_333_333;
+    uint256 constant SILO_POINTS = 333_333_333_333_333_333;
 
-    IBeanstalk beanstalk = IBeanstalk(BEANSTALK);
+    IBeanstalk beanstalk;
+
+    constructor(address beanstalkAddress) {
+        beanstalk = IBeanstalk(beanstalkAddress);
+    }
 
     /**
      * @notice Get the current points and cap for Barn shipments.
@@ -54,6 +58,7 @@ contract ShipmentPlanner {
         bytes memory data
     ) external view returns (ShipmentPlan memory shipmentPlan) {
         uint256 fieldId = abi.decode(data, (uint256));
+        require(fieldId < beanstalk.fieldCount(), "Field does not exist");
         if (!beanstalk.isHarvesting(fieldId)) return shipmentPlan;
         return ShipmentPlan({points: FIELD_POINTS, cap: beanstalk.totalUnharvestable(fieldId)});
     }

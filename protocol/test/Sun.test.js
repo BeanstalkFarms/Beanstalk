@@ -44,7 +44,7 @@ describe("Sun", function () {
     [beanstalk, mockBeanstalk] = await getAllBeanstalkContracts(this.diamond.address);
 
     let contractFactory = await ethers.getContractFactory("ShipmentPlanner", owner);
-    contractFactory = await contractFactory.deploy();
+    contractFactory = await contractFactory.deploy(this.diamond.address);
     await contractFactory.deployed();
     if (verbose) console.log(`ShipmentPlanner deployed at ${contractFactory.address}`);
     this.shipmentPlanner = await ethers.getContractAt("ShipmentPlanner", contractFactory.address);

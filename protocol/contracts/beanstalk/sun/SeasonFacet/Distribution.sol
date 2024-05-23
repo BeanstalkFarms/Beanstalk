@@ -76,15 +76,6 @@ contract Distribution is Receiving {
         // Ship it.
         for (uint256 i; i < shipmentAmounts.length; i++) {
             if (shipmentAmounts[i] == 0) continue;
-            // Success is not verified here. Receive functions should be designed to never revert.
-            // address(this).call(
-            //     abi.encodeWithSelector(
-            //         bytes4(keccak256("receive(uint8,uint256,bytes)")),
-            //         shipmentRoutes[i].recipient,
-            //         shipmentAmounts[i],
-            //         shipmentRoutes[i].data
-            //     )
-            // );
             receiveShipment(
                 shipmentRoutes[i].recipient,
                 shipmentAmounts[i],
@@ -114,20 +105,6 @@ contract Distribution is Receiving {
         }
     }
 
-    function hashShipmentRoute(
-        Storage.ShipmentRoute memory shipmentRoute
-    ) internal pure returns (bytes32 hash) {
-        return
-            keccak256(
-                abi.encode(
-                    shipmentRoute.planContract,
-                    shipmentRoute.planSelector,
-                    uint8(shipmentRoute.recipient),
-                    keccak256(shipmentRoute.data)
-                )
-            );
-    }
-
     /**
      * @notice Gets the shipping plan for all shipping routes.
      * @dev Determines which routes are active and how many Beans they will receive.
@@ -153,7 +130,7 @@ contract Distribution is Receiving {
     /**
      * @notice Gets the current set of ShipmentRoutes.
      */
-    function getShipmentRoutes() public view returns (Storage.ShipmentRoute[] memory) {
+    function getShipmentRoutes() external view returns (Storage.ShipmentRoute[] memory) {
         return s.shipmentRoutes;
     }
 
@@ -161,7 +138,7 @@ contract Distribution is Receiving {
      * @notice Replaces the entire set of ShipmentRoutes with a new set.
      * @dev Changes take effect immediately and will be seen at the next sunrise mint.
      */
-    function setShipmentRoutes(Storage.ShipmentRoute[] calldata shipmentRoutes) public {
+    function setShipmentRoutes(Storage.ShipmentRoute[] calldata shipmentRoutes) external {
         LibDiamond.enforceIsOwnerOrContract();
         delete s.shipmentRoutes;
         for (uint256 i; i < shipmentRoutes.length; i++) {

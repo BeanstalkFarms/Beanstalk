@@ -227,7 +227,10 @@ contract FieldFacet is Invariable, ReentrancyGuard {
      * @notice Set the active Field. Only the active field is accrues Soil.
      * @param fieldId ID of the Field to set as active. ID is the Field Number.
      */
-    function setActiveField(uint256 fieldId, uint32 temperature) public fundsSafu noSupplyChange noNetFlow {
+    function setActiveField(
+        uint256 fieldId,
+        uint32 temperature
+    ) public fundsSafu noSupplyChange noNetFlow {
         LibDiamond.enforceIsOwnerOrContract();
         require(fieldId < s.fieldCount, "Field: Field does not exist");
         s.activeField = fieldId;
@@ -295,6 +298,10 @@ contract FieldFacet is Invariable, ReentrancyGuard {
         return s.fields[fieldId].pods - s.fields[fieldId].harvestable;
     }
 
+    /**
+     * @notice Returns true if there exists un-harvestable pods.
+     * @param fieldId The index of the Field to query.
+     */
     function isHarvesting(uint256 fieldId) public view returns (bool) {
         return s.fields[fieldId].harvestable < s.fields[fieldId].pods;
     }
@@ -306,6 +313,14 @@ contract FieldFacet is Invariable, ReentrancyGuard {
      */
     function plot(address account, uint256 fieldId, uint256 index) public view returns (uint256) {
         return s.accounts[account].fields[fieldId].plots[index];
+    }
+
+    function activeField() public view returns (uint256) {
+        return s.activeField;
+    }
+
+    function fieldCount() public view returns (uint256) {
+        return s.fieldCount;
     }
 
     /**
