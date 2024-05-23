@@ -1,6 +1,6 @@
 import { css } from "styled-components";
 
-export type ThemeColor = "primary" | "primaryLight" | "black" | "white" | "gray" | "lightGray";
+export type ThemeColor = "disabled" | "primary" | "primaryLight" | "black" | "white" | "gray" | "lightGray";
 
 export const THEME_COLORS: Record<ThemeColor, string> = {
   primary: "#46b955",
@@ -8,7 +8,8 @@ export const THEME_COLORS: Record<ThemeColor, string> = {
   black: "#000",
   white: "#fff",
   gray: "#4B5563",
-  lightGray: "#9ca3af"
+  lightGray: "#9ca3af",
+  disabled: "#D1D5DB"
 } as const;
 
 export type FontColor = "primary" | "text.primary" | "text.secondary";

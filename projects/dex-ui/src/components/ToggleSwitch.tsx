@@ -4,7 +4,7 @@ import styled from "styled-components";
 
 // Styled components
 
-// TODO: add props for size. Currently, we only support 20 x 32px (w,h) dimensions
+// TODO: add props for size. Currently, we only support 20px x 32px
 
 const ToggleContainer = styled.div<{ checked?: boolean }>`
   position: relative;
@@ -25,7 +25,6 @@ const ToggleCircle = styled.div<{ checked?: boolean }>`
   height: 14px;
   border-radius: 50%;
   background-color: ${(props) => (props.checked ? theme.colors.black : theme.colors.lightGray)};
-
   transition: left 0.2s; background-color 0.2s;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 `;
