@@ -1,9 +1,10 @@
 import { css } from "styled-components";
 
-export type ThemeColor = "primary" | "black" | "white" | "gray" | "lightGray";
+export type ThemeColor = "primary" | "primaryLight" | "black" | "white" | "gray" | "lightGray";
 
 export const THEME_COLORS: Record<ThemeColor, string> = {
   primary: "#46b955",
+  primaryLight: "#F0FDF4",
   black: "#000",
   white: "#fff",
   gray: "#4B5563",
