@@ -234,8 +234,8 @@ contract FieldFacet is Invariable, ReentrancyGuard {
 
         // Reset weather.
         s.weather.t = temperature;
-        s.weather.thisSowTime = 0;
-        s.weather.lastSowTime = 0;
+        s.weather.thisSowTime = type(uint32).max;
+        s.weather.lastSowTime = type(uint32).max;
         s.weather.lastDSoil = 0;
 
         emit ActiveFieldSet(fieldId);
