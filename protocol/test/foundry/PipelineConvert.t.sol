@@ -298,9 +298,9 @@ contract PipelineConvertTest is TestHelper {
         );
 
         // store convert capacities for later comparison
-        pd.beforeInputWellCapacity = convert.getWellConvertCapacity(pd.inputWell);
-        pd.beforeOutputWellCapacity = convert.getWellConvertCapacity(pd.outputWell);
-        pd.beforeOverallCapacity = convert.getOverallConvertCapacity();
+        pd.beforeInputWellCapacity = bs.getWellConvertCapacity(pd.inputWell);
+        pd.beforeOutputWellCapacity = bs.getWellConvertCapacity(pd.outputWell);
+        pd.beforeOverallCapacity = bs.getOverallConvertCapacity();
 
         uint256 bdvOfDepositedLp = bs.bdv(pd.inputWell, amountOfDepositedLP);
         uint256[] memory bdvAmountsDeposited = new uint256[](1);
@@ -419,11 +419,11 @@ contract PipelineConvertTest is TestHelper {
         );
 
         // In this test overall convert capacity before and after should be 0.
-        assertEq(convert.getOverallConvertCapacity(), 0);
+        assertEq(bs.getOverallConvertCapacity(), 0);
         assertEq(pd.beforeOverallCapacity, 0);
         // Per-well capacities were used
-        assertGt(convert.getWellConvertCapacity(pd.inputWell), pd.beforeInputWellCapacity);
-        assertGt(convert.getWellConvertCapacity(pd.outputWell), pd.beforeOutputWellCapacity);
+        assertGt(bs.getWellConvertCapacity(pd.inputWell), pd.beforeInputWellCapacity);
+        assertGt(bs.getWellConvertCapacity(pd.outputWell), pd.beforeOutputWellCapacity);
     }
 
     function testBeanToLPUsingRemainingConvertCapacity(uint256 amount, uint256 tradeAmount) public {
@@ -671,12 +671,12 @@ contract PipelineConvertTest is TestHelper {
         // update pump
         updateMockPumpUsingWellReserves(beanEthWell);
 
-        uint256 convertCapacityStage1 = convert.getOverallConvertCapacity();
+        uint256 convertCapacityStage1 = bs.getOverallConvertCapacity();
 
         // convert beans to lp
         beanToLPDoConvert(amount, stem, users[1]);
 
-        uint256 convertCapacityStage2 = convert.getOverallConvertCapacity();
+        uint256 convertCapacityStage2 = bs.getOverallConvertCapacity();
         assertLe(convertCapacityStage2, convertCapacityStage1);
 
         // add more eth to well again
@@ -684,7 +684,7 @@ contract PipelineConvertTest is TestHelper {
 
         beanToLPDoConvert(amount, stem2, users[2]);
 
-        uint256 convertCapacityStage3 = convert.getOverallConvertCapacity();
+        uint256 convertCapacityStage3 = bs.getOverallConvertCapacity();
         assertLe(convertCapacityStage3, convertCapacityStage2);
 
         assertEq(convertCapacityStage3, 0);
@@ -1927,7 +1927,7 @@ contract PipelineConvertTest is TestHelper {
 
         // encode get convert capacity for bean:eth well
         bytes memory getConvertCapacityEncoded = abi.encodeWithSelector(
-            convert.getWellConvertCapacity.selector,
+            bs.getWellConvertCapacity.selector,
             beanEthWell
         );
 

@@ -1024,6 +1024,8 @@ interface IMockFBeanstalk {
 
     function getWellConvertCapacity(address well) external view returns (uint256);
 
+    function getOverallConvertCapacity() external view returns (uint256);
+
     function getWhitelistStatus(
         address token
     ) external view returns (WhitelistStatus memory _whitelistStatuses);
