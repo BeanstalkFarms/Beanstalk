@@ -142,11 +142,12 @@ const SiloAssetApyChip: FC<SiloAssetApyChipProps> = ({
           '& .MuiChip-label': {
             overflow: 'visible',
           },
+          maxWidth: '120%'
         }}
         label={
           <Typography sx={{ whiteSpace: 'nowrap' }}>
             <Row
-              gap={0.5}
+              gap={0.25}
               flexWrap="nowrap"
               justifyContent="center"
               alignItems="center"
@@ -157,7 +158,12 @@ const SiloAssetApyChip: FC<SiloAssetApyChipProps> = ({
                 </>
               )}
               {metric === 'bean' ? (
-                <>
+                <Box
+                  display="flex"
+                  justifyContent="center"
+                  alignItems="center"
+                  gap={0.25}
+                >
                   <Box
                     display="flex"
                     justifyContent="center"
@@ -202,7 +208,7 @@ const SiloAssetApyChip: FC<SiloAssetApyChipProps> = ({
                   <Typography color="white" marginTop={-0.25}>
                     |
                   </Typography>
-                </>
+                </Box>
               ) : null}
               <Box
                 display="flex"
