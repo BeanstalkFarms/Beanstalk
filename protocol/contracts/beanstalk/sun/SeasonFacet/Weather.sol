@@ -266,7 +266,7 @@ contract Weather is Sun {
         WellDeltaB[] memory arr,
         int left,
         int right
-    ) public pure returns (WellDeltaB[] memory) {
+    ) private pure returns (WellDeltaB[] memory) {
         if (left >= right) return arr;
 
         // Choose the median of left, right, and middle as pivot (improves performance on random data)
