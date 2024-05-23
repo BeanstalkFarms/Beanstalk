@@ -1,7 +1,7 @@
 import React, { useState } from "react";
-import { Flex } from "src/components/Layout";
+import { Box, Flex } from "src/components/Layout";
 import { Text } from "src/components/Typography";
-import { useWells } from "src/wells/useWells";
+
 import { ToggleSwitch } from "src/components/ToggleSwitch";
 import { ButtonPrimary } from "src/components/Button";
 import { BEANETH_ADDRESS } from "src/utils/addresses";
@@ -10,37 +10,51 @@ import HalbornLogo from "src/assets/images/halborn-logo.png";
 import { AccordionSelectCard } from "src/components/Common/ExpandableCard";
 import styled from "styled-components";
 import { theme } from "src/utils/ui/theme";
+import { Etherscan, Github } from "src/components/Icons";
+import { Link } from "react-router-dom";
+
+type WellInfoEntry = {
+  name: string;
+  description: string[];
+  info: {
+    label: string;
+    value: string;
+    imgSrc?: string;
+    url?: string;
+  }[];
+  usedBy: number;
+  etherscan?: string;
+  github?: string;
+  learnMore?: string;
+};
 
 // Can we make this dynamic??
-export const entries = {
+const entries: Record<string, WellInfoEntry> = {
   [BEANETH_ADDRESS.toLowerCase()]: {
     name: "Well.sol",
     description: [
       "A standard Well implementation that prioritizes flexibility and composability.",
       "Fits many use cases for a Liquidity Well."
     ],
-    deployer: {
-      name: "Beanstalk Farms",
-      imgSrc: BeanstalkFarmsLogo
-    },
-    blockDeployed: 12345678, // FIX ME
-    auditor: {
-      name: "Halborn",
-      imgSrc: HalbornLogo
-    }
+    info: [
+      { label: "Deployed By", value: "Beanstalk Farms", imgSrc: BeanstalkFarmsLogo },
+      { label: "Block Deployed", value: "12345678" },
+      { label: "Auditor", value: "Halborn", imgSrc: HalbornLogo, url: "https://github.com/BeanstalkFarms/Beanstalk-Audits" }
+    ],
+    usedBy: 1,
+
+    etherscan: "https://etherscan.io", // TODO: FIX ME
+    github: "https://github.com/BeanstalkFarms/Basin/blob/master/src/Well.sol",
+    learnMore: "https://docs.basin.exchange" // TODO: FIX ME
   }
 };
 
 export const ChooseWellImplementation = () => {
   const [selected, setSelected] = useState<string>("");
-  const { data: wells } = useWells();
   const [isCustomWell, setIsCustomWell] = useState(false);
 
   const handleSetSelected = (addr: string) => {
-    console.log("addr: ", addr);
-    console.log("curr: ", selected);
-    const isSelected = selected === addr;
-    setSelected(isSelected ? "" : addr);
+    setSelected(selected === addr ? "" : addr);
   };
 
   return (
@@ -52,30 +66,64 @@ export const ChooseWellImplementation = () => {
           selected={selected === address}
           upper={
             <Flex $direction="row" $gap={2}>
-              <div>
-                <InlineText $weight="semi-bold" $variant="xs">
+              <Box>
+                <Text $weight="semi-bold" $variant="xs">
                   {data.name}{" "}
                   <Text as="span" $color="text.secondary" $weight="normal" $variant="xs">
                     {"(Recommended)"}
                   </Text>
-                </InlineText>
+                </Text>
                 {data.description.map((text, j) => (
                   <Text $color="text.secondary" $variant="xs" key={`description-${i}-${j}`}>
                     {text}
                   </Text>
                 ))}
-              </div>
+              </Box>
             </Flex>
           }
           below={
-            <Flex $gap={0.5}>
-              <Flex $direction="row" $justifyContent="space-between">
-                <Text $color="text.secondary">Deployed By: </Text>
+            <Flex $direction="row" $justifyContent="space-between">
+              <Flex $gap={0.5} $alignItems="flex-start">
+                {data.info.map((info) => (
+                  <Text $color="text.secondary" $variant="xs" key={`info-${info.label}`}>
+                    {info.label}: {info.imgSrc && <IconImg src={info.imgSrc} />}
+                    <MayLink url={info.url || ""}>
+                      <Text as="span" $variant="xs">
+                        {" "}
+                        {info.value}
+                      </Text>
+                    </MayLink>
+                  </Text>
+                ))}
+                <Text $color="text.light" $variant="xs">
+                  Used by {data.usedBy} other {toPlural("Well", data.usedBy)}
+                </Text>
+              </Flex>
+              <Flex $justifyContent="space-between" $alignItems="flex-end">
+                <Flex $direction="row" $gap={0.5}>
+                  {data.etherscan && (
+                    <MayLink url={data.etherscan}>
+                      <Etherscan width={20} height={20} color={theme.colors.lightGray} />
+                    </MayLink>
+                  )}
+                  {data.github && (
+                    <MayLink url={data.github}>
+                      <Github width={20} height={20} color={theme.colors.lightGray} />
+                    </MayLink>
+                  )}
+                </Flex>
+                {data.learnMore ? (
+                  <MayLink url={data.learnMore}>
+                    <Text $color="text.secondary" $variant="xs" $textDecoration="underline">
+                      Learn more about this component
+                    </Text>
+                  </MayLink>
+                ) : null}
               </Flex>
             </Flex>
           }
-          defaultExpanded
           onClick={() => handleSetSelected(address)}
+          // defaultExpanded
         />
       ))}
       <Flex $direction="row" $gap={1}>
@@ -94,9 +142,20 @@ export const ChooseWellImplementation = () => {
   );
 };
 
-const Inline = styled.div`
-  display: inline;
-  // gap: ${theme.spacing(0.5)};
+const MayLink = ({ url, children }: { url?: string; children: React.ReactNode }) => {
+  if (url) {
+    return <LinkWrapper to={url}>{children}</LinkWrapper>;
+  }
+  return children;
+};
+
+const LinkWrapper = styled(Link).attrs({
+  target: "_blank",
+  rel: "noopener noreferrer",
+  onclick: (e: React.MouseEvent) => e.stopPropagation()
+})`
+  text-decoration: none;
+  outline: none;
 `;
 
 const FormWrapper = styled(Flex)`
@@ -104,6 +163,14 @@ const FormWrapper = styled(Flex)`
   width: 100%;
 `;
 
-const InlineText = styled(Text)`
-  display: inline;
+const IconImg = styled.img<{ $rounded?: boolean }>`
+  max-height: 16px;
+  max-width: 16px;
+  border-radius: 50%;
+  margin-bottom: ${theme.spacing(-0.25)};
 `;
+
+const toPlural = (word: string, count: number) => {
+  const suffix = count === 1 ? "" : "s";
+  return `${word}${suffix}`;
+};
