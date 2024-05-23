@@ -306,28 +306,40 @@ library LibConvert {
         // update per-well convert capacity
 
         if (inputToken != C.BEAN && inputTokenAmountInDirectionOfPeg > 0) {
-            uint256 inputTokenWellCapacity = abs(LibDeltaB.cappedReservesDeltaB(inputToken));
-            pdCapacity.inputToken = convertCap.wellConvertCapacityUsed[inputToken].add(
-                inputTokenAmountInDirectionOfPeg
+            (cumulativePenalty, pdCapacity.inputToken) = calculatePerWellCapacity(
+                inputToken,
+                inputTokenAmountInDirectionOfPeg,
+                cumulativePenalty,
+                convertCap,
+                pdCapacity.inputToken
             );
-            if (pdCapacity.inputToken > inputTokenWellCapacity) {
-                cumulativePenalty = cumulativePenalty.add(
-                    pdCapacity.inputToken.sub(inputTokenWellCapacity)
-                );
-            }
         }
 
         if (outputToken != C.BEAN && outputTokenAmountInDirectionOfPeg > 0) {
-            uint256 outputTokenWellCapacity = abs(LibDeltaB.cappedReservesDeltaB(outputToken));
-            pdCapacity.outputToken = convertCap.wellConvertCapacityUsed[outputToken].add(
-                outputTokenAmountInDirectionOfPeg
+            (cumulativePenalty, pdCapacity.outputToken) = calculatePerWellCapacity(
+                outputToken,
+                outputTokenAmountInDirectionOfPeg,
+                cumulativePenalty,
+                convertCap,
+                pdCapacity.outputToken
             );
-            if (pdCapacity.outputToken > outputTokenWellCapacity) {
-                cumulativePenalty = cumulativePenalty.add(
-                    pdCapacity.outputToken.sub(outputTokenWellCapacity)
-                );
-            }
         }
+    }
+
+    function calculatePerWellCapacity(
+        address wellToken,
+        uint256 amountInDirectionOfPeg,
+        uint256 cumulativePenalty,
+        Storage.ConvertCapacity storage convertCap,
+        uint256 pdCapacityToken
+    ) internal view returns (uint256, uint256) {
+        uint256 tokenWellCapacity = abs(LibDeltaB.cappedReservesDeltaB(wellToken));
+        pdCapacityToken = convertCap.wellConvertCapacityUsed[wellToken].add(amountInDirectionOfPeg);
+        if (pdCapacityToken > tokenWellCapacity) {
+            cumulativePenalty = cumulativePenalty.add(pdCapacityToken.sub(tokenWellCapacity));
+        }
+
+        return (cumulativePenalty, pdCapacityToken);
     }
 
     /**
