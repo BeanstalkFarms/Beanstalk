@@ -218,26 +218,6 @@ task("deploySeedGauge", async function () {
   await bipSeedGauge();
 });
 
-task('verifyEarnedBeans', async function () {
-  const bs = await getBeanstalk()
-  const stemTip = await bs.stemTipForToken('0xBEA0000029AD1c77D3d5D23Ba2D8893dB9d1Efab');
-  // impersonate farmer that could not withdraw beans
-  const account = await impersonateSigner('0xA7e3feD558E81dAb40Cd87F334D68b0BF0AB3fD6')
-  await bs.connect(account).withdrawDeposit(
-    '0xBEA0000029AD1c77D3d5D23Ba2D8893dB9d1Efab',
-    stemTip,
-    1,
-    0
-  );
-})
-
-task("balanceOfRoots", async function () {
-  this.beanstalk = await getBeanstalk();
-  console.log("Beanstalk:", this.beanstalk);
-  const balanceOfRoots = await this.beanstalk.balanceOfRoots('0x3C43674dfa916d791614827a50353fe65227B7f3');
-  console.log("Balance of Roots:", balanceOfRoots.toString());
-});
-
 /// EBIPS /// 
 
 task("ebip15", async function () {
