@@ -161,7 +161,7 @@ describe("Silo Convert", function () {
 
       it(`Fail ${from.symbol} -> ${to.symbol}`, async () => {
         const fn = async () => await (await sdk.silo.convert(from, to, from.amount(1))).wait();
-        await expect(fn).rejects.toThrowError("Convert: Tokens not supported");
+        await expect(fn).rejects.toThrowError("Cannot convert between these tokens");
       });
     });
 
