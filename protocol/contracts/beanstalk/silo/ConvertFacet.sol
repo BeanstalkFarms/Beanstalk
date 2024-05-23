@@ -16,11 +16,8 @@ import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {LibConvert} from "contracts/libraries/Convert/LibConvert.sol";
 import {AppStorage, LibAppStorage} from "contracts/libraries/LibAppStorage.sol";
-import {AdvancedFarmCall, LibFarm} from "../../libraries/LibFarm.sol";
-import {LibWellMinting} from "../../libraries/Minting/LibWellMinting.sol";
+import {AdvancedFarmCall} from "../../libraries/LibFarm.sol";
 import {LibWell} from "contracts/libraries/Well/LibWell.sol";
-import {IPipeline, PipeCall} from "contracts/interfaces/IPipeline.sol";
-import {LibFunction} from "contracts/libraries/LibFunction.sol";
 import {LibGerminate} from "contracts/libraries/Silo/LibGerminate.sol";
 import {LibConvertData} from "contracts/libraries/Convert/LibConvertData.sol";
 import {Invariable} from "contracts/beanstalk/Invariable.sol";
@@ -46,17 +43,6 @@ contract ConvertFacet is Invariable, ReentrancyGuard {
         uint256[] bdvsRemoved;
         uint256[] stalksRemoved;
         uint256[] depositIds;
-    }
-
-    struct PipelineConvertData {
-        uint256 grownStalk;
-        LibConvert.DeltaBStorage deltaB;
-        uint256 inputAmount;
-        uint256 overallConvertCapacity;
-        uint256 stalkPenaltyBdv;
-        address user;
-        uint256 newBdv;
-        uint256[] initialLpSupply;
     }
 
     event Convert(
@@ -113,26 +99,11 @@ contract ConvertFacet is Invariable, ReentrancyGuard {
     {
         address toToken;
         address fromToken;
-        PipelineConvertData memory pipeData;
 
-        // this setup is unfortunate because the convertData will be parsed again later
-        LibConvertData.ConvertKind kind = convertData.convertKind();
-        if (
-            kind == LibConvertData.ConvertKind.BEANS_TO_WELL_LP ||
-            kind == LibConvertData.ConvertKind.WELL_LP_TO_BEANS
-        ) {
-            if (kind == LibConvertData.ConvertKind.BEANS_TO_WELL_LP) {
-                (, , toToken) = convertData.convertWithAddress();
-                fromToken = C.BEAN;
-                require(LibWell.isWell(toToken), "Convert: Invalid Well");
-            } else {
-                (, , fromToken) = convertData.convertWithAddress();
-                toToken = C.BEAN;
-                require(LibWell.isWell(fromToken), "Convert: Invalid Well");
-            }
-
-            pipeData = LibPipelineConvert.populatePipelineConvertData(fromToken, toToken);
-        }
+        // if the convert is a well <> bean convert, cache the state to validate convert.
+        LibPipelineConvert.PipelineConvertData memory pipeData = LibPipelineConvert.getConvertState(
+            convertData
+        );
 
         (toToken, fromToken, toAmount, fromAmount) = LibConvert.convert(convertData);
 
@@ -144,26 +115,13 @@ contract ConvertFacet is Invariable, ReentrancyGuard {
         (pipeData.grownStalk, fromBdv) = _withdrawTokens(fromToken, stems, amounts, fromAmount);
 
         // check for potential penalty
-        if (
-            kind == LibConvertData.ConvertKind.BEANS_TO_WELL_LP ||
-            kind == LibConvertData.ConvertKind.WELL_LP_TO_BEANS
-        ) {
-            pipeData.overallConvertCapacity = LibConvert.abs(LibDeltaB.overallCappedDeltaB());
-
-            pipeData.stalkPenaltyBdv = LibPipelineConvert.prepareStalkPenaltyCalculation(
-                fromToken,
-                toToken,
-                pipeData.deltaB,
-                pipeData.overallConvertCapacity,
-                fromBdv,
-                pipeData.initialLpSupply
-            );
-
-            require(
-                pipeData.stalkPenaltyBdv == 0,
-                "Convert: Penalty would be applied to this convert, use pipeline convert"
-            );
-        }
+        LibPipelineConvert.checkForValidConvertAndUpdateConvertCapacity(
+            pipeData,
+            convertData,
+            fromToken,
+            toToken,
+            fromBdv
+        );
 
         uint256 newBdv = LibTokenSilo.beanDenominatedValue(toToken, toAmount);
         toBdv = newBdv > fromBdv ? newBdv : fromBdv;
@@ -210,10 +168,8 @@ contract ConvertFacet is Invariable, ReentrancyGuard {
             "Convert: Output token must be Bean or a well"
         );
 
-        PipelineConvertData memory pipeData = LibPipelineConvert.populatePipelineConvertData(
-            inputToken,
-            outputToken
-        );
+        LibPipelineConvert.PipelineConvertData memory pipeData = LibPipelineConvert
+            .populatePipelineConvertData(inputToken, outputToken);
 
         pipeData.user = LibTractor._user();
 
@@ -266,81 +222,6 @@ contract ConvertFacet is Invariable, ReentrancyGuard {
         toBdv = pipeData.newBdv;
 
         emit Convert(pipeData.user, inputToken, outputToken, fromAmount, toAmount);
-    }
-
-    /**
-     * @notice returns the overall current deltaB for all whitelisted well tokens.
-     */
-    function overallCurrentDeltaB() external view returns (int256 deltaB) {
-        return LibDeltaB.overallCurrentDeltaB();
-    }
-
-    /*
-     * @notice returns the scaled deltaB, based on LP supply before and after convert
-     */
-    function scaledDeltaB(
-        uint256 beforeLpTokenSupply,
-        uint256 afterLpTokenSupply,
-        int256 deltaB
-    ) external pure returns (int256) {
-        return LibDeltaB.scaledDeltaB(beforeLpTokenSupply, afterLpTokenSupply, deltaB);
-    }
-
-    /**
-     * @notice Returns the multi-block MEV resistant deltaB for a given token using capped reserves from the well.
-     * @param well The well for which to return the capped reserves deltaB
-     * @return deltaB The capped reserves deltaB for the well
-     */
-    function cappedReservesDeltaB(address well) external view returns (int256 deltaB) {
-        return LibDeltaB.cappedReservesDeltaB(well);
-    }
-
-    /**
-     * @notice Returns currently available convert power for this block
-     * @return convertCapacity The amount of convert power available for this block
-     */
-    function getOverallConvertCapacity() external view returns (uint256) {
-        uint256 overallCappedDeltaB = LibConvert.abs(LibDeltaB.overallCappedDeltaB());
-        uint256 overallConvertCapacityUsed = s
-            .convertCapacity[block.number]
-            .overallConvertCapacityUsed;
-        return
-            overallConvertCapacityUsed > overallCappedDeltaB
-                ? 0
-                : overallCappedDeltaB.sub(overallConvertCapacityUsed);
-    }
-
-    function getWellConvertCapacity(address well) external view returns (uint256) {
-        return
-            LibConvert.abs(LibDeltaB.cappedReservesDeltaB(well)).sub(
-                s.convertCapacity[block.number].wellConvertCapacityUsed[well]
-            );
-    }
-
-    function calculateStalkPenalty(
-        LibConvert.DeltaBStorage memory dbs,
-        uint256 bdvConverted,
-        uint256 overallConvertCapacity,
-        address inputToken,
-        address outputToken
-    )
-        external
-        view
-        returns (
-            uint256 stalkPenaltyBdv,
-            uint256 overallConvertCapacityUsed,
-            uint256 inputTokenAmountUsed,
-            uint256 outputTokenAmountUsed
-        )
-    {
-        return
-            LibConvert.calculateStalkPenalty(
-                dbs,
-                bdvConverted,
-                overallConvertCapacity,
-                inputToken,
-                outputToken
-            );
     }
 
     /**

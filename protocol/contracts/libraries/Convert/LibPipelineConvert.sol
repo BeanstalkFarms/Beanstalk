@@ -11,13 +11,28 @@ import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {LibWhitelistedTokens} from "contracts/libraries/Silo/LibWhitelistedTokens.sol";
 import {LibDeltaB} from "contracts/libraries/Oracle/LibDeltaB.sol";
 import {IPipeline, PipeCall} from "contracts/interfaces/IPipeline.sol";
-import {ConvertFacet} from "contracts/beanstalk/silo/ConvertFacet.sol";
+import {LibConvertData} from "contracts/libraries/Convert/LibConvertData.sol";
 
 /**
  * @title LibPipelineConvert
  * @author pizzaman1337, Brean
  */
 library LibPipelineConvert {
+    using LibConvertData for bytes;
+    /**
+     * @notice contains data for a convert that uses Pipeline.
+     */
+    struct PipelineConvertData {
+        uint256 grownStalk;
+        LibConvert.DeltaBStorage deltaB;
+        uint256 inputAmount;
+        uint256 overallConvertCapacity;
+        uint256 stalkPenaltyBdv;
+        address user;
+        uint256 newBdv;
+        uint256[] initialLpSupply;
+    }
+
     /**
      * @notice Calculates the stalk penalty for a convert. Updates convert capacity used.
      */
@@ -89,10 +104,71 @@ library LibPipelineConvert {
     function populatePipelineConvertData(
         address fromToken,
         address toToken
-    ) internal view returns (ConvertFacet.PipelineConvertData memory pipeData) {
+    ) internal view returns (PipelineConvertData memory pipeData) {
         pipeData.deltaB.beforeOverallDeltaB = LibDeltaB.overallCurrentDeltaB();
         pipeData.deltaB.beforeInputTokenDeltaB = LibDeltaB.getCurrentDeltaB(fromToken);
         pipeData.deltaB.beforeOutputTokenDeltaB = LibDeltaB.getCurrentDeltaB(toToken);
         pipeData.initialLpSupply = LibDeltaB.getLpSupply();
+    }
+
+    /**
+     * @notice Determines the convert state and populates pipeline data if necessary
+     */
+    function getConvertState(
+        bytes calldata convertData
+    ) internal view returns (PipelineConvertData memory pipeData) {
+        LibConvertData.ConvertKind kind = convertData.convertKind();
+        address toToken;
+        address fromToken;
+        if (
+            kind == LibConvertData.ConvertKind.BEANS_TO_WELL_LP ||
+            kind == LibConvertData.ConvertKind.WELL_LP_TO_BEANS
+        ) {
+            if (kind == LibConvertData.ConvertKind.BEANS_TO_WELL_LP) {
+                (, , toToken) = convertData.convertWithAddress();
+                fromToken = C.BEAN;
+                require(LibWell.isWell(toToken), "Convert: Invalid Well");
+            } else {
+                (, , fromToken) = convertData.convertWithAddress();
+                toToken = C.BEAN;
+                require(LibWell.isWell(fromToken), "Convert: Invalid Well");
+            }
+
+            pipeData = LibPipelineConvert.populatePipelineConvertData(fromToken, toToken);
+        }
+    }
+
+    /**
+     * @notice reverts if the convert would be penalized.
+     * @dev used in {ConvertFacet.convert}
+     */
+    function checkForValidConvertAndUpdateConvertCapacity(
+        PipelineConvertData memory pipeData,
+        bytes calldata convertData,
+        address fromToken,
+        address toToken,
+        uint256 fromBdv
+    ) internal {
+        LibConvertData.ConvertKind kind = convertData.convertKind();
+        if (
+            kind == LibConvertData.ConvertKind.BEANS_TO_WELL_LP ||
+            kind == LibConvertData.ConvertKind.WELL_LP_TO_BEANS
+        ) {
+            pipeData.overallConvertCapacity = LibConvert.abs(LibDeltaB.overallCappedDeltaB());
+
+            pipeData.stalkPenaltyBdv = LibPipelineConvert.prepareStalkPenaltyCalculation(
+                fromToken,
+                toToken,
+                pipeData.deltaB,
+                pipeData.overallConvertCapacity,
+                fromBdv,
+                pipeData.initialLpSupply
+            );
+
+            require(
+                pipeData.stalkPenaltyBdv == 0,
+                "Convert: Penalty would be applied to this convert, use pipeline convert"
+            );
+        }
     }
 }
