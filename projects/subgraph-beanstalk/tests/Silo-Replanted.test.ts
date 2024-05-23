@@ -7,7 +7,7 @@ import {
   handleWhitelistToken,
   handleWhitelistToken_V3
 } from "../src/SiloHandler";
-import { BEAN_ERC20, BEAN_WETH_CP2_WELL, BEANSTALK } from "../../subgraph-core/utils/Constants";
+import { BEAN_ERC20, BEAN_WETH_CP2_WELL, BEANSTALK, LUSD_3POOL } from "../../subgraph-core/utils/Constants";
 import { createAddDepositEvent, createRemoveDepositEvent } from "./event-mocking/Silo";
 import { createDewhitelistTokenEvent, createWhitelistTokenV2Event, createWhitelistTokenV3Event } from "./event-mocking/Whitelist";
 import { ONE_BI } from "../../subgraph-core/utils/Decimals";
@@ -116,6 +116,11 @@ describe("Mocked Events", () => {
       );
 
       handleDewhitelistToken(createDewhitelistTokenEvent(BEAN_ERC20.toHexString()));
+      assert.fieldEquals("Silo", BEANSTALK.toHexString(), "whitelistedTokens", "[" + BEAN_WETH_CP2_WELL.toHexString() + "]");
+      assert.fieldEquals("Silo", BEANSTALK.toHexString(), "dewhitelistedTokens", "[" + BEAN_ERC20.toHexString() + "]");
+
+      // Try dewhitelisting a non-whitelisted token. Nothing should happen
+      handleDewhitelistToken(createDewhitelistTokenEvent(LUSD_3POOL.toHexString()));
       assert.fieldEquals("Silo", BEANSTALK.toHexString(), "whitelistedTokens", "[" + BEAN_WETH_CP2_WELL.toHexString() + "]");
       assert.fieldEquals("Silo", BEANSTALK.toHexString(), "dewhitelistedTokens", "[" + BEAN_ERC20.toHexString() + "]");
     });

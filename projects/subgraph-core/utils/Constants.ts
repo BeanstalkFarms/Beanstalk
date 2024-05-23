@@ -47,3 +47,4 @@ export const REPLANT_SUNRISE_BLOCK = BigInt.fromU32(15289934);
 export const BEANSTALK_PRICE_BLOCK = BigInt.fromU32(17978222);
 export const BEAN_WETH_CP2_WELL_BLOCK = BigInt.fromU32(17978134);
 export const BEAN_WETH_UNRIPE_MIGRATION_BLOCK = BigInt.fromU32(18392690);
+export const GAUGE_BIP45_BLOCK = BigInt.fromU32(19927634);
