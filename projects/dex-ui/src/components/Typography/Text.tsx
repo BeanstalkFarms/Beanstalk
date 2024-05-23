@@ -1,4 +1,5 @@
-import { HTMLAttributes } from "react";
+import React, { forwardRef } from "react";
+import type { HTMLAttributes, ElementType } from "react";
 import { BoxModelBase, BoxModelProps } from "src/utils/ui/styled";
 import {
   theme,
@@ -23,9 +24,15 @@ export interface TextProps extends HTMLAttributes<HTMLDivElement>, BoxModelProps
   $size?: FontSize;
   $lineHeight?: number | FontSize;
   $align?: TextAlign;
+  as?: ElementType;
+  className?: string;
 }
 
-export const Text = styled.div<TextProps>`
+export const Text = forwardRef<HTMLDivElement, TextProps>((props, ref) => {
+  return <TextComponent ref={ref} {...props} />;
+});
+
+const TextComponent = styled.div<TextProps>`
   ${(props) => theme.font.styles.variant(props.$variant || "s")}
   ${FontSizeStyle}
   ${LineHeightStyle}
