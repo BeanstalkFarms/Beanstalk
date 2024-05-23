@@ -289,17 +289,19 @@ library LibConvert {
         // first check overall convert capacity, if none remaining then full penalty for amount in direction of peg
         if (convertCap.overallConvertCapacityUsed >= overallCappedDeltaB) {
             cumulativePenalty = overallAmountInDirectionOfPeg;
+        } else if (
+            overallAmountInDirectionOfPeg >
+            overallCappedDeltaB.sub(convertCap.overallConvertCapacityUsed)
+        ) {
+            cumulativePenalty =
+                overallAmountInDirectionOfPeg -
+                overallCappedDeltaB.sub(convertCap.overallConvertCapacityUsed);
         }
 
         // update overall remaining convert capacity
         pdCapacity.overall = convertCap.overallConvertCapacityUsed.add(
             overallAmountInDirectionOfPeg
         );
-
-        // add to penalty how far past capacity was used
-        if (convertCap.overallConvertCapacityUsed > overallCappedDeltaB) {
-            cumulativePenalty = convertCap.overallConvertCapacityUsed.sub(overallCappedDeltaB);
-        }
 
         // update per-well convert capacity
 
