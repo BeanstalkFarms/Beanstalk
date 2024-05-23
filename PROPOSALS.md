@@ -50,6 +50,8 @@ You can read more about BIPs [here](https://docs.bean.money/almanac/governance/p
 * [BIP-39](https://bean.money/bip-39): Beanstalk Farms 2024 Development Budget
 * [BIP-40](https://bean.money/bip-40): Beanstalk Farms 2024 Development Budget
 * [BIP-41](https://bean.money/bip-41): Immunefi Program Update
+* [BIP-42](https://bean.money/bip-42): Seed Gauge System
+* [BIP-43](https://bean.money/bip-43): Hypernative
 
 ## Emergency Beanstalk Improvement Proposal (EBIP)
 
