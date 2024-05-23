@@ -242,7 +242,7 @@ library LibSilo {
             // For more info on Oversaturation, See {Weather.handleRain}
             if (s.season.raining) {
                 s.r.roots = s.r.roots.sub(roots);
-                s.a[account].rainRoots = s.a[account].roots;
+                s.a[account].sop.rainRoots = s.a[account].roots;
             }
         } else {
             burnGerminatingStalk(account, uint128(stalk), germ);
@@ -512,7 +512,10 @@ library LibSilo {
         if (s.season.lastSopSeason > lastUpdate) {
             address[] memory tokens = LibWhitelistedTokens.getWhitelistedWellLpTokens();
             for (uint i; i < tokens.length; i++) {
-                s.a[account].sop[tokens[i]].plenty = balanceOfPlenty(account, tokens[i]);
+                s.a[account].sop.perWellPlenty[tokens[i]].plenty = balanceOfPlenty(
+                    account,
+                    tokens[i]
+                );
             }
             s.a[account].lastSop = s.season.lastSop;
         }
@@ -520,14 +523,16 @@ library LibSilo {
             // If rain started after update, set account variables to track rain.
             if (s.season.rainStart > lastUpdate) {
                 s.a[account].lastRain = s.season.rainStart;
-                s.a[account].rainRoots = s.a[account].roots;
+                s.a[account].sop.rainRoots = s.a[account].roots;
             }
             // If there has been a Sop since rain started,
             // save plentyPerRoot in case another SOP happens during rain.
             if (s.season.lastSop == s.season.rainStart) {
                 address[] memory tokens = LibWhitelistedTokens.getWhitelistedWellLpTokens();
                 for (uint i; i < tokens.length; i++) {
-                    s.a[account].sop[tokens[i]].plentyPerRoot = s.sops[s.season.lastSop][tokens[i]];
+                    s.a[account].sop.perWellPlenty[tokens[i]].plentyPerRoot = s.sops[
+                        s.season.lastSop
+                    ][tokens[i]];
                 }
             }
         } else if (s.a[account].lastRain > 0) {
@@ -556,7 +561,7 @@ library LibSilo {
     function balanceOfPlenty(address account, address well) internal view returns (uint256 plenty) {
         AppStorage storage s = LibAppStorage.diamondStorage();
         Account.State storage a = s.a[account];
-        plenty = a.sop[well].plenty;
+        plenty = a.sop.perWellPlenty[well].plenty;
         uint256 previousPPR;
 
         // If lastRain > 0, then check if SOP occured during the rain period.
@@ -564,7 +569,7 @@ library LibSilo {
             // if the last processed SOP = the lastRain processed season,
             // then we use the stored roots to get the delta.
             if (a.lastSop == a.lastRain) {
-                previousPPR = a.sop[well].plentyPerRoot;
+                previousPPR = a.sop.perWellPlenty[well].plentyPerRoot;
             } else {
                 previousPPR = s.sops[a.lastSop][well];
             }
@@ -574,7 +579,9 @@ library LibSilo {
             if (lastRainPPR > previousPPR) {
                 uint256 plentyPerRoot = lastRainPPR - previousPPR;
                 previousPPR = lastRainPPR;
-                plenty = plenty.add(plentyPerRoot.mul(s.a[account].rainRoots).div(C.SOP_PRECISION));
+                plenty = plenty.add(
+                    plentyPerRoot.mul(s.a[account].sop.rainRoots).div(C.SOP_PRECISION)
+                );
             }
         } else {
             // If it was not raining, just use the PPR at previous SOP.

@@ -79,12 +79,17 @@ contract Account {
         uint128 bdv; // ──────┘ 16 (28/32)
     }
 
+    struct SeasonOfPlenty {
+        uint256 rainRoots; // The number of Roots a Farmer had when it started Raining.
+        mapping(address => PerWellPlenty) perWellPlenty; // a mapping from well to plentyPerRoot and plenty.
+    }
+
     /**
      * @notice Stores a Farmer's Season of Plenty (SOP) balances.
      * @param plentyPerRoot The Plenty Per Root index for this well at the last time a Farmer updated their Silo.
      * @param plenty The balance of a Farmer's plenty. Plenty can be claimed directly for the well's non-Bean token.
      */
-    struct SeasonOfPlenty {
+    struct PerWellPlenty {
         uint256 plentyPerRoot;
         uint256 plenty;
     }
@@ -117,8 +122,7 @@ contract Account {
      * @param isApprovedForAll A mapping of ERC1155 operator to approved status. ERC1155 compatability.
      * @param farmerGerminating A Farmer's germinating stalk. Seperated into odd and even stalk.
      * @param deposits SiloV3.1 deposits. A mapping from depositId to Deposit. SiloV3.1 introduces greater precision for deposits.
-     * @param rainRoots The number of Roots a Farmer had when it started Raining.
-     * @param sop A mapping from well to plentyPerRoot and plenty
+     * @param sop struct containing rainRoots and per-well plenty.
      */
     struct State {
         Field field; // A Farmer's Field storage.
@@ -153,12 +157,12 @@ contract Account {
         uint32 lastSop; // The last Season that a SOP occured at the time the Farmer last updated their Silo.
         uint32 lastRain; // The last Season that it started Raining at the time the Farmer last updated their Silo.
         uint128 deprecated_deltaRoots; // DEPRECATED - BIP-39 introduced germination.
-        SeasonOfPlenty deprecated; // DEPRECATED – Replant reset the Season of Plenty mechanism
+        PerWellPlenty deprecated; // DEPRECATED – Replant reset the Season of Plenty mechanism
         uint256 roots; // A Farmer's Root balance.
         uint256 deprecated_wrappedBeans; // DEPRECATED – Replant generalized Internal Balances. Wrapped Beans are now stored at the AppStorage level.
         mapping(address => mapping(uint32 => Deposit)) legacyV2Deposits; // Legacy Silo V2 Deposits stored as a map from Token address to Season of Deposit to Deposit. NOTE: While the Silo V2 format is now deprecated, unmigrated Silo V2 deposits are still stored in this mapping.
         mapping(address => mapping(uint32 => uint256)) withdrawals; // Zero withdraw eliminates a need for withdraw mapping, but is kept for legacy
-        SeasonOfPlenty deprecated_sop; // DEPRECATED - Generalized Flood uses per-well storage.
+        PerWellPlenty deprecated_sop; // DEPRECATED - Generalized Flood uses per-well storage.
         mapping(address => mapping(address => uint256)) depositAllowances; // Spender => Silo Token
         mapping(address => mapping(IERC20 => uint256)) tokenAllowances; // Token allowances
         uint256 depositPermitNonces; // A Farmer's current deposit permit nonce
@@ -170,8 +174,7 @@ contract Account {
         FarmerGerminatingStalk farmerGerminating; // A Farmer's germinating stalk.
         // Silo v3.1
         mapping(uint256 => Deposit) deposits; // Silo v3.1 Deposits stored as a map from uint256 to Deposit. This is an concat of the token address and the stem for a ERC20 deposit.
-        uint256 rainRoots; // The number of Roots a Farmer had when it started Raining.
-        mapping(address => SeasonOfPlenty) sop; // a mapping from well to plentyPerRoot and plenty.
+        SeasonOfPlenty sop; // struct containing rainRoots and per-well plenty.
     }
 }
 

@@ -142,12 +142,12 @@ contract Silo is ReentrancyGuard {
      * with an amount of 0.
      */
     function _claimPlenty(address account, address well, LibTransfer.To toMode) internal {
-        uint256 plenty = s.a[account].sop[well].plenty;
+        uint256 plenty = s.a[account].sop.perWellPlenty[well].plenty;
         if (plenty > 0) {
             IERC20[] memory tokens = IWell(well).tokens();
             IERC20 sopToken = tokens[0] != C.bean() ? tokens[0] : tokens[1];
             LibTransfer.sendToken(sopToken, plenty, LibTractor._user(), toMode);
-            s.a[account].sop[well].plenty = 0;
+            s.a[account].sop.perWellPlenty[well].plenty = 0;
 
             // reduce from Beanstalk's total stored plenty for this well
             s.plentyPerSopToken[address(sopToken)] -= plenty;

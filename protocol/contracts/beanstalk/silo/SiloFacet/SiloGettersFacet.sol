@@ -42,7 +42,7 @@ contract SiloGettersFacet is ReentrancyGuard {
 
     struct FarmerSops {
         address well;
-        Account.SeasonOfPlenty wellsPlenty;
+        Account.PerWellPlenty wellsPlenty;
     }
 
     //////////////////////// GETTERS ////////////////////////
@@ -462,7 +462,7 @@ contract SiloGettersFacet is ReentrancyGuard {
      * Raining during a Silo update.
      */
     function balanceOfRainRoots(address account) external view returns (uint256) {
-        return s.a[account].rainRoots;
+        return s.a[account].sop.rainRoots;
     }
 
     /**
@@ -474,11 +474,11 @@ contract SiloGettersFacet is ReentrancyGuard {
     ) external view returns (AccountSeasonOfPlenty memory sop) {
         sop.lastRain = s.a[account].lastRain;
         sop.lastSop = s.a[account].lastSop;
-        sop.roots = s.a[account].rainRoots;
+        sop.roots = s.a[account].sop.rainRoots;
         address[] memory wells = LibWhitelistedTokens.getWhitelistedWellLpTokens();
         sop.farmerSops = new FarmerSops[](wells.length);
         for (uint256 i; i < wells.length; i++) {
-            Account.SeasonOfPlenty memory wellSop = s.a[account].sop[wells[i]];
+            Account.PerWellPlenty memory wellSop = s.a[account].sop.perWellPlenty[wells[i]];
             FarmerSops memory farmerSops = FarmerSops(wells[i], wellSop);
             sop.farmerSops[i] = farmerSops;
         }
