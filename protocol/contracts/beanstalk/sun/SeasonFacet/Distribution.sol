@@ -19,7 +19,7 @@ contract Distribution is Receiving {
     using SafeCast for uint256;
 
     /**
-     * @notice Emitted during Sunrise when Beans are distributed to the Field, the Silo, and Fertilizer.
+     * @notice Emitted during Sunrise when Beans mints are shipped through active routes.
      * @param season The Season in which Beans were distributed.
      * @param shipmentRoutes The routes defining where to distribute.
      * @param shipmentAmounts The amount of Beans distributed to each route.
