@@ -19,6 +19,7 @@ import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
 import {LibBytes} from "contracts/libraries/LibBytes.sol";
 import {C} from "contracts/C.sol";
 import {IWell} from "contracts/interfaces/basin/IWell.sol";
+import {LibWell} from "contracts/libraries/Well/LibWell.sol";
 import "contracts/libraries/Token/LibTransfer.sol";
 
 /**
@@ -143,7 +144,7 @@ contract Silo is ReentrancyGuard {
      */
     function _claimPlenty(address account, address well, LibTransfer.To toMode) internal {
         uint256 plenty = s.a[account].sop.perWellPlenty[well].plenty;
-        if (plenty > 0) {
+        if (plenty > 0 && LibWell.isWell(well)) {
             IERC20[] memory tokens = IWell(well).tokens();
             IERC20 sopToken = tokens[0] != C.bean() ? tokens[0] : tokens[1];
             LibTransfer.sendToken(sopToken, plenty, LibTractor._user(), toMode);
