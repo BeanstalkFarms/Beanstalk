@@ -295,10 +295,12 @@ contract TokenSilo is Silo {
         uint256 stalk,
         LibGerminate.Germinate germinateState
     ) private {
-        // deposited earned beans do not germinate,
-        // but the stem of a earned bean deposit may match the germination stem of a bean deposit.
-        // if the stalk is greater than the farmers germinating stalk, a portion
-        // of the deposit was sourced from a plant.
+        // Deposited Earned Beans do not germinate. Thus, when withdrawing a Bean Deposit
+        // with a Germinating Stem, Beanstalk needs to determine how many of the Beans
+        // were Planted vs Deposited from a Circulating/Farm balance. 
+        // If a Farmer's Germinating Stalk for a given Season is less than the number of 
+        // Deposited Beans in that Season, then it is assumed that the excess Beans were
+        // Planted.
         if (token == C.BEAN) {
             (amount, bdv, stalk) = checkForEarnedBeans(
                 account,
@@ -472,13 +474,13 @@ contract TokenSilo is Silo {
     }
 
     /**
-     * @notice verifies whether the stalk is greater than the farmers germinating stalk.
-     * @dev this occurs when a user attempts to withdraw a bean deposit, where a portion
-     * of the deposit was sourced from a plant (i.e Earned Beans). A deposit with Earned
-     * beans do not germinate, but their stem matches a germinating deposit. If a user
-     * withdraws a deposit with Earned Beans, cap the germinating stalk, bdv, and amount
-     * by the farmers germinating stalk.
-     * @return the germinating portion of amount, bdv, and stalk.
+     * @notice Returns the amount of Germinating Beans, Germinating BDV and Germinating Stalk 
+     * for a given Germinate enum.
+     * @dev When a Farmer attempts to withdraw Beans from a Deposit that has a Germinating Stem,
+     * `checkForEarnedBeans` is called to determine how many of the Beans were Planted vs Deposited.
+     * If a Farmer withdraws a Germinating Deposit with Earned Beans, only subtract the Germinating Beans
+     * from the Germinating Balances
+     * @return the germinating portion of amount, bdv, and stalk for a given Germinate enum.
      */
     function checkForEarnedBeans(
         address account,
