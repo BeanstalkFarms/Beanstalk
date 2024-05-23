@@ -39,7 +39,7 @@ import TxnAccordion from '~/components/Common/TxnAccordion';
 import useAccount from '~/hooks/ledger/useAccount';
 import AdditionalTxnsAccordion from '~/components/Common/Form/FormTxn/AdditionalTxnsAccordion';
 import useFarmerFormTxnsActions from '~/hooks/farmer/form-txn/useFarmerFormTxnActions';
-import AddPlantTxnToggle from '~/components/Common/Form/FormTxn/AddPlantTxnToggle';
+// import AddPlantTxnToggle from '~/components/Common/Form/FormTxn/AddPlantTxnToggle';
 import FormTxnProvider from '~/components/Common/Form/FormTxnProvider';
 import useFormTxnContext from '~/hooks/sdk/useFormTxnContext';
 import { FormTxn, PlantAndDoX, WithdrawFarmStep } from '~/lib/Txn';
@@ -176,7 +176,8 @@ const WithdrawForm: FC<
     const amount = sdk.tokens.BEAN.amount(
       values.tokens[0]?.amount?.toString() || '0'
     );
-    const crates = siloBalance?.deposits || [];
+    // FIXME: Restore geminating deposits
+    const crates = siloBalance?.convertibleDeposits || [];
 
     if (!isUsingPlant && (amount.lte(0) || !crates.length)) return null;
     if (isUsingPlant && plantAndDoX?.getAmount().lte(0)) return null;
@@ -195,7 +196,7 @@ const WithdrawForm: FC<
     plantAndDoX,
     sdk.silo.siloWithdraw,
     season,
-    siloBalance?.deposits,
+    siloBalance?.convertibleDeposits,
     values.tokens,
     whitelistedToken,
   ]);
@@ -279,7 +280,9 @@ const WithdrawForm: FC<
             />
           </>
         </Stack>
+        {/*
         <AddPlantTxnToggle plantAndDoX={plantAndDoX} actionText='Withdraw'/>
+        */}
         {isReady ? (
           <Stack direction="column" gap={1}>
             <TxnSeparator />
@@ -353,7 +356,6 @@ const WithdrawForm: FC<
                       withdrawSeasons,
                     },
                   ]}
-                  {...txActions}
                 />
               </TxnAccordion>
             </Box>
@@ -431,7 +433,7 @@ const WithdrawPropProvider: FC<{
       try {
         middleware.before();
         if (!account) throw new Error('Missing signer');
-        if (!siloBalance?.deposits) {
+        if (!siloBalance?.convertibleDeposits) {
           throw new Error('No balances found');
         }
 
@@ -468,7 +470,8 @@ const WithdrawPropProvider: FC<{
         }
 
         const withdrawTxn = new WithdrawFarmStep(sdk, token, [
-          ...siloBalance.deposits,
+          // FIXME: Restore geminating deposits
+          ...siloBalance.convertibleDeposits,
         ]);
 
         withdrawTxn.build(
@@ -537,7 +540,7 @@ const WithdrawPropProvider: FC<{
       middleware,
       txnBundler,
       plantAndDoX,
-      siloBalance?.deposits,
+      siloBalance?.convertibleDeposits,
       refetch,
       refetchSilo,
     ]

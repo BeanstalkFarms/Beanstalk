@@ -4,9 +4,9 @@ import { Card, CardProps } from '@mui/material';
 import { FC } from '~/types';
 import { BeanstalkPalette } from '../App/muiTheme';
 
-const EmbeddedCard: FC<CardProps & { danger: boolean }> = ({
+const EmbeddedCard: FC<CardProps & { danger?: boolean }> = ({
   children,
-  danger,
+  danger = false,
   ...cardProps
 }) => (
   <Card
