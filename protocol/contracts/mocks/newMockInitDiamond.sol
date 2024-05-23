@@ -101,6 +101,16 @@ contract MockInitDiamond is InitalizeDiamond {
         returns (Storage.SiloSettings[] memory siloSettings)
     {
         Storage.Implmentation memory impl = Storage.Implmentation(address(0), bytes4(0), bytes1(0));
+        Storage.Implmentation memory liquidityWeightImpl = Storage.Implmentation(
+            address(0),
+            ILiquidityWeightFacet.maxWeight.selector,
+            bytes1(0)
+        );
+        Storage.Implmentation memory gaugePointImpl = Storage.Implmentation(
+            address(0),
+            IGaugePointFacet.defaultGaugePointFunction.selector,
+            bytes1(0)
+        );
 
         siloSettings = new Storage.SiloSettings[](2);
         siloSettings[0] = Storage.SiloSettings({
@@ -116,8 +126,8 @@ contract MockInitDiamond is InitalizeDiamond {
             gaugePoints: 0,
             optimalPercentDepositedBdv: 0,
             oracleImplmentation: impl,
-            gaugePointImplmentation: impl,
-            liquidityWeightImplmentation: impl
+            gaugePointImplmentation: gaugePointImpl,
+            liquidityWeightImplmentation: liquidityWeightImpl
         });
         siloSettings[1] = Storage.SiloSettings({
             selector: BDVFacet.unripeLPToBDV.selector,
@@ -132,8 +142,8 @@ contract MockInitDiamond is InitalizeDiamond {
             gaugePoints: 0,
             optimalPercentDepositedBdv: 0,
             oracleImplmentation: impl,
-            gaugePointImplmentation: impl,
-            liquidityWeightImplmentation: impl
+            gaugePointImplmentation: gaugePointImpl,
+            liquidityWeightImplmentation: liquidityWeightImpl
         });
     }
 
