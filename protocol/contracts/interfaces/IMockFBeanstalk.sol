@@ -500,6 +500,7 @@ interface IMockFBeanstalk {
         uint256 minFillAmount,
         uint8 mode
     ) external payable;
+
     function captureCurveE() external returns (int256 deltaB);
 
     function captureE() external returns (int256 deltaB);
@@ -553,6 +554,7 @@ interface IMockFBeanstalk {
         uint256 minFillAmount,
         uint8 mode
     ) external payable;
+
     function createPodOrder(
         uint256 beanAmount,
         uint24 pricePerPod,
@@ -560,6 +562,7 @@ interface IMockFBeanstalk {
         uint256 minFillAmount,
         uint8 mode
     ) external payable returns (bytes32 id);
+
     function curveToBDV(uint256 amount) external view returns (uint256);
 
     function decreaseDepositAllowance(
@@ -690,6 +693,7 @@ interface IMockFBeanstalk {
     function fertilizerSunrise(uint256 amount) external;
 
     function fillPodListing(PodListing memory l, uint256 beanAmount, uint8 mode) external payable;
+
     function fillPodOrder(
         PodOrder memory o,
         uint256 index,
@@ -697,6 +701,7 @@ interface IMockFBeanstalk {
         uint256 amount,
         uint8 mode
     ) external payable;
+
     function findPiecewiseIndex(
         bytes memory breakpoints,
         uint256 value,
@@ -719,11 +724,13 @@ interface IMockFBeanstalk {
         address account,
         address[] memory tokens
     ) external view returns (Balance[] memory balances);
+
     function getAmountOut(
         address tokenIn,
         address tokenOut,
         uint256 amountIn
     ) external view returns (uint256 amountOut);
+
     function getAverageGrownStalkPerBdv() external view returns (uint256);
 
     function getAverageGrownStalkPerBdvPerSeason() external view returns (uint128);
@@ -1119,7 +1126,12 @@ interface IMockFBeanstalk {
 
     function mockUpdateAverageStalkPerBdvPerSeason() external;
 
-    function mockUpdateLiquidityWeight(address token, bytes4 selector) external;
+    function mockUpdateLiquidityWeight(
+        address token,
+        address newLiquidityWeightImplmentation,
+        bytes1 encodeType,
+        bytes4 selector
+    ) external;
 
     function mockWhitelistToken(
         address token,
@@ -1267,6 +1279,7 @@ interface IMockFBeanstalk {
     ) external view returns (uint256);
 
     function podOrderById(bytes32 id) external view returns (uint256);
+
     function poolDeltaB(address pool) external view returns (int256);
 
     function rain() external view returns (Rain memory);

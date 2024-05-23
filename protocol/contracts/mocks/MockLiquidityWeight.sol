@@ -2,7 +2,7 @@
  SPDX-License-Identifier: MIT
 */
 
-pragma solidity =0.7.6;
+pragma solidity ^0.8.2;
 pragma experimental ABIEncoderV2;
 
 /**
@@ -11,7 +11,6 @@ pragma experimental ABIEncoderV2;
  * @notice Contains a valid and invalid liquidityWeight implmentation.
  **/
 contract MockLiquidityWeight {
-
     uint256 public liquidityWeight;
 
     constructor(uint256 _liquidityWeight) {

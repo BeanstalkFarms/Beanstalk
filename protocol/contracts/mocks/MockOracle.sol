@@ -2,7 +2,7 @@
  SPDX-License-Identifier: MIT
 */
 
-pragma solidity =0.7.6;
+pragma solidity ^0.8.2;
 pragma experimental ABIEncoderV2;
 
 /**
@@ -11,7 +11,6 @@ pragma experimental ABIEncoderV2;
  * @notice Contains a valid and invalid price implmentation.
  **/
 contract MockOracle {
-
     uint256 public price;
     uint256 public twaPrice;
 
@@ -24,7 +23,7 @@ contract MockOracle {
      * @notice Valid Implmentation.
      */
     function getPrice(uint256 lookback) public view returns (uint256) {
-        if(lookback > 0) {
+        if (lookback > 0) {
             return twaPrice;
         } else {
             return price;

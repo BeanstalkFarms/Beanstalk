@@ -6,6 +6,7 @@ import {TestHelper, LibTransfer, IMockFBeanstalk, MockToken, C, IWell, LibWell} 
 import {MockSeasonFacet} from "contracts/mocks/mockFacets/MockSeasonFacet.sol";
 import {LibGauge} from "contracts/libraries/LibGauge.sol";
 import {MockChainlinkAggregator} from "contracts/mocks/chainlink/MockChainlinkAggregator.sol";
+import {MockLiquidityWeight} from "contracts/mocks/MockLiquidityWeight.sol";
 
 /**
  * @notice Tests the functionality of the gauge.
@@ -15,9 +16,13 @@ contract GaugeTest is TestHelper {
 
     // Interfaces.
     MockSeasonFacet season = MockSeasonFacet(BEANSTALK);
+    MockLiquidityWeight lw = MockLiquidityWeight(BEANSTALK);
 
     function setUp() public {
         initializeBeanstalkTestState(true, false);
+
+        // deploy mockLiquidityWeight contract for testing.
+        lw = new MockLiquidityWeight(0.5e18);
     }
 
     ////////////////////// BEAN TO MAX LP RATIO //////////////////////
@@ -174,8 +179,13 @@ contract GaugeTest is TestHelper {
         }
         assertEq(bs.getTotalWeightedUsdLiquidity(), totalNonBeanValue);
 
-        // update liquidtyWeight
-        bs.mockUpdateLiquidityWeight(whitelistedWellTokens[rand], bs.mockLiquidityWeight.selector);
+        // update liquidtyWeight.
+        bs.mockUpdateLiquidityWeight(
+            whitelistedWellTokens[rand],
+            address(lw),
+            0x00,
+            lw.getLiquidityWeight.selector
+        );
 
         // 1 out of 2 whitelisted lp tokens should have updated weight.
         // mockLiquidityWeight has a 50% reduction in weight. total Weighted value should decrease by 25%.

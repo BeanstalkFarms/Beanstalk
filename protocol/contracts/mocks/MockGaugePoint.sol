@@ -2,7 +2,7 @@
  SPDX-License-Identifier: MIT
 */
 
-pragma solidity =0.7.6;
+pragma solidity ^0.8.2;
 pragma experimental ABIEncoderV2;
 
 /**
@@ -11,7 +11,6 @@ pragma experimental ABIEncoderV2;
  * @notice Contains a valid and invalid gauge point implmentation.
  **/
 contract MockGaugePoint {
-
     uint256 public gaugePoints;
 
     /**
@@ -22,7 +21,7 @@ contract MockGaugePoint {
         uint256 percentDepositedBdv,
         uint256 optimalDepositedBdv
     ) public pure returns (uint256) {
-        if(percentDepositedBdv > optimalDepositedBdv) {
+        if (percentDepositedBdv > optimalDepositedBdv) {
             return currentGaugePoints / 2;
         } else {
             return currentGaugePoints * 2;
