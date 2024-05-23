@@ -389,7 +389,7 @@ export class Silo {
    */
   async getStalk(_account?: string) {
     const account = await Silo.sdk.getAccount(_account);
-    return Silo.sdk.contracts.beanstalk.balanceOfStalk(account).then((v) => Silo.sdk.tokens.STALK.fromBlockchain(v));
+    return  Silo.sdk.tokens.STALK.amount(0) // Silo.sdk.contracts.beanstalk.balanceOfStalk(account).then((v) => Silo.sdk.tokens.STALK.fromBlockchain(v));
   }
 
   /**

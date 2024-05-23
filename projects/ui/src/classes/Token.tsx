@@ -113,15 +113,15 @@ export default abstract class Token {
   /** Get the amount of Stalk rewarded per deposited BDV of this Token. */
   public getStalk(bdv?: BigNumber): BigNumber {
     if (!this.rewards?.stalk) return ZERO_BN;
-    if (!bdv) return new BigNumber(this.rewards.stalk);
-    return bdv.times(this.rewards.stalk);
+    if (!bdv) return ZERO_BN // new BigNumber(this.rewards.stalk);
+    return ZERO_BN // bdv.times(this.rewards.stalk);
   }
 
   /** Get the amount of Seeds rewarded per deposited BDV of this Token. */
   public getSeeds(bdv?: BigNumber): BigNumber {
     if (!this.rewards?.seeds) return ZERO_BN;
-    if (!bdv) return new BigNumber(this.rewards.seeds);
-    return bdv.times(this.rewards.seeds);
+    if (!bdv) return ZERO_BN // new BigNumber(this.rewards.seeds);
+    return ZERO_BN // bdv.times(this.rewards.seeds);
   }
 
   abstract getContract(): any;
