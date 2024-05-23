@@ -172,6 +172,11 @@ describe('Silo', function () {
       expect(await this.siloGetters.balanceOfStalk(user2Address)).to.eq(toStalk('1050.6'));
       expect(await this.siloGetters.balanceOfRoots(user2Address)).to.eq('10005714285714285714285714');
     });
+
+    it('user can withdraw earned beans', async function () {
+      stemTip = await this.siloGetters.stemTipForToken(this.bean.address)
+      await this.silo.connect(user).withdrawDeposit(this.bean.address, stemTip, to6('50'), EXTERNAL)
+    });
   });
 
   describe("ERC1155 Deposits", async function () {

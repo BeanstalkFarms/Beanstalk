@@ -517,4 +517,38 @@ library LibGerminate {
     function isSeasonOdd(uint32 season) internal pure returns (bool) {
         return season.mod(2) == 0 ? false : true;
     }
+
+    /**
+     * @notice verifies whether the stalk is greater than the farmers germinating stalk.
+     * @dev this occurs when a user attempts to withdraw a bean deposit, where a portion
+     * of the deposit was sourced from a plant (i.e Earned Beans). A deposit with Earned
+     * beans do not germinate, but their stem matches a germinating deposit. If a user
+     * withdraws a deposit with Earned Beans, cap the germinating stalk, bdv, and amount
+     * by the farmers germinating stalk.
+     * @return the germinating portion of amount, bdv, and stalk.
+     */
+    function checkForEarnedBeans(
+        address account,
+        uint256 amount,
+        uint256 bdv,
+        uint256 stalk,
+        Germinate germ
+    ) internal view returns (uint256, uint256, uint256) {
+        AppStorage storage s = LibAppStorage.diamondStorage();
+        uint256 farmerGerminatingStalk;
+        if (germ == Germinate.ODD) {
+            farmerGerminatingStalk = s.a[account].farmerGerminating.odd;
+        } else {
+            farmerGerminatingStalk = s.a[account].farmerGerminating.even;
+        }
+        if (stalk > farmerGerminatingStalk) {
+            return (
+                farmerGerminatingStalk.div(C.STALK_PER_BEAN),
+                farmerGerminatingStalk.div(C.STALK_PER_BEAN),
+                farmerGerminatingStalk
+            );
+        } else {
+            return (amount, bdv, stalk);
+        }
+    }
 }

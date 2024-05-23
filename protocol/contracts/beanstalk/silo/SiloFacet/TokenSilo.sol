@@ -295,6 +295,19 @@ contract TokenSilo is Silo {
         uint256 stalk,
         LibGerminate.Germinate germinateState
     ) private {
+        // deposited earned beans do not germinate,
+        // but the stem of a earned bean deposit may match the germination stem of a bean deposit.
+        // if the stalk is greater than the farmers germinating stalk, a portion
+        // of the deposit was sourced from a plant.
+        if (token == C.BEAN) {
+            (amount, bdv, stalk) = LibGerminate.checkForEarnedBeans(
+                account,
+                amount,
+                bdv,
+                stalk,
+                germinateState
+            );
+        }
         // Decrement from total germinating.
         LibTokenSilo.decrementTotalGerminating(token, amount, bdv, germinateState); // Decrement total Germinating in the silo.
         LibSilo.burnGerminatingStalk(account, stalk.toUint128(), germinateState); // Burn stalk and roots associated with the stalk.
