@@ -357,8 +357,6 @@ contract Weather is Sun {
      * @notice Calculates the amount of beans per well that should be minted in a sop.
      * @param wellDeltaBs The deltaBs of all whitelisted wells in which to flood. Must be sorted in descending order.
      */
-    // code review note: have some casual comments here for just understanding the code, happy to
-    // change this function to make it more efficient based on feedback.
     function calculateSopPerWell(
         WellDeltaB[] memory wellDeltaBs,
         uint256 totalPositiveDeltaB,
@@ -393,10 +391,7 @@ contract Weather is Sun {
         for (uint256 i = positiveDeltaBCount; i > 0; i--) {
             if (shaveToLevel > uint256(wellDeltaBs[i - 1].deltaB)) {
                 shaveToLevel += (shaveToLevel - uint256(wellDeltaBs[i - 1].deltaB)) / (i - 1);
-
-                // reduction amount does not need to be set here,
-                // but is written for demonstration.
-                wellDeltaBs[i - 1].deltaB = 0;
+                // deltaB does not need to be updated
             } else {
                 wellDeltaBs[i - 1].deltaB = wellDeltaBs[i - 1].deltaB - int256(shaveToLevel);
             }
