@@ -1,7 +1,19 @@
 import { Address, BigInt } from "@graphprotocol/graph-ts";
 import { Chop, DewhitelistToken, Reward, Sunrise } from "../generated/Beanstalk/Beanstalk";
-import { getBeanTokenAddress, loadBean, updateBeanSeason, updateBeanSupplyPegPercent, updateBeanTwa, updateBeanValues } from "./utils/Bean";
-import { loadOrCreatePool, updatePoolPrice, updatePoolSeason, updatePoolValues } from "./utils/Pool";
+import {
+  getBeanTokenAddress,
+  loadBean,
+  updateBeanSeason,
+  updateBeanSupplyPegPercent,
+  updateBeanTwa,
+  updateBeanValues
+} from "./utils/Bean";
+import {
+  loadOrCreatePool,
+  updatePoolPrice,
+  updatePoolSeason,
+  updatePoolValues
+} from "./utils/Pool";
 import { BeanstalkPrice } from "../generated/Beanstalk/BeanstalkPrice";
 import {
   BEANSTALK_PRICE,
@@ -33,9 +45,13 @@ export function handleSunrise(event: Sunrise): void {
 
   let bean = loadBean(beanToken);
   let oldBeanPrice = bean.price;
-  let oldBeanLiquidity = bean.liquidityUSD;
   for (let i = 0; i < bean.pools.length; i++) {
-    updatePoolSeason(bean.pools[i], event.block.timestamp, event.block.number, event.params.season.toI32());
+    updatePoolSeason(
+      bean.pools[i],
+      event.block.timestamp,
+      event.block.number,
+      event.params.season.toI32()
+    );
   }
 
   // Fetch price from price contract to capture any non-bean token price movevements
@@ -51,7 +67,15 @@ export function handleSunrise(event: Sunrise): void {
       let beanCurve = loadOrCreatePool(BEAN_3CRV.toHexString(), event.block.number);
 
       if (!curve.reverted) {
-        updateBeanValues(BEAN_ERC20.toHexString(), event.block.timestamp, toDecimal(curve.value.price), ZERO_BI, ZERO_BI, ZERO_BD, ZERO_BD);
+        updateBeanValues(
+          BEAN_ERC20.toHexString(),
+          event.block.timestamp,
+          toDecimal(curve.value.price),
+          ZERO_BI,
+          ZERO_BI,
+          ZERO_BD,
+          ZERO_BD
+        );
         updatePoolValues(
           BEAN_3CRV.toHexString(),
           event.block.timestamp,
@@ -61,8 +85,19 @@ export function handleSunrise(event: Sunrise): void {
           toDecimal(curve.value.liquidity).minus(beanCurve.liquidityUSD),
           curve.value.deltaB
         );
-        updatePoolPrice(BEAN_3CRV.toHexString(), event.block.timestamp, event.block.number, toDecimal(curve.value.price));
-        checkBeanCross(BEAN_ERC20.toHexString(), event.block.timestamp, event.block.number, oldBeanPrice, toDecimal(curve.value.price));
+        updatePoolPrice(
+          BEAN_3CRV.toHexString(),
+          event.block.timestamp,
+          event.block.number,
+          toDecimal(curve.value.price)
+        );
+        checkBeanCross(
+          BEAN_ERC20.toHexString(),
+          event.block.timestamp,
+          event.block.number,
+          oldBeanPrice,
+          toDecimal(curve.value.price)
+        );
       }
     }
   } else {
@@ -107,7 +142,13 @@ export function handleSunrise(event: Sunrise): void {
       ZERO_BD,
       totalLiquidity.minus(bean.liquidityUSD)
     );
-    checkBeanCross(BEAN_ERC20_V1.toHexString(), event.block.timestamp, event.block.number, bean.price, totalPrice);
+    checkBeanCross(
+      BEAN_ERC20_V1.toHexString(),
+      event.block.timestamp,
+      event.block.number,
+      bean.price,
+      totalPrice
+    );
     updateBeanTwa(event.block.timestamp, event.block.number);
   }
 }
@@ -116,10 +157,14 @@ export function handleSunrise(event: Sunrise): void {
 export function handleDewhitelistToken(event: DewhitelistToken): void {
   let bean = loadBean(getBeanTokenAddress(event.block.number));
   let index = bean.pools.indexOf(event.params.token.toHexString());
-  const newPools = bean.pools;
-  newPools.splice(index, 1);
-  bean.pools = newPools;
-  bean.save();
+  if (index >= 0) {
+    const newPools = bean.pools;
+    const newDewhitelistedPools = bean.dewhitelistedPools;
+    newDewhitelistedPools.push(newPools.splice(index, 1)[0]);
+    bean.pools = newPools;
+    bean.dewhitelistedPools = newDewhitelistedPools;
+    bean.save();
+  }
 }
 
 // POST REPLANT TWA DELTAB //
@@ -132,8 +177,17 @@ export function handleMetapoolOracle(event: MetapoolOracle): void {
 
 export function handleWellOracle(event: WellOracle): void {
   setRawWellReserves(event);
-  setTwaLast(event.params.well.toHexString(), decodeCumulativeWellReserves(event.params.cumulativeReserves), event.block.timestamp);
-  setWellTwa(event.params.well.toHexString(), event.params.deltaB, event.block.timestamp, event.block.number);
+  setTwaLast(
+    event.params.well.toHexString(),
+    decodeCumulativeWellReserves(event.params.cumulativeReserves),
+    event.block.timestamp
+  );
+  setWellTwa(
+    event.params.well.toHexString(),
+    event.params.deltaB,
+    event.block.timestamp,
+    event.block.number
+  );
   updateBeanTwa(event.block.timestamp, event.block.number);
 }
 

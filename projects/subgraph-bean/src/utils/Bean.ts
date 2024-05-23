@@ -32,12 +32,17 @@ export function loadBean(token: string): Bean {
     bean.lastCross = ZERO_BI;
     bean.lastSeason = token == BEAN_ERC20.toHexString() ? 6074 : 0;
     bean.pools = [];
+    bean.dewhitelistedPools = [];
     bean.save();
   }
   return bean as Bean;
 }
 
-export function loadOrCreateBeanHourlySnapshot(token: string, timestamp: BigInt, season: i32): BeanHourlySnapshot {
+export function loadOrCreateBeanHourlySnapshot(
+  token: string,
+  timestamp: BigInt,
+  season: i32
+): BeanHourlySnapshot {
   let id = token + "-" + season.toString();
   let snapshot = BeanHourlySnapshot.load(id);
   if (snapshot == null) {
@@ -183,7 +188,9 @@ export function calcLiquidityWeightedBeanPrice(token: string): BigDecimal {
 }
 
 export function getBeanTokenAddress(blockNumber: BigInt): string {
-  return blockNumber < BigInt.fromString("15278082") ? BEAN_ERC20_V1.toHexString() : BEAN_ERC20.toHexString();
+  return blockNumber < BigInt.fromString("15278082")
+    ? BEAN_ERC20_V1.toHexString()
+    : BEAN_ERC20.toHexString();
 }
 
 export function updateBeanSupplyPegPercent(blockNumber: BigInt): void {
@@ -247,7 +254,15 @@ export function updateBeanAfterPoolSwap(
     }
 
     updateBeanSupplyPegPercent(blockNumber);
-    updateBeanValues(BEAN_ERC20.toHexString(), timestamp, beanPrice, ZERO_BI, volumeBean, volumeUSD, deltaLiquidityUSD);
+    updateBeanValues(
+      BEAN_ERC20.toHexString(),
+      timestamp,
+      beanPrice,
+      ZERO_BI,
+      volumeBean,
+      volumeUSD,
+      deltaLiquidityUSD
+    );
     checkBeanCross(BEAN_ERC20.toHexString(), timestamp, blockNumber, oldBeanPrice, beanPrice);
   }
 }
