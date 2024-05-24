@@ -5,6 +5,7 @@
 pragma solidity ^0.8.20;
 
 import {AppStorage} from "contracts/beanstalk/storage/AppStorage.sol";
+import {GerminationSide} from "contracts/beanstalk/storage/System.sol";
 import {MowStatus} from "contracts/beanstalk/storage/Account.sol";
 import {AssetSettings} from "contracts/beanstalk/storage/System.sol";
 import {LibRedundantMath128} from "contracts/libraries/LibRedundantMath128.sol";
@@ -224,9 +225,8 @@ contract SiloGettersFacet is ReentrancyGuard {
      */
     function getTotalGerminatingAmount(address token) external view returns (uint256) {
         return
-            s.system.silo.oddGerminating.deposited[token].amount.add(
-                s.system.silo.evenGerminating.deposited[token].amount
-            );
+            s.system.silo.germinating[GerminationSide.ODD][token].amount +
+            s.system.silo.germinating[GerminationSide.EVEN][token].amount;
     }
 
     /**
@@ -234,9 +234,8 @@ contract SiloGettersFacet is ReentrancyGuard {
      */
     function getTotalGerminatingBdv(address token) external view returns (uint256) {
         return
-            s.system.silo.oddGerminating.deposited[token].bdv.add(
-                s.system.silo.evenGerminating.deposited[token].bdv
-            );
+            s.system.silo.germinating[GerminationSide.ODD][token].bdv +
+            s.system.silo.germinating[GerminationSide.EVEN][token].bdv;
     }
 
     /**
@@ -244,8 +243,8 @@ contract SiloGettersFacet is ReentrancyGuard {
      */
     function getOddGerminating(address token) external view returns (uint256, uint256) {
         return (
-            s.system.silo.oddGerminating.deposited[token].amount,
-            s.system.silo.oddGerminating.deposited[token].bdv
+            s.system.silo.germinating[GerminationSide.ODD][token].amount,
+            s.system.silo.germinating[GerminationSide.ODD][token].bdv
         );
     }
 
@@ -254,8 +253,8 @@ contract SiloGettersFacet is ReentrancyGuard {
      */
     function getEvenGerminating(address token) external view returns (uint256, uint256) {
         return (
-            s.system.silo.evenGerminating.deposited[token].amount,
-            s.system.silo.evenGerminating.deposited[token].bdv
+            s.system.silo.germinating[GerminationSide.EVEN][token].amount,
+            s.system.silo.germinating[GerminationSide.EVEN][token].bdv
         );
     }
 

@@ -3,7 +3,7 @@ pragma solidity ^0.8.20;
 
 import {LibAppStorage} from "../LibAppStorage.sol";
 import {AppStorage} from "contracts/beanstalk/storage/AppStorage.sol";
-import {TotalGerminating, GerminatingSilo} from "contracts/beanstalk/storage/System.sol";
+import {Deposited, GerminatingSilo, GerminationSide} from "contracts/beanstalk/storage/System.sol";
 import {LibRedundantMath128} from "../LibRedundantMath128.sol";
 import {LibRedundantMath32} from "../LibRedundantMath32.sol";
 import {LibRedundantMathSigned96} from "../LibRedundantMathSigned96.sol";
@@ -54,16 +54,6 @@ library LibGerminate {
         int96 germinatingStem;
         int96 stemTip;
     }
-    /**
-     * @notice Germinate determines what germination struct to use.
-     * @dev "odd" and "even" refers to the value of the season counter.
-     * "Odd" germinations are used when the season is odd, and vice versa.
-     */
-    enum Germinate {
-        ODD,
-        EVEN,
-        NOT_GERMINATING
-    }
 
     /**
      * @notice Ends the germination process of system-wide values.
@@ -106,34 +96,29 @@ library LibGerminate {
         );
 
         // increment total deposited and amounts for each token.
-        TotalGerminating storage totalGerm;
-        if (getSeasonGerminationState() == Germinate.ODD) {
-            totalGerm = s.system.silo.oddGerminating;
-        } else {
-            totalGerm = s.system.silo.evenGerminating;
-        }
+        GerminationSide side = getSeasonGerminationSide();
         for (uint i; i < tokens.length; ++i) {
             // if the token has no deposits, skip.
-            if (totalGerm.deposited[tokens[i]].amount == 0) {
+            if (s.system.silo.germinating[side][tokens[i]].amount == 0) {
                 continue;
             }
 
             LibTokenSilo.incrementTotalDeposited(
                 tokens[i],
-                totalGerm.deposited[tokens[i]].amount,
-                totalGerm.deposited[tokens[i]].bdv
+                s.system.silo.germinating[side][tokens[i]].amount,
+                s.system.silo.germinating[side][tokens[i]].bdv
             );
 
             // emit events.
             emit TotalGerminatingBalanceChanged(
                 season,
                 tokens[i],
-                -int256(uint256(totalGerm.deposited[tokens[i]].amount)),
-                -int256(uint256(totalGerm.deposited[tokens[i]].bdv))
+                -int256(uint256(s.system.silo.germinating[side][tokens[i]].amount)),
+                -int256(uint256(s.system.silo.germinating[side][tokens[i]].bdv))
             );
 
             // clear deposited values.
-            delete totalGerm.deposited[tokens[i]];
+            delete s.system.silo.germinating[side][tokens[i]];
         }
     }
 
@@ -212,9 +197,9 @@ library LibGerminate {
         roots = calculateGerminatingRoots(season, stalk);
 
         if (clearOdd) {
-            delete s.accounts[account].germinatingStalk.odd;
+            delete s.accounts[account].germinatingStalk[GerminationSide.ODD];
         } else {
-            delete s.accounts[account].germinatingStalk.even;
+            delete s.accounts[account].germinatingStalk[GerminationSide.EVEN];
         }
 
         // deduct from unclaimed values.
@@ -267,11 +252,11 @@ library LibGerminate {
     ) internal view returns (uint128 firstStalk, uint128 secondStalk) {
         AppStorage storage s = LibAppStorage.diamondStorage();
         if (lastUpdateOdd) {
-            firstStalk = s.accounts[account].germinatingStalk.odd;
-            secondStalk = s.accounts[account].germinatingStalk.even;
+            firstStalk = s.accounts[account].germinatingStalk[GerminationSide.ODD];
+            secondStalk = s.accounts[account].germinatingStalk[GerminationSide.EVEN];
         } else {
-            firstStalk = s.accounts[account].germinatingStalk.even;
-            secondStalk = s.accounts[account].germinatingStalk.odd;
+            firstStalk = s.accounts[account].germinatingStalk[GerminationSide.EVEN];
+            secondStalk = s.accounts[account].germinatingStalk[GerminationSide.ODD];
         }
     }
 
@@ -354,12 +339,10 @@ library LibGerminate {
     ) internal view returns (uint256 bdv, uint256 amount) {
         AppStorage storage s = LibAppStorage.diamondStorage();
         return (
-            s.system.silo.oddGerminating.deposited[token].bdv.add(
-                s.system.silo.evenGerminating.deposited[token].bdv
-            ),
-            s.system.silo.oddGerminating.deposited[token].amount.add(
-                s.system.silo.evenGerminating.deposited[token].amount
-            )
+            s.system.silo.germinating[GerminationSide.ODD][token].bdv +
+                s.system.silo.germinating[GerminationSide.EVEN][token].bdv,
+            s.system.silo.germinating[GerminationSide.ODD][token].amount +
+                s.system.silo.germinating[GerminationSide.EVEN][token].amount
         );
     }
 
@@ -373,7 +356,7 @@ library LibGerminate {
     function getGerminationState(
         address token,
         int96 stem
-    ) internal view returns (Germinate, int96) {
+    ) internal view returns (GerminationSide, int96) {
         GermStem memory germStem = getGerminatingStem(token);
         return (_getGerminationState(stem, germStem), germStem.stemTip);
     }
@@ -451,30 +434,30 @@ library LibGerminate {
     function _getGerminationState(
         int96 stem,
         GermStem memory germData
-    ) internal view returns (Germinate) {
+    ) internal view returns (GerminationSide) {
         if (stem < germData.germinatingStem) {
             // if the stem of the deposit is lower than the germination stem,
             // then the deposit is not germinating.
-            return Germinate.NOT_GERMINATING;
+            return GerminationSide.NOT_GERMINATING;
         } else {
             // return the gemination state based on whether the stem
             // is equal to the stemTip.
             // if the stem is equal to the stem tip, it is in the inital stages of germination.
             // if the stem is not equal to the stemTip, its in the germination process.
             if (stem == germData.stemTip) {
-                return isCurrentSeasonOdd() ? Germinate.ODD : Germinate.EVEN;
+                return isCurrentSeasonOdd() ? GerminationSide.ODD : GerminationSide.EVEN;
             } else {
-                return isCurrentSeasonOdd() ? Germinate.EVEN : Germinate.ODD;
+                return isCurrentSeasonOdd() ? GerminationSide.EVEN : GerminationSide.ODD;
             }
         }
     }
 
     /**
-     * @notice returns the germination state for the current season.
+     * @notice returns the germination side for the current season.
      * @dev used in new deposits, as all new deposits are germinating.
      */
-    function getSeasonGerminationState() internal view returns (Germinate) {
-        return isCurrentSeasonOdd() ? Germinate.ODD : Germinate.EVEN;
+    function getSeasonGerminationSide() internal view returns (GerminationSide) {
+        return isCurrentSeasonOdd() ? GerminationSide.ODD : GerminationSide.EVEN;
     }
 
     /**

@@ -8,7 +8,7 @@ import {LibRedundantMath256} from "contracts/libraries/LibRedundantMath256.sol";
 import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
 import {LibAppStorage} from "../LibAppStorage.sol";
 import {AppStorage} from "contracts/beanstalk/storage/AppStorage.sol";
-import {TotalGerminating} from "contracts/beanstalk/storage/System.sol";
+import {Deposited, GerminationSide} from "contracts/beanstalk/storage/System.sol";
 import {C} from "../../C.sol";
 import {LibRedundantMath32} from "contracts/libraries/LibRedundantMath32.sol";
 import {LibRedundantMath128} from "contracts/libraries/LibRedundantMath128.sol";
@@ -100,25 +100,18 @@ library LibTokenSilo {
         address token,
         uint256 amount,
         uint256 bdv,
-        LibGerminate.Germinate germ
+        GerminationSide side
     ) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        TotalGerminating storage germinate;
 
-        // verify germ is valid
-        if (germ == LibGerminate.Germinate.ODD) {
-            germinate = s.system.silo.oddGerminating;
-        } else if (germ == LibGerminate.Germinate.EVEN) {
-            germinate = s.system.silo.evenGerminating;
-        } else {
-            revert("invalid germinationMode"); // should not ever get here
+        // verify side is valid
+        if (side != GerminationSide.ODD && side != GerminationSide.EVEN) {
+            revert("invalid germinationSide"); // should not ever get here
         }
 
         // increment germinating amount and bdv.
-        germinate.deposited[token].amount = germinate.deposited[token].amount.add(
-            amount.toUint128()
-        );
-        germinate.deposited[token].bdv = germinate.deposited[token].bdv.add(bdv.toUint128());
+        s.system.silo.germinating[side][token].amount += amount.toUint128();
+        s.system.silo.germinating[side][token].bdv += bdv.toUint128();
 
         // emit event.
         emit LibGerminate.TotalGerminatingBalanceChanged(
@@ -138,28 +131,21 @@ library LibTokenSilo {
         address token,
         uint256 amount,
         uint256 bdv,
-        LibGerminate.Germinate germ
+        GerminationSide side
     ) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        TotalGerminating storage germinate;
 
-        // verify germ is valid
-        if (germ == LibGerminate.Germinate.ODD) {
-            germinate = s.system.silo.oddGerminating;
-        } else if (germ == LibGerminate.Germinate.EVEN) {
-            germinate = s.system.silo.evenGerminating;
-        } else {
-            revert("invalid germinationMode"); // should not ever get here
+        // verify side is valid
+        if (side != GerminationSide.ODD && side != GerminationSide.EVEN) {
+            revert("invalid germinationSide"); // should not ever get here
         }
 
         // decrement germinating amount and bdv.
-        germinate.deposited[token].amount = germinate.deposited[token].amount.sub(
-            amount.toUint128()
-        );
-        germinate.deposited[token].bdv = germinate.deposited[token].bdv.sub(bdv.toUint128());
+        s.system.silo.germinating[side][token].amount -= amount.toUint128();
+        s.system.silo.germinating[side][token].bdv -= bdv.toUint128();
 
         emit LibGerminate.TotalGerminatingBalanceChanged(
-            LibGerminate.getSeasonGerminationState() == germ
+            LibGerminate.getSeasonGerminationSide() == side
                 ? s.system.season.current
                 : s.system.season.current - 1,
             token,
@@ -174,34 +160,17 @@ library LibTokenSilo {
     function incrementTotalGerminatingBdv(
         address token,
         uint256 bdv,
-        LibGerminate.Germinate germ
+        GerminationSide side
     ) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
 
-        if (germ == LibGerminate.Germinate.ODD) {
-            // increment odd germinating
-            s.system.silo.oddGerminating.deposited[token].bdv = s
-                .system
-                .silo
-                .oddGerminating
-                .deposited[token]
-                .bdv
-                .add(bdv.toUint128());
-        } else if (germ == LibGerminate.Germinate.EVEN) {
-            // increment even germinating
-            s.system.silo.evenGerminating.deposited[token].bdv = s
-                .system
-                .silo
-                .evenGerminating
-                .deposited[token]
-                .bdv
-                .add(bdv.toUint128());
-        } else {
-            revert("invalid germinationMode"); // should not ever get here
+        if (side != GerminationSide.ODD && side != GerminationSide.EVEN) {
+            revert("invalid germinationSide"); // should not ever get here
         }
+        s.system.silo.germinating[side][token].bdv += bdv.toUint128();
 
         emit LibGerminate.TotalGerminatingBalanceChanged(
-            LibGerminate.getSeasonGerminationState() == germ
+            LibGerminate.getSeasonGerminationSide() == side
                 ? s.system.season.current
                 : s.system.season.current - 1,
             token,
@@ -265,7 +234,7 @@ library LibTokenSilo {
         address token,
         int96 stem,
         uint256 amount
-    ) internal returns (uint256, LibGerminate.Germinate) {
+    ) internal returns (uint256 stalk, GerminationSide) {
         uint256 bdv = beanDenominatedValue(token, amount);
         return depositWithBDV(account, token, stem, amount, bdv);
     }
@@ -282,15 +251,15 @@ library LibTokenSilo {
         int96 stem,
         uint256 amount,
         uint256 bdv
-    ) internal returns (uint256 stalk, LibGerminate.Germinate germ) {
+    ) internal returns (uint256 stalk, GerminationSide side) {
         require(bdv > 0, "Silo: No Beans under Token.");
         AppStorage storage s = LibAppStorage.diamondStorage();
 
         // determine whether the deposit is odd or even germinating
-        germ = LibGerminate.getSeasonGerminationState();
+        side = LibGerminate.getSeasonGerminationSide();
 
         // all new deposits will increment total germination.
-        incrementTotalGerminating(token, amount, bdv, germ);
+        incrementTotalGerminating(token, amount, bdv, side);
 
         addDepositToAccount(account, token, stem, amount, bdv, Transfer.emitTransferSingle);
 
@@ -577,12 +546,12 @@ library LibTokenSilo {
         address token,
         uint256 grownStalk,
         uint256 bdv
-    ) internal view returns (int96 stem, LibGerminate.Germinate germ) {
+    ) internal view returns (int96 stem, GerminationSide side) {
         LibGerminate.GermStem memory germStem = LibGerminate.getGerminatingStem(token);
         stem = germStem.stemTip.sub(
             SafeCast.toInt96(SafeCast.toInt256(grownStalk.mul(PRECISION).div(bdv)))
         );
-        germ = LibGerminate._getGerminationState(stem, germStem);
+        side = LibGerminate._getGerminationState(stem, germStem);
     }
 
     /**

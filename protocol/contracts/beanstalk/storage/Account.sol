@@ -3,6 +3,7 @@
 pragma solidity ^0.8.20;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {GerminationSide} from "./System.sol";
 
 /**
  * @title Account
@@ -47,7 +48,8 @@ struct Account {
     mapping(address => MowStatus) mowStatuses;
     mapping(address => bool) isApprovedForAll;
     // Germination
-    GerminatingStalk germinatingStalk;
+    // GerminatingStalk germinatingStalk;
+    mapping(GerminationSide => uint128) germinatingStalk;
     mapping(address => bool) unripeClaimed;
     mapping(IERC20 => uint256) internalTokenBalance;
 }

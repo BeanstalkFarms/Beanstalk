@@ -7,6 +7,7 @@ pragma abicoder v2;
 
 import {LibAppStorage} from "../LibAppStorage.sol";
 import {AppStorage} from "contracts/beanstalk/storage/AppStorage.sol";
+import {GerminationSide} from "contracts/beanstalk/storage/System.sol";
 import {Account} from "contracts/beanstalk/storage/Account.sol";
 import {C} from "../../C.sol";
 import {LibRedundantMath256} from "contracts/libraries/LibRedundantMath256.sol";
@@ -193,42 +194,18 @@ library LibSilo {
      * stalk, it should use the stalk and roots of the system once the stalk is fully germinated,
      * rather than at the time of minting.
      */
-    function mintGerminatingStalk(
-        address account,
-        uint128 stalk,
-        LibGerminate.Germinate germ
-    ) internal {
+    function mintGerminatingStalk(address account, uint128 stalk, GerminationSide side) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
 
-        if (germ == LibGerminate.Germinate.ODD) {
-            s.accounts[account].germinatingStalk.odd = s.accounts[account].germinatingStalk.odd.add(
-                stalk
-            );
-        } else {
-            s.accounts[account].germinatingStalk.even = s
-                .accounts[account]
-                .germinatingStalk
-                .even
-                .add(stalk);
-        }
+        s.accounts[account].germinatingStalk[side] += stalk;
 
         // germinating stalk are either newly germinating, or partially germinated.
         // Thus they can only be incremented in the latest or previous season.
         uint32 season = s.system.season.current;
-        if (LibGerminate.getSeasonGerminationState() == germ) {
-            s.system.silo.unclaimedGerminating[season].stalk = s
-                .system
-                .silo
-                .unclaimedGerminating[season]
-                .stalk
-                .add(stalk);
+        if (LibGerminate.getSeasonGerminationSide() == side) {
+            s.system.silo.unclaimedGerminating[season].stalk += stalk;
         } else {
-            s.system.silo.unclaimedGerminating[season.sub(1)].stalk = s
-                .system
-                .silo
-                .unclaimedGerminating[season.sub(1)]
-                .stalk
-                .add(stalk);
+            s.system.silo.unclaimedGerminating[season - 1].stalk += stalk;
         }
 
         // emit event.
@@ -242,12 +219,12 @@ library LibSilo {
      * @dev assumes all stalk are in the same `state`. If not the case,
      * use `burnActiveStalk` and `burnGerminatingStalk` instead.
      */
-    function burnStalk(address account, uint256 stalk, LibGerminate.Germinate germ) internal {
+    function burnStalk(address account, uint256 stalk, GerminationSide side) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
         if (stalk == 0) return;
 
         // increment user and total stalk and roots if not germinating:
-        if (germ == LibGerminate.Germinate.NOT_GERMINATING) {
+        if (side == GerminationSide.NOT_GERMINATING) {
             uint256 roots = burnActiveStalk(account, stalk);
 
             // Oversaturated was previously referred to as Raining and thus
@@ -260,7 +237,7 @@ library LibSilo {
                 s.accounts[account].sop.roots = s.accounts[account].roots;
             }
         } else {
-            burnGerminatingStalk(account, uint128(stalk), germ);
+            burnGerminatingStalk(account, uint128(stalk), side);
         }
     }
 
@@ -291,42 +268,18 @@ library LibSilo {
      * @notice Burns germinating stalk.
      * @dev Germinating stalk does not have any roots assoicated with it.
      */
-    function burnGerminatingStalk(
-        address account,
-        uint128 stalk,
-        LibGerminate.Germinate germ
-    ) internal {
+    function burnGerminatingStalk(address account, uint128 stalk, GerminationSide side) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
 
-        if (germ == LibGerminate.Germinate.ODD) {
-            s.accounts[account].germinatingStalk.odd = s.accounts[account].germinatingStalk.odd.sub(
-                stalk
-            );
-        } else {
-            s.accounts[account].germinatingStalk.even = s
-                .accounts[account]
-                .germinatingStalk
-                .even
-                .sub(stalk);
-        }
+        s.accounts[account].germinatingStalk[side] -= stalk;
 
         // germinating stalk are either newly germinating, or partially germinated.
         // Thus they can only be decremented in the latest or previous season.
         uint32 season = s.system.season.current;
-        if (LibGerminate.getSeasonGerminationState() == germ) {
-            s.system.silo.unclaimedGerminating[season].stalk = s
-                .system
-                .silo
-                .unclaimedGerminating[season]
-                .stalk
-                .sub(stalk);
+        if (LibGerminate.getSeasonGerminationSide() == side) {
+            s.system.silo.unclaimedGerminating[season].stalk -= stalk;
         } else {
-            s.system.silo.unclaimedGerminating[season.sub(1)].stalk = s
-                .system
-                .silo
-                .unclaimedGerminating[season.sub(1)]
-                .stalk
-                .sub(stalk);
+            s.system.silo.unclaimedGerminating[season - 1].stalk -= stalk;
         }
 
         // emit events.
@@ -366,30 +319,13 @@ library LibSilo {
         address sender,
         address recipient,
         uint256 stalk,
-        LibGerminate.Germinate GermState
+        GerminationSide side
     ) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
         // Subtract Germinating Stalk from the 'sender' balance,
         // and Add to the 'recipient' balance.
-        if (GermState == LibGerminate.Germinate.ODD) {
-            s.accounts[sender].germinatingStalk.odd = s.accounts[sender].germinatingStalk.odd.sub(
-                stalk.toUint128()
-            );
-            s.accounts[recipient].germinatingStalk.odd = s
-                .accounts[recipient]
-                .germinatingStalk
-                .odd
-                .add(stalk.toUint128());
-        } else {
-            s.accounts[sender].germinatingStalk.even = s.accounts[sender].germinatingStalk.even.sub(
-                stalk.toUint128()
-            );
-            s.accounts[recipient].germinatingStalk.even = s
-                .accounts[recipient]
-                .germinatingStalk
-                .even
-                .add(stalk.toUint128());
-        }
+        s.accounts[sender].germinatingStalk[side] -= stalk.toUint128();
+        s.accounts[recipient].germinatingStalk[side] += stalk.toUint128();
 
         // emit events.
         emit LibGerminate.FarmerGerminatingStalkBalanceChanged(sender, -int256(stalk));
@@ -418,12 +354,12 @@ library LibSilo {
 
         if (ar.odd.bdv > 0) {
             ar.odd.stalk = ar.odd.stalk.add(ar.odd.bdv.mul(stalkPerBDV));
-            transferGerminatingStalk(sender, recipient, ar.odd.stalk, LibGerminate.Germinate.ODD);
+            transferGerminatingStalk(sender, recipient, ar.odd.stalk, GerminationSide.ODD);
         }
 
         if (ar.even.bdv > 0) {
             ar.even.stalk = ar.even.stalk.add(ar.even.bdv.mul(stalkPerBDV));
-            transferGerminatingStalk(sender, recipient, ar.even.stalk, LibGerminate.Germinate.EVEN);
+            transferGerminatingStalk(sender, recipient, ar.even.stalk, GerminationSide.EVEN);
         }
     }
 
@@ -635,12 +571,12 @@ library LibSilo {
             uint256 initalStalkRemoved,
             uint256 grownStalkRemoved,
             uint256 bdvRemoved,
-            LibGerminate.Germinate germ
+            GerminationSide side
         )
     {
         AppStorage storage s = LibAppStorage.diamondStorage();
         int96 stemTip;
-        (germ, stemTip) = LibGerminate.getGerminationState(token, stem);
+        (side, stemTip) = LibGerminate.getGerminationState(token, stem);
         bdvRemoved = LibTokenSilo.removeDepositFromAccount(account, token, stem, amount);
 
         // the inital and grown stalk are as there are instances where the inital stalk is
@@ -691,10 +627,7 @@ library LibSilo {
         uint256[] memory removedDepositIDs = new uint256[](stems.length);
         LibGerminate.GermStem memory germStem = LibGerminate.getGerminatingStem(token);
         for (uint256 i; i < stems.length; ++i) {
-            LibGerminate.Germinate germState = LibGerminate._getGerminationState(
-                stems[i],
-                germStem
-            );
+            GerminationSide side = LibGerminate._getGerminationState(stems[i], germStem);
             uint256 crateBdv = LibTokenSilo.removeDepositFromAccount(
                 account,
                 token,
@@ -707,12 +640,12 @@ library LibSilo {
 
             // if the deposit is germinating, decrement germinating values,
             // otherwise increment deposited values.
-            if (germState == LibGerminate.Germinate.NOT_GERMINATING) {
+            if (side == GerminationSide.NOT_GERMINATING) {
                 ar.active.bdv = ar.active.bdv.add(crateBdv);
                 ar.active.stalk = ar.active.stalk.add(crateStalk);
                 ar.active.tokens = ar.active.tokens.add(amounts[i]);
             } else {
-                if (germState == LibGerminate.Germinate.ODD) {
+                if (side == GerminationSide.ODD) {
                     ar.odd.bdv = ar.odd.bdv.add(crateBdv);
                     ar.odd.tokens = ar.odd.tokens.add(amounts[i]);
                 } else {

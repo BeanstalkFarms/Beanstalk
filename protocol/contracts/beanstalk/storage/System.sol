@@ -201,8 +201,10 @@ struct Silo {
     mapping(address => UnripeSettings) unripeSettings;
     WhitelistStatus[] whitelistStatuses;
     // Germination
-    TotalGerminating oddGerminating;
-    TotalGerminating evenGerminating;
+    // mapping(address => Deposited) oddGerminatingDeposited;
+    // mapping(address => Deposited) evenGerminatingDeposited;
+    // Germinating germinating;
+    mapping(GerminationSide => mapping(address => Deposited)) germinating;
     mapping(uint32 => GerminatingSilo) unclaimedGerminating;
 }
 
@@ -281,6 +283,7 @@ struct TwaReserves {
 
 /**
  * @notice Stores the total germination amounts for each whitelisted token.
+ * @param _buffer Reserved storage for future expansion.
  */
 struct Deposited {
     uint128 amount;
@@ -288,12 +291,28 @@ struct Deposited {
 }
 
 /**
- * @notice Stores the system level germination data.
+ * @notice Germinate determines what germination struct to use.
+ * @dev "odd" and "even" refers to the value of the season counter.
+ * "Odd" germinations are used when the season is odd, and vice versa.
  */
-struct TotalGerminating {
-    mapping(address => Deposited) deposited;
+enum GerminationSide {
+    ODD,
+    EVEN,
+    NOT_GERMINATING
 }
 
+/**
+ * @notice Stores the system level germination data.
+ * @param _buffer Reserved storage for future expansion.
+ */
+struct Germinating {
+    mapping(GerminationSide => mapping(address => Deposited)) deposited;
+}
+
+/**
+ * @notice Stores the system level germination Silo data.
+ * @param _buffer Reserved storage for future expansion.
+ */
 struct GerminatingSilo {
     uint128 stalk;
     uint128 roots;

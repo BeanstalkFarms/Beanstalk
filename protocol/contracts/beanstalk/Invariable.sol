@@ -9,6 +9,7 @@ import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
 
 import {C} from "contracts/C.sol";
 import {AppStorage} from "contracts/beanstalk/storage/AppStorage.sol";
+import {GerminationSide} from "contracts/beanstalk/storage/System.sol";
 import {LibAppStorage} from "contracts/libraries/LibAppStorage.sol";
 import {LibWhitelistedTokens} from "contracts/libraries/Silo/LibWhitelistedTokens.sol";
 import {LibUnripe} from "contracts/libraries/LibUnripe.sol";
@@ -172,8 +173,8 @@ abstract contract Invariable {
         for (uint256 i; i < tokens.length; i++) {
             entitlements[i] =
                 s.system.silo.balances[tokens[i]].deposited +
-                s.system.silo.evenGerminating.deposited[tokens[i]].amount +
-                s.system.silo.oddGerminating.deposited[tokens[i]].amount +
+                s.system.silo.germinating[GerminationSide.ODD][tokens[i]].amount +
+                s.system.silo.germinating[GerminationSide.EVEN][tokens[i]].amount +
                 s.system.internalTokenBalanceTotal[IERC20(tokens[i])];
             if (tokens[i] == C.BEAN) {
                 entitlements[i] +=

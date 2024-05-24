@@ -5,7 +5,7 @@ pragma solidity ^0.8.20;
 
 import "contracts/libraries/LibRedundantMath256.sol";
 import "contracts/beanstalk/sun/SeasonFacet/SeasonFacet.sol";
-import {AssetSettings, TotalGerminating} from "contracts/beanstalk/storage/System.sol";
+import {AssetSettings, Deposited, GerminationSide} from "contracts/beanstalk/storage/System.sol";
 import {LibDiamond} from "contracts/libraries/LibDiamond.sol";
 import {IERC1155} from "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
 import "../MockToken.sol";
@@ -503,18 +503,13 @@ contract MockSeasonFacet is SeasonFacet {
 
     function mockEndTotalGerminationForToken(address token) external {
         // increment total deposited and amounts for each token.
-        TotalGerminating storage totalGerm;
-        if (LibGerminate.getSeasonGerminationState() == LibGerminate.Germinate.ODD) {
-            totalGerm = s.system.silo.oddGerminating;
-        } else {
-            totalGerm = s.system.silo.evenGerminating;
-        }
+        GerminationSide side = LibGerminate.getSeasonGerminationSide();
         LibTokenSilo.incrementTotalDeposited(
             token,
-            totalGerm.deposited[token].amount,
-            totalGerm.deposited[token].bdv
+            s.system.silo.germinating[side][token].amount,
+            s.system.silo.germinating[side][token].bdv
         );
-        delete totalGerm.deposited[token];
+        delete s.system.silo.germinating[side][token];
     }
 
     function mockUpdateAverageStalkPerBdvPerSeason() external {
@@ -533,9 +528,9 @@ contract MockSeasonFacet is SeasonFacet {
         address token,
         uint128 amount,
         uint128 bdv,
-        LibGerminate.Germinate germ
+        GerminationSide side
     ) external {
-        LibTokenSilo.incrementTotalGerminating(token, amount, bdv, germ);
+        LibTokenSilo.incrementTotalGerminating(token, amount, bdv, side);
     }
 
     /**
