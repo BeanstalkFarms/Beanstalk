@@ -1,6 +1,5 @@
 import styled, { css } from "styled-components";
 import { size } from "src/breakpoints";
-import { FontVariant } from "src/utils/ui/theme";
 
 export const H1 = css`
   font-style: normal;
@@ -106,24 +105,3 @@ export const TextNudge = styled.div<NudgeProps>`
     margin-bottom: ${(props) => -1 * (props.mobileAmount || props.amount)}px;
   }
 `;
-
-export const getFontVariantStyles = (variant: FontVariant) => {
-  switch (variant) {
-    case "h1":
-      return H1;
-    case "h2":
-      return H2;
-    case "h3":
-      return H3;
-    case "l":
-      return BodyL;
-    case "s":
-      return BodyS;
-    case "xs":
-      return BodyXS;
-    case "button-link":
-      return LinksButtonText;
-    default:
-      return BodyS;
-  }
-};

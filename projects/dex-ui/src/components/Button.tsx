@@ -1,4 +1,4 @@
-import React, { HTMLAttributes, forwardRef } from "react";
+import React, { ButtonHTMLAttributes, forwardRef } from "react";
 import { BoxModelBase, BoxModelProps } from "src/utils/ui/styled";
 import { theme } from "src/utils/ui/theme";
 import styled from "styled-components";
@@ -10,7 +10,7 @@ type BaseButtonProps = {
   disabled?: boolean;
 };
 
-export type ButtonProps = HTMLAttributes<HTMLButtonElement> & BoxModelProps & BaseButtonProps;
+export type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & BoxModelProps & BaseButtonProps;
 
 export const ButtonPrimary = forwardRef<HTMLButtonElement, ButtonProps>((props: ButtonProps, ref) => {
   return <ButtonBase ref={ref} {...props} />;
