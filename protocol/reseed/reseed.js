@@ -1,5 +1,6 @@
-const { reseedDeployL2Beanstalk } = require("./reseedDeployL2Beanstalk.js");
 const { reseed1 } = require("./reseed1.js");
+const { reseedDeployL2Beanstalk } = require("./reseedDeployL2Beanstalk.js");
+const { reseed3 } = require("./reseed3.js");
 
 const fs = require("fs");
 
@@ -18,18 +19,24 @@ async function reseed(
   mock = true,
   log = false,
   start = 0,
-  end = 1
+  end = 2
 ) {
-  reseeds = [
-    reseed1, 
-    reseedDeployL2Beanstalk
-  ];
-
+  reseeds = [reseed1, reseedDeployL2Beanstalk, reseed3];
+  let l2Beanstalk;
   console.clear();
   await printBeanstalk();
   for (let i = start; i < end; i++) {
     printStage(i, end, mock, log);
-    await reseeds[i](account);
+    if (i == 0) {
+      // migrate beanstalk L1 assets.
+    }
+    if (i == 1 && mock == true) {
+      // deploy L2 beanstalk.
+      l2Beanstalk = await reseedDeployL2Beanstalk(account);
+    } else {
+      // initialize beanstalk state.
+      await reseeds[i](account, l2Beanstalk);
+    }
   }
   console.log("Reseed successful.");
 }
