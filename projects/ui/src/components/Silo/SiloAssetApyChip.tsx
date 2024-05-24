@@ -53,7 +53,7 @@ const SiloAssetApyChip: FC<SiloAssetApyChipProps> = ({
       title={
         <Row gap={0}>
           {metric === 'bean' && (
-            <Box sx={{ px: 1, py: 0.5, maxWidth: 325 }}>
+            <Box sx={{ px: 1, py: 0.5, maxWidth: 200 }}>
               <Stack gap={0.25}>
                 <Row gap={0.5}>
                   <TokenIcon token={Bean} />
