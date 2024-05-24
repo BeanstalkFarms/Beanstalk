@@ -86,11 +86,9 @@ struct Deposit {
 /**
  * @notice Stores a Farmer's Stalk and Seeds balances.
  * @param stalk Balance of the Farmer's Stalk.
- * @param seeds DEPRECATED – Balance of the Farmer's Seeds. Seeds are no longer referenced as of Silo V3.
  */
 struct Silo {
     uint256 stalk;
-    uint256 seeds;
 }
 
 /**
