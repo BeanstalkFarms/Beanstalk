@@ -392,7 +392,7 @@ contract Storage {
 
     /**
      * @notice Describes the settings for each Token that is Whitelisted in the Silo.
-     * @param selector The encoded BDV function selector for the token that pertains to 
+     * @param selector The encoded BDV function selector for the token that pertains to
      * an external view Beanstalk function with the following signature:
      * ```
      * function tokenToBdv(uint256 amount) external view returns (uint256);
@@ -409,7 +409,7 @@ contract Storage {
      * @param encodeType determine the encoding type of the selector.
      * a encodeType of 0x00 means the selector takes an input amount.
      * 0x01 means the selector takes an input amount and a token.
-     * @param gpSelector The encoded gaugePoint function selector for the token that pertains to 
+     * @param gpSelector The encoded gaugePoint function selector for the token that pertains to
      * an external view Beanstalk function with the following signature:
      * ```
      * function gaugePoints(
@@ -418,7 +418,7 @@ contract Storage {
      *  uint256 percentOfDepositedBdv
      *  ) external view returns (uint256);
      * ```
-     * @param lwSelector The encoded liquidityWeight function selector for the token that pertains to 
+     * @param lwSelector The encoded liquidityWeight function selector for the token that pertains to
      * an external view Beanstalk function with the following signature `function liquidityWeight()`
      * @param optimalPercentDepositedBdv The target percentage of the total LP deposited BDV for this token. 6 decimal precision.
      * @param gaugePoints the amount of Gauge points this LP token has in the LP Gauge. Only used for LP whitelisted assets.
@@ -440,24 +440,8 @@ contract Storage {
         bytes4 lwSelector; //                    │ 4  (8)
         uint128 gaugePoints; //                  │ 16 (24)
         uint64 optimalPercentDepositedBdv; //  ──┘ 8  (32)
-        Implmentation oracleImplmentation;
         Implmentation gaugePointImplmentation;
         Implmentation liquidityWeightImplmentation;
-    }
-
-    /**
-     * @notice contains data in order for beanstalk to call a function with a specific selector.
-     * @param target The address of the implementation.
-     * @param selector The function selector that is used to call on the implementation.
-     * @param encodeType The encode type that should be used to encode the function call. 
-     * The encodeType value depends on the context of each implmentation.
-     * @dev assumes all future implmentations will use the same parameters as the beanstalk 
-     * gaugePoint and liquidityWeight implmentations.
-     */
-    struct Implmentation {
-        address target;
-        bytes4 selector;
-        bytes1 encodeType;
     }
 
     /**
@@ -523,6 +507,21 @@ contract Storage {
     struct Sr {
         uint128 stalk;
         uint128 roots;
+    }
+
+    /**
+     * @notice contains data in order for beanstalk to call a function with a specific selector.
+     * @param target The address of the implementation.
+     * @param selector The function selector that is used to call on the implementation.
+     * @param encodeType The encode type that should be used to encode the function call.
+     * The encodeType value depends on the context of each implmentation.
+     * @dev assumes all future implmentations will use the same parameters as the beanstalk
+     * gaugePoint and liquidityWeight implmentations.
+     */
+    struct Implmentation {
+        address target;
+        bytes4 selector;
+        bytes1 encodeType;
     }
 }
 
@@ -660,4 +659,5 @@ struct AppStorage {
     mapping(IERC20 => uint256) internalTokenBalanceTotal;
     uint256 fertilizedPaidIndex;
     uint256 plenty;
+    mapping(address => Storage.Implmentation) oracleImplmentation;
 }

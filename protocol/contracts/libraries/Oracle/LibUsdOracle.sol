@@ -6,6 +6,7 @@ pragma solidity ^0.8.20;
 
 import {LibAppStorage, AppStorage, Storage} from "contracts/libraries/LibAppStorage.sol";
 import {LibChainlinkOracle} from "./LibChainlinkOracle.sol";
+import {LibUniswapOracle} from "./LibUniswapOracle.sol";
 import {LibEthUsdOracle} from "./LibEthUsdOracle.sol";
 import {LibWstethUsdOracle} from "./LibWstethUsdOracle.sol";
 import {LibRedundantMath256} from "contracts/libraries/LibRedundantMath256.sol";
@@ -86,7 +87,7 @@ library LibUsdOracle {
         uint256 lookback
     ) internal view returns (uint256 tokenPrice) {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        Storage.Implmentation memory oracleImpl = s.ss[token].oracleImplmentation;
+        Storage.Implmentation memory oracleImpl = s.oracleImplmentation[token];
 
         // If the encode type is type 1, use the default chainlink implmentation instead.
         // `target` refers to the address of the price aggergator implmenation
@@ -96,6 +97,16 @@ library LibUsdOracle {
                     oracleImpl.target,
                     LibChainlinkOracle.FOUR_HOUR_TIMEOUT,
                     lookback
+                );
+        } else if (oracleImpl.encodeType == bytes1(0x02)) {
+            // if the encodeType is type 2, use a uniswap oracle implmentation.
+            return
+                LibUniswapOracle.getTwap(
+                    lookback == 0 ? LibUniswapOracle.FIFTEEN_MINUTES : uint32(lookback),
+                    oracleImpl.target,
+                    token,
+                    C.WETH,
+                    1e18
                 );
         }
 
