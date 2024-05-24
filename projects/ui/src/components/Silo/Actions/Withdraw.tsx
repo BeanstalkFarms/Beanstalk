@@ -179,8 +179,8 @@ const WithdrawForm: FC<
     const amount = sdk.tokens.BEAN.amount(
       values.tokens[0]?.amount?.toString() || '0'
     );
-    // FIXME: Restore geminating deposits
-    const crates = siloBalance?.convertibleDeposits || [];
+
+    const crates = siloBalance?.deposits || [];
 
     if (!isUsingPlant && (amount.lte(0) || !crates.length)) return null;
     if (isUsingPlant && plantAndDoX?.getAmount().lte(0)) return null;
@@ -199,7 +199,7 @@ const WithdrawForm: FC<
     plantAndDoX,
     sdk.silo.siloWithdraw,
     season,
-    siloBalance?.convertibleDeposits,
+    siloBalance?.deposits,
     values.tokens,
     whitelistedToken,
   ]);
@@ -438,7 +438,7 @@ const WithdrawPropProvider: FC<{
       try {
         middleware.before();
         if (!account) throw new Error('Missing signer');
-        if (!siloBalance?.convertibleDeposits) {
+        if (!siloBalance?.deposits) {
           throw new Error('No balances found');
         }
 
@@ -476,7 +476,7 @@ const WithdrawPropProvider: FC<{
 
         const withdrawTxn = new WithdrawFarmStep(sdk, token, [
           // FIXME: Restore geminating deposits
-          ...siloBalance.convertibleDeposits,
+          ...siloBalance.deposits,
         ]);
 
         withdrawTxn.build(
@@ -557,7 +557,7 @@ const WithdrawPropProvider: FC<{
       middleware,
       txnBundler,
       plantAndDoX,
-      siloBalance?.convertibleDeposits,
+      siloBalance?.deposits,
       refetch,
       refetchSilo,
     ]

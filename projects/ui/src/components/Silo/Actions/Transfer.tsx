@@ -123,8 +123,7 @@ const TransferForm: FC<
   // Results
   const withdrawResult = useMemo(() => {
     const amount = BEAN.amount(values.tokens[0].amount?.toString() || '0');
-    // FIXME: Restore geminating deposits
-    const deposits = siloBalance?.convertibleDeposits || [];
+    const deposits = siloBalance?.deposits || [];
 
     if (!isUsingPlant && (amount.lte(0) || !deposits.length)) return null;
     if (isUsingPlant && plantAndDoX?.getAmount().lte(0)) return null;
@@ -143,7 +142,7 @@ const TransferForm: FC<
     plantAndDoX,
     sdk.silo.siloWithdraw,
     season,
-    siloBalance?.convertibleDeposits,
+    siloBalance?.deposits,
     values.tokens,
     whitelistedToken,
   ]);
@@ -154,8 +153,8 @@ const TransferForm: FC<
   );
 
   // derived
-  //const depositedBalance = siloBalance?.amount;
-  const depositedBalance = siloBalance?.convertibleDeposits.reduce((total: TokenValue, deposit) => deposit.amount.add(total), TokenValue.ZERO);
+  const depositedBalance = siloBalance?.amount;
+  // const depositedBalance = siloBalance?.convertibleDeposits.reduce((total: TokenValue, deposit) => deposit.amount.add(total), TokenValue.ZERO);
   const isReady = withdrawResult && !withdrawResult.amount.lt(0);
 
   // Input props
@@ -445,7 +444,7 @@ const TransferPropProvider: FC<{
           throw new Error('Please enter a valid recipient address.');
         }
 
-        if (!siloBalance?.convertibleDeposits) {
+        if (!siloBalance?.deposits) {
           throw new Error('No balances found');
         }
 
@@ -469,7 +468,7 @@ const TransferPropProvider: FC<{
         if (totalAmount.lte(0)) throw new Error('Invalid amount.');
 
         const transferTxn = new TransferFarmStep(sdk, token, account, [
-          ...siloBalance.convertibleDeposits,
+          ...siloBalance.deposits,
         ]);
 
         transferTxn.build(
@@ -538,7 +537,7 @@ const TransferPropProvider: FC<{
     [
       middleware,
       account,
-      siloBalance?.convertibleDeposits,
+      siloBalance?.deposits,
       token,
       sdk,
       season,
