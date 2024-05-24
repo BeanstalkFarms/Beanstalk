@@ -201,7 +201,7 @@ contract Sun is Oracle {
      * When the Pod Rate is low, Beanstalk issues more Soil.
      */
     function setSoilAbovePeg(uint256 newHarvestable, uint256 caseId) internal {
-        uint256 newSoil = newHarvestable.mul(100).div(100 + s.system.weather.t);
+        uint256 newSoil = newHarvestable.mul(100).div(100 + s.system.weather.temp);
         if (caseId >= 24) {
             newSoil = newSoil.mul(SOIL_COEFFICIENT_HIGH).div(C.PRECISION); // high podrate
         } else if (caseId < 8) {

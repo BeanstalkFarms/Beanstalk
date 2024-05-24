@@ -164,7 +164,7 @@ describe("Complex Weather", function () {
       await mockBeanstalk.setNextSowTimeE("10");
       await mockBeanstalk.calcCaseIdE(ethers.utils.parseEther("1"), "1");
       const weather = await beanstalk.weather();
-      expect(weather.t).to.equal(7);
+      expect(weather.temp).to.equal(7);
       expect(weather.thisSowTime).to.equal(parseInt(MAX_UINT32));
       expect(weather.lastSowTime).to.equal(10);
     });
@@ -174,7 +174,7 @@ describe("Complex Weather", function () {
       await mockBeanstalk.setNextSowTimeE("1000");
       await mockBeanstalk.calcCaseIdE(ethers.utils.parseEther("1"), "1");
       const weather = await beanstalk.weather();
-      expect(weather.t).to.equal(7);
+      expect(weather.temp).to.equal(7);
       expect(weather.thisSowTime).to.equal(parseInt(MAX_UINT32));
       expect(weather.lastSowTime).to.equal(1000);
     });
@@ -184,7 +184,7 @@ describe("Complex Weather", function () {
       await mockBeanstalk.setNextSowTimeE("1000");
       await mockBeanstalk.calcCaseIdE(ethers.utils.parseEther("1"), "1");
       const weather = await beanstalk.weather();
-      expect(weather.t).to.equal(7);
+      expect(weather.temp).to.equal(7);
       expect(weather.thisSowTime).to.equal(parseInt(MAX_UINT32));
       expect(weather.lastSowTime).to.equal(1000);
     });
@@ -194,7 +194,7 @@ describe("Complex Weather", function () {
       await mockBeanstalk.setNextSowTimeE("1000");
       await mockBeanstalk.calcCaseIdE(ethers.utils.parseEther("1"), "1");
       const weather = await beanstalk.weather();
-      expect(weather.t).to.equal(7);
+      expect(weather.temp).to.equal(7);
       expect(weather.thisSowTime).to.equal(parseInt(MAX_UINT32));
       expect(weather.lastSowTime).to.equal(1000);
     });
@@ -204,7 +204,7 @@ describe("Complex Weather", function () {
       await mockBeanstalk.setNextSowTimeE("1000");
       await mockBeanstalk.calcCaseIdE(ethers.utils.parseEther("1"), "1");
       const weather = await beanstalk.weather();
-      expect(weather.t).to.equal(7);
+      expect(weather.temp).to.equal(7);
       expect(weather.thisSowTime).to.equal(parseInt(MAX_UINT32));
       expect(weather.lastSowTime).to.equal(1000);
     });
@@ -214,7 +214,7 @@ describe("Complex Weather", function () {
       await mockBeanstalk.setNextSowTimeE("1000");
       await mockBeanstalk.calcCaseIdE(ethers.utils.parseEther("1"), "1");
       const weather = await beanstalk.weather();
-      expect(weather.t).to.equal(9);
+      expect(weather.temp).to.equal(9);
       expect(weather.thisSowTime).to.equal(parseInt(MAX_UINT32));
       expect(weather.lastSowTime).to.equal(1000);
     });
@@ -224,7 +224,7 @@ describe("Complex Weather", function () {
       await mockBeanstalk.setNextSowTimeE(MAX_UINT32);
       await mockBeanstalk.calcCaseIdE(ethers.utils.parseEther("1"), "1");
       const weather = await beanstalk.weather();
-      expect(weather.t).to.equal(7);
+      expect(weather.temp).to.equal(7);
       expect(weather.thisSowTime).to.equal(parseInt(MAX_UINT32));
       expect(weather.lastSowTime).to.equal(parseInt(MAX_UINT32));
     });

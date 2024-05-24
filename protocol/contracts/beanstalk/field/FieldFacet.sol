@@ -278,7 +278,7 @@ contract FieldFacet is Invariable, ReentrancyGuard {
         else {
             soil = LibDibbler.scaleSoilUp(
                 uint256(s.system.field.soil), // max soil offered this Season, reached when `t >= 25`
-                uint256(s.system.weather.t).mul(LibDibbler.TEMPERATURE_PRECISION), // max temperature
+                uint256(s.system.weather.temp).mul(LibDibbler.TEMPERATURE_PRECISION), // max temperature
                 _morningTemperature // temperature adjusted by number of blocks since Sunrise
             );
         }
@@ -302,7 +302,7 @@ contract FieldFacet is Invariable, ReentrancyGuard {
         return
             LibDibbler.scaleSoilUp(
                 uint256(s.system.field.soil), // min soil
-                uint256(s.system.weather.t).mul(LibDibbler.TEMPERATURE_PRECISION), // max temperature
+                uint256(s.system.weather.temp).mul(LibDibbler.TEMPERATURE_PRECISION), // max temperature
                 LibDibbler.morningTemperature() // temperature adjusted by number of blocks since Sunrise
             );
     }
@@ -324,7 +324,7 @@ contract FieldFacet is Invariable, ReentrancyGuard {
      * precision needed for the Morning Auction functionality.
      */
     function maxTemperature() external view returns (uint256) {
-        return uint256(s.system.weather.t).mul(LibDibbler.TEMPERATURE_PRECISION);
+        return uint256(s.system.weather.temp).mul(LibDibbler.TEMPERATURE_PRECISION);
     }
 
     //////////////////// GETTERS: PODS ////////////////////

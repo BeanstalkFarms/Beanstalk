@@ -600,7 +600,7 @@ contract FieldTest is TestHelper {
     // /**
     //  * check that the Soil decreases over 25 blocks, then stays stagent
     //  * when beanstalk is above peg, the soil issued is now:
-    //  * `availableSoil` = s.system.field.soil * (1+ s.system.weather.t)/(1+ yield())
+    //  * `availableSoil` = s.system.field.soil * (1+ s.system.weather.temp)/(1+ yield())
     //  * `availableSoil` should always be greater or equal to s.system.field.soil
     //  */
     // function testSoilDecrementsOverDutchAbovePeg(uint256 startingSoil) public {

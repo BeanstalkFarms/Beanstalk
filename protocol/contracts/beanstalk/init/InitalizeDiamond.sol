@@ -108,7 +108,7 @@ contract InitalizeDiamond {
      * @notice Initalizes field parameters.
      */
     function initalizeField() internal {
-        s.system.weather.t = 1;
+        s.system.weather.temp = 1;
         s.system.weather.thisSowTime = type(uint32).max;
         s.system.weather.lastSowTime = type(uint32).max;
         s.system.isFarm = 1;

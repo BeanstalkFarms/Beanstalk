@@ -38,7 +38,7 @@ contract InitDiamond is Weather {
         ds.supportedInterfaces[0x0e89341c] = true; // ERC1155Metadata
 
         LibCases.setCasesV2();
-        s.system.weather.t = 1;
+        s.system.weather.temp = 1;
 
         s.system.season.current = 1;
         s.system.season.withdrawSeasons = 25;

@@ -66,7 +66,7 @@ contract MockSeasonFacet is SeasonFacet {
     }
 
     function setYieldE(uint256 t) public {
-        s.system.weather.t = uint32(t);
+        s.system.weather.temp = uint32(t);
     }
 
     function siloSunrise(uint256 amount) public {
@@ -152,7 +152,7 @@ contract MockSeasonFacet is SeasonFacet {
     function sunTemperatureSunrise(int256 deltaB, uint256 caseId, uint32 t) public {
         require(!s.system.paused, "Season: Paused.");
         s.system.season.current += 1;
-        s.system.weather.t = t;
+        s.system.weather.temp = t;
         s.system.season.sunriseBlock = uint32(block.number);
         stepSun(deltaB, caseId);
     }
@@ -222,7 +222,7 @@ contract MockSeasonFacet is SeasonFacet {
     }
 
     function setMaxTempE(uint32 number) public {
-        s.system.weather.t = number;
+        s.system.weather.temp = number;
     }
 
     function setAbovePegE(bool peg) public {
@@ -400,7 +400,7 @@ contract MockSeasonFacet is SeasonFacet {
     }
 
     function getT() external view returns (uint256) {
-        return uint256(s.system.weather.t);
+        return uint256(s.system.weather.temp);
     }
 
     function getUsdPrice(address token) external view returns (uint256) {

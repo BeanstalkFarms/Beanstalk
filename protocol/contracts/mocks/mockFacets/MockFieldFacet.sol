@@ -192,7 +192,7 @@ contract MockFieldFacet is FieldFacet {
         uint32 maxTemperature,
         bool abovePeg
     ) external returns (uint256 pods) {
-        s.system.weather.t = maxTemperature;
+        s.system.weather.temp = maxTemperature;
         pods = LibDibbler.sow(beans, _morningTemperature, msg.sender, abovePeg);
         return pods;
     }
@@ -207,12 +207,12 @@ contract MockFieldFacet is FieldFacet {
         return
             LibDibbler.scaleSoilUp(
                 uint256(s.system.field.soil), // min soil
-                uint256(s.system.weather.t).mul(LibDibbler.TEMPERATURE_PRECISION), // max temperature
+                uint256(s.system.weather.temp).mul(LibDibbler.TEMPERATURE_PRECISION), // max temperature
                 morningTemperature // temperature adjusted by number of blocks since Sunrise
             );
     }
 
     function setMaxTemp(uint32 t) external {
-        s.system.weather.t = t;
+        s.system.weather.temp = t;
     }
 }

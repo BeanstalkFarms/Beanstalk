@@ -75,7 +75,7 @@ contract Weather is Sun {
         uint256 beanSupply = C.bean().totalSupply();
         // prevents infinite L2SR and podrate
         if (beanSupply == 0) {
-            s.system.weather.t = 1;
+            s.system.weather.temp = 1;
             return 9; // Reasonably low
         }
         // Calculate Case Id
@@ -100,19 +100,19 @@ contract Weather is Sun {
      * @dev bT are set during edge cases such that the event emitted is valid.
      */
     function updateTemperature(int8 bT, uint256 caseId) private {
-        uint256 t = s.system.weather.t;
+        uint256 t = s.system.weather.temp;
         if (bT < 0) {
             if (t <= uint256(int256(-bT))) {
                 // if (change < 0 && t <= uint32(-change)),
                 // then 0 <= t <= type(int8).max because change is an int8.
                 // Thus, downcasting t to an int8 will not cause overflow.
                 bT = 1 - int8(int256(t));
-                s.system.weather.t = 1;
+                s.system.weather.temp = 1;
             } else {
-                s.system.weather.t = uint32(t - uint256(int256(-bT)));
+                s.system.weather.temp = uint32(t - uint256(int256(-bT)));
             }
         } else {
-            s.system.weather.t = uint32(t + uint256(int256(bT)));
+            s.system.weather.temp = uint32(t + uint256(int256(bT)));
         }
 
         emit TemperatureChange(s.system.season.current, caseId, bT);

@@ -72,7 +72,7 @@ library LibDibbler {
 
         uint256 pods;
         if (abovePeg) {
-            uint256 maxTemperature = uint256(s.system.weather.t).mul(TEMPERATURE_PRECISION);
+            uint256 maxTemperature = uint256(s.system.weather.temp).mul(TEMPERATURE_PRECISION);
             // amount sown is rounded up, because
             // 1: temperature is rounded down.
             // 2: pods are rounded down.
@@ -148,7 +148,7 @@ library LibDibbler {
 
         // check most likely case first
         if (delta > 24) {
-            return uint256(s.system.weather.t).mul(TEMPERATURE_PRECISION);
+            return uint256(s.system.weather.temp).mul(TEMPERATURE_PRECISION);
         }
 
         // Binary Search
@@ -270,7 +270,7 @@ library LibDibbler {
     function _scaleTemperature(uint256 pct) private view returns (uint256 scaledTemperature) {
         AppStorage storage s = LibAppStorage.diamondStorage();
 
-        uint256 maxTemperature = s.system.weather.t;
+        uint256 maxTemperature = s.system.weather.temp;
         if (maxTemperature == 0) return 0;
 
         scaledTemperature = Math.max(
@@ -326,7 +326,7 @@ library LibDibbler {
      *
      * When Beanstalk is above peg, the Soil issued changes. Example:
      *
-     * If 500 Soil is issued when `s.weather.t = 100e2 = 100%`
+     * If 500 Soil is issued when `s.weather.temp = 100e2 = 100%`
      * At delta = 0:
      *  morningTemperature() = 1%
      *  Soil = `500*(100 + 100%)/(100 + 1%)` = 990.09901 soil
@@ -361,7 +361,7 @@ library LibDibbler {
             return
                 beansToPods(
                     s.system.field.soil, // 1 bean = 1 soil
-                    uint256(s.system.weather.t).mul(TEMPERATURE_PRECISION) // 1e2 -> 1e8
+                    uint256(s.system.weather.temp).mul(TEMPERATURE_PRECISION) // 1e2 -> 1e8
                 );
         } else {
             // Below peg: amount of Soil is fixed, temperature adjusts
