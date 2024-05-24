@@ -29,84 +29,37 @@ contract ReseedInternalBalances {
         BeanstalkInternalBalance calldata beanBalances,
         BeanstalkInternalBalance calldata beanEthBalances,
         BeanstalkInternalBalance calldata beanWstethBalances,
-        BeanstalkInternalBalance calldata beanStableBalances
+        BeanstalkInternalBalance calldata beanStableBalances,
+        BeanstalkInternalBalance calldata urBeanBalances,
+        BeanstalkInternalBalance calldata urBeanLpBalances
     ) external {
-        setBeanInternalBalances(beanBalances);
-        setBeanEthInternalBalances(beanEthBalances);
-        setBeanWstethInternalBalances(beanWstethBalances);
-        setBeanStableInternalBalances(beanStableBalances);
+        setInternalBalances(beanBalances);
+        setInternalBalances(beanEthBalances);
+        setInternalBalances(beanWstethBalances);
+        setInternalBalances(beanStableBalances);
+        setInternalBalances(urBeanBalances);
+        setInternalBalances(urBeanLpBalances);
     }
 
-    function setBeanInternalBalances(BeanstalkInternalBalance calldata beanBalances) internal {
+    function setInternalBalances(BeanstalkInternalBalance calldata internalBalances) internal {
         uint256 totalInternalBalance;
-        for (uint i; i < beanBalances.farmers.length; i++) {
-            s.internalTokenBalance[beanBalances.farmers[i]][
-                IERC20(beanBalances.token)
-            ] = beanBalances.balances[i];
-            totalInternalBalance += beanBalances.balances[i];
+        for (uint i; i < internalBalances.farmers.length; i++) {
+            s.internalTokenBalance[internalBalances.farmers[i]][
+                IERC20(internalBalances.token)
+            ] = internalBalances.balances[i];
+            totalInternalBalance += internalBalances.balances[i];
             emit InternalBalanceChanged(
-                beanBalances.farmers[i],
-                IERC20(beanBalances.token),
-                int256(beanBalances.balances[i])
+                internalBalances.farmers[i],
+                IERC20(internalBalances.token),
+                int256(internalBalances.balances[i])
             );
         }
 
         require(
-            totalInternalBalance == beanBalances.totalInternalBalance,
+            totalInternalBalance == internalBalances.totalInternalBalance,
             "ReseedInternalBalances: totalInternalBalance mismatch"
         );
 
-        s.internalTokenBalanceTotal[IERC20(beanBalances.token)] = totalInternalBalance;
-    }
-
-    function setBeanEthInternalBalances(
-        BeanstalkInternalBalance calldata beanEthBalances
-    ) internal {
-        uint256 totalInternalBalance;
-        for (uint i; i < beanEthBalances.farmers.length; i++) {
-            s.internalTokenBalance[beanEthBalances.farmers[i]][
-                IERC20(beanEthBalances.token)
-            ] = beanEthBalances.balances[i];
-            totalInternalBalance += beanEthBalances.balances[i];
-            emit InternalBalanceChanged(
-                beanEthBalances.farmers[i],
-                IERC20(beanEthBalances.token),
-                int256(beanEthBalances.balances[i])
-            );
-        }
-    }
-
-    function setBeanWstethInternalBalances(
-        BeanstalkInternalBalance calldata beanWstethBalances
-    ) internal {
-        uint256 totalInternalBalance;
-        for (uint i; i < beanWstethBalances.farmers.length; i++) {
-            s.internalTokenBalance[beanWstethBalances.farmers[i]][
-                IERC20(beanWstethBalances.token)
-            ] = beanWstethBalances.balances[i];
-            totalInternalBalance += beanWstethBalances.balances[i];
-            emit InternalBalanceChanged(
-                beanWstethBalances.farmers[i],
-                IERC20(beanWstethBalances.token),
-                int256(beanWstethBalances.balances[i])
-            );
-        }
-    }
-
-    function setBeanStableInternalBalances(
-        BeanstalkInternalBalance calldata beanStableBalances
-    ) internal {
-        uint256 totalInternalBalance;
-        for (uint i; i < beanStableBalances.farmers.length; i++) {
-            s.internalTokenBalance[beanStableBalances.farmers[i]][
-                IERC20(beanStableBalances.token)
-            ] = beanStableBalances.balances[i];
-            totalInternalBalance += beanStableBalances.balances[i];
-            emit InternalBalanceChanged(
-                beanStableBalances.farmers[i],
-                IERC20(beanStableBalances.token),
-                int256(beanStableBalances.balances[i])
-            );
-        }
+        s.internalTokenBalanceTotal[IERC20(internalBalances.token)] = totalInternalBalance;
     }
 }
