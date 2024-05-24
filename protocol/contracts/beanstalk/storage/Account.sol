@@ -31,28 +31,6 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
  * @param internalTokenBalance A mapping from Token address to Internal Balance. It stores the amount of the Token that the Farmer has stored as an Internal Balance in Beanstalk.
  */
 struct Account {
-    /*
-     * @dev (Silo V1) A Farmer's Unripe Bean Deposits only as a result of Replant
-     *
-     * Previously held the V1 Silo Deposits/Withdrawals for Beans.
-
-     * NOTE: While the Silo V1 format is now deprecated, this storage slot is used for gas
-     * efficiency to store Unripe BEAN deposits. See {LibUnripeSilo} for more.
-     */
-    AssetSilo bean;
-    /*
-     * @dev (Silo V1) Unripe LP Deposits as a result of Replant.
-     *
-     * Previously held the V1 Silo Deposits/Withdrawals for BEAN:ETH Uniswap v2 LP Tokens.
-     *
-     * BEAN:3CRV and BEAN:LUSD tokens prior to Replant were stored in the Silo V2
-     * format in the `s.accounts[account].legacyV2Deposits` mapping.
-     *
-     * NOTE: While the Silo V1 format is now deprecated, unmigrated Silo V1 deposits are still
-     * stored in this storage slot. See {LibUnripeSilo} for more.
-     *
-     */
-    AssetSilo lp;
     // Silo v3.1.
     mapping(uint256 => Deposit) deposits; // Silo v3.1 Deposits stored as a map from uint256 to Deposit. This is an concat of the token address and the stem for a ERC20 deposit.
     Field field;
