@@ -22,9 +22,13 @@ export const App = ({}) => {
         <Route path="/wells" element={<Wells />} />
         <Route path="/wells/:address" element={<Well />} />
         <Route path="/wells/:address/liquidity" element={<Liquidity />} />
-        <Route path="/build" element={<Build />} />
         <Route path="/swap" element={<Swap />} />
-        <Route path="/create" element={<Create />} />
+        {isNotProd && (
+          <>
+            <Route path="/build" element={<Build />} />
+            <Route path="/create" element={<Create />} />
+          </>
+        )}
         {isNotProd && <Route path="/dev" element={<Dev />} />}
         <Route path="*" element={<NotFound />} />
       </Routes>
