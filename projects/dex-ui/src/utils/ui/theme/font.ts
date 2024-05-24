@@ -21,14 +21,14 @@ const FONT_SIZE_MAP = {
 /// --------------- Font Size ---------------
 export const getFontSize = (_size: number | FontSize) => {
   if (typeof _size === "number") return _size;
-  return FONT_SIZE_MAP[_size in FONT_SIZE_MAP ? _size : "s"];
+  return `${FONT_SIZE_MAP[_size in FONT_SIZE_MAP ? _size : "s"]}px`;
 };
 
 export const FontSizeStyle = css<{ $size?: number | FontSize }>`
   ${({ $size }) => {
     if (!exists($size)) return "";
     return `
-      font-size: ${getFontSize($size)}px;
+      font-size: ${getFontSize($size)};
     `;
   }}
 `;
@@ -37,7 +37,7 @@ export const LineHeightStyle = css<{ $lineHeight?: number | FontSize }>`
   ${(props) => {
     if (!exists(props.$lineHeight)) return "";
     return `
-      line-height: ${getFontSize(props.$lineHeight)}px;
+      line-height: ${getFontSize(props.$lineHeight)};
     `;
   }}
 `;
