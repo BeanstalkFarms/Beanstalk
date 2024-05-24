@@ -3954,265 +3954,6 @@
         "type": "address"
       },
       {
-        "indexed": true,
-        "internalType": "address",
-        "name": "token",
-        "type": "address"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint32",
-        "name": "season",
-        "type": "uint32"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "amount",
-        "type": "uint256"
-      }
-    ],
-    "name": "RemoveDepositLegacy",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": true,
-        "internalType": "address",
-        "name": "account",
-        "type": "address"
-      },
-      {
-        "indexed": false,
-        "internalType": "int256",
-        "name": "delta",
-        "type": "int256"
-      }
-    ],
-    "name": "SeedsBalanceChanged",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": true,
-        "internalType": "address",
-        "name": "account",
-        "type": "address"
-      },
-      {
-        "indexed": false,
-        "internalType": "int256",
-        "name": "delta",
-        "type": "int256"
-      },
-      {
-        "indexed": false,
-        "internalType": "int256",
-        "name": "deltaRoots",
-        "type": "int256"
-      }
-    ],
-    "name": "StalkBalanceChanged",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": true,
-        "internalType": "address",
-        "name": "operator",
-        "type": "address"
-      },
-      {
-        "indexed": true,
-        "internalType": "address",
-        "name": "sender",
-        "type": "address"
-      },
-      {
-        "indexed": true,
-        "internalType": "address",
-        "name": "recipient",
-        "type": "address"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "depositId",
-        "type": "uint256"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "amount",
-        "type": "uint256"
-      }
-    ],
-    "name": "TransferSingle",
-    "type": "event"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "account",
-        "type": "address"
-      }
-    ],
-    "name": "balanceOfGrownStalkUpToStemsDeployment",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "account",
-        "type": "address"
-      }
-    ],
-    "name": "balanceOfLegacySeeds",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "account",
-        "type": "address"
-      },
-      {
-        "internalType": "address",
-        "name": "token",
-        "type": "address"
-      },
-      {
-        "internalType": "uint32",
-        "name": "season",
-        "type": "uint32"
-      }
-    ],
-    "name": "getDepositLegacy",
-    "outputs": [
-      {
-        "internalType": "uint128",
-        "name": "",
-        "type": "uint128"
-      },
-      {
-        "internalType": "uint128",
-        "name": "",
-        "type": "uint128"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "account",
-        "type": "address"
-      },
-      {
-        "internalType": "address[]",
-        "name": "tokens",
-        "type": "address[]"
-      },
-      {
-        "internalType": "uint32[][]",
-        "name": "seasons",
-        "type": "uint32[][]"
-      },
-      {
-        "internalType": "uint256[][]",
-        "name": "amounts",
-        "type": "uint256[][]"
-      },
-      {
-        "internalType": "uint256",
-        "name": "stalkDiff",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "seedsDiff",
-        "type": "uint256"
-      },
-      {
-        "internalType": "bytes32[]",
-        "name": "proof",
-        "type": "bytes32[]"
-      }
-    ],
-    "name": "mowAndMigrate",
-    "outputs": [],
-    "stateMutability": "payable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "account",
-        "type": "address"
-      }
-    ],
-    "name": "mowAndMigrateNoDeposits",
-    "outputs": [],
-    "stateMutability": "payable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "token",
-        "type": "address"
-      }
-    ],
-    "name": "totalMigratedBdv",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": true,
-        "internalType": "address",
-        "name": "account",
-        "type": "address"
-      },
-      {
         "indexed": false,
         "internalType": "int256",
         "name": "delta",
@@ -4308,6 +4049,31 @@
       {
         "indexed": true,
         "internalType": "address",
+        "name": "account",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "int256",
+        "name": "delta",
+        "type": "int256"
+      },
+      {
+        "indexed": false,
+        "internalType": "int256",
+        "name": "deltaRoots",
+        "type": "int256"
+      }
+    ],
+    "name": "StalkBalanceChanged",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
         "name": "operator",
         "type": "address"
       },
@@ -4337,6 +4103,43 @@
       }
     ],
     "name": "TransferBatch",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "operator",
+        "type": "address"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "sender",
+        "type": "address"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "recipient",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "depositId",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "amount",
+        "type": "uint256"
+      }
+    ],
+    "name": "TransferSingle",
     "type": "event"
   },
   {
@@ -4572,25 +4375,6 @@
       }
     ],
     "stateMutability": "pure",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "amount",
-        "type": "uint256"
-      }
-    ],
-    "name": "curveToBDV",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
     "type": "function"
   },
   {
@@ -5248,7 +5032,7 @@
             "type": "bool"
           }
         ],
-        "internalType": "struct Storage.WhitelistStatus",
+        "internalType": "struct WhitelistStatus",
         "name": "_whitelistStatuses",
         "type": "tuple"
       }
@@ -5283,7 +5067,7 @@
             "type": "bool"
           }
         ],
-        "internalType": "struct Storage.WhitelistStatus[]",
+        "internalType": "struct WhitelistStatus[]",
         "name": "_whitelistStatuses",
         "type": "tuple[]"
       }
@@ -6077,7 +5861,7 @@
             "type": "uint128"
           }
         ],
-        "internalType": "struct Account.MowStatus",
+        "internalType": "struct MowStatus",
         "name": "mowStatus",
         "type": "tuple"
       }
@@ -6420,7 +6204,7 @@
             "type": "uint64"
           }
         ],
-        "internalType": "struct Storage.SiloSettings",
+        "internalType": "struct AssetSettings",
         "name": "",
         "type": "tuple"
       }
@@ -7370,7 +7154,7 @@
           },
           {
             "internalType": "uint32",
-            "name": "beanEthStartMintingSeason",
+            "name": "deprecated",
             "type": "uint32"
           },
           {
@@ -7389,7 +7173,7 @@
             "type": "uint256"
           }
         ],
-        "internalType": "struct Storage.Season",
+        "internalType": "struct Season",
         "name": "",
         "type": "tuple"
       }
@@ -7427,7 +7211,7 @@
             "type": "uint128"
           }
         ],
-        "internalType": "struct Storage.SeedGauge",
+        "internalType": "struct SeedGauge",
         "name": "",
         "type": "tuple"
       }
@@ -7584,11 +7368,6 @@
         "components": [
           {
             "internalType": "uint256",
-            "name": "deprecated",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
             "name": "pods",
             "type": "uint256"
           },
@@ -7598,7 +7377,7 @@
             "type": "uint256"
           }
         ],
-        "internalType": "struct Storage.Rain",
+        "internalType": "struct Rain",
         "name": "",
         "type": "tuple"
       }
@@ -7695,7 +7474,7 @@
           },
           {
             "internalType": "uint32",
-            "name": "beanEthStartMintingSeason",
+            "name": "deprecated",
             "type": "uint32"
           },
           {
@@ -7714,7 +7493,7 @@
             "type": "uint256"
           }
         ],
-        "internalType": "struct Storage.Season",
+        "internalType": "struct Season",
         "name": "",
         "type": "tuple"
       }
@@ -7742,11 +7521,6 @@
       {
         "components": [
           {
-            "internalType": "uint256[2]",
-            "name": "deprecated",
-            "type": "uint256[2]"
-          },
-          {
             "internalType": "uint128",
             "name": "lastDSoil",
             "type": "uint128"
@@ -7767,7 +7541,7 @@
             "type": "uint32"
           }
         ],
-        "internalType": "struct Storage.Weather",
+        "internalType": "struct Weather",
         "name": "",
         "type": "tuple"
       }

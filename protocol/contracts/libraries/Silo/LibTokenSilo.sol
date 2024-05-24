@@ -391,21 +391,6 @@ library LibTokenSilo {
 
         uint256 crateAmount = s.accounts[account].deposits[depositId].amount;
         crateBDV = s.accounts[account].deposits[depositId].bdv;
-        // if amount is > crateAmount, check if user has a legacy deposit:
-        if (amount > crateAmount) {
-            // get the absolute stem value.
-            uint256 absStem = stem > 0 ? uint256(int256(stem)) : uint256(int256(-stem));
-            // only stems with modulo 1e6 can have a legacy deposit.
-            if (absStem.mod(1e6) == 0) {
-                (crateAmount, crateBDV) = migrateLegacyStemDeposit(
-                    account,
-                    token,
-                    stem,
-                    crateAmount,
-                    crateBDV
-                );
-            }
-        }
         require(amount <= crateAmount, "Silo: Crate balance too low.");
 
         // Partial remove
@@ -625,42 +610,42 @@ library LibTokenSilo {
     }
 
     /**
-     * @notice internal logic for migrating a legacy deposit.
-     * @dev
+     * @notice Calculates stem based on input season
+     * @param seedsPerBdv Seeds per bdv for the token you want to find the corresponding stem for
+     * @param season The season you want to find the corresponding stem for
+     *
+     * @dev Used by the mowAndMigrate function to convert seasons to stems, to know which
+     * stem to deposit in for the new Silo storage system.
      */
-    function migrateLegacyStemDeposit(
-        address account,
-        address token,
-        int96 newStem,
-        uint256 crateAmount,
-        uint256 crateBdv
-    ) internal returns (uint256, uint256) {
+    function seasonToStem(uint256 seedsPerBdv, uint32 season) internal view returns (int96 stem) {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        // divide the newStem by 1e6 to get the legacy stem.
-        uint256 legacyDepositId = LibBytes.packAddressAndStem(token, newStem.div(1e6));
-        uint256 legacyAmount = s.accounts[account].legacyV3Deposits[legacyDepositId].amount;
-        uint256 legacyBdv = s.accounts[account].legacyV3Deposits[legacyDepositId].bdv;
-        crateAmount = crateAmount.add(legacyAmount);
-        crateBdv = crateBdv.add(legacyBdv);
-        delete s.accounts[account].legacyV3Deposits[legacyDepositId];
 
-        // Emit burn events.
-        emit TransferSingle(LibTractor._user(), account, address(0), legacyDepositId, legacyAmount);
+        require(seedsPerBdv > 0, "Silo: Token not supported");
 
-        emit RemoveDeposit(account, token, newStem.div(1e6), legacyAmount, legacyBdv);
+        //need to go back in time, calculate the delta between the current season and that old deposit season,
+        //and that's how many seasons back we need to go. Then, multiply that by seedsPerBdv, and that's our
+        //negative grown stalk index.
 
-        // Emit mint events.
-        emit TransferSingle(
-            LibTractor._user(),
-            address(0),
-            account,
-            LibBytes.packAddressAndStem(token, newStem),
-            legacyAmount
+        //find the difference between the input season and the Silo v3 epoch season
+        stem = (int96(uint96(season)).sub(int96(uint96(s.system.season.stemStartSeason)))).mul(
+            int96(int256(seedsPerBdv))
         );
+    }
 
-        emit AddDeposit(account, token, newStem, legacyAmount, legacyBdv);
-
-        return (crateAmount, crateBdv);
+    /**
+     * @dev Legacy Seed balance getter.
+     *
+     * constants are used in favor of reading from storage for gas savings.
+     */
+    function getLegacySeedsPerToken(address token) internal pure returns (uint256) {
+        if (token == C.BEAN) {
+            return 2;
+        } else if (token == C.UNRIPE_BEAN) {
+            return 2;
+        } else if (token == C.UNRIPE_LP) {
+            return 4;
+        }
+        return 0;
     }
 
     function toInt96(uint256 value) internal pure returns (int96) {

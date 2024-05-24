@@ -7,7 +7,6 @@ pragma solidity ^0.8.20;
 import {AppStorage} from "contracts/beanstalk/storage/AppStorage.sol";
 import {MowStatus} from "contracts/beanstalk/storage/Account.sol";
 import {AssetSettings} from "contracts/beanstalk/storage/System.sol";
-import {LibLegacyTokenSilo} from "contracts/libraries/Silo/LibLegacyTokenSilo.sol";
 import {LibRedundantMath128} from "contracts/libraries/LibRedundantMath128.sol";
 import {LibGerminate} from "contracts/libraries/Silo/LibGerminate.sol";
 import {ReentrancyGuard} from "contracts/beanstalk/ReentrancyGuard.sol";
@@ -517,7 +516,7 @@ contract SiloGettersFacet is ReentrancyGuard {
      */
     function seasonToStem(address token, uint32 season) external view returns (int96 stem) {
         uint256 seedsPerBdv = getLegacySeedsPerToken(token).mul(1e6);
-        stem = LibLegacyTokenSilo.seasonToStem(seedsPerBdv, season);
+        stem = LibTokenSilo.seasonToStem(seedsPerBdv, season);
     }
 
     /**
@@ -527,7 +526,7 @@ contract SiloGettersFacet is ReentrancyGuard {
      * kept for legacy reasons.
      */
     function getLegacySeedsPerToken(address token) public view virtual returns (uint256) {
-        return LibLegacyTokenSilo.getLegacySeedsPerToken(token);
+        return LibTokenSilo.getLegacySeedsPerToken(token);
     }
 
     /**

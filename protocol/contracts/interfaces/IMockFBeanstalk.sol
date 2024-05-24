@@ -393,7 +393,6 @@ interface IMockFBeanstalk {
     ) external view returns (uint256 gStalk, uint256 gRoots);
     function balanceOfGerminatingStalk(address account) external view returns (uint256);
     function balanceOfGrownStalk(address account, address token) external view returns (uint256);
-    function balanceOfGrownStalkLegacy(address account) external view returns (uint256);
     function balanceOfGrownStalkUpToStemsDeployment(
         address account
     ) external view returns (uint256);
@@ -529,7 +528,6 @@ interface IMockFBeanstalk {
         uint256 bdv,
         uint256 grownStalk
     ) external;
-    function depositLegacy(address token, uint256 amount, uint8 mode) external payable;
     function depositPermitDomainSeparator() external view returns (bytes32);
     function depositPermitNonces(address owner) external view returns (uint256);
     function determineReward(
@@ -649,11 +647,6 @@ interface IMockFBeanstalk {
         int96 stem
     ) external view returns (uint256, uint256);
     function getDepositId(address token, int96 stem) external pure returns (uint256);
-    function getDepositLegacy(
-        address account,
-        address token,
-        uint32 season
-    ) external view returns (uint128, uint128);
     function getEndBpf() external view returns (uint128 endBpf);
     function getEthUsdPrice() external view returns (uint256);
     function getEthUsdTwap(uint256 lookback) external view returns (uint256);

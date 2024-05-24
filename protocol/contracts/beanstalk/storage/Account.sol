@@ -53,10 +53,6 @@ struct Account {
      *
      */
     AssetSilo lp;
-    // Silo v2.
-    mapping(address => mapping(uint32 => Deposit)) legacyV2Deposits; // Legacy Silo V2 Deposits stored as a map from Token address to Season of Deposit to Deposit. NOTE: While the Silo V2 format is now deprecated, unmigrated Silo V2 deposits are still stored in this mapping.
-    // Silo v3.0.
-    mapping(uint256 => Deposit) legacyV3Deposits; // NOTE: Legacy SiloV3 Deposits stored as a map from uint256 to Deposit. This is an concat of the token address and the CGSPBDV for a ERC20 deposit.
     // Silo v3.1.
     mapping(uint256 => Deposit) deposits; // Silo v3.1 Deposits stored as a map from uint256 to Deposit. This is an concat of the token address and the stem for a ERC20 deposit.
     Field field;
