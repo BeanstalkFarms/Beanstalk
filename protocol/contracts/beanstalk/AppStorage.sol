@@ -587,6 +587,7 @@ contract Storage {
  * @param barnRaiseWell Stores the well that the Barn Raise adds liquidity to.
  * @param fertilizedPaidIndex The total number of Fertilizer Beans that have been sent out to users.
  * @param plenty The amount of plenty token held by the contract.
+ * @param oracleImplmentation A mapping from token to its oracle implementation.
  */
 struct AppStorage {
     uint8 deprecated_index;

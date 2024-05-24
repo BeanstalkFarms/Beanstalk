@@ -13,6 +13,7 @@ import {LibWell, IWell} from "contracts/libraries/Well/LibWell.sol";
 import {IChainlinkAggregator} from "contracts/interfaces/chainlink/IChainlinkAggregator.sol";
 import {LibRedundantMath32} from "contracts/libraries/LibRedundantMath32.sol";
 import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
+import {console} from "forge-std/console.sol";
 
 /**
  * @title LibWhitelist
@@ -228,9 +229,11 @@ library LibWhitelist {
         s.ss[token].lwSelector = bytes4(0);
         s.ss[token].gaugePoints = gaugePoints;
         s.ss[token].optimalPercentDepositedBdv = optimalPercentDepositedBdv;
-        s.ss[token].oracleImplmentation = oracleImplmentation;
         s.ss[token].gaugePointImplmentation = gpImplmentation;
         s.ss[token].liquidityWeightImplmentation = lwImplmentation;
+
+        // the Oracle should return the price for the non-bean asset in USD
+        s.oracleImplmentation[token] = oracleImplmentation;
 
         emit WhitelistToken(
             token,
@@ -338,7 +341,8 @@ library LibWhitelist {
             oracleImplmentation.encodeType
         );
 
-        ss.oracleImplmentation = oracleImplmentation;
+        AppStorage storage s = LibAppStorage.diamondStorage();
+        s.oracleImplmentation[token] = oracleImplmentation;
 
         emit UpdatedOracleImplmentationForToken(token, oracleImplmentation);
     }
@@ -404,7 +408,7 @@ library LibWhitelist {
         delete s.ss[token].optimalPercentDepositedBdv;
 
         // delete implmentations:
-        delete s.ss[token].oracleImplmentation;
+        delete s.oracleImplmentation[token];
         delete s.ss[token].gaugePointImplmentation;
         delete s.ss[token].liquidityWeightImplmentation;
 
@@ -436,6 +440,9 @@ library LibWhitelist {
             (success, ) = oracleImplmentation.staticcall(
                 abi.encodeWithSelector(IChainlinkAggregator.decimals.selector)
             );
+        } else if (encodeType == bytes1(0x02)) {
+            // 0x02 is LibUniswapOracle
+            console.log("verifyOracleImplmentation verify uniswap oracle");
         } else {
             // verify you passed in a callable oracle selector
             (success, ) = oracleImplmentation.staticcall(abi.encodeWithSelector(selector, 0));

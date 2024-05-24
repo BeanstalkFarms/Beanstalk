@@ -78,7 +78,6 @@ contract InitalizeDiamond {
             lwSelector: bytes4(0),
             gaugePoints: 0,
             optimalPercentDepositedBdv: 0,
-            oracleImplmentation: impl,
             gaugePointImplmentation: impl,
             liquidityWeightImplmentation: impl
         });
@@ -95,7 +94,6 @@ contract InitalizeDiamond {
             lwSelector: ILiquidityWeightFacet.maxWeight.selector,
             gaugePoints: INIT_TOKEN_G_POINTS,
             optimalPercentDepositedBdv: INIT_BEAN_TOKEN_WELL_PERCENT_TARGET,
-            oracleImplmentation: impl,
             gaugePointImplmentation: gaugePointImpl,
             liquidityWeightImplmentation: liquidityWeightImpl
         });

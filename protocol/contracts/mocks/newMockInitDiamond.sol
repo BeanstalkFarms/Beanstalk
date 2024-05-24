@@ -125,7 +125,6 @@ contract MockInitDiamond is InitalizeDiamond {
             lwSelector: bytes4(0),
             gaugePoints: 0,
             optimalPercentDepositedBdv: 0,
-            oracleImplmentation: impl,
             gaugePointImplmentation: gaugePointImpl,
             liquidityWeightImplmentation: liquidityWeightImpl
         });
@@ -141,7 +140,6 @@ contract MockInitDiamond is InitalizeDiamond {
             lwSelector: bytes4(0),
             gaugePoints: 0,
             optimalPercentDepositedBdv: 0,
-            oracleImplmentation: impl,
             gaugePointImplmentation: gaugePointImpl,
             liquidityWeightImplmentation: liquidityWeightImpl
         });
@@ -181,7 +179,6 @@ contract MockInitDiamond is InitalizeDiamond {
             lwSelector: ILiquidityWeightFacet.maxWeight.selector,
             gaugePoints: INIT_TOKEN_WURLP_POINTS,
             optimalPercentDepositedBdv: INIT_BEAN_WURLP_PERCENT_TARGET,
-            oracleImplmentation: impl,
             gaugePointImplmentation: Storage.Implmentation(
                 address(0),
                 IGaugePointFacet.defaultGaugePointFunction.selector,
