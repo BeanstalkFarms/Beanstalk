@@ -572,6 +572,7 @@ contract Storage {
  * @param barnRaiseWell Stores the well that the Barn Raise adds liquidity to.
  * @param fertilizedPaidIndex The total number of Fertilizer Beans that have been sent out to users.
  * @param plenty The amount of plenty token held by the contract.
+ * @param migratedL1Beans the amount of external L1 beans migrated to L2. used to prevent manipulation.
  */
 struct AppStorage {
     uint8 deprecated_index;
@@ -644,4 +645,5 @@ struct AppStorage {
     mapping(IERC20 => uint256) internalTokenBalanceTotal;
     uint256 fertilizedPaidIndex;
     uint256 plenty;
+    uint256 migratedL1Beans;
 }
