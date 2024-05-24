@@ -60,7 +60,7 @@ const SiloAssetApyChip: FC<SiloAssetApyChipProps> = ({
                   Total Beans per Season
                 </Row>
                 <Box display="flex">
-                  <Stack width="33%">
+                  {/* <Stack width="33%">
                     <Typography variant="h4">24H</Typography>
                     <Typography variant="h4">
                       {latestYield
@@ -81,8 +81,8 @@ const SiloAssetApyChip: FC<SiloAssetApyChipProps> = ({
                           )
                         : '0'}
                     </Typography>
-                  </Stack>
-                  <Stack width="33%">
+                        </Stack> */}
+                  <Stack width="100%">
                     <Typography variant="h4">30D</Typography>
                     <Typography variant="h4">
                       {latestYield
@@ -95,7 +95,7 @@ const SiloAssetApyChip: FC<SiloAssetApyChipProps> = ({
                   </Stack>
                 </Box>
                 <Typography variant="bodySmall" color="text.primary">
-                  24-hour/7-day/30-day exponential moving average of Beans
+                  30-day exponential moving average of Beans
                   earned by all Stalkholders per Season.
                 </Typography>
               </Stack>
@@ -157,13 +157,8 @@ const SiloAssetApyChip: FC<SiloAssetApyChipProps> = ({
                   <TokenIcon token={tokenProps} /> vAPY:{' '}
                 </>
               )}
-              {metric === 'bean' ? (
-                <Box
-                  display="flex"
-                  justifyContent="center"
-                  alignItems="center"
-                  gap={0.25}
-                >
+              {/* metric === 'bean' ? (
+                <>
                   <Box
                     display="flex"
                     justifyContent="center"
@@ -208,8 +203,8 @@ const SiloAssetApyChip: FC<SiloAssetApyChipProps> = ({
                   <Typography color="white" marginTop={-0.25}>
                     |
                   </Typography>
-                </Box>
-              ) : null}
+                </>
+              ) : null */}
               <Box
                 display="flex"
                 justifyContent="center"

@@ -129,15 +129,15 @@ const Whitelist: FC<{
                 label={
                   <Row gap={0.5}>
                     <TokenIcon token={BEAN[1]} />
-                    vAPY 24H
-                    <Typography color="white" marginTop={-0.25}>
+                    vAPY 30D
+                    {/* <Typography color="white" marginTop={-0.25}>
                       |
                     </Typography>
                     7D
                     <Typography color="white" marginTop={-0.25}>
                       |
                     </Typography>
-                    30D
+                30D */}
                   </Row>
                 }
                 onClick={undefined}
