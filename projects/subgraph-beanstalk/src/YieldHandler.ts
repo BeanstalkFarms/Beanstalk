@@ -1,7 +1,7 @@
 import { Address, BigDecimal, BigInt, log } from "@graphprotocol/graph-ts";
 import { Beanstalk } from "../generated/Season-Replanted/Beanstalk";
 import { BEANSTALK, BEAN_ERC20, FERTILIZER } from "../../subgraph-core/utils/Constants";
-import { ONE_BD, ONE_BI, toBigInt, toDecimal, ZERO_BD, ZERO_BI } from "../../subgraph-core/utils/Decimals";
+import { BI_10, ONE_BD, ONE_BI, toBigInt, toDecimal, ZERO_BD, ZERO_BI } from "../../subgraph-core/utils/Decimals";
 import { loadFertilizer } from "./utils/Fertilizer";
 import { loadFertilizerYield } from "./utils/FertilizerYield";
 import {
@@ -134,7 +134,8 @@ export function updateSiloVAPYs(t: i32, timestamp: BigInt, window: i32): void {
     let depositedBeanBdv = ZERO_BD;
 
     let initialR = toDecimal(silo.beanToMaxLpGpPerBdvRatio!, 20);
-    let siloStalk = toDecimal(silo.stalk.plus(silo.plantableStalk));
+    // Stalk has 10 decimals
+    let siloStalk = toDecimal(silo.stalk.plus(silo.plantableStalk), 10);
 
     let germinatingBeanBdv: BigDecimal[] = [];
     let germinatingGaugeLpBdv: BigDecimal[][] = [];
@@ -209,7 +210,6 @@ export function updateSiloVAPYs(t: i32, timestamp: BigInt, window: i32): void {
 
   // Save the apys
   for (let i = 0; i < apys.length; ++i) {
-    //FIXME
     let tokenYield = loadTokenYield(Address.fromBytes(whitelistSettings[i].id), t, window);
     tokenYield.beanAPY = apys[i][0];
     tokenYield.stalkAPY = apys[i][1];
@@ -291,6 +291,7 @@ export function calculateAPYPreGauge(
 /**
  * Calculates silo Bean/Stalk vAPY when Seed Gauge is active.
  *
+ * Each provided BigDecimal value should already be converted such that it has 0 decimals.
  * All of the array parameters should not be empty and be the same length, with one entry for every gauge lp deposit type
  *
  * @param token Which tokens to calculate the apy for. For a gauge lp token, provide an index corresponding to
@@ -340,10 +341,10 @@ export function calculateGaugeVAPYs(
 ): BigDecimal[][] {
   // Fixed-point arithmetic is used here to achieve >40% speedup over using BigDecimal
   // Everything is still passed to this function as BigDecimal so we can normalize the precision as set here
-  const PRECISION = 12;
+  const PRECISION: u8 = 12;
   const PRECISION_BI = toBigInt(ONE_BD, PRECISION);
   // A larger precision is required for tracking user balances as they can be highly fractional
-  const BALANCES_PRECISION = 18;
+  const BALANCES_PRECISION: u8 = 18;
   const BALANCES_PRECISION_BI = toBigInt(ONE_BD, BALANCES_PRECISION);
 
   // Current percentages allocations of each LP
@@ -374,13 +375,15 @@ export function calculateGaugeVAPYs(
   let totalBdv = gaugeBdv.plus(nonGaugeDepositedBdv_);
   let largestLpGpPerBdv = BigInt_max(lpGpPerBdv);
 
+  const startingGrownStalk = totalStalk.times(PRECISION_BI).div(totalBdv).minus(toBigInt(ONE_BD, PRECISION));
   let userBeans: BigInt[] = [];
   let userLp: BigInt[] = [];
   let userStalk: BigInt[] = [];
   for (let i = 0; i < tokens.length; ++i) {
     userBeans.push(toBigInt(tokens[i] == -1 ? ONE_BD : ZERO_BD, BALANCES_PRECISION));
     userLp.push(toBigInt(tokens[i] == -1 ? ZERO_BD : ONE_BD, BALANCES_PRECISION));
-    userStalk.push(toBigInt(ONE_BD, BALANCES_PRECISION));
+    // Initial stalk from deposit + avg grown stalk
+    userStalk.push(toBigInt(ONE_BD, BALANCES_PRECISION).plus(startingGrownStalk.times(BI_10.pow(BALANCES_PRECISION - PRECISION))));
   }
 
   const SEED_PRECISION = toBigInt(BigDecimal.fromString("10000"), PRECISION);
@@ -431,8 +434,9 @@ export function calculateGaugeVAPYs(
         }
       }
 
-      // No bean rewards while the new deposit is germinating, but stalk can grow
-      const userBeanShare = i < 2 ? toBigInt(ZERO_BD, PRECISION) : siloReward.times(userStalk[j]).div(totalStalk);
+      // (disabled) - for germinating deposits not receiving seignorage for 2 seasons
+      // const userBeanShare = i < 2 ? toBigInt(ZERO_BD, PRECISION) : siloReward.times(userStalk[j]).div(totalStalk);
+      const userBeanShare = siloReward.times(userStalk[j]).div(totalStalk);
       userStalk[j] = userStalk[j]
         .plus(userBeanShare)
         .plus(userBeans[j].times(beanSeeds).div(PRECISION_BI).plus(userLp[j].times(lpSeeds).div(PRECISION_BI)).div(SEED_PRECISION));
@@ -447,7 +451,8 @@ export function calculateGaugeVAPYs(
       .minus(BALANCES_PRECISION_BI)
       .times(toBigInt(BigDecimal.fromString("100"), PRECISION));
     const stalkApy = userStalk[i].minus(BALANCES_PRECISION_BI).times(toBigInt(BigDecimal.fromString("100"), PRECISION));
-    retval.push([toDecimal(beanApy, PRECISION + BALANCES_PRECISION), toDecimal(stalkApy, PRECISION + BALANCES_PRECISION)]);
+    // Add 2 to each precision to divide by 100 (i.e. 25% is .25 not 25)
+    retval.push([toDecimal(beanApy, PRECISION + BALANCES_PRECISION + 2), toDecimal(stalkApy, PRECISION + BALANCES_PRECISION + 2)]);
   }
 
   return retval;

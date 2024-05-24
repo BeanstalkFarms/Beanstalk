@@ -39,7 +39,7 @@ import TxnAccordion from '~/components/Common/TxnAccordion';
 import useAccount from '~/hooks/ledger/useAccount';
 import AdditionalTxnsAccordion from '~/components/Common/Form/FormTxn/AdditionalTxnsAccordion';
 import useFarmerFormTxnsActions from '~/hooks/farmer/form-txn/useFarmerFormTxnActions';
-import AddPlantTxnToggle from '~/components/Common/Form/FormTxn/AddPlantTxnToggle';
+// import AddPlantTxnToggle from '~/components/Common/Form/FormTxn/AddPlantTxnToggle';
 import FormTxnProvider from '~/components/Common/Form/FormTxnProvider';
 import useFormTxnContext from '~/hooks/sdk/useFormTxnContext';
 import { FormTxn, PlantAndDoX, WithdrawFarmStep } from '~/lib/Txn';
@@ -104,7 +104,10 @@ const WithdrawForm: FC<
     // FIXME: Temporarily disabled Withdraws of Bean:ETH LP in Bean/WETH, needs routing code
     () => [
       whitelistedToken,
-      ...(((whitelistedToken.isLP && whitelistedToken !== sdk.tokens.BEAN_ETH_WELL_LP) && pool?.tokens) || []),
+      ...((whitelistedToken.isLP &&
+        whitelistedToken !== sdk.tokens.BEAN_ETH_WELL_LP &&
+        pool?.tokens) ||
+        []),
     ],
     [pool, sdk.tokens, whitelistedToken]
   );
@@ -159,7 +162,7 @@ const WithdrawForm: FC<
   const { setDestination } = useFormTxnContext();
   useEffect(() => {
     setDestination(values.destination);
-  }, [values.destination, setDestination])
+  }, [values.destination, setDestination]);
 
   const [isTokenSelectVisible, showTokenSelect, hideTokenSelect] = useToggle();
 
@@ -176,7 +179,8 @@ const WithdrawForm: FC<
     const amount = sdk.tokens.BEAN.amount(
       values.tokens[0]?.amount?.toString() || '0'
     );
-    const crates = siloBalance?.deposits || [];
+    // FIXME: Restore geminating deposits
+    const crates = siloBalance?.convertibleDeposits || [];
 
     if (!isUsingPlant && (amount.lte(0) || !crates.length)) return null;
     if (isUsingPlant && plantAndDoX?.getAmount().lte(0)) return null;
@@ -195,7 +199,7 @@ const WithdrawForm: FC<
     plantAndDoX,
     sdk.silo.siloWithdraw,
     season,
-    siloBalance?.deposits,
+    siloBalance?.convertibleDeposits,
     values.tokens,
     whitelistedToken,
   ]);
@@ -279,7 +283,9 @@ const WithdrawForm: FC<
             />
           </>
         </Stack>
+        {/*
         <AddPlantTxnToggle plantAndDoX={plantAndDoX} actionText='Withdraw'/>
+        */}
         {isReady ? (
           <Stack direction="column" gap={1}>
             <TxnSeparator />
@@ -348,7 +354,9 @@ const WithdrawForm: FC<
                     {
                       type: ActionType.IN_TRANSIT,
                       amount: toBN(withdrawResult.amount),
-                      token: getNewToOldToken(values.tokenOut || whitelistedToken),
+                      token: getNewToOldToken(
+                        values.tokenOut || whitelistedToken
+                      ),
                       destination: values.destination || FarmToMode.EXTERNAL,
                       withdrawSeasons,
                     },
@@ -430,7 +438,7 @@ const WithdrawPropProvider: FC<{
       try {
         middleware.before();
         if (!account) throw new Error('Missing signer');
-        if (!siloBalance?.deposits) {
+        if (!siloBalance?.convertibleDeposits) {
           throw new Error('No balances found');
         }
 
@@ -467,7 +475,8 @@ const WithdrawPropProvider: FC<{
         }
 
         const withdrawTxn = new WithdrawFarmStep(sdk, token, [
-          ...siloBalance.deposits,
+          // FIXME: Restore geminating deposits
+          ...siloBalance.convertibleDeposits,
         ]);
 
         withdrawTxn.build(
@@ -520,7 +529,19 @@ const WithdrawPropProvider: FC<{
         formActions.resetForm();
       } catch (err) {
         if (txToast) {
-          txToast.error(err);
+          if (err instanceof Error) {
+            if (err.message.includes('SafeMath: subtraction overflow')) {
+              txToast.error({
+                code: 'CALL_EXCEPTION',
+                message:
+                  'Germinating Bean Deposits currently cannot be Withdrawn. A fix is being implemented. In the meantime, you can Withdraw in 2 Seasons once your Bean Deposits are no longer Germinating. See Discord for details.',
+              });
+            } else {
+              txToast.error(err);
+            }
+          } else {
+            txToast.error(err);
+          }
         } else {
           const toast = new TransactionToast({});
           toast.error(err);
@@ -536,7 +557,7 @@ const WithdrawPropProvider: FC<{
       middleware,
       txnBundler,
       plantAndDoX,
-      siloBalance?.deposits,
+      siloBalance?.convertibleDeposits,
       refetch,
       refetchSilo,
     ]

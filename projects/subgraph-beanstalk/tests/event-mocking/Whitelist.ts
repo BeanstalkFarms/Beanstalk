@@ -4,7 +4,7 @@ import { newMockEvent } from "matchstick-as/assembly/index";
 import { BEANSTALK } from "../../../subgraph-core/utils/Constants";
 import { WhitelistToken as WhitelistToken_V2, DewhitelistToken } from "../../generated/Silo-Replanted/Beanstalk";
 import { WhitelistToken as WhitelistToken_V3 } from "../../generated/Silo-V3/Beanstalk";
-import { WhitelistToken as WhitelistToken_V4 } from "../../generated/BIP44-SeedGauge/Beanstalk";
+import { WhitelistToken as WhitelistToken_V4 } from "../../generated/BIP45-SeedGauge/Beanstalk";
 
 // Default mock to include beanstalk address
 const mockBeanstalkEvent = (): ethereum.Event => {

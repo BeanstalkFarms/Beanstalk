@@ -225,11 +225,6 @@ enum AddDeposit_orderBy {
   token
 }
 
-enum Aggregation_interval {
-  day
-  hour
-}
-
 type Beanstalk {
   """ Array of the addresses for all active farmers in the silo """
   activeFarmers: [String!]!
@@ -2686,9 +2681,6 @@ enum Incentive_orderBy {
   protocol__slug
   protocol__subgraphVersion
 }
-
-"8 bytes signed integer\n"
-scalar Int8
 
 enum MarketStatus {
   ACTIVE
@@ -8938,6 +8930,9 @@ type Silo {
   """Current BDV of all deposited assets"""
   depositedBDV: BigInt!
 
+  """Tokens that have been removed from the silo deposit whitelist"""
+  dewhitelistedTokens: [String!]!
+
   """Farmer address if applicable"""
   farmer: Farmer
 
@@ -10760,6 +10755,12 @@ input Silo_filter {
   depositedBDV_lte: BigInt
   depositedBDV_not: BigInt
   depositedBDV_not_in: [BigInt!]
+  dewhitelistedTokens: [String!]
+  dewhitelistedTokens_contains: [String!]
+  dewhitelistedTokens_contains_nocase: [String!]
+  dewhitelistedTokens_not: [String!]
+  dewhitelistedTokens_not_contains: [String!]
+  dewhitelistedTokens_not_contains_nocase: [String!]
   farmer: String
   farmer_: Farmer_filter
   farmer_contains: String
@@ -10863,6 +10864,7 @@ enum Silo_orderBy {
   beanstalk__subgraphVersion
   dailySnapshots
   depositedBDV
+  dewhitelistedTokens
   farmer
   farmer__id
   germinatingStalk
@@ -12531,9 +12533,6 @@ type Subscription {
   ): [WhitelistToken!]!
 }
 
-"A string representation of microseconds UNIX timestamp (16 digits)\n"
-scalar Timestamp
-
 type TokenYield {
   """Bean APY for season"""
   beanAPY: BigDecimal!
@@ -12831,13 +12830,13 @@ type WhitelistToken implements SiloEvent {
   protocol: Beanstalk!
 
   """Seeds per BDV"""
-  seeds: BigInt!
+  seeds: BigInt
 
   """Selector for token"""
-  selector: String!
+  selector: String
 
   """Stalk per BDV"""
-  stalk: BigInt!
+  stalk: BigInt
 
   """Stalk earned per season"""
   stalkPerSeason: BigInt
@@ -13574,9 +13573,6 @@ type _Block_ {
 
   """The block number"""
   number: Int!
-
-  """The hash of the parent block"""
-  parentHash: Bytes
 
   """Integer representation of the timestamp stored in blocks for the chain"""
   timestamp: Int
