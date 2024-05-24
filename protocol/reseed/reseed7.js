@@ -32,14 +32,15 @@ async function reseed7(account, L2Beanstalk) {
   const stable = await ethers.getContractFactory("IERC20", L2_USDC_ADDRESS);
 
   // mint:
+  owner = impersonateSigner(account);
   await weth.mint(account, ethInBeanEthWell);
   await wsteth.mint(account, wstEthInBeanWstEthWell);
   await stable.mint(account, stableInBeanStableWell);
 
   // approve beanstalk:
-  await weth.connect(account).approve(L2Beanstalk, ethInBeanEthWell);
-  await wsteth.connect(account).approve(L2Beanstalk, wstEthInBeanWstEthWell);
-  await stable.connect(account).approve(L2Beanstalk, stableInBeanStableWell);
+  await weth.connect(owner).approve(L2Beanstalk, ethInBeanEthWell);
+  await wsteth.connect(owner).approve(L2Beanstalk, wstEthInBeanWstEthWell);
+  await stable.connect(owner).approve(L2Beanstalk, stableInBeanStableWell);
 
   // call init:
   await upgradeWithNewFacets({
