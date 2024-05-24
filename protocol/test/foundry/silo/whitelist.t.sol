@@ -5,6 +5,7 @@ pragma abicoder v2;
 import {TestHelper, LibTransfer, C} from "test/foundry/utils/TestHelper.sol";
 import {IMockFBeanstalk} from "contracts/interfaces/IMockFBeanstalk.sol";
 import {MockToken} from "contracts/mocks/MockToken.sol";
+import {Storage} from "contracts/beanstalk/AppStorage.sol";
 
 /**
  * @notice Tests the functionality of whitelisting.
@@ -293,6 +294,50 @@ contract WhitelistTest is TestHelper {
         assertEq(uint256(newSS.milestoneSeason), season);
     }
 
+    function test_whitelistTokenWithExternalImplmenation(
+        uint32 stalkEarnedPerSeason,
+        uint32 stalkIssuedPerBdv,
+        uint8 encodeType,
+        uint128 gaugePoints,
+        uint64 optimalPercentDepositedBdv
+    ) public prank(BEANSTALK) {
+        address token = address(new MockToken("Mock Token", "MTK"));
+        bytes4 bdvSelector = IMockFBeanstalk.beanToBDV.selector;
+        bytes4 gaugePointSelector = IMockFBeanstalk.defaultGaugePointFunction.selector;
+        bytes4 liquidityWeightSelector = IMockFBeanstalk.maxWeight.selector;
+
+        Storage.Implmentation memory oracleImplementation = Storage.Implmentation(
+            address(0),
+            bytes4(0),
+            bytes1(0)
+        );
+
+        Storage.Implmentation memory gaugePointImplmentation = Storage.Implmentation(
+            address(0),
+            gaugePointSelector,
+            bytes1(0)
+        );
+
+        Storage.Implmentation memory liquidityWeightImplmentation = Storage.Implmentation(
+            address(0),
+            liquidityWeightSelector,
+            bytes1(0)
+        );
+
+        bs.whitelistTokenWithExternalImplmenation(
+            token,
+            bdvSelector,
+            stalkIssuedPerBdv,
+            stalkEarnedPerSeason,
+            encodeType,
+            gaugePoints,
+            optimalPercentDepositedBdv,
+            oracleImplementation,
+            gaugePointImplmentation,
+            liquidityWeightImplmentation
+        );
+    }
+
     function verifyWhitelistEvents(
         address token,
         bytes4 bdvSelector,
@@ -350,5 +395,4 @@ contract WhitelistTest is TestHelper {
         assertEq(ws.isWhitelistedLp, isWhitelistedLp);
         assertEq(ws.isWhitelistedWell, isWhitelistedWell);
     }
-
 }

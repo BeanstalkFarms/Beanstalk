@@ -40,6 +40,12 @@ interface IMockFBeanstalk {
         bytes4[] functionSelectors;
     }
 
+    struct Implmentation {
+        address target;
+        bytes4 selector;
+        bytes1 encodeType;
+    }
+
     struct MowStatus {
         int96 lastStem;
         uint128 bdv;
@@ -1626,6 +1632,19 @@ interface IMockFBeanstalk {
         bytes4 liquidityWeightSelector,
         uint128 gaugePoints,
         uint64 optimalPercentDepositedBdv
+    ) external payable;
+
+    function whitelistTokenWithExternalImplmenation(
+        address token,
+        bytes4 selector,
+        uint32 stalkIssuedPerBdv,
+        uint32 stalkEarnedPerSeason,
+        bytes1 encodeType,
+        uint128 gaugePoints,
+        uint64 optimalPercentDepositedBdv,
+        Implmentation memory oracleImplmentation,
+        Implmentation memory gaugePointImplmentation,
+        Implmentation memory liquidityWeightImplmentation
     ) external payable;
 
     function withdrawDeposit(
