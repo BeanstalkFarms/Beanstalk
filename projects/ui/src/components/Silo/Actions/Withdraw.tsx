@@ -475,7 +475,6 @@ const WithdrawPropProvider: FC<{
         }
 
         const withdrawTxn = new WithdrawFarmStep(sdk, token, [
-          // FIXME: Restore geminating deposits
           ...siloBalance.deposits,
         ]);
 
