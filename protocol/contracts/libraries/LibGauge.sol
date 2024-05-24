@@ -183,19 +183,19 @@ library LibGauge {
         uint256 percentDepositedBdv
     ) internal view returns (uint256 newGaugePoints) {
         // if the target is 0, use address(this).
-        address target = ss.gaugePointImplmentation.target;
+        address target = ss.gaugePointImplementation.target;
         if (target == address(0)) {
             target = address(this);
         }
         // if no selector is provided, use defaultGaugePointFunction
-        bytes4 selector = ss.gaugePointImplmentation.selector;
+        bytes4 selector = ss.gaugePointImplementation.selector;
         if (selector == bytes4(0)) {
             selector = IGaugePointFacet.defaultGaugePointFunction.selector;
         }
 
         (bool success, bytes memory data) = target.staticcall(
             abi.encodeWithSelector(
-                ss.gaugePointImplmentation.selector,
+                ss.gaugePointImplementation.selector,
                 ss.gaugePoints,
                 ss.optimalPercentDepositedBdv,
                 percentDepositedBdv

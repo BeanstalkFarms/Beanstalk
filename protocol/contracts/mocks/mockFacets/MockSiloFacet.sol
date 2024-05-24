@@ -409,12 +409,12 @@ contract MockSiloFacet is SiloFacet {
 
     function mockUpdateLiquidityWeight(
         address token,
-        address newLiquidityWeightImplmentation,
+        address newLiquidityWeightImplementation,
         bytes1 encodeType,
         bytes4 selector
     ) external {
-        s.ss[token].liquidityWeightImplmentation = Storage.Implmentation(
-            newLiquidityWeightImplmentation,
+        s.ss[token].liquidityWeightImplementation = Storage.Implementation(
+            newLiquidityWeightImplementation,
             selector,
             encodeType
         );

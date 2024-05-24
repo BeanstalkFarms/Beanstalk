@@ -93,7 +93,7 @@ contract MockSetComponentsWell is MockToken {
      * swapFrom is used to test sop.
      * `swapFrom` is a stripped down version of well.sol swap from.
      * does not update pumps.
-     * @dev update if well.sol implmentation is updated.
+     * @dev update if well.sol implementation is updated.
      */
     function swapFrom(
         IERC20 fromToken,

@@ -71,15 +71,15 @@ library LibUsdOracle {
             return wstethUsdPrice;
         }
 
-        // tokens that use the default chainlink oracle implmentation,
-        // or a custom oracle implmentation are called here.
+        // tokens that use the default chainlink oracle implementation,
+        // or a custom oracle implementation are called here.
         return getTokenPriceFromExternal(token, lookback);
     }
 
     /**
      * @notice gets the token price from an external oracle.
      * @dev if address is 0, use the current contract.
-     * If encodeType is 0x01, use the default chainlink implmentation.
+     * If encodeType is 0x01, use the default chainlink implementation.
      * Returns 0 rather than reverting if the call fails.
      */
     function getTokenPriceFromExternal(
@@ -87,9 +87,9 @@ library LibUsdOracle {
         uint256 lookback
     ) internal view returns (uint256 tokenPrice) {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        Storage.Implmentation memory oracleImpl = s.oracleImplmentation[token];
+        Storage.Implementation memory oracleImpl = s.oracleImplementation[token];
 
-        // If the encode type is type 1, use the default chainlink implmentation instead.
+        // If the encode type is type 1, use the default chainlink implementation instead.
         // `target` refers to the address of the price aggergator implmenation
         if (oracleImpl.encodeType == bytes1(0x01)) {
             return
@@ -99,7 +99,7 @@ library LibUsdOracle {
                     lookback
                 );
         } else if (oracleImpl.encodeType == bytes1(0x02)) {
-            // if the encodeType is type 2, use a uniswap oracle implmentation.
+            // if the encodeType is type 2, use a uniswap oracle implementation.
             return
                 LibUniswapOracle.getTwap(
                     lookback == 0 ? LibUniswapOracle.FIFTEEN_MINUTES : uint32(lookback),
@@ -110,7 +110,7 @@ library LibUsdOracle {
                 );
         }
 
-        // If the oracle implmentation address is not set, use the current contract.
+        // If the oracle implementation address is not set, use the current contract.
         address target = oracleImpl.target;
         if (target == address(0)) target = address(this);
 

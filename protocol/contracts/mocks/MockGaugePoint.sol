@@ -8,13 +8,13 @@ pragma experimental ABIEncoderV2;
 /**
  * @author Brean
  * @title Mock gauge point contract.
- * @notice Contains a valid and invalid gauge point implmentation.
+ * @notice Contains a valid and invalid gauge point implementation.
  **/
 contract MockGaugePoint {
     uint256 public gaugePoints;
 
     /**
-     * @notice Valid implmentation.
+     * @notice Valid implementation.
      */
     function getGaugePoints(
         uint256 currentGaugePoints,

@@ -100,13 +100,17 @@ contract MockInitDiamond is InitalizeDiamond {
         view
         returns (Storage.SiloSettings[] memory siloSettings)
     {
-        Storage.Implmentation memory impl = Storage.Implmentation(address(0), bytes4(0), bytes1(0));
-        Storage.Implmentation memory liquidityWeightImpl = Storage.Implmentation(
+        Storage.Implementation memory impl = Storage.Implementation(
+            address(0),
+            bytes4(0),
+            bytes1(0)
+        );
+        Storage.Implementation memory liquidityWeightImpl = Storage.Implementation(
             address(0),
             ILiquidityWeightFacet.maxWeight.selector,
             bytes1(0)
         );
-        Storage.Implmentation memory gaugePointImpl = Storage.Implmentation(
+        Storage.Implementation memory gaugePointImpl = Storage.Implementation(
             address(0),
             IGaugePointFacet.defaultGaugePointFunction.selector,
             bytes1(0)
@@ -125,8 +129,8 @@ contract MockInitDiamond is InitalizeDiamond {
             lwSelector: bytes4(0),
             gaugePoints: 0,
             optimalPercentDepositedBdv: 0,
-            gaugePointImplmentation: gaugePointImpl,
-            liquidityWeightImplmentation: liquidityWeightImpl
+            gaugePointImplementation: gaugePointImpl,
+            liquidityWeightImplementation: liquidityWeightImpl
         });
         siloSettings[1] = Storage.SiloSettings({
             selector: BDVFacet.unripeLPToBDV.selector,
@@ -140,8 +144,8 @@ contract MockInitDiamond is InitalizeDiamond {
             lwSelector: bytes4(0),
             gaugePoints: 0,
             optimalPercentDepositedBdv: 0,
-            gaugePointImplmentation: gaugePointImpl,
-            liquidityWeightImplmentation: liquidityWeightImpl
+            gaugePointImplementation: gaugePointImpl,
+            liquidityWeightImplementation: liquidityWeightImpl
         });
     }
 
@@ -165,7 +169,11 @@ contract MockInitDiamond is InitalizeDiamond {
      */
     function whitelistUnderlyingUrLPWell(address well) internal {
         // whitelist bean:stETH well
-        Storage.Implmentation memory impl = Storage.Implmentation(address(0), bytes4(0), bytes1(0));
+        Storage.Implementation memory impl = Storage.Implementation(
+            address(0),
+            bytes4(0),
+            bytes1(0)
+        );
         // note: no error checking:
         s.ss[well] = Storage.SiloSettings({
             selector: BDVFacet.wellBdv.selector,
@@ -179,12 +187,12 @@ contract MockInitDiamond is InitalizeDiamond {
             lwSelector: ILiquidityWeightFacet.maxWeight.selector,
             gaugePoints: INIT_TOKEN_WURLP_POINTS,
             optimalPercentDepositedBdv: INIT_BEAN_WURLP_PERCENT_TARGET,
-            gaugePointImplmentation: Storage.Implmentation(
+            gaugePointImplementation: Storage.Implementation(
                 address(0),
                 IGaugePointFacet.defaultGaugePointFunction.selector,
                 bytes1(0)
             ),
-            liquidityWeightImplmentation: Storage.Implmentation(
+            liquidityWeightImplementation: Storage.Implementation(
                 address(0),
                 ILiquidityWeightFacet.maxWeight.selector,
                 bytes1(0)

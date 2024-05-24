@@ -83,8 +83,8 @@ contract GaugeTest is TestHelper {
 
     /**
      * @notice verifies that the bean to max LP properly scales up.
-     * @dev these tests verify the specific scalar implmentation.
-     * Changing the scalar implmentation will most likely break these tests.
+     * @dev these tests verify the specific scalar implementation.
+     * Changing the scalar implementation will most likely break these tests.
      * See {LibGauge.getBeanToMaxLpGpPerBdvRatioScaled}.
      */
     function test_beanToMaxLP_scaled(
@@ -602,7 +602,7 @@ contract GaugeTest is TestHelper {
 
     /**
      * @notice initializes the LP<>LP distrubution.
-     * @dev the function updates the gaugePointSelector to a gauge point implmentation
+     * @dev the function updates the gaugePointSelector to a gauge point implementation
      * that stays constant for testing purposes.
      */
     function initLpToLpDistro() internal {

@@ -40,8 +40,8 @@ contract WhitelistFacet is Invariable, WhitelistedTokens {
      * @dev
      * Can only be called by Beanstalk or Beanstalk owner.
      * Assumes an `encodeType` of 0.
-     * Assumes the token uses a gaugePoint, LiquidityWeight, and oracle implmentation in the beanstalk contract.
-     * Non standard implmentations should use {whitelistTokenWithExternalImplmenation}
+     * Assumes the token uses a gaugePoint, LiquidityWeight, and oracle implementation in the beanstalk contract.
+     * Non standard implementations should use {whitelistTokenWithExternalImplmenation}
      */
     function whitelistToken(
         address token,
@@ -107,27 +107,27 @@ contract WhitelistFacet is Invariable, WhitelistedTokens {
     }
 
     /**
-     * @notice Adds a token to the Silo Whitelist with an external implmentation.
+     * @notice Adds a token to the Silo Whitelist with an external implementation.
      * @param token Address of the token that is being Whitelisted.
      * @param selector The function selector that is used to calculate the BDV of the token.
      * @param stalkIssuedPerBdv The amount of Stalk issued per BDV on Deposit.
      * @param stalkEarnedPerSeason The amount of Stalk earned per Season for each Deposited BDV.
      * @param encodeType The encode type that should be used to encode the BDV function call. See {LibTokenSilo.beanDenominatedValue}.
-     * @param oracleImplmentation The implmentation of the oracle that should be used to fetch the token price.
-     * @param gaugePointImplmentation The implmentation of the gauge point function that should be used to calculate the gauge points.
-     * @param liquidityWeightImplmentation The implmentation of the liquidity weight function that should be used to calculate the liquidity weight.
-     * @dev If the implmentation addresses are 0, then beanstalk calls the selector on itself.
-     * See {LibWhitelist.whitelistTokenWithExternalImplmenation} for more info on implmentation.
-     * The selector MUST be a view function that returns an uint256 for all implmentation.
-     * The oracleImplmentation selector should take:
+     * @param oracleImplementation The implementation of the oracle that should be used to fetch the token price.
+     * @param gaugePointImplementation The implementation of the gauge point function that should be used to calculate the gauge points.
+     * @param liquidityWeightImplementation The implementation of the liquidity weight function that should be used to calculate the liquidity weight.
+     * @dev If the implementation addresses are 0, then beanstalk calls the selector on itself.
+     * See {LibWhitelist.whitelistTokenWithExternalImplmenation} for more info on implementation.
+     * The selector MUST be a view function that returns an uint256 for all implementation.
+     * The oracleImplementation selector should take:
      *  - `lookback` parameter
      *  (foo(uint256)).
-     * The gaugePointImplmentation selector should take:
+     * The gaugePointImplementation selector should take:
      *  - current gauge points,
      *  - optimal deposited bdv,
      *  - percent depositedbdv
      * (foo(uint256, uint256, uint256)).
-     * The liquidityWeightImplmentation selector should take no parameters.
+     * The liquidityWeightImplementation selector should take no parameters.
      * (foo()).
      */
     function whitelistTokenWithExternalImplmenation(
@@ -138,9 +138,9 @@ contract WhitelistFacet is Invariable, WhitelistedTokens {
         bytes1 encodeType,
         uint128 gaugePoints,
         uint64 optimalPercentDepositedBdv,
-        Storage.Implmentation memory oracleImplmentation,
-        Storage.Implmentation memory gaugePointImplmentation,
-        Storage.Implmentation memory liquidityWeightImplmentation
+        Storage.Implementation memory oracleImplementation,
+        Storage.Implementation memory gaugePointImplementation,
+        Storage.Implementation memory liquidityWeightImplementation
     ) external payable {
         LibDiamond.enforceIsOwnerOrContract();
         LibWhitelist.whitelistTokenWithExternalImplmenation(
@@ -151,9 +151,9 @@ contract WhitelistFacet is Invariable, WhitelistedTokens {
             encodeType,
             gaugePoints,
             optimalPercentDepositedBdv,
-            oracleImplmentation,
-            gaugePointImplmentation,
-            liquidityWeightImplmentation
+            oracleImplementation,
+            gaugePointImplementation,
+            liquidityWeightImplementation
         );
     }
 
@@ -191,35 +191,35 @@ contract WhitelistFacet is Invariable, WhitelistedTokens {
     }
 
     /**
-     * @notice Updates the Oracle Implmentation for a given Token.
+     * @notice Updates the Oracle Implementation for a given Token.
      */
-    function updateOracleImplmentationForToken(
+    function updateOracleImplementationForToken(
         address token,
-        Storage.Implmentation memory impl
+        Storage.Implementation memory impl
     ) external payable {
         LibDiamond.enforceIsOwnerOrContract();
-        LibWhitelist.updateOracleImplmentationForToken(token, impl);
+        LibWhitelist.updateOracleImplementationForToken(token, impl);
     }
 
     /**
-     * @notice Updates the Liquidity Weight Implmentation for a given Token.
+     * @notice Updates the Liquidity Weight Implementation for a given Token.
      */
-    function updateLiqudityWeightImplmentationForToken(
+    function updateLiqudityWeightImplementationForToken(
         address token,
-        Storage.Implmentation memory impl
+        Storage.Implementation memory impl
     ) external payable {
         LibDiamond.enforceIsOwnerOrContract();
-        LibWhitelist.updateLiqudityWeightImplmentationForToken(token, impl);
+        LibWhitelist.updateLiqudityWeightImplementationForToken(token, impl);
     }
 
     /**
-     * @notice Updates the Gauge Point Implmentation for a given Token.
+     * @notice Updates the Gauge Point Implementation for a given Token.
      */
-    function updateGaugePointImplmentationForToken(
+    function updateGaugePointImplementationForToken(
         address token,
-        Storage.Implmentation memory impl
+        Storage.Implementation memory impl
     ) external payable {
         LibDiamond.enforceIsOwnerOrContract();
-        LibWhitelist.updateGaugePointImplmentationForToken(token, impl);
+        LibWhitelist.updateGaugePointImplementationForToken(token, impl);
     }
 }

@@ -8,7 +8,7 @@ pragma experimental ABIEncoderV2;
 /**
  * @author Brean
  * @title Mock liquidityWeight contract.
- * @notice Contains a valid and invalid liquidityWeight implmentation.
+ * @notice Contains a valid and invalid liquidityWeight implementation.
  **/
 contract MockLiquidityWeight {
     uint256 public liquidityWeight;
@@ -18,7 +18,7 @@ contract MockLiquidityWeight {
     }
 
     /**
-     * @notice Valid implmentation.
+     * @notice Valid implementation.
      */
     function getLiquidityWeight() public view returns (uint256) {
         return liquidityWeight;

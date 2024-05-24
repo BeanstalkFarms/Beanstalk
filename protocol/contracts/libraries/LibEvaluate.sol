@@ -323,7 +323,7 @@ library LibEvaluate {
      */
     function getLiquidityWeight(address pool) internal view returns (uint256 liquidityWeight) {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        Storage.Implmentation memory lw = s.ss[pool].liquidityWeightImplmentation;
+        Storage.Implementation memory lw = s.ss[pool].liquidityWeightImplementation;
 
         // if the target is 0, use address(this).
         address target = lw.target;

@@ -7,8 +7,8 @@ pragma experimental ABIEncoderV2;
 
 /**
  * @author Brean
- * @title Non chainlink Mock Oracle implmentation.
- * @notice Contains a valid and invalid price implmentation.
+ * @title Non chainlink Mock Oracle implementation.
+ * @notice Contains a valid and invalid price implementation.
  **/
 contract MockOracle {
     uint256 public price;
@@ -20,7 +20,7 @@ contract MockOracle {
     }
 
     /**
-     * @notice Valid Implmentation.
+     * @notice Valid Implementation.
      */
     function getPrice(uint256 lookback) public view returns (uint256) {
         if (lookback > 0) {

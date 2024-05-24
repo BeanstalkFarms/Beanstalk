@@ -40,7 +40,7 @@ interface IMockFBeanstalk {
         bytes4[] functionSelectors;
     }
 
-    struct Implmentation {
+    struct Implementation {
         address target;
         bytes4 selector;
         bytes1 encodeType;
@@ -1134,7 +1134,7 @@ interface IMockFBeanstalk {
 
     function mockUpdateLiquidityWeight(
         address token,
-        address newLiquidityWeightImplmentation,
+        address newLiquidityWeightImplementation,
         bytes1 encodeType,
         bytes4 selector
     ) external;
@@ -1642,9 +1642,9 @@ interface IMockFBeanstalk {
         bytes1 encodeType,
         uint128 gaugePoints,
         uint64 optimalPercentDepositedBdv,
-        Implmentation memory oracleImplmentation,
-        Implmentation memory gaugePointImplmentation,
-        Implmentation memory liquidityWeightImplmentation
+        Implementation memory oracleImplementation,
+        Implementation memory gaugePointImplementation,
+        Implementation memory liquidityWeightImplementation
     ) external payable;
 
     function withdrawDeposit(

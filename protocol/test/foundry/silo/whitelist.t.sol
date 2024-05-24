@@ -306,19 +306,19 @@ contract WhitelistTest is TestHelper {
         bytes4 gaugePointSelector = IMockFBeanstalk.defaultGaugePointFunction.selector;
         bytes4 liquidityWeightSelector = IMockFBeanstalk.maxWeight.selector;
 
-        Storage.Implmentation memory oracleImplementation = Storage.Implmentation(
+        Storage.Implementation memory oracleImplementation = Storage.Implementation(
             address(0),
             bytes4(0),
             bytes1(0)
         );
 
-        Storage.Implmentation memory gaugePointImplmentation = Storage.Implmentation(
+        Storage.Implementation memory gaugePointImplementation = Storage.Implementation(
             address(0),
             gaugePointSelector,
             bytes1(0)
         );
 
-        Storage.Implmentation memory liquidityWeightImplmentation = Storage.Implmentation(
+        Storage.Implementation memory liquidityWeightImplementation = Storage.Implementation(
             address(0),
             liquidityWeightSelector,
             bytes1(0)
@@ -333,8 +333,8 @@ contract WhitelistTest is TestHelper {
             gaugePoints,
             optimalPercentDepositedBdv,
             oracleImplementation,
-            gaugePointImplmentation,
-            liquidityWeightImplmentation
+            gaugePointImplementation,
+            liquidityWeightImplementation
         );
     }
 
