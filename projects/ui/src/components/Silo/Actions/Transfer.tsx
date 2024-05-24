@@ -154,7 +154,6 @@ const TransferForm: FC<
 
   // derived
   const depositedBalance = siloBalance?.amount;
-  // const depositedBalance = siloBalance?.convertibleDeposits.reduce((total: TokenValue, deposit) => deposit.amount.add(total), TokenValue.ZERO);
   const isReady = withdrawResult && !withdrawResult.amount.lt(0);
 
   // Input props
