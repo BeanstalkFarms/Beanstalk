@@ -1,2 +1,2 @@
 export * from "./Text";
-export * from "./components";
+export * from "./typography-components";

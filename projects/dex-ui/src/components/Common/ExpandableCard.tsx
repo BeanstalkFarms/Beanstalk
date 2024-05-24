@@ -17,8 +17,9 @@ export type AccordionSelectCardProps = {
 export const AccordionSelectCard = ({ selected, below, upper, defaultExpanded = false, onClick }: AccordionSelectCardProps) => {
   const [expanded, { toggle }] = useBoolean(defaultExpanded);
 
+  // console.log("redrender...");
   return (
-    <ComponentWrapper $active={selected} onClick={onClick} $fullWidth>
+    <ComponentWrapper $active={selected} onClick={onClick}>
       <Flex $direction="row" $alignItems="center" $fullWidth $justifyContent="space-between">
         <Flex $direction="row" $alignItems="center" $fullWidth $gap={2}>
           {selected ? <CircleFilledCheckIcon /> : <CircleEmptyIcon />}

@@ -1,3 +1,4 @@
+import { H1, H2, H3, BodyL, BodyS, BodyXS, LinksButtonText } from "src/components/Typography";
 import { exists } from "src/utils/check";
 import { css } from "styled-components";
 
@@ -82,4 +83,25 @@ export const getTextAlignStyles = (align: TextAlign) => {
 export const FontUtil = {
   size: getFontSize,
   weight: getFontWeight
+};
+
+export const getFontVariantStyles = (variant: FontVariant) => {
+  switch (variant) {
+    case "h1":
+      return H1;
+    case "h2":
+      return H2;
+    case "h3":
+      return H3;
+    case "l":
+      return BodyL;
+    case "s":
+      return BodyS;
+    case "xs":
+      return BodyXS;
+    case "button-link":
+      return LinksButtonText;
+    default:
+      return BodyS;
+  }
 };

@@ -1,7 +1,6 @@
-import { getFontVariantStyles } from "src/components/Typography/components";
 import { THEME_COLORS, getFontColor } from "./colors";
 import { themeSpacing } from "./spacing";
-import { getFontSize, getTextAlignStyles } from "./font";
+import { getFontSize, getFontVariantStyles, getTextAlignStyles } from "./font";
 import { mediaQuery, size } from "src/breakpoints";
 
 export const theme = {
