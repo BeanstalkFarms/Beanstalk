@@ -147,6 +147,27 @@ async function ebip14(mock = false, account = undefined) {
   });
 }
 
+async function ebip15(mock = true, account = undefined) {
+  if (account == undefined) {
+    account = await impersonateBeanstalkOwner();
+    await mintEth(account.address);
+  }
+
+  await upgradeWithNewFacets({
+    diamondAddress: BEANSTALK,
+    facetNames: ["SiloFacet", "SiloGettersFacet"],
+    libraryNames: ['LibSilo'],
+    facetLibraries: {
+      'SiloFacet': ['LibSilo']
+    },
+    bip: false,
+    object: !mock,
+    verbose: true,
+    account: account
+  });
+}
+
+
 async function bipDiamondCut(name, dc, account, mock = true) {
   beanstalk = await getBeanstalk();
   if (mock) {
@@ -172,3 +193,4 @@ exports.ebip10 = ebip10;
 exports.ebip11 = ebip11;
 exports.ebip13 = ebip13;
 exports.ebip14 = ebip14;
+exports.ebip15 = ebip15;
