@@ -14,8 +14,8 @@ import "../ReentrancyGuard.sol";
  **/
 
 contract BeanL1RecieverFacet is ReentrancyGuard {
-    // TODO: set bridge
-    uint256 constant EXTERNAL_BEANS = 0;
+    // TODO: set bridge, implement L2 bridge.
+    uint256 constant EXTERNAL_L1_BEANS = 0;
 
     address constant BRIDGE = address(0x109830a1AAaD605BbF02a9dFA7B0B92EC2FB7dAa);
 
@@ -26,7 +26,7 @@ contract BeanL1RecieverFacet is ReentrancyGuard {
     function recieveL1Beans(bytes memory data) external nonReentrant {
         (address reciever, uint256 amount) = abi.decode(data, (address, uint256));
         s.migratedL1Beans += amount;
-        require(EXTERNAL_BEANS >= s.migratedL1Beans, "L2Migration: exceeds maximum migrated");
+        require(EXTERNAL_L1_BEANS >= s.migratedL1Beans, "L2Migration: exceeds maximum migrated");
         C.bean().mint(reciever, amount);
     }
 }
