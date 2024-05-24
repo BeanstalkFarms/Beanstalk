@@ -271,10 +271,11 @@ library LibGerminate {
         if (stalk == s.unclaimedGerminating[season].stalk) {
             roots = s.unclaimedGerminating[season].roots;
         } else {
-            // calculate the roots:
-            roots = stalk.mul(s.unclaimedGerminating[season].roots).div(
+            // calculate the roots. casted up to uint256 to prevent overflow,
+            // and safecasted down.
+            roots = uint256(stalk).mul(s.unclaimedGerminating[season].roots).div(
                 s.unclaimedGerminating[season].stalk
-            );
+            ).toUint128();
         }
     }
 
@@ -517,4 +518,5 @@ library LibGerminate {
     function isSeasonOdd(uint32 season) internal pure returns (bool) {
         return season.mod(2) == 0 ? false : true;
     }
+
 }
