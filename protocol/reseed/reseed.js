@@ -5,6 +5,7 @@ const { reseed4 } = require("./reseed4.js");
 const { reseed5 } = require("./reseed5.js");
 const { reseed6 } = require("./reseed6.js");
 const { reseed7 } = require("./reseed7.js");
+const { reseed9 } = require("./reseed9.js");
 
 const fs = require("fs");
 
@@ -23,9 +24,19 @@ async function reseed(
   mock = true,
   log = false,
   start = 0,
-  end = 3
+  end = 8
 ) {
-  reseeds = [reseed1, reseedDeployL2Beanstalk, reseed3, reseed4, reseed5, reseed6, reseed7];
+  const { reseed9 } = require("./reseed9.js");
+  reseeds = [
+    reseed1,
+    reseedDeployL2Beanstalk,
+    reseed3,
+    reseed4,
+    reseed5,
+    reseed6,
+    reseed7,
+    reseed9
+  ];
   let l2Beanstalk;
   console.clear();
   await printBeanstalk();

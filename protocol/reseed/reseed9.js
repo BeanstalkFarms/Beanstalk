@@ -1,26 +1,10 @@
-const { deploy, deployFacets } = require("../scripts/diamond.js");
+const { deployFacets, upgradeWithNewFacets } = require("../scripts/diamond.js");
 const fs = require("fs");
-const { impersonateSigner, mintEth } = require("../utils");
 
 /**
- * @notice deploys a new beanstalk. Should be on an L2.
- * @dev account: the account to deploy the beanstalk with.
- * Todo: facets should be added post-migration to prevent users from interacting.
+ * @notice reseed9 (final step) adds all facets to beanstalk, and unpauses beanstalk.
  */
-async function reseedDeployL2Beanstalk(account, verbose = false, mock) {
-  // impersonate `account`:
-  let signer;
-  if (mock) {
-    await mintEth(account);
-    signer = await ethers.provider.getSigner(account);
-  } else {
-    signer = await impersonateSigner(account);
-  }
-
-  let tx;
-  let totalGasUsed = ethers.BigNumber.from("0");
-  let receipt;
-
+async function reseed9(account) {
   // get list of facets to deploy:
   let facets = [
     "SeasonFacet", // SUN
@@ -83,13 +67,15 @@ async function reseedDeployL2Beanstalk(account, verbose = false, mock) {
     facetLibraries,
     totalGasUsed
   );
-  const [beanstalkDiamond] = await deploy({
-    diamondName: "L2BeanstalkDiamond",
-    facets: facetsAndNames,
-    owner: account,
-    args: [],
-    verbose: verbose
+
+  // upgrade beanstalk with all facets. calls `reseedRestart`
+  await upgradeWithNewFacets({
+    diamondAddress: L2Beanstalk,
+    facetNames: facetsAndNames,
+    initFacetName: "reseedRestart",
+    bip: false,
+    verbose: true,
+    account: account
   });
-  return beanstalkDiamond.address;
 }
-exports.reseedDeployL2Beanstalk = reseedDeployL2Beanstalk;
+exports.reseed9 = reseed9;
