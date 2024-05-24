@@ -17,15 +17,27 @@ import {C} from "contracts/C.sol";
  * @author Brean
  * @notice ReseedBean deploys the Bean, UnripeBean, UnripeLP ERC20s, and the BeanEth, BeanWsteth, BeanStable Wells.
  * Then adds liquidity to the beanEth, beanWsteth, and beanStable well.
- * @dev each well is upgradeable and ownable. the owner is `owner` when the init is called.
+ * @dev each well is upgradeable and ownable. the OWNER is `OWNER` when the init is called.
  */
 // TODO: replace with implmentation once developed.
 interface IWellUpgradeable {
-    function init(string memory name, string memory symbol, address owner) external;
+    function init(string memory name, string memory symbol, address OWNER) external;
 }
 
 contract ReseedBean {
+    struct ExternalUnripeHolders {
+        address account;
+        uint256 amount;
+    }
+
+    struct WellAmountData {
+        uint256 beansInWell;
+        uint256 nonBeanTokensInWell;
+    }
+
     using SafeERC20 for IERC20;
+
+    address internal constant OWNER = address(0xa9bA2C40b263843C04d344727b954A545c81D043);
 
     // BEAN parameters.
     string internal constant BEAN_NAME = "Bean";
@@ -74,38 +86,41 @@ contract ReseedBean {
      * @notice deploys bean, unripe bean, unripe lp, and wells.
      * @dev mints bean assets to the beanstalk contract,
      * and mints the bean sided liquidity to the well.
+     * Additionally, issues external unripe bean and unripe LP to users.
      */
     function init(
-        address owner,
         uint256 beanSupply,
         uint256 unripeBeanSupply,
         uint256 unripeLpSupply,
-        uint256 beanInBeanEthWell,
-        uint256 ethInBeanEthWell,
-        uint256 beanInBeanWstEthWell,
-        uint256 wstEthInBeanWstEthWell,
-        uint256 beanInBeanStableWell,
-        uint256 stableInBeanStableWell
+        WellAmountData calldata beanEthAmounts,
+        WellAmountData calldata beanWstethAmounts,
+        WellAmountData calldata beanStableAmounts,
+        ExternalUnripeHolders[] calldata urBean,
+        ExternalUnripeHolders[] calldata urBeanLP
     ) external {
         // deploy new bean contract. Issue beans.
         BeanstalkERC20 bean = deployBean(beanSupply);
 
         // deploy new unripe bean contract.
-        deployUnripeBean(unripeBeanSupply);
+        BeanstalkERC20 urBeanERC20 = deployUnripeBean(unripeBeanSupply);
 
         // deploy new unripe lp contract.
-        deployUnripeLP(unripeLpSupply);
+        BeanstalkERC20 urBeanLPERC20 = deployUnripeLP(unripeLpSupply);
 
         // wells are deployed as ERC1967Proxies in order to allow for future upgrades.
 
         // deploy new beanEthWell contract.
-        deployBeanEthWell(owner, bean, beanInBeanEthWell, ethInBeanEthWell);
+        deployBeanEthWell(bean, beanEthAmounts);
 
         // deploy new beanWstEthWell contract.
-        deployBeanWstEthWell(owner, bean, wstEthInBeanWstEthWell, beanInBeanWstEthWell);
+        deployBeanWstEthWell(bean, beanWstethAmounts);
 
         // deploy new beanStableWell contract.
-        deployBeanStableWell(owner, bean, stableInBeanStableWell, beanInBeanStableWell);
+        deployBeanStableWell(bean, beanStableAmounts);
+
+        // mint urBean and urBeanLP to external holders:
+        mintUnripeToExternal(address(urBeanERC20), urBean);
+        mintUnripeToExternal(address(urBeanLPERC20), urBeanLP);
     }
 
     function deployBean(uint256 supply) internal returns (BeanstalkERC20) {
@@ -139,60 +154,84 @@ contract ReseedBean {
     }
 
     function deployBeanEthWell(
-        address owner,
         BeanstalkERC20 bean,
-        uint256 beanAmount,
-        uint256 wethAmount
+        WellAmountData calldata beanEth
     ) internal returns (IWell) {
         address beanEthWell = address(
             new ERC1967Proxy{salt: BEAN_ETH_SALT}(
                 CP2_U_BEAN_ETH_WELL_IMPLMENTATION,
-                abi.encodeCall(IWellUpgradeable.init, (BEAN_ETH_NAME, BEAN_ETH_SYMBOL, owner))
+                abi.encodeCall(IWellUpgradeable.init, (BEAN_ETH_NAME, BEAN_ETH_SYMBOL, OWNER))
             )
         );
 
-        bean.mint(beanEthWell, beanAmount);
-        (address weth, ) = LibWell.getNonBeanTokenAndIndexFromWell(beanEthWell);
-        IERC20(weth).safeTransferFrom(owner, beanEthWell, wethAmount);
-        IWell(beanEthWell).sync(address(this), 0); // sync the well.
-        return IWell(beanEthWell);
+        return mintAndSync(bean, beanEthWell, beanEth.beansInWell, beanEth.nonBeanTokensInWell);
     }
 
     function deployBeanWstEthWell(
-        address owner,
         BeanstalkERC20 bean,
-        uint256 beanAmount,
-        uint256 wstethAmount
+        WellAmountData calldata beanWsteth
     ) internal returns (IWell) {
         address beanWstEthWell = address(
             new ERC1967Proxy{salt: BEAN_WSTETH_SALT}(
                 CP2_U_BEAN_WSTETH_WELL_IMPLMENTATION,
-                abi.encodeCall(IWellUpgradeable.init, (BEAN_WSTETH_NAME, BEAN_WSTETH_SYMBOL, owner))
+                abi.encodeCall(IWellUpgradeable.init, (BEAN_WSTETH_NAME, BEAN_WSTETH_SYMBOL, OWNER))
             )
         );
-        bean.mint(address(beanWstEthWell), beanAmount);
-        (address wsteth, ) = LibWell.getNonBeanTokenAndIndexFromWell(beanWstEthWell);
-        IERC20(wsteth).safeTransferFrom(owner, beanWstEthWell, wstethAmount);
-        IWell(beanWstEthWell).sync(address(this), 0); // sync the well.
-        return IWell(beanWstEthWell);
+        return
+            mintAndSync(
+                bean,
+                beanWstEthWell,
+                beanWsteth.beansInWell,
+                beanWsteth.nonBeanTokensInWell
+            );
     }
 
     function deployBeanStableWell(
-        address owner,
         BeanstalkERC20 bean,
-        uint256 beanAmount,
-        uint256 stableAmount
+        WellAmountData calldata beanStable
     ) internal returns (IWell) {
         address beanStableWell = address(
             new ERC1967Proxy{salt: BEAN_STABLE_SALT}(
                 SS_U_BEAN_STABLE_WELL_IMPLMENTATION,
-                abi.encodeCall(IWellUpgradeable.init, (BEAN_STABLE_NAME, BEAN_STABLE_SYMBOL, owner))
+                abi.encodeCall(IWellUpgradeable.init, (BEAN_STABLE_NAME, BEAN_STABLE_SYMBOL, OWNER))
             )
         );
-        bean.mint(beanStableWell, beanAmount);
-        (address stable, ) = LibWell.getNonBeanTokenAndIndexFromWell(beanStableWell);
-        IERC20(stable).safeTransferFrom(owner, address(beanStableWell), stableAmount);
-        IWell(beanStableWell).sync(address(this), 0); // sync the well.
-        return IWell(beanStableWell);
+
+        return
+            mintAndSync(
+                bean,
+                beanStableWell,
+                beanStable.beansInWell,
+                beanStable.nonBeanTokensInWell
+            );
+    }
+
+    /**
+     * @notice transfers `tokenAmount` from `OWNER` to the `well,
+     * mints `beanAmount` to `well`, and calls sync.
+     */
+    function mintAndSync(
+        BeanstalkERC20 bean,
+        address well,
+        uint256 beanAmount,
+        uint256 tokenAmount
+    ) internal returns (IWell) {
+        bean.mint(well, beanAmount);
+        (address nonBeanToken, ) = LibWell.getNonBeanTokenAndIndexFromWell(well);
+        IERC20(nonBeanToken).safeTransferFrom(OWNER, address(well), tokenAmount);
+        IWell(well).sync(address(this), 0); // sync the well.
+        return IWell(well);
+    }
+
+    /**
+     * @notice mints unripe to an account's internal balance.
+     */
+    function mintUnripeToExternal(
+        address token,
+        ExternalUnripeHolders[] calldata externalHolders
+    ) internal {
+        for (uint256 i; i < externalHolders.length; i++) {
+            BeanstalkERC20(token).mint(externalHolders[i].account, externalHolders[i].amount);
+        }
     }
 }
