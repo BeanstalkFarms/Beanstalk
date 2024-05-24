@@ -18,6 +18,6 @@ import {System} from "./System.sol";
  * @param accounts Contains state of individual users.
  */
 struct AppStorage {
-    System system;
     mapping(address => Account) accounts;
+    System system;
 }

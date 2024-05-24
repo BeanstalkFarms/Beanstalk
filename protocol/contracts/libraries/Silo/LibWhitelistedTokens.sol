@@ -160,7 +160,12 @@ library LibWhitelistedTokens {
     ) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
         s.system.silo.whitelistStatuses.push(
-            WhitelistStatus(token, isWhitelisted, isWhitelistedLp, isWhitelistedWell)
+            WhitelistStatus(
+                token,
+                isWhitelisted,
+                isWhitelistedLp,
+                isWhitelistedWell
+            )
         );
 
         emit AddWhitelistStatus(
