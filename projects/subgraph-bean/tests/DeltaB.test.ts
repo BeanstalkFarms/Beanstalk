@@ -13,7 +13,7 @@ import { mock_virtual_price } from "./event-mocking/Curve";
 import { loadOrCreatePool } from "../src/utils/Pool";
 import { loadBean } from "../src/utils/Bean";
 import { getD, getY, priceFromY } from "../src/utils/price/CurvePrice";
-import { Bytes_bigEndian } from "../../subgraph-core/utils/BigEndian";
+import { Bytes_bigEndian } from "../../subgraph-core/utils/Bytes";
 import { ABDK_toUInt, pow2toX } from "../../subgraph-core/utils/ABDKMathQuad";
 
 const timestamp1 = BigInt.fromU32(1712793374);

@@ -1,4 +1,12 @@
-import { afterEach, assert, beforeEach, clearStore, describe, logStore, test } from "matchstick-as/assembly/index";
+import {
+  afterEach,
+  assert,
+  beforeEach,
+  clearStore,
+  describe,
+  logStore,
+  test
+} from "matchstick-as/assembly/index";
 import { BEAN_ERC20, WETH } from "../../subgraph-core/utils/Constants";
 import { ZERO_BD, ZERO_BI } from "../../subgraph-core/utils/Decimals";
 import { loadWell } from "../src/utils/Well";
@@ -63,23 +71,41 @@ describe("Well Entity: Single Event Tests", () => {
 
       assert.stringEquals(BEAN_USD_AMOUNT.toString(), endingBalances[0].toString());
       assert.stringEquals(WETH_USD_AMOUNT.toString(), endingBalances[1].toString());
-      assert.stringEquals(WETH_USD_AMOUNT.times(BigDecimal.fromString("2")).toString(), updatedStore.totalLiquidityUSD.toString());
+      assert.stringEquals(
+        WETH_USD_AMOUNT.times(BigDecimal.fromString("2")).toString(),
+        updatedStore.totalLiquidityUSD.toString()
+      );
     });
     test("Liquidity Token balance", () => {
       createDefaultAddLiquidity();
-      assert.fieldEquals(WELL_ENTITY_TYPE, WELL.toHexString(), "lpTokenSupply", WELL_LP_AMOUNT.toString());
+      assert.fieldEquals(
+        WELL_ENTITY_TYPE,
+        WELL.toHexString(),
+        "lpTokenSupply",
+        WELL_LP_AMOUNT.toString()
+      );
     });
     test("Previous day snapshot entity created", () => {
       createDefaultAddLiquidity();
 
-      let dayID = dayFromTimestamp(CURRENT_BLOCK_TIMESTAMP) - 1;
+      let dayID = dayFromTimestamp(CURRENT_BLOCK_TIMESTAMP, 8 * 60 * 60) - 1;
       let daySnapshotID = WELL.concatI32(dayID);
 
       let hourID = hourFromTimestamp(CURRENT_BLOCK_TIMESTAMP) - 1;
       let hourSnapshotID = WELL.concatI32(hourID);
 
-      assert.fieldEquals(WELL_DAILY_ENTITY_TYPE, daySnapshotID.toHexString(), "id", daySnapshotID.toHexString());
-      assert.fieldEquals(WELL_HOURLY_ENTITY_TYPE, hourSnapshotID.toHexString(), "id", hourSnapshotID.toHexString());
+      assert.fieldEquals(
+        WELL_DAILY_ENTITY_TYPE,
+        daySnapshotID.toHexString(),
+        "id",
+        daySnapshotID.toHexString()
+      );
+      assert.fieldEquals(
+        WELL_HOURLY_ENTITY_TYPE,
+        hourSnapshotID.toHexString(),
+        "id",
+        hourSnapshotID.toHexString()
+      );
     });
   });
 
@@ -99,19 +125,34 @@ describe("Well Entity: Single Event Tests", () => {
     });
     test("Liquidity Token balance", () => {
       createDefaultRemoveLiquidity();
-      assert.fieldEquals(WELL_ENTITY_TYPE, WELL.toHexString(), "lpTokenSupply", ZERO_BI.minus(WELL_LP_AMOUNT).toString());
+      assert.fieldEquals(
+        WELL_ENTITY_TYPE,
+        WELL.toHexString(),
+        "lpTokenSupply",
+        ZERO_BI.minus(WELL_LP_AMOUNT).toString()
+      );
     });
     test("Previous day snapshot entity created", () => {
       createDefaultAddLiquidity();
 
-      let dayID = dayFromTimestamp(CURRENT_BLOCK_TIMESTAMP) - 1;
+      let dayID = dayFromTimestamp(CURRENT_BLOCK_TIMESTAMP, 8 * 60 * 60) - 1;
       let daySnapshotID = WELL.concatI32(dayID);
 
       let hourID = hourFromTimestamp(CURRENT_BLOCK_TIMESTAMP) - 1;
       let hourSnapshotID = WELL.concatI32(hourID);
 
-      assert.fieldEquals(WELL_DAILY_ENTITY_TYPE, daySnapshotID.toHexString(), "id", daySnapshotID.toHexString());
-      assert.fieldEquals(WELL_HOURLY_ENTITY_TYPE, hourSnapshotID.toHexString(), "id", hourSnapshotID.toHexString());
+      assert.fieldEquals(
+        WELL_DAILY_ENTITY_TYPE,
+        daySnapshotID.toHexString(),
+        "id",
+        daySnapshotID.toHexString()
+      );
+      assert.fieldEquals(
+        WELL_HOURLY_ENTITY_TYPE,
+        hourSnapshotID.toHexString(),
+        "id",
+        hourSnapshotID.toHexString()
+      );
     });
   });
 
@@ -137,19 +178,34 @@ describe("Well Entity: Single Event Tests", () => {
       createDefaultAddLiquidity();
       createDefaultAddLiquidity();
       createRemoveLiquidityOneBean();
-      assert.fieldEquals(WELL_ENTITY_TYPE, WELL.toHexString(), "lpTokenSupply", WELL_LP_AMOUNT.toString());
+      assert.fieldEquals(
+        WELL_ENTITY_TYPE,
+        WELL.toHexString(),
+        "lpTokenSupply",
+        WELL_LP_AMOUNT.toString()
+      );
     });
     test("Previous day snapshot entity created", () => {
       createDefaultAddLiquidity();
 
-      let dayID = dayFromTimestamp(CURRENT_BLOCK_TIMESTAMP) - 1;
+      let dayID = dayFromTimestamp(CURRENT_BLOCK_TIMESTAMP, 8 * 60 * 60) - 1;
       let daySnapshotID = WELL.concatI32(dayID);
 
       let hourID = hourFromTimestamp(CURRENT_BLOCK_TIMESTAMP) - 1;
       let hourSnapshotID = WELL.concatI32(hourID);
 
-      assert.fieldEquals(WELL_DAILY_ENTITY_TYPE, daySnapshotID.toHexString(), "id", daySnapshotID.toHexString());
-      assert.fieldEquals(WELL_HOURLY_ENTITY_TYPE, hourSnapshotID.toHexString(), "id", hourSnapshotID.toHexString());
+      assert.fieldEquals(
+        WELL_DAILY_ENTITY_TYPE,
+        daySnapshotID.toHexString(),
+        "id",
+        daySnapshotID.toHexString()
+      );
+      assert.fieldEquals(
+        WELL_HOURLY_ENTITY_TYPE,
+        hourSnapshotID.toHexString(),
+        "id",
+        hourSnapshotID.toHexString()
+      );
     });
   });
 
@@ -169,19 +225,34 @@ describe("Well Entity: Single Event Tests", () => {
     });
     test("Liquidity Token balance", () => {
       createRemoveLiquidityOneWeth();
-      assert.fieldEquals(WELL_ENTITY_TYPE, WELL.toHexString(), "lpTokenSupply", ZERO_BI.minus(WELL_LP_AMOUNT).toString());
+      assert.fieldEquals(
+        WELL_ENTITY_TYPE,
+        WELL.toHexString(),
+        "lpTokenSupply",
+        ZERO_BI.minus(WELL_LP_AMOUNT).toString()
+      );
     });
     test("Previous day snapshot entity created", () => {
       createDefaultAddLiquidity();
 
-      let dayID = dayFromTimestamp(CURRENT_BLOCK_TIMESTAMP) - 1;
+      let dayID = dayFromTimestamp(CURRENT_BLOCK_TIMESTAMP, 8 * 60 * 60) - 1;
       let daySnapshotID = WELL.concatI32(dayID);
 
       let hourID = hourFromTimestamp(CURRENT_BLOCK_TIMESTAMP) - 1;
       let hourSnapshotID = WELL.concatI32(hourID);
 
-      assert.fieldEquals(WELL_DAILY_ENTITY_TYPE, daySnapshotID.toHexString(), "id", daySnapshotID.toHexString());
-      assert.fieldEquals(WELL_HOURLY_ENTITY_TYPE, hourSnapshotID.toHexString(), "id", hourSnapshotID.toHexString());
+      assert.fieldEquals(
+        WELL_DAILY_ENTITY_TYPE,
+        daySnapshotID.toHexString(),
+        "id",
+        daySnapshotID.toHexString()
+      );
+      assert.fieldEquals(
+        WELL_HOURLY_ENTITY_TYPE,
+        hourSnapshotID.toHexString(),
+        "id",
+        hourSnapshotID.toHexString()
+      );
     });
   });
 
@@ -227,14 +298,24 @@ describe("Well Entity: Single Event Tests", () => {
     test("Previous day snapshot entity created", () => {
       createDefaultAddLiquidity();
 
-      let dayID = dayFromTimestamp(CURRENT_BLOCK_TIMESTAMP) - 1;
+      let dayID = dayFromTimestamp(CURRENT_BLOCK_TIMESTAMP, 8 * 60 * 60) - 1;
       let daySnapshotID = WELL.concatI32(dayID);
 
       let hourID = hourFromTimestamp(CURRENT_BLOCK_TIMESTAMP) - 1;
       let hourSnapshotID = WELL.concatI32(hourID);
 
-      assert.fieldEquals(WELL_DAILY_ENTITY_TYPE, daySnapshotID.toHexString(), "id", daySnapshotID.toHexString());
-      assert.fieldEquals(WELL_HOURLY_ENTITY_TYPE, hourSnapshotID.toHexString(), "id", hourSnapshotID.toHexString());
+      assert.fieldEquals(
+        WELL_DAILY_ENTITY_TYPE,
+        daySnapshotID.toHexString(),
+        "id",
+        daySnapshotID.toHexString()
+      );
+      assert.fieldEquals(
+        WELL_HOURLY_ENTITY_TYPE,
+        hourSnapshotID.toHexString(),
+        "id",
+        hourSnapshotID.toHexString()
+      );
     });
   });
 });
@@ -254,7 +335,12 @@ describe("Swap Entity", () => {
   });
   test("Account entity exists", () => {
     let id = createDefaultSwap();
-    assert.fieldEquals(ACCOUNT_ENTITY_TYPE, SWAP_ACCOUNT.toHexString(), "id", SWAP_ACCOUNT.toHexString());
+    assert.fieldEquals(
+      ACCOUNT_ENTITY_TYPE,
+      SWAP_ACCOUNT.toHexString(),
+      "id",
+      SWAP_ACCOUNT.toHexString()
+    );
   });
   test("Well value", () => {
     let id = createDefaultSwap();
@@ -293,7 +379,12 @@ describe("AddLiquidity => Deposit Entity", () => {
   });
   test("Account entity exists", () => {
     let id = createDefaultAddLiquidity();
-    assert.fieldEquals(ACCOUNT_ENTITY_TYPE, SWAP_ACCOUNT.toHexString(), "id", SWAP_ACCOUNT.toHexString());
+    assert.fieldEquals(
+      ACCOUNT_ENTITY_TYPE,
+      SWAP_ACCOUNT.toHexString(),
+      "id",
+      SWAP_ACCOUNT.toHexString()
+    );
   });
   test("Well value", () => {
     let id = createDefaultAddLiquidity();
@@ -338,7 +429,12 @@ describe("RemoveLiquidity => Withdraw Entity", () => {
   });
   test("Account entity exists", () => {
     let id = createDefaultRemoveLiquidity();
-    assert.fieldEquals(ACCOUNT_ENTITY_TYPE, SWAP_ACCOUNT.toHexString(), "id", SWAP_ACCOUNT.toHexString());
+    assert.fieldEquals(
+      ACCOUNT_ENTITY_TYPE,
+      SWAP_ACCOUNT.toHexString(),
+      "id",
+      SWAP_ACCOUNT.toHexString()
+    );
   });
   test("Well value", () => {
     let id = createDefaultRemoveLiquidity();
@@ -387,7 +483,12 @@ describe("RemoveLiquidityOneToken => Withdraw Entity", () => {
     createDefaultAddLiquidity();
     createDefaultAddLiquidity();
     let id = createRemoveLiquidityOneBean();
-    assert.fieldEquals(ACCOUNT_ENTITY_TYPE, SWAP_ACCOUNT.toHexString(), "id", SWAP_ACCOUNT.toHexString());
+    assert.fieldEquals(
+      ACCOUNT_ENTITY_TYPE,
+      SWAP_ACCOUNT.toHexString(),
+      "id",
+      SWAP_ACCOUNT.toHexString()
+    );
   });
   test("Well value", () => {
     createDefaultAddLiquidity();
