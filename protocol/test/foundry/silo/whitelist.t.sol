@@ -294,39 +294,45 @@ contract WhitelistTest is TestHelper {
         assertEq(uint256(newSS.milestoneSeason), season);
     }
 
-    function test_whitelistTokenWithExternalImplmenation(
+    function test_whitelistTokenWithExternalImplementation(
         uint32 stalkEarnedPerSeason,
         uint32 stalkIssuedPerBdv,
-        uint8 encodeType,
         uint128 gaugePoints,
         uint64 optimalPercentDepositedBdv
     ) public prank(BEANSTALK) {
         address token = address(new MockToken("Mock Token", "MTK"));
-        bytes4 bdvSelector = IMockFBeanstalk.beanToBDV.selector;
-        bytes4 gaugePointSelector = IMockFBeanstalk.defaultGaugePointFunction.selector;
         bytes4 liquidityWeightSelector = IMockFBeanstalk.maxWeight.selector;
+        bytes1 encodeType = 0x01;
 
-        Storage.Implementation memory oracleImplementation = Storage.Implementation(
+        IMockFBeanstalk.Implementation memory oracleImplementation = IMockFBeanstalk.Implementation(
             address(0),
             bytes4(0),
             bytes1(0)
         );
 
-        Storage.Implementation memory gaugePointImplementation = Storage.Implementation(
-            address(0),
-            gaugePointSelector,
-            bytes1(0)
-        );
+        IMockFBeanstalk.Implementation memory gaugePointImplementation = IMockFBeanstalk
+            .Implementation(
+                address(0),
+                IMockFBeanstalk.defaultGaugePointFunction.selector,
+                bytes1(0)
+            );
 
-        Storage.Implementation memory liquidityWeightImplementation = Storage.Implementation(
-            address(0),
-            liquidityWeightSelector,
-            bytes1(0)
-        );
+        IMockFBeanstalk.Implementation memory liquidityWeightImplementation = IMockFBeanstalk
+            .Implementation(address(0), liquidityWeightSelector, bytes1(0));
 
-        bs.whitelistTokenWithExternalImplmenation(
+        verifyWhitelistEvents(
             token,
-            bdvSelector,
+            IMockFBeanstalk.beanToBDV.selector,
+            stalkEarnedPerSeason,
+            stalkIssuedPerBdv,
+            bytes4(0),
+            bytes4(0),
+            gaugePoints,
+            optimalPercentDepositedBdv
+        );
+        bs.whitelistTokenWithExternalImplementation(
+            token,
+            IMockFBeanstalk.beanToBDV.selector,
             stalkIssuedPerBdv,
             stalkEarnedPerSeason,
             encodeType,

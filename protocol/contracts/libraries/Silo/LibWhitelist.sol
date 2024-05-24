@@ -177,7 +177,7 @@ library LibWhitelist {
     /**
      * @notice whitelists a token with an external implementation(s).
      */
-    function whitelistTokenWithExternalImplmenation(
+    function whitelistTokenWithExternalImplementation(
         address token,
         bytes4 selector,
         uint32 stalkIssuedPerBdv,

@@ -1634,7 +1634,7 @@ interface IMockFBeanstalk {
         uint64 optimalPercentDepositedBdv
     ) external payable;
 
-    function whitelistTokenWithExternalImplmenation(
+    function whitelistTokenWithExternalImplementation(
         address token,
         bytes4 selector,
         uint32 stalkIssuedPerBdv,

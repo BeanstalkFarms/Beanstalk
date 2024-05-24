@@ -41,7 +41,7 @@ contract WhitelistFacet is Invariable, WhitelistedTokens {
      * Can only be called by Beanstalk or Beanstalk owner.
      * Assumes an `encodeType` of 0.
      * Assumes the token uses a gaugePoint, LiquidityWeight, and oracle implementation in the beanstalk contract.
-     * Non standard implementations should use {whitelistTokenWithExternalImplmenation}
+     * Non standard implementations should use {whitelistTokenWithExternalImplementation}
      */
     function whitelistToken(
         address token,
@@ -117,7 +117,7 @@ contract WhitelistFacet is Invariable, WhitelistedTokens {
      * @param gaugePointImplementation The implementation of the gauge point function that should be used to calculate the gauge points.
      * @param liquidityWeightImplementation The implementation of the liquidity weight function that should be used to calculate the liquidity weight.
      * @dev If the implementation addresses are 0, then beanstalk calls the selector on itself.
-     * See {LibWhitelist.whitelistTokenWithExternalImplmenation} for more info on implementation.
+     * See {LibWhitelist.whitelistTokenWithExternalImplementation} for more info on implementation.
      * The selector MUST be a view function that returns an uint256 for all implementation.
      * The oracleImplementation selector should take:
      *  - `lookback` parameter
@@ -130,7 +130,7 @@ contract WhitelistFacet is Invariable, WhitelistedTokens {
      * The liquidityWeightImplementation selector should take no parameters.
      * (foo()).
      */
-    function whitelistTokenWithExternalImplmenation(
+    function whitelistTokenWithExternalImplementation(
         address token,
         bytes4 selector,
         uint32 stalkIssuedPerBdv,
@@ -143,7 +143,7 @@ contract WhitelistFacet is Invariable, WhitelistedTokens {
         Storage.Implementation memory liquidityWeightImplementation
     ) external payable {
         LibDiamond.enforceIsOwnerOrContract();
-        LibWhitelist.whitelistTokenWithExternalImplmenation(
+        LibWhitelist.whitelistTokenWithExternalImplementation(
             token,
             selector,
             stalkIssuedPerBdv,
