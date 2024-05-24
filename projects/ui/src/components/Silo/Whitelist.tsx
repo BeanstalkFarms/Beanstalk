@@ -107,7 +107,7 @@ const Whitelist: FC<{
         }}
       >
         <Grid container alignItems="center">
-          <Grid item md={2.25} xs={4}>
+          <Grid item md={3} xs={4}>
             <Typography color="text.secondary">Token</Typography>
           </Grid>
           <Grid item md={1.25} xs={0} display={{ xs: 'none', md: 'block' }}>
@@ -117,7 +117,7 @@ const Whitelist: FC<{
           </Grid>
           <Grid
             item
-            md={2}
+            md={1.25}
             xs={0}
             display={{ xs: 'none', md: 'flex' }}
             justifyContent="center"
@@ -262,7 +262,7 @@ const Whitelist: FC<{
                    */}
                   <Grid
                     item
-                    md={isDeprecated ? 6.75 : 2.25}
+                    md={isDeprecated ? 6.75 : 3}
                     xs={isDeprecated ? 7 : 7}
                   >
                     <Row gap={1}>
@@ -347,7 +347,7 @@ const Whitelist: FC<{
                   {!isDeprecated && (
                     <Grid
                       item
-                      md={2}
+                      md={1.25}
                       xs={0}
                       display={{ xs: 'none', md: 'flex' }}
                       justifyContent="center"
