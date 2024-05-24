@@ -14,7 +14,7 @@ export const THEME_COLORS: Record<ThemeColor, string> = {
 
 export type FontColor = "primary" | "text.primary" | "text.secondary" | "text.light" | "disabled";
 
-const FONT_COLORS: Record<FontColor, string> = {
+export const FONT_COLORS: Record<FontColor, string> = {
   ["text.primary"]: THEME_COLORS.black,
   ["text.secondary"]: THEME_COLORS.gray,
   ["text.light"]: THEME_COLORS.lightGray,
@@ -22,11 +22,13 @@ const FONT_COLORS: Record<FontColor, string> = {
   disabled: THEME_COLORS.disabled
 };
 
+export const getFontColor = (color: FontColor) => FONT_COLORS[color];
+
 export const FontColorStyle = css<{ $color?: FontColor }>`
   ${(props) => {
     const color = props.$color || "text.primary";
     return `
-      color: ${FONT_COLORS[color]};
+      color: ${getFontColor(color)};
     `;
   }}
 `;
