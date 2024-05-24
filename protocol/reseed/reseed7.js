@@ -1,69 +1,22 @@
-const { impersonateSigner } = require("../utils");
 const { upgradeWithNewFacets } = require("../scripts/diamond.js");
 const fs = require("fs");
 
-const { L2_WETH_ADDRESS, L2_WSTETH_ADDRESS, L2_USDC_ADDRESS } = require("../test/utils/constants");
-
 // Files
-const INIT_SUPPLY = "./reseed/data/r7-L2_supply.json";
-const INIT_WELL_BALANCES = "./reseed/data/r7-L2_well_balances.json";
-/**
- * reseed7 should only be used for testing purposes.
- * reseed7 approves beanstalk to use the BCM's wsteth, eth, and a stablecoin,
- * where it will 1) transfer to a well 2) sync and add liquidity, upon deployment.
- * note: for testing purposes, the L2 is on base, and the stablecoin is USDC, but can be switched based on the discretion of the DAO.
- */
+const WHITELIST_SETTINGS = "./reseed/data/r7-whitelist.json";
+
 async function reseed7(account, L2Beanstalk) {
-  verbose = true;
   console.log("-----------------------------------");
-  console.log("reseed7: transfer beanEth, beanWsteth, beanUSDC.\n");
-  [beanSupply, unripeBeanSupply, unripeLpSupply] = JSON.parse(await fs.readFileSync(INIT_SUPPLY));
-  [
-    beanInBeanEthWell,
-    ethInBeanEthWell,
-    beanInBeanWstEthWell,
-    wstEthInBeanWstEthWell,
-    beanInBeanStableWell,
-    stableInBeanStableWell
-  ] = JSON.parse(await fs.readFileSync(INIT_WELL_BALANCES));
-
-  const weth = await ethers.getContractFactory("IERC20", L2_WETH_ADDRESS);
-  const wsteth = await ethers.getContractFactory("IERC20", L2_WSTETH_ADDRESS);
-  const stable = await ethers.getContractFactory("IERC20", L2_USDC_ADDRESS);
-
-  // mint:
-  owner = impersonateSigner(account);
-  await weth.mint(account, ethInBeanEthWell);
-  await wsteth.mint(account, wstEthInBeanWstEthWell);
-  await stable.mint(account, stableInBeanStableWell);
-
-  // approve beanstalk:
-  await weth.connect(owner).approve(L2Beanstalk, ethInBeanEthWell);
-  await wsteth.connect(owner).approve(L2Beanstalk, wstEthInBeanWstEthWell);
-  await stable.connect(owner).approve(L2Beanstalk, stableInBeanStableWell);
-
-  // call init:
+  console.log("reseed7: whitelist tokens.\n");
+  const [tokens, siloSettings] = JSON.parse(await fs.readFileSync(WHITELIST_SETTINGS));
   await upgradeWithNewFacets({
     diamondAddress: L2Beanstalk,
     facetNames: [],
-    initFacetName: "ReseedBean",
-    initArgs: [
-      account,
-      beanSupply,
-      unripeBeanSupply,
-      unripeLpSupply,
-      beanInBeanEthWell,
-      ethInBeanEthWell,
-      beanInBeanWstEthWell,
-      wstEthInBeanWstEthWell,
-      beanInBeanStableWell,
-      stableInBeanStableWell
-    ],
+    initFacetName: "ReseedWhitelist",
+    initArgs: [tokens, siloSettings],
     bip: false,
     verbose: true,
     account: account
   });
-
   console.log("-----------------------------------");
 }
 exports.reseed7 = reseed7;
