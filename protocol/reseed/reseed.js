@@ -4,6 +4,7 @@ const { reseed3 } = require("./reseed3.js");
 const { reseed4 } = require("./reseed4.js");
 const { reseed5 } = require("./reseed5.js");
 const { reseed6 } = require("./reseed6.js");
+const { reseed7 } = require("./reseed7.js");
 
 const fs = require("fs");
 
@@ -24,7 +25,7 @@ async function reseed(
   start = 0,
   end = 3
 ) {
-  reseeds = [reseed1, reseedDeployL2Beanstalk, reseed3, reseed4, reseed5, reseed6];
+  reseeds = [reseed1, reseedDeployL2Beanstalk, reseed3, reseed4, reseed5, reseed6, reseed7];
   let l2Beanstalk;
   console.clear();
   await printBeanstalk();
@@ -32,8 +33,8 @@ async function reseed(
     printStage(i, end, mock, log);
     if (i == 0) {
       // migrate beanstalk L1 assets.
-    }
-    if (i == 1 && mock == true) {
+      await reseeds[0](account);
+    } else if (i == 1 && mock == true) {
       // deploy L2 beanstalk.
       l2Beanstalk = await reseedDeployL2Beanstalk(account);
       print("L2 Beanstalk:", l2Beanstalk.address);

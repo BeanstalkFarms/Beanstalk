@@ -16,6 +16,8 @@ import {C} from "contracts/C.sol";
 /**
  * @author Brean
  * @notice ReseedBean deploys the Bean, UnripeBean, UnripeLP ERC20s, and the BeanEth, BeanWsteth, BeanStable Wells.
+ * Then adds liquidity to the beanEth, beanWsteth, and beanStable well.
+ * @dev each well is upgradeable and ownable. the owner is `owner` when the init is called.
  */
 // TODO: replace with implmentation once developed.
 interface IWellUpgradeable {
@@ -24,8 +26,6 @@ interface IWellUpgradeable {
 
 contract ReseedBean {
     using SafeERC20 for IERC20;
-    // BCM.
-    address internal constant BCM = address(0xa9bA2C40b263843C04d344727b954A545c81D043);
 
     // BEAN parameters.
     string internal constant BEAN_NAME = "Bean";
@@ -76,43 +76,36 @@ contract ReseedBean {
      * and mints the bean sided liquidity to the well.
      */
     function init(
+        address owner,
         uint256 beanSupply,
         uint256 unripeBeanSupply,
         uint256 unripeLpSupply,
+        uint256 beanInBeanEthWell,
         uint256 ethInBeanEthWell,
-        uint256 beaninBeanEthWell,
-        uint256 wstEthInBeanWstEthWell,
         uint256 beanInBeanWstEthWell,
-        uint256 stableInBeanStableWell,
-        uint256 beanInBeanStableWell
+        uint256 wstEthInBeanWstEthWell,
+        uint256 beanInBeanStableWell,
+        uint256 stableInBeanStableWell
     ) external {
         // deploy new bean contract. Issue beans.
         BeanstalkERC20 bean = deployBean(beanSupply);
 
         // deploy new unripe bean contract.
-        BeanstalkERC20 unripeBean = deployUnripeBean(unripeBeanSupply);
+        deployUnripeBean(unripeBeanSupply);
 
         // deploy new unripe lp contract.
-        BeanstalkERC20 unripeLP = deployUnripeLP(unripeLpSupply);
+        deployUnripeLP(unripeLpSupply);
 
         // wells are deployed as ERC1967Proxies in order to allow for future upgrades.
 
         // deploy new beanEthWell contract.
-        IWell beanEthWell = deployBeanEthWell(bean, beaninBeanEthWell, ethInBeanEthWell);
+        deployBeanEthWell(owner, bean, beanInBeanEthWell, ethInBeanEthWell);
 
         // deploy new beanWstEthWell contract.
-        IWell beanWstEthWell = deployBeanWstEthWell(
-            bean,
-            wstEthInBeanWstEthWell,
-            beanInBeanWstEthWell
-        );
+        deployBeanWstEthWell(owner, bean, wstEthInBeanWstEthWell, beanInBeanWstEthWell);
 
         // deploy new beanStableWell contract.
-        IWell beanStableWell = deployBeanStableWell(
-            bean,
-            stableInBeanStableWell,
-            beanInBeanStableWell
-        );
+        deployBeanStableWell(owner, bean, stableInBeanStableWell, beanInBeanStableWell);
     }
 
     function deployBean(uint256 supply) internal returns (BeanstalkERC20) {
@@ -146,6 +139,7 @@ contract ReseedBean {
     }
 
     function deployBeanEthWell(
+        address owner,
         BeanstalkERC20 bean,
         uint256 beanAmount,
         uint256 wethAmount
@@ -153,18 +147,19 @@ contract ReseedBean {
         address beanEthWell = address(
             new ERC1967Proxy{salt: BEAN_ETH_SALT}(
                 CP2_U_BEAN_ETH_WELL_IMPLMENTATION,
-                abi.encodeCall(IWellUpgradeable.init, (BEAN_ETH_NAME, BEAN_ETH_SYMBOL, BCM))
+                abi.encodeCall(IWellUpgradeable.init, (BEAN_ETH_NAME, BEAN_ETH_SYMBOL, owner))
             )
         );
 
         bean.mint(beanEthWell, beanAmount);
         (address weth, ) = LibWell.getNonBeanTokenAndIndexFromWell(beanEthWell);
-        IERC20(weth).safeTransferFrom(BCM, beanEthWell, wethAmount);
+        IERC20(weth).safeTransferFrom(owner, beanEthWell, wethAmount);
         IWell(beanEthWell).sync(address(this), 0); // sync the well.
         return IWell(beanEthWell);
     }
 
     function deployBeanWstEthWell(
+        address owner,
         BeanstalkERC20 bean,
         uint256 beanAmount,
         uint256 wstethAmount
@@ -172,17 +167,18 @@ contract ReseedBean {
         address beanWstEthWell = address(
             new ERC1967Proxy{salt: BEAN_WSTETH_SALT}(
                 CP2_U_BEAN_WSTETH_WELL_IMPLMENTATION,
-                abi.encodeCall(IWellUpgradeable.init, (BEAN_WSTETH_NAME, BEAN_WSTETH_SYMBOL, BCM))
+                abi.encodeCall(IWellUpgradeable.init, (BEAN_WSTETH_NAME, BEAN_WSTETH_SYMBOL, owner))
             )
         );
         bean.mint(address(beanWstEthWell), beanAmount);
         (address wsteth, ) = LibWell.getNonBeanTokenAndIndexFromWell(beanWstEthWell);
-        IERC20(wsteth).safeTransferFrom(BCM, beanWstEthWell, wstethAmount);
+        IERC20(wsteth).safeTransferFrom(owner, beanWstEthWell, wstethAmount);
         IWell(beanWstEthWell).sync(address(this), 0); // sync the well.
         return IWell(beanWstEthWell);
     }
 
     function deployBeanStableWell(
+        address owner,
         BeanstalkERC20 bean,
         uint256 beanAmount,
         uint256 stableAmount
@@ -190,12 +186,12 @@ contract ReseedBean {
         address beanStableWell = address(
             new ERC1967Proxy{salt: BEAN_STABLE_SALT}(
                 SS_U_BEAN_STABLE_WELL_IMPLMENTATION,
-                abi.encodeCall(IWellUpgradeable.init, (BEAN_STABLE_NAME, BEAN_STABLE_SYMBOL, BCM))
+                abi.encodeCall(IWellUpgradeable.init, (BEAN_STABLE_NAME, BEAN_STABLE_SYMBOL, owner))
             )
         );
         bean.mint(beanStableWell, beanAmount);
         (address stable, ) = LibWell.getNonBeanTokenAndIndexFromWell(beanStableWell);
-        IERC20(stable).safeTransferFrom(BCM, address(beanStableWell), stableAmount);
+        IERC20(stable).safeTransferFrom(owner, address(beanStableWell), stableAmount);
         IWell(beanStableWell).sync(address(this), 0); // sync the well.
         return IWell(beanStableWell);
     }
