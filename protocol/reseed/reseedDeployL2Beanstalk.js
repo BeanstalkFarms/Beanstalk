@@ -83,12 +83,13 @@ async function reseedDeployL2Beanstalk(account, verbose = false, mock) {
     facetLibraries,
     totalGasUsed
   );
-  const [beanstalkDiamond, diamondCut] = await deploy({
+  const [beanstalkDiamond] = await deploy({
     diamondName: "L2BeanstalkDiamond",
     facets: facetsAndNames,
     owner: account,
     args: [],
     verbose: verbose
   });
+  return beanstalkDiamond.address;
 }
 exports.reseedDeployL2Beanstalk = reseedDeployL2Beanstalk;

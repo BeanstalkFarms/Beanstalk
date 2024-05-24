@@ -35,6 +35,7 @@ async function reseed(
     if (i == 1 && mock == true) {
       // deploy L2 beanstalk.
       l2Beanstalk = await reseedDeployL2Beanstalk(account);
+      print("L2 Beanstalk:", l2Beanstalk.address);
     } else {
       // initialize beanstalk state.
       await reseeds[i](account, l2Beanstalk);
