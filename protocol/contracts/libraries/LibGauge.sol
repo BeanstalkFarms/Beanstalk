@@ -12,6 +12,7 @@ import {LibWhitelist} from "contracts/libraries/Silo/LibWhitelist.sol";
 import {LibRedundantMath32} from "contracts/libraries/LibRedundantMath32.sol";
 import {C} from "../C.sol";
 import {LibWell} from "contracts/libraries/Well/LibWell.sol";
+import {IGaugePointFacet} from "contracts/beanstalk/sun/GaugePointFacet.sol";
 
 /**
  * @title LibGauge
@@ -181,17 +182,25 @@ library LibGauge {
         Storage.SiloSettings memory ss,
         uint256 percentDepositedBdv
     ) internal view returns (uint256 newGaugePoints) {
-
         // if the target is 0, use address(this).
         address target = ss.gaugePointImplmentation.target;
-        if(target == address(0)) target = address(this);
+        if (target == address(0)) {
+            target = address(this);
+        }
+        // if no selector is provided, use defaultGaugePointFunction
+        bytes4 selector = ss.gaugePointImplmentation.selector;
+        if (selector == bytes4(0)) {
+            selector = IGaugePointFacet.defaultGaugePointFunction.selector;
+        }
 
-        (bool success, bytes memory data) = target.staticcall(abi.encodeWithSelector(
-            ss.gaugePointImplmentation.selector,
-            ss.gaugePoints,
-            ss.optimalPercentDepositedBdv,
-            percentDepositedBdv
-        ));
+        (bool success, bytes memory data) = target.staticcall(
+            abi.encodeWithSelector(
+                ss.gaugePointImplmentation.selector,
+                ss.gaugePoints,
+                ss.optimalPercentDepositedBdv,
+                percentDepositedBdv
+            )
+        );
 
         if (!success) return ss.gaugePoints;
         assembly {
@@ -212,9 +221,7 @@ library LibGauge {
         uint256 gaugePoints,
         uint256 optimalPercentDepositedBdv,
         uint256 percentDepositedBdv
-    ) internal view returns (uint256 newGaugePoints) {
-       
-    }
+    ) internal view returns (uint256 newGaugePoints) {}
 
     /**
      * @notice Updates the average grown stalk per BDV per Season for whitelisted Beanstalk assets.
