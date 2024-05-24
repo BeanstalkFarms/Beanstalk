@@ -107,10 +107,10 @@ const Whitelist: FC<{
         }}
       >
         <Grid container alignItems="center">
-          <Grid item md={3} xs={4}>
+          <Grid item md={2.25} xs={4}>
             <Typography color="text.secondary">Token</Typography>
           </Grid>
-          <Grid item md={1.25} xs={0} display={{ xs: 'none', md: 'block' }}>
+          <Grid item md={1} xs={0} display={{ xs: 'none', md: 'block' }}>
             <Tooltip title="The amount of Stalk and Seeds earned for each 1 Bean Denominated Value (BDV) Deposited in the Silo.">
               <Typography color="text.secondary">Rewards</Typography>
             </Tooltip>
@@ -166,7 +166,7 @@ const Whitelist: FC<{
               <Typography color="text.secondary">TVD</Typography>
             </Tooltip>
           </Grid>
-          <Grid item md={2.75} xs={0} display={{ xs: 'none', md: 'block' }}>
+          <Grid item md={3.75} xs={0} display={{ xs: 'none', md: 'block' }}>
             <Typography color="text.secondary">Amount Deposited</Typography>
           </Grid>
           <Grid
@@ -262,7 +262,7 @@ const Whitelist: FC<{
                    */}
                   <Grid
                     item
-                    md={isDeprecated ? 6.75 : 3}
+                    md={isDeprecated ? 5.75 : 2.25}
                     xs={isDeprecated ? 7 : 7}
                   >
                     <Row gap={1}>
@@ -305,7 +305,7 @@ const Whitelist: FC<{
                      */
                     <Grid
                       item
-                      md={1.25}
+                      md={1}
                       xs={0}
                       display={{ xs: 'none', md: 'block' }}
                     >
@@ -551,7 +551,7 @@ const Whitelist: FC<{
                        */}
                       <Grid
                         item
-                        md={2.5}
+                        md={3.5}
                         xs={0}
                         display={{ xs: 'none', md: 'block' }}
                       >
