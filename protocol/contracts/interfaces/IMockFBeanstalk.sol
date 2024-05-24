@@ -118,7 +118,7 @@ interface IMockFBeanstalk {
 
     struct Weather {
         uint256[2] deprecated;
-        uint128 lastDSoil;
+        uint128 lastDeltaSoil;
         uint32 lastSowTime;
         uint32 thisSowTime;
         uint32 t;
@@ -432,7 +432,7 @@ interface IMockFBeanstalk {
     function calcCaseIdE(int256 deltaB, uint128 endSoil) external;
     function calcCaseIdWithParams(
         uint256 pods,
-        uint256 _lastDSoil,
+        uint256 _lastDeltaSoil,
         uint128 beanSown,
         uint128 endSoil,
         int256 deltaB,
@@ -803,7 +803,7 @@ interface IMockFBeanstalk {
     function isApprovedForAll(address _owner, address _operator) external view returns (bool);
     function isFertilizing() external view returns (bool);
     function isUnripe(address unripeToken) external view returns (bool unripe);
-    function lastDSoil() external view returns (uint256);
+    function lastDeltaSoil() external view returns (uint256);
     function lastSeasonOfPlenty() external view returns (uint32);
     function lastSowTime() external view returns (uint256);
     function lastUpdate(address account) external view returns (uint32);

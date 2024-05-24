@@ -24,11 +24,11 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
  * @param sops A mapping from Season to Plenty Per Root (PPR) in that Season. Plenty Per Root is 0 if a Season of Plenty did not occur.
  * @param _buffer_1 Reserved storage for future additions.
  * @param casesV2 Stores the 144 Weather and seedGauge cases.
- * @param weather See {Weather}.
- * @param season See {Season}.
  * @param silo See {Silo}.
  * @param field See {Field}.
  * @param fert See {Fertilizer}.
+ * @param season See {Season}.
+ * @param weather See {Weather}.
  * @param seedGauge Stores the seedGauge.
  * @param rain See {Rain}.
  * @param _buffer_2 Reserved storage for future additions.
@@ -48,7 +48,7 @@ struct System {
     mapping(address => bytes) wellOracleSnapshots;
     mapping(address => TwaReserves) twaReserves;
     mapping(address => uint256) usdTokenPrice;
-    mapping(uint32 => uint256) sops; // TODO rename / move
+    mapping(uint32 => uint256) sops;
     bytes32[16] _buffer_1;
     bytes32[144] casesV2;
     Silo silo;
@@ -66,14 +66,13 @@ struct System {
  * @param stalk The total amount of active Stalk (including Earned Stalk, excluding Grown Stalk).
  * @param roots The total amount of Roots.
  * @param earnedBeans The number of Beans distributed to the Silo that have not yet been Deposited as a result of the Earn function being called.
- * @param siloBalances A mapping from Token address to Silo Balance storage (amount deposited and withdrawn).
+ * @param balances A mapping from Token address to Silo Balance storage (amount deposited and withdrawn).
  * @param assetSettings A mapping from Token address to Silo Settings for each Whitelisted Token. If a non-zero storage exists, a Token is whitelisted.
- * @param unripe Unripe Settings for a given Token address. The existence of a non-zero Unripe Settings implies that the token is an Unripe Token. The mapping is from Token address to Unripe Settings.
+ * @param unripeSettings Unripe Settings for a given Token address. The existence of a non-zero Unripe Settings implies that the token is an Unripe Token. The mapping is from Token address to Unripe Settings.
  * @param whitelistStatuses Stores a list of Whitelist Statues for all tokens that have been Whitelisted and have not had their Whitelist Status manually removed.
  * @param germinating Mapping from odd/even to token to germinating deposits data.
  * @param unclaimedGerminating A mapping from season to object containing the stalk and roots that are germinating.
  * @param _buffer Reserved storage for future expansion.
- * @dev seeds are no longer used internally. Balance is wiped to 0 from the mayflower update. see {mowAndMigrate}.
  */
 struct Silo {
     uint256 stalk;
@@ -81,7 +80,6 @@ struct Silo {
     uint256 earnedBeans;
     mapping(address => AssetSilo) balances;
     mapping(address => AssetSettings) assetSettings;
-    // Unripe
     mapping(address => UnripeSettings) unripeSettings;
     WhitelistStatus[] whitelistStatuses;
     mapping(GerminationSide => mapping(address => Deposited)) germinating;
@@ -148,26 +146,23 @@ struct Fertilizer {
  * @param abovePeg Boolean indicating whether the previous Season was above or below peg.
  * @param stemStartSeason // season in which the stem storage method was introduced.
  * @param stemScaleSeason // season in which the stem v1.1 was introduced, where stems are not truncated anymore.
- * @param deprecated // beanEthStartMintingSeason - Season to start minting in Bean:Eth pool after migrating liquidity out of the pool to protect against Pump failure.
- * This allows for greater precision of stems, and requires a soft migration (see {LibTokenSilo.removeDepositFromAccount})
  * @param start The timestamp of the Beanstalk deployment rounded down to the nearest hour.
  * @param period The length of each season in Beanstalk in seconds.
  * @param timestamp The timestamp of the start of the current Season.
  * @param _buffer Reserved storage for future expansion.
  */
 struct Season {
-    uint32 current; // ─────────────────┐ 4
-    uint32 lastSop; //                  │ 4 (8)
-    uint8 withdrawSeasons; //           │ 1 (9)
-    uint32 lastSopSeason; //            │ 4 (13)
-    uint32 rainStart; //                │ 4 (17)
-    bool raining; //                    │ 1 (18)
-    bool fertilizing; //                │ 1 (19)
-    uint32 sunriseBlock; //             │ 4 (23)
-    bool abovePeg; //                   | 1 (24)
-    uint16 stemStartSeason; //          | 2 (26)
-    uint16 stemScaleSeason; //          | 2 (28/32)
-    uint32 deprecated; //               ┘ 4 (32/32) beanEthStartMintingSeason - deprecated after Bean:wStEth migration completed.
+    uint32 current;
+    uint32 lastSop;
+    uint8 withdrawSeasons;
+    uint32 lastSopSeason;
+    uint32 rainStart;
+    bool raining;
+    bool fertilizing;
+    uint32 sunriseBlock;
+    bool abovePeg;
+    uint16 stemStartSeason;
+    uint16 stemScaleSeason;
     uint256 start;
     uint256 period;
     uint256 timestamp;
@@ -176,18 +171,18 @@ struct Season {
 
 /**
  * @notice System-level Weather state variables.
- * @param lastDSoil Delta Soil; the number of Soil purchased last Season.
+ * @param lastDeltaSoil Delta Soil; the number of Soil purchased last Season.
  * @param lastSowTime The number of seconds it for Soil to sell out last Season.
  * @param thisSowTime The number of seconds it for Soil to sell out this Season.
  * @param temp Temperature is max interest rate in current Season for sowing Beans in Soil. Adjusted each Season.
  * @param _buffer Reserved storage for future expansion.
  */
 struct Weather {
-    uint128 lastDSoil; // ───┐ 16 (16)
-    uint32 lastSowTime; //    │ 4  (20)
-    uint32 thisSowTime; //    │ 4  (24)
+    uint128 lastDeltaSoil; // ───┐ 16 (16)
+    uint32 lastSowTime; //       │ 4  (20)
+    uint32 thisSowTime; //       │ 4  (24)
     uint32 temp; // ─────────────┘ 4  (28/32)
-    bytes32[8] _buffer;
+    bytes32[4] _buffer;
 }
 
 /**
@@ -203,7 +198,7 @@ struct Weather {
 struct SeedGauge {
     uint128 averageGrownStalkPerBdvPerSeason;
     uint128 beanToMaxLpGpPerBdvRatio;
-    bytes32[8] _buffer;
+    bytes32[4] _buffer;
 }
 
 /**
@@ -215,7 +210,7 @@ struct SeedGauge {
 struct Rain {
     uint256 pods;
     uint256 roots;
-    bytes32[8] _buffer;
+    bytes32[4] _buffer;
 }
 
 /**
@@ -247,40 +242,40 @@ struct WhitelistStatus {
 }
 
 /**
-     * @notice Describes the settings for each Token that is Whitelisted in the Silo.
-     * @param selector The encoded BDV function selector for the token that pertains to 
-     * an external view Beanstalk function with the following signature:
-     * ```
-     * function tokenToBdv(uint256 amount) external view returns (uint256);
-     * ```
-     * It is called by `LibTokenSilo` through the use of `delegatecall`
-     * to calculate a token's BDV at the time of Deposit.
-     * @param stalkEarnedPerSeason represents how much Stalk one BDV of the underlying deposited token
-     * grows each season. In the past, this was represented by seeds. This is stored as 1e6, plus stalk is stored
-     * as 1e10, so 1 legacy seed would be 1e6 * 1e10.
-     * @param stalkIssuedPerBdv The Stalk Per BDV that the Silo grants in exchange for Depositing this Token.
-     * previously called stalk.
-     * @param milestoneSeason The last season in which the stalkEarnedPerSeason for this token was updated.
-     * @param milestoneStem The cumulative amount of grown stalk per BDV for this token at the last stalkEarnedPerSeason update.
-     * @param encodeType determine the encoding type of the selector.
-     * a encodeType of 0x00 means the selector takes an input amount.
-     * 0x01 means the selector takes an input amount and a token.
-     * @param gpSelector The encoded gaugePoint function selector for the token that pertains to 
-     * an external view Beanstalk function with the following signature:
-     * ```
-     * function gaugePoints(
-     *  uint256 currentGaugePoints,
-     *  uint256 optimalPercentDepositedBdv,
-     *  uint256 percentOfDepositedBdv
-     *  ) external view returns (uint256);
-     * ```
-     * @param lwSelector The encoded liquidityWeight function selector for the token that pertains to 
-     * an external view Beanstalk function with the following signature `function liquidityWeight()`
-     * @param optimalPercentDepositedBdv The target percentage of the total LP deposited BDV for this token. 6 decimal precision.
-     * @param gaugePoints the amount of Gauge points this LP token has in the LP Gauge. Only used for LP whitelisted assets.
-     * GaugePoints has 18 decimal point precision (1 Gauge point = 1e18).
-     * @dev A Token is considered Whitelisted if there exists a non-zero {AssetSettings} selector.
-     */
+ * @notice Describes the settings for each Token that is Whitelisted in the Silo.
+ * @param selector The encoded BDV function selector for the token that pertains to
+ * an external view Beanstalk function with the following signature:
+ * ```
+ * function tokenToBdv(uint256 amount) external view returns (uint256);
+ * ```
+ * It is called by `LibTokenSilo` through the use of `delegatecall`
+ * to calculate a token's BDV at the time of Deposit.
+ * @param stalkEarnedPerSeason represents how much Stalk one BDV of the underlying deposited token
+ * grows each season. In the past, this was represented by seeds. This is stored as 1e6, plus stalk is stored
+ * as 1e10, so 1 legacy seed would be 1e6 * 1e10.
+ * @param stalkIssuedPerBdv The Stalk Per BDV that the Silo grants in exchange for Depositing this Token.
+ * previously called stalk.
+ * @param milestoneSeason The last season in which the stalkEarnedPerSeason for this token was updated.
+ * @param milestoneStem The cumulative amount of grown stalk per BDV for this token at the last stalkEarnedPerSeason update.
+ * @param encodeType determine the encoding type of the selector.
+ * a encodeType of 0x00 means the selector takes an input amount.
+ * 0x01 means the selector takes an input amount and a token.
+ * @param gpSelector The encoded gaugePoint function selector for the token that pertains to
+ * an external view Beanstalk function with the following signature:
+ * ```
+ * function gaugePoints(
+ *  uint256 currentGaugePoints,
+ *  uint256 optimalPercentDepositedBdv,
+ *  uint256 percentOfDepositedBdv
+ *  ) external view returns (uint256);
+ * ```
+ * @param lwSelector The encoded liquidityWeight function selector for the token that pertains to
+ * an external view Beanstalk function with the following signature `function liquidityWeight()`
+ * @param gaugePoints the amount of Gauge points this LP token has in the LP Gauge. Only used for LP whitelisted assets.
+ * GaugePoints has 18 decimal point precision (1 Gauge point = 1e18).
+ * @param optimalPercentDepositedBdv The target percentage of the total LP deposited BDV for this token. 6 decimal precision.
+ * @dev A Token is considered Whitelisted if there exists a non-zero {AssetSettings} selector.
+ */
 struct AssetSettings {
     bytes4 selector; // ────────────────────┐ 4
     uint32 stalkEarnedPerSeason; //         │ 4  (8)

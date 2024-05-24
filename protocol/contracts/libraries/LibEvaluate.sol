@@ -188,14 +188,14 @@ library LibEvaluate {
             }
         } else {
             // Soil didn't sell out
-            uint256 lastDSoil = s.system.weather.lastDSoil;
+            uint256 lastDeltaSoil = s.system.weather.lastDeltaSoil;
 
             if (dsoil == 0) {
                 deltaPodDemand = Decimal.zero(); // If no one Sow'd
-            } else if (lastDSoil == 0) {
+            } else if (lastDeltaSoil == 0) {
                 deltaPodDemand = Decimal.from(1e18); // If no one Sow'd last Season
             } else {
-                deltaPodDemand = Decimal.ratio(dsoil, lastDSoil);
+                deltaPodDemand = Decimal.ratio(dsoil, lastDeltaSoil);
             }
         }
 
@@ -291,7 +291,7 @@ library LibEvaluate {
             s.system.weather.lastSowTime,
             s.system.weather.thisSowTime
         ) = calcDeltaPodDemand(dsoil);
-        s.system.weather.lastDSoil = uint128(dsoil); // SafeCast not necessary as `s.field.beanSown` is uint128.
+        s.system.weather.lastDeltaSoil = uint128(dsoil); // SafeCast not necessary as `s.field.beanSown` is uint128.
 
         // Calculate Lp To Supply Ratio, fetching the twaReserves in storage:
         (lpToSupplyRatio, largestLiqWell) = calcLPToSupplyRatio(beanSupply);

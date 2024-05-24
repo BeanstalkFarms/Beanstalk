@@ -8,24 +8,19 @@ import {GerminationSide} from "./System.sol";
 /**
  * @title Account
  * @notice Stores Farmer-level Beanstalk state.
- * @param bean A Farmer's Unripe Bean Deposits only as a result of Replant (previously held the V1 Silo Deposits/Withdrawals for Beans).
- * @param lp A Farmer's Unripe LP Deposits as a result of Replant of BEAN:ETH Uniswap v2 LP Tokens (previously held the V1 Silo Deposits/Withdrawals for BEAN:ETH Uniswap v2 LP Tokens).
+ * @param roots A Farmer's Root balance.
+ * @param depositPermitNonces A Farmer's current deposit permit nonce.
+ * @param tokenPermitNonces A Farmer's current token permit nonce.
  * @param lastUpdate The Season in which the Farmer last updated their Silo.
  * @param lastSop The last Season that a SOP occurred at the time the Farmer last updated their Silo.
  * @param lastRain The last Season that it started Raining at the time the Farmer last updated their Silo.
  * @param _buffer_0 Reserved storage for future additions.
- * @param roots A Farmer's Root balance.
- * @param legacyV2Deposits DEPRECATED - SiloV2 was retired in favor of Silo V3. A Farmer's Silo Deposits stored as a map from Token address to Season of Deposit to Deposit.
- * @param withdrawals Withdraws were removed in zero withdraw upgrade - A Farmer's Withdrawals from the Silo stored as a map from Token address to Season the Withdrawal becomes Claimable to Withdrawn amount of Tokens.
+ * @param deposits SiloV3.1 deposits. A mapping from depositId to Deposit. SiloV3.1 introduces greater precision for deposits.
  * @param depositAllowances A mapping of `spender => Silo token address => amount`.
  * @param tokenAllowances Internal balance token allowances.
- * @param depositPermitNonces A Farmer's current deposit permit nonce
- * @param tokenPermitNonces A Farmer's current token permit nonce
- * @param legacyV3Deposits DEPRECATED: Silo V3 deposits. Deprecated in favor of SiloV3.1 mapping from depositId to Deposit.
  * @param mowStatuses A mapping of whitelisted token address to MowStatus.
  * @param isApprovedForAll A mapping of ERC1155 operator to approved status. ERC1155 compatability.
  * @param germinatingStalk A Farmer's germinating stalk. Separated into odd and even stalk.
- * @param deposits SiloV3.1 deposits. A mapping from depositId to Deposit. SiloV3.1 introduces greater precision for deposits.
  * @param unripeClaimed True if a Farmer has Claimed an Unripe Token. A mapping from Farmer to Unripe Token to its Claim status.
  * @param internalTokenBalance A mapping from Token address to Internal Balance. It stores the amount of the Token that the Farmer has stored as an Internal Balance in Beanstalk.
  * @param _buffer_1 Reserved storage for future additions.
@@ -64,7 +59,7 @@ struct Account {
 struct Field {
     mapping(uint256 => uint256) plots;
     mapping(address => uint256) podAllowances;
-    bytes32[8] _buffer;
+    bytes32[4] _buffer;
 }
 
 /**
@@ -76,7 +71,7 @@ struct Field {
 struct Silo {
     uint256 stalk;
     uint256 seeds;
-    bytes32[8] _buffer;
+    bytes32[4] _buffer;
 }
 
 /**
@@ -90,7 +85,7 @@ struct SeasonOfPlenty {
     uint256 roots;
     uint256 plentyPerRoot;
     uint256 plenty;
-    bytes32[8] _buffer;
+    bytes32[4] _buffer;
 }
 
 /**

@@ -108,7 +108,7 @@ describe("Complex Weather", function () {
           await mockBeanstalk.setNextSowTimeE(this.testData.thisSowTime);
           this.result = await mockBeanstalk.calcCaseIdWithParams(
             this.pods,
-            this.dsoil, // lastDSoil
+            this.dsoil, // lastDeltaSoil
             this.startSoil - this.endSoil, // beanSown
             this.endSoil, // endSoil
             this.deltaB, // deltaB

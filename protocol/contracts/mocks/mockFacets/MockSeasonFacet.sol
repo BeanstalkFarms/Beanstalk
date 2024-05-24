@@ -230,7 +230,7 @@ contract MockSeasonFacet is SeasonFacet {
     }
 
     function setLastDSoilE(uint128 number) public {
-        s.system.weather.lastDSoil = number;
+        s.system.weather.lastDeltaSoil = number;
     }
 
     function setNextSowTimeE(uint32 _time) public {
@@ -274,7 +274,7 @@ contract MockSeasonFacet is SeasonFacet {
 
     function calcCaseIdWithParams(
         uint256 pods,
-        uint256 _lastDSoil,
+        uint256 _lastDeltaSoil,
         uint128 beanSown,
         uint128 endSoil,
         int256 deltaB,
@@ -322,7 +322,7 @@ contract MockSeasonFacet is SeasonFacet {
         s.system.season.raining = raining;
         s.system.rain.roots = rainRoots ? 1 : 0;
         s.system.field.pods = (pods.mul(C.bean().totalSupply()) / 1000); // previous tests used 1000 as the total supply.
-        s.system.weather.lastDSoil = uint128(_lastDSoil);
+        s.system.weather.lastDeltaSoil = uint128(_lastDeltaSoil);
         s.system.field.beanSown = beanSown;
         s.system.field.soil = endSoil;
         calcCaseIdandUpdate(deltaB);
@@ -387,8 +387,8 @@ contract MockSeasonFacet is SeasonFacet {
 
     //constants for old seeds values
 
-    function lastDSoil() external view returns (uint256) {
-        return uint256(s.system.weather.lastDSoil);
+    function lastDeltaSoil() external view returns (uint256) {
+        return uint256(s.system.weather.lastDeltaSoil);
     }
 
     function lastSowTime() external view returns (uint256) {

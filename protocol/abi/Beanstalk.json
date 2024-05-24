@@ -7153,11 +7153,6 @@
             "type": "uint16"
           },
           {
-            "internalType": "uint32",
-            "name": "deprecated",
-            "type": "uint32"
-          },
-          {
             "internalType": "uint256",
             "name": "start",
             "type": "uint256"
@@ -7171,6 +7166,11 @@
             "internalType": "uint256",
             "name": "timestamp",
             "type": "uint256"
+          },
+          {
+            "internalType": "bytes32[8]",
+            "name": "_buffer",
+            "type": "bytes32[8]"
           }
         ],
         "internalType": "struct Season",
@@ -7209,6 +7209,11 @@
             "internalType": "uint128",
             "name": "beanToMaxLpGpPerBdvRatio",
             "type": "uint128"
+          },
+          {
+            "internalType": "bytes32[4]",
+            "name": "_buffer",
+            "type": "bytes32[4]"
           }
         ],
         "internalType": "struct SeedGauge",
@@ -7375,6 +7380,11 @@
             "internalType": "uint256",
             "name": "roots",
             "type": "uint256"
+          },
+          {
+            "internalType": "bytes32[4]",
+            "name": "_buffer",
+            "type": "bytes32[4]"
           }
         ],
         "internalType": "struct Rain",
@@ -7473,11 +7483,6 @@
             "type": "uint16"
           },
           {
-            "internalType": "uint32",
-            "name": "deprecated",
-            "type": "uint32"
-          },
-          {
             "internalType": "uint256",
             "name": "start",
             "type": "uint256"
@@ -7491,6 +7496,11 @@
             "internalType": "uint256",
             "name": "timestamp",
             "type": "uint256"
+          },
+          {
+            "internalType": "bytes32[8]",
+            "name": "_buffer",
+            "type": "bytes32[8]"
           }
         ],
         "internalType": "struct Season",
@@ -7522,7 +7532,7 @@
         "components": [
           {
             "internalType": "uint128",
-            "name": "lastDSoil",
+            "name": "lastDeltaSoil",
             "type": "uint128"
           },
           {
@@ -7537,8 +7547,13 @@
           },
           {
             "internalType": "uint32",
-            "name": "t",
+            "name": "temp",
             "type": "uint32"
+          },
+          {
+            "internalType": "bytes32[4]",
+            "name": "_buffer",
+            "type": "bytes32[4]"
           }
         ],
         "internalType": "struct Weather",
