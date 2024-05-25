@@ -266,7 +266,7 @@ contract Weather is Sun {
         WellDeltaB[] memory arr,
         int left,
         int right
-    ) private pure returns (WellDeltaB[] memory) {
+    ) public pure returns (WellDeltaB[] memory) {
         if (left >= right) return arr;
 
         // Choose the median of left, right, and middle as pivot (improves performance on random data)
@@ -391,7 +391,8 @@ contract Weather is Sun {
         for (uint256 i = positiveDeltaBCount; i > 0; i--) {
             if (shaveToLevel > uint256(wellDeltaBs[i - 1].deltaB)) {
                 shaveToLevel += (shaveToLevel - uint256(wellDeltaBs[i - 1].deltaB)) / (i - 1);
-                // deltaB does not need to be updated
+                // amount to sop for this well must be zero
+                wellDeltaBs[i - 1].deltaB = 0;
             } else {
                 wellDeltaBs[i - 1].deltaB = wellDeltaBs[i - 1].deltaB - int256(shaveToLevel);
             }
