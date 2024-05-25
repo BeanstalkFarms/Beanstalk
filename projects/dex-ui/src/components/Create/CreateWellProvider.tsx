@@ -21,6 +21,12 @@ type SetFunctionAndPumpStepParams = {
   pump: string;
 };
 
+export type CreateWellProps = {
+  wellImplementation: SetWellImplementationStepParams;
+  wellFunctionAndPump: SetFunctionAndPumpStepParams;
+  wellNameAndSymbol: SetWellNameAndSymbolStepParams;
+};
+
 type SetWellNameAndSymbolStepParams = {
   name: string;
   symbol: string;
