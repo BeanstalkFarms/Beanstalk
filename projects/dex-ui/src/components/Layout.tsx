@@ -1,4 +1,9 @@
 import { size } from "src/breakpoints";
+import { AdditionalCssBase, BoxModelBase, BoxModelProps } from "src/utils/ui/styled";
+import { BlockDisplayStyle, DisplayStyleProps } from "src/utils/ui/styled/common";
+import { FlexModelProps, FlexBase } from "src/utils/ui/styled/flex-model";
+
+import { CssProps } from "src/utils/ui/theme/types";
 import styled from "styled-components";
 
 export const Item = styled.div<{ stretch?: boolean; right?: boolean; column?: boolean }>`
@@ -17,4 +22,20 @@ export const Row = styled.div<{ gap?: number; mobileGap?: string }>`
   @media (max-width: ${size.mobile}) {
     ${({ gap, mobileGap }) => (mobileGap ? `gap: ${mobileGap};` : `gap: ${gap}px;`)}
   }
+`;
+
+export type BoxProps = BoxModelProps & DisplayStyleProps & CssProps;
+
+export const Box = styled.div<BoxProps>`
+  ${BlockDisplayStyle}
+  ${BoxModelBase}
+  ${AdditionalCssBase}
+`;
+
+export type FlexProps = BoxModelProps & FlexModelProps & CssProps;
+
+export const Flex = styled.div<FlexProps>`
+  ${FlexBase}
+  ${BoxModelBase}
+  ${AdditionalCssBase}
 `;

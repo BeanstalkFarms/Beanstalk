@@ -10,6 +10,7 @@ import { Build } from "src/pages/Build";
 import { Swap } from "src/pages/Swap";
 import { Settings } from "src/settings";
 import { Liquidity } from "src/pages/Liquidity";
+import { Create } from "src/pages/Create";
 
 export const App = ({}) => {
   const isNotProd = !Settings.PRODUCTION;
@@ -21,8 +22,13 @@ export const App = ({}) => {
         <Route path="/wells" element={<Wells />} />
         <Route path="/wells/:address" element={<Well />} />
         <Route path="/wells/:address/liquidity" element={<Liquidity />} />
-        <Route path="/build" element={<Build />} />
         <Route path="/swap" element={<Swap />} />
+        {isNotProd && (
+          <>
+            <Route path="/build" element={<Build />} />
+            <Route path="/create" element={<Create />} />
+          </>
+        )}
         {isNotProd && <Route path="/dev" element={<Dev />} />}
         <Route path="*" element={<NotFound />} />
       </Routes>
