@@ -28,16 +28,16 @@ library LibGauge {
     uint256 internal constant GP_PRECISION = 1e18;
 
     // Max and min are the ranges that the beanToMaxLpGpPerBdvRatioScaled can output.
-    uint256 internal constant MAX_BEAN_MAX_LP_GP_PER_BDV_RATIO = 100e18;
-    uint256 internal constant MIN_BEAN_MAX_LP_GP_PER_BDV_RATIO = 50e18;
-    uint256 internal constant BEAN_MAX_LP_GP_RATIO_RANGE =
-        MAX_BEAN_MAX_LP_GP_PER_BDV_RATIO - MIN_BEAN_MAX_LP_GP_PER_BDV_RATIO;
+    // uint256 internal constant MAX_BEAN_MAX_LP_GP_PER_BDV_RATIO = 100e18; //state
+    // uint256 internal constant MIN_BEAN_MAX_LP_GP_PER_BDV_RATIO = 50e18; //state
+    // uint256 internal constant BEAN_MAX_LP_GP_RATIO_RANGE =
+    // MAX_BEAN_MAX_LP_GP_PER_BDV_RATIO - MIN_BEAN_MAX_LP_GP_PER_BDV_RATIO;
 
     // The maximum value of beanToMaxLpGpPerBdvRatio.
     uint256 internal constant ONE_HUNDRED_PERCENT = 100e18;
 
     // 24 * 30 * 6
-    uint256 internal constant TARGET_SEASONS_TO_CATCHUP = 4320;
+    // uint256 internal constant TARGET_SEASONS_TO_CATCHUP = 4320; //state
     uint256 internal constant STALK_BDV_PRECISION = 1e4;
 
     /**
@@ -257,7 +257,7 @@ library LibGauge {
 
         // update the average grown stalk per BDV per Season.
         // beanstalk must exist for a minimum of the catchup season in order to update the average.
-        if (s.season.current > TARGET_SEASONS_TO_CATCHUP) {
+        if (s.season.current > s.seedGaugeSettings.targetSeasonsToCatchUp) {
             updateAverageStalkPerBdvPerSeason();
         }
 
@@ -316,7 +316,9 @@ library LibGauge {
         // which is highly improbable assuming consistent new deposits.
         // Thus, safeCast was determined is to be unnecessary.
         s.seedGauge.averageGrownStalkPerBdvPerSeason = uint128(
-            getAverageGrownStalkPerBdv().mul(BDV_PRECISION).div(TARGET_SEASONS_TO_CATCHUP)
+            getAverageGrownStalkPerBdv().mul(BDV_PRECISION).div(
+                s.seedGaugeSettings.targetSeasonsToCatchUp
+            )
         );
         emit UpdateAverageStalkPerBdvPerSeason(s.seedGauge.averageGrownStalkPerBdvPerSeason);
     }
@@ -359,10 +361,13 @@ library LibGauge {
      */
     function getBeanToMaxLpGpPerBdvRatioScaled(
         uint256 beanToMaxLpGpPerBdvRatio
-    ) internal pure returns (uint256) {
+    ) internal view returns (uint256) {
+        AppStorage storage s = LibAppStorage.diamondStorage();
+        uint256 beanMaxLpGpRatioRange = s.seedGaugeSettings.maxBeanMaxLpGpPerBdvRatio -
+            s.seedGaugeSettings.minBeanMaxLpGpPerBdvRatio;
         return
-            beanToMaxLpGpPerBdvRatio.mul(BEAN_MAX_LP_GP_RATIO_RANGE).div(ONE_HUNDRED_PERCENT).add(
-                MIN_BEAN_MAX_LP_GP_PER_BDV_RATIO
+            beanToMaxLpGpPerBdvRatio.mul(beanMaxLpGpRatioRange).div(ONE_HUNDRED_PERCENT).add(
+                s.seedGaugeSettings.minBeanMaxLpGpPerBdvRatio
             );
     }
 }

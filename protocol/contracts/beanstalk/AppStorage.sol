@@ -523,6 +523,21 @@ contract Storage {
         bytes4 selector;
         bytes1 encodeType;
     }
+
+    struct SeedGaugeSettings {
+        uint256 maxBeanMaxLpGpPerBdvRatio;
+        uint256 minBeanMaxLpGpPerBdvRatio;
+        uint256 targetSeasonsToCatchUp;
+        uint256 podRateLowerBound;
+        uint256 podRateOptimal;
+        uint256 podRateUpperBound;
+        uint256 deltaPodDemandLowerBound;
+        uint256 deltaPodDemandUpperBound;
+        uint256 lpToSupplyRatioUpperBound;
+        uint256 lpToSupplyRatioOptimal;
+        uint256 lpToSupplyRatioLowerBound;
+        uint256 excessivePriceThreshold;
+    }
 }
 
 /**
@@ -661,4 +676,5 @@ struct AppStorage {
     uint256 fertilizedPaidIndex;
     uint256 plenty;
     mapping(address => Storage.Implementation) oracleImplementation;
+    Storage.SeedGaugeSettings seedGaugeSettings;
 }

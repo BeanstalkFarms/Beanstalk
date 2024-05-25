@@ -7,6 +7,8 @@ import {MockSeasonFacet} from "contracts/mocks/mockFacets/MockSeasonFacet.sol";
 import {LibGauge} from "contracts/libraries/LibGauge.sol";
 import {MockChainlinkAggregator} from "contracts/mocks/chainlink/MockChainlinkAggregator.sol";
 import {MockLiquidityWeight} from "contracts/mocks/MockLiquidityWeight.sol";
+import {AppStorage} from "contracts/beanstalk/AppStorage.sol";
+import {LibAppStorage} from "contracts/libraries/LibAppStorage.sol";
 
 /**
  * @notice Tests the functionality of the gauge.
@@ -93,15 +95,19 @@ contract GaugeTest is TestHelper {
     ) public {
         initBeanToMaxLPRatio = bound(initBeanToMaxLPRatio, 0, 100e18);
         bs.setBeanToMaxLpGpPerBdvRatio(uint128(initBeanToMaxLPRatio));
+        AppStorage storage s = LibAppStorage.diamondStorage();
         uint256 scaledRatio = bs.getBeanToMaxLpGpPerBdvRatioScaled();
         // scaled ratio should never fall below 50%.
-        assertGe(scaledRatio, LibGauge.MIN_BEAN_MAX_LP_GP_PER_BDV_RATIO);
+        assertGe(scaledRatio, s.seedGaugeSettings.minBeanMaxLpGpPerBdvRatio);
 
         // scaled ratio should never exceed 100%.
-        assertLe(scaledRatio, LibGauge.MAX_BEAN_MAX_LP_GP_PER_BDV_RATIO);
+        assertLe(scaledRatio, s.seedGaugeSettings.maxBeanMaxLpGpPerBdvRatio);
 
         // the scaledRatio should increase half as fast as the initBeanToMaxLPRatio.
-        assertEq(scaledRatio - LibGauge.MIN_BEAN_MAX_LP_GP_PER_BDV_RATIO, initBeanToMaxLPRatio / 2);
+        assertEq(
+            scaledRatio - s.seedGaugeSettings.minBeanMaxLpGpPerBdvRatio,
+            initBeanToMaxLPRatio / 2
+        );
     }
 
     ////////////////////// L2SR //////////////////////
@@ -199,7 +205,8 @@ contract GaugeTest is TestHelper {
      * @notice verifies that the average grown stalk per season does not change if the season is less than the catchup season.
      */
     function test_avgGrownStalkPerBdv_noChange(uint256 season) public {
-        season = bound(season, 0, LibGauge.TARGET_SEASONS_TO_CATCHUP - 1);
+        AppStorage storage s = LibAppStorage.diamondStorage();
+        season = bound(season, 0, s.seedGaugeSettings.targetSeasonsToCatchUp - 1);
         uint256 initialAvgGrownStalkPerBdvPerSeason = bs.getAverageGrownStalkPerBdvPerSeason();
         depositForUser(users[1], C.BEAN, 100e6);
 
@@ -221,8 +228,9 @@ contract GaugeTest is TestHelper {
      * @notice verifies that the average grown stalk per season changes after the catchup season.
      */
     function test_avgGrownStalkPerBdv_changes(uint256 season) public {
+        AppStorage storage s = LibAppStorage.diamondStorage();
         // season is capped to uint32 max - 1.
-        season = bound(season, LibGauge.TARGET_SEASONS_TO_CATCHUP, type(uint32).max - 1);
+        season = bound(season, s.seedGaugeSettings.targetSeasonsToCatchUp, type(uint32).max - 1);
         depositForUser(users[1], C.BEAN, 100e6);
 
         bs.fastForward(uint32(season));

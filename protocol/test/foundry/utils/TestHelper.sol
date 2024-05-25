@@ -18,6 +18,8 @@ import {OracleDeployer} from "test/foundry/utils/OracleDeployer.sol";
 import {FertilizerDeployer} from "test/foundry/utils/FertilizerDeployer.sol";
 import {LibWell, IWell, IERC20} from "contracts/libraries/Well/LibWell.sol";
 import {C} from "contracts/C.sol";
+import {AppStorage} from "contracts/beanstalk/AppStorage.sol";
+import {LibAppStorage} from "contracts/libraries/LibAppStorage.sol";
 
 ///// COMMON IMPORTED LIBRARIES //////
 import {LibTransfer} from "contracts/libraries/Token/LibTransfer.sol";
@@ -91,6 +93,25 @@ contract TestHelper is
 
         // initialize Diamond, initalize users:
         setupDiamond(mock, verbose);
+
+        // TODO: upon deployment, setup these state settings
+        initStateSettings();
+    }
+
+    function initStateSettings() public {
+        AppStorage storage s = LibAppStorage.diamondStorage();
+        s.seedGaugeSettings.maxBeanMaxLpGpPerBdvRatio = 100e18;
+        s.seedGaugeSettings.minBeanMaxLpGpPerBdvRatio = 50e18;
+        s.seedGaugeSettings.targetSeasonsToCatchUp = 4320;
+        s.seedGaugeSettings.podRateLowerBound = 0.05e18;
+        s.seedGaugeSettings.podRateOptimal = 0.15e18;
+        s.seedGaugeSettings.podRateUpperBound = 0.25e18;
+        s.seedGaugeSettings.deltaPodDemandLowerBound = 0.95e18;
+        s.seedGaugeSettings.deltaPodDemandUpperBound = 1.05e18;
+        s.seedGaugeSettings.lpToSupplyRatioUpperBound = 0.8e18;
+        s.seedGaugeSettings.lpToSupplyRatioOptimal = 0.4e18;
+        s.seedGaugeSettings.lpToSupplyRatioLowerBound = 0.12e18;
+        s.seedGaugeSettings.excessivePriceThreshold = 1.05e6;
     }
 
     /**

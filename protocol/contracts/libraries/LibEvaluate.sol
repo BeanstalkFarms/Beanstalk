@@ -41,13 +41,13 @@ library LibEvaluate {
     using LibRedundantMath32 for uint32;
 
     // Pod rate bounds
-    uint256 internal constant POD_RATE_LOWER_BOUND = 0.05e18; // 5%
-    uint256 internal constant POD_RATE_OPTIMAL = 0.15e18; // 15%
-    uint256 internal constant POD_RATE_UPPER_BOUND = 0.25e18; // 25%
+    // uint256 internal constant POD_RATE_LOWER_BOUND = 0.05e18; // 5%
+    // uint256 internal constant POD_RATE_OPTIMAL = 0.15e18; // 15%
+    // uint256 internal constant POD_RATE_UPPER_BOUND = 0.25e18; // 25%
 
     // Change in Soil demand bounds
-    uint256 internal constant DELTA_POD_DEMAND_LOWER_BOUND = 0.95e18; // 95%
-    uint256 internal constant DELTA_POD_DEMAND_UPPER_BOUND = 1.05e18; // 105%
+    // uint256 internal constant DELTA_POD_DEMAND_LOWER_BOUND = 0.95e18; // 95%
+    // uint256 internal constant DELTA_POD_DEMAND_UPPER_BOUND = 1.05e18; // 105%
 
     /// @dev If all Soil is Sown faster than this, Beanstalk considers demand for Soil to be increasing.
     uint256 internal constant SOW_TIME_DEMAND_INCR = 600; // seconds
@@ -55,12 +55,12 @@ library LibEvaluate {
     uint32 internal constant SOW_TIME_STEADY = 60; // seconds
 
     // Liquidity to supply ratio bounds
-    uint256 internal constant LP_TO_SUPPLY_RATIO_UPPER_BOUND = 0.8e18; // 80%
-    uint256 internal constant LP_TO_SUPPLY_RATIO_OPTIMAL = 0.4e18; // 40%
-    uint256 internal constant LP_TO_SUPPLY_RATIO_LOWER_BOUND = 0.12e18; // 12%
+    // uint256 internal constant LP_TO_SUPPLY_RATIO_UPPER_BOUND = 0.8e18; // 80%
+    // uint256 internal constant LP_TO_SUPPLY_RATIO_OPTIMAL = 0.4e18; // 40%
+    // uint256 internal constant LP_TO_SUPPLY_RATIO_LOWER_BOUND = 0.12e18; // 12%
 
     // Excessive price threshold constant
-    uint256 internal constant EXCESSIVE_PRICE_THRESHOLD = 1.05e6;
+    // uint256 internal constant EXCESSIVE_PRICE_THRESHOLD = 1.05e6;
 
     uint256 internal constant LIQUIDITY_PRECISION = 1e12;
 
@@ -68,12 +68,15 @@ library LibEvaluate {
      * @notice evaluates the pod rate and returns the caseId
      * @param podRate the length of the podline (debt), divided by the bean supply.
      */
-    function evalPodRate(Decimal.D256 memory podRate) internal pure returns (uint256 caseId) {
-        if (podRate.greaterThanOrEqualTo(POD_RATE_UPPER_BOUND.toDecimal())) {
+    function evalPodRate(Decimal.D256 memory podRate) internal view returns (uint256 caseId) {
+        AppStorage storage s = LibAppStorage.diamondStorage();
+        if (podRate.greaterThanOrEqualTo(s.seedGaugeSettings.podRateUpperBound.toDecimal())) {
             caseId = 27;
-        } else if (podRate.greaterThanOrEqualTo(POD_RATE_OPTIMAL.toDecimal())) {
+        } else if (podRate.greaterThanOrEqualTo(s.seedGaugeSettings.podRateOptimal.toDecimal())) {
             caseId = 18;
-        } else if (podRate.greaterThanOrEqualTo(POD_RATE_LOWER_BOUND.toDecimal())) {
+        } else if (
+            podRate.greaterThanOrEqualTo(s.seedGaugeSettings.podRateLowerBound.toDecimal())
+        ) {
             caseId = 9;
         }
     }
@@ -89,9 +92,12 @@ library LibEvaluate {
         Decimal.D256 memory podRate,
         address well
     ) internal view returns (uint256 caseId) {
+        AppStorage storage s = LibAppStorage.diamondStorage();
         // p > 1
         if (
-            deltaB > 0 || (deltaB == 0 && podRate.lessThanOrEqualTo(POD_RATE_OPTIMAL.toDecimal()))
+            deltaB > 0 ||
+            (deltaB == 0 &&
+                podRate.lessThanOrEqualTo(s.seedGaugeSettings.podRateOptimal.toDecimal()))
         ) {
             // Beanstalk will only use the largest liquidity well to compute the Bean price,
             // and thus will skip the p > EXCESSIVE_PRICE_THRESHOLD check if the well oracle fails to
@@ -102,8 +108,8 @@ library LibEvaluate {
                 uint256 beanUsdPrice = uint256(1e30).div(
                     LibWell.getUsdTokenPriceForWell(well).mul(beanTknPrice)
                 );
-                if (beanUsdPrice > EXCESSIVE_PRICE_THRESHOLD) {
-                    // p > EXCESSIVE_PRICE_THRESHOLD
+                if (beanUsdPrice > s.seedGaugeSettings.excessivePriceThreshold) {
+                    // p > excessivePriceThreshold
                     return caseId = 6;
                 }
             }
@@ -118,12 +124,21 @@ library LibEvaluate {
      */
     function evalDeltaPodDemand(
         Decimal.D256 memory deltaPodDemand
-    ) internal pure returns (uint256 caseId) {
+    ) internal view returns (uint256 caseId) {
+        AppStorage storage s = LibAppStorage.diamondStorage();
         // increasing
-        if (deltaPodDemand.greaterThanOrEqualTo(DELTA_POD_DEMAND_UPPER_BOUND.toDecimal())) {
+        if (
+            deltaPodDemand.greaterThanOrEqualTo(
+                s.seedGaugeSettings.deltaPodDemandUpperBound.toDecimal()
+            )
+        ) {
             caseId = 2;
             // steady
-        } else if (deltaPodDemand.greaterThanOrEqualTo(DELTA_POD_DEMAND_LOWER_BOUND.toDecimal())) {
+        } else if (
+            deltaPodDemand.greaterThanOrEqualTo(
+                s.seedGaugeSettings.deltaPodDemandLowerBound.toDecimal()
+            )
+        ) {
             caseId = 1;
         }
         // decreasing (caseId = 0)
@@ -137,16 +152,27 @@ library LibEvaluate {
      */
     function evalLpToSupplyRatio(
         Decimal.D256 memory lpToSupplyRatio
-    ) internal pure returns (uint256 caseId) {
+    ) internal view returns (uint256 caseId) {
+        AppStorage storage s = LibAppStorage.diamondStorage();
         // Extremely High
-        if (lpToSupplyRatio.greaterThanOrEqualTo(LP_TO_SUPPLY_RATIO_UPPER_BOUND.toDecimal())) {
+        if (
+            lpToSupplyRatio.greaterThanOrEqualTo(
+                s.seedGaugeSettings.lpToSupplyRatioUpperBound.toDecimal()
+            )
+        ) {
             caseId = 108;
             // Reasonably High
-        } else if (lpToSupplyRatio.greaterThanOrEqualTo(LP_TO_SUPPLY_RATIO_OPTIMAL.toDecimal())) {
+        } else if (
+            lpToSupplyRatio.greaterThanOrEqualTo(
+                s.seedGaugeSettings.lpToSupplyRatioOptimal.toDecimal()
+            )
+        ) {
             caseId = 72;
             // Reasonably Low
         } else if (
-            lpToSupplyRatio.greaterThanOrEqualTo(LP_TO_SUPPLY_RATIO_LOWER_BOUND.toDecimal())
+            lpToSupplyRatio.greaterThanOrEqualTo(
+                s.seedGaugeSettings.lpToSupplyRatioLowerBound.toDecimal()
+            )
         ) {
             caseId = 36;
         }
