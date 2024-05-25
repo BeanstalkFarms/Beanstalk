@@ -4,7 +4,7 @@ const { takeSnapshot, revertToSnapshot } = require("./utils/snapshot");
 const { BEAN, THREE_POOL, BEAN_3_CURVE, UNRIPE_LP, UNRIPE_BEAN, ZERO_ADDRESS, WETH, BEANSTALK_PUMP } = require('./utils/constants');
 const { to18, to6 } = require('./utils/helpers.js');
 const { getBeanstalk } = require('../utils/contracts.js');
-const { getWellContractFactory, whitelistWell, deployMockPump } = require('../utils/well.js');
+const { whitelistWell, deployMockWellWithMockPump } = require('../utils/well.js');
 let user,user2,owner;
 let userAddress, ownerAddress, user2Address;
 const ZERO_BYTES = ethers.utils.formatBytes32String('0x0')
@@ -19,19 +19,10 @@ describe('Well BDV', function () {
     const contracts = await deploy("Test", false, true);
     ownerAddress = contracts.account;
     this.diamond = contracts.beanstalkDiamond;
-    this.beanstalk = await getBeanstalk(this.diamond.address)
+    this.beanstalk = await getBeanstalk(this.diamond.address);
+    this.bdv = await ethers.getContractAt('BDVFacet', this.diamond.address);
 
-    this.pump = await deployMockPump()
-
-    this.wellFunction = await (await getWellContractFactory('ConstantProduct2')).deploy()
-    await this.wellFunction.deployed()
-
-    this.well = await (await ethers.getContractFactory('MockSetComponentsWell')).deploy()
-    await this.well.deployed()
-
-    await this.well.setPumps([[this.pump.address, '0x']])
-    await this.well.setWellFunction([this.wellFunction.address, '0x'])
-    await this.well.setTokens([BEAN, WETH])
+    [this.well, this.wellFunction, this.pump] = await deployMockWellWithMockPump();
     this.pump.setInstantaneousReserves([to18('1'), to18('1')])
     await whitelistWell(this.well.address, '10000', to6('4'))
   });
@@ -46,6 +37,7 @@ describe('Well BDV', function () {
 
   it("get BDV at 1:1", async function () {
     expect(await this.beanstalk.wellBdv(this.well.address, to6('1000000'))).to.be.within('1999999', '2000001')
+    expect(await this.bdv.wellBdv(this.well.address, to6('1000000'))).to.be.within('1999999', '2000001')
     expect(await this.beanstalk.bdv(this.well.address, to6('1000000'))).to.be.within('1999999', '2000001')
   })
 

@@ -27,6 +27,7 @@ describe('BDV', function () {
     this.convert = await ethers.getContractAt('ConvertFacet', this.diamond.address)
     this.bean = await ethers.getContractAt('MockToken', BEAN);
     this.bdv = await ethers.getContractAt('BDVFacet', this.diamond.address)
+    this.siloGetters = await ethers.getContractAt('SiloGettersFacet', this.diamond.address)
 
     this.well = await impersonateContract('MockSetComponentsWell', BEAN_ETH_WELL)
 
@@ -72,7 +73,7 @@ describe('BDV', function () {
 
   describe("Bean BDV", async function () {
     it("properly checks bdv", async function () {
-      expect(await this.silo.bdv(BEAN, to6('200'))).to.equal(to6('200'));
+      expect(await this.siloGetters.bdv(BEAN, to6('200'))).to.equal(to6('200'));
     })
   })
 
@@ -93,18 +94,19 @@ describe('BDV', function () {
     });
 
     it("properly checks bdv", async function () {
-      expect(await this.silo.bdv(BEAN_3_CURVE, to18('200'))).to.equal(to6('200'));
+      expect(await this.siloGetters.bdv(BEAN_3_CURVE, to18('200'))).to.equal(to6('200'));
     })
 
     it("properly checks bdv", async function () {
       await this.threePool.set_virtual_price(to18('1.02'));
-      expect(await this.silo.bdv(BEAN_3_CURVE, to18('2'))).to.equal('1998191');
+      expect(await this.siloGetters.bdv(BEAN_3_CURVE, to18('2'))).to.equal('1998191');
     })
+    
   })
 
   describe("Unripe Bean BDV", async function () {
     it("properly checks bdv", async function () {
-      expect(await this.silo.bdv(UNRIPE_BEAN, to6('200'))).to.equal(to6('20'));
+      expect(await this.siloGetters.bdv(UNRIPE_BEAN, to6('200'))).to.equal(to6('20'));
     })
   })
 
@@ -123,20 +125,20 @@ describe('BDV', function () {
     });
 
     it("properly checks bdv", async function () {
-      const wellBdv = await this.silo.bdv(this.well.address, to18('200'))
+      const wellBdv = await this.siloGetters.bdv(this.well.address, to18('200'))
       expect(await this.bdv.unripeLPToBDV(to18('2000'))).to.eq(wellBdv);
-      expect(await this.silo.bdv(UNRIPE_LP, to18('2000'))).to.equal(wellBdv);
+      expect(await this.siloGetters.bdv(UNRIPE_LP, to18('2000'))).to.equal(wellBdv);
     })
 
     it("properly checks bdv", async function () {
       this.pump.setInstantaneousReserves([to18('1.02'), to18('1')])
-      const wellBdv = await this.silo.bdv(this.well.address, to18('2'))
+      const wellBdv = await this.siloGetters.bdv(this.well.address, to18('2'))
       expect(await this.bdv.unripeLPToBDV(to18('20'))).to.equal(wellBdv);
-      expect(await this.silo.bdv(UNRIPE_LP, to18('20'))).to.equal(wellBdv);
+      expect(await this.siloGetters.bdv(UNRIPE_LP, to18('20'))).to.equal(wellBdv);
     })
   })
 
   it("reverts if not correct", async function () {
-    await expect(this.silo.bdv(ZERO_ADDRESS, to18('2000'))).to.be.revertedWith('Silo: Token not whitelisted')
+    await expect(this.siloGetters.bdv(ZERO_ADDRESS, to18('2000'))).to.be.revertedWith('Silo: Token not whitelisted')
   })
 });

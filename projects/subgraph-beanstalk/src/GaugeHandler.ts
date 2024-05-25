@@ -9,7 +9,7 @@ import {
   WhitelistToken,
   TotalGerminatingStalkChanged,
   TotalStalkChangedFromGermination
-} from "../generated/BIP44-SeedGauge/Beanstalk";
+} from "../generated/BIP45-SeedGauge/Beanstalk";
 import { handleRateChange } from "./utils/Field";
 import {
   loadSilo,
@@ -20,10 +20,13 @@ import {
   loadWhitelistTokenHourlySnapshot
 } from "./utils/SiloEntities";
 import { deleteGerminating, loadGerminating, loadOrCreateGerminating } from "./utils/Germinating";
-import { ZERO_BI } from "../../subgraph-core/utils/Decimals";
+import { BI_10, ZERO_BI } from "../../subgraph-core/utils/Decimals";
 import { updateStalkBalances } from "./SiloHandler";
 import { getCurrentSeason } from "./utils/Season";
 import { WhitelistToken as WhitelistTokenEntity } from "../generated/schema";
+import { BigInt } from "@graphprotocol/graph-ts";
+import { BEAN_WETH_CP2_WELL } from "../../subgraph-core/utils/Constants";
+import { Bytes4_emptyToNull } from "../../subgraph-core/utils/Bytes";
 
 export function handleTemperatureChange(event: TemperatureChange): void {
   handleRateChange(event.address, event.block, event.params.season, event.params.caseId, event.params.absChange);
@@ -83,6 +86,10 @@ export function handleUpdateAverageStalkPerBdvPerSeason(event: UpdateAverageStal
 
 // Tracks germinating balances for individual famers
 export function handleFarmerGerminatingStalkBalanceChanged(event: FarmerGerminatingStalkBalanceChanged): void {
+  if (event.params.deltaGerminatingStalk == ZERO_BI) {
+    return;
+  }
+
   const currentSeason = getCurrentSeason(event.address);
 
   if (event.params.deltaGerminatingStalk > ZERO_BI) {
@@ -117,6 +124,10 @@ export function handleFarmerGerminatingStalkBalanceChanged(event: FarmerGerminat
 
 // Tracks the germinating balance on a token level
 export function handleTotalGerminatingBalanceChanged(event: TotalGerminatingBalanceChanged): void {
+  if (event.params.deltaAmount == ZERO_BI && event.params.deltaBdv == ZERO_BI) {
+    return;
+  }
+
   let tokenGerminating = loadOrCreateGerminating(event.params.token, event.params.germinationSeason.toU32());
   tokenGerminating.season = event.params.germinationSeason.toU32();
   tokenGerminating.tokenAmount = tokenGerminating.tokenAmount.plus(event.params.deltaAmount);
@@ -130,6 +141,10 @@ export function handleTotalGerminatingBalanceChanged(event: TotalGerminatingBala
 
 // This occurs at the beanstalk level regardless of whether users mow their own germinating stalk into regular stalk.
 export function handleTotalGerminatingStalkChanged(event: TotalGerminatingStalkChanged): void {
+  if (event.params.deltaGerminatingStalk == ZERO_BI) {
+    return;
+  }
+
   let siloGerminating = loadOrCreateGerminating(event.address, event.params.germinationSeason.toU32());
   siloGerminating.season = event.params.germinationSeason.toU32();
   siloGerminating.stalk = siloGerminating.stalk.plus(event.params.deltaGerminatingStalk);
@@ -165,15 +180,15 @@ export function handleTotalStalkChangedFromGermination(event: TotalStalkChangedF
 
 // WHITELIST / GAUGE CONFIGURATION SETTINGS //
 
-export function handleWhitelistToken_BIP44(event: WhitelistToken): void {
+export function handleWhitelistToken_BIP45(event: WhitelistToken): void {
   let siloSettings = loadWhitelistTokenSetting(event.params.token);
 
   siloSettings.selector = event.params.selector;
   siloSettings.stalkEarnedPerSeason = event.params.stalkEarnedPerSeason;
   siloSettings.stalkIssuedPerBdv = event.params.stalkIssuedPerBdv;
   siloSettings.gaugePoints = event.params.gaugePoints;
-  siloSettings.gpSelector = event.params.gpSelector;
-  siloSettings.lwSelector = event.params.lwSelector;
+  siloSettings.gpSelector = Bytes4_emptyToNull(event.params.gpSelector);
+  siloSettings.lwSelector = Bytes4_emptyToNull(event.params.lwSelector);
   siloSettings.optimalPercentDepositedBdv = event.params.optimalPercentDepositedBdv;
   siloSettings.updatedAt = event.block.timestamp;
   siloSettings.save();
@@ -194,23 +209,33 @@ export function handleWhitelistToken_BIP44(event: WhitelistToken): void {
 
 export function handleUpdateGaugeSettings(event: UpdateGaugeSettings): void {
   let siloSettings = loadWhitelistTokenSetting(event.params.token);
-  siloSettings.gpSelector = event.params.gpSelector;
-  siloSettings.lwSelector = event.params.lwSelector;
+  siloSettings.gpSelector = Bytes4_emptyToNull(event.params.gpSelector);
+  siloSettings.lwSelector = Bytes4_emptyToNull(event.params.lwSelector);
   siloSettings.optimalPercentDepositedBdv = event.params.optimalPercentDepositedBdv;
   siloSettings.updatedAt = event.block.timestamp;
-  siloSettings.save();
 
   let hourly = loadWhitelistTokenHourlySnapshot(event.params.token, getCurrentSeason(event.address), event.block.timestamp);
   hourly.gpSelector = siloSettings.gpSelector;
   hourly.lwSelector = siloSettings.lwSelector;
   hourly.optimalPercentDepositedBdv = siloSettings.optimalPercentDepositedBdv;
   hourly.updatedAt = siloSettings.updatedAt;
-  hourly.save();
 
   let daily = loadWhitelistTokenDailySnapshot(event.params.token, event.block.timestamp);
   daily.gpSelector = siloSettings.gpSelector;
   daily.lwSelector = siloSettings.lwSelector;
   daily.optimalPercentDepositedBdv = siloSettings.optimalPercentDepositedBdv;
   daily.updatedAt = siloSettings.updatedAt;
+
+  // On initial gauge deployment, there was no GaugePointChange event emitted. Need to initialize BEANETH here
+  if (
+    event.params.token == BEAN_WETH_CP2_WELL &&
+    event.transaction.hash.toHexString().toLowerCase() == "0x299a4b93b8d19f8587b648ce04e3f5e618ea461426bb2b2337993b5d6677f6a7"
+  ) {
+    siloSettings.gaugePoints = BI_10.pow(20);
+    hourly.gaugePoints = BI_10.pow(20);
+    daily.gaugePoints = BI_10.pow(20);
+  }
+  siloSettings.save();
+  hourly.save();
   daily.save();
 }

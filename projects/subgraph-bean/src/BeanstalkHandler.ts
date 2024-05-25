@@ -33,9 +33,12 @@ export function handleSunrise(event: Sunrise): void {
 
   let bean = loadBean(beanToken);
   let oldBeanPrice = bean.price;
-  let oldBeanLiquidity = bean.liquidityUSD;
   for (let i = 0; i < bean.pools.length; i++) {
     updatePoolSeason(bean.pools[i], event.block.timestamp, event.block.number, event.params.season.toI32());
+  }
+
+  for (let i = 0; i < bean.dewhitelistedPools.length; i++) {
+    updatePoolSeason(bean.dewhitelistedPools[i], event.block.timestamp, event.block.number, event.params.season.toI32());
   }
 
   // Fetch price from price contract to capture any non-bean token price movevements
@@ -116,10 +119,14 @@ export function handleSunrise(event: Sunrise): void {
 export function handleDewhitelistToken(event: DewhitelistToken): void {
   let bean = loadBean(getBeanTokenAddress(event.block.number));
   let index = bean.pools.indexOf(event.params.token.toHexString());
-  const newPools = bean.pools;
-  newPools.splice(index, 1);
-  bean.pools = newPools;
-  bean.save();
+  if (index >= 0) {
+    const newPools = bean.pools;
+    const newDewhitelistedPools = bean.dewhitelistedPools;
+    newDewhitelistedPools.push(newPools.splice(index, 1)[0]);
+    bean.pools = newPools;
+    bean.dewhitelistedPools = newDewhitelistedPools;
+    bean.save();
+  }
 }
 
 // POST REPLANT TWA DELTAB //

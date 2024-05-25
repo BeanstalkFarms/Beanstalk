@@ -30,15 +30,18 @@ describe('Curve', function () {
     ownerAddress = contracts.account;
     this.diamond = contracts.beanstalkDiamond;
     this.season = await ethers.getContractAt('MockSeasonFacet', this.diamond.address)
+    this.seasonGetter = await ethers.getContractAt('SeasonGettersFacet', this.diamond.address)
     this.bean = await ethers.getContractAt('Bean', BEAN)
     this.threeCurve = await ethers.getContractAt('MockToken', THREE_CURVE)
     this.threePool = await ethers.getContractAt('Mock3Curve', THREE_POOL)
     this.beanMetapool = await ethers.getContractAt('MockMeta3Curve', BEAN_3_CURVE)
     this.curve = await ethers.getContractAt('CurveFacet', this.diamond.address)
     this.token = await ethers.getContractAt('TokenFacet', this.diamond.address)
-    this.silo = await ethers.getContractAt('SiloFacet', this.diamond.address)
+    this.silo = await ethers.getContractAt('MockSiloFacet', this.diamond.address)
     this.farm = await ethers.getContractAt('FarmFacet', this.diamond.address)
     this.usdc = await ethers.getContractAt('IERC20', USDC)
+    this.whitelist = await ethers.getContractAt('WhitelistFacet', this.diamond.address)
+    this.bdv = await ethers.getContractAt('BDVFacet', this.diamond.address)
 
     await this.season.siloSunrise(0)
     await this.bean.connect(user).approve(this.diamond.address, '100000000000')
@@ -424,7 +427,8 @@ describe('Curve', function () {
     })
   })
 
-  describe("farm LP and Deposit", async function () {
+  // skipped due to curve dewhitelisting.
+  describe.skip("farm LP and Deposit", async function () {
     beforeEach('add LP and Deposits', async function () {
       await this.season.teleportSunrise(10);
       this.season.deployStemsUpgrade();
@@ -446,14 +450,21 @@ describe('Curve', function () {
       await this.bean.mint(user2Address, to6('500'))
       await this.threeCurve.connect(user2).approve(this.silo.address, to18('5000000'))
       await this.bean.connect(user2).approve(this.silo.address, to6('50000000'))
-
+      // psuedo whitelist for testing purposes 
+      await this.silo.mockWhitelistToken(
+        BEAN_3_CURVE,
+        this.bdv.interface.getSighash('curveToBDV'),
+        10000,
+        to6('1')
+      );
       await this.farm.connect(user2).farm([addLiquidity, deposit])
+      await this.whitelist.dewhitelistToken(BEAN_3_CURVE)
     })
 
     it('add lp and deposit', async function () {
-      const season = await this.season.season()
-      const stemBean = await this.silo.seasonToStem(this.beanMetapool.address, season);
-      const dep = await this.silo.getDeposit(user2Address, this.beanMetapool.address, stemBean)
+      const season = await this.seasonGetter.season()
+      const stemBean = await this.silo.mockSeasonToStem(this.beanMetapool.address, season);
+      const dep = await this.siloGetters.getDeposit(user2Address, this.beanMetapool.address, stemBean)
       expect(dep[0]).to.be.equal(to18('1000'))
       expect(dep[1]).to.be.equal(to6('1000'))
     })

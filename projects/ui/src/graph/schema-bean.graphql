@@ -11,11 +11,6 @@ directive @entity on OBJECT
 """Defined a Subgraph ID for an object type"""
 directive @subgraphId(id: String!) on OBJECT
 
-enum Aggregation_interval {
-  day
-  hour
-}
-
 type Bean {
   """Detailed cross events during this snapshot"""
   crossEvents(first: Int = 100, orderBy: BeanCross_orderBy, orderDirection: OrderDirection, skip: Int = 0, where: BeanCross_filter): [BeanCross!]!
@@ -964,9 +959,6 @@ input Block_height {
 }
 
 scalar Bytes
-
-"8 bytes signed integer\n"
-scalar Int8
 
 """Defines the order direction, either ascending or descending"""
 enum OrderDirection {
@@ -2394,9 +2386,6 @@ type Subscription {
   ): [TwaOracle!]!
 }
 
-"A string representation of microseconds UNIX timestamp (16 digits)\n"
-scalar Timestamp
-
 type Token {
   """Number of decimals"""
   decimals: BigInt!
@@ -2447,9 +2436,9 @@ enum Token_orderBy {
 
 type TwaOracle {
   cumulativeWellReserves: Bytes!
-  cumulativeWellReservesBlock: BigInt
+  cumulativeWellReservesBlock: BigInt!
   cumulativeWellReservesPrev: Bytes!
-  cumulativeWellReservesPrevBlock: BigInt
+  cumulativeWellReservesPrevBlock: BigInt!
   cumulativeWellReservesPrevTime: BigInt!
   cumulativeWellReservesTime: BigInt!
   id: ID!
@@ -2614,9 +2603,6 @@ type _Block_ {
 
   """The block number"""
   number: Int!
-
-  """The hash of the parent block"""
-  parentHash: Bytes
 
   """Integer representation of the timestamp stored in blocks for the chain"""
   timestamp: Int

@@ -6,8 +6,11 @@ const { impersonateBeanstalkOwner, impersonateSigner } = require('../utils/signe
 const { mintEth } = require('../utils/mint.js')
 const { upgradeWithNewFacets } = require("../scripts/diamond");
 
-
-describe("Legacy Claim", async function () {
+// this test was previously used to test the migration from existing users 
+// to the new silo V3 system, specfically for those who have pending withdraws.
+// It is skipped as BIP-36 has been deployed. 
+// Future developers can remove the skip to verify functionality.
+describe.skip("Legacy Claim", async function () {
   before(async function () {
     try {
       await network.provider.request({

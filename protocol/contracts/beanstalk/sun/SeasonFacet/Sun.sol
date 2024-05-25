@@ -3,14 +3,10 @@
 pragma solidity ^0.7.6;
 pragma experimental ABIEncoderV2;
 
-import "@openzeppelin/contracts/utils/SafeCast.sol";
-import "contracts/libraries/Decimal.sol";
-import "contracts/libraries/LibSafeMath32.sol";
-import "contracts/libraries/LibFertilizer.sol";
-import "contracts/libraries/LibSafeMath128.sol";
-import "contracts/libraries/LibPRBMath.sol";
-import "contracts/C.sol";
-import "./Oracle.sol";
+import {SafeCast} from "@openzeppelin/contracts/utils/SafeCast.sol";
+import {LibFertilizer, SafeMath} from "contracts/libraries/LibFertilizer.sol";
+import {LibSafeMath128} from "contracts/libraries/LibSafeMath128.sol";
+import {Oracle, C} from "./Oracle.sol";
 
 /**
  * @title Sun
@@ -20,10 +16,7 @@ import "./Oracle.sol";
 contract Sun is Oracle {
     using SafeCast for uint256;
     using SafeMath for uint256;
-    using LibPRBMath for uint256;
-    using LibSafeMath32 for uint32;
     using LibSafeMath128 for uint128;
-    using Decimal for Decimal.D256;
 
     /// @dev When Fertilizer is Active, it receives 1/3 of new Bean mints.
     uint256 private constant FERTILIZER_DENOMINATOR = 3;
@@ -65,7 +58,7 @@ contract Sun is Oracle {
     
     /**
      * @param deltaB Pre-calculated deltaB from {Oracle.stepOracle}.
-     * @param caseId Pre-calculated Weather case from {Weather.stepWeather}.
+     * @param caseId Pre-calculated Weather case from {Weather.calcCaseId}.
      */
     function stepSun(int256 deltaB, uint256 caseId) internal {
         // Above peg
@@ -181,7 +174,8 @@ contract Sun is Oracle {
         // `s.earnedBeans` is an accounting mechanism that tracks the total number
         // of Earned Beans that are claimable by Stalkholders. When claimed via `plant()`,
         // it is decremented. See {Silo.sol:_plant} for more details.
-        s.earnedBeans = s.earnedBeans.add(amount);
+        // SafeCast not necessary as `seasonStalk.toUint128();` will fail if amount > type(uint128).max.
+        s.earnedBeans = s.earnedBeans.add(amount.toUint128());
 
         // Mint Stalk (as Earned Stalk). Farmers can claim their Earned Stalk via {SiloFacet.sol:plant}.
         //
@@ -189,8 +183,7 @@ contract Sun is Oracle {
         // Beans that are allocated to the Silo will receive Stalk.
         // Constant is used here rather than s.ss[BEAN].stalkIssuedPerBdv
         // for gas savings.
-        uint256 seasonStalk = amount.mul(C.STALK_PER_BEAN);
-        s.s.stalk = s.s.stalk.add(seasonStalk);
+        s.s.stalk = s.s.stalk.add(amount.mul(C.STALK_PER_BEAN));
 
         // removed at ebip-13. Will be replaced upon seed gauge BIP.
         // s.newEarnedStalk = seasonStalk.toUint128();
@@ -222,9 +215,9 @@ contract Sun is Oracle {
      */
     function setSoilAbovePeg(uint256 newHarvestable, uint256 caseId) internal {
         uint256 newSoil = newHarvestable.mul(100).div(100 + s.w.t);
-        if (caseId >= 24) {
+        if (caseId.mod(36) >= 24) {
             newSoil = newSoil.mul(SOIL_COEFFICIENT_HIGH).div(C.PRECISION); // high podrate
-        } else if (caseId < 8) {
+        } else if (caseId.mod(36) < 8) {
             newSoil = newSoil.mul(SOIL_COEFFICIENT_LOW).div(C.PRECISION); // low podrate
         }
         setSoil(newSoil);

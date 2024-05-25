@@ -5344,42 +5344,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@graphprotocol/graph-cli@npm:0.56.0":
-  version: 0.56.0
-  resolution: "@graphprotocol/graph-cli@npm:0.56.0"
-  dependencies:
-    "@float-capital/float-subgraph-uncrashable": "npm:^0.0.0-alpha.4"
-    "@oclif/core": "npm:2.8.6"
-    "@whatwg-node/fetch": "npm:^0.8.4"
-    assemblyscript: "npm:0.19.23"
-    binary-install-raw: "npm:0.0.13"
-    chalk: "npm:3.0.0"
-    chokidar: "npm:3.5.3"
-    debug: "npm:4.3.4"
-    docker-compose: "npm:0.23.19"
-    dockerode: "npm:2.5.8"
-    fs-extra: "npm:9.1.0"
-    glob: "npm:9.3.5"
-    gluegun: "npm:5.1.2"
-    graphql: "npm:15.5.0"
-    immutable: "npm:4.2.1"
-    ipfs-http-client: "npm:55.0.0"
-    jayson: "npm:4.0.0"
-    js-yaml: "npm:3.14.1"
-    prettier: "npm:1.19.1"
-    request: "npm:2.88.2"
-    semver: "npm:7.4.0"
-    sync-request: "npm:6.1.0"
-    tmp-promise: "npm:3.0.3"
-    web3-eth-abi: "npm:1.7.0"
-    which: "npm:2.0.2"
-    yaml: "npm:1.10.2"
-  bin:
-    graph: bin/run
-  checksum: 10/d271d572199f3c0306b813b8fa7a5b1a758a7706dca333efd8ca0b65a55a921d310a02258dc3f031e22872c068068e0235f05fcbd99c71af9e616a1c79cf2b96
-  languageName: node
-  linkType: hard
-
 "@graphprotocol/graph-cli@npm:0.69.0":
   version: 0.69.0
   resolution: "@graphprotocol/graph-cli@npm:0.69.0"
@@ -5417,30 +5381,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@graphprotocol/graph-ts@npm:0.31.0":
-  version: 0.31.0
-  resolution: "@graphprotocol/graph-ts@npm:0.31.0"
-  dependencies:
-    assemblyscript: "npm:0.19.10"
-  checksum: 10/624f672e2f0e4d35a6752df1fa6d8208216205ffc412d2506e6bfdb59802a044646007fb6fcd21abda4cc219abad0b180635118070a74b44261c71d6dd859f2a
-  languageName: node
-  linkType: hard
-
 "@graphprotocol/graph-ts@npm:0.34.0":
   version: 0.34.0
   resolution: "@graphprotocol/graph-ts@npm:0.34.0"
   dependencies:
     assemblyscript: "npm:0.19.10"
   checksum: 10/0aa26453002bb7b5342010877ba1148b9173603f4a3ce6db00afe77da5982f1d9a964ea86a79218c9b0615e2b3b459ed036eabc8e0d866ed9524c93396bf37de
-  languageName: node
-  linkType: hard
-
-"@graphprotocol/graph-ts@npm:^0.27.0":
-  version: 0.27.0
-  resolution: "@graphprotocol/graph-ts@npm:0.27.0"
-  dependencies:
-    assemblyscript: "npm:0.19.10"
-  checksum: 10/a745c2692ca8a187a043f2001c99380478258deab4fe41ed8858d8ec7365b68732254acd5437d766835a0ec2f65b5d4c60fd4dcaee330a909cf785807933cc29
   languageName: node
   linkType: hard
 
@@ -17553,7 +17499,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"assemblyscript@npm:0.19.23, assemblyscript@npm:^0.19.20":
+"assemblyscript@npm:0.19.23":
   version: 0.19.23
   resolution: "assemblyscript@npm:0.19.23"
   dependencies:
@@ -18213,10 +18159,10 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "beanft@workspace:projects/subgraph-beanft"
   dependencies:
-    "@graphprotocol/graph-cli": "npm:0.56.0"
-    "@graphprotocol/graph-ts": "npm:0.31.0"
+    "@graphprotocol/graph-cli": "npm:0.69.0"
+    "@graphprotocol/graph-ts": "npm:0.34.0"
     ethers: "npm:^6.3.0"
-    matchstick-as: "npm:0.5.0"
+    matchstick-as: "npm:^0.6.0"
   languageName: unknown
   linkType: soft
 
@@ -22424,17 +22370,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"ejs@npm:3.1.6":
-  version: 3.1.6
-  resolution: "ejs@npm:3.1.6"
-  dependencies:
-    jake: "npm:^10.6.1"
-  bin:
-    ejs: ./bin/cli.js
-  checksum: 10/f3882b57655b53fd9044cb7acb585c04004da9a3c90ef96c69660ee31ca9572e7a0df0cf794bbc72c674c2b9ba396bbc4ae130fe0c8c65fb0ca53b0a488c2300
-  languageName: node
-  linkType: hard
-
 "ejs@npm:3.1.8":
   version: 3.1.8
   resolution: "ejs@npm:3.1.8"
@@ -25027,7 +24962,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"filelist@npm:^1.0.1, filelist@npm:^1.0.4":
+"filelist@npm:^1.0.1":
   version: 1.0.4
   resolution: "filelist@npm:1.0.4"
   dependencies:
@@ -26525,46 +26460,6 @@ __metadata:
     pify: "npm:^4.0.1"
     slash: "npm:^2.0.0"
   checksum: 10/8035f1e5d8f3fd9df6e4b475f4e2b17ace1ac679bb8477fbfaefea6958cc9c4cfbe50080fd7e76a821501ecd28bf94cc1bd9e42ed127723dbeefee31d0e198fe
-  languageName: node
-  linkType: hard
-
-"gluegun@npm:5.1.2":
-  version: 5.1.2
-  resolution: "gluegun@npm:5.1.2"
-  dependencies:
-    apisauce: "npm:^2.1.5"
-    app-module-path: "npm:^2.2.0"
-    cli-table3: "npm:0.6.0"
-    colors: "npm:1.4.0"
-    cosmiconfig: "npm:7.0.1"
-    cross-spawn: "npm:7.0.3"
-    ejs: "npm:3.1.6"
-    enquirer: "npm:2.3.6"
-    execa: "npm:5.1.1"
-    fs-jetpack: "npm:4.3.1"
-    lodash.camelcase: "npm:^4.3.0"
-    lodash.kebabcase: "npm:^4.1.1"
-    lodash.lowercase: "npm:^4.3.0"
-    lodash.lowerfirst: "npm:^4.3.1"
-    lodash.pad: "npm:^4.5.1"
-    lodash.padend: "npm:^4.6.1"
-    lodash.padstart: "npm:^4.6.1"
-    lodash.repeat: "npm:^4.1.0"
-    lodash.snakecase: "npm:^4.1.1"
-    lodash.startcase: "npm:^4.4.0"
-    lodash.trim: "npm:^4.5.1"
-    lodash.trimend: "npm:^4.5.1"
-    lodash.trimstart: "npm:^4.5.1"
-    lodash.uppercase: "npm:^4.3.0"
-    lodash.upperfirst: "npm:^4.3.1"
-    ora: "npm:4.0.2"
-    pluralize: "npm:^8.0.0"
-    semver: "npm:7.3.5"
-    which: "npm:2.0.2"
-    yargs-parser: "npm:^21.0.0"
-  bin:
-    gluegun: bin/gluegun
-  checksum: 10/c3a673d114953fd79090b4bd2e417e9f9cf819f8cb4c53d17659f814bd1f508597bed64be0e8041fcdd0d6ba0b06ffe95c8cb95708cd4a4a5e0c1d3867b56ae8
   languageName: node
   linkType: hard
 
@@ -29664,20 +29559,6 @@ __metadata:
     "@pkgjs/parseargs":
       optional: true
   checksum: 10/69da974c05e5623743694484a9441f7dfa6b340daa20522fd9466edc132608012d5194f44167c706f62d1f87af96daf1e2b8cc62960153beea468cfaf99ed980
-  languageName: node
-  linkType: hard
-
-"jake@npm:^10.6.1":
-  version: 10.8.7
-  resolution: "jake@npm:10.8.7"
-  dependencies:
-    async: "npm:^3.2.3"
-    chalk: "npm:^4.0.2"
-    filelist: "npm:^1.0.4"
-    minimatch: "npm:^3.1.2"
-  bin:
-    jake: bin/cli.js
-  checksum: 10/ad1cfe398836df4e6962954e5095597c21c5af1ea5a4182f6adf0869df8aca467a2eeca7869bf44f47120f4dd4ea52589d16050d295c87a5906c0d744775acc3
   languageName: node
   linkType: hard
 
@@ -32829,17 +32710,6 @@ __metadata:
     glob: "npm:^7.1.6"
     picomatch: "npm:^2.2.1"
   checksum: 10/0879c5c8f8db5f80a6db401e109b1749d3fe6cb8a28540b4f2970f29fd65ff7dcae1e57adcd60a5b3bb56fa682aaefe89c31561ee7d97ff4a6761ee614f21918
-  languageName: node
-  linkType: hard
-
-"matchstick-as@npm:0.5.0, matchstick-as@npm:^0.5.0":
-  version: 0.5.0
-  resolution: "matchstick-as@npm:0.5.0"
-  dependencies:
-    "@graphprotocol/graph-ts": "npm:^0.27.0"
-    assemblyscript: "npm:^0.19.20"
-    wabt: "npm:1.0.24"
-  checksum: 10/299c66c3990dc0379d7172ddad6878e657b2e23ab39ff98eab315f3a55144882d3f3911ab6135ff2725293835acea17ec83fe169459d157ecacfc6f41d15b6cc
   languageName: node
   linkType: hard
 
@@ -36514,15 +36384,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"prettier@npm:1.19.1":
-  version: 1.19.1
-  resolution: "prettier@npm:1.19.1"
-  bin:
-    prettier: ./bin-prettier.js
-  checksum: 10/21d245fe788d1123fd7df63a3759f7807d8c0bb7aaa2f4f02cc055998c3e1f92d7c614b6e2749a936c527cdbbb0f3c869bd9723eb32c5232b0fab9fac04b455d
-  languageName: node
-  linkType: hard
-
 "prettier@npm:3.0.3":
   version: 3.0.3
   resolution: "prettier@npm:3.0.3"
@@ -38284,7 +38145,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"request@npm:2.88.2, request@npm:^2.85.0, request@npm:^2.88.0":
+"request@npm:^2.85.0, request@npm:^2.88.0":
   version: 2.88.2
   resolution: "request@npm:2.88.2"
   dependencies:
@@ -40871,9 +40732,9 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "subgraph-basin@workspace:projects/subgraph-basin"
   dependencies:
-    "@graphprotocol/graph-cli": "npm:0.56.0"
-    "@graphprotocol/graph-ts": "npm:0.31.0"
-    matchstick-as: "npm:^0.5.0"
+    "@graphprotocol/graph-cli": "npm:0.69.0"
+    "@graphprotocol/graph-ts": "npm:0.34.0"
+    matchstick-as: "npm:^0.6.0"
   languageName: unknown
   linkType: soft
 
@@ -40881,9 +40742,9 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "subgraph-bean@workspace:projects/subgraph-bean"
   dependencies:
-    "@graphprotocol/graph-cli": "npm:0.56.0"
-    "@graphprotocol/graph-ts": "npm:0.31.0"
-    matchstick-as: "npm:^0.5.0"
+    "@graphprotocol/graph-cli": "npm:0.69.0"
+    "@graphprotocol/graph-ts": "npm:0.34.0"
+    matchstick-as: "npm:^0.6.0"
   languageName: unknown
   linkType: soft
 

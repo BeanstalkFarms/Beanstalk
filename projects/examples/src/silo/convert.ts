@@ -8,7 +8,7 @@ main().catch((e) => {
   console.log(e);
 });
 
-let sdk:BeanstalkSDK;
+let sdk: BeanstalkSDK;
 
 async function main() {
   const account = process.argv[3] || _account;
@@ -16,14 +16,20 @@ async function main() {
   let { sdk: _sdk, stop } = await impersonate(account);
   sdk = _sdk;
   sdk.DEBUG = false;
+  await sdk.refresh();
+  // const fromToken = sdk.tokens.UNRIPE_BEAN_WETH;
+  // const toToken = sdk.tokens.BEAN_ETH_WELL_LP;
+  const fromToken = sdk.tokens.UNRIPE_BEAN;
+  const toToken = sdk.tokens.BEAN;
 
-  
-  const fromToken = sdk.tokens.BEAN
-  const toToken = sdk.tokens.UNRIPE_BEAN
-  const amount = fromToken.amount(2500)
+  const maxConvert = await sdk.contracts.beanstalk.getMaxAmountIn(fromToken.address, toToken.address);
 
-  let tx = await sdk.silo.convert(fromToken, toToken, amount)
+  const amount = fromToken.amount(1000);
+  const quote = await sdk.contracts.beanstalk.getAmountOut(fromToken.address, toToken.address, amount.toBlockchain());
+  console.log(quote.toString());
+
+  let tx = await sdk.silo.convert(fromToken, toToken, amount);
   await tx.wait();
-  
+
   await stop();
 }

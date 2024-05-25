@@ -26,8 +26,8 @@ export interface FertilizerSelectProps {
 }
 
 interface FertilizerTransferFormContext {
-  fertilizerIds: (number|undefined)[];
-  amounts: (number|undefined)[];
+  fertilizerIds: (number | undefined)[];
+  amounts: (number | undefined)[];
 }
 
 interface IRowContent {
@@ -38,8 +38,13 @@ interface IRowContent {
   setFieldValue: any;
 }
 
-function RowContent({isMobile, fertilizer, index, values, setFieldValue }: IRowContent): ReactElement {
-
+function RowContent({
+  isMobile,
+  fertilizer,
+  index,
+  values,
+  setFieldValue,
+}: IRowContent): ReactElement {
   const textFieldStyles = {
     borderRadius: 1,
     '& .MuiOutlinedInput-root': {
@@ -57,38 +62,46 @@ function RowContent({isMobile, fertilizer, index, values, setFieldValue }: IRowC
   const preventNegativeInput = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === '-') {
       e.preventDefault();
-    };
+    }
   };
 
-  const handleInput = useCallback((e: any) => {
+  const handleInput = useCallback(
+    (e: any) => {
+      const newIds = values.fertilizerIds;
+      const newAmounts = values.amounts;
 
-    const newIds = values.fertilizerIds;
-    const newAmounts = values.amounts;
-
-    if (e.target.value && e.target.value !== newAmounts[index]) {
-      const roundedValue = Math.round(e.target.value);
-      if (roundedValue === 0) {
+      if (e.target.value && e.target.value !== newAmounts[index]) {
+        const roundedValue = Math.round(e.target.value);
+        if (roundedValue === 0) {
+          newIds[index] = undefined;
+          newAmounts[index] = undefined;
+        } else if (roundedValue > fertilizer.amount.toNumber()) {
+          newIds[index] = fertilizer.token.id.toNumber();
+          newAmounts[index] = fertilizer.amount.toNumber();
+        } else {
+          newIds[index] = fertilizer.token.id.toNumber();
+          newAmounts[index] = roundedValue;
+        }
+      } else {
         newIds[index] = undefined;
         newAmounts[index] = undefined;
-      } else if (roundedValue > fertilizer.amount.toNumber()) {
-        newIds[index] = fertilizer.token.id.toNumber();
-        newAmounts[index] = fertilizer.amount.toNumber();
-      } else {
-        newIds[index] = fertilizer.token.id.toNumber();
-        newAmounts[index] = roundedValue;
-      };
-    } else {
-      newIds[index] = undefined;
-      newAmounts[index] = undefined;
-    };
+      }
 
-    const newTotalSelected = newIds.filter(Boolean).length;
+      const newTotalSelected = newIds.filter(Boolean).length;
 
-    setFieldValue('fertilizerIds', newIds);
-    setFieldValue('amounts', newAmounts);
-    setFieldValue('totalSelected', newTotalSelected);
-
-  }, [index, setFieldValue, values.amounts, fertilizer.amount, values.fertilizerIds, fertilizer.token.id]);
+      setFieldValue('fertilizerIds', newIds);
+      setFieldValue('amounts', newAmounts);
+      setFieldValue('totalSelected', newTotalSelected);
+    },
+    [
+      index,
+      setFieldValue,
+      values.amounts,
+      fertilizer.amount,
+      values.fertilizerIds,
+      fertilizer.token.id,
+    ]
+  );
 
   const handleClick = (e: any) => {
     e.stopPropagation();
@@ -101,7 +114,9 @@ function RowContent({isMobile, fertilizer, index, values, setFieldValue }: IRowC
           <ListItemIcon sx={{ pr: 1 }}>
             <Box
               component="img"
-              src={fertilizer.status === "active" ? fertActiveIcon : fertUsedIcon}
+              src={
+                fertilizer.status === 'active' ? fertActiveIcon : fertUsedIcon
+              }
               alt=""
               sx={{
                 width: IconSize.tokenSelect,
@@ -114,8 +129,10 @@ function RowContent({isMobile, fertilizer, index, values, setFieldValue }: IRowC
             primaryTypographyProps={{ color: 'text.primary', display: 'flex' }}
             secondary={
               <>
-                <Box sx={{ display: 'flex', alignItems: 'center', flexGrow: 1 }}>
-                  {isMobile ? 
+                <Box
+                  sx={{ display: 'flex', alignItems: 'center', flexGrow: 1 }}
+                >
+                  {isMobile ? (
                     <Box
                       component="img"
                       src={sproutIcon}
@@ -124,16 +141,17 @@ function RowContent({isMobile, fertilizer, index, values, setFieldValue }: IRowC
                         width: IconSize.xs,
                         height: IconSize.xs,
                       }}
-                    /> 
-                    : 'Sprouts: '}
+                    />
+                  ) : (
+                    'Sprouts: '
+                  )}
                   {displayBN(fertilizer.sprouts)}
                 </Box>
-                {!isMobile ? 
-                  <>·</>
-                  : null
-                }
-                <Box sx={{ display: 'flex', alignItems: 'center', flexGrow: 1 }}>
-                  {isMobile ? 
+                {!isMobile ? <>·</> : null}
+                <Box
+                  sx={{ display: 'flex', alignItems: 'center', flexGrow: 1 }}
+                >
+                  {isMobile ? (
                     <Box
                       component="img"
                       src={humidityIcon}
@@ -142,17 +160,19 @@ function RowContent({isMobile, fertilizer, index, values, setFieldValue }: IRowC
                         width: IconSize.xs,
                         height: IconSize.xs,
                       }}
-                    /> 
-                    : 'Humidity: '}
+                    />
+                  ) : (
+                    'Humidity: '
+                  )}
                   {`${Number(fertilizer.token.humidity)}%`}
                 </Box>
               </>
             }
-            secondaryTypographyProps={{ 
-              display: 'flex', 
-              marginTop: isMobile ? -0.5 : 0, 
-              gap: isMobile ? 0 : 1, 
-              flexDirection: isMobile ? 'column' : 'row'
+            secondaryTypographyProps={{
+              display: 'flex',
+              marginTop: isMobile ? -0.5 : 0,
+              gap: isMobile ? 0 : 1,
+              flexDirection: isMobile ? 'column' : 'row',
             }}
             sx={{ my: 0 }}
           />
@@ -160,7 +180,7 @@ function RowContent({isMobile, fertilizer, index, values, setFieldValue }: IRowC
         <TextField
           type="number"
           color="primary"
-          placeholder={isMobile ? "Amount" :  "Amount to Transfer"}
+          placeholder={isMobile ? 'Amount' : 'Amount to Transfer'}
           value={values.amounts[index] || ''}
           onWheel={preventScroll}
           onChange={handleInput}
@@ -176,15 +196,15 @@ function RowContent({isMobile, fertilizer, index, values, setFieldValue }: IRowC
 
 const FertilizerSelect: FC<FertilizerSelectProps> = ({
   fertilizers,
-  isMobile
+  isMobile,
 }) => {
   /// Form state
-  const { values, setFieldValue } = useFormikContext<FertilizerTransferFormContext>();
+  const { values, setFieldValue } =
+    useFormikContext<FertilizerTransferFormContext>();
 
   if (!fertilizers) return null;
 
   const items = fertilizers.map((fertilizer, index) => {
-
     const thisFert = {
       id: fertilizer.token.id.toNumber(),
       amount: fertilizer.amount.toNumber(),
@@ -198,9 +218,9 @@ const FertilizerSelect: FC<FertilizerSelectProps> = ({
         if (values.fertilizerIds[i] === thisFert.id) {
           isSelected = true;
           break;
-        };
-      };
-    };
+        }
+      }
+    }
 
     function toggleFertilizer() {
       const newIds = values.fertilizerIds;
@@ -212,13 +232,13 @@ const FertilizerSelect: FC<FertilizerSelectProps> = ({
       } else {
         newIds[index] = fertilizer.token.id.toNumber();
         newAmounts[index] = fertilizer.amount.toNumber();
-      };
+      }
       newTotalSelected = newIds.filter(Boolean).length;
       setFieldValue('fertilizerIds', newIds);
       setFieldValue('amounts', newAmounts);
       setFieldValue('totalSelected', newTotalSelected);
-    };
-    
+    }
+
     return (
       <SelectionItem
         selected={isSelected}
@@ -237,25 +257,21 @@ const FertilizerSelect: FC<FertilizerSelectProps> = ({
             // color: BeanstalkPalette.lightGrey
           },
           mb: 1,
-          '&:last-child': {mb: 0}
+          '&:last-child': { mb: 0 },
         }}
-        >
-          <RowContent
-            isMobile={isMobile}
-            fertilizer={fertilizer}
-            index={index}
-            values={values}
-            setFieldValue={setFieldValue}
-          />
+      >
+        <RowContent
+          isMobile={isMobile}
+          fertilizer={fertilizer}
+          index={index}
+          values={values}
+          setFieldValue={setFieldValue}
+        />
       </SelectionItem>
     );
   });
 
-  return (
-    <List sx={{ p: 0 }}>
-      {items}
-    </List>
-  );
+  return <List sx={{ p: 0 }}>{items}</List>;
 };
 
 export default FertilizerSelect;

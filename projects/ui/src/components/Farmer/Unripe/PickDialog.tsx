@@ -42,7 +42,6 @@ import { useBeanstalkContract } from '~/hooks/ledger/useContract';
 import useGetChainToken from '~/hooks/chain/useGetChainToken';
 import useAccount from '~/hooks/ledger/useAccount';
 import { useFetchFarmerSilo } from '~/state/farmer/silo/updater';
-import UnripeTokenRow from './UnripeTokenRow';
 import Row from '~/components/Common/Row';
 import useFormMiddleware from '~/hooks/ledger/useFormMiddleware';
 
@@ -50,6 +49,7 @@ import useFormMiddleware from '~/hooks/ledger/useFormMiddleware';
 
 import { FC } from '~/types';
 import useSetting from '~/hooks/app/useSetting';
+import UnripeTokenRow from './UnripeTokenRow';
 
 // ----------------------------------------------------
 
@@ -280,7 +280,8 @@ const PickBeansDialog: FC<
   );
 
   // Are we impersonating a different account while not in dev mode
-  const isImpersonating = !!useSetting('impersonatedAccount')[0] && !import.meta.env.DEV;
+  const isImpersonating =
+    !!useSetting('impersonatedAccount')[0] && !import.meta.env.DEV;
 
   /// Tab: Pick Overview
   const alreadyPicked = picked[0] === true || picked[1] === true;
@@ -307,8 +308,8 @@ const PickBeansDialog: FC<
         <img src={pickImage} alt="pick" css={{ height: 120 }} />
         <Typography sx={{ fontSize: '15px' }} color="text.secondary">
           To claim non-Deposited Unripe Beans and Unripe BEAN:ETH LP, they must
-          be Picked. You can Pick assets to your wallet, or Pick
-          and Deposit them directly in the Silo.
+          be Picked. You can Pick assets to your wallet, or Pick and Deposit
+          them directly in the Silo.
           <br />
           <br />
           Unripe Deposited assets <b>do not need to be Picked</b> and were be
@@ -420,9 +421,7 @@ const PickBeansDialog: FC<
              * Section 2b: Total Unripe LP
              */}
             <Row justifyContent="space-between" pl={1}>
-              <Typography>
-                Unripe BEAN:ETH LP available to Pick
-              </Typography>
+              <Typography>Unripe BEAN:ETH LP available to Pick</Typography>
               <Row gap={0.3}>
                 <img src={brownLPIcon} alt="Circulating Beans" width={13} />
                 <Typography variant="h4">

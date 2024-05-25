@@ -42,7 +42,7 @@ const SiloAssetApyChip: FC<SiloAssetApyChipProps> = ({
     ? Bean
     : ({ symbol: 'Stalk', logo: stalkIconBlue } as Token);
 
-  function getDisplayString(val: (BigNumber | null)) {
+  function getDisplayString(val: BigNumber | null) {
     return `${val ? (val.gt(0) && val.lt(0.1) ? '< 0.1' : val.toFixed(1)) : '0.0'}%`;
   }
 
@@ -53,40 +53,50 @@ const SiloAssetApyChip: FC<SiloAssetApyChipProps> = ({
       title={
         <Row gap={0}>
           {metric === 'bean' && (
-            <Box sx={{ px: 1, py: 0.5, maxWidth: 245 }}>
+            <Box sx={{ px: 1, py: 0.5, maxWidth: 200 }}>
               <Stack gap={0.25}>
                 <Row gap={0.5}>
                   <TokenIcon token={Bean} />
                   Total Beans per Season
                 </Row>
-                <Box display='flex'>
-                  <Stack width='33%'>
-                    <Typography variant='h4'>
-                      24H
-                    </Typography>
-                    <Typography variant='h4'>
-                      {latestYield ? displayFullBN(latestYield.beansPerSeasonEMA24h, Bean.displayDecimals) : '0'}
-                    </Typography>
-                  </Stack>
-                  <Stack width='33%'>
-                    <Typography variant='h4'>
-                      7D
-                    </Typography>
-                    <Typography variant='h4'>
-                      {latestYield ? displayFullBN(latestYield.beansPerSeasonEMA7d, Bean.displayDecimals) : '0'}
+                <Box display="flex">
+                  {/* <Stack width="33%">
+                    <Typography variant="h4">24H</Typography>
+                    <Typography variant="h4">
+                      {latestYield
+                        ? displayFullBN(
+                            latestYield.beansPerSeasonEMA24h,
+                            Bean.displayDecimals
+                          )
+                        : '0'}
                     </Typography>
                   </Stack>
-                  <Stack width='33%'>
-                    <Typography variant='h4'>
-                      30D
+                  <Stack width="33%">
+                    <Typography variant="h4">7D</Typography>
+                    <Typography variant="h4">
+                      {latestYield
+                        ? displayFullBN(
+                            latestYield.beansPerSeasonEMA7d,
+                            Bean.displayDecimals
+                          )
+                        : '0'}
                     </Typography>
-                    <Typography variant='h4'>
-                      {latestYield ? displayFullBN(latestYield.beansPerSeasonEMA30d, Bean.displayDecimals) : '0'}
+                        </Stack> */}
+                  <Stack width="100%">
+                    <Typography variant="h4">30D</Typography>
+                    <Typography variant="h4">
+                      {latestYield
+                        ? displayFullBN(
+                            latestYield.beansPerSeasonEMA30d,
+                            Bean.displayDecimals
+                          )
+                        : '0'}
                     </Typography>
                   </Stack>
                 </Box>
                 <Typography variant="bodySmall" color="text.primary">
-                  24-hour/7-day/30-day exponential moving average of Beans earned by all Stalkholders per Season.
+                  30-day exponential moving average of Beans
+                  earned by all Stalkholders per Season.
                 </Typography>
               </Stack>
             </Box>
@@ -129,21 +139,31 @@ const SiloAssetApyChip: FC<SiloAssetApyChipProps> = ({
         variant="filled"
         color={metric === 'bean' ? 'primary' : 'secondary'}
         sx={{
-          "& .MuiChip-label": {
-            overflow: "visible"
-          }
+          '& .MuiChip-label': {
+            overflow: 'visible',
+          },
+          maxWidth: '120%'
         }}
         label={
           <Typography sx={{ whiteSpace: 'nowrap' }}>
-            <Row gap={0.5} flexWrap="nowrap" justifyContent="center" alignItems="center">
+            <Row
+              gap={0.25}
+              flexWrap="nowrap"
+              justifyContent="center"
+              alignItems="center"
+            >
               {variant === 'labeled' && (
                 <>
                   <TokenIcon token={tokenProps} /> vAPY:{' '}
                 </>
               )}
-              {metric === 'bean' ? 
+              {/* metric === 'bean' ? (
                 <>
-                  <Box display='flex' justifyContent='center' width={isLoading ? '40px' : 'auto'}>
+                  <Box
+                    display="flex"
+                    justifyContent="center"
+                    width={isLoading ? '40px' : 'auto'}
+                  >
                     {isLoading ? (
                       <BeanProgressIcon
                         size={10}
@@ -152,12 +172,20 @@ const SiloAssetApyChip: FC<SiloAssetApyChipProps> = ({
                       />
                     ) : (
                       <>
-                        {getDisplayString(apys ? apys['24h'][metric].times(100) : null)}
+                        {getDisplayString(
+                          apys ? apys['24h'][metric].times(100) : null
+                        )}
                       </>
                     )}
                   </Box>
-                  <Typography color='white' marginTop={-0.25}>|</Typography>
-                  <Box display='flex' justifyContent='center' width={isLoading ? '40px' : 'auto'}>
+                  <Typography color="white" marginTop={-0.25}>
+                    |
+                  </Typography>
+                  <Box
+                    display="flex"
+                    justifyContent="center"
+                    width={isLoading ? '40px' : 'auto'}
+                  >
                     {isLoading ? (
                       <BeanProgressIcon
                         size={10}
@@ -166,23 +194,29 @@ const SiloAssetApyChip: FC<SiloAssetApyChipProps> = ({
                       />
                     ) : (
                       <>
-                        {getDisplayString(apys ? apys['7d'][metric].times(100) : null)}
+                        {getDisplayString(
+                          apys ? apys['7d'][metric].times(100) : null
+                        )}
                       </>
                     )}
                   </Box>
-                  <Typography color='white' marginTop={-0.25}>|</Typography>
+                  <Typography color="white" marginTop={-0.25}>
+                    |
+                  </Typography>
                 </>
-              : null }
-              <Box display='flex' justifyContent='center'  width={isLoading ? '40px' : 'auto'}>
+              ) : null */}
+              <Box
+                display="flex"
+                justifyContent="center"
+                width={isLoading ? '40px' : 'auto'}
+              >
                 {isLoading ? (
-                  <BeanProgressIcon
-                    size={10}
-                    enabled
-                    variant="indeterminate"
-                  />
+                  <BeanProgressIcon size={10} enabled variant="indeterminate" />
                 ) : (
                   <>
-                    {getDisplayString(apys ? apys['30d'][metric].times(100) : null)}
+                    {getDisplayString(
+                      apys ? apys['30d'][metric].times(100) : null
+                    )}
                   </>
                 )}
               </Box>

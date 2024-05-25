@@ -5,14 +5,14 @@ overwrite: true
 generates:
   ./src/graph/schema-beanstalk.graphql:
     schema:
-      - https://graph.node.bean.money/subgraphs/name/beanstalk
+      - https://graph.node.bean.money/subgraphs/name/beanstalk-dev
     plugins:
       - "schema-ast"
-  # ./src/graph/schema-bean.graphql:
-  #   schema:
-  #     - https://graph.node.bean.money/subgraphs/name/bean-testing
-  #   plugins:
-  #     - "schema-ast"
+  #./src/graph/schema-bean.graphql:
+  #  schema:
+  #    - https://graph.node.bean.money/subgraphs/name/bean
+  #  plugins:
+  #    - "schema-ast"
   ./src/graph/schema-snapshot1.graphql:
     schema:
       - https://hub.snapshot.org/graphql

@@ -443,8 +443,10 @@ enum Beanstalk_orderBy {
   silo
   silo__activeFarmers
   silo__beanMints
+  silo__beanToMaxLpGpPerBdvRatio
   silo__depositedBDV
-  silo__grownStalkPerBdvPerSeason
+  silo__germinatingStalk
+  silo__grownStalkPerSeason
   silo__id
   silo__plantableStalk
   silo__roots
@@ -884,8 +886,10 @@ enum Farmer_orderBy {
   silo
   silo__activeFarmers
   silo__beanMints
+  silo__beanToMaxLpGpPerBdvRatio
   silo__depositedBDV
-  silo__grownStalkPerBdvPerSeason
+  silo__germinatingStalk
+  silo__grownStalkPerSeason
   silo__id
   silo__plantableStalk
   silo__roots
@@ -1746,6 +1750,9 @@ type FieldHourlySnapshot {
   """Number of blocks between sunrise and soil being sold out"""
   blocksToSoldOutSoil: BigInt!
 
+  """The caseId used in the seasonal adjustment of temperature"""
+  caseId: BigInt!
+
   """Timestamp of initial snapshot creation"""
   createdAt: BigInt!
 
@@ -1839,6 +1846,14 @@ input FieldHourlySnapshot_filter {
   blocksToSoldOutSoil_lte: BigInt
   blocksToSoldOutSoil_not: BigInt
   blocksToSoldOutSoil_not_in: [BigInt!]
+  caseId: BigInt
+  caseId_gt: BigInt
+  caseId_gte: BigInt
+  caseId_in: [BigInt!]
+  caseId_lt: BigInt
+  caseId_lte: BigInt
+  caseId_not: BigInt
+  caseId_not_in: [BigInt!]
   createdAt: BigInt
   createdAt_gt: BigInt
   createdAt_gte: BigInt
@@ -2046,6 +2061,7 @@ input FieldHourlySnapshot_filter {
 enum FieldHourlySnapshot_orderBy {
   blockNumber
   blocksToSoldOutSoil
+  caseId
   createdAt
   deltaHarvestablePods
   deltaHarvestedPods
@@ -2274,6 +2290,78 @@ enum Field_orderBy {
   sownBeans
   temperature
   unharvestablePods
+}
+
+type Germinating {
+  """Germinating bdv. This only applies to a Token address"""
+  bdv: BigInt!
+
+  """Address-(EVEN|ODD)"""
+  id: ID!
+
+  """The season in which the germination started"""
+  season: Int!
+
+  """Germinating stalk. This only applies to farmer/Beanstalk address"""
+  stalk: BigInt!
+
+  """Germinating tokens. This only applies to a Token address"""
+  tokenAmount: BigInt!
+}
+
+input Germinating_filter {
+  """Filter for the block changed event."""
+  _change_block: BlockChangedFilter
+  and: [Germinating_filter]
+  bdv: BigInt
+  bdv_gt: BigInt
+  bdv_gte: BigInt
+  bdv_in: [BigInt!]
+  bdv_lt: BigInt
+  bdv_lte: BigInt
+  bdv_not: BigInt
+  bdv_not_in: [BigInt!]
+  id: ID
+  id_gt: ID
+  id_gte: ID
+  id_in: [ID!]
+  id_lt: ID
+  id_lte: ID
+  id_not: ID
+  id_not_in: [ID!]
+  or: [Germinating_filter]
+  season: Int
+  season_gt: Int
+  season_gte: Int
+  season_in: [Int!]
+  season_lt: Int
+  season_lte: Int
+  season_not: Int
+  season_not_in: [Int!]
+  stalk: BigInt
+  stalk_gt: BigInt
+  stalk_gte: BigInt
+  stalk_in: [BigInt!]
+  stalk_lt: BigInt
+  stalk_lte: BigInt
+  stalk_not: BigInt
+  stalk_not_in: [BigInt!]
+  tokenAmount: BigInt
+  tokenAmount_gt: BigInt
+  tokenAmount_gte: BigInt
+  tokenAmount_in: [BigInt!]
+  tokenAmount_lt: BigInt
+  tokenAmount_lte: BigInt
+  tokenAmount_not: BigInt
+  tokenAmount_not_in: [BigInt!]
+}
+
+enum Germinating_orderBy {
+  bdv
+  id
+  season
+  stalk
+  tokenAmount
 }
 
 type Harvest implements FieldEvent {
@@ -6975,6 +7063,34 @@ type Query {
     subgraphError: _SubgraphErrorPolicy_! = deny
     where: Field_filter
   ): [Field!]!
+  germinating(
+    """
+    The block at which the query should be executed. Can either be a `{ hash: Bytes }` value containing a block hash, a `{ number: Int }` containing the block number, or a `{ number_gte: Int }` containing the minimum block number. In the case of `number_gte`, the query will be executed on the latest block only if the subgraph has progressed to or past the minimum block number. Defaults to the latest block when omitted.
+    """
+    block: Block_height
+    id: ID!
+
+    """
+    Set to `allow` to receive data even if the subgraph has skipped over errors while syncing.
+    """
+    subgraphError: _SubgraphErrorPolicy_! = deny
+  ): Germinating
+  germinatings(
+    """
+    The block at which the query should be executed. Can either be a `{ hash: Bytes }` value containing a block hash, a `{ number: Int }` containing the block number, or a `{ number_gte: Int }` containing the minimum block number. In the case of `number_gte`, the query will be executed on the latest block only if the subgraph has progressed to or past the minimum block number. Defaults to the latest block when omitted.
+    """
+    block: Block_height
+    first: Int = 100
+    orderBy: Germinating_orderBy
+    orderDirection: OrderDirection
+    skip: Int = 0
+
+    """
+    Set to `allow` to receive data even if the subgraph has skipped over errors while syncing.
+    """
+    subgraphError: _SubgraphErrorPolicy_! = deny
+    where: Germinating_filter
+  ): [Germinating!]!
   harvest(
     """
     The block at which the query should be executed. Can either be a `{ hash: Bytes }` value containing a block hash, a `{ number: Int }` containing the block number, or a `{ number_gte: Int }` containing the minimum block number. In the case of `number_gte`, the query will be executed on the latest block only if the subgraph has progressed to or past the minimum block number. Defaults to the latest block when omitted.
@@ -7967,6 +8083,62 @@ type Query {
     """
     subgraphError: _SubgraphErrorPolicy_! = deny
   ): WhitelistToken
+  whitelistTokenDailySnapshot(
+    """
+    The block at which the query should be executed. Can either be a `{ hash: Bytes }` value containing a block hash, a `{ number: Int }` containing the block number, or a `{ number_gte: Int }` containing the minimum block number. In the case of `number_gte`, the query will be executed on the latest block only if the subgraph has progressed to or past the minimum block number. Defaults to the latest block when omitted.
+    """
+    block: Block_height
+    id: ID!
+
+    """
+    Set to `allow` to receive data even if the subgraph has skipped over errors while syncing.
+    """
+    subgraphError: _SubgraphErrorPolicy_! = deny
+  ): WhitelistTokenDailySnapshot
+  whitelistTokenDailySnapshots(
+    """
+    The block at which the query should be executed. Can either be a `{ hash: Bytes }` value containing a block hash, a `{ number: Int }` containing the block number, or a `{ number_gte: Int }` containing the minimum block number. In the case of `number_gte`, the query will be executed on the latest block only if the subgraph has progressed to or past the minimum block number. Defaults to the latest block when omitted.
+    """
+    block: Block_height
+    first: Int = 100
+    orderBy: WhitelistTokenDailySnapshot_orderBy
+    orderDirection: OrderDirection
+    skip: Int = 0
+
+    """
+    Set to `allow` to receive data even if the subgraph has skipped over errors while syncing.
+    """
+    subgraphError: _SubgraphErrorPolicy_! = deny
+    where: WhitelistTokenDailySnapshot_filter
+  ): [WhitelistTokenDailySnapshot!]!
+  whitelistTokenHourlySnapshot(
+    """
+    The block at which the query should be executed. Can either be a `{ hash: Bytes }` value containing a block hash, a `{ number: Int }` containing the block number, or a `{ number_gte: Int }` containing the minimum block number. In the case of `number_gte`, the query will be executed on the latest block only if the subgraph has progressed to or past the minimum block number. Defaults to the latest block when omitted.
+    """
+    block: Block_height
+    id: ID!
+
+    """
+    Set to `allow` to receive data even if the subgraph has skipped over errors while syncing.
+    """
+    subgraphError: _SubgraphErrorPolicy_! = deny
+  ): WhitelistTokenHourlySnapshot
+  whitelistTokenHourlySnapshots(
+    """
+    The block at which the query should be executed. Can either be a `{ hash: Bytes }` value containing a block hash, a `{ number: Int }` containing the block number, or a `{ number_gte: Int }` containing the minimum block number. In the case of `number_gte`, the query will be executed on the latest block only if the subgraph has progressed to or past the minimum block number. Defaults to the latest block when omitted.
+    """
+    block: Block_height
+    first: Int = 100
+    orderBy: WhitelistTokenHourlySnapshot_orderBy
+    orderDirection: OrderDirection
+    skip: Int = 0
+
+    """
+    Set to `allow` to receive data even if the subgraph has skipped over errors while syncing.
+    """
+    subgraphError: _SubgraphErrorPolicy_! = deny
+    where: WhitelistTokenHourlySnapshot_filter
+  ): [WhitelistTokenHourlySnapshot!]!
   whitelistTokenSetting(
     """
     The block at which the query should be executed. Can either be a `{ hash: Bytes }` value containing a block hash, a `{ number: Int }` containing the block number, or a `{ number_gte: Int }` containing the minimum block number. In the case of `number_gte`, the query will be executed on the latest block only if the subgraph has progressed to or past the minimum block number. Defaults to the latest block when omitted.
@@ -8746,6 +8918,9 @@ type Silo {
   """Cumulative total for bean mints sent to the silo"""
   beanMints: BigInt!
 
+  """[Seed Gauge] Current target ratio of Bean to LP deposits"""
+  beanToMaxLpGpPerBdvRatio: BigInt
+
   """Beanstalk diamond address"""
   beanstalk: Beanstalk!
 
@@ -8755,11 +8930,17 @@ type Silo {
   """Current BDV of all deposited assets"""
   depositedBDV: BigInt!
 
+  """Tokens that have been removed from the silo deposit whitelist"""
+  dewhitelistedTokens: [String!]!
+
   """Farmer address if applicable"""
   farmer: Farmer
 
-  """Current average grown stalk per bdv per season"""
-  grownStalkPerBdvPerSeason: BigInt!
+  """[Seed Gauge] Stalk that is currently Germinating"""
+  germinatingStalk: BigInt!
+
+  """Current grown stalk per season"""
+  grownStalkPerSeason: BigInt!
 
   """Link to hourly snapshot data"""
   hourlySnapshots(first: Int = 100, orderBy: SiloHourlySnapshot_orderBy, orderDirection: OrderDirection, skip: Int = 0, where: SiloHourlySnapshot_filter): [SiloHourlySnapshot!]!
@@ -9286,8 +9467,10 @@ enum SiloAsset_orderBy {
   silo
   silo__activeFarmers
   silo__beanMints
+  silo__beanToMaxLpGpPerBdvRatio
   silo__depositedBDV
-  silo__grownStalkPerBdvPerSeason
+  silo__germinatingStalk
+  silo__grownStalkPerSeason
   silo__id
   silo__plantableStalk
   silo__roots
@@ -9304,6 +9487,9 @@ type SiloDailySnapshot {
   """Point in time cumulative total for bean mints sent to the silo"""
   beanMints: BigInt!
 
+  """[Seed Gauge] Current target ratio of Bean to LP deposits"""
+  beanToMaxLpGpPerBdvRatio: BigInt
+
   """Timestamp of initial snapshot creation"""
   createdAt: BigInt!
 
@@ -9315,6 +9501,9 @@ type SiloDailySnapshot {
 
   """Point in time delta BDV of all deposited assets"""
   deltaDepositedBDV: BigInt!
+
+  """Point in time germinating stalk balance"""
+  deltaGerminatingStalk: BigInt!
 
   """
   Point in time current plantable stalk for bean seigniorage not yet claimed
@@ -9333,8 +9522,11 @@ type SiloDailySnapshot {
   """Point in time current BDV of all deposited assets"""
   depositedBDV: BigInt!
 
-  """Point in time average grown stalk per bdv per season"""
-  grownStalkPerBdvPerSeason: BigInt!
+  """[Seed Gauge] Stalk that is currently Germinating"""
+  germinatingStalk: BigInt!
+
+  """Point in time grown stalk per season"""
+  grownStalkPerSeason: BigInt!
 
   """ID of silo-Unix Hour Timestamp"""
   id: ID!
@@ -9383,6 +9575,14 @@ input SiloDailySnapshot_filter {
   beanMints_lte: BigInt
   beanMints_not: BigInt
   beanMints_not_in: [BigInt!]
+  beanToMaxLpGpPerBdvRatio: BigInt
+  beanToMaxLpGpPerBdvRatio_gt: BigInt
+  beanToMaxLpGpPerBdvRatio_gte: BigInt
+  beanToMaxLpGpPerBdvRatio_in: [BigInt!]
+  beanToMaxLpGpPerBdvRatio_lt: BigInt
+  beanToMaxLpGpPerBdvRatio_lte: BigInt
+  beanToMaxLpGpPerBdvRatio_not: BigInt
+  beanToMaxLpGpPerBdvRatio_not_in: [BigInt!]
   createdAt: BigInt
   createdAt_gt: BigInt
   createdAt_gte: BigInt
@@ -9415,6 +9615,14 @@ input SiloDailySnapshot_filter {
   deltaDepositedBDV_lte: BigInt
   deltaDepositedBDV_not: BigInt
   deltaDepositedBDV_not_in: [BigInt!]
+  deltaGerminatingStalk: BigInt
+  deltaGerminatingStalk_gt: BigInt
+  deltaGerminatingStalk_gte: BigInt
+  deltaGerminatingStalk_in: [BigInt!]
+  deltaGerminatingStalk_lt: BigInt
+  deltaGerminatingStalk_lte: BigInt
+  deltaGerminatingStalk_not: BigInt
+  deltaGerminatingStalk_not_in: [BigInt!]
   deltaPlantableStalk: BigInt
   deltaPlantableStalk_gt: BigInt
   deltaPlantableStalk_gte: BigInt
@@ -9455,14 +9663,22 @@ input SiloDailySnapshot_filter {
   depositedBDV_lte: BigInt
   depositedBDV_not: BigInt
   depositedBDV_not_in: [BigInt!]
-  grownStalkPerBdvPerSeason: BigInt
-  grownStalkPerBdvPerSeason_gt: BigInt
-  grownStalkPerBdvPerSeason_gte: BigInt
-  grownStalkPerBdvPerSeason_in: [BigInt!]
-  grownStalkPerBdvPerSeason_lt: BigInt
-  grownStalkPerBdvPerSeason_lte: BigInt
-  grownStalkPerBdvPerSeason_not: BigInt
-  grownStalkPerBdvPerSeason_not_in: [BigInt!]
+  germinatingStalk: BigInt
+  germinatingStalk_gt: BigInt
+  germinatingStalk_gte: BigInt
+  germinatingStalk_in: [BigInt!]
+  germinatingStalk_lt: BigInt
+  germinatingStalk_lte: BigInt
+  germinatingStalk_not: BigInt
+  germinatingStalk_not_in: [BigInt!]
+  grownStalkPerSeason: BigInt
+  grownStalkPerSeason_gt: BigInt
+  grownStalkPerSeason_gte: BigInt
+  grownStalkPerSeason_in: [BigInt!]
+  grownStalkPerSeason_lt: BigInt
+  grownStalkPerSeason_lte: BigInt
+  grownStalkPerSeason_not: BigInt
+  grownStalkPerSeason_not_in: [BigInt!]
   id: ID
   id_gt: ID
   id_gte: ID
@@ -9546,16 +9762,19 @@ input SiloDailySnapshot_filter {
 enum SiloDailySnapshot_orderBy {
   activeFarmers
   beanMints
+  beanToMaxLpGpPerBdvRatio
   createdAt
   deltaActiveFarmers
   deltaBeanMints
   deltaDepositedBDV
+  deltaGerminatingStalk
   deltaPlantableStalk
   deltaRoots
   deltaSeeds
   deltaStalk
   depositedBDV
-  grownStalkPerBdvPerSeason
+  germinatingStalk
+  grownStalkPerSeason
   id
   plantableStalk
   roots
@@ -9564,8 +9783,10 @@ enum SiloDailySnapshot_orderBy {
   silo
   silo__activeFarmers
   silo__beanMints
+  silo__beanToMaxLpGpPerBdvRatio
   silo__depositedBDV
-  silo__grownStalkPerBdvPerSeason
+  silo__germinatingStalk
+  silo__grownStalkPerSeason
   silo__id
   silo__plantableStalk
   silo__roots
@@ -9905,6 +10126,14 @@ type SiloHourlySnapshot {
   """Point in time cumulative total for bean mints sent to the silo"""
   beanMints: BigInt!
 
+  """[Seed Gauge] Current target ratio of Bean to LP deposits"""
+  beanToMaxLpGpPerBdvRatio: BigInt
+
+  """
+  [Seed Gauge] The caseId used in the seasonal adjustment of beanToMaxLpGpPerBdvRatio
+  """
+  caseId: BigInt
+
   """Timestamp of initial snapshot creation"""
   createdAt: BigInt!
 
@@ -9916,6 +10145,9 @@ type SiloHourlySnapshot {
 
   """Point in time delta BDV of all deposited assets"""
   deltaDepositedBDV: BigInt!
+
+  """Point in time germinating stalk balance"""
+  deltaGerminatingStalk: BigInt!
 
   """
   Point in time current plantable stalk for bean seigniorage not yet claimed
@@ -9934,8 +10166,11 @@ type SiloHourlySnapshot {
   """Point in time current BDV of all deposited assets"""
   depositedBDV: BigInt!
 
-  """Point in time average grown stalk per bdv per season"""
-  grownStalkPerBdvPerSeason: BigInt!
+  """[Seed Gauge] Stalk that is currently Germinating"""
+  germinatingStalk: BigInt!
+
+  """Point in time grown stalk per season"""
+  grownStalkPerSeason: BigInt!
 
   """ID of silo-Unix Hour Timestamp"""
   id: ID!
@@ -9984,6 +10219,22 @@ input SiloHourlySnapshot_filter {
   beanMints_lte: BigInt
   beanMints_not: BigInt
   beanMints_not_in: [BigInt!]
+  beanToMaxLpGpPerBdvRatio: BigInt
+  beanToMaxLpGpPerBdvRatio_gt: BigInt
+  beanToMaxLpGpPerBdvRatio_gte: BigInt
+  beanToMaxLpGpPerBdvRatio_in: [BigInt!]
+  beanToMaxLpGpPerBdvRatio_lt: BigInt
+  beanToMaxLpGpPerBdvRatio_lte: BigInt
+  beanToMaxLpGpPerBdvRatio_not: BigInt
+  beanToMaxLpGpPerBdvRatio_not_in: [BigInt!]
+  caseId: BigInt
+  caseId_gt: BigInt
+  caseId_gte: BigInt
+  caseId_in: [BigInt!]
+  caseId_lt: BigInt
+  caseId_lte: BigInt
+  caseId_not: BigInt
+  caseId_not_in: [BigInt!]
   createdAt: BigInt
   createdAt_gt: BigInt
   createdAt_gte: BigInt
@@ -10016,6 +10267,14 @@ input SiloHourlySnapshot_filter {
   deltaDepositedBDV_lte: BigInt
   deltaDepositedBDV_not: BigInt
   deltaDepositedBDV_not_in: [BigInt!]
+  deltaGerminatingStalk: BigInt
+  deltaGerminatingStalk_gt: BigInt
+  deltaGerminatingStalk_gte: BigInt
+  deltaGerminatingStalk_in: [BigInt!]
+  deltaGerminatingStalk_lt: BigInt
+  deltaGerminatingStalk_lte: BigInt
+  deltaGerminatingStalk_not: BigInt
+  deltaGerminatingStalk_not_in: [BigInt!]
   deltaPlantableStalk: BigInt
   deltaPlantableStalk_gt: BigInt
   deltaPlantableStalk_gte: BigInt
@@ -10056,14 +10315,22 @@ input SiloHourlySnapshot_filter {
   depositedBDV_lte: BigInt
   depositedBDV_not: BigInt
   depositedBDV_not_in: [BigInt!]
-  grownStalkPerBdvPerSeason: BigInt
-  grownStalkPerBdvPerSeason_gt: BigInt
-  grownStalkPerBdvPerSeason_gte: BigInt
-  grownStalkPerBdvPerSeason_in: [BigInt!]
-  grownStalkPerBdvPerSeason_lt: BigInt
-  grownStalkPerBdvPerSeason_lte: BigInt
-  grownStalkPerBdvPerSeason_not: BigInt
-  grownStalkPerBdvPerSeason_not_in: [BigInt!]
+  germinatingStalk: BigInt
+  germinatingStalk_gt: BigInt
+  germinatingStalk_gte: BigInt
+  germinatingStalk_in: [BigInt!]
+  germinatingStalk_lt: BigInt
+  germinatingStalk_lte: BigInt
+  germinatingStalk_not: BigInt
+  germinatingStalk_not_in: [BigInt!]
+  grownStalkPerSeason: BigInt
+  grownStalkPerSeason_gt: BigInt
+  grownStalkPerSeason_gte: BigInt
+  grownStalkPerSeason_in: [BigInt!]
+  grownStalkPerSeason_lt: BigInt
+  grownStalkPerSeason_lte: BigInt
+  grownStalkPerSeason_not: BigInt
+  grownStalkPerSeason_not_in: [BigInt!]
   id: ID
   id_gt: ID
   id_gte: ID
@@ -10147,16 +10414,20 @@ input SiloHourlySnapshot_filter {
 enum SiloHourlySnapshot_orderBy {
   activeFarmers
   beanMints
+  beanToMaxLpGpPerBdvRatio
+  caseId
   createdAt
   deltaActiveFarmers
   deltaBeanMints
   deltaDepositedBDV
+  deltaGerminatingStalk
   deltaPlantableStalk
   deltaRoots
   deltaSeeds
   deltaStalk
   depositedBDV
-  grownStalkPerBdvPerSeason
+  germinatingStalk
+  grownStalkPerSeason
   id
   plantableStalk
   roots
@@ -10165,8 +10436,10 @@ enum SiloHourlySnapshot_orderBy {
   silo
   silo__activeFarmers
   silo__beanMints
+  silo__beanToMaxLpGpPerBdvRatio
   silo__depositedBDV
-  silo__grownStalkPerBdvPerSeason
+  silo__germinatingStalk
+  silo__grownStalkPerSeason
   silo__id
   silo__plantableStalk
   silo__roots
@@ -10444,6 +10717,14 @@ input Silo_filter {
   beanMints_lte: BigInt
   beanMints_not: BigInt
   beanMints_not_in: [BigInt!]
+  beanToMaxLpGpPerBdvRatio: BigInt
+  beanToMaxLpGpPerBdvRatio_gt: BigInt
+  beanToMaxLpGpPerBdvRatio_gte: BigInt
+  beanToMaxLpGpPerBdvRatio_in: [BigInt!]
+  beanToMaxLpGpPerBdvRatio_lt: BigInt
+  beanToMaxLpGpPerBdvRatio_lte: BigInt
+  beanToMaxLpGpPerBdvRatio_not: BigInt
+  beanToMaxLpGpPerBdvRatio_not_in: [BigInt!]
   beanstalk: String
   beanstalk_: Beanstalk_filter
   beanstalk_contains: String
@@ -10474,6 +10755,12 @@ input Silo_filter {
   depositedBDV_lte: BigInt
   depositedBDV_not: BigInt
   depositedBDV_not_in: [BigInt!]
+  dewhitelistedTokens: [String!]
+  dewhitelistedTokens_contains: [String!]
+  dewhitelistedTokens_contains_nocase: [String!]
+  dewhitelistedTokens_not: [String!]
+  dewhitelistedTokens_not_contains: [String!]
+  dewhitelistedTokens_not_contains_nocase: [String!]
   farmer: String
   farmer_: Farmer_filter
   farmer_contains: String
@@ -10495,14 +10782,22 @@ input Silo_filter {
   farmer_not_starts_with_nocase: String
   farmer_starts_with: String
   farmer_starts_with_nocase: String
-  grownStalkPerBdvPerSeason: BigInt
-  grownStalkPerBdvPerSeason_gt: BigInt
-  grownStalkPerBdvPerSeason_gte: BigInt
-  grownStalkPerBdvPerSeason_in: [BigInt!]
-  grownStalkPerBdvPerSeason_lt: BigInt
-  grownStalkPerBdvPerSeason_lte: BigInt
-  grownStalkPerBdvPerSeason_not: BigInt
-  grownStalkPerBdvPerSeason_not_in: [BigInt!]
+  germinatingStalk: BigInt
+  germinatingStalk_gt: BigInt
+  germinatingStalk_gte: BigInt
+  germinatingStalk_in: [BigInt!]
+  germinatingStalk_lt: BigInt
+  germinatingStalk_lte: BigInt
+  germinatingStalk_not: BigInt
+  germinatingStalk_not_in: [BigInt!]
+  grownStalkPerSeason: BigInt
+  grownStalkPerSeason_gt: BigInt
+  grownStalkPerSeason_gte: BigInt
+  grownStalkPerSeason_in: [BigInt!]
+  grownStalkPerSeason_lt: BigInt
+  grownStalkPerSeason_lte: BigInt
+  grownStalkPerSeason_not: BigInt
+  grownStalkPerSeason_not_in: [BigInt!]
   hourlySnapshots_: SiloHourlySnapshot_filter
   id: ID
   id_gt: ID
@@ -10557,6 +10852,7 @@ enum Silo_orderBy {
   activeFarmers
   assets
   beanMints
+  beanToMaxLpGpPerBdvRatio
   beanstalk
   beanstalk__id
   beanstalk__lastSeason
@@ -10568,9 +10864,11 @@ enum Silo_orderBy {
   beanstalk__subgraphVersion
   dailySnapshots
   depositedBDV
+  dewhitelistedTokens
   farmer
   farmer__id
-  grownStalkPerBdvPerSeason
+  germinatingStalk
+  grownStalkPerSeason
   hourlySnapshots
   id
   plantableStalk
@@ -11113,6 +11411,34 @@ type Subscription {
     subgraphError: _SubgraphErrorPolicy_! = deny
     where: Field_filter
   ): [Field!]!
+  germinating(
+    """
+    The block at which the query should be executed. Can either be a `{ hash: Bytes }` value containing a block hash, a `{ number: Int }` containing the block number, or a `{ number_gte: Int }` containing the minimum block number. In the case of `number_gte`, the query will be executed on the latest block only if the subgraph has progressed to or past the minimum block number. Defaults to the latest block when omitted.
+    """
+    block: Block_height
+    id: ID!
+
+    """
+    Set to `allow` to receive data even if the subgraph has skipped over errors while syncing.
+    """
+    subgraphError: _SubgraphErrorPolicy_! = deny
+  ): Germinating
+  germinatings(
+    """
+    The block at which the query should be executed. Can either be a `{ hash: Bytes }` value containing a block hash, a `{ number: Int }` containing the block number, or a `{ number_gte: Int }` containing the minimum block number. In the case of `number_gte`, the query will be executed on the latest block only if the subgraph has progressed to or past the minimum block number. Defaults to the latest block when omitted.
+    """
+    block: Block_height
+    first: Int = 100
+    orderBy: Germinating_orderBy
+    orderDirection: OrderDirection
+    skip: Int = 0
+
+    """
+    Set to `allow` to receive data even if the subgraph has skipped over errors while syncing.
+    """
+    subgraphError: _SubgraphErrorPolicy_! = deny
+    where: Germinating_filter
+  ): [Germinating!]!
   harvest(
     """
     The block at which the query should be executed. Can either be a `{ hash: Bytes }` value containing a block hash, a `{ number: Int }` containing the block number, or a `{ number_gte: Int }` containing the minimum block number. In the case of `number_gte`, the query will be executed on the latest block only if the subgraph has progressed to or past the minimum block number. Defaults to the latest block when omitted.
@@ -12105,6 +12431,62 @@ type Subscription {
     """
     subgraphError: _SubgraphErrorPolicy_! = deny
   ): WhitelistToken
+  whitelistTokenDailySnapshot(
+    """
+    The block at which the query should be executed. Can either be a `{ hash: Bytes }` value containing a block hash, a `{ number: Int }` containing the block number, or a `{ number_gte: Int }` containing the minimum block number. In the case of `number_gte`, the query will be executed on the latest block only if the subgraph has progressed to or past the minimum block number. Defaults to the latest block when omitted.
+    """
+    block: Block_height
+    id: ID!
+
+    """
+    Set to `allow` to receive data even if the subgraph has skipped over errors while syncing.
+    """
+    subgraphError: _SubgraphErrorPolicy_! = deny
+  ): WhitelistTokenDailySnapshot
+  whitelistTokenDailySnapshots(
+    """
+    The block at which the query should be executed. Can either be a `{ hash: Bytes }` value containing a block hash, a `{ number: Int }` containing the block number, or a `{ number_gte: Int }` containing the minimum block number. In the case of `number_gte`, the query will be executed on the latest block only if the subgraph has progressed to or past the minimum block number. Defaults to the latest block when omitted.
+    """
+    block: Block_height
+    first: Int = 100
+    orderBy: WhitelistTokenDailySnapshot_orderBy
+    orderDirection: OrderDirection
+    skip: Int = 0
+
+    """
+    Set to `allow` to receive data even if the subgraph has skipped over errors while syncing.
+    """
+    subgraphError: _SubgraphErrorPolicy_! = deny
+    where: WhitelistTokenDailySnapshot_filter
+  ): [WhitelistTokenDailySnapshot!]!
+  whitelistTokenHourlySnapshot(
+    """
+    The block at which the query should be executed. Can either be a `{ hash: Bytes }` value containing a block hash, a `{ number: Int }` containing the block number, or a `{ number_gte: Int }` containing the minimum block number. In the case of `number_gte`, the query will be executed on the latest block only if the subgraph has progressed to or past the minimum block number. Defaults to the latest block when omitted.
+    """
+    block: Block_height
+    id: ID!
+
+    """
+    Set to `allow` to receive data even if the subgraph has skipped over errors while syncing.
+    """
+    subgraphError: _SubgraphErrorPolicy_! = deny
+  ): WhitelistTokenHourlySnapshot
+  whitelistTokenHourlySnapshots(
+    """
+    The block at which the query should be executed. Can either be a `{ hash: Bytes }` value containing a block hash, a `{ number: Int }` containing the block number, or a `{ number_gte: Int }` containing the minimum block number. In the case of `number_gte`, the query will be executed on the latest block only if the subgraph has progressed to or past the minimum block number. Defaults to the latest block when omitted.
+    """
+    block: Block_height
+    first: Int = 100
+    orderBy: WhitelistTokenHourlySnapshot_orderBy
+    orderDirection: OrderDirection
+    skip: Int = 0
+
+    """
+    Set to `allow` to receive data even if the subgraph has skipped over errors while syncing.
+    """
+    subgraphError: _SubgraphErrorPolicy_! = deny
+    where: WhitelistTokenHourlySnapshot_filter
+  ): [WhitelistTokenHourlySnapshot!]!
   whitelistTokenSetting(
     """
     The block at which the query should be executed. Can either be a `{ hash: Bytes }` value containing a block hash, a `{ number: Int }` containing the block number, or a `{ number_gte: Int }` containing the minimum block number. In the case of `number_gte`, the query will be executed on the latest block only if the subgraph has progressed to or past the minimum block number. Defaults to the latest block when omitted.
@@ -12448,13 +12830,13 @@ type WhitelistToken implements SiloEvent {
   protocol: Beanstalk!
 
   """Seeds per BDV"""
-  seeds: BigInt!
+  seeds: BigInt
 
   """Selector for token"""
-  selector: String!
+  selector: String
 
   """Stalk per BDV"""
-  stalk: BigInt!
+  stalk: BigInt
 
   """Stalk earned per season"""
   stalkPerSeason: BigInt
@@ -12463,16 +12845,434 @@ type WhitelistToken implements SiloEvent {
   token: String!
 }
 
-type WhitelistTokenSetting {
-  """ Contract address for the whitelisted token """
-  id: Bytes!
+type WhitelistTokenDailySnapshot {
+  """Timestamp of initial snapshot creation"""
+  createdAt: BigInt!
+
+  """[Seed Gauge] Current Gauge Points"""
+  gaugePoints: BigInt
+
+  """[Seed Gauge] Encoded Gauge Point selector"""
+  gpSelector: Bytes
+
+  """Token address - Unix Timestamp"""
+  id: ID!
+
+  """[Seed Gauge] Encoded Liquidity Weight selector"""
+  lwSelector: Bytes
 
   """
   The last season in which the stalkEarnedPerSeason for this token was updated.
   """
   milestoneSeason: Int!
 
-  """ Encoded BDV selector """
+  """
+  [Seed Gauge] The current optimal targeted distribution of BDV for this whitelisted asset
+  """
+  optimalPercentDepositedBdv: BigInt
+
+  """Encoded BDV selector"""
+  selector: Bytes!
+
+  """
+  Represents how much Stalk one BDV of the underlying deposited token grows each season.
+  """
+  stalkEarnedPerSeason: BigInt!
+
+  """
+  The stalk per BDV that the silo grants in exchange for depositing this token.
+  """
+  stalkIssuedPerBdv: BigInt!
+
+  """WhitelistTokenSetting associated with this snapshot"""
+  token: WhitelistTokenSetting!
+
+  """Timestamp of last entity update"""
+  updatedAt: BigInt!
+}
+
+input WhitelistTokenDailySnapshot_filter {
+  """Filter for the block changed event."""
+  _change_block: BlockChangedFilter
+  and: [WhitelistTokenDailySnapshot_filter]
+  createdAt: BigInt
+  createdAt_gt: BigInt
+  createdAt_gte: BigInt
+  createdAt_in: [BigInt!]
+  createdAt_lt: BigInt
+  createdAt_lte: BigInt
+  createdAt_not: BigInt
+  createdAt_not_in: [BigInt!]
+  gaugePoints: BigInt
+  gaugePoints_gt: BigInt
+  gaugePoints_gte: BigInt
+  gaugePoints_in: [BigInt!]
+  gaugePoints_lt: BigInt
+  gaugePoints_lte: BigInt
+  gaugePoints_not: BigInt
+  gaugePoints_not_in: [BigInt!]
+  gpSelector: Bytes
+  gpSelector_contains: Bytes
+  gpSelector_gt: Bytes
+  gpSelector_gte: Bytes
+  gpSelector_in: [Bytes!]
+  gpSelector_lt: Bytes
+  gpSelector_lte: Bytes
+  gpSelector_not: Bytes
+  gpSelector_not_contains: Bytes
+  gpSelector_not_in: [Bytes!]
+  id: ID
+  id_gt: ID
+  id_gte: ID
+  id_in: [ID!]
+  id_lt: ID
+  id_lte: ID
+  id_not: ID
+  id_not_in: [ID!]
+  lwSelector: Bytes
+  lwSelector_contains: Bytes
+  lwSelector_gt: Bytes
+  lwSelector_gte: Bytes
+  lwSelector_in: [Bytes!]
+  lwSelector_lt: Bytes
+  lwSelector_lte: Bytes
+  lwSelector_not: Bytes
+  lwSelector_not_contains: Bytes
+  lwSelector_not_in: [Bytes!]
+  milestoneSeason: Int
+  milestoneSeason_gt: Int
+  milestoneSeason_gte: Int
+  milestoneSeason_in: [Int!]
+  milestoneSeason_lt: Int
+  milestoneSeason_lte: Int
+  milestoneSeason_not: Int
+  milestoneSeason_not_in: [Int!]
+  optimalPercentDepositedBdv: BigInt
+  optimalPercentDepositedBdv_gt: BigInt
+  optimalPercentDepositedBdv_gte: BigInt
+  optimalPercentDepositedBdv_in: [BigInt!]
+  optimalPercentDepositedBdv_lt: BigInt
+  optimalPercentDepositedBdv_lte: BigInt
+  optimalPercentDepositedBdv_not: BigInt
+  optimalPercentDepositedBdv_not_in: [BigInt!]
+  or: [WhitelistTokenDailySnapshot_filter]
+  selector: Bytes
+  selector_contains: Bytes
+  selector_gt: Bytes
+  selector_gte: Bytes
+  selector_in: [Bytes!]
+  selector_lt: Bytes
+  selector_lte: Bytes
+  selector_not: Bytes
+  selector_not_contains: Bytes
+  selector_not_in: [Bytes!]
+  stalkEarnedPerSeason: BigInt
+  stalkEarnedPerSeason_gt: BigInt
+  stalkEarnedPerSeason_gte: BigInt
+  stalkEarnedPerSeason_in: [BigInt!]
+  stalkEarnedPerSeason_lt: BigInt
+  stalkEarnedPerSeason_lte: BigInt
+  stalkEarnedPerSeason_not: BigInt
+  stalkEarnedPerSeason_not_in: [BigInt!]
+  stalkIssuedPerBdv: BigInt
+  stalkIssuedPerBdv_gt: BigInt
+  stalkIssuedPerBdv_gte: BigInt
+  stalkIssuedPerBdv_in: [BigInt!]
+  stalkIssuedPerBdv_lt: BigInt
+  stalkIssuedPerBdv_lte: BigInt
+  stalkIssuedPerBdv_not: BigInt
+  stalkIssuedPerBdv_not_in: [BigInt!]
+  token: String
+  token_: WhitelistTokenSetting_filter
+  token_contains: String
+  token_contains_nocase: String
+  token_ends_with: String
+  token_ends_with_nocase: String
+  token_gt: String
+  token_gte: String
+  token_in: [String!]
+  token_lt: String
+  token_lte: String
+  token_not: String
+  token_not_contains: String
+  token_not_contains_nocase: String
+  token_not_ends_with: String
+  token_not_ends_with_nocase: String
+  token_not_in: [String!]
+  token_not_starts_with: String
+  token_not_starts_with_nocase: String
+  token_starts_with: String
+  token_starts_with_nocase: String
+  updatedAt: BigInt
+  updatedAt_gt: BigInt
+  updatedAt_gte: BigInt
+  updatedAt_in: [BigInt!]
+  updatedAt_lt: BigInt
+  updatedAt_lte: BigInt
+  updatedAt_not: BigInt
+  updatedAt_not_in: [BigInt!]
+}
+
+enum WhitelistTokenDailySnapshot_orderBy {
+  createdAt
+  gaugePoints
+  gpSelector
+  id
+  lwSelector
+  milestoneSeason
+  optimalPercentDepositedBdv
+  selector
+  stalkEarnedPerSeason
+  stalkIssuedPerBdv
+  token
+  token__gaugePoints
+  token__gpSelector
+  token__id
+  token__lwSelector
+  token__milestoneSeason
+  token__optimalPercentDepositedBdv
+  token__selector
+  token__stalkEarnedPerSeason
+  token__stalkIssuedPerBdv
+  token__updatedAt
+  updatedAt
+}
+
+type WhitelistTokenHourlySnapshot {
+  """Timestamp of initial snapshot creation"""
+  createdAt: BigInt!
+
+  """[Seed Gauge] Current Gauge Points"""
+  gaugePoints: BigInt
+
+  """[Seed Gauge] Encoded Gauge Point selector"""
+  gpSelector: Bytes
+
+  """Token address - Season"""
+  id: ID!
+
+  """[Seed Gauge] Encoded Liquidity Weight selector"""
+  lwSelector: Bytes
+
+  """
+  The last season in which the stalkEarnedPerSeason for this token was updated.
+  """
+  milestoneSeason: Int!
+
+  """
+  [Seed Gauge] The current optimal targeted distribution of BDV for this whitelisted asset
+  """
+  optimalPercentDepositedBdv: BigInt
+
+  """The season for this snapshot"""
+  season: Int!
+
+  """Encoded BDV selector"""
+  selector: Bytes!
+
+  """
+  Represents how much Stalk one BDV of the underlying deposited token grows each season.
+  """
+  stalkEarnedPerSeason: BigInt!
+
+  """
+  The stalk per BDV that the silo grants in exchange for depositing this token.
+  """
+  stalkIssuedPerBdv: BigInt!
+
+  """WhitelistTokenSetting associated with this snapshot"""
+  token: WhitelistTokenSetting!
+
+  """Timestamp of last entity update"""
+  updatedAt: BigInt!
+}
+
+input WhitelistTokenHourlySnapshot_filter {
+  """Filter for the block changed event."""
+  _change_block: BlockChangedFilter
+  and: [WhitelistTokenHourlySnapshot_filter]
+  createdAt: BigInt
+  createdAt_gt: BigInt
+  createdAt_gte: BigInt
+  createdAt_in: [BigInt!]
+  createdAt_lt: BigInt
+  createdAt_lte: BigInt
+  createdAt_not: BigInt
+  createdAt_not_in: [BigInt!]
+  gaugePoints: BigInt
+  gaugePoints_gt: BigInt
+  gaugePoints_gte: BigInt
+  gaugePoints_in: [BigInt!]
+  gaugePoints_lt: BigInt
+  gaugePoints_lte: BigInt
+  gaugePoints_not: BigInt
+  gaugePoints_not_in: [BigInt!]
+  gpSelector: Bytes
+  gpSelector_contains: Bytes
+  gpSelector_gt: Bytes
+  gpSelector_gte: Bytes
+  gpSelector_in: [Bytes!]
+  gpSelector_lt: Bytes
+  gpSelector_lte: Bytes
+  gpSelector_not: Bytes
+  gpSelector_not_contains: Bytes
+  gpSelector_not_in: [Bytes!]
+  id: ID
+  id_gt: ID
+  id_gte: ID
+  id_in: [ID!]
+  id_lt: ID
+  id_lte: ID
+  id_not: ID
+  id_not_in: [ID!]
+  lwSelector: Bytes
+  lwSelector_contains: Bytes
+  lwSelector_gt: Bytes
+  lwSelector_gte: Bytes
+  lwSelector_in: [Bytes!]
+  lwSelector_lt: Bytes
+  lwSelector_lte: Bytes
+  lwSelector_not: Bytes
+  lwSelector_not_contains: Bytes
+  lwSelector_not_in: [Bytes!]
+  milestoneSeason: Int
+  milestoneSeason_gt: Int
+  milestoneSeason_gte: Int
+  milestoneSeason_in: [Int!]
+  milestoneSeason_lt: Int
+  milestoneSeason_lte: Int
+  milestoneSeason_not: Int
+  milestoneSeason_not_in: [Int!]
+  optimalPercentDepositedBdv: BigInt
+  optimalPercentDepositedBdv_gt: BigInt
+  optimalPercentDepositedBdv_gte: BigInt
+  optimalPercentDepositedBdv_in: [BigInt!]
+  optimalPercentDepositedBdv_lt: BigInt
+  optimalPercentDepositedBdv_lte: BigInt
+  optimalPercentDepositedBdv_not: BigInt
+  optimalPercentDepositedBdv_not_in: [BigInt!]
+  or: [WhitelistTokenHourlySnapshot_filter]
+  season: Int
+  season_gt: Int
+  season_gte: Int
+  season_in: [Int!]
+  season_lt: Int
+  season_lte: Int
+  season_not: Int
+  season_not_in: [Int!]
+  selector: Bytes
+  selector_contains: Bytes
+  selector_gt: Bytes
+  selector_gte: Bytes
+  selector_in: [Bytes!]
+  selector_lt: Bytes
+  selector_lte: Bytes
+  selector_not: Bytes
+  selector_not_contains: Bytes
+  selector_not_in: [Bytes!]
+  stalkEarnedPerSeason: BigInt
+  stalkEarnedPerSeason_gt: BigInt
+  stalkEarnedPerSeason_gte: BigInt
+  stalkEarnedPerSeason_in: [BigInt!]
+  stalkEarnedPerSeason_lt: BigInt
+  stalkEarnedPerSeason_lte: BigInt
+  stalkEarnedPerSeason_not: BigInt
+  stalkEarnedPerSeason_not_in: [BigInt!]
+  stalkIssuedPerBdv: BigInt
+  stalkIssuedPerBdv_gt: BigInt
+  stalkIssuedPerBdv_gte: BigInt
+  stalkIssuedPerBdv_in: [BigInt!]
+  stalkIssuedPerBdv_lt: BigInt
+  stalkIssuedPerBdv_lte: BigInt
+  stalkIssuedPerBdv_not: BigInt
+  stalkIssuedPerBdv_not_in: [BigInt!]
+  token: String
+  token_: WhitelistTokenSetting_filter
+  token_contains: String
+  token_contains_nocase: String
+  token_ends_with: String
+  token_ends_with_nocase: String
+  token_gt: String
+  token_gte: String
+  token_in: [String!]
+  token_lt: String
+  token_lte: String
+  token_not: String
+  token_not_contains: String
+  token_not_contains_nocase: String
+  token_not_ends_with: String
+  token_not_ends_with_nocase: String
+  token_not_in: [String!]
+  token_not_starts_with: String
+  token_not_starts_with_nocase: String
+  token_starts_with: String
+  token_starts_with_nocase: String
+  updatedAt: BigInt
+  updatedAt_gt: BigInt
+  updatedAt_gte: BigInt
+  updatedAt_in: [BigInt!]
+  updatedAt_lt: BigInt
+  updatedAt_lte: BigInt
+  updatedAt_not: BigInt
+  updatedAt_not_in: [BigInt!]
+}
+
+enum WhitelistTokenHourlySnapshot_orderBy {
+  createdAt
+  gaugePoints
+  gpSelector
+  id
+  lwSelector
+  milestoneSeason
+  optimalPercentDepositedBdv
+  season
+  selector
+  stalkEarnedPerSeason
+  stalkIssuedPerBdv
+  token
+  token__gaugePoints
+  token__gpSelector
+  token__id
+  token__lwSelector
+  token__milestoneSeason
+  token__optimalPercentDepositedBdv
+  token__selector
+  token__stalkEarnedPerSeason
+  token__stalkIssuedPerBdv
+  token__updatedAt
+  updatedAt
+}
+
+type WhitelistTokenSetting {
+  """Link to daily snapshot data"""
+  dailySnapshots(first: Int = 100, orderBy: WhitelistTokenDailySnapshot_orderBy, orderDirection: OrderDirection, skip: Int = 0, where: WhitelistTokenDailySnapshot_filter): [WhitelistTokenDailySnapshot!]!
+
+  """[Seed Gauge] Current Gauge Points"""
+  gaugePoints: BigInt
+
+  """[Seed Gauge] Encoded Gauge Point selector"""
+  gpSelector: Bytes
+
+  """Link to hourly snapshot data"""
+  hourlySnapshots(first: Int = 100, orderBy: WhitelistTokenHourlySnapshot_orderBy, orderDirection: OrderDirection, skip: Int = 0, where: WhitelistTokenHourlySnapshot_filter): [WhitelistTokenHourlySnapshot!]!
+
+  """Contract address for the whitelisted token"""
+  id: Bytes!
+
+  """[Seed Gauge] Encoded Liquidity Weight selector"""
+  lwSelector: Bytes
+
+  """
+  The last season in which the stalkEarnedPerSeason for this token was updated.
+  """
+  milestoneSeason: Int!
+
+  """
+  [Seed Gauge] The current optimal targeted distribution of BDV for this whitelisted asset
+  """
+  optimalPercentDepositedBdv: BigInt
+
+  """Encoded BDV selector"""
   selector: Bytes!
 
   """
@@ -12493,6 +13293,26 @@ input WhitelistTokenSetting_filter {
   """Filter for the block changed event."""
   _change_block: BlockChangedFilter
   and: [WhitelistTokenSetting_filter]
+  dailySnapshots_: WhitelistTokenDailySnapshot_filter
+  gaugePoints: BigInt
+  gaugePoints_gt: BigInt
+  gaugePoints_gte: BigInt
+  gaugePoints_in: [BigInt!]
+  gaugePoints_lt: BigInt
+  gaugePoints_lte: BigInt
+  gaugePoints_not: BigInt
+  gaugePoints_not_in: [BigInt!]
+  gpSelector: Bytes
+  gpSelector_contains: Bytes
+  gpSelector_gt: Bytes
+  gpSelector_gte: Bytes
+  gpSelector_in: [Bytes!]
+  gpSelector_lt: Bytes
+  gpSelector_lte: Bytes
+  gpSelector_not: Bytes
+  gpSelector_not_contains: Bytes
+  gpSelector_not_in: [Bytes!]
+  hourlySnapshots_: WhitelistTokenHourlySnapshot_filter
   id: Bytes
   id_contains: Bytes
   id_gt: Bytes
@@ -12503,6 +13323,16 @@ input WhitelistTokenSetting_filter {
   id_not: Bytes
   id_not_contains: Bytes
   id_not_in: [Bytes!]
+  lwSelector: Bytes
+  lwSelector_contains: Bytes
+  lwSelector_gt: Bytes
+  lwSelector_gte: Bytes
+  lwSelector_in: [Bytes!]
+  lwSelector_lt: Bytes
+  lwSelector_lte: Bytes
+  lwSelector_not: Bytes
+  lwSelector_not_contains: Bytes
+  lwSelector_not_in: [Bytes!]
   milestoneSeason: Int
   milestoneSeason_gt: Int
   milestoneSeason_gte: Int
@@ -12511,6 +13341,14 @@ input WhitelistTokenSetting_filter {
   milestoneSeason_lte: Int
   milestoneSeason_not: Int
   milestoneSeason_not_in: [Int!]
+  optimalPercentDepositedBdv: BigInt
+  optimalPercentDepositedBdv_gt: BigInt
+  optimalPercentDepositedBdv_gte: BigInt
+  optimalPercentDepositedBdv_in: [BigInt!]
+  optimalPercentDepositedBdv_lt: BigInt
+  optimalPercentDepositedBdv_lte: BigInt
+  optimalPercentDepositedBdv_not: BigInt
+  optimalPercentDepositedBdv_not_in: [BigInt!]
   or: [WhitelistTokenSetting_filter]
   selector: Bytes
   selector_contains: Bytes
@@ -12549,8 +13387,14 @@ input WhitelistTokenSetting_filter {
 }
 
 enum WhitelistTokenSetting_orderBy {
+  dailySnapshots
+  gaugePoints
+  gpSelector
+  hourlySnapshots
   id
+  lwSelector
   milestoneSeason
+  optimalPercentDepositedBdv
   selector
   stalkEarnedPerSeason
   stalkIssuedPerBdv
