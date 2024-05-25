@@ -369,8 +369,10 @@ contract Weather is Sun {
             return wellDeltaBs;
         }
 
-        if (positiveDeltaBCount == 0) {
-            // No positive values, so no well flooding needed, return zeros
+        if (totalPositiveDeltaB < totalNegativeDeltaB || positiveDeltaBCount == 0) {
+            // The less than conditional can occur if the twaDeltaB is positive, but the instanteous deltaB is negative or 0
+            // In that case, no reductions are needed.
+            // If there are no positive values, no well flooding is needed, return zeros
             for (uint256 i = 0; i < positiveDeltaBCount; i++) {
                 wellDeltaBs[i].deltaB = 0;
             }
@@ -378,8 +380,6 @@ contract Weather is Sun {
         }
 
         if (totalPositiveDeltaB < totalNegativeDeltaB) {
-            // This can occur if the twaDeltaB is positive, but the instanteous deltaB is negative or 0
-            // In this case, no reductions are needed.
             for (uint256 i = 0; i < positiveDeltaBCount; i++) {
                 wellDeltaBs[i].deltaB = 0;
             }
