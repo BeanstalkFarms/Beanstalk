@@ -5,7 +5,6 @@ pragma solidity ^0.8.20;
 pragma abicoder v2;
 
 interface IMockFBeanstalk {
-    // Is this the proper location for enums?
     enum From {
         EXTERNAL,
         INTERNAL,
