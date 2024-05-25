@@ -286,4 +286,50 @@ contract MockSiloFacet is SiloFacet {
             amount.toUint128()
         );
     }
+
+    /**
+     * @notice mock functionality that allows the deposit at any stem and bdv
+     * @dev does not support germinating stems.
+     * used in enroot tests.
+     */
+    function depositAtStemAndBdv(
+        address token,
+        uint256 _amount,
+        int96 stem,
+        uint128 bdv,
+        LibTransfer.From mode
+    ) external {
+        LibTransfer.receiveToken(IERC20(token), _amount, LibTractor._user(), mode);
+        _depositAtStemAndBdv(LibTractor._user(), token, _amount, stem, bdv);
+    }
+
+    /**
+     * @notice internal logic for depositing. See Deposit flow.
+     */
+    function _depositAtStemAndBdv(
+        address account,
+        address token,
+        uint256 amount,
+        int96 stem,
+        uint128 bdv
+    ) internal {
+        LibTokenSilo.incrementTotalDeposited(token, amount, bdv);
+        LibTokenSilo.addDepositToAccount(
+            account,
+            token,
+            stem,
+            amount,
+            bdv,
+            LibTokenSilo.Transfer.emitTransferSingle
+        );
+        uint256 stalk = bdv.mul(s.system.silo.assetSettings[token].stalkIssuedPerBdv);
+        LibSilo.mintActiveStalk(account, uint128(stalk));
+    }
+
+    function setStalkAndRoots(address account, uint128 stalk, uint256 roots) external {
+        s.system.silo.stalk = stalk;
+        s.system.silo.roots = stalk;
+        s.accounts[account].silo.stalk = stalk;
+        s.accounts[account].roots = roots;
+    }
 }

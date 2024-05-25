@@ -5818,25 +5818,6 @@
     "inputs": [
       {
         "internalType": "address",
-        "name": "token",
-        "type": "address"
-      }
-    ],
-    "name": "getLegacySeedsPerToken",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
         "name": "account",
         "type": "address"
       },
@@ -6075,30 +6056,6 @@
         "internalType": "bool",
         "name": "hasMigrated",
         "type": "bool"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "token",
-        "type": "address"
-      },
-      {
-        "internalType": "uint32",
-        "name": "season",
-        "type": "uint32"
-      }
-    ],
-    "name": "seasonToStem",
-    "outputs": [
-      {
-        "internalType": "int96",
-        "name": "stem",
-        "type": "int96"
       }
     ],
     "stateMutability": "view",
@@ -9574,19 +9531,33 @@
     "inputs": [
       {
         "internalType": "address",
-        "name": "account",
+        "name": "token",
         "type": "address"
-      }
-    ],
-    "name": "balanceOfSeeds",
-    "outputs": [
+      },
       {
         "internalType": "uint256",
-        "name": "",
+        "name": "_amount",
         "type": "uint256"
+      },
+      {
+        "internalType": "int96",
+        "name": "stem",
+        "type": "int96"
+      },
+      {
+        "internalType": "uint128",
+        "name": "bdv",
+        "type": "uint128"
+      },
+      {
+        "internalType": "enum LibTransfer.From",
+        "name": "mode",
+        "type": "uint8"
       }
     ],
-    "stateMutability": "view",
+    "name": "depositAtStemAndBdv",
+    "outputs": [],
+    "stateMutability": "nonpayable",
     "type": "function"
   },
   {
@@ -9628,25 +9599,6 @@
     "type": "function"
   },
   {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "token",
-        "type": "address"
-      }
-    ],
-    "name": "mockGetSeedsPerToken",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "pure",
-    "type": "function"
-  },
-  {
     "inputs": [],
     "name": "mockLiquidityWeight",
     "outputs": [
@@ -9657,76 +9609,6 @@
       }
     ],
     "stateMutability": "pure",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "token",
-        "type": "address"
-      },
-      {
-        "internalType": "uint32",
-        "name": "season",
-        "type": "uint32"
-      }
-    ],
-    "name": "mockSeasonToStem",
-    "outputs": [
-      {
-        "internalType": "int96",
-        "name": "stem",
-        "type": "int96"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint32",
-        "name": "_s",
-        "type": "uint32"
-      },
-      {
-        "internalType": "uint256",
-        "name": "amount",
-        "type": "uint256"
-      }
-    ],
-    "name": "mockUnripeBeanDeposit",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "t",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint32",
-        "name": "_s",
-        "type": "uint32"
-      },
-      {
-        "internalType": "uint256",
-        "name": "amount",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "bdv",
-        "type": "uint256"
-      }
-    ],
-    "name": "mockUnripeLPDeposit",
-    "outputs": [],
-    "stateMutability": "nonpayable",
     "type": "function"
   },
   {
@@ -9837,6 +9719,29 @@
       }
     ],
     "name": "removeWhitelistSelector",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "account",
+        "type": "address"
+      },
+      {
+        "internalType": "uint128",
+        "name": "stalk",
+        "type": "uint128"
+      },
+      {
+        "internalType": "uint256",
+        "name": "roots",
+        "type": "uint256"
+      }
+    ],
+    "name": "setStalkAndRoots",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
