@@ -1,79 +1,20 @@
-import React from "react";
+import React, { useMemo } from "react";
 import styled from "styled-components";
-import BrendanTwitterPFP from "src/assets/images/brendan-twitter-pfp.png";
-import ClockIcon from "src/assets/images/clock-icon.svg";
-import BeanstalkFarmsLogo from "src/assets/images/beanstalk-farms.png";
 
 import { Table, Td, THead, ResponsiveTr, Th, TBody, Row } from "src/components//Table";
 import { Link } from "react-router-dom";
 import { theme } from "src/utils/ui/theme";
 import { Text } from "src/components/Typography";
-
-type ComponentDetail = {
-  component: {
-    name: string;
-    description: string;
-    url?: string;
-  };
-  type: {
-    type: string;
-    imgSrc?: string;
-  };
-  dev: {
-    name: string;
-    imgSrc: string;
-    url?: string;
-  };
-};
-const componentsDetail: ComponentDetail[] = [
-  {
-    component: {
-      name: "Multi Flow",
-      description: "An inter-block MEV manipulation resistant oracle implementation.",
-      url: "https://docs.basin.exchange/implementations/multi-flow-pump"
-    },
-    type: {
-      type: "🔮 Pump"
-    },
-    dev: {
-      name: "Brendan Sanderson",
-      imgSrc: BrendanTwitterPFP,
-      url: "https://twitter.com/brendaann__"
-    }
-  },
-  {
-    component: {
-      name: "Constant Product 2",
-      description: "A standard x*y = k token pricing function for two tokens with no fees.",
-      url: "https://github.com/BeanstalkFarms/Basin/blob/master/src/functions/ConstantProduct2.sol"
-    },
-    type: {
-      type: "Well Function",
-      imgSrc: ClockIcon
-    },
-    dev: {
-      name: "Beanstalk Farms",
-      imgSrc: BeanstalkFarmsLogo
-    }
-  },
-  {
-    component: {
-      name: "Well.sol",
-      description: "A standard Well implementation that prioritizes flexibility and composability.",
-      url: "https://github.com/BeanstalkFarms/Basin/blob/master/src/Well.sol"
-    },
-    type: {
-      type: "💧 Well Implementation",
-      imgSrc: ""
-    },
-    dev: {
-      name: "Beanstalk Farms",
-      imgSrc: BeanstalkFarmsLogo
-    }
-  }
-] as const;
+import { useWhitelistedWellComponents } from "./useWhitelistedWellComponents";
 
 export const ComponentLibraryTable = () => {
+  const { wellImplementations, pumps, wellFunctions } = useWhitelistedWellComponents();
+
+  const entries = useMemo(
+    () => [...pumps, ...wellFunctions, ...wellImplementations],
+    [pumps, wellFunctions, wellImplementations]
+  );
+
   return (
     <StyledTable>
       <THead>
@@ -84,22 +25,22 @@ export const ComponentLibraryTable = () => {
         </ResponsiveTr>
       </THead>
       <TBody>
-        {componentsDetail.map(({ component, type, dev }, i) => (
+        {entries.map(({ component, deploy }, i) => (
           <StyledTr key={`${component.name}-${i}`}>
             <TableData align="left" url={component.url}>
               <Text $variant="l">{component.name}</Text>
-              <Text $color="text.secondary">{component.description}</Text>
+              <Text $color="text.secondary">{component.summary}</Text>
             </TableData>
             <TableData>
               <TextWrapper>
-                {type.imgSrc && <IconImg src={type.imgSrc} />}
-                <Text $variant="l">{type.type}</Text>
+                {component.type.imgSrc && <IconImg src={component.type.imgSrc} />}
+                <Text $variant="l">{component.type.display}</Text>
               </TextWrapper>
             </TableData>
-            <TableData url={dev.url}>
+            <TableData url={deploy.url}>
               <TextWrapper>
-                <IconImg src={dev.imgSrc} $rounded />
-                <Text $variant="l">{dev.name}</Text>
+                <IconImg src={deploy.imgSrc} $rounded />
+                <Text $variant="l">{deploy.value}</Text>
               </TextWrapper>
             </TableData>
           </StyledTr>
@@ -146,7 +87,15 @@ const StyledLink = styled(Link).attrs({
   color: ${theme.colors.black};
 `;
 
-const TableData = ({ children, url, align = "right" }: { children: React.ReactNode; align?: "left" | "right"; url?: string }) => {
+const TableData = ({
+  children,
+  url,
+  align = "right"
+}: {
+  children: React.ReactNode;
+  align?: "left" | "right";
+  url?: string;
+}) => {
   if (url) {
     return (
       <StyledTd align={align} $hasLink={!!url}>
