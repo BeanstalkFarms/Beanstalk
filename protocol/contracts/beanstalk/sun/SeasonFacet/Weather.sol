@@ -388,6 +388,8 @@ contract Weather is Sun {
 
         uint256 shaveToLevel = totalNegativeDeltaB / positiveDeltaBCount;
 
+        // Loop through positive deltaB wells starting at the highest, re-use the deltaB value slot
+        // as reduction amount (amount of beans to flood per well).
         for (uint256 i = positiveDeltaBCount; i > 0; i--) {
             if (shaveToLevel > uint256(wellDeltaBs[i - 1].deltaB)) {
                 shaveToLevel += (shaveToLevel - uint256(wellDeltaBs[i - 1].deltaB)) / (i - 1);
