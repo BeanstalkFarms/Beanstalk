@@ -305,15 +305,9 @@ describe("New Silo Token", function () {
     describe("withdraw token by seasons", async function () {
       describe("1 full and 1 partial token crates", function () {
         beforeEach(async function () {
-          const stem0 = await mockBeanstalk.mockSeasonToStem(
-            siloToken.address,
-            toBN(await beanstalk.season())
-          );
+          const stem0 = await beanstalk.stemTipForToken(siloToken.address);
           await mockBeanstalk.siloSunrise(0);
-          const stem1 = await mockBeanstalk.mockSeasonToStem(
-            siloToken.address,
-            toBN(await beanstalk.season())
-          );
+          const stem1 = await beanstalk.stemTipForToken(siloToken.address);
           await beanstalk.connect(user).deposit(siloToken.address, "1000", EXTERNAL);
           userBalanceBefore = await siloToken.balanceOf(user.address);
           this.result = await beanstalk
@@ -342,14 +336,9 @@ describe("New Silo Token", function () {
           expect((await siloToken.balanceOf(user.address)).sub(userBalanceBefore)).to.eq("1500");
         });
         it("properly removes the crate", async function () {
-          const stem0 = await mockBeanstalk.mockSeasonToStem(
-            siloToken.address,
-            toBN(await beanstalk.season()).sub("1")
-          );
-          const stem1 = await mockBeanstalk.mockSeasonToStem(
-            siloToken.address,
-            toBN(await beanstalk.season())
-          );
+          const siloSettings = await beanstalk.tokenSettings(siloToken.address);
+          const stem1 = await beanstalk.stemTipForToken(siloToken.address);
+          const stem0 = stem1.sub(siloSettings.stalkEarnedPerSeason);
           let dep = await beanstalk.getDeposit(user.address, siloToken.address, stem0);
           expect(dep[0]).to.equal("500");
           expect(dep[1]).to.equal("500");
@@ -363,10 +352,7 @@ describe("New Silo Token", function () {
             siloToken.address,
             toBN(await beanstalk.season()).sub("1")
           );
-          const stem1 = await mockBeanstalk.mockSeasonToStem(
-            siloToken.address,
-            toBN(await beanstalk.season())
-          );
+          const stem1 = await beanstalk.stemTipForToken(siloToken.address);
           await expect(this.result)
             .to.emit(beanstalk, "RemoveDeposits")
             .withArgs(user.address, siloToken.address, [stem0, stem1], ["500", "1000"], "1500", [
@@ -378,15 +364,9 @@ describe("New Silo Token", function () {
 
       describe("2 token crates", function () {
         beforeEach(async function () {
-          const stem0 = await mockBeanstalk.mockSeasonToStem(
-            siloToken.address,
-            toBN(await beanstalk.season())
-          );
+          const stem0 = await beanstalk.stemTipForToken(siloToken.address);
           await mockBeanstalk.siloSunrise(0);
-          const stem1 = await mockBeanstalk.mockSeasonToStem(
-            siloToken.address,
-            toBN(await beanstalk.season())
-          );
+          const stem1 = await beanstalk.stemTipForToken(siloToken.address);
 
           await beanstalk.connect(user).deposit(siloToken.address, "1000", EXTERNAL);
           userBalanceBefore = await siloToken.balanceOf(user.address);
@@ -419,10 +399,7 @@ describe("New Silo Token", function () {
             siloToken.address,
             toBN(await beanstalk.season()).sub("1")
           );
-          const stem1 = await mockBeanstalk.mockSeasonToStem(
-            siloToken.address,
-            toBN(await beanstalk.season())
-          );
+          const stem1 = await beanstalk.stemTipForToken(siloToken.address);
           await expect(this.result)
             .to.emit(beanstalk, "RemoveDeposits")
             .withArgs(user.address, siloToken.address, [stem0, stem1], ["1000", "1000"], "2000", [
