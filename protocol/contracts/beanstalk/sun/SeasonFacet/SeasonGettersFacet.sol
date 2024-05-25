@@ -363,4 +363,56 @@ contract SeasonGettersFacet {
     function getSeasonTimestamp() external view returns (uint256) {
         return s.season.timestamp;
     }
+
+    function getSeedGaugeSetting() external view returns (Storage.SeedGaugeSettings memory) {
+        return s.seedGaugeSettings;
+    }
+
+    function getMaxBeanMaxLpGpPerBdvRatio() external view returns (uint256) {
+        return s.seedGaugeSettings.maxBeanMaxLpGpPerBdvRatio;
+    }
+
+    function getMinBeanMaxLpGpPerBdvRatio() external view returns (uint256) {
+        return s.seedGaugeSettings.minBeanMaxLpGpPerBdvRatio;
+    }
+
+    function getTargetSeasonsToCatchUp() external view returns (uint256) {
+        return s.seedGaugeSettings.targetSeasonsToCatchUp;
+    }
+
+    function getPodRateLowerBound() external view returns (uint256) {
+        return s.seedGaugeSettings.podRateLowerBound;
+    }
+
+    function getPodRateOptimal() external view returns (uint256) {
+        return s.seedGaugeSettings.podRateOptimal;
+    }
+
+    function getPodRateUpperBound() external view returns (uint256) {
+        return s.seedGaugeSettings.podRateUpperBound;
+    }
+
+    function getDeltaPodDemandLowerBound() external view returns (uint256) {
+        return s.seedGaugeSettings.deltaPodDemandLowerBound;
+    }
+
+    function getDeltaPodDemandUpperBound() external view returns (uint256) {
+        return s.seedGaugeSettings.deltaPodDemandUpperBound;
+    }
+
+    function getLpToSupplyRatioUpperBound() external view returns (uint256) {
+        return s.seedGaugeSettings.lpToSupplyRatioUpperBound;
+    }
+
+    function getLpToSupplyRatioOptimal() external view returns (uint256) {
+        return s.seedGaugeSettings.lpToSupplyRatioOptimal;
+    }
+
+    function getLpToSupplyRatioLowerBound() external view returns (uint256) {
+        return s.seedGaugeSettings.lpToSupplyRatioLowerBound;
+    }
+
+    function getExcessivePriceThreshold() external view returns (uint256) {
+        return s.seedGaugeSettings.excessivePriceThreshold;
+    }
 }
