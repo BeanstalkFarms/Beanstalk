@@ -9,6 +9,7 @@ import {LibWhitelist} from "contracts/libraries/Silo/LibWhitelist.sol";
 import {AppStorage, Storage} from "contracts/beanstalk/AppStorage.sol";
 import {WhitelistedTokens} from "contracts/beanstalk/silo/WhitelistFacet/WhitelistedTokens.sol";
 import {Invariable} from "contracts/beanstalk/Invariable.sol";
+import {ReentrancyGuard} from "contracts/beanstalk/ReentrancyGuard.sol";
 
 /**
  * @author Publius
@@ -16,7 +17,12 @@ import {Invariable} from "contracts/beanstalk/Invariable.sol";
  * @notice Manages the Silo Whitelist including Adding to, Updating
  * and Removing from the Silo Whitelist
  **/
-contract WhitelistFacet is Invariable, WhitelistedTokens {
+contract WhitelistFacet is Invariable, WhitelistedTokens, ReentrancyGuard {
+    /**
+     * @notice emitted when {Storage.SeedGaugeSettings} is updated.
+     */
+    event UpdatedSeedGaugeSettings(Storage.SeedGaugeSettings);
+
     /**
      * @notice Removes a token from the Silo Whitelist.
      * @dev Can only be called by Beanstalk or Beanstalk owner.
@@ -221,5 +227,13 @@ contract WhitelistFacet is Invariable, WhitelistedTokens {
     ) external payable {
         LibDiamond.enforceIsOwnerOrContract();
         LibWhitelist.updateGaugePointImplementationForToken(token, impl);
+    }
+
+    function updateSeedGaugeSettings(
+        Storage.SeedGaugeSettings memory updatedSeedGaugeSettings
+    ) external {
+        LibDiamond.enforceIsOwnerOrContract();
+        s.seedGaugeSettings = updatedSeedGaugeSettings;
+        emit UpdatedSeedGaugeSettings(updatedSeedGaugeSettings);
     }
 }

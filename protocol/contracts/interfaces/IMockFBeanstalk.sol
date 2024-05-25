@@ -5,6 +5,21 @@ pragma solidity ^0.8.20;
 pragma abicoder v2;
 
 interface IMockFBeanstalk {
+    struct SeedGaugeSettings {
+        uint256 maxBeanMaxLpGpPerBdvRatio;
+        uint256 minBeanMaxLpGpPerBdvRatio;
+        uint256 targetSeasonsToCatchUp;
+        uint256 podRateLowerBound;
+        uint256 podRateOptimal;
+        uint256 podRateUpperBound;
+        uint256 deltaPodDemandLowerBound;
+        uint256 deltaPodDemandUpperBound;
+        uint256 lpToSupplyRatioUpperBound;
+        uint256 lpToSupplyRatioOptimal;
+        uint256 lpToSupplyRatioLowerBound;
+        uint256 excessivePriceThreshold;
+    }
+
     struct AccountSeasonOfPlenty {
         uint32 lastRain;
         uint32 lastSop;
@@ -334,6 +349,8 @@ interface IMockFBeanstalk {
 
     function abovePeg() external view returns (bool);
 
+    function updateSeedGaugeSettings(SeedGaugeSettings memory updatedSeedGaugeSettings) external;
+
     function addFertilizer(uint128 id, uint128 tokenAmountIn, uint256 minLpOut) external payable;
 
     function addFertilizerOwner(
@@ -442,6 +459,32 @@ interface IMockFBeanstalk {
     ) external view returns (uint256 underlying);
 
     function balanceOfPlenty(address account) external view returns (uint256 plenty);
+
+    function getSeedGaugeSetting() external view returns (SeedGaugeSettings memory);
+
+    function getMaxBeanMaxLpGpPerBdvRatio() external view returns (uint256);
+
+    function getMinBeanMaxLpGpPerBdvRatio() external view returns (uint256);
+
+    function getTargetSeasonsToCatchUp() external view returns (uint256);
+
+    function getDeltaPodDemandUpperBound() external view returns (uint256);
+
+    function getLpToSupplyRatioLowerBound() external view returns (uint256);
+
+    function getExcessivePriceThreshold() external view returns (uint256);
+
+    function getLpToSupplyRatioUpperBound() external view returns (uint256);
+
+    function getLpToSupplyRatioOptimal() external view returns (uint256);
+
+    function getPodRateLowerBound() external view returns (uint256);
+
+    function getPodRateOptimal() external view returns (uint256);
+
+    function getPodRateUpperBound() external view returns (uint256);
+
+    function getDeltaPodDemandLowerBound() external view returns (uint256);
 
     function balanceOfRainRoots(address account) external view returns (uint256);
 

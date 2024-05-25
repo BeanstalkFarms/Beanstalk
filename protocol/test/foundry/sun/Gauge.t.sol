@@ -14,6 +14,7 @@ import {LibAppStorage} from "contracts/libraries/LibAppStorage.sol";
  * @notice Tests the functionality of the gauge.
  */
 contract GaugeTest is TestHelper {
+    event UpdatedSeedGaugeSettings(IMockFBeanstalk.SeedGaugeSettings);
     event BeanToMaxLpGpPerBdvRatioChange(uint256 indexed season, uint256 caseId, int80 absChange);
 
     // Interfaces.
@@ -205,8 +206,7 @@ contract GaugeTest is TestHelper {
      * @notice verifies that the average grown stalk per season does not change if the season is less than the catchup season.
      */
     function test_avgGrownStalkPerBdv_noChange(uint256 season) public {
-        AppStorage storage s = LibAppStorage.diamondStorage();
-        season = bound(season, 0, s.seedGaugeSettings.targetSeasonsToCatchUp - 1);
+        season = bound(season, 0, bs.getTargetSeasonsToCatchUp() - 1);
         uint256 initialAvgGrownStalkPerBdvPerSeason = bs.getAverageGrownStalkPerBdvPerSeason();
         depositForUser(users[1], C.BEAN, 100e6);
 
@@ -639,5 +639,33 @@ contract GaugeTest is TestHelper {
         // skip germination, as germinating bdv is not included.
         bs.siloSunrise(0);
         bs.siloSunrise(0);
+    }
+
+    /**
+     * @notice validates that the seed gauge settings in storage changes.
+     */
+    function testSeedGaugeSettings() external {
+        // validate current settings
+        IMockFBeanstalk.SeedGaugeSettings memory seedGauge = bs.getSeedGaugeSetting();
+
+        // change settings
+        vm.prank(BEANSTALK);
+        bs.updateSeedGaugeSettings(
+            IMockFBeanstalk.SeedGaugeSettings(uint256(0), 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
+        );
+
+        IMockFBeanstalk.SeedGaugeSettings memory ssg = bs.getSeedGaugeSetting();
+        assertEq(ssg.maxBeanMaxLpGpPerBdvRatio, 0);
+        assertEq(ssg.minBeanMaxLpGpPerBdvRatio, 0);
+        assertEq(ssg.targetSeasonsToCatchUp, 0);
+        assertEq(ssg.podRateLowerBound, 0);
+        assertEq(ssg.podRateOptimal, 0);
+        assertEq(ssg.podRateUpperBound, 0);
+        assertEq(ssg.deltaPodDemandLowerBound, 0);
+        assertEq(ssg.deltaPodDemandUpperBound, 0);
+        assertEq(ssg.lpToSupplyRatioUpperBound, 0);
+        assertEq(ssg.lpToSupplyRatioOptimal, 0);
+        assertEq(ssg.lpToSupplyRatioLowerBound, 0);
+        assertEq(ssg.excessivePriceThreshold, 0);
     }
 }
