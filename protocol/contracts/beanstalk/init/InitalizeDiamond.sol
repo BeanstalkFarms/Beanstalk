@@ -32,6 +32,28 @@ contract InitalizeDiamond {
     uint128 constant INIT_TOKEN_G_POINTS = 100e18;
     uint32 constant INIT_BEAN_TOKEN_WELL_PERCENT_TARGET = 100e6;
 
+    // Pod rate bounds
+    uint256 internal constant POD_RATE_LOWER_BOUND = 0.05e18; // 5%
+    uint256 internal constant POD_RATE_OPTIMAL = 0.15e18; // 15%
+    uint256 internal constant POD_RATE_UPPER_BOUND = 0.25e18; // 25%
+
+    // Change in Soil demand bounds
+    uint256 internal constant DELTA_POD_DEMAND_LOWER_BOUND = 0.95e18; // 95%
+    uint256 internal constant DELTA_POD_DEMAND_UPPER_BOUND = 1.05e18; // 105%
+
+    // Liquidity to supply ratio bounds
+    uint256 internal constant LP_TO_SUPPLY_RATIO_UPPER_BOUND = 0.8e18; // 80%
+    uint256 internal constant LP_TO_SUPPLY_RATIO_OPTIMAL = 0.4e18; // 40%
+    uint256 internal constant LP_TO_SUPPLY_RATIO_LOWER_BOUND = 0.12e18; // 12%
+
+    // Excessive price threshold constant
+    uint256 internal constant EXCESSIVE_PRICE_THRESHOLD = 1.05e6;
+
+    // Gauge
+    uint256 internal constant TARGET_SEASONS_TO_CATCHUP = 4320;
+    uint256 internal constant MAX_BEAN_MAX_LP_GP_PER_BDV_RATIO = 100e18;
+    uint256 internal constant MIN_BEAN_MAX_LP_GP_PER_BDV_RATIO = 50e18;
+
     // EVENTS:
     event BeanToMaxLpGpPerBdvRatioChange(uint256 indexed season, uint256 caseId, int80 absChange);
 
@@ -157,6 +179,8 @@ contract InitalizeDiamond {
         // initalizes the cases that beanstalk uses
         // to change certain parameters of itself.
         setCases();
+
+        initializeSeedGaugeSettings();
     }
 
     /**
@@ -223,5 +247,20 @@ contract InitalizeDiamond {
                 isLPandWell
             );
         }
+    }
+
+    function initializeSeedGaugeSettings() internal {
+        s.seedGaugeSettings.maxBeanMaxLpGpPerBdvRatio = MAX_BEAN_MAX_LP_GP_PER_BDV_RATIO;
+        s.seedGaugeSettings.minBeanMaxLpGpPerBdvRatio = MIN_BEAN_MAX_LP_GP_PER_BDV_RATIO;
+        s.seedGaugeSettings.targetSeasonsToCatchUp = TARGET_SEASONS_TO_CATCHUP;
+        s.seedGaugeSettings.podRateLowerBound = POD_RATE_LOWER_BOUND;
+        s.seedGaugeSettings.podRateOptimal = POD_RATE_OPTIMAL;
+        s.seedGaugeSettings.podRateUpperBound = POD_RATE_UPPER_BOUND;
+        s.seedGaugeSettings.deltaPodDemandLowerBound = DELTA_POD_DEMAND_LOWER_BOUND;
+        s.seedGaugeSettings.deltaPodDemandUpperBound = DELTA_POD_DEMAND_UPPER_BOUND;
+        s.seedGaugeSettings.lpToSupplyRatioUpperBound = LP_TO_SUPPLY_RATIO_UPPER_BOUND;
+        s.seedGaugeSettings.lpToSupplyRatioOptimal = LP_TO_SUPPLY_RATIO_OPTIMAL;
+        s.seedGaugeSettings.lpToSupplyRatioLowerBound = LP_TO_SUPPLY_RATIO_LOWER_BOUND;
+        s.seedGaugeSettings.excessivePriceThreshold = EXCESSIVE_PRICE_THRESHOLD;
     }
 }
