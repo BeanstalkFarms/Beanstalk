@@ -11,13 +11,12 @@ export type AccordionSelectCardProps = {
   selected: boolean;
   below: JSX.Element;
   defaultExpanded?: boolean;
-  onClick: () => void;
+  onClick: React.MouseEventHandler<HTMLDivElement> | undefined;
 };
 
 export const AccordionSelectCard = ({ selected, below, upper, defaultExpanded = false, onClick }: AccordionSelectCardProps) => {
   const [expanded, { toggle }] = useBoolean(defaultExpanded);
 
-  // console.log("redrender...");
   return (
     <ComponentWrapper $active={selected} onClick={onClick}>
       <Flex $direction="row" $alignItems="center" $fullWidth $justifyContent="space-between">
@@ -30,6 +29,8 @@ export const AccordionSelectCard = ({ selected, below, upper, defaultExpanded = 
           size={12}
           rotate={expanded ? "180" : "0"}
           onClick={(e) => {
+            // prevent the card from being clicked
+            e.preventDefault();
             e.stopPropagation();
             toggle();
           }}

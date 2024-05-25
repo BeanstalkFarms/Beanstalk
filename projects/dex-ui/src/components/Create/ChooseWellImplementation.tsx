@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import { Box, Flex } from "src/components/Layout";
 import { Text } from "src/components/Typography";
 import { ToggleSwitch } from "src/components/ToggleSwitch";
@@ -13,33 +13,9 @@ import { Etherscan, Github } from "src/components/Icons";
 import { Link, useNavigate } from "react-router-dom";
 import { useBoolean } from "src/utils/ui/useBoolean";
 import { AddressInputField } from "src/components/Common/Form";
-import { Form, useForm } from "react-hook-form";
+import { Form, FormSubmitHandler, useForm } from "react-hook-form";
 import { ethers } from "ethers";
 import { useCreateWell } from "./CreateWellProvider";
-
-const ChooseWellImplementationContent = () => {
-  return (
-    <Flex $gap={3} $fullWidth>
-      <Text $variant="h2">Create a Well - Choose a Well Implementation</Text>
-      <Flex $direction="row" $alignItems="flex-start" $gap={8}>
-        <InstructionContainer>
-          <Text $color="text.secondary" $lineHeight="l">
-            Deploy a Well using Aquifer, a Well factory contract.
-          </Text>
-          <Text $color="text.secondary" $lineHeight="l">
-            It is recommended to use the Well.sol Well Implementation, but you&apos;re welcome to use a custom contract.
-          </Text>
-          <Text $color="text.secondary" $lineHeight="l">
-            Visit the documentation to learn more about Aquifers and Well Implementations.
-          </Text>
-        </InstructionContainer>
-        <ChooseWellImplementationForm />
-      </Flex>
-    </Flex>
-  );
-};
-
-export const ChooseWellImplementation = React.memo(ChooseWellImplementationContent);
 
 type WellInfoEntry = {
   name: string;
@@ -54,6 +30,10 @@ type WellInfoEntry = {
   etherscan?: string;
   github?: string;
   learnMore?: string;
+};
+
+type ICreateWellForm = {
+  wellImplementation: string;
 };
 
 // Can we make this dynamic??
@@ -77,59 +57,56 @@ const entries: Record<string, WellInfoEntry> = {
   }
 };
 
-type ICreateWellForm = {
-  wellImplementation: string;
-};
-
 const ChooseWellImplementationForm = () => {
-  const { wellImplementation, setWellImplementation } = useCreateWell();
-  const [usingCustomWell, { toggle, set }] = useBoolean();
+  const navigate = useNavigate();
 
-  // Separate state from form
-  const [selected, setSelected] = useState(wellImplementation?.wellImplementation || "");
+  const { wellImplementation, setWellImplementation } = useCreateWell();
+  const [usingCustomWell, { toggle, set: setBool }] = useBoolean();
+
   const {
     register,
     setValue,
-    getValues,
+    watch,
     control,
-    formState: { errors, isValid },
-    resetField
+    formState: { errors }
   } = useForm<ICreateWellForm>({
     defaultValues: { wellImplementation: "" },
     values: { wellImplementation: wellImplementation?.wellImplementation || "" }
   });
-  const navigate = useNavigate();
+
+  const value = watch("wellImplementation");
 
   const handleToggle = () => {
-    setSelected("");
-    resetField("wellImplementation");
+    setValue("wellImplementation", "");
     toggle();
   };
 
   const handleSetSelected = (_addr: string) => {
-    const addr = _addr === selected ? "" : _addr;
-    setSelected(addr);
-    setValue("wellImplementation", addr);
-    usingCustomWell && set(false);
+    setValue("wellImplementation", _addr === value ? "" : _addr, {
+      shouldValidate: true
+    });
+    setBool(false);
   };
 
-  const handleSubmit = () => {
-    const value = getValues("wellImplementation");
-    const addr = value || selected;
-    if (!addr) return;
-    setWellImplementation({ wellImplementation: addr, goNext: true });
+  const handleSubmit: FormSubmitHandler<ICreateWellForm> = ({ data: { wellImplementation } }) => {
+    if (!!Object.keys(errors).length) return;
+
+    if (!ethers.utils.isAddress(wellImplementation)) return;
+    if (wellImplementation) {
+      setWellImplementation({ wellImplementation: wellImplementation, goNext: true });
+    }
   };
 
-  const submitDisabled = getValues("wellImplementation") ? !isValid : !selected;
+  const canSubmit = !!(value && !Object.keys(errors).length);
 
   return (
-    <Form onSubmit={handleSubmit} control={control}>
+    <Form onSubmit={handleSubmit} control={control} style={{ width: "100%" }}>
       <FormWrapperInner $gap={2} $fullWidth>
-        <Text $lineHeight="l">Which Well Implementation do you want to use?</Text>
+        <Uppercase $lineHeight="l">Which Well Implementation do you want to use?</Uppercase>
         {Object.entries(entries).map(([address, data], i) => (
           <AccordionSelectCard
             key={`well-implementation-card-${address}`}
-            selected={selected === address}
+            selected={value === address}
             upper={
               <Flex $direction="row" $gap={2}>
                 <Box>
@@ -210,7 +187,7 @@ const ChooseWellImplementationForm = () => {
           <ButtonPrimary $variant="outlined" onClick={() => navigate("/build")}>
             Back: Choose Aquifer
           </ButtonPrimary>
-          <ButtonPrimary type="submit" disabled={submitDisabled}>
+          <ButtonPrimary type="submit" disabled={!canSubmit}>
             Next: Customize Well
           </ButtonPrimary>
         </Flex>
@@ -226,8 +203,8 @@ const MayLink = ({ url, children }: { url?: string; children: React.ReactNode })
   return children;
 };
 
-const InstructionContainer = styled(Flex).attrs({ $gap: 2 })`
-  max-width: 274px;
+const Uppercase = styled(Text)`
+  text-transform: uppercase;
 `;
 
 const LinkFormWrapperInner = styled(Link).attrs({
@@ -255,3 +232,31 @@ const toPlural = (word: string, count: number) => {
   const suffix = count === 1 ? "" : "s";
   return `${word}${suffix}`;
 };
+
+// ----------------------------------------
+
+export const ChooseWellImplementation = () => {
+  return (
+    <Flex $gap={3} $fullWidth>
+      <Text $variant="h2">Create a Well - Choose a Well Implementation</Text>
+      <Flex $direction="row" $alignItems="flex-start" $gap={8}>
+        <InstructionContainer>
+          <Text $color="text.secondary" $lineHeight="l">
+            Deploy a Well using Aquifer, a Well factory contract.
+          </Text>
+          <Text $color="text.secondary" $lineHeight="l">
+            It is recommended to use the Well.sol Well Implementation, but you&apos;re welcome to use a custom contract.
+          </Text>
+          <Text $color="text.secondary" $lineHeight="l">
+            Visit the documentation to learn more about Aquifers and Well Implementations.
+          </Text>
+        </InstructionContainer>
+        <ChooseWellImplementationForm />
+      </Flex>
+    </Flex>
+  );
+};
+
+const InstructionContainer = styled(Flex).attrs({ $gap: 2 })`
+  max-width: 274px;
+`;

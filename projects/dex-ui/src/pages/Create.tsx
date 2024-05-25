@@ -8,16 +8,22 @@ import { ChooseFunctionAndPump } from "src/components/Create/ChooseFunctionAndPu
 export type CreateWellStep = "well-implementation" | "function-pump" | "name-symbol" | "preview";
 
 export const Create = () => {
-  const { step } = useCreateWell();
-
   return (
     <CreateWellProvider>
       <Page>
-        <>
-          {step === 0 && <ChooseWellImplementation />}
-          {step === 1 && <ChooseFunctionAndPump />}
-        </>
+        <CreateSteps />
       </Page>
     </CreateWellProvider>
+  );
+};
+
+const CreateSteps = () => {
+  const { step } = useCreateWell();
+
+  return (
+    <>
+      {step === 0 && <ChooseWellImplementation />}
+      {step === 1 && <ChooseFunctionAndPump />}
+    </>
   );
 };
