@@ -764,6 +764,7 @@ const ConvertPropProvider: FC<{
 
           // Plant
           farm.add(new sdk.farm.actions.Plant());
+          
           // Withdraw Planted deposit crate
           farm.add(
             new sdk.farm.actions.WithdrawDeposit(
@@ -773,6 +774,7 @@ const ConvertPropProvider: FC<{
               FarmToMode.INTERNAL
             )
           );
+
           // Transfer to Well
           farm.add(
             new sdk.farm.actions.TransferToken(
@@ -785,6 +787,7 @@ const ConvertPropProvider: FC<{
 
           // Create Pipeline operation
           const pipe = sdk.farm.createAdvancedPipe('pipelineDeposit');
+          
           // (Pipeline) - Call sync on Well
           pipe.add(
             new sdk.farm.actions.WellSync(
