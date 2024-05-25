@@ -208,7 +208,7 @@ describe("Silo Enroot", function () {
       });
     });
 
-    describe.only("2 deposit, all", async function () {
+    describe("2 deposit, all", async function () {
       beforeEach(async function () {
         await mockBeanstalk.deployStemsUpgrade();
 
@@ -272,7 +272,7 @@ describe("Silo Enroot", function () {
       });
     });
 
-    describe.only("2 deposit, round", async function () {
+    describe("2 deposit, round", async function () {
       beforeEach(async function () {
         // Bypass fundsSafu invariant because this test handling of underlying tokens violates operating conditions.
         await this.beanWstethWell.mint(mockBeanstalk.address, to18("10000"));
