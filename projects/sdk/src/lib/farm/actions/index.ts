@@ -4,6 +4,8 @@ import { WrapEth } from "./WrapEth";
 import { UnwrapEth } from "./UnwrapEth";
 import { TransferToken } from "./TransferToken";
 import { Deposit } from "./Deposit";
+import { Convert } from "./Convert";
+import { Plant } from "./Plant";
 import { WithdrawDeposits } from "./WithdrawDeposits";
 import { WithdrawDeposit } from "./WithdrawDeposit";
 import { ClaimWithdrawals } from "./ClaimWithdrawals";
@@ -34,6 +36,8 @@ export {
 
   // Beanstalk: Silo
   Deposit,
+  Convert,
+  Plant,
   WithdrawDeposits,
   WithdrawDeposit,
   ClaimWithdrawals,
