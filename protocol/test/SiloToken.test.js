@@ -348,11 +348,9 @@ describe("New Silo Token", function () {
         });
 
         it("emits RemoveDeposits event", async function () {
-          const stem0 = await mockBeanstalk.mockSeasonToStem(
-            siloToken.address,
-            toBN(await beanstalk.season()).sub("1")
-          );
+          const siloSettings = await beanstalk.tokenSettings(siloToken.address);
           const stem1 = await beanstalk.stemTipForToken(siloToken.address);
+          const stem0 = stem1.sub(siloSettings.stalkEarnedPerSeason);
           await expect(this.result)
             .to.emit(beanstalk, "RemoveDeposits")
             .withArgs(user.address, siloToken.address, [stem0, stem1], ["500", "1000"], "1500", [
@@ -395,11 +393,9 @@ describe("New Silo Token", function () {
           expect(dep[1]).to.equal("0");
         });
         it("emits RemoveDeposits event", async function () {
-          const stem0 = await mockBeanstalk.mockSeasonToStem(
-            siloToken.address,
-            toBN(await beanstalk.season()).sub("1")
-          );
+          const siloSettings = await beanstalk.tokenSettings(siloToken.address);
           const stem1 = await beanstalk.stemTipForToken(siloToken.address);
+          const stem0 = stem1.sub(siloSettings.stalkEarnedPerSeason);
           await expect(this.result)
             .to.emit(beanstalk, "RemoveDeposits")
             .withArgs(user.address, siloToken.address, [stem0, stem1], ["1000", "1000"], "2000", [
@@ -781,8 +777,9 @@ describe("New Silo Token", function () {
       });
 
       it("reverts with no allowance", async function () {
-        const depositStem = await mockBeanstalk.mockSeasonToStem(siloToken.address, "10");
-        const stem11 = await mockBeanstalk.mockSeasonToStem(siloToken.address, "11");
+        const siloSettings = await beanstalk.tokenSettings(siloToken.address);
+        const stem1 = await beanstalk.stemTipForToken(siloToken.address);
+        const stem0 = stem1.sub(siloSettings.stalkEarnedPerSeason);
         await expect(
           beanstalk
             .connect(owner)
@@ -790,7 +787,7 @@ describe("New Silo Token", function () {
               user.address,
               user2.address,
               siloToken.address,
-              [depositStem, stem11],
+              [stem0, stem1],
               ["50", "25"]
             )
         ).to.revertedWith("Silo: insufficient allowance");
