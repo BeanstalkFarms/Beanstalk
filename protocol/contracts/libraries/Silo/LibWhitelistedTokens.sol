@@ -6,6 +6,8 @@ pragma solidity ^0.8.20;
 
 import {C} from "../../C.sol";
 import {AppStorage, Storage, LibAppStorage} from "contracts/libraries/LibAppStorage.sol";
+import {LibWell} from "contracts/libraries/Well/LibWell.sol";
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 /**
  * @title LibWhitelistedTokens
@@ -145,6 +147,14 @@ library LibWhitelistedTokens {
         assembly {
             mstore(tokens, tokensLength)
         }
+    }
+
+    function getSopTokens() internal view returns (address[] memory) {
+        address[] memory tokens = getSoppableWellLpTokens();
+        for (uint256 i = 0; i < tokens.length; i++) {
+            tokens[i] = address(LibWell.getNonBeanTokenFromWell(tokens[i]));
+        }
+        return tokens;
     }
 
     /**

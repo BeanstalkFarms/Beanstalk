@@ -104,7 +104,7 @@ library LibWhitelist {
             true, // Whitelisted by default.
             token != address(C.bean()) && !LibUnripe.isUnripe(token), // Assumes tokens that are not Unripe and not Bean are LP tokens.
             selector == LibWell.WELL_BDV_SELECTOR,
-            token != address(C.bean()) && !LibUnripe.isUnripe(token) // Assumes tokens that are not Unripe and not Bean are soppable wells
+            selector == LibWell.WELL_BDV_SELECTOR // Assumes wells are soppable if selector is WELL_BDV_SELECTOR
         );
 
         // If an LP token, initialize oracle storage variables.

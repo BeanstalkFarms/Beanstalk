@@ -136,15 +136,16 @@ abstract contract Invariable {
      */
     function getTokensOfInterest() internal view returns (address[] memory tokens) {
         address[] memory whitelistedTokens = LibWhitelistedTokens.getWhitelistedTokens();
-        address sopToken = address(LibSilo.getSopToken());
-        if (sopToken == address(0)) {
-            tokens = new address[](whitelistedTokens.length);
-        } else {
-            tokens = new address[](whitelistedTokens.length + 1);
-            tokens[tokens.length - 1] = sopToken;
-        }
-        for (uint256 i; i < whitelistedTokens.length; i++) {
+        address[] memory sopTokens = LibWhitelistedTokens.getSopTokens();
+        uint256 totalLength = whitelistedTokens.length + sopTokens.length;
+        tokens = new address[](totalLength);
+
+        for (uint256 i = 0; i < whitelistedTokens.length; i++) {
             tokens[i] = whitelistedTokens[i];
+        }
+
+        for (uint256 i = 0; i < sopTokens.length; i++) {
+            tokens[whitelistedTokens.length + i] = sopTokens[i];
         }
     }
 

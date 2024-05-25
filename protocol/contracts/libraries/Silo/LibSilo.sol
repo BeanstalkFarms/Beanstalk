@@ -484,19 +484,6 @@ library LibSilo {
         return s.a[account].lastUpdate;
     }
 
-    // TODO: Monitor incompatibilities (esp wrt initialization) when generalized flood merges in.
-    /**
-     * @notice returns the token paid out by Season of Plenty.
-     */
-    function getSopToken() internal view returns (IERC20) {
-        AppStorage storage s = LibAppStorage.diamondStorage();
-        // sopWell may not yet be initialized.
-        if (s.deprecated_sopWell == address(0)) return IERC20(address(0));
-        IWell well = IWell(s.deprecated_sopWell);
-        IERC20[] memory tokens = well.tokens();
-        return tokens[0] != C.bean() ? tokens[0] : tokens[1];
-    }
-
     /**
      * @dev internal logic to handle when beanstalk is raining.
      */
