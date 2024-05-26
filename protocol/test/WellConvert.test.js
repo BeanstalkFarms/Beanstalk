@@ -8,11 +8,16 @@ const {
   impersonateBeanEthWell,
   deployMockWell
 } = require("../utils/well.js");
-const { BEAN, BEAN_ETH_WELL, WETH } = require("./utils/constants");
+const { BEAN, BEAN_ETH_WELL, WETH, BEAN_WSTETH_WELL } = require("./utils/constants");
 const { ConvertEncoder } = require("./utils/encoder.js");
 const { to6, to18 } = require("./utils/helpers.js");
 const { takeSnapshot, revertToSnapshot } = require("./utils/snapshot");
-const { setEthUsdChainlinkPrice } = require("../utils/oracle.js");
+
+const {
+  setStethEthChainlinkPrice,
+  setWstethEthUniswapPrice,
+  setEthUsdChainlinkPrice
+} = require("../utils/oracle.js");
 const { getAllBeanstalkContracts } = require("../utils/contracts");
 let user, user2, owner;
 
@@ -28,6 +33,7 @@ describe("Well Convert", function () {
     [beanstalk, mockBeanstalk] = await getAllBeanstalkContracts(this.diamond.address);
 
     this.well = await ethers.getContractAt("IWell", BEAN_ETH_WELL);
+    this.wstethWell = await ethers.getContractAt("IWell", BEAN_WSTETH_WELL);
     this.fakeWell = await deployMockWell();
     this.wellToken = await ethers.getContractAt("IERC20", this.well.address);
     bean = await ethers.getContractAt("MockToken", BEAN);
@@ -37,6 +43,9 @@ describe("Well Convert", function () {
     await bean.connect(owner).approve(beanstalk.address, ethers.constants.MaxUint256);
 
     await setEthUsdChainlinkPrice("1000");
+    await setStethEthChainlinkPrice("1000");
+    await setStethEthChainlinkPrice("1");
+    await setWstethEthUniswapPrice("1");
 
     await setReserves(owner, this.well, [to6("1000000"), to18("1000")]);
 
@@ -92,9 +101,11 @@ describe("Well Convert", function () {
   });
 
   describe("convert beans to lp", async function () {
-    describe("p > 1", async function () {
+    describe.only("p > 1", async function () {
       beforeEach(async function () {
+        console.log("this.well in set reserves", this.well.address);
         await setReserves(owner, this.well, [to6("800000"), to18("1000")]);
+        await setReserves(owner, this.wstethWell, [to6("800000"), to18("1000")]);
       });
 
       it("reverts if not whitelisted well", async function () {
@@ -159,6 +170,7 @@ describe("Well Convert", function () {
           "1338505354221892343955",
           this.well.address
         );
+        console.log("this.well.address", this.well.address);
         await bean.connect(owner).approve(beanstalk.address, to6("100000"));
         await beanstalk.connect(owner).deposit(BEAN, to6("100000"), 0);
         // call sunrise twice to finish germination (germinating deposits cannot convert).

@@ -13,6 +13,7 @@ import {LibRedundantMathSigned256} from "contracts/libraries/LibRedundantMathSig
 import {Call, IWell} from "contracts/interfaces/basin/IWell.sol";
 import {ICappedReservesPump} from "contracts/interfaces/basin/pumps/ICappedReservesPump.sol";
 import {IBeanstalkWellFunction} from "contracts/interfaces/basin/IBeanstalkWellFunction.sol";
+import {console} from "forge-std/console.sol";
 
 /**
  * @title LibPipelineConvert
@@ -169,6 +170,9 @@ library LibDeltaB {
 
         // Converts cannot be performed, if the Bean reserve is less than the minimum
         if (reserves[beanIndex] < C.WELL_MINIMUM_BEAN_BALANCE) {
+            console.log("well:", well);
+            console.log("reserves[beanIndex]", reserves[beanIndex]);
+
             revert("Well: Bean reserve is less than the minimum");
         }
 
