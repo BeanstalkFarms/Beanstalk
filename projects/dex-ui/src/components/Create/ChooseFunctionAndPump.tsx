@@ -50,8 +50,6 @@ const ChooseFunctionAndPumpForm = () => {
     [setFunctionAndPump]
   );
 
-  // console.log("Parent rerendering...");
-
   return (
     <FormProvider {...methods}>
       <form onSubmit={methods.handleSubmit(handleSubmit)} style={{ width: "100%" }}>

@@ -14,14 +14,24 @@ export type AccordionSelectCardProps = {
   onClick: React.MouseEventHandler<HTMLDivElement> | undefined;
 };
 
-export const AccordionSelectCard = ({ selected, below, upper, defaultExpanded = false, onClick }: AccordionSelectCardProps) => {
+export const AccordionSelectCard = ({
+  selected,
+  below,
+  upper,
+  defaultExpanded = false,
+  onClick
+}: AccordionSelectCardProps) => {
   const [expanded, { toggle }] = useBoolean(defaultExpanded);
 
   return (
     <ComponentWrapper $active={selected} onClick={onClick}>
       <Flex $direction="row" $alignItems="center" $fullWidth $justifyContent="space-between">
         <Flex $direction="row" $alignItems="center" $fullWidth $gap={2}>
-          {selected ? <CircleFilledCheckIcon /> : <CircleEmptyIcon />}
+          {selected ? (
+            <CircleFilledCheckIcon />
+          ) : (
+            <CircleEmptyIcon color={theme.colors.lightGray} />
+          )}
           {upper}
         </Flex>
         <ImageButton
@@ -49,7 +59,7 @@ export const AccordionSelectCard = ({ selected, below, upper, defaultExpanded = 
 };
 
 const ComponentWrapper = styled(Flex).attrs({ $gap: 2 })<{ $active: boolean }>`
-  border: 1px solid ${theme.colors.black};
+  border: 1px solid ${(props) => (props.$active ? theme.colors.black : theme.colors.lightGray)};
   background: ${(props) => (props.$active ? theme.colors.primaryLight : theme.colors.white)};
   padding: ${theme.spacing(2, 3)};
   cursor: pointer;
