@@ -3,7 +3,6 @@
 pragma solidity ^0.8.20;
 
 import {LibRedundantMath256} from "contracts/libraries/LibRedundantMath256.sol";
-import {LibCurveConvert} from "./LibCurveConvert.sol";
 import {LibUnripeConvert} from "./LibUnripeConvert.sol";
 import {LibLambdaConvert} from "./LibLambdaConvert.sol";
 import {LibConvertData} from "./LibConvertData.sol";
@@ -31,15 +30,8 @@ library LibConvert {
         bytes calldata convertData
     ) external returns (address tokenOut, address tokenIn, uint256 amountOut, uint256 amountIn) {
         LibConvertData.ConvertKind kind = convertData.convertKind();
-
-        // if (kind == LibConvertData.ConvertKind.BEANS_TO_CURVE_LP) {
-        //     (tokenOut, tokenIn, amountOut, amountIn) = LibCurveConvert
-        //         .convertBeansToLP(convertData);
-        if (kind == LibConvertData.ConvertKind.CURVE_LP_TO_BEANS) {
-            (tokenOut, tokenIn, amountOut, amountIn) = LibCurveConvert.convertLPToBeans(
-                convertData
-            );
-        } else if (kind == LibConvertData.ConvertKind.UNRIPE_BEANS_TO_UNRIPE_LP) {
+        
+        if (kind == LibConvertData.ConvertKind.UNRIPE_BEANS_TO_UNRIPE_LP) {
             (tokenOut, tokenIn, amountOut, amountIn) = LibUnripeConvert.convertBeansToLP(
                 convertData
             );
@@ -63,15 +55,6 @@ library LibConvert {
     }
 
     function getMaxAmountIn(address tokenIn, address tokenOut) internal view returns (uint256) {
-        /// BEAN:3CRV LP -> BEAN
-        if (tokenIn == C.CURVE_BEAN_METAPOOL && tokenOut == C.BEAN)
-            return LibCurveConvert.lpToPeg(C.CURVE_BEAN_METAPOOL);
-
-        /// BEAN -> BEAN:3CRV LP
-        // NOTE: cannot convert due to bean:3crv dewhitelisting
-        // if (tokenIn == C.BEAN && tokenOut == C.CURVE_BEAN_METAPOOL)
-        //     return LibCurveConvert.beansToPeg(C.CURVE_BEAN_METAPOOL);
-
         // Lambda -> Lambda
         if (tokenIn == tokenOut) return type(uint256).max;
 
@@ -105,14 +88,6 @@ library LibConvert {
         address tokenOut,
         uint256 amountIn
     ) internal view returns (uint256) {
-        /// BEAN:3CRV LP -> BEAN
-        if (tokenIn == C.CURVE_BEAN_METAPOOL && tokenOut == C.BEAN)
-            return LibCurveConvert.getBeanAmountOut(C.CURVE_BEAN_METAPOOL, amountIn);
-
-        /// BEAN -> BEAN:3CRV LP
-        // NOTE: cannot convert due to bean:3crv dewhitelisting
-        // if (tokenIn == C.BEAN && tokenOut == C.CURVE_BEAN_METAPOOL)
-        //     return LibCurveConvert.getLPAmountOut(C.CURVE_BEAN_METAPOOL, amountIn);
 
         /// urLP -> urBEAN
         if (tokenIn == C.UNRIPE_LP && tokenOut == C.UNRIPE_BEAN)

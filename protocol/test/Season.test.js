@@ -2,7 +2,6 @@ const { expect } = require("chai");
 const { deploy } = require("../scripts/deploy.js");
 const { getBeanstalk } = require("../utils/contracts.js");
 const {
-  BEAN_3_CURVE,
   BEAN,
   UNRIPE_BEAN,
   UNRIPE_LP,
@@ -38,7 +37,6 @@ describe("Season", function () {
     // add unripe
     this.unripeBean = await ethers.getContractAt("MockToken", UNRIPE_BEAN);
     this.unripeLP = await ethers.getContractAt("MockToken", UNRIPE_LP);
-    this.beanThreeCurve = await ethers.getContractAt("MockMeta3Curve", BEAN_3_CURVE);
     bean = await ethers.getContractAt("MockToken", BEAN);
     await this.unripeLP.mint(user.address, to6("1000"));
     await this.unripeLP.connect(user).approve(this.diamond.address, to6("100000000"));

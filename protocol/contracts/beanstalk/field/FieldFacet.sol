@@ -130,7 +130,7 @@ contract FieldFacet is Invariable, ReentrancyGuard {
     ) internal returns (uint256 pods) {
         beans = LibTransfer.burnToken(C.bean(), beans, LibTractor._user(), mode);
         pods = LibDibbler.sow(beans, _morningTemperature, LibTractor._user(), peg);
-        s.beanSown += SafeCast.toUint128(beans);
+        s.system.beanSown += SafeCast.toUint128(beans);
     }
 
     //////////////////// HARVEST ////////////////////
@@ -169,11 +169,11 @@ contract FieldFacet is Invariable, ReentrancyGuard {
         for (uint256 i; i < plots.length; ++i) {
             // The Plot is partially harvestable if its index is less than
             // the current harvestable index.
-            require(plots[i] < s.fields[fieldId].harvestable, "Field: Plot not Harvestable");
+            require(plots[i] < s.system.fields[fieldId].harvestable, "Field: Plot not Harvestable");
             uint256 harvested = _harvestPlot(LibTractor._user(), fieldId, plots[i]);
             beansHarvested += harvested;
         }
-        s.fields[fieldId].harvested += beansHarvested;
+        s.system.fields[fieldId].harvested += beansHarvested;
         emit Harvest(LibTractor._user(), fieldId, plots, beansHarvested);
     }
 
@@ -193,7 +193,7 @@ contract FieldFacet is Invariable, ReentrancyGuard {
         // Calculate how many Pods are harvestable.
         // The upstream _harvest function checks that at least some Pods
         // are harvestable.
-        harvestablePods = s.fields[fieldId].harvestable.sub(index);
+        harvestablePods = s.system.fields[fieldId].harvestable.sub(index);
 
         LibMarket._cancelPodListing(LibTractor._user(), fieldId, index);
 
@@ -218,8 +218,8 @@ contract FieldFacet is Invariable, ReentrancyGuard {
      */
     function addField() public fundsSafu noSupplyChange noNetFlow {
         LibDiamond.enforceIsOwnerOrContract();
-        uint256 fieldId = s.fieldCount;
-        s.fieldCount++;
+        uint256 fieldId = s.system.fieldCount;
+        s.system.fieldCount++;
         emit FieldAdded(fieldId);
     }
 
@@ -232,14 +232,14 @@ contract FieldFacet is Invariable, ReentrancyGuard {
         uint32 temperature
     ) public fundsSafu noSupplyChange noNetFlow {
         LibDiamond.enforceIsOwnerOrContract();
-        require(fieldId < s.fieldCount, "Field: Field does not exist");
-        s.activeField = fieldId;
+        require(fieldId < s.system.fieldCount, "Field: Field does not exist");
+        s.system.activeField = fieldId;
 
         // Reset weather.
-        s.weather.t = temperature;
-        s.weather.thisSowTime = type(uint32).max;
-        s.weather.lastSowTime = type(uint32).max;
-        s.weather.lastDSoil = 0;
+        s.system.weather.temp = temperature;
+        s.system.weather.thisSowTime = type(uint32).max;
+        s.system.weather.lastSowTime = type(uint32).max;
+        s.system.weather.lastDeltaSoil = 0;
 
         emit ActiveFieldSet(fieldId);
     }
@@ -251,7 +251,7 @@ contract FieldFacet is Invariable, ReentrancyGuard {
      * @param fieldId The index of the Field to query.
      */
     function podIndex(uint256 fieldId) public view returns (uint256) {
-        return s.fields[fieldId].pods;
+        return s.system.fields[fieldId].pods;
     }
 
     /**
@@ -259,7 +259,7 @@ contract FieldFacet is Invariable, ReentrancyGuard {
      * @param fieldId The index of the Field to query.
      */
     function harvestableIndex(uint256 fieldId) public view returns (uint256) {
-        return s.fields[fieldId].harvestable;
+        return s.system.fields[fieldId].harvestable;
     }
 
     /**
@@ -268,7 +268,7 @@ contract FieldFacet is Invariable, ReentrancyGuard {
      * @param fieldId The index of the Field to query.
      */
     function totalPods(uint256 fieldId) public view returns (uint256) {
-        return s.fields[fieldId].pods - s.fields[fieldId].harvested;
+        return s.system.fields[fieldId].pods - s.system.fields[fieldId].harvested;
     }
 
     /**
@@ -276,7 +276,7 @@ contract FieldFacet is Invariable, ReentrancyGuard {
      * @param fieldId The index of the Field to query.
      */
     function totalHarvested(uint256 fieldId) public view returns (uint256) {
-        return s.fields[fieldId].harvested;
+        return s.system.fields[fieldId].harvested;
     }
 
     /**
@@ -287,7 +287,7 @@ contract FieldFacet is Invariable, ReentrancyGuard {
      * @param fieldId The index of the Field to query.
      */
     function totalHarvestable(uint256 fieldId) public view returns (uint256) {
-        return s.fields[fieldId].harvestable - s.fields[fieldId].harvested;
+        return s.system.fields[fieldId].harvestable - s.system.fields[fieldId].harvested;
     }
 
     /**
@@ -295,7 +295,7 @@ contract FieldFacet is Invariable, ReentrancyGuard {
      * @param fieldId The index of the Field to query.
      */
     function totalUnharvestable(uint256 fieldId) public view returns (uint256) {
-        return s.fields[fieldId].pods - s.fields[fieldId].harvestable;
+        return s.system.fields[fieldId].pods - s.system.fields[fieldId].harvestable;
     }
 
     /**
@@ -303,7 +303,7 @@ contract FieldFacet is Invariable, ReentrancyGuard {
      * @param fieldId The index of the Field to query.
      */
     function isHarvesting(uint256 fieldId) public view returns (bool) {
-        return s.fields[fieldId].harvestable < s.fields[fieldId].pods;
+        return s.system.fields[fieldId].harvestable < s.system.fields[fieldId].pods;
     }
 
     /**
@@ -316,11 +316,11 @@ contract FieldFacet is Invariable, ReentrancyGuard {
     }
 
     function activeField() public view returns (uint256) {
-        return s.activeField;
+        return s.system.activeField;
     }
 
     function fieldCount() public view returns (uint256) {
-        return s.fieldCount;
+        return s.system.fieldCount;
     }
 
     /**
@@ -335,21 +335,21 @@ contract FieldFacet is Invariable, ReentrancyGuard {
         returns (uint256 soil, uint256 _morningTemperature, bool abovePeg)
     {
         _morningTemperature = LibDibbler.morningTemperature();
-        abovePeg = s.season.abovePeg;
+        abovePeg = s.system.season.abovePeg;
 
         // Below peg: Soil is fixed to the amount set during {calcCaseId}.
         // Morning Temperature is dynamic, starting small and logarithmically
         // increasing to `s.weather.t` across the first 25 blocks of the Season.
         if (!abovePeg) {
-            soil = uint256(s.soil);
+            soil = uint256(s.system.soil);
         }
         // Above peg: the maximum amount of Pods that Beanstalk is willing to mint
         // stays fixed; since {morningTemperature} is scaled down when `delta < 25`, we
         // need to scale up the amount of Soil to hold Pods constant.
         else {
             soil = LibDibbler.scaleSoilUp(
-                uint256(s.soil), // max soil offered this Season, reached when `t >= 25`
-                uint256(s.weather.t).mul(LibDibbler.TEMPERATURE_PRECISION), // max temperature
+                uint256(s.system.soil), // max soil offered this Season, reached when `t >= 25`
+                uint256(s.system.weather.temp).mul(LibDibbler.TEMPERATURE_PRECISION), // max temperature
                 _morningTemperature // temperature adjusted by number of blocks since Sunrise
             );
         }
@@ -365,15 +365,15 @@ contract FieldFacet is Invariable, ReentrancyGuard {
      */
     function totalSoil() external view returns (uint256) {
         // Below peg: Soil is fixed to the amount set during {calcCaseId}.
-        if (!s.season.abovePeg) {
-            return uint256(s.soil);
+        if (!s.system.season.abovePeg) {
+            return uint256(s.system.soil);
         }
 
         // Above peg: Soil is dynamic
         return
             LibDibbler.scaleSoilUp(
-                uint256(s.soil), // min soil
-                uint256(s.weather.t).mul(LibDibbler.TEMPERATURE_PRECISION), // max temperature
+                uint256(s.system.soil), // min soil
+                uint256(s.system.weather.temp).mul(LibDibbler.TEMPERATURE_PRECISION), // max temperature
                 LibDibbler.morningTemperature() // temperature adjusted by number of blocks since Sunrise
             );
     }
@@ -395,7 +395,7 @@ contract FieldFacet is Invariable, ReentrancyGuard {
      * precision needed for the Morning Auction functionality.
      */
     function maxTemperature() external view returns (uint256) {
-        return uint256(s.weather.t).mul(LibDibbler.TEMPERATURE_PRECISION);
+        return uint256(s.system.weather.temp).mul(LibDibbler.TEMPERATURE_PRECISION);
     }
 
     //////////////////// GETTERS: PODS ////////////////////

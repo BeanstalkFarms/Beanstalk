@@ -316,8 +316,8 @@ describe("newField", function () {
 
     // Above peg, beanstalk can issue a certain amount
     // of pods in order to measure soil demand.
-    // this is calculated as s.f.soil_inital * (s.w.t + 100) .
-    // Since the morning auction raises the temperature from 1% to s.w.t,
+    // this is calculated as s.system.f.soil_inital * (s.system.w.t + 100) .
+    // Since the morning auction raises the temperature from 1% to s.system.w.t,
     // the soil that can be issued should increase.
     // rather than increase the soil, we decrease the amount of soil
     // that is sown per bean. (during non-morning conditions, 1 bean = 1 soil)

@@ -53,7 +53,7 @@ contract MarketplaceFacet is Invariable, Order {
     }
 
     function podListing(uint256 fieldId, uint256 index) external view returns (bytes32 id) {
-        return s.podListings[fieldId][index];
+        return s.system.podListings[fieldId][index];
     }
 
     /*
@@ -98,7 +98,7 @@ contract MarketplaceFacet is Invariable, Order {
     }
 
     function podOrder(bytes32 id) external view returns (uint256) {
-        return s.podOrders[id];
+        return s.system.podOrders[id];
     }
 
     /*
@@ -128,7 +128,7 @@ contract MarketplaceFacet is Invariable, Order {
             decrementAllowancePods(sender, LibTractor._user(), fieldId, transferAmount);
         }
 
-        if (s.podListings[fieldId][index] != bytes32(0)) {
+        if (s.system.podListings[fieldId][index] != bytes32(0)) {
             LibMarket._cancelPodListing(sender, fieldId, index);
         }
         _transferPlot(sender, recipient, fieldId, index, start, transferAmount);

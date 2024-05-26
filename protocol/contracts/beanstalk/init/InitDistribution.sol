@@ -5,13 +5,14 @@
 pragma solidity ^0.8.20;
 
 import {C} from "contracts/C.sol";
-import {AppStorage, Storage} from "contracts/beanstalk/AppStorage.sol";
+import {AppStorage} from "contracts/beanstalk/storage/AppStorage.sol";
+import {ShipmentRoute, ShipmentRecipient} from "contracts/beanstalk/storage/System.sol";
 import {ShipmentPlanner} from "contracts/ecosystem/ShipmentPlanner.sol";
 
 // NOTE: Values are arbitrary placeholders.
 
 interface IBeanstalk {
-    function setShipmentRoutes(Storage.ShipmentRoute[] calldata shipmentRoutes) external;
+    function setShipmentRoutes(ShipmentRoute[] calldata shipmentRoutes) external;
 
     function addField() external;
 
@@ -34,26 +35,26 @@ contract InitDistribution {
             shipmentPlanner != address(0),
             "InitDistribution: ShipmentPlanner deployment failed."
         );
-        Storage.ShipmentRoute[] memory shipmentRoutes = new Storage.ShipmentRoute[](3);
+        ShipmentRoute[] memory shipmentRoutes = new ShipmentRoute[](3);
 
-        shipmentRoutes[0] = Storage.ShipmentRoute(
+        shipmentRoutes[0] = ShipmentRoute(
             shipmentPlanner,
             ShipmentPlanner.getSiloPlan.selector,
-            Storage.ShipmentRecipient.Silo,
+            ShipmentRecipient.Silo,
             bytes("")
         );
 
-        shipmentRoutes[1] = Storage.ShipmentRoute(
+        shipmentRoutes[1] = ShipmentRoute(
             shipmentPlanner,
             ShipmentPlanner.getFieldPlan.selector,
-            Storage.ShipmentRecipient.Field,
+            ShipmentRecipient.Field,
             abi.encode(uint256(0))
         );
 
-        shipmentRoutes[2] = Storage.ShipmentRoute(
+        shipmentRoutes[2] = ShipmentRoute(
             shipmentPlanner,
             ShipmentPlanner.getBarnPlan.selector,
-            Storage.ShipmentRecipient.Barn,
+            ShipmentRecipient.Barn,
             bytes("")
         );
 

@@ -5,7 +5,9 @@
 pragma solidity ^0.8.20;
 
 import {C} from "../../C.sol";
-import {LibAppStorage, AppStorage, Storage} from "../LibAppStorage.sol";
+import {LibAppStorage} from "../LibAppStorage.sol";
+import {AppStorage} from "contracts/beanstalk/storage/AppStorage.sol";
+import {AssetSettings} from "contracts/beanstalk/storage/System.sol";
 import {LibTokenSilo} from "contracts/libraries/Silo/LibTokenSilo.sol";
 import {LibWhitelistedTokens} from "contracts/libraries/Silo/LibWhitelistedTokens.sol";
 import {LibUnripe} from "contracts/libraries/LibUnripe.sol";
@@ -106,24 +108,27 @@ library LibWhitelist {
 
         // If an LP token, initialize oracle storage variables.
         if (token != address(C.bean()) && !LibUnripe.isUnripe(token)) {
-            s.usdTokenPrice[token] = 1;
-            s.twaReserves[token].reserve0 = 1;
-            s.twaReserves[token].reserve1 = 1;
+            s.system.usdTokenPrice[token] = 1;
+            s.system.twaReserves[token].reserve0 = 1;
+            s.system.twaReserves[token].reserve1 = 1;
         }
 
-        require(s.siloSettings[token].milestoneSeason == 0, "Whitelist: Token already whitelisted");
+        require(
+            s.system.silo.assetSettings[token].milestoneSeason == 0,
+            "Whitelist: Token already whitelisted"
+        );
         // beanstalk requires all whitelisted assets to have a minimum stalkEarnedPerSeeason
         // of 1 (due to the germination update). set stalkEarnedPerSeason to 1 to prevent revert.
         if (stalkEarnedPerSeason == 0) stalkEarnedPerSeason = 1;
-        s.siloSettings[token].selector = selector;
-        s.siloSettings[token].stalkEarnedPerSeason = stalkEarnedPerSeason;
-        s.siloSettings[token].stalkIssuedPerBdv = stalkIssuedPerBdv;
-        s.siloSettings[token].milestoneSeason = uint32(s.season.current);
-        s.siloSettings[token].encodeType = encodeType;
-        s.siloSettings[token].gpSelector = gaugePointSelector;
-        s.siloSettings[token].lwSelector = liquidityWeightSelector;
-        s.siloSettings[token].gaugePoints = gaugePoints;
-        s.siloSettings[token].optimalPercentDepositedBdv = optimalPercentDepositedBdv;
+        s.system.silo.assetSettings[token].selector = selector;
+        s.system.silo.assetSettings[token].stalkEarnedPerSeason = stalkEarnedPerSeason;
+        s.system.silo.assetSettings[token].stalkIssuedPerBdv = stalkIssuedPerBdv;
+        s.system.silo.assetSettings[token].milestoneSeason = uint32(s.system.season.current);
+        s.system.silo.assetSettings[token].encodeType = encodeType;
+        s.system.silo.assetSettings[token].gpSelector = gaugePointSelector;
+        s.system.silo.assetSettings[token].lwSelector = liquidityWeightSelector;
+        s.system.silo.assetSettings[token].gaugePoints = gaugePoints;
+        s.system.silo.assetSettings[token].optimalPercentDepositedBdv = optimalPercentDepositedBdv;
 
         emit WhitelistToken(
             token,
@@ -145,7 +150,7 @@ library LibWhitelist {
         address token,
         uint64 optimalPercentDepositedBdv
     ) internal {
-        Storage.SiloSettings storage ss = LibAppStorage.diamondStorage().siloSettings[token];
+        AssetSettings storage ss = LibAppStorage.diamondStorage().system.silo.assetSettings[token];
         updateGaugeForToken(token, ss.gpSelector, ss.lwSelector, optimalPercentDepositedBdv);
     }
 
@@ -159,7 +164,7 @@ library LibWhitelist {
         bytes4 liquidityWeightSelector,
         uint64 optimalPercentDepositedBdv
     ) internal {
-        Storage.SiloSettings storage ss = LibAppStorage.diamondStorage().siloSettings[token];
+        AssetSettings storage ss = LibAppStorage.diamondStorage().system.silo.assetSettings[token];
         require(ss.selector != 0, "Whitelist: Token not whitelisted in Silo");
         verifyGaugePointSelector(gaugePointSelector);
         verifyLiquidityWeightSelector(liquidityWeightSelector);
@@ -185,22 +190,23 @@ library LibWhitelist {
     ) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
 
-        require(s.siloSettings[token].milestoneSeason != 0, "Token not whitelisted");
+        require(s.system.silo.assetSettings[token].milestoneSeason != 0, "Token not whitelisted");
 
         // beanstalk requires a min. stalkEarnedPerSeason of 1.
         if (stalkEarnedPerSeason == 0) stalkEarnedPerSeason = 1;
 
         // update milestone stem and season.
-        s.siloSettings[token].milestoneStem = LibTokenSilo.stemTipForToken(token);
-        s.siloSettings[token].milestoneSeason = s.season.current;
+        s.system.silo.assetSettings[token].milestoneStem = LibTokenSilo.stemTipForToken(token);
+        s.system.silo.assetSettings[token].milestoneSeason = s.system.season.current;
 
         // stalkEarnedPerSeason is set to int32 before casting down.
-        s.siloSettings[token].deltaStalkEarnedPerSeason = int24(
-            int32(stalkEarnedPerSeason) - int32(s.siloSettings[token].stalkEarnedPerSeason)
+        s.system.silo.assetSettings[token].deltaStalkEarnedPerSeason = int24(
+            int32(stalkEarnedPerSeason) -
+                int32(s.system.silo.assetSettings[token].stalkEarnedPerSeason)
         ); // calculate delta
-        s.siloSettings[token].stalkEarnedPerSeason = stalkEarnedPerSeason;
+        s.system.silo.assetSettings[token].stalkEarnedPerSeason = stalkEarnedPerSeason;
 
-        emit UpdatedStalkPerBdvPerSeason(token, stalkEarnedPerSeason, s.season.current);
+        emit UpdatedStalkPerBdvPerSeason(token, stalkEarnedPerSeason, s.system.season.current);
     }
 
     /**
@@ -218,14 +224,14 @@ library LibWhitelist {
         updateStalkPerBdvPerSeasonForToken(token, 1);
 
         // delete the selector and encodeType.
-        delete s.siloSettings[token].selector;
-        delete s.siloSettings[token].encodeType;
+        delete s.system.silo.assetSettings[token].selector;
+        delete s.system.silo.assetSettings[token].encodeType;
 
         // delete gaugePoints, gaugePointSelector, liquidityWeightSelector, and optimalPercentDepositedBdv.
-        delete s.siloSettings[token].gaugePoints;
-        delete s.siloSettings[token].gpSelector;
-        delete s.siloSettings[token].lwSelector;
-        delete s.siloSettings[token].optimalPercentDepositedBdv;
+        delete s.system.silo.assetSettings[token].gaugePoints;
+        delete s.system.silo.assetSettings[token].gpSelector;
+        delete s.system.silo.assetSettings[token].lwSelector;
+        delete s.system.silo.assetSettings[token].optimalPercentDepositedBdv;
 
         emit DewhitelistToken(token);
     }

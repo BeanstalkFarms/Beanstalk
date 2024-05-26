@@ -31,7 +31,7 @@ library LibUnripe {
     function percentBeansRecapped() internal view returns (uint256 percent) {
         AppStorage storage s = LibAppStorage.diamondStorage();
         return
-            s.unripe[C.UNRIPE_BEAN].balanceOfUnderlying.mul(DECIMALS).div(
+            s.system.silo.unripeSettings[C.UNRIPE_BEAN].balanceOfUnderlying.mul(DECIMALS).div(
                 C.unripeBean().totalSupply()
             );
     }
@@ -41,7 +41,8 @@ library LibUnripe {
      */
     function percentLPRecapped() internal view returns (uint256 percent) {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        return C.unripeLPPerDollar().mul(s.recapitalized).div(C.unripeLP().totalSupply());
+        return
+            C.unripeLPPerDollar().mul(s.system.fert.recapitalized).div(C.unripeLP().totalSupply());
     }
 
     /**
@@ -51,7 +52,12 @@ library LibUnripe {
      */
     function incrementUnderlying(address token, uint256 amount) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        s.unripe[token].balanceOfUnderlying = s.unripe[token].balanceOfUnderlying.add(amount);
+        s.system.silo.unripeSettings[token].balanceOfUnderlying = s
+            .system
+            .silo
+            .unripeSettings[token]
+            .balanceOfUnderlying
+            .add(amount);
         emit ChangeUnderlying(token, int256(amount));
     }
 
@@ -62,7 +68,12 @@ library LibUnripe {
      */
     function decrementUnderlying(address token, uint256 amount) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        s.unripe[token].balanceOfUnderlying = s.unripe[token].balanceOfUnderlying.sub(amount);
+        s.system.silo.unripeSettings[token].balanceOfUnderlying = s
+            .system
+            .silo
+            .unripeSettings[token]
+            .balanceOfUnderlying
+            .sub(amount);
         emit ChangeUnderlying(token, -int256(amount));
     }
 
@@ -78,7 +89,9 @@ library LibUnripe {
         uint256 supply
     ) internal view returns (uint256 underlying) {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        underlying = s.unripe[unripeToken].balanceOfUnderlying.mul(unripe).div(supply);
+        underlying = s.system.silo.unripeSettings[unripeToken].balanceOfUnderlying.mul(unripe).div(
+            supply
+        );
     }
 
     /**
@@ -93,7 +106,7 @@ library LibUnripe {
     ) internal view returns (uint256 unripe) {
         AppStorage storage s = LibAppStorage.diamondStorage();
         unripe = IBean(unripeToken).totalSupply().mul(underlying).div(
-            s.unripe[unripeToken].balanceOfUnderlying
+            s.system.silo.unripeSettings[unripeToken].balanceOfUnderlying
         );
     }
 
@@ -106,10 +119,10 @@ library LibUnripe {
     function addUnderlying(address token, uint256 underlying) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
         if (token == C.UNRIPE_LP) {
-            uint256 recapped = underlying.mul(s.recapitalized).div(
-                s.unripe[C.UNRIPE_LP].balanceOfUnderlying
+            uint256 recapped = underlying.mul(s.system.fert.recapitalized).div(
+                s.system.silo.unripeSettings[C.UNRIPE_LP].balanceOfUnderlying
             );
-            s.recapitalized = s.recapitalized.add(recapped);
+            s.system.fert.recapitalized = s.system.fert.recapitalized.add(recapped);
         }
         incrementUnderlying(token, underlying);
     }
@@ -123,21 +136,21 @@ library LibUnripe {
     function removeUnderlying(address token, uint256 underlying) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
         if (token == C.UNRIPE_LP) {
-            uint256 recapped = underlying.mul(s.recapitalized).div(
-                s.unripe[C.UNRIPE_LP].balanceOfUnderlying
+            uint256 recapped = underlying.mul(s.system.fert.recapitalized).div(
+                s.system.silo.unripeSettings[C.UNRIPE_LP].balanceOfUnderlying
             );
-            s.recapitalized = s.recapitalized.sub(recapped);
+            s.system.fert.recapitalized = s.system.fert.recapitalized.sub(recapped);
         }
         decrementUnderlying(token, underlying);
     }
 
     /**
      * @dev Switches the underlying token of an unripe token.
-     * Should only be called if `s.unripe[unripeToken].balanceOfUnderlying == 0`.
+     * Should only be called if `s.silo.unripeSettings[unripeToken].balanceOfUnderlying == 0`.
      */
     function switchUnderlyingToken(address unripeToken, address newUnderlyingToken) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        s.unripe[unripeToken].underlyingToken = newUnderlyingToken;
+        s.system.silo.unripeSettings[unripeToken].underlyingToken = newUnderlyingToken;
         emit SwitchUnderlyingToken(unripeToken, newUnderlyingToken);
     }
 
@@ -193,7 +206,7 @@ library LibUnripe {
             C.UNRIPE_LP,
             getRecapPaidPercentAmount(1e6)
         );
-        address underlying = s.unripe[C.UNRIPE_LP].underlyingToken;
+        address underlying = s.system.silo.unripeSettings[C.UNRIPE_LP].underlyingToken;
         uint256 beanIndex = LibWell.getBeanIndexFromWell(underlying);
 
         // lpTokenSupply is calculated rather than calling totalSupply(),
@@ -216,7 +229,7 @@ library LibUnripe {
         uint256 amount
     ) internal view returns (uint256 penalizedAmount) {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        return s.fertilizedIndex.mul(amount).div(s.unfertilizedIndex);
+        return s.system.fert.fertilizedIndex.mul(amount).div(s.system.fert.unfertilizedIndex);
     }
 
     /**
@@ -224,7 +237,7 @@ library LibUnripe {
      */
     function isUnripe(address unripeToken) internal view returns (bool unripe) {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        unripe = s.unripe[unripeToken].underlyingToken != address(0);
+        unripe = s.system.silo.unripeSettings[unripeToken].underlyingToken != address(0);
     }
 
     /**
@@ -236,13 +249,15 @@ library LibUnripe {
         uint256 supply
     ) internal view returns (uint256 redeem) {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        redeem = s.unripe[unripeToken].balanceOfUnderlying.mul(amount).div(supply);
+        redeem = s.system.silo.unripeSettings[unripeToken].balanceOfUnderlying.mul(amount).div(
+            supply
+        );
     }
 
     function _getUnderlyingToken(
         address unripeToken
     ) internal view returns (address underlyingToken) {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        return s.unripe[unripeToken].underlyingToken;
+        return s.system.silo.unripeSettings[unripeToken].underlyingToken;
     }
 }

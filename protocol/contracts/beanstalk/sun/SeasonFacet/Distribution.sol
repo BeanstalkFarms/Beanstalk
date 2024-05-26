@@ -5,7 +5,8 @@ pragma solidity ^0.8.20;
 import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
 
 import {C} from "contracts/C.sol";
-import {AppStorage, Storage} from "contracts/beanstalk/AppStorage.sol";
+import {AppStorage} from "contracts/beanstalk/storage/AppStorage.sol";
+import {ShipmentRoute} from "contracts/beanstalk/storage/System.sol";
 import {Receiving} from "contracts/beanstalk/sun/SeasonFacet/Receiving.sol";
 import {ShipmentPlan} from "contracts/ecosystem/ShipmentPlanner.sol";
 import {LibDiamond} from "contracts/libraries/LibDiamond.sol";
@@ -26,7 +27,7 @@ contract Distribution is Receiving {
      */
     event Ship(
         uint32 indexed season,
-        Storage.ShipmentRoute[] shipmentRoutes,
+        ShipmentRoute[] shipmentRoutes,
         uint256[] shipmentAmounts
     );
 
@@ -34,7 +35,7 @@ contract Distribution is Receiving {
      * @notice Emitted when the shipment routes in storage are replaced with a new set of routes.
      * @param newShipmentRoutes New set of ShipmentRoutes.
      */
-    event ShipmentRoutesSet(Storage.ShipmentRoute[] newShipmentRoutes);
+    event ShipmentRoutesSet(ShipmentRoute[] newShipmentRoutes);
 
     //////////////////// REWARD BEANS ////////////////////
 
@@ -45,7 +46,7 @@ contract Distribution is Receiving {
     function ship(uint256 beansToShip) internal {
         C.bean().mint(address(this), beansToShip);
 
-        Storage.ShipmentRoute[] memory shipmentRoutes = s.shipmentRoutes;
+        ShipmentRoute[] memory shipmentRoutes = s.system.shipmentRoutes;
         ShipmentPlan[] memory shipmentPlans = new ShipmentPlan[](shipmentRoutes.length);
         uint256[] memory shipmentAmounts = new uint256[](shipmentRoutes.length);
         uint256 totalPoints;
@@ -83,7 +84,7 @@ contract Distribution is Receiving {
             );
         }
 
-        emit Ship(s.season.current, shipmentRoutes, shipmentAmounts);
+        emit Ship(s.system.season.current, shipmentRoutes, shipmentAmounts);
     }
 
     /**
@@ -111,7 +112,7 @@ contract Distribution is Receiving {
      * @dev GetPlan functions should never fail/revert. Else they will have no Beans allocated.
      */
     function getShipmentPlans(
-        Storage.ShipmentRoute[] memory shipmentRoutes
+        ShipmentRoute[] memory shipmentRoutes
     ) private view returns (ShipmentPlan[] memory shipmentPlans, uint256 totalPoints) {
         shipmentPlans = new ShipmentPlan[](shipmentRoutes.length);
         for (uint256 i; i < shipmentRoutes.length; i++) {
@@ -130,19 +131,19 @@ contract Distribution is Receiving {
     /**
      * @notice Gets the current set of ShipmentRoutes.
      */
-    function getShipmentRoutes() external view returns (Storage.ShipmentRoute[] memory) {
-        return s.shipmentRoutes;
+    function getShipmentRoutes() external view returns (ShipmentRoute[] memory) {
+        return s.system.shipmentRoutes;
     }
 
     /**
      * @notice Replaces the entire set of ShipmentRoutes with a new set.
      * @dev Changes take effect immediately and will be seen at the next sunrise mint.
      */
-    function setShipmentRoutes(Storage.ShipmentRoute[] calldata shipmentRoutes) external {
+    function setShipmentRoutes(ShipmentRoute[] calldata shipmentRoutes) external {
         LibDiamond.enforceIsOwnerOrContract();
-        delete s.shipmentRoutes;
+        delete s.system.shipmentRoutes;
         for (uint256 i; i < shipmentRoutes.length; i++) {
-            s.shipmentRoutes.push(shipmentRoutes[i]);
+            s.system.shipmentRoutes.push(shipmentRoutes[i]);
         }
         emit ShipmentRoutesSet(shipmentRoutes);
     }

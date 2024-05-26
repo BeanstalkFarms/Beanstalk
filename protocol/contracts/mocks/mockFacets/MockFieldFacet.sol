@@ -19,24 +19,24 @@ contract MockFieldFacet is FieldFacet {
     using LibRedundantMath128 for uint128;
 
     function incrementTotalSoilE(uint128 amount) external {
-        s.soil += amount;
+        s.system.soil += amount;
     }
 
     function incrementTotalHarvestableE(uint256 fieldId, uint256 amount) external {
         C.bean().mint(address(this), amount);
-        s.fields[fieldId].harvestable += amount;
+        s.system.fields[fieldId].harvestable += amount;
     }
 
     function incrementTotalPodsE(uint256 fieldId, uint256 amount) external {
-        s.fields[fieldId].pods += amount;
+        s.system.fields[fieldId].pods += amount;
     }
 
     function totalRealSoil() external view returns (uint256) {
-        return s.soil;
+        return s.system.soil;
     }
 
     function beanSown() external view returns (uint256) {
-        return s.beanSown;
+        return s.system.beanSown;
     }
 
     /**
@@ -192,7 +192,7 @@ contract MockFieldFacet is FieldFacet {
         uint32 maxTemperature,
         bool abovePeg
     ) external returns (uint256 pods) {
-        s.weather.t = maxTemperature;
+        s.system.weather.temp = maxTemperature;
         pods = LibDibbler.sow(beans, _morningTemperature, msg.sender, abovePeg);
         return pods;
     }
@@ -206,13 +206,13 @@ contract MockFieldFacet is FieldFacet {
         // Above peg: Soil is dynamic
         return
             LibDibbler.scaleSoilUp(
-                uint256(s.soil), // min soil
-                uint256(s.weather.t).mul(LibDibbler.TEMPERATURE_PRECISION), // max temperature
+                uint256(s.system.soil), // min soil
+                uint256(s.system.weather.temp).mul(LibDibbler.TEMPERATURE_PRECISION), // max temperature
                 morningTemperature // temperature adjusted by number of blocks since Sunrise
             );
     }
 
     function setMaxTemp(uint32 t) external {
-        s.weather.t = t;
+        s.system.weather.temp = t;
     }
 }

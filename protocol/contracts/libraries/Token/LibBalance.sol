@@ -7,7 +7,8 @@ import {LibRedundantMath256} from "contracts/libraries/LibRedundantMath256.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
-import {AppStorage, LibAppStorage} from "../LibAppStorage.sol";
+import {LibAppStorage} from "../LibAppStorage.sol";
+import {AppStorage} from "contracts/beanstalk/storage/AppStorage.sol";
 
 /**
  * @title LibInternalBalance
@@ -84,13 +85,15 @@ library LibBalance {
     ) private {
         AppStorage storage s = LibAppStorage.diamondStorage();
         delta >= 0
-            ? s.internalTokenBalanceTotal[token] = s.internalTokenBalanceTotal[token].add(
-                uint256(delta)
-            )
-            : s.internalTokenBalanceTotal[token] = s.internalTokenBalanceTotal[token].sub(
-            uint256(-delta)
-        );
-        s.internalTokenBalance[account][token] = newBalance;
+            ? s.system.internalTokenBalanceTotal[token] = s
+                .system
+                .internalTokenBalanceTotal[token]
+                .add(uint256(delta))
+            : s.system.internalTokenBalanceTotal[token] = s
+            .system
+            .internalTokenBalanceTotal[token]
+            .sub(uint256(-delta));
+        s.accounts[account].internalTokenBalance[token] = newBalance;
         emit InternalBalanceChanged(account, token, delta);
     }
 
@@ -102,6 +105,6 @@ library LibBalance {
         IERC20 token
     ) internal view returns (uint256 balance) {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        balance = s.internalTokenBalance[account][token];
+        balance = s.accounts[account].internalTokenBalance[token];
     }
 }

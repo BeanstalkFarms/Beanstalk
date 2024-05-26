@@ -21,7 +21,7 @@ library LibMarket {
             "Marketplace: Listing not owned by sender."
         );
 
-        delete s.podListings[fieldId][index];
+        delete s.system.podListings[fieldId][index];
 
         emit PodListingCancelled(lister, fieldId, index);
     }

@@ -5,7 +5,7 @@
 pragma solidity ^0.8.20;
 pragma abicoder v2;
 
-import {AppStorage, Storage} from "contracts/beanstalk/AppStorage.sol";
+import {AppStorage} from "contracts/beanstalk/storage/AppStorage.sol";
 import {SafeERC20, IERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {ReentrancyGuard} from "contracts/beanstalk/ReentrancyGuard.sol";
 import {LibRedundantMath128} from "contracts/libraries/LibRedundantMath128.sol";
@@ -27,7 +27,7 @@ import {IWell} from "contracts/interfaces/basin/IWell.sol";
  *
  * - Grown Stalk (see "Mow")
  * - Earned Beans, Earned Stalk (see "Plant")
- * - 3CRV earned during a Flood (see "Flood")
+ * - Tokens earned during a Flood (see "Flood")
  *
  * For backwards compatibility, a Flood is sometimes referred to by its old name
  * "Season of Plenty".
@@ -49,9 +49,9 @@ contract Silo is ReentrancyGuard {
     event Plant(address indexed account, uint256 beans);
 
     /**
-     * @notice Emitted when 3CRV paid to `account` during a Flood is Claimed.
+     * @notice Emitted when Token paid to `account` during a Flood is Claimed.
      * @param account Owns and receives the assets paid during a Flood.
-     * @param plenty The amount of 3CRV claimed by `account`. This is the amount
+     * @param plenty The amount of Token claimed by `account`. This is the amount
      * that `account` has been paid since their last {ClaimPlenty}.
      *
      * @dev Flood was previously called a "Season of Plenty". For backwards
@@ -99,7 +99,7 @@ contract Silo is ReentrancyGuard {
         // Earned Beans.
 
         LibSilo._mow(account, C.BEAN);
-        uint256 accountStalk = s.accounts[account].silo.stalk;
+        uint256 accountStalk = s.accounts[account].stalk;
 
         // Calculate balance of Earned Beans.
         beans = LibSilo._balanceOfEarnedBeans(accountStalk, s.accounts[account].roots);
@@ -107,8 +107,8 @@ contract Silo is ReentrancyGuard {
         if (beans == 0) return (0, stemTip);
 
         // Reduce the Silo's supply of Earned Beans.
-        // SafeCast unnecessary because beans is <= s.earnedBeans.
-        s.earnedBeans = s.earnedBeans.sub(uint128(beans));
+        // SafeCast unnecessary because beans is <= s.system.silo.earnedBeans.
+        s.system.silo.earnedBeans = s.system.silo.earnedBeans.sub(uint128(beans));
 
         // Deposit Earned Beans if there are any. Note that 1 Bean = 1 BDV.
         LibTokenSilo.addDepositToAccount(
@@ -124,10 +124,10 @@ contract Silo is ReentrancyGuard {
         // Earned Stalk are minted when Earned Beans are minted during Sunrise. See {Sun.sol:rewardToSilo} for details.
         // Similarly, `account` does not receive additional Roots from Earned Stalk during a Plant.
         // The following lines allocate Earned Stalk that has already been minted to `account`.
-        // Constant is used here rather than s.siloSettings[BEAN].stalkIssuedPerBdv
+        // Constant is used here rather than s.system.silo.assetSettings[BEAN].stalkIssuedPerBdv
         // for gas savings.
         uint256 stalk = beans.mul(C.STALK_PER_BEAN);
-        s.accounts[account].silo.stalk = accountStalk.add(stalk);
+        s.accounts[account].stalk = accountStalk.add(stalk);
 
         emit StalkBalanceChanged(account, int256(stalk), 0);
         emit Plant(account, beans);
@@ -146,7 +146,7 @@ contract Silo is ReentrancyGuard {
         IERC20 sopToken = LibSilo.getSopToken();
         sopToken.safeTransfer(account, plenty);
         delete s.accounts[account].sop.plenty;
-        s.plenty -= plenty;
+        s.system.plenty -= plenty;
 
         emit ClaimPlenty(account, address(sopToken), plenty);
     }

@@ -135,8 +135,6 @@ async function ebip14(mock = false, account = undefined) {
     facetNames: [
       "SeasonFacet",
       "SiloFacet", 
-      "MigrationFacet",
-      "LegacyClaimWithdrawalFacet",
       "ConvertFacet",
       "EnrootFacet"
     ],

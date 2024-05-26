@@ -46,15 +46,18 @@ contract Sun is Oracle, Distribution {
     function stepSun(int256 deltaB, uint256 caseId) internal {
         // Above peg
         if (deltaB > 0) {
-            uint256 priorHarvestable = s.fields[s.activeField].harvestable;
+            uint256 priorHarvestable = s.system.fields[s.system.activeField].harvestable;
             ship(uint256(deltaB));
-            setSoilAbovePeg(s.fields[s.activeField].harvestable - priorHarvestable, caseId);
-            s.season.abovePeg = true;
+            setSoilAbovePeg(
+                s.system.fields[s.system.activeField].harvestable - priorHarvestable,
+                caseId
+            );
+            s.system.season.abovePeg = true;
         }
         // Below peg
         else {
             setSoil(uint256(-deltaB));
-            s.season.abovePeg = false;
+            s.system.season.abovePeg = false;
         }
     }
 
@@ -71,7 +74,7 @@ contract Sun is Oracle, Distribution {
      * When the Pod Rate is low, Beanstalk issues more Soil.
      */
     function setSoilAbovePeg(uint256 newHarvestable, uint256 caseId) internal {
-        uint256 newSoil = newHarvestable.mul(100).div(100 + s.weather.t);
+        uint256 newSoil = newHarvestable.mul(100).div(100 + s.system.weather.temp);
         if (caseId >= 24) {
             newSoil = newSoil.mul(SOIL_COEFFICIENT_HIGH).div(C.PRECISION); // high podrate
         } else if (caseId < 8) {
@@ -81,7 +84,7 @@ contract Sun is Oracle, Distribution {
     }
 
     function setSoil(uint256 amount) internal {
-        s.soil = amount.toUint128();
-        emit Soil(s.season.current, amount.toUint128());
+        s.system.soil = amount.toUint128();
+        emit Soil(s.system.season.current, amount.toUint128());
     }
 }

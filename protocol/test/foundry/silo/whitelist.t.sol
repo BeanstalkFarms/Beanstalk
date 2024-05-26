@@ -297,7 +297,7 @@ contract WhitelistTest is TestHelper {
         uint128 gaugePoints,
         uint64 optimalPercentDepositedBdv
     ) internal view {
-        IMockFBeanstalk.SiloSettings memory ss = bs.tokenSettings(token);
+        IMockFBeanstalk.AssetSettings memory ss = bs.tokenSettings(token);
         assertEq(ss.selector, bdvSelector);
         assertEq(uint256(ss.stalkIssuedPerBdv), stalkIssuedPerBdv);
         assertEq(

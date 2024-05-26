@@ -8,7 +8,6 @@ import "contracts/C.sol";
 import "contracts/libraries/Silo/LibSilo.sol";
 import "contracts/libraries/Silo/LibTokenSilo.sol";
 import "contracts/libraries/Silo/LibSiloPermit.sol";
-import "contracts/libraries/Silo/LibLegacyTokenSilo.sol";
 import "./SiloFacet/Silo.sol";
 import "./SiloFacet/TokenSilo.sol";
 import "contracts/libraries/LibRedundantMath32.sol";

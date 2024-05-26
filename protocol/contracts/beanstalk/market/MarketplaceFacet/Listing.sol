@@ -63,14 +63,14 @@ contract Listing is PodTransfer {
         );
         require(podListing.pricePerPod > 0, "Marketplace: Pod price must be greater than 0.");
         require(
-            s.fields[podListing.fieldId].harvestable <= podListing.maxHarvestableIndex,
+            s.system.fields[podListing.fieldId].harvestable <= podListing.maxHarvestableIndex,
             "Marketplace: Expired."
         );
 
-        if (s.podListings[podListing.fieldId][podListing.index] != bytes32(0))
+        if (s.system.podListings[podListing.fieldId][podListing.index] != bytes32(0))
             LibMarket._cancelPodListing(podListing.lister, podListing.fieldId, podListing.index);
 
-        s.podListings[podListing.fieldId][podListing.index] = _hashListing(podListing);
+        s.system.podListings[podListing.fieldId][podListing.index] = _hashListing(podListing);
 
         emit PodListingCreated(
             podListing.lister,
@@ -95,7 +95,7 @@ contract Listing is PodTransfer {
         uint256 beanPayAmount
     ) internal {
         require(
-            s.podListings[podListing.fieldId][podListing.index] == _hashListing(podListing),
+            s.system.podListings[podListing.fieldId][podListing.index] == _hashListing(podListing),
             "Marketplace: Listing does not exist."
         );
         uint256 plotSize = s.accounts[podListing.lister].fields[podListing.fieldId].plots[
@@ -107,7 +107,7 @@ contract Listing is PodTransfer {
             "Marketplace: Invalid Plot."
         );
         require(
-            s.fields[podListing.fieldId].harvestable <= podListing.maxHarvestableIndex,
+            s.system.fields[podListing.fieldId].harvestable <= podListing.maxHarvestableIndex,
             "Marketplace: Listing has expired."
         );
 
@@ -128,11 +128,11 @@ contract Listing is PodTransfer {
         );
 
         // Remove old listing and create new listing if necessary.
-        delete s.podListings[podListing.fieldId][podListing.index];
+        delete s.system.podListings[podListing.fieldId][podListing.index];
 
         if (podReceiveAmount < podListing.podAmount) {
             uint256 newIndex = podListing.index + podReceiveAmount + podListing.start;
-            s.podListings[podListing.fieldId][newIndex] = _hashListing(
+            s.system.podListings[podListing.fieldId][newIndex] = _hashListing(
                 PodListing(
                     podListing.lister,
                     podListing.fieldId,
