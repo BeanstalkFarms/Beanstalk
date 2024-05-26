@@ -16,34 +16,40 @@ import {C} from "contracts/C.sol";
 contract ReseedField {
     AppStorage internal s;
 
+    struct Plot {
+        uint256 podIndex;
+        uint256 podAmounts;
+    }
+    struct MigratedPlotData {
+        address account;
+        Plot[] plots;
+    }
+
     // emitted when a plot is migrated.
     event MigratedPlot(address indexed account, uint256 indexed plotIndex, uint256 pods);
 
     /**
      * @notice Re-initializes the field.
-     * @param accounts The addresses of the farmers.
-     * @param podIndex The index of the pods.
-     * @param podAmounts The amounts of the pods.
+     * @param accountPlots the plots for each account
      * @param totalPods The total number of pods on L1.
      * @param harvestable The number of harvestable pods on L1.
      * @param harvested The number of harvested pods on L1.
      */
     function init(
-        address[] calldata accounts,
-        uint256[][] calldata podIndex,
-        uint256[][] calldata podAmounts,
+        MigratedPlotData[] calldata accountPlots,
         uint256 totalPods,
         uint256 harvestable,
         uint256 harvested
     ) external {
         uint256 calculatedTotalPods;
-        for (uint i; i < accounts.length; i++) {
-            for (uint j; j < podIndex.length; i++) {
-                s.a[accounts[i]].field.plots[podIndex[i][j]] = podAmounts[i][j];
-                s.a[accounts[i]].field.plotIndexes.push(podIndex[i][j]);
-
-                emit MigratedPlot(accounts[i], podIndex[i][j], podAmounts[i][j]);
-                calculatedTotalPods += podAmounts[i][j];
+        for (uint i; i < accountPlots.length; i++) {
+            for (uint j; j < accountPlots[i].plots.length; i++) {
+                uint256 podIndex = accountPlots[i].plots[j].podIndex;
+                uint256 podAmount = accountPlots[i].plots[j].podAmounts;
+                s.a[accountPlots[i].account].field.plots[podIndex] = podAmount;
+                s.a[accountPlots[i].account].field.plotIndexes.push(podIndex);
+                emit MigratedPlot(accountPlots[i].account, podIndex, podAmount);
+                calculatedTotalPods += podAmount;
             }
         }
 

@@ -13,7 +13,13 @@ async function reseed1(account) {
   beanstalkSelectors = [];
   console.log("-----------------------------------");
   console.log("Reseed1: Initialize L2 migration\n");
-  // read beanstalk selectors:
+
+  // the following selectors come from the following facets.
+  // diamondLoupeFacet,
+  // diamondCutFacet
+  // ownershipFacet
+  // pauseFacet
+  // farmFacet
   let listOfWhitelistedFunctionSelectors = [
     "0x1f931c1c", // diamondCut
     "0xcdffacc6", // facetAddress
@@ -56,9 +62,10 @@ async function reseed1(account) {
       }
     }
   }
+  // add the BeanL2MigrationFacet, remove all selectors other than
   await upgradeWithNewFacets({
     diamondAddress: BEANSTALK,
-    facetNames: [],
+    facetNames: ["BeanL2MigrationFacet"],
     facetsToRemove: beanstalkSelectors,
     initFacetName: "InitL2Migration",
     bip: false,
