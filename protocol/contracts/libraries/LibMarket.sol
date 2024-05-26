@@ -17,11 +17,11 @@ library LibMarket {
     function _cancelPodListing(address lister, uint256 fieldId, uint256 index) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
         require(
-            s.accounts[lister].fields[fieldId].plots[index] > 0,
+            s.accts[lister].fields[fieldId].plots[index] > 0,
             "Marketplace: Listing not owned by sender."
         );
 
-        delete s.system.podListings[fieldId][index];
+        delete s.sys.podListings[fieldId][index];
 
         emit PodListingCancelled(lister, fieldId, index);
     }

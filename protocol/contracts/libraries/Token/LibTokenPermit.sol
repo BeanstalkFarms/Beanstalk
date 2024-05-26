@@ -53,13 +53,13 @@ library LibTokenPermit {
 
     function nonces(address owner) internal view returns (uint256) {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        return s.accounts[owner].tokenPermitNonces;
+        return s.accts[owner].tokenPermitNonces;
     }
 
     function _useNonce(address owner) internal returns (uint256 current) {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        current = s.accounts[owner].tokenPermitNonces;
-        ++s.accounts[owner].tokenPermitNonces;
+        current = s.accts[owner].tokenPermitNonces;
+        ++s.accts[owner].tokenPermitNonces;
     }
 
     /**

@@ -166,21 +166,21 @@ library LibSilo {
     function mintActiveStalk(address account, uint256 stalk) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
         uint256 roots;
-        if (s.system.silo.roots == 0) {
+        if (s.sys.silo.roots == 0) {
             roots = uint256(stalk.mul(C.getRootsBase()));
         } else {
             // germinating assets should be considered
             // when calculating roots
-            roots = s.system.silo.roots.mul(stalk).div(s.system.silo.stalk);
+            roots = s.sys.silo.roots.mul(stalk).div(s.sys.silo.stalk);
         }
 
         // increment user and total stalk;
-        s.system.silo.stalk = s.system.silo.stalk.add(stalk);
-        s.accounts[account].stalk = s.accounts[account].stalk.add(stalk);
+        s.sys.silo.stalk = s.sys.silo.stalk.add(stalk);
+        s.accts[account].stalk = s.accts[account].stalk.add(stalk);
 
         // increment user and total roots
-        s.system.silo.roots = s.system.silo.roots.add(roots);
-        s.accounts[account].roots = s.accounts[account].roots.add(roots);
+        s.sys.silo.roots = s.sys.silo.roots.add(roots);
+        s.accts[account].roots = s.accts[account].roots.add(roots);
 
         emit StalkBalanceChanged(account, int256(stalk), int256(roots));
     }
@@ -197,15 +197,15 @@ library LibSilo {
     function mintGerminatingStalk(address account, uint128 stalk, GerminationSide side) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
 
-        s.accounts[account].germinatingStalk[side] += stalk;
+        s.accts[account].germinatingStalk[side] += stalk;
 
         // germinating stalk are either newly germinating, or partially germinated.
         // Thus they can only be incremented in the latest or previous season.
-        uint32 season = s.system.season.current;
+        uint32 season = s.sys.season.current;
         if (LibGerminate.getSeasonGerminationSide() == side) {
-            s.system.silo.unclaimedGerminating[season].stalk += stalk;
+            s.sys.silo.unclaimedGerminating[season].stalk += stalk;
         } else {
-            s.system.silo.unclaimedGerminating[season - 1].stalk += stalk;
+            s.sys.silo.unclaimedGerminating[season - 1].stalk += stalk;
         }
 
         // emit event.
@@ -232,9 +232,9 @@ library LibSilo {
             // If Beanstalk is Oversaturated, subtract Roots from both the
             // account's and Beanstalk's Oversaturated Roots balances.
             // For more info on Oversaturation, See {Weather.handleRain}
-            if (s.system.season.raining) {
-                s.system.rain.roots = s.system.rain.roots.sub(roots);
-                s.accounts[account].sop.roots = s.accounts[account].roots;
+            if (s.sys.season.raining) {
+                s.sys.rain.roots = s.sys.rain.roots.sub(roots);
+                s.accts[account].sop.roots = s.accts[account].roots;
             }
         } else {
             burnGerminatingStalk(account, uint128(stalk), side);
@@ -249,16 +249,16 @@ library LibSilo {
         if (stalk == 0) return 0;
 
         // Calculate the amount of Roots for the given amount of Stalk.
-        roots = s.system.silo.roots.mul(stalk).div(s.system.silo.stalk);
-        if (roots > s.accounts[account].roots) roots = s.accounts[account].roots;
+        roots = s.sys.silo.roots.mul(stalk).div(s.sys.silo.stalk);
+        if (roots > s.accts[account].roots) roots = s.accts[account].roots;
 
         // Decrease supply of Stalk; Remove Stalk from the balance of `account`
-        s.system.silo.stalk = s.system.silo.stalk.sub(stalk);
-        s.accounts[account].stalk = s.accounts[account].stalk.sub(stalk);
+        s.sys.silo.stalk = s.sys.silo.stalk.sub(stalk);
+        s.accts[account].stalk = s.accts[account].stalk.sub(stalk);
 
         // Decrease supply of Roots; Remove Roots from the balance of `account`
-        s.system.silo.roots = s.system.silo.roots.sub(roots);
-        s.accounts[account].roots = s.accounts[account].roots.sub(roots);
+        s.sys.silo.roots = s.sys.silo.roots.sub(roots);
+        s.accts[account].roots = s.accts[account].roots.sub(roots);
 
         // emit event.
         emit StalkBalanceChanged(account, -int256(stalk), -int256(roots));
@@ -271,15 +271,15 @@ library LibSilo {
     function burnGerminatingStalk(address account, uint128 stalk, GerminationSide side) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
 
-        s.accounts[account].germinatingStalk[side] -= stalk;
+        s.accts[account].germinatingStalk[side] -= stalk;
 
         // germinating stalk are either newly germinating, or partially germinated.
         // Thus they can only be decremented in the latest or previous season.
-        uint32 season = s.system.season.current;
+        uint32 season = s.sys.season.current;
         if (LibGerminate.getSeasonGerminationSide() == side) {
-            s.system.silo.unclaimedGerminating[season].stalk -= stalk;
+            s.sys.silo.unclaimedGerminating[season].stalk -= stalk;
         } else {
-            s.system.silo.unclaimedGerminating[season - 1].stalk -= stalk;
+            s.sys.silo.unclaimedGerminating[season - 1].stalk -= stalk;
         }
 
         // emit events.
@@ -296,18 +296,18 @@ library LibSilo {
     function transferStalk(address sender, address recipient, uint256 stalk) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
         uint256 roots;
-        roots = stalk == s.accounts[sender].stalk
-            ? s.accounts[sender].roots
-            : s.system.silo.roots.sub(1).mul(stalk).div(s.system.silo.stalk).add(1);
+        roots = stalk == s.accts[sender].stalk
+            ? s.accts[sender].roots
+            : s.sys.silo.roots.sub(1).mul(stalk).div(s.sys.silo.stalk).add(1);
 
         // Subtract Stalk and Roots from the 'sender' balance.
-        s.accounts[sender].stalk = s.accounts[sender].stalk.sub(stalk);
-        s.accounts[sender].roots = s.accounts[sender].roots.sub(roots);
+        s.accts[sender].stalk = s.accts[sender].stalk.sub(stalk);
+        s.accts[sender].roots = s.accts[sender].roots.sub(roots);
         emit StalkBalanceChanged(sender, -int256(stalk), -int256(roots));
 
         // Add Stalk and Roots to the 'recipient' balance.
-        s.accounts[recipient].stalk = s.accounts[recipient].stalk.add(stalk);
-        s.accounts[recipient].roots = s.accounts[recipient].roots.add(roots);
+        s.accts[recipient].stalk = s.accts[recipient].stalk.add(stalk);
+        s.accts[recipient].roots = s.accts[recipient].roots.add(roots);
         emit StalkBalanceChanged(recipient, int256(stalk), int256(roots));
     }
 
@@ -324,8 +324,8 @@ library LibSilo {
         AppStorage storage s = LibAppStorage.diamondStorage();
         // Subtract Germinating Stalk from the 'sender' balance,
         // and Add to the 'recipient' balance.
-        s.accounts[sender].germinatingStalk[side] -= stalk.toUint128();
-        s.accounts[recipient].germinatingStalk[side] += stalk.toUint128();
+        s.accts[sender].germinatingStalk[side] -= stalk.toUint128();
+        s.accts[recipient].germinatingStalk[side] += stalk.toUint128();
 
         // emit events.
         emit LibGerminate.FarmerGerminatingStalkBalanceChanged(sender, -int256(stalk));
@@ -343,7 +343,7 @@ library LibSilo {
         AssetsRemoved memory ar
     ) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        uint256 stalkPerBDV = s.system.silo.assetSettings[token].stalkIssuedPerBdv;
+        uint256 stalkPerBDV = s.sys.silo.assetSettings[token].stalkIssuedPerBdv;
 
         // a germinating deposit may have active grown stalk,
         // but no active stalk from bdv.
@@ -385,17 +385,17 @@ library LibSilo {
         // if the user hasn't updated prior to the seedGauge/siloV3.1 update,
         // perform a one time `lastStem` scale.
         if (
-            (lastUpdate < s.system.season.stemScaleSeason && lastUpdate > 0) ||
-            (lastUpdate == s.system.season.stemScaleSeason && checkStemEdgeCase(account))
+            (lastUpdate < s.sys.season.stemScaleSeason && lastUpdate > 0) ||
+            (lastUpdate == s.sys.season.stemScaleSeason && checkStemEdgeCase(account))
         ) {
             migrateStems(account);
         }
 
         // sop data only needs to be updated once per season,
         // if it started raining and it's still raining, or there was a sop
-        uint32 currentSeason = s.system.season.current;
-        if (s.system.season.rainStart > s.system.season.stemStartSeason) {
-            if (lastUpdate <= s.system.season.rainStart && lastUpdate <= currentSeason) {
+        uint32 currentSeason = s.sys.season.current;
+        if (s.sys.season.rainStart > s.sys.season.stemStartSeason) {
+            if (lastUpdate <= s.sys.season.rainStart && lastUpdate <= currentSeason) {
                 // Increments `plenty` for `account` if a Flood has occured.
                 // Saves Rain Roots for `account` if it is Raining.
                 handleRainAndSops(account, lastUpdate);
@@ -411,7 +411,7 @@ library LibSilo {
         __mow(account, token);
 
         // update lastUpdate for sop and germination calculations.
-        s.accounts[account].lastUpdate = currentSeason;
+        s.accts[account].lastUpdate = currentSeason;
     }
 
     /**
@@ -422,8 +422,8 @@ library LibSilo {
         AppStorage storage s = LibAppStorage.diamondStorage();
 
         int96 _stemTip = LibTokenSilo.stemTipForToken(token);
-        int96 _lastStem = s.accounts[account].mowStatuses[token].lastStem;
-        uint128 _bdv = s.accounts[account].mowStatuses[token].bdv;
+        int96 _lastStem = s.accts[account].mowStatuses[token].lastStem;
+        uint128 _bdv = s.accts[account].mowStatuses[token].bdv;
 
         // if:
         // 1: account has no bdv (new token deposit)
@@ -440,7 +440,7 @@ library LibSilo {
 
         // If this `account` has no BDV, skip to save gas. Update lastStem.
         // (happen on initial deposit, since mow is called before any deposit)
-        s.accounts[account].mowStatuses[token].lastStem = _stemTip;
+        s.accts[account].mowStatuses[token].lastStem = _stemTip;
         return;
     }
 
@@ -449,7 +449,7 @@ library LibSilo {
      */
     function _lastUpdate(address account) internal view returns (uint32) {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        return s.accounts[account].lastUpdate;
+        return s.accts[account].lastUpdate;
     }
 
     // TODO: Monitor incompatibilities (esp wrt initialization) when generalized flood merges in.
@@ -459,8 +459,8 @@ library LibSilo {
     function getSopToken() internal view returns (IERC20) {
         AppStorage storage s = LibAppStorage.diamondStorage();
         // sopWell may not yet be initialized.
-        if (s.system.sopWell == address(0)) return IERC20(address(0));
-        IWell well = IWell(s.system.sopWell);
+        if (s.sys.sopWell == address(0)) return IERC20(address(0));
+        IWell well = IWell(s.sys.sopWell);
         IERC20[] memory tokens = well.tokens();
         return tokens[0] != C.bean() ? tokens[0] : tokens[1];
     }
@@ -471,30 +471,30 @@ library LibSilo {
     function handleRainAndSops(address account, uint32 lastUpdate) private {
         AppStorage storage s = LibAppStorage.diamondStorage();
         // If no roots, reset Sop counters variables
-        if (s.accounts[account].roots == 0) {
-            s.accounts[account].lastSop = s.system.season.rainStart;
-            s.accounts[account].lastRain = 0;
+        if (s.accts[account].roots == 0) {
+            s.accts[account].lastSop = s.sys.season.rainStart;
+            s.accts[account].lastRain = 0;
             return;
         }
         // If a Sop has occured since last update, calculate rewards and set last Sop.
-        if (s.system.season.lastSopSeason > lastUpdate) {
-            s.accounts[account].sop.plenty = balanceOfPlenty(account);
-            s.accounts[account].lastSop = s.system.season.lastSop;
+        if (s.sys.season.lastSopSeason > lastUpdate) {
+            s.accts[account].sop.plenty = balanceOfPlenty(account);
+            s.accts[account].lastSop = s.sys.season.lastSop;
         }
-        if (s.system.season.raining) {
+        if (s.sys.season.raining) {
             // If rain started after update, set account variables to track rain.
-            if (s.system.season.rainStart > lastUpdate) {
-                s.accounts[account].lastRain = s.system.season.rainStart;
-                s.accounts[account].sop.roots = s.accounts[account].roots;
+            if (s.sys.season.rainStart > lastUpdate) {
+                s.accts[account].lastRain = s.sys.season.rainStart;
+                s.accts[account].sop.roots = s.accts[account].roots;
             }
             // If there has been a Sop since rain started,
             // save plentyPerRoot in case another SOP happens during rain.
-            if (s.system.season.lastSop == s.system.season.rainStart) {
-                s.accounts[account].sop.plentyPerRoot = s.system.sops[s.system.season.lastSop];
+            if (s.sys.season.lastSop == s.sys.season.rainStart) {
+                s.accts[account].sop.plentyPerRoot = s.sys.sops[s.sys.season.lastSop];
             }
-        } else if (s.accounts[account].lastRain > 0) {
+        } else if (s.accts[account].lastRain > 0) {
             // Reset Last Rain if not raining.
-            s.accounts[account].lastRain = 0;
+            s.accts[account].lastRain = 0;
         }
     }
 
@@ -517,35 +517,35 @@ library LibSilo {
      */
     function balanceOfPlenty(address account) internal view returns (uint256 plenty) {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        Account storage a = s.accounts[account];
+        Account storage a = s.accts[account];
         plenty = a.sop.plenty;
         uint256 previousPPR;
 
         // If lastRain > 0, then check if SOP occured during the rain period.
-        if (s.accounts[account].lastRain > 0) {
+        if (s.accts[account].lastRain > 0) {
             // if the last processed SOP = the lastRain processed season,
             // then we use the stored roots to get the delta.
             if (a.lastSop == a.lastRain) previousPPR = a.sop.plentyPerRoot;
-            else previousPPR = s.system.sops[a.lastSop];
-            uint256 lastRainPPR = s.system.sops[s.accounts[account].lastRain];
+            else previousPPR = s.sys.sops[a.lastSop];
+            uint256 lastRainPPR = s.sys.sops[s.accts[account].lastRain];
 
             // If there has been a SOP duing the rain sesssion since last update, process SOP.
             if (lastRainPPR > previousPPR) {
                 uint256 plentyPerRoot = lastRainPPR - previousPPR;
                 previousPPR = lastRainPPR;
                 plenty = plenty.add(
-                    plentyPerRoot.mul(s.accounts[account].sop.roots).div(C.SOP_PRECISION)
+                    plentyPerRoot.mul(s.accts[account].sop.roots).div(C.SOP_PRECISION)
                 );
             }
         } else {
             // If it was not raining, just use the PPR at previous SOP.
-            previousPPR = s.system.sops[s.accounts[account].lastSop];
+            previousPPR = s.sys.sops[s.accts[account].lastSop];
         }
 
         // Handle and SOPs that started + ended before after last Silo update.
-        if (s.system.season.lastSop > _lastUpdate(account)) {
-            uint256 plentyPerRoot = s.system.sops[s.system.season.lastSop].sub(previousPPR);
-            plenty = plenty.add(plentyPerRoot.mul(s.accounts[account].roots).div(C.SOP_PRECISION));
+        if (s.sys.season.lastSop > _lastUpdate(account)) {
+            uint256 plentyPerRoot = s.sys.sops[s.sys.season.lastSop].sub(previousPPR);
+            plenty = plenty.add(plentyPerRoot.mul(s.accts[account].roots).div(C.SOP_PRECISION));
         }
     }
 
@@ -581,7 +581,7 @@ library LibSilo {
 
         // the inital and grown stalk are as there are instances where the inital stalk is
         // germinating, but the grown stalk is not.
-        initalStalkRemoved = bdvRemoved.mul(s.system.silo.assetSettings[token].stalkIssuedPerBdv);
+        initalStalkRemoved = bdvRemoved.mul(s.sys.silo.assetSettings[token].stalkIssuedPerBdv);
 
         grownStalkRemoved = stalkReward(stem, stemTip, bdvRemoved.toUint128());
         /**
@@ -660,7 +660,7 @@ library LibSilo {
 
         // add inital stalk deposit to all stalk removed.
         {
-            uint256 stalkIssuedPerBdv = s.system.silo.assetSettings[token].stalkIssuedPerBdv;
+            uint256 stalkIssuedPerBdv = s.sys.silo.assetSettings[token].stalkIssuedPerBdv;
             if (ar.active.tokens > 0) {
                 ar.active.stalk = ar.active.stalk.add(ar.active.bdv.mul(stalkIssuedPerBdv));
             }
@@ -716,8 +716,8 @@ library LibSilo {
         address account
     ) internal view returns (bool needsMigration, uint32 lastUpdate) {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        lastUpdate = s.accounts[account].lastUpdate;
-        needsMigration = lastUpdate > 0 && lastUpdate < s.system.season.stemStartSeason;
+        lastUpdate = s.accts[account].lastUpdate;
+        needsMigration = lastUpdate > 0 && lastUpdate < s.sys.season.stemStartSeason;
     }
 
     /**
@@ -736,19 +736,19 @@ library LibSilo {
     ) internal view returns (uint256 beans) {
         AppStorage storage s = LibAppStorage.diamondStorage();
         // There will be no Roots before the first Deposit is made.
-        if (s.system.silo.roots == 0) return 0;
+        if (s.sys.silo.roots == 0) return 0;
 
-        uint256 stalk = s.system.silo.stalk.mul(accountRoots).div(s.system.silo.roots);
+        uint256 stalk = s.sys.silo.stalk.mul(accountRoots).div(s.sys.silo.roots);
 
         // Beanstalk rounds down when minting Roots. Thus, it is possible that
-        // balanceOfRoots / totalRoots * totalStalk < s.accounts[account].stalk.
+        // balanceOfRoots / totalRoots * totalStalk < s.accts[account].stalk.
         // As `account` Earned Balance balance should never be negative,
         // Beanstalk returns 0 instead.
         if (stalk <= accountStalk) return 0;
 
         // Calculate Earned Stalk and convert to Earned Beans.
         beans = (stalk - accountStalk).div(C.STALK_PER_BEAN);
-        if (beans > s.system.silo.earnedBeans) return s.system.silo.earnedBeans;
+        if (beans > s.sys.silo.earnedBeans) return s.sys.silo.earnedBeans;
 
         return beans;
     }
@@ -763,9 +763,9 @@ library LibSilo {
         address[] memory siloTokens = LibWhitelistedTokens.getSiloTokens();
         for (uint i; i < siloTokens.length; i++) {
             // scale lastStem by 1e6, if the user has a lastStem.
-            if (s.accounts[account].mowStatuses[siloTokens[i]].lastStem > 0) {
-                s.accounts[account].mowStatuses[siloTokens[i]].lastStem = s
-                    .accounts[account]
+            if (s.accts[account].mowStatuses[siloTokens[i]].lastStem > 0) {
+                s.accts[account].mowStatuses[siloTokens[i]].lastStem = s
+                    .accts[account]
                     .mowStatuses[siloTokens[i]]
                     .lastStem
                     .mul(int96(uint96(PRECISION)));
@@ -786,7 +786,7 @@ library LibSilo {
         // for each silo token, divide the stemTip of the token with the users last stem.
         // if the answer is 1e6 or greater, the user has not updated.
         for (uint i; i < siloTokens.length; i++) {
-            int96 lastStem = s.accounts[account].mowStatuses[siloTokens[i]].lastStem;
+            int96 lastStem = s.accts[account].mowStatuses[siloTokens[i]].lastStem;
             if (lastStem > 0) {
                 if (
                     LibTokenSilo.stemTipForToken(siloTokens[i]).div(lastStem) >=

@@ -54,15 +54,15 @@ contract Receiving is ReentrancyGuard {
         // `s.earnedBeans` is an accounting mechanism that tracks the total number
         // of Earned Beans that are claimable by Stalkholders. When claimed via `plant()`,
         // it is decremented. See {Silo.sol:_plant} for more details.
-        s.system.silo.earnedBeans += amount.toUint128();
+        s.sys.silo.earnedBeans += amount.toUint128();
 
         // Mint Stalk (as Earned Stalk).
         // Stalk is created here because only Beans that are allocated to the Silo receive Stalk.
-        s.system.silo.stalk += (amount * C.STALK_PER_BEAN);
+        s.sys.silo.stalk += (amount * C.STALK_PER_BEAN);
 
         // SafeCast unnecessary here because of prior safe cast.
-        s.system.silo.balances[C.BEAN].deposited += uint128(amount);
-        s.system.silo.balances[C.BEAN].depositedBdv += uint128(amount);
+        s.sys.silo.balances[C.BEAN].deposited += uint128(amount);
+        s.sys.silo.balances[C.BEAN].depositedBdv += uint128(amount);
     }
 
     /**
@@ -73,8 +73,8 @@ contract Receiving is ReentrancyGuard {
      */
     function fieldReceive(uint256 amount, bytes memory data) private {
         uint256 fieldId = abi.decode(data, (uint256));
-        require(fieldId < s.system.fieldCount, "Field does not exist");
-        s.system.fields[fieldId].harvestable += amount;
+        require(fieldId < s.sys.fieldCount, "Field does not exist");
+        s.sys.fields[fieldId].harvestable += amount;
     }
 
     /**
@@ -86,41 +86,38 @@ contract Receiving is ReentrancyGuard {
         uint256 deltaFertilized;
 
         // Get the new Beans per Fertilizer and the total new Beans per Fertilizer
-        uint256 remainingBpf = amount / s.system.fert.activeFertilizer;
-        uint256 oldBpf = s.system.fert.bpf;
+        uint256 remainingBpf = amount / s.sys.fert.activeFertilizer;
+        uint256 oldBpf = s.sys.fert.bpf;
         uint256 newBpf = oldBpf + remainingBpf;
 
         // Get the end BPF of the first Fertilizer to run out.
-        uint256 firstBpf = s.system.fert.fertFirst;
+        uint256 firstBpf = s.sys.fert.fertFirst;
 
         // If the next fertilizer is going to run out, then step BPF according
         while (newBpf >= firstBpf) {
             // Increment the cumulative change in Fertilized.
-            deltaFertilized += (firstBpf - oldBpf) * s.system.fert.activeFertilizer; // fertilizer between init and next cliff
+            deltaFertilized += (firstBpf - oldBpf) * s.sys.fert.activeFertilizer; // fertilizer between init and next cliff
 
             if (LibFertilizer.pop()) {
                 oldBpf = firstBpf;
-                firstBpf = s.system.fert.fertFirst;
+                firstBpf = s.sys.fert.fertFirst;
                 // Calculate BPF beyond the first Fertilizer edge.
-                remainingBpf = (amount - deltaFertilized) / s.system.fert.activeFertilizer;
+                remainingBpf = (amount - deltaFertilized) / s.sys.fert.activeFertilizer;
                 newBpf = oldBpf + remainingBpf;
             }
             // Else, if there is no more fertilizer. Matches plan cap.
             else {
-                s.system.fert.bpf = uint128(firstBpf); // SafeCast unnecessary here.
-                s.system.fert.fertilizedIndex += deltaFertilized;
+                s.sys.fert.bpf = uint128(firstBpf); // SafeCast unnecessary here.
+                s.sys.fert.fertilizedIndex += deltaFertilized;
                 require(amount == deltaFertilized, "Inexact amount of Beans at Barn");
-                require(
-                    s.system.fert.fertilizedIndex == s.system.fert.unfertilizedIndex,
-                    "Paid != owed"
-                );
+                require(s.sys.fert.fertilizedIndex == s.sys.fert.unfertilizedIndex, "Paid != owed");
                 return;
             }
         }
 
         // Distribute the rest of the Fertilized Beans
-        s.system.fert.bpf = uint128(newBpf); // SafeCast unnecessary here.
-        deltaFertilized = deltaFertilized + (remainingBpf * s.system.fert.activeFertilizer);
-        s.system.fert.fertilizedIndex += deltaFertilized;
+        s.sys.fert.bpf = uint128(newBpf); // SafeCast unnecessary here.
+        deltaFertilized = deltaFertilized + (remainingBpf * s.sys.fert.activeFertilizer);
+        s.sys.fert.fertilizedIndex += deltaFertilized;
     }
 }

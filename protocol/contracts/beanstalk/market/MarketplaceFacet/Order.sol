@@ -57,8 +57,8 @@ contract Order is Listing {
 
         id = _getOrderId(podOrder);
 
-        if (s.system.podOrders[id] > 0) _cancelPodOrder(podOrder, LibTransfer.To.INTERNAL);
-        s.system.podOrders[id] = beanAmount;
+        if (s.sys.podOrders[id] > 0) _cancelPodOrder(podOrder, LibTransfer.To.INTERNAL);
+        s.sys.podOrders[id] = beanAmount;
 
         emit PodOrderCreated(
             podOrder.orderer,
@@ -89,11 +89,11 @@ contract Order is Listing {
             "Marketplace: Fill must be >= minimum amount."
         );
         require(
-            s.accounts[filler].fields[podOrder.fieldId].plots[index] >= (start + podAmount),
+            s.accts[filler].fields[podOrder.fieldId].plots[index] >= (start + podAmount),
             "Marketplace: Invalid Plot."
         );
         require(
-            (index + start + podAmount - s.system.fields[podOrder.fieldId].harvestable) <=
+            (index + start + podAmount - s.sys.fields[podOrder.fieldId].harvestable) <=
                 podOrder.maxPlaceInLine,
             "Marketplace: Plot too far in line."
         );
@@ -101,19 +101,19 @@ contract Order is Listing {
         bytes32 id = _getOrderId(podOrder);
 
         uint256 costInBeans = (podAmount * podOrder.pricePerPod) / 1000000;
-        require(costInBeans <= s.system.podOrders[id], "Marketplace: Not enough beans in order.");
-        s.system.podOrders[id] = s.system.podOrders[id] - costInBeans;
+        require(costInBeans <= s.sys.podOrders[id], "Marketplace: Not enough beans in order.");
+        s.sys.podOrders[id] = s.sys.podOrders[id] - costInBeans;
 
         LibTransfer.sendToken(C.bean(), costInBeans, filler, mode);
 
-        if (s.system.podListings[podOrder.fieldId][index] != bytes32(0)) {
+        if (s.sys.podListings[podOrder.fieldId][index] != bytes32(0)) {
             LibMarket._cancelPodListing(filler, podOrder.fieldId, index);
         }
 
         _transferPlot(filler, podOrder.orderer, podOrder.fieldId, index, start, podAmount);
 
-        if (s.system.podOrders[id] == 0) {
-            delete s.system.podOrders[id];
+        if (s.sys.podOrders[id] == 0) {
+            delete s.sys.podOrders[id];
         }
 
         emit PodOrderFilled(
@@ -133,9 +133,9 @@ contract Order is Listing {
      */
     function _cancelPodOrder(PodOrder memory podOrder, LibTransfer.To mode) internal {
         bytes32 id = _getOrderId(podOrder);
-        uint256 amountBeans = s.system.podOrders[id];
+        uint256 amountBeans = s.sys.podOrders[id];
         LibTransfer.sendToken(C.bean(), amountBeans, podOrder.orderer, mode);
-        delete s.system.podOrders[id];
+        delete s.sys.podOrders[id];
         emit PodOrderCancelled(podOrder.orderer, id);
     }
 

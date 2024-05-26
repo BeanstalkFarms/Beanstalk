@@ -114,13 +114,13 @@ contract UnripeFacet is Invariable, ReentrancyGuard {
         bytes32[] memory proof,
         LibTransfer.To mode
     ) external payable fundsSafu noSupplyChange oneOutFlow(token) nonReentrant {
-        bytes32 root = s.system.silo.unripeSettings[token].merkleRoot;
+        bytes32 root = s.sys.silo.unripeSettings[token].merkleRoot;
         require(root != bytes32(0), "UnripeClaim: invalid token");
         require(!picked(LibTractor._user(), token), "UnripeClaim: already picked");
 
         bytes32 leaf = keccak256(abi.encodePacked(LibTractor._user(), amount));
         require(MerkleProof.verify(proof, root, leaf), "UnripeClaim: invalid proof");
-        s.accounts[LibTractor._user()].unripeClaimed[token] = true;
+        s.accts[LibTractor._user()].unripeClaimed[token] = true;
 
         LibTransfer.sendToken(IERC20(token), amount, LibTractor._user(), mode);
 
@@ -133,7 +133,7 @@ contract UnripeFacet is Invariable, ReentrancyGuard {
      * @param token The address of the Unripe Token to check.
      */
     function picked(address account, address token) public view returns (bool) {
-        return s.accounts[account].unripeClaimed[token];
+        return s.accts[account].unripeClaimed[token];
     }
 
     /**
@@ -265,7 +265,7 @@ contract UnripeFacet is Invariable, ReentrancyGuard {
         address unripeToken
     ) external view returns (uint256 underlyingPerToken) {
         underlyingPerToken = s
-            .system
+            .sys
             .silo
             .unripeSettings[unripeToken]
             .balanceOfUnderlying
@@ -279,7 +279,7 @@ contract UnripeFacet is Invariable, ReentrancyGuard {
      * @return underlying The total balance of the token.
      */
     function getTotalUnderlying(address unripeToken) external view returns (uint256 underlying) {
-        return s.system.silo.unripeSettings[unripeToken].balanceOfUnderlying;
+        return s.sys.silo.unripeSettings[unripeToken].balanceOfUnderlying;
     }
 
     /**
@@ -294,8 +294,8 @@ contract UnripeFacet is Invariable, ReentrancyGuard {
         bytes32 root
     ) external payable fundsSafu noNetFlow noSupplyChange nonReentrant {
         LibDiamond.enforceIsOwnerOrContract();
-        s.system.silo.unripeSettings[unripeToken].underlyingToken = underlyingToken;
-        s.system.silo.unripeSettings[unripeToken].merkleRoot = root;
+        s.sys.silo.unripeSettings[unripeToken].underlyingToken = underlyingToken;
+        s.sys.silo.unripeSettings[unripeToken].merkleRoot = root;
         emit AddUnripeToken(unripeToken, underlyingToken, root);
     }
 
@@ -324,7 +324,7 @@ contract UnripeFacet is Invariable, ReentrancyGuard {
         uint256 amount
     ) external payable fundsSafu noNetFlow noSupplyChange nonReentrant {
         LibDiamond.enforceIsContractOwner();
-        IERC20(s.system.silo.unripeSettings[unripeToken].underlyingToken).safeTransferFrom(
+        IERC20(s.sys.silo.unripeSettings[unripeToken].underlyingToken).safeTransferFrom(
             LibTractor._user(),
             address(this),
             amount
@@ -344,7 +344,7 @@ contract UnripeFacet is Invariable, ReentrancyGuard {
     ) external payable fundsSafu noNetFlow noSupplyChange {
         LibDiamond.enforceIsContractOwner();
         require(
-            s.system.silo.unripeSettings[unripeToken].balanceOfUnderlying == 0,
+            s.sys.silo.unripeSettings[unripeToken].balanceOfUnderlying == 0,
             "Unripe: Underlying balance > 0"
         );
         LibUnripe.switchUnderlyingToken(unripeToken, newUnderlyingToken);

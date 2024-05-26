@@ -25,11 +25,7 @@ contract Distribution is Receiving {
      * @param shipmentRoutes The routes defining where to distribute.
      * @param shipmentAmounts The amount of Beans distributed to each route.
      */
-    event Ship(
-        uint32 indexed season,
-        ShipmentRoute[] shipmentRoutes,
-        uint256[] shipmentAmounts
-    );
+    event Ship(uint32 indexed season, ShipmentRoute[] shipmentRoutes, uint256[] shipmentAmounts);
 
     /**
      * @notice Emitted when the shipment routes in storage are replaced with a new set of routes.
@@ -46,7 +42,7 @@ contract Distribution is Receiving {
     function ship(uint256 beansToShip) internal {
         C.bean().mint(address(this), beansToShip);
 
-        ShipmentRoute[] memory shipmentRoutes = s.system.shipmentRoutes;
+        ShipmentRoute[] memory shipmentRoutes = s.sys.shipmentRoutes;
         ShipmentPlan[] memory shipmentPlans = new ShipmentPlan[](shipmentRoutes.length);
         uint256[] memory shipmentAmounts = new uint256[](shipmentRoutes.length);
         uint256 totalPoints;
@@ -84,7 +80,7 @@ contract Distribution is Receiving {
             );
         }
 
-        emit Ship(s.system.season.current, shipmentRoutes, shipmentAmounts);
+        emit Ship(s.sys.season.current, shipmentRoutes, shipmentAmounts);
     }
 
     /**
@@ -132,7 +128,7 @@ contract Distribution is Receiving {
      * @notice Gets the current set of ShipmentRoutes.
      */
     function getShipmentRoutes() external view returns (ShipmentRoute[] memory) {
-        return s.system.shipmentRoutes;
+        return s.sys.shipmentRoutes;
     }
 
     /**
@@ -141,9 +137,9 @@ contract Distribution is Receiving {
      */
     function setShipmentRoutes(ShipmentRoute[] calldata shipmentRoutes) external {
         LibDiamond.enforceIsOwnerOrContract();
-        delete s.system.shipmentRoutes;
+        delete s.sys.shipmentRoutes;
         for (uint256 i; i < shipmentRoutes.length; i++) {
-            s.system.shipmentRoutes.push(shipmentRoutes[i]);
+            s.sys.shipmentRoutes.push(shipmentRoutes[i]);
         }
         emit ShipmentRoutesSet(shipmentRoutes);
     }

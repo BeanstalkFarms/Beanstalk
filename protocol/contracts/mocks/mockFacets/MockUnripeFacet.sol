@@ -17,14 +17,14 @@ contract MockUnripeFacet is UnripeFacet {
     using LibRedundantMath256 for uint256;
 
     function setMerkleRootE(address unripeToken, bytes32 root) external {
-        s.system.silo.unripeSettings[unripeToken].merkleRoot = root;
+        s.sys.silo.unripeSettings[unripeToken].merkleRoot = root;
     }
 
     function addUnderlying(address unripeToken, uint256 amount) external payable nonReentrant {
-        address underlyingToken = s.system.silo.unripeSettings[unripeToken].underlyingToken;
+        address underlyingToken = s.sys.silo.unripeSettings[unripeToken].underlyingToken;
         IERC20(underlyingToken).safeTransferFrom(LibTractor._user(), address(this), amount);
-        s.system.silo.unripeSettings[unripeToken].balanceOfUnderlying = s
-            .system
+        s.sys.silo.unripeSettings[unripeToken].balanceOfUnderlying = s
+            .sys
             .silo
             .unripeSettings[unripeToken]
             .balanceOfUnderlying
@@ -35,12 +35,12 @@ contract MockUnripeFacet is UnripeFacet {
         address unripeToken,
         uint256 amount
     ) external payable nonReentrant {
-        address underlyingToken = s.system.silo.unripeSettings[unripeToken].underlyingToken;
+        address underlyingToken = s.sys.silo.unripeSettings[unripeToken].underlyingToken;
         IERC20(underlyingToken).safeTransferFrom(LibTractor._user(), address(this), amount);
         LibUnripe.addUnderlying(unripeToken, amount);
     }
 
     function resetUnderlying(address unripeToken) external {
-        s.system.silo.unripeSettings[unripeToken].balanceOfUnderlying = 0;
+        s.sys.silo.unripeSettings[unripeToken].balanceOfUnderlying = 0;
     }
 }

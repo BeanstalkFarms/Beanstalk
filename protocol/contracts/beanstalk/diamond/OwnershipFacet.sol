@@ -12,13 +12,13 @@ contract OwnershipFacet {
 
     function transferOwnership(address _newOwner) external {
         LibDiamond.enforceIsContractOwner();
-        s.system.ownerCandidate = _newOwner;
+        s.sys.ownerCandidate = _newOwner;
     }
 
     function claimOwnership() external {
-        require(s.system.ownerCandidate == msg.sender, "Ownership: Not candidate");
+        require(s.sys.ownerCandidate == msg.sender, "Ownership: Not candidate");
         LibDiamond.setContractOwner(msg.sender);
-        delete s.system.ownerCandidate;
+        delete s.sys.ownerCandidate;
     }
 
     function owner() external view returns (address owner_) {
@@ -26,6 +26,6 @@ contract OwnershipFacet {
     }
 
     function ownerCandidate() external view returns (address ownerCandidate_) {
-        ownerCandidate_ = s.system.ownerCandidate;
+        ownerCandidate_ = s.sys.ownerCandidate;
     }
 }

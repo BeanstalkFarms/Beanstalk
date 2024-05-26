@@ -85,15 +85,13 @@ library LibBalance {
     ) private {
         AppStorage storage s = LibAppStorage.diamondStorage();
         delta >= 0
-            ? s.system.internalTokenBalanceTotal[token] = s
-                .system
-                .internalTokenBalanceTotal[token]
-                .add(uint256(delta))
-            : s.system.internalTokenBalanceTotal[token] = s
-            .system
-            .internalTokenBalanceTotal[token]
-            .sub(uint256(-delta));
-        s.accounts[account].internalTokenBalance[token] = newBalance;
+            ? s.sys.internalTokenBalanceTotal[token] = s.sys.internalTokenBalanceTotal[token].add(
+                uint256(delta)
+            )
+            : s.sys.internalTokenBalanceTotal[token] = s.sys.internalTokenBalanceTotal[token].sub(
+            uint256(-delta)
+        );
+        s.accts[account].internalTokenBalance[token] = newBalance;
         emit InternalBalanceChanged(account, token, delta);
     }
 
@@ -105,6 +103,6 @@ library LibBalance {
         IERC20 token
     ) internal view returns (uint256 balance) {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        balance = s.accounts[account].internalTokenBalance[token];
+        balance = s.accts[account].internalTokenBalance[token];
     }
 }

@@ -108,27 +108,27 @@ library LibWhitelist {
 
         // If an LP token, initialize oracle storage variables.
         if (token != address(C.bean()) && !LibUnripe.isUnripe(token)) {
-            s.system.usdTokenPrice[token] = 1;
-            s.system.twaReserves[token].reserve0 = 1;
-            s.system.twaReserves[token].reserve1 = 1;
+            s.sys.usdTokenPrice[token] = 1;
+            s.sys.twaReserves[token].reserve0 = 1;
+            s.sys.twaReserves[token].reserve1 = 1;
         }
 
         require(
-            s.system.silo.assetSettings[token].milestoneSeason == 0,
+            s.sys.silo.assetSettings[token].milestoneSeason == 0,
             "Whitelist: Token already whitelisted"
         );
         // beanstalk requires all whitelisted assets to have a minimum stalkEarnedPerSeeason
         // of 1 (due to the germination update). set stalkEarnedPerSeason to 1 to prevent revert.
         if (stalkEarnedPerSeason == 0) stalkEarnedPerSeason = 1;
-        s.system.silo.assetSettings[token].selector = selector;
-        s.system.silo.assetSettings[token].stalkEarnedPerSeason = stalkEarnedPerSeason;
-        s.system.silo.assetSettings[token].stalkIssuedPerBdv = stalkIssuedPerBdv;
-        s.system.silo.assetSettings[token].milestoneSeason = uint32(s.system.season.current);
-        s.system.silo.assetSettings[token].encodeType = encodeType;
-        s.system.silo.assetSettings[token].gpSelector = gaugePointSelector;
-        s.system.silo.assetSettings[token].lwSelector = liquidityWeightSelector;
-        s.system.silo.assetSettings[token].gaugePoints = gaugePoints;
-        s.system.silo.assetSettings[token].optimalPercentDepositedBdv = optimalPercentDepositedBdv;
+        s.sys.silo.assetSettings[token].selector = selector;
+        s.sys.silo.assetSettings[token].stalkEarnedPerSeason = stalkEarnedPerSeason;
+        s.sys.silo.assetSettings[token].stalkIssuedPerBdv = stalkIssuedPerBdv;
+        s.sys.silo.assetSettings[token].milestoneSeason = uint32(s.sys.season.current);
+        s.sys.silo.assetSettings[token].encodeType = encodeType;
+        s.sys.silo.assetSettings[token].gpSelector = gaugePointSelector;
+        s.sys.silo.assetSettings[token].lwSelector = liquidityWeightSelector;
+        s.sys.silo.assetSettings[token].gaugePoints = gaugePoints;
+        s.sys.silo.assetSettings[token].optimalPercentDepositedBdv = optimalPercentDepositedBdv;
 
         emit WhitelistToken(
             token,
@@ -150,7 +150,7 @@ library LibWhitelist {
         address token,
         uint64 optimalPercentDepositedBdv
     ) internal {
-        AssetSettings storage ss = LibAppStorage.diamondStorage().system.silo.assetSettings[token];
+        AssetSettings storage ss = LibAppStorage.diamondStorage().sys.silo.assetSettings[token];
         updateGaugeForToken(token, ss.gpSelector, ss.lwSelector, optimalPercentDepositedBdv);
     }
 
@@ -164,7 +164,7 @@ library LibWhitelist {
         bytes4 liquidityWeightSelector,
         uint64 optimalPercentDepositedBdv
     ) internal {
-        AssetSettings storage ss = LibAppStorage.diamondStorage().system.silo.assetSettings[token];
+        AssetSettings storage ss = LibAppStorage.diamondStorage().sys.silo.assetSettings[token];
         require(ss.selector != 0, "Whitelist: Token not whitelisted in Silo");
         verifyGaugePointSelector(gaugePointSelector);
         verifyLiquidityWeightSelector(liquidityWeightSelector);
@@ -190,23 +190,23 @@ library LibWhitelist {
     ) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
 
-        require(s.system.silo.assetSettings[token].milestoneSeason != 0, "Token not whitelisted");
+        require(s.sys.silo.assetSettings[token].milestoneSeason != 0, "Token not whitelisted");
 
         // beanstalk requires a min. stalkEarnedPerSeason of 1.
         if (stalkEarnedPerSeason == 0) stalkEarnedPerSeason = 1;
 
         // update milestone stem and season.
-        s.system.silo.assetSettings[token].milestoneStem = LibTokenSilo.stemTipForToken(token);
-        s.system.silo.assetSettings[token].milestoneSeason = s.system.season.current;
+        s.sys.silo.assetSettings[token].milestoneStem = LibTokenSilo.stemTipForToken(token);
+        s.sys.silo.assetSettings[token].milestoneSeason = s.sys.season.current;
 
         // stalkEarnedPerSeason is set to int32 before casting down.
-        s.system.silo.assetSettings[token].deltaStalkEarnedPerSeason = int24(
+        s.sys.silo.assetSettings[token].deltaStalkEarnedPerSeason = int24(
             int32(stalkEarnedPerSeason) -
-                int32(s.system.silo.assetSettings[token].stalkEarnedPerSeason)
+                int32(s.sys.silo.assetSettings[token].stalkEarnedPerSeason)
         ); // calculate delta
-        s.system.silo.assetSettings[token].stalkEarnedPerSeason = stalkEarnedPerSeason;
+        s.sys.silo.assetSettings[token].stalkEarnedPerSeason = stalkEarnedPerSeason;
 
-        emit UpdatedStalkPerBdvPerSeason(token, stalkEarnedPerSeason, s.system.season.current);
+        emit UpdatedStalkPerBdvPerSeason(token, stalkEarnedPerSeason, s.sys.season.current);
     }
 
     /**
@@ -224,14 +224,14 @@ library LibWhitelist {
         updateStalkPerBdvPerSeasonForToken(token, 1);
 
         // delete the selector and encodeType.
-        delete s.system.silo.assetSettings[token].selector;
-        delete s.system.silo.assetSettings[token].encodeType;
+        delete s.sys.silo.assetSettings[token].selector;
+        delete s.sys.silo.assetSettings[token].encodeType;
 
         // delete gaugePoints, gaugePointSelector, liquidityWeightSelector, and optimalPercentDepositedBdv.
-        delete s.system.silo.assetSettings[token].gaugePoints;
-        delete s.system.silo.assetSettings[token].gpSelector;
-        delete s.system.silo.assetSettings[token].lwSelector;
-        delete s.system.silo.assetSettings[token].optimalPercentDepositedBdv;
+        delete s.sys.silo.assetSettings[token].gaugePoints;
+        delete s.sys.silo.assetSettings[token].gpSelector;
+        delete s.sys.silo.assetSettings[token].lwSelector;
+        delete s.sys.silo.assetSettings[token].optimalPercentDepositedBdv;
 
         emit DewhitelistToken(token);
     }

@@ -99,7 +99,7 @@ library LibWell {
      */
     function isWell(address well) internal view returns (bool _isWell) {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        return s.system.silo.assetSettings[well].selector == WELL_BDV_SELECTOR;
+        return s.sys.silo.assetSettings[well].selector == WELL_BDV_SELECTOR;
     }
 
     /**
@@ -111,7 +111,7 @@ library LibWell {
      * Currently this is only done in {seasonFacet.sunrise}.
      *
      * if LibWell.getUsdTokenPriceForWell() returns 1, then this function is called without the reserves being set.
-     * if s.system.usdTokenPrice[well] or s.system.twaReserves[well] returns 0, then the oracle failed to compute
+     * if s.sys.usdTokenPrice[well] or s.sys.twaReserves[well] returns 0, then the oracle failed to compute
      * a valid price this Season, and thus beanstalk cannot calculate the usd liquidity.
      */
     function getWellTwaUsdLiquidityFromReserves(
@@ -125,7 +125,7 @@ library LibWell {
         }
 
         // if tokenUsd == 0, then the beanstalk could not compute a valid eth price,
-        // and should return 0. if s.system.twaReserves[C.BEAN_ETH_WELL].reserve1 is 0, the previous if block will return 0.
+        // and should return 0. if s.sys.twaReserves[C.BEAN_ETH_WELL].reserve1 is 0, the previous if block will return 0.
         if (tokenUsd == 0) {
             return 0;
         }
@@ -148,10 +148,10 @@ library LibWell {
         // valid manipulation resistant reserves and thus the price is set to 0
         // indicating that the oracle failed to compute a valid price this Season.
         if (ratios.length == 0) {
-            s.system.usdTokenPrice[well] = 0;
+            s.sys.usdTokenPrice[well] = 0;
         } else {
             (, uint256 j) = getNonBeanTokenAndIndexFromWell(well);
-            s.system.usdTokenPrice[well] = ratios[j];
+            s.sys.usdTokenPrice[well] = ratios[j];
         }
     }
 
@@ -160,7 +160,7 @@ library LibWell {
      * @dev assumes TKN has 18 decimals.
      */
     function getUsdTokenPriceForWell(address well) internal view returns (uint tokenUsd) {
-        tokenUsd = LibAppStorage.diamondStorage().system.usdTokenPrice[well];
+        tokenUsd = LibAppStorage.diamondStorage().sys.usdTokenPrice[well];
     }
 
     /**
@@ -169,7 +169,7 @@ library LibWell {
      * price is not needed anymore to save gas.
      */
     function resetUsdTokenPriceForWell(address well) internal {
-        LibAppStorage.diamondStorage().system.usdTokenPrice[well] = 1;
+        LibAppStorage.diamondStorage().sys.usdTokenPrice[well] = 1;
     }
 
     /**
@@ -184,12 +184,12 @@ library LibWell {
         // the length of twaReserves should never be 1, but
         // is added to prevent revert.
         if (twaReserves.length <= 1) {
-            delete s.system.twaReserves[well].reserve0;
-            delete s.system.twaReserves[well].reserve1;
+            delete s.sys.twaReserves[well].reserve0;
+            delete s.sys.twaReserves[well].reserve1;
         } else {
             // safeCast not needed as the reserves are uint128 in the wells.
-            s.system.twaReserves[well].reserve0 = uint128(twaReserves[0]);
-            s.system.twaReserves[well].reserve1 = uint128(twaReserves[1]);
+            s.sys.twaReserves[well].reserve0 = uint128(twaReserves[0]);
+            s.sys.twaReserves[well].reserve1 = uint128(twaReserves[1]);
         }
     }
 
@@ -202,8 +202,8 @@ library LibWell {
     ) internal view returns (uint256[] memory twaReserves) {
         AppStorage storage s = LibAppStorage.diamondStorage();
         twaReserves = new uint256[](2);
-        twaReserves[0] = s.system.twaReserves[well].reserve0;
-        twaReserves[1] = s.system.twaReserves[well].reserve1;
+        twaReserves[0] = s.sys.twaReserves[well].reserve0;
+        twaReserves[1] = s.sys.twaReserves[well].reserve1;
     }
 
     /**
@@ -213,19 +213,19 @@ library LibWell {
      */
     function resetTwaReservesForWell(address well) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        s.system.twaReserves[well].reserve0 = 1;
-        s.system.twaReserves[well].reserve1 = 1;
+        s.sys.twaReserves[well].reserve0 = 1;
+        s.sys.twaReserves[well].reserve1 = 1;
     }
 
     function getWellPriceFromTwaReserves(address well) internal view returns (uint256 price) {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        // s.system.twaReserve[well] should be set prior to this function being called.
+        // s.sys.twaReserve[well] should be set prior to this function being called.
         // 'price' is in terms of reserve0:reserve1.
-        if (s.system.twaReserves[well].reserve0 == 0 || s.system.twaReserves[well].reserve1 == 0) {
+        if (s.sys.twaReserves[well].reserve0 == 0 || s.sys.twaReserves[well].reserve1 == 0) {
             price = 0;
         } else {
-            price = s.system.twaReserves[well].reserve0.mul(1e18).div(
-                s.system.twaReserves[well].reserve1
+            price = s.sys.twaReserves[well].reserve0.mul(1e18).div(
+                s.sys.twaReserves[well].reserve1
             );
         }
     }
@@ -253,8 +253,8 @@ library LibWell {
         try
             ICumulativePump(pumps[0].target).readTwaReserves(
                 well,
-                s.system.wellOracleSnapshots[well],
-                uint40(s.system.season.timestamp),
+                s.sys.wellOracleSnapshots[well],
+                uint40(s.sys.season.timestamp),
                 pumps[0].data
             )
         returns (uint[] memory twaReserves, bytes memory) {
@@ -280,8 +280,8 @@ library LibWell {
         try
             ICumulativePump(pumps[0].target).readTwaReserves(
                 well,
-                s.system.wellOracleSnapshots[well],
-                uint40(s.system.season.timestamp),
+                s.sys.wellOracleSnapshots[well],
+                uint40(s.sys.season.timestamp),
                 pumps[0].data
             )
         returns (uint[] memory twaReserves, bytes memory) {

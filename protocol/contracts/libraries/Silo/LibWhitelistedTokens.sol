@@ -53,12 +53,12 @@ library LibWhitelistedTokens {
      */
     function getSiloTokens() internal view returns (address[] memory tokens) {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        uint256 numberOfSiloTokens = s.system.silo.whitelistStatuses.length;
+        uint256 numberOfSiloTokens = s.sys.silo.whitelistStatuses.length;
 
         tokens = new address[](numberOfSiloTokens);
 
         for (uint256 i = 0; i < numberOfSiloTokens; i++) {
-            tokens[i] = s.system.silo.whitelistStatuses[i].token;
+            tokens[i] = s.sys.silo.whitelistStatuses[i].token;
         }
     }
 
@@ -67,14 +67,14 @@ library LibWhitelistedTokens {
      */
     function getWhitelistedTokens() internal view returns (address[] memory tokens) {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        uint256 numberOfSiloTokens = s.system.silo.whitelistStatuses.length;
+        uint256 numberOfSiloTokens = s.sys.silo.whitelistStatuses.length;
         uint256 tokensLength;
 
         tokens = new address[](numberOfSiloTokens);
 
         for (uint256 i = 0; i < numberOfSiloTokens; i++) {
-            if (s.system.silo.whitelistStatuses[i].isWhitelisted) {
-                tokens[tokensLength++] = s.system.silo.whitelistStatuses[i].token;
+            if (s.sys.silo.whitelistStatuses[i].isWhitelisted) {
+                tokens[tokensLength++] = s.sys.silo.whitelistStatuses[i].token;
             }
         }
         assembly {
@@ -88,17 +88,17 @@ library LibWhitelistedTokens {
      */
     function getWhitelistedLpTokens() internal view returns (address[] memory tokens) {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        uint256 numberOfSiloTokens = s.system.silo.whitelistStatuses.length;
+        uint256 numberOfSiloTokens = s.sys.silo.whitelistStatuses.length;
         uint256 tokensLength;
 
         tokens = new address[](numberOfSiloTokens);
 
         for (uint256 i = 0; i < numberOfSiloTokens; i++) {
-            if (s.system.silo.whitelistStatuses[i].isWhitelistedLp) {
+            if (s.sys.silo.whitelistStatuses[i].isWhitelistedLp) {
                 // assembly {
                 //     mstore(tokens, add(mload(tokens), 1))
                 // }
-                tokens[tokensLength++] = s.system.silo.whitelistStatuses[i].token;
+                tokens[tokensLength++] = s.sys.silo.whitelistStatuses[i].token;
             }
         }
         assembly {
@@ -111,14 +111,14 @@ library LibWhitelistedTokens {
      */
     function getWhitelistedWellLpTokens() internal view returns (address[] memory tokens) {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        uint256 numberOfSiloTokens = s.system.silo.whitelistStatuses.length;
+        uint256 numberOfSiloTokens = s.sys.silo.whitelistStatuses.length;
         uint256 tokensLength;
 
         tokens = new address[](numberOfSiloTokens);
 
         for (uint256 i = 0; i < numberOfSiloTokens; i++) {
-            if (s.system.silo.whitelistStatuses[i].isWhitelistedWell) {
-                tokens[tokensLength++] = s.system.silo.whitelistStatuses[i].token;
+            if (s.sys.silo.whitelistStatuses[i].isWhitelistedWell) {
+                tokens[tokensLength++] = s.sys.silo.whitelistStatuses[i].token;
             }
         }
         assembly {
@@ -135,7 +135,7 @@ library LibWhitelistedTokens {
         returns (WhitelistStatus[] memory _whitelistStatuses)
     {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        _whitelistStatuses = s.system.silo.whitelistStatuses;
+        _whitelistStatuses = s.sys.silo.whitelistStatuses;
     }
 
     /**
@@ -146,7 +146,7 @@ library LibWhitelistedTokens {
     ) internal view returns (WhitelistStatus memory _whitelistStatus) {
         AppStorage storage s = LibAppStorage.diamondStorage();
         uint256 tokenStatusIndex = findWhitelistStatusIndex(token);
-        _whitelistStatus = s.system.silo.whitelistStatuses[tokenStatusIndex];
+        _whitelistStatus = s.sys.silo.whitelistStatuses[tokenStatusIndex];
     }
 
     /**
@@ -159,18 +159,13 @@ library LibWhitelistedTokens {
         bool isWhitelistedWell
     ) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        s.system.silo.whitelistStatuses.push(
-            WhitelistStatus(
-                token,
-                isWhitelisted,
-                isWhitelistedLp,
-                isWhitelistedWell
-            )
+        s.sys.silo.whitelistStatuses.push(
+            WhitelistStatus(token, isWhitelisted, isWhitelistedLp, isWhitelistedWell)
         );
 
         emit AddWhitelistStatus(
             token,
-            s.system.silo.whitelistStatuses.length - 1,
+            s.sys.silo.whitelistStatuses.length - 1,
             isWhitelisted,
             isWhitelistedLp,
             isWhitelistedWell
@@ -188,9 +183,9 @@ library LibWhitelistedTokens {
     ) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
         uint256 tokenStatusIndex = findWhitelistStatusIndex(token);
-        s.system.silo.whitelistStatuses[tokenStatusIndex].isWhitelisted = isWhitelisted;
-        s.system.silo.whitelistStatuses[tokenStatusIndex].isWhitelistedLp = isWhitelistedLp;
-        s.system.silo.whitelistStatuses[tokenStatusIndex].isWhitelistedWell = isWhitelistedWell;
+        s.sys.silo.whitelistStatuses[tokenStatusIndex].isWhitelisted = isWhitelisted;
+        s.sys.silo.whitelistStatuses[tokenStatusIndex].isWhitelistedLp = isWhitelistedLp;
+        s.sys.silo.whitelistStatuses[tokenStatusIndex].isWhitelistedWell = isWhitelistedWell;
 
         emit UpdateWhitelistStatus(
             token,
@@ -207,10 +202,10 @@ library LibWhitelistedTokens {
     function removeWhitelistStatus(address token) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
         uint256 tokenStatusIndex = findWhitelistStatusIndex(token);
-        s.system.silo.whitelistStatuses[tokenStatusIndex] = s.system.silo.whitelistStatuses[
-            s.system.silo.whitelistStatuses.length - 1
+        s.sys.silo.whitelistStatuses[tokenStatusIndex] = s.sys.silo.whitelistStatuses[
+            s.sys.silo.whitelistStatuses.length - 1
         ];
-        s.system.silo.whitelistStatuses.pop();
+        s.sys.silo.whitelistStatuses.pop();
 
         emit RemoveWhitelistStatus(token, tokenStatusIndex);
     }
@@ -220,9 +215,9 @@ library LibWhitelistedTokens {
      */
     function findWhitelistStatusIndex(address token) private view returns (uint256) {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        uint256 whitelistedStatusLength = s.system.silo.whitelistStatuses.length;
+        uint256 whitelistedStatusLength = s.sys.silo.whitelistStatuses.length;
         uint256 i;
-        while (s.system.silo.whitelistStatuses[i].token != token) {
+        while (s.sys.silo.whitelistStatuses[i].token != token) {
             i++;
             if (i >= whitelistedStatusLength) {
                 revert("LibWhitelistedTokens: Token not found");

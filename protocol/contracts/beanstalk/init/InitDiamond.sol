@@ -38,34 +38,34 @@ contract InitDiamond is Weather {
         ds.supportedInterfaces[0x0e89341c] = true; // ERC1155Metadata
 
         LibCases.setCasesV2();
-        s.system.weather.temp = 1;
+        s.sys.weather.temp = 1;
 
-        s.system.season.current = 1;
-        s.system.season.withdrawSeasons = 25;
-        s.system.season.period = C.getSeasonPeriod();
-        s.system.season.timestamp = block.timestamp;
-        s.system.season.start = s.system.season.period > 0
-            ? (block.timestamp / s.system.season.period) * s.system.season.period
+        s.sys.season.current = 1;
+        s.sys.season.withdrawSeasons = 25;
+        s.sys.season.period = C.getSeasonPeriod();
+        s.sys.season.timestamp = block.timestamp;
+        s.sys.season.start = s.sys.season.period > 0
+            ? (block.timestamp / s.sys.season.period) * s.sys.season.period
             : block.timestamp;
 
-        s.system.weather.thisSowTime = type(uint32).max;
-        s.system.weather.lastSowTime = type(uint32).max;
-        s.system.isFarm = 1;
+        s.sys.weather.thisSowTime = type(uint32).max;
+        s.sys.weather.lastSowTime = type(uint32).max;
+        s.sys.isFarm = 1;
 
-        s.system.usdTokenPrice[C.BEAN_ETH_WELL] = 1;
-        s.system.twaReserves[C.BEAN_ETH_WELL].reserve0 = 1;
-        s.system.twaReserves[C.BEAN_ETH_WELL].reserve1 = 1;
+        s.sys.usdTokenPrice[C.BEAN_ETH_WELL] = 1;
+        s.sys.twaReserves[C.BEAN_ETH_WELL].reserve0 = 1;
+        s.sys.twaReserves[C.BEAN_ETH_WELL].reserve1 = 1;
 
-        s.system.seedGauge.beanToMaxLpGpPerBdvRatio = 50e18; // 50%
-        s.system.seedGauge.averageGrownStalkPerBdvPerSeason = 3e6;
+        s.sys.seedGauge.beanToMaxLpGpPerBdvRatio = 50e18; // 50%
+        s.sys.seedGauge.averageGrownStalkPerBdvPerSeason = 3e6;
 
         emit BeanToMaxLpGpPerBdvRatioChange(
-            s.system.season.current,
+            s.sys.season.current,
             type(uint256).max,
-            int80(int128(s.system.seedGauge.beanToMaxLpGpPerBdvRatio))
+            int80(int128(s.sys.seedGauge.beanToMaxLpGpPerBdvRatio))
         );
         emit LibGauge.UpdateAverageStalkPerBdvPerSeason(
-            s.system.seedGauge.averageGrownStalkPerBdvPerSeason
+            s.sys.seedGauge.averageGrownStalkPerBdvPerSeason
         );
         C.bean().mint(msg.sender, LibIncentive.MAX_REWARD);
         emit LibIncentive.Incentivization(msg.sender, LibIncentive.MAX_REWARD);

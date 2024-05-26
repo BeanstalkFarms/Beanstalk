@@ -49,14 +49,14 @@ abstract contract Invariable {
      * @dev Roughly akin to a view only check where only routine modifications are allowed (ie mowing).
      */
     modifier noNetFlow() {
-        uint256 initialStalk = LibAppStorage.diamondStorage().system.silo.stalk;
+        uint256 initialStalk = LibAppStorage.diamondStorage().sys.silo.stalk;
         address[] memory tokens = getTokensOfInterest();
         uint256[] memory initialProtocolTokenBalances = getTokenBalances(tokens);
         _;
         uint256[] memory finalProtocolTokenBalances = getTokenBalances(tokens);
 
         require(
-            LibAppStorage.diamondStorage().system.silo.stalk >= initialStalk,
+            LibAppStorage.diamondStorage().sys.silo.stalk >= initialStalk,
             "INV: noNetFlow Stalk decreased"
         );
         for (uint256 i; i < tokens.length; i++) {
@@ -72,14 +72,14 @@ abstract contract Invariable {
      * @dev Favor noNetFlow where applicable.
      */
     modifier noOutFlow() {
-        uint256 initialStalk = LibAppStorage.diamondStorage().system.silo.stalk;
+        uint256 initialStalk = LibAppStorage.diamondStorage().sys.silo.stalk;
         address[] memory tokens = getTokensOfInterest();
         uint256[] memory initialProtocolTokenBalances = getTokenBalances(tokens);
         _;
         uint256[] memory finalProtocolTokenBalances = getTokenBalances(tokens);
 
         require(
-            LibAppStorage.diamondStorage().system.silo.stalk >= initialStalk,
+            LibAppStorage.diamondStorage().sys.silo.stalk >= initialStalk,
             "INV: noOutFlow Stalk decreased"
         );
         for (uint256 i; i < tokens.length; i++) {
@@ -172,23 +172,22 @@ abstract contract Invariable {
         balances = new uint256[](tokens.length);
         for (uint256 i; i < tokens.length; i++) {
             entitlements[i] =
-                s.system.silo.balances[tokens[i]].deposited +
-                s.system.silo.germinating[GerminationSide.ODD][tokens[i]].amount +
-                s.system.silo.germinating[GerminationSide.EVEN][tokens[i]].amount +
-                s.system.internalTokenBalanceTotal[IERC20(tokens[i])];
+                s.sys.silo.balances[tokens[i]].deposited +
+                s.sys.silo.germinating[GerminationSide.ODD][tokens[i]].amount +
+                s.sys.silo.germinating[GerminationSide.EVEN][tokens[i]].amount +
+                s.sys.internalTokenBalanceTotal[IERC20(tokens[i])];
             if (tokens[i] == C.BEAN) {
                 entitlements[i] +=
-                    (s.system.fert.fertilizedIndex - s.system.fert.fertilizedPaidIndex) + // unrinsed rinsable beans
-                    s.system.silo.unripeSettings[C.UNRIPE_BEAN].balanceOfUnderlying; // unchopped underlying beans
-                for (uint256 j; j < s.system.fieldCount; j++) {
-                    entitlements[i] += (s.system.fields[j].harvestable -
-                        s.system.fields[j].harvested); // unharvested harvestable beans
+                    (s.sys.fert.fertilizedIndex - s.sys.fert.fertilizedPaidIndex) + // unrinsed rinsable beans
+                    s.sys.silo.unripeSettings[C.UNRIPE_BEAN].balanceOfUnderlying; // unchopped underlying beans
+                for (uint256 j; j < s.sys.fieldCount; j++) {
+                    entitlements[i] += (s.sys.fields[j].harvestable - s.sys.fields[j].harvested); // unharvested harvestable beans
                 }
             } else if (tokens[i] == LibUnripe._getUnderlyingToken(C.UNRIPE_LP)) {
-                entitlements[i] += s.system.silo.unripeSettings[C.UNRIPE_LP].balanceOfUnderlying;
+                entitlements[i] += s.sys.silo.unripeSettings[C.UNRIPE_LP].balanceOfUnderlying;
             }
-            if (s.system.sopWell != address(0) && tokens[i] == address(LibSilo.getSopToken())) {
-                entitlements[i] += s.system.plenty;
+            if (s.sys.sopWell != address(0) && tokens[i] == address(LibSilo.getSopToken())) {
+                entitlements[i] += s.sys.plenty;
             }
             balances[i] = IERC20(tokens[i]).balanceOf(address(this));
         }

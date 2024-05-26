@@ -87,7 +87,7 @@ contract SunriseTest is TestHelper {
     /**
      * @notice tests that the sunrise will revert, if not enough time has elapsed.
      * @dev `s` hours need to elapse from the start of beanstalk in order for beanstalk
-     * to accept a sunrise call. `s` is the current season, found at s.system.season.current.
+     * to accept a sunrise call. `s` is the current season, found at s.sys.season.current.
      */
     function test_sunriseRevert(uint256 s, uint256 timestamp) public {
         s = bound(s, 1, type(uint32).max);

@@ -16,9 +16,9 @@ abstract contract ReentrancyGuard {
     AppStorage internal s;
 
     modifier nonReentrant() {
-        require(s.system.reentrantStatus != _ENTERED, "ReentrancyGuard: reentrant call");
-        s.system.reentrantStatus = _ENTERED;
+        require(s.sys.reentrantStatus != _ENTERED, "ReentrancyGuard: reentrant call");
+        s.sys.reentrantStatus = _ENTERED;
         _;
-        s.system.reentrantStatus = _NOT_ENTERED;
+        s.sys.reentrantStatus = _NOT_ENTERED;
     }
 }

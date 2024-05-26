@@ -14,10 +14,10 @@ import {System} from "./System.sol";
 /**
  * @title AppStorage
  * @notice Contains all state for the Beanstalk Diamond.
- * @param system Contains shared state of the system as a whole.
- * @param accounts Contains state of individual users.
+ * @param sys Contains shared state of the system as a whole.
+ * @param accts Contains state of individual users.
  */
 struct AppStorage {
-    mapping(address => Account) accounts;
-    System system;
+    mapping(address => Account) accts;
+    System sys;
 }

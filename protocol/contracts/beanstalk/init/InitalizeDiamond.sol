@@ -47,7 +47,7 @@ contract InitalizeDiamond {
         addInterfaces();
         initalizeSeason();
         initalizeField();
-        initalizeSilo(uint16(s.system.season.current));
+        initalizeSilo(uint16(s.sys.season.current));
         initalizeSeedGauge(INIT_BEAN_TO_MAX_LP_GP_RATIO, INIT_AVG_GSPBDV);
 
         address[] memory tokens = new address[](2);
@@ -61,7 +61,7 @@ contract InitalizeDiamond {
             selector: BDVFacet.beanToBDV.selector,
             stalkEarnedPerSeason: INIT_BEAN_STALK_EARNED_PER_SEASON,
             stalkIssuedPerBdv: INIT_STALK_ISSUED_PER_BDV,
-            milestoneSeason: s.system.season.current,
+            milestoneSeason: s.sys.season.current,
             milestoneStem: 0,
             encodeType: 0x00,
             deltaStalkEarnedPerSeason: 0,
@@ -75,7 +75,7 @@ contract InitalizeDiamond {
             selector: BDVFacet.wellBdv.selector,
             stalkEarnedPerSeason: INIT_BEAN_TOKEN_WELL_STALK_EARNED_PER_SEASON,
             stalkIssuedPerBdv: INIT_STALK_ISSUED_PER_BDV,
-            milestoneSeason: s.system.season.current,
+            milestoneSeason: s.sys.season.current,
             milestoneStem: 0,
             encodeType: 0x01,
             deltaStalkEarnedPerSeason: 0,
@@ -89,9 +89,9 @@ contract InitalizeDiamond {
 
         // init usdTokenPrice. C.Bean_eth_well should be
         // a bean well w/ the native token of the network.
-        s.system.usdTokenPrice[C.BEAN_ETH_WELL] = 1;
-        s.system.twaReserves[beanTokenWell].reserve0 = 1;
-        s.system.twaReserves[beanTokenWell].reserve1 = 1;
+        s.sys.usdTokenPrice[C.BEAN_ETH_WELL] = 1;
+        s.sys.twaReserves[beanTokenWell].reserve0 = 1;
+        s.sys.twaReserves[beanTokenWell].reserve1 = 1;
     }
 
     /**
@@ -108,10 +108,10 @@ contract InitalizeDiamond {
      * @notice Initalizes field parameters.
      */
     function initalizeField() internal {
-        s.system.weather.temp = 1;
-        s.system.weather.thisSowTime = type(uint32).max;
-        s.system.weather.lastSowTime = type(uint32).max;
-        s.system.isFarm = 1;
+        s.sys.weather.temp = 1;
+        s.sys.weather.thisSowTime = type(uint32).max;
+        s.sys.weather.lastSowTime = type(uint32).max;
+        s.sys.isFarm = 1;
     }
 
     /**
@@ -119,22 +119,22 @@ contract InitalizeDiamond {
      */
     function initalizeSeason() internal {
         // set current season to 1.
-        s.system.season.current = 1;
+        s.sys.season.current = 1;
 
         // set withdraw seasons to 0. Kept here for verbosity.
-        s.system.season.withdrawSeasons = 0;
+        s.sys.season.withdrawSeasons = 0;
 
         // initalize the duration of 1 season in seconds.
-        s.system.season.period = C.getSeasonPeriod();
+        s.sys.season.period = C.getSeasonPeriod();
 
         // initalize current timestamp.
-        s.system.season.timestamp = block.timestamp;
+        s.sys.season.timestamp = block.timestamp;
 
         // initalize the start timestamp.
         // Rounds down to the nearest hour
         // if needed.
-        s.system.season.start = s.system.season.period > 0
-            ? (block.timestamp / s.system.season.period) * s.system.season.period
+        s.sys.season.start = s.sys.season.period > 0
+            ? (block.timestamp / s.sys.season.period) * s.sys.season.period
             : block.timestamp;
 
         // initalizes the cases that beanstalk uses
@@ -154,8 +154,8 @@ contract InitalizeDiamond {
      */
     function initalizeSilo(uint16 season) internal {
         // initalize when the silo started silo V3.
-        s.system.season.stemStartSeason = season;
-        s.system.season.stemScaleSeason = season;
+        s.sys.season.stemStartSeason = season;
+        s.sys.season.stemScaleSeason = season;
     }
 
     function initalizeSeedGauge(
@@ -163,19 +163,19 @@ contract InitalizeDiamond {
         uint128 averageGrownStalkPerBdvPerSeason
     ) internal {
         // initalize the ratio of bean to max lp gp per bdv.
-        s.system.seedGauge.beanToMaxLpGpPerBdvRatio = beanToMaxLpGpRatio;
+        s.sys.seedGauge.beanToMaxLpGpPerBdvRatio = beanToMaxLpGpRatio;
 
         // initalize the average grown stalk per bdv per season.
-        s.system.seedGauge.averageGrownStalkPerBdvPerSeason = averageGrownStalkPerBdvPerSeason;
+        s.sys.seedGauge.averageGrownStalkPerBdvPerSeason = averageGrownStalkPerBdvPerSeason;
 
         // emit events.
         emit BeanToMaxLpGpPerBdvRatioChange(
-            s.system.season.current,
+            s.sys.season.current,
             type(uint256).max,
-            int80(int128(s.system.seedGauge.beanToMaxLpGpPerBdvRatio))
+            int80(int128(s.sys.seedGauge.beanToMaxLpGpPerBdvRatio))
         );
         emit LibGauge.UpdateAverageStalkPerBdvPerSeason(
-            s.system.seedGauge.averageGrownStalkPerBdvPerSeason
+            s.sys.seedGauge.averageGrownStalkPerBdvPerSeason
         );
     }
 
@@ -189,7 +189,7 @@ contract InitalizeDiamond {
     ) internal {
         for (uint256 i = 0; i < tokens.length; i++) {
             // note: no error checking.
-            s.system.silo.assetSettings[tokens[i]] = assetSettings[i];
+            s.sys.silo.assetSettings[tokens[i]] = assetSettings[i];
 
             bool isLPandWell = true;
             if (tokens[i] == C.BEAN) {

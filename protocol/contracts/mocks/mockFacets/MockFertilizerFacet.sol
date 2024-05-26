@@ -22,18 +22,18 @@ contract MockFertilizerFacet is FertilizerFacet {
     }
 
     function setPenaltyParams(uint256 recapitalized, uint256 fertilized) external {
-        s.system.fert.recapitalized = recapitalized;
-        s.system.fert.fertilizedIndex = fertilized;
-        s.system.fert.fertilizedPaidIndex = fertilized;
+        s.sys.fert.recapitalized = recapitalized;
+        s.sys.fert.fertilizedIndex = fertilized;
+        s.sys.fert.fertilizedPaidIndex = fertilized;
     }
 
     function setFertilizerE(bool fertilizing, uint256 unfertilized) external {
-        s.system.season.fertilizing = fertilizing;
-        s.system.fert.unfertilizedIndex = unfertilized;
+        s.sys.season.fertilizing = fertilizing;
+        s.sys.fert.unfertilizedIndex = unfertilized;
     }
 
     function setBarnRaiseWell(address well) external {
-        s.system.silo.unripeSettings[C.UNRIPE_LP].underlyingToken = well;
+        s.sys.silo.unripeSettings[C.UNRIPE_LP].underlyingToken = well;
     }
 
     function addFertilizer(

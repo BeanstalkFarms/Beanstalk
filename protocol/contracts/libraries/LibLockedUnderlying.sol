@@ -26,7 +26,7 @@ library LibLockedUnderlying {
         AppStorage storage s = LibAppStorage.diamondStorage();
         return
             s
-                .system
+                .sys
                 .silo
                 .unripeSettings[unripeToken]
                 .balanceOfUnderlying

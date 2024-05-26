@@ -22,18 +22,18 @@ contract InitInvariants {
         setInternalTokenBalances();
 
         // TODO: Get exact from future snapshot.
-        s.system.fert.fertilizedPaidIndex = 3_500_000_000_000;
+        s.sys.fert.fertilizedPaidIndex = 3_500_000_000_000;
 
         // TODO: Get exact amount. May be 0.
         // TODO: Ensure SopWell/SopToken initialization is compatible with the logic between here and there.
-        s.system.plenty = 0;
+        s.sys.plenty = 0;
     }
 
     function setInternalTokenBalances() internal {
-        // TODO: Deconstruct s.system.internalTokenBalance offchain and set all tokens and all totals here.
-        s.system.internalTokenBalanceTotal[IERC20(C.BEAN)] = 115611612399;
-        s.system.internalTokenBalanceTotal[IERC20(C.BEAN_ETH_WELL)] = 0;
-        s.system.internalTokenBalanceTotal[IERC20(C.UNRIPE_BEAN)] = 9001888;
-        s.system.internalTokenBalanceTotal[IERC20(C.UNRIPE_LP)] = 12672419462;
+        // TODO: Deconstruct s.sys.internalTokenBalance offchain and set all tokens and all totals here.
+        s.sys.internalTokenBalanceTotal[IERC20(C.BEAN)] = 115611612399;
+        s.sys.internalTokenBalanceTotal[IERC20(C.BEAN_ETH_WELL)] = 0;
+        s.sys.internalTokenBalanceTotal[IERC20(C.UNRIPE_BEAN)] = 9001888;
+        s.sys.internalTokenBalanceTotal[IERC20(C.UNRIPE_LP)] = 12672419462;
     }
 }

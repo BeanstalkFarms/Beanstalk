@@ -62,7 +62,7 @@ contract MockInitDiamond is InitalizeDiamond {
     ) internal {
         for (uint i; i < tokens.length; i++) {
             // sets the silo settings for each token.
-            s.system.silo.assetSettings[tokens[i]] = assetSettings[i];
+            s.sys.silo.assetSettings[tokens[i]] = assetSettings[i];
             // note: unripeLP is not an LP token (only the underlying is)
             LibWhitelistedTokens.addWhitelistStatus(
                 tokens[i],
@@ -89,7 +89,7 @@ contract MockInitDiamond is InitalizeDiamond {
 
         // sets the barn raise token to the underlying of the unripe LP.
         s
-            .system
+            .sys
             .silo
             .unripeSettings[unripeToken[underlyingToken.length - 1]]
             .underlyingToken = barnRaiseWell;
@@ -110,7 +110,7 @@ contract MockInitDiamond is InitalizeDiamond {
             selector: BDVFacet.unripeBeanToBDV.selector,
             stalkEarnedPerSeason: INIT_UR_BEAN_STALK_EARNED_PER_SEASON,
             stalkIssuedPerBdv: INIT_STALK_ISSUED_PER_BDV,
-            milestoneSeason: s.system.season.current,
+            milestoneSeason: s.sys.season.current,
             milestoneStem: 0,
             encodeType: 0x00,
             deltaStalkEarnedPerSeason: 0,
@@ -123,7 +123,7 @@ contract MockInitDiamond is InitalizeDiamond {
             selector: BDVFacet.unripeLPToBDV.selector,
             stalkEarnedPerSeason: INIT_UR_BEAN_STALK_EARNED_PER_SEASON,
             stalkIssuedPerBdv: INIT_STALK_ISSUED_PER_BDV,
-            milestoneSeason: s.system.season.current,
+            milestoneSeason: s.sys.season.current,
             milestoneStem: 0,
             encodeType: 0x00,
             deltaStalkEarnedPerSeason: 0,
@@ -155,11 +155,11 @@ contract MockInitDiamond is InitalizeDiamond {
     function whitelistUnderlyingUrLPWell(address well) internal {
         // whitelist bean:stETH well
         // note: no error checking:
-        s.system.silo.assetSettings[well] = AssetSettings({
+        s.sys.silo.assetSettings[well] = AssetSettings({
             selector: BDVFacet.wellBdv.selector,
             stalkEarnedPerSeason: INIT_BEAN_WSTETH_WELL_STALK_EARNED_PER_SEASON,
             stalkIssuedPerBdv: INIT_STALK_ISSUED_PER_BDV,
-            milestoneSeason: s.system.season.current,
+            milestoneSeason: s.sys.season.current,
             milestoneStem: 0,
             encodeType: 0x01,
             deltaStalkEarnedPerSeason: 0,
@@ -183,7 +183,7 @@ contract MockInitDiamond is InitalizeDiamond {
             true // is well
         );
 
-        s.system.twaReserves[well].reserve0 = 1;
-        s.system.twaReserves[well].reserve1 = 1;
+        s.sys.twaReserves[well].reserve0 = 1;
+        s.sys.twaReserves[well].reserve1 = 1;
     }
 }

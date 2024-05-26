@@ -92,7 +92,7 @@ library LibCases {
      */
     function getDataFromCase(uint256 caseId) internal view returns (bytes32 caseData) {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        return s.system.casesV2[caseId];
+        return s.sys.casesV2[caseId];
     }
 
     /**
@@ -113,7 +113,7 @@ library LibCases {
 
     function setCasesV2() internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        s.system.casesV2 = [
+        s.sys.casesV2 = [
             //               Dsc soil demand,  Steady soil demand  Inc soil demand
             /////////////////////// Exremely Low L2SR ///////////////////////
             bytes32(T_PLUS_3_L_MINUS_FIFTY),

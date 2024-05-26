@@ -185,9 +185,7 @@ contract ConvertFacet is Invariable, ReentrancyGuard {
         // all deposits converted are not germinating.
         LibSilo.burnActiveStalk(
             LibTractor._user(),
-            a.active.stalk.add(
-                a.active.bdv.mul(s.system.silo.assetSettings[token].stalkIssuedPerBdv)
-            )
+            a.active.stalk.add(a.active.bdv.mul(s.sys.silo.assetSettings[token].stalkIssuedPerBdv))
         );
         return (a.active.stalk, a.active.bdv);
     }

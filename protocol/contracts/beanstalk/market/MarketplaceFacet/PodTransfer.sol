@@ -36,7 +36,7 @@ contract PodTransfer is ReentrancyGuard {
         address spender,
         uint256 fieldId
     ) public view returns (uint256) {
-        return s.accounts[owner].fields[fieldId].podAllowances[spender];
+        return s.accts[owner].fields[fieldId].podAllowances[spender];
     }
 
     /**
@@ -58,7 +58,7 @@ contract PodTransfer is ReentrancyGuard {
     }
 
     function insertPlot(address account, uint256 fieldId, uint256 index, uint256 amount) internal {
-        s.accounts[account].fields[fieldId].plots[index] = amount;
+        s.accts[account].fields[fieldId].plots[index] = amount;
     }
 
     function removePlot(
@@ -68,16 +68,16 @@ contract PodTransfer is ReentrancyGuard {
         uint256 start,
         uint256 end
     ) internal {
-        uint256 amountAfterEnd = s.accounts[account].fields[fieldId].plots[index] - end;
+        uint256 amountAfterEnd = s.accts[account].fields[fieldId].plots[index] - end;
 
         if (start > 0) {
-            s.accounts[account].fields[fieldId].plots[index] = start;
+            s.accts[account].fields[fieldId].plots[index] = start;
         } else {
-            delete s.accounts[account].fields[fieldId].plots[index];
+            delete s.accts[account].fields[fieldId].plots[index];
         }
 
         if (amountAfterEnd > 0) {
-            s.accounts[account].fields[fieldId].plots[index + end] = amountAfterEnd;
+            s.accts[account].fields[fieldId].plots[index + end] = amountAfterEnd;
         }
     }
 
@@ -100,6 +100,6 @@ contract PodTransfer is ReentrancyGuard {
         uint256 fieldId,
         uint256 amount
     ) internal {
-        s.accounts[owner].fields[fieldId].podAllowances[spender] = amount;
+        s.accts[owner].fields[fieldId].podAllowances[spender] = amount;
     }
 }

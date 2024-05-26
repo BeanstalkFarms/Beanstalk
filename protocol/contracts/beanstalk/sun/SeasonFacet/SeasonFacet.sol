@@ -52,8 +52,8 @@ contract SeasonFacet is Invariable, Weather {
     ) public payable fundsSafu noOutFlow returns (uint256) {
         uint256 initialGasLeft = gasleft();
 
-        require(!s.system.paused, "Season: Paused.");
-        require(seasonTime() > s.system.season.current, "Season: Still current Season.");
+        require(!s.sys.paused, "Season: Paused.");
+        require(seasonTime() > s.sys.season.current, "Season: Still current Season.");
         uint32 season = stepSeason();
         int256 deltaB = stepOracle();
         uint256 caseId = calcCaseIdandUpdate(deltaB);
@@ -66,12 +66,12 @@ contract SeasonFacet is Invariable, Weather {
 
     /**
      * @notice Returns the expected Season number given the current block timestamp.
-     * {sunrise} can be called when `seasonTime() > s.system.season.current`.
+     * {sunrise} can be called when `seasonTime() > s.sys.season.current`.
      */
     function seasonTime() public view virtual returns (uint32) {
-        if (block.timestamp < s.system.season.start) return 0;
-        if (s.system.season.period == 0) return type(uint32).max;
-        return uint32((block.timestamp - s.system.season.start) / s.system.season.period);
+        if (block.timestamp < s.sys.season.start) return 0;
+        if (s.sys.season.period == 0) return type(uint32).max;
+        return uint32((block.timestamp - s.sys.season.start) / s.sys.season.period);
     }
 
     //////////////////// SEASON INTERNAL ////////////////////
@@ -80,9 +80,9 @@ contract SeasonFacet is Invariable, Weather {
      * @dev Moves the Season forward by 1.
      */
     function stepSeason() private returns (uint32 season) {
-        s.system.season.current += 1;
-        season = s.system.season.current;
-        s.system.season.sunriseBlock = uint32(block.number); // Note: Will overflow in the year 3650.
+        s.sys.season.current += 1;
+        season = s.sys.season.current;
+        s.sys.season.sunriseBlock = uint32(block.number); // Note: Will overflow in the year 3650.
         emit Sunrise(season);
     }
 
@@ -102,7 +102,7 @@ contract SeasonFacet is Invariable, Weather {
         // Assumes that each block timestamp is exactly `C.BLOCK_LENGTH_SECONDS` apart.
         uint256 blocksLate = block
             .timestamp
-            .sub(s.system.season.start.add(s.system.season.period.mul(s.system.season.current)))
+            .sub(s.sys.season.start.add(s.sys.season.period.mul(s.sys.season.current)))
             .div(C.BLOCK_LENGTH_SECONDS);
 
         // Read the Bean / Eth price calculated by the Minting Well.

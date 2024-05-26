@@ -53,7 +53,7 @@ contract MarketplaceFacet is Invariable, Order {
     }
 
     function podListing(uint256 fieldId, uint256 index) external view returns (bytes32 id) {
-        return s.system.podListings[fieldId][index];
+        return s.sys.podListings[fieldId][index];
     }
 
     /*
@@ -98,7 +98,7 @@ contract MarketplaceFacet is Invariable, Order {
     }
 
     function podOrder(bytes32 id) external view returns (uint256) {
-        return s.system.podOrders[id];
+        return s.sys.podOrders[id];
     }
 
     /*
@@ -117,7 +117,7 @@ contract MarketplaceFacet is Invariable, Order {
             sender != address(0) && recipient != address(0),
             "Field: Transfer to/from 0 address."
         );
-        uint256 amountInPlot = s.accounts[sender].fields[fieldId].plots[index];
+        uint256 amountInPlot = s.accts[sender].fields[fieldId].plots[index];
         require(amountInPlot > 0, "Field: Plot not owned by user.");
         require(end > start && amountInPlot >= end, "Field: Pod range invalid.");
         uint256 transferAmount = end - start;
@@ -128,7 +128,7 @@ contract MarketplaceFacet is Invariable, Order {
             decrementAllowancePods(sender, LibTractor._user(), fieldId, transferAmount);
         }
 
-        if (s.system.podListings[fieldId][index] != bytes32(0)) {
+        if (s.sys.podListings[fieldId][index] != bytes32(0)) {
             LibMarket._cancelPodListing(sender, fieldId, index);
         }
         _transferPlot(sender, recipient, fieldId, index, start, transferAmount);

@@ -326,7 +326,7 @@ describe("Gauge", function () {
     });
 
     it("update seeds values", async function () {
-      // mockInitDiamond sets s.system.averageGrownStalkPerBdvPerSeason to 3e6 (avg 3 seeds per BDV),
+      // mockInitDiamond sets s.sys.averageGrownStalkPerBdvPerSeason to 3e6 (avg 3 seeds per BDV),
       // and BeanToMaxLpGpPerBDVRatio to 50% (BeanToMaxLpGpPerBDVRatioScaled = 0.75)
       // total BDV of ~163.25 (100 + 63.245537)
       // 1 seed = 1/10000 stalk, so ~489.75/10000 stalk should be issued this season.

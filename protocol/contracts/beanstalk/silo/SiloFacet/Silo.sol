@@ -99,16 +99,16 @@ contract Silo is ReentrancyGuard {
         // Earned Beans.
 
         LibSilo._mow(account, C.BEAN);
-        uint256 accountStalk = s.accounts[account].stalk;
+        uint256 accountStalk = s.accts[account].stalk;
 
         // Calculate balance of Earned Beans.
-        beans = LibSilo._balanceOfEarnedBeans(accountStalk, s.accounts[account].roots);
+        beans = LibSilo._balanceOfEarnedBeans(accountStalk, s.accts[account].roots);
         stemTip = LibTokenSilo.stemTipForToken(C.BEAN);
         if (beans == 0) return (0, stemTip);
 
         // Reduce the Silo's supply of Earned Beans.
-        // SafeCast unnecessary because beans is <= s.system.silo.earnedBeans.
-        s.system.silo.earnedBeans = s.system.silo.earnedBeans.sub(uint128(beans));
+        // SafeCast unnecessary because beans is <= s.sys.silo.earnedBeans.
+        s.sys.silo.earnedBeans = s.sys.silo.earnedBeans.sub(uint128(beans));
 
         // Deposit Earned Beans if there are any. Note that 1 Bean = 1 BDV.
         LibTokenSilo.addDepositToAccount(
@@ -124,10 +124,10 @@ contract Silo is ReentrancyGuard {
         // Earned Stalk are minted when Earned Beans are minted during Sunrise. See {Sun.sol:rewardToSilo} for details.
         // Similarly, `account` does not receive additional Roots from Earned Stalk during a Plant.
         // The following lines allocate Earned Stalk that has already been minted to `account`.
-        // Constant is used here rather than s.system.silo.assetSettings[BEAN].stalkIssuedPerBdv
+        // Constant is used here rather than s.sys.silo.assetSettings[BEAN].stalkIssuedPerBdv
         // for gas savings.
         uint256 stalk = beans.mul(C.STALK_PER_BEAN);
-        s.accounts[account].stalk = accountStalk.add(stalk);
+        s.accts[account].stalk = accountStalk.add(stalk);
 
         emit StalkBalanceChanged(account, int256(stalk), 0);
         emit Plant(account, beans);
@@ -137,16 +137,16 @@ contract Silo is ReentrancyGuard {
 
     /**
      * @dev Gas optimization: An account can call `{SiloFacet:claimPlenty}` even
-     * if `s.accounts[account].sop.plenty == 0`. This would emit a ClaimPlenty event
+     * if `s.accts[account].sop.plenty == 0`. This would emit a ClaimPlenty event
      * with an amount of 0.
      */
     function _claimPlenty(address account) internal {
         // Plenty is earned in the form of the non-Bean token in the SOP Well.
-        uint256 plenty = s.accounts[account].sop.plenty;
+        uint256 plenty = s.accts[account].sop.plenty;
         IERC20 sopToken = LibSilo.getSopToken();
         sopToken.safeTransfer(account, plenty);
-        delete s.accounts[account].sop.plenty;
-        s.system.plenty -= plenty;
+        delete s.accts[account].sop.plenty;
+        s.sys.plenty -= plenty;
 
         emit ClaimPlenty(account, address(sopToken), plenty);
     }

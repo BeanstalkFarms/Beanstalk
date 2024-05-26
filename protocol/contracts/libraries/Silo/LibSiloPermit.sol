@@ -129,7 +129,7 @@ library LibSiloPermit {
      */
     function nonces(address owner) internal view returns (uint256) {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        return s.accounts[owner].depositPermitNonces;
+        return s.accts[owner].depositPermitNonces;
     }
 
     /**
@@ -137,8 +137,8 @@ library LibSiloPermit {
      */
     function _useNonce(address owner) internal returns (uint256 current) {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        current = s.accounts[owner].depositPermitNonces;
-        ++s.accounts[owner].depositPermitNonces;
+        current = s.accts[owner].depositPermitNonces;
+        ++s.accts[owner].depositPermitNonces;
     }
 
     /**
@@ -192,7 +192,7 @@ library LibSiloPermit {
         uint256 amount
     ) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        s.accounts[account].depositAllowances[spender][token] = amount;
+        s.accts[account].depositAllowances[spender][token] = amount;
         emit DepositApproval(account, spender, token, amount);
     }
 
@@ -217,6 +217,6 @@ library LibSiloPermit {
         address token
     ) public view returns (uint256) {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        return s.accounts[owner].depositAllowances[spender][token];
+        return s.accts[owner].depositAllowances[spender][token];
     }
 }
