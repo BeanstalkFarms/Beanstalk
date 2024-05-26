@@ -877,12 +877,14 @@ const ConvertPropProvider: FC<{
               tokensWithStalk.set(token, value);
             };
           });
-          farm.add(
-            new sdk.farm.actions.Mow(
-              account,
-              tokensWithStalk
-            )
-          );
+          if (tokensWithStalk.size > 0) {
+            farm.add(
+              new sdk.farm.actions.Mow(
+                account,
+                tokensWithStalk
+              )
+            );
+          };
 
           const gasEstimate = await farm.estimateGas(earnedBeans, {
             slippage: slippage,
