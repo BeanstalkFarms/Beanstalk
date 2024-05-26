@@ -203,18 +203,14 @@ const PriceButton: FC<ButtonProps> = ({ ...props }) => {
             {showTWA ? (
               <>
                 {' '}
-                View the average deltaB of Bean over the last hour, the shortage
-                or excess of Beans in a liquidity pool Beans trade in.
-                <br />
-                <br />
                 Beanstalk uses the time-weighted average deltaB to determine how
-                many Beans to mint per season.
+                many Beans and Soil to mint each Season.
               </>
             ) : (
               <>
                 {' '}
-                View the time-weighted average shortage or excess of Beans in
-                each pool over the last hour, i.e., the TWA deltaB.
+                Show the time-weighted average shortage or excess of Beans in
+                each pool since the beginning of the Season.
               </>
             )}
           </Typography>
@@ -253,8 +249,8 @@ const PriceButton: FC<ButtonProps> = ({ ...props }) => {
             sx={{ color: '#647265', cursor: 'pointer' }}
           >
             {showDeprecated
-              ? 'Show only whitelisted'
-              : 'Show all pools (inc non-whitelisted)'}
+              ? 'Show only whitelisted pools'
+              : 'Show dewhitelisted pools'}
           </Link>
         </Box>
       </div>
@@ -283,7 +279,7 @@ const PriceButton: FC<ButtonProps> = ({ ...props }) => {
         }}
       >
         <Typography sx={{ fontSize: 14, fontWeight: 600 }}>
-          Prices of Non-Bean assets
+          Prices of Non-Bean Assets
         </Typography>
         <Close
           sx={{ fontSize: 14, cursor: 'pointer' }}
@@ -333,8 +329,8 @@ const PriceButton: FC<ButtonProps> = ({ ...props }) => {
         <Typography
           sx={{ color: '#647265', fontSize: '12px', lineHeight: '14px' }}
         >
-          TWA Prices represent the prices of these non-Bean assets over the last
-          hour according to Beanstalk
+          TWA prices indicate the prices of the non-Bean asset over the last
+          hour according to Beanstalk.
         </Typography>
       </Box>
     </Box>
