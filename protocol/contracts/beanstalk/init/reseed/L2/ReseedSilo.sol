@@ -34,9 +34,13 @@ contract ReseedSilo {
      */
     struct AccountSiloDeposits {
         address accounts;
-        uint256[] depositIds;
-        uint128[] amounts;
-        uint128[] bdvs;
+        AccountDepositData[] dd;
+    }
+
+    struct AccountDepositData {
+        int96 stem;
+        uint128 amount;
+        uint128 bdv;
     }
 
     /**
@@ -68,6 +72,7 @@ contract ReseedSilo {
      * @dev performs the following:
      * - re-deposits all deposits to the silo.
      * - re-issues all stalk to holders.
+     * note: token addresses will differ from L1.
      */
     function init(
         SiloDeposits calldata beanDeposits,
@@ -109,42 +114,41 @@ contract ReseedSilo {
             AccountSiloDeposits memory deposits = siloDeposit.siloDepositsAccount[i];
             uint128 totalBdvForAccount;
             uint256 accountStalk;
-            for (uint256 j; j < deposits.depositIds.length; j++) {
+            for (uint256 j; j < deposits.dd.length; j++) {
                 // verify that depositId is valid.
-                uint256 depositId = deposits.depositIds[j];
-                (address depositToken, int96 stem) = depositId.unpackAddressAndStem();
-                require(depositToken == siloDeposit.token, "ReseedSilo: INVALID_DEPOSIT_ID");
+                int96 stem = deposits.dd[j].stem;
                 require(siloDeposit.stemTip >= stem, "ReseedSilo: INVALID_STEM");
+                uint256 depositId = LibBytes.packAddressAndStem(siloDeposit.token, stem);
 
                 // add deposit to account. Add to depositIdList.
-                s.a[deposits.accounts].deposits[depositId].amount = deposits.amounts[j];
-                s.a[deposits.accounts].deposits[depositId].bdv = deposits.bdvs[j];
+                s.a[deposits.accounts].deposits[depositId].amount = deposits.dd[j].amount;
+                s.a[deposits.accounts].deposits[depositId].bdv = deposits.dd[j].bdv;
                 s.a[deposits.accounts].depositIdList[siloDeposit.token].push(depositId);
 
                 // increment totalBdvForAccount by bdv of deposit:
-                totalBdvForAccount += deposits.bdvs[j];
+                totalBdvForAccount += deposits.dd[j].bdv;
 
                 // increment by grown stalk of deposit.
-                accountStalk += uint96(siloDeposit.stemTip - stem) * deposits.bdvs[j];
+                accountStalk += uint96(siloDeposit.stemTip - stem) * deposits.dd[j].bdv;
 
                 // increment totalCalcDeposited and totalCalcDepositedBdv.
-                totalCalcDeposited += deposits.amounts[j];
-                totalCalcDepositedBdv += deposits.bdvs[j];
+                totalCalcDeposited += deposits.dd[j].amount;
+                totalCalcDepositedBdv += deposits.dd[j].bdv;
 
                 // emit events.
                 emit AddDeposit(
                     deposits.accounts,
                     siloDeposit.token,
                     stem,
-                    deposits.amounts[j],
-                    deposits.bdvs[j]
+                    deposits.dd[j].amount,
+                    deposits.dd[j].bdv
                 );
                 emit TransferSingle(
                     deposits.accounts, // operator
                     address(0), // from
                     deposits.accounts, // to
                     depositId, // depositID
-                    deposits.amounts[j] // token amount
+                    deposits.dd[j].amount // token amount
                 );
             }
             // update mowStatuses for account and token.
