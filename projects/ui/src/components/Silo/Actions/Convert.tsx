@@ -497,7 +497,9 @@ const ConvertForm: FC<
             ) : null}
 
             {/* Add-on transactions */}
-            <AdditionalTxnsAccordion filter={disabledFormActions} />
+            {!isUsingPlanted && 
+              <AdditionalTxnsAccordion filter={disabledFormActions} />
+            }
 
             {/* Transation preview */}
             <Box>
