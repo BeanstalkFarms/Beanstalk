@@ -1,8 +1,5 @@
 import { BasicPreparedResult, RunContext, Step, StepClass } from "src/classes/Workflow";
 import { ethers } from "ethers";
-import { Token } from "src/classes/Token";
-import { Deposit } from "src/lib/silo/types";
-import { TokenValue } from "@beanstalk/sdk-core";
 
 export class Plant extends StepClass<BasicPreparedResult> {
   public name: string = "plant";
