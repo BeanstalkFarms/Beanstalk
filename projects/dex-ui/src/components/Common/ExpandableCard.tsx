@@ -59,6 +59,7 @@ export const AccordionSelectCard = ({
 };
 
 const ComponentWrapper = styled(Flex).attrs({ $gap: 2 })<{ $active: boolean }>`
+  // width: 100%;
   border: 1px solid ${(props) => (props.$active ? theme.colors.black : theme.colors.lightGray)};
   background: ${(props) => (props.$active ? theme.colors.primaryLight : theme.colors.white)};
   padding: ${theme.spacing(2, 3)};

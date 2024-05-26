@@ -24,7 +24,8 @@ export const Build = () => {
       <Flex $gap={0.5}>
         <Title title="Build" fontWeight={"600"} largeOnMobile />
         <Text $variant="l" $color="text.secondary">
-          Basin has three unique components which can be composed together to create a custom liquidity pool, or Well.
+          Basin has three unique components which can be composed together to create a custom
+          liquidity pool, or Well.
         </Text>
       </Flex>
       <ActionBanner>
@@ -34,8 +35,8 @@ export const Build = () => {
       <Flex $gap={0.5} $mt={3}>
         <Text $variant="h3">COMPONENT LIBRARY</Text>
         <Text $variant="l" $color="text.secondary">
-          Use existing components which are already available for developers to extend, copy or compose together when building Wells. Select
-          a component to view its implementation.
+          Use existing components which are already available for developers to extend, copy or
+          compose together when building Wells. Select a component to view its implementation.
         </Text>
       </Flex>
       <ComponentLibraryTable />

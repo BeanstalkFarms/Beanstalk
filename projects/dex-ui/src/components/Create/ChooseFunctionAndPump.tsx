@@ -11,6 +11,7 @@ import { useBoolean } from "src/utils/ui/useBoolean";
 import { ToggleSwitch } from "../ToggleSwitch";
 import { ethers } from "ethers";
 import { AddressInputField } from "../Common/Form";
+import { FunctionPumpFormProgress } from "./function-and-pump/FunctionPumpFormProgress";
 
 type FormValues = CreateWellProps["wellFunctionAndPump"];
 
@@ -50,10 +51,13 @@ const ChooseFunctionAndPumpForm = () => {
     [setFunctionAndPump]
   );
 
+  console.log("parent rerender...");
+
   return (
     <FormProvider {...methods}>
       <form onSubmit={methods.handleSubmit(handleSubmit)} style={{ width: "100%" }}>
-        <Flex $direction="row">
+        <Flex $direction="row" $gap={6}>
+          <FunctionPumpFormProgress />
           <Flex $fullWidth>
             <WellFunctionFormWrapper $direction="row" $fullWidth $justifyContent="space-between">
               <Flex $gap={2} className="description">
@@ -110,7 +114,7 @@ const WellFunctionSection = () => {
 
   return (
     <>
-      <Flex className="well-functions" $gap={2}>
+      <Flex className="well-functions" $gap={2} $fullWidth>
         {wellFunctions.map((data, i) => (
           <WellComponentAccordionCard
             key={`well-functions-${i}`}
