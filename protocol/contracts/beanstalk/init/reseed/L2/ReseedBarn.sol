@@ -22,13 +22,20 @@ interface IFertilizer {
 
 contract ReseedBarn {
     /**
-     * @dev Fertilizers contains the ids, accounts, amounts, and lastBpf of each fertilizer.
+     * @notice contains data per account for fertilizer.
+     */
+    struct AccountFertilizerData {
+        address account;
+        uint128 amount;
+        uint128 lastBpf;
+    }
+    /**
+     * @notice Fertilizers contains the ids, accounts, amounts, and lastBpf of each fertilizer.
+     * @dev fertilizerIds MUST be in acsending order.
      */
     struct Fertilizers {
         uint128 fertilizerId;
-        address[] accounts;
-        uint128[] amounts;
-        uint128[] lastBpf;
+        AccountFertilizerData[] accountData;
     }
     AppStorage internal s;
 
@@ -74,10 +81,15 @@ contract ReseedBarn {
             if (i == fertilizerIds.length - 1) s.fLast = fid;
 
             // reissue fertilizer to each holder.
-            for (uint j; j < fertilizerIds[i].accounts.length; j++) {
+            for (uint j; j < f.accountData.length; j++) {
                 // `id` only needs to be set once per account, but is set on each fertilizer
                 // as `Fertilizer` does not have a function to set `id` once on a batch.
-                fertilizerProxy.beanstalkMint(f.accounts[j], fid, f.amounts[j], f.lastBpf[j]);
+                fertilizerProxy.beanstalkMint(
+                    f.accountData[j].account,
+                    fid,
+                    f.accountData[j].amount,
+                    f.accountData[j].lastBpf
+                );
             }
         }
     }
