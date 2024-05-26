@@ -240,9 +240,15 @@ contract SeasonGettersFacet {
     /**
      * @notice Returns the pod rate (unharvestable pods / total bean supply).
      */
-    function getPodRate() external view returns (uint256) {
+    function getPodRate(uint256 fieldId) external view returns (uint256) {
         uint256 beanSupply = C.bean().totalSupply();
-        return Decimal.ratio(s.system.field.pods.sub(s.system.field.harvestable), beanSupply).value;
+        return
+            Decimal
+                .ratio(
+                    s.system.fields[fieldId].pods - s.system.fields[fieldId].harvestable,
+                    beanSupply
+                )
+                .value;
     }
 
     /**
@@ -259,7 +265,7 @@ contract SeasonGettersFacet {
      */
     function getDeltaPodDemand() external view returns (uint256) {
         Decimal.D256 memory deltaPodDemand;
-        (deltaPodDemand, , ) = LibEvaluate.calcDeltaPodDemand(s.system.field.beanSown);
+        (deltaPodDemand, , ) = LibEvaluate.calcDeltaPodDemand(s.system.beanSown);
         return deltaPodDemand.value;
     }
 

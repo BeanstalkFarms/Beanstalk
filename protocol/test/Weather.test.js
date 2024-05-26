@@ -152,7 +152,7 @@ describe("Complex Weather", function () {
     before(async function () {
       await mockBeanstalk.setLastDSoilE("100000");
       await bean.mint(user.address, "1000000000");
-      await mockBeanstalk.incrementTotalPodsE("100000000000");
+      await mockBeanstalk.incrementTotalPodsE(0, "100000000000");
     });
 
     beforeEach(async function () {

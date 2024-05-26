@@ -17,6 +17,7 @@ import {GerminationSide} from "./System.sol";
  * @param lastRain The last Season that it started Raining at the time the Farmer last updated their Silo.
  * @param _buffer_0 Reserved storage for future additions.
  * @param deposits SiloV3.1 deposits. A mapping from depositId to Deposit. SiloV3.1 introduces greater precision for deposits.
+ * @param field A mapping from FieldId to a Farmer's Field storage.
  * @param depositAllowances A mapping of `spender => Silo token address => amount`.
  * @param tokenAllowances Internal balance token allowances.
  * @param mowStatuses A mapping of whitelisted token address to MowStatus.
@@ -25,7 +26,6 @@ import {GerminationSide} from "./System.sol";
  * @param unripeClaimed True if a Farmer has Claimed an Unripe Token. A mapping from Farmer to Unripe Token to its Claim status.
  * @param internalTokenBalance A mapping from Token address to Internal Balance. It stores the amount of the Token that the Farmer has stored as an Internal Balance in Beanstalk.
  * @param _buffer_1 Reserved storage for future additions.
- * @param field A Farmer's Field storage.
  * @param silo A Farmer's Silo storage.
  * @param sop A Farmer's Season of Plenty storage.
  */
@@ -39,6 +39,7 @@ struct Account {
     uint32 lastRain;
     bytes32[16] _buffer_0;
     mapping(uint256 => Deposit) deposits;
+    mapping(uint256 => Field) fields;
     mapping(address => mapping(address => uint256)) depositAllowances;
     mapping(address => mapping(IERC20 => uint256)) tokenAllowances;
     mapping(address => MowStatus) mowStatuses;
@@ -47,7 +48,6 @@ struct Account {
     mapping(address => bool) unripeClaimed;
     mapping(IERC20 => uint256) internalTokenBalance;
     bytes32[16] _buffer_1;
-    Field field;
     SeasonOfPlenty sop;
 }
 

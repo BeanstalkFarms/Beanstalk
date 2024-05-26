@@ -5,7 +5,7 @@ pragma solidity ^0.8.20;
 
 import "contracts/libraries/LibRedundantMath256.sol";
 import "contracts/beanstalk/sun/SeasonFacet/SeasonFacet.sol";
-import {AssetSettings, Deposited, GerminationSide} from "contracts/beanstalk/storage/System.sol";
+import {AssetSettings, Deposited, Field, GerminationSide} from "contracts/beanstalk/storage/System.sol";
 import {LibDiamond} from "contracts/libraries/LibDiamond.sol";
 import {IERC1155} from "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
 import "../MockToken.sol";
@@ -23,6 +23,7 @@ import {LibWellMinting} from "contracts/libraries/Minting/LibWellMinting.sol";
 import {LibEvaluate} from "contracts/libraries/LibEvaluate.sol";
 import {LibTokenSilo} from "contracts/libraries/Silo/LibTokenSilo.sol";
 import {IWell, Call} from "contracts/interfaces/basin/IWell.sol";
+import {ShipmentRecipient} from "contracts/beanstalk/storage/System.sol";
 
 import "forge-std/console.sol";
 /**
@@ -83,7 +84,7 @@ contract MockSeasonFacet is SeasonFacet {
 
     function mockStepSilo(uint256 amount) public {
         C.bean().mint(address(this), amount);
-        rewardToSilo(amount);
+        receiveShipment(ShipmentRecipient.Silo, amount, bytes(""));
     }
 
     function rainSunrise() public {
@@ -246,7 +247,11 @@ contract MockSeasonFacet is SeasonFacet {
     }
 
     function resetState() public {
-        delete s.system.field;
+        for (uint256 i; i < s.system.fieldCount; i++) {
+            s.system.fields[i].pods = 0;
+            s.system.fields[i].harvested = 0;
+            s.system.fields[i].harvestable = 0;
+        }
         delete s.system.silo;
         delete s.system.weather;
         s.system.weather.lastSowTime = type(uint32).max;
@@ -263,8 +268,8 @@ contract MockSeasonFacet is SeasonFacet {
     }
 
     function calcCaseIdE(int256 deltaB, uint128 endSoil) external {
-        s.system.field.soil = endSoil;
-        s.system.field.beanSown = endSoil;
+        s.system.soil = endSoil;
+        s.system.beanSown = endSoil;
         calcCaseIdandUpdate(deltaB);
     }
 
@@ -321,10 +326,10 @@ contract MockSeasonFacet is SeasonFacet {
         /// FIELD ///
         s.system.season.raining = raining;
         s.system.rain.roots = rainRoots ? 1 : 0;
-        s.system.field.pods = (pods.mul(C.bean().totalSupply()) / 1000); // previous tests used 1000 as the total supply.
+        s.system.fields[s.system.activeField].pods = (pods.mul(C.bean().totalSupply()) / 1000); // previous tests used 1000 as the total supply.
         s.system.weather.lastDeltaSoil = uint128(_lastDeltaSoil);
-        s.system.field.beanSown = beanSown;
-        s.system.field.soil = endSoil;
+        s.system.beanSown = beanSown;
+        s.system.soil = endSoil;
         calcCaseIdandUpdate(deltaB);
     }
 
@@ -350,8 +355,15 @@ contract MockSeasonFacet is SeasonFacet {
     }
 
     function rewardToFertilizerE(uint256 amount) external {
-        rewardToFertilizer(amount * 3);
+        // Simulate the ShipmentPlan cap.
+        uint256 unfertilizedBeans = s.system.fert.unfertilizedIndex - s.system.fert.fertilizedIndex;
+        require(
+            unfertilizedBeans >= amount,
+            "rewardToFertilizerE: amount greater than outstanding Fert"
+        );
+
         C.bean().mint(address(this), amount);
+        receiveShipment(ShipmentRecipient.Barn, amount, bytes(""));
     }
 
     function setSunriseBlock(uint256 _block) external {
@@ -599,16 +611,16 @@ contract MockSeasonFacet is SeasonFacet {
         uint256 beanSupply = C.bean().totalSupply();
         if (podRate == 0) {
             // < 5%
-            s.system.field.pods = beanSupply.mul(49).div(1000);
+            s.system.fields[s.system.activeField].pods = beanSupply.mul(49).div(1000);
         } else if (podRate == 1) {
             // < 15%
-            s.system.field.pods = beanSupply.mul(149).div(1000);
+            s.system.fields[s.system.activeField].pods = beanSupply.mul(149).div(1000);
         } else if (podRate == 2) {
             // < 25%
-            s.system.field.pods = beanSupply.mul(249).div(1000);
+            s.system.fields[s.system.activeField].pods = beanSupply.mul(249).div(1000);
         } else {
             // > 25%
-            s.system.field.pods = beanSupply.mul(251).div(1000);
+            s.system.fields[s.system.activeField].pods = beanSupply.mul(251).div(1000);
         }
     }
 

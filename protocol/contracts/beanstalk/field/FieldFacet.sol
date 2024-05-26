@@ -5,15 +5,21 @@
 pragma solidity ^0.8.20;
 
 import {C} from "contracts/C.sol";
+import {LibRedundantMath32} from "contracts/libraries/LibRedundantMath32.sol";
+import {LibRedundantMath128} from "contracts/libraries/LibRedundantMath128.sol";
 import {LibRedundantMath256} from "contracts/libraries/LibRedundantMath256.sol";
 import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
 import {LibTractor} from "contracts/libraries/LibTractor.sol";
 import {LibTransfer} from "contracts/libraries/Token/LibTransfer.sol";
 import {LibDibbler} from "contracts/libraries/LibDibbler.sol";
-import {LibRedundantMath32} from "contracts/libraries/LibRedundantMath32.sol";
-import {LibRedundantMath128} from "contracts/libraries/LibRedundantMath128.sol";
 import {ReentrancyGuard} from "../ReentrancyGuard.sol";
 import {Invariable} from "contracts/beanstalk/Invariable.sol";
+import {LibDiamond} from "contracts/libraries/LibDiamond.sol";
+import {LibMarket} from "contracts/libraries/LibMarket.sol";
+
+interface IBeanstalk {
+    function cancelPodListing(uint256 fieldId, uint256 index) external;
+}
 
 /**
  * @title FieldFacet
@@ -26,6 +32,18 @@ contract FieldFacet is Invariable, ReentrancyGuard {
     using LibRedundantMath128 for uint128;
 
     /**
+     * @notice Emitted when a new Field is added.
+     * @param fieldId The index of the Field that was added.
+     */
+    event FieldAdded(uint256 fieldId);
+
+    /**
+     * @notice Emitted when the active Field is modified.
+     * @param fieldId The index of the Field that was set to active.
+     */
+    event ActiveFieldSet(uint256 fieldId);
+
+    /**
      * @notice Emitted from {LibDibbler.sow} when an `account` creates a plot.
      * A Plot is a set of Pods created in from a single {sow} or {fund} call.
      * @param account The account that sowed Beans for Pods
@@ -33,7 +51,7 @@ contract FieldFacet is Invariable, ReentrancyGuard {
      * @param beans The amount of Beans burnt to create the Plot
      * @param pods The amount of Pods assocated with the created Plot
      */
-    event Sow(address indexed account, uint256 index, uint256 beans, uint256 pods);
+    event Sow(address indexed account, uint256 fieldId, uint256 index, uint256 beans, uint256 pods);
 
     /**
      * @notice Emitted when `account` claims the Beans associated with Harvestable Pods.
@@ -41,14 +59,7 @@ contract FieldFacet is Invariable, ReentrancyGuard {
      * @param plots The indices of Plots that were harvested
      * @param beans The amount of Beans transferred to `account`
      */
-    event Harvest(address indexed account, uint256[] plots, uint256 beans);
-
-    /**
-     * @param account The account that created the Pod Listing
-     * @param index The index of the Plot listed
-     * @dev NOTE: must mirror {Listing.PodListingCancelled}
-     */
-    event PodListingCancelled(address indexed account, uint256 index);
+    event Harvest(address indexed account, uint256 fieldId, uint256[] plots, uint256 beans);
 
     //////////////////// SOW ////////////////////
 
@@ -119,13 +130,14 @@ contract FieldFacet is Invariable, ReentrancyGuard {
     ) internal returns (uint256 pods) {
         beans = LibTransfer.burnToken(C.bean(), beans, LibTractor._user(), mode);
         pods = LibDibbler.sow(beans, _morningTemperature, LibTractor._user(), peg);
-        s.system.field.beanSown = s.system.field.beanSown + SafeCast.toUint128(beans);
+        s.system.beanSown += SafeCast.toUint128(beans);
     }
 
     //////////////////// HARVEST ////////////////////
 
     /**
      * @notice Harvest Pods from the Field.
+     * @param fieldId The index of the Field to Harvest from.
      * @param plots List of plot IDs to Harvest
      * @param mode The balance to transfer Beans to; see {LibTrasfer.To}
      * @dev Redeems Pods for Beans. When Pods become Harvestable, they are
@@ -135,13 +147,14 @@ contract FieldFacet is Invariable, ReentrancyGuard {
      * Beanstalk holds these Beans until `harvest()` is called.
      *
      * Pods are "burned" when the corresponding Plot is deleted from
-     * `s.accounts[account].field.plots`.
+     * `s.accounts[account].fields[fieldId].plots`.
      */
     function harvest(
+        uint256 fieldId,
         uint256[] calldata plots,
         LibTransfer.To mode
     ) external payable fundsSafu noSupplyChange oneOutFlow(C.BEAN) {
-        uint256 beansHarvested = _harvest(plots);
+        uint256 beansHarvested = _harvest(fieldId, plots);
         LibTransfer.sendToken(C.bean(), beansHarvested, LibTractor._user(), mode);
     }
 
@@ -149,16 +162,19 @@ contract FieldFacet is Invariable, ReentrancyGuard {
      * @dev Ensure that each Plot is at least partially harvestable, burn the Plot,
      * update the total harvested, and emit a {Harvest} event.
      */
-    function _harvest(uint256[] calldata plots) internal returns (uint256 beansHarvested) {
+    function _harvest(
+        uint256 fieldId,
+        uint256[] calldata plots
+    ) internal returns (uint256 beansHarvested) {
         for (uint256 i; i < plots.length; ++i) {
             // The Plot is partially harvestable if its index is less than
             // the current harvestable index.
-            require(plots[i] < s.system.field.harvestable, "Field: Plot not Harvestable");
-            uint256 harvested = _harvestPlot(LibTractor._user(), plots[i]);
-            beansHarvested = beansHarvested.add(harvested);
+            require(plots[i] < s.system.fields[fieldId].harvestable, "Field: Plot not Harvestable");
+            uint256 harvested = _harvestPlot(LibTractor._user(), fieldId, plots[i]);
+            beansHarvested += harvested;
         }
-        s.system.field.harvested = s.system.field.harvested.add(beansHarvested);
-        emit Harvest(LibTractor._user(), plots, beansHarvested);
+        s.system.fields[fieldId].harvested += beansHarvested;
+        emit Harvest(LibTractor._user(), fieldId, plots, beansHarvested);
     }
 
     /**
@@ -167,25 +183,21 @@ contract FieldFacet is Invariable, ReentrancyGuard {
      */
     function _harvestPlot(
         address account,
+        uint256 fieldId,
         uint256 index
     ) private returns (uint256 harvestablePods) {
         // Check that `account` holds this Plot.
-        uint256 pods = s.accounts[account].field.plots[index];
+        uint256 pods = s.accounts[account].fields[fieldId].plots[index];
         require(pods > 0, "Field: no plot");
 
         // Calculate how many Pods are harvestable.
         // The upstream _harvest function checks that at least some Pods
         // are harvestable.
-        harvestablePods = s.system.field.harvestable.sub(index);
-        delete s.accounts[account].field.plots[index];
+        harvestablePods = s.system.fields[fieldId].harvestable.sub(index);
 
-        // Cancel any active Pod Listings active for this Plot.
-        // Note: duplicate of {Listing._cancelPodListing} without the
-        // ownership check, which is done above.
-        if (s.system.podListings[index] > 0) {
-            delete s.system.podListings[index];
-            emit PodListingCancelled(LibTractor._user(), index);
-        }
+        LibMarket._cancelPodListing(LibTractor._user(), fieldId, index);
+
+        delete s.accounts[account].fields[fieldId].plots[index];
 
         // If the entire Plot was harvested, exit.
         if (harvestablePods >= pods) {
@@ -193,38 +205,78 @@ contract FieldFacet is Invariable, ReentrancyGuard {
         }
 
         // Create a new Plot with remaining Pods.
-        s.accounts[account].field.plots[index.add(harvestablePods)] = pods.sub(harvestablePods);
+        s.accounts[account].fields[fieldId].plots[index.add(harvestablePods)] = pods.sub(
+            harvestablePods
+        );
+    }
+
+    //////////////////// CONFIG /////////////////////
+
+    /**
+     * @notice Add a new Field to the system.
+     * @dev It is not possible to remove a Field, but a Field's Plan can be nullified.
+     */
+    function addField() public fundsSafu noSupplyChange noNetFlow {
+        LibDiamond.enforceIsOwnerOrContract();
+        uint256 fieldId = s.system.fieldCount;
+        s.system.fieldCount++;
+        emit FieldAdded(fieldId);
+    }
+
+    /**
+     * @notice Set the active Field. Only the active field is accrues Soil.
+     * @param fieldId ID of the Field to set as active. ID is the Field Number.
+     */
+    function setActiveField(
+        uint256 fieldId,
+        uint32 temperature
+    ) public fundsSafu noSupplyChange noNetFlow {
+        LibDiamond.enforceIsOwnerOrContract();
+        require(fieldId < s.system.fieldCount, "Field: Field does not exist");
+        s.system.activeField = fieldId;
+
+        // Reset weather.
+        s.system.weather.temp = temperature;
+        s.system.weather.thisSowTime = type(uint32).max;
+        s.system.weather.lastSowTime = type(uint32).max;
+        s.system.weather.lastDeltaSoil = 0;
+
+        emit ActiveFieldSet(fieldId);
     }
 
     //////////////////// GETTERS ////////////////////
 
     /**
-     * @notice Returns the total number of Pods ever minted.
+     * @notice Returns the total number of Pods ever minted in the Field.
+     * @param fieldId The index of the Field to query.
      */
-    function podIndex() public view returns (uint256) {
-        return s.system.field.pods;
+    function podIndex(uint256 fieldId) public view returns (uint256) {
+        return s.system.fields[fieldId].pods;
     }
 
     /**
      * @notice Returns the index below which Pods are Harvestable.
+     * @param fieldId The index of the Field to query.
      */
-    function harvestableIndex() public view returns (uint256) {
-        return s.system.field.harvestable;
+    function harvestableIndex(uint256 fieldId) public view returns (uint256) {
+        return s.system.fields[fieldId].harvestable;
     }
 
     /**
      * @notice Returns the number of outstanding Pods. Includes Pods that are
      * currently Harvestable but have not yet been Harvested.
+     * @param fieldId The index of the Field to query.
      */
-    function totalPods() public view returns (uint256) {
-        return s.system.field.pods.sub(s.system.field.harvested);
+    function totalPods(uint256 fieldId) public view returns (uint256) {
+        return s.system.fields[fieldId].pods - s.system.fields[fieldId].harvested;
     }
 
     /**
      * @notice Returns the number of Pods that have ever been Harvested.
+     * @param fieldId The index of the Field to query.
      */
-    function totalHarvested() public view returns (uint256) {
-        return s.system.field.harvested;
+    function totalHarvested(uint256 fieldId) public view returns (uint256) {
+        return s.system.fields[fieldId].harvested;
     }
 
     /**
@@ -232,24 +284,43 @@ contract FieldFacet is Invariable, ReentrancyGuard {
      * have not yet been Harvested.
      * @dev This is the number of Pods that Beanstalk is prepared to pay back,
      * but that haven’t yet been claimed via the `harvest()` function.
+     * @param fieldId The index of the Field to query.
      */
-    function totalHarvestable() public view returns (uint256) {
-        return s.system.field.harvestable.sub(s.system.field.harvested);
+    function totalHarvestable(uint256 fieldId) public view returns (uint256) {
+        return s.system.fields[fieldId].harvestable - s.system.fields[fieldId].harvested;
     }
 
     /**
      * @notice Returns the number of Pods that are not yet Harvestable. Also known as the Pod Line.
+     * @param fieldId The index of the Field to query.
      */
-    function totalUnharvestable() public view returns (uint256) {
-        return s.system.field.pods.sub(s.system.field.harvestable);
+    function totalUnharvestable(uint256 fieldId) public view returns (uint256) {
+        return s.system.fields[fieldId].pods - s.system.fields[fieldId].harvestable;
+    }
+
+    /**
+     * @notice Returns true if there exists un-harvestable pods.
+     * @param fieldId The index of the Field to query.
+     */
+    function isHarvesting(uint256 fieldId) public view returns (bool) {
+        return s.system.fields[fieldId].harvestable < s.system.fields[fieldId].pods;
     }
 
     /**
      * @notice Returns the number of Pods remaining in a Plot.
-     * @dev Plots are only stored in the `s.accounts[account].field.plots` mapping.
+     * @dev Plots are only stored in the `s.accounts[account].fields[fieldId].plots` mapping.
+     * @param fieldId The index of the Field to query.
      */
-    function plot(address account, uint256 index) public view returns (uint256) {
-        return s.accounts[account].field.plots[index];
+    function plot(address account, uint256 fieldId, uint256 index) public view returns (uint256) {
+        return s.accounts[account].fields[fieldId].plots[index];
+    }
+
+    function activeField() public view returns (uint256) {
+        return s.system.activeField;
+    }
+
+    function fieldCount() public view returns (uint256) {
+        return s.system.fieldCount;
     }
 
     /**
@@ -270,14 +341,14 @@ contract FieldFacet is Invariable, ReentrancyGuard {
         // Morning Temperature is dynamic, starting small and logarithmically
         // increasing to `s.weather.t` across the first 25 blocks of the Season.
         if (!abovePeg) {
-            soil = uint256(s.system.field.soil);
+            soil = uint256(s.system.soil);
         }
         // Above peg: the maximum amount of Pods that Beanstalk is willing to mint
         // stays fixed; since {morningTemperature} is scaled down when `delta < 25`, we
         // need to scale up the amount of Soil to hold Pods constant.
         else {
             soil = LibDibbler.scaleSoilUp(
-                uint256(s.system.field.soil), // max soil offered this Season, reached when `t >= 25`
+                uint256(s.system.soil), // max soil offered this Season, reached when `t >= 25`
                 uint256(s.system.weather.temp).mul(LibDibbler.TEMPERATURE_PRECISION), // max temperature
                 _morningTemperature // temperature adjusted by number of blocks since Sunrise
             );
@@ -295,13 +366,13 @@ contract FieldFacet is Invariable, ReentrancyGuard {
     function totalSoil() external view returns (uint256) {
         // Below peg: Soil is fixed to the amount set during {calcCaseId}.
         if (!s.system.season.abovePeg) {
-            return uint256(s.system.field.soil);
+            return uint256(s.system.soil);
         }
 
         // Above peg: Soil is dynamic
         return
             LibDibbler.scaleSoilUp(
-                uint256(s.system.field.soil), // min soil
+                uint256(s.system.soil), // min soil
                 uint256(s.system.weather.temp).mul(LibDibbler.TEMPERATURE_PRECISION), // max temperature
                 LibDibbler.morningTemperature() // temperature adjusted by number of blocks since Sunrise
             );

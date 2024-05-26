@@ -13,6 +13,11 @@ const {
   endGerminationWithMockToken
 } = require("./utils/testHelpers.js");
 
+// TODO
+// Tests to add
+// - Harvest/Sow/Read from Field that does not exist.
+// - Alter Fields as owner/non-owner.
+
 let user, user2, owner;
 
 describe("newField", function () {
@@ -70,23 +75,23 @@ describe("newField", function () {
 
       it("updates user's balance", async function () {
         expect(await bean.balanceOf(user.address)).to.eq(to6("9900"));
-        expect(await beanstalk.plot(user.address, 0)).to.eq(to6("101"));
+        expect(await beanstalk.plot(user.address, 0, 0)).to.eq(to6("101"));
       });
 
       it("updates total balance", async function () {
         expect(await bean.balanceOf(beanstalk.address)).to.eq("0");
         expect(await bean.totalSupply()).to.eq(to6("19900"));
-        expect(await beanstalk.totalPods()).to.eq(to6("101"));
+        expect(await beanstalk.totalPods(0)).to.eq(to6("101"));
         expect(await beanstalk.totalSoil()).to.eq("0");
-        expect(await beanstalk.totalUnharvestable()).to.eq(to6("101"));
-        expect(await beanstalk.podIndex()).to.eq(to6("101"));
-        expect(await beanstalk.harvestableIndex()).to.eq("0");
+        expect(await beanstalk.totalUnharvestable(0)).to.eq(to6("101"));
+        expect(await beanstalk.podIndex(0)).to.eq(to6("101"));
+        expect(await beanstalk.harvestableIndex(0)).to.eq("0");
       });
 
       it("emits Sow event", async function () {
         await expect(this.result)
           .to.emit(beanstalk, "Sow")
-          .withArgs(user.address, "0", to6("100"), to6("101"));
+          .withArgs(user.address, 0, "0", to6("100"), to6("101"));
       });
     });
 
@@ -98,23 +103,23 @@ describe("newField", function () {
 
       it("updates user's balance", async function () {
         expect(await bean.balanceOf(user.address)).to.eq(to6("9900"));
-        expect(await beanstalk.plot(user.address, 0)).to.eq(to6("101"));
+        expect(await beanstalk.plot(user.address, 0, 0)).to.eq(to6("101"));
       });
 
       it("updates total balance", async function () {
         expect(await bean.balanceOf(beanstalk.address)).to.eq("0");
         expect(await bean.totalSupply()).to.eq(to6("19900"));
-        expect(await beanstalk.totalPods()).to.eq(to6("101"));
+        expect(await beanstalk.totalPods(0)).to.eq(to6("101"));
         expect(await beanstalk.totalSoil()).to.eq(to6("100"));
-        expect(await beanstalk.totalUnharvestable()).to.eq(to6("101"));
-        expect(await beanstalk.podIndex()).to.eq(to6("101"));
-        expect(await beanstalk.harvestableIndex()).to.eq("0");
+        expect(await beanstalk.totalUnharvestable(0)).to.eq(to6("101"));
+        expect(await beanstalk.podIndex(0)).to.eq(to6("101"));
+        expect(await beanstalk.harvestableIndex(0)).to.eq("0");
       });
 
       it("emits Sow event", async function () {
         await expect(this.result)
           .to.emit(mockBeanstalk, "Sow")
-          .withArgs(user.address, "0", to6("100"), to6("101"));
+          .withArgs(user.address, 0, "0", to6("100"), to6("101"));
       });
     });
 
@@ -129,23 +134,23 @@ describe("newField", function () {
 
       it("updates user's balance", async function () {
         expect(await bean.balanceOf(user.address)).to.eq(to6("9900"));
-        expect(await beanstalk.plot(user.address, 0)).to.eq(to6("101"));
+        expect(await beanstalk.plot(user.address, 0, 0)).to.eq(to6("101"));
       });
 
       it("updates total balance", async function () {
         expect(await bean.balanceOf(beanstalk.address)).to.eq("0");
         expect(await bean.totalSupply()).to.eq(to6("19900"));
-        expect(await beanstalk.totalPods()).to.eq(to6("101"));
+        expect(await beanstalk.totalPods(0)).to.eq(to6("101"));
         expect(await beanstalk.totalSoil()).to.eq(to6("100"));
-        expect(await beanstalk.totalUnharvestable()).to.eq(to6("101"));
-        expect(await beanstalk.podIndex()).to.eq(to6("101"));
-        expect(await beanstalk.harvestableIndex()).to.eq("0");
+        expect(await beanstalk.totalUnharvestable(0)).to.eq(to6("101"));
+        expect(await beanstalk.podIndex(0)).to.eq(to6("101"));
+        expect(await beanstalk.harvestableIndex(0)).to.eq("0");
       });
 
       it("emits Sow event", async function () {
         await expect(this.result)
           .to.emit(mockBeanstalk, "Sow")
-          .withArgs(user.address, "0", to6("100"), to6("101"));
+          .withArgs(user.address, 0, "0", to6("100"), to6("101"));
       });
     });
 
@@ -160,23 +165,23 @@ describe("newField", function () {
 
       it("updates user's balance", async function () {
         expect(await bean.balanceOf(user.address)).to.eq(to6("9950"));
-        expect(await beanstalk.plot(user.address, 0)).to.eq(to6("50.5"));
+        expect(await beanstalk.plot(user.address, 0, 0)).to.eq(to6("50.5"));
       });
 
       it("updates total balance", async function () {
         expect(await bean.balanceOf(beanstalk.address)).to.eq("0");
         expect(await bean.totalSupply()).to.eq(to6("19950"));
-        expect(await beanstalk.totalPods()).to.eq(to6("50.5"));
+        expect(await beanstalk.totalPods(0)).to.eq(to6("50.5"));
         expect(await beanstalk.totalSoil()).to.eq(to6("150"));
-        expect(await beanstalk.totalUnharvestable()).to.eq(to6("50.5"));
-        expect(await beanstalk.podIndex()).to.eq(to6("50.5"));
-        expect(await beanstalk.harvestableIndex()).to.eq("0");
+        expect(await beanstalk.totalUnharvestable(0)).to.eq(to6("50.5"));
+        expect(await beanstalk.podIndex(0)).to.eq(to6("50.5"));
+        expect(await beanstalk.harvestableIndex(0)).to.eq("0");
       });
 
       it("emits Sow event", async function () {
         await expect(this.result)
           .to.emit(mockBeanstalk, "Sow")
-          .withArgs(user.address, "0", to6("50"), to6("50.5"));
+          .withArgs(user.address, 0, "0", to6("50"), to6("50.5"));
       });
     });
 
@@ -188,23 +193,23 @@ describe("newField", function () {
 
       it("updates user's balance", async function () {
         expect(await bean.balanceOf(user.address)).to.eq(to6("9900"));
-        expect(await beanstalk.plot(user.address, 0)).to.eq(to6("101"));
+        expect(await beanstalk.plot(user.address, 0, 0)).to.eq(to6("101"));
       });
 
       it("updates total balance", async function () {
         expect(await bean.balanceOf(beanstalk.address)).to.eq("0");
         expect(await bean.totalSupply()).to.eq(to6("19900"));
-        expect(await beanstalk.totalPods()).to.eq(to6("101"));
+        expect(await beanstalk.totalPods(0)).to.eq(to6("101"));
         expect(await beanstalk.totalSoil()).to.eq(to6("0"));
-        expect(await beanstalk.totalUnharvestable()).to.eq(to6("101"));
-        expect(await beanstalk.podIndex()).to.eq(to6("101"));
-        expect(await beanstalk.harvestableIndex()).to.eq("0");
+        expect(await beanstalk.totalUnharvestable(0)).to.eq(to6("101"));
+        expect(await beanstalk.podIndex(0)).to.eq(to6("101"));
+        expect(await beanstalk.harvestableIndex(0)).to.eq("0");
       });
 
       it("emits Sow event", async function () {
         await expect(this.result)
           .to.emit(mockBeanstalk, "Sow")
-          .withArgs(user.address, "0", to6("100"), to6("101"));
+          .withArgs(user.address, 0, "0", to6("100"), to6("101"));
       });
     });
 
@@ -216,23 +221,23 @@ describe("newField", function () {
 
       it("updates user's balance", async function () {
         expect(await bean.balanceOf(user.address)).to.eq(to6("9900"));
-        expect(await beanstalk.plot(user.address, 0)).to.eq(to6("101"));
+        expect(await beanstalk.plot(user.address, 0, 0)).to.eq(to6("101"));
       });
 
       it("updates total balance", async function () {
         expect(await bean.balanceOf(beanstalk.address)).to.eq("0");
         expect(await bean.totalSupply()).to.eq(to6("19900"));
-        expect(await beanstalk.totalPods()).to.eq(to6("101"));
+        expect(await beanstalk.totalPods(0)).to.eq(to6("101"));
         expect(await beanstalk.totalSoil()).to.eq(to6("100"));
-        expect(await beanstalk.totalUnharvestable()).to.eq(to6("101"));
-        expect(await beanstalk.podIndex()).to.eq(to6("101"));
-        expect(await beanstalk.harvestableIndex()).to.eq("0");
+        expect(await beanstalk.totalUnharvestable(0)).to.eq(to6("101"));
+        expect(await beanstalk.podIndex(0)).to.eq(to6("101"));
+        expect(await beanstalk.harvestableIndex(0)).to.eq("0");
       });
 
       it("emits Sow event", async function () {
         await expect(this.result)
           .to.emit(mockBeanstalk, "Sow")
-          .withArgs(user.address, "0", to6("100"), to6("101"));
+          .withArgs(user.address, 0, "0", to6("100"), to6("101"));
       });
     });
 
@@ -245,23 +250,23 @@ describe("newField", function () {
 
       it("updates user's balance", async function () {
         expect(await bean.balanceOf(user.address)).to.eq(to6("9900"));
-        expect(await beanstalk.plot(user.address, to6("101"))).to.eq(to6("101"));
+        expect(await beanstalk.plot(user.address, 0, to6("101"))).to.eq(to6("101"));
       });
 
       it("updates total balance", async function () {
         expect(await bean.balanceOf(beanstalk.address)).to.eq("0");
         expect(await bean.totalSupply()).to.eq(to6("19800"));
-        expect(await beanstalk.totalPods()).to.eq(to6("202"));
+        expect(await beanstalk.totalPods(0)).to.eq(to6("202"));
         expect(await beanstalk.totalSoil()).to.eq(to6("0"));
-        expect(await beanstalk.totalUnharvestable()).to.eq(to6("202"));
-        expect(await beanstalk.podIndex()).to.eq(to6("202"));
-        expect(await beanstalk.harvestableIndex()).to.eq("0");
+        expect(await beanstalk.totalUnharvestable(0)).to.eq(to6("202"));
+        expect(await beanstalk.podIndex(0)).to.eq(to6("202"));
+        expect(await beanstalk.harvestableIndex(0)).to.eq("0");
       });
 
       it("emits Sow event", async function () {
         await expect(this.result)
           .to.emit(mockBeanstalk, "Sow")
-          .withArgs(user.address, to6("101"), to6("100"), to6("101"));
+          .withArgs(user.address, 0, to6("101"), to6("100"), to6("101"));
       });
     });
   });
@@ -340,7 +345,7 @@ describe("newField", function () {
       expect(await beanstalk.totalSoil()).to.eq(to6("5"));
       expect(await mockBeanstalk.totalSoilAtMorningTemp(morningTemperature)).to.eq(to6("10"));
       // 10 * 150% = 15 pods.
-      expect(await beanstalk.totalPods()).to.eq(to6("15"));
+      expect(await beanstalk.totalPods(0)).to.eq(to6("15"));
     });
   });
 
@@ -385,14 +390,14 @@ describe("newField", function () {
 
     describe("Revert", async function () {
       it("reverts if plot not owned", async function () {
-        await mockBeanstalk.incrementTotalHarvestableE(to6("101"));
-        await expect(beanstalk.connect(user2).harvest(["0"], EXTERNAL)).to.be.revertedWith(
+        await mockBeanstalk.incrementTotalHarvestableE(0, to6("101"));
+        await expect(beanstalk.connect(user2).harvest(0, ["0"], EXTERNAL)).to.be.revertedWith(
           "Field: no plot"
         );
       });
 
       it("reverts if plot harvestable", async function () {
-        await expect(beanstalk.connect(user).harvest(["0"], EXTERNAL)).to.be.revertedWith(
+        await expect(beanstalk.connect(user).harvest(0, ["0"], EXTERNAL)).to.be.revertedWith(
           "Field: Plot not Harvestable"
         );
       });
@@ -400,99 +405,301 @@ describe("newField", function () {
 
     describe("Full", async function () {
       beforeEach(async function () {
-        await mockBeanstalk.incrementTotalHarvestableE(to6("101"));
-        this.result = await beanstalk.connect(user).harvest(["0"], EXTERNAL);
+        await mockBeanstalk.incrementTotalHarvestableE(0, to6("101"));
+        this.result = await beanstalk.connect(user).harvest(0, ["0"], EXTERNAL);
       });
 
       it("updates user's balance", async function () {
         expect(await bean.balanceOf(user.address)).to.eq(to6("10001"));
-        expect(await beanstalk.plot(user.address, to6("0"))).to.eq(to6("0"));
+        expect(await beanstalk.plot(user.address, 0, to6("0"))).to.eq(to6("0"));
       });
 
       it("updates total balance", async function () {
         expect(await bean.balanceOf(beanstalk.address)).to.eq("0");
         expect(await bean.totalSupply()).to.eq(to6("19901"));
-        expect(await beanstalk.totalPods()).to.eq(to6("101"));
+        expect(await beanstalk.totalPods(0)).to.eq(to6("101"));
         expect(await beanstalk.totalSoil()).to.eq(to6("0"));
-        expect(await beanstalk.totalUnharvestable()).to.eq(to6("101"));
-        expect(await beanstalk.totalHarvestable()).to.eq(to6("0"));
-        expect(await beanstalk.harvestableIndex()).to.eq(to6("101"));
-        expect(await beanstalk.totalHarvested()).to.eq(to6("101"));
-        expect(await beanstalk.podIndex()).to.eq(to6("202"));
+        expect(await beanstalk.totalUnharvestable(0)).to.eq(to6("101"));
+        expect(await beanstalk.totalHarvestable(0)).to.eq(to6("0"));
+        expect(await beanstalk.harvestableIndex(0)).to.eq(to6("101"));
+        expect(await beanstalk.harvestableIndex(0)).to.eq(to6("101"));
+        expect(await beanstalk.podIndex(0)).to.eq(to6("202"));
       });
 
       it("emits Sow event", async function () {
         await expect(this.result)
           .to.emit(mockBeanstalk, "Harvest")
-          .withArgs(user.address, ["0"], to6("101"));
+          .withArgs(user.address, 0, ["0"], to6("101"));
       });
     });
 
     describe("Partial", async function () {
       beforeEach(async function () {
-        await mockBeanstalk.incrementTotalHarvestableE(to6("50"));
-        this.result = await beanstalk.connect(user).harvest(["0"], EXTERNAL);
+        await mockBeanstalk.incrementTotalHarvestableE(0, to6("50"));
+        this.result = await beanstalk.connect(user).harvest(0, ["0"], EXTERNAL);
       });
 
       it("updates user's balance", async function () {
         expect(await bean.balanceOf(user.address)).to.eq(to6("9950"));
-        expect(await beanstalk.plot(user.address, to6("0"))).to.eq(to6("0"));
-        expect(await beanstalk.plot(user.address, to6("50"))).to.eq(to6("51"));
+        expect(await beanstalk.plot(user.address, 0, to6("0"))).to.eq(to6("0"));
+        expect(await beanstalk.plot(user.address, 0, to6("50"))).to.eq(to6("51"));
       });
 
       it("updates total balance", async function () {
         expect(await bean.balanceOf(beanstalk.address)).to.eq("0");
         expect(await bean.totalSupply()).to.eq(to6("19850"));
-        expect(await beanstalk.totalPods()).to.eq(to6("152"));
+        expect(await beanstalk.totalPods(0)).to.eq(to6("152"));
         expect(await beanstalk.totalSoil()).to.eq(to6("0"));
-        expect(await beanstalk.totalHarvestable()).to.eq(to6("0"));
-        expect(await beanstalk.totalUnharvestable()).to.eq(to6("152"));
-        expect(await beanstalk.harvestableIndex()).to.eq(to6("50"));
-        expect(await beanstalk.totalHarvested()).to.eq(to6("50"));
-        expect(await beanstalk.podIndex()).to.eq(to6("202"));
+        expect(await beanstalk.totalHarvestable(0)).to.eq(to6("0"));
+        expect(await beanstalk.totalUnharvestable(0)).to.eq(to6("152"));
+        expect(await beanstalk.harvestableIndex(0)).to.eq(to6("50"));
+        expect(await beanstalk.harvestableIndex(0)).to.eq(to6("50"));
+        expect(await beanstalk.podIndex(0)).to.eq(to6("202"));
       });
 
       it("emits Sow event", async function () {
         await expect(this.result)
           .to.emit(mockBeanstalk, "Harvest")
-          .withArgs(user.address, ["0"], to6("50"));
+          .withArgs(user.address, 0, ["0"], to6("50"));
       });
     });
 
     describe("Full With Listing", async function () {
       beforeEach(async function () {
-        await mockBeanstalk.incrementTotalHarvestableE(to6("101"));
-        this.result = await beanstalk
-          .connect(user)
-          .createPodListing("0", "0", "500", "500000", to6("200"), 0, EXTERNAL);
-        this.result = await beanstalk.connect(user).harvest(["0"], EXTERNAL);
+        await mockBeanstalk.incrementTotalHarvestableE(0, to6("101"));
+        this.result = await beanstalk.connect(user).createPodListing({
+          lister: user.address,
+          fieldId: 0,
+          index: 0,
+          start: 0,
+          podAmount: 500,
+          pricePerPod: 500000,
+          maxHarvestableIndex: to6("200"),
+          minFillAmount: 0,
+          mode: EXTERNAL
+        });
+        this.result = await beanstalk.connect(user).harvest(0, ["0"], EXTERNAL);
       });
 
       it("updates user's balance", async function () {
         expect(await bean.balanceOf(user.address)).to.eq(to6("10001"));
-        expect(await beanstalk.plot(user.address, to6("0"))).to.eq(to6("0"));
+        expect(await beanstalk.plot(user.address, 0, 0)).to.eq(to6("0"));
       });
 
       it("updates total balance", async function () {
         expect(await bean.balanceOf(beanstalk.address)).to.eq("0");
         expect(await bean.totalSupply()).to.eq(to6("19901"));
-        expect(await beanstalk.totalPods()).to.eq(to6("101"));
+        expect(await beanstalk.totalPods(0)).to.eq(to6("101"));
         expect(await beanstalk.totalSoil()).to.eq(to6("0"));
-        expect(await beanstalk.totalUnharvestable()).to.eq(to6("101"));
-        expect(await beanstalk.totalHarvestable()).to.eq(to6("0"));
-        expect(await beanstalk.harvestableIndex()).to.eq(to6("101"));
-        expect(await beanstalk.totalHarvested()).to.eq(to6("101"));
-        expect(await beanstalk.podIndex()).to.eq(to6("202"));
+        expect(await beanstalk.totalUnharvestable(0)).to.eq(to6("101"));
+        expect(await beanstalk.totalHarvestable(0)).to.eq(to6("0"));
+        expect(await beanstalk.harvestableIndex(0)).to.eq(to6("101"));
+        expect(await beanstalk.harvestableIndex(0)).to.eq(to6("101"));
+        expect(await beanstalk.podIndex(0)).to.eq(to6("202"));
       });
 
       it("deletes", async function () {
-        expect(await beanstalk.podListing(0)).to.be.equal(ethers.constants.HashZero);
+        expect(await beanstalk.podListing(0, 0)).to.be.equal(ethers.constants.HashZero);
       });
 
       it("emits Sow event", async function () {
         await expect(this.result)
           .to.emit(mockBeanstalk, "Harvest")
-          .withArgs(user.address, ["0"], to6("101"));
+          .withArgs(user.address, 0, ["0"], to6("101"));
+      });
+    });
+  });
+});
+
+describe("twoField", function () {
+  before(async function () {
+    [owner, user, user2] = await ethers.getSigners();
+    const contracts = await deploy((verbose = false), (mock = true), (reset = true));
+    owner.address = contracts.account;
+    this.diamond = contracts.beanstalkDiamond;
+    // `beanstalk` contains all functions that the regualar beanstalk has.
+    // `mockBeanstalk` has functions that are only available in the mockFacets.
+    [beanstalk, mockBeanstalk] = await getAllBeanstalkContracts(this.diamond.address);
+
+    // Add and initialize Field with ID of 0.
+    await mockBeanstalk.addField();
+    await mockBeanstalk.incrementTotalHarvestableE(0, to6("1000"));
+    await mockBeanstalk.incrementTotalPodsE(0, to6("2000"));
+
+    // Add and initialize Field with ID of 1.
+    await mockBeanstalk.addField();
+    // await mockBeanstalk.incrementTotalHarvestableE(1, to6("30000"));
+    // await mockBeanstalk.incrementTotalPodsE(1, to6("400000"));
+
+    // Set active field.
+    this.activeField = 1;
+    mockBeanstalk.setActiveField(this.activeField, 1);
+
+    bean = await initalizeUsersForToken(BEAN, [user, user2], to6("10000"));
+  });
+
+  beforeEach(async function () {
+    snapshotId = await takeSnapshot();
+  });
+
+  afterEach(async function () {
+    await revertToSnapshot(snapshotId);
+  });
+
+  describe("Sow", async function () {
+    describe("all soil", async function () {
+      beforeEach(async function () {
+        await mockBeanstalk.incrementTotalSoilE(to6("100"));
+        this.result = await beanstalk.connect(user).sow(to6("100"), 0, EXTERNAL);
+      });
+
+      it("updates user's balance", async function () {
+        expect(await bean.balanceOf(user.address)).to.eq(to6("9900"));
+        expect(await beanstalk.plot(user.address, 1, 0)).to.eq(to6("101"));
+      });
+
+      it("updates total balance", async function () {
+        expect(await bean.balanceOf(beanstalk.address)).to.eq(to6("1000"));
+        expect(await bean.totalSupply()).to.eq(to6("20900"));
+        expect(await beanstalk.totalPods(0)).to.eq(to6("2000"));
+        expect(await beanstalk.totalPods(1)).to.eq(to6("101"));
+        expect(await beanstalk.totalSoil()).to.eq("0");
+        expect(await beanstalk.totalUnharvestable(0)).to.eq(to6("1000"));
+        expect(await beanstalk.totalUnharvestable(1)).to.eq(to6("101"));
+        expect(await beanstalk.podIndex(0)).to.eq(to6("2000"));
+        expect(await beanstalk.podIndex(1)).to.eq(to6("101"));
+        expect(await beanstalk.harvestableIndex(0)).to.eq(to6("1000"));
+        expect(await beanstalk.harvestableIndex(1)).to.eq(to6("0"));
+      });
+
+      it("emits Sow event", async function () {
+        await expect(this.result)
+          .to.emit(beanstalk, "Sow")
+          .withArgs(user.address, 1, "0", to6("100"), to6("101"));
+      });
+    });
+
+    describe("some soil", async function () {
+      beforeEach(async function () {
+        await mockBeanstalk.incrementTotalSoilE(to6("200"));
+        this.result = await beanstalk.connect(user).sow(to6("100"), 1, EXTERNAL);
+      });
+
+      it("updates user's balance", async function () {
+        expect(await bean.balanceOf(user.address)).to.eq(to6("9900"));
+        expect(await beanstalk.plot(user.address, 1, 0)).to.eq(to6("101"));
+      });
+
+      it("updates total balance", async function () {
+        expect(await bean.balanceOf(beanstalk.address)).to.eq(to6("1000"));
+        expect(await bean.totalSupply()).to.eq(to6("20900"));
+        expect(await beanstalk.totalPods(0)).to.eq(to6("2000"));
+        expect(await beanstalk.totalPods(1)).to.eq(to6("101"));
+        expect(await beanstalk.totalSoil()).to.eq(to6("100"));
+        expect(await beanstalk.totalUnharvestable(0)).to.eq(to6("1000"));
+        expect(await beanstalk.totalUnharvestable(1)).to.eq(to6("101"));
+        expect(await beanstalk.podIndex(0)).to.eq(to6("2000"));
+        expect(await beanstalk.podIndex(1)).to.eq(to6("101"));
+        expect(await beanstalk.harvestableIndex(0)).to.eq(to6("1000"));
+        expect(await beanstalk.harvestableIndex(1)).to.eq(to6("0"));
+      });
+
+      it("emits Sow event", async function () {
+        await expect(this.result)
+          .to.emit(mockBeanstalk, "Sow")
+          .withArgs(user.address, 1, "0", to6("100"), to6("101"));
+      });
+    });
+
+    describe("Harvest", async function () {
+      beforeEach(async function () {
+        await mockBeanstalk.incrementTotalSoilE(to6("200"));
+        await beanstalk.connect(user).sow(to6("100"), 1, EXTERNAL);
+        await beanstalk.connect(user2).sow(to6("100"), 1, EXTERNAL);
+      });
+
+      describe("Revert", async function () {
+        it("reverts if plot not owned", async function () {
+          await mockBeanstalk.incrementTotalHarvestableE(1, to6("101"));
+          await expect(beanstalk.connect(user2).harvest(1, ["0"], EXTERNAL)).to.be.revertedWith(
+            "Field: no plot"
+          );
+        });
+
+        it("reverts if plot not harvestable", async function () {
+          await expect(beanstalk.connect(user).harvest(1, ["0"], EXTERNAL)).to.be.revertedWith(
+            "Field: Plot not Harvestable"
+          );
+        });
+      });
+
+      describe("Full", async function () {
+        beforeEach(async function () {
+          await mockBeanstalk.incrementTotalHarvestableE(1, to6("101"));
+          this.result = await beanstalk.connect(user).harvest(1, ["0"], EXTERNAL);
+        });
+
+        it("updates user's balance", async function () {
+          expect(await bean.balanceOf(user.address)).to.eq(to6("10001"));
+          expect(await beanstalk.plot(user.address, 1, to6("0"))).to.eq(to6("0"));
+        });
+
+        it("updates total balance", async function () {
+          expect(await bean.balanceOf(beanstalk.address)).to.eq(to6("1000"));
+          expect(await bean.totalSupply()).to.eq(to6("20901"));
+          expect(await beanstalk.totalPods(0)).to.eq(to6("2000"));
+          expect(await beanstalk.totalPods(1)).to.eq(to6("101"));
+          expect(await beanstalk.totalSoil()).to.eq(to6("0"));
+          expect(await beanstalk.totalUnharvestable(0)).to.eq(to6("1000"));
+          expect(await beanstalk.totalUnharvestable(1)).to.eq(to6("101"));
+          expect(await beanstalk.totalHarvestable(0)).to.eq(to6("1000"));
+          expect(await beanstalk.totalHarvestable(1)).to.eq(to6("0"));
+          expect(await beanstalk.harvestableIndex(0)).to.eq(to6("1000"));
+          expect(await beanstalk.harvestableIndex(1)).to.eq(to6("101"));
+          expect(await beanstalk.podIndex(0)).to.eq(to6("2000"));
+          expect(await beanstalk.podIndex(1)).to.eq(to6("202"));
+        });
+
+        it("emits Sow event", async function () {
+          await expect(this.result)
+            .to.emit(mockBeanstalk, "Harvest")
+            .withArgs(user.address, 1, ["0"], to6("101"));
+        });
+      });
+
+      describe("Partial", async function () {
+        beforeEach(async function () {
+          await mockBeanstalk.incrementTotalHarvestableE(1, to6("50"));
+          this.result = await beanstalk.connect(user).harvest(1, [to6("0")], EXTERNAL);
+        });
+
+        it("updates user's balance", async function () {
+          expect(await bean.balanceOf(user.address)).to.eq(to6("9950"));
+          expect(await beanstalk.plot(user.address, 1, to6("0"))).to.eq(to6("0"));
+          expect(await beanstalk.plot(user.address, 1, to6("50"))).to.eq(to6("51"));
+        });
+
+        it("updates total balance", async function () {
+          expect(await bean.balanceOf(beanstalk.address)).to.eq(to6("1000"));
+          expect(await bean.totalSupply()).to.eq(to6("20850"));
+          expect(await beanstalk.totalPods(0)).to.eq(to6("2000"));
+          expect(await beanstalk.totalPods(1)).to.eq(to6("152"));
+          expect(await beanstalk.totalSoil()).to.eq(to6("0"));
+          expect(await beanstalk.totalHarvestable(0)).to.eq(to6("1000"));
+          expect(await beanstalk.totalHarvestable(1)).to.eq(to6("0"));
+          expect(await beanstalk.totalUnharvestable(0)).to.eq(to6("1000"));
+          expect(await beanstalk.totalUnharvestable(1)).to.eq(to6("152"));
+          expect(await beanstalk.harvestableIndex(0)).to.eq(to6("1000"));
+          expect(await beanstalk.harvestableIndex(1)).to.eq(to6("50"));
+          expect(await beanstalk.podIndex(0)).to.eq(to6("2000"));
+          expect(await beanstalk.podIndex(1)).to.eq(to6("202"));
+        });
+
+        it("emits Sow event", async function () {
+          await expect(this.result)
+            .to.emit(mockBeanstalk, "Harvest")
+            .withArgs(user.address, 1, ["0"], to6("50"));
+        });
       });
     });
   });

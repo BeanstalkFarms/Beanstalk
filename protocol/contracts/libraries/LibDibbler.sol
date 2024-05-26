@@ -35,7 +35,7 @@ library LibDibbler {
     /// Soil to be "sold out"; affects how Temperature is adjusted.
     uint256 private constant SOIL_SOLD_OUT_THRESHOLD = 1e6;
 
-    event Sow(address indexed account, uint256 index, uint256 beans, uint256 pods);
+    event Sow(address indexed account, uint256 fieldId, uint256 index, uint256 beans, uint256 pods);
 
     //////////////////// SOW ////////////////////
 
@@ -48,7 +48,7 @@ library LibDibbler {
      *
      * ## Above Peg
      *
-     * | t   | Max pods  | s.system.field.soil              | soil                    | temperature              | maxTemperature |
+     * | t   | Max pods  | s.system.soil         | soil                    | temperature              | maxTemperature |
      * |-----|-----------|-----------------------|-------------------------|--------------------------|----------------|
      * | 0   | 500e6     | ~37e6 500e6/(1+1250%) | ~495e6 500e6/(1+1%))    | 1e6 (1%)                 | 1250 (1250%)   |
      * | 12  | 500e6     | ~37e6                 | ~111e6 500e6/(1+348%))  | 348.75e6 (27.9% * 1250)  | 1250           |
@@ -83,16 +83,24 @@ library LibDibbler {
         }
 
         // In the case of an overflow, its equivalent to having no soil left.
-        if (s.system.field.soil < beans) {
-            s.system.field.soil = 0;
+        if (s.system.soil < beans) {
+            s.system.soil = 0;
         } else {
-            s.system.field.soil = s.system.field.soil.sub(uint128(beans));
+            s.system.soil = s.system.soil.sub(uint128(beans));
         }
 
-        s.accounts[account].field.plots[s.system.field.pods] = pods;
-        emit Sow(account, s.system.field.pods, beans, pods);
+        s.accounts[account].fields[s.system.activeField].plots[
+            s.system.fields[s.system.activeField].pods
+        ] = pods;
+        emit Sow(
+            account,
+            s.system.activeField,
+            s.system.fields[s.system.activeField].pods,
+            beans,
+            pods
+        );
 
-        s.system.field.pods = s.system.field.pods.add(pods);
+        s.system.fields[s.system.activeField].pods += pods;
         _saveSowTime();
         return pods;
     }
@@ -115,15 +123,15 @@ library LibDibbler {
      *  (b) it has not yet been updated this Season.
      *
      * Note that:
-     *  - `s.field.soil` was decremented in the upstream {sow} function.
+     *  - `s.soil` was decremented in the upstream {sow} function.
      *  - `s.weather.thisSowTime` is set to `type(uint32).max` during {sunrise}.
      */
     function _saveSowTime() private {
         AppStorage storage s = LibAppStorage.diamondStorage();
 
-        // s.system.field.soil is now the soil remaining after this Sow.
+        // s.system.soil is now the soil remaining after this Sow.
         if (
-            s.system.field.soil > SOIL_SOLD_OUT_THRESHOLD ||
+            s.system.soil > SOIL_SOLD_OUT_THRESHOLD ||
             s.system.weather.thisSowTime < type(uint32).max
         ) {
             // haven't sold enough soil, or already set thisSowTime for this Season.
@@ -332,7 +340,7 @@ library LibDibbler {
      *  Soil = `500*(100 + 100%)/(100 + 1%)` = 990.09901 soil
      *
      * If someone sow'd ~495 soil, it's equilivant to sowing 250 soil at t > 25.
-     * Thus when someone sows during this time, the amount subtracted from s.system.field.soil
+     * Thus when someone sows during this time, the amount subtracted from s.system.soil
      * should be scaled down.
      *
      * Note: param ordering matches the mulDiv operation
@@ -360,14 +368,14 @@ library LibDibbler {
         if (s.system.season.abovePeg) {
             return
                 beansToPods(
-                    s.system.field.soil, // 1 bean = 1 soil
+                    s.system.soil, // 1 bean = 1 soil
                     uint256(s.system.weather.temp).mul(TEMPERATURE_PRECISION) // 1e2 -> 1e8
                 );
         } else {
             // Below peg: amount of Soil is fixed, temperature adjusts
             return
                 beansToPods(
-                    s.system.field.soil, // 1 bean = 1 soil
+                    s.system.soil, // 1 bean = 1 soil
                     morningTemperature()
                 );
         }

@@ -9,8 +9,8 @@ import {C} from "contracts/C.sol";
 
 contract FieldTest is TestHelper {
     // events
-    event Harvest(address indexed account, uint256[] plots, uint256 beans);
-    event Sow(address indexed account, uint256 index, uint256 beans, uint256 pods);
+    event Harvest(address indexed account, uint256 fieldId, uint256[] plots, uint256 beans);
+    event Sow(address indexed account, uint256 fieldId, uint256 index, uint256 beans, uint256 pods);
 
     // Interfaces.
     MockFieldFacet field = MockFieldFacet(BEANSTALK);
@@ -339,7 +339,7 @@ contract FieldTest is TestHelper {
 
     // /**
     //  * a farmer cannot harvest an unharvestable plot.
-    //  * a plot is unharvestable if the index of plot > s.system.field.harvestable.
+    //  * a plot is unharvestable if the index of plot > s.system.field[].harvestable.
     //  */
     // function testCannotHarvestUnharvestablePlot() public {
     //     _beforeEachHarvest();
@@ -600,8 +600,8 @@ contract FieldTest is TestHelper {
     // /**
     //  * check that the Soil decreases over 25 blocks, then stays stagent
     //  * when beanstalk is above peg, the soil issued is now:
-    //  * `availableSoil` = s.system.field.soil * (1+ s.system.weather.temp)/(1+ yield())
-    //  * `availableSoil` should always be greater or equal to s.system.field.soil
+    //  * `availableSoil` = s.system.soil * (1+ s.system.weather.t)/(1+ yield())
+    //  * `availableSoil` should always be greater or equal to s.system.soil
     //  */
     // function testSoilDecrementsOverDutchAbovePeg(uint256 startingSoil) public {
     //     _beforeEachMorningAuction();
@@ -646,7 +646,7 @@ contract FieldTest is TestHelper {
     //     vm.prank(brean);
     //     field.sow(totalSoil, 1e6, LibTransfer.From.EXTERNAL);
     //     assertEq(uint256(field.totalSoil()), 0, "totalSoil greater than 0");
-    //     assertEq(uint256(field.totalRealSoil()), 0, "s.field.soil greater than 0");
+    //     assertEq(uint256(field.totalRealSoil()), 0, "s.soil greater than 0");
     //     assertEq(field.totalUnharvestable(), remainingPods, "Unharvestable pods does not Equal Expected.");
     // }
 
@@ -735,7 +735,7 @@ contract FieldTest is TestHelper {
         vm.roll(30);
         season.setSoilE(soilAmount);
         vm.expectEmit();
-        emit Sow(farmers[0], 0, sowAmount, (sowAmount * 101) / 100);
+        emit Sow(farmers[0], 0, 0, sowAmount, (sowAmount * 101) / 100);
         vm.prank(farmers[0]);
         if (from == 0) {
             field.sow(sowAmount, 0, LibTransfer.From.EXTERNAL);
@@ -762,7 +762,7 @@ contract FieldTest is TestHelper {
         season.setSoilE(soilAmount);
         vm.expectEmit();
         if (internalBalance > sowAmount) internalBalance = sowAmount;
-        emit Sow(farmers[0], 0, internalBalance, (internalBalance * 101) / 100);
+        emit Sow(farmers[0], 0, 0, internalBalance, (internalBalance * 101) / 100);
         vm.prank(farmers[0]);
         field.sow(sowAmount, 0, LibTransfer.From.INTERNAL_TOLERANT);
     }
@@ -817,7 +817,7 @@ contract FieldTest is TestHelper {
 
         vm.startPrank(farmer0);
         vm.expectEmit(true, true, true, true);
-        emit Sow(farmer0, 0, amount0, (amount0 * 101) / 100);
+        emit Sow(farmer0, 0, 0, amount0, (amount0 * 101) / 100);
         field.sowWithMin(amount0, 0, 0, LibTransfer.From.EXTERNAL);
         vm.stopPrank();
 
@@ -828,7 +828,7 @@ contract FieldTest is TestHelper {
 
         vm.startPrank(farmer1);
         vm.expectEmit(true, true, true, true);
-        emit Sow(farmer1, (amount0 * 101) / 100, amount1, (amount1 * 101) / 100);
+        emit Sow(farmer1, 0, (amount0 * 101) / 100, amount1, (amount1 * 101) / 100);
         field.sowWithMin(amount1, 0, 0, LibTransfer.From.EXTERNAL);
         vm.stopPrank();
 

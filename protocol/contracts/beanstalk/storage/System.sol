@@ -14,18 +14,23 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
  * @param ownerCandidate Stores a candidate address to transfer ownership to. The owner must claim the ownership transfer.
  * @param sopWell Stores the well that will be used upon a SOP. Uninitialized until a SOP occurs, and is kept constant afterwards.
  * @param plenty The amount of plenty token held by the contract.
+ * @param soil The number of Soil currently available. Adjusted during {Sun.stepSun}.
+ * @param beanSown The number of Bean sown within the current Season. Reset during {Weather.calcCaseId}.
+ * @param activeField ID of the active Field.
+ * @param fieldCount Number of Fields that have ever been initialized.
  * @param _buffer_0 Reserved storage for future additions.
- * @param podListings A mapping from Plot Index to the hash of the Pod Listing.
+ * @param podListings A mapping from fieldId to index to hash of Listing.
  * @param podOrders A mapping from the hash of a Pod Order to the amount of Pods that the Pod Order is still willing to buy.
  * @param internalTokenBalanceTotal Sum of all users internalTokenBalance.
  * @param wellOracleSnapshots A mapping from Well Oracle address to the Well Oracle Snapshot.
  * @param twaReserves A mapping from well to its twaReserves. Stores twaReserves during the sunrise function. Returns 1 otherwise for each asset. Currently supports 2 token wells.
  * @param usdTokenPrice A mapping from token address to usd price.
  * @param sops A mapping from Season to Plenty Per Root (PPR) in that Season. Plenty Per Root is 0 if a Season of Plenty did not occur.
+ * @param fields mapping of Field ID to Storage.Field.
+ * @param shipmentRoutes Define the distribution of newly minted Beans.
  * @param _buffer_1 Reserved storage for future additions.
  * @param casesV2 Stores the 144 Weather and seedGauge cases.
  * @param silo See {Silo}.
- * @param field See {Field}.
  * @param fert See {Fertilizer}.
  * @param season See {Season}.
  * @param weather See {Weather}.
@@ -41,14 +46,20 @@ struct System {
     address ownerCandidate;
     address sopWell;
     uint256 plenty;
+    uint128 soil;
+    uint128 beanSown;
+    uint256 activeField;
+    uint256 fieldCount;
     bytes32[16] _buffer_0;
-    mapping(uint256 => bytes32) podListings;
+    mapping(uint256 => mapping(uint256 => bytes32)) podListings;
     mapping(bytes32 => uint256) podOrders;
     mapping(IERC20 => uint256) internalTokenBalanceTotal;
     mapping(address => bytes) wellOracleSnapshots;
     mapping(address => TwaReserves) twaReserves;
     mapping(address => uint256) usdTokenPrice;
     mapping(uint32 => uint256) sops;
+    mapping(uint256 => Field) fields;
+    ShipmentRoute[] shipmentRoutes;
     bytes32[16] _buffer_1;
     bytes32[144] casesV2;
     Silo silo;
@@ -89,16 +100,12 @@ struct Silo {
 
 /**
  * @notice System-level Field state variables.
- * @param soil The number of Soil currently available. Adjusted during {Sun.stepSun}.
- * @param beanSown The number of Bean sown within the current Season. Reset during {Weather.calcCaseId}.
  * @param pods The pod index; the total number of Pods ever minted.
  * @param harvested The harvested index; the total number of Pods that have ever been Harvested.
  * @param harvestable The harvestable index; the total number of Pods that have ever been Harvestable. Included previously Harvested Beans.
  * @param _buffer Reserved storage for future expansion.
  */
 struct Field {
-    uint128 soil;
-    uint128 beanSown;
     uint256 pods;
     uint256 harvested;
     uint256 harvestable;
@@ -338,6 +345,19 @@ struct GerminatingSilo {
 }
 
 /**
+ * @param planContract The address of the contract containing the plan getter view function.
+ * @param planSelector The selector of the plan getter view function.
+ * @param recipient The recipient enum of the shipment.
+ * @param data The data to be passed to both the plan getter function and the receive function.
+ */
+struct ShipmentRoute {
+    address planContract;
+    bytes4 planSelector;
+    ShipmentRecipient recipient;
+    bytes data;
+}
+
+/**
  * @notice Germinate determines what germination struct to use.
  * @dev "odd" and "even" refers to the value of the season counter.
  * "Odd" germinations are used when the season is odd, and vice versa.
@@ -346,4 +366,13 @@ enum GerminationSide {
     ODD,
     EVEN,
     NOT_GERMINATING
+}
+
+/**
+ * @notice Details which Beanstalk component receives the shipment.
+ */
+enum ShipmentRecipient {
+    Silo,
+    Field,
+    Barn
 }

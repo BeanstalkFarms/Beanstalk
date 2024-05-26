@@ -93,7 +93,7 @@ contract SunTest is TestHelper {
             int256(uint256(type(uint128).max))
         );
         // increase pods in field.
-        bs.incrementTotalPodsE(podsInField);
+        bs.incrementTotalPodsE(0, podsInField);
 
         // soil event check.
         uint256 soilIssued;
@@ -161,7 +161,7 @@ contract SunTest is TestHelper {
         sproutsInBarn = bound(sproutsInBarn, 0, type(uint72).max);
 
         // increase pods in field.
-        bs.incrementTotalPodsE(podsInField);
+        bs.incrementTotalPodsE(0, podsInField);
 
         // initialize farmer with unripe tokens in order for fertilizer to function.
         initializeUnripeTokens(users[0], 100e6, 100e18);
