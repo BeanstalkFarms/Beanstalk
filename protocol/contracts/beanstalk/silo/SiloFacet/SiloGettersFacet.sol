@@ -511,25 +511,6 @@ contract SiloGettersFacet is ReentrancyGuard {
     }
 
     /**
-     * @notice given the season/token, returns the stem assoicated with that deposit.
-     * kept for legacy reasons.
-     */
-    function seasonToStem(address token, uint32 season) external view returns (int96 stem) {
-        uint256 seedsPerBdv = getLegacySeedsPerToken(token).mul(1e6);
-        stem = LibTokenSilo.seasonToStem(seedsPerBdv, season);
-    }
-
-    /**
-     * @notice returns the seeds per token, for legacy tokens.
-     * calling with an non-legacy token will return 0,
-     * even after the token is whitelisted.
-     * kept for legacy reasons.
-     */
-    function getLegacySeedsPerToken(address token) public view virtual returns (uint256) {
-        return LibTokenSilo.getLegacySeedsPerToken(token);
-    }
-
-    /**
      * @notice returns the season in which beanstalk initalized siloV3.
      */
     function stemStartSeason() external view virtual returns (uint16) {
