@@ -787,7 +787,7 @@ const ConvertPropProvider: FC<{
 
           // Create Pipeline operation
           const pipe = sdk.farm.createAdvancedPipe('pipelineDeposit');
-          
+
           // (Pipeline) - Call sync on Well
           pipe.add(
             new sdk.farm.actions.WellSync(
@@ -868,6 +868,20 @@ const ConvertPropProvider: FC<{
             );
           };
 
+          // Mow Grown Stalk
+          const tokensWithStalk: Map<Token, TokenValue> = new Map()
+          farmerSilo.stalk.grownByToken.forEach((value, token) => { 
+            if (value.gt(0)) {
+              tokensWithStalk.set(token, value);
+            };
+          });
+          farm.add(
+            new sdk.farm.actions.Mow(
+              account,
+              tokensWithStalk
+            )
+          );
+
           const gasEstimate = await farm.estimateGas(earnedBeans, {
             slippage: slippage,
           });
@@ -879,6 +893,7 @@ const ConvertPropProvider: FC<{
             { slippage: slippage },
             { gasLimit: adjustedGas }
           );
+
         }
 
         txToast.confirming(txn);
@@ -925,6 +940,7 @@ const ConvertPropProvider: FC<{
       plantAndDoX,
       initialValues,
       farmerBalances,
+      farmerSilo,
       refetch,
       refetchPools,
       refetchFarmerBalances,

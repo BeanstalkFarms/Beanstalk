@@ -6,6 +6,7 @@ import { TransferToken } from "./TransferToken";
 import { Deposit } from "./Deposit";
 import { Convert } from "./Convert";
 import { Plant } from "./Plant";
+import { Mow } from "./Mow";
 import { WithdrawDeposits } from "./WithdrawDeposits";
 import { WithdrawDeposit } from "./WithdrawDeposit";
 import { ClaimWithdrawals } from "./ClaimWithdrawals";
@@ -38,6 +39,7 @@ export {
   Deposit,
   Convert,
   Plant,
+  Mow,
   WithdrawDeposits,
   WithdrawDeposit,
   ClaimWithdrawals,
