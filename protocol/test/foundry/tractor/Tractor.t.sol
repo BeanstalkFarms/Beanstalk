@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-///////// DEPRECATED IN FAVOR OF JS TESTS /////////
+// ///////// DEPRECATED IN FAVOR OF JS TESTS /////////
 
 // import "forge-std/Test.sol";
 

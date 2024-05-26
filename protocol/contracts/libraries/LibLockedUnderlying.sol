@@ -15,6 +15,8 @@ import {AppStorage, LibAppStorage} from "./LibAppStorage.sol";
 library LibLockedUnderlying {
     using LibRedundantMath256 for uint256;
 
+    uint256 constant DECIMALS = 1e6;
+
     /**
      * @notice Return the amount of Underlying Tokens that would be locked if all of the Unripe Tokens
      * were chopped.
@@ -53,12 +55,15 @@ library LibLockedUnderlying {
      * The equation is solved by using a lookup table of N_{⌈U/i⌉} values for different values of
      * U and R (The solution is independent of N) as solving iteratively is too computationally
      * expensive and there is no more efficient way to solve the equation.
+     *
+     * The lookup threshold assumes no decimal precision. This library only supports
+     * unripe tokens with 6 decimals.
      */
     function getPercentLockedUnderlying(
         address unripeToken,
         uint256 recapPercentPaid
     ) private view returns (uint256 percentLockedUnderlying) {
-        uint256 unripeSupply = IERC20(unripeToken).totalSupply();
+        uint256 unripeSupply = IERC20(unripeToken).totalSupply().div(DECIMALS);
         if (unripeSupply < 1_000_000) return 0; // If < 1,000,000 Assume all supply is unlocked.
         if (unripeSupply > 5_000_000) {
             if (unripeSupply > 10_000_000) {

@@ -30,10 +30,6 @@ async function getWeth() {
     return await ethers.getContractAt('contracts/interfaces/IWETH.sol:IWETH', WETH);
 }
 
-async function getWeth() {
-    return await ethers.getContractAt('contracts/interfaces/IWETH.sol:IWETH', WETH);
-}
-
 async function getUsdc() {
   return await ethers.getContractAt("IBean", USDC);
 }

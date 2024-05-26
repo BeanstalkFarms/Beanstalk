@@ -1,4 +1,5 @@
 const { upgrades } = require("hardhat");
+const { mintEth } = require('../utils');
 var fs = require('fs');
 
 const {
@@ -33,6 +34,7 @@ async function deploy(account, mock=false) {
     })
     await hre.network.provider.request({ method: "hardhat_impersonateAccount", params: [BCM] });
     const bcm = await ethers.getSigner(BCM)
+    await mintEth(BCM);
     await usdc.connect(bcm).transfer(USDC_MINTER, await usdc.balanceOf(BCM));
 
   }

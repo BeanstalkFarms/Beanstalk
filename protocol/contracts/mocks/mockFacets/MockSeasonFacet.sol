@@ -26,6 +26,7 @@ import {IWell, Call} from "contracts/interfaces/basin/IWell.sol";
 import {ShipmentRecipient} from "contracts/beanstalk/storage/System.sol";
 
 import "forge-std/console.sol";
+
 /**
  * @author Publius
  * @title Mock Season Facet
@@ -38,7 +39,9 @@ interface ResetPool {
 
 interface IMockPump {
     function update(uint256[] memory _reserves, bytes memory) external;
+
     function update(address well, uint256[] memory _reserves, bytes memory) external;
+
     function readInstantaneousReserves(
         address well,
         bytes memory data
@@ -492,6 +495,22 @@ contract MockSeasonFacet is SeasonFacet {
         uint128 _averageGrownStalkPerBdvPerSeason
     ) external {
         s.sys.seedGauge.averageGrownStalkPerBdvPerSeason = _averageGrownStalkPerBdvPerSeason;
+    }
+
+    /**
+     * @notice Mocks the updateGrownStalkEarnedPerSeason function.
+     * @dev used to test the updateGrownStalkPerSeason updating.
+     */
+    function mockUpdateAverageGrownStalkPerBdvPerSeason() external {
+        LibGauge.updateGrownStalkEarnedPerSeason(0, new LibGauge.LpGaugePointData[](0), 100e18, 0);
+    }
+
+    function gaugePointsNoChange(
+        uint256 currentGaugePoints,
+        uint256,
+        uint256
+    ) external pure returns (uint256) {
+        return currentGaugePoints;
     }
 
     function mockInitalizeGaugeForToken(

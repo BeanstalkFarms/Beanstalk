@@ -5,6 +5,12 @@ pragma solidity ^0.8.20;
 pragma abicoder v2;
 
 interface IMockFBeanstalk {
+    enum Germinate {
+        ODD,
+        EVEN,
+        NOT_GERMINATING
+    }
+
     struct AccountSeasonOfPlenty {
         uint32 lastRain;
         uint32 lastSop;
@@ -27,6 +33,24 @@ interface IMockFBeanstalk {
     struct Balance {
         uint128 amount;
         uint128 lastBpf;
+    }
+
+    struct Blueprint {
+        address publisher;
+        bytes data;
+        bytes32[] operatorPasteInstrs;
+        uint256 maxNonce;
+        uint256 startTime;
+        uint256 endTime;
+    }
+
+    struct DeltaBStorage {
+        int256 beforeInputTokenDeltaB;
+        int256 afterInputTokenDeltaB;
+        int256 beforeOutputTokenDeltaB;
+        int256 afterOutputTokenDeltaB;
+        int256 beforeOverallDeltaB;
+        int256 afterOverallDeltaB;
     }
 
     struct Facet {
@@ -74,6 +98,12 @@ interface IMockFBeanstalk {
         bytes32[4] _buffer;
     }
 
+    struct Requisition {
+        Blueprint blueprint;
+        bytes32 blueprintHash;
+        bytes signature;
+    }
+
     struct Season {
         uint32 current;
         uint32 lastSop;
@@ -111,19 +141,19 @@ interface IMockFBeanstalk {
         bytes data;
     }
 
-struct AssetSettings {
-    bytes4 selector;
-    uint32 stalkEarnedPerSeason;
-    uint32 stalkIssuedPerBdv;
-    uint32 milestoneSeason;
-    int96 milestoneStem;
-    bytes1 encodeType;
-    int24 deltaStalkEarnedPerSeason;
-    bytes4 gpSelector;
-    bytes4 lwSelector;
-    uint128 gaugePoints;
-    uint64 optimalPercentDepositedBdv;
-}
+    struct AssetSettings {
+        bytes4 selector;
+        uint32 stalkEarnedPerSeason;
+        uint32 stalkIssuedPerBdv;
+        uint32 milestoneSeason;
+        int96 milestoneStem;
+        bytes1 encodeType;
+        int24 deltaStalkEarnedPerSeason;
+        bytes4 gpSelector;
+        bytes4 lwSelector;
+        uint128 gaugePoints;
+        uint64 optimalPercentDepositedBdv;
+    }
 
     struct Supply {
         uint128 endBpf;
@@ -166,6 +196,7 @@ struct AssetSettings {
     );
     event ApprovalForAll(address indexed account, address indexed operator, bool approved);
     event BeanToMaxLpGpPerBdvRatioChange(uint256 indexed season, uint256 caseId, int80 absChange);
+    event CancelBlueprint(bytes32 blueprintHash);
     event ChangeUnderlying(address indexed token, int256 underlying);
     event Chop(address indexed account, address indexed token, uint256 amount, uint256 underlying);
     event ClaimPlenty(address indexed account, address token, uint256 plenty);
@@ -391,6 +422,12 @@ struct AssetSettings {
 
     function allowancePods(address owner, address spender) external view returns (uint256);
 
+    function applyPenaltyToGrownStalks(
+        uint256 penaltyBdv,
+        uint256[] memory bdvsRemoved,
+        uint256[] memory grownStalks
+    ) external view returns (uint256[] memory);
+
     function approveDeposit(address spender, address token, uint256 amount) external payable;
 
     function approvePods(address spender, uint256 amount) external payable;
@@ -503,6 +540,28 @@ struct AssetSettings {
         bool aboveQ,
         uint256 L2SRState
     ) external;
+
+    function calculateStalkPenalty(
+        DeltaBStorage memory dbs,
+        uint256 bdvConverted,
+        uint256 overallConvertCapacity,
+        address inputToken,
+        address outputToken
+    )
+        external
+        view
+        returns (
+            uint256 stalkPenaltyBdv,
+            uint256 overallConvertCapacityUsed,
+            uint256 inputTokenAmountUsed,
+            uint256 outputTokenAmountUsed
+        );
+
+    function calculateStemForTokenFromGrownStalk(
+        address token,
+        uint256 grownStalk,
+        uint256 bdvOfDeposit
+    ) external view returns (int96 stem, Germinate germ);
 
     function cancelPodListing(uint256 index) external payable;
 
@@ -742,6 +801,14 @@ struct AssetSettings {
 
     function getAverageGrownStalkPerBdvPerSeason() external view returns (uint128);
 
+    function mockUpdateAverageGrownStalkPerBdvPerSeason() external;
+
+    function gaugePointsNoChange(
+        uint256 currentGaugePoints,
+        uint256,
+        uint256
+    ) external pure returns (uint256);
+
     function getBalance(address account, address token) external view returns (uint256 balance);
 
     function getBalances(
@@ -955,6 +1022,10 @@ struct AssetSettings {
     function getUsdPrice(address token) external view returns (uint256);
 
     function getWeightedTwaLiquidityForWell(address well) external view returns (uint256);
+
+    function getWellConvertCapacity(address well) external view returns (uint256);
+
+    function getOverallConvertCapacity() external view returns (uint256);
 
     function getWhitelistStatus(
         address token
@@ -1170,6 +1241,10 @@ struct AssetSettings {
         bytes memory
     ) external pure returns (bytes4);
 
+    function overallCappedDeltaB() external view returns (int256 deltaB);
+
+    function overallCurrentDeltaB() external view returns (int256 deltaB);
+
     function owner() external view returns (address owner_);
 
     function ownerCandidate() external view returns (address ownerCandidate_);
@@ -1246,7 +1321,17 @@ struct AssetSettings {
     function plant() external payable returns (uint256 beans, int96 stem);
 
     function plentyPerRoot(uint32 _season) external view returns (uint256);
+
     function plot(address account, uint256 fieldId, uint256 index) external view returns (uint256);
+
+    function pipelineConvert(
+        address inputToken,
+        int96[] memory stems,
+        uint256[] memory amounts,
+        address outputToken,
+        AdvancedFarmCall[] memory farmCalls
+    ) external payable returns (int96[] memory outputStems, uint256[] memory outputAmounts);
+
     function podIndex() external view returns (uint256);
 
     function podListing(uint256 index) external view returns (bytes32);
@@ -1261,6 +1346,8 @@ struct AssetSettings {
     function podOrderById(bytes32 id) external view returns (uint256);
 
     function poolDeltaB(address pool) external view returns (int256);
+
+    function poolCurrentDeltaB(address pool) external view returns (int256 deltaB);
 
     function rain() external view returns (Rain memory);
 
@@ -1474,6 +1561,8 @@ struct AssetSettings {
     function totalRealSoil() external view returns (uint256);
 
     function totalRoots() external view returns (uint256);
+
+    function totalSeeds() external view returns (uint256);
 
     function totalSoil() external view returns (uint256);
 

@@ -508,6 +508,18 @@ contract SiloGettersFacet is ReentrancyGuard {
         _stemTip = LibTokenSilo.stemTipForToken(token);
     }
 
+    function calculateStemForTokenFromGrownStalk(
+        address token,
+        uint256 grownStalk,
+        uint256 bdvOfDeposit
+    ) external view returns (int96 stem, GerminationSide germ) {
+        (stem, germ) = LibTokenSilo.calculateStemForTokenFromGrownStalk(
+            token,
+            grownStalk,
+            bdvOfDeposit
+        );
+    }
+
     /**
      * @notice returns the season in which beanstalk initalized siloV3.
      */

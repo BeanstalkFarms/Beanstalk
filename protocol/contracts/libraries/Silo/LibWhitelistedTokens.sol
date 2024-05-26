@@ -225,4 +225,15 @@ library LibWhitelistedTokens {
         }
         return i;
     }
+
+    function getIndexFromWhitelistedWellLpTokens(address token) internal view returns (uint256) {
+        address[] memory whitelistedWellLpTokens = getWhitelistedWellLpTokens();
+        for (uint256 i; i < whitelistedWellLpTokens.length; i++) {
+            if (whitelistedWellLpTokens[i] == token) {
+                return i;
+            }
+        }
+
+        revert("LibWhitelistedTokens: Token not found");
+    }
 }

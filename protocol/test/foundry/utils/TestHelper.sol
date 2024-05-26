@@ -24,6 +24,7 @@ import {LibTransfer} from "contracts/libraries/Token/LibTransfer.sol";
 
 ///// ECOSYSTEM //////
 import {UsdOracle} from "contracts/ecosystem/oracles/UsdOracle.sol";
+import {Pipeline} from "contracts/pipeline/Pipeline.sol";
 
 /**
  * @title TestHelper
@@ -44,12 +45,19 @@ contract TestHelper is
     // usdOracle contract.
     UsdOracle usdOracle;
 
+    Pipeline pipeline;
+
     // ideally, timestamp should be set to 1_000_000.
     // however, beanstalk rounds down to the nearest hour.
     // 1_000_000 / 3600 * 3600 = 997200.
     uint256 constant PERIOD = 3600;
     uint256 constant START_TIMESTAMP = 1_000_000;
     uint256 constant INITIAL_TIMESTAMP = (START_TIMESTAMP / PERIOD) * PERIOD;
+
+    // The largest deposit that can occur on the first season.
+    // Given the supply of beans should starts at 0,
+    // this should never occur.
+    uint256 constant MAX_DEPOSIT_BOUND = 1.7e22; // 2 ** 128 / 2e16
 
     struct initERC20params {
         address targetAddr;
@@ -113,12 +121,14 @@ contract TestHelper is
      * which allows for arbitary minting for testing purposes.
      */
     function initMockTokens(bool verbose) internal {
-        initERC20params[5] memory tokens = [
+        initERC20params[7] memory tokens = [
             initERC20params(C.BEAN, "Bean", "BEAN", 6),
             initERC20params(C.UNRIPE_BEAN, "Unripe Bean", "UrBEAN", 6),
             initERC20params(C.UNRIPE_LP, "Unripe LP", "UrBEAN3CRV", 18),
             initERC20params(C.WETH, "Weth", "WETH", 18),
-            initERC20params(C.WSTETH, "wstETH", "WSTETH", 18)
+            initERC20params(C.WSTETH, "wstETH", "WSTETH", 18),
+            initERC20params(C.USDC, "USDC", "USDC", 6),
+            initERC20params(C.USDT, "USDT", "USDT", 6)
         ];
 
         for (uint i; i < tokens.length; i++) {
@@ -171,25 +181,33 @@ contract TestHelper is
         MockToken(token).approve(BEANSTALK, type(uint256).max);
     }
 
-    /**
-     * @notice assumes a CP2 well with bean as one of the tokens.
-     */
     function addLiquidityToWell(
         address well,
         uint256 beanAmount,
         uint256 nonBeanTokenAmount
-    ) internal {
+    ) internal returns (uint256) {
+        return addLiquidityToWell(users[0], well, beanAmount, nonBeanTokenAmount);
+    }
+
+    /**
+     * @notice assumes a CP2 well with bean as one of the tokens.
+     */
+    function addLiquidityToWell(
+        address user,
+        address well,
+        uint256 beanAmount,
+        uint256 nonBeanTokenAmount
+    ) internal returns (uint256 lpOut) {
         (address nonBeanToken, ) = LibWell.getNonBeanTokenAndIndexFromWell(well);
 
         // mint and sync.
         MockToken(C.BEAN).mint(well, beanAmount);
         MockToken(nonBeanToken).mint(well, nonBeanTokenAmount);
 
-        // inital liquidity owned by beanstalk deployer.
-        IWell(well).sync(users[0], 0);
+        lpOut = IWell(well).sync(user, 0);
 
         // sync again to update reserves.
-        IWell(well).sync(users[0], 0);
+        IWell(well).sync(user, 0);
     }
 
     /**
@@ -242,8 +260,61 @@ contract TestHelper is
         IWell(well).sync(users[0], 0);
     }
 
+    /**
+     * @notice mints `amount` and deposits it to beanstalk.
+     * @dev if 'token' is a well, 'amount' corresponds to the amount of non-bean tokens underlying the output amount.
+     */
+    function depositForUser(
+        address user,
+        address token,
+        uint256 amount
+    ) internal prank(user) returns (uint256 outputAmount) {
+        address[] memory tokens = bs.getWhitelistedWellLpTokens();
+        bool isWell;
+        for (uint i; i < tokens.length; i++) {
+            if (tokens[i] == token) {
+                isWell = true;
+                break;
+            }
+        }
+        if (isWell) {
+            (amount, ) = addLiquidityToWellAtCurrentPrice(user, token, amount);
+        } else {
+            MockToken(token).mint(user, amount);
+        }
+        outputAmount = amount;
+        MockToken(token).approve(BEANSTALK, amount);
+        bs.deposit(token, amount, 0);
+    }
+
+    /**
+     * @notice adds an amount of non-bean tokens in the well,
+     * and adds the amount of beans such that the well matches the price oracles.
+     */
+    function addLiquidityToWellAtCurrentPrice(
+        address well,
+        uint256 amount
+    ) internal returns (uint256 lpAmountOut, address tokenInWell) {
+        (lpAmountOut, tokenInWell) = addLiquidityToWellAtCurrentPrice(users[0], well, amount);
+    }
+
+    /**
+     * @notice adds an amount of non-bean tokens in the well,
+     * and adds the amount of beans such that the well matches the price oracles.
+     */
+    function addLiquidityToWellAtCurrentPrice(
+        address user,
+        address well,
+        uint256 amount
+    ) internal returns (uint256 lpAmountOut, address tokenInWell) {
+        (tokenInWell, ) = LibWell.getNonBeanTokenAndIndexFromWell(well);
+        uint256 beanAmount = (amount * 1e6) / usdOracle.getUsdTokenPrice(tokenInWell);
+        lpAmountOut = addLiquidityToWell(user, well, beanAmount, amount);
+    }
+
     function initMisc() internal {
         usdOracle = UsdOracle(deployCode("UsdOracle"));
+        pipeline = Pipeline(PIPELINE);
     }
 
     function abs(int256 x) internal pure returns (int256) {
@@ -288,13 +359,21 @@ contract TestHelper is
     function setDeltaBforWell(int256 deltaB, address wellAddress, address tokenInWell) internal {
         IWell well = IWell(wellAddress);
         IERC20 tokenOut;
-        uint256 initalBeanBalance = C.bean().balanceOf(wellAddress);
-        if (deltaB > 0) {
-            uint256 tokenAmountIn = well.getSwapIn(IERC20(tokenInWell), C.bean(), uint256(deltaB));
+        int256 initialDeltaB = bs.poolCurrentDeltaB(wellAddress);
+
+        // find difference between initial and final deltaB
+        int256 deltaBdiff = deltaB - initialDeltaB;
+
+        if (deltaBdiff > 0) {
+            uint256 tokenAmountIn = well.getSwapIn(
+                IERC20(tokenInWell),
+                C.bean(),
+                uint256(deltaBdiff)
+            );
             MockToken(tokenInWell).mint(wellAddress, tokenAmountIn);
             tokenOut = C.bean();
         } else {
-            C.bean().mint(wellAddress, uint256(-deltaB));
+            C.bean().mint(wellAddress, uint256(-deltaBdiff));
             tokenOut = IERC20(tokenInWell);
         }
         uint256 amountOut = well.shift(tokenOut, 0, users[1]);
@@ -336,9 +415,52 @@ contract TestHelper is
         address barnRaiseToken = bs.getBarnRaiseToken();
         mintTokensToUser(address(this), barnRaiseToken, tokenAmountIn);
         // add fertilizer.
-        console.log("tokenAmountIn", tokenAmountIn);
         if (tokenAmountIn > 0) {
             bs.addFertilizer(season, tokenAmountIn, 0);
+        }
+    }
+
+    /**
+     * @notice Calls sunrise twice to pass the germination process.
+     */
+    function passGermination() public {
+        // call sunrise twice to end the germination process.
+        bs.siloSunrise(0);
+        bs.siloSunrise(0);
+    }
+
+    /**
+     * @notice Set up the silo deposit test by depositing beans to the silo from multiple users.
+     * @param amount The amount of beans to deposit.
+     * @return _amount The actual amount of beans deposited.
+     * @return stem The stem tip for the deposited beans.
+     */
+    function setUpSiloDepositTest(
+        uint256 amount,
+        address[] memory _farmers
+    ) public returns (uint256 _amount, int96 stem) {
+        _amount = bound(amount, 1, MAX_DEPOSIT_BOUND);
+
+        depositForUsers(_farmers, C.BEAN, _amount, LibTransfer.From.EXTERNAL);
+        stem = bs.stemTipForToken(C.BEAN);
+    }
+
+    /**
+     * @notice Deposit beans to the silo from multiple users.
+     * @param users The users to deposit beans from.
+     * @param token The token to deposit.
+     * @param amount The amount of beans to deposit.
+     * @param mode The deposit mode.
+     */
+    function depositForUsers(
+        address[] memory users,
+        address token,
+        uint256 amount,
+        LibTransfer.From mode
+    ) public {
+        for (uint256 i = 0; i < users.length; i++) {
+            vm.prank(users[i]);
+            bs.deposit(token, amount, uint8(mode)); // switching from silo.deposit to bs.deposit, but bs does not have a From enum, so casting to uint8.
         }
     }
 }

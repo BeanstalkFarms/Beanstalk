@@ -265,44 +265,154 @@ describe("Gauge", function () {
 
     // when beanstalk has outstanding fertilizer (aka unripe assets)
     // a portion of the supply is locked, due to the difference between
-    // the underlying amount and redemption price.
+    // the underlying amount and redemption price. 
     // thus the supply can be reduced.
-    describe("with unripe", function () {
-      before(async function () {
-        await bean.mint(ownerAddress, to6("1000000"));
+    describe('with unripe', function() {
+      before(async function() {
+        await bean.mint(ownerAddress, to6('1000000'))
         // enable fertilizer, 10000 sprouts unfertilized
-        await mockBeanstalk.setFertilizerE(true, to6("10000"));
-        await mockBeanstalk.connect(owner).addUnderlying(UNRIPE_BEAN, to6("1000"));
+        await mockBeanstalk.setFertilizerE(true, to6('10000'))
+        await mockBeanstalk.connect(owner).addUnderlying(
+          UNRIPE_BEAN,
+          to6('1000')
+        )
 
-        await mockBeanstalk.connect(owner).addUnderlying(UNRIPE_LP, to18("31.62277663"));
+        await mockBeanstalk.connect(owner).addUnderlying(
+          UNRIPE_LP,
+          to18('31.62277663')
+        )
 
         // add 1000 LP to 10,000 unripe
-        await mockBeanstalk.connect(owner).setPenaltyParams(to6("100"), to6("1000"));
-      });
+        await mockBeanstalk.connect(owner).setPenaltyParams(to6('100'), to6('1000'))
+      })
 
-      it("getters", async function () {
+      it('getters', async function () {
+        // issue unripe such that unripe supply > 10m. 
+        await this.unripeLP.mint(ownerAddress, to6('10000000'))
+        await this.unripeBean.mint(ownerAddress, to6('10000000'))
         // urBean supply * 10% recapitalization (underlyingBean/UrBean) * 10% (fertilizerIndex/totalFertilizer)
         // = 10000 urBEAN * 10% = 1000 BEAN * (100-10%) = 900 beans locked.
-        // urLP supply * 0.1% recapitalization (underlyingBEANETH/UrBEANETH) * 10% (fertilizerIndex/totalFertilizer)
-        // urLP supply * 0.1% recapitalization * (100-10%) = 0.9% BEANETHLP locked.
+        // urBEANETH supply * 0.1% recapitalization (underlyingBEANETH/UrBEANETH) * 10% (fertilizerIndex/totalFertilizer)
+        // urBEANETH supply * 0.1% recapitalization * (100-10%) = 0.9% BEANETHLP locked.
         // 1m beans underlay all beanETHLP tokens.
         // 1m * 0.9% = 900 beans locked.
-        expect(await mockBeanstalk.getLockedBeansUnderlyingUnripeBean()).to.be.eq(
-          to6("436.332105")
-        );
-        expect(await mockBeanstalk.getLockedBeansUnderlyingUnripeLP()).to.be.eq(to6("436.332105"));
-        expect(await mockBeanstalk.getLockedBeans()).to.be.eq(to6("872.66421"));
-        expect(await beanstalk.getLiquidityToSupplyRatio()).to.be.eq(to18("1.000873426417975035"));
-      });
+        expect(await beanstalk.getLockedBeansUnderlyingUnripeBean()).to.be.eq(to6('436.332105'))
+        expect(await beanstalk.getLockedBeansUnderlyingUnripeLP()).to.be.eq(to6('436.332105'))
+        expect(await beanstalk.getLockedBeans()).to.be.eq(to6('872.66421'))
+        expect(
+          await beanstalk.getLiquidityToSupplyRatio()
+          ).to.be.eq(to18('1.000873426417975035'))
 
-      it("is MEV resistant", async function () {
-        expect(await mockBeanstalk.getLockedBeansUnderlyingUnripeLP()).to.be.eq(to6("436.332105"));
+      })
+      
+      // skipped due to foundry tests.
+      it.skip('< 1m unripe lockedBeans calculation:', async function () {
+        // current unripe LP and unripe Bean supply each: 10,000. 
+        // under 1m unripe bean and LP, all supply is unlocked:
+        const getLockedBeansUnderlyingUnripeBean = await beanstalk.getLockedBeansUnderlyingUnripeBean()
+        const getLockedBeansUnderlyingUrLP = await beanstalk.getLockedBeansUnderlyingUnripeLP()
+        const lockedBeans = await beanstalk.getLockedBeans()
+        const L2SR = await beanstalk.getLiquidityToSupplyRatio()
 
-        await this.well.mint(ownerAddress, to18("1000"));
+        expect(getLockedBeansUnderlyingUnripeBean).to.be.eq('0')
+        expect(getLockedBeansUnderlyingUrLP).to.be.eq('0')
+        expect(lockedBeans).to.be.eq('0')
+        expect(L2SR).to.be.eq(to18('1'))
 
-        expect(await mockBeanstalk.getLockedBeansUnderlyingUnripeLP()).to.be.eq(to6("436.332105"));
-      });
-    });
+        //  set urBean and urLP to 1m and verify values do not change:
+        await this.unripeLP.mint(ownerAddress, to6('989999'))
+        await this.unripeBean.mint(ownerAddress, to6('989999'))
+
+        expect(await beanstalk.getLockedBeansUnderlyingUnripeBean()).to.be.eq(getLockedBeansUnderlyingUnripeBean)
+        expect(await beanstalk.getLockedBeansUnderlyingUnripeLP()).to.be.eq(getLockedBeansUnderlyingUrLP)
+        expect(await beanstalk.getLockedBeans()).to.be.eq(lockedBeans)
+        expect(await beanstalk.getLiquidityToSupplyRatio()
+          ).to.be.eq(L2SR)
+      })
+
+      it.skip('< 5m unripe lockedBeans calculation:', async function () {
+        // mint unripe bean and LP such that 5m > supply > 1m.
+        await this.unripeLP.mint(ownerAddress, to6('1000000'))
+        await this.unripeBean.mint(ownerAddress, to6('1000000'))
+
+        // verify locked beans amount changed: 
+        const getLockedBeansUnderlyingUnripeBean = await beanstalk.getLockedBeansUnderlyingUnripeBean()
+        const getLockedBeansUnderlyingUrLP = await beanstalk.getLockedBeansUnderlyingUnripeLP()
+        const lockedBeans = await beanstalk.getLockedBeans()
+        const L2SR = await beanstalk.getLiquidityToSupplyRatio()
+        expect(getLockedBeansUnderlyingUnripeBean).to.be.eq(to6('579.500817'))
+        expect(getLockedBeansUnderlyingUrLP).to.be.eq(to6('579.500817'))
+        expect(lockedBeans).to.be.eq(to6('1159.001634'))
+
+        // verify L2SR increased:
+        expect(L2SR).to.be.eq(to18('1.001160346477463386'))
+        
+        //  set urBean and urLP to 5m and verify values do not change:
+        await this.unripeLP.mint(ownerAddress, to6('3990000'))
+        await this.unripeBean.mint(ownerAddress, to6('3990000'))
+
+        expect(await beanstalk.getLockedBeansUnderlyingUnripeBean()).to.be.eq(getLockedBeansUnderlyingUnripeBean)
+        expect(await beanstalk.getLockedBeansUnderlyingUnripeLP()).to.be.eq(getLockedBeansUnderlyingUrLP)
+        expect(await beanstalk.getLockedBeans()).to.be.eq(lockedBeans)
+
+        expect(await beanstalk.getLiquidityToSupplyRatio()).to.be.eq(L2SR)
+      })
+
+      it.skip('< 10m unripe lockedBeans calculation:', async function () {
+        // mint unripe bean and LP such that 10m > supply > 5m.
+        await this.unripeLP.mint(ownerAddress, to6('5000000'))
+        await this.unripeBean.mint(ownerAddress, to6('5000000'))
+
+        // verify locked beans amount changed: 
+        const getLockedBeansUnderlyingUnripeBean = await beanstalk.getLockedBeansUnderlyingUnripeBean()
+        const getLockedBeansUnderlyingUrLP = await beanstalk.getLockedBeansUnderlyingUnripeLP()
+        const lockedBeans = await beanstalk.getLockedBeans()
+        const L2SR = await beanstalk.getLiquidityToSupplyRatio()
+        expect(getLockedBeansUnderlyingUnripeBean).to.be.eq(to6('515.604791'))
+        expect(getLockedBeansUnderlyingUrLP).to.be.eq(to6('515.604791'))
+        expect(lockedBeans).to.be.eq(to6('1031.209582'))
+
+        // verify L2SR increased:
+        expect(L2SR).to.be.eq(to18('1.001032274072915240'))
+
+        //  set urBean and urLP to 10m and verify values do not change:
+        await this.unripeLP.mint(ownerAddress, to6('4990000'))
+        await this.unripeBean.mint(ownerAddress, to6('4990000'))
+
+        expect(await beanstalk.getLockedBeansUnderlyingUnripeBean()).to.be.eq(getLockedBeansUnderlyingUnripeBean)
+        expect(await beanstalk.getLockedBeansUnderlyingUnripeLP()).to.be.eq(getLockedBeansUnderlyingUrLP)
+        expect(await beanstalk.getLockedBeans()).to.be.eq(lockedBeans)
+
+        expect(await beanstalk.getLiquidityToSupplyRatio()).to.be.eq(L2SR)
+      })
+
+      it.skip('< 10m unripe lockedBeans calculation:', async function () {
+        // mint unripe bean and LP such that supply > 10m.
+        await this.unripeLP.mint(ownerAddress, to6('10000000'))
+        await this.unripeBean.mint(ownerAddress, to6('10000000'))
+
+        // verify locked beans amount changed: 
+        expect(await beanstalk.getLockedBeansUnderlyingUnripeBean()).to.be.eq(to6('436.332105'))
+        expect(await beanstalk.getLockedBeansUnderlyingUnripeLP()).to.be.eq(to6('436.332105'))
+        expect(await beanstalk.getLockedBeans()).to.be.eq(to6('872.664210'))
+
+        // verify L2SR increased:
+        expect(
+          await beanstalk.getLiquidityToSupplyRatio()
+          ).to.be.eq(to18('1.000873426417975035'))
+      })
+
+      it('is MEV resistant', async function () {
+        // issue unripe such that unripe supply > 10m. 
+        await this.unripeLP.mint(ownerAddress, to6('10000000'))
+        await this.unripeBean.mint(ownerAddress, to6('10000000'))
+        expect(await beanstalk.getLockedBeansUnderlyingUnripeLP()).to.be.eq(to6('436.332105'))
+
+        await this.well.mint(ownerAddress, to18('1000'))
+        
+        expect(await beanstalk.getLockedBeansUnderlyingUnripeLP()).to.be.eq(to6('436.332105'))
+      })
+    })
   });
 
   describe("GaugePoints", async function () {

@@ -27,6 +27,7 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
  * @param usdTokenPrice A mapping from token address to usd price.
  * @param sops A mapping from Season to Plenty Per Root (PPR) in that Season. Plenty Per Root is 0 if a Season of Plenty did not occur.
  * @param fields mapping of Field ID to Storage.Field.
+ * @param convertCapacity A mapping from block number to the amount of Beans that can be converted towards peg in this block before stalk penalty becomes applied.
  * @param shipmentRoutes Define the distribution of newly minted Beans.
  * @param _buffer_1 Reserved storage for future additions.
  * @param casesV2 Stores the 144 Weather and seedGauge cases.
@@ -59,6 +60,7 @@ struct System {
     mapping(address => uint256) usdTokenPrice;
     mapping(uint32 => uint256) sops;
     mapping(uint256 => Field) fields;
+    mapping(uint256 => ConvertCapacity) convertCapacity;
     ShipmentRoute[] shipmentRoutes;
     bytes32[16] _buffer_1;
     bytes32[144] casesV2;
@@ -334,6 +336,11 @@ struct TwaReserves {
 struct Deposited {
     uint128 amount;
     uint128 bdv;
+}
+
+struct ConvertCapacity {
+    uint256 overallConvertCapacityUsed;
+    mapping(address => uint256) wellConvertCapacityUsed;
 }
 
 /**

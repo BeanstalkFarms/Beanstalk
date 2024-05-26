@@ -6,6 +6,7 @@ pragma solidity ^0.8.20;
 
 import {LibFunction} from "./LibFunction.sol";
 import {LibClipboard} from "./LibClipboard.sol";
+import {console} from "forge-std/console.sol";
 
 /**
  * @title Farm Lib
@@ -26,9 +27,29 @@ library LibFarm {
         AdvancedFarmCall memory data,
         bytes[] memory returnData
     ) internal returns (bytes memory result) {
-        bytes1 pipeType = data.clipboard[0];
+        bytes1 pipeType = data.clipboard.length == 0 ? bytes1(0) : data.clipboard[0];
         // 0x00 -> Static Call - Execute static call
         // else > Advanced Call - Use clipboard on and execute call.
+        if (pipeType == 0x00) {
+            result = _farm(data.callData);
+        } else {
+            bytes memory callData = LibClipboard.useClipboard(
+                data.callData,
+                data.clipboard,
+                returnData
+            );
+            result = _farm(callData);
+        }
+    }
+
+    // maybe remove this function?
+    function _advancedFarmMem(
+        AdvancedFarmCall memory data,
+        bytes[] memory returnData
+    ) internal returns (bytes memory result) {
+        bytes1 pipeType = data.clipboard.length == 0 ? bytes1(0) : data.clipboard[0];
+        // 0x00 -> Static Call - Execute static call
+        // else > Advanced Call - Use clipboard on and execute call
         if (pipeType == 0x00) {
             result = _farm(data.callData);
         } else {

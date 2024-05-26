@@ -9,12 +9,14 @@ import {AppStorage} from "contracts/beanstalk/storage/AppStorage.sol";
 import {C, LibMinting} from "./LibMinting.sol";
 import {ICumulativePump} from "contracts/interfaces/basin/pumps/ICumulativePump.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {IInstantaneousPump} from "contracts/interfaces/basin/pumps/IInstantaneousPump.sol";
 import {Call, IWell} from "contracts/interfaces/basin/IWell.sol";
 import {LibWell} from "contracts/libraries/Well/LibWell.sol";
-import {IBeanstalkWellFunction} from "contracts/interfaces/basin/IBeanstalkWellFunction.sol";
 import {LibRedundantMathSigned256} from "contracts/libraries/LibRedundantMathSigned256.sol";
 import {LibEthUsdOracle} from "contracts/libraries/Oracle/LibEthUsdOracle.sol";
+import {LibWhitelistedTokens} from "contracts/libraries/Silo/LibWhitelistedTokens.sol";
 import {LibRedundantMath256} from "contracts/libraries/LibRedundantMath256.sol";
+import {IBeanstalkWellFunction} from "contracts/interfaces/basin/IBeanstalkWellFunction.sol";
 
 /**
  * @title Well Minting Oracle Library
@@ -30,6 +32,7 @@ import {LibRedundantMath256} from "contracts/libraries/LibRedundantMath256.sol";
 
 library LibWellMinting {
     using LibRedundantMathSigned256 for int256;
+    using LibRedundantMath256 for uint256;
 
     /**
      * @notice Emitted when a Well Minting Oracle is captured.
@@ -39,8 +42,6 @@ library LibWellMinting {
      * @param cumulativeReserves The encoded cumulative reserves that were snapshotted most by the Oracle capture.
      */
     event WellOracle(uint32 indexed season, address well, int256 deltaB, bytes cumulativeReserves);
-
-    using LibRedundantMath256 for uint256;
 
     //////////////////// CHECK ////////////////////
 

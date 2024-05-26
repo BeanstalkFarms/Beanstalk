@@ -15,6 +15,7 @@ import {LibWhitelistedTokens} from "contracts/libraries/Silo/LibWhitelistedToken
 import {LibGauge} from "contracts/libraries/LibGauge.sol";
 import {LibCases} from "contracts/libraries/LibCases.sol";
 import {LibRedundantMath256} from "contracts/libraries/LibRedundantMath256.sol";
+import {LibDeltaB} from "contracts/libraries/Oracle/LibDeltaB.sol";
 
 /**
  * @title SeasonGettersFacet
@@ -100,6 +101,15 @@ contract SeasonGettersFacet {
     function poolDeltaB(address pool) external view returns (int256) {
         if (LibWell.isWell(pool)) return LibWellMinting.check(pool);
         revert("Oracle: Pool not supported");
+    }
+
+    function poolCurrentDeltaB(address pool) external view returns (int256 deltaB) {
+        if (LibWell.isWell(pool)) {
+            (deltaB) = LibDeltaB.currentDeltaB(pool);
+            return deltaB;
+        } else {
+            revert("Oracle: Pool not supported");
+        }
     }
 
     /**

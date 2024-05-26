@@ -224,9 +224,12 @@ library LibWell {
         if (s.sys.twaReserves[well].reserve0 == 0 || s.sys.twaReserves[well].reserve1 == 0) {
             price = 0;
         } else {
-            price = s.sys.twaReserves[well].reserve0.mul(1e18).div(
-                s.sys.twaReserves[well].reserve1
-            );
+            // fetch the bean index from the well in order to properly return the bean price.
+            if (getBeanIndexFromWell(well) == 0) { 
+                price = uint256(s.sys.twaReserves[well].reserve0).mul(1e18).div(s.sys.twaReserves[well].reserve1);
+            } else { 
+                price = uint256(s.sys.twaReserves[well].reserve1).mul(1e18).div(s.sys.twaReserves[well].reserve0);
+            }
         }
     }
 

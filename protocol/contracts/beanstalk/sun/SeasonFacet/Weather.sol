@@ -171,9 +171,10 @@ contract Weather is Sun {
             // Set the plenty per root equal to previous rain start.
             s.sys.sops[s.sys.season.current] = s.sys.sops[s.sys.season.rainStart];
             s.sys.season.rainStart = s.sys.season.current;
-            s.sys.rain.pods = s.sys.fields[s.sys.activeField].pods;
-            s.sys.rain.roots = s.sys.silo.roots;
+            s.sys.rain.pods = s.sys.fields[s.sys.activeField].pods; // Store the current amount of pods into the rain struct for this rainy season
+            s.sys.rain.roots = s.sys.silo.roots; // Same for roots
         } else {
+            // if it's already raining, and we've capture raining roots, make sure sop well setup and do the sop
             if (s.sys.rain.roots > 0) {
                 // initalize sopWell if it is not already set.
                 if (s.sys.sopWell == address(0)) s.sys.sopWell = well;
@@ -240,6 +241,7 @@ contract Weather is Sun {
      * @dev Allocate `sop token` during a Season of Plenty.
      */
     function rewardSop(uint256 amount) private {
+        // For this sop (which is stored based on when it started raining last), add a token amount per root
         s.sys.sops[s.sys.season.rainStart] = s.sys.sops[s.sys.season.lastSop].add(
             amount.mul(C.SOP_PRECISION).div(s.sys.rain.roots)
         );

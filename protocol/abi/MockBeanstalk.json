@@ -4479,6 +4479,111 @@
   {
     "inputs": [
       {
+        "components": [
+          {
+            "internalType": "int256",
+            "name": "beforeInputTokenDeltaB",
+            "type": "int256"
+          },
+          {
+            "internalType": "int256",
+            "name": "afterInputTokenDeltaB",
+            "type": "int256"
+          },
+          {
+            "internalType": "int256",
+            "name": "beforeOutputTokenDeltaB",
+            "type": "int256"
+          },
+          {
+            "internalType": "int256",
+            "name": "afterOutputTokenDeltaB",
+            "type": "int256"
+          },
+          {
+            "internalType": "int256",
+            "name": "beforeOverallDeltaB",
+            "type": "int256"
+          },
+          {
+            "internalType": "int256",
+            "name": "afterOverallDeltaB",
+            "type": "int256"
+          }
+        ],
+        "internalType": "struct LibConvert.DeltaBStorage",
+        "name": "dbs",
+        "type": "tuple"
+      },
+      {
+        "internalType": "uint256",
+        "name": "bdvConverted",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "overallConvertCapacity",
+        "type": "uint256"
+      },
+      {
+        "internalType": "address",
+        "name": "inputToken",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "outputToken",
+        "type": "address"
+      }
+    ],
+    "name": "calculateStalkPenalty",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "stalkPenaltyBdv",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "overallConvertCapacityUsed",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "inputTokenAmountUsed",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "outputTokenAmountUsed",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "well",
+        "type": "address"
+      }
+    ],
+    "name": "cappedReservesDeltaB",
+    "outputs": [
+      {
+        "internalType": "int256",
+        "name": "deltaB",
+        "type": "int256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
         "internalType": "address",
         "name": "tokenIn",
         "type": "address"
@@ -4527,6 +4632,93 @@
       }
     ],
     "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "getOverallConvertCapacity",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "well",
+        "type": "address"
+      }
+    ],
+    "name": "getWellConvertCapacity",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "overallCappedDeltaB",
+    "outputs": [
+      {
+        "internalType": "int256",
+        "name": "deltaB",
+        "type": "int256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "overallCurrentDeltaB",
+    "outputs": [
+      {
+        "internalType": "int256",
+        "name": "deltaB",
+        "type": "int256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "beforeLpTokenSupply",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "afterLpTokenSupply",
+        "type": "uint256"
+      },
+      {
+        "internalType": "int256",
+        "name": "deltaB",
+        "type": "int256"
+      }
+    ],
+    "name": "scaledDeltaB",
+    "outputs": [
+      {
+        "internalType": "int256",
+        "name": "",
+        "type": "int256"
+      }
+    ],
+    "stateMutability": "pure",
     "type": "function"
   },
   {
@@ -4616,6 +4808,77 @@
       }
     ],
     "name": "convert",
+    "outputs": [
+      {
+        "internalType": "int96",
+        "name": "toStem",
+        "type": "int96"
+      },
+      {
+        "internalType": "uint256",
+        "name": "fromAmount",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "toAmount",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "fromBdv",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "toBdv",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "payable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "inputToken",
+        "type": "address"
+      },
+      {
+        "internalType": "int96[]",
+        "name": "stems",
+        "type": "int96[]"
+      },
+      {
+        "internalType": "uint256[]",
+        "name": "amounts",
+        "type": "uint256[]"
+      },
+      {
+        "internalType": "address",
+        "name": "outputToken",
+        "type": "address"
+      },
+      {
+        "components": [
+          {
+            "internalType": "bytes",
+            "name": "callData",
+            "type": "bytes"
+          },
+          {
+            "internalType": "bytes",
+            "name": "clipboard",
+            "type": "bytes"
+          }
+        ],
+        "internalType": "struct AdvancedFarmCall[]",
+        "name": "advancedFarmCalls",
+        "type": "tuple[]"
+      }
+    ],
+    "name": "pipelineConvert",
     "outputs": [
       {
         "internalType": "int96",
@@ -5891,6 +6154,40 @@
         "internalType": "uint256",
         "name": "_bdv",
         "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "token",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "grownStalk",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "bdvOfDeposit",
+        "type": "uint256"
+      }
+    ],
+    "name": "calculateStemForTokenFromGrownStalk",
+    "outputs": [
+      {
+        "internalType": "int96",
+        "name": "stem",
+        "type": "int96"
+      },
+      {
+        "internalType": "enum GerminationSide",
+        "name": "germ",
+        "type": "uint8"
       }
     ],
     "stateMutability": "view",
@@ -7605,6 +7902,25 @@
         "type": "address"
       }
     ],
+    "name": "poolCurrentDeltaB",
+    "outputs": [
+      {
+        "internalType": "int256",
+        "name": "deltaB",
+        "type": "int256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "pool",
+        "type": "address"
+      }
+    ],
     "name": "poolDeltaB",
     "outputs": [
       {
@@ -9105,6 +9421,35 @@
     "type": "function"
   },
   {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "currentGaugePoints",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "name": "gaugePointsNoChange",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "pure",
+    "type": "function"
+  },
+  {
     "inputs": [],
     "name": "getChainlinkEthUsdPrice",
     "outputs": [
@@ -9497,6 +9842,13 @@
       }
     ],
     "name": "mockStepSilo",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "mockUpdateAverageGrownStalkPerBdvPerSeason",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"

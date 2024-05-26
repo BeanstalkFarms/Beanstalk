@@ -13,6 +13,7 @@ import {LibWhitelistedTokens} from "contracts/libraries/Silo/LibWhitelistedToken
 import {LibUnripe} from "contracts/libraries/LibUnripe.sol";
 import {LibWell, IWell} from "contracts/libraries/Well/LibWell.sol";
 import {LibRedundantMath32} from "contracts/libraries/LibRedundantMath32.sol";
+import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
 
 /**
  * @title LibWhitelist
@@ -21,6 +22,7 @@ import {LibRedundantMath32} from "contracts/libraries/LibRedundantMath32.sol";
  */
 library LibWhitelist {
     using LibRedundantMath32 for uint32;
+    using SafeCast for int32;
 
     /**
      * @notice Emitted when a token is added to the Silo Whitelist.
@@ -200,10 +202,8 @@ library LibWhitelist {
         s.sys.silo.assetSettings[token].milestoneSeason = s.sys.season.current;
 
         // stalkEarnedPerSeason is set to int32 before casting down.
-        s.sys.silo.assetSettings[token].deltaStalkEarnedPerSeason = int24(
-            int32(stalkEarnedPerSeason) -
-                int32(s.sys.silo.assetSettings[token].stalkEarnedPerSeason)
-        ); // calculate delta
+        s.sys.silo.assetSettings[token].deltaStalkEarnedPerSeason = (int32(stalkEarnedPerSeason) -
+            int32(s.sys.silo.assetSettings[token].stalkEarnedPerSeason)).toInt24();
         s.sys.silo.assetSettings[token].stalkEarnedPerSeason = stalkEarnedPerSeason;
 
         emit UpdatedStalkPerBdvPerSeason(token, stalkEarnedPerSeason, s.sys.season.current);
