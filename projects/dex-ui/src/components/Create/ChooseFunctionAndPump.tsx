@@ -1,7 +1,7 @@
 import React, { useCallback } from "react";
 import styled from "styled-components";
 import { CreateWellProps, useCreateWell } from "./CreateWellProvider";
-import { FormProvider, useForm, useFormContext } from "react-hook-form";
+import { FormProvider, useForm, useFormContext, useWatch } from "react-hook-form";
 import { Flex } from "../Layout";
 import { Text } from "../Typography";
 import { theme } from "src/utils/ui/theme";
@@ -50,7 +50,7 @@ const ChooseFunctionAndPumpForm = () => {
     [setFunctionAndPump]
   );
 
-  // const methods = useForm<FormValues>();
+  // console.log("Parent rerendering...");
 
   return (
     <FormProvider {...methods}>
@@ -64,7 +64,7 @@ const ChooseFunctionAndPumpForm = () => {
                   Choose a Well Function to determine how the tokens in the Well get priced.
                 </Text>
               </Flex>
-              <WellFunctionFormSection />
+              <WellFunctionSection />
             </WellFunctionFormWrapper>
           </Flex>
         </Flex>
@@ -84,66 +84,68 @@ const WellFunctionFormWrapper = styled(Flex)`
   }
 `;
 
-const WellFunctionFormSection = React.memo(() => {
+const WellFunctionSection = () => {
   const { wellFunctions } = useWhitelistedWellComponents();
-  const [usingCustom, { toggle, set }] = useBoolean();
+  const [usingCustom, { toggle, set: setUsingCustom }] = useBoolean();
 
   const {
-    watch,
-    setValue,
+    control,
     register,
+    setValue,
     formState: {
       errors: { wellFunction: wellFunctionError }
     }
   } = useFormContext<FormValues>();
-  const value = watch("wellFunction");
+  const value = useWatch<FormValues>({ control, name: "wellFunction" });
+
+  const handleSetValue = (_addr: string) => {
+    setValue("wellFunction", _addr === value ? "" : _addr, {
+      shouldValidate: true
+    });
+    setUsingCustom(false);
+  };
 
   const handleToggle = () => {
     setValue("wellFunction", "");
     toggle();
   };
 
-  const handleSetValue = (_addr: string) => {
-    setValue("wellFunction", _addr === value ? "" : _addr, {
-      shouldValidate: true
-    });
-    set(false);
-  };
-
   return (
-    <Flex className="well-functions" $gap={2}>
-      {wellFunctions.map((data, i) => (
-        <WellComponentAccordionCard
-          selected={data.address === value}
-          setSelected={handleSetValue}
-          key={`well-functions-${i}`}
-          {...data}
-        />
-      ))}
-      <Flex $direction="row" $gap={1}>
-        <ToggleSwitch checked={usingCustom} toggle={handleToggle} />
-        <Text $variant="xs" color="text.secondary">
-          Use a custom Well Implementation instead
-        </Text>
+    <>
+      <Flex className="well-functions" $gap={2}>
+        {wellFunctions.map((data, i) => (
+          <WellComponentAccordionCard
+            key={`well-functions-${i}`}
+            selected={data.address === value}
+            setSelected={handleSetValue}
+            {...data}
+          />
+        ))}
+        <Flex $direction="row" $gap={1}>
+          <ToggleSwitch checked={usingCustom} toggle={handleToggle} />
+          <Text $variant="xs" color="text.secondary">
+            Use a custom Well Implementation instead
+          </Text>
+        </Flex>
+        {usingCustom && (
+          <AddressInputField
+            {...register("wellFunction", {
+              validate: (value) => ethers.utils.isAddress(value) || "Invalid address"
+            })}
+            placeholder="Input address"
+            error={wellFunctionError?.message}
+          />
+        )}
       </Flex>
-      {usingCustom ? (
-        <AddressInputField
-          {...register("wellFunction", {
-            validate: (value) => ethers.utils.isAddress(value) || "Invalid address"
-          })}
-          placeholder="Input address"
-          error={wellFunctionError?.message}
-        />
-      ) : null}
-    </Flex>
+    </>
   );
-});
+};
 
 export const ChooseFunctionAndPump = () => {
   return (
     <Flex $gap={3} $fullWidth>
       <div>
-        <Text $variant="h2">Create a Well - Choose a Well Function and Pump</Text>
+        <Text $variant="h2">Create a Well - Choose a Well Function and 0Pump</Text>
         <Subtitle>Select the components to use in your Well.</Subtitle>
       </div>
       <ChooseFunctionAndPumpForm />

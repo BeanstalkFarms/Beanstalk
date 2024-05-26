@@ -8,18 +8,20 @@ export type AddressInputFieldProps = InputHTMLAttributes<HTMLInputElement> & {
   error?: string;
 };
 
-export const AddressInputField = forwardRef<HTMLInputElement, AddressInputFieldProps>(({ error, ...props }, ref) => {
-  return (
-    <Flex>
-      <StyledAddressInputField {...props} onChange={props.onChange} ref={ref} type="text" />
-      {error && (
-        <Text $color="error" $variant="xs" $mt={0.5}>
-          {error}
-        </Text>
-      )}
-    </Flex>
-  );
-});
+export const AddressInputField = forwardRef<HTMLInputElement, AddressInputFieldProps>(
+  ({ error, ...props }, ref) => {
+    return (
+      <Flex>
+        <StyledAddressInputField {...props} onChange={props.onChange} ref={ref} type="text" />
+        {error && (
+          <Text $color="error" $variant="xs" $mt={0.5}>
+            {error}
+          </Text>
+        )}
+      </Flex>
+    );
+  }
+);
 
 const StyledAddressInputField = styled.input`
   border: 0.5px solid ${theme.colors.black};

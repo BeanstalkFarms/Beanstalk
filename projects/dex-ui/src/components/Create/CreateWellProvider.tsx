@@ -51,9 +51,15 @@ export const CreateWellProvider = ({ children }: { children: React.ReactNode }) 
   const [step, setStep] = useState<number>(0);
 
   /// step 1
-  const [wellImplementation, setWellImplementation] = useState<SetWellImplementationStepParams | undefined>();
-  const [functionAndPump, setFunctionAndPump] = useState<SetFunctionAndPumpStepParams | undefined>();
-  const [wellNameAndSymbol, setWellNameAndSymbol] = useState<SetWellNameAndSymbolStepParams | undefined>();
+  const [wellImplementation, setWellImplementation] = useState<
+    SetWellImplementationStepParams | undefined
+  >();
+  const [functionAndPump, setFunctionAndPump] = useState<
+    SetFunctionAndPumpStepParams | undefined
+  >();
+  const [wellNameAndSymbol, setWellNameAndSymbol] = useState<
+    SetWellNameAndSymbolStepParams | undefined
+  >();
 
   const handleGoNext = useCallback(() => {
     setStep((_step) => Math.min(_step + 1, 3));
@@ -83,9 +89,12 @@ export const CreateWellProvider = ({ children }: { children: React.ReactNode }) 
     [handleGoNext]
   );
 
-  const setWellNameAndSymbolStep: CreateWellContext["setWellNameAndSymbol"] = useCallback((params) => {
-    setWellNameAndSymbol(params);
-  }, []);
+  const setWellNameAndSymbolStep: CreateWellContext["setWellNameAndSymbol"] = useCallback(
+    (params) => {
+      setWellNameAndSymbol(params);
+    },
+    []
+  );
 
   const deployWell = useCallback(async () => {
     console.debug({
