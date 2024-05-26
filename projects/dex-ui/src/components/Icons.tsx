@@ -235,6 +235,12 @@ export const BurgerMenuIcon = ({ color = "#000", width = 24, height = 24 }: SVGP
   </svg>
 );
 
+export const CheckIcon = ({ color = "#000", width = 16, height = 16 }: SVGProps) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width={width} height={height} viewBox="0 0 17 18" fill="none">
+    <path d="M7.08333 12.1166L4.25 9.28325L5.24167 8.29159L7.08333 10.1333L11.7583 5.45825L12.75 6.44992L7.08333 12.1166Z" fill={color}/>
+  </svg>
+)
+
 export const CircleFilledCheckIcon = ({ color = "#000", width = 16, height = 16 }: SVGProps) => (
   <svg xmlns="http://www.w3.org/2000/svg" width={width} height={height} viewBox="0 0 16 16" fill="none">
     <path d="M8 16C12.4183 16 16 12.4183 16 8C16 3.58172 12.4183 0 8 0C3.58172 0 0 3.58172 0 8C0 12.4183 3.58172 16 8 16Z" fill={color} />

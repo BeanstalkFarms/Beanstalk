@@ -4,6 +4,7 @@ import { ChooseWellImplementation } from "src/components/Create/ChooseWellImplem
 
 import { Page } from "src/components/Page";
 import { ChooseFunctionAndPump } from "src/components/Create/ChooseFunctionAndPump";
+import styled from "styled-components";
 
 export type CreateWellStep = "well-implementation" | "function-pump" | "name-symbol" | "preview";
 
@@ -11,7 +12,9 @@ export const Create = () => {
   return (
     <CreateWellProvider>
       <Page>
-        <CreateSteps />
+        <ContentWrapper>
+          <CreateSteps />
+        </ContentWrapper>
       </Page>
     </CreateWellProvider>
   );
@@ -28,3 +31,9 @@ const CreateSteps = () => {
     </>
   );
 };
+
+const ContentWrapper = styled.div`
+  display: flex;
+  width: 100%;
+  max-width: 1234px;
+`;
