@@ -176,7 +176,7 @@ library LibSilo {
 
         // increment user and total stalk;
         s.system.silo.stalk = s.system.silo.stalk.add(stalk);
-        s.accounts[account].silo.stalk = s.accounts[account].silo.stalk.add(stalk);
+        s.accounts[account].stalk = s.accounts[account].stalk.add(stalk);
 
         // increment user and total roots
         s.system.silo.roots = s.system.silo.roots.add(roots);
@@ -254,7 +254,7 @@ library LibSilo {
 
         // Decrease supply of Stalk; Remove Stalk from the balance of `account`
         s.system.silo.stalk = s.system.silo.stalk.sub(stalk);
-        s.accounts[account].silo.stalk = s.accounts[account].silo.stalk.sub(stalk);
+        s.accounts[account].stalk = s.accounts[account].stalk.sub(stalk);
 
         // Decrease supply of Roots; Remove Roots from the balance of `account`
         s.system.silo.roots = s.system.silo.roots.sub(roots);
@@ -296,17 +296,17 @@ library LibSilo {
     function transferStalk(address sender, address recipient, uint256 stalk) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
         uint256 roots;
-        roots = stalk == s.accounts[sender].silo.stalk
+        roots = stalk == s.accounts[sender].stalk
             ? s.accounts[sender].roots
             : s.system.silo.roots.sub(1).mul(stalk).div(s.system.silo.stalk).add(1);
 
         // Subtract Stalk and Roots from the 'sender' balance.
-        s.accounts[sender].silo.stalk = s.accounts[sender].silo.stalk.sub(stalk);
+        s.accounts[sender].stalk = s.accounts[sender].stalk.sub(stalk);
         s.accounts[sender].roots = s.accounts[sender].roots.sub(roots);
         emit StalkBalanceChanged(sender, -int256(stalk), -int256(roots));
 
         // Add Stalk and Roots to the 'recipient' balance.
-        s.accounts[recipient].silo.stalk = s.accounts[recipient].silo.stalk.add(stalk);
+        s.accounts[recipient].stalk = s.accounts[recipient].stalk.add(stalk);
         s.accounts[recipient].roots = s.accounts[recipient].roots.add(roots);
         emit StalkBalanceChanged(recipient, int256(stalk), int256(roots));
     }
@@ -741,7 +741,7 @@ library LibSilo {
         uint256 stalk = s.system.silo.stalk.mul(accountRoots).div(s.system.silo.roots);
 
         // Beanstalk rounds down when minting Roots. Thus, it is possible that
-        // balanceOfRoots / totalRoots * totalStalk < s.accounts[account].silo.stalk.
+        // balanceOfRoots / totalRoots * totalStalk < s.accounts[account].stalk.
         // As `account` Earned Balance balance should never be negative,
         // Beanstalk returns 0 instead.
         if (stalk <= accountStalk) return 0;

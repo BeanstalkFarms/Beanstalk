@@ -24,7 +24,7 @@ function prune(value) {
   return toBN(value).mul(toBN(pru)).div(to18("1"));
 }
 
-describe.skip("Silo Enroot", function () {
+describe("Silo Enroot", function () {
   before(async function () {
     pru = await readPrune();
     [owner, user, user2] = await ethers.getSigners();
@@ -35,8 +35,6 @@ describe.skip("Silo Enroot", function () {
     // `beanstalk` contains all functions that the regualar beanstalk has.
     // `mockBeanstalk` has functions that are only available in the mockFacets.
     [beanstalk, mockBeanstalk] = await getAllBeanstalkContracts(this.diamond.address);
-
-    this.migrate = await ethers.getContractAt("MigrationFacet", this.diamond.address);
 
     const SiloToken = await ethers.getContractFactory("MockToken");
     this.siloToken = await SiloToken.deploy("Silo", "SILO");
@@ -91,16 +89,14 @@ describe.skip("Silo Enroot", function () {
     await revertToSnapshot(snapshotId);
   });
 
-  describe.skip("Unripe Bean Removal", async function () {
+  describe("Unripe Bean Removal", async function () {
     describe("All but 1", async function () {
       beforeEach(async function () {
         // 158328 * 0.185564685220298701 ~= 29380.085
         // 158327 * 0.185564685220298701 ~= 29379.899
         // floor(29380.085) - floor(29379.899) = 1
-        await mockBeanstalk.connect(user).mockUnripeBeanDeposit(season, "158328");
 
         mockBeanstalk.deployStemsUpgrade();
-        this.stem = await mockBeanstalk.mockSeasonToStem(UNRIPE_BEAN, season);
 
         // call sunrise twice to avoid germination error.
         // note that `mockUnripeBeanDeposit` increments correctly,
@@ -108,15 +104,10 @@ describe.skip("Silo Enroot", function () {
         await mockBeanstalk.siloSunrise(0);
         await mockBeanstalk.siloSunrise(0);
 
-        await this.migrate.mowAndMigrate(
-          user.address,
-          [UNRIPE_BEAN],
-          [[season]],
-          [[158328]],
-          0,
-          0,
-          []
-        );
+        this.stem = 0;
+        await mockBeanstalk
+          .connect(user)
+          .depositAtStemAndBdv(UNRIPE_BEAN, "158328", this.stem, "29380", 0);
 
         await beanstalk.connect(user).withdrawDeposit(UNRIPE_BEAN, this.stem, "158327", EXTERNAL);
       });

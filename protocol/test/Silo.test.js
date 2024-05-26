@@ -161,7 +161,7 @@ describe("newSilo", function () {
     it("adds to the ERC1155 balance when depositing an whitelisted asset", async function () {
       this.result = await beanstalk.connect(user).deposit(BEAN, to6("1000"), EXTERNAL);
       season = beanstalk.season();
-      stem = mockBeanstalk.mockSeasonToStem(BEAN, season);
+      stem = beanstalk.stemTipForToken(BEAN);
       depositID = await beanstalk.getDepositId(BEAN, stem);
       expect(await beanstalk.balanceOf(user.address, depositID)).to.eq(to6("2000"));
 
@@ -177,7 +177,7 @@ describe("newSilo", function () {
     it("removes ERC1155 balance when withdrawing an whitelisted asset", async function () {
       // user 1 already deposited 1000, so we expect the balanceOf to be 500e6 here.
       season = beanstalk.season();
-      stem = mockBeanstalk.mockSeasonToStem(BEAN, season);
+      stem = beanstalk.stemTipForToken(BEAN);
       depositID = await beanstalk.getDepositId(BEAN, stem);
       expect(await beanstalk.balanceOf(user.address, depositID)).to.eq(to6("1000"));
       this.result = await beanstalk.connect(user).withdrawDeposit(BEAN, stem, to6("500"), EXTERNAL);
@@ -192,10 +192,10 @@ describe("newSilo", function () {
     });
 
     it("transfers an ERC1155 deposit", async function () {
-      // transfering the most recent deposit from user 1, to user 3
+      // transferring the most recent deposit from user 1, to user 3
       // user 1 currently has 2000.4 stalk (1000 stalk, 1000 germinating stalk, and 0.4 grown stalk),
       season = beanstalk.season();
-      stem = mockBeanstalk.mockSeasonToStem(BEAN, season);
+      stem = beanstalk.stemTipForToken(BEAN);
       depositID = await beanstalk.getDepositId(BEAN, stem);
 
       expect(await beanstalk.balanceOfStalk(user.address)).to.eq(toStalk("1000.4"));
@@ -240,7 +240,7 @@ describe("newSilo", function () {
     it("batch transfers an ERC1155 deposit", async function () {
       // skip to next season, user 1 deposits again, and batch transfers the ERC1155 to user 3
       season = beanstalk.season();
-      stem0 = mockBeanstalk.mockSeasonToStem(BEAN, season);
+      stem0 = beanstalk.stemTipForToken(BEAN);
       depositID0 = await beanstalk.getDepositId(BEAN, stem0);
       // user has 1000.4 grown stalk + 1000 germinating stalk.
       expect(await beanstalk.balanceOfStalk(user.address)).to.eq(toStalk("1000.4"));
@@ -249,7 +249,7 @@ describe("newSilo", function () {
       await mockBeanstalk.farmSunrise();
 
       season = beanstalk.season();
-      stem1 = mockBeanstalk.mockSeasonToStem(BEAN, season);
+      stem1 = beanstalk.stemTipForToken(BEAN);
       depositID1 = await beanstalk.getDepositId(BEAN, stem1);
 
       expect(await beanstalk.balanceOfStalk(user.address)).to.eq(toStalk("1000.4"));
@@ -309,18 +309,15 @@ describe("newSilo", function () {
     });
 
     it("properly gives the correct batch balances", async function () {
-      const season = await beanstalk.season();
-      stem = await mockBeanstalk.mockSeasonToStem(BEAN, toBN(season).sub("2"));
-      depositID = await beanstalk.getDepositId(BEAN, stem);
-
+      await beanstalk.connect(user2).deposit(BEAN, to6("1000"), EXTERNAL);
+      let depositID = await beanstalk.getDepositId(BEAN, await beanstalk.stemTipForToken(BEAN));
       let b = await beanstalk.balanceOfBatch([user.address, user2.address], [depositID, depositID]);
       expect(b[0]).to.eq(to6("1000"));
       expect(b[1]).to.eq(to6("1000"));
     });
 
     it("properly gives the correct depositID", async function () {
-      season = beanstalk.season();
-      stem = mockBeanstalk.mockSeasonToStem(BEAN, season);
+      stem = beanstalk.stemTipForToken(BEAN);
       depositID = await beanstalk.getDepositId(BEAN, stem);
       // first 20 bytes is the address,
       // next 12 bytes is the stem

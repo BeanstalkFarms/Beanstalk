@@ -9,6 +9,7 @@ import {GerminationSide} from "./System.sol";
  * @title Account
  * @notice Stores Farmer-level Beanstalk state.
  * @param roots A Farmer's Root balance.
+ * @param stalk Balance of the Farmer's Stalk.
  * @param depositPermitNonces A Farmer's current deposit permit nonce.
  * @param tokenPermitNonces A Farmer's current token permit nonce.
  * @param lastUpdate The Season in which the Farmer last updated their Silo.
@@ -30,6 +31,7 @@ import {GerminationSide} from "./System.sol";
  */
 struct Account {
     uint256 roots;
+    uint256 stalk;
     uint256 depositPermitNonces;
     uint256 tokenPermitNonces;
     uint32 lastUpdate;
@@ -46,7 +48,6 @@ struct Account {
     mapping(IERC20 => uint256) internalTokenBalance;
     bytes32[16] _buffer_1;
     Field field;
-    Silo silo;
     SeasonOfPlenty sop;
 }
 
@@ -59,18 +60,6 @@ struct Account {
 struct Field {
     mapping(uint256 => uint256) plots;
     mapping(address => uint256) podAllowances;
-    bytes32[4] _buffer;
-}
-
-/**
- * @notice Stores a Farmer's Stalk and Seeds balances.
- * @param stalk Balance of the Farmer's Stalk.
- * @param seeds DEPRECATED – Balance of the Farmer's Seeds. Seeds are no longer referenced as of Silo V3.
- * @param _buffer Reserved storage for future additions.
- */
-struct Silo {
-    uint256 stalk;
-    uint256 seeds;
     bytes32[4] _buffer;
 }
 

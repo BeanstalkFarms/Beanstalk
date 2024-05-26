@@ -5818,25 +5818,6 @@
     "inputs": [
       {
         "internalType": "address",
-        "name": "token",
-        "type": "address"
-      }
-    ],
-    "name": "getLegacySeedsPerToken",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
         "name": "account",
         "type": "address"
       },
@@ -6075,30 +6056,6 @@
         "internalType": "bool",
         "name": "hasMigrated",
         "type": "bool"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "token",
-        "type": "address"
-      },
-      {
-        "internalType": "uint32",
-        "name": "season",
-        "type": "uint32"
-      }
-    ],
-    "name": "seasonToStem",
-    "outputs": [
-      {
-        "internalType": "int96",
-        "name": "stem",
-        "type": "int96"
       }
     ],
     "stateMutability": "view",

@@ -578,45 +578,6 @@ library LibTokenSilo {
         return _stemTipForToken.sub(grownStalkPerBdv);
     }
 
-    /**
-     * @notice Calculates stem based on input season
-     * @param seedsPerBdv Seeds per bdv for the token you want to find the corresponding stem for
-     * @param season The season you want to find the corresponding stem for
-     *
-     * @dev Used by the mowAndMigrate function to convert seasons to stems, to know which
-     * stem to deposit in for the new Silo storage system.
-     */
-    function seasonToStem(uint256 seedsPerBdv, uint32 season) internal view returns (int96 stem) {
-        AppStorage storage s = LibAppStorage.diamondStorage();
-
-        require(seedsPerBdv > 0, "Silo: Token not supported");
-
-        //need to go back in time, calculate the delta between the current season and that old deposit season,
-        //and that's how many seasons back we need to go. Then, multiply that by seedsPerBdv, and that's our
-        //negative grown stalk index.
-
-        //find the difference between the input season and the Silo v3 epoch season
-        stem = (int96(uint96(season)).sub(int96(uint96(s.system.season.stemStartSeason)))).mul(
-            int96(int256(seedsPerBdv))
-        );
-    }
-
-    /**
-     * @dev Legacy Seed balance getter.
-     *
-     * constants are used in favor of reading from storage for gas savings.
-     */
-    function getLegacySeedsPerToken(address token) internal pure returns (uint256) {
-        if (token == C.BEAN) {
-            return 2;
-        } else if (token == C.UNRIPE_BEAN) {
-            return 2;
-        } else if (token == C.UNRIPE_LP) {
-            return 4;
-        }
-        return 0;
-    }
-
     function toInt96(uint256 value) internal pure returns (int96) {
         return SafeCast.toInt96(SafeCast.toInt256(value));
     }

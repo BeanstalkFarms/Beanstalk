@@ -164,7 +164,7 @@ library LibGerminate {
 
         // increment users stalk and roots.
         if (germinatingStalk > 0) {
-            s.accounts[account].silo.stalk = s.accounts[account].silo.stalk.add(germinatingStalk);
+            s.accounts[account].stalk = s.accounts[account].stalk.add(germinatingStalk);
             s.accounts[account].roots = s.accounts[account].roots.add(roots);
 
             // emit events. Active stalk is incremented, germinating stalk is decremented.

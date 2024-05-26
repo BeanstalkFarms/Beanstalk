@@ -99,7 +99,7 @@ contract Silo is ReentrancyGuard {
         // Earned Beans.
 
         LibSilo._mow(account, C.BEAN);
-        uint256 accountStalk = s.accounts[account].silo.stalk;
+        uint256 accountStalk = s.accounts[account].stalk;
 
         // Calculate balance of Earned Beans.
         beans = LibSilo._balanceOfEarnedBeans(accountStalk, s.accounts[account].roots);
@@ -127,7 +127,7 @@ contract Silo is ReentrancyGuard {
         // Constant is used here rather than s.system.silo.assetSettings[BEAN].stalkIssuedPerBdv
         // for gas savings.
         uint256 stalk = beans.mul(C.STALK_PER_BEAN);
-        s.accounts[account].silo.stalk = accountStalk.add(stalk);
+        s.accounts[account].stalk = accountStalk.add(stalk);
 
         emit StalkBalanceChanged(account, int256(stalk), 0);
         emit Plant(account, beans);
