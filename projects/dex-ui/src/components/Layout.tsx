@@ -2,6 +2,7 @@ import { size } from "src/breakpoints";
 import { AdditionalCssBase, BoxModelBase, BoxModelProps } from "src/utils/ui/styled";
 import { BlockDisplayStyle, DisplayStyleProps } from "src/utils/ui/styled/common";
 import { FlexModelProps, FlexBase } from "src/utils/ui/styled/flex-model";
+import { theme } from "src/utils/ui/theme";
 
 import { CssProps } from "src/utils/ui/theme/types";
 import styled from "styled-components";
@@ -38,4 +39,9 @@ export const Flex = styled.div<FlexProps>`
   ${FlexBase}
   ${BoxModelBase}
   ${AdditionalCssBase}
+`;
+
+export const Divider = styled.div<{ $color?: keyof typeof theme.colors }>`
+  width: 100%;
+  border-bottom: 1px solid ${(props) => theme.colors[props.$color || "lightGray"]};
 `;
