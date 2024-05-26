@@ -49,7 +49,7 @@ async function printWeather(season) {
   console.log("---------------------------------------------");
   console.log("Weather:");
   console.log(`startSoil ${weather.startSoil}`);
-  console.log(`lastDSoil ${weather.lastDSoil}`);
+  console.log(`lastDeltaSoil ${weather.lastDeltaSoil}`);
   console.log(`lastSoilPercent ${weather.lastSoilPercent}`);
   console.log(`lastSowTime ${weather.lastSowTime}`);
   console.log(`thisSowTime ${weather.thisSowTime}`);

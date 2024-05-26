@@ -61,7 +61,6 @@ async function bipNewSilo(mock = true, account = undefined) {
       'SiloFacet',
       'ConvertFacet',
       'WhitelistFacet',
-      'MigrationFacet',
       'MetadataFacet',
       'TokenFacet',
       'ApprovalFacet',
@@ -160,7 +159,6 @@ async function bipMigrateUnripeBean3CrvToBeanEth(mock = true, account = undefine
       "ConvertGettersFacet",
       "FertilizerFacet",
       "MetadataFacet",
-      "MigrationFacet",
       "UnripeFacet",
     ],
     libraryNames: [
@@ -282,7 +280,6 @@ async function bipMigrateUnripeBeanEthToBeanSteth(mock = true, account = undefin
       "EnrootFacet",
       "FertilizerFacet",
       "MetadataFacet",
-      "MigrationFacet",
       "SeasonFacet",
       "SeasonGettersFacet",
       "UnripeFacet",

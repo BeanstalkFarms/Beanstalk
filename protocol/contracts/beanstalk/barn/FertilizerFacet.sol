@@ -8,7 +8,7 @@ import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
 import {LibRedundantMath256} from "contracts/libraries/LibRedundantMath256.sol";
 import {IFertilizer} from "contracts/interfaces/IFertilizer.sol";
-import {AppStorage} from "../AppStorage.sol";
+import {AppStorage} from "../storage/AppStorage.sol";
 import {LibTractor} from "contracts/libraries/LibTractor.sol";
 import {LibTransfer} from "contracts/libraries/Token/LibTransfer.sol";
 import {LibUsdOracle} from "contracts/libraries/Oracle/LibUsdOracle.sol";
@@ -50,8 +50,8 @@ contract FertilizerFacet is Invariable {
         uint256[] calldata ids,
         LibTransfer.To mode
     ) external payable fundsSafu noSupplyChange oneOutFlow(C.BEAN) {
-        uint256 amount = C.fertilizer().beanstalkUpdate(LibTractor._user(), ids, s.bpf);
-        s.fertilizedPaidIndex += amount;
+        uint256 amount = C.fertilizer().beanstalkUpdate(LibTractor._user(), ids, s.sys.fert.bpf);
+        s.sys.fert.fertilizedPaidIndex += amount;
         LibTransfer.sendToken(C.bean(), amount, LibTractor._user(), mode);
     }
 
@@ -79,7 +79,7 @@ contract FertilizerFacet is Invariable {
         require(fertilizerAmountOut <= remaining, "Fertilizer: Not enough remaining.");
 
         uint128 id = LibFertilizer.addFertilizer(
-            uint128(s.season.current),
+            uint128(s.sys.season.current),
             tokenAmountIn,
             fertilizerAmountOut,
             minLPTokensOut
@@ -88,7 +88,7 @@ contract FertilizerFacet is Invariable {
             LibTractor._user(),
             uint256(id),
             (fertilizerAmountOut).toUint128(),
-            s.bpf
+            s.sys.fert.bpf
         );
     }
 
@@ -100,7 +100,7 @@ contract FertilizerFacet is Invariable {
         uint256 amount
     ) external payable fundsSafu noSupplyChange oneOutFlow(C.BEAN) {
         require(msg.sender == C.fertilizerAddress());
-        s.fertilizedPaidIndex += amount;
+        s.sys.fert.fertilizedPaidIndex += amount;
         LibTransfer.sendToken(C.bean(), amount, account, LibTransfer.To.INTERNAL);
     }
 
@@ -124,19 +124,19 @@ contract FertilizerFacet is Invariable {
     }
 
     function totalFertilizedBeans() external view returns (uint256 beans) {
-        return s.fertilizedIndex;
+        return s.sys.fert.fertilizedIndex;
     }
 
     function totalUnfertilizedBeans() external view returns (uint256 beans) {
-        return s.unfertilizedIndex - s.fertilizedIndex;
+        return s.sys.fert.unfertilizedIndex - s.sys.fert.fertilizedIndex;
     }
 
     function totalFertilizerBeans() external view returns (uint256 beans) {
-        return s.unfertilizedIndex;
+        return s.sys.fert.unfertilizedIndex;
     }
 
     function getFertilizer(uint128 id) external view returns (uint256) {
-        return s.fertilizer[id];
+        return s.sys.fert.fertilizer[id];
     }
 
     function getNext(uint128 id) external view returns (uint128) {
@@ -144,23 +144,23 @@ contract FertilizerFacet is Invariable {
     }
 
     function getFirst() external view returns (uint128) {
-        return s.fFirst;
+        return s.sys.fert.fertFirst;
     }
 
     function getLast() external view returns (uint128) {
-        return s.fLast;
+        return s.sys.fert.fertLast;
     }
 
     function getActiveFertilizer() external view returns (uint256) {
-        return s.activeFertilizer;
+        return s.sys.fert.activeFertilizer;
     }
 
     function isFertilizing() external view returns (bool) {
-        return s.season.fertilizing;
+        return s.sys.season.fertilizing;
     }
 
     function beansPerFertilizer() external view returns (uint128 bpf) {
-        return s.bpf;
+        return s.sys.fert.bpf;
     }
 
     function getHumidity(uint128 _s) external pure returns (uint128 humidity) {
@@ -168,11 +168,11 @@ contract FertilizerFacet is Invariable {
     }
 
     function getCurrentHumidity() external view returns (uint128 humidity) {
-        humidity = LibFertilizer.getHumidity(s.season.current);
+        humidity = LibFertilizer.getHumidity(s.sys.season.current);
     }
 
     function getEndBpf() external view returns (uint128 endBpf) {
-        endBpf = s.bpf.add(LibFertilizer.getBpf(uint128(s.season.current)));
+        endBpf = s.sys.fert.bpf.add(LibFertilizer.getBpf(uint128(s.sys.season.current)));
     }
 
     function remainingRecapitalization() external view returns (uint256) {
@@ -209,14 +209,14 @@ contract FertilizerFacet is Invariable {
 
     function getFertilizers() external view returns (Supply[] memory fertilizers) {
         uint256 numFerts = 0;
-        uint128 idx = s.fFirst;
+        uint128 idx = s.sys.fert.fertFirst;
         while (idx > 0) {
             numFerts = numFerts.add(1);
             idx = LibFertilizer.getNext(idx);
         }
         fertilizers = new Supply[](numFerts);
         numFerts = 0;
-        idx = s.fFirst;
+        idx = s.sys.fert.fertFirst;
         while (idx > 0) {
             fertilizers[numFerts].endBpf = idx;
             fertilizers[numFerts].supply = LibFertilizer.getAmount(idx);

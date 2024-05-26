@@ -11,8 +11,8 @@ import "contracts/libraries/Token/LibEth.sol";
 import "contracts/libraries/Token/LibTokenPermit.sol";
 import "contracts/libraries/Token/LibTokenApprove.sol";
 import {IERC1155Receiver} from "contracts/interfaces/IERC1155Receiver.sol";
-import "../AppStorage.sol";
 import "../ReentrancyGuard.sol";
+import {AppStorage} from "contracts/beanstalk/storage/AppStorage.sol";
 import {Invariable} from "contracts/beanstalk/Invariable.sol";
 
 /**

@@ -59,6 +59,7 @@ async function advanceTime(time) {
   });
 }
 
+exports.toBean = toBean;
 exports.to6 = to6;
 exports.toStalk = toStalk;
 exports.toEther = toEther;

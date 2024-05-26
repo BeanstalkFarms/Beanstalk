@@ -3,7 +3,8 @@
 pragma solidity ^0.8.20;
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import {AppStorage, LibAppStorage} from "../LibAppStorage.sol";
+import {LibAppStorage} from "../LibAppStorage.sol";
+import {AppStorage} from "contracts/beanstalk/storage/AppStorage.sol";
 
 /**
  * @title LibTokenApprove
@@ -19,7 +20,7 @@ library LibTokenApprove {
 
     function approve(address account, address spender, IERC20 token, uint256 amount) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        s.a[account].tokenAllowances[spender][token] = amount;
+        s.accts[account].tokenAllowances[spender][token] = amount;
         emit TokenApproval(account, spender, token, amount);
     }
 
@@ -29,7 +30,7 @@ library LibTokenApprove {
         IERC20 token
     ) internal view returns (uint256) {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        return s.a[account].tokenAllowances[spender][token];
+        return s.accts[account].tokenAllowances[spender][token];
     }
 
     function spendAllowance(address owner, address spender, IERC20 token, uint256 amount) internal {

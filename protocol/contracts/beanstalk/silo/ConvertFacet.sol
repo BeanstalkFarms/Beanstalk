@@ -5,6 +5,7 @@
 pragma solidity ^0.8.20;
 
 import {C} from "contracts/C.sol";
+import {GerminationSide} from "contracts/beanstalk/storage/System.sol";
 import {LibTractor} from "contracts/libraries/LibTractor.sol";
 import {LibSilo} from "contracts/libraries/Silo/LibSilo.sol";
 import {LibTokenSilo} from "contracts/libraries/Silo/LibTokenSilo.sol";
@@ -298,7 +299,7 @@ contract ConvertFacet is Invariable, ReentrancyGuard {
         // all deposits converted are not germinating.
         LibSilo.burnActiveStalk(
             user,
-            a.active.stalk.add(a.active.bdv.mul(s.ss[token].stalkIssuedPerBdv))
+            a.active.stalk.add(a.active.bdv.mul(s.sys.silo.assetSettings[token].stalkIssuedPerBdv))
         );
         return (a.active.stalk, a.active.bdv);
     }
@@ -311,28 +312,28 @@ contract ConvertFacet is Invariable, ReentrancyGuard {
     ) internal returns (int96 stem) {
         require(bdv > 0 && amount > 0, "Convert: BDV or amount is 0.");
 
-        LibGerminate.Germinate germ;
+        GerminationSide side;
 
         // calculate the stem and germination state for the new deposit.
-        (stem, germ) = LibTokenSilo.calculateStemForTokenFromGrownStalk(token, grownStalk, bdv);
+        (stem, side) = LibTokenSilo.calculateStemForTokenFromGrownStalk(token, grownStalk, bdv);
 
         // increment totals based on germination state,
         // as well as issue stalk to the user.
         // if the deposit is germinating, only the inital stalk of the deposit is germinating.
         // the rest is active stalk.
-        if (germ == LibGerminate.Germinate.NOT_GERMINATING) {
+        if (side == GerminationSide.NOT_GERMINATING) {
             LibTokenSilo.incrementTotalDeposited(token, amount, bdv);
             LibSilo.mintActiveStalk(
                 LibTractor._user(),
                 bdv.mul(LibTokenSilo.stalkIssuedPerBdv(token)).add(grownStalk)
             );
         } else {
-            LibTokenSilo.incrementTotalGerminating(token, amount, bdv, germ);
+            LibTokenSilo.incrementTotalGerminating(token, amount, bdv, side);
             // safeCast not needed as stalk is <= max(uint128)
             LibSilo.mintGerminatingStalk(
                 LibTractor._user(),
                 uint128(bdv.mul(LibTokenSilo.stalkIssuedPerBdv(token))),
-                germ
+                side
             );
             LibSilo.mintActiveStalk(LibTractor._user(), grownStalk);
         }

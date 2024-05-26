@@ -77,7 +77,7 @@ library LibTransfer {
         address sender,
         From mode
     ) internal returns (uint256 burnt) {
-        // burnToken only can be called with Unripe Bean, Unripe Bean:3Crv or Bean token, which are all Beanstalk tokens.
+        // burnToken only can be called with Unripe Bean, Unripe LP or Bean token, which are all Beanstalk tokens.
         // Beanstalk's ERC-20 implementation uses OpenZeppelin's ERC20Burnable
         // which reverts if burnFrom function call cannot burn full amount.
         if (mode == From.EXTERNAL) {

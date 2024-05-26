@@ -35,7 +35,7 @@ library LibDibbler {
     /// Soil to be "sold out"; affects how Temperature is adjusted.
     uint256 private constant SOIL_SOLD_OUT_THRESHOLD = 1e6;
 
-    event Sow(address indexed account, uint256 index, uint256 beans, uint256 pods);
+    event Sow(address indexed account, uint256 fieldId, uint256 index, uint256 beans, uint256 pods);
 
     //////////////////// SOW ////////////////////
 
@@ -48,7 +48,7 @@ library LibDibbler {
      *
      * ## Above Peg
      *
-     * | t   | Max pods  | s.f.soil              | soil                    | temperature              | maxTemperature |
+     * | t   | Max pods  | s.sys.soil         | soil                    | temperature              | maxTemperature |
      * |-----|-----------|-----------------------|-------------------------|--------------------------|----------------|
      * | 0   | 500e6     | ~37e6 500e6/(1+1250%) | ~495e6 500e6/(1+1%))    | 1e6 (1%)                 | 1250 (1250%)   |
      * | 12  | 500e6     | ~37e6                 | ~111e6 500e6/(1+348%))  | 348.75e6 (27.9% * 1250)  | 1250           |
@@ -72,7 +72,7 @@ library LibDibbler {
 
         uint256 pods;
         if (abovePeg) {
-            uint256 maxTemperature = uint256(s.w.t).mul(TEMPERATURE_PRECISION);
+            uint256 maxTemperature = uint256(s.sys.weather.temp).mul(TEMPERATURE_PRECISION);
             // amount sown is rounded up, because
             // 1: temperature is rounded down.
             // 2: pods are rounded down.
@@ -83,16 +83,18 @@ library LibDibbler {
         }
 
         // In the case of an overflow, its equivalent to having no soil left.
-        if (s.f.soil < beans) {
-            s.f.soil = 0;
+        if (s.sys.soil < beans) {
+            s.sys.soil = 0;
         } else {
-            s.f.soil = s.f.soil.sub(uint128(beans));
+            s.sys.soil = s.sys.soil.sub(uint128(beans));
         }
 
-        s.a[account].field.plots[s.f.pods] = pods;
-        emit Sow(account, s.f.pods, beans, pods);
+        s.accts[account].fields[s.sys.activeField].plots[
+            s.sys.fields[s.sys.activeField].pods
+        ] = pods;
+        emit Sow(account, s.sys.activeField, s.sys.fields[s.sys.activeField].pods, beans, pods);
 
-        s.f.pods = s.f.pods.add(pods);
+        s.sys.fields[s.sys.activeField].pods += pods;
         _saveSowTime();
         return pods;
     }
@@ -115,25 +117,25 @@ library LibDibbler {
      *  (b) it has not yet been updated this Season.
      *
      * Note that:
-     *  - `s.f.soil` was decremented in the upstream {sow} function.
-     *  - `s.w.thisSowTime` is set to `type(uint32).max` during {sunrise}.
+     *  - `s.soil` was decremented in the upstream {sow} function.
+     *  - `s.weather.thisSowTime` is set to `type(uint32).max` during {sunrise}.
      */
     function _saveSowTime() private {
         AppStorage storage s = LibAppStorage.diamondStorage();
 
-        // s.f.soil is now the soil remaining after this Sow.
-        if (s.f.soil > SOIL_SOLD_OUT_THRESHOLD || s.w.thisSowTime < type(uint32).max) {
+        // s.sys.soil is now the soil remaining after this Sow.
+        if (s.sys.soil > SOIL_SOLD_OUT_THRESHOLD || s.sys.weather.thisSowTime < type(uint32).max) {
             // haven't sold enough soil, or already set thisSowTime for this Season.
             return;
         }
 
-        s.w.thisSowTime = uint32(block.timestamp.sub(s.season.timestamp));
+        s.sys.weather.thisSowTime = uint32(block.timestamp.sub(s.sys.season.timestamp));
     }
 
     //////////////////// TEMPERATURE ////////////////////
 
     /**
-     * @dev Returns the temperature `s.w.t` scaled down based on the block delta.
+     * @dev Returns the temperature `s.weather.t` scaled down based on the block delta.
      * Precision level 1e6, as soil has 1e6 precision (1% = 1e6)
      * the formula `log51(A * MAX_BLOCK_ELAPSED + 1)` is applied, where:
      * `A = 2`
@@ -141,11 +143,11 @@ library LibDibbler {
      */
     function morningTemperature() internal view returns (uint256) {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        uint256 delta = block.number.sub(s.season.sunriseBlock);
+        uint256 delta = block.number.sub(s.sys.season.sunriseBlock);
 
         // check most likely case first
         if (delta > 24) {
-            return uint256(s.w.t).mul(TEMPERATURE_PRECISION);
+            return uint256(s.sys.weather.temp).mul(TEMPERATURE_PRECISION);
         }
 
         // Binary Search
@@ -261,13 +263,13 @@ library LibDibbler {
     /**
      * @param pct The percentage to scale down by, measured to 1e12.
      * @return scaledTemperature The scaled temperature, measured to 1e8 = 100e6 = 100% = 1.
-     * @dev Scales down `s.w.t` and imposes a minimum of 1e6 (1%) unless
-     * `s.w.t` is 0%.
+     * @dev Scales down `s.weather.t` and imposes a minimum of 1e6 (1%) unless
+     * `s.weather.t` is 0%.
      */
     function _scaleTemperature(uint256 pct) private view returns (uint256 scaledTemperature) {
         AppStorage storage s = LibAppStorage.diamondStorage();
 
-        uint256 maxTemperature = s.w.t;
+        uint256 maxTemperature = s.sys.weather.temp;
         if (maxTemperature == 0) return 0;
 
         scaledTemperature = Math.max(
@@ -323,13 +325,13 @@ library LibDibbler {
      *
      * When Beanstalk is above peg, the Soil issued changes. Example:
      *
-     * If 500 Soil is issued when `s.w.t = 100e2 = 100%`
+     * If 500 Soil is issued when `s.weather.temp = 100e2 = 100%`
      * At delta = 0:
      *  morningTemperature() = 1%
      *  Soil = `500*(100 + 100%)/(100 + 1%)` = 990.09901 soil
      *
      * If someone sow'd ~495 soil, it's equilivant to sowing 250 soil at t > 25.
-     * Thus when someone sows during this time, the amount subtracted from s.f.soil
+     * Thus when someone sows during this time, the amount subtracted from s.sys.soil
      * should be scaled down.
      *
      * Note: param ordering matches the mulDiv operation
@@ -354,17 +356,17 @@ library LibDibbler {
         AppStorage storage s = LibAppStorage.diamondStorage();
 
         // Above peg: number of Pods is fixed, Soil adjusts
-        if (s.season.abovePeg) {
+        if (s.sys.season.abovePeg) {
             return
                 beansToPods(
-                    s.f.soil, // 1 bean = 1 soil
-                    uint256(s.w.t).mul(TEMPERATURE_PRECISION) // 1e2 -> 1e8
+                    s.sys.soil, // 1 bean = 1 soil
+                    uint256(s.sys.weather.temp).mul(TEMPERATURE_PRECISION) // 1e2 -> 1e8
                 );
         } else {
             // Below peg: amount of Soil is fixed, temperature adjusts
             return
                 beansToPods(
-                    s.f.soil, // 1 bean = 1 soil
+                    s.sys.soil, // 1 bean = 1 soil
                     morningTemperature()
                 );
         }

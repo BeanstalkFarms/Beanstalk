@@ -3,11 +3,6 @@ var fs = require('fs');
 const {
   ZERO_ADDRESS,
   BEAN,
-  THREE_CURVE,
-  THREE_POOL,
-  BEAN_3_CURVE,
-  LUSD_3_CURVE,
-  BEAN_LUSD_CURVE,
   UNISWAP_V2_ROUTER,
   UNISWAP_V2_PAIR,
   WETH,
@@ -15,8 +10,6 @@ const {
   UNRIPE_BEAN,
   UNRIPE_LP,
   USDC,
-  CURVE_REGISTRY,
-  CURVE_ZAP,
   STABLE_FACTORY,
   PRICE_DEPLOYER,
   BEANSTALK,
@@ -32,70 +25,6 @@ const { impersonateSigner, mintEth } = require('../utils');
 const { to18 } = require('../test/utils/helpers');
 
 const { getSigner } = '../utils'
-
-/**
- * @notice deploys the curve ecosystem relevant to beanstalk.
- * @dev Because bean3crv is dewhitelisted, this is kept for testing 
- * legacy functionality. 
- */
-async function curve() {
-
-  // 3-pool (DAI, USDC, USDT)
-  await impersonateContractOnPath(
-    `./artifacts/contracts/mocks/curve/Mock3Curve.sol/Mock3Curve.json`,
-    THREE_POOL
-  )
-
-  const threePool = await ethers.getContractAt('Mock3Curve', THREE_POOL)
-  await threePool.set_virtual_price(ethers.utils.parseEther('1'));
-
-  // 3crv token
-  await impersonateContractOnPath(
-    './artifacts/contracts/mocks/MockToken.sol/MockToken.json',
-    THREE_CURVE
-  )
-
-  // Stable Factory, Curve Registry, Curve Zap
-  await impersonateContractOnPath(
-    './artifacts/contracts/mocks/curve/MockCurveFactory.sol/MockCurveFactory.json',
-    STABLE_FACTORY
-  )
-  await impersonateContractOnPath(
-    './artifacts/contracts/mocks/curve/MockCurveFactory.sol/MockCurveFactory.json',
-    CURVE_REGISTRY
-  )
-  await impersonateContractOnPath(
-    './artifacts/contracts/mocks/curve/MockCurveZap.sol/MockCurveZap.json',
-    CURVE_ZAP
-  )
-
-  const curveStableFactory = await ethers.getContractAt("MockCurveFactory", STABLE_FACTORY);
-  await curveStableFactory.set_coins(BEAN_3_CURVE, [BEAN, THREE_CURVE, ZERO_ADDRESS, ZERO_ADDRESS]);
-
-  const curveZap = await ethers.getContractAt("MockCurveZap", CURVE_ZAP);
-  await curveZap.approve()
-}
-
-async function curveMetapool(poolAddress, name, tokenAddress) {
-
-  await impersonateContractOnPath(
-    './artifacts/contracts/mocks/curve/MockMeta3Curve.sol/MockMeta3Curve.json',
-    poolAddress
-  )
-
-  const beanMetapool = await ethers.getContractAt('MockMeta3Curve', poolAddress);
-  await beanMetapool.init(tokenAddress, THREE_CURVE, THREE_POOL);
-  await beanMetapool.set_A_precise('1000');
-  await beanMetapool.set_virtual_price(ethers.utils.parseEther('1'));
-  await beanMetapool.setSymbol(`${name}-f`);
-}
-
-/**
- * @notice deploys the bean3crv metapool.
- */
-async function bean3CrvMetapool() {
-  await curveMetapool(BEAN_3_CURVE, 'BEAN3CRV', BEAN);
-}
 
 /// WETH ///
 async function weth() {
@@ -256,9 +185,6 @@ async function chainlinkAggregator(address, decimals=6) {
 
 exports.impersonateRouter = router
 exports.impersonateBean = bean
-exports.impersonateCurve = curve
-exports.impersonateCurveMetapool = curveMetapool
-exports.impersonateBean3CrvMetapool = bean3CrvMetapool
 exports.impersonatePool = pool
 exports.impersonateWeth = weth
 exports.impersonateUnripe = unripe
