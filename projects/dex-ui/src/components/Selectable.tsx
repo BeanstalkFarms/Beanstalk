@@ -2,8 +2,8 @@ import React from "react";
 import { theme } from "src/utils/ui/theme";
 import styled from "styled-components";
 import { Flex } from "src/components/Layout";
-import { ChevronDown, CircleEmptyIcon, CircleFilledCheckIcon } from "../Icons";
-import { ImageButton } from "../ImageButton";
+import { ChevronDown, CircleEmptyIcon, CircleFilledCheckIcon } from "./Icons";
+import { ImageButton } from "./ImageButton";
 import { useBoolean } from "src/utils/ui/useBoolean";
 
 export type AccordionSelectCardProps = {
@@ -13,6 +13,33 @@ export type AccordionSelectCardProps = {
   defaultExpanded?: boolean;
   onClick: React.MouseEventHandler<HTMLDivElement> | undefined;
 };
+
+export const SelectIndicatorIcon = ({
+  selected,
+  size = 16
+}: {
+  selected: boolean;
+  size?: number;
+}) => {
+  return (
+    <SelectIndicatorWrapper size={size}>
+      {selected ? (
+        <CircleFilledCheckIcon width={size} height={size} />
+      ) : (
+        <CircleEmptyIcon color={theme.colors.lightGray} width={size} height={size} />
+      )}
+    </SelectIndicatorWrapper>
+  );
+};
+
+const SelectIndicatorWrapper = styled.div<{ size: number }>`
+  min-width: ${(props) => props.size}px;
+  min-height: ${(props) => props.size}px;
+  max-height: ${(props) => props.size}px;
+  max-width: ${(props) => props.size}px;
+  width: ${(props) => props.size}px;
+  height: ${(props) => props.size}px;
+`;
 
 export const AccordionSelectCard = ({
   selected,
@@ -27,11 +54,7 @@ export const AccordionSelectCard = ({
     <ComponentWrapper $active={selected} onClick={onClick}>
       <Flex $direction="row" $alignItems="center" $fullWidth $justifyContent="space-between">
         <Flex $direction="row" $alignItems="center" $fullWidth $gap={2}>
-          {selected ? (
-            <CircleFilledCheckIcon />
-          ) : (
-            <CircleEmptyIcon color={theme.colors.lightGray} />
-          )}
+          <SelectIndicatorIcon selected={selected} />
           {upper}
         </Flex>
         <ImageButton

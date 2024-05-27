@@ -4,6 +4,14 @@ import { Text } from "src/components/Typography";
 import styled from "styled-components";
 import { ComponentInputWithCustom } from "../ComponentInputWithCustom";
 
+const additionalOptions = [
+  {
+    value: "none",
+    label: "None",
+    subLabel: "No Oracle"
+  }
+];
+
 export const PumpSelectFormSection = () => {
   return (
     <SectionWrapper $direction="row" $justifyContent="space-between" $fullWidth>
@@ -17,9 +25,7 @@ export const PumpSelectFormSection = () => {
           path="pump"
           toggleMessage="Use a custom Pump"
           emptyValue=""
-          noneOption={{
-            description: "No Oracle"
-          }}
+          additional={additionalOptions}
         />
       </Flex>
     </SectionWrapper>

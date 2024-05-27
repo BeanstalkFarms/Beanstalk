@@ -2,8 +2,8 @@ import React, { InputHTMLAttributes, forwardRef } from "react";
 import { theme } from "src/utils/ui/theme";
 import styled from "styled-components";
 import { LinksButtonText, Text } from "src/components/Typography";
-import { Flex } from "../Layout";
-import { SearchIcon } from "../Icons";
+import { Flex } from "./Layout";
+import { SearchIcon } from "./Icons";
 
 export type AddressInputFieldProps = InputHTMLAttributes<HTMLInputElement> & {
   error?: string;
