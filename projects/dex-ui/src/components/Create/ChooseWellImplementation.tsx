@@ -10,19 +10,19 @@ import { ethers } from "ethers";
 import { CreateWellProps, useCreateWell } from "./CreateWellProvider";
 import { ComponentInputWithCustom } from "./ComponentInputWithCustom";
 
-type FormType = CreateWellProps["wellImplementation"];
+type FormValues = CreateWellProps["wellImplementation"];
 
 const ChooseWellImplementationForm = () => {
   const navigate = useNavigate();
 
   const { wellImplementation, setWellImplementation } = useCreateWell();
 
-  const methods = useForm<FormType>({
+  const methods = useForm<FormValues>({
     defaultValues: { wellImplementation: "" },
     values: { wellImplementation: wellImplementation?.wellImplementation || "" }
   });
 
-  const handleSubmit = ({ wellImplementation }: FormType) => {
+  const handleSubmit = ({ wellImplementation }: FormValues) => {
     if (!ethers.utils.isAddress(wellImplementation)) return;
     if (wellImplementation) {
       setWellImplementation({ wellImplementation: wellImplementation, goNext: true });
@@ -34,10 +34,11 @@ const ChooseWellImplementationForm = () => {
       <form onSubmit={methods.handleSubmit(handleSubmit)} style={{ width: "100%" }}>
         <FormWrapperInner $gap={2} $fullWidth>
           <Uppercase $lineHeight="l">Which Well Implementation do you want to use?</Uppercase>
-          <ComponentInputWithCustom
+          <ComponentInputWithCustom<FormValues>
             componentType="wellImplementations"
             path="wellImplementation"
             toggleMessage="Use a custom Well Implementation instead"
+            emptyValue=""
           />
           <Flex $fullWidth $direction="row" $justifyContent="space-between">
             <ButtonPrimary $variant="outlined" onClick={() => navigate("/build")}>
@@ -54,9 +55,9 @@ const ChooseWellImplementationForm = () => {
 const SubmitButton = () => {
   const {
     formState: { errors }
-  } = useFormContext<FormType>();
+  } = useFormContext<FormValues>();
 
-  const canSubmit = !!Object.keys(errors).length;
+  const canSubmit = !Object.keys(errors).length;
 
   return (
     <ButtonPrimary type="submit" disabled={!canSubmit}>
