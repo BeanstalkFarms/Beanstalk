@@ -3,7 +3,6 @@ import { useFormContext, useWatch } from "react-hook-form";
 import { Flex } from "src/components/Layout";
 import { Text } from "src/components/Typography";
 import { CreateWellProps } from "../CreateWellProvider";
-import { DropdownField } from "src/components/Common/Dropdown";
 import styled from "styled-components";
 import { AddressInputField } from "src/components/Common/Form";
 import { ethers } from "ethers";
@@ -13,8 +12,6 @@ import { useReadContract } from "wagmi";
 import { erc20Abi } from "viem";
 import { theme } from "src/utils/ui/theme";
 import { XIcon } from "src/components/Icons";
-
-const allowedTokenTypes = ["ERC20", "ERC1155"];
 
 type FormValues = CreateWellProps["wellFunctionAndPump"];
 
@@ -73,37 +70,10 @@ const FieldDataWrapper = styled.div`
 `;
 
 export const TokenSelectFormSection = () => {
-  const { control } = useFormContext<FormValues>();
-
   return (
     <Flex $gap={2} $fullWidth>
       <Text $variant="h3">Tokens</Text>
-      <Flex $direction="row" $gap={4} $fullWidth>
-        <Flex $width="50%">
-          <Text $color="text.secondary" $variant="xs" $mb={1}>
-            Token 1 Type
-          </Text>
-          <DropdownField control={control} name="token1.type" align="center">
-            {allowedTokenTypes.map((_type) => (
-              <DropdownField.Option value={_type} key={`dropdown-${_type}`}>
-                <Text $align="center">{_type}</Text>
-              </DropdownField.Option>
-            ))}
-          </DropdownField>
-        </Flex>
-        <Flex $width="50%">
-          <Text $color="text.secondary" $variant="xs" $mb={1}>
-            Token 2 Type
-          </Text>
-          <DropdownField control={control} name="token2.type" align="center">
-            {allowedTokenTypes.map((_type) => (
-              <DropdownField.Option value={_type} key={`dropdown-${_type}`}>
-                <Text $align="center">{_type}</Text>
-              </DropdownField.Option>
-            ))}
-          </DropdownField>
-        </Flex>
-      </Flex>
+
       <Flex $direction="row" $gap={4} $fullWidth>
         <TokenContainer>
           <Text $color="text.secondary" $variant="xs" $mb={1}>
