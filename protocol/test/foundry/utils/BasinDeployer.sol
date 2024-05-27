@@ -41,6 +41,11 @@ contract BasinDeployer is Utils {
     address constant MFP = address(0xBA510f10E3095B83a0F33aa9ad2544E22570a87C);
     address constant WELL_IMPLMENTATION = address(0xBA510e11eEb387fad877812108a3406CA3f43a4B);
 
+    // extra wells addreses (used for convert testing)
+    // addresses were randomly generated and are not on-chain.
+    address constant BEAN_USDC_WELL = address(0x4444F7394455A8d1af37E8BEa52F2FCf6D39f158);
+    address constant BEAN_USDT_WELL = address(0x55554AF7c7CEe28994c7484C364768620C726D68);
+
     string constant BEAN_WETH_WELL_NAME = "BEAN:WETH Constant Product 2 Well";
     string constant BEAN_WETH_WELL_SYMBOL = "BEANWETHCP2w";
 
@@ -177,6 +182,28 @@ contract BasinDeployer is Utils {
         wells.push(deployBeanCp2Well([C.BEAN_WSTETH_WELL, C.WSTETH], _pump));
         if (verbose) console.log("Bean wstEth well deployed at:", wells[1]);
         vm.label(C.BEAN_WSTETH_WELL, "BEAN/WSTETH Well");
+    }
+
+    function deployExtraWells(bool mock, bool verbose) internal {
+        address _pump;
+
+        if (mock) {
+            // mock pump.
+            _pump = pumps[1];
+        } else {
+            // multi flow pump.
+            _pump = pumps[0];
+        }
+
+        // deploy Bean USDC well:
+        wells.push(deployBeanCp2Well([BEAN_USDC_WELL, C.USDC], _pump));
+        if (verbose) console.log("Bean USDC well deployed at:", wells[0]);
+        vm.label(BEAN_USDC_WELL, "BEAN/USDC Well");
+
+        // deploy Bean USDT well:
+        wells.push(deployBeanCp2Well([BEAN_USDT_WELL, C.USDT], _pump));
+        if (verbose) console.log("Bean USDT well deployed at:", wells[1]);
+        vm.label(BEAN_USDT_WELL, "BEAN/USDT Well");
     }
 
     /**

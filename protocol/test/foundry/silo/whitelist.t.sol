@@ -5,7 +5,6 @@ pragma abicoder v2;
 import {TestHelper, LibTransfer, C} from "test/foundry/utils/TestHelper.sol";
 import {IMockFBeanstalk} from "contracts/interfaces/IMockFBeanstalk.sol";
 import {MockToken} from "contracts/mocks/MockToken.sol";
-import {Storage} from "contracts/beanstalk/AppStorage.sol";
 
 /**
  * @notice Tests the functionality of whitelisting.
@@ -280,7 +279,7 @@ contract WhitelistTest is TestHelper {
         i = bound(i, 0, tokens.length - 1);
         address token = tokens[i];
         // initial milestone stem and season
-        IMockFBeanstalk.SiloSettings memory ss = bs.tokenSettings(token);
+        IMockFBeanstalk.AssetSettings memory ss = bs.tokenSettings(token);
 
         vm.expectEmit();
         emit DewhitelistToken(token);
@@ -289,7 +288,7 @@ contract WhitelistTest is TestHelper {
         verifyWhitelistState(token, 0, 1, 10000, 0, 0, 0, 0, false, false, false);
         // verify that the milestone stem and season are updated and are kept, as
         // existing deposits are still valid.
-        IMockFBeanstalk.SiloSettings memory newSS = bs.tokenSettings(token);
+        IMockFBeanstalk.AssetSettings memory newSS = bs.tokenSettings(token);
         assertEq(int256(newSS.milestoneStem), bs.stemTipForToken(token));
         assertEq(uint256(newSS.milestoneSeason), season);
     }
@@ -382,7 +381,7 @@ contract WhitelistTest is TestHelper {
         bool isWhitelistedLp,
         bool isWhitelistedWell
     ) internal view {
-        IMockFBeanstalk.SiloSettings memory ss = bs.tokenSettings(token);
+        IMockFBeanstalk.AssetSettings memory ss = bs.tokenSettings(token);
         assertEq(ss.selector, bdvSelector);
         assertEq(uint256(ss.stalkIssuedPerBdv), stalkIssuedPerBdv);
         assertEq(

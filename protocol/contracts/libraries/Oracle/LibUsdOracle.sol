@@ -4,7 +4,9 @@
 
 pragma solidity ^0.8.20;
 
-import {LibAppStorage, AppStorage, Storage} from "contracts/libraries/LibAppStorage.sol";
+import {Implementation} from "contracts/beanstalk/storage/System.sol";
+import {AppStorage} from "contracts/beanstalk/storage/AppStorage.sol";
+import {LibAppStorage} from "contracts/libraries/LibAppStorage.sol";
 import {LibChainlinkOracle} from "./LibChainlinkOracle.sol";
 import {LibUniswapOracle} from "./LibUniswapOracle.sol";
 import {LibEthUsdOracle} from "./LibEthUsdOracle.sol";
@@ -87,7 +89,7 @@ library LibUsdOracle {
         uint256 lookback
     ) internal view returns (uint256 tokenPrice) {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        Storage.Implementation memory oracleImpl = s.oracleImplementation[token];
+        Implementation memory oracleImpl = s.sys.oracleImplementation[token];
 
         // If the encode type is type 1, use the default chainlink implementation instead.
         // `target` refers to the address of the price aggergator implmenation

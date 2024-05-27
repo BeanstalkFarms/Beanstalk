@@ -4,9 +4,6 @@ const { EXTERNAL } = require("./utils/balances.js");
 const { to18, to6, advanceTime } = require("./utils/helpers.js");
 const {
   BEAN,
-  BEAN_3_CURVE,
-  THREE_CURVE,
-  THREE_POOL,
   STABLE_FACTORY,
   BEAN_ETH_WELL,
   BEAN_WSTETH_WELL

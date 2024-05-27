@@ -7,8 +7,8 @@ import {MockSeasonFacet} from "contracts/mocks/mockFacets/MockSeasonFacet.sol";
 import {LibGauge} from "contracts/libraries/LibGauge.sol";
 import {MockChainlinkAggregator} from "contracts/mocks/chainlink/MockChainlinkAggregator.sol";
 import {MockLiquidityWeight} from "contracts/mocks/MockLiquidityWeight.sol";
-import {AppStorage} from "contracts/beanstalk/AppStorage.sol";
 import {LibAppStorage} from "contracts/libraries/LibAppStorage.sol";
+import {AppStorage} from "contracts/beanstalk/storage/AppStorage.sol";
 
 /**
  * @notice Tests the functionality of the gauge.
@@ -99,14 +99,14 @@ contract GaugeTest is TestHelper {
         AppStorage storage s = LibAppStorage.diamondStorage();
         uint256 scaledRatio = bs.getBeanToMaxLpGpPerBdvRatioScaled();
         // scaled ratio should never fall below 50%.
-        assertGe(scaledRatio, s.seedGaugeSettings.minBeanMaxLpGpPerBdvRatio);
+        assertGe(scaledRatio, s.sys.seedGaugeSettings.minBeanMaxLpGpPerBdvRatio);
 
         // scaled ratio should never exceed 100%.
-        assertLe(scaledRatio, s.seedGaugeSettings.maxBeanMaxLpGpPerBdvRatio);
+        assertLe(scaledRatio, s.sys.seedGaugeSettings.maxBeanMaxLpGpPerBdvRatio);
 
         // the scaledRatio should increase half as fast as the initBeanToMaxLPRatio.
         assertEq(
-            scaledRatio - s.seedGaugeSettings.minBeanMaxLpGpPerBdvRatio,
+            scaledRatio - s.sys.seedGaugeSettings.minBeanMaxLpGpPerBdvRatio,
             initBeanToMaxLPRatio / 2
         );
     }
@@ -230,7 +230,11 @@ contract GaugeTest is TestHelper {
     function test_avgGrownStalkPerBdv_changes(uint256 season) public {
         AppStorage storage s = LibAppStorage.diamondStorage();
         // season is capped to uint32 max - 1.
-        season = bound(season, s.seedGaugeSettings.targetSeasonsToCatchUp, type(uint32).max - 1);
+        season = bound(
+            season,
+            s.sys.seedGaugeSettings.targetSeasonsToCatchUp,
+            type(uint32).max - 1
+        );
         depositForUser(users[1], C.BEAN, 100e6);
 
         bs.fastForward(uint32(season));
@@ -394,13 +398,13 @@ contract GaugeTest is TestHelper {
         bs.setBeanToMaxLpGpPerBdvRatio(uint128(beanToMaxLpRatio));
 
         // init values:
-        IMockFBeanstalk.SiloSettings memory lpSettings = bs.tokenSettings(wellToken);
+        IMockFBeanstalk.AssetSettings memory lpSettings = bs.tokenSettings(wellToken);
         // step gauge:
         bs.mockStepGauge();
 
         // assertions.
-        IMockFBeanstalk.SiloSettings memory postBeanSettings = bs.tokenSettings(C.BEAN);
-        IMockFBeanstalk.SiloSettings memory postLpSettings = bs.tokenSettings(wellToken);
+        IMockFBeanstalk.AssetSettings memory postBeanSettings = bs.tokenSettings(C.BEAN);
+        IMockFBeanstalk.AssetSettings memory postLpSettings = bs.tokenSettings(wellToken);
 
         // verify that the gauge points remain unchanged.
         assertEq(
@@ -462,7 +466,7 @@ contract GaugeTest is TestHelper {
 
         // get silo settings.
         address[] memory tokens = bs.getWhitelistedTokens();
-        IMockFBeanstalk.SiloSettings[] memory postSettings = new IMockFBeanstalk.SiloSettings[](
+        IMockFBeanstalk.AssetSettings[] memory postSettings = new IMockFBeanstalk.AssetSettings[](
             tokens.length
         );
 

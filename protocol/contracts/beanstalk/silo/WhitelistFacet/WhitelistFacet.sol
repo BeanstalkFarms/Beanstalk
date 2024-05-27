@@ -6,10 +6,12 @@ pragma solidity ^0.8.20;
 
 import {LibDiamond} from "contracts/libraries/LibDiamond.sol";
 import {LibWhitelist} from "contracts/libraries/Silo/LibWhitelist.sol";
-import {AppStorage, Storage} from "contracts/beanstalk/AppStorage.sol";
+import {AppStorage} from "contracts/beanstalk/storage/AppStorage.sol";
 import {WhitelistedTokens} from "contracts/beanstalk/silo/WhitelistFacet/WhitelistedTokens.sol";
 import {Invariable} from "contracts/beanstalk/Invariable.sol";
 import {ReentrancyGuard} from "contracts/beanstalk/ReentrancyGuard.sol";
+import {SeedGaugeSettings} from "contracts/beanstalk/storage/System.sol";
+import {Implementation} from "contracts/beanstalk/storage/System.sol";
 
 /**
  * @author Publius
@@ -19,9 +21,9 @@ import {ReentrancyGuard} from "contracts/beanstalk/ReentrancyGuard.sol";
  **/
 contract WhitelistFacet is Invariable, WhitelistedTokens, ReentrancyGuard {
     /**
-     * @notice emitted when {Storage.SeedGaugeSettings} is updated.
+     * @notice emitted when {SeedGaugeSettings} is updated.
      */
-    event UpdatedSeedGaugeSettings(Storage.SeedGaugeSettings);
+    event UpdatedSeedGaugeSettings(SeedGaugeSettings);
 
     /**
      * @notice Removes a token from the Silo Whitelist.
@@ -144,9 +146,9 @@ contract WhitelistFacet is Invariable, WhitelistedTokens, ReentrancyGuard {
         bytes1 encodeType,
         uint128 gaugePoints,
         uint64 optimalPercentDepositedBdv,
-        Storage.Implementation memory oracleImplementation,
-        Storage.Implementation memory gaugePointImplementation,
-        Storage.Implementation memory liquidityWeightImplementation
+        Implementation memory oracleImplementation,
+        Implementation memory gaugePointImplementation,
+        Implementation memory liquidityWeightImplementation
     ) external payable {
         LibDiamond.enforceIsOwnerOrContract();
         LibWhitelist.whitelistTokenWithExternalImplementation(
@@ -201,7 +203,7 @@ contract WhitelistFacet is Invariable, WhitelistedTokens, ReentrancyGuard {
      */
     function updateOracleImplementationForToken(
         address token,
-        Storage.Implementation memory impl
+        Implementation memory impl
     ) external payable {
         LibDiamond.enforceIsOwnerOrContract();
         LibWhitelist.updateOracleImplementationForToken(token, impl);
@@ -212,7 +214,7 @@ contract WhitelistFacet is Invariable, WhitelistedTokens, ReentrancyGuard {
      */
     function updateLiqudityWeightImplementationForToken(
         address token,
-        Storage.Implementation memory impl
+        Implementation memory impl
     ) external payable {
         LibDiamond.enforceIsOwnerOrContract();
         LibWhitelist.updateLiqudityWeightImplementationForToken(token, impl);
@@ -223,17 +225,15 @@ contract WhitelistFacet is Invariable, WhitelistedTokens, ReentrancyGuard {
      */
     function updateGaugePointImplementationForToken(
         address token,
-        Storage.Implementation memory impl
+        Implementation memory impl
     ) external payable {
         LibDiamond.enforceIsOwnerOrContract();
         LibWhitelist.updateGaugePointImplementationForToken(token, impl);
     }
 
-    function updateSeedGaugeSettings(
-        Storage.SeedGaugeSettings memory updatedSeedGaugeSettings
-    ) external {
+    function updateSeedGaugeSettings(SeedGaugeSettings memory updatedSeedGaugeSettings) external {
         LibDiamond.enforceIsOwnerOrContract();
-        s.seedGaugeSettings = updatedSeedGaugeSettings;
+        s.sys.seedGaugeSettings = updatedSeedGaugeSettings;
         emit UpdatedSeedGaugeSettings(updatedSeedGaugeSettings);
     }
 }

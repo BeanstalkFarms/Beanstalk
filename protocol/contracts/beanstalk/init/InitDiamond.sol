@@ -4,7 +4,7 @@
 
 pragma solidity ^0.8.20;
 
-import {AppStorage, Storage} from "../AppStorage.sol";
+import {AppStorage} from "../storage/AppStorage.sol";
 import {IERC165} from "@openzeppelin/contracts/utils/introspection/IERC165.sol";
 import {IERC1155} from "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
 import {IDiamondCut} from "../../interfaces/IDiamondCut.sol";
@@ -37,39 +37,35 @@ contract InitDiamond is Weather {
         ds.supportedInterfaces[0xd9b67a26] = true; // ERC1155
         ds.supportedInterfaces[0x0e89341c] = true; // ERC1155Metadata
 
-        C.bean().approve(C.CURVE_BEAN_METAPOOL, type(uint256).max);
-        C.bean().approve(C.curveZapAddress(), type(uint256).max);
-        C.usdc().approve(C.curveZapAddress(), type(uint256).max);
-
         LibCases.setCasesV2();
-        s.w.t = 1;
+        s.sys.weather.temp = 1;
 
-        s.season.current = 1;
-        s.season.withdrawSeasons = 25;
-        s.season.period = C.getSeasonPeriod();
-        s.season.timestamp = block.timestamp;
-        s.season.start = s.season.period > 0
-            ? (block.timestamp / s.season.period) * s.season.period
+        s.sys.season.current = 1;
+        s.sys.season.withdrawSeasons = 25;
+        s.sys.season.period = C.getSeasonPeriod();
+        s.sys.season.timestamp = block.timestamp;
+        s.sys.season.start = s.sys.season.period > 0
+            ? (block.timestamp / s.sys.season.period) * s.sys.season.period
             : block.timestamp;
 
-        s.w.thisSowTime = type(uint32).max;
-        s.w.lastSowTime = type(uint32).max;
-        s.isFarm = 1;
+        s.sys.weather.thisSowTime = type(uint32).max;
+        s.sys.weather.lastSowTime = type(uint32).max;
+        s.sys.isFarm = 1;
 
-        s.usdTokenPrice[C.BEAN_ETH_WELL] = 1;
-        s.twaReserves[C.BEAN_ETH_WELL].reserve0 = 1;
-        s.twaReserves[C.BEAN_ETH_WELL].reserve1 = 1;
+        s.sys.usdTokenPrice[C.BEAN_ETH_WELL] = 1;
+        s.sys.twaReserves[C.BEAN_ETH_WELL].reserve0 = 1;
+        s.sys.twaReserves[C.BEAN_ETH_WELL].reserve1 = 1;
 
-        s.seedGauge.beanToMaxLpGpPerBdvRatio = 50e18; // 50%
-        s.seedGauge.averageGrownStalkPerBdvPerSeason = 3e6;
+        s.sys.seedGauge.beanToMaxLpGpPerBdvRatio = 50e18; // 50%
+        s.sys.seedGauge.averageGrownStalkPerBdvPerSeason = 3e6;
 
         emit BeanToMaxLpGpPerBdvRatioChange(
-            s.season.current,
+            s.sys.season.current,
             type(uint256).max,
-            int80(int128(s.seedGauge.beanToMaxLpGpPerBdvRatio))
+            int80(int128(s.sys.seedGauge.beanToMaxLpGpPerBdvRatio))
         );
         emit LibGauge.UpdateAverageStalkPerBdvPerSeason(
-            s.seedGauge.averageGrownStalkPerBdvPerSeason
+            s.sys.seedGauge.averageGrownStalkPerBdvPerSeason
         );
         C.bean().mint(msg.sender, LibIncentive.MAX_REWARD);
         emit LibIncentive.Incentivization(msg.sender, LibIncentive.MAX_REWARD);

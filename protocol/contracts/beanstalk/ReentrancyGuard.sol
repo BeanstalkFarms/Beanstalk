@@ -2,7 +2,7 @@
 
 pragma solidity ^0.8.20;
 
-import "./AppStorage.sol";
+import {AppStorage} from "./storage/AppStorage.sol";
 
 /**
  * @author Beanstalk Farms
@@ -16,9 +16,9 @@ abstract contract ReentrancyGuard {
     AppStorage internal s;
 
     modifier nonReentrant() {
-        require(s.reentrantStatus != _ENTERED, "ReentrancyGuard: reentrant call");
-        s.reentrantStatus = _ENTERED;
+        require(s.sys.reentrantStatus != _ENTERED, "ReentrancyGuard: reentrant call");
+        s.sys.reentrantStatus = _ENTERED;
         _;
-        s.reentrantStatus = _NOT_ENTERED;
+        s.sys.reentrantStatus = _NOT_ENTERED;
     }
 }

@@ -21,7 +21,6 @@ const {
   impersonateSigner,
   mintUsdc,
   mintBeans,
-  getBeanMetapool,
   getUsdc,
   getBean,
   getBeanstalkAdminControls,
@@ -35,7 +34,7 @@ const {
   INTERNAL_EXTERNAL,
   INTERNAL_TOLERANT
 } = require("./test/utils/balances.js");
-const { BEANSTALK, PUBLIUS, BEAN_3_CURVE, BEAN_ETH_WELL } = require("./test/utils/constants.js");
+const { BEANSTALK, PUBLIUS, BEAN_ETH_WELL } = require("./test/utils/constants.js");
 const { to6 } = require("./test/utils/helpers.js");
 //const { replant } = require("./replant/replant.js")
 const { task } = require("hardhat/config");
@@ -54,34 +53,6 @@ function getRemappings() {
 }
 
 //////////////////////// TASKS ////////////////////////
-
-task("buyBeans")
-  .addParam("amount", "The amount of USDC to buy with")
-  .setAction(async (args) => {
-    await mintEth(PUBLIUS);
-    await mintUsdc(PUBLIUS, args.amount);
-    const signer = await impersonateSigner(PUBLIUS);
-    await (await getUsdc()).connect(signer).approve(BEAN_3_CURVE, ethers.constants.MaxUint256);
-    const txn = await (await getBeanMetapool())
-      .connect(signer)
-      .exchange_underlying("2", "0", args.amount, "0");
-    const result = await txn.wait();
-    console.log("Done", result);
-  });
-
-task("sellBeans")
-  .addParam("amount", "The amount of Beans to sell")
-  .setAction(async (args) => {
-    await mintBeans(PUBLIUS, args.amount);
-    const signer = await impersonateSigner(PUBLIUS);
-    await (await getBean()).connect(signer).approve(BEAN_3_CURVE, ethers.constants.MaxUint256);
-    await (
-      await getBeanMetapool()
-    )
-      .connect(signer)
-      .connect(await impersonateSigner(PUBLIUS))
-      .exchange_underlying("0", "2", args.amount, "0");
-  });
 
 task("ripen")
   .addParam("amount", "The amount of Pods to ripen")

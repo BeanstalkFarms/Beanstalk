@@ -4,7 +4,6 @@ const { readPrune, toBN } = require("../utils");
 const { EXTERNAL } = require("./utils/balances.js");
 const {
   BEAN,
-  BEAN_3_CURVE,
   UNRIPE_LP,
   UNRIPE_BEAN,
   BEAN_WSTETH_WELL,
@@ -45,7 +44,7 @@ describe("Silo Enroot", function () {
     [owner, user, user2] = await ethers.getSigners();
 
     // Setup mock facets for manipulating Beanstalk's state during tests
-    const contracts = await deploy(verbose = false, mock = true, reset = true);
+    const contracts = await deploy((verbose = false), (mock = true), (reset = true));
     ownerAddress = contracts.account;
     this.diamond = contracts.beanstalkDiamond;
     // `beanstalk` contains all functions that the regualar beanstalk has.
@@ -72,7 +71,6 @@ describe("Silo Enroot", function () {
 
     // Needed to appease invariants when underlying asset of urBean != Bean.
     await mockBeanstalk.removeWhitelistStatus(BEAN);
-    
 
     await mockBeanstalk.teleportSunrise(ENROOT_FIX_SEASON);
     [this.well, this.wellfunction, this.pump] = await deployMockWellWithMockPump(
@@ -121,26 +119,15 @@ describe("Silo Enroot", function () {
 
     describe("1 deposit, some", async function () {
       beforeEach(async function () {
-        mockBeanstalk.deployStemsUpgrade();
-
-        await mockBeanstalk.connect(user).depositLegacy(UNRIPE_BEAN, to6("5"), EXTERNAL);
-        await mockBeanstalk.connect(user).mockUnripeBeanDeposit(ENROOT_FIX_SEASON, to6("5"));
-
+        await mockBeanstalk.deployStemsUpgrade();
         await mockBeanstalk.connect(owner).addUnderlying(UNRIPE_BEAN, to6("1000"));
 
-        const stem10 = await mockBeanstalk.mockSeasonToStem(UNRIPE_BEAN, ENROOT_FIX_SEASON);
-        // migrate to new deposit system since the mock stuff deposits in old one (still useful to test)
-        await beanstalk.mowAndMigrate(
-          user.address,
-          [UNRIPE_BEAN],
-          [[ENROOT_FIX_SEASON]],
-          [[to6("10")]],
-          0,
-          0,
-          []
-        );
-        // call sunrise twice to finish germination process.
-        this.result = await beanstalk.connect(user).enrootDeposit(UNRIPE_BEAN, stem10, to6("5"));
+        // deposit amount at stem 0, at bdv of "1855646". This is the bdv from previous mock tests.
+        const stem = "0";
+        await mockBeanstalk
+          .connect(user)
+          .depositAtStemAndBdv(UNRIPE_BEAN, to6("10"), stem, "1855646", 0);
+        this.result = await beanstalk.connect(user).enrootDeposit(UNRIPE_BEAN, stem, to6("5"));
       });
 
       it("properly updates the total balances", async function () {
@@ -159,54 +146,34 @@ describe("Silo Enroot", function () {
       });
 
       it("properly removes the crate", async function () {
-        const stem10 = await mockBeanstalk.mockSeasonToStem(
-          this.siloToken.address,
-          ENROOT_FIX_SEASON
-        );
-        let dep = await beanstalk.getDeposit(user.address, UNRIPE_BEAN, stem10);
+        let dep = await beanstalk.getDeposit(user.address, UNRIPE_BEAN, 0);
 
         expect(dep[0]).to.equal(to6("10"));
         expect(dep[1]).to.equal(prune(to6("10")).add(to6("0.5")));
       });
 
       it("emits Remove and Add Deposit event", async function () {
-        const stem10 = await mockBeanstalk.mockSeasonToStem(
-          this.siloToken.address,
-          ENROOT_FIX_SEASON
-        );
         await expect(this.result)
           .to.emit(beanstalk, "RemoveDeposit")
-          .withArgs(user.address, UNRIPE_BEAN, stem10, to6("5"), "927823");
+          .withArgs(user.address, UNRIPE_BEAN, 0, to6("5"), "927823");
         await expect(this.result)
           .to.emit(beanstalk, "AddDeposit")
-          .withArgs(user.address, UNRIPE_BEAN, stem10, to6("5"), prune(to6("5")).add(to6("0.5")));
+          .withArgs(user.address, UNRIPE_BEAN, 0, to6("5"), prune(to6("5")).add(to6("0.5")));
       });
     });
 
     describe("1 deposit after 1 season, all", async function () {
       beforeEach(async function () {
-        mockBeanstalk.deployStemsUpgrade();
-
-        await mockBeanstalk.connect(user).depositLegacy(UNRIPE_BEAN, to6("5"), EXTERNAL); //need to do legacy deposit to simulate pre-stems upgrade
-        await mockBeanstalk.connect(user).mockUnripeBeanDeposit(ENROOT_FIX_SEASON, to6("5"));
-
-        await mockBeanstalk.lightSunrise();
-
+        await mockBeanstalk.deployStemsUpgrade();
         await mockBeanstalk
           .connect(owner)
           .addUnderlying(UNRIPE_BEAN, to6("5000").sub(to6("10000").mul(toBN(pru)).div(to18("1"))));
 
-        // const stem10 = await mockBeanstalk.mockSeasonToStem(UNRIPE_BEAN, '10');
-
-        await beanstalk.mowAndMigrate(
-          user.address,
-          [UNRIPE_BEAN],
-          [[ENROOT_FIX_SEASON]],
-          [[to6("10")]],
-          0,
-          0,
-          []
-        );
+        // deposit amount at stem 0, at bdv of "1855646". This is the bdv from previous mock tests.
+        const stem = "0";
+        await mockBeanstalk
+          .connect(user)
+          .depositAtStemAndBdv(UNRIPE_BEAN, to6("10"), stem, "1855646", 0);
 
         this.result = await beanstalk.connect(user).enrootDeposit(UNRIPE_BEAN, "0", to6("10"));
       });
@@ -226,52 +193,48 @@ describe("Silo Enroot", function () {
       });
 
       it("properly removes the crate", async function () {
-        const stem10 = await mockBeanstalk.mockSeasonToStem(UNRIPE_BEAN, ENROOT_FIX_SEASON);
-        let dep = await beanstalk.getDeposit(user.address, UNRIPE_BEAN, stem10);
+        let dep = await beanstalk.getDeposit(user.address, UNRIPE_BEAN, 0);
         expect(dep[0]).to.equal(to6("10"));
         expect(dep[1]).to.equal(to6("5"));
       });
 
       it("emits Remove and Add Deposit event", async function () {
-        const stem10 = await mockBeanstalk.mockSeasonToStem(UNRIPE_BEAN, ENROOT_FIX_SEASON);
         await expect(this.result)
           .to.emit(beanstalk, "RemoveDeposit")
-          .withArgs(user.address, UNRIPE_BEAN, stem10, to6("10"), "1855646");
+          .withArgs(user.address, UNRIPE_BEAN, 0, to6("10"), "1855646");
         await expect(this.result)
           .to.emit(beanstalk, "AddDeposit")
-          .withArgs(user.address, UNRIPE_BEAN, stem10, to6("10"), to6("5"));
+          .withArgs(user.address, UNRIPE_BEAN, 0, to6("10"), to6("5"));
       });
     });
 
     describe("2 deposit, all", async function () {
       beforeEach(async function () {
-        await mockBeanstalk.connect(user).mockUnripeBeanDeposit(ENROOT_FIX_SEASON, to6("5"));
-
-        await mockBeanstalk.lightSunrise();
-        await mockBeanstalk.connect(user).depositLegacy(UNRIPE_BEAN, to6("5"), EXTERNAL);
-
-        mockBeanstalk.deployStemsUpgrade();
+        await mockBeanstalk.deployStemsUpgrade();
 
         await mockBeanstalk
           .connect(owner)
           .addUnderlying(UNRIPE_BEAN, to6("5000").sub(to6("10000").mul(toBN(pru)).div(to18("1"))));
 
-        await beanstalk.mowAndMigrate(
+        stem0 = "-2000000";
+        await mockBeanstalk
+          .connect(user)
+          .depositAtStemAndBdv(UNRIPE_BEAN, to6("5"), stem0, "927823", 0);
+
+        stem1 = "0";
+        await mockBeanstalk
+          .connect(user)
+          .depositAtStemAndBdv(UNRIPE_BEAN, to6("5"), stem1, "927823", 0);
+
+        await mockBeanstalk.setStalkAndRoots(
           user.address,
-          [UNRIPE_BEAN],
-          [[ENROOT_FIX_SEASON, ENROOT_FIX_SEASON + 1]],
-          [[to6("5"), to6("5")]],
-          0,
-          0,
-          []
+          "18558315646",
+          "18558315646000000000000"
         );
 
-        const stem10 = await mockBeanstalk.mockSeasonToStem(UNRIPE_BEAN, ENROOT_FIX_SEASON);
-
-        const stem11 = await mockBeanstalk.mockSeasonToStem(UNRIPE_BEAN, ENROOT_FIX_SEASON + 1);
         this.result = await beanstalk
           .connect(user)
-          .enrootDeposits(UNRIPE_BEAN, [stem10, stem11], [to6("5"), to6("5")]);
+          .enrootDeposits(UNRIPE_BEAN, [stem0, stem1], [to6("5"), to6("5")]);
       });
 
       it("properly updates the total balances", async function () {
@@ -285,15 +248,15 @@ describe("Silo Enroot", function () {
       });
 
       it("properly removes the crate", async function () {
-        const stem10 = await mockBeanstalk.mockSeasonToStem(UNRIPE_BEAN, ENROOT_FIX_SEASON);
+        const stem10 = "-2000000";
         let dep = await beanstalk.getDeposit(user.address, UNRIPE_BEAN, stem10);
         expect(dep[0]).to.equal(to6("5"));
         expect(dep[1]).to.equal(to6("2.5"));
       });
 
       it("emits Remove and Add Deposits event", async function () {
-        const stem10 = await mockBeanstalk.mockSeasonToStem(UNRIPE_BEAN, ENROOT_FIX_SEASON);
-        const stem11 = await mockBeanstalk.mockSeasonToStem(UNRIPE_BEAN, ENROOT_FIX_SEASON + 1);
+        const stem10 = "-2000000";
+        const stem11 = "0";
         await expect(this.result)
           .to.emit(beanstalk, "RemoveDeposits")
           .withArgs(user.address, UNRIPE_BEAN, [stem10, stem11], [to6("5"), to6("5")], to6("10"), [
@@ -313,33 +276,27 @@ describe("Silo Enroot", function () {
       beforeEach(async function () {
         // Bypass fundsSafu invariant because this test handling of underlying tokens violates operating conditions.
         await this.beanWstethWell.mint(mockBeanstalk.address, to18("10000"));
-
         await mockBeanstalk.connect(owner).addUnderlying(UNRIPE_LP, "147796000000000");
         await mockBeanstalk.connect(owner).addUnripeToken(UNRIPE_LP, BEAN_WSTETH_WELL, ZERO_BYTES);
-        await mockBeanstalk
-          .connect(user)
-          .mockUnripeLPDeposit("0", ENROOT_FIX_SEASON, to18("0.000000083406453"), to6("10"));
         await mockBeanstalk.lightSunrise();
+        await mockBeanstalk.deployStemsUpgrade();
+        stem0 = "-4000000";
         await mockBeanstalk
           .connect(user)
-          .mockUnripeLPDeposit("0", ENROOT_FIX_SEASON + 1, to18("0.000000083406453"), to6("10"));
+          .depositAtStemAndBdv(UNRIPE_LP, to6("10"), stem0, "1855646", 0);
 
-        mockBeanstalk.deployStemsUpgrade();
-        await beanstalk.mowAndMigrate(
+        stem1 = "0";
+        await mockBeanstalk
+          .connect(user)
+          .depositAtStemAndBdv(UNRIPE_LP, to6("10"), stem1, "1855646", 0);
+        await mockBeanstalk.setStalkAndRoots(
           user.address,
-          [UNRIPE_LP],
-          [[ENROOT_FIX_SEASON, ENROOT_FIX_SEASON + 1]],
-          [[to6("10"), to6("10")]],
-          0,
-          0,
-          []
+          "37120342584",
+          "37120342584000000000000"
         );
-
-        const stem10 = await mockBeanstalk.mockSeasonToStem(UNRIPE_LP, ENROOT_FIX_SEASON);
-        const stem11 = await mockBeanstalk.mockSeasonToStem(UNRIPE_LP, ENROOT_FIX_SEASON + 1);
         this.result = await beanstalk
           .connect(user)
-          .enrootDeposits(UNRIPE_LP, [stem10, stem11], [to6("10"), to6("10")]);
+          .enrootDeposits(UNRIPE_LP, [stem0, stem1], [to6("10"), to6("10")]);
       });
 
       it("properly updates the total balances", async function () {
@@ -353,11 +310,11 @@ describe("Silo Enroot", function () {
 
       it("properly updates the crate", async function () {
         const bdv = await beanstalk.bdv(UNRIPE_LP, to6("20"));
-        const stem10 = await mockBeanstalk.mockSeasonToStem(UNRIPE_LP, ENROOT_FIX_SEASON);
+        const stem10 = "-4000000";
         let dep = await beanstalk.getDeposit(user.address, UNRIPE_LP, stem10);
         expect(dep[0]).to.equal(to6("10"));
         expect(dep[1]).to.equal(bdv.div("2"));
-        const stem11 = await mockBeanstalk.mockSeasonToStem(UNRIPE_LP, ENROOT_FIX_SEASON + 1);
+        const stem11 = "0";
         dep = await beanstalk.getDeposit(user.address, UNRIPE_LP, stem11);
         expect(dep[0]).to.equal(to6("10"));
         expect(dep[1]).to.equal(bdv.sub("1").div("2").add("1"));

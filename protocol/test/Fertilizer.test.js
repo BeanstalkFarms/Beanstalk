@@ -17,6 +17,7 @@ const { to6, to18 } = require("./utils/helpers.js");
 const { deployBasinV1_1 } = require("../scripts/basinV1_1.js");
 const { getAllBeanstalkContracts } = require("../utils/contracts.js");
 const { impersonateBeanWstethWell } = require("../utils/well.js");
+const { upgradeWithNewFacets } = require("../scripts/diamond.js");
 
 let user, user2, owner, fert;
 

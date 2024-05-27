@@ -16,16 +16,18 @@ import {BasinDeployer} from "test/foundry/utils/BasinDeployer.sol";
 import {DepotDeployer} from "test/foundry/utils/DepotDeployer.sol";
 import {OracleDeployer} from "test/foundry/utils/OracleDeployer.sol";
 import {FertilizerDeployer} from "test/foundry/utils/FertilizerDeployer.sol";
+import {ShipmentDeployer} from "test/foundry/utils/ShipmentDeployer.sol";
 import {LibWell, IWell, IERC20} from "contracts/libraries/Well/LibWell.sol";
 import {C} from "contracts/C.sol";
-import {AppStorage} from "contracts/beanstalk/AppStorage.sol";
 import {LibAppStorage} from "contracts/libraries/LibAppStorage.sol";
+import {AppStorage} from "contracts/beanstalk/storage/AppStorage.sol";
 
 ///// COMMON IMPORTED LIBRARIES //////
 import {LibTransfer} from "contracts/libraries/Token/LibTransfer.sol";
 
 ///// ECOSYSTEM //////
 import {UsdOracle} from "contracts/ecosystem/oracles/UsdOracle.sol";
+import {Pipeline} from "contracts/pipeline/Pipeline.sol";
 
 /**
  * @title TestHelper
@@ -38,13 +40,13 @@ contract TestHelper is
     BasinDeployer,
     DepotDeployer,
     OracleDeployer,
-    FertilizerDeployer
+    FertilizerDeployer,
+    ShipmentDeployer
 {
-    // general mock interface for beanstalk.
-    IMockFBeanstalk bs = IMockFBeanstalk(BEANSTALK);
-
     // usdOracle contract.
     UsdOracle usdOracle;
+
+    Pipeline pipeline;
 
     // ideally, timestamp should be set to 1_000_000.
     // however, beanstalk rounds down to the nearest hour.
@@ -52,6 +54,11 @@ contract TestHelper is
     uint256 constant PERIOD = 3600;
     uint256 constant START_TIMESTAMP = 1_000_000;
     uint256 constant INITIAL_TIMESTAMP = (START_TIMESTAMP / PERIOD) * PERIOD;
+
+    // The largest deposit that can occur on the first season.
+    // Given the supply of beans should starts at 0,
+    // this should never occur.
+    uint256 constant MAX_DEPOSIT_BOUND = 1.7e22; // 2 ** 128 / 2e16
 
     struct initERC20params {
         address targetAddr;
@@ -64,6 +71,9 @@ contract TestHelper is
      * @notice initializes the state of the beanstalk contracts for testing.
      */
     function initializeBeanstalkTestState(bool mock, bool verbose) public {
+        // general mock interface for beanstalk.
+        bs = IMockFBeanstalk(BEANSTALK);
+
         // initialize misc contracts.
         initMisc();
 
@@ -94,24 +104,27 @@ contract TestHelper is
         // initialize Diamond, initalize users:
         setupDiamond(mock, verbose);
 
+        // Initialize Shipment Routes and Plans.
+        initShipping(verbose);
+
         // TODO: upon deployment, setup these state settings
         initStateSettings();
     }
 
     function initStateSettings() public {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        s.seedGaugeSettings.maxBeanMaxLpGpPerBdvRatio = 100e18;
-        s.seedGaugeSettings.minBeanMaxLpGpPerBdvRatio = 50e18;
-        s.seedGaugeSettings.targetSeasonsToCatchUp = 4320;
-        s.seedGaugeSettings.podRateLowerBound = 0.05e18;
-        s.seedGaugeSettings.podRateOptimal = 0.15e18;
-        s.seedGaugeSettings.podRateUpperBound = 0.25e18;
-        s.seedGaugeSettings.deltaPodDemandLowerBound = 0.95e18;
-        s.seedGaugeSettings.deltaPodDemandUpperBound = 1.05e18;
-        s.seedGaugeSettings.lpToSupplyRatioUpperBound = 0.8e18;
-        s.seedGaugeSettings.lpToSupplyRatioOptimal = 0.4e18;
-        s.seedGaugeSettings.lpToSupplyRatioLowerBound = 0.12e18;
-        s.seedGaugeSettings.excessivePriceThreshold = 1.05e6;
+        s.sys.seedGaugeSettings.maxBeanMaxLpGpPerBdvRatio = 100e18;
+        s.sys.seedGaugeSettings.minBeanMaxLpGpPerBdvRatio = 50e18;
+        s.sys.seedGaugeSettings.targetSeasonsToCatchUp = 4320;
+        s.sys.seedGaugeSettings.podRateLowerBound = 0.05e18;
+        s.sys.seedGaugeSettings.podRateOptimal = 0.15e18;
+        s.sys.seedGaugeSettings.podRateUpperBound = 0.25e18;
+        s.sys.seedGaugeSettings.deltaPodDemandLowerBound = 0.95e18;
+        s.sys.seedGaugeSettings.deltaPodDemandUpperBound = 1.05e18;
+        s.sys.seedGaugeSettings.lpToSupplyRatioUpperBound = 0.8e18;
+        s.sys.seedGaugeSettings.lpToSupplyRatioOptimal = 0.4e18;
+        s.sys.seedGaugeSettings.lpToSupplyRatioLowerBound = 0.12e18;
+        s.sys.seedGaugeSettings.excessivePriceThreshold = 1.05e6;
     }
 
     /**
@@ -134,12 +147,14 @@ contract TestHelper is
      * which allows for arbitary minting for testing purposes.
      */
     function initMockTokens(bool verbose) internal {
-        initERC20params[5] memory tokens = [
+        initERC20params[7] memory tokens = [
             initERC20params(C.BEAN, "Bean", "BEAN", 6),
             initERC20params(C.UNRIPE_BEAN, "Unripe Bean", "UrBEAN", 6),
-            initERC20params(C.UNRIPE_LP, "Unripe BEAN3CRV", "UrBEAN3CRV", 18),
+            initERC20params(C.UNRIPE_LP, "Unripe LP", "UrBEAN3CRV", 18),
             initERC20params(C.WETH, "Weth", "WETH", 18),
-            initERC20params(C.WSTETH, "wstETH", "WSTETH", 18)
+            initERC20params(C.WSTETH, "wstETH", "WSTETH", 18),
+            initERC20params(C.USDC, "USDC", "USDC", 6),
+            initERC20params(C.USDT, "USDT", "USDT", 6)
         ];
 
         for (uint i; i < tokens.length; i++) {
@@ -325,6 +340,7 @@ contract TestHelper is
 
     function initMisc() internal {
         usdOracle = UsdOracle(deployCode("UsdOracle"));
+        pipeline = Pipeline(PIPELINE);
     }
 
     function abs(int256 x) internal pure returns (int256) {
@@ -369,13 +385,21 @@ contract TestHelper is
     function setDeltaBforWell(int256 deltaB, address wellAddress, address tokenInWell) internal {
         IWell well = IWell(wellAddress);
         IERC20 tokenOut;
-        uint256 initalBeanBalance = C.bean().balanceOf(wellAddress);
-        if (deltaB > 0) {
-            uint256 tokenAmountIn = well.getSwapIn(IERC20(tokenInWell), C.bean(), uint256(deltaB));
+        int256 initialDeltaB = bs.poolCurrentDeltaB(wellAddress);
+
+        // find difference between initial and final deltaB
+        int256 deltaBdiff = deltaB - initialDeltaB;
+
+        if (deltaBdiff > 0) {
+            uint256 tokenAmountIn = well.getSwapIn(
+                IERC20(tokenInWell),
+                C.bean(),
+                uint256(deltaBdiff)
+            );
             MockToken(tokenInWell).mint(wellAddress, tokenAmountIn);
             tokenOut = C.bean();
         } else {
-            C.bean().mint(wellAddress, uint256(-deltaB));
+            C.bean().mint(wellAddress, uint256(-deltaBdiff));
             tokenOut = IERC20(tokenInWell);
         }
         uint256 amountOut = well.shift(tokenOut, 0, users[1]);
@@ -419,6 +443,50 @@ contract TestHelper is
         // add fertilizer.
         if (tokenAmountIn > 0) {
             bs.addFertilizer(season, tokenAmountIn, 0);
+        }
+    }
+
+    /**
+     * @notice Calls sunrise twice to pass the germination process.
+     */
+    function passGermination() public {
+        // call sunrise twice to end the germination process.
+        bs.siloSunrise(0);
+        bs.siloSunrise(0);
+    }
+
+    /**
+     * @notice Set up the silo deposit test by depositing beans to the silo from multiple users.
+     * @param amount The amount of beans to deposit.
+     * @return _amount The actual amount of beans deposited.
+     * @return stem The stem tip for the deposited beans.
+     */
+    function setUpSiloDepositTest(
+        uint256 amount,
+        address[] memory _farmers
+    ) public returns (uint256 _amount, int96 stem) {
+        _amount = bound(amount, 1, MAX_DEPOSIT_BOUND);
+
+        depositForUsers(_farmers, C.BEAN, _amount, LibTransfer.From.EXTERNAL);
+        stem = bs.stemTipForToken(C.BEAN);
+    }
+
+    /**
+     * @notice Deposit beans to the silo from multiple users.
+     * @param users The users to deposit beans from.
+     * @param token The token to deposit.
+     * @param amount The amount of beans to deposit.
+     * @param mode The deposit mode.
+     */
+    function depositForUsers(
+        address[] memory users,
+        address token,
+        uint256 amount,
+        LibTransfer.From mode
+    ) public {
+        for (uint256 i = 0; i < users.length; i++) {
+            vm.prank(users[i]);
+            bs.deposit(token, amount, uint8(mode)); // switching from silo.deposit to bs.deposit, but bs does not have a From enum, so casting to uint8.
         }
     }
 }

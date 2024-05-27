@@ -4,7 +4,7 @@
 
 pragma solidity ^0.8.20;
 
-import {AppStorage} from "../AppStorage.sol";
+import {AppStorage} from "../storage/AppStorage.sol";
 import {LibDiamond} from "../../libraries/LibDiamond.sol";
 import {LibEth} from "../../libraries/Token/LibEth.sol";
 import {AdvancedFarmCall, LibFarm} from "../../libraries/LibFarm.sol";
@@ -53,10 +53,10 @@ contract FarmFacet is Invariable {
     // signals to Beanstalk functions that they should not refund Eth
     // at the end of the function because the function is wrapped in a Farm function
     modifier withEth() {
-        if (msg.value > 0) s.isFarm = 2;
+        if (msg.value > 0) s.sys.isFarm = 2;
         _;
         if (msg.value > 0) {
-            s.isFarm = 1;
+            s.sys.isFarm = 1;
             LibEth.refundEth();
         }
     }

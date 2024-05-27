@@ -25,11 +25,6 @@ import {SeasonGettersFacet} from "contracts/beanstalk/sun/SeasonFacet/SeasonGett
  * @notice Test helper contract for Beanstalk tests.
  */
 contract BeanstalkDeployer is Utils {
-    // beanstalk
-    address payable constant BEANSTALK =
-        payable(address(0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5));
-
-    address internal deployer;
 
     // add or remove facets here. Facets here do not have mocks.
     string[] facets = [

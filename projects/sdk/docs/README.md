@@ -134,21 +134,7 @@ Available contracts:
 ```javascript
 sdk.contracts = {
   beanstalk: Beanstalk,
-  curve: {
-    pools: {
-      pool3: Curve3Pool,
-      tricrypto2: CurveTriCrypto2Pool,
-      beanCrv3: CurveMetaPool,
-      [k: string]: BaseContract   // allows getting a contract by address
-    },
-    registries: {
-      poolRegistry: CurveRegistry,
-      metaFactory: CurveMetaFactory,
-      cryptoFactory: CurveCryptoFactory,
-      [k: string]: BaseContract,  // allows getting a contract by address
-    },
-    zap: CurveZap,
-  },
+  .....
 };
 ```
 

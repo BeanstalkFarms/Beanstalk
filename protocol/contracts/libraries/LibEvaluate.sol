@@ -2,7 +2,6 @@
 
 pragma solidity ^0.8.20;
 
-import {LibAppStorage, AppStorage, Storage} from "./LibAppStorage.sol";
 import {Decimal} from "contracts/libraries/Decimal.sol";
 import {LibWhitelistedTokens, C} from "contracts/libraries/Silo/LibWhitelistedTokens.sol";
 import {LibUnripe} from "contracts/libraries/LibUnripe.sol";
@@ -11,6 +10,9 @@ import {LibRedundantMath32} from "contracts/libraries/LibRedundantMath32.sol";
 import {LibWell} from "contracts/libraries/Well/LibWell.sol";
 import {LibBarnRaise} from "contracts/libraries/LibBarnRaise.sol";
 import {LibRedundantMath256} from "contracts/libraries/LibRedundantMath256.sol";
+import {AppStorage} from "contracts/beanstalk/storage/AppStorage.sol";
+import {LibAppStorage} from "contracts/libraries/LibAppStorage.sol";
+import {Implementation} from "contracts/beanstalk/storage/System.sol";
 
 /**
  * @author Brean
@@ -70,12 +72,14 @@ library LibEvaluate {
      */
     function evalPodRate(Decimal.D256 memory podRate) internal view returns (uint256 caseId) {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        if (podRate.greaterThanOrEqualTo(s.seedGaugeSettings.podRateUpperBound.toDecimal())) {
+        if (podRate.greaterThanOrEqualTo(s.sys.seedGaugeSettings.podRateUpperBound.toDecimal())) {
             caseId = 27;
-        } else if (podRate.greaterThanOrEqualTo(s.seedGaugeSettings.podRateOptimal.toDecimal())) {
+        } else if (
+            podRate.greaterThanOrEqualTo(s.sys.seedGaugeSettings.podRateOptimal.toDecimal())
+        ) {
             caseId = 18;
         } else if (
-            podRate.greaterThanOrEqualTo(s.seedGaugeSettings.podRateLowerBound.toDecimal())
+            podRate.greaterThanOrEqualTo(s.sys.seedGaugeSettings.podRateLowerBound.toDecimal())
         ) {
             caseId = 9;
         }
@@ -97,7 +101,7 @@ library LibEvaluate {
         if (
             deltaB > 0 ||
             (deltaB == 0 &&
-                podRate.lessThanOrEqualTo(s.seedGaugeSettings.podRateOptimal.toDecimal()))
+                podRate.lessThanOrEqualTo(s.sys.seedGaugeSettings.podRateOptimal.toDecimal()))
         ) {
             // Beanstalk will only use the largest liquidity well to compute the Bean price,
             // and thus will skip the p > EXCESSIVE_PRICE_THRESHOLD check if the well oracle fails to
@@ -108,7 +112,7 @@ library LibEvaluate {
                 uint256 beanUsdPrice = uint256(1e30).div(
                     LibWell.getUsdTokenPriceForWell(well).mul(beanTknPrice)
                 );
-                if (beanUsdPrice > s.seedGaugeSettings.excessivePriceThreshold) {
+                if (beanUsdPrice > s.sys.seedGaugeSettings.excessivePriceThreshold) {
                     // p > excessivePriceThreshold
                     return caseId = 6;
                 }
@@ -129,14 +133,14 @@ library LibEvaluate {
         // increasing
         if (
             deltaPodDemand.greaterThanOrEqualTo(
-                s.seedGaugeSettings.deltaPodDemandUpperBound.toDecimal()
+                s.sys.seedGaugeSettings.deltaPodDemandUpperBound.toDecimal()
             )
         ) {
             caseId = 2;
             // steady
         } else if (
             deltaPodDemand.greaterThanOrEqualTo(
-                s.seedGaugeSettings.deltaPodDemandLowerBound.toDecimal()
+                s.sys.seedGaugeSettings.deltaPodDemandLowerBound.toDecimal()
             )
         ) {
             caseId = 1;
@@ -157,21 +161,21 @@ library LibEvaluate {
         // Extremely High
         if (
             lpToSupplyRatio.greaterThanOrEqualTo(
-                s.seedGaugeSettings.lpToSupplyRatioUpperBound.toDecimal()
+                s.sys.seedGaugeSettings.lpToSupplyRatioUpperBound.toDecimal()
             )
         ) {
             caseId = 108;
             // Reasonably High
         } else if (
             lpToSupplyRatio.greaterThanOrEqualTo(
-                s.seedGaugeSettings.lpToSupplyRatioOptimal.toDecimal()
+                s.sys.seedGaugeSettings.lpToSupplyRatioOptimal.toDecimal()
             )
         ) {
             caseId = 72;
             // Reasonably Low
         } else if (
             lpToSupplyRatio.greaterThanOrEqualTo(
-                s.seedGaugeSettings.lpToSupplyRatioLowerBound.toDecimal()
+                s.sys.seedGaugeSettings.lpToSupplyRatioLowerBound.toDecimal()
             )
         ) {
             caseId = 36;
@@ -192,18 +196,20 @@ library LibEvaluate {
     {
         AppStorage storage s = LibAppStorage.diamondStorage();
 
-        // `s.w.thisSowTime` is set to the number of seconds in it took for
+        // `s.weather.thisSowTime` is set to the number of seconds in it took for
         // Soil to sell out during the current Season. If Soil didn't sell out,
         // it remains `type(uint32).max`.
-        if (s.w.thisSowTime < type(uint32).max) {
+        if (s.sys.weather.thisSowTime < type(uint32).max) {
             if (
-                s.w.lastSowTime == type(uint32).max || // Didn't Sow all last Season
-                s.w.thisSowTime < SOW_TIME_DEMAND_INCR || // Sow'd all instantly this Season
-                (s.w.lastSowTime > SOW_TIME_STEADY &&
-                    s.w.thisSowTime < s.w.lastSowTime.sub(SOW_TIME_STEADY)) // Sow'd all faster
+                s.sys.weather.lastSowTime == type(uint32).max || // Didn't Sow all last Season
+                s.sys.weather.thisSowTime < SOW_TIME_DEMAND_INCR || // Sow'd all instantly this Season
+                (s.sys.weather.lastSowTime > SOW_TIME_STEADY &&
+                    s.sys.weather.thisSowTime < s.sys.weather.lastSowTime.sub(SOW_TIME_STEADY)) // Sow'd all faster
             ) {
                 deltaPodDemand = Decimal.from(1e18);
-            } else if (s.w.thisSowTime <= s.w.lastSowTime.add(SOW_TIME_STEADY)) {
+            } else if (
+                s.sys.weather.thisSowTime <= s.sys.weather.lastSowTime.add(SOW_TIME_STEADY)
+            ) {
                 // Sow'd all in same time
                 deltaPodDemand = Decimal.one();
             } else {
@@ -211,18 +217,18 @@ library LibEvaluate {
             }
         } else {
             // Soil didn't sell out
-            uint256 lastDSoil = s.w.lastDSoil;
+            uint256 lastDeltaSoil = s.sys.weather.lastDeltaSoil;
 
             if (dsoil == 0) {
                 deltaPodDemand = Decimal.zero(); // If no one Sow'd
-            } else if (lastDSoil == 0) {
+            } else if (lastDeltaSoil == 0) {
                 deltaPodDemand = Decimal.from(1e18); // If no one Sow'd last Season
             } else {
-                deltaPodDemand = Decimal.ratio(dsoil, lastDSoil);
+                deltaPodDemand = Decimal.ratio(dsoil, lastDeltaSoil);
             }
         }
 
-        lastSowTime = s.w.thisSowTime; // Overwrite last Season
+        lastSowTime = s.sys.weather.thisSowTime; // Overwrite last Season
         thisSowTime = type(uint32).max; // Reset for next Season
     }
 
@@ -237,6 +243,8 @@ library LibEvaluate {
     ) internal view returns (Decimal.D256 memory lpToSupplyRatio, address largestLiqWell) {
         // prevent infinite L2SR
         if (beanSupply == 0) return (Decimal.zero(), address(0));
+
+        AppStorage storage s = LibAppStorage.diamondStorage();
 
         address[] memory pools = LibWhitelistedTokens.getWhitelistedLpTokens();
         uint256[] memory twaReserves;
@@ -271,7 +279,7 @@ library LibEvaluate {
                 // Scale down bean supply by the locked beans, if there is fertilizer to be paid off.
                 // Note: This statement is put into the for loop to prevent another extraneous read of
                 // the twaReserves from storage as `twaReserves` are already loaded into memory.
-                if (LibAppStorage.diamondStorage().season.fertilizing == true) {
+                if (LibAppStorage.diamondStorage().sys.season.fertilizing == true) {
                     beanSupply = beanSupply.sub(LibUnripe.getLockedBeans(twaReserves));
                 }
             }
@@ -292,7 +300,7 @@ library LibEvaluate {
      * @notice Get the deltaPodDemand, lpToSupplyRatio, and podRate, and update soil demand
      * parameters.
      */
-    function getBeanstalkState(
+    function updateAndGetBeanstalkState(
         uint256 beanSupply
     )
         internal
@@ -305,16 +313,21 @@ library LibEvaluate {
     {
         AppStorage storage s = LibAppStorage.diamondStorage();
         // Calculate Delta Soil Demand
-        uint256 dsoil = s.f.beanSown;
-        s.f.beanSown = 0;
-        (deltaPodDemand, s.w.lastSowTime, s.w.thisSowTime) = calcDeltaPodDemand(dsoil);
-        s.w.lastDSoil = uint128(dsoil); // SafeCast not necessary as `s.f.beanSown` is uint128.
+        uint256 dsoil = s.sys.beanSown;
+        s.sys.beanSown = 0;
+        (deltaPodDemand, s.sys.weather.lastSowTime, s.sys.weather.thisSowTime) = calcDeltaPodDemand(
+            dsoil
+        );
+        s.sys.weather.lastDeltaSoil = uint128(dsoil); // SafeCast not necessary as `s.beanSown` is uint128.
 
         // Calculate Lp To Supply Ratio, fetching the twaReserves in storage:
         (lpToSupplyRatio, largestLiqWell) = calcLPToSupplyRatio(beanSupply);
 
         // Calculate PodRate
-        podRate = Decimal.ratio(s.f.pods.sub(s.f.harvestable), beanSupply); // Pod Rate
+        podRate = Decimal.ratio(
+            s.sys.fields[s.sys.activeField].pods.sub(s.sys.fields[s.sys.activeField].harvestable),
+            beanSupply
+        ); // Pod Rate
     }
 
     /**
@@ -330,7 +343,7 @@ library LibEvaluate {
             Decimal.D256 memory lpToSupplyRatio,
             Decimal.D256 memory podRate,
             address largestLiqWell
-        ) = getBeanstalkState(beanSupply);
+        ) = updateAndGetBeanstalkState(beanSupply);
         uint256 caseId = evalPodRate(podRate) // Evaluate Pod Rate
         .add(evalPrice(deltaB, podRate, largestLiqWell)) // Evaluate Price
             .add(evalDeltaPodDemand(deltaPodDemand))
@@ -349,7 +362,7 @@ library LibEvaluate {
      */
     function getLiquidityWeight(address pool) internal view returns (uint256 liquidityWeight) {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        Storage.Implementation memory lw = s.ss[pool].liquidityWeightImplementation;
+        Implementation memory lw = s.sys.silo.assetSettings[pool].liquidityWeightImplementation;
 
         // if the target is 0, use address(this).
         address target = lw.target;

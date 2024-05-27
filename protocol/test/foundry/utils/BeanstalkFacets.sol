@@ -44,4 +44,4 @@ import {SeasonGettersFacet} from "contracts/beanstalk/sun/SeasonFacet/SeasonGett
 import "contracts/C.sol";
 
 // AppStorage:
-import "contracts/beanstalk/AppStorage.sol";
+import "contracts/beanstalk/storage/AppStorage.sol";
