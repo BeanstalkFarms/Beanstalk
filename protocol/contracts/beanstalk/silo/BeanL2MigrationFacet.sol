@@ -6,6 +6,7 @@ pragma solidity ^0.8.20;
 
 import "contracts/C.sol";
 import "../ReentrancyGuard.sol";
+import {Invariable} from "contracts/beanstalk/Invariable.sol";
 
 /**
  * @author Brean
@@ -25,21 +26,33 @@ import "../ReentrancyGuard.sol";
  **/
 
 interface IL2Bridge {
-    function sendData(bytes memory) external;
+    function sendMessage(address _target, bytes memory _message, uint32 _minGasLimit) external;
 }
 
-contract BeanL2MigrationFacet is ReentrancyGuard {
-    // TODO: set bridge
-    address constant BRIDGE = address(0x109830a1AAaD605BbF02a9dFA7B0B92EC2FB7dAa);
+interface IBeanL1RecieverFacet {
+    function recieveL1Beans(address reciever, uint256 amount) external;
+}
+
+contract BeanL2MigrationFacet is Invariable, ReentrancyGuard {
+    address constant BRIDGE = address(0x866E82a600A1414e583f7F13623F1aC5d58b0Afa);
 
     /**
      * @notice migrates `amount` of Beans to L2,
      * issued to `reciever`.
      */
-    function migrateL2Beans(address reciever, uint256 amount) external nonReentrant {
+    function migrateL2Beans(
+        address reciever,
+        address L2Beanstalk,
+        uint256 amount,
+        uint32 gasLimit
+    ) external nonReentrant fundsSafu noSupplyIncrease oneOutFlow(C.BEAN) {
         C.bean().burnFrom(msg.sender, amount);
 
         // send data to
-        IL2Bridge(BRIDGE).sendData(abi.encode(reciever, amount));
+        IL2Bridge(BRIDGE).sendMessage(
+            L2Beanstalk,
+            abi.encodeCall(IBeanL1RecieverFacet(L2Beanstalk).recieveL1Beans, (reciever, amount)),
+            gasLimit
+        );
     }
 }

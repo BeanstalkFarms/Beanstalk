@@ -11,20 +11,30 @@ import "../ReentrancyGuard.sol";
  * @author Brean
  * @title
  * @notice Allows beanstalk to recieve data from an L1, specifically to mint beans. see {BeanL2MigrationFacet} for more details.
+ * The Facet implmentation may need to change depending on the L2 that the beanstalk DAO chooses to migrate to.
  **/
 
+interface IL2Messenger {
+    function xDomainMessageSender() external view returns (address);
+}
+
 contract BeanL1RecieverFacet is ReentrancyGuard {
-    // TODO: set bridge, implement L2 bridge.
     uint256 constant EXTERNAL_L1_BEANS = 0;
 
-    address constant BRIDGE = address(0x109830a1AAaD605BbF02a9dFA7B0B92EC2FB7dAa);
+    address constant BRIDGE = address(0x4200000000000000000000000000000000000007);
+    address constant L1BEANSTALK = address(0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5);
 
     /**
      * @notice migrates `amount` of Beans to L2,
      * issued to `reciever`.
      */
-    function recieveL1Beans(bytes memory data) external nonReentrant {
-        (address reciever, uint256 amount) = abi.decode(data, (address, uint256));
+    function recieveL1Beans(address reciever, uint256 amount) external nonReentrant {
+        // verify msg.sender is the cross-chain messenger address, and
+        // the xDomainMessageSender is the L1 Beanstalk contract.
+        require(
+            msg.sender == address(BRIDGE) &&
+                IL2Messenger(BRIDGE).xDomainMessageSender() == L1BEANSTALK
+        );
         s.migratedL1Beans += amount;
         require(EXTERNAL_L1_BEANS >= s.migratedL1Beans, "L2Migration: exceeds maximum migrated");
         C.bean().mint(reciever, amount);
