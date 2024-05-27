@@ -16,14 +16,8 @@ const ChooseFunctionAndPumpForm = () => {
   const methods = useForm<FormValues>({
     defaultValues: {
       wellFunction: functionAndPump?.wellFunction || "",
-      token1: {
-        type: functionAndPump?.token1.type || "ERC-20",
-        address: functionAndPump?.token1.address || ""
-      },
-      token2: {
-        type: functionAndPump?.token2.type || "ERC-20",
-        address: functionAndPump?.token2.address || ""
-      },
+      token1: functionAndPump?.token1 || "",
+      token2: functionAndPump?.token2 || "",
       pump: functionAndPump?.pump || ""
     }
   });
@@ -33,14 +27,8 @@ const ChooseFunctionAndPumpForm = () => {
       // TODO: Implement
       setFunctionAndPump({
         wellFunction: "",
-        token1: {
-          type: "",
-          address: ""
-        },
-        token2: {
-          type: "",
-          address: ""
-        },
+        token1: "",
+        token2: "",
         pump: ""
       });
     },
@@ -58,6 +46,7 @@ const ChooseFunctionAndPumpForm = () => {
             <WellFunctionFormSection />
             <Divider />
             <TokenSelectFormSection />
+            <Divider />
           </Flex>
         </Flex>
       </form>

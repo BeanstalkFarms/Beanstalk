@@ -38,9 +38,7 @@ export const FunctionPumpFormProgress = () => {
 
   const wellFunctionValid = !!values.wellFunction && !wellFunctionErr;
 
-  const tokenStepAllHaveValues = Boolean(
-    values.token1?.type && values.token1?.address && values.token2?.type && values.token2?.address
-  );
+  const tokenStepAllHaveValues = Boolean(values.token1 && values.token2);
 
   const tokenStepNoErrors = !(token1Err || token2Err);
 
