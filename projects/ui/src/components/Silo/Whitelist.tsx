@@ -117,7 +117,7 @@ const Whitelist: FC<{
           </Grid>
           <Grid
             item
-            md={1.25}
+            md={2.25}
             xs={0}
             display={{ xs: 'none', md: 'flex' }}
             justifyContent="center"
@@ -130,14 +130,14 @@ const Whitelist: FC<{
                   <Row gap={0.5}>
                     <TokenIcon token={BEAN[1]} />
                     vAPY 30D
-                    {/* <Typography color="white" marginTop={-0.25}>
+                     <Typography color="white" marginTop={-0.25}>
                       |
                     </Typography>
                     7D
                     <Typography color="white" marginTop={-0.25}>
                       |
                     </Typography>
-                30D */}
+                    30D
                   </Row>
                 }
                 onClick={undefined}
@@ -166,7 +166,7 @@ const Whitelist: FC<{
               <Typography color="text.secondary">TVD</Typography>
             </Tooltip>
           </Grid>
-          <Grid item md={3.75} xs={0} display={{ xs: 'none', md: 'block' }}>
+          <Grid item md={2.75} xs={0} display={{ xs: 'none', md: 'block' }}>
             <Typography color="text.secondary">Amount Deposited</Typography>
           </Grid>
           <Grid
@@ -262,7 +262,7 @@ const Whitelist: FC<{
                    */}
                   <Grid
                     item
-                    md={isDeprecated ? 5.75 : 2.25}
+                    md={isDeprecated ? 6.75 : 2.25}
                     xs={isDeprecated ? 7 : 7}
                   >
                     <Row gap={1}>
@@ -347,7 +347,7 @@ const Whitelist: FC<{
                   {!isDeprecated && (
                     <Grid
                       item
-                      md={1.25}
+                      md={2.25}
                       xs={0}
                       display={{ xs: 'none', md: 'flex' }}
                       justifyContent="center"
@@ -551,7 +551,7 @@ const Whitelist: FC<{
                        */}
                       <Grid
                         item
-                        md={3.5}
+                        md={2.5}
                         xs={0}
                         display={{ xs: 'none', md: 'block' }}
                       >

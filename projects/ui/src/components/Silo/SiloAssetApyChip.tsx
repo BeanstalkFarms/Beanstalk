@@ -53,14 +53,14 @@ const SiloAssetApyChip: FC<SiloAssetApyChipProps> = ({
       title={
         <Row gap={0}>
           {metric === 'bean' && (
-            <Box sx={{ px: 1, py: 0.5, maxWidth: 200 }}>
+            <Box sx={{ px: 1, py: 0.5, maxWidth: 300 }}>
               <Stack gap={0.25}>
                 <Row gap={0.5}>
                   <TokenIcon token={Bean} />
                   Total Beans per Season
                 </Row>
                 <Box display="flex">
-                  {/* <Stack width="33%">
+                  <Stack width="33%">
                     <Typography variant="h4">24H</Typography>
                     <Typography variant="h4">
                       {latestYield
@@ -81,8 +81,8 @@ const SiloAssetApyChip: FC<SiloAssetApyChipProps> = ({
                           )
                         : '0'}
                     </Typography>
-                        </Stack> */}
-                  <Stack width="100%">
+                  </Stack>
+                  <Stack width="33%">
                     <Typography variant="h4">30D</Typography>
                     <Typography variant="h4">
                       {latestYield
@@ -157,7 +157,7 @@ const SiloAssetApyChip: FC<SiloAssetApyChipProps> = ({
                   <TokenIcon token={tokenProps} /> vAPY:{' '}
                 </>
               )}
-              {/* metric === 'bean' ? (
+              {metric === 'bean' ? (
                 <>
                   <Box
                     display="flex"
@@ -173,7 +173,7 @@ const SiloAssetApyChip: FC<SiloAssetApyChipProps> = ({
                     ) : (
                       <>
                         {getDisplayString(
-                          apys ? apys['24h'][metric].times(100) : null
+                          apys && apys['24h'] ? apys['24h'][metric].times(100) : null
                         )}
                       </>
                     )}
@@ -195,7 +195,7 @@ const SiloAssetApyChip: FC<SiloAssetApyChipProps> = ({
                     ) : (
                       <>
                         {getDisplayString(
-                          apys ? apys['7d'][metric].times(100) : null
+                          apys && apys['7d'] ? apys['7d'][metric].times(100) : null
                         )}
                       </>
                     )}
@@ -204,7 +204,7 @@ const SiloAssetApyChip: FC<SiloAssetApyChipProps> = ({
                     |
                   </Typography>
                 </>
-              ) : null */}
+              ) : null}
               <Box
                 display="flex"
                 justifyContent="center"
@@ -215,7 +215,7 @@ const SiloAssetApyChip: FC<SiloAssetApyChipProps> = ({
                 ) : (
                   <>
                     {getDisplayString(
-                      apys ? apys['30d'][metric].times(100) : null
+                      apys && apys['30d'] ? apys['30d'][metric].times(100) : null
                     )}
                   </>
                 )}
