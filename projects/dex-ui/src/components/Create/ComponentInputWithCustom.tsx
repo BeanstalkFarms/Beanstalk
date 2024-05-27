@@ -2,7 +2,7 @@ import React, { useCallback } from "react";
 import { FieldValues, Path, PathValue, useFormContext, useWatch } from "react-hook-form";
 import { useWhitelistedWellComponents } from "./useWhitelistedWellComponents";
 import { useBoolean } from "src/utils/ui/useBoolean";
-import { AddressInputField } from "../Form";
+import { TextInputField } from "../Form";
 import { Flex } from "src/components/Layout";
 import { ToggleSwitch } from "src/components/ToggleSwitch";
 import { WellComponentAccordionCard } from "./ComponentAccordionCard";
@@ -112,7 +112,7 @@ export const ComponentInputWithCustom = <T extends FieldValues>({
         </Text>
       </Flex>
       {usingCustom && (
-        <AddressInputField
+        <TextInputField
           {...register(path, {
             validate: (_value) => {
               if (!usingCustom && additional?.some((val) => val.value === _value)) {

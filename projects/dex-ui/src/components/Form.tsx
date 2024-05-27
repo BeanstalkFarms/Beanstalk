@@ -5,18 +5,18 @@ import { LinksButtonText, Text } from "src/components/Typography";
 import { Flex } from "./Layout";
 import { SearchIcon } from "./Icons";
 
-export type AddressInputFieldProps = InputHTMLAttributes<HTMLInputElement> & {
+export type TextInputFieldProps = InputHTMLAttributes<HTMLInputElement> & {
   error?: string;
   isSearch?: boolean;
 };
 
-export const AddressInputField = forwardRef<HTMLInputElement, AddressInputFieldProps>(
+export const TextInputField = forwardRef<HTMLInputElement, TextInputFieldProps>(
   ({ error, isSearch, ...props }, ref) => {
     return (
       <Flex>
         <Wrapper>
           {isSearch ? <SearchIcon /> : null}
-          <StyledAddressInputField {...props} onChange={props.onChange} ref={ref} type="text" />
+          <StyledTextInputField {...props} onChange={props.onChange} ref={ref} type="text" />
         </Wrapper>
         {error && (
           <Text $color="error" $variant="xs" $mt={0.5}>
@@ -51,7 +51,7 @@ const Wrapper = styled.div`
   }
 `;
 
-const StyledAddressInputField = styled.input`
+const StyledTextInputField = styled.input`
   color: ${theme.colors.black};
 
   ::placeholder {
