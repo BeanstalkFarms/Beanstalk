@@ -18,6 +18,7 @@ export const WellFunctionFormSection = () => {
           toggleMessage="Use a custom Well Implementation instead"
           path="wellFunction"
           componentType="wellFunctions"
+          emptyValue=""
         />
       </Flex>
     </WellFunctionFormWrapper>

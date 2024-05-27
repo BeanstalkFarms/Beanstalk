@@ -12,11 +12,13 @@ import { Text } from "../Typography";
 export const ComponentInputWithCustom = <T extends FieldValues>({
   componentType,
   path,
-  toggleMessage
+  toggleMessage,
+  emptyValue
 }: {
   path: Path<T>;
   componentType: keyof ReturnType<typeof useWhitelistedWellComponents>;
   toggleMessage: string;
+  emptyValue: PathValue<T, Path<T>>;
 }) => {
   const { [componentType]: wellComponents } = useWhitelistedWellComponents();
   const [usingCustom, { toggle, set: setUsingCustom }] = useBoolean();
@@ -30,17 +32,19 @@ export const ComponentInputWithCustom = <T extends FieldValues>({
   } = useFormContext<T>();
   const value = useWatch<T>({ control, name: path });
 
-  const handleSetValue = (_addr: string) => {
-    setValue(path, (_addr === value ? "" : _addr) as PathValue<T, Path<T>>, {
+  const handleSetValue = (_addr: PathValue<T, Path<T>>) => {
+    setValue(path, _addr === value ? emptyValue : _addr, {
       shouldValidate: true
     });
     setUsingCustom(false);
   };
 
   const handleToggle = () => {
-    setValue(path, "" as PathValue<T, Path<T>>);
+    setValue(path, emptyValue);
     toggle();
   };
+
+  const errMessage = typeof error?.message === "string" ? error.message : "";
 
   return (
     <>
@@ -64,7 +68,7 @@ export const ComponentInputWithCustom = <T extends FieldValues>({
             validate: (value) => ethers.utils.isAddress(value) || "Invalid address"
           })}
           placeholder="Input address"
-          error={error?.message as string | undefined}
+          error={errMessage}
         />
       )}
     </>
