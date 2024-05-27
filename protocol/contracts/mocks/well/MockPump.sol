@@ -7,7 +7,6 @@ pragma solidity ^0.8.20;
 
 import {IInstantaneousPump} from "contracts/interfaces/basin/pumps/IInstantaneousPump.sol";
 import {ICumulativePump} from "contracts/interfaces/basin/pumps/ICumulativePump.sol";
-import {console} from "forge-std/console.sol";
 
 /**
  * @title Mock Pump
