@@ -253,3 +253,10 @@ export const CircleEmptyIcon = ({ color = "#000", width = 16, height = 16 }: SVG
     <circle cx="8" cy="8" r="7" stroke={color} strokeWidth="1" fill="none" />
   </svg>
 );
+
+export const SearchIcon = ({ color = "#000", width = 16, height = 16 }: SVGProps) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width={width} height={height} viewBox="0 0 17 16" fill="none">
+    <path d="M7.75 12.5C10.6495 12.5 13 10.1495 13 7.25C13 4.35051 10.6495 2 7.75 2C4.85051 2 2.5 4.35051 2.5 7.25C2.5 10.1495 4.85051 12.5 7.75 12.5Z" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+    <path d="M11.4625 10.9624L14.5 13.9999" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+  </svg>
+);
