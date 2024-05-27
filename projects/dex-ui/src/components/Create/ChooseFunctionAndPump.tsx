@@ -8,6 +8,7 @@ import { theme } from "src/utils/ui/theme";
 import { FunctionPumpFormProgress } from "./function-and-pump/FunctionPumpFormProgress";
 import { WellFunctionFormSection } from "./function-and-pump/WellFunctionFormSection";
 import { TokenSelectFormSection } from "./function-and-pump/TokenSelectFormSection";
+import { PumpSelectFormSection } from "./function-and-pump/PumpSelectFormSection";
 
 type FormValues = CreateWellProps["wellFunctionAndPump"];
 
@@ -47,6 +48,7 @@ const ChooseFunctionAndPumpForm = () => {
             <Divider />
             <TokenSelectFormSection />
             <Divider />
+            <PumpSelectFormSection />
           </Flex>
         </Flex>
       </form>
