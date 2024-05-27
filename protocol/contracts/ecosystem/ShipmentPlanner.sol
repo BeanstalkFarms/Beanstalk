@@ -15,6 +15,7 @@ struct ShipmentPlan {
 interface IBeanstalk {
     function isFertilizing() external view returns (bool);
     function totalUnfertilizedBeans() external view returns (uint256);
+    function leftoverBeans() external view returns (uint256);
 
     function isHarvesting(uint256 fieldId) external view returns (bool);
     function totalUnharvestable(uint256 fieldId) external view returns (uint256);
@@ -46,7 +47,11 @@ contract ShipmentPlanner {
      */
     function getBarnPlan(bytes memory) external view returns (ShipmentPlan memory shipmentPlan) {
         if (!beanstalk.isFertilizing()) return shipmentPlan;
-        return ShipmentPlan({points: BARN_POINTS, cap: beanstalk.totalUnfertilizedBeans()});
+        return
+            ShipmentPlan({
+                points: BARN_POINTS,
+                cap: beanstalk.totalUnfertilizedBeans() - beanstalk.leftoverBeans()
+            });
     }
 
     /**

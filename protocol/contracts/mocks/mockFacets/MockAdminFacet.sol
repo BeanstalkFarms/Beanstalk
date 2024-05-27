@@ -23,17 +23,17 @@ contract MockAdminFacet is Sun {
 
     function ripen(uint256 amount) external {
         C.bean().mint(address(this), amount);
-        receiveShipment(ShipmentRecipient.Field, amount, abi.encode(uint256(0)));
+        receiveShipment(ShipmentRecipient.FIELD, amount, abi.encode(uint256(0)));
     }
 
     function fertilize(uint256 amount) external {
         C.bean().mint(address(this), amount);
-        receiveShipment(ShipmentRecipient.Barn, amount, bytes(""));
+        receiveShipment(ShipmentRecipient.BARN, amount, bytes(""));
     }
 
     function rewardSilo(uint256 amount) external {
         C.bean().mint(address(this), amount);
-        receiveShipment(ShipmentRecipient.Silo, amount, bytes(""));
+        receiveShipment(ShipmentRecipient.SILO, amount, bytes(""));
     }
 
     function forceSunrise() external {
@@ -53,7 +53,7 @@ contract MockAdminFacet is Sun {
         updateStart();
         s.sys.season.current += 1;
         C.bean().mint(address(this), amount);
-        receiveShipment(ShipmentRecipient.Barn, amount * 3, bytes(""));
+        receiveShipment(ShipmentRecipient.BARN, amount * 3, bytes(""));
     }
 
     function updateStart() private {

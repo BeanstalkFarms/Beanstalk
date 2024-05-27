@@ -126,6 +126,7 @@ struct Field {
  * @param fertLast The highest active Fertilizer Id (end of linked list that is stored by nextFid).
  * @param bpf The cumulative Beans Per Fertilizer (bfp) minted over all Season.
  * @param recapitalized The number of USDC that has been recapitalized in the Barn Raise.
+ * @param leftoverBeans Amount of Beans that have shipped to Fert but not yet reflected in bpf.
  * @param _buffer Reserved storage for future expansion.
  */
 struct Fertilizer {
@@ -139,6 +140,7 @@ struct Fertilizer {
     uint128 fertLast;
     uint128 bpf;
     uint256 recapitalized;
+    uint256 leftoverBeans;
     bytes32[8] _buffer;
 }
 
@@ -379,7 +381,8 @@ enum GerminationSide {
  * @notice Details which Beanstalk component receives the shipment.
  */
 enum ShipmentRecipient {
-    Silo,
-    Field,
-    Barn
+    NULL,
+    SILO,
+    FIELD,
+    BARN
 }

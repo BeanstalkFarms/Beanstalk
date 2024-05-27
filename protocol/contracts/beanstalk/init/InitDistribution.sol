@@ -40,21 +40,21 @@ contract InitDistribution {
         shipmentRoutes[0] = ShipmentRoute(
             shipmentPlanner,
             ShipmentPlanner.getSiloPlan.selector,
-            ShipmentRecipient.Silo,
+            ShipmentRecipient.SILO,
             bytes("")
         );
 
         shipmentRoutes[1] = ShipmentRoute(
             shipmentPlanner,
             ShipmentPlanner.getFieldPlan.selector,
-            ShipmentRecipient.Field,
+            ShipmentRecipient.FIELD,
             abi.encode(uint256(0))
         );
 
         shipmentRoutes[2] = ShipmentRoute(
             shipmentPlanner,
             ShipmentPlanner.getBarnPlan.selector,
-            ShipmentRecipient.Barn,
+            ShipmentRecipient.BARN,
             bytes("")
         );
 

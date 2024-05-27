@@ -303,7 +303,7 @@ contract FieldFacet is Invariable, ReentrancyGuard {
      * @param fieldId The index of the Field to query.
      */
     function isHarvesting(uint256 fieldId) public view returns (bool) {
-        return s.sys.fields[fieldId].harvestable < s.sys.fields[fieldId].pods;
+        return totalUnharvestable(fieldId) > 0;
     }
 
     /**
