@@ -10,6 +10,7 @@ import { WellFunctionFormSection } from "./function-and-pump/WellFunctionFormSec
 import { TokenSelectFormSection } from "./function-and-pump/TokenSelectFormSection";
 import { PumpSelectFormSection } from "./function-and-pump/PumpSelectFormSection";
 import { CreateWellButtonRow } from "./CreateWellButtonRow";
+import { getIsValidEthereumAddress } from "src/utils/addresses";
 
 type FormValues = CreateWellProps["wellFunctionAndPump"];
 
@@ -25,7 +26,17 @@ const ChooseFunctionAndPumpForm = () => {
   });
 
   const handleSubmit = useCallback(
-    (values: FormValues) => setFunctionAndPump({ ...values }),
+    (values: FormValues) => {
+      // validate 
+      for (const key in values) {
+        const value = values[key as keyof typeof values];
+        if (!value || !getIsValidEthereumAddress(value)) {
+          return;
+        }
+      }
+
+      setFunctionAndPump({ ...values, goNext: true });
+    },
     [setFunctionAndPump]
   );
 
