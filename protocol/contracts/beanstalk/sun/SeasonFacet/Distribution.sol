@@ -22,10 +22,9 @@ contract Distribution is Receiving {
     /**
      * @notice Emitted during Sunrise when Beans mints are shipped through active routes.
      * @param season The Season in which Beans were distributed.
-     * @param shipmentRoutes The routes defining where to distribute.
-     * @param shipmentAmounts The amount of Beans distributed to each route.
+     * @param shipmentAmount The amount of Beans across all routes.
      */
-    event Ship(uint32 indexed season, ShipmentRoute[] shipmentRoutes, uint256[] shipmentAmounts);
+    event Ship(uint32 indexed season, uint256 shipmentAmount);
 
     /**
      * @notice Emitted when the shipment routes in storage are replaced with a new set of routes.
@@ -41,6 +40,7 @@ contract Distribution is Receiving {
      */
     function ship(uint256 beansToShip) internal {
         C.bean().mint(address(this), beansToShip);
+        uint256 remainingBeansToShip = beansToShip;
 
         ShipmentRoute[] memory shipmentRoutes = s.sys.shipmentRoutes;
         ShipmentPlan[] memory shipmentPlans = new ShipmentPlan[](shipmentRoutes.length);
@@ -49,26 +49,31 @@ contract Distribution is Receiving {
         (shipmentPlans, totalPoints) = getShipmentPlans(shipmentRoutes);
 
         // May need to calculate individual stream rewards multiple times, since
-        // they are dependent on each other and each has a cap.
+        // they are dependent on each others caps. Once a cap is reached, excess Beans are
+        // spread to other streams, proportional to their points.
         for (uint256 i; i < shipmentRoutes.length; i++) {
             bool capExceeded;
-            // Calculate the amount of rewards to each stream. Ignores cap and plans with 0 points.
-            getBeansFromPoints(shipmentAmounts, shipmentPlans, totalPoints, beansToShip);
 
-            // iterate though each stream, checking that the cap is not exceeded.
+            // Calculate the amount of rewards to each stream. Ignores cap and plans with 0 points.
+            getBeansFromPoints(shipmentAmounts, shipmentPlans, totalPoints, remainingBeansToShip);
+
+            // Iterate though each stream, checking if cap is exceeded.
             for (uint256 j; j < shipmentAmounts.length; j++) {
                 // If shipment amount exceeds plan cap, adjust plan and totals before recomputing.
                 if (shipmentAmounts[j] > shipmentPlans[j].cap) {
                     shipmentAmounts[j] = shipmentPlans[j].cap;
-                    beansToShip -= shipmentPlans[j].cap;
+                    remainingBeansToShip -= shipmentPlans[j].cap;
                     totalPoints -= shipmentPlans[j].points;
                     shipmentPlans[j].points = 0;
                     capExceeded = true;
                 }
             }
+
             // If no cap exceeded, amounts are final.
             if (!capExceeded) break;
         }
+
+        emit Ship(s.sys.season.current, beansToShip);
 
         // Ship it.
         for (uint256 i; i < shipmentAmounts.length; i++) {
@@ -79,8 +84,6 @@ contract Distribution is Receiving {
                 shipmentRoutes[i].data
             );
         }
-
-        emit Ship(s.sys.season.current, shipmentRoutes, shipmentAmounts);
     }
 
     /**

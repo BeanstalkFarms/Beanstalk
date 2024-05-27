@@ -24,8 +24,16 @@ contract Receiving is ReentrancyGuard {
     using SafeCast for uint256;
 
     /**
+     * @notice Emitted during Sunrise when Beans mints are shipped through active routes.
+     * @param recipient The receiver.
+     * @param receivedAmount The amount of Beans successfully received and processed.
+     * @param data The data the Beans were received with. Optional.
+     */
+    event Receipt(ShipmentRecipient indexed recipient, uint256 receivedAmount, bytes data);
+
+    /**
      * @notice General entry point to receive Beans at a given component of the system.
-     * @dev Receive functions should be designed to never revert.
+     * @dev Receive functions should never revert, else they will block other receipts.
      * @param recipient The Beanstalk component that will receive the Beans.
      * @param amount The amount of Beans to receive.
      * @param data Additional data to pass to the receiving function.
@@ -35,11 +43,11 @@ contract Receiving is ReentrancyGuard {
         uint256 amount,
         bytes memory data
     ) internal {
-        if (recipient == ShipmentRecipient.Silo) {
+        if (recipient == ShipmentRecipient.SILO) {
             siloReceive(amount, data);
-        } else if (recipient == ShipmentRecipient.Field) {
+        } else if (recipient == ShipmentRecipient.FIELD) {
             fieldReceive(amount, data);
-        } else if (recipient == ShipmentRecipient.Barn) {
+        } else if (recipient == ShipmentRecipient.BARN) {
             barnReceive(amount, data);
         }
         // New receiveShipment enum values should have a corresponding function call here.
@@ -63,6 +71,9 @@ contract Receiving is ReentrancyGuard {
         // SafeCast unnecessary here because of prior safe cast.
         s.sys.silo.balances[C.BEAN].deposited += uint128(amount);
         s.sys.silo.balances[C.BEAN].depositedBdv += uint128(amount);
+
+        // Confirm successful receipt.
+        emit Receipt(ShipmentRecipient.SILO, amount, abi.encode(""));
     }
 
     /**
@@ -75,6 +86,9 @@ contract Receiving is ReentrancyGuard {
         uint256 fieldId = abi.decode(data, (uint256));
         require(fieldId < s.sys.fieldCount, "Field does not exist");
         s.sys.fields[fieldId].harvestable += amount;
+
+        // Confirm successful receipt.
+        emit Receipt(ShipmentRecipient.FIELD, amount, data);
     }
 
     /**
@@ -119,5 +133,8 @@ contract Receiving is ReentrancyGuard {
         s.sys.fert.bpf = uint128(newBpf); // SafeCast unnecessary here.
         deltaFertilized = deltaFertilized + (remainingBpf * s.sys.fert.activeFertilizer);
         s.sys.fert.fertilizedIndex += deltaFertilized;
+
+        // Confirm successful receipt.
+        emit Receipt(ShipmentRecipient.BARN, amount, abi.encode(""));
     }
 }

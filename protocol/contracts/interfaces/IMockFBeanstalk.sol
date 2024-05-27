@@ -286,7 +286,8 @@ interface IMockFBeanstalk {
         uint256[] bdvs
     );
     event RemoveWhitelistStatus(address token, uint256 index);
-    event Ship(uint32 indexed season, ShipmentRoute[] shipmentRoutes, uint256[] shipmentAmounts);
+    event Ship(uint32 indexed season, uint256 shipmentAmount);
+    event Receipt(ShipmentRecipient indexed recipient, uint256 amount, bytes data);
     event SeasonOfPlenty(
         uint256 indexed season,
         address well,
