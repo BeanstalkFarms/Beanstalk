@@ -39,8 +39,7 @@
     "styled-components": "5.3.11",
     "typechain": "8.1.1",
     "viem": "2.7.18",
-    "wagmi": "2.5.7",
-    "yarn": "1.22.22"
+    "wagmi": "2.5.7"
   },
   "devDependencies": {
     "@graphql-codegen/cli": "3.2.2",
