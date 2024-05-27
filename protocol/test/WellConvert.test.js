@@ -6,7 +6,8 @@ const {
   setReserves,
   whitelistWell,
   impersonateBeanEthWell,
-  deployMockWell
+  deployMockWell,
+  deployMockPump
 } = require("../utils/well.js");
 const { BEAN, BEAN_ETH_WELL, WETH, BEAN_WSTETH_WELL, BEANSTALK_PUMP, ZERO_BYTES } = require("./utils/constants");
 const { ConvertEncoder } = require("./utils/encoder.js");
@@ -47,13 +48,13 @@ describe("Well Convert", function () {
     await setStethEthChainlinkPrice("1");
     await setWstethEthUniswapPrice("1");
 
-    await setReserves(owner, this.well, [to6("1000000"), to18("1000")]);
+    await deployMockPump();
 
     await setReserves(owner, this.well, [to6("1000000"), to18("1000")]);
+    await setReserves(owner, this.wstethWell, [to6("1000000"), to18("1000")]);
 
-    this.pump = await ethers.getContractAt("MockPump", BEANSTALK_PUMP);
-
-    await this.pump.readCappedReserves(BEAN_ETH_WELL, "");
+    await setReserves(owner, this.well, [to6("1000000"), to18("1000")]);
+    await setReserves(owner, this.wstethWell, [to6("1000000"), to18("1000")]);
   });
 
   beforeEach(async function () {
@@ -109,7 +110,7 @@ describe("Well Convert", function () {
       beforeEach(async function () {
         console.log("this.well in set reserves", this.well.address);
         await setReserves(owner, this.well, [to6("800000"), to18("1000")]);
-        await setReserves(owner, this.wstethWell, [to6("800000"), to18("1000")]);
+        await setReserves(owner, this.well, [to6("800000"), to18("1000")]);
       });
 
       it("reverts if not whitelisted well", async function () {
@@ -180,8 +181,9 @@ describe("Well Convert", function () {
         // call sunrise twice to finish germination (germinating deposits cannot convert).
         await mockBeanstalk.siloSunrise("0");
         await mockBeanstalk.siloSunrise("0");
+      
         await beanstalk.connect(owner).convert(convertData, ["0"], [to6("100000")]);
-        deposit = await beanstalk.getDeposit(owner.address, this.well.address, "4141449");
+        deposit = await beanstalk.getDeposit(owner.address, this.well.address, "4000000");
         expect(deposit[0]).to.be.equal("1715728752538099023967");
       });
 
