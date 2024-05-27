@@ -7,11 +7,9 @@ import styled from "styled-components";
 import { AddressInputField } from "src/components/Common/Form";
 import { ethers } from "ethers";
 
-import { useReadContract } from "wagmi";
-
-import { erc20Abi } from "viem";
 import { theme } from "src/utils/ui/theme";
 import { XIcon } from "src/components/Icons";
+import { useTokenMetadata } from "src/utils/token/useTokenMetadata";
 
 type FormValues = CreateWellProps["wellFunctionAndPump"];
 
@@ -20,20 +18,14 @@ const TokenAddressInputWithSearch = ({ path }: { path: "token1" | "token2" }) =>
   const _value = useWatch({ control, name: path });
   const value = typeof _value === "string" ? _value : "";
 
-  const { data: symbol } = useReadContract({
-    address: value as "0xString",
-    abi: erc20Abi,
-    functionName: "symbol",
-    query: {
-      enabled: !!(value && ethers.utils.isAddress(value)),
-      staleTime: Infinity
-    },
-    scopeKey: `${path}-symbol-${value}`
-  });
+  const metadata = useTokenMetadata(value);
+
+  const logo = metadata?.logo || "";
+  const symbol = metadata?.symbol || "";
 
   return (
     <>
-      {!symbol ? (
+      {!symbol && !logo ? (
         <AddressInputField
           {...register(path, {
             validate: (value) => ethers.utils.isAddress(value) || "Invalid address"
@@ -43,6 +35,11 @@ const TokenAddressInputWithSearch = ({ path }: { path: "token1" | "token2" }) =>
         />
       ) : (
         <FieldDataWrapper>
+          {logo && (
+            <ImgContainer width={16} height={16}>
+              {<img src={logo} alt={value} />}
+            </ImgContainer>
+          )}
           <Text $variant="button-link">{symbol}</Text>{" "}
           <Flex onClick={() => setValue(path, "")}>
             <XIcon width={10} height={10} />
@@ -95,4 +92,20 @@ export const TokenSelectFormSection = () => {
 const TokenContainer = styled(Flex)`
   width: 50%;
   max-width: 50%;
+`;
+
+const ImgContainer = styled.div<{
+  width: number;
+  height: number;
+}>`
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  width: ${(props) => props.width}px;
+  height: ${(props) => props.height}px;
+  img {
+    width: ${(props) => props.width}px;
+    height: ${(props) => props.height}px;
+  }
 `;
