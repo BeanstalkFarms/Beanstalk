@@ -1097,6 +1097,19 @@
     "type": "function"
   },
   {
+    "inputs": [],
+    "name": "leftoverBeans",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
     "inputs": [
       {
         "internalType": "uint256",
@@ -8180,6 +8193,31 @@
     "inputs": [
       {
         "indexed": true,
+        "internalType": "enum ShipmentRecipient",
+        "name": "recipient",
+        "type": "uint8"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "receivedAmount",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "bytes",
+        "name": "data",
+        "type": "bytes"
+      }
+    ],
+    "name": "Receipt",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
         "internalType": "uint256",
         "name": "season",
         "type": "uint256"
@@ -8222,38 +8260,10 @@
         "type": "uint32"
       },
       {
-        "components": [
-          {
-            "internalType": "address",
-            "name": "planContract",
-            "type": "address"
-          },
-          {
-            "internalType": "bytes4",
-            "name": "planSelector",
-            "type": "bytes4"
-          },
-          {
-            "internalType": "enum ShipmentRecipient",
-            "name": "recipient",
-            "type": "uint8"
-          },
-          {
-            "internalType": "bytes",
-            "name": "data",
-            "type": "bytes"
-          }
-        ],
         "indexed": false,
-        "internalType": "struct ShipmentRoute[]",
-        "name": "shipmentRoutes",
-        "type": "tuple[]"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint256[]",
-        "name": "shipmentAmounts",
-        "type": "uint256[]"
+        "internalType": "uint256",
+        "name": "shipmentAmount",
+        "type": "uint256"
       }
     ],
     "name": "Ship",
