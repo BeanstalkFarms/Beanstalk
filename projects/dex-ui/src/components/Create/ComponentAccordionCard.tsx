@@ -8,12 +8,12 @@ import { WellComponentInfo, WellComponentType } from "./useWhitelistedWellCompon
 import { AccordionSelectCard } from "../Common/ExpandableCard";
 import { Etherscan, Github } from "../Icons";
 
-export type WellComponentAccordionCardProps<T> = {
+export type WellComponentAccordionCardProps = {
   selected: boolean;
-  setSelected: (value: T) => void;
+  setSelected: (address: string) => void;
 } & WellComponentInfo;
 
-export const WellComponentAccordionCard = <T,>({
+export const WellComponentAccordionCard = ({
   selected,
   address,
   component,
@@ -21,7 +21,7 @@ export const WellComponentAccordionCard = <T,>({
   deploy,
   links,
   setSelected
-}: WellComponentAccordionCardProps<T>) => {
+}: WellComponentAccordionCardProps) => {
   return (
     <AccordionSelectCard
       selected={selected}
@@ -84,7 +84,7 @@ export const WellComponentAccordionCard = <T,>({
           </Flex>
         </Flex>
       }
-      onClick={() => setSelected(address as T)}
+      onClick={() => setSelected(address)}
     />
   );
 };

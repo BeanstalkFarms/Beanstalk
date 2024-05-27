@@ -12,13 +12,7 @@ import { theme } from "src/utils/ui/theme";
 import styled from "styled-components";
 import { CircleFilledCheckIcon, CircleEmptyIcon } from "../Icons";
 
-export const ComponentInputWithCustom = <T extends FieldValues>({
-  componentType,
-  path,
-  toggleMessage,
-  emptyValue,
-  noneOption
-}: {
+type Props<T extends FieldValues> = {
   path: Path<T>;
   componentType: keyof ReturnType<typeof useWhitelistedWellComponents>;
   toggleMessage: string;
@@ -26,7 +20,15 @@ export const ComponentInputWithCustom = <T extends FieldValues>({
   noneOption?: {
     description?: string;
   };
-}) => {
+};
+
+export const ComponentInputWithCustom = <T extends FieldValues>({
+  componentType,
+  path,
+  toggleMessage,
+  emptyValue,
+  noneOption
+}: Props<T>) => {
   const { [componentType]: wellComponents } = useWhitelistedWellComponents();
   const [usingCustom, { toggle, set: setUsingCustom }] = useBoolean();
   const {
@@ -39,11 +41,10 @@ export const ComponentInputWithCustom = <T extends FieldValues>({
   } = useFormContext<T>();
   const value = useWatch<T>({ control, name: path });
 
-  const handleSetValue = (_addr: PathValue<T, Path<T>>) => {
-    setValue(path, _addr === value ? emptyValue : _addr, {
-      shouldValidate: true
-    });
+  const handleSetValue = (_addr: string) => {
+    const newValue = (_addr === "none" ? "none" : _addr) as PathValue<T, Path<T>>;
     setUsingCustom(false);
+    setValue(path, newValue, { shouldValidate: true });
   };
 
   const handleToggle = () => {
@@ -51,7 +52,9 @@ export const ComponentInputWithCustom = <T extends FieldValues>({
     toggle();
   };
 
-  const errMessage = typeof error?.message === "string" ? error.message : "";
+  // we can always assume that error.message is a string b/c we define the
+  // validation here in this component
+  const errMessage = typeof error?.message as string;
 
   return (
     <>
@@ -66,8 +69,8 @@ export const ComponentInputWithCustom = <T extends FieldValues>({
       {noneOption && (
         <EmptyOption
           selected={value === "none"}
-          subLabel={noneOption.description}
           onClick={() => handleSetValue("none" as PathValue<T, Path<T>>)}
+          {...noneOption}
         />
       )}
       <Flex $direction="row" $gap={1}>
@@ -94,11 +97,11 @@ export const ComponentInputWithCustom = <T extends FieldValues>({
 
 const EmptyOption = ({
   selected,
-  subLabel,
+  description,
   onClick
 }: {
   selected: boolean;
-  subLabel?: string;
+  description?: string;
   onClick: () => void;
 }) => {
   return (
@@ -109,9 +112,9 @@ const EmptyOption = ({
           <Text $variant="xs" $weight="semi-bold">
             None
           </Text>
-          {subLabel && (
+          {description && (
             <Text $variant="xs" $color="text.secondary">
-              {subLabel}
+              {description}
             </Text>
           )}
         </div>
@@ -121,7 +124,6 @@ const EmptyOption = ({
 };
 
 const EmptyOptionWrapper = styled(Flex).attrs({ $gap: 2 })<{ $active: boolean }>`
-  // width: 100%;
   border: 1px solid ${(props) => (props.$active ? theme.colors.black : theme.colors.lightGray)};
   background: ${(props) => (props.$active ? theme.colors.primaryLight : theme.colors.white)};
   padding: ${theme.spacing(2, 3)};
