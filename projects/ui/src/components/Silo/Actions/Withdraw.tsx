@@ -39,7 +39,7 @@ import TxnAccordion from '~/components/Common/TxnAccordion';
 import useAccount from '~/hooks/ledger/useAccount';
 import AdditionalTxnsAccordion from '~/components/Common/Form/FormTxn/AdditionalTxnsAccordion';
 import useFarmerFormTxnsActions from '~/hooks/farmer/form-txn/useFarmerFormTxnActions';
-// import AddPlantTxnToggle from '~/components/Common/Form/FormTxn/AddPlantTxnToggle';
+import AddPlantTxnToggle from '~/components/Common/Form/FormTxn/AddPlantTxnToggle';
 import FormTxnProvider from '~/components/Common/Form/FormTxnProvider';
 import useFormTxnContext from '~/hooks/sdk/useFormTxnContext';
 import { FormTxn, PlantAndDoX, WithdrawFarmStep } from '~/lib/Txn';
@@ -283,9 +283,7 @@ const WithdrawForm: FC<
             />
           </>
         </Stack>
-        {/*
         <AddPlantTxnToggle plantAndDoX={plantAndDoX} actionText='Withdraw'/>
-        */}
         {isReady ? (
           <Stack direction="column" gap={1}>
             <TxnSeparator />

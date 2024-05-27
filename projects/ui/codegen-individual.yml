@@ -5,7 +5,7 @@ overwrite: true
 generates:
   ./src/graph/schema-beanstalk.graphql:
     schema:
-      - https://graph.node.bean.money/subgraphs/name/beanstalk-dev
+      - https://graph.node.bean.money/subgraphs/name/beanstalk
     plugins:
       - "schema-ast"
   #./src/graph/schema-bean.graphql:

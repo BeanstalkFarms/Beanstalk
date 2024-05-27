@@ -11,6 +11,8 @@ import {
   BeanstalkSDK,
   TokenValue,
   ConvertDetails,
+  FarmToMode,
+  FarmFromMode,
 } from '@beanstalk/sdk';
 import { useSelector } from 'react-redux';
 import {
@@ -50,7 +52,7 @@ import TxnAccordion from '~/components/Common/TxnAccordion';
 import AdditionalTxnsAccordion from '~/components/Common/Form/FormTxn/AdditionalTxnsAccordion';
 import useFarmerFormTxnsActions from '~/hooks/farmer/form-txn/useFarmerFormTxnActions';
 import useAsyncMemo from '~/hooks/display/useAsyncMemo';
-// import AddPlantTxnToggle from '~/components/Common/Form/FormTxn/AddPlantTxnToggle';
+import AddPlantTxnToggle from '~/components/Common/Form/FormTxn/AddPlantTxnToggle';
 import FormTxnProvider from '~/components/Common/Form/FormTxnProvider';
 import useFormTxnContext from '~/hooks/sdk/useFormTxnContext';
 import { FormTxn, ConvertFarmStep } from '~/lib/Txn';
@@ -155,10 +157,10 @@ const ConvertForm: FC<
   const isQuoting = values.tokens[0].quoting || false;
   const slippage = values.settings.slippage;
 
-  const isUsingPlanted = false /* Boolean(
+  const isUsingPlanted = Boolean(
     values.farmActions.primary?.includes(FormTxn.PLANT) &&
       sdk.tokens.BEAN.equals(tokenIn)
-  ); */
+  );
 
   const totalAmountIn =
     isUsingPlanted && plantCrate
@@ -378,14 +380,12 @@ const ConvertForm: FC<
           }
           params={quoteHandlerParams}
         />
-        {/*
         {!canConvert && tokenOut && maxAmountIn ? null : (
           <AddPlantTxnToggle
             plantAndDoX={plantAndDoX.plantAction}
             actionText="Convert"
           />
         )}
-        */}
         {/* User Input: destination token */}
         {depositedAmount.gt(0) ? (
           <PillRow
@@ -497,7 +497,9 @@ const ConvertForm: FC<
             ) : null}
 
             {/* Add-on transactions */}
-            <AdditionalTxnsAccordion filter={disabledFormActions} />
+            {!isUsingPlanted && 
+              <AdditionalTxnsAccordion filter={disabledFormActions} />
+            }
 
             {/* Transation preview */}
             <Box>
@@ -718,6 +720,8 @@ const ConvertPropProvider: FC<{
           success: 'Convert successful.',
         });
 
+        let txn;
+
         const { plantAction } = plantAndDoX;
 
         const amountIn = tokenIn.amount(_amountIn?.toString() || '0'); // amount of from token
@@ -741,14 +745,161 @@ const ConvertPropProvider: FC<{
         convertTxn.build(getEncoded, minAmountOut);
         const actionsPerformed = txnBundler.setFarmSteps(values.farmActions);
 
-        const { execute } = await txnBundler.bundle(
-          convertTxn,
-          amountIn,
-          slippage,
-          1.2
-        );
+        if (!isPlanting) {
+          const { execute } = await txnBundler.bundle(
+            convertTxn,
+            amountIn,
+            slippage,
+            1.2
+          );
 
-        const txn = await execute();
+          txn = await execute();
+        } else {
+          // Create Advanced Farm operation for alt-route Converts
+          const farm = sdk.farm.createAdvancedFarm('Alternative Convert');
+
+          // Get Earned Beans data
+          const stemTips = await sdk.silo.getStemTip(tokenIn);
+          const earnedBeans = await sdk.silo.getEarnedBeans(account);
+          const earnedStem = stemTips.toString();
+          const earnedAmount = earnedBeans.toBlockchain();
+
+          // Plant
+          farm.add(new sdk.farm.actions.Plant());
+          
+          // Withdraw Planted deposit crate
+          farm.add(
+            new sdk.farm.actions.WithdrawDeposit(
+              tokenIn.address,
+              earnedStem,
+              earnedAmount,
+              FarmToMode.INTERNAL
+            )
+          );
+
+          // Transfer to Well
+          farm.add(
+            new sdk.farm.actions.TransferToken(
+              tokenIn.address,
+              sdk.pools.BEAN_ETH_WELL.address,
+              FarmFromMode.INTERNAL,
+              FarmToMode.EXTERNAL
+            )
+          );
+
+          // Create Pipeline operation
+          const pipe = sdk.farm.createAdvancedPipe('pipelineDeposit');
+
+          // (Pipeline) - Call sync on Well
+          pipe.add(
+            new sdk.farm.actions.WellSync(
+              sdk.pools.BEAN_ETH_WELL,
+              tokenIn,
+              sdk.contracts.pipeline.address
+            ),
+            { tag: 'amountToDeposit' }
+          );
+
+          // (Pipeline) - Approve transfer of sync output
+          const approveClipboard = {
+            tag: 'amountToDeposit',
+            copySlot: 0,
+            pasteSlot: 1,
+          };
+          pipe.add(
+            new sdk.farm.actions.ApproveERC20(
+              sdk.pools.BEAN_ETH_WELL.lpToken,
+              sdk.contracts.beanstalk.address,
+              approveClipboard
+            )
+          );
+
+          // (Pipeline) - Transfer sync output to Beanstalk
+          const transferClipboard = {
+            tag: 'amountToDeposit',
+            copySlot: 0,
+            pasteSlot: 2,
+          };
+          pipe.add(
+            new sdk.farm.actions.TransferToken(
+              sdk.tokens.BEAN_ETH_WELL_LP.address,
+              account,
+              FarmFromMode.EXTERNAL,
+              FarmToMode.INTERNAL,
+              transferClipboard
+            )
+          );
+
+          // Add Pipeline operation to the Advanced Pipe operation
+          farm.add(pipe);
+
+          // Deposit Advanced Pipe output to Silo
+          farm.add(
+            new sdk.farm.actions.Deposit(
+              sdk.tokens.BEAN_ETH_WELL_LP,
+              FarmFromMode.INTERNAL
+            )
+          );
+
+          // Convert the other Deposits as usual
+          if (amountIn.gt(0)) {
+            const convertData = sdk.silo.siloConvert.calculateConvert(
+              tokenIn,
+              tokenOut,
+              amountIn,
+              farmerBalances.convertibleDeposits,
+              season.toNumber()
+            );
+            const amountOut = await sdk.contracts.beanstalk.getAmountOut(
+              tokenIn.address,
+              tokenOut.address,
+              convertData.amount.toBlockchain()
+            );
+            const _minAmountOut = TokenValue.fromBlockchain(
+              amountOut.toString(),
+              tokenOut.decimals
+            ).mul(1 - slippage);
+            farm.add(
+              new sdk.farm.actions.Convert(
+                sdk.tokens.BEAN,
+                sdk.tokens.BEAN_ETH_WELL_LP,
+                amountIn,
+                _minAmountOut,
+                convertData.crates
+              )
+            );
+          };
+
+          // Mow Grown Stalk
+          const tokensWithStalk: Map<Token, TokenValue> = new Map()
+          farmerSilo.stalk.grownByToken.forEach((value, token) => { 
+            if (value.gt(0)) {
+              tokensWithStalk.set(token, value);
+            };
+          });
+          if (tokensWithStalk.size > 0) {
+            farm.add(
+              new sdk.farm.actions.Mow(
+                account,
+                tokensWithStalk
+              )
+            );
+          };
+
+          const gasEstimate = await farm.estimateGas(earnedBeans, {
+            slippage: slippage,
+          });
+          const adjustedGas = Math.round(
+            gasEstimate.toNumber() * 1.2
+          ).toString();
+          txn = await farm.execute(
+            earnedBeans,
+            { slippage: slippage },
+            { gasLimit: adjustedGas }
+          );
+
+        }
+
         txToast.confirming(txn);
 
         const receipt = await txn.wait();
@@ -793,6 +944,7 @@ const ConvertPropProvider: FC<{
       plantAndDoX,
       initialValues,
       farmerBalances,
+      farmerSilo,
       refetch,
       refetchPools,
       refetchFarmerBalances,
