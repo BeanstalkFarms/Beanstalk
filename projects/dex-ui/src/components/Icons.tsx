@@ -223,10 +223,18 @@ export const RightArrowCircle = ({ width = 24, height = 24 }: SVGProps) => (
 );
 
 export const RightArrow = ({ color = "#000", width = 24, height = 24 }: SVGProps) => (
-  <svg xmlns="http://www.w3.org/2000/svg" width={width} height={height} fill="none">
-    <path stroke={color} strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 12H5M14 17l5-5M14 7l5 5" />
-  </svg>
+  <svg xmlns="http://www.w3.org/2000/svg" width={width} height={height} viewBox="0 0 16 16" fill="none">
+<path d="M2.5 8H13.5" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+<path d="M9 3.5L13.5 8L9 12.5" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+</svg>
 );
+
+export const LeftArrow = ({ color = "#000", width = 24, height = 24 }: SVGProps) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width={width} height={height} viewBox="0 0 16 16" fill="none">
+    <path d="M13.5 8H2.5" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+    <path d="M7 3.5L2.5 8L7 12.5" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+  </svg>
+)
 
 export const BurgerMenuIcon = ({ color = "#000", width = 24, height = 24 }: SVGProps) => (
   <svg width={width} height={height} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">

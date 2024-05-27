@@ -9,6 +9,7 @@ import { FunctionPumpFormProgress } from "./function-and-pump/FunctionPumpFormPr
 import { WellFunctionFormSection } from "./function-and-pump/WellFunctionFormSection";
 import { TokenSelectFormSection } from "./function-and-pump/TokenSelectFormSection";
 import { PumpSelectFormSection } from "./function-and-pump/PumpSelectFormSection";
+import { CreateWellButtonRow } from "./CreateWellButtonRow";
 
 type FormValues = CreateWellProps["wellFunctionAndPump"];
 
@@ -24,15 +25,7 @@ const ChooseFunctionAndPumpForm = () => {
   });
 
   const handleSubmit = useCallback(
-    (_: FormValues) => {
-      // TODO: Implement
-      setFunctionAndPump({
-        wellFunction: "",
-        token1: "",
-        token2: "",
-        pump: ""
-      });
-    },
+    (values: FormValues) => setFunctionAndPump({ ...values }),
     [setFunctionAndPump]
   );
 
@@ -40,15 +33,14 @@ const ChooseFunctionAndPumpForm = () => {
     <FormProvider {...methods}>
       <form onSubmit={methods.handleSubmit(handleSubmit)} style={{ width: "100%" }}>
         <Flex $direction="row" $gap={6}>
-          {/*  */}
           <FunctionPumpFormProgress />
-          {/*  */}
           <Flex $fullWidth $gap={4}>
             <WellFunctionFormSection />
             <Divider />
             <TokenSelectFormSection />
             <Divider />
             <PumpSelectFormSection />
+            <CreateWellButtonRow />
           </Flex>
         </Flex>
       </form>

@@ -4,7 +4,7 @@ import { Flex } from "src/components/Layout";
 import { Text } from "src/components/Typography";
 import { CreateWellProps } from "../CreateWellProvider";
 import styled from "styled-components";
-import { AddressInputField } from "src/components/Common/Form";
+import { AddressInputField } from "src/components/Form";
 import { ethers } from "ethers";
 
 import { theme } from "src/utils/ui/theme";
