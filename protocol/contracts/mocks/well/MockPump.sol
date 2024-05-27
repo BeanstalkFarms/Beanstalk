@@ -7,6 +7,7 @@ pragma solidity ^0.8.20;
 
 import {IInstantaneousPump} from "contracts/interfaces/basin/pumps/IInstantaneousPump.sol";
 import {ICumulativePump} from "contracts/interfaces/basin/pumps/ICumulativePump.sol";
+import {console} from "forge-std/console.sol";
 
 /**
  * @title Mock Pump
@@ -36,7 +37,14 @@ contract MockPump is IInstantaneousPump, ICumulativePump {
         address well,
         bytes memory
     ) external view returns (uint[] memory reserves) {
-        return reservesData[well].cappedReserves;
+        return new uint[](2);
+        console.log("readCappedReserves: ", well);
+        console.log(
+            "reservesData[well].cappedReserves.length",
+            reservesData[well].cappedReserves.length
+        );
+        return new uint[](2);
+        // return reservesData[well].cappedReserves;
     }
 
     function update(address well, uint256[] memory _reserves, bytes memory data) external {

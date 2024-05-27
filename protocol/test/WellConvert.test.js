@@ -8,7 +8,7 @@ const {
   impersonateBeanEthWell,
   deployMockWell
 } = require("../utils/well.js");
-const { BEAN, BEAN_ETH_WELL, WETH, BEAN_WSTETH_WELL } = require("./utils/constants");
+const { BEAN, BEAN_ETH_WELL, WETH, BEAN_WSTETH_WELL, BEANSTALK_PUMP, ZERO_BYTES } = require("./utils/constants");
 const { ConvertEncoder } = require("./utils/encoder.js");
 const { to6, to18 } = require("./utils/helpers.js");
 const { takeSnapshot, revertToSnapshot } = require("./utils/snapshot");
@@ -50,6 +50,10 @@ describe("Well Convert", function () {
     await setReserves(owner, this.well, [to6("1000000"), to18("1000")]);
 
     await setReserves(owner, this.well, [to6("1000000"), to18("1000")]);
+
+    this.pump = await ethers.getContractAt("MockPump", BEANSTALK_PUMP);
+
+    await this.pump.readCappedReserves(BEAN_ETH_WELL, "");
   });
 
   beforeEach(async function () {
@@ -101,7 +105,7 @@ describe("Well Convert", function () {
   });
 
   describe("convert beans to lp", async function () {
-    describe.only("p > 1", async function () {
+    describe("p > 1", async function () {
       beforeEach(async function () {
         console.log("this.well in set reserves", this.well.address);
         await setReserves(owner, this.well, [to6("800000"), to18("1000")]);
@@ -164,7 +168,7 @@ describe("Well Convert", function () {
         expect(toAmount).to.be.equal("3338505354221892343955");
       });
 
-      it("deposit and convert below max", async function () {
+      it.only("deposit and convert below max", async function () {
         const convertData = ConvertEncoder.convertBeansToWellLP(
           to6("100000"),
           "1338505354221892343955",

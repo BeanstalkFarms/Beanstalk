@@ -84,6 +84,9 @@ library LibDeltaB {
         Call[] memory pumps = IWell(well).pumps();
         address pump = pumps[0].target;
 
+        console.log("cappedReservesDeltaB: ", well);
+        console.log("cappedReservesDeltaB pump: ", pump);
+
         // well address , data[]
         uint256[] memory instReserves = ICappedReservesPump(pump).readCappedReserves(
             well,
