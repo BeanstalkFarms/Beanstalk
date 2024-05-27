@@ -1,7 +1,7 @@
 import type { CSSProperties } from "react";
 import { ThemedStyledProps, css } from "styled-components";
 
-const makeStyle = <T>(
+export const makeStyle = <T>(
   props: ThemedStyledProps<T, any>,
   cssKey: string,
   propKey: string
@@ -11,7 +11,7 @@ const makeStyle = <T>(
 };
 
 export type DisplayStyleProps = {
-  $display?: CSSProperties["display"];
+  display?: CSSProperties["display"];
 };
 
 export const BlockDisplayStyle = css<DisplayStyleProps>`
@@ -27,7 +27,7 @@ export type DimensionStyleProps = {
   maxWidth?: CSSProperties["maxWidth"];
 };
 
-export const DimensionStyleProps = css<DimensionStyleProps>`
+export const DimensionStyles = css<DimensionStyleProps>`
   ${(p) => makeStyle(p, "height", "height")}
   ${(p) => makeStyle(p, "min-height", "minHeight")}
   ${(p) => makeStyle(p, "max-height", "maxHeight")}
