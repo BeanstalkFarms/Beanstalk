@@ -5,24 +5,35 @@ import { LinksButtonText, Text } from "src/components/Typography";
 import { Flex } from "./Layout";
 import { SearchIcon } from "./Icons";
 
+type IconType = "search"; // add more here later
+
 export type TextInputFieldProps = InputHTMLAttributes<HTMLInputElement> & {
   error?: string;
-  isSearch?: boolean;
+  startIcon?: IconType;
 };
 
+const iconMapping = {
+  search: <SearchIcon />
+};
+
+const StartIcon = React.memo((props: { startIcon: IconType | undefined }) => {
+  if (!props.startIcon) return null;
+  return iconMapping[props.startIcon];
+});
+
 export const TextInputField = forwardRef<HTMLInputElement, TextInputFieldProps>(
-  ({ error, isSearch, ...props }, ref) => {
+  ({ error, startIcon, ...props }, ref) => {
     return (
       <Flex>
         <Wrapper>
-          {isSearch ? <SearchIcon /> : null}
+          <StartIcon startIcon={startIcon} />
           <StyledTextInputField {...props} onChange={props.onChange} ref={ref} type="text" />
         </Wrapper>
-        {error && (
+        {error ? (
           <Text $color="error" $variant="xs" $mt={0.5}>
             {error}
           </Text>
-        )}
+        ) : null}
       </Flex>
     );
   }

@@ -63,7 +63,7 @@ export const ComponentInputWithCustom = <T extends FieldValues>({
 
   // we can always assume that error.message is a string b/c we define the
   // validation here in this component
-  const errMessage = typeof error?.message as string | undefined;
+  const errMessage = (error?.message || "") as string | undefined;
 
   return (
     <>
@@ -115,10 +115,8 @@ export const ComponentInputWithCustom = <T extends FieldValues>({
         <TextInputField
           {...register(path, {
             validate: (_value) => {
-              if (!usingCustom && additional?.some((val) => val.value === _value)) {
-                return true;
-              }
-              return getIsValidEthereumAddress(_value) || "Invalid address";
+              const isAdditional = !!additional?.some((val) => val.value === _value);
+              return isAdditional || getIsValidEthereumAddress(_value) || "Invalid address";
             }
           })}
           placeholder="Input address"

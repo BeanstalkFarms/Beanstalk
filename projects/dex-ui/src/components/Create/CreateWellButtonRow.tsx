@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React from "react";
 import { useFormContext, useWatch } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
 import { theme } from "src/utils/ui/theme";
@@ -37,13 +37,6 @@ export const CreateWellButtonRow = () => {
   } = useFormContext();
   const values = useWatch({ control });
 
-  const goNextEnabled = useMemo(() => {
-    const noErrors = !Object.keys(errors).length;
-    const hasValues = Object.values(values).every(Boolean);
-
-    return noErrors && hasValues;
-  }, [values, errors]);
-
   const handleGoBack = () => {
     if (step === 0) {
       navigate("/build");
@@ -51,6 +44,11 @@ export const CreateWellButtonRow = () => {
       goBack();
     }
   };
+
+  const noErrors = !Object.keys(errors).length;
+  const hasValues = Object.values(values).every(Boolean);
+
+  const goNextEnabled = noErrors && hasValues;
 
   const goBackLabel = ButtonLabels[step].back || "Back";
   const nextLabel = ButtonLabels[step].next || "Next";

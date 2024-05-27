@@ -1,10 +1,11 @@
 import React from "react";
+import styled from "styled-components";
 import { CreateWellProvider, useCreateWell } from "src/components/Create/CreateWellProvider";
 import { ChooseWellImplementation } from "src/components/Create/ChooseWellImplementation";
 
 import { Page } from "src/components/Page";
 import { ChooseFunctionAndPump } from "src/components/Create/ChooseFunctionAndPump";
-import styled from "styled-components";
+import { ChooseComponentNames } from "src/components/Create/ChooseComponentNames";
 
 export type CreateWellStep = "well-implementation" | "function-pump" | "name-symbol" | "preview";
 
@@ -25,9 +26,9 @@ const CreateSteps = () => {
 
   return (
     <>
-      {/* <ChooseFunctionAndPump /> */}
       {step === 0 && <ChooseWellImplementation />}
       {step === 1 && <ChooseFunctionAndPump />}
+      {step === 2 && <ChooseComponentNames />}
     </>
   );
 };
