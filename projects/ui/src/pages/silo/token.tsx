@@ -9,7 +9,6 @@ import usePools from '~/hooks/beanstalk/usePools';
 import useWhitelist from '~/hooks/beanstalk/useWhitelist';
 import GuideButton from '~/components/Common/Guide/GuideButton';
 import {
-  HOW_TO_CLAIM_WITHDRAWALS,
   HOW_TO_CONVERT_DEPOSITS,
   HOW_TO_DEPOSIT_IN_THE_SILO,
   HOW_TO_TRANSFER_DEPOSITS,
@@ -27,7 +26,6 @@ const guides = [
   HOW_TO_CONVERT_DEPOSITS,
   HOW_TO_TRANSFER_DEPOSITS,
   HOW_TO_WITHDRAW_FROM_THE_SILO,
-  HOW_TO_CLAIM_WITHDRAWALS,
 ];
 
 const SILO_ACTIONS_MAX_WIDTH = '480px';
