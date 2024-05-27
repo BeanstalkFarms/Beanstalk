@@ -135,6 +135,10 @@ contract FertilizerFacet is Invariable {
         return s.sys.fert.unfertilizedIndex;
     }
 
+    function leftoverBeans() external view returns (uint256) {
+        return s.sys.fert.leftoverBeans;
+    }
+
     function getFertilizer(uint128 id) external view returns (uint256) {
         return s.sys.fert.fertilizer[id];
     }

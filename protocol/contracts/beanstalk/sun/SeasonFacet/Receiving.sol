@@ -24,23 +24,30 @@ contract Receiving is ReentrancyGuard {
     using SafeCast for uint256;
 
     /**
+     * @notice Emitted during Sunrise when Beans mints are shipped through active routes.
+     * @param recipient The receiver.
+     * @param receivedAmount The amount of Beans successfully received and processed.
+     * @param data The data the Beans were received with. Optional.
+     */
+    event Receipt(ShipmentRecipient indexed recipient, uint256 receivedAmount, bytes data);
+
+    /**
      * @notice General entry point to receive Beans at a given component of the system.
-     * @dev Receive functions should be designed to never revert.
      * @param recipient The Beanstalk component that will receive the Beans.
-     * @param amount The amount of Beans to receive.
+     * @param shipmentAmount The amount of Beans to receive.
      * @param data Additional data to pass to the receiving function.
      */
     function receiveShipment(
         ShipmentRecipient recipient,
-        uint256 amount,
+        uint256 shipmentAmount,
         bytes memory data
     ) internal {
-        if (recipient == ShipmentRecipient.Silo) {
-            siloReceive(amount, data);
-        } else if (recipient == ShipmentRecipient.Field) {
-            fieldReceive(amount, data);
-        } else if (recipient == ShipmentRecipient.Barn) {
-            barnReceive(amount, data);
+        if (recipient == ShipmentRecipient.SILO) {
+            siloReceive(shipmentAmount, data);
+        } else if (recipient == ShipmentRecipient.FIELD) {
+            fieldReceive(shipmentAmount, data);
+        } else if (recipient == ShipmentRecipient.BARN) {
+            barnReceive(shipmentAmount, data);
         }
         // New receiveShipment enum values should have a corresponding function call here.
     }
@@ -48,50 +55,60 @@ contract Receiving is ReentrancyGuard {
     /**
      * @notice Receive Beans at the Silo, distributing Stalk & Earned Beans.
      * @dev Data param not used.
-     * @param amount Amount of Beans to receive.
+     * @param shipmentAmount Amount of Beans to receive.
      */
-    function siloReceive(uint256 amount, bytes memory) private {
+    function siloReceive(uint256 shipmentAmount, bytes memory) private {
         // `s.earnedBeans` is an accounting mechanism that tracks the total number
         // of Earned Beans that are claimable by Stalkholders. When claimed via `plant()`,
         // it is decremented. See {Silo.sol:_plant} for more details.
-        s.sys.silo.earnedBeans += amount.toUint128();
+        s.sys.silo.earnedBeans += shipmentAmount.toUint128();
 
         // Mint Stalk (as Earned Stalk).
         // Stalk is created here because only Beans that are allocated to the Silo receive Stalk.
-        s.sys.silo.stalk += (amount * C.STALK_PER_BEAN);
+        s.sys.silo.stalk += (shipmentAmount * C.STALK_PER_BEAN);
 
         // SafeCast unnecessary here because of prior safe cast.
-        s.sys.silo.balances[C.BEAN].deposited += uint128(amount);
-        s.sys.silo.balances[C.BEAN].depositedBdv += uint128(amount);
+        s.sys.silo.balances[C.BEAN].deposited += uint128(shipmentAmount);
+        s.sys.silo.balances[C.BEAN].depositedBdv += uint128(shipmentAmount);
+
+        // Confirm successful receipt.
+        emit Receipt(ShipmentRecipient.SILO, shipmentAmount, abi.encode(""));
     }
 
     /**
-     * @notice Receive Beans at the Field. The next `amount` Pods become harvestable.
+     * @notice Receive Beans at the Field. The next `shipmentAmount` Pods become harvestable.
      * @dev Amount should never exceed the number of Pods that are not yet Harvestable.
-     * @param amount Amount of Beans to receive.
+     * @param shipmentAmount Amount of Beans to receive.
      * @param data Encoded uint256 containing the index of the Field to receive the Beans.
      */
-    function fieldReceive(uint256 amount, bytes memory data) private {
+    function fieldReceive(uint256 shipmentAmount, bytes memory data) private {
         uint256 fieldId = abi.decode(data, (uint256));
         require(fieldId < s.sys.fieldCount, "Field does not exist");
-        s.sys.fields[fieldId].harvestable += amount;
+        s.sys.fields[fieldId].harvestable += shipmentAmount;
+
+        // Confirm successful receipt.
+        emit Receipt(ShipmentRecipient.FIELD, shipmentAmount, data);
     }
 
     /**
      * @notice Receive Beans at the Barn. Amount of Sprouts become Rinsible.
      * @dev Data param not used.
-     * @param amount Amount of Beans to receive.
+     * @dev Rounding here can cause up to s.sys.fert.activeFertilizer / 1e6 Beans to be lost. Currently there are 17,217,105 activeFertilizer. So up to 17.217 Beans can be lost.
+     * @param shipmentAmount Amount of Beans to receive.
      */
-    function barnReceive(uint256 amount, bytes memory) private {
-        uint256 deltaFertilized;
+    function barnReceive(uint256 shipmentAmount, bytes memory) private {
+        uint256 amountToFertilize = shipmentAmount + s.sys.fert.leftoverBeans;
 
         // Get the new Beans per Fertilizer and the total new Beans per Fertilizer
-        uint256 remainingBpf = amount / s.sys.fert.activeFertilizer;
+        // Zeroness of activeFertilizer handled in Planner.
+        uint256 remainingBpf = amountToFertilize / s.sys.fert.activeFertilizer;
         uint256 oldBpf = s.sys.fert.bpf;
         uint256 newBpf = oldBpf + remainingBpf;
 
         // Get the end BPF of the first Fertilizer to run out.
         uint256 firstBpf = s.sys.fert.fertFirst;
+
+        uint256 deltaFertilized;
 
         // If the next fertilizer is going to run out, then step BPF according
         while (newBpf >= firstBpf) {
@@ -102,14 +119,14 @@ contract Receiving is ReentrancyGuard {
                 oldBpf = firstBpf;
                 firstBpf = s.sys.fert.fertFirst;
                 // Calculate BPF beyond the first Fertilizer edge.
-                remainingBpf = (amount - deltaFertilized) / s.sys.fert.activeFertilizer;
+                remainingBpf = (amountToFertilize - deltaFertilized) / s.sys.fert.activeFertilizer;
                 newBpf = oldBpf + remainingBpf;
             }
             // Else, if there is no more fertilizer. Matches plan cap.
             else {
                 s.sys.fert.bpf = uint128(firstBpf); // SafeCast unnecessary here.
                 s.sys.fert.fertilizedIndex += deltaFertilized;
-                require(amount == deltaFertilized, "Inexact amount of Beans at Barn");
+                require(amountToFertilize == deltaFertilized, "Inexact amount of Beans at Barn");
                 require(s.sys.fert.fertilizedIndex == s.sys.fert.unfertilizedIndex, "Paid != owed");
                 return;
             }
@@ -117,7 +134,14 @@ contract Receiving is ReentrancyGuard {
 
         // Distribute the rest of the Fertilized Beans
         s.sys.fert.bpf = uint128(newBpf); // SafeCast unnecessary here.
-        deltaFertilized = deltaFertilized + (remainingBpf * s.sys.fert.activeFertilizer);
+        deltaFertilized += (remainingBpf * s.sys.fert.activeFertilizer);
         s.sys.fert.fertilizedIndex += deltaFertilized;
+
+        // There will be up to activeFertilizer Beans leftover Beans that are not fertilized.
+        // These leftovers will be applied on future Fertilizer receipts.
+        s.sys.fert.leftoverBeans = amountToFertilize - deltaFertilized;
+
+        // Confirm successful receipt.
+        emit Receipt(ShipmentRecipient.BARN, shipmentAmount, abi.encode(""));
     }
 }

@@ -87,7 +87,7 @@ contract MockSeasonFacet is SeasonFacet {
 
     function mockStepSilo(uint256 amount) public {
         C.bean().mint(address(this), amount);
-        receiveShipment(ShipmentRecipient.Silo, amount, bytes(""));
+        receiveShipment(ShipmentRecipient.SILO, amount, bytes(""));
     }
 
     function rainSunrise() public {
@@ -366,7 +366,7 @@ contract MockSeasonFacet is SeasonFacet {
         );
 
         C.bean().mint(address(this), amount);
-        receiveShipment(ShipmentRecipient.Barn, amount, bytes(""));
+        receiveShipment(ShipmentRecipient.BARN, amount, bytes(""));
     }
 
     function setSunriseBlock(uint256 _block) external {

@@ -129,9 +129,10 @@ interface IMockFBeanstalk {
     }
 
     enum ShipmentRecipient {
-        Silo,
-        Field,
-        Barn
+        NULL,
+        SILO,
+        FIELD,
+        BARN
     }
 
     struct ShipmentRoute {
@@ -286,7 +287,8 @@ interface IMockFBeanstalk {
         uint256[] bdvs
     );
     event RemoveWhitelistStatus(address token, uint256 index);
-    event Ship(uint32 indexed season, ShipmentRoute[] shipmentRoutes, uint256[] shipmentAmounts);
+    event Ship(uint32 indexed season, uint256 shipmentAmount);
+    event Receipt(ShipmentRecipient indexed recipient, uint256 amount, bytes data);
     event SeasonOfPlenty(
         uint256 indexed season,
         address well,
@@ -1088,7 +1090,6 @@ interface IMockFBeanstalk {
         address token,
         uint256 addedValue
     ) external returns (bool);
-    function addField() external returns (uint256 id);
     function incrementTotalHarvestableE(uint256 fieldId, uint256 amount) external;
     function incrementTotalPodsE(uint256 fieldId, uint256 amount) external;
     function incrementTotalSoilE(uint128 amount) external;
@@ -1573,6 +1574,7 @@ interface IMockFBeanstalk {
     function totalStalk() external view returns (uint256);
 
     function totalUnfertilizedBeans() external view returns (uint256 beans);
+    function leftoverBeans() external view returns (uint256);
     function totalUnharvestable(uint256 fieldId) external view returns (uint256);
     function isHarvesting(uint256 fieldId) external view returns (bool);
     function transferDeposit(
@@ -1653,6 +1655,14 @@ interface IMockFBeanstalk {
     ) external;
 
     function upgradeStems() external;
+
+    function setShipmentRoutes(ShipmentRoute[] calldata shipmentRoutes) external;
+
+    function addField() external;
+
+    function fieldCount() external view returns (uint256);
+
+    function setActiveField(uint256 fieldId, uint32 temperature) external;
 
     function uri(uint256 depositId) external view returns (string memory);
 
