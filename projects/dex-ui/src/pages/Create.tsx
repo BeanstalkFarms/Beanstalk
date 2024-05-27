@@ -25,9 +25,9 @@ const CreateSteps = () => {
 
   return (
     <>
-      <ChooseFunctionAndPump />
-      {/* {step === 0 && <ChooseWellImplementation />} */}
-      {/* {step === 1 && <ChooseFunctionAndPump />} */}
+      {/* <ChooseFunctionAndPump /> */}
+      {step === 0 && <ChooseWellImplementation />}
+      {step === 1 && <ChooseFunctionAndPump />}
     </>
   );
 };
