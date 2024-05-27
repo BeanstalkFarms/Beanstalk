@@ -376,13 +376,13 @@ contract GaugeTest is TestHelper {
         bs.setBeanToMaxLpGpPerBdvRatio(uint128(beanToMaxLpRatio));
 
         // init values:
-        IMockFBeanstalk.SiloSettings memory lpSettings = bs.tokenSettings(wellToken);
+        IMockFBeanstalk.AssetSettings memory lpSettings = bs.tokenSettings(wellToken);
         // step gauge:
         bs.mockStepGauge();
 
         // assertions.
-        IMockFBeanstalk.SiloSettings memory postBeanSettings = bs.tokenSettings(C.BEAN);
-        IMockFBeanstalk.SiloSettings memory postLpSettings = bs.tokenSettings(wellToken);
+        IMockFBeanstalk.AssetSettings memory postBeanSettings = bs.tokenSettings(C.BEAN);
+        IMockFBeanstalk.AssetSettings memory postLpSettings = bs.tokenSettings(wellToken);
 
         // verify that the gauge points remain unchanged.
         assertEq(
@@ -444,7 +444,7 @@ contract GaugeTest is TestHelper {
 
         // get silo settings.
         address[] memory tokens = bs.getWhitelistedTokens();
-        IMockFBeanstalk.SiloSettings[] memory postSettings = new IMockFBeanstalk.SiloSettings[](
+        IMockFBeanstalk.AssetSettings[] memory postSettings = new IMockFBeanstalk.AssetSettings[](
             tokens.length
         );
 

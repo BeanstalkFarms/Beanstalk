@@ -16,6 +16,7 @@ import {BasinDeployer} from "test/foundry/utils/BasinDeployer.sol";
 import {DepotDeployer} from "test/foundry/utils/DepotDeployer.sol";
 import {OracleDeployer} from "test/foundry/utils/OracleDeployer.sol";
 import {FertilizerDeployer} from "test/foundry/utils/FertilizerDeployer.sol";
+import {ShipmentDeployer} from "test/foundry/utils/ShipmentDeployer.sol";
 import {LibWell, IWell, IERC20} from "contracts/libraries/Well/LibWell.sol";
 import {C} from "contracts/C.sol";
 
@@ -37,10 +38,9 @@ contract TestHelper is
     BasinDeployer,
     DepotDeployer,
     OracleDeployer,
-    FertilizerDeployer
+    FertilizerDeployer,
+    ShipmentDeployer
 {
-    // general mock interface for beanstalk.
-    IMockFBeanstalk bs = IMockFBeanstalk(BEANSTALK);
 
     // usdOracle contract.
     UsdOracle usdOracle;
@@ -70,6 +70,9 @@ contract TestHelper is
      * @notice initializes the state of the beanstalk contracts for testing.
      */
     function initializeBeanstalkTestState(bool mock, bool verbose) public {
+        // general mock interface for beanstalk.
+        bs = IMockFBeanstalk(BEANSTALK);
+
         // initialize misc contracts.
         initMisc();
 
@@ -99,6 +102,9 @@ contract TestHelper is
 
         // initialize Diamond, initalize users:
         setupDiamond(mock, verbose);
+
+        // Initialize Shipment Routes and Plans.
+        initShipping(verbose);
     }
 
     /**

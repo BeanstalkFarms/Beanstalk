@@ -242,14 +242,14 @@ contract FieldTest is TestHelper {
             farmer1BeansBeforeSow - farmer1Sow,
             "farmer 1 invalid balance"
         );
-        assertEq(field.plot(farmers[0], 0), farmer1Pods, "farmer 1 invalid pods");
+        assertEq(field.plot(farmers[0], 0, 0), farmer1Pods, "farmer 1 invalid pods");
 
         assertEq(
             C.bean().balanceOf(farmers[1]),
             farmer2BeansBeforeSow - farmer2Sow,
             "farmer 2 invalid balance"
         );
-        assertEq(field.plot(farmers[1], farmer1Pods), farmer2Pods, "farmer 2 invalid pods");
+        assertEq(field.plot(farmers[1], 0, farmer1Pods), farmer2Pods, "farmer 2 invalid pods");
         assertEq(
             C.bean().totalSupply(),
             farmer1BeansBeforeSow + farmer2BeansBeforeSow - totalAmountSown,
@@ -257,9 +257,9 @@ contract FieldTest is TestHelper {
         );
         assertEq(C.bean().balanceOf(BEANSTALK), 0, "beans remaining in beanstalk");
 
-        assertEq(field.totalPods(), totalPodsIssued, "invalid total pods");
-        assertEq(field.totalUnharvestable(), totalPodsIssued, "invalid unharvestable");
-        assertEq(field.podIndex(), totalPodsIssued, "invalid pod index");
+        assertEq(field.totalPods(0), totalPodsIssued, "invalid total pods");
+        assertEq(field.totalUnharvestable(0), totalPodsIssued, "invalid unharvestable");
+        assertEq(field.podIndex(0), totalPodsIssued, "invalid pod index");
 
         assertEq(field.totalSoil(), soilAvailable - totalAmountSown);
     }
@@ -853,11 +853,11 @@ contract FieldTest is TestHelper {
         assertEq(C.bean().totalSupply(), preTotalBalance - sowedAmount, "total supply");
 
         //// FIELD STATE ////
-        assertEq(field.plot(account, 0), expectedPods, "plot");
-        assertEq(field.totalPods(), expectedPods, "total Pods");
-        assertEq(field.totalUnharvestable(), expectedPods, "totalUnharvestable");
-        assertEq(field.podIndex(), expectedPods, "podIndex");
-        assertEq(field.harvestableIndex(), 0, "harvestableIndex");
+        assertEq(field.plot(account, 0, 0), expectedPods, "plot");
+        assertEq(field.totalPods(0), expectedPods, "total Pods");
+        assertEq(field.totalUnharvestable(0), expectedPods, "totalUnharvestable");
+        assertEq(field.podIndex(0), expectedPods, "podIndex");
+        assertEq(field.harvestableIndex(0), 0, "harvestableIndex");
     }
 
     // function sowAllInit(
