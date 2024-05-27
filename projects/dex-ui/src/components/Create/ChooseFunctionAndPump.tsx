@@ -10,7 +10,7 @@ import { theme } from "src/utils/ui/theme";
 import { Divider, Flex } from "src/components/Layout";
 import { Text } from "src/components/Typography";
 import { CreateWellButtonRow } from "./CreateWellButtonRow";
-import { AddressInputField } from "src/components/Form";
+import { TextInputField } from "src/components/Form";
 import { XIcon } from "src/components/Icons";
 
 import { CreateWellProps, useCreateWell } from "./CreateWellProvider";
@@ -158,7 +158,7 @@ const TokenAddressInputWithSearch = ({ path }: { path: "token1" | "token2" }) =>
   return (
     <>
       {!symbol && !logo ? (
-        <AddressInputField
+        <TextInputField
           {...register(path, {
             validate: (value) => ethers.utils.isAddress(value) || "Invalid address"
           })}
