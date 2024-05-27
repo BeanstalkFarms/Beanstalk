@@ -1,20 +1,38 @@
 import React from "react";
-import { useFormContext } from "react-hook-form";
-import { CreateWellProps } from "../CreateWellProvider";
 import { Flex } from "src/components/Layout";
 import { Text } from "src/components/Typography";
-
-type FormValues = CreateWellProps["wellFunctionAndPump"];
+import styled from "styled-components";
+import { ComponentInputWithCustom } from "../ComponentInputWithCustom";
 
 export const PumpSelectFormSection = () => {
-  const form = useFormContext<FormValues>();
-
   return (
-    <Flex $direction="row" $alignItems="center">
-      <Flex $gap={2}>
+    <SectionWrapper $direction="row" $justifyContent="space-between" $fullWidth>
+      <Flex $gap={2} className="description" $justifyContent="flex-start">
         <Text $variant="h3">Pumps</Text>
         <Text $variant="xs">Choose Pump(s) to set up a price feed from your Well.</Text>
       </Flex>
-    </Flex>
+      <Flex className="form-section" $gap={2} $fullWidth>
+        <ComponentInputWithCustom
+          componentType="pumps"
+          path="pump"
+          toggleMessage="Use a custom Pump"
+          emptyValue=""
+          noneOption={{
+            description: "No Oracle"
+          }}
+        />
+      </Flex>
+    </SectionWrapper>
   );
 };
+
+const SectionWrapper = styled(Flex)`
+  .description {
+    max-width: 180px;
+  }
+
+  .form-section {
+    max-width: 713px;
+    width: 100%;
+  }
+`;
