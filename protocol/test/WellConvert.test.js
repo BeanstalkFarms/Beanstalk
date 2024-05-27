@@ -169,7 +169,7 @@ describe("Well Convert", function () {
         expect(toAmount).to.be.equal("3338505354221892343955");
       });
 
-      it.only("deposit and convert below max", async function () {
+      it("deposit and convert below max", async function () {
         const convertData = ConvertEncoder.convertBeansToWellLP(
           to6("100000"),
           "1338505354221892343955",
@@ -293,7 +293,8 @@ describe("Well Convert", function () {
         await mockBeanstalk.siloSunrise("0");
         await mockBeanstalk.siloSunrise("0");
         await beanstalk.connect(owner).convert(convertData, ["0"], [to18("2000")]);
-        deposit = await beanstalk.getDeposit(owner.address, BEAN, "-3588917");
+        
+        deposit = await beanstalk.getDeposit(owner.address, BEAN, "-3520050");
         expect(deposit[0]).to.be.equal("134564064605");
       });
 
