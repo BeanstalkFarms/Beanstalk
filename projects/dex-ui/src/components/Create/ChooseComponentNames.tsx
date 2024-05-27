@@ -1,15 +1,19 @@
-import React, { useCallback } from "react";
-import { Flex } from "src/components/Layout";
+import React, { useCallback, useMemo } from "react";
+import { Divider, Flex } from "src/components/Layout";
 import { Text } from "src/components/Typography";
 import { theme } from "src/utils/ui/theme";
 import styled from "styled-components";
 import { CreateWellProps, useCreateWell } from "./CreateWellProvider";
 import { FormProvider, useForm } from "react-hook-form";
 import { CreateWellFormProgress } from "./CreateWellFormProgress";
+import { TextInputField } from "../Form";
+import { useWells } from "src/wells/useWells";
+import { CreateWellButtonRow } from "./CreateWellButtonRow";
 
 type FormValues = CreateWellProps["wellNameAndSymbol"];
 
 const ChooseComponentNamesForm = () => {
+  const { data: wells } = useWells();
   const { wellNameAndSymbol: cached, setWellNameAndSymbol } = useCreateWell();
 
   const methods = useForm<FormValues>({
@@ -19,12 +23,38 @@ const ChooseComponentNamesForm = () => {
     }
   });
 
+  const validate = useMemo(() => {
+    const wellName = (name: string) => {
+      const duplicate = (wells || []).some(
+        (well) => well.name?.toLowerCase() === name.toLowerCase()
+      );
+      return duplicate || "Token name taken";
+    };
+
+    const wellSymbol = (symbol: string) => {
+      const duplicate = (wells || []).some(
+        (well) => well?.lpToken?.symbol.toLowerCase() === symbol.toLowerCase()
+      );
+      return duplicate || "Token symbol taken";
+    };
+
+    return {
+      name: wellName,
+      symbol: wellSymbol
+    };
+  }, [wells]);
+
   const onSubmit = useCallback(
     (values: FormValues) => {
-      // validate
+      const nameValidated = validate.name(values.name);
+      const symbolValidated = validate.symbol(values.symbol);
+      if (typeof nameValidated === "string" || typeof symbolValidated === "string") {
+        return;
+      }
+
       setWellNameAndSymbol(values);
     },
-    [setWellNameAndSymbol]
+    [setWellNameAndSymbol, validate]
   );
 
   return (
@@ -32,6 +62,45 @@ const ChooseComponentNamesForm = () => {
       <form onSubmit={methods.handleSubmit(onSubmit)}>
         <Flex $direction="row" $gap={6}>
           <CreateWellFormProgress />
+          <Flex $fullWidth $gap={4}>
+            <div>
+              <Text $variant="h3" $mb={2}>
+                Name and Symbol
+              </Text>
+              <Flex $direction="row" $fullWidth $gap={4}>
+                <Flex width="50%" maxWidth="50%">
+                  <Text $variant="xs" $color="text.secondary" $mb={1}>
+                    Well Token Name
+                  </Text>
+                  <TextInputField
+                    {...methods.register("name", {
+                      required: {
+                        value: true,
+                        message: "Token Name is required"
+                      },
+                      validate: (value) => validate.name(value)
+                    })}
+                  />
+                </Flex>
+                <Flex width="50%" maxWidth="50%">
+                  <Text $variant="xs" $color="text.secondary" $mb={1}>
+                    Well Token Symbol
+                  </Text>
+                  <TextInputField
+                    {...methods.register("symbol", {
+                      required: {
+                        value: true,
+                        message: "Token Symbol is required"
+                      },
+                      validate: (value) => validate.symbol(value)
+                    })}
+                  />
+                </Flex>
+              </Flex>
+            </div>
+            <Divider />
+            <CreateWellButtonRow />
+          </Flex>
         </Flex>
       </form>
     </FormProvider>
