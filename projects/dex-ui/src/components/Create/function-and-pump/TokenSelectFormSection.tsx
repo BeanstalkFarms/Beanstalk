@@ -73,7 +73,7 @@ const FieldDataWrapper = styled.div`
 `;
 
 export const TokenSelectFormSection = () => {
-  const { control, register } = useFormContext<FormValues>();
+  const { control } = useFormContext<FormValues>();
 
   return (
     <Flex $gap={2} $fullWidth>
@@ -110,25 +110,12 @@ export const TokenSelectFormSection = () => {
             Specify token
           </Text>
           <TokenAddressInputWithSearch path={"token1.address"} />
-          {/* <AddressInputField
-            {...register("token1.address", {
-              validate: (value) => ethers.utils.isAddress(value) || "Invalid address"
-            })}
-            placeholder="Search for token or input an address"
-            isSearch
-          /> */}
         </TokenContainer>
         <TokenContainer>
           <Text $color="text.secondary" $variant="xs" $mb={1}>
             Specify token
           </Text>
-          <AddressInputField
-            {...register("token2.address", {
-              validate: (value) => ethers.utils.isAddress(value) || "Invalid address"
-            })}
-            placeholder="Search for token or input an address"
-            isSearch
-          />
+          <TokenAddressInputWithSearch path={"token2.address"} />
         </TokenContainer>
       </Flex>
     </Flex>
