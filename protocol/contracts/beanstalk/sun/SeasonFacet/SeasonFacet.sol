@@ -89,21 +89,15 @@ contract SeasonFacet is Invariable, Weather {
     /**
      * @param account The address to which the reward beans are sent, may or may not
      * be the same as the caller of `sunrise()`
-     * @param initialGasLeft The amount of gas left at the start of the transaction
      * @param mode Send reward beans to Internal or Circulating balance
      * @dev Mints Beans to `account` as a reward for calling {sunrise()}.
      */
-    function incentivize(
-        address account,
-        uint256 initialGasLeft,
-        LibTransfer.To mode
-    ) private returns (uint256) {
+    function incentivize(address account, LibTransfer.To mode) private returns (uint256) {
         // Number of blocks the sunrise is late by
         // Assumes that each block timestamp is exactly `C.BLOCK_LENGTH_SECONDS` apart.
-        uint256 blocksLate = block
-            .timestamp
-            .sub(s.season.start.add(s.season.period.mul(s.season.current)))
-            .div(C.BLOCK_LENGTH_SECONDS);
+        uint256 blocksLate = block.timestamp.sub(
+            s.season.start.add(s.season.period.mul(s.season.current))
+        );
 
         // Read the Bean / Eth price calculated by the Minting Well.
         uint256 beanEthPrice = LibWell.getWellPriceFromTwaReserves(C.BEAN_ETH_WELL);
@@ -115,11 +109,7 @@ contract SeasonFacet is Invariable, Weather {
             LibWell.resetTwaReservesForWell(whitelistedWells[i]);
         }
 
-        uint256 incentiveAmount = LibIncentive.determineReward(
-            initialGasLeft,
-            blocksLate,
-            beanEthPrice
-        );
+        uint256 incentiveAmount = LibIncentive.determineReward(blocksLate);
 
         LibTransfer.mintToken(C.bean(), incentiveAmount, account, mode);
 
