@@ -7,6 +7,7 @@ import { Text } from "../Typography";
 import { theme } from "src/utils/ui/theme";
 import { FunctionPumpFormProgress } from "./function-and-pump/FunctionPumpFormProgress";
 import { WellFunctionFormSection } from "./function-and-pump/WellFunctionFormSection";
+import { TokenSelectFormSection } from "./function-and-pump/TokenSelectFormSection";
 
 type FormValues = CreateWellProps["wellFunctionAndPump"];
 
@@ -16,11 +17,11 @@ const ChooseFunctionAndPumpForm = () => {
     defaultValues: {
       wellFunction: functionAndPump?.wellFunction || "",
       token1: {
-        type: functionAndPump?.token1.type || "",
+        type: functionAndPump?.token1.type || "ERC-20",
         address: functionAndPump?.token1.address || ""
       },
       token2: {
-        type: functionAndPump?.token2.type || "",
+        type: functionAndPump?.token2.type || "ERC-20",
         address: functionAndPump?.token2.address || ""
       },
       pump: functionAndPump?.pump || ""
@@ -56,6 +57,7 @@ const ChooseFunctionAndPumpForm = () => {
           <Flex $fullWidth $gap={4}>
             <WellFunctionFormSection />
             <Divider />
+            <TokenSelectFormSection />
           </Flex>
         </Flex>
       </form>
