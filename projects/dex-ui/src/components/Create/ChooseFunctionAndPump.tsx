@@ -163,7 +163,7 @@ const TokenAddressInputWithSearch = ({ path }: { path: "token1" | "token2" }) =>
             validate: (value) => ethers.utils.isAddress(value) || "Invalid address"
           })}
           placeholder="Search for token or input an address"
-          isSearch
+          startIcon="search"
         />
       ) : (
         <FoundTokenInfo>
