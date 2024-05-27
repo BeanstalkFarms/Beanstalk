@@ -40,7 +40,8 @@ contract ReseedField {
         MigratedPlotData[] calldata accountPlots,
         uint256 totalPods,
         uint256 harvestable,
-        uint256 harvested
+        uint256 harvested,
+        uint8 initialTemperature
     ) external {
         uint256 calculatedTotalPods;
         for (uint i; i < accountPlots.length; i++) {
@@ -62,5 +63,10 @@ contract ReseedField {
         s.f.pods = totalPods;
         s.f.harvestable = harvestable;
         s.f.harvested = harvested;
+
+        // soil demand initialization.
+        s.w.thisSowTime = type(uint32).max;
+        s.w.lastSowTime = type(uint32).max;
+        s.w.t = initialTemperature;
     }
 }
