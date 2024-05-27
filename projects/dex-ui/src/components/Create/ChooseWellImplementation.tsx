@@ -3,18 +3,15 @@ import styled from "styled-components";
 import { Flex } from "src/components/Layout";
 import { Text } from "src/components/Typography";
 
-import { ButtonPrimary } from "src/components/Button";
-import { useNavigate } from "react-router-dom";
-import { FormProvider, useForm, useFormContext } from "react-hook-form";
+import { FormProvider, useForm } from "react-hook-form";
 import { ethers } from "ethers";
 import { CreateWellProps, useCreateWell } from "./CreateWellProvider";
 import { ComponentInputWithCustom } from "./ComponentInputWithCustom";
+import { CreateWellButtonRow } from "./CreateWellButtonRow";
 
 type FormValues = CreateWellProps["wellImplementation"];
 
 const ChooseWellImplementationForm = () => {
-  const navigate = useNavigate();
-
   const { wellImplementation, setWellImplementation } = useCreateWell();
 
   const methods = useForm<FormValues>({
@@ -40,29 +37,10 @@ const ChooseWellImplementationForm = () => {
             toggleMessage="Use a custom Well Implementation instead"
             emptyValue=""
           />
-          <Flex $fullWidth $direction="row" $justifyContent="space-between">
-            <ButtonPrimary $variant="outlined" onClick={() => navigate("/build")}>
-              Back: Choose Aquifer
-            </ButtonPrimary>
-            <SubmitButton />
-          </Flex>
+          <CreateWellButtonRow />
         </FormWrapperInner>
       </form>
     </FormProvider>
-  );
-};
-
-const SubmitButton = () => {
-  const {
-    formState: { errors }
-  } = useFormContext<FormValues>();
-
-  const canSubmit = !Object.keys(errors).length;
-
-  return (
-    <ButtonPrimary type="submit" disabled={!canSubmit}>
-      Next: Customize Well
-    </ButtonPrimary>
   );
 };
 
