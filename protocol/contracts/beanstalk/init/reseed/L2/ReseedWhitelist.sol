@@ -11,14 +11,14 @@ import {C} from "contracts/C.sol";
 
 /**
  * @author Brean
- * @notice ReseedWhitelist whitelists various silo assets.
- * @dev assets that may be whitelisted are dependent on the DAO.
+ * @notice ReseedWhitelist Whitelists various Silo assets.
+ * @dev assets that may be Whitelists are dependent on the DAO.
  */
 contract ReseedWhitelist {
     AppStorage internal s;
 
     /**
-     * @notice whitelists silo assets
+     * @notice Whitelists Silo assets
      */
     function init(address[] calldata tokens, Storage.SiloSettings[] calldata ss) external {
         for (uint i; i < tokens.length; i++) {

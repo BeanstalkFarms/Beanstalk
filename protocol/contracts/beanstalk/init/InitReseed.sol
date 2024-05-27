@@ -5,6 +5,7 @@
 pragma solidity ^0.8.20;
 pragma experimental ABIEncoderV2;
 import {AppStorage} from "../AppStorage.sol";
+import {LibTractor} from "contracts/libraries/LibTractor.sol";
 
 /**
  * @author Brean
@@ -13,17 +14,10 @@ import {AppStorage} from "../AppStorage.sol";
 contract InitReseed {
     AppStorage internal s;
 
-    function init(address fertilizerImplementation) external {
-        s.season.lastSop = 0;
+    function init() external {
+        s.paused = false;
         s.isFarm = 1;
-        s.co.initialized = false;
-        s.co.startSeason = s.season.current + 1;
-        s.season.withdrawSeasons = 1;
         s.earnedBeans = 0;
-        // 4 Sunrises were missed before Beanstalk was paused.
-        s.season.start = s.season.start + 14400;
-
-        C.fertilizerAdmin().upgrade(C.fertilizerAddress(), fertilizerImplementation);
-        C.fertilizer().setURI("https://fert.bean.money/");
+        LibTractor._tractorStorage().activePublisher = payable(address(1));
     }
 }

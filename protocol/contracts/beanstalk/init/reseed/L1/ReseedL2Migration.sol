@@ -11,9 +11,10 @@ import {C} from "contracts/C.sol";
 
 /**
  * @author Brean
- * @notice Pauses beanstalk on L1, transfers liquidity to the BCM.
- * @dev all bean LP tokens are transfered to the BCM, where they will be migrated onto L2.
- * Non deposited LP tokens will be distrubuted to their initial owners, in their internal balances.
+ * @notice Pauses Beanstalk on L1, transfers liquidity to the BCM.
+ * @dev all Bean LP tokens are transfered to the BCM, where they will be migrated onto L2.
+ * Externally owned Well tokens will need to migrate their beans to L2 manually.
+ * Well tokens held in Farm Balances will be migrated to L2 by the ReseedInternalBalances contract.
  */
 contract ReseedL2Migration {
     // BCM.

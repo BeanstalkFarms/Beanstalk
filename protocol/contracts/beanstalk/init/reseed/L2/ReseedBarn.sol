@@ -12,7 +12,7 @@ import {C} from "contracts/C.sol";
 
 /**
  * @author Brean
- * @notice Reseed Barn re-initializes fertilizer.
+ * @notice Reseed Barn re-initializes Fertilizer.
  * @dev Fertilizer is re-issued to each holder. Barn raise is set to L1 state.
  */
 
@@ -22,7 +22,7 @@ interface IFertilizer {
 
 contract ReseedBarn {
     /**
-     * @notice contains data per account for fertilizer.
+     * @notice contains data per account for Fertilizer.
      */
     struct AccountFertilizerData {
         address account;
@@ -30,18 +30,19 @@ contract ReseedBarn {
         uint128 lastBpf;
     }
     /**
-     * @notice Fertilizers contains the ids, accounts, amounts, and lastBpf of each fertilizer.
+     * @notice Fertilizers contains the ids, accounts, amounts, and lastBpf of each Fertilizer.
      * @dev fertilizerIds MUST be in acsending order.
      */
     struct Fertilizers {
         uint128 fertilizerId;
         AccountFertilizerData[] accountData;
     }
+
     AppStorage internal s;
 
     /**
-     * @notice deploys fertilizer and fertilizer proxy,
-     * reissues fertilizer to each holder.
+     * @notice deploys Fertilizer and Fertilizer proxy,
+     * reissues Fertilizer to each holder.
      */
     function init(
         Fertilizers[] calldata fertilizerIds,

@@ -10,8 +10,8 @@ import {C} from "contracts/C.sol";
 
 /**
  * @author Brean
- * @notice ReseedField re-initializes the field.
- * @dev plots are re-issued to existing farmers. Field is set to L1 state.
+ * @notice ReseedField re-initializes the Field.
+ * @dev Plots are re-issued to existing farmers. Field is set to L1 state.
  */
 contract ReseedField {
     AppStorage internal s;
@@ -34,6 +34,7 @@ contract ReseedField {
      * @param totalPods The total number of pods on L1.
      * @param harvestable The number of harvestable pods on L1.
      * @param harvested The number of harvested pods on L1.
+     * @param initialTemperature the initial Temperature of the field.
      */
     function init(
         MigratedPlotData[] calldata accountPlots,

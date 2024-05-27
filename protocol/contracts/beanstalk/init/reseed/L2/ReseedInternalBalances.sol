@@ -11,8 +11,8 @@ import {C} from "contracts/C.sol";
 
 /**
  * @author Brean
- * @notice Reseed re-initializes the internal balance of farmers.
- * @dev non bean assets cannot be transfered to L2, due to the lack of garentee of the asset's Liquidity.
+ * @notice Reseed re-initializes the Internal Balance of Farmers.
+ * @dev non Bean assets cannot be transfered to L2, due to the lack of garentee of the asset's Liquidity.
  */
 contract ReseedInternalBalances {
     AppStorage internal s;

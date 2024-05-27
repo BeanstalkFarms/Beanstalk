@@ -16,12 +16,12 @@ import {C} from "contracts/C.sol";
 /**
  * @author Brean
  * @notice ReseedBean deploys the Bean, UnripeBean, UnripeLP ERC20s, and the BeanEth, BeanWsteth, BeanStable Wells.
- * Then adds liquidity to the beanEth, beanWsteth, and beanStable well.
- * @dev each well is upgradeable and ownable. the OWNER is `OWNER` when the init is called.
+ * Then adds liquidity to the BeanEth, BeanWsteth, and BeanStable well.
+ * @dev each Well is upgradeable and ownable. the owner is `OWNER` when the init is called.
  */
 // TODO: replace with implmentation once developed.
 interface IWellUpgradeable {
-    function init(string memory name, string memory symbol, address OWNER) external;
+    function init(string memory name, string memory symbol, address owner) external;
 }
 
 contract ReseedBean {

@@ -12,8 +12,8 @@ import {C} from "contracts/C.sol";
 
 /**
  * @author Brean
- * @notice ReseedSilo re-initializes the silo.
- * @dev deposits are re-issued to each holder. Silo is set to L1 state.
+ * @notice ReseedSilo re-initializes the Silo.
+ * @dev Deposits are re-issued to each holder. Silo is set to L1 state.
  */
 contract ReseedSilo {
     using LibBytes for uint256;

@@ -11,8 +11,8 @@ import {C} from "contracts/C.sol";
 
 /**
  * @author Brean
- * @notice ReseedSun re-initializes the sun.
- * @dev cases are re-initialized. Season is set to L1 state.
+ * @notice ReseedSun re-initializes the Sun.
+ * @dev Cases are re-initialized. Season is set to L1 state.
  */
 contract ReseedSun {
     uint256 constant PERIOD = 3600;
