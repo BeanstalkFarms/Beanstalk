@@ -10,14 +10,8 @@ type SetWellImplementationStepParams = {
 
 type SetFunctionAndPumpStepParams = {
   wellFunction: string;
-  token1: {
-    type: string;
-    address: string;
-  };
-  token2: {
-    type: string;
-    address: string;
-  };
+  token1: string;
+  token2: string;
   pump: string;
 };
 

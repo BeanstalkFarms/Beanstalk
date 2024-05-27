@@ -15,7 +15,7 @@ import { XIcon } from "src/components/Icons";
 
 type FormValues = CreateWellProps["wellFunctionAndPump"];
 
-const TokenAddressInputWithSearch = ({ path }: { path: "token1.address" | "token2.address" }) => {
+const TokenAddressInputWithSearch = ({ path }: { path: "token1" | "token2" }) => {
   const { register, control, setValue } = useFormContext<FormValues>();
   const _value = useWatch({ control, name: path });
   const value = typeof _value === "string" ? _value : "";
@@ -79,13 +79,13 @@ export const TokenSelectFormSection = () => {
           <Text $color="text.secondary" $variant="xs" $mb={1}>
             Specify token
           </Text>
-          <TokenAddressInputWithSearch path={"token1.address"} />
+          <TokenAddressInputWithSearch path={"token1"} />
         </TokenContainer>
         <TokenContainer>
           <Text $color="text.secondary" $variant="xs" $mb={1}>
             Specify token
           </Text>
-          <TokenAddressInputWithSearch path={"token2.address"} />
+          <TokenAddressInputWithSearch path={"token2"} />
         </TokenContainer>
       </Flex>
     </Flex>
