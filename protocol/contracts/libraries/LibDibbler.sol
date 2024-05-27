@@ -36,6 +36,9 @@ library LibDibbler {
     /// Soil to be "sold out"; affects how Temperature is adjusted.
     uint256 private constant SOIL_SOLD_OUT_THRESHOLD = 1e6;
 
+    uint256 private constant L1_BLOCK_TIME = 12;
+    uint256 private constant L2_BLOCK_TIME = 2;
+
     event Sow(address indexed account, uint256 index, uint256 beans, uint256 pods);
 
     //////////////////// SOW ////////////////////
@@ -135,15 +138,19 @@ library LibDibbler {
     //////////////////// TEMPERATURE ////////////////////
 
     /**
-     * @dev Returns the temperature `s.w.t` scaled down based on the block delta.
+     * @notice Returns the temperature `s.w.t` scaled down based on the block delta.
      * Precision level 1e6, as soil has 1e6 precision (1% = 1e6)
      * the formula `log51(A * MAX_BLOCK_ELAPSED + 1)` is applied, where:
      * `A = 2`
      * `MAX_BLOCK_ELAPSED = 25`
+     * @dev L2 block times are signifncatly shorter than L1. To adjust for this,
+     * `delta` is scaled down by the ratio of L2 block time to L1 block time.
      */
     function morningTemperature() internal view returns (uint256) {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        uint256 delta = block.number.sub(s.season.sunriseBlock);
+        uint256 delta = block.number.sub(s.season.sunriseBlock).mul(L2_BLOCK_TIME).div(
+            L1_BLOCK_TIME
+        );
 
         // check most likely case first
         if (delta > 24) {

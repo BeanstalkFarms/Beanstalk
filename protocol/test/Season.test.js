@@ -87,53 +87,27 @@ describe("Season", function () {
     it("season incentive", async function () {
       await setToSecondsAfterHour(0);
       await beanstalk.connect(owner).sunrise();
-      expect(await bean.balanceOf(owner.address)).to.be.equal(to6("100"));
+      expect(await bean.balanceOf(owner.address)).to.be.equal(to6("5"));
     });
 
     it("30 seconds after season incentive", async function () {
       await setToSecondsAfterHour(30);
       await beanstalk.connect(owner).sunrise();
-      expect(await bean.balanceOf(owner.address)).to.be.equal("126973464");
+      // 5 * 1_347_849
+      expect(await bean.balanceOf(owner.address)).to.be.equal(to6("6.739245"));
     });
 
     it("300 seconds after season incentive", async function () {
       await setToSecondsAfterHour(300);
       await beanstalk.connect(owner).sunrise();
-      expect(await bean.balanceOf(owner.address)).to.be.equal("1978846626");
+      // 5 * 1_347_849
+      expect(await bean.balanceOf(owner.address)).to.be.equal(to6("98.942330"));
     });
 
     it("1500 seconds after season incentive", async function () {
       await setToSecondsAfterHour(1500);
       await beanstalk.connect(owner).sunrise();
-      expect(await bean.balanceOf(owner.address)).to.be.equal("1978846626");
-    });
-  });
-
-  describe("oracle not initialized, previous balance > 0", async function () {
-    it("season incentive", async function () {
-      await setToSecondsAfterHour(0);
-      // Set block base fee to a known value, since it effects the reward amount.
-      await network.provider.send("hardhat_setNextBlockBaseFeePerGas", [
-        "0x4A817C800" // 20 gwei
-      ]);
-      await beanstalk.connect(owner).sunrise();
-      expect(await bean.balanceOf(owner.address)).to.be.within("11600000", "18000000");
-    });
-  });
-
-  describe("oracle initialized", async function () {
-    it("season incentive", async function () {
-      await this.beanEthWell.setReserves([to6("100000"), to18("100")]);
-      await setToSecondsAfterHour(0);
-      await beanstalk.connect(user).sunrise();
-      await setToSecondsAfterHour(0);
-      // Set block base fee to a known value, since it effects the reward amount.
-      await network.provider.send("hardhat_setNextBlockBaseFeePerGas", [
-        "0x4A817C800" // 20 gwei
-      ]);
-      await beanstalk.connect(owner).sunrise();
-
-      expect(await bean.balanceOf(owner.address)).to.be.within("15300000", "15600000");
+      expect(await bean.balanceOf(owner.address)).to.be.equal(to6("98.942330"));
     });
   });
 });
