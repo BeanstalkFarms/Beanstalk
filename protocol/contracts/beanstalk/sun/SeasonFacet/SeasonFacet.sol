@@ -50,8 +50,6 @@ contract SeasonFacet is Invariable, Weather {
         address account,
         LibTransfer.To mode
     ) public payable fundsSafu noOutFlow returns (uint256) {
-        uint256 initialGasLeft = gasleft();
-
         require(!s.paused, "Season: Paused.");
         require(seasonTime() > s.season.current, "Season: Still current Season.");
         uint32 season = stepSeason();
@@ -61,7 +59,7 @@ contract SeasonFacet is Invariable, Weather {
         LibGauge.stepGauge();
         stepSun(deltaB, caseId);
 
-        return incentivize(account, initialGasLeft, mode);
+        return incentivize(account, mode);
     }
 
     /**
