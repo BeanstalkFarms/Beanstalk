@@ -165,6 +165,7 @@ describe("Silo Enroot", function () {
     describe("1 deposit after 1 season, all", async function () {
       beforeEach(async function () {
         await mockBeanstalk.deployStemsUpgrade();
+        await mockBeanstalk.siloSunrise(0);
         await mockBeanstalk
           .connect(owner)
           .addUnderlying(UNRIPE_BEAN, to6("5000").sub(to6("10000").mul(toBN(pru)).div(to18("1"))));
