@@ -5,7 +5,7 @@
 pragma solidity ^0.8.20;
 pragma experimental ABIEncoderV2;
 
-import {AppStorage} from "contracts/beanstalk/AppStorage.sol";
+import {AppStorage} from "contracts/beanstalk/storage/AppStorage.sol";
 import {C} from "contracts/C.sol";
 
 /**
@@ -41,6 +41,7 @@ contract ReseedField {
         uint256 totalPods,
         uint256 harvestable,
         uint256 harvested,
+        uint256 fieldId,
         uint8 initialTemperature
     ) external {
         uint256 calculatedTotalPods;
@@ -48,8 +49,8 @@ contract ReseedField {
             for (uint j; j < accountPlots[i].plots.length; i++) {
                 uint256 podIndex = accountPlots[i].plots[j].podIndex;
                 uint256 podAmount = accountPlots[i].plots[j].podAmounts;
-                s.a[accountPlots[i].account].field.plots[podIndex] = podAmount;
-                s.a[accountPlots[i].account].field.plotIndexes.push(podIndex);
+                s.accts[accountPlots[i].account].fields[fieldId].plots[podIndex] = podAmount;
+                s.accts[accountPlots[i].account].fields[fieldId].plotIndexes.push(podIndex);
                 emit MigratedPlot(accountPlots[i].account, podIndex, podAmount);
                 calculatedTotalPods += podAmount;
             }
@@ -60,13 +61,13 @@ contract ReseedField {
         require(totalPods >= harvestable, "ReseedField: harvestable mismatch");
         require(harvestable >= harvested, "ReseedField: harvested mismatch");
 
-        s.f.pods = totalPods;
-        s.f.harvestable = harvestable;
-        s.f.harvested = harvested;
+        s.sys.field.pods = totalPods;
+        s.sys.field.harvestable = harvestable;
+        s.sys.field.harvested = harvested;
 
         // soil demand initialization.
-        s.w.thisSowTime = type(uint32).max;
-        s.w.lastSowTime = type(uint32).max;
-        s.w.t = initialTemperature;
+        s.sys.weather.thisSowTime = type(uint32).max;
+        s.sys.weather.lastSowTime = type(uint32).max;
+        s.sys.weather.temp = initialTemperature;
     }
 }

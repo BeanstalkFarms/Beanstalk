@@ -5,7 +5,7 @@
 pragma solidity ^0.8.20;
 pragma experimental ABIEncoderV2;
 
-import {AppStorage} from "contracts/beanstalk/AppStorage.sol";
+import {AppStorage} from "contracts/beanstalk/storage/AppStorage.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {C} from "contracts/C.sol";
 
@@ -26,8 +26,8 @@ contract ReseedL2Migration {
 
     function init() external {
         // Pause beanstalk, preventing future sunrises.
-        s.paused = true;
-        s.pausedAt = uint128(block.timestamp);
+        s.sys.paused = true;
+        s.sys.pausedAt = uint128(block.timestamp);
         emit Pause(block.timestamp);
 
         // transfer the following whitelisted silo assets to the BCM:

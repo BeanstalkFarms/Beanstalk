@@ -5,7 +5,7 @@
 pragma solidity ^0.8.20;
 pragma experimental ABIEncoderV2;
 
-import {AppStorage} from "contracts/beanstalk/AppStorage.sol";
+import {AppStorage} from "contracts/beanstalk/storage/AppStorage.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {C} from "contracts/C.sol";
 
@@ -44,7 +44,7 @@ contract ReseedInternalBalances {
     function setInternalBalances(BeanstalkInternalBalance calldata internalBalances) internal {
         uint256 totalInternalBalance;
         for (uint i; i < internalBalances.farmers.length; i++) {
-            s.internalTokenBalance[internalBalances.farmers[i]][
+            s.accts[internalBalances.farmers[i]].internalTokenBalance[
                 IERC20(internalBalances.token)
             ] = internalBalances.balances[i];
             totalInternalBalance += internalBalances.balances[i];
@@ -60,6 +60,6 @@ contract ReseedInternalBalances {
             "ReseedInternalBalances: totalInternalBalance mismatch"
         );
 
-        s.internalTokenBalanceTotal[IERC20(internalBalances.token)] = totalInternalBalance;
+        s.sys.internalTokenBalanceTotal[IERC20(internalBalances.token)] = totalInternalBalance;
     }
 }

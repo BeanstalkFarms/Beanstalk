@@ -181,7 +181,7 @@ contract CasesTest is TestHelper {
         uint256 steadyDemand;
 
         // verify ∆temp is 0% (see whitepaper).
-        assertEq(10 - uint256(w.t), 0);
+        assertEq(10 - uint256(w.temp), 0);
     }
 
     /**
@@ -216,7 +216,7 @@ contract CasesTest is TestHelper {
         uint256 steadyDemand;
 
         // verify ∆temp is 1% (see whitepaper).
-        assertEq(10 - uint256(w.t), 1);
+        assertEq(10 - uint256(w.temp), 1);
     }
 
     /**
@@ -251,6 +251,6 @@ contract CasesTest is TestHelper {
         uint256 steadyDemand;
 
         // verify ∆temp is 3% (see whitepaper).
-        assertEq(10 - uint256(w.t), 3);
+        assertEq(10 - uint256(w.temp), 3);
     }
 }

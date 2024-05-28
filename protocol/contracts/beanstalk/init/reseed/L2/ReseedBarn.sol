@@ -5,7 +5,7 @@
 pragma solidity ^0.8.20;
 pragma experimental ABIEncoderV2;
 
-import {AppStorage} from "contracts/beanstalk/AppStorage.sol";
+import {AppStorage} from "contracts/beanstalk/storage/AppStorage.sol";
 import {Fertilizer} from "contracts/tokens/Fertilizer/Fertilizer.sol";
 import {TransparentUpgradeableProxy} from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
 import {C} from "contracts/C.sol";
@@ -62,11 +62,11 @@ contract ReseedBarn {
         );
 
         mintFertilizers(Fertilizer(address(fertilizerProxy)), fertilizerIds);
-        s.season.fertilizing = true;
-        s.activeFertilizer = activeFertilizer;
-        s.fertilizedIndex = fertilizedIndex;
-        s.unfertilizedIndex = unfertilizedIndex;
-        s.bpf = bpf;
+        s.sys.season.fertilizing = true;
+        s.sys.fert.activeFertilizer = activeFertilizer;
+        s.sys.fert.fertilizedIndex = fertilizedIndex;
+        s.sys.fert.unfertilizedIndex = unfertilizedIndex;
+        s.sys.fert.bpf = bpf;
     }
 
     function mintFertilizers(
@@ -77,9 +77,9 @@ contract ReseedBarn {
             Fertilizers memory f = fertilizerIds[i];
             // set s.firstFid, s.nextFid, s.lastFid
             uint128 fid = f.fertilizerId;
-            if (i == 0) s.fFirst = fid;
-            if (i != 0) s.nextFid[fertilizerIds[i - 1].fertilizerId] = fid;
-            if (i == fertilizerIds.length - 1) s.fLast = fid;
+            if (i == 0) s.sys.fert.fertFirst = fid;
+            if (i != 0) s.sys.fert.nextFid[fertilizerIds[i - 1].fertilizerId] = fid;
+            if (i == fertilizerIds.length - 1) s.sys.fert.fertLast = fid;
 
             // reissue fertilizer to each holder.
             for (uint j; j < f.accountData.length; j++) {

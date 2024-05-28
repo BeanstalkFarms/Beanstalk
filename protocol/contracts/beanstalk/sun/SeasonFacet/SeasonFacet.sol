@@ -50,8 +50,8 @@ contract SeasonFacet is Invariable, Weather {
         address account,
         LibTransfer.To mode
     ) public payable fundsSafu noOutFlow returns (uint256) {
-        require(!s.paused, "Season: Paused.");
-        require(seasonTime() > s.season.current, "Season: Still current Season.");
+        require(!s.sys.paused, "Season: Paused.");
+        require(seasonTime() > s.sys.season.current, "Season: Still current Season.");
         uint32 season = stepSeason();
         int256 deltaB = stepOracle();
         uint256 caseId = calcCaseIdandUpdate(deltaB);
@@ -94,7 +94,7 @@ contract SeasonFacet is Invariable, Weather {
         // Number of blocks the sunrise is late by
         // Assumes that each block timestamp is exactly `C.BLOCK_LENGTH_SECONDS` apart.
         uint256 blocksLate = block.timestamp.sub(
-            s.season.start.add(s.season.period.mul(s.season.current))
+            s.sys.season.start.add(s.sys.season.period.mul(s.sys.season.current))
         );
 
         // Read the Bean / Eth price calculated by the Minting Well.

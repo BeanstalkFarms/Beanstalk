@@ -65,7 +65,7 @@
 //     function claimWithdrawals(Withdrawals[] calldata w) private {
 //         for (uint256 i; i < w.length; ++i) {
 //             for (uint256 j = 0; j < w[i].seasons.length; j++) {
-//                 delete s.a[w[i].account].withdrawals[w[i].token][w[i].seasons[j]];
+//                 delete s.accts[w[i].account].withdrawals[w[i].token][w[i].seasons[j]];
 //             }
 //             emit ClaimSeasons(w[i].account, w[i].token, w[i].seasons, w[i].amount);
 //         }

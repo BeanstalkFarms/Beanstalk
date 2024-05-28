@@ -206,6 +206,7 @@ contract FieldFacet is Invariable, ReentrancyGuard {
         LibMarket._cancelPodListing(LibTractor._user(), fieldId, index);
 
         delete s.accts[account].fields[fieldId].plots[index];
+        LibDibbler.removePlotIndexFromAccount(account, fieldId, index);
 
         // If the entire Plot was harvested, exit.
         if (harvestablePods >= pods) {
@@ -214,10 +215,8 @@ contract FieldFacet is Invariable, ReentrancyGuard {
 
         // Create a new Plot with remaining Pods.
         uint256 newIndex = index.add(harvestablePods);
-        s.accts[account].fields[fieldId].plots[newIndex] = pods.sub(
-            harvestablePods
-        );
-        s.a[account].field.plotIndexes.push(newIndex);
+        s.accts[account].fields[fieldId].plots[newIndex] = pods.sub(harvestablePods);
+        s.accts[account].fields[fieldId].plotIndexes.push(newIndex);
     }
 
     //////////////////// CONFIG /////////////////////
@@ -421,21 +420,25 @@ contract FieldFacet is Invariable, ReentrancyGuard {
      * @notice returns the plotIndexes owned by `account`.
      */
     function getPlotIndexesFromAccount(
-        address account
+        address account,
+        uint256 fieldId
     ) external view returns (uint256[] memory plotIndexes) {
-        return s.a[account].field.plotIndexes;
+        return s.accts[account].fields[fieldId].plotIndexes;
     }
 
     /**
      * @notice returns the plots owned by `account`.
      */
-    function getPlotsFromAccount(address account) external view returns (Plot[] memory plots) {
-        uint256[] memory plotIndexes = s.a[account].field.plotIndexes;
+    function getPlotsFromAccount(
+        address account,
+        uint256 fieldId
+    ) external view returns (Plot[] memory plots) {
+        uint256[] memory plotIndexes = s.accts[account].fields[fieldId].plotIndexes;
         if (plotIndexes.length == 0) return plots;
         plots = new Plot[](plotIndexes.length);
         for (uint256 i = 0; i < plotIndexes.length; i++) {
             uint256 index = plotIndexes[i];
-            plots[i] = Plot(index, s.a[account].field.plots[index]);
+            plots[i] = Plot(index, s.accts[account].fields[fieldId].plots[index]);
         }
     }
 }

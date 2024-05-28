@@ -107,18 +107,18 @@
 //         // LibBeanSilo.decrementDepositedBeans(PROPOSER_AMOUNT);
 
 //         // 3. Decrement total Stalk, Seeds, Roots
-//         s.s.stalk = s.s.stalk.sub(s.a[PROPOSER].s.stalk).sub(s.a[EXPLOITER].s.stalk);
-//         s.s.seeds = s.s.seeds.sub(s.a[PROPOSER].s.seeds).sub(s.a[EXPLOITER].s.seeds);
-//         s.s.roots = s.s.roots.sub(s.a[PROPOSER].roots).sub(s.a[EXPLOITER].roots);
+//         s.s.stalk = s.s.stalk.sub(s.accts[PROPOSER].s.stalk).sub(s.accts[EXPLOITER].s.stalk);
+//         s.s.seeds = s.s.seeds.sub(s.accts[PROPOSER].s.seeds).sub(s.accts[EXPLOITER].s.seeds);
+//         s.s.roots = s.s.roots.sub(s.accts[PROPOSER].roots).sub(s.accts[EXPLOITER].roots);
 
 //         // 4. Reset Stalk, Seed, Root balances
-//         s.a[PROPOSER].s.stalk = 0;
-//         s.a[EXPLOITER].s.stalk = 0;
+//         s.accts[PROPOSER].s.stalk = 0;
+//         s.accts[EXPLOITER].s.stalk = 0;
 
-//         s.a[PROPOSER].s.seeds = 0;
-//         s.a[EXPLOITER].s.seeds = 0;
+//         s.accts[PROPOSER].s.seeds = 0;
+//         s.accts[EXPLOITER].s.seeds = 0;
 
-//         s.a[PROPOSER].roots = 0;
-//         s.a[EXPLOITER].roots = 0;
+//         s.accts[PROPOSER].roots = 0;
+//         s.accts[EXPLOITER].roots = 0;
 //     }
 // }

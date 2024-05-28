@@ -35,8 +35,11 @@ contract BeanL1RecieverFacet is ReentrancyGuard {
             msg.sender == address(BRIDGE) &&
                 IL2Messenger(BRIDGE).xDomainMessageSender() == L1BEANSTALK
         );
-        s.migratedL1Beans += amount;
-        require(EXTERNAL_L1_BEANS >= s.migratedL1Beans, "L2Migration: exceeds maximum migrated");
+        s.sys.migration.migratedL1Beans += amount;
+        require(
+            EXTERNAL_L1_BEANS >= s.sys.migration.migratedL1Beans,
+            "L2Migration: exceeds maximum migrated"
+        );
         C.bean().mint(reciever, amount);
     }
 }

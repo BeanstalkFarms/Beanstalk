@@ -33,6 +33,12 @@ contract SiloTest is TestHelper {
             10000e6, // 10,000 Beans
             10 ether // 10 ether.
         );
+
+        addLiquidityToWell(
+            C.BEAN_WSTETH_WELL,
+            10000e6, // 10,000 Beans
+            10 ether // 10 ether.
+        );
     }
 
     /**

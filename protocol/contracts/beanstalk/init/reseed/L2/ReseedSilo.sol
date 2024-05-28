@@ -5,7 +5,7 @@
 pragma solidity ^0.8.20;
 pragma experimental ABIEncoderV2;
 
-import {AppStorage} from "contracts/beanstalk/AppStorage.sol";
+import {AppStorage} from "contracts/beanstalk/storage/AppStorage.sol";
 import {LibTokenSilo} from "contracts/libraries/Silo/LibTokenSilo.sol";
 import {LibBytes} from "contracts/libraries/LibBytes.sol";
 import {C} from "contracts/C.sol";
@@ -109,7 +109,7 @@ contract ReseedSilo {
     function reseedSiloDeposit(SiloDeposits calldata siloDeposit) internal {
         uint256 totalCalcDeposited;
         uint256 totalCalcDepositedBdv;
-        uint256 stalkIssuedPerBdv = s.ss[siloDeposit.token].stalkIssuedPerBdv;
+        uint256 stalkIssuedPerBdv = s.sys.silo.assetSettings[siloDeposit.token].stalkIssuedPerBdv;
         for (uint256 i; i < siloDeposit.siloDepositsAccount.length; i++) {
             AccountSiloDeposits memory deposits = siloDeposit.siloDepositsAccount[i];
             uint128 totalBdvForAccount;
@@ -121,9 +121,9 @@ contract ReseedSilo {
                 uint256 depositId = LibBytes.packAddressAndStem(siloDeposit.token, stem);
 
                 // add deposit to account. Add to depositIdList.
-                s.a[deposits.accounts].deposits[depositId].amount = deposits.dd[j].amount;
-                s.a[deposits.accounts].deposits[depositId].bdv = deposits.dd[j].bdv;
-                s.a[deposits.accounts].depositIdList[siloDeposit.token].push(depositId);
+                s.accts[deposits.accounts].deposits[depositId].amount = deposits.dd[j].amount;
+                s.accts[deposits.accounts].deposits[depositId].bdv = deposits.dd[j].bdv;
+                s.accts[deposits.accounts].depositIdList[siloDeposit.token].push(depositId);
 
                 // increment totalBdvForAccount by bdv of deposit:
                 totalBdvForAccount += deposits.dd[j].bdv;
@@ -152,15 +152,16 @@ contract ReseedSilo {
                 );
             }
             // update mowStatuses for account and token.
-            s.a[deposits.accounts].mowStatuses[siloDeposit.token].bdv = totalBdvForAccount;
-            s.a[deposits.accounts].mowStatuses[siloDeposit.token].lastStem = siloDeposit.stemTip;
+            s.accts[deposits.accounts].mowStatuses[siloDeposit.token].bdv = totalBdvForAccount;
+            s.accts[deposits.accounts].mowStatuses[siloDeposit.token].lastStem = siloDeposit
+                .stemTip;
 
             // increment stalkForAccount by the stalk issued per BDV.
             // placed outside of loop for gas effiency.
             accountStalk += stalkIssuedPerBdv * totalBdvForAccount;
 
             // set stalk for account.
-            s.a[deposits.accounts].s.stalk = accountStalk;
+            s.accts[deposits.accounts].stalk = accountStalk;
         }
 
         // verify that the total deposited and total deposited bdv are correct.
@@ -174,7 +175,7 @@ contract ReseedSilo {
         );
 
         // set global state
-        s.siloBalances[siloDeposit.token].deposited = siloDeposit.totalDeposited;
-        s.siloBalances[siloDeposit.token].depositedBdv = siloDeposit.totalDepositedBdv;
+        s.sys.silo.balances[siloDeposit.token].deposited = siloDeposit.totalDeposited;
+        s.sys.silo.balances[siloDeposit.token].depositedBdv = siloDeposit.totalDepositedBdv;
     }
 }

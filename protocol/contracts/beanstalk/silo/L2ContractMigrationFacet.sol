@@ -143,7 +143,7 @@ contract L2ContractMigrationFacet is Invariable, ReentrancyGuard {
         AccountDepositData calldata depositData
     ) internal returns (uint256 accountStalk) {
         int96 stemTip = LibTokenSilo.stemTipForToken(depositData.token);
-        uint256 stalkIssuedPerBdv = s.ss[depositData.token].stalkIssuedPerBdv;
+        uint256 stalkIssuedPerBdv = s.sys.silo.assetSettings[depositData.token].stalkIssuedPerBdv;
         uint128 totalBdvForAccount;
         uint128 totalDeposited;
         uint128 totalDepositedBdv;
@@ -155,8 +155,8 @@ contract L2ContractMigrationFacet is Invariable, ReentrancyGuard {
             require(stemTip >= stem, "Migration: INVALID_STEM");
 
             // add deposit to account.
-            s.a[account].deposits[depositId].amount = depositData.amounts[i];
-            s.a[account].deposits[depositId].bdv = depositData.bdvs[i];
+            s.accts[account].deposits[depositId].amount = depositData.amounts[i];
+            s.accts[account].deposits[depositId].bdv = depositData.bdvs[i];
 
             // increment totalBdvForAccount by bdv of deposit:
             totalBdvForAccount += depositData.bdvs[i];
@@ -176,12 +176,12 @@ contract L2ContractMigrationFacet is Invariable, ReentrancyGuard {
         }
 
         // update mowStatuses for account and token.
-        s.a[account].mowStatuses[depositData.token].bdv = totalBdvForAccount;
-        s.a[account].mowStatuses[depositData.token].lastStem = stemTip;
+        s.accts[account].mowStatuses[depositData.token].bdv = totalBdvForAccount;
+        s.accts[account].mowStatuses[depositData.token].lastStem = stemTip;
 
         // set global state
-        s.siloBalances[depositData.token].deposited = totalDeposited;
-        s.siloBalances[depositData.token].depositedBdv = totalDepositedBdv;
+        s.sys.silo.balances[depositData.token].deposited = totalDeposited;
+        s.sys.silo.balances[depositData.token].depositedBdv = totalDepositedBdv;
 
         // increment stalkForAccount by the stalk issued per BDV.
         // placed outside of loop for gas effiency.
@@ -192,8 +192,8 @@ contract L2ContractMigrationFacet is Invariable, ReentrancyGuard {
      * @notice increments the stalk and roots for an account.
      */
     function setStalk(address account, uint256 accountStalk, uint256 accountRoots) internal {
-        s.a[account].s.stalk += accountStalk;
-        s.a[account].roots += accountRoots;
+        s.accts[account].stalk += accountStalk;
+        s.accts[account].roots += accountRoots;
 
         // emit event.
         emit StalkBalanceChanged(account, int256(accountStalk), int256(accountRoots));

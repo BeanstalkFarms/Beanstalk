@@ -90,9 +90,9 @@ contract InitalizeDiamond {
 
         // init usdTokenPrice. C.Bean_eth_well should be
         // a bean well w/ the native token of the network.
-        s.usdTokenPrice[C.BEAN_ETH_WELL] = 1;
-        s.twaReserves[beanTokenWell].reserve0 = 1;
-        s.twaReserves[beanTokenWell].reserve1 = 1;
+        s.sys.usdTokenPrice[C.BEAN_ETH_WELL] = 1;
+        s.sys.twaReserves[beanTokenWell].reserve0 = 1;
+        s.sys.twaReserves[beanTokenWell].reserve1 = 1;
 
         // init tractor.
         LibTractor._tractorStorage().activePublisher = payable(address(1));

@@ -25,7 +25,7 @@ import {IBeanstalkWellFunction} from "contracts/interfaces/basin/IBeanstalkWellF
  * for a given Well.
  *
  * @dev
- * The Oracle uses the Season timestamp stored in `s.season.timestamp` to determine how many seconds
+ * The Oracle uses the Season timestamp stored in `s.sys.season.timestamp` to determine how many seconds
  * it has been since the last Season instead of storing its own for efficiency purposes.
  * Each Capture stores the encoded cumulative reserves returned by the Pump in `s.wellOracleSnapshots[well]`.
  **/

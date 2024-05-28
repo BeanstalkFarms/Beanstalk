@@ -120,7 +120,7 @@ contract MarketplaceFacet is Invariable, Order {
             sender != address(0) && recipient != address(0),
             "Field: Transfer to/from 0 address."
         );
-        uint256 amount = validatePlotAndReturnPods(fieldId, sender, id, start, end);
+        uint256 transferAmount = validatePlotAndReturnPods(fieldId, sender, index, start, end);
         if (
             LibTractor._user() != sender &&
             allowancePods(sender, LibTractor._user(), fieldId) != type(uint256).max
@@ -140,6 +140,7 @@ contract MarketplaceFacet is Invariable, Order {
     function transferPlots(
         address sender,
         address recipient,
+        uint256 fieldId,
         uint256[] calldata ids,
         uint256[] calldata starts,
         uint256[] calldata ends
@@ -152,14 +153,14 @@ contract MarketplaceFacet is Invariable, Order {
             ids.length == starts.length && ids.length == ends.length,
             "Field: Array length mismatch."
         );
-        uint256 totalAmount = _transferPlots(sender, recipient, ids, starts, ends);
+        uint256 totalAmount = _transferPlots(sender, recipient, fieldId, ids, starts, ends);
 
         // Decrement allowance is done on totalAmount rather than per plot.
         if (
             LibTractor._user() != sender &&
-            allowancePods(sender, LibTractor._user()) != type(uint256).max
+            allowancePods(sender, LibTractor._user(), fieldId) != type(uint256).max
         ) {
-            decrementAllowancePods(sender, LibTractor._user(), totalAmount);
+            decrementAllowancePods(sender, LibTractor._user(), totalAmount, fieldId);
         }
     }
 
@@ -170,16 +171,17 @@ contract MarketplaceFacet is Invariable, Order {
     function _transferPlots(
         address sender,
         address recipient,
+        uint256 fieldId,
         uint256[] calldata ids,
         uint256[] calldata starts,
         uint256[] calldata ends
     ) internal returns (uint256 totalAmount) {
         for (uint256 i; i < ids.length; i++) {
-            uint256 amount = validatePlotAndReturnPods(sender, ids[i], starts[i], ends[i]);
-            if (s.podListings[ids[i]] != bytes32(0)) {
-                _cancelPodListing(sender, ids[i]);
+            uint256 amount = validatePlotAndReturnPods(fieldId, sender, ids[i], starts[i], ends[i]);
+            if (s.sys.podListings[fieldId][ids[i]] != bytes32(0)) {
+                LibMarket._cancelPodListing(sender, fieldId, ids[i]);
             }
-            _transferPlot(sender, recipient, ids[i], starts[i], amount);
+            _transferPlot(sender, recipient, fieldId, ids[i], starts[i], amount);
             totalAmount += amount;
         }
     }
@@ -194,7 +196,7 @@ contract MarketplaceFacet is Invariable, Order {
         uint256 start,
         uint256 end
     ) internal view returns (uint256 amount) {
-        amount = s.a[sender].fields[fieldId].plots[id];
+        amount = s.accts[sender].fields[fieldId].plots[id];
         require(amount > 0, "Field: Plot not owned by user.");
         require(end > start && amount >= end, "Field: Pod range invalid.");
         amount = end - start;

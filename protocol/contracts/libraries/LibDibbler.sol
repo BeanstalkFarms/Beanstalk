@@ -6,6 +6,7 @@ import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 import {PRBMath} from "@prb/math/contracts/PRBMath.sol";
 import {LibPRBMathRoundable} from "contracts/libraries/LibPRBMathRoundable.sol";
 import {LibAppStorage, AppStorage} from "./LibAppStorage.sol";
+import {Account, Field} from "contracts/beanstalk/storage/Account.sol";
 import {LibRedundantMath128} from "./LibRedundantMath128.sol";
 import {LibRedundantMath32} from "./LibRedundantMath32.sol";
 import {LibRedundantMath256} from "contracts/libraries/LibRedundantMath256.sol";
@@ -36,11 +37,10 @@ library LibDibbler {
     /// Soil to be "sold out"; affects how Temperature is adjusted.
     uint256 private constant SOIL_SOLD_OUT_THRESHOLD = 1e6;
 
-    event Sow(address indexed account, uint256 fieldId uint256 index, uint256 beans, uint256 pods);
     uint256 private constant L1_BLOCK_TIME = 12;
     uint256 private constant L2_BLOCK_TIME = 2;
 
-    event Sow(address indexed account, uint256 index, uint256 beans, uint256 pods);
+    event Sow(address indexed account, uint256 fieldId, uint256 index, uint256 beans, uint256 pods);
 
     //////////////////// SOW ////////////////////
 
@@ -94,11 +94,11 @@ library LibDibbler {
             s.sys.soil = s.sys.soil.sub(uint128(beans));
         }
 
-        s.accts[account].fields[s.sys.activeField].plots[
-            s.sys.fields[s.sys.activeField].pods
-        ] = pods;
-        s.a[account].field.plotIndexes.push(s.f.pods);
-        emit Sow(account, s.sys.activeField, s.sys.fields[s.sys.activeField].pods, beans, pods);
+        uint256 index = s.sys.fields[s.sys.activeField].pods;
+
+        s.accts[account].fields[s.sys.activeField].plots[index] = pods;
+        s.accts[account].fields[s.sys.activeField].plotIndexes.push(index);
+        emit Sow(account, s.sys.activeField, index, beans, pods);
 
         s.sys.fields[s.sys.activeField].pods += pods;
         _saveSowTime();
@@ -151,7 +151,7 @@ library LibDibbler {
      */
     function morningTemperature() internal view returns (uint256) {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        uint256 delta = block.number.sub(s.season.sunriseBlock).mul(L2_BLOCK_TIME).div(
+        uint256 delta = block.number.sub(s.sys.season.sunriseBlock).mul(L2_BLOCK_TIME).div(
             L1_BLOCK_TIME
         );
 
@@ -385,13 +385,16 @@ library LibDibbler {
     /**
      * @notice removes a plot index from an accounts plotIndex list.
      */
-    function removePlotIndexFromAccount(address account, uint256 plotIndex) internal {
+    function removePlotIndexFromAccount(
+        address account,
+        uint256 fieldId,
+        uint256 plotIndex
+    ) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        uint256 i = findPlotIndexForAccount(account, plotIndex);
-        s.a[account].field.plotIndexes[i] = s.a[account].field.plotIndexes[
-            s.a[account].field.plotIndexes.length - 1
-        ];
-        s.a[account].field.plotIndexes.pop();
+        uint256 i = findPlotIndexForAccount(account, fieldId, plotIndex);
+        Field storage field = s.accts[account].fields[fieldId];
+        field.plotIndexes[i] = field.plotIndexes[field.plotIndexes.length - 1];
+        field.plotIndexes.pop();
     }
 
     /**
@@ -399,10 +402,12 @@ library LibDibbler {
      */
     function findPlotIndexForAccount(
         address account,
+        uint256 fieldId,
         uint256 plotIndex
     ) internal view returns (uint256 i) {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        uint256[] memory plotIndexes = s.a[account].field.plotIndexes;
+        Field storage field = s.accts[account].fields[fieldId];
+        uint256[] memory plotIndexes = field.plotIndexes;
         uint256 length = plotIndexes.length;
         while (plotIndexes[i] != plotIndex) {
             i++;

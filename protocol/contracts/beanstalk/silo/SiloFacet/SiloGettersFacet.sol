@@ -5,6 +5,7 @@
 pragma solidity ^0.8.20;
 
 import {AppStorage} from "contracts/beanstalk/storage/AppStorage.sol";
+import {Deposit} from "contracts/beanstalk/storage/Account.sol";
 import {GerminationSide} from "contracts/beanstalk/storage/System.sol";
 import {MowStatus} from "contracts/beanstalk/storage/Account.sol";
 import {AssetSettings} from "contracts/beanstalk/storage/System.sol";
@@ -32,7 +33,7 @@ contract SiloGettersFacet is ReentrancyGuard {
     struct TokenDepositId {
         address token;
         uint256[] depositIds;
-        Account.Deposit[] tokenDeposits;
+        Deposit[] tokenDeposits;
     }
 
     /**
@@ -574,14 +575,13 @@ contract SiloGettersFacet is ReentrancyGuard {
         address account,
         address token
     ) public view returns (TokenDepositId memory deposits) {
-        uint256[] memory depositIds = s.a[account].depositIdList[token];
-        if (depositIds.length == 0)
-            return TokenDepositId(token, depositIds, new Account.Deposit[](0));
+        uint256[] memory depositIds = s.accts[account].depositIdList[token];
+        if (depositIds.length == 0) return TokenDepositId(token, depositIds, new Deposit[](0));
         deposits.token = token;
         deposits.depositIds = depositIds;
-        deposits.tokenDeposits = new Account.Deposit[](depositIds.length);
+        deposits.tokenDeposits = new Deposit[](depositIds.length);
         for (uint256 i; i < depositIds.length; i++) {
-            deposits.tokenDeposits[i] = s.a[account].deposits[depositIds[i]];
+            deposits.tokenDeposits[i] = s.accts[account].deposits[depositIds[i]];
         }
     }
 
@@ -592,6 +592,6 @@ contract SiloGettersFacet is ReentrancyGuard {
         address account,
         address token
     ) public view returns (uint256[] memory depositIds) {
-        return s.a[account].depositIdList[token];
+        return s.accts[account].depositIdList[token];
     }
 }

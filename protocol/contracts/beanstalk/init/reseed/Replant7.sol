@@ -42,7 +42,7 @@
 //         for (uint256 i; i < earned.length; ++i) {
 //             uint256 earnedBeans = earned[i].earnedBeans;
 //             address account = earned[i].account;
-//             s.a[account].lastUpdate = s.season.current;
+//             s.accts[account].lastUpdate = s.sys.season.current;
 //             LibTokenSilo.addDepositToAccount(
 //                 account,
 //                 C.UNRIPE_BEAN,
@@ -57,16 +57,16 @@
 //     }
 
 //     function prune(Earned calldata e) private {
-//         s.a[e.account].s.stalk = e.stalk;
-//         s.a[e.account].s.seeds = e.seeds;
-//         s.a[e.account].roots = s.a[e.account].s.stalk.mul(ROOTS_PADDING);
+//         s.accts[e.account].s.stalk = e.stalk;
+//         s.accts[e.account].s.seeds = e.seeds;
+//         s.accts[e.account].roots = s.accts[e.account].s.stalk.mul(ROOTS_PADDING);
 
-//         emit SeedsBalanceChanged(e.account, int256(s.a[e.account].s.seeds));
+//         emit SeedsBalanceChanged(e.account, int256(s.accts[e.account].s.seeds));
 
 //         emit StalkBalanceChanged(
 //             e.account,
-//             int256(s.a[e.account].s.stalk),
-//             int256(s.a[e.account].roots)
+//             int256(s.accts[e.account].s.stalk),
+//             int256(s.accts[e.account].roots)
 //         );
 //     }
 

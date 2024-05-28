@@ -5,7 +5,7 @@
 pragma solidity ^0.8.20;
 pragma experimental ABIEncoderV2;
 
-import {AppStorage} from "contracts/beanstalk/AppStorage.sol";
+import {AppStorage} from "contracts/beanstalk/storage/AppStorage.sol";
 import {LibCases} from "contracts/libraries/LibCases.sol";
 import {C} from "contracts/C.sol";
 
@@ -39,18 +39,18 @@ contract ReseedSun {
         uint128 averageGrownStalkPerBdvPerSeason,
         uint128 beanToMaxLpGpPerBdvRatio
     ) external {
-        s.season.current = season;
-        s.season.period = PERIOD;
-        s.season.timestamp = TIMESTAMP;
-        s.w.t = temperature;
-        s.seedGauge.averageGrownStalkPerBdvPerSeason = averageGrownStalkPerBdvPerSeason;
+        s.sys.season.current = season;
+        s.sys.season.period = PERIOD;
+        s.sys.season.timestamp = TIMESTAMP;
+        s.sys.weather.temp = temperature;
+        s.sys.seedGauge.averageGrownStalkPerBdvPerSeason = averageGrownStalkPerBdvPerSeason;
         emit BeanToMaxLpGpPerBdvRatioChange(
-            s.season.current,
+            s.sys.season.current,
             type(uint256).max,
             int80(int128(beanToMaxLpGpPerBdvRatio))
         );
 
-        s.seedGauge.beanToMaxLpGpPerBdvRatio = beanToMaxLpGpPerBdvRatio;
+        s.sys.seedGauge.beanToMaxLpGpPerBdvRatio = beanToMaxLpGpPerBdvRatio;
         emit UpdateAverageStalkPerBdvPerSeason(averageGrownStalkPerBdvPerSeason);
         LibCases.setCasesV2();
     }

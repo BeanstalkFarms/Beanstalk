@@ -5,6 +5,7 @@
 pragma solidity ^0.8.20;
 
 import {ReentrancyGuard} from "contracts/beanstalk/ReentrancyGuard.sol";
+import {LibDibbler} from "contracts/libraries/LibDibbler.sol";
 import {C} from "contracts/C.sol";
 
 /**
@@ -59,7 +60,7 @@ contract PodTransfer is ReentrancyGuard {
 
     function insertPlot(address account, uint256 fieldId, uint256 index, uint256 amount) internal {
         s.accts[account].fields[fieldId].plots[index] = amount;
-        s.a[account].field.plotIndexes.push(index);
+        s.accts[account].fields[fieldId].plotIndexes.push(index);
     }
 
     function removePlot(
@@ -73,31 +74,15 @@ contract PodTransfer is ReentrancyGuard {
 
         if (start > 0) {
             s.accts[account].fields[fieldId].plots[index] = start;
-            LibDibbler.removePlotIndexFromAccount(account, id);
         } else {
             delete s.accts[account].fields[fieldId].plots[index];
+            LibDibbler.removePlotIndexFromAccount(account, fieldId, index);
         }
 
         if (amountAfterEnd > 0) {
-            uint256 newIndex = id.add(end);
+            uint256 newIndex = index + end;
             s.accts[account].fields[fieldId].plots[newIndex] = amountAfterEnd;
-            s.a[account].field.plotIndexes.push(newIndex);
-        }
-    /**
-     * @notice removes a plot from an account's field state. Used in market to transfer plots.
-     */
-    function removePlot(address account, uint256 id, uint256 start, uint256 end) internal {
-        uint256 amount = s.a[account].field.plots[id];
-        if (start == 0) {
-            delete s.a[account].field.plots[id];
-            LibDibbler.removePlotIndexFromAccount(account, id);
-        } else {
-            s.a[account].field.plots[id] = start;
-        }
-        if (end != amount) {
-            uint256 newIndex = id.add(end);
-            s.a[account].field.plots[newIndex] = amount.sub(end);
-            s.a[account].field.plotIndexes.push(newIndex);
+            s.accts[account].fields[fieldId].plotIndexes.push(newIndex);
         }
     }
 

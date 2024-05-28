@@ -87,16 +87,16 @@
 
 //     function harvest(address account, uint256[] calldata plots, uint256 amount) private {
 //         for (uint256 i; i < plots.length; ++i) {
-//             delete s.a[account].field.plots[plots[i]];
+//             delete s.accts[account].field.plots[plots[i]];
 //         }
 //         emit Harvest(account, plots, amount);
 //     }
 
 //     function harvestPartial(address account, uint256 plotId) private {
-//         uint256 pods = s.a[account].field.plots[plotId];
+//         uint256 pods = s.accts[account].field.plots[plotId];
 //         uint256 beansHarvested = s.f.harvestable.sub(plotId);
-//         delete s.a[account].field.plots[plotId];
-//         s.a[account].field.plots[plotId.add(beansHarvested)] = pods.sub(beansHarvested);
+//         delete s.accts[account].field.plots[plotId];
+//         s.accts[account].field.plots[plotId.add(beansHarvested)] = pods.sub(beansHarvested);
 //         uint256[] memory plots = new uint256[](1);
 //         plots[0] = plotId;
 //         emit Harvest(account, plots, beansHarvested);
