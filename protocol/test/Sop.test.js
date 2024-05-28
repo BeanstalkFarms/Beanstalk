@@ -138,7 +138,6 @@ describe("Sop", function () {
   describe("1 sop", async function () {
     beforeEach(async function () {
       // verify sop well is not initalized in storage prior to sop.
-      expect(await beanstalk.getSopWell()).to.be.equal(ZERO_ADDRESS);
       // set reserves/pump P > 1.
       // `setReserves` updates the values in the well,
       // `setInstantaneousReserves` updates the values in the pump.
@@ -201,11 +200,6 @@ describe("Sop", function () {
       await beanstalk.connect(user2).claimPlenty();
       expect(await beanstalk.balanceOfPlenty(user2.address)).to.be.equal('0')
       expect(await this.weth.balanceOf(user2.address)).to.be.equal(to18('25.595575914848452999'))
-    })
-    
-    it('changes the sop well', async function () {
-      expect(await beanstalk.getSopWell()).to.not.be.equal(ZERO_ADDRESS)
-      expect(await beanstalk.getSopWell()).to.be.equal(this.well.address)
     })
   })
 
@@ -272,8 +266,6 @@ describe("Sop", function () {
 
   describe("sop with current balances", async function () {
     beforeEach(async function () {
-      // verify sop well is not initalized in storage prior to sop.
-      expect(await beanstalk.getSopWell()).to.be.equal(ZERO_ADDRESS);
 
       // the sop can use either the current or isntanteous reserves,
       // depending on which one issues less beans.
@@ -337,11 +329,6 @@ describe("Sop", function () {
       await beanstalk.connect(user2).claimPlenty();
       expect(await beanstalk.balanceOfPlenty(user2.address)).to.be.equal('0')
       expect(await this.weth.balanceOf(user2.address)).to.be.equal(to18('25.595575914848452999'))
-    })
-    
-    it('changes the sop well', async function () {
-      expect(await beanstalk.getSopWell()).to.not.be.equal(ZERO_ADDRESS)
-      expect(await beanstalk.getSopWell()).to.be.equal(this.well.address)
     })
   })
 })

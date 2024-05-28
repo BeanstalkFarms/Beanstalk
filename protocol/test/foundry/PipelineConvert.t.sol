@@ -15,7 +15,6 @@ import {MockToken} from "contracts/mocks/MockToken.sol";
 import {DepotFacet, AdvancedPipeCall} from "contracts/beanstalk/farm/DepotFacet.sol";
 import {AdvancedFarmCall} from "contracts/libraries/LibFarm.sol";
 import {C} from "contracts/C.sol";
-import {console} from "forge-std/console.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {LibWell} from "contracts/libraries/Well/LibWell.sol";
 import {ICappedReservesPump} from "contracts/interfaces/basin/pumps/ICappedReservesPump.sol";

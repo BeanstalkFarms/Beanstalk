@@ -12,7 +12,6 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
  * @param reentrantStatus An intra-transaction state variable to protect against reentrance.
  * @param isFarm Stores whether the function is wrapped in the `farm` function (1 if not, 2 if it is).
  * @param ownerCandidate Stores a candidate address to transfer ownership to. The owner must claim the ownership transfer.
- * @param sopWell Stores the well that will be used upon a SOP. Uninitialized until a SOP occurs, and is kept constant afterwards.
  * @param plenty The amount of plenty token held by the contract.
  * @param soil The number of Soil currently available. Adjusted during {Sun.stepSun}.
  * @param beanSown The number of Bean sown within the current Season. Reset during {Weather.calcCaseId}.
@@ -46,7 +45,6 @@ struct System {
     uint256 reentrantStatus;
     uint256 isFarm;
     address ownerCandidate;
-    address sopWell;
     uint256 plenty;
     uint128 soil;
     uint128 beanSown;
@@ -75,6 +73,7 @@ struct System {
     bytes32[128] _buffer_2;
     mapping(address => Implementation) oracleImplementation;
     SeedGaugeSettings seedGaugeSettings;
+    SeasonOfPlenty sop;
 }
 
 /**
@@ -253,6 +252,7 @@ struct WhitelistStatus {
     bool isWhitelisted;
     bool isWhitelistedLp;
     bool isWhitelistedWell;
+    bool isSoppable;
 }
 
 /**
@@ -402,6 +402,15 @@ struct SeedGaugeSettings {
     uint256 lpToSupplyRatioOptimal;
     uint256 lpToSupplyRatioLowerBound;
     uint256 excessivePriceThreshold;
+}
+
+/**
+ * @param perWellPlenty A mapping from well amount of plenty (flooded tokens) per well
+ * @param sops mapping of season to a mapping of wells to plentyPerRoot
+ */
+struct SeasonOfPlenty {
+    mapping(address => uint256) plentyPerSopToken;
+    mapping(uint32 => mapping(address => uint256)) sops;
 }
 
 /**

@@ -334,10 +334,7 @@ library LibEvaluate {
      * @notice Evaluates beanstalk based on deltaB, podRate, deltaPodDemand and lpToSupplyRatio.
      * and returns the associated caseId.
      */
-    function evaluateBeanstalk(
-        int256 deltaB,
-        uint256 beanSupply
-    ) internal returns (uint256, address) {
+    function evaluateBeanstalk(int256 deltaB, uint256 beanSupply) internal returns (uint256) {
         (
             Decimal.D256 memory deltaPodDemand,
             Decimal.D256 memory lpToSupplyRatio,
@@ -348,7 +345,7 @@ library LibEvaluate {
         .add(evalPrice(deltaB, podRate, largestLiqWell)) // Evaluate Price
             .add(evalDeltaPodDemand(deltaPodDemand))
             .add(evalLpToSupplyRatio(lpToSupplyRatio)); // Evaluate Delta Soil Demand // Evaluate LP to Supply Ratio
-        return (caseId, largestLiqWell);
+        return (caseId);
     }
 
     /**

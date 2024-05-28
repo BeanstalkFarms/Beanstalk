@@ -69,7 +69,7 @@ contract MockWhitelistFacet is WhitelistFacet {
         uint256 index,
         bool isWhitelisted,
         bool isWhitelistedLp,
-        bool isWhitelistedWell
+        bool isSoppable
     );
 
     /**
@@ -85,7 +85,8 @@ contract MockWhitelistFacet is WhitelistFacet {
         uint256 index,
         bool isWhitelisted,
         bool isWhitelistedLp,
-        bool isWhitelistedWell
+        bool isWhitelistedWell,
+        bool isSoppable
     );
 
     /**
@@ -98,13 +99,15 @@ contract MockWhitelistFacet is WhitelistFacet {
         address token,
         bool isWhitelisted,
         bool isWhitelistedLp,
-        bool isWhitelistedWell
+        bool isWhitelistedWell,
+        bool isSoppable
     ) external {
         LibWhitelistedTokens.updateWhitelistStatus(
             token,
             isWhitelisted,
             isWhitelistedLp,
-            isWhitelistedWell
+            isWhitelistedWell,
+            isSoppable
         );
     }
 
@@ -116,13 +119,15 @@ contract MockWhitelistFacet is WhitelistFacet {
         address token,
         bool isWhitelisted,
         bool isWhitelistedLp,
-        bool isWhitelistedWell
+        bool isWhitelistedWell,
+        bool isSoppable
     ) external {
         LibWhitelistedTokens.addWhitelistStatus(
             token,
             isWhitelisted,
             isWhitelistedLp,
-            isWhitelistedWell
+            isWhitelistedWell,
+            isSoppable
         );
     }
 }
