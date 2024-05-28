@@ -29,7 +29,7 @@ export const SNAPSHOT_SPACES = Object.values(GovSpace);
 
 /**
  * Quorum for BIPs and BOPs changed via BIP-47 in the following manner:
- * BIPs: 50% vote for -> Min(50%, 33% + % votes against)
+ * BIPs: 50% vote for -> Min(50%, (1/3 * 100)% + % votes against)
  * BOPs: 35% vote for => Min(50%, 25% + % votes against)
  */
 const QUORUM = {
