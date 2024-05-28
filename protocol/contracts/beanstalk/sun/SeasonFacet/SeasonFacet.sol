@@ -64,12 +64,12 @@ contract SeasonFacet is Invariable, Weather {
 
     /**
      * @notice Returns the expected Season number given the current block timestamp.
-     * {sunrise} can be called when `seasonTime() > s.season.current`.
+     * {sunrise} can be called when `seasonTime() > s.sys.season.current`.
      */
     function seasonTime() public view virtual returns (uint32) {
-        if (block.timestamp < s.season.start) return 0;
-        if (s.season.period == 0) return type(uint32).max;
-        return uint32((block.timestamp - s.season.start) / s.season.period);
+        if (block.timestamp < s.sys.season.start) return 0;
+        if (s.sys.season.period == 0) return type(uint32).max;
+        return uint32((block.timestamp - s.sys.season.start) / s.sys.season.period);
     }
 
     //////////////////// SEASON INTERNAL ////////////////////
@@ -78,9 +78,9 @@ contract SeasonFacet is Invariable, Weather {
      * @dev Moves the Season forward by 1.
      */
     function stepSeason() private returns (uint32 season) {
-        s.season.current += 1;
-        season = s.season.current;
-        s.season.sunriseBlock = uint32(block.number); // Note: Will overflow in the year 3650.
+        s.sys.season.current += 1;
+        season = s.sys.season.current;
+        s.sys.season.sunriseBlock = uint32(block.number); // Note: Will overflow in the year 3650.
         emit Sunrise(season);
     }
 

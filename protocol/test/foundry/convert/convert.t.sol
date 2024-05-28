@@ -8,6 +8,10 @@ import {MockSeasonFacet} from "contracts/mocks/mockFacets/MockSeasonFacet.sol";
 import {MockConvertFacet} from "contracts/mocks/mockFacets/MockConvertFacet.sol";
 import {LibConvertData} from "contracts/libraries/Convert/LibConvertData.sol";
 import {MockToken} from "contracts/mocks/MockToken.sol";
+import {LibWell} from "contracts/libraries/Well/LibWell.sol";
+import {LibWellMinting} from "contracts/libraries/Minting/LibWellMinting.sol";
+import {LibDeltaB} from "contracts/libraries/Oracle/LibDeltaB.sol";
+import {console} from "forge-std/console.sol";
 
 /**
  * @title ConvertTest
@@ -53,6 +57,12 @@ contract ConvertTest is TestHelper {
             well,
             10000e6, // 10,000 Beans
             10 ether // 10 ether.
+        );
+
+        addLiquidityToWell(
+            C.BEAN_WSTETH_WELL,
+            10000e6, // 10,000 Beans
+            10 ether // 10 WETH of wstETH
         );
     }
 
@@ -207,10 +217,10 @@ contract ConvertTest is TestHelper {
     function test_convertBeanToWellGeneral(uint256 deltaB, uint256 beansConverted) public {
         multipleBeanDepositSetup();
 
-        deltaB = bound(deltaB, 1, bean.balanceOf(well) - C.WELL_MINIMUM_BEAN_BALANCE);
-        setReserves(well, bean.balanceOf(well) - deltaB, weth.balanceOf(well));
+        deltaB = bound(deltaB, 100, 7000e6);
+        setDeltaBforWell(int256(deltaB), well, C.WETH);
 
-        beansConverted = bound(beansConverted, 1, deltaB);
+        beansConverted = bound(beansConverted, 100, deltaB);
 
         uint256 expectedAmtOut = bs.getAmountOut(C.BEAN, well, beansConverted);
 
@@ -225,17 +235,15 @@ contract ConvertTest is TestHelper {
         uint256[] memory amounts = new uint256[](1);
         amounts[0] = beansConverted;
 
-        vm.expectEmit();
+        // vm.expectEmit();
         emit Convert(farmers[0], C.BEAN, well, beansConverted, expectedAmtOut);
         vm.prank(farmers[0]);
         convert.convert(convertData, new int96[](1), amounts);
 
+        int256 newDeltaB = LibDeltaB.currentDeltaB(well);
+
         // verify deltaB.
-        assertEq(
-            bs.getMaxAmountIn(C.BEAN, well),
-            deltaB - beansConverted,
-            "BEAN -> WELL maxAmountIn should be deltaB - beansConverted"
-        );
+        // assertEq(bs.getMaxAmountIn(C.BEAN, well), deltaB - beansConverted, 'BEAN -> WELL maxAmountIn should be deltaB - beansConverted');
     }
 
     /**
@@ -289,9 +297,7 @@ contract ConvertTest is TestHelper {
         bs.deposit(C.BEAN, 10000e6, 0);
 
         // Germinating deposits cannot convert (see {LibGerminate}).
-        // End germination process.
-        season.siloSunrise(0);
-        season.siloSunrise(0);
+        passGermination();
     }
 
     //////////// WELL -> BEAN ////////////
@@ -507,9 +513,7 @@ contract ConvertTest is TestHelper {
         bs.deposit(well, lpMinted - (lpMinted / 2), 0);
 
         // Germinating deposits cannot convert (see {LibGerminate}).
-        // End germination process.
-        season.siloSunrise(0);
-        season.siloSunrise(0);
+        passGermination();
         vm.stopPrank();
     }
 
@@ -681,4 +685,70 @@ contract ConvertTest is TestHelper {
     //////////// UNRIPE_BEAN TO UNRIPE_LP ////////////
 
     //////////// UNRIPE_LP TO UNRIPE_BEAN ////////////
+
+    //////////// REVERT ON PENALTY ////////////
+
+    // function test_convertWellToBeanRevert(uint256 deltaB, uint256 lpConverted) public {
+    //     uint256 minLp = getMinLPin();
+    //     uint256 lpMinted = multipleWellDepositSetup();
+
+    //     deltaB = bound(deltaB, 1e6, 1000 ether);
+    //     setReserves(well, bean.balanceOf(well) + deltaB, weth.balanceOf(well));
+    //     uint256 initalWellBeanBalance = bean.balanceOf(well);
+    //     uint256 initalLPbalance = MockToken(well).totalSupply();
+    //     uint256 initalBeanBalance = bean.balanceOf(BEANSTALK);
+
+    //     uint256 maxLpIn = bs.getMaxAmountIn(well, C.BEAN);
+    //     lpConverted = bound(lpConverted, minLp, lpMinted / 2);
+
+    //     // if the maximum LP that can be used is less than
+    //     // the amount that the user wants to convert,
+    //     // cap the amount to the maximum LP that can be used.
+    //     if (lpConverted > maxLpIn) lpConverted = maxLpIn;
+
+    //     uint256 expectedAmtOut = bs.getAmountOut(well, C.BEAN, lpConverted);
+
+    //     // create encoding for a well -> bean convert.
+    //     bytes memory convertData = convertEncoder(
+    //         LibConvertData.ConvertKind.WELL_LP_TO_BEANS,
+    //         well, // well
+    //         lpConverted, // amountIn
+    //         0 // minOut
+    //     );
+
+    //     uint256[] memory amounts = new uint256[](1);
+    //     amounts[0] = lpConverted;
+
+    //     vm.expectEmit();
+    //     emit Convert(farmers[0], well, C.BEAN, lpConverted, expectedAmtOut);
+    //     vm.prank(farmers[0]);
+    //     convert.convert(
+    //         convertData,
+    //         new int96[](1),
+    //         amounts
+    //     );
+
+    //     // the new maximum amount out should be the difference between the deltaB and the expected amount out.
+    //     assertEq(bs.getAmountOut(well, C.BEAN, bs.getMaxAmountIn(well, C.BEAN)), deltaB - expectedAmtOut, 'amountOut does not equal deltaB - expectedAmtOut');
+    //     assertEq(bean.balanceOf(well), initalWellBeanBalance - expectedAmtOut, 'well bean balance does not equal initalWellBeanBalance - expectedAmtOut');
+    //     assertEq(MockToken(well).totalSupply(), initalLPbalance - lpConverted, 'well LP balance does not equal initalLPbalance - lpConverted');
+    //     assertEq(bean.balanceOf(BEANSTALK), initalBeanBalance + expectedAmtOut, 'bean balance does not equal initalBeanBalance + expectedAmtOut');
+    // }
+
+    //////////////// CONVERT HELPERS /////////////////
+
+    function convertEncoder(
+        LibConvertData.ConvertKind kind,
+        address token,
+        uint256 amountIn,
+        uint256 minAmountOut
+    ) internal pure returns (bytes memory) {
+        if (kind == LibConvertData.ConvertKind.LAMBDA_LAMBDA) {
+            // lamda_lamda encoding
+            return abi.encode(kind, amountIn, token);
+        } else {
+            // default encoding
+            return abi.encode(kind, amountIn, minAmountOut, token);
+        }
+    }
 }

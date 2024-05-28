@@ -78,7 +78,10 @@ contract EnrootFacet is Invariable, ReentrancyGuard {
         int96 stem,
         uint256 amount
     ) external payable fundsSafu noNetFlow noSupplyChange nonReentrant mowSender(token) {
-        require(s.u[token].underlyingToken != address(0), "Silo: token not unripe");
+        require(
+            s.sys.silo.unripeSettings[token].underlyingToken != address(0),
+            "Silo: token not unripe"
+        );
 
         uint256 deltaBDV;
         {
@@ -113,7 +116,7 @@ contract EnrootFacet is Invariable, ReentrancyGuard {
 
         // enroots should mint active stalk,
         // as unripe assets have been in the system for at least 1 season.
-        uint256 deltaStalk = deltaBDV.mul(s.ss[token].stalkIssuedPerBdv).add(
+        uint256 deltaStalk = deltaBDV.mul(s.sys.silo.assetSettings[token].stalkIssuedPerBdv).add(
             LibSilo.stalkReward(stem, LibTokenSilo.stemTipForToken(token), uint128(deltaBDV))
         );
 
@@ -138,7 +141,10 @@ contract EnrootFacet is Invariable, ReentrancyGuard {
         int96[] calldata stems,
         uint256[] calldata amounts
     ) external payable fundsSafu noNetFlow noSupplyChange nonReentrant mowSender(token) {
-        require(s.u[token].underlyingToken != address(0), "Silo: token not unripe");
+        require(
+            s.sys.silo.unripeSettings[token].underlyingToken != address(0),
+            "Silo: token not unripe"
+        );
         // First, remove Deposits because every deposit is in a different season,
         // we need to get the total Stalk, not just BDV.
         LibSilo.AssetsRemoved memory ar = LibSilo._removeDepositsFromAccount(
@@ -218,7 +224,7 @@ contract EnrootFacet is Invariable, ReentrancyGuard {
         // get the stemTip and stalkPerBdv.
         enrootData.stemTip = LibTokenSilo.stemTipForToken(token);
         // get the stalk per BDV.
-        enrootData.stalkPerBdv = s.ss[token].stalkIssuedPerBdv;
+        enrootData.stalkPerBdv = s.sys.silo.assetSettings[token].stalkIssuedPerBdv;
     }
 
     /**

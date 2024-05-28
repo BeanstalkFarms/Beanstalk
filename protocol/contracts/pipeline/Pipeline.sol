@@ -86,6 +86,7 @@ contract Pipeline is IPipeline, ERC1155Holder, ERC721Holder {
     ) private returns (bytes memory result) {
         bool success;
         (success, result) = target.call{value: value}(data);
+
         LibFunction.checkReturn(success, result);
     }
 

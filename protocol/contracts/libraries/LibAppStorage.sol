@@ -3,7 +3,7 @@
 pragma solidity ^0.8.20;
 
 // Import all of AppStorage to give importers of LibAppStorage access to {Account}, etc.
-import "../beanstalk/AppStorage.sol";
+import {AppStorage} from "../beanstalk/storage/AppStorage.sol";
 
 /**
  * @title LibAppStorage

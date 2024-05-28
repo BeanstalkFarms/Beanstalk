@@ -6,7 +6,9 @@ pragma solidity ^0.8.20;
 
 import {LibRedundantMath256} from "contracts/libraries/LibRedundantMath256.sol";
 import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
-import {LibAppStorage, Storage, AppStorage, Account} from "../LibAppStorage.sol";
+import {LibAppStorage} from "../LibAppStorage.sol";
+import {AppStorage} from "contracts/beanstalk/storage/AppStorage.sol";
+import {Deposited, GerminationSide} from "contracts/beanstalk/storage/System.sol";
 import {C} from "../../C.sol";
 import {LibRedundantMath32} from "contracts/libraries/LibRedundantMath32.sol";
 import {LibRedundantMath128} from "contracts/libraries/LibRedundantMath128.sol";
@@ -98,29 +100,22 @@ library LibTokenSilo {
         address token,
         uint256 amount,
         uint256 bdv,
-        LibGerminate.Germinate germ
+        GerminationSide side
     ) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        Storage.TotalGerminating storage germinate;
 
-        // verify germ is valid
-        if (germ == LibGerminate.Germinate.ODD) {
-            germinate = s.oddGerminating;
-        } else if (germ == LibGerminate.Germinate.EVEN) {
-            germinate = s.evenGerminating;
-        } else {
-            revert("invalid germinationMode"); // should not ever get here
+        // verify side is valid
+        if (side != GerminationSide.ODD && side != GerminationSide.EVEN) {
+            revert("invalid germinationSide"); // should not ever get here
         }
 
         // increment germinating amount and bdv.
-        germinate.deposited[token].amount = germinate.deposited[token].amount.add(
-            amount.toUint128()
-        );
-        germinate.deposited[token].bdv = germinate.deposited[token].bdv.add(bdv.toUint128());
+        s.sys.silo.germinating[side][token].amount += amount.toUint128();
+        s.sys.silo.germinating[side][token].bdv += bdv.toUint128();
 
         // emit event.
         emit LibGerminate.TotalGerminatingBalanceChanged(
-            s.season.current,
+            s.sys.season.current,
             token,
             int256(amount),
             int256(bdv)
@@ -136,30 +131,23 @@ library LibTokenSilo {
         address token,
         uint256 amount,
         uint256 bdv,
-        LibGerminate.Germinate germ
+        GerminationSide side
     ) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        Storage.TotalGerminating storage germinate;
 
-        // verify germ is valid
-        if (germ == LibGerminate.Germinate.ODD) {
-            germinate = s.oddGerminating;
-        } else if (germ == LibGerminate.Germinate.EVEN) {
-            germinate = s.evenGerminating;
-        } else {
-            revert("invalid germinationMode"); // should not ever get here
+        // verify side is valid
+        if (side != GerminationSide.ODD && side != GerminationSide.EVEN) {
+            revert("invalid germinationSide"); // should not ever get here
         }
 
         // decrement germinating amount and bdv.
-        germinate.deposited[token].amount = germinate.deposited[token].amount.sub(
-            amount.toUint128()
-        );
-        germinate.deposited[token].bdv = germinate.deposited[token].bdv.sub(bdv.toUint128());
+        s.sys.silo.germinating[side][token].amount -= amount.toUint128();
+        s.sys.silo.germinating[side][token].bdv -= bdv.toUint128();
 
         emit LibGerminate.TotalGerminatingBalanceChanged(
-            LibGerminate.getSeasonGerminationState() == germ
-                ? s.season.current
-                : s.season.current - 1,
+            LibGerminate.getSeasonGerminationSide() == side
+                ? s.sys.season.current
+                : s.sys.season.current - 1,
             token,
             -int256(amount),
             -int256(bdv)
@@ -172,28 +160,19 @@ library LibTokenSilo {
     function incrementTotalGerminatingBdv(
         address token,
         uint256 bdv,
-        LibGerminate.Germinate germ
+        GerminationSide side
     ) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
 
-        if (germ == LibGerminate.Germinate.ODD) {
-            // increment odd germinating
-            s.oddGerminating.deposited[token].bdv = s.oddGerminating.deposited[token].bdv.add(
-                bdv.toUint128()
-            );
-        } else if (germ == LibGerminate.Germinate.EVEN) {
-            // increment even germinating
-            s.evenGerminating.deposited[token].bdv = s.evenGerminating.deposited[token].bdv.add(
-                bdv.toUint128()
-            );
-        } else {
-            revert("invalid germinationMode"); // should not ever get here
+        if (side != GerminationSide.ODD && side != GerminationSide.EVEN) {
+            revert("invalid germinationSide"); // should not ever get here
         }
+        s.sys.silo.germinating[side][token].bdv += bdv.toUint128();
 
         emit LibGerminate.TotalGerminatingBalanceChanged(
-            LibGerminate.getSeasonGerminationState() == germ
-                ? s.season.current
-                : s.season.current - 1,
+            LibGerminate.getSeasonGerminationSide() == side
+                ? s.sys.season.current
+                : s.sys.season.current - 1,
             token,
             0,
             int256(bdv)
@@ -209,8 +188,10 @@ library LibTokenSilo {
      */
     function incrementTotalDeposited(address token, uint256 amount, uint256 bdv) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        s.siloBalances[token].deposited = s.siloBalances[token].deposited.add(amount.toUint128());
-        s.siloBalances[token].depositedBdv = s.siloBalances[token].depositedBdv.add(
+        s.sys.silo.balances[token].deposited = s.sys.silo.balances[token].deposited.add(
+            amount.toUint128()
+        );
+        s.sys.silo.balances[token].depositedBdv = s.sys.silo.balances[token].depositedBdv.add(
             bdv.toUint128()
         );
     }
@@ -222,8 +203,10 @@ library LibTokenSilo {
      */
     function decrementTotalDeposited(address token, uint256 amount, uint256 bdv) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        s.siloBalances[token].deposited = s.siloBalances[token].deposited.sub(amount.toUint128());
-        s.siloBalances[token].depositedBdv = s.siloBalances[token].depositedBdv.sub(
+        s.sys.silo.balances[token].deposited = s.sys.silo.balances[token].deposited.sub(
+            amount.toUint128()
+        );
+        s.sys.silo.balances[token].depositedBdv = s.sys.silo.balances[token].depositedBdv.sub(
             bdv.toUint128()
         );
     }
@@ -233,7 +216,7 @@ library LibTokenSilo {
      */
     function incrementTotalDepositedBdv(address token, uint256 bdv) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        s.siloBalances[token].depositedBdv = s.siloBalances[token].depositedBdv.add(
+        s.sys.silo.balances[token].depositedBdv = s.sys.silo.balances[token].depositedBdv.add(
             bdv.toUint128()
         );
     }
@@ -251,7 +234,7 @@ library LibTokenSilo {
         address token,
         int96 stem,
         uint256 amount
-    ) internal returns (uint256, LibGerminate.Germinate) {
+    ) internal returns (uint256 stalk, GerminationSide) {
         uint256 bdv = beanDenominatedValue(token, amount);
         return depositWithBDV(account, token, stem, amount, bdv);
     }
@@ -260,7 +243,7 @@ library LibTokenSilo {
      * @dev Once the BDV received for Depositing `amount` of `token` is known,
      * add a Deposit for `account` and update the total amount Deposited.
      *
-     * `s.ss[token].stalkIssuedPerBdv` stores the number of Stalk per BDV for `token`.
+     * `s.sys.assetSettings[token].stalkIssuedPerBdv` stores the number of Stalk per BDV for `token`.
      */
     function depositWithBDV(
         address account,
@@ -268,19 +251,19 @@ library LibTokenSilo {
         int96 stem,
         uint256 amount,
         uint256 bdv
-    ) internal returns (uint256 stalk, LibGerminate.Germinate germ) {
+    ) internal returns (uint256 stalk, GerminationSide side) {
         require(bdv > 0, "Silo: No Beans under Token.");
         AppStorage storage s = LibAppStorage.diamondStorage();
 
         // determine whether the deposit is odd or even germinating
-        germ = LibGerminate.getSeasonGerminationState();
+        side = LibGerminate.getSeasonGerminationSide();
 
         // all new deposits will increment total germination.
-        incrementTotalGerminating(token, amount, bdv, germ);
+        incrementTotalGerminating(token, amount, bdv, side);
 
         addDepositToAccount(account, token, stem, amount, bdv, Transfer.emitTransferSingle);
 
-        stalk = bdv.mul(s.ss[token].stalkIssuedPerBdv);
+        stalk = bdv.mul(s.sys.silo.assetSettings[token].stalkIssuedPerBdv);
     }
 
     /**
@@ -315,15 +298,17 @@ library LibTokenSilo {
             s.a[account].depositIdList[token].push(depositId);
         }
         // add amount and bdv to the deposits.
-        s.a[account].deposits[depositId].amount = s.a[account].deposits[depositId].amount.add(
-            amount.toUint128()
-        );
-        s.a[account].deposits[depositId].bdv = s.a[account].deposits[depositId].bdv.add(
+        s.accts[account].deposits[depositId].amount = s
+            .accts[account]
+            .deposits[depositId]
+            .amount
+            .add(amount.toUint128());
+        s.accts[account].deposits[depositId].bdv = s.accts[account].deposits[depositId].bdv.add(
             bdv.toUint128()
         );
 
         // Will not overflow b/c crateBDV <= type(uint128).max
-        s.a[account].mowStatuses[token].bdv = s.a[account].mowStatuses[token].bdv.add(
+        s.accts[account].mowStatuses[token].bdv = s.accts[account].mowStatuses[token].bdv.add(
             bdv.toUint128()
         );
 
@@ -352,7 +337,7 @@ library LibTokenSilo {
      * @dev Remove `amount` of `token` from a user's Deposit in `stem`.
      *
      * A "Crate" refers to the existing Deposit in storage at:
-     *  `s.a[account].deposits[token][stem]`
+     *  `s.accts[account].deposits[token][stem]`
      *
      * Partially removing a Deposit should scale its BDV proportionally. For ex.
      * removing 80% of the tokens from a Deposit should reduce its BDV by 80%.
@@ -375,23 +360,8 @@ library LibTokenSilo {
         AppStorage storage s = LibAppStorage.diamondStorage();
         uint256 depositId = LibBytes.packAddressAndStem(token, stem);
 
-        uint256 crateAmount = s.a[account].deposits[depositId].amount;
-        crateBDV = s.a[account].deposits[depositId].bdv;
-        // if amount is > crateAmount, check if user has a legacy deposit:
-        if (amount > crateAmount) {
-            // get the absolute stem value.
-            uint256 absStem = stem > 0 ? uint256(int256(stem)) : uint256(int256(-stem));
-            // only stems with modulo 1e6 can have a legacy deposit.
-            if (absStem.mod(1e6) == 0) {
-                (crateAmount, crateBDV) = migrateLegacyStemDeposit(
-                    account,
-                    token,
-                    stem,
-                    crateAmount,
-                    crateBDV
-                );
-            }
-        }
+        uint256 crateAmount = s.accts[account].deposits[depositId].amount;
+        crateBDV = s.accts[account].deposits[depositId].bdv;
         require(amount <= crateAmount, "Silo: Crate balance too low.");
 
         // Partial remove
@@ -404,10 +374,10 @@ library LibTokenSilo {
 
             // SafeCast unnecessary b/c updatedAmount <= crateAmount and updatedBDV <= crateBDV,
             // which are both <= type(uint128).max
-            s.a[account].deposits[depositId].amount = uint128(updatedAmount);
-            s.a[account].deposits[depositId].bdv = uint128(updatedBDV);
+            s.accts[account].deposits[depositId].amount = uint128(updatedAmount);
+            s.accts[account].deposits[depositId].bdv = uint128(updatedBDV);
 
-            s.a[account].mowStatuses[token].bdv = s.a[account].mowStatuses[token].bdv.sub(
+            s.accts[account].mowStatuses[token].bdv = s.accts[account].mowStatuses[token].bdv.sub(
                 uint128(removedBDV)
             );
 
@@ -415,12 +385,12 @@ library LibTokenSilo {
         }
         // Full remove
         if (crateAmount > 0) {
-            delete s.a[account].deposits[depositId];
+            delete s.accts[account].deposits[depositId];
             removeDepositIDfromAccountList(account, token, depositId);
         }
 
         // Will not overflow b/c crateBDV <= type(uint128).max
-        s.a[account].mowStatuses[token].bdv = s.a[account].mowStatuses[token].bdv.sub(
+        s.accts[account].mowStatuses[token].bdv = s.accts[account].mowStatuses[token].bdv.sub(
             uint128(crateBDV)
         );
     }
@@ -430,18 +400,26 @@ library LibTokenSilo {
     /**
      * @dev Calculate the BDV ("Bean Denominated Value") for `amount` of `token`.
      *
-     * Makes a call to a BDV function defined in the SiloSettings for this
-     * `token`. See {AppStorage.sol:Storage-SiloSettings} for more information.
+     * Makes a call to a BDV function defined in the AssetSettings for this
+     * `token`. See {AppStorage.sol:Storage-AssetSettings} for more information.
      */
     function beanDenominatedValue(
         address token,
         uint256 amount
     ) internal view returns (uint256 bdv) {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        require(s.ss[token].selector != bytes4(0), "Silo: Token not whitelisted");
+        require(
+            s.sys.silo.assetSettings[token].selector != bytes4(0),
+            "Silo: Token not whitelisted"
+        );
 
         (bool success, bytes memory data) = address(this).staticcall(
-            encodeBdvFunction(token, s.ss[token].encodeType, s.ss[token].selector, amount)
+            encodeBdvFunction(
+                token,
+                s.sys.silo.assetSettings[token].encodeType,
+                s.sys.silo.assetSettings[token].selector,
+                amount
+            )
         );
 
         if (!success) {
@@ -489,8 +467,8 @@ library LibTokenSilo {
     ) internal view returns (uint256 amount, uint256 bdv) {
         AppStorage storage s = LibAppStorage.diamondStorage();
         uint256 depositId = LibBytes.packAddressAndStem(token, stem);
-        amount = s.a[account].deposits[depositId].amount;
-        bdv = s.a[account].deposits[depositId].bdv;
+        amount = s.accts[account].deposits[depositId].amount;
+        bdv = s.accts[account].deposits[depositId].bdv;
     }
 
     /**
@@ -499,7 +477,7 @@ library LibTokenSilo {
      */
     function stalkEarnedPerSeason(address token) internal view returns (uint256) {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        return uint256(s.ss[token].stalkEarnedPerSeason);
+        return uint256(s.sys.silo.assetSettings[token].stalkEarnedPerSeason);
     }
 
     /**
@@ -507,7 +485,7 @@ library LibTokenSilo {
      */
     function stalkIssuedPerBdv(address token) internal view returns (uint256) {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        return uint256(s.ss[token].stalkIssuedPerBdv);
+        return uint256(s.sys.silo.assetSettings[token].stalkIssuedPerBdv);
     }
 
     /**
@@ -517,9 +495,11 @@ library LibTokenSilo {
         AppStorage storage s = LibAppStorage.diamondStorage();
         // Will not over/underflow because all casted variables are types smaller that int96.
         _stemTip =
-            s.ss[token].milestoneStem +
-            toInt96(s.ss[token].stalkEarnedPerSeason).mul(
-                toInt96(s.season.current).sub(toInt96(s.ss[token].milestoneSeason))
+            s.sys.silo.assetSettings[token].milestoneStem +
+            toInt96(s.sys.silo.assetSettings[token].stalkEarnedPerSeason).mul(
+                toInt96(s.sys.season.current).sub(
+                    toInt96(s.sys.silo.assetSettings[token].milestoneSeason)
+                )
             );
     }
 
@@ -569,12 +549,12 @@ library LibTokenSilo {
         address token,
         uint256 grownStalk,
         uint256 bdv
-    ) internal view returns (int96 stem, LibGerminate.Germinate germ) {
+    ) internal view returns (int96 stem, GerminationSide side) {
         LibGerminate.GermStem memory germStem = LibGerminate.getGerminatingStem(token);
         stem = germStem.stemTip.sub(
             SafeCast.toInt96(SafeCast.toInt256(grownStalk.mul(PRECISION).div(bdv)))
         );
-        germ = LibGerminate._getGerminationState(stem, germStem);
+        side = LibGerminate._getGerminationState(stem, germStem);
     }
 
     /**
@@ -599,81 +579,6 @@ library LibTokenSilo {
 
         // subtract from the current latest index, so we get the index the deposit should have happened at
         return _stemTipForToken.sub(grownStalkPerBdv);
-    }
-
-    /**
-     * @notice internal logic for migrating a legacy deposit.
-     * @dev
-     */
-    function migrateLegacyStemDeposit(
-        address account,
-        address token,
-        int96 newStem,
-        uint256 crateAmount,
-        uint256 crateBdv
-    ) internal returns (uint256, uint256) {
-        AppStorage storage s = LibAppStorage.diamondStorage();
-        // divide the newStem by 1e6 to get the legacy stem.
-        uint256 legacyDepositId = LibBytes.packAddressAndStem(token, newStem.div(1e6));
-        uint256 legacyAmount = s.a[account].legacyV3Deposits[legacyDepositId].amount;
-        uint256 legacyBdv = s.a[account].legacyV3Deposits[legacyDepositId].bdv;
-        crateAmount = crateAmount.add(legacyAmount);
-        crateBdv = crateBdv.add(legacyBdv);
-        delete s.a[account].legacyV3Deposits[legacyDepositId];
-
-        // Emit burn events.
-        emit TransferSingle(LibTractor._user(), account, address(0), legacyDepositId, legacyAmount);
-
-        emit RemoveDeposit(account, token, newStem.div(1e6), legacyAmount, legacyBdv);
-
-        // Emit mint events.
-        emit TransferSingle(
-            LibTractor._user(),
-            address(0),
-            account,
-            LibBytes.packAddressAndStem(token, newStem),
-            legacyAmount
-        );
-
-        emit AddDeposit(account, token, newStem, legacyAmount, legacyBdv);
-
-        return (crateAmount, crateBdv);
-    }
-
-    /**
-     * @notice removes an depositID from an account's depositID list.
-     */
-    function removeDepositIDfromAccountList(
-        address account,
-        address token,
-        uint256 depositId
-    ) internal {
-        AppStorage storage s = LibAppStorage.diamondStorage();
-        uint256 i = findDepositIdForAccount(account, token, depositId);
-        s.a[account].depositIdList[token][i] = s.a[account].depositIdList[token][
-            s.a[account].depositIdList[token].length - 1
-        ];
-        s.a[account].depositIdList[token].pop();
-    }
-
-    /**
-     * @notice given an depositId, find the index of the depositId in the account's deposit list.
-     */
-    function findDepositIdForAccount(
-        address account,
-        address token,
-        uint256 depositId
-    ) internal view returns (uint256 i) {
-        AppStorage storage s = LibAppStorage.diamondStorage();
-        uint256[] memory depositIdList = s.a[account].depositIdList[token];
-        uint256 length = depositIdList.length;
-        while (depositIdList[i] != depositId) {
-            i++;
-            if (i >= length) {
-                revert("Id not found");
-            }
-        }
-        return i;
     }
 
     function toInt96(uint256 value) internal pure returns (int96) {

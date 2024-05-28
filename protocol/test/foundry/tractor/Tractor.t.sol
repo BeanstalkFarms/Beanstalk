@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-///////// DEPRECATED IN FAVOR OF JS TESTS /////////
+// ///////// DEPRECATED IN FAVOR OF JS TESTS /////////
 
 // import "forge-std/Test.sol";
 
@@ -58,7 +58,7 @@ uint80 constant ARRAY_LENGTH = 5;
 //         // Cut and init TractorFacet.
 //         IDiamondCut.FacetCut[] memory cut = new IDiamondCut.FacetCut[](1);
 //         cut[0] = _cut("TractorFacet", address(new TractorFacet()));
-//         vm.prank(BEANSTALK_OWNER); // LibAppStorage.diamondStorage().contractOwner
+//         vm.prank(BEANSTALK_OWNER); // LibAppStorage.diamondStorage().sys.contractOwner
 //         IDiamondCut(BEANSTALK).diamondCut(
 //             cut,
 //             address(0), // address of contract with init() function
@@ -69,7 +69,7 @@ uint80 constant ARRAY_LENGTH = 5;
 //         // Cut and init JunctionFacet.
 //         cut = new IDiamondCut.FacetCut[](1);
 //         cut[0] = _cut("JunctionFacet", address(new JunctionFacet()));
-//         vm.prank(BEANSTALK_OWNER); // LibAppStorage.diamondStorage().contractOwner
+//         vm.prank(BEANSTALK_OWNER); // LibAppStorage.diamondStorage().sys.contractOwner
 //         IDiamondCut(BEANSTALK).diamondCut(
 //             cut,
 //             address(0), // address of contract with init() function

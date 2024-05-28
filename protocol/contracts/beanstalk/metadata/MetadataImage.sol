@@ -3,7 +3,7 @@
 pragma solidity ^0.8.20;
 
 import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
-import "../AppStorage.sol";
+import {AppStorage} from "../storage/AppStorage.sol";
 import {LibBytes64} from "contracts/libraries/LibBytes64.sol";
 import {LibRedundantMath256} from "contracts/libraries/LibRedundantMath256.sol";
 import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";

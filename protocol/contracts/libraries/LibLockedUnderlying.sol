@@ -28,7 +28,9 @@ library LibLockedUnderlying {
         AppStorage storage s = LibAppStorage.diamondStorage();
         return
             s
-                .u[unripeToken]
+                .sys
+                .silo
+                .unripeSettings[unripeToken]
                 .balanceOfUnderlying
                 .mul(getPercentLockedUnderlying(unripeToken, recapPercentPaid))
                 .div(1e18);

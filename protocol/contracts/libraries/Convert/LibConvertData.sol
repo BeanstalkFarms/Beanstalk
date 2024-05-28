@@ -9,8 +9,8 @@ pragma solidity ^0.8.20;
 library LibConvertData {
     // In order to preserve backwards compatibility, make sure new kinds are added at the end of the enum.
     enum ConvertKind {
-        BEANS_TO_CURVE_LP,
-        CURVE_LP_TO_BEANS,
+        DEPRECATED_0, // BEANS_TO_CURVE_LP
+        DEPRECATED_1, // CURVE_LP_TO_BEANS
         UNRIPE_BEANS_TO_UNRIPE_LP,
         UNRIPE_LP_TO_UNRIPE_BEANS,
         LAMBDA_LAMBDA,

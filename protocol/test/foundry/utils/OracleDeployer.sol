@@ -30,7 +30,9 @@ contract OracleDeployer is Utils {
     // assumes index matching with chainlinkOracles.
     int256[] initalPrices = [
         int256(1000e6), // ETH/USD
-        1e6 // wstETH/ETH
+        1e6, // wstETH/ETH
+        1e6, // USDC/USD
+        1e6 // USDT/USD
     ];
 
     ////////// UNISWAP //////////
@@ -51,6 +53,8 @@ contract OracleDeployer is Utils {
         // optional labels to assist in testing.
         vm.label(C.ETH_USD_CHAINLINK_PRICE_AGGREGATOR, "CL ETH/USD");
         vm.label(C.WSTETH_ETH_CHAINLINK_PRICE_AGGREGATOR, "CL WstETH/ETH");
+        vm.label(C.USDC_CHAINLINK_PRICE_AGGREGATOR, "CL USDC/USD");
+        vm.label(C.USDT_CHAINLINK_PRICE_AGGREGATOR, "CL USDT/USD");
 
         for (uint i; i < chainlinkOracles.length; i++) {
             deployCodeTo("MockChainlinkAggregator.sol", new bytes(0), chainlinkOracles[i]);

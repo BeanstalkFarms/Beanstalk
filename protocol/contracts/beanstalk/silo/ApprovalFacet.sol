@@ -8,7 +8,6 @@ import "contracts/C.sol";
 import "contracts/libraries/Silo/LibSilo.sol";
 import "contracts/libraries/Silo/LibTokenSilo.sol";
 import "contracts/libraries/Silo/LibSiloPermit.sol";
-import "contracts/libraries/Silo/LibLegacyTokenSilo.sol";
 import "./SiloFacet/Silo.sol";
 import "./SiloFacet/TokenSilo.sol";
 import "contracts/libraries/LibRedundantMath32.sol";
@@ -184,7 +183,7 @@ contract ApprovalFacet is Invariable, ReentrancyGuard {
         address spender,
         address token
     ) public view virtual returns (uint256) {
-        return s.a[owner].depositAllowances[spender][token];
+        return s.accts[owner].depositAllowances[spender][token];
     }
 
     // ERC1155 Approvals
@@ -192,11 +191,11 @@ contract ApprovalFacet is Invariable, ReentrancyGuard {
         address spender,
         bool approved
     ) external fundsSafu noNetFlow noSupplyChange {
-        s.a[LibTractor._user()].isApprovedForAll[spender] = approved;
+        s.accts[LibTractor._user()].isApprovedForAll[spender] = approved;
         emit ApprovalForAll(LibTractor._user(), spender, approved);
     }
 
     function isApprovedForAll(address _owner, address _operator) external view returns (bool) {
-        return s.a[_owner].isApprovedForAll[_operator];
+        return s.accts[_owner].isApprovedForAll[_operator];
     }
 }

@@ -1,7 +1,7 @@
 const { expect } = require("chai");
 const { deploy } = require("../scripts/deploy.js");
 const { readPrune, toBN } = require("../utils/index.js");
-const { BEAN_3_CURVE, ZERO_ADDRESS } = require("./utils/constants.js");
+const { UNRIPE_LP, ZERO_ADDRESS } = require("./utils/constants.js");
 const { to18, to6 } = require("./utils/helpers.js");
 const { takeSnapshot, revertToSnapshot } = require("./utils/snapshot.js");
 const { deployMockWellWithMockPump, deployMockWell } = require("../utils/well.js");
@@ -270,14 +270,15 @@ describe("Whitelist", function () {
     });
 
     it("dewhitelists token", async function () {
+      // Duplicate whitelisting possible, though not expected.
       await mockBeanstalk.mockWhitelistToken(
-        BEAN_3_CURVE,
-        beanstalk.interface.getSighash("curveToBDV"),
+        UNRIPE_LP,
+        beanstalk.interface.getSighash("unripeLPToBDV"), // Arbitrary BDV.
         10000,
         to6("1")
       );
-      this.result = await beanstalk.connect(owner).dewhitelistToken(BEAN_3_CURVE);
-      const settings = await beanstalk.tokenSettings(BEAN_3_CURVE);
+      this.result = await beanstalk.connect(owner).dewhitelistToken(UNRIPE_LP);
+      const settings = await beanstalk.tokenSettings(UNRIPE_LP);
       // milestone season, stem, or stalkIssuedPerBDV should not be cleared.
       expect(settings[0]).to.equal("0x00000000");
       expect(settings[1]).to.equal(1);
@@ -291,7 +292,7 @@ describe("Whitelist", function () {
       expect(settings[9]).to.equal(0);
       expect(settings[10]).to.equal(0);
 
-      await expect(this.result).to.emit(beanstalk, "DewhitelistToken").withArgs(BEAN_3_CURVE);
+      await expect(this.result).to.emit(beanstalk, "DewhitelistToken").withArgs(UNRIPE_LP);
     });
   });
 });

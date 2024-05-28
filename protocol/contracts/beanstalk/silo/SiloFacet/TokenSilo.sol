@@ -5,8 +5,10 @@
 pragma solidity ^0.8.20;
 pragma abicoder v2;
 
+import {GerminationSide} from "contracts/beanstalk/storage/System.sol";
 import "./Silo.sol";
 import "contracts/libraries/LibTractor.sol";
+import {console} from "forge-std/console.sol";
 
 /**
  * @title TokenSilo
@@ -140,14 +142,14 @@ contract TokenSilo is Silo {
         address token,
         uint256 amount
     ) internal returns (uint256 stalk, int96 stem) {
-        LibGerminate.Germinate germ;
-        (stalk, germ) = LibTokenSilo.deposit(
+        GerminationSide side;
+        (stalk, side) = LibTokenSilo.deposit(
             account,
             token,
             stem = LibTokenSilo.stemTipForToken(token),
             amount
         );
-        LibSilo.mintGerminatingStalk(account, uint128(stalk), germ);
+        LibSilo.mintGerminatingStalk(account, uint128(stalk), side);
     }
 
     //////////////////////// WITHDRAW ////////////////////////
@@ -169,7 +171,7 @@ contract TokenSilo is Silo {
             uint256 initalStalkRemoved,
             uint256 grownStalkRemoved,
             uint256 bdvRemoved,
-            LibGerminate.Germinate germinate
+            GerminationSide side
         ) = LibSilo._removeDepositFromAccount(
                 account,
                 token,
@@ -177,7 +179,7 @@ contract TokenSilo is Silo {
                 amount,
                 LibTokenSilo.Transfer.emitTransferSingle
             );
-        if (germinate == LibGerminate.Germinate.NOT_GERMINATING) {
+        if (side == GerminationSide.NOT_GERMINATING) {
             // remove the deposit from totals
             _withdraw(
                 account,
@@ -189,7 +191,7 @@ contract TokenSilo is Silo {
         } else {
             // remove deposit from germination, and burn the grown stalk.
             // grown stalk does not germinate and is not counted in germinating totals.
-            _withdrawGerminating(account, token, amount, bdvRemoved, initalStalkRemoved, germinate);
+            _withdrawGerminating(account, token, amount, bdvRemoved, initalStalkRemoved, side);
 
             if (grownStalkRemoved > 0) {
                 LibSilo.burnActiveStalk(account, grownStalkRemoved);
@@ -235,7 +237,7 @@ contract TokenSilo is Silo {
                 ar.odd.tokens,
                 ar.odd.bdv,
                 ar.odd.stalk,
-                LibGerminate.Germinate.ODD
+                GerminationSide.ODD
             );
         }
 
@@ -247,7 +249,7 @@ contract TokenSilo is Silo {
                 ar.even.tokens,
                 ar.even.bdv,
                 ar.even.stalk,
-                LibGerminate.Germinate.EVEN
+                GerminationSide.EVEN
             );
         }
 
@@ -278,7 +280,7 @@ contract TokenSilo is Silo {
 
     /**
      * @dev internal helper function for withdraw accounting with germination.
-     * @param germinateState determines whether to withdraw from odd or even germination.
+     * @param side determines whether to withdraw from odd or even germination.
      */
     function _withdrawGerminating(
         address account,
@@ -286,11 +288,11 @@ contract TokenSilo is Silo {
         uint256 amount,
         uint256 bdv,
         uint256 stalk,
-        LibGerminate.Germinate germinateState
+        GerminationSide side
     ) private {
         // Decrement from total germinating.
-        LibTokenSilo.decrementTotalGerminating(token, amount, bdv, germinateState); // Decrement total Germinating in the silo.
-        LibSilo.burnGerminatingStalk(account, uint128(stalk), germinateState); // Burn stalk and roots associated with the stalk.
+        LibTokenSilo.decrementTotalGerminating(token, amount, bdv, side); // Decrement total Germinating in the silo.
+        LibSilo.burnGerminatingStalk(account, uint128(stalk), side); // Burn stalk and roots associated with the stalk.
     }
 
     //////////////////////// TRANSFER ////////////////////////
@@ -309,12 +311,8 @@ contract TokenSilo is Silo {
         int96 stem,
         uint256 amount
     ) internal returns (uint256) {
-        (
-            uint256 initalStalk,
-            uint256 grownStalk,
-            uint256 bdv,
-            LibGerminate.Germinate germ
-        ) = LibSilo._removeDepositFromAccount(
+        (uint256 initalStalk, uint256 grownStalk, uint256 bdv, GerminationSide side) = LibSilo
+            ._removeDepositFromAccount(
                 sender,
                 token,
                 stem,
@@ -330,10 +328,10 @@ contract TokenSilo is Silo {
             LibTokenSilo.Transfer.noEmitTransferSingle
         );
 
-        if (germ == LibGerminate.Germinate.NOT_GERMINATING) {
+        if (side == GerminationSide.NOT_GERMINATING) {
             LibSilo.transferStalk(sender, recipient, initalStalk.add(grownStalk));
         } else {
-            LibSilo.transferGerminatingStalk(sender, recipient, initalStalk, germ);
+            LibSilo.transferGerminatingStalk(sender, recipient, initalStalk, side);
             if (grownStalk > 0) {
                 LibSilo.transferStalk(sender, recipient, grownStalk);
             }
@@ -381,7 +379,7 @@ contract TokenSilo is Silo {
         // Similar to {removeDepositsFromAccount}, however the Deposit is also
         // added to the recipient's account during each iteration.
         for (uint256 i; i < stems.length; ++i) {
-            LibGerminate.Germinate germ = LibGerminate._getGerminationState(stems[i], germStem);
+            GerminationSide side = LibGerminate._getGerminationState(stems[i], germStem);
             uint256 crateBdv = LibTokenSilo.removeDepositFromAccount(
                 sender,
                 token,
@@ -405,11 +403,11 @@ contract TokenSilo is Silo {
             // if the deposit is germinating, increment germinating bdv and stalk,
             // otherwise increment deposited values.
             ar.active.tokens = ar.active.tokens.add(amounts[i]);
-            if (germ == LibGerminate.Germinate.NOT_GERMINATING) {
+            if (side == GerminationSide.NOT_GERMINATING) {
                 ar.active.bdv = ar.active.bdv.add(crateBdv);
                 ar.active.stalk = ar.active.stalk.add(crateStalk);
             } else {
-                if (germ == LibGerminate.Germinate.ODD) {
+                if (side == GerminationSide.ODD) {
                     ar.odd.bdv = ar.odd.bdv.add(crateBdv);
                     ar.odd.stalk = ar.odd.stalk.add(crateStalk);
                 } else {

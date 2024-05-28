@@ -166,18 +166,20 @@ library LibEvaluate {
     {
         AppStorage storage s = LibAppStorage.diamondStorage();
 
-        // `s.w.thisSowTime` is set to the number of seconds in it took for
+        // `s.weather.thisSowTime` is set to the number of seconds in it took for
         // Soil to sell out during the current Season. If Soil didn't sell out,
         // it remains `type(uint32).max`.
-        if (s.w.thisSowTime < type(uint32).max) {
+        if (s.sys.weather.thisSowTime < type(uint32).max) {
             if (
-                s.w.lastSowTime == type(uint32).max || // Didn't Sow all last Season
-                s.w.thisSowTime < SOW_TIME_DEMAND_INCR || // Sow'd all instantly this Season
-                (s.w.lastSowTime > SOW_TIME_STEADY &&
-                    s.w.thisSowTime < s.w.lastSowTime.sub(SOW_TIME_STEADY)) // Sow'd all faster
+                s.sys.weather.lastSowTime == type(uint32).max || // Didn't Sow all last Season
+                s.sys.weather.thisSowTime < SOW_TIME_DEMAND_INCR || // Sow'd all instantly this Season
+                (s.sys.weather.lastSowTime > SOW_TIME_STEADY &&
+                    s.sys.weather.thisSowTime < s.sys.weather.lastSowTime.sub(SOW_TIME_STEADY)) // Sow'd all faster
             ) {
                 deltaPodDemand = Decimal.from(1e18);
-            } else if (s.w.thisSowTime <= s.w.lastSowTime.add(SOW_TIME_STEADY)) {
+            } else if (
+                s.sys.weather.thisSowTime <= s.sys.weather.lastSowTime.add(SOW_TIME_STEADY)
+            ) {
                 // Sow'd all in same time
                 deltaPodDemand = Decimal.one();
             } else {
@@ -185,18 +187,18 @@ library LibEvaluate {
             }
         } else {
             // Soil didn't sell out
-            uint256 lastDSoil = s.w.lastDSoil;
+            uint256 lastDeltaSoil = s.sys.weather.lastDeltaSoil;
 
             if (dsoil == 0) {
                 deltaPodDemand = Decimal.zero(); // If no one Sow'd
-            } else if (lastDSoil == 0) {
+            } else if (lastDeltaSoil == 0) {
                 deltaPodDemand = Decimal.from(1e18); // If no one Sow'd last Season
             } else {
-                deltaPodDemand = Decimal.ratio(dsoil, lastDSoil);
+                deltaPodDemand = Decimal.ratio(dsoil, lastDeltaSoil);
             }
         }
 
-        lastSowTime = s.w.thisSowTime; // Overwrite last Season
+        lastSowTime = s.sys.weather.thisSowTime; // Overwrite last Season
         thisSowTime = type(uint32).max; // Reset for next Season
     }
 
@@ -222,7 +224,7 @@ library LibEvaluate {
         uint256 liquidityWeight;
         for (uint256 i; i < pools.length; i++) {
             // get the liquidity weight.
-            liquidityWeight = getLiquidityWeight(s.ss[pools[i]].lwSelector);
+            liquidityWeight = getLiquidityWeight(s.sys.silo.assetSettings[pools[i]].lwSelector);
 
             // get the non-bean value in an LP.
             twaReserves = LibWell.getTwaReservesFromStorageOrBeanstalkPump(pools[i]);
@@ -247,7 +249,7 @@ library LibEvaluate {
                 // Scale down bean supply by the locked beans, if there is fertilizer to be paid off.
                 // Note: This statement is put into the for loop to prevent another extraneous read of
                 // the twaReserves from storage as `twaReserves` are already loaded into memory.
-                if (LibAppStorage.diamondStorage().season.fertilizing == true) {
+                if (LibAppStorage.diamondStorage().sys.season.fertilizing == true) {
                     beanSupply = beanSupply.sub(LibUnripe.getLockedBeans(twaReserves));
                 }
             }
@@ -268,7 +270,7 @@ library LibEvaluate {
      * @notice Get the deltaPodDemand, lpToSupplyRatio, and podRate, and update soil demand
      * parameters.
      */
-    function getBeanstalkState(
+    function updateAndGetBeanstalkState(
         uint256 beanSupply
     )
         internal
@@ -281,16 +283,21 @@ library LibEvaluate {
     {
         AppStorage storage s = LibAppStorage.diamondStorage();
         // Calculate Delta Soil Demand
-        uint256 dsoil = s.f.beanSown;
-        s.f.beanSown = 0;
-        (deltaPodDemand, s.w.lastSowTime, s.w.thisSowTime) = calcDeltaPodDemand(dsoil);
-        s.w.lastDSoil = uint128(dsoil); // SafeCast not necessary as `s.f.beanSown` is uint128.
+        uint256 dsoil = s.sys.beanSown;
+        s.sys.beanSown = 0;
+        (deltaPodDemand, s.sys.weather.lastSowTime, s.sys.weather.thisSowTime) = calcDeltaPodDemand(
+            dsoil
+        );
+        s.sys.weather.lastDeltaSoil = uint128(dsoil); // SafeCast not necessary as `s.beanSown` is uint128.
 
         // Calculate Lp To Supply Ratio, fetching the twaReserves in storage:
         (lpToSupplyRatio, largestLiqWell) = calcLPToSupplyRatio(beanSupply);
 
         // Calculate PodRate
-        podRate = Decimal.ratio(s.f.pods.sub(s.f.harvestable), beanSupply); // Pod Rate
+        podRate = Decimal.ratio(
+            s.sys.fields[s.sys.activeField].pods.sub(s.sys.fields[s.sys.activeField].harvestable),
+            beanSupply
+        ); // Pod Rate
     }
 
     /**
@@ -306,7 +313,7 @@ library LibEvaluate {
             Decimal.D256 memory lpToSupplyRatio,
             Decimal.D256 memory podRate,
             address largestLiqWell
-        ) = getBeanstalkState(beanSupply);
+        ) = updateAndGetBeanstalkState(beanSupply);
         uint256 caseId = evalPodRate(podRate) // Evaluate Pod Rate
         .add(evalPrice(deltaB, podRate, largestLiqWell)) // Evaluate Price
             .add(evalDeltaPodDemand(deltaPodDemand))

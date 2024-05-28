@@ -4,13 +4,8 @@
 
 pragma solidity ^0.8.20;
 
-import "contracts/libraries/LibRedundantMath256.sol";
-import "contracts/beanstalk/AppStorage.sol";
-import "contracts/interfaces/IBean.sol";
-import "contracts/libraries/LibRedundantMath32.sol";
-import "contracts/beanstalk/ReentrancyGuard.sol";
-import "contracts/C.sol";
-import "contracts/libraries/LibDibbler.sol";
+import {ReentrancyGuard} from "contracts/beanstalk/ReentrancyGuard.sol";
+import {C} from "contracts/C.sol";
 
 /**
  * @author Publius, Brean
@@ -18,18 +13,30 @@ import "contracts/libraries/LibDibbler.sol";
  **/
 
 contract PodTransfer is ReentrancyGuard {
-    using LibRedundantMath256 for uint256;
-    using LibRedundantMath32 for uint32;
+    event PlotTransfer(
+        address indexed from,
+        address indexed to,
+        uint256 indexed index,
+        uint256 amount
+    );
 
-    event PlotTransfer(address indexed from, address indexed to, uint256 indexed id, uint256 pods);
-    event PodApproval(address indexed owner, address indexed spender, uint256 pods);
+    event PodApproval(
+        address indexed owner,
+        address indexed spender,
+        uint256 fieldId,
+        uint256 amount
+    );
 
     /**
      * Getters
      **/
 
-    function allowancePods(address owner, address spender) public view returns (uint256) {
-        return s.a[owner].field.podAllowances[spender];
+    function allowancePods(
+        address owner,
+        address spender,
+        uint256 fieldId
+    ) public view returns (uint256) {
+        return s.accts[owner].fields[fieldId].podAllowances[spender];
     }
 
     /**
@@ -39,24 +46,43 @@ contract PodTransfer is ReentrancyGuard {
     function _transferPlot(
         address from,
         address to,
+        uint256 fieldId,
         uint256 index,
         uint256 start,
         uint256 amount
     ) internal {
         require(from != to, "Field: Cannot transfer Pods to oneself.");
-        insertPlot(to, index.add(start), amount);
-        removePlot(from, index, start, amount.add(start));
-        emit PlotTransfer(from, to, index.add(start), amount);
+        insertPlot(to, fieldId, index + start, amount);
+        removePlot(from, fieldId, index, start, amount + start);
+        emit PlotTransfer(from, to, index + start, amount);
     }
 
-    /**
-     * @notice inserts a plot into an account's field state. Used in market to transfer plots.
-     */
-    function insertPlot(address account, uint256 id, uint256 amount) internal {
-        s.a[account].field.plots[id] = amount;
-        s.a[account].field.plotIndexes.push(id);
+    function insertPlot(address account, uint256 fieldId, uint256 index, uint256 amount) internal {
+        s.accts[account].fields[fieldId].plots[index] = amount;
+        s.a[account].field.plotIndexes.push(index);
     }
 
+    function removePlot(
+        address account,
+        uint256 fieldId,
+        uint256 index,
+        uint256 start,
+        uint256 end
+    ) internal {
+        uint256 amountAfterEnd = s.accts[account].fields[fieldId].plots[index] - end;
+
+        if (start > 0) {
+            s.accts[account].fields[fieldId].plots[index] = start;
+            LibDibbler.removePlotIndexFromAccount(account, id);
+        } else {
+            delete s.accts[account].fields[fieldId].plots[index];
+        }
+
+        if (amountAfterEnd > 0) {
+            uint256 newIndex = id.add(end);
+            s.accts[account].fields[fieldId].plots[newIndex] = amountAfterEnd;
+            s.a[account].field.plotIndexes.push(newIndex);
+        }
     /**
      * @notice removes a plot from an account's field state. Used in market to transfer plots.
      */
@@ -75,15 +101,25 @@ contract PodTransfer is ReentrancyGuard {
         }
     }
 
-    function decrementAllowancePods(address owner, address spender, uint256 amount) internal {
-        uint256 currentAllowance = allowancePods(owner, spender);
+    function decrementAllowancePods(
+        address owner,
+        address spender,
+        uint256 fieldId,
+        uint256 amount
+    ) internal {
+        uint256 currentAllowance = allowancePods(owner, spender, fieldId);
         if (currentAllowance < amount) {
             revert("Field: Insufficient approval.");
         }
-        setAllowancePods(owner, spender, currentAllowance.sub(amount));
+        setAllowancePods(owner, spender, fieldId, currentAllowance - amount);
     }
 
-    function setAllowancePods(address owner, address spender, uint256 amount) internal {
-        s.a[owner].field.podAllowances[spender] = amount;
+    function setAllowancePods(
+        address owner,
+        address spender,
+        uint256 fieldId,
+        uint256 amount
+    ) internal {
+        s.accts[owner].fields[fieldId].podAllowances[spender] = amount;
     }
 }
