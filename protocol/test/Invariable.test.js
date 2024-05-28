@@ -101,7 +101,7 @@ describe("Invariants", function () {
     expect(await mockBeanstalk.entitlementsMatchBalances()).true;
   });
   
-  describe.only("Reverts exploits", async function () {
+  describe("Reverts exploits", async function () {
     it("reverts at internal accounting exploit", async function () {
       await expect(mockBeanstalk.exploitUserInternalTokenBalance()).to.be.revertedWith(
         "INV: Insufficient token balance"
