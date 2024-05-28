@@ -73,7 +73,6 @@ describe("Complex Weather", function () {
     await owner.sendTransaction({ to: user.address, value: 0 });
     await this.well.connect(user).mint(user.address, to18("1000"));
     await beanstalk.connect(user).sunrise();
-    await mockBeanstalk.mockSetSopWell(this.well.address);
     await mockBeanstalk.captureWellE(this.well.address);
     await mockBeanstalk.captureWellE(this.beanWstethWell.address);
 

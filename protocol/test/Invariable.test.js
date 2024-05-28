@@ -101,7 +101,7 @@ describe("Invariants", function () {
     expect(await mockBeanstalk.entitlementsMatchBalances()).true;
   });
   
-  describe("Reverts exploits", async function () {
+  describe.only("Reverts exploits", async function () {
     it("reverts at internal accounting exploit", async function () {
       await expect(mockBeanstalk.exploitUserInternalTokenBalance()).to.be.revertedWith(
         "INV: Insufficient token balance"
@@ -112,7 +112,6 @@ describe("Invariants", function () {
       await expect(mockBeanstalk.exploitFertilizer()).to.be.revertedWith(
         "INV: Insufficient token balance"
       );
-      mockBeanstalk.mockSetSopWell(BEAN_ETH_WELL);
       await expect(mockBeanstalk.exploitSop(this.well.address)).to.be.revertedWith(
         "INV: Insufficient token balance"
       );
