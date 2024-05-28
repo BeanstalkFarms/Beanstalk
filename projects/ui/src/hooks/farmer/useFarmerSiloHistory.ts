@@ -1,7 +1,9 @@
+import { useMemo } from 'react';
 import {
-  SeasonalPriceDocument,
+  SeasonalInstantPriceDocument,
   useFarmerSiloAssetSnapshotsQuery,
   useFarmerSiloRewardsQuery,
+  useWhitelistTokenRewardsQuery,
 } from '~/generated/graphql';
 import useSeasonsQuery, {
   SeasonRange,
@@ -25,7 +27,23 @@ const useFarmerSiloHistory = (
     skip: !account,
     fetchPolicy: 'cache-and-network',
   });
-  const priceQuery = useSeasonsQuery(SeasonalPriceDocument, SeasonRange.ALL);
+  const seedsPerTokenQuery = useWhitelistTokenRewardsQuery({
+    fetchPolicy: 'cache-and-network'
+  });
+
+  const queryConfig = useMemo(
+    () => ({
+      variables: { season_gte: 1 },
+      context: { subgraph: 'bean' },
+    }),
+    []
+  );
+
+  const priceQuery = useSeasonsQuery(
+    SeasonalInstantPriceDocument,
+    SeasonRange.ALL,
+    queryConfig
+  );
 
   /// Interpolate
   const depositData = useInterpolateDeposits(
@@ -33,8 +51,9 @@ const useFarmerSiloHistory = (
     priceQuery,
     itemizeByToken
   );
-  const [stalkData, seedsData] = useInterpolateStalk(
+  const [stalkData, seedsData, grownStalkData] = useInterpolateStalk(
     siloRewardsQuery,
+    seedsPerTokenQuery,
     !includeStalk
   );
 
@@ -43,6 +62,7 @@ const useFarmerSiloHistory = (
       deposits: depositData,
       stalk: stalkData,
       seeds: seedsData,
+      grownStalk: grownStalkData,
     },
     loading:
       siloRewardsQuery.loading || siloAssetsQuery.loading || priceQuery.loading,

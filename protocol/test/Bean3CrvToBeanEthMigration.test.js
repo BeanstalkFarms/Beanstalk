@@ -4,9 +4,10 @@ const { BEAN, FERTILIZER, USDC, BEAN_3_CURVE, THREE_CURVE, UNRIPE_BEAN, UNRIPE_L
 const { setEthUsdcPrice, setEthUsdPrice } = require('../utils/oracle.js');
 const { to6, to18 } = require('./utils/helpers.js');
 const { bipMigrateUnripeBean3CrvToBeanEth } = require('../scripts/bips.js');
-const { getBeanstalk } = require('../utils/contracts.js');
+const { getBeanstalk, getBeanstalkAdminControls } = require('../utils/contracts.js');
 const { impersonateBeanstalkOwner, impersonateSigner } = require('../utils/signer.js');
 const { ethers } = require('hardhat');
+const { upgradeWithNewFacets } = require("../scripts/diamond");
 const { mintEth, mintBeans } = require('../utils/mint.js');
 const { ConvertEncoder } = require('./utils/encoder.js');
 const { setReserves } = require('../utils/well.js');
@@ -38,7 +39,7 @@ describe('Bean:3Crv to Bean:Eth Migration', function () {
         ],
       });
     } catch(error) {
-      console.log('forking error in Silo V3: Grown Stalk Per Bdv:');
+      console.log('forking error in bean3crv -> bean:eth');
       console.log(error);
       return
     }
@@ -48,7 +49,7 @@ describe('Bean:3Crv to Bean:Eth Migration', function () {
     owner = await impersonateBeanstalkOwner()
     this.beanstalk = await getBeanstalk()
     this.well = await ethers.getContractAt('IWell', BEAN_ETH_WELL);
-    this.weth = await ethers.getContractAt('IWETH', WETH)
+    this.weth = await ethers.getContractAt('contracts/interfaces/IWETH.sol:IWETH', WETH)
     this.bean = await ethers.getContractAt('IBean', BEAN)
     this.beanEth = await ethers.getContractAt('IWell', BEAN_ETH_WELL)
     this.beanEthToken = await ethers.getContractAt('IERC20', BEAN_ETH_WELL)
@@ -57,6 +58,22 @@ describe('Bean:3Crv to Bean:Eth Migration', function () {
     underlyingBefore = await this.beanstalk.getTotalUnderlying(UNRIPE_LP);
 
     await bipMigrateUnripeBean3CrvToBeanEth(true, undefined, false)
+
+    // upgrade beanstalk with admin Facet to update stems:
+    await mintEth(owner.address);
+    await upgradeWithNewFacets({
+      diamondAddress: BEANSTALK,
+      facetNames: [
+        'MockAdminFacet'
+      ],
+      initArgs: [],
+      bip: false,
+      verbose: false,
+      account: owner
+    });
+    const beanstalkAdmin = await getBeanstalkAdminControls();
+    await beanstalkAdmin.upgradeStems();
+
   });
 
   beforeEach(async function () {
@@ -100,13 +117,13 @@ describe('Bean:3Crv to Bean:Eth Migration', function () {
       })
 
       it('convert Unripe Bean to LP fails', async function () {
-        await expect(this.beanstalk.connect(publius).convert(ConvertEncoder.convertUnripeBeansToLP(to6('200'), '0'), ['-16272'], [to6('200')])).to.be.revertedWith('SafeMath: division by zero');
+        await expect(this.beanstalk.connect(publius).convert(ConvertEncoder.convertUnripeBeansToLP(to6('200'), '0'), ['-16272000000'], [to6('200')])).to.be.revertedWith('SafeMath: division by zero');
       })
 
       it('convert Unripe LP to Bean fails', async function () {
         const liquidityRemover = await impersonateSigner('0x7eaE23DD0f0d8289d38653BCE11b92F7807eFB64', true);
         await this.well.connect(liquidityRemover).removeLiquidityOneToken(to18('29'), WETH, '0', liquidityRemover.address, ethers.constants.MaxUint256)
-        await expect(this.beanstalk.connect(publius).convert(ConvertEncoder.convertUnripeLPToBeans(to6('200'), '0'), ['-56836'], [to6('200')])).to.be.revertedWith('SafeMath: division by zero');
+        await expect(this.beanstalk.connect(publius).convert(ConvertEncoder.convertUnripeLPToBeans(to6('200'), '0'), ['-56836000000'], [to6('200')])).to.be.revertedWith('SafeMath: division by zero');
       })
     })
   })
@@ -167,7 +184,7 @@ describe('Bean:3Crv to Bean:Eth Migration', function () {
       })
 
       it('convert Unripe Bean to LP succeeds', async function () {
-        await this.beanstalk.connect(publius).convert(ConvertEncoder.convertUnripeBeansToLP(to6('200'), '0'), ['-16272'], [to6('200')]);
+        await this.beanstalk.connect(publius).convert(ConvertEncoder.convertUnripeBeansToLP(to6('200'), '0'), ['-16272000000'], [to6('200')]);
       })
 
       it('convert Unripe LP to Bean succeeds', async function () {
@@ -175,7 +192,7 @@ describe('Bean:3Crv to Bean:Eth Migration', function () {
         await this.bean.mint(user.address, to6('100000'))
         await this.bean.connect(user).approve(BEAN_ETH_WELL, to6('100000'))
         await this.beanEth.connect(user).addLiquidity([to6('100000'), '0'], '0', user.address, ethers.constants.MaxUint256);
-        await this.beanstalk.connect(publius).convert(ConvertEncoder.convertUnripeLPToBeans(to6('200'), '0'), ['-56836'], [to6('200')])
+        await this.beanstalk.connect(publius).convert(ConvertEncoder.convertUnripeLPToBeans(to6('200'), '0'), ['-56836000000'], [to6('200')])
       })
     })
   })

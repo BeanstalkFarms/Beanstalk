@@ -20,7 +20,6 @@ const FertilizerSelectDialog: FC<FertilizerSelectDialogProps & DialogProps> = ({
   // Dialog
   open,
 }) => {
-
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
@@ -33,10 +32,7 @@ const FertilizerSelectDialog: FC<FertilizerSelectDialogProps & DialogProps> = ({
         }}
       >
         {fertilizers.length > 0 ? (
-          <FertilizerSelect
-            isMobile={isMobile}
-            fertilizers={fertilizers}
-          />
+          <FertilizerSelect isMobile={isMobile} fertilizers={fertilizers} />
         ) : (
           <EmptyState message="You have no Fertilizer." />
         )}

@@ -1,48 +1,34 @@
-import { defaultAbiCoder } from 'ethers/lib/utils';
+import { defaultAbiCoder } from "ethers/lib/utils";
 
 export enum ConvertKind {
-  BEANS_TO_CURVE_LP   = 0,
-  CURVE_LP_TO_BEANS   = 1,
-  UNRIPE_BEANS_TO_LP  = 2,
-  UNRIPE_LP_TO_BEANS  = 3,
-  BEANS_TO_WELL_LP    = 5,
-  WELL_LP_TO_BEANS    = 6,
+  BEANS_TO_CURVE_LP = 0,
+  CURVE_LP_TO_BEANS = 1,
+  UNRIPE_BEANS_TO_LP = 2,
+  UNRIPE_LP_TO_BEANS = 3,
+  BEANS_TO_WELL_LP = 5,
+  WELL_LP_TO_BEANS = 6,
+  UNRIPE_TO_RIPE = 7
 }
 
 export class ConvertEncoder {
   static curveLPToBeans = (amountLP: string, minBeans: string, pool: string) =>
-    defaultAbiCoder.encode(
-      ['uint256', 'uint256', 'uint256', 'address'],
-      [ConvertKind.CURVE_LP_TO_BEANS, amountLP, minBeans, pool]
-    );
+    defaultAbiCoder.encode(["uint256", "uint256", "uint256", "address"], [ConvertKind.CURVE_LP_TO_BEANS, amountLP, minBeans, pool]);
 
   static beansToCurveLP = (amountBeans: string, minLP: string, pool: string) =>
-    defaultAbiCoder.encode(
-      ['uint256', 'uint256', 'uint256', 'address'],
-      [ConvertKind.BEANS_TO_CURVE_LP, amountBeans, minLP, pool]
-    );
+    defaultAbiCoder.encode(["uint256", "uint256", "uint256", "address"], [ConvertKind.BEANS_TO_CURVE_LP, amountBeans, minLP, pool]);
 
   static unripeLPToBeans = (amountLP: string, minBeans: string) =>
-    defaultAbiCoder.encode(
-      ['uint256', 'uint256', 'uint256'],
-      [ConvertKind.UNRIPE_LP_TO_BEANS, amountLP, minBeans]
-    );
+    defaultAbiCoder.encode(["uint256", "uint256", "uint256"], [ConvertKind.UNRIPE_LP_TO_BEANS, amountLP, minBeans]);
 
   static unripeBeansToLP = (amountBeans: string, minLP: string) =>
-    defaultAbiCoder.encode(
-      ['uint256', 'uint256', 'uint256'],
-      [ConvertKind.UNRIPE_BEANS_TO_LP, amountBeans, minLP]
-    );
-  
+    defaultAbiCoder.encode(["uint256", "uint256", "uint256"], [ConvertKind.UNRIPE_BEANS_TO_LP, amountBeans, minLP]);
+
   static beansToWellLP = (amountBeans: string, minLP: string, pool: string) =>
-    defaultAbiCoder.encode(
-      ['uint256', 'uint256', 'uint256', 'address'],
-      [ConvertKind.BEANS_TO_WELL_LP, amountBeans, minLP, pool]
-    );
+    defaultAbiCoder.encode(["uint256", "uint256", "uint256", "address"], [ConvertKind.BEANS_TO_WELL_LP, amountBeans, minLP, pool]);
 
   static wellLPToBeans = (amountLP: string, minBeans: string, pool: string) =>
-    defaultAbiCoder.encode(
-      ['uint256', 'uint256', 'uint256', 'address'],
-      [ConvertKind.WELL_LP_TO_BEANS, amountLP, minBeans, pool]
-    );
+    defaultAbiCoder.encode(["uint256", "uint256", "uint256", "address"], [ConvertKind.WELL_LP_TO_BEANS, amountLP, minBeans, pool]);
+
+  static unripeToRipe = (unripeAmount: string, unripeToken: string) =>
+    defaultAbiCoder.encode(["uint256", "uint256", "uint256"], [ConvertKind.UNRIPE_TO_RIPE, unripeAmount, unripeToken]);
 }

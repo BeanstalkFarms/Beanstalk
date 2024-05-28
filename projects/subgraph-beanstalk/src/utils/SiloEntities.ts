@@ -10,6 +10,8 @@ import {
   SiloAssetHourlySnapshot,
   SiloAsset,
   WhitelistTokenSetting,
+  WhitelistTokenHourlySnapshot,
+  WhitelistTokenDailySnapshot,
   TokenYield
 } from "../../generated/schema";
 import { BEANSTALK, UNRIPE_BEAN, UNRIPE_BEAN_3CRV } from "../../../subgraph-core/utils/Constants";
@@ -28,12 +30,14 @@ export function loadSilo(account: Address): Silo {
       silo.farmer = account.toHexString();
     }
     silo.whitelistedTokens = [];
+    silo.dewhitelistedTokens = [];
     silo.depositedBDV = ZERO_BI;
     silo.stalk = ZERO_BI;
     silo.plantableStalk = ZERO_BI;
     silo.seeds = ZERO_BI;
-    silo.grownStalkPerBdvPerSeason = ZERO_BI;
+    silo.grownStalkPerSeason = ZERO_BI;
     silo.roots = ZERO_BI;
+    silo.germinatingStalk = ZERO_BI;
     silo.beanMints = ZERO_BI;
     silo.activeFarmers = 0;
     silo.save();
@@ -42,7 +46,6 @@ export function loadSilo(account: Address): Silo {
 }
 
 export function loadSiloHourlySnapshot(account: Address, season: i32, timestamp: BigInt): SiloHourlySnapshot {
-  let hour = hourFromTimestamp(timestamp);
   let id = account.toHexString() + "-" + season.toString();
   let snapshot = SiloHourlySnapshot.load(id);
   if (snapshot == null) {
@@ -54,8 +57,10 @@ export function loadSiloHourlySnapshot(account: Address, season: i32, timestamp:
     snapshot.stalk = silo.stalk;
     snapshot.plantableStalk = silo.plantableStalk;
     snapshot.seeds = silo.seeds;
-    snapshot.grownStalkPerBdvPerSeason = silo.grownStalkPerBdvPerSeason;
+    snapshot.grownStalkPerSeason = silo.grownStalkPerSeason;
     snapshot.roots = silo.roots;
+    snapshot.germinatingStalk = silo.germinatingStalk;
+    snapshot.beanToMaxLpGpPerBdvRatio = silo.beanToMaxLpGpPerBdvRatio;
     snapshot.beanMints = silo.beanMints;
     snapshot.activeFarmers = silo.activeFarmers;
     snapshot.deltaDepositedBDV = ZERO_BI;
@@ -63,9 +68,10 @@ export function loadSiloHourlySnapshot(account: Address, season: i32, timestamp:
     snapshot.deltaPlantableStalk = ZERO_BI;
     snapshot.deltaSeeds = ZERO_BI;
     snapshot.deltaRoots = ZERO_BI;
+    snapshot.deltaGerminatingStalk = ZERO_BI;
     snapshot.deltaBeanMints = ZERO_BI;
     snapshot.deltaActiveFarmers = 0;
-    snapshot.createdAt = BigInt.fromString(hour);
+    snapshot.createdAt = BigInt.fromString(hourFromTimestamp(timestamp));
     snapshot.updatedAt = timestamp;
     snapshot.save();
   }
@@ -85,8 +91,10 @@ export function loadSiloDailySnapshot(account: Address, timestamp: BigInt): Silo
     snapshot.stalk = silo.stalk;
     snapshot.plantableStalk = silo.plantableStalk;
     snapshot.seeds = silo.seeds;
-    snapshot.grownStalkPerBdvPerSeason = silo.grownStalkPerBdvPerSeason;
+    snapshot.grownStalkPerSeason = silo.grownStalkPerSeason;
     snapshot.roots = silo.roots;
+    snapshot.germinatingStalk = silo.germinatingStalk;
+    snapshot.beanToMaxLpGpPerBdvRatio = silo.beanToMaxLpGpPerBdvRatio;
     snapshot.beanMints = silo.beanMints;
     snapshot.activeFarmers = silo.activeFarmers;
     snapshot.deltaDepositedBDV = ZERO_BI;
@@ -94,6 +102,7 @@ export function loadSiloDailySnapshot(account: Address, timestamp: BigInt): Silo
     snapshot.deltaPlantableStalk = ZERO_BI;
     snapshot.deltaSeeds = ZERO_BI;
     snapshot.deltaRoots = ZERO_BI;
+    snapshot.deltaGerminatingStalk = ZERO_BI;
     snapshot.deltaBeanMints = ZERO_BI;
     snapshot.deltaActiveFarmers = 0;
     snapshot.createdAt = BigInt.fromString(day);
@@ -196,6 +205,53 @@ export function loadWhitelistTokenSetting(token: Address): WhitelistTokenSetting
     }
   }
   return setting as WhitelistTokenSetting;
+}
+
+export function loadWhitelistTokenHourlySnapshot(token: Address, season: i32, timestamp: BigInt): WhitelistTokenHourlySnapshot {
+  let hour = hourFromTimestamp(timestamp);
+  let id = token.toHexString() + "-" + season.toString();
+  let snapshot = WhitelistTokenHourlySnapshot.load(id);
+  if (snapshot == null) {
+    let setting = loadWhitelistTokenSetting(token);
+    snapshot = new WhitelistTokenHourlySnapshot(id);
+    snapshot.season = season;
+    snapshot.token = setting.id;
+    snapshot.selector = setting.selector;
+    snapshot.gpSelector = setting.gpSelector;
+    snapshot.lwSelector = setting.lwSelector;
+    snapshot.stalkEarnedPerSeason = setting.stalkEarnedPerSeason;
+    snapshot.stalkIssuedPerBdv = setting.stalkIssuedPerBdv;
+    snapshot.milestoneSeason = setting.milestoneSeason;
+    snapshot.gaugePoints = setting.gaugePoints;
+    snapshot.optimalPercentDepositedBdv = setting.optimalPercentDepositedBdv;
+    snapshot.createdAt = BigInt.fromString(hour);
+    snapshot.updatedAt = ZERO_BI;
+    snapshot.save();
+  }
+  return snapshot as WhitelistTokenHourlySnapshot;
+}
+
+export function loadWhitelistTokenDailySnapshot(token: Address, timestamp: BigInt): WhitelistTokenDailySnapshot {
+  let day = dayFromTimestamp(timestamp);
+  let id = token.toHexString() + "-" + day.toString();
+  let snapshot = WhitelistTokenDailySnapshot.load(id);
+  if (snapshot == null) {
+    let setting = loadWhitelistTokenSetting(token);
+    snapshot = new WhitelistTokenDailySnapshot(id);
+    snapshot.token = setting.id;
+    snapshot.selector = setting.selector;
+    snapshot.gpSelector = setting.gpSelector;
+    snapshot.lwSelector = setting.lwSelector;
+    snapshot.stalkEarnedPerSeason = setting.stalkEarnedPerSeason;
+    snapshot.stalkIssuedPerBdv = setting.stalkIssuedPerBdv;
+    snapshot.milestoneSeason = setting.milestoneSeason;
+    snapshot.gaugePoints = setting.gaugePoints;
+    snapshot.optimalPercentDepositedBdv = setting.optimalPercentDepositedBdv;
+    snapshot.createdAt = BigInt.fromString(day);
+    snapshot.updatedAt = ZERO_BI;
+    snapshot.save();
+  }
+  return snapshot as WhitelistTokenDailySnapshot;
 }
 
 /* ===== Deposit Entities ===== */
@@ -305,4 +361,13 @@ export function loadTokenYield(token: Address, season: i32, window: i32): TokenY
     tokenYield.save();
   }
   return tokenYield as TokenYield;
+}
+
+export function SiloAsset_findIndex_token(a: SiloAsset[], targetToken: string): i32 {
+  for (let j = 0; j < a.length; j++) {
+    if (a[j].token == targetToken) {
+      return j;
+    }
+  }
+  return -1;
 }

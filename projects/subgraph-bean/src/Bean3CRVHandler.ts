@@ -1,4 +1,4 @@
-import { BigInt, BigDecimal } from "@graphprotocol/graph-ts";
+import { BigInt, BigDecimal, Address } from "@graphprotocol/graph-ts";
 import {
   AddLiquidity,
   RemoveLiquidity,
@@ -8,12 +8,10 @@ import {
   TokenExchangeUnderlying
 } from "../generated/Bean3CRV/Bean3CRV";
 import { CurvePrice } from "../generated/Bean3CRV/CurvePrice";
-import { loadBean, updateBeanSupplyPegPercent, updateBeanValues } from "./utils/Bean";
-import { BEANSTALK_PRICE, BEAN_ERC20, CURVE_PRICE } from "../../subgraph-core/utils/Constants";
+import { updateBeanAfterPoolSwap } from "./utils/Bean";
+import { CURVE_PRICE } from "../../subgraph-core/utils/Constants";
 import { toDecimal, ZERO_BD, ZERO_BI } from "../../subgraph-core/utils/Decimals";
-import { getPoolLiquidityUSD, loadOrCreatePool, setPoolReserves, updatePoolPrice, updatePoolValues } from "./utils/Pool";
-import { BeanstalkPrice } from "../generated/Bean3CRV/BeanstalkPrice";
-import { checkBeanCross } from "./utils/Cross";
+import { getPoolLiquidityUSD, setPoolReserves, updatePoolPrice, updatePoolValues } from "./utils/Pool";
 
 export function handleTokenExchange(event: TokenExchange): void {
   handleSwap(
@@ -88,17 +86,6 @@ function handleLiquidityChange(
     return;
   }
 
-  let beanPrice = toDecimal(curve.value.price);
-
-  // Attempt to pull from Beanstalk Price contract first for the overall Bean price update
-  let beanstalkPrice = BeanstalkPrice.bind(BEANSTALK_PRICE);
-  let beanstalkQuery = beanstalkPrice.try_price();
-  if (!beanstalkQuery.reverted) {
-    beanPrice = toDecimal(beanstalkQuery.value.price);
-  }
-
-  let bean = loadBean(BEAN_ERC20.toHexString());
-  let oldBeanPrice = bean.price;
   let startingLiquidity = getPoolLiquidityUSD(poolAddress, blockNumber);
 
   let newPrice = toDecimal(curve.value.price);
@@ -115,14 +102,11 @@ function handleLiquidityChange(
     volumeBean = ZERO_BI;
   }
 
-  setPoolReserves(poolAddress, curve.value.balances, blockNumber);
-  updateBeanSupplyPegPercent(blockNumber);
-
-  updateBeanValues(BEAN_ERC20.toHexString(), timestamp, beanPrice, ZERO_BI, volumeBean, volumeUSD, deltaLiquidityUSD);
-
+  setPoolReserves(poolAddress, curve.value.balances, timestamp, blockNumber);
   updatePoolValues(poolAddress, timestamp, blockNumber, volumeBean, volumeUSD, deltaLiquidityUSD, curve.value.deltaB);
   updatePoolPrice(poolAddress, timestamp, blockNumber, newPrice);
-  checkBeanCross(BEAN_ERC20.toHexString(), timestamp, blockNumber, oldBeanPrice, beanPrice);
+
+  updateBeanAfterPoolSwap(poolAddress, toDecimal(curve.value.price), volumeBean, volumeUSD, deltaLiquidityUSD, timestamp, blockNumber);
 }
 
 function handleSwap(
@@ -142,17 +126,6 @@ function handleSwap(
     return;
   }
 
-  let beanPrice = toDecimal(curve.value.price);
-
-  // Attempt to pull from Beanstalk Price contract first for the overall Bean price update
-  let beanstalkPrice = BeanstalkPrice.bind(BEANSTALK_PRICE);
-  let beanstalkQuery = beanstalkPrice.try_price();
-  if (!beanstalkQuery.reverted) {
-    beanPrice = toDecimal(beanstalkQuery.value.price);
-  }
-
-  let bean = loadBean(BEAN_ERC20.toHexString());
-  let oldBeanPrice = bean.price;
   let startingLiquidity = getPoolLiquidityUSD(poolAddress, blockNumber);
 
   let newPrice = toDecimal(curve.value.price);
@@ -166,12 +139,9 @@ function handleSwap(
   let volumeUSD = toDecimal(volumeBean).times(newPrice);
   let deltaLiquidityUSD = toDecimal(curve.value.liquidity).minus(startingLiquidity);
 
-  setPoolReserves(poolAddress, curve.value.balances, blockNumber);
-  updateBeanSupplyPegPercent(blockNumber);
-
-  updateBeanValues(BEAN_ERC20.toHexString(), timestamp, beanPrice, ZERO_BI, volumeBean, volumeUSD, deltaLiquidityUSD);
-
+  setPoolReserves(poolAddress, curve.value.balances, timestamp, blockNumber);
   updatePoolValues(poolAddress, timestamp, blockNumber, volumeBean, volumeUSD, deltaLiquidityUSD, curve.value.deltaB);
   updatePoolPrice(poolAddress, timestamp, blockNumber, newPrice);
-  checkBeanCross(BEAN_ERC20.toHexString(), timestamp, blockNumber, oldBeanPrice, beanPrice);
+
+  updateBeanAfterPoolSwap(poolAddress, toDecimal(curve.value.price), volumeBean, volumeUSD, deltaLiquidityUSD, timestamp, blockNumber);
 }

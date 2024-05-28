@@ -4,7 +4,7 @@ pragma abicoder v2;
 
 import "forge-std/Test.sol";
 
-import { Bean } from "~/tokens/Bean.sol";
+import { Bean } from "contracts/tokens/Bean.sol";
 import { Utils } from "test/foundry/utils/Utils.sol";
 
 contract BeanTest is Bean, Test {

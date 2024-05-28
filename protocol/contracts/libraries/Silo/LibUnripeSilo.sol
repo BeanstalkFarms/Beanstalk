@@ -119,7 +119,7 @@ library LibUnripeSilo {
         // Sum the `account` pre-exploit Silo V1 Bean Balance 
         // and the Silo V2 Unripe Bean Balance
         amount = uint256(
-            s.a[account].legacyDeposits[C.UNRIPE_BEAN][season].amount
+            s.a[account].legacyV2Deposits[C.UNRIPE_BEAN][season].amount
         ).add(legacyAmount);
         
         // Sum the BDV of the `account` pre-exploit Silo V1 Bean Balance 
@@ -127,7 +127,7 @@ library LibUnripeSilo {
         //
         // The BDV of the Silo V1 Bean Balance is equal to the amount of Beans
         // (where 1 Bean = 1 BDV) times the initial recapitalization percent.
-        bdv = uint256(s.a[account].legacyDeposits[C.UNRIPE_BEAN][season].bdv)
+        bdv = uint256(s.a[account].legacyV2Deposits[C.UNRIPE_BEAN][season].bdv)
             .add(legacyAmount.mul(C.initialRecap()).div(1e18));
         
     }
@@ -160,8 +160,8 @@ library LibUnripeSilo {
         AppStorage storage s = LibAppStorage.diamondStorage();
         delete s.a[account].lp.depositSeeds[season];
         delete s.a[account].lp.deposits[season];
-        delete s.a[account].legacyDeposits[C.unripeLPPool1()][season];
-        delete s.a[account].legacyDeposits[C.unripeLPPool2()][season];
+        delete s.a[account].legacyV2Deposits[C.unripeLPPool1()][season];
+        delete s.a[account].legacyV2Deposits[C.unripeLPPool2()][season];
     }
 
     /**1000000000000000017348
@@ -191,11 +191,11 @@ library LibUnripeSilo {
 
         // Summate the amount acrosses all 4 potential Unripe BEAN:3CRV storage locations.
         amount = uint256(
-            s.a[account].legacyDeposits[C.UNRIPE_LP][season].amount
+            s.a[account].legacyV2Deposits[C.UNRIPE_LP][season].amount
         ).add(amount.add(amount1).add(amount2));
         
         // Summate the BDV acrosses all 3 pre-exploit LP Silo Deposit storages
-        // and haircut by the inital recapitalization percent.
+        // and haircut by the initial recapitalization percent.
         uint256 legBdv = bdv.add(bdv1).add(bdv2)
             .mul(C.initialRecap())
             .div(C.precision());
@@ -203,7 +203,7 @@ library LibUnripeSilo {
         // Summate the pre-exploit legacy BDV and the BDV stored in the
         // Unripe BEAN:3CRV Silo Deposit storage.
         bdv = uint256(
-            s.a[account].legacyDeposits[C.UNRIPE_LP][season].bdv
+            s.a[account].legacyV2Deposits[C.UNRIPE_LP][season].bdv
         ).add(legBdv);
         
     }
@@ -258,12 +258,12 @@ library LibUnripeSilo {
         returns (uint256 amount, uint256 bdv)
     {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        bdv = uint256(s.a[account].legacyDeposits[C.unripeLPPool2()][season].bdv);
+        bdv = uint256(s.a[account].legacyV2Deposits[C.unripeLPPool2()][season].bdv);
 
         // `amount` is equal to the pre-exploit BDV of the Deposited BEAN:LUSD
         // tokens. This is the equivalent amount of Unripe BEAN:3CRV LP.
         amount = uint256(
-            s.a[account].legacyDeposits[C.unripeLPPool2()][season].amount
+            s.a[account].legacyV2Deposits[C.unripeLPPool2()][season].amount
         ).mul(AMOUNT_TO_BDV_BEAN_LUSD).div(C.precision());
     }
 
@@ -279,12 +279,12 @@ library LibUnripeSilo {
         returns (uint256 amount, uint256 bdv)
     {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        bdv = uint256(s.a[account].legacyDeposits[C.unripeLPPool1()][season].bdv);
+        bdv = uint256(s.a[account].legacyV2Deposits[C.unripeLPPool1()][season].bdv);
 
         // `amount` is equal to the pre-exploit BDV of the Deposited BEAN:3CRV
         // tokens. This is the equivalent amount of Unripe BEAN:3CRV LP.
         amount = uint256(
-            s.a[account].legacyDeposits[C.unripeLPPool1()][season].amount
+            s.a[account].legacyV2Deposits[C.unripeLPPool1()][season].amount
         ).mul(AMOUNT_TO_BDV_BEAN_3CRV).div(C.precision());
     }
 }

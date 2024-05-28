@@ -64,8 +64,7 @@ const RewardsSummary: FC<RewardsBarProps & { compact?: boolean }> = ({
         <RewardItem
           title="Earned Beans"
           tooltip={
-            `The number of Beans earned since your last Plant. Upon Plant, Earned Beans are Deposited. When Beans are 
-            minted to the Silo, they are Vesting until they become Earned Beans 2 minutes later. 
+            `The number of Beans earned since your last Plant. Upon Plant, Earned Beans are Deposited. 
             ${vesting.amount
                 ? vesting.amount.gt(0) && vesting.isVesting
                   // TODO: Needs 'Beans in Vesting Period' function
@@ -84,7 +83,7 @@ const RewardsSummary: FC<RewardsBarProps & { compact?: boolean }> = ({
             (action === ClaimRewardsAction.PLANT_AND_MOW ||
               action === ClaimRewardsAction.CLAIM_ALL)
           }
-          annotation={vesting.isVesting === true ? '*' : null}
+          annotation={vesting.isVesting === true ? '' : null}
         />
         <RewardItem
           title="Earned Stalk"
@@ -131,7 +130,7 @@ const RewardsSummary: FC<RewardsBarProps & { compact?: boolean }> = ({
         <RewardItem
           title="Revitalized Stalk"
           tooltip="Stalk that have vested for Unripe holders. Revitalized Stalk are minted as the BDV of Unripe assets increases. Revitalized Stalk does not contribute to Stalk ownership until Enrooted."
-          amount={revitalizedStalk}
+          amount={revitalizedStalk.isNaN() ? BigNumber(0) : revitalizedStalk}
           icon={stalkIcon}
           compact={compact}
           isClaimable={
