@@ -13,7 +13,11 @@ const {
 const { to18, to6, advanceTime } = require("./utils/helpers.js");
 const { deployMockWell, whitelistWell, deployMockWellWithMockPump } = require("../utils/well.js");
 const { takeSnapshot, revertToSnapshot } = require("./utils/snapshot");
-const { setEthUsdChainlinkPrice } = require("../utils/oracle.js");
+const {
+  setStethEthChainlinkPrice,
+  setWstethEthUniswapPrice,
+  setEthUsdChainlinkPrice
+} = require("../utils/oracle.js");
 const { getAllBeanstalkContracts } = require("../utils/contracts.js");
 
 let user, user2, owner;
@@ -56,6 +60,9 @@ describe("Sop", function () {
     await mockBeanstalk.captureWellE(this.well.address);
 
     await setEthUsdChainlinkPrice("1000");
+    await setStethEthChainlinkPrice("1000");
+    await setStethEthChainlinkPrice("1");
+    await setWstethEthUniswapPrice("1");
 
     await beanstalk.connect(user).deposit(bean.address, to6("1000"), EXTERNAL);
     await beanstalk.connect(user2).deposit(bean.address, to6("1000"), EXTERNAL);
@@ -163,7 +170,7 @@ describe("Sop", function () {
     });
 
     it("tracks user plenty before update", async function () {
-      expect(await beanstalk.connect(user).balanceOfPlenty(user.address)).to.be.equal(
+      expect(await beanstalk.connect(user).balanceOfPlenty(user.address, this.well.address)).to.be.equal(
         "25595575914848452999"
       );
     });
@@ -174,13 +181,13 @@ describe("Sop", function () {
       expect(userSop.lastRain).to.be.equal(6);
       expect(userSop.lastSop).to.be.equal(6);
       expect(userSop.roots).to.be.equal("10004000000000000000000000");
-      expect(userSop.plenty).to.be.equal(to18("25.595575914848452999"));
-      expect(userSop.plentyPerRoot).to.be.equal("2558534177813719812");
+      expect(userSop.farmerSops[0].wellsPlenty.plenty).to.be.equal(to18("25.595575914848452999"));
+      expect(userSop.farmerSops[0].wellsPlenty.plentyPerRoot).to.be.equal("2558534177813719812");
     });
 
     // each user should get half of the eth gained.
     it("tracks user2 plenty", async function () {
-      expect(await beanstalk.connect(user).balanceOfPlenty(user2.address)).to.be.equal(
+      expect(await beanstalk.connect(user).balanceOfPlenty(user2.address, this.well.address)).to.be.equal(
         to18("25.595575914848452999")
       );
     });
@@ -191,14 +198,14 @@ describe("Sop", function () {
       expect(userSop.lastRain).to.be.equal(6);
       expect(userSop.lastSop).to.be.equal(6);
       expect(userSop.roots).to.be.equal("10004000000000000000000000");
-      expect(userSop.plenty).to.be.equal(to18("25.595575914848452999"));
-      expect(userSop.plentyPerRoot).to.be.equal("2558534177813719812");
+      expect(userSop.farmerSops[0].wellsPlenty.plenty).to.be.equal(to18("25.595575914848452999"));
+      expect(userSop.farmerSops[0].wellsPlenty.plentyPerRoot).to.be.equal("2558534177813719812");
     });
 
     it("claims user plenty", async function () {
       await beanstalk.mow(user2.address, this.well.address);
-      await beanstalk.connect(user2).claimPlenty();
-      expect(await beanstalk.balanceOfPlenty(user2.address)).to.be.equal('0')
+      await beanstalk.connect(user2).claimPlenty(this.well.address, EXTERNAL);
+      expect(await beanstalk.balanceOfPlenty(user2.address, this.well.address)).to.be.equal('0')
       expect(await this.weth.balanceOf(user2.address)).to.be.equal(to18('25.595575914848452999'))
     })
   })
@@ -231,7 +238,7 @@ describe("Sop", function () {
     });
 
     it("tracks user plenty before update", async function () {
-      expect(await beanstalk.connect(user).balanceOfPlenty(user.address)).to.be.equal(
+      expect(await beanstalk.connect(user).balanceOfPlenty(user.address, this.well.address)).to.be.equal(
         "38544532214605630101"
       );
     });
@@ -242,12 +249,12 @@ describe("Sop", function () {
       expect(userSop.lastRain).to.be.equal(9);
       expect(userSop.lastSop).to.be.equal(9);
       expect(userSop.roots).to.be.equal("10004000000000000000000000");
-      expect(userSop.plenty).to.be.equal("38544532214605630101");
-      expect(userSop.plentyPerRoot).to.be.equal("3852912056637907847");
+      expect(userSop.farmerSops[0].wellsPlenty.plenty).to.be.equal("38544532214605630101");
+      expect(userSop.farmerSops[0].wellsPlenty.plentyPerRoot).to.be.equal("3852912056637907847");
     });
 
     it("tracks user2 plenty", async function () {
-      expect(await beanstalk.connect(user).balanceOfPlenty(user2.address)).to.be.equal(
+      expect(await beanstalk.connect(user).balanceOfPlenty(user2.address, this.well.address)).to.be.equal(
         "38547120970363278477"
       );
     });
@@ -259,8 +266,8 @@ describe("Sop", function () {
       expect(userSop.lastRain).to.be.equal(9);
       expect(userSop.lastSop).to.be.equal(9);
       expect(userSop.roots).to.be.equal("10006000000000000000000000");
-      expect(userSop.plenty).to.be.equal("38547120970363278477");
-      expect(userSop.plentyPerRoot).to.be.equal("3852912056637907847");
+      expect(userSop.farmerSops[0].wellsPlenty.plenty).to.be.equal("38547120970363278477");
+      expect(userSop.farmerSops[0].wellsPlenty.plentyPerRoot).to.be.equal("3852912056637907847");
     });
   });
 
@@ -292,7 +299,7 @@ describe("Sop", function () {
     });
 
     it("tracks user plenty before update", async function () {
-      expect(await beanstalk.connect(user).balanceOfPlenty(user.address)).to.be.equal(
+      expect(await beanstalk.connect(user).balanceOfPlenty(user.address, this.well.address)).to.be.equal(
         "25595575914848452999"
       );
     });
@@ -303,13 +310,13 @@ describe("Sop", function () {
       expect(userSop.lastRain).to.be.equal(6);
       expect(userSop.lastSop).to.be.equal(6);
       expect(userSop.roots).to.be.equal("10004000000000000000000000");
-      expect(userSop.plenty).to.be.equal(to18("25.595575914848452999"));
-      expect(userSop.plentyPerRoot).to.be.equal("2558534177813719812");
+      expect(userSop.farmerSops[0].wellsPlenty.plenty).to.be.equal(to18("25.595575914848452999"));
+      expect(userSop.farmerSops[0].wellsPlenty.plentyPerRoot).to.be.equal("2558534177813719812");
     });
 
     // each user should get half of the eth gained.
     it("tracks user2 plenty", async function () {
-      expect(await beanstalk.connect(user).balanceOfPlenty(user2.address)).to.be.equal(
+      expect(await beanstalk.connect(user).balanceOfPlenty(user2.address, this.well.address)).to.be.equal(
         to18("25.595575914848452999")
       );
     });
@@ -320,14 +327,14 @@ describe("Sop", function () {
       expect(userSop.lastRain).to.be.equal(6);
       expect(userSop.lastSop).to.be.equal(6);
       expect(userSop.roots).to.be.equal("10004000000000000000000000");
-      expect(userSop.plenty).to.be.equal(to18("25.595575914848452999"));
-      expect(userSop.plentyPerRoot).to.be.equal("2558534177813719812");
+      expect(userSop.farmerSops[0].wellsPlenty.plenty).to.be.equal(to18("25.595575914848452999"));
+      expect(userSop.farmerSops[0].wellsPlenty.plentyPerRoot).to.be.equal("2558534177813719812");
     });
 
     it("claims user plenty", async function () {
       await beanstalk.mow(user2.address, this.well.address);
-      await beanstalk.connect(user2).claimPlenty();
-      expect(await beanstalk.balanceOfPlenty(user2.address)).to.be.equal('0')
+      await beanstalk.connect(user2).claimPlenty(this.well.address, EXTERNAL);
+      expect(await beanstalk.balanceOfPlenty(user2.address, this.well.address)).to.be.equal('0')
       expect(await this.weth.balanceOf(user2.address)).to.be.equal(to18('25.595575914848452999'))
     })
   })

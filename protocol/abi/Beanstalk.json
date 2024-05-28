@@ -3356,6 +3356,19 @@
     "type": "function"
   },
   {
+    "inputs": [],
+    "name": "totalHarvestableForActiveField",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
     "inputs": [
       {
         "internalType": "uint256",
@@ -5371,6 +5384,12 @@
         "internalType": "bool",
         "name": "isWhitelistedWell",
         "type": "bool"
+      },
+      {
+        "indexed": false,
+        "internalType": "bool",
+        "name": "isSoppable",
+        "type": "bool"
       }
     ],
     "name": "AddWhitelistStatus",
@@ -5451,6 +5470,12 @@
         "indexed": false,
         "internalType": "bool",
         "name": "isWhitelistedWell",
+        "type": "bool"
+      },
+      {
+        "indexed": false,
+        "internalType": "bool",
+        "name": "isSoppable",
         "type": "bool"
       }
     ],
@@ -5594,6 +5619,11 @@
             "internalType": "bool",
             "name": "isWhitelistedWell",
             "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "isSoppable",
+            "type": "bool"
           }
         ],
         "internalType": "struct WhitelistStatus",
@@ -5628,6 +5658,11 @@
           {
             "internalType": "bool",
             "name": "isWhitelistedWell",
+            "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "isSoppable",
             "type": "bool"
           }
         ],
@@ -6008,6 +6043,11 @@
         "internalType": "address",
         "name": "account",
         "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "well",
+        "type": "address"
       }
     ],
     "name": "balanceOfPlenty",
@@ -6087,14 +6127,38 @@
             "type": "uint256"
           },
           {
-            "internalType": "uint256",
-            "name": "plentyPerRoot",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "plenty",
-            "type": "uint256"
+            "components": [
+              {
+                "internalType": "address",
+                "name": "well",
+                "type": "address"
+              },
+              {
+                "components": [
+                  {
+                    "internalType": "uint256",
+                    "name": "plentyPerRoot",
+                    "type": "uint256"
+                  },
+                  {
+                    "internalType": "uint256",
+                    "name": "plenty",
+                    "type": "uint256"
+                  },
+                  {
+                    "internalType": "bytes32[4]",
+                    "name": "_buffer",
+                    "type": "bytes32[4]"
+                  }
+                ],
+                "internalType": "struct PerWellPlenty",
+                "name": "wellsPlenty",
+                "type": "tuple"
+              }
+            ],
+            "internalType": "struct SiloGettersFacet.FarmerSops[]",
+            "name": "farmerSops",
+            "type": "tuple[]"
           }
         ],
         "internalType": "struct SiloGettersFacet.AccountSeasonOfPlenty",
@@ -6851,7 +6915,31 @@
     "type": "event"
   },
   {
-    "inputs": [],
+    "inputs": [
+      {
+        "internalType": "enum LibTransfer.To",
+        "name": "toMode",
+        "type": "uint8"
+      }
+    ],
+    "name": "claimAllPlenty",
+    "outputs": [],
+    "stateMutability": "payable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "well",
+        "type": "address"
+      },
+      {
+        "internalType": "enum LibTransfer.To",
+        "name": "toMode",
+        "type": "uint8"
+      }
+    ],
     "name": "claimPlenty",
     "outputs": [],
     "stateMutability": "payable",
@@ -7787,19 +7875,6 @@
   },
   {
     "inputs": [],
-    "name": "getSopWell",
-    "outputs": [
-      {
-        "internalType": "address",
-        "name": "",
-        "type": "address"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
     "name": "getTotalBdv",
     "outputs": [
       {
@@ -7894,6 +7969,11 @@
         "internalType": "uint32",
         "name": "_season",
         "type": "uint32"
+      },
+      {
+        "internalType": "address",
+        "name": "well",
+        "type": "address"
       }
     ],
     "name": "plentyPerRoot",
@@ -8217,6 +8297,19 @@
     "anonymous": false,
     "inputs": [
       {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "toField",
+        "type": "uint256"
+      }
+    ],
+    "name": "SeasonOfPlentyField",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
         "indexed": true,
         "internalType": "uint256",
         "name": "season",
@@ -8239,15 +8332,9 @@
         "internalType": "uint256",
         "name": "amount",
         "type": "uint256"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "toField",
-        "type": "uint256"
       }
     ],
-    "name": "SeasonOfPlenty",
+    "name": "SeasonOfPlentyWell",
     "type": "event"
   },
   {
@@ -8362,6 +8449,64 @@
     "type": "event"
   },
   {
+    "inputs": [
+      {
+        "components": [
+          {
+            "internalType": "address",
+            "name": "well",
+            "type": "address"
+          },
+          {
+            "internalType": "int256",
+            "name": "deltaB",
+            "type": "int256"
+          }
+        ],
+        "internalType": "struct Weather.WellDeltaB[]",
+        "name": "wellDeltaBs",
+        "type": "tuple[]"
+      },
+      {
+        "internalType": "uint256",
+        "name": "totalPositiveDeltaB",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "totalNegativeDeltaB",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "positiveDeltaBCount",
+        "type": "uint256"
+      }
+    ],
+    "name": "calculateSopPerWell",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "address",
+            "name": "well",
+            "type": "address"
+          },
+          {
+            "internalType": "int256",
+            "name": "deltaB",
+            "type": "int256"
+          }
+        ],
+        "internalType": "struct Weather.WellDeltaB[]",
+        "name": "",
+        "type": "tuple[]"
+      }
+    ],
+    "stateMutability": "pure",
+    "type": "function"
+  },
+  {
     "inputs": [],
     "name": "getShipmentRoutes",
     "outputs": [
@@ -8397,6 +8542,46 @@
     "type": "function"
   },
   {
+    "inputs": [],
+    "name": "getWellsByDeltaB",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "address",
+            "name": "well",
+            "type": "address"
+          },
+          {
+            "internalType": "int256",
+            "name": "deltaB",
+            "type": "int256"
+          }
+        ],
+        "internalType": "struct Weather.WellDeltaB[]",
+        "name": "wellDeltaBs",
+        "type": "tuple[]"
+      },
+      {
+        "internalType": "uint256",
+        "name": "totalPositiveDeltaB",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "totalNegativeDeltaB",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "positiveDeltaBCount",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
     "inputs": [
       {
         "internalType": "address",
@@ -8418,6 +8603,59 @@
       }
     ],
     "stateMutability": "payable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "components": [
+          {
+            "internalType": "address",
+            "name": "well",
+            "type": "address"
+          },
+          {
+            "internalType": "int256",
+            "name": "deltaB",
+            "type": "int256"
+          }
+        ],
+        "internalType": "struct Weather.WellDeltaB[]",
+        "name": "arr",
+        "type": "tuple[]"
+      },
+      {
+        "internalType": "int256",
+        "name": "left",
+        "type": "int256"
+      },
+      {
+        "internalType": "int256",
+        "name": "right",
+        "type": "int256"
+      }
+    ],
+    "name": "quickSort",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "address",
+            "name": "well",
+            "type": "address"
+          },
+          {
+            "internalType": "int256",
+            "name": "deltaB",
+            "type": "int256"
+          }
+        ],
+        "internalType": "struct Weather.WellDeltaB[]",
+        "name": "",
+        "type": "tuple[]"
+      }
+    ],
+    "stateMutability": "pure",
     "type": "function"
   },
   {
