@@ -43,11 +43,11 @@ describe("Marketplace", function () {
     await bean.connect(user2).approve(beanstalk.address, "100000000000");
 
     await mockBeanstalk.incrementTotalSoilE("100000");
+    // mine 300 blocks:
+    await mine(300);
     await mockBeanstalk.setYieldE("0");
     await beanstalk.connect(user).sow("1000", "0", EXTERNAL);
     await beanstalk.connect(user2).sow("1000", "0", EXTERNAL);
-    // mine 300 blocks:
-    await mine(300);
   });
 
   const getHashFromListing = function (l) {
