@@ -5,7 +5,9 @@ pragma abicoder v2;
 import {TestHelper, LibTransfer, C, IMockFBeanstalk} from "test/foundry/utils/TestHelper.sol";
 import {BeanL2MigrationFacet} from "contracts/beanstalk/migration/BeanL2MigrationFacet.sol";
 import {ReseedL2Migration} from "contracts/beanstalk/init/reseed/L1/ReseedL2Migration.sol";
+import {L1TokenFacet} from "contracts/beanstalk/migration/L1TokenFacet.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {IDiamondCut} from "contracts/interfaces/IDiamondCut.sol";
 
 /**
  * @notice Tests the functionality of migration.
@@ -38,10 +40,16 @@ contract reeseedMigrateL2 is TestHelper {
             WELL_IMPLMENTATION
         );
 
-        string[] memory facetNames = new string[](1);
+        string[] memory facetNames = new string[](2);
         facetNames[0] = "BeanL2MigrationFacet";
-        address[] memory newFacetAddresses = new address[](1);
+        facetNames[1] = "L1TokenFacet";
+        address[] memory newFacetAddresses = new address[](2);
         newFacetAddresses[0] = address(new BeanL2MigrationFacet()); // deploy the BeanL2MigrationFacet.
+        newFacetAddresses[1] = address(new L1TokenFacet()); // deploy the BeanL2MigrationFacet.
+
+        IDiamondCut.FacetCutAction[] memory facetCutActions = new IDiamondCut.FacetCutAction[](2);
+        facetCutActions[0] = IDiamondCut.FacetCutAction.Add;
+        facetCutActions[1] = IDiamondCut.FacetCutAction.Replace;
 
         // upgrade beanstalk with an L2 migration facet.
         upgradeWithNewFacets(
@@ -49,6 +57,7 @@ contract reeseedMigrateL2 is TestHelper {
             IMockFBeanstalk(BEANSTALK).owner(), // fetch beanstalk owner.
             facetNames,
             newFacetAddresses,
+            facetCutActions,
             address(new ReseedL2Migration()), // deploy the InitMint.
             abi.encodeWithSignature("init()"), // call init.
             new bytes4[](0) // remove no selectors.

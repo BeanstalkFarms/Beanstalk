@@ -8,6 +8,7 @@ import {MockUpgradeFacet} from "contracts/mocks/mockFacets/MockUpgradeFacet.sol"
 import {InitMint} from "contracts/beanstalk/init/InitMint.sol";
 import {TestHelper} from "test/foundry/utils/TestHelper.sol";
 import {IMockFBeanstalk} from "contracts/interfaces/IMockFBeanstalk.sol";
+import {IDiamondCut} from "contracts/interfaces/IDiamondCut.sol";
 
 /**
  * @title GerminationTest
@@ -32,6 +33,8 @@ contract MockUpgradeFacets is TestHelper {
         facetNames[0] = "MockUpgradeFacet";
         address[] memory newFacetAddresses = new address[](1);
         newFacetAddresses[0] = deployCode("MockUpgradeFacet.sol");
+        IDiamondCut.FacetCutAction[] memory facetCutActions = new IDiamondCut.FacetCutAction[](1);
+        facetCutActions[0] = IDiamondCut.FacetCutAction.Add;
 
         users = createUsers(1);
         address user = users[0];
@@ -42,6 +45,7 @@ contract MockUpgradeFacets is TestHelper {
             IMockFBeanstalk(BEANSTALK).owner(), // fetch beanstalk owner.
             facetNames,
             newFacetAddresses,
+            facetCutActions,
             address(new InitMint()), // deploy the InitMint.
             abi.encodeWithSignature("init(address,uint256)", user, 100e6), // issue 100 beans to owner.
             new bytes4[](0) // remove no selectors.
@@ -70,6 +74,7 @@ contract MockUpgradeFacets is TestHelper {
             IMockFBeanstalk(BEANSTALK).owner(), // fetch beanstalk owner.
             new string[](0),
             new address[](0),
+            new IDiamondCut.FacetCutAction[](0),
             address(0),
             new bytes(0),
             removeSelectors

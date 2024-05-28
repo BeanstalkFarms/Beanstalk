@@ -55,6 +55,8 @@ contract BeanstalkDeployer is Utils {
     ];
     address[] facetAddresses;
 
+    IDiamondCut.FacetCutAction[] cutActions;
+
     /**
      * @notice deploys the beanstalk diamond contract.
      * @param mock if true, deploys all mocks and sets the diamond address to the canonical beanstalk address.
@@ -79,6 +81,8 @@ contract BeanstalkDeployer is Utils {
             } else {
                 facetAddresses.push(address(deployCode(facetName)));
             }
+
+            cutActions.push(IDiamondCut.FacetCutAction.Add);
         }
 
         for (uint i; i < mockFacets.length; i++) {
@@ -104,8 +108,10 @@ contract BeanstalkDeployer is Utils {
 
             // append the facet name to the facets array.
             facets.push(facet);
+
+            cutActions.push(IDiamondCut.FacetCutAction.Add);
         }
-        IDiamondCut.FacetCut[] memory cut = _multiCut(facets, facetAddresses);
+        IDiamondCut.FacetCut[] memory cut = _multiCut(facets, facetAddresses, cutActions);
         d = deployDiamondAtAddress(deployer, BEANSTALK);
 
         // if mocking, set the diamond address to
@@ -143,6 +149,7 @@ contract BeanstalkDeployer is Utils {
         address diamondOwner,
         string[] memory newFacetNames,
         address[] memory newFacetAddresses,
+        IDiamondCut.FacetCutAction[] memory actions,
         address initAddress,
         bytes memory initFunctionCall,
         bytes4[] memory selectorsToRemove
@@ -153,7 +160,12 @@ contract BeanstalkDeployer is Utils {
         IDiamondCut.FacetCut[] memory cut = new IDiamondCut.FacetCut[](newFacetNames.length + 1);
 
         // generate cut for new facets:
-        cut = _multiCutWithSelectorRemovals(newFacetNames, newFacetAddresses, selectorsToRemove);
+        cut = _multiCutWithSelectorRemovals(
+            newFacetNames,
+            newFacetAddresses,
+            actions,
+            selectorsToRemove
+        );
 
         // call diamondcut
         IDiamondCut(diamondAddress).diamondCut(cut, initAddress, initFunctionCall);
@@ -180,14 +192,15 @@ contract BeanstalkDeployer is Utils {
      */
     function _multiCut(
         string[] memory _facetNames,
-        address[] memory _facetAddresses
+        address[] memory _facetAddresses,
+        IDiamondCut.FacetCutAction[] memory _actions
     ) internal returns (IDiamondCut.FacetCut[] memory cutArray) {
         cutArray = new IDiamondCut.FacetCut[](_facetNames.length);
         bytes4[][] memory functionSelectorsArray = _generateMultiSelectors(_facetNames);
         for (uint i; i < _facetNames.length; i++) {
             cutArray[i] = IDiamondCut.FacetCut({
                 facetAddress: _facetAddresses[i],
-                action: IDiamondCut.FacetCutAction.Add,
+                action: _actions[i],
                 functionSelectors: functionSelectorsArray[i]
             });
         }
@@ -199,10 +212,11 @@ contract BeanstalkDeployer is Utils {
     function _multiCutWithSelectorRemovals(
         string[] memory _facetNames,
         address[] memory _facetAddresses,
+        IDiamondCut.FacetCutAction[] memory actions,
         bytes4[] memory _selectorsToRemove
     ) internal returns (IDiamondCut.FacetCut[] memory cutArray) {
         // get inital cutArray.
-        cutArray = _multiCut(_facetNames, _facetAddresses);
+        cutArray = _multiCut(_facetNames, _facetAddresses, actions);
 
         // generate cuts for selectors to remove.
         if (_selectorsToRemove.length != 0) {
@@ -229,7 +243,6 @@ contract BeanstalkDeployer is Utils {
         string[] memory cmd = new string[](_facetNames.length + 2);
         cmd[0] = "node";
         cmd[1] = "scripts/genSelectors.js";
-
         for (uint i = 0; i < _facetNames.length; i++) {
             cmd[i + 2] = _facetNames[i];
         }
