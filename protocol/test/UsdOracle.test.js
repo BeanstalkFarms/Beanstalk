@@ -5,7 +5,7 @@ const { getBeanstalk } = require("../utils");
 const { USDC } = require("./utils/constants.js");
 const { getAllBeanstalkContracts } = require("../utils/contracts.js");
 
-describe.only("USD Oracle", function () {
+describe("USD Oracle", function () {
   before(async function () {
     const contracts = await deploy((verbose = false), (mock = true), (reset = true));
     // `beanstalk` contains all functions that the regualar beanstalk has.
