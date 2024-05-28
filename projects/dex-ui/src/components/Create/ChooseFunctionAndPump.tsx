@@ -9,13 +9,13 @@ import { getIsValidEthereumAddress } from "src/utils/addresses";
 import { theme } from "src/utils/ui/theme";
 import { Divider, Flex } from "src/components/Layout";
 import { Text } from "src/components/Typography";
-import { CreateWellButtonRow } from "./CreateWellButtonRow";
+import { CreateWellButtonRow } from "./shared/CreateWellButtonRow";
 import { TextInputField } from "src/components/Form";
 import { XIcon } from "src/components/Icons";
 
 import { CreateWellProps, useCreateWell } from "./CreateWellProvider";
-import { CreateWellFormProgress } from "./CreateWellFormProgress";
-import { ComponentInputWithCustom } from "./ComponentInputWithCustom";
+import { CreateWellFormProgress } from "./shared/CreateWellFormProgress";
+import { ComponentInputWithCustom } from "./shared/ComponentInputWithCustom";
 
 const additionalOptions = [
   {

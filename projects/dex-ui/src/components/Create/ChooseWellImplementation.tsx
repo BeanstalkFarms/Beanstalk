@@ -6,8 +6,8 @@ import { Text } from "src/components/Typography";
 import { FormProvider, useForm } from "react-hook-form";
 import { ethers } from "ethers";
 import { CreateWellProps, useCreateWell } from "./CreateWellProvider";
-import { ComponentInputWithCustom } from "./ComponentInputWithCustom";
-import { CreateWellButtonRow } from "./CreateWellButtonRow";
+import { ComponentInputWithCustom } from "./shared/ComponentInputWithCustom";
+import { CreateWellButtonRow } from "./shared/CreateWellButtonRow";
 
 type FormValues = CreateWellProps["wellImplementation"];
 

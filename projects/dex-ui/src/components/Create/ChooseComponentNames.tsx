@@ -5,10 +5,10 @@ import { theme } from "src/utils/ui/theme";
 import styled from "styled-components";
 import { CreateWellProps, useCreateWell } from "./CreateWellProvider";
 import { FormProvider, useForm } from "react-hook-form";
-import { CreateWellFormProgress } from "./CreateWellFormProgress";
+import { CreateWellFormProgress } from "./shared/CreateWellFormProgress";
 import { TextInputField } from "../Form";
 import { useWells } from "src/wells/useWells";
-import { CreateWellButtonRow } from "./CreateWellButtonRow";
+import { CreateWellButtonRow } from "./shared/CreateWellButtonRow";
 
 type FormValues = CreateWellProps["wellNameAndSymbol"];
 

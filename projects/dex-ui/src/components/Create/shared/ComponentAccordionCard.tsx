@@ -4,9 +4,9 @@ import { Link } from "react-router-dom";
 import { theme } from "src/utils/ui/theme";
 import { Box, Flex } from "src/components/Layout";
 import { Text } from "src/components/Typography";
-import { WellComponentInfo, WellComponentType } from "./useWhitelistedWellComponents";
-import { AccordionSelectCard } from "../Selectable";
-import { Etherscan, Github } from "../Icons";
+import { WellComponentInfo, WellComponentType } from "../useWhitelistedWellComponents";
+import { AccordionSelectCard } from "../../Selectable";
+import { Etherscan, Github } from "../../Icons";
 
 export type WellComponentAccordionCardProps = {
   selected: boolean;

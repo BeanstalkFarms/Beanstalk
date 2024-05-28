@@ -1,12 +1,12 @@
 import React, { useMemo } from "react";
 import { useFormContext, useWatch } from "react-hook-form";
 import { theme } from "src/utils/ui/theme";
-import { CheckIcon, CircleEmptyIcon } from "../Icons";
-import { Flex } from "../Layout";
+import { CheckIcon, CircleEmptyIcon } from "../../Icons";
+import { Flex } from "../../Layout";
 import { Link } from "react-router-dom";
 import styled from "styled-components";
-import { Text } from "../Typography";
-import { CreateWellProps } from "./CreateWellProvider";
+import { Text } from "../../Typography";
+import { CreateWellProps } from "../CreateWellProvider";
 
 type FunctionAndPump = CreateWellProps["wellFunctionAndPump"];
 type SymbolAndName = CreateWellProps["wellNameAndSymbol"];

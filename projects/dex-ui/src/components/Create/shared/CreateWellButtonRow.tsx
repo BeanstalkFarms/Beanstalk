@@ -3,10 +3,10 @@ import { useFormContext, useWatch } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
 import { theme } from "src/utils/ui/theme";
 import styled from "styled-components";
-import { ButtonPrimary } from "../Button";
-import { LeftArrow, RightArrow } from "../Icons";
-import { Flex } from "../Layout";
-import { useCreateWell } from "./CreateWellProvider";
+import { ButtonPrimary } from "../../Button";
+import { LeftArrow, RightArrow } from "../../Icons";
+import { Flex } from "../../Layout";
+import { useCreateWell } from "../CreateWellProvider";
 
 const ButtonLabels = [
   {
