@@ -24,9 +24,8 @@ contract InitInvariants {
         // TODO: Get exact from future snapshot.
         s.sys.fert.fertilizedPaidIndex = 3_500_000_000_000;
 
-        // TODO: Get exact amount. May be 0.
-        // TODO: Ensure SopWell/SopToken initialization is compatible with the logic between here and there.
-        s.sys.plenty = 0;
+        // TODO: migrate old unclaimed plenty to here? or auto-claim plenty if there's any left unclaimed?
+        s.sys.sop.plentyPerSopToken[C.WETH] = 0;
     }
 
     function setInternalTokenBalances() internal {

@@ -291,6 +291,14 @@ contract FieldFacet is Invariable, ReentrancyGuard {
     }
 
     /**
+     * @notice Returns the number of Pods that are currently Harvestable for the active Field.
+     */
+    function totalHarvestableForActiveField() public view returns (uint256) {
+        return
+            s.sys.fields[s.sys.activeField].harvestable - s.sys.fields[s.sys.activeField].harvested;
+    }
+
+    /**
      * @notice Returns the number of Pods that are not yet Harvestable. Also known as the Pod Line.
      * @param fieldId The index of the Field to query.
      */

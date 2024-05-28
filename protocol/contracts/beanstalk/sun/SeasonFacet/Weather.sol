@@ -11,13 +11,16 @@ import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {IBeanstalkWellFunction} from "contracts/interfaces/basin/IBeanstalkWellFunction.sol";
 import {LibWell} from "contracts/libraries/Well/LibWell.sol";
 import {IWell, Call} from "contracts/interfaces/basin/IWell.sol";
-import {IInstantaneousPump} from "contracts/interfaces/basin/pumps/IInstantaneousPump.sol";
+import {LibWhitelistedTokens} from "contracts/libraries/Silo/LibWhitelistedTokens.sol";
+import {LibWellMinting} from "contracts/libraries/Minting/LibWellMinting.sol";
 import {LibRedundantMath256} from "contracts/libraries/LibRedundantMath256.sol";
 import {LibRedundantMathSigned256} from "contracts/libraries/LibRedundantMathSigned256.sol";
+import {AppStorage, LibAppStorage} from "contracts/libraries/LibAppStorage.sol";
+import {LibDeltaB} from "contracts/libraries/Oracle/LibDeltaB.sol";
 
 /**
  * @title Weather
- * @author Publius
+ * @author Publius, pizzaman1337, Brean
  * @notice Weather controls the Temperature and Grown Stalk to LP on the Farm.
  */
 contract Weather is Sun {
@@ -26,6 +29,16 @@ contract Weather is Sun {
     using LibRedundantMath128 for uint128;
 
     uint128 internal constant MAX_BEAN_LP_GP_PER_BDV_RATIO = 100e18;
+
+    // @notice This controls the percentage of Bean supply that is flooded to the field.
+    // 1000 represents 1/1000, or 0.1% of total Bean supply.
+    uint256 internal constant FLOOD_PODLINE_PERCENT_DENOMINATOR = 1000;
+
+    // @dev In-memory struct used to store current deltaB, and then reduction amount per-well.
+    struct WellDeltaB {
+        address well;
+        int256 deltaB;
+    }
 
     /**
      * @notice Emitted when the Temperature (fka "Weather") changes.
@@ -46,20 +59,19 @@ contract Weather is Sun {
     event BeanToMaxLpGpPerBdvRatioChange(uint256 indexed season, uint256 caseId, int80 absChange);
 
     /**
-     * @notice Emitted when Beans are minted during the Season of Plenty.
+     * @notice Emitted when Beans are minted to a Well during the Season of Plenty.
      * @param season The Season in which Beans were minted for distribution.
      * @param well The Well that the SOP occurred in.
      * @param token The token that was swapped for Beans.
-     * @param amount The amount of token which was received for swapping Beans.
+     * @param amount The amount of tokens which was received for swapping Beans.
+     */
+    event SeasonOfPlentyWell(uint256 indexed season, address well, address token, uint256 amount);
+
+    /**
+     * @notice Emitted when Beans are minted to the Field during the Season of Plenty.
      * @param toField The amount of Beans which were distributed to remaining Pods in the Field.
      */
-    event SeasonOfPlenty(
-        uint256 indexed season,
-        address well,
-        address token,
-        uint256 amount,
-        uint256 toField
-    );
+    event SeasonOfPlentyField(uint256 toField);
 
     //////////////////// WEATHER INTERNAL ////////////////////
 
@@ -79,9 +91,9 @@ contract Weather is Sun {
             return 9; // Reasonably low
         }
         // Calculate Case Id
-        (uint256 caseId, address sopWell) = LibEvaluate.evaluateBeanstalk(deltaB, beanSupply);
+        uint256 caseId = LibEvaluate.evaluateBeanstalk(deltaB, beanSupply);
         updateTemperatureAndBeanToMaxLpGpPerBdvRatio(caseId);
-        handleRain(caseId, sopWell);
+        handleRain(caseId);
         return caseId;
     }
 
@@ -159,7 +171,7 @@ contract Weather is Sun {
      * Pod Rate is less than 5%, the Farm is Oversaturated. If it is Oversaturated
      * for a Season, each Season in which it continues to be Oversaturated, it Floods.
      */
-    function handleRain(uint256 caseId, address well) internal {
+    function handleRain(uint256 caseId) internal {
         // cases % 36  3-8 represent the case where the pod rate is less than 5% and P > 1.
         if (caseId.mod(36) < 3 || caseId.mod(36) > 8) {
             if (s.sys.season.raining) {
@@ -168,19 +180,132 @@ contract Weather is Sun {
             return;
         } else if (!s.sys.season.raining) {
             s.sys.season.raining = true;
+            address[] memory wells = LibWhitelistedTokens.getCurrentlySoppableWellLpTokens();
             // Set the plenty per root equal to previous rain start.
-            s.sys.sops[s.sys.season.current] = s.sys.sops[s.sys.season.rainStart];
+            uint32 season = s.sys.season.current;
+            uint32 rainstartSeason = s.sys.season.rainStart;
+            for (uint i; i < wells.length; i++) {
+                s.sys.sop.sops[season][wells[i]] = s.sys.sop.sops[rainstartSeason][wells[i]];
+            }
             s.sys.season.rainStart = s.sys.season.current;
-            s.sys.rain.pods = s.sys.fields[s.sys.activeField].pods; // Store the current amount of pods into the rain struct for this rainy season
-            s.sys.rain.roots = s.sys.silo.roots; // Same for roots
+            s.sys.rain.pods = s.sys.fields[s.sys.activeField].pods;
+            s.sys.rain.roots = s.sys.silo.roots;
         } else {
-            // if it's already raining, and we've capture raining roots, make sure sop well setup and do the sop
+            // flood podline first, because it checks current Bean supply
+            floodPodline();
+
             if (s.sys.rain.roots > 0) {
-                // initalize sopWell if it is not already set.
-                if (s.sys.sopWell == address(0)) s.sys.sopWell = well;
-                sop();
+                (
+                    WellDeltaB[] memory wellDeltaBs,
+                    uint256 totalPositiveDeltaB,
+                    uint256 totalNegativeDeltaB,
+                    uint256 positiveDeltaBCount
+                ) = getWellsByDeltaB();
+                wellDeltaBs = calculateSopPerWell(
+                    wellDeltaBs,
+                    totalPositiveDeltaB,
+                    totalNegativeDeltaB,
+                    positiveDeltaBCount
+                );
+
+                for (uint i; i < wellDeltaBs.length; i++) {
+                    sopWell(wellDeltaBs[i]);
+                }
             }
         }
+    }
+
+    /**
+     * @notice Floods the field, up to 0.1% of the total Bean supply worth of pods.
+     */
+    function floodPodline() private {
+        // Make 0.1% of the total bean supply worth of pods harvestable.
+
+        uint256 totalBeanSupply = C.bean().totalSupply();
+        uint256 sopFieldBeans = totalBeanSupply.div(FLOOD_PODLINE_PERCENT_DENOMINATOR); // 1/1000 = 0.1% of total supply
+
+        // Note there may be cases where zero harvestable pods are available. For clarity, the code will still emit an event
+        // but with zero sop field beans.
+        uint256 maxHarvestable = s.sys.fields[s.sys.activeField].pods.sub(
+            s.sys.fields[s.sys.activeField].harvestable
+        );
+
+        sopFieldBeans = sopFieldBeans > maxHarvestable ? maxHarvestable : sopFieldBeans;
+
+        s.sys.fields[s.sys.activeField].harvestable = s
+            .sys
+            .fields[s.sys.activeField]
+            .harvestable
+            .add(sopFieldBeans);
+        C.bean().mint(address(this), sopFieldBeans);
+
+        emit SeasonOfPlentyField(sopFieldBeans);
+    }
+
+    function getWellsByDeltaB()
+        public
+        view
+        returns (
+            WellDeltaB[] memory wellDeltaBs,
+            uint256 totalPositiveDeltaB,
+            uint256 totalNegativeDeltaB,
+            uint256 positiveDeltaBCount
+        )
+    {
+        address[] memory wells = LibWhitelistedTokens.getCurrentlySoppableWellLpTokens();
+        wellDeltaBs = new WellDeltaB[](wells.length);
+
+        for (uint i = 0; i < wells.length; i++) {
+            wellDeltaBs[i] = WellDeltaB(wells[i], LibDeltaB.currentDeltaB(wells[i]));
+            if (wellDeltaBs[i].deltaB > 0) {
+                totalPositiveDeltaB += uint256(wellDeltaBs[i].deltaB);
+                positiveDeltaBCount++;
+            } else {
+                totalNegativeDeltaB += uint256(-wellDeltaBs[i].deltaB);
+            }
+        }
+
+        // Sort the wellDeltaBs array
+        quickSort(wellDeltaBs, 0, int(wellDeltaBs.length - 1));
+    }
+
+    // Reviewer note: This works, but there's got to be a way to make this more gas efficient
+    function quickSort(
+        WellDeltaB[] memory arr,
+        int left,
+        int right
+    ) public pure returns (WellDeltaB[] memory) {
+        if (left >= right) return arr;
+
+        // Choose the median of left, right, and middle as pivot (improves performance on random data)
+        uint mid = uint(left) + (uint(right) - uint(left)) / 2;
+        WellDeltaB memory pivot = arr[uint(left)].deltaB > arr[uint(mid)].deltaB
+            ? (
+                arr[uint(left)].deltaB < arr[uint(right)].deltaB
+                    ? arr[uint(left)]
+                    : arr[uint(right)]
+            )
+            : (arr[uint(mid)].deltaB < arr[uint(right)].deltaB ? arr[uint(mid)] : arr[uint(right)]);
+
+        int i = left;
+        int j = right;
+        while (i <= j) {
+            while (arr[uint(i)].deltaB > pivot.deltaB) i++;
+            while (pivot.deltaB > arr[uint(j)].deltaB) j--;
+            if (i <= j) {
+                (arr[uint(i)], arr[uint(j)]) = (arr[uint(j)], arr[uint(i)]);
+                i++;
+                j--;
+            }
+        }
+
+        if (left < j) {
+            return quickSort(arr, left, j);
+        }
+        if (i < right) {
+            return quickSort(arr, i, right);
+        }
+        return arr;
     }
 
     /**
@@ -194,114 +319,96 @@ contract Weather is Sun {
      * and become Harvestable.
      * For more information On Oversaturation see {Weather.handleRain}.
      */
-    function sop() private {
-        // calculate the beans from a sop.
-        // sop beans uses the min of the current and instantaneous reserves of the sop well,
-        // rather than the twaReserves in order to get bean back to peg.
-        address sopWell = s.sys.sopWell;
-        (uint256 newBeans, IERC20 sopToken) = calculateSop(sopWell);
-        if (newBeans == 0) return;
+    function sopWell(WellDeltaB memory wellDeltaB) private {
+        if (wellDeltaB.deltaB > 0) {
+            AppStorage storage s = LibAppStorage.diamondStorage();
+            IERC20 sopToken = LibWell.getNonBeanTokenFromWell(wellDeltaB.well);
 
-        uint256 sopBeans = uint256(newBeans);
-        uint256 newHarvestable;
-
-        // Pay off remaining Pods if any exist.
-        if (s.sys.fields[s.sys.activeField].harvestable < s.sys.rain.pods) {
-            newHarvestable = s.sys.rain.pods - s.sys.fields[s.sys.activeField].harvestable;
-            s.sys.fields[s.sys.activeField].harvestable =
-                s.sys.fields[s.sys.activeField].harvestable +
-                newHarvestable;
-            C.bean().mint(address(this), newHarvestable.add(sopBeans));
-        } else {
+            uint256 sopBeans = uint256(wellDeltaB.deltaB);
             C.bean().mint(address(this), sopBeans);
-        }
 
-        // Approve and Swap Beans for the non-bean token of the SOP well.
-        C.bean().approve(sopWell, sopBeans);
-        uint256 amountOut = IWell(sopWell).swapFrom(
-            C.bean(),
-            sopToken,
-            sopBeans,
-            0,
-            address(this),
-            type(uint256).max
-        );
-        s.sys.plenty += amountOut;
-        rewardSop(amountOut);
-        emit SeasonOfPlenty(
-            s.sys.season.current,
-            sopWell,
-            address(sopToken),
-            amountOut,
-            newHarvestable
-        );
+            // Approve and Swap Beans for the non-bean token of the SOP well.
+            C.bean().approve(wellDeltaB.well, sopBeans);
+            uint256 amountOut = IWell(wellDeltaB.well).swapFrom(
+                C.bean(),
+                sopToken,
+                sopBeans,
+                0,
+                address(this),
+                type(uint256).max
+            );
+            rewardSop(wellDeltaB.well, amountOut, address(sopToken));
+            emit SeasonOfPlentyWell(
+                s.sys.season.current,
+                wellDeltaB.well,
+                address(sopToken),
+                amountOut
+            );
+        }
     }
 
     /**
      * @dev Allocate `sop token` during a Season of Plenty.
      */
-    function rewardSop(uint256 amount) private {
-        // For this sop (which is stored based on when it started raining last), add a token amount per root
-        s.sys.sops[s.sys.season.rainStart] = s.sys.sops[s.sys.season.lastSop].add(
-            amount.mul(C.SOP_PRECISION).div(s.sys.rain.roots)
-        );
+    function rewardSop(address well, uint256 amount, address sopToken) private {
+        s.sys.sop.sops[s.sys.season.rainStart][well] = s
+        .sys
+        .sop
+        .sops[s.sys.season.lastSop][well].add(amount.mul(C.SOP_PRECISION).div(s.sys.rain.roots));
+
         s.sys.season.lastSop = s.sys.season.rainStart;
         s.sys.season.lastSopSeason = s.sys.season.current;
+
+        // update Beanstalk's stored overall plenty for this well
+        s.sys.sop.plentyPerSopToken[sopToken] += amount;
     }
 
-    /**
-     * Calculates the amount of beans that should be minted in a sop.
-     * @dev the instanteous EMA reserves are used rather than the twa reserves
-     * as the twa reserves are not indiciative of the current deltaB in the pool.
-     *
-     * Generalized for a single well. Sop does not support multiple wells.
+    /*
+     * @notice Calculates the amount of beans per well that should be minted in a sop.
+     * @param wellDeltaBs The deltaBs of all whitelisted wells in which to flood. Must be sorted in descending order.
      */
-    function calculateSop(address well) private view returns (uint256 sopBeans, IERC20 sopToken) {
-        // if the sopWell was not initalized, the should not occur.
-        if (well == address(0)) return (0, IERC20(address(0)));
-        IWell sopWell = IWell(well);
-        IERC20[] memory tokens = sopWell.tokens();
-        Call[] memory pumps = sopWell.pumps();
-        IInstantaneousPump pump = IInstantaneousPump(pumps[0].target);
-        uint256[] memory instantaneousReserves = pump.readInstantaneousReserves(
-            well,
-            pumps[0].data
-        );
-        uint256[] memory currentReserves = sopWell.getReserves();
-        Call memory wellFunction = sopWell.wellFunction();
-        (uint256[] memory ratios, uint256 beanIndex, bool success) = LibWell.getRatiosAndBeanIndex(
-            tokens
-        );
-        // If the USD Oracle oracle call fails, the sop should not occur.
-        // return 0 rather than revert to prevent sunrise from failing.
-        if (!success) return (0, IERC20(address(0)));
-
-        // compare the beans at peg using the instantaneous reserves,
-        // and the current reserves.
-        uint256 instantaneousBeansAtPeg = IBeanstalkWellFunction(wellFunction.target)
-            .calcReserveAtRatioSwap(instantaneousReserves, beanIndex, ratios, wellFunction.data);
-
-        uint256 currentBeansAtPeg = IBeanstalkWellFunction(wellFunction.target)
-            .calcReserveAtRatioSwap(currentReserves, beanIndex, ratios, wellFunction.data);
-
-        // Calculate the signed Sop beans for the two reserves.
-        int256 lowestSopBeans = int256(instantaneousBeansAtPeg).sub(
-            int256(instantaneousReserves[beanIndex])
-        );
-        int256 currentSopBeans = int256(currentBeansAtPeg).sub(int256(currentReserves[beanIndex]));
-
-        // Use the minimum of the two.
-        if (lowestSopBeans > currentSopBeans) {
-            lowestSopBeans = currentSopBeans;
+    function calculateSopPerWell(
+        WellDeltaB[] memory wellDeltaBs,
+        uint256 totalPositiveDeltaB,
+        uint256 totalNegativeDeltaB,
+        uint256 positiveDeltaBCount
+    ) public pure returns (WellDeltaB[] memory) {
+        // most likely case is that all deltaBs are positive
+        if (positiveDeltaBCount == wellDeltaBs.length) {
+            // if all deltaBs are positive, need to sop all to zero, so return existing deltaBs
+            return wellDeltaBs;
         }
 
-        // If the sopBeans is negative, the sop should not occur.
-        if (lowestSopBeans < 0) return (0, IERC20(address(0)));
+        if (totalPositiveDeltaB < totalNegativeDeltaB || positiveDeltaBCount == 0) {
+            // The less than conditional can occur if the twaDeltaB is positive, but the instanteous deltaB is negative or 0
+            // In that case, no reductions are needed.
+            // If there are no positive values, no well flooding is needed, return zeros
+            for (uint256 i = 0; i < positiveDeltaBCount; i++) {
+                wellDeltaBs[i].deltaB = 0;
+            }
+            return wellDeltaBs;
+        }
 
-        // SafeCast not necessary due to above check.
-        sopBeans = uint256(lowestSopBeans);
+        if (totalPositiveDeltaB < totalNegativeDeltaB) {
+            for (uint256 i = 0; i < positiveDeltaBCount; i++) {
+                wellDeltaBs[i].deltaB = 0;
+            }
+            return wellDeltaBs;
+        }
 
-        // the sopToken is the non bean token in the well.
-        sopToken = tokens[beanIndex == 0 ? 1 : 0];
+        uint256 shaveToLevel = totalNegativeDeltaB / positiveDeltaBCount;
+
+        // Loop through positive deltaB wells starting at the highest, re-use the deltaB value slot
+        // as reduction amount (amount of beans to flood per well).
+        for (uint256 i = positiveDeltaBCount; i > 0; i--) {
+            if (shaveToLevel > uint256(wellDeltaBs[i - 1].deltaB)) {
+                shaveToLevel += (shaveToLevel - uint256(wellDeltaBs[i - 1].deltaB)) / (i - 1);
+                // amount to sop for this well must be zero
+                wellDeltaBs[i - 1].deltaB = 0;
+            } else {
+                wellDeltaBs[i - 1].deltaB = wellDeltaBs[i - 1].deltaB - int256(shaveToLevel);
+            }
+        }
+        return wellDeltaBs;
     }
 }

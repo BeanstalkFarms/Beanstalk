@@ -16,7 +16,8 @@ contract WhitelistTest is TestHelper {
         uint256 index,
         bool isWhitelisted,
         bool isWhitelistedLp,
-        bool isWhitelistedWell
+        bool isWhitelistedWell,
+        bool isSoppable
     );
     event WhitelistToken(
         address indexed token,
@@ -178,7 +179,7 @@ contract WhitelistTest is TestHelper {
         bytes4 liquidityWeightSelector = IMockFBeanstalk.maxWeight.selector;
 
         vm.expectEmit();
-        emit AddWhitelistStatus(token, 5, true, true, false);
+        emit AddWhitelistStatus(token, 5, true, true, false, false);
         vm.expectEmit();
         emit WhitelistToken(
             token,
@@ -236,7 +237,8 @@ contract WhitelistTest is TestHelper {
             gaugePointSelector,
             liquidityWeightSelector,
             gaugePoints,
-            optimalPercentDepositedBdv
+            optimalPercentDepositedBdv,
+            false
         );
         bs.whitelistTokenWithEncodeType(
             token,
@@ -270,10 +272,11 @@ contract WhitelistTest is TestHelper {
         bytes4 gaugePointSelector,
         bytes4 liquidityWeightSelector,
         uint128 gaugePoints,
-        uint64 optimalPercentDepositedBdv
+        uint64 optimalPercentDepositedBdv,
+        bool isSoppable
     ) public {
         vm.expectEmit();
-        emit AddWhitelistStatus(token, 5, true, true, false);
+        emit AddWhitelistStatus(token, 5, true, true, false, isSoppable);
         vm.expectEmit();
         emit WhitelistToken(
             token,

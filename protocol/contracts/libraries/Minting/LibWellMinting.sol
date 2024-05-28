@@ -8,6 +8,7 @@ import {LibAppStorage} from "../LibAppStorage.sol";
 import {AppStorage} from "contracts/beanstalk/storage/AppStorage.sol";
 import {C, LibMinting} from "./LibMinting.sol";
 import {ICumulativePump} from "contracts/interfaces/basin/pumps/ICumulativePump.sol";
+import {ICappedReservesPump} from "contracts/interfaces/basin/pumps/ICappedReservesPump.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {IInstantaneousPump} from "contracts/interfaces/basin/pumps/IInstantaneousPump.sol";
 import {Call, IWell} from "contracts/interfaces/basin/IWell.sol";
@@ -25,7 +26,7 @@ import {IBeanstalkWellFunction} from "contracts/interfaces/basin/IBeanstalkWellF
  * for a given Well.
  *
  * @dev
- * The Oracle uses the Season timestamp stored in `s.season.timestamp` to determine how many seconds
+ * The Oracle uses the Season timestamp stored in `s.sys.season.timestamp` to determine how many seconds
  * it has been since the last Season instead of storing its own for efficiency purposes.
  * Each Capture stores the encoded cumulative reserves returned by the Pump in `s.wellOracleSnapshots[well]`.
  **/
@@ -33,6 +34,8 @@ import {IBeanstalkWellFunction} from "contracts/interfaces/basin/IBeanstalkWellF
 library LibWellMinting {
     using LibRedundantMathSigned256 for int256;
     using LibRedundantMath256 for uint256;
+
+    uint256 internal constant ZERO_LOOKBACK = 0;
 
     /**
      * @notice Emitted when a Well Minting Oracle is captured.

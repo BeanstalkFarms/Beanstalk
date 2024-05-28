@@ -14,6 +14,7 @@ import {LibAppStorage} from "contracts/libraries/LibAppStorage.sol";
 import {LibWhitelistedTokens} from "contracts/libraries/Silo/LibWhitelistedTokens.sol";
 import {LibUnripe} from "contracts/libraries/LibUnripe.sol";
 import {LibSilo} from "contracts/libraries/Silo/LibSilo.sol";
+import {Weather} from "contracts/beanstalk/sun/SeasonFacet/Weather.sol";
 
 /**
  * @author funderbrker
@@ -136,15 +137,16 @@ abstract contract Invariable {
      */
     function getTokensOfInterest() internal view returns (address[] memory tokens) {
         address[] memory whitelistedTokens = LibWhitelistedTokens.getWhitelistedTokens();
-        address sopToken = address(LibSilo.getSopToken());
-        if (sopToken == address(0)) {
-            tokens = new address[](whitelistedTokens.length);
-        } else {
-            tokens = new address[](whitelistedTokens.length + 1);
-            tokens[tokens.length - 1] = sopToken;
-        }
-        for (uint256 i; i < whitelistedTokens.length; i++) {
+        address[] memory sopTokens = LibWhitelistedTokens.getSopTokens();
+        uint256 totalLength = whitelistedTokens.length + sopTokens.length;
+        tokens = new address[](totalLength);
+
+        for (uint256 i = 0; i < whitelistedTokens.length; i++) {
             tokens[i] = whitelistedTokens[i];
+        }
+
+        for (uint256 i = 0; i < sopTokens.length; i++) {
+            tokens[whitelistedTokens.length + i] = sopTokens[i];
         }
     }
 
@@ -170,6 +172,7 @@ abstract contract Invariable {
         AppStorage storage s = LibAppStorage.diamondStorage();
         entitlements = new uint256[](tokens.length);
         balances = new uint256[](tokens.length);
+
         for (uint256 i; i < tokens.length; i++) {
             entitlements[i] =
                 s.sys.silo.balances[tokens[i]].deposited +
@@ -178,7 +181,9 @@ abstract contract Invariable {
                 s.sys.internalTokenBalanceTotal[IERC20(tokens[i])];
             if (tokens[i] == C.BEAN) {
                 entitlements[i] +=
-                    (s.sys.fert.fertilizedIndex - s.sys.fert.fertilizedPaidIndex + s.sys.fert.leftoverBeans) + // unrinsed rinsable beans
+                    (s.sys.fert.fertilizedIndex -
+                        s.sys.fert.fertilizedPaidIndex +
+                        s.sys.fert.leftoverBeans) + // unrinsed rinsable beans
                     s.sys.silo.unripeSettings[C.UNRIPE_BEAN].balanceOfUnderlying; // unchopped underlying beans
                 for (uint256 j; j < s.sys.fieldCount; j++) {
                     entitlements[i] += (s.sys.fields[j].harvestable - s.sys.fields[j].harvested); // unharvested harvestable beans
@@ -186,9 +191,7 @@ abstract contract Invariable {
             } else if (tokens[i] == LibUnripe._getUnderlyingToken(C.UNRIPE_LP)) {
                 entitlements[i] += s.sys.silo.unripeSettings[C.UNRIPE_LP].balanceOfUnderlying;
             }
-            if (s.sys.sopWell != address(0) && tokens[i] == address(LibSilo.getSopToken())) {
-                entitlements[i] += s.sys.plenty;
-            }
+            entitlements[i] += s.sys.sop.plentyPerSopToken[tokens[i]];
             balances[i] = IERC20(tokens[i]).balanceOf(address(this));
         }
         return (entitlements, balances);

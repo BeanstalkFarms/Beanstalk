@@ -245,12 +245,14 @@ contract TestHelper is
         }
 
         // liquidity is removed first.
-        IWell(well).removeLiquidityImbalanced(
-            type(uint256).max,
-            removedTokens,
-            users[0],
-            type(uint256).max
-        );
+        if (removedTokens[0] > 0 || removedTokens[1] > 0) {
+            IWell(well).removeLiquidityImbalanced(
+                type(uint256).max,
+                removedTokens,
+                users[0],
+                type(uint256).max
+            );
+        }
 
         // mint amount to add to well, call sync.
         if (reserves[beanIndex] < beanAmount) {
@@ -263,6 +265,7 @@ contract TestHelper is
             );
         }
 
+        IWell(well).sync(users[0], 0);
         IWell(well).sync(users[0], 0);
     }
 
