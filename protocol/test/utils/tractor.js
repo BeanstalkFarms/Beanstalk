@@ -23,8 +23,8 @@ const RATIO_FACTOR = ethers.BigNumber.from(10).pow(ethers.BigNumber.from(18));
 
 // Copied from protocol/test/Tractor.test.js
 const ConvertKind = {
-  BEANS_TO_CURVE_LP: 0,
-  CURVE_LP_TO_BEANS: 1,
+  DEPRECATED_0: 0,
+  DEPRECATED_1: 1,
   UNRIPE_BEANS_TO_LP: 2,
   UNRIPE_LP_TO_BEANS: 3,
   BEANS_TO_WELL_LP: 5,

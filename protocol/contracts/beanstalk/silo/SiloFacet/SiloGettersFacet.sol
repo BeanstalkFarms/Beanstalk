@@ -4,8 +4,10 @@
 
 pragma solidity ^0.8.20;
 
-import {AppStorage, Storage, Account} from "contracts/beanstalk/AppStorage.sol";
-import {LibLegacyTokenSilo} from "contracts/libraries/Silo/LibLegacyTokenSilo.sol";
+import {AppStorage} from "contracts/beanstalk/storage/AppStorage.sol";
+import {GerminationSide} from "contracts/beanstalk/storage/System.sol";
+import {MowStatus} from "contracts/beanstalk/storage/Account.sol";
+import {AssetSettings} from "contracts/beanstalk/storage/System.sol";
 import {LibRedundantMath128} from "contracts/libraries/LibRedundantMath128.sol";
 import {LibGerminate} from "contracts/libraries/Silo/LibGerminate.sol";
 import {ReentrancyGuard} from "contracts/beanstalk/ReentrancyGuard.sol";
@@ -15,6 +17,7 @@ import {LibBytes} from "contracts/libraries/LibBytes.sol";
 import {LibSilo} from "contracts/libraries/Silo/LibSilo.sol";
 import {C} from "contracts/C.sol";
 import {LibWhitelistedTokens} from "contracts/libraries/Silo/LibWhitelistedTokens.sol";
+import {PerWellPlenty} from "contracts/beanstalk/storage/Account.sol";
 
 /**
  * @author Brean, pizzaman1337
@@ -42,7 +45,7 @@ contract SiloGettersFacet is ReentrancyGuard {
 
     struct FarmerSops {
         address well;
-        Account.PerWellPlenty wellsPlenty;
+        PerWellPlenty wellsPlenty;
     }
 
     //////////////////////// GETTERS ////////////////////////
@@ -68,7 +71,7 @@ contract SiloGettersFacet is ReentrancyGuard {
      * @dev does not include germinating tokens.
      */
     function getTotalDeposited(address token) external view returns (uint256) {
-        return s.siloBalances[token].deposited;
+        return s.sys.silo.balances[token].deposited;
     }
 
     /**
@@ -76,7 +79,7 @@ contract SiloGettersFacet is ReentrancyGuard {
      * @dev does not include germinating bdv.
      */
     function getTotalDepositedBdv(address token) external view returns (uint256) {
-        return s.siloBalances[token].depositedBdv;
+        return s.sys.silo.balances[token].depositedBdv;
     }
 
     /**
@@ -94,7 +97,7 @@ contract SiloGettersFacet is ReentrancyGuard {
     }
 
     /**
-     * @notice Get the Storage.SiloSettings for a whitelisted Silo token.
+     * @notice Get the AssetSettings for a whitelisted Silo token.
      *
      * Contains:
      *  - the BDV function selector
@@ -103,8 +106,8 @@ contract SiloGettersFacet is ReentrancyGuard {
      *  - milestoneSeason
      *  - lastStem
      */
-    function tokenSettings(address token) external view returns (Storage.SiloSettings memory) {
-        return s.ss[token];
+    function tokenSettings(address token) external view returns (AssetSettings memory) {
+        return s.sys.silo.assetSettings[token];
     }
 
     //////////////////////// ERC1155 ////////////////////////
@@ -115,7 +118,7 @@ contract SiloGettersFacet is ReentrancyGuard {
      * @dev see {getDeposit} for both the bdv and amount.
      */
     function balanceOf(address account, uint256 depositId) external view returns (uint256 amount) {
-        return s.a[account].deposits[depositId].amount;
+        return s.accts[account].deposits[depositId].amount;
     }
 
     /**
@@ -128,7 +131,7 @@ contract SiloGettersFacet is ReentrancyGuard {
         require(accounts.length == depositIds.length, "ERC1155: ids and amounts length mismatch");
         uint256[] memory balances = new uint256[](accounts.length);
         for (uint256 i = 0; i < accounts.length; i++) {
-            balances[i] = s.a[accounts[i]].deposits[depositIds[i]].amount;
+            balances[i] = s.accts[accounts[i]].deposits[depositIds[i]].amount;
         }
         return balances;
     }
@@ -153,7 +156,7 @@ contract SiloGettersFacet is ReentrancyGuard {
      * @notice Get the last Season in which `account` updated their Silo.
      */
     function lastUpdate(address account) external view returns (uint32) {
-        return s.a[account].lastUpdate;
+        return s.accts[account].lastUpdate;
     }
 
     //////////////////////// SILO: TOTALS ////////////////////////
@@ -162,7 +165,7 @@ contract SiloGettersFacet is ReentrancyGuard {
      * @notice Returns the total supply of Stalk. Does NOT include Grown Stalk.
      */
     function totalStalk() external view returns (uint256) {
-        return s.s.stalk;
+        return s.sys.silo.stalk;
     }
 
     /**
@@ -171,21 +174,24 @@ contract SiloGettersFacet is ReentrancyGuard {
     function getGerminatingStalkAndRootsForSeason(
         uint32 season
     ) external view returns (uint256, uint256) {
-        return (s.unclaimedGerminating[season].stalk, s.unclaimedGerminating[season].roots);
+        return (
+            s.sys.silo.unclaimedGerminating[season].stalk,
+            s.sys.silo.unclaimedGerminating[season].roots
+        );
     }
 
     /**
      * @notice Returns the unclaimed germinating stalk and roots for a season.
      */
     function getGerminatingStalkForSeason(uint32 season) external view returns (uint256) {
-        return (s.unclaimedGerminating[season].stalk);
+        return (s.sys.silo.unclaimedGerminating[season].stalk);
     }
 
     /**
      * @notice Returns the unclaimed germinating stalk and roots for a season.
      */
     function getGerminatingRootsForSeason(uint32 season) external view returns (uint256) {
-        return (s.unclaimedGerminating[season].roots);
+        return (s.sys.silo.unclaimedGerminating[season].roots);
     }
 
     /**
@@ -193,8 +199,8 @@ contract SiloGettersFacet is ReentrancyGuard {
      */
     function getTotalGerminatingStalk() external view returns (uint256) {
         return
-            s.unclaimedGerminating[s.season.current].stalk.add(
-                s.unclaimedGerminating[s.season.current - 1].stalk
+            s.sys.silo.unclaimedGerminating[s.sys.season.current].stalk.add(
+                s.sys.silo.unclaimedGerminating[s.sys.season.current - 1].stalk
             );
     }
 
@@ -212,8 +218,8 @@ contract SiloGettersFacet is ReentrancyGuard {
         returns (uint256 matureGerminatingStalk, uint256 youngGerminatingStalk)
     {
         return (
-            s.unclaimedGerminating[s.season.current - 1].stalk,
-            s.unclaimedGerminating[s.season.current].stalk
+            s.sys.silo.unclaimedGerminating[s.sys.season.current - 1].stalk,
+            s.sys.silo.unclaimedGerminating[s.sys.season.current].stalk
         );
     }
 
@@ -222,28 +228,37 @@ contract SiloGettersFacet is ReentrancyGuard {
      */
     function getTotalGerminatingAmount(address token) external view returns (uint256) {
         return
-            s.oddGerminating.deposited[token].amount.add(s.evenGerminating.deposited[token].amount);
+            s.sys.silo.germinating[GerminationSide.ODD][token].amount +
+            s.sys.silo.germinating[GerminationSide.EVEN][token].amount;
     }
 
     /**
      * @notice gets the total amount of bdv germinating for a given `token`.
      */
     function getTotalGerminatingBdv(address token) external view returns (uint256) {
-        return s.oddGerminating.deposited[token].bdv.add(s.evenGerminating.deposited[token].bdv);
+        return
+            s.sys.silo.germinating[GerminationSide.ODD][token].bdv +
+            s.sys.silo.germinating[GerminationSide.EVEN][token].bdv;
     }
 
     /**
      * @notice gets the odd germinating amount and bdv for a given `token`.
      */
     function getOddGerminating(address token) external view returns (uint256, uint256) {
-        return (s.oddGerminating.deposited[token].amount, s.oddGerminating.deposited[token].bdv);
+        return (
+            s.sys.silo.germinating[GerminationSide.ODD][token].amount,
+            s.sys.silo.germinating[GerminationSide.ODD][token].bdv
+        );
     }
 
     /**
      * @notice gets the even germinating amount and bdv for a given `token`.
      */
     function getEvenGerminating(address token) external view returns (uint256, uint256) {
-        return (s.evenGerminating.deposited[token].amount, s.evenGerminating.deposited[token].bdv);
+        return (
+            s.sys.silo.germinating[GerminationSide.EVEN][token].amount,
+            s.sys.silo.germinating[GerminationSide.EVEN][token].bdv
+        );
     }
 
     /**
@@ -254,8 +269,8 @@ contract SiloGettersFacet is ReentrancyGuard {
     ) external view returns (uint256 gStalk, uint256 gRoots) {
         (gStalk, gRoots) = LibGerminate.getFinishedGerminatingStalkAndRoots(
             account,
-            s.a[account].lastUpdate,
-            s.season.current
+            s.accts[account].lastUpdate,
+            s.sys.season.current
         );
     }
 
@@ -263,7 +278,7 @@ contract SiloGettersFacet is ReentrancyGuard {
      * @notice Returns the total supply of Roots.
      */
     function totalRoots() external view returns (uint256) {
-        return s.s.roots;
+        return s.sys.silo.roots;
     }
 
     /**
@@ -273,7 +288,7 @@ contract SiloGettersFacet is ReentrancyGuard {
      * distribution to Stalkholders during {SiloFacet-plant}.
      */
     function totalEarnedBeans() external view returns (uint256) {
-        return s.earnedBeans;
+        return s.sys.silo.earnedBeans;
     }
 
     //////////////////////// SILO: ACCOUNT BALANCES ////////////////////////
@@ -290,10 +305,10 @@ contract SiloGettersFacet is ReentrancyGuard {
     function balanceOfStalk(address account) external view returns (uint256) {
         (uint256 germinatingStalk, ) = LibGerminate.getFinishedGerminatingStalkAndRoots(
             account,
-            s.a[account].lastUpdate,
-            s.season.current
+            s.accts[account].lastUpdate,
+            s.sys.season.current
         );
-        return s.a[account].s.stalk.add(germinatingStalk).add(balanceOfEarnedStalk(account));
+        return s.accts[account].stalk.add(germinatingStalk).add(balanceOfEarnedStalk(account));
     }
 
     /**
@@ -302,7 +317,7 @@ contract SiloGettersFacet is ReentrancyGuard {
      * is not included.
      */
     function balanceOfGerminatingStalk(address account) external view returns (uint256) {
-        return LibGerminate.getCurrentGerminatingStalk(account, s.a[account].lastUpdate);
+        return LibGerminate.getCurrentGerminatingStalk(account, s.accts[account].lastUpdate);
     }
 
     /**
@@ -317,12 +332,12 @@ contract SiloGettersFacet is ReentrancyGuard {
     ) external view returns (uint256 matureGerminatingStalk, uint256 youngGerminatingStalk) {
         // if the last mowed season is less than the current season - 1,
         // then there are no germinating stalk and roots (as all germinating assets have finished).
-        if (s.a[account].lastUpdate < s.season.current - 1) {
+        if (s.accts[account].lastUpdate < s.sys.season.current - 1) {
             return (0, 0);
         } else {
             (youngGerminatingStalk, matureGerminatingStalk) = LibGerminate.getGerminatingStalk(
                 account,
-                LibGerminate.isSeasonOdd(s.a[account].lastUpdate)
+                LibGerminate.isSeasonOdd(s.accts[account].lastUpdate)
             );
         }
     }
@@ -344,10 +359,10 @@ contract SiloGettersFacet is ReentrancyGuard {
     function balanceOfRoots(address account) external view returns (uint256) {
         (, uint256 germinatingRoots) = LibGerminate.getFinishedGerminatingStalkAndRoots(
             account,
-            s.a[account].lastUpdate,
-            s.season.current
+            s.accts[account].lastUpdate,
+            s.sys.season.current
         );
-        return s.a[account].roots.add(germinatingRoots);
+        return s.accts[account].roots.add(germinatingRoots);
     }
 
     /**
@@ -360,9 +375,9 @@ contract SiloGettersFacet is ReentrancyGuard {
     function balanceOfGrownStalk(address account, address token) external view returns (uint256) {
         return
             LibSilo._balanceOfGrownStalk(
-                s.a[account].mowStatuses[token].lastStem, //last stem farmer mowed
+                s.accts[account].mowStatuses[token].lastStem, //last stem farmer mowed
                 LibTokenSilo.stemTipForToken(token), //get latest stem for this token
-                s.a[account].mowStatuses[token].bdv
+                s.accts[account].mowStatuses[token].bdv
             );
     }
 
@@ -389,11 +404,11 @@ contract SiloGettersFacet is ReentrancyGuard {
         (uint256 germinatingStalk, uint256 germinatingRoots) = LibGerminate
             .getFinishedGerminatingStalkAndRoots(
                 account,
-                s.a[account].lastUpdate,
-                s.season.current
+                s.accts[account].lastUpdate,
+                s.sys.season.current
             );
-        uint256 accountStalk = s.a[account].s.stalk.add(germinatingStalk);
-        uint256 accountRoots = s.a[account].roots.add(germinatingRoots);
+        uint256 accountStalk = s.accts[account].stalk.add(germinatingStalk);
+        uint256 accountRoots = s.accts[account].roots.add(germinatingRoots);
         beans = LibSilo._balanceOfEarnedBeans(accountStalk, accountRoots);
     }
 
@@ -414,7 +429,7 @@ contract SiloGettersFacet is ReentrancyGuard {
         address account,
         address token
     ) external view returns (uint256 depositedBdv) {
-        depositedBdv = s.a[account].mowStatuses[token].bdv;
+        depositedBdv = s.accts[account].mowStatuses[token].bdv;
     }
 
     /**
@@ -424,7 +439,7 @@ contract SiloGettersFacet is ReentrancyGuard {
         address account,
         address token
     ) external view returns (int96 lastStem) {
-        lastStem = s.a[account].mowStatuses[token].lastStem;
+        lastStem = s.accts[account].mowStatuses[token].lastStem;
     }
 
     /**
@@ -435,8 +450,8 @@ contract SiloGettersFacet is ReentrancyGuard {
     function getMowStatus(
         address account,
         address token
-    ) external view returns (Account.MowStatus memory mowStatus) {
-        mowStatus = s.a[account].mowStatuses[token];
+    ) external view returns (MowStatus memory mowStatus) {
+        mowStatus = s.accts[account].mowStatuses[token];
     }
 
     //////////////////////// SEASON OF PLENTY ////////////////////////
@@ -446,11 +461,11 @@ contract SiloGettersFacet is ReentrancyGuard {
      * Season of Plenty.
      */
     function lastSeasonOfPlenty() external view returns (uint32) {
-        return s.season.lastSop;
+        return s.sys.season.lastSop;
     }
 
     /**
-     * @notice Returns the `account` balance of unclaimed BEAN:3CRV earned from
+     * @notice Returns the `account` balance of unclaimed tokens earned from
      * Seasons of Plenty.
      */
     function balanceOfPlenty(address account, address well) external view returns (uint256 plenty) {
@@ -462,7 +477,7 @@ contract SiloGettersFacet is ReentrancyGuard {
      * Raining during a Silo update.
      */
     function balanceOfRainRoots(address account) external view returns (uint256) {
-        return s.a[account].sop.rainRoots;
+        return s.accts[account].sop.rainRoots;
     }
 
     /**
@@ -472,13 +487,13 @@ contract SiloGettersFacet is ReentrancyGuard {
     function balanceOfSop(
         address account
     ) external view returns (AccountSeasonOfPlenty memory sop) {
-        sop.lastRain = s.a[account].lastRain;
-        sop.lastSop = s.a[account].lastSop;
-        sop.roots = s.a[account].sop.rainRoots;
+        sop.lastRain = s.accts[account].lastRain;
+        sop.lastSop = s.accts[account].lastSop;
+        sop.roots = s.accts[account].sop.rainRoots;
         address[] memory wells = LibWhitelistedTokens.getWhitelistedWellLpTokens();
         sop.farmerSops = new FarmerSops[](wells.length);
         for (uint256 i; i < wells.length; i++) {
-            Account.PerWellPlenty memory wellSop = s.a[account].sop.perWellPlenty[wells[i]];
+            PerWellPlenty memory wellSop = s.accts[account].sop.perWellPlenty[wells[i]];
             FarmerSops memory farmerSops = FarmerSops(wells[i], wellSop);
             sop.farmerSops[i] = farmerSops;
         }
@@ -501,30 +516,23 @@ contract SiloGettersFacet is ReentrancyGuard {
         _stemTip = LibTokenSilo.stemTipForToken(token);
     }
 
-    /**
-     * @notice given the season/token, returns the stem assoicated with that deposit.
-     * kept for legacy reasons.
-     */
-    function seasonToStem(address token, uint32 season) external view returns (int96 stem) {
-        uint256 seedsPerBdv = getLegacySeedsPerToken(token).mul(1e6);
-        stem = LibLegacyTokenSilo.seasonToStem(seedsPerBdv, season);
-    }
-
-    /**
-     * @notice returns the seeds per token, for legacy tokens.
-     * calling with an non-legacy token will return 0,
-     * even after the token is whitelisted.
-     * kept for legacy reasons.
-     */
-    function getLegacySeedsPerToken(address token) public view virtual returns (uint256) {
-        return LibLegacyTokenSilo.getLegacySeedsPerToken(token);
+    function calculateStemForTokenFromGrownStalk(
+        address token,
+        uint256 grownStalk,
+        uint256 bdvOfDeposit
+    ) external view returns (int96 stem, GerminationSide germ) {
+        (stem, germ) = LibTokenSilo.calculateStemForTokenFromGrownStalk(
+            token,
+            grownStalk,
+            bdvOfDeposit
+        );
     }
 
     /**
      * @notice returns the season in which beanstalk initalized siloV3.
      */
     function stemStartSeason() external view virtual returns (uint16) {
-        return s.season.stemStartSeason;
+        return s.sys.season.stemStartSeason;
     }
 
     /**
@@ -540,6 +548,6 @@ contract SiloGettersFacet is ReentrancyGuard {
      * @notice Returns the current Season number.
      */
     function _season() internal view returns (uint32) {
-        return s.season.current;
+        return s.sys.season.current;
     }
 }

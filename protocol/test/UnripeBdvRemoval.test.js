@@ -3,15 +3,7 @@ const { deploy } = require("../scripts/deploy.js");
 const { readPrune, toBN } = require("../utils");
 const { getBeanstalk } = require("../utils/contracts.js");
 const { EXTERNAL } = require("./utils/balances.js");
-const {
-  BEAN,
-  THREE_POOL,
-  BEAN_3_CURVE,
-  UNRIPE_LP,
-  UNRIPE_BEAN,
-  THREE_CURVE,
-  ZERO_BYTES
-} = require("./utils/constants");
+const { BEAN, UNRIPE_LP, UNRIPE_BEAN, ZERO_BYTES } = require("./utils/constants");
 const { to18, toStalk, to6 } = require("./utils/helpers.js");
 const { takeSnapshot, revertToSnapshot } = require("./utils/snapshot");
 const { getAllBeanstalkContracts } = require("../utils/contracts");
@@ -43,16 +35,6 @@ describe("Silo Enroot", function () {
     // `beanstalk` contains all functions that the regualar beanstalk has.
     // `mockBeanstalk` has functions that are only available in the mockFacets.
     [beanstalk, mockBeanstalk] = await getAllBeanstalkContracts(this.diamond.address);
-
-    this.migrate = await ethers.getContractAt("MigrationFacet", this.diamond.address);
-
-    this.threeCurve = await ethers.getContractAt("MockToken", THREE_CURVE);
-    this.beanMetapool = await ethers.getContractAt("IMockCurvePool", BEAN_3_CURVE);
-    await this.beanMetapool.set_supply(ethers.utils.parseUnits("2000000", 6));
-    await this.beanMetapool.set_balances([
-      ethers.utils.parseUnits("1000000", 6),
-      ethers.utils.parseEther("1000000")
-    ]);
 
     const SiloToken = await ethers.getContractFactory("MockToken");
     this.siloToken = await SiloToken.deploy("Silo", "SILO");
@@ -96,17 +78,6 @@ describe("Silo Enroot", function () {
     await mockBeanstalk.addUnripeToken(UNRIPE_LP, this.siloToken.address, ZERO_BYTES);
     await mockBeanstalk.connect(owner).addUnderlying(UNRIPE_LP, toBN(pru).mul(toBN("10000")));
 
-    this.beanThreeCurve = await ethers.getContractAt("MockMeta3Curve", BEAN_3_CURVE);
-    await this.beanThreeCurve.set_supply(ethers.utils.parseEther("2000000"));
-    await this.beanThreeCurve.set_balances([
-      ethers.utils.parseUnits("1000000", 6),
-      ethers.utils.parseEther("1000000")
-    ]);
-    await this.beanThreeCurve.set_balances([
-      ethers.utils.parseUnits("1200000", 6),
-      ethers.utils.parseEther("1000000")
-    ]);
-
     season = await beanstalk.season();
   });
 
@@ -124,10 +95,8 @@ describe("Silo Enroot", function () {
         // 158328 * 0.185564685220298701 ~= 29380.085
         // 158327 * 0.185564685220298701 ~= 29379.899
         // floor(29380.085) - floor(29379.899) = 1
-        await mockBeanstalk.connect(user).mockUnripeBeanDeposit(season, "158328");
 
         mockBeanstalk.deployStemsUpgrade();
-        this.stem = await mockBeanstalk.mockSeasonToStem(UNRIPE_BEAN, season);
 
         // call sunrise twice to avoid germination error.
         // note that `mockUnripeBeanDeposit` increments correctly,
@@ -135,15 +104,10 @@ describe("Silo Enroot", function () {
         await mockBeanstalk.siloSunrise(0);
         await mockBeanstalk.siloSunrise(0);
 
-        await this.migrate.mowAndMigrate(
-          user.address,
-          [UNRIPE_BEAN],
-          [[season]],
-          [[158328]],
-          0,
-          0,
-          []
-        );
+        this.stem = 0;
+        await mockBeanstalk
+          .connect(user)
+          .depositAtStemAndBdv(UNRIPE_BEAN, "158328", this.stem, "29380", 0);
 
         await beanstalk.connect(user).withdrawDeposit(UNRIPE_BEAN, this.stem, "158327", EXTERNAL);
       });

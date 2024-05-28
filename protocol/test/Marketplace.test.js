@@ -1,6 +1,5 @@
 const { EXTERNAL, INTERNAL } = require("./utils/balances.js");
-const { Fixed, Dynamic } = require("./utils/priceTypes.js");
-const { interpolatePoints } = require("./utils/interpolater.js");
+const { Fixed } = require("./utils/priceTypes.js");
 const { expect, use } = require("chai");
 const { waffleChai } = require("@ethereum-waffle/chai");
 use(waffleChai);
@@ -34,137 +33,79 @@ describe("Marketplace", function () {
 
     bean = await getBean();
 
-    await bean.mint(user.address, "500000");
-    await bean.mint(user2.address, "500000");
+    await bean.mint(user.address, 500000);
+    await bean.mint(user2.address, 500000);
 
     await mockBeanstalk.siloSunrise(0);
 
     await bean.connect(user).approve(beanstalk.address, "100000000000");
     await bean.connect(user2).approve(beanstalk.address, "100000000000");
 
-    await mockBeanstalk.incrementTotalSoilE("100000");
-    await mockBeanstalk.setYieldE("0");
-    await beanstalk.connect(user).sow("1000", "0", EXTERNAL);
-    await beanstalk.connect(user2).sow("1000", "0", EXTERNAL);
+    await mockBeanstalk.incrementTotalSoilE(100000);
+    await mockBeanstalk.setYieldE(0);
+    await beanstalk.connect(user).sow(1000, 0, EXTERNAL);
+    await beanstalk.connect(user2).sow(1000, 0, EXTERNAL);
   });
 
-  const getHash = async function (tx) {
-    let receipt = await tx.wait();
-    var args = (receipt.events?.filter((x) => {
-      return x.event == "PodListingCreated";
-    }))[0]?.args;
-    if (args.minFillAmount > 0) {
-      return ethers.utils.solidityKeccak256(
-        ["uint256", "uint256", "uint24", "uint256", "uint256", "bool"],
-        [
-          args.start,
-          args.amount,
-          args.pricePerPod,
-          args.maxHarvestableIndex,
-          args.minFillAmount,
-          args.mode == EXTERNAL
-        ]
-      );
-    } else {
-      return ethers.utils.solidityKeccak256(
-        ["uint256", "uint256", "uint24", "uint256", "bool"],
-        [args.start, args.amount, args.pricePerPod, args.maxHarvestableIndex, args.mode == EXTERNAL]
-      );
-    }
-  };
-
-  const getHashFromDynamicListing = function (l) {
-    //listing input must contain 'minFillAmount' param
-    l[5] = l[5] == EXTERNAL;
+  const getHashFromListing = function (l) {
     return ethers.utils.solidityKeccak256(
-      ["uint256", "uint256", "uint24", "uint256", "uint256", "bool", "bytes"],
-      l
+      [
+        "address",
+        "uint256",
+        "uint256",
+        "uint256",
+        "uint256",
+        "uint24",
+        "uint256",
+        "uint256",
+        "uint8"
+      ],
+      [
+        l.lister,
+        l.fieldId,
+        l.index,
+        l.start,
+        l.podAmount,
+        l.pricePerPod,
+        l.maxHarvestableIndex,
+        l.minFillAmount,
+        l.mode
+      ]
     );
   };
 
-  const getHashFromListing = function (l) {
-    //listing input must contain 'minFillAmount' param
-
-    l[5] = l[5] == EXTERNAL;
-    if (l[4] > 0) {
-      return ethers.utils.solidityKeccak256(
-        ["uint256", "uint256", "uint24", "uint256", "uint256", "bool"],
-        l
-      );
-    } else {
-      l.splice(4, 1);
-      return ethers.utils.solidityKeccak256(["uint256", "uint256", "uint24", "uint256", "bool"], l);
-    }
+  const PodListing = function (
+    lister,
+    fieldId,
+    index,
+    start,
+    podAmount,
+    pricePerPod,
+    maxHarvestableIndex,
+    minFillAmount,
+    mode
+  ) {
+    return {
+      lister: lister,
+      fieldId: fieldId,
+      index: index,
+      start: start,
+      podAmount: podAmount,
+      pricePerPod: pricePerPod,
+      maxHarvestableIndex: maxHarvestableIndex,
+      minFillAmount: minFillAmount,
+      mode: mode
+    };
   };
 
-  const getOrderId = async function (tx) {
-    let receipt = await tx.wait();
-    let idx = (receipt.events?.filter((x) => {
-      return x.event == "PodOrderCreated";
-    }))[0].args.id;
-    return idx;
-  };
-
-  const staticset_16Pieces_500000 = {
-    xs: [
-      0, 1000, 2000, 3000, 4000, 5000, 6000, 7000, 8000, 9000, 10000, 11000, 12000, 13000, 14000,
-      15000
-    ],
-    ys: [
-      500000, 500000, 500000, 500000, 500000, 500000, 500000, 500000, 500000, 500000, 500000,
-      500000, 500000, 500000, 500000, 500000
-    ]
-  };
-
-  const staticset_64Pieces_500000 = {
-    xs: [
-      0, 1000, 2000, 3000, 4000, 5000, 6000, 7000, 8000, 9000, 10000, 11000, 12000, 13000, 14000,
-      15000, 16000, 17000, 18000, 19000, 20000, 21000, 22000, 23000, 24000, 25000, 26000, 27000,
-      28000, 29000, 30000, 31000, 32000, 33000, 34000, 35000, 36000, 37000, 38000, 39000, 40000,
-      41000, 42000, 43000, 44000, 45000, 46000, 47000, 48000, 49000, 50000, 51000, 52000, 53000,
-      54000, 55000, 56000, 57000, 58000, 59000, 60000, 61000, 62000, 63000
-    ],
-    ys: [
-      500000, 500000, 500000, 500000, 500000, 500000, 500000, 500000, 500000, 500000, 500000,
-      500000, 500000, 500000, 500000, 500000, 500000, 500000, 500000, 500000, 500000, 500000,
-      500000, 500000, 500000, 500000, 500000, 500000, 500000, 500000, 500000, 500000, 500000,
-      500000, 500000, 500000, 500000, 500000, 500000, 500000, 500000, 500000, 500000, 500000,
-      500000, 500000, 500000, 500000, 500000, 500000, 500000, 500000, 500000, 500000, 500000,
-      500000, 500000, 500000, 500000, 500000, 500000, 500000, 500000, 500000
-    ]
-  };
-
-  const staticset_4Pieces_100000 = {
-    xs: [0, 5000, 6000, 7000],
-    ys: [100000, 100000, 100000, 100000]
-  };
-
-  const set_16Pieces = {
-    xs: [100, 200, 400, 600, 800, 1000, 1200, 1400, 1600, 1800, 2000, 2200, 2400, 2600, 2800, 3000],
-    ys: [
-      900000, 900000, 900000, 900000, 900000, 800000, 800000, 800000, 800000, 775000, 750000,
-      725000, 700000, 675000, 650000, 625000
-    ]
-  };
-
-  const set_13Pieces = {
-    xs: [1000, 5000, 6000, 7000, 8000, 9000, 10000, 11000, 12000, 13000, 14000, 18000, 20000],
-    ys: [
-      1000000, 990000, 980000, 950000, 890000, 790000, 680000, 670000, 660000, 570000, 470000,
-      450000, 430000
-    ]
-  };
-
-  const hugeValueSet_13Pieces = {
-    xs: [
-      10000000000000, 50000000000000, 60000000000000, 70000000000000, 80000000000000,
-      90000000000000, 100000000000000, 110000000000000, 120000000000000, 130000000000000,
-      140000000000000, 180000000000000, 200000000000000
-    ],
-    ys: [
-      1000000, 990000, 980000, 950000, 890000, 790000, 680000, 670000, 660000, 570000, 470000,
-      450000, 430000
-    ]
+  const PodOrder = function (orderer, fieldId, pricePerPod, maxPlaceInLine, minFillAmount) {
+    return {
+      orderer: orderer,
+      fieldId: fieldId,
+      pricePerPod: pricePerPod,
+      maxPlaceInLine: maxPlaceInLine,
+      minFillAmount: minFillAmount
+    };
   };
 
   beforeEach(async function () {
@@ -179,166 +120,184 @@ describe("Marketplace", function () {
     describe("Fixed Price", async function () {
       describe("Create", async function () {
         it("Fails to List Unowned Plot", async function () {
-          await expect(
-            mockBeanstalk
-              .connect(user)
-              .createPodListing("5000", "0", "1000", "100000", "0", "0", INTERNAL)
-          ).to.be.revertedWith("Marketplace: Invalid Plot/Amount.");
+          let podListing = PodListing(user.address, 0, 5000, 0, 1000, 100000, 0, 0, INTERNAL);
+          await expect(mockBeanstalk.connect(user).createPodListing(podListing)).to.be.revertedWith(
+            "Marketplace: Invalid Plot."
+          );
         });
 
         it("Fails if already expired", async function () {
-          await mockBeanstalk.incrementTotalHarvestableE("2000");
-          await expect(
-            mockBeanstalk
-              .connect(user)
-              .createPodListing("0", "0", "500", "100000", "0", "0", INTERNAL)
-          ).to.be.revertedWith("Marketplace: Expired.");
+          let podListing = PodListing(user.address, 0, 0, 0, 500, 100000, 0, 0, INTERNAL);
+          await mockBeanstalk.incrementTotalHarvestableE(0, 2000);
+          await expect(mockBeanstalk.connect(user).createPodListing(podListing)).to.be.revertedWith(
+            "Marketplace: Expired."
+          );
         });
 
         it("Fails if amount is 0", async function () {
+          let podListing = PodListing(user2.address, 0, 1000, 0, 0, 100000, 0, 0, INTERNAL);
           await expect(
-            mockBeanstalk
-              .connect(user2)
-              .createPodListing("1000", "0", "0", "100000", "0", "0", INTERNAL)
-          ).to.be.revertedWith("Marketplace: Invalid Plot/Amount.");
+            mockBeanstalk.connect(user2).createPodListing(podListing)
+          ).to.be.revertedWith("Marketplace: Invalid Amount.");
         });
 
         it("fails if price is 0", async function () {
+          let podListing = PodListing(user2.address, 0, 1000, 0, 1000, 0, 0, 0, INTERNAL);
           await expect(
-            mockBeanstalk
-              .connect(user2)
-              .createPodListing("1000", "0", "1000", "0", "0", "0", INTERNAL)
+            mockBeanstalk.connect(user2).createPodListing(podListing)
           ).to.be.revertedWith("Marketplace: Pod price must be greater than 0.");
         });
 
-        it("Fails if start + amount too large", async function () {
+        it("Fails if address mismatch", async function () {
+          let podListing = PodListing(user.address, 0, 1000, 0, 1000, 100000, 0, 0, INTERNAL);
           await expect(
-            mockBeanstalk
-              .connect(user2)
-              .createPodListing("1000", "500", "1000", "100000", "0", "0", INTERNAL)
-          ).to.be.revertedWith("Marketplace: Invalid Plot/Amount.");
+            mockBeanstalk.connect(user2).createPodListing(podListing)
+          ).to.be.revertedWith("Marketplace: Non-user create listing.");
+        });
+
+        it("Fails if field does not exist", async function () {
+          let podListing = PodListing(user2.address, 420, 1000, 0, 1000, 100000, 0, 0, INTERNAL);
+          await expect(
+            mockBeanstalk.connect(user2).createPodListing(podListing)
+          ).to.be.revertedWith("Marketplace: Invalid Plot.");
+        });
+
+        it("Fails if start + amount too large", async function () {
+          let podListing = PodListing(user2.address, 0, 1000, 500, 1000, 100000, 0, 0, INTERNAL);
+          await expect(
+            mockBeanstalk.connect(user2).createPodListing(podListing)
+          ).to.be.revertedWith("Marketplace: Invalid Plot.");
         });
 
         describe("List full plot", async function () {
           beforeEach(async function () {
-            this.result = await mockBeanstalk
-              .connect(user)
-              .createPodListing("0", "0", "1000", "500000", "0", "0", EXTERNAL);
+            this.podListing = PodListing(user.address, 0, 0, 0, 1000, 500000, 0, 0, EXTERNAL);
+            this.result = await mockBeanstalk.connect(user).createPodListing(this.podListing);
+            this.listingId = getHashFromListing(this.podListing);
           });
 
           it("Lists Plot properly", async function () {
-            expect(await mockBeanstalk.podListing(0)).to.be.equal(await getHash(this.result));
+            expect(
+              await mockBeanstalk.podListing(this.podListing.fieldId, this.podListing.index)
+            ).to.be.equal(this.listingId);
           });
 
           it("Emits event", async function () {
             await expect(this.result)
               .to.emit(mockBeanstalk, "PodListingCreated")
-              .withArgs(user.address, "0", "0", "1000", 500000, "0", "0", 0);
+              .withArgs(user.address, 0, 0, 0, 1000, 500000, 0, 0, 0);
           });
         });
 
         describe("List full plot with minimum amount", async function () {
           beforeEach(async function () {
-            this.result = await mockBeanstalk
-              .connect(user)
-              .createPodListing("0", "0", "1000", "500000", "0", "100", EXTERNAL);
+            this.podListing = PodListing(user.address, 0, 0, 0, 1000, 500000, 0, 100, EXTERNAL);
+            this.result = await mockBeanstalk.connect(user).createPodListing(this.podListing);
           });
+          this.listingId = await getHashFromListing(this.podListing);
 
           it("Lists Plot properly", async function () {
-            expect(await mockBeanstalk.podListing(0)).to.be.equal(await getHash(this.result));
+            expect(
+              await mockBeanstalk.podListing(this.podListing.fieldId, this.podListing.index)
+            ).to.be.equal(this.listingId);
           });
 
           it("Emits event", async function () {
             await expect(this.result)
               .to.emit(mockBeanstalk, "PodListingCreated")
-              .withArgs(user.address, "0", "0", "1000", 500000, "0", "100", 0);
+              .withArgs(user.address, 0, 0, 0, 1000, 500000, 0, 100, 0);
           });
         });
 
         describe("List partial plot", async function () {
           beforeEach(async function () {
-            this.result = await mockBeanstalk
-              .connect(user)
-              .createPodListing("0", "0", "100", "100000", "0", "0", EXTERNAL);
-            this.result = await mockBeanstalk
-              .connect(user)
-              .createPodListing("0", "0", "500", "500000", "0", "0", EXTERNAL);
+            this.podListing = PodListing(user.address, 0, 123, 0, 100, 100000, 0, 0, EXTERNAL);
+            this.result = await mockBeanstalk.connect(user).createPodListing(this.podListing);
+            this.podListing = PodListing(user.address, 0, 123, 0, 500, 500000, 0, 0, EXTERNAL);
+            this.result = await mockBeanstalk.connect(user).createPodListing(this.podListing);
           });
+          this.listingId = getHashFromListing(this.podListing);
 
           it("Lists Plot properly", async function () {
-            expect(await mockBeanstalk.podListing(0)).to.be.equal(await getHash(this.result));
+            expect(
+              await mockBeanstalk.podListing(this.podListing.fieldId, this.podListing.index)
+            ).to.be.equal(this.listingId);
           });
 
           it("Emits event", async function () {
             await expect(this.result)
               .to.emit(mockBeanstalk, "PodListingCreated")
-              .withArgs(user.address, 0, 0, "500", 500000, 0, "0", 0);
+              .withArgs(user.address, 0, 123, 0, 500, 500000, 0, 0, 0);
           });
         });
 
         describe("List partial plot from middle", async function () {
           beforeEach(async function () {
-            this.result = await mockBeanstalk
-              .connect(user)
-              .createPodListing("0", "500", "500", "500000", "2000", "0", INTERNAL);
+            this.podListing = PodListing(user.address, 0, 0, 500, 500, 500000, 2000, 0, INTERNAL);
+            this.result = await mockBeanstalk.connect(user).createPodListing(this.podListing);
+            this.listingId = await getHashFromListing(this.podListing);
           });
 
           it("Lists Plot properly", async function () {
-            expect(await mockBeanstalk.podListing(0)).to.be.equal(await getHash(this.result));
+            expect(
+              await mockBeanstalk.podListing(this.podListing.fieldId, this.podListing.index)
+            ).to.be.equal(this.listingId);
           });
 
           it("Emits event", async function () {
             await expect(this.result)
               .to.emit(mockBeanstalk, "PodListingCreated")
-              .withArgs(user.address, 0, 500, "500", 500000, 2000, "0", 1);
+              .withArgs(user.address, 0, 0, 500, 500, 500000, 2000, 0, 1);
           });
         });
 
         describe("Relist plot from middle", async function () {
           beforeEach(async function () {
-            this.result = await mockBeanstalk
-              .connect(user)
-              .createPodListing("0", "0", "500", "500000", "0", "0", INTERNAL);
-            this.result = await mockBeanstalk
-              .connect(user)
-              .createPodListing("0", "500", "100", "500000", "2000", "0", INTERNAL);
+            this.podListing = PodListing(user.address, 0, 0, 0, 500, 500000, 0, 0, INTERNAL);
+            this.result = await mockBeanstalk.connect(user).createPodListing(this.podListing);
+            this.podListing = PodListing(user.address, 0, 0, 500, 100, 500000, 2000, 0, INTERNAL);
+            this.result = await mockBeanstalk.connect(user).createPodListing(this.podListing);
+            this.listingId = await getHashFromListing(this.podListing);
           });
 
           it("Lists Plot properly", async function () {
-            expect(await mockBeanstalk.podListing(0)).to.be.equal(await getHash(this.result));
+            expect(
+              await mockBeanstalk.podListing(this.podListing.fieldId, this.podListing.index)
+            ).to.be.equal(this.listingId);
           });
 
           it("Emits event", async function () {
             await expect(this.result)
               .to.emit(mockBeanstalk, "PodListingCancelled")
-              .withArgs(user.address, 0);
+              .withArgs(user.address, 0, 0);
             await expect(this.result)
               .to.emit(mockBeanstalk, "PodListingCreated")
-              .withArgs(user.address, 0, 500, "100", 500000, 2000, "0", 1);
+              .withArgs(user.address, 0, 0, 500, 100, 500000, 2000, 0, 1);
           });
         });
 
         describe("Relist plot from middle with minimum amount", async function () {
           beforeEach(async function () {
-            this.result = await mockBeanstalk
-              .connect(user)
-              .createPodListing("0", "0", "500", "500000", "0", "100", INTERNAL);
-            this.result = await mockBeanstalk
-              .connect(user)
-              .createPodListing("0", "500", "100", "500000", "2000", "100", INTERNAL);
+            this.podListing = PodListing(user.address, 0, 0, 0, 500, 500000, 0, 100, INTERNAL);
+            this.result = await mockBeanstalk.connect(user).createPodListing(this.podListing);
+            this.podListing = PodListing(user.address, 0, 0, 500, 100, 500000, 2000, 100, INTERNAL);
+            this.result = await mockBeanstalk.connect(user).createPodListing(this.podListing);
+            this.listingId = await getHashFromListing(this.podListing);
           });
 
           it("Lists Plot properly", async function () {
-            expect(await mockBeanstalk.podListing(0)).to.be.equal(await getHash(this.result));
+            expect(
+              await mockBeanstalk.podListing(this.podListing.fieldId, this.podListing.index)
+            ).to.be.equal(this.listingId);
           });
 
           it("Emits event", async function () {
             await expect(this.result)
               .to.emit(mockBeanstalk, "PodListingCancelled")
-              .withArgs(user.address, 0);
+              .withArgs(user.address, 0, 0);
             await expect(this.result)
               .to.emit(mockBeanstalk, "PodListingCreated")
-              .withArgs(user.address, 0, 500, "100", 500000, 2000, "100", 1);
+              .withArgs(user.address, 0, 0, 500, 100, 500000, 2000, 100, 1);
           });
         });
       });
@@ -346,72 +305,66 @@ describe("Marketplace", function () {
       describe("Fill", async function () {
         describe("revert", async function () {
           beforeEach(async function () {
-            await mockBeanstalk
-              .connect(user)
-              .createPodListing("0", "0", "1000", "500000", "0", "10", EXTERNAL);
-            this.listing = [user.address, "0", "0", "1000", 500000, "0", "10", EXTERNAL];
+            this.podListing = PodListing(user.address, 0, 0, 0, 1000, 500000, 0, "10", EXTERNAL);
+            await mockBeanstalk.connect(user).createPodListing(this.podListing);
           });
 
           it("Fill Listing non-listed Index Fails", async function () {
-            let brokenListing = this.listing;
-            brokenListing[1] = "1";
+            let brokenListing = this.podListing;
+            brokenListing.index = 1;
             await expect(
               mockBeanstalk.connect(user).fillPodListing(brokenListing, 500, EXTERNAL)
             ).to.be.revertedWith("Marketplace: Listing does not exist.");
           });
 
           it("Fill Listing wrong start Index Fails", async function () {
-            let brokenListing = this.listing;
-            brokenListing[2] = "1";
+            let brokenListing = this.podListing;
+            brokenListing.start = 1;
             await expect(
               mockBeanstalk.connect(user).fillPodListing(brokenListing, 500, EXTERNAL)
             ).to.be.revertedWith("Marketplace: Listing does not exist.");
           });
 
           it("Fill Listing wrong price Fails", async function () {
-            let brokenListing = this.listing;
-            brokenListing[4] = "100001";
+            let brokenListing = this.podListing;
+            brokenListing.pricePerPod = "100001";
             await expect(
               mockBeanstalk.connect(user).fillPodListing(brokenListing, 500, EXTERNAL)
             ).to.be.revertedWith("Marketplace: Listing does not exist.");
           });
 
           it("Fill Listing after expired", async function () {
-            await mockBeanstalk.incrementTotalHarvestableE("2000");
+            await mockBeanstalk.incrementTotalHarvestableE(0, 2000);
             await expect(
-              mockBeanstalk.connect(user2).fillPodListing(this.listing, 500, EXTERNAL)
+              mockBeanstalk.connect(user2).fillPodListing(this.podListing, 500, EXTERNAL)
             ).to.be.revertedWith("Marketplace: Listing has expired.");
           });
 
           it("Fill Listing not enough pods in plot", async function () {
             await expect(
-              mockBeanstalk.connect(user2).fillPodListing(this.listing, 501, EXTERNAL)
+              mockBeanstalk.connect(user2).fillPodListing(this.podListing, 501, EXTERNAL)
             ).to.be.revertedWith("Marketplace: Not enough pods in Listing.");
           });
 
           it("Fill Listing not enough pods in listing", async function () {
-            const l = [user.address, "0", "0", "500", "500000", "0", "0", INTERNAL];
-            await mockBeanstalk
-              .connect(user)
-              .createPodListing("0", "0", "500", "500000", "0", "0", INTERNAL);
+            const podListing = PodListing(user.address, 0, 0, 0, 500, 500000, 0, 0, INTERNAL);
+            await mockBeanstalk.connect(user).createPodListing(podListing);
             await expect(
-              mockBeanstalk.connect(user2).fillPodListing(l, 500, EXTERNAL)
+              mockBeanstalk.connect(user2).fillPodListing(podListing, 500, EXTERNAL)
             ).to.be.revertedWith("Marketplace: Not enough pods in Listing.");
           });
 
           it("Fails if filling under minimum amount of Pods", async function () {
             await expect(
-              mockBeanstalk.connect(user2).fillPodListing(this.listing, "1", EXTERNAL)
+              mockBeanstalk.connect(user2).fillPodListing(this.podListing, 1, EXTERNAL)
             ).to.be.revertedWith("Marketplace: Fill must be >= minimum amount.");
           });
         });
 
         describe("Fill listing", async function () {
           beforeEach(async function () {
-            this.listing = [user.address, "0", "0", "1000", "500000", "0", "0", EXTERNAL];
-            await mockBeanstalk
-              .connect(user)
-              .createPodListing("0", "0", "1000", "500000", "0", "0", EXTERNAL);
+            this.podListing = PodListing(user.address, 0, 0, 0, 1000, 500000, 0, 0, EXTERNAL);
+            await mockBeanstalk.connect(user).createPodListing(this.podListing);
             this.amountBeansBuyingWith = 500;
 
             this.userBeanBalance = await bean.balanceOf(user.address);
@@ -419,7 +372,7 @@ describe("Marketplace", function () {
 
             this.result = await mockBeanstalk
               .connect(user2)
-              .fillPodListing(this.listing, this.amountBeansBuyingWith, EXTERNAL);
+              .fillPodListing(this.podListing, this.amountBeansBuyingWith, EXTERNAL);
 
             this.user2BeanBalanceAfter = await bean.balanceOf(user2.address);
             this.userBeanBalanceAfter = await bean.balanceOf(user.address);
@@ -436,27 +389,25 @@ describe("Marketplace", function () {
           });
 
           it("Deletes Pod Listing", async function () {
-            expect(await mockBeanstalk.podListing(0)).to.equal(ZERO_HASH);
+            expect(await mockBeanstalk.podListing(0, 0)).to.equal(ZERO_HASH);
           });
 
           it("transfer pod listing", async function () {
-            expect((await beanstalk.plot(user2.address, 0)).toString()).to.equal("1000");
-            expect((await beanstalk.plot(user.address, 0)).toString()).to.equal("0");
+            expect(await beanstalk.plot(user2.address, 0, 0)).to.equal(1000);
+            expect(await beanstalk.plot(user.address, 0, 0)).to.equal(0);
           });
 
           it("emits event", async function () {
             await expect(this.result)
               .to.emit(mockBeanstalk, "PodListingFilled")
-              .withArgs(user.address, user2.address, 0, 0, "1000", "500");
+              .withArgs(user2.address, user.address, 0, 0, 0, 1000, 500);
           });
         });
 
         describe("Fill partial listing", async function () {
           beforeEach(async function () {
-            this.listing = [user.address, "0", "0", "1000", "500000", "0", "0", EXTERNAL];
-            await mockBeanstalk
-              .connect(user)
-              .createPodListing("0", "0", "1000", "500000", "0", "0", EXTERNAL);
+            this.podListing = PodListing(user.address, 0, 0, 0, 1000, 500000, 0, 0, EXTERNAL);
+            await mockBeanstalk.connect(user).createPodListing(this.podListing);
             this.amountBeansBuyingWith = 250;
 
             this.userBeanBalance = await bean.balanceOf(user.address);
@@ -464,7 +415,7 @@ describe("Marketplace", function () {
 
             this.result = await mockBeanstalk
               .connect(user2)
-              .fillPodListing(this.listing, this.amountBeansBuyingWith, EXTERNAL);
+              .fillPodListing(this.podListing, this.amountBeansBuyingWith, EXTERNAL);
 
             this.user2BeanBalanceAfter = await bean.balanceOf(user2.address);
             this.userBeanBalanceAfter = await bean.balanceOf(user.address);
@@ -480,39 +431,32 @@ describe("Marketplace", function () {
             expect(await beanstalk.getInternalBalance(user.address, bean.address)).to.equal(0);
           });
 
-          it("Deletes Pod Listing", async function () {
-            expect(await mockBeanstalk.podListing(0)).to.equal(ZERO_HASH);
-            expect(await mockBeanstalk.podListing(500)).to.equal(
-              getHashFromListing([
-                "0",
-                "500",
-                this.listing[4],
-                this.listing[5],
-                this.listing[6],
-                this.listing[7]
-              ])
-            );
+          it("transfer pod listing", async function () {
+            expect(await beanstalk.plot(user2.address, 0, 0)).to.equal(500);
+            expect(await beanstalk.plot(user.address, 0, 0)).to.equal(0);
+            expect(await beanstalk.plot(user.address, 0, 500)).to.equal(500);
           });
 
-          it("transfer pod listing", async function () {
-            expect((await beanstalk.plot(user2.address, 0)).toString()).to.equal("500");
-            expect((await beanstalk.plot(user.address, 0)).toString()).to.equal("0");
-            expect((await beanstalk.plot(user.address, 500)).toString()).to.equal("500");
+          it("Deletes Pod Listing", async function () {
+            let newListing = this.podListing;
+            newListing.index = 500;
+            newListing.start = 0;
+            newListing.podAmount = 500;
+            expect(await mockBeanstalk.podListing(0, 0)).to.equal(ZERO_HASH);
+            expect(await mockBeanstalk.podListing(0, 500)).to.equal(getHashFromListing(newListing));
           });
 
           it("emits event", async function () {
             await expect(this.result)
               .to.emit(mockBeanstalk, "PodListingFilled")
-              .withArgs(user.address, user2.address, 0, 0, "500", "250");
+              .withArgs(user2.address, user.address, 0, 0, 0, 500, "250");
           });
         });
 
         describe("Fill partial listing of a partial listing multiple fills", async function () {
           beforeEach(async function () {
-            this.listing = [user.address, "0", "500", "500", "500000", "0", "0", EXTERNAL];
-            await mockBeanstalk
-              .connect(user)
-              .createPodListing("0", "500", "500", "500000", "0", "0", EXTERNAL);
+            this.podListing = PodListing(user.address, 0, 0, 500, 500, 500000, 0, 0, EXTERNAL);
+            await mockBeanstalk.connect(user).createPodListing(this.podListing);
             this.amountBeansBuyingWith = 100;
 
             this.userBeanBalance = await bean.balanceOf(user.address);
@@ -520,7 +464,7 @@ describe("Marketplace", function () {
 
             this.result = await mockBeanstalk
               .connect(user2)
-              .fillPodListing(this.listing, this.amountBeansBuyingWith, EXTERNAL);
+              .fillPodListing(this.podListing, this.amountBeansBuyingWith, EXTERNAL);
 
             this.user2BeanBalanceAfter = await bean.balanceOf(user2.address);
             this.userBeanBalanceAfter = await bean.balanceOf(user.address);
@@ -536,87 +480,75 @@ describe("Marketplace", function () {
             expect(await beanstalk.getInternalBalance(user.address, bean.address)).to.equal(0);
           });
 
-          it("Deletes Pod Listing", async function () {
-            expect(await mockBeanstalk.podListing(0)).to.equal(ZERO_HASH);
-            expect(await mockBeanstalk.podListing(700)).to.equal(
-              getHashFromListing([
-                "0",
-                "300",
-                this.listing[4],
-                this.listing[5],
-                this.listing[6],
-                this.listing[7]
-              ])
-            );
+          it("transfer pod listing", async function () {
+            expect(await beanstalk.plot(user2.address, 0, 500)).to.equal(200);
+            expect(await beanstalk.plot(user.address, 0, 0)).to.equal(500);
+            expect(await beanstalk.plot(user.address, 0, 700)).to.equal(300);
           });
 
-          it("transfer pod listing", async function () {
-            expect((await beanstalk.plot(user2.address, 500)).toString()).to.equal("200");
-            expect((await beanstalk.plot(user.address, 0)).toString()).to.equal("500");
-            expect((await beanstalk.plot(user.address, 700)).toString()).to.equal("300");
+          it("Deletes Pod Listing", async function () {
+            expect(await mockBeanstalk.podListing(0, 0)).to.equal(ZERO_HASH);
+            let newListing = this.podListing;
+            newListing.index = 700;
+            newListing.start = 0;
+            newListing.podAmount = 300;
+            expect(await mockBeanstalk.podListing(0, 700)).to.equal(getHashFromListing(newListing));
           });
 
           it("emits event", async function () {
             await expect(this.result)
               .to.emit(mockBeanstalk, "PodListingFilled")
-              .withArgs(user.address, user2.address, 0, 500, "200", "100");
+              .withArgs(user2.address, user.address, 0, 0, 500, 200, 100);
           });
         });
 
         describe("Fill partial listing of a listing created by partial fill", async function () {
           beforeEach(async function () {
-            this.listing = [user.address, "0", "500", "500", "500000", "0", "0", EXTERNAL];
-            await mockBeanstalk
-              .connect(user)
-              .createPodListing("0", "500", "500", "500000", "0", "0", EXTERNAL);
+            this.podListing = PodListing(user.address, 0, 0, 500, 500, 500000, 0, 0, EXTERNAL);
+            await mockBeanstalk.connect(user).createPodListing(this.podListing);
             this.amountBeansBuyingWith = 100;
 
             this.userBeanBalance = await bean.balanceOf(user.address);
             this.user2BeanBalance = await bean.balanceOf(user2.address);
             this.result = await mockBeanstalk
               .connect(user2)
-              .fillPodListing(this.listing, this.amountBeansBuyingWith, EXTERNAL);
+              .fillPodListing(this.podListing, this.amountBeansBuyingWith, EXTERNAL);
 
             this.user2BeanBalanceAfter = await bean.balanceOf(user2.address);
             this.userBeanBalanceAfter = await bean.balanceOf(user.address);
-            this.listing = [user.address, "700", "0", "300", "500000", "0", "0", EXTERNAL];
+
+            this.podListing = PodListing(user.address, 0, 700, 0, 300, 500000, 0, 0, EXTERNAL);
+            this.listingId = getHashFromListing(this.podListing);
 
             this.result = await mockBeanstalk
               .connect(user2)
-              .fillPodListing(this.listing, 100, EXTERNAL);
-          });
-          it("plots correctly transfer", async function () {
-            expect((await beanstalk.plot(user.address, 0)).toString()).to.equal("500");
-            expect((await beanstalk.plot(user.address, 700)).toString()).to.equal("0");
-            expect((await beanstalk.plot(user.address, 900)).toString()).to.equal("100");
+              .fillPodListing(this.podListing, 100, EXTERNAL);
 
-            expect((await beanstalk.plot(user2.address, 0)).toString()).to.equal("0");
-            expect((await beanstalk.plot(user2.address, 500)).toString()).to.equal("200");
-            expect((await beanstalk.plot(user2.address, 700)).toString()).to.equal("200");
-            expect((await beanstalk.plot(user2.address, 900)).toString()).to.equal("0");
+            this.podListing = PodListing(user.address, 0, 900, 0, 100, 500000, 0, 0, EXTERNAL);
+            this.listingId = getHashFromListing(this.podListing);
+          });
+
+          it("plots correctly transfer", async function () {
+            expect(await beanstalk.plot(user.address, 0, 0)).to.equal(500);
+            expect(await beanstalk.plot(user.address, 0, 700)).to.equal(0);
+            expect(await beanstalk.plot(user.address, 0, 900)).to.equal(100);
+
+            expect(await beanstalk.plot(user2.address, 0, 0)).to.equal(0);
+            expect(await beanstalk.plot(user2.address, 0, 500)).to.equal(200);
+            expect(await beanstalk.plot(user2.address, 0, 700)).to.equal(200);
+            expect(await beanstalk.plot(user2.address, 0, 900)).to.equal(0);
           });
 
           it("listing updates", async function () {
-            expect(await mockBeanstalk.podListing(700)).to.equal(ZERO_HASH);
-            expect(await mockBeanstalk.podListing(900)).to.equal(
-              getHashFromListing([
-                "0",
-                "100",
-                this.listing[4],
-                this.listing[5],
-                this.listing[6],
-                this.listing[7]
-              ])
-            );
+            expect(await mockBeanstalk.podListing(0, 700)).to.equal(ZERO_HASH);
+            expect(await mockBeanstalk.podListing(0, 900)).to.equal(this.listingId);
           });
         });
 
         describe("Fill partial listing to wallet", async function () {
           beforeEach(async function () {
-            this.listing = [user.address, "0", "0", "1000", "500000", "0", "0", INTERNAL];
-            await mockBeanstalk
-              .connect(user)
-              .createPodListing("0", "0", "1000", "500000", "0", "0", INTERNAL);
+            this.podListing = PodListing(user.address, 0, 0, 0, 1000, 500000, 0, 0, INTERNAL);
+            await mockBeanstalk.connect(user).createPodListing(this.podListing);
             this.amountBeansBuyingWith = 250;
 
             this.userBeanBalance = await bean.balanceOf(user.address);
@@ -624,7 +556,7 @@ describe("Marketplace", function () {
 
             this.result = await mockBeanstalk
               .connect(user2)
-              .fillPodListing(this.listing, this.amountBeansBuyingWith, EXTERNAL);
+              .fillPodListing(this.podListing, this.amountBeansBuyingWith, EXTERNAL);
 
             this.user2BeanBalanceAfter = await bean.balanceOf(user2.address);
             this.userBeanBalanceAfter = await bean.balanceOf(user.address);
@@ -641,68 +573,73 @@ describe("Marketplace", function () {
           });
 
           it("Deletes Pod Listing", async function () {
-            expect(await mockBeanstalk.podListing(700)).to.equal(ZERO_HASH);
-            expect(await mockBeanstalk.podListing(500)).to.equal(
-              getHashFromListing([
-                "0",
-                "500",
-                this.listing[4],
-                this.listing[5],
-                this.listing[6],
-                this.listing[7]
-              ])
-            );
+            expect(await mockBeanstalk.podListing(0, 0)).to.equal(ZERO_HASH);
+            newListing = this.podListing;
+            newListing.index = 500;
+            newListing.start = 0;
+            newListing.podAmount = 500;
+            expect(await mockBeanstalk.podListing(0, 500)).to.equal(getHashFromListing(newListing));
           });
 
           it("transfer pod listing", async function () {
-            expect((await beanstalk.plot(user2.address, 0)).toString()).to.equal("500");
-            expect((await beanstalk.plot(user.address, 0)).toString()).to.equal("0");
-            expect((await beanstalk.plot(user.address, 500)).toString()).to.equal("500");
+            expect(await beanstalk.plot(user2.address, 0, 0)).to.equal(500);
+            expect(await beanstalk.plot(user.address, 0, 0)).to.equal(0);
+            expect(await beanstalk.plot(user.address, 0, 500)).to.equal(500);
           });
 
           it("emits event", async function () {
             await expect(this.result)
               .to.emit(mockBeanstalk, "PodListingFilled")
-              .withArgs(user.address, user2.address, 0, 0, "500", "250");
+              .withArgs(user2.address, user.address, 0, 0, 0, 500, "250");
           });
         });
       });
 
       describe("Cancel", async function () {
         it("Re-list plot cancels and re-lists", async function () {
-          result = await mockBeanstalk
-            .connect(user)
-            .createPodListing("0", "0", "1000", "500000", "0", "0", EXTERNAL);
-          expect(await mockBeanstalk.podListing(0)).to.be.equal(await getHash(result));
-          result = await mockBeanstalk
-            .connect(user)
-            .createPodListing("0", "0", "1000", "200000", "2000", "0", INTERNAL);
+          let podListing = PodListing(user.address, 0, 0, 0, 1000, 500000, 0, 0, EXTERNAL);
+          result = await mockBeanstalk.connect(user).createPodListing(podListing);
+          this.listingId = await getHashFromListing(podListing);
+          expect(await mockBeanstalk.podListing(podListing.fieldId, podListing.index)).to.be.equal(
+            this.listingId
+          );
+
+          podListing = PodListing(user.address, 0, 0, 0, 1000, "200000", 2000, 0, INTERNAL);
+          result = await mockBeanstalk.connect(user).createPodListing(podListing);
           await expect(result)
             .to.emit(mockBeanstalk, "PodListingCreated")
-            .withArgs(user.address, "0", 0, 1000, 200000, 2000, "0", 1);
+            .withArgs(user.address, 0, 0, 0, 1000, 200000, 2000, 0, 1);
           await expect(result)
             .to.emit(mockBeanstalk, "PodListingCancelled")
-            .withArgs(user.address, "0");
-          expect(await mockBeanstalk.podListing(0)).to.be.equal(await getHash(result));
+            .withArgs(user.address, 0, 0);
+          this.listingId = await getHashFromListing(podListing);
+          expect(await mockBeanstalk.podListing(podListing.fieldId, podListing.index)).to.be.equal(
+            this.listingId
+          );
         });
 
         it("Reverts on Cancel Listing, not owned by user", async function () {
-          await mockBeanstalk
-            .connect(user)
-            .createPodListing("0", "0", "1000", "500000", "0", "0", EXTERNAL);
-          await expect(mockBeanstalk.connect(user2).cancelPodListing("0")).to.be.revertedWith(
+          let podListing = PodListing(user.address, 0, 0, 0, 1000, 500000, 0, 0, EXTERNAL);
+          await mockBeanstalk.connect(user).createPodListing(podListing);
+          await expect(mockBeanstalk.connect(user2).cancelPodListing(0, 0)).to.be.revertedWith(
             "Marketplace: Listing not owned by sender."
           );
         });
 
         it("Cancels Listing, Emits Listing Cancelled Event", async function () {
-          result = await mockBeanstalk
-            .connect(user)
-            .createPodListing("0", "0", "1000", "500000", "2000", "0", EXTERNAL);
-          expect(await mockBeanstalk.podListing(0)).to.be.equal(await getHash(result));
-          result = await mockBeanstalk.connect(user).cancelPodListing("0");
-          expect(await mockBeanstalk.podListing(0)).to.be.equal(ZERO_HASH);
-          expect(result).to.emit(mockBeanstalk, "PodListingCancelled").withArgs(user.address, "0");
+          let podListing = PodListing(user.address, 0, 0, 0, 1000, 500000, 2000, 0, EXTERNAL);
+          result = await mockBeanstalk.connect(user).createPodListing(podListing);
+          this.listingId = await getHashFromListing(podListing);
+          expect(await mockBeanstalk.podListing(podListing.fieldId, podListing.index)).to.be.equal(
+            this.listingId
+          );
+          result = await mockBeanstalk.connect(user).cancelPodListing(0, 0);
+          expect(await mockBeanstalk.podListing(podListing.fieldId, podListing.index)).to.be.equal(
+            ZERO_HASH
+          );
+          await expect(result)
+            .to.emit(mockBeanstalk, "PodListingCancelled")
+            .withArgs(user.address, 0, 0);
         });
       });
     });
@@ -713,13 +650,16 @@ describe("Marketplace", function () {
       describe("Create", async function () {
         describe("revert", async function () {
           it("Reverts if price is 0", async function () {
+            this.podOrder = PodOrder(user2.address, 0, 0, 100000, 0);
             await expect(
-              mockBeanstalk.connect(user2).createPodOrder("100", "0", "100000", "0", EXTERNAL)
+              mockBeanstalk.connect(user2).createPodOrder(this.podOrder, 100, EXTERNAL)
             ).to.be.revertedWith("Marketplace: Pod price must be greater than 0.");
           });
+
           it("Reverts if amount is 0", async function () {
+            this.podOrder = PodOrder(user2.address, 0, 100000, 100000, 0);
             await expect(
-              mockBeanstalk.connect(user2).createPodOrder("0", "100000", "100000", "0", EXTERNAL)
+              mockBeanstalk.connect(user2).createPodOrder(this.podOrder, 0, EXTERNAL)
             ).to.be.revertedWith("Marketplace: Order amount must be > 0.");
           });
         });
@@ -728,42 +668,38 @@ describe("Marketplace", function () {
           beforeEach(async function () {
             this.userBeanBalance = await bean.balanceOf(user.address);
             this.beanstalkBeanBalance = await bean.balanceOf(mockBeanstalk.address);
+            this.podOrder = PodOrder(user.address, 0, 100000, 1000, 0);
             this.result = await mockBeanstalk
               .connect(user)
-              .createPodOrder("500", "100000", "1000", "0", EXTERNAL);
-            this.id = await getOrderId(this.result);
+              .createPodOrder(this.podOrder, 500, EXTERNAL);
+            this.id = await beanstalk.orderId(this.podOrder);
             this.userBeanBalanceAfter = await bean.balanceOf(user.address);
             this.beanstalkBeanBalanceAfter = await bean.balanceOf(mockBeanstalk.address);
           });
 
           it("Transfer Beans properly", async function () {
-            expect(this.beanstalkBeanBalanceAfter.sub(this.beanstalkBeanBalance)).to.equal("500");
-            expect(this.userBeanBalance.sub(this.userBeanBalanceAfter)).to.equal("500");
+            expect(this.beanstalkBeanBalanceAfter.sub(this.beanstalkBeanBalance)).to.equal(500);
+            expect(this.userBeanBalance.sub(this.userBeanBalanceAfter)).to.equal(500);
           });
 
           it("Creates the order", async function () {
-            expect(await mockBeanstalk.podOrderById(this.id)).to.equal("500");
-            expect(await mockBeanstalk.podOrder(user.address, "100000", "1000", "0")).to.equal(
-              "500"
-            );
+            expect(await mockBeanstalk.podOrder(this.id)).to.equal(500);
           });
 
           it("emits an event", async function () {
-            expect(this.result)
+            await expect(this.result)
               .to.emit(mockBeanstalk, "PodOrderCreated")
-              .withArgs(user.address, this.id, "500", 100000, "1000", "0", "0x", Fixed);
+              .withArgs(user.address, this.id, 500, 0, 100000, 1000, 0);
           });
 
           it("cancels old order, replacing with new order", async function () {
             let newOrder = await mockBeanstalk
               .connect(user)
-              .createPodOrder("100", "100000", "1000", "0", EXTERNAL);
-            expect(newOrder)
+              .createPodOrder(PodOrder(user.address, 0, 100000, 1000, 0), 100, EXTERNAL);
+            await expect(newOrder)
               .to.emit(mockBeanstalk, "PodOrderCancelled")
               .withArgs(user.address, this.id);
-            expect(await mockBeanstalk.podOrder(user.address, "100000", "1000", "0")).to.equal(
-              "100"
-            );
+            expect(await mockBeanstalk.podOrder(this.id)).to.equal(100);
           });
         });
 
@@ -771,72 +707,70 @@ describe("Marketplace", function () {
           beforeEach(async function () {
             this.userBeanBalance = await bean.balanceOf(user.address);
             this.beanstalkBeanBalance = await bean.balanceOf(mockBeanstalk.address);
+            this.podOrder = PodOrder(user.address, 0, 100000, 1000, 100);
             this.result = await mockBeanstalk
               .connect(user)
-              .createPodOrder("500", "100000", "1000", "100", EXTERNAL);
-            this.id = await getOrderId(this.result);
+              .createPodOrder(this.podOrder, 500, EXTERNAL);
+            this.id = await beanstalk.orderId(this.podOrder);
             this.userBeanBalanceAfter = await bean.balanceOf(user.address);
             this.beanstalkBeanBalanceAfter = await bean.balanceOf(mockBeanstalk.address);
           });
 
           it("Transfer Beans properly", async function () {
-            expect(this.beanstalkBeanBalanceAfter.sub(this.beanstalkBeanBalance)).to.equal("500");
-            expect(this.userBeanBalance.sub(this.userBeanBalanceAfter)).to.equal("500");
+            expect(this.beanstalkBeanBalanceAfter.sub(this.beanstalkBeanBalance)).to.equal(500);
+            expect(this.userBeanBalance.sub(this.userBeanBalanceAfter)).to.equal(500);
           });
 
           it("Creates the order", async function () {
-            expect(await mockBeanstalk.podOrderById(this.id)).to.equal("500");
-            expect(await mockBeanstalk.podOrder(user.address, "100000", "1000", "100")).to.equal(
-              "500"
-            );
+            expect(await mockBeanstalk.podOrder(this.id)).to.equal(500);
           });
 
           it("emits an event", async function () {
-            expect(this.result)
+            await expect(this.result)
               .to.emit(mockBeanstalk, "PodOrderCreated")
-              .withArgs(user.address, this.id, "500", 100000, "1000", "100", "0x", Fixed);
+              .withArgs(user.address, this.id, 500, 0, 100000, 1000, 100);
           });
         });
       });
 
       describe("Fill", async function () {
         beforeEach(async function () {
+          this.podOrder = PodOrder(user.address, 0, 100000, "2500", "10");
           this.result = await mockBeanstalk
             .connect(user)
-            .createPodOrder("50", "100000", "2500", "10", EXTERNAL);
-          this.id = await getOrderId(this.result);
-          this.order = [user.address, "100000", "2500", "10"];
+            .createPodOrder(this.podOrder, 50, EXTERNAL);
+          this.id = await beanstalk.orderId(this.podOrder);
         });
 
         describe("revert", async function () {
           it("owner does not own plot", async function () {
             await expect(
-              mockBeanstalk.fillPodOrder(this.order, 0, 0, 500, INTERNAL)
+              mockBeanstalk.fillPodOrder(this.podOrder, 0, 0, 500, INTERNAL)
             ).to.revertedWith("Marketplace: Invalid Plot.");
           });
 
           it("plot amount too large", async function () {
             await expect(
-              mockBeanstalk.connect(user2).fillPodOrder(this.order, 1000, 700, 500, INTERNAL)
+              mockBeanstalk.connect(user2).fillPodOrder(this.podOrder, 1000, 700, 500, INTERNAL)
             ).to.be.revertedWith("Marketplace: Invalid Plot.");
           });
 
           it("plot amount too large", async function () {
-            await beanstalk.connect(user2).sow("1200", "0", EXTERNAL);
+            await beanstalk.connect(user2).sow("1200", 0, EXTERNAL);
             await expect(
-              mockBeanstalk.connect(user2).fillPodOrder(this.order, 2000, 700, 500, INTERNAL)
+              mockBeanstalk.connect(user2).fillPodOrder(this.podOrder, 2000, 700, 500, INTERNAL)
             ).to.be.revertedWith("Marketplace: Plot too far in line.");
           });
 
           it("sell too much", async function () {
             await expect(
-              mockBeanstalk.connect(user2).fillPodOrder(this.order, 1000, 0, 1000, INTERNAL)
+              mockBeanstalk.connect(user2).fillPodOrder(this.podOrder, 1000, 0, 1000, INTERNAL)
             ).to.revertedWith("Marketplace: Not enough beans in order.");
           });
 
           it("under minimum amount of pods", async function () {
             await expect(
-              mockBeanstalk.connect(user2).fillPodOrder(this.order, 1000, 0, 1, INTERNAL)
+              mockBeanstalk.connect(user2).fillPodOrder(this.podOrder, 1000, 0, 1, INTERNAL)
             ).to.revertedWith("Marketplace: Fill must be >= minimum amount.");
           });
         });
@@ -847,7 +781,7 @@ describe("Marketplace", function () {
             this.user2BeanBalance = await bean.balanceOf(user2.address);
             this.result = await mockBeanstalk
               .connect(user2)
-              .fillPodOrder(this.order, 1000, 0, 500, EXTERNAL);
+              .fillPodOrder(this.podOrder, 1000, 0, 500, EXTERNAL);
             this.beanstalkBalanceAfter = await bean.balanceOf(mockBeanstalk.address);
             this.user2BeanBalanceAfter = await bean.balanceOf(user2.address);
           });
@@ -859,19 +793,19 @@ describe("Marketplace", function () {
           });
 
           it("transfer the plot", async function () {
-            expect(await beanstalk.plot(user2.address, 1000)).to.be.equal(0);
-            expect(await beanstalk.plot(user2.address, 1500)).to.be.equal(500);
-            expect(await beanstalk.plot(user.address, 1000)).to.be.equal(500);
+            expect(await beanstalk.plot(user2.address, 0, 1000)).to.be.equal(0);
+            expect(await beanstalk.plot(user2.address, 0, 1500)).to.be.equal(500);
+            expect(await beanstalk.plot(user.address, 0, 1000)).to.be.equal(500);
           });
 
           it("Updates the offer", async function () {
-            expect(await mockBeanstalk.podOrderById(this.id)).to.equal("0");
+            expect(await mockBeanstalk.podOrder(this.id)).to.equal(0);
           });
 
           it("Emits an event", async function () {
-            expect(this.result)
+            await expect(this.result)
               .to.emit(mockBeanstalk, "PodOrderFilled")
-              .withArgs(user2.address, user.address, this.id, 1000, 0, 500, 50);
+              .withArgs(user2.address, user.address, this.id, 0, 1000, 0, 500, 50);
           });
         });
 
@@ -881,7 +815,7 @@ describe("Marketplace", function () {
             this.user2BeanBalance = await bean.balanceOf(user2.address);
             this.result = await mockBeanstalk
               .connect(user2)
-              .fillPodOrder(this.order, 1000, 250, 250, EXTERNAL);
+              .fillPodOrder(this.podOrder, 1000, 250, 250, EXTERNAL);
             this.beanstalkBalanceAfter = await bean.balanceOf(mockBeanstalk.address);
             this.user2BeanBalanceAfter = await bean.balanceOf(user2.address);
           });
@@ -893,19 +827,19 @@ describe("Marketplace", function () {
           });
 
           it("transfer the plot", async function () {
-            expect(await beanstalk.plot(user2.address, 1000)).to.be.equal(250);
-            expect(await beanstalk.plot(user2.address, 1500)).to.be.equal(500);
-            expect(await beanstalk.plot(user.address, 1250)).to.be.equal(250);
+            expect(await beanstalk.plot(user2.address, 0, 1000)).to.be.equal(250);
+            expect(await beanstalk.plot(user2.address, 0, 1500)).to.be.equal(500);
+            expect(await beanstalk.plot(user.address, 0, 1250)).to.be.equal(250);
           });
 
           it("Updates the offer", async function () {
-            expect(await mockBeanstalk.podOrderById(this.id)).to.equal("25");
+            expect(await mockBeanstalk.podOrder(this.id)).to.equal("25");
           });
 
           it("Emits an event", async function () {
-            expect(this.result)
+            await expect(this.result)
               .to.emit(mockBeanstalk, "PodOrderFilled")
-              .withArgs(user2.address, user.address, this.id, 1000, 250, 250, 25);
+              .withArgs(user2.address, user.address, this.id, 0, 1000, 250, 250, 25);
           });
         });
 
@@ -915,7 +849,7 @@ describe("Marketplace", function () {
             this.user2BeanBalance = await bean.balanceOf(user2.address);
             this.result = await mockBeanstalk
               .connect(user2)
-              .fillPodOrder(this.order, 1000, 0, 500, INTERNAL);
+              .fillPodOrder(this.podOrder, 1000, 0, 500, INTERNAL);
             this.beanstalkBalanceAfter = await bean.balanceOf(mockBeanstalk.address);
             this.user2BeanBalanceAfter = await bean.balanceOf(user2.address);
           });
@@ -927,32 +861,41 @@ describe("Marketplace", function () {
           });
 
           it("transfer the plot", async function () {
-            expect(await beanstalk.plot(user2.address, 1000)).to.be.equal(0);
-            expect(await beanstalk.plot(user2.address, 1500)).to.be.equal(500);
-            expect(await beanstalk.plot(user.address, 1000)).to.be.equal(500);
+            expect(await beanstalk.plot(user2.address, 0, 1000)).to.be.equal(0);
+            expect(await beanstalk.plot(user2.address, 0, 1500)).to.be.equal(500);
+            expect(await beanstalk.plot(user.address, 0, 1000)).to.be.equal(500);
           });
 
           it("Updates the offer", async function () {
-            expect(await mockBeanstalk.podOrderById(this.id)).to.equal("0");
+            expect(await mockBeanstalk.podOrder(this.id)).to.equal(0);
           });
 
           it("Emits an event", async function () {
-            expect(this.result)
+            await expect(this.result)
               .to.emit(mockBeanstalk, "PodOrderFilled")
-              .withArgs(user2.address, user.address, this.id, 1000, 0, 500, 50);
+              .withArgs(user2.address, user.address, this.id, 0, 1000, 0, 500, 50);
           });
         });
 
         describe("Full order with active listing", async function () {
           beforeEach(async function () {
-            await mockBeanstalk
-              .connect(user2)
-              .createPodListing("1000", "500", "500", "50000", "5000", "0", EXTERNAL);
+            this.podListing = PodListing(
+              user2.address,
+              0,
+              1000,
+              500,
+              500,
+              50000,
+              5000,
+              0,
+              EXTERNAL
+            );
+            await mockBeanstalk.connect(user2).createPodListing(this.podListing);
             this.beanstalkBalance = await bean.balanceOf(mockBeanstalk.address);
             this.user2BeanBalance = await bean.balanceOf(user2.address);
             this.result = await mockBeanstalk
               .connect(user2)
-              .fillPodOrder(this.order, 1000, 0, 500, INTERNAL);
+              .fillPodOrder(this.podOrder, 1000, 0, 500, INTERNAL);
             this.beanstalkBalanceAfter = await bean.balanceOf(mockBeanstalk.address);
             this.user2BeanBalanceAfter = await bean.balanceOf(user2.address);
           });
@@ -964,61 +907,62 @@ describe("Marketplace", function () {
           });
 
           it("transfer the plot", async function () {
-            expect(await beanstalk.plot(user2.address, 1000)).to.be.equal(0);
-            expect(await beanstalk.plot(user2.address, 1500)).to.be.equal(500);
-            expect(await beanstalk.plot(user.address, 1000)).to.be.equal(500);
+            expect(await beanstalk.plot(user2.address, 0, 1000)).to.be.equal(0);
+            expect(await beanstalk.plot(user2.address, 0, 1500)).to.be.equal(500);
+            expect(await beanstalk.plot(user.address, 0, 1000)).to.be.equal(500);
           });
 
           it("Updates the offer", async function () {
-            expect(await mockBeanstalk.podOrderById(this.id)).to.equal("0");
+            expect(await mockBeanstalk.podOrder(this.id)).to.equal(0);
           });
 
           it("deletes the listing", async function () {
-            expect(await mockBeanstalk.podListing("1000")).to.equal(ZERO_HASH);
+            expect(
+              await mockBeanstalk.podListing(this.podListing.fieldId, this.podListing.index)
+            ).to.equal(ZERO_HASH);
           });
 
           it("Emits an event", async function () {
-            expect(this.result)
+            await expect(this.result)
               .to.emit(mockBeanstalk, "PodListingCancelled")
-              .withArgs(user2.address, "1000");
-            expect(this.result)
+              .withArgs(user2.address, 0, 1000);
+            await expect(this.result)
               .to.emit(mockBeanstalk, "PodOrderFilled")
-              .withArgs(user2.address, user.address, this.id, 1000, 0, 500, 50);
+              .withArgs(user2.address, user.address, this.id, 0, 1000, 0, 500, 50);
           });
         });
       });
 
       describe("Cancel", async function () {
         beforeEach(async function () {
+          this.podOrder = PodOrder(user.address, 0, 100000, 1000, 0);
           this.result = await mockBeanstalk
             .connect(user)
-            .createPodOrder("500", "100000", "1000", "0", EXTERNAL);
-          this.id = await getOrderId(this.result);
+            .createPodOrder(this.podOrder, 500, EXTERNAL);
+          this.id = await beanstalk.orderId(this.podOrder);
         });
 
         describe("Cancel owner", async function () {
           beforeEach(async function () {
             this.userBeanBalance = await bean.balanceOf(user.address);
             this.beanstalkBeanBalance = await bean.balanceOf(mockBeanstalk.address);
-            this.result = await mockBeanstalk
-              .connect(user)
-              .cancelPodOrder("100000", "1000", "0", EXTERNAL);
+            this.result = await mockBeanstalk.connect(user).cancelPodOrder(this.podOrder, EXTERNAL);
             this.userBeanBalanceAfter = await bean.balanceOf(user.address);
             this.beanstalkBeanBalanceAfter = await bean.balanceOf(mockBeanstalk.address);
           });
 
           it("deletes the offer", async function () {
-            expect(await mockBeanstalk.podOrderById(this.id)).to.equal("0");
+            expect(await mockBeanstalk.podOrder(this.id)).to.equal(0);
           });
 
           it("transfer beans", async function () {
-            expect(this.beanstalkBeanBalance.sub(this.beanstalkBeanBalanceAfter)).to.equal("500");
-            expect(this.userBeanBalanceAfter.sub(this.userBeanBalance)).to.equal("500");
-            expect(await beanstalk.getInternalBalance(user.address, bean.address)).to.equal("0");
+            expect(this.beanstalkBeanBalance.sub(this.beanstalkBeanBalanceAfter)).to.equal(500);
+            expect(this.userBeanBalanceAfter.sub(this.userBeanBalance)).to.equal(500);
+            expect(await beanstalk.getInternalBalance(user.address, bean.address)).to.equal(0);
           });
 
           it("Emits an event", async function () {
-            expect(this.result)
+            await expect(this.result)
               .to.emit(mockBeanstalk, "PodOrderCancelled")
               .withArgs(user.address, this.id);
           });
@@ -1028,25 +972,23 @@ describe("Marketplace", function () {
           beforeEach(async function () {
             this.userBeanBalance = await bean.balanceOf(user.address);
             this.beanstalkBeanBalance = await bean.balanceOf(mockBeanstalk.address);
-            this.result = await mockBeanstalk
-              .connect(user)
-              .cancelPodOrder("100000", "1000", "0", INTERNAL);
+            this.result = await mockBeanstalk.connect(user).cancelPodOrder(this.podOrder, INTERNAL);
             this.userBeanBalanceAfter = await bean.balanceOf(user.address);
             this.beanstalkBeanBalanceAfter = await bean.balanceOf(mockBeanstalk.address);
           });
 
           it("deletes the offer", async function () {
-            expect(await mockBeanstalk.podOrderById(this.id)).to.equal("0");
+            expect(await mockBeanstalk.podOrder(this.id)).to.equal(0);
           });
 
           it("transfer beans", async function () {
-            expect(this.beanstalkBeanBalance.sub(this.beanstalkBeanBalanceAfter)).to.equal("0");
-            expect(this.userBeanBalanceAfter.sub(this.userBeanBalance)).to.equal("0");
-            expect(await beanstalk.getInternalBalance(user.address, bean.address)).to.equal("500");
+            expect(this.beanstalkBeanBalance.sub(this.beanstalkBeanBalanceAfter)).to.equal(0);
+            expect(this.userBeanBalanceAfter.sub(this.userBeanBalance)).to.equal(0);
+            expect(await beanstalk.getInternalBalance(user.address, bean.address)).to.equal(500);
           });
 
           it("Emits an event", async function () {
-            expect(this.result)
+            await expect(this.result)
               .to.emit(mockBeanstalk, "PodOrderCancelled")
               .withArgs(user.address, this.id);
           });
@@ -1058,31 +1000,31 @@ describe("Marketplace", function () {
       describe("reverts", async function () {
         it("doesn't sent to 0 address", async function () {
           await expect(
-            mockBeanstalk.connect(user).transferPlot(user.address, ZERO_ADDRESS, "0", "0", "100")
+            mockBeanstalk.connect(user).transferPlot(user.address, ZERO_ADDRESS, 0, 0, 0, 100)
           ).to.be.revertedWith("Field: Transfer to/from 0 address.");
         });
 
         it("Plot not owned by user.", async function () {
           await expect(
-            mockBeanstalk.connect(user2).transferPlot(user2.address, user.address, "0", "0", "100")
+            mockBeanstalk.connect(user2).transferPlot(user2.address, user.address, 0, 0, 0, 100)
           ).to.be.revertedWith("Field: Plot not owned by user.");
         });
 
         it("Allowance is 0 not owned by user.", async function () {
           await expect(
-            mockBeanstalk.connect(user2).transferPlot(user.address, user2.address, "0", "0", "100")
+            mockBeanstalk.connect(user2).transferPlot(user.address, user2.address, 0, 0, 0, 100)
           ).to.be.revertedWith("Field: Insufficient approval.");
         });
 
         it("Pod Range invalid", async function () {
           await expect(
-            mockBeanstalk.connect(user).transferPlot(user.address, user.address, "0", "150", "100")
+            mockBeanstalk.connect(user).transferPlot(user.address, user.address, 0, 0, "150", 100)
           ).to.be.revertedWith("Field: Pod range invalid.");
         });
 
         it("transfers to self", async function () {
           await expect(
-            mockBeanstalk.connect(user).transferPlot(user.address, user.address, "0", "0", "100")
+            mockBeanstalk.connect(user).transferPlot(user.address, user.address, 0, 0, 0, 100)
           ).to.be.revertedWith("Field: Cannot transfer Pods to oneself.");
         });
       });
@@ -1091,104 +1033,106 @@ describe("Marketplace", function () {
         beforeEach(async function () {
           this.result = await mockBeanstalk
             .connect(user)
-            .transferPlot(user.address, user2.address, "0", "0", "100");
+            .transferPlot(user.address, user2.address, 0, 0, 0, 100);
         });
 
         it("transfers the plot", async function () {
-          expect(await beanstalk.plot(user2.address, "0")).to.be.equal("100");
-          expect(await beanstalk.plot(user.address, "0")).to.be.equal("0");
-          expect(await beanstalk.plot(user.address, "100")).to.be.equal("900");
+          expect(await beanstalk.plot(user2.address, 0, 0)).to.be.equal(100);
+          expect(await beanstalk.plot(user.address, 0, 0)).to.be.equal(0);
+          expect(await beanstalk.plot(user.address, 0, 100)).to.be.equal(900);
         });
 
         it("emits plot transfer the plot", async function () {
           await expect(this.result)
             .to.emit(mockBeanstalk, "PlotTransfer")
-            .withArgs(user.address, user2.address, "0", "100");
+            .withArgs(user.address, user2.address, 0, 100);
         });
       });
 
       describe("transfers with allowance", async function () {
         beforeEach(async function () {
-          await expect(mockBeanstalk.connect(user).approvePods(user2.address, "100"));
+          await expect(mockBeanstalk.connect(user).approvePods(user2.address, 0, 100));
           this.result = await mockBeanstalk
             .connect(user2)
-            .transferPlot(user.address, user2.address, "0", "0", "100");
+            .transferPlot(user.address, user2.address, 0, 0, 0, 100);
         });
 
         it("transfers the plot", async function () {
-          expect(await beanstalk.plot(user2.address, "0")).to.be.equal("100");
-          expect(await beanstalk.plot(user.address, "0")).to.be.equal("0");
-          expect(await beanstalk.plot(user.address, "100")).to.be.equal("900");
-          expect(await mockBeanstalk.allowancePods(user.address, user2.address)).to.be.equal("0");
+          expect(await beanstalk.plot(user2.address, 0, 0)).to.be.equal(100);
+          expect(await beanstalk.plot(user.address, 0, 0)).to.be.equal(0);
+          expect(await beanstalk.plot(user.address, 0, 100)).to.be.equal(900);
+          expect(await mockBeanstalk.allowancePods(user.address, user2.address, 0)).to.be.equal(0);
         });
 
         it("emits plot transfer the plot", async function () {
           await expect(this.result)
             .to.emit(mockBeanstalk, "PlotTransfer")
-            .withArgs(user.address, user2.address, "0", "100");
+            .withArgs(user.address, user2.address, 0, 100);
         });
       });
 
       describe("transfers with existing pod listing", async function () {
         beforeEach(async function () {
-          await mockBeanstalk
-            .connect(user)
-            .createPodListing("0", "0", "1000", "500000", "0", "0", EXTERNAL);
+          this.podListing = PodListing(user.address, 0, 0, 0, 1000, 500000, 0, 0, EXTERNAL);
+          await mockBeanstalk.connect(user).createPodListing(this.podListing);
           this.result = await mockBeanstalk
             .connect(user)
-            .transferPlot(user.address, user2.address, "0", "0", "100");
+            .transferPlot(user.address, user2.address, 0, 0, 0, 100);
         });
 
         it("transfers the plot", async function () {
-          expect(await beanstalk.plot(user2.address, "0")).to.be.equal("100");
-          expect(await beanstalk.plot(user.address, "0")).to.be.equal("0");
-          expect(await beanstalk.plot(user.address, "100")).to.be.equal("900");
-          expect(await mockBeanstalk.podListing("0")).to.be.equal(
-            "0x0000000000000000000000000000000000000000000000000000000000000000"
-          );
+          expect(await beanstalk.plot(user2.address, 0, 0)).to.be.equal(100);
+          expect(await beanstalk.plot(user.address, 0, 0)).to.be.equal(0);
+          expect(await beanstalk.plot(user.address, 0, 100)).to.be.equal(900);
+        });
+
+        it("removes the listing", async function () {
+          expect(
+            await mockBeanstalk.podListing(this.podListing.fieldId, this.podListing.index)
+          ).to.be.equal(ZERO_HASH);
         });
 
         it("emits plot transfer the plot", async function () {
           await expect(this.result)
             .to.emit(mockBeanstalk, "PlotTransfer")
-            .withArgs(user.address, user2.address, "0", "100");
+            .withArgs(user.address, user2.address, 0, 100);
           await expect(this.result)
             .to.emit(mockBeanstalk, "PodListingCancelled")
-            .withArgs(user.address, "0");
+            .withArgs(user.address, 0, 0);
         });
       });
 
       describe("transfers with existing pod listing from other", async function () {
         beforeEach(async function () {
-          await mockBeanstalk
-            .connect(user)
-            .createPodListing("0", "0", "1000", "500000", "0", "0", EXTERNAL);
-          this.result = await expect(mockBeanstalk.connect(user).approvePods(user2.address, "100"));
+          this.podListing = PodListing(user.address, 0, 0, 0, 1000, 500000, 0, 0, EXTERNAL);
+          await mockBeanstalk.connect(user).createPodListing(this.podListing);
+          this.result = await expect(
+            mockBeanstalk.connect(user).approvePods(user2.address, 0, 100)
+          );
           this.result = await mockBeanstalk
             .connect(user2)
-            .transferPlot(user.address, user2.address, "0", "0", "100");
+            .transferPlot(user.address, user2.address, 0, 0, 0, 100);
         });
 
         it("transfers the plot", async function () {
-          expect(await beanstalk.plot(user2.address, "0")).to.be.equal("100");
-          expect(await beanstalk.plot(user.address, "0")).to.be.equal("0");
-          expect(await beanstalk.plot(user.address, "100")).to.be.equal("900");
-          expect(await mockBeanstalk.podListing("0")).to.be.equal(
-            "0x0000000000000000000000000000000000000000000000000000000000000000"
-          );
+          expect(await beanstalk.plot(user.address, 0, 0)).to.be.equal(0);
+          expect(await beanstalk.plot(user.address, 0, 100)).to.be.equal(900);
+          expect(await beanstalk.plot(user2.address, 0, 0)).to.be.equal(100);
         });
 
         it("removes the listing", async function () {
-          expect(await mockBeanstalk.podListing("0")).to.be.equal(ZERO_HASH);
+          expect(
+            await mockBeanstalk.podListing(this.podListing.fieldId, this.podListing.index)
+          ).to.be.equal(ZERO_HASH);
         });
 
         it("emits events", async function () {
           await expect(this.result)
             .to.emit(mockBeanstalk, "PlotTransfer")
-            .withArgs(user.address, user2.address, "0", "100");
+            .withArgs(user.address, user2.address, 0, 100);
           await expect(this.result)
             .to.emit(mockBeanstalk, "PodListingCancelled")
-            .withArgs(user.address, "0");
+            .withArgs(user.address, 0, 0);
         });
       });
     });

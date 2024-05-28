@@ -6,7 +6,7 @@ pragma solidity ^0.8.20;
 
 import {LibDiamond} from "contracts/libraries/LibDiamond.sol";
 import {LibWhitelist} from "contracts/libraries/Silo/LibWhitelist.sol";
-import {AppStorage} from "contracts/beanstalk/AppStorage.sol";
+import {AppStorage} from "contracts/beanstalk/storage/AppStorage.sol";
 import {WhitelistedTokens} from "contracts/beanstalk/silo/WhitelistFacet/WhitelistedTokens.sol";
 import {Invariable} from "contracts/beanstalk/Invariable.sol";
 

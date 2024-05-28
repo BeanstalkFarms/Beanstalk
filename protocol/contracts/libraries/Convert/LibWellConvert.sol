@@ -11,6 +11,7 @@ import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {C} from "contracts/C.sol";
 import {Call, IWell} from "contracts/interfaces/basin/IWell.sol";
 import {IBeanstalkWellFunction} from "contracts/interfaces/basin/IBeanstalkWellFunction.sol";
+import {ConvertFacet} from "contracts/beanstalk/silo/ConvertFacet.sol";
 
 /**
  * @title Well Convert Library
@@ -108,7 +109,7 @@ library LibWellConvert {
 
     /**
      * @notice Converts `lp` LP Tokens of a given `well` into at least `minBeans` Beans
-     * while ensuring that delta B <= 0 in the Bean:3Crv Curve Metapool.
+     * while ensuring that delta B <= 0 in the Well.
      * @param convertData Contains the encoding of `lp`, `minBeans` and `well`.
      * @return tokenOut The token to convert to.
      * @return tokenIn The token to convert from
@@ -150,7 +151,7 @@ library LibWellConvert {
 
     /**
      * @notice Converts `beans` Beans into at least `minLP` LP Tokens of a given `well`
-     * while ensuring that delta B >= 0 in the Bean:3Crv Curve Metapool.
+     * while ensuring that delta B >= 0 in the Well.
      * @param convertData Contains the encoding of `beans`, `minLp` and `well`.
      * @return tokenOut The token to convert to.
      * @return tokenIn The token to convert from

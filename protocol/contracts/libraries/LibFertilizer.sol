@@ -52,16 +52,16 @@ library LibFertilizer {
 
         // Calculate Beans Per Fertilizer and add to total owed
         uint128 bpf = getBpf(season);
-        s.unfertilizedIndex = s.unfertilizedIndex.add(fertilizerAmount.mul(bpf));
+        s.sys.fert.unfertilizedIndex = s.sys.fert.unfertilizedIndex.add(fertilizerAmount.mul(bpf));
         // Get id
-        id = s.bpf.add(bpf);
+        id = s.sys.fert.bpf.add(bpf);
         // Update Total and Season supply
-        s.fertilizer[id] = s.fertilizer[id].add(fertilizerAmount128);
-        s.activeFertilizer = s.activeFertilizer.add(fertilizerAmount);
+        s.sys.fert.fertilizer[id] = s.sys.fert.fertilizer[id].add(fertilizerAmount128);
+        s.sys.fert.activeFertilizer = s.sys.fert.activeFertilizer.add(fertilizerAmount);
         // Add underlying to Unripe Beans and Unripe LP
         addUnderlying(tokenAmountIn, fertilizerAmount.mul(DECIMALS), minLP);
         // If not first time adding Fertilizer with this id, return
-        if (s.fertilizer[id] > fertilizerAmount128) return id;
+        if (s.sys.fert.fertilizer[id] > fertilizerAmount128) return id;
         // If first time, log end Beans Per Fertilizer and add to Season queue.
         push(id);
         emit SetFertilizer(id, bpf);
@@ -92,9 +92,12 @@ library LibFertilizer {
         uint256 percentToFill = usdAmount.mul(C.precision()).div(remainingRecapitalization());
 
         uint256 newDepositedBeans;
-        if (C.unripeBean().totalSupply() > s.u[C.UNRIPE_BEAN].balanceOfUnderlying) {
+        if (
+            C.unripeBean().totalSupply() >
+            s.sys.silo.unripeSettings[C.UNRIPE_BEAN].balanceOfUnderlying
+        ) {
             newDepositedBeans = (C.unripeBean().totalSupply()).sub(
-                s.u[C.UNRIPE_BEAN].balanceOfUnderlying
+                s.sys.silo.unripeSettings[C.UNRIPE_BEAN].balanceOfUnderlying
             );
             newDepositedBeans = newDepositedBeans.mul(percentToFill).div(C.precision());
         }
@@ -137,27 +140,27 @@ library LibFertilizer {
         LibUnripe.incrementUnderlying(C.UNRIPE_BEAN, newDepositedBeans);
         LibUnripe.incrementUnderlying(C.UNRIPE_LP, newLP);
 
-        s.recapitalized = s.recapitalized.add(usdAmount);
+        s.sys.fert.recapitalized = s.sys.fert.recapitalized.add(usdAmount);
     }
 
     function push(uint128 id) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        if (s.fFirst == 0) {
+        if (s.sys.fert.fertFirst == 0) {
             // Queue is empty
-            s.season.fertilizing = true;
-            s.fLast = id;
-            s.fFirst = id;
-        } else if (id <= s.fFirst) {
+            s.sys.season.fertilizing = true;
+            s.sys.fert.fertLast = id;
+            s.sys.fert.fertFirst = id;
+        } else if (id <= s.sys.fert.fertFirst) {
             // Add to front of queue
-            setNext(id, s.fFirst);
-            s.fFirst = id;
-        } else if (id >= s.fLast) {
+            setNext(id, s.sys.fert.fertFirst);
+            s.sys.fert.fertFirst = id;
+        } else if (id >= s.sys.fert.fertLast) {
             // Add to back of queue
-            setNext(s.fLast, id);
-            s.fLast = id;
+            setNext(s.sys.fert.fertLast, id);
+            s.sys.fert.fertLast = id;
         } else {
             // Add to middle of queue
-            uint128 prev = s.fFirst;
+            uint128 prev = s.sys.fert.fertFirst;
             uint128 next = getNext(prev);
             // Search for proper place in line
             while (id > next) {
@@ -173,40 +176,40 @@ library LibFertilizer {
         AppStorage storage s = LibAppStorage.diamondStorage();
         uint256 totalDollars = C.dollarPerUnripeLP().mul(C.unripeLP().totalSupply()).div(DECIMALS);
         totalDollars = (totalDollars / 1e6) * 1e6; // round down to nearest USDC
-        if (s.recapitalized >= totalDollars) return 0;
-        return totalDollars.sub(s.recapitalized);
+        if (s.sys.fert.recapitalized >= totalDollars) return 0;
+        return totalDollars.sub(s.sys.fert.recapitalized);
     }
 
     function pop() internal returns (bool) {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        uint128 first = s.fFirst;
-        s.activeFertilizer = s.activeFertilizer.sub(getAmount(first));
+        uint128 first = s.sys.fert.fertFirst;
+        s.sys.fert.activeFertilizer = s.sys.fert.activeFertilizer.sub(getAmount(first));
         uint128 next = getNext(first);
         if (next == 0) {
             // If all Unfertilized Beans have been fertilized, delete line.
-            require(s.activeFertilizer == 0, "Still active fertilizer");
-            s.fFirst = 0;
-            s.fLast = 0;
-            s.season.fertilizing = false;
+            require(s.sys.fert.activeFertilizer == 0, "Still active fertilizer");
+            s.sys.fert.fertFirst = 0;
+            s.sys.fert.fertLast = 0;
+            s.sys.season.fertilizing = false;
             return false;
         }
-        s.fFirst = getNext(first);
+        s.sys.fert.fertFirst = getNext(first);
         return true;
     }
 
     function getAmount(uint128 id) internal view returns (uint256) {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        return s.fertilizer[id];
+        return s.sys.fert.fertilizer[id];
     }
 
     function getNext(uint128 id) internal view returns (uint128) {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        return s.nextFid[id];
+        return s.sys.fert.nextFid[id];
     }
 
     function setNext(uint128 id, uint128 next) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        s.nextFid[id] = next;
+        s.sys.fert.nextFid[id] = next;
     }
 
     function beginBarnRaiseMigration(address well) internal {
@@ -221,8 +224,8 @@ library LibFertilizer {
         // Check that Lib Usd Oracle supports the non-Bean token in the Well.
         LibUsdOracle.getTokenPrice(address(tokens[tokens[0] == C.bean() ? 1 : 0]));
 
-        uint256 balanceOfUnderlying = s.u[C.UNRIPE_LP].balanceOfUnderlying;
-        IERC20(s.u[C.UNRIPE_LP].underlyingToken).safeTransfer(
+        uint256 balanceOfUnderlying = s.sys.silo.unripeSettings[C.UNRIPE_LP].balanceOfUnderlying;
+        IERC20(s.sys.silo.unripeSettings[C.UNRIPE_LP].underlyingToken).safeTransfer(
             LibDiamond.diamondStorage().contractOwner,
             balanceOfUnderlying
         );

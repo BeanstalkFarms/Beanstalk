@@ -4,22 +4,21 @@
 
 pragma solidity ^0.8.20;
 
-import "./PodTransfer.sol";
-import "contracts/libraries/Token/LibTransfer.sol";
-import "contracts/libraries/LibTractor.sol";
+import {PodTransfer} from "./PodTransfer.sol";
+import {LibTransfer} from "contracts/libraries/Token/LibTransfer.sol";
+import {LibMarket} from "contracts/libraries/LibMarket.sol";
 
 /**
- * @author Beanjoyer, Malteasy
+ * @author Beanjoyer, Malteasy, funderbrker
  **/
 
 contract Listing is PodTransfer {
-    using LibRedundantMath256 for uint256;
-
     struct PodListing {
-        address account;
+        address lister;
+        uint256 fieldId;
         uint256 index;
         uint256 start;
-        uint256 amount;
+        uint256 podAmount;
         uint24 pricePerPod;
         uint256 maxHarvestableIndex;
         uint256 minFillAmount;
@@ -27,10 +26,11 @@ contract Listing is PodTransfer {
     }
 
     event PodListingCreated(
-        address indexed account,
+        address indexed lister,
+        uint256 fieldId,
         uint256 index,
         uint256 start,
-        uint256 amount,
+        uint256 podAmount,
         uint24 pricePerPod,
         uint256 maxHarvestableIndex,
         uint256 minFillAmount,
@@ -38,55 +38,50 @@ contract Listing is PodTransfer {
     );
 
     event PodListingFilled(
-        address indexed from,
-        address indexed to,
+        address indexed filler,
+        address indexed lister,
+        uint256 fieldId,
         uint256 index,
         uint256 start,
-        uint256 amount,
+        uint256 podAmount,
         uint256 costInBeans
     );
-
-    event PodListingCancelled(address indexed account, uint256 index);
 
     /*
      * Create
      */
 
-    function _createPodListing(
-        uint256 index,
-        uint256 start,
-        uint256 amount,
-        uint24 pricePerPod,
-        uint256 maxHarvestableIndex,
-        uint256 minFillAmount,
-        LibTransfer.To mode
-    ) internal {
-        uint256 plotSize = s.a[LibTractor._user()].field.plots[index];
+    function _createPodListing(PodListing calldata podListing) internal {
+        uint256 plotSize = s.accts[podListing.lister].fields[podListing.fieldId].plots[
+            podListing.index
+        ];
 
-        require(plotSize >= (start.add(amount)) && amount > 0, "Marketplace: Invalid Plot/Amount.");
-        require(pricePerPod > 0, "Marketplace: Pod price must be greater than 0.");
-        require(s.f.harvestable <= maxHarvestableIndex, "Marketplace: Expired.");
-
-        if (s.podListings[index] != bytes32(0)) _cancelPodListing(LibTractor._user(), index);
-
-        s.podListings[index] = hashListing(
-            start,
-            amount,
-            pricePerPod,
-            maxHarvestableIndex,
-            minFillAmount,
-            mode
+        require(podListing.podAmount > 0, "Marketplace: Invalid Amount.");
+        require(
+            plotSize >= (podListing.start + podListing.podAmount),
+            "Marketplace: Invalid Plot."
+        );
+        require(podListing.pricePerPod > 0, "Marketplace: Pod price must be greater than 0.");
+        require(
+            s.sys.fields[podListing.fieldId].harvestable <= podListing.maxHarvestableIndex,
+            "Marketplace: Expired."
         );
 
+        if (s.sys.podListings[podListing.fieldId][podListing.index] != bytes32(0))
+            LibMarket._cancelPodListing(podListing.lister, podListing.fieldId, podListing.index);
+
+        s.sys.podListings[podListing.fieldId][podListing.index] = _hashListing(podListing);
+
         emit PodListingCreated(
-            LibTractor._user(),
-            index,
-            start,
-            amount,
-            pricePerPod,
-            maxHarvestableIndex,
-            minFillAmount,
-            mode
+            podListing.lister,
+            podListing.fieldId,
+            podListing.index,
+            podListing.start,
+            podListing.podAmount,
+            podListing.pricePerPod,
+            podListing.maxHarvestableIndex,
+            podListing.minFillAmount,
+            podListing.mode
         );
     }
 
@@ -94,112 +89,101 @@ contract Listing is PodTransfer {
      * Fill
      */
 
-    function _fillListing(PodListing calldata l, uint256 beanAmount) internal {
-        bytes32 lHash = hashListing(
-            l.start,
-            l.amount,
-            l.pricePerPod,
-            l.maxHarvestableIndex,
-            l.minFillAmount,
-            l.mode
-        );
-
-        require(s.podListings[l.index] == lHash, "Marketplace: Listing does not exist.");
-        uint256 plotSize = s.a[l.account].field.plots[l.index];
+    function _fillListing(
+        PodListing calldata podListing,
+        address filler,
+        uint256 beanPayAmount
+    ) internal {
         require(
-            plotSize >= (l.start.add(l.amount)) && l.amount > 0,
-            "Marketplace: Invalid Plot/Amount."
+            s.sys.podListings[podListing.fieldId][podListing.index] == _hashListing(podListing),
+            "Marketplace: Listing does not exist."
         );
-        require(s.f.harvestable <= l.maxHarvestableIndex, "Marketplace: Listing has expired.");
+        uint256 plotSize = s.accts[podListing.lister].fields[podListing.fieldId].plots[
+            podListing.index
+        ];
+        require(podListing.podAmount > 0, "Marketplace: Invalid Amount.");
+        require(
+            plotSize >= (podListing.start + podListing.podAmount),
+            "Marketplace: Invalid Plot."
+        );
+        require(
+            s.sys.fields[podListing.fieldId].harvestable <= podListing.maxHarvestableIndex,
+            "Marketplace: Listing has expired."
+        );
 
-        uint256 amount = getAmountPodsFromFillListing(l.pricePerPod, l.amount, beanAmount);
+        uint256 podReceiveAmount = (beanPayAmount * 1000000) / podListing.pricePerPod;
+        require(
+            podReceiveAmount <= podListing.podAmount,
+            "Marketplace: Not enough pods in Listing."
+        );
 
-        __fillListing(LibTractor._user(), l, amount, beanAmount);
-        _transferPlot(l.account, LibTractor._user(), l.index, l.start, amount);
-    }
-
-    function __fillListing(
-        address to,
-        PodListing calldata l,
-        uint256 amount,
-        uint256 beanAmount
-    ) private {
-        require(amount >= l.minFillAmount, "Marketplace: Fill must be >= minimum amount.");
-        require(l.amount >= amount, "Marketplace: Not enough pods in Listing.");
-
-        delete s.podListings[l.index];
-
-        if (l.amount > amount) {
-            s.podListings[l.index.add(amount).add(l.start)] = hashListing(
-                0,
-                l.amount.sub(amount),
-                l.pricePerPod,
-                l.maxHarvestableIndex,
-                l.minFillAmount,
-                l.mode
-            );
+        // Round.
+        if (podListing.podAmount - podReceiveAmount <= (1000000 / podListing.pricePerPod)) {
+            podReceiveAmount = podListing.podAmount;
         }
 
-        emit PodListingFilled(l.account, to, l.index, l.start, amount, beanAmount);
-    }
+        require(
+            podReceiveAmount >= podListing.minFillAmount,
+            "Marketplace: Fill must be >= minimum amount."
+        );
 
-    /*
-     * Cancel
-     */
+        // Remove old listing and create new listing if necessary.
+        delete s.sys.podListings[podListing.fieldId][podListing.index];
 
-    function _cancelPodListing(address account, uint256 index) internal {
-        require(s.a[account].field.plots[index] > 0, "Marketplace: Listing not owned by sender.");
-
-        delete s.podListings[index];
-
-        emit PodListingCancelled(account, index);
-    }
-
-    /*
-     * Helpers
-     */
-
-    function getAmountPodsFromFillListing(
-        uint24 pricePerPod,
-        uint256 podListingAmount,
-        uint256 fillBeanAmount
-    ) internal pure returns (uint256 amount) {
-        amount = (fillBeanAmount * 1000000) / pricePerPod;
-
-        if (amount > podListingAmount) {
-            revert("Marketplace: Not enough pods in Listing.");
-        }
-        uint256 remainingAmount = podListingAmount.sub(amount);
-        if (remainingAmount <= (1000000 / pricePerPod)) amount = podListingAmount;
-    }
-
-    function hashListing(
-        uint256 start,
-        uint256 amount,
-        uint24 pricePerPod,
-        uint256 maxHarvestableIndex,
-        uint256 minFillAmount,
-        LibTransfer.To mode
-    ) internal pure returns (bytes32 lHash) {
-        if (minFillAmount > 0)
-            lHash = keccak256(
-                abi.encodePacked(
-                    start,
-                    amount,
-                    pricePerPod,
-                    maxHarvestableIndex,
-                    minFillAmount,
-                    mode == LibTransfer.To.EXTERNAL
+        if (podReceiveAmount < podListing.podAmount) {
+            uint256 newIndex = podListing.index + podReceiveAmount + podListing.start;
+            s.sys.podListings[podListing.fieldId][newIndex] = _hashListing(
+                PodListing(
+                    podListing.lister,
+                    podListing.fieldId,
+                    newIndex,
+                    0,
+                    podListing.podAmount - podReceiveAmount,
+                    podListing.pricePerPod,
+                    podListing.maxHarvestableIndex,
+                    podListing.minFillAmount,
+                    podListing.mode
                 )
             );
-        else
-            lHash = keccak256(
+        }
+
+        emit PodListingFilled(
+            filler,
+            podListing.lister,
+            podListing.fieldId,
+            podListing.index,
+            podListing.start,
+            podReceiveAmount,
+            beanPayAmount
+        );
+
+        _transferPlot(
+            podListing.lister,
+            filler,
+            podListing.fieldId,
+            podListing.index,
+            podListing.start,
+            podReceiveAmount
+        );
+    }
+
+    /*
+     * Get
+     */
+
+    function _hashListing(PodListing memory podListing) internal pure returns (bytes32 hash) {
+        return
+            keccak256(
                 abi.encodePacked(
-                    start,
-                    amount,
-                    pricePerPod,
-                    maxHarvestableIndex,
-                    mode == LibTransfer.To.EXTERNAL
+                    podListing.lister,
+                    podListing.fieldId,
+                    podListing.index,
+                    podListing.start,
+                    podListing.podAmount,
+                    podListing.pricePerPod,
+                    podListing.maxHarvestableIndex,
+                    podListing.minFillAmount,
+                    podListing.mode
                 )
             );
     }

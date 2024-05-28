@@ -16,13 +16,8 @@ contract InitWhitelistStatuses {
     function addWhitelistStatuses(bool beanEth) internal {
         addBeanStatus();
         if (beanEth) addBeanEthStatus();
-        addBean3CrvStatus();
         addUnripeBeanStatus();
         addUnripeLPStatus();
-    }
-
-    function addBean3CrvStatus() internal {
-        LibWhitelistedTokens.addWhitelistStatus(C.CURVE_BEAN_METAPOOL, true, true, false, false);
     }
 
     function addBeanStatus() internal {

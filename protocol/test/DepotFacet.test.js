@@ -6,9 +6,6 @@ const { toBN, encodeAdvancedData } = require("../utils/index.js");
 const { impersonateSigner } = require("../utils/signer.js");
 const { EXTERNAL, INTERNAL } = require("./utils/balances.js");
 const {
-  BEAN_3_CURVE,
-  THREE_POOL,
-  THREE_CURVE,
   STABLE_FACTORY,
   WETH,
   BEAN,

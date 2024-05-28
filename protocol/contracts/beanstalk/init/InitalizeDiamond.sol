@@ -6,13 +6,15 @@ pragma solidity ^0.8.20;
 
 import {ILiquidityWeightFacet} from "contracts/beanstalk/sun/LiquidityWeightFacet.sol";
 import {LibWhitelistedTokens} from "contracts/libraries/Silo/LibWhitelistedTokens.sol";
-import {AppStorage, Storage} from "contracts/beanstalk/AppStorage.sol";
+import {AppStorage} from "contracts/beanstalk/storage/AppStorage.sol";
+import {AssetSettings} from "contracts/beanstalk/storage/System.sol";
 import {IGaugePointFacet} from "contracts/beanstalk/sun/GaugePointFacet.sol";
 import {LibDiamond} from "contracts/libraries/LibDiamond.sol";
 import {LibCases} from "contracts/libraries/LibCases.sol";
 import {LibGauge} from "contracts/libraries/LibGauge.sol";
 import {BDVFacet} from "contracts/beanstalk/silo/BDVFacet.sol";
 import {LibUnripe} from "contracts/libraries/LibUnripe.sol";
+import {LibTractor} from "contracts/libraries/LibTractor.sol";
 import {C} from "contracts/C.sol";
 
 /**
@@ -45,7 +47,8 @@ contract InitalizeDiamond {
         addInterfaces();
         initalizeSeason();
         initalizeField();
-        initalizeSilo(uint16(s.season.current));
+        initalizeFarmAndTractor();
+        initalizeSilo(uint16(s.sys.season.current));
         initalizeSeedGauge(INIT_BEAN_TO_MAX_LP_GP_RATIO, INIT_AVG_GSPBDV);
 
         address[] memory tokens = new address[](2);
@@ -54,12 +57,12 @@ contract InitalizeDiamond {
 
         // note: bean and assets that are not in the gauge system
         // do not need to initalize the gauge system.
-        Storage.SiloSettings[] memory siloSettings = new Storage.SiloSettings[](2);
-        siloSettings[0] = Storage.SiloSettings({
+        AssetSettings[] memory assetSettings = new AssetSettings[](2);
+        assetSettings[0] = AssetSettings({
             selector: BDVFacet.beanToBDV.selector,
             stalkEarnedPerSeason: INIT_BEAN_STALK_EARNED_PER_SEASON,
             stalkIssuedPerBdv: INIT_STALK_ISSUED_PER_BDV,
-            milestoneSeason: s.season.current,
+            milestoneSeason: s.sys.season.current,
             milestoneStem: 0,
             encodeType: 0x00,
             deltaStalkEarnedPerSeason: 0,
@@ -69,11 +72,11 @@ contract InitalizeDiamond {
             optimalPercentDepositedBdv: 0
         });
 
-        siloSettings[1] = Storage.SiloSettings({
+        assetSettings[1] = AssetSettings({
             selector: BDVFacet.wellBdv.selector,
             stalkEarnedPerSeason: INIT_BEAN_TOKEN_WELL_STALK_EARNED_PER_SEASON,
             stalkIssuedPerBdv: INIT_STALK_ISSUED_PER_BDV,
-            milestoneSeason: s.season.current,
+            milestoneSeason: s.sys.season.current,
             milestoneStem: 0,
             encodeType: 0x01,
             deltaStalkEarnedPerSeason: 0,
@@ -83,13 +86,13 @@ contract InitalizeDiamond {
             optimalPercentDepositedBdv: INIT_BEAN_TOKEN_WELL_PERCENT_TARGET
         });
 
-        whitelistPools(tokens, siloSettings);
+        whitelistPools(tokens, assetSettings);
 
         // init usdTokenPrice. C.Bean_eth_well should be
         // a bean well w/ the native token of the network.
-        s.usdTokenPrice[C.BEAN_ETH_WELL] = 1;
-        s.twaReserves[beanTokenWell].reserve0 = 1;
-        s.twaReserves[beanTokenWell].reserve1 = 1;
+        s.sys.usdTokenPrice[C.BEAN_ETH_WELL] = 1;
+        s.sys.twaReserves[beanTokenWell].reserve0 = 1;
+        s.sys.twaReserves[beanTokenWell].reserve1 = 1;
     }
 
     /**
@@ -106,10 +109,9 @@ contract InitalizeDiamond {
      * @notice Initalizes field parameters.
      */
     function initalizeField() internal {
-        s.w.t = 1;
-        s.w.thisSowTime = type(uint32).max;
-        s.w.lastSowTime = type(uint32).max;
-        s.isFarm = 1;
+        s.sys.weather.temp = 1;
+        s.sys.weather.thisSowTime = type(uint32).max;
+        s.sys.weather.lastSowTime = type(uint32).max;
     }
 
     /**
@@ -117,22 +119,22 @@ contract InitalizeDiamond {
      */
     function initalizeSeason() internal {
         // set current season to 1.
-        s.season.current = 1;
+        s.sys.season.current = 1;
 
         // set withdraw seasons to 0. Kept here for verbosity.
-        s.season.withdrawSeasons = 0;
+        s.sys.season.withdrawSeasons = 0;
 
         // initalize the duration of 1 season in seconds.
-        s.season.period = C.getSeasonPeriod();
+        s.sys.season.period = C.getSeasonPeriod();
 
         // initalize current timestamp.
-        s.season.timestamp = block.timestamp;
+        s.sys.season.timestamp = block.timestamp;
 
         // initalize the start timestamp.
         // Rounds down to the nearest hour
         // if needed.
-        s.season.start = s.season.period > 0
-            ? (block.timestamp / s.season.period) * s.season.period
+        s.sys.season.start = s.sys.season.period > 0
+            ? (block.timestamp / s.sys.season.period) * s.sys.season.period
             : block.timestamp;
 
         // initalizes the cases that beanstalk uses
@@ -152,8 +154,8 @@ contract InitalizeDiamond {
      */
     function initalizeSilo(uint16 season) internal {
         // initalize when the silo started silo V3.
-        s.season.stemStartSeason = season;
-        s.season.stemScaleSeason = season;
+        s.sys.season.stemStartSeason = season;
+        s.sys.season.stemScaleSeason = season;
     }
 
     function initalizeSeedGauge(
@@ -161,33 +163,33 @@ contract InitalizeDiamond {
         uint128 averageGrownStalkPerBdvPerSeason
     ) internal {
         // initalize the ratio of bean to max lp gp per bdv.
-        s.seedGauge.beanToMaxLpGpPerBdvRatio = beanToMaxLpGpRatio;
+        s.sys.seedGauge.beanToMaxLpGpPerBdvRatio = beanToMaxLpGpRatio;
 
         // initalize the average grown stalk per bdv per season.
-        s.seedGauge.averageGrownStalkPerBdvPerSeason = averageGrownStalkPerBdvPerSeason;
+        s.sys.seedGauge.averageGrownStalkPerBdvPerSeason = averageGrownStalkPerBdvPerSeason;
 
         // emit events.
         emit BeanToMaxLpGpPerBdvRatioChange(
-            s.season.current,
+            s.sys.season.current,
             type(uint256).max,
-            int80(int128(s.seedGauge.beanToMaxLpGpPerBdvRatio))
+            int80(int128(s.sys.seedGauge.beanToMaxLpGpPerBdvRatio))
         );
         emit LibGauge.UpdateAverageStalkPerBdvPerSeason(
-            s.seedGauge.averageGrownStalkPerBdvPerSeason
+            s.sys.seedGauge.averageGrownStalkPerBdvPerSeason
         );
     }
 
     /**
      * Whitelists the pools.
-     * @param siloSettings The pools to whitelist.
+     * @param assetSettings The pools to whitelist.
      */
     function whitelistPools(
         address[] memory tokens,
-        Storage.SiloSettings[] memory siloSettings
+        AssetSettings[] memory assetSettings
     ) internal {
         for (uint256 i = 0; i < tokens.length; i++) {
             // note: no error checking.
-            s.ss[tokens[i]] = siloSettings[i];
+            s.sys.silo.assetSettings[tokens[i]] = assetSettings[i];
 
             bool isLPandWell = true;
             if (tokens[i] == C.BEAN) {
@@ -206,5 +208,10 @@ contract InitalizeDiamond {
                 !isUnripe && isLPandWell // assumes any non-unripe LP is soppable, may not be true in the future
             );
         }
+    }
+
+    function initalizeFarmAndTractor() public {
+        s.sys.isFarm = 1;
+        LibTractor._resetPublisher();
     }
 }

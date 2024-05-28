@@ -190,6 +190,7 @@ contract SiloFacet is Invariable, TokenSilo {
         uint256 totalAmount;
         for (uint256 i = 0; i < amounts.length; ++i) {
             require(amounts[i] > 0, "Silo: amount in array is 0");
+
             totalAmount = totalAmount.add(amounts[i]);
         }
 

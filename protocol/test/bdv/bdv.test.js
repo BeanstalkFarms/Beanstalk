@@ -3,8 +3,6 @@ const { deploy } = require("../../scripts/deploy.js");
 const { takeSnapshot, revertToSnapshot } = require("../utils/snapshot");
 const {
   BEAN,
-  THREE_POOL,
-  BEAN_3_CURVE,
   UNRIPE_LP,
   UNRIPE_BEAN,
   ZERO_ADDRESS,
@@ -77,29 +75,6 @@ describe("BDV", function () {
   describe("Bean BDV", async function () {
     it("properly checks bdv", async function () {
       expect(await beanstalk.bdv(BEAN, to6("200"))).to.equal(to6("200"));
-    });
-  });
-
-  describe("Bean Metapool BDV", async function () {
-    before(async function () {
-      this.threePool = await ethers.getContractAt("Mock3Curve", THREE_POOL);
-      await this.threePool.set_virtual_price(to18("1"));
-      this.beanThreeCurve = await ethers.getContractAt("MockMeta3Curve", BEAN_3_CURVE);
-      await this.beanThreeCurve.set_supply(to18("2000000"));
-      await this.beanThreeCurve.set_balances([to6("1000000"), to18("1000000")]);
-      await this.beanThreeCurve.set_balances([to6("1200000"), to18("1000000")]);
-    });
-
-    // with the dewhitelisting of bean3crv, bdv() will fail, but curveToBdv() will still work.
-    it("properly checks bdv", async function () {
-      // expect(await beanstalk.bdv(BEAN_3_CURVE, to18('200'))).to.equal(to6('200'));
-      expect(await beanstalk.curveToBDV(to18("200"))).to.equal(to6("200"));
-    });
-
-    it("properly checks bdv", async function () {
-      await this.threePool.set_virtual_price(to18("1.02"));
-      // expect(await beanstalk.bdv(BEAN_3_CURVE, to18('2'))).to.equal('1998191');
-      expect(await beanstalk.curveToBDV(to18("2"))).to.equal("1998191");
     });
   });
 

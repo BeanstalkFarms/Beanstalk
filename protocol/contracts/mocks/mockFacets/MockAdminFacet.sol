@@ -7,9 +7,9 @@ import "contracts/C.sol";
 import "contracts/libraries/Token/LibTransfer.sol";
 import "contracts/beanstalk/sun/SeasonFacet/SeasonFacet.sol";
 import "contracts/beanstalk/sun/SeasonFacet/Sun.sol";
-import {LibCurveMinting} from "contracts/libraries/Minting/LibCurveMinting.sol";
 import {LibTransfer} from "contracts/libraries/Token/LibTransfer.sol";
 import {LibBalance} from "contracts/libraries/Token/LibBalance.sol";
+import {ShipmentRecipient} from "contracts/beanstalk/storage/System.sol";
 
 /**
  * @author Publius
@@ -23,17 +23,17 @@ contract MockAdminFacet is Sun {
 
     function ripen(uint256 amount) external {
         C.bean().mint(address(this), amount);
-        rewardToHarvestable(amount);
+        receiveShipment(ShipmentRecipient.FIELD, amount, abi.encode(uint256(0)));
     }
 
     function fertilize(uint256 amount) external {
         C.bean().mint(address(this), amount);
-        rewardToFertilizer(amount);
+        receiveShipment(ShipmentRecipient.BARN, amount, bytes(""));
     }
 
     function rewardSilo(uint256 amount) external {
         C.bean().mint(address(this), amount);
-        rewardToSilo(amount);
+        receiveShipment(ShipmentRecipient.SILO, amount, bytes(""));
     }
 
     function forceSunrise() external {
@@ -44,41 +44,39 @@ contract MockAdminFacet is Sun {
 
     function rewardSunrise(uint256 amount) public {
         updateStart();
-        s.season.current += 1;
+        s.sys.season.current += 1;
         C.bean().mint(address(this), amount);
-        rewardBeans(amount);
+        ship(amount);
     }
 
     function fertilizerSunrise(uint256 amount) public {
         updateStart();
-        s.season.current += 1;
+        s.sys.season.current += 1;
         C.bean().mint(address(this), amount);
-        rewardToFertilizer(amount * 3);
+        receiveShipment(ShipmentRecipient.BARN, amount * 3, bytes(""));
     }
 
     function updateStart() private {
         SeasonFacet sf = SeasonFacet(address(this));
-        int256 sa = int256(uint256(s.season.current - sf.seasonTime()));
-        if (sa >= 0) s.season.start -= 3600 * (uint256(sa) + 1);
-    }
-
-    function update3CRVOracle() public {
-        LibCurveMinting.updateOracle();
+        int256 sa = int256(uint256(s.sys.season.current - sf.seasonTime()));
+        if (sa >= 0) s.sys.season.start -= 3600 * (uint256(sa) + 1);
     }
 
     function updateStemScaleSeason(uint16 season) public {
-        s.season.stemScaleSeason = season;
+        s.sys.season.stemScaleSeason = season;
     }
 
     function updateStems() public {
         address[] memory siloTokens = LibWhitelistedTokens.getSiloTokens();
         for (uint256 i = 0; i < siloTokens.length; i++) {
-            s.ss[siloTokens[i]].milestoneStem = int96(s.ss[siloTokens[i]].milestoneStem * 1e6);
+            s.sys.silo.assetSettings[siloTokens[i]].milestoneStem = int96(
+                s.sys.silo.assetSettings[siloTokens[i]].milestoneStem * 1e6
+            );
         }
     }
 
     function upgradeStems() public {
-        updateStemScaleSeason(uint16(s.season.current));
+        updateStemScaleSeason(uint16(s.sys.season.current));
         updateStems();
     }
 }

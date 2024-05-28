@@ -3,8 +3,6 @@ const { deploy } = require("../scripts/deploy.js");
 const { EXTERNAL, INTERNAL, INTERNAL_EXTERNAL, INTERNAL_TOLERANT } = require("./utils/balances.js");
 const {
   BEAN,
-  THREE_CURVE,
-  THREE_POOL,
   BEAN_ETH_WELL,
   WETH,
   MAX_UINT256,
@@ -87,14 +85,14 @@ describe("Sop", function () {
     });
 
     it("Raining", async function () {
-      await mockBeanstalk.incrementTotalPodsE(to18("100"));
+      await mockBeanstalk.incrementTotalPodsE(0, to18("100"));
       await mockBeanstalk.rainSunrise();
       await beanstalk.mow(user.address, bean.address);
       const rain = await beanstalk.rain();
       const season = await beanstalk.time();
       expect(season.rainStart).to.be.equal(season.current);
       expect(season.raining).to.be.equal(true);
-      expect(rain.pods).to.be.equal(await beanstalk.totalPods());
+      expect(rain.pods).to.be.equal(await beanstalk.totalPods(0));
       // roots are slightly higher than 2 as 2 seasons need to pass
       // until the roots are accounted for.
       expect(rain.roots).to.be.equal("20008000000000000000000000");
@@ -104,7 +102,7 @@ describe("Sop", function () {
     });
 
     it("Stops raining", async function () {
-      await mockBeanstalk.incrementTotalPodsE(to18("100"));
+      await mockBeanstalk.incrementTotalPodsE(0, to18("100"));
       await mockBeanstalk.rainSunrise();
       await beanstalk.mow(user.address, bean.address);
       await mockBeanstalk.droughtSunrise();

@@ -78,7 +78,6 @@ describe.skip("Silo V3: Stem deployment migrate everyone", function () {
         "WhitelistFacet",
         "MockSiloFacet",
         "MockSeasonFacet",
-        "MigrationFacet"
       ],
       // libraryNames: ['LibLegacyTokenSilo'],
       initFacetName: "InitBipNewSilo",

@@ -4,7 +4,7 @@ pragma abicoder v2;
 
 import {TestHelper, LibTransfer, C} from "test/foundry/utils/TestHelper.sol";
 import {MockSeasonFacet} from "contracts/mocks/mockFacets/MockSeasonFacet.sol";
-import {console} from "forge-std/console.sol";
+import {IMockFBeanstalk as IBS} from "contracts/interfaces/IMockFBeanstalk.sol";
 
 /**
  * @notice Tests the functionality of the sun, the distrubution of beans and soil.
@@ -12,7 +12,8 @@ import {console} from "forge-std/console.sol";
 contract SunTest is TestHelper {
     // Events
     event Soil(uint32 indexed season, uint256 soil);
-    event Reward(uint32 indexed season, uint256 toField, uint256 toSilo, uint256 toFertilizer);
+    event Ship(uint32 indexed season, uint256 shipmentAmount);
+    // event Receipt(IBS.ShipmentRecipient indexed recipient, uint256 receivedAmount, bytes data);
 
     // Interfaces
     MockSeasonFacet season = MockSeasonFacet(BEANSTALK);
@@ -28,7 +29,7 @@ contract SunTest is TestHelper {
     function test_sunOnlySilo(int256 deltaB, uint256 caseId) public {
         uint32 currentSeason = bs.season();
         uint256 initialBeanBalance = C.bean().balanceOf(BEANSTALK);
-        uint256 initalPods = bs.totalUnharvestable();
+        uint256 initalPods = bs.totalUnharvestable(0);
         // cases can only range between 0 and 143.
         caseId = bound(caseId, 0, 143);
         // deltaB cannot exceed uint128 max.
@@ -42,8 +43,6 @@ contract SunTest is TestHelper {
         uint256 soilIssued;
         if (deltaB > 0) {
             // note: no soil is issued as no debt exists.
-            vm.expectEmit();
-            emit Reward(currentSeason + 1, 0, uint256(deltaB), 0);
         } else {
             soilIssued = uint256(-deltaB);
         }
@@ -73,7 +72,7 @@ contract SunTest is TestHelper {
         // in both cases, soil should be issued,
         // and pods should remain 0.
         assertEq(bs.totalSoil(), soilIssued, "invalid soil issued");
-        assertEq(bs.totalUnharvestable(), 0, "invalid pods");
+        assertEq(bs.totalUnharvestable(0), 0, "invalid pods");
     }
 
     /**
@@ -83,6 +82,9 @@ contract SunTest is TestHelper {
      * the remaining bean issuance is given to the silo.
      */
     function test_sunFieldAndSilo(uint256 podsInField, int256 deltaB, uint256 caseId) public {
+        // Set up shipment routes to include only Silo and one Field.
+        setRoutes_siloAndFields();
+
         uint32 currentSeason = bs.season();
         uint256 initialBeanBalance = C.bean().balanceOf(BEANSTALK);
         // cases can only range between 0 and 143.
@@ -94,7 +96,7 @@ contract SunTest is TestHelper {
             int256(uint256(type(uint128).max))
         );
         // increase pods in field.
-        bs.incrementTotalPodsE(podsInField);
+        bs.incrementTotalPodsE(0, podsInField);
 
         // soil event check.
         uint256 soilIssued;
@@ -103,8 +105,6 @@ contract SunTest is TestHelper {
         if (deltaB > 0) {
             (beansToField, beansToSilo) = calcBeansToFieldAndSilo(uint256(deltaB), podsInField);
             soilIssued = getSoilIssuedAbovePeg(podsInField, beansToField, caseId);
-            vm.expectEmit();
-            emit Reward(currentSeason + 1, beansToField, beansToSilo, 0);
         } else {
             soilIssued = uint256(-deltaB);
         }
@@ -121,7 +121,11 @@ contract SunTest is TestHelper {
         if (deltaB >= 0) {
             assertEq(C.bean().balanceOf(BEANSTALK), uint256(deltaB), "invalid bean minted +deltaB");
             assertEq(bs.totalSoil(), soilIssued, "invalid soil @ +deltaB");
-            assertEq(bs.totalUnharvestable(), podsInField - beansToField, "invalid pods @ +deltaB");
+            assertEq(
+                bs.totalUnharvestable(0),
+                podsInField - beansToField,
+                "invalid pods @ +deltaB"
+            );
         }
         // if deltaB is negative, soil is issued equal to deltaB.
         // no beans should be minted.
@@ -132,10 +136,11 @@ contract SunTest is TestHelper {
                 "invalid bean minted -deltaB"
             );
             assertEq(bs.totalSoil(), soilIssued, "invalid soil @ -deltaB");
-            assertEq(bs.totalUnharvestable(), podsInField, "invalid pods @ -deltaB");
+            assertEq(bs.totalUnharvestable(0), podsInField, "invalid pods @ -deltaB");
         }
     }
 
+    // TODO: Improve this/these tests by handling multiple concurrent seasons with shipment edge cases.
     /**
      * @notice tests bean issuance with a field, silo, and fertilizer.
      * @dev bean mints are split between the field, silo, and fertilizer 1/3, 1/3, 1/3.
@@ -158,39 +163,27 @@ contract SunTest is TestHelper {
             int256(uint256(type(uint128).max))
         );
 
+        uint256 initialEarnedBeans = bs.totalEarnedBeans();
+
         // test is capped to CP2 constraints. See {ConstantProduct2.sol}
         sproutsInBarn = bound(sproutsInBarn, 0, type(uint72).max);
 
         // increase pods in field.
-        bs.incrementTotalPodsE(podsInField);
+        bs.incrementTotalPodsE(0, podsInField);
 
         // initialize farmer with unripe tokens in order for fertilizer to function.
         initializeUnripeTokens(users[0], 100e6, 100e18);
         uint256 fertilizerMinted;
         (sproutsInBarn, fertilizerMinted) = addFertilizerBasedOnSprouts(0, sproutsInBarn);
-        // soil event check.
-        uint256 soilIssued;
-        uint256 beansToFertilizer;
-        uint256 beansToField;
-        uint256 beansToSilo;
-        if (deltaB > 0) {
-            (beansToFertilizer, beansToField, beansToSilo) = calcBeansToFertilizerFieldAndSilo(
-                uint256(deltaB),
-                sproutsInBarn,
-                podsInField
-            );
-            soilIssued = getSoilIssuedAbovePeg(podsInField, beansToField, caseId);
-            vm.expectEmit();
-            emit Reward(currentSeason + 1, beansToField, beansToSilo, beansToFertilizer);
-        } else {
-            soilIssued = uint256(-deltaB);
-        }
+        assertEq(sproutsInBarn, bs.totalUnfertilizedBeans(), "invalid sprouts in barn");
 
         // bean supply may change due to fert issuance, and inital supply is placed here.
         uint256 beansInBeanstalk = C.bean().balanceOf(BEANSTALK);
 
-        vm.expectEmit();
-        emit Soil(currentSeason + 1, soilIssued);
+        int256 initialLeftoverBeans = int256(bs.leftoverBeans());
+
+        vm.expectEmit(true, false, false, false);
+        emit Soil(currentSeason + 1, 0);
 
         season.sunSunrise(deltaB, caseId);
 
@@ -206,13 +199,35 @@ contract SunTest is TestHelper {
                 uint256(deltaB),
                 "invalid bean minted +deltaB"
             );
-            assertEq(bs.totalSoil(), soilIssued, "invalid soil @ +deltaB");
-            assertEq(bs.totalUnharvestable(), podsInField - beansToField, "invalid pods @ +deltaB");
-            assertEq(
-                bs.totalUnfertilizedBeans(),
-                sproutsInBarn - beansToFertilizer,
-                "invalid sprouts @ +deltaB"
+
+            // Verify amount of change in Fertilizer. Either a max of cap or a min of 1/3 mints.
+            uint256 beansToFertilizer = sproutsInBarn - bs.totalUnfertilizedBeans();
+            int256 leftoverChange = int256(bs.leftoverBeans()) - initialLeftoverBeans;
+            beansToFertilizer = leftoverChange > 0
+                ? beansToFertilizer + uint256(leftoverChange)
+                : beansToFertilizer - uint256(-leftoverChange);
+            assertLe(beansToFertilizer, uint256(deltaB) / 2, "too many Beans to Fert");
+            assertTrue(
+                beansToFertilizer == sproutsInBarn - uint256(initialLeftoverBeans) ||
+                    beansToFertilizer >= uint256(deltaB) / 3,
+                "not enough Beans to Fert"
             );
+
+            // Verify amount of change in Field. Either a max of cap or a min of 1/3 mints.
+            uint256 beansToField = podsInField - bs.totalUnharvestable(0);
+            assertLe(beansToField, uint256(deltaB) / 2, "too many Beans to Field");
+            assertTrue(
+                beansToField == podsInField || beansToField >= uint256(deltaB) / 3,
+                "not enough Beans to Field"
+            );
+
+            // Verify amount of change in Silo. Min of 1/3 mints.
+            uint256 beansToSilo = bs.totalEarnedBeans() - initialEarnedBeans;
+            assertLe(beansToSilo, uint256(deltaB), "too many Beans to Silo");
+            assertGe(beansToSilo, uint256(deltaB) / 3, "not enough Beans to Silo");
+
+            uint256 soilIssued = getSoilIssuedAbovePeg(podsInField, beansToField, caseId);
+            assertEq(bs.totalSoil(), soilIssued, "invalid soil @ +deltaB");
         }
         // if deltaB is negative, soil is issued equal to deltaB.
         // no beans should be minted.
@@ -222,37 +237,14 @@ contract SunTest is TestHelper {
                 0,
                 "invalid bean minted -deltaB"
             );
-            assertEq(bs.totalSoil(), soilIssued, "invalid soil @ -deltaB");
-            assertEq(bs.totalUnharvestable(), podsInField, "invalid pods @ -deltaB");
             assertEq(bs.totalUnfertilizedBeans(), sproutsInBarn, "invalid sprouts @ +deltaB");
+            assertEq(bs.totalUnharvestable(0), podsInField, "invalid pods @ -deltaB");
+            uint256 soilIssued = uint256(-deltaB);
+            assertEq(bs.totalSoil(), soilIssued, "invalid soil @ -deltaB");
         }
     }
 
     ////// HELPER FUNCTIONS //////
-
-    /**
-     * @notice calculates the distrubution of field and silo beans.
-     * @dev TODO: generalize division.
-     */
-    function calcBeansToFertilizerFieldAndSilo(
-        uint256 beansIssued,
-        uint256 sproutsInBarn,
-        uint256 podsInField
-    ) internal returns (uint256 beansToFertilizer, uint256 beansToField, uint256 beansToSilo) {
-        // Fertilizer gets 1/3 of bean issuance. Only enabled if fert is purchased.
-        if (bs.getActiveFertilizer() > 0) {
-            beansToFertilizer = beansIssued / 3;
-            // Fertilizer Issuance rounds down to the nearest activeFertilizer (see Sun.rewardToFertilizer).
-            beansToFertilizer =
-                (beansToFertilizer / bs.getActiveFertilizer()) *
-                bs.getActiveFertilizer();
-            // Cap fertilizer issuance is to the number of sprouts in the barn.
-            if (beansToFertilizer > sproutsInBarn) beansToFertilizer = sproutsInBarn;
-        }
-
-        beansIssued -= beansToFertilizer;
-        (beansToField, beansToSilo) = calcBeansToFieldAndSilo(beansIssued, podsInField);
-    }
 
     /**
      * @notice calculates the distrubution of field and silo beans.

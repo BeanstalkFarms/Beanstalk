@@ -21,11 +21,6 @@ contract GerminationTest is TestHelper {
     // test accounts
     address[] farmers;
 
-    // The largest deposit that can occur on the first season.
-    // Given the supply of beans should starts at 0,
-    // this should never occur.
-    uint256 constant MAX_DEPOSIT_BOUND = 1.7e22; // 2 ** 128 / 2e16
-
     function setUp() public {
         initializeBeanstalkTestState(true, false);
 
@@ -221,42 +216,6 @@ contract GerminationTest is TestHelper {
     // }
 
     ////// SILO TEST HELPERS //////
-
-    /**
-     * @notice Set up the silo deposit test by depositing beans to the silo from multiple users.
-     * @param amount The amount of beans to deposit.
-     * @return _amount The actual amount of beans deposited.
-     * @return stem The stem tip for the deposited beans.
-     */
-    function setUpSiloDepositTest(
-        uint256 amount,
-        address[] memory _farmers
-    ) public returns (uint256 _amount, int96 stem) {
-        _amount = bound(amount, 1, MAX_DEPOSIT_BOUND);
-
-        // deposit beans to silo from user 1 and 2.
-        depositForUsers(_farmers, C.BEAN, _amount, LibTransfer.From.EXTERNAL);
-        stem = bs.stemTipForToken(C.BEAN);
-    }
-
-    /**
-     * @notice Deposit beans to the silo from multiple users.
-     * @param users The users to deposit beans from.
-     * @param token The token to deposit.
-     * @param amount The amount of beans to deposit.
-     * @param mode The deposit mode.
-     */
-    function depositForUsers(
-        address[] memory users,
-        address token,
-        uint256 amount,
-        LibTransfer.From mode
-    ) public {
-        for (uint256 i = 0; i < users.length; i++) {
-            vm.prank(users[i]);
-            silo.deposit(token, amount, mode);
-        }
-    }
 
     /**
      * @notice Withdraw beans from the silo for multiple users.

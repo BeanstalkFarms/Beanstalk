@@ -7,10 +7,11 @@ import {IWell, IERC20, Call} from "contracts/interfaces/basin/IWell.sol";
 import {MockPump} from "contracts/mocks/well/MockPump.sol";
 import {MockSeasonFacet, Weather} from "contracts/mocks/mockFacets/MockSeasonFacet.sol";
 import {MockFieldFacet} from "contracts/mocks/mockFacets/MockFieldFacet.sol";
-import {Storage} from "contracts/libraries/LibAppStorage.sol";
 import {SeasonGettersFacet} from "contracts/beanstalk/sun/SeasonFacet/SeasonGettersFacet.sol";
 import {SiloGettersFacet} from "contracts/beanstalk/silo/SiloFacet/SiloGettersFacet.sol";
 import {IMockFBeanstalk} from "contracts/interfaces/IMockFBeanstalk.sol";
+import {Season} from "contracts/beanstalk/storage/System.sol";
+import {Rain} from "contracts/beanstalk/storage/System.sol";
 
 /**
  * @title FloodTest
@@ -64,21 +65,21 @@ contract FloodTest is TestHelper {
     }
 
     function testNotRaining() public {
-        Storage.Season memory s = seasonGetters.time();
+        Season memory s = seasonGetters.time();
         assertFalse(s.raining);
     }
 
     function testRaining() public {
-        field.incrementTotalPodsE(1000e18);
+        field.incrementTotalPodsE(1000e18, bs.activeField());
         season.rainSunrise();
         bs.mow(users[1], C.BEAN);
 
-        Storage.Rain memory rain = seasonGetters.rain();
-        Storage.Season memory s = seasonGetters.time();
+        Rain memory rain = seasonGetters.rain();
+        Season memory s = seasonGetters.time();
 
         assertEq(s.rainStart, s.current);
         assertTrue(s.raining);
-        assertEq(rain.pods, bs.totalPods());
+        assertEq(rain.pods, bs.totalPods(bs.activeField()));
         assertEq(rain.roots, 20008000e18);
 
         SiloGettersFacet.AccountSeasonOfPlenty memory sop = siloGetters.balanceOfSop(users[1]);
@@ -88,14 +89,14 @@ contract FloodTest is TestHelper {
     }
 
     function testStopsRaining() public {
-        field.incrementTotalPodsE(1000e18);
+        field.incrementTotalPodsE(1000e18, bs.activeField());
         season.rainSunrise();
         bs.mow(users[1], C.BEAN);
 
         season.droughtSunrise();
         bs.mow(users[1], C.BEAN);
 
-        Storage.Season memory s = seasonGetters.time();
+        Season memory s = seasonGetters.time();
         assertEq(s.rainStart, s.current - 1);
 
         SiloGettersFacet.AccountSeasonOfPlenty memory sop = siloGetters.balanceOfSop(users[1]);
@@ -104,7 +105,7 @@ contract FloodTest is TestHelper {
 
     function testSopsWhenAtPeg() public {
         season.rainSunrises(25);
-        Storage.Season memory s = seasonGetters.time();
+        Season memory s = seasonGetters.time();
 
         assertEq(s.lastSop, 0);
         assertEq(s.lastSopSeason, 0);
@@ -114,7 +115,7 @@ contract FloodTest is TestHelper {
         setDeltaBforWell(-1000e6, C.BEAN_ETH_WELL, C.WETH);
         season.rainSunrises(25);
 
-        Storage.Season memory s = seasonGetters.time();
+        Season memory s = seasonGetters.time();
         assertEq(s.lastSop, 0);
         assertEq(s.lastSopSeason, 0);
     }
@@ -141,7 +142,7 @@ contract FloodTest is TestHelper {
 
         season.rainSunrise();
 
-        Storage.Season memory s = seasonGetters.time();
+        Season memory s = seasonGetters.time();
 
         assertEq(s.lastSop, s.rainStart);
         assertEq(s.lastSopSeason, s.current);
@@ -216,7 +217,7 @@ contract FloodTest is TestHelper {
         season.rainSunrises(2);
 
         // sops p > 1
-        Storage.Season memory s = seasonGetters.time();
+        Season memory s = seasonGetters.time();
         uint256[] memory reserves = IWell(sopWell).getReserves();
 
         assertEq(s.lastSop, s.rainStart);
@@ -280,7 +281,7 @@ contract FloodTest is TestHelper {
         // end before each from hardhat test
 
         // sops p > 1
-        Storage.Season memory s = seasonGetters.time();
+        Season memory s = seasonGetters.time();
         uint256[] memory reserves = IWell(sopWell).getReserves();
 
         assertEq(s.lastSop, s.rainStart);
@@ -411,23 +412,24 @@ contract FloodTest is TestHelper {
         amount = bound(amount, 1, 1_000e6);
 
         // "buy" some pods
-        bs.incrementTotalPodsE(amount);
+        bs.incrementTotalPodsE(bs.activeField(), amount);
 
         uint256 initialBeanSupply = C.bean().totalSupply();
-        uint256 initialPodLine = bs.podIndex();
-        uint256 initialHarvestable = bs.totalHarvestable();
+        uint256 initialPodLine = bs.podIndex(bs.activeField());
+        uint256 initialHarvestable = bs.totalHarvestableForActiveField();
 
         season.rainSunrise();
         bs.mow(users[1], C.BEAN);
 
         vm.expectEmit();
+
         emit SeasonOfPlentyField(amount);
 
         season.rainSunrise();
 
-        uint256 newHarvestable = bs.totalHarvestable();
+        uint256 newHarvestable = bs.totalHarvestableForActiveField();
         uint256 newBeanSupply = C.bean().totalSupply();
-        uint256 newPodLine = bs.podIndex();
+        uint256 newPodLine = bs.podIndex(bs.activeField());
 
         assertGt(newBeanSupply, initialBeanSupply); // Beans were minted
         assertEq(newHarvestable, initialPodLine); // Pods cleared to end of podline because podline was <0.1% of supply
@@ -441,10 +443,10 @@ contract FloodTest is TestHelper {
 
         amount = bound(amount, 10_000e6, 100_000e6);
 
-        bs.incrementTotalPodsE(amount);
+        bs.incrementTotalPodsE(bs.activeField(), amount);
         uint256 initialBeanSupply = C.bean().totalSupply();
-        uint256 initialPodLine = bs.podIndex();
-        uint256 initialHarvestable = bs.totalHarvestable();
+        uint256 initialPodLine = bs.podIndex(bs.activeField());
+        uint256 initialHarvestable = bs.totalHarvestableForActiveField();
 
         season.rainSunrise();
         bs.mow(users[1], C.BEAN);
@@ -454,9 +456,9 @@ contract FloodTest is TestHelper {
 
         season.rainSunrise();
 
-        uint256 newHarvestable = bs.totalHarvestable();
+        uint256 newHarvestable = bs.totalHarvestableForActiveField();
         uint256 newBeanSupply = C.bean().totalSupply();
-        uint256 newPodLine = bs.podIndex();
+        uint256 newPodLine = bs.podIndex(bs.activeField());
 
         assertGt(newBeanSupply, initialBeanSupply); // Beans were minted
         assertLt(newHarvestable, newPodLine); // Pods didn't clear to end of podline because podline was >0.1% of supply

@@ -96,14 +96,20 @@ async function encodeInitFunctionCall() {
     return well.interface.encodeFunctionData('init', ["Test", "Test"]);
 }
 
-async function deployWell(tokens, verbose = false, salt = ethers.constants.HashZero) {
+async function deployWell(tokens, verbose = false, salt = ethers.constants.HashZero, mockPump = false) {
     const wellImplementation = await deployWellContract('Well');
     if (verbose) console.log("Deployed Well Implementation", wellImplementation.address);
     const aquifer = await deployWellContract('Aquifer');
     if (verbose) console.log("Deployed Aquifer", aquifer.address);
     const wellFunction = await deployWellContract('ConstantProduct2');
     if (verbose) console.log("Deployed Well Function", wellFunction.address);
-    const pump = await deployMultiFlowPump()
+    let pump;
+    if(mockPump) {
+        pump = await deployMockPump()
+    } else {
+        pump = await deployMultiFlowPump()
+    }
+    
     if (verbose) console.log("Deployed Pump", pump.address);
 
     const immutableData = await encodeWellImmutableData(
