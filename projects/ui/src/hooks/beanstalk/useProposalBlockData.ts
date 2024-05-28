@@ -95,6 +95,7 @@ function useTotalOutstandingAtBlock(proposal: Proposal) {
   }, [isNFT, loading, totalBeaNFTs, totalBeaNFTsLoading, totalStalk]);
 }
 
+// eslint-disable-next-line unused-imports/no-unused-vars
 function useMinQuorumRatio(
   proposal: Proposal,
   totalOutstanding: BigNumber | undefined
@@ -169,7 +170,7 @@ export default function useProposalBlockData(
   });
 
   const [totalOutstanding, isLoading] = useTotalOutstandingAtBlock(proposal);
-  const ratioNeededForQuorum = useMinQuorumRatio(proposal, totalOutstanding);
+  const ratioNeededForQuorum = getQuorumPct(type);
 
   const votingPower = useMemo(
     () => (vpData?.vp?.vp ? new BigNumber(vpData.vp.vp) : undefined),
