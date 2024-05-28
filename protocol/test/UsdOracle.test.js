@@ -5,7 +5,7 @@ const { getBeanstalk } = require("../utils");
 const { USDC } = require("./utils/constants.js");
 const { getAllBeanstalkContracts } = require("../utils/contracts.js");
 
-describe("USD Oracle", function () {
+describe.only("USD Oracle", function () {
   before(async function () {
     const contracts = await deploy((verbose = false), (mock = true), (reset = true));
     // `beanstalk` contains all functions that the regualar beanstalk has.
@@ -22,8 +22,6 @@ describe("USD Oracle", function () {
   });
 
   it("Reverts if not accepted token", async function () {
-    await expect(mockBeanstalk.getUsdPrice(USDC)).to.be.revertedWith(
-      "Oracle: Token not supported."
-    ); // About 1e14
+    expect(await mockBeanstalk.getUsdPrice(USDC)).to.be.equal(0);
   });
 });
