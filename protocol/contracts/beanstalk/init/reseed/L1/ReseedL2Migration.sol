@@ -26,9 +26,9 @@ contract ReseedL2Migration {
 
     function init() external {
         // Pause beanstalk, preventing future sunrises.
-        s.sys.paused = true;
-        s.sys.pausedAt = uint128(block.timestamp);
-        emit Pause(block.timestamp);
+        // s.sys.paused = true;
+        // s.sys.pausedAt = uint128(block.timestamp);
+        // emit Pause(block.timestamp);
 
         // transfer the following whitelisted silo assets to the BCM:
         // bean:eth
@@ -37,7 +37,7 @@ contract ReseedL2Migration {
         beanEth.transfer(BCM, beanEthBalance);
 
         // BEAN:WstETH
-        IERC20 beanwsteth = IERC20(C.BEAN_ETH_WELL);
+        IERC20 beanwsteth = IERC20(C.BEAN_WSTETH_WELL);
         uint256 beanwstethBalance = beanwsteth.balanceOf(address(this));
         beanwsteth.transfer(BCM, beanwstethBalance);
 

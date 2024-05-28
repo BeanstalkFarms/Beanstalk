@@ -25,7 +25,6 @@ import {SeasonGettersFacet} from "contracts/beanstalk/sun/SeasonFacet/SeasonGett
  * @notice Test helper contract for Beanstalk tests.
  */
 contract BeanstalkDeployer is Utils {
-
     // add or remove facets here. Facets here do not have mocks.
     string[] facets = [
         "BDVFacet",
@@ -230,6 +229,7 @@ contract BeanstalkDeployer is Utils {
         string[] memory cmd = new string[](_facetNames.length + 2);
         cmd[0] = "node";
         cmd[1] = "scripts/genSelectors.js";
+
         for (uint i = 0; i < _facetNames.length; i++) {
             cmd[i + 2] = _facetNames[i];
         }

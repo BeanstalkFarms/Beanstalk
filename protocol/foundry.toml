@@ -12,6 +12,7 @@ libs = [
 cache = true
 cache_path = 'cache'
 force = false
+evm_version = 'shanghai'
 
 # Compiler
 # https://book.getfoundry.sh/reference/config/solidity-compiler
@@ -21,8 +22,8 @@ auto_detect_solc = true
 # 2462: Visibility for constructor is ignored
 ignored_error_codes = [2462]
 # set optimizer to true when deploying to mainnet
-optimizer = false
-optimizer_runs = 200
+optimizer = true
+optimizer_runs = 0
 via_ir = false
 bytecode_hash = 'ipfs'
 
