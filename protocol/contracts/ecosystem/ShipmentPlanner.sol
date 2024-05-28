@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 
 pragma solidity ^0.8.20;
+import "forge-std/console.sol";
 
 /**
  * @notice Constraints of how many Beans to send to a given route at the current time.
@@ -14,11 +15,15 @@ struct ShipmentPlan {
 
 interface IBeanstalk {
     function isFertilizing() external view returns (bool);
+
     function totalUnfertilizedBeans() external view returns (uint256);
+
     function leftoverBeans() external view returns (uint256);
 
     function isHarvesting(uint256 fieldId) external view returns (bool);
+
     function totalUnharvestable(uint256 fieldId) external view returns (uint256);
+
     function fieldCount() external view returns (uint256);
 }
 

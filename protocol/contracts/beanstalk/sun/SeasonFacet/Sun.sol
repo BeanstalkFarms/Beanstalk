@@ -7,6 +7,7 @@ import {LibRedundantMath128} from "contracts/libraries/LibRedundantMath128.sol";
 import {LibRedundantMath256} from "contracts/libraries/LibRedundantMath256.sol";
 import {Oracle, C} from "./Oracle.sol";
 import {Distribution} from "./Distribution.sol";
+import {console} from "forge-std/console.sol";
 
 /**
  * @title Sun
@@ -17,12 +18,6 @@ contract Sun is Oracle, Distribution {
     using SafeCast for uint256;
     using LibRedundantMath256 for uint256;
     using LibRedundantMath128 for uint128;
-
-    /// @dev When Fertilizer is Active, it receives 1/3 of new Bean mints.
-    uint256 private constant FERTILIZER_DENOMINATOR = 3;
-
-    /// @dev After Fertilizer, Harvestable Pods receive 1/2 of new Bean mints.
-    uint256 private constant HARVEST_DENOMINATOR = 2;
 
     /// @dev When the Pod Rate is high, issue less Soil.
     uint256 private constant SOIL_COEFFICIENT_HIGH = 0.5e18;

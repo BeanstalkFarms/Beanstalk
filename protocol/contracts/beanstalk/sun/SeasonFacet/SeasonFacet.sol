@@ -97,9 +97,6 @@ contract SeasonFacet is Invariable, Weather {
             s.sys.season.start.add(s.sys.season.period.mul(s.sys.season.current))
         );
 
-        // Read the Bean / Eth price calculated by the Minting Well.
-        uint256 beanEthPrice = LibWell.getWellPriceFromTwaReserves(C.BEAN_ETH_WELL);
-
         // reset USD Token prices and TWA reserves in storage for all whitelisted Well LP Tokens.
         address[] memory whitelistedWells = LibWhitelistedTokens.getWhitelistedWellLpTokens();
         for (uint256 i; i < whitelistedWells.length; i++) {

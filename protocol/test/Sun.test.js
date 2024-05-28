@@ -13,15 +13,12 @@ const {
   ZERO_BYTES,
   BEAN_WSTETH_WELL
 } = require("./utils/constants.js");
-const { EXTERNAL, INTERNAL } = require("./utils/balances.js");
 const { ethers } = require("hardhat");
 const { setEthUsdChainlinkPrice, setWstethUsdPrice } = require("../utils/oracle.js");
-const { deployBasin } = require("../scripts/basin.js");
-const { deployBasinV1_1Upgrade } = require("../scripts/basinV1_1.js");
 const { getAllBeanstalkContracts } = require("../utils/contracts");
 const { getBean } = require("../utils/index.js");
 const { upgradeWithNewFacets } = require("../scripts/diamond.js");
-const { mockBeanstalkAdmin } = require("../scripts/bips.js");
+const { mine } = require("@nomicfoundation/hardhat-network-helpers");
 
 // TODO
 // Tests to add
@@ -274,19 +271,18 @@ describe("Sun", function () {
     expect(await beanstalk.totalEarnedBeans()).to.be.equal(to6("200"));
   });
 
-
   it("dynamic shipments, harvestable & fertilizable", async function () {
     // increments pods by 1000
     // temperature is 1%
     await mockBeanstalk.incrementTotalPodsE(0, "2600");
-    this.result = await mockBeanstalk.sunSunrise("1500", 8);
     await mockBeanstalk.connect(owner).addFertilizerOwner("0", to18("0.001"), "0");
+    this.result = await mockBeanstalk.sunSunrise("1500", 8);
     // add 1 fertilizer owner, 1 fert (which is equal to 5 beans)
     //sunrise with 1500 beans 500 given to field, silo, and barn
     // emit a event that 495 soil was issued at season 3
     // 500/1.01 = ~495 (rounded down)
-    await expect(this.result).to.emit(beanstalk, "Soil").withArgs(3, "495");
     expect(await beanstalk.totalSoil()).to.be.equal("495");
+    await expect(this.result).to.emit(beanstalk, "Soil").withArgs(3, "495");
     await expect(this.result).to.emit(beanstalk, "Ship");
     expect(await beanstalk.totalHarvestable(0)).to.be.equal("500");
 
@@ -339,7 +335,6 @@ describe("Sun", function () {
     expect(await mockBeanstalk.beansPerFertilizer()).to.be.equal(3533);
     expect(await beanstalk.totalEarnedBeans()).to.be.equal("3533");
     expect(await mockBeanstalk.isFertilizing()).to.be.equal(true);
-
   });
   it("ends germination", async function () {
     await mockBeanstalk.teleportSunrise(5);
