@@ -2,7 +2,17 @@
 pragma solidity ^0.8.4;
 
 interface IMockFBeanstalk {
-    enum GerminationSide {
+    enum FacetCutAction {
+        Add,
+        Replace,
+        Remove
+    }
+
+    enum CounterUpdateType {
+        INCREASE,
+        DECREASE
+    }
+
     struct SeedGaugeSettings {
         uint256 maxBeanMaxLpGpPerBdvRatio;
         uint256 minBeanMaxLpGpPerBdvRatio;
@@ -29,7 +39,7 @@ interface IMockFBeanstalk {
         INTERNAL
     }
 
-    enum Germinate {
+    enum GerminationSide {
         ODD,
         EVEN,
         NOT_GERMINATING
@@ -373,12 +383,10 @@ interface IMockFBeanstalk {
     );
     event RemoveWhitelistStatus(address token, uint256 index);
     event Ship(uint32 indexed season, uint256 shipmentAmount);
-    event Receipt(ShipmentRecipient indexed recipient, uint256 amount, bytes data);
 
     event SeasonOfPlentyField(uint256 toField);
     event SeasonOfPlentyWell(uint256 indexed season, address well, address token, uint256 amount);
     event SetFertilizer(uint128 id, uint128 bpf);
-    event Ship(uint32 indexed season, uint256 shipmentAmount);
     event ShipmentRoutesSet(ShipmentRoute[] newShipmentRoutes);
     event Soil(uint32 indexed season, uint256 soil);
     event Sow(address indexed account, uint256 fieldId, uint256 index, uint256 beans, uint256 pods);
@@ -461,15 +469,10 @@ interface IMockFBeanstalk {
     function abovePeg() external view returns (bool);
 
     function updateSeedGaugeSettings(SeedGaugeSettings memory updatedSeedGaugeSettings) external;
+
     function activeField() external view returns (uint256);
 
     function addFertilizer(uint128 id, uint128 tokenAmountIn, uint256 minLpOut) external payable;
-
-    function addFertilizer(
-        uint128 seasonAdded,
-        uint128 tokenAmountIn,
-        uint256 minLpOut
-    ) external payable;
 
     function addFertilizerOwner(
         uint128 id,
@@ -692,6 +695,7 @@ interface IMockFBeanstalk {
     function claimOwnership() external;
 
     function claimPlenty(address well, To toMode) external payable;
+
     function claimAllPlenty(To toMode) external payable;
 
     function convert(
@@ -1463,8 +1467,6 @@ interface IMockFBeanstalk {
         uint256 minFillAmount
     ) external view returns (uint256);
 
-    function poolDeltaB(address pool) external view returns (int256);
-
     function podOrder(bytes32 id) external view returns (uint256);
 
     function poolCurrentDeltaB(address pool) external view returns (int256 deltaB);
@@ -1672,7 +1674,9 @@ interface IMockFBeanstalk {
     function totalFertilizerBeans() external view returns (uint256 beans);
 
     function totalHarvestable(uint256 fieldId) external view returns (uint256);
+
     function totalHarvestableForActiveField() external view returns (uint256);
+
     function totalHarvested(uint256 fieldId) external view returns (uint256);
 
     function totalPods(uint256 fieldId) external view returns (uint256);
