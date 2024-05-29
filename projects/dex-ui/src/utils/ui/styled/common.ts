@@ -1,37 +1,78 @@
 import type { CSSProperties } from "react";
 import { ThemedStyledProps, css } from "styled-components";
 
-export const makeStyle = <T>(
+const CSS_PROP_MAP = {
+  // display
+  $display: "display",
+
+  // dimensions
+  $height: "height",
+  $minHeight: "min-height",
+  $maxHeight: "max-height",
+  $width: "width",
+  $minWidth: "min-width",
+  $maxWidth: "max-width",
+
+  // box
+  $boxSizing: "box-sizing",
+
+  // flex
+  $direction: "flex-direction",
+  $alignItems: "align-items",
+  $justifyContent: "justify-content",
+  $alignSelf: "align-self",
+  $gap: "gap"
+
+  // we can't handle margin / padding here b/c we calculate them differently
+};
+
+export const makeCssStyle = <T>(
   props: ThemedStyledProps<T, any>,
-  cssKey: string,
-  propKey: string
+  propKey: keyof typeof CSS_PROP_MAP
 ): string => {
   const prop = props[propKey as keyof typeof props];
-  return prop ? `${cssKey}: ${prop};` : "";
+  const cssKey = CSS_PROP_MAP[propKey];
+  return prop && cssKey ? `${cssKey}: ${prop};` : "";
 };
 
 export type DisplayStyleProps = {
-  display?: CSSProperties["display"];
+  $display?: CSSProperties["display"];
 };
 
 export const BlockDisplayStyle = css<DisplayStyleProps>`
-  ${(p) => makeStyle(p, "display", "$display")}
+  ${(p) => makeCssStyle(p, "$display")}
 `;
 
 export type DimensionStyleProps = {
-  height?: CSSProperties["height"];
-  minHeight?: CSSProperties["minHeight"];
-  maxHeight?: CSSProperties["maxHeight"];
-  width?: CSSProperties["width"];
-  minWidth?: CSSProperties["minWidth"];
-  maxWidth?: CSSProperties["maxWidth"];
+  $height?: CSSProperties["height"];
+  $minHeight?: CSSProperties["minHeight"];
+  $maxHeight?: CSSProperties["maxHeight"];
+  $width?: CSSProperties["width"];
+  $minWidth?: CSSProperties["minWidth"];
+  $maxWidth?: CSSProperties["maxWidth"];
 };
 
 export const DimensionStyles = css<DimensionStyleProps>`
-  ${(p) => makeStyle(p, "height", "height")}
-  ${(p) => makeStyle(p, "min-height", "minHeight")}
-  ${(p) => makeStyle(p, "max-height", "maxHeight")}
-  ${(p) => makeStyle(p, "width", "width")}
-  ${(p) => makeStyle(p, "min-width", "minWidth")}
-  ${(p) => makeStyle(p, "max-width", "maxWidth")}
+  ${(p) => makeCssStyle(p, "$height")}
+  ${(p) => makeCssStyle(p, "$minHeight")}
+  ${(p) => makeCssStyle(p, "$maxHeight")}
+  ${(p) => makeCssStyle(p, "$width")}
+  ${(p) => makeCssStyle(p, "$minWidth")}
+  ${(p) => makeCssStyle(p, "$maxWidth")}
+`;
+
+export type BoxSizingProps = {
+  $boxSizing?: CSSProperties["boxSizing"];
+};
+
+export const BoxSizingStyles = css<BoxSizingProps>`
+  ${(p) => makeCssStyle(p, "$boxSizing")}
+`;
+
+export type CommonCssProps = DimensionStyleProps & BoxSizingProps & DisplayStyleProps;
+
+export const CommonCssStyles = css<CommonCssProps>`
+  ${DimensionStyles}
+  ${BoxSizingStyles}
+  ${BlockDisplayStyle}
 `;
