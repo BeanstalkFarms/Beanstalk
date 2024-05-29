@@ -365,16 +365,16 @@ library LibSilo {
                 // check whether the Germinating Stalk transferred exceeds the farmers
                 // Germinating Stalk. If so, the difference is considered from Earned 
                 // Beans. Deduct the odd BDV and increment the activeBDV by the difference.
-                uint256 farmersGerminatingStalk = checkForEarnedBeans(
+                (uint256 farmersGerminatingStalk, uint256 earnedBeansStalk) = checkForEarnedBeans(
                     sender,
                     germinatingStalk,
                     LibGerminate.Germinate.ODD
                 );
                 if (germinatingStalk > farmersGerminatingStalk) {
-                    // safe math not needed as germinatingStalk > removedGerminatingStalk
-                    uint256 activeStalk = (germinatingStalk - farmersGerminatingStalk);
-                    ar.active.stalk += activeStalk;
-                    germinatingStalk -= activeStalk;
+                    // increment the active stalk by the earned beans active stalk.
+                    // decrement the germinatingStalk stalk by the earned beans active stalk.
+                    ar.active.stalk = ar.active.stalk.add(earnedBeansStalk);
+                    germinatingStalk = germinatingStalk.sub(earnedBeansStalk);
                 }
             }
             transferGerminatingStalk(
@@ -390,16 +390,16 @@ library LibSilo {
             // check whether the Germinating Stalk transferred exceeds the farmers
             // Germinating Stalk. If so, the difference is considered from Earned 
             // Beans. Deduct the even BDV and increment the active BDV by the difference.
-            uint256 farmersGerminatingStalk = checkForEarnedBeans(
+            (uint256 farmersGerminatingStalk, uint256 earnedBeansStalk) = checkForEarnedBeans(
                 sender,
                 germinatingStalk,
                 LibGerminate.Germinate.EVEN
             );
             if (germinatingStalk > farmersGerminatingStalk) {
-                // safe math not needed as germinatingStalk > removedGerminatingStalk
-                uint256 activeStalk = (germinatingStalk - farmersGerminatingStalk);
-                ar.active.stalk += activeStalk;
-                germinatingStalk -= activeStalk;
+                // increment the active stalk by the earned beans active stalk.
+                // decrement the germinatingStalk stalk by the earned beans active stalk.
+                ar.active.stalk = ar.active.stalk.add(earnedBeansStalk);
+                germinatingStalk = germinatingStalk.sub(earnedBeansStalk);
             }
             transferGerminatingStalk(
                 sender,
@@ -852,13 +852,14 @@ library LibSilo {
      * `checkForEarnedBeans` is called to determine how many of the Beans were Planted vs Deposited.
      * If a Farmer withdraws a Germinating Deposit with Earned Beans, only subtract the Germinating Beans
      * from the Germinating Balances
-     * @return the germinating portion of stalk for a given Germinate enum.
+     * @return germinatingStalk stalk that is germinating for a given Germinate enum.
+     * @return earnedBeanStalk the earned bean portion of stalk for a given Germinate enum.
      */
     function checkForEarnedBeans(
         address account,
         uint256 stalk,
         LibGerminate.Germinate germ
-    ) internal view returns (uint256) {
+    ) internal view returns (uint256 germinatingStalk, uint256 earnedBeanStalk) {
         AppStorage storage s = LibAppStorage.diamondStorage();
         uint256 farmerGerminatingStalk;
         if (germ == LibGerminate.Germinate.ODD) {
@@ -867,9 +868,9 @@ library LibSilo {
             farmerGerminatingStalk = s.a[account].farmerGerminating.even;
         }
         if (stalk > farmerGerminatingStalk) {
-            return farmerGerminatingStalk;
+            return (farmerGerminatingStalk, stalk.sub(farmerGerminatingStalk));
         } else {
-            return stalk;
+            return (stalk, 0);
         }
     }
 }
