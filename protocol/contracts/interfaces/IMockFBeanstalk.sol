@@ -55,6 +55,12 @@ interface IMockFBeanstalk {
         BARN
     }
 
+    // @dev In-memory struct used to store current deltaB, and then reduction amount per-well.
+    struct WellDeltaB {
+        address well;
+        int256 deltaB;
+    }
+
     struct AccountDepositData {
         address token;
         uint256[] depositIds;
@@ -1516,6 +1522,16 @@ interface IMockFBeanstalk {
     function resetUnderlying(address unripeToken) external;
 
     function rewardSilo(uint256 amount) external;
+
+    function getWellsByDeltaB()
+        external
+        view
+        returns (
+            WellDeltaB[] memory wellDeltaBs,
+            uint256 totalPositiveDeltaB,
+            uint256 totalNegativeDeltaB,
+            uint256 positiveDeltaBCount
+        );
 
     function rewardSunrise(uint256 amount) external;
 

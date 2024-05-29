@@ -12,6 +12,7 @@ import {SiloGettersFacet} from "contracts/beanstalk/silo/SiloFacet/SiloGettersFa
 import {IMockFBeanstalk} from "contracts/interfaces/IMockFBeanstalk.sol";
 import {Season} from "contracts/beanstalk/storage/System.sol";
 import {Rain} from "contracts/beanstalk/storage/System.sol";
+import {LibFlood} from "contracts/libraries/Silo/LibFlood.sol";
 
 /**
  * @title FloodTest
@@ -327,7 +328,7 @@ contract FloodTest is TestHelper {
     }
 
     function testCalculateSopPerWell() public view {
-        Weather.WellDeltaB[] memory wellDeltaBs = new Weather.WellDeltaB[](3);
+        LibFlood.WellDeltaB[] memory wellDeltaBs = new LibFlood.WellDeltaB[](3);
         wellDeltaBs[0].deltaB = 100;
         wellDeltaBs[1].deltaB = 100;
         wellDeltaBs[2].deltaB = -100;
@@ -336,7 +337,7 @@ contract FloodTest is TestHelper {
         assertEq(wellDeltaBs[1].deltaB, 50);
         assertEq(wellDeltaBs[2].deltaB, -100);
 
-        wellDeltaBs = new Weather.WellDeltaB[](4);
+        wellDeltaBs = new LibFlood.WellDeltaB[](4);
         wellDeltaBs[0].deltaB = 90;
         wellDeltaBs[1].deltaB = 80;
         wellDeltaBs[2].deltaB = 20;
@@ -347,7 +348,7 @@ contract FloodTest is TestHelper {
         assertEq(wellDeltaBs[2].deltaB, 0);
         assertEq(wellDeltaBs[3].deltaB, -120);
 
-        wellDeltaBs = new Weather.WellDeltaB[](7);
+        wellDeltaBs = new LibFlood.WellDeltaB[](7);
         wellDeltaBs[0].deltaB = 90;
         wellDeltaBs[1].deltaB = 80;
         wellDeltaBs[2].deltaB = 70;
@@ -364,7 +365,7 @@ contract FloodTest is TestHelper {
         assertEq(wellDeltaBs[5].deltaB, 20);
         assertEq(wellDeltaBs[6].deltaB, -120);
 
-        wellDeltaBs = new Weather.WellDeltaB[](4);
+        wellDeltaBs = new LibFlood.WellDeltaB[](4);
         wellDeltaBs[0].deltaB = 90;
         wellDeltaBs[1].deltaB = 80;
         wellDeltaBs[2].deltaB = -70;
@@ -375,21 +376,21 @@ contract FloodTest is TestHelper {
         assertEq(wellDeltaBs[2].deltaB, -70);
         assertEq(wellDeltaBs[3].deltaB, -200);
 
-        wellDeltaBs = new Weather.WellDeltaB[](1);
+        wellDeltaBs = new LibFlood.WellDeltaB[](1);
         wellDeltaBs[0].deltaB = 90;
         wellDeltaBs = calculateSopPerWellHelper(wellDeltaBs);
         assertEq(wellDeltaBs[0].deltaB, 90);
 
         // This can occur if the twaDeltaB is positive, but the instanteous deltaB is negative or 0
         // In this case, no reductions are needed.
-        wellDeltaBs = new Weather.WellDeltaB[](2);
+        wellDeltaBs = new LibFlood.WellDeltaB[](2);
         wellDeltaBs[0].deltaB = 90;
         wellDeltaBs[1].deltaB = -100;
         wellDeltaBs = calculateSopPerWellHelper(wellDeltaBs);
         assertEq(wellDeltaBs[0].deltaB, 0);
 
         // test just 2 wells, all positive
-        wellDeltaBs = new Weather.WellDeltaB[](2);
+        wellDeltaBs = new LibFlood.WellDeltaB[](2);
         wellDeltaBs[0].deltaB = 90;
         wellDeltaBs[1].deltaB = 80;
         wellDeltaBs = calculateSopPerWellHelper(wellDeltaBs);
@@ -397,7 +398,7 @@ contract FloodTest is TestHelper {
         assertEq(wellDeltaBs[1].deltaB, 80);
 
         // test just 2 wells, one negative
-        wellDeltaBs = new Weather.WellDeltaB[](2);
+        wellDeltaBs = new LibFlood.WellDeltaB[](2);
         wellDeltaBs[0].deltaB = 90;
         wellDeltaBs[1].deltaB = -80;
         wellDeltaBs = calculateSopPerWellHelper(wellDeltaBs);
@@ -473,7 +474,7 @@ contract FloodTest is TestHelper {
         addLiquidityToWell(C.BEAN_ETH_WELL, 13000e6, 10 ether);
         addLiquidityToWell(C.BEAN_WSTETH_WELL, 12000e6, 10 ether);
 
-        (Weather.WellDeltaB[] memory wells, , , ) = season.getWellsByDeltaB();
+        (IMockFBeanstalk.WellDeltaB[] memory wells, , , ) = bs.getWellsByDeltaB();
 
         //verify wells are in descending deltaB
         for (uint256 i = 0; i < wells.length - 1; i++) {
@@ -482,31 +483,31 @@ contract FloodTest is TestHelper {
     }
 
     function testQuickSort() public view {
-        Weather.WellDeltaB[] memory wells = new Weather.WellDeltaB[](5);
+        LibFlood.WellDeltaB[] memory wells = new LibFlood.WellDeltaB[](5);
         int right = int(wells.length - 1);
-        wells[0] = Weather.WellDeltaB(address(0), 100);
-        wells[1] = Weather.WellDeltaB(address(1), 200);
-        wells[2] = Weather.WellDeltaB(address(2), -300);
-        wells[3] = Weather.WellDeltaB(address(3), 400);
-        wells[4] = Weather.WellDeltaB(address(4), -500);
-        wells = season.quickSort(wells, 0, right);
+        wells[0] = LibFlood.WellDeltaB(address(0), 100);
+        wells[1] = LibFlood.WellDeltaB(address(1), 200);
+        wells[2] = LibFlood.WellDeltaB(address(2), -300);
+        wells[3] = LibFlood.WellDeltaB(address(3), 400);
+        wells[4] = LibFlood.WellDeltaB(address(4), -500);
+        wells = LibFlood.quickSort(wells, 0, right);
         assertEq(wells[0].deltaB, 400);
         assertEq(wells[1].deltaB, 200);
         assertEq(wells[2].deltaB, 100);
         assertEq(wells[3].deltaB, -300);
         assertEq(wells[4].deltaB, -500);
 
-        wells = new Weather.WellDeltaB[](2);
+        wells = new LibFlood.WellDeltaB[](2);
         right = int(wells.length - 1);
-        wells[0] = Weather.WellDeltaB(address(0), 200);
-        wells[1] = Weather.WellDeltaB(address(1), 100);
-        wells = season.quickSort(wells, 0, right);
+        wells[0] = LibFlood.WellDeltaB(address(0), 200);
+        wells[1] = LibFlood.WellDeltaB(address(1), 100);
+        wells = LibFlood.quickSort(wells, 0, right);
         assertEq(wells[0].deltaB, 200);
         assertEq(wells[1].deltaB, 100);
 
-        wells[0] = Weather.WellDeltaB(address(0), 100);
-        wells[1] = Weather.WellDeltaB(address(1), 200);
-        wells = season.quickSort(wells, 0, right);
+        wells[0] = LibFlood.WellDeltaB(address(0), 100);
+        wells[1] = LibFlood.WellDeltaB(address(1), 200);
+        wells = LibFlood.quickSort(wells, 0, right);
         assertEq(wells[0].deltaB, 200);
         assertEq(wells[1].deltaB, 100);
     }
@@ -518,8 +519,8 @@ contract FloodTest is TestHelper {
      * @param wellDeltaBs The deltaBs of all whitelisted wells in which to flood
      */
     function calculateSopPerWellHelper(
-        Weather.WellDeltaB[] memory wellDeltaBs
-    ) private view returns (Weather.WellDeltaB[] memory) {
+        LibFlood.WellDeltaB[] memory wellDeltaBs
+    ) private view returns (LibFlood.WellDeltaB[] memory) {
         uint256 totalPositiveDeltaB;
         uint256 totalNegativeDeltaB;
         uint256 positiveDeltaBCount;
@@ -534,7 +535,7 @@ contract FloodTest is TestHelper {
         }
 
         return
-            season.calculateSopPerWell(
+            LibFlood.calculateSopPerWell(
                 wellDeltaBs,
                 totalPositiveDeltaB,
                 totalNegativeDeltaB,

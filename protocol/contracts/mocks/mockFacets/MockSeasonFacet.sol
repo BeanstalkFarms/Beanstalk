@@ -24,6 +24,7 @@ import {LibEvaluate} from "contracts/libraries/LibEvaluate.sol";
 import {LibTokenSilo} from "contracts/libraries/Silo/LibTokenSilo.sol";
 import {IWell, Call} from "contracts/interfaces/basin/IWell.sol";
 import {ShipmentRecipient} from "contracts/beanstalk/storage/System.sol";
+import {LibFlood} from "contracts/libraries/Silo/LibFlood.sol";
 
 /**
  * @author Publius
@@ -113,7 +114,7 @@ contract MockSeasonFacet is SeasonFacet {
         s.sys.season.sunriseBlock = uint32(block.number);
         // update last snapshot in beanstalk.
         stepOracle();
-        handleRain(2);
+        LibFlood.handleRain(2);
     }
 
     function rainSiloSunrise(uint256 amount) public {
@@ -546,7 +547,7 @@ contract MockSeasonFacet is SeasonFacet {
     }
 
     function mockStartSop() internal {
-        handleRain(3);
+        LibFlood.handleRain(3);
     }
 
     function mockIncrementGermination(
