@@ -1,43 +1,20 @@
-import { useEffect, useMemo } from "react";
+import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { ethers } from "ethers";
 import { alchemy } from "../alchemy";
 import { TokenMetadataResponse } from "alchemy-sdk";
 
 import useSdk from "../sdk/useSdk";
-import BeanLogo from "src/assets/images/tokens/BEAN.svg";
-import usdtLogo from "src/assets/images/tokens/USDT.svg";
-import usdcLogo from "src/assets/images/tokens/USDC.svg";
-import daiLogo from "src/assets/images/tokens/DAI.svg";
-import wethLogo from "src/assets/images/tokens/WETH.svg";
-import ethLogo from "src/assets/images/tokens/ETH.svg";
 
-const useSetSdkTokenMetadata = () => {
-  const sdk = useSdk();
-
-  useEffect(() => {
-    const tokens = sdk.tokens;
-
-    if (!tokens.BEAN.logo) tokens.BEAN.setMetadata({ logo: BeanLogo });
-    if (!tokens.USDT.logo) tokens.USDT.setMetadata({ logo: usdtLogo });
-    if (!tokens.USDC.logo) tokens.USDC.setMetadata({ logo: usdcLogo });
-    if (!tokens.DAI.logo) tokens.DAI.setMetadata({ logo: daiLogo });
-    if (!tokens.WETH.logo) tokens.WETH.setMetadata({ logo: wethLogo });
-    if (!tokens.ETH.logo) tokens.ETH.setMetadata({ logo: ethLogo });
-  }, [sdk]);
-};
-
-export const useTokenMetadata = (
-  _address: string | undefined
-): TokenMetadataResponse | undefined => {
-  useSetSdkTokenMetadata();
-
+export const useTokenMetadata = (_address: string | undefined): TokenMetadataResponse | undefined => {
   const address = _address?.toLowerCase() ?? "";
 
   const sdk = useSdk();
 
-  const isValidAddress = Boolean(ethers.utils.isAddress(address));
+  const isValidAddress = Boolean(address && ethers.utils.isAddress(address));
   const sdkToken = sdk.tokens.findByAddress(address);
+
+  console.log("_address: ", _address);
 
   const query = useQuery({
     queryKey: ["token-metadata", address],
@@ -46,10 +23,12 @@ export const useTokenMetadata = (
       console.debug("[useTokenMetadata]: ", address, token);
       return token;
     },
-    enabled: isValidAddress && !sdkToken,
+    enabled: !!address && isValidAddress && !sdkToken,
     // We never need to refetch this data
     staleTime: Infinity
   });
+
+  console.log("query: ", query.data);
 
   return useMemo(() => {
     let metadata: TokenMetadataResponse = {

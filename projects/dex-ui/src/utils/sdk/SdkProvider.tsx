@@ -1,9 +1,27 @@
-import React, { createContext, useMemo } from "react";
+import React, { createContext, useEffect, useMemo } from "react";
 import { BeanstalkSDK } from "@beanstalk/sdk";
 import { JsonRpcProvider } from "@ethersproject/providers";
 import { Signer } from "ethers";
 import { Log } from "../logger";
 import { useEthersProvider, useEthersSigner } from "../wagmi/ethersAdapter";
+
+import BeanLogo from "src/assets/images/tokens/BEAN.svg";
+import usdtLogo from "src/assets/images/tokens/USDT.svg";
+import usdcLogo from "src/assets/images/tokens/USDC.svg";
+import daiLogo from "src/assets/images/tokens/DAI.svg";
+import wethLogo from "src/assets/images/tokens/WETH.svg";
+import ethLogo from "src/assets/images/tokens/ETH.svg";
+
+const SetSdkTokenMetadata = (beanstalkSdk: BeanstalkSDK) => {
+  const tokens = beanstalkSdk.tokens;
+
+  if (!tokens.BEAN.logo) tokens.BEAN.setMetadata({ logo: BeanLogo });
+  if (!tokens.USDT.logo) tokens.USDT.setMetadata({ logo: usdtLogo });
+  if (!tokens.USDC.logo) tokens.USDC.setMetadata({ logo: usdcLogo });
+  if (!tokens.DAI.logo) tokens.DAI.setMetadata({ logo: daiLogo });
+  if (!tokens.WETH.logo) tokens.WETH.setMetadata({ logo: wethLogo });
+  if (!tokens.ETH.logo) tokens.ETH.setMetadata({ logo: ethLogo });
+};
 
 const IS_DEVELOPMENT_ENV = process.env.NODE_ENV !== "production";
 
@@ -13,15 +31,20 @@ const getSDK = (provider?: JsonRpcProvider, signer?: Signer) => {
     provider: provider,
     DEBUG: IS_DEVELOPMENT_ENV
   });
+  SetSdkTokenMetadata(sdk);
   Log.module("sdk").debug("sdk initialized", sdk);
   return sdk;
 };
 
 const ALCHEMY_API_KEY = import.meta.env.VITE_ALCHEMY_API_KEY;
 // TODO: use the correct RPC_URL for the current network
-const RPC_URL = IS_DEVELOPMENT_ENV ? "http://localhost:8545" : `https://eth-mainnet.g.alchemy.com/v2/${ALCHEMY_API_KEY}`;
+const RPC_URL = IS_DEVELOPMENT_ENV
+  ? "http://localhost:8545"
+  : `https://eth-mainnet.g.alchemy.com/v2/${ALCHEMY_API_KEY}`;
 
-export const BeanstalkSDKContext = createContext<BeanstalkSDK>(new BeanstalkSDK({ rpcUrl: RPC_URL, DEBUG: import.meta.env.DEV }));
+export const BeanstalkSDKContext = createContext<BeanstalkSDK>(
+  new BeanstalkSDK({ rpcUrl: RPC_URL, DEBUG: import.meta.env.DEV })
+);
 
 function BeanstalkSDKProvider({ children }: { children: React.ReactNode }) {
   const signer = useEthersSigner();
