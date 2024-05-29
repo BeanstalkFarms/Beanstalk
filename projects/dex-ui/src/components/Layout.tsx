@@ -1,6 +1,6 @@
 import { size } from "src/breakpoints";
-import { AdditionalCssBase, BoxModelBase, BoxModelProps } from "src/utils/ui/styled";
-import { BlockDisplayStyle, DisplayStyleProps } from "src/utils/ui/styled/common";
+import { AdditionalCssBase, BoxModelBase } from "src/utils/ui/styled";
+import { CommonCssProps, CommonCssStyles } from "src/utils/ui/styled/common";
 import { FlexModelProps, FlexBase } from "src/utils/ui/styled/flex-model";
 import { theme } from "src/utils/ui/theme";
 
@@ -25,15 +25,15 @@ export const Row = styled.div<{ gap?: number; mobileGap?: string }>`
   }
 `;
 
-export type BoxProps = BoxModelProps & DisplayStyleProps & CssProps;
+export type BoxProps = CommonCssProps & CssProps;
 
 export const Box = styled.div<BoxProps>`
-  ${BlockDisplayStyle}
   ${BoxModelBase}
+  ${CommonCssStyles}
   ${AdditionalCssBase}
 `;
 
-export type FlexProps = BoxModelProps & FlexModelProps & CssProps;
+export type FlexProps = FlexModelProps & CssProps;
 
 export const Flex = styled.div<FlexProps>`
   ${FlexBase}

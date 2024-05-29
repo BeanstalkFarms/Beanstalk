@@ -11,7 +11,6 @@ export type FlexModelProps = {
   $justifyContent?: CSSProperties["justifyContent"];
   $alignSelf?: CSSProperties["alignSelf"];
   $gap?: number;
-  $width?: string;
   $fullWidth?: boolean;
 } & CommonCssProps;
 

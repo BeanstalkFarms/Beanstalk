@@ -1,5 +1,6 @@
 import type { CSSProperties } from "react";
 import { ThemedStyledProps, css } from "styled-components";
+import { BoxModelBase, BoxModelProps } from "./box-model";
 
 const CSS_PROP_MAP = {
   // display
@@ -69,10 +70,14 @@ export const BoxSizingStyles = css<BoxSizingProps>`
   ${(p) => makeCssStyle(p, "$boxSizing")}
 `;
 
-export type CommonCssProps = DimensionStyleProps & BoxSizingProps & DisplayStyleProps;
+export type CommonCssProps = DimensionStyleProps &
+  BoxSizingProps &
+  DisplayStyleProps &
+  BoxModelProps;
 
 export const CommonCssStyles = css<CommonCssProps>`
   ${DimensionStyles}
   ${BoxSizingStyles}
   ${BlockDisplayStyle}
+  ${BoxModelBase}
 `;
