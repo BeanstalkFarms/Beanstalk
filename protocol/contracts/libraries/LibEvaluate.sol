@@ -2,7 +2,6 @@
 
 pragma solidity ^0.8.20;
 
-import {LibAppStorage, AppStorage} from "./LibAppStorage.sol";
 import {Decimal} from "contracts/libraries/Decimal.sol";
 import {LibWhitelistedTokens, C} from "contracts/libraries/Silo/LibWhitelistedTokens.sol";
 import {LibUnripe} from "contracts/libraries/LibUnripe.sol";
@@ -11,6 +10,9 @@ import {LibRedundantMath32} from "contracts/libraries/LibRedundantMath32.sol";
 import {LibWell} from "contracts/libraries/Well/LibWell.sol";
 import {LibBarnRaise} from "contracts/libraries/LibBarnRaise.sol";
 import {LibRedundantMath256} from "contracts/libraries/LibRedundantMath256.sol";
+import {AppStorage} from "contracts/beanstalk/storage/AppStorage.sol";
+import {LibAppStorage} from "contracts/libraries/LibAppStorage.sol";
+import {Implementation} from "contracts/beanstalk/storage/System.sol";
 
 /**
  * @author Brean
@@ -41,13 +43,13 @@ library LibEvaluate {
     using LibRedundantMath32 for uint32;
 
     // Pod rate bounds
-    uint256 internal constant POD_RATE_LOWER_BOUND = 0.05e18; // 5%
-    uint256 internal constant POD_RATE_OPTIMAL = 0.15e18; // 15%
-    uint256 internal constant POD_RATE_UPPER_BOUND = 0.25e18; // 25%
+    // uint256 internal constant POD_RATE_LOWER_BOUND = 0.05e18; // 5%
+    // uint256 internal constant POD_RATE_OPTIMAL = 0.15e18; // 15%
+    // uint256 internal constant POD_RATE_UPPER_BOUND = 0.25e18; // 25%
 
     // Change in Soil demand bounds
-    uint256 internal constant DELTA_POD_DEMAND_LOWER_BOUND = 0.95e18; // 95%
-    uint256 internal constant DELTA_POD_DEMAND_UPPER_BOUND = 1.05e18; // 105%
+    // uint256 internal constant DELTA_POD_DEMAND_LOWER_BOUND = 0.95e18; // 95%
+    // uint256 internal constant DELTA_POD_DEMAND_UPPER_BOUND = 1.05e18; // 105%
 
     /// @dev If all Soil is Sown faster than this, Beanstalk considers demand for Soil to be increasing.
     uint256 internal constant SOW_TIME_DEMAND_INCR = 600; // seconds
@@ -55,12 +57,12 @@ library LibEvaluate {
     uint32 internal constant SOW_TIME_STEADY = 60; // seconds
 
     // Liquidity to supply ratio bounds
-    uint256 internal constant LP_TO_SUPPLY_RATIO_UPPER_BOUND = 0.8e18; // 80%
-    uint256 internal constant LP_TO_SUPPLY_RATIO_OPTIMAL = 0.4e18; // 40%
-    uint256 internal constant LP_TO_SUPPLY_RATIO_LOWER_BOUND = 0.12e18; // 12%
+    // uint256 internal constant LP_TO_SUPPLY_RATIO_UPPER_BOUND = 0.8e18; // 80%
+    // uint256 internal constant LP_TO_SUPPLY_RATIO_OPTIMAL = 0.4e18; // 40%
+    // uint256 internal constant LP_TO_SUPPLY_RATIO_LOWER_BOUND = 0.12e18; // 12%
 
     // Excessive price threshold constant
-    uint256 internal constant EXCESSIVE_PRICE_THRESHOLD = 1.05e6;
+    // uint256 internal constant EXCESSIVE_PRICE_THRESHOLD = 1.05e6;
 
     uint256 internal constant LIQUIDITY_PRECISION = 1e12;
 
@@ -68,12 +70,17 @@ library LibEvaluate {
      * @notice evaluates the pod rate and returns the caseId
      * @param podRate the length of the podline (debt), divided by the bean supply.
      */
-    function evalPodRate(Decimal.D256 memory podRate) internal pure returns (uint256 caseId) {
-        if (podRate.greaterThanOrEqualTo(POD_RATE_UPPER_BOUND.toDecimal())) {
+    function evalPodRate(Decimal.D256 memory podRate) internal view returns (uint256 caseId) {
+        AppStorage storage s = LibAppStorage.diamondStorage();
+        if (podRate.greaterThanOrEqualTo(s.sys.seedGaugeSettings.podRateUpperBound.toDecimal())) {
             caseId = 27;
-        } else if (podRate.greaterThanOrEqualTo(POD_RATE_OPTIMAL.toDecimal())) {
+        } else if (
+            podRate.greaterThanOrEqualTo(s.sys.seedGaugeSettings.podRateOptimal.toDecimal())
+        ) {
             caseId = 18;
-        } else if (podRate.greaterThanOrEqualTo(POD_RATE_LOWER_BOUND.toDecimal())) {
+        } else if (
+            podRate.greaterThanOrEqualTo(s.sys.seedGaugeSettings.podRateLowerBound.toDecimal())
+        ) {
             caseId = 9;
         }
     }
@@ -89,9 +96,12 @@ library LibEvaluate {
         Decimal.D256 memory podRate,
         address well
     ) internal view returns (uint256 caseId) {
+        AppStorage storage s = LibAppStorage.diamondStorage();
         // p > 1
         if (
-            deltaB > 0 || (deltaB == 0 && podRate.lessThanOrEqualTo(POD_RATE_OPTIMAL.toDecimal()))
+            deltaB > 0 ||
+            (deltaB == 0 &&
+                podRate.lessThanOrEqualTo(s.sys.seedGaugeSettings.podRateOptimal.toDecimal()))
         ) {
             // Beanstalk will only use the largest liquidity well to compute the Bean price,
             // and thus will skip the p > EXCESSIVE_PRICE_THRESHOLD check if the well oracle fails to
@@ -102,8 +112,8 @@ library LibEvaluate {
                 uint256 beanUsdPrice = uint256(1e30).div(
                     LibWell.getUsdTokenPriceForWell(well).mul(beanTknPrice)
                 );
-                if (beanUsdPrice > EXCESSIVE_PRICE_THRESHOLD) {
-                    // p > EXCESSIVE_PRICE_THRESHOLD
+                if (beanUsdPrice > s.sys.seedGaugeSettings.excessivePriceThreshold) {
+                    // p > excessivePriceThreshold
                     return caseId = 6;
                 }
             }
@@ -118,12 +128,21 @@ library LibEvaluate {
      */
     function evalDeltaPodDemand(
         Decimal.D256 memory deltaPodDemand
-    ) internal pure returns (uint256 caseId) {
+    ) internal view returns (uint256 caseId) {
+        AppStorage storage s = LibAppStorage.diamondStorage();
         // increasing
-        if (deltaPodDemand.greaterThanOrEqualTo(DELTA_POD_DEMAND_UPPER_BOUND.toDecimal())) {
+        if (
+            deltaPodDemand.greaterThanOrEqualTo(
+                s.sys.seedGaugeSettings.deltaPodDemandUpperBound.toDecimal()
+            )
+        ) {
             caseId = 2;
             // steady
-        } else if (deltaPodDemand.greaterThanOrEqualTo(DELTA_POD_DEMAND_LOWER_BOUND.toDecimal())) {
+        } else if (
+            deltaPodDemand.greaterThanOrEqualTo(
+                s.sys.seedGaugeSettings.deltaPodDemandLowerBound.toDecimal()
+            )
+        ) {
             caseId = 1;
         }
         // decreasing (caseId = 0)
@@ -137,16 +156,27 @@ library LibEvaluate {
      */
     function evalLpToSupplyRatio(
         Decimal.D256 memory lpToSupplyRatio
-    ) internal pure returns (uint256 caseId) {
+    ) internal view returns (uint256 caseId) {
+        AppStorage storage s = LibAppStorage.diamondStorage();
         // Extremely High
-        if (lpToSupplyRatio.greaterThanOrEqualTo(LP_TO_SUPPLY_RATIO_UPPER_BOUND.toDecimal())) {
+        if (
+            lpToSupplyRatio.greaterThanOrEqualTo(
+                s.sys.seedGaugeSettings.lpToSupplyRatioUpperBound.toDecimal()
+            )
+        ) {
             caseId = 108;
             // Reasonably High
-        } else if (lpToSupplyRatio.greaterThanOrEqualTo(LP_TO_SUPPLY_RATIO_OPTIMAL.toDecimal())) {
+        } else if (
+            lpToSupplyRatio.greaterThanOrEqualTo(
+                s.sys.seedGaugeSettings.lpToSupplyRatioOptimal.toDecimal()
+            )
+        ) {
             caseId = 72;
             // Reasonably Low
         } else if (
-            lpToSupplyRatio.greaterThanOrEqualTo(LP_TO_SUPPLY_RATIO_LOWER_BOUND.toDecimal())
+            lpToSupplyRatio.greaterThanOrEqualTo(
+                s.sys.seedGaugeSettings.lpToSupplyRatioLowerBound.toDecimal()
+            )
         ) {
             caseId = 36;
         }
@@ -211,10 +241,10 @@ library LibEvaluate {
     function calcLPToSupplyRatio(
         uint256 beanSupply
     ) internal view returns (Decimal.D256 memory lpToSupplyRatio, address largestLiqWell) {
-        AppStorage storage s = LibAppStorage.diamondStorage();
-
         // prevent infinite L2SR
         if (beanSupply == 0) return (Decimal.zero(), address(0));
+
+        AppStorage storage s = LibAppStorage.diamondStorage();
 
         address[] memory pools = LibWhitelistedTokens.getWhitelistedLpTokens();
         uint256[] memory twaReserves;
@@ -224,7 +254,7 @@ library LibEvaluate {
         uint256 liquidityWeight;
         for (uint256 i; i < pools.length; i++) {
             // get the liquidity weight.
-            liquidityWeight = getLiquidityWeight(s.sys.silo.assetSettings[pools[i]].lwSelector);
+            liquidityWeight = getLiquidityWeight(pools[i]);
 
             // get the non-bean value in an LP.
             twaReserves = LibWell.getTwaReservesFromStorageOrBeanstalkPump(pools[i]);
@@ -304,10 +334,7 @@ library LibEvaluate {
      * @notice Evaluates beanstalk based on deltaB, podRate, deltaPodDemand and lpToSupplyRatio.
      * and returns the associated caseId.
      */
-    function evaluateBeanstalk(
-        int256 deltaB,
-        uint256 beanSupply
-    ) internal returns (uint256, address) {
+    function evaluateBeanstalk(int256 deltaB, uint256 beanSupply) internal returns (uint256) {
         (
             Decimal.D256 memory deltaPodDemand,
             Decimal.D256 memory lpToSupplyRatio,
@@ -318,23 +345,29 @@ library LibEvaluate {
         .add(evalPrice(deltaB, podRate, largestLiqWell)) // Evaluate Price
             .add(evalDeltaPodDemand(deltaPodDemand))
             .add(evalLpToSupplyRatio(lpToSupplyRatio)); // Evaluate Delta Soil Demand // Evaluate LP to Supply Ratio
-        return (caseId, largestLiqWell);
+        return (caseId);
     }
 
     /**
      * @notice calculates the liquidity weight of a token.
      * @dev the liquidity weight determines the percentage of
-     * liquidity is considered in evaluating the liquidity of bean.
+     * liquidity that is used in evaluating the liquidity of bean.
      * At 0, no liquidity is added. at 1e18, all liquidity is added.
-     *
+     * The function must be a non state, viewable function that returns a uint256.
      * if failure, returns 0 (no liquidity is considered) instead of reverting.
+     * if the pool does not have a target, uses address(this).
      */
-    function getLiquidityWeight(bytes4 lwSelector) internal view returns (uint256 liquidityWeight) {
-        bytes memory callData = abi.encodeWithSelector(lwSelector);
-        (bool success, bytes memory data) = address(this).staticcall(callData);
-        if (!success) {
-            return 0;
-        }
+    function getLiquidityWeight(address pool) internal view returns (uint256 liquidityWeight) {
+        AppStorage storage s = LibAppStorage.diamondStorage();
+        Implementation memory lw = s.sys.silo.assetSettings[pool].liquidityWeightImplementation;
+
+        // if the target is 0, use address(this).
+        address target = lw.target;
+        if (target == address(0)) target = address(this);
+
+        (bool success, bytes memory data) = target.staticcall(abi.encodeWithSelector(lw.selector));
+
+        if (!success) return 0;
         assembly {
             liquidityWeight := mload(add(data, add(0x20, 0)))
         }

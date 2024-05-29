@@ -3,7 +3,6 @@ pragma solidity >=0.6.0 <0.9.0;
 pragma abicoder v2;
 
 import {C} from "contracts/C.sol";
-import {console} from "forge-std/console.sol";
 import {MockUpgradeFacet} from "contracts/mocks/mockFacets/MockUpgradeFacet.sol";
 import {InitMint} from "contracts/beanstalk/init/InitMint.sol";
 import {TestHelper} from "test/foundry/utils/TestHelper.sol";
@@ -11,12 +10,11 @@ import {IMockFBeanstalk} from "contracts/interfaces/IMockFBeanstalk.sol";
 import {IDiamondCut} from "contracts/interfaces/IDiamondCut.sol";
 
 /**
- * @title GerminationTest
+ * @title UpgradeDiamond
  * @author Brean
- * @notice Test the germination of beans in the silo.
- * @dev Tests total/farmer values and validates the germination process.
+ * @notice Tests upgrading the diamond.
  */
-contract MockUpgradeFacets is TestHelper {
+contract UpgradeDiamond is TestHelper {
     // test accounts
     address[] farmers;
 

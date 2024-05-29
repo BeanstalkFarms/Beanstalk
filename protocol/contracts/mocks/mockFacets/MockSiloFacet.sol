@@ -148,7 +148,7 @@ contract MockSiloFacet is SiloFacet {
     //     );
     // }
 
-    function handleRainAndSopsLegacy(address account, uint32 _lastUpdate) private {
+    /*function handleRainAndSopsLegacy(address account, uint32 _lastUpdate) private {
         // If no roots, reset Sop counters variables
         if (s.accts[account].roots == 0) {
             s.accts[account].lastSop = s.sys.season.rainStart;
@@ -174,7 +174,7 @@ contract MockSiloFacet is SiloFacet {
             // Reset Last Rain if not raining.
             s.accts[account].lastRain = 0;
         }
-    }
+    }*/
 
     //mock adding seeds to account for legacy tests
     // function mintSeeds(address account, uint256 seeds) internal {
@@ -217,7 +217,8 @@ contract MockSiloFacet is SiloFacet {
             token,
             true,
             true,
-            selector == LibWell.WELL_BDV_SELECTOR
+            selector == LibWell.WELL_BDV_SELECTOR,
+            false // is soppable
         );
 
         // emit WhitelistToken(token, selector, stalkEarnedPerSeason, stalkIssuedPerBdv);
@@ -253,7 +254,8 @@ contract MockSiloFacet is SiloFacet {
             token,
             true,
             true,
-            selector == LibWell.WELL_BDV_SELECTOR
+            selector == LibWell.WELL_BDV_SELECTOR,
+            true
         );
     }
 
@@ -269,8 +271,17 @@ contract MockSiloFacet is SiloFacet {
         return 0.5e18;
     }
 
-    function mockUpdateLiquidityWeight(address token, bytes4 selector) external {
-        s.sys.silo.assetSettings[token].lwSelector = selector;
+    function mockUpdateLiquidityWeight(
+        address token,
+        address newLiquidityWeightImplementation,
+        bytes1 encodeType,
+        bytes4 selector
+    ) external {
+        s.sys.silo.assetSettings[token].liquidityWeightImplementation = Implementation(
+            newLiquidityWeightImplementation,
+            selector,
+            encodeType
+        );
     }
 
     function incrementTotalDepositedAmount(address token, uint256 amount) internal {

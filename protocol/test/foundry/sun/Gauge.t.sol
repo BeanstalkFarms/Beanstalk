@@ -6,18 +6,26 @@ import {TestHelper, LibTransfer, IMockFBeanstalk, MockToken, C, IWell, LibWell} 
 import {MockSeasonFacet} from "contracts/mocks/mockFacets/MockSeasonFacet.sol";
 import {LibGauge} from "contracts/libraries/LibGauge.sol";
 import {MockChainlinkAggregator} from "contracts/mocks/chainlink/MockChainlinkAggregator.sol";
+import {MockLiquidityWeight} from "contracts/mocks/MockLiquidityWeight.sol";
+import {LibAppStorage} from "contracts/libraries/LibAppStorage.sol";
+import {AppStorage} from "contracts/beanstalk/storage/AppStorage.sol";
 
 /**
  * @notice Tests the functionality of the gauge.
  */
 contract GaugeTest is TestHelper {
+    event UpdatedSeedGaugeSettings(IMockFBeanstalk.SeedGaugeSettings);
     event BeanToMaxLpGpPerBdvRatioChange(uint256 indexed season, uint256 caseId, int80 absChange);
 
     // Interfaces.
     MockSeasonFacet season = MockSeasonFacet(BEANSTALK);
+    MockLiquidityWeight lw = MockLiquidityWeight(BEANSTALK);
 
     function setUp() public {
         initializeBeanstalkTestState(true, false);
+
+        // deploy mockLiquidityWeight contract for testing.
+        lw = new MockLiquidityWeight(0.5e18);
     }
 
     ////////////////////// BEAN TO MAX LP RATIO //////////////////////
@@ -78,8 +86,8 @@ contract GaugeTest is TestHelper {
 
     /**
      * @notice verifies that the bean to max LP properly scales up.
-     * @dev these tests verify the specific scalar implmentation.
-     * Changing the scalar implmentation will most likely break these tests.
+     * @dev these tests verify the specific scalar implementation.
+     * Changing the scalar implementation will most likely break these tests.
      * See {LibGauge.getBeanToMaxLpGpPerBdvRatioScaled}.
      */
     function test_beanToMaxLP_scaled(
@@ -88,15 +96,19 @@ contract GaugeTest is TestHelper {
     ) public {
         initBeanToMaxLPRatio = bound(initBeanToMaxLPRatio, 0, 100e18);
         bs.setBeanToMaxLpGpPerBdvRatio(uint128(initBeanToMaxLPRatio));
+        AppStorage storage s = LibAppStorage.diamondStorage();
         uint256 scaledRatio = bs.getBeanToMaxLpGpPerBdvRatioScaled();
         // scaled ratio should never fall below 50%.
-        assertGe(scaledRatio, LibGauge.MIN_BEAN_MAX_LP_GP_PER_BDV_RATIO);
+        assertGe(scaledRatio, s.sys.seedGaugeSettings.minBeanMaxLpGpPerBdvRatio);
 
         // scaled ratio should never exceed 100%.
-        assertLe(scaledRatio, LibGauge.MAX_BEAN_MAX_LP_GP_PER_BDV_RATIO);
+        assertLe(scaledRatio, s.sys.seedGaugeSettings.maxBeanMaxLpGpPerBdvRatio);
 
         // the scaledRatio should increase half as fast as the initBeanToMaxLPRatio.
-        assertEq(scaledRatio - LibGauge.MIN_BEAN_MAX_LP_GP_PER_BDV_RATIO, initBeanToMaxLPRatio / 2);
+        assertEq(
+            scaledRatio - s.sys.seedGaugeSettings.minBeanMaxLpGpPerBdvRatio,
+            initBeanToMaxLPRatio / 2
+        );
     }
 
     ////////////////////// L2SR //////////////////////
@@ -174,8 +186,13 @@ contract GaugeTest is TestHelper {
         }
         assertEq(bs.getTotalWeightedUsdLiquidity(), totalNonBeanValue);
 
-        // update liquidtyWeight
-        bs.mockUpdateLiquidityWeight(whitelistedWellTokens[rand], bs.mockLiquidityWeight.selector);
+        // update liquidtyWeight.
+        bs.mockUpdateLiquidityWeight(
+            whitelistedWellTokens[rand],
+            address(lw),
+            0x00,
+            lw.getLiquidityWeight.selector
+        );
 
         // 1 out of 2 whitelisted lp tokens should have updated weight.
         // mockLiquidityWeight has a 50% reduction in weight. total Weighted value should decrease by 25%.
@@ -189,7 +206,7 @@ contract GaugeTest is TestHelper {
      * @notice verifies that the average grown stalk per season does not change if the season is less than the catchup season.
      */
     function test_avgGrownStalkPerBdv_noChange(uint256 season) public {
-        season = bound(season, 0, LibGauge.TARGET_SEASONS_TO_CATCHUP - 1);
+        season = bound(season, 0, bs.getTargetSeasonsToCatchUp() - 1);
         uint256 initialAvgGrownStalkPerBdvPerSeason = bs.getAverageGrownStalkPerBdvPerSeason();
         depositForUser(users[1], C.BEAN, 100e6);
 
@@ -211,8 +228,13 @@ contract GaugeTest is TestHelper {
      * @notice verifies that the average grown stalk per season changes after the catchup season.
      */
     function test_avgGrownStalkPerBdv_changes(uint256 season) public {
+        AppStorage storage s = LibAppStorage.diamondStorage();
         // season is capped to uint32 max - 1.
-        season = bound(season, LibGauge.TARGET_SEASONS_TO_CATCHUP, type(uint32).max - 1);
+        season = bound(
+            season,
+            s.sys.seedGaugeSettings.targetSeasonsToCatchUp,
+            type(uint32).max - 1
+        );
         depositForUser(users[1], C.BEAN, 100e6);
 
         bs.fastForward(uint32(season));
@@ -592,7 +614,7 @@ contract GaugeTest is TestHelper {
 
     /**
      * @notice initializes the LP<>LP distrubution.
-     * @dev the function updates the gaugePointSelector to a gauge point implmentation
+     * @dev the function updates the gaugePointSelector to a gauge point implementation
      * that stays constant for testing purposes.
      */
     function initLpToLpDistro() internal {
@@ -621,5 +643,33 @@ contract GaugeTest is TestHelper {
         // skip germination, as germinating bdv is not included.
         bs.siloSunrise(0);
         bs.siloSunrise(0);
+    }
+
+    /**
+     * @notice validates that the seed gauge settings in storage changes.
+     */
+    function testSeedGaugeSettings() external {
+        // validate current settings
+        IMockFBeanstalk.SeedGaugeSettings memory seedGauge = bs.getSeedGaugeSetting();
+
+        // change settings
+        vm.prank(BEANSTALK);
+        bs.updateSeedGaugeSettings(
+            IMockFBeanstalk.SeedGaugeSettings(uint256(0), 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
+        );
+
+        IMockFBeanstalk.SeedGaugeSettings memory ssg = bs.getSeedGaugeSetting();
+        assertEq(ssg.maxBeanMaxLpGpPerBdvRatio, 0);
+        assertEq(ssg.minBeanMaxLpGpPerBdvRatio, 0);
+        assertEq(ssg.targetSeasonsToCatchUp, 0);
+        assertEq(ssg.podRateLowerBound, 0);
+        assertEq(ssg.podRateOptimal, 0);
+        assertEq(ssg.podRateUpperBound, 0);
+        assertEq(ssg.deltaPodDemandLowerBound, 0);
+        assertEq(ssg.deltaPodDemandUpperBound, 0);
+        assertEq(ssg.lpToSupplyRatioUpperBound, 0);
+        assertEq(ssg.lpToSupplyRatioOptimal, 0);
+        assertEq(ssg.lpToSupplyRatioLowerBound, 0);
+        assertEq(ssg.excessivePriceThreshold, 0);
     }
 }

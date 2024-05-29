@@ -5,7 +5,6 @@ pragma abicoder v2;
 import {TestHelper, LibTransfer, C} from "test/foundry/utils/TestHelper.sol";
 import {MockSeasonFacet} from "contracts/mocks/mockFacets/MockSeasonFacet.sol";
 import {IMockFBeanstalk as IBS} from "contracts/interfaces/IMockFBeanstalk.sol";
-import {console} from "forge-std/console.sol";
 
 /**
  * @notice Tests the functionality of the sun, the distrubution of beans and soil.

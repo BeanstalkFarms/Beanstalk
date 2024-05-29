@@ -69,11 +69,28 @@ library LibWell {
     }
 
     /**
+     * @dev Returns the first ERC20 well token that is not Bean.
+     */
+    function getNonBeanIndex(IERC20[] memory tokens) internal pure returns (uint nonBeanIndex) {
+        for (nonBeanIndex; nonBeanIndex < tokens.length; ++nonBeanIndex) {
+            if (C.BEAN != address(tokens[nonBeanIndex])) {
+                return nonBeanIndex;
+            }
+        }
+        revert("Non-Bean not in Well.");
+    }
+
+    /**
      * @dev Returns the index of Bean given a Well.
      */
     function getBeanIndexFromWell(address well) internal view returns (uint beanIndex) {
         IERC20[] memory tokens = IWell(well).tokens();
         beanIndex = getBeanIndex(tokens);
+    }
+
+    function getNonBeanTokenFromWell(address well) internal view returns (IERC20 nonBeanToken) {
+        IERC20[] memory tokens = IWell(well).tokens();
+        return tokens[getNonBeanIndex(tokens)];
     }
 
     /**

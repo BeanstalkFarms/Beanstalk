@@ -115,7 +115,7 @@ contract MockSeasonFacet is SeasonFacet {
         s.sys.season.sunriseBlock = uint32(block.number);
         // update last snapshot in beanstalk.
         stepOracle();
-        handleRain(2, C.BEAN_ETH_WELL);
+        handleRain(2);
     }
 
     function rainSiloSunrise(uint256 amount) public {
@@ -548,11 +548,7 @@ contract MockSeasonFacet is SeasonFacet {
     }
 
     function mockStartSop() internal {
-        handleRain(3, C.BEAN_ETH_WELL);
-    }
-
-    function mockSetSopWell(address well) external {
-        s.sys.sopWell = well;
+        handleRain(3);
     }
 
     function mockIncrementGermination(

@@ -52,7 +52,7 @@ contract MarketplaceFacet is Invariable, Order {
         LibMarket._cancelPodListing(LibTractor._user(), fieldId, index);
     }
 
-    function podListing(uint256 fieldId, uint256 index) external view returns (bytes32 id) {
+    function getPodListing(uint256 fieldId, uint256 index) external view returns (bytes32 id) {
         return s.sys.podListings[fieldId][index];
     }
 
@@ -93,11 +93,11 @@ contract MarketplaceFacet is Invariable, Order {
 
     // Get
 
-    function orderId(PodOrder calldata podOrder) external pure returns (bytes32 id) {
+    function getOrderId(PodOrder calldata podOrder) external pure returns (bytes32 id) {
         return _getOrderId(podOrder);
     }
 
-    function podOrder(bytes32 id) external view returns (uint256) {
+    function getPodOrder(bytes32 id) external view returns (uint256) {
         return s.sys.podOrders[id];
     }
 

@@ -112,7 +112,6 @@ describe("Invariants", function () {
       await expect(mockBeanstalk.exploitFertilizer()).to.be.revertedWith(
         "INV: Insufficient token balance"
       );
-      mockBeanstalk.mockSetSopWell(BEAN_ETH_WELL);
       await expect(mockBeanstalk.exploitSop(this.well.address)).to.be.revertedWith(
         "INV: Insufficient token balance"
       );

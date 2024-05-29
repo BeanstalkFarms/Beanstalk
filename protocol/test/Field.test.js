@@ -499,7 +499,7 @@ describe("newField", function () {
       });
 
       it("deletes", async function () {
-        expect(await beanstalk.podListing(0, 0)).to.be.equal(ethers.constants.HashZero);
+        expect(await beanstalk.getPodListing(0, 0)).to.be.equal(ethers.constants.HashZero);
       });
 
       it("emits Sow event", async function () {

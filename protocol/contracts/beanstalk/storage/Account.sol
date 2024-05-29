@@ -75,7 +75,17 @@ struct Field {
  * @param _buffer Reserved storage for future additions.
  */
 struct SeasonOfPlenty {
-    uint256 roots;
+    uint256 rainRoots; // The number of Roots a Farmer had when it started Raining.
+    mapping(address => PerWellPlenty) perWellPlenty; // a mapping from well to plentyPerRoot and plenty.
+    bytes32[4] _buffer;
+}
+
+/**
+ * @notice Stores a Farmer's Season of Plenty (SOP) balances.
+ * @param plentyPerRoot The Plenty Per Root index for this well at the last time a Farmer updated their Silo.
+ * @param plenty The balance of a Farmer's plenty. Plenty can be claimed directly for the well's non-Bean token.
+ */
+struct PerWellPlenty {
     uint256 plentyPerRoot;
     uint256 plenty;
     bytes32[4] _buffer;

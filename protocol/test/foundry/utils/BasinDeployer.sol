@@ -49,17 +49,17 @@ contract BasinDeployer is Utils {
     string constant BEAN_WETH_WELL_NAME = "BEAN:WETH Constant Product 2 Well";
     string constant BEAN_WETH_WELL_SYMBOL = "BEANWETHCP2w";
 
-    // a list of well functions, pumps, and well implmentations.
+    // a list of well functions, pumps, and well implementations.
     address public aquifer;
 
     address[] public wellFunctions;
     address[] public pumps;
-    address[] public wellImplmentations;
+    address[] public wellImplementations;
     address[] public wells;
 
     /**
      * @notice deploys basin and initlizes wells.
-     * @dev deploys the Aquifer, ConstantProduct2, MultiFlowPump, and Well implmentation,
+     * @dev deploys the Aquifer, ConstantProduct2, MultiFlowPump, and Well implementation,
      * at current mainnet addresses.
      */
     function initBasin(bool mock, bool verbose) internal {
@@ -72,7 +72,7 @@ contract BasinDeployer is Utils {
 
     /**
      * @notice deploys the basin contracts.
-     * @dev new well functions, pumps, and well implmentations should be appended.
+     * @dev new well functions, pumps, and well implementations should be appended.
      */
     function deployBasin(bool verbose) internal {
         // new well functions should be added here.
@@ -94,9 +94,9 @@ contract BasinDeployer is Utils {
         // mock pump for testing purposes.
         pumpsDeployData[1] = DeployData("MockPump.sol", address(0), new bytes(0));
 
-        // new well implmentations should be added here.
-        DeployData[] memory wellImplmentationDeployData = new DeployData[](1);
-        wellImplmentationDeployData[0] = DeployData(
+        // new well implementations should be added here.
+        DeployData[] memory wellImplementationDeployData = new DeployData[](1);
+        wellImplementationDeployData[0] = DeployData(
             "./node_modules/@beanstalk/wells/out/Well.sol/Well.json",
             WELL_IMPLMENTATION,
             new bytes(0)
@@ -106,7 +106,7 @@ contract BasinDeployer is Utils {
             AQUIFER, // aquifer
             wfDeployData, // well functions
             pumpsDeployData, // pumps
-            wellImplmentationDeployData, // well implmentations
+            wellImplementationDeployData, // well implementations
             verbose
         );
     }
@@ -118,7 +118,7 @@ contract BasinDeployer is Utils {
         address aquiferAddress,
         DeployData[] memory wfData,
         DeployData[] memory pumpData,
-        DeployData[] memory wellImplmentationData,
+        DeployData[] memory wellImplementationData,
         bool verbose
     ) internal {
         // deploy Aquifier.
@@ -143,18 +143,18 @@ contract BasinDeployer is Utils {
             if (verbose) console.log("Pump", i, "Deployed at:", pumps[i]);
         }
 
-        // deploy implmentations
+        // deploy implementations
         if (verbose) console.log("deploying well implm:");
-        for (uint i; i < wellImplmentationData.length; i++) {
-            wellImplmentations.push(deployCodeWithArgs(wellImplmentationData[i]));
-            if (verbose) console.log("Well Implm", i, "Deployed at:", wellImplmentations[i]);
+        for (uint i; i < wellImplementationData.length; i++) {
+            wellImplementations.push(deployCodeWithArgs(wellImplementationData[i]));
+            if (verbose) console.log("Well Implm", i, "Deployed at:", wellImplementations[i]);
         }
 
         // optional labels for testing.
         vm.label(CP2, "Constant Product 2");
         vm.label(MFP, "MultiFlowPump");
         vm.label(pumps[1], "MockPump");
-        vm.label(wellImplmentations[0], "well");
+        vm.label(wellImplementations[0], "well");
     }
 
     /**
@@ -223,7 +223,7 @@ contract BasinDeployer is Utils {
                 wellAddressAndNonBeanToken[1],
                 wellFunctions[0],
                 pump,
-                wellImplmentations[0]
+                wellImplementations[0]
             );
     }
 

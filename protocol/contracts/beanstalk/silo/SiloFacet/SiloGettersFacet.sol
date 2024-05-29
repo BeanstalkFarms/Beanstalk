@@ -18,9 +18,11 @@ import {LibBytes} from "contracts/libraries/LibBytes.sol";
 import {LibSilo} from "contracts/libraries/Silo/LibSilo.sol";
 import {LibWhitelistedTokens} from "contracts/libraries/Silo/LibWhitelistedTokens.sol";
 import {C} from "contracts/C.sol";
+import {LibWhitelistedTokens} from "contracts/libraries/Silo/LibWhitelistedTokens.sol";
+import {PerWellPlenty} from "contracts/beanstalk/storage/Account.sol";
 
 /**
- * @author Brean
+ * @author Brean, pizzaman1337
  * @title SiloGettersFacet contains view functions related to the silo.
  **/
 contract SiloGettersFacet is ReentrancyGuard {
@@ -49,11 +51,12 @@ contract SiloGettersFacet is ReentrancyGuard {
         uint32 lastSop;
         // `account` balance of Roots when it started raining.
         uint256 roots;
-        // The global Plenty per Root at the last Season in which `account`
-        // updated their Silo.
-        uint256 plentyPerRoot;
-        // `account` balance of unclaimed tokens from Seasons of Plenty.
-        uint256 plenty;
+        FarmerSops[] farmerSops;
+    }
+
+    struct FarmerSops {
+        address well;
+        PerWellPlenty wellsPlenty;
     }
 
     //////////////////////// GETTERS ////////////////////////
@@ -476,8 +479,8 @@ contract SiloGettersFacet is ReentrancyGuard {
      * @notice Returns the `account` balance of unclaimed tokens earned from
      * Seasons of Plenty.
      */
-    function balanceOfPlenty(address account) external view returns (uint256 plenty) {
-        return LibSilo.balanceOfPlenty(account);
+    function balanceOfPlenty(address account, address well) external view returns (uint256 plenty) {
+        return LibSilo.balanceOfPlenty(account, well);
     }
 
     /**
@@ -485,7 +488,7 @@ contract SiloGettersFacet is ReentrancyGuard {
      * Raining during a Silo update.
      */
     function balanceOfRainRoots(address account) external view returns (uint256) {
-        return s.accts[account].sop.roots;
+        return s.accts[account].sop.rainRoots;
     }
 
     /**
@@ -497,9 +500,14 @@ contract SiloGettersFacet is ReentrancyGuard {
     ) external view returns (AccountSeasonOfPlenty memory sop) {
         sop.lastRain = s.accts[account].lastRain;
         sop.lastSop = s.accts[account].lastSop;
-        sop.roots = s.accts[account].sop.roots;
-        sop.plenty = LibSilo.balanceOfPlenty(account);
-        sop.plentyPerRoot = s.accts[account].sop.plentyPerRoot;
+        sop.roots = s.accts[account].sop.rainRoots;
+        address[] memory wells = LibWhitelistedTokens.getWhitelistedWellLpTokens();
+        sop.farmerSops = new FarmerSops[](wells.length);
+        for (uint256 i; i < wells.length; i++) {
+            PerWellPlenty memory wellSop = s.accts[account].sop.perWellPlenty[wells[i]];
+            FarmerSops memory farmerSops = FarmerSops(wells[i], wellSop);
+            sop.farmerSops[i] = farmerSops;
+        }
     }
 
     //////////////////////// STEM ////////////////////////

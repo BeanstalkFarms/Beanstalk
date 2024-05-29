@@ -12,7 +12,6 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
  * @param reentrantStatus An intra-transaction state variable to protect against reentrance.
  * @param isFarm Stores whether the function is wrapped in the `farm` function (1 if not, 2 if it is).
  * @param ownerCandidate Stores a candidate address to transfer ownership to. The owner must claim the ownership transfer.
- * @param sopWell Stores the well that will be used upon a SOP. Uninitialized until a SOP occurs, and is kept constant afterwards.
  * @param plenty The amount of plenty token held by the contract.
  * @param soil The number of Soil currently available. Adjusted during {Sun.stepSun}.
  * @param beanSown The number of Bean sown within the current Season. Reset during {Weather.calcCaseId}.
@@ -38,6 +37,7 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
  * @param seedGauge Stores the seedGauge.
  * @param rain See {Rain}.
  * @param _buffer_2 Reserved storage for future additions.
+ * @param oracleImplementation A mapping from token to its oracle implementation.
  */
 struct System {
     bool paused;
@@ -45,7 +45,6 @@ struct System {
     uint256 reentrantStatus;
     uint256 isFarm;
     address ownerCandidate;
-    address sopWell;
     uint256 plenty;
     uint128 soil;
     uint128 beanSown;
@@ -73,6 +72,9 @@ struct System {
     Rain rain;
     Migration migration;
     bytes32[128] _buffer_2;
+    mapping(address => Implementation) oracleImplementation;
+    SeedGaugeSettings seedGaugeSettings;
+    SeasonOfPlenty sop;
 }
 
 /**
@@ -251,6 +253,7 @@ struct WhitelistStatus {
     bool isWhitelisted;
     bool isWhitelistedLp;
     bool isWhitelistedWell;
+    bool isSoppable;
 }
 
 /**
@@ -286,6 +289,9 @@ struct WhitelistStatus {
  * @param gaugePoints the amount of Gauge points this LP token has in the LP Gauge. Only used for LP whitelisted assets.
  * GaugePoints has 18 decimal point precision (1 Gauge point = 1e18).
  * @param optimalPercentDepositedBdv The target percentage of the total LP deposited BDV for this token. 6 decimal precision.
+ * @param oracleImplementation The implementation for the oracle.
+ * @param gaugePointImplementation The implementation for the gauge points. Supports encodeType 0 and 1.
+ * @param liquidityWeightImplementation The implementation for the liquidity weight.
  * @dev A Token is considered Whitelisted if there exists a non-zero {AssetSettings} selector.
  */
 struct AssetSettings {
@@ -300,6 +306,8 @@ struct AssetSettings {
     bytes4 lwSelector; //                    │ 4  (8)
     uint128 gaugePoints; //                  │ 16 (24)
     uint64 optimalPercentDepositedBdv; //  ──┘ 8  (32)
+    Implementation gaugePointImplementation;
+    Implementation liquidityWeightImplementation;
 }
 
 /**
@@ -370,6 +378,45 @@ struct ShipmentRoute {
 struct Migration {
     uint256 migratedL1Beans;
     bytes32[4] _buffer_;
+}
+
+/**
+ * @notice contains data in order for beanstalk to call a function with a specific selector.
+ * @param target The address of the implementation.
+ * @param selector The function selector that is used to call on the implementation.
+ * @param encodeType The encode type that should be used to encode the function call.
+ * The encodeType value depends on the context of each implementation.
+ * @dev assumes all future implementations will use the same parameters as the beanstalk
+ * gaugePoint and liquidityWeight implementations.
+ */
+struct Implementation {
+    address target;
+    bytes4 selector;
+    bytes1 encodeType;
+}
+
+struct SeedGaugeSettings {
+    uint256 maxBeanMaxLpGpPerBdvRatio;
+    uint256 minBeanMaxLpGpPerBdvRatio;
+    uint256 targetSeasonsToCatchUp;
+    uint256 podRateLowerBound;
+    uint256 podRateOptimal;
+    uint256 podRateUpperBound;
+    uint256 deltaPodDemandLowerBound;
+    uint256 deltaPodDemandUpperBound;
+    uint256 lpToSupplyRatioUpperBound;
+    uint256 lpToSupplyRatioOptimal;
+    uint256 lpToSupplyRatioLowerBound;
+    uint256 excessivePriceThreshold;
+}
+
+/**
+ * @param perWellPlenty A mapping from well amount of plenty (flooded tokens) per well
+ * @param sops mapping of season to a mapping of wells to plentyPerRoot
+ */
+struct SeasonOfPlenty {
+    mapping(address => uint256) plentyPerSopToken;
+    mapping(uint32 => mapping(address => uint256)) sops;
 }
 
 /**

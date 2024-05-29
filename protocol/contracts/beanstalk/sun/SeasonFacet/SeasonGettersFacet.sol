@@ -16,6 +16,7 @@ import {LibGauge} from "contracts/libraries/LibGauge.sol";
 import {LibCases} from "contracts/libraries/LibCases.sol";
 import {LibRedundantMath256} from "contracts/libraries/LibRedundantMath256.sol";
 import {LibDeltaB} from "contracts/libraries/Oracle/LibDeltaB.sol";
+import {SeedGaugeSettings} from "contracts/beanstalk/storage/System.sol";
 
 /**
  * @title SeasonGettersFacet
@@ -82,8 +83,8 @@ contract SeasonGettersFacet {
     /**
      * @notice Returns the Plenty per Root for `season`.
      */
-    function plentyPerRoot(uint32 _season) external view returns (uint256) {
-        return s.sys.sops[_season];
+    function plentyPerRoot(uint32 _season, address well) external view returns (uint256) {
+        return s.sys.sop.sops[_season][well];
     }
 
     //////////////////// ORACLE GETTERS ////////////////////
@@ -288,11 +289,7 @@ contract SeasonGettersFacet {
      * @dev This is the liquidity used in the gauge system.
      */
     function getWeightedTwaLiquidityForWell(address well) public view returns (uint256) {
-        return
-            LibEvaluate
-                .getLiquidityWeight(s.sys.silo.assetSettings[well].lwSelector)
-                .mul(getTwaLiquidityForWell(well))
-                .div(1e18);
+        return LibEvaluate.getLiquidityWeight(well).mul(getTwaLiquidityForWell(well)).div(1e18);
     }
 
     /**
@@ -328,10 +325,6 @@ contract SeasonGettersFacet {
         uint256 beanSupply = C.bean().totalSupply();
         (, address well) = LibEvaluate.calcLPToSupplyRatio(beanSupply);
         return well;
-    }
-
-    function getSopWell() external view returns (address) {
-        return s.sys.sopWell;
     }
 
     //////////////////// CASES ////////////////////
@@ -379,5 +372,57 @@ contract SeasonGettersFacet {
 
     function getSeasonTimestamp() external view returns (uint256) {
         return s.sys.season.timestamp;
+    }
+
+    function getSeedGaugeSetting() external view returns (SeedGaugeSettings memory) {
+        return s.sys.seedGaugeSettings;
+    }
+
+    function getMaxBeanMaxLpGpPerBdvRatio() external view returns (uint256) {
+        return s.sys.seedGaugeSettings.maxBeanMaxLpGpPerBdvRatio;
+    }
+
+    function getMinBeanMaxLpGpPerBdvRatio() external view returns (uint256) {
+        return s.sys.seedGaugeSettings.minBeanMaxLpGpPerBdvRatio;
+    }
+
+    function getTargetSeasonsToCatchUp() external view returns (uint256) {
+        return s.sys.seedGaugeSettings.targetSeasonsToCatchUp;
+    }
+
+    function getPodRateLowerBound() external view returns (uint256) {
+        return s.sys.seedGaugeSettings.podRateLowerBound;
+    }
+
+    function getPodRateOptimal() external view returns (uint256) {
+        return s.sys.seedGaugeSettings.podRateOptimal;
+    }
+
+    function getPodRateUpperBound() external view returns (uint256) {
+        return s.sys.seedGaugeSettings.podRateUpperBound;
+    }
+
+    function getDeltaPodDemandLowerBound() external view returns (uint256) {
+        return s.sys.seedGaugeSettings.deltaPodDemandLowerBound;
+    }
+
+    function getDeltaPodDemandUpperBound() external view returns (uint256) {
+        return s.sys.seedGaugeSettings.deltaPodDemandUpperBound;
+    }
+
+    function getLpToSupplyRatioUpperBound() external view returns (uint256) {
+        return s.sys.seedGaugeSettings.lpToSupplyRatioUpperBound;
+    }
+
+    function getLpToSupplyRatioOptimal() external view returns (uint256) {
+        return s.sys.seedGaugeSettings.lpToSupplyRatioOptimal;
+    }
+
+    function getLpToSupplyRatioLowerBound() external view returns (uint256) {
+        return s.sys.seedGaugeSettings.lpToSupplyRatioLowerBound;
+    }
+
+    function getExcessivePriceThreshold() external view returns (uint256) {
+        return s.sys.seedGaugeSettings.excessivePriceThreshold;
     }
 }

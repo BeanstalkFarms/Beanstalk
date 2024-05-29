@@ -6,7 +6,6 @@ pragma solidity ^0.8.20;
 
 import {LibFunction} from "./LibFunction.sol";
 import {LibClipboard} from "./LibClipboard.sol";
-import {console} from "forge-std/console.sol";
 
 /**
  * @title Farm Lib

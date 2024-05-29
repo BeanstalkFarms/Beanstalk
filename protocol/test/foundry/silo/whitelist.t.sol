@@ -16,7 +16,8 @@ contract WhitelistTest is TestHelper {
         uint256 index,
         bool isWhitelisted,
         bool isWhitelistedLp,
-        bool isWhitelistedWell
+        bool isWhitelistedWell,
+        bool isSoppable
     );
     event WhitelistToken(
         address indexed token,
@@ -28,6 +29,7 @@ contract WhitelistTest is TestHelper {
         uint128 gaugePoints,
         uint64 optimalPercentDepositedBdv
     );
+    event DewhitelistToken(address indexed token);
 
     function setUp() public {
         initializeBeanstalkTestState(true, false);
@@ -178,7 +180,7 @@ contract WhitelistTest is TestHelper {
         bytes4 liquidityWeightSelector = IMockFBeanstalk.maxWeight.selector;
 
         vm.expectEmit();
-        emit AddWhitelistStatus(token, 5, true, true, false);
+        emit AddWhitelistStatus(token, 5, true, true, false, false);
         vm.expectEmit();
         emit WhitelistToken(
             token,
@@ -209,7 +211,10 @@ contract WhitelistTest is TestHelper {
             gaugePointSelector,
             liquidityWeightSelector,
             gaugePoints,
-            optimalPercentDepositedBdv
+            optimalPercentDepositedBdv,
+            true,
+            true,
+            false
         );
     }
 
@@ -236,7 +241,8 @@ contract WhitelistTest is TestHelper {
             gaugePointSelector,
             liquidityWeightSelector,
             gaugePoints,
-            optimalPercentDepositedBdv
+            optimalPercentDepositedBdv,
+            false
         );
         bs.whitelistTokenWithEncodeType(
             token,
@@ -258,7 +264,85 @@ contract WhitelistTest is TestHelper {
             gaugePointSelector,
             liquidityWeightSelector,
             gaugePoints,
-            optimalPercentDepositedBdv
+            optimalPercentDepositedBdv,
+            true,
+            true,
+            false
+        );
+    }
+
+    /**
+     * @notice validates general dewhitelist functionality.
+     */
+    function test_dewhitelist(uint256 i, uint256 season) public prank(BEANSTALK) {
+        season = bound(season, 1, type(uint32).max);
+        bs.teleportSunrise(uint32(season));
+        address[] memory tokens = bs.getWhitelistedTokens();
+        i = bound(i, 0, tokens.length - 1);
+        address token = tokens[i];
+        // initial milestone stem and season
+        IMockFBeanstalk.AssetSettings memory ss = bs.tokenSettings(token);
+
+        vm.expectEmit();
+        emit DewhitelistToken(token);
+        bs.dewhitelistToken(token);
+
+        verifyWhitelistState(token, 0, 1, 10000, 0, 0, 0, 0, false, false, false);
+        // verify that the milestone stem and season are updated and are kept, as
+        // existing deposits are still valid.
+        IMockFBeanstalk.AssetSettings memory newSS = bs.tokenSettings(token);
+        assertEq(int256(newSS.milestoneStem), bs.stemTipForToken(token));
+        assertEq(uint256(newSS.milestoneSeason), season);
+    }
+
+    function test_whitelistTokenWithExternalImplementation(
+        uint32 stalkEarnedPerSeason,
+        uint32 stalkIssuedPerBdv,
+        uint128 gaugePoints,
+        uint64 optimalPercentDepositedBdv
+    ) public prank(BEANSTALK) {
+        address token = address(new MockToken("Mock Token", "MTK"));
+        bytes4 liquidityWeightSelector = IMockFBeanstalk.maxWeight.selector;
+        bytes1 encodeType = 0x01;
+
+        IMockFBeanstalk.Implementation memory oracleImplementation = IMockFBeanstalk.Implementation(
+            address(0),
+            bytes4(0),
+            bytes1(0)
+        );
+
+        IMockFBeanstalk.Implementation memory gaugePointImplementation = IMockFBeanstalk
+            .Implementation(
+                address(0),
+                IMockFBeanstalk.defaultGaugePointFunction.selector,
+                bytes1(0)
+            );
+
+        IMockFBeanstalk.Implementation memory liquidityWeightImplementation = IMockFBeanstalk
+            .Implementation(address(0), liquidityWeightSelector, bytes1(0));
+
+        verifyWhitelistEvents(
+            token,
+            IMockFBeanstalk.beanToBDV.selector,
+            stalkEarnedPerSeason,
+            stalkIssuedPerBdv,
+            bytes4(0),
+            bytes4(0),
+            gaugePoints,
+            optimalPercentDepositedBdv,
+            false
+        );
+        bs.whitelistTokenWithExternalImplementation(
+            token,
+            IMockFBeanstalk.beanToBDV.selector,
+            stalkIssuedPerBdv,
+            stalkEarnedPerSeason,
+            encodeType,
+            gaugePoints,
+            optimalPercentDepositedBdv,
+            oracleImplementation,
+            gaugePointImplementation,
+            liquidityWeightImplementation
         );
     }
 
@@ -270,10 +354,11 @@ contract WhitelistTest is TestHelper {
         bytes4 gaugePointSelector,
         bytes4 liquidityWeightSelector,
         uint128 gaugePoints,
-        uint64 optimalPercentDepositedBdv
+        uint64 optimalPercentDepositedBdv,
+        bool isSoppable
     ) public {
         vm.expectEmit();
-        emit AddWhitelistStatus(token, 5, true, true, false);
+        emit AddWhitelistStatus(token, 5, true, true, false, isSoppable);
         vm.expectEmit();
         emit WhitelistToken(
             token,
@@ -295,7 +380,10 @@ contract WhitelistTest is TestHelper {
         bytes4 gaugePointSelector,
         bytes4 liquidityWeightSelector,
         uint128 gaugePoints,
-        uint64 optimalPercentDepositedBdv
+        uint64 optimalPercentDepositedBdv,
+        bool isWhitelisted,
+        bool isWhitelistedLp,
+        bool isWhitelistedWell
     ) internal view {
         IMockFBeanstalk.AssetSettings memory ss = bs.tokenSettings(token);
         assertEq(ss.selector, bdvSelector);
@@ -312,8 +400,8 @@ contract WhitelistTest is TestHelper {
 
         IMockFBeanstalk.WhitelistStatus memory ws = bs.getWhitelistStatus(token);
         assertEq(ws.token, token);
-        assertEq(ws.isWhitelisted, true);
-        assertEq(ws.isWhitelistedLp, true);
-        assertEq(ws.isWhitelistedWell, false);
+        assertEq(ws.isWhitelisted, isWhitelisted);
+        assertEq(ws.isWhitelistedLp, isWhitelistedLp);
+        assertEq(ws.isWhitelistedWell, isWhitelistedWell);
     }
 }

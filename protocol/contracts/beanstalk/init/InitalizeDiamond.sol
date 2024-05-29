@@ -7,13 +7,14 @@ pragma solidity ^0.8.20;
 import {ILiquidityWeightFacet} from "contracts/beanstalk/sun/LiquidityWeightFacet.sol";
 import {LibWhitelistedTokens} from "contracts/libraries/Silo/LibWhitelistedTokens.sol";
 import {AppStorage} from "contracts/beanstalk/storage/AppStorage.sol";
-import {AssetSettings} from "contracts/beanstalk/storage/System.sol";
+import {AssetSettings, Implementation} from "contracts/beanstalk/storage/System.sol";
 import {IGaugePointFacet} from "contracts/beanstalk/sun/GaugePointFacet.sol";
 import {LibTractor} from "contracts/libraries/LibTractor.sol";
 import {LibDiamond} from "contracts/libraries/LibDiamond.sol";
 import {LibCases} from "contracts/libraries/LibCases.sol";
 import {LibGauge} from "contracts/libraries/LibGauge.sol";
 import {BDVFacet} from "contracts/beanstalk/silo/BDVFacet.sol";
+import {LibUnripe} from "contracts/libraries/LibUnripe.sol";
 import {LibTractor} from "contracts/libraries/LibTractor.sol";
 import {C} from "contracts/C.sol";
 
@@ -34,6 +35,28 @@ contract InitalizeDiamond {
     uint32 constant INIT_STALK_ISSUED_PER_BDV = 1e4;
     uint128 constant INIT_TOKEN_G_POINTS = 100e18;
     uint32 constant INIT_BEAN_TOKEN_WELL_PERCENT_TARGET = 100e6;
+
+    // Pod rate bounds
+    uint256 internal constant POD_RATE_LOWER_BOUND = 0.05e18; // 5%
+    uint256 internal constant POD_RATE_OPTIMAL = 0.15e18; // 15%
+    uint256 internal constant POD_RATE_UPPER_BOUND = 0.25e18; // 25%
+
+    // Change in Soil demand bounds
+    uint256 internal constant DELTA_POD_DEMAND_LOWER_BOUND = 0.95e18; // 95%
+    uint256 internal constant DELTA_POD_DEMAND_UPPER_BOUND = 1.05e18; // 105%
+
+    // Liquidity to supply ratio bounds
+    uint256 internal constant LP_TO_SUPPLY_RATIO_UPPER_BOUND = 0.8e18; // 80%
+    uint256 internal constant LP_TO_SUPPLY_RATIO_OPTIMAL = 0.4e18; // 40%
+    uint256 internal constant LP_TO_SUPPLY_RATIO_LOWER_BOUND = 0.12e18; // 12%
+
+    // Excessive price threshold constant
+    uint256 internal constant EXCESSIVE_PRICE_THRESHOLD = 1.05e6;
+
+    // Gauge
+    uint256 internal constant TARGET_SEASONS_TO_CATCHUP = 4320;
+    uint256 internal constant MAX_BEAN_MAX_LP_GP_PER_BDV_RATIO = 100e18;
+    uint256 internal constant MIN_BEAN_MAX_LP_GP_PER_BDV_RATIO = 50e18;
 
     // EVENTS:
     event BeanToMaxLpGpPerBdvRatioChange(uint256 indexed season, uint256 caseId, int80 absChange);
@@ -57,6 +80,18 @@ contract InitalizeDiamond {
 
         // note: bean and assets that are not in the gauge system
         // do not need to initalize the gauge system.
+        Implementation memory impl = Implementation(address(0), bytes4(0), bytes1(0));
+        Implementation memory liquidityWeightImpl = Implementation(
+            address(0),
+            ILiquidityWeightFacet.maxWeight.selector,
+            bytes1(0)
+        );
+        Implementation memory gaugePointImpl = Implementation(
+            address(0),
+            IGaugePointFacet.defaultGaugePointFunction.selector,
+            bytes1(0)
+        );
+
         AssetSettings[] memory assetSettings = new AssetSettings[](2);
         assetSettings[0] = AssetSettings({
             selector: BDVFacet.beanToBDV.selector,
@@ -69,7 +104,9 @@ contract InitalizeDiamond {
             gpSelector: bytes4(0),
             lwSelector: bytes4(0),
             gaugePoints: 0,
-            optimalPercentDepositedBdv: 0
+            optimalPercentDepositedBdv: 0,
+            gaugePointImplementation: impl,
+            liquidityWeightImplementation: impl
         });
 
         assetSettings[1] = AssetSettings({
@@ -83,7 +120,9 @@ contract InitalizeDiamond {
             gpSelector: IGaugePointFacet.defaultGaugePointFunction.selector,
             lwSelector: ILiquidityWeightFacet.maxWeight.selector,
             gaugePoints: INIT_TOKEN_G_POINTS,
-            optimalPercentDepositedBdv: INIT_BEAN_TOKEN_WELL_PERCENT_TARGET
+            optimalPercentDepositedBdv: INIT_BEAN_TOKEN_WELL_PERCENT_TARGET,
+            gaugePointImplementation: gaugePointImpl,
+            liquidityWeightImplementation: liquidityWeightImpl
         });
 
         whitelistPools(tokens, assetSettings);
@@ -143,6 +182,8 @@ contract InitalizeDiamond {
         // initalizes the cases that beanstalk uses
         // to change certain parameters of itself.
         setCases();
+
+        initializeSeedGaugeSettings();
     }
 
     /**
@@ -198,6 +239,7 @@ contract InitalizeDiamond {
             if (tokens[i] == C.BEAN) {
                 isLPandWell = false;
             }
+            bool isUnripe = LibUnripe.isUnripe(tokens[i]);
 
             // All tokens (excluding bean) are assumed to be
             // - whitelisted,
@@ -206,9 +248,25 @@ contract InitalizeDiamond {
                 tokens[i],
                 true, // is whitelisted,
                 isLPandWell,
-                isLPandWell
+                isLPandWell,
+                !isUnripe && isLPandWell // assumes any non-unripe LP is soppable, may not be true in the future
             );
         }
+    }
+
+    function initializeSeedGaugeSettings() internal {
+        s.sys.seedGaugeSettings.maxBeanMaxLpGpPerBdvRatio = MAX_BEAN_MAX_LP_GP_PER_BDV_RATIO;
+        s.sys.seedGaugeSettings.minBeanMaxLpGpPerBdvRatio = MIN_BEAN_MAX_LP_GP_PER_BDV_RATIO;
+        s.sys.seedGaugeSettings.targetSeasonsToCatchUp = TARGET_SEASONS_TO_CATCHUP;
+        s.sys.seedGaugeSettings.podRateLowerBound = POD_RATE_LOWER_BOUND;
+        s.sys.seedGaugeSettings.podRateOptimal = POD_RATE_OPTIMAL;
+        s.sys.seedGaugeSettings.podRateUpperBound = POD_RATE_UPPER_BOUND;
+        s.sys.seedGaugeSettings.deltaPodDemandLowerBound = DELTA_POD_DEMAND_LOWER_BOUND;
+        s.sys.seedGaugeSettings.deltaPodDemandUpperBound = DELTA_POD_DEMAND_UPPER_BOUND;
+        s.sys.seedGaugeSettings.lpToSupplyRatioUpperBound = LP_TO_SUPPLY_RATIO_UPPER_BOUND;
+        s.sys.seedGaugeSettings.lpToSupplyRatioOptimal = LP_TO_SUPPLY_RATIO_OPTIMAL;
+        s.sys.seedGaugeSettings.lpToSupplyRatioLowerBound = LP_TO_SUPPLY_RATIO_LOWER_BOUND;
+        s.sys.seedGaugeSettings.excessivePriceThreshold = EXCESSIVE_PRICE_THRESHOLD;
     }
 
     function initalizeFarmAndTractor() public {
