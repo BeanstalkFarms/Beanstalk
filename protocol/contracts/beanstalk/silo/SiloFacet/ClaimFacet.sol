@@ -11,6 +11,7 @@ import {Invariable} from "contracts/beanstalk/Invariable.sol";
 import {LibTractor} from "contracts/libraries/LibTractor.sol";
 import {LibWell, IWell} from "contracts/libraries/Well/LibWell.sol";
 import {LibTransfer} from "contracts/libraries/Token/LibTransfer.sol";
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {LibTokenSilo} from "contracts/libraries/Silo/LibTokenSilo.sol";
 import {ReentrancyGuard} from "contracts/beanstalk/ReentrancyGuard.sol";
 import {LibRedundantMath256} from "contracts/libraries/LibRedundantMath256.sol";

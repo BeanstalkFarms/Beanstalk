@@ -4,9 +4,9 @@
 
 pragma solidity ^0.8.20;
 
-import "contracts/libraries/LibRedundantMath256.sol";
 import {LibDiamond} from "contracts/libraries/LibDiamond.sol";
 import {AppStorage} from "../storage/AppStorage.sol";
+import {LibRedundantMath256} from "contracts/libraries/LibRedundantMath256.sol";
 
 /**
  * @author Publius

@@ -16,10 +16,6 @@ contract MockUnripeFacet is UnripeFacet {
     using SafeERC20 for IERC20;
     using LibRedundantMath256 for uint256;
 
-    function setMerkleRootE(address unripeToken, bytes32 root) external {
-        s.sys.silo.unripeSettings[unripeToken].merkleRoot = root;
-    }
-
     function addUnderlying(address unripeToken, uint256 amount) external payable nonReentrant {
         address underlyingToken = s.sys.silo.unripeSettings[unripeToken].underlyingToken;
         IERC20(underlyingToken).safeTransferFrom(LibTractor._user(), address(this), amount);
