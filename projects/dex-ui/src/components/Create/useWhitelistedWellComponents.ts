@@ -2,9 +2,9 @@ import { useMemo } from "react";
 import BeanstalkFarmsLogo from "src/assets/images/beanstalk-farms.png";
 import HalbornLogo from "src/assets/images/halborn-logo.png";
 import {
-  BEANETH_ADDRESS,
-  BEANETH_MULTIPUMP_ADDRESS,
-  CONSTANT_PRODUCT_2_ADDRESS
+  MULTI_FLOW_PUMP_ADDRESS,
+  CONSTANT_PRODUCT_2_ADDRESS,
+  WELL_DOT_SOL_ADDRESS
 } from "src/utils/addresses";
 import BrendanTwitterPFP from "src/assets/images/brendan-twitter-pfp.png";
 import ClockIcon from "src/assets/images/clock-icon.svg";
@@ -47,7 +47,7 @@ export type WellComponentInfo = {
 };
 
 const WellDotSol: WellComponentInfo = {
-  address: BEANETH_ADDRESS,
+  address: WELL_DOT_SOL_ADDRESS,
   component: {
     name: "Well.sol",
     summary: "A standard Well implementation that prioritizes flexibility and composability.",
@@ -87,10 +87,10 @@ const WellDotSol: WellComponentInfo = {
 };
 
 const MultiFlowPump: WellComponentInfo = {
-  address: BEANETH_MULTIPUMP_ADDRESS,
+  address: MULTI_FLOW_PUMP_ADDRESS,
   component: {
     name: "Multi Flow",
-    fullName: "MultiFlow Pump v1.1",
+    fullName: "MultiFlow Pump",
     summary: "An inter-block MEV manipulation resistant oracle implementation.",
     description: [
       "An inter-block MEV manipulation-resistant oracle implementation which can serve last values, geometric EMA values and TWA geometric SMA values."
@@ -158,7 +158,7 @@ const ConstantProduct2: WellComponentInfo = {
 // TODO: can we somwhow make this dynamic??
 export const WellComponentsMap: Record<WellComponentType, Record<string, WellComponentInfo>> = {
   [WellComponentType.WellImplementation]: {
-    [BEANETH_ADDRESS.toLowerCase()]: WellDotSol
+    [WELL_DOT_SOL_ADDRESS.toLowerCase()]: WellDotSol
   },
   [WellComponentType.Pump]: {
     ["multi-flow-pump"]: MultiFlowPump
