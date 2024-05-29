@@ -163,8 +163,13 @@ library LibWhitelist {
         s.sys.silo.assetSettings[token].stalkIssuedPerBdv = stalkIssuedPerBdv;
         s.sys.silo.assetSettings[token].milestoneSeason = uint32(s.sys.season.current);
         s.sys.silo.assetSettings[token].encodeType = encodeType;
-        s.sys.silo.assetSettings[token].gpSelector = gaugePointSelector;
-        s.sys.silo.assetSettings[token].lwSelector = liquidityWeightSelector;
+        s.sys.silo.assetSettings[token].gaugePointImplementation.selector = gaugePointSelector;
+        s
+            .sys
+            .silo
+            .assetSettings[token]
+            .liquidityWeightImplementation
+            .selector = liquidityWeightSelector;
         s.sys.silo.assetSettings[token].gaugePoints = gaugePoints;
         s.sys.silo.assetSettings[token].optimalPercentDepositedBdv = optimalPercentDepositedBdv;
 
@@ -235,8 +240,8 @@ library LibWhitelist {
         s.sys.silo.assetSettings[token].stalkIssuedPerBdv = stalkIssuedPerBdv;
         s.sys.silo.assetSettings[token].milestoneSeason = uint32(s.sys.season.current);
         s.sys.silo.assetSettings[token].encodeType = encodeType;
-        s.sys.silo.assetSettings[token].gpSelector = bytes4(0);
-        s.sys.silo.assetSettings[token].lwSelector = bytes4(0);
+        s.sys.silo.assetSettings[token].gaugePointImplementation.selector = bytes4(0);
+        s.sys.silo.assetSettings[token].liquidityWeightImplementation.selector = bytes4(0);
         s.sys.silo.assetSettings[token].gaugePoints = gaugePoints;
         s.sys.silo.assetSettings[token].optimalPercentDepositedBdv = optimalPercentDepositedBdv;
         s.sys.silo.assetSettings[token].gaugePointImplementation = gpImplementation;
@@ -272,7 +277,12 @@ library LibWhitelist {
         uint64 optimalPercentDepositedBdv
     ) internal {
         AssetSettings storage ss = LibAppStorage.diamondStorage().sys.silo.assetSettings[token];
-        updateGaugeForToken(token, ss.gpSelector, ss.lwSelector, optimalPercentDepositedBdv);
+        updateGaugeForToken(
+            token,
+            ss.gaugePointImplementation.selector,
+            ss.liquidityWeightImplementation.selector,
+            optimalPercentDepositedBdv
+        );
     }
 
     /**
@@ -290,8 +300,8 @@ library LibWhitelist {
         verifyGaugePointSelector(gaugePointSelector);
         verifyLiquidityWeightSelector(liquidityWeightSelector);
 
-        ss.gpSelector = gaugePointSelector;
-        ss.lwSelector = liquidityWeightSelector;
+        ss.gaugePointImplementation.selector = gaugePointSelector;
+        ss.liquidityWeightImplementation.selector = liquidityWeightSelector;
         ss.optimalPercentDepositedBdv = optimalPercentDepositedBdv;
 
         emit UpdateGaugeSettings(
@@ -407,8 +417,8 @@ library LibWhitelist {
 
         // delete gaugePoints, gaugePointSelector, liquidityWeightSelector, and optimalPercentDepositedBdv.
         delete s.sys.silo.assetSettings[token].gaugePoints;
-        delete s.sys.silo.assetSettings[token].gpSelector;
-        delete s.sys.silo.assetSettings[token].lwSelector;
+        delete s.sys.silo.assetSettings[token].gaugePointImplementation;
+        delete s.sys.silo.assetSettings[token].liquidityWeightImplementation;
         delete s.sys.silo.assetSettings[token].optimalPercentDepositedBdv;
 
         // delete implementations:

@@ -168,7 +168,7 @@ contract WhitelistTest is TestHelper {
     /**
      * @notice validates general whitelist functionality.
      */
-    function test_whitelistToken(
+    function test_whitelistTokenBasic(
         uint32 stalkEarnedPerSeason,
         uint32 stalkIssuedPerBdv,
         uint128 gaugePoints,
@@ -393,8 +393,8 @@ contract WhitelistTest is TestHelper {
             stalkEarnedPerSeason == 0 ? 1 : stalkEarnedPerSeason
         );
         assertEq(uint256(ss.stalkIssuedPerBdv), stalkIssuedPerBdv);
-        assertEq(ss.gpSelector, gaugePointSelector);
-        assertEq(ss.lwSelector, liquidityWeightSelector);
+        assertEq(ss.gaugePointImplementation.selector, gaugePointSelector);
+        assertEq(ss.liquidityWeightImplementation.selector, liquidityWeightSelector);
         assertEq(uint256(ss.gaugePoints), gaugePoints);
         assertEq(uint256(ss.optimalPercentDepositedBdv), optimalPercentDepositedBdv);
 

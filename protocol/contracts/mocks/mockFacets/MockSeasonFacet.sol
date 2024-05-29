@@ -521,8 +521,8 @@ contract MockSeasonFacet is SeasonFacet {
         uint64 optimalPercentDepositedBdv
     ) external {
         AssetSettings storage ss = LibAppStorage.diamondStorage().sys.silo.assetSettings[token];
-        ss.gpSelector = gaugePointSelector;
-        ss.gaugePoints = gaugePoints;
+        ss.gaugePointImplementation.selector = gaugePointSelector;
+        ss.liquidityWeightImplementation.selector = liquidityWeightSelector;
         ss.optimalPercentDepositedBdv = optimalPercentDepositedBdv;
         emit UpdateGaugeSettings(
             token,
