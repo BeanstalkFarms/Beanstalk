@@ -508,7 +508,8 @@ library LibWhitelist {
                 token,
                 true, // Whitelisted by default.
                 token != address(C.bean()) && !LibUnripe.isUnripe(token), // Assumes tokens that are not Unripe and not Bean are LP tokens.
-                selector == LibWell.WELL_BDV_SELECTOR
+                selector == LibWell.WELL_BDV_SELECTOR,
+                selector == LibWell.WELL_BDV_SELECTOR // Assumes wells are soppable if selector is WELL_BDV_SELECTOR
             );
         } else {
             // assumes new tokens are well pool tokens.
@@ -516,7 +517,8 @@ library LibWhitelist {
                 token,
                 true, // Whitelisted by default.
                 token != address(C.bean()) && !LibUnripe.isUnripe(token), // Assumes tokens that are not Unripe and not Bean are LP tokens.
-                selector == LibWell.WELL_BDV_SELECTOR
+                selector == LibWell.WELL_BDV_SELECTOR,
+                selector == LibWell.WELL_BDV_SELECTOR // Assumes wells are soppable if selector is WELL_BDV_SELECTOR
             );
         }
 
@@ -525,7 +527,7 @@ library LibWhitelist {
         // previous value.
         if (previouslyWhitelisted) {
             require(
-                s.ss[token].stalkIssuedPerBdv == stalkIssuedPerBdv,
+                s.sys.silo.assetSettings[token].stalkIssuedPerBdv == stalkIssuedPerBdv,
                 "Whitelist: Cannot update stalkIssuedPerBdv"
             );
         }

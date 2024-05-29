@@ -113,7 +113,7 @@ contract SunriseTest is TestHelper {
         warpToNextSeasonTimestamp();
 
         uninitializeWellPumps();
-        callSunriseAndCheckEvents();
+        callSunriseAndCheckEvents(false);
     }
 
     /**
@@ -128,7 +128,7 @@ contract SunriseTest is TestHelper {
         oracleIndex = bound(oracleIndex, 0, chainlinkOracles.length - 1);
         mockAddInvalidRound(chainlinkOracles[oracleIndex]);
 
-        callSunriseAndCheckEvents();
+        callSunriseAndCheckEvents(false);
     }
 
     /**
@@ -144,7 +144,7 @@ contract SunriseTest is TestHelper {
         uint256 maxTimestamp = (type(uint32).max * SEASON_DURATION + INITIAL_TIMESTAMP);
         uint256 secondsLate = bound(secondsLate, 0, maxTimestamp - block.timestamp);
         skip(secondsLate);
-        callSunriseAndCheckEvents();
+        callSunriseAndCheckEvents(false);
     }
 
     ///////// STEP SEASON /////////
@@ -197,7 +197,7 @@ contract SunriseTest is TestHelper {
 
     ////// HELPER FUNCTIONS //////
 
-    function callSunriseAndCheckEvents() internal {
+    function callSunriseAndCheckEvents(bool wellsEnabled) internal {
         vm.pauseGasMetering();
 
         uint256 currentSeason = bs.season();
@@ -212,8 +212,10 @@ contract SunriseTest is TestHelper {
         emit TemperatureChange(newSeason, 0, 0);
 
         // Ratio changes.
-        vm.expectEmit(false, false, false, false);
-        emit BeanToMaxLpGpPerBdvRatioChange(newSeason, 0, 0);
+        if (wellsEnabled) {
+            vm.expectEmit(false, false, false, false);
+            emit BeanToMaxLpGpPerBdvRatioChange(newSeason, 0, 0);
+        }
 
         // Soil Issuance.
         vm.expectEmit(false, false, false, false);
@@ -221,7 +223,7 @@ contract SunriseTest is TestHelper {
 
         // sunrise incentive event.
         vm.expectEmit(false, false, false, false);
-        emit Incentivization(address(this), 0);
+        emit Incentivization(address(this), 5e6);
 
         vm.resumeGasMetering();
 

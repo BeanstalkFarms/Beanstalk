@@ -235,7 +235,7 @@ library LibWell {
     }
 
     /**
-     * @notice returns the price in terms of TKN/BEAN. 
+     * @notice returns the price in terms of TKN/BEAN.
      * (if eth is 1000 beans, this function will return 1000e6);
      */
     function getBeanTokenPriceFromTwaReserves(address well) internal view returns (uint256 price) {
@@ -246,10 +246,14 @@ library LibWell {
             price = 0;
         } else {
             // fetch the bean index from the well in order to properly return the bean price.
-            if (getBeanIndexFromWell(well) == 0) { 
-                price = uint256(s.sys.twaReserves[well].reserve0).mul(1e18).div(s.sys.twaReserves[well].reserve1);
-            } else { 
-                price = uint256(s.sys.twaReserves[well].reserve1).mul(1e18).div(s.sys.twaReserves[well].reserve0);
+            if (getBeanIndexFromWell(well) == 0) {
+                price = uint256(s.sys.twaReserves[well].reserve0).mul(1e18).div(
+                    s.sys.twaReserves[well].reserve1
+                );
+            } else {
+                price = uint256(s.sys.twaReserves[well].reserve1).mul(1e18).div(
+                    s.sys.twaReserves[well].reserve0
+                );
             }
         }
     }
@@ -259,7 +263,7 @@ library LibWell {
     ) internal view returns (uint256[] memory twaReserves) {
         twaReserves = getTwaReservesForWell(well);
         if (twaReserves[0] == 1) {
-            twaReserves = getTwaReservesFromBeanstalkPump(well);
+            twaReserves = getTwaReservesFromPump(well);
         }
     }
 
@@ -269,9 +273,7 @@ library LibWell {
      * the initial timestamp and reserves is the timestamp of the start
      * of the last season. wrapped in try/catch to return gracefully.
      */
-    function getTwaReservesFromBeanstalkPump(
-        address well
-    ) internal view returns (uint256[] memory) {
+    function getTwaReservesFromPump(address well) internal view returns (uint256[] memory) {
         AppStorage storage s = LibAppStorage.diamondStorage();
         Call[] memory pumps = IWell(well).pumps();
         try
@@ -294,7 +296,7 @@ library LibWell {
      * the initial timestamp and reserves is the timestamp of the start
      * of the last season.
      */
-    function getTwaLiquidityFromBeanstalkPump(
+    function getTwaLiquidityFromPump(
         address well,
         uint256 tokenUsdPrice
     ) internal view returns (uint256 usdLiquidity) {

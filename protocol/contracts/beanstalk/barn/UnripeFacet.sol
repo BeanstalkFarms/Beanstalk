@@ -318,24 +318,8 @@ contract UnripeFacet is Invariable, ReentrancyGuard {
      * Tokens.
      */
     function getLockedBeans() external view returns (uint256) {
-        uint256[] memory twaReserves = LibWell.getTwaReservesFromBeanstalkPump(
-            LibBarnRaise.getBarnRaiseWell()
-        );
-        return LibUnripe.getLockedBeans(twaReserves);
-    }
-
-    /**
-     * @notice returns the locked beans given the cumulative reserves and timestamp.
-     */
-    function getLockedBeansFromTwaReserves(
-        bytes memory cumulativeReserves,
-        uint40 timestamp
-    ) external view returns (uint256) {
-        address underlyingUrLpWell = s.u[C.UNRIPE_LP].underlyingToken;
         uint256[] memory twaReserves = LibWell.getTwaReservesFromPump(
-            underlyingUrLpWell,
-            cumulativeReserves,
-            timestamp
+            LibBarnRaise.getBarnRaiseWell()
         );
         return LibUnripe.getLockedBeans(twaReserves);
     }
@@ -355,7 +339,7 @@ contract UnripeFacet is Invariable, ReentrancyGuard {
      * @notice Returns the number of Beans that are locked underneath the Unripe LP Token.
      */
     function getLockedBeansUnderlyingUnripeLP() external view returns (uint256) {
-        uint256[] memory twaReserves = LibWell.getTwaReservesFromBeanstalkPump(
+        uint256[] memory twaReserves = LibWell.getTwaReservesFromPump(
             LibBarnRaise.getBarnRaiseWell()
         );
         return LibUnripe.getLockedBeansFromLP(twaReserves);

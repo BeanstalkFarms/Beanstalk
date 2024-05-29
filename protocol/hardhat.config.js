@@ -12,10 +12,6 @@ require("@openzeppelin/hardhat-upgrades");
 require("dotenv").config();
 require("@nomiclabs/hardhat-etherscan");
 
-// BIP 39
-const { bipSeedGauge } = require("./scripts/bips.js");
-//
-
 const { upgradeWithNewFacets } = require("./scripts/diamond");
 const {
   impersonateSigner,
@@ -138,10 +134,10 @@ task("diamondABI", "Generates ABI file for diamond, includes all ABIs of facets"
       files.push("contracts/libraries/LibGauge.sol");
       files.push("contracts/libraries/Silo/LibGerminate.sol");
       files.push("contracts/libraries/LibShipping.sol");
-      files.push("contracts/libraries/Minting/LibWellMinting.sol")
-      files.push("contracts/libraries/Silo/LibWhitelistedTokens.sol")
-      files.push("contracts/libraries/Silo/LibWhitelist.sol")
-      files.push("contracts/libraries/LibGauge.sol")
+      files.push("contracts/libraries/Minting/LibWellMinting.sol");
+      files.push("contracts/libraries/Silo/LibWhitelistedTokens.sol");
+      files.push("contracts/libraries/Silo/LibWhitelist.sol");
+      files.push("contracts/libraries/LibGauge.sol");
     }
     files.forEach((file) => {
       const facetName = getFacetName(file);
@@ -306,11 +302,11 @@ task("deploySeedGauge", async function () {
   await bipSeedGauge();
 });
 
-/// EBIPS /// 
+/// EBIPS ///
 
 task("ebip15", async function () {
   await ebip15();
-})
+});
 task("ebip14", async function () {
   await ebip14();
 });

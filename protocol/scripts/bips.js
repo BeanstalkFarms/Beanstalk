@@ -295,11 +295,11 @@ async function bipSeedGauge(mock = true, account = undefined, verbose = true) {
     });
 
 
-  if (account == undefined) {
 async function bipMigrateUnripeBeanEthToBeanSteth(mock = true, account = undefined, verbose = true, oracleAccount = undefined) {
+    if (account == undefined) {
     await mintEth(account.address);
     account = await impersonateBeanstalkOwner();
-}
+  }
 
   await upgradeWithNewFacets({
     diamondAddress: BEANSTALK,
