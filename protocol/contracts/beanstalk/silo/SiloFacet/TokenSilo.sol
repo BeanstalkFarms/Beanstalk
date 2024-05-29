@@ -463,13 +463,7 @@ contract TokenSilo is ReentrancyGuard {
          *  However, the ERC1155 standard has a dedicated {batchTransfer} event,
          *  which is used here.
          */
-        emit LibSilo.TransferBatch(
-            LibTractor._user(),
-            sender,
-            recipient,
-            removedDepositIDs,
-            amounts
-        );
+        emit TransferBatch(LibTractor._user(), sender, recipient, removedDepositIDs, amounts);
         // emit RemoveDeposits event (tokens removed are summation).
         emit RemoveDeposits(sender, token, stems, amounts, ar.active.tokens, bdvs);
 
