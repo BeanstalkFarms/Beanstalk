@@ -39,7 +39,17 @@ contract WhitelistTest is TestHelper {
     function test_whitelistRevertOwner(uint i) public {
         vm.prank(address(bytes20(keccak256(abi.encode(i)))));
         vm.expectRevert("LibDiamond: Must be contract or owner");
-        bs.whitelistToken(address(0), bytes4(0), 0, 0, bytes4(0), bytes4(0), 0, 0);
+        bs.whitelistToken(
+            address(0),
+            bytes4(0),
+            0,
+            0,
+            bytes4(0),
+            bytes4(0),
+            0,
+            0,
+            IMockFBeanstalk.Implementation(address(0), bytes4(0), bytes1(0))
+        );
 
         vm.expectRevert("LibDiamond: Must be contract or owner");
         bs.whitelistTokenWithEncodeType(
@@ -51,7 +61,8 @@ contract WhitelistTest is TestHelper {
             bytes4(0),
             bytes4(0),
             0,
-            0
+            0,
+            IMockFBeanstalk.Implementation(address(0), bytes4(0), bytes1(0))
         );
     }
 
@@ -60,7 +71,17 @@ contract WhitelistTest is TestHelper {
         bytes4 bdvSelector = bytes4(keccak256(abi.encode(i)));
 
         vm.expectRevert("Whitelist: Invalid BDV selector");
-        bs.whitelistToken(address(0), bdvSelector, 0, 0, bytes4(0), bytes4(0), 0, 0);
+        bs.whitelistToken(
+            address(0),
+            bdvSelector,
+            0,
+            0,
+            bytes4(0),
+            bytes4(0),
+            0,
+            0,
+            IMockFBeanstalk.Implementation(address(0), bytes4(0), bytes1(0))
+        );
 
         vm.expectRevert("Whitelist: Invalid BDV selector");
         bs.whitelistTokenWithEncodeType(
@@ -72,7 +93,8 @@ contract WhitelistTest is TestHelper {
             bytes4(0),
             bytes4(0),
             0,
-            0
+            0,
+            IMockFBeanstalk.Implementation(address(0), bytes4(0), bytes1(0))
         );
     }
 
@@ -81,7 +103,17 @@ contract WhitelistTest is TestHelper {
         bytes4 gaugePointSelector = bytes4(keccak256(abi.encode(i)));
 
         vm.expectRevert("Whitelist: Invalid GaugePoint selector");
-        bs.whitelistToken(address(0), bdvSelector, 0, 0, gaugePointSelector, bytes4(0), 0, 0);
+        bs.whitelistToken(
+            address(0),
+            bdvSelector,
+            0,
+            0,
+            gaugePointSelector,
+            bytes4(0),
+            0,
+            0,
+            IMockFBeanstalk.Implementation(address(0), bytes4(0), bytes1(0))
+        );
 
         vm.expectRevert("Whitelist: Invalid GaugePoint selector");
         bs.whitelistTokenWithEncodeType(
@@ -93,7 +125,8 @@ contract WhitelistTest is TestHelper {
             gaugePointSelector,
             bytes4(0),
             0,
-            0
+            0,
+            IMockFBeanstalk.Implementation(address(0), bytes4(0), bytes1(0))
         );
     }
 
@@ -111,7 +144,8 @@ contract WhitelistTest is TestHelper {
             gaugePointSelector,
             liquidityWeightSelector,
             0,
-            0
+            0,
+            IMockFBeanstalk.Implementation(address(0), bytes4(0), bytes1(0))
         );
 
         vm.expectRevert("Whitelist: Invalid LiquidityWeight selector");
@@ -124,7 +158,8 @@ contract WhitelistTest is TestHelper {
             gaugePointSelector,
             liquidityWeightSelector,
             0,
-            0
+            0,
+            IMockFBeanstalk.Implementation(address(0), bytes4(0), bytes1(0))
         );
     }
 
@@ -143,7 +178,8 @@ contract WhitelistTest is TestHelper {
             gaugePointSelector,
             liquidityWeightSelector,
             0,
-            0
+            0,
+            IMockFBeanstalk.Implementation(address(0), bytes4(0), bytes1(0))
         );
 
         vm.expectRevert("Whitelist: Token already whitelisted");
@@ -156,7 +192,8 @@ contract WhitelistTest is TestHelper {
             gaugePointSelector,
             liquidityWeightSelector,
             0,
-            0
+            0,
+            IMockFBeanstalk.Implementation(address(0), bytes4(0), bytes1(0))
         );
     }
 
@@ -200,7 +237,8 @@ contract WhitelistTest is TestHelper {
             gaugePointSelector,
             liquidityWeightSelector,
             gaugePoints,
-            optimalPercentDepositedBdv
+            optimalPercentDepositedBdv,
+            IMockFBeanstalk.Implementation(address(0), bytes4(0), bytes1(0))
         );
 
         verifyWhitelistState(
@@ -253,7 +291,8 @@ contract WhitelistTest is TestHelper {
             gaugePointSelector,
             liquidityWeightSelector,
             gaugePoints,
-            optimalPercentDepositedBdv
+            optimalPercentDepositedBdv,
+            IMockFBeanstalk.Implementation(address(0), bytes4(0), bytes1(0))
         );
 
         verifyWhitelistState(

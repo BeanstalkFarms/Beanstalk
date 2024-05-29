@@ -458,7 +458,8 @@ interface IMockFBeanstalk {
         bytes4 gpSelector,
         bytes4 lwSelector,
         uint128 gaugePoints,
-        uint64 optimalPercentDepositedBdv
+        uint64 optimalPercentDepositedBdv,
+        Implementation oracleImplementation
     );
 
     function _getMintFertilizerOut(
@@ -1829,7 +1830,8 @@ interface IMockFBeanstalk {
         bytes4 gaugePointSelector,
         bytes4 liquidityWeightSelector,
         uint128 gaugePoints,
-        uint64 optimalPercentDepositedBdv
+        uint64 optimalPercentDepositedBdv,
+        Implementation memory oracleImplementation
     ) external payable;
 
     function whitelistTokenWithEncodeType(
@@ -1841,7 +1843,8 @@ interface IMockFBeanstalk {
         bytes4 gaugePointSelector,
         bytes4 liquidityWeightSelector,
         uint128 gaugePoints,
-        uint64 optimalPercentDepositedBdv
+        uint64 optimalPercentDepositedBdv,
+        Implementation memory oracleImplementation
     ) external payable;
 
     function whitelistTokenWithExternalImplementation(

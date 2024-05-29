@@ -126,7 +126,8 @@ library LibWhitelist {
         bytes4 gaugePointSelector,
         bytes4 liquidityWeightSelector,
         uint128 gaugePoints,
-        uint64 optimalPercentDepositedBdv
+        uint64 optimalPercentDepositedBdv,
+        Implementation memory oracleImplementation
     ) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
 
@@ -134,6 +135,11 @@ library LibWhitelist {
         verifyBDVselector(token, encodeType, selector);
         verifyGaugePointSelector(gaugePointSelector);
         verifyLiquidityWeightSelector(liquidityWeightSelector);
+        verifyOracleImplementation(
+            oracleImplementation.target,
+            oracleImplementation.selector,
+            oracleImplementation.encodeType
+        );
 
         // add whitelist status
         LibWhitelistedTokens.addWhitelistStatus(
@@ -172,6 +178,9 @@ library LibWhitelist {
             .selector = liquidityWeightSelector;
         s.sys.silo.assetSettings[token].gaugePoints = gaugePoints;
         s.sys.silo.assetSettings[token].optimalPercentDepositedBdv = optimalPercentDepositedBdv;
+
+        // the Oracle should return the price for the non-bean asset in USD
+        s.sys.oracleImplementation[token] = oracleImplementation;
 
         emit WhitelistToken(
             token,

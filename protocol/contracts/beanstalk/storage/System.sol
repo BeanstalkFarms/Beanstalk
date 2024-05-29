@@ -302,10 +302,11 @@ struct AssetSettings {
     int96 milestoneStem; //                 │ 12 (28)
     bytes1 encodeType; //                   │ 1  (29)
     int24 deltaStalkEarnedPerSeason; // ────┘ 3  (32)
-    uint128 gaugePoints; // ─────────-───────┐ 16 
-    uint64 optimalPercentDepositedBdv; //  ──┘ 8  
+    uint128 gaugePoints; // ─────────-───────┐ 16
+    uint64 optimalPercentDepositedBdv; //  ──┘ 8
     Implementation gaugePointImplementation;
     Implementation liquidityWeightImplementation;
+    Implementation oracleImplementation;
 }
 
 /**

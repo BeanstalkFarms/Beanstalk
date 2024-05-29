@@ -59,7 +59,8 @@ contract WhitelistFacet is Invariable, WhitelistedTokens, ReentrancyGuard {
         bytes4 gaugePointSelector,
         bytes4 liquidityWeightSelector,
         uint128 gaugePoints,
-        uint64 optimalPercentDepositedBdv
+        uint64 optimalPercentDepositedBdv,
+        Implementation memory oracleImplementation
     ) external payable fundsSafu noNetFlow noSupplyChange {
         LibDiamond.enforceIsOwnerOrContract();
         LibWhitelist.whitelistToken(
@@ -71,7 +72,8 @@ contract WhitelistFacet is Invariable, WhitelistedTokens, ReentrancyGuard {
             gaugePointSelector,
             liquidityWeightSelector,
             gaugePoints,
-            optimalPercentDepositedBdv
+            optimalPercentDepositedBdv,
+            oracleImplementation
         );
     }
 
@@ -98,7 +100,8 @@ contract WhitelistFacet is Invariable, WhitelistedTokens, ReentrancyGuard {
         bytes4 gaugePointSelector,
         bytes4 liquidityWeightSelector,
         uint128 gaugePoints,
-        uint64 optimalPercentDepositedBdv
+        uint64 optimalPercentDepositedBdv,
+        Implementation memory oracleImplementation
     ) external payable fundsSafu noNetFlow noSupplyChange {
         LibDiamond.enforceIsOwnerOrContract();
         LibWhitelist.whitelistToken(
@@ -110,7 +113,8 @@ contract WhitelistFacet is Invariable, WhitelistedTokens, ReentrancyGuard {
             gaugePointSelector,
             liquidityWeightSelector,
             gaugePoints,
-            optimalPercentDepositedBdv
+            optimalPercentDepositedBdv,
+            oracleImplementation
         );
     }
 

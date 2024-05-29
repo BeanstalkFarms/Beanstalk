@@ -32,7 +32,8 @@ contract ReseedWhitelist {
                 asset[i].gaugePointImplementation.selector,
                 asset[i].liquidityWeightImplementation.selector,
                 asset[i].gaugePoints,
-                asset[i].optimalPercentDepositedBdv
+                asset[i].optimalPercentDepositedBdv,
+                asset[i].oracleImplementation
             );
         }
     }
