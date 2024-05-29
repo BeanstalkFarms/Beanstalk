@@ -4,14 +4,15 @@
 
 pragma solidity ^0.8.20;
 
+import {C} from "contracts/C.sol";
+import {IWell} from "contracts/interfaces/basin/IWell.sol";
+import {LibWell} from "contracts/libraries/Well/LibWell.sol";
+import {Account} from "contracts/beanstalk/storage/Account.sol";
+import {LibDeltaB} from "contracts/libraries/Oracle/LibDeltaB.sol";
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {LibRedundantMath256} from "contracts/libraries/LibRedundantMath256.sol";
 import {LibAppStorage, AppStorage} from "contracts/libraries/LibAppStorage.sol";
 import {LibWhitelistedTokens} from "contracts/libraries/Silo/LibWhitelistedTokens.sol";
-import {LibRedundantMath256} from "contracts/libraries/LibRedundantMath256.sol";
-import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import {LibDeltaB} from "contracts/libraries/Oracle/LibDeltaB.sol";
-import {LibWell} from "contracts/libraries/Well/LibWell.sol";
-import {IWell} from "contracts/interfaces/basin/IWell.sol";
-import {C} from "contracts/C.sol";
 
 /**
  * @author Brean
@@ -93,6 +94,90 @@ library LibFlood {
                     sopWell(wellDeltaBs[i]);
                 }
             }
+        }
+    }
+
+    /**
+     * @dev internal logic to handle when beanstalk is raining.
+     */
+    function handleRainAndSops(address account, uint32 lastUpdate) internal {
+        AppStorage storage s = LibAppStorage.diamondStorage();
+        // If no roots, reset Sop counters variables
+        if (s.accts[account].roots == 0) {
+            s.accts[account].lastSop = s.sys.season.rainStart;
+            s.accts[account].lastRain = 0;
+            return;
+        }
+        // If a Sop has occured since last update, calculate rewards and set last Sop.
+        if (s.sys.season.lastSopSeason > lastUpdate) {
+            address[] memory tokens = LibWhitelistedTokens.getWhitelistedWellLpTokens();
+            for (uint i; i < tokens.length; i++) {
+                s.accts[account].sop.perWellPlenty[tokens[i]].plenty = balanceOfPlenty(
+                    account,
+                    tokens[i]
+                );
+            }
+            s.accts[account].lastSop = s.sys.season.lastSop;
+        }
+        if (s.sys.season.raining) {
+            // If rain started after update, set account variables to track rain.
+            if (s.sys.season.rainStart > lastUpdate) {
+                s.accts[account].lastRain = s.sys.season.rainStart;
+                s.accts[account].sop.rainRoots = s.accts[account].roots;
+            }
+            // If there has been a Sop since rain started,
+            // save plentyPerRoot in case another SOP happens during rain.
+            if (s.sys.season.lastSop == s.sys.season.rainStart) {
+                address[] memory tokens = LibWhitelistedTokens.getWhitelistedWellLpTokens();
+                for (uint i; i < tokens.length; i++) {
+                    s.accts[account].sop.perWellPlenty[tokens[i]].plentyPerRoot = s.sys.sop.sops[
+                        s.sys.season.lastSop
+                    ][tokens[i]];
+                }
+            }
+        } else if (s.accts[account].lastRain > 0) {
+            // Reset Last Rain if not raining.
+            s.accts[account].lastRain = 0;
+        }
+    }
+
+    /**
+     * @dev returns the amount of `plenty` an account has.
+     */
+    function balanceOfPlenty(address account, address well) internal view returns (uint256 plenty) {
+        AppStorage storage s = LibAppStorage.diamondStorage();
+        Account storage a = s.accts[account];
+        plenty = a.sop.perWellPlenty[well].plenty;
+        uint256 previousPPR;
+
+        // If lastRain > 0, then check if SOP occured during the rain period.
+        if (s.accts[account].lastRain > 0) {
+            // if the last processed SOP = the lastRain processed season,
+            // then we use the stored roots to get the delta.
+            if (a.lastSop == a.lastRain) {
+                previousPPR = a.sop.perWellPlenty[well].plentyPerRoot;
+            } else {
+                previousPPR = s.sys.sop.sops[a.lastSop][well];
+            }
+            uint256 lastRainPPR = s.sys.sop.sops[s.accts[account].lastRain][well];
+
+            // If there has been a SOP duing the rain sesssion since last update, process SOP.
+            if (lastRainPPR > previousPPR) {
+                uint256 plentyPerRoot = lastRainPPR - previousPPR;
+                previousPPR = lastRainPPR;
+                plenty = plenty.add(
+                    plentyPerRoot.mul(s.accts[account].sop.rainRoots).div(C.SOP_PRECISION)
+                );
+            }
+        } else {
+            // If it was not raining, just use the PPR at previous SOP.
+            previousPPR = s.sys.sop.sops[s.accts[account].lastSop][well];
+        }
+
+        // Handle and SOPs that started + ended before after last Silo update.
+        if (s.sys.season.lastSop > s.accts[account].lastUpdate) {
+            uint256 plentyPerRoot = s.sys.sop.sops[s.sys.season.lastSop][well].sub(previousPPR);
+            plenty = plenty.add(plentyPerRoot.mul(s.accts[account].roots).div(C.SOP_PRECISION));
         }
     }
 

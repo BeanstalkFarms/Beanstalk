@@ -20,6 +20,7 @@ import {LibWhitelistedTokens} from "contracts/libraries/Silo/LibWhitelistedToken
 import {C} from "contracts/C.sol";
 import {LibWhitelistedTokens} from "contracts/libraries/Silo/LibWhitelistedTokens.sol";
 import {PerWellPlenty} from "contracts/beanstalk/storage/Account.sol";
+import {LibFlood} from "contracts/libraries/Silo/LibFlood.sol";
 
 /**
  * @author Brean, pizzaman1337
@@ -480,7 +481,7 @@ contract SiloGettersFacet is ReentrancyGuard {
      * Seasons of Plenty.
      */
     function balanceOfPlenty(address account, address well) external view returns (uint256 plenty) {
-        return LibSilo.balanceOfPlenty(account, well);
+        return LibFlood.balanceOfPlenty(account, well);
     }
 
     /**

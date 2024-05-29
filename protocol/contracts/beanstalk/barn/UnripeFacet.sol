@@ -7,19 +7,18 @@ pragma solidity ^0.8.20;
 import {C} from "contracts/C.sol";
 import {IBean} from "contracts/interfaces/IBean.sol";
 import {LibChop} from "contracts/libraries/LibChop.sol";
-import {MerkleProof} from "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
-import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import {LibRedundantMath256} from "contracts/libraries/LibRedundantMath256.sol";
-import {LibDiamond} from "contracts/libraries/LibDiamond.sol";
 import {LibUnripe} from "contracts/libraries/LibUnripe.sol";
-import {LibTransfer} from "contracts/libraries/Token/LibTransfer.sol";
 import {LibWell} from "contracts/libraries/Well/LibWell.sol";
-import {LibTractor} from "contracts/libraries/LibTractor.sol";
-import {ReentrancyGuard} from "contracts/beanstalk/ReentrancyGuard.sol";
-import {LibLockedUnderlying} from "contracts/libraries/LibLockedUnderlying.sol";
-import {LibBarnRaise} from "contracts/libraries/LibBarnRaise.sol";
 import {Invariable} from "contracts/beanstalk/Invariable.sol";
+import {LibDiamond} from "contracts/libraries/LibDiamond.sol";
+import {LibTractor} from "contracts/libraries/LibTractor.sol";
+import {LibBarnRaise} from "contracts/libraries/LibBarnRaise.sol";
+import {LibTransfer} from "contracts/libraries/Token/LibTransfer.sol";
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {ReentrancyGuard} from "contracts/beanstalk/ReentrancyGuard.sol";
+import {LibRedundantMath256} from "contracts/libraries/LibRedundantMath256.sol";
+import {LibLockedUnderlying} from "contracts/libraries/LibLockedUnderlying.sol";
+import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
 /**
  * @title UnripeFacet
@@ -259,7 +258,6 @@ contract UnripeFacet is Invariable, ReentrancyGuard {
     ) external payable fundsSafu noNetFlow noSupplyChange nonReentrant {
         LibDiamond.enforceIsOwnerOrContract();
         s.sys.silo.unripeSettings[unripeToken].underlyingToken = underlyingToken;
-        s.sys.silo.unripeSettings[unripeToken].merkleRoot = root;
         emit AddUnripeToken(unripeToken, underlyingToken, root);
     }
 
