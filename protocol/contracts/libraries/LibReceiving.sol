@@ -2,25 +2,25 @@
 
 pragma solidity ^0.8.20;
 
-import {C} from "contracts/C.sol";
 import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
-import {AppStorage} from "contracts/beanstalk/storage/AppStorage.sol";
+import {C} from "contracts/C.sol";
+import {AppStorage, LibAppStorage} from "contracts/libraries/LibAppStorage.sol";
 import {ShipmentRecipient} from "contracts/beanstalk/storage/System.sol";
 import {LibFertilizer} from "contracts/libraries/LibFertilizer.sol";
-import {ReentrancyGuard} from "contracts/beanstalk/ReentrancyGuard.sol";
 
 /**
- * @title Receiving
+ * @title LibReceiving
  * @author funderbrker
- * @notice Holds the functions responsible for receiving Bean shipments after mints. These
- *  functions must live inside of the Beanstalk Diamond. If new receiving components are needed,
- *  this contract and its containing Facet will need to be updated.
+ * @notice Holds the logic responsible for receiving Bean shipments after mints. These
+ *  functions must be delegatecalled from inside of the Beanstalk Diamond. If new receiving components
+ *  are needed, this library and its calling Facet will need to be updated.
  * @dev An alternative design could remove the need for the generalized receive() entry function
  *  and instead require the shipping route to define the selector of its own corresponding receive
  *  function. However, both designs will require a Facet cut if a new receive function is needed,
  *  so this design was chosen for additional clarity.
+ * @dev Functions are internal, but only pulled into LibShipping. Reduces the size of facet.
  */
-contract Receiving is ReentrancyGuard {
+library LibReceiving {
     using SafeCast for uint256;
 
     /**
@@ -58,6 +58,8 @@ contract Receiving is ReentrancyGuard {
      * @param shipmentAmount Amount of Beans to receive.
      */
     function siloReceive(uint256 shipmentAmount, bytes memory) private {
+        AppStorage storage s = LibAppStorage.diamondStorage();
+
         // `s.earnedBeans` is an accounting mechanism that tracks the total number
         // of Earned Beans that are claimable by Stalkholders. When claimed via `plant()`,
         // it is decremented. See {Silo.sol:_plant} for more details.
@@ -82,6 +84,8 @@ contract Receiving is ReentrancyGuard {
      * @param data Encoded uint256 containing the index of the Field to receive the Beans.
      */
     function fieldReceive(uint256 shipmentAmount, bytes memory data) private {
+        AppStorage storage s = LibAppStorage.diamondStorage();
+
         uint256 fieldId = abi.decode(data, (uint256));
         require(fieldId < s.sys.fieldCount, "Field does not exist");
         s.sys.fields[fieldId].harvestable += shipmentAmount;
@@ -97,6 +101,8 @@ contract Receiving is ReentrancyGuard {
      * @param shipmentAmount Amount of Beans to receive.
      */
     function barnReceive(uint256 shipmentAmount, bytes memory) private {
+        AppStorage storage s = LibAppStorage.diamondStorage();
+
         uint256 amountToFertilize = shipmentAmount + s.sys.fert.leftoverBeans;
 
         // Get the new Beans per Fertilizer and the total new Beans per Fertilizer

@@ -365,6 +365,7 @@ interface IMockFBeanstalk {
         uint256 costInBeans
     );
     event PublishRequisition(Requisition requisition);
+    event Shipped(uint32 indexed season, uint256 shipmentAmount);
     event Receipt(ShipmentRecipient indexed recipient, uint256 receivedAmount, bytes data);
     event RemoveDeposit(
         address indexed account,
@@ -382,7 +383,6 @@ interface IMockFBeanstalk {
         uint256[] bdvs
     );
     event RemoveWhitelistStatus(address token, uint256 index);
-    event Ship(uint32 indexed season, uint256 shipmentAmount);
 
     event SeasonOfPlentyField(uint256 toField);
     event SeasonOfPlentyWell(uint256 indexed season, address well, address token, uint256 amount);
