@@ -178,7 +178,7 @@ describe("Marketplace", function () {
 
           it("Lists Plot properly", async function () {
             expect(
-              await mockBeanstalk.podListing(this.podListing.fieldId, this.podListing.index)
+              await mockBeanstalk.getPodListing(this.podListing.fieldId, this.podListing.index)
             ).to.be.equal(this.listingId);
           });
 
@@ -198,7 +198,7 @@ describe("Marketplace", function () {
 
           it("Lists Plot properly", async function () {
             expect(
-              await mockBeanstalk.podListing(this.podListing.fieldId, this.podListing.index)
+              await mockBeanstalk.getPodListing(this.podListing.fieldId, this.podListing.index)
             ).to.be.equal(this.listingId);
           });
 
@@ -220,7 +220,7 @@ describe("Marketplace", function () {
 
           it("Lists Plot properly", async function () {
             expect(
-              await mockBeanstalk.podListing(this.podListing.fieldId, this.podListing.index)
+              await mockBeanstalk.getPodListing(this.podListing.fieldId, this.podListing.index)
             ).to.be.equal(this.listingId);
           });
 
@@ -240,7 +240,7 @@ describe("Marketplace", function () {
 
           it("Lists Plot properly", async function () {
             expect(
-              await mockBeanstalk.podListing(this.podListing.fieldId, this.podListing.index)
+              await mockBeanstalk.getPodListing(this.podListing.fieldId, this.podListing.index)
             ).to.be.equal(this.listingId);
           });
 
@@ -262,7 +262,7 @@ describe("Marketplace", function () {
 
           it("Lists Plot properly", async function () {
             expect(
-              await mockBeanstalk.podListing(this.podListing.fieldId, this.podListing.index)
+              await mockBeanstalk.getPodListing(this.podListing.fieldId, this.podListing.index)
             ).to.be.equal(this.listingId);
           });
 
@@ -287,7 +287,7 @@ describe("Marketplace", function () {
 
           it("Lists Plot properly", async function () {
             expect(
-              await mockBeanstalk.podListing(this.podListing.fieldId, this.podListing.index)
+              await mockBeanstalk.getPodListing(this.podListing.fieldId, this.podListing.index)
             ).to.be.equal(this.listingId);
           });
 
@@ -389,7 +389,7 @@ describe("Marketplace", function () {
           });
 
           it("Deletes Pod Listing", async function () {
-            expect(await mockBeanstalk.podListing(0, 0)).to.equal(ZERO_HASH);
+            expect(await mockBeanstalk.getPodListing(0, 0)).to.equal(ZERO_HASH);
           });
 
           it("transfer pod listing", async function () {
@@ -442,8 +442,10 @@ describe("Marketplace", function () {
             newListing.index = 500;
             newListing.start = 0;
             newListing.podAmount = 500;
-            expect(await mockBeanstalk.podListing(0, 0)).to.equal(ZERO_HASH);
-            expect(await mockBeanstalk.podListing(0, 500)).to.equal(getHashFromListing(newListing));
+            expect(await mockBeanstalk.getPodListing(0, 0)).to.equal(ZERO_HASH);
+            expect(await mockBeanstalk.getPodListing(0, 500)).to.equal(
+              getHashFromListing(newListing)
+            );
           });
 
           it("emits event", async function () {
@@ -487,12 +489,14 @@ describe("Marketplace", function () {
           });
 
           it("Deletes Pod Listing", async function () {
-            expect(await mockBeanstalk.podListing(0, 0)).to.equal(ZERO_HASH);
+            expect(await mockBeanstalk.getPodListing(0, 0)).to.equal(ZERO_HASH);
             let newListing = this.podListing;
             newListing.index = 700;
             newListing.start = 0;
             newListing.podAmount = 300;
-            expect(await mockBeanstalk.podListing(0, 700)).to.equal(getHashFromListing(newListing));
+            expect(await mockBeanstalk.getPodListing(0, 700)).to.equal(
+              getHashFromListing(newListing)
+            );
           });
 
           it("emits event", async function () {
@@ -540,8 +544,8 @@ describe("Marketplace", function () {
           });
 
           it("listing updates", async function () {
-            expect(await mockBeanstalk.podListing(0, 700)).to.equal(ZERO_HASH);
-            expect(await mockBeanstalk.podListing(0, 900)).to.equal(this.listingId);
+            expect(await mockBeanstalk.getPodListing(0, 700)).to.equal(ZERO_HASH);
+            expect(await mockBeanstalk.getPodListing(0, 900)).to.equal(this.listingId);
           });
         });
 
@@ -573,12 +577,14 @@ describe("Marketplace", function () {
           });
 
           it("Deletes Pod Listing", async function () {
-            expect(await mockBeanstalk.podListing(0, 0)).to.equal(ZERO_HASH);
+            expect(await mockBeanstalk.getPodListing(0, 0)).to.equal(ZERO_HASH);
             newListing = this.podListing;
             newListing.index = 500;
             newListing.start = 0;
             newListing.podAmount = 500;
-            expect(await mockBeanstalk.podListing(0, 500)).to.equal(getHashFromListing(newListing));
+            expect(await mockBeanstalk.getPodListing(0, 500)).to.equal(
+              getHashFromListing(newListing)
+            );
           });
 
           it("transfer pod listing", async function () {
@@ -600,9 +606,9 @@ describe("Marketplace", function () {
           let podListing = PodListing(user.address, 0, 0, 0, 1000, 500000, 0, 0, EXTERNAL);
           result = await mockBeanstalk.connect(user).createPodListing(podListing);
           this.listingId = await getHashFromListing(podListing);
-          expect(await mockBeanstalk.podListing(podListing.fieldId, podListing.index)).to.be.equal(
-            this.listingId
-          );
+          expect(
+            await mockBeanstalk.getPodListing(podListing.fieldId, podListing.index)
+          ).to.be.equal(this.listingId);
 
           podListing = PodListing(user.address, 0, 0, 0, 1000, "200000", 2000, 0, INTERNAL);
           result = await mockBeanstalk.connect(user).createPodListing(podListing);
@@ -613,9 +619,9 @@ describe("Marketplace", function () {
             .to.emit(mockBeanstalk, "PodListingCancelled")
             .withArgs(user.address, 0, 0);
           this.listingId = await getHashFromListing(podListing);
-          expect(await mockBeanstalk.podListing(podListing.fieldId, podListing.index)).to.be.equal(
-            this.listingId
-          );
+          expect(
+            await mockBeanstalk.getPodListing(podListing.fieldId, podListing.index)
+          ).to.be.equal(this.listingId);
         });
 
         it("Reverts on Cancel Listing, not owned by user", async function () {
@@ -630,13 +636,13 @@ describe("Marketplace", function () {
           let podListing = PodListing(user.address, 0, 0, 0, 1000, 500000, 2000, 0, EXTERNAL);
           result = await mockBeanstalk.connect(user).createPodListing(podListing);
           this.listingId = await getHashFromListing(podListing);
-          expect(await mockBeanstalk.podListing(podListing.fieldId, podListing.index)).to.be.equal(
-            this.listingId
-          );
+          expect(
+            await mockBeanstalk.getPodListing(podListing.fieldId, podListing.index)
+          ).to.be.equal(this.listingId);
           result = await mockBeanstalk.connect(user).cancelPodListing(0, 0);
-          expect(await mockBeanstalk.podListing(podListing.fieldId, podListing.index)).to.be.equal(
-            ZERO_HASH
-          );
+          expect(
+            await mockBeanstalk.getPodListing(podListing.fieldId, podListing.index)
+          ).to.be.equal(ZERO_HASH);
           await expect(result)
             .to.emit(mockBeanstalk, "PodListingCancelled")
             .withArgs(user.address, 0, 0);
@@ -672,7 +678,7 @@ describe("Marketplace", function () {
             this.result = await mockBeanstalk
               .connect(user)
               .createPodOrder(this.podOrder, 500, EXTERNAL);
-            this.id = await beanstalk.orderId(this.podOrder);
+            this.id = await beanstalk.getOrderId(this.podOrder);
             this.userBeanBalanceAfter = await bean.balanceOf(user.address);
             this.beanstalkBeanBalanceAfter = await bean.balanceOf(mockBeanstalk.address);
           });
@@ -683,7 +689,7 @@ describe("Marketplace", function () {
           });
 
           it("Creates the order", async function () {
-            expect(await mockBeanstalk.podOrder(this.id)).to.equal(500);
+            expect(await mockBeanstalk.getPodOrder(this.id)).to.equal(500);
           });
 
           it("emits an event", async function () {
@@ -699,7 +705,7 @@ describe("Marketplace", function () {
             await expect(newOrder)
               .to.emit(mockBeanstalk, "PodOrderCancelled")
               .withArgs(user.address, this.id);
-            expect(await mockBeanstalk.podOrder(this.id)).to.equal(100);
+            expect(await mockBeanstalk.getPodOrder(this.id)).to.equal(100);
           });
         });
 
@@ -711,7 +717,7 @@ describe("Marketplace", function () {
             this.result = await mockBeanstalk
               .connect(user)
               .createPodOrder(this.podOrder, 500, EXTERNAL);
-            this.id = await beanstalk.orderId(this.podOrder);
+            this.id = await beanstalk.getOrderId(this.podOrder);
             this.userBeanBalanceAfter = await bean.balanceOf(user.address);
             this.beanstalkBeanBalanceAfter = await bean.balanceOf(mockBeanstalk.address);
           });
@@ -722,7 +728,7 @@ describe("Marketplace", function () {
           });
 
           it("Creates the order", async function () {
-            expect(await mockBeanstalk.podOrder(this.id)).to.equal(500);
+            expect(await mockBeanstalk.getPodOrder(this.id)).to.equal(500);
           });
 
           it("emits an event", async function () {
@@ -739,7 +745,7 @@ describe("Marketplace", function () {
           this.result = await mockBeanstalk
             .connect(user)
             .createPodOrder(this.podOrder, 50, EXTERNAL);
-          this.id = await beanstalk.orderId(this.podOrder);
+          this.id = await beanstalk.getOrderId(this.podOrder);
         });
 
         describe("revert", async function () {
@@ -799,7 +805,7 @@ describe("Marketplace", function () {
           });
 
           it("Updates the offer", async function () {
-            expect(await mockBeanstalk.podOrder(this.id)).to.equal(0);
+            expect(await mockBeanstalk.getPodOrder(this.id)).to.equal(0);
           });
 
           it("Emits an event", async function () {
@@ -833,7 +839,7 @@ describe("Marketplace", function () {
           });
 
           it("Updates the offer", async function () {
-            expect(await mockBeanstalk.podOrder(this.id)).to.equal("25");
+            expect(await mockBeanstalk.getPodOrder(this.id)).to.equal("25");
           });
 
           it("Emits an event", async function () {
@@ -867,7 +873,7 @@ describe("Marketplace", function () {
           });
 
           it("Updates the offer", async function () {
-            expect(await mockBeanstalk.podOrder(this.id)).to.equal(0);
+            expect(await mockBeanstalk.getPodOrder(this.id)).to.equal(0);
           });
 
           it("Emits an event", async function () {
@@ -913,12 +919,12 @@ describe("Marketplace", function () {
           });
 
           it("Updates the offer", async function () {
-            expect(await mockBeanstalk.podOrder(this.id)).to.equal(0);
+            expect(await mockBeanstalk.getPodOrder(this.id)).to.equal(0);
           });
 
           it("deletes the listing", async function () {
             expect(
-              await mockBeanstalk.podListing(this.podListing.fieldId, this.podListing.index)
+              await mockBeanstalk.getPodListing(this.podListing.fieldId, this.podListing.index)
             ).to.equal(ZERO_HASH);
           });
 
@@ -939,7 +945,7 @@ describe("Marketplace", function () {
           this.result = await mockBeanstalk
             .connect(user)
             .createPodOrder(this.podOrder, 500, EXTERNAL);
-          this.id = await beanstalk.orderId(this.podOrder);
+          this.id = await beanstalk.getOrderId(this.podOrder);
         });
 
         describe("Cancel owner", async function () {
@@ -952,7 +958,7 @@ describe("Marketplace", function () {
           });
 
           it("deletes the offer", async function () {
-            expect(await mockBeanstalk.podOrder(this.id)).to.equal(0);
+            expect(await mockBeanstalk.getPodOrder(this.id)).to.equal(0);
           });
 
           it("transfer beans", async function () {
@@ -978,7 +984,7 @@ describe("Marketplace", function () {
           });
 
           it("deletes the offer", async function () {
-            expect(await mockBeanstalk.podOrder(this.id)).to.equal(0);
+            expect(await mockBeanstalk.getPodOrder(this.id)).to.equal(0);
           });
 
           it("transfer beans", async function () {
@@ -1088,7 +1094,7 @@ describe("Marketplace", function () {
 
         it("removes the listing", async function () {
           expect(
-            await mockBeanstalk.podListing(this.podListing.fieldId, this.podListing.index)
+            await mockBeanstalk.getPodListing(this.podListing.fieldId, this.podListing.index)
           ).to.be.equal(ZERO_HASH);
         });
 
@@ -1122,7 +1128,7 @@ describe("Marketplace", function () {
 
         it("removes the listing", async function () {
           expect(
-            await mockBeanstalk.podListing(this.podListing.fieldId, this.podListing.index)
+            await mockBeanstalk.getPodListing(this.podListing.fieldId, this.podListing.index)
           ).to.be.equal(ZERO_HASH);
         });
 

@@ -418,7 +418,7 @@ contract FieldTest is TestHelper {
     //     assertEq(field.podIndex(), 202e6, "podIndex");
 
     //     //deletes
-    //     assertEq(marketplace.podListing(0), 0);
+    //     assertEq(marketplace.getPodListing(0), 0);
     // }
 
     // //////////////////// MORNING AUCTION ////////////////////////////

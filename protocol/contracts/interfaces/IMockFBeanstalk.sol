@@ -1343,16 +1343,12 @@ interface IMockFBeanstalk {
 
     function podIndex(uint256 fieldId) external view returns (uint256);
 
-    function podListing(uint256 index) external view returns (bytes32);
-
-    function podOrder(
+    function getPodOrder(
         address account,
         uint24 pricePerPod,
         uint256 maxPlaceInLine,
         uint256 minFillAmount
     ) external view returns (uint256);
-
-    function podOrderById(bytes32 id) external view returns (uint256);
 
     function poolDeltaB(address pool) external view returns (int256);
 
