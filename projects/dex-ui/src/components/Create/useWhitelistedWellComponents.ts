@@ -155,19 +155,6 @@ const ConstantProduct2: WellComponentInfo = {
   }
 };
 
-// TODO: can we somwhow make this dynamic??
-export const WellComponentsMap: Record<WellComponentType, Record<string, WellComponentInfo>> = {
-  [WellComponentType.WellImplementation]: {
-    [WELL_DOT_SOL_ADDRESS.toLowerCase()]: WellDotSol
-  },
-  [WellComponentType.Pump]: {
-    ["multi-flow-pump"]: MultiFlowPump
-  },
-  [WellComponentType.WellFunction]: {
-    ["constant-product-2"]: ConstantProduct2
-  }
-};
-
 export const useWhitelistedWellComponents = (): {
   wellImplementations: readonly WellComponentInfo[];
   pumps: readonly WellComponentInfo[];

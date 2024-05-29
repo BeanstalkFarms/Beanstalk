@@ -1,11 +1,12 @@
 import React from "react";
-import styled from "styled-components";
 import { CreateWellProvider, useCreateWell } from "src/components/Create/CreateWellProvider";
 import { ChooseWellImplementation } from "src/components/Create/ChooseWellImplementation";
 
 import { Page } from "src/components/Page";
 import { ChooseFunctionAndPump } from "src/components/Create/ChooseFunctionAndPump";
 import { ChooseComponentNames } from "src/components/Create/ChooseComponentNames";
+import { CreateWellPreviewDeploy } from "src/components/Create/CreateWellPreviewDeploy";
+import { Flex } from "src/components/Layout";
 
 export type CreateWellStep = "well-implementation" | "function-pump" | "name-symbol" | "preview";
 
@@ -13,29 +14,41 @@ export const Create = () => {
   return (
     <CreateWellProvider>
       <Page>
-        <ContentWrapper>
-          <CreateSteps />
-        </ContentWrapper>
+        <CreateSteps />
       </Page>
     </CreateWellProvider>
   );
 };
+
+const CONTENT_MAX_WIDTH = "1234px";
 
 const CreateSteps = () => {
   const { step } = useCreateWell();
 
   return (
     <>
-      {/* <ChooseComponentNames /> */}
-      {step === 0 && <ChooseWellImplementation />}
-      {step === 1 && <ChooseFunctionAndPump />}
-      {step === 2 && <ChooseComponentNames />}
+      {step === 0 && (
+        <Flex $fullWidth $maxWidth={CONTENT_MAX_WIDTH}>
+          <ChooseWellImplementation />
+        </Flex>
+      )}
+      {step === 1 && (
+        <Flex $fullWidth $maxWidth={CONTENT_MAX_WIDTH}>
+          <ChooseFunctionAndPump />
+        </Flex>
+      )}
+      {step === 2 && (
+        <Flex $fullWidth $maxWidth={CONTENT_MAX_WIDTH}>
+          <ChooseComponentNames />
+        </Flex>
+      )}
+      {step === 3 && (
+        <Flex $fullWidth $alignItems="center">
+          <Flex $maxWidth="710px">
+            <CreateWellPreviewDeploy />
+          </Flex>
+        </Flex>
+      )}
     </>
   );
 };
-
-const ContentWrapper = styled.div`
-  display: flex;
-  width: 100%;
-  max-width: 1234px;
-`;
