@@ -14,8 +14,6 @@ export const useTokenMetadata = (_address: string | undefined): TokenMetadataRes
   const isValidAddress = Boolean(address && ethers.utils.isAddress(address));
   const sdkToken = sdk.tokens.findByAddress(address);
 
-  console.log("_address: ", _address);
-
   const query = useQuery({
     queryKey: ["token-metadata", address],
     queryFn: async () => {
@@ -27,8 +25,6 @@ export const useTokenMetadata = (_address: string | undefined): TokenMetadataRes
     // We never need to refetch this data
     staleTime: Infinity
   });
-
-  console.log("query: ", query.data);
 
   return useMemo(() => {
     let metadata: TokenMetadataResponse = {
