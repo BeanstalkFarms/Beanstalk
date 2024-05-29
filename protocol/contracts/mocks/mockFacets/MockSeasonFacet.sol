@@ -64,6 +64,8 @@ contract MockSeasonFacet is SeasonFacet {
         bytes4 lwSelector,
         uint64 optimalPercentDepositedBdv
     );
+    event TotalGerminatingStalkChanged(uint256 season, int256 deltaStalk);
+    event TotalStalkChangedFromGermination(int256 deltaStalk, int256 deltaRoots);
 
     function reentrancyGuardTest() public nonReentrant {
         reentrancyGuardTest();
@@ -151,6 +153,10 @@ contract MockSeasonFacet is SeasonFacet {
         s.sys.season.sunriseBlock = uint32(block.number);
         updateTemperatureAndBeanToMaxLpGpPerBdvRatio(caseId);
         stepSun(deltaB, caseId);
+    }
+
+    function seedGaugeSunSunrise(int256 deltaB, uint256 caseId) public {
+        seedGaugeSunSunriseWithOracle(deltaB, caseId, false);
     }
 
     function sunTemperatureSunrise(int256 deltaB, uint256 caseId, uint32 t) public {
@@ -552,6 +558,7 @@ contract MockSeasonFacet is SeasonFacet {
     }
 
     function mockIncrementGermination(
+        address account,
         address token,
         uint128 amount,
         uint128 bdv,

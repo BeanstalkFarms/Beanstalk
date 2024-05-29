@@ -22,12 +22,12 @@ import { displayFullBN, MaxBN, MinBN } from '~/util/Tokens';
 import { SPROUTS, RINSABLE_SPROUTS } from '~/constants/tokens';
 import { ONE_BN, ZERO_BN } from '~/constants';
 import { AppState } from '~/state';
-import TokenIcon from '../Common/TokenIcon';
-import { FontSize } from '../App/muiTheme';
 import { FertilizerBalance } from '~/state/farmer/barn';
 import Row from '~/components/Common/Row';
 
 import { FC } from '~/types';
+import { FontSize } from '../App/muiTheme';
+import TokenIcon from '../Common/TokenIcon';
 
 enum TabState {
   ACTIVE = 0,
@@ -148,7 +148,7 @@ const MyFertilizer: FC<{}> = () => {
                 const sprouts = debt.multipliedBy(ONE_BN.minus(pct));
                 const rinsableSprouts = debt.multipliedBy(pct);
                 return (
-                  <Grid key={balance.token.id.toString()} item xs={12} md={4}>
+                  <Grid key={balance.token.id.toString()} item xs={6} sm={4}>
                     <FertilizerItem
                       id={balance.token.id}
                       season={balance.token.season}

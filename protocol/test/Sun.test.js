@@ -125,6 +125,15 @@ describe("Sun", function () {
     expect(await beanstalk.totalSoil()).to.be.equal("14850");
   });
 
+  it("delta B > 1, low pod rate, High L2SR", async function () {
+    await this.season.setAbovePegE(true);
+    await this.field.incrementTotalPodsE('10000');
+    this.result = await this.season.sunSunrise('30000', 108);
+    expect(await this.field.totalSoil()).to.be.equal('14850');
+  })
+
+  
+
   it("delta B > 1, medium pod rate", async function () {
     await mockBeanstalk.incrementTotalPodsE(0, "10000");
     this.result = await mockBeanstalk.sunSunrise("30000", 8);
@@ -137,6 +146,13 @@ describe("Sun", function () {
     expect(await beanstalk.totalSoil()).to.be.equal("4950");
     await expect(this.result).to.emit(beanstalk, "Soil").withArgs(3, "4950");
   });
+
+  it("delta B > 1, high pod rate, High L2SR", async function () {
+    await this.field.incrementTotalPodsE('10000');
+    this.result = await this.season.sunSunrise('30000', 133);
+    expect(await this.field.totalSoil()).to.be.equal('4950');
+    await expect(this.result).to.emit(this.season, 'Soil').withArgs(3, '4950');
+  })
 
   it("only silo", async function () {
     this.result = await mockBeanstalk.sunSunrise("100", 8);

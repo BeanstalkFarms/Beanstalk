@@ -234,7 +234,11 @@ library LibWell {
         s.sys.twaReserves[well].reserve1 = 1;
     }
 
-    function getWellPriceFromTwaReserves(address well) internal view returns (uint256 price) {
+    /**
+     * @notice returns the price in terms of TKN/BEAN. 
+     * (if eth is 1000 beans, this function will return 1000e6);
+     */
+    function getBeanTokenPriceFromTwaReserves(address well) internal view returns (uint256 price) {
         AppStorage storage s = LibAppStorage.diamondStorage();
         // s.sys.twaReserve[well] should be set prior to this function being called.
         // 'price' is in terms of reserve0:reserve1.
@@ -262,7 +266,7 @@ library LibWell {
     /**
      * @notice gets the TwaReserves of a given well.
      * @dev only supports wells that are whitelisted in beanstalk.
-     * the inital timestamp and reserves is the timestamp of the start
+     * the initial timestamp and reserves is the timestamp of the start
      * of the last season. wrapped in try/catch to return gracefully.
      */
     function getTwaReservesFromBeanstalkPump(
@@ -287,7 +291,7 @@ library LibWell {
     /**
      * @notice gets the TwaLiquidity of a given well.
      * @dev only supports wells that are whitelisted in beanstalk.
-     * the inital timestamp and reserves is the timestamp of the start
+     * the initial timestamp and reserves is the timestamp of the start
      * of the last season.
      */
     function getTwaLiquidityFromBeanstalkPump(

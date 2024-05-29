@@ -243,7 +243,8 @@ contract TokenSilo is ReentrancyGuard {
             account,
             token,
             stems,
-            amounts
+            amounts,
+            LibSilo.ERC1155Event.EMIT_BATCH_EVENT
         );
 
         // withdraw deposits that are not germinating.
@@ -312,6 +313,18 @@ contract TokenSilo is ReentrancyGuard {
         uint256 stalk,
         GerminationSide side
     ) private {
+        // Deposited Earned Beans do not germinate. Thus, when withdrawing a Bean Deposit
+        // with a Germinating Stem, Beanstalk needs to determine how many of the Beans
+        // were Planted vs Deposited from a Circulating/Farm balance. 
+        // If a Farmer's Germinating Stalk for a given Season is less than the number of 
+        // Deposited Beans in that Season, then it is assumed that the excess Beans were
+        // Planted.
+        if (token == C.BEAN) {
+            stalk = LibSilo.checkForEarnedBeans(account, stalk, germinateState);
+            // set the bdv and amount accordingly to the stalk.
+            bdv = stalk.div(C.STALK_PER_BEAN);
+            amount = bdv;
+        }
         // Decrement from total germinating.
         LibTokenSilo.decrementTotalGerminating(token, amount, bdv, side); // Decrement total Germinating in the silo.
         LibSilo.burnGerminatingStalk(account, uint128(stalk), side); // Burn stalk and roots associated with the stalk.

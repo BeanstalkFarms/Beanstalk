@@ -358,6 +358,26 @@ describe("New Silo Token", function () {
               "1000"
             ]);
         });
+
+        it('emits TransferBatch event', async function () {
+          const stem0 = await this.silo.mockSeasonToStem(
+            this.siloToken.address, 
+            toBN(await this.seasonGetters.season()).sub('1')
+          );
+          const stem1 = await this.silo.mockSeasonToStem(
+            this.siloToken.address, 
+            toBN(await this.seasonGetters.season())
+          );
+          const depositID0 = await this.siloGetters.getDepositId(this.siloToken.address, stem0)
+          const depositID1 = await this.siloGetters.getDepositId(this.siloToken.address, stem1)
+          await expect(this.result).to.emit(this.silo, 'TransferBatch').withArgs(
+            userAddress,
+            userAddress,
+            ZERO_ADDRESS,
+            [depositID0, depositID1], 
+            ['500', '1000']
+          )
+        });
       });
 
       describe("2 token crates", function () {
@@ -402,6 +422,26 @@ describe("New Silo Token", function () {
               "1000",
               "1000"
             ]);
+        });
+
+        it('emits TransferBatch event', async function () {
+          const stem0 = await this.silo.mockSeasonToStem(
+            this.siloToken.address, 
+            toBN(await this.seasonGetters.season()).sub('1')
+          );
+          const stem1 = await this.silo.mockSeasonToStem(
+            this.siloToken.address, 
+            toBN(await this.seasonGetters.season())
+          );
+          const depositID0 = await this.siloGetters.getDepositId(this.siloToken.address, stem0)
+          const depositID1 = await this.siloGetters.getDepositId(this.siloToken.address, stem1)
+          await expect(this.result).to.emit(this.silo, 'TransferBatch').withArgs(
+            userAddress,
+            userAddress,
+            ZERO_ADDRESS,
+            [depositID0, depositID1], 
+            ['1000', '1000']
+          )
         });
       });
     });

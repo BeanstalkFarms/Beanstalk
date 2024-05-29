@@ -147,6 +147,7 @@ describe("Complex Weather", function () {
       });
     });
 
+  // note: podrate is exremely low.
   describe("Extreme Weather", async function () {
     before(async function () {
       await mockBeanstalk.setLastDSoilE("100000");

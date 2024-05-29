@@ -264,7 +264,7 @@ contract SeasonGettersFacet {
      */
     function getLiquidityToSupplyRatio() external view returns (uint256) {
         uint256 beanSupply = C.bean().totalSupply();
-        (Decimal.D256 memory l2sr, ) = LibEvaluate.calcLPToSupplyRatio(beanSupply);
+        (Decimal.D256 memory l2sr,, ) = LibEvaluate.calcLPToSupplyRatio(beanSupply);
         return l2sr.value;
     }
 
@@ -320,6 +320,62 @@ contract SeasonGettersFacet {
      */
     function getGaugePoints(address token) external view returns (uint256) {
         return s.sys.silo.assetSettings[token].gaugePoints;
+    }
+
+    /**
+     * @notice returns the new gauge point for a token,
+     * if it were to be updated with the given parameters.
+     */
+    function calcGaugePointsWithParams(
+        address token, 
+        uint256 currentGaugePoints,
+        uint256 optimalPercentDepositedBdv,
+        uint256 percentOfDepositedBdv
+    ) external view returns (uint256) {
+        return LibGauge.calcGaugePoints(
+            s.ss[token].gpSelector,
+            currentGaugePoints,
+            optimalPercentDepositedBdv,
+            percentOfDepositedBdv
+        );
+    }
+
+    /**
+     * @notice returns the new gauge point for a token,
+     * if it were to be updated with the current state.
+     */
+    function getGaugePointsWithParams(address token) external view returns (uint256) {
+        address[] memory whitelistedLpTokens = LibWhitelistedTokens.getWhitelistedLpTokens();
+
+        // get the germinating assets that will finish germination in the next season.
+        Storage.TotalGerminating storage totalGerm;
+        if (
+            LibGerminate.getGerminationStateForSeason(s.season.current + 1) == 
+            LibGerminate.Germinate.ODD
+        ) {
+            totalGerm = s.oddGerminating;
+        } else {
+            totalGerm = s.evenGerminating;
+        }
+
+        // Summate total deposited BDV across all whitelisted LP tokens.
+        uint256 totalLpBdv;
+        for (uint256 i; i < whitelistedLpTokens.length; ++i) {
+            uint256 finishedGerminatingBdv = totalGerm.deposited[whitelistedLpTokens[i]].bdv;
+            totalLpBdv = totalLpBdv
+                .add(s.siloBalances[whitelistedLpTokens[i]].depositedBdv)
+                .add(finishedGerminatingBdv);
+        }
+        uint256 depositedBdv = s.siloBalances[token].depositedBdv;
+        uint256 percentDepositedBdv = depositedBdv.mul(100e6).div(totalLpBdv);
+
+        Storage.SiloSettings memory ss = s.ss[token];
+        return LibGauge.calcGaugePoints(
+            ss.gpSelector,
+            ss.gaugePoints,
+            ss.optimalPercentDepositedBdv,
+            percentDepositedBdv
+        );
     }
 
     function getLargestLiqWell() external view returns (address) {

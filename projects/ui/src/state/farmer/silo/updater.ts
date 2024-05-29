@@ -1,13 +1,17 @@
 import { useCallback, useEffect } from 'react';
 import { useDispatch } from 'react-redux';
+import BigNumber from 'bignumber.js';
 import axios from 'axios';
-import { Token, TokenValue } from '@beanstalk/sdk';
+import { Deposit, Token, TokenValue } from '@beanstalk/sdk';
 import { ethers } from 'ethers';
-import { ZERO_BN } from '~/constants';
+import { TokenMap, ZERO_BN } from '~/constants';
 import { useBeanstalkContract } from '~/hooks/ledger/useContract';
 import useChainId from '~/hooks/chain/useChainId';
 import { bigNumberResult, transform } from '~/util';
 import useAccount from '~/hooks/ledger/useAccount';
+import useSdk from '~/hooks/sdk';
+import { LegacyDepositCrate } from '~/state/farmer/silo';
+import useSeason from '~/hooks/beanstalk/useSeason';
 import {
   resetFarmerSilo,
   updateLegacyFarmerSiloBalances,
@@ -19,9 +23,6 @@ import {
   updateFarmerSiloError,
   updateFarmerSiloRan,
 } from './actions';
-import useSdk from '~/hooks/sdk';
-import { LegacyDepositCrate } from '~/state/farmer/silo';
-import useSeason from '~/hooks/beanstalk/useSeason';
 
 type SiloV3StaticData = {
   deposits: {
@@ -35,6 +36,13 @@ type SiloV3StaticData = {
     leaf: string;
     proof: string[];
   };
+};
+
+type BaseToGrownStalk = {
+  base: BigNumber;
+  grown: BigNumber;
+  seeds: BigNumber;
+  unclaimed: BigNumber;
 };
 
 export const fetchMigrationData = async (account: string) =>
@@ -82,6 +90,8 @@ export const useFetchFarmerSilo = () => {
         earnedBeanBalance,
         migrationNeeded,
         mowStatuses,
+        lastUpdate,
+        stemTips
       ] = await Promise.all([
         // `getStalk()` returns `stalk + earnedStalk` but NOT grown stalk
         sdk.silo.getStalk(account),
@@ -127,6 +137,8 @@ export const useFetchFarmerSilo = () => {
               Awaited<ReturnType<typeof sdk.contracts.beanstalk.getMowStatus>>
             >(statuses)
         ),
+        beanstalk.lastUpdate(account),
+        sdk.silo.getStemTips([...sdk.tokens.siloWhitelist])
       ] as const);
 
       dispatch(updateFarmerMigrationStatus(migrationNeeded));
@@ -144,8 +156,6 @@ export const useFetchFarmerSilo = () => {
           fetchMigrationData(account),
           sdk.silo.getSeeds(account),
         ]);
-
-        console.log('Fetched migration data', balances);
 
         // Pre-migration, # of seeds is calc'd from the contract getter
         activeSeedBalance = _activeSeedBalance;
@@ -173,25 +183,40 @@ export const useFetchFarmerSilo = () => {
                     // For simplicity we operate here with TokenValues using the SDK
                     const bdvTV = sdk.tokens.BEAN.fromBlockchain(crate.bdv);
                     const amountTV = token.fromBlockchain(crate.amount);
-                    const baseStalkTV = token.getStalk(bdvTV);
 
                     // HACK: since we set the seeds value to zero, need to
                     // use the old value here
                     let seedsTV;
                     if (token === sdk.tokens.UNRIPE_BEAN) {
                       seedsTV = sdk.tokens.SEEDS.amount(2).mul(bdvTV);
+                    } else if (token === sdk.tokens.BEAN) {
+                      seedsTV = sdk.tokens.SEEDS.amount(2).mul(bdvTV);
+                    } else if (token === sdk.tokens.BEAN_CRV3_LP) {
+                      seedsTV = sdk.tokens.SEEDS.amount(4).mul(bdvTV);
                     } else if (token === sdk.tokens.UNRIPE_BEAN_WETH) {
                       seedsTV = sdk.tokens.SEEDS.amount(4).mul(bdvTV);
                     } else {
                       seedsTV = token.getSeeds(bdvTV);
-                    }
+                    };
 
-                    // Legacy grown stalk calculation
-                    const grownStalkTV = sdk.silo.calculateGrownStalkSeeds(
-                      season.toString(),
-                      depositSeason.toString(),
-                      seedsTV
-                    );
+                    // This token's stem tip
+                    const tokenStemTip = stemTips.get(token.address);
+
+                    // This token's base stalk
+                    const baseStalkTV = bdvTV;
+
+                    // Delta between this account's last Silo update and Silo V3 deployment
+                    const updateDelta = TokenValue.fromHuman(14210 - lastUpdate, 0);
+
+                    // Mown Stalk
+                    const mownTV = sdk.silo.calculateGrownStalkSeeds(lastUpdate, depositSeason.toString(), seedsTV);
+
+                    // Stalk Grown between last Silo update and Silo V3 deployment
+                    const grownBeforeStemsTV = TokenValue.fromBlockchain(seedsTV.mul(updateDelta).toBlockchain(), sdk.tokens.STALK.decimals);
+
+                    // Stalk Grown after Silo V3 deployment
+                    const ethersZERO = TokenValue.ZERO.toBigNumber();
+                    const grownAfterStemsTV = sdk.silo.calculateGrownStalk(tokenStemTip || ethersZERO, ethersZERO, bdvTV);
 
                     // Legacy BigNumberJS values
                     const bdv = transform(bdvTV, 'bnjs');
@@ -207,26 +232,25 @@ export const useFetchFarmerSilo = () => {
                       amount: amount,
                       bdv: bdv,
                       stalk: {
-                        base: transform(baseStalkTV, 'bnjs', sdk.tokens.STALK),
-                        grown: transform(
-                          grownStalkTV,
-                          'bnjs',
-                          sdk.tokens.STALK
-                        ),
+                        base: transform(baseStalkTV.add(mownTV), 'bnjs', sdk.tokens.STALK),
+                        grown: transform(grownBeforeStemsTV.add(grownAfterStemsTV), 'bnjs', sdk.tokens.STALK),
                         total: transform(
-                          grownStalkTV.add(baseStalkTV),
+                          baseStalkTV.add(mownTV).add(grownBeforeStemsTV).add(grownAfterStemsTV),
                           'bnjs',
                           sdk.tokens.STALK
                         ),
                       },
                       seeds: transform(seedsTV, 'bnjs'),
+                      isGerminating: false
                     });
                     return dep;
                   },
                   {
                     amount: ZERO_BN,
+                    convertibleAmount: ZERO_BN,
                     bdv: ZERO_BN,
                     crates: [] as LegacyDepositCrate[], // FIXME
+                    convertibleCrates: [] as LegacyDepositCrate[],
                   }
                 ),
               },
@@ -240,23 +264,36 @@ export const useFetchFarmerSilo = () => {
           activeSeedBalance = activeSeedBalance.add(
             token.getSeeds(balance.bdv)
           );
+          const handleCrate = (
+            crate: Deposit<TokenValue>
+          ): LegacyDepositCrate => ({
+            // stem: transform(crate.stem, 'bnjs'), // FIXME
+            // ALECKS: I changed above line to below line. Typescript was expecting stem to be ethers.BigNumber
+            // Leaving this comment here in case there's unexpected issues somewhere downstream.
+            stem: crate.stem,
+            amount: transform(crate.amount, 'bnjs', token),
+            bdv: transform(crate.bdv, 'bnjs', sdk.tokens.BEAN),
+            stalk: {
+              base: transform(crate.stalk.base, 'bnjs', sdk.tokens.STALK),
+              grown: transform(crate.stalk.grown, 'bnjs', sdk.tokens.STALK),
+              total: transform(crate.stalk.total, 'bnjs', sdk.tokens.STALK),
+            },
+            seeds: transform(crate.seeds, 'bnjs'),
+            isGerminating: crate.isGerminating,
+          });
 
           payload[token.address] = {
             mowStatus: mowStatuses.get(token),
             deposited: {
               amount: transform(balance.amount, 'bnjs', token),
+              convertibleAmount: transform(
+                balance.convertibleAmount,
+                'bnjs',
+                token
+              ),
               bdv: transform(balance.bdv, 'bnjs', sdk.tokens.BEAN),
-              crates: balance.deposits.map((crate) => ({
-                stem: transform(crate.stem, 'bnjs'), // FIXME
-                amount: transform(crate.amount, 'bnjs', token),
-                bdv: transform(crate.bdv, 'bnjs', sdk.tokens.BEAN),
-                stalk: {
-                  base: transform(crate.stalk.base, 'bnjs', sdk.tokens.STALK),
-                  grown: transform(crate.stalk.grown, 'bnjs', sdk.tokens.STALK),
-                  total: transform(crate.stalk.total, 'bnjs', sdk.tokens.STALK),
-                },
-                seeds: transform(crate.seeds, 'bnjs'),
-              })),
+              crates: balance.deposits.map(handleCrate),
+              convertibleCrates: balance.convertibleDeposits.map(handleCrate),
             },
           };
         });
@@ -264,9 +301,59 @@ export const useFetchFarmerSilo = () => {
         dispatch(updateFarmerSiloBalanceSdk(balances));
       }
 
-      /// earnedStalk (this is already included in activeStalk)
-      /// earnedSeed  (aka plantable seeds)
-      /// these work because 1 BEAN = 1 BDV.
+      /**
+       * We need to calculate the stalk for un-migrated accounts differently than migrated ones
+       */
+
+      // First aggregate all crates per token
+      const stalkPerTokenForUnMigrated = Object.entries(payload).reduce<
+        TokenMap<BaseToGrownStalk>
+      >((prev, [tokenAddress, tokenBalances]) => {
+        if (!season) return prev;
+        prev[tokenAddress] =
+          tokenBalances.deposited!.crates.reduce<BaseToGrownStalk>(
+            (acc, crate) => {
+              acc.base = acc.base.plus(crate.stalk.base);
+              acc.grown = acc.grown.plus(crate.stalk.grown);
+              acc.seeds = acc.seeds.plus(crate.seeds);
+              acc.unclaimed = ZERO_BN;
+              return acc;
+            },
+            {
+              base: ZERO_BN,
+              grown: ZERO_BN,
+              unclaimed: ZERO_BN,
+              seeds: ZERO_BN,
+            }
+          );
+        return prev;
+      }, {});
+
+      // Then aggregate all tokens
+      const stalkForUnMigrated = Object.entries(
+        stalkPerTokenForUnMigrated
+      ).reduce(
+        (prev, [_, data]) => {
+          prev.base = prev.base.plus(data.base);
+          prev.grown = prev.grown.plus(data.grown);
+
+          return prev;
+        },
+        {
+          base: ZERO_BN,
+          grown: ZERO_BN,
+          earned: transform(
+            sdk.tokens.BEAN.getStalk(earnedBeanBalance),
+            'bnjs'
+          ),
+          total: ZERO_BN,
+        }
+      );
+      stalkForUnMigrated.total = stalkForUnMigrated.base
+        .plus(stalkForUnMigrated.grown)
+        // .plus(stalkForUnMigrated.earned);
+      // End of un-migrated stalk calculation
+
       const earnedStalkBalance = sdk.tokens.BEAN.getStalk(earnedBeanBalance);
       const earnedSeedBalance = sdk.tokens.BEAN.getSeeds(earnedBeanBalance);
       const totalStalkBalance = activeStalkBalance.add(grownStalkBalance);
@@ -281,10 +368,18 @@ export const useFetchFarmerSilo = () => {
           earned: transform(earnedBeanBalance, 'bnjs', sdk.tokens.BEAN),
         },
         stalk: {
-          active: transform(activeStalkBalance, 'bnjs', sdk.tokens.STALK),
-          earned: transform(earnedStalkBalance, 'bnjs', sdk.tokens.STALK),
-          grown: transform(grownStalkBalance, 'bnjs', sdk.tokens.STALK),
-          total: transform(totalStalkBalance, 'bnjs', sdk.tokens.STALK),
+          active: migrationNeeded
+            ? stalkForUnMigrated.base // .plus(stalkForUnMigrated.earned)
+            : transform(activeStalkBalance, 'bnjs', sdk.tokens.STALK),
+          earned: migrationNeeded
+            ? stalkForUnMigrated.earned
+            : transform(earnedStalkBalance, 'bnjs', sdk.tokens.STALK),
+          grown: migrationNeeded
+            ? stalkForUnMigrated.grown
+            : transform(grownStalkBalance, 'bnjs', sdk.tokens.STALK),
+          total: migrationNeeded
+            ? stalkForUnMigrated.total
+            : transform(totalStalkBalance, 'bnjs', sdk.tokens.STALK),
           grownByToken: grownStalkByToken,
         },
         seeds: {
@@ -297,12 +392,6 @@ export const useFetchFarmerSilo = () => {
         },
       };
 
-      // console.log("Silo Rewards", rewards, {
-      //   totalStalkBalance: totalStalkBalance.toHuman(),
-      //   grownStalkBalance: grownStalkBalance.toHuman(),
-      //   earnedBeanBalance: earnedBeanBalance.toHuman(),
-      // })
-
       dispatch(updateLegacyFarmerSiloRewards(rewards));
 
       // HEADS UP: this has to be called after updateLegacyFarmerSiloRewards
@@ -310,7 +399,7 @@ export const useFetchFarmerSilo = () => {
       dispatch(updateLegacyFarmerSiloBalances(payload));
       dispatch(updateFarmerSiloLoading(false));
     }
-  }, [initialized, sdk, account, dispatch, season]);
+  }, [initialized, sdk, account, dispatch, beanstalk, season]);
 
   const clear = useCallback(
     (_account?: string) => {

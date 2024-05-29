@@ -271,6 +271,10 @@ describe("Silo Enroot", function () {
           .to.emit(beanstalk, "AddDeposit")
           .withArgs(user.address, UNRIPE_BEAN, stem11, to6("5"), to6("2.5"));
       });
+
+      it('omits TransferBatch event', async function () {
+        await expect(this.result).to.not.emit(this.silo, 'TransferBatch')
+      });
     });
 
     describe("2 deposit, round", async function () {
@@ -319,6 +323,10 @@ describe("Silo Enroot", function () {
         dep = await beanstalk.getDeposit(user.address, UNRIPE_LP, stem11);
         expect(dep[0]).to.equal(to6("10"));
         expect(dep[1]).to.equal(bdv.sub("1").div("2").add("1"));
+      });
+
+      it('omits TransferBatch event', async function () {
+        await expect(this.result).to.not.emit(this.silo, 'TransferBatch');
       });
     });
   });

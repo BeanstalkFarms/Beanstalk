@@ -3,11 +3,11 @@ import {
   CurveMetaPool__factory,
   CurvePlainPool__factory,
   UniswapV2Pair__factory,
-  BasinWell__factory
+  BasinWell__factory,
 } from '~/generated/index';
 import { ChainConstant, AddressMap, SupportedChainId } from '~/constants';
 import { MinBN } from '~/util/Tokens';
-import client from '~/util/Client';
+import client from '~/util/wagmi/Client';
 import { CRV3, DAI, USDC, USDT } from '~/constants/tokens';
 import { getChainConstant } from '~/util/Chain';
 import Token, { ERC20Token } from './Token';
@@ -59,6 +59,8 @@ export default abstract class Pool {
   public readonly logo: string;
 
   public readonly color: string;
+
+  public link?: string;
 
   /**
    * @param chainId the chain ID on which this currency resides

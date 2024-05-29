@@ -1,14 +1,11 @@
 import React, { createContext, useMemo } from 'react';
 import { BeanstalkSDK } from '@beanstalk/sdk';
-import { useProvider } from 'wagmi';
-import { useSigner } from '~/hooks/ledger/useSigner';
 
 // Ethereum Images
 import ethIconCircled from '~/img/tokens/eth-logo-circled.svg';
 import wEthIconCircled from '~/img/tokens/weth-logo-circled.svg';
 
 // Bean Images
-// import beanLogoUrl from '~/img/tokens/bean-logo.svg';
 import beanCircleLogo from '~/img/tokens/bean-logo-circled.svg';
 import beanCrv3LpLogo from '~/img/tokens/bean-crv3-logo.svg';
 
@@ -31,12 +28,15 @@ import unripeBeanLogo from '~/img/tokens/unripe-bean-logo-circled.svg';
 import unripeBeanWethLogoUrl from '~/img/tokens/unrip-beanweth.svg';
 import useSetting from '~/hooks/app/useSetting';
 import { SUBGRAPH_ENVIRONMENTS } from '~/graph/endpoints';
+import { useEthersProvider } from '~/util/wagmi/ethersAdapter';
+import { useSigner } from '~/hooks/ledger/useSigner';
+import { useDynamicSeeds } from '~/hooks/sdk';
 
 const IS_DEVELOPMENT_ENV = process.env.NODE_ENV !== 'production';
 
 const useBeanstalkSdkContext = () => {
-  const provider = useProvider();
   const { data: signer } = useSigner();
+  const provider = useEthersProvider();
 
   const [datasource] = useSetting('datasource');
   const [subgraphEnv] = useSetting('subgraphEnv');
@@ -45,7 +45,7 @@ const useBeanstalkSdkContext = () => {
     SUBGRAPH_ENVIRONMENTS?.[subgraphEnv]?.subgraphs?.beanstalk;
 
   const sdk = useMemo(() => {
-    console.info(`Instantiating BeanstalkSDK`, {
+    console.debug(`Instantiating BeanstalkSDK`, {
       provider,
       signer,
       datasource,
@@ -95,13 +95,17 @@ export const BeanstalkSDKContext = createContext<
 >(undefined);
 
 function BeanstalkSDKProvider({ children }: { children: React.ReactNode }) {
-  // use the same instance of the sdk across the app
   const sdk = useBeanstalkSdkContext();
+  const ready = useDynamicSeeds(sdk);
 
   return (
-    <BeanstalkSDKContext.Provider value={sdk}>
-      {children}
-    </BeanstalkSDKContext.Provider>
+    <>
+      {ready && (
+        <BeanstalkSDKContext.Provider value={sdk}>
+          {children}
+        </BeanstalkSDKContext.Provider>
+      )}
+    </>
   );
 }
 

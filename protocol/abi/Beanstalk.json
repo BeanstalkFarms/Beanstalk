@@ -358,6 +358,30 @@
     "type": "function"
   },
   {
+    "inputs": [
+      {
+        "internalType": "bytes",
+        "name": "cumulativeReserves",
+        "type": "bytes"
+      },
+      {
+        "internalType": "uint40",
+        "name": "timestamp",
+        "type": "uint40"
+      }
+    ],
+    "name": "getLockedBeansFromTwaReserves",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
     "inputs": [],
     "name": "getLockedBeansUnderlyingUnripeBean",
     "outputs": [
@@ -7181,6 +7205,44 @@
         "type": "address"
       }
     ],
+    "name": "getGerminatingStem",
+    "outputs": [
+      {
+        "internalType": "int96",
+        "name": "germinatingStem",
+        "type": "int96"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address[]",
+        "name": "tokens",
+        "type": "address[]"
+      }
+    ],
+    "name": "getGerminatingStems",
+    "outputs": [
+      {
+        "internalType": "int96[]",
+        "name": "germinatingStems",
+        "type": "int96[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "token",
+        "type": "address"
+      }
+    ],
     "name": "getGerminatingTotalDeposited",
     "outputs": [
       {
@@ -8318,6 +8380,224 @@
     "type": "function"
   },
   {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "account",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "int256",
+        "name": "deltaGerminatingStalk",
+        "type": "int256"
+      },
+      {
+        "indexed": false,
+        "internalType": "enum LibGerminate.Germinate",
+        "name": "germinationState",
+        "type": "uint8"
+      }
+    ],
+    "name": "FarmerGerminatingStalkBalanceChanged",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "germinationSeason",
+        "type": "uint256"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "token",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "int256",
+        "name": "deltaAmount",
+        "type": "int256"
+      },
+      {
+        "indexed": false,
+        "internalType": "int256",
+        "name": "deltaBdv",
+        "type": "int256"
+      }
+    ],
+    "name": "TotalGerminatingBalanceChanged",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "germinationSeason",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "int256",
+        "name": "deltaGerminatingStalk",
+        "type": "int256"
+      }
+    ],
+    "name": "TotalGerminatingStalkChanged",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "int256",
+        "name": "deltaStalk",
+        "type": "int256"
+      },
+      {
+        "indexed": false,
+        "internalType": "int256",
+        "name": "deltaRoots",
+        "type": "int256"
+      }
+    ],
+    "name": "TotalStalkChangedFromGermination",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "token",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "index",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "bool",
+        "name": "isWhitelisted",
+        "type": "bool"
+      },
+      {
+        "indexed": false,
+        "internalType": "bool",
+        "name": "isWhitelistedLp",
+        "type": "bool"
+      },
+      {
+        "indexed": false,
+        "internalType": "bool",
+        "name": "isWhitelistedWell",
+        "type": "bool"
+      }
+    ],
+    "name": "AddWhitelistStatus",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "token",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "index",
+        "type": "uint256"
+      }
+    ],
+    "name": "RemoveWhitelistStatus",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "token",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "index",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "bool",
+        "name": "isWhitelisted",
+        "type": "bool"
+      },
+      {
+        "indexed": false,
+        "internalType": "bool",
+        "name": "isWhitelistedLp",
+        "type": "bool"
+      },
+      {
+        "indexed": false,
+        "internalType": "bool",
+        "name": "isWhitelistedWell",
+        "type": "bool"
+      }
+    ],
+    "name": "UpdateWhitelistStatus",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "uint32",
+        "name": "season",
+        "type": "uint32"
+      },
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "well",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "int256",
+        "name": "deltaB",
+        "type": "int256"
+      },
+      {
+        "indexed": false,
+        "internalType": "bytes",
+        "name": "cumulativeReserves",
+        "type": "bytes"
+      }
+    ],
+    "name": "WellOracle",
+    "type": "event"
+  },
+  {
     "inputs": [],
     "name": "maxWeight",
     "outputs": [
@@ -8653,6 +8933,25 @@
       }
     ],
     "name": "getGaugePointsPerBdvForWell",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "token",
+        "type": "address"
+      }
+    ],
+    "name": "getGaugePointsWithParams",
     "outputs": [
       {
         "internalType": "uint256",

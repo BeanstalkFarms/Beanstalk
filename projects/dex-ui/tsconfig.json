@@ -3,6 +3,8 @@
   "compilerOptions": {
     "baseUrl": "./",
     "noEmit": true,   
+    "declaration": false,
+    "declarationMap": false,
     "paths": {
       "src/*": [
         "./src/*"

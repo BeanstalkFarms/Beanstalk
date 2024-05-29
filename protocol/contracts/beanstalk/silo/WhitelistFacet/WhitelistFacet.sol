@@ -42,7 +42,7 @@ contract WhitelistFacet is Invariable, WhitelistedTokens, ReentrancyGuard {
      * @param stalkEarnedPerSeason The amount of Stalk earned per Season for each Deposited BDV.
      * @param gaugePointSelector The function selector that is used to calculate the Gauge Points of the token.
      * @param liquidityWeightSelector The function selector that outputs the liquidity weight of the token.
-     * @param gaugePoints The inital gauge points allocated to the token.
+     * @param gaugePoints The initial gauge points allocated to the token.
      * @param optimalPercentDepositedBdv The target percentage
      * of the total LP deposited BDV for this token. Only used if the token is an LP token.
      * @dev
@@ -50,6 +50,8 @@ contract WhitelistFacet is Invariable, WhitelistedTokens, ReentrancyGuard {
      * Assumes an `encodeType` of 0.
      * Assumes the token uses a gaugePoint, LiquidityWeight, and oracle implementation in the beanstalk contract.
      * Non standard implementations should use {whitelistTokenWithExternalImplementation}
+     * Note: The Beanstalk DAO should not whitelist Fee-on-transfer or rebasing tokens,
+     * as the Silo is not compatible with these tokens.
      */
     function whitelistToken(
         address token,
@@ -83,11 +85,13 @@ contract WhitelistFacet is Invariable, WhitelistedTokens, ReentrancyGuard {
      * @param stalkEarnedPerSeason The amount of Stalk earned per Season for each Deposited BDV.
      * @param encodeType The encode type that should be used to encode the BDV function call. See {LibTokenSilo.beanDenominatedValue}.
      * @param gaugePointSelector The function selector that is used to calculate the Gauge Points of the token.
-     * @param gaugePoints The inital gauge points allocated to the token.
+     * @param gaugePoints The initial gauge points allocated to the token.
      * @param optimalPercentDepositedBdv The target percentage
      * of the total LP deposited BDV for this token. Only used if the token is an LP token.
      *
      * @dev Can only be called by Beanstalk or Beanstalk owner.
+     * Note: The Beanstalk DAO should not whitelist Fee-on-transfer or rebasing tokens,
+     * as the Silo is not compatible with these tokens.
      */
     function whitelistTokenWithEncodeType(
         address token,

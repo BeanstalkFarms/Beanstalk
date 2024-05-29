@@ -66,6 +66,14 @@ library LibEvaluate {
 
     uint256 internal constant LIQUIDITY_PRECISION = 1e12;
 
+    struct BeanstalkState {
+        Decimal.D256 deltaPodDemand;
+        Decimal.D256 lpToSupplyRatio;
+        Decimal.D256 podRate;
+        address largestLiqWell;
+        bool oracleFailure;
+    }
+
     /**
      * @notice evaluates the pod rate and returns the caseId
      * @param podRate the length of the podline (debt), divided by the bean supply.
@@ -88,21 +96,15 @@ library LibEvaluate {
     /**
      * @notice updates the caseId based on the price of bean (deltaB)
      * @param deltaB the amount of beans needed to be sold or bought to get bean to peg.
-     * @param podRate the length of the podline (debt), divided by the bean supply.
      * @param well the well address to get the bean price from.
      */
     function evalPrice(
         int256 deltaB,
-        Decimal.D256 memory podRate,
         address well
     ) internal view returns (uint256 caseId) {
         AppStorage storage s = LibAppStorage.diamondStorage();
         // p > 1
-        if (
-            deltaB > 0 ||
-            (deltaB == 0 &&
-                podRate.lessThanOrEqualTo(s.sys.seedGaugeSettings.podRateOptimal.toDecimal()))
-        ) {
+        if (deltaB > 0) {
             // Beanstalk will only use the largest liquidity well to compute the Bean price,
             // and thus will skip the p > EXCESSIVE_PRICE_THRESHOLD check if the well oracle fails to
             // compute a valid price this Season.
@@ -240,16 +242,17 @@ library LibEvaluate {
      */
     function calcLPToSupplyRatio(
         uint256 beanSupply
-    ) internal view returns (Decimal.D256 memory lpToSupplyRatio, address largestLiqWell) {
+    ) internal view returns (Decimal.D256 memory lpToSupplyRatio, address largestLiqWell, bool oracleFailure) {
+        AppStorage storage s = LibAppStorage.diamondStorage();
+
         // prevent infinite L2SR
-        if (beanSupply == 0) return (Decimal.zero(), address(0));
+        if (beanSupply == 0) return (Decimal.zero(), address(0), true);
 
         address[] memory pools = LibWhitelistedTokens.getWhitelistedLpTokens();
         uint256[] memory twaReserves;
         uint256 totalUsdLiquidity;
         uint256 largestLiq;
         uint256 wellLiquidity;
-        uint256 liquidityWeight;
         for (uint256 i; i < pools.length; i++) {
             // get the liquidity weight.
             liquidityWeight = getLiquidityWeight(pools[i]);
@@ -271,6 +274,7 @@ library LibEvaluate {
                 largestLiq = wellLiquidity;
                 largestLiqWell = pools[i];
             }
+
             totalUsdLiquidity = totalUsdLiquidity.add(wellLiquidity);
 
             if (pools[i] == LibBarnRaise.getBarnRaiseWell()) {
@@ -288,7 +292,7 @@ library LibEvaluate {
 
         // if there is no liquidity,
         // return 0 to save gas.
-        if (totalUsdLiquidity == 0) return (Decimal.zero(), address(0));
+        if (totalUsdLiquidity == 0) return (Decimal.zero(), address(0), true);
 
         // USD liquidity is scaled down from 1e18 to match Bean precision (1e6).
         lpToSupplyRatio = Decimal.ratio(totalUsdLiquidity.div(LIQUIDITY_PRECISION), beanSupply);
@@ -332,18 +336,17 @@ library LibEvaluate {
      * @notice Evaluates beanstalk based on deltaB, podRate, deltaPodDemand and lpToSupplyRatio.
      * and returns the associated caseId.
      */
-    function evaluateBeanstalk(int256 deltaB, uint256 beanSupply) internal returns (uint256) {
-        (
-            Decimal.D256 memory deltaPodDemand,
-            Decimal.D256 memory lpToSupplyRatio,
-            Decimal.D256 memory podRate,
-            address largestLiqWell
-        ) = updateAndGetBeanstalkState(beanSupply);
-        uint256 caseId = evalPodRate(podRate) // Evaluate Pod Rate
-        .add(evalPrice(deltaB, podRate, largestLiqWell)) // Evaluate Price
-            .add(evalDeltaPodDemand(deltaPodDemand))
-            .add(evalLpToSupplyRatio(lpToSupplyRatio)); // Evaluate Delta Soil Demand // Evaluate LP to Supply Ratio
-        return (caseId);
+        return (caseId, largestLiqWell, oracleFailure);
+    function evaluateBeanstalk(
+        int256 deltaB,
+        uint256 beanSupply
+    ) internal returns (uint256, address, bool) {
+        BeanstalkState memory bs = getBeanstalkState(beanSupply);
+        uint256 caseId = evalPodRate(bs.podRate) // Evaluate Pod Rate
+        .add(evalPrice(deltaB, bs.largestLiqWell)) // Evaluate Price
+        .add(evalDeltaPodDemand(bs.deltaPodDemand)) // Evaluate Delta Soil Demand
+        .add(evalLpToSupplyRatio(bs.lpToSupplyRatio));  // Evaluate LP to Supply Ratio
+        return (caseId, bs.largestLiqWell, bs.oracleFailure);
     }
 
     /**
