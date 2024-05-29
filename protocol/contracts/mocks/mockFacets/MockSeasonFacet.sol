@@ -24,6 +24,7 @@ import {LibEvaluate} from "contracts/libraries/LibEvaluate.sol";
 import {LibTokenSilo} from "contracts/libraries/Silo/LibTokenSilo.sol";
 import {IWell, Call} from "contracts/interfaces/basin/IWell.sol";
 import {ShipmentRecipient} from "contracts/beanstalk/storage/System.sol";
+import {LibReceiving} from "contracts/libraries/LibReceiving.sol";
 import {LibFlood} from "contracts/libraries/Silo/LibFlood.sol";
 
 /**
@@ -86,7 +87,7 @@ contract MockSeasonFacet is SeasonFacet {
 
     function mockStepSilo(uint256 amount) public {
         C.bean().mint(address(this), amount);
-        receiveShipment(ShipmentRecipient.SILO, amount, bytes(""));
+        LibReceiving.receiveShipment(ShipmentRecipient.SILO, amount, bytes(""));
     }
 
     function rainSunrise() public {
@@ -365,7 +366,7 @@ contract MockSeasonFacet is SeasonFacet {
         );
 
         C.bean().mint(address(this), amount);
-        receiveShipment(ShipmentRecipient.BARN, amount, bytes(""));
+        LibReceiving.receiveShipment(ShipmentRecipient.BARN, amount, bytes(""));
     }
 
     function setSunriseBlock(uint256 _block) external {

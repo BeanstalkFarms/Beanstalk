@@ -365,6 +365,7 @@ async function getFacetData(mock = true) {
     "LibGerminate",
     "LibPipelineConvert",
     "LibSilo",
+    "LibShipping"
     "LibFlood"
   ];
 
@@ -377,6 +378,7 @@ async function getFacetData(mock = true) {
       "LibLockedUnderlying",
       "LibWellMinting",
       "LibGerminate",
+      "LibShipping"
       "LibFlood"
     ],
     ConvertFacet: ["LibConvert", "LibPipelineConvert"],

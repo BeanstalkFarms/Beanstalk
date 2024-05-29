@@ -12,7 +12,7 @@ import {IMockFBeanstalk as IBS} from "contracts/interfaces/IMockFBeanstalk.sol";
 contract SunTest is TestHelper {
     // Events
     event Soil(uint32 indexed season, uint256 soil);
-    event Ship(uint32 indexed season, uint256 shipmentAmount);
+    event Shipped(uint32 indexed season, uint256 shipmentAmount);
     // event Receipt(IBS.ShipmentRecipient indexed recipient, uint256 receivedAmount, bytes data);
 
     // Interfaces
