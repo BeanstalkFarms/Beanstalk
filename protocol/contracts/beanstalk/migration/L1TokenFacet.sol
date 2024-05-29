@@ -63,7 +63,10 @@ contract L1TokenFacet is IERC1155Receiver, ReentrancyGuard {
         checkBeanAsset(address(token));
         // L1 external -> internal transfers are not supported after the L2 migration.
         if (fromMode != LibTransfer.From.INTERNAL) {
-            require(toMode == LibTransfer.To.EXTERNAL);
+            require(
+                toMode == LibTransfer.To.EXTERNAL,
+                "TokenFacet: EXTERNAL->INTERNAL transfers are disabled."
+            );
         }
         LibTransfer.transferToken(token, msg.sender, recipient, amount, fromMode, toMode);
     }

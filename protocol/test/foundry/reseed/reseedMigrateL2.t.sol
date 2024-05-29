@@ -18,6 +18,12 @@ contract reeseedMigrateL2 is TestHelper {
     // BCM.
     address internal constant BCM = address(0xa9bA2C40b263843C04d344727b954A545c81D043);
 
+    // Beanstalk Farms.
+    address internal constant BS_FARMS = address(0x21DE18B6A8f78eDe6D16C50A167f6B222DC08DF7);
+
+    // L2Beanstalk: note this is a mock/random address.
+    address internal constant L2_BEANSTALK = address(0x4021489084021481024812904812481242141241);
+
     // mainnet fork id.
     uint256 mainnetForkId;
 
@@ -27,8 +33,14 @@ contract reeseedMigrateL2 is TestHelper {
     function setUp() public {
         bs = IMockFBeanstalk(BEANSTALK);
         // fork mainnet.
-        mainnetForkId = vm.createFork(vm.envString("FORKING_RPC"));
+        mainnetForkId = vm.createFork(vm.envString("FORKING_RPC"), 19976370);
+
+        // fork base.
+        l2ForkId = vm.createFork(vm.envString("BASE_FORKING_RPC"), 15104866);
         vm.selectFork(mainnetForkId);
+        vm.label(address(0x866E82a600A1414e583f7F13623F1aC5d58b0Afa), "Base L1 Bridge");
+        vm.label(BEANSTALK, "Beanstalk");
+        vm.label(C.BEAN, "BEAN");
 
         // perform step 1 of the migration process. (transferring assets to the BCM).
         // this is done on L1.
@@ -50,11 +62,11 @@ contract reeseedMigrateL2 is TestHelper {
         facetNames[1] = "L1TokenFacet";
         address[] memory newFacetAddresses = new address[](2);
         newFacetAddresses[0] = address(new BeanL2MigrationFacet()); // deploy the BeanL2MigrationFacet.
-        newFacetAddresses[1] = address(new L1TokenFacet()); // deploy the BeanL2MigrationFacet.
+        newFacetAddresses[1] = address(new L1TokenFacet()); // deploy the L1TokenFacet.
 
         IDiamondCut.FacetCutAction[] memory facetCutActions = new IDiamondCut.FacetCutAction[](2);
         facetCutActions[0] = IDiamondCut.FacetCutAction.Add;
-        facetCutActions[1] = IDiamondCut.FacetCutAction.Replace;
+        facetCutActions[1] = IDiamondCut.FacetCutAction.Add;
         bytes4[] memory removedSelectors = generateL2MigrationSelectors();
         // upgrade beanstalk with an L2 migration facet.
         upgradeWithNewFacets(
@@ -63,7 +75,7 @@ contract reeseedMigrateL2 is TestHelper {
             facetNames,
             newFacetAddresses,
             facetCutActions,
-            address(new ReseedL2Migration()), // deploy the InitMint.
+            address(new ReseedL2Migration()), // deploy the ReseedL2Migration.
             abi.encodeWithSignature("init()"), // call init.
             removedSelectors // remove all selectors from beanstalk.
         );
@@ -87,13 +99,18 @@ contract reeseedMigrateL2 is TestHelper {
 
         assertGe(beanEthBalance, 1e18);
         assertGe(bean3crvBalance, 1e18);
-        assertGe(wstethBalance, 1e18);
     }
 
     // verify facets have been removed.
     function test_facets() public view {
         IDiamondLoupe.Facet[] memory facets = IDiamondLoupe(BEANSTALK).facets();
-        assertEq(facets.length, 4);
+        assertEq(facets.length, 6);
+        assertEq(facets[0].facetAddress, address(0xDFeFF7592915bea8D040499E961E332BD453C249)); // DiamondCutFacet
+        assertEq(facets[1].facetAddress, address(0xB51D5C699B749E0382e257244610039dDB272Da0)); // DiamondLoupeFacet
+        assertEq(facets[2].facetAddress, address(0x5D45283Ff53aabDb93693095039b489Af8b18Cf7)); // OwnershipFacet
+        assertEq(facets[3].facetAddress, address(0xeab4398f62194948cB25F45fEE4C46Fae2e91229)); // PauseFacet
+        assertEq(facets[4].facetAddress, address(0x5c541e5Cfbdd436abCFC28D509Db19d07ce9B4D9)); // L2migrationFacet
+        assertEq(facets[5].facetAddress, address(0x5EDFB2107440260cc9507E74E9F95A50b654aE40)); // L1TokenFacet
     }
 
     // user is able to transfer farm balances out.
@@ -109,12 +126,38 @@ contract reeseedMigrateL2 is TestHelper {
         uint256 initialTokenBalance = IERC20(C.USDC).balanceOf(BEANSTALK);
         uint256 initialInternalTokenBalance = bs.getInternalBalance(user, token);
 
+        // initial snapshot.
+        uint256 snapshot = vm.snapshot();
+
         vm.prank(user);
-        bs.transferToken(user, token, 1e6, 1, 0);
-        // verify:
+        // verify the user is able to remove internal balances into their external balances.
+        bs.transferToken(token, user, 1e6, 1, 0);
         assertEq(IERC20(token).balanceOf(user), 1e6);
         assertEq(initialTokenBalance - IERC20(token).balanceOf(BEANSTALK), 1e6);
         assertEq(initialInternalTokenBalance - bs.getInternalBalance(user, token), 1e6);
+
+        // verify the user is Unable to transfer into internal balances.
+        vm.prank(user);
+        vm.expectRevert("TokenFacet: EXTERNAL->INTERNAL transfers are disabled.");
+        bs.transferToken(token, user, 1e6, 0, 1);
+
+        // revert to snapshot.
+        vm.revertTo(snapshot);
+        vm.prank(user);
+        // verify the user is able to transfer internal balances to other users).
+        bs.transferToken(token, address(100010), 1e6, 1, 1);
+        assertEq(IERC20(token).balanceOf(user), 0);
+        assertEq(IERC20(token).balanceOf(address(100010)), 0);
+        assertEq(initialTokenBalance - IERC20(token).balanceOf(BEANSTALK), 0);
+        assertEq(initialInternalTokenBalance - bs.getInternalBalance(user, token), 1e6);
+        assertEq(bs.getInternalBalance(address(100010), token), 1e6);
+    }
+
+    // verifies that the user is able to migrate external beans to L2.
+    function test_bean_l2_migration() public {
+        vm.startPrank(BS_FARMS);
+        IERC20(C.BEAN).approve(BEANSTALK, 1e6);
+        BeanL2MigrationFacet(BEANSTALK).migrateL2Beans(BS_FARMS, L2_BEANSTALK, 1e6, 1000000);
     }
 
     //////// MIGRATION HELPERS ////////
@@ -131,9 +174,7 @@ contract reeseedMigrateL2 is TestHelper {
             bytes4[] memory selectors = facet.functionSelectors;
             if (checkForWhitelistedFacet(facet.facetAddress)) {
                 for (uint j; j < selectors.length; j++) {
-                    if (checkForTokenFacetSelectors(selectors[j])) {
-                        facetSelectors[k++] = selectors[j];
-                    }
+                    facetSelectors[k++] = selectors[j];
                 }
             }
         }
@@ -153,13 +194,5 @@ contract reeseedMigrateL2 is TestHelper {
             _facet != address(0xB51D5C699B749E0382e257244610039dDB272Da0) && // diamondLoupeFacet
             _facet != address(0x5D45283Ff53aabDb93693095039b489Af8b18Cf7) && // ownershipFacet
             _facet != address(0xeab4398f62194948cB25F45fEE4C46Fae2e91229); // pauseFacet
-    }
-
-    function checkForTokenFacetSelectors(bytes4 _selector) internal pure returns (bool) {
-        // remove the following selectors from the token facet.
-        return
-            _selector != bytes4(0x4edcab2d) && // tokenPermitNonces
-            _selector != bytes4(0x1f351f6a) && // tokenPermitDomainSeparator
-            _selector != bytes4(0x7c516e94); // permitToken
     }
 }

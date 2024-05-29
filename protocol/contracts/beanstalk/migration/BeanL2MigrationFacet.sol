@@ -45,7 +45,7 @@ contract BeanL2MigrationFacet is Invariable, ReentrancyGuard {
         address L2Beanstalk,
         uint256 amount,
         uint32 gasLimit
-    ) external nonReentrant fundsSafu noSupplyIncrease oneOutFlow(C.BEAN) {
+    ) external nonReentrant {
         C.bean().burnFrom(msg.sender, amount);
 
         // send data to

@@ -351,7 +351,8 @@ async function getFacetData(mock = true) {
     "UnripeFacet",
     "WhitelistFacet",
     "TractorFacet",
-    "PipelineConvertFacet"
+    "PipelineConvertFacet",
+    "ClaimFacet"
   ];
 
   // A list of public libraries that need to be deployed separately.
@@ -363,7 +364,8 @@ async function getFacetData(mock = true) {
     "LibWellMinting",
     "LibGerminate",
     "LibPipelineConvert",
-    "LibSilo"
+    "LibSilo",
+    "LibFlood"
   ];
 
   // A mapping of facet to public library names that will be linked to it.
@@ -374,7 +376,8 @@ async function getFacetData(mock = true) {
       "LibIncentive",
       "LibLockedUnderlying",
       "LibWellMinting",
-      "LibGerminate"
+      "LibGerminate",
+      "LibFlood"
     ],
     ConvertFacet: ["LibConvert", "LibPipelineConvert"],
     PipelineConvertFacet: ["LibPipelineConvert"],

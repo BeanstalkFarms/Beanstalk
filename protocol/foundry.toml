@@ -22,7 +22,7 @@ auto_detect_solc = true
 # 2462: Visibility for constructor is ignored
 ignored_error_codes = [2462]
 # set optimizer to true when deploying to mainnet
-optimizer = true
+optimizer = false
 optimizer_runs = 100
 via_ir = false
 bytecode_hash = 'ipfs'
