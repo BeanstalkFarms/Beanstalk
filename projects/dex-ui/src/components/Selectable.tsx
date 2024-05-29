@@ -86,7 +86,7 @@ type SelectCardProps = {
 };
 export const SelectCard = ({ selected, children, onClick }: SelectCardProps) => {
   return (
-    <SelectWrapper $active={selected} onClick={onClick}>
+    <SelectWrapper onClick={onClick} $active={selected} $clickable={!!onClick}>
       <Flex $direction="row" $alignItems="center" $fullWidth $gap={2}>
         <SelectIndicatorIcon selected={selected} />
         {children}
@@ -95,12 +95,12 @@ export const SelectCard = ({ selected, children, onClick }: SelectCardProps) => 
   );
 };
 
-const SelectWrapper = styled(Flex).attrs({ $gap: 2 })<{ $active: boolean }>`
+const SelectWrapper = styled(Flex).attrs({ $gap: 2 })<{ $active: boolean; $clickable?: boolean }>`
   // width: 100%;
   border: 1px solid ${(props) => (props.$active ? theme.colors.black : theme.colors.lightGray)};
   background: ${(props) => (props.$active ? theme.colors.primaryLight : theme.colors.white)};
   padding: ${theme.spacing(2, 3)};
-  cursor: pointer;
+  cursor: ${(props) => (props.$clickable ? "pointer" : "default")};
 `;
 
 const Divider = styled.div`

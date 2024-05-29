@@ -27,18 +27,22 @@ const useSetSdkTokenMetadata = () => {
   }, [sdk]);
 };
 
-export const useTokenMetadata = (address: string): TokenMetadataResponse | undefined => {
+export const useTokenMetadata = (
+  _address: string | undefined
+): TokenMetadataResponse | undefined => {
   useSetSdkTokenMetadata();
+
+  const address = _address?.toLowerCase() ?? "";
 
   const sdk = useSdk();
 
-  const isValidAddress = Boolean(address && ethers.utils.isAddress(address));
-  const sdkToken = sdk.tokens.findByAddress(address.toLowerCase());
+  const isValidAddress = Boolean(ethers.utils.isAddress(address));
+  const sdkToken = sdk.tokens.findByAddress(address);
 
   const query = useQuery({
     queryKey: ["token-metadata", address],
     queryFn: async () => {
-      const token = await alchemy.core.getTokenMetadata(address);
+      const token = await alchemy.core.getTokenMetadata(address ?? "");
       console.debug("[useTokenMetadata]: ", address, token);
       return token;
     },
