@@ -283,454 +283,6 @@ contract FieldTest is TestHelper {
         assertEq(uint256(w.thisSowTime), type(uint32).max);
     }
 
-    // /**
-    //  * checking next sow time, with exactly 0 soil available
-    //  * *after* sowing.
-    //  */
-    // function testComplexDPD1Soil() public {
-    //     // Does set thisSowTime if Soil = 1;
-    //     season.setSoilE(1e6);
-    //     vm.prank(brean);
-    //     field.sow(1e6, 1, LibTransfer.From.EXTERNAL);
-    //     weather = season.weather();
-    //     assertLt(uint256(weather.thisSowTime), uint256(LibConstant.MAX_UINT32));
-    // }
-
-    // /**
-    //  * checking next sow time, with less than 1 soil available
-    //  * *after* sowing.
-    //  */
-    // function testComplexDPDLessThan1Soil() public {
-    //     // Does set thisSowTime if Soil < 1;
-    //     season.setSoilE(1.5e6);
-    //     vm.prank(brean);
-    //     field.sow(1 * 1e6, 1, LibTransfer.From.EXTERNAL);
-    //     weather = season.weather();
-    //     assertLt(uint256(weather.thisSowTime), uint256(LibConstant.MAX_UINT32));
-    // }
-
-    // /**
-    //  * checking next sow time with less than 1 soil available,
-    //  * after it has been set previously in the season.
-    //  * *after* sowing.
-    //  */
-    // function testComplexDPDLessThan1SoilNoSet() public {
-    //     // Does not set thisSowTime if Soil already < 1;
-    //     season.setSoilE(1.5e6);
-    //     vm.prank(brean);
-    //     field.sow(1e6, 1, LibTransfer.From.EXTERNAL);
-    //     weather = season.weather();
-    //     vm.prank(siloChad);
-    //     field.sow(0.5e6, 1, LibTransfer.From.EXTERNAL);
-    //     System.Weather memory weather2 = season.weather();
-    //     assertEq(uint256(weather2.thisSowTime), uint256(weather.thisSowTime));
-    // }
-
-    // // a farmer cannot harvest another farmers plot, or an unintialized plot.
-    // function testCannotHarvestUnownedPlot() public {
-    //     _beforeEachHarvest();
-    //     field.incrementTotalHarvestableE(101e6);
-    //     uint256[] memory harvestPlot = new uint[](1);
-    //     harvestPlot[0] = 0;
-    //     vm.prank(siloChad);
-    //     vm.expectRevert("Field: no plot");
-    //     field.harvest(harvestPlot, LibTransfer.To.EXTERNAL);
-    // }
-
-    // /**
-    //  * a farmer cannot harvest an unharvestable plot.
-    //  * a plot is unharvestable if the index of plot > s.sys.field[].harvestable.
-    //  */
-    // function testCannotHarvestUnharvestablePlot() public {
-    //     _beforeEachHarvest();
-    //     uint256[] memory harvestPlot = new uint[](1);
-    //     harvestPlot[0] = 0;
-    //     vm.prank(brean);
-    //     vm.expectRevert("Field: Plot not Harvestable");
-    //     field.harvest(harvestPlot, LibTransfer.To.EXTERNAL);
-    // }
-
-    // // test that a farmer can harvest an entire plot.
-    // function testHarvestEntirePlot() public {
-    //     uint256 beanBalanceBefore = C.bean().balanceOf(brean);
-    //     uint256 totalBeanSupplyBefore = C.bean().totalSupply();
-
-    //     _beforeEachHarvest();
-    //     _beforeEachFullHarvest();
-    //     //updates farmer balance
-    //     assertEq(C.bean().balanceOf(brean), beanBalanceBefore + 1e6);
-    //     assertEq(field.plot(brean, 0), 0);
-
-    //     //updates total balance
-    //     assertEq(C.bean().balanceOf(BEANSTALK), 0);
-    //     assertEq(C.bean().totalSupply(), totalBeanSupplyBefore - 100e6 + 1e6);
-    //     assertEq(field.totalPods(), 101e6);
-    //     assertEq(uint256(field.totalSoil()), 0);
-    //     assertEq(field.totalUnharvestable(), 101e6);
-    //     assertEq(field.totalHarvestable(), 0);
-    //     assertEq(field.harvestableIndex(), 101e6);
-    //     assertEq(field.totalHarvested(), 101e6);
-    //     assertEq(field.podIndex(), 202e6);
-    // }
-
-    // // test that a farmer can harvest an partial plot.
-    // function testHarvestPartialPlot() public {
-    //     uint256 beanBalanceBefore = C.bean().balanceOf(brean);
-    //     uint256 totalBeanSupplyBefore = C.bean().totalSupply();
-
-    //     _beforeEachHarvest();
-    //     _beforeEachPartialHarvest();
-    //     //updates farmer balance
-    //     assertEq(C.bean().balanceOf(brean), beanBalanceBefore - 50e6);
-    //     assertEq(field.plot(brean, 0), 0);
-    //     assertEq(field.plot(brean, 50e6), 51e6);
-
-    //     //updates total balance
-    //     assertEq(C.bean().balanceOf(BEANSTALK), 0);
-    //     assertEq(C.bean().totalSupply(), totalBeanSupplyBefore - 200e6 + 50e6);
-    //     assertEq(field.totalPods(), 152e6);
-    //     assertEq(uint256(field.totalSoil()), 0);
-    //     assertEq(field.totalUnharvestable(), 152e6);
-    //     assertEq(field.totalHarvestable(), 0);
-    //     assertEq(field.harvestableIndex(), 50e6);
-    //     assertEq(field.totalHarvested(), 50e6);
-    //     assertEq(field.podIndex(), 202e6);
-    // }
-
-    // // test that a farmer can harvest an entire plot, that is listed on the pod market.
-    // function testHarvestEntirePlotWithListing() public {
-    //     uint256 beanBalanceBefore = C.bean().balanceOf(brean);
-    //     uint256 totalBeanSupplyBefore = C.bean().totalSupply();
-
-    //     _beforeEachHarvest();
-    //     _beforeEachHarvestEntirePlotWithListing();
-    //     assertEq(C.bean().balanceOf(brean), beanBalanceBefore + 1e6);
-    //     assertEq(field.plot(brean, 0), 0);
-    //     assertEq(C.bean().balanceOf(BEANSTALK), 0, "Field balanceOf");
-    //     assertEq(C.bean().totalSupply(), totalBeanSupplyBefore - 100e6 + 1e6, "totalSupply");
-
-    //     assertEq(field.totalPods(), 101e6, "totalPods");
-    //     assertEq(uint256(field.totalSoil()), 0, "soil");
-    //     assertEq(field.totalUnharvestable(), 101e6, "totalUnharvestable");
-    //     assertEq(field.totalHarvestable(), 0, "totalHarvestable");
-    //     assertEq(field.harvestableIndex(), 101e6, "harvestableIndex");
-    //     assertEq(field.totalHarvested(), 101e6, "totalHarvested");
-    //     assertEq(field.podIndex(), 202e6, "podIndex");
-
-    //     //deletes
-    //     assertEq(marketplace.getPodListing(0), 0);
-    // }
-
-    // //////////////////// MORNING AUCTION ////////////////////////////
-    // /**
-    //  * The morning auction is a mechanism that introduces
-    //  * reflexivity to the temperature that beanstalk is willing to lend at.
-    //  * During the first 25 blocks (5 minutes) of the season (dubbed the morning),
-    //  * the temperature starts at 1% and increases logarithmically until it reaches
-    //  * the maximum temperature.
-    //  * The formula for the morning auction is:
-    //  * max(temperature*log_a*b+1(a*c + 1),1) where:
-    //  * a = 2,
-    //  * b = 25 (length of morning auction)
-    //  * c = number of blocks elapsed since the start of season.
-    //  */
-    // function testMorningAuctionValues(uint256 blockNo, uint32 _temperature) public {
-
-    //     // tests that morning auction values align with manually calculated values
-    //     _temperature = uint32(bound(uint256(_temperature), 1, 100_000_000)); // arbitary large number
-    //     season.setMaxTempE(_temperature);
-    //     blockNo = bound(blockNo, 1, 26); // 12s block time = 300 blocks in an season
-
-    //     uint256[26] memory ScaleValues;
-    //     ScaleValues = [
-    //         uint256(1000000), // Delta = 0
-    //         279415312704, // Delta = 1
-    //         409336034395, // 2
-    //         494912626048, // 3
-    //         558830625409, // 4
-    //         609868162219, // 5
-    //         652355825780, // 6
-    //         688751347100, // 7
-    //         720584687295, // 8
-    //         748873234524, // 9
-    //         774327938752, // 10
-    //         797465225780, // 11
-    //         818672068791, // 12
-    //         838245938114, // 13
-    //         856420437864, // 14
-    //         873382373802, // 15
-    //         889283474924, // 16
-    //         904248660443, // 17
-    //         918382006208, // 18
-    //         931771138485, // 19
-    //         944490527707, // 20
-    //         956603996980, // 21
-    //         968166659804, // 22
-    //         979226436102, // 23
-    //         989825252096, // 24
-    //         1000000000000 // 25
-    //     ];
-
-    //     vm.roll(blockNo);
-
-    //     // temperature is scaled as such:
-    //     // (1e2)    season.weather().t
-    //     // (1e12)    * pct
-    //     // (1e6)     / TEMPERATURE_PRECISION
-    //     // (1e8)     = temperature
-    //     uint256 __temperature = uint256(season.weather().t).mulDiv(ScaleValues[blockNo - 1], 1e6, UD60x18.Rounding.Up);
-    //     // temperature is always 1% if a farmer sows at the same block
-    //     // as the sunrise block, irregardless of temperature
-    //     uint256 calcTemperature = blockNo == 1 ? 1e6 : max(__temperature, 1e6);
-    //     assertApproxEqAbs(field.temperature(), calcTemperature, 0); // +/- 1 due to rounding
-    //     assertEq(field.temperature(), calcTemperature);
-    // }
-
-    // // various sowing at different dutch auctions + different soil amount
-    // // soil sown should be larger than starting soil
-    // // pods issued should be the same maximum
-    // function test_remainingPods_abovePeg(uint256 rand) prank(brean) public {
-    //     _beforeEachMorningAuction();
-    //     uint256 _block = 1;
-    //     uint256 maxBeans = 10e6;
-    //     uint256 totalSoilSown = 0;
-    //     uint256 totalPodsMinted = 0;
-
-    //     while (field.totalSoil() > 0) {
-    //         vm.roll(_block);
-    //         // we want to randomize the amount of soil sown,
-    //         // but currently foundry does not support stateful fuzz testing.
-    //         uint256 beans = uint256(keccak256(abi.encodePacked(rand))).mod(maxBeans);
-
-    //         // if beans is less than maxBeans, then sow remaining instead
-    //         if (maxBeans > field.totalSoil()){
-    //             beans = field.totalSoil();
-    //         }
-    //         totalPodsMinted = totalPodsMinted + field.sow(beans, 1e6, LibTransfer.From.EXTERNAL);
-    //         totalSoilSown = totalSoilSown + beans;
-    //         _block++;
-    //         rand++;
-    //     }
-    //     assertEq(field.totalPods(), field.totalUnharvestable(), "totalUnharvestable");
-    //     assertEq(totalPodsMinted, field.totalPods(), "totalPodsMinted");
-    //     assertEq(field.remainingPods(), 0, "remainingPods");
-    //     assertGt(totalSoilSown, 100e6, "totalSoilSown");
-    // }
-
-    // // same test as above, but below peg
-    // // soil sown should be equal to starting soil
-    // // pods issued should be less than maximum
-    // function test_remainingPods_belowPeg(uint256 rand) public prank(brean) {
-    //     _beforeEachMorningAuctionBelowPeg();
-    //     uint256 _block = 1; // start block
-    //     uint256 totalSoilSown = 0;
-    //     uint256 maxBeans = 5e6; // max beans that can be sown in a tx
-    //     uint256 totalPodsMinted = 0;
-    //     uint256 maxPods = 200e6; // maximum pods that should be issued
-    //     uint256 initalBal = C.bean().balanceOf(brean); // inital balance
-
-    //     while (field.totalSoil() > 0) {
-    //         // we want to randomize the beans sown,
-    //         // but currently foundry does not support stateful fuzz testing.
-    //         uint256 beans = uint256(keccak256(abi.encodePacked(rand))).mod(maxBeans);
-    //         vm.roll(_block);
-    //         uint256 lastTotalSoil = field.totalSoil();
-    //         // if beans is less than maxBeans, then sow remaining instead
-    //         if (maxBeans > field.totalSoil()){
-    //             beans = field.totalSoil();
-    //         }
-    //         totalSoilSown = totalSoilSown + beans;
-    //         totalPodsMinted = totalPodsMinted + field.sow(beans, 1e6, LibTransfer.From.EXTERNAL);
-    //         assertEq(lastTotalSoil - field.totalSoil(), beans);
-    //         _block++;
-    //         rand++;
-    //     }
-    //     assertLt(field.totalUnharvestable(), maxPods);
-    //     assertEq(field.totalPods(), field.totalUnharvestable(), "totalUnharvestable");
-    //     assertEq(totalPodsMinted, field.totalPods(), "totalPodsMinted");
-    //     assertEq(field.remainingPods(), 0, "remainingPods is not 0");
-
-    //     // check the amt of soil sown at the end of the season is equal to start soil
-    //     assertEq(totalSoilSown, 100e6, "totalSoilSown");
-    //     assertEq(
-    //         totalSoilSown,
-    //         initalBal - C.bean().balanceOf(brean),
-    //         "total bean used does not equal total soil sown"
-    //     );
-    // }
-
-    // // multiple fixed amount sows at different dutch auction times
-    // function testRoundingErrorBelowPeg(uint256 beans) prank(brean) public {
-    //     // we bound between 1 and 10 beans to sow, out of 100 total soil.
-    //     beans = bound(beans, 1e6, 10e6);
-    //     _beforeEachMorningAuction();
-    //     uint256 _block = 1;
-    //     uint256 totalSoilSown = 0;
-    //     uint256 totalPodsMinted = 0;
-    //     uint256 lastTotalSoil;
-    //     while (field.totalSoil() > 0) {
-    //         vm.roll(_block);
-    //         lastTotalSoil = field.totalSoil();
-    //         // if beans is less than the amount of soil in the field, then sow remaining instead
-    //         if (beans > field.totalSoil()) beans = field.totalSoil();
-    //         totalSoilSown = totalSoilSown + beans;
-    //         totalPodsMinted = totalPodsMinted + field.sow(beans, 1e6, LibTransfer.From.EXTERNAL);
-
-    //         // because totalsoil is scaled up,
-    //         // it may cause the delta to be up to 2 off
-    //         // (if one was rounded up, and the other is rounded down)
-    //         assertApproxEqAbs(lastTotalSoil - field.totalSoil(), beans, 2);
-    //         // cap the blocks between 1 - 25 blocks
-    //         if (_block < 25) _block++;
-    //     }
-
-    //     assertEq(
-    //         field.totalUnharvestable(),
-    //         totalPodsMinted,
-    //         "TotalUnharvestable doesn't equal totalPodsMinted"
-    //     );
-    //     // check the amount of beans sown at the end of the season is greater than the start soil
-    //     assertGt(
-    //         totalSoilSown,
-    //         100e6,
-    //         "Total soil sown is less than inital soil issued."
-    //     );
-    // }
-
-    // /**
-    //  * check that the Soil decreases over 25 blocks, then stays stagent
-    //  * when beanstalk is above peg, the soil issued is now:
-    //  * `availableSoil` = s.sys.soil * (1+ s.sys.weather.t)/(1+ yield())
-    //  * `availableSoil` should always be greater or equal to s.sys.soil
-    //  */
-    // function testSoilDecrementsOverDutchAbovePeg(uint256 startingSoil) public {
-    //     _beforeEachMorningAuction();
-    //     // uint256 startingSoil = 100e6;
-    //     startingSoil = bound(startingSoil, 100e6, 10000e6);
-    //     season.setSoilE(startingSoil);
-    //     startingSoil = startingSoil.mulDiv(200, 101);
-    //     uint256 sfsoil = uint256(field.totalRealSoil());
-    //     for (uint256 i = 1; i < 30; ++i) {
-    //         vm.roll(i);
-    //         uint256 LastSoil = uint256(field.totalSoil());
-    //         if (i == 1) {
-    //             // sunriseBlock is set at block 1;
-    //             assertEq(LastSoil, startingSoil, "LastSoil");
-    //         } else if (i <= 26) {
-    //             assertGt(startingSoil, LastSoil);
-    //             assertGt(startingSoil, sfsoil);
-    //             startingSoil = LastSoil;
-    //         } else {
-    //             assertEq(startingSoil, LastSoil);
-    //             assertEq(startingSoil, sfsoil);
-    //             startingSoil = LastSoil;
-    //         }
-    //     }
-    // }
-
-    // /**
-    //  * sowing all soil, with variable soil, temperature, and place in the morning auction.
-    //  * this is done by rolling to a block between 1 and 25, and sowing all soil.
-    //  * pods issued should always be equal to remainingPods.
-    //  * soil/bean used should always be greater/equal to soil issued.
-    //  */
-    // function testSowAllMorningAuctionAbovePeg(uint256 soil, uint32 temperature, uint256 _block) public {
-    //     sowAllInit(
-    //         temperature,
-    //         soil,
-    //         _block,
-    //         true
-    //     );
-    //     uint256 remainingPods = field.remainingPods();
-    //     uint256 totalSoil = field.totalSoil();
-    //     vm.prank(brean);
-    //     field.sow(totalSoil, 1e6, LibTransfer.From.EXTERNAL);
-    //     assertEq(uint256(field.totalSoil()), 0, "totalSoil greater than 0");
-    //     assertEq(uint256(field.totalRealSoil()), 0, "s.soil greater than 0");
-    //     assertEq(field.totalUnharvestable(), remainingPods, "Unharvestable pods does not Equal Expected.");
-    // }
-
-    // /**
-    //  * sowing all soil, with variable soil, temperature, and block below peg
-    //  * pods issued should always be lower than remainingPods
-    //  * soil/bean used should always be equal to soil issued.
-    //  */
-    // function testSowAllMorningAuctionBelowPeg(
-    //     uint256 soil,
-    //     uint32 temperature,
-    //     uint256 _block
-    // ) prank(brean) public {
-    //     sowAllInit(
-    //         temperature,
-    //         soil,
-    //         _block,
-    //         false
-    //     );
-    //     uint256 remainingPods = field.remainingPods();
-    //     uint256 totalSoil = field.totalSoil();
-    //     field.sow(totalSoil, 1e6, LibTransfer.From.EXTERNAL);
-    //     assertEq(uint256(field.totalSoil()), 0, "totalSoil greater than 0");
-    //     assertEq(field.totalUnharvestable(), remainingPods, "Unharvestable pods does not Equal Expected.");
-    // }
-
-    // //////////////////// BEFOREEACH HELPERS ////////////////////
-
-    // function _beforeEachMorningAuction() public {
-    //     season.setMaxTempE(100);
-    //     season.setSoilE(100e6);
-    //     season.setAbovePegE(true);
-    // }
-
-    // function _beforeEachMorningAuctionBelowPeg() public {
-    //     season.setMaxTempE(100);
-    //     season.setSoilE(100e6);
-    //     season.setAbovePegE(false);
-    // }
-
-    // function _beforeEachFullHarvest() public {
-    //     field.incrementTotalHarvestableE(101e6);
-    //     uint256[] memory harvestPlot = new uint[](1);
-    //     harvestPlot[0] = 0;
-    //     vm.prank(brean);
-    //     vm.expectEmit(true, true, false, true);
-    //     // account, index, beans, pods
-    //     emit Harvest(brean, harvestPlot, 101 * 1e6);
-    //     field.harvest(harvestPlot, LibTransfer.To.EXTERNAL);
-    // }
-
-    // function _beforeEachPartialHarvest() public {
-    //     field.incrementTotalHarvestableE(50e6);
-    //     uint256[] memory harvestPlot = new uint[](1);
-    //     harvestPlot[0] = 0;
-    //     vm.prank(brean);
-    //     vm.expectEmit(true, true, false, true);
-    //     // account, index, beans, pods
-    //     emit Harvest(brean, harvestPlot, 50e6);
-    //     field.harvest(harvestPlot, LibTransfer.To.EXTERNAL);
-    // }
-
-    // function _beforeEachHarvest() public {
-    //     season.setSoilE(200e6);
-    //     vm.roll(30); // after morning Auction
-    //     vm.prank(brean);
-    //     field.sow(100e6, 1, LibTransfer.From.EXTERNAL);
-    //     vm.prank(siloChad);
-    //     field.sow(100e6, 1, LibTransfer.From.EXTERNAL);
-    // }
-
-    // function _beforeEachHarvestEntirePlotWithListing() public {
-    //     field.incrementTotalHarvestableE(101e6);
-    //     vm.prank(brean);
-    //     marketplace.createPodListing(0, 0, 500, 500000, 200 * 1e6, 1 * 1e6, LibTransfer.To.EXTERNAL);
-    //     uint256[] memory harvestPlot = new uint[](1);
-    //     harvestPlot[0] = 0;
-    //     vm.prank(brean);
-    //     vm.expectEmit(true, true, false, true);
-    //     // account, index, beans, pods
-    //     emit Harvest(brean, harvestPlot, 101e6);
-    //     field.harvest(harvestPlot, LibTransfer.To.EXTERNAL);
-    // }
-
     function _beforeEachSow(uint256 soilAmount, uint256 sowAmount, uint8 from) public {
         vm.roll(30);
         season.setSoilE(soilAmount);
@@ -767,41 +319,6 @@ contract FieldTest is TestHelper {
         field.sow(sowAmount, 0, LibTransfer.From.INTERNAL_TOLERANT);
     }
 
-    // function _beforeEachSomeSowFromInternal() prank(brean) public {
-    //     season.setSoilE(200e6);
-    //     token.transferToken(C.bean(), brean, 100e6, LibTransfer.From.EXTERNAL, LibTransfer.To.INTERNAL);
-    //     vm.expectEmit(true, true, true, true);
-    //     // account, index, beans, pods
-    //     emit Sow(brean, 0, 100e6, 101e6);
-    //     field.sow(100e6, 1e6, LibTransfer.From.INTERNAL);
-    // }
-
-    // function _beforeEachSomeSowFromInternalTolerant() prank(brean) public {
-    //     season.setSoilE(200e6);
-    //     token.transferToken(C.bean(), brean, 100e6, LibTransfer.From.EXTERNAL, LibTransfer.To.INTERNAL);
-    //     vm.expectEmit(true, true, true, true);
-    //     // account, index, beans, pods
-    //     emit Sow(brean, 0, 100e6, 101e6);
-    //     field.sow(100e6, 1e6, LibTransfer.From.INTERNAL_TOLERANT);
-    // }
-
-    // function _beforeEachSowMin() prank(brean) public {
-    //     season.setSoilE(100e6);
-    //     vm.roll(30);
-    //     vm.expectEmit(true, true, true, true);
-    //     // account, index, beans, pods
-    //     emit Sow(brean, 0, 100e6, 101e6);
-    //     field.sowWithMin(200e6, 1e6, 100e6, LibTransfer.From.EXTERNAL);
-    // }
-
-    // function _beforeEachSowMinWithEnoughSoil() prank(brean) public {
-    //     season.setSoilE(200e6);
-    //     vm.expectEmit(true, true, true, true);
-    //     // account, index, beans, pods
-    //     emit Sow(brean, 0, 100e6, 101e6);
-    //     field.sowWithMin(100e6, 1e6, 50e6, LibTransfer.From.EXTERNAL);
-    // }
-
     function beforeEachSow2farmers(
         uint256 soil,
         address farmer0,
@@ -835,11 +352,6 @@ contract FieldTest is TestHelper {
         return (amount0, amount1, initalBeanBalance0, initalBeanBalance1);
     }
 
-    // // Test Helpers
-    // function max(uint256 a, uint256 b) internal pure returns (uint256) {
-    //     return a >= b ? a : b;
-    // }
-
     // // helper function to reduce clutter, asserts that the state of the field is as expected
     function sowAssertEq(
         address account,
@@ -860,19 +372,173 @@ contract FieldTest is TestHelper {
         assertEq(field.harvestableIndex(0), 0, "harvestableIndex");
     }
 
-    // function sowAllInit(
-    //     uint32 temperature,
-    //     uint256 soil,
-    //     uint256 _block,
-    //     bool abovePeg
-    // ) public {
-    //     temperature = uint32(bound(uint256(temperature), 1, 10000));
-    //     soil = bound(soil, 1e6, 100e6);
-    //     // maximum blockdelta within a season is 300 blocks, but the block starts at 1
-    //     _block = bound(_block, 1, 301);
-    //     season.setMaxTempE(temperature);
-    //     season.setSoilE(soil);
-    //     season.setAbovePegE(abovePeg);
-    //     vm.roll(_block);
-    // }
+    /**
+     * @notice verfies that a farmer's plot index is updated correctly.
+     * @dev partial harvests and transfers are tested here. full harvests/transfers can be seen in `test_plotIndexMultiple`.
+     */
+    function test_plotIndexList(uint256 sowAmount, uint256 portion) public {
+        uint256 activeField = field.activeField();
+        uint256[] memory plotIndexes = field.getPlotIndexesFromAccount(farmers[0], activeField);
+        MockFieldFacet.Plot[] memory plots = field.getPlotsFromAccount(farmers[0], activeField);
+        assertEq(plotIndexes.length, plots.length, "plotIndexes length");
+        assertEq(plotIndexes.length, 0, "plotIndexes length");
+
+        sowAmount = bound(sowAmount, 100, type(uint128).max);
+        uint256 pods = (sowAmount * 101) / 100;
+        portion = bound(portion, 1, pods - 1);
+        field.incrementTotalHarvestableE(activeField, portion);
+        sowAmountForFarmer(farmers[0], sowAmount);
+
+        plotIndexes = field.getPlotIndexesFromAccount(farmers[0], activeField);
+        plots = field.getPlotsFromAccount(farmers[0], activeField);
+        assertEq(plotIndexes.length, plots.length, "plotIndexes length");
+        assertEq(plotIndexes.length, 1, "plotIndexes length");
+        assertEq(plots[0].index, 0, "plotIndexes[0]");
+        assertEq(plots[0].pods, pods, "plotIndexes[0]");
+
+        uint256 snapshot = vm.snapshot();
+
+        // transfer a portion of the plot.
+
+        vm.prank(farmers[0]);
+        bs.transferPlot(farmers[0], farmers[1], activeField, 0, 0, portion);
+
+        // verify sender plot index.
+        plotIndexes = field.getPlotIndexesFromAccount(farmers[0], activeField);
+        plots = field.getPlotsFromAccount(farmers[0], activeField);
+        assertEq(plotIndexes.length, plots.length, "plotIndexes length");
+        assertEq(plotIndexes.length, 1, "plotIndexes length");
+        assertEq(plots[0].index, portion, "plotIndexes[0]");
+        assertEq(plots[0].pods, pods - portion, "plotIndexes[0]");
+
+        // verify receiver plot index.
+        plotIndexes = field.getPlotIndexesFromAccount(farmers[1], activeField);
+        plots = field.getPlotsFromAccount(farmers[1], activeField);
+        assertEq(plotIndexes.length, plots.length, "plotIndexes length");
+        assertEq(plotIndexes.length, 1, "plotIndexes length");
+        assertEq(plots[0].index, 0, "plotIndexes[0]");
+        assertEq(plots[0].pods, portion, "plotIndexes[0]");
+
+        // revert to snapshot, harvest portion of plot.
+        vm.revertTo(snapshot);
+
+        plotIndexes = field.getPlotIndexesFromAccount(farmers[0], activeField);
+        vm.prank(farmers[0]);
+        field.harvest(activeField, plotIndexes, LibTransfer.To.EXTERNAL);
+
+        plotIndexes = field.getPlotIndexesFromAccount(farmers[0], activeField);
+        plots = field.getPlotsFromAccount(farmers[0], activeField);
+        assertEq(plotIndexes.length, plots.length, "plotIndexes length");
+        assertEq(plotIndexes.length, 1, "plotIndexes length");
+        assertEq(plots[0].index, portion, "plotIndexes[0]");
+        assertEq(plots[0].pods, pods - portion, "plotIndexes[0]");
+    }
+
+    /**
+     * @notice performs a series of actions to verify sows multiple times and verifies that the plot index is updated correctly.
+     * 1. sowing properly increments the plot index.
+     * 2. transfering a plot properly decrements the senders' plot index,
+     * and increments the recipients' plot index.
+     * 3. harvesting a plot properly decrements the senders' plot index.
+     */
+    function test_plotIndexMultiple() public {
+        uint256 activeField = field.activeField();
+        //////////// SOWING ////////////
+
+        uint256 sowAmount = rand(0, 10e6);
+        uint256 sows = rand(1, 1000);
+        for (uint256 i; i < sows; i++) {
+            sowAmountForFarmer(farmers[0], sowAmount);
+        }
+        verifyPlotIndexAndPlotLengths(farmers[0], sows);
+        uint256 pods = (sowAmount * 101) / 100;
+        MockFieldFacet.Plot[] memory plots = field.getPlotsFromAccount(farmers[0], activeField);
+        for (uint256 i; i < sows; i++) {
+            assertEq(plots[i].index, i * pods, "plotIndexes");
+            assertEq(plots[i].pods, pods, "plotIndexes");
+        }
+
+        //////////// TRANSFER ////////////
+
+        // transfers a random amount of plots to farmer[1].
+        uint256 transfers = rand(1, ((sows - 1) / 2) + 1);
+
+        uint256[] memory plotIndexes = field.getPlotIndexesFromAccount(farmers[0], activeField);
+        assembly {
+            mstore(plotIndexes, transfers)
+        }
+        uint256[] memory ends = new uint256[](transfers);
+
+        for (uint256 i; i < transfers; i++) {
+            ends[i] = pods;
+        }
+
+        vm.startPrank(farmers[0]);
+        bs.transferPlots(
+            farmers[0],
+            farmers[1],
+            activeField,
+            plotIndexes,
+            new uint256[](transfers),
+            ends
+        );
+        vm.stopPrank();
+        verifyPlotIndexAndPlotLengths(farmers[0], sows - transfers);
+
+        // upon a transfer/burn, the list of plots are not ordered.
+        plots = field.getPlotsFromAccount(farmers[0], activeField);
+        for (uint i; i < plots.length; i++) {
+            assertTrue(plots[i].index % pods == 0);
+            assertEq(plots[i].pods, pods, "pods");
+        }
+
+        verifyPlotIndexAndPlotLengths(farmers[1], transfers);
+
+        plots = field.getPlotsFromAccount(farmers[1], activeField);
+        for (uint i; i < plots.length; i++) {
+            assertTrue(plots[i].index % pods == 0);
+            assertEq(plots[i].pods, pods, "pods");
+        }
+
+        //////////// HARVESTING ////////////
+
+        // verify that a user is able to harvest all plots from calling their `getPlotIndexesFromAccount`
+        // assuming all valid indexes are returned.
+        field.incrementTotalHarvestableE(field.activeField(), 1000 * pods);
+
+        uint256[] memory accountPlots = field.getPlotIndexesFromAccount(farmers[0], activeField);
+        vm.prank(farmers[0]);
+        field.harvest(activeField, accountPlots, LibTransfer.To.EXTERNAL);
+        verifyPlotIndexAndPlotLengths(farmers[0], 0);
+        // verify that plots are empty.
+        plots = field.getPlotsFromAccount(farmers[0], activeField);
+
+        accountPlots = field.getPlotIndexesFromAccount(farmers[1], activeField);
+        vm.prank(farmers[1]);
+        field.harvest(activeField, accountPlots, LibTransfer.To.EXTERNAL);
+        // verify that plots are empty.
+        verifyPlotIndexAndPlotLengths(farmers[1], 0);
+    }
+
+    // field helpers.
+
+    /**
+     * @notice mints `sowAmount` beans for farmer,
+     * issues `sowAmount` of beans to farmer.
+     * sows `sowAmount` of beans.
+     */
+    function sowAmountForFarmer(address farmer, uint256 sowAmount) internal {
+        season.setSoilE(sowAmount);
+        mintTokensToUser(farmer, C.BEAN, sowAmount);
+        vm.prank(farmer);
+        field.sow(sowAmount, 0, LibTransfer.From.EXTERNAL);
+    }
+
+    function verifyPlotIndexAndPlotLengths(address farmer, uint256 expectedLength) public view {
+        uint256 fieldId = field.activeField();
+        uint256[] memory plotIndexes = field.getPlotIndexesFromAccount(farmer, fieldId);
+        MockFieldFacet.Plot[] memory plots = field.getPlotsFromAccount(farmer, fieldId);
+        assertEq(plotIndexes.length, plots.length, "plotIndexes length");
+        assertEq(plotIndexes.length, expectedLength, "plotIndexes length");
+    }
 }

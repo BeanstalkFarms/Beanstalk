@@ -244,8 +244,6 @@ library LibEvaluate {
         // prevent infinite L2SR
         if (beanSupply == 0) return (Decimal.zero(), address(0));
 
-        AppStorage storage s = LibAppStorage.diamondStorage();
-
         address[] memory pools = LibWhitelistedTokens.getWhitelistedLpTokens();
         uint256[] memory twaReserves;
         uint256 totalUsdLiquidity;

@@ -24,6 +24,7 @@ import {AppStorage} from "contracts/beanstalk/storage/AppStorage.sol";
 
 ///// COMMON IMPORTED LIBRARIES //////
 import {LibTransfer} from "contracts/libraries/Token/LibTransfer.sol";
+import {LibConvertData} from "contracts/libraries/Convert/LibConvertData.sol";
 
 ///// ECOSYSTEM //////
 import {UsdOracle} from "contracts/ecosystem/oracles/UsdOracle.sol";
@@ -447,6 +448,52 @@ contract TestHelper is
         if (tokenAmountIn > 0) {
             bs.addFertilizer(season, tokenAmountIn, 0);
         }
+    }
+
+    //////////////// CONVERT HELPERS /////////////////
+
+    function convertEncoder(
+        LibConvertData.ConvertKind kind,
+        address token,
+        uint256 amountIn,
+        uint256 minAmountOut
+    ) internal pure returns (bytes memory) {
+        if (kind == LibConvertData.ConvertKind.LAMBDA_LAMBDA) {
+            // lamda_lamda encoding
+            return abi.encode(kind, amountIn, token);
+        } else {
+            // default encoding
+            return abi.encode(kind, amountIn, minAmountOut, token);
+        }
+    }
+
+    function createBeanToLPConvert(
+        address well,
+        uint256 amountIn
+    ) internal pure returns (bytes memory) {
+        return
+            convertEncoder(
+                LibConvertData.ConvertKind.BEANS_TO_WELL_LP,
+                well, // well
+                amountIn, // amountIn
+                0 // minOut
+            );
+    }
+
+    function rand(uint256 lowerBound, uint256 upperBound) internal returns (uint256 rand) {
+        return bound(uint256(keccak256(abi.encode(vm.unixTime()))), lowerBound, upperBound);
+    }
+
+    /**
+     * @notice returns a random number between lowerBound and upperBound,
+     * using unix time and salt as the source of randomness.
+     */
+    function rand(
+        uint256 lowerBound,
+        uint256 upperBound,
+        bytes memory salt
+    ) internal returns (uint256 rand) {
+        return bound(uint256(keccak256(abi.encode(vm.unixTime(), salt))), lowerBound, upperBound);
     }
 
     /**

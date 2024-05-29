@@ -49,8 +49,7 @@ contract ConvertTest is TestHelper {
         well = C.BEAN_ETH_WELL;
         // init user.
         farmers.push(users[1]);
-        vm.prank(farmers[0]);
-        C.bean().approve(BEANSTALK, type(uint256).max);
+        maxApproveBeanstalk(farmers);
 
         // Initialize well to balances. (1000 BEAN/ETH)
         addLiquidityToWell(
@@ -734,21 +733,4 @@ contract ConvertTest is TestHelper {
     //     assertEq(MockToken(well).totalSupply(), initalLPbalance - lpConverted, 'well LP balance does not equal initalLPbalance - lpConverted');
     //     assertEq(bean.balanceOf(BEANSTALK), initalBeanBalance + expectedAmtOut, 'bean balance does not equal initalBeanBalance + expectedAmtOut');
     // }
-
-    //////////////// CONVERT HELPERS /////////////////
-
-    function convertEncoder(
-        LibConvertData.ConvertKind kind,
-        address token,
-        uint256 amountIn,
-        uint256 minAmountOut
-    ) internal pure returns (bytes memory) {
-        if (kind == LibConvertData.ConvertKind.LAMBDA_LAMBDA) {
-            // lamda_lamda encoding
-            return abi.encode(kind, amountIn, token);
-        } else {
-            // default encoding
-            return abi.encode(kind, amountIn, minAmountOut, token);
-        }
-    }
 }

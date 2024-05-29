@@ -14,11 +14,15 @@ struct ShipmentPlan {
 
 interface IBeanstalk {
     function isFertilizing() external view returns (bool);
+
     function totalUnfertilizedBeans() external view returns (uint256);
+
     function leftoverBeans() external view returns (uint256);
 
     function isHarvesting(uint256 fieldId) external view returns (bool);
+
     function totalUnharvestable(uint256 fieldId) external view returns (uint256);
+
     function fieldCount() external view returns (uint256);
 }
 

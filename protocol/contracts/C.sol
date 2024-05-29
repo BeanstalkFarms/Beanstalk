@@ -18,6 +18,7 @@ library C {
     //////////////////// Globals ////////////////////
 
     uint256 internal constant PRECISION = 1e18;
+    uint256 private constant LEGACY_CHAIN_ID = 1;
     uint256 private constant CHAIN_ID = 1;
     bytes constant BYTES_ZERO = new bytes(0);
 
@@ -45,6 +46,7 @@ library C {
     //////////////////// Contracts ////////////////////
 
     address internal constant BEAN = 0xBEA0000029AD1c77D3d5D23Ba2D8893dB9d1Efab;
+    address internal constant CURVE_BEAN_METAPOOL = 0xc9C32cd16Bf7eFB85Ff14e0c8603cc90F6F2eE49;
 
     address internal constant UNRIPE_BEAN = 0x1BEA0050E63e05FBb5D8BA2f10cf5800B6224449;
     address internal constant UNRIPE_LP = 0x1BEA3CcD22F4EBd3d37d731BA31Eeca95713716D;
@@ -107,6 +109,10 @@ library C {
         return CHAIN_ID;
     }
 
+    function getLegacyChainId() internal pure returns (uint256) {
+        return LEGACY_CHAIN_ID;
+    }
+
     function getSeedsPerBean() internal pure returns (uint256) {
         return SEEDS_PER_BEAN;
     }
@@ -117,20 +123,6 @@ library C {
 
     function getRootsBase() internal pure returns (uint256) {
         return ROOTS_BASE;
-    }
-
-    /**
-     * @dev The pre-exploit BEAN:3CRV Curve metapool address.
-     */
-    function unripeLPPool1() internal pure returns (address) {
-        return UNRIPE_CURVE_BEAN_METAPOOL;
-    }
-
-    /**
-     * @dev The pre-exploit BEAN:LUSD Curve plain pool address.
-     */
-    function unripeLPPool2() internal pure returns (address) {
-        return UNRIPE_CURVE_BEAN_LUSD_POOL;
     }
 
     function unripeBean() internal pure returns (IERC20) {

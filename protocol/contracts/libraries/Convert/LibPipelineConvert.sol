@@ -4,7 +4,6 @@ pragma solidity ^0.8.20;
 
 import {C} from "contracts/C.sol";
 import {LibConvert} from "./LibConvert.sol";
-import {LibWellMinting} from "../Minting/LibWellMinting.sol";
 import {AdvancedFarmCall, LibFarm} from "../../libraries/LibFarm.sol";
 import {LibWell} from "../Well/LibWell.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
@@ -43,7 +42,7 @@ library LibPipelineConvert {
         uint256 overallConvertCapacity,
         uint256 fromBdv,
         uint256[] memory initialLpSupply
-    ) internal returns (uint256) {
+    ) public returns (uint256) {
         dbs.afterOverallDeltaB = LibDeltaB.scaledOverallCurrentDeltaB(initialLpSupply);
 
         // modify afterInputTokenDeltaB and afterOutputTokenDeltaB to scale using before/after LP amounts
@@ -78,7 +77,7 @@ library LibPipelineConvert {
     /**
      * @param calls The advanced farm calls to execute.
      */
-    function executeAdvancedFarmCalls(AdvancedFarmCall[] calldata calls) internal {
+    function executeAdvancedFarmCalls(AdvancedFarmCall[] calldata calls) external {
         bytes[] memory results;
         results = new bytes[](calls.length);
         for (uint256 i = 0; i < calls.length; ++i) {
@@ -91,7 +90,7 @@ library LibPipelineConvert {
      * @notice Determines input token amount left in pipeline and returns to Beanstalk
      * @param tokenOut The token to pull out of pipeline
      */
-    function transferTokensFromPipeline(address tokenOut) internal returns (uint256 amountOut) {
+    function transferTokensFromPipeline(address tokenOut) external returns (uint256 amountOut) {
         amountOut = IERC20(tokenOut).balanceOf(C.PIPELINE);
         require(amountOut > 0, "Convert: No output tokens left in pipeline");
 
@@ -116,7 +115,7 @@ library LibPipelineConvert {
      */
     function getConvertState(
         bytes calldata convertData
-    ) internal view returns (PipelineConvertData memory pipeData) {
+    ) external view returns (PipelineConvertData memory pipeData) {
         LibConvertData.ConvertKind kind = convertData.convertKind();
         address toToken;
         address fromToken;
@@ -134,7 +133,7 @@ library LibPipelineConvert {
                 require(LibWell.isWell(fromToken), "Convert: Invalid Well");
             }
 
-            pipeData = LibPipelineConvert.populatePipelineConvertData(fromToken, toToken);
+            pipeData = populatePipelineConvertData(fromToken, toToken);
         }
     }
 
@@ -148,7 +147,7 @@ library LibPipelineConvert {
         address fromToken,
         address toToken,
         uint256 fromBdv
-    ) internal {
+    ) external {
         LibConvertData.ConvertKind kind = convertData.convertKind();
         if (
             kind == LibConvertData.ConvertKind.BEANS_TO_WELL_LP ||
@@ -156,7 +155,7 @@ library LibPipelineConvert {
         ) {
             pipeData.overallConvertCapacity = LibConvert.abs(LibDeltaB.overallCappedDeltaB());
 
-            pipeData.stalkPenaltyBdv = LibPipelineConvert.prepareStalkPenaltyCalculation(
+            pipeData.stalkPenaltyBdv = prepareStalkPenaltyCalculation(
                 fromToken,
                 toToken,
                 pipeData.deltaB,

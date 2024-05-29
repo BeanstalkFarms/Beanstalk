@@ -26,18 +26,6 @@ library LibDeltaB {
     uint256 internal constant ZERO_LOOKBACK = 0;
 
     /**
-     * @param inputToken The input token for the convert.
-     * @param outputToken The output token for the convert.
-     * @return The combined deltaB of the input/output tokens.
-     */
-    function getCombinedDeltaBForTokens(
-        address inputToken,
-        address outputToken
-    ) internal view returns (int256) {
-        return LibDeltaB.getCurrentDeltaB(inputToken).add(getCurrentDeltaB(outputToken));
-    }
-
-    /**
      * @param token The token to get the deltaB of.
      * @return The deltaB of the token, for Bean it returns 0.
      */

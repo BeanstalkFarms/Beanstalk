@@ -13,15 +13,12 @@ const {
   ZERO_BYTES,
   BEAN_WSTETH_WELL
 } = require("./utils/constants.js");
-const { EXTERNAL, INTERNAL } = require("./utils/balances.js");
 const { ethers } = require("hardhat");
 const { setEthUsdChainlinkPrice, setWstethUsdPrice } = require("../utils/oracle.js");
-const { deployBasin } = require("../scripts/basin.js");
-const { deployBasinV1_1Upgrade } = require("../scripts/basinV1_1.js");
 const { getAllBeanstalkContracts } = require("../utils/contracts");
 const { getBean } = require("../utils/index.js");
 const { upgradeWithNewFacets } = require("../scripts/diamond.js");
-const { mockBeanstalkAdmin } = require("../scripts/bips.js");
+const { mine } = require("@nomicfoundation/hardhat-network-helpers");
 
 // TODO
 // Tests to add
@@ -278,47 +275,47 @@ describe("Sun", function () {
     // increments pods by 1000
     // temperature is 1%
     await mockBeanstalk.incrementTotalPodsE(0, "2600");
-    // add 1 fertilizer owner, 1 fert (which is equal to 5 beans)
     await mockBeanstalk.connect(owner).addFertilizerOwner("0", to18("0.001"), "0");
-    //sunrise with 1500 beans 500 given to field, silo, and barn
     this.result = await mockBeanstalk.sunSunrise("1500", 8);
+    // add 1 fertilizer owner, 1 fert (which is equal to 5 beans)
+    //sunrise with 1500 beans 500 given to field, silo, and barn
     // emit a event that 495 soil was issued at season 3
     // 500/1.01 = ~495 (rounded down)
-    await expect(this.result).to.emit(beanstalk, "Ship");
-    await expect(this.result).to.emit(beanstalk, "Soil").withArgs(3, "495");
     expect(await beanstalk.totalSoil()).to.be.equal("495");
-
+    await expect(this.result).to.emit(beanstalk, "Soil").withArgs(3, "495");
+    await expect(this.result).to.emit(beanstalk, "Ship");
     expect(await beanstalk.totalHarvestable(0)).to.be.equal("500");
-    expect(await mockBeanstalk.totalFertilizedBeans()).to.be.equal("500");
-    expect(await mockBeanstalk.beansPerFertilizer()).to.be.equal(500);
+
     expect(await beanstalk.totalEarnedBeans()).to.be.equal("500");
+    expect(await mockBeanstalk.beansPerFertilizer()).to.be.equal(500);
+    expect(await mockBeanstalk.totalFertilizedBeans()).to.be.equal("500");
 
     expect(await mockBeanstalk.isFertilizing()).to.be.equal(true);
 
     // Update shipping routes.
     let newShipmentRoute = [...this.shipmentRoutes[1]];
-    newShipmentRoute[3] = ethers.utils.defaultAbiCoder.encode(["uint8"], [1]);
     delete newShipmentRoute[7];
+    newShipmentRoute[3] = ethers.utils.defaultAbiCoder.encode(["uint8"], [1]);
     this.shipmentRoutes = [...this.shipmentRoutes, newShipmentRoute];
     await mockBeanstalk.connect(owner).setShipmentRoutes(this.shipmentRoutes);
     if (verbose) console.log(await beanstalk.getShipmentRoutes());
-
     // Add and Set active field.
+
     await mockBeanstalk.connect(owner).addField();
     await mockBeanstalk.connect(owner).setActiveField(1, 1);
 
     // New season, new rewards. No pods in new Field.
-    this.result = await mockBeanstalk.sunSunrise("2400", 8);
     await expect(this.result).to.emit(beanstalk, "Ship");
-
+    this.result = await mockBeanstalk.sunSunrise("2400", 8);
     expect(await beanstalk.totalHarvestable(0)).to.be.equal("1300");
+
     expect(await beanstalk.totalHarvestable(1)).to.be.equal("0");
     expect(await mockBeanstalk.totalFertilizedBeans()).to.be.equal("1300");
     expect(await mockBeanstalk.beansPerFertilizer()).to.be.equal(1300);
     expect(await beanstalk.totalEarnedBeans()).to.be.equal("1300");
 
-    // Pods in both Fields.
     await mockBeanstalk.incrementTotalPodsE(1, "5000");
+    // Pods in both Fields.
     this.result = await mockBeanstalk.sunSunrise("4000", 8);
     await expect(this.result).to.emit(beanstalk, "Ship");
 
@@ -331,106 +328,14 @@ describe("Sun", function () {
     // Field[0] at cap.
     this.result = await mockBeanstalk.sunSunrise("4000", 8);
     await expect(this.result).to.emit(beanstalk, "Ship");
-
     expect(await beanstalk.totalHarvestable(0)).to.be.equal("2600");
+
     expect(await beanstalk.totalHarvestable(1)).to.be.equal("2233");
     expect(await mockBeanstalk.totalFertilizedBeans()).to.be.equal("3533");
     expect(await mockBeanstalk.beansPerFertilizer()).to.be.equal(3533);
     expect(await beanstalk.totalEarnedBeans()).to.be.equal("3533");
-
     expect(await mockBeanstalk.isFertilizing()).to.be.equal(true);
   });
-
-  it("sunrise reward", async function () {
-    const VERBOSE = false;
-
-    // [[pool balances], base fee, secondsLate, toMode]
-    const mockedValues = [
-      [[to6("10000"), to18("6.666666")], 50 * Math.pow(10, 9), 0, EXTERNAL],
-      [[to6("10000"), to18("4.51949333333335")], 30 * Math.pow(10, 9), 0, EXTERNAL],
-      [[to6("50000"), to18("24.5848333333334")], 50 * Math.pow(10, 9), 0, EXTERNAL],
-      [[to6("10000"), to18("3.33333")], 50 * Math.pow(10, 9), 0, INTERNAL],
-      [[to6("10000"), to18("6.66666")], 50 * Math.pow(10, 9), 24, INTERNAL],
-      [[to6("10000"), to18("6.666666")], 50 * Math.pow(10, 9), 500, INTERNAL]
-    ];
-    let START_TIME = (await ethers.provider.getBlock("latest")).timestamp;
-    await timeSkip(START_TIME + 60 * 60 * 3);
-    const initial = await beanstalk.connect(owner).sunrise();
-    const block = await ethers.provider.getBlock(initial.blockNumber);
-    START_TIME = (await ethers.provider.getBlock("latest")).timestamp;
-    await mockBeanstalk.setCurrentSeasonE(1);
-
-    const startingBeanBalance =
-      (await beanstalk.getAllBalance(owner.address, BEAN)).totalBalance.toNumber() /
-      Math.pow(10, 6);
-    for (const mockVal of mockedValues) {
-      snapshotId = await takeSnapshot();
-
-      // await this.pump.update(mockVal[0], 0x00);
-      // await this.pump.update(mockVal[0], 0x00);
-
-      // Time skip an hour after setting new balance (twap will be very close to whats in mockVal)
-      await timeSkip(START_TIME + 60 * 60);
-
-      const secondsLate = mockVal[2];
-      const effectiveSecondsLate = Math.min(secondsLate, 300);
-      await mockBeanstalk.resetSeasonStart(secondsLate);
-
-      // NOTE: This test does not account for on-chain base fee cost of transaction, since
-      //       wells are not properly initialized.
-
-      // SUNRISE
-      if (mockVal[3] == EXTERNAL) {
-        this.result = await beanstalk.sunrise();
-      } else {
-        this.result = await beanstalk.gm(owner.address, mockVal[3]);
-      }
-
-      // Verify that sunrise was profitable assuming a 50% average success rate
-
-      const beanBalance =
-        (await beanstalk.getAllBalance(owner.address, BEAN)).totalBalance.toNumber() /
-        Math.pow(10, 6);
-      const rewardAmount = parseFloat((beanBalance - startingBeanBalance).toFixed(6));
-
-      // Determine how much gas was used
-      const txReceipt = await ethers.provider.getTransactionReceipt(this.result.hash);
-      const gasUsed = txReceipt.gasUsed.toNumber();
-
-      const blockBaseFee = mockVal[1] / Math.pow(10, 9);
-      const GasCostInETH = (blockBaseFee * gasUsed) / Math.pow(10, 9);
-
-      // How many beans are required to purchase 1 eth
-      const beanEthPrice = (mockVal[0][0] * 1e12) / mockVal[0][1];
-
-      // Bean equivalent of the cost to execute sunrise
-      const GasCostBean = GasCostInETH * beanEthPrice;
-
-      if (VERBOSE) {
-        // console.log('sunrise call tx', this.result);
-        const logs = await ethers.provider.getLogs(this.result.hash);
-        viewGenericUint256Logs(logs);
-        console.log("reward beans: ", rewardAmount);
-        console.log("gas used", gasUsed);
-        console.log("to mode", mockVal[4]);
-        console.log("base fee", blockBaseFee);
-        console.log("gas cost (eth)", GasCostInETH);
-        console.log("gas cost (bean)", GasCostBean);
-        console.log(
-          "cost * late exponent (bean)",
-          GasCostBean * Math.pow(1.01, effectiveSecondsLate)
-        );
-      }
-
-      expect(rewardAmount).to.greaterThan(GasCostBean * Math.pow(1.01, effectiveSecondsLate));
-
-      await expect(this.result)
-        .to.emit(beanstalk, "Incentivization")
-        .withArgs(owner.address, Math.round(rewardAmount * Math.pow(10, 6)));
-      await revertToSnapshot(snapshotId);
-    }
-  });
-
   it("ends germination", async function () {
     await mockBeanstalk.teleportSunrise(5);
     await mockBeanstalk.mockIncrementGermination(BEAN, to6("1000"), to6("1000"), 1);

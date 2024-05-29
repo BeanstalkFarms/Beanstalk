@@ -5,10 +5,11 @@
 pragma solidity ^0.8.20;
 
 import {ReentrancyGuard} from "contracts/beanstalk/ReentrancyGuard.sol";
+import {LibDibbler} from "contracts/libraries/LibDibbler.sol";
 import {C} from "contracts/C.sol";
 
 /**
- * @author Publius
+ * @author Publius, Brean
  * @title Pod Transfer
  **/
 
@@ -59,6 +60,7 @@ contract PodTransfer is ReentrancyGuard {
 
     function insertPlot(address account, uint256 fieldId, uint256 index, uint256 amount) internal {
         s.accts[account].fields[fieldId].plots[index] = amount;
+        s.accts[account].fields[fieldId].plotIndexes.push(index);
     }
 
     function removePlot(
@@ -74,10 +76,13 @@ contract PodTransfer is ReentrancyGuard {
             s.accts[account].fields[fieldId].plots[index] = start;
         } else {
             delete s.accts[account].fields[fieldId].plots[index];
+            LibDibbler.removePlotIndexFromAccount(account, fieldId, index);
         }
 
         if (amountAfterEnd > 0) {
-            s.accts[account].fields[fieldId].plots[index + end] = amountAfterEnd;
+            uint256 newIndex = index + end;
+            s.accts[account].fields[fieldId].plots[newIndex] = amountAfterEnd;
+            s.accts[account].fields[fieldId].plotIndexes.push(newIndex);
         }
     }
 

@@ -32,6 +32,14 @@ contract FieldFacet is Invariable, ReentrancyGuard {
     using LibRedundantMath128 for uint128;
 
     /**
+     * @notice Plot struct contains the plot index and amount of pods the plot contains.
+     */
+    struct Plot {
+        uint256 index;
+        uint256 pods;
+    }
+
+    /**
      * @notice Emitted when a new Field is added.
      * @param fieldId The index of the Field that was added.
      */
@@ -198,6 +206,7 @@ contract FieldFacet is Invariable, ReentrancyGuard {
         LibMarket._cancelPodListing(LibTractor._user(), fieldId, index);
 
         delete s.accts[account].fields[fieldId].plots[index];
+        LibDibbler.removePlotIndexFromAccount(account, fieldId, index);
 
         // If the entire Plot was harvested, exit.
         if (harvestablePods >= pods) {
@@ -205,9 +214,9 @@ contract FieldFacet is Invariable, ReentrancyGuard {
         }
 
         // Create a new Plot with remaining Pods.
-        s.accts[account].fields[fieldId].plots[index.add(harvestablePods)] = pods.sub(
-            harvestablePods
-        );
+        uint256 newIndex = index.add(harvestablePods);
+        s.accts[account].fields[fieldId].plots[newIndex] = pods.sub(harvestablePods);
+        s.accts[account].fields[fieldId].plotIndexes.push(newIndex);
     }
 
     //////////////////// CONFIG /////////////////////
@@ -413,5 +422,31 @@ contract FieldFacet is Invariable, ReentrancyGuard {
      */
     function remainingPods() external view returns (uint256) {
         return uint256(LibDibbler.remainingPods());
+    }
+
+    /**
+     * @notice returns the plotIndexes owned by `account`.
+     */
+    function getPlotIndexesFromAccount(
+        address account,
+        uint256 fieldId
+    ) external view returns (uint256[] memory plotIndexes) {
+        return s.accts[account].fields[fieldId].plotIndexes;
+    }
+
+    /**
+     * @notice returns the plots owned by `account`.
+     */
+    function getPlotsFromAccount(
+        address account,
+        uint256 fieldId
+    ) external view returns (Plot[] memory plots) {
+        uint256[] memory plotIndexes = s.accts[account].fields[fieldId].plotIndexes;
+        if (plotIndexes.length == 0) return plots;
+        plots = new Plot[](plotIndexes.length);
+        for (uint256 i = 0; i < plotIndexes.length; i++) {
+            uint256 index = plotIndexes[i];
+            plots[i] = Plot(index, s.accts[account].fields[fieldId].plots[index]);
+        }
     }
 }

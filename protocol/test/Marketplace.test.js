@@ -9,6 +9,7 @@ const { takeSnapshot, revertToSnapshot } = require("./utils/snapshot");
 const { ethers } = require("hardhat");
 const { getAllBeanstalkContracts } = require("../utils/contracts");
 const { getBean } = require("../utils/contracts");
+const { mine } = require("@nomicfoundation/hardhat-network-helpers");
 
 const ZERO_HASH = "0x0000000000000000000000000000000000000000000000000000000000000000";
 let user, user2, owner;
@@ -41,10 +42,12 @@ describe("Marketplace", function () {
     await bean.connect(user).approve(beanstalk.address, "100000000000");
     await bean.connect(user2).approve(beanstalk.address, "100000000000");
 
-    await mockBeanstalk.incrementTotalSoilE(100000);
-    await mockBeanstalk.setYieldE(0);
-    await beanstalk.connect(user).sow(1000, 0, EXTERNAL);
-    await beanstalk.connect(user2).sow(1000, 0, EXTERNAL);
+    await mockBeanstalk.incrementTotalSoilE("100000");
+    // mine 300 blocks:
+    await mine(300);
+    await mockBeanstalk.setYieldE("0");
+    await beanstalk.connect(user).sow("1000", "0", EXTERNAL);
+    await beanstalk.connect(user2).sow("1000", "0", EXTERNAL);
   });
 
   const getHashFromListing = function (l) {

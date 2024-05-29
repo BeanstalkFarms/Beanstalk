@@ -9,6 +9,7 @@ import {LibWhitelistedTokens} from "contracts/libraries/Silo/LibWhitelistedToken
 import {AppStorage} from "contracts/beanstalk/storage/AppStorage.sol";
 import {AssetSettings, Implementation} from "contracts/beanstalk/storage/System.sol";
 import {IGaugePointFacet} from "contracts/beanstalk/sun/GaugePointFacet.sol";
+import {LibTractor} from "contracts/libraries/LibTractor.sol";
 import {LibDiamond} from "contracts/libraries/LibDiamond.sol";
 import {LibCases} from "contracts/libraries/LibCases.sol";
 import {LibGauge} from "contracts/libraries/LibGauge.sol";
@@ -131,6 +132,9 @@ contract InitalizeDiamond {
         s.sys.usdTokenPrice[C.BEAN_ETH_WELL] = 1;
         s.sys.twaReserves[beanTokenWell].reserve0 = 1;
         s.sys.twaReserves[beanTokenWell].reserve1 = 1;
+
+        // init tractor.
+        LibTractor._tractorStorage().activePublisher = payable(address(1));
     }
 
     /**

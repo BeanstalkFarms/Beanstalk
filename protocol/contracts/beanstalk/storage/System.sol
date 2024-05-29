@@ -70,6 +70,7 @@ struct System {
     Weather weather;
     SeedGauge seedGauge;
     Rain rain;
+    Migration migration;
     bytes32[128] _buffer_2;
     mapping(address => Implementation) oracleImplementation;
     SeedGaugeSettings seedGaugeSettings;
@@ -372,6 +373,11 @@ struct ShipmentRoute {
     bytes4 planSelector;
     ShipmentRecipient recipient;
     bytes data;
+}
+
+struct Migration {
+    uint256 migratedL1Beans;
+    bytes32[4] _buffer_;
 }
 
 /**

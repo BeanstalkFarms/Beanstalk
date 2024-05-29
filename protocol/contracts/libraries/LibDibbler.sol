@@ -6,15 +6,17 @@ import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 import {PRBMath} from "@prb/math/contracts/PRBMath.sol";
 import {LibPRBMathRoundable} from "contracts/libraries/LibPRBMathRoundable.sol";
 import {LibAppStorage, AppStorage} from "./LibAppStorage.sol";
+import {Account, Field} from "contracts/beanstalk/storage/Account.sol";
 import {LibRedundantMath128} from "./LibRedundantMath128.sol";
 import {LibRedundantMath32} from "./LibRedundantMath32.sol";
 import {LibRedundantMath256} from "contracts/libraries/LibRedundantMath256.sol";
+
 /**
  * @title LibDibbler
  * @author Publius, Brean
  * @notice Calculates the amount of Pods received for Sowing under certain conditions.
  * Provides functions to calculate the instantaneous Temperature, which is adjusted by the
- * Morning Auction functionality. Provides math helpers for scaling Soil.
+ * Morning Auction functionality. Provides additional functionality used by field/market.
  */
 library LibDibbler {
     using PRBMath for uint256;
@@ -34,6 +36,9 @@ library LibDibbler {
     /// @dev If less than `SOIL_SOLD_OUT_THRESHOLD` Soil is left, consider
     /// Soil to be "sold out"; affects how Temperature is adjusted.
     uint256 private constant SOIL_SOLD_OUT_THRESHOLD = 1e6;
+
+    uint256 private constant L1_BLOCK_TIME = 12;
+    uint256 private constant L2_BLOCK_TIME = 2;
 
     event Sow(address indexed account, uint256 fieldId, uint256 index, uint256 beans, uint256 pods);
 
@@ -89,10 +94,11 @@ library LibDibbler {
             s.sys.soil = s.sys.soil.sub(uint128(beans));
         }
 
-        s.accts[account].fields[s.sys.activeField].plots[
-            s.sys.fields[s.sys.activeField].pods
-        ] = pods;
-        emit Sow(account, s.sys.activeField, s.sys.fields[s.sys.activeField].pods, beans, pods);
+        uint256 index = s.sys.fields[s.sys.activeField].pods;
+
+        s.accts[account].fields[s.sys.activeField].plots[index] = pods;
+        s.accts[account].fields[s.sys.activeField].plotIndexes.push(index);
+        emit Sow(account, s.sys.activeField, index, beans, pods);
 
         s.sys.fields[s.sys.activeField].pods += pods;
         _saveSowTime();
@@ -140,10 +146,14 @@ library LibDibbler {
      * the formula `log51(A * MAX_BLOCK_ELAPSED + 1)` is applied, where:
      * `A = 2`
      * `MAX_BLOCK_ELAPSED = 25`
+     * @dev L2 block times are signifncatly shorter than L1. To adjust for this,
+     * `delta` is scaled down by the ratio of L2 block time to L1 block time.
      */
     function morningTemperature() internal view returns (uint256) {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        uint256 delta = block.number.sub(s.sys.season.sunriseBlock);
+        uint256 delta = block.number.sub(s.sys.season.sunriseBlock).mul(L2_BLOCK_TIME).div(
+            L1_BLOCK_TIME
+        );
 
         // check most likely case first
         if (delta > 24) {
@@ -370,5 +380,41 @@ library LibDibbler {
                     morningTemperature()
                 );
         }
+    }
+
+    /**
+     * @notice removes a plot index from an accounts plotIndex list.
+     */
+    function removePlotIndexFromAccount(
+        address account,
+        uint256 fieldId,
+        uint256 plotIndex
+    ) internal {
+        AppStorage storage s = LibAppStorage.diamondStorage();
+        uint256 i = findPlotIndexForAccount(account, fieldId, plotIndex);
+        Field storage field = s.accts[account].fields[fieldId];
+        field.plotIndexes[i] = field.plotIndexes[field.plotIndexes.length - 1];
+        field.plotIndexes.pop();
+    }
+
+    /**
+     * @notice finds the index of a plot in an accounts plotIndex list.
+     */
+    function findPlotIndexForAccount(
+        address account,
+        uint256 fieldId,
+        uint256 plotIndex
+    ) internal view returns (uint256 i) {
+        AppStorage storage s = LibAppStorage.diamondStorage();
+        Field storage field = s.accts[account].fields[fieldId];
+        uint256[] memory plotIndexes = field.plotIndexes;
+        uint256 length = plotIndexes.length;
+        while (plotIndexes[i] != plotIndex) {
+            i++;
+            if (i >= length) {
+                revert("Id not found");
+            }
+        }
+        return i;
     }
 }

@@ -25,13 +25,17 @@ const {
 } = require("./impersonate.js");
 
 const { deployBasin } = require("./basin");
-const { whitelistWell, impersonateBeanEthWell, impersonateBeanWstethWell } = require("../utils/well");
+const {
+  whitelistWell,
+  impersonateBeanEthWell,
+  impersonateBeanWstethWell
+} = require("../utils/well");
 
 /**
- * @notice deploys a new instance of beanstalk. 
+ * @notice deploys a new instance of beanstalk.
  * @dev SHOULD NOT be used to deploy new beanstalks on mainnet,
  * as the "Bean" token is always impersonated to the mainnet bean address.
- * For new deployments, ensure that the "Bean" token assigns the minter role 
+ * For new deployments, ensure that the "Bean" token assigns the minter role
  * to the new beanstalk diamond.
  */
 async function main(
@@ -49,18 +53,17 @@ async function main(
   }
 
   // Disable forking / reset hardhat network.
-  https://hardhat.org/hardhat-network/docs/reference
-  if (mock && reset) {
+  //hardhat.org/hardhat-network/docs/reference
+  https: if (mock && reset) {
     await network.provider.request({
       method: "hardhat_reset",
       params: []
     });
   }
 
-  
   const accounts = await ethers.getSigners();
   const account = await accounts[0].getAddress();
-  
+
   if (verbose) {
     console.log("Account: " + account);
     console.log("---");
@@ -71,7 +74,7 @@ async function main(
   const name = "Beanstalk";
 
   // Deploy all facets and external libraries.
-  [facets, libraryNames, facetLibraries] = await getFacetData(mock)
+  [facets, libraryNames, facetLibraries] = await getFacetData(mock);
   let facetsAndNames = await deployFacets(
     verbose,
     mock,
@@ -79,39 +82,38 @@ async function main(
     libraryNames,
     facetLibraries,
     totalGasUsed
-  )
-  
+  );
+
   // Fetch init diamond contract
   const initDiamondArg = mock
     ? "contracts/mocks/newMockInitDiamond.sol:MockInitDiamond"
     : "contracts/beanstalk/init/newInitDiamond.sol:InitDiamond";
-  
-  
+
   // eslint-disable-next-line no-unused-vars
   // Impersonate various contracts that beanstalk interacts with.
   // These should be impersonated on a fresh network state.
-  let basinComponents = []
+  let basinComponents = [];
   if (reset) {
-    await impersonatePrice() // BeanstalkPrice contract (frontend price)
-    await impersonatePipeline() // Pipeline contract.
+    await impersonatePrice(); // BeanstalkPrice contract (frontend price)
+    await impersonatePipeline(); // Pipeline contract.
   }
 
-  if (basin) { 
+  if (basin) {
     basinComponents = await deployBasin(
       true, // mock
       undefined, // account
-      verbose, 
+      verbose,
       true, // just deploys the well (does not add liquidity)
       mockPump // deploys a regular or mock multiFlow Pump.
-    ) // Basin deployment.
+    ); // Basin deployment.
 
     // deploy bean-eth well.
-    await impersonateBeanEthWell()
+    await impersonateBeanEthWell();
 
     // deploy bean-wstETH well.
-    await impersonateBeanWstethWell()
+    await impersonateBeanWstethWell();
 
-    await impersonateUnripe() // Unripe
+    await impersonateUnripe(); // Unripe
   }
 
   // Impersonate various ERC20s, if enabled.
@@ -148,7 +150,7 @@ async function main(
     console.log("--");
     console.log("Beanstalk diamond address:" + beanstalkDiamond.address);
     console.log("--");
-    console.log("Total gas used: " + strDisplay(totalGasUsed))
+    console.log("Total gas used: " + strDisplay(totalGasUsed));
   }
 
   return {
@@ -163,44 +165,32 @@ async function main(
  * - adds underlying assets to unripe assets.
  * - mints and approves unripe tokens for an address.
  */
-async function addUnderlyingToUnripe(
-  address = undefined,
-  contract = BEANSTALK,
-  amount = [0,0],
-) {
-  if (address == undefined) { 
+async function addUnderlyingToUnripe(address = undefined, contract = BEANSTALK, amount = [0, 0]) {
+  if (address == undefined) {
     address = await beanstalk.owner();
   }
 
   const beanstalk = getBeanstalk(contract);
-  const unripe = await ethers.getContractAt('MockUnripeFacet', beanstalk.address)
-  const unripeLP = await ethers.getContractAt('MockToken', UNRIPE_LP)
-  
+  const unripe = await ethers.getContractAt("MockUnripeFacet", beanstalk.address);
+  const unripeLP = await ethers.getContractAt("MockToken", UNRIPE_LP);
+
   // mint 'amount' of the underlying token for the unripeLP.
   // add to underlying.
-  await ethers.getContractAt(
-    'MockToken',
-    await beanstalk.getUnderlyingToken(UNRIPE_LP)
-  ).mint(address, amount[0])
-  
-  await mockBeanstalk.connect(address).addUnderlying(
-    UNRIPE_LP,
-    amount[0]
-  )
+  await ethers
+    .getContractAt("MockToken", await beanstalk.getUnderlyingToken(UNRIPE_LP))
+    .mint(address, amount[0]);
 
-  await ethers.getContractAt(
-    'MockToken',
-    await beanstalk.getUnderlyingToken(UNRIPE_BEAN)
-  ).mint(address, amount[1])
+  await mockBeanstalk.connect(address).addUnderlying(UNRIPE_LP, amount[0]);
 
-  await mockBeanstalk.connect(address).addUnderlying(
-    UNRIPE_BEAN,
-    to6('1000')
-  )
+  await ethers
+    .getContractAt("MockToken", await beanstalk.getUnderlyingToken(UNRIPE_BEAN))
+    .mint(address, amount[1]);
+
+  await mockBeanstalk.connect(address).addUnderlying(UNRIPE_BEAN, to6("1000"));
 }
 
 /**
- * @notice intializes a bean well. 
+ * @notice intializes a bean well.
  * settings:
  * - wellAddress: address of the well to impersonate to.
  * - token: the token to use for the well.
@@ -213,53 +203,51 @@ async function deployAndInitalizeMockBeanWell(
   token = undefined,
   wellComponents = undefined,
   whitelist = false,
-  siloSettings = ['10000', '4e6'],
-  initalReserves = [to6('1000000'), to18('1000')]
+  siloSettings = ["10000", "4e6"],
+  initalReserves = [to6("1000000"), to18("1000")]
 ) {
-
-  let well = await (await ethers.getContractFactory('MockSetComponentsWell', await getWellDeployer())).deploy()
-  await well.deployed()
+  let well = await (
+    await ethers.getContractFactory("MockSetComponentsWell", await getWellDeployer())
+  ).deploy();
+  await well.deployed();
   await network.provider.send("hardhat_setCode", [
     wellAddress,
-    await ethers.provider.getCode(well.address),
+    await ethers.provider.getCode(well.address)
   ]);
-  well = await ethers.getContractAt('MockSetComponentsWell', address)
-  tokenContract = await ethers.getContractAt('MockToken', token)
-  await well.setPumps([[wellComponents.pump, '0x']])
-  await well.setWellFunction([wellComponents.wellFunction, '0x'])
-  await well.setTokens([BEAN, tokenContract.address])
+  well = await ethers.getContractAt("MockSetComponentsWell", address);
+  tokenContract = await ethers.getContractAt("MockToken", token);
+  await well.setPumps([[wellComponents.pump, "0x"]]);
+  await well.setWellFunction([wellComponents.wellFunction, "0x"]);
+  await well.setTokens([BEAN, tokenContract.address]);
 
   // set reserves twice to iniralize oracle.
-  await well.setReserves(initalReserves)
-  await well.setReserves(initalReserves)
+  await well.setReserves(initalReserves);
+  await well.setReserves(initalReserves);
 
   // set symbol.
-  let symbol = 
-    'BEAN' + 
-    await tokenContract.symbol() + 
-    await wellComponents.wellFunction.symbol() + 
-    'w'
-  
+  let symbol =
+    "BEAN" + (await tokenContract.symbol()) + (await wellComponents.wellFunction.symbol()) + "w";
+
   // initalize instanteous reserves.
-  await wellComponents.pump.setInstantaneousReserves(pumpBalances)
-  await well.setSymbol(symbol)
-  
+  await wellComponents.pump.setInstantaneousReserves(pumpBalances);
+  await well.setSymbol(symbol);
+
   // whitelist token.
   if (whitelist) {
-    await whitelistWell(well.address, siloSettings[0], siloSettings[1])
+    await whitelistWell(well.address, siloSettings[0], siloSettings[1]);
   }
 
-  return [well, wellComponents.wellFunction, wellComponents.pump]
+  return [well, wellComponents.wellFunction, wellComponents.pump];
 }
 
 // Deploy all facets and libraries.
 // if mock is enabled, deploy "Mock" versions of the facets.
 async function deployFacets(
-  verbose, 
+  verbose,
   mock,
-  facets, 
-  libraryNames = [], 
-  facetLibraries = {}, 
+  facets,
+  libraryNames = [],
+  facetLibraries = {},
   totalGasUsed
 ) {
   const instancesAndNames = [];
@@ -289,13 +277,13 @@ async function deployFacets(
         if (facetLibraries[facet].includes(val)) acc[val] = libraries[val];
         return acc;
       }, {});
-      try { 
+      try {
         mockFacet = "Mock" + facet;
         factory = await ethers.getContractFactory(mockFacet, {
           libraries: facetLibrary
         });
         facet = mockFacet;
-      } catch(e) {
+      } catch (e) {
         factory = await ethers.getContractFactory(facet, {
           libraries: facetLibrary
         });
@@ -333,10 +321,10 @@ async function deployFacets(
   return instancesAndNames;
 }
 
-async function getFacetData(mock=true) {
+async function getFacetData(mock = true) {
   // if new facets are added to beanstalk,
   // append them here.
-  // "Mock" versions are automatically detected, 
+  // "Mock" versions are automatically detected,
   // if mocks are enabled (make sure to append "Mock" to the facet name).
   facets = [
     "BDVFacet",
@@ -362,8 +350,9 @@ async function getFacetData(mock=true) {
     "FertilizerFacet",
     "UnripeFacet",
     "WhitelistFacet",
-    "TractorFacet"
-  ]
+    "TractorFacet",
+    "PipelineConvertFacet"
+  ];
 
   // A list of public libraries that need to be deployed separately.
   libraryNames = [
@@ -372,25 +361,29 @@ async function getFacetData(mock=true) {
     "LibConvert",
     "LibLockedUnderlying",
     "LibWellMinting",
-    "LibGerminate"
+    "LibGerminate",
+    "LibPipelineConvert",
+    "LibSilo"
   ];
 
   // A mapping of facet to public library names that will be linked to it.
   // MockFacets will be deployed with the same public libraries.
   facetLibraries = {
     SeasonFacet: [
-      "LibGauge", 
-      "LibIncentive", 
-      "LibLockedUnderlying", 
+      "LibGauge",
+      "LibIncentive",
+      "LibLockedUnderlying",
       "LibWellMinting",
       "LibGerminate"
     ],
-    ConvertFacet: ["LibConvert"],
+    ConvertFacet: ["LibConvert", "LibPipelineConvert"],
+    PipelineConvertFacet: ["LibPipelineConvert"],
     UnripeFacet: ["LibLockedUnderlying"],
-    SeasonGettersFacet: ["LibLockedUnderlying", "LibWellMinting"]
+    SeasonGettersFacet: ["LibLockedUnderlying", "LibWellMinting"],
+    SiloFacet: ["LibSilo"]
   };
 
-  return [facets, libraryNames, facetLibraries]
+  return [facets, libraryNames, facetLibraries];
 }
 
 /**
@@ -398,8 +391,7 @@ async function getFacetData(mock=true) {
  * @dev called if "impersonate" flag is enabled.
  * New ERC20s can be added via the `tokens` array.
  */
-async function impersonateERC20s(
-) {
+async function impersonateERC20s() {
   await impersonateWeth();
   await impersonateWsteth();
 
@@ -408,7 +400,7 @@ async function impersonateERC20s(
     [USDC, 6],
     [USDT, 18],
     [DAI, 18]
-  ]
+  ];
   for (let token of tokens) {
     await impersonateToken(token[0], token[1]);
   }

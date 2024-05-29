@@ -37,6 +37,7 @@ const {
 const { BEANSTALK, PUBLIUS, BEAN_ETH_WELL } = require("./test/utils/constants.js");
 const { to6 } = require("./test/utils/helpers.js");
 //const { replant } = require("./replant/replant.js")
+const { reseed } = require("./reseed/reseed.js");
 const { task } = require("hardhat/config");
 const { TASK_COMPILE_SOLIDITY_GET_SOURCE_PATHS } = require("hardhat/builtin-tasks/task-names");
 const { bipNewSilo, mockBeanstalkAdmin } = require("./scripts/bips.js");
@@ -99,6 +100,11 @@ task("getTime", async function () {
   await replant(account)
 })*/
 
+task("reseed", async () => {
+  const account = await impersonateSigner(PUBLIUS);
+  await reseed(account);
+});
+
 task("diamondABI", "Generates ABI file for diamond, includes all ABIs of facets", async () => {
   // The path (relative to the root of `protocol` directory) where all modules sit.
   const modulesDir = path.join("contracts", "beanstalk");
@@ -127,10 +133,10 @@ task("diamondABI", "Generates ABI file for diamond, includes all ABIs of facets"
     const files = glob.sync(pattern);
     if (module == "silo") {
       // Manually add in libraries that emit events
-      files.push("contracts/libraries/LibIncentive.sol")
-      files.push("contracts/libraries/Silo/LibWhitelist.sol")
-      files.push("contracts/libraries/LibGauge.sol")
-      files.push("contracts/libraries/Silo/LibGerminate.sol") 
+      files.push("contracts/libraries/LibIncentive.sol");
+      files.push("contracts/libraries/Silo/LibWhitelist.sol");
+      files.push("contracts/libraries/LibGauge.sol");
+      files.push("contracts/libraries/Silo/LibGerminate.sol");
     }
     files.forEach((file) => {
       const facetName = getFacetName(file);
@@ -165,7 +171,6 @@ task("diamondABI", "Generates ABI file for diamond, includes all ABIs of facets"
  * @notice generates mock diamond ABI.
  */
 task("mockDiamondABI", "Generates ABI file for mock contracts", async () => {
-  
   //////////////////////// FACETS ////////////////////////
 
   // The path (relative to the root of `protocol` directory) where all modules sit.
@@ -188,8 +193,8 @@ task("mockDiamondABI", "Generates ABI file for mock contracts", async () => {
     paths.push(...filesInModule.map((f) => [module, f]));
   });
 
-  console.log("Facets:")
-  console.log(paths)
+  console.log("Facets:");
+  console.log(paths);
 
   // Build ABI
   let abi = [];
@@ -198,10 +203,10 @@ task("mockDiamondABI", "Generates ABI file for mock contracts", async () => {
     const files = glob.sync(pattern);
     if (module == "silo") {
       // Manually add in libraries that emit events
-      files.push("contracts/libraries/LibIncentive.sol")
-      files.push("contracts/libraries/Silo/LibWhitelist.sol")
-      files.push("contracts/libraries/LibGauge.sol")
-      files.push("contracts/libraries/Silo/LibGerminate.sol") 
+      files.push("contracts/libraries/LibIncentive.sol");
+      files.push("contracts/libraries/Silo/LibWhitelist.sol");
+      files.push("contracts/libraries/LibGauge.sol");
+      files.push("contracts/libraries/Silo/LibGerminate.sol");
     }
     files.forEach((file) => {
       const facetName = getFacetName(file);
@@ -227,12 +232,12 @@ task("mockDiamondABI", "Generates ABI file for mock contracts", async () => {
 
   // Load files across all mock modules.
   const filesInModule = fs.readdirSync(path.join(".", mockModulesDir));
-  console.log("Mock Facets:")
-  console.log(filesInModule)
+  console.log("Mock Facets:");
+  console.log(filesInModule);
 
   // Build ABI
   filesInModule.forEach((module) => {
-    const file = path.join(".", mockModulesDir, module); 
+    const file = path.join(".", mockModulesDir, module);
     const facetName = getFacetName(file);
     const jsonFileName = `${facetName}.json`;
     const jsonFileLoc = path.join(".", "artifacts", file, jsonFileName);
@@ -255,7 +260,7 @@ task("mockDiamondABI", "Generates ABI file for mock contracts", async () => {
       2
     )
   );
-})
+});
 
 task("marketplace", async function () {
   const owner = await impersonateBeanstalkOwner();
@@ -302,11 +307,11 @@ task("deployBip39", async function () {
 
 task("ebip14", async function () {
   await ebip14();
-})
+});
 
 task("ebip13", async function () {
   await ebip13();
-})
+});
 
 task("ebip11", async function () {
   await ebip11();

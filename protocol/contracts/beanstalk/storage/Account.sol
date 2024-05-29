@@ -17,6 +17,7 @@ import {GerminationSide} from "./System.sol";
  * @param lastRain The last Season that it started Raining at the time the Farmer last updated their Silo.
  * @param _buffer_0 Reserved storage for future additions.
  * @param deposits SiloV3.1 deposits. A mapping from depositId to Deposit. SiloV3.1 introduces greater precision for deposits.
+ * @param depositIdList A list of depositIds for each token owned by the account.
  * @param field A mapping from FieldId to a Farmer's Field storage.
  * @param depositAllowances A mapping of `spender => Silo token address => amount`.
  * @param tokenAllowances Internal balance token allowances.
@@ -39,6 +40,7 @@ struct Account {
     uint32 lastRain;
     bytes32[16] _buffer_0;
     mapping(uint256 => Deposit) deposits;
+    mapping(address => uint256[]) depositIdList;
     mapping(uint256 => Field) fields;
     mapping(address => mapping(address => uint256)) depositAllowances;
     mapping(address => mapping(IERC20 => uint256)) tokenAllowances;
@@ -55,11 +57,13 @@ struct Account {
  * @notice Stores a Farmer's Plots and Pod allowances.
  * @param plots A Farmer's Plots. Maps from Plot index to Pod amount.
  * @param podAllowances An allowance mapping for Pods similar to that of the ERC-20 standard. Maps from spender address to allowance amount.
+ * @param plotIndexes An array of Plot indexes. Used to return the farm plots of a Farmer.
  * @param _buffer Reserved storage for future additions.
  */
 struct Field {
     mapping(uint256 => uint256) plots;
     mapping(address => uint256) podAllowances;
+    uint256[] plotIndexes;
     bytes32[4] _buffer;
 }
 

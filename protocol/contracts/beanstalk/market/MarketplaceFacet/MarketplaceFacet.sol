@@ -105,6 +105,9 @@ contract MarketplaceFacet is Invariable, Order {
      * Transfer Plot
      */
 
+    /**
+     * @notice transfers a plot from `sender` to `recipient`.
+     */
     function transferPlot(
         address sender,
         address recipient,
@@ -117,10 +120,7 @@ contract MarketplaceFacet is Invariable, Order {
             sender != address(0) && recipient != address(0),
             "Field: Transfer to/from 0 address."
         );
-        uint256 amountInPlot = s.accts[sender].fields[fieldId].plots[index];
-        require(amountInPlot > 0, "Field: Plot not owned by user.");
-        require(end > start && amountInPlot >= end, "Field: Pod range invalid.");
-        uint256 transferAmount = end - start;
+        uint256 transferAmount = validatePlotAndReturnPods(fieldId, sender, index, start, end);
         if (
             LibTractor._user() != sender &&
             allowancePods(sender, LibTractor._user(), fieldId) != type(uint256).max
@@ -132,6 +132,74 @@ contract MarketplaceFacet is Invariable, Order {
             LibMarket._cancelPodListing(sender, fieldId, index);
         }
         _transferPlot(sender, recipient, fieldId, index, start, transferAmount);
+    }
+
+    /**
+     * @notice transfers multiple plots from `sender` to `recipient`.
+     */
+    function transferPlots(
+        address sender,
+        address recipient,
+        uint256 fieldId,
+        uint256[] calldata ids,
+        uint256[] calldata starts,
+        uint256[] calldata ends
+    ) external payable fundsSafu noNetFlow noSupplyChange nonReentrant {
+        require(
+            sender != address(0) && recipient != address(0),
+            "Field: Transfer to/from 0 address."
+        );
+        require(
+            ids.length == starts.length && ids.length == ends.length,
+            "Field: Array length mismatch."
+        );
+        uint256 totalAmount = _transferPlots(sender, recipient, fieldId, ids, starts, ends);
+
+        // Decrement allowance is done on totalAmount rather than per plot.
+        if (
+            LibTractor._user() != sender &&
+            allowancePods(sender, LibTractor._user(), fieldId) != type(uint256).max
+        ) {
+            decrementAllowancePods(sender, LibTractor._user(), totalAmount, fieldId);
+        }
+    }
+
+    /**
+     * @notice internal function to transfer multiple plots from `sender` to `recipient`.
+     * @dev placed in a function due to stack.
+     */
+    function _transferPlots(
+        address sender,
+        address recipient,
+        uint256 fieldId,
+        uint256[] calldata ids,
+        uint256[] calldata starts,
+        uint256[] calldata ends
+    ) internal returns (uint256 totalAmount) {
+        for (uint256 i; i < ids.length; i++) {
+            uint256 amount = validatePlotAndReturnPods(fieldId, sender, ids[i], starts[i], ends[i]);
+            if (s.sys.podListings[fieldId][ids[i]] != bytes32(0)) {
+                LibMarket._cancelPodListing(sender, fieldId, ids[i]);
+            }
+            _transferPlot(sender, recipient, fieldId, ids[i], starts[i], amount);
+            totalAmount += amount;
+        }
+    }
+
+    /**
+     * @notice validates the plot is valid and returns the pod being sent.
+     */
+    function validatePlotAndReturnPods(
+        uint256 fieldId,
+        address sender,
+        uint256 id,
+        uint256 start,
+        uint256 end
+    ) internal view returns (uint256 amount) {
+        amount = s.accts[sender].fields[fieldId].plots[id];
+        require(amount > 0, "Field: Plot not owned by user.");
+        require(end > start && amount >= end, "Field: Pod range invalid.");
+        amount = end - start;
     }
 
     function approvePods(

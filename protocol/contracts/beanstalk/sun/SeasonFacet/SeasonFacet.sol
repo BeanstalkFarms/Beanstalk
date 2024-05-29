@@ -34,7 +34,6 @@ contract SeasonFacet is Invariable, Weather {
      * @return reward The number of beans minted to the caller.
      * @dev No out flow because any externally sent reward beans are freshly minted.
      */
-    // TODO: FIx this. should be broken from noNetFlow bc balance of beanstalk will increase
     function sunrise() external payable fundsSafu noOutFlow returns (uint256) {
         return gm(LibTractor._user(), LibTransfer.To.EXTERNAL);
     }
@@ -50,8 +49,6 @@ contract SeasonFacet is Invariable, Weather {
         address account,
         LibTransfer.To mode
     ) public payable fundsSafu noOutFlow returns (uint256) {
-        uint256 initialGasLeft = gasleft();
-
         require(!s.sys.paused, "Season: Paused.");
         require(seasonTime() > s.sys.season.current, "Season: Still current Season.");
         uint32 season = stepSeason();
@@ -61,7 +58,7 @@ contract SeasonFacet is Invariable, Weather {
         LibGauge.stepGauge();
         stepSun(deltaB, caseId);
 
-        return incentivize(account, initialGasLeft, mode);
+        return incentivize(account, mode);
     }
 
     /**
@@ -89,24 +86,13 @@ contract SeasonFacet is Invariable, Weather {
     /**
      * @param account The address to which the reward beans are sent, may or may not
      * be the same as the caller of `sunrise()`
-     * @param initialGasLeft The amount of gas left at the start of the transaction
      * @param mode Send reward beans to Internal or Circulating balance
      * @dev Mints Beans to `account` as a reward for calling {sunrise()}.
      */
-    function incentivize(
-        address account,
-        uint256 initialGasLeft,
-        LibTransfer.To mode
-    ) private returns (uint256) {
-        // Number of blocks the sunrise is late by
-        // Assumes that each block timestamp is exactly `C.BLOCK_LENGTH_SECONDS` apart.
-        uint256 blocksLate = block
-            .timestamp
-            .sub(s.sys.season.start.add(s.sys.season.period.mul(s.sys.season.current)))
-            .div(C.BLOCK_LENGTH_SECONDS);
-
-        // Read the Bean / Eth price calculated by the Minting Well.
-        uint256 beanEthPrice = LibWell.getWellPriceFromTwaReserves(C.BEAN_ETH_WELL);
+    function incentivize(address account, LibTransfer.To mode) private returns (uint256) {
+        uint256 secondsLate = block.timestamp.sub(
+            s.sys.season.start.add(s.sys.season.period.mul(s.sys.season.current))
+        );
 
         // reset USD Token prices and TWA reserves in storage for all whitelisted Well LP Tokens.
         address[] memory whitelistedWells = LibWhitelistedTokens.getWhitelistedWellLpTokens();
@@ -115,11 +101,7 @@ contract SeasonFacet is Invariable, Weather {
             LibWell.resetTwaReservesForWell(whitelistedWells[i]);
         }
 
-        uint256 incentiveAmount = LibIncentive.determineReward(
-            initialGasLeft,
-            blocksLate,
-            beanEthPrice
-        );
+        uint256 incentiveAmount = LibIncentive.determineReward(secondsLate);
 
         LibTransfer.mintToken(C.bean(), incentiveAmount, account, mode);
 

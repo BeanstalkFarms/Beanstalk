@@ -67,7 +67,5 @@ contract InitDiamond is Weather {
         emit LibGauge.UpdateAverageStalkPerBdvPerSeason(
             s.sys.seedGauge.averageGrownStalkPerBdvPerSeason
         );
-        C.bean().mint(msg.sender, LibIncentive.MAX_REWARD);
-        emit LibIncentive.Incentivization(msg.sender, LibIncentive.MAX_REWARD);
     }
 }
