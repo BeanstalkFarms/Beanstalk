@@ -241,7 +241,7 @@ library LibSilo {
      * @notice Burns germinating stalk.
      * @dev Germinating stalk does not have any roots assoicated with it.
      */
-    function burnGerminatingStalk(address account, uint128 stalk, GerminationSide side) internal {
+    function burnGerminatingStalk(address account, uint128 stalk, GerminationSide side) external {
         AppStorage storage s = LibAppStorage.diamondStorage();
 
         s.accts[account].germinatingStalk[side] -= stalk;
