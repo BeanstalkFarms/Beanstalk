@@ -43,7 +43,9 @@ contract L2ContractMigrationFacet is Invariable, ReentrancyGuard {
             "EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)"
         );
     bytes32 private constant REDEEM_DEPOSIT_TYPE_HASH =
-        keccak256("redeemDeposits(address owner,address reciever,uint256 deadline)");
+        keccak256(
+            "redeemDepositsAndInternalBalances(address owner,address reciever,uint256 deadline)"
+        );
 
     // todo: update with the correct merkle root.
     bytes32 private constant MERKLE_ROOT =
@@ -72,7 +74,7 @@ contract L2ContractMigrationFacet is Invariable, ReentrancyGuard {
     );
 
     /**
-     * @notice allows an contract that owns deposits to redeem onto an address on L2.
+     * @notice allows an contract that owns deposits and bean-asset internal balances to redeem onto an address on L2.
      * @param owner address of the contract on L1.
      * @param reciever address of the contract on L2.
      * @param deposits deposits to redeem.
@@ -83,7 +85,7 @@ contract L2ContractMigrationFacet is Invariable, ReentrancyGuard {
      * @param signature signature of the owner.
      * @dev the signature is signed on the L1 blockchain.
      */
-    function redeemDeposits(
+    function redeemDepositsAndInternalBalances(
         address owner,
         address reciever,
         AccountDepositData[] calldata deposits,
