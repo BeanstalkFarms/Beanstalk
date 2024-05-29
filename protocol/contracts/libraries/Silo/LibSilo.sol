@@ -360,61 +360,67 @@ library LibSilo {
         uint256 stalkPerBDV = s.ss[token].stalkIssuedPerBdv;
 
         if (ar.odd.bdv > 0) {
-            uint256 germinatingStalk = ar.odd.bdv.mul(stalkPerBDV);
+            uint256 initialStalk = ar.odd.bdv.mul(stalkPerBDV);
+            
             if (token == C.BEAN) {
                 // check whether the Germinating Stalk transferred exceeds the farmers
                 // Germinating Stalk. If so, the difference is considered from Earned 
                 // Beans. Deduct the odd BDV and increment the activeBDV by the difference.
-                (uint256 farmersGerminatingStalk, uint256 earnedBeansStalk) = checkForEarnedBeans(
+                (uint256 senderGerminatingStalk, uint256 earnedBeansStalk) = checkForEarnedBeans(
                     sender,
-                    germinatingStalk,
+                    initialStalk,
                     LibGerminate.Germinate.ODD
                 );
-                if (germinatingStalk > farmersGerminatingStalk) {
+                if (initialStalk > senderGerminatingStalk) {
                     // increment the active stalk by the earned beans active stalk.
                     // decrement the germinatingStalk stalk by the earned beans active stalk.
                     ar.active.stalk = ar.active.stalk.add(earnedBeansStalk);
-                    germinatingStalk = germinatingStalk.sub(earnedBeansStalk);
+                    initialStalk = initialStalk.sub(earnedBeansStalk);
                 }
             }
+            // the inital Stalk issued for a Deposit is the 
+            // only Stalk that can Germinate (i.e, Grown Stalk does not Germinate).
             transferGerminatingStalk(
                 sender,
                 recipient,
-                germinatingStalk,
+                initialStalk,
                 LibGerminate.Germinate.ODD
             );
         }
 
         if (ar.even.bdv > 0) {
-            uint256 germinatingStalk = ar.even.bdv.mul(stalkPerBDV);
-            // check whether the Germinating Stalk transferred exceeds the farmers
-            // Germinating Stalk. If so, the difference is considered from Earned 
-            // Beans. Deduct the even BDV and increment the active BDV by the difference.
+            uint256 initialStalk = ar.even.bdv.mul(stalkPerBDV);
+           
             if (token == C.BEAN) {
-                (uint256 farmersGerminatingStalk, uint256 earnedBeansStalk) = checkForEarnedBeans(
+                 // check whether the Germinating Stalk transferred exceeds the farmers
+                // Germinating Stalk. If so, the difference is considered from Earned 
+                // Beans. Deduct the even BDV and increment the active BDV by the difference.
+                (uint256 senderGerminatingStalk, uint256 earnedBeansStalk) = checkForEarnedBeans(
                     sender,
-                    germinatingStalk,
+                    initialStalk,
                     LibGerminate.Germinate.EVEN
                 );
-                if (germinatingStalk > farmersGerminatingStalk) {
+                if (initialStalk > senderGerminatingStalk) {
                     // increment the active stalk by the earned beans active stalk.
                     // decrement the germinatingStalk stalk by the earned beans active stalk.
                     ar.active.stalk = ar.active.stalk.add(earnedBeansStalk);
-                    germinatingStalk = germinatingStalk.sub(earnedBeansStalk);
+                    initialStalk = initialStalk.sub(earnedBeansStalk);
                 }
             }
+            // the inital Stalk issued for a Deposit is the 
+            // only Stalk that can Germinate (i.e, Grown Stalk does not Germinate).
             transferGerminatingStalk(
                 sender,
                 recipient,
-                germinatingStalk,
+                initialStalk,
                 LibGerminate.Germinate.EVEN
             );
         }
 
-        // a germinating deposit may have active grown stalk,
-        // but no active stalk from bdv.
-        ar.active.stalk = ar.active.stalk
-            .add(ar.active.bdv.mul(stalkPerBDV)) // grown stalk from active.
+        // a Germinating Deposit may have Grown Stalk (which is not Germinating),
+        // but the base Stalk is still Germinating.
+        ar.active.stalk = ar.active.stalk // Grown Stalk from non-Germinating Deposits, and base stalk from Earned Bean Deposits.
+            .add(ar.active.bdv.mul(stalkPerBDV)) // base stalk from non-germinating deposits.
             .add(ar.even.stalk) // grown stalk from Even Germinating Deposits.
             .add(ar.odd.stalk); // grown stalk from Odd Germinating Deposits.
         if (ar.active.stalk > 0) {
