@@ -178,7 +178,7 @@ contract SiloFacet is Invariable, TokenSilo {
         int96[] calldata stem,
         uint256[] calldata amounts
     )
-        public
+        external
         payable
         fundsSafu
         noNetFlow
@@ -263,75 +263,51 @@ contract SiloFacet is Invariable, TokenSilo {
         }
     }
 
-    //////////////////////// YIELD DISTRUBUTION ////////////////////////
+    //////////////////////// INTERNAL: PLANT ////////////////////////
 
     /**
-     * @notice Claim Grown Stalk for `account`.
-     * @dev See {Silo-_mow}.
-     */
-    function mow(
-        address account,
-        address token
-    ) external payable fundsSafu noNetFlow noSupplyChange {
-        LibSilo._mow(account, token);
-    }
-
-    //function to mow multiple tokens given an address
-    function mowMultiple(
-        address account,
-        address[] calldata tokens
-    ) external payable fundsSafu noNetFlow noSupplyChange {
-        for (uint256 i; i < tokens.length; ++i) {
-            LibSilo._mow(account, tokens[i]);
-        }
-    }
-
-    /**
-     * @notice Claim Earned Beans and their associated Stalk and Plantable Seeds for
-     * user.
+     * @dev Plants the Plantable BDV of `account` associated with its Earned
+     * Beans.
      *
-     * The Stalk associated with Earned Beans is commonly called "Earned Stalk".
-     * Earned Stalk DOES contribute towards the Farmer's Stalk when earned beans is issued.
-     *
-     * The Seeds associated with Earned Beans are commonly called "Plantable
-     * Seeds". The word "Plantable" is used to highlight that these Seeds aren't
-     * yet earning the Farmer new Stalk. In other words, Seeds do NOT automatically
-     * compound; they must first be Planted with {plant}.
-     *
-     * In practice, when Seeds are Planted, all Earned Beans are Deposited in
-     * the current Season.
+     * For more info on Planting, see: {SiloFacet-plant}
      */
-    function plant()
-        external
-        payable
-        fundsSafu
-        noNetFlow
-        noSupplyChange
-        returns (uint256 beans, int96 stem)
-    {
-        return _plant(LibTractor._user());
-    }
 
-    /**
-     * @notice Claim rewards from a Flood (Was Season of Plenty)
-     */
-    function claimPlenty(
-        address well,
-        LibTransfer.To toMode
-    )
-        external
-        payable
-        fundsSafu
-        noSupplyChange
-        oneOutFlow(address(LibWell.getNonBeanTokenFromWell(well)))
-    {
-        _claimPlenty(LibTractor._user(), well, toMode);
-    }
+    function _plant(address account) internal returns (uint256 beans, int96 stemTip) {
+        // Need to Mow for `account` before we calculate the balance of
+        // Earned Beans.
 
-    function claimAllPlenty(LibTransfer.To toMode) external payable fundsSafu noSupplyChange {
-        address[] memory tokens = LibWhitelistedTokens.getWhitelistedWellLpTokens();
-        for (uint i; i < tokens.length; i++) {
-            _claimPlenty(LibTractor._user(), tokens[i], toMode);
-        }
+        LibSilo._mow(account, C.BEAN);
+        uint256 accountStalk = s.accts[account].stalk;
+
+        // Calculate balance of Earned Beans.
+        beans = LibSilo._balanceOfEarnedBeans(accountStalk, s.accts[account].roots);
+        stemTip = LibTokenSilo.stemTipForToken(C.BEAN);
+        if (beans == 0) return (0, stemTip);
+
+        // Reduce the Silo's supply of Earned Beans.
+        // SafeCast unnecessary because beans is <= s.sys.silo.earnedBeans.
+        s.sys.silo.earnedBeans = s.sys.silo.earnedBeans.sub(uint128(beans));
+
+        // Deposit Earned Beans if there are any. Note that 1 Bean = 1 BDV.
+        LibTokenSilo.addDepositToAccount(
+            account,
+            C.BEAN,
+            stemTip,
+            beans, // amount
+            beans, // bdv
+            LibTokenSilo.Transfer.emitTransferSingle
+        );
+
+        // Earned Stalk associated with Earned Beans generate more Earned Beans automatically (i.e., auto compounding).
+        // Earned Stalk are minted when Earned Beans are minted during Sunrise. See {Sun.sol:rewardToSilo} for details.
+        // Similarly, `account` does not receive additional Roots from Earned Stalk during a Plant.
+        // The following lines allocate Earned Stalk that has already been minted to `account`.
+        // Constant is used here rather than s.sys.silo.assetSettings[BEAN].stalkIssuedPerBdv
+        // for gas savings.
+        uint256 stalk = beans.mul(C.STALK_PER_BEAN);
+        s.accts[account].stalk = accountStalk.add(stalk);
+
+        emit StalkBalanceChanged(account, int256(stalk), 0);
+        emit Plant(account, beans);
     }
 }

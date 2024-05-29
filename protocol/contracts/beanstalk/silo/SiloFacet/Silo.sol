@@ -19,7 +19,6 @@ import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
 import {LibBytes} from "contracts/libraries/LibBytes.sol";
 import {C} from "contracts/C.sol";
 import {IWell} from "contracts/interfaces/basin/IWell.sol";
-import {LibWell} from "contracts/libraries/Well/LibWell.sol";
 import "contracts/libraries/Token/LibTransfer.sol";
 
 /**
@@ -51,18 +50,6 @@ contract Silo is ReentrancyGuard {
     event Plant(address indexed account, uint256 beans);
 
     /**
-     * @notice Emitted when Token paid to `account` during a Flood is Claimed.
-     * @param account Owns and receives the assets paid during a Flood.
-     * @param plenty The amount of Token claimed by `account`. This is the amount
-     * that `account` has been paid since their last {ClaimPlenty}.
-     *
-     * @dev Flood was previously called a "Season of Plenty". For backwards
-     * compatibility, the event has not been changed. For more information on
-     * Flood, see: {Weather.sop}.
-     */
-    event ClaimPlenty(address indexed account, address token, uint256 plenty);
-
-    /**
      * @notice Emitted when `account` gains or loses Stalk.
      * @param account The account that gained or lost Stalk.
      * @param delta The change in Stalk.
@@ -85,75 +72,5 @@ contract Silo is ReentrancyGuard {
     modifier mowSender(address token) {
         LibSilo._mow(LibTractor._user(), token);
         _;
-    }
-
-    //////////////////////// INTERNAL: PLANT ////////////////////////
-
-    /**
-     * @dev Plants the Plantable BDV of `account` associated with its Earned
-     * Beans.
-     *
-     * For more info on Planting, see: {SiloFacet-plant}
-     */
-
-    function _plant(address account) internal returns (uint256 beans, int96 stemTip) {
-        // Need to Mow for `account` before we calculate the balance of
-        // Earned Beans.
-
-        LibSilo._mow(account, C.BEAN);
-        uint256 accountStalk = s.accts[account].stalk;
-
-        // Calculate balance of Earned Beans.
-        beans = LibSilo._balanceOfEarnedBeans(accountStalk, s.accts[account].roots);
-        stemTip = LibTokenSilo.stemTipForToken(C.BEAN);
-        if (beans == 0) return (0, stemTip);
-
-        // Reduce the Silo's supply of Earned Beans.
-        // SafeCast unnecessary because beans is <= s.sys.silo.earnedBeans.
-        s.sys.silo.earnedBeans = s.sys.silo.earnedBeans.sub(uint128(beans));
-
-        // Deposit Earned Beans if there are any. Note that 1 Bean = 1 BDV.
-        LibTokenSilo.addDepositToAccount(
-            account,
-            C.BEAN,
-            stemTip,
-            beans, // amount
-            beans, // bdv
-            LibTokenSilo.Transfer.emitTransferSingle
-        );
-
-        // Earned Stalk associated with Earned Beans generate more Earned Beans automatically (i.e., auto compounding).
-        // Earned Stalk are minted when Earned Beans are minted during Sunrise. See {Sun.sol:rewardToSilo} for details.
-        // Similarly, `account` does not receive additional Roots from Earned Stalk during a Plant.
-        // The following lines allocate Earned Stalk that has already been minted to `account`.
-        // Constant is used here rather than s.sys.silo.assetSettings[BEAN].stalkIssuedPerBdv
-        // for gas savings.
-        uint256 stalk = beans.mul(C.STALK_PER_BEAN);
-        s.accts[account].stalk = accountStalk.add(stalk);
-
-        emit StalkBalanceChanged(account, int256(stalk), 0);
-        emit Plant(account, beans);
-    }
-
-    //////////////////////// INTERNAL: SEASON OF PLENTY ////////////////////////
-
-    /**
-     * @dev Gas optimization: An account can call `{SiloFacet:claimPlenty}` even
-     * if `s.accts[account].sop.plenty == 0`. This would emit a ClaimPlenty event
-     * with an amount of 0.
-     */
-    function _claimPlenty(address account, address well, LibTransfer.To toMode) internal {
-        uint256 plenty = s.accts[account].sop.perWellPlenty[well].plenty;
-        if (plenty > 0 && LibWell.isWell(well)) {
-            IERC20[] memory tokens = IWell(well).tokens();
-            IERC20 sopToken = tokens[0] != C.bean() ? tokens[0] : tokens[1];
-            LibTransfer.sendToken(sopToken, plenty, LibTractor._user(), toMode);
-            s.accts[account].sop.perWellPlenty[well].plenty = 0;
-
-            // reduce from Beanstalk's total stored plenty for this well
-            s.sys.sop.plentyPerSopToken[address(sopToken)] -= plenty;
-
-            emit ClaimPlenty(account, address(sopToken), plenty);
-        }
     }
 }
