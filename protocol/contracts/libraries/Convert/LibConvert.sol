@@ -17,6 +17,13 @@ import {LibRedundantMathSigned256} from "contracts/libraries/LibRedundantMathSig
 import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
 import {LibDeltaB} from "contracts/libraries/Oracle/LibDeltaB.sol";
 import {ConvertCapacity} from "contracts/beanstalk/storage/System.sol";
+import {LibSilo} from "contracts/libraries/Silo/LibSilo.sol";
+import {LibTractor} from "contracts/libraries/LibTractor.sol";
+import {LibGerminate} from "contracts/libraries/Silo/LibGerminate.sol";
+import {LibTokenSilo} from "contracts/libraries/Silo/LibTokenSilo.sol";
+import {GerminationSide} from "contracts/beanstalk/storage/System.sol";
+import {LibBytes} from "contracts/libraries/LibBytes.sol";
+import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
 
 /**
  * @title LibConvert
@@ -27,6 +34,14 @@ library LibConvert {
     using LibConvertData for bytes;
     using LibWell for address;
     using LibRedundantMathSigned256 for int256;
+    using SafeCast for uint256;
+
+    struct AssetsRemovedConvert {
+        LibSilo.Removed active;
+        uint256[] bdvsRemoved;
+        uint256[] stalksRemoved;
+        uint256[] depositIds;
+    }
 
     struct DeltaBStorage {
         int256 beforeInputTokenDeltaB;
@@ -50,6 +65,23 @@ library LibConvert {
         uint256 convertCapacityPenalty;
     }
 
+    event RemoveDeposit(
+        address indexed account,
+        address indexed token,
+        int96 stem,
+        uint256 amount,
+        uint256 bdv
+    );
+
+    event RemoveDeposits(
+        address indexed account,
+        address indexed token,
+        int96[] stems,
+        uint256[] amounts,
+        uint256 amount,
+        uint256[] bdvs
+    );
+
     /**
      * @notice Takes in bytes object that has convert input data encoded into it for a particular convert for
      * a specified pool and returns the in and out convert amounts and token addresses and bdv
@@ -59,7 +91,7 @@ library LibConvert {
         bytes calldata convertData
     ) external returns (address tokenOut, address tokenIn, uint256 amountOut, uint256 amountIn) {
         LibConvertData.ConvertKind kind = convertData.convertKind();
-        
+
         if (kind == LibConvertData.ConvertKind.UNRIPE_BEANS_TO_UNRIPE_LP) {
             (tokenOut, tokenIn, amountOut, amountIn) = LibUnripeConvert.convertBeansToLP(
                 convertData
@@ -117,7 +149,6 @@ library LibConvert {
         address tokenOut,
         uint256 amountIn
     ) internal view returns (uint256) {
-
         /// urLP -> urBEAN
         if (tokenIn == C.UNRIPE_LP && tokenOut == C.UNRIPE_BEAN)
             return LibUnripeConvert.getBeanAmountOut(amountIn);
@@ -398,8 +429,129 @@ library LibConvert {
         }
     }
 
-    // TODO: when we updated to Solidity 0.8, use the native abs function
-    // the verson of OpenZeppelin we're on does not support abs
+    /**
+     * @notice removes the deposits from user and returns the
+     * grown stalk and bdv removed.
+     *
+     * @dev if a user inputs a stem of a deposit that is `germinating`,
+     * the function will omit that deposit. This is due to the fact that
+     * germinating deposits can be manipulated and skip the germination process.
+     */
+    function _withdrawTokens(
+        address token,
+        int96[] memory stems,
+        uint256[] memory amounts,
+        uint256 maxTokens
+    ) internal returns (uint256, uint256) {
+        AppStorage storage s = LibAppStorage.diamondStorage();
+        require(stems.length == amounts.length, "Convert: stems, amounts are diff lengths.");
+
+        AssetsRemovedConvert memory a;
+        uint256 i = 0;
+        address user = LibTractor._user();
+
+        // a bracket is included here to avoid the "stack too deep" error.
+        {
+            a.bdvsRemoved = new uint256[](stems.length);
+            a.stalksRemoved = new uint256[](stems.length);
+            a.depositIds = new uint256[](stems.length);
+
+            // get germinating stem and stemTip for the token
+            LibGerminate.GermStem memory germStem = LibGerminate.getGerminatingStem(token);
+
+            while ((i < stems.length) && (a.active.tokens < maxTokens)) {
+                // skip any stems that are germinating, due to the ability to
+                // circumvent the germination process.
+                // TODO: expose a view function that let's you pass in stems/amounts and returns the non-germinating stems/amounts?
+                if (germStem.germinatingStem <= stems[i]) {
+                    i++;
+                    continue;
+                }
+
+                if (a.active.tokens.add(amounts[i]) >= maxTokens)
+                    amounts[i] = maxTokens.sub(a.active.tokens);
+
+                a.bdvsRemoved[i] = LibTokenSilo.removeDepositFromAccount(
+                    user,
+                    token,
+                    stems[i],
+                    amounts[i]
+                );
+
+                a.stalksRemoved[i] = LibSilo.stalkReward(
+                    stems[i],
+                    germStem.stemTip,
+                    a.bdvsRemoved[i].toUint128()
+                );
+                a.active.stalk = a.active.stalk.add(a.stalksRemoved[i]);
+
+                a.active.tokens = a.active.tokens.add(amounts[i]);
+                a.active.bdv = a.active.bdv.add(a.bdvsRemoved[i]);
+
+                a.depositIds[i] = uint256(LibBytes.packAddressAndStem(token, stems[i]));
+                i++;
+            }
+            for (i; i < stems.length; ++i) amounts[i] = 0;
+
+            emit RemoveDeposits(user, token, stems, amounts, a.active.tokens, a.bdvsRemoved);
+
+            emit LibSilo.TransferBatch(user, user, address(0), a.depositIds, amounts);
+        }
+
+        require(a.active.tokens == maxTokens, "Convert: Not enough tokens removed.");
+        LibTokenSilo.decrementTotalDeposited(token, a.active.tokens, a.active.bdv);
+
+        // all deposits converted are not germinating.
+        LibSilo.burnActiveStalk(
+            user,
+            a.active.stalk.add(a.active.bdv.mul(s.sys.silo.assetSettings[token].stalkIssuedPerBdv))
+        );
+        return (a.active.stalk, a.active.bdv);
+    }
+
+    function _depositTokensForConvert(
+        address token,
+        uint256 amount,
+        uint256 bdv,
+        uint256 grownStalk
+    ) internal returns (int96 stem) {
+        require(bdv > 0 && amount > 0, "Convert: BDV or amount is 0.");
+
+        GerminationSide side;
+
+        // calculate the stem and germination state for the new deposit.
+        (stem, side) = LibTokenSilo.calculateStemForTokenFromGrownStalk(token, grownStalk, bdv);
+
+        // increment totals based on germination state,
+        // as well as issue stalk to the user.
+        // if the deposit is germinating, only the inital stalk of the deposit is germinating.
+        // the rest is active stalk.
+        if (side == GerminationSide.NOT_GERMINATING) {
+            LibTokenSilo.incrementTotalDeposited(token, amount, bdv);
+            LibSilo.mintActiveStalk(
+                LibTractor._user(),
+                bdv.mul(LibTokenSilo.stalkIssuedPerBdv(token)).add(grownStalk)
+            );
+        } else {
+            LibTokenSilo.incrementTotalGerminating(token, amount, bdv, side);
+            // safeCast not needed as stalk is <= max(uint128)
+            LibSilo.mintGerminatingStalk(
+                LibTractor._user(),
+                uint128(bdv.mul(LibTokenSilo.stalkIssuedPerBdv(token))),
+                side
+            );
+            LibSilo.mintActiveStalk(LibTractor._user(), grownStalk);
+        }
+        LibTokenSilo.addDepositToAccount(
+            LibTractor._user(),
+            token,
+            stem,
+            amount,
+            bdv,
+            LibTokenSilo.Transfer.emitTransferSingle
+        );
+    }
+
     function abs(int256 a) internal pure returns (uint256) {
         return a >= 0 ? uint256(a) : uint256(-a);
     }

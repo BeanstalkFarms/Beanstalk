@@ -13,7 +13,6 @@ import {LibRedundantMathSigned256} from "contracts/libraries/LibRedundantMathSig
 import {Call, IWell} from "contracts/interfaces/basin/IWell.sol";
 import {ICappedReservesPump} from "contracts/interfaces/basin/pumps/ICappedReservesPump.sol";
 import {IBeanstalkWellFunction} from "contracts/interfaces/basin/IBeanstalkWellFunction.sol";
-import {console} from "forge-std/console.sol";
 
 /**
  * @title LibPipelineConvert
@@ -25,18 +24,6 @@ library LibDeltaB {
     using LibRedundantMathSigned256 for int256;
 
     uint256 internal constant ZERO_LOOKBACK = 0;
-
-    /**
-     * @param inputToken The input token for the convert.
-     * @param outputToken The output token for the convert.
-     * @return The combined deltaB of the input/output tokens.
-     */
-    function getCombinedDeltaBForTokens(
-        address inputToken,
-        address outputToken
-    ) internal view returns (int256) {
-        return LibDeltaB.getCurrentDeltaB(inputToken).add(getCurrentDeltaB(outputToken));
-    }
 
     /**
      * @param token The token to get the deltaB of.

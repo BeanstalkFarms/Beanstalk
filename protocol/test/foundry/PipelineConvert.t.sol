@@ -23,6 +23,7 @@ import {LibWellMinting} from "contracts/libraries/Minting/LibWellMinting.sol";
 import {LibConvert} from "contracts/libraries/Convert/LibConvert.sol";
 import {LibRedundantMath256} from "contracts/libraries/LibRedundantMath256.sol";
 import {LibDeltaB} from "contracts/libraries/Oracle/LibDeltaB.sol";
+import {PipelineConvertFacet} from "contracts/beanstalk/silo/PipelineConvertFacet.sol";
 import "forge-std/Test.sol";
 
 contract MiscHelperContract {
@@ -46,7 +47,7 @@ contract PipelineConvertTest is TestHelper {
     // Interfaces.
     // IMockFBeanstalk bs = IMockFBeanstalk(BEANSTALK);
     MockSiloFacet silo = MockSiloFacet(BEANSTALK);
-    ConvertFacet convert = ConvertFacet(BEANSTALK);
+    PipelineConvertFacet convert = PipelineConvertFacet(BEANSTALK);
     MockSeasonFacet season = MockSeasonFacet(BEANSTALK);
     DepotFacet depot = DepotFacet(BEANSTALK);
     MockToken bean = MockToken(C.BEAN);

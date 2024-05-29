@@ -34,7 +34,6 @@ contract SeasonFacet is Invariable, Weather {
      * @return reward The number of beans minted to the caller.
      * @dev No out flow because any externally sent reward beans are freshly minted.
      */
-    // TODO: FIx this. should be broken from noNetFlow bc balance of beanstalk will increase
     function sunrise() external payable fundsSafu noOutFlow returns (uint256) {
         return gm(LibTractor._user(), LibTransfer.To.EXTERNAL);
     }
@@ -91,9 +90,7 @@ contract SeasonFacet is Invariable, Weather {
      * @dev Mints Beans to `account` as a reward for calling {sunrise()}.
      */
     function incentivize(address account, LibTransfer.To mode) private returns (uint256) {
-        // Number of blocks the sunrise is late by
-        // Assumes that each block timestamp is exactly `C.BLOCK_LENGTH_SECONDS` apart.
-        uint256 blocksLate = block.timestamp.sub(
+        uint256 secondsLate = block.timestamp.sub(
             s.sys.season.start.add(s.sys.season.period.mul(s.sys.season.current))
         );
 
@@ -104,7 +101,7 @@ contract SeasonFacet is Invariable, Weather {
             LibWell.resetTwaReservesForWell(whitelistedWells[i]);
         }
 
-        uint256 incentiveAmount = LibIncentive.determineReward(blocksLate);
+        uint256 incentiveAmount = LibIncentive.determineReward(secondsLate);
 
         LibTransfer.mintToken(C.bean(), incentiveAmount, account, mode);
 
