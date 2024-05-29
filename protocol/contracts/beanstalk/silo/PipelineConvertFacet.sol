@@ -68,6 +68,7 @@ contract PipelineConvertFacet is Invariable, ReentrancyGuard {
     )
         external
         payable
+        fundsSafu
         nonReentrant
         returns (int96 toStem, uint256 fromAmount, uint256 toAmount, uint256 fromBdv, uint256 toBdv)
     {
@@ -81,14 +82,9 @@ contract PipelineConvertFacet is Invariable, ReentrancyGuard {
             "Convert: Output token must be Bean or a well"
         );
 
-        LibPipelineConvert.PipelineConvertData memory pipeData = LibPipelineConvert
-            .populatePipelineConvertData(inputToken, outputToken);
-
-        pipeData.user = LibTractor._user();
-
         // mow input and output tokens:
-        LibSilo._mow(pipeData.user, inputToken);
-        LibSilo._mow(pipeData.user, outputToken);
+        LibSilo._mow(LibTractor._user(), inputToken);
+        LibSilo._mow(LibTractor._user(), outputToken);
 
         // Calculate the maximum amount of tokens to withdraw
         for (uint256 i = 0; i < stems.length; i++) {
@@ -96,49 +92,20 @@ contract PipelineConvertFacet is Invariable, ReentrancyGuard {
         }
 
         // withdraw tokens from deposits and calculate the total grown stalk and bdv.
-        (pipeData.grownStalk, fromBdv) = LibConvert._withdrawTokens(
-            inputToken,
-            stems,
-            amounts,
-            fromAmount
-        );
+        uint256 grownStalk;
+        (grownStalk, fromBdv) = LibConvert._withdrawTokens(inputToken, stems, amounts, fromAmount);
 
-        // Store the capped overall deltaB, this limits the overall convert power for the block
-        pipeData.overallConvertCapacity = LibConvert.abs(LibDeltaB.overallCappedDeltaB());
-
-        IERC20(inputToken).transfer(C.PIPELINE, fromAmount);
-        LibPipelineConvert.executeAdvancedFarmCalls(advancedFarmCalls);
-
-        // user MUST leave final assets in pipeline, allowing us to verify that the farm has been called successfully.
-        // this also let's us know how many assets to attempt to pull out of the final type
-        toAmount = LibPipelineConvert.transferTokensFromPipeline(outputToken);
-
-        // Calculate stalk penalty using start/finish deltaB of pools, and the capped deltaB is
-        // passed in to setup max convert power.
-        pipeData.stalkPenaltyBdv = LibPipelineConvert.prepareStalkPenaltyCalculation(
+        (toAmount, grownStalk, toBdv) = LibPipelineConvert.executePipelineConvert(
             inputToken,
             outputToken,
-            pipeData.deltaB,
-            pipeData.overallConvertCapacity,
+            fromAmount,
             fromBdv,
-            pipeData.initialLpSupply
+            grownStalk,
+            advancedFarmCalls
         );
 
-        // Update grownStalk amount with penalty applied
-        pipeData.grownStalk =
-            (pipeData.grownStalk * (fromBdv - pipeData.stalkPenaltyBdv)) /
-            fromBdv;
+        toStem = LibConvert._depositTokensForConvert(outputToken, toAmount, toBdv, grownStalk);
 
-        pipeData.newBdv = LibTokenSilo.beanDenominatedValue(outputToken, toAmount);
-
-        toStem = LibConvert._depositTokensForConvert(
-            outputToken,
-            toAmount,
-            pipeData.newBdv,
-            pipeData.grownStalk
-        );
-        toBdv = pipeData.newBdv;
-
-        emit Convert(pipeData.user, inputToken, outputToken, fromAmount, toAmount);
+        emit Convert(LibTractor._user(), inputToken, outputToken, fromAmount, toAmount);
     }
 }

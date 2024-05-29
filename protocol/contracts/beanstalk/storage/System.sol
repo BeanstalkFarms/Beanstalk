@@ -314,7 +314,6 @@ struct AssetSettings {
  * @notice Describes the settings for each Unripe Token in Beanstalk.
  * @param underlyingToken The address of the Token underlying the Unripe Token.
  * @param balanceOfUnderlying The number of Tokens underlying the Unripe Tokens (redemption pool).
- * @param merkleRoot The Merkle Root used to validate a claim of Unripe Tokens.
  * @dev An Unripe Token is a vesting Token that is redeemable for a a pro rata share
  * of the `balanceOfUnderlying`, subject to a penalty based on the percent of
  * Unfertilized Beans paid back.
@@ -330,7 +329,6 @@ struct AssetSettings {
 struct UnripeSettings {
     address underlyingToken;
     uint256 balanceOfUnderlying;
-    bytes32 merkleRoot;
 }
 
 /**

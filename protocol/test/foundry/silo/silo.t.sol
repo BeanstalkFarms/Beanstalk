@@ -164,7 +164,7 @@ contract SiloTest is TestHelper {
      */
     function test_siloMultipleDepositLists() public {
         //////////// DEPOSIT ////////////
-        uint256 depositAmount = rand(0, 10e6);
+        uint256 depositAmount = rand(1, 10e6);
         uint256 deposits = rand(1, 50);
         for (uint256 i; i < deposits; i++) {
             mintTokensToUser(farmers[0], C.BEAN, depositAmount);

@@ -17,6 +17,7 @@ import {DiamondLoupeFacet} from "contracts/beanstalk/diamond/DiamondLoupeFacet.s
 import {UnripeFacet, MockUnripeFacet} from "contracts/mocks/mockFacets/MockUnripeFacet.sol";
 import {MockConvertFacet, ConvertFacet} from "contracts/mocks/mockFacets/MockConvertFacet.sol";
 import {MockSeasonFacet, SeasonFacet} from "contracts/mocks/mockFacets/MockSeasonFacet.sol";
+import {MockSiloFacet, SiloFacet} from "contracts/mocks/mockFacets/MockSiloFacet.sol";
 import {SeasonGettersFacet} from "contracts/beanstalk/sun/SeasonFacet/SeasonGettersFacet.sol";
 
 /**
@@ -41,7 +42,8 @@ contract BeanstalkDeployer is Utils {
         "SeasonGettersFacet",
         "DepotFacet",
         "MarketplaceFacet",
-        "PipelineConvertFacet"
+        "PipelineConvertFacet",
+        "ClaimFacet"
     ];
 
     // Facets that have a mock counter part should be appended here.
@@ -96,11 +98,29 @@ contract BeanstalkDeployer is Utils {
             bytes32 hashedName = keccak256(abi.encode(mockFacets[i]));
             address facetAddress;
             if (hashedName == keccak256(abi.encode("UnripeFacet"))) {
-                facetAddress = address(new MockUnripeFacet());
+                if (mock) {
+                    facetAddress = address(new MockUnripeFacet());
+                } else {
+                    facetAddress = address(new UnripeFacet());
+                }
             } else if (hashedName == keccak256(abi.encode("ConvertFacet"))) {
-                facetAddress = address(new MockConvertFacet());
+                if (mock) {
+                    facetAddress = address(new MockConvertFacet());
+                } else {
+                    facetAddress = address(new ConvertFacet());
+                }
             } else if (hashedName == keccak256(abi.encode("SeasonFacet"))) {
-                facetAddress = address(new MockSeasonFacet());
+                if (mock) {
+                    facetAddress = address(new MockSeasonFacet());
+                } else {
+                    facetAddress = address(new SeasonFacet());
+                }
+            } else if (hashedName == keccak256(abi.encode("SiloFacet"))) {
+                if (mock) {
+                    facetAddress = address(new MockSiloFacet());
+                } else {
+                    facetAddress = address(new SiloFacet());
+                }
             } else {
                 facetAddress = address(deployCode(facet));
             }
@@ -217,19 +237,26 @@ contract BeanstalkDeployer is Utils {
         bytes4[] memory _selectorsToRemove
     ) internal returns (IDiamondCut.FacetCut[] memory cutArray) {
         // get inital cutArray.
-        cutArray = _multiCut(_facetNames, _facetAddresses, actions);
+        IDiamondCut.FacetCut[] memory initialCutArray = _multiCut(
+            _facetNames,
+            _facetAddresses,
+            actions
+        );
 
         // generate cuts for selectors to remove.
         if (_selectorsToRemove.length != 0) {
-            assembly {
-                mstore(cutArray, add(mload(cutArray), 1))
-            }
-
-            cutArray[cutArray.length - 1] = IDiamondCut.FacetCut(
+            cutArray = new IDiamondCut.FacetCut[](initialCutArray.length + 1);
+            cutArray[0] = IDiamondCut.FacetCut(
                 address(0),
                 IDiamondCut.FacetCutAction.Remove,
                 _selectorsToRemove
             );
+
+            for (uint i; i < initialCutArray.length; i++) {
+                cutArray[i + 1] = initialCutArray[i];
+            }
+        } else {
+            cutArray = initialCutArray;
         }
     }
 

@@ -1,7 +1,7 @@
 const { ethers } = require("hardhat");
 
 const { EXTERNAL, INTERNAL } = require("./balances.js");
-const { BEAN, ZERO_ADDRESS, UNRIPE_BEAN, UNRIPE_LP } = require("./constants.js");
+const { BEAN, ZERO_ADDRESS, UNRIPE_BEAN, UNRIPE_LP, BEANSTALK } = require("./constants.js");
 const { to6, to18 } = require("./helpers.js");
 
 // const ARRAY_LENGTH = 5;
@@ -59,7 +59,23 @@ const convertFacetInterface = new ethers.utils.Interface([
 // Interfaces needed to encode calldata.
 const farmFacetInterface = async () => (await ethers.getContractFactory("FarmFacet")).interface;
 const tokenFacetInterface = async () => (await ethers.getContractFactory("TokenFacet")).interface;
-const siloFacetInterface = async () => (await ethers.getContractFactory("SiloFacet")).interface;
+const siloFacetInterface = async () =>
+  (
+    await ethers.getContractFactory("SiloFacet", {
+      libraries: {
+        LibSilo: (await (await ethers.getContractFactory("LibSilo")).deploy()).address
+      }
+    })
+  ).interface;
+const claimFacetInterface = async () =>
+  (
+    await ethers.getContractFactory("ClaimFacet", {
+      libraries: {
+        LibSilo: (await (await ethers.getContractFactory("LibSilo")).deploy()).address
+      }
+    })
+  ).interface;
+
 const siloGettersFacetInterface = async () =>
   (await ethers.getContractFactory("SiloGettersFacet")).interface;
 // const convertFacetInterface = async () => (await ethers.getContractFactory("ConvertFacet")).interface;
@@ -337,7 +353,7 @@ const draftMow = async (rewardRatio, verbose = false) => {
 
   // call[1] - Mow.
   advancedFarmCalls.push({
-    callData: (await siloFacetInterface()).encodeFunctionData("mow", [ZERO_ADDRESS, ZERO_ADDRESS]),
+    callData: (await claimFacetInterface()).encodeFunctionData("mow", [ZERO_ADDRESS, ZERO_ADDRESS]),
     clipboard: ethers.utils.hexlify("0x000000")
   });
   operatorPasteInstrs.push(
@@ -437,7 +453,7 @@ const draftPlant = async (rewardRatio, verbose = false) => {
 
   // call[0] - Plant.
   advancedFarmCalls.push({
-    callData: (await siloFacetInterface()).encodeFunctionData("plant", []),
+    callData: (await claimFacetInterface()).encodeFunctionData("plant", []),
     clipboard: ethers.utils.hexlify("0x000000")
   });
 

@@ -6,12 +6,9 @@ pragma solidity ^0.8.20;
 pragma abicoder v2;
 
 import "./TokenSilo.sol";
-import {LibTractor} from "contracts/libraries/LibTractor.sol";
-import "contracts/libraries/Token/LibTransfer.sol";
 import "contracts/libraries/Silo/LibSiloPermit.sol";
 import {Invariable} from "contracts/beanstalk/Invariable.sol";
 import {LibWhitelistedTokens} from "contracts/libraries/Silo/LibWhitelistedTokens.sol";
-import {LibWell} from "contracts/libraries/Well/LibWell.sol";
 
 /**
  * @title SiloFacet
@@ -19,13 +16,8 @@ import {LibWell} from "contracts/libraries/Well/LibWell.sol";
  * @notice SiloFacet is the entry point for all Silo functionality.
  *
  * SiloFacet           public functions for modifying an account's Silo.
- * ↖ TokenSilo         accounting & storage for Deposits, Withdrawals, allowances
- * ↖ Silo              accounting & storage for Stalk, and Roots.
- * ↖ SiloExit          public view funcs for total balances, account balances
- *                     & other account state.
+ * ↖ TokenSilo         accounting & storage for Deposits, Withdrawals, allowances.
  * ↖ ReentrancyGuard   provides reentrancy guard modifier and access to {C}.
- *
- *
  */
 contract SiloFacet is Invariable, TokenSilo {
     using LibRedundantMath256 for uint256;
@@ -178,7 +170,7 @@ contract SiloFacet is Invariable, TokenSilo {
         int96[] calldata stem,
         uint256[] calldata amounts
     )
-        public
+        external
         payable
         fundsSafu
         noNetFlow
@@ -260,78 +252,6 @@ contract SiloFacet is Invariable, TokenSilo {
         for (uint i; i < depositIds.length; ++i) {
             (token, stem) = LibBytes.unpackAddressAndStem(depositIds[i]);
             transferDeposit(sender, recipient, token, stem, amounts[i]);
-        }
-    }
-
-    //////////////////////// YIELD DISTRUBUTION ////////////////////////
-
-    /**
-     * @notice Claim Grown Stalk for `account`.
-     * @dev See {Silo-_mow}.
-     */
-    function mow(
-        address account,
-        address token
-    ) external payable fundsSafu noNetFlow noSupplyChange {
-        LibSilo._mow(account, token);
-    }
-
-    //function to mow multiple tokens given an address
-    function mowMultiple(
-        address account,
-        address[] calldata tokens
-    ) external payable fundsSafu noNetFlow noSupplyChange {
-        for (uint256 i; i < tokens.length; ++i) {
-            LibSilo._mow(account, tokens[i]);
-        }
-    }
-
-    /**
-     * @notice Claim Earned Beans and their associated Stalk and Plantable Seeds for
-     * user.
-     *
-     * The Stalk associated with Earned Beans is commonly called "Earned Stalk".
-     * Earned Stalk DOES contribute towards the Farmer's Stalk when earned beans is issued.
-     *
-     * The Seeds associated with Earned Beans are commonly called "Plantable
-     * Seeds". The word "Plantable" is used to highlight that these Seeds aren't
-     * yet earning the Farmer new Stalk. In other words, Seeds do NOT automatically
-     * compound; they must first be Planted with {plant}.
-     *
-     * In practice, when Seeds are Planted, all Earned Beans are Deposited in
-     * the current Season.
-     */
-    function plant()
-        external
-        payable
-        fundsSafu
-        noNetFlow
-        noSupplyChange
-        returns (uint256 beans, int96 stem)
-    {
-        return _plant(LibTractor._user());
-    }
-
-    /**
-     * @notice Claim rewards from a Flood (Was Season of Plenty)
-     */
-    function claimPlenty(
-        address well,
-        LibTransfer.To toMode
-    )
-        external
-        payable
-        fundsSafu
-        noSupplyChange
-        oneOutFlow(address(LibWell.getNonBeanTokenFromWell(well)))
-    {
-        _claimPlenty(LibTractor._user(), well, toMode);
-    }
-
-    function claimAllPlenty(LibTransfer.To toMode) external payable fundsSafu noSupplyChange {
-        address[] memory tokens = LibWhitelistedTokens.getWhitelistedWellLpTokens();
-        for (uint i; i < tokens.length; i++) {
-            _claimPlenty(LibTractor._user(), tokens[i], toMode);
         }
     }
 }

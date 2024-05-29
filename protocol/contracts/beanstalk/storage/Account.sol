@@ -24,7 +24,6 @@ import {GerminationSide} from "./System.sol";
  * @param mowStatuses A mapping of whitelisted token address to MowStatus.
  * @param isApprovedForAll A mapping of ERC1155 operator to approved status. ERC1155 compatability.
  * @param germinatingStalk A Farmer's germinating stalk. Separated into odd and even stalk.
- * @param unripeClaimed True if a Farmer has Claimed an Unripe Token. A mapping from Farmer to Unripe Token to its Claim status.
  * @param internalTokenBalance A mapping from Token address to Internal Balance. It stores the amount of the Token that the Farmer has stored as an Internal Balance in Beanstalk.
  * @param _buffer_1 Reserved storage for future additions.
  * @param silo A Farmer's Silo storage.
@@ -47,7 +46,6 @@ struct Account {
     mapping(address => MowStatus) mowStatuses;
     mapping(address => bool) isApprovedForAll;
     mapping(GerminationSide => uint128) germinatingStalk;
-    mapping(address => bool) unripeClaimed;
     mapping(IERC20 => uint256) internalTokenBalance;
     bytes32[16] _buffer_1;
     SeasonOfPlenty sop;

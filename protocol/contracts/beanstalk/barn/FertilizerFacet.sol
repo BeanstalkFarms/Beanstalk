@@ -4,21 +4,19 @@
 
 pragma solidity ^0.8.20;
 
-import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
-import {LibRedundantMath256} from "contracts/libraries/LibRedundantMath256.sol";
-import {IFertilizer} from "contracts/interfaces/IFertilizer.sol";
+import {C} from "contracts/C.sol";
 import {AppStorage} from "../storage/AppStorage.sol";
+import {Invariable} from "contracts/beanstalk/Invariable.sol";
 import {LibTractor} from "contracts/libraries/LibTractor.sol";
+import {LibDiamond} from "contracts/libraries/LibDiamond.sol";
+import {IFertilizer} from "contracts/interfaces/IFertilizer.sol";
+import {LibBarnRaise} from "contracts/libraries/LibBarnRaise.sol";
+import {LibFertilizer} from "contracts/libraries/LibFertilizer.sol";
 import {LibTransfer} from "contracts/libraries/Token/LibTransfer.sol";
 import {LibUsdOracle} from "contracts/libraries/Oracle/LibUsdOracle.sol";
-import {LibFertilizer} from "contracts/libraries/LibFertilizer.sol";
+import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
 import {LibRedundantMath128} from "contracts/libraries/LibRedundantMath128.sol";
-import {C} from "contracts/C.sol";
-import {LibDiamond} from "contracts/libraries/LibDiamond.sol";
-import {IWell} from "contracts/interfaces/basin/IWell.sol";
-import {LibBarnRaise} from "contracts/libraries/LibBarnRaise.sol";
-import {Invariable} from "contracts/beanstalk/Invariable.sol";
+import {LibRedundantMath256} from "contracts/libraries/LibRedundantMath256.sol";
 
 /**
  * @author Publius

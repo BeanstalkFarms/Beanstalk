@@ -142,7 +142,7 @@ describe("Sun", function () {
     this.result = await mockBeanstalk.sunSunrise("100", 8);
     await expect(this.result).to.emit(beanstalk, "Soil").withArgs(3, "0");
     // await expect(this.result).to.emit(beanstalk, "Reward").withArgs(3, "0", "100", "0");
-    await expect(this.result).to.emit(beanstalk, "Ship");
+    await expect(this.result).to.emit(beanstalk, "Shipped");
     expect(await beanstalk.totalStalk()).to.be.equal("1000000");
     expect(await beanstalk.totalEarnedBeans()).to.be.equal("100");
   });
@@ -155,7 +155,7 @@ describe("Sun", function () {
     await expect(this.result).to.emit(beanstalk, "Soil").withArgs(3, "9900");
     expect(await beanstalk.totalSoil()).to.be.equal("9900");
     // await expect(this.result).to.emit(beanstalk, "Reward").withArgs(3, "10000", "10000", "0");
-    await expect(this.result).to.emit(beanstalk, "Ship");
+    await expect(this.result).to.emit(beanstalk, "Shipped");
     expect(await beanstalk.totalHarvestable(0)).to.be.equal("10000");
     expect(await beanstalk.totalStalk()).to.be.equal("100000000");
     expect(await beanstalk.totalEarnedBeans()).to.be.equal("10000");
@@ -170,7 +170,7 @@ describe("Sun", function () {
     await expect(this.result).to.emit(beanstalk, "Soil").withArgs(3, "4950");
     expect(await beanstalk.totalSoil()).to.be.equal("4950");
     // await expect(this.result).to.emit(beanstalk, "Reward").withArgs(3, "5000", "10000", "0");
-    await expect(this.result).to.emit(beanstalk, "Ship");
+    await expect(this.result).to.emit(beanstalk, "Shipped");
     expect(await beanstalk.totalHarvestable(0)).to.be.equal("5000");
     expect(await beanstalk.totalStalk()).to.be.equal("100000000");
     expect(await beanstalk.totalEarnedBeans()).to.be.equal("10000");
@@ -183,7 +183,7 @@ describe("Sun", function () {
 
     expect(await beanstalk.totalSoil()).to.be.equal("49504950");
     await expect(this.result).to.emit(beanstalk, "Soil").withArgs(3, 49504950);
-    await expect(this.result).to.emit(beanstalk, "Ship");
+    await expect(this.result).to.emit(beanstalk, "Shipped");
 
     expect(await mockBeanstalk.isFertilizing()).to.be.equal(false);
     expect(await mockBeanstalk.totalFertilizedBeans()).to.be.equal(to6("50"));
@@ -205,7 +205,7 @@ describe("Sun", function () {
     await expect(this.result).to.emit(beanstalk, "Soil").withArgs(3, "495");
     expect(await beanstalk.totalSoil()).to.be.equal("495");
     // await expect(this.result).to.emit(beanstalk, "Reward").withArgs(3, "500", "834", "666");
-    await expect(this.result).to.emit(beanstalk, "Ship");
+    await expect(this.result).to.emit(beanstalk, "Shipped");
 
     expect(await mockBeanstalk.isFertilizing()).to.be.equal(true);
     expect(await mockBeanstalk.totalFertilizedBeans()).to.be.equal("750");
@@ -236,7 +236,7 @@ describe("Sun", function () {
     expect(await beanstalk.totalSoil()).to.be.equal("495");
 
     // await expect(this.result).to.emit(beanstalk, "Reward").withArgs(3, "500", "500", "500");
-    await expect(this.result).to.emit(beanstalk, "Ship");
+    await expect(this.result).to.emit(beanstalk, "Shipped");
 
     expect(await mockBeanstalk.isFertilizing()).to.be.equal(true);
     expect(await mockBeanstalk.totalFertilizedBeans()).to.be.equal("500");
@@ -283,7 +283,7 @@ describe("Sun", function () {
     // 500/1.01 = ~495 (rounded down)
     expect(await beanstalk.totalSoil()).to.be.equal("495");
     await expect(this.result).to.emit(beanstalk, "Soil").withArgs(3, "495");
-    await expect(this.result).to.emit(beanstalk, "Ship");
+    await expect(this.result).to.emit(beanstalk, "Shipped");
     expect(await beanstalk.totalHarvestable(0)).to.be.equal("500");
 
     expect(await beanstalk.totalEarnedBeans()).to.be.equal("500");
@@ -305,7 +305,7 @@ describe("Sun", function () {
     await mockBeanstalk.connect(owner).setActiveField(1, 1);
 
     // New season, new rewards. No pods in new Field.
-    await expect(this.result).to.emit(beanstalk, "Ship");
+    await expect(this.result).to.emit(beanstalk, "Shipped");
     this.result = await mockBeanstalk.sunSunrise("2400", 8);
     expect(await beanstalk.totalHarvestable(0)).to.be.equal("1300");
 
@@ -317,7 +317,7 @@ describe("Sun", function () {
     await mockBeanstalk.incrementTotalPodsE(1, "5000");
     // Pods in both Fields.
     this.result = await mockBeanstalk.sunSunrise("4000", 8);
-    await expect(this.result).to.emit(beanstalk, "Ship");
+    await expect(this.result).to.emit(beanstalk, "Shipped");
 
     expect(await beanstalk.totalHarvestable(0)).to.be.equal("2300");
     expect(await beanstalk.totalHarvestable(1)).to.be.equal("1000");
@@ -327,7 +327,7 @@ describe("Sun", function () {
 
     // Field[0] at cap.
     this.result = await mockBeanstalk.sunSunrise("4000", 8);
-    await expect(this.result).to.emit(beanstalk, "Ship");
+    await expect(this.result).to.emit(beanstalk, "Shipped");
     expect(await beanstalk.totalHarvestable(0)).to.be.equal("2600");
 
     expect(await beanstalk.totalHarvestable(1)).to.be.equal("2233");

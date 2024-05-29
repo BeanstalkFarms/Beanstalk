@@ -17,6 +17,7 @@ import {LibCases} from "contracts/libraries/LibCases.sol";
 import {LibRedundantMath256} from "contracts/libraries/LibRedundantMath256.sol";
 import {LibDeltaB} from "contracts/libraries/Oracle/LibDeltaB.sol";
 import {SeedGaugeSettings} from "contracts/beanstalk/storage/System.sol";
+import {LibFlood} from "contracts/libraries/Silo/LibFlood.sol";
 
 /**
  * @title SeasonGettersFacet
@@ -424,5 +425,18 @@ contract SeasonGettersFacet {
 
     function getExcessivePriceThreshold() external view returns (uint256) {
         return s.sys.seedGaugeSettings.excessivePriceThreshold;
+    }
+
+    function getWellsByDeltaB()
+        external
+        view
+        returns (
+            LibFlood.WellDeltaB[] memory wellDeltaBs,
+            uint256 totalPositiveDeltaB,
+            uint256 totalNegativeDeltaB,
+            uint256 positiveDeltaBCount
+        )
+    {
+        return LibFlood.getWellsByDeltaB();
     }
 }

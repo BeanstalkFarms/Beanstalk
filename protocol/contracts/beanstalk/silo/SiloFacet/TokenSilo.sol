@@ -5,24 +5,37 @@
 pragma solidity ^0.8.20;
 pragma abicoder v2;
 
+import {C} from "contracts/C.sol";
+import {AppStorage} from "contracts/beanstalk/storage/AppStorage.sol";
 import {GerminationSide} from "contracts/beanstalk/storage/System.sol";
-import "./Silo.sol";
-import "contracts/libraries/LibTractor.sol";
+import {SafeERC20, IERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import {ReentrancyGuard} from "contracts/beanstalk/ReentrancyGuard.sol";
+import {LibRedundantMath128} from "contracts/libraries/LibRedundantMath128.sol";
+import {LibRedundantMath32} from "contracts/libraries/LibRedundantMath32.sol";
+import {LibGerminate} from "contracts/libraries/Silo/LibGerminate.sol";
+import {LibTokenSilo} from "contracts/libraries/Silo/LibTokenSilo.sol";
+import {LibSilo} from "contracts/libraries/Silo/LibSilo.sol";
+import {LibTractor} from "contracts/libraries/LibTractor.sol";
+import {LibRedundantMath256} from "contracts/libraries/LibRedundantMath256.sol";
+import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
+import {LibBytes} from "contracts/libraries/LibBytes.sol";
+import {LibTransfer} from "contracts/libraries/Token/LibTransfer.sol";
+import {LibTractor} from "contracts/libraries/LibTractor.sol";
 
 /**
  * @title TokenSilo
  * @author Publius, Brean, Pizzaman1337
- * @notice This contract contains functions for depositing, withdrawing and
- * claiming whitelisted Silo tokens.
- *
+ * @notice This contract contains functions for depositing, withdrawing.
  * "Removing a Deposit" only removes from the `account`; the total amount
  * deposited in the Silo is decremented during withdrawal, _after_ a Withdrawal
  * is created. See "Finish Removal".
  */
-contract TokenSilo is Silo {
+contract TokenSilo is ReentrancyGuard {
     using LibRedundantMath256 for uint256;
-    using SafeCast for uint256;
+    using LibRedundantMath128 for uint128;
     using LibRedundantMath32 for uint32;
+    using SafeCast for uint256;
+    using SafeERC20 for IERC20;
 
     /**
      * @notice Emitted when `account` adds a single Deposit to the Silo.
@@ -122,6 +135,16 @@ contract TokenSilo is Silo {
         uint256[] ids,
         uint256[] values
     );
+
+    //////////////////////// INTERNAL: MOW ////////////////////////
+
+    /**
+     * @dev Claims the Grown Stalk for user. Requires token address to mow.
+     */
+    modifier mowSender(address token) {
+        LibSilo._mow(LibTractor._user(), token);
+        _;
+    }
 
     //////////////////////// DEPOSIT ////////////////////////
 

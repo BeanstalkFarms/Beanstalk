@@ -46,7 +46,7 @@ describe("Tractor", function () {
       console.log("operator", operator.address);
     }
 
-    const contracts = await deploy(false, true);
+    const contracts = await deploy((verbose = false), (mock = true), (reset = true));
     this.diamond = contracts.beanstalkDiamond;
     [beanstalk, mockBeanstalk] = await getAllBeanstalkContracts(this.diamond.address);
     bean = await getBean();
@@ -201,10 +201,6 @@ describe("Tractor", function () {
   });
 
   describe("Run Tractor", function () {
-    afterEach(async function () {
-      await revertToSnapshot(snapshotId);
-    });
-
     it("Deposit Publisher Internal Beans", async function () {
       [advancedFarmCalls, this.blueprint.operatorPasteInstrs] =
         await draftDepositInternalBeanBalance(to6("10"));
