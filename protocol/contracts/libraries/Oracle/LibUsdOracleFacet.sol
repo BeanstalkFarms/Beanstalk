@@ -4,15 +4,25 @@
 
 pragma solidity ^0.8.20;
 
+import {C} from "contracts/C.sol";
+import {LibEthUsdOracle} from "./LibEthUsdOracle.sol";
+import {LibUniswapOracle} from "./LibUniswapOracle.sol";
+import {LibChainlinkOracle} from "./LibChainlinkOracle.sol";
+import {LibWstethUsdOracle} from "./LibWstethUsdOracle.sol";
+import "@uniswap/v3-core/contracts/interfaces/IUniswapV3Pool.sol";
+import {LibAppStorage} from "contracts/libraries/LibAppStorage.sol";
 import {Implementation} from "contracts/beanstalk/storage/System.sol";
 import {AppStorage} from "contracts/beanstalk/storage/AppStorage.sol";
-import {LibAppStorage} from "contracts/libraries/LibAppStorage.sol";
-import {LibChainlinkOracle} from "./LibChainlinkOracle.sol";
-import {LibUniswapOracle} from "./LibUniswapOracle.sol";
-import {LibEthUsdOracle} from "./LibEthUsdOracle.sol";
-import {LibWstethUsdOracle} from "./LibWstethUsdOracle.sol";
 import {LibRedundantMath256} from "contracts/libraries/LibRedundantMath256.sol";
-import {C} from "contracts/C.sol";
+import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+
+interface IERC20 {
+    function decimals() external view returns (uint8);
+}
+
+interface ChainlinkPriceFeedRegistry {
+    function getFeed(address base, address quote) external view returns (address aggregator);
+}
 
 /**
  * @title Eth Usd Oracle Library
@@ -22,6 +32,7 @@ import {C} from "contracts/C.sol";
  **/
 library LibUsdOracleFacet {
     using LibRedundantMath256 for uint256;
+    address constant chainlinkRegistry = 0x47Fb2585D2C56Fe188D0E6ec628a38b74fCeeeDf;
 
     function getUsdPrice(address token) public view returns (uint256) {
         return getUsdPrice(token, 0);
@@ -94,22 +105,53 @@ library LibUsdOracleFacet {
         // If the encode type is type 1, use the default chainlink implementation instead.
         // `target` refers to the address of the price aggergator implmenation
         if (oracleImpl.encodeType == bytes1(0x01)) {
+            // if the address in the oracle implementation is 0, use the chainlink registry to lookup address
+            address chainlinkOraclePriceAddress = oracleImpl.target;
+            if (chainlinkOraclePriceAddress == address(0)) {
+                // use the chainlink registry
+                chainlinkOraclePriceAddress = ChainlinkPriceFeedRegistry(chainlinkRegistry).getFeed(
+                    token,
+                    0x0000000000000000000000000000000000000348
+                ); // 0x0348 is the address for USD
+            }
+
             return
                 LibChainlinkOracle.getTokenPrice(
-                    oracleImpl.target,
+                    chainlinkOraclePriceAddress,
                     LibChainlinkOracle.FOUR_HOUR_TIMEOUT,
                     lookback
                 );
         } else if (oracleImpl.encodeType == bytes1(0x02)) {
+            // assumes a dollar stablecoin is passed in
             // if the encodeType is type 2, use a uniswap oracle implementation.
-            return
-                LibUniswapOracle.getTwap(
-                    lookback == 0 ? LibUniswapOracle.FIFTEEN_MINUTES : uint32(lookback),
-                    oracleImpl.target,
+            // BODEN/USDC
+            address chainlinkToken = IUniswapV3PoolImmutables(oracleImpl.target).token0();
+            tokenPrice = LibUniswapOracle.getTwap(
+                lookback == 0 ? LibUniswapOracle.FIFTEEN_MINUTES : uint32(lookback),
+                oracleImpl.target,
+                chainlinkToken,
+                token,
+                uint128(10) ** uint128(IERC20(token).decimals())
+            );
+            // USDC/USD
+            // call chainlink oracle from the OracleImplmentation contract
+            Implementation memory chainlinkOracleImpl = s.sys.oracleImplementation[chainlinkToken];
+            address chainlinkOraclePriceAddress = chainlinkOracleImpl.target;
+
+            if (chainlinkOraclePriceAddress == address(0)) {
+                // use the chainlink registry
+                chainlinkOraclePriceAddress = ChainlinkPriceFeedRegistry(chainlinkRegistry).getFeed(
                     token,
-                    C.WETH,
-                    1e18
-                );
+                    0x0000000000000000000000000000000000000348
+                ); // 0x0348 is the address for USD
+            }
+
+            uint256 chainlinkTokenPrice = LibChainlinkOracle.getTokenPrice(
+                chainlinkOracleImpl.target,
+                LibChainlinkOracle.FOUR_HOUR_TIMEOUT,
+                lookback
+            );
+            tokenPrice = tokenPrice.mul(chainlinkTokenPrice).div(1e6);
         }
 
         // If the oracle implementation address is not set, use the current contract.
