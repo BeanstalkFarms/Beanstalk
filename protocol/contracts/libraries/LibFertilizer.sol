@@ -16,7 +16,7 @@ import {LibBarnRaise} from "./LibBarnRaise.sol";
 import {LibDiamond} from "contracts/libraries/LibDiamond.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {LibWell} from "contracts/libraries/Well/LibWell.sol";
-import {LibUsdOracle} from "contracts/libraries/Oracle/LibUsdOracle.sol";
+import {LibUsdOracleFacet} from "contracts/libraries/Oracle/LibUsdOracleFacet.sol";
 import {LibTractor} from "contracts/libraries/LibTractor.sol";
 
 /**
@@ -222,7 +222,7 @@ library LibFertilizer {
         require(tokens.length == 2, "Fertilizer: Well must have 2 tokens.");
         require(tokens[0] == C.bean() || tokens[1] == C.bean(), "Fertilizer: Well must have BEAN.");
         // Check that Lib Usd Oracle supports the non-Bean token in the Well.
-        LibUsdOracle.getTokenPrice(address(tokens[tokens[0] == C.bean() ? 1 : 0]));
+        LibUsdOracleFacet.getTokenPrice(address(tokens[tokens[0] == C.bean() ? 1 : 0]));
 
         uint256 balanceOfUnderlying = s.sys.silo.unripeSettings[C.UNRIPE_LP].balanceOfUnderlying;
         IERC20(s.sys.silo.unripeSettings[C.UNRIPE_LP].underlyingToken).safeTransfer(

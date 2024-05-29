@@ -11,7 +11,7 @@ import {IWell, Call} from "contracts/interfaces/basin/IWell.sol";
 import {C} from "contracts/C.sol";
 import {LibAppStorage} from "../LibAppStorage.sol";
 import {AppStorage} from "contracts/beanstalk/storage/AppStorage.sol";
-import {LibUsdOracle} from "contracts/libraries/Oracle/LibUsdOracle.sol";
+import {LibUsdOracleFacet} from "contracts/libraries/Oracle/LibUsdOracleFacet.sol";
 import {LibRedundantMath128} from "contracts/libraries/LibRedundantMath128.sol";
 
 /**
@@ -47,7 +47,7 @@ library LibWell {
                 beanIndex = i;
                 ratios[i] = 1e6;
             } else {
-                ratios[i] = LibUsdOracle.getUsdPrice(address(tokens[i]), lookback);
+                ratios[i] = LibUsdOracleFacet.getUsdPrice(address(tokens[i]), lookback);
                 if (ratios[i] == 0) {
                     success = false;
                 }
@@ -151,7 +151,7 @@ library LibWell {
         // (i.e, seasonGetterFacet.getLiquidityToSupplyRatio()).We use LibUsdOracle
         // to get the price. This should never be reached during sunrise and thus
         // should not impact gas.
-        return LibUsdOracle.getTokenPrice(token).mul(twaReserves[j]).div(1e6);
+        return LibUsdOracleFacet.getTokenPrice(token).mul(twaReserves[j]).div(1e6);
     }
 
     /**
@@ -242,10 +242,14 @@ library LibWell {
             price = 0;
         } else {
             // fetch the bean index from the well in order to properly return the bean price.
-            if (getBeanIndexFromWell(well) == 0) { 
-                price = uint256(s.sys.twaReserves[well].reserve0).mul(1e18).div(s.sys.twaReserves[well].reserve1);
-            } else { 
-                price = uint256(s.sys.twaReserves[well].reserve1).mul(1e18).div(s.sys.twaReserves[well].reserve0);
+            if (getBeanIndexFromWell(well) == 0) {
+                price = uint256(s.sys.twaReserves[well].reserve0).mul(1e18).div(
+                    s.sys.twaReserves[well].reserve1
+                );
+            } else {
+                price = uint256(s.sys.twaReserves[well].reserve1).mul(1e18).div(
+                    s.sys.twaReserves[well].reserve0
+                );
             }
         }
     }

@@ -14,7 +14,7 @@ import {LibChainlinkOracle} from "contracts/libraries/Oracle/LibChainlinkOracle.
 import {LibEthUsdOracle} from "contracts/libraries/Oracle/LibEthUsdOracle.sol";
 import {LibWstethEthOracle} from "contracts/libraries/Oracle/LibWstethEthOracle.sol";
 import {LibWstethUsdOracle} from "contracts/libraries/Oracle/LibWstethUsdOracle.sol";
-import {LibUsdOracle} from "contracts/libraries/Oracle/LibUsdOracle.sol";
+import {LibUsdOracleFacet} from "contracts/libraries/Oracle/LibUsdOracleFacet.sol";
 import {LibAppStorage} from "contracts/libraries/LibAppStorage.sol";
 import {LibRedundantMathSigned256} from "contracts/libraries/LibRedundantMathSigned256.sol";
 import {LibGauge} from "contracts/libraries/LibGauge.sol";
@@ -416,10 +416,6 @@ contract MockSeasonFacet is SeasonFacet {
 
     function getT() external view returns (uint256) {
         return uint256(s.sys.weather.temp);
-    }
-
-    function getUsdPrice(address token) external view returns (uint256) {
-        return LibUsdOracle.getUsdPrice(token);
     }
 
     function getEthUsdPrice() external view returns (uint256) {

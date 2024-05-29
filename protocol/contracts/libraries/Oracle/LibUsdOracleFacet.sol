@@ -20,10 +20,10 @@ import {C} from "contracts/C.sol";
  * @dev currently supports:
  * - ETH/USD price
  **/
-library LibUsdOracle {
+library LibUsdOracleFacet {
     using LibRedundantMath256 for uint256;
 
-    function getUsdPrice(address token) internal view returns (uint256) {
+    function getUsdPrice(address token) public view returns (uint256) {
         return getUsdPrice(token, 0);
     }
 
@@ -34,7 +34,7 @@ library LibUsdOracle {
      * If using a non-zero lookback, it is recommended to use a substantially large `lookback`
      * (> 900 seconds) to protect against manipulation.
      */
-    function getUsdPrice(address token, uint256 lookback) internal view returns (uint256) {
+    function getUsdPrice(address token, uint256 lookback) public view returns (uint256) {
         if (token == C.WETH) {
             uint256 ethUsdPrice = LibEthUsdOracle.getEthUsdPrice(lookback);
             if (ethUsdPrice == 0) return 0;
@@ -51,7 +51,7 @@ library LibUsdOracle {
         return uint256(1e24).div(tokenPrice);
     }
 
-    function getTokenPrice(address token) internal view returns (uint256) {
+    function getTokenPrice(address token) public view returns (uint256) {
         return getTokenPrice(token, 0);
     }
 
@@ -60,7 +60,7 @@ library LibUsdOracle {
      * @dev if ETH returns 1000 USD, this function returns 1000
      * (ignoring decimal precision)
      */
-    function getTokenPrice(address token, uint256 lookback) internal view returns (uint256) {
+    function getTokenPrice(address token, uint256 lookback) public view returns (uint256) {
         // oracles that are implmented within beanstalk should be placed here.
         if (token == C.WETH) {
             uint256 ethUsdPrice = LibEthUsdOracle.getEthUsdPrice(lookback);
@@ -87,7 +87,7 @@ library LibUsdOracle {
     function getTokenPriceFromExternal(
         address token,
         uint256 lookback
-    ) internal view returns (uint256 tokenPrice) {
+    ) public view returns (uint256 tokenPrice) {
         AppStorage storage s = LibAppStorage.diamondStorage();
         Implementation memory oracleImpl = s.sys.oracleImplementation[token];
 

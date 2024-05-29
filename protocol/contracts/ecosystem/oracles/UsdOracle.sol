@@ -2,7 +2,7 @@
 
 pragma solidity ^0.8.20;
 
-import {LibUsdOracle, LibEthUsdOracle, LibWstethUsdOracle} from "contracts/libraries/Oracle/LibUsdOracle.sol";
+import {LibUsdOracleFacet, LibEthUsdOracle, LibWstethUsdOracle} from "contracts/libraries/Oracle/LibUsdOracleFacet.sol";
 import {LibWstethEthOracle} from "contracts/libraries/Oracle/LibWstethEthOracle.sol";
 
 /**
@@ -14,21 +14,21 @@ contract UsdOracle {
     // USD : Token
 
     function getUsdTokenPrice(address token) external view returns (uint256) {
-        return LibUsdOracle.getUsdPrice(token);
+        return LibUsdOracleFacet.getUsdPrice(token);
     }
 
     function getUsdTokenTwap(address token, uint256 lookback) external view returns (uint256) {
-        return LibUsdOracle.getUsdPrice(token, lookback);
+        return LibUsdOracleFacet.getUsdPrice(token, lookback);
     }
 
     // Token : USD
 
     function getTokenUsdPrice(address token) external view returns (uint256) {
-        return LibUsdOracle.getTokenPrice(token);
+        return LibUsdOracleFacet.getTokenPrice(token);
     }
 
     function getTokenUsdTwap(address token, uint256 lookback) external view returns (uint256) {
-        return LibUsdOracle.getTokenPrice(token, lookback);
+        return LibUsdOracleFacet.getTokenPrice(token, lookback);
     }
 
     // ETH : USD

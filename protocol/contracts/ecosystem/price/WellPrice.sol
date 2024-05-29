@@ -6,7 +6,7 @@ import {LibRedundantMath256} from "contracts/libraries/LibRedundantMath256.sol";
 import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
 import {Call, IWell, IERC20} from "../../interfaces/basin/IWell.sol";
 import {IBeanstalkWellFunction} from "../../interfaces/basin/IBeanstalkWellFunction.sol";
-import {LibUsdOracle} from "../../libraries/Oracle/LibUsdOracle.sol";
+import {LibUsdOracleFacet} from "../../libraries/Oracle/LibUsdOracleFacet.sol";
 import {LibWell} from "../../libraries/Well/LibWell.sol";
 import {C} from "../../C.sol";
 
@@ -59,7 +59,7 @@ contract WellPrice {
 
         // swap 1 bean of the opposite asset to get the usd price
         // price = amtOut/tknOutPrice
-        uint256 assetPrice = LibUsdOracle.getUsdPrice(pool.tokens[tknIndex]);
+        uint256 assetPrice = LibUsdOracleFacet.getUsdPrice(pool.tokens[tknIndex]);
         if (assetPrice > 0) {
             pool.price = well
                 .getSwapOut(wellTokens[beanIndex], wellTokens[tknIndex], 1e6)
