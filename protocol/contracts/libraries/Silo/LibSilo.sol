@@ -215,33 +215,6 @@ library LibSilo {
     //////////////////////// BURN ////////////////////////
 
     /**
-     * @notice Burns Stalk and Roots from `account`.
-     * @dev assumes all stalk are in the same `state`. If not the case,
-     * use `burnActiveStalk` and `burnGerminatingStalk` instead.
-     */
-    function burnStalk(address account, uint256 stalk, GerminationSide side) internal {
-        AppStorage storage s = LibAppStorage.diamondStorage();
-        if (stalk == 0) return;
-
-        // increment user and total stalk and roots if not germinating:
-        if (side == GerminationSide.NOT_GERMINATING) {
-            uint256 roots = burnActiveStalk(account, stalk);
-
-            // Oversaturated was previously referred to as Raining and thus
-            // code references mentioning Rain really refer to Oversaturation
-            // If Beanstalk is Oversaturated, subtract Roots from both the
-            // account's and Beanstalk's Oversaturated Roots balances.
-            // For more info on Oversaturation, See {Weather.handleRain}
-            if (s.sys.season.raining) {
-                s.sys.rain.roots = s.sys.rain.roots.sub(roots);
-                s.accts[account].sop.rainRoots = s.accts[account].roots;
-            }
-        } else {
-            burnGerminatingStalk(account, uint128(stalk), side);
-        }
-    }
-
-    /**
      * @notice Burns stalk and roots from an account.
      */
     function burnActiveStalk(address account, uint256 stalk) internal returns (uint256 roots) {
@@ -379,17 +352,7 @@ library LibSilo {
         AppStorage storage s = LibAppStorage.diamondStorage();
 
         // if the user has not migrated from siloV2, revert.
-        (bool needsMigration, uint32 lastUpdate) = migrationNeeded(account);
-        require(!needsMigration, "Silo: Migration needed");
-
-        // if the user hasn't updated prior to the seedGauge/siloV3.1 update,
-        // perform a one time `lastStem` scale.
-        if (
-            (lastUpdate < s.sys.season.stemScaleSeason && lastUpdate > 0) ||
-            (lastUpdate == s.sys.season.stemScaleSeason && checkStemEdgeCase(account))
-        ) {
-            migrateStems(account);
-        }
+        uint32 lastUpdate = _lastUpdate(account);
 
         // sop data only needs to be updated once per season,
         // if it started raining and it's still raining, or there was a sop
@@ -711,17 +674,6 @@ library LibSilo {
     }
 
     /**
-     * @dev check whether the account needs to be migrated.
-     */
-    function migrationNeeded(
-        address account
-    ) internal view returns (bool needsMigration, uint32 lastUpdate) {
-        AppStorage storage s = LibAppStorage.diamondStorage();
-        lastUpdate = s.accts[account].lastUpdate;
-        needsMigration = lastUpdate > 0 && lastUpdate < s.sys.season.stemStartSeason;
-    }
-
-    /**
      * @dev Internal function to compute `account` balance of Earned Beans.
      *
      * The number of Earned Beans is equal to the difference between:
@@ -752,51 +704,5 @@ library LibSilo {
         if (beans > s.sys.silo.earnedBeans) return s.sys.silo.earnedBeans;
 
         return beans;
-    }
-
-    /**
-     * @notice performs a one time update for the
-     * users lastStem for all silo Tokens.
-     * @dev Due to siloV3.1 update.
-     */
-    function migrateStems(address account) internal {
-        AppStorage storage s = LibAppStorage.diamondStorage();
-        address[] memory siloTokens = LibWhitelistedTokens.getSiloTokens();
-        for (uint i; i < siloTokens.length; i++) {
-            // scale lastStem by 1e6, if the user has a lastStem.
-            if (s.accts[account].mowStatuses[siloTokens[i]].lastStem > 0) {
-                s.accts[account].mowStatuses[siloTokens[i]].lastStem = s
-                    .accts[account]
-                    .mowStatuses[siloTokens[i]]
-                    .lastStem
-                    .mul(int96(uint96(PRECISION)));
-            }
-        }
-    }
-
-    /**
-     * @dev An edge case can occur with the siloV3.1 update, where
-     * A user updates their silo in the same season as the seedGauge update,
-     * but prior to the seedGauge BIP execution (i.e the farmer mowed at the start of
-     * the season, and the BIP was excuted mid-way through the season).
-     * This function checks for that edge case and returns a boolean.
-     */
-    function checkStemEdgeCase(address account) internal view returns (bool) {
-        AppStorage storage s = LibAppStorage.diamondStorage();
-        address[] memory siloTokens = LibWhitelistedTokens.getSiloTokens();
-        // for each silo token, divide the stemTip of the token with the users last stem.
-        // if the answer is 1e6 or greater, the user has not updated.
-        for (uint i; i < siloTokens.length; i++) {
-            int96 lastStem = s.accts[account].mowStatuses[siloTokens[i]].lastStem;
-            if (lastStem > 0) {
-                if (
-                    LibTokenSilo.stemTipForToken(siloTokens[i]).div(lastStem) >=
-                    int96(uint96(PRECISION))
-                ) {
-                    return true;
-                }
-            }
-        }
-        return false;
     }
 }

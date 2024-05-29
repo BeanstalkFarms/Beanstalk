@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: MIT
 
 pragma solidity ^0.8.20;
-import "forge-std/console.sol";
 
 /**
  * @notice Constraints of how many Beans to send to a given route at the current time.

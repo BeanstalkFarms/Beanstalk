@@ -25,8 +25,6 @@ import {LibTokenSilo} from "contracts/libraries/Silo/LibTokenSilo.sol";
 import {IWell, Call} from "contracts/interfaces/basin/IWell.sol";
 import {ShipmentRecipient} from "contracts/beanstalk/storage/System.sol";
 
-import "forge-std/console.sol";
-
 /**
  * @author Publius
  * @title Mock Season Facet

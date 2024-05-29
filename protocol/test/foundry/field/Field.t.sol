@@ -6,7 +6,6 @@ import {TestHelper, LibTransfer, IMockFBeanstalk} from "test/foundry/utils/TestH
 import {MockFieldFacet} from "contracts/mocks/mockFacets/MockFieldFacet.sol";
 import {MockSeasonFacet} from "contracts/mocks/mockFacets/MockSeasonFacet.sol";
 import {C} from "contracts/C.sol";
-import {console} from "forge-std/console.sol";
 
 contract FieldTest is TestHelper {
     // events

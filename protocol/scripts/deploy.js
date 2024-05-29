@@ -361,7 +361,9 @@ async function getFacetData(mock = true) {
     "LibConvert",
     "LibLockedUnderlying",
     "LibWellMinting",
-    "LibGerminate"
+    "LibGerminate",
+    "LibPipelineConvert",
+    "LibSilo"
   ];
 
   // A mapping of facet to public library names that will be linked to it.
@@ -374,9 +376,11 @@ async function getFacetData(mock = true) {
       "LibWellMinting",
       "LibGerminate"
     ],
-    ConvertFacet: ["LibConvert"],
+    ConvertFacet: ["LibConvert", "LibPipelineConvert"],
+    PipelineConvertFacet: ["LibPipelineConvert"],
     UnripeFacet: ["LibLockedUnderlying"],
-    SeasonGettersFacet: ["LibLockedUnderlying", "LibWellMinting"]
+    SeasonGettersFacet: ["LibLockedUnderlying", "LibWellMinting"],
+    SiloFacet: ["LibSilo"]
   };
 
   return [facets, libraryNames, facetLibraries];

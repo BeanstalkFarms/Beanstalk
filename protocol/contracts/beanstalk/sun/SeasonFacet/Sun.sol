@@ -7,7 +7,6 @@ import {LibRedundantMath128} from "contracts/libraries/LibRedundantMath128.sol";
 import {LibRedundantMath256} from "contracts/libraries/LibRedundantMath256.sol";
 import {Oracle, C} from "./Oracle.sol";
 import {Distribution} from "./Distribution.sol";
-import {console} from "forge-std/console.sol";
 
 /**
  * @title Sun
