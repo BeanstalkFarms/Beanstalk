@@ -98,10 +98,7 @@ library LibEvaluate {
      * @param deltaB the amount of beans needed to be sold or bought to get bean to peg.
      * @param well the well address to get the bean price from.
      */
-    function evalPrice(
-        int256 deltaB,
-        address well
-    ) internal view returns (uint256 caseId) {
+    function evalPrice(int256 deltaB, address well) internal view returns (uint256 caseId) {
         AppStorage storage s = LibAppStorage.diamondStorage();
         // p > 1
         if (deltaB > 0) {
@@ -242,7 +239,11 @@ library LibEvaluate {
      */
     function calcLPToSupplyRatio(
         uint256 beanSupply
-    ) internal view returns (Decimal.D256 memory lpToSupplyRatio, address largestLiqWell, bool oracleFailure) {
+    )
+        internal
+        view
+        returns (Decimal.D256 memory lpToSupplyRatio, address largestLiqWell, bool oracleFailure)
+    {
         AppStorage storage s = LibAppStorage.diamondStorage();
 
         // prevent infinite L2SR
@@ -254,16 +255,24 @@ library LibEvaluate {
         uint256 largestLiq;
         uint256 wellLiquidity;
         for (uint256 i; i < pools.length; i++) {
-            // get the liquidity weight.
-            liquidityWeight = getLiquidityWeight(pools[i]);
-
             // get the non-bean value in an LP.
             twaReserves = LibWell.getTwaReservesFromStorageOrBeanstalkPump(pools[i]);
 
-            // calculate the non-bean liqudity in the pool.
-            wellLiquidity = liquidityWeight
-                .mul(LibWell.getWellTwaUsdLiquidityFromReserves(pools[i], twaReserves))
-                .div(1e18);
+            // calculate the non-bean usd liquidity value.
+            uint256 usdLiquidity = LibWell.getWellTwaUsdLiquidityFromReserves(
+                pools[i],
+                twaReserves
+            );
+
+            // if the usdLiquidty is 0, beanstalk assumes oracle failure.
+            if (usdLiquidity == 0) {
+                oracleFailure = true;
+            }
+
+            // calculate the scaled, non-bean liquidity in the pool.
+            wellLiquidity = getLiquidityWeight(s.ss[pools[i]].lwSelector).mul(usdLiquidity).div(
+                1e18
+            );
 
             // if the liquidity is the largest, update `largestLiqWell`,
             // and add the liquidity to the total.
@@ -336,16 +345,15 @@ library LibEvaluate {
      * @notice Evaluates beanstalk based on deltaB, podRate, deltaPodDemand and lpToSupplyRatio.
      * and returns the associated caseId.
      */
-        return (caseId, largestLiqWell, oracleFailure);
     function evaluateBeanstalk(
         int256 deltaB,
         uint256 beanSupply
     ) internal returns (uint256, address, bool) {
-        BeanstalkState memory bs = getBeanstalkState(beanSupply);
+        BeanstalkState memory bs = updateAndGetBeanstalkState(beanSupply);
         uint256 caseId = evalPodRate(bs.podRate) // Evaluate Pod Rate
-        .add(evalPrice(deltaB, bs.largestLiqWell)) // Evaluate Price
-        .add(evalDeltaPodDemand(bs.deltaPodDemand)) // Evaluate Delta Soil Demand
-        .add(evalLpToSupplyRatio(bs.lpToSupplyRatio));  // Evaluate LP to Supply Ratio
+            .add(evalPrice(deltaB, bs.largestLiqWell))
+            .add(evalDeltaPodDemand(bs.deltaPodDemand))
+            .add(evalLpToSupplyRatio(bs.lpToSupplyRatio)); // Evaluate Price // Evaluate Delta Soil Demand // Evaluate LP to Supply Ratio
         return (caseId, bs.largestLiqWell, bs.oracleFailure);
     }
 

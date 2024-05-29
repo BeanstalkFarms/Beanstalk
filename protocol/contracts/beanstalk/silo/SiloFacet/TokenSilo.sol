@@ -315,12 +315,12 @@ contract TokenSilo is ReentrancyGuard {
     ) private {
         // Deposited Earned Beans do not germinate. Thus, when withdrawing a Bean Deposit
         // with a Germinating Stem, Beanstalk needs to determine how many of the Beans
-        // were Planted vs Deposited from a Circulating/Farm balance. 
-        // If a Farmer's Germinating Stalk for a given Season is less than the number of 
+        // were Planted vs Deposited from a Circulating/Farm balance.
+        // If a Farmer's Germinating Stalk for a given Season is less than the number of
         // Deposited Beans in that Season, then it is assumed that the excess Beans were
         // Planted.
         if (token == C.BEAN) {
-            stalk = LibSilo.checkForEarnedBeans(account, stalk, germinateState);
+            stalk = LibSilo.checkForEarnedBeans(account, stalk, side);
             // set the bdv and amount accordingly to the stalk.
             bdv = stalk.div(C.STALK_PER_BEAN);
             amount = bdv;

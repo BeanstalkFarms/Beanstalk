@@ -293,11 +293,13 @@ library LibWhitelistedTokens {
      * verify whether `isWhitelisted` is set to false.
      * @param token the token to check.
      */
-    function checkWhitelisted(address token) internal view returns (bool isWhitelisted, bool previouslyWhitelisted) {
+    function checkWhitelisted(
+        address token
+    ) internal view returns (bool isWhitelisted, bool previouslyWhitelisted) {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        uint256 whitelistedStatusLength = s.whitelistStatuses.length;
+        uint256 whitelistedStatusLength = s.sys.silo.whitelistStatuses.length;
         uint256 i;
-        while (s.whitelistStatuses[i].token != token) {
+        while (s.sys.silo.whitelistStatuses[i].token != token) {
             i++;
             if (i >= whitelistedStatusLength) {
                 // if the token does not appear in the array
@@ -306,7 +308,7 @@ library LibWhitelistedTokens {
             }
         }
 
-        if (s.whitelistStatuses[i].isWhitelisted) {
+        if (s.sys.silo.whitelistStatuses[i].isWhitelisted) {
             // token is whitelisted.
             return (true, false);
         } else {

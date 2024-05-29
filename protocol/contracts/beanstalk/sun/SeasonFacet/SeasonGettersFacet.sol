@@ -3,7 +3,7 @@
 pragma solidity ^0.8.20;
 
 import {AppStorage} from "../../storage/AppStorage.sol";
-import {Season, SeedGauge, Weather, Rain} from "../../storage/System.sol";
+import {Season, SeedGauge, Weather, Rain, SeedGaugeSettings, Deposited, GerminationSide, AssetSettings} from "../../storage/System.sol";
 import {C} from "../../../C.sol";
 import {Decimal} from "contracts/libraries/Decimal.sol";
 import {LibEvaluate} from "contracts/libraries/LibEvaluate.sol";
@@ -16,8 +16,8 @@ import {LibGauge} from "contracts/libraries/LibGauge.sol";
 import {LibCases} from "contracts/libraries/LibCases.sol";
 import {LibRedundantMath256} from "contracts/libraries/LibRedundantMath256.sol";
 import {LibDeltaB} from "contracts/libraries/Oracle/LibDeltaB.sol";
-import {SeedGaugeSettings} from "contracts/beanstalk/storage/System.sol";
 import {LibFlood} from "contracts/libraries/Silo/LibFlood.sol";
+import {LibGerminate} from "contracts/libraries/Silo/LibGerminate.sol";
 
 /**
  * @title SeasonGettersFacet
@@ -264,7 +264,7 @@ contract SeasonGettersFacet {
      */
     function getLiquidityToSupplyRatio() external view returns (uint256) {
         uint256 beanSupply = C.bean().totalSupply();
-        (Decimal.D256 memory l2sr,, ) = LibEvaluate.calcLPToSupplyRatio(beanSupply);
+        (Decimal.D256 memory l2sr, , ) = LibEvaluate.calcLPToSupplyRatio(beanSupply);
         return l2sr.value;
     }
 
@@ -327,17 +327,18 @@ contract SeasonGettersFacet {
      * if it were to be updated with the given parameters.
      */
     function calcGaugePointsWithParams(
-        address token, 
+        address token,
         uint256 currentGaugePoints,
         uint256 optimalPercentDepositedBdv,
         uint256 percentOfDepositedBdv
     ) external view returns (uint256) {
-        return LibGauge.calcGaugePoints(
-            s.ss[token].gpSelector,
-            currentGaugePoints,
-            optimalPercentDepositedBdv,
-            percentOfDepositedBdv
-        );
+        return
+            LibGauge.calcGaugePoints(
+                s.ss[token].gpSelector,
+                currentGaugePoints,
+                optimalPercentDepositedBdv,
+                percentOfDepositedBdv
+            );
     }
 
     /**
@@ -348,34 +349,34 @@ contract SeasonGettersFacet {
         address[] memory whitelistedLpTokens = LibWhitelistedTokens.getWhitelistedLpTokens();
 
         // get the germinating assets that will finish germination in the next season.
-        Storage.TotalGerminating storage totalGerm;
+        Deposited storage totalGerm;
         if (
-            LibGerminate.getGerminationStateForSeason(s.season.current + 1) == 
-            LibGerminate.Germinate.ODD
+            LibGerminate.getGerminationStateForSeason(s.season.current + 1) == GerminationSide.ODD
         ) {
-            totalGerm = s.oddGerminating;
+            totalGerm = s.sys.silo[GerminationSide.ODD];
         } else {
-            totalGerm = s.evenGerminating;
+            totalGerm = s.sys.silo[GerminationSide.EVEN];
         }
 
         // Summate total deposited BDV across all whitelisted LP tokens.
         uint256 totalLpBdv;
         for (uint256 i; i < whitelistedLpTokens.length; ++i) {
             uint256 finishedGerminatingBdv = totalGerm.deposited[whitelistedLpTokens[i]].bdv;
-            totalLpBdv = totalLpBdv
-                .add(s.siloBalances[whitelistedLpTokens[i]].depositedBdv)
-                .add(finishedGerminatingBdv);
+            totalLpBdv = totalLpBdv.add(s.siloBalances[whitelistedLpTokens[i]].depositedBdv).add(
+                finishedGerminatingBdv
+            );
         }
         uint256 depositedBdv = s.siloBalances[token].depositedBdv;
         uint256 percentDepositedBdv = depositedBdv.mul(100e6).div(totalLpBdv);
 
-        Storage.SiloSettings memory ss = s.ss[token];
-        return LibGauge.calcGaugePoints(
-            ss.gpSelector,
-            ss.gaugePoints,
-            ss.optimalPercentDepositedBdv,
-            percentDepositedBdv
-        );
+        AssetSettings memory ss = s.ss[token];
+        return
+            LibGauge.calcGaugePoints(
+                ss.gpSelector,
+                ss.gaugePoints,
+                ss.optimalPercentDepositedBdv,
+                percentDepositedBdv
+            );
     }
 
     function getLargestLiqWell() external view returns (address) {

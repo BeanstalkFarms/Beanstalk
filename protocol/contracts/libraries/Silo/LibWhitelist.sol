@@ -136,9 +136,9 @@ library LibWhitelist {
         verifyGaugePointSelector(gaugePointSelector);
         verifyLiquidityWeightSelector(liquidityWeightSelector);
 
-        // verify whitelist status of token. 
+        // verify whitelist status of token.
         // reverts on an invalid stalkIssuedPerBdv if previously whitelisted.
-        verifyWhitelistStatus(token, selector, stalkIssuedPerBdv);       
+        verifyWhitelistStatus(token, selector, stalkIssuedPerBdv);
 
         // If an LP token, initialize oracle storage variables.
         if (token != address(C.bean()) && !LibUnripe.isUnripe(token)) {
@@ -494,14 +494,16 @@ library LibWhitelist {
         address token,
         bytes4 selector,
         uint32 stalkIssuedPerBdv
-    ) internal { 
+    ) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        
-        (bool isWhitelisted, bool previouslyWhitelisted) = LibWhitelistedTokens.checkWhitelisted(token);
-            require(isWhitelisted == false, "Whitelist: Token already whitelisted");
-       
+
+        (bool isWhitelisted, bool previouslyWhitelisted) = LibWhitelistedTokens.checkWhitelisted(
+            token
+        );
+        require(isWhitelisted == false, "Whitelist: Token already whitelisted");
+
         // add whitelist status. If previously whitelisted, update the status rather than appending.
-        if (previouslyWhitelisted) { 
+        if (previouslyWhitelisted) {
             LibWhitelistedTokens.updateWhitelistStatus(
                 token,
                 true, // Whitelisted by default.
@@ -518,12 +520,14 @@ library LibWhitelist {
             );
         }
 
-        // if the token has previously been whitelisted, the stalkIssuedPerBdv 
+        // if the token has previously been whitelisted, the stalkIssuedPerBdv
         // cannot be updated, as previous deposits would have been made with the
-        // previous value. 
-        if (previouslyWhitelisted) { 
-            require(s.ss[token].stalkIssuedPerBdv == stalkIssuedPerBdv, "Whitelist: Cannot update stalkIssuedPerBdv");
+        // previous value.
+        if (previouslyWhitelisted) {
+            require(
+                s.ss[token].stalkIssuedPerBdv == stalkIssuedPerBdv,
+                "Whitelist: Cannot update stalkIssuedPerBdv"
+            );
         }
     }
-    
 }
