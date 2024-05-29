@@ -91,7 +91,9 @@ describe("Complex Weather", function () {
           await mockBeanstalk.setUsdEthPrice(to18("0.001"));
           await mockBeanstalk.setFertilizerE(false, to6("0"));
           await mockBeanstalk.setYieldE(this.testData.startingWeather);
-          await mockBeanstalk.setBeanToMaxLpGpPerBdvRatio(to18(this.testData.initalPercentToLp));
+          await mockBeanstalk.setBeanToMaxLpGpPerBdvRatio(
+            to18(this.testData.initalPercentToLp.toString())
+          );
           bean.connect(user).burn(await bean.balanceOf(user.address));
           this.dsoil = this.testData.lastSoil;
           this.startSoil = this.testData.startingSoil;

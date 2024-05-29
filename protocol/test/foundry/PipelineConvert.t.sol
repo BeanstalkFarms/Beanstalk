@@ -131,7 +131,7 @@ contract PipelineConvertTest is TestHelper {
         farmers.push(users[1]);
         farmers.push(users[2]);
 
-        // add inital liquidity to bean eth well:
+        // add initial liquidity to bean eth well:
         // prank beanstalk deployer (can be anyone)
         vm.prank(users[0]);
         addLiquidityToWell(

@@ -580,7 +580,7 @@ contract ConvertTest is TestHelper {
         (uint256 updatedAmount, uint256 updatedBdv) = bs.getDeposit(farmers[0], well, toStem);
         // the stem of a deposit increased, because the stalkPerBdv of the deposit decreased.
         // stalkPerBdv is calculated by (stemTip - stem).
-        assertGt(toStem, int96(0), "new stem should be higher than inital stem");
+        assertGt(toStem, int96(0), "new stem should be higher than initial stem");
         assertEq(updatedAmount, initalAmount, "amounts should be equal");
         assertGt(updatedBdv, initialBdv, "new bdv should be higher");
     }

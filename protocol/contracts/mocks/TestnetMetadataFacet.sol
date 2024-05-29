@@ -22,7 +22,7 @@ import {LibRedundantMath256} from "contracts/libraries/LibRedundantMath256.sol";
 contract TestnetMetadataFacet is MetadataImage {
     using LibRedundantMath256 for uint256;
 
-    // inital conditions: 2 seeds, 1000 seasons has elapsed from milestone season.
+    // initial conditions: 2 seeds, 1000 seasons has elapsed from milestone season.
     uint256 public stalkEarnedPerSeason = 2e6;
     uint256 public seasonsElapsed = 1000;
     uint256 public stalkIssuedPerBdv = 10000;
@@ -51,7 +51,7 @@ contract TestnetMetadataFacet is MetadataImage {
             depositId.toHexString(32),
             '"}, { "trait_type": "stem", "display_type": "number", "value": ',
             int256(stem).toStringSigned(),
-            '}, { "trait_type": "inital stalk per BDV", "display_type": "number", "value": ',
+            '}, { "trait_type": "initial stalk per BDV", "display_type": "number", "value": ',
             stalkIssuedPerBdv.toString(),
             '}, { "trait_type": "grown stalk per BDV", "display_type": "number", "value": ',
             uint256(int256(stemTip - stem)).toString(),

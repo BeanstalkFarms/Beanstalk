@@ -350,7 +350,7 @@ contract GaugeTest is TestHelper {
         MockToken(C.BEAN).mint(underlyingWell, 1000000e6);
         MockToken(nonBeanToken).mint(underlyingWell, 1000 ether);
 
-        // inital liquidity owned by beanstalk deployer.
+        // initial liquidity owned by beanstalk deployer.
         uint256 lpOut = IWell(underlyingWell).sync(users[0], 0);
 
         uint256 newLockedBeans = bs.getLockedBeansUnderlyingUnripeLP();

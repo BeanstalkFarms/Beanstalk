@@ -236,7 +236,7 @@ contract BeanstalkDeployer is Utils {
         IDiamondCut.FacetCutAction[] memory actions,
         bytes4[] memory _selectorsToRemove
     ) internal returns (IDiamondCut.FacetCut[] memory cutArray) {
-        // get inital cutArray.
+        // get initial cutArray.
         IDiamondCut.FacetCut[] memory initialCutArray = _multiCut(
             _facetNames,
             _facetAddresses,

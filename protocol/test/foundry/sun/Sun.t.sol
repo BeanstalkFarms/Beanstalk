@@ -177,7 +177,7 @@ contract SunTest is TestHelper {
         (sproutsInBarn, fertilizerMinted) = addFertilizerBasedOnSprouts(0, sproutsInBarn);
         assertEq(sproutsInBarn, bs.totalUnfertilizedBeans(), "invalid sprouts in barn");
 
-        // bean supply may change due to fert issuance, and inital supply is placed here.
+        // bean supply may change due to fert issuance, and initial supply is placed here.
         uint256 beansInBeanstalk = C.bean().balanceOf(BEANSTALK);
 
         int256 initialLeftoverBeans = int256(bs.leftoverBeans());

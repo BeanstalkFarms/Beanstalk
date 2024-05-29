@@ -360,18 +360,12 @@ describe("New Silo Token", function () {
         });
 
         it("emits TransferBatch event", async function () {
-          const stem0 = await this.silo.mockSeasonToStem(
-            this.siloToken.address,
-            toBN(await this.seasonGetters.season()).sub("1")
-          );
-          const stem1 = await this.silo.mockSeasonToStem(
-            this.siloToken.address,
-            toBN(await this.seasonGetters.season())
-          );
-          const depositID0 = await this.siloGetters.getDepositId(this.siloToken.address, stem0);
-          const depositID1 = await this.siloGetters.getDepositId(this.siloToken.address, stem1);
+          const stem1 = await beanstalk.stemTipForToken(siloToken.address);
+          const stem0 = stem1.sub(siloSettings.stalkEarnedPerSeason);
+          const depositID0 = await beanstalk.getDepositId(this.siloToken.address, stem0);
+          const depositID1 = await beanstalk.getDepositId(this.siloToken.address, stem1);
           await expect(this.result)
-            .to.emit(this.silo, "TransferBatch")
+            .to.emit(beanstalk, "TransferBatch")
             .withArgs(
               userAddress,
               userAddress,
@@ -427,18 +421,12 @@ describe("New Silo Token", function () {
         });
 
         it("emits TransferBatch event", async function () {
-          const stem0 = await this.silo.mockSeasonToStem(
-            this.siloToken.address,
-            toBN(await this.seasonGetters.season()).sub("1")
-          );
-          const stem1 = await this.silo.mockSeasonToStem(
-            this.siloToken.address,
-            toBN(await this.seasonGetters.season())
-          );
-          const depositID0 = await this.siloGetters.getDepositId(this.siloToken.address, stem0);
-          const depositID1 = await this.siloGetters.getDepositId(this.siloToken.address, stem1);
+          const stem1 = await beanstalk.stemTipForToken(siloToken.address);
+          const stem0 = stem1.sub(siloSettings.stalkEarnedPerSeason);
+          const depositID0 = await beanstalk.getDepositId(this.siloToken.address, stem0);
+          const depositID1 = await beanstalk.getDepositId(this.siloToken.address, stem1);
           await expect(this.result)
-            .to.emit(this.silo, "TransferBatch")
+            .to.emit(beanstalk, "TransferBatch")
             .withArgs(
               userAddress,
               userAddress,
@@ -873,7 +861,7 @@ describe("New Silo Token", function () {
         // end total germination:
         await endGermination();
 
-        // verify inital values:
+        // verify initial values:
         expect(await beanstalk.getTotalDeposited(UNRIPE_BEAN)).to.eq(to6("10"));
         // currently, there are 10,000 units underlying 100,000 beans (10% bdv)
         // depositing 10 urBeans should result in (0.1)*10 = 1 stalk.
@@ -922,7 +910,7 @@ describe("New Silo Token", function () {
         // end total germination:
         await endGermination();
 
-        // verify inital values:
+        // verify initial values:
         expect(await beanstalk.getTotalDeposited(UNRIPE_BEAN)).to.eq(to6("10"));
         // currently, there are 10,000 units underlying 100,000 beans (10% bdv)
         // depositing 10 urBeans should result in (0.1)*10 = 1 stalk.
@@ -976,7 +964,7 @@ describe("New Silo Token", function () {
         // end total germination:
         await endGermination();
 
-        // verify inital values:
+        // verify initial values:
         expect(await beanstalk.getTotalDeposited(UNRIPE_BEAN)).to.eq(to6("20"));
         // currently, there are 10,000 units underlying 100,000 beans (10% bdv)
         // depositing 10 urBeans should result in (0.1)*10 = 1 stalk.
@@ -1045,7 +1033,7 @@ describe("New Silo Token", function () {
         // end total germination:
         await endGermination();
 
-        // verify inital values:
+        // verify initial values:
         expect(await beanstalk.getTotalDeposited(UNRIPE_BEAN)).to.eq(to6("20"));
         // currently, there are 10,000 units underlying 100,000 beans (10% bdv)
         // depositing 10 urBeans should result in (0.1)*10 = 1 stalk.

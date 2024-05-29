@@ -570,7 +570,7 @@ contract MockSeasonFacet is SeasonFacet {
      * @param changeInSoilDemand decreasing, steady, increasing.
      * @param liquidityToSupplyRatio extremely low, low, high, extremely high.
      * @dev
-     * assumes the inital L2SR is >80%.
+     * assumes the initial L2SR is >80%.
      * assumes only one well with beans.
      */
     function setBeanstalkState(
