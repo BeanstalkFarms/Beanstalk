@@ -15,8 +15,7 @@ const ChooseWellImplementationForm = () => {
   const { wellImplementation, setWellImplementation } = useCreateWell();
 
   const methods = useForm<FormValues>({
-    defaultValues: { wellImplementation: "" },
-    values: { wellImplementation: wellImplementation?.wellImplementation || "" }
+    defaultValues: { wellImplementation: wellImplementation?.wellImplementation || "" }
   });
 
   const handleSubmit = ({ wellImplementation }: FormValues) => {
