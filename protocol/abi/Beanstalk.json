@@ -3251,7 +3251,7 @@
       },
       {
         "internalType": "uint32",
-        "name": "temperature",
+        "name": "_temperature",
         "type": "uint32"
       }
     ],
@@ -5492,6 +5492,189 @@
         "type": "address"
       },
       {
+        "components": [
+          {
+            "internalType": "address",
+            "name": "target",
+            "type": "address"
+          },
+          {
+            "internalType": "bytes4",
+            "name": "selector",
+            "type": "bytes4"
+          },
+          {
+            "internalType": "bytes1",
+            "name": "encodeType",
+            "type": "bytes1"
+          }
+        ],
+        "indexed": false,
+        "internalType": "struct Implementation",
+        "name": "gaugePointImplementation",
+        "type": "tuple"
+      }
+    ],
+    "name": "UpdatedGaugePointImplementationForToken",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "token",
+        "type": "address"
+      },
+      {
+        "components": [
+          {
+            "internalType": "address",
+            "name": "target",
+            "type": "address"
+          },
+          {
+            "internalType": "bytes4",
+            "name": "selector",
+            "type": "bytes4"
+          },
+          {
+            "internalType": "bytes1",
+            "name": "encodeType",
+            "type": "bytes1"
+          }
+        ],
+        "indexed": false,
+        "internalType": "struct Implementation",
+        "name": "liquidityWeightImplementation",
+        "type": "tuple"
+      }
+    ],
+    "name": "UpdatedLiqudityWeightImplementationForToken",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "token",
+        "type": "address"
+      },
+      {
+        "components": [
+          {
+            "internalType": "address",
+            "name": "target",
+            "type": "address"
+          },
+          {
+            "internalType": "bytes4",
+            "name": "selector",
+            "type": "bytes4"
+          },
+          {
+            "internalType": "bytes1",
+            "name": "encodeType",
+            "type": "bytes1"
+          }
+        ],
+        "indexed": false,
+        "internalType": "struct Implementation",
+        "name": "oracleImplementation",
+        "type": "tuple"
+      }
+    ],
+    "name": "UpdatedOracleImplementationForToken",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "components": [
+          {
+            "internalType": "uint256",
+            "name": "maxBeanMaxLpGpPerBdvRatio",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "minBeanMaxLpGpPerBdvRatio",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "targetSeasonsToCatchUp",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "podRateLowerBound",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "podRateOptimal",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "podRateUpperBound",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "deltaPodDemandLowerBound",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "deltaPodDemandUpperBound",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "lpToSupplyRatioUpperBound",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "lpToSupplyRatioOptimal",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "lpToSupplyRatioLowerBound",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "excessivePriceThreshold",
+            "type": "uint256"
+          }
+        ],
+        "indexed": false,
+        "internalType": "struct SeedGaugeSettings",
+        "name": "",
+        "type": "tuple"
+      }
+    ],
+    "name": "UpdatedSeedGaugeSettings",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "token",
+        "type": "address"
+      },
+      {
         "indexed": false,
         "internalType": "uint32",
         "name": "stalkEarnedPerSeason",
@@ -5560,6 +5743,82 @@
       }
     ],
     "name": "WhitelistToken",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "components": [
+          {
+            "internalType": "address",
+            "name": "target",
+            "type": "address"
+          },
+          {
+            "internalType": "bytes4",
+            "name": "selector",
+            "type": "bytes4"
+          },
+          {
+            "internalType": "bytes1",
+            "name": "encodeType",
+            "type": "bytes1"
+          }
+        ],
+        "indexed": false,
+        "internalType": "struct Implementation",
+        "name": "oracleImplementation",
+        "type": "tuple"
+      },
+      {
+        "components": [
+          {
+            "internalType": "address",
+            "name": "target",
+            "type": "address"
+          },
+          {
+            "internalType": "bytes4",
+            "name": "selector",
+            "type": "bytes4"
+          },
+          {
+            "internalType": "bytes1",
+            "name": "encodeType",
+            "type": "bytes1"
+          }
+        ],
+        "indexed": false,
+        "internalType": "struct Implementation",
+        "name": "gpImplementation",
+        "type": "tuple"
+      },
+      {
+        "components": [
+          {
+            "internalType": "address",
+            "name": "target",
+            "type": "address"
+          },
+          {
+            "internalType": "bytes4",
+            "name": "selector",
+            "type": "bytes4"
+          },
+          {
+            "internalType": "bytes1",
+            "name": "encodeType",
+            "type": "bytes1"
+          }
+        ],
+        "indexed": false,
+        "internalType": "struct Implementation",
+        "name": "lwImplementation",
+        "type": "tuple"
+      }
+    ],
+    "name": "WhitelistTokenWithExternalImplementation",
     "type": "event"
   },
   {
@@ -5749,6 +6008,186 @@
         "type": "address"
       },
       {
+        "components": [
+          {
+            "internalType": "address",
+            "name": "target",
+            "type": "address"
+          },
+          {
+            "internalType": "bytes4",
+            "name": "selector",
+            "type": "bytes4"
+          },
+          {
+            "internalType": "bytes1",
+            "name": "encodeType",
+            "type": "bytes1"
+          }
+        ],
+        "internalType": "struct Implementation",
+        "name": "impl",
+        "type": "tuple"
+      }
+    ],
+    "name": "updateGaugePointImplementationForToken",
+    "outputs": [],
+    "stateMutability": "payable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "token",
+        "type": "address"
+      },
+      {
+        "components": [
+          {
+            "internalType": "address",
+            "name": "target",
+            "type": "address"
+          },
+          {
+            "internalType": "bytes4",
+            "name": "selector",
+            "type": "bytes4"
+          },
+          {
+            "internalType": "bytes1",
+            "name": "encodeType",
+            "type": "bytes1"
+          }
+        ],
+        "internalType": "struct Implementation",
+        "name": "impl",
+        "type": "tuple"
+      }
+    ],
+    "name": "updateLiqudityWeightImplementationForToken",
+    "outputs": [],
+    "stateMutability": "payable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "token",
+        "type": "address"
+      },
+      {
+        "components": [
+          {
+            "internalType": "address",
+            "name": "target",
+            "type": "address"
+          },
+          {
+            "internalType": "bytes4",
+            "name": "selector",
+            "type": "bytes4"
+          },
+          {
+            "internalType": "bytes1",
+            "name": "encodeType",
+            "type": "bytes1"
+          }
+        ],
+        "internalType": "struct Implementation",
+        "name": "impl",
+        "type": "tuple"
+      }
+    ],
+    "name": "updateOracleImplementationForToken",
+    "outputs": [],
+    "stateMutability": "payable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "components": [
+          {
+            "internalType": "uint256",
+            "name": "maxBeanMaxLpGpPerBdvRatio",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "minBeanMaxLpGpPerBdvRatio",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "targetSeasonsToCatchUp",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "podRateLowerBound",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "podRateOptimal",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "podRateUpperBound",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "deltaPodDemandLowerBound",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "deltaPodDemandUpperBound",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "lpToSupplyRatioUpperBound",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "lpToSupplyRatioOptimal",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "lpToSupplyRatioLowerBound",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "excessivePriceThreshold",
+            "type": "uint256"
+          }
+        ],
+        "internalType": "struct SeedGaugeSettings",
+        "name": "updatedSeedGaugeSettings",
+        "type": "tuple"
+      }
+    ],
+    "name": "updateSeedGaugeSettings",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "token",
+        "type": "address"
+      },
+      {
         "internalType": "uint32",
         "name": "stalkEarnedPerSeason",
         "type": "uint32"
@@ -5856,6 +6295,115 @@
       }
     ],
     "name": "whitelistTokenWithEncodeType",
+    "outputs": [],
+    "stateMutability": "payable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "token",
+        "type": "address"
+      },
+      {
+        "internalType": "bytes4",
+        "name": "selector",
+        "type": "bytes4"
+      },
+      {
+        "internalType": "uint32",
+        "name": "stalkIssuedPerBdv",
+        "type": "uint32"
+      },
+      {
+        "internalType": "uint32",
+        "name": "stalkEarnedPerSeason",
+        "type": "uint32"
+      },
+      {
+        "internalType": "bytes1",
+        "name": "encodeType",
+        "type": "bytes1"
+      },
+      {
+        "internalType": "uint128",
+        "name": "gaugePoints",
+        "type": "uint128"
+      },
+      {
+        "internalType": "uint64",
+        "name": "optimalPercentDepositedBdv",
+        "type": "uint64"
+      },
+      {
+        "components": [
+          {
+            "internalType": "address",
+            "name": "target",
+            "type": "address"
+          },
+          {
+            "internalType": "bytes4",
+            "name": "selector",
+            "type": "bytes4"
+          },
+          {
+            "internalType": "bytes1",
+            "name": "encodeType",
+            "type": "bytes1"
+          }
+        ],
+        "internalType": "struct Implementation",
+        "name": "oracleImplementation",
+        "type": "tuple"
+      },
+      {
+        "components": [
+          {
+            "internalType": "address",
+            "name": "target",
+            "type": "address"
+          },
+          {
+            "internalType": "bytes4",
+            "name": "selector",
+            "type": "bytes4"
+          },
+          {
+            "internalType": "bytes1",
+            "name": "encodeType",
+            "type": "bytes1"
+          }
+        ],
+        "internalType": "struct Implementation",
+        "name": "gaugePointImplementation",
+        "type": "tuple"
+      },
+      {
+        "components": [
+          {
+            "internalType": "address",
+            "name": "target",
+            "type": "address"
+          },
+          {
+            "internalType": "bytes4",
+            "name": "selector",
+            "type": "bytes4"
+          },
+          {
+            "internalType": "bytes1",
+            "name": "encodeType",
+            "type": "bytes1"
+          }
+        ],
+        "internalType": "struct Implementation",
+        "name": "liquidityWeightImplementation",
+        "type": "tuple"
+      }
+    ],
+    "name": "whitelistTokenWithExternalImplementation",
     "outputs": [],
     "stateMutability": "payable",
     "type": "function"
@@ -6821,6 +7369,50 @@
             "internalType": "uint64",
             "name": "optimalPercentDepositedBdv",
             "type": "uint64"
+          },
+          {
+            "components": [
+              {
+                "internalType": "address",
+                "name": "target",
+                "type": "address"
+              },
+              {
+                "internalType": "bytes4",
+                "name": "selector",
+                "type": "bytes4"
+              },
+              {
+                "internalType": "bytes1",
+                "name": "encodeType",
+                "type": "bytes1"
+              }
+            ],
+            "internalType": "struct Implementation",
+            "name": "gaugePointImplementation",
+            "type": "tuple"
+          },
+          {
+            "components": [
+              {
+                "internalType": "address",
+                "name": "target",
+                "type": "address"
+              },
+              {
+                "internalType": "bytes4",
+                "name": "selector",
+                "type": "bytes4"
+              },
+              {
+                "internalType": "bytes1",
+                "name": "encodeType",
+                "type": "bytes1"
+              }
+            ],
+            "internalType": "struct Implementation",
+            "name": "liquidityWeightImplementation",
+            "type": "tuple"
           }
         ],
         "internalType": "struct AssetSettings",
@@ -7575,6 +8167,45 @@
     "type": "function"
   },
   {
+    "inputs": [],
+    "name": "getDeltaPodDemandLowerBound",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "getDeltaPodDemandUpperBound",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "getExcessivePriceThreshold",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
     "inputs": [
       {
         "internalType": "address",
@@ -7684,6 +8315,71 @@
     "type": "function"
   },
   {
+    "inputs": [],
+    "name": "getLpToSupplyRatioLowerBound",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "getLpToSupplyRatioOptimal",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "getLpToSupplyRatioUpperBound",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "getMaxBeanMaxLpGpPerBdvRatio",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "getMinBeanMaxLpGpPerBdvRatio",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
     "inputs": [
       {
         "internalType": "uint256",
@@ -7692,6 +8388,45 @@
       }
     ],
     "name": "getPodRate",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "getPodRateLowerBound",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "getPodRateOptimal",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "getPodRateUpperBound",
     "outputs": [
       {
         "internalType": "uint256",
@@ -7868,6 +8603,94 @@
         "internalType": "struct SeedGauge",
         "name": "",
         "type": "tuple"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "getSeedGaugeSetting",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "uint256",
+            "name": "maxBeanMaxLpGpPerBdvRatio",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "minBeanMaxLpGpPerBdvRatio",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "targetSeasonsToCatchUp",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "podRateLowerBound",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "podRateOptimal",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "podRateUpperBound",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "deltaPodDemandLowerBound",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "deltaPodDemandUpperBound",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "lpToSupplyRatioUpperBound",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "lpToSupplyRatioOptimal",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "lpToSupplyRatioLowerBound",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "excessivePriceThreshold",
+            "type": "uint256"
+          }
+        ],
+        "internalType": "struct SeedGaugeSettings",
+        "name": "",
+        "type": "tuple"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "getTargetSeasonsToCatchUp",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
       }
     ],
     "stateMutability": "view",

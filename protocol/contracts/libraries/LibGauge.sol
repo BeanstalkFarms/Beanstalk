@@ -14,6 +14,7 @@ import {LibWhitelist} from "contracts/libraries/Silo/LibWhitelist.sol";
 import {LibRedundantMath32} from "contracts/libraries/LibRedundantMath32.sol";
 import {C} from "../C.sol";
 import {LibWell} from "contracts/libraries/Well/LibWell.sol";
+import {IGaugePointFacet} from "contracts/beanstalk/sun/GaugePointFacet.sol";
 
 /**
  * @title LibGauge
@@ -29,16 +30,16 @@ library LibGauge {
     uint256 internal constant GP_PRECISION = 1e18;
 
     // Max and min are the ranges that the beanToMaxLpGpPerBdvRatioScaled can output.
-    uint256 internal constant MAX_BEAN_MAX_LP_GP_PER_BDV_RATIO = 100e18;
-    uint256 internal constant MIN_BEAN_MAX_LP_GP_PER_BDV_RATIO = 50e18;
-    uint256 internal constant BEAN_MAX_LP_GP_RATIO_RANGE =
-        MAX_BEAN_MAX_LP_GP_PER_BDV_RATIO - MIN_BEAN_MAX_LP_GP_PER_BDV_RATIO;
+    // uint256 internal constant MAX_BEAN_MAX_LP_GP_PER_BDV_RATIO = 100e18; //state
+    // uint256 internal constant MIN_BEAN_MAX_LP_GP_PER_BDV_RATIO = 50e18; //state
+    // uint256 internal constant BEAN_MAX_LP_GP_RATIO_RANGE =
+    // MAX_BEAN_MAX_LP_GP_PER_BDV_RATIO - MIN_BEAN_MAX_LP_GP_PER_BDV_RATIO;
 
     // The maximum value of beanToMaxLpGpPerBdvRatio.
     uint256 internal constant ONE_HUNDRED_PERCENT = 100e18;
 
     // 24 * 30 * 6
-    uint256 internal constant TARGET_SEASONS_TO_CATCHUP = 4320;
+    // uint256 internal constant TARGET_SEASONS_TO_CATCHUP = 4320; //state
     uint256 internal constant STALK_BDV_PRECISION = 1e4;
 
     /**
@@ -151,12 +152,7 @@ library LibGauge {
             uint256 percentDepositedBdv = depositedBdv.mul(100e6).div(totalLpBdv);
 
             // Calculate the new gauge points of the token.
-            uint256 newGaugePoints = calcGaugePoints(
-                ss.gpSelector,
-                ss.gaugePoints,
-                ss.optimalPercentDepositedBdv,
-                percentDepositedBdv
-            );
+            uint256 newGaugePoints = calcGaugePoints(ss, percentDepositedBdv);
 
             // Increment totalGaugePoints and calculate the gaugePoints per BDV:
             totalGaugePoints = totalGaugePoints.add(newGaugePoints);
@@ -175,7 +171,42 @@ library LibGauge {
             lpGpData[i] = _lpGpData;
 
             ss.gaugePoints = newGaugePoints.toUint128();
-            emit GaugePointChange(s.sys.season.current, whitelistedLpTokens[i], ss.gaugePoints);
+            emit GaugePointChange(s.sys.season.current, whitelistedLpTokens[i], newGaugePoints);
+        }
+    }
+
+    /**
+     * @notice calculates the new gauge points, given the silo settings and the percent deposited BDV.
+     * @param ss siloSettings of the token.
+     * @param percentDepositedBdv the current percentage of the total LP deposited BDV for the token.
+     */
+    function calcGaugePoints(
+        AssetSettings memory ss,
+        uint256 percentDepositedBdv
+    ) internal view returns (uint256 newGaugePoints) {
+        // if the target is 0, use address(this).
+        address target = ss.gaugePointImplementation.target;
+        if (target == address(0)) {
+            target = address(this);
+        }
+        // if no selector is provided, use defaultGaugePointFunction
+        bytes4 selector = ss.gaugePointImplementation.selector;
+        if (selector == bytes4(0)) {
+            selector = IGaugePointFacet.defaultGaugePointFunction.selector;
+        }
+
+        (bool success, bytes memory data) = target.staticcall(
+            abi.encodeWithSelector(
+                ss.gaugePointImplementation.selector,
+                ss.gaugePoints,
+                ss.optimalPercentDepositedBdv,
+                percentDepositedBdv
+            )
+        );
+
+        if (!success) return ss.gaugePoints;
+        assembly {
+            newGaugePoints := mload(add(data, add(0x20, 0)))
         }
     }
 
@@ -183,31 +214,16 @@ library LibGauge {
      * @notice Calculates the new gauge points for the given token.
      * @dev Function calls the selector of the token's gauge point function.
      * Currently all assets uses the default GaugePoint Function.
+     * Returns the current gauge points if failed rather than revert.
      * {GaugePointFacet.defaultGaugePointFunction()}
      */
-    function calcGaugePoints(
-        bytes4 gpSelector,
+    function calcGaugePointsFromAddress(
+        address target,
+        bytes4 selector,
         uint256 gaugePoints,
         uint256 optimalPercentDepositedBdv,
         uint256 percentDepositedBdv
-    ) internal view returns (uint256 newGaugePoints) {
-        bytes memory callData = abi.encodeWithSelector(
-            gpSelector,
-            gaugePoints,
-            optimalPercentDepositedBdv,
-            percentDepositedBdv
-        );
-        (bool success, bytes memory data) = address(this).staticcall(callData);
-        if (!success) {
-            if (data.length == 0) revert();
-            assembly {
-                revert(add(32, data), mload(data))
-            }
-        }
-        assembly {
-            newGaugePoints := mload(add(data, add(0x20, 0)))
-        }
-    }
+    ) internal view returns (uint256 newGaugePoints) {}
 
     /**
      * @notice Updates the average grown stalk per BDV per Season for whitelisted Beanstalk assets.
@@ -243,7 +259,7 @@ library LibGauge {
 
         // update the average grown stalk per BDV per Season.
         // beanstalk must exist for a minimum of the catchup season in order to update the average.
-        if (s.sys.season.current > TARGET_SEASONS_TO_CATCHUP) {
+        if (s.sys.season.current > s.sys.seedGaugeSettings.targetSeasonsToCatchUp) {
             updateAverageStalkPerBdvPerSeason();
         }
 
@@ -302,7 +318,9 @@ library LibGauge {
         // which is highly improbable assuming consistent new deposits.
         // Thus, safeCast was determined is to be unnecessary.
         s.sys.seedGauge.averageGrownStalkPerBdvPerSeason = uint128(
-            getAverageGrownStalkPerBdv().mul(BDV_PRECISION).div(TARGET_SEASONS_TO_CATCHUP)
+            getAverageGrownStalkPerBdv().mul(BDV_PRECISION).div(
+                s.sys.seedGaugeSettings.targetSeasonsToCatchUp
+            )
         );
         emit UpdateAverageStalkPerBdvPerSeason(s.sys.seedGauge.averageGrownStalkPerBdvPerSeason);
     }
@@ -345,10 +363,13 @@ library LibGauge {
      */
     function getBeanToMaxLpGpPerBdvRatioScaled(
         uint256 beanToMaxLpGpPerBdvRatio
-    ) internal pure returns (uint256) {
+    ) internal view returns (uint256) {
+        AppStorage storage s = LibAppStorage.diamondStorage();
+        uint256 beanMaxLpGpRatioRange = s.sys.seedGaugeSettings.maxBeanMaxLpGpPerBdvRatio -
+            s.sys.seedGaugeSettings.minBeanMaxLpGpPerBdvRatio;
         return
-            beanToMaxLpGpPerBdvRatio.mul(BEAN_MAX_LP_GP_RATIO_RANGE).div(ONE_HUNDRED_PERCENT).add(
-                MIN_BEAN_MAX_LP_GP_PER_BDV_RATIO
+            beanToMaxLpGpPerBdvRatio.mul(beanMaxLpGpRatioRange).div(ONE_HUNDRED_PERCENT).add(
+                s.sys.seedGaugeSettings.minBeanMaxLpGpPerBdvRatio
             );
     }
 }

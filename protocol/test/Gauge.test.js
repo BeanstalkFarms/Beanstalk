@@ -217,9 +217,10 @@ describe("Gauge", function () {
         await bean.mint(ownerAddress, to6("1000000"));
         await mockBeanstalk.mockUpdateLiquidityWeight(
           BEAN_ETH_WELL,
-          mockBeanstalk.interface.getSighash("mockLiquidityWeight")
+          mockBeanstalk.address,
+          "0x00",
+          mockBeanstalk.interface.getSighash("mockLiquidityWeight"),
         );
-
         expect(await beanstalk.getLiquidityToSupplyRatio()).to.be.equal(to18("0.5"));
       });
 

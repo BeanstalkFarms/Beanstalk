@@ -4,6 +4,11 @@
 
 pragma solidity ^0.8.20;
 
+import {Implementation} from "contracts/beanstalk/storage/System.sol";
+import {AppStorage} from "contracts/beanstalk/storage/AppStorage.sol";
+import {LibAppStorage} from "contracts/libraries/LibAppStorage.sol";
+import {LibChainlinkOracle} from "./LibChainlinkOracle.sol";
+import {LibUniswapOracle} from "./LibUniswapOracle.sol";
 import {LibEthUsdOracle} from "./LibEthUsdOracle.sol";
 import {LibWstethUsdOracle} from "./LibWstethUsdOracle.sol";
 import {LibRedundantMath256} from "contracts/libraries/LibRedundantMath256.sol";
@@ -40,7 +45,10 @@ library LibUsdOracle {
             if (wstethUsdPrice == 0) return 0;
             return uint256(1e24).div(wstethUsdPrice);
         }
-        revert("Oracle: Token not supported.");
+
+        uint256 tokenPrice = getTokenPriceFromExternal(token, lookback);
+        if (tokenPrice == 0) return 0;
+        return uint256(1e24).div(tokenPrice);
     }
 
     function getTokenPrice(address token) internal view returns (uint256) {
@@ -53,6 +61,7 @@ library LibUsdOracle {
      * (ignoring decimal precision)
      */
     function getTokenPrice(address token, uint256 lookback) internal view returns (uint256) {
+        // oracles that are implmented within beanstalk should be placed here.
         if (token == C.WETH) {
             uint256 ethUsdPrice = LibEthUsdOracle.getEthUsdPrice(lookback);
             if (ethUsdPrice == 0) return 0;
@@ -63,6 +72,57 @@ library LibUsdOracle {
             if (wstethUsdPrice == 0) return 0;
             return wstethUsdPrice;
         }
-        revert("Oracle: Token not supported.");
+
+        // tokens that use the default chainlink oracle implementation,
+        // or a custom oracle implementation are called here.
+        return getTokenPriceFromExternal(token, lookback);
+    }
+
+    /**
+     * @notice gets the token price from an external oracle.
+     * @dev if address is 0, use the current contract.
+     * If encodeType is 0x01, use the default chainlink implementation.
+     * Returns 0 rather than reverting if the call fails.
+     */
+    function getTokenPriceFromExternal(
+        address token,
+        uint256 lookback
+    ) internal view returns (uint256 tokenPrice) {
+        AppStorage storage s = LibAppStorage.diamondStorage();
+        Implementation memory oracleImpl = s.sys.oracleImplementation[token];
+
+        // If the encode type is type 1, use the default chainlink implementation instead.
+        // `target` refers to the address of the price aggergator implmenation
+        if (oracleImpl.encodeType == bytes1(0x01)) {
+            return
+                LibChainlinkOracle.getTokenPrice(
+                    oracleImpl.target,
+                    LibChainlinkOracle.FOUR_HOUR_TIMEOUT,
+                    lookback
+                );
+        } else if (oracleImpl.encodeType == bytes1(0x02)) {
+            // if the encodeType is type 2, use a uniswap oracle implementation.
+            return
+                LibUniswapOracle.getTwap(
+                    lookback == 0 ? LibUniswapOracle.FIFTEEN_MINUTES : uint32(lookback),
+                    oracleImpl.target,
+                    token,
+                    C.WETH,
+                    1e18
+                );
+        }
+
+        // If the oracle implementation address is not set, use the current contract.
+        address target = oracleImpl.target;
+        if (target == address(0)) target = address(this);
+
+        (bool success, bytes memory data) = target.staticcall(
+            abi.encodeWithSelector(oracleImpl.selector, lookback)
+        );
+
+        if (!success) return 0;
+        assembly {
+            tokenPrice := mload(add(data, add(0x20, 0)))
+        }
     }
 }

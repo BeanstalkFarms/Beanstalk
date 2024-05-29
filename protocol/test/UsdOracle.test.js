@@ -22,8 +22,6 @@ describe("USD Oracle", function () {
   });
 
   it("Reverts if not accepted token", async function () {
-    await expect(mockBeanstalk.getUsdPrice(USDC)).to.be.revertedWith(
-      "Oracle: Token not supported."
-    ); // About 1e14
+    expect(await mockBeanstalk.getUsdPrice(USDC)).to.be.equal(0);
   });
 });

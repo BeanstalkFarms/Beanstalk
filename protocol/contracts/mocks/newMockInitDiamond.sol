@@ -106,6 +106,18 @@ contract MockInitDiamond is InitalizeDiamond {
         view
         returns (AssetSettings[] memory assetSettings)
     {
+        Implementation memory impl = Implementation(address(0), bytes4(0), bytes1(0));
+        Implementation memory liquidityWeightImpl = Implementation(
+            address(0),
+            ILiquidityWeightFacet.maxWeight.selector,
+            bytes1(0)
+        );
+        Implementation memory gaugePointImpl = Implementation(
+            address(0),
+            IGaugePointFacet.defaultGaugePointFunction.selector,
+            bytes1(0)
+        );
+
         assetSettings = new AssetSettings[](2);
         assetSettings[0] = AssetSettings({
             selector: BDVFacet.unripeBeanToBDV.selector,
@@ -118,7 +130,9 @@ contract MockInitDiamond is InitalizeDiamond {
             gpSelector: bytes4(0),
             lwSelector: bytes4(0),
             gaugePoints: 0,
-            optimalPercentDepositedBdv: 0
+            optimalPercentDepositedBdv: 0,
+            gaugePointImplementation: gaugePointImpl,
+            liquidityWeightImplementation: liquidityWeightImpl
         });
         assetSettings[1] = AssetSettings({
             selector: BDVFacet.unripeLPToBDV.selector,
@@ -131,7 +145,9 @@ contract MockInitDiamond is InitalizeDiamond {
             gpSelector: bytes4(0),
             lwSelector: bytes4(0),
             gaugePoints: 0,
-            optimalPercentDepositedBdv: 0
+            optimalPercentDepositedBdv: 0,
+            gaugePointImplementation: gaugePointImpl,
+            liquidityWeightImplementation: liquidityWeightImpl
         });
     }
 
@@ -155,6 +171,7 @@ contract MockInitDiamond is InitalizeDiamond {
      */
     function whitelistUnderlyingUrLPWell(address well) internal {
         // whitelist bean:stETH well
+        Implementation memory impl = Implementation(address(0), bytes4(0), bytes1(0));
         // note: no error checking:
         s.sys.silo.assetSettings[well] = AssetSettings({
             selector: BDVFacet.wellBdv.selector,
@@ -167,7 +184,17 @@ contract MockInitDiamond is InitalizeDiamond {
             gpSelector: IGaugePointFacet.defaultGaugePointFunction.selector,
             lwSelector: ILiquidityWeightFacet.maxWeight.selector,
             gaugePoints: INIT_TOKEN_WURLP_POINTS,
-            optimalPercentDepositedBdv: INIT_BEAN_WURLP_PERCENT_TARGET
+            optimalPercentDepositedBdv: INIT_BEAN_WURLP_PERCENT_TARGET,
+            gaugePointImplementation: Implementation(
+                address(0),
+                IGaugePointFacet.defaultGaugePointFunction.selector,
+                bytes1(0)
+            ),
+            liquidityWeightImplementation: Implementation(
+                address(0),
+                ILiquidityWeightFacet.maxWeight.selector,
+                bytes1(0)
+            )
         });
 
         // updates the optimal percent deposited for bean:eth.

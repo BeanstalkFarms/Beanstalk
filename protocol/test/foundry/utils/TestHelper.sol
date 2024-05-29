@@ -19,6 +19,8 @@ import {FertilizerDeployer} from "test/foundry/utils/FertilizerDeployer.sol";
 import {ShipmentDeployer} from "test/foundry/utils/ShipmentDeployer.sol";
 import {LibWell, IWell, IERC20} from "contracts/libraries/Well/LibWell.sol";
 import {C} from "contracts/C.sol";
+import {LibAppStorage} from "contracts/libraries/LibAppStorage.sol";
+import {AppStorage} from "contracts/beanstalk/storage/AppStorage.sol";
 
 ///// COMMON IMPORTED LIBRARIES //////
 import {LibTransfer} from "contracts/libraries/Token/LibTransfer.sol";
@@ -41,7 +43,6 @@ contract TestHelper is
     FertilizerDeployer,
     ShipmentDeployer
 {
-
     // usdOracle contract.
     UsdOracle usdOracle;
 
@@ -105,6 +106,25 @@ contract TestHelper is
 
         // Initialize Shipment Routes and Plans.
         initShipping(verbose);
+
+        // TODO: upon deployment, setup these state settings
+        initStateSettings();
+    }
+
+    function initStateSettings() public {
+        AppStorage storage s = LibAppStorage.diamondStorage();
+        s.sys.seedGaugeSettings.maxBeanMaxLpGpPerBdvRatio = 100e18;
+        s.sys.seedGaugeSettings.minBeanMaxLpGpPerBdvRatio = 50e18;
+        s.sys.seedGaugeSettings.targetSeasonsToCatchUp = 4320;
+        s.sys.seedGaugeSettings.podRateLowerBound = 0.05e18;
+        s.sys.seedGaugeSettings.podRateOptimal = 0.15e18;
+        s.sys.seedGaugeSettings.podRateUpperBound = 0.25e18;
+        s.sys.seedGaugeSettings.deltaPodDemandLowerBound = 0.95e18;
+        s.sys.seedGaugeSettings.deltaPodDemandUpperBound = 1.05e18;
+        s.sys.seedGaugeSettings.lpToSupplyRatioUpperBound = 0.8e18;
+        s.sys.seedGaugeSettings.lpToSupplyRatioOptimal = 0.4e18;
+        s.sys.seedGaugeSettings.lpToSupplyRatioLowerBound = 0.12e18;
+        s.sys.seedGaugeSettings.excessivePriceThreshold = 1.05e6;
     }
 
     /**

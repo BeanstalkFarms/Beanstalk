@@ -229,14 +229,14 @@ contract FieldFacet is Invariable, ReentrancyGuard {
      */
     function setActiveField(
         uint256 fieldId,
-        uint32 temp
+        uint32 _temperature
     ) public fundsSafu noSupplyChange noNetFlow {
         LibDiamond.enforceIsOwnerOrContract();
         require(fieldId < s.sys.fieldCount, "Field: Field does not exist");
         s.sys.activeField = fieldId;
 
         // Reset weather.
-        s.sys.weather.temp = temp;
+        s.sys.weather.temp = _temperature;
         s.sys.weather.thisSowTime = type(uint32).max;
         s.sys.weather.lastSowTime = type(uint32).max;
         s.sys.weather.lastDeltaSoil = 0;

@@ -5,6 +5,21 @@ pragma solidity ^0.8.20;
 pragma abicoder v2;
 
 interface IMockFBeanstalk {
+    struct SeedGaugeSettings {
+        uint256 maxBeanMaxLpGpPerBdvRatio;
+        uint256 minBeanMaxLpGpPerBdvRatio;
+        uint256 targetSeasonsToCatchUp;
+        uint256 podRateLowerBound;
+        uint256 podRateOptimal;
+        uint256 podRateUpperBound;
+        uint256 deltaPodDemandLowerBound;
+        uint256 deltaPodDemandUpperBound;
+        uint256 lpToSupplyRatioUpperBound;
+        uint256 lpToSupplyRatioOptimal;
+        uint256 lpToSupplyRatioLowerBound;
+        uint256 excessivePriceThreshold;
+    }
+
     enum From {
         EXTERNAL,
         INTERNAL,
@@ -73,6 +88,12 @@ interface IMockFBeanstalk {
         address facetAddress;
         uint8 action;
         bytes4[] functionSelectors;
+    }
+
+    struct Implementation {
+        address target;
+        bytes4 selector;
+        bytes1 encodeType;
     }
 
     struct MowStatus {
@@ -382,6 +403,7 @@ interface IMockFBeanstalk {
 
     function abovePeg() external view returns (bool);
 
+    function updateSeedGaugeSettings(SeedGaugeSettings memory updatedSeedGaugeSettings) external;
     function activeField() external view returns (uint256);
 
     function addFertilizer(uint128 id, uint128 tokenAmountIn, uint256 minLpOut) external payable;
@@ -496,6 +518,32 @@ interface IMockFBeanstalk {
     ) external view returns (uint256 underlying);
 
     function balanceOfPlenty(address account, address well) external view returns (uint256 plenty);
+
+    function getSeedGaugeSetting() external view returns (SeedGaugeSettings memory);
+
+    function getMaxBeanMaxLpGpPerBdvRatio() external view returns (uint256);
+
+    function getMinBeanMaxLpGpPerBdvRatio() external view returns (uint256);
+
+    function getTargetSeasonsToCatchUp() external view returns (uint256);
+
+    function getDeltaPodDemandUpperBound() external view returns (uint256);
+
+    function getLpToSupplyRatioLowerBound() external view returns (uint256);
+
+    function getExcessivePriceThreshold() external view returns (uint256);
+
+    function getLpToSupplyRatioUpperBound() external view returns (uint256);
+
+    function getLpToSupplyRatioOptimal() external view returns (uint256);
+
+    function getPodRateLowerBound() external view returns (uint256);
+
+    function getPodRateOptimal() external view returns (uint256);
+
+    function getPodRateUpperBound() external view returns (uint256);
+
+    function getDeltaPodDemandLowerBound() external view returns (uint256);
 
     function balanceOfRainRoots(address account) external view returns (uint256);
 
@@ -1193,7 +1241,12 @@ interface IMockFBeanstalk {
 
     function mockUpdateAverageStalkPerBdvPerSeason() external;
 
-    function mockUpdateLiquidityWeight(address token, bytes4 selector) external;
+    function mockUpdateLiquidityWeight(
+        address token,
+        address newLiquidityWeightImplementation,
+        bytes1 encodeType,
+        bytes4 selector
+    ) external;
 
     function mockWhitelistToken(
         address token,
@@ -1698,6 +1751,19 @@ interface IMockFBeanstalk {
         bytes4 liquidityWeightSelector,
         uint128 gaugePoints,
         uint64 optimalPercentDepositedBdv
+    ) external payable;
+
+    function whitelistTokenWithExternalImplementation(
+        address token,
+        bytes4 selector,
+        uint32 stalkIssuedPerBdv,
+        uint32 stalkEarnedPerSeason,
+        bytes1 encodeType,
+        uint128 gaugePoints,
+        uint64 optimalPercentDepositedBdv,
+        Implementation memory oracleImplementation,
+        Implementation memory gaugePointImplementation,
+        Implementation memory liquidityWeightImplementation
     ) external payable;
 
     function withdrawDeposit(
