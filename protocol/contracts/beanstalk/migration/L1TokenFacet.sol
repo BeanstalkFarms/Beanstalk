@@ -304,7 +304,7 @@ contract L1TokenFacet is IERC1155Receiver, ReentrancyGuard {
      * @dev bean assets on L1 will be migrated onto L2,
      * and thus requires that these tokens are not transferred.
      */
-    function checkBeanAsset(address token) internal {
+    function checkBeanAsset(address token) internal pure {
         require(token != address(C.BEAN), "TokenFacet: Beans cannot be transferred.");
         require(
             token != address(C.BEAN_ETH_WELL),
