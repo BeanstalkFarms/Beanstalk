@@ -2,8 +2,7 @@
  SPDX-License-Identifier: MIT
 */
 
-pragma experimental ABIEncoderV2;
-pragma solidity =0.7.6;
+pragma solidity ^0.8.20;
 /******************************************************************************\
 * Author: Nick Mudge <nick@perfectabstractions.com> (https://twitter.com/mudgen)
 * EIP-2535 Diamond Standard: https://eips.ethereum.org/EIPS/eip-2535
@@ -11,8 +10,9 @@ pragma solidity =0.7.6;
 
 import {IDiamondCut} from "contracts/interfaces/IDiamondCut.sol";
 import {LibDiamond} from "contracts/libraries/LibDiamond.sol";
+import {Invariable} from "contracts/beanstalk/Invariable.sol";
 
-contract DiamondCutFacet is IDiamondCut {
+contract DiamondCutFacet is Invariable, IDiamondCut {
     /// @notice Add/replace/remove any number of functions and optionally execute
     ///         a function with delegatecall
     /// @param _diamondCut Contains the facet addresses and function selectors

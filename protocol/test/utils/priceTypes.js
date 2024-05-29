@@ -1,4 +1,4 @@
 module.exports = {
-    Fixed: 0,
-    Dynamic: 1
-  };
+  Fixed: 0,
+  Dynamic: 1
+};

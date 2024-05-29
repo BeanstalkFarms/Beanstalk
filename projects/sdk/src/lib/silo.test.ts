@@ -33,6 +33,7 @@ beforeAll(async () => {
 
   await sdk.silo.deposit(sdk.tokens.BEAN, sdk.tokens.BEAN, amount, 0.1, account);
 });
+
 describe("Silo Balance loading", () => {
   describe("getBalance", function () {
     it("returns an empty object", async () => {

@@ -42,4 +42,5 @@ node_modules
 # Local Netlify folder
 .netlify
 
-protocol/lib/forge-std
+# forge libraries.
+protocol/lib/

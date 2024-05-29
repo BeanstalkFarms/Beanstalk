@@ -61,6 +61,7 @@ yarn hardhat compile
 
 ### Testing
 
+#### Hardhat
 1. Ensure you are in the `protocol` directory
 2. Have a [FORKING_RPC](https://hardhat.org/hardhat-network/docs/guides/forking-other-networks) as an [environment variable](https://www.npmjs.com/package/dotenv) pointing to ETH Mainnet.
    1. _We fork ETH Mainnet to run our test suite locally. Note, this will make a large number of API calls to your `FORKING_RPC`_
@@ -75,6 +76,12 @@ yarn test
 ```bash
 yarn hardhat coverage
 ```
+
+#### Foundry
+1. Ensure you are in the `protocol` directory
+2. Install foundry with `foundryup` - instructions [here](https://book.getfoundry.sh/getting-started/installation)
+3. `forge install foundry-rs/forge-std --no-commit`
+4. `forge test`
 
 ### Forking Mainnet Locally
 

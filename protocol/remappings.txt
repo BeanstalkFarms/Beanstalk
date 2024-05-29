@@ -1,11 +1,3 @@
-@contracts/=contracts/
-~/=contracts/
-
-src/=@beanstalk/wells/src/
-@wells/=@beanstalk/wells/src/
-oz/=@openzeppelin/contracts/
-
-ds-test/=lib/solmate/lib/ds-test/src/
 forge-std/=lib/forge-std/src/
-prb-math/=lib/prb-math/contracts/
-solmate/=lib/solmate/src/
+@openzeppelin/=node_modules/@openzeppelin/
+@wells/=node_modules/@beanstalk/wells1.1/

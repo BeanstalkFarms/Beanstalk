@@ -1,4 +1,5 @@
 const { upgrades } = require("hardhat");
+const { mintEth } = require('../utils');
 var fs = require('fs');
 
 const {
@@ -7,9 +8,9 @@ const {
   USDC_MINTER
 } = require('../test/utils/constants')
 
-async function deploy(account, pre=true, mock=false) {
-  const contractName = pre ? 'FertilizerPreMint' : 'Fertilizer';
-  const args = pre ? [''] : [];
+async function deploy(account, mock=false) {
+  const contractName = 'Fertilizer';
+  const args = [];
   const Fertilizer = await ethers.getContractFactory(contractName);
   const fertilizer = await upgrades.deployProxy(Fertilizer, args);
   console.log("Fertilizer 1155 deployed to:", fertilizer.address);
@@ -33,6 +34,7 @@ async function deploy(account, pre=true, mock=false) {
     })
     await hre.network.provider.request({ method: "hardhat_impersonateAccount", params: [BCM] });
     const bcm = await ethers.getSigner(BCM)
+    await mintEth(BCM);
     await usdc.connect(bcm).transfer(USDC_MINTER, await usdc.balanceOf(BCM));
 
   }

@@ -2,12 +2,11 @@
  * SPDX-License-Identifier: MIT
  **/
 
-pragma solidity =0.7.6;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.20;
 
-import {IWsteth, LibWstethEthOracle, SafeMath} from "contracts/libraries/Oracle/LibWstethEthOracle.sol";
+import {IWsteth, LibWstethEthOracle} from "contracts/libraries/Oracle/LibWstethEthOracle.sol";
 import {LibEthUsdOracle} from "contracts/libraries/Oracle/LibEthUsdOracle.sol";
-
+import {LibRedundantMath256} from "../LibRedundantMath256.sol";
 
 /**
  * @title Wsteth USD Oracle Library
@@ -21,7 +20,7 @@ import {LibEthUsdOracle} from "contracts/libraries/Oracle/LibEthUsdOracle.sol";
  * The wStEth:USD price is computed as: a * b
  **/
 library LibWstethUsdOracle {
-    using SafeMath for uint256;
+    using LibRedundantMath256 for uint256;
 
     uint256 constant ORACLE_PRECISION = 1e6;
 
@@ -40,8 +39,10 @@ library LibWstethUsdOracle {
      * Returns 0 if the either LibWstethEthOracle or LibEthUsdOracle cannot fetch a valid price.
      **/
     function getWstethUsdPrice(uint256 lookback) internal view returns (uint256) {
-        return LibWstethEthOracle.getWstethEthPrice(lookback).mul(
-            LibEthUsdOracle.getEthUsdPrice(lookback)
-        ).div(ORACLE_PRECISION);
+        return
+            LibWstethEthOracle
+                .getWstethEthPrice(lookback)
+                .mul(LibEthUsdOracle.getEthUsdPrice(lookback))
+                .div(ORACLE_PRECISION);
     }
 }

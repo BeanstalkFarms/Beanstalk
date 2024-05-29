@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity =0.7.6;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.20;
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
@@ -29,7 +28,13 @@ interface IWell {
      * @param amountOut The amount of `toToken` transferred out of the Well
      * @param recipient The address that received `toToken`
      */
-    event Swap(IERC20 fromToken, IERC20 toToken, uint256 amountIn, uint256 amountOut, address recipient);
+    event Swap(
+        IERC20 fromToken,
+        IERC20 toToken,
+        uint256 amountIn,
+        uint256 amountOut,
+        address recipient
+    );
 
     /**
      * @notice Emitted when liquidity is added to the Well.
@@ -58,7 +63,12 @@ interface IWell {
      * saves gas, since `tokenAmountsOut` in {RemoveLiquidity} must emit a value
      * for each token in the Well.
      */
-    event RemoveLiquidityOneToken(uint256 lpAmountIn, IERC20 tokenOut, uint256 tokenAmountOut, address recipient);
+    event RemoveLiquidityOneToken(
+        uint256 lpAmountIn,
+        IERC20 tokenOut,
+        uint256 tokenAmountOut,
+        address recipient
+    );
 
     /**
      * @notice Emitted when a Shift occurs.
@@ -188,7 +198,11 @@ interface IWell {
      * @param amountIn The amount of `fromToken` to spend
      * @return amountOut The amount of `toToken` to receive
      */
-    function getSwapOut(IERC20 fromToken, IERC20 toToken, uint256 amountIn) external view returns (uint256 amountOut);
+    function getSwapOut(
+        IERC20 fromToken,
+        IERC20 toToken,
+        uint256 amountIn
+    ) external view returns (uint256 amountOut);
 
     //////////////////// SWAP: TO ////////////////////
 
@@ -218,7 +232,11 @@ interface IWell {
      * @param amountOut The amount of `toToken` desired
      * @return amountIn The amount of `fromToken` that must be spent
      */
-    function getSwapIn(IERC20 fromToken, IERC20 toToken, uint256 amountOut) external view returns (uint256 amountIn);
+    function getSwapIn(
+        IERC20 fromToken,
+        IERC20 toToken,
+        uint256 amountOut
+    ) external view returns (uint256 amountIn);
 
     //////////////////// SHIFT ////////////////////
 
@@ -232,7 +250,11 @@ interface IWell {
      * No deadline is needed since this function does not use the user's assets. If adding liquidity in a multicall,
      * then a deadline check can be added to the multicall.
      */
-    function shift(IERC20 tokenOut, uint256 minAmountOut, address recipient) external returns (uint256 amountOut);
+    function shift(
+        IERC20 tokenOut,
+        uint256 minAmountOut,
+        address recipient
+    ) external returns (uint256 amountOut);
 
     /**
      * @notice Calculates the amount of the token out received from shifting excess tokens held by the Well.
@@ -280,7 +302,9 @@ interface IWell {
      * @param tokenAmountsIn The amount of each token to add; MUST match the indexing of {Well.tokens}
      * @return lpAmountOut The amount of LP tokens received
      */
-    function getAddLiquidityOut(uint256[] memory tokenAmountsIn) external view returns (uint256 lpAmountOut);
+    function getAddLiquidityOut(
+        uint256[] memory tokenAmountsIn
+    ) external view returns (uint256 lpAmountOut);
 
     //////////////////// REMOVE LIQUIDITY: BALANCED ////////////////////
 
@@ -304,7 +328,9 @@ interface IWell {
      * @param lpAmountIn The amount of LP tokens to burn
      * @return tokenAmountsOut The amount of each underlying token received
      */
-    function getRemoveLiquidityOut(uint256 lpAmountIn) external view returns (uint256[] memory tokenAmountsOut);
+    function getRemoveLiquidityOut(
+        uint256 lpAmountIn
+    ) external view returns (uint256[] memory tokenAmountsOut);
 
     //////////////////// REMOVE LIQUIDITY: ONE TOKEN ////////////////////
 
@@ -358,10 +384,9 @@ interface IWell {
      * @param tokenAmountsOut The amount of each underlying token to receive; MUST match the indexing of {Well.tokens}
      * @return lpAmountIn The amount of LP tokens burned
      */
-    function getRemoveLiquidityImbalancedIn(uint256[] calldata tokenAmountsOut)
-        external
-        view
-        returns (uint256 lpAmountIn);
+    function getRemoveLiquidityImbalancedIn(
+        uint256[] calldata tokenAmountsOut
+    ) external view returns (uint256 lpAmountIn);
 
     //////////////////// RESERVES ////////////////////
 

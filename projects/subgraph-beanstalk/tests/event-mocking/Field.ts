@@ -28,4 +28,3 @@ export function createPlotTransferEvent(from: string, to: string, id: BigInt, po
 export function createSupplyIncreaseEvent(season: BigInt, price: BigInt, newHarvestable: BigInt, newSilo: BigInt, issuedSoil: i32): void { }
 export function createSupplyDecreaseEvent(season: BigInt, price: BigInt, issuedSoil: i32): void { }
 export function createSupplyNeutralEvent(season: BigInt, issuedSoil: i32): void { }
-export function createFundFundraiserEvent(id: BigInt, fundraiser: string, token: string, amount: BigInt): void { }

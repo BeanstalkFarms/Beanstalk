@@ -2,12 +2,11 @@
  * SPDX-License-Identifier: MIT
  **/
 
-pragma solidity =0.7.6;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.20;
 
 import {C} from "contracts/C.sol";
 import {IChainlinkAggregator} from "contracts/interfaces/chainlink/IChainlinkAggregator.sol";
-import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
+import {LibRedundantMath256} from "contracts/libraries/LibRedundantMath256.sol";
 
 /**
  * @title Chainlink Oracle Library
@@ -16,7 +15,7 @@ import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
  * - ETH/USD price feed
  **/
 library LibChainlinkOracle {
-    using SafeMath for uint256;
+    using LibRedundantMath256 for uint256;
 
     uint256 constant PRECISION = 1e6; // use 6 decimal precision.
 
@@ -29,6 +28,22 @@ library LibChainlinkOracle {
         uint256 cumulativePrice;
         uint256 endTimestamp;
         uint256 lastTimestamp;
+    }
+
+    /**
+     * @dev Returns the TOKEN/USD price with the option of using a TWA lookback.
+     * Use `lookback = 0` for the instantaneous price. `lookback > 0` for a TWAP.
+     * Return value has 6 decimal precision.
+     * Returns 0 if `priceAggregatorAddress` is broken or frozen.
+     **/
+    function getTokenPrice(
+        address priceAggregatorAddress,
+        uint256 maxTimeout, 
+        uint256 lookback
+    ) internal view returns (uint256 price) {
+        return lookback > 0
+            ? getPrice(priceAggregatorAddress, maxTimeout)
+            : getTwap(priceAggregatorAddress, maxTimeout, lookback);
     }
 
     /**
@@ -124,12 +139,14 @@ library LibChainlinkOracle {
                     roundId -= 1;
                     t.lastTimestamp = timestamp;
                     (answer, timestamp) = getRoundData(priceAggregator, roundId);
-                    if (checkForInvalidTimestampOrAnswer(
+                    if (
+                        checkForInvalidTimestampOrAnswer(
                             timestamp,
                             answer,
                             t.lastTimestamp,
                             maxTimeout
-                    )) {
+                        )
+                    ) {
                         return 0;
                     }
                 }
@@ -149,11 +166,11 @@ library LibChainlinkOracle {
         uint80 roundId
     ) private view returns (int256, uint256) {
         try priceAggregator.getRoundData(roundId) returns (
-                uint80 /* roundId */,
-                int256 _answer,
-                uint256 /* startedAt */,
-                uint256 _timestamp,
-                uint80 /* answeredInRound */
+            uint80 /* roundId */,
+            int256 _answer,
+            uint256 /* startedAt */,
+            uint256 _timestamp,
+            uint80 /* answeredInRound */
         ) {
             return (_answer, _timestamp);
         } catch {
@@ -173,5 +190,7 @@ library LibChainlinkOracle {
         if (currentTimestamp.sub(timestamp) > maxTimeout) return true;
         // Check for non-positive price
         if (answer <= 0) return true;
+
+        return false;
     }
 }

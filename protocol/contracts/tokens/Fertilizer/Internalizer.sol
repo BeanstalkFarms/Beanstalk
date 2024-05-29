@@ -1,27 +1,21 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity ^0.7.6;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.20;
 
-
-import "@openzeppelin/contracts-upgradeable/utils/StringsUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/token/ERC20/SafeERC20Upgradeable.sol";
+import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "./Fertilizer1155.sol";
-import "contracts/libraries/LibSafeMath32.sol";
-import "contracts/libraries/LibSafeMath128.sol";
+import "contracts/libraries/LibRedundantMath32.sol";
+import "contracts/libraries/LibRedundantMath128.sol";
 
 /**
  * @author publius
- * @title Fertilizer before the Unpause
  */
 
 contract Internalizer is OwnableUpgradeable, ReentrancyGuardUpgradeable, Fertilizer1155 {
-
-    using SafeERC20Upgradeable for IERC20;
-    using LibSafeMath128 for uint128;
+    using LibRedundantMath128 for uint128;
 
     struct Balance {
         uint128 amount;
@@ -29,7 +23,7 @@ contract Internalizer is OwnableUpgradeable, ReentrancyGuardUpgradeable, Fertili
     }
 
     function __Internallize_init(string memory uri_) internal {
-        __Ownable_init();
+        __Ownable_init(msg.sender);
         __ERC1155_init(uri_);
         __ReentrancyGuard_init();
     }
@@ -38,8 +32,8 @@ contract Internalizer is OwnableUpgradeable, ReentrancyGuardUpgradeable, Fertili
 
     string private _uri;
 
-    function uri(uint256 _id) external view virtual override returns (string memory) {
-        return string(abi.encodePacked(_uri, StringsUpgradeable.toString(_id)));
+    function uri(uint256 _id) public view virtual override returns (string memory) {
+        return string(abi.encodePacked(_uri, Strings.toString(_id)));
     }
 
     function setURI(string calldata newuri) public onlyOwner {
@@ -64,7 +58,10 @@ contract Internalizer is OwnableUpgradeable, ReentrancyGuardUpgradeable, Fertili
         return _balances[id][account];
     }
 
-    function lastBalanceOfBatch(address[] memory accounts, uint256[] memory ids) external view returns (Balance[] memory balances) {
+    function lastBalanceOfBatch(
+        address[] memory accounts,
+        uint256[] memory ids
+    ) external view returns (Balance[] memory balances) {
         balances = new Balance[](accounts.length);
         for (uint256 i; i < accounts.length; ++i) {
             balances[i] = lastBalanceOf(accounts[i], ids[i]);
