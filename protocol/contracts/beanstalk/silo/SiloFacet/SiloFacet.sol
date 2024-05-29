@@ -6,12 +6,9 @@ pragma solidity ^0.8.20;
 pragma abicoder v2;
 
 import "./TokenSilo.sol";
-import {LibTractor} from "contracts/libraries/LibTractor.sol";
-import "contracts/libraries/Token/LibTransfer.sol";
 import "contracts/libraries/Silo/LibSiloPermit.sol";
 import {Invariable} from "contracts/beanstalk/Invariable.sol";
 import {LibWhitelistedTokens} from "contracts/libraries/Silo/LibWhitelistedTokens.sol";
-import {LibWell} from "contracts/libraries/Well/LibWell.sol";
 
 /**
  * @title SiloFacet
@@ -19,13 +16,8 @@ import {LibWell} from "contracts/libraries/Well/LibWell.sol";
  * @notice SiloFacet is the entry point for all Silo functionality.
  *
  * SiloFacet           public functions for modifying an account's Silo.
- * ↖ TokenSilo         accounting & storage for Deposits, Withdrawals, allowances
- * ↖ Silo              accounting & storage for Stalk, and Roots.
- * ↖ SiloExit          public view funcs for total balances, account balances
- *                     & other account state.
+ * ↖ TokenSilo         accounting & storage for Deposits, Withdrawals, allowances.
  * ↖ ReentrancyGuard   provides reentrancy guard modifier and access to {C}.
- *
- *
  */
 contract SiloFacet is Invariable, TokenSilo {
     using LibRedundantMath256 for uint256;

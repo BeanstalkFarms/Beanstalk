@@ -348,7 +348,7 @@ library LibSilo {
      *  - {_plant}
      *  - {SiloFacet-transferDeposit(s)}
      */
-    function _mow(address account, address token) internal {
+    function _mow(address account, address token) external {
         AppStorage storage s = LibAppStorage.diamondStorage();
 
         // if the user has not migrated from siloV2, revert.

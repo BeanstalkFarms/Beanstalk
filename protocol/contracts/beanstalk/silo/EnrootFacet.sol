@@ -7,7 +7,6 @@ pragma solidity ^0.8.20;
 import {LibTractor} from "contracts/libraries/LibTractor.sol";
 import "contracts/libraries/Silo/LibSilo.sol";
 import "contracts/libraries/Silo/LibTokenSilo.sol";
-import "./SiloFacet/Silo.sol";
 import "contracts/libraries/LibRedundantMath32.sol";
 import "../ReentrancyGuard.sol";
 import {Invariable} from "contracts/beanstalk/Invariable.sol";

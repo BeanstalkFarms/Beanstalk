@@ -4,22 +4,22 @@
 
 pragma solidity ^0.8.20;
 
+import {C} from "contracts/C.sol";
+import {IBean} from "contracts/interfaces/IBean.sol";
+import {LibChop} from "contracts/libraries/LibChop.sol";
 import {MerkleProof} from "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {LibRedundantMath256} from "contracts/libraries/LibRedundantMath256.sol";
-import {IBean} from "contracts/interfaces/IBean.sol";
 import {LibDiamond} from "contracts/libraries/LibDiamond.sol";
 import {LibUnripe} from "contracts/libraries/LibUnripe.sol";
 import {LibTransfer} from "contracts/libraries/Token/LibTransfer.sol";
 import {LibWell} from "contracts/libraries/Well/LibWell.sol";
-import {C} from "contracts/C.sol";
+import {LibTractor} from "contracts/libraries/LibTractor.sol";
 import {ReentrancyGuard} from "contracts/beanstalk/ReentrancyGuard.sol";
 import {LibLockedUnderlying} from "contracts/libraries/LibLockedUnderlying.sol";
-import {LibChop} from "contracts/libraries/LibChop.sol";
 import {LibBarnRaise} from "contracts/libraries/LibBarnRaise.sol";
 import {Invariable} from "contracts/beanstalk/Invariable.sol";
-import {LibTractor} from "contracts/libraries/LibTractor.sol";
 
 /**
  * @title UnripeFacet
@@ -98,42 +98,6 @@ contract UnripeFacet is Invariable, ReentrancyGuard {
         // emit the event
         emit Chop(LibTractor._user(), unripeToken, amount, underlyingAmount);
         return underlyingAmount;
-    }
-
-    /**
-     * @notice Picks a Farmer's Pickable Unripe Tokens.
-     * @dev Pickable Unripe Tokens were distributed to all non-Deposited pre-exploit Bean and Bean LP Tokens.
-     * @param token The Unripe Token address to Pick.
-     * @param amount The amount of Unripe Tokens to Pick.
-     * @param proof The merkle proof used to validate that the Pick is valid.
-     * @param mode The destination balance that the Unripe Tokens are sent to.
-     */
-    function pick(
-        address token,
-        uint256 amount,
-        bytes32[] memory proof,
-        LibTransfer.To mode
-    ) external payable fundsSafu noSupplyChange oneOutFlow(token) nonReentrant {
-        bytes32 root = s.sys.silo.unripeSettings[token].merkleRoot;
-        require(root != bytes32(0), "UnripeClaim: invalid token");
-        require(!picked(LibTractor._user(), token), "UnripeClaim: already picked");
-
-        bytes32 leaf = keccak256(abi.encodePacked(LibTractor._user(), amount));
-        require(MerkleProof.verify(proof, root, leaf), "UnripeClaim: invalid proof");
-        s.accts[LibTractor._user()].unripeClaimed[token] = true;
-
-        LibTransfer.sendToken(IERC20(token), amount, LibTractor._user(), mode);
-
-        emit Pick(LibTractor._user(), token, amount);
-    }
-
-    /**
-     * @notice Returns whether a given `account` has picked a given `token`.
-     * @param account The address of the account to check.
-     * @param token The address of the Unripe Token to check.
-     */
-    function picked(address account, address token) public view returns (bool) {
-        return s.accts[account].unripeClaimed[token];
     }
 
     /**

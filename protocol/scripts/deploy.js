@@ -365,7 +365,7 @@ async function getFacetData(mock = true) {
     "LibGerminate",
     "LibPipelineConvert",
     "LibSilo",
-    "LibShipping"
+    "LibShipping",
     "LibFlood"
   ];
 
@@ -378,14 +378,16 @@ async function getFacetData(mock = true) {
       "LibLockedUnderlying",
       "LibWellMinting",
       "LibGerminate",
-      "LibShipping"
+      "LibShipping",
       "LibFlood"
     ],
-    ConvertFacet: ["LibConvert", "LibPipelineConvert"],
-    PipelineConvertFacet: ["LibPipelineConvert"],
+    ConvertFacet: ["LibConvert", "LibPipelineConvert", "LibSilo"],
+    PipelineConvertFacet: ["LibPipelineConvert", "LibSilo"],
     UnripeFacet: ["LibLockedUnderlying"],
     SeasonGettersFacet: ["LibLockedUnderlying", "LibWellMinting"],
-    SiloFacet: ["LibSilo"]
+    SiloFacet: ["LibSilo"],
+    EnrootFacet: ["LibSilo"],
+    ClaimFacet: ["LibSilo"]
   };
 
   return [facets, libraryNames, facetLibraries];

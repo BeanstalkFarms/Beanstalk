@@ -67,7 +67,14 @@ const siloFacetInterface = async () =>
       }
     })
   ).interface;
-const claimFacetInterface = async () => (await ethers.getContractFactory("ClaimFacet")).interface;
+const claimFacetInterface = async () =>
+  (
+    await ethers.getContractFactory("ClaimFacet", {
+      libraries: {
+        LibSilo: (await (await ethers.getContractFactory("LibSilo")).deploy()).address
+      }
+    })
+  ).interface;
 
 const siloGettersFacetInterface = async () =>
   (await ethers.getContractFactory("SiloGettersFacet")).interface;

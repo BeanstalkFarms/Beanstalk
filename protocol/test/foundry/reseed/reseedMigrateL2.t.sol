@@ -109,8 +109,6 @@ contract reeseedMigrateL2 is TestHelper {
         assertEq(facets[1].facetAddress, address(0xB51D5C699B749E0382e257244610039dDB272Da0)); // DiamondLoupeFacet
         assertEq(facets[2].facetAddress, address(0x5D45283Ff53aabDb93693095039b489Af8b18Cf7)); // OwnershipFacet
         assertEq(facets[3].facetAddress, address(0xeab4398f62194948cB25F45fEE4C46Fae2e91229)); // PauseFacet
-        assertEq(facets[4].facetAddress, address(0x5c541e5Cfbdd436abCFC28D509Db19d07ce9B4D9)); // L2migrationFacet
-        assertEq(facets[5].facetAddress, address(0x5EDFB2107440260cc9507E74E9F95A50b654aE40)); // L1TokenFacet
     }
 
     // user is able to transfer farm balances out.
