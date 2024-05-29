@@ -1,29 +1,79 @@
 import React from "react";
 import styled from "styled-components";
+import { FormProvider, useForm, useFormContext, useWatch } from "react-hook-form";
 
 import { theme } from "src/utils/ui/theme";
-
-import { Text } from "src/components/Typography";
-import { Divider, Flex } from "src/components/Layout";
-import { FormProvider, useForm } from "react-hook-form";
-import { CreateWellProps, useCreateWell } from "./CreateWellProvider";
 import { useTokenMetadata } from "src/utils/token/useTokenMetadata";
-import { SelectCard } from "../Selectable";
+
+import { SwitchField, TextInputField } from "src/components/Form";
+import { Box, Divider, Flex } from "src/components/Layout";
+import { SelectCard } from "src/components/Selectable";
+import { Text } from "src/components/Typography";
+
+import { CreateWellProps, useCreateWell } from "./CreateWellProvider";
 import { WellComponentInfo, useWhitelistedWellComponents } from "./useWhitelistedWellComponents";
 
-const FormContent = () => {
-  const methods = useForm();
+type FormValues = CreateWellProps["liquidity"] & CreateWellProps["salt"];
 
-  const onSubmit = (data: any) => {
+const FormContent = () => {
+  const { salt: cachedSalt, liquidity: cachedLiquidity } = useCreateWell();
+  const methods = useForm<FormValues>({
+    defaultValues: {
+      usingSalt: cachedSalt.usingSalt,
+      salt: cachedSalt.salt,
+      seedingLiquidity: cachedLiquidity.seedingLiquidity,
+      token1Amount: cachedLiquidity.token1Amount?.toString(),
+      token2Amount: cachedLiquidity.token2Amount?.toString()
+    }
+  });
+
+  const onSubmit = (data: FormValues) => {
     console.log(data);
   };
+
+  console.log(methods.watch());
 
   return (
     <FormProvider {...methods}>
       <form onSubmit={methods.handleSubmit(onSubmit)}>
-        <div>FORM HERE</div>
+        <Flex $gap={2}>
+          <LiquidityForm />
+          <SaltForm />
+        </Flex>
       </form>
     </FormProvider>
+  );
+};
+
+const LiquidityForm = () => {
+  const { control } = useFormContext<FormValues>();
+
+  return (
+    <Flex $gap={2}>
+      <Flex $direction="row" $gap={1} $alignItems="center">
+        <SwitchField control={control} name="usingSalt" />
+        <Text $variant="xs" $weight="bold" $mb={-0.5}>
+          Seed Well with initial liquidity
+        </Text>
+      </Flex>
+    </Flex>
+  );
+};
+
+const SaltForm = () => {
+  const { control, register } = useFormContext<FormValues>();
+  const seedingLiquidity = useWatch({ control, name: "seedingLiquidity" });
+
+  return (
+    <Flex $gap={2}>
+      <Flex $direction="row" $gap={1} $alignItems="center">
+        <SwitchField control={control} name="seedingLiquidity" />
+        <Text $variant="xs" $weight="bold" $mb={-0.5}>
+          Deploy Well with a Salt
+        </Text>
+      </Flex>
+      {seedingLiquidity && <TextInputField placeholder="Input Salt" {...register("salt")} />}
+    </Flex>
   );
 };
 
@@ -58,7 +108,7 @@ const WellCreatePreviewInner = ({
   wellImplementation: { wellImplementation },
   wellFunctionAndPump: { token1, token2, pump, wellFunction },
   wellNameAndSymbol: { name: wellName, symbol: wellSymbol }
-}: CreateWellProps) => {
+}: Omit<CreateWellProps, "salt" | "liquidity">) => {
   const components = useWhitelistedWellComponents();
 
   const token1Metadata = useTokenMetadata(token1);
@@ -126,11 +176,9 @@ export const CreateWellPreviewDeploy = () => {
       <Flex $mt={3}>
         <WellCreatePreview />
       </Flex>
-      <div style={{ marginTop: "20px" }}>
-        <Flex $fullWidth $px={2} $pl={2} $pr={4} $boxSizing="border-box">
-          <Divider />
-        </Flex>
-      </div>
+      <Box $my={4}>
+        <Divider />
+      </Box>
       <FormContent />
     </Flex>
   );

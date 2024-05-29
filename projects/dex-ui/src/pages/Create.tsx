@@ -20,8 +20,6 @@ export const Create = () => {
   );
 };
 
-const CONTENT_MAX_WIDTH = "1234px";
-
 const CreateSteps = () => {
   const { step } = useCreateWell();
 
@@ -43,12 +41,13 @@ const CreateSteps = () => {
         </Flex>
       )}
       {step === 3 && (
-        <Flex $fullWidth $alignItems="center">
-          <Flex $maxWidth="710px">
-            <CreateWellPreviewDeploy />
-          </Flex>
+        <Flex $fullWidth $alignSelf="center" $maxWidth={PREVIEW_MAX_WIDTH}>
+          <CreateWellPreviewDeploy />
         </Flex>
       )}
     </>
   );
 };
+
+const CONTENT_MAX_WIDTH = "1234px";
+const PREVIEW_MAX_WIDTH = "710px";
