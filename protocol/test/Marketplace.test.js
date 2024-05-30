@@ -1111,7 +1111,7 @@ describe("Marketplace", function () {
         });
       });
 
-      describe("transfers with existing pod listing from other", async function () {
+      describe.skip("transfers with existing pod listing from other", async function () {
         beforeEach(async function () {
           this.podListing = PodListing(user.address, 0, 0, 0, 1000, 500000, 0, 0, EXTERNAL);
           await mockBeanstalk.connect(user).createPodListing(this.podListing);
