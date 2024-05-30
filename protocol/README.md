@@ -41,6 +41,10 @@ The Beanstalk contract is a multi-facet proxy that implements [EIP-2535](https:/
 - Rosetta (Apple Silicon) 
   - You'll know you've installed Rosetta right if you can execute the solc 0.7.6 binary `.../solc-macosx-amd64-v0.7.6+commit.7338295f --version`
 
+## Node and NPM compatibility
+
+The latest Node.js and NPM versions are known to be incompatible with some parts of the Foundry toolchain. We recommend using Node.js `v18.12.0` and npm `v8.19.2`.
+
 ## Installation
 
 _Note: The Beanstalk repo is a monorepo with induvidual projects inside it. See the `DEVELOPER.md` in the root directory for more information._
@@ -64,6 +68,7 @@ yarn hardhat compile
 ### Testing
 
 #### Hardhat
+
 1. Ensure you are in the `protocol` directory
 2. Have a [FORKING_RPC](https://hardhat.org/hardhat-network/docs/guides/forking-other-networks) as an [environment variable](https://www.npmjs.com/package/dotenv) pointing to ETH Mainnet.
    1. _We fork ETH Mainnet to run our test suite locally. Note, this will make a large number of API calls to your `FORKING_RPC`_
@@ -80,6 +85,7 @@ yarn hardhat coverage
 ```
 
 #### Foundry
+
 1. Ensure you are in the `protocol` directory
 2. Install foundry with `foundryup` - instructions [here](https://book.getfoundry.sh/getting-started/installation)
 3. `forge install foundry-rs/forge-std --no-commit`
