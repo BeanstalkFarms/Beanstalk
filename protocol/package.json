@@ -36,7 +36,7 @@
     "ethereum-waffle": "4.0.10",
     "ethers": "5.7.2",
     "ganache-cli": "^6.12.2",
-    "hardhat": "2.14.0",
+    "hardhat": "2.22.4",
     "hardhat-contract-sizer": "^2.8.0",
     "hardhat-gas-reporter": "^1.0.4",
     "json-bigint": "^1.0.0",
