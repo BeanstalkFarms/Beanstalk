@@ -2,7 +2,7 @@ import React, { createContext, useMemo } from "react";
 import { BeanstalkSDK } from "@beanstalk/sdk";
 import { JsonRpcProvider } from "@ethersproject/providers";
 import { Signer } from "ethers";
-import { Log, Log } from "../logger";
+import { Log } from "../logger";
 import { useEthersProvider, useEthersSigner } from "../wagmi/ethersAdapter";
 
 const IS_DEVELOPMENT_ENV = process.env.NODE_ENV !== "production";
