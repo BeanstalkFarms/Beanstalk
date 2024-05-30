@@ -41,7 +41,7 @@ The Beanstalk contract is a multi-facet proxy that implements [EIP-2535](https:/
 
 ## Node and NPM compatibility
 
-The latest Node.js and NPM versions are known to be incompatible with some parts of the Foundry toolchain. We recommend using Node.js `v16.20.2` and npm `v8.19.2`.
+The latest Node.js and NPM versions are known to be incompatible with some parts of the Foundry toolchain. We recommend using Node.js `v18.12.0` and npm `v8.19.2`.
 
 ## Installation
 
