@@ -132,7 +132,6 @@ library LibUsdOracle {
             chainlinkToken = chainlinkToken == token
                 ? IUniswapV3PoolImmutables(oracleImpl.target).token1()
                 : token;
-            console.log("chainlinkToken", chainlinkToken);
             tokenPrice = LibUniswapOracle.getTwap(
                 lookback == 0 ? LibUniswapOracle.FIFTEEN_MINUTES : uint32(lookback),
                 oracleImpl.target,
@@ -158,9 +157,6 @@ library LibUsdOracle {
                 LibChainlinkOracle.FOUR_HOUR_TIMEOUT,
                 lookback
             );
-            console.log("chainlinkTokenPrice", chainlinkTokenPrice);
-            console.log("Uniswap", tokenPrice);
-            console.log(tokenPrice.mul(chainlinkTokenPrice).div(1e6));
             return tokenPrice.mul(chainlinkTokenPrice).div(1e6);
         }
 
