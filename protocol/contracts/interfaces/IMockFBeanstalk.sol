@@ -88,17 +88,17 @@ interface IMockFBeanstalk {
     }
 
     struct AssetSettings {
-        bytes4 selector;
-        uint32 stalkEarnedPerSeason;
-        uint32 stalkIssuedPerBdv;
-        uint32 milestoneSeason;
-        int96 milestoneStem;
-        bytes1 encodeType;
-        int24 deltaStalkEarnedPerSeason;
-        bytes4 gpSelector;
-        bytes4 lwSelector;
-        uint128 gaugePoints;
-        uint64 optimalPercentDepositedBdv;
+        bytes4 selector; // ────────────────────┐ 4
+        uint32 stalkEarnedPerSeason; //         │ 4  (8)
+        uint32 stalkIssuedPerBdv; //            │ 4  (12)
+        uint32 milestoneSeason; //              │ 4  (16)
+        int96 milestoneStem; //                 │ 12 (28)
+        bytes1 encodeType; //                   │ 1  (29)
+        int24 deltaStalkEarnedPerSeason; // ────┘ 3  (32)
+        uint128 gaugePoints; // ─────────-───────┐ 16
+        uint64 optimalPercentDepositedBdv; //  ──┘ 8
+        Implementation gaugePointImplementation;
+        Implementation liquidityWeightImplementation;
     }
 
     struct Balance {
@@ -458,7 +458,8 @@ interface IMockFBeanstalk {
         bytes4 gpSelector,
         bytes4 lwSelector,
         uint128 gaugePoints,
-        uint64 optimalPercentDepositedBdv
+        uint64 optimalPercentDepositedBdv,
+        Implementation oracleImplementation
     );
 
     function _getMintFertilizerOut(
@@ -512,6 +513,13 @@ interface IMockFBeanstalk {
     function advancedFarm(
         AdvancedFarmCall[] memory data
     ) external payable returns (bytes[] memory results);
+
+    function updateLiqudityWeightImplementationForToken(
+        address token,
+        Implementation memory impl
+    ) external;
+
+    function updateOracleImplementationForToken(address token, Implementation memory impl) external;
 
     function advancedPipe(
         AdvancedPipeCall[] memory pipes,
@@ -1829,7 +1837,8 @@ interface IMockFBeanstalk {
         bytes4 gaugePointSelector,
         bytes4 liquidityWeightSelector,
         uint128 gaugePoints,
-        uint64 optimalPercentDepositedBdv
+        uint64 optimalPercentDepositedBdv,
+        Implementation memory oracleImplementation
     ) external payable;
 
     function whitelistTokenWithEncodeType(
@@ -1841,7 +1850,8 @@ interface IMockFBeanstalk {
         bytes4 gaugePointSelector,
         bytes4 liquidityWeightSelector,
         uint128 gaugePoints,
-        uint64 optimalPercentDepositedBdv
+        uint64 optimalPercentDepositedBdv,
+        Implementation memory oracleImplementation
     ) external payable;
 
     function whitelistTokenWithExternalImplementation(

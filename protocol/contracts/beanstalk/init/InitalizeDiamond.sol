@@ -91,6 +91,7 @@ contract InitalizeDiamond {
             IGaugePointFacet.defaultGaugePointFunction.selector,
             bytes1(0)
         );
+        Implementation memory oracleImpl = Implementation(address(0), bytes4(0), bytes1(0));
 
         AssetSettings[] memory assetSettings = new AssetSettings[](2);
         assetSettings[0] = AssetSettings({
@@ -101,12 +102,11 @@ contract InitalizeDiamond {
             milestoneStem: 0,
             encodeType: 0x00,
             deltaStalkEarnedPerSeason: 0,
-            gpSelector: bytes4(0),
-            lwSelector: bytes4(0),
             gaugePoints: 0,
             optimalPercentDepositedBdv: 0,
             gaugePointImplementation: impl,
-            liquidityWeightImplementation: impl
+            liquidityWeightImplementation: impl,
+            oracleImplementation: oracleImpl
         });
 
         assetSettings[1] = AssetSettings({
@@ -117,12 +117,11 @@ contract InitalizeDiamond {
             milestoneStem: 0,
             encodeType: 0x01,
             deltaStalkEarnedPerSeason: 0,
-            gpSelector: IGaugePointFacet.defaultGaugePointFunction.selector,
-            lwSelector: ILiquidityWeightFacet.maxWeight.selector,
             gaugePoints: INIT_TOKEN_G_POINTS,
             optimalPercentDepositedBdv: INIT_BEAN_TOKEN_WELL_PERCENT_TARGET,
             gaugePointImplementation: gaugePointImpl,
-            liquidityWeightImplementation: liquidityWeightImpl
+            liquidityWeightImplementation: liquidityWeightImpl,
+            oracleImplementation: oracleImpl
         });
 
         whitelistPools(tokens, assetSettings);

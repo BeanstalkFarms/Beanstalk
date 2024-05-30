@@ -5,11 +5,16 @@ pragma abicoder v2;
 import {TestHelper, LibTransfer, C} from "test/foundry/utils/TestHelper.sol";
 import {IMockFBeanstalk} from "contracts/interfaces/IMockFBeanstalk.sol";
 import {MockToken} from "contracts/mocks/MockToken.sol";
+import {IDiamondCut} from "contracts/interfaces/IDiamondCut.sol";
+import {WhitelistFacet} from "contracts/beanstalk/silo/WhitelistFacet/WhitelistFacet.sol";
+import {LibUsdOracle} from "contracts/libraries/Oracle/LibUsdOracle.sol";
+import {OracleFacet} from "contracts/beanstalk/sun/OracleFacet.sol";
 
 /**
  * @notice Tests the functionality of whitelisting.
  */
 contract WhitelistTest is TestHelper {
+    address constant wBTC = 0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599;
     // events
     event AddWhitelistStatus(
         address token,
@@ -39,7 +44,17 @@ contract WhitelistTest is TestHelper {
     function test_whitelistRevertOwner(uint i) public {
         vm.prank(address(bytes20(keccak256(abi.encode(i)))));
         vm.expectRevert("LibDiamond: Must be contract or owner");
-        bs.whitelistToken(address(0), bytes4(0), 0, 0, bytes4(0), bytes4(0), 0, 0);
+        bs.whitelistToken(
+            address(0),
+            bytes4(0),
+            0,
+            0,
+            bytes4(0),
+            bytes4(0),
+            0,
+            0,
+            IMockFBeanstalk.Implementation(address(0), bytes4(0), bytes1(0))
+        );
 
         vm.expectRevert("LibDiamond: Must be contract or owner");
         bs.whitelistTokenWithEncodeType(
@@ -51,7 +66,8 @@ contract WhitelistTest is TestHelper {
             bytes4(0),
             bytes4(0),
             0,
-            0
+            0,
+            IMockFBeanstalk.Implementation(address(0), bytes4(0), bytes1(0))
         );
     }
 
@@ -60,7 +76,17 @@ contract WhitelistTest is TestHelper {
         bytes4 bdvSelector = bytes4(keccak256(abi.encode(i)));
 
         vm.expectRevert("Whitelist: Invalid BDV selector");
-        bs.whitelistToken(address(0), bdvSelector, 0, 0, bytes4(0), bytes4(0), 0, 0);
+        bs.whitelistToken(
+            address(0),
+            bdvSelector,
+            0,
+            0,
+            bytes4(0),
+            bytes4(0),
+            0,
+            0,
+            IMockFBeanstalk.Implementation(address(0), bytes4(0), bytes1(0))
+        );
 
         vm.expectRevert("Whitelist: Invalid BDV selector");
         bs.whitelistTokenWithEncodeType(
@@ -72,7 +98,8 @@ contract WhitelistTest is TestHelper {
             bytes4(0),
             bytes4(0),
             0,
-            0
+            0,
+            IMockFBeanstalk.Implementation(address(0), bytes4(0), bytes1(0))
         );
     }
 
@@ -81,7 +108,17 @@ contract WhitelistTest is TestHelper {
         bytes4 gaugePointSelector = bytes4(keccak256(abi.encode(i)));
 
         vm.expectRevert("Whitelist: Invalid GaugePoint selector");
-        bs.whitelistToken(address(0), bdvSelector, 0, 0, gaugePointSelector, bytes4(0), 0, 0);
+        bs.whitelistToken(
+            address(0),
+            bdvSelector,
+            0,
+            0,
+            gaugePointSelector,
+            bytes4(0),
+            0,
+            0,
+            IMockFBeanstalk.Implementation(address(0), bytes4(0), bytes1(0))
+        );
 
         vm.expectRevert("Whitelist: Invalid GaugePoint selector");
         bs.whitelistTokenWithEncodeType(
@@ -93,7 +130,8 @@ contract WhitelistTest is TestHelper {
             gaugePointSelector,
             bytes4(0),
             0,
-            0
+            0,
+            IMockFBeanstalk.Implementation(address(0), bytes4(0), bytes1(0))
         );
     }
 
@@ -111,7 +149,8 @@ contract WhitelistTest is TestHelper {
             gaugePointSelector,
             liquidityWeightSelector,
             0,
-            0
+            0,
+            IMockFBeanstalk.Implementation(address(0), bytes4(0), bytes1(0))
         );
 
         vm.expectRevert("Whitelist: Invalid LiquidityWeight selector");
@@ -124,7 +163,8 @@ contract WhitelistTest is TestHelper {
             gaugePointSelector,
             liquidityWeightSelector,
             0,
-            0
+            0,
+            IMockFBeanstalk.Implementation(address(0), bytes4(0), bytes1(0))
         );
     }
 
@@ -143,7 +183,8 @@ contract WhitelistTest is TestHelper {
             gaugePointSelector,
             liquidityWeightSelector,
             0,
-            0
+            0,
+            IMockFBeanstalk.Implementation(address(0), bytes4(0), bytes1(0))
         );
 
         vm.expectRevert("Whitelist: Token already whitelisted");
@@ -156,7 +197,8 @@ contract WhitelistTest is TestHelper {
             gaugePointSelector,
             liquidityWeightSelector,
             0,
-            0
+            0,
+            IMockFBeanstalk.Implementation(address(0), bytes4(0), bytes1(0))
         );
     }
 
@@ -168,7 +210,7 @@ contract WhitelistTest is TestHelper {
     /**
      * @notice validates general whitelist functionality.
      */
-    function test_whitelistToken(
+    function test_whitelistTokenBasic(
         uint32 stalkEarnedPerSeason,
         uint32 stalkIssuedPerBdv,
         uint128 gaugePoints,
@@ -200,7 +242,8 @@ contract WhitelistTest is TestHelper {
             gaugePointSelector,
             liquidityWeightSelector,
             gaugePoints,
-            optimalPercentDepositedBdv
+            optimalPercentDepositedBdv,
+            IMockFBeanstalk.Implementation(address(0), bytes4(0), bytes1(0))
         );
 
         verifyWhitelistState(
@@ -253,7 +296,8 @@ contract WhitelistTest is TestHelper {
             gaugePointSelector,
             liquidityWeightSelector,
             gaugePoints,
-            optimalPercentDepositedBdv
+            optimalPercentDepositedBdv,
+            IMockFBeanstalk.Implementation(address(0), bytes4(0), bytes1(0))
         );
 
         verifyWhitelistState(
@@ -393,8 +437,8 @@ contract WhitelistTest is TestHelper {
             stalkEarnedPerSeason == 0 ? 1 : stalkEarnedPerSeason
         );
         assertEq(uint256(ss.stalkIssuedPerBdv), stalkIssuedPerBdv);
-        assertEq(ss.gpSelector, gaugePointSelector);
-        assertEq(ss.lwSelector, liquidityWeightSelector);
+        assertEq(ss.gaugePointImplementation.selector, gaugePointSelector);
+        assertEq(ss.liquidityWeightImplementation.selector, liquidityWeightSelector);
         assertEq(uint256(ss.gaugePoints), gaugePoints);
         assertEq(uint256(ss.optimalPercentDepositedBdv), optimalPercentDepositedBdv);
 

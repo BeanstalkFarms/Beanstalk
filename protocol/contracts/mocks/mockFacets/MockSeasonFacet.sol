@@ -420,10 +420,6 @@ contract MockSeasonFacet is SeasonFacet {
         return uint256(s.sys.weather.temp);
     }
 
-    function getUsdPrice(address token) external view returns (uint256) {
-        return LibUsdOracle.getUsdPrice(token);
-    }
-
     function getEthUsdPrice() external view returns (uint256) {
         return LibEthUsdOracle.getEthUsdPrice();
     }
@@ -523,8 +519,8 @@ contract MockSeasonFacet is SeasonFacet {
         uint64 optimalPercentDepositedBdv
     ) external {
         AssetSettings storage ss = LibAppStorage.diamondStorage().sys.silo.assetSettings[token];
-        ss.gpSelector = gaugePointSelector;
-        ss.gaugePoints = gaugePoints;
+        ss.gaugePointImplementation.selector = gaugePointSelector;
+        ss.liquidityWeightImplementation.selector = liquidityWeightSelector;
         ss.optimalPercentDepositedBdv = optimalPercentDepositedBdv;
         emit UpdateGaugeSettings(
             token,

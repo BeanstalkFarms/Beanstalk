@@ -30,7 +30,7 @@ contract UpgradeDiamond is TestHelper {
         string[] memory facetNames = new string[](1);
         facetNames[0] = "MockUpgradeFacet";
         address[] memory newFacetAddresses = new address[](1);
-        newFacetAddresses[0] = deployCode("MockUpgradeFacet.sol");
+        newFacetAddresses[0] = deployCode("MockUpgradeFacet");
         IDiamondCut.FacetCutAction[] memory facetCutActions = new IDiamondCut.FacetCutAction[](1);
         facetCutActions[0] = IDiamondCut.FacetCutAction.Add;
 

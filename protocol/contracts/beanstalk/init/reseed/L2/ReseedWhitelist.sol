@@ -29,10 +29,11 @@ contract ReseedWhitelist {
                 asset[i].stalkIssuedPerBdv,
                 asset[i].stalkEarnedPerSeason,
                 asset[i].encodeType,
-                asset[i].gpSelector,
-                asset[i].lwSelector,
+                asset[i].gaugePointImplementation.selector,
+                asset[i].liquidityWeightImplementation.selector,
                 asset[i].gaugePoints,
-                asset[i].optimalPercentDepositedBdv
+                asset[i].optimalPercentDepositedBdv,
+                asset[i].oracleImplementation
             );
         }
     }

@@ -127,7 +127,8 @@ library LibWhitelist {
         bytes4 gaugePointSelector,
         bytes4 liquidityWeightSelector,
         uint128 gaugePoints,
-        uint64 optimalPercentDepositedBdv
+        uint64 optimalPercentDepositedBdv,
+        Implementation memory oracleImplementation
     ) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
 
@@ -135,6 +136,11 @@ library LibWhitelist {
         verifyBDVselector(token, encodeType, selector);
         verifyGaugePointSelector(gaugePointSelector);
         verifyLiquidityWeightSelector(liquidityWeightSelector);
+        verifyOracleImplementation(
+            oracleImplementation.target,
+            oracleImplementation.selector,
+            oracleImplementation.encodeType
+        );
 
         // verify whitelist status of token.
         // reverts on an invalid stalkIssuedPerBdv if previously whitelisted.
@@ -155,10 +161,18 @@ library LibWhitelist {
         s.sys.silo.assetSettings[token].stalkIssuedPerBdv = stalkIssuedPerBdv;
         s.sys.silo.assetSettings[token].milestoneSeason = uint32(s.sys.season.current);
         s.sys.silo.assetSettings[token].encodeType = encodeType;
-        s.sys.silo.assetSettings[token].gpSelector = gaugePointSelector;
-        s.sys.silo.assetSettings[token].lwSelector = liquidityWeightSelector;
+        s.sys.silo.assetSettings[token].gaugePointImplementation.selector = gaugePointSelector;
+        s
+            .sys
+            .silo
+            .assetSettings[token]
+            .liquidityWeightImplementation
+            .selector = liquidityWeightSelector;
         s.sys.silo.assetSettings[token].gaugePoints = gaugePoints;
         s.sys.silo.assetSettings[token].optimalPercentDepositedBdv = optimalPercentDepositedBdv;
+
+        // the Oracle should return the price for the non-bean asset in USD
+        s.sys.oracleImplementation[token] = oracleImplementation;
 
         emit WhitelistToken(
             token,
@@ -227,8 +241,8 @@ library LibWhitelist {
         s.sys.silo.assetSettings[token].stalkIssuedPerBdv = stalkIssuedPerBdv;
         s.sys.silo.assetSettings[token].milestoneSeason = uint32(s.sys.season.current);
         s.sys.silo.assetSettings[token].encodeType = encodeType;
-        s.sys.silo.assetSettings[token].gpSelector = bytes4(0);
-        s.sys.silo.assetSettings[token].lwSelector = bytes4(0);
+        s.sys.silo.assetSettings[token].gaugePointImplementation.selector = bytes4(0);
+        s.sys.silo.assetSettings[token].liquidityWeightImplementation.selector = bytes4(0);
         s.sys.silo.assetSettings[token].gaugePoints = gaugePoints;
         s.sys.silo.assetSettings[token].optimalPercentDepositedBdv = optimalPercentDepositedBdv;
         s.sys.silo.assetSettings[token].gaugePointImplementation = gpImplementation;
@@ -264,7 +278,12 @@ library LibWhitelist {
         uint64 optimalPercentDepositedBdv
     ) internal {
         AssetSettings storage ss = LibAppStorage.diamondStorage().sys.silo.assetSettings[token];
-        updateGaugeForToken(token, ss.gpSelector, ss.lwSelector, optimalPercentDepositedBdv);
+        updateGaugeForToken(
+            token,
+            ss.gaugePointImplementation.selector,
+            ss.liquidityWeightImplementation.selector,
+            optimalPercentDepositedBdv
+        );
     }
 
     /**
@@ -282,8 +301,8 @@ library LibWhitelist {
         verifyGaugePointSelector(gaugePointSelector);
         verifyLiquidityWeightSelector(liquidityWeightSelector);
 
-        ss.gpSelector = gaugePointSelector;
-        ss.lwSelector = liquidityWeightSelector;
+        ss.gaugePointImplementation.selector = gaugePointSelector;
+        ss.liquidityWeightImplementation.selector = liquidityWeightSelector;
         ss.optimalPercentDepositedBdv = optimalPercentDepositedBdv;
 
         emit UpdateGaugeSettings(
@@ -327,9 +346,6 @@ library LibWhitelist {
         address token,
         Implementation memory oracleImplementation
     ) internal {
-        AssetSettings storage ss = LibAppStorage.diamondStorage().sys.silo.assetSettings[token];
-        require(ss.selector != 0, "Whitelist: Token not whitelisted in Silo");
-
         // check that new implementation is valid.
         verifyOracleImplementation(
             oracleImplementation.target,
@@ -399,8 +415,8 @@ library LibWhitelist {
 
         // delete gaugePoints, gaugePointSelector, liquidityWeightSelector, and optimalPercentDepositedBdv.
         delete s.sys.silo.assetSettings[token].gaugePoints;
-        delete s.sys.silo.assetSettings[token].gpSelector;
-        delete s.sys.silo.assetSettings[token].lwSelector;
+        delete s.sys.silo.assetSettings[token].gaugePointImplementation;
+        delete s.sys.silo.assetSettings[token].liquidityWeightImplementation;
         delete s.sys.silo.assetSettings[token].optimalPercentDepositedBdv;
 
         // delete implementations:
@@ -436,6 +452,9 @@ library LibWhitelist {
             (success, ) = oracleImplementation.staticcall(
                 abi.encodeWithSelector(IChainlinkAggregator.decimals.selector)
             );
+        } else if (encodeType == bytes1(0x02)) {
+            // 0x0dfe1681 == token0() for uniswap pools.
+            (success, ) = oracleImplementation.staticcall(abi.encodeWithSelector(0x0dfe1681));
         } else {
             // verify you passed in a callable oracle selector
             (success, ) = oracleImplementation.staticcall(abi.encodeWithSelector(selector, 0));
