@@ -4,18 +4,36 @@
 
 pragma solidity ^0.8.20;
 
-import {LibDiamond} from "contracts/libraries/LibDiamond.sol";
-import {LibWhitelist} from "contracts/libraries/Silo/LibWhitelist.sol";
-import {AppStorage} from "contracts/beanstalk/storage/AppStorage.sol";
-import {WhitelistedTokens} from "contracts/beanstalk/silo/WhitelistFacet/WhitelistedTokens.sol";
 import {Invariable} from "contracts/beanstalk/Invariable.sol";
 import {ReentrancyGuard} from "contracts/beanstalk/ReentrancyGuard.sol";
-import {SeedGaugeSettings} from "contracts/beanstalk/storage/System.sol";
-import {Implementation} from "contracts/beanstalk/storage/System.sol";
+import {LibUsdOracle} from "contracts/libraries/Oracle/LibUsdOracle.sol";
 
 /**
  * @author pizzaman1337
  * @title Oracle Facet
  * @notice Exposes Oracle Functionality
  **/
-contract OracleFacet is Invariable, ReentrancyGuard {}
+contract OracleFacet is Invariable, ReentrancyGuard {
+    function getUsdPrice(address token) external view returns (uint256) {
+        return LibUsdOracle.getUsdPrice(token, 0);
+    }
+
+    function getUsdPrice(address token, uint256 lookback) external view returns (uint256) {
+        return LibUsdOracle.getUsdPrice(token, lookback);
+    }
+
+    function getTokenPrice(address token) external view returns (uint256) {
+        return LibUsdOracle.getTokenPrice(token, 0);
+    }
+
+    function getTokenPrice(address token, uint256 lookback) external view returns (uint256) {
+        return LibUsdOracle.getTokenPrice(token, lookback);
+    }
+
+    function getTokenPriceFromExternal(
+        address token,
+        uint256 lookback
+    ) external view returns (uint256 tokenPrice) {
+        return LibUsdOracle.getTokenPriceFromExternal(token, lookback);
+    }
+}

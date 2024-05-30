@@ -17,13 +17,26 @@ import {MockUniswapV3Factory} from "contracts/mocks/uniswap/MockUniswapV3Factory
  * @author Brean
  * @notice Test helper contract to deploy Depot.
  */
+interface ChainlinkPriceFeedRegistry {
+    function getFeed(address base, address quote) external view returns (address aggregator);
+}
 contract OracleDeployer is Utils {
     ////////// CHAINLINK //////////
+    address constant USDC_USD_CHAINLINK_PRICE_AGGREGATOR =
+        address(0x8fFfFfd4AfB6115b954Bd326cbe7B4BA576818f6);
+
+    address constant WBTC_USD_CHAINLINK_PRICE_AGGREGATOR =
+        address(0xd0C7101eACbB49F3deCcCc166d238410D6D46d57);
+
+    address constant MockChainlinkPriceFeedRegistry =
+        address(0x47Fb2585D2C56Fe188D0E6ec628a38b74fCeeeDf);
 
     // new chainlink oracles should be added here.
     address[] public chainlinkOracles = [
         C.ETH_USD_CHAINLINK_PRICE_AGGREGATOR,
-        C.WSTETH_ETH_CHAINLINK_PRICE_AGGREGATOR
+        C.WSTETH_ETH_CHAINLINK_PRICE_AGGREGATOR,
+        USDC_USD_CHAINLINK_PRICE_AGGREGATOR,
+        WBTC_USD_CHAINLINK_PRICE_AGGREGATOR
     ];
 
     // inital prices for chainlink oracles should be added here.
@@ -32,29 +45,41 @@ contract OracleDeployer is Utils {
         int256(1000e6), // ETH/USD
         1e6, // wstETH/ETH
         1e6, // USDC/USD
-        1e6 // USDT/USD
+        50000e6 // WBTC/USD
     ];
 
     ////////// UNISWAP //////////
 
+    address constant WBTC_USDC_03_POOL = address(0x99ac8cA7087fA4A2A1FB6357269965A2014ABc35);
+    address constant WBTC = address(0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599);
+
     // new uniswap pools should be appended here.
     address[][] public pools = [
-        [C.WSTETH_ETH_UNIV3_01_POOL, C.WSTETH, C.WETH] // wstETH/ETH
+        [C.WSTETH_ETH_UNIV3_01_POOL, C.WSTETH, C.WETH], // wstETH/ETH
+        [WBTC_USDC_03_POOL, WBTC, C.USDC] // WBTC/USDC
     ];
 
     // oracles must be initalized at some price. Assumes index matching with pools.
-    uint256[][] public priceData = [[1e18, 18]];
+    uint256[][] public priceData = [[uint256(1e18), 18], [uint256(50000e2), 6]];
 
     /**
      * @notice initializes chainlink oracles.
      * @dev oracles are mocked, and thus require initalization/updates.
      */
     function initChainlink(bool verbose) internal {
+        // deploy mock chainlink priceFeed registry
+        deployCodeTo(
+            "MockChainlinkPriceFeedRegistry.sol",
+            new bytes(0),
+            MockChainlinkPriceFeedRegistry
+        );
+        vm.label(MockChainlinkPriceFeedRegistry, "MockChainlinkPriceFeedRegistry");
         // optional labels to assist in testing.
         vm.label(C.ETH_USD_CHAINLINK_PRICE_AGGREGATOR, "CL ETH/USD");
         vm.label(C.WSTETH_ETH_CHAINLINK_PRICE_AGGREGATOR, "CL WstETH/ETH");
         vm.label(C.USDC_CHAINLINK_PRICE_AGGREGATOR, "CL USDC/USD");
         vm.label(C.USDT_CHAINLINK_PRICE_AGGREGATOR, "CL USDT/USD");
+        vm.label(WBTC_USD_CHAINLINK_PRICE_AGGREGATOR, "CL WBTC/USD");
 
         for (uint i; i < chainlinkOracles.length; i++) {
             deployCodeTo("MockChainlinkAggregator.sol", new bytes(0), chainlinkOracles[i]);
@@ -105,6 +130,7 @@ contract OracleDeployer is Utils {
      */
     function initUniswapPools(bool verbose) internal {
         vm.label(C.WSTETH_ETH_UNIV3_01_POOL, "UNI WSTETH_ETH_UNIV3_01");
+        vm.label(WBTC_USDC_03_POOL, "UNI WBTC_USDC_03_POOL");
 
         MockUniswapV3Factory uniFactory = MockUniswapV3Factory(new MockUniswapV3Factory());
 
@@ -116,6 +142,8 @@ contract OracleDeployer is Utils {
             uint256 price = calcPrice(priceData[i][0], priceData[i][1]);
             MockUniswapV3Pool(poolData[0]).setOraclePrice(price, uint8(priceData[i][1]));
             if (verbose) console.log("Price set at:", priceData[i][0]);
+            MockUniswapV3Pool(poolData[0]).setToken0(poolData[1]);
+            MockUniswapV3Pool(poolData[0]).setToken1(poolData[2]);
         }
     }
 

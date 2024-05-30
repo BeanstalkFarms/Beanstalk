@@ -15,6 +15,7 @@ import {Implementation} from "contracts/beanstalk/storage/System.sol";
 import {AppStorage} from "contracts/beanstalk/storage/AppStorage.sol";
 import {LibRedundantMath256} from "contracts/libraries/LibRedundantMath256.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import {console} from "forge-std/console.sol";
 
 interface IERC20 {
     function decimals() external view returns (uint8);
@@ -57,6 +58,7 @@ library LibUsdOracle {
             return uint256(1e24).div(wstethUsdPrice);
         }
 
+        // 1e18 * 1e6 = 1e24.
         uint256 tokenPrice = getTokenPriceFromExternal(token, lookback);
         if (tokenPrice == 0) return 0;
         return uint256(1e24).div(tokenPrice);
@@ -116,16 +118,21 @@ library LibUsdOracle {
             }
 
             return
-                LibChainlinkOracle.getTokenPrice(
-                    chainlinkOraclePriceAddress,
-                    LibChainlinkOracle.FOUR_HOUR_TIMEOUT,
-                    lookback
+                uint256(1e24).div(
+                    LibChainlinkOracle.getTokenPrice(
+                        chainlinkOraclePriceAddress,
+                        LibChainlinkOracle.FOUR_HOUR_TIMEOUT,
+                        lookback
+                    )
                 );
         } else if (oracleImpl.encodeType == bytes1(0x02)) {
             // assumes a dollar stablecoin is passed in
             // if the encodeType is type 2, use a uniswap oracle implementation.
-            // BODEN/USDC
             address chainlinkToken = IUniswapV3PoolImmutables(oracleImpl.target).token0();
+            chainlinkToken = chainlinkToken == token
+                ? IUniswapV3PoolImmutables(oracleImpl.target).token1()
+                : token;
+            console.log("chainlinkToken", chainlinkToken);
             tokenPrice = LibUniswapOracle.getTwap(
                 lookback == 0 ? LibUniswapOracle.FIFTEEN_MINUTES : uint32(lookback),
                 oracleImpl.target,
@@ -141,17 +148,20 @@ library LibUsdOracle {
             if (chainlinkOraclePriceAddress == address(0)) {
                 // use the chainlink registry
                 chainlinkOraclePriceAddress = ChainlinkPriceFeedRegistry(chainlinkRegistry).getFeed(
-                    token,
+                    chainlinkToken,
                     0x0000000000000000000000000000000000000348
                 ); // 0x0348 is the address for USD
             }
 
             uint256 chainlinkTokenPrice = LibChainlinkOracle.getTokenPrice(
-                chainlinkOracleImpl.target,
+                chainlinkOraclePriceAddress,
                 LibChainlinkOracle.FOUR_HOUR_TIMEOUT,
                 lookback
             );
-            tokenPrice = tokenPrice.mul(chainlinkTokenPrice).div(1e6);
+            console.log("chainlinkTokenPrice", chainlinkTokenPrice);
+            console.log("Uniswap", tokenPrice);
+            console.log(tokenPrice.mul(chainlinkTokenPrice).div(1e6));
+            return tokenPrice.mul(chainlinkTokenPrice).div(1e6);
         }
 
         // If the oracle implementation address is not set, use the current contract.

@@ -514,6 +514,13 @@ interface IMockFBeanstalk {
         AdvancedFarmCall[] memory data
     ) external payable returns (bytes[] memory results);
 
+    function updateLiqudityWeightImplementationForToken(
+        address token,
+        Implementation memory impl
+    ) external;
+
+    function updateOracleImplementationForToken(address token, Implementation memory impl) external;
+
     function advancedPipe(
         AdvancedPipeCall[] memory pipes,
         uint256 value

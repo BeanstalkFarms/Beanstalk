@@ -354,9 +354,6 @@ library LibWhitelist {
         address token,
         Implementation memory oracleImplementation
     ) internal {
-        AssetSettings storage ss = LibAppStorage.diamondStorage().sys.silo.assetSettings[token];
-        require(ss.selector != 0, "Whitelist: Token not whitelisted in Silo");
-
         // check that new implementation is valid.
         verifyOracleImplementation(
             oracleImplementation.target,
@@ -463,6 +460,9 @@ library LibWhitelist {
             (success, ) = oracleImplementation.staticcall(
                 abi.encodeWithSelector(IChainlinkAggregator.decimals.selector)
             );
+        } else if (encodeType == bytes1(0x02)) {
+            // 0x0dfe1681 == token0() for uniswap pools.
+            (success, ) = oracleImplementation.staticcall(abi.encodeWithSelector(0x0dfe1681));
         } else {
             // verify you passed in a callable oracle selector
             (success, ) = oracleImplementation.staticcall(abi.encodeWithSelector(selector, 0));

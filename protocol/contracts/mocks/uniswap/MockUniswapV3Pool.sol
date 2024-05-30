@@ -17,9 +17,9 @@ contract MockUniswapV3Pool {
 
     address public immutable factory;
 
-    address public immutable token0;
+    address public token0;
 
-    address public immutable token1;
+    address public token1;
 
     uint24 public immutable fee;
 
@@ -95,5 +95,13 @@ contract MockUniswapV3Pool {
             y = z;
             z = (x / z + z) / 2;
         }
+    }
+
+    function setToken0(address _token0) external {
+        token0 = _token0;
+    }
+
+    function setToken1(address _token1) external {
+        token1 = _token1;
     }
 }
