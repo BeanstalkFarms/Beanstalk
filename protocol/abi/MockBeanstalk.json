@@ -6392,6 +6392,28 @@
         "internalType": "uint64",
         "name": "optimalPercentDepositedBdv",
         "type": "uint64"
+      },
+      {
+        "components": [
+          {
+            "internalType": "address",
+            "name": "target",
+            "type": "address"
+          },
+          {
+            "internalType": "bytes4",
+            "name": "selector",
+            "type": "bytes4"
+          },
+          {
+            "internalType": "bytes1",
+            "name": "encodeType",
+            "type": "bytes1"
+          }
+        ],
+        "internalType": "struct Implementation",
+        "name": "oracleImplementation",
+        "type": "tuple"
       }
     ],
     "name": "whitelistToken",
@@ -6445,6 +6467,28 @@
         "internalType": "uint64",
         "name": "optimalPercentDepositedBdv",
         "type": "uint64"
+      },
+      {
+        "components": [
+          {
+            "internalType": "address",
+            "name": "target",
+            "type": "address"
+          },
+          {
+            "internalType": "bytes4",
+            "name": "selector",
+            "type": "bytes4"
+          },
+          {
+            "internalType": "bytes1",
+            "name": "encodeType",
+            "type": "bytes1"
+          }
+        ],
+        "internalType": "struct Implementation",
+        "name": "oracleImplementation",
+        "type": "tuple"
       }
     ],
     "name": "whitelistTokenWithEncodeType",
@@ -7610,16 +7654,6 @@
             "type": "int24"
           },
           {
-            "internalType": "bytes4",
-            "name": "gpSelector",
-            "type": "bytes4"
-          },
-          {
-            "internalType": "bytes4",
-            "name": "lwSelector",
-            "type": "bytes4"
-          },
-          {
             "internalType": "uint128",
             "name": "gaugePoints",
             "type": "uint128"
@@ -7671,6 +7705,28 @@
             ],
             "internalType": "struct Implementation",
             "name": "liquidityWeightImplementation",
+            "type": "tuple"
+          },
+          {
+            "components": [
+              {
+                "internalType": "address",
+                "name": "target",
+                "type": "address"
+              },
+              {
+                "internalType": "bytes4",
+                "name": "selector",
+                "type": "bytes4"
+              },
+              {
+                "internalType": "bytes1",
+                "name": "encodeType",
+                "type": "bytes1"
+              }
+            ],
+            "internalType": "struct Implementation",
+            "name": "oracleImplementation",
             "type": "tuple"
           }
         ],
@@ -8183,6 +8239,97 @@
     ],
     "name": "TotalStalkChangedFromGermination",
     "type": "event"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "token",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "lookback",
+        "type": "uint256"
+      }
+    ],
+    "name": "getTokenPrice",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "token",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "lookback",
+        "type": "uint256"
+      }
+    ],
+    "name": "getTokenPriceFromExternal",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "tokenPrice",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "token",
+        "type": "address"
+      }
+    ],
+    "name": "getUsdPrice",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "token",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "lookback",
+        "type": "uint256"
+      }
+    ],
+    "name": "getUsdPriceWithLookback",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
   },
   {
     "inputs": [],
@@ -10813,25 +10960,6 @@
   {
     "inputs": [],
     "name": "getT",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "token",
-        "type": "address"
-      }
-    ],
-    "name": "getUsdPrice",
     "outputs": [
       {
         "internalType": "uint256",

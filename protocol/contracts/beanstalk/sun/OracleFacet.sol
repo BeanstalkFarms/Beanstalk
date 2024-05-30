@@ -18,7 +18,10 @@ contract OracleFacet is Invariable, ReentrancyGuard {
         return LibUsdOracle.getUsdPrice(token, 0);
     }
 
-    function getUsdPrice(address token, uint256 lookback) external view returns (uint256) {
+    function getUsdPriceWithLookback(
+        address token,
+        uint256 lookback
+    ) external view returns (uint256) {
         return LibUsdOracle.getUsdPrice(token, lookback);
     }
 
