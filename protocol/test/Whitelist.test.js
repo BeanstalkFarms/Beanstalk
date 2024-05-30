@@ -15,7 +15,8 @@ function prune(value) {
   return toBN(value).mul(toBN(pru)).div(to18("1"));
 }
 
-describe("Whitelist", function () {
+// whitelists are skipped as whitelist.t.sol tests the same functionality.
+describe.skip("Whitelist", function () {
   before(async function () {
     pru = await readPrune();
     [owner, user, user2, flashLoanExploiter] = await ethers.getSigners();
