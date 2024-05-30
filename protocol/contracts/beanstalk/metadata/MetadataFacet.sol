@@ -51,7 +51,7 @@ contract MetadataFacet is MetadataImage {
             depositId.toHexString(32),
             '"}, { "trait_type": "stem", "display_type": "number", "value": ',
             int256(stem).toStringSigned(),
-            '}, { "trait_type": "inital stalk per BDV", "display_type": "number", "value": ',
+            '}, { "trait_type": "initial stalk per BDV", "display_type": "number", "value": ',
             uint256(LibTokenSilo.stalkIssuedPerBdv(token)).toString(),
             '}, { "trait_type": "grown stalk per BDV", "display_type": "number", "value": ',
             uint256(int256(stemTip - stem)).toString(),

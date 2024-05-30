@@ -41,6 +41,7 @@ export enum ActionType {
   RINSE,
   BUY_FERTILIZER,
   RECEIVE_FERT_REWARDS,
+  TRANSFER_FERTILIZER,
 
   /// SILO REWARDS
   ENROOT,
@@ -236,6 +237,13 @@ export type FertilizerRewardsAction = {
   amountOut: BigNumber;
 };
 
+export type FertilizerTransferAction = {
+  type: ActionType.TRANSFER_FERTILIZER;
+  to: string;
+  fertAmount: BigNumber;
+  sproutAmount: BigNumber;
+};
+
 /// /////////////////////////// AGGREGATE /////////////////////////////////
 
 export type Action =
@@ -271,7 +279,8 @@ export type Action =
   /// BARN
   | RinseAction
   | FertilizerBuyAction
-  | FertilizerRewardsAction;
+  | FertilizerRewardsAction
+  | FertilizerTransferAction;
 
 // -----------------------------------------------------------------------
 
@@ -281,13 +290,21 @@ export const parseActionMessage = (a: Action) => {
     case ActionType.END_TOKEN:
       return null;
     case ActionType.SWAP:
-      if (a.tokenOut.isLP && a.tokenOut.symbol !== CRV3[1].symbol && !a.tokenOut.isUnripe) {
+      if (
+        a.tokenOut.isLP &&
+        a.tokenOut.symbol !== CRV3[1].symbol &&
+        !a.tokenOut.isUnripe
+      ) {
         return `Add ${displayTokenAmount(
           a.amountIn,
           a.tokenIn
         )} of liquidity for ${displayTokenAmount(a.amountOut, a.tokenOut)}.`;
       }
-      if (a.tokenIn.isLP && a.tokenIn.symbol !== CRV3[1].symbol && !a.tokenIn.isUnripe) {
+      if (
+        a.tokenIn.isLP &&
+        a.tokenIn.symbol !== CRV3[1].symbol &&
+        !a.tokenIn.isUnripe
+      ) {
         return `Burn ${displayTokenAmount(
           a.amountIn,
           a.tokenIn
@@ -410,6 +427,8 @@ export const parseActionMessage = (a: Action) => {
       )}% Humidity with ${displayFullBN(a.amountIn, 2)} Wrapped Ether.`;
     case ActionType.RECEIVE_FERT_REWARDS:
       return `Receive ${displayFullBN(a.amountOut, 2)} Sprouts.`;
+    case ActionType.TRANSFER_FERTILIZER:
+      return `Transfer ${displayFullBN(a.fertAmount, 0)} Fertilizer${a.fertAmount.gt(1) ? 's' : ''} with ${displayFullBN(a.sproutAmount, 2)} Sprout${a.sproutAmount.gt(1) ? 's' : ''} to ${trimAddress(a.to, false)}`;
 
     /// MARKET
     case ActionType.CREATE_ORDER:

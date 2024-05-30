@@ -1,5 +1,7 @@
 import React from 'react';
 import { Button, Dialog, Link } from '@mui/material';
+import { FC } from '~/types';
+import useSetting from '~/hooks/app/useSetting';
 import {
   StyledDialogActions,
   StyledDialogContent,
@@ -7,8 +9,6 @@ import {
 } from '../Common/Dialog';
 import { ClaimStatus, Nft } from '../../util/BeaNFTs';
 import NFTImage from './NFTImage';
-
-import { FC } from '~/types';
 
 export interface NFTDialogProps {
   handleDialogClose: any;
@@ -24,6 +24,11 @@ const NFTDialog: FC<NFTDialogProps> = ({
   nft,
 }) => {
   const nftImage = <NFTImage nft={nft} />;
+
+  // Are we impersonating a different account outside dev mode
+  const isImpersonating =
+    !!useSetting('impersonatedAccount')[0] && !import.meta.env.DEV;
+
   return (
     <Dialog
       onClose={handleDialogClose}
@@ -51,10 +56,14 @@ const NFTDialog: FC<NFTDialogProps> = ({
         {/* FIXME: should be a LoadingButton */}
         <Button
           onClick={handleMint}
-          disabled={nft.claimed === ClaimStatus.CLAIMED}
+          disabled={nft.claimed === ClaimStatus.CLAIMED || isImpersonating}
           sx={{ height: '45px', width: '100%' }}
         >
-          {nft.claimed === ClaimStatus.CLAIMED ? 'Minted' : 'Mint'}
+          {nft.claimed === ClaimStatus.CLAIMED
+            ? 'Minted'
+            : isImpersonating
+              ? 'Impersonating Account'
+              : 'Mint'}
         </Button>
       </StyledDialogActions>
     </Dialog>

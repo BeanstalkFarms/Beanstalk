@@ -341,7 +341,7 @@ describe("newField", function () {
         true // above peg?
       );
 
-      // 10 soil was sown out of 20, 50% of the inital soil was sown.
+      // 10 soil was sown out of 20, 50% of the initial soil was sown.
       expect(await beanstalk.totalSoil()).to.eq(to6("5"));
       expect(await mockBeanstalk.totalSoilAtMorningTemp(morningTemperature)).to.eq(to6("10"));
       // 10 * 150% = 15 pods.

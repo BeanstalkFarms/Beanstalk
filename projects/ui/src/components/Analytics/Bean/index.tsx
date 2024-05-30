@@ -1,16 +1,18 @@
 import { Card, Tab, Tabs } from '@mui/material';
 
 import Crosses from '~/components/Analytics/Bean/Crosses';
-import DeltaB from '~/components/Analytics/Bean/DeltaB';
+import DeltaBInstant from '~/components/Analytics/Bean/DeltaBInstant';
+import DeltaBWeighted from '~/components/Analytics/Bean/DeltaBWeighted';
 import { FC } from '~/types';
 import Liquidity from '~/components/Analytics/Bean/Liquidity';
 import MarketCap from '~/components/Analytics/Bean/MarketCap';
-import Price from './Price';
 import React from 'react';
 import Supply from '~/components/Analytics/Bean/Supply';
 import VolumeChart from '~/components/Analytics/Bean/VolumeChart';
 import useTabs from '~/hooks/display/useTabs';
+import Price from './PriceInstant';
 import LiquiditySupplyRatio from './LiquiditySupplyRatio';
+import PriceWeighted from './PriceWeighted';
 
 const SLUGS = [
   'price',
@@ -19,8 +21,9 @@ const SLUGS = [
   'mktcap',
   'supply',
   'crosses',
-  'delta_b',
-  'liquiditysupplyratio'
+  'inst_delta_b',
+  'twa_delta_b',
+  'liquiditysupplyratio',
 ];
 
 const BeanAnalytics: FC<{}> = () => {
@@ -39,7 +42,9 @@ const BeanAnalytics: FC<{}> = () => {
         <Tab label="Market Cap" />
         <Tab label="Supply" />
         <Tab label="Crosses" />
-        <Tab label="deltaB" />
+        <Tab label="Inst. deltaB" />
+        <Tab label="TWA deltaB" />
+        <Tab label="TWA Bean Price" />
         <Tab label="L2SR" />
       </Tabs>
       {/* 
@@ -54,8 +59,10 @@ const BeanAnalytics: FC<{}> = () => {
       {tab === 3 && <MarketCap height={CHART_HEIGHT} />}
       {tab === 4 && <Supply height={CHART_HEIGHT} />}
       {tab === 5 && <Crosses height={CHART_HEIGHT} />}
-      {tab === 6 && <DeltaB height={CHART_HEIGHT} />}
-      {tab === 7 && <LiquiditySupplyRatio height={CHART_HEIGHT} />}
+      {tab === 6 && <DeltaBInstant height={CHART_HEIGHT} />}
+      {tab === 7 && <DeltaBWeighted height={CHART_HEIGHT} />}
+      {tab === 8 && <PriceWeighted height={CHART_HEIGHT} />}
+      {tab === 9 && <LiquiditySupplyRatio height={CHART_HEIGHT} />}
     </Card>
   );
 };

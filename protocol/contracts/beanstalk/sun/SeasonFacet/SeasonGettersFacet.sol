@@ -3,7 +3,7 @@
 pragma solidity ^0.8.20;
 
 import {AppStorage} from "../../storage/AppStorage.sol";
-import {Season, SeedGauge, Weather, Rain} from "../../storage/System.sol";
+import {Season, SeedGauge, Weather, Rain, SeedGaugeSettings, Deposited, GerminationSide, AssetSettings} from "../../storage/System.sol";
 import {C} from "../../../C.sol";
 import {Decimal} from "contracts/libraries/Decimal.sol";
 import {LibEvaluate} from "contracts/libraries/LibEvaluate.sol";
@@ -16,8 +16,8 @@ import {LibGauge} from "contracts/libraries/LibGauge.sol";
 import {LibCases} from "contracts/libraries/LibCases.sol";
 import {LibRedundantMath256} from "contracts/libraries/LibRedundantMath256.sol";
 import {LibDeltaB} from "contracts/libraries/Oracle/LibDeltaB.sol";
-import {SeedGaugeSettings} from "contracts/beanstalk/storage/System.sol";
 import {LibFlood} from "contracts/libraries/Silo/LibFlood.sol";
+import {LibGerminate} from "contracts/libraries/Silo/LibGerminate.sol";
 
 /**
  * @title SeasonGettersFacet
@@ -264,7 +264,7 @@ contract SeasonGettersFacet {
      */
     function getLiquidityToSupplyRatio() external view returns (uint256) {
         uint256 beanSupply = C.bean().totalSupply();
-        (Decimal.D256 memory l2sr, ) = LibEvaluate.calcLPToSupplyRatio(beanSupply);
+        (Decimal.D256 memory l2sr, , ) = LibEvaluate.calcLPToSupplyRatio(beanSupply);
         return l2sr.value;
     }
 
@@ -282,7 +282,7 @@ contract SeasonGettersFacet {
      */
     function getTwaLiquidityForWell(address well) public view returns (uint256) {
         (address token, ) = LibWell.getNonBeanTokenAndIndexFromWell(well);
-        return LibWell.getTwaLiquidityFromBeanstalkPump(well, LibUsdOracle.getTokenPrice(token));
+        return LibWell.getTwaLiquidityFromPump(well, LibUsdOracle.getTokenPrice(token));
     }
 
     /**
@@ -322,9 +322,56 @@ contract SeasonGettersFacet {
         return s.sys.silo.assetSettings[token].gaugePoints;
     }
 
+    /**
+     * @notice returns the new gauge point for a token,
+     * if it were to be updated with the given parameters.
+     */
+    function calcGaugePointsWithParams(
+        address token,
+        uint256 percentOfDepositedBdv
+    ) external view returns (uint256) {
+        return LibGauge.calcGaugePoints(s.sys.silo.assetSettings[token], percentOfDepositedBdv);
+    }
+
+    /**
+     * @notice returns the new gauge point for a token,
+     * if it were to be updated with the current state.
+     */
+    function getGaugePointsWithParams(address token) external view returns (uint256) {
+        address[] memory whitelistedLpTokens = LibWhitelistedTokens.getWhitelistedLpTokens();
+
+        // get the germinating assets that will finish germination in the next season.
+        GerminationSide side;
+        if (
+            LibGerminate.getGerminationStateForSeason(s.sys.season.current + 1) ==
+            GerminationSide.ODD
+        ) {
+            side = GerminationSide.ODD;
+        } else {
+            side = GerminationSide.EVEN;
+        }
+
+        // Summate total deposited BDV across all whitelisted LP tokens.
+        uint256 totalLpBdv;
+        for (uint256 i; i < whitelistedLpTokens.length; ++i) {
+            uint256 finishedGerminatingBdv = s
+            .sys
+            .silo
+            .germinating[side][whitelistedLpTokens[i]].bdv;
+            totalLpBdv = totalLpBdv
+                .add(s.sys.silo.balances[whitelistedLpTokens[i]].depositedBdv)
+                .add(finishedGerminatingBdv);
+        }
+        uint256 depositedBdv = s.sys.silo.balances[token].depositedBdv;
+        uint256 percentDepositedBdv = depositedBdv.mul(100e6).div(totalLpBdv);
+
+        AssetSettings memory ss = s.sys.silo.assetSettings[token];
+        return LibGauge.calcGaugePoints(ss, percentDepositedBdv);
+    }
+
     function getLargestLiqWell() external view returns (address) {
         uint256 beanSupply = C.bean().totalSupply();
-        (, address well) = LibEvaluate.calcLPToSupplyRatio(beanSupply);
+        (, address well, ) = LibEvaluate.calcLPToSupplyRatio(beanSupply);
         return well;
     }
 

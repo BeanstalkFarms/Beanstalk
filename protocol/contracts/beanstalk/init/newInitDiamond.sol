@@ -15,7 +15,7 @@ import {C} from "contracts/C.sol";
  *
  **/
 contract InitDiamond is InitalizeDiamond {
-    // inital reward for deploying beanstalk.
+    // initial reward for deploying beanstalk.
     uint256 constant INIT_SUPPLY = 100e6;
 
     function init() external {

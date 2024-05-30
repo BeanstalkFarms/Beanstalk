@@ -101,7 +101,6 @@ library LibFertilizer {
             );
             newDepositedBeans = newDepositedBeans.mul(percentToFill).div(C.precision());
         }
-
         // Calculate how many Beans to add as LP
         uint256 newDepositedLPBeans = usdAmount.mul(C.exploitAddLPRatio()).div(DECIMALS);
 

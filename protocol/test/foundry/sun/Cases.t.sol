@@ -42,9 +42,9 @@ contract CasesTest is TestHelper {
         // Initialize well to balances. (1000 BEAN/ETH)
         addLiquidityToWell(well, 10000e6, 10 ether);
 
-        // call well to wsteth/bean to initalize mock pumps reserves to 0.
+        // call well to wsteth/bean to initalize the well.
         // avoids errors due to gas limits.
-        addLiquidityToWell(C.BEAN_WSTETH_WELL, 0, 0);
+        addLiquidityToWell(C.BEAN_WSTETH_WELL, 10e6, .01 ether);
     }
 
     /**

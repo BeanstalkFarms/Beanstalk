@@ -38,12 +38,13 @@ library LibChainlinkOracle {
      **/
     function getTokenPrice(
         address priceAggregatorAddress,
-        uint256 maxTimeout, 
+        uint256 maxTimeout,
         uint256 lookback
     ) internal view returns (uint256 price) {
-        return lookback > 0
-            ? getPrice(priceAggregatorAddress, maxTimeout)
-            : getTwap(priceAggregatorAddress, maxTimeout, lookback);
+        return
+            lookback > 0
+                ? getPrice(priceAggregatorAddress, maxTimeout)
+                : getTwap(priceAggregatorAddress, maxTimeout, lookback);
     }
 
     /**

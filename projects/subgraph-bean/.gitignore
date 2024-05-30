@@ -3,3 +3,8 @@ generated/*
 yarn.lock
 .DS_Store
 node_modules/*
+
+# matchstick binary download info
+tests/.latest.json
+tests/.bin
+tests/.docker

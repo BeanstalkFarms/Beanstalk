@@ -150,7 +150,8 @@ contract EnrootFacet is Invariable, ReentrancyGuard {
             LibTractor._user(),
             token,
             stems,
-            amounts
+            amounts,
+            LibSilo.ERC1155Event.NO_EMIT_BATCH_EVENT
         );
 
         // Get enroot data.

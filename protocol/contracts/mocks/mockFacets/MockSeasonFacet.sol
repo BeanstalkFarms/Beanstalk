@@ -64,6 +64,8 @@ contract MockSeasonFacet is SeasonFacet {
         bytes4 lwSelector,
         uint64 optimalPercentDepositedBdv
     );
+    event TotalGerminatingStalkChanged(uint256 season, int256 deltaStalk);
+    event TotalStalkChangedFromGermination(int256 deltaStalk, int256 deltaRoots);
 
     function reentrancyGuardTest() public nonReentrant {
         reentrancyGuardTest();
@@ -149,7 +151,7 @@ contract MockSeasonFacet is SeasonFacet {
         require(!s.sys.paused, "Season: Paused.");
         s.sys.season.current += 1;
         s.sys.season.sunriseBlock = uint32(block.number);
-        updateTemperatureAndBeanToMaxLpGpPerBdvRatio(caseId);
+        updateTemperatureAndBeanToMaxLpGpPerBdvRatio(caseId, false);
         stepSun(deltaB, caseId);
     }
 
@@ -333,7 +335,7 @@ contract MockSeasonFacet is SeasonFacet {
         s.sys.weather.lastDeltaSoil = uint128(_lastDeltaSoil);
         s.sys.beanSown = beanSown;
         s.sys.soil = endSoil;
-        calcCaseIdandUpdate(deltaB);
+        mockCalcCaseIdandUpdate(deltaB);
     }
 
     function resetSeasonStart(uint256 amount) public {
@@ -567,7 +569,7 @@ contract MockSeasonFacet is SeasonFacet {
      * @param changeInSoilDemand decreasing, steady, increasing.
      * @param liquidityToSupplyRatio extremely low, low, high, extremely high.
      * @dev
-     * assumes the inital L2SR is >80%.
+     * assumes the initial L2SR is >80%.
      * assumes only one well with beans.
      */
     function setBeanstalkState(
@@ -690,8 +692,21 @@ contract MockSeasonFacet is SeasonFacet {
         C.bean().mint(msg.sender, newSupply);
     }
 
-    function mockCalcCaseIdandUpdate(int256 deltaB) external returns (uint256 caseId) {
-        return calcCaseIdandUpdate(deltaB);
+    /**
+     * @notice mock updates case id and beanstalk state. disables oracle failure.
+     */
+    function mockCalcCaseIdandUpdate(int256 deltaB) public returns (uint256 caseId) {
+        uint256 beanSupply = C.bean().totalSupply();
+        // prevents infinite L2SR and podrate
+        if (beanSupply == 0) {
+            s.sys.weather.temp = 1;
+            return 9; // Reasonably low
+        }
+        // Calculate Case Id
+        (caseId, ) = LibEvaluate.evaluateBeanstalk(deltaB, beanSupply);
+        updateTemperatureAndBeanToMaxLpGpPerBdvRatio(caseId, false);
+        LibFlood.handleRain(caseId);
+        return caseId;
     }
 
     function getSeasonStart() external view returns (uint256) {

@@ -92,8 +92,8 @@ contract Weather is Sun {
             return 9; // Reasonably low
         }
         // Calculate Case Id
-        uint256 caseId = LibEvaluate.evaluateBeanstalk(deltaB, beanSupply);
-        updateTemperatureAndBeanToMaxLpGpPerBdvRatio(caseId);
+        (uint256 caseId, bool oracleFailure) = LibEvaluate.evaluateBeanstalk(deltaB, beanSupply);
+        updateTemperatureAndBeanToMaxLpGpPerBdvRatio(caseId, oracleFailure);
         LibFlood.handleRain(caseId);
         return caseId;
     }
@@ -101,10 +101,21 @@ contract Weather is Sun {
     /**
      * @notice updates the temperature and BeanToMaxLpGpPerBdvRatio, based on the caseId.
      * @param caseId the state beanstalk is in, based on the current season.
+     * @dev currently, an oracle failure does not affect the temperature, as
+     * the temperature is not affected by liquidity levels. The function will
+     * need to be updated if the temperature is affected by liquidity levels.
+     * This is implemented such that liveliness in change in temperature is retained.
      */
-    function updateTemperatureAndBeanToMaxLpGpPerBdvRatio(uint256 caseId) internal {
+    function updateTemperatureAndBeanToMaxLpGpPerBdvRatio(
+        uint256 caseId,
+        bool oracleFailure
+    ) internal {
         LibCases.CaseData memory cd = LibCases.decodeCaseData(caseId);
         updateTemperature(cd.bT, caseId);
+
+        // if one of the oracles needed to calculate usd liquidity fails,
+        // the beanToMaxLpGpPerBdvRatio should not be updated.
+        if (oracleFailure) return;
         updateBeanToMaxLPRatio(cd.bL, caseId);
     }
 

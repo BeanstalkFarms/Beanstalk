@@ -4,7 +4,6 @@ import {
   Button,
   Card,
   Chip,
-  CircularProgress,
   Divider,
   Grid,
   Link,
@@ -13,6 +12,7 @@ import {
   Typography,
 } from '@mui/material';
 import ArrowRightIcon from '@mui/icons-material/ArrowRight';
+import { ReportGmailerrorred } from '@mui/icons-material';
 import { Link as RouterLink } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { useAccount } from 'wagmi';
@@ -40,18 +40,18 @@ import useSetting from '~/hooks/app/useSetting';
 import Row from '~/components/Common/Row';
 import Stat from '~/components/Common/Stat';
 import useUnripeUnderlyingMap from '~/hooks/beanstalk/useUnripeUnderlying';
-import useAPY from '~/hooks/beanstalk/useAPY';
-import stalkIconBlue from '~/img/beanstalk/stalk-icon-blue.svg';
-import SiloAssetApyChip from './SiloAssetApyChip';
-import BeanProgressIcon from '../Common/BeanProgressIcon';
+import stalkIcon from '~/img/beanstalk/stalk-icon.svg';
 import logo from '~/img/tokens/bean-logo.svg';
+import { FC } from '~/types';
+import { useIsTokenDeprecated } from '~/hooks/beanstalk/useWhitelist';
+import SiloAssetApyChip from './SiloAssetApyChip';
+import StatHorizontal from '../Common/StatHorizontal';
+import BeanProgressIcon from '../Common/BeanProgressIcon';
 
 /**
  * Display a pseudo-table of Whitelisted Silo Tokens.
  * This table is the entry point to deposit Beans, LP, etc.
  */
-import { FC } from '~/types';
-import StatHorizontal from '../Common/StatHorizontal';
 
 const ARROW_CONTAINER_WIDTH = 20;
 const TOOLTIP_COMPONENT_PROPS = {
@@ -73,6 +73,7 @@ const Whitelist: FC<{
   /// Settings
   const [denomination] = useSetting('denomination');
   const account = useAccount();
+  const checkIfDeprecated = useIsTokenDeprecated();
 
   /// Chain
   const getChainToken = useGetChainToken();
@@ -82,7 +83,7 @@ const Whitelist: FC<{
   const unripeUnderlyingTokens = useUnripeUnderlyingMap();
 
   /// State
-  const apyQuery = useAPY();
+  // const apyQuery = useAPY();
   const getBDV = useBDV();
   const beanstalkSilo = useSelector<AppState, AppState['_beanstalk']['silo']>(
     (state) => state._beanstalk.silo
@@ -93,108 +94,79 @@ const Whitelist: FC<{
 
   return (
     <Card>
+      {/* Header */}
       <Box
         display="flex"
         sx={{
           px: 3, // 1 + 2 from Table Body
           pt: '14px', // manually adjusted
-          pb: '5px', // manually adjusted
+          pb: '14px', // manually adjusted
           borderBottomStyle: 'solid',
           borderBottomColor: 'divider',
           borderBottomWidth: 1,
         }}
       >
-        <Grid container alignItems="flex-end">
-          <Grid item md={2.5} xs={4}>
+        <Grid container alignItems="center">
+          <Grid item md={2.25} xs={4}>
             <Typography color="text.secondary">Token</Typography>
           </Grid>
-          <Grid item md={3} xs={0} display={{ xs: 'none', md: 'block' }}>
-            <Row gap={0.25}>
-              <Tooltip
-                title={
-                  <>
-                    The amount of Stalk and Seeds earned for each 1 Bean
-                    Denominated Value (BDV) Deposited in the Silo.
-                  </>
-                }
-              >
-                <Typography color="text.secondary">Rewards</Typography>
-              </Tooltip>
-              &nbsp;
-              <Tooltip
-                title={
-                  <>
-                    <strong>vAPY</strong> (Variable APY) uses historical data
-                    about Beans earned by Stalkholders to estimate future
-                    returns for Depositing assets in the Silo.&nbsp;
-                    <Link
-                      underline="hover"
-                      href="https://docs.bean.money/almanac/guides/silo/understand-silo-vapy"
-                      target="_blank"
-                      rel="noreferrer"
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      Learn more
-                    </Link>
-                    <Divider sx={{ my: 1, borderColor: 'divider' }} />
-                    <Typography fontSize={FontSize.sm}>
-                      <strong>Bean vAPY:</strong> Estimated annual Beans earned
-                      by a Stalkholder for Depositing an asset.
-                      <br />
-                      <strong>Stalk vAPY:</strong> Estimated annual growth in
-                      Stalk for Depositing an asset.
-                    </Typography>
-                  </>
-                }
-              >
-                <span>
-                  <Row gap={0.25}>
-                    <Chip
-                      variant="filled"
-                      color="primary"
-                      label={
-                        <Row gap={0.5}>
-                          <TokenIcon token={BEAN[1]} /> vAPY
-                        </Row>
-                      }
-                      onClick={undefined}
-                      size="small"
-                    />
-                    <Chip
-                      variant="filled"
-                      color="secondary"
-                      label={
-                        <Row gap={0.5}>
-                          <TokenIcon
-                            token={
-                              { symbol: 'Stalk', logo: stalkIconBlue } as Token
-                            }
-                          />{' '}
-                          vAPY
-                        </Row>
-                      }
-                      onClick={undefined}
-                      size="small"
-                    />
-                    {apyQuery.loading && (
-                      <CircularProgress
-                        variant="indeterminate"
-                        size={12}
-                        thickness={4}
-                        sx={{ ml: 0.5 }}
-                      />
-                    )}
-                  </Row>
-                </span>
-              </Tooltip>
-            </Row>
+          <Grid item md={1} xs={0} display={{ xs: 'none', md: 'block' }}>
+            <Tooltip title="The amount of Stalk and Seeds earned for each 1 Bean Denominated Value (BDV) Deposited in the Silo.">
+              <Typography color="text.secondary">Rewards</Typography>
+            </Tooltip>
           </Grid>
-          <Grid item md={1.5} xs={0} display={{ xs: 'none', md: 'block' }}>
+          <Grid
+            item
+            md={2.25}
+            xs={0}
+            display={{ xs: 'none', md: 'flex' }}
+            justifyContent="center"
+          >
+            <Tooltip title="Estimated annual Beans earned by a Stalkholder for Depositing an asset.">
+              <Chip
+                variant="filled"
+                color="primary"
+                label={
+                  <Row gap={0.5}>
+                    <TokenIcon token={BEAN[1]} />
+                    vAPY 24H
+                    <Typography color="white" marginTop={-0.25}>
+                      |
+                    </Typography>
+                    7D
+                    <Typography color="white" marginTop={-0.25}>
+                      |
+                    </Typography>
+                    30D
+                  </Row>
+                }
+                onClick={undefined}
+                size="small"
+              />
+            </Tooltip>
+          </Grid>
+          <Grid
+            item
+            md={1.25}
+            xs={0}
+            display={{ xs: 'none', md: 'flex' }}
+            justifyContent="center"
+          >
+            <Tooltip title="Estimated annual growth in Stalk for Depositing an asset.">
+              <Typography color="text.primary">
+                <TokenIcon
+                  token={{ symbol: 'Stalk', logo: stalkIcon } as Token}
+                />{' '}
+                vAPY
+              </Typography>
+            </Tooltip>
+          </Grid>
+          <Grid item md={1} xs={0} display={{ xs: 'none', md: 'block' }}>
             <Tooltip title="Total Value Deposited in the Silo.">
               <Typography color="text.secondary">TVD</Typography>
             </Tooltip>
           </Grid>
-          <Grid item md={3.5} xs={0} display={{ xs: 'none', md: 'block' }}>
+          <Grid item md={2.75} xs={0} display={{ xs: 'none', md: 'block' }}>
             <Typography color="text.secondary">Amount Deposited</Typography>
           </Grid>
           <Grid
@@ -228,10 +200,13 @@ const Whitelist: FC<{
           </Grid>
         </Grid>
       </Box>
+      {/* Rows */}
       <Stack gap={1} p={1}>
         {config.whitelist.map((token) => {
           const deposited = farmerSilo.balances[token.address]?.deposited;
           const isUnripe = token === urBean || token === urBeanWeth;
+          const isDeprecated = checkIfDeprecated(token.address);
+
           // Unripe data
           const underlyingToken = isUnripe
             ? unripeUnderlyingTokens[token.address]
@@ -243,6 +218,33 @@ const Whitelist: FC<{
               ).div(unripeTokens[token.address]?.supply || ONE_BN)
             : ONE_BN;
 
+          const wlSx = {
+            textAlign: 'left',
+            px: 2,
+            py: 1.5,
+            borderColor: 'divider',
+            borderWidth: '0.5px',
+            background: BeanstalkPalette.white,
+            '&:hover': {
+              borderColor: 'primary.main',
+              backgroundColor: 'primary.light',
+            },
+          };
+
+          const depSx = {
+            textAlign: 'left',
+            px: 2,
+            py: 1.5,
+            height: '90px',
+            borderColor: '#d2ebfd',
+            borderWidth: '0.5px',
+            background: BeanstalkPalette.white,
+            '&:hover': {
+              borderColor: '#dae8f2',
+              backgroundColor: 'primary.light',
+            },
+          };
+
           return (
             <Box key={`${token.address}-${token.chainId}`}>
               <Button
@@ -250,86 +252,129 @@ const Whitelist: FC<{
                 to={`/silo/${token.address}`}
                 fullWidth
                 variant="outlined"
-                color="secondary"
+                color="primary"
                 size="large"
-                sx={{
-                  textAlign: 'left',
-                  px: 2,
-                  py: 1.5,
-                  borderColor: 'divider',
-                  borderWidth: '0.5px',
-                  background: BeanstalkPalette.white,
-                  '&:hover': {
-                    borderColor: 'primary.main',
-                    backgroundColor: 'primary.light',
-                  },
-                }}
+                sx={isDeprecated ? depSx : wlSx}
               >
                 <Grid container alignItems="center">
                   {/**
                    * Cell: Token
                    */}
-                  <Grid item md={2.5} xs={7}>
+                  <Grid
+                    item
+                    md={isDeprecated ? 6.75 : 2.25}
+                    xs={isDeprecated ? 7 : 7}
+                  >
                     <Row gap={1}>
-                      <img
+                      <Box
+                        component="img"
                         src={token.logo}
                         alt={token.name}
-                        css={{ height: IconSize.medium, display: 'inline' }}
+                        css={{
+                          height: IconSize.medium,
+                          display: 'inline',
+                          opacity: isDeprecated ? 0.2 : 1,
+                        }}
                       />
-                      <Typography display="inline" color="text.primary">
+                      <Typography
+                        display="inline"
+                        color={isDeprecated ? 'text.tertiary' : 'text.primary'}
+                      >
                         {token.name}
                       </Typography>
                     </Row>
+                    {isDeprecated && (
+                      <Chip
+                        icon={<ReportGmailerrorred />}
+                        variant="outlined"
+                        sx={{
+                          border: 'none',
+                          color: '#9ca3ad',
+                          backgroundColor: '#f2f7fd',
+                          marginTop: '5px',
+                          padding: '15px 10px',
+                        }}
+                        size="small"
+                        label="Removed from Deposit Whitelist in BIP-45"
+                      />
+                    )}
                   </Grid>
-
-                  {/**
-                   * Cell: Rewards
-                   */}
-                  <Grid
-                    item
-                    md={3}
-                    xs={0}
-                    display={{ xs: 'none', md: 'block' }}
-                  >
-                    <Row gap={0.75}>
-                      <Tooltip
-                        placement="right"
-                        title={
-                          <>
-                            1 {token.symbol} = {displayFullBN(getBDV(token))}{' '}
-                            BDV
-                          </>
-                        }
-                      >
-                        <Box>
-                          <Row gap={0.2}>
-                            <TokenIcon
-                              token={STALK}
-                              css={{ height: '0.8em', marginTop: '-1px' }}
-                            />
-                            <Typography color="text.primary" mr={0.2}>
-                              {token.rewards?.stalk}
-                            </Typography>
-                            <TokenIcon token={SEEDS} />
-                            <Typography color="text.primary">
-                              {token.rewards?.seeds}
-                            </Typography>
-                          </Row>
-                        </Box>
-                      </Tooltip>
-                      <Row gap={0.25}>
-                        <SiloAssetApyChip token={token} metric="bean" />
-                        <SiloAssetApyChip token={token} metric="stalk" />
+                  {!isDeprecated && (
+                    /**
+                     * Cell: Rewards
+                     */
+                    <Grid
+                      item
+                      md={1}
+                      xs={0}
+                      display={{ xs: 'none', md: 'block' }}
+                    >
+                      <Row gap={0.75}>
+                        <Tooltip
+                          placement="right"
+                          title={
+                            <>
+                              1 {token.symbol} = {displayFullBN(getBDV(token))}{' '}
+                              BDV
+                            </>
+                          }
+                        >
+                          <Box>
+                            <Row gap={0.2}>
+                              <TokenIcon
+                                token={STALK}
+                                css={{ height: '0.8em', marginTop: '-1px' }}
+                              />
+                              <Typography color="text.primary" mr={0.2}>
+                                {token.rewards?.stalk}
+                              </Typography>
+                              <TokenIcon token={SEEDS} />
+                              <Typography color="text.primary">
+                                {Math.round(
+                                  (token.rewards?.seeds || 0 + Number.EPSILON) *
+                                    100
+                                ) / 100}
+                              </Typography>
+                            </Row>
+                          </Box>
+                        </Tooltip>
                       </Row>
-                    </Row>
-                  </Grid>
-
+                    </Grid>
+                  )}
+                  {/**
+                   * Cell: Bean APY
+                   */}
+                  {!isDeprecated && (
+                    <Grid
+                      item
+                      md={2.25}
+                      xs={0}
+                      display={{ xs: 'none', md: 'flex' }}
+                      justifyContent="center"
+                    >
+                      <SiloAssetApyChip token={token} metric="bean" />
+                    </Grid>
+                  )}
+                  {/**
+                   * Cell: Stalk APY
+                   */}
+                  {!isDeprecated && (
+                    <Grid
+                      item
+                      md={1.25}
+                      xs={0}
+                      display={{ xs: 'none', md: 'flex' }}
+                      justifyContent="center"
+                    >
+                      <SiloAssetApyChip token={token} metric="stalk" />
+                    </Grid>
+                  )}
                   {/**
                    * Cell: TVD
                    */}
                   <Grid
                     item
-                    md={1.5}
+                    md={1}
                     xs={0}
                     display={{ xs: 'none', md: 'block' }}
                   >
@@ -457,7 +502,10 @@ const Whitelist: FC<{
                         )
                       }
                     >
-                      <Typography display="inline" color="text.primary">
+                      <Typography
+                        display="inline"
+                        color={isDeprecated ? 'text.tertiary' : 'text.primary'}
+                      >
                         {isUnripe ? (
                           <>
                             <Fiat
@@ -503,11 +551,15 @@ const Whitelist: FC<{
                        */}
                       <Grid
                         item
-                        md={3.5}
+                        md={2.5}
                         xs={0}
                         display={{ xs: 'none', md: 'block' }}
                       >
-                        <Typography color="text.primary">
+                        <Typography
+                          color={
+                            isDeprecated ? 'text.tertiary' : 'text.primary'
+                          }
+                        >
                           {/* If this is the entry for Bean deposits,
                            * display Earned Beans and Deposited Beans separately.
                            * Internally they are both considered "Deposited". */}
@@ -646,7 +698,7 @@ const Whitelist: FC<{
                       {/**
                        * Cell: My Deposits
                        */}
-                      <Grid item md={1.5} xs={5}>
+                      <Grid item md={1.75} xs={5}>
                         <Row justifyContent="flex-end">
                           <Tooltip
                             placement="left"
@@ -756,7 +808,11 @@ const Whitelist: FC<{
                               )
                             }
                           >
-                            <Typography color="text.primary">
+                            <Typography
+                              color={
+                                isDeprecated ? 'text.tertiary' : 'text.primary'
+                              }
+                            >
                               <Row gap={0.3}>
                                 {/*
                                  * There are multiple states here:

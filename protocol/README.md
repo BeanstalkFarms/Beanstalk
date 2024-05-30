@@ -38,6 +38,8 @@ The Beanstalk contract is a multi-facet proxy that implements [EIP-2535](https:/
   - You'll know you've installed nodejs right if you can run `node --version`and get an ouput like: `vx.x.x`
 - [Yarn](https://classic.yarnpkg.com/lang/en/docs/install/)
   - You'll know you've installed yarn right if you can run `yarn --version` And get an output like: `x.x.x`
+- Rosetta (Apple Silicon) 
+  - You'll know you've installed Rosetta right if you can execute the solc 0.7.6 binary `.../solc-macosx-amd64-v0.7.6+commit.7338295f --version`
 
 ## Installation
 

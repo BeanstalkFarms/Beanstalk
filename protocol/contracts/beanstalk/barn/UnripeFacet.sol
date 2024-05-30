@@ -318,7 +318,7 @@ contract UnripeFacet is Invariable, ReentrancyGuard {
      * Tokens.
      */
     function getLockedBeans() external view returns (uint256) {
-        uint256[] memory twaReserves = LibWell.getTwaReservesFromBeanstalkPump(
+        uint256[] memory twaReserves = LibWell.getTwaReservesFromPump(
             LibBarnRaise.getBarnRaiseWell()
         );
         return LibUnripe.getLockedBeans(twaReserves);
@@ -339,7 +339,7 @@ contract UnripeFacet is Invariable, ReentrancyGuard {
      * @notice Returns the number of Beans that are locked underneath the Unripe LP Token.
      */
     function getLockedBeansUnderlyingUnripeLP() external view returns (uint256) {
-        uint256[] memory twaReserves = LibWell.getTwaReservesFromBeanstalkPump(
+        uint256[] memory twaReserves = LibWell.getTwaReservesFromPump(
             LibBarnRaise.getBarnRaiseWell()
         );
         return LibUnripe.getLockedBeansFromLP(twaReserves);

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Box, Link, Typography } from '@mui/material';
+import { Alert, Box, Link, Typography } from '@mui/material';
 import Vote from '~/components/Governance/Actions/Vote';
 import {
   Module,
@@ -19,6 +19,7 @@ const GovernanceActions: FC<{
 
   const isOldBip = props.proposal.id.startsWith("bip-");
   const isEbip = props.proposal.id.startsWith("ebip-");
+  const isBip23 = props.proposal.id === "0x3b2a7808f01960ff993b7aec4df9ef6a3434d0ef0843828ea6c6bce4e768e6a9";
 
   return (
   <Box sx={{ position: 'sticky', top: 120 }}>
@@ -41,6 +42,19 @@ const GovernanceActions: FC<{
       </Module>
     ) : (
       <>
+        {isBip23 &&
+        <Module sx={{ marginBottom: 2 }}>
+          <Alert color="warning" icon={false} sx={{ p: 1 }}>
+            <Typography>
+              Due to significant Withdrawals during the BIP-23 Voting Period, the total Stalk supply and thus quorum decreased such that the BIP did pass.
+            </Typography>
+            <br/>
+            <Typography>
+              However, Snapshot does not support this functionality and thus the data shown on this page is slightly inaccurate.
+            </Typography>
+          </Alert>
+        </Module>
+        }
         <Module>
           <ModuleHeader>
             <Typography variant="h4">Vote</Typography>

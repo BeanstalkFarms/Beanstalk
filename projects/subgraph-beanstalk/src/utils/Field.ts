@@ -1,8 +1,52 @@
-import { Address, BigInt } from "@graphprotocol/graph-ts";
+import { Address, BigInt, BigDecimal, ethereum } from "@graphprotocol/graph-ts";
 import { Field, FieldDailySnapshot, FieldHourlySnapshot } from "../../generated/schema";
-import { BEANSTALK } from "../../../subgraph-core/utils/Constants";
-import { dayFromTimestamp, hourFromTimestamp } from "./Dates";
-import { ZERO_BD, ZERO_BI } from "../../../subgraph-core/utils/Decimals";
+import { dayFromTimestamp } from "./Dates";
+import { BI_MAX, ONE_BD, toDecimal, ZERO_BD, ZERO_BI } from "../../../subgraph-core/utils/Decimals";
+import { BEANSTALK, BEANSTALK_PRICE, CURVE_PRICE } from "../../../subgraph-core/utils/Constants";
+import { loadSeason } from "./Season";
+import { CurvePrice } from "../../generated/Field/CurvePrice";
+import { BeanstalkPrice } from "../../generated/Field/BeanstalkPrice";
+
+// This function is for handling both the WeatherChange and TemperatureChange events.
+// The logic is the same for both, this is intended to accommodate the renamed event and fields.
+export function handleRateChange(evtAddress: Address, evtBlock: ethereum.Block, season: BigInt, caseId: BigInt, absChange: i32): void {
+  let field = loadField(evtAddress);
+  let fieldHourly = loadFieldHourly(evtAddress, season.toI32(), evtBlock.timestamp);
+  let fieldDaily = loadFieldDaily(evtAddress, evtBlock.timestamp);
+
+  field.temperature += absChange;
+  fieldHourly.temperature += absChange;
+  fieldDaily.temperature += absChange;
+
+  fieldHourly.caseId = caseId;
+
+  // Real Rate of Return
+
+  let seasonEntity = loadSeason(evtAddress, season);
+
+  let currentPrice = ZERO_BD;
+  if (seasonEntity.price != ZERO_BD) {
+    currentPrice = seasonEntity.price;
+  } else {
+    // Attempt to pull from Beanstalk Price contract first
+    let beanstalkPrice = BeanstalkPrice.bind(BEANSTALK_PRICE);
+    let beanstalkQuery = beanstalkPrice.try_price();
+    if (beanstalkQuery.reverted) {
+      let curvePrice = CurvePrice.bind(CURVE_PRICE);
+      currentPrice = toDecimal(curvePrice.getCurve().price);
+    } else {
+      currentPrice = toDecimal(beanstalkQuery.value.price);
+    }
+  }
+
+  field.realRateOfReturn = ONE_BD.plus(BigDecimal.fromString((field.temperature / 100).toString())).div(currentPrice);
+  fieldHourly.realRateOfReturn = field.realRateOfReturn;
+  fieldHourly.realRateOfReturn = field.realRateOfReturn;
+
+  field.save();
+  fieldHourly.save();
+  fieldDaily.save();
+}
 
 export function loadField(account: Address): Field {
   let field = Field.load(account.toHexString());
@@ -60,6 +104,7 @@ export function loadFieldHourly(account: Address, season: i32, timestamp: BigInt
     hourly.podRate = field.podRate;
     hourly.blocksToSoldOutSoil = ZERO_BI;
     hourly.soilSoldOut = false;
+    hourly.caseId = BI_MAX;
     hourly.blockNumber = ZERO_BI;
     hourly.createdAt = timestamp;
     hourly.updatedAt = timestamp;

@@ -125,6 +125,13 @@ describe("Sun", function () {
     expect(await beanstalk.totalSoil()).to.be.equal("14850");
   });
 
+  it("delta B > 1, low pod rate, High L2SR", async function () {
+    await mockBeanstalk.setAbovePegE(true);
+    await mockBeanstalk.incrementTotalPodsE(0, "10000");
+    this.result = await mockBeanstalk.sunSunrise("30000", 108);
+    expect(await beanstalk.totalSoil()).to.be.equal("14850");
+  });
+
   it("delta B > 1, medium pod rate", async function () {
     await mockBeanstalk.incrementTotalPodsE(0, "10000");
     this.result = await mockBeanstalk.sunSunrise("30000", 8);
@@ -134,6 +141,13 @@ describe("Sun", function () {
   it("delta B > 1, high pod rate", async function () {
     await mockBeanstalk.incrementTotalPodsE(0, "10000");
     this.result = await mockBeanstalk.sunSunrise("30000", 25);
+    expect(await beanstalk.totalSoil()).to.be.equal("4950");
+    await expect(this.result).to.emit(beanstalk, "Soil").withArgs(3, "4950");
+  });
+
+  it("delta B > 1, high pod rate, High L2SR", async function () {
+    await mockBeanstalk.incrementTotalPodsE(0, "10000");
+    this.result = await mockBeanstalk.sunSunrise("30000", 133);
     expect(await beanstalk.totalSoil()).to.be.equal("4950");
     await expect(this.result).to.emit(beanstalk, "Soil").withArgs(3, "4950");
   });
@@ -345,7 +359,7 @@ describe("Sun", function () {
 
     await expect(this.result)
       .to.emit(beanstalk, "TotalGerminatingBalanceChanged")
-      .withArgs("6", BEAN, to6("-1000"), to6("-1000"));
+      .withArgs("4", BEAN, to6("-1000"), to6("-1000"));
     expect((await beanstalk.getEvenGerminating(BEAN))[0]).to.be.equal(to6("0"));
     expect((await beanstalk.getEvenGerminating(BEAN))[1]).to.be.equal(to6("0"));
   });

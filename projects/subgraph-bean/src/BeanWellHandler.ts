@@ -1,11 +1,10 @@
 import { Address, BigDecimal, BigInt } from "@graphprotocol/graph-ts";
-import { BEANSTALK_PRICE, BEAN_ERC20 } from "../../subgraph-core/utils/Constants";
+import { BEAN_ERC20 } from "../../subgraph-core/utils/Constants";
 import { ZERO_BD, ZERO_BI, deltaBigIntArray, toDecimal } from "../../subgraph-core/utils/Decimals";
-import { BeanstalkPrice } from "../generated/BeanWETHCP2w/BeanstalkPrice";
 import { AddLiquidity, RemoveLiquidity, RemoveLiquidityOneToken, Shift, Swap, Sync } from "../generated/BeanWETHCP2w/Well";
-import { loadBean, updateBeanSupplyPegPercent, updateBeanValues } from "./utils/Bean";
+import { updateBeanAfterPoolSwap } from "./utils/Bean";
 import { getPoolLiquidityUSD, loadOrCreatePool, setPoolReserves, updatePoolPrice, updatePoolValues } from "./utils/Pool";
-import { checkBeanCross } from "./utils/Cross";
+import { BeanstalkPrice_try_price, getPoolPrice } from "./utils/price/BeanstalkPrice";
 
 export function handleAddLiquidity(event: AddLiquidity): void {
   handleLiquidityChange(
@@ -83,30 +82,25 @@ function handleLiquidityChange(
   removal: boolean
 ): void {
   // Get Price Details via Price contract
-  let beanstalkPrice = BeanstalkPrice.bind(BEANSTALK_PRICE);
-  let wellPrice = beanstalkPrice.try_getConstantProductWell(Address.fromString(poolAddress));
-  let beanPrice = beanstalkPrice.try_price();
-
-  if (wellPrice.reverted || beanPrice.reverted) {
+  let beanPrice = BeanstalkPrice_try_price(BEAN_ERC20, blockNumber);
+  if (beanPrice.reverted) {
     return;
   }
-
-  let bean = loadBean(BEAN_ERC20.toHexString());
-  let oldBeanPrice = bean.price;
+  let wellPrice = getPoolPrice(beanPrice, Address.fromString(poolAddress))!;
 
   let startingLiquidity = getPoolLiquidityUSD(poolAddress, blockNumber);
 
-  let newPrice = toDecimal(wellPrice.value.price);
-  let deltaLiquidityUSD = toDecimal(wellPrice.value.liquidity).minus(startingLiquidity);
+  let newPrice = toDecimal(wellPrice.price);
+  let deltaLiquidityUSD = toDecimal(wellPrice.liquidity).minus(startingLiquidity);
 
   let volumeUSD = ZERO_BD;
   let volumeBean = ZERO_BI;
   if ((token0Amount == ZERO_BI || token1Amount == ZERO_BI) && removal) {
     if (token0Amount != ZERO_BI) {
       volumeBean = token0Amount.div(BigInt.fromI32(2));
-      volumeUSD = toDecimal(token0Amount).times(toDecimal(wellPrice.value.price));
+      volumeUSD = toDecimal(token0Amount).times(toDecimal(wellPrice.price));
     } else {
-      let wellPairInBean = toDecimal(wellPrice.value.balances[0]).div(toDecimal(wellPrice.value.balances[1], 18));
+      let wellPairInBean = toDecimal(wellPrice.balances[0]).div(toDecimal(wellPrice.balances[1], 18));
       volumeBean = BigInt.fromString(
         toDecimal(token1Amount, 18)
           .times(wellPairInBean)
@@ -115,26 +109,24 @@ function handleLiquidityChange(
           .truncate(0)
           .toString()
       );
-      volumeUSD = toDecimal(volumeBean).times(toDecimal(wellPrice.value.price));
+      volumeUSD = toDecimal(volumeBean).times(toDecimal(wellPrice.price));
     }
   }
 
-  setPoolReserves(poolAddress, wellPrice.value.balances, blockNumber);
-  updateBeanSupplyPegPercent(blockNumber);
+  setPoolReserves(poolAddress, wellPrice.balances, timestamp, blockNumber);
+  updatePoolValues(poolAddress, timestamp, blockNumber, volumeBean, volumeUSD, deltaLiquidityUSD, wellPrice.deltaB);
+  updatePoolPrice(poolAddress, timestamp, blockNumber, newPrice);
 
-  updateBeanValues(
-    BEAN_ERC20.toHexString(),
-    timestamp,
-    toDecimal(beanPrice.value.price),
-    ZERO_BI,
+  updateBeanAfterPoolSwap(
+    poolAddress,
+    toDecimal(wellPrice.price),
     volumeBean,
     volumeUSD,
-    deltaLiquidityUSD
+    deltaLiquidityUSD,
+    timestamp,
+    blockNumber,
+    beanPrice
   );
-
-  updatePoolValues(poolAddress, timestamp, blockNumber, volumeBean, volumeUSD, deltaLiquidityUSD, wellPrice.value.deltaB);
-  updatePoolPrice(poolAddress, timestamp, blockNumber, newPrice);
-  checkBeanCross(BEAN_ERC20.toHexString(), timestamp, blockNumber, oldBeanPrice, toDecimal(beanPrice.value.price));
 }
 
 function handleSwapEvent(
@@ -146,39 +138,32 @@ function handleSwapEvent(
   blockNumber: BigInt
 ): void {
   // Get Price Details via Price contract
-  let beanstalkPrice = BeanstalkPrice.bind(BEANSTALK_PRICE);
-  let wellPrice = beanstalkPrice.try_getConstantProductWell(Address.fromString(poolAddress));
-  let beanPrice = beanstalkPrice.try_price();
-
-  if (wellPrice.reverted || beanPrice.reverted) {
+  let beanPrice = BeanstalkPrice_try_price(BEAN_ERC20, blockNumber);
+  if (beanPrice.reverted) {
     return;
   }
-
-  let bean = loadBean(BEAN_ERC20.toHexString());
-  let oldBeanPrice = bean.price;
+  let wellPrice = getPoolPrice(beanPrice, Address.fromString(poolAddress))!;
 
   let startingLiquidity = getPoolLiquidityUSD(poolAddress, blockNumber);
 
-  let newPrice = toDecimal(wellPrice.value.price);
+  let newPrice = toDecimal(wellPrice.price);
   let volumeBean = toToken == BEAN_ERC20 ? amountOut : amountIn;
 
   let volumeUSD = toDecimal(volumeBean).times(newPrice);
-  let deltaLiquidityUSD = toDecimal(wellPrice.value.liquidity).minus(startingLiquidity);
+  let deltaLiquidityUSD = toDecimal(wellPrice.liquidity).minus(startingLiquidity);
 
-  setPoolReserves(poolAddress, wellPrice.value.balances, blockNumber);
-  updateBeanSupplyPegPercent(blockNumber);
+  setPoolReserves(poolAddress, wellPrice.balances, timestamp, blockNumber);
+  updatePoolValues(poolAddress, timestamp, blockNumber, volumeBean, volumeUSD, deltaLiquidityUSD, wellPrice.deltaB);
+  updatePoolPrice(poolAddress, timestamp, blockNumber, newPrice);
 
-  updateBeanValues(
-    BEAN_ERC20.toHexString(),
-    timestamp,
-    toDecimal(beanPrice.value.price),
-    ZERO_BI,
+  updateBeanAfterPoolSwap(
+    poolAddress,
+    toDecimal(wellPrice.price),
     volumeBean,
     volumeUSD,
-    deltaLiquidityUSD
+    deltaLiquidityUSD,
+    timestamp,
+    blockNumber,
+    beanPrice
   );
-
-  updatePoolValues(poolAddress, timestamp, blockNumber, volumeBean, volumeUSD, deltaLiquidityUSD, wellPrice.value.deltaB);
-  updatePoolPrice(poolAddress, timestamp, blockNumber, newPrice);
-  checkBeanCross(BEAN_ERC20.toHexString(), timestamp, blockNumber, oldBeanPrice, toDecimal(beanPrice.value.price));
 }

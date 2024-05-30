@@ -49,6 +49,20 @@ library LibSilo {
     using LibRedundantMath32 for uint32;
     using SafeCast for uint256;
 
+    //////////////////////// ENUM ////////////////////////
+
+    /**
+     * @dev when a user removes multiple deposits, the
+     * {TransferBatch} event is emitted. However, in the
+     * case of an enroot, the event is omitted (as the
+     * depositID does not change). This enum is
+     * used to determine if the event should be emitted.
+     */
+    enum ERC1155Event {
+        EMIT_BATCH_EVENT,
+        NO_EMIT_BATCH_EVENT
+    }
+
     uint128 internal constant PRECISION = 1e6;
     //////////////////////// EVENTS ////////////////////////
 
@@ -208,8 +222,13 @@ library LibSilo {
             s.sys.silo.unclaimedGerminating[season - 1].stalk += stalk;
         }
 
-        // emit event.
-        emit LibGerminate.FarmerGerminatingStalkBalanceChanged(account, int256(uint256(stalk)));
+        // emit events.
+        emit LibGerminate.FarmerGerminatingStalkBalanceChanged(
+            account,
+            int256(uint256(stalk)),
+            side
+        );
+        emit LibGerminate.TotalGerminatingStalkChanged(season, int256(uint256(stalk)));
     }
 
     //////////////////////// BURN ////////////////////////
@@ -256,7 +275,12 @@ library LibSilo {
         }
 
         // emit events.
-        emit LibGerminate.FarmerGerminatingStalkBalanceChanged(account, -int256(uint256(stalk)));
+        emit LibGerminate.FarmerGerminatingStalkBalanceChanged(
+            account,
+            -int256(uint256(stalk)),
+            side
+        );
+        emit LibGerminate.TotalGerminatingStalkChanged(season, -int256(uint256(stalk)));
     }
 
     //////////////////////// TRANSFER ////////////////////////
@@ -301,8 +325,16 @@ library LibSilo {
         s.accts[recipient].germinatingStalk[side] += stalk.toUint128();
 
         // emit events.
-        emit LibGerminate.FarmerGerminatingStalkBalanceChanged(sender, -int256(stalk));
-        emit LibGerminate.FarmerGerminatingStalkBalanceChanged(recipient, int256(stalk));
+        emit LibGerminate.FarmerGerminatingStalkBalanceChanged(
+            sender,
+            -int256(uint256(stalk)),
+            side
+        );
+        emit LibGerminate.FarmerGerminatingStalkBalanceChanged(
+            recipient,
+            int256(uint256(stalk)),
+            side
+        );
     }
 
     /**
@@ -318,21 +350,63 @@ library LibSilo {
         AppStorage storage s = LibAppStorage.diamondStorage();
         uint256 stalkPerBDV = s.sys.silo.assetSettings[token].stalkIssuedPerBdv;
 
-        // a germinating deposit may have active grown stalk,
-        // but no active stalk from bdv.
-        if (ar.active.stalk > 0) {
-            ar.active.stalk = ar.active.stalk.add(ar.active.bdv.mul(stalkPerBDV));
-            transferStalk(sender, recipient, ar.active.stalk);
-        }
-
         if (ar.odd.bdv > 0) {
-            ar.odd.stalk = ar.odd.stalk.add(ar.odd.bdv.mul(stalkPerBDV));
-            transferGerminatingStalk(sender, recipient, ar.odd.stalk, GerminationSide.ODD);
+            uint256 initialStalk = ar.odd.bdv.mul(stalkPerBDV);
+            if (token == C.BEAN) {
+                // check whether the Germinating Stalk transferred exceeds the farmers
+                // Germinating Stalk. If so, the difference is considered from Earned
+                // Beans. Deduct the odd BDV and increment the activeBDV by the difference.
+                (uint256 senderGerminatingStalk, uint256 earnedBeansStalk) = checkForEarnedBeans(
+                    sender,
+                    initialStalk,
+                    GerminationSide.ODD
+                );
+                if (earnedBeansStalk > 0) {
+                    // increment the active stalk by the earned beans active stalk.
+                    // decrement the germinatingStalk stalk by the earned beans active stalk.
+                    ar.active.stalk = ar.active.stalk.add(earnedBeansStalk);
+                    initialStalk = senderGerminatingStalk;
+                }
+            }
+            transferGerminatingStalk(sender, recipient, initialStalk, GerminationSide.ODD);
         }
 
         if (ar.even.bdv > 0) {
-            ar.even.stalk = ar.even.stalk.add(ar.even.bdv.mul(stalkPerBDV));
-            transferGerminatingStalk(sender, recipient, ar.even.stalk, GerminationSide.EVEN);
+            uint256 initialStalk = ar.even.bdv.mul(stalkPerBDV);
+            if (token == C.BEAN) {
+                // check whether the Germinating Stalk transferred exceeds the farmers
+                // Germinating Stalk. If so, the difference is considered from Earned
+                // Beans. Deduct the even BDV and increment the active BDV by the difference.
+                (uint256 senderGerminatingStalk, uint256 earnedBeansStalk) = checkForEarnedBeans(
+                    sender,
+                    initialStalk,
+                    GerminationSide.EVEN
+                );
+                if (earnedBeansStalk > 0) {
+                    // increment the active stalk by the earned beans active stalk.
+                    // decrement the germinatingStalk stalk by the earned beans active stalk.
+                    ar.active.stalk = ar.active.stalk.add(earnedBeansStalk);
+                    initialStalk = senderGerminatingStalk;
+                }
+            }
+
+            transferGerminatingStalk(sender, recipient, initialStalk, GerminationSide.EVEN);
+        }
+
+        // a Germinating Deposit may have Grown Stalk (which is not Germinating),
+        // but the base Stalk is still Germinating.
+        // Grown Stalk from non-Germinating Deposits, and base stalk from Earned Bean Deposits.
+        // base stalk from non-germinating deposits.
+        // grown stalk from Even Germinating Deposits.
+        // grown stalk from Odd Germinating Deposits.
+        ar.active.stalk = ar
+            .active
+            .stalk
+            .add(ar.active.bdv.mul(stalkPerBDV))
+            .add(ar.even.stalk)
+            .add(ar.odd.stalk);
+        if (ar.active.stalk > 0) {
+            transferStalk(sender, recipient, ar.active.stalk);
         }
     }
 
@@ -448,7 +522,7 @@ library LibSilo {
     )
         internal
         returns (
-            uint256 initalStalkRemoved,
+            uint256 initialStalkRemoved,
             uint256 grownStalkRemoved,
             uint256 bdvRemoved,
             GerminationSide side
@@ -459,9 +533,10 @@ library LibSilo {
         (side, stemTip) = LibGerminate.getGerminationState(token, stem);
         bdvRemoved = LibTokenSilo.removeDepositFromAccount(account, token, stem, amount);
 
-        // the inital and grown stalk are as there are instances where the inital stalk is
-        // germinating, but the grown stalk is not.
-        initalStalkRemoved = bdvRemoved.mul(s.sys.silo.assetSettings[token].stalkIssuedPerBdv);
+        // the initial and grown stalk are seperated as there are instances
+        // where the initial stalk issued for a deposit is germinating. Grown stalk never germinates,
+        // and thus is not included in the germinating stalk.
+        initialStalkRemoved = bdvRemoved.mul(s.sys.silo.assetSettings[token].stalkIssuedPerBdv);
 
         grownStalkRemoved = stalkReward(stem, stemTip, bdvRemoved.toUint128());
         /**
@@ -499,7 +574,8 @@ library LibSilo {
         address account,
         address token,
         int96[] calldata stems,
-        uint256[] calldata amounts
+        uint256[] calldata amounts,
+        ERC1155Event emission
     ) internal returns (AssetsRemoved memory ar) {
         AppStorage storage s = LibAppStorage.diamondStorage();
 
@@ -538,7 +614,7 @@ library LibSilo {
             }
         }
 
-        // add inital stalk deposit to all stalk removed.
+        // add initial stalk deposit to all stalk removed.
         {
             uint256 stalkIssuedPerBdv = s.sys.silo.assetSettings[token].stalkIssuedPerBdv;
             if (ar.active.tokens > 0) {
@@ -555,7 +631,10 @@ library LibSilo {
         }
 
         // "removing" deposits is equivalent to "burning" a batch of ERC1155 tokens.
-        emit TransferBatch(LibTractor._user(), account, address(0), removedDepositIDs, amounts);
+        if (emission == ERC1155Event.EMIT_BATCH_EVENT) {
+            emit TransferBatch(msg.sender, account, address(0), removedDepositIDs, amounts);
+        }
+
         emit RemoveDeposits(
             account,
             token,
@@ -620,5 +699,29 @@ library LibSilo {
         if (beans > s.sys.silo.earnedBeans) return s.sys.silo.earnedBeans;
 
         return beans;
+    }
+
+    /**
+     * @notice Returns the amount of Germinating Stalk
+     * for a given GerminationSide enum.
+     * @dev When a Farmer attempts to withdraw Beans from a Deposit that has a Germinating Stem,
+     * `checkForEarnedBeans` is called to determine how many of the Beans were Planted vs Deposited.
+     * If a Farmer withdraws a Germinating Deposit with Earned Beans, only subtract the Germinating Beans
+     * from the Germinating Balances
+     * @return germinatingStalk stalk that is germinating for a given GerminationSide enum.
+     * @return earnedBeanStalk the earned bean portion of stalk for a given GerminationSide enum.
+     */
+    function checkForEarnedBeans(
+        address account,
+        uint256 stalk,
+        GerminationSide side
+    ) internal view returns (uint256 germinatingStalk, uint256 earnedBeanStalk) {
+        AppStorage storage s = LibAppStorage.diamondStorage();
+        uint256 farmerGerminatingStalk = s.accts[account].germinatingStalk[side];
+        if (stalk > farmerGerminatingStalk) {
+            return (farmerGerminatingStalk, stalk.sub(farmerGerminatingStalk));
+        } else {
+            return (stalk, 0);
+        }
     }
 }

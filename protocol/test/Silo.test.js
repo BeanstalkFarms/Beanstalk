@@ -138,6 +138,77 @@ describe("newSilo", function () {
       expect(await beanstalk.balanceOfStalk(user2.address)).to.eq(toStalk("1050.6"));
       expect(await beanstalk.balanceOfRoots(user2.address)).to.eq("10005714285714285714285714");
     });
+
+    it("user can withdraw earned beans", async function () {
+      stemTip = await beanstalk.stemTipForToken(BEAN);
+      await beanstalk.connect(user).withdrawDeposit(BEAN, stemTip, to6("25"), EXTERNAL);
+
+      // add Bean deposit, such that the stem tip matches with the earned beans, and verify withdraw.
+      await beanstalk.connect(user).deposit(BEAN, to6("25"), EXTERNAL);
+      await beanstalk.connect(user).withdrawDeposit(BEAN, stemTip, to6("50"), EXTERNAL);
+    });
+
+    it("user can withdraws earned beans", async function () {
+      stemTip = await beanstalk.stemTipForToken(BEAN);
+      await beanstalk.connect(user).withdrawDeposits(BEAN, [stemTip], [to6("25")], EXTERNAL);
+
+      // add Bean deposit, such that the stem tip matches with the earned beans, and verify withdraw.
+      await beanstalk.connect(user).deposit(BEAN, to6("25"), EXTERNAL);
+      await beanstalk.connect(user).withdrawDeposits(BEAN, [stemTip], [to6("50")], EXTERNAL);
+    });
+
+    it("user can withdraws multiple earned beans", async function () {
+      stemTip = await beanstalk.stemTipForToken(BEAN);
+      await beanstalk.connect(user).withdrawDeposits(BEAN, [stemTip], [to6("25")], EXTERNAL);
+
+      // add Bean deposit, such that the stem tip matches with the earned beans, and verify withdraw.
+      await beanstalk.connect(user).deposit(BEAN, to6("25"), EXTERNAL);
+      await mockBeanstalk.siloSunrise("0");
+      stemTip1 = await beanstalk.stemTipForToken(BEAN);
+      await beanstalk.connect(user).deposit(BEAN, to6("50"), EXTERNAL);
+      await beanstalk
+        .connect(user)
+        .withdrawDeposits(BEAN, [stemTip, stemTip1], [to6("50"), to6("50")], EXTERNAL);
+    });
+
+    it("user can transfer earned beans", async function () {
+      stemTip = await beanstalk.stemTipForToken(BEAN);
+      await beanstalk
+        .connect(user)
+        .transferDeposit(user.address, user2.address, BEAN, stemTip, to6("25"));
+      // add Bean deposit, such that the stem tip matches with the earned beans, and verify withdraw.
+      await beanstalk.connect(user).deposit(BEAN, to6("25"), EXTERNAL);
+      await beanstalk
+        .connect(user)
+        .transferDeposit(user.address, user2.address, BEAN, stemTip, to6("50"));
+    });
+
+    it("user can transferDeposits earned beans", async function () {
+      stemTip = await beanstalk.stemTipForToken(BEAN);
+      await beanstalk
+        .connect(user)
+        .transferDeposits(user.address, user2.address, BEAN, [stemTip], [to6("50")]);
+    });
+
+    it("user can transferDeposits earned beans", async function () {
+      stemTip0 = await beanstalk.stemTipForToken(BEAN);
+      await beanstalk
+        .connect(user)
+        .transferDeposits(user.address, user2.address, BEAN, [stemTip], [to6("25")]);
+      // pass 1 season, deposit, and verify user can transfer.
+      await mockBeanstalk.siloSunrise("0");
+      stemTip1 = await beanstalk.stemTipForToken(BEAN);
+      await beanstalk.connect(user).deposit(BEAN, to6("25"), EXTERNAL);
+      await beanstalk
+        .connect(user)
+        .transferDeposits(
+          user.address,
+          user2.address,
+          BEAN,
+          [stemTip0, stemTip1],
+          [to6("25"), to6("25")]
+        );
+    });
   });
 
   describe("ERC1155 Deposits", async function () {
@@ -473,12 +544,16 @@ describe("newSilo", function () {
       });
 
       it("emit events", async function () {
+        season = await beanstalk.season();
         expect(this.result)
           .to.emit(beanstalk, "FarmerGerminatingStalkBalanceChanged")
           .withArgs(user4.address, toStalk("1000"));
         expect(this.result)
           .to.emit(beanstalk, "TotalGerminatingBalanceChanged")
           .withArgs("3", BEAN, to6("1000"), to6("1000"));
+        expect(this.result)
+          .to.emit(beanstalk, "TotalGerminatingStalkChanged")
+          .withArgs(season, toStalk("1000"));
       });
     });
 
@@ -493,12 +568,16 @@ describe("newSilo", function () {
       });
 
       it("emit events", async function () {
+        season = await beanstalk.season();
         expect(this.result)
           .to.emit(beanstalk, "FarmerGerminatingStalkBalanceChanged")
           .withArgs(user4.address, toStalk("-1000"));
         expect(this.result)
           .to.emit(beanstalk, "TotalGerminatingBalanceChanged")
           .withArgs("3", BEAN, to6("-1000"), to6("-1000"));
+        expect(this.result)
+          .to.emit(beanstalk, "TotalGerminatingStalkChanged")
+          .withArgs(season, toStalk("-1000"));
       });
     });
 

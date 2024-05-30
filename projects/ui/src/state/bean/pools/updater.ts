@@ -2,15 +2,16 @@ import { useCallback, useEffect, useMemo } from 'react';
 import BigNumber from 'bignumber.js';
 import { useDispatch } from 'react-redux';
 import throttle from 'lodash/throttle';
-import { useProvider } from 'wagmi';
+
 import {
   useBeanstalkContract,
   useBeanstalkPriceContract,
 } from '~/hooks/ledger/useContract';
 import { tokenResult, getChainConstant, displayBeanPrice } from '~/util';
 import { BEAN } from '~/constants/tokens';
-import ALL_POOLS from '~/constants/pools';
+import { ALL_POOLS, WHITELISTED_POOLS } from '~/constants/pools';
 import { ERC20__factory } from '~/generated';
+import { useEthersProvider } from '~/util/wagmi/ethersAdapter';
 import { updatePrice, updateDeltaB, updateSupply } from '../token/actions';
 import { resetPools, updateBeanPools, UpdatePoolPayload } from './actions';
 
@@ -18,7 +19,7 @@ export const useFetchPools = () => {
   const dispatch = useDispatch();
   const beanstalk = useBeanstalkContract();
   const [beanstalkPriceContract, chainId] = useBeanstalkPriceContract();
-  const provider = useProvider();
+  const provider = useEthersProvider();
 
   // Handlers
   const _fetch = useCallback(async () => {
@@ -30,6 +31,7 @@ export const useFetchPools = () => {
           chainId
         );
         const Pools = getChainConstant(ALL_POOLS, chainId);
+        const WhitelistedPools = getChainConstant(WHITELISTED_POOLS, chainId);
         const Bean = getChainConstant(BEAN, chainId);
 
         // FIXME: find regression with Bean.totalSupply()
@@ -68,29 +70,51 @@ export const useFetchPools = () => {
                 acc.push(
                   ERC20__factory.connect(POOL.lpToken.address, provider)
                     .totalSupply()
-                    .then((supply) => ({
-                      address: poolData.pool,
-                      pool: {
-                        price: tokenResult(BEAN)(poolData.price.toString()),
-                        reserves: [
-                          // NOTE:
-                          // Assumes that the ordering of tokens in the Pool instance
-                          // matches the order returned by the price contract.
-                          tokenResult(POOL.tokens[0])(poolData.balances[0]),
-                          tokenResult(POOL.tokens[1])(poolData.balances[1]),
-                        ],
-                        deltaB: tokenResult(BEAN)(poolData.deltaB.toString()),
-                        supply: tokenResult(POOL.lpToken)(supply.toString()),
-                        // Liquidity: always denominated in USD for the price contract
-                        liquidity: tokenResult(BEAN)(
-                          poolData.liquidity.toString()
-                        ),
-                        // USD value of 1 LP token == liquidity / supply
-                        totalCrosses: new BigNumber(0),
-                        lpUsd: tokenResult(BEAN)(poolData.lpUsd),
-                        lpBdv: tokenResult(BEAN)(poolData.lpBdv),
-                      },
-                    }))
+                    .then(
+                      (supply) =>
+                        ({
+                          address: poolData.pool,
+                          pool: {
+                            price: tokenResult(BEAN)(poolData.price.toString()),
+                            reserves: [
+                              // NOTE:
+                              // Assumes that the ordering of tokens in the Pool instance
+                              // matches the order returned by the price contract.
+                              tokenResult(POOL.tokens[0])(poolData.balances[0]),
+                              tokenResult(POOL.tokens[1])(poolData.balances[1]),
+                            ],
+                            deltaB: tokenResult(BEAN)(
+                              poolData.deltaB.toString()
+                            ),
+                            supply: tokenResult(POOL.lpToken)(
+                              supply.toString()
+                            ),
+                            // Liquidity: always denominated in USD for the price contract
+                            liquidity: tokenResult(BEAN)(
+                              poolData.liquidity.toString()
+                            ),
+                            // USD value of 1 LP token == liquidity / supply
+                            totalCrosses: new BigNumber(0),
+                            lpUsd: tokenResult(BEAN)(poolData.lpUsd),
+                            lpBdv: tokenResult(BEAN)(poolData.lpBdv),
+                            twaDeltaB: null,
+                          },
+                        }) as UpdatePoolPayload
+                    )
+                    .then((data) => {
+                      if (WhitelistedPools[data.address.toLowerCase()]) {
+                        return beanstalk
+                          .poolDeltaB(data.address)
+                          .then((twaDeltaB) => {
+                            data.pool.twaDeltaB = tokenResult(BEAN)(
+                              twaDeltaB.toString()
+                            );
+                            return data;
+                          });
+                      }
+
+                      return data;
+                    })
                     .catch((err) => {
                       console.debug(
                         '[beanstalk/pools/updater] Failed to get LP token supply',

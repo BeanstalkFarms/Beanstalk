@@ -1,4 +1,4 @@
-import { Address, BigDecimal } from "@graphprotocol/graph-ts";
+import { Address, BigDecimal, BigInt } from "@graphprotocol/graph-ts";
 
 // Standard Addresses
 export const ADDRESS_ZERO = Address.fromString("0x0000000000000000000000000000000000000000");
@@ -11,6 +11,7 @@ export const BEAN_3CRV = Address.fromString("0xc9C32cd16Bf7eFB85Ff14e0c8603cc90F
 export const UNRIPE_BEAN_3CRV = Address.fromString("0x1BEA3CcD22F4EBd3d37d731BA31Eeca95713716D");
 export const BEANSTALK_FARMS = Address.fromString("0x21de18b6a8f78ede6d16c50a167f6b222dc08df7");
 export const WETH = Address.fromString("0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2");
+export const LUSD = Address.fromString("0x5f98805A4E8be255a32880FDeC7F6728C6568bA0");
 
 // Protocol Addresses
 export const BEANSTALK = Address.fromString("0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5");
@@ -22,7 +23,7 @@ export const BEANSTALK_PRICE = Address.fromString("0xb01CE0008CaD90104651d6A84b6
 
 // LP Addresses
 export const BEAN_3CRV_V1 = Address.fromString("0x3a70DfA7d2262988064A2D051dd47521E43c9BdD");
-export const CRV3_POOL_V1 = Address.fromString("0x6c3F90f043a72FA612cbac8115EE7e52BDe6E490");
+export const CRV3_TOKEN = Address.fromString("0x6c3F90f043a72FA612cbac8115EE7e52BDe6E490");
 export const CRV3_POOL = Address.fromString("0xbEbc44782C7dB0a1A60Cb6fe97d0b483032FF1C7");
 export const BEAN_WETH_V1 = Address.fromString("0x87898263B6C5BABe34b4ec53F22d98430b91e371");
 export const WETH_USDC_PAIR = Address.fromString("0xB4e16d0168e52d35CaCD2c6185b44281Ec28C9Dc");
@@ -38,3 +39,12 @@ export const MIN_HUMIDITY = BigDecimal.fromString("500");
 export const DELTA_HUMIDITY = BigDecimal.fromString("0.5");
 
 export const CALCULATIONS_CURVE = Address.fromString("0x25BF7b72815476Dd515044F9650Bf79bAd0Df655");
+
+// Milestone blocks
+export const BEANSTALK_BLOCK = BigInt.fromU32(12974075);
+export const EXPLOIT_BLOCK = BigInt.fromU32(14602790);
+export const REPLANT_SUNRISE_BLOCK = BigInt.fromU32(15289934);
+export const BEANSTALK_PRICE_BLOCK = BigInt.fromU32(17978222);
+export const BEAN_WETH_CP2_WELL_BLOCK = BigInt.fromU32(17978134);
+export const BEAN_WETH_UNRIPE_MIGRATION_BLOCK = BigInt.fromU32(18392690);
+export const GAUGE_BIP45_BLOCK = BigInt.fromU32(19927634);
