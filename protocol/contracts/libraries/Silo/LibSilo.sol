@@ -632,8 +632,9 @@ library LibSilo {
         (germ, stemTip) = LibGerminate.getGerminationState(token, stem);
         bdvRemoved = LibTokenSilo.removeDepositFromAccount(account, token, stem, amount);
 
-        // the initial and grown stalk are as there are instances where the initial stalk is
-        // germinating, but the grown stalk is not.
+        // the initial and grown stalk are seperated as there are instances
+        // where the initial stalk issued for a deposit is germinating. Grown stalk never germinates,
+        // and thus is not included in the germinating stalk.
         initialStalkRemoved = bdvRemoved.mul(s.ss[token].stalkIssuedPerBdv);
 
         grownStalkRemoved = stalkReward(stem, stemTip, bdvRemoved.toUint128());
