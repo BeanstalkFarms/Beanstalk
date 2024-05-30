@@ -1,9 +1,8 @@
-import React, { useCallback } from "react";
+import React, { useCallback, useEffect } from "react";
 import styled from "styled-components";
 import { ethers } from "ethers";
 import { FormProvider, useForm, useFormContext, useWatch } from "react-hook-form";
 
-import { useTokenMetadata } from "src/utils/token/useTokenMetadata";
 import { getIsValidEthereumAddress } from "src/utils/addresses";
 
 import { theme } from "src/utils/ui/theme";
@@ -16,6 +15,7 @@ import { XIcon } from "src/components/Icons";
 import { CreateWellProps, useCreateWell } from "./CreateWellProvider";
 import { CreateWellFormProgress } from "./shared/CreateWellFormProgress";
 import { ComponentInputWithCustom } from "./shared/ComponentInputWithCustom";
+import { useERC20TokenWithAddress } from "src/tokens/useERC20Token";
 
 const additionalOptions = [
   {
@@ -144,20 +144,22 @@ export const ChooseFunctionAndPump = () => {
 // ---------- STYLES & COMPONENTS ----------
 
 const TokenAddressInputWithSearch = ({ path }: { path: "token1" | "token2" }) => {
-  const { register, control, setValue } = useFormContext<FormValues>();
+  const { register, control, setValue, setError } = useFormContext<FormValues>();
   const _value = useWatch({ control, name: path });
   const value = typeof _value === "string" ? _value : "";
 
-  const metadata = useTokenMetadata(value);
+  const { data: token, error } = useERC20TokenWithAddress(value);
 
-  // TODO: need to verify here that the token is a valid ERC20 token
-
-  const logo = metadata?.logo || "";
-  const symbol = metadata?.symbol || "";
+  useEffect(() => {
+    if (error?.message) {
+      setError(path, { message: error.message });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [error?.message]);
 
   return (
     <>
-      {!symbol && !logo ? (
+      {!token ? (
         <TextInputField
           {...register(path, {
             validate: (value) => ethers.utils.isAddress(value) || "Invalid address"
@@ -167,12 +169,12 @@ const TokenAddressInputWithSearch = ({ path }: { path: "token1" | "token2" }) =>
         />
       ) : (
         <FoundTokenInfo>
-          {logo && (
+          {token?.logo && (
             <ImgContainer width={16} height={16}>
-              {<img src={logo} alt={value} />}
+              {<img src={token.logo} alt={value} />}
             </ImgContainer>
           )}
-          <Text $variant="button-link">{symbol}</Text>{" "}
+          <Text $variant="button-link">{token.symbol || ""}</Text>{" "}
           <Flex onClick={() => setValue(path, "")}>
             <XIcon width={10} height={10} />
           </Flex>
