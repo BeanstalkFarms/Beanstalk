@@ -335,7 +335,7 @@ contract MockSeasonFacet is SeasonFacet {
         s.sys.weather.lastDeltaSoil = uint128(_lastDeltaSoil);
         s.sys.beanSown = beanSown;
         s.sys.soil = endSoil;
-        calcCaseIdandUpdate(deltaB);
+        mockCalcCaseIdandUpdate(deltaB);
     }
 
     function resetSeasonStart(uint256 amount) public {
@@ -554,7 +554,6 @@ contract MockSeasonFacet is SeasonFacet {
     }
 
     function mockIncrementGermination(
-        address account,
         address token,
         uint128 amount,
         uint128 bdv,
@@ -693,8 +692,21 @@ contract MockSeasonFacet is SeasonFacet {
         C.bean().mint(msg.sender, newSupply);
     }
 
-    function mockCalcCaseIdandUpdate(int256 deltaB) external returns (uint256 caseId) {
-        return calcCaseIdandUpdate(deltaB);
+    /**
+     * @notice mock updates case id and beanstalk state. disables oracle failure.
+     */
+    function mockCalcCaseIdandUpdate(int256 deltaB) public returns (uint256 caseId) {
+        uint256 beanSupply = C.bean().totalSupply();
+        // prevents infinite L2SR and podrate
+        if (beanSupply == 0) {
+            s.sys.weather.temp = 1;
+            return 9; // Reasonably low
+        }
+        // Calculate Case Id
+        (caseId, ) = LibEvaluate.evaluateBeanstalk(deltaB, beanSupply);
+        updateTemperatureAndBeanToMaxLpGpPerBdvRatio(caseId, false);
+        LibFlood.handleRain(caseId);
+        return caseId;
     }
 
     function getSeasonStart() external view returns (uint256) {

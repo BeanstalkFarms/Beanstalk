@@ -127,18 +127,18 @@ task("diamondABI", "Generates ABI file for diamond, includes all ABIs of facets"
   modules.forEach((module) => {
     const pattern = path.join(".", modulesDir, module, "**", "*Facet.sol");
     const files = glob.sync(pattern);
-    // if (module == "silo") {
-    //   // Manually add in libraries that emit events
-    //   files.push("contracts/libraries/LibIncentive.sol");
-    //   files.push("contracts/libraries/Silo/LibWhitelist.sol");
-    //   files.push("contracts/libraries/LibGauge.sol");
-    //   files.push("contracts/libraries/Silo/LibGerminate.sol");
-    //   files.push("contracts/libraries/LibShipping.sol");
-    //   files.push("contracts/libraries/Minting/LibWellMinting.sol");
-    //   files.push("contracts/libraries/Silo/LibWhitelistedTokens.sol");
-    //   files.push("contracts/libraries/Silo/LibWhitelist.sol");
-    //   files.push("contracts/libraries/LibGauge.sol");
-    // }
+    if (module == "silo") {
+      // Manually add in libraries that emit events
+      // files.push("contracts/libraries/LibIncentive.sol");
+      // files.push("contracts/libraries/Silo/LibWhitelist.sol");
+      // files.push("contracts/libraries/LibGauge.sol");
+      // files.push("contracts/libraries/Silo/LibGerminate.sol");
+      // files.push("contracts/libraries/Minting/LibWellMinting.sol");
+      // files.push("contracts/libraries/Silo/LibWhitelistedTokens.sol");
+      // files.push("contracts/libraries/Silo/LibWhitelist.sol");
+      // files.push("contracts/libraries/LibGauge.sol");
+      files.push("contracts/libraries/LibShipping.sol");
+    }
     files.forEach((file) => {
       const facetName = getFacetName(file);
       const jsonFileName = `${facetName}.json`;

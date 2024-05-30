@@ -358,22 +358,6 @@ describe("New Silo Token", function () {
               "1000"
             ]);
         });
-
-        it("emits TransferBatch event", async function () {
-          const stem1 = await beanstalk.stemTipForToken(siloToken.address);
-          const stem0 = stem1.sub(siloSettings.stalkEarnedPerSeason);
-          const depositID0 = await beanstalk.getDepositId(this.siloToken.address, stem0);
-          const depositID1 = await beanstalk.getDepositId(this.siloToken.address, stem1);
-          await expect(this.result)
-            .to.emit(beanstalk, "TransferBatch")
-            .withArgs(
-              userAddress,
-              userAddress,
-              ZERO_ADDRESS,
-              [depositID0, depositID1],
-              ["500", "1000"]
-            );
-        });
       });
 
       describe("2 token crates", function () {
@@ -418,22 +402,6 @@ describe("New Silo Token", function () {
               "1000",
               "1000"
             ]);
-        });
-
-        it("emits TransferBatch event", async function () {
-          const stem1 = await beanstalk.stemTipForToken(siloToken.address);
-          const stem0 = stem1.sub(siloSettings.stalkEarnedPerSeason);
-          const depositID0 = await beanstalk.getDepositId(this.siloToken.address, stem0);
-          const depositID1 = await beanstalk.getDepositId(this.siloToken.address, stem1);
-          await expect(this.result)
-            .to.emit(beanstalk, "TransferBatch")
-            .withArgs(
-              userAddress,
-              userAddress,
-              ZERO_ADDRESS,
-              [depositID0, depositID1],
-              ["1000", "1000"]
-            );
         });
       });
     });

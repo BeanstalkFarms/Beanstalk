@@ -272,8 +272,8 @@ describe("Silo Enroot", function () {
           .withArgs(user.address, UNRIPE_BEAN, stem11, to6("5"), to6("2.5"));
       });
 
-      it('omits TransferBatch event', async function () {
-        await expect(this.result).to.not.emit(this.silo, 'TransferBatch')
+      it("omits TransferBatch event", async function () {
+        await expect(this.result).to.not.emit(beanstalk, "TransferBatch");
       });
     });
 
@@ -325,8 +325,8 @@ describe("Silo Enroot", function () {
         expect(dep[1]).to.equal(bdv.sub("1").div("2").add("1"));
       });
 
-      it('omits TransferBatch event', async function () {
-        await expect(this.result).to.not.emit(this.silo, 'TransferBatch');
+      it("omits TransferBatch event", async function () {
+        await expect(this.result).to.not.emit(beanstalk, "TransferBatch");
       });
     });
   });

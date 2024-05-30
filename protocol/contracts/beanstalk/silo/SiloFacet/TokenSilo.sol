@@ -320,10 +320,24 @@ contract TokenSilo is ReentrancyGuard {
         // Deposited Beans in that Season, then it is assumed that the excess Beans were
         // Planted.
         if (token == C.BEAN) {
-            stalk = LibSilo.checkForEarnedBeans(account, stalk, side);
+            (uint256 germinatingStalk, uint256 earnedBeansStalk) = LibSilo.checkForEarnedBeans(
+                account,
+                stalk,
+                side
+            );
             // set the bdv and amount accordingly to the stalk.
-            bdv = stalk.div(C.STALK_PER_BEAN);
-            amount = bdv;
+            stalk = germinatingStalk;
+            uint256 earnedBeans = earnedBeansStalk.div(C.STALK_PER_BEAN);
+            amount = amount - earnedBeans;
+            // note: the 1 Bean = 1 BDV assumption cannot be made here for input `bdv`,
+            // as a user converting a germinating LP deposit into bean may have an inflated bdv.
+            // thus, amount and bdv are decremented by the earnedBeans (where the 1 Bean = 1 BDV assumption can be made).
+            bdv = bdv - earnedBeans;
+
+            // burn the earned bean stalk (which is active).
+            LibSilo.burnActiveStalk(account, earnedBeansStalk);
+            // calculate earnedBeans and decrement totalDeposited.
+            LibTokenSilo.decrementTotalDeposited(C.BEAN, earnedBeans, earnedBeans);
         }
         // Decrement from total germinating.
         LibTokenSilo.decrementTotalGerminating(token, amount, bdv, side); // Decrement total Germinating in the silo.
@@ -346,7 +360,7 @@ contract TokenSilo is ReentrancyGuard {
         int96 stem,
         uint256 amount
     ) internal returns (uint256) {
-        (uint256 initalStalk, uint256 grownStalk, uint256 bdv, GerminationSide side) = LibSilo
+        (uint256 initialStalk, uint256 activeStalk, uint256 bdv, GerminationSide side) = LibSilo
             ._removeDepositFromAccount(
                 sender,
                 token,
@@ -364,11 +378,22 @@ contract TokenSilo is ReentrancyGuard {
         );
 
         if (side == GerminationSide.NOT_GERMINATING) {
-            LibSilo.transferStalk(sender, recipient, initalStalk.add(grownStalk));
+            LibSilo.transferStalk(sender, recipient, initialStalk.add(activeStalk));
         } else {
-            LibSilo.transferGerminatingStalk(sender, recipient, initalStalk, side);
-            if (grownStalk > 0) {
-                LibSilo.transferStalk(sender, recipient, grownStalk);
+            if (token == C.BEAN) {
+                (uint256 senderGerminatingStalk, uint256 senderEarnedBeansStalk) = LibSilo
+                    .checkForEarnedBeans(sender, initialStalk, side);
+                // if initial stalk is greater than the sender's germinating stalk, then the sender is sending an
+                // Earned Bean Deposit. The active stalk is incremented and the
+                // initial stalk is decremented by the sender's earnedBeansStalk.
+                if (initialStalk > senderGerminatingStalk) {
+                    activeStalk = activeStalk.add(senderEarnedBeansStalk);
+                    initialStalk = initialStalk.sub(senderEarnedBeansStalk);
+                }
+            }
+            LibSilo.transferGerminatingStalk(sender, recipient, initialStalk, side);
+            if (activeStalk > 0) {
+                LibSilo.transferStalk(sender, recipient, activeStalk);
             }
         }
 
