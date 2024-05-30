@@ -306,11 +306,12 @@ contract TokenSilo is Silo {
             // set the bdv and amount accordingly to the stalk. 
             stalk = germinatingStalk;
             uint256 earnedBeans = earnedBeansStalk.div(C.STALK_PER_BEAN);
-            amount = amount - earnedBeans;
+
+            amount = amount.sub(earnedBeans);
             // note: the 1 Bean = 1 BDV assumption cannot be made here for input `bdv`, 
             // as a user converting a germinating LP deposit into bean may have an inflated bdv.
             // thus, amount and bdv are decremented by the earnedBeans (where the 1 Bean = 1 BDV assumption can be made).
-            bdv = bdv - earnedBeans;
+            bdv = bdv.sub(earnedBeans);
 
             // burn the earned bean stalk (which is active).
             LibSilo.burnActiveStalk(account,  earnedBeansStalk);
@@ -367,9 +368,9 @@ contract TokenSilo is Silo {
                 // if initial stalk is greater than the sender's germinating stalk, then the sender is sending an 
                 // Earned Bean Deposit. The active stalk is incremented and the
                 // initial stalk is decremented by the sender's earnedBeansStalk.
-                if(initialStalk > senderGerminatingStalk) {
+                if(senderEarnedBeansStalk > 0) {
                     activeStalk = activeStalk.add(senderEarnedBeansStalk);
-                    initialStalk = initialStalk.sub(senderEarnedBeansStalk);
+                    initialStalk = senderGerminatingStalk;
                 }
             }
             LibSilo.transferGerminatingStalk(sender, recipient, initialStalk, germ);

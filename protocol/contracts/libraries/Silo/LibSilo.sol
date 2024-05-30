@@ -371,11 +371,11 @@ library LibSilo {
                     initialStalk,
                     LibGerminate.Germinate.ODD
                 );
-                if (initialStalk > senderGerminatingStalk) {
+                if (earnedBeansStalk > 0) {
                     // increment the active stalk by the earned beans active stalk.
                     // decrement the germinatingStalk stalk by the earned beans active stalk.
                     ar.active.stalk = ar.active.stalk.add(earnedBeansStalk);
-                    initialStalk = initialStalk.sub(earnedBeansStalk);
+                    initialStalk = senderGerminatingStalk;
                 }
             }
             // the inital Stalk issued for a Deposit is the 
@@ -400,11 +400,11 @@ library LibSilo {
                     initialStalk,
                     LibGerminate.Germinate.EVEN
                 );
-                if (initialStalk > senderGerminatingStalk) {
+                if (earnedBeansStalk > 0) {
                     // increment the active stalk by the earned beans active stalk.
                     // decrement the germinatingStalk stalk by the earned beans active stalk.
                     ar.active.stalk = ar.active.stalk.add(earnedBeansStalk);
-                    initialStalk = initialStalk.sub(earnedBeansStalk);
+                    initialStalk = senderGerminatingStalk;
                 }
             }
             // the inital Stalk issued for a Deposit is the 
