@@ -37,7 +37,7 @@ async function printAllSelectors(contractNames, defaultArtifactFolderPath = "../
   if (verbose) console.log(results)
 
   // Write the output to a text file
-  fs.writeFileSync('./reseed/data/BeanstalkSelectors.json', JSON.stringify(results, null, 2));
+  fs.writeFileSync('./reseed/data/beanstalkSelectors.json', JSON.stringify(results, null, 2));
 }
 
 exports.printSelectors = printSelectors;
