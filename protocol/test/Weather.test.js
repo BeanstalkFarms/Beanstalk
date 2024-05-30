@@ -67,6 +67,9 @@ describe("Complex Weather", function () {
       WSTETH
     );
     await this.beanWstethWell.setReserves([to6("1000000"), to18("1000")]);
+    await this.beanWstethWell.setReserves([to6("1000000"), to18("1000")]);
+    await this.well.setReserves([to6("1000000"), to18("1000")]);
+    await this.well.setReserves([to6("1000000"), to18("1000")]);
     await advanceTime(3600);
     await owner.sendTransaction({ to: user.address, value: 0 });
     await setToSecondsAfterHour(0);
@@ -91,7 +94,7 @@ describe("Complex Weather", function () {
           await mockBeanstalk.setUsdEthPrice(to18("0.001"));
           await mockBeanstalk.setFertilizerE(false, to6("0"));
           await mockBeanstalk.setYieldE(this.testData.startingWeather);
-          await mockBeanstalk.setBeanToMaxLpGpPerBdvRatio(to18(this.testData.initalPercentToLp));
+          await mockBeanstalk.setBeanToMaxLpGpPerBdvRatio(to18(this.testData.initialPercentToLp));
           bean.connect(user).burn(await bean.balanceOf(user.address));
           this.dsoil = this.testData.lastSoil;
           this.startSoil = this.testData.startingSoil;

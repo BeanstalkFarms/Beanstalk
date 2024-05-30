@@ -1,4 +1,4 @@
-import { BigInt } from "@graphprotocol/graph-ts";
+import { BigDecimal, BigInt } from "@graphprotocol/graph-ts";
 import { Token } from "../../generated/schema";
 import { ZERO_BD } from "../../../subgraph-core/utils/Decimals";
 
@@ -11,4 +11,10 @@ export function loadOrCreateToken(address: string): Token {
     token.save();
   }
   return token as Token;
+}
+
+export function updateTokenPrice(address: string, price: BigDecimal): void {
+  let token = loadOrCreateToken(address);
+  token.lastPriceUSD = price;
+  token.save();
 }

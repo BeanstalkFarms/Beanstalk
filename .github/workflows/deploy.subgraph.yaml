@@ -1,0 +1,48 @@
+name: Deploy Subgraph
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: "Deployment environment (prod/dev/testing)"
+        required: true
+      subgraph:
+        description: "Subgraph name (beanstalk/bean/basin/beanft)"
+        required: true
+      branch:
+        description: "Branch name"
+        required: true
+
+jobs:
+  validation:
+    runs-on: ubuntu-latest
+    outputs:
+      environment: ${{ steps.check_env.outputs.environment }}
+    steps:
+      - name: Validate environment input
+        id: check_env
+        run: |
+          # Check if the environment is either 'prod' or 'dev' or 'testing'
+          if [[ "${{ github.event.inputs.environment }}" != "prod" && "${{ github.event.inputs.environment }}" != "dev" && "${{ github.event.inputs.environment }}" != "testing" ]]; then
+            echo "Error: Environment must be one of 'prod', 'dev', 'testing'."
+            exit 1
+          fi
+          # Check if the subgraph is a valid selection
+          if [[ "${{ github.event.inputs.subgraph }}" != "beanstalk" && "${{ github.event.inputs.subgraph }}" != "bean" && "${{ github.event.inputs.subgraph }}" != "basin" && "${{ github.event.inputs.subgraph }}" != "beanft" ]]; then
+            echo "Error: Subgraph must be one of 'beanstalk', 'bean', 'basin', 'beanft'."
+            exit 1
+          fi
+
+  deploy:
+    needs: validation
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install SSH key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.GRAPH_SERVER_SSH_KEY }}" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh-keyscan -H ${{ secrets.GRAPH_SERVER_HOST }} >> ~/.ssh/known_hosts
+
+      - name: Execute Remote Deployment Script
+        run: ssh -i ~/.ssh/id_ed25519 github@${{ secrets.GRAPH_SERVER_HOST }} "bash /home/github/deploy.sh ${{ github.event.inputs.branch }} ${{ github.event.inputs.subgraph }} ${{ github.event.inputs.environment }}"

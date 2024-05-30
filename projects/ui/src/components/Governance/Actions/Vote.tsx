@@ -29,6 +29,7 @@ import useProposalBlockData from '~/hooks/beanstalk/useProposalBlockData';
 import StatHorizontal from '~/components/Common/StatHorizontal';
 import { GovSpace } from '~/lib/Beanstalk/Governance';
 import useFarmerVotingPower from '~/hooks/farmer/useFarmerVotingPower';
+import useSetting from '~/hooks/app/useSetting';
 
 const SNAPSHOT_API_KEY = import.meta.env.VITE_SNAPSHOT_API_KEY;
 if (!SNAPSHOT_API_KEY) throw new Error('Missing SNAPSHOT_API_KEY');
@@ -80,9 +81,15 @@ const VoteForm: FC<
 
   /// Derived
   const isNFT = proposal.space.id === GovSpace.BeanNFT;
-  const isViewOnly = proposal.space.id === GovSpace.BeanstalkBugBounty || proposal.space.id === GovSpace.BeanstalkFarmsBudget;
+  const isViewOnly =
+    proposal.space.id === GovSpace.BeanstalkBugBounty ||
+    proposal.space.id === GovSpace.BeanstalkFarmsBudget;
   const canVote = farmerVP.votingPower.total.gt(0);
   const isClosed = differenceInTime <= 0;
+
+  // Are we impersonating a different account while not in dev mode
+  const isImpersonating =
+    !!useSetting('impersonatedAccount')[0] && !import.meta.env.DEV;
 
   /// Handlers
   const handleClick = useCallback(
@@ -106,6 +113,19 @@ const VoteForm: FC<
 
   const createVoteButtons = () => {
     if (isViewOnly) return null;
+    if (isImpersonating) {
+      return (
+        <LoadingButton
+          type="button"
+          variant="contained"
+          color="primary"
+          size="medium"
+          disabled
+        >
+          Impersonating Account
+        </LoadingButton>
+      );
+    }
     switch (proposal.type) {
       case 'single-choice': {
         /// Option isn't selected or the voting period has ended

@@ -151,7 +151,7 @@ contract MockInitDiamond is InitalizeDiamond {
     }
 
     /**
-     * @notice returns the inital unripe and underlying tokens.
+     * @notice returns the initial unripe and underlying tokens.
      */
     function getInitalUnripeAndUnderlyingTokens(
         address underlyingUrLPWell

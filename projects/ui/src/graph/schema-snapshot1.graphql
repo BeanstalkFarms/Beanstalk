@@ -1,0 +1,491 @@
+type Alias {
+  address: String!
+  alias: String!
+  created: Int!
+  id: String!
+  ipfs: String
+}
+
+input AliasWhere {
+  address: String
+  address_in: [String]
+  alias: String
+  alias_in: [String]
+  created: Int
+  created_gt: Int
+  created_gte: Int
+  created_in: [Int]
+  created_lt: Int
+  created_lte: Int
+  id: String
+  id_in: [String]
+  ipfs: String
+  ipfs_in: [String]
+}
+
+scalar Any
+
+type BoostSettings {
+  bribeEnabled: Boolean
+  enabled: Boolean
+}
+
+type DelegationPortal {
+  delegationApi: String!
+  delegationContract: String!
+  delegationType: String!
+}
+
+type Follow {
+  created: Int!
+  follower: String!
+  id: String!
+  ipfs: String
+  network: String!
+  space: Space!
+}
+
+input FollowWhere {
+  created: Int
+  created_gt: Int
+  created_gte: Int
+  created_in: [Int]
+  created_lt: Int
+  created_lte: Int
+  follower: String
+  follower_in: [String]
+  id: String
+  id_in: [String]
+  ipfs: String
+  ipfs_in: [String]
+  network: String
+  network_in: [String]
+  space: String
+  space_in: [String]
+}
+
+type Item {
+  id: String!
+  spacesCount: Int
+}
+
+type Message {
+  address: String
+  id: String
+  ipfs: String
+  mci: Int
+  receipt: String
+  sig: String
+  space: String
+  timestamp: Int
+  type: String
+  version: String
+}
+
+input MessageWhere {
+  address: String
+  address_in: [String]
+  id: String
+  id_in: [String]
+  mci: Int
+  mci_gt: Int
+  mci_gte: Int
+  mci_in: [Int]
+  mci_lt: Int
+  mci_lte: Int
+  space: String
+  space_in: [String]
+  timestamp: Int
+  timestamp_gt: Int
+  timestamp_gte: Int
+  timestamp_in: [Int]
+  timestamp_lt: Int
+  timestamp_lte: Int
+  type: String
+  type_in: [String]
+}
+
+type Metrics {
+  categories: Any
+  total: Int
+}
+
+enum OrderDirection {
+  asc
+  desc
+}
+
+type Proposal {
+  app: String
+  author: String!
+  body: String
+  choices: [String]!
+  created: Int!
+  discussion: String!
+  end: Int!
+  flagged: Boolean
+  id: String!
+  ipfs: String
+  link: String
+  network: String!
+  plugins: Any!
+  privacy: String
+  quorum: Float!
+  quorumType: String!
+  scores: [Float]
+  scores_by_strategy: Any
+  scores_state: String
+  scores_total: Float
+  scores_updated: Int
+  snapshot: String
+  space: Space
+  start: Int!
+  state: String
+  strategies: [Strategy]!
+  symbol: String!
+  title: String!
+  type: String
+  updated: Int
+  validation: Validation
+  votes: Int
+}
+
+input ProposalWhere {
+  app: String
+  app_in: [String]
+  app_not: String
+  app_not_in: [String]
+  author: String
+  author_in: [String]
+  created: Int
+  created_gt: Int
+  created_gte: Int
+  created_in: [Int]
+  created_lt: Int
+  created_lte: Int
+  end: Int
+  end_gt: Int
+  end_gte: Int
+  end_in: [Int]
+  end_lt: Int
+  end_lte: Int
+  flagged: Boolean
+  id: String
+  id_in: [String]
+  ipfs: String
+  ipfs_in: [String]
+  network: String
+  network_in: [String]
+  plugins_contains: String
+  scores_state: String
+  scores_state_in: [String]
+  space: String
+  space_in: [String]
+  space_verified: Boolean
+  start: Int
+  start_gt: Int
+  start_gte: Int
+  start_in: [Int]
+  start_lt: Int
+  start_lte: Int
+  state: String
+  strategies_contains: String
+  title_contains: String
+  type: String
+  type_in: [String]
+  updated: Int
+  updated_gt: Int
+  updated_gte: Int
+  updated_in: [Int]
+  updated_lt: Int
+  updated_lte: Int
+  validation: String
+}
+
+type Query {
+  aliases(first: Int! = 20, orderBy: String, orderDirection: OrderDirection, skip: Int! = 0, where: AliasWhere): [Alias]
+  follows(first: Int! = 20, orderBy: String, orderDirection: OrderDirection, skip: Int! = 0, where: FollowWhere): [Follow]
+  messages(first: Int! = 20, orderBy: String, orderDirection: OrderDirection, skip: Int! = 0, where: MessageWhere): [Message]
+  networks: [Item]
+  plugins: [Item]
+  proposal(id: String!): Proposal
+  proposals(first: Int! = 20, orderBy: String, orderDirection: OrderDirection, skip: Int! = 0, where: ProposalWhere): [Proposal]
+  ranking(first: Int! = 20, skip: Int! = 0, where: RankingWhere): RankingObject
+  roles(where: RolesWhere!): [Role]
+  skins: [Item]
+  space(id: String!): Space
+  spaces(first: Int! = 20, orderBy: String, orderDirection: OrderDirection, skip: Int! = 0, where: SpaceWhere): [Space]
+  statement(id: String!): Statement
+  statements(first: Int! = 20, orderBy: String, orderDirection: OrderDirection, skip: Int! = 0, where: StatementsWhere): [Statement]
+  strategies: [StrategyItem]
+  strategy(id: String!): StrategyItem
+  subscriptions(first: Int! = 20, orderBy: String, orderDirection: OrderDirection, skip: Int! = 0, where: SubscriptionWhere): [Subscription]
+  user(id: String!): User
+  users(first: Int! = 20, orderBy: String, orderDirection: OrderDirection, skip: Int! = 0, where: UsersWhere): [User]
+  validations: [Item]
+  vote(id: String!): Vote
+  votes(first: Int! = 20, orderBy: String, orderDirection: OrderDirection, skip: Int! = 0, where: VoteWhere): [Vote]
+  vp(proposal: String, space: String!, voter: String!): Vp
+}
+
+type RankingObject {
+  items: [Space]
+  metrics: Metrics
+}
+
+input RankingWhere {
+  category: String
+  id: String
+  id_in: [String]
+  network: String
+  plugin: String
+  search: String
+  strategy: String
+}
+
+type Role {
+  permissions: [String]
+  space: String
+}
+
+input RolesWhere {
+  address: String!
+}
+
+type Space {
+  about: String
+  activeProposals: Int
+  admins: [String]
+  avatar: String
+  boost: BoostSettings
+  categories: [String]
+  children: [Space]
+  coingecko: String
+  created: Int!
+  delegationPortal: DelegationPortal
+  domain: String
+  email: String
+  filters: SpaceFilters
+  flagged: Boolean
+  followersCount: Int
+  followersCount7d: Int
+  github: String
+  guidelines: String
+  hibernated: Boolean
+  id: String!
+  location: String
+  members: [String]
+  moderators: [String]
+  name: String
+  network: String
+  parent: Space
+  plugins: Any
+  private: Boolean
+  proposalsCount: Int
+  proposalsCount7d: Int
+  rank: Float
+  skin: String
+  strategies: [Strategy]
+  symbol: String
+  template: String
+  terms: String
+  treasuries: [Treasury]
+  turbo: Boolean
+  twitter: String
+  validation: Validation
+  verified: Boolean
+  voteValidation: Validation
+  votesCount: Int
+  votesCount7d: Int
+  voting: SpaceVoting
+  website: String
+}
+
+type SpaceFilters {
+  minScore: Float
+  onlyMembers: Boolean
+}
+
+type SpaceVoting {
+  aliased: Boolean
+  blind: Boolean
+  delay: Int
+  hideAbstain: Boolean
+  period: Int
+  privacy: String
+  quorum: Float
+  quorumType: String!
+  type: String
+}
+
+input SpaceWhere {
+  created: Int
+  created_gt: Int
+  created_gte: Int
+  created_in: [Int]
+  created_lt: Int
+  created_lte: Int
+  id: String
+  id_in: [String]
+  plugin: String
+  strategy: String
+}
+
+type Statement {
+  about: String
+  created: Int!
+  delegate: String
+  id: String!
+  ipfs: String!
+  space: String!
+  statement: String
+  updated: Int!
+}
+
+input StatementsWhere {
+  created: Int
+  created_gt: Int
+  created_gte: Int
+  created_in: [Int]
+  created_lt: Int
+  created_lte: Int
+  delegate: String
+  delegate_in: [String]
+  id: String
+  id_in: [String]
+  ipfs: String
+  ipfs_in: [String]
+  space: String
+  space_in: [String]
+}
+
+type Strategy {
+  name: String!
+  network: String
+  params: Any
+}
+
+type StrategyItem {
+  about: String
+  author: String
+  examples: [Any]
+  id: String!
+  schema: Any
+  spacesCount: Int
+  version: String
+}
+
+type Subscription {
+  address: String!
+  created: Int!
+  id: String!
+  ipfs: String
+  space: Space!
+}
+
+input SubscriptionWhere {
+  address: String
+  address_in: [String]
+  created: Int
+  created_gt: Int
+  created_gte: Int
+  created_in: [Int]
+  created_lt: Int
+  created_lte: Int
+  id: String
+  id_in: [String]
+  ipfs: String
+  ipfs_in: [String]
+  space: String
+  space_in: [String]
+}
+
+type Treasury {
+  address: String
+  name: String
+  network: String
+}
+
+type User {
+  about: String
+  avatar: String
+  created: Int!
+  id: String!
+  ipfs: String
+  name: String
+}
+
+input UsersWhere {
+  created: Int
+  created_gt: Int
+  created_gte: Int
+  created_in: [Int]
+  created_lt: Int
+  created_lte: Int
+  id: String
+  id_in: [String]
+  ipfs: String
+  ipfs_in: [String]
+}
+
+type Validation {
+  name: String!
+  params: Any
+}
+
+type Vote {
+  app: String
+  choice: Any!
+  created: Int!
+  id: String!
+  ipfs: String
+  metadata: Any
+  proposal: Proposal
+  reason: String
+  space: Space!
+  voter: String!
+  vp: Float
+  vp_by_strategy: [Float]
+  vp_state: String
+}
+
+input VoteWhere {
+  app: String
+  app_in: [String]
+  app_not: String
+  app_not_in: [String]
+  created: Int
+  created_gt: Int
+  created_gte: Int
+  created_in: [Int]
+  created_lt: Int
+  created_lte: Int
+  id: String
+  id_in: [String]
+  ipfs: String
+  ipfs_in: [String]
+  proposal: String
+  proposal_in: [String]
+  reason: String
+  reason_in: [String]
+  reason_not: String
+  reason_not_in: [String]
+  space: String
+  space_in: [String]
+  voter: String
+  voter_in: [String]
+  vp: Float
+  vp_gt: Float
+  vp_gte: Float
+  vp_in: [Float]
+  vp_lt: Float
+  vp_lte: Float
+  vp_state: String
+  vp_state_in: [String]
+}
+
+type Vp {
+  vp: Float
+  vp_by_strategy: [Float]
+  vp_state: String
+}

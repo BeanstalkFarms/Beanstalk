@@ -33,3 +33,8 @@ export function loadSeason(diamondAddress: Address, id: BigInt): Season {
   }
   return season;
 }
+
+export function getCurrentSeason(beanstalk: Address): i32 {
+  let beanstalkEntity = loadBeanstalk(beanstalk);
+  return beanstalkEntity.lastSeason;
+}

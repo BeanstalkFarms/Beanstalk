@@ -39,7 +39,7 @@ contract OracleDeployer is Utils {
         WBTC_USD_CHAINLINK_PRICE_AGGREGATOR
     ];
 
-    // inital prices for chainlink oracles should be added here.
+    // initial prices for chainlink oracles should be added here.
     // assumes index matching with chainlinkOracles.
     int256[] initalPrices = [
         int256(1000e6), // ETH/USD

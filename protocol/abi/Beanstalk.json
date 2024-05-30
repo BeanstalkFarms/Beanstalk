@@ -581,58 +581,6 @@
     "inputs": [
       {
         "internalType": "address",
-        "name": "token",
-        "type": "address"
-      },
-      {
-        "internalType": "uint256",
-        "name": "amount",
-        "type": "uint256"
-      },
-      {
-        "internalType": "bytes32[]",
-        "name": "proof",
-        "type": "bytes32[]"
-      },
-      {
-        "internalType": "enum LibTransfer.To",
-        "name": "mode",
-        "type": "uint8"
-      }
-    ],
-    "name": "pick",
-    "outputs": [],
-    "stateMutability": "payable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "account",
-        "type": "address"
-      },
-      {
-        "internalType": "address",
-        "name": "token",
-        "type": "address"
-      }
-    ],
-    "name": "picked",
-    "outputs": [
-      {
-        "internalType": "bool",
-        "name": "",
-        "type": "bool"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
         "name": "unripeToken",
         "type": "address"
       },
@@ -4407,6 +4355,12 @@
         "internalType": "int256",
         "name": "delta",
         "type": "int256"
+      },
+      {
+        "indexed": false,
+        "internalType": "enum GerminationSide",
+        "name": "germ",
+        "type": "uint8"
       }
     ],
     "name": "FarmerGerminatingStalkBalanceChanged",
@@ -4486,7 +4440,7 @@
       {
         "indexed": false,
         "internalType": "uint256",
-        "name": "season",
+        "name": "germinationSeason",
         "type": "uint256"
       },
       {
@@ -4498,7 +4452,7 @@
       {
         "indexed": false,
         "internalType": "int256",
-        "name": "delta",
+        "name": "deltaAmount",
         "type": "int256"
       },
       {
@@ -4509,6 +4463,25 @@
       }
     ],
     "name": "TotalGerminatingBalanceChanged",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "germinationSeason",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "int256",
+        "name": "deltaGerminatingStalk",
+        "type": "int256"
+      }
+    ],
+    "name": "TotalGerminatingStalkChanged",
     "type": "event"
   },
   {
@@ -4696,6 +4669,23 @@
         "type": "tuple[]"
       },
       {
+        "components": [
+          {
+            "internalType": "address",
+            "name": "token",
+            "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "amount",
+            "type": "uint256"
+          }
+        ],
+        "internalType": "struct L2ContractMigrationFacet.AccountInternalBalance[]",
+        "name": "internalBalances",
+        "type": "tuple[]"
+      },
+      {
         "internalType": "uint256",
         "name": "ownerRoots",
         "type": "uint256"
@@ -4716,7 +4706,7 @@
         "type": "bytes"
       }
     ],
-    "name": "redeemDeposits",
+    "name": "redeemDepositsAndInternalBalances",
     "outputs": [],
     "stateMutability": "payable",
     "type": "function"
@@ -8104,82 +8094,6 @@
     "inputs": [
       {
         "indexed": true,
-        "internalType": "address",
-        "name": "account",
-        "type": "address"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "beans",
-        "type": "uint256"
-      }
-    ],
-    "name": "Incentivization",
-    "type": "event"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "secondsLate",
-        "type": "uint256"
-      }
-    ],
-    "name": "determineReward",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "pure",
-    "type": "function"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": true,
-        "internalType": "uint256",
-        "name": "season",
-        "type": "uint256"
-      },
-      {
-        "indexed": true,
-        "internalType": "address",
-        "name": "token",
-        "type": "address"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "gaugePoints",
-        "type": "uint256"
-      }
-    ],
-    "name": "GaugePointChange",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "newStalkPerBdvPerSeason",
-        "type": "uint256"
-      }
-    ],
-    "name": "UpdateAverageStalkPerBdvPerSeason",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": true,
         "internalType": "enum ShipmentRecipient",
         "name": "recipient",
         "type": "uint8"
@@ -8367,6 +8281,30 @@
         "internalType": "bool",
         "name": "",
         "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "token",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "percentOfDepositedBdv",
+        "type": "uint256"
+      }
+    ],
+    "name": "calcGaugePointsWithParams",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
       }
     ],
     "stateMutability": "view",
@@ -8653,6 +8591,25 @@
       }
     ],
     "name": "getGaugePointsPerBdvForWell",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "token",
+        "type": "address"
+      }
+    ],
+    "name": "getGaugePointsWithParams",
     "outputs": [
       {
         "internalType": "uint256",
@@ -9530,6 +9487,25 @@
       }
     ],
     "name": "BeanToMaxLpGpPerBdvRatioChange",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "account",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "beans",
+        "type": "uint256"
+      }
+    ],
+    "name": "Incentivization",
     "type": "event"
   },
   {

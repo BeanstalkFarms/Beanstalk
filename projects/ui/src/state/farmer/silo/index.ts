@@ -47,10 +47,12 @@ export type FarmerSiloTokenBalance = {
   deposited: {
     /** The total amount of this Token currently in the Deposited state. */
     amount: BigNumberJS;
+    convertibleAmount: BigNumberJS;
     /** The BDV of this Token currently in the Deposited state. */
     bdv: BigNumberJS;
     /** All Deposit crates. */
     crates: LegacyDepositCrate[];
+    convertibleCrates: LegacyDepositCrate[];
   };
 
   /** @deprecated */

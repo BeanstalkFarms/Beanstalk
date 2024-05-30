@@ -524,7 +524,7 @@ library LibConvert {
 
         // increment totals based on germination state,
         // as well as issue stalk to the user.
-        // if the deposit is germinating, only the inital stalk of the deposit is germinating.
+        // if the deposit is germinating, only the initial stalk of the deposit is germinating.
         // the rest is active stalk.
         if (side == GerminationSide.NOT_GERMINATING) {
             LibTokenSilo.incrementTotalDeposited(token, amount, bdv);

@@ -314,6 +314,18 @@ const TxnStep: FC<{
         </IconRow>
       );
       break;
+    case ActionType.TRANSFER_FERTILIZER:
+      step = (
+        <IconRow>
+          <img
+            src={FERTILIZER_ICONS.active}
+            alt="FERT"
+            css={{ height: '100%' }}
+          />
+          <TokenIcon token={SPROUTS} css={{ height: '100%', marginTop: 0 }} />
+        </IconRow>
+      );
+      break;
 
     /// ?
     case ActionType.END_TOKEN:
@@ -405,6 +417,7 @@ const EXECUTION_STEPS = [
 
   /// Group 4:
   /// ???
+  ActionType.TRANSFER_FERTILIZER,
   ActionType.END_TOKEN,
 ];
 
@@ -517,7 +530,7 @@ const TxnPreview: FC<{
                   return null;
                 })}
                 {customOrder
-                  ? actions.map((action, index) => 
+                  ? actions.map((action, index) =>
                       action ? (
                         <TxnStep
                           key={index}

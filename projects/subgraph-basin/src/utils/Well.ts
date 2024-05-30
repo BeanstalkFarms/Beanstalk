@@ -197,7 +197,9 @@ export function incrementWellWithdraw(wellAddress: Address): void {
 
 export function checkForSnapshot(wellAddress: Address, timestamp: BigInt, blockNumber: BigInt): void {
   // We check for the prior period snapshot and then take one if needed
-  let dayID = dayFromTimestamp(timestamp) - 1;
+  // Schedule the "day" to begin at 9am PT/12pm ET.
+  // Future work could include properly adjusting this when DST occurs.
+  let dayID = dayFromTimestamp(timestamp, 8 * 60 * 60) - 1;
   let hourID = hourFromTimestamp(timestamp) - 1;
 
   let well = loadWell(wellAddress);

@@ -9,7 +9,14 @@ const {
   deployMockWell,
   deployMockPump
 } = require("../utils/well.js");
-const { BEAN, BEAN_ETH_WELL, WETH, BEAN_WSTETH_WELL, BEANSTALK_PUMP, ZERO_BYTES } = require("./utils/constants");
+const {
+  BEAN,
+  BEAN_ETH_WELL,
+  WETH,
+  BEAN_WSTETH_WELL,
+  BEANSTALK_PUMP,
+  ZERO_BYTES
+} = require("./utils/constants");
 const { ConvertEncoder } = require("./utils/encoder.js");
 const { to6, to18 } = require("./utils/helpers.js");
 const { takeSnapshot, revertToSnapshot } = require("./utils/snapshot");
@@ -108,7 +115,6 @@ describe("Well Convert", function () {
   describe("convert beans to lp", async function () {
     describe("p > 1", async function () {
       beforeEach(async function () {
-        console.log("this.well in set reserves", this.well.address);
         await setReserves(owner, this.well, [to6("800000"), to18("1000")]);
         await setReserves(owner, this.well, [to6("800000"), to18("1000")]);
       });
@@ -181,7 +187,7 @@ describe("Well Convert", function () {
         // call sunrise twice to finish germination (germinating deposits cannot convert).
         await mockBeanstalk.siloSunrise("0");
         await mockBeanstalk.siloSunrise("0");
-      
+
         await beanstalk.connect(owner).convert(convertData, ["0"], [to6("100000")]);
         deposit = await beanstalk.getDeposit(owner.address, this.well.address, "4000000");
         expect(deposit[0]).to.be.equal("1715728752538099023967");
@@ -293,7 +299,7 @@ describe("Well Convert", function () {
         await mockBeanstalk.siloSunrise("0");
         await mockBeanstalk.siloSunrise("0");
         await beanstalk.connect(owner).convert(convertData, ["0"], [to18("2000")]);
-        
+
         deposit = await beanstalk.getDeposit(owner.address, BEAN, "-3520050");
         expect(deposit[0]).to.be.equal("134564064605");
       });

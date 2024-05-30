@@ -1,7 +1,6 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import { Box, CircularProgress, Stack, Typography } from '@mui/material';
 import BigNumber from 'bignumber.js';
-
 import LineChart from '~/components/Common/Charts/LineChart';
 import TimeTabs, { TimeTabState } from '~/components/Common/Charts/TimeTabs';
 import WalletButton from '~/components/Common/Connection/WalletButton';
@@ -15,80 +14,62 @@ import {
   SeasonRange,
   SEASON_RANGE_TO_COUNT,
 } from '~/hooks/beanstalk/useSeasonsQuery';
-
 import { FC } from '~/types';
-import { BaseDataPoint } from '~/components/Common/Charts/ChartPropProvider';
+import { BaseDataPoint, ChartMultiStyles } from '~/components/Common/Charts/ChartPropProvider';
+import { displayStalk } from '~/util';
+import StackedAreaChart from '../Common/Charts/StackedAreaChart';
+import { BeanstalkPalette } from '../App/muiTheme';
 
 export type OverviewPlotProps = {
   account: string | undefined;
-  season: BigNumber;
-  current: BigNumber[];
-  date: Date | string;
   series: BaseDataPoint[][];
   stats: (
-    season: BigNumber,
-    value: BigNumber[],
-    date: string
+    dataPoint: BaseDataPoint | undefined
   ) => React.ReactElement;
   empty: boolean;
   loading: boolean;
   label: string;
+  useStackedChart?: boolean;
+  keysAndTooltips?: { [key: string] : string };
 };
 
 const OverviewPlot: FC<OverviewPlotProps> = ({
   account,
-  season,
-  current,
-  date,
   series,
   stats,
   loading,
   empty,
   label,
+  useStackedChart = false,
+  keysAndTooltips = { 'First': 'First Tooltip' }
 }) => {
-  const [displaySeason, setDisplaySeason] = useState<BigNumber>(season);
-  const [displayValue, setDisplayValue] = useState<BigNumber[]>(current);
-  const [displayDate, setDisplayDate] = useState<string>(
-    date.toLocaleString(undefined, { dateStyle: 'short', timeStyle: 'short' })
-  );
-
-  useEffect(() => setDisplayValue(current), [current]);
-  useEffect(() => setDisplaySeason(season), [season]);
-  useEffect(
-    () =>
-      setDisplayDate(
-        date.toLocaleString(undefined, {
-          dateStyle: 'short',
-          timeStyle: 'short',
-        })
-      ),
-    [date]
-  );
+  const [displayDataPoint, setDisplayDataPoint] = useState<BaseDataPoint | undefined>()
 
   const handleCursor = useCallback(
-    (dps?: BaseDataPoint[]) => {
-      setDisplaySeason(dps ? new BigNumber(dps[0].season) : season);
-      setDisplayValue(dps ? dps.map((dp) => new BigNumber(dp.value)) : current);
-      setDisplayDate(
-        dps
-          ? new Date(dps[0].date).toLocaleString(undefined, {
-              dateStyle: 'short',
-              timeStyle: 'short',
-            })
-          : date.toLocaleString(undefined, {
-              dateStyle: 'short',
-              timeStyle: 'short',
-            })
-      );
-    },
-
-    [current, season, date]
+    (_: number | undefined, __?: number | undefined, ___?: Date | undefined, dataPoint?: BaseDataPoint | undefined) => {
+      setDisplayDataPoint(dataPoint)
+    }, []
   );
+
+  const handleCursorLineChart = useCallback(
+    (dataPoint?: BaseDataPoint[] | undefined) => {
+      setDisplayDataPoint(dataPoint ? dataPoint[0] : undefined)
+    }, []
+  );
+
+  const formatValueStacked = (value: number) => `${displayStalk(BigNumber(value, 10), 2)}`;
+
+  const getStatValue = <T extends BaseDataPoint>(v?: T[]) => {
+    if (!v?.length) return 0;
+    const dataPoint = v[0];
+    return dataPoint?.value || 0;
+  };
 
   const [tabState, setTimeTab] = useState<TimeTabState>([
     SeasonAggregation.HOUR,
     SeasonRange.WEEK,
   ]);
+  
   const handleChangeTimeTab = useCallback((tabs: TimeTabState) => {
     setTimeTab(tabs);
   }, []);
@@ -102,6 +83,19 @@ const OverviewPlot: FC<OverviewPlotProps> = ({
     return series;
   }, [series, tabState]);
 
+  const chartStyle: ChartMultiStyles = {
+    0: { 
+      stroke: BeanstalkPalette.theme.spring.beanstalkGreen, 
+      fillPrimary: BeanstalkPalette.theme.spring.washedGreen
+    },
+    1: { 
+      stroke: BeanstalkPalette.darkBlue, 
+      fillPrimary: BeanstalkPalette.blue 
+    },
+  };
+
+  const keys = Object.keys(keysAndTooltips);
+
   const ready = account && !loading && !empty;
 
   return (
@@ -113,7 +107,7 @@ const OverviewPlot: FC<OverviewPlotProps> = ({
           sx={{ px: 2, pb: { xs: 2, md: 0 } }}
           alignItems="flex-start"
         >
-          {stats(displaySeason, displayValue, displayDate)}
+          {stats(displayDataPoint)}
         </Stack>
         <Stack alignItems="right">
           <TimeTabs
@@ -125,7 +119,22 @@ const OverviewPlot: FC<OverviewPlotProps> = ({
       </Row>
       <Box sx={{ width: '100%', height: '220px', position: 'relative' }}>
         {ready ? (
-          <LineChart series={filteredSeries} onCursor={handleCursor} />
+          <>
+          {useStackedChart ?
+            <StackedAreaChart
+              series={filteredSeries}
+              keys={keys}
+              onCursor={handleCursor}
+              formatValue={formatValueStacked}
+              getDisplayValue={getStatValue}
+              stylesConfig={chartStyle}
+              tooltip
+              useCustomTooltipNames={keysAndTooltips}
+            />
+            : 
+            <LineChart series={filteredSeries} onCursor={handleCursorLineChart} />
+          }
+          </>
         ) : (
           <>
             <MockPlot />

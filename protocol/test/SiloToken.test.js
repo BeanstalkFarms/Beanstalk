@@ -829,7 +829,7 @@ describe("New Silo Token", function () {
         // end total germination:
         await endGermination();
 
-        // verify inital values:
+        // verify initial values:
         expect(await beanstalk.getTotalDeposited(UNRIPE_BEAN)).to.eq(to6("10"));
         // currently, there are 10,000 units underlying 100,000 beans (10% bdv)
         // depositing 10 urBeans should result in (0.1)*10 = 1 stalk.
@@ -878,7 +878,7 @@ describe("New Silo Token", function () {
         // end total germination:
         await endGermination();
 
-        // verify inital values:
+        // verify initial values:
         expect(await beanstalk.getTotalDeposited(UNRIPE_BEAN)).to.eq(to6("10"));
         // currently, there are 10,000 units underlying 100,000 beans (10% bdv)
         // depositing 10 urBeans should result in (0.1)*10 = 1 stalk.
@@ -932,7 +932,7 @@ describe("New Silo Token", function () {
         // end total germination:
         await endGermination();
 
-        // verify inital values:
+        // verify initial values:
         expect(await beanstalk.getTotalDeposited(UNRIPE_BEAN)).to.eq(to6("20"));
         // currently, there are 10,000 units underlying 100,000 beans (10% bdv)
         // depositing 10 urBeans should result in (0.1)*10 = 1 stalk.
@@ -1001,7 +1001,7 @@ describe("New Silo Token", function () {
         // end total germination:
         await endGermination();
 
-        // verify inital values:
+        // verify initial values:
         expect(await beanstalk.getTotalDeposited(UNRIPE_BEAN)).to.eq(to6("20"));
         // currently, there are 10,000 units underlying 100,000 beans (10% bdv)
         // depositing 10 urBeans should result in (0.1)*10 = 1 stalk.

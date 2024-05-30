@@ -1,9 +1,9 @@
 import React, { createContext, useMemo } from "react";
 import { BeanstalkSDK } from "@beanstalk/sdk";
-import { useProvider, useSigner } from "wagmi";
 import { JsonRpcProvider } from "@ethersproject/providers";
 import { Signer } from "ethers";
 import { Log } from "../logger";
+import { useEthersProvider, useEthersSigner } from "../wagmi/ethersAdapter";
 
 const IS_DEVELOPMENT_ENV = process.env.NODE_ENV !== "production";
 
@@ -24,9 +24,9 @@ const RPC_URL = IS_DEVELOPMENT_ENV ? "http://localhost:8545" : `https://eth-main
 export const BeanstalkSDKContext = createContext<BeanstalkSDK>(new BeanstalkSDK({ rpcUrl: RPC_URL, DEBUG: import.meta.env.DEV }));
 
 function BeanstalkSDKProvider({ children }: { children: React.ReactNode }) {
-  const { data: signer, isSuccess } = useSigner();
-  const provider = useProvider();
-  const sdk = useMemo(() => getSDK(provider as JsonRpcProvider, signer ?? undefined), [provider, signer, isSuccess]);
+  const signer = useEthersSigner();
+  const provider = useEthersProvider();
+  const sdk = useMemo(() => getSDK(provider as JsonRpcProvider, signer), [provider, signer]);
 
   return <BeanstalkSDKContext.Provider value={sdk}>{children}</BeanstalkSDKContext.Provider>;
 }

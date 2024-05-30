@@ -1,5 +1,5 @@
 import { BigNumber } from 'bignumber.js';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useMemo, useRef, useState } from 'react';
 import debounce from 'lodash/debounce';
 import toast from 'react-hot-toast';
 import { ethers } from 'ethers';
@@ -60,10 +60,10 @@ export default function useQuote(
   const abortController = useRef<null | AbortController>(null);
 
   /// When token changes, reset the amount.
-  useEffect(() => {
-    setResult(settings.onReset());
-    setQuoting(false);
-  }, [tokenOut, settings]);
+  // useEffect(() => {
+  //  setResult(settings.onReset());
+  //  setQuoting(false);
+  // }, [tokenOut, settings]);
 
   const __getAmountOut = useCallback(
     (tokenIn: ERC20Token | NativeToken, amountIn: BigNumber) => {

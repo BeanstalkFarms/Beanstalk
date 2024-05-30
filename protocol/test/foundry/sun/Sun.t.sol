@@ -177,7 +177,7 @@ contract SunTest is TestHelper {
         (sproutsInBarn, fertilizerMinted) = addFertilizerBasedOnSprouts(0, sproutsInBarn);
         assertEq(sproutsInBarn, bs.totalUnfertilizedBeans(), "invalid sprouts in barn");
 
-        // bean supply may change due to fert issuance, and inital supply is placed here.
+        // bean supply may change due to fert issuance, and initial supply is placed here.
         uint256 beansInBeanstalk = C.bean().balanceOf(BEANSTALK);
 
         int256 initialLeftoverBeans = int256(bs.leftoverBeans());
@@ -240,6 +240,7 @@ contract SunTest is TestHelper {
             assertEq(bs.totalUnfertilizedBeans(), sproutsInBarn, "invalid sprouts @ +deltaB");
             assertEq(bs.totalUnharvestable(0), podsInField, "invalid pods @ -deltaB");
             uint256 soilIssued = uint256(-deltaB);
+            vm.roll(block.number + 300);
             assertEq(bs.totalSoil(), soilIssued, "invalid soil @ -deltaB");
         }
     }
@@ -268,9 +269,9 @@ contract SunTest is TestHelper {
         uint256 caseId
     ) internal view returns (uint256 soilIssued) {
         soilIssued = (podsRipened * 100) / (100 + (bs.maxTemperature() / 1e6));
-        if (caseId >= 24) {
+        if (caseId % 36 >= 24) {
             soilIssued = (soilIssued * 0.5e18) / 1e18; // high podrate
-        } else if (caseId < 8) {
+        } else if (caseId % 36 < 8) {
             soilIssued = (soilIssued * 1.5e18) / 1e18; // low podrate
         }
     }

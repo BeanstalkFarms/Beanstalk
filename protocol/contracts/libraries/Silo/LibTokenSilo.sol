@@ -278,9 +278,6 @@ library LibTokenSilo {
      *
      * Unlike {removeDepositFromAccount}, this function DOES EMIT an
      * {AddDeposit} event. See {removeDepositFromAccount} for more details.
-     *
-     * If a deposit is 'germinating', increment the germinating bdv for a user.
-     * Otherwise, increment the mow status bdv for a user.
      */
     function addDepositToAccount(
         address account,

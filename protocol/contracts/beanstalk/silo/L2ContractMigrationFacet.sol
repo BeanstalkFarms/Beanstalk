@@ -19,6 +19,11 @@ import {Invariable} from "contracts/beanstalk/Invariable.sol";
 contract L2ContractMigrationFacet is Invariable, ReentrancyGuard {
     using LibBytes for uint256;
 
+    struct AccountInternalBalance {
+        address token;
+        uint256 amount;
+    }
+
     /**
      * @notice MigrationDepositData is a struct that contains the silo deposits for a given account.
      */
@@ -38,8 +43,11 @@ contract L2ContractMigrationFacet is Invariable, ReentrancyGuard {
             "EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)"
         );
     bytes32 private constant REDEEM_DEPOSIT_TYPE_HASH =
-        keccak256("redeemDeposits(address owner,address reciever,uint256 deadline)");
+        keccak256(
+            "redeemDepositsAndInternalBalances(address owner,address reciever,uint256 deadline)"
+        );
 
+    // todo: update with the correct merkle root.
     bytes32 private constant MERKLE_ROOT =
         0xa84dc86252c556839dff46b290f0c401088a65584aa38a163b6b3f7dd7a5b0e8;
 
@@ -66,20 +74,22 @@ contract L2ContractMigrationFacet is Invariable, ReentrancyGuard {
     );
 
     /**
-     * @notice allows an contract that owns deposits to redeem onto an address on L2.
+     * @notice allows an contract that owns deposits and bean-asset internal balances to redeem onto an address on L2.
      * @param owner address of the contract on L1.
      * @param reciever address of the contract on L2.
      * @param deposits deposits to redeem.
+     * @param internalBalances internal balances to redeem.
      * @param ownerRoots underlying roots of the owner.
      * @param proof proof of ownership.
      * @param deadline deadline for the signature.
      * @param signature signature of the owner.
      * @dev the signature is signed on the L1 blockchain.
      */
-    function redeemDeposits(
+    function redeemDepositsAndInternalBalances(
         address owner,
         address reciever,
         AccountDepositData[] calldata deposits,
+        AccountInternalBalance[] calldata internalBalances,
         uint256 ownerRoots,
         bytes32[] calldata proof,
         uint256 deadline,
@@ -88,7 +98,7 @@ contract L2ContractMigrationFacet is Invariable, ReentrancyGuard {
         // verify deposits are valid.
         // note: if the number of contracts that own deposits is small,
         // deposits can be stored in bytecode rather than relying on a merkle tree.
-        verifyDeposits(owner, deposits, ownerRoots, proof);
+        verifyDepositsAndInternalBalances(owner, deposits, internalBalances, ownerRoots, proof);
 
         // signature verification.
         verifySignature(owner, reciever, deadline, signature);
@@ -107,13 +117,14 @@ contract L2ContractMigrationFacet is Invariable, ReentrancyGuard {
      * @notice verfies that the input parameters for deposits
      * are correct.
      */
-    function verifyDeposits(
+    function verifyDepositsAndInternalBalances(
         address account,
         AccountDepositData[] calldata deposits,
+        AccountInternalBalance[] calldata internalBalances,
         uint256 ownerRoots,
         bytes32[] calldata proof
     ) internal pure {
-        bytes32 leaf = keccak256(abi.encode(account, deposits, ownerRoots));
+        bytes32 leaf = keccak256(abi.encode(account, deposits, internalBalances, ownerRoots));
         require(MerkleProof.verify(proof, MERKLE_ROOT, leaf), "Migration: invalid proof");
     }
 
