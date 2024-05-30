@@ -17,7 +17,7 @@ import {LibRedundantMath256} from "contracts/libraries/LibRedundantMath256.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {console} from "forge-std/console.sol";
 
-interface IERC20 {
+interface IERC20Decimals {
     function decimals() external view returns (uint8);
 }
 
@@ -137,7 +137,7 @@ library LibUsdOracle {
                 oracleImpl.target,
                 chainlinkToken,
                 token,
-                uint128(10) ** uint128(IERC20(token).decimals())
+                uint128(10) ** uint128(IERC20Decimals(token).decimals())
             );
             // USDC/USD
             // call chainlink oracle from the OracleImplmentation contract

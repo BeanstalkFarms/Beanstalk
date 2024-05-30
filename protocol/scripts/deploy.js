@@ -353,7 +353,7 @@ async function getFacetData(mock = true) {
     "TractorFacet",
     "PipelineConvertFacet",
     "ClaimFacet",
-    "LibUsdOracleFacet"
+    "OracleFacet"
   ];
 
   // A list of public libraries that need to be deployed separately.
