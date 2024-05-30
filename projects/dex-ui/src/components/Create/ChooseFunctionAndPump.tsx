@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import styled from "styled-components";
 import { ethers } from "ethers";
 import { FormProvider, useForm, useFormContext, useWatch } from "react-hook-form";
@@ -16,6 +16,7 @@ import { CreateWellProps, useCreateWell } from "./CreateWellProvider";
 import { CreateWellFormProgress } from "./shared/CreateWellFormProgress";
 import { ComponentInputWithCustom } from "./shared/ComponentInputWithCustom";
 import { useERC20TokenWithAddress } from "src/tokens/useERC20Token";
+import { ERC20Token } from "@beanstalk/sdk";
 
 const additionalOptions = [
   {
@@ -27,13 +28,19 @@ const additionalOptions = [
 
 type FormValues = CreateWellProps["wellFunctionAndPump"];
 
+// const aave = "0x7Fc66500c84A76Ad7e9c93437bFc5Ac33E2DDaE9".toLowerCase(); // AAVE
+// const bean = "0xBEA0000029AD1c77D3d5D23Ba2D8893dB9d1Efab".toLowerCase(); // BEAN
+
 const ChooseFunctionAndPumpForm = () => {
-  const { functionAndPump, setFunctionAndPump } = useCreateWell();
+  const { functionAndPump, setFunctionAndPump, tokens, setTokens } = useCreateWell();
+  const [token1, setToken1] = useState<ERC20Token | undefined>(undefined);
+  const [token2, setToken2] = useState<ERC20Token | undefined>(undefined);
+
   const methods = useForm<FormValues>({
     defaultValues: {
       wellFunction: functionAndPump?.wellFunction || "",
-      token1: functionAndPump?.token1 || "",
-      token2: functionAndPump?.token2 || "",
+      token1Address: tokens?.token1?.address || "",
+      token2Address: tokens?.token2?.address || "",
       pump: functionAndPump?.pump || ""
     }
   });
@@ -43,14 +50,14 @@ const ChooseFunctionAndPumpForm = () => {
       // validate
       for (const key in values) {
         const value = values[key as keyof typeof values];
-        if (!value || !getIsValidEthereumAddress(value)) {
-          return;
-        }
+        if (!value || !getIsValidEthereumAddress(value)) return;
       }
+      if (!token1 || !token2) return;
 
+      setTokens({ token1, token2 });
       setFunctionAndPump({ ...values, goNext: true });
     },
-    [setFunctionAndPump]
+    [setFunctionAndPump, setTokens, token1, token2]
   );
 
   return (
@@ -89,13 +96,13 @@ const ChooseFunctionAndPumpForm = () => {
                   <Text $color="text.secondary" $variant="xs" $mb={1}>
                     Specify token
                   </Text>
-                  <TokenAddressInputWithSearch path={"token1"} />
+                  <TokenAddressInputWithSearch path={"token1Address"} setToken={setToken1} />
                 </HalfWidthFlex>
                 <HalfWidthFlex>
                   <Text $color="text.secondary" $variant="xs" $mb={1}>
                     Specify token
                   </Text>
-                  <TokenAddressInputWithSearch path={"token2"} />
+                  <TokenAddressInputWithSearch path={"token2Address"} setToken={setToken2} />
                 </HalfWidthFlex>
               </Flex>
             </Flex>
@@ -121,7 +128,7 @@ const ChooseFunctionAndPumpForm = () => {
             {/*
              * Actions
              */}
-            <CreateWellButtonRow />
+            <CreateWellButtonRow disabled={!token1 || !token2} />
           </Flex>
         </Flex>
       </form>
@@ -143,12 +150,18 @@ export const ChooseFunctionAndPump = () => {
 
 // ---------- STYLES & COMPONENTS ----------
 
-const TokenAddressInputWithSearch = ({ path }: { path: "token1" | "token2" }) => {
+const TokenAddressInputWithSearch = ({
+  path,
+  setToken
+}: {
+  path: "token1Address" | "token2Address";
+  setToken: React.Dispatch<React.SetStateAction<ERC20Token | undefined>>;
+}) => {
   const { register, control, setValue, setError } = useFormContext<FormValues>();
   const _value = useWatch({ control, name: path });
   const value = typeof _value === "string" ? _value : "";
 
-  const { data: token, error } = useERC20TokenWithAddress(value);
+  const { data: token, error, isLoading } = useERC20TokenWithAddress(value);
 
   useEffect(() => {
     if (error?.message) {
@@ -157,9 +170,20 @@ const TokenAddressInputWithSearch = ({ path }: { path: "token1" | "token2" }) =>
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [error?.message]);
 
+  const tokenAndFormValueMatch = Boolean(token && token.address === value.toLowerCase());
+
+  useEffect(() => {
+    if (token && tokenAndFormValueMatch) {
+      setToken(token);
+    } else {
+      setToken(undefined);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [token, tokenAndFormValueMatch]);
+
   return (
     <>
-      {!token ? (
+      {!token || isLoading ? (
         <TextInputField
           {...register(path, {
             validate: (value) => ethers.utils.isAddress(value) || "Invalid address"

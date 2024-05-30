@@ -27,7 +27,7 @@ const ButtonLabels = [
   }
 ] as const;
 
-export const CreateWellButtonRow = () => {
+export const CreateWellButtonRow = ({ disabled = false }: { disabled?: boolean }) => {
   const { step, goBack } = useCreateWell();
 
   const navigate = useNavigate();
@@ -61,7 +61,7 @@ export const CreateWellButtonRow = () => {
           {goBackLabel}
         </ButtonLabel>
       </ButtonPrimary>
-      <ButtonPrimary type="submit" disabled={!goNextEnabled}>
+      <ButtonPrimary type="submit" disabled={!goNextEnabled || disabled}>
         <ButtonLabel>
           {nextLabel}
           <RightArrow width={16} height={16} color={theme.colors.white} />

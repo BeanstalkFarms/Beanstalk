@@ -3,7 +3,6 @@ import styled from "styled-components";
 import { FormProvider, useForm, useFormContext, useWatch } from "react-hook-form";
 
 import { theme } from "src/utils/ui/theme";
-import { useTokenMetadata } from "src/utils/token/useTokenMetadata";
 
 import { SwitchField, TextInputField } from "src/components/Form";
 import { Box, Divider, Flex } from "src/components/Layout";
@@ -12,6 +11,8 @@ import { Text } from "src/components/Typography";
 
 import { CreateWellProps, useCreateWell } from "./CreateWellProvider";
 import { WellComponentInfo, useWhitelistedWellComponents } from "./useWhitelistedWellComponents";
+
+import { ERC20Token } from "@beanstalk/sdk";
 
 type FormValues = CreateWellProps["liquidity"] & CreateWellProps["salt"];
 
@@ -31,8 +32,6 @@ const FormContent = () => {
     console.log(data);
   };
 
-  console.log(methods.watch());
-
   return (
     <FormProvider {...methods}>
       <form onSubmit={methods.handleSubmit(onSubmit)}>
@@ -46,7 +45,12 @@ const FormContent = () => {
 };
 
 const LiquidityForm = () => {
+  const {
+    functionAndPump,
+    tokens: { token1, token2 }
+  } = useCreateWell();
   const { control } = useFormContext<FormValues>();
+  // const
 
   return (
     <Flex $gap={2}>
@@ -90,9 +94,16 @@ const getSelectedCardComponentProps = (
 };
 
 const WellCreatePreview = () => {
-  const { wellImplementation, functionAndPump, wellNameAndSymbol } = useCreateWell();
+  const { wellImplementation, functionAndPump, wellNameAndSymbol, tokens } = useCreateWell();
 
-  if (!wellImplementation || !functionAndPump || !wellNameAndSymbol) return null;
+  if (
+    !wellImplementation ||
+    !functionAndPump ||
+    !wellNameAndSymbol ||
+    !tokens.token1 ||
+    !tokens.token2
+  )
+    return null;
   // TODO: add go back step here...
 
   return (
@@ -100,19 +111,25 @@ const WellCreatePreview = () => {
       wellFunctionAndPump={functionAndPump}
       wellImplementation={wellImplementation}
       wellNameAndSymbol={wellNameAndSymbol}
+      tokens={{ token1: tokens.token1, token2: tokens.token2 }}
     />
   );
 };
 
+type WellCreatePreviewInnerProps = {
+  wellImplementation: CreateWellProps["wellImplementation"];
+  wellFunctionAndPump: CreateWellProps["wellFunctionAndPump"];
+  wellNameAndSymbol: CreateWellProps["wellNameAndSymbol"];
+  tokens: { token1: ERC20Token; token2: ERC20Token };
+};
+
 const WellCreatePreviewInner = ({
   wellImplementation: { wellImplementation },
-  wellFunctionAndPump: { token1, token2, pump, wellFunction },
-  wellNameAndSymbol: { name: wellName, symbol: wellSymbol }
-}: Omit<CreateWellProps, "salt" | "liquidity">) => {
+  wellFunctionAndPump: { pump, wellFunction },
+  wellNameAndSymbol: { name: wellName, symbol: wellSymbol },
+  tokens: { token1, token2 }
+}: WellCreatePreviewInnerProps) => {
   const components = useWhitelistedWellComponents();
-
-  const token1Metadata = useTokenMetadata(token1);
-  const token2Metadata = useTokenMetadata(token2);
 
   return (
     <Flex $gap={2}>
@@ -143,12 +160,12 @@ const WellCreatePreviewInner = ({
       <Flex $gap={1}>
         <Text $variant="h3">Well Name & Symbol</Text>
         <InlineImgFlex>
-          <img src={token1Metadata?.logo ?? ""} alt={token1Metadata?.name ?? ""} />
-          <Text $variant="l">{token1Metadata?.symbol ?? ""}</Text>
+          <img src={token1?.logo ?? ""} alt={token1?.name ?? ""} />
+          <Text $variant="l">{token1?.symbol ?? ""}</Text>
         </InlineImgFlex>
         <InlineImgFlex>
-          <img src={token2Metadata?.logo ?? ""} alt={token2Metadata?.name ?? ""} />
-          <Text $variant="l">{token2Metadata?.symbol ?? ""}</Text>
+          <img src={token2?.logo ?? ""} alt={token2?.name ?? ""} />
+          <Text $variant="l">{token2?.symbol ?? ""}</Text>
         </InlineImgFlex>
       </Flex>
       {/* Pricing Function */}

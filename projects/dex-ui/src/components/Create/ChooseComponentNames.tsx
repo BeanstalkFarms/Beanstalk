@@ -28,14 +28,15 @@ const ChooseComponentNamesForm = () => {
       const duplicate = (wells || []).some(
         (well) => well.name?.toLowerCase() === name.toLowerCase()
       );
-      return duplicate || "Token name taken";
+
+      return duplicate ? "Token name taken" : true;
     };
 
     const wellSymbol = (symbol: string) => {
       const duplicate = (wells || []).some(
         (well) => well?.lpToken?.symbol.toLowerCase() === symbol.toLowerCase()
       );
-      return duplicate || "Token symbol taken";
+      return duplicate ? "Token symbol taken" : true;
     };
 
     return {
@@ -48,11 +49,12 @@ const ChooseComponentNamesForm = () => {
     (values: FormValues) => {
       const nameValidated = validate.name(values.name);
       const symbolValidated = validate.symbol(values.symbol);
+
       if (typeof nameValidated === "string" || typeof symbolValidated === "string") {
         return;
       }
 
-      setWellNameAndSymbol(values);
+      setWellNameAndSymbol({ ...values, goNext: true });
     },
     [setWellNameAndSymbol, validate]
   );
@@ -68,7 +70,7 @@ const ChooseComponentNamesForm = () => {
                 Name and Symbol
               </Text>
               <Flex $direction="row" $fullWidth $gap={4}>
-                <Flex width="50%" maxWidth="50%">
+                <Flex $width="50%" $maxWidth="50%">
                   <Text $variant="xs" $color="text.secondary" $mb={1}>
                     Well Token Name
                   </Text>
@@ -82,7 +84,7 @@ const ChooseComponentNamesForm = () => {
                     })}
                   />
                 </Flex>
-                <Flex width="50%" maxWidth="50%">
+                <Flex $width="50%" $maxWidth="50%">
                   <Text $variant="xs" $color="text.secondary" $mb={1}>
                     Well Token Symbol
                   </Text>
