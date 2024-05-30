@@ -355,7 +355,7 @@ library LibSilo {
         address recipient,
         address token,
         AssetsRemoved memory ar
-    ) internal {
+    ) external {
         AppStorage storage s = LibAppStorage.diamondStorage();
         uint256 stalkPerBDV = s.ss[token].stalkIssuedPerBdv;
 
