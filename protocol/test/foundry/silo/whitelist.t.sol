@@ -5,11 +5,16 @@ pragma abicoder v2;
 import {TestHelper, LibTransfer, C} from "test/foundry/utils/TestHelper.sol";
 import {IMockFBeanstalk} from "contracts/interfaces/IMockFBeanstalk.sol";
 import {MockToken} from "contracts/mocks/MockToken.sol";
+import {IDiamondCut} from "contracts/interfaces/IDiamondCut.sol";
+import {WhitelistFacet} from "contracts/beanstalk/silo/WhitelistFacet/WhitelistFacet.sol";
+import {LibUsdOracle} from "contracts/libraries/Oracle/LibUsdOracle.sol";
+import {OracleFacet} from "contracts/beanstalk/sun/OracleFacet.sol";
 
 /**
  * @notice Tests the functionality of whitelisting.
  */
 contract WhitelistTest is TestHelper {
+    address constant wBTC = 0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599;
     // events
     event AddWhitelistStatus(
         address token,
@@ -382,6 +387,83 @@ contract WhitelistTest is TestHelper {
             oracleImplementation,
             gaugePointImplementation,
             liquidityWeightImplementation
+        );
+    }
+
+    function test_forkWhitelist(
+        uint32 stalkEarnedPerSeason,
+        uint32 stalkIssuedPerBdv,
+        uint128 gaugePoints,
+        uint64 optimalPercentDepositedBdv
+    ) public prank(BEANSTALK) {
+        setupFork();
+
+        address token = address(new MockToken("Mock Token", "MTK"));
+        bytes4 liquidityWeightSelector = IMockFBeanstalk.maxWeight.selector;
+
+        IMockFBeanstalk.Implementation memory oracleImplementation = IMockFBeanstalk.Implementation(
+            address(0),
+            bytes4(0),
+            bytes1(0)
+        );
+
+        IMockFBeanstalk.Implementation memory gaugePointImplementation = IMockFBeanstalk
+            .Implementation(
+                address(0),
+                IMockFBeanstalk.defaultGaugePointFunction.selector,
+                bytes1(0)
+            );
+
+        IMockFBeanstalk.Implementation memory liquidityWeightImplementation = IMockFBeanstalk
+            .Implementation(address(0), liquidityWeightSelector, bytes1(0));
+
+        // try to whitelist wBTC
+        bs.whitelistTokenWithExternalImplementation(
+            token,
+            IMockFBeanstalk.beanToBDV.selector,
+            stalkIssuedPerBdv,
+            stalkEarnedPerSeason,
+            0x01, // encodeType
+            gaugePoints,
+            optimalPercentDepositedBdv,
+            oracleImplementation,
+            gaugePointImplementation,
+            liquidityWeightImplementation
+        );
+    }
+
+    function setupFork() public {
+        uint256 numFacets = 2;
+        uint256 mainnetForkId = vm.createFork(vm.envString("FORKING_RPC"), 19970000);
+        vm.selectFork(mainnetForkId);
+
+        IDiamondCut.FacetCutAction[] memory facetCutActions = new IDiamondCut.FacetCutAction[](
+            numFacets
+        );
+        facetCutActions[0] = IDiamondCut.FacetCutAction.Add;
+        facetCutActions[1] = IDiamondCut.FacetCutAction.Replace;
+
+        string[] memory facetNames = new string[](numFacets);
+        facetNames[0] = "OracleFacet";
+        facetNames[1] = "WhitelistFacet";
+
+        address[] memory newFacetAddresses = new address[](numFacets);
+        newFacetAddresses[0] = address(new OracleFacet());
+        newFacetAddresses[1] = address(new WhitelistFacet());
+
+        users = createUsers(1);
+        address user = users[0];
+
+        // upgrade beanstalk with a new mock facet
+        upgradeWithNewFacets(
+            BEANSTALK, // upgrading beanstalk.
+            IMockFBeanstalk(BEANSTALK).owner(), // fetch beanstalk owner.
+            facetNames,
+            newFacetAddresses,
+            facetCutActions,
+            address(0), // no init address
+            new bytes(0), // no calldata
+            new bytes4[](0) // remove no selectors.
         );
     }
 

@@ -7,7 +7,7 @@ import {Season, SeedGauge, Weather, Rain} from "../../storage/System.sol";
 import {C} from "../../../C.sol";
 import {Decimal} from "contracts/libraries/Decimal.sol";
 import {LibEvaluate} from "contracts/libraries/LibEvaluate.sol";
-import {LibUsdOracleFacet} from "contracts/libraries/Oracle/LibUsdOracleFacet.sol";
+import {LibUsdOracle} from "contracts/libraries/Oracle/LibUsdOracle.sol";
 import {LibWellMinting} from "contracts/libraries/Minting/LibWellMinting.sol";
 import {LibWell} from "contracts/libraries/Well/LibWell.sol";
 import {LibRedundantMathSigned256} from "contracts/libraries/LibRedundantMathSigned256.sol";
@@ -282,8 +282,7 @@ contract SeasonGettersFacet {
      */
     function getTwaLiquidityForWell(address well) public view returns (uint256) {
         (address token, ) = LibWell.getNonBeanTokenAndIndexFromWell(well);
-        return
-            LibWell.getTwaLiquidityFromBeanstalkPump(well, LibUsdOracleFacet.getTokenPrice(token));
+        return LibWell.getTwaLiquidityFromBeanstalkPump(well, LibUsdOracle.getTokenPrice(token));
     }
 
     /**

@@ -11,7 +11,7 @@ import {IWell, Call} from "contracts/interfaces/basin/IWell.sol";
 import {C} from "contracts/C.sol";
 import {LibAppStorage} from "../LibAppStorage.sol";
 import {AppStorage} from "contracts/beanstalk/storage/AppStorage.sol";
-import {LibUsdOracleFacet} from "contracts/libraries/Oracle/LibUsdOracleFacet.sol";
+import {LibUsdOracle} from "contracts/libraries/Oracle/LibUsdOracle.sol";
 import {LibRedundantMath128} from "contracts/libraries/LibRedundantMath128.sol";
 
 /**
@@ -47,7 +47,7 @@ library LibWell {
                 beanIndex = i;
                 ratios[i] = 1e6;
             } else {
-                ratios[i] = LibUsdOracleFacet.getUsdPrice(address(tokens[i]), lookback);
+                ratios[i] = LibUsdOracle.getUsdPrice(address(tokens[i]), lookback);
                 if (ratios[i] == 0) {
                     success = false;
                 }
@@ -151,7 +151,7 @@ library LibWell {
         // (i.e, seasonGetterFacet.getLiquidityToSupplyRatio()).We use LibUsdOracle
         // to get the price. This should never be reached during sunrise and thus
         // should not impact gas.
-        return LibUsdOracleFacet.getTokenPrice(token).mul(twaReserves[j]).div(1e6);
+        return LibUsdOracle.getTokenPrice(token).mul(twaReserves[j]).div(1e6);
     }
 
     /**
