@@ -4,7 +4,7 @@ import { Link } from "react-router-dom";
 import { theme } from "src/utils/ui/theme";
 import { Box, Flex } from "src/components/Layout";
 import { Text } from "src/components/Typography";
-import { WellComponentInfo, WellComponentType } from "../useWhitelistedWellComponents";
+import { WellComponentInfo } from "../useWhitelistedWellComponents";
 import { AccordionSelectCard } from "../../Selectable";
 import { Etherscan, Github } from "../../Icons";
 
@@ -91,15 +91,23 @@ export const WellComponentAccordionCard = ({
 
 const MayLink = ({ url, children }: { url?: string; children: React.ReactNode }) => {
   if (url) {
-    return <LinkFormWrapperInner to={url}>{children}</LinkFormWrapperInner>;
+    return (
+      <LinkFormWrapperInner
+        to={url}
+        onClick={(e) => {
+          e.stopPropagation();
+        }}
+      >
+        {children}
+      </LinkFormWrapperInner>
+    );
   }
   return children;
 };
 
 const LinkFormWrapperInner = styled(Link).attrs({
   target: "_blank",
-  rel: "noopener noreferrer",
-  onclick: (e: React.MouseEvent) => e.stopPropagation()
+  rel: "noopener noreferrer"
 })`
   text-decoration: none;
   outline: none;
@@ -111,17 +119,6 @@ const IconImg = styled.img<{ $rounded?: boolean }>`
   border-radius: 50%;
   margin-bottom: ${theme.spacing(-0.25)};
 `;
-
-const getTypeDisplay = (component: WellComponentInfo["component"]) => {
-  switch (component.type.type) {
-    case WellComponentType.Pump:
-      return "Pump";
-    case WellComponentType.WellFunction:
-      return "Well Function";
-    default:
-      return "Well";
-  }
-};
 
 const toPlural = (word: string, count: number) => {
   const suffix = count === 1 ? "" : "s";

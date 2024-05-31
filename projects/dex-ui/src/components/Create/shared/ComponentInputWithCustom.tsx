@@ -115,8 +115,7 @@ export const ComponentInputWithCustom = <T extends FieldValues>({
         <TextInputField
           {...register(path, {
             validate: (_value) => {
-              const isAdditional = !!additional?.some((val) => val.value === _value);
-              return isAdditional || getIsValidEthereumAddress(_value) || "Invalid address";
+              return getIsValidEthereumAddress(_value) || "Invalid address";
             }
           })}
           placeholder="Input address"

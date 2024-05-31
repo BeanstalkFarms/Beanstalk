@@ -27,7 +27,9 @@ const getERC20Data = async (_address: string) => {
   return multicall(config, { contracts: calls });
 };
 
-export const useERC20TokenWithAddress = (address: string | undefined = "") => {
+export const useERC20TokenWithAddress = (_address: string | undefined = "") => {
+  const address = _address.toLowerCase();
+
   const { data: wells = [] } = useWells();
   const sdk = useSdk();
 
@@ -40,17 +42,20 @@ export const useERC20TokenWithAddress = (address: string | undefined = "") => {
     refetch: refetchTokenMetadata,
     ...tokenMetadataQuery
   } = useQuery({
-    queryKey: queryKeys.tokenMetadata(address),
+    queryKey: queryKeys.tokenMetadata(isValidAddress ? address : "invalid"),
     queryFn: async () => {
-      console.log("metadata fetching!!!!", address);
+      console.debug("[useERC20Token] fetching: ", address);
       const multiCallResponse = await getERC20Data(address);
 
       // Validate as much as we can that this is an ERC20 token
       if (multiCallResponse[0]?.error || multiCallResponse[1]?.error) {
         throw new Error(USE_ERC20_TOKEN_ERRORS.notERC20Ish);
       }
+      console.debug("[useERC20Token] erc20 multicall response: ", multiCallResponse);
 
       const metadata = await alchemy.core.getTokenMetadata(address);
+
+      console.debug("[useERC20Token] token metadata: ", metadata);
 
       return {
         name: metadata?.name ?? "",
@@ -112,7 +117,7 @@ export const useERC20TokenWithAddress = (address: string | undefined = "") => {
   const shouldRunWhenSdkToken = Boolean(sdkToken && isValidAddress && lpTokens.length);
 
   const erc20Query = useQuery({
-    queryKey: queryKeys.erc20TokenWithAddress(address),
+    queryKey: queryKeys.erc20TokenWithAddress(isValidAddress ? address : "invalid"),
     queryFn: async () => {
       let token: ERC20Token | undefined = undefined;
       token = await handleIsLPToken();

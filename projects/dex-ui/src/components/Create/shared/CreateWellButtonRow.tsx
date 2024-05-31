@@ -54,8 +54,6 @@ export const CreateWellButtonRow = ({
     }
   };
 
-  // console.log("errors: ", errors);
-
   const noErrors = !Object.keys(errors).length;
   const hasValues = !valuesRequired || Object.values(values).every(Boolean);
 

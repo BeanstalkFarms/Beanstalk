@@ -62,18 +62,10 @@ const ChooseFunctionAndPumpForm = () => {
   const handleSubmit = useCallback(
     async (values: FunctionTokenPumpFormValues) => {
       const valid = await methods.trigger();
-      console.log("valid: ", valid);
-
       if (!valid || !token1 || !token2) return;
+      if (token1.address === token2.address) return; // should never be true, but just in case
 
-      const payload = {
-        ...values,
-        token1: token1,
-        token2: token2
-      };
-
-      // setStep2({ ...payload, goNext: true });
-      setStep2(payload);
+      setStep2({ ...values, token1, token2, goNext: true });
     },
     [setStep2, methods, token1, token2]
   );
@@ -156,10 +148,7 @@ const ChooseFunctionAndPumpForm = () => {
             {/*
              * Actions
              */}
-            <CreateWellButtonRow
-              onGoBack={handleSave}
-              // disabled={!token1 || !token2}
-            />
+            <CreateWellButtonRow onGoBack={handleSave} disabled={!token1 || !token2} />
           </Flex>
         </Flex>
       </form>
@@ -181,13 +170,6 @@ export const ChooseFunctionAndPump = () => {
 
 // ---------- STYLES & COMPONENTS ----------
 
-const ErrMessage = {
-  uniqueTokens: "Unique tokens required",
-  invalidAddress: "Invalid address",
-  required: "Token address is required",
-  notERC20Ish: USE_ERC20_TOKEN_ERRORS.notERC20Ish
-} as const;
-
 const TokenAddressInputWithSearch = ({
   path,
   setToken
@@ -201,17 +183,30 @@ const TokenAddressInputWithSearch = ({
     setValue,
     formState: {
       errors: { [path]: formError }
-    }
+    },
+    setError,
+    clearErrors
   } = useFormContext<FunctionTokenPumpFormValues>();
 
   const _value = useWatch({ control, name: path });
   const value = typeof _value === "string" ? _value : "";
+
   const { data: token, error, isLoading } = useERC20TokenWithAddress(value);
 
   const erc20ErrMessage = error?.message;
   const formErrMessage = formError?.message;
 
-  const tokenAndFormValueMatch = Boolean(token && token.address === value.toLowerCase());
+  const tokenAndFormValueMatch = Boolean(
+    token && token.address.toLowerCase() === value.toLowerCase()
+  );
+
+  useEffect(() => {
+    if (erc20ErrMessage) {
+      setError(path, { message: erc20ErrMessage });
+    } else if (!erc20ErrMessage && formErrMessage === USE_ERC20_TOKEN_ERRORS.notERC20Ish) {
+      clearErrors(path);
+    }
+  }, [path, formErrMessage, erc20ErrMessage, setError, clearErrors]);
 
   useEffect(() => {
     if (token && tokenAndFormValueMatch) {
@@ -228,28 +223,20 @@ const TokenAddressInputWithSearch = ({
           {...register(path, {
             required: {
               value: true,
-              message: ErrMessage.required
+              message: "Token address is required"
             },
-            validate: {
-              isValidAddress: (value) => getIsValidEthereumAddress(value) || "Invalid address",
-              isUnique: (value, formValues) => {
-                const otherTokenKey = path === "token1" ? "token2" : "token1";
-                const isValid = getIsValidEthereumAddress(value);
-                const tokensAreSame =
-                  value.toLowerCase() === formValues[otherTokenKey].toLowerCase();
-                if (isValid && tokensAreSame) {
-                  return "Unique tokens required";
-                }
+            validate: (formValue, formValues) => {
+              if (!getIsValidEthereumAddress(formValue)) return "Invalid address";
+              const otherTokenValue = formValues[path === "token1" ? "token2" : "token1"];
+              const tokensAreSame = formValue.toLowerCase() === otherTokenValue.toLowerCase();
+              if (tokensAreSame) return "Unique tokens required";
 
-                if (isValid && !tokensAreSame) {
-                }
-                return true;
-              }
+              return true;
             }
           })}
           placeholder="Search for token or input an address"
           startIcon="search"
-          error={formErrMessage}
+          error={formErrMessage ?? erc20ErrMessage}
         />
       ) : (
         <Flex>
@@ -259,7 +246,9 @@ const TokenAddressInputWithSearch = ({
                 {<img src={token.logo} alt={value} />}
               </ImgContainer>
             )}
-            <Text $variant="button-link" className="token-symbol">{token.symbol || ""}</Text>{" "}
+            <Text $variant="button-link" className="token-symbol">
+              {token.symbol}
+            </Text>{" "}
             <ImgContainer width={10} height={10} onClick={() => setValue(path, "")}>
               <XIcon width={10} height={10} />
             </ImgContainer>
