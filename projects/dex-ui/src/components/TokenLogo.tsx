@@ -14,7 +14,7 @@ type Props = {
 
 export const TokenLogo: FC<Props> = ({ size, mobileSize, token, isLP = false }) => {
   const symbol = token?.symbol ? token?.symbol : isLP ? "LP" : "DEFAULT";
-  let image = images[symbol];
+  let image = token?.logo ?? images[symbol];
   if (!image) {
     image = isLP ? images.LP : images.DEFAULT;
   }

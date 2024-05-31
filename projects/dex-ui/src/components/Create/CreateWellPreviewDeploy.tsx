@@ -28,19 +28,28 @@ type FormValues = DeepRequired<CreateWellStepProps["step4"]> & {
 };
 
 const FormContent = () => {
-  const { salt: cachedSalt, liquidity: cachedLiquidity } = useCreateWell();
+  const { salt, liquidity, setStep4 } = useCreateWell();
   const methods = useForm<FormValues>({
     defaultValues: {
-      usingSalt: false,
-      salt: cachedSalt,
-      seedingLiquidity: false,
-      token1Amount: cachedLiquidity.token1Amount?.toString(),
-      token2Amount: cachedLiquidity.token2Amount?.toString()
+      usingSalt: !!salt,
+      salt: salt,
+      seedingLiquidity: Boolean(liquidity.token1Amount || liquidity.token2Amount),
+      token1Amount: liquidity.token1Amount?.toString(),
+      token2Amount: liquidity.token2Amount?.toString()
     }
   });
 
+  const handleSave = () => {
+    const values = methods.getValues();
+    setStep4({
+      salt: values.salt,
+      token1Amount: values.token1Amount,
+      token2Amount: values.token2Amount
+    });
+  };
+
   const onSubmit = (data: FormValues) => {
-    console.log(data);
+    // console.log(data);
   };
 
   return (
@@ -49,7 +58,7 @@ const FormContent = () => {
         <Flex $gap={2}>
           <LiquidityForm />
           <SaltForm />
-          <CreateWellButtonRow />
+          <CreateWellButtonRow onGoBack={handleSave} valuesRequired={false} />
         </Flex>
       </form>
     </FormProvider>

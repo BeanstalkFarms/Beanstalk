@@ -46,15 +46,14 @@ const ChooseFunctionAndPumpForm = () => {
   const methods = useForm<FunctionTokenPumpFormValues>({
     defaultValues: {
       wellFunction: wellFunction || "",
-      token1: wellTokens?.token1?.address || aave,
-      token2: wellTokens?.token2?.address || bean,
+      token1: wellTokens?.token1?.address || "",
+      token2: wellTokens?.token2?.address || "",
       pump: pump || ""
     }
   });
 
   const handleSubmit = useCallback(
     (values: FunctionTokenPumpFormValues) => {
-      // validate
       for (const key in values) {
         const value = values[key as keyof typeof values];
         if (!value || !getIsValidEthereumAddress(value)) return;

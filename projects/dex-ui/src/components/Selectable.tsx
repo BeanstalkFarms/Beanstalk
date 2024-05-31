@@ -49,7 +49,7 @@ export const AccordionSelectCard = ({
   const [expanded, { toggle }] = useBoolean(defaultExpanded);
 
   return (
-    <SelectWrapper $active={selected} onClick={onClick}>
+    <SelectWrapper $active={selected} onClick={onClick} $clickable>
       <Flex $direction="row" $alignItems="center" $fullWidth $justifyContent="space-between">
         <Flex $direction="row" $alignItems="center" $fullWidth $gap={2}>
           <SelectIndicatorIcon selected={selected} />

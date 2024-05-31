@@ -88,7 +88,7 @@ export const CreateWellProvider = ({ children }: { children: React.ReactNode }) 
       setStep((_step) => Math.min(_step + 1, 3));
     };
     const handleGoBack = () => {
-      setStep((_step) => Math.min(_step - 1, 0));
+      setStep((_step) => Math.max(_step - 1, 0));
     };
     const handleSetPump = (pump: string) => setPump(pump);
     const handleSetWellFunction = (wellFunction: string) => setWellFunction(wellFunction);
