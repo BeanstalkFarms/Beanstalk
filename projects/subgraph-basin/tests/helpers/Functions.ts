@@ -1,5 +1,5 @@
 import { Address, BigInt, ethereum } from "@graphprotocol/graph-ts";
-import { createMockedFunction } from "matchstick-as";
+import { createMockedFunction } from "matchstick-as/assembly/index";
 import { BEAN_3CRV, BEAN_ERC20, BEAN_WETH_CP2_WELL, CRV3_TOKEN, WETH } from "../../../subgraph-core/utils/Constants";
 import { BEAN_USD_PRICE, WELL } from "./Constants";
 import { setMockCurvePrice, setMockWellPrice } from "../../../subgraph-core/tests/event-mocking/Price";

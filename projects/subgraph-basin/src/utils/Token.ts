@@ -1,5 +1,4 @@
 import { Address, BigDecimal, BigInt } from "@graphprotocol/graph-ts";
-import { log } from "matchstick-as";
 import { ERC20 } from "../../generated/Aquifer/ERC20";
 import { Token } from "../../generated/schema";
 import { CurvePrice } from "../../generated/templates/Well/CurvePrice";
@@ -22,7 +21,8 @@ export function loadOrCreateToken(tokenAddress: Address): Token {
     else token.symbol = symbolCall.value;
 
     let decimalCall = tokenContract.try_decimals();
-    if (decimalCall.reverted) token.decimals = 18; // Default to 18 decimals
+    if (decimalCall.reverted)
+      token.decimals = 18; // Default to 18 decimals
     else token.decimals = decimalCall.value;
 
     token.lastPriceUSD = ZERO_BD;

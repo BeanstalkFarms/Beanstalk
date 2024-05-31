@@ -87,32 +87,31 @@ export function updateWellVolumes(
   blockNumber: BigInt
 ): void {
   let well = loadWell(wellAddress);
-  let swapToken = loadToken(fromToken);
+  let tokenFrom = loadToken(fromToken);
+  let tokenTo = loadToken(toToken);
 
   let fromTokenIndex = well.tokens.indexOf(fromToken);
   let toTokenIndex = well.tokens.indexOf(toToken);
 
-  let usdVolume = toDecimal(amountIn, swapToken.decimals).times(swapToken.lastPriceUSD);
+  let usdAmountIn = toDecimal(amountIn, tokenFrom.decimals).times(tokenFrom.lastPriceUSD);
+  let usdAmountOut = toDecimal(amountOut, tokenTo.decimals).times(tokenTo.lastPriceUSD);
 
-  // Remove liquidity one token has no input token amount to calculate volume.
-  if (amountIn == ZERO_BI) {
-    swapToken = loadToken(toToken);
-    usdVolume = toDecimal(amountOut.div(BigInt.fromI32(2)), swapToken.decimals).times(swapToken.lastPriceUSD);
-  }
+  let usdVolume = usdAmountIn.plus(usdAmountOut).div(BigDecimal.fromString("2"));
+  well.cumulativeVolumeUSD = well.cumulativeVolumeUSD.plus(usdVolume);
 
-  // Update fromToken amounts
-
+  // Update swap volume by reserves
+  // Volume is considered on both ends of the trade. This is particularly relevant since a well could have >2 tokens.
   let volumeReserves = well.cumulativeVolumeReserves;
   let volumeReservesUSD = well.cumulativeVolumeReservesUSD;
-  let reserves = well.reserves;
-
   volumeReserves[fromTokenIndex] = volumeReserves[fromTokenIndex].plus(amountIn);
-  volumeReservesUSD[fromTokenIndex] = volumeReservesUSD[fromTokenIndex].plus(usdVolume);
-  reserves[fromTokenIndex] = reserves[fromTokenIndex].plus(amountIn);
+  volumeReserves[toTokenIndex] = volumeReserves[toTokenIndex].plus(amountOut);
+  volumeReservesUSD[fromTokenIndex] = volumeReservesUSD[fromTokenIndex].plus(usdAmountIn);
+  volumeReservesUSD[toTokenIndex] = volumeReservesUSD[toTokenIndex].plus(usdAmountOut);
 
+  let reserves = well.reserves;
+  reserves[fromTokenIndex] = reserves[fromTokenIndex].plus(amountIn);
   reserves[toTokenIndex] = reserves[toTokenIndex].minus(amountOut);
 
-  well.cumulativeVolumeUSD = well.cumulativeVolumeUSD.plus(usdVolume);
   well.cumulativeVolumeReserves = volumeReserves;
   well.cumulativeVolumeReservesUSD = volumeReservesUSD;
   well.reserves = reserves;

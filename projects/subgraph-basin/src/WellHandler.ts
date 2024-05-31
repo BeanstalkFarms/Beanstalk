@@ -62,25 +62,20 @@ export function handleRemoveLiquidityOneToken(event: RemoveLiquidityOneToken): v
   let well = loadWell(event.address);
   let fromTokenIndex = well.tokens.indexOf(event.params.tokenOut) == 0 ? 1 : 0;
 
-  let indexedBalances = emptyBigIntArray(well.tokens.length);
+  let withdrawnBalances = emptyBigIntArray(well.tokens.length);
 
-  indexedBalances[well.tokens.indexOf(event.params.tokenOut)] = indexedBalances[well.tokens.indexOf(event.params.tokenOut)].plus(
+  withdrawnBalances[well.tokens.indexOf(event.params.tokenOut)] = withdrawnBalances[well.tokens.indexOf(event.params.tokenOut)].plus(
     event.params.tokenAmountOut
   );
 
   loadOrCreateAccount(event.transaction.from);
-
-  // Flip to negative for updating well balances
-  for (let i = 0; i < indexedBalances.length; i++) {
-    indexedBalances[i] = ZERO_BI.minus(indexedBalances[i]);
-  }
 
   checkForSnapshot(event.address, event.block.timestamp, event.block.number);
 
   updateWellVolumes(
     event.address,
     Address.fromBytes(well.tokens[fromTokenIndex]),
-    indexedBalances[fromTokenIndex],
+    ZERO_BI,
     event.params.tokenOut,
     event.params.tokenAmountOut,
     event.block.timestamp,
@@ -93,7 +88,7 @@ export function handleRemoveLiquidityOneToken(event: RemoveLiquidityOneToken): v
 
   incrementWellWithdraw(event.address);
 
-  recordRemoveLiquidityOneEvent(event, indexedBalances);
+  recordRemoveLiquidityOneEvent(event, withdrawnBalances);
 }
 
 export function handleSwap(event: Swap): void {
