@@ -28,5 +28,7 @@ export const Settings = {
   NETLIFY_BUILD_ID: netlifyBuildId
 };
 
+export const isNetlifyContext = netlifyContext === 'deploy-preview';
+
 // @ts-ignore
 globalThis.settings = () => Log.module("settings").log(Settings);

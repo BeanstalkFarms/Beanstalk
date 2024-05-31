@@ -3,23 +3,50 @@ import { Divider, Flex } from "src/components/Layout";
 import { Text } from "src/components/Typography";
 import { theme } from "src/utils/ui/theme";
 import styled from "styled-components";
-import { CreateWellProps, useCreateWell } from "./CreateWellProvider";
+import { CreateWellStepProps, useCreateWell } from "./CreateWellProvider";
 import { FormProvider, useForm } from "react-hook-form";
-import { CreateWellFormProgress } from "./CreateWellFormProgress";
+import { CreateWellFormProgress } from "./shared/CreateWellFormProgress";
 import { TextInputField } from "../Form";
 import { useWells } from "src/wells/useWells";
-import { CreateWellButtonRow } from "./CreateWellButtonRow";
+import { CreateWellButtonRow } from "./shared/CreateWellButtonRow";
+import { useWhitelistedWellComponents } from "./useWhitelistedWellComponents";
 
-type FormValues = CreateWellProps["wellNameAndSymbol"];
+export type WellDetailsFormValues = CreateWellStepProps["step3"];
+
+const useWellDetailsDefaultValues = () => {
+  const components = useWhitelistedWellComponents();
+  const { wellFunction = "", wellTokens } = useCreateWell();
+
+  const token1 = wellTokens?.token1?.symbol;
+  const token2 = wellTokens?.token2?.symbol;
+
+  const whitelistedWellFunction = components.wellFunctions.find(
+    (wf) => wf.address.toLowerCase() === wellFunction?.toLowerCase()
+  );
+
+  const componentName = whitelistedWellFunction?.component.name;
+  const abbrev = whitelistedWellFunction?.component.tokenSuffixAbbreviation;
+
+  const defaultName =
+    componentName && token1 && token2 ? `${token1}:${token2} ${componentName}` : undefined;
+
+  const defaultSymbol = abbrev && token1 && token2 && `${token1}${token2}${abbrev}`;
+
+  return {
+    name: defaultName,
+    symbol: defaultSymbol
+  };
+};
 
 const ChooseComponentNamesForm = () => {
   const { data: wells } = useWells();
-  const { wellNameAndSymbol: cached, setWellNameAndSymbol } = useCreateWell();
+  const { wellDetails, setStep3 } = useCreateWell();
+  const defaults = useWellDetailsDefaultValues();
 
-  const methods = useForm<FormValues>({
+  const methods = useForm<WellDetailsFormValues>({
     defaultValues: {
-      name: cached?.name ?? "",
-      symbol: cached?.symbol ?? ""
+      name: wellDetails?.name ?? defaults?.name ?? "",
+      symbol: wellDetails?.symbol ?? defaults?.symbol ?? ""
     }
   });
 
@@ -28,14 +55,15 @@ const ChooseComponentNamesForm = () => {
       const duplicate = (wells || []).some(
         (well) => well.name?.toLowerCase() === name.toLowerCase()
       );
-      return duplicate || "Token name taken";
+
+      return duplicate ? "Token name taken" : true;
     };
 
     const wellSymbol = (symbol: string) => {
       const duplicate = (wells || []).some(
         (well) => well?.lpToken?.symbol.toLowerCase() === symbol.toLowerCase()
       );
-      return duplicate || "Token symbol taken";
+      return duplicate ? "Token symbol taken" : true;
     };
 
     return {
@@ -44,17 +72,23 @@ const ChooseComponentNamesForm = () => {
     };
   }, [wells]);
 
+  const handleSave = useCallback(() => {
+    const values = methods.getValues();
+    setStep3(values);
+  }, [setStep3, methods]);
+
   const onSubmit = useCallback(
-    (values: FormValues) => {
+    (values: WellDetailsFormValues) => {
       const nameValidated = validate.name(values.name);
       const symbolValidated = validate.symbol(values.symbol);
+
       if (typeof nameValidated === "string" || typeof symbolValidated === "string") {
         return;
       }
 
-      setWellNameAndSymbol(values);
+      setStep3({ ...values, goNext: true });
     },
-    [setWellNameAndSymbol, validate]
+    [setStep3, validate]
   );
 
   return (
@@ -68,7 +102,7 @@ const ChooseComponentNamesForm = () => {
                 Name and Symbol
               </Text>
               <Flex $direction="row" $fullWidth $gap={4}>
-                <Flex width="50%" maxWidth="50%">
+                <Flex $width="50%" $maxWidth="50%">
                   <Text $variant="xs" $color="text.secondary" $mb={1}>
                     Well Token Name
                   </Text>
@@ -82,7 +116,7 @@ const ChooseComponentNamesForm = () => {
                     })}
                   />
                 </Flex>
-                <Flex width="50%" maxWidth="50%">
+                <Flex $width="50%" $maxWidth="50%">
                   <Text $variant="xs" $color="text.secondary" $mb={1}>
                     Well Token Symbol
                   </Text>
@@ -99,7 +133,7 @@ const ChooseComponentNamesForm = () => {
               </Flex>
             </div>
             <Divider />
-            <CreateWellButtonRow />
+            <CreateWellButtonRow onGoBack={handleSave} />
           </Flex>
         </Flex>
       </form>

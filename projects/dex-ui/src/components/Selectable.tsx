@@ -6,33 +6,24 @@ import { ChevronDown, CircleEmptyIcon, CircleFilledCheckIcon } from "./Icons";
 import { ImageButton } from "./ImageButton";
 import { useBoolean } from "src/utils/ui/useBoolean";
 
-export type AccordionSelectCardProps = {
-  upper: React.ReactNode;
-  selected: boolean;
-  below: JSX.Element;
-  defaultExpanded?: boolean;
-  onClick: React.MouseEventHandler<HTMLDivElement> | undefined;
-};
 
-export const SelectIndicatorIcon = ({
-  selected,
-  size = 16
-}: {
+type SelectnIndicatorIconProps = {
   selected: boolean;
   size?: number;
-}) => {
+};
+export const SelectIndicatorIcon = ({ selected, size = 16 }: SelectnIndicatorIconProps) => {
   return (
-    <SelectIndicatorWrapper size={size}>
+    <ExactSize size={size}>
       {selected ? (
         <CircleFilledCheckIcon width={size} height={size} />
       ) : (
         <CircleEmptyIcon color={theme.colors.lightGray} width={size} height={size} />
       )}
-    </SelectIndicatorWrapper>
+    </ExactSize>
   );
 };
 
-const SelectIndicatorWrapper = styled.div<{ size: number }>`
+const ExactSize = styled.div<{ size: number }>`
   min-width: ${(props) => props.size}px;
   min-height: ${(props) => props.size}px;
   max-height: ${(props) => props.size}px;
@@ -41,6 +32,13 @@ const SelectIndicatorWrapper = styled.div<{ size: number }>`
   height: ${(props) => props.size}px;
 `;
 
+type AccordionSelectCardProps = {
+  upper: React.ReactNode;
+  selected: boolean;
+  below: JSX.Element;
+  defaultExpanded?: boolean;
+  onClick: React.MouseEventHandler<HTMLDivElement> | undefined;
+};
 export const AccordionSelectCard = ({
   selected,
   below,
@@ -51,7 +49,7 @@ export const AccordionSelectCard = ({
   const [expanded, { toggle }] = useBoolean(defaultExpanded);
 
   return (
-    <ComponentWrapper $active={selected} onClick={onClick}>
+    <SelectWrapper $active={selected} onClick={onClick} $clickable>
       <Flex $direction="row" $alignItems="center" $fullWidth $justifyContent="space-between">
         <Flex $direction="row" $alignItems="center" $fullWidth $gap={2}>
           <SelectIndicatorIcon selected={selected} />
@@ -77,16 +75,32 @@ export const AccordionSelectCard = ({
           {below}
         </>
       )}
-    </ComponentWrapper>
+    </SelectWrapper>
   );
 };
 
-const ComponentWrapper = styled(Flex).attrs({ $gap: 2 })<{ $active: boolean }>`
+type SelectCardProps = {
+  selected: boolean;
+  children: React.ReactNode;
+  onClick?: React.MouseEventHandler<HTMLDivElement> | undefined;
+};
+export const SelectCard = ({ selected, children, onClick }: SelectCardProps) => {
+  return (
+    <SelectWrapper onClick={onClick} $active={selected} $clickable={!!onClick}>
+      <Flex $direction="row" $alignItems="center" $fullWidth $gap={2}>
+        <SelectIndicatorIcon selected={selected} />
+        {children}
+      </Flex>
+    </SelectWrapper>
+  );
+};
+
+const SelectWrapper = styled(Flex).attrs({ $gap: 2 })<{ $active: boolean; $clickable?: boolean }>`
   // width: 100%;
   border: 1px solid ${(props) => (props.$active ? theme.colors.black : theme.colors.lightGray)};
   background: ${(props) => (props.$active ? theme.colors.primaryLight : theme.colors.white)};
   padding: ${theme.spacing(2, 3)};
-  cursor: pointer;
+  cursor: ${(props) => (props.$clickable ? "pointer" : "default")};
 `;
 
 const Divider = styled.div`

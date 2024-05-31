@@ -2,9 +2,9 @@ import { useMemo } from "react";
 import BeanstalkFarmsLogo from "src/assets/images/beanstalk-farms.png";
 import HalbornLogo from "src/assets/images/halborn-logo.png";
 import {
-  BEANETH_ADDRESS,
-  BEANETH_MULTIPUMP_ADDRESS,
-  CONSTANT_PRODUCT_2_ADDRESS
+  MULTI_FLOW_PUMP_ADDRESS,
+  CONSTANT_PRODUCT_2_ADDRESS,
+  WELL_DOT_SOL_ADDRESS
 } from "src/utils/addresses";
 import BrendanTwitterPFP from "src/assets/images/brendan-twitter-pfp.png";
 import ClockIcon from "src/assets/images/clock-icon.svg";
@@ -36,6 +36,7 @@ export type WellComponentInfo = {
       display: string;
       imgSrc?: string;
     };
+    tokenSuffixAbbreviation?: string;
   };
   deploy: ComponentInfo;
   info: ComponentInfo[];
@@ -47,7 +48,7 @@ export type WellComponentInfo = {
 };
 
 const WellDotSol: WellComponentInfo = {
-  address: BEANETH_ADDRESS,
+  address: WELL_DOT_SOL_ADDRESS,
   component: {
     name: "Well.sol",
     summary: "A standard Well implementation that prioritizes flexibility and composability.",
@@ -87,14 +88,15 @@ const WellDotSol: WellComponentInfo = {
 };
 
 const MultiFlowPump: WellComponentInfo = {
-  address: BEANETH_MULTIPUMP_ADDRESS,
+  address: MULTI_FLOW_PUMP_ADDRESS,
   component: {
     name: "Multi Flow",
-    fullName: "MultiFlow Pump v1.1",
+    fullName: "MultiFlow Pump",
     summary: "An inter-block MEV manipulation resistant oracle implementation.",
     description: [
       "An inter-block MEV manipulation-resistant oracle implementation which can serve last values, geometric EMA values and TWA geometric SMA values."
     ],
+    usedBy: 1,
     url: "https://docs.basin.exchange/implementations/multi-flow-pump",
     type: {
       type: WellComponentType.Pump,
@@ -133,7 +135,9 @@ const ConstantProduct2: WellComponentInfo = {
       type: WellComponentType.WellFunction,
       display: "Well Function",
       imgSrc: ClockIcon
-    }
+    },
+    usedBy: 1,
+    tokenSuffixAbbreviation: "CP2w"
   },
   deploy: {
     label: "Deployed By",
@@ -152,19 +156,6 @@ const ConstantProduct2: WellComponentInfo = {
     etherscan: "https://etherscan.io", // TODO: FIX ME
     github: "https://github.com/BeanstalkFarms/Basin/blob/master/src/functions/ConstantProduct2.sol" // TODO: FIX ME
     // learnMore: // TODO: FIX ME
-  }
-};
-
-// TODO: can we somwhow make this dynamic??
-export const WellComponentsMap: Record<WellComponentType, Record<string, WellComponentInfo>> = {
-  [WellComponentType.WellImplementation]: {
-    [BEANETH_ADDRESS.toLowerCase()]: WellDotSol
-  },
-  [WellComponentType.Pump]: {
-    ["multi-flow-pump"]: MultiFlowPump
-  },
-  [WellComponentType.WellFunction]: {
-    ["constant-product-2"]: ConstantProduct2
   }
 };
 

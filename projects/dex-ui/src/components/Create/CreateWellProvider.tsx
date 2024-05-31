@@ -1,116 +1,171 @@
-import React, { createContext, useCallback, useState } from "react";
+import React, { createContext, useCallback, useMemo, useState } from "react";
+import { ERC20Token } from "@beanstalk/sdk-core";
+import { DeepRequired } from "react-hook-form";
 
 type GoNextParams = {
   goNext?: boolean;
 };
 
-type SetWellImplementationStepParams = {
-  wellImplementation: string;
+type WellTokensParams = {
+  token1: ERC20Token;
+  token2: ERC20Token;
 };
 
-type SetFunctionAndPumpStepParams = {
-  wellFunction: string;
-  token1: string;
-  token2: string;
-  pump: string;
+type LiquidityAmounts = {
+  token1Amount: string;
+  token2Amount: string;
 };
 
-export type CreateWellProps = {
-  wellImplementation: SetWellImplementationStepParams;
-  wellFunctionAndPump: SetFunctionAndPumpStepParams;
-  wellNameAndSymbol: SetWellNameAndSymbolStepParams;
-};
-
-type SetWellNameAndSymbolStepParams = {
+type WellDetails = {
   name: string;
   symbol: string;
 };
 
-type CreateWellContext = {
+export type CreateWellContext = {
   step: number;
-  wellImplementation: SetWellImplementationStepParams | undefined;
-  functionAndPump: SetFunctionAndPumpStepParams | undefined;
-  wellNameAndSymbol: SetWellNameAndSymbolStepParams | undefined;
+  wellImplementation: string | undefined;
+  wellFunction: string | undefined;
+  pump: string | undefined;
+  wellDetails: Partial<WellDetails>;
+  wellTokens: Partial<WellTokensParams>;
+  liquidity: Partial<LiquidityAmounts>;
+  salt: number | undefined;
   goBack: () => void;
   goNext: () => void;
-  setWellImplementation: (params: SetWellImplementationStepParams & GoNextParams) => void;
-  setFunctionAndPump: (params: SetFunctionAndPumpStepParams & GoNextParams) => void;
-  setWellNameAndSymbol: (params: SetWellNameAndSymbolStepParams) => void;
+  setStep1: (params: Partial<{ wellImplementation: string } & GoNextParams>) => void;
+  setStep2: (
+    params: Partial<
+      {
+        wellFunction: string;
+        token1: ERC20Token;
+        token2: ERC20Token;
+        pump: string;
+      } & GoNextParams
+    >
+  ) => void;
+  setStep3: (params: Partial<WellDetails & GoNextParams>) => void;
+  setStep4: (params: Partial<LiquidityAmounts & { salt?: number }>) => void;
   deployWell: () => Promise<any>;
 };
+
+export type CreateWellStepProps = DeepRequired<{
+  step1: {
+    wellImplementation: CreateWellContext["wellImplementation"];
+  };
+  step2: {
+    wellFunction: CreateWellContext["wellFunction"];
+    pump: CreateWellContext["pump"];
+    wellTokens: CreateWellContext["wellTokens"];
+  };
+  step3: CreateWellContext["wellDetails"];
+  step4: CreateWellContext["liquidity"] & {
+    salt: CreateWellContext["salt"];
+  };
+}>;
 
 const Context = createContext<CreateWellContext | null>(null);
 
 export const CreateWellProvider = ({ children }: { children: React.ReactNode }) => {
   const [step, setStep] = useState<number>(0);
 
-  /// step 1
-  const [wellImplementation, setWellImplementation] = useState<
-    SetWellImplementationStepParams | undefined
-  >();
-  const [functionAndPump, setFunctionAndPump] = useState<
-    SetFunctionAndPumpStepParams | undefined
-  >();
-  const [wellNameAndSymbol, setWellNameAndSymbol] = useState<
-    SetWellNameAndSymbolStepParams | undefined
-  >();
+  // step 1
+  const [wellImplementation, setWellImplementation] = useState<string | undefined>();
 
-  const handleGoNext = useCallback(() => {
-    setStep((_step) => Math.min(_step + 1, 3));
+  // step 2
+  const [pump, setPump] = useState<string | undefined>();
+  const [wellFunction, setWellFunction] = useState<string | undefined>();
+  const [wellTokens, setWellTokens] = useState<Partial<WellTokensParams>>({});
+
+  // step 3
+  const [wellDetails, setWellDetails] = useState<Partial<WellDetails>>({});
+
+  // step 4
+  const [liquidity, setLiquidity] = useState<Partial<LiquidityAmounts>>({});
+  const [salt, setDeploySalt] = useState<number | undefined>();
+
+  const methods = useMemo(() => {
+    const handleSetLiquidity = (params: LiquidityAmounts) => setLiquidity(params);
+    const handleSetSalt = (_salt: number) => setDeploySalt(_salt);
+    const handleGoNext = () => {
+      setStep((_step) => Math.min(_step + 1, 3));
+    };
+    const handleGoBack = () => {
+      setStep((_step) => Math.max(_step - 1, 0));
+    };
+    const handleSetPump = (pump: string) => setPump(pump);
+    const handleSetWellFunction = (wellFunction: string) => setWellFunction(wellFunction);
+    const handleSetWellDetails = (details: WellDetails) => setWellDetails(details);
+
+    return {
+      setLiquidity: handleSetLiquidity,
+      setSalt: handleSetSalt,
+      goNext: handleGoNext,
+      goBack: handleGoBack,
+      setPump: handleSetPump,
+      setWellFunction: handleSetWellFunction,
+      setWellDetails: handleSetWellDetails
+    };
   }, []);
 
-  const handleGoBack = useCallback(() => {
-    setStep((_step) => Math.min(_step - 1, 0));
-  }, []);
-
-  const setWellImplementationStep: CreateWellContext["setWellImplementation"] = useCallback(
-    ({ goNext, ...params }) => {
-      setWellImplementation(params);
-      if (goNext) {
-        handleGoNext();
-      }
-    },
-    [handleGoNext]
-  );
-
-  const setFunctionAndPumpStep: CreateWellContext["setFunctionAndPump"] = useCallback(
-    ({ goNext, ...params }) => {
-      setFunctionAndPump(params);
-      if (goNext) {
-        handleGoNext();
-      }
-    },
-    [handleGoNext]
-  );
-
-  const setWellNameAndSymbolStep: CreateWellContext["setWellNameAndSymbol"] = useCallback(
+  const setStep1: CreateWellContext["setStep1"] = useCallback(
     (params) => {
-      setWellNameAndSymbol(params);
+      setWellImplementation(params.wellImplementation);
+      params.goNext && methods.goNext();
     },
-    []
+    [methods]
   );
+
+  const setStep2: CreateWellContext["setStep2"] = useCallback(
+    (params) => {
+      setPump(params.pump);
+      setWellFunction(params.wellFunction);
+      setWellTokens({
+        token1: params.token1,
+        token2: params.token2
+      });
+
+      params.goNext && methods.goNext();
+    },
+    [methods]
+  );
+
+  const setStep3: CreateWellContext["setStep3"] = useCallback(
+    ({ goNext, ...params }) => {
+      setWellDetails(params);
+      goNext && methods.goNext();
+    },
+    [methods]
+  );
+
+  const setStep4: CreateWellContext["setStep4"] = useCallback((params) => {
+    setDeploySalt(params.salt);
+    setLiquidity({
+      token1Amount: params.token1Amount,
+      token2Amount: params.token2Amount
+    });
+  }, []);
 
   const deployWell = useCallback(async () => {
-    console.debug({
-      wellImplementation,
-      functionAndPump,
-      wellNameAndSymbol
-    });
-  }, [wellImplementation, functionAndPump, wellNameAndSymbol]);
+    console.log("deploying well...");
+  }, []);
 
   return (
     <Context.Provider
       value={{
         step,
         wellImplementation,
-        functionAndPump,
-        wellNameAndSymbol,
-        goBack: handleGoBack,
-        goNext: handleGoNext,
-        setWellImplementation: setWellImplementationStep,
-        setFunctionAndPump: setFunctionAndPumpStep,
-        setWellNameAndSymbol: setWellNameAndSymbolStep,
-        deployWell
+        wellFunction,
+        pump,
+        wellDetails,
+        wellTokens,
+        liquidity,
+        salt,
+        setStep1,
+        setStep2,
+        setStep3,
+        setStep4,
+        deployWell,
+        ...methods
       }}
     >
       {children}

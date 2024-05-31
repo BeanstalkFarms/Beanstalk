@@ -1,15 +1,15 @@
 import React, { useCallback } from "react";
 import { FieldValues, Path, PathValue, useFormContext, useWatch } from "react-hook-form";
-import { useWhitelistedWellComponents } from "./useWhitelistedWellComponents";
+import { useWhitelistedWellComponents } from "../useWhitelistedWellComponents";
 import { useBoolean } from "src/utils/ui/useBoolean";
-import { TextInputField } from "../Form";
+import { TextInputField } from "../../Form";
 import { Flex } from "src/components/Layout";
 import { ToggleSwitch } from "src/components/ToggleSwitch";
 import { WellComponentAccordionCard } from "./ComponentAccordionCard";
 import { Text } from "src/components/Typography";
 import { theme } from "src/utils/ui/theme";
 import styled from "styled-components";
-import { CircleFilledCheckIcon, CircleEmptyIcon } from "../Icons";
+import { CircleFilledCheckIcon, CircleEmptyIcon } from "../../Icons";
 import { getIsValidEthereumAddress } from "src/utils/addresses";
 
 type AdditionalOptionProps = {
@@ -115,8 +115,7 @@ export const ComponentInputWithCustom = <T extends FieldValues>({
         <TextInputField
           {...register(path, {
             validate: (_value) => {
-              const isAdditional = !!additional?.some((val) => val.value === _value);
-              return isAdditional || getIsValidEthereumAddress(_value) || "Invalid address";
+              return getIsValidEthereumAddress(_value) || "Invalid address";
             }
           })}
           placeholder="Input address"

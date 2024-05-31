@@ -3,10 +3,10 @@ import { useFormContext, useWatch } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
 import { theme } from "src/utils/ui/theme";
 import styled from "styled-components";
-import { ButtonPrimary } from "../Button";
-import { LeftArrow, RightArrow } from "../Icons";
-import { Flex } from "../Layout";
-import { useCreateWell } from "./CreateWellProvider";
+import { ButtonPrimary } from "../../Button";
+import { LeftArrow, RightArrow } from "../../Icons";
+import { Flex } from "../../Layout";
+import { useCreateWell } from "../CreateWellProvider";
 
 const ButtonLabels = [
   {
@@ -27,7 +27,15 @@ const ButtonLabels = [
   }
 ] as const;
 
-export const CreateWellButtonRow = () => {
+export const CreateWellButtonRow = ({
+  disabled = false,
+  valuesRequired = true,
+  onGoBack
+}: {
+  disabled?: boolean;
+  valuesRequired?: boolean;
+  onGoBack?: () => void;
+}) => {
   const { step, goBack } = useCreateWell();
 
   const navigate = useNavigate();
@@ -38,6 +46,7 @@ export const CreateWellButtonRow = () => {
   const values = useWatch({ control });
 
   const handleGoBack = () => {
+    onGoBack?.();
     if (step === 0) {
       navigate("/build");
     } else {
@@ -46,7 +55,7 @@ export const CreateWellButtonRow = () => {
   };
 
   const noErrors = !Object.keys(errors).length;
-  const hasValues = Object.values(values).every(Boolean);
+  const hasValues = !valuesRequired || Object.values(values).every(Boolean);
 
   const goNextEnabled = noErrors && hasValues;
 
@@ -54,14 +63,22 @@ export const CreateWellButtonRow = () => {
   const nextLabel = ButtonLabels[step].next || "Next";
 
   return (
-    <Flex $fullWidth $direction="row" $justifyContent="space-between">
-      <ButtonPrimary $variant="outlined" onClick={handleGoBack}>
+    <Flex $fullWidth $direction="row" $justifyContent="space-between" $gap={2}>
+      <ButtonPrimary
+        $variant="outlined"
+        onClick={(e) => {
+          // stop the event from bubbling up
+          e.preventDefault();
+          e.stopPropagation();
+          handleGoBack();
+        }}
+      >
         <ButtonLabel>
           <LeftArrow width={16} height={16} />
           {goBackLabel}
         </ButtonLabel>
       </ButtonPrimary>
-      <ButtonPrimary type="submit" disabled={!goNextEnabled}>
+      <ButtonPrimary type="submit" disabled={!goNextEnabled || disabled}>
         <ButtonLabel>
           {nextLabel}
           <RightArrow width={16} height={16} color={theme.colors.white} />
