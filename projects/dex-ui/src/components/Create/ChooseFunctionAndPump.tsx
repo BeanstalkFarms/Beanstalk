@@ -80,7 +80,7 @@ const ChooseFunctionAndPumpForm = () => {
             {/*
              * Well Function Form Section
              */}
-            <SectionWrapper $direction="row" $fullWidth $justifyContent="space-between">
+            <SectionWrapper $direction="row" $fullWidth $justifyContent="space-between" $gap={2}>
               <Flex $gap={2} className="description">
                 <Text $variant="h3">Well Functions</Text>
                 <Text $variant="xs" $color="text.secondary">
@@ -121,7 +121,7 @@ const ChooseFunctionAndPumpForm = () => {
             {/*
              * Pump Select Section
              */}
-            <SectionWrapper $direction="row" $justifyContent="space-between" $fullWidth>
+            <SectionWrapper $direction="row" $justifyContent="space-between" $fullWidth $gap={2}>
               <Flex $gap={2} className="description" $justifyContent="flex-start">
                 <Text $variant="h3">Pumps</Text>
                 <Text $variant="xs">Choose Pump(s) to set up a price feed from your Well.</Text>

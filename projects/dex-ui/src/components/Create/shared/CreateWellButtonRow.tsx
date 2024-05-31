@@ -63,7 +63,7 @@ export const CreateWellButtonRow = ({
   const nextLabel = ButtonLabels[step].next || "Next";
 
   return (
-    <Flex $fullWidth $direction="row" $justifyContent="space-between">
+    <Flex $fullWidth $direction="row" $justifyContent="space-between" $gap={2}>
       <ButtonPrimary
         $variant="outlined"
         onClick={(e) => {
