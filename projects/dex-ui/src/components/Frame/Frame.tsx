@@ -4,7 +4,7 @@ import { FC } from "src/types";
 import styled from "styled-components";
 import { Footer } from "./Footer";
 import { Window } from "./Window";
-import { Settings } from "src/settings";
+import { Settings, isNetlifyContext } from "src/settings";
 import CustomToaster from "../TxnToast/CustomToaster";
 import buildIcon from "src/assets/images/navbar/build.svg";
 import swapIcon from "src/assets/images/navbar/swap.svg";
@@ -37,13 +37,15 @@ export const Frame: FC<{}> = ({ children }) => {
             <NavLink to="/wells" hovericon={wellsIcon}>
               Liquidity
             </NavLink>
-            <NavLink to="/build" hovericon={buildIcon}>
-              Build
-            </NavLink>
+            {(isNotProd || isNetlifyContext) && (
+              <NavLink to="/build" hovericon={buildIcon}>
+                Build
+              </NavLink>
+            )}
             <NavLink to="/swap" hovericon={swapIcon}>
               Swap
             </NavLink>
-            {isNotProd && <NavLink to="/dev">Dev</NavLink>}
+            {(isNotProd) && <NavLink to="/dev">Dev</NavLink>}
           </NavLinks>
         </RightSide>
         <StyledConnectContainer>
