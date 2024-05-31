@@ -9,17 +9,46 @@ import { CreateWellFormProgress } from "./shared/CreateWellFormProgress";
 import { TextInputField } from "../Form";
 import { useWells } from "src/wells/useWells";
 import { CreateWellButtonRow } from "./shared/CreateWellButtonRow";
+import { useWhitelistedWellComponents } from "./useWhitelistedWellComponents";
 
 export type WellDetailsFormValues = CreateWellStepProps["step3"];
+
+const useWellDetailsDefaultValues = () => {
+  const components = useWhitelistedWellComponents();
+  const { wellFunction = "", wellTokens } = useCreateWell();
+
+  const token1 = wellTokens?.token1?.symbol;
+  const token2 = wellTokens?.token2?.symbol;
+
+  const whitelistedWellFunction = components.wellFunctions.find(
+    (wf) => wf.address.toLowerCase() === wellFunction?.toLowerCase()
+  );
+
+  const componentName = whitelistedWellFunction?.component.name;
+  const abbrev = whitelistedWellFunction?.component.tokenSuffixAbbreviation;
+
+  console.log("component: ", whitelistedWellFunction?.component);
+
+  const defaultName =
+    componentName && token1 && token2 ? `${token1}:${token2} ${componentName}` : undefined;
+
+  const defaultSymbol = abbrev && token1 && token2 && `${token1}${token2}${abbrev}`;
+
+  return {
+    name: defaultName,
+    symbol: defaultSymbol
+  };
+};
 
 const ChooseComponentNamesForm = () => {
   const { data: wells } = useWells();
   const { wellDetails, setStep3 } = useCreateWell();
+  const defaults = useWellDetailsDefaultValues();
 
   const methods = useForm<WellDetailsFormValues>({
     defaultValues: {
-      name: wellDetails?.name ?? "",
-      symbol: wellDetails?.symbol ?? ""
+      name: wellDetails?.name ?? defaults?.name ?? "",
+      symbol: wellDetails?.symbol ?? defaults?.symbol ?? ""
     }
   });
 

@@ -36,6 +36,7 @@ export type WellComponentInfo = {
       display: string;
       imgSrc?: string;
     };
+    tokenSuffixAbbreviation?: string;
   };
   deploy: ComponentInfo;
   info: ComponentInfo[];
@@ -133,7 +134,8 @@ const ConstantProduct2: WellComponentInfo = {
       type: WellComponentType.WellFunction,
       display: "Well Function",
       imgSrc: ClockIcon
-    }
+    },
+    tokenSuffixAbbreviation: "CP2w"
   },
   deploy: {
     label: "Deployed By",

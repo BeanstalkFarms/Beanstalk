@@ -29,8 +29,8 @@ export const Build = () => {
         </Text>
       </Flex>
       <ActionBanner>
-        <Text $variant="l">Use the Well Creator to deploy your own Wells.</Text>
-        <ButtonPrimary onClick={handleNavigate}>Well Creator →</ButtonPrimary>
+        <Text $variant="l">Use the Well Deployer to deploy your own Wells.</Text>
+        <ButtonPrimary onClick={handleNavigate}>Well Deployer →</ButtonPrimary>
       </ActionBanner>
       <Flex $gap={0.5} $mt={3}>
         <Text $variant="h3">COMPONENT LIBRARY</Text>

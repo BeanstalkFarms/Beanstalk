@@ -22,7 +22,7 @@ const additionalOptions = [
   {
     value: "none",
     label: "None",
-    subLabel: "No Oracle"
+    subLabel: "No Pump"
   }
 ];
 

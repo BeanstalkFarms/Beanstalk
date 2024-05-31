@@ -85,6 +85,7 @@ export const WellComponentAccordionCard = ({
         </Flex>
       }
       onClick={() => setSelected(address)}
+      defaultExpanded
     />
   );
 };
