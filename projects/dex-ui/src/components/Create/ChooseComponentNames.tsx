@@ -72,6 +72,11 @@ const ChooseComponentNamesForm = () => {
     };
   }, [wells]);
 
+  const handleSave = useCallback(() => {
+    const values = methods.getValues();
+    setStep3(values);
+  }, [setStep3, methods]);
+
   const onSubmit = useCallback(
     (values: WellDetailsFormValues) => {
       const nameValidated = validate.name(values.name);
@@ -128,7 +133,7 @@ const ChooseComponentNamesForm = () => {
               </Flex>
             </div>
             <Divider />
-            <CreateWellButtonRow />
+            <CreateWellButtonRow onGoBack={handleSave} />
           </Flex>
         </Flex>
       </form>

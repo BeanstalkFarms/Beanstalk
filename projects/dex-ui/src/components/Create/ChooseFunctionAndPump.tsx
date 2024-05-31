@@ -52,6 +52,15 @@ const ChooseFunctionAndPumpForm = () => {
     }
   });
 
+  const handleSave = useCallback(() => {
+    const values = methods.getValues();
+    setStep2({
+      ...values,
+      token1: token1,
+      token2: token2
+    });
+  }, [token1, token2, methods, setStep2]);
+
   const handleSubmit = useCallback(
     (values: FunctionTokenPumpFormValues) => {
       for (const key in values) {
@@ -139,7 +148,7 @@ const ChooseFunctionAndPumpForm = () => {
             {/*
              * Actions
              */}
-            <CreateWellButtonRow disabled={!token1 || !token2} />
+            <CreateWellButtonRow onGoBack={handleSave} disabled={!token1 || !token2} />
           </Flex>
         </Flex>
       </form>
@@ -168,7 +177,15 @@ const TokenAddressInputWithSearch = ({
   path: "token1" | "token2";
   setToken: React.Dispatch<React.SetStateAction<ERC20Token | undefined>>;
 }) => {
-  const { register, control, setValue, setError } = useFormContext<FunctionTokenPumpFormValues>();
+  const {
+    register,
+    control,
+    setValue,
+    setError,
+    formState: {
+      errors: { [path]: formError }
+    }
+  } = useFormContext<FunctionTokenPumpFormValues>();
   const _value = useWatch({ control, name: path });
   const value = typeof _value === "string" ? _value : "";
 
@@ -197,23 +214,44 @@ const TokenAddressInputWithSearch = ({
       {!token || isLoading ? (
         <TextInputField
           {...register(path, {
-            validate: (value) => ethers.utils.isAddress(value) || "Invalid address"
+            validate: (value, formValues) => {
+              if (!getIsValidEthereumAddress(value)) return "Invalid address";
+              const otherTokenKey = path === "token1" ? "token2" : "token1";
+              const otherTokenAddress = formValues[otherTokenKey];
+
+              if (
+                getIsValidEthereumAddress(otherTokenAddress) &&
+                value.toLowerCase() === otherTokenAddress.toLowerCase()
+              ) {
+                return "Unique tokens required";
+              }
+
+              return true;
+            }
           })}
           placeholder="Search for token or input an address"
           startIcon="search"
+          error={error?.message}
         />
       ) : (
-        <FoundTokenInfo>
-          {token?.logo && (
-            <ImgContainer width={16} height={16}>
-              {<img src={token.logo} alt={value} />}
-            </ImgContainer>
+        <Flex>
+          <FoundTokenInfo>
+            {token?.logo && (
+              <ImgContainer width={16} height={16}>
+                {<img src={token.logo} alt={value} />}
+              </ImgContainer>
+            )}
+            <Text $variant="button-link">{token.symbol || ""}</Text>{" "}
+            <Flex onClick={() => setValue(path, "")}>
+              <XIcon width={10} height={10} />
+            </Flex>
+          </FoundTokenInfo>
+          {formError?.message && (
+            <Text $color="error" $variant="xs" $mt={0.5}>
+              {formError?.message}
+            </Text>
           )}
-          <Text $variant="button-link">{token.symbol || ""}</Text>{" "}
-          <Flex onClick={() => setValue(path, "")}>
-            <XIcon width={10} height={10} />
-          </Flex>
-        </FoundTokenInfo>
+        </Flex>
       )}
     </>
   );

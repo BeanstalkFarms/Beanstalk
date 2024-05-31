@@ -32,17 +32,19 @@ export type CreateWellContext = {
   salt: number | undefined;
   goBack: () => void;
   goNext: () => void;
-  setStep1: (params: { wellImplementation: string } & GoNextParams) => void;
+  setStep1: (params: Partial<{ wellImplementation: string } & GoNextParams>) => void;
   setStep2: (
-    params: {
-      wellFunction: string;
-      token1: ERC20Token;
-      token2: ERC20Token;
-      pump: string;
-    } & GoNextParams
+    params: Partial<
+      {
+        wellFunction: string;
+        token1: ERC20Token;
+        token2: ERC20Token;
+        pump: string;
+      } & GoNextParams
+    >
   ) => void;
-  setStep3: (params: WellDetails & GoNextParams) => void;
-  setStep4: (params: LiquidityAmounts & { salt?: number }) => void;
+  setStep3: (params: Partial<WellDetails & GoNextParams>) => void;
+  setStep4: (params: Partial<LiquidityAmounts & { salt?: number }>) => void;
   deployWell: () => Promise<any>;
 };
 
