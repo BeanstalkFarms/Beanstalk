@@ -53,6 +53,7 @@ const Wrapper = styled.div`
 
   input {
     ${LinksButtonText}
+    font-weight: 400;
     outline: none;
     border: none;
     width: 100%;

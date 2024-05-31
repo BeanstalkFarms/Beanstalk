@@ -27,8 +27,6 @@ const useWellDetailsDefaultValues = () => {
   const componentName = whitelistedWellFunction?.component.name;
   const abbrev = whitelistedWellFunction?.component.tokenSuffixAbbreviation;
 
-  console.log("component: ", whitelistedWellFunction?.component);
-
   const defaultName =
     componentName && token1 && token2 ? `${token1}:${token2} ${componentName}` : undefined;
 
