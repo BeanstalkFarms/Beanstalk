@@ -57,8 +57,7 @@ export const WellComponentAccordionCard = ({
               </Text>
             ))}
             <Text $color="text.light" $variant="xs">
-              Used by {component.usedBy} other{" "}
-              {toPlural(getTypeDisplay(component), component.usedBy ?? 0)}
+              Used by {component.usedBy} other {toPlural("Well", component.usedBy ?? 0)}
             </Text>
           </Flex>
           <Flex $justifyContent="space-between" $alignItems="flex-end">

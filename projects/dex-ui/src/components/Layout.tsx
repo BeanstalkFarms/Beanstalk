@@ -45,3 +45,27 @@ export const Divider = styled.div<{ $color?: keyof typeof theme.colors }>`
   width: 100%;
   border-bottom: 1px solid ${(props) => theme.colors[props.$color || "lightGray"]};
 `;
+
+export type FlexCardProps = FlexProps & {
+  $borderColor?: keyof typeof theme.colors;
+  $bgColor?: keyof typeof theme.colors;
+  $borderWidth?: number;
+};
+
+export const FlexCard = styled(Flex)<
+  FlexProps & {
+    $borderColor?: keyof typeof theme.colors;
+    $borderWidth?: number;
+    $bgColor?: keyof typeof theme.colors;
+  }
+>`
+  border: ${(p) => p.$borderWidth ?? 1}px solid ${(p) => theme.colors[p.$borderColor || "black"]};
+  background: ${(p) => (p.$bgColor ? theme.colors[p.$bgColor] : theme.colors.white)};
+  ${(p) => {
+    if (p.$p || p.$px || p.$py || p.$pt || p.$pr || p.$pb || p.$pl) {
+      return "";
+    } else {
+      return `padding: ${theme.spacing(2, 3)};`;
+    }
+  }}
+`;

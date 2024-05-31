@@ -96,6 +96,7 @@ const MultiFlowPump: WellComponentInfo = {
     description: [
       "An inter-block MEV manipulation-resistant oracle implementation which can serve last values, geometric EMA values and TWA geometric SMA values."
     ],
+    usedBy: 1,
     url: "https://docs.basin.exchange/implementations/multi-flow-pump",
     type: {
       type: WellComponentType.Pump,
@@ -135,6 +136,7 @@ const ConstantProduct2: WellComponentInfo = {
       display: "Well Function",
       imgSrc: ClockIcon
     },
+    usedBy: 1,
     tokenSuffixAbbreviation: "CP2w"
   },
   deploy: {
