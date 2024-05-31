@@ -9,15 +9,14 @@ import { CreateWellFormProgress } from "./shared/CreateWellFormProgress";
 import { TextInputField } from "../Form";
 import { useWells } from "src/wells/useWells";
 import { CreateWellButtonRow } from "./shared/CreateWellButtonRow";
-import type { DeepRequired } from "react-hook-form";
 
-type FormValues = DeepRequired<CreateWellStepProps["step3"]>;
+export type WellDetailsFormValues = CreateWellStepProps["step3"];
 
 const ChooseComponentNamesForm = () => {
   const { data: wells } = useWells();
   const { wellDetails, setStep3 } = useCreateWell();
 
-  const methods = useForm<FormValues>({
+  const methods = useForm<WellDetailsFormValues>({
     defaultValues: {
       name: wellDetails?.name ?? "",
       symbol: wellDetails?.symbol ?? ""
@@ -47,7 +46,7 @@ const ChooseComponentNamesForm = () => {
   }, [wells]);
 
   const onSubmit = useCallback(
-    (values: FormValues) => {
+    (values: WellDetailsFormValues) => {
       const nameValidated = validate.name(values.name);
       const symbolValidated = validate.symbol(values.symbol);
 

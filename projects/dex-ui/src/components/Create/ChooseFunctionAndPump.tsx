@@ -2,7 +2,6 @@ import React, { useCallback, useEffect, useState } from "react";
 import styled from "styled-components";
 import { ethers } from "ethers";
 import { FormProvider, useForm, useFormContext, useWatch } from "react-hook-form";
-import type { DeepRequired } from "react-hook-form";
 
 import { getIsValidEthereumAddress } from "src/utils/addresses";
 
@@ -34,7 +33,7 @@ type TokenFormValues = {
 
 type OmitWellTokens = Omit<CreateWellStepProps["step2"], "wellTokens">;
 
-type FormValues = DeepRequired<OmitWellTokens & TokenFormValues>;
+export type FunctionTokenPumpFormValues = OmitWellTokens & TokenFormValues;
 
 const aave = "0x7Fc66500c84A76Ad7e9c93437bFc5Ac33E2DDaE9".toLowerCase(); // AAVE
 const bean = "0xBEA0000029AD1c77D3d5D23Ba2D8893dB9d1Efab".toLowerCase(); // BEAN
@@ -44,7 +43,7 @@ const ChooseFunctionAndPumpForm = () => {
   const [token1, setToken1] = useState<ERC20Token | undefined>(undefined);
   const [token2, setToken2] = useState<ERC20Token | undefined>(undefined);
 
-  const methods = useForm<FormValues>({
+  const methods = useForm<FunctionTokenPumpFormValues>({
     defaultValues: {
       wellFunction: wellFunction || "",
       token1: wellTokens?.token1?.address || aave,
@@ -54,7 +53,7 @@ const ChooseFunctionAndPumpForm = () => {
   });
 
   const handleSubmit = useCallback(
-    (values: FormValues) => {
+    (values: FunctionTokenPumpFormValues) => {
       // validate
       for (const key in values) {
         const value = values[key as keyof typeof values];
@@ -170,7 +169,7 @@ const TokenAddressInputWithSearch = ({
   path: "token1" | "token2";
   setToken: React.Dispatch<React.SetStateAction<ERC20Token | undefined>>;
 }) => {
-  const { register, control, setValue, setError } = useFormContext<FormValues>();
+  const { register, control, setValue, setError } = useFormContext<FunctionTokenPumpFormValues>();
   const _value = useWatch({ control, name: path });
   const value = typeof _value === "string" ? _value : "";
 

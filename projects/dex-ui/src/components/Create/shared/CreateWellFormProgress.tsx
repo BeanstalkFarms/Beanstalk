@@ -1,17 +1,15 @@
 import React, { useMemo } from "react";
 import { useFormContext, useWatch } from "react-hook-form";
 import { theme } from "src/utils/ui/theme";
-import { CheckIcon, CircleEmptyIcon } from "../../Icons";
-import { Flex } from "../../Layout";
+import { CheckIcon, CircleEmptyIcon } from "src/components/Icons";
+import { Flex } from "src/components/Layout";
 import { Link } from "react-router-dom";
 import styled from "styled-components";
-import { Text } from "../../Typography";
-import { CreateWellProps } from "../CreateWellProvider";
+import { Text } from "src/components/Typography";
+import { FunctionTokenPumpFormValues } from "../ChooseFunctionAndPump";
+import { WellDetailsFormValues } from "../ChooseComponentNames";
 
-type FunctionAndPump = CreateWellProps["wellFunctionAndPump"];
-type SymbolAndName = CreateWellProps["wellNameAndSymbol"];
-
-type ViableProps = FunctionAndPump & SymbolAndName;
+type ViableProps = FunctionTokenPumpFormValues & WellDetailsFormValues;
 
 const progressOrder = {
   // Well Function & Pump Steps

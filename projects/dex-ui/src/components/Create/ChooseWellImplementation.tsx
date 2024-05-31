@@ -4,13 +4,12 @@ import { Flex } from "src/components/Layout";
 import { Text } from "src/components/Typography";
 
 import { FormProvider, useForm } from "react-hook-form";
-import type { DeepRequired } from "react-hook-form";
 import { ethers } from "ethers";
 import { CreateWellStepProps, useCreateWell } from "./CreateWellProvider";
 import { ComponentInputWithCustom } from "./shared/ComponentInputWithCustom";
 import { CreateWellButtonRow } from "./shared/CreateWellButtonRow";
 
-type FormValues = DeepRequired<CreateWellStepProps["step1"]>;
+type FormValues = CreateWellStepProps["step1"];
 
 const ChooseWellImplementationForm = () => {
   const { wellImplementation, setStep1 } = useCreateWell();

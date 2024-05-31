@@ -1,5 +1,6 @@
 import React, { createContext, useCallback, useMemo, useState } from "react";
 import { ERC20Token } from "@beanstalk/sdk-core";
+import { DeepRequired } from "react-hook-form";
 
 type GoNextParams = {
   goNext?: boolean;
@@ -45,7 +46,7 @@ export type CreateWellContext = {
   deployWell: () => Promise<any>;
 };
 
-export type CreateWellStepProps = {
+export type CreateWellStepProps = DeepRequired<{
   step1: {
     wellImplementation: CreateWellContext["wellImplementation"];
   };
@@ -58,7 +59,7 @@ export type CreateWellStepProps = {
   step4: CreateWellContext["liquidity"] & {
     salt: CreateWellContext["salt"];
   };
-};
+}>;
 
 const Context = createContext<CreateWellContext | null>(null);
 
