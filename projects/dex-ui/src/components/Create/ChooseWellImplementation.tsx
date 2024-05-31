@@ -4,24 +4,25 @@ import { Flex } from "src/components/Layout";
 import { Text } from "src/components/Typography";
 
 import { FormProvider, useForm } from "react-hook-form";
+import type { DeepRequired } from "react-hook-form";
 import { ethers } from "ethers";
-import { CreateWellProps, useCreateWell } from "./CreateWellProvider";
+import { CreateWellStepProps, useCreateWell } from "./CreateWellProvider";
 import { ComponentInputWithCustom } from "./shared/ComponentInputWithCustom";
 import { CreateWellButtonRow } from "./shared/CreateWellButtonRow";
 
-type FormValues = CreateWellProps["wellImplementation"];
+type FormValues = DeepRequired<CreateWellStepProps["step1"]>;
 
 const ChooseWellImplementationForm = () => {
-  const { wellImplementation, setWellImplementation } = useCreateWell();
+  const { wellImplementation, setStep1 } = useCreateWell();
 
   const methods = useForm<FormValues>({
-    defaultValues: { wellImplementation: wellImplementation?.wellImplementation || "" }
+    defaultValues: { wellImplementation: wellImplementation ?? "" }
   });
 
   const handleSubmit = ({ wellImplementation }: FormValues) => {
     if (!ethers.utils.isAddress(wellImplementation)) return;
     if (wellImplementation) {
-      setWellImplementation({ wellImplementation: wellImplementation, goNext: true });
+      setStep1({ wellImplementation: wellImplementation, goNext: true });
     }
   };
 

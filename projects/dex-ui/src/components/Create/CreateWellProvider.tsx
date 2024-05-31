@@ -6,35 +6,29 @@ type GoNextParams = {
 };
 
 type WellTokensParams = {
-  token1?: ERC20Token;
-  token2?: ERC20Token;
+  token1: ERC20Token;
+  token2: ERC20Token;
 };
 
 type LiquidityAmounts = {
-  token1Amount?: string;
-  token2Amount?: string;
+  token1Amount: string;
+  token2Amount: string;
 };
 
 type WellDetails = {
-  name?: string;
-  symbol?: string;
-};
-
-export type CreateWellProps = {
-  wellDetails: WellDetails;
-  liquidity: LiquidityAmounts;
-  salt: number;
+  name: string;
+  symbol: string;
 };
 
 export type CreateWellContext = {
   step: number;
-  wellImplementation?: string;
-  wellFunction?: string;
-  pump?: string;
-  wellDetails?: WellDetails;
-  wellTokens?: WellTokensParams;
-  liquidity?: LiquidityAmounts;
-  salt?: number;
+  wellImplementation: string | undefined;
+  wellFunction: string | undefined;
+  pump: string | undefined;
+  wellDetails: Partial<WellDetails>;
+  wellTokens: Partial<WellTokensParams>;
+  liquidity: Partial<LiquidityAmounts>;
+  salt: number | undefined;
   goBack: () => void;
   goNext: () => void;
   setStep1: (params: { wellImplementation: string } & GoNextParams) => void;
@@ -51,24 +45,39 @@ export type CreateWellContext = {
   deployWell: () => Promise<any>;
 };
 
+export type CreateWellStepProps = {
+  step1: {
+    wellImplementation: CreateWellContext["wellImplementation"];
+  };
+  step2: {
+    wellFunction: CreateWellContext["wellFunction"];
+    pump: CreateWellContext["pump"];
+    wellTokens: CreateWellContext["wellTokens"];
+  };
+  step3: CreateWellContext["wellDetails"];
+  step4: CreateWellContext["liquidity"] & {
+    salt: CreateWellContext["salt"];
+  };
+};
+
 const Context = createContext<CreateWellContext | null>(null);
 
 export const CreateWellProvider = ({ children }: { children: React.ReactNode }) => {
   const [step, setStep] = useState<number>(0);
 
   // step 1
-  const [wellImplementation, setWellImplementation] = useState<string>("");
+  const [wellImplementation, setWellImplementation] = useState<string | undefined>();
 
   // step 2
-  const [pump, setPump] = useState<string>("");
-  const [wellFunction, setWellFunction] = useState<string>("");
-  const [wellTokens, setWellTokens] = useState<WellTokensParams>({});
+  const [pump, setPump] = useState<string | undefined>();
+  const [wellFunction, setWellFunction] = useState<string | undefined>();
+  const [wellTokens, setWellTokens] = useState<Partial<WellTokensParams>>({});
 
   // step 3
-  const [wellDetails, setWellDetails] = useState<WellDetails>({});
+  const [wellDetails, setWellDetails] = useState<Partial<WellDetails>>({});
 
   // step 4
-  const [liquidity, setLiquidity] = useState<LiquidityAmounts>({});
+  const [liquidity, setLiquidity] = useState<Partial<LiquidityAmounts>>({});
   const [salt, setDeploySalt] = useState<number | undefined>();
 
   const methods = useMemo(() => {

@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useState } from "react";
 import styled from "styled-components";
 import { ethers } from "ethers";
 import { FormProvider, useForm, useFormContext, useWatch } from "react-hook-form";
+import type { DeepRequired } from "react-hook-form";
 
 import { getIsValidEthereumAddress } from "src/utils/addresses";
 
@@ -12,7 +13,7 @@ import { CreateWellButtonRow } from "./shared/CreateWellButtonRow";
 import { TextInputField } from "src/components/Form";
 import { XIcon } from "src/components/Icons";
 
-import { CreateWellProps, useCreateWell } from "./CreateWellProvider";
+import { CreateWellStepProps, useCreateWell } from "./CreateWellProvider";
 import { CreateWellFormProgress } from "./shared/CreateWellFormProgress";
 import { ComponentInputWithCustom } from "./shared/ComponentInputWithCustom";
 import { useERC20TokenWithAddress } from "src/tokens/useERC20Token";
@@ -26,22 +27,29 @@ const additionalOptions = [
   }
 ];
 
-type FormValues = CreateWellProps["wellFunctionAndPump"];
+type TokenFormValues = {
+  token1: string;
+  token2: string;
+};
+
+type OmitWellTokens = Omit<CreateWellStepProps["step2"], "wellTokens">;
+
+type FormValues = DeepRequired<OmitWellTokens & TokenFormValues>;
 
 const aave = "0x7Fc66500c84A76Ad7e9c93437bFc5Ac33E2DDaE9".toLowerCase(); // AAVE
 const bean = "0xBEA0000029AD1c77D3d5D23Ba2D8893dB9d1Efab".toLowerCase(); // BEAN
 
 const ChooseFunctionAndPumpForm = () => {
-  const { functionAndPump, setFunctionAndPump, tokens, setTokens } = useCreateWell();
+  const { wellTokens, wellFunction, pump, setStep2 } = useCreateWell();
   const [token1, setToken1] = useState<ERC20Token | undefined>(undefined);
   const [token2, setToken2] = useState<ERC20Token | undefined>(undefined);
 
   const methods = useForm<FormValues>({
     defaultValues: {
-      wellFunction: functionAndPump?.wellFunction || "",
-      token1Address: tokens?.token1?.address || aave,
-      token2Address: tokens?.token2?.address || bean,
-      pump: functionAndPump?.pump || ""
+      wellFunction: wellFunction || "",
+      token1: wellTokens?.token1?.address || aave,
+      token2: wellTokens?.token2?.address || bean,
+      pump: pump || ""
     }
   });
 
@@ -54,10 +62,15 @@ const ChooseFunctionAndPumpForm = () => {
       }
       if (!token1 || !token2) return;
 
-      setTokens({ token1, token2 });
-      setFunctionAndPump({ ...values, goNext: true });
+      const payload = {
+        ...values,
+        token1: token1,
+        token2: token2
+      };
+
+      setStep2({ ...payload, goNext: true });
     },
-    [setFunctionAndPump, setTokens, token1, token2]
+    [setStep2, token1, token2]
   );
 
   return (
@@ -96,13 +109,13 @@ const ChooseFunctionAndPumpForm = () => {
                   <Text $color="text.secondary" $variant="xs" $mb={1}>
                     Specify token
                   </Text>
-                  <TokenAddressInputWithSearch path={"token1Address"} setToken={setToken1} />
+                  <TokenAddressInputWithSearch path={"token1"} setToken={setToken1} />
                 </HalfWidthFlex>
                 <HalfWidthFlex>
                   <Text $color="text.secondary" $variant="xs" $mb={1}>
                     Specify token
                   </Text>
-                  <TokenAddressInputWithSearch path={"token2Address"} setToken={setToken2} />
+                  <TokenAddressInputWithSearch path={"token2"} setToken={setToken2} />
                 </HalfWidthFlex>
               </Flex>
             </Flex>
@@ -154,7 +167,7 @@ const TokenAddressInputWithSearch = ({
   path,
   setToken
 }: {
-  path: "token1Address" | "token2Address";
+  path: "token1" | "token2";
   setToken: React.Dispatch<React.SetStateAction<ERC20Token | undefined>>;
 }) => {
   const { register, control, setValue, setError } = useFormContext<FormValues>();

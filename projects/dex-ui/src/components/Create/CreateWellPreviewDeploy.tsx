@@ -1,7 +1,13 @@
 import React from "react";
 import styled from "styled-components";
-import { Controller, FormProvider, useForm, useFormContext, useWatch } from "react-hook-form";
-
+import {
+  Controller,
+  DeepRequired,
+  FormProvider,
+  useForm,
+  useFormContext,
+  useWatch
+} from "react-hook-form";
 import { theme } from "src/utils/ui/theme";
 
 import { SwitchField, TextInputField } from "src/components/Form";
@@ -9,22 +15,25 @@ import { Box, Divider, Flex } from "src/components/Layout";
 import { SelectCard } from "src/components/Selectable";
 import { Text } from "src/components/Typography";
 
-import { CreateWellProps, useCreateWell } from "./CreateWellProvider";
+import { CreateWellStepProps, useCreateWell } from "./CreateWellProvider";
 import { WellComponentInfo, useWhitelistedWellComponents } from "./useWhitelistedWellComponents";
 
 import { ERC20Token } from "@beanstalk/sdk";
 import { TokenInput } from "src/components/Swap/TokenInput";
 import { CreateWellButtonRow } from "./shared/CreateWellButtonRow";
 
-type FormValues = CreateWellProps["liquidity"] & CreateWellProps["salt"];
+type FormValues = DeepRequired<CreateWellStepProps["step4"]> & {
+  usingSalt: boolean;
+  seedingLiquidity: boolean;
+};
 
 const FormContent = () => {
   const { salt: cachedSalt, liquidity: cachedLiquidity } = useCreateWell();
   const methods = useForm<FormValues>({
     defaultValues: {
-      usingSalt: cachedSalt.usingSalt,
-      salt: cachedSalt.salt,
-      seedingLiquidity: cachedLiquidity.seedingLiquidity,
+      usingSalt: false,
+      salt: cachedSalt,
+      seedingLiquidity: false,
       token1Amount: cachedLiquidity.token1Amount?.toString(),
       token2Amount: cachedLiquidity.token2Amount?.toString()
     }
@@ -48,11 +57,12 @@ const FormContent = () => {
 };
 
 const LiquidityForm = () => {
-  const {
-    tokens: { token1, token2 }
-  } = useCreateWell();
+  const { wellTokens } = useCreateWell();
   const { control } = useFormContext<FormValues>();
   const seedingLiquidity = useWatch({ control, name: "seedingLiquidity" });
+
+  const token1 = wellTokens.token1;
+  const token2 = wellTokens.token2;
 
   if (!token1 || !token2) return null;
 
@@ -146,40 +156,51 @@ const getSelectedCardComponentProps = (
 };
 
 const WellCreatePreview = () => {
-  const { wellImplementation, functionAndPump, wellNameAndSymbol, tokens } = useCreateWell();
+  const { wellImplementation, pump, wellFunction, wellTokens, wellDetails } = useCreateWell();
 
   if (
     !wellImplementation ||
-    !functionAndPump ||
-    !wellNameAndSymbol ||
-    !tokens.token1 ||
-    !tokens.token2
-  )
+    !pump ||
+    !wellFunction ||
+    !wellTokens?.token1 ||
+    !wellTokens?.token2 ||
+    !wellDetails?.name ||
+    !wellDetails?.symbol
+  ) {
     return null;
-  // TODO: add go back step here...
+  }
 
   return (
     <WellCreatePreviewInner
-      wellFunctionAndPump={functionAndPump}
       wellImplementation={wellImplementation}
-      wellNameAndSymbol={wellNameAndSymbol}
-      tokens={{ token1: tokens.token1, token2: tokens.token2 }}
+      wellFunction={wellFunction}
+      pump={pump}
+      token1={wellTokens.token1}
+      token2={wellTokens.token2}
+      wellName={wellDetails.name}
+      wellSymbol={wellDetails.symbol}
     />
   );
 };
 
 type WellCreatePreviewInnerProps = {
-  wellImplementation: CreateWellProps["wellImplementation"];
-  wellFunctionAndPump: CreateWellProps["wellFunctionAndPump"];
-  wellNameAndSymbol: CreateWellProps["wellNameAndSymbol"];
-  tokens: { token1: ERC20Token; token2: ERC20Token };
+  wellImplementation: string;
+  pump: string;
+  wellFunction: string;
+  token1: ERC20Token;
+  token2: ERC20Token;
+  wellName: string;
+  wellSymbol: string;
 };
 
 const WellCreatePreviewInner = ({
-  wellImplementation: { wellImplementation },
-  wellFunctionAndPump: { pump, wellFunction },
-  wellNameAndSymbol: { name: wellName, symbol: wellSymbol },
-  tokens: { token1, token2 }
+  wellImplementation,
+  pump,
+  wellFunction,
+  token1,
+  token2,
+  wellName,
+  wellSymbol
 }: WellCreatePreviewInnerProps) => {
   const components = useWhitelistedWellComponents();
 

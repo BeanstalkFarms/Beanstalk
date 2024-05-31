@@ -3,23 +3,24 @@ import { Divider, Flex } from "src/components/Layout";
 import { Text } from "src/components/Typography";
 import { theme } from "src/utils/ui/theme";
 import styled from "styled-components";
-import { CreateWellProps, useCreateWell } from "./CreateWellProvider";
+import { CreateWellStepProps, useCreateWell } from "./CreateWellProvider";
 import { FormProvider, useForm } from "react-hook-form";
 import { CreateWellFormProgress } from "./shared/CreateWellFormProgress";
 import { TextInputField } from "../Form";
 import { useWells } from "src/wells/useWells";
 import { CreateWellButtonRow } from "./shared/CreateWellButtonRow";
+import type { DeepRequired } from "react-hook-form";
 
-type FormValues = CreateWellProps["wellNameAndSymbol"];
+type FormValues = DeepRequired<CreateWellStepProps["step3"]>;
 
 const ChooseComponentNamesForm = () => {
   const { data: wells } = useWells();
-  const { wellNameAndSymbol: cached, setWellNameAndSymbol } = useCreateWell();
+  const { wellDetails, setStep3 } = useCreateWell();
 
   const methods = useForm<FormValues>({
     defaultValues: {
-      name: cached?.name ?? "",
-      symbol: cached?.symbol ?? ""
+      name: wellDetails?.name ?? "",
+      symbol: wellDetails?.symbol ?? ""
     }
   });
 
@@ -54,9 +55,9 @@ const ChooseComponentNamesForm = () => {
         return;
       }
 
-      setWellNameAndSymbol({ ...values, goNext: true });
+      setStep3({ ...values, goNext: true });
     },
-    [setWellNameAndSymbol, validate]
+    [setStep3, validate]
   );
 
   return (
