@@ -117,6 +117,12 @@ export function updateWellVolumes(
   well.cumulativeVolumeReservesUSD = volumeReservesUSD;
   well.reserves = reserves;
 
+  // Add to the rolling volumes. At the end of this hour, the furthest day back will have its volume amount removed.
+  // As a result there is constantly between 24-25hrs of data here. This is preferable to not containing
+  // some of the most recent volume data.
+  well.rollingDailyVolumeUSD = well.rollingDailyVolumeUSD.plus(usdVolume);
+  well.rollingWeeklyVolumeUSD = well.rollingWeeklyVolumeUSD.plus(usdVolume);
+
   well.lastUpdateTimestamp = timestamp;
   well.lastUpdateBlockNumber = blockNumber;
 
@@ -280,7 +286,7 @@ export function takeWellHourlySnapshot(wellAddress: Address, hourID: i32, timest
   well.save();
 
   let priorSnapshot = loadOrCreateWellHourlySnapshot(wellAddress, priorHourID, timestamp, blockNumber);
-  let newSnapshot = loadOrCreateWellHourlySnapshot(wellAddress, well.lastSnapshotHourID, timestamp, blockNumber);
+  let newSnapshot = loadOrCreateWellHourlySnapshot(wellAddress, hourID, timestamp, blockNumber);
 
   newSnapshot.deltalpTokenSupply = newSnapshot.lpTokenSupply.minus(priorSnapshot.lpTokenSupply);
   newSnapshot.deltaLiquidityUSD = newSnapshot.totalLiquidityUSD.minus(priorSnapshot.totalLiquidityUSD);
@@ -297,20 +303,14 @@ export function takeWellHourlySnapshot(wellAddress: Address, hourID: i32, timest
   newSnapshot.lastUpdateBlockNumber = blockNumber;
   newSnapshot.save();
 
-  // Update the rolling daily and weekly volumes
-  well.rollingDailyVolumeUSD = newSnapshot.deltaVolumeUSD;
-  well.rollingWeeklyVolumeUSD = newSnapshot.deltaVolumeUSD;
-  for (let i = 1; i < 168; i++) {
-    let snapshot = WellHourlySnapshot.load(wellAddress.concatI32(hourID - i));
-    if (snapshot == null) {
-      // We hit the last snapshot to total
-      break;
-    }
-    if (i < 24) {
-      well.rollingDailyVolumeUSD = well.rollingDailyVolumeUSD.plus(snapshot.deltaVolumeUSD);
-      well.rollingWeeklyVolumeUSD = well.rollingWeeklyVolumeUSD.plus(snapshot.deltaVolumeUSD);
-    } else {
-      well.rollingWeeklyVolumeUSD = well.rollingWeeklyVolumeUSD.plus(snapshot.deltaVolumeUSD);
+  // Update the rolling daily and weekly volumes by removing the oldest value.
+  // Newer values for the latest hour were already added.
+  let oldest24h = WellHourlySnapshot.load(wellAddress.concatI32(hourID - 24));
+  let oldest7d = WellHourlySnapshot.load(wellAddress.concatI32(hourID - 168));
+  if (oldest24h != null) {
+    well.rollingDailyVolumeUSD = well.rollingDailyVolumeUSD.minus(oldest24h.deltaVolumeUSD);
+    if (oldest7d != null) {
+      well.rollingWeeklyVolumeUSD = well.rollingWeeklyVolumeUSD.minus(oldest7d.deltaVolumeUSD);
     }
   }
   well.save();

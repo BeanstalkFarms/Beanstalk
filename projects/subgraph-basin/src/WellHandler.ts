@@ -1,13 +1,4 @@
-import {
-  AddLiquidity,
-  Approval,
-  RemoveLiquidity,
-  RemoveLiquidityOneToken,
-  Shift,
-  Swap,
-  Sync,
-  Transfer
-} from "../generated/templates/Well/Well";
+import { AddLiquidity, RemoveLiquidity, RemoveLiquidityOneToken, Shift, Swap, Sync, Transfer } from "../generated/templates/Well/Well";
 import { loadOrCreateAccount } from "./utils/Account";
 import { deltaBigIntArray, emptyBigIntArray, ZERO_BI } from "../../subgraph-core/utils/Decimals";
 import { recordAddLiquidityEvent, recordRemoveLiquidityEvent, recordRemoveLiquidityOneEvent, recordSyncEvent } from "./utils/Liquidity";
@@ -32,6 +23,8 @@ export function handleAddLiquidity(event: AddLiquidity): void {
 
   updateWellTokenBalances(event.address, event.params.tokenAmountsIn, event.block.timestamp, event.block.number);
 
+  // TODO: there can be volume here if liquidity was not added in equal proportions.
+
   updateWellLiquidityTokenBalance(event.address, event.params.lpAmountOut, event.block.timestamp, event.block.number);
 
   updateWellTokenUSDPrices(event.address, event.block.number);
@@ -40,8 +33,6 @@ export function handleAddLiquidity(event: AddLiquidity): void {
 
   recordAddLiquidityEvent(event);
 }
-
-export function handleApproval(event: Approval): void {}
 
 export function handleRemoveLiquidity(event: RemoveLiquidity): void {
   loadOrCreateAccount(event.transaction.from);
@@ -53,6 +44,8 @@ export function handleRemoveLiquidity(event: RemoveLiquidity): void {
   checkForSnapshot(event.address, event.block.timestamp, event.block.number);
 
   updateWellTokenBalances(event.address, balances, event.block.timestamp, event.block.number);
+
+  // TODO: there can be volume here if liquidity was not removed in equal proportions.
 
   updateWellLiquidityTokenBalance(event.address, ZERO_BI.minus(event.params.lpAmountIn), event.block.timestamp, event.block.number);
 
@@ -77,10 +70,10 @@ export function handleRemoveLiquidityOneToken(event: RemoveLiquidityOneToken): v
 
   loadOrCreateAccount(event.transaction.from);
 
-  recordRemoveLiquidityOneEvent(event, indexedBalances);
-
   // Flip to negative for updating well balances
-  for (let i = 0; i < indexedBalances.length; i++) indexedBalances[i] = ZERO_BI.minus(indexedBalances[i]);
+  for (let i = 0; i < indexedBalances.length; i++) {
+    indexedBalances[i] = ZERO_BI.minus(indexedBalances[i]);
+  }
 
   checkForSnapshot(event.address, event.block.timestamp, event.block.number);
 
@@ -99,6 +92,8 @@ export function handleRemoveLiquidityOneToken(event: RemoveLiquidityOneToken): v
   updateWellTokenUSDPrices(event.address, event.block.number);
 
   incrementWellWithdraw(event.address);
+
+  recordRemoveLiquidityOneEvent(event, indexedBalances);
 }
 
 export function handleSwap(event: Swap): void {
@@ -167,6 +162,8 @@ export function handleSync(event: Sync): void {
 
   updateWellTokenBalances(event.address, deltaReserves, event.block.timestamp, event.block.number);
 
+  // TODO: there can be volume here if liquidity was not added in equal proportions.
+
   updateWellLiquidityTokenBalance(event.address, event.params.lpAmountOut, event.block.timestamp, event.block.number);
 
   updateWellTokenUSDPrices(event.address, event.block.number);
@@ -174,8 +171,4 @@ export function handleSync(event: Sync): void {
   incrementWellDeposit(event.address);
 
   recordSyncEvent(event, deltaReserves);
-}
-
-export function handleTransfer(event: Transfer): void {
-  // Placeholder for possible future liquidity holdings data
 }
