@@ -1,6 +1,6 @@
 import React from "react";
 import styled from "styled-components";
-import { FormProvider, useForm, useFormContext, useWatch } from "react-hook-form";
+import { Controller, FormProvider, useForm, useFormContext, useWatch } from "react-hook-form";
 
 import { theme } from "src/utils/ui/theme";
 
@@ -13,6 +13,8 @@ import { CreateWellProps, useCreateWell } from "./CreateWellProvider";
 import { WellComponentInfo, useWhitelistedWellComponents } from "./useWhitelistedWellComponents";
 
 import { ERC20Token } from "@beanstalk/sdk";
+import { TokenInput } from "src/components/Swap/TokenInput";
+import { CreateWellButtonRow } from "./shared/CreateWellButtonRow";
 
 type FormValues = CreateWellProps["liquidity"] & CreateWellProps["salt"];
 
@@ -38,6 +40,7 @@ const FormContent = () => {
         <Flex $gap={2}>
           <LiquidityForm />
           <SaltForm />
+          <CreateWellButtonRow />
         </Flex>
       </form>
     </FormProvider>
@@ -46,37 +49,86 @@ const FormContent = () => {
 
 const LiquidityForm = () => {
   const {
-    functionAndPump,
     tokens: { token1, token2 }
   } = useCreateWell();
   const { control } = useFormContext<FormValues>();
-  // const
-
-  return (
-    <Flex $gap={2}>
-      <Flex $direction="row" $gap={1} $alignItems="center">
-        <SwitchField control={control} name="usingSalt" />
-        <Text $variant="xs" $weight="bold" $mb={-0.5}>
-          Seed Well with initial liquidity
-        </Text>
-      </Flex>
-    </Flex>
-  );
-};
-
-const SaltForm = () => {
-  const { control, register } = useFormContext<FormValues>();
   const seedingLiquidity = useWatch({ control, name: "seedingLiquidity" });
+
+  if (!token1 || !token2) return null;
 
   return (
     <Flex $gap={2}>
       <Flex $direction="row" $gap={1} $alignItems="center">
         <SwitchField control={control} name="seedingLiquidity" />
         <Text $variant="xs" $weight="bold" $mb={-0.5}>
+          Seed Well with initial liquidity
+        </Text>
+      </Flex>
+      {seedingLiquidity && (
+        <Card $gap={2}>
+          <Controller
+            name="token1Amount"
+            control={control}
+            render={({ field }) => {
+              return (
+                <TokenInput
+                  id="seed-liquidity-input-1"
+                  token={token1}
+                  amount={field.value ? token1.amount(Number(field.value)) : undefined}
+                  onAmountChange={(value) => {
+                    field.onChange(value.toHuman());
+                  }}
+                  canChangeToken={false}
+                  loading={false}
+                  label=""
+                  allowNegative={false}
+                  balanceLabel="Available"
+                  clamp
+                />
+              );
+            }}
+          />
+          <Controller
+            name="token2Amount"
+            control={control}
+            render={({ field }) => {
+              return (
+                <TokenInput
+                  id="seed-liquidity-input-1"
+                  token={token2}
+                  amount={field.value ? token2.amount(Number(field.value)) : undefined}
+                  onAmountChange={(value) => {
+                    field.onChange(value.toHuman());
+                  }}
+                  canChangeToken={false}
+                  loading={false}
+                  label=""
+                  allowNegative={false}
+                  balanceLabel="Available"
+                  clamp
+                />
+              );
+            }}
+          />
+        </Card>
+      )}
+    </Flex>
+  );
+};
+
+const SaltForm = () => {
+  const { control, register } = useFormContext<FormValues>();
+  const usingSalt = useWatch({ control, name: "usingSalt" });
+
+  return (
+    <Flex $gap={2}>
+      <Flex $direction="row" $gap={1} $alignItems="center">
+        <SwitchField control={control} name="usingSalt" />
+        <Text $variant="xs" $weight="bold" $mb={-0.5}>
           Deploy Well with a Salt
         </Text>
       </Flex>
-      {seedingLiquidity && <TextInputField placeholder="Input Salt" {...register("salt")} />}
+      {usingSalt && <TextInputField placeholder="Input Salt" type="number" {...register("salt")} />}
     </Flex>
   );
 };
@@ -224,6 +276,16 @@ const SelectedComponentCard = ({ title, subtitle }: { title?: string; subtitle?:
     </SelectCard>
   );
 };
+
+const Card = styled(Flex).attrs({
+  $p: 3,
+  $boxSizing: "border-box",
+  $fullWidth: true,
+  $maxWidth: "430px"
+})`
+  border: 1px solid ${theme.colors.black};
+  background: ${theme.colors.white};
+`;
 
 const InlineImgFlex = styled(Flex).attrs({
   $display: "inline-flex",

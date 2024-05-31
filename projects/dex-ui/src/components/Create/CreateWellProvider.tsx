@@ -1,10 +1,6 @@
 import { ERC20Token } from "@beanstalk/sdk-core";
-import React, { createContext, useCallback, useState } from "react";
-import {
-  CONSTANT_PRODUCT_2_ADDRESS,
-  MULTI_FLOW_PUMP_ADDRESS,
-  WELL_DOT_SOL_ADDRESS
-} from "src/utils/addresses";
+import React, { createContext, useCallback, useMemo, useState } from "react";
+import { WELL_DOT_SOL_ADDRESS } from "src/utils/addresses";
 
 type GoNextParams = {
   goNext?: boolean;
@@ -75,19 +71,16 @@ export const CreateWellProvider = ({ children }: { children: React.ReactNode }) 
   >({ wellImplementation: WELL_DOT_SOL_ADDRESS.toLowerCase() });
 
   const [functionAndPump, setFunctionAndPump] = useState<SetFunctionAndPumpStepParams | undefined>({
-    wellFunction: CONSTANT_PRODUCT_2_ADDRESS.toLowerCase(), // constantProduct2
-    // token1: "0x6B175474E89094C44Da98b954EedeAC495271d0F".toLowerCase(), // DAI
-    token1Address: "0x7Fc66500c84A76Ad7e9c93437bFc5Ac33E2DDaE9".toLowerCase(), // AAVE
-    // token1: "0xb01CE0008CaD90104651d6A84b6B11e182a9B62A".toLowerCase(), // Beanstalk
-    // token1: "0xBA510e11eEb387fad877812108a3406CA3f43a4B".toLowerCase(), // well.sol
-    token2Address: "0xBEA0000029AD1c77D3d5D23Ba2D8893dB9d1Efab".toLowerCase(), // BEAN
-    pump: MULTI_FLOW_PUMP_ADDRESS.toLowerCase() // multi flow pump
+    wellFunction: "",
+    token1Address: "",
+    token2Address: "",
+    pump: ""
   });
 
   const [tokens, setTokens] = useState<{
-    token1: ERC20Token | undefined;
-    token2: ERC20Token | undefined;
-  }>({ token1: undefined, token2: undefined });
+    token1?: ERC20Token;
+    token2?: ERC20Token;
+  }>({});
 
   const [wellNameAndSymbol, setWellNameAndSymbol] = useState<
     SetWellNameAndSymbolStepParams | undefined
@@ -101,55 +94,57 @@ export const CreateWellProvider = ({ children }: { children: React.ReactNode }) 
     usingSalt: false
   });
 
-  const handleGoNext = useCallback(() => {
-    setStep((_step) => Math.min(_step + 1, 3));
-  }, []);
+  const methods = useMemo(() => {
+    const handleSetLiquidity = (params: LiquidityParams) => setLiquidity(params);
+    const handleSetSalt = (params: DeploySaltParams) => setDeploySalt(params);
+    const handleSetTokens = (params: { token1: ERC20Token; token2: ERC20Token }) => {
+      setTokens(params);
+    };
+    const handleGoNext = () => {
+      setStep((_step) => Math.min(_step + 1, 3));
+    };
+    const handleGoBack = () => {
+      setStep((_step) => Math.min(_step - 1, 0));
+    };
 
-  const handleGoBack = useCallback(() => {
-    setStep((_step) => Math.min(_step - 1, 0));
+    return {
+      setLiquidity: handleSetLiquidity,
+      setSalt: handleSetSalt,
+      setTokens: handleSetTokens,
+      goNext: handleGoNext,
+      goBack: handleGoBack
+    };
   }, []);
 
   const setWellImplementationStep: CreateWellContext["setWellImplementation"] = useCallback(
     ({ goNext, ...params }) => {
       setWellImplementation(params);
       if (goNext) {
-        handleGoNext();
+        methods.goNext();
       }
     },
-    [handleGoNext]
+    [methods]
   );
 
   const setFunctionAndPumpStep: CreateWellContext["setFunctionAndPump"] = useCallback(
     ({ goNext, ...params }) => {
       setFunctionAndPump(params);
       if (goNext) {
-        handleGoNext();
+        methods.goNext();
       }
     },
-    [handleGoNext]
+    [methods]
   );
 
   const setWellNameAndSymbolStep: CreateWellContext["setWellNameAndSymbol"] = useCallback(
     ({ goNext, ...params }) => {
       setWellNameAndSymbol(params);
       if (goNext) {
-        handleGoNext();
+        methods.goNext();
       }
     },
-    [handleGoNext]
+    [methods]
   );
-
-  const handleSetLiqiudityParams = useCallback((params: LiquidityParams) => {
-    setLiquidity(params);
-  }, []);
-
-  const handleSetSaltParams = useCallback((params: DeploySaltParams) => {
-    setDeploySalt(params);
-  }, []);
-
-  const handleSetERC20Tokens = useCallback((params: { token1: ERC20Token; token2: ERC20Token }) => {
-    setTokens(params);
-  }, []);
 
   const deployWell = useCallback(async () => {
     console.debug({
@@ -169,15 +164,11 @@ export const CreateWellProvider = ({ children }: { children: React.ReactNode }) 
         liquidity,
         salt,
         tokens: tokens,
-        goBack: handleGoBack,
-        goNext: handleGoNext,
-        setLiquidity: handleSetLiqiudityParams,
-        setSalt: handleSetSaltParams,
         setWellImplementation: setWellImplementationStep,
         setFunctionAndPump: setFunctionAndPumpStep,
         setWellNameAndSymbol: setWellNameAndSymbolStep,
-        setTokens: handleSetERC20Tokens,
-        deployWell
+        deployWell,
+        ...methods
       }}
     >
       {children}

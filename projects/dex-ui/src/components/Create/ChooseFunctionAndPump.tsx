@@ -28,8 +28,8 @@ const additionalOptions = [
 
 type FormValues = CreateWellProps["wellFunctionAndPump"];
 
-// const aave = "0x7Fc66500c84A76Ad7e9c93437bFc5Ac33E2DDaE9".toLowerCase(); // AAVE
-// const bean = "0xBEA0000029AD1c77D3d5D23Ba2D8893dB9d1Efab".toLowerCase(); // BEAN
+const aave = "0x7Fc66500c84A76Ad7e9c93437bFc5Ac33E2DDaE9".toLowerCase(); // AAVE
+const bean = "0xBEA0000029AD1c77D3d5D23Ba2D8893dB9d1Efab".toLowerCase(); // BEAN
 
 const ChooseFunctionAndPumpForm = () => {
   const { functionAndPump, setFunctionAndPump, tokens, setTokens } = useCreateWell();
@@ -39,8 +39,8 @@ const ChooseFunctionAndPumpForm = () => {
   const methods = useForm<FormValues>({
     defaultValues: {
       wellFunction: functionAndPump?.wellFunction || "",
-      token1Address: tokens?.token1?.address || "",
-      token2Address: tokens?.token2?.address || "",
+      token1Address: tokens?.token1?.address || aave,
+      token2Address: tokens?.token2?.address || bean,
       pump: functionAndPump?.pump || ""
     }
   });
