@@ -1,63 +1,54 @@
-import { ERC20Token } from "@beanstalk/sdk-core";
 import React, { createContext, useCallback, useMemo, useState } from "react";
-import { WELL_DOT_SOL_ADDRESS } from "src/utils/addresses";
+import { ERC20Token } from "@beanstalk/sdk-core";
 
 type GoNextParams = {
   goNext?: boolean;
 };
 
-type SetWellImplementationStepParams = {
-  wellImplementation: string;
+type WellTokensParams = {
+  token1?: ERC20Token;
+  token2?: ERC20Token;
 };
 
-type SetFunctionAndPumpStepParams = {
-  wellFunction: string;
-  token1Address: string;
-  token2Address: string;
-  pump: string;
-};
-
-type LiquidityParams = {
-  seedingLiquidity: boolean;
+type LiquidityAmounts = {
   token1Amount?: string;
   token2Amount?: string;
 };
 
-type DeploySaltParams = {
-  usingSalt: boolean;
-  salt?: number;
+type WellDetails = {
+  name?: string;
+  symbol?: string;
 };
 
 export type CreateWellProps = {
-  wellImplementation: SetWellImplementationStepParams;
-  wellFunctionAndPump: SetFunctionAndPumpStepParams;
-  wellNameAndSymbol: SetWellNameAndSymbolStepParams;
-  liquidity: LiquidityParams;
-  salt: DeploySaltParams;
-};
-
-type SetWellNameAndSymbolStepParams = {
-  name: string;
-  symbol: string;
+  wellDetails: WellDetails;
+  liquidity: LiquidityAmounts;
+  salt: number;
 };
 
 export type CreateWellContext = {
   step: number;
-  wellImplementation: SetWellImplementationStepParams | undefined;
-  functionAndPump: SetFunctionAndPumpStepParams | undefined;
-  wellNameAndSymbol: SetWellNameAndSymbolStepParams | undefined;
-  liquidity: LiquidityParams;
-  salt: DeploySaltParams;
-  tokens: { token1?: ERC20Token; token2?: ERC20Token };
+  wellImplementation?: string;
+  wellFunction?: string;
+  pump?: string;
+  wellDetails?: WellDetails;
+  wellTokens?: WellTokensParams;
+  liquidity?: LiquidityAmounts;
+  salt?: number;
   goBack: () => void;
   goNext: () => void;
-  setWellImplementation: (params: SetWellImplementationStepParams & GoNextParams) => void;
-  setFunctionAndPump: (params: SetFunctionAndPumpStepParams & GoNextParams) => void;
-  setWellNameAndSymbol: (params: SetWellNameAndSymbolStepParams & GoNextParams) => void;
-  setSalt: (params: DeploySaltParams) => void;
-  setLiquidity: (params: LiquidityParams) => void;
+  setStep1: (params: { wellImplementation: string } & GoNextParams) => void;
+  setStep2: (
+    params: {
+      wellFunction: string;
+      token1: ERC20Token;
+      token2: ERC20Token;
+      pump: string;
+    } & GoNextParams
+  ) => void;
+  setStep3: (params: WellDetails & GoNextParams) => void;
+  setStep4: (params: LiquidityAmounts & { salt?: number }) => void;
   deployWell: () => Promise<any>;
-  setTokens: (tokens: { token1: ERC20Token; token2: ERC20Token }) => void;
 };
 
 const Context = createContext<CreateWellContext | null>(null);
@@ -65,108 +56,102 @@ const Context = createContext<CreateWellContext | null>(null);
 export const CreateWellProvider = ({ children }: { children: React.ReactNode }) => {
   const [step, setStep] = useState<number>(0);
 
-  /// step 1
-  const [wellImplementation, setWellImplementation] = useState<
-    SetWellImplementationStepParams | undefined
-  >({ wellImplementation: WELL_DOT_SOL_ADDRESS.toLowerCase() });
+  // step 1
+  const [wellImplementation, setWellImplementation] = useState<string>("");
 
-  const [functionAndPump, setFunctionAndPump] = useState<SetFunctionAndPumpStepParams | undefined>({
-    wellFunction: "",
-    token1Address: "",
-    token2Address: "",
-    pump: ""
-  });
+  // step 2
+  const [pump, setPump] = useState<string>("");
+  const [wellFunction, setWellFunction] = useState<string>("");
+  const [wellTokens, setWellTokens] = useState<WellTokensParams>({});
 
-  const [tokens, setTokens] = useState<{
-    token1?: ERC20Token;
-    token2?: ERC20Token;
-  }>({});
+  // step 3
+  const [wellDetails, setWellDetails] = useState<WellDetails>({});
 
-  const [wellNameAndSymbol, setWellNameAndSymbol] = useState<
-    SetWellNameAndSymbolStepParams | undefined
-  >({ name: "Bean-DAI Well", symbol: "BEAN-DAI" });
-
-  const [liquidity, setLiquidity] = useState<LiquidityParams>({
-    seedingLiquidity: false
-  });
-
-  const [salt, setDeploySalt] = useState<DeploySaltParams>({
-    usingSalt: false
-  });
+  // step 4
+  const [liquidity, setLiquidity] = useState<LiquidityAmounts>({});
+  const [salt, setDeploySalt] = useState<number | undefined>();
 
   const methods = useMemo(() => {
-    const handleSetLiquidity = (params: LiquidityParams) => setLiquidity(params);
-    const handleSetSalt = (params: DeploySaltParams) => setDeploySalt(params);
-    const handleSetTokens = (params: { token1: ERC20Token; token2: ERC20Token }) => {
-      setTokens(params);
-    };
+    const handleSetLiquidity = (params: LiquidityAmounts) => setLiquidity(params);
+    const handleSetSalt = (_salt: number) => setDeploySalt(_salt);
     const handleGoNext = () => {
       setStep((_step) => Math.min(_step + 1, 3));
     };
     const handleGoBack = () => {
       setStep((_step) => Math.min(_step - 1, 0));
     };
+    const handleSetPump = (pump: string) => setPump(pump);
+    const handleSetWellFunction = (wellFunction: string) => setWellFunction(wellFunction);
+    const handleSetWellDetails = (details: WellDetails) => setWellDetails(details);
 
     return {
       setLiquidity: handleSetLiquidity,
       setSalt: handleSetSalt,
-      setTokens: handleSetTokens,
       goNext: handleGoNext,
-      goBack: handleGoBack
+      goBack: handleGoBack,
+      setPump: handleSetPump,
+      setWellFunction: handleSetWellFunction,
+      setWellDetails: handleSetWellDetails
     };
   }, []);
 
-  const setWellImplementationStep: CreateWellContext["setWellImplementation"] = useCallback(
-    ({ goNext, ...params }) => {
-      setWellImplementation(params);
-      if (goNext) {
-        methods.goNext();
-      }
+  const setStep1: CreateWellContext["setStep1"] = useCallback(
+    (params) => {
+      setWellImplementation(params.wellImplementation);
+      params.goNext && methods.goNext();
     },
     [methods]
   );
 
-  const setFunctionAndPumpStep: CreateWellContext["setFunctionAndPump"] = useCallback(
-    ({ goNext, ...params }) => {
-      setFunctionAndPump(params);
-      if (goNext) {
-        methods.goNext();
-      }
+  const setStep2: CreateWellContext["setStep2"] = useCallback(
+    (params) => {
+      setPump(params.pump);
+      setWellFunction(params.wellFunction);
+      setWellTokens({
+        token1: params.token1,
+        token2: params.token2
+      });
+
+      params.goNext && methods.goNext();
     },
     [methods]
   );
 
-  const setWellNameAndSymbolStep: CreateWellContext["setWellNameAndSymbol"] = useCallback(
+  const setStep3: CreateWellContext["setStep3"] = useCallback(
     ({ goNext, ...params }) => {
-      setWellNameAndSymbol(params);
-      if (goNext) {
-        methods.goNext();
-      }
+      setWellDetails(params);
+      goNext && methods.goNext();
     },
     [methods]
   );
+
+  const setStep4: CreateWellContext["setStep4"] = useCallback((params) => {
+    setDeploySalt(params.salt);
+    setLiquidity({
+      token1Amount: params.token1Amount,
+      token2Amount: params.token2Amount
+    });
+  }, []);
 
   const deployWell = useCallback(async () => {
-    console.debug({
-      wellImplementation,
-      functionAndPump,
-      wellNameAndSymbol
-    });
-  }, [wellImplementation, functionAndPump, wellNameAndSymbol]);
+    console.log("deploying well...");
+  }, []);
 
   return (
     <Context.Provider
       value={{
         step,
         wellImplementation,
-        functionAndPump,
-        wellNameAndSymbol,
+        wellFunction,
+        pump,
+        wellDetails,
+        wellTokens,
         liquidity,
         salt,
-        tokens: tokens,
-        setWellImplementation: setWellImplementationStep,
-        setFunctionAndPump: setFunctionAndPumpStep,
-        setWellNameAndSymbol: setWellNameAndSymbolStep,
+        setStep1,
+        setStep2,
+        setStep3,
+        setStep4,
         deployWell,
         ...methods
       }}
