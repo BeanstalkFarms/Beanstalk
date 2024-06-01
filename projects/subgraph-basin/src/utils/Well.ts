@@ -77,6 +77,8 @@ export function loadOrCreateWellFunction(functionData: BoreWellWellFunctionStruc
   return wellFunction as WellFunction;
 }
 
+// TODO: need another volume function for add/removal liquiditiy with multiple tokens.
+
 export function updateWellVolumes(
   wellAddress: Address,
   fromToken: Address,
