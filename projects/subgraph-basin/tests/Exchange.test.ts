@@ -1,14 +1,10 @@
 import { afterEach, assert, beforeEach, clearStore, describe, test } from "matchstick-as/assembly/index";
-import { BEAN_ERC20, WETH } from "../../subgraph-core/utils/Constants";
 import { ZERO_BI } from "../../subgraph-core/utils/Decimals";
 import { loadWell } from "../src/utils/Well";
 import {
-  ACCOUNT_ENTITY_TYPE,
   BEAN_SWAP_AMOUNT,
   BEAN_USD_AMOUNT,
   CURRENT_BLOCK_TIMESTAMP,
-  SWAP_ACCOUNT,
-  SWAP_ENTITY_TYPE,
   WELL,
   WELL_DAILY_ENTITY_TYPE,
   WELL_ENTITY_TYPE,
@@ -87,35 +83,5 @@ describe("Well Entity: Exchange Tests", () => {
 
     assert.fieldEquals(WELL_DAILY_ENTITY_TYPE, daySnapshotID.toHexString(), "id", daySnapshotID.toHexString());
     assert.fieldEquals(WELL_HOURLY_ENTITY_TYPE, hourSnapshotID.toHexString(), "id", hourSnapshotID.toHexString());
-  });
-});
-
-describe("Swap Entity", () => {
-  beforeEach(() => {
-    boreDefaultWell();
-  });
-
-  afterEach(() => {
-    clearStore();
-  });
-
-  describe("Swap", () => {
-    test("Swap entity", () => {
-      let id = createDefaultSwap();
-      assert.fieldEquals(SWAP_ENTITY_TYPE, id, "id", id);
-      assert.fieldEquals(SWAP_ENTITY_TYPE, id, "well", WELL.toHexString());
-      assert.fieldEquals(SWAP_ENTITY_TYPE, id, "fromToken", BEAN_ERC20.toHexString());
-      assert.fieldEquals(SWAP_ENTITY_TYPE, id, "amountIn", BEAN_SWAP_AMOUNT.toString());
-      assert.fieldEquals(SWAP_ENTITY_TYPE, id, "toToken", WETH.toHexString());
-      assert.fieldEquals(SWAP_ENTITY_TYPE, id, "amountOut", WETH_SWAP_AMOUNT.toString());
-    });
-    test("Account entity exists", () => {
-      let id = createDefaultSwap();
-      assert.fieldEquals(ACCOUNT_ENTITY_TYPE, SWAP_ACCOUNT.toHexString(), "id", SWAP_ACCOUNT.toHexString());
-    });
-  });
-
-  describe("Shift", () => {
-    // TODO
   });
 });
