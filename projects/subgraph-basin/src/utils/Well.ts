@@ -27,12 +27,18 @@ export function createWell(wellAddress: Address, implementation: Address, inputT
   let wellContract = ERC20.bind(wellAddress);
 
   let nameCall = wellContract.try_name();
-  if (nameCall.reverted) well.name = "";
-  else well.name = nameCall.value;
+  if (nameCall.reverted) {
+    well.name = "";
+  } else {
+    well.name = nameCall.value;
+  }
 
   let symbolCall = wellContract.try_symbol();
-  if (symbolCall.reverted) well.symbol = "";
-  else well.symbol = symbolCall.value;
+  if (symbolCall.reverted) {
+    well.symbol = "";
+  } else {
+    well.symbol = symbolCall.value;
+  }
 
   well.aquifer = Bytes.empty();
   well.implementation = implementation;
@@ -168,11 +174,15 @@ export function updateWellTokenUSDPrices(wellAddress: Address, blockNumber: BigI
   updateTokenUSD(BEAN_ERC20, blockNumber, BigDecimal.fromString("1"));
   let beanIndex = well.tokens.indexOf(BEAN_ERC20);
   // Curretly only supporting USD values for Wells with BEAN as a token.
-  if (beanIndex == -1) return;
+  if (beanIndex == -1) {
+    return;
+  }
   let currentBeans = toDecimal(well.reserves[beanIndex]);
 
   for (let i = 0; i < well.tokens.length; i++) {
-    if (i == beanIndex) continue;
+    if (i == beanIndex) {
+      continue;
+    }
     let tokenAddress = Address.fromBytes(well.tokens[i]);
     if (well.reserves[i].gt(ZERO_BI)) {
       updateTokenUSD(tokenAddress, blockNumber, currentBeans.div(toDecimal(well.reserves[i], getTokenDecimals(tokenAddress))));
@@ -211,8 +221,12 @@ export function checkForSnapshot(wellAddress: Address, timestamp: BigInt, blockN
 
   let well = loadWell(wellAddress);
 
-  if (dayID > well.lastSnapshotDayID) takeWellDailySnapshot(wellAddress, dayID, timestamp, blockNumber);
-  if (hourID > well.lastSnapshotHourID) takeWellHourlySnapshot(wellAddress, hourID, timestamp, blockNumber);
+  if (dayID > well.lastSnapshotDayID) {
+    takeWellDailySnapshot(wellAddress, dayID, timestamp, blockNumber);
+  }
+  if (hourID > well.lastSnapshotHourID) {
+    takeWellHourlySnapshot(wellAddress, hourID, timestamp, blockNumber);
+  }
 }
 
 export function takeWellDailySnapshot(wellAddress: Address, dayID: i32, timestamp: BigInt, blockNumber: BigInt): void {

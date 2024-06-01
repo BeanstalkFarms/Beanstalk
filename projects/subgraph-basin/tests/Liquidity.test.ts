@@ -1,5 +1,5 @@
 import { afterEach, assert, beforeEach, clearStore, describe, test } from "matchstick-as/assembly/index";
-import { ZERO_BI } from "../../subgraph-core/utils/Decimals";
+import { ZERO_BD, ZERO_BI } from "../../subgraph-core/utils/Decimals";
 import { loadWell } from "../src/utils/Well";
 import {
   BEAN_SWAP_AMOUNT,
@@ -14,6 +14,11 @@ import { boreDefaultWell } from "./helpers/Aquifer";
 import { mockAddLiquidity, mockRemoveLiquidity, mockRemoveLiquidityOneBean, mockRemoveLiquidityOneWeth } from "./helpers/Liquidity";
 import { BigDecimal, BigInt } from "@graphprotocol/graph-ts";
 
+const BI_2 = BigInt.fromU32(2);
+const BI_3 = BigInt.fromU32(3);
+const BD_2 = BigDecimal.fromString("2");
+const BD_3 = BigDecimal.fromString("3");
+
 describe("Well Entity: Liquidity Event Tests", () => {
   beforeEach(() => {
     boreDefaultWell();
@@ -23,9 +28,7 @@ describe("Well Entity: Liquidity Event Tests", () => {
     clearStore();
   });
 
-  // TODO: Sync
-
-  describe("Add Liquidity - Balanced", () => {
+  describe("Add Liquidity - Multiple", () => {
     beforeEach(() => {
       mockAddLiquidity();
     });
@@ -51,18 +54,27 @@ describe("Well Entity: Liquidity Event Tests", () => {
       assert.fieldEquals(WELL_ENTITY_TYPE, WELL.toHexString(), "lpTokenSupply", WELL_LP_AMOUNT.toString());
     });
     test("Token volumes updated", () => {
-      //TODO
-    });
-    test("Token volumes USD updated", () => {
-      //TODO
+      let updatedStore = loadWell(WELL);
+      assert.bigIntEquals(updatedStore.cumulativeVolumeReserves[0], BEAN_SWAP_AMOUNT);
+      assert.bigIntEquals(updatedStore.cumulativeVolumeReserves[1], WETH_SWAP_AMOUNT);
+      assert.stringEquals(updatedStore.cumulativeVolumeReservesUSD[0].toString(), BEAN_USD_AMOUNT.toString());
+      assert.stringEquals(updatedStore.cumulativeVolumeReservesUSD[1].toString(), WETH_USD_AMOUNT.toString());
     });
   });
 
-  describe("Add Liquidity - Multiple Imbalanced", () => {
+  describe("Add Liquidity - One", () => {
     // TODO
   });
 
-  describe("Remove Liquidity - Balanced", () => {
+  describe("Sync (Add Liquidity) - Multiple", () => {
+    // TODO
+  });
+
+  describe("Sync (Add Liquidity) - One", () => {
+    // TODO
+  });
+
+  describe("Remove Liquidity - Multiple", () => {
     beforeEach(() => {
       mockRemoveLiquidity();
     });
@@ -78,6 +90,13 @@ describe("Well Entity: Liquidity Event Tests", () => {
     });
     test("Liquidity Token balance", () => {
       assert.fieldEquals(WELL_ENTITY_TYPE, WELL.toHexString(), "lpTokenSupply", ZERO_BI.minus(WELL_LP_AMOUNT).toString());
+    });
+    test("Token volumes updated", () => {
+      let updatedStore = loadWell(WELL);
+      assert.bigIntEquals(updatedStore.cumulativeVolumeReserves[0], BEAN_SWAP_AMOUNT);
+      assert.bigIntEquals(updatedStore.cumulativeVolumeReserves[1], WETH_SWAP_AMOUNT);
+      assert.stringEquals(updatedStore.cumulativeVolumeReservesUSD[0].toString(), BEAN_USD_AMOUNT.toString());
+      assert.stringEquals(updatedStore.cumulativeVolumeReservesUSD[1].toString(), WETH_USD_AMOUNT.toString());
     });
   });
 
@@ -95,10 +114,17 @@ describe("Well Entity: Liquidity Event Tests", () => {
       let endingBalances = updatedStore.reserves;
 
       assert.bigIntEquals(BEAN_SWAP_AMOUNT, endingBalances[0]);
-      assert.bigIntEquals(WETH_SWAP_AMOUNT.times(BigInt.fromI32(2)), endingBalances[1]);
+      assert.bigIntEquals(WETH_SWAP_AMOUNT.times(BI_2), endingBalances[1]);
     });
     test("Liquidity Token balance", () => {
       assert.fieldEquals(WELL_ENTITY_TYPE, WELL.toHexString(), "lpTokenSupply", WELL_LP_AMOUNT.toString());
+    });
+    test("Token volumes updated", () => {
+      let updatedStore = loadWell(WELL);
+      assert.bigIntEquals(updatedStore.cumulativeVolumeReserves[0], BEAN_SWAP_AMOUNT.times(BI_3));
+      assert.bigIntEquals(updatedStore.cumulativeVolumeReserves[1], WETH_SWAP_AMOUNT.times(BI_2));
+      assert.stringEquals(updatedStore.cumulativeVolumeReservesUSD[0].toString(), BEAN_USD_AMOUNT.times(BD_3).toString());
+      assert.stringEquals(updatedStore.cumulativeVolumeReservesUSD[1].toString(), WETH_USD_AMOUNT.times(BD_2).toString());
     });
   });
 
@@ -119,9 +145,12 @@ describe("Well Entity: Liquidity Event Tests", () => {
     test("Liquidity Token balance", () => {
       assert.fieldEquals(WELL_ENTITY_TYPE, WELL.toHexString(), "lpTokenSupply", ZERO_BI.minus(WELL_LP_AMOUNT).toString());
     });
-  });
-
-  describe("Remove Liquidity - Multiple Imbalanced", () => {
-    // TODO
+    test("Token volumes updated", () => {
+      let updatedStore = loadWell(WELL);
+      assert.bigIntEquals(updatedStore.cumulativeVolumeReserves[0], ZERO_BI);
+      assert.bigIntEquals(updatedStore.cumulativeVolumeReserves[1], WETH_SWAP_AMOUNT);
+      assert.stringEquals(updatedStore.cumulativeVolumeReservesUSD[0].toString(), "0");
+      assert.stringEquals(updatedStore.cumulativeVolumeReservesUSD[1].toString(), WETH_USD_AMOUNT.toString());
+    });
   });
 });
