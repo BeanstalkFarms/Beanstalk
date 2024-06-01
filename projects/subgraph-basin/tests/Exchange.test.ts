@@ -80,6 +80,9 @@ describe("Well Entity: Exchange Tests", () => {
   });
 
   describe("Shift", () => {
-    // TODO
+    // beforeEach(() => {
+
+    // });
+    test("Swap counter incremented", () => {});
   });
 });
