@@ -10,6 +10,7 @@ import { FC } from '~/types';
 import { createChart } from 'lightweight-charts';
 import { hexToRgba } from '~/util/UI';
 import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
+import { SEASON_RANGE_TO_COUNT, SeasonRange } from '~/hooks/beanstalk/useSeasonsQuery';
 import { useChartSetupData } from './useChartSetupData';
 import { BeanstalkPalette } from '../App/muiTheme';
 /*
@@ -26,14 +27,6 @@ import { BeanstalkPalette } from '../App/muiTheme';
 */
 
 type ChartV2DataProps = {
-  /*
-   *
-   */
-  tooltipTitle: string;
-  /*
-   *
-   */
-  tooltipHoverText?: string;
   /*
    *
    */
@@ -57,6 +50,10 @@ type ChartV2DataProps = {
   /*
    *
    */
+  timePeriod?: SeasonRange;
+  /*
+   *
+   */
   containerHeight: number;
   /*
    *
@@ -64,18 +61,41 @@ type ChartV2DataProps = {
   selected: number[];
 };
 
-
-const defaultFormatter = (value: any) => `$${value.toFixed(4)}`;
+const chartColors = [
+  {
+    lineColor: BeanstalkPalette.logoGreen,
+    topColor: hexToRgba(BeanstalkPalette.logoGreen, 0.8),
+    bottomColor: hexToRgba(BeanstalkPalette.logoGreen, 0.2),
+  },
+  {
+    lineColor: BeanstalkPalette.darkBlue,
+    topColor: hexToRgba(BeanstalkPalette.darkBlue, 0.8),
+    bottomColor: hexToRgba(BeanstalkPalette.darkBlue, 0.2),
+  },
+  {
+    lineColor: BeanstalkPalette.washedRed,
+    topColor: hexToRgba(BeanstalkPalette.washedRed, 0.8),
+    bottomColor: hexToRgba(BeanstalkPalette.washedRed, 0.2),
+  },
+  {
+    lineColor: BeanstalkPalette.theme.spring.chart.yellow,
+    topColor: hexToRgba(BeanstalkPalette.theme.spring.chart.yellow, 0.8),
+    bottomColor: hexToRgba(BeanstalkPalette.theme.spring.chart.yellow, 0.2),
+  },
+  {
+    lineColor: BeanstalkPalette.theme.winter.error,
+    topColor: hexToRgba(BeanstalkPalette.theme.winter.error, 0.8),
+    bottomColor: hexToRgba(BeanstalkPalette.theme.winter.error, 0.2),
+  }
+];
 
 const ChartV2: FC<ChartV2DataProps> = ({
-  tooltipTitle,
-  tooltipHoverText,
   formattedData,
   extraData,
-  priceFormatter = defaultFormatter,
   drawPegLine,
   size = "full",
   containerHeight,
+  timePeriod,
   selected
 }) => {
   const chartContainerRef = useRef<any>();
@@ -90,6 +110,7 @@ const ChartV2: FC<ChartV2DataProps> = ({
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const chartSetupData = useChartSetupData();
+
 
   useEffect(() => {
     if (!chartContainerRef.current || !chartHeight) return;
@@ -134,37 +155,9 @@ const ChartV2: FC<ChartV2DataProps> = ({
       });
     };
 
-    const chartColors = [
-      {
-        lineColor: BeanstalkPalette.logoGreen,
-        topColor: hexToRgba(BeanstalkPalette.logoGreen, 0.8),
-        bottomColor: hexToRgba(BeanstalkPalette.logoGreen, 0.2),
-      },
-      {
-        lineColor: BeanstalkPalette.blue,
-        topColor: hexToRgba(BeanstalkPalette.blue, 0.8),
-        bottomColor: hexToRgba(BeanstalkPalette.blue, 0.2),
-      },
-      {
-        lineColor: BeanstalkPalette.washedRed,
-        topColor: hexToRgba(BeanstalkPalette.washedRed, 0.8),
-        bottomColor: hexToRgba(BeanstalkPalette.washedRed, 0.2),
-      },
-      {
-        lineColor: BeanstalkPalette.yellow,
-        topColor: hexToRgba(BeanstalkPalette.yellow, 0.8),
-        bottomColor: hexToRgba(BeanstalkPalette.yellow, 0.2),
-      },
-      {
-        lineColor: BeanstalkPalette.yellow,
-        topColor: hexToRgba(BeanstalkPalette.yellow, 0.8),
-        bottomColor: hexToRgba(BeanstalkPalette.yellow, 0.2),
-      }
-    ];
-
     chart.current = createChart(chartContainerRef.current, chartOptions);
-    const numberOfCharts = formattedData.length;
-    if (numberOfCharts > 0 ) {
+    const numberOfCharts = selected.length;
+    if (numberOfCharts > 0) {
       for (let i = 0; i < numberOfCharts; i+=1) {
         areaSeries.current[i] = chart.current.addLineSeries({
           color: chartColors[i].lineColor,
@@ -201,24 +194,31 @@ const ChartV2: FC<ChartV2DataProps> = ({
     };
   }, [theme, drawPegLine, size, chartHeight, formattedData, chartSetupData, selected]);
 
-  useEffect(() => {
-    if (!chart.current || !formattedData) return;
-    const numberOfCharts = formattedData.length;
-    for (let i = 0; i < numberOfCharts; i+=1) {
-      areaSeries.current[i].setData(formattedData[i]);
+  useMemo(() => {
+    const hours = SEASON_RANGE_TO_COUNT[timePeriod || 0];
+    if (lastDataPoint) {
+      if (hours === undefined) {
+        chart.current.timeScale().fitContent();
+      } else {
+        chart.current.timeScale().setVisibleRange({
+          from: (Date.now() / 1000) - (hours * 60 * 60),
+          to: Date.now() / 1000,
+        });
+      };
     };
-    chart.current.timeScale().fitContent();
-  }, [formattedData]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [timePeriod]);
 
-  /* useEffect(() => {
+  useEffect(() => {
     if (!chart.current || !formattedData || !extraData) return
-    function getMergedData(commonData: { time: Number; value: Number }) {
-      const date = commonData
-        ? new Date((commonData.time as number) * 1000)
+    function getMergedData(commonData: { time: number | null; value: number | null }[]) {
+
+      const date = commonData[0]?.time
+        ? new Date((commonData[0].time) * 1000)
         : null;
-      const value = commonData ? commonData.value : null;
+      const value = commonData ? commonData.map((data) => data.value) : null;
       const additionalData =
-        extraData && commonData ? extraData.get(commonData.time) : null;
+        extraData && commonData[0]?.time ? extraData.get(commonData[0].time) : null;
       const formattedDate = date?.toLocaleString(undefined, {
         dateStyle: 'short',
         timeStyle: 'short',
@@ -230,18 +230,46 @@ const ChartV2: FC<ChartV2DataProps> = ({
       };
     }
 
-    const lastCommonDataPoint = formattedData[0][formattedData[0].length - 1];
-    setLastDataPoint(getMergedData(lastCommonDataPoint));
+    const numberOfCharts = selected?.length || 0;
+    for (let i = 0; i < numberOfCharts; i+=1) {
+      if (!formattedData[selected[i]]) return
+      areaSeries.current[i].setData(formattedData[selected[i]]);
+    };
+
+    const lastCommonDataPoint = (formattedData[0] || selected[0]) 
+      ? selected.map((selection) => {
+        if (!formattedData[selection]) {
+          return {
+            time: null,
+            value: null
+          }
+        }
+        return {
+          time: formattedData[selection][formattedData[selection].length -1].time,
+          value: formattedData[selection][formattedData[selection].length -1].value
+        }
+      }) 
+      : null
+    setLastDataPoint(lastCommonDataPoint ? getMergedData(lastCommonDataPoint) : { time: 0, value: [0], season: 0 });
 
     chart.current.subscribeCrosshairMove((param: any) => {
-      const hoveredDataPoint = param.seriesData.get(areaSeries.current[0]) || null;
-      setDataPoint(getMergedData(hoveredDataPoint));
+      const hoveredDataPoints: any[] = [];
+      areaSeries.current.forEach((series: any, index: number) => {
+        const data = param.seriesData.get(series) || null;
+        if (data) {
+          hoveredDataPoints[index] = {
+            value: data.value || null,
+            time: data.time || null,
+          };
+        };
+      });
+      setDataPoint(getMergedData(hoveredDataPoints));
     });
 
     return () => {
       chart.current.unsubscribeCrosshairMove();
     };
-  }, [formattedData, extraData]) */
+  }, [formattedData, extraData, selected]);
 
   return (
     <Box>
@@ -250,62 +278,75 @@ const ChartV2: FC<ChartV2DataProps> = ({
         sx={{
           position: 'relative',
           display: 'flex',
-          flexDirection: 'column',
+          flexDirection: 'row',
           padding: 0,
           marginTop: 2,
           marginLeft: 2,
           zIndex: 3,
-          gap: 0.25,
+          gap: 2,
           borderColor: 'transparent',
           backgroundColor: 'transparent',
         }}
       >
-        <Box sx={{ display: 'flex', flexDirection: 'row' }}>
-          <Box sx={{ display: 'flex' }}>
-            <Typography variant="body1">{tooltipTitle}</Typography>
-            {tooltipHoverText && (
-              <Tooltip
-                title={tooltipHoverText}
-                placement={isMobile ? 'top' : 'right'}
-              >
-                <HelpOutlineIcon
-                  sx={{
-                    color: 'text.secondary',
-                    display: 'inline',
-                    mb: 0.5,
-                    fontSize: '11px',
-                  }}
-                />
-              </Tooltip>
+        {selected.map((chartId, index) => {
+
+        const tooltipTitle = chartSetupData[chartId].tooltipTitle;
+        const tooltipHoverText = chartSetupData[chartId].tooltipHoverText;
+        const value = dataPoint?.value[index] || lastDataPoint?.value[index] || 0;
+          
+        return (
+          <Box sx={{ display: 'flex', flexDirection: 'column'}}>
+            <Box sx={{ 
+              borderLeft: selected.length > 1 ? 2.5 : 0, 
+              paddingLeft: selected.length > 1 ? 0.25 : 0,
+              borderColor: chartColors[index].lineColor
+              }}
+            >
+              <Box sx={{ display: 'flex', flexDirection: 'row' }}>
+                <Box sx={{ display: 'flex' }}>
+                  <Typography variant="body1">{tooltipTitle}</Typography>
+                  {tooltipHoverText && (
+                    <Tooltip
+                      title={tooltipHoverText}
+                      placement={isMobile ? 'top' : 'right'}
+                    >
+                      <HelpOutlineIcon
+                        sx={{
+                          color: 'text.secondary',
+                          display: 'inline',
+                          mb: 0.5,
+                          fontSize: '11px',
+                        }}
+                      />
+                    </Tooltip>
+                  )}
+                </Box>
+              </Box>
+              <Typography variant="h2">
+                {chartSetupData[chartId].tickFormatter(value || 0)}
+              </Typography>
+            </Box>
+            {index === 0 && (
+            <>
+              <Typography variant="bodySmall" color="text.primary">
+                Season{' '}
+                {dataPoint && dataPoint.season
+                  ? dataPoint.season
+                  : lastDataPoint && lastDataPoint.season
+                    ? lastDataPoint.season
+                    : 0}
+              </Typography>
+              <Typography variant="bodySmall" color="text.primary">
+                {dataPoint && dataPoint.time
+                  ? dataPoint.time
+                  : lastDataPoint && lastDataPoint.time
+                    ? lastDataPoint.time
+                    : 0}
+              </Typography>
+            </>
             )}
           </Box>
-        </Box>
-        <Typography variant="h2">
-          {priceFormatter(
-            dataPoint && dataPoint.value
-              ? dataPoint.value
-              : lastDataPoint && lastDataPoint.value
-                ? lastDataPoint.value
-                : 0
-          )}
-        </Typography>
-        {extraData && (
-          <Typography variant="bodySmall" color="text.primary">
-            Season{' '}
-            {dataPoint && dataPoint.season
-              ? dataPoint.season
-              : lastDataPoint && lastDataPoint.season
-                ? lastDataPoint.season
-                : 0}
-          </Typography>
-        )}
-        <Typography variant="bodySmall" color="text.primary">
-          {dataPoint && dataPoint.time
-            ? dataPoint.time
-            : lastDataPoint && lastDataPoint.time
-              ? lastDataPoint.time
-              : 0}
-        </Typography>
+        )})}
       </Box>
       <Box
         ref={chartContainerRef}

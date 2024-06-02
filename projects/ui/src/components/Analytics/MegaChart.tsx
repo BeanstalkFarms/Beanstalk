@@ -1,11 +1,12 @@
 import React, { useMemo, useState } from 'react';
 import { FC } from '~/types';
-import { Box, Button, Card, CircularProgress } from '@mui/material';
-import useSeasonsQuery from '~/hooks/beanstalk/useSeasonsQuery';
+import { Box, Button, Card, CircularProgress, Divider } from '@mui/material';
 import useTimeTabState from '~/hooks/app/useTimeTabState';
 import AddRoundedIcon from '@mui/icons-material/AddRounded';
 import useToggle from '~/hooks/display/useToggle';
-import { getFormattedAndExtraData } from './formatters';
+import { apolloClient } from '~/graph/client';
+import DateRangeOutlinedIcon from '@mui/icons-material/DateRangeOutlined';
+import useSeason from '~/hooks/beanstalk/useSeason';
 import ChartV2 from './ChartV2';
 import TimeTabs from '../Common/Charts/TimeTabs';
 import DropdownIcon from '../Common/DropdownIcon';
@@ -14,6 +15,7 @@ import { useChartSetupData } from './useChartSetupData';
 
 const MegaChart: FC<{}> = () => {
 
+  const season = useSeason();
   const chartSetupData = useChartSetupData();
 
   const timeTabParams = useTimeTabState();
@@ -21,24 +23,69 @@ const MegaChart: FC<{}> = () => {
 
   const [dialogOpen, showDialog, hideDialog] = useToggle();
   const [selectedCharts, setSelectedCharts] = useState([0]);
+  const [queryData, setQueryData] = useState<any[]>([]);
+  const [moreData, setMoreData] = useState<Map<any, any>>(new Map());
+  const [loading, setLoading] = useState<boolean>(true);
 
-  const query0Config = useMemo(() => ( chartSetupData[selectedCharts[0]]?.queryConfig ), [selectedCharts, chartSetupData]);
-  const query1Config = useMemo(() => ( chartSetupData[selectedCharts[1]]?.queryConfig ), [selectedCharts, chartSetupData]);
-  const query2Config = useMemo(() => ( chartSetupData[selectedCharts[2]]?.queryConfig ), [selectedCharts, chartSetupData]);
+  useMemo(() => {
+    async function getSeasonData(getAllData?: boolean) {
+      const promises: any[] = [];
+      const output: any[] = [];
+      const extraOutput = new Map();
+      const timestamps = new Map();
 
-  // Subgraph queries
-  const query0 = useSeasonsQuery(chartSetupData[selectedCharts[0]]?.document, selectedTimePeriod, query0Config);
-  const query1 = useSeasonsQuery(chartSetupData[selectedCharts[1]]?.document, selectedTimePeriod, query1Config);
-  const query2 = useSeasonsQuery(chartSetupData[selectedCharts[2]]?.document, selectedTimePeriod, query2Config);
+      for (let i = 0; i < selectedCharts.length; i += 1) {
 
-  // Formatting data
-  const { formattedData: priceFormattedData, extraData } = getFormattedAndExtraData(
-    [query0, query1, query2],
-    selectedCharts,
-    chartSetupData
-  );
+        const chartId = selectedCharts[i];
+        const queryConfig = chartSetupData[chartId].queryConfig;
+        const document = chartSetupData[chartId].document;
+        const entity = chartSetupData[chartId].documentEntity;
 
-  const loading = query0.loading && query1.loading && query2.loading;
+        const currentSeason = season.toNumber();
+
+        const iterations = getAllData ? Math.ceil(currentSeason / 1000) + 1 : 1;
+        for (let j = 0; j < iterations; j += 1) {
+          promises.push( 
+            apolloClient.query({
+            ...queryConfig,
+            query: document,
+            variables: {
+              ...queryConfig?.variables,
+              first: 1000,
+              season_lte: getAllData ? currentSeason - (j * 1000) : 999999999,
+            },
+            notifyOnNetworkStatusChange: true,
+            fetchPolicy: 'cache-first',
+          })
+          .then((r) => {
+            r.data[entity].forEach((seasonData: any) => {
+              if (seasonData?.season) {
+                if (!output[chartId]?.length) {
+                  output[chartId] = [];
+                };
+                if (!timestamps.has(seasonData.season)) {
+                  timestamps.set(seasonData.season, Number(seasonData[chartSetupData[chartId].timeScaleKey]));
+                };
+                const formattedTime = timestamps.get(seasonData.season);
+                const formattedValue = chartSetupData[chartId].valueFormatter(seasonData[chartSetupData[chartId].priceScaleKey]);
+                output[chartId][seasonData.season] = { time: formattedTime, value: formattedValue };
+                extraOutput.set(formattedTime, seasonData.season);
+              };
+            });
+          }));
+        };
+      }
+      await Promise.all(promises);
+      output.forEach((dataSet, index) => { output[index] = dataSet.filter(Boolean) });
+      setQueryData(output);
+      setMoreData(extraOutput);
+    }
+
+    setLoading(true);
+    getSeasonData();
+    setLoading(false);
+    getSeasonData(true);
+  }, [chartSetupData, selectedCharts, season]);
 
   return (
     <>
@@ -49,7 +96,7 @@ const MegaChart: FC<{}> = () => {
               handleClose={hideDialog}
               selected={selectedCharts}
               setSelected={setSelectedCharts}
-            />
+  />
           </Card>
         <Box p={1.5} sx={{ borderBottom: '0.5px', borderColor: 'divider', borderBottomStyle: 'solid', display: 'flex', flexDirection: 'row', justifyContent: 'space-between' }}>
           <Box sx={{ display: 'flex', gap: 1 }}>
@@ -72,7 +119,7 @@ const MegaChart: FC<{}> = () => {
                 paddingX: 0.75,
               }}
               endIcon={<DropdownIcon open={false} sx={{ fontSize: 20 }} />}
-              onClick={showDialog}
+              onClick={() => showDialog()}
             >
               {chartSetupData[selection].name}
             </Button>
@@ -97,18 +144,38 @@ const MegaChart: FC<{}> = () => {
                   },
                 }}
                 endIcon={<AddRoundedIcon fontSize="small" color="inherit" />}
-                onClick={showDialog}
+                onClick={() => showDialog()}
               >
                 Add another
               </Button>
             )}
           </Box>
-          <TimeTabs
-            state={timeTabParams[0]}
-            setState={timeTabParams[1]}
-            aggregation={false}
-            useExpandedWindows
-          />
+          <Box display="flex" flexDirection="row" gap={1}>
+            <TimeTabs
+              state={timeTabParams[0]}
+              setState={timeTabParams[1]}
+              aggregation={false}
+              useExpandedWindows
+            />
+            <Divider variant="middle" orientation="vertical" aria-hidden="true" flexItem sx={{ marginTop: '0px', marginBottom: '0px', height: '20px', color: 'divider' }} />
+            <Button
+              // onClick={() => handleChange1(w.index)}
+              key='calendarSelect'
+              variant="text"
+              size="small"
+              color="dark"
+              sx={{
+                borderRadius: 0.5,
+                px: 0.3,
+                py: 0.3,
+                mt: -0.3,
+                minWidth: 0,
+              }}
+              disableRipple
+            >
+              <DateRangeOutlinedIcon color="inherit" fontSize='small' />
+            </Button>
+          </Box>
         </Box>
         {loading ? (
           <Box sx={{ display: 'flex', height: '100%', alignItems: 'center', justifyContent: 'center' }}>
@@ -116,12 +183,11 @@ const MegaChart: FC<{}> = () => {
           </Box>
         ) : (
           <ChartV2
-            tooltipTitle={chartSetupData[selectedCharts[0]].tooltipTitle}
-            tooltipHoverText={chartSetupData[selectedCharts[0]].tooltipHoverText}
-            formattedData={priceFormattedData}
-            extraData={extraData}
+            formattedData={queryData}
+            extraData={moreData}
             selected={selectedCharts}
             drawPegLine
+            timePeriod={selectedTimePeriod}
             containerHeight={345}
           />
         )}

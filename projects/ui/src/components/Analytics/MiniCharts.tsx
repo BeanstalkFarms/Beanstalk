@@ -1,6 +1,6 @@
 import React from 'react';
 import { FC } from '~/types';
-import { useSeasonalLiquidityQuery, useSeasonalMarketCapQuery, useSeasonalPriceQuery, useSeasonalSupplyQuery } from '~/generated/graphql';
+import { useSeasonalLiquidityQuery, useSeasonalMarketCapQuery, useSeasonalSupplyQuery } from '~/generated/graphql';
 import useSeason from '~/hooks/beanstalk/useSeason';
 import { Box, Card, CircularProgress } from '@mui/material';
 import useSdk from '~/hooks/sdk';
@@ -14,13 +14,6 @@ const MiniCharts: FC<{}> = () => {
   const sdk = useSdk();
   const BEAN = sdk.tokens.BEAN;
 
-  // Subgraph queries
-  const { data: priceData, loading: loadingPriceData } = useSeasonalPriceQuery({
-    variables: {
-      season_lte: season.toNumber() || 0,
-      first: 168,
-    },
-  });
   const { data: supplyData, loading: loadingSupplyData } = useSeasonalSupplyQuery({
     variables: {
       season_lte: season.toNumber() || 0,
@@ -67,25 +60,12 @@ const MiniCharts: FC<{}> = () => {
   const formatBeanValue = (value: any) => Number(formatUnits(value, BEAN.decimals)).toLocaleString('en-US', { maximumFractionDigits: 0 });
   const formatDollarValue = (value: any) => `$${value.toLocaleString('en-US', { maximumFractionDigits: 0 })}`;
 
-  const loadingComplete = !(loadingPriceData && loadingLiquidityData && loadingMarketCapData && loadingSupplyData);
+  const loadingComplete = !(loadingLiquidityData && loadingMarketCapData && loadingSupplyData);
 
   return (
     <>
       <Box display='flex' flexDirection='row' gap={2}>
         <Card sx={{ width: '100%', height: 150 }}>
-        {loadingComplete ? (
-          <ChartV2
-            tooltipTitle="Current Bean Price"
-            formattedData={priceFormattedData}
-            drawPegLine
-            size="mini"
-            containerHeight={150}
-          />
-        ) : (
-          <Box sx={{ display: 'flex', height: '100%', alignItems: 'center', justifyContent: 'center' }}>
-            <CircularProgress variant="indeterminate" />
-          </Box>
-        )}
         </Card>
         <Card sx={{ width: '100%', height: 150 }}>
         {loadingComplete ? (

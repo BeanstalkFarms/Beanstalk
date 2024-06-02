@@ -1,4 +1,4 @@
-import React, { FC } from 'react';
+import React, { FC, useEffect, useState } from 'react';
 import { Box, Button, Divider, IconButton, TextField, Typography } from "@mui/material";
 import SearchRoundedIcon from '@mui/icons-material/SearchRounded';
 import beanIcon from '~/img/tokens/bean-logo-circled.svg';
@@ -17,6 +17,35 @@ export interface SelectDialogProps {
 const SelectDialog: FC<SelectDialogProps> = ({ handleClose, selected, setSelected }) => {
 
     const chartSetupData = useChartSetupData();
+    const dataTypes = ['Bean', 'Silo', 'Field'];
+
+    const [searchInput, setSearchInput] = useState('');
+    const [selectedTypes, setSelectedTypes] = useState<string[]>([]);
+    const [filteredData, setFilteredData] = useState(chartSetupData);
+
+    function typeToggle(type: string) {
+        const index = selectedTypes.indexOf(type);
+        if (index === -1) {
+            const newSelection = [...selectedTypes];
+            newSelection.push(type);
+            setSelectedTypes(newSelection);
+        } else {
+            const newSelection = [...selectedTypes];
+            newSelection.splice(index, 1);
+            setSelectedTypes(newSelection);
+        };
+    };
+
+    useEffect(() => {
+        if ((!searchInput || searchInput === '') && selectedTypes.length === 0) {
+            setFilteredData(chartSetupData)
+        } else {
+            const inputFilter = searchInput.split(/(\s+)/).filter((output) => output.trim().length > 0);
+            const stringFilter = chartSetupData.filter((option) => inputFilter.every((filter) => option.name.toLowerCase().includes(filter)));
+            const typeFilter = selectedTypes.length > 0 ? stringFilter.filter((option) => selectedTypes.includes(option.type)) : stringFilter;
+            setFilteredData(typeFilter);
+        }
+    }, [chartSetupData, searchInput, selectedTypes])
     
     return (
         <Box sx={{ p: 2, display: 'flex', flexDirection: 'column', gap: 1, height: 400 }}>
@@ -24,7 +53,7 @@ const SelectDialog: FC<SelectDialogProps> = ({ handleClose, selected, setSelecte
                 <Box sx={{ display: 'flex'}}>Find Data</Box>
                 <IconButton
                     aria-label="close"
-                    onClick={handleClose}
+                    onClick={() => handleClose()}
                     disableRipple
                     sx={{
                         p: 0,
@@ -39,72 +68,37 @@ const SelectDialog: FC<SelectDialogProps> = ({ handleClose, selected, setSelecte
                 size='small' 
                 color='primary'
                 InputProps={{
-                startAdornment: <SearchRoundedIcon fontSize="small" color="inherit" /> 
+                    startAdornment: <SearchRoundedIcon fontSize="small" color="inherit" /> 
                 }}
-                // onChange={/* (e) => {checkAddress(e.target.value)} */} 
+                onChange={(e) => {setSearchInput(e.target.value)}}
             />
             <Box sx={{ display: 'flex', gap: 1 }}>
-                <Button
-                variant='outlined-secondary'
-                color='secondary'
-                size='small'
-                sx={{
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    cursor: 'pointer',
-                    border: '0.5px solid',
-                    borderColor: 'divider',
-                    fontWeight: 'normal',
-                    color: 'text.primary',
-                    boxSizing: 'border-box',
-                    paddingY: 0.25,
-                    paddingX: 0.75,
-                }}
-                >
-                Bean
-                </Button>
-                <Button
-                variant='outlined-secondary'
-                color='secondary'
-                size='small'
-                sx={{
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    cursor: 'pointer',
-                    border: '0.5px solid',
-                    borderColor: 'divider',
-                    fontWeight: 'normal',
-                    color: 'text.primary',
-                    boxSizing: 'border-box',
-                    paddingY: 0.25,
-                    paddingX: 0.75,
-                }}
-                >
-                Silo
-                </Button>
-                <Button
-                variant='outlined-secondary'
-                color='secondary'
-                size='small'
-                sx={{
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    cursor: 'pointer',
-                    border: '0.5px solid',
-                    borderColor: 'divider',
-                    fontWeight: 'normal',
-                    color: 'text.primary',
-                    boxSizing: 'border-box',
-                    paddingY: 0.25,
-                    paddingX: 0.75,
-                }}
-                >
-                Field
-                </Button>
+                {dataTypes.map((dataType) => 
+                    <Button
+                    variant={selectedTypes.includes(dataType) ? 'contained' : 'outlined-secondary'}
+                    color='secondary'
+                    size='small'
+                    sx={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        cursor: 'pointer',
+                        border: '0.5px solid',
+                        borderColor: 'divider',
+                        fontWeight: 'normal',
+                        color: 'text.primary',
+                        boxSizing: 'border-box',
+                        paddingY: 0.25,
+                        paddingX: 0.75,
+                    }}
+                    onClick={() => typeToggle(dataType)}
+                    >
+                        {dataType}
+                    </Button>
+                )}
             </Box>
             <Divider />
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5, overflowY: 'auto' }}>
-                {chartSetupData.map((data, index) => {
+                {filteredData.map((data, index) => {
                     const selectedItems = [...selected];
                     const indexInSelection = selectedItems.findIndex((selectionIndex) => data.index === selectionIndex);
                     const isSelected = indexInSelection > -1;
@@ -119,7 +113,7 @@ const SelectDialog: FC<SelectDialogProps> = ({ handleClose, selected, setSelecte
                             <img src={podIcon} alt="Bean" style={{ height: 16, width: 16 }} /> 
                         ) : null}
                         <Box>{data.name}</Box>
-                        <Box sx={{ display: 'flex', flexGrow: 1, justifyContent: 'flex-end' }}>
+                        <Box sx={{ display: 'flex', flexGrow: 1, justifyContent: 'flex-end', overflow: 'clip', whiteSpace: 'nowrap', textOverflow: 'ellipsis'}}>
                             <Typography fontSize={10} color='text.tertiary'>{data.tooltipHoverText}</Typography>
                         </Box>
                     </Row>
