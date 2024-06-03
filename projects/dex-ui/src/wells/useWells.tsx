@@ -23,6 +23,7 @@ export const useWells = () => {
                 name: true,
                 tokens: true,
                 wellFunction: true,
+                pumps: true,
                 reserves: true,
                 lpToken: true
               })
