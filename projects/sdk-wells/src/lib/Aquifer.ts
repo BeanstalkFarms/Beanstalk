@@ -182,7 +182,7 @@ async function getNameAndSymbol(
     name = symbols.join(":") + " " + fnName + " Well";
   }
 
-  if (symbol) {
+  if (!symbol) {
     const fnSymbol = await wellFunction.getSymbol();
     symbol = symbols.join("") + fnSymbol + "w";
   }
