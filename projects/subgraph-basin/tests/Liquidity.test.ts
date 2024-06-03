@@ -223,7 +223,6 @@ describe("Well Entity: Liquidity Event Tests", () => {
     });
     test("Token volumes updated", () => {
       let updatedStore = loadWell(WELL);
-      log.debug("{} {}", [updatedStore.cumulativeVolumeReserves[0].toString(), updatedStore.cumulativeVolumeReservesUSD[0].toString()]);
       assert.bigIntEquals(BEAN_SWAP_AMOUNT.times(BI_2), updatedStore.cumulativeVolumeReserves[0]);
       assert.bigIntEquals(WETH_SWAP_AMOUNT.times(BI_2), updatedStore.cumulativeVolumeReserves[1]);
       assert.stringEquals(BEAN_USD_AMOUNT.times(BD_2).toString(), updatedStore.cumulativeVolumeReservesUSD[0].toString());
@@ -293,7 +292,6 @@ describe("Well Entity: Liquidity Event Tests", () => {
     });
     test("Token volumes updated", () => {
       let updatedStore = loadWell(WELL);
-      log.debug("{} {}", [updatedStore.cumulativeVolumeReserves[0].toString(), updatedStore.cumulativeVolumeReservesUSD[0].toString()]);
       assert.bigIntEquals(BEAN_SWAP_AMOUNT.times(BI_2), updatedStore.cumulativeVolumeReserves[0]);
       assert.bigIntEquals(WETH_SWAP_AMOUNT.times(BI_3), updatedStore.cumulativeVolumeReserves[1]);
       assert.stringEquals(BEAN_USD_AMOUNT.times(BD_2).toString(), updatedStore.cumulativeVolumeReservesUSD[0].toString());

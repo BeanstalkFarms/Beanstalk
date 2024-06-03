@@ -147,8 +147,6 @@ export function updateWellVolumesAfterLiquidity(
     const usdAmount = toDecimal(amounts[i].abs(), tokenInfo.decimals).times(tokenInfo.lastPriceUSD);
     usdAmounts.push(usdAmount);
 
-    log.debug("usd amt {} {}", [amounts[i].abs().toString(), tokenInfo.lastPriceUSD.toString()]);
-
     // Update volume for individual reserves
     let volumeReserves = well.cumulativeVolumeReserves;
     let volumeReservesUSD = well.cumulativeVolumeReservesUSD;
@@ -161,7 +159,8 @@ export function updateWellVolumesAfterLiquidity(
   // Update cumulative usd volume. This is determined based on the amount of price fluctuation
   // caused by the liquidity event.
   // The current implementation may be incorrect for wells that have more than 2 tokens.
-  let usdVolume = BigDecimal_max(usdAmounts).minus(BigDecimal_min(usdAmounts)).div(BigDecimal.fromString(well.tokens.length.toString()));
+  let minAmount = tokens.length == well.tokens.length ? BigDecimal_min(usdAmounts) : ZERO_BD;
+  let usdVolume = BigDecimal_max(usdAmounts).minus(minAmount).div(BigDecimal.fromString(well.tokens.length.toString()));
   well.cumulativeVolumeUSD = well.cumulativeVolumeUSD.plus(usdVolume);
 
   // Add to the rolling volumes. At the end of this hour, the furthest day back will have its volume amount removed.

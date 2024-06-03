@@ -54,13 +54,13 @@ describe("Well Entity: Exchange Tests", () => {
     test("Token Volumes USD updated", () => {
       mockAddLiquidity();
       mockAddLiquidity();
-      mockSwap();
+      mockSwap(BigDecimal.fromString("0.5"));
 
       let updatedStore = loadWell(WELL);
       let endingBalances = updatedStore.cumulativeVolumeReservesUSD;
 
-      assert.stringEquals(BEAN_USD_AMOUNT.toString(), endingBalances[0].toString());
-      assert.stringEquals(WETH_USD_AMOUNT.toString(), endingBalances[1].toString());
+      assert.stringEquals(BEAN_USD_AMOUNT.times(BigDecimal.fromString("2.5")).toString(), endingBalances[0].toString());
+      assert.stringEquals(WETH_USD_AMOUNT.times(BigDecimal.fromString("3.5")).toString(), endingBalances[1].toString());
       assert.stringEquals(
         BEAN_USD_AMOUNT.plus(WETH_USD_AMOUNT).div(BigDecimal.fromString("2")).toString(),
         updatedStore.cumulativeVolumeUSD.toString()
@@ -85,7 +85,7 @@ describe("Well Entity: Exchange Tests", () => {
       mockAddLiquidity();
       mockAddLiquidity();
       // Buy beans for 1 weth
-      mockShift([BEAN_SWAP_AMOUNT, WETH_SWAP_AMOUNT.times(BigInt.fromU32(3))], BEAN_ERC20, BEAN_SWAP_AMOUNT);
+      mockShift([BEAN_SWAP_AMOUNT, WETH_SWAP_AMOUNT.times(BigInt.fromU32(3))], BEAN_ERC20, BEAN_SWAP_AMOUNT, BigDecimal.fromString("1.5"));
     });
     test("Swap counter incremented", () => {
       assert.fieldEquals(WELL_ENTITY_TYPE, WELL.toHexString(), "cumulativeSwapCount", "1");
@@ -108,8 +108,8 @@ describe("Well Entity: Exchange Tests", () => {
       let updatedStore = loadWell(WELL);
       let endingBalances = updatedStore.cumulativeVolumeReservesUSD;
 
-      assert.stringEquals(BEAN_USD_AMOUNT.times(BigDecimal.fromString("3")).toString(), endingBalances[0].toString());
-      assert.stringEquals(WETH_USD_AMOUNT.times(BigDecimal.fromString("3")).toString(), endingBalances[1].toString());
+      assert.stringEquals(BEAN_USD_AMOUNT.times(BigDecimal.fromString("3.5")).toString(), endingBalances[0].toString());
+      assert.stringEquals(WETH_USD_AMOUNT.times(BigDecimal.fromString("2.5")).toString(), endingBalances[1].toString());
       assert.stringEquals(BEAN_USD_AMOUNT.toString(), updatedStore.cumulativeVolumeUSD.toString());
     });
   });

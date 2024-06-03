@@ -109,11 +109,15 @@ export function handleRemoveLiquidityOneToken(event: RemoveLiquidityOneToken): v
 }
 
 export function handleSwap(event: Swap): void {
+  let well = loadWell(event.address);
   loadOrCreateAccount(event.transaction.from);
 
   checkForSnapshot(event.address, event.block.timestamp, event.block.number);
 
-  updateWellReserves(event.address, [event.params.amountIn, event.params.amountOut.neg()], event.block.timestamp, event.block.number);
+  let deltaReserves = emptyBigIntArray(well.tokens.length);
+  deltaReserves[well.tokens.indexOf(event.params.fromToken)] = event.params.amountIn;
+  deltaReserves[well.tokens.indexOf(event.params.toToken)] = event.params.amountOut.neg();
+  updateWellReserves(event.address, deltaReserves, event.block.timestamp, event.block.number);
 
   updateWellTokenUSDPrices(event.address, event.block.number);
 
@@ -145,7 +149,7 @@ export function handleShift(event: Shift): void {
   let deltaReserves = deltaBigIntArray(event.params.reserves, well.reserves);
   let amountIn = deltaReserves[fromTokenIndex];
 
-  updateWellReserves(event.address, [amountIn, event.params.amountOut.neg()], event.block.timestamp, event.block.number);
+  updateWellReserves(event.address, deltaReserves, event.block.timestamp, event.block.number);
 
   updateWellTokenUSDPrices(event.address, event.block.number);
 
