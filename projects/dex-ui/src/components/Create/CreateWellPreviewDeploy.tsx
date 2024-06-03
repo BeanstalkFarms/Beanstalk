@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useCallback } from "react";
 import styled from "styled-components";
 import {
   Controller,
@@ -22,18 +22,18 @@ import { ERC20Token } from "@beanstalk/sdk";
 import { TokenInput } from "src/components/Swap/TokenInput";
 import { CreateWellButtonRow } from "./shared/CreateWellButtonRow";
 
-type FormValues = DeepRequired<CreateWellStepProps["step4"]> & {
+type FormValues = CreateWellStepProps["step4"] & {
   usingSalt: boolean;
   seedingLiquidity: boolean;
 };
 
 const FormContent = () => {
-  const { salt, liquidity, setStep4, deployWell } = useCreateWell();
+  const { salt, liquidity, setStep4, deployWell, wellTokens } = useCreateWell();
   const methods = useForm<FormValues>({
     defaultValues: {
       usingSalt: !!salt,
       salt: salt,
-      seedingLiquidity: Boolean(liquidity.token1Amount || liquidity.token2Amount),
+      seedingLiquidity: !!(liquidity.token1Amount || liquidity.token2Amount),
       token1Amount: liquidity.token1Amount?.toString(),
       token2Amount: liquidity.token2Amount?.toString()
     }
@@ -48,10 +48,28 @@ const FormContent = () => {
     });
   };
 
-  const onSubmit = async (data: FormValues) => {
-    const k = await deployWell();
-    // console.log(data);
-  };
+  const onSubmit = useCallback(
+    async (values: FormValues) => {
+      setStep4({
+        salt: values.usingSalt ? values.salt : undefined,
+        token1Amount: values.seedingLiquidity ? values.token1Amount : undefined,
+        token2Amount: values.seedingLiquidity ? values.token2Amount : undefined
+      });
+
+      const tk1Amount =
+        values.seedingLiquidity && values.token1Amount
+          ? wellTokens.token1?.amount(values.token1Amount)
+          : undefined;
+
+      const tk2Amount =
+        values.seedingLiquidity && values.token2Amount
+          ? wellTokens.token2?.amount(values.token2Amount)
+          : undefined;
+
+      await deployWell(values.usingSalt ? values.salt : undefined, tk1Amount, tk2Amount);
+    },
+    [setStep4, deployWell, wellTokens]
+  );
 
   return (
     <FormProvider {...methods}>

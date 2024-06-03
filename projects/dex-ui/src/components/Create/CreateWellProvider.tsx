@@ -1,5 +1,5 @@
 import React, { createContext, useCallback, useMemo, useState } from "react";
-import { ERC20Token } from "@beanstalk/sdk-core";
+import { ERC20Token, TokenValue } from "@beanstalk/sdk-core";
 import { DeepRequired } from "react-hook-form";
 import useSdk from "src/utils/sdk/useSdk";
 import useAquifer from "src/utils/sdk/useAquifer";
@@ -55,7 +55,11 @@ export type CreateWellContext = {
   ) => void;
   setStep3: (params: Partial<WellDetails & GoNextParams>) => void;
   setStep4: (params: Partial<LiquidityAmounts & { salt?: number }>) => void;
-  deployWell: () => Promise<any>;
+  deployWell: (
+    _salt?: number,
+    _token1Amount?: TokenValue,
+    _token2Amount?: TokenValue
+  ) => Promise<any>;
 };
 
 export type CreateWellStepProps = DeepRequired<{
@@ -175,64 +179,67 @@ export const CreateWellProvider = ({ children }: { children: React.ReactNode }) 
     return new Pump(sdk.wells, pump, pumpData || "0x");
   }, [sdk.wells, pump, pumpData]);
 
-  const deployWell = useCallback(async () => {
-    const toast = new TransactionToast({
-      loading: "Deploying Well...",
-      error: "Failed to deploy Well",
-      success: "Well deployed successfully"
-    });
-    setDeploying(true);
-    Log.module("wellDeployer").debug("Deploying Well...");
-
-    try {
-      if (!wellImplementation) throw new Error("well implementation not set");
-      if (!wellFunctionObject) throw new Error("well function not set");
-      if (!pumpObject) throw new Error("pump not set");
-      if (!wellTokens.token1) throw new Error("token 1 not set");
-      if (!wellTokens.token2) throw new Error("token 2 not set");
-      if (!wellDetails.name) throw new Error("well name not set");
-      if (!wellDetails.symbol) throw new Error("well symbol not set");
-
-      const deployedWell = await aquifer.boreWellWithOptions({
-        implementationAddress: wellImplementation,
-        tokens: [wellTokens.token1, wellTokens.token2],
-        wellFunction: wellFunctionObject,
-        pumps: [pumpObject],
-        name: wellDetails.name,
-        symbol: wellDetails.symbol,
-        salt
+  const deployWell = useCallback(
+    async (_salt?: number, _token1Amount?: TokenValue, _token2Amount?: TokenValue) => {
+      const toast = new TransactionToast({
+        loading: "Deploying Well...",
+        error: "Failed to deploy Well",
+        success: "Well deployed successfully"
       });
+      setDeploying(true);
+      Log.module("wellDeployer").debug("Deploying Well...");
 
-      toast.confirming(deployedWell);
+      try {
+        if (!wellImplementation) throw new Error("well implementation not set");
+        if (!wellFunctionObject) throw new Error("well function not set");
+        if (!pumpObject) throw new Error("pump not set");
+        if (!wellTokens.token1) throw new Error("token 1 not set");
+        if (!wellTokens.token2) throw new Error("token 2 not set");
+        if (!wellDetails.name) throw new Error("well name not set");
+        if (!wellDetails.symbol) throw new Error("well symbol not set");
 
-      const txn = await deployedWell.wait();
+        const deployedWell = await aquifer.boreWellWithOptions({
+          implementationAddress: wellImplementation,
+          tokens: [wellTokens.token1, wellTokens.token2],
+          wellFunction: wellFunctionObject,
+          pumps: [pumpObject],
+          name: wellDetails.name,
+          symbol: wellDetails.symbol,
+          salt: _salt || salt
+        });
 
-      if (!txn.events?.length) {
-        throw new Error("No events found");
+        toast.confirming(deployedWell);
+
+        const txn = await deployedWell.wait();
+
+        if (!txn.events?.length) {
+          throw new Error("No events found");
+        }
+
+        const boredWellAddress = txn.events[0].address;
+        const well = new Well(sdk.wells, boredWellAddress);
+        await well.loadWell();
+        toast.success();
+
+        return;
+      } catch (e) {
+        toast.error(e);
+        return e;
+      } finally {
+        setDeploying(false);
       }
-
-      const boredWellAddress = txn.events[0].address;
-      const well = new Well(sdk.wells, boredWellAddress);
-      await well.loadWell();
-      toast.success();
-
-      return;
-    } catch (e) {
-      toast.error(e);
-      return e;
-    } finally {
-      setDeploying(false);
-    }
-  }, [
-    wellImplementation,
-    wellFunctionObject,
-    pumpObject,
-    wellTokens,
-    wellDetails,
-    aquifer,
-    salt,
-    sdk.wells
-  ]);
+    },
+    [
+      wellImplementation,
+      wellFunctionObject,
+      pumpObject,
+      wellTokens,
+      wellDetails,
+      aquifer,
+      salt,
+      sdk.wells
+    ]
+  );
 
   return (
     <Context.Provider
