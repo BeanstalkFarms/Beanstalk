@@ -100,29 +100,15 @@ export class Aquifer {
    * @param params
    * @returns txn & well
    */
-  async boreWellWithOptions(params: {
-    implementationAddress: string;
-    tokens: ERC20Token[];
-    wellFunction: WellFunction;
-    pumps: Pump[];
-    symbol?: string;
-    name?: string;
-    salt?: number;
-  }) {
-    const {
-      implementationAddress,
-      tokens,
-      wellFunction,
-      pumps,
-      salt,
-      name: _name,
-      symbol: _symbol
-    } = params;
-
-    validateAddress(implementationAddress, implementationAddress);
-    if (tokens.length < 2) {
-      throw new Error("Well must have at least 2 tokens");
-    }
+  async boreWellWithOptions(
+    implementationAddress: string,
+    tokens: ERC20Token[],
+    wellFunction: WellFunction,
+    pumps: Pump[],
+    _symbol?: string,
+    _name?: string,
+    salt?: number
+  ) {
     if (salt) {
       if (!Number.isInteger(salt)) {
         throw new Error("Salt must be an integer");
@@ -131,18 +117,19 @@ export class Aquifer {
       }
     }
 
-    const tokensAddresses = tokens.map((t) => t.address);
-    const wellFunctionCall = makeCallObject(wellFunction);
-    const pumpCalls = pumps.map((p) => makeCallObject(p));
-
-    const immutableData = encodeWellImmutableData(
+    const immutableData = this.getEncodedWellImmutableData(
       this.address,
-      tokensAddresses,
-      wellFunctionCall,
-      pumpCalls
+      tokens,
+      wellFunction,
+      pumps
     );
-    const { name, symbol } = await getNameAndSymbol(wellFunction, tokens);
-    const initFunctionCall = await encodeWellInitFunctionCall(name, symbol);
+
+    // const
+    const nameAndSymbol = await getNameAndSymbol(wellFunction, tokens);
+    const initFunctionCall = await encodeWellInitFunctionCall(
+      nameAndSymbol.name,
+      nameAndSymbol.symbol
+    );
     const saltBytes32 = salt ? getBytesHexString(salt, 32) : constants.HashZero;
 
     // bore well
@@ -155,6 +142,56 @@ export class Aquifer {
 
     // we return the incomplete txn so that the caller can handle the confirmation
     return deployedWellTxn;
+  }
+
+  async predictWellAddress(
+    implementation: string,
+    tokens: ERC20Token[],
+    wellFunction: WellFunction,
+    pumps: Pump[],
+    salt?: number
+  ) {
+    if (salt) {
+      if (!Number.isInteger(salt)) {
+        throw new Error("Salt must be an integer");
+      } else if (salt < 0) {
+        throw new Error("Salt must be greater than 0");
+      }
+    }
+
+    const immutableData = this.getEncodedWellImmutableData(
+      implementation,
+      tokens,
+      wellFunction,
+      pumps
+    );
+    const saltBytes32 = salt ? getBytesHexString(salt, 32) : constants.HashZero;
+
+    return this.contract.predictWellAddress(implementation, immutableData, saltBytes32);
+  }
+
+  private async getEncodedWellImmutableData(
+    wellImplementation: string,
+    tokens: ERC20Token[],
+    wellFunction: WellFunction,
+    pumps: Pump[]
+  ) {
+    validateAddress(wellImplementation, wellImplementation);
+    validateAddress(wellFunction.address, wellFunction.address);
+
+    if (tokens.length < 2) {
+      throw new Error("Well must have at least 2 tokens");
+    }
+
+    const pumpCalls = pumps.map((p) => {
+      validateAddress(p.address, p.address);
+      return makeCallObject(p);
+    });
+
+    const tokensAddresses = tokens.map((t) => t.address);
+    const wellFunctionCall = makeCallObject(wellFunction);
+
+    return encodeWellImmutableData(this.address, tokensAddresses, wellFunctionCall, pumpCalls);
   }
 
   static async BuildAquifer(sdk: WellsSDK): Promise<Aquifer> {
