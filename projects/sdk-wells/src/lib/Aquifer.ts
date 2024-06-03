@@ -1,12 +1,5 @@
 import { Aquifer as AquiferContract, Aquifer__factory } from "src/constants/generated";
-import {
-  encodeWellImmutableData,
-  encodeWellInitFunctionCall,
-  getBytesHexString,
-  makeCallObject,
-  setReadOnly,
-  validateAddress
-} from "./utils";
+import { encodeWellImmutableData, encodeWellInitFunctionCall, getBytesHexString, makeCallObject, setReadOnly, validateAddress } from "./utils";
 import { WellsSDK } from "./WellsSDK";
 import { WellFunction } from "./WellFunction";
 import { ERC20Token } from "@beanstalk/sdk-core";
@@ -40,12 +33,7 @@ export class Aquifer {
    * @param pumps
    * @returns
    */
-  async boreWell(
-    wellAddress: string,
-    tokens: ERC20Token[],
-    wellFunction: WellFunction,
-    pumps: Pump[]
-  ): Promise<Well> {
+  async boreWell(wellAddress: string, tokens: ERC20Token[], wellFunction: WellFunction, pumps: Pump[]): Promise<Well> {
     if (tokens.length < 2) {
       throw new Error("Well must have at least 2 tokens");
     }
@@ -62,27 +50,17 @@ export class Aquifer {
         ({
           target: p.address,
           data: new Uint8Array()
-        }) as Call
+        } as Call)
     );
 
     // Prepare Data
-    const immutableData = encodeWellImmutableData(
-      this.address,
-      tokensAddresses,
-      wellFunctionCall,
-      pumpCalls
-    );
+    const immutableData = encodeWellImmutableData(this.address, tokensAddresses, wellFunctionCall, pumpCalls);
     const { name, symbol } = await getNameAndSymbol(wellFunction, tokens);
     const initFunctionCall = await encodeWellInitFunctionCall(name, symbol);
     const saltBytes32 = constants.HashZero;
 
     // Bore It
-    const deployedWell = await this.contract.boreWell(
-      wellAddress,
-      immutableData,
-      initFunctionCall,
-      saltBytes32
-    );
+    const deployedWell = await this.contract.boreWell(wellAddress, immutableData, initFunctionCall, saltBytes32);
 
     const txn = await deployedWell.wait();
 
@@ -100,15 +78,7 @@ export class Aquifer {
    * @param params
    * @returns txn & well
    */
-  async boreWellWithOptions(
-    implementationAddress: string,
-    tokens: ERC20Token[],
-    wellFunction: WellFunction,
-    pumps: Pump[],
-    _symbol?: string,
-    _name?: string,
-    salt?: number
-  ) {
+  async boreWellWithOptions(implementationAddress: string, tokens: ERC20Token[], wellFunction: WellFunction, pumps: Pump[], _symbol?: string, _name?: string, salt?: number) {
     if (salt) {
       if (!Number.isInteger(salt)) {
         throw new Error("Salt must be an integer");
@@ -117,40 +87,21 @@ export class Aquifer {
       }
     }
 
-    const immutableData = this.getEncodedWellImmutableData(
-      this.address,
-      tokens,
-      wellFunction,
-      pumps
-    );
+    const immutableData = this.getEncodedWellImmutableData(this.address, tokens, wellFunction, pumps);
 
     // const
     const nameAndSymbol = await getNameAndSymbol(wellFunction, tokens);
-    const initFunctionCall = await encodeWellInitFunctionCall(
-      nameAndSymbol.name,
-      nameAndSymbol.symbol
-    );
+    const initFunctionCall = await encodeWellInitFunctionCall(nameAndSymbol.name, nameAndSymbol.symbol);
     const saltBytes32 = salt ? getBytesHexString(salt, 32) : constants.HashZero;
 
     // bore well
-    const deployedWellTxn = await this.contract.boreWell(
-      implementationAddress,
-      immutableData,
-      initFunctionCall,
-      saltBytes32
-    );
+    const deployedWellTxn = await this.contract.boreWell(implementationAddress, immutableData, initFunctionCall, saltBytes32);
 
     // we return the incomplete txn so that the caller can handle the confirmation
     return deployedWellTxn;
   }
 
-  async predictWellAddress(
-    implementation: string,
-    tokens: ERC20Token[],
-    wellFunction: WellFunction,
-    pumps: Pump[],
-    salt?: number
-  ) {
+  async predictWellAddress(implementation: string, tokens: ERC20Token[], wellFunction: WellFunction, pumps: Pump[], salt?: number) {
     if (salt) {
       if (!Number.isInteger(salt)) {
         throw new Error("Salt must be an integer");
@@ -159,23 +110,13 @@ export class Aquifer {
       }
     }
 
-    const immutableData = this.getEncodedWellImmutableData(
-      implementation,
-      tokens,
-      wellFunction,
-      pumps
-    );
+    const immutableData = this.getEncodedWellImmutableData(implementation, tokens, wellFunction, pumps);
     const saltBytes32 = salt ? getBytesHexString(salt, 32) : constants.HashZero;
 
     return this.contract.predictWellAddress(implementation, immutableData, saltBytes32);
   }
 
-  private async getEncodedWellImmutableData(
-    wellImplementation: string,
-    tokens: ERC20Token[],
-    wellFunction: WellFunction,
-    pumps: Pump[]
-  ) {
+  private async getEncodedWellImmutableData(wellImplementation: string, tokens: ERC20Token[], wellFunction: WellFunction, pumps: Pump[]) {
     validateAddress(wellImplementation, wellImplementation);
     validateAddress(wellFunction.address, wellFunction.address);
 
@@ -201,12 +142,7 @@ export class Aquifer {
   }
 }
 
-async function getNameAndSymbol(
-  wellFunction: WellFunction,
-  tokens: ERC20Token[],
-  _name?: string,
-  _symbol?: string
-) {
+async function getNameAndSymbol(wellFunction: WellFunction, tokens: ERC20Token[], _name?: string, _symbol?: string) {
   let name = _name ?? "";
   let symbol = _symbol ?? "";
 
