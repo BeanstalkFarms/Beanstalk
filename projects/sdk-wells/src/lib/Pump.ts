@@ -8,11 +8,7 @@ export class Pump {
   readonly contract: MultiFlowPump__factory;
   readonly address: string;
 
-  constructor(
-    sdk: WellsSDK,
-    address: string,
-    public readonly data: string
-  ) {
+  constructor(sdk: WellsSDK, address: string, public readonly data: string) {
     this.address = address;
     setReadOnly(this, "sdk", sdk, false);
     const contract = MultiFlowPump__factory.connect(address, sdk.providerOrSigner);
