@@ -1,9 +1,9 @@
 const { expect } = require("chai");
 const { deploy } = require("../../scripts/deploy.js");
 const { getBeanstalk, getBean } = require("../../utils/contracts.js");
-const { WETH, ETH_USD_CHAINLINK_AGGREGATOR } = require("../utils/constants.js");
-const { to6, to18 } = require("../utils/helpers.js");
-const { takeSnapshot, revertToSnapshot } = require("../utils/snapshot.js");
+const { WETH, ETH_USD_CHAINLINK_AGGREGATOR } = require("./utils/constants.js");
+const { to6, to18 } = require("./utils/helpers.js");
+const { takeSnapshot, revertToSnapshot } = require("./utils/snapshot.js");
 const { setEthUsdChainlinkPrice } = require("../../utils/oracle.js");
 const { getAllBeanstalkContracts } = require("../../utils/contracts");
 

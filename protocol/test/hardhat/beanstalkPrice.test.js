@@ -1,9 +1,9 @@
 const { expect } = require("chai");
 const { deploy } = require("../../scripts/deploy.js");
-const { EXTERNAL } = require("../utils/balances.js");
-const { to18, to6, advanceTime } = require("../utils/helpers.js");
-const { BEAN, STABLE_FACTORY, BEAN_ETH_WELL, BEAN_WSTETH_WELL } = require("../utils/constants.js");
-const { takeSnapshot, revertToSnapshot } = require("../utils/snapshot.js");
+const { EXTERNAL } = require("./utils/balances.js");
+const { to18, to6, advanceTime } = require("./utils/helpers.js");
+const { BEAN, STABLE_FACTORY, BEAN_ETH_WELL, BEAN_WSTETH_WELL } = require("./utils/constants.js");
+const { takeSnapshot, revertToSnapshot } = require("./utils/snapshot.js");
 const {
   setReserves,
   impersonateBeanWstethWell,

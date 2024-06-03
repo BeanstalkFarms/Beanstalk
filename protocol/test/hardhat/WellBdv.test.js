@@ -1,7 +1,7 @@
 const { expect } = require("chai");
 const { deploy } = require("../../scripts/deploy.js");
-const { takeSnapshot, revertToSnapshot } = require("../utils/snapshot");
-const { to18, to6 } = require("../utils/helpers.js");
+const { takeSnapshot, revertToSnapshot } = require("./utils/snapshot");
+const { to18, to6 } = require("./utils/helpers.js");
 const { getBeanstalk } = require("../../utils/contracts.js");
 const { whitelistWell, deployMockWellWithMockPump } = require("../../utils/well.js");
 const { getAllBeanstalkContracts } = require("../../utils/contracts.js");

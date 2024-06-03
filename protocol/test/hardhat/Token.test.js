@@ -1,15 +1,10 @@
-const { to18, to6 } = require("../utils/helpers.js");
-const {
-  EXTERNAL,
-  INTERNAL,
-  INTERNAL_EXTERNAL,
-  INTERNAL_TOLERANT
-} = require("../utils/balances.js");
-const { WETH, BEANSTALK } = require("../utils/constants");
+const { to18, to6 } = require("./utils/helpers.js");
+const { EXTERNAL, INTERNAL, INTERNAL_EXTERNAL, INTERNAL_TOLERANT } = require("./utils/balances.js");
+const { WETH, BEANSTALK } = require("./utils/constants");
 const { getWeth } = require("../../utils/contracts.js");
 const { expect } = require("chai");
 const { deploy } = require("../../scripts/deploy.js");
-const { takeSnapshot, revertToSnapshot } = require("../utils/snapshot");
+const { takeSnapshot, revertToSnapshot } = require("./utils/snapshot");
 const { signTokenPermit } = require("../../utils");
 const { getAllBeanstalkContracts } = require("../../utils/contracts");
 

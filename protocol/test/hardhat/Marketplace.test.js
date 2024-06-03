@@ -1,11 +1,11 @@
-const { EXTERNAL, INTERNAL } = require("../utils/balances.js");
-const { Fixed } = require("../utils/priceTypes.js");
+const { EXTERNAL, INTERNAL } = require("./utils/balances.js");
+const { Fixed } = require("./utils/priceTypes.js");
 const { expect, use } = require("chai");
 const { waffleChai } = require("@ethereum-waffle/chai");
 use(waffleChai);
 const { deploy } = require("../../scripts/deploy.js");
-const { BEAN, ZERO_ADDRESS } = require("../utils/constants");
-const { takeSnapshot, revertToSnapshot } = require("../utils/snapshot");
+const { BEAN, ZERO_ADDRESS } = require("./utils/constants");
+const { takeSnapshot, revertToSnapshot } = require("./utils/snapshot");
 const { ethers } = require("hardhat");
 const { getAllBeanstalkContracts } = require("../../utils/contracts");
 const { getBean } = require("../../utils/contracts");

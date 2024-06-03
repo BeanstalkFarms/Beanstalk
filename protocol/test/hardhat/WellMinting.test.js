@@ -1,7 +1,7 @@
 const { expect } = require("chai");
 const { deploy } = require("../../scripts/deploy.js");
-const { takeSnapshot, revertToSnapshot } = require("../utils/snapshot");
-const { to18, to6 } = require("../utils/helpers.js");
+const { takeSnapshot, revertToSnapshot } = require("./utils/snapshot");
+const { to18, to6 } = require("./utils/helpers.js");
 const { getBeanstalk, getBean } = require("../../utils/contracts.js");
 const {
   whitelistWell,
@@ -11,7 +11,7 @@ const {
 const { setEthUsdChainlinkPrice } = require("../../utils/oracle.js");
 const { advanceTime } = require("../../utils/helpers.js");
 const { getAllBeanstalkContracts } = require("../../utils/contracts");
-const { ETH_USD_CHAINLINK_AGGREGATOR, BEAN_ETH_WELL, WETH } = require("../utils/constants.js");
+const { ETH_USD_CHAINLINK_AGGREGATOR, BEAN_ETH_WELL, WETH } = require("./utils/constants.js");
 let user, user2, owner;
 
 let snapshotId;

@@ -3,10 +3,10 @@ const { deploy } = require("../../scripts/deploy.js");
 const { getBeanstalk, getBean, getUsdc } = require("../../utils/contracts.js");
 const { toBN, encodeAdvancedData } = require("../../utils/index.js");
 const { impersonateSigner } = require("../../utils/signer.js");
-const { INTERNAL } = require("../utils/balances.js");
-const { WETH, ZERO_ADDRESS, PIPELINE } = require("../utils/constants.js");
-const { to6, to18 } = require("../utils/helpers.js");
-const { takeSnapshot, revertToSnapshot } = require("../utils/snapshot");
+const { INTERNAL } = require("./utils/balances.js");
+const { WETH, ZERO_ADDRESS, PIPELINE } = require("./utils/constants.js");
+const { to6, to18 } = require("./utils/helpers.js");
+const { takeSnapshot, revertToSnapshot } = require("./utils/snapshot");
 
 let user, user2, owner;
 

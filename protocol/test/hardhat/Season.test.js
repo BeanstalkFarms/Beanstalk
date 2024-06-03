@@ -9,9 +9,9 @@ const {
   WETH,
   BEAN_WSTETH_WELL,
   ZERO_BYTES
-} = require("../utils/constants.js");
-const { to6, to18 } = require("../utils/helpers.js");
-const { takeSnapshot, revertToSnapshot } = require("../utils/snapshot");
+} = require("./utils/constants.js");
+const { to6, to18 } = require("./utils/helpers.js");
+const { takeSnapshot, revertToSnapshot } = require("./utils/snapshot");
 const { deployMockBeanWell } = require("../../utils/well.js");
 const { advanceTime } = require("../../utils/helpers.js");
 const { setEthUsdChainlinkPrice } = require("../../utils/oracle.js");

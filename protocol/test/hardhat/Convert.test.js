@@ -1,12 +1,12 @@
 const { expect } = require("chai");
 const { deploy } = require("../../scripts/deploy.js");
-const { EXTERNAL } = require("../utils/balances.js");
-const { to6, to18 } = require("../utils/helpers.js");
-const { ConvertEncoder } = require("../utils/encoder.js");
-const { takeSnapshot, revertToSnapshot } = require("../utils/snapshot");
+const { EXTERNAL } = require("./utils/balances.js");
+const { to6, to18 } = require("./utils/helpers.js");
+const { ConvertEncoder } = require("./utils/encoder.js");
+const { takeSnapshot, revertToSnapshot } = require("./utils/snapshot");
 const { getAllBeanstalkContracts } = require("../../utils/contracts");
 const { getBean } = require("../../utils/contracts.js");
-const { initalizeUsersForToken, endGermination } = require("../utils/testHelpers.js");
+const { initalizeUsersForToken, endGermination } = require("./utils/testHelpers.js");
 
 let user, user2, owner;
 

@@ -1,12 +1,7 @@
 const { expect } = require("chai");
 const { deploy } = require("../../scripts/deploy.js");
-const {
-  EXTERNAL,
-  INTERNAL,
-  INTERNAL_EXTERNAL,
-  INTERNAL_TOLERANT
-} = require("../utils/balances.js");
-const { to18, to6 } = require("../utils/helpers.js");
+const { EXTERNAL, INTERNAL, INTERNAL_EXTERNAL, INTERNAL_TOLERANT } = require("./utils/balances.js");
+const { to18, to6 } = require("./utils/helpers.js");
 const {
   BEAN,
   USDT,
@@ -17,9 +12,9 @@ const {
   LUSD_3_CURVE,
   LUSD,
   MAX_UINT256
-} = require("../utils/constants");
-const { takeSnapshot, revertToSnapshot } = require("../utils/snapshot");
-const { testIfRpcSet } = require("../utils/test.js");
+} = require("./utils/constants");
+const { takeSnapshot, revertToSnapshot } = require("./utils/snapshot");
+const { testIfRpcSet } = require("./utils/test.js");
 const { getAllBeanstalkContracts } = require("../../utils/contracts.js");
 
 let user, user2, owner;

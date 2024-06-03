@@ -1,8 +1,8 @@
 const { expect } = require("chai");
 const { deploy } = require("../../scripts/deploy.js");
-const { takeSnapshot, revertToSnapshot } = require("../utils/snapshot.js");
+const { takeSnapshot, revertToSnapshot } = require("./utils/snapshot.js");
 const { getBeanstalk } = require("../../utils");
-const { USDC } = require("../utils/constants.js");
+const { USDC } = require("./utils/constants.js");
 const { getAllBeanstalkContracts } = require("../../utils/contracts.js");
 
 describe("USD Oracle", function () {

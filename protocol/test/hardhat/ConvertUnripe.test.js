@@ -1,6 +1,6 @@
 const { expect } = require("chai");
 const { deploy } = require("../../scripts/deploy.js");
-const { EXTERNAL } = require("../utils/balances.js");
+const { EXTERNAL } = require("./utils/balances.js");
 const {
   BEAN,
   UNRIPE_BEAN,
@@ -9,15 +9,15 @@ const {
   BEANSTALK,
   BEAN_ETH_WELL,
   ZERO_BYTES
-} = require("../utils/constants");
-const { ConvertEncoder } = require("../utils/encoder.js");
-const { to18, to6, toStalk } = require("../utils/helpers.js");
-const { takeSnapshot, revertToSnapshot } = require("../utils/snapshot");
+} = require("./utils/constants");
+const { ConvertEncoder } = require("./utils/encoder.js");
+const { to18, to6, toStalk } = require("./utils/helpers.js");
+const { takeSnapshot, revertToSnapshot } = require("./utils/snapshot");
 const { setEthUsdChainlinkPrice } = require("../../utils/oracle.js");
 const { deployBasin } = require("../../scripts/basin.js");
 const { toBN } = require("../../utils/helpers.js");
 const { getAllBeanstalkContracts } = require("../../utils/contracts");
-const { setRecapitalizationParams, endGermination } = require("../utils/testHelpers.js");
+const { setRecapitalizationParams, endGermination } = require("./utils/testHelpers.js");
 const { getBean } = require("../../utils/contracts.js");
 
 let user, user2, owner;

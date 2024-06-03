@@ -1,11 +1,6 @@
 const { expect } = require("chai");
 const { deploy } = require("../../scripts/deploy.js");
-const {
-  EXTERNAL,
-  INTERNAL,
-  INTERNAL_EXTERNAL,
-  INTERNAL_TOLERANT
-} = require("../utils/balances.js");
+const { EXTERNAL, INTERNAL, INTERNAL_EXTERNAL, INTERNAL_TOLERANT } = require("./utils/balances.js");
 const {
   BEAN,
   BEAN_ETH_WELL,
@@ -14,14 +9,14 @@ const {
   ZERO_ADDRESS,
   BEAN_WSTETH_WELL,
   WSTETH
-} = require("../utils/constants");
-const { to18, to6, advanceTime } = require("../utils/helpers.js");
+} = require("./utils/constants");
+const { to18, to6, advanceTime } = require("./utils/helpers.js");
 const {
   deployMockWell,
   whitelistWell,
   deployMockWellWithMockPump
 } = require("../../utils/well.js");
-const { takeSnapshot, revertToSnapshot } = require("../utils/snapshot");
+const { takeSnapshot, revertToSnapshot } = require("./utils/snapshot");
 const {
   setStethEthChainlinkPrice,
   setWstethEthUniswapPrice,

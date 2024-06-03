@@ -1,9 +1,9 @@
-const { to6 } = require("../utils/helpers.js");
-const { EXTERNAL, INTERNAL } = require("../utils/balances.js");
-const { BEANSTALK } = require("../utils/constants");
+const { to6 } = require("./utils/helpers.js");
+const { EXTERNAL, INTERNAL } = require("./utils/balances.js");
+const { BEANSTALK } = require("./utils/constants");
 const { signERC2612Permit } = require("eth-permit");
 const { expect } = require("chai");
-const { takeSnapshot, revertToSnapshot } = require("../utils/snapshot");
+const { takeSnapshot, revertToSnapshot } = require("./utils/snapshot");
 
 let snapshotId;
 

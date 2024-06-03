@@ -1,8 +1,8 @@
 const { expect } = require("chai");
 const { deploy } = require("../../scripts/deploy.js");
 const { impersonateFertilizer } = require("../../scripts/deployFertilizer.js");
-const { EXTERNAL, INTERNAL } = require("../utils/balances.js");
-const { takeSnapshot, revertToSnapshot } = require("../utils/snapshot.js");
+const { EXTERNAL, INTERNAL } = require("./utils/balances.js");
+const { takeSnapshot, revertToSnapshot } = require("./utils/snapshot.js");
 const {
   BEAN,
   USDC,
@@ -11,9 +11,9 @@ const {
   BEANSTALK,
   BARN_RAISE_TOKEN,
   BEAN_WSTETH_WELL
-} = require("../utils/constants.js");
+} = require("./utils/constants.js");
 const { setWstethUsdPrice } = require("../../utils/oracle.js");
-const { to6, to18 } = require("../utils/helpers.js");
+const { to6, to18 } = require("./utils/helpers.js");
 const { deployBasinV1_1 } = require("../../scripts/basinV1_1.js");
 const { getAllBeanstalkContracts } = require("../../utils/contracts.js");
 const { impersonateBeanWstethWell } = require("../../utils/well.js");

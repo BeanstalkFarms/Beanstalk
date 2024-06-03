@@ -7,7 +7,7 @@ const {
   UNRIPE_LP,
   ZERO_BYTES
 } = require("./constants");
-const { getMockBeanstalk } = require("../../utils/contracts");
+const { getMockBeanstalk } = require("../../../utils/contracts");
 const { to6, to18 } = require("./helpers");
 // general beanstalk test helpers to assist with testing.
 

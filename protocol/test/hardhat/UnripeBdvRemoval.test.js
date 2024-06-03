@@ -2,10 +2,10 @@ const { expect } = require("chai");
 const { deploy } = require("../../scripts/deploy.js");
 const { readPrune, toBN } = require("../../utils");
 const { getBeanstalk } = require("../../utils/contracts.js");
-const { EXTERNAL } = require("../utils/balances.js");
-const { BEAN, UNRIPE_LP, UNRIPE_BEAN, ZERO_BYTES } = require("../utils/constants");
-const { to18, toStalk, to6 } = require("../utils/helpers.js");
-const { takeSnapshot, revertToSnapshot } = require("../utils/snapshot");
+const { EXTERNAL } = require("./utils/balances.js");
+const { BEAN, UNRIPE_LP, UNRIPE_BEAN, ZERO_BYTES } = require("./utils/constants");
+const { to18, toStalk, to6 } = require("./utils/helpers.js");
+const { takeSnapshot, revertToSnapshot } = require("./utils/snapshot");
 const { getAllBeanstalkContracts } = require("../../utils/contracts");
 
 let user, user2, owner;

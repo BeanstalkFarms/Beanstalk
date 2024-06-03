@@ -1,25 +1,13 @@
 const { impersonateBeanstalkOwner, impersonateSigner } = require("../../utils/signer.js");
 const { toBN } = require("../../utils");
 const { mintEth } = require("../../utils/mint.js");
-const {
-  BEAN,
-  BEANSTALK,
-  BCM,
-  BEAN_3_CURVE,
-  UNRIPE_BEAN,
-  UNRIPE_LP
-} = require("../utils/constants");
-const { takeSnapshot, revertToSnapshot } = require("../utils/snapshot");
+const { BEAN, BEANSTALK, BCM, BEAN_3_CURVE, UNRIPE_BEAN, UNRIPE_LP } = require("./utils/constants");
+const { takeSnapshot, revertToSnapshot } = require("./utils/snapshot");
 const { upgradeWithNewFacets } = require("../../scripts/diamond");
 const beanstalkABI = require("../../abi/Beanstalk.json");
 const fs = require("fs");
 const { BigNumber } = require("ethers");
-const {
-  EXTERNAL,
-  INTERNAL,
-  INTERNAL_EXTERNAL,
-  INTERNAL_TOLERANT
-} = require("../utils/balances.js");
+const { EXTERNAL, INTERNAL, INTERNAL_EXTERNAL, INTERNAL_TOLERANT } = require("./utils/balances.js");
 const { expect } = require("chai");
 
 const BLOCK_NUMBER = 17301500; //a recent block number. Using this so that the currentStalkDiff in _mowAndMigrateMerkleCheck is exercised

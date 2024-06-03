@@ -5,9 +5,9 @@ const {
   WSTETH_ETH_UNIV3_01_POOL,
   STETH_ETH_CHAINLINK_PRICE_AGGREGATOR,
   WSTETH
-} = require("../utils/constants.js");
-const { to6, to18 } = require("../utils/helpers.js");
-const { takeSnapshot, revertToSnapshot } = require("../utils/snapshot.js");
+} = require("./utils/constants.js");
+const { to6, to18 } = require("./utils/helpers.js");
+const { takeSnapshot, revertToSnapshot } = require("./utils/snapshot.js");
 const { toBN } = require("../../utils/helpers.js");
 const {
   setOracleFailure,
@@ -16,7 +16,7 @@ const {
   setWstethStethRedemptionPrice,
   setEthUsdChainlinkPrice
 } = require("../../utils/oracle.js");
-const { testIfRpcSet } = require("../utils/test.js");
+const { testIfRpcSet } = require("./utils/test.js");
 
 let user, user2, owner;
 

@@ -2,7 +2,11 @@ const { impersonateSigner } = require("../utils");
 const { upgradeWithNewFacets } = require("../scripts/diamond.js");
 const fs = require("fs");
 
-const { L2_WETH_ADDRESS, L2_WSTETH_ADDRESS, L2_USDC_ADDRESS } = require("../test/utils/constants");
+const {
+  L2_WETH_ADDRESS,
+  L2_WSTETH_ADDRESS,
+  L2_USDC_ADDRESS
+} = require("../test/hardhat/utils/constants");
 
 // Files
 const INIT_SUPPLY = "./reseed/data/r8-L2_supply.json";

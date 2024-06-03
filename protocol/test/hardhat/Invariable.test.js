@@ -3,7 +3,7 @@ const { deploy } = require("../../scripts/deploy.js");
 const { upgradeWithNewFacets } = require("../../scripts/diamond");
 const { impersonateBeanstalkOwner, impersonateSigner } = require("../../utils/signer.js");
 const { mintEth, mintBeans } = require("../../utils/mint.js");
-const { EXTERNAL, INTERNAL } = require("../utils/balances.js");
+const { EXTERNAL, INTERNAL } = require("./utils/balances.js");
 const {
   BEAN,
   MAX_UINT256,
@@ -12,15 +12,15 @@ const {
   UNRIPE_BEAN,
   UNRIPE_LP,
   ZERO_BYTES
-} = require("../utils/constants");
+} = require("./utils/constants");
 const { setEthUsdChainlinkPrice, setWstethUsdPrice } = require("../../utils/oracle.js");
 const { deployMockWellWithMockPump } = require("../../utils/well.js");
-const { to6, to18 } = require("../utils/helpers.js");
+const { to6, to18 } = require("./utils/helpers.js");
 const {
   initalizeUsersForToken,
   endGermination,
   setRecapitalizationParams
-} = require("../utils/testHelpers.js");
+} = require("./utils/testHelpers.js");
 
 const { getAllBeanstalkContracts } = require("../../utils/contracts");
 

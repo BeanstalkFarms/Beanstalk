@@ -1,7 +1,7 @@
 const { expect } = require("chai");
 const { deploy } = require("../../scripts/deploy.js");
-const { takeSnapshot, revertToSnapshot } = require("../utils/snapshot");
-const { to6, to18 } = require("../utils/helpers.js");
+const { takeSnapshot, revertToSnapshot } = require("./utils/snapshot");
+const { to6, to18 } = require("./utils/helpers.js");
 const {
   UNRIPE_BEAN,
   UNRIPE_LP,
@@ -11,8 +11,8 @@ const {
   ZERO_BYTES,
   MAX_UINT256,
   BEAN_WSTETH_WELL
-} = require("../utils/constants.js");
-const { EXTERNAL } = require("../utils/balances.js");
+} = require("./utils/constants.js");
+const { EXTERNAL } = require("./utils/balances.js");
 const { ethers } = require("hardhat");
 const { deployMockWellWithMockPump } = require("../../utils/well.js");
 const { setEthUsdChainlinkPrice } = require("../../utils/oracle.js");

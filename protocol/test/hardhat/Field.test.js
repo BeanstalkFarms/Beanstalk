@@ -1,17 +1,17 @@
 const { expect } = require("chai");
 const { deploy } = require("../../scripts/deploy.js");
-const { EXTERNAL, INTERNAL, INTERNAL_TOLERANT } = require("../utils/balances.js");
-const { BEAN } = require("../utils/constants");
-const { to6 } = require("../utils/helpers.js");
-const { MAX_UINT32, MAX_UINT256 } = require("../utils/constants.js");
-const { takeSnapshot, revertToSnapshot } = require("../utils/snapshot");
+const { EXTERNAL, INTERNAL, INTERNAL_TOLERANT } = require("./utils/balances.js");
+const { BEAN } = require("./utils/constants");
+const { to6 } = require("./utils/helpers.js");
+const { MAX_UINT32, MAX_UINT256 } = require("./utils/constants.js");
+const { takeSnapshot, revertToSnapshot } = require("./utils/snapshot");
 const { getAllBeanstalkContracts } = require("../../utils/contracts");
 const {
   initalizeUsersForToken,
   endGermination,
   addMockUnderlying,
   endGerminationWithMockToken
-} = require("../utils/testHelpers.js");
+} = require("./utils/testHelpers.js");
 
 // TODO
 // Tests to add

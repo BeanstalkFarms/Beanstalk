@@ -1,7 +1,7 @@
 const { expect } = require("chai");
 const { deploy } = require("../../scripts/deploy.js");
-const { takeSnapshot, revertToSnapshot } = require("../utils/snapshot");
-const { toStalk, to6, to18 } = require("../utils/helpers.js");
+const { takeSnapshot, revertToSnapshot } = require("./utils/snapshot");
+const { toStalk, to6, to18 } = require("./utils/helpers.js");
 const {
   USDC,
   UNRIPE_BEAN,
@@ -12,7 +12,7 @@ const {
   WSTETH,
   ZERO_BYTES,
   BEAN_WSTETH_WELL
-} = require("../utils/constants.js");
+} = require("./utils/constants.js");
 const { ethers } = require("hardhat");
 const { setEthUsdChainlinkPrice, setWstethUsdPrice } = require("../../utils/oracle.js");
 const { getAllBeanstalkContracts } = require("../../utils/contracts");

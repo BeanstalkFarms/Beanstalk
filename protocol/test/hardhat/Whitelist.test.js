@@ -1,9 +1,9 @@
 const { expect } = require("chai");
 const { deploy } = require("../../scripts/deploy.js");
 const { readPrune, toBN } = require("../../utils/index.js");
-const { UNRIPE_LP, ZERO_ADDRESS } = require("../utils/constants.js");
-const { to18, to6 } = require("../utils/helpers.js");
-const { takeSnapshot, revertToSnapshot } = require("../utils/snapshot.js");
+const { UNRIPE_LP, ZERO_ADDRESS } = require("./utils/constants.js");
+const { to18, to6 } = require("./utils/helpers.js");
+const { takeSnapshot, revertToSnapshot } = require("./utils/snapshot.js");
 const { deployMockWellWithMockPump, deployMockWell } = require("../../utils/well.js");
 const { getAllBeanstalkContracts } = require("../../utils/contracts.js");
 

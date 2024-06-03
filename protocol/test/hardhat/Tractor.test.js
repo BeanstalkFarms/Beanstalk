@@ -2,7 +2,7 @@ const { expect } = require("chai");
 const { deploy } = require("../../scripts/deploy.js");
 const { setEthUsdcPrice, setEthUsdChainlinkPrice, printPrices } = require("../../utils/oracle.js");
 const { getBean, getAllBeanstalkContracts } = require("../../utils/contracts");
-const { setRecapitalizationParams } = require("../utils/testHelpers.js");
+const { setRecapitalizationParams } = require("./utils/testHelpers.js");
 const {
   initContracts,
   signRequisition,
@@ -15,7 +15,7 @@ const {
   draftDepositInternalBeansWithLimit,
   RATIO_FACTOR,
   ConvertKind
-} = require("../utils/tractor.js");
+} = require("./utils/tractor.js");
 const {
   BEAN,
   UNRIPE_LP,
@@ -23,10 +23,10 @@ const {
   BEAN_ETH_WELL,
   WETH,
   ZERO_ADDRESS
-} = require("../utils/constants.js");
-const { EXTERNAL, INTERNAL } = require("../utils/balances.js");
-const { to6, to18, toStalk } = require("../utils/helpers.js");
-const { takeSnapshot, revertToSnapshot } = require("../utils/snapshot");
+} = require("./utils/constants.js");
+const { EXTERNAL, INTERNAL } = require("./utils/balances.js");
+const { to6, to18, toStalk } = require("./utils/helpers.js");
+const { takeSnapshot, revertToSnapshot } = require("./utils/snapshot");
 const { ethers } = require("hardhat");
 const { time, mine } = require("@nomicfoundation/hardhat-network-helpers");
 

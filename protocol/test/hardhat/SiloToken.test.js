@@ -7,16 +7,16 @@ const {
   signSiloDepositTokenPermit,
   signSiloDepositTokensPermit
 } = require("../../utils");
-const { EXTERNAL, INTERNAL } = require("../utils/balances.js");
-const { BEAN, UNRIPE_LP, UNRIPE_BEAN, ZERO_BYTES, MAX_UINT256 } = require("../utils/constants");
-const { to18, to6, toStalk } = require("../utils/helpers.js");
-const { takeSnapshot, revertToSnapshot } = require("../utils/snapshot");
+const { EXTERNAL, INTERNAL } = require("./utils/balances.js");
+const { BEAN, UNRIPE_LP, UNRIPE_BEAN, ZERO_BYTES, MAX_UINT256 } = require("./utils/constants");
+const { to18, to6, toStalk } = require("./utils/helpers.js");
+const { takeSnapshot, revertToSnapshot } = require("./utils/snapshot");
 const {
   initalizeUsersForToken,
   endGermination,
   addMockUnderlying,
   endGerminationWithMockToken
-} = require("../utils/testHelpers.js");
+} = require("./utils/testHelpers.js");
 
 let user, user2, owner;
 

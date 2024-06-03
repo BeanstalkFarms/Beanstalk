@@ -1,6 +1,6 @@
 const { expect } = require("chai");
 const { deploy } = require("../../scripts/deploy.js");
-const { parseJson, to6, to18 } = require("../utils/helpers.js");
+const { parseJson, to6, to18 } = require("./utils/helpers.js");
 const {
   MAX_UINT32,
   UNRIPE_BEAN,
@@ -11,7 +11,7 @@ const {
   WSTETH,
   BEANSTALK_PUMP,
   ZERO_BYTES
-} = require("../utils/constants.js");
+} = require("./utils/constants.js");
 const { getAllBeanstalkContracts } = require("../../utils/contracts.js");
 const { deployMockWellWithMockPump } = require("../../utils/well.js");
 const { setEthUsdChainlinkPrice, setWstethUsdPrice } = require("../../utils/oracle.js");

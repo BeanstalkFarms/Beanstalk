@@ -2,9 +2,9 @@ const { expect } = require("chai");
 const { deploy } = require("../../scripts/deploy.js");
 const { getBeanstalk } = require("../../utils/contracts.js");
 const { signERC2612Permit } = require("eth-permit");
-const { PIPELINE, BEANSTALK } = require("../utils/constants.js");
-const { to6 } = require("../utils/helpers.js");
-const { takeSnapshot, revertToSnapshot } = require("../utils/snapshot");
+const { PIPELINE, BEANSTALK } = require("./utils/constants.js");
+const { to6 } = require("./utils/helpers.js");
+const { takeSnapshot, revertToSnapshot } = require("./utils/snapshot");
 
 let user, user2, owner;
 

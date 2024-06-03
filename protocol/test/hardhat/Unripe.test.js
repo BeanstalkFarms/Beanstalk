@@ -1,9 +1,9 @@
 const { expect } = require("chai");
-const { EXTERNAL, INTERNAL, INTERNAL_TOLERANT } = require("../utils/balances.js");
+const { EXTERNAL, INTERNAL, INTERNAL_TOLERANT } = require("./utils/balances.js");
 const { deploy } = require("../../scripts/deploy.js");
-const { takeSnapshot, revertToSnapshot } = require("../utils/snapshot");
-const { BEAN, UNRIPE_BEAN, UNRIPE_LP, USDT, ZERO_BYTES } = require("../utils/constants");
-const { to6 } = require("../utils/helpers.js");
+const { takeSnapshot, revertToSnapshot } = require("./utils/snapshot");
+const { BEAN, UNRIPE_BEAN, UNRIPE_LP, USDT, ZERO_BYTES } = require("./utils/constants");
+const { to6 } = require("./utils/helpers.js");
 const { getAllBeanstalkContracts } = require("../../utils/contracts");
 
 let user, user2, owner;

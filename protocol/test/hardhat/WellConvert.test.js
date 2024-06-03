@@ -16,10 +16,10 @@ const {
   BEAN_WSTETH_WELL,
   BEANSTALK_PUMP,
   ZERO_BYTES
-} = require("../utils/constants");
-const { ConvertEncoder } = require("../utils/encoder.js");
-const { to6, to18 } = require("../utils/helpers.js");
-const { takeSnapshot, revertToSnapshot } = require("../utils/snapshot");
+} = require("./utils/constants");
+const { ConvertEncoder } = require("./utils/encoder.js");
+const { to6, to18 } = require("./utils/helpers.js");
+const { takeSnapshot, revertToSnapshot } = require("./utils/snapshot");
 
 const {
   setStethEthChainlinkPrice,

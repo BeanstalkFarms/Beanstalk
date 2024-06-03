@@ -1,6 +1,6 @@
 const { expect } = require("chai");
 const { deploy } = require("../../scripts/deploy.js");
-const { takeSnapshot, revertToSnapshot } = require("../utils/snapshot.js");
+const { takeSnapshot, revertToSnapshot } = require("./utils/snapshot.js");
 const {
   BEAN,
   UNRIPE_LP,
@@ -9,8 +9,8 @@ const {
   WETH,
   BEAN_WSTETH_WELL,
   WSTETH
-} = require("../utils/constants.js");
-const { to18, to6 } = require("../utils/helpers.js");
+} = require("./utils/constants.js");
+const { to18, to6 } = require("./utils/helpers.js");
 const {
   deployMockPump,
   getWellContractFactory,

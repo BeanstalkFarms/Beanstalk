@@ -1,11 +1,11 @@
 const { expect } = require("chai");
 const { deploy } = require("../../scripts/deploy.js");
 const { getBean } = require("../../utils/contracts.js");
-const { to6 } = require("../utils/helpers.js");
-const { takeSnapshot, revertToSnapshot } = require("../utils/snapshot.js");
+const { to6 } = require("./utils/helpers.js");
+const { takeSnapshot, revertToSnapshot } = require("./utils/snapshot.js");
 const { toBN } = require("../../utils/helpers.js");
 const { getAllBeanstalkContracts } = require("../../utils/contracts");
-const { ETH_USD_CHAINLINK_AGGREGATOR, BEANSTALK } = require("../utils/constants.js");
+const { ETH_USD_CHAINLINK_AGGREGATOR, BEANSTALK } = require("./utils/constants.js");
 
 let user, user2, owner;
 

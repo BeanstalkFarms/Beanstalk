@@ -2,8 +2,8 @@ const { expect, use } = require("chai");
 const { waffleChai } = require("@ethereum-waffle/chai");
 use(waffleChai);
 const { deploy } = require("../../scripts/deploy.js");
-const { ZERO_ADDRESS } = require("../utils/constants");
-const { takeSnapshot, revertToSnapshot } = require("../utils/snapshot");
+const { ZERO_ADDRESS } = require("./utils/constants");
+const { takeSnapshot, revertToSnapshot } = require("./utils/snapshot");
 const { getAllBeanstalkContracts } = require("../../utils/contracts");
 
 let snapshotId;

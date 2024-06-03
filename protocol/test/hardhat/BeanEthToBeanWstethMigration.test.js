@@ -1,5 +1,5 @@
 const { expect } = require("chai");
-const { takeSnapshot, revertToSnapshot } = require("../utils/snapshot.js");
+const { takeSnapshot, revertToSnapshot } = require("./utils/snapshot.js");
 const {
   BEAN,
   FERTILIZER,
@@ -14,20 +14,20 @@ const {
   PUBLIUS,
   WSTETH,
   BEAN_WSTETH_WELL
-} = require("../utils/constants.js");
+} = require("./utils/constants.js");
 const { setEthUsdcPrice, setEthUsdChainlinkPrice } = require("../../utils/oracle.js");
-const { to6, to18 } = require("../utils/helpers.js");
+const { to6, to18 } = require("./utils/helpers.js");
 const { bipMigrateUnripeBeanEthToBeanSteth, bipSeedGauge } = require("../../scripts/bips.js");
 const { getBeanstalk } = require("../../utils/contracts.js");
 const { impersonateBeanstalkOwner, impersonateSigner } = require("../../utils/signer.js");
 const { ethers } = require("hardhat");
 const { upgradeWithNewFacets } = require("../../scripts/diamond.js");
 const { mintEth, mintBeans } = require("../../utils/mint.js");
-const { ConvertEncoder } = require("../utils/encoder.js");
+const { ConvertEncoder } = require("./utils/encoder.js");
 const { setReserves, getWellContractAt } = require("../../utils/well.js");
 const { toBN } = require("../../utils/helpers.js");
 const { impersonateBean, impersonateWsteth } = require("../../scripts/impersonate.js");
-const { testIfRpcSet } = require("../utils/test.js");
+const { testIfRpcSet } = require("./utils/test.js");
 const { deployBasinV1_1Upgrade, deployBasinV1_1 } = require("../../scripts/basinV1_1.js");
 const { addAdminControls } = require("../../utils/admin.js");
 const {

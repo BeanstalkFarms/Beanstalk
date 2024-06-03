@@ -4,11 +4,11 @@ const { deploy } = require("../../scripts/deploy.js");
 const { getBeanstalk, getBean, getUsdc } = require("../../utils/contracts.js");
 const { toBN, encodeAdvancedData } = require("../../utils/index.js");
 const { impersonateSigner } = require("../../utils/signer.js");
-const { EXTERNAL, INTERNAL } = require("../utils/balances.js");
-const { STABLE_FACTORY, WETH, BEAN, PIPELINE } = require("../utils/constants.js");
-const { to6, to18 } = require("../utils/helpers.js");
+const { EXTERNAL, INTERNAL } = require("./utils/balances.js");
+const { STABLE_FACTORY, WETH, BEAN, PIPELINE } = require("./utils/constants.js");
+const { to6, to18 } = require("./utils/helpers.js");
 const { getAllBeanstalkContracts } = require("../../utils/contracts");
-const { takeSnapshot, revertToSnapshot } = require("../utils/snapshot");
+const { takeSnapshot, revertToSnapshot } = require("./utils/snapshot");
 
 let user, user2, owner;
 
