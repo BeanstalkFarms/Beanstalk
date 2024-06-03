@@ -36,17 +36,21 @@ export type FunctionTokenPumpFormValues = OmitWellTokens & TokenFormValues;
 
 const tokenFormKeys = ["token1", "token2"] as const;
 
+const optionalKeys = ["wellFunctionData", "pumpData"] as const;
+
 const ChooseFunctionAndPumpForm = () => {
-  const { wellTokens, wellFunction, pump, setStep2 } = useCreateWell();
+  const { wellTokens, wellFunction, pump, setStep2, wellFunctionData, pumpData } = useCreateWell();
   const [token1, setToken1] = useState<ERC20Token | undefined>(undefined);
   const [token2, setToken2] = useState<ERC20Token | undefined>(undefined);
 
   const methods = useForm<FunctionTokenPumpFormValues>({
     defaultValues: {
       wellFunction: wellFunction || "",
+      wellFunctionData: wellFunctionData || "",
       token1: wellTokens?.token1?.address || "",
       token2: wellTokens?.token2?.address || "",
-      pump: pump || ""
+      pump: pump || "",
+      pumpData: pumpData || ""
     }
   });
 
@@ -90,8 +94,10 @@ const ChooseFunctionAndPumpForm = () => {
                 <ComponentInputWithCustom
                   toggleMessage="Use a custom Well Implementation instead"
                   path="wellFunction"
+                  dataPath="wellFunctionData"
                   componentType="wellFunctions"
                   emptyValue=""
+                  toggleOpen={!!wellFunctionData}
                 />
               </Flex>
             </SectionWrapper>
@@ -139,16 +145,22 @@ const ChooseFunctionAndPumpForm = () => {
                 <ComponentInputWithCustom
                   componentType="pumps"
                   path="pump"
+                  dataPath="pumpData"
                   toggleMessage="Use a custom Pump"
                   emptyValue=""
                   additional={additionalOptions}
+                  toggleOpen={!!pumpData}
                 />
               </Flex>
             </SectionWrapper>
             {/*
              * Actions
              */}
-            <CreateWellButtonRow onGoBack={handleSave} disabled={!token1 || !token2} />
+            <CreateWellButtonRow
+              onGoBack={handleSave}
+              disabled={!token1 || !token2}
+              optionalKeys={optionalKeys}
+            />
           </Flex>
         </Flex>
       </form>

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useMemo } from "react";
 import { useFormContext, useWatch } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
 import { theme } from "src/utils/ui/theme";
@@ -30,9 +30,11 @@ const ButtonLabels = [
 export const CreateWellButtonRow = ({
   disabled = false,
   valuesRequired = true,
+  optionalKeys,
   onGoBack
 }: {
   disabled?: boolean;
+  optionalKeys?: readonly string[];
   valuesRequired?: boolean;
   onGoBack?: () => void;
 }) => {
@@ -55,9 +57,22 @@ export const CreateWellButtonRow = ({
   };
 
   const noErrors = !Object.keys(errors).length;
-  const hasValues = !valuesRequired || Object.values(values).every(Boolean);
 
-  const goNextEnabled = noErrors && hasValues;
+  const hasRequiredValues = useMemo(() => {
+    if (!valuesRequired) return true;
+    const baseKeys = Object.keys(values);
+    const keys = optionalKeys ? baseKeys.filter((key) => !optionalKeys.includes(key)) : baseKeys;
+    console.log("keys: ", keys);
+
+    return keys.every((key) => Boolean(values[key]));
+  }, [valuesRequired, optionalKeys, values]);
+
+  // const hasValues = !valuesRequired || Object.values(values).every(Boolean);
+
+  console.log("hasRequiredValues", hasRequiredValues);
+  console.log("noErrors", noErrors);
+
+  const goNextEnabled = noErrors && hasRequiredValues;
 
   const goBackLabel = ButtonLabels[step].back || "Back";
   const nextLabel = ButtonLabels[step].next || "Next";

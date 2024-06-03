@@ -9,7 +9,8 @@ import { Text } from "src/components/Typography";
 import { FunctionTokenPumpFormValues } from "../ChooseFunctionAndPump";
 import { WellDetailsFormValues } from "../ChooseComponentNames";
 
-type ViableProps = FunctionTokenPumpFormValues & WellDetailsFormValues;
+type ViableProps = Omit<FunctionTokenPumpFormValues, "wellFunctionData" | "pumpData"> &
+  WellDetailsFormValues;
 
 const progressOrder = {
   // Well Function & Pump Steps
@@ -47,6 +48,7 @@ export const CreateWellFormProgress = () => {
 
     // We assume that 'defaultValue' is always passed into the form. Otherwise
     for (const key in values) {
+      if (!(key in progressLabelMap)) continue;
       const progressKey = progressLabelMap[key as keyof typeof progressLabelMap];
 
       const value = values[key as keyof typeof values];
@@ -54,7 +56,7 @@ export const CreateWellFormProgress = () => {
 
       const isFinished = Boolean(value) && !hasError;
 
-      if (progressKey in progressMap) {
+      if (progressKey && progressKey in progressMap) {
         progressMap[progressKey] = progressMap[progressKey] && isFinished;
       } else {
         progressMap[progressKey] = isFinished;

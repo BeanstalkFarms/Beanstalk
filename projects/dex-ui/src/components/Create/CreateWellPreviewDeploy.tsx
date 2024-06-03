@@ -28,7 +28,7 @@ type FormValues = DeepRequired<CreateWellStepProps["step4"]> & {
 };
 
 const FormContent = () => {
-  const { salt, liquidity, setStep4 } = useCreateWell();
+  const { salt, liquidity, setStep4, deployWell } = useCreateWell();
   const methods = useForm<FormValues>({
     defaultValues: {
       usingSalt: !!salt,
@@ -48,7 +48,8 @@ const FormContent = () => {
     });
   };
 
-  const onSubmit = (data: FormValues) => {
+  const onSubmit = async (data: FormValues) => {
+    const k = await deployWell();
     // console.log(data);
   };
 

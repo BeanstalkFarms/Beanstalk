@@ -1,6 +1,12 @@
 import React, { createContext, useCallback, useMemo, useState } from "react";
 import { ERC20Token } from "@beanstalk/sdk-core";
 import { DeepRequired } from "react-hook-form";
+import useSdk from "src/utils/sdk/useSdk";
+import useAquifer from "src/utils/sdk/useAquifer";
+import { TransactionToast } from "../TxnToast/TransactionToast";
+import { Log } from "src/utils/logger";
+import { WellFunction, WellsSDK } from "@beanstalk/sdk-wells";
+import { CONSTANT_PRODUCT_2_ADDRESS } from "src/utils/addresses";
 
 type GoNextParams = {
   goNext?: boolean;
@@ -25,7 +31,9 @@ export type CreateWellContext = {
   step: number;
   wellImplementation: string | undefined;
   wellFunction: string | undefined;
+  wellFunctionData: string | undefined;
   pump: string | undefined;
+  pumpData: string | undefined;
   wellDetails: Partial<WellDetails>;
   wellTokens: Partial<WellTokensParams>;
   liquidity: Partial<LiquidityAmounts>;
@@ -37,9 +45,11 @@ export type CreateWellContext = {
     params: Partial<
       {
         wellFunction: string;
+        wellFunctionData: string;
         token1: ERC20Token;
         token2: ERC20Token;
         pump: string;
+        pumpData: string;
       } & GoNextParams
     >
   ) => void;
@@ -54,7 +64,9 @@ export type CreateWellStepProps = DeepRequired<{
   };
   step2: {
     wellFunction: CreateWellContext["wellFunction"];
+    wellFunctionData: CreateWellContext["wellFunctionData"];
     pump: CreateWellContext["pump"];
+    pumpData: CreateWellContext["pumpData"];
     wellTokens: CreateWellContext["wellTokens"];
   };
   step3: CreateWellContext["wellDetails"];
@@ -63,9 +75,22 @@ export type CreateWellStepProps = DeepRequired<{
   };
 }>;
 
+const getDeployedWellFunction = async (sdk: WellsSDK, mayDeployedAddress: string) => {
+  if (mayDeployedAddress === CONSTANT_PRODUCT_2_ADDRESS) {
+    return WellFunction.BuildConstantProduct2(sdk);
+  }
+
+  return new WellFunction(sdk, mayDeployedAddress, "0x");
+};
+
 const Context = createContext<CreateWellContext | null>(null);
 
 export const CreateWellProvider = ({ children }: { children: React.ReactNode }) => {
+  const aquifer = useAquifer();
+  const sdk = useSdk();
+
+  const [deploying, setDeploying] = useState(false);
+
   const [step, setStep] = useState<number>(0);
 
   // step 1
@@ -73,7 +98,9 @@ export const CreateWellProvider = ({ children }: { children: React.ReactNode }) 
 
   // step 2
   const [pump, setPump] = useState<string | undefined>();
+  const [pumpData, setPumpData] = useState<string | undefined>();
   const [wellFunction, setWellFunction] = useState<string | undefined>();
+  const [wellFunctionData, setWellFunctionData] = useState<string | undefined>();
   const [wellTokens, setWellTokens] = useState<Partial<WellTokensParams>>({});
 
   // step 3
@@ -123,6 +150,7 @@ export const CreateWellProvider = ({ children }: { children: React.ReactNode }) 
         token1: params.token1,
         token2: params.token2
       });
+      // setWellFunctionData(params.)
 
       params.goNext && methods.goNext();
     },
@@ -146,8 +174,59 @@ export const CreateWellProvider = ({ children }: { children: React.ReactNode }) 
   }, []);
 
   const deployWell = useCallback(async () => {
-    console.log("deploying well...");
-  }, []);
+    const toast = new TransactionToast({
+      loading: "Deploying Well...",
+      error: "Failed to deploy Well",
+      success: "Well deployed successfully"
+    });
+    setDeploying(true);
+    Log.module("wellDeployer").debug("Deploying Well...");
+
+    try {
+      if (!wellImplementation) throw new Error("well implementation not set");
+      if (!wellFunction) throw new Error("well function not set");
+      if (!pump) throw new Error("pump not set");
+      if (!wellTokens.token1) throw new Error("token 1 not set");
+      if (!wellTokens.token2) throw new Error("token 2 not set");
+      if (!wellDetails.name) throw new Error("well name not set");
+      if (!wellDetails.symbol) throw new Error("well symbol not set");
+
+      // const deployedWellFunction = await
+      // make well function
+
+      const deployedWellFunction = await getDeployedWellFunction(sdk.wells, wellFunction).catch(
+        (e) => {
+          console.error("[DEPLOY WELL/WELL FUNCTION]: FAILED to deploy", e);
+          throw new Error("Failed to deploy well function.");
+        }
+      );
+      console.log("deployedWellFunction: ", deployedWellFunction);
+
+      // const well = await Well.DeployViaAquifer(
+      //   sdk.wells,
+      //   aquifer,
+      //   [wellTokens.token1, wellTokens.token2],
+      //   deployedWellFunction,
+      //   [] // FIX ME
+      // );
+      toast.success();
+
+      return;
+    } catch (e) {
+      toast.error(e);
+      return e;
+    }
+  }, [
+    wellImplementation,
+    wellFunction,
+    pump,
+    wellTokens.token1,
+    wellTokens.token2,
+    wellDetails.name,
+    wellDetails.symbol,
+    sdk.wells,
+    aquifer
+  ]);
 
   return (
     <Context.Provider
@@ -155,7 +234,9 @@ export const CreateWellProvider = ({ children }: { children: React.ReactNode }) 
         step,
         wellImplementation,
         wellFunction,
+        wellFunctionData,
         pump,
+        pumpData,
         wellDetails,
         wellTokens,
         liquidity,
