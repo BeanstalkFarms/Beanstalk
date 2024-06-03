@@ -5,7 +5,7 @@ import useSdk from "src/utils/sdk/useSdk";
 import useAquifer from "src/utils/sdk/useAquifer";
 import { TransactionToast } from "../TxnToast/TransactionToast";
 import { Log } from "src/utils/logger";
-import { WellFunction, WellsSDK } from "@beanstalk/sdk-wells";
+import { Pump, WellFunction, WellsSDK } from "@beanstalk/sdk-wells";
 import { CONSTANT_PRODUCT_2_ADDRESS } from "src/utils/addresses";
 
 type GoNextParams = {
@@ -150,8 +150,8 @@ export const CreateWellProvider = ({ children }: { children: React.ReactNode }) 
         token1: params.token1,
         token2: params.token2
       });
-      // setWellFunctionData(params.)
-
+      setWellFunctionData(params.wellFunctionData);
+      setPumpData(params.pumpData);
       params.goNext && methods.goNext();
     },
     [methods]
@@ -173,6 +173,16 @@ export const CreateWellProvider = ({ children }: { children: React.ReactNode }) 
     });
   }, []);
 
+  const wellFunctionObject = useMemo(() => {
+    if (!wellFunction) return undefined;
+    return new WellFunction(sdk.wells, wellFunction, wellFunctionData || "0x");
+  }, [sdk.wells, wellFunction, wellFunctionData]);
+
+  const pumpObject = useMemo(() => {
+    if (!pump) return undefined;
+    return new Pump(sdk.wells, pump, pumpData || "0x");
+  }, [sdk.wells, pump, pumpData]);
+
   const deployWell = useCallback(async () => {
     const toast = new TransactionToast({
       loading: "Deploying Well...",
@@ -193,6 +203,8 @@ export const CreateWellProvider = ({ children }: { children: React.ReactNode }) 
 
       // const deployedWellFunction = await
       // make well function
+
+      const wellFn = new WellFunction(sdk.wells, wellFunction, wellFunctionData || "0x");
 
       const deployedWellFunction = await getDeployedWellFunction(sdk.wells, wellFunction).catch(
         (e) => {

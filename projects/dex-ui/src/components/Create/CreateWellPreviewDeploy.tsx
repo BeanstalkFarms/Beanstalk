@@ -148,7 +148,24 @@ const SaltForm = () => {
           Deploy Well with a Salt
         </Text>
       </Flex>
-      {usingSalt && <TextInputField placeholder="Input Salt" type="number" {...register("salt")} />}
+      {usingSalt && (
+        <TextInputField
+          placeholder="Input Salt"
+          type="number"
+          {...register("salt", {
+            min: {
+              value: 0,
+              message: "Salt cannot be negative"
+            },
+            validate: (formValue) => {
+              if (formValue && !Number.isInteger(formValue)) {
+                return "Salt must be an integer";
+              }
+              return true;
+            }
+          })}
+        />
+      )}
     </Flex>
   );
 };
