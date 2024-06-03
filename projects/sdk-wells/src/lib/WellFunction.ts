@@ -1,10 +1,19 @@
-import { ConstantProduct__factory, ConstantProduct2__factory, IWellFunction, IWellFunction__factory } from "src/constants/generated";
+import {
+  ConstantProduct__factory,
+  ConstantProduct2__factory,
+  IWellFunction,
+  IWellFunction__factory
+} from "src/constants/generated";
 import { WellsSDK } from "./WellsSDK";
 
 export class WellFunction {
   contract: IWellFunction;
 
-  constructor(public readonly sdk: WellsSDK, public readonly address: string, public readonly data: string) {
+  constructor(
+    public readonly sdk: WellsSDK,
+    public readonly address: string,
+    public readonly data: string
+  ) {
     this.sdk = sdk;
     this.contract = IWellFunction__factory.connect(address, sdk.providerOrSigner);
   }
@@ -17,6 +26,16 @@ export class WellFunction {
   async getSymbol(): Promise<string> {
     return this.contract.symbol();
   }
+
+  // getAbi() {
+  //   try {
+  //     const abi = this.contract.interface.format(ethers.utils.FormatTypes.JSON);
+  //     return abi;
+  //   } catch (e) {
+  //     console.error("Failed to parse contract ABI: ", e);
+  //     return {};
+  //   }
+  // }
 
   static async BuildConstantProduct(sdk: WellsSDK): Promise<WellFunction> {
     const constantProductConstract = new ConstantProduct__factory(sdk.signer);
