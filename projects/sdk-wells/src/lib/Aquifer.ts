@@ -161,10 +161,7 @@ export class Aquifer {
 
     const well = new Well(this.sdk, txn.events[0].address);
 
-    return {
-      well: well,
-      contractReceipt: txn
-    };
+    return { well, txn };
   }
 
   static async BuildAquifer(sdk: WellsSDK): Promise<Aquifer> {
