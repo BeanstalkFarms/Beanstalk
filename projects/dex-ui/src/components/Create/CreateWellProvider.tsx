@@ -6,6 +6,8 @@ import useAquifer from "src/utils/sdk/useAquifer";
 import { TransactionToast } from "../TxnToast/TransactionToast";
 import { Log } from "src/utils/logger";
 import { Pump, Well, WellFunction } from "@beanstalk/sdk-wells";
+import { useAccount } from "wagmi";
+import { ensureAllowance, hasMinimumAllowance } from "../Liquidity/allowance";
 
 type GoNextParams = {
   goNext?: boolean;
@@ -82,6 +84,7 @@ export type CreateWellStepProps = DeepRequired<{
 const Context = createContext<CreateWellContext | null>(null);
 
 export const CreateWellProvider = ({ children }: { children: React.ReactNode }) => {
+  const { address: walletAddress } = useAccount();
   const aquifer = useAquifer();
   const sdk = useSdk();
 
@@ -179,6 +182,55 @@ export const CreateWellProvider = ({ children }: { children: React.ReactNode }) 
     return new Pump(sdk.wells, pump, pumpData || "0x");
   }, [sdk.wells, pump, pumpData]);
 
+  const handleSeedLiquidity = useCallback(
+    async (
+      well: Well,
+      token1: ERC20Token,
+      token2: ERC20Token,
+      token1Amount: TokenValue,
+      token2Amount: TokenValue
+    ) => {
+      if (!walletAddress) return;
+      if (token1Amount.lte(0) && token2Amount.lte(0)) return;
+
+      const toast = new TransactionToast({
+        loading: "Seeding Liquidity...",
+        error: "Seeding Liquidity failed",
+        success: "Liquidity seeded"
+      });
+
+      const amountInputs = [token1Amount, token2Amount];
+
+      try {
+        await ensureAllowance(walletAddress, well.address, token1, token1Amount);
+        await ensureAllowance(walletAddress, well.address, token2, token2Amount);
+        const quote = await well.addLiquidityQuote(amountInputs);
+        const gasEstimate = well.addLiquidityGasEstimate(amountInputs, quote, walletAddress);
+        const quoteLessSlippage = quote.subSlippage(0.05); // TODO: add slippage to form
+
+        const addLiquidityTxn = await well.addLiquidity(
+          amountInputs,
+          quoteLessSlippage,
+          walletAddress,
+          undefined,
+          {
+            gasLimit: (await gasEstimate).mul(1.2).toBigNumber()
+          }
+        );
+        toast.confirming(addLiquidityTxn);
+        const receipt = await addLiquidityTxn.wait();
+
+        toast.success(receipt);
+      } catch (e) {
+        toast.error(e);
+        return;
+      } finally {
+        setDeploying(false);
+      }
+    },
+    [walletAddress]
+  );
+
   const deployWell = useCallback(
     async (_salt?: number, _token1Amount?: TokenValue, _token2Amount?: TokenValue) => {
       const toast = new TransactionToast({
@@ -186,21 +238,28 @@ export const CreateWellProvider = ({ children }: { children: React.ReactNode }) 
         error: "Failed to deploy Well",
         success: "Well deployed successfully"
       });
+      let wellDeployed = false;
+
       setDeploying(true);
       Log.module("wellDeployer").debug("Deploying Well...");
 
       try {
+        if (!walletAddress) throw new Error("Wallet not connected");
         if (!wellImplementation) throw new Error("well implementation not set");
         if (!wellFunctionObject) throw new Error("well function not set");
         if (!pumpObject) throw new Error("pump not set");
-        if (!wellTokens.token1) throw new Error("token 1 not set");
-        if (!wellTokens.token2) throw new Error("token 2 not set");
+        const token1 = wellTokens.token1;
+        const token2 = wellTokens.token2;
+
+        if (!token1) throw new Error("token 1 not set");
+        if (!token2) throw new Error("token 2 not set");
+
         if (!wellDetails.name) throw new Error("well name not set");
         if (!wellDetails.symbol) throw new Error("well symbol not set");
 
         const deployedWell = await aquifer.boreWellWithOptions({
           implementationAddress: wellImplementation,
-          tokens: [wellTokens.token1, wellTokens.token2],
+          tokens: [token1, token2],
           wellFunction: wellFunctionObject,
           pumps: [pumpObject],
           name: wellDetails.name,
@@ -216,20 +275,31 @@ export const CreateWellProvider = ({ children }: { children: React.ReactNode }) 
           throw new Error("No events found");
         }
 
+        wellDeployed = true;
+
         const boredWellAddress = txn.events[0].address;
         const well = new Well(sdk.wells, boredWellAddress);
         await well.loadWell();
         toast.success();
 
+        // do this separately...
+        if (_token1Amount?.gte(0) && _token2Amount?.gte(0)) {
+          await handleSeedLiquidity(well, token1, token2, _token1Amount, _token2Amount);
+        }
+
         return;
       } catch (e) {
-        toast.error(e);
+        if (!wellDeployed) {
+          toast.error(e);
+        }
         return e;
       } finally {
         setDeploying(false);
       }
     },
     [
+      handleSeedLiquidity,
+      walletAddress,
       wellImplementation,
       wellFunctionObject,
       pumpObject,
@@ -267,6 +337,34 @@ export const CreateWellProvider = ({ children }: { children: React.ReactNode }) 
     </Context.Provider>
   );
 };
+
+
+// const handleDeployWell = async (params: {
+//   toast: TransactionToast;
+//   walletAddress: string;
+//   implementationAddress: string;
+//   wellFunction: WellFunction;
+//   tokens: {
+//     token: ERC20Token;
+//     amount?: TokenValue;
+//   }[];
+//   pumps: Pump[];
+//   name: string;
+//   symbol: string;
+//   salt: number;
+// }) => {
+//   const toast = new TransactionToast({
+//     loading: "Deploying Well...",
+//     error: "Failed to deploy Well",
+//     success: "Well deployed successfully"
+//   });
+
+//   try {
+    
+//   } catch (e) {
+
+//   }
+// };
 
 export const useCreateWell = () => {
   const context = React.useContext(Context);
