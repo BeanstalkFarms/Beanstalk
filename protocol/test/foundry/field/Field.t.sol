@@ -450,7 +450,7 @@ contract FieldTest is TestHelper {
         for (uint256 i; i < sows; i++) {
             sowAmountForFarmer(farmers[0], sowAmount);
         }
-        verifyPlotIndexAndPlotLengths(farmers[0], sows);
+        verifyPlotIndexAndPlotLengths(farmers[0], activeField, sows);
         uint256 pods = (sowAmount * 101) / 100;
         MockFieldFacet.Plot[] memory plots = field.getPlotsFromAccount(farmers[0], activeField);
         for (uint256 i; i < sows; i++) {
@@ -483,7 +483,7 @@ contract FieldTest is TestHelper {
             ends
         );
         vm.stopPrank();
-        verifyPlotIndexAndPlotLengths(farmers[0], sows - transfers);
+        verifyPlotIndexAndPlotLengths(farmers[0], activeField, sows - transfers);
 
         // upon a transfer/burn, the list of plots are not ordered.
         plots = field.getPlotsFromAccount(farmers[0], activeField);
@@ -492,7 +492,7 @@ contract FieldTest is TestHelper {
             assertEq(plots[i].pods, pods, "pods");
         }
 
-        verifyPlotIndexAndPlotLengths(farmers[1], transfers);
+        verifyPlotIndexAndPlotLengths(farmers[1], activeField, transfers);
 
         plots = field.getPlotsFromAccount(farmers[1], activeField);
         for (uint i; i < plots.length; i++) {
@@ -509,7 +509,7 @@ contract FieldTest is TestHelper {
         uint256[] memory accountPlots = field.getPlotIndexesFromAccount(farmers[0], activeField);
         vm.prank(farmers[0]);
         field.harvest(activeField, accountPlots, LibTransfer.To.EXTERNAL);
-        verifyPlotIndexAndPlotLengths(farmers[0], 0);
+        verifyPlotIndexAndPlotLengths(farmers[0], activeField, 0);
         // verify that plots are empty.
         plots = field.getPlotsFromAccount(farmers[0], activeField);
 
@@ -517,7 +517,46 @@ contract FieldTest is TestHelper {
         vm.prank(farmers[1]);
         field.harvest(activeField, accountPlots, LibTransfer.To.EXTERNAL);
         // verify that plots are empty.
-        verifyPlotIndexAndPlotLengths(farmers[1], 0);
+        verifyPlotIndexAndPlotLengths(farmers[1], activeField, 0);
+    }
+
+    function test_multipleFields(uint256 sowsPerField, uint256 sowAmount) public {
+        uint256 sowAmount = bound(sowAmount, 1, type(uint32).max);
+        uint256 sowsPerField = bound(sowsPerField, 1, 20);
+
+        vm.prank(deployer);
+        field.addField();
+        vm.prank(deployer);
+        field.addField();
+
+        for (uint256 j; j < field.fieldCount(); j++) {
+            vm.prank(deployer);
+            field.setActiveField(j, 101);
+            uint256 activeField = field.activeField();
+            for (uint256 i; i < sowsPerField; i++) {
+                sowAmountForFarmer(farmers[0], sowAmount);
+            }
+        }
+
+        uint256 pods = (sowAmount * 101) / 100;
+        MockFieldFacet.Plot[] memory plots;
+        for (uint256 j; j < field.fieldCount(); j++) {
+            verifyPlotIndexAndPlotLengths(farmers[0], j, sowsPerField);
+            plots = field.getPlotsFromAccount(farmers[0], j);
+            for (uint256 i; i < sowsPerField; i++) {
+                assertEq(plots[i].index, i * pods, "plots.index unexpected");
+                assertEq(plots[i].pods, pods, "plot.pods unexpected");
+            }
+        }
+
+        uint256 activeField = field.activeField();
+        field.incrementTotalHarvestableE(activeField, 1000 * pods);
+        uint256[] memory accountPlots = field.getPlotIndexesFromAccount(farmers[0], activeField);
+        vm.prank(farmers[0]);
+        field.harvest(activeField, accountPlots, LibTransfer.To.EXTERNAL);
+        verifyPlotIndexAndPlotLengths(farmers[0], activeField, 0);
+
+        assertGt(field.fieldCount(), 1, "field count");
     }
 
     // field helpers.
@@ -534,11 +573,14 @@ contract FieldTest is TestHelper {
         field.sow(sowAmount, 0, LibTransfer.From.EXTERNAL);
     }
 
-    function verifyPlotIndexAndPlotLengths(address farmer, uint256 expectedLength) public view {
-        uint256 fieldId = field.activeField();
+    function verifyPlotIndexAndPlotLengths(
+        address farmer,
+        uint256 fieldId,
+        uint256 expectedLength
+    ) public view {
         uint256[] memory plotIndexes = field.getPlotIndexesFromAccount(farmer, fieldId);
         MockFieldFacet.Plot[] memory plots = field.getPlotsFromAccount(farmer, fieldId);
-        assertEq(plotIndexes.length, plots.length, "plotIndexes length");
-        assertEq(plotIndexes.length, expectedLength, "plotIndexes length");
+        assertEq(plotIndexes.length, plots.length, "plotIndexes length != plots length");
+        assertEq(plotIndexes.length, expectedLength, "plotIndexes length unexpected");
     }
 }
