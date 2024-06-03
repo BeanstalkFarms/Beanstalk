@@ -42,31 +42,30 @@ const FormContent = () => {
   const handleSave = () => {
     const values = methods.getValues();
     setStep4({
-      salt: values.salt,
-      token1Amount: values.token1Amount,
-      token2Amount: values.token2Amount
+      salt: values.usingSalt ? values.salt : undefined,
+      token1Amount: values.seedingLiquidity ? values.token1Amount : undefined,
+      token2Amount: values.seedingLiquidity ? values.token2Amount : undefined
     });
   };
 
   const onSubmit = useCallback(
     async (values: FormValues) => {
+      const _salt = values.usingSalt ? values.salt : undefined;
+      const _tk1Amount =
+        values.seedingLiquidity && values.token1Amount ? values.token1Amount : undefined;
+      const _tk2Amount =
+        values.seedingLiquidity && values.token2Amount ? values.token2Amount : undefined;
+
       setStep4({
-        salt: values.usingSalt ? values.salt : undefined,
-        token1Amount: values.seedingLiquidity ? values.token1Amount : undefined,
-        token2Amount: values.seedingLiquidity ? values.token2Amount : undefined
+        salt: _salt,
+        token1Amount: _tk1Amount,
+        token2Amount: _tk2Amount
       });
 
-      const tk1Amount =
-        values.seedingLiquidity && values.token1Amount
-          ? wellTokens.token1?.amount(values.token1Amount)
-          : undefined;
+      const tk1Amount = _tk1Amount ? wellTokens.token1?.amount(values.token1Amount) : undefined;
+      const tk2Amount = _tk2Amount ? wellTokens.token2?.amount(values.token2Amount) : undefined;
 
-      const tk2Amount =
-        values.seedingLiquidity && values.token2Amount
-          ? wellTokens.token2?.amount(values.token2Amount)
-          : undefined;
-
-      await deployWell(values.usingSalt ? values.salt : undefined, tk1Amount, tk2Amount);
+      await deployWell(_salt, tk1Amount, tk2Amount);
     },
     [setStep4, deployWell, wellTokens]
   );
