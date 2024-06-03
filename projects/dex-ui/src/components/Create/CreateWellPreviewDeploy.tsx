@@ -1,13 +1,6 @@
 import React, { useCallback } from "react";
 import styled from "styled-components";
-import {
-  Controller,
-  DeepRequired,
-  FormProvider,
-  useForm,
-  useFormContext,
-  useWatch
-} from "react-hook-form";
+import { Controller, FormProvider, useForm, useFormContext, useWatch } from "react-hook-form";
 import { theme } from "src/utils/ui/theme";
 
 import { SwitchField, TextInputField } from "src/components/Form";
@@ -34,8 +27,8 @@ const FormContent = () => {
       usingSalt: !!salt,
       salt: salt,
       seedingLiquidity: !!(liquidity.token1Amount || liquidity.token2Amount),
-      token1Amount: liquidity.token1Amount?.toString(),
-      token2Amount: liquidity.token2Amount?.toString()
+      token1Amount: liquidity.token1Amount?.toString() || "",
+      token2Amount: liquidity.token2Amount?.toString() || ""
     }
   });
 
