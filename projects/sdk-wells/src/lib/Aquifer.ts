@@ -146,22 +146,15 @@ export class Aquifer {
     const saltBytes32 = salt ? getBytesHexString(salt, 32) : constants.HashZero;
 
     // bore well
-    const deployedWell = await this.contract.boreWell(
+    const deployedWellTxn = await this.contract.boreWell(
       implementationAddress,
       immutableData,
       initFunctionCall,
       saltBytes32
     );
 
-    const txn = await deployedWell.wait();
-
-    if (!txn.events?.length) {
-      throw new Error("No events found");
-    }
-
-    const well = new Well(this.sdk, txn.events[0].address);
-
-    return { well, txn };
+    // we return the incomplete txn so that the caller can handle the confirmation
+    return deployedWellTxn;
   }
 
   static async BuildAquifer(sdk: WellsSDK): Promise<Aquifer> {
