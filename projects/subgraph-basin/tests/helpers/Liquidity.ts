@@ -1,10 +1,11 @@
-import { BigInt } from "@graphprotocol/graph-ts";
+import { BigDecimal, BigInt } from "@graphprotocol/graph-ts";
 import { Deposit, Withdraw } from "../../generated/schema";
 import { BEAN_ERC20, WETH } from "../../../subgraph-core/utils/Constants";
 import { handleAddLiquidity, handleRemoveLiquidity, handleRemoveLiquidityOneToken, handleSync } from "../../src/WellHandler";
 import { BEAN_SWAP_AMOUNT, SWAP_ACCOUNT, WELL, WELL_LP_AMOUNT, WETH_SWAP_AMOUNT } from "./Constants";
 import { createContractCallMocks } from "./Functions";
 import { createAddLiquidityEvent, createRemoveLiquidityEvent, createRemoveLiquidityOneTokenEvent, createSyncEvent } from "./Well";
+import { ONE_BD } from "../../../subgraph-core/utils/Decimals";
 
 export function mockAddLiquidity(tokenAmounts: BigInt[] = [BEAN_SWAP_AMOUNT, WETH_SWAP_AMOUNT]): string {
   createContractCallMocks();
@@ -27,15 +28,15 @@ export function mockRemoveLiquidityOneBean(): string {
   return newEvent.transaction.hash.toHexString() + "-" + newEvent.logIndex.toString();
 }
 
-export function mockRemoveLiquidityOneWeth(): string {
-  createContractCallMocks();
+export function mockRemoveLiquidityOneWeth(beanPriceMultiple: BigDecimal = ONE_BD): string {
+  createContractCallMocks(beanPriceMultiple);
   let newEvent = createRemoveLiquidityOneTokenEvent(WELL, SWAP_ACCOUNT, WELL_LP_AMOUNT, WETH, WETH_SWAP_AMOUNT);
   handleRemoveLiquidityOneToken(newEvent);
   return newEvent.transaction.hash.toHexString() + "-" + newEvent.logIndex.toString();
 }
 
-export function mockSync(newReserves: BigInt[], lpAmountOut: BigInt): string {
-  createContractCallMocks();
+export function mockSync(newReserves: BigInt[], lpAmountOut: BigInt, beanPriceMultiple: BigDecimal = ONE_BD): string {
+  createContractCallMocks(beanPriceMultiple);
   let newSyncEvent = createSyncEvent(WELL, SWAP_ACCOUNT, newReserves, lpAmountOut);
   handleSync(newSyncEvent);
   return newSyncEvent.transaction.hash.toHexString() + "-" + newSyncEvent.logIndex.toString();

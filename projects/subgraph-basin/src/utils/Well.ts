@@ -147,6 +147,8 @@ export function updateWellVolumesAfterLiquidity(
     const usdAmount = toDecimal(amounts[i].abs(), tokenInfo.decimals).times(tokenInfo.lastPriceUSD);
     usdAmounts.push(usdAmount);
 
+    log.debug("usd amt {} {}", [amounts[i].abs().toString(), tokenInfo.lastPriceUSD.toString()]);
+
     // Update volume for individual reserves
     let volumeReserves = well.cumulativeVolumeReserves;
     let volumeReservesUSD = well.cumulativeVolumeReservesUSD;
@@ -174,12 +176,12 @@ export function updateWellVolumesAfterLiquidity(
   well.save();
 }
 
-export function updateWellTokenBalances(wellAddress: Address, inputTokenAmounts: BigInt[], timestamp: BigInt, blockNumber: BigInt): void {
+export function updateWellReserves(wellAddress: Address, additiveAmounts: BigInt[], timestamp: BigInt, blockNumber: BigInt): void {
   let well = loadWell(wellAddress);
   let balances = well.reserves;
 
   for (let i = 0; i < balances.length; i++) {
-    balances[i] = balances[i].plus(inputTokenAmounts[i]);
+    balances[i] = balances[i].plus(additiveAmounts[i]);
   }
 
   well.reserves = balances;

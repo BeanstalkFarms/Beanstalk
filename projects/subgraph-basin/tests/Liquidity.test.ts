@@ -68,15 +68,15 @@ describe("Well Entity: Liquidity Event Tests", () => {
     });
     test("Token volumes updated", () => {
       let updatedStore = loadWell(WELL);
-      assert.bigIntEquals(updatedStore.cumulativeVolumeReserves[0], BEAN_SWAP_AMOUNT);
-      assert.bigIntEquals(updatedStore.cumulativeVolumeReserves[1], WETH_SWAP_AMOUNT);
-      assert.stringEquals(updatedStore.cumulativeVolumeReservesUSD[0].toString(), BEAN_USD_AMOUNT.toString());
-      assert.stringEquals(updatedStore.cumulativeVolumeReservesUSD[1].toString(), WETH_USD_AMOUNT.toString());
+      assert.bigIntEquals(BEAN_SWAP_AMOUNT, updatedStore.cumulativeVolumeReserves[0]);
+      assert.bigIntEquals(WETH_SWAP_AMOUNT, updatedStore.cumulativeVolumeReserves[1]);
+      assert.stringEquals(BEAN_USD_AMOUNT.toString(), updatedStore.cumulativeVolumeReservesUSD[0].toString());
+      assert.stringEquals(WETH_USD_AMOUNT.toString(), updatedStore.cumulativeVolumeReservesUSD[1].toString());
     });
     test("Cumulative volume updated (CP)", () => {
       let updatedStore = loadWell(WELL);
       const volumeUsd = liquidityEventUSDVolumeCP([BEAN_USD_AMOUNT, WETH_USD_AMOUNT]);
-      assert.stringEquals(updatedStore.cumulativeVolumeUSD.toString(), volumeUsd.toString());
+      assert.stringEquals(volumeUsd.toString(), updatedStore.cumulativeVolumeUSD.toString());
     });
   });
 
@@ -107,15 +107,15 @@ describe("Well Entity: Liquidity Event Tests", () => {
     });
     test("Token volumes updated", () => {
       let updatedStore = loadWell(WELL);
-      assert.bigIntEquals(updatedStore.cumulativeVolumeReserves[0], BEAN_SWAP_AMOUNT);
-      assert.bigIntEquals(updatedStore.cumulativeVolumeReserves[1], ZERO_BI);
-      assert.stringEquals(updatedStore.cumulativeVolumeReservesUSD[0].toString(), BEAN_USD_AMOUNT.toString());
-      assert.stringEquals(updatedStore.cumulativeVolumeReservesUSD[1].toString(), "0");
+      assert.bigIntEquals(BEAN_SWAP_AMOUNT, updatedStore.cumulativeVolumeReserves[0]);
+      assert.bigIntEquals(ZERO_BI, updatedStore.cumulativeVolumeReserves[1]);
+      assert.stringEquals(BEAN_USD_AMOUNT.toString(), updatedStore.cumulativeVolumeReservesUSD[0].toString());
+      assert.stringEquals("0", updatedStore.cumulativeVolumeReservesUSD[1].toString());
     });
     test("Cumulative volume updated (CP)", () => {
       let updatedStore = loadWell(WELL);
       const volumeUsd = liquidityEventUSDVolumeCP([BEAN_USD_AMOUNT, ZERO_BD]);
-      assert.stringEquals(updatedStore.cumulativeVolumeUSD.toString(), volumeUsd.toString());
+      assert.stringEquals(volumeUsd.toString(), updatedStore.cumulativeVolumeUSD.toString());
     });
   });
 
@@ -147,23 +147,24 @@ describe("Well Entity: Liquidity Event Tests", () => {
     });
     test("Token volumes updated", () => {
       let updatedStore = loadWell(WELL);
-      assert.bigIntEquals(updatedStore.cumulativeVolumeReserves[0], BEAN_SWAP_AMOUNT);
-      assert.bigIntEquals(updatedStore.cumulativeVolumeReserves[1], WETH_SWAP_AMOUNT);
-      assert.stringEquals(updatedStore.cumulativeVolumeReservesUSD[0].toString(), BEAN_USD_AMOUNT.toString());
-      assert.stringEquals(updatedStore.cumulativeVolumeReservesUSD[1].toString(), WETH_USD_AMOUNT.toString());
+      assert.bigIntEquals(BEAN_SWAP_AMOUNT, updatedStore.cumulativeVolumeReserves[0]);
+      assert.bigIntEquals(WETH_SWAP_AMOUNT, updatedStore.cumulativeVolumeReserves[1]);
+      assert.stringEquals(BEAN_USD_AMOUNT.toString(), updatedStore.cumulativeVolumeReservesUSD[0].toString());
+      assert.stringEquals(WETH_USD_AMOUNT.toString(), updatedStore.cumulativeVolumeReservesUSD[1].toString());
     });
     test("Cumulative volume updated (CP)", () => {
       let updatedStore = loadWell(WELL);
       let volumeUsd = liquidityEventUSDVolumeCP([BEAN_USD_AMOUNT.div(BD_2), WETH_USD_AMOUNT.div(BD_2)]);
       volumeUsd = volumeUsd.plus(liquidityEventUSDVolumeCP([BEAN_USD_AMOUNT.div(BD_2), WETH_USD_AMOUNT.div(BD_2)]));
-      assert.stringEquals(updatedStore.cumulativeVolumeUSD.toString(), volumeUsd.toString());
+      assert.stringEquals(volumeUsd.toString(), updatedStore.cumulativeVolumeUSD.toString());
     });
   });
 
   describe("Sync (Add Liquidity) - One", () => {
     beforeEach(() => {
       mockAddLiquidity([BEAN_SWAP_AMOUNT.div(BI_2), WETH_SWAP_AMOUNT.div(BI_2)]);
-      mockSync([BEAN_SWAP_AMOUNT.div(BI_2), WETH_SWAP_AMOUNT], BI_10);
+      // WETH is doubled so the bean price is also doubled
+      mockSync([BEAN_SWAP_AMOUNT.div(BI_2), WETH_SWAP_AMOUNT], BI_10, BigDecimal.fromString("2"));
     });
     test("Deposit counter incremented", () => {
       assert.fieldEquals(WELL_ENTITY_TYPE, WELL.toHexString(), "cumulativeDepositCount", "2");
@@ -179,34 +180,32 @@ describe("Well Entity: Liquidity Event Tests", () => {
       let updatedStore = loadWell(WELL);
       let endingBalances = updatedStore.reservesUSD;
 
-      assert.stringEquals(BEAN_USD_AMOUNT.div(BD_2).toString(), endingBalances[0].toString(), "BEAN");
-      assert.stringEquals(WETH_USD_AMOUNT.toString(), endingBalances[1].toString(), "WETH");
-      assert.stringEquals(
-        BEAN_USD_AMOUNT.div(BD_2).plus(WETH_USD_AMOUNT).toString(),
-        updatedStore.totalLiquidityUSD.toString(),
-        "Liquidity"
-      );
+      // WETH was doubled from the initial, so the bean price has also doubled
+      assert.stringEquals(BEAN_USD_AMOUNT.toString(), endingBalances[0].toString());
+      assert.stringEquals(WETH_USD_AMOUNT.toString(), endingBalances[1].toString());
+      assert.stringEquals(BEAN_USD_AMOUNT.plus(WETH_USD_AMOUNT).toString(), updatedStore.totalLiquidityUSD.toString());
     });
     test("Liquidity Token balance", () => {
       assert.fieldEquals(WELL_ENTITY_TYPE, WELL.toHexString(), "lpTokenSupply", WELL_LP_AMOUNT.plus(BI_10).toString());
     });
     test("Token volumes updated", () => {
       let updatedStore = loadWell(WELL);
-      assert.bigIntEquals(updatedStore.cumulativeVolumeReserves[0], BEAN_SWAP_AMOUNT.div(BI_2));
-      assert.bigIntEquals(updatedStore.cumulativeVolumeReserves[1], WETH_SWAP_AMOUNT);
-      assert.stringEquals(updatedStore.cumulativeVolumeReservesUSD[0].toString(), BEAN_USD_AMOUNT.div(BD_2).toString());
-      assert.stringEquals(updatedStore.cumulativeVolumeReservesUSD[1].toString(), WETH_USD_AMOUNT.toString());
+      assert.bigIntEquals(BEAN_SWAP_AMOUNT.div(BI_2), updatedStore.cumulativeVolumeReserves[0]);
+      assert.bigIntEquals(WETH_SWAP_AMOUNT, updatedStore.cumulativeVolumeReserves[1]);
+      assert.stringEquals(BEAN_USD_AMOUNT.div(BD_2).toString(), updatedStore.cumulativeVolumeReservesUSD[0].toString());
+      assert.stringEquals(WETH_USD_AMOUNT.toString(), updatedStore.cumulativeVolumeReservesUSD[1].toString());
     });
     test("Cumulative volume updated (CP)", () => {
       let updatedStore = loadWell(WELL);
       let volumeUsd = liquidityEventUSDVolumeCP([BEAN_USD_AMOUNT.div(BD_2), WETH_USD_AMOUNT.div(BD_2)]);
       volumeUsd = volumeUsd.plus(liquidityEventUSDVolumeCP([ZERO_BD, WETH_USD_AMOUNT.div(BD_2)]));
-      assert.stringEquals(updatedStore.cumulativeVolumeUSD.toString(), volumeUsd.toString());
+      assert.stringEquals(volumeUsd.toString(), updatedStore.cumulativeVolumeUSD.toString());
     });
   });
 
   describe("Remove Liquidity - Multiple", () => {
     beforeEach(() => {
+      mockAddLiquidity();
       mockRemoveLiquidity();
     });
     test("Withdraw counter incremented", () => {
@@ -216,23 +215,25 @@ describe("Well Entity: Liquidity Event Tests", () => {
       let updatedStore = loadWell(WELL);
       let endingBalances = updatedStore.reserves;
 
-      assert.bigIntEquals(ZERO_BI.minus(BEAN_SWAP_AMOUNT), endingBalances[0]);
-      assert.bigIntEquals(ZERO_BI.minus(WETH_SWAP_AMOUNT), endingBalances[1]);
+      assert.bigIntEquals(ZERO_BI, endingBalances[0]);
+      assert.bigIntEquals(ZERO_BI, endingBalances[1]);
     });
     test("Liquidity Token balance", () => {
-      assert.fieldEquals(WELL_ENTITY_TYPE, WELL.toHexString(), "lpTokenSupply", ZERO_BI.minus(WELL_LP_AMOUNT).toString());
+      assert.fieldEquals(WELL_ENTITY_TYPE, WELL.toHexString(), "lpTokenSupply", "0");
     });
     test("Token volumes updated", () => {
       let updatedStore = loadWell(WELL);
-      assert.bigIntEquals(updatedStore.cumulativeVolumeReserves[0], BEAN_SWAP_AMOUNT);
-      assert.bigIntEquals(updatedStore.cumulativeVolumeReserves[1], WETH_SWAP_AMOUNT);
-      assert.stringEquals(updatedStore.cumulativeVolumeReservesUSD[0].toString(), BEAN_USD_AMOUNT.toString());
-      assert.stringEquals(updatedStore.cumulativeVolumeReservesUSD[1].toString(), WETH_USD_AMOUNT.toString());
+      log.debug("{} {}", [updatedStore.cumulativeVolumeReserves[0].toString(), updatedStore.cumulativeVolumeReservesUSD[0].toString()]);
+      assert.bigIntEquals(BEAN_SWAP_AMOUNT.times(BI_2), updatedStore.cumulativeVolumeReserves[0]);
+      assert.bigIntEquals(WETH_SWAP_AMOUNT.times(BI_2), updatedStore.cumulativeVolumeReserves[1]);
+      assert.stringEquals(BEAN_USD_AMOUNT.times(BD_2).toString(), updatedStore.cumulativeVolumeReservesUSD[0].toString());
+      assert.stringEquals(WETH_USD_AMOUNT.times(BD_2).toString(), updatedStore.cumulativeVolumeReservesUSD[1].toString());
     });
     test("Cumulative volume updated (CP)", () => {
       let updatedStore = loadWell(WELL);
-      const volumeUsd = liquidityEventUSDVolumeCP([BEAN_USD_AMOUNT, WETH_USD_AMOUNT]);
-      assert.stringEquals(updatedStore.cumulativeVolumeUSD.toString(), volumeUsd.toString());
+      let volumeUsd = liquidityEventUSDVolumeCP([BEAN_USD_AMOUNT, WETH_USD_AMOUNT]);
+      volumeUsd = volumeUsd.plus(liquidityEventUSDVolumeCP([BEAN_USD_AMOUNT, WETH_USD_AMOUNT]));
+      assert.stringEquals(volumeUsd.toString(), updatedStore.cumulativeVolumeUSD.toString());
     });
   });
 
@@ -257,23 +258,25 @@ describe("Well Entity: Liquidity Event Tests", () => {
     });
     test("Token volumes updated", () => {
       let updatedStore = loadWell(WELL);
-      assert.bigIntEquals(updatedStore.cumulativeVolumeReserves[0], BEAN_SWAP_AMOUNT.times(BI_3));
-      assert.bigIntEquals(updatedStore.cumulativeVolumeReserves[1], WETH_SWAP_AMOUNT.times(BI_2));
-      assert.stringEquals(updatedStore.cumulativeVolumeReservesUSD[0].toString(), BEAN_USD_AMOUNT.times(BD_3).toString());
-      assert.stringEquals(updatedStore.cumulativeVolumeReservesUSD[1].toString(), WETH_USD_AMOUNT.times(BD_2).toString());
+      assert.bigIntEquals(BEAN_SWAP_AMOUNT.times(BI_3), updatedStore.cumulativeVolumeReserves[0]);
+      assert.bigIntEquals(WETH_SWAP_AMOUNT.times(BI_2), updatedStore.cumulativeVolumeReserves[1]);
+      assert.stringEquals(BEAN_USD_AMOUNT.times(BD_3).toString(), updatedStore.cumulativeVolumeReservesUSD[0].toString());
+      assert.stringEquals(WETH_USD_AMOUNT.times(BD_2).toString(), updatedStore.cumulativeVolumeReservesUSD[1].toString());
     });
     test("Cumulative volume updated (CP)", () => {
       let updatedStore = loadWell(WELL);
-      let volumeUsd = liquidityEventUSDVolumeCP([BEAN_USD_AMOUNT, WETH_USD_AMOUNT]);
-      volumeUsd = volumeUsd.plus(liquidityEventUSDVolumeCP([BEAN_USD_AMOUNT, WETH_USD_AMOUNT]));
+      let volumeUsd = liquidityEventUSDVolumeCP([WETH_USD_AMOUNT, BEAN_USD_AMOUNT]);
+      volumeUsd = volumeUsd.plus(liquidityEventUSDVolumeCP([WETH_USD_AMOUNT, BEAN_USD_AMOUNT]));
       volumeUsd = volumeUsd.plus(liquidityEventUSDVolumeCP([BEAN_USD_AMOUNT, ZERO_BD]));
-      assert.stringEquals(updatedStore.cumulativeVolumeUSD.toString(), volumeUsd.toString());
+      assert.stringEquals(volumeUsd.toString(), updatedStore.cumulativeVolumeUSD.toString());
     });
   });
 
   describe("Remove Liquidity One - WETH", () => {
     beforeEach(() => {
-      mockRemoveLiquidityOneWeth();
+      mockAddLiquidity();
+      mockAddLiquidity();
+      mockRemoveLiquidityOneWeth(BigDecimal.fromString("0.5"));
     });
     test("Withdraw counter incremented", () => {
       assert.fieldEquals(WELL_ENTITY_TYPE, WELL.toHexString(), "cumulativeWithdrawCount", "1");
@@ -282,23 +285,26 @@ describe("Well Entity: Liquidity Event Tests", () => {
       let updatedStore = loadWell(WELL);
       let endingBalances = updatedStore.reserves;
 
-      assert.bigIntEquals(ZERO_BI, endingBalances[0]);
-      assert.bigIntEquals(ZERO_BI.minus(WETH_SWAP_AMOUNT), endingBalances[1]);
+      assert.bigIntEquals(BEAN_SWAP_AMOUNT.times(BI_2), endingBalances[0]);
+      assert.bigIntEquals(WETH_SWAP_AMOUNT, endingBalances[1]);
     });
     test("Liquidity Token balance", () => {
-      assert.fieldEquals(WELL_ENTITY_TYPE, WELL.toHexString(), "lpTokenSupply", ZERO_BI.minus(WELL_LP_AMOUNT).toString());
+      assert.fieldEquals(WELL_ENTITY_TYPE, WELL.toHexString(), "lpTokenSupply", WELL_LP_AMOUNT.toString());
     });
     test("Token volumes updated", () => {
       let updatedStore = loadWell(WELL);
-      assert.bigIntEquals(updatedStore.cumulativeVolumeReserves[0], ZERO_BI);
-      assert.bigIntEquals(updatedStore.cumulativeVolumeReserves[1], WETH_SWAP_AMOUNT);
-      assert.stringEquals(updatedStore.cumulativeVolumeReservesUSD[0].toString(), "0");
-      assert.stringEquals(updatedStore.cumulativeVolumeReservesUSD[1].toString(), WETH_USD_AMOUNT.toString());
+      log.debug("{} {}", [updatedStore.cumulativeVolumeReserves[0].toString(), updatedStore.cumulativeVolumeReservesUSD[0].toString()]);
+      assert.bigIntEquals(BEAN_SWAP_AMOUNT.times(BI_2), updatedStore.cumulativeVolumeReserves[0]);
+      assert.bigIntEquals(WETH_SWAP_AMOUNT.times(BI_3), updatedStore.cumulativeVolumeReserves[1]);
+      assert.stringEquals(BEAN_USD_AMOUNT.times(BD_2).toString(), updatedStore.cumulativeVolumeReservesUSD[0].toString());
+      assert.stringEquals(WETH_USD_AMOUNT.times(BD_3).toString(), updatedStore.cumulativeVolumeReservesUSD[1].toString());
     });
     test("Cumulative volume updated (CP)", () => {
       let updatedStore = loadWell(WELL);
-      const volumeUsd = liquidityEventUSDVolumeCP([ZERO_BD, WETH_USD_AMOUNT]);
-      assert.stringEquals(updatedStore.cumulativeVolumeUSD.toString(), volumeUsd.toString());
+      let volumeUsd = liquidityEventUSDVolumeCP([WETH_USD_AMOUNT, BEAN_USD_AMOUNT]);
+      volumeUsd = volumeUsd.plus(liquidityEventUSDVolumeCP([WETH_USD_AMOUNT, BEAN_USD_AMOUNT]));
+      volumeUsd = volumeUsd.plus(liquidityEventUSDVolumeCP([ZERO_BD, WETH_USD_AMOUNT]));
+      assert.stringEquals(volumeUsd.toString(), updatedStore.cumulativeVolumeUSD.toString());
     });
   });
 });
