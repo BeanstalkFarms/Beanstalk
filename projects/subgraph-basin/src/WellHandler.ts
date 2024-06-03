@@ -12,22 +12,30 @@ import {
   updateWellLiquidityTokenBalance,
   updateWellTokenBalances,
   updateWellTokenUSDPrices,
-  updateWellVolumes
+  updateWellVolumesAfterLiquidity,
+  updateWellVolumesAfterSwap
 } from "./utils/Well";
 import { Address } from "@graphprotocol/graph-ts";
 
 export function handleAddLiquidity(event: AddLiquidity): void {
+  let well = loadWell(event.address);
   loadOrCreateAccount(event.transaction.from);
 
   checkForSnapshot(event.address, event.block.timestamp, event.block.number);
 
   updateWellTokenBalances(event.address, event.params.tokenAmountsIn, event.block.timestamp, event.block.number);
 
-  // TODO: there can be volume here if liquidity was not added in equal proportions.
+  updateWellTokenUSDPrices(event.address, event.block.number);
+
+  updateWellVolumesAfterLiquidity(
+    event.address,
+    well.tokens.map<Address>((b) => Address.fromBytes(b)),
+    event.params.tokenAmountsIn,
+    event.block.timestamp,
+    event.block.number
+  );
 
   updateWellLiquidityTokenBalance(event.address, event.params.lpAmountOut, event.block.timestamp, event.block.number);
-
-  updateWellTokenUSDPrices(event.address, event.block.number);
 
   incrementWellDeposit(event.address);
 
@@ -35,6 +43,7 @@ export function handleAddLiquidity(event: AddLiquidity): void {
 }
 
 export function handleRemoveLiquidity(event: RemoveLiquidity): void {
+  let well = loadWell(event.address);
   loadOrCreateAccount(event.transaction.from);
 
   // Treat token balances as negative since we are removing liquidity
@@ -45,11 +54,17 @@ export function handleRemoveLiquidity(event: RemoveLiquidity): void {
 
   updateWellTokenBalances(event.address, balances, event.block.timestamp, event.block.number);
 
-  // TODO: there can be volume here if liquidity was not removed in equal proportions.
+  updateWellTokenUSDPrices(event.address, event.block.number);
+
+  updateWellVolumesAfterLiquidity(
+    event.address,
+    well.tokens.map<Address>((b) => Address.fromBytes(b)),
+    event.params.tokenAmountsOut,
+    event.block.timestamp,
+    event.block.number
+  );
 
   updateWellLiquidityTokenBalance(event.address, ZERO_BI.minus(event.params.lpAmountIn), event.block.timestamp, event.block.number);
-
-  updateWellTokenUSDPrices(event.address, event.block.number);
 
   incrementWellWithdraw(event.address);
 
@@ -57,37 +72,29 @@ export function handleRemoveLiquidity(event: RemoveLiquidity): void {
 }
 
 export function handleRemoveLiquidityOneToken(event: RemoveLiquidityOneToken): void {
-  // Pre-process amount out into an indexed array for the well's input tokens.
-
   let well = loadWell(event.address);
-  let fromTokenIndex = well.tokens.indexOf(event.params.tokenOut) == 0 ? 1 : 0;
-
-  let withdrawnBalances = emptyBigIntArray(well.tokens.length);
-
-  withdrawnBalances[well.tokens.indexOf(event.params.tokenOut)] = withdrawnBalances[well.tokens.indexOf(event.params.tokenOut)].plus(
-    event.params.tokenAmountOut
-  );
-
   loadOrCreateAccount(event.transaction.from);
 
   checkForSnapshot(event.address, event.block.timestamp, event.block.number);
 
-  updateWellVolumes(
+  updateWellTokenUSDPrices(event.address, event.block.number);
+
+  updateWellVolumesAfterLiquidity(
     event.address,
-    Address.fromBytes(well.tokens[fromTokenIndex]),
-    ZERO_BI,
-    event.params.tokenOut,
-    event.params.tokenAmountOut,
+    [event.params.tokenOut],
+    [event.params.tokenAmountOut],
     event.block.timestamp,
     event.block.number
   );
 
   updateWellLiquidityTokenBalance(event.address, ZERO_BI.minus(event.params.lpAmountIn), event.block.timestamp, event.block.number);
 
-  updateWellTokenUSDPrices(event.address, event.block.number);
-
   incrementWellWithdraw(event.address);
 
+  let withdrawnBalances = emptyBigIntArray(well.tokens.length);
+  withdrawnBalances[well.tokens.indexOf(event.params.tokenOut)] = withdrawnBalances[well.tokens.indexOf(event.params.tokenOut)].plus(
+    event.params.tokenAmountOut
+  );
   recordRemoveLiquidityOneEvent(event, withdrawnBalances);
 }
 
@@ -96,7 +103,11 @@ export function handleSwap(event: Swap): void {
 
   checkForSnapshot(event.address, event.block.timestamp, event.block.number);
 
-  updateWellVolumes(
+  updateWellTokenBalances(event.address, [event.params.amountIn, event.params.amountOut.neg()], event.block.timestamp, event.block.number);
+
+  updateWellTokenUSDPrices(event.address, event.block.number);
+
+  updateWellVolumesAfterSwap(
     event.address,
     event.params.fromToken,
     event.params.amountIn,
@@ -105,8 +116,6 @@ export function handleSwap(event: Swap): void {
     event.block.timestamp,
     event.block.number
   );
-
-  updateWellTokenUSDPrices(event.address, event.block.number);
 
   incrementWellSwap(event.address);
 
@@ -127,7 +136,11 @@ export function handleShift(event: Shift): void {
   let deltaReserves = deltaBigIntArray(event.params.reserves, well.reserves);
   let amountIn = deltaReserves[fromTokenIndex];
 
-  updateWellVolumes(
+  updateWellTokenBalances(event.address, [amountIn, event.params.amountOut.neg()], event.block.timestamp, event.block.number);
+
+  updateWellTokenUSDPrices(event.address, event.block.number);
+
+  updateWellVolumesAfterSwap(
     event.address,
     fromToken,
     amountIn,
@@ -136,8 +149,6 @@ export function handleShift(event: Shift): void {
     event.block.timestamp,
     event.block.number
   );
-
-  updateWellTokenUSDPrices(event.address, event.block.number);
 
   incrementWellSwap(event.address);
 
@@ -157,11 +168,17 @@ export function handleSync(event: Sync): void {
 
   updateWellTokenBalances(event.address, deltaReserves, event.block.timestamp, event.block.number);
 
-  // TODO: there can be volume here if liquidity was not added in equal proportions.
+  updateWellTokenUSDPrices(event.address, event.block.number);
+
+  updateWellVolumesAfterLiquidity(
+    event.address,
+    well.tokens.map<Address>((b) => Address.fromBytes(b)),
+    deltaReserves,
+    event.block.timestamp,
+    event.block.number
+  );
 
   updateWellLiquidityTokenBalance(event.address, event.params.lpAmountOut, event.block.timestamp, event.block.number);
-
-  updateWellTokenUSDPrices(event.address, event.block.number);
 
   incrementWellDeposit(event.address);
 

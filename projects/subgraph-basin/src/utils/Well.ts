@@ -1,6 +1,6 @@
 import { Address, BigDecimal, BigInt, Bytes, log } from "@graphprotocol/graph-ts";
 import { BoreWellWellFunctionStruct } from "../../generated/Aquifer/Aquifer";
-import { Well, WellDailySnapshot, WellFunction, WellHourlySnapshot } from "../../generated/schema";
+import { Token, Well, WellDailySnapshot, WellFunction, WellHourlySnapshot } from "../../generated/schema";
 import { ERC20 } from "../../generated/templates/Well/ERC20";
 import { BEAN_ERC20 } from "../../../subgraph-core/utils/Constants";
 import { dayFromTimestamp, hourFromTimestamp } from "../../../subgraph-core/utils/Dates";
@@ -15,6 +15,7 @@ import {
   ZERO_BI
 } from "../../../subgraph-core/utils/Decimals";
 import { getTokenDecimals, loadToken, updateTokenUSD } from "./Token";
+import { BigDecimal_max, BigDecimal_min, BigInt_max } from "../../../subgraph-core/utils/ArrayMath";
 
 export function createWell(wellAddress: Address, implementation: Address, inputTokens: Address[]): Well {
   let well = Well.load(wellAddress);
@@ -83,9 +84,7 @@ export function loadOrCreateWellFunction(functionData: BoreWellWellFunctionStruc
   return wellFunction as WellFunction;
 }
 
-// TODO: need another volume function for add/removal liquiditiy with multiple tokens.
-
-export function updateWellVolumes(
+export function updateWellVolumesAfterSwap(
   wellAddress: Address,
   fromToken: Address,
   amountIn: BigInt,
@@ -116,13 +115,52 @@ export function updateWellVolumes(
   volumeReservesUSD[fromTokenIndex] = volumeReservesUSD[fromTokenIndex].plus(usdAmountIn);
   volumeReservesUSD[toTokenIndex] = volumeReservesUSD[toTokenIndex].plus(usdAmountOut);
 
-  let reserves = well.reserves;
-  reserves[fromTokenIndex] = reserves[fromTokenIndex].plus(amountIn);
-  reserves[toTokenIndex] = reserves[toTokenIndex].minus(amountOut);
-
   well.cumulativeVolumeReserves = volumeReserves;
   well.cumulativeVolumeReservesUSD = volumeReservesUSD;
-  well.reserves = reserves;
+
+  // Add to the rolling volumes. At the end of this hour, the furthest day back will have its volume amount removed.
+  // As a result there is constantly between 24-25hrs of data here. This is preferable to not containing
+  // some of the most recent volume data.
+  well.rollingDailyVolumeUSD = well.rollingDailyVolumeUSD.plus(usdVolume);
+  well.rollingWeeklyVolumeUSD = well.rollingWeeklyVolumeUSD.plus(usdVolume);
+
+  well.lastUpdateTimestamp = timestamp;
+  well.lastUpdateBlockNumber = blockNumber;
+
+  well.save();
+}
+
+export function updateWellVolumesAfterLiquidity(
+  wellAddress: Address,
+  tokens: Address[],
+  amounts: BigInt[],
+  timestamp: BigInt,
+  blockNumber: BigInt
+): void {
+  let well = loadWell(wellAddress);
+  const tokenInfos = tokens.map<Token>((t) => loadToken(t));
+
+  const usdAmounts: BigDecimal[] = [];
+  for (let i = 0; i < tokens.length; ++i) {
+    const tokenIndex = well.tokens.indexOf(tokens[i]);
+    const tokenInfo = tokenInfos[i];
+    const usdAmount = toDecimal(amounts[i].abs(), tokenInfo.decimals).times(tokenInfo.lastPriceUSD);
+    usdAmounts.push(usdAmount);
+
+    // Update volume for individual reserves
+    let volumeReserves = well.cumulativeVolumeReserves;
+    let volumeReservesUSD = well.cumulativeVolumeReservesUSD;
+    volumeReserves[tokenIndex] = volumeReserves[tokenIndex].plus(amounts[i].abs());
+    volumeReservesUSD[tokenIndex] = volumeReservesUSD[tokenIndex].plus(usdAmount);
+    well.cumulativeVolumeReserves = volumeReserves;
+    well.cumulativeVolumeReservesUSD = volumeReservesUSD;
+  }
+
+  // Update cumulative usd volume. This is determined based on the amount of price fluctuation
+  // caused by the liquidity event.
+  // The current implementation may be incorrect for wells that have more than 2 tokens.
+  let usdVolume = BigDecimal_max(usdAmounts).minus(BigDecimal_min(usdAmounts)).div(BigDecimal.fromString(well.tokens.length.toString()));
+  well.cumulativeVolumeUSD = well.cumulativeVolumeUSD.plus(usdVolume);
 
   // Add to the rolling volumes. At the end of this hour, the furthest day back will have its volume amount removed.
   // As a result there is constantly between 24-25hrs of data here. This is preferable to not containing
