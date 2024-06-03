@@ -62,15 +62,9 @@ export const CreateWellButtonRow = ({
     if (!valuesRequired) return true;
     const baseKeys = Object.keys(values);
     const keys = optionalKeys ? baseKeys.filter((key) => !optionalKeys.includes(key)) : baseKeys;
-    console.log("keys: ", keys);
 
     return keys.every((key) => Boolean(values[key]));
   }, [valuesRequired, optionalKeys, values]);
-
-  // const hasValues = !valuesRequired || Object.values(values).every(Boolean);
-
-  console.log("hasRequiredValues", hasRequiredValues);
-  console.log("noErrors", noErrors);
 
   const goNextEnabled = noErrors && hasRequiredValues;
 

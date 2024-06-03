@@ -27,16 +27,6 @@ export class WellFunction {
     return this.contract.symbol();
   }
 
-  // getAbi() {
-  //   try {
-  //     const abi = this.contract.interface.format(ethers.utils.FormatTypes.JSON);
-  //     return abi;
-  //   } catch (e) {
-  //     console.error("Failed to parse contract ABI: ", e);
-  //     return {};
-  //   }
-  // }
-
   static async BuildConstantProduct(sdk: WellsSDK): Promise<WellFunction> {
     const constantProductConstract = new ConstantProduct__factory(sdk.signer);
     const deployedWellFunction = await constantProductConstract.deploy();
