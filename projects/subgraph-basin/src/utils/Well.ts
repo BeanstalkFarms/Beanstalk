@@ -15,7 +15,7 @@ import {
   ZERO_BI
 } from "../../../subgraph-core/utils/Decimals";
 import { getTokenDecimals, loadToken, updateTokenUSD } from "./Token";
-import { BigDecimal_max, BigDecimal_min, BigInt_max } from "../../../subgraph-core/utils/ArrayMath";
+import { BigDecimal_max, BigDecimal_min, BigDecimal_sum } from "../../../subgraph-core/utils/ArrayMath";
 
 export function createWell(wellAddress: Address, implementation: Address, inputTokens: Address[]): Well {
   let well = Well.load(wellAddress);
@@ -50,14 +50,19 @@ export function createWell(wellAddress: Address, implementation: Address, inputT
   well.totalLiquidityUSD = ZERO_BD;
   well.reserves = emptyBigIntArray(inputTokens.length);
   well.reservesUSD = emptyBigDecimalArray(inputTokens.length);
-  well.cumulativeVolumeReserves = emptyBigIntArray(inputTokens.length);
-  well.cumulativeVolumeReservesUSD = emptyBigDecimalArray(inputTokens.length);
-  well.cumulativeVolumeUSD = ZERO_BD;
+  well.cumulativeTradeVolumeReserves = emptyBigIntArray(inputTokens.length);
+  well.cumulativeTradeVolumeReservesUSD = emptyBigDecimalArray(inputTokens.length);
+  well.cumulativeTradeVolumeUSD = ZERO_BD;
+  well.cumulativeTransferVolumeReserves = emptyBigIntArray(inputTokens.length);
+  well.cumulativeTransferVolumeReservesUSD = emptyBigDecimalArray(inputTokens.length);
+  well.cumulativeTransferVolumeUSD = ZERO_BD;
   well.cumulativeDepositCount = 0;
   well.cumulativeWithdrawCount = 0;
   well.cumulativeSwapCount = 0;
-  well.rollingDailyVolumeUSD = ZERO_BD;
-  well.rollingWeeklyVolumeUSD = ZERO_BD;
+  well.rollingDailyTradeVolumeUSD = ZERO_BD;
+  well.rollingDailyTransferVolumeUSD = ZERO_BD;
+  well.rollingWeeklyTradeVolumeUSD = ZERO_BD;
+  well.rollingWeeklyTransferVolumeUSD = ZERO_BD;
   well.lastSnapshotDayID = 0;
   well.lastSnapshotHourID = 0;
   well.lastUpdateTimestamp = ZERO_BI;
@@ -103,26 +108,35 @@ export function updateWellVolumesAfterSwap(
   let usdAmountIn = toDecimal(amountIn, tokenFrom.decimals).times(tokenFrom.lastPriceUSD);
   let usdAmountOut = toDecimal(amountOut, tokenTo.decimals).times(tokenTo.lastPriceUSD);
 
-  let usdVolume = usdAmountIn.plus(usdAmountOut).div(BigDecimal.fromString("2"));
-  well.cumulativeVolumeUSD = well.cumulativeVolumeUSD.plus(usdVolume);
+  // let usdVolume = usdAmountIn.plus(usdAmountOut).div(BigDecimal.fromString("2"));
+  well.cumulativeTradeVolumeUSD = well.cumulativeTradeVolumeUSD.plus(usdAmountOut);
+  well.cumulativeTransferVolumeUSD = well.cumulativeTransferVolumeUSD.plus(usdAmountIn).plus(usdAmountOut);
 
-  // Update swap volume by reserves
-  // Volume is considered on both ends of the trade. This is particularly relevant since a well could have >2 tokens.
-  let volumeReserves = well.cumulativeVolumeReserves;
-  let volumeReservesUSD = well.cumulativeVolumeReservesUSD;
-  volumeReserves[fromTokenIndex] = volumeReserves[fromTokenIndex].plus(amountIn);
-  volumeReserves[toTokenIndex] = volumeReserves[toTokenIndex].plus(amountOut);
-  volumeReservesUSD[fromTokenIndex] = volumeReservesUSD[fromTokenIndex].plus(usdAmountIn);
-  volumeReservesUSD[toTokenIndex] = volumeReservesUSD[toTokenIndex].plus(usdAmountOut);
+  // Update swap volume by reserves. Trade volume is considered on the buying end of the trade, while
+  // Transfer volume is considered on both ends of the trade.
+  let tradeVolumeReserves = well.cumulativeTradeVolumeReserves;
+  let tradeVolumeReservesUSD = well.cumulativeTradeVolumeReservesUSD;
+  let transferVolumeReserves = well.cumulativeTransferVolumeReserves;
+  let transferVolumeReservesUSD = well.cumulativeTransferVolumeReservesUSD;
+  tradeVolumeReserves[toTokenIndex] = tradeVolumeReserves[toTokenIndex].plus(amountOut);
+  tradeVolumeReservesUSD[toTokenIndex] = tradeVolumeReservesUSD[toTokenIndex].plus(usdAmountOut);
+  transferVolumeReserves[fromTokenIndex] = transferVolumeReserves[fromTokenIndex].plus(amountIn);
+  transferVolumeReserves[toTokenIndex] = transferVolumeReserves[toTokenIndex].plus(amountOut);
+  transferVolumeReservesUSD[fromTokenIndex] = transferVolumeReservesUSD[fromTokenIndex].plus(usdAmountIn);
+  transferVolumeReservesUSD[toTokenIndex] = transferVolumeReservesUSD[toTokenIndex].plus(usdAmountOut);
 
-  well.cumulativeVolumeReserves = volumeReserves;
-  well.cumulativeVolumeReservesUSD = volumeReservesUSD;
+  well.cumulativeTradeVolumeReserves = tradeVolumeReserves;
+  well.cumulativeTradeVolumeReservesUSD = tradeVolumeReservesUSD;
+  well.cumulativeTransferVolumeReserves = transferVolumeReserves;
+  well.cumulativeTransferVolumeReservesUSD = transferVolumeReservesUSD;
 
   // Add to the rolling volumes. At the end of this hour, the furthest day back will have its volume amount removed.
   // As a result there is constantly between 24-25hrs of data here. This is preferable to not containing
   // some of the most recent volume data.
-  well.rollingDailyVolumeUSD = well.rollingDailyVolumeUSD.plus(usdVolume);
-  well.rollingWeeklyVolumeUSD = well.rollingWeeklyVolumeUSD.plus(usdVolume);
+  well.rollingDailyTradeVolumeUSD = well.rollingDailyTradeVolumeUSD.plus(usdAmountOut);
+  well.rollingDailyTransferVolumeUSD = well.rollingDailyTransferVolumeUSD.plus(usdAmountIn).plus(usdAmountOut);
+  well.rollingWeeklyTradeVolumeUSD = well.rollingWeeklyTradeVolumeUSD.plus(usdAmountOut);
+  well.rollingWeeklyTransferVolumeUSD = well.rollingWeeklyTransferVolumeUSD.plus(usdAmountIn).plus(usdAmountOut);
 
   well.lastUpdateTimestamp = timestamp;
   well.lastUpdateBlockNumber = blockNumber;
@@ -130,6 +144,7 @@ export function updateWellVolumesAfterSwap(
   well.save();
 }
 
+// The current implementation of USD volumes may be incorrect for wells that have more than 2 tokens.
 export function updateWellVolumesAfterLiquidity(
   wellAddress: Address,
   tokens: Address[],
@@ -147,27 +162,38 @@ export function updateWellVolumesAfterLiquidity(
     const usdAmount = toDecimal(amounts[i].abs(), tokenInfo.decimals).times(tokenInfo.lastPriceUSD);
     usdAmounts.push(usdAmount);
 
-    // Update volume for individual reserves
-    let volumeReserves = well.cumulativeVolumeReserves;
-    let volumeReservesUSD = well.cumulativeVolumeReservesUSD;
-    volumeReserves[tokenIndex] = volumeReserves[tokenIndex].plus(amounts[i].abs());
-    volumeReservesUSD[tokenIndex] = volumeReservesUSD[tokenIndex].plus(usdAmount);
-    well.cumulativeVolumeReserves = volumeReserves;
-    well.cumulativeVolumeReservesUSD = volumeReservesUSD;
+    // Update swap volume for individual reserves. Trade volume is not known yet.
+    // Transfer volume is considered on both ends of the trade.
+    let transferVolumeReserves = well.cumulativeTransferVolumeReserves;
+    let transferVolumeReservesUSD = well.cumulativeTransferVolumeReservesUSD;
+    transferVolumeReserves[tokenIndex] = transferVolumeReserves[tokenIndex].plus(amounts[i].abs());
+    transferVolumeReservesUSD[tokenIndex] = transferVolumeReservesUSD[tokenIndex].plus(usdAmount);
+    well.cumulativeTransferVolumeReserves = transferVolumeReserves;
+    well.cumulativeTransferVolumeReservesUSD = transferVolumeReservesUSD;
   }
 
-  // Update cumulative usd volume. This is determined based on the amount of price fluctuation
+  // Update cumulative usd volume. Trade volume is determined based on the amount of price fluctuation
   // caused by the liquidity event.
-  // The current implementation may be incorrect for wells that have more than 2 tokens.
   let minAmount = tokens.length == well.tokens.length ? BigDecimal_min(usdAmounts) : ZERO_BD;
   let usdVolume = BigDecimal_max(usdAmounts).minus(minAmount).div(BigDecimal.fromString(well.tokens.length.toString()));
-  well.cumulativeVolumeUSD = well.cumulativeVolumeUSD.plus(usdVolume);
+  let cumulativeTransfer = BigDecimal_sum(usdAmounts);
+  well.cumulativeTradeVolumeUSD = well.cumulativeTradeVolumeUSD.plus(usdVolume);
+  well.cumulativeTransferVolumeUSD = well.cumulativeTransferVolumeUSD.plus(cumulativeTransfer);
+
+  // TODO
+  // Determine which token is bought and increment its trade volume. Example:
+  // Adding beans = selling bean/buying weth
+  // Removing beans = buying beans/selling weth
+  // => the token that there is fewest of is being bought.
+  // The amount being bought can be computed as usdVolume/price.
 
   // Add to the rolling volumes. At the end of this hour, the furthest day back will have its volume amount removed.
   // As a result there is constantly between 24-25hrs of data here. This is preferable to not containing
   // some of the most recent volume data.
-  well.rollingDailyVolumeUSD = well.rollingDailyVolumeUSD.plus(usdVolume);
-  well.rollingWeeklyVolumeUSD = well.rollingWeeklyVolumeUSD.plus(usdVolume);
+  well.rollingDailyTradeVolumeUSD = well.rollingDailyTradeVolumeUSD.plus(usdVolume);
+  well.rollingDailyTransferVolumeUSD = well.rollingDailyTransferVolumeUSD.plus(cumulativeTransfer);
+  well.rollingWeeklyTradeVolumeUSD = well.rollingWeeklyTradeVolumeUSD.plus(usdVolume);
+  well.rollingWeeklyTransferVolumeUSD = well.rollingWeeklyTransferVolumeUSD.plus(cumulativeTransfer);
 
   well.lastUpdateTimestamp = timestamp;
   well.lastUpdateBlockNumber = blockNumber;
@@ -287,12 +313,26 @@ export function takeWellDailySnapshot(wellAddress: Address, dayID: i32, timestam
 
   newSnapshot.deltalpTokenSupply = newSnapshot.lpTokenSupply.minus(priorSnapshot.lpTokenSupply);
   newSnapshot.deltaLiquidityUSD = newSnapshot.totalLiquidityUSD.minus(priorSnapshot.totalLiquidityUSD);
-  newSnapshot.deltaVolumeReserves = deltaBigIntArray(newSnapshot.cumulativeVolumeReserves, priorSnapshot.cumulativeVolumeReserves);
-  newSnapshot.deltaVolumeReservesUSD = deltaBigDecimalArray(
-    newSnapshot.cumulativeVolumeReservesUSD,
-    priorSnapshot.cumulativeVolumeReservesUSD
+
+  newSnapshot.deltaTradeVolumeReserves = deltaBigIntArray(
+    newSnapshot.cumulativeTradeVolumeReserves,
+    priorSnapshot.cumulativeTradeVolumeReserves
   );
-  newSnapshot.deltaVolumeUSD = newSnapshot.cumulativeVolumeUSD.minus(priorSnapshot.cumulativeVolumeUSD);
+  newSnapshot.deltaTradeVolumeReservesUSD = deltaBigDecimalArray(
+    newSnapshot.cumulativeTradeVolumeReservesUSD,
+    priorSnapshot.cumulativeTradeVolumeReservesUSD
+  );
+  newSnapshot.deltaTradeVolumeUSD = newSnapshot.cumulativeTradeVolumeUSD.minus(priorSnapshot.cumulativeTradeVolumeUSD);
+  newSnapshot.deltaTransferVolumeReserves = deltaBigIntArray(
+    newSnapshot.cumulativeTransferVolumeReserves,
+    priorSnapshot.cumulativeTransferVolumeReserves
+  );
+  newSnapshot.deltaTransferVolumeReservesUSD = deltaBigDecimalArray(
+    newSnapshot.cumulativeTransferVolumeReservesUSD,
+    priorSnapshot.cumulativeTransferVolumeReservesUSD
+  );
+  newSnapshot.deltaTransferVolumeUSD = newSnapshot.cumulativeTransferVolumeUSD.minus(priorSnapshot.cumulativeTransferVolumeUSD);
+
   newSnapshot.deltaDepositCount = newSnapshot.cumulativeDepositCount - priorSnapshot.cumulativeDepositCount;
   newSnapshot.deltaWithdrawCount = newSnapshot.cumulativeWithdrawCount - priorSnapshot.cumulativeWithdrawCount;
   newSnapshot.deltaSwapCount = newSnapshot.cumulativeSwapCount - priorSnapshot.cumulativeSwapCount;
@@ -311,17 +351,23 @@ export function loadOrCreateWellDailySnapshot(wellAddress: Address, dayID: i32, 
     snapshot.well = wellAddress;
     snapshot.lpTokenSupply = well.lpTokenSupply;
     snapshot.totalLiquidityUSD = well.totalLiquidityUSD;
-    snapshot.cumulativeVolumeReserves = well.cumulativeVolumeReserves;
-    snapshot.cumulativeVolumeReservesUSD = well.cumulativeVolumeReservesUSD;
-    snapshot.cumulativeVolumeUSD = well.cumulativeVolumeUSD;
+    snapshot.cumulativeTradeVolumeReserves = well.cumulativeTradeVolumeReserves;
+    snapshot.cumulativeTradeVolumeReservesUSD = well.cumulativeTradeVolumeReservesUSD;
+    snapshot.cumulativeTradeVolumeUSD = well.cumulativeTradeVolumeUSD;
+    snapshot.cumulativeTransferVolumeReserves = well.cumulativeTransferVolumeReserves;
+    snapshot.cumulativeTransferVolumeReservesUSD = well.cumulativeTransferVolumeReservesUSD;
+    snapshot.cumulativeTransferVolumeUSD = well.cumulativeTransferVolumeUSD;
     snapshot.cumulativeDepositCount = well.cumulativeDepositCount;
     snapshot.cumulativeWithdrawCount = well.cumulativeWithdrawCount;
     snapshot.cumulativeSwapCount = well.cumulativeSwapCount;
     snapshot.deltalpTokenSupply = ZERO_BI;
     snapshot.deltaLiquidityUSD = ZERO_BD;
-    snapshot.deltaVolumeReserves = emptyBigIntArray(well.tokens.length);
-    snapshot.deltaVolumeReservesUSD = emptyBigDecimalArray(well.tokens.length);
-    snapshot.deltaVolumeUSD = ZERO_BD;
+    snapshot.deltaTradeVolumeReserves = emptyBigIntArray(well.tokens.length);
+    snapshot.deltaTradeVolumeReservesUSD = emptyBigDecimalArray(well.tokens.length);
+    snapshot.deltaTradeVolumeUSD = ZERO_BD;
+    snapshot.deltaTransferVolumeReserves = emptyBigIntArray(well.tokens.length);
+    snapshot.deltaTransferVolumeReservesUSD = emptyBigDecimalArray(well.tokens.length);
+    snapshot.deltaTransferVolumeUSD = ZERO_BD;
     snapshot.deltaDepositCount = 0;
     snapshot.deltaWithdrawCount = 0;
     snapshot.deltaSwapCount = 0;
@@ -344,12 +390,26 @@ export function takeWellHourlySnapshot(wellAddress: Address, hourID: i32, timest
 
   newSnapshot.deltalpTokenSupply = newSnapshot.lpTokenSupply.minus(priorSnapshot.lpTokenSupply);
   newSnapshot.deltaLiquidityUSD = newSnapshot.totalLiquidityUSD.minus(priorSnapshot.totalLiquidityUSD);
-  newSnapshot.deltaVolumeReserves = deltaBigIntArray(newSnapshot.cumulativeVolumeReserves, priorSnapshot.cumulativeVolumeReserves);
-  newSnapshot.deltaVolumeReservesUSD = deltaBigDecimalArray(
-    newSnapshot.cumulativeVolumeReservesUSD,
-    priorSnapshot.cumulativeVolumeReservesUSD
+
+  newSnapshot.deltaTradeVolumeReserves = deltaBigIntArray(
+    newSnapshot.cumulativeTradeVolumeReserves,
+    priorSnapshot.cumulativeTradeVolumeReserves
   );
-  newSnapshot.deltaVolumeUSD = newSnapshot.cumulativeVolumeUSD.minus(priorSnapshot.cumulativeVolumeUSD);
+  newSnapshot.deltaTradeVolumeReservesUSD = deltaBigDecimalArray(
+    newSnapshot.cumulativeTradeVolumeReservesUSD,
+    priorSnapshot.cumulativeTradeVolumeReservesUSD
+  );
+  newSnapshot.deltaTradeVolumeUSD = newSnapshot.cumulativeTradeVolumeUSD.minus(priorSnapshot.cumulativeTradeVolumeUSD);
+  newSnapshot.deltaTransferVolumeReserves = deltaBigIntArray(
+    newSnapshot.cumulativeTransferVolumeReserves,
+    priorSnapshot.cumulativeTransferVolumeReserves
+  );
+  newSnapshot.deltaTransferVolumeReservesUSD = deltaBigDecimalArray(
+    newSnapshot.cumulativeTransferVolumeReservesUSD,
+    priorSnapshot.cumulativeTransferVolumeReservesUSD
+  );
+  newSnapshot.deltaTransferVolumeUSD = newSnapshot.cumulativeTransferVolumeUSD.minus(priorSnapshot.cumulativeTransferVolumeUSD);
+
   newSnapshot.deltaDepositCount = newSnapshot.cumulativeDepositCount - priorSnapshot.cumulativeDepositCount;
   newSnapshot.deltaWithdrawCount = newSnapshot.cumulativeWithdrawCount - priorSnapshot.cumulativeWithdrawCount;
   newSnapshot.deltaSwapCount = newSnapshot.cumulativeSwapCount - priorSnapshot.cumulativeSwapCount;
@@ -362,9 +422,11 @@ export function takeWellHourlySnapshot(wellAddress: Address, hourID: i32, timest
   let oldest24h = WellHourlySnapshot.load(wellAddress.concatI32(hourID - 24));
   let oldest7d = WellHourlySnapshot.load(wellAddress.concatI32(hourID - 168));
   if (oldest24h != null) {
-    well.rollingDailyVolumeUSD = well.rollingDailyVolumeUSD.minus(oldest24h.deltaVolumeUSD);
+    well.rollingDailyTradeVolumeUSD = well.rollingDailyTradeVolumeUSD.minus(oldest24h.deltaTradeVolumeUSD);
+    well.rollingDailyTransferVolumeUSD = well.rollingDailyTransferVolumeUSD.minus(oldest24h.deltaTransferVolumeUSD);
     if (oldest7d != null) {
-      well.rollingWeeklyVolumeUSD = well.rollingWeeklyVolumeUSD.minus(oldest7d.deltaVolumeUSD);
+      well.rollingWeeklyTradeVolumeUSD = well.rollingWeeklyTradeVolumeUSD.minus(oldest7d.deltaTradeVolumeUSD);
+      well.rollingWeeklyTransferVolumeUSD = well.rollingWeeklyTransferVolumeUSD.minus(oldest7d.deltaTransferVolumeUSD);
     }
   }
   well.save();
@@ -384,17 +446,23 @@ export function loadOrCreateWellHourlySnapshot(
     snapshot.well = wellAddress;
     snapshot.lpTokenSupply = well.lpTokenSupply;
     snapshot.totalLiquidityUSD = well.totalLiquidityUSD;
-    snapshot.cumulativeVolumeReserves = well.cumulativeVolumeReserves;
-    snapshot.cumulativeVolumeReservesUSD = well.cumulativeVolumeReservesUSD;
-    snapshot.cumulativeVolumeUSD = well.cumulativeVolumeUSD;
+    snapshot.cumulativeTradeVolumeReserves = well.cumulativeTradeVolumeReserves;
+    snapshot.cumulativeTradeVolumeReservesUSD = well.cumulativeTradeVolumeReservesUSD;
+    snapshot.cumulativeTradeVolumeUSD = well.cumulativeTradeVolumeUSD;
+    snapshot.cumulativeTransferVolumeReserves = well.cumulativeTransferVolumeReserves;
+    snapshot.cumulativeTransferVolumeReservesUSD = well.cumulativeTransferVolumeReservesUSD;
+    snapshot.cumulativeTransferVolumeUSD = well.cumulativeTransferVolumeUSD;
     snapshot.cumulativeDepositCount = well.cumulativeDepositCount;
     snapshot.cumulativeWithdrawCount = well.cumulativeWithdrawCount;
     snapshot.cumulativeSwapCount = well.cumulativeSwapCount;
     snapshot.deltalpTokenSupply = ZERO_BI;
     snapshot.deltaLiquidityUSD = ZERO_BD;
-    snapshot.deltaVolumeReserves = emptyBigIntArray(well.tokens.length);
-    snapshot.deltaVolumeReservesUSD = emptyBigDecimalArray(well.tokens.length);
-    snapshot.deltaVolumeUSD = ZERO_BD;
+    snapshot.deltaTradeVolumeReserves = emptyBigIntArray(well.tokens.length);
+    snapshot.deltaTradeVolumeReservesUSD = emptyBigDecimalArray(well.tokens.length);
+    snapshot.deltaTradeVolumeUSD = ZERO_BD;
+    snapshot.deltaTransferVolumeReserves = emptyBigIntArray(well.tokens.length);
+    snapshot.deltaTransferVolumeReservesUSD = emptyBigDecimalArray(well.tokens.length);
+    snapshot.deltaTransferVolumeUSD = ZERO_BD;
     snapshot.deltaDepositCount = 0;
     snapshot.deltaWithdrawCount = 0;
     snapshot.deltaSwapCount = 0;

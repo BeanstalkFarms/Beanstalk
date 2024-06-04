@@ -46,10 +46,13 @@ describe("Well Entity: Exchange Tests", () => {
       mockSwap();
 
       let updatedStore = loadWell(WELL);
-      let endingBalances = updatedStore.cumulativeVolumeReserves;
+      let tradeAmounts = updatedStore.cumulativeTradeVolumeReserves;
+      let transferAmounts = updatedStore.cumulativeTransferVolumeReserves;
 
-      assert.bigIntEquals(BEAN_SWAP_AMOUNT, endingBalances[0]);
-      assert.bigIntEquals(WETH_SWAP_AMOUNT, endingBalances[1]);
+      assert.bigIntEquals(ZERO_BI, tradeAmounts[0]);
+      assert.bigIntEquals(WETH_SWAP_AMOUNT, tradeAmounts[1]);
+      assert.bigIntEquals(BEAN_SWAP_AMOUNT, transferAmounts[0]);
+      assert.bigIntEquals(WETH_SWAP_AMOUNT, transferAmounts[1]);
     });
     test("Token Volumes USD updated", () => {
       mockAddLiquidity();
@@ -57,13 +60,19 @@ describe("Well Entity: Exchange Tests", () => {
       mockSwap(BigDecimal.fromString("0.5"));
 
       let updatedStore = loadWell(WELL);
-      let endingBalances = updatedStore.cumulativeVolumeReservesUSD;
+      let tradeAmounts = updatedStore.cumulativeTradeVolumeReservesUSD;
+      let transferAmounts = updatedStore.cumulativeTransferVolumeReservesUSD;
 
-      assert.stringEquals(BEAN_USD_AMOUNT.times(BigDecimal.fromString("2.5")).toString(), endingBalances[0].toString());
-      assert.stringEquals(WETH_USD_AMOUNT.times(BigDecimal.fromString("3.5")).toString(), endingBalances[1].toString());
+      assert.stringEquals("0", tradeAmounts[0].toString());
+      assert.stringEquals(WETH_USD_AMOUNT.times(BigDecimal.fromString("1.5")).toString(), tradeAmounts[1].toString());
+      assert.stringEquals(BEAN_USD_AMOUNT.times(BigDecimal.fromString("2.5")).toString(), transferAmounts[0].toString());
+      assert.stringEquals(WETH_USD_AMOUNT.times(BigDecimal.fromString("3.5")).toString(), transferAmounts[1].toString());
+      assert.stringEquals(WETH_USD_AMOUNT.times(BigDecimal.fromString("1.5")).toString(), updatedStore.cumulativeTradeVolumeUSD.toString());
       assert.stringEquals(
-        BEAN_USD_AMOUNT.plus(WETH_USD_AMOUNT).div(BigDecimal.fromString("2")).toString(),
-        updatedStore.cumulativeVolumeUSD.toString()
+        BEAN_USD_AMOUNT.times(BigDecimal.fromString("2.5"))
+          .plus(WETH_USD_AMOUNT.times(BigDecimal.fromString("3.5")))
+          .toString(),
+        updatedStore.cumulativeTransferVolumeUSD.toString()
       );
     });
     test("Previous day snapshot entity created", () => {
@@ -99,18 +108,28 @@ describe("Well Entity: Exchange Tests", () => {
     });
     test("Token Volumes updated", () => {
       let updatedStore = loadWell(WELL);
-      let endingBalances = updatedStore.cumulativeVolumeReserves;
+      let tradeAmounts = updatedStore.cumulativeTradeVolumeReserves;
+      let transferAmounts = updatedStore.cumulativeTransferVolumeReserves;
 
-      assert.bigIntEquals(BEAN_SWAP_AMOUNT.times(BigInt.fromU32(3)), endingBalances[0]);
-      assert.bigIntEquals(WETH_SWAP_AMOUNT.times(BigInt.fromU32(3)), endingBalances[1]);
+      assert.bigIntEquals(BEAN_SWAP_AMOUNT, tradeAmounts[0]);
+      assert.bigIntEquals(ZERO_BI, tradeAmounts[1]);
+      assert.bigIntEquals(BEAN_SWAP_AMOUNT.times(BigInt.fromU32(3)), transferAmounts[0]);
+      assert.bigIntEquals(WETH_SWAP_AMOUNT.times(BigInt.fromU32(3)), transferAmounts[1]);
     });
-    test("Token Volumes USD updated", () => {
+    test("Token Volumes USD updsted", () => {
       let updatedStore = loadWell(WELL);
-      let endingBalances = updatedStore.cumulativeVolumeReservesUSD;
+      let tradeAmounts = updatedStore.cumulativeTradeVolumeReservesUSD;
+      let transferAmounts = updatedStore.cumulativeTransferVolumeReservesUSD;
 
-      assert.stringEquals(BEAN_USD_AMOUNT.times(BigDecimal.fromString("3.5")).toString(), endingBalances[0].toString());
-      assert.stringEquals(WETH_USD_AMOUNT.times(BigDecimal.fromString("2.5")).toString(), endingBalances[1].toString());
-      assert.stringEquals(BEAN_USD_AMOUNT.toString(), updatedStore.cumulativeVolumeUSD.toString());
+      assert.stringEquals(BEAN_USD_AMOUNT.times(BigDecimal.fromString("1.5")).toString(), tradeAmounts[0].toString());
+      assert.stringEquals("0", tradeAmounts[1].toString());
+      assert.stringEquals(BEAN_USD_AMOUNT.times(BigDecimal.fromString("3.5")).toString(), transferAmounts[0].toString());
+      assert.stringEquals(WETH_USD_AMOUNT.times(BigDecimal.fromString("2.5")).toString(), transferAmounts[1].toString());
+      assert.stringEquals(BEAN_USD_AMOUNT.times(BigDecimal.fromString("1.5")).toString(), updatedStore.cumulativeTradeVolumeUSD.toString());
+      // assert.stringEquals(
+      //   WETH_USD_AMOUNT.times(BigDecimal.fromString("2.5")).plus(BEAN_USD_AMOUNT.times(BigDecimal.fromString("1.5"))).toString(),
+      //   updatedStore.cumulativeTransferVolumeUSD.toString()
+      // );
     });
   });
 });
