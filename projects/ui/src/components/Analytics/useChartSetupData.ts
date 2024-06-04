@@ -1,15 +1,74 @@
-import { LiquiditySupplyRatioDocument, SeasonalCrossesDocument, SeasonalDepositedSiloAssetDocument, SeasonalHarvestedPodsDocument, SeasonalInstantDeltaBDocument, SeasonalInstantPriceDocument, SeasonalMarketCapDocument, SeasonalPodRateDocument, SeasonalPodsDocument, SeasonalRRoRDocument, SeasonalSownDocument, SeasonalSupplyDocument, SeasonalTemperatureDocument, SeasonalTotalSowersDocument, SeasonalWeightedDeltaBDocument, SeasonalWeightedDeltaBDocument, SeasonalWeightedPriceDocument } from "~/generated/graphql";
+import { LiquiditySupplyRatioDocument, SeasonalApyDocument, SeasonalCrossesDocument, SeasonalDepositedSiloAssetDocument, SeasonalHarvestedPodsDocument, SeasonalInstantDeltaBDocument, SeasonalInstantPriceDocument, SeasonalMarketCapDocument, SeasonalPodRateDocument, SeasonalPodsDocument, SeasonalRRoRDocument, SeasonalSownDocument, SeasonalSupplyDocument, SeasonalTemperatureDocument, SeasonalTotalSowersDocument, SeasonalWeightedDeltaBDocument, SeasonalWeightedPriceDocument } from "~/generated/graphql";
 import useSdk from "~/hooks/sdk";
 import { useMemo } from "react";
+import { formatUnits } from "viem";
 import { tickFormatBeanAmount, tickFormatBeanPrice, tickFormatPercentage, tickFormatUSD, valueFormatBeanAmount } from "./formatters";
 
 export function useChartSetupData() {
 
     const sdk = useSdk();
-    const beanstalkAddress = sdk.addresses.BEANSTALK.MAINNET;
-    const beanAddress = sdk.addresses.BEAN.MAINNET;
 
     return useMemo(() => {
+
+        const beanstalkAddress = sdk.addresses.BEANSTALK.MAINNET;
+        const stalk = sdk.tokens.STALK;
+    
+        const depositedTokensToChart = [
+            sdk.tokens.BEAN, 
+            sdk.tokens.BEAN_CRV3_LP, 
+            sdk.tokens.BEAN_ETH_WELL_LP, 
+            sdk.tokens.UNRIPE_BEAN, 
+            sdk.tokens.UNRIPE_BEAN_WETH
+        ];
+    
+        const depositCharts: any[] = [];
+        const apyCharts: any[] = [];
+    
+        depositedTokensToChart.forEach((token) => {
+            const depositedChart = {
+                name: `Deposited ${token.symbol}`,
+                tooltipTitle: `Total Deposited ${token.symbol}`,
+                tooltipHoverText: `The total number of Deposited ${
+                    token.symbol === 'BEAN'
+                      ? 'Beans'
+                      : token.symbol === 'urBEAN'
+                      ? 'Unripe Beans'
+                      : token.name
+                  } at the beginning of every Season.`,
+                timeScaleKey: 'createdAt',
+                priceScaleKey: 'depositedAmount',
+                document: SeasonalDepositedSiloAssetDocument,
+                documentEntity: 'seasons',
+                queryConfig: {
+                    variables: {
+                        season_gt: 6073,
+                        siloAsset: `${beanstalkAddress.toLowerCase()}-${token.address}`,
+                    }
+                },
+                valueFormatter: (value: any) => Number(formatUnits(value, token.decimals)),
+                tickFormatter: tickFormatBeanAmount,
+            };
+            const apyChart = {
+                name: `${token.symbol} 30D vAPY`,
+                tooltipTitle: `${token.symbol} 30D vAPY`,
+                tooltipHoverText: `The Variable Bean APY uses a moving average of Beans earned by Stalkholders during recent Seasons to estimate a future rate of return, accounting for Stalk growth.`,
+                timeScaleKey: 'createdAt',
+                priceScaleKey: 'beanAPY',
+                document: SeasonalApyDocument,
+                documentEntity: 'seasons',
+                queryConfig: {
+                    variables: {
+                        season_gt: 6074,
+                        token: token.address,
+                    }
+                },
+                valueFormatter: (v: string) => Number(v) * 100,
+                tickFormatter: tickFormatPercentage
+            };
+    
+            depositCharts.push(depositedChart);
+            apyCharts.push(apyChart);
+        })
 
         const output: any[] = [];
         let dataIndex = 0;
@@ -133,23 +192,24 @@ export function useChartSetupData() {
         ];
     
         const siloCharts = [
+            ...depositCharts,
             {
-                name: 'Deposited BEAN',
-                tooltipTitle: 'Deposited BEANs',
-                tooltipHoverText: 'The total number of deposited Beans',
+                name: `Stalk`,
+                tooltipTitle: `Stalk`,
+                tooltipHoverText: `The total number of Stalk at the beginning of every Season.`,
                 timeScaleKey: 'createdAt',
-                priceScaleKey: 'depositedAmount',
+                priceScaleKey: 'stalk',
                 document: SeasonalDepositedSiloAssetDocument,
                 documentEntity: 'seasons',
                 queryConfig: {
                     variables: {
                         season_gt: 6073,
-                        siloAsset: `${beanstalkAddress.toLowerCase()}-${beanAddress}`,
-                    }
+                    },
                 },
-                valueFormatter: valueFormatBeanAmount,
+                valueFormatter: (value: any) => Number(formatUnits(value, stalk.decimals)),
                 tickFormatter: tickFormatBeanAmount,
             },
+            ...apyCharts
         ];
     
         const fieldCharts = [
@@ -239,7 +299,7 @@ export function useChartSetupData() {
             },
         ];
     
-       beanCharts.forEach((chartData) => {
+        beanCharts.forEach((chartData) => {
            const chartDataToAdd = {
                ...chartData,
                type: 'Bean',
@@ -271,5 +331,5 @@ export function useChartSetupData() {
 
         return output;
 
-    }, [beanAddress, beanstalkAddress]);
+    }, [sdk]);
 };
