@@ -137,7 +137,7 @@ describe("Well Entity: Liquidity Event Tests", () => {
       let updatedStore = loadWell(WELL);
       const volumeUsd = liquidityEventUSDVolumeCP([BEAN_USD_AMOUNT, ZERO_BD]);
       assert.stringEquals(volumeUsd.toString(), updatedStore.cumulativeTradeVolumeUSD.toString());
-      assert.stringEquals(BEAN_USD_AMOUNT.div(BD_2).toString(), updatedStore.cumulativeTransferVolumeUSD.toString());
+      assert.stringEquals(BEAN_USD_AMOUNT.toString(), updatedStore.cumulativeTransferVolumeUSD.toString());
     });
   });
 

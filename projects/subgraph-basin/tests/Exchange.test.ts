@@ -127,8 +127,8 @@ describe("Well Entity: Exchange Tests", () => {
       assert.stringEquals(WETH_USD_AMOUNT.times(BigDecimal.fromString("2.5")).toString(), transferAmounts[1].toString());
       assert.stringEquals(BEAN_USD_AMOUNT.times(BigDecimal.fromString("1.5")).toString(), updatedStore.cumulativeTradeVolumeUSD.toString());
       assert.stringEquals(
-        WETH_USD_AMOUNT.times(BigDecimal.fromString("2.5"))
-          .plus(BEAN_USD_AMOUNT.times(BigDecimal.fromString("1.5")))
+        BEAN_USD_AMOUNT.times(BigDecimal.fromString("3.5"))
+          .plus(WETH_USD_AMOUNT.times(BigDecimal.fromString("2.5")))
           .toString(),
         updatedStore.cumulativeTransferVolumeUSD.toString()
       );

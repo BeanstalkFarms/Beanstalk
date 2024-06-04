@@ -1,4 +1,4 @@
-import { Address, BigDecimal, BigInt } from "@graphprotocol/graph-ts";
+import { Address, BigDecimal, BigInt, log } from "@graphprotocol/graph-ts";
 import { ERC20 } from "../../generated/Aquifer/ERC20";
 import { Token } from "../../generated/schema";
 import { CurvePrice } from "../../generated/templates/Well/CurvePrice";
