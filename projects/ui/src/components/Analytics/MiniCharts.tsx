@@ -7,11 +7,13 @@ import useSdk from '~/hooks/sdk';
 import { formatUnits } from 'viem';
 import { getFormattedAndExtraData } from './formatters';
 import ChartV2 from './ChartV2';
+import { useChartSetupData } from './useChartSetupData';
 
 const MiniCharts: FC<{}> = () => {
 
   const season = useSeason();
   const sdk = useSdk();
+  const chartSetupData = useChartSetupData();
   const BEAN = sdk.tokens.BEAN;
 
   const { data: supplyData, loading: loadingSupplyData } = useSeasonalSupplyQuery({
@@ -35,83 +37,58 @@ const MiniCharts: FC<{}> = () => {
     context: { subgraph: 'bean' } 
   });
 
-  // Formatting data
-  const { formattedData: priceFormattedData } = getFormattedAndExtraData(
-    priceData?.seasons.toReversed(),
-    'createdAt',
-    'price'
-  );
+  const chartsToUse = ['Bean Price', 'Market Cap', 'Supply'];
+  const chartIds: number[] = [];
+  chartsToUse.forEach((chartName) => {
+    const chartId = chartSetupData.findIndex((setupData) => setupData.name === chartName)
+    if (chartId > -1) {
+     chartIds.push(chartId)
+    };
+  });
+
   const { formattedData: supplyFormattedData } = getFormattedAndExtraData(
-    supplyData?.seasons.toReversed(),
-    'createdAt',
-    'beans'
+    supplyData,
+    [chartIds[0]],
+    chartSetupData
   );
   const { formattedData: marketCapFormattedData } = getFormattedAndExtraData(
-    marketCapData?.seasons.toReversed(),
-    'createdAt',
-    'marketCap'
+    marketCapData,
+    [chartIds[1]],
+    chartSetupData
   );
   const { formattedData: liquidityFormattedData } = getFormattedAndExtraData(
-    liquidityData?.seasons.toReversed(),
-    'timestamp',
-    'liquidityUSD'
+    liquidityData,
+    [chartIds[2]],
+    chartSetupData
   );
 
   const formatBeanValue = (value: any) => Number(formatUnits(value, BEAN.decimals)).toLocaleString('en-US', { maximumFractionDigits: 0 });
   const formatDollarValue = (value: any) => `$${value.toLocaleString('en-US', { maximumFractionDigits: 0 })}`;
 
+  const allFormattedData = [supplyFormattedData, marketCapFormattedData, liquidityFormattedData]
   const loadingComplete = !(loadingLiquidityData && loadingMarketCapData && loadingSupplyData);
 
   return (
     <>
       <Box display='flex' flexDirection='row' gap={2}>
-        <Card sx={{ width: '100%', height: 150 }}>
-        </Card>
-        <Card sx={{ width: '100%', height: 150 }}>
-        {loadingComplete ? (
-          <ChartV2
-            tooltipTitle="Total Bean Supply"
-            formattedData={supplyFormattedData}
-            priceFormatter={formatBeanValue}
-            size="mini"
-            containerHeight={150}
-          />
-        ) : (
-          <Box sx={{ display: 'flex', height: '100%', alignItems: 'center', justifyContent: 'center' }}>
-            <CircularProgress variant="indeterminate" />
-          </Box>
+        {chartIds.map((chart, index) => (
+            <Card sx={{ width: '100%', height: 150 }}>
+            {loadingComplete ? (
+              <ChartV2
+                formattedData={allFormattedData[index]}
+                selected={[chart]}
+                priceFormatter={chartSetupData[chart].valueFormatter}
+                size="mini"
+                containerHeight={150}
+              />
+            ) : (
+              <Box sx={{ display: 'flex', height: '100%', alignItems: 'center', justifyContent: 'center' }}>
+                <CircularProgress variant="indeterminate" />
+              </Box>
+            )}
+            </Card>            
+          )
         )}
-        </Card>
-        <Card sx={{ width: '100%', height: 150 }}>
-        {loadingComplete ? (
-          <ChartV2
-            tooltipTitle="Market Cap"
-            formattedData={marketCapFormattedData}
-            priceFormatter={formatDollarValue}
-            size="mini"
-            containerHeight={150}
-          />
-        ) : (
-          <Box sx={{ display: 'flex', height: '100%', alignItems: 'center', justifyContent: 'center' }}>
-            <CircularProgress variant="indeterminate" />
-          </Box>
-        )}
-        </Card>
-        <Card sx={{ width: '100%', height: 150 }}>
-        {loadingComplete ? (
-          <ChartV2
-            tooltipTitle="Liquidity"
-            formattedData={liquidityFormattedData}
-            priceFormatter={formatDollarValue}
-            size="mini"
-            containerHeight={150}
-          />
-        ) : (
-          <Box sx={{ display: 'flex', height: '100%', alignItems: 'center', justifyContent: 'center' }}>
-            <CircularProgress variant="indeterminate" />
-          </Box>
-        )}
-        </Card>
       </Box>
     </>
   );
