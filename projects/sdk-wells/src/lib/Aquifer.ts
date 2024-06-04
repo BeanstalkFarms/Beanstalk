@@ -1,12 +1,12 @@
 import { Aquifer as AquiferContract, Aquifer__factory } from "src/constants/generated";
-import { 
-  encodeWellImmutableData, 
-  encodeWellInitFunctionCall, 
-  getBytesHexString, 
-  makeCallObject, 
-  setReadOnly, 
-  validateAddress, 
-  validateHasMinTokensForWell 
+import {
+  encodeWellImmutableData,
+  encodeWellInitFunctionCall,
+  getBytesHexString,
+  makeCallObject,
+  setReadOnly,
+  validateAddress,
+  validateHasMinTokensForWell
 } from "./utils";
 import { WellsSDK } from "./WellsSDK";
 import { WellFunction } from "./WellFunction";
@@ -40,12 +40,25 @@ export class Aquifer {
    * @param pumps
    * @returns
    */
-  async boreWell(wellAddress: string, tokens: ERC20Token[], wellFunction: WellFunction, pumps: Pump[], _symbol?: string, _name?: string, salt?: number): Promise<Well> {
+  async boreWell(
+    wellAddress: string,
+    tokens: ERC20Token[],
+    wellFunction: WellFunction,
+    pumps: Pump[],
+    _symbol?: string,
+    _name?: string,
+    salt?: number
+  ): Promise<Well> {
     validateHasMinTokensForWell(tokens);
     validateSalt(salt);
 
     // Prepare Data
-    const immutableData = Aquifer.getEncodedWellImmutableData(this.address, wellAddress, tokens, wellFunction, pumps);
+    const immutableData = Aquifer.getEncodedWellImmutableData(
+      this.address,
+      tokens,
+      wellFunction,
+      pumps
+    );
     const { name, symbol } = await getNameAndSymbol(wellFunction, tokens, _name, _symbol);
     const initFunctionCall = await Aquifer.getEncodedWellInitFunctionData(name, symbol);
 
@@ -53,7 +66,12 @@ export class Aquifer {
     const saltBytes32 = salt ? getBytesHexString(salt, 32) : constants.HashZero;
 
     // Bore It
-    const deployedWell = await this.contract.boreWell(wellAddress, immutableData, initFunctionCall, saltBytes32);
+    const deployedWell = await this.contract.boreWell(
+      wellAddress,
+      immutableData,
+      initFunctionCall,
+      saltBytes32
+    );
 
     const txn = await deployedWell.wait();
 
@@ -66,11 +84,22 @@ export class Aquifer {
     return new Well(this.sdk, boredWellAddress);
   }
 
-  async predictWellAddress(implementation: string, tokens: ERC20Token[], wellFunction: WellFunction, pumps: Pump[], salt?: number) {
+  async predictWellAddress(
+    implementation: string,
+    tokens: ERC20Token[],
+    wellFunction: WellFunction,
+    pumps: Pump[],
+    salt?: number
+  ) {
     validateHasMinTokensForWell(tokens);
     validateSalt(salt);
-    
-    const immutableData = Aquifer.getEncodedWellImmutableData(this.address, implementation, tokens, wellFunction, pumps);
+
+    const immutableData = Aquifer.getEncodedWellImmutableData(
+      this.address,
+      tokens,
+      wellFunction,
+      pumps
+    );
     const saltBytes32 = salt ? getBytesHexString(salt, 32) : constants.HashZero;
 
     return this.contract.predictWellAddress(implementation, immutableData, saltBytes32);
@@ -80,15 +109,19 @@ export class Aquifer {
 
   /**
    * returns pack encoded data (immutableData) to deploy a well via aquifer.boreWell & predict a deterministic well address via aquifer.predictWellAddress
-   * @param aquifer 
-   * @param wellImplementation 
-   * @param tokens 
-   * @param wellFunction 
-   * @param pumps 
-   * @returns 
+   * @param aquifer
+   * @param wellImplementation
+   * @param tokens
+   * @param wellFunction
+   * @param pumps
+   * @returns
    */
-  static getEncodedWellImmutableData(aquifer: string, wellImplementation: string, tokens: ERC20Token[], wellFunction: WellFunction, pumps: Pump[]) {
-    validateAddress(wellImplementation, wellImplementation);
+  static getEncodedWellImmutableData(
+    aquifer: string,
+    tokens: ERC20Token[],
+    wellFunction: WellFunction,
+    pumps: Pump[]
+  ) {
     validateAddress(wellFunction.address, wellFunction.address);
 
     if (tokens.length < 2) {
@@ -99,18 +132,17 @@ export class Aquifer {
       validateAddress(p.address, p.address);
       return makeCallObject(p);
     });
-
-    const tokensAddresses = tokens.map((t) => t.address);
     const wellFunctionCall = makeCallObject(wellFunction);
+    const tokensAddresses = tokens.map((t) => t.address);
 
     return encodeWellImmutableData(aquifer, tokensAddresses, wellFunctionCall, pumpCalls);
   }
 
   /**
    * Returns pack encoded data (initFunctionCall) to deploy a well via aquifer.boreWell
-   * @param name 
-   * @param symbol 
-   * @returns 
+   * @param name
+   * @param symbol
+   * @returns
    */
   static async getEncodedWellInitFunctionData(name: string, symbol: string) {
     if (!name) {
@@ -124,8 +156,8 @@ export class Aquifer {
 
   /**
    * Deploy a new instance of Aquifer
-   * @param sdk 
-   * @returns 
+   * @param sdk
+   * @returns
    */
   static async BuildAquifer(sdk: WellsSDK): Promise<Aquifer> {
     const aquiferContract = new Aquifer__factory(sdk.signer);
@@ -144,7 +176,12 @@ function validateSalt(salt?: number) {
   }
 }
 
-async function getNameAndSymbol(wellFunction: WellFunction, tokens: ERC20Token[], _name?: string, _symbol?: string) {
+async function getNameAndSymbol(
+  wellFunction: WellFunction,
+  tokens: ERC20Token[],
+  _name?: string,
+  _symbol?: string
+) {
   let name = _name ?? "";
   let symbol = _symbol ?? "";
 
