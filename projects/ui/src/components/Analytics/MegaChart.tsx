@@ -45,6 +45,8 @@ const MegaChart: FC<{}> = () => {
 
         const iterations = getAllData ? Math.ceil(currentSeason / 1000) + 1 : 1;
         for (let j = 0; j < iterations; j += 1) {
+          const startSeason = getAllData ? currentSeason - (j * 1000) : 999999999;
+          if (startSeason <= 0) continue;
           promises.push( 
             apolloClient.query({
             ...queryConfig,
@@ -52,7 +54,7 @@ const MegaChart: FC<{}> = () => {
             variables: {
               ...queryConfig?.variables,
               first: 1000,
-              season_lte: getAllData ? currentSeason - (j * 1000) : 999999999,
+              season_lte: startSeason,
             },
             notifyOnNetworkStatusChange: true,
             fetchPolicy: 'cache-first',
