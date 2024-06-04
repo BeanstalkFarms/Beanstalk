@@ -1,7 +1,7 @@
-import { SeasonalDepositedSiloAssetDocument, SeasonalInstantPriceDocument, SeasonalRRoRDocument } from "~/generated/graphql";
+import { LiquiditySupplyRatioDocument, SeasonalCrossesDocument, SeasonalDepositedSiloAssetDocument, SeasonalHarvestedPodsDocument, SeasonalInstantDeltaBDocument, SeasonalInstantPriceDocument, SeasonalMarketCapDocument, SeasonalPodRateDocument, SeasonalPodsDocument, SeasonalRRoRDocument, SeasonalSownDocument, SeasonalSupplyDocument, SeasonalTemperatureDocument, SeasonalTotalSowersDocument, SeasonalWeightedDeltaBDocument, SeasonalWeightedDeltaBDocument, SeasonalWeightedPriceDocument } from "~/generated/graphql";
 import useSdk from "~/hooks/sdk";
 import { useMemo } from "react";
-import { tickFormatBeanAmount, tickFormatBeanPrice, tickFormatPercentage, valueFormatBeanAmount } from "./formatters";
+import { tickFormatBeanAmount, tickFormatBeanPrice, tickFormatPercentage, tickFormatUSD, valueFormatBeanAmount } from "./formatters";
 
 export function useChartSetupData() {
 
@@ -29,6 +29,106 @@ export function useChartSetupData() {
                   },
                 valueFormatter: (v: string) => Number(v),
                 tickFormatter: tickFormatBeanPrice
+            },
+            // TODO: Volume
+            // TODO: Liquidity
+            {
+                name: 'Market Cap',
+                tooltipTitle: 'Market Cap',
+                tooltipHoverText: 'The USD value of the Bean supply at the beginning of every Season.',
+                timeScaleKey: 'createdAt',
+                priceScaleKey: 'marketCap',
+                document: SeasonalMarketCapDocument,
+                documentEntity: 'seasons',
+                queryConfig: undefined,
+                valueFormatter: (v: string) => Number(v),
+                tickFormatter: tickFormatUSD,
+            },
+            {
+                name: 'Supply',
+                tooltipTitle: 'Bean Supply',
+                tooltipHoverText: 'The total Bean supply at the beginning of every Season.',
+                timeScaleKey: 'createdAt',
+                priceScaleKey: 'beans',
+                document: SeasonalSupplyDocument,
+                documentEntity: 'seasons',
+                queryConfig: undefined,
+                valueFormatter: valueFormatBeanAmount,
+                tickFormatter: tickFormatBeanAmount,
+            },
+            {
+                name: 'Crosses',
+                tooltipTitle: 'Peg Crosses',
+                tooltipHoverText: 'The total number of times Bean has crossed its peg at the beginning of every Season.',
+                timeScaleKey: 'timestamp',
+                priceScaleKey: 'crosses',
+                document: SeasonalCrossesDocument,
+                documentEntity: 'seasons',
+                queryConfig: {
+                    context: { subgraph: 'bean' },
+                  },
+                valueFormatter: (v: string) => Number(v),
+                tickFormatter: (v: string) => Number(v),
+            },
+            {
+                name: 'Inst. deltaB',
+                tooltipTitle: 'Cumulative Instantaneous deltaB',
+                tooltipHoverText: 'The cumulative instantaneous shortage of Beans in liquidity pools on the Minting Whitelist at the beginning of every Season. Pre-exploit values include the instantaneous deltaB in all pools on the Deposit Whitelist.',
+                timeScaleKey: 'timestamp',
+                priceScaleKey: 'instantaneousDeltaB',
+                document: SeasonalInstantDeltaBDocument,
+                documentEntity: 'seasons',
+                queryConfig: {
+                    variables: { season_gte: 1 },
+                    context: { subgraph: 'bean' },
+                  },
+                valueFormatter: valueFormatBeanAmount,
+                tickFormatter: tickFormatBeanAmount,
+            },
+            {
+                name: 'TWA deltaB',
+                tooltipTitle: 'Cumulative TWA deltaB',
+                tooltipHoverText: 'The cumulative liquidity and time weighted average shortage of Beans in liquidity pools on the Minting Whitelist at the beginning of every Season. Values during liquidity migrations are omitted. Pre-exploit values include the TWA deltaB in all pools on the Deposit Whitelist.',
+                timeScaleKey: 'timestamp',
+                priceScaleKey: 'twaDeltaB',
+                document: SeasonalWeightedDeltaBDocument,
+                documentEntity: 'seasons',
+                queryConfig: {
+                    variables: { season_gte: 1 },
+                    context: { subgraph: 'bean' },
+                  },
+                valueFormatter: valueFormatBeanAmount,
+                tickFormatter: tickFormatBeanAmount,
+            },
+            {
+                name: 'TWA Bean Price',
+                tooltipTitle: 'TWA Bean Price',
+                tooltipHoverText: 'The cumulative liquidity and time weighted average USD price of 1 Bean at the beginning of every Season. Values during liquidity migrations are omitted. Pre-exploit values include the TWA price in all pools on the Deposit Whitelist.',
+                timeScaleKey: 'timestamp',
+                priceScaleKey: 'twaPrice',
+                document: SeasonalWeightedPriceDocument,
+                documentEntity: 'seasons',
+                queryConfig: {
+                    variables: { season_gte: 1 },
+                    context: { subgraph: 'bean' },
+                  },
+                valueFormatter: (v: string) => Number(v),
+                tickFormatter: tickFormatBeanPrice
+            },
+            {
+                name: 'L2SR',
+                tooltipTitle: 'Liquidity to Supply Ratio',
+                tooltipHoverText: `The ratio of Beans in liquidity pools on the Minting Whitelist per Bean, displayed as a percentage, at the beginning of every Season. The Liquidity to Supply Ratio is a useful indicator of Beanstalk's health. Pre-exploit values include liquidity in pools on the Deposit Whitelist.`,
+                timeScaleKey: 'timestamp',
+                priceScaleKey: 'supplyInPegLP',
+                document: LiquiditySupplyRatioDocument,
+                documentEntity: 'seasons',
+                queryConfig: {
+                    variables: { season_gt: 0 },
+                    context: { subgraph: 'bean' },
+                  },
+                valueFormatter: (v: string) => Number(v) * 100,
+                tickFormatter: tickFormatPercentage
             },
         ];
     
@@ -64,6 +164,78 @@ export function useChartSetupData() {
                 queryConfig: undefined,
                 valueFormatter: (v: string) => Number(v) * 100,
                 tickFormatter: tickFormatPercentage
+            },
+            {
+                name: 'Max Temperature',
+                tooltipTitle: 'Max Temperature',
+                tooltipHoverText: 'The maximum interest rate for Sowing Beans every Season.',
+                timeScaleKey: 'createdAt',
+                priceScaleKey: 'temperature',
+                document: SeasonalTemperatureDocument,
+                documentEntity: 'seasons',
+                queryConfig: undefined,
+                valueFormatter: (v: string) => Number(v),
+                tickFormatter: tickFormatPercentage
+            },
+            {
+                name: 'Pods',
+                tooltipTitle: 'Pods',
+                tooltipHoverText: 'The total number of Unharvestable Pods at the beginning of every Season.',
+                timeScaleKey: 'createdAt',
+                priceScaleKey: 'unharvestablePods',
+                document: SeasonalPodsDocument,
+                documentEntity: 'seasons',
+                queryConfig: undefined,
+                valueFormatter: valueFormatBeanAmount,
+                tickFormatter: tickFormatBeanAmount,
+            },
+            {
+                name: 'Pod Rate',
+                tooltipTitle: 'Pod Rate',
+                tooltipHoverText: 'The ratio of Unharvestable Pods per Bean, displayed as a percentage, at the beginning of every Season. The Pod Rate is used by Beanstalk as a proxy for its health.',
+                timeScaleKey: 'createdAt',
+                priceScaleKey: 'podRate',
+                document: SeasonalPodRateDocument,
+                documentEntity: 'seasons',
+                queryConfig: undefined,
+                valueFormatter: (v: string) => Number(v) * 100,
+                tickFormatter: tickFormatPercentage
+            },
+            {
+                name: 'Beans Sown',
+                tooltipTitle: 'Beans Sown',
+                tooltipHoverText: 'The total number of Beans Sown at the beginning of every Season.',
+                timeScaleKey: 'createdAt',
+                priceScaleKey: 'sownBeans',
+                document: SeasonalSownDocument,
+                documentEntity: 'seasons',
+                queryConfig: undefined,
+                valueFormatter: valueFormatBeanAmount,
+                tickFormatter: tickFormatBeanAmount,
+            },
+            {
+                name: 'Pods Harvested',
+                tooltipTitle: 'Pods Harvested',
+                tooltipHoverText: 'The total number of Pods Harvested at the beginning of every Season.',
+                timeScaleKey: 'createdAt',
+                priceScaleKey: 'harvestedPods',
+                document: SeasonalHarvestedPodsDocument,
+                documentEntity: 'seasons',
+                queryConfig: undefined,
+                valueFormatter: valueFormatBeanAmount,
+                tickFormatter: tickFormatBeanAmount,
+            },
+            {
+                name: 'Total Sowers',
+                tooltipTitle: 'Total Sowers',
+                tooltipHoverText: 'The total number of unique Sowers at the beginning of every Season.',
+                timeScaleKey: 'createdAt',
+                priceScaleKey: 'numberOfSowers',
+                document: SeasonalTotalSowersDocument,
+                documentEntity: 'seasons',
+                queryConfig: undefined,
+                valueFormatter: (v: string) => Number(v),
+                tickFormatter: (v: string) => Number(v),
             },
         ];
     
