@@ -31,12 +31,7 @@ export class Pump {
     const capInterval = BigNumber.from(12).toHexString(); // 12 seconds
     const alpha = "0x3ffeef368eb04325c526c2246eec3e55"; // 0.967213114754098360 = 1 - 2 / (1 + blocks) where blocks = 60
 
-    const deployedMockPump = await contract.deploy(
-      maxPctIncrease,
-      maxPctDecrease,
-      capInterval,
-      alpha
-    );
+    const deployedMockPump = await contract.deploy(maxPctIncrease, maxPctDecrease, capInterval, alpha);
 
     return new Pump(sdk, deployedMockPump.address, "0x");
   }

@@ -7,8 +7,6 @@ import { Aquifer } from "./Aquifer";
 import { Pump } from "./Pump";
 import {
   deadlineSecondsToBlockchain,
-  encodeWellImmutableData,
-  encodeWellInitFunctionCall,
   loadToken,
   setReadOnly,
   validateAddress,
@@ -19,7 +17,6 @@ import {
 } from "./utils";
 import { WellFunction } from "./WellFunction";
 import { WellsSDK } from "./WellsSDK";
-import { Call } from "src/types";
 
 export type WellDetails = {
   tokens: ERC20Token[];

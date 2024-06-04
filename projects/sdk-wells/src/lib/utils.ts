@@ -2,6 +2,7 @@ import { ERC20Token, Token, TokenValue } from "@beanstalk/sdk-core";
 import { ethers } from "ethers";
 import { WellsSDK } from "./WellsSDK";
 import { Call } from "src/types";
+import { WellFunction } from "./WellFunction";
 
 export const loadToken = async (sdk: WellsSDK, address: string): Promise<ERC20Token> => {
   // First see this is a built in token provided by the SDK
@@ -23,6 +24,12 @@ export const validateToken = (token: Token, name: string) => {
 
   validateAddress(token.address, name);
 };
+
+export const validateHasMinTokensForWell = (tokens: ERC20Token[]) => {
+  if (tokens.length < 2) {
+    throw new Error("Well must have at least 2 tokens");
+  }
+}
 
 export const validateAmount = (value: TokenValue, name: string) => {
   if (!(value instanceof TokenValue)) {
