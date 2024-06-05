@@ -61,7 +61,7 @@ const MegaChart: FC<{}> = () => {
           })
           .then((r) => {
             r.data[entity].forEach((seasonData: any) => {
-              if (seasonData?.season) {
+              if (seasonData?.season && seasonData.season) {
                 if (!output[chartId]?.length) {
                   output[chartId] = [];
                 };
@@ -70,8 +70,10 @@ const MegaChart: FC<{}> = () => {
                 };
                 const formattedTime = timestamps.get(seasonData.season);
                 const formattedValue = chartSetupData[chartId].valueFormatter(seasonData[chartSetupData[chartId].priceScaleKey]);
-                output[chartId][seasonData.season] = { time: formattedTime, value: formattedValue };
-                extraOutput.set(formattedTime, seasonData.season);
+                if (formattedTime > 0) {
+                  output[chartId][seasonData.season] = { time: formattedTime, value: formattedValue };
+                  extraOutput.set(formattedTime, seasonData.season);
+                };
               };
             });
           }));
