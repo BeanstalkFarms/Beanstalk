@@ -3,6 +3,8 @@ import { DocumentNode, QueryOptions, gql, useLazyQuery } from '@apollo/client';
 import { apolloClient } from '~/graph/client';
 
 const PAGE_SIZE = 1000;
+const current = new Date(Date.now());
+const startOfYear = new Date(current.getFullYear(), 0, 0, 0, 0);
 
 export enum SeasonAggregation {
   HOUR = 0,
@@ -30,7 +32,7 @@ export const SEASON_RANGE_TO_COUNT: {
   [SeasonRange.DAY]: 24,
   [SeasonRange.THREE_MONTHS]: 2160,
   [SeasonRange.SIX_MONTHS]: 4320,
-  [SeasonRange.YTD]: 2000,
+  [SeasonRange.YTD]: Math.floor(Math.abs(current.getTime() - startOfYear.getTime()) / (60 * 60 * 1000)),
   [SeasonRange.ONE_YEAR]: 8760,
   [SeasonRange.TWO_YEARS]: 17520
 } as const;
