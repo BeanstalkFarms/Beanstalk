@@ -1,81 +1,103 @@
-import React from 'react';
+import React, { useMemo, useState } from 'react';
 import { FC } from '~/types';
-import { useSeasonalLiquidityQuery, useSeasonalMarketCapQuery, useSeasonalSupplyQuery } from '~/generated/graphql';
 import useSeason from '~/hooks/beanstalk/useSeason';
 import { Box, Card, CircularProgress } from '@mui/material';
-import useSdk from '~/hooks/sdk';
-import { formatUnits } from 'viem';
-import { getFormattedAndExtraData } from './formatters';
+import { apolloClient } from '~/graph/client';
 import ChartV2 from './ChartV2';
 import { useChartSetupData } from './useChartSetupData';
 
 const MiniCharts: FC<{}> = () => {
 
   const season = useSeason();
-  const sdk = useSdk();
   const chartSetupData = useChartSetupData();
-  const BEAN = sdk.tokens.BEAN;
 
-  const { data: supplyData, loading: loadingSupplyData } = useSeasonalSupplyQuery({
-    variables: {
-      season_lte: season.toNumber() || 0,
-      first: 168
+  const selectedCharts: number[] = useMemo(() => { 
+    const chartsToUse = ['Bean Price', 'Market Cap', 'Supply', 'Inst. deltaB'];
+    const output: any[] = [];
+    chartsToUse.forEach((chartName) => {
+      const chartId = chartSetupData.findIndex((setupData) => setupData.name === chartName)
+      if (chartId > -1) {
+        output.push(chartId)
+      };
+    });
+    return output;
+  }, [chartSetupData]);
+
+
+  const [queryData, setQueryData] = useState<any[]>([]);
+  const [moreData, setMoreData] = useState<Map<any, any>>(new Map());
+  const [loading, setLoading] = useState<boolean>(true);
+
+  useMemo(() => {
+    async function getSeasonData(getAllData?: boolean) {
+      const promises: any[] = [];
+      const output: any[] = [];
+      const extraOutput = new Map();
+      const timestamps = new Map();
+
+      for (let i = 0; i < selectedCharts.length; i += 1) {
+
+        const chartId = selectedCharts[i];
+        const queryConfig = chartSetupData[chartId].queryConfig;
+        const document = chartSetupData[chartId].document;
+        const entity = chartSetupData[chartId].documentEntity;
+
+        const currentSeason = season.toNumber();
+
+        const iterations = getAllData ? Math.ceil(currentSeason / 1000) + 1 : 1;
+        for (let j = 0; j < iterations; j += 1) {
+          const startSeason = getAllData ? currentSeason - (j * 1000) : 999999999;
+          if (startSeason <= 0) continue;
+          promises.push( 
+            apolloClient.query({
+            ...queryConfig,
+            query: document,
+            variables: {
+              ...queryConfig?.variables,
+              first: 168,
+              season_lte: startSeason,
+            },
+            notifyOnNetworkStatusChange: true,
+            fetchPolicy: 'cache-first',
+          })
+          .then((r) => {
+            r.data[entity].forEach((seasonData: any) => {
+              if (seasonData?.season) {
+                if (!output[chartId]?.length) {
+                  output[chartId] = [];
+                };
+                if (!timestamps.has(seasonData.season)) {
+                  timestamps.set(seasonData.season, Number(seasonData[chartSetupData[chartId].timeScaleKey]));
+                };
+                const formattedTime = timestamps.get(seasonData.season);
+                const formattedValue = chartSetupData[chartId].valueFormatter(seasonData[chartSetupData[chartId].priceScaleKey]);
+                output[chartId][seasonData.season] = { time: formattedTime, value: formattedValue };
+                extraOutput.set(formattedTime, seasonData.season);
+              };
+            });
+          }));
+        };
+      }
+      await Promise.all(promises);
+      output.forEach((dataSet, index) => { output[index] = dataSet.filter(Boolean) });
+      setQueryData(output);
+      setMoreData(extraOutput);
     }
-  });
-  const { data: marketCapData, loading: loadingMarketCapData } = useSeasonalMarketCapQuery({
-    variables: {
-      season_lte: season.toNumber() || 0,
-      first: 168
-    }
-  });
-  const { data: liquidityData, loading: loadingLiquidityData } = useSeasonalLiquidityQuery({
-    variables: {
-      season_lte: season.toNumber() || 0,
-      season_gt: season.toNumber() - 169 || 0,
-      first: 168
-    },
-    context: { subgraph: 'bean' } 
-  });
 
-  const chartsToUse = ['Bean Price', 'Market Cap', 'Supply'];
-  const chartIds: number[] = [];
-  chartsToUse.forEach((chartName) => {
-    const chartId = chartSetupData.findIndex((setupData) => setupData.name === chartName)
-    if (chartId > -1) {
-     chartIds.push(chartId)
-    };
-  });
-
-  const { formattedData: supplyFormattedData } = getFormattedAndExtraData(
-    supplyData,
-    [chartIds[0]],
-    chartSetupData
-  );
-  const { formattedData: marketCapFormattedData } = getFormattedAndExtraData(
-    marketCapData,
-    [chartIds[1]],
-    chartSetupData
-  );
-  const { formattedData: liquidityFormattedData } = getFormattedAndExtraData(
-    liquidityData,
-    [chartIds[2]],
-    chartSetupData
-  );
-
-  const formatBeanValue = (value: any) => Number(formatUnits(value, BEAN.decimals)).toLocaleString('en-US', { maximumFractionDigits: 0 });
-  const formatDollarValue = (value: any) => `$${value.toLocaleString('en-US', { maximumFractionDigits: 0 })}`;
-
-  const allFormattedData = [supplyFormattedData, marketCapFormattedData, liquidityFormattedData]
-  const loadingComplete = !(loadingLiquidityData && loadingMarketCapData && loadingSupplyData);
+    setLoading(true);
+    getSeasonData();
+    setLoading(false);
+  }, [chartSetupData, selectedCharts, season]);
 
   return (
     <>
       <Box display='flex' flexDirection='row' gap={2}>
-        {chartIds.map((chart, index) => (
+        {selectedCharts.map((chart) => (
             <Card sx={{ width: '100%', height: 150 }}>
-            {loadingComplete ? (
+            {!loading ? (
               <ChartV2
-                formattedData={allFormattedData[index]}
+                formattedData={queryData}
+                extraData={moreData}
                 selected={[chart]}
                 priceFormatter={chartSetupData[chart].valueFormatter}
                 size="mini"
