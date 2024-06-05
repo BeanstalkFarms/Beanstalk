@@ -1,6 +1,6 @@
 import { Address, BigDecimal, BigInt, Bytes, log } from "@graphprotocol/graph-ts";
 import { BoreWellWellFunctionStruct } from "../../generated/Aquifer/Aquifer";
-import { Token, Well, WellDailySnapshot, WellFunction, WellHourlySnapshot } from "../../generated/schema";
+import { Well, WellDailySnapshot, WellFunction, WellHourlySnapshot } from "../../generated/schema";
 import { ERC20 } from "../../generated/templates/Well/ERC20";
 import { BEAN_ERC20 } from "../../../subgraph-core/utils/Constants";
 import { dayFromTimestamp, hourFromTimestamp } from "../../../subgraph-core/utils/Dates";
@@ -15,7 +15,6 @@ import {
   ZERO_BI
 } from "../../../subgraph-core/utils/Decimals";
 import { getTokenDecimals, loadToken, updateTokenUSD } from "./Token";
-import { BigDecimal_max, BigDecimal_min, BigDecimal_sum } from "../../../subgraph-core/utils/ArrayMath";
 
 export function createWell(wellAddress: Address, implementation: Address, inputTokens: Address[]): Well {
   let well = Well.load(wellAddress);
@@ -87,118 +86,6 @@ export function loadOrCreateWellFunction(functionData: BoreWellWellFunctionStruc
     wellFunction.save();
   }
   return wellFunction as WellFunction;
-}
-
-export function updateWellVolumesAfterSwap(
-  wellAddress: Address,
-  fromToken: Address,
-  amountIn: BigInt,
-  toToken: Address,
-  amountOut: BigInt,
-  timestamp: BigInt,
-  blockNumber: BigInt
-): void {
-  let well = loadWell(wellAddress);
-  let tokenFrom = loadToken(fromToken);
-  let tokenTo = loadToken(toToken);
-
-  let fromTokenIndex = well.tokens.indexOf(fromToken);
-  let toTokenIndex = well.tokens.indexOf(toToken);
-
-  let usdAmountIn = toDecimal(amountIn, tokenFrom.decimals).times(tokenFrom.lastPriceUSD);
-  let usdAmountOut = toDecimal(amountOut, tokenTo.decimals).times(tokenTo.lastPriceUSD);
-
-  // let usdVolume = usdAmountIn.plus(usdAmountOut).div(BigDecimal.fromString("2"));
-  well.cumulativeTradeVolumeUSD = well.cumulativeTradeVolumeUSD.plus(usdAmountOut);
-  well.cumulativeTransferVolumeUSD = well.cumulativeTransferVolumeUSD.plus(usdAmountIn).plus(usdAmountOut);
-
-  // Update swap volume by reserves. Trade volume is considered on the buying end of the trade, while
-  // Transfer volume is considered on both ends of the trade.
-  let tradeVolumeReserves = well.cumulativeTradeVolumeReserves;
-  let tradeVolumeReservesUSD = well.cumulativeTradeVolumeReservesUSD;
-  let transferVolumeReserves = well.cumulativeTransferVolumeReserves;
-  let transferVolumeReservesUSD = well.cumulativeTransferVolumeReservesUSD;
-  tradeVolumeReserves[toTokenIndex] = tradeVolumeReserves[toTokenIndex].plus(amountOut);
-  tradeVolumeReservesUSD[toTokenIndex] = tradeVolumeReservesUSD[toTokenIndex].plus(usdAmountOut);
-  transferVolumeReserves[fromTokenIndex] = transferVolumeReserves[fromTokenIndex].plus(amountIn);
-  transferVolumeReserves[toTokenIndex] = transferVolumeReserves[toTokenIndex].plus(amountOut);
-  transferVolumeReservesUSD[fromTokenIndex] = transferVolumeReservesUSD[fromTokenIndex].plus(usdAmountIn);
-  transferVolumeReservesUSD[toTokenIndex] = transferVolumeReservesUSD[toTokenIndex].plus(usdAmountOut);
-
-  well.cumulativeTradeVolumeReserves = tradeVolumeReserves;
-  well.cumulativeTradeVolumeReservesUSD = tradeVolumeReservesUSD;
-  well.cumulativeTransferVolumeReserves = transferVolumeReserves;
-  well.cumulativeTransferVolumeReservesUSD = transferVolumeReservesUSD;
-
-  // Add to the rolling volumes. At the end of this hour, the furthest day back will have its volume amount removed.
-  // As a result there is constantly between 24-25hrs of data here. This is preferable to not containing
-  // some of the most recent volume data.
-  well.rollingDailyTradeVolumeUSD = well.rollingDailyTradeVolumeUSD.plus(usdAmountOut);
-  well.rollingDailyTransferVolumeUSD = well.rollingDailyTransferVolumeUSD.plus(usdAmountIn).plus(usdAmountOut);
-  well.rollingWeeklyTradeVolumeUSD = well.rollingWeeklyTradeVolumeUSD.plus(usdAmountOut);
-  well.rollingWeeklyTransferVolumeUSD = well.rollingWeeklyTransferVolumeUSD.plus(usdAmountIn).plus(usdAmountOut);
-
-  well.lastUpdateTimestamp = timestamp;
-  well.lastUpdateBlockNumber = blockNumber;
-
-  well.save();
-}
-
-// The current implementation of USD volumes may be incorrect for wells that have more than 2 tokens.
-export function updateWellVolumesAfterLiquidity(
-  wellAddress: Address,
-  tokens: Address[],
-  amounts: BigInt[],
-  timestamp: BigInt,
-  blockNumber: BigInt
-): void {
-  let well = loadWell(wellAddress);
-  const tokenInfos = tokens.map<Token>((t) => loadToken(t));
-
-  const usdAmounts: BigDecimal[] = [];
-  for (let i = 0; i < tokens.length; ++i) {
-    const tokenIndex = well.tokens.indexOf(tokens[i]);
-    const tokenInfo = tokenInfos[i];
-    const usdAmount = toDecimal(amounts[i].abs(), tokenInfo.decimals).times(tokenInfo.lastPriceUSD);
-    usdAmounts.push(usdAmount);
-
-    // Update swap volume for individual reserves. Trade volume is not known yet.
-    // Transfer volume is considered on both ends of the trade.
-    let transferVolumeReserves = well.cumulativeTransferVolumeReserves;
-    let transferVolumeReservesUSD = well.cumulativeTransferVolumeReservesUSD;
-    transferVolumeReserves[tokenIndex] = transferVolumeReserves[tokenIndex].plus(amounts[i].abs());
-    transferVolumeReservesUSD[tokenIndex] = transferVolumeReservesUSD[tokenIndex].plus(usdAmount);
-    well.cumulativeTransferVolumeReserves = transferVolumeReserves;
-    well.cumulativeTransferVolumeReservesUSD = transferVolumeReservesUSD;
-  }
-
-  // Update cumulative usd volume. Trade volume is determined based on the amount of price fluctuation
-  // caused by the liquidity event.
-  let minAmount = tokens.length == well.tokens.length ? BigDecimal_min(usdAmounts) : ZERO_BD;
-  let usdVolume = BigDecimal_max(usdAmounts).minus(minAmount).div(BigDecimal.fromString(well.tokens.length.toString()));
-  let cumulativeTransfer = BigDecimal_sum(usdAmounts);
-  well.cumulativeTradeVolumeUSD = well.cumulativeTradeVolumeUSD.plus(usdVolume);
-  well.cumulativeTransferVolumeUSD = well.cumulativeTransferVolumeUSD.plus(cumulativeTransfer);
-
-  // TODO
-  // Determine which token is bought and increment its trade volume. Example:
-  // Adding beans = selling bean/buying weth
-  // Removing beans = buying beans/selling weth
-  // => the token that there is fewest of is being bought.
-  // The amount being bought can be computed as usdVolume/price.
-
-  // Add to the rolling volumes. At the end of this hour, the furthest day back will have its volume amount removed.
-  // As a result there is constantly between 24-25hrs of data here. This is preferable to not containing
-  // some of the most recent volume data.
-  well.rollingDailyTradeVolumeUSD = well.rollingDailyTradeVolumeUSD.plus(usdVolume);
-  well.rollingDailyTransferVolumeUSD = well.rollingDailyTransferVolumeUSD.plus(cumulativeTransfer);
-  well.rollingWeeklyTradeVolumeUSD = well.rollingWeeklyTradeVolumeUSD.plus(usdVolume);
-  well.rollingWeeklyTransferVolumeUSD = well.rollingWeeklyTransferVolumeUSD.plus(cumulativeTransfer);
-
-  well.lastUpdateTimestamp = timestamp;
-  well.lastUpdateBlockNumber = blockNumber;
-
-  well.save();
 }
 
 export function updateWellReserves(wellAddress: Address, additiveAmounts: BigInt[], timestamp: BigInt, blockNumber: BigInt): void {

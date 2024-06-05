@@ -11,11 +11,10 @@ import {
   loadWell,
   updateWellLiquidityTokenBalance,
   updateWellReserves,
-  updateWellTokenUSDPrices,
-  updateWellVolumesAfterLiquidity,
-  updateWellVolumesAfterSwap
+  updateWellTokenUSDPrices
 } from "./utils/Well";
 import { Address, BigInt } from "@graphprotocol/graph-ts";
+import { updateWellVolumesAfterLiquidity, updateWellVolumesAfterSwap } from "./utils/VolumeCP";
 
 export function handleAddLiquidity(event: AddLiquidity): void {
   let well = loadWell(event.address);

@@ -7,8 +7,11 @@ import { createContractCallMocks } from "./Functions";
 import { createAddLiquidityEvent, createRemoveLiquidityEvent, createRemoveLiquidityOneTokenEvent, createSyncEvent } from "./Well";
 import { ONE_BD } from "../../../subgraph-core/utils/Decimals";
 
-export function mockAddLiquidity(tokenAmounts: BigInt[] = [BEAN_SWAP_AMOUNT, WETH_SWAP_AMOUNT]): string {
-  createContractCallMocks();
+export function mockAddLiquidity(
+  tokenAmounts: BigInt[] = [BEAN_SWAP_AMOUNT, WETH_SWAP_AMOUNT],
+  beanPriceMultiple: BigDecimal = ONE_BD
+): string {
+  createContractCallMocks(beanPriceMultiple);
   let newEvent = createAddLiquidityEvent(WELL, SWAP_ACCOUNT, WELL_LP_AMOUNT, tokenAmounts);
   handleAddLiquidity(newEvent);
   return newEvent.transaction.hash.toHexString() + "-" + newEvent.logIndex.toString();

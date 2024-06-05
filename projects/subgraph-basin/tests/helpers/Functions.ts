@@ -13,7 +13,7 @@ export function createContractCallMocks(priceMultiple: BigDecimal = ONE_BD): voi
   }
   prevMocked = priceMultiple;
 
-  const price = BigInt.fromString(new BigDecimal(BEAN_USD_PRICE).times(priceMultiple).toString());
+  const price = BigInt.fromString(new BigDecimal(BEAN_USD_PRICE).times(priceMultiple).truncate(0).toString());
 
   setMockCurvePrice({
     contract: BEAN_3CRV,
