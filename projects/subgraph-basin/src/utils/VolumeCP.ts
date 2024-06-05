@@ -1,7 +1,7 @@
 import { Address, BigDecimal, BigInt, log } from "@graphprotocol/graph-ts";
 import { loadWell } from "./Well";
 import { loadToken } from "./Token";
-import { deltaBigIntArray, emptyBigIntArray, toDecimal, ZERO_BD, ZERO_BI } from "../../../subgraph-core/utils/Decimals";
+import { deltaBigIntArray, emptyBigIntArray, toBigInt, toDecimal, ZERO_BD, ZERO_BI } from "../../../subgraph-core/utils/Decimals";
 import { Token } from "../../generated/schema";
 import { BigDecimal_sum } from "../../../subgraph-core/utils/ArrayMath";
 
@@ -160,12 +160,21 @@ export function calcLiquidityVolume(currentReserves: BigInt[], addedReserves: Bi
     return emptyBigIntArray(2);
   }
 
+  // The overall product is scaled by `scale`, so the individual assets must be scaled by `scaleSqrt`
   const scale = new BigDecimal(initialCp).div(new BigDecimal(currentCp));
+  const scaleSqrt = toDecimal(toBigInt(scale, 36).sqrt(), 18);
   // Reserves after the "buy" portion of the imbalanced liquidity addition
   const reservesBeforeBalancedAdd = [
-    BigInt.fromString(new BigDecimal(currentReserves[0]).times(scale).truncate(0).toString()),
-    BigInt.fromString(new BigDecimal(currentReserves[1]).times(scale).truncate(0).toString())
+    BigInt.fromString(new BigDecimal(currentReserves[0]).times(scaleSqrt).truncate(0).toString()),
+    BigInt.fromString(new BigDecimal(currentReserves[1]).times(scaleSqrt).truncate(0).toString())
   ];
+
+  // log.debug("initialReserves [{}, {}]", [initialReserves[0].toString(), initialReserves[1].toString()]);
+  // log.debug("initialCp {}", [initialCp.toString()]);
+  // log.debug("currentCp {}", [currentCp.toString()]);
+  // log.debug("scale {}", [scale.toString()]);
+  // log.debug("scaleSqrt {}", [scaleSqrt.toString()]);
+  // log.debug("reservesBeforeBalancedAdd [{}, {}]", [reservesBeforeBalancedAdd[0].toString(), reservesBeforeBalancedAdd[1].toString()]);
 
   // The negative value is the token which got bought (removed from the pool).
   // Returns the positive value for the token which was bought and zero for the other token.
