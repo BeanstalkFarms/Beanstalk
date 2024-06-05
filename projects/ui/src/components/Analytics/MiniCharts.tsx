@@ -12,7 +12,7 @@ const MiniCharts: FC<{}> = () => {
   const chartSetupData = useChartSetupData();
 
   const selectedCharts: number[] = useMemo(() => { 
-    const chartsToUse = ['Bean Price', 'Market Cap', 'Supply', 'Inst. deltaB'];
+    const chartsToUse = ['Bean Price', 'Market Cap', 'Supply', 'Total Liquidity'];
     const output: any[] = [];
     chartsToUse.forEach((chartName) => {
       const chartId = chartSetupData.findIndex((setupData) => setupData.name === chartName)

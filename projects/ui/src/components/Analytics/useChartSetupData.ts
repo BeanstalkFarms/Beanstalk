@@ -1,4 +1,4 @@
-import { LiquiditySupplyRatioDocument, SeasonalApyDocument, SeasonalCrossesDocument, SeasonalDepositedSiloAssetDocument, SeasonalHarvestedPodsDocument, SeasonalInstantDeltaBDocument, SeasonalInstantPriceDocument, SeasonalMarketCapDocument, SeasonalPodRateDocument, SeasonalPodsDocument, SeasonalRRoRDocument, SeasonalSownDocument, SeasonalSupplyDocument, SeasonalTemperatureDocument, SeasonalTotalSowersDocument, SeasonalWeightedDeltaBDocument, SeasonalWeightedPriceDocument } from "~/generated/graphql";
+import { LiquiditySupplyRatioDocument, SeasonalApyDocument, SeasonalCrossesDocument, SeasonalDepositedSiloAssetDocument, SeasonalHarvestedPodsDocument, SeasonalInstantDeltaBDocument, SeasonalInstantPriceDocument, SeasonalLiquidityDocument, SeasonalMarketCapDocument, SeasonalPodRateDocument, SeasonalPodsDocument, SeasonalRRoRDocument, SeasonalSownDocument, SeasonalSupplyDocument, SeasonalTemperatureDocument, SeasonalTotalSowersDocument, SeasonalWeightedDeltaBDocument, SeasonalWeightedPriceDocument } from "~/generated/graphql";
 import useSdk from "~/hooks/sdk";
 import { useMemo } from "react";
 import { formatUnits } from "viem";
@@ -91,6 +91,21 @@ export function useChartSetupData() {
             },
             // TODO: Volume
             // TODO: Liquidity
+            {
+                name: 'Total Liquidity',
+                tooltipTitle: 'Liquidity',
+                tooltipHoverText: 'The total USD value of tokens in liquidity pools on the Minting Whitelist at the beginning of every Season. Pre-exploit values include liquidity in pools on the Deposit Whitelist.',
+                timeScaleKey: 'timestamp',
+                priceScaleKey: 'liquidityUSD',
+                document: SeasonalLiquidityDocument,
+                documentEntity: 'seasons',
+                queryConfig: {
+                    variables: { season_gt: 1 },
+                    context: { subgraph: 'bean' },
+                  },
+                valueFormatter: (v: string) => Number(v),
+                tickFormatter: tickFormatUSD,
+            },
             {
                 name: 'Market Cap',
                 tooltipTitle: 'Market Cap',
