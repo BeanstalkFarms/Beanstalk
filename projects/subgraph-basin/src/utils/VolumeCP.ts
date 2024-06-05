@@ -45,56 +45,12 @@ export function updateWellVolumesAfterLiquidity(
 ): void {
   let well = loadWell(wellAddress);
   const wellTokens = well.tokens.map<Address>((t) => Address.fromBytes(t));
-  const tokenInfos = wellTokens.map<Token>((t) => loadToken(t));
-
-  const usdAmounts: BigDecimal[] = [];
-  const usdAmountsAbs: BigDecimal[] = [];
-  for (let i = 0; i < tokens.length; ++i) {
-    const tokenIndex = well.tokens.indexOf(tokens[i]);
-    const tokenInfo = tokenInfos[tokenIndex];
-    usdAmounts.push(toDecimal(amounts[i], tokenInfo.decimals).times(tokenInfo.lastPriceUSD));
-    usdAmountsAbs.push(toDecimal(amounts[i].abs(), tokenInfo.decimals).times(tokenInfo.lastPriceUSD));
-
-    // Update swap volume for individual reserves. Trade volume is not known yet.
-    // Transfer volume is considered on both ends of the trade.
-    let transferVolumeReserves = well.cumulativeTransferVolumeReserves;
-    let transferVolumeReservesUSD = well.cumulativeTransferVolumeReservesUSD;
-    transferVolumeReserves[tokenIndex] = transferVolumeReserves[tokenIndex].plus(amounts[i].abs());
-    transferVolumeReservesUSD[tokenIndex] = transferVolumeReservesUSD[tokenIndex].plus(usdAmountsAbs[i]);
-    well.cumulativeTransferVolumeReserves = transferVolumeReserves;
-    well.cumulativeTransferVolumeReservesUSD = transferVolumeReservesUSD;
-  }
 
   // Determines which token is bought and how much was bought
   const boughtTokens = calcLiquidityVolume(well.reserves, padTokenAmounts(wellTokens, tokens, amounts));
+  const deltaTransferVolumeReserves = padTokenAmounts(wellTokens, tokens, amounts);
 
-  // Add to trade volume
-  let usdVolume = ZERO_BD;
-  let tradeVolumeReserves = well.cumulativeTradeVolumeReserves;
-  let tradeVolumeReservesUSD = well.cumulativeTradeVolumeReservesUSD;
-  for (let i = 0; i < boughtTokens.length; ++i) {
-    if (boughtTokens[i] > ZERO_BI) {
-      tradeVolumeReserves[i] = tradeVolumeReserves[i].plus(boughtTokens[i]);
-      usdVolume = toDecimal(boughtTokens[i], tokenInfos[i].decimals).times(tokenInfos[i].lastPriceUSD);
-      tradeVolumeReservesUSD[i] = tradeVolumeReservesUSD[i].plus(usdVolume);
-    }
-  }
-  well.cumulativeTradeVolumeReserves = tradeVolumeReserves;
-  well.cumulativeTradeVolumeReservesUSD = tradeVolumeReservesUSD;
-
-  // Update cumulative usd volume. Trade volume is determined based on the amount of price fluctuation
-  // caused by the liquidity event.
-  let cumulativeTransfer = BigDecimal_sum(usdAmountsAbs);
-  well.cumulativeTradeVolumeUSD = well.cumulativeTradeVolumeUSD.plus(usdVolume);
-  well.cumulativeTransferVolumeUSD = well.cumulativeTransferVolumeUSD.plus(cumulativeTransfer);
-
-  // Add to the rolling volumes. At the end of this hour, the furthest day back will have its volume amount removed.
-  // As a result there is constantly between 24-25hrs of data here. This is preferable to not containing
-  // some of the most recent volume data.
-  well.rollingDailyTradeVolumeUSD = well.rollingDailyTradeVolumeUSD.plus(usdVolume);
-  well.rollingDailyTransferVolumeUSD = well.rollingDailyTransferVolumeUSD.plus(cumulativeTransfer);
-  well.rollingWeeklyTradeVolumeUSD = well.rollingWeeklyTradeVolumeUSD.plus(usdVolume);
-  well.rollingWeeklyTransferVolumeUSD = well.rollingWeeklyTransferVolumeUSD.plus(cumulativeTransfer);
+  updateVolumeStats(well, boughtTokens, deltaTransferVolumeReserves);
 
   well.lastUpdateTimestamp = timestamp;
   well.lastUpdateBlockNumber = blockNumber;
@@ -170,7 +126,7 @@ function updateVolumeStats(well: Well, deltaTradeVolumeReserves: BigInt[], delta
   let totalTransferUSD = ZERO_BD;
   for (let i = 0; i < deltaTradeVolumeReserves.length; ++i) {
     tradeVolumeReserves[i] = tradeVolumeReserves[i].plus(deltaTradeVolumeReserves[i]);
-    transferVolumeReserves[i] = transferVolumeReserves[i].plus(deltaTransferVolumeReserves[i]);
+    transferVolumeReserves[i] = transferVolumeReserves[i].plus(deltaTransferVolumeReserves[i].abs());
 
     const tokenInfo = loadToken(Address.fromBytes(well.tokens[i]));
     let usdTradeAmount = toDecimal(deltaTradeVolumeReserves[i].abs(), tokenInfo.decimals).times(tokenInfo.lastPriceUSD);
