@@ -116,7 +116,7 @@ describe("Well Entity: Exchange Tests", () => {
       assert.bigIntEquals(BEAN_SWAP_AMOUNT.times(BigInt.fromU32(3)), transferAmounts[0]);
       assert.bigIntEquals(WETH_SWAP_AMOUNT.times(BigInt.fromU32(3)), transferAmounts[1]);
     });
-    test("Token Volumes USD updsted", () => {
+    test("Token Volumes USD updated", () => {
       let updatedStore = loadWell(WELL);
       let tradeAmounts = updatedStore.cumulativeTradeVolumeReservesUSD;
       let transferAmounts = updatedStore.cumulativeTransferVolumeReservesUSD;

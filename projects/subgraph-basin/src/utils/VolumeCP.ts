@@ -2,7 +2,7 @@ import { Address, BigDecimal, BigInt, log } from "@graphprotocol/graph-ts";
 import { loadWell } from "./Well";
 import { loadToken } from "./Token";
 import { deltaBigIntArray, emptyBigIntArray, toBigInt, toDecimal, ZERO_BD, ZERO_BI } from "../../../subgraph-core/utils/Decimals";
-import { Token } from "../../generated/schema";
+import { Token, Well } from "../../generated/schema";
 import { BigDecimal_sum } from "../../../subgraph-core/utils/ArrayMath";
 
 // Constant product volume calculations
@@ -17,44 +17,17 @@ export function updateWellVolumesAfterSwap(
   blockNumber: BigInt
 ): void {
   let well = loadWell(wellAddress);
-  let tokenFrom = loadToken(fromToken);
-  let tokenTo = loadToken(toToken);
 
-  let fromTokenIndex = well.tokens.indexOf(fromToken);
-  let toTokenIndex = well.tokens.indexOf(toToken);
+  const deltaTradeVolumeReserves = emptyBigIntArray(well.tokens.length);
+  const deltaTransferVolumeReserves = emptyBigIntArray(well.tokens.length);
 
-  let usdAmountIn = toDecimal(amountIn, tokenFrom.decimals).times(tokenFrom.lastPriceUSD);
-  let usdAmountOut = toDecimal(amountOut, tokenTo.decimals).times(tokenTo.lastPriceUSD);
+  // Trade volume is considered on the buying end of the trade
+  deltaTradeVolumeReserves[well.tokens.indexOf(toToken)] = amountOut;
+  // Transfer volume is considered on both ends of the trade
+  deltaTransferVolumeReserves[well.tokens.indexOf(fromToken)] = amountIn;
+  deltaTransferVolumeReserves[well.tokens.indexOf(toToken)] = amountOut;
 
-  // let usdVolume = usdAmountIn.plus(usdAmountOut).div(BigDecimal.fromString("2"));
-  well.cumulativeTradeVolumeUSD = well.cumulativeTradeVolumeUSD.plus(usdAmountOut);
-  well.cumulativeTransferVolumeUSD = well.cumulativeTransferVolumeUSD.plus(usdAmountIn).plus(usdAmountOut);
-
-  // Update swap volume by reserves. Trade volume is considered on the buying end of the trade, while
-  // Transfer volume is considered on both ends of the trade.
-  let tradeVolumeReserves = well.cumulativeTradeVolumeReserves;
-  let tradeVolumeReservesUSD = well.cumulativeTradeVolumeReservesUSD;
-  let transferVolumeReserves = well.cumulativeTransferVolumeReserves;
-  let transferVolumeReservesUSD = well.cumulativeTransferVolumeReservesUSD;
-  tradeVolumeReserves[toTokenIndex] = tradeVolumeReserves[toTokenIndex].plus(amountOut);
-  tradeVolumeReservesUSD[toTokenIndex] = tradeVolumeReservesUSD[toTokenIndex].plus(usdAmountOut);
-  transferVolumeReserves[fromTokenIndex] = transferVolumeReserves[fromTokenIndex].plus(amountIn);
-  transferVolumeReserves[toTokenIndex] = transferVolumeReserves[toTokenIndex].plus(amountOut);
-  transferVolumeReservesUSD[fromTokenIndex] = transferVolumeReservesUSD[fromTokenIndex].plus(usdAmountIn);
-  transferVolumeReservesUSD[toTokenIndex] = transferVolumeReservesUSD[toTokenIndex].plus(usdAmountOut);
-
-  well.cumulativeTradeVolumeReserves = tradeVolumeReserves;
-  well.cumulativeTradeVolumeReservesUSD = tradeVolumeReservesUSD;
-  well.cumulativeTransferVolumeReserves = transferVolumeReserves;
-  well.cumulativeTransferVolumeReservesUSD = transferVolumeReservesUSD;
-
-  // Add to the rolling volumes. At the end of this hour, the furthest day back will have its volume amount removed.
-  // As a result there is constantly between 24-25hrs of data here. This is preferable to not containing
-  // some of the most recent volume data.
-  well.rollingDailyTradeVolumeUSD = well.rollingDailyTradeVolumeUSD.plus(usdAmountOut);
-  well.rollingDailyTransferVolumeUSD = well.rollingDailyTransferVolumeUSD.plus(usdAmountIn).plus(usdAmountOut);
-  well.rollingWeeklyTradeVolumeUSD = well.rollingWeeklyTradeVolumeUSD.plus(usdAmountOut);
-  well.rollingWeeklyTransferVolumeUSD = well.rollingWeeklyTransferVolumeUSD.plus(usdAmountIn).plus(usdAmountOut);
+  updateVolumeStats(well, deltaTradeVolumeReserves, deltaTransferVolumeReserves);
 
   well.lastUpdateTimestamp = timestamp;
   well.lastUpdateBlockNumber = blockNumber;
@@ -100,8 +73,8 @@ export function updateWellVolumesAfterLiquidity(
   let tradeVolumeReserves = well.cumulativeTradeVolumeReserves;
   let tradeVolumeReservesUSD = well.cumulativeTradeVolumeReservesUSD;
   for (let i = 0; i < boughtTokens.length; ++i) {
-    tradeVolumeReserves[i] = tradeVolumeReserves[i].plus(boughtTokens[i]);
     if (boughtTokens[i] > ZERO_BI) {
+      tradeVolumeReserves[i] = tradeVolumeReserves[i].plus(boughtTokens[i]);
       usdVolume = toDecimal(boughtTokens[i], tokenInfos[i].decimals).times(tokenInfos[i].lastPriceUSD);
       tradeVolumeReservesUSD[i] = tradeVolumeReservesUSD[i].plus(usdVolume);
     }
@@ -184,6 +157,42 @@ export function calcLiquidityVolume(currentReserves: BigInt[], addedReserves: Bi
     reservesBeforeBalancedAdd[1].minus(initialReserves[1]) < ZERO_BI ? initialReserves[1].minus(reservesBeforeBalancedAdd[1]) : ZERO_BI
   ];
   return tokenAmountBought;
+}
+
+// Updates all volume statistics associated with this well and the provided values
+function updateVolumeStats(well: Well, deltaTradeVolumeReserves: BigInt[], deltaTransferVolumeReserves: BigInt[]): void {
+  let tradeVolumeReserves = well.cumulativeTradeVolumeReserves;
+  let tradeVolumeReservesUSD = well.cumulativeTradeVolumeReservesUSD;
+  let transferVolumeReserves = well.cumulativeTransferVolumeReserves;
+  let transferVolumeReservesUSD = well.cumulativeTransferVolumeReservesUSD;
+
+  let totalTradeUSD = ZERO_BD;
+  let totalTransferUSD = ZERO_BD;
+  for (let i = 0; i < deltaTradeVolumeReserves.length; ++i) {
+    tradeVolumeReserves[i] = tradeVolumeReserves[i].plus(deltaTradeVolumeReserves[i]);
+    transferVolumeReserves[i] = transferVolumeReserves[i].plus(deltaTransferVolumeReserves[i]);
+
+    const tokenInfo = loadToken(Address.fromBytes(well.tokens[i]));
+    let usdTradeAmount = toDecimal(deltaTradeVolumeReserves[i].abs(), tokenInfo.decimals).times(tokenInfo.lastPriceUSD);
+    let usdTransferAmount = toDecimal(deltaTransferVolumeReserves[i].abs(), tokenInfo.decimals).times(tokenInfo.lastPriceUSD);
+    tradeVolumeReservesUSD[i] = tradeVolumeReservesUSD[i].plus(usdTradeAmount);
+    transferVolumeReservesUSD[i] = transferVolumeReservesUSD[i].plus(usdTransferAmount);
+    totalTradeUSD = totalTradeUSD.plus(usdTradeAmount);
+    totalTransferUSD = totalTransferUSD.plus(usdTransferAmount);
+  }
+
+  well.cumulativeTradeVolumeReserves = tradeVolumeReserves;
+  well.cumulativeTradeVolumeReservesUSD = tradeVolumeReservesUSD;
+  well.cumulativeTransferVolumeReserves = transferVolumeReserves;
+  well.cumulativeTransferVolumeReservesUSD = transferVolumeReservesUSD;
+
+  well.cumulativeTradeVolumeUSD = well.cumulativeTradeVolumeUSD.plus(totalTradeUSD);
+  well.cumulativeTransferVolumeUSD = well.cumulativeTransferVolumeUSD.plus(totalTransferUSD);
+
+  well.rollingDailyTradeVolumeUSD = well.rollingDailyTradeVolumeUSD.plus(totalTradeUSD);
+  well.rollingDailyTransferVolumeUSD = well.rollingDailyTransferVolumeUSD.plus(totalTransferUSD);
+  well.rollingWeeklyTradeVolumeUSD = well.rollingWeeklyTradeVolumeUSD.plus(totalTradeUSD);
+  well.rollingWeeklyTransferVolumeUSD = well.rollingWeeklyTransferVolumeUSD.plus(totalTransferUSD);
 }
 
 // Returns the provided token amounts in their appropriate position with respect to well reserve tokens
