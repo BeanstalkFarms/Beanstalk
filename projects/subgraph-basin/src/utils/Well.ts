@@ -58,9 +58,17 @@ export function createWell(wellAddress: Address, implementation: Address, inputT
   well.cumulativeDepositCount = 0;
   well.cumulativeWithdrawCount = 0;
   well.cumulativeSwapCount = 0;
+  well.rollingDailyTradeVolumeReserves = emptyBigIntArray(inputTokens.length);
+  well.rollingDailyTradeVolumeReservesUSD = emptyBigDecimalArray(inputTokens.length);
   well.rollingDailyTradeVolumeUSD = ZERO_BD;
+  well.rollingDailyTransferVolumeReserves = emptyBigIntArray(inputTokens.length);
+  well.rollingDailyTransferVolumeReservesUSD = emptyBigDecimalArray(inputTokens.length);
   well.rollingDailyTransferVolumeUSD = ZERO_BD;
+  well.rollingWeeklyTradeVolumeReserves = emptyBigIntArray(inputTokens.length);
+  well.rollingWeeklyTradeVolumeReservesUSD = emptyBigDecimalArray(inputTokens.length);
   well.rollingWeeklyTradeVolumeUSD = ZERO_BD;
+  well.rollingWeeklyTransferVolumeReserves = emptyBigIntArray(inputTokens.length);
+  well.rollingWeeklyTransferVolumeReservesUSD = emptyBigDecimalArray(inputTokens.length);
   well.rollingWeeklyTransferVolumeUSD = ZERO_BD;
   well.lastSnapshotDayID = 0;
   well.lastSnapshotHourID = 0;
@@ -309,10 +317,36 @@ export function takeWellHourlySnapshot(wellAddress: Address, hourID: i32, timest
   let oldest24h = WellHourlySnapshot.load(wellAddress.concatI32(hourID - 24));
   let oldest7d = WellHourlySnapshot.load(wellAddress.concatI32(hourID - 168));
   if (oldest24h != null) {
+    well.rollingDailyTradeVolumeReserves = deltaBigIntArray(well.rollingDailyTradeVolumeReserves, oldest24h.deltaTradeVolumeReserves);
+    well.rollingDailyTradeVolumeReservesUSD = deltaBigDecimalArray(
+      well.rollingDailyTradeVolumeReservesUSD,
+      oldest24h.deltaTradeVolumeReservesUSD
+    );
     well.rollingDailyTradeVolumeUSD = well.rollingDailyTradeVolumeUSD.minus(oldest24h.deltaTradeVolumeUSD);
+    well.rollingDailyTransferVolumeReserves = deltaBigIntArray(
+      well.rollingDailyTransferVolumeReserves,
+      oldest24h.deltaTransferVolumeReserves
+    );
+    well.rollingDailyTransferVolumeReservesUSD = deltaBigDecimalArray(
+      well.rollingDailyTransferVolumeReservesUSD,
+      oldest24h.deltaTransferVolumeReservesUSD
+    );
     well.rollingDailyTransferVolumeUSD = well.rollingDailyTransferVolumeUSD.minus(oldest24h.deltaTransferVolumeUSD);
     if (oldest7d != null) {
+      well.rollingWeeklyTradeVolumeReserves = deltaBigIntArray(well.rollingWeeklyTradeVolumeReserves, oldest7d.deltaTradeVolumeReserves);
+      well.rollingWeeklyTradeVolumeReservesUSD = deltaBigDecimalArray(
+        well.rollingWeeklyTradeVolumeReservesUSD,
+        oldest7d.deltaTradeVolumeReservesUSD
+      );
       well.rollingWeeklyTradeVolumeUSD = well.rollingWeeklyTradeVolumeUSD.minus(oldest7d.deltaTradeVolumeUSD);
+      well.rollingWeeklyTransferVolumeReserves = deltaBigIntArray(
+        well.rollingWeeklyTransferVolumeReserves,
+        oldest7d.deltaTransferVolumeReserves
+      );
+      well.rollingWeeklyTransferVolumeReservesUSD = deltaBigDecimalArray(
+        well.rollingWeeklyTransferVolumeReservesUSD,
+        oldest7d.deltaTransferVolumeReservesUSD
+      );
       well.rollingWeeklyTransferVolumeUSD = well.rollingWeeklyTransferVolumeUSD.minus(oldest7d.deltaTransferVolumeUSD);
     }
   }

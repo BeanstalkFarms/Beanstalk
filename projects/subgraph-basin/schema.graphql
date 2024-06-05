@@ -140,14 +140,38 @@ type Well @entity {
   " Total number of trades (swaps) "
   cumulativeSwapCount: Int!
 
+  " Current rolling 24h reserve trade volume in token amounts "
+  rollingDailyTradeVolumeReserves: [BigInt!]!
+
+  " Current rolling 24h reserve trade volume in USD "
+  rollingDailyTradeVolumeReservesUSD: [BigDecimal!]!
+
   " Current rolling 24h trade volume in USD "
   rollingDailyTradeVolumeUSD: BigDecimal!
+
+  " Current rolling 24h reserve transfer volume in token amounts "
+  rollingDailyTransferVolumeReserves: [BigInt!]!
+
+  " Current rolling 24h reserve transfer volume in USD "
+  rollingDailyTransferVolumeReservesUSD: [BigDecimal!]!
 
   " Current rolling 24h transfer volume in USD "
   rollingDailyTransferVolumeUSD: BigDecimal!
 
+  " Current rolling weekly reserve trade volume in token amounts "
+  rollingWeeklyTradeVolumeReserves: [BigInt!]!
+
+  " Current rolling weekly reserve trade volume in USD "
+  rollingWeeklyTradeVolumeReservesUSD: [BigDecimal!]!
+
   " Current rolling weekly trade volume in USD "
   rollingWeeklyTradeVolumeUSD: BigDecimal!
+
+  " Current rolling weekly reserve transfer volume in token amounts "
+  rollingWeeklyTransferVolumeReserves: [BigInt!]!
+
+  " Current rolling weekly reserve transfer volume in USD "
+  rollingWeeklyTransferVolumeReservesUSD: [BigDecimal!]!
 
   " Current rolling weekly transfer volume in USD "
   rollingWeeklyTransferVolumeUSD: BigDecimal!
