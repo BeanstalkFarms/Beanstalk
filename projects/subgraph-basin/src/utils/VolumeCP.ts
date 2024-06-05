@@ -1,17 +1,9 @@
 import { Address, BigDecimal, BigInt, log } from "@graphprotocol/graph-ts";
 import { loadWell } from "./Well";
 import { loadToken } from "./Token";
-import {
-  deltaBigIntArray,
-  emptyBigDecimalArray,
-  emptyBigIntArray,
-  toBigInt,
-  toDecimal,
-  ZERO_BD,
-  ZERO_BI
-} from "../../../subgraph-core/utils/Decimals";
+import { deltaBigIntArray, emptyBigIntArray, toDecimal, ZERO_BD, ZERO_BI } from "../../../subgraph-core/utils/Decimals";
 import { Token } from "../../generated/schema";
-import { BigDecimal_indexOfMin, BigDecimal_max, BigDecimal_min, BigDecimal_sum } from "../../../subgraph-core/utils/ArrayMath";
+import { BigDecimal_sum } from "../../../subgraph-core/utils/ArrayMath";
 
 // Constant product volume calculations
 
@@ -100,24 +92,17 @@ export function updateWellVolumesAfterLiquidity(
     well.cumulativeTransferVolumeReservesUSD = transferVolumeReservesUSD;
   }
 
-  // INCORRECT:
-  // let minAmount = tokens.length == well.tokens.length ? BigDecimal_min(usdAmountsAbs) : ZERO_BD;
-  // let usdVolume = BigDecimal_max(usdAmountsAbs).minus(minAmount).div(BigDecimal.fromString(well.tokens.length.toString()));
+  // Determines which token is bought and how much was bought
+  const boughtTokens = calcLiquidityVolume(well.reserves, padTokenAmounts(wellTokens, tokens, amounts));
 
-  // Determine which token is bought and increment its trade volume.
-  // The amount of tokens being bought can be computed as usdVolume/price.
-  // const boughtTokenIndex = indexOfLiquidityBoughtToken(wellTokens, tokens, usdAmounts);
-  // const boughtTokenAmount = usdVolume.div(tokenInfos[boughtTokenIndex].lastPriceUSD);
-  // const boughtTokenBI = toBigInt(boughtTokenAmount, tokenInfos[boughtTokenIndex].decimals);
-  const boughtToken = calcLiquidityVolume(well.reserves, padTokenAmounts(wellTokens, tokens, amounts));
+  // Add to trade volume
   let usdVolume = ZERO_BD;
-
   let tradeVolumeReserves = well.cumulativeTradeVolumeReserves;
   let tradeVolumeReservesUSD = well.cumulativeTradeVolumeReservesUSD;
-  for (let i = 0; i < boughtToken.length; ++i) {
-    tradeVolumeReserves[i] = tradeVolumeReserves[i].plus(boughtToken[i]);
-    if (boughtToken[i] > ZERO_BI) {
-      usdVolume = toDecimal(boughtToken[i], tokenInfos[i].decimals).times(tokenInfos[i].lastPriceUSD);
+  for (let i = 0; i < boughtTokens.length; ++i) {
+    tradeVolumeReserves[i] = tradeVolumeReserves[i].plus(boughtTokens[i]);
+    if (boughtTokens[i] > ZERO_BI) {
+      usdVolume = toDecimal(boughtTokens[i], tokenInfos[i].decimals).times(tokenInfos[i].lastPriceUSD);
       tradeVolumeReservesUSD[i] = tradeVolumeReservesUSD[i].plus(usdVolume);
     }
   }
@@ -144,22 +129,21 @@ export function updateWellVolumesAfterLiquidity(
   well.save();
 }
 
-// TODO: update these comments
 /**
  * Calculates the amount of volume resulting from a liquidity add operation.
- * The following system of equations was solved:
+ * The methodology is as follows:
  *
- * let initial reserves = i
- * let amount of reserves added = d
+ * When adding liquidity in unbalanced proportions, we treat it as if some of one asset must first be bought,
+ * and then the rest is added in a balanced proportion.
  *
- * (i0 + x)(i0 - y) = i0 * i1
- * (i0 + x)r = i0 + d0
- * (i1 - y)r = i1 + d1
+ * We know the constant product before adding liquidity, and after adding liquidity. The
+ * newer constant product can be scaled down until it reaches the older constant product.
+ * From there, it becomes clear how much of an asset must have been purchased as a result.
  *
- * Assumption is that only one of d0 or d1 will be nonzero.
- *
- * Example: 1500 BEAN and 1 ETH. If 1500 BEAN liquidity is added, in terms of buy pressure, this is equivalent
+ * Example: initial 1500 BEAN and 1 ETH. If 1500 BEAN liquidity is added, in terms of buy pressure, this is equivalent
  * to buying 0.29289 ETH for 621 BEAN and then adding in equal proportions.
+ * After that purchase there would be 2121 BEAN and 0.70711 ETH, which can be scaled up to (3000, 1) in equal proportion.
+ * The below implementation solves this scenario backwards.
  *
  * @param currentReserves - the current reserves, after the liquidity event
  * @param addedReserves - the net change in reserves after the liquidity event
@@ -208,34 +192,4 @@ function padTokenAmounts(allTokens: Address[], includedTokens: Address[], amount
   } else {
     return amounts;
   }
-}
-
-// TODO: update these comments. This method may no longer be necessary
-/**
- * Returns the index of the token which was effectively bought by this liquidity operation. Example:
- * Adding beans = selling bean/buying weth
- * Removing beans = buying beans/selling weth
- * => the token that there is fewest of is being bought (including negative for removal).
- * @param allTokens - all tokens in the well
- * @param eventTokens - tokens which were added/removed by the liquidity event
- * @param usdAmountAdded - usd value of tokens which were added. Is negative for removal
- *
- * eventTokens and usdAmounts lists must be the same size as their values correspond to one another.
- *
- */
-function indexOfLiquidityBoughtToken(allTokens: Address[], eventTokens: Address[], usdAmountAdded: BigDecimal[]): u32 {
-  let usdAmountList: BigDecimal[];
-  if (eventTokens.length < allTokens.length) {
-    // Pad with zeros
-    usdAmountList = emptyBigDecimalArray(allTokens.length);
-    for (let i = 0; i < eventTokens.length; ++i) {
-      const tokenIndex = allTokens.indexOf(eventTokens[i]);
-      if (tokenIndex >= 0) {
-        usdAmountList[tokenIndex] = usdAmountAdded[i];
-      }
-    }
-  } else {
-    usdAmountList = usdAmountAdded;
-  }
-  return BigDecimal_indexOfMin(usdAmountList);
 }
