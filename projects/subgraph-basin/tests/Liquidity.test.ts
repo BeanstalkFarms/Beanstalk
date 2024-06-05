@@ -122,7 +122,6 @@ describe("Well Entity: Liquidity Event Tests", () => {
       let endingBalances = updatedStore.reservesUSD;
 
       // Bean balance is still only one unit of BEAN_USD_AMOUNT because the price was cut in half on the second deposit
-      // In practice the WETH price would be changing also, but because bean price is mocked to be 0.5, its constant.
       assert.stringEquals(BEAN_USD_AMOUNT.toString(), endingBalances[0].toString());
       assert.stringEquals(WETH_USD_AMOUNT.toString(), endingBalances[1].toString());
       assert.stringEquals(BEAN_USD_AMOUNT.plus(WETH_USD_AMOUNT).toString(), updatedStore.totalLiquidityUSD.toString());

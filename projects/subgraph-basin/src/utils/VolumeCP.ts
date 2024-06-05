@@ -169,6 +169,7 @@ export function calcLiquidityVolume(currentReserves: BigInt[], addedReserves: Bi
     BigInt.fromString(new BigDecimal(currentReserves[1]).times(scaleSqrt).truncate(0).toString())
   ];
 
+  // log.debug("currentReserves [{}, {}]", [currentReserves[0].toString(), currentReserves[1].toString()]);
   // log.debug("initialReserves [{}, {}]", [initialReserves[0].toString(), initialReserves[1].toString()]);
   // log.debug("initialCp {}", [initialCp.toString()]);
   // log.debug("currentCp {}", [currentCp.toString()]);

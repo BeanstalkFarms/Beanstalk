@@ -95,7 +95,7 @@ export function handleRemoveLiquidityOneToken(event: RemoveLiquidityOneToken): v
   updateWellVolumesAfterLiquidity(
     event.address,
     [event.params.tokenOut],
-    [event.params.tokenAmountOut],
+    [event.params.tokenAmountOut.neg()],
     event.block.timestamp,
     event.block.number
   );
