@@ -1,5 +1,5 @@
 import { ERC20Token, Token, TokenValue } from "@beanstalk/sdk-core";
-import { BigNumber, CallOverrides, constants, ContractFactory, ContractTransaction, Overrides } from "ethers";
+import { BigNumber, CallOverrides, ContractTransaction, Overrides } from "ethers";
 import { Well__factory } from "src/constants/generated";
 import { Well as WellContract } from "src/constants/generated";
 
