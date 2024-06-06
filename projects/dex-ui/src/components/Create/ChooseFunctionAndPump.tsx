@@ -10,16 +10,13 @@ import { Text } from "src/components/Typography";
 import { CreateWellButtonRow } from "./shared/CreateWellButtonRow";
 import { TextInputField } from "src/components/Form";
 import { XIcon } from "src/components/Icons";
-import {
-  CreateWellStepProps,
-  prepareTokenOrderForBoreWell,
-  useCreateWell
-} from "./CreateWellProvider";
+import { CreateWellStepProps, useCreateWell } from "./CreateWellProvider";
 import { CreateWellFormProgress } from "./shared/CreateWellFormProgress";
 import { ComponentInputWithCustom } from "./shared/ComponentInputWithCustom";
 import { USE_ERC20_TOKEN_ERRORS, useERC20TokenWithAddress } from "src/tokens/useERC20Token";
 import { ERC20Token } from "@beanstalk/sdk";
 import useSdk from "src/utils/sdk/useSdk";
+import BoreWellUtils from "src/wells/boreWell";
 
 const additionalOptions = [
   {
@@ -75,7 +72,7 @@ const ChooseFunctionAndPumpForm = () => {
       if (!valid || !token1 || !token2) return;
       if (token1.address === token2.address) return; // should never be true, but just in case
 
-      const [tk1, tk2] = prepareTokenOrderForBoreWell(sdk, [token1, token2]);
+      const [tk1, tk2] = BoreWellUtils.prepareTokenOrderForBoreWell(sdk, [token1, token2]);
       setStep2({ ...values, token1: tk1, token2: tk2, goNext: true });
     },
     [sdk, setStep2, methods, token1, token2]

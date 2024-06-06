@@ -7,7 +7,7 @@ export const usePumps = () => {
   const { data: wells } = useWells();
 
   return useMemo(() => {
-    if (!wells || !wells.length) return;
+    if (!wells || !wells.length) return [];
 
     const pumpMap: Record<string, Pump> = {};
 

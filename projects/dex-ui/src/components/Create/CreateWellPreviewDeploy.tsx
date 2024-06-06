@@ -44,23 +44,23 @@ const FormContent = () => {
   const onSubmit = async (values: FormValues) => {
     handleSave(values);
 
-    const token1Amount = wellTokens.token1?.fromHuman(Number(values.token1Amount || "0" ));
-    const token2Amount = wellTokens.token2?.fromHuman(Number(values.token2Amount || "0"));
+    if (!wellTokens.token1 || !wellTokens.token2) return;
+
+    const token1Amount = wellTokens.token1.fromHuman(Number(values.token1Amount || "0"));
+    const token2Amount = wellTokens.token2.fromHuman(Number(values.token2Amount || "0"));
 
     // We determine that the user is seeding liquidity if they have 'seeding liquidity' toggled on in the CURRENT form
     // and if they have provided a non-zero amount for at least 1 token.
-    const seedingLiquidity = values.seedingLiquidity && Boolean(token1Amount?.gt(0) || token2Amount?.gt(0));
-    
+    const seedingLiquidity =
+      values.seedingLiquidity && Boolean(token1Amount.gt(0) || token2Amount.gt(0));
+
     // Always use the salt value from the current form.
-    const saltValue = values.usingSalt ? values.salt : undefined;
+    const saltValue = values.usingSalt ? values.salt : 0;
 
-    // if the user is seeding liquidity, they must provide salt so we can deploy the well at a deterministic address. 
-    // a deterministic address is necessary to boreWell & seed liquidity in the same txn (via advancedFarm & advancedPipe)
-    if (seedingLiquidity && (!saltValue || saltValue < 1)) {
-      return;
-    };
+    const liquidity =
+      seedingLiquidity && token1Amount && token2Amount ? { token1Amount, token2Amount } : undefined;
 
-    await deployWell(saltValue, token1Amount, token2Amount);
+    await deployWell(saltValue, liquidity);
   };
 
   return (

@@ -7,7 +7,7 @@ export const useWellFunctions = () => {
   const { data: wells } = useWells();
 
   return useMemo(() => {
-    if (!wells || !wells.length) return;
+    if (!wells || !wells.length) return [];
 
     const wellFunctionMap: Record<string, WellFunction> = {};
 
@@ -16,7 +16,6 @@ export const useWellFunctions = () => {
       const address = well.wellFunction.address.toLowerCase();
 
       if (!(address in wellFunctionMap)) {
-        wellFunctionMap[address] = well.wellFunction;
       }
     }
 
