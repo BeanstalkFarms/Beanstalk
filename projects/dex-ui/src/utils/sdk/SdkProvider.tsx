@@ -1,11 +1,9 @@
-import React, { createContext, useEffect, useMemo, useRef } from "react";
+import React, { createContext, useMemo } from "react";
 import { BeanstalkSDK } from "@beanstalk/sdk";
-import { Aquifer, WellsSDK } from "@beanstalk/sdk-wells";
 import { JsonRpcProvider } from "@ethersproject/providers";
 import { Signer } from "ethers";
 import { Log } from "../logger";
 import { useEthersProvider, useEthersSigner } from "../wagmi/ethersAdapter";
-import { Settings } from "src/settings";
 
 const IS_DEVELOPMENT_ENV = process.env.NODE_ENV !== "production";
 
@@ -26,29 +24,16 @@ const RPC_URL = IS_DEVELOPMENT_ENV
   ? "http://localhost:8545"
   : `https://eth-mainnet.g.alchemy.com/v2/${ALCHEMY_API_KEY}`;
 
-export const BeanstalkSDKContext = createContext<{ sdk: BeanstalkSDK; aquifer: Aquifer | null }>({
-  sdk: new BeanstalkSDK({ rpcUrl: RPC_URL, DEBUG: import.meta.env.DEV }),
-  aquifer: null
-});
-
-const makeAquifer = (wellsSdk: WellsSDK) => new Aquifer(wellsSdk, Settings.AQUIFER_ADDRESS);
+export const BeanstalkSDKContext = createContext<BeanstalkSDK>(
+  new BeanstalkSDK({ rpcUrl: RPC_URL, DEBUG: import.meta.env.DEV })
+);
 
 function BeanstalkSDKProvider({ children }: { children: React.ReactNode }) {
   const signer = useEthersSigner();
   const provider = useEthersProvider();
   const sdk = useMemo(() => getSDK(provider as JsonRpcProvider, signer), [provider, signer]);
 
-  const aquifer = useRef<Aquifer>(makeAquifer(sdk.wells));
-
-  useEffect(() => {
-    aquifer.current = makeAquifer(sdk.wells);
-  }, [sdk]);
-
-  return (
-    <BeanstalkSDKContext.Provider value={{ sdk, aquifer: aquifer.current }}>
-      {children}
-    </BeanstalkSDKContext.Provider>
-  );
+  return <BeanstalkSDKContext.Provider value={sdk}>{children}</BeanstalkSDKContext.Provider>;
 }
 
 export const SdkProvider = React.memo(BeanstalkSDKProvider);
