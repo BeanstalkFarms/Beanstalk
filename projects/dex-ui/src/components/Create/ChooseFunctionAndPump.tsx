@@ -10,12 +10,15 @@ import { Text } from "src/components/Typography";
 import { CreateWellButtonRow } from "./shared/CreateWellButtonRow";
 import { TextInputField } from "src/components/Form";
 import { XIcon } from "src/components/Icons";
-
-import { CreateWellStepProps, useCreateWell } from "./CreateWellProvider";
+import {
+  CreateWellStepProps,
+  prepareTokenOrderForBoreWell,
+  useCreateWell
+} from "./CreateWellProvider";
 import { CreateWellFormProgress } from "./shared/CreateWellFormProgress";
 import { ComponentInputWithCustom } from "./shared/ComponentInputWithCustom";
 import { USE_ERC20_TOKEN_ERRORS, useERC20TokenWithAddress } from "src/tokens/useERC20Token";
-import { BeanstalkSDK, ERC20Token } from "@beanstalk/sdk";
+import { ERC20Token } from "@beanstalk/sdk";
 import useSdk from "src/utils/sdk/useSdk";
 
 const additionalOptions = [
@@ -72,7 +75,7 @@ const ChooseFunctionAndPumpForm = () => {
       if (!valid || !token1 || !token2) return;
       if (token1.address === token2.address) return; // should never be true, but just in case
 
-      const [tk1, tk2] = sortTokens(sdk, [token1, token2]);
+      const [tk1, tk2] = prepareTokenOrderForBoreWell(sdk, [token1, token2]);
       setStep2({ ...values, token1: tk1, token2: tk2, goNext: true });
     },
     [sdk, setStep2, methods, token1, token2]
@@ -278,34 +281,6 @@ const TokenAddressInputWithSearch = ({
       )}
     </>
   );
-};
-
-/**
- * Sorts the tokens in the following manner:
- *  - if tokens includes BEAN, BEAN is first
- *  - if tokens includes WETH, WETH is last
- * - otherwise, the token order is preserved
- *
- * this is so that pairs with BEAN are BEAN:X
- * and pairs with WETH are X:WETH
- *
- * TODO: do this with wStETH
- */
-const sortTokens = (sdk: BeanstalkSDK, tokens: ERC20Token[]) => {
-  if (tokens.length < 2) {
-    throw new Error("2 Tokens are required");
-  }
-
-  const wethAddress = sdk.tokens.WETH.address.toLowerCase();
-  const beanAddress = sdk.tokens.BEAN.address.toLowerCase();
-
-  return tokens.sort((a, b) => {
-    const addressA = a.address.toLowerCase();
-    const addressB = b.address.toLowerCase();
-    if (addressA === beanAddress || addressB === wethAddress) return -1;
-    if (addressB === beanAddress || addressA === wethAddress) return 1;
-    return 0;
-  });
 };
 
 

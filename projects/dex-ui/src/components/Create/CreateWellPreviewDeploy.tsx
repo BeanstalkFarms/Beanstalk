@@ -1,4 +1,4 @@
-import React, { useCallback } from "react";
+import React, { useEffect } from "react";
 import styled from "styled-components";
 import { Controller, FormProvider, useForm, useFormContext, useWatch } from "react-hook-form";
 import { theme } from "src/utils/ui/theme";
@@ -32,8 +32,8 @@ const FormContent = () => {
     }
   });
 
-  const handleSave = () => {
-    const values = methods.getValues();
+  const handleSave = (formValues?: FormValues) => {
+    const values = formValues || methods.getValues();
     setStep4({
       salt: values.usingSalt ? values.salt : undefined,
       token1Amount: values.seedingLiquidity ? values.token1Amount : undefined,
@@ -41,27 +41,27 @@ const FormContent = () => {
     });
   };
 
-  const onSubmit = useCallback(
-    async (values: FormValues) => {
-      const _salt = values.usingSalt ? values.salt : undefined;
-      const _tk1Amount =
-        values.seedingLiquidity && values.token1Amount ? values.token1Amount : undefined;
-      const _tk2Amount =
-        values.seedingLiquidity && values.token2Amount ? values.token2Amount : undefined;
+  const onSubmit = async (values: FormValues) => {
+    handleSave(values);
 
-      setStep4({
-        salt: _salt,
-        token1Amount: _tk1Amount,
-        token2Amount: _tk2Amount
-      });
+    const token1Amount = wellTokens.token1?.fromHuman(Number(values.token1Amount || "0" ));
+    const token2Amount = wellTokens.token2?.fromHuman(Number(values.token2Amount || "0"));
 
-      const tk1Amount = _tk1Amount ? wellTokens.token1?.amount(values.token1Amount) : undefined;
-      const tk2Amount = _tk2Amount ? wellTokens.token2?.amount(values.token2Amount) : undefined;
+    // We determine that the user is seeding liquidity if they have 'seeding liquidity' toggled on in the CURRENT form
+    // and if they have provided a non-zero amount for at least 1 token.
+    const seedingLiquidity = values.seedingLiquidity && Boolean(token1Amount?.gt(0) || token2Amount?.gt(0));
+    
+    // Always use the salt value from the current form.
+    const saltValue = values.usingSalt ? values.salt : undefined;
 
-      await deployWell(_salt, tk1Amount, tk2Amount);
-    },
-    [setStep4, deployWell, wellTokens]
-  );
+    // if the user is seeding liquidity, they must provide salt so we can deploy the well at a deterministic address. 
+    // a deterministic address is necessary to boreWell & seed liquidity in the same txn (via advancedFarm & advancedPipe)
+    if (seedingLiquidity && (!saltValue || saltValue < 1)) {
+      return;
+    };
+
+    await deployWell(saltValue, token1Amount, token2Amount);
+  };
 
   return (
     <FormProvider {...methods}>
@@ -78,11 +78,19 @@ const FormContent = () => {
 
 const LiquidityForm = () => {
   const { wellTokens } = useCreateWell();
-  const { control } = useFormContext<FormValues>();
+  const { control, setValue } = useFormContext<FormValues>();
   const seedingLiquidity = useWatch({ control, name: "seedingLiquidity" });
+  const usingSalt = useWatch({ control, name: "usingSalt" });
 
   const token1 = wellTokens.token1;
   const token2 = wellTokens.token2;
+
+  useEffect(() => {
+    if (seedingLiquidity && !usingSalt) {
+      setValue("usingSalt", true);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [seedingLiquidity, usingSalt]);
 
   if (!token1 || !token2) return null;
 
@@ -150,6 +158,8 @@ const SaltForm = () => {
   const { control, register } = useFormContext<FormValues>();
   const usingSalt = useWatch({ control, name: "usingSalt" });
 
+  const seedingLiquidity = useWatch({ control, name: "seedingLiquidity" });
+
   return (
     <Flex $gap={2}>
       <Flex $direction="row" $gap={1} $alignItems="center">
@@ -163,9 +173,13 @@ const SaltForm = () => {
           placeholder="Input Salt"
           type="number"
           {...register("salt", {
+            required: {
+              value: seedingLiquidity ? true : false,
+              message: "Salt is required when seeding liquidity"
+            },
             min: {
-              value: 0,
-              message: "Salt cannot be negative"
+              value: 1,
+              message: "Salt must be >= 1"
             },
             validate: (formValue) => {
               if (formValue && !Number.isInteger(formValue)) {
