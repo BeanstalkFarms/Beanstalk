@@ -5,13 +5,13 @@ import useTimeTabState from '~/hooks/app/useTimeTabState';
 import AddRoundedIcon from '@mui/icons-material/AddRounded';
 import useToggle from '~/hooks/display/useToggle';
 import { apolloClient } from '~/graph/client';
-import DateRangeOutlinedIcon from '@mui/icons-material/DateRangeOutlined';
 import useSeason from '~/hooks/beanstalk/useSeason';
 import ChartV2 from './ChartV2';
 import TimeTabs from '../Common/Charts/TimeTabs';
 import DropdownIcon from '../Common/DropdownIcon';
 import SelectDialog from './SelectDialog';
 import { useChartSetupData } from './useChartSetupData';
+import CalendarButton from '../Common/CalendarButton';
 
 const MegaChart: FC<{}> = () => {
 
@@ -162,23 +162,7 @@ const MegaChart: FC<{}> = () => {
               useExpandedWindows
             />
             <Divider variant="middle" orientation="vertical" aria-hidden="true" flexItem sx={{ marginTop: '0px', marginBottom: '0px', height: '20px', color: 'divider' }} />
-            <Button
-              // onClick={() => handleChange1(w.index)}
-              key='calendarSelect'
-              variant="text"
-              size="small"
-              color="dark"
-              sx={{
-                borderRadius: 0.5,
-                px: 0.3,
-                py: 0.3,
-                mt: -0.3,
-                minWidth: 0,
-              }}
-              disableRipple
-            >
-              <DateRangeOutlinedIcon color="inherit" fontSize='small' />
-            </Button>
+            <CalendarButton />
           </Box>
         </Box>
         {loading ? (
