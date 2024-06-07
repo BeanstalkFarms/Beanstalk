@@ -71,6 +71,7 @@ library LibLegacyTokenSilo {
     struct MigrateData {
         uint128 totalSeeds;
         uint128 totalGrownStalk;
+        uint256 totalBdv;
     }
 
     struct PerDepositData {
@@ -82,6 +83,7 @@ library LibLegacyTokenSilo {
     struct PerTokenData {
         address token;
         int96 stemTip;
+        uint256 crateBDV;
     }
 
     //////////////////////// REMOVE DEPOSIT ////////////////////////
@@ -251,14 +253,14 @@ library LibLegacyTokenSilo {
      * Deposits are migrated to the stem storage system on a 1:1 basis. Accounts with
      * lots of deposits may take a considerable amount of gas to migrate.
      *
-     * Returns seeds diff compared to stored amount, for verification in merkle check.
+     * Returns seeds diff compared to stored amount, for verification in merkle check, and total bdv.
      */
     function _mowAndMigrate(
         address account,
         address[] calldata tokens,
         uint32[][] calldata seasons,
         uint256[][] calldata amounts
-    ) internal returns (uint256) {
+    ) internal returns (uint256, uint256) {
         
         // Validates whether a user needs to perform migration.
         checkForMigration(account);
@@ -289,22 +291,25 @@ library LibLegacyTokenSilo {
                 }
 
                 // withdraw this deposit
-                uint256 crateBDV = removeDepositFromAccount(
+                perTokenData.crateBDV = removeDepositFromAccount(
                     account,
                     perTokenData.token,
                     perDepositData.season,
                     perDepositData.amount
                 );
 
+                // add to running total of bdv
+                migrateData.totalBdv = migrateData.totalBdv.add(perTokenData.crateBDV);
+
                 // calculate how much stalk has grown for this deposit
                 perDepositData.grownStalk = _calcGrownStalkForDeposit(
-                    crateBDV.mul(getLegacySeedsPerToken(address(perTokenData.token))),
+                    perTokenData.crateBDV.mul(getLegacySeedsPerToken(address(perTokenData.token))),
                     perDepositData.season
                 );
 
                 // also need to calculate how much stalk has grown since the migration
                 uint128 stalkGrownSinceStemStartSeason = LibSilo
-                    .stalkReward(0, perTokenData.stemTip, crateBDV.toUint128())
+                    .stalkReward(0, perTokenData.stemTip, perTokenData.crateBDV.toUint128())
                     .toUint128();
                 perDepositData.grownStalk = perDepositData.grownStalk.add(
                     stalkGrownSinceStemStartSeason
@@ -320,16 +325,16 @@ library LibLegacyTokenSilo {
                     LibTokenSilo.grownStalkAndBdvToStem(
                         perTokenData.token,
                         perDepositData.grownStalk,
-                        crateBDV
+                        perTokenData.crateBDV
                     ),
                     perDepositData.amount,
-                    crateBDV,
+                    perTokenData.crateBDV,
                     LibTokenSilo.Transfer.emitTransferSingle
                 );
 
                 // add to running total of seeds
                 migrateData.totalSeeds = migrateData.totalSeeds.add(
-                    crateBDV.mul(getLegacySeedsPerToken(address(perTokenData.token))).toUint128()
+                    perTokenData.crateBDV.mul(getLegacySeedsPerToken(address(perTokenData.token))).toUint128()
                 );
 
                 // emit legacy RemoveDeposit event
@@ -349,7 +354,7 @@ library LibLegacyTokenSilo {
         LibSilo.mintActiveStalk(account, migrateData.totalGrownStalk);
 
         //return seeds diff for checking in the "part 2" of this function (stack depth kept it from all fitting in one)
-        return balanceOfSeeds(account).sub(migrateData.totalSeeds);
+        return (balanceOfSeeds(account).sub(migrateData.totalSeeds), migrateData.totalBdv);
     }
 
     function _mowAndMigrateMerkleCheck(
@@ -357,7 +362,8 @@ library LibLegacyTokenSilo {
         uint256 stalkDiff,
         uint256 seedsDiff,
         bytes32[] calldata proof,
-        uint256 seedsVariance
+        uint256 seedsVariance,
+        uint256 totalBdv
     ) internal {
         if (seedsDiff > 0) {
             // verify merkle tree to determine stalk/seeds diff drift from convert issue
@@ -382,7 +388,9 @@ library LibLegacyTokenSilo {
 
         // stalk diff was calculated based on ENROOT_FIX_SEASON, so we need to calculate
         // the amount of stalk that has grown since then
-        if (seedsDiff > 0) {
+        // if totalBdv is zero, the stalk diff should be zero, so we can skip this step.
+        if (seedsDiff > 0 && totalBdv > 3) {
+            console.log("totalBdv: ", totalBdv);
             uint256 currentStalkDiff = (uint256(s.season.current).sub(ENROOT_FIX_SEASON))
                 .mul(seedsDiff)
                 .add(stalkDiff);

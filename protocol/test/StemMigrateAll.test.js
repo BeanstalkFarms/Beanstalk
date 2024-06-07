@@ -525,18 +525,18 @@ describe.only('Silo V3: Stem deployment migrate everyone', function () {
             var migrateResult;
             var receipt;
 
-            try {
+            // try {
               migrateResult = await this.migrate.mowAndMigrate(depositorAddress, tokens, seasons, amounts, stalkDiff, seedsDiff, proof);
               receipt = await migrateResult.wait();
 
 
               console.log('migrated, progress:', progress, 'depositorAddress: ', depositorAddress);
-            } catch (error) {
-              failed++;
-              failedAccounts.push(depositorAddress);
-              console.log('failed: ', depositorAddress);
-              continue;
-            }
+            // } catch (error) {
+            //   failed++;
+            //   failedAccounts.push(depositorAddress);
+            //   console.log('failed: ', depositorAddress);
+            //   continue;
+            // }
 
             // the below commented out code withdraws all deposits to verify that they can be withdrawn,
             // but now with germination, we would need to wait a couple seasons before withdrawing
