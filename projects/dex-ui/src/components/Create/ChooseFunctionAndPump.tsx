@@ -40,7 +40,8 @@ const tokenFormKeys = ["token1", "token2"] as const;
 const optionalKeys = ["wellFunctionData", "pumpData"] as const;
 
 const ChooseFunctionAndPumpForm = () => {
-  const { wellTokens, wellFunction, pump, setStep2, wellFunctionData, pumpData } = useCreateWell();
+  const { wellTokens, wellFunctionAddress, pumpAddress, setStep2, wellFunctionData, pumpData } =
+    useCreateWell();
   const sdk = useSdk();
 
   const [token1, setToken1] = useState<ERC20Token | undefined>(undefined);
@@ -48,11 +49,11 @@ const ChooseFunctionAndPumpForm = () => {
 
   const methods = useForm<FunctionTokenPumpFormValues>({
     defaultValues: {
-      wellFunction: wellFunction || "",
+      wellFunctionAddress: wellFunctionAddress || "",
       wellFunctionData: wellFunctionData || "",
       token1: wellTokens?.token1?.address || "",
       token2: wellTokens?.token2?.address || "",
-      pump: pump || "",
+      pumpAddress: pumpAddress || "",
       pumpData: pumpData || ""
     }
   });
@@ -95,9 +96,9 @@ const ChooseFunctionAndPumpForm = () => {
                 </Text>
               </Flex>
               <Flex className="form-section" $gap={2} $fullWidth>
-                <ComponentInputWithCustom
+                <ComponentInputWithCustom<FunctionTokenPumpFormValues>
                   toggleMessage="Use a custom Well Implementation instead"
-                  path="wellFunction"
+                  path="wellFunctionAddress"
                   dataPath="wellFunctionData"
                   componentType="wellFunctions"
                   emptyValue=""
@@ -146,9 +147,9 @@ const ChooseFunctionAndPumpForm = () => {
                 <Text $variant="xs">Choose Pump(s) to set up a price feed from your Well.</Text>
               </Flex>
               <Flex className="form-section" $gap={2} $fullWidth>
-                <ComponentInputWithCustom
+                <ComponentInputWithCustom<FunctionTokenPumpFormValues>
                   componentType="pumps"
-                  path="pump"
+                  path="pumpAddress"
                   dataPath="pumpData"
                   toggleMessage="Use a custom Pump"
                   emptyValue=""
@@ -279,7 +280,6 @@ const TokenAddressInputWithSearch = ({
     </>
   );
 };
-
 
 const FoundTokenInfo = styled.div`
   display: flex;

@@ -76,16 +76,23 @@ const StyledTextInputField = styled.input`
 type SwitchFieldProps<T extends FieldValues> = {
   control: Control<T>;
   name: Path<T>;
+  disabled?: boolean;
 };
 
-export const SwitchField = <T extends FieldValues>({ control, name }: SwitchFieldProps<T>) => {
+export const SwitchField = <T extends FieldValues>({
+  control,
+  name,
+  disabled
+}: SwitchFieldProps<T>) => {
   return (
     <Controller
       name={name}
       control={control}
       render={({ field }) => {
         const value = typeof field.value === "boolean" ? field.value : false;
-        return <ToggleSwitch checked={value} toggle={() => field.onChange(!value)} />;
+        return (
+          <ToggleSwitch checked={value} disabled={disabled} toggle={() => field.onChange(!value)} />
+        );
       }}
     />
   );

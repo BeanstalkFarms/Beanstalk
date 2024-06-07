@@ -11,7 +11,7 @@ import { theme } from "src/utils/ui/theme";
 import styled from "styled-components";
 import { CircleFilledCheckIcon, CircleEmptyIcon } from "../../Icons";
 import { getIsValidEthereumAddress } from "src/utils/addresses";
-import { isConvertibleToBytes } from "src/utils/check";
+import { isConvertibleToBytes } from "src/utils/bytes";
 
 type AdditionalOptionProps = {
   value: string;
@@ -63,8 +63,11 @@ export const ComponentInputWithCustom = <T extends FieldValues>({
 
   const handleToggle = useCallback(() => {
     setValue(path, emptyValue);
+    if (dataPath) {
+      setValue(dataPath, emptyValue);
+    }
     toggle();
-  }, [setValue, toggle, path, emptyValue]);
+  }, [setValue, toggle, path, emptyValue, dataPath]);
 
   // we can always assume that error.message is a string b/c we define the
   // validation here in this component

@@ -4,7 +4,7 @@ import { Controller, FormProvider, useForm, useFormContext, useWatch } from "rea
 import { theme } from "src/utils/ui/theme";
 
 import { SwitchField, TextInputField } from "src/components/Form";
-import { Box, Divider, Flex } from "src/components/Layout";
+import { Box, Divider, Flex, FlexCard } from "src/components/Layout";
 import { SelectCard } from "src/components/Selectable";
 import { Text } from "src/components/Typography";
 
@@ -55,7 +55,7 @@ const FormContent = () => {
       values.seedingLiquidity && Boolean(token1Amount.gt(0) || token2Amount.gt(0));
 
     // Always use the salt value from the current form.
-    const saltValue = values.usingSalt ? values.salt : 0;
+    const saltValue = (values.usingSalt && values.salt) || 0;
 
     const liquidity =
       seedingLiquidity && token1Amount && token2Amount ? { token1Amount, token2Amount } : undefined;
@@ -78,19 +78,11 @@ const FormContent = () => {
 
 const LiquidityForm = () => {
   const { wellTokens } = useCreateWell();
-  const { control, setValue } = useFormContext<FormValues>();
+  const { control } = useFormContext<FormValues>();
   const seedingLiquidity = useWatch({ control, name: "seedingLiquidity" });
-  const usingSalt = useWatch({ control, name: "usingSalt" });
 
   const token1 = wellTokens.token1;
   const token2 = wellTokens.token2;
-
-  useEffect(() => {
-    if (seedingLiquidity && !usingSalt) {
-      setValue("usingSalt", true);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [seedingLiquidity, usingSalt]);
 
   if (!token1 || !token2) return null;
 
@@ -103,7 +95,7 @@ const LiquidityForm = () => {
         </Text>
       </Flex>
       {seedingLiquidity && (
-        <Card $gap={2}>
+        <FlexCard $gap={2} $p={3} $boxSizing="border-box" $fullWidth $maxWidth="430px">
           <Controller
             name="token1Amount"
             control={control}
@@ -148,25 +140,61 @@ const LiquidityForm = () => {
               );
             }}
           />
-        </Card>
+        </FlexCard>
       )}
     </Flex>
   );
 };
 
+const useSaltInputOpenDynamic = () => {
+  const { control, setValue } = useFormContext<FormValues>();
+
+  const seedingLiquidity = useWatch({ control, name: "seedingLiquidity" });
+  const amount1 = useWatch({ control, name: "token1Amount" });
+  const amount2 = useWatch({ control, name: "token2Amount" });
+
+  const usingSalt = useWatch({ control, name: "usingSalt" });
+  const salt = useWatch({ control, name: "salt" });
+
+  const noAmounts = !amount1 && !amount2;
+  const noSaltValue = !salt;
+
+  useEffect(() => {
+    if (seedingLiquidity && !usingSalt) {
+      setValue("usingSalt", true);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [seedingLiquidity, usingSalt]);
+
+  useEffect(() => {
+    if (!seedingLiquidity && noSaltValue && !noAmounts) {
+      setValue("usingSalt", false);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [noAmounts, seedingLiquidity, noSaltValue]);
+};
+
 const SaltForm = () => {
   const { control, register } = useFormContext<FormValues>();
   const usingSalt = useWatch({ control, name: "usingSalt" });
+  useSaltInputOpenDynamic();
 
   const seedingLiquidity = useWatch({ control, name: "seedingLiquidity" });
 
   return (
     <Flex $gap={2}>
-      <Flex $direction="row" $gap={1} $alignItems="center">
-        <SwitchField control={control} name="usingSalt" />
-        <Text $variant="xs" $weight="bold" $mb={-0.5}>
-          Deploy Well with a Salt
-        </Text>
+      <Flex $gap={1}>
+        <Flex $direction="row" $gap={1} $alignItems="center">
+          <SwitchField control={control} name="usingSalt" disabled={seedingLiquidity} />
+          <Text $variant="xs" $weight="bold" $mb={-0.5}>
+            Deploy Well with a Salt
+          </Text>
+        </Flex>
+        {usingSalt ? (
+          <Text $variant="xs" $color="text.secondary">
+            New Wells are deployed using pipeline. Salt should be mined with the pipeline address
+          </Text>
+        ) : null}
       </Flex>
       {usingSalt && (
         <TextInputField
@@ -194,25 +222,14 @@ const SaltForm = () => {
   );
 };
 
-const getSelectedCardComponentProps = (
-  address: string,
-  components: readonly WellComponentInfo[]
-): { title: string; subtitle?: string } | undefined => {
-  const component = components.find((c) => c.address.toLowerCase() === address.toLowerCase());
-
-  return {
-    title: component?.component.name ?? address,
-    subtitle: component?.component.summary
-  };
-};
-
 const WellCreatePreview = () => {
-  const { wellImplementation, pump, wellFunction, wellTokens, wellDetails } = useCreateWell();
+  const { wellImplementation, pumpAddress, wellFunctionAddress, wellTokens, wellDetails } =
+    useCreateWell();
 
   if (
     !wellImplementation ||
-    !pump ||
-    !wellFunction ||
+    !pumpAddress ||
+    !wellFunctionAddress ||
     !wellTokens?.token1 ||
     !wellTokens?.token2 ||
     !wellDetails?.name ||
@@ -224,8 +241,8 @@ const WellCreatePreview = () => {
   return (
     <WellCreatePreviewInner
       wellImplementation={wellImplementation}
-      wellFunction={wellFunction}
-      pump={pump}
+      wellFunctionAddress={wellFunctionAddress}
+      pumpAddress={pumpAddress}
       token1={wellTokens.token1}
       token2={wellTokens.token2}
       wellName={wellDetails.name}
@@ -236,18 +253,17 @@ const WellCreatePreview = () => {
 
 type WellCreatePreviewInnerProps = {
   wellImplementation: string;
-  pump: string;
-  wellFunction: string;
+  pumpAddress: string;
+  wellFunctionAddress: string;
   token1: ERC20Token;
   token2: ERC20Token;
   wellName: string;
   wellSymbol: string;
 };
-
 const WellCreatePreviewInner = ({
   wellImplementation,
-  pump,
-  wellFunction,
+  pumpAddress,
+  wellFunctionAddress,
   token1,
   token2,
   wellName,
@@ -296,16 +312,18 @@ const WellCreatePreviewInner = ({
       <Flex $gap={1}>
         <Text $variant="h3">Pricing Function</Text>
         <SelectedComponentCard
-          {...getSelectedCardComponentProps(wellFunction, components.wellFunctions)}
+          {...getSelectedCardComponentProps(wellFunctionAddress, components.wellFunctions)}
         />
       </Flex>
       <Flex $gap={1}>
         <Text $variant="h3">Pumps</Text>
-        <SelectedComponentCard {...getSelectedCardComponentProps(pump, components.pumps)} />
+        <SelectedComponentCard {...getSelectedCardComponentProps(pumpAddress, components.pumps)} />
       </Flex>
     </Flex>
   );
 };
+
+// ----------------------------------------
 
 export const CreateWellPreviewDeploy = () => {
   return (
@@ -325,11 +343,21 @@ export const CreateWellPreviewDeploy = () => {
   );
 };
 
-const Subtitle = styled(Text).attrs({ $mt: 0.5 })`
-  color: ${theme.colors.stone};
-`;
+// ----------------------------------------
 
 // shared components
+const getSelectedCardComponentProps = (
+  address: string,
+  components: readonly WellComponentInfo[]
+): { title: string; subtitle?: string } | undefined => {
+  const component = components.find((c) => c.address.toLowerCase() === address.toLowerCase());
+
+  return {
+    title: component?.component.name ?? address,
+    subtitle: component?.component.summary
+  };
+};
+
 const SelectedComponentCard = ({ title, subtitle }: { title?: string; subtitle?: string }) => {
   if (!title && !subtitle) return null;
 
@@ -349,14 +377,8 @@ const SelectedComponentCard = ({ title, subtitle }: { title?: string; subtitle?:
   );
 };
 
-const Card = styled(Flex).attrs({
-  $p: 3,
-  $boxSizing: "border-box",
-  $fullWidth: true,
-  $maxWidth: "430px"
-})`
-  border: 1px solid ${theme.colors.black};
-  background: ${theme.colors.white};
+const Subtitle = styled(Text).attrs({ $mt: 0.5 })`
+  color: ${theme.colors.stone};
 `;
 
 const InlineImgFlex = styled(Flex).attrs({

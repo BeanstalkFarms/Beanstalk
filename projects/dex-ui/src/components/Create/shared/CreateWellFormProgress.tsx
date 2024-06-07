@@ -27,10 +27,10 @@ type OrderKey = keyof typeof progressOrder;
 
 const progressLabelMap: Record<keyof ViableProps, string> = {
   // Well Function & Pump Steps
-  wellFunction: "Select Well Function",
+  wellFunctionAddress: "Select Well Function",
   token1: "Select Tokens",
   token2: "Select Tokens",
-  pump: "Select Pump(s)",
+  pumpAddress: "Select Pump(s)",
   // Well Name & Symbol Steps
   name: "Well Name",
   symbol: "Well Symbol"

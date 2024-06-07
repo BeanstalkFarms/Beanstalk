@@ -70,9 +70,9 @@ type WellDetails = {
 export type CreateWellContext = {
   step: number;
   wellImplementation: string | undefined;
-  wellFunction: string | undefined;
+  wellFunctionAddress: string | undefined;
   wellFunctionData: string | undefined;
-  pump: string | undefined;
+  pumpAddress: string | undefined;
   pumpData: string | undefined;
   wellDetails: Partial<WellDetails>;
   wellTokens: Partial<WellTokensParams>;
@@ -101,8 +101,7 @@ export type CreateWellContext = {
     liquidity?: {
       token1Amount: TokenValue;
       token2Amount: TokenValue;
-    },
-    token2Amount?: TokenValue
+    }
   ) => Promise<any>;
 };
 
@@ -111,11 +110,11 @@ export type CreateWellStepProps = DeepRequired<{
     wellImplementation: CreateWellContext["wellImplementation"];
   };
   step2: {
-    wellFunction: CreateWellContext["wellFunction"];
-    wellFunctionData: CreateWellContext["wellFunctionData"];
-    pump: CreateWellContext["pump"];
-    pumpData: CreateWellContext["pumpData"];
+    wellFunctionAddress: CreateWellContext["wellFunctionAddress"];
+    pumpAddress: CreateWellContext["pumpAddress"];
     wellTokens: CreateWellContext["wellTokens"];
+    pumpData: CreateWellContext["pumpData"];
+    wellFunctionData: CreateWellContext["wellFunctionData"];
   };
   step3: CreateWellContext["wellDetails"];
   step4: CreateWellContext["liquidity"] & {
@@ -409,9 +408,9 @@ export const CreateWellProvider = ({ children }: { children: React.ReactNode }) 
       value={{
         step,
         wellImplementation,
-        wellFunction: wellFunctionAddress,
+        wellFunctionAddress,
         wellFunctionData,
-        pump: pumpAddress,
+        pumpAddress,
         pumpData,
         wellDetails,
         wellTokens,
