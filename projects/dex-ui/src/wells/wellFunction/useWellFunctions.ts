@@ -16,6 +16,7 @@ export const useWellFunctions = () => {
       const address = well.wellFunction.address.toLowerCase();
 
       if (!(address in wellFunctionMap)) {
+        wellFunctionMap[address] = well.wellFunction;
       }
     }
 
