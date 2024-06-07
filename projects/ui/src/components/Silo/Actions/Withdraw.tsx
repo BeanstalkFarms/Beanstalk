@@ -179,6 +179,7 @@ const WithdrawForm: FC<
     const amount = sdk.tokens.BEAN.amount(
       values.tokens[0]?.amount?.toString() || '0'
     );
+
     const crates = siloBalance?.deposits || [];
 
     if (!isUsingPlant && (amount.lte(0) || !crates.length)) return null;
@@ -525,7 +526,19 @@ const WithdrawPropProvider: FC<{
         formActions.resetForm();
       } catch (err) {
         if (txToast) {
-          txToast.error(err);
+          if (err instanceof Error) {
+            if (err.message.includes('SafeMath: subtraction overflow')) {
+              txToast.error({
+                code: 'CALL_EXCEPTION',
+                message:
+                  'Germinating Bean Deposits currently cannot be Withdrawn. A fix is being implemented. In the meantime, you can Withdraw in 2 Seasons once your Bean Deposits are no longer Germinating. See Discord for details.',
+              });
+            } else {
+              txToast.error(err);
+            }
+          } else {
+            txToast.error(err);
+          }
         } else {
           const toast = new TransactionToast({});
           toast.error(err);

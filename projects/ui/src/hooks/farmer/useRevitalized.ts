@@ -77,7 +77,7 @@ export default function useRevitalized() {
 
       const crates = balances[token.address].deposited.crates;
       crates.forEach((crate) => {
-        const stem = crate.stem as unknown as BigNumber; // Fix bad type from upstream.
+        const stem = BigNumber(crate.stem.toString());
         const bdv = getExpectedBDV(token);
         const futureBDV = getExpectedBDVForCrate(token, crate.amount);
         const currentBDV = crate.bdv;

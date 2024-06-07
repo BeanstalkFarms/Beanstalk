@@ -32,6 +32,7 @@ export function loadBean(token: string): Bean {
     bean.lastCross = ZERO_BI;
     bean.lastSeason = token == BEAN_ERC20.toHexString() ? 6074 : 0;
     bean.pools = [];
+    bean.dewhitelistedPools = [];
     bean.save();
   }
   return bean as Bean;

@@ -513,7 +513,19 @@ const TransferPropProvider: FC<{
         formActions.resetForm();
       } catch (err) {
         if (txToast) {
-          txToast.error(err);
+          if (err instanceof Error) {
+            if (err.message.includes('SafeMath: subtraction overflow')) {
+              txToast.error({
+                code: 'CALL_EXCEPTION',
+                message:
+                  'Germinating Bean Deposits currently cannot be Transferred. A fix is being implemented. In the meantime, you can Transfer in 2 Seasons once your Bean Deposits are no longer Germinating. See Discord for details.',
+              });
+            } else {
+              txToast.error(err);
+            }
+          } else {
+            txToast.error(err);
+          }
         } else {
           const toast = new TransactionToast({});
           toast.error(err);

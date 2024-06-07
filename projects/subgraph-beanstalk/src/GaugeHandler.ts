@@ -86,6 +86,10 @@ export function handleUpdateAverageStalkPerBdvPerSeason(event: UpdateAverageStal
 
 // Tracks germinating balances for individual famers
 export function handleFarmerGerminatingStalkBalanceChanged(event: FarmerGerminatingStalkBalanceChanged): void {
+  if (event.params.deltaGerminatingStalk == ZERO_BI) {
+    return;
+  }
+
   const currentSeason = getCurrentSeason(event.address);
 
   if (event.params.deltaGerminatingStalk > ZERO_BI) {
@@ -120,6 +124,10 @@ export function handleFarmerGerminatingStalkBalanceChanged(event: FarmerGerminat
 
 // Tracks the germinating balance on a token level
 export function handleTotalGerminatingBalanceChanged(event: TotalGerminatingBalanceChanged): void {
+  if (event.params.deltaAmount == ZERO_BI && event.params.deltaBdv == ZERO_BI) {
+    return;
+  }
+
   let tokenGerminating = loadOrCreateGerminating(event.params.token, event.params.germinationSeason.toU32());
   tokenGerminating.season = event.params.germinationSeason.toU32();
   tokenGerminating.tokenAmount = tokenGerminating.tokenAmount.plus(event.params.deltaAmount);
@@ -133,6 +141,10 @@ export function handleTotalGerminatingBalanceChanged(event: TotalGerminatingBala
 
 // This occurs at the beanstalk level regardless of whether users mow their own germinating stalk into regular stalk.
 export function handleTotalGerminatingStalkChanged(event: TotalGerminatingStalkChanged): void {
+  if (event.params.deltaGerminatingStalk == ZERO_BI) {
+    return;
+  }
+
   let siloGerminating = loadOrCreateGerminating(event.address, event.params.germinationSeason.toU32());
   siloGerminating.season = event.params.germinationSeason.toU32();
   siloGerminating.stalk = siloGerminating.stalk.plus(event.params.deltaGerminatingStalk);

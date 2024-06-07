@@ -24,10 +24,6 @@ export const HOW_TO_WITHDRAW_FROM_THE_SILO: Guide = {
   title: 'How to Withdraw from the Silo',
   url: 'https://docs.bean.money/almanac/guides/silo/withdraw',
 };
-export const HOW_TO_CLAIM_WITHDRAWALS: Guide = {
-  title: 'How to Claim Withdrawals',
-  url: 'https://docs.bean.money/almanac/guides/silo/claim-assets',
-};
 export const HOW_TO_TRANSFER_DEPOSITS: Guide = {
   title: 'How to Transfer Deposits',
   url: 'https://docs.bean.money/almanac/guides/silo/transfer',

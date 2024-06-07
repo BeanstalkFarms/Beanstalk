@@ -97,10 +97,14 @@ const Overview: FC<{
           }
           color="primary"
           subtitle={`Season ${_season.toString()}`}
-          secondSubtitle={_date.toLocaleString(undefined, {
-            dateStyle: 'short',
-            timeStyle: 'short',
-          })}
+          secondSubtitle={
+            _date
+              ? _date.toLocaleString(undefined, {
+                  dateStyle: 'short',
+                  timeStyle: 'short',
+                })
+              : '-'
+          }
           amount={displayUSD(_value)}
           amountIcon={undefined}
           gap={0.25}
@@ -131,17 +135,20 @@ const Overview: FC<{
         : latestData && account
           ? latestData.grownStalk
           : '';
-
       return (
         <>
           <Stat
             title="Stalk Balance"
             titleTooltip="Stalk is the governance token of the Beanstalk DAO. Stalk entitles holders to passive interest in the form of a share of future Bean mints, and the right to propose and vote on BIPs. Your Stalk is forfeited when you Withdraw your Deposited assets from the Silo."
             subtitle={`Season ${_season.toString()}`}
-            secondSubtitle={_date.toLocaleString(undefined, {
-              dateStyle: 'short',
-              timeStyle: 'short',
-            })}
+            secondSubtitle={
+              _date
+                ? _date.toLocaleString(undefined, {
+                    dateStyle: 'short',
+                    timeStyle: 'short',
+                  })
+                : '-'
+            }
             amount={
               _stalkValue ? displayStalk(BigNumber(_stalkValue, 10)) : '0'
             }
@@ -196,10 +203,14 @@ const Overview: FC<{
           title="Seed Balance"
           titleTooltip="Seeds are illiquid tokens that yield 1/10,000 Stalk each Season."
           subtitle={`Season ${_season.toString()}`}
-          secondSubtitle={_date.toLocaleString(undefined, {
-            dateStyle: 'short',
-            timeStyle: 'short',
-          })}
+          secondSubtitle={
+            _date
+              ? _date.toLocaleString(undefined, {
+                  dateStyle: 'short',
+                  timeStyle: 'short',
+                })
+              : '-'
+          }
           amount={displayStalk(_value)}
           sx={{ minWidth: 180, ml: 0 }}
           amountIcon={undefined}

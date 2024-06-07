@@ -75,7 +75,8 @@ describe("Silo V3: Grown Stalk Per Bdv deployment", function () {
         "LibLockedUnderlying",
         "LibCurveMinting",
         "LibIncentive",
-        "LibGerminate"
+        "LibGerminate",
+        "LibSilo"
       ],
       facetLibraries: {
         MockSeasonFacet: [
@@ -85,7 +86,8 @@ describe("Silo V3: Grown Stalk Per Bdv deployment", function () {
           "LibCurveMinting",
           "LibGerminate"
         ],
-        ConvertFacet: ["LibConvert"]
+        ConvertFacet: ["LibConvert"],
+        MockSiloFacet: ["LibSilo"]
       },
       bip: false,
       object: false,

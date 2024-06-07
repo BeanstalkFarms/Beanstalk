@@ -16,9 +16,9 @@ export const WELL_FUNCTION = Address.fromString("0x3E661784267F128e5f706De17Fac1
 export const PUMP = Address.fromString("0x6732128F9cc0c4344b2d4DC6285BCd516b7E59E6");
 export const WELL_DATA = Bytes.empty();
 
-export const BEAN_SWAP_AMOUNT = BigInt.fromI32(1500 * 10 ** 6);
-export const WETH_SWAP_AMOUNT = BigInt.fromI64(<i64>(1 * 10 ** 18));
-export const WELL_LP_AMOUNT = BigInt.fromI64(<i64>(10 * 10 ** 18));
+export const BEAN_SWAP_AMOUNT = BigInt.fromU32(1500 * 10 ** 6);
+export const WETH_SWAP_AMOUNT = BigInt.fromU64(<u64>(1 * 10 ** 18));
+export const WELL_LP_AMOUNT = BigInt.fromU64(<u64>(10 * 10 ** 18));
 export const BEAN_USD_PRICE = BigInt.fromString("938452");
 export const BEAN_USD_AMOUNT = toDecimal(BEAN_SWAP_AMOUNT).times(toDecimal(BEAN_USD_PRICE));
 export const WETH_USD_AMOUNT = toDecimal(BEAN_SWAP_AMOUNT).div(toDecimal(WETH_SWAP_AMOUNT, 18)).times(toDecimal(BEAN_USD_PRICE));

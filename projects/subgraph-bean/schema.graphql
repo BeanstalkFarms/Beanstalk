@@ -52,6 +52,9 @@ type Bean @entity {
   "Pools that include this Bean"
   pools: [Pool!]!
 
+  "Dewhitelisted pools that include this Bean"
+  dewhitelistedPools: [Pool!]!
+
   "Hourly snapshot of Bean data"
   hourlySnapshot: [BeanHourlySnapshot!]! @derivedFrom(field: "bean")
 

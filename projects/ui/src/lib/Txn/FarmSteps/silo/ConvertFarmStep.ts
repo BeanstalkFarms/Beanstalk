@@ -168,8 +168,8 @@ export class ConvertFarmStep extends FarmStep {
           : tokenIn === sdk.tokens.BEAN
             ? 1
             : tokenIn === sdk.tokens.UNRIPE_BEAN
-              ? 3
-              : 4;
+              ? 2
+              : 3;
     const path = pathMatrix[index];
     const tokenInIndex = path.findIndex((t) => t.equals(tokenIn));
     const tokenOutIndex = Number(Boolean(!tokenInIndex));

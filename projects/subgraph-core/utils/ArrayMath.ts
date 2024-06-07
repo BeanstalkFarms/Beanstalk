@@ -55,3 +55,15 @@ export function BigDecimal_min(a: BigDecimal[]): BigDecimal {
   }
   return retval;
 }
+
+export function BigDecimal_indexOfMin(a: BigDecimal[]): u32 {
+  let retval = 0;
+  let min = a[0];
+  for (let i = 1; i < a.length; ++i) {
+    if (a[i] < min) {
+      retval = i;
+      min = a[i];
+    }
+  }
+  return retval;
+}

@@ -106,7 +106,8 @@ async function main(scriptName, verbose = true, mock = false, reset = true) {
     "LibConvert",
     "LibLockedUnderlying",
     "LibCurveMinting",
-    "LibGerminate"
+    "LibGerminate",
+    "LibSilo"
   ];
 
   // A mapping of facet to public library names that will be linked to it.
@@ -123,7 +124,9 @@ async function main(scriptName, verbose = true, mock = false, reset = true) {
     ConvertFacet: ["LibConvert"],
     MockConvertFacet: ["LibConvert"],
     MockUnripeFacet: ["LibLockedUnderlying"],
-    UnripeFacet: ["LibLockedUnderlying"]
+    UnripeFacet: ["LibLockedUnderlying"],
+    MockSiloFacet: ["LibSilo"],
+    SiloFacet: ["LibSilo"]
   };
 
   let [
