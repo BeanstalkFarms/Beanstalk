@@ -10,7 +10,7 @@ const { BigNumber } = require('ethers');
 const { EXTERNAL, INTERNAL, INTERNAL_EXTERNAL, INTERNAL_TOLERANT } = require('./utils/balances.js')
 const { expect } = require('chai');
 
-const BLOCK_NUMBER = 17301500; //a recent block number. Using this so that the currentStalkDiff in _mowAndMigrateMerkleCheck is exercised
+const BLOCK_NUMBER = 20000000; //a recent block number. Using this so that the currentStalkDiff in _mowAndMigrateMerkleCheck is exercised
 
 //17251905 is the block the enroot fix was deployed
 
@@ -49,7 +49,7 @@ const eventsAbi = [
   }
 ];
 
-describe.skip('Silo V3: Stem deployment migrate everyone', function () {
+describe.only('Silo V3: Stem deployment migrate everyone', function () {
     before(async function () {
 
       try {
@@ -76,7 +76,22 @@ describe.skip('Silo V3: Stem deployment migrate everyone', function () {
       await upgradeWithNewFacets({
         diamondAddress: BEANSTALK,
         facetNames: ['ConvertFacet', 'WhitelistFacet', 'MockSiloFacet', 'MockSeasonFacet', 'MigrationFacet'],
-        // libraryNames: ['LibLegacyTokenSilo'],
+        libraryNames: ['LibConvert', 'LibSilo', 'LibGauge', 'LibIncentive', 'LibLockedUnderlying', 'LibCurveMinting', 'LibGerminate'],
+        facetLibraries: {
+          'ConvertFacet': [
+            'LibConvert'
+          ], 
+          'MockSiloFacet': [
+            'LibSilo'
+          ],
+          'MockSeasonFacet': [
+            'LibGauge',
+            'LibIncentive',
+            'LibLockedUnderlying',
+            'LibCurveMinting',
+            'LibGerminate'
+          ],
+        },
         initFacetName: 'InitBipNewSilo',
         bip: false,
         object: false,
