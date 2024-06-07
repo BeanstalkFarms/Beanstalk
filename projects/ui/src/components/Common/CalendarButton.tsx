@@ -15,7 +15,7 @@ import { ClickAwayListener } from '@mui/base';
 import { FC } from '~/types';
 import { DateRange, DayPicker } from 'react-day-picker';
 import { BeanstalkPalette } from '~/components/App/muiTheme';
-import { subDays } from 'date-fns';
+import { format, isValid, parse, set, setHours } from 'date-fns';
 import CloseIcon from '@mui/icons-material/Close';
 
 const CalendarButton: FC<{}> = ({ children }) => {
@@ -33,11 +33,94 @@ const CalendarButton: FC<{}> = ({ children }) => {
   }, []);
 
   const initialRange: DateRange = {
-    from: subDays(new Date(), 4),
-    to: new Date(),
+    from: undefined,
+    to: undefined,
   };
 
-  const [range, setRange] = useState<DateRange | undefined>(initialRange);
+    
+
+    // Hold the month in state to control the calendar when the input changes
+    const [month, setMonth] = useState(new Date());
+
+    // Hold the selected dates in state
+    const [range, setRange] = useState<DateRange | undefined>(initialRange);
+
+    // Hold the input values in state
+    const [inputValue, setInputValue] = useState<{from: string | undefined, to: string | undefined}>({from: '', to: ''});
+    const [inputTime, setInputTime] = useState<{from: string | undefined, to: string | undefined}>({from: '', to: ''});
+
+    const handleDayPickerSelect = (date: DateRange | undefined) => {
+        if (!date) {
+            setInputValue({from: undefined, to: undefined});
+            setRange(initialRange);
+        } else {
+            const fromHour = inputTime.from ? (parse(inputTime.from, 'HH', new Date())).getHours() : undefined
+            const toHour = inputTime.to ? (parse(inputTime.to, 'HH', new Date())).getHours() : undefined
+            const adjustedDate = {
+                from: date.from ? set(date.from, { hours: Number(fromHour || 0), minutes: 5 }) : undefined,
+                to: date.to ? set(date.to, { hours: Number(toHour || 0), minutes: 5 }) : undefined,
+            };
+            setRange(adjustedDate);
+            setInputValue({from: adjustedDate.from ? format(adjustedDate.from, "MM/dd/yyyy") : undefined, to: adjustedDate.to ? format(adjustedDate.to, "MM/dd/yyyy") : undefined});
+        };
+    };
+
+    const handleInputChange = (type: string, target: string, value: string) => {
+        
+
+        if (type === 'date') {
+
+            const currentValue = inputValue;
+            const currentTime = inputTime;
+
+            setInputValue({
+                from: target === 'from' ? value : currentValue.from,
+                to: target === 'to' ? value : currentValue.to,
+            });
+            
+            let customHour = 0
+            if (target === 'from' && currentTime.from) {
+                customHour = (parse(currentTime.from, 'HH', new Date())).getHours();
+            } else if (target === 'to' && currentTime.to) {
+                customHour = (parse(currentTime.to, 'HH', new Date())).getHours();
+            }
+
+            const parsedDate = set(parse(value, "MM/dd/yyyy", new Date()), { hours: customHour, minutes: 5 });
+
+            if (isValid(parsedDate)) {
+                setRange({
+                    from: target === 'from' ? parsedDate : range?.from,
+                    to: target === 'to' ? parsedDate : range?.to
+                });
+                setMonth(parsedDate);
+            } else {
+                setRange({
+                    from: undefined,
+                    to: undefined
+                });
+            };
+
+        } else if (type === 'time') {
+
+            const currentValue = inputTime;
+
+            setInputTime({
+                from: target === 'from' ? value : currentValue.from,
+                to: target === 'to' ? value : currentValue.to,
+            });
+
+            const parsedTime = parse(value, 'HH', new Date());
+
+            if (isValid(parsedTime)) {
+                const newHour = parsedTime.getHours();
+                const newTime = {
+                    from: target === 'from' && range?.from ? setHours(range.from, newHour) : range?.from,
+                    to: target === 'to' && range?.to ? setHours(range?.to, newHour) : range?.to,
+                };
+                setRange(newTime);
+            };
+        };
+    };
 
   return (
     <ClickAwayListener onClickAway={handleHideMenu}>
@@ -48,11 +131,11 @@ const CalendarButton: FC<{}> = ({ children }) => {
             size="small"
             color="dark"
             sx={{
-            borderRadius: 0.5,
-            px: 0.3,
-            py: 0.3,
-            mt: -0.3,
-            minWidth: 0,
+                borderRadius: 0.5,
+                px: 0.3,
+                py: 0.3,
+                mt: -0.3,
+                minWidth: 0,
             }}
             disableRipple
             onClick={handleToggleMenu}
@@ -109,6 +192,7 @@ const CalendarButton: FC<{}> = ({ children }) => {
                                     borderRadius: '6px' 
                                 }
                             }}
+                            value={inputValue.from}
                             placeholder="YYYY-MM-DD"
                             size="small"
                             color="primary"
@@ -120,7 +204,7 @@ const CalendarButton: FC<{}> = ({ children }) => {
                                 // ),
                             }}
                             onChange={(e) => {
-                                // checkAddress(e.target.value);
+                                handleInputChange('date', 'from', e.target.value);
                             }}
                         />
                         <TextField
@@ -131,6 +215,7 @@ const CalendarButton: FC<{}> = ({ children }) => {
                                     borderRadius: '6px' 
                                 }
                             }}
+                            value={inputTime.from}
                             placeholder="11:00"
                             size="small"
                             color="primary"
@@ -142,7 +227,7 @@ const CalendarButton: FC<{}> = ({ children }) => {
                                 // ),
                             }}
                             onChange={(e) => {
-                                // checkAddress(e.target.value);
+                                handleInputChange('time', 'from', e.target.value);
                             }}
                         />
                     </Box>
@@ -155,6 +240,7 @@ const CalendarButton: FC<{}> = ({ children }) => {
                                     borderRadius: '6px' 
                                 }
                             }}
+                            value={inputValue.to}
                             placeholder="YYYY-MM-DD"
                             size="small"
                             color="primary"
@@ -166,7 +252,7 @@ const CalendarButton: FC<{}> = ({ children }) => {
                                 // ),
                             }}
                             onChange={(e) => {
-                                // checkAddress(e.target.value);
+                                handleInputChange('date', 'to', e.target.value);
                             }}
                         />
                         <TextField
@@ -177,6 +263,7 @@ const CalendarButton: FC<{}> = ({ children }) => {
                                     borderRadius: '6px' 
                                 }
                             }}
+                            value={inputTime.to}
                             placeholder="11:00"
                             size="small"
                             color="primary"
@@ -188,7 +275,7 @@ const CalendarButton: FC<{}> = ({ children }) => {
                                 // ),
                             }}
                             onChange={(e) => {
-                                // checkAddress(e.target.value);
+                                handleInputChange('time', 'to', e.target.value);
                             }}
                         />
                     </Box>
@@ -197,7 +284,9 @@ const CalendarButton: FC<{}> = ({ children }) => {
                         mode="range" 
                         showOutsideDays
                         selected={range}
-                        onSelect={setRange}
+                        onSelect={handleDayPickerSelect}
+                        month={month}
+                        onMonthChange={setMonth}
                         styles={{
                             caption: {
                                 display: 'flex',
