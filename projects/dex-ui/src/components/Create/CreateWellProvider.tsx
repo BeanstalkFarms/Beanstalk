@@ -238,9 +238,13 @@ export const CreateWellProvider = ({ children }: { children: React.ReactNode }) 
 
   /// ----- Callbacks -----
   const deployWell: CreateWellContext["deployWell"] = useCallback(
-    async (saltValue, liquidity) => {
+    async (saltValue, liquidityAmounts) => {
+      const liqToastPortion =
+        liquidityAmounts?.token1Amount?.gt(0) || liquidityAmounts?.token2Amount.gt(0)
+          ? " with Liquidity"
+          : "";
       const toast = new TransactionToast({
-        loading: "Deploying Well...",
+        loading: `Deploying Well${liqToastPortion}...`,
         error: "Failed to deploy Well",
         success: "Well deployed successfully"
       });
@@ -258,8 +262,8 @@ export const CreateWellProvider = ({ children }: { children: React.ReactNode }) 
         if (!wellDetails.name) throw new Error("well name not set");
         if (!wellDetails.symbol) throw new Error("well symbol not set");
 
-        if (liquidity) {
-          if (!liquidity.token1Amount?.lte(0) && !liquidity.token2Amount.lte(0)) {
+        if (liquidityAmounts) {
+          if (!liquidityAmounts.token1Amount?.lte(0) && !liquidityAmounts.token2Amount.lte(0)) {
             throw new Error("At least one token amount must be greater than 0 to seed liquidity");
           }
           if (saltValue < 1) {
@@ -268,10 +272,6 @@ export const CreateWellProvider = ({ children }: { children: React.ReactNode }) 
         }
 
         const aquifer = new Aquifer(sdk.wells, Settings.AQUIFER_ADDRESS);
-
-        const advancedFarm = sdk.farm.createAdvancedFarm("adv-farm");
-        const advancedPipe = sdk.farm.createAdvancedPipe("adv-pipe");
-
         const boreWellParams = await prepareBoreWellParameters(
           aquifer,
           wellImplementation,
@@ -282,25 +282,26 @@ export const CreateWellProvider = ({ children }: { children: React.ReactNode }) 
           wellDetails.symbol,
           saltValue
         );
-
         Log.module("wellDeployer").debug("boreWellParams: ", boreWellParams);
 
         const callData = aquifer.contract.interface.encodeFunctionData("boreWell", boreWellParams);
-
         Log.module("wellDeployer").debug("callData: ", callData);
 
-        Log.module("wellDeployer").debug("liquidity: ", boreWellParams);
-
-        let txn: ContractTransaction;
         let wellAddress: string = "";
 
-        if (liquidity) {
-          advancedPipe.add(makeBoreWellStep(aquifer, callData));
+        const advancedFarm = sdk.farm.createAdvancedFarm("adv-farm");
+        const advancedPipe = sdk.farm.createAdvancedPipe("adv-pipe");
+        advancedPipe.add(makeBoreWellStep(aquifer, callData));
+
+        /// If we are adding liquidity, add steps to advancedFarm & advancedPipe
+        if (liquidityAmounts) {
           advancedFarm.add(advancedPipe);
 
           wellAddress = await advancedFarm
             .callStatic(BigNumber.from(0), { slippage: 0.05 })
             .then((result) => decodeBoreWellPipeCall(sdk, aquifer, result) || "");
+
+          console.log("expected wellAddress: ", wellAddress);
 
           if (!wellAddress) {
             throw new Error("Unable to determine well address");
@@ -310,17 +311,9 @@ export const CreateWellProvider = ({ children }: { children: React.ReactNode }) 
 
           // clear the steps
           advancedFarm.clearSteps();
-          advancedPipe.clearSteps();
-
-          console.log("advancedFarm: ", advancedFarm);
-          console.log("advancedPipe: ", advancedPipe);
-
-          if (advancedFarm.generators.length || advancedPipe.generators.length) {
-            throw new Error("Generators are not empty");
-          }
 
           // add transfer token1 to the undeployed well address
-          advancedFarm.add(makeLocalOnlyStep("token1-amount", liquidity.token1Amount));
+          advancedFarm.add(makeLocalOnlyStep("token1-amount", liquidityAmounts.token1Amount));
           advancedFarm.add(
             new sdk.farm.actions.TransferToken(
               wellTokens.token1.address,
@@ -331,7 +324,7 @@ export const CreateWellProvider = ({ children }: { children: React.ReactNode }) 
           );
 
           // add transfer token2 to the undeployed well address
-          advancedFarm.add(makeLocalOnlyStep("token2-amount", liquidity.token2Amount));
+          advancedFarm.add(makeLocalOnlyStep("token2-amount", liquidityAmounts.token2Amount));
           advancedFarm.add(
             new sdk.farm.actions.TransferToken(
               wellTokens.token2.address,
@@ -341,28 +334,26 @@ export const CreateWellProvider = ({ children }: { children: React.ReactNode }) 
             )
           );
 
-          advancedPipe.add(makeBoreWellStep(aquifer, callData));
+          // advancedPipe.add(makeBoreWellStep(aquifer, callData));
           advancedPipe.add(
             makeSyncWellStep(
               well,
               wellFunction,
-              liquidity.token1Amount,
-              liquidity.token2Amount,
+              liquidityAmounts.token1Amount,
+              liquidityAmounts.token2Amount,
               walletAddress
             )
           );
-
-          advancedFarm.add(advancedPipe);
-
-          // build the workflow
-          await advancedFarm.estimate(BigNumber.from(0));
-
-          txn = await advancedFarm.execute(BigNumber.from(0), {
-            slippage: 0.1 // TODO: Add slippage to form.
-          });
-        } else {
-          txn = await aquifer.contract.boreWell(...boreWellParams);
         }
+
+        advancedFarm.add(advancedPipe);
+
+        // build the workflow
+        await advancedFarm.estimate(BigNumber.from(0));
+
+        const txn = await advancedFarm.execute(BigNumber.from(0), {
+          slippage: 0.1 // TODO: Add slippage to form.
+        });
 
         toast.confirming(txn);
         Log.module("wellDeployer").debug(`Well deploying... Transaction: ${txn.hash}`);
@@ -370,16 +361,18 @@ export const CreateWellProvider = ({ children }: { children: React.ReactNode }) 
         const receipt = await txn.wait();
         Log.module("wellDeployer").debug("Well deployed... txn events: ", receipt.events);
 
+        console.log("events: ", receipt.events);
+
         if (!receipt.events?.length) {
           throw new Error("No Bore Well events found");
         }
 
         toast.success(receipt);
-        if (!wellAddress && !liquidity) {
-          wellAddress = receipt.events[0].address as string;
-        }
+        // if (!wellAddress && !liquidity) {
+        //   wellAddress = receipt.events[0].address as string;
+        // }
 
-        Log.module("wellDeployer").debug("Well deployed at address: ", wellAddress);
+        Log.module("wellDeployer").debug("Well deployed at address: ", wellAddress || "");
       } catch (e) {
         console.error(e);
         toast.error(e);
