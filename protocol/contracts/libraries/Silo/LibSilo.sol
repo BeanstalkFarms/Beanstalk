@@ -252,7 +252,7 @@ library LibSilo {
         // Decrease supply of Stalk; Remove Stalk from the balance of `account`
         s.s.stalk = s.s.stalk.sub(stalk);
         if (stalk > s.a[account].s.stalk) {
-            console.log("burning too much");
+            console.log("burning too much, by amount: ", stalk.sub(s.a[account].s.stalk));
             console.log("account: ", account);
             console.log("stalk: ", stalk);
             console.log("s.a[account].s.stalk: ", s.a[account].s.stalk);
