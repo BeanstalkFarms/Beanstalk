@@ -15,8 +15,6 @@ import { useChartSetupData } from './useChartSetupData';
 import { BeanstalkPalette } from '../App/muiTheme';
 /*
     List of Variables:
-    tooltipTitle
-    tooltipHoverText
     formattedData (MUST BE IN ASCENDING ORDER)
     extraData (MUST BE IN ASCENDING ORDER)
     priceFormatter

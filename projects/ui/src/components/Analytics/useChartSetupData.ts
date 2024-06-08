@@ -328,7 +328,7 @@ export function useChartSetupData() {
                 name: 'Total Sowers',
                 tooltipTitle: 'Total Sowers',
                 tooltipHoverText: 'The total number of unique Sowers at the beginning of every Season.',
-                shortDescription: 'The total number of unique Sowers',
+                shortDescription: 'The total number of unique Sowers.',
                 timeScaleKey: 'createdAt',
                 priceScaleKey: 'numberOfSowers',
                 document: SeasonalTotalSowersDocument,
