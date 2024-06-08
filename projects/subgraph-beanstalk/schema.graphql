@@ -73,6 +73,9 @@ type Season @entity {
   " Season number in Int form for sorting "
   season: Int!
 
+  " Block in which the season start was triggered by the sunrise call "
+  sunriseBlock: BigInt!
+
   " Block timestamp when sunrise was called "
   createdAt: BigInt!
 
