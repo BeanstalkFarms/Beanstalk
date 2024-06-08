@@ -14,6 +14,17 @@ export interface SelectDialogProps {
     setSelected: React.Dispatch<React.SetStateAction<any>>,
 };
 
+const selectedSx = {
+    color: 'primary.main',
+    borderColor: 'primary.main',
+    backgroundColor: 'primary.light',
+  };
+  
+  const unselectedSx = {
+    color: 'text.primary',
+    borderColor: 'text.light',
+  };
+
 const SelectDialog: FC<SelectDialogProps> = ({ handleClose, selected, setSelected }) => {
 
     const chartSetupData = useChartSetupData();
@@ -73,28 +84,32 @@ const SelectDialog: FC<SelectDialogProps> = ({ handleClose, selected, setSelecte
                 onChange={(e) => {setSearchInput(e.target.value)}}
             />
             <Box sx={{ display: 'flex', gap: 1 }}>
-                {dataTypes.map((dataType) => 
+                {dataTypes.map((dataType) => {
+                    const isSelected = selectedTypes.includes(dataType);
+                    return (
                     <Button
-                    variant={selectedTypes.includes(dataType) ? 'contained' : 'outlined-secondary'}
-                    color='secondary'
-                    size='small'
-                    sx={{
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        cursor: 'pointer',
-                        border: '0.5px solid',
-                        borderColor: 'divider',
-                        fontWeight: 'normal',
-                        color: 'text.primary',
-                        boxSizing: 'border-box',
-                        paddingY: 0.25,
-                        paddingX: 0.75,
-                    }}
-                    onClick={() => typeToggle(dataType)}
-                    >
+                        key={`selectDialog${dataType}`}
+                        variant="outlined"
+                        size="large"
+                        sx={{
+                          px: 0.75,
+                          py: 0.25,
+                          height: 'unset',
+                          backgroundColor: 'white',
+                          border: '1px solid',
+                          fontWeight: 'normal',
+                          ':hover': {
+                            borderColor: 'text.light',
+                            background: 'primary.light',
+                            ...(isSelected ? selectedSx : {}),
+                          },
+                          ...(isSelected ? selectedSx : unselectedSx),
+                        }}
+                        onClick={() => typeToggle(dataType)}
+                      >
                         {dataType}
                     </Button>
-                )}
+                )})}
             </Box>
             <Divider />
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5, overflowY: 'auto' }}>
