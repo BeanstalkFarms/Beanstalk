@@ -92,12 +92,12 @@ const MegaChart: FC<{}> = () => {
     <>
       <Box display='flex' flexDirection='row' gap={2}>
         <Card sx={{ position: 'relative', width: '100%', height: 400 }}>
-          <Card sx={{ position: 'absolute', left: (dialogOpen ? '0%' : '-100%'), width: 600, zIndex: 4, height: 400, transition: 'left 0.3s' }}>
+          <Card sx={{ position: 'absolute', left: (dialogOpen ? '0%' : '-100%'), width: 700, zIndex: 4, height: 400, transition: 'left 0.3s' }}>
             <SelectDialog
               handleClose={hideDialog}
               selected={selectedCharts}
               setSelected={setSelectedCharts}
-  />
+            />
           </Card>
         <Box p={1.5} sx={{ borderBottom: '0.5px', borderColor: 'divider', borderBottomStyle: 'solid', display: 'flex', flexDirection: 'row', justifyContent: 'space-between' }}>
           <Box sx={{ display: 'flex', gap: 1 }}>

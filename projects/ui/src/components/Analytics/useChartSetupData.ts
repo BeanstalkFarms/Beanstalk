@@ -30,11 +30,18 @@ export function useChartSetupData() {
                 tooltipTitle: `Total Deposited ${token.symbol}`,
                 tooltipHoverText: `The total number of Deposited ${
                     token.symbol === 'BEAN'
-                      ? 'Beans'
+                      ? 'Beans.'
                       : token.symbol === 'urBEAN'
-                      ? 'Unripe Beans'
-                      : token.name
+                      ? 'Unripe Beans.'
+                      : `${token.name}.`
                   } at the beginning of every Season.`,
+                shortDescription: `The total number of Deposited ${
+                    token.symbol === 'BEAN'
+                      ? 'Beans.'
+                      : token.symbol === 'urBEAN'
+                      ? 'Unripe Beans.'
+                      : `${token.name}.`
+                  }`,
                 timeScaleKey: 'createdAt',
                 priceScaleKey: 'depositedAmount',
                 document: SeasonalDepositedSiloAssetDocument,
@@ -52,6 +59,7 @@ export function useChartSetupData() {
                 name: `${token.symbol} 30D vAPY`,
                 tooltipTitle: `${token.symbol} 30D vAPY`,
                 tooltipHoverText: `The Variable Bean APY uses a moving average of Beans earned by Stalkholders during recent Seasons to estimate a future rate of return, accounting for Stalk growth.`,
+                shortDescription: 'Average Beans earned by Stalkholders during recent Seasons estimate a future rate of return.',
                 timeScaleKey: 'createdAt',
                 priceScaleKey: 'beanAPY',
                 document: SeasonalApyDocument,
@@ -78,6 +86,7 @@ export function useChartSetupData() {
                 name: 'Bean Price',
                 tooltipTitle: 'Current Bean Price',
                 tooltipHoverText: 'The Current Price of Bean in USD',
+                shortDescription: 'The USD price of 1 Bean.',
                 timeScaleKey: 'timestamp',
                 priceScaleKey: 'price',
                 document: SeasonalInstantPriceDocument,
@@ -95,6 +104,7 @@ export function useChartSetupData() {
                 name: 'Total Liquidity',
                 tooltipTitle: 'Liquidity',
                 tooltipHoverText: 'The total USD value of tokens in liquidity pools on the Minting Whitelist at the beginning of every Season. Pre-exploit values include liquidity in pools on the Deposit Whitelist.',
+                shortDescription: 'The total USD value of tokens in liquidity pools on the Minting Whitelist.',
                 timeScaleKey: 'timestamp',
                 priceScaleKey: 'liquidityUSD',
                 document: SeasonalLiquidityDocument,
@@ -110,6 +120,7 @@ export function useChartSetupData() {
                 name: 'Market Cap',
                 tooltipTitle: 'Market Cap',
                 tooltipHoverText: 'The USD value of the Bean supply at the beginning of every Season.',
+                shortDescription: 'The USD value of the Bean supply.',
                 timeScaleKey: 'createdAt',
                 priceScaleKey: 'marketCap',
                 document: SeasonalMarketCapDocument,
@@ -122,6 +133,7 @@ export function useChartSetupData() {
                 name: 'Supply',
                 tooltipTitle: 'Bean Supply',
                 tooltipHoverText: 'The total Bean supply at the beginning of every Season.',
+                shortDescription: 'The total Bean supply.',
                 timeScaleKey: 'createdAt',
                 priceScaleKey: 'beans',
                 document: SeasonalSupplyDocument,
@@ -134,6 +146,7 @@ export function useChartSetupData() {
                 name: 'Crosses',
                 tooltipTitle: 'Peg Crosses',
                 tooltipHoverText: 'The total number of times Bean has crossed its peg at the beginning of every Season.',
+                shortDescription: 'The total number of times Bean has crossed its peg.',
                 timeScaleKey: 'timestamp',
                 priceScaleKey: 'crosses',
                 document: SeasonalCrossesDocument,
@@ -148,6 +161,7 @@ export function useChartSetupData() {
                 name: 'Inst. deltaB',
                 tooltipTitle: 'Cumulative Instantaneous deltaB',
                 tooltipHoverText: 'The cumulative instantaneous shortage of Beans in liquidity pools on the Minting Whitelist at the beginning of every Season. Pre-exploit values include the instantaneous deltaB in all pools on the Deposit Whitelist.',
+                shortDescription: 'The cumulative instantaneous shortage of Beans in liquidity pools on the Minting Whitelist.',
                 timeScaleKey: 'timestamp',
                 priceScaleKey: 'instantaneousDeltaB',
                 document: SeasonalInstantDeltaBDocument,
@@ -163,6 +177,7 @@ export function useChartSetupData() {
                 name: 'TWA deltaB',
                 tooltipTitle: 'Cumulative TWA deltaB',
                 tooltipHoverText: 'The cumulative liquidity and time weighted average shortage of Beans in liquidity pools on the Minting Whitelist at the beginning of every Season. Values during liquidity migrations are omitted. Pre-exploit values include the TWA deltaB in all pools on the Deposit Whitelist.',
+                shortDescription: 'The time weighted average shortage of Beans in liquidity pools on the Minting Whitelist.',
                 timeScaleKey: 'timestamp',
                 priceScaleKey: 'twaDeltaB',
                 document: SeasonalWeightedDeltaBDocument,
@@ -178,6 +193,7 @@ export function useChartSetupData() {
                 name: 'TWA Bean Price',
                 tooltipTitle: 'TWA Bean Price',
                 tooltipHoverText: 'The cumulative liquidity and time weighted average USD price of 1 Bean at the beginning of every Season. Values during liquidity migrations are omitted. Pre-exploit values include the TWA price in all pools on the Deposit Whitelist.',
+                shortDescription: 'The cumulative liquidity and time weighted average USD price of 1 Bean.',
                 timeScaleKey: 'timestamp',
                 priceScaleKey: 'twaPrice',
                 document: SeasonalWeightedPriceDocument,
@@ -190,9 +206,10 @@ export function useChartSetupData() {
                 tickFormatter: tickFormatBeanPrice
             },
             {
-                name: 'L2SR',
+                name: 'Liquidity to Supply Ratio',
                 tooltipTitle: 'Liquidity to Supply Ratio',
                 tooltipHoverText: `The ratio of Beans in liquidity pools on the Minting Whitelist per Bean, displayed as a percentage, at the beginning of every Season. The Liquidity to Supply Ratio is a useful indicator of Beanstalk's health. Pre-exploit values include liquidity in pools on the Deposit Whitelist.`,
+                shortDescription: 'The ratio of Beans in liquidity pools on the Minting Whitelist per Bean, displayed as a percentage.',
                 timeScaleKey: 'timestamp',
                 priceScaleKey: 'supplyInPegLP',
                 document: LiquiditySupplyRatioDocument,
@@ -212,6 +229,7 @@ export function useChartSetupData() {
                 name: `Stalk`,
                 tooltipTitle: `Stalk`,
                 tooltipHoverText: `The total number of Stalk at the beginning of every Season.`,
+                shortDescription: 'The total number of Stalk.',
                 timeScaleKey: 'createdAt',
                 priceScaleKey: 'stalk',
                 document: SeasonalDepositedSiloAssetDocument,
@@ -232,6 +250,7 @@ export function useChartSetupData() {
                 name: 'Real Rate of Return',
                 tooltipTitle: 'Real Rate of Return',
                 tooltipHoverText: 'The return for sowing Beans, accounting for Bean price. RRoR = (1 + Temperature) / TWAP.',
+                shortDescription: 'The return for sowing Beans, accounting for Bean price. RRoR = (1 + Temperature) / TWAP.',
                 timeScaleKey: 'createdAt',
                 priceScaleKey: 'realRateOfReturn',
                 document: SeasonalRRoRDocument,
@@ -244,6 +263,7 @@ export function useChartSetupData() {
                 name: 'Max Temperature',
                 tooltipTitle: 'Max Temperature',
                 tooltipHoverText: 'The maximum interest rate for Sowing Beans every Season.',
+                shortDescription: 'The maximum interest rate for Sowing Beans every Season.',
                 timeScaleKey: 'createdAt',
                 priceScaleKey: 'temperature',
                 document: SeasonalTemperatureDocument,
@@ -256,6 +276,7 @@ export function useChartSetupData() {
                 name: 'Pods',
                 tooltipTitle: 'Pods',
                 tooltipHoverText: 'The total number of Unharvestable Pods at the beginning of every Season.',
+                shortDescription: 'The total number of Unharvestable Pods.',
                 timeScaleKey: 'createdAt',
                 priceScaleKey: 'unharvestablePods',
                 document: SeasonalPodsDocument,
@@ -268,6 +289,7 @@ export function useChartSetupData() {
                 name: 'Pod Rate',
                 tooltipTitle: 'Pod Rate',
                 tooltipHoverText: 'The ratio of Unharvestable Pods per Bean, displayed as a percentage, at the beginning of every Season. The Pod Rate is used by Beanstalk as a proxy for its health.',
+                shortDescription: 'The ratio of Unharvestable Pods per Bean, displayed as a percentage.',
                 timeScaleKey: 'createdAt',
                 priceScaleKey: 'podRate',
                 document: SeasonalPodRateDocument,
@@ -280,6 +302,7 @@ export function useChartSetupData() {
                 name: 'Beans Sown',
                 tooltipTitle: 'Beans Sown',
                 tooltipHoverText: 'The total number of Beans Sown at the beginning of every Season.',
+                shortDescription: 'The total number of Beans Sown.',
                 timeScaleKey: 'createdAt',
                 priceScaleKey: 'sownBeans',
                 document: SeasonalSownDocument,
@@ -292,6 +315,7 @@ export function useChartSetupData() {
                 name: 'Pods Harvested',
                 tooltipTitle: 'Pods Harvested',
                 tooltipHoverText: 'The total number of Pods Harvested at the beginning of every Season.',
+                shortDescription: 'The total number of Pods Harvested.',
                 timeScaleKey: 'createdAt',
                 priceScaleKey: 'harvestedPods',
                 document: SeasonalHarvestedPodsDocument,
@@ -304,6 +328,7 @@ export function useChartSetupData() {
                 name: 'Total Sowers',
                 tooltipTitle: 'Total Sowers',
                 tooltipHoverText: 'The total number of unique Sowers at the beginning of every Season.',
+                shortDescription: 'The total number of unique Sowers',
                 timeScaleKey: 'createdAt',
                 priceScaleKey: 'numberOfSowers',
                 document: SeasonalTotalSowersDocument,

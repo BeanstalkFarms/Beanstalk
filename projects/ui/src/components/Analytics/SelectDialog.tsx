@@ -114,7 +114,7 @@ const SelectDialog: FC<SelectDialogProps> = ({ handleClose, selected, setSelecte
                         ) : null}
                         <Box>{data.name}</Box>
                         <Box sx={{ display: 'flex', flexGrow: 1, justifyContent: 'flex-end', overflow: 'clip', whiteSpace: 'nowrap', textOverflow: 'ellipsis'}}>
-                            <Typography fontSize={10} color='text.tertiary'>{data.tooltipHoverText}</Typography>
+                            <Typography fontSize={10} color='text.tertiary'>{data.shortDescription}</Typography>
                         </Box>
                     </Row>
                     )
