@@ -10,7 +10,7 @@ import { FC } from '~/types';
 import { createChart } from 'lightweight-charts';
 import { hexToRgba } from '~/util/UI';
 import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
-import { SEASON_RANGE_TO_COUNT, SeasonRange } from '~/hooks/beanstalk/useSeasonsQuery';
+import { setHours } from 'date-fns';
 import { useChartSetupData } from './useChartSetupData';
 import { BeanstalkPalette } from '../App/muiTheme';
 /*
@@ -50,7 +50,7 @@ type ChartV2DataProps = {
   /*
    *
    */
-  timePeriod?: SeasonRange;
+  timePeriod?: { from: Date | undefined, to: Date | undefined };
   /*
    *
    */
@@ -195,14 +195,22 @@ const ChartV2: FC<ChartV2DataProps> = ({
   }, [theme, drawPegLine, size, chartHeight, formattedData, chartSetupData, selected]);
 
   useMemo(() => {
-    const hours = SEASON_RANGE_TO_COUNT[timePeriod || 0];
     if (lastDataPoint) {
-      if (hours === undefined) {
+      const from = timePeriod?.from;
+      const to = timePeriod?.to;
+      if (!from) {
         chart.current.timeScale().fitContent();
+      } else if (from && !to) {
+        const newFrom = setHours(from, 0)
+        const newTo = setHours(from, 23)
+        chart.current.timeScale().setVisibleRange({
+          from: newFrom.valueOf() / 1000,
+          to: newTo.valueOf() / 1000,
+        });
       } else {
         chart.current.timeScale().setVisibleRange({
-          from: (Date.now() / 1000) - (hours * 60 * 60),
-          to: Date.now() / 1000,
+          from: from.valueOf() / 1000,
+          to: to!.valueOf() / 1000,
         });
       };
     };

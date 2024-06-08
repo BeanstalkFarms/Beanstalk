@@ -47,6 +47,7 @@
     "http-errors": "^2.0.0",
     "jotai": "^1.9.1",
     "lambda-rate-limiter": "^3.0.1",
+    "lightweight-charts": "4.1.4",
     "luxon": "^2.4.0",
     "markdown-to-jsx": "^7.4.1",
     "middy": "^0.36.0",

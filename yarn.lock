@@ -31667,6 +31667,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"lightweight-charts@npm:4.1.4":
+  version: 4.1.4
+  resolution: "lightweight-charts@npm:4.1.4"
+  dependencies:
+    fancy-canvas: "npm:2.1.0"
+  checksum: 10/d992e5c8000950d47b254b12ca0426a33de036642d37bc721a481458f33639a6f916907c12eaa4cd09e814188f966570e17d03818b59264ee518e907b2f38119
+  languageName: node
+  linkType: hard
+
 "lilconfig@npm:2.1.0":
   version: 2.1.0
   resolution: "lilconfig@npm:2.1.0"
@@ -42303,6 +42312,7 @@ __metadata:
     husky: "npm:^8.0.3"
     jotai: "npm:^1.9.1"
     lambda-rate-limiter: "npm:^3.0.1"
+    lightweight-charts: "npm:4.1.4"
     luxon: "npm:^2.4.0"
     markdown-to-jsx: "npm:^7.4.1"
     middy: "npm:^0.36.0"

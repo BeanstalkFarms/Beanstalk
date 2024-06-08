@@ -1,13 +1,11 @@
 import React, { useMemo, useState } from 'react';
 import { FC } from '~/types';
-import { Box, Button, Card, CircularProgress, Divider } from '@mui/material';
-import useTimeTabState from '~/hooks/app/useTimeTabState';
+import { Box, Button, Card, CircularProgress } from '@mui/material';
 import AddRoundedIcon from '@mui/icons-material/AddRounded';
 import useToggle from '~/hooks/display/useToggle';
 import { apolloClient } from '~/graph/client';
 import useSeason from '~/hooks/beanstalk/useSeason';
 import ChartV2 from './ChartV2';
-import TimeTabs from '../Common/Charts/TimeTabs';
 import DropdownIcon from '../Common/DropdownIcon';
 import SelectDialog from './SelectDialog';
 import { useChartSetupData } from './useChartSetupData';
@@ -18,8 +16,7 @@ const MegaChart: FC<{}> = () => {
   const season = useSeason();
   const chartSetupData = useChartSetupData();
 
-  const timeTabParams = useTimeTabState();
-  const selectedTimePeriod = timeTabParams[0][1];
+  const [timePeriod, setTimePeriod] = useState<{from: Date | undefined, to: Date | undefined}>({ from: undefined, to: undefined })
 
   const [dialogOpen, showDialog, hideDialog] = useToggle();
   const [selectedCharts, setSelectedCharts] = useState([0]);
@@ -155,14 +152,7 @@ const MegaChart: FC<{}> = () => {
             )}
           </Box>
           <Box display="flex" flexDirection="row" gap={1}>
-            <TimeTabs
-              state={timeTabParams[0]}
-              setState={timeTabParams[1]}
-              aggregation={false}
-              useExpandedWindows
-            />
-            <Divider variant="middle" orientation="vertical" aria-hidden="true" flexItem sx={{ marginTop: '0px', marginBottom: '0px', height: '20px', color: 'divider' }} />
-            <CalendarButton />
+            <CalendarButton setTimePeriod={setTimePeriod} />
           </Box>
         </Box>
         {loading ? (
@@ -175,7 +165,7 @@ const MegaChart: FC<{}> = () => {
             extraData={moreData}
             selected={selectedCharts}
             drawPegLine
-            timePeriod={selectedTimePeriod}
+            timePeriod={timePeriod}
             containerHeight={345}
           />
         )}
