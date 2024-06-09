@@ -39,6 +39,7 @@ type TitleContainerProps = {
 const Container = styled.div<TitleContainerProps>`
   display: flex;
   flex-direction: row;
+  align-items: center;
 
   @media (max-width: ${size.mobile}) {
     justify-content: start;
@@ -51,7 +52,7 @@ const TitleContainer = styled.div<TitleContainerProps>`
 `;
 
 const TitleText = styled.div<TitleProps>`
-  ${H2}
+  ${H3}
   ${(props) => props.fontWeight && `font-weight: ${props.fontWeight}`};
   text-transform: uppercase;
   @media (max-width: ${size.mobile}) {
