@@ -23,22 +23,20 @@ export const Build = () => {
     <Page>
       <Flex $gap={0.5}>
         <Title title="Build" fontWeight={"600"} largeOnMobile />
-        <Text $variant="l" $responsive $color="text.secondary">
+        <Text $variant="l" $color="text.secondary">
           Basin has three unique components which can be composed together to create a custom
           liquidity pool, or Well.
         </Text>
       </Flex>
       <ActionBanner>
-        <Text $variant="l" $responsive className="banner-text">
+        <Text $variant="l" className="banner-text">
           Use the Well Deployer to deploy your own Wells.
         </Text>
         <NavigateButton onClick={handleNavigate}>Well Deployer →</NavigateButton>
       </ActionBanner>
       <Flex $gap={0.5} $mt={3}>
-        <Text $variant="h3" $responsive>
-          COMPONENT LIBRARY
-        </Text>
-        <Text $variant="l" $color="text.secondary" $responsive>
+        <Text $variant="h3">COMPONENT LIBRARY</Text>
+        <Text $variant="l" $color="text.secondary">
           Use existing components which are already available for developers to extend, copy or
           compose together when building Wells. Select a component to view its implementation.
         </Text>

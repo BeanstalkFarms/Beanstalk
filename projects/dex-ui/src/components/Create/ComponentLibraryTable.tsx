@@ -30,17 +30,13 @@ export const ComponentLibraryTable = () => {
         {entries.map(({ component, deploy }, i) => (
           <StyledTr key={`${component.name}-${i}`}>
             <TableData align="left" url={component.url}>
-              <Text $variant="l" $responsive>
-                {component.name}
-              </Text>
+              <Text $variant="l">{component.name}</Text>
               <Text $color="text.secondary">{component.summary}</Text>
             </TableData>
             <TableData>
               <TextWrapper>
                 {component.type.imgSrc && <IconImg src={component.type.imgSrc} />}
-                <Text $variant="l" $responsive>
-                  {component.type.display}
-                </Text>
+                <Text $variant="l">{component.type.display}</Text>
               </TextWrapper>
             </TableData>
             <TableData url={deploy.url} hideMobile>
