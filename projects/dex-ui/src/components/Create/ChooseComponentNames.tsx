@@ -6,7 +6,7 @@ import styled from "styled-components";
 import { CreateWellStepProps, useCreateWell } from "./CreateWellProvider";
 import { FormProvider, useForm } from "react-hook-form";
 import { CreateWellFormProgress } from "./shared/CreateWellFormProgress";
-import { TextInputField } from "../Form";
+import { StyledForm, TextInputField } from "../Form";
 import { useWells } from "src/wells/useWells";
 import { CreateWellButtonRow } from "./shared/CreateWellButtonRow";
 import { useWhitelistedWellComponents } from "./useWhitelistedWellComponents";
@@ -67,16 +67,16 @@ const ChooseComponentNamesForm = () => {
 
   return (
     <FormProvider {...methods}>
-      <form onSubmit={methods.handleSubmit(onSubmit)}>
-        <Flex $direction="row" $gap={6}>
+      <StyledForm onSubmit={methods.handleSubmit(onSubmit)} $width="100%">
+        <FormInnerWrapper>
           <CreateWellFormProgress />
           <Flex $fullWidth $gap={4}>
             <div>
               <Text $variant="h3" $mb={2}>
                 Name and Symbol
               </Text>
-              <Flex $direction="row" $fullWidth $gap={4}>
-                <Flex $width="50%" $maxWidth="50%">
+              <Flex className="component-inputs-wrapper">
+                <Flex className="input-wrapper">
                   <Text $variant="xs" $color="text.secondary" $mb={1}>
                     Well Token Name
                   </Text>
@@ -97,7 +97,7 @@ const ChooseComponentNamesForm = () => {
                     error={methods.formState.errors.name?.message as string | undefined}
                   />
                 </Flex>
-                <Flex $width="50%" $maxWidth="50%">
+                <Flex className="input-wrapper">
                   <Text $variant="xs" $color="text.secondary" $mb={1}>
                     Well Token Symbol
                   </Text>
@@ -122,8 +122,8 @@ const ChooseComponentNamesForm = () => {
             <Divider />
             <CreateWellButtonRow onGoBack={handleSave} />
           </Flex>
-        </Flex>
-      </form>
+        </FormInnerWrapper>
+      </StyledForm>
     </FormProvider>
   );
 };
@@ -139,6 +139,38 @@ export const ChooseComponentNames = () => {
     </Flex>
   );
 };
+
+const FormInnerWrapper = styled.div`
+  display: flex;
+  flex-direction: row;
+  gap: ${theme.spacing(6)};
+
+  ${theme.media.query.sm.only} {
+    flex-direction: column;
+    gap: ${theme.spacing(4)};
+  }
+
+  .component-inputs-wrapper {
+    flex-direction: row;
+    width: 100%;
+    gap: ${theme.spacing(4)};
+
+    .input-wrapper {
+      width: 50%;
+      max-width: 50%;
+    }
+
+    ${theme.media.query.sm.only} {
+      gap: ${theme.spacing(2)};
+      flex-direction: column;
+
+      .input-wrapper {
+        width: 100%;
+        max-width: unset;
+      }
+    }
+  }
+`;
 
 const Subtitle = styled(Text)`
   margin-top: ${theme.spacing(0.5)};
