@@ -100,6 +100,7 @@ contract Order is Listing {
     ) internal {
 
         require(amount >= o.minFillAmount, "Marketplace: Fill must be >= minimum amount.");
+        require(amount > 0, "Marketplace: amount must be > 0.");
         require(s.a[msg.sender].field.plots[index] >= (start.add(amount)), "Marketplace: Invalid Plot.");
         require(index.add(start).add(amount).sub(s.f.harvestable) <= o.maxPlaceInLine, "Marketplace: Plot too far in line.");
         
@@ -128,6 +129,7 @@ contract Order is Listing {
     ) internal {
 
         require(amount >= o.minFillAmount, "Marketplace: Fill must be >= minimum amount.");
+        require(amount > 0, "Marketplace: amount must be > 0.");
         require(s.a[msg.sender].field.plots[index] >= (start.add(amount)), "Marketplace: Invalid Plot.");
         require(index.add(start).add(amount).sub(s.f.harvestable) <= o.maxPlaceInLine, "Marketplace: Plot too far in line.");
         

@@ -197,7 +197,6 @@ async function ebip17(mock = true, account = undefined) {
   await upgradeWithNewFacets({
     diamondAddress: BEANSTALK,
     facetNames: ["MarketplaceFacet"],
-    initFacetName: "InitBipSeedGauge",
     bip: false,
     object: !mock,
     verbose: true,
