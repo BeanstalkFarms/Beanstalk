@@ -1295,6 +1295,13 @@ describe('Marketplace', function () {
                 .createPodOrder("0", "100000", "100000", '1', EXTERNAL)
             ).to.be.revertedWith("Marketplace: Order amount must be > 0.");
           });
+          it("Reverts if minFill is 0", async function () {
+            await expect(
+              this.marketplace
+                .connect(user2)
+                .createPodOrder("100", "100000", "100000", '0', EXTERNAL)
+            ).to.be.revertedWith("Marketplace: Minimum fill amount must be greater than 0.");
+          });
         });
   
         describe("create order", async function () {
