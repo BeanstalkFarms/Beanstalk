@@ -17,7 +17,6 @@ import { BeanstalkPalette } from '../App/muiTheme';
     List of Variables:
     formattedData (MUST BE IN ASCENDING ORDER)
     extraData (MUST BE IN ASCENDING ORDER)
-    priceFormatter
     drawPegLine
     TODO: drawExploitLine (timestamp: 1650196810)
     size
@@ -33,10 +32,6 @@ type ChartV2DataProps = {
    *
    */
   extraData?: Map<Number, String>;
-  /*
-   *
-   */
-  priceFormatter?: (value: number) => string | JSX.Element;
   /*
    *
    */
@@ -122,10 +117,13 @@ const ChartV2: FC<ChartV2DataProps> = ({
         horzLines: { color: theme.palette.divider, visible: false },
       },
       crosshair: {
+        // visible: false,
         vertLine: {
+        //  labelVisible: false,
           labelBackgroundColor: theme.palette.text.primary,
         },
         horzLine: {
+        // labelVisible: false,
           labelBackgroundColor: theme.palette.primary.main,
         },
       },
@@ -161,6 +159,7 @@ const ChartV2: FC<ChartV2DataProps> = ({
           color: chartColors[i].lineColor,
           // topColor: chartColors[i].topColor,
           // bottomColor: chartColors[i].bottomColor,
+          // pointMarkerVisible: false,
           lineWidth: 2,
           priceScaleId: i === 0 ? 'right' : i === 1 ? 'left' : '',
           priceFormat: {
