@@ -15,13 +15,13 @@ export type WellDetailsFormValues = CreateWellStepProps["step3"];
 
 const useWellDetailsDefaultValues = () => {
   const components = useWhitelistedWellComponents();
-  const { wellFunction = "", wellTokens } = useCreateWell();
+  const { wellFunctionAddress = "", wellTokens } = useCreateWell();
 
   const token1 = wellTokens?.token1?.symbol;
   const token2 = wellTokens?.token2?.symbol;
 
   const whitelistedWellFunction = components.wellFunctions.find(
-    (wf) => wf.address.toLowerCase() === wellFunction?.toLowerCase()
+    (wf) => wf.address.toLowerCase() === wellFunctionAddress?.toLowerCase()
   );
 
   const componentName = whitelistedWellFunction?.component.name;
@@ -45,32 +45,10 @@ const ChooseComponentNamesForm = () => {
 
   const methods = useForm<WellDetailsFormValues>({
     defaultValues: {
-      name: wellDetails?.name ?? defaults?.name ?? "",
-      symbol: wellDetails?.symbol ?? defaults?.symbol ?? ""
+      name: wellDetails?.name || defaults?.name || "",
+      symbol: wellDetails?.symbol || defaults?.symbol || ""
     }
   });
-
-  const validate = useMemo(() => {
-    const wellName = (name: string) => {
-      const duplicate = (wells || []).some(
-        (well) => well.name?.toLowerCase() === name.toLowerCase()
-      );
-
-      return duplicate ? "Token name taken" : true;
-    };
-
-    const wellSymbol = (symbol: string) => {
-      const duplicate = (wells || []).some(
-        (well) => well?.lpToken?.symbol.toLowerCase() === symbol.toLowerCase()
-      );
-      return duplicate ? "Token symbol taken" : true;
-    };
-
-    return {
-      name: wellName,
-      symbol: wellSymbol
-    };
-  }, [wells]);
 
   const handleSave = useCallback(() => {
     const values = methods.getValues();
@@ -78,17 +56,13 @@ const ChooseComponentNamesForm = () => {
   }, [setStep3, methods]);
 
   const onSubmit = useCallback(
-    (values: WellDetailsFormValues) => {
-      const nameValidated = validate.name(values.name);
-      const symbolValidated = validate.symbol(values.symbol);
-
-      if (typeof nameValidated === "string" || typeof symbolValidated === "string") {
-        return;
-      }
-
+    async (values: WellDetailsFormValues) => {
+      const valid = await methods.trigger();
+      console.log("valid", valid);
+      if (!valid) return;
       setStep3({ ...values, goNext: true });
     },
-    [setStep3, validate]
+    [setStep3, methods]
   );
 
   return (
@@ -112,8 +86,15 @@ const ChooseComponentNamesForm = () => {
                         value: true,
                         message: "Token Name is required"
                       },
-                      validate: (value) => validate.name(value)
+                      validate: (value) => {
+                        const duplicate = (wells || []).some(
+                          (well) => well.name?.toLowerCase() === value.toLowerCase()
+                        );
+
+                        return !duplicate || "Token name taken";
+                      }
                     })}
+                    error={methods.formState.errors.name?.message as string | undefined}
                   />
                 </Flex>
                 <Flex $width="50%" $maxWidth="50%">
@@ -126,8 +107,14 @@ const ChooseComponentNamesForm = () => {
                         value: true,
                         message: "Token Symbol is required"
                       },
-                      validate: (value) => validate.symbol(value)
+                      validate: (value) => {
+                        const duplicate = (wells || []).some(
+                          (well) => well?.lpToken?.symbol.toLowerCase() === value.toLowerCase()
+                        );
+                        return !duplicate || "Token symbol taken";
+                      }
                     })}
+                    error={methods.formState.errors.symbol?.message as string | undefined}
                   />
                 </Flex>
               </Flex>

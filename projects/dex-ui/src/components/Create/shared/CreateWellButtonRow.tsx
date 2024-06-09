@@ -31,11 +31,13 @@ export const CreateWellButtonRow = ({
   disabled = false,
   valuesRequired = true,
   optionalKeys,
-  onGoBack
+  onGoBack,
+  renderPrimaryCustom
 }: {
   disabled?: boolean;
   optionalKeys?: readonly string[];
   valuesRequired?: boolean;
+  renderPrimaryCustom?: JSX.Element;
   onGoBack?: () => void;
 }) => {
   const { step, goBack } = useCreateWell();
@@ -87,12 +89,16 @@ export const CreateWellButtonRow = ({
           {goBackLabel}
         </ButtonLabel>
       </ButtonPrimary>
-      <ButtonPrimary type="submit" disabled={!goNextEnabled || disabled}>
-        <ButtonLabel>
-          {nextLabel}
-          <RightArrow width={16} height={16} color={theme.colors.white} />
-        </ButtonLabel>
-      </ButtonPrimary>
+      {renderPrimaryCustom ? (
+        renderPrimaryCustom
+      ) : (
+        <ButtonPrimary type="submit" disabled={!goNextEnabled || disabled}>
+          <ButtonLabel>
+            {nextLabel}
+            <RightArrow width={16} height={16} color={theme.colors.white} />
+          </ButtonLabel>
+        </ButtonPrimary>
+      )}
     </Flex>
   );
 };
