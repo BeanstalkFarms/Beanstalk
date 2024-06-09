@@ -104,7 +104,7 @@ export type CreateWellContext = {
       token1Amount: TokenValue;
       token2Amount: TokenValue;
     }
-  ) => Promise<any>;
+  ) => Promise<{ wellAddress: string } | Error>;
 };
 
 export type CreateWellStepProps = DeepRequired<{
@@ -373,21 +373,21 @@ export const CreateWellProvider = ({ children }: { children: React.ReactNode }) 
         if (!wellAddress && !liquidityAmounts) {
           wellAddress = receipt.events[0].address as string;
         }
+
+        clearWellsCache();
         queryClient.fetchQuery({
           queryKey: ["wells", sdk]
         });
 
         Log.module("wellDeployer").debug("Well deployed at address: ", wellAddress || "");
-        clearWellsCache();
-      } catch (e) {
+        setDeploying(false);
+        return { wellAddress: wellAddress };
+      } catch (e: any) {
+        setDeploying(false);
         console.error(e);
         toast.error(e);
         return e;
-      } finally {
-        setDeploying(false);
       }
-
-      return;
     },
     [
       queryClient,
