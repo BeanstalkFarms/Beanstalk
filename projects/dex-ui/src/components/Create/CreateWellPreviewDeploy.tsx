@@ -52,7 +52,6 @@ const FormContent = ({
   deployWell
 }: FormContentProps) => {
   const [enoughAllowance, setEnoughAllowance] = useState(true);
-  const sdk = useSdk();
 
   const methods = useForm<FormValues>({
     defaultValues: {
@@ -118,7 +117,7 @@ const FormContent = ({
           <CreateWellButtonRow
             onGoBack={handleSave}
             valuesRequired={false}
-            // disabled={!enoughAllowance}
+            disabled={!enoughAllowance}
           />
         </Flex>
       </form>
@@ -144,7 +143,7 @@ const LiquidityForm = ({ token1, token2, setHasEnoughAllowance }: LiquidityFormP
         </Text>
       </Flex>
       {seedingLiquidity && (
-        <FlexCard $gap={2} $p={3} $boxSizing="border-box" $fullWidth $maxWidth="430px">
+        <FlexCard $gap={3} $p={3} $boxSizing="border-box" $fullWidth $maxWidth="430px">
           <Controller
             name="token1Amount"
             control={control}
