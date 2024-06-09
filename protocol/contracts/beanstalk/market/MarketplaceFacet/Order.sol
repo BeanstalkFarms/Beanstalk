@@ -79,6 +79,7 @@ contract Order is Listing {
         bytes calldata pricingFunction
     ) internal returns (bytes32 id) {
         require(beanAmount > 0, "Marketplace: Order amount must be > 0.");
+        require(minFillAmount > 0, "Marketplace: Pod price must be greater than 0.");
         id = createOrderIdV2(msg.sender, 0, maxPlaceInLine, minFillAmount, pricingFunction);
         if (s.podOrders[id] > 0) _cancelPodOrderV2(maxPlaceInLine, minFillAmount, pricingFunction, LibTransfer.To.INTERNAL);
         s.podOrders[id] = beanAmount;
