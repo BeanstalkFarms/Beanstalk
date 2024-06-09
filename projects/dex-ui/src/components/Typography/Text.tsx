@@ -38,7 +38,9 @@ export interface TextProps
 }
 
 export const Text = forwardRef<HTMLDivElement, TextProps>((props, ref) => {
-  return <TextComponent ref={ref} {...props} />;
+  return (
+    <TextComponent ref={ref} $responsve={props.$responsive !== false ? true : false} {...props} />
+  );
 });
 
 const TextComponent = styled.div<TextProps>`

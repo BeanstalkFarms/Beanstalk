@@ -39,17 +39,17 @@ const ResponsiveBodyL = css`
 
 export const H1 = css<ResponsiveTextProps>`
   ${BaseH1}
-  ${(p) => p.$responsive !== false && ` ${theme.media.query.sm.only} { ${BaseH2} } `}
+  ${(p) => p.$responsive && ` ${theme.media.query.sm.only} { ${BaseH2} } `}
 `;
 
 export const H2 = css<ResponsiveTextProps>`
   ${BaseH2};
-  ${(p) => p.$responsive !== false && ` ${theme.media.query.sm.only} { ${BaseH3} } `}
+  ${(p) => p.$responsive && ` ${theme.media.query.sm.only} { ${BaseH3} } `}
 `;
 
 export const H3 = css<ResponsiveTextProps>`
   ${BaseH3}
-  ${(p) => p.$responsive !== false && `${theme.media.query.sm.only} { ${ResponsiveH3} } `}
+  ${(p) => p.$responsive && `${theme.media.query.sm.only} { ${ResponsiveH3} } `}
 `;
 
 // don't change the font-size for BodyS & BodyXS
@@ -71,7 +71,7 @@ export const BodyL = css<ResponsiveTextProps>`
   font-weight: 400;
   font-size: 20px;
   line-height: 24px;
-  ${(p) => p.$responsive !== false && ` ${theme.media.query.sm.only} { ${ResponsiveBodyL} }`}
+  ${(p) => p.$responsive && ` ${theme.media.query.sm.only} { ${ResponsiveBodyL} }`}
 `;
 export const LinksCaps = css`
   font-style: normal;
