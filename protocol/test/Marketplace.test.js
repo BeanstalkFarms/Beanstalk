@@ -1395,6 +1395,7 @@ describe('Marketplace', function () {
           this.result = await this.marketplace.connect(user).createPodOrder("50", "100000", "2500", '10', EXTERNAL);
           this.id = await getOrderId(this.result);
           this.order = [userAddress, "100000", "2500", '10'];
+          this.invalidOrder = [userAddress, "100000", "2500", '0'];
         });
   
         describe("revert", async function () {
@@ -1435,6 +1436,14 @@ describe('Marketplace', function () {
                 .connect(user2)
                 .fillPodOrder(this.order, 1000, 0, 1, INTERNAL)
             ).to.revertedWith("Marketplace: Fill must be >= minimum amount.");
+          });
+
+          it("zero amount", async function () {
+            await expect(
+              this.marketplace
+                .connect(user2)
+                .fillPodOrder(this.invalidOrder, 1000, 0, 0, INTERNAL)
+            ).to.revertedWith("Marketplace: amount must be > 0.");
           });
         });
   
@@ -1775,6 +1784,7 @@ describe('Marketplace', function () {
           this.result = await this.marketplace.connect(user).createPodOrderV2("50", "2500", '1', this.f.packedFunction, EXTERNAL);
           this.id = await getOrderId(this.result);
           this.order = [userAddress, "0", "2500", '1'];
+          this.invalidOrder = [userAddress, "0", "2500", '0'];
         });
 
         describe("revert", async function () {
@@ -1801,6 +1811,12 @@ describe('Marketplace', function () {
             await expect(
               this.marketplace.connect(user2).fillPodOrderV2(this.order,1000, 0, 1000, this.f.packedFunction, INTERNAL)
             ).to.revertedWith("Marketplace: Not enough beans in order.");
+          });
+
+          it("invalid amount", async function () {
+            await expect(
+              this.marketplace.connect(user2).fillPodOrderV2(this.invalidOrder,1000, 0, 0, this.f.packedFunction, INTERNAL)
+            ).to.revertedWith("Marketplace: amount must be > 0.");
           });
         });
 
