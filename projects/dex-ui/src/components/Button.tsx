@@ -8,6 +8,7 @@ export type ButtonVariant = "outlined" | "contained"; // | "text" (Add Text Vari
 type BaseButtonProps = {
   $variant?: ButtonVariant;
   disabled?: boolean;
+  $fullWidth?: boolean;
 };
 
 export type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & BoxModelProps & BaseButtonProps;
@@ -42,6 +43,7 @@ const ButtonBase = styled.button<ButtonProps>`
   padding: ${theme.spacing(1.5)};
   ${theme.font.styles.variant("button-link")}
   ${BoxModelBase}
+  ${({ $fullWidth }) => $fullWidth && "width: 100%;"}
   
   background-color: ${getButtonBgColor};
   color: ${getButtonFontColor};

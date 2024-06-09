@@ -60,7 +60,7 @@ export const FlexCard = styled(Flex)<
   }
 >`
   border: ${(p) => p.$borderWidth ?? 1}px solid ${(p) => theme.colors[p.$borderColor || "black"]};
-  background: ${(p) => (p.$bgColor ? theme.colors[p.$bgColor] : theme.colors.white)};
+  background: ${(p) => theme.colors[p.$bgColor || "white"]};
   ${(p) => {
     if (p.$p || p.$px || p.$py || p.$pt || p.$pr || p.$pb || p.$pl) {
       return "";

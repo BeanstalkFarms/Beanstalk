@@ -143,8 +143,12 @@ export const Wells = () => {
                   let price = undefined;
                   let volume = undefined;
                   if (wellStats && well.tokens && wellTokenPrices[index]) {
-                    price = well.tokens[1].fromHuman(wellStats[index].last_price).mul(wellTokenPrices[index][1] as TokenValue);
-                    volume =  well.tokens[1].fromHuman(wellStats[index].target_volume).mul(wellTokenPrices[index][1] as TokenValue);
+                    price = well.tokens[1]
+                      .fromHuman(wellStats[index]?.last_price || 0)
+                      .mul(wellTokenPrices?.[index]?.[1] || TokenValue.ZERO);
+                    volume = well.tokens[1]
+                      .fromHuman(wellStats[index]?.target_volume || 0)
+                      .mul(wellTokenPrices[index]?.[1] || TokenValue.ZERO);
                   };
                   return tab === 0 ? (
                     <WellDetailRow

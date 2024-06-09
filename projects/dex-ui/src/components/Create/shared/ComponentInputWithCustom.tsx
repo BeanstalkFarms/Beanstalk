@@ -11,6 +11,7 @@ import { theme } from "src/utils/ui/theme";
 import styled from "styled-components";
 import { CircleFilledCheckIcon, CircleEmptyIcon } from "../../Icons";
 import { getIsValidEthereumAddress } from "src/utils/addresses";
+import { isConvertibleToBytes } from "src/utils/bytes";
 
 type AdditionalOptionProps = {
   value: string;
@@ -20,21 +21,25 @@ type AdditionalOptionProps = {
 
 type Props<T extends FieldValues> = {
   path: Path<T>;
+  dataPath?: Path<T>;
   componentType: keyof ReturnType<typeof useWhitelistedWellComponents>;
   toggleMessage: string;
   emptyValue: PathValue<T, Path<T>>;
   additional?: AdditionalOptionProps[];
+  toggleOpen?: boolean;
 };
 
 export const ComponentInputWithCustom = <T extends FieldValues>({
   componentType,
   path,
+  dataPath,
   toggleMessage,
   emptyValue,
+  toggleOpen = false,
   additional
 }: Props<T>) => {
   const { [componentType]: wellComponents } = useWhitelistedWellComponents();
-  const [usingCustom, { toggle, set: setUsingCustom }] = useBoolean();
+  const [usingCustom, { toggle, set: setUsingCustom }] = useBoolean(toggleOpen);
 
   const {
     control,
@@ -58,8 +63,11 @@ export const ComponentInputWithCustom = <T extends FieldValues>({
 
   const handleToggle = useCallback(() => {
     setValue(path, emptyValue);
+    if (dataPath) {
+      setValue(dataPath, emptyValue);
+    }
     toggle();
-  }, [setValue, toggle, path, emptyValue]);
+  }, [setValue, toggle, path, emptyValue, dataPath]);
 
   // we can always assume that error.message is a string b/c we define the
   // validation here in this component
@@ -112,17 +120,43 @@ export const ComponentInputWithCustom = <T extends FieldValues>({
         </Text>
       </Flex>
       {usingCustom && (
-        <TextInputField
-          {...register(path, {
-            validate: (_value) => {
-              return getIsValidEthereumAddress(_value) || "Invalid address";
-            }
-          })}
-          placeholder="Input address"
-          error={errMessage}
-        />
+        <>
+          <TextInputField
+            {...register(path, {
+              validate: (_value) => {
+                return getIsValidEthereumAddress(_value) || "Invalid address";
+              }
+            })}
+            placeholder="Input address"
+            error={errMessage}
+          />
+          {dataPath && <ComponentDataFieldInput path={dataPath} />}
+        </>
       )}
     </>
+  );
+};
+
+const ComponentDataFieldInput = <T extends FieldValues>(props: { path: Path<T> }) => {
+  const {
+    register,
+    formState: {
+      errors: { [props.path]: error }
+    }
+  } = useFormContext<T>();
+
+  const errMessage = (error?.message || "") as string | undefined;
+
+  return (
+    <TextInputField
+      {...register(props.path, {
+        validate: (_value) => {
+          return isConvertibleToBytes(_value) || "Invalid input";
+        }
+      })}
+      placeholder="0x data"
+      error={errMessage}
+    />
   );
 };
 

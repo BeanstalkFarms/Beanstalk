@@ -10,12 +10,13 @@ import { Text } from "src/components/Typography";
 import { CreateWellButtonRow } from "./shared/CreateWellButtonRow";
 import { TextInputField } from "src/components/Form";
 import { XIcon } from "src/components/Icons";
-
 import { CreateWellStepProps, useCreateWell } from "./CreateWellProvider";
 import { CreateWellFormProgress } from "./shared/CreateWellFormProgress";
 import { ComponentInputWithCustom } from "./shared/ComponentInputWithCustom";
 import { USE_ERC20_TOKEN_ERRORS, useERC20TokenWithAddress } from "src/tokens/useERC20Token";
 import { ERC20Token } from "@beanstalk/sdk";
+import useSdk from "src/utils/sdk/useSdk";
+import BoreWellUtils from "src/wells/boreWell";
 
 const additionalOptions = [
   {
@@ -36,17 +37,24 @@ export type FunctionTokenPumpFormValues = OmitWellTokens & TokenFormValues;
 
 const tokenFormKeys = ["token1", "token2"] as const;
 
+const optionalKeys = ["wellFunctionData", "pumpData"] as const;
+
 const ChooseFunctionAndPumpForm = () => {
-  const { wellTokens, wellFunction, pump, setStep2 } = useCreateWell();
+  const { wellTokens, wellFunctionAddress, pumpAddress, setStep2, wellFunctionData, pumpData } =
+    useCreateWell();
+  const sdk = useSdk();
+
   const [token1, setToken1] = useState<ERC20Token | undefined>(undefined);
   const [token2, setToken2] = useState<ERC20Token | undefined>(undefined);
 
   const methods = useForm<FunctionTokenPumpFormValues>({
     defaultValues: {
-      wellFunction: wellFunction || "",
+      wellFunctionAddress: wellFunctionAddress || "",
+      wellFunctionData: wellFunctionData || "",
       token1: wellTokens?.token1?.address || "",
       token2: wellTokens?.token2?.address || "",
-      pump: pump || ""
+      pumpAddress: pumpAddress || "",
+      pumpData: pumpData || ""
     }
   });
 
@@ -65,9 +73,10 @@ const ChooseFunctionAndPumpForm = () => {
       if (!valid || !token1 || !token2) return;
       if (token1.address === token2.address) return; // should never be true, but just in case
 
-      setStep2({ ...values, token1, token2, goNext: true });
+      const [tk1, tk2] = BoreWellUtils.prepareTokenOrderForBoreWell(sdk, [token1, token2]);
+      setStep2({ ...values, token1: tk1, token2: tk2, goNext: true });
     },
-    [setStep2, methods, token1, token2]
+    [sdk, setStep2, methods, token1, token2]
   );
 
   return (
@@ -87,11 +96,13 @@ const ChooseFunctionAndPumpForm = () => {
                 </Text>
               </Flex>
               <Flex className="form-section" $gap={2} $fullWidth>
-                <ComponentInputWithCustom
+                <ComponentInputWithCustom<FunctionTokenPumpFormValues>
                   toggleMessage="Use a custom Well Implementation instead"
-                  path="wellFunction"
+                  path="wellFunctionAddress"
+                  dataPath="wellFunctionData"
                   componentType="wellFunctions"
                   emptyValue=""
+                  toggleOpen={!!wellFunctionData}
                 />
               </Flex>
             </SectionWrapper>
@@ -136,19 +147,25 @@ const ChooseFunctionAndPumpForm = () => {
                 <Text $variant="xs">Choose Pump(s) to set up a price feed from your Well.</Text>
               </Flex>
               <Flex className="form-section" $gap={2} $fullWidth>
-                <ComponentInputWithCustom
+                <ComponentInputWithCustom<FunctionTokenPumpFormValues>
                   componentType="pumps"
-                  path="pump"
+                  path="pumpAddress"
+                  dataPath="pumpData"
                   toggleMessage="Use a custom Pump"
                   emptyValue=""
                   additional={additionalOptions}
+                  toggleOpen={!!pumpData}
                 />
               </Flex>
             </SectionWrapper>
             {/*
              * Actions
              */}
-            <CreateWellButtonRow onGoBack={handleSave} disabled={!token1 || !token2} />
+            <CreateWellButtonRow
+              onGoBack={handleSave}
+              disabled={!token1 || !token2}
+              optionalKeys={optionalKeys}
+            />
           </Flex>
         </Flex>
       </form>
