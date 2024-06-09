@@ -31,7 +31,7 @@ const ChooseWellImplementationForm = () => {
   return (
     <FormProvider {...methods}>
       <form onSubmit={methods.handleSubmit(handleSubmit)} style={{ width: "100%" }}>
-        <Flex $maxWidth={"710px"} $fullWidth $gap={2}>
+        <Flex $maxWidth={"710px"} $gap={2}>
           <Text $lineHeight="l">
             {"Which Well Implementation do you want to use?".toUpperCase()}
           </Text>
@@ -88,24 +88,11 @@ const ContentWrapper = styled.div`
     display: flex;
     flex-direction: column;
     gap: ${theme.spacing(2)};
-    max-width: 274px;
+    max-width: 300px;
 
     ${theme.media.query.sm.only} {
       max-width: 100%;
       gap: ${theme.spacing(2)};
     }
   }
-  //
 `;
-
-// const TextSection = styled.div`
-//   display: flex;
-//   flex-direction: column;
-//   gap: ${theme.spacing(2)};
-//   max-width: 274px;
-
-//   ${theme.media.query.sm.only} {
-//     max-width: 100%;
-//     gap: ${theme.spacing(1)};
-//   }
-// `;

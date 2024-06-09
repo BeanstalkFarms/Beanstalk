@@ -72,7 +72,7 @@ export const CreateWellFormProgress = () => {
 
   return (
     <ProgressContainer>
-      <Flex $gap={2}>
+      <Flex className="progress-indicators">
         {labelToProgress.map(([label, checked], i) => (
           <IndicatorWithLabel label={label} checked={checked} key={`indicator-${label}-${i}`} />
         ))}
@@ -117,8 +117,22 @@ const ProgressContainer = styled.div`
   display: flex;
   flex-direction: column;
   gap: ${theme.spacing(4)};
-  width: 100%;
   max-width: 182px;
+  width: 100%;
+
+  .progress-indicators {
+    gap: ${theme.spacing(2)};
+  }
+
+  ${theme.media.query.sm.only} {
+    gap: ${theme.spacing(2)};
+    flex-direction: column-reverse;
+    max-width: unset;
+
+    .progress-indicators {
+      gap: ${theme.spacing(1)};
+    }
+  }
 `;
 
 const TextLink = styled(Link)`

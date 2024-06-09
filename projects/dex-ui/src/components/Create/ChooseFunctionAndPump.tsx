@@ -8,7 +8,7 @@ import { theme } from "src/utils/ui/theme";
 import { Divider, Flex, FlexCard } from "src/components/Layout";
 import { Text } from "src/components/Typography";
 import { CreateWellButtonRow } from "./shared/CreateWellButtonRow";
-import { TextInputField } from "src/components/Form";
+import { StyledForm, TextInputField } from "src/components/Form";
 import { XIcon } from "src/components/Icons";
 import { CreateWellStepProps, useCreateWell } from "./CreateWellProvider";
 import { CreateWellFormProgress } from "./shared/CreateWellFormProgress";
@@ -81,14 +81,14 @@ const ChooseFunctionAndPumpForm = () => {
 
   return (
     <FormProvider {...methods}>
-      <form onSubmit={methods.handleSubmit(handleSubmit)} style={{ width: "100%" }}>
-        <Flex $direction="row" $gap={6}>
+      <StyledForm onSubmit={methods.handleSubmit(handleSubmit)}>
+        <FormInnerWrapper>
           <CreateWellFormProgress />
           <Flex $fullWidth $gap={4}>
             {/*
              * Well Function Form Section
              */}
-            <SectionWrapper $direction="row" $fullWidth $justifyContent="space-between" $gap={2}>
+            <SectionWrapper>
               <Flex $gap={2} className="description">
                 <Text $variant="h3">Well Functions</Text>
                 <Text $variant="xs" $color="text.secondary">
@@ -112,12 +112,12 @@ const ChooseFunctionAndPumpForm = () => {
              */}
             <Flex $gap={2} $fullWidth>
               <Text $variant="h3">Tokens</Text>
-              <Flex $direction="row" $gap={4} $fullWidth>
+              <TokenSelectWrapper>
                 {tokenFormKeys.map((path) => {
                   const setToken = path === "token1" ? setToken1 : setToken2;
                   const typeText = path === "token1" ? "Token 1 Type" : "Token 2 Type";
                   return (
-                    <HalfWidthFlex key={`set-token-${path}`} $gap={2}>
+                    <div className="input-wrapper" key={`set-token-${path}`}>
                       <Flex>
                         <Text $color="text.secondary" $variant="xs" $mb={1}>
                           {typeText}
@@ -132,16 +132,16 @@ const ChooseFunctionAndPumpForm = () => {
                         </Text>
                         <TokenAddressInputWithSearch path={path} setToken={setToken} />
                       </Flex>
-                    </HalfWidthFlex>
+                    </div>
                   );
                 })}
-              </Flex>
+              </TokenSelectWrapper>
             </Flex>
             <Divider />
             {/*
              * Pump Select Section
              */}
-            <SectionWrapper $direction="row" $justifyContent="space-between" $fullWidth $gap={2}>
+            <SectionWrapper>
               <Flex $gap={2} className="description" $justifyContent="flex-start">
                 <Text $variant="h3">Pumps</Text>
                 <Text $variant="xs">Choose Pump(s) to set up a price feed from your Well.</Text>
@@ -167,11 +167,13 @@ const ChooseFunctionAndPumpForm = () => {
               optionalKeys={optionalKeys}
             />
           </Flex>
-        </Flex>
-      </form>
+        </FormInnerWrapper>
+      </StyledForm>
     </FormProvider>
   );
 };
+
+// ----------------------------------------
 
 export const ChooseFunctionAndPump = () => {
   return (
@@ -281,6 +283,41 @@ const TokenAddressInputWithSearch = ({
   );
 };
 
+const FormInnerWrapper = styled.div`
+  display: flex;
+  flex-direction: row;
+  gap: ${theme.spacing(6)};
+
+  ${theme.media.query.sm.only} {
+    flex-direction: column;
+    gap: ${theme.spacing(4)};
+  }
+`;
+
+const TokenSelectWrapper = styled(Flex)`
+  width: 100%;
+  flex-direction: row;
+  gap: ${theme.spacing(4)};
+
+  ${theme.media.query.md.down} {
+    flex-direction: column;
+    gap: ${theme.spacing(3)};
+  }
+
+  .input-wrapper {
+    display: flex;
+    flex-direction: column;
+    width: 50%;
+    max-width: 50%;
+    gap: ${theme.spacing(2)};
+
+    ${theme.media.query.md.down} {
+      width: 100%;
+      max-width: 100%;
+    }
+  }
+`;
+
 const FoundTokenInfo = styled.div`
   display: flex;
   flex-direction: row;
@@ -302,19 +339,33 @@ const FoundTokenInfo = styled.div`
 `;
 
 const SectionWrapper = styled(Flex)`
+  display: flex;
+  flex-direction: row;
+  width: 100%;
+  justify-content: space-between;
+  gap: ${theme.spacing(2)};
+
+  ${theme.media.query.md.down} {
+    flex-direction: column;
+    gap: ${theme.spacing(3)};
+  }
+
   .description {
     max-width: 180px;
+
+    ${theme.media.query.md.down} {
+      max-width: 100%;
+    }
   }
 
   .form-section {
     max-width: 713px;
     width: 100%;
-  }
-`;
 
-const HalfWidthFlex = styled(Flex)`
-  width: 50%;
-  max-width: 50%;
+    ${theme.media.query.md.down} {
+      max-width: 100%;
+    }
+  }
 `;
 
 const ImgContainer = styled.div<{
