@@ -1702,7 +1702,7 @@ describe('Marketplace', function () {
           });
 
           it("Reverts if minFill is 0", async function () {
-            await expect(this.marketplace.connect(user2).createPodOrderV2("500","1000",'0',this.f.packedFunction,EXTERNAL)).to.be.revertedWith("Marketplace: Order amount must be > 0.");
+            await expect(this.marketplace.connect(user2).createPodOrderV2("500","1000",'0',this.f.packedFunction,EXTERNAL)).to.be.revertedWith("Marketplace: Pod price must be greater than 0.");
           });
 
           it("Reverts with invalid function", async function () {
@@ -1756,7 +1756,7 @@ describe('Marketplace', function () {
                 "500",
                 0,
                 "1000",
-                '0',
+                '1',
                 this.f.packedFunction,
                 Dynamic
               );
@@ -1774,7 +1774,7 @@ describe('Marketplace', function () {
         beforeEach(async function () {
           this.result = await this.marketplace.connect(user).createPodOrderV2("50", "2500", '1', this.f.packedFunction, EXTERNAL);
           this.id = await getOrderId(this.result);
-          this.order = [userAddress, "0", "2500", '0'];
+          this.order = [userAddress, "0", "2500", '1'];
         });
 
         describe("revert", async function () {
