@@ -39,7 +39,7 @@ export interface TextProps
 
 export const Text = forwardRef<HTMLDivElement, TextProps>((props, ref) => {
   return (
-    <TextComponent ref={ref} $responsve={props.$responsive !== false ? true : false} {...props} />
+    <TextComponent ref={ref} $responsive={props.$responsive !== false ? true : false} {...props} />
   );
 });
 

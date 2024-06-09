@@ -13,7 +13,7 @@ import { useWellFunctions } from "src/wells/wellFunction/useWellFunctions";
 import BoreWellUtils from "src/wells/boreWell";
 import { Settings } from "src/settings";
 import { makeLocalOnlyStep } from "src/utils/workflow/steps";
-import { clearWellsCache, useWells } from "src/wells/useWells";
+import { clearWellsCache } from "src/wells/useWells";
 import { useQueryClient } from "@tanstack/react-query";
 
 /**
@@ -132,7 +132,6 @@ export const CreateWellProvider = ({ children }: { children: React.ReactNode }) 
   const wellFunctions = useWellFunctions();
   const pumps = usePumps();
   const queryClient = useQueryClient();
-  const { refetch: refetchWells } = useWells();
 
   /// ----- Local State -----
   const [deploying, setDeploying] = useState(false);
