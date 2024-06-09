@@ -81,7 +81,7 @@ const ChooseFunctionAndPumpForm = () => {
 
   return (
     <FormProvider {...methods}>
-      <StyledForm onSubmit={methods.handleSubmit(handleSubmit)}>
+      <StyledForm onSubmit={methods.handleSubmit(handleSubmit)} $width="100%">
         <FormInnerWrapper>
           <CreateWellFormProgress />
           <Flex $fullWidth $gap={4}>
