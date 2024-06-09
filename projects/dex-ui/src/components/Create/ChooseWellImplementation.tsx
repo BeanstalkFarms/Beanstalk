@@ -55,7 +55,7 @@ export const ChooseWellImplementation = () => {
     <Flex $gap={3} $fullWidth>
       <Text $variant="h2">Create a Well - Choose a Well Implementation</Text>
       <ContentWrapper>
-        <TextSection>
+        <div className="text-section">
           <Text $color="text.secondary" $lineHeight="l">
             Deploy a Well using Aquifer, a Well factory contract.
           </Text>
@@ -66,7 +66,7 @@ export const ChooseWellImplementation = () => {
           <Text $color="text.secondary" $lineHeight="l">
             Visit the documentation to learn more about Aquifers and Well Implementations.
           </Text>
-        </TextSection>
+        </div>
         <ChooseWellImplementationForm />
       </ContentWrapper>
     </Flex>
@@ -83,16 +83,29 @@ const ContentWrapper = styled.div`
     flex-direction: column;
     gap: ${theme.spacing(4)};
   }
-`;
 
-const TextSection = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: ${theme.spacing(2)};
-  max-width: 274px;
+  .text-section {
+    display: flex;
+    flex-direction: column;
+    gap: ${theme.spacing(2)};
+    max-width: 274px;
 
-  ${theme.media.query.sm.only} {
-    max-width: 100%;
-    gap: ${theme.spacing(1)};
+    ${theme.media.query.sm.only} {
+      max-width: 100%;
+      gap: ${theme.spacing(2)};
+    }
   }
+  //
 `;
+
+// const TextSection = styled.div`
+//   display: flex;
+//   flex-direction: column;
+//   gap: ${theme.spacing(2)};
+//   max-width: 274px;
+
+//   ${theme.media.query.sm.only} {
+//     max-width: 100%;
+//     gap: ${theme.spacing(1)};
+//   }
+// `;
