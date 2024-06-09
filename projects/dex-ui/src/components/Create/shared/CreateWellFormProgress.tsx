@@ -81,7 +81,7 @@ export const CreateWellFormProgress = () => {
         Visit the{" "}
         <TextLink
           // TODO: FIX ME
-          to=""
+          to="/build"
         >
           component library
         </TextLink>{" "}
