@@ -43,7 +43,7 @@ export const WellComponentAccordionCard = ({
         </Flex>
       }
       below={
-        <Flex $direction="row" $justifyContent="space-between">
+        <Flex $direction="row" $justifyContent="space-between" $gap={1}>
           <Flex $gap={0.5} $alignItems="flex-start">
             {[deploy, ...info].map((datum) => (
               <Text $color="text.secondary" $variant="xs" key={`info-${datum.label}`}>

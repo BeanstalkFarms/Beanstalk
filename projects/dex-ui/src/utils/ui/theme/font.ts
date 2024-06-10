@@ -21,7 +21,7 @@ const FONT_SIZE_MAP = {
 
 /// --------------- Font Size ---------------
 export const getFontSize = (_size: number | FontSize) => {
-  if (typeof _size === "number") return _size;
+  if (typeof _size === "number") return `${_size}px`;
   return `${FONT_SIZE_MAP[_size in FONT_SIZE_MAP ? _size : "s"]}px`;
 };
 

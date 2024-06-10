@@ -78,14 +78,8 @@ export const CreateWellFormProgress = () => {
         ))}
       </Flex>
       <Text $color="text.secondary" $variant="xs">
-        Visit the{" "}
-        <TextLink
-          // TODO: FIX ME
-          to="/build"
-        >
-          component library
-        </TextLink>{" "}
-        to learn more about the different Well components.
+        Visit the <TextLink to="/build">component library</TextLink> to learn more about the
+        different Well components.
       </Text>
     </ProgressContainer>
   );

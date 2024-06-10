@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import styled from "styled-components";
 import { FormProvider, useForm, useFormContext, useWatch } from "react-hook-form";
 
@@ -50,7 +50,7 @@ const ChooseFunctionAndPumpForm = () => {
   const methods = useForm<FunctionTokenPumpFormValues>({
     defaultValues: {
       wellFunctionAddress: wellFunctionAddress || "",
-      wellFunctionData: wellFunctionData || "",
+      wellFunctionData: wellFunctionAddress || "",
       token1: wellTokens?.token1?.address || "",
       token2: wellTokens?.token2?.address || "",
       pumpAddress: pumpAddress || "",
@@ -58,26 +58,24 @@ const ChooseFunctionAndPumpForm = () => {
     }
   });
 
-  const handleSave = useCallback(() => {
+  const handleSave = () => {
     const values = methods.getValues();
+
     setStep2({
       ...values,
       token1: token1,
       token2: token2
     });
-  }, [token1, token2, methods, setStep2]);
+  };
 
-  const handleSubmit = useCallback(
-    async (values: FunctionTokenPumpFormValues) => {
-      const valid = await methods.trigger();
-      if (!valid || !token1 || !token2) return;
-      if (token1.address === token2.address) return; // should never be true, but just in case
+  const handleSubmit = async (values: FunctionTokenPumpFormValues) => {
+    const valid = await methods.trigger();
+    if (!valid || !token1 || !token2) return;
+    if (token1.address === token2.address) return; // should never be true, but just in case
 
-      const [tk1, tk2] = BoreWellUtils.prepareTokenOrderForBoreWell(sdk, [token1, token2]);
-      setStep2({ ...values, token1: tk1, token2: tk2, goNext: true });
-    },
-    [sdk, setStep2, methods, token1, token2]
-  );
+    const [tk1, tk2] = BoreWellUtils.prepareTokenOrderForBoreWell(sdk, [token1, token2]);
+    setStep2({ ...values, token1: tk1, token2: tk2, goNext: true });
+  };
 
   return (
     <FormProvider {...methods}>
