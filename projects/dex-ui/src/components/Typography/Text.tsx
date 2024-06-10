@@ -17,8 +17,14 @@ import {
   FontColorStyle
 } from "src/utils/ui/theme";
 import styled from "styled-components";
+import { ResponsiveTextProps } from "./typography-components";
 
-export interface TextProps extends HTMLAttributes<HTMLDivElement>, BoxModelProps, CssProps, DisplayStyleProps {
+export interface TextProps
+  extends HTMLAttributes<HTMLDivElement>,
+    BoxModelProps,
+    CssProps,
+    DisplayStyleProps,
+    ResponsiveTextProps {
   $variant?: FontVariant;
   $weight?: FontWeight;
   $color?: FontColor;
@@ -28,10 +34,13 @@ export interface TextProps extends HTMLAttributes<HTMLDivElement>, BoxModelProps
   $textDecoration?: CSSProperties["textDecoration"];
   as?: ElementType;
   className?: string;
+  $mobileVariant?: FontVariant;
 }
 
 export const Text = forwardRef<HTMLDivElement, TextProps>((props, ref) => {
-  return <TextComponent ref={ref} {...props} />;
+  return (
+    <TextComponent ref={ref} $responsive={props.$responsive !== false ? true : false} {...props} />
+  );
 });
 
 const TextComponent = styled.div<TextProps>`

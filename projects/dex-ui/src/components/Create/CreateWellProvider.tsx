@@ -13,7 +13,7 @@ import { useWellFunctions } from "src/wells/wellFunction/useWellFunctions";
 import BoreWellUtils from "src/wells/boreWell";
 import { Settings } from "src/settings";
 import { makeLocalOnlyStep } from "src/utils/workflow/steps";
-import { clearWellsCache, useWells } from "src/wells/useWells";
+import { clearWellsCache } from "src/wells/useWells";
 import { useQueryClient } from "@tanstack/react-query";
 
 /**
@@ -104,7 +104,7 @@ export type CreateWellContext = {
       token1Amount: TokenValue;
       token2Amount: TokenValue;
     }
-  ) => Promise<any>;
+  ) => Promise<{ wellAddress: string } | Error>;
 };
 
 export type CreateWellStepProps = DeepRequired<{
@@ -132,7 +132,6 @@ export const CreateWellProvider = ({ children }: { children: React.ReactNode }) 
   const wellFunctions = useWellFunctions();
   const pumps = usePumps();
   const queryClient = useQueryClient();
-  const { refetch: refetchWells } = useWells();
 
   /// ----- Local State -----
   const [deploying, setDeploying] = useState(false);
@@ -373,21 +372,21 @@ export const CreateWellProvider = ({ children }: { children: React.ReactNode }) 
         if (!wellAddress && !liquidityAmounts) {
           wellAddress = receipt.events[0].address as string;
         }
+
+        clearWellsCache();
         queryClient.fetchQuery({
           queryKey: ["wells", sdk]
         });
 
         Log.module("wellDeployer").debug("Well deployed at address: ", wellAddress || "");
-        clearWellsCache();
-      } catch (e) {
+        setDeploying(false);
+        return { wellAddress: wellAddress };
+      } catch (e: any) {
+        setDeploying(false);
         console.error(e);
         toast.error(e);
         return e;
-      } finally {
-        setDeploying(false);
       }
-
-      return;
     },
     [
       queryClient,

@@ -13,12 +13,15 @@ type BaseButtonProps = {
 
 export type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & BoxModelProps & BaseButtonProps;
 
-export const ButtonPrimary = forwardRef<HTMLButtonElement, ButtonProps>((props: ButtonProps, ref) => {
-  return <ButtonBase ref={ref} {...props} />;
-});
+export const ButtonPrimary = forwardRef<HTMLButtonElement, ButtonProps>(
+  (props: ButtonProps, ref) => {
+    return <ButtonBase ref={ref} {...props} />;
+  }
+);
 
 const getButtonFontColor = (props: BaseButtonProps) => {
-  if (props.$variant === "outlined") return props.disabled ? theme.colors.disabled : theme.colors.black;
+  if (props.$variant === "outlined")
+    return props.disabled ? theme.colors.disabled : theme.colors.black;
   return theme.colors.white;
 };
 
@@ -28,7 +31,8 @@ const getButtonBgColor = (props: BaseButtonProps) => {
 };
 
 const getButtonOutline = (props: BaseButtonProps) => {
-  if (props.$variant === "outlined") return props.disabled ? theme.colors.disabled : theme.colors.lightGray;
+  if (props.$variant === "outlined")
+    return props.disabled ? theme.colors.disabled : theme.colors.lightGray;
   return props.disabled ? theme.colors.disabled : theme.colors.black;
 };
 
@@ -37,7 +41,6 @@ const ButtonBase = styled.button<ButtonProps>`
   justify-content: center;
   align-items: center;
   border: 0;
-  white-space: nowrap;
   cursor: pointer;
   box-sizing: border-box;
   padding: ${theme.spacing(1.5)};
@@ -53,5 +56,10 @@ const ButtonBase = styled.button<ButtonProps>`
   &:hover,
   &:focus {
     outline: ${(props) => (!props.disabled ? `2px solid ${theme.colors.primary}` : "")};
+  }
+
+  ${theme.media.query.sm.only} {
+    padding: ${theme.spacing(1)};
+    ${theme.font.styles.variant("xs")}
   }
 `;

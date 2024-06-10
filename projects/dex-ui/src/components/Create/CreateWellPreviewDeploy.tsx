@@ -10,7 +10,7 @@ import {
 } from "react-hook-form";
 import { theme } from "src/utils/ui/theme";
 
-import { SwitchField, TextInputField } from "src/components/Form";
+import { StyledForm, SwitchField, TextInputField } from "src/components/Form";
 import { Box, Divider, Flex, FlexCard } from "src/components/Layout";
 import { SelectCard } from "src/components/Selectable";
 import { Text } from "src/components/Typography";
@@ -28,6 +28,10 @@ import { ensureAllowance } from "../Liquidity/allowance";
 import { useAccount } from "wagmi";
 import { useQueryClient } from "@tanstack/react-query";
 import { queryKeys } from "src/utils/query/queryKeys";
+import { useBoolean } from "src/utils/ui/useBoolean";
+import { Dialog } from "../Dialog";
+import { ProgressCircle } from "../ProgressCircle";
+import { useNavigate } from "react-router-dom";
 
 type FormValues = CreateWellStepProps["step4"] & {
   usingSalt: boolean;
@@ -39,6 +43,7 @@ type FormContentProps = {
   liquidity: CreateWellContext["liquidity"];
   token1: ERC20Token;
   token2: ERC20Token;
+  deploying: boolean;
   setStep4: CreateWellContext["setStep4"];
   deployWell: CreateWellContext["deployWell"];
 };
@@ -48,10 +53,15 @@ const FormContent = ({
   token2,
   salt,
   liquidity,
+  deploying,
   setStep4,
   deployWell
 }: FormContentProps) => {
   const [enoughAllowance, setEnoughAllowance] = useState(true);
+  const [modalOpen, { set: setModal }] = useBoolean(false);
+  const [deployedWellAddress, setDeployedWellAddress] = useState<string>("");
+  const [deployErr, setDeployErr] = useState<Error | undefined>();
+  const navigate = useNavigate();
 
   const methods = useForm<FormValues>({
     defaultValues: {
@@ -77,6 +87,7 @@ const FormContent = ({
 
   const onSubmit = useCallback(
     async (values: FormValues) => {
+      setModal(true);
       setStep4({
         salt: values.usingSalt ? values.salt : undefined,
         token1Amount: values.token1Amount,
@@ -99,29 +110,68 @@ const FormContent = ({
           ? { token1Amount, token2Amount }
           : undefined;
 
-      await deployWell(saltValue, liquidity);
+      const response = await deployWell(saltValue, liquidity);
+      if ("wellAddress" in response) {
+        setDeployedWellAddress(response.wellAddress);
+        navigate(`/wells/${response.wellAddress}`);
+      } else {
+        setDeployErr(response);
+      }
     },
-    [deployWell, setStep4, token1, token2]
+    [deployWell, setModal, setStep4, navigate, token1, token2]
   );
 
   return (
-    <FormProvider {...methods}>
-      <form onSubmit={methods.handleSubmit(onSubmit)}>
-        <Flex $gap={2}>
-          <LiquidityForm
-            token1={token1}
-            token2={token2}
-            setHasEnoughAllowance={setEnoughAllowance}
-          />
-          <SaltForm />
-          <CreateWellButtonRow
-            onGoBack={handleSave}
-            valuesRequired={false}
-            disabled={!enoughAllowance}
-          />
+    <>
+      <FormProvider {...methods}>
+        <StyledForm $width="100%" onSubmit={methods.handleSubmit(onSubmit)}>
+          <Flex $gap={2}>
+            <LiquidityForm
+              token1={token1}
+              token2={token2}
+              setHasEnoughAllowance={setEnoughAllowance}
+            />
+            <SaltForm />
+            <CreateWellButtonRow
+              onGoBack={handleSave}
+              valuesRequired={false}
+              disabled={!enoughAllowance}
+            />
+          </Flex>
+        </StyledForm>
+      </FormProvider>
+      <Dialog
+        canClose={!deploying}
+        open={modalOpen}
+        closeModal={() => {
+          setModal(false);
+          setDeployErr(undefined);
+        }}
+      >
+        <Flex $p={2} $alignItems="center">
+          <Text $variant="l">Well Deployment In Progress</Text>
+          <Flex $fullWidth>
+            <Flex $my={5} $alignSelf="center">
+              <ProgressCircle
+                size={75}
+                progress={80}
+                strokeWidth={5}
+                trackColor={theme.colors.white}
+                strokeColor={theme.colors.primary}
+                animate
+                status={deployedWellAddress ? "success" : deployErr ? "error" : undefined}
+              />
+            </Flex>
+            {deployErr ? (
+              <Flex $alignSelf="flex-start">
+                <Text>Transaction Reverted: </Text>
+                <Text>{deployErr.message || "See console for details"}</Text>
+              </Flex>
+            ) : null}
+          </Flex>
         </Flex>
-      </form>
-    </FormProvider>
+      </Dialog>
+    </>
   );
 };
 
@@ -385,6 +435,7 @@ export const CreateWellPreviewDeploy = () => {
     wellDetails: { name: wellName, symbol: wellSymbol },
     salt,
     liquidity,
+    loading,
     setStep4,
     deployWell
   } = useCreateWell();
@@ -467,6 +518,7 @@ export const CreateWellPreviewDeploy = () => {
         liquidity={liquidity}
         token1={token1}
         token2={token2}
+        deploying={loading}
         setStep4={setStep4}
         deployWell={deployWell}
       />

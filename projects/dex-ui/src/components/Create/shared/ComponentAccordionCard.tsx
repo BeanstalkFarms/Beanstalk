@@ -75,7 +75,12 @@ export const WellComponentAccordionCard = ({
             </Flex>
             {links.learnMore ? (
               <MayLink url={links.learnMore}>
-                <Text $color="text.secondary" $variant="xs" $textDecoration="underline">
+                <Text
+                  $color="text.secondary"
+                  $variant="xs"
+                  $textDecoration="underline"
+                  $align="right"
+                >
                   Learn more about this component
                 </Text>
               </MayLink>

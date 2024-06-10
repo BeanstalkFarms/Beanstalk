@@ -6,6 +6,8 @@ import { FormProvider, useForm } from "react-hook-form";
 import { CreateWellStepProps, useCreateWell } from "./CreateWellProvider";
 import { ComponentInputWithCustom } from "./shared/ComponentInputWithCustom";
 import { CreateWellButtonRow } from "./shared/CreateWellButtonRow";
+import styled from "styled-components";
+import { theme } from "src/utils/ui/theme";
 
 type FormValues = CreateWellStepProps["step1"];
 
@@ -29,7 +31,7 @@ const ChooseWellImplementationForm = () => {
   return (
     <FormProvider {...methods}>
       <form onSubmit={methods.handleSubmit(handleSubmit)} style={{ width: "100%" }}>
-        <Flex $maxWidth={"710px"} $fullWidth $gap={2}>
+        <Flex $maxWidth={"710px"} $gap={2}>
           <Text $lineHeight="l">
             {"Which Well Implementation do you want to use?".toUpperCase()}
           </Text>
@@ -52,8 +54,8 @@ export const ChooseWellImplementation = () => {
   return (
     <Flex $gap={3} $fullWidth>
       <Text $variant="h2">Create a Well - Choose a Well Implementation</Text>
-      <Flex $direction="row" $alignItems="flex-start" $gap={8}>
-        <Flex $gap={2} $maxWidth="274px">
+      <ContentWrapper>
+        <div className="text-section">
           <Text $color="text.secondary" $lineHeight="l">
             Deploy a Well using Aquifer, a Well factory contract.
           </Text>
@@ -64,9 +66,33 @@ export const ChooseWellImplementation = () => {
           <Text $color="text.secondary" $lineHeight="l">
             Visit the documentation to learn more about Aquifers and Well Implementations.
           </Text>
-        </Flex>
+        </div>
         <ChooseWellImplementationForm />
-      </Flex>
+      </ContentWrapper>
     </Flex>
   );
 };
+
+const ContentWrapper = styled.div`
+  display: flex;
+  flex-direction: row;
+  gap: ${theme.spacing(8)};
+  align-items: flex-start;
+
+  ${theme.media.query.sm.only} {
+    flex-direction: column;
+    gap: ${theme.spacing(4)};
+  }
+
+  .text-section {
+    display: flex;
+    flex-direction: column;
+    gap: ${theme.spacing(2)};
+    max-width: 300px;
+
+    ${theme.media.query.sm.only} {
+      max-width: 100%;
+      gap: ${theme.spacing(2)};
+    }
+  }
+`;

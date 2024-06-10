@@ -112,4 +112,10 @@ const ButtonLabel = styled(Flex).attrs({
   svg {
     margin-bottom: 2px;
   }
+
+  ${theme.media.query.sm.only} {
+    svg {
+      display: none;
+    }
+  }
 `;

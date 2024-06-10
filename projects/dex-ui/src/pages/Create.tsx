@@ -8,7 +8,6 @@ import { ChooseComponentNames } from "src/components/Create/ChooseComponentNames
 import { CreateWellPreviewDeploy } from "src/components/Create/CreateWellPreviewDeploy";
 import { Flex } from "src/components/Layout";
 
-
 export const Create = () => {
   return (
     <CreateWellProvider>
