@@ -174,56 +174,209 @@ describe('Silo', function () {
     });
 
     it('user can withdraw earned beans', async function () {
+      // verify initial state: 
+      expect(await this.siloGetters.totalStalk()).to.eq(toStalk('2101.2'));
+      expect(await this.siloGetters.balanceOfStalk(userAddress)).to.eq(toStalk('1050.6'));
+      expect(await this.siloGetters.getTotalDepositedBdv(BEAN)).to.eq(to6('2100'));
+      expect(await this.siloGetters.getTotalDeposited(BEAN)).to.eq(to6('2100'));
+      expect((await this.siloGetters.getMowStatus(userAddress, BEAN))[1]).to.eq(to6('1050'));
+
       stemTip = await this.siloGetters.stemTipForToken(this.bean.address)
       await this.silo.connect(user).withdrawDeposit(this.bean.address, stemTip, to6('25'), EXTERNAL)
 
+      // verify state has decreased equal to 25 beans.
+      expect(await this.siloGetters.totalStalk()).to.eq(toStalk('2076.2'));
+      expect(await this.siloGetters.balanceOfStalk(userAddress)).to.eq(toStalk('1025.6'));
+      expect(await this.siloGetters.getTotalDepositedBdv(BEAN)).to.eq(to6('2075'));
+      expect(await this.siloGetters.getTotalDeposited(BEAN)).to.eq(to6('2075'));
+      expect((await this.siloGetters.getMowStatus(userAddress, BEAN))[1]).to.eq(to6('1025'));
+
       // add Bean deposit, such that the stem tip matches with the earned beans, and verify withdraw.
       await this.silo.connect(user).deposit(this.bean.address, to6('25'), EXTERNAL)
+
+      // verify state has not changed from germination, as the deposit is germinating.
+      // user mow state should increase.
+      expect(await this.siloGetters.totalStalk()).to.eq(toStalk('2076.2'));
+      expect(await this.siloGetters.balanceOfStalk(userAddress)).to.eq(toStalk('1025.6'));
+      expect(await this.siloGetters.getTotalDepositedBdv(BEAN)).to.eq(to6('2075')); 
+      expect(await this.siloGetters.getTotalDeposited(BEAN)).to.eq(to6('2075'));
+      expect((await this.siloGetters.getMowStatus(userAddress, BEAN))[1]).to.eq(to6('1050'));
+
+      // withdraw the germinating deposit, and verify state has changed.
       await this.silo.connect(user).withdrawDeposit(this.bean.address, stemTip, to6('50'), EXTERNAL)
+
+      // verify state has changed by 25 beans, as part of the deposit is an Earned Bean Deposit.
+      expect(await this.siloGetters.totalStalk()).to.eq(toStalk('2051.2'));
+      expect(await this.siloGetters.balanceOfStalk(userAddress)).to.eq(toStalk('1000.6'));
+      expect(await this.siloGetters.getTotalDepositedBdv(BEAN)).to.eq(to6('2050'));
+      expect(await this.siloGetters.getTotalDeposited(BEAN)).to.eq(to6('2050'));
+      expect((await this.siloGetters.getMowStatus(userAddress, BEAN))[1]).to.eq(to6('1000'));
     });
 
     it('user can withdraws earned beans', async function () {
+      // verify initial state: 
+      expect(await this.siloGetters.totalStalk()).to.eq(toStalk('2101.2'));
+      expect(await this.siloGetters.balanceOfStalk(userAddress)).to.eq(toStalk('1050.6'));
+      expect(await this.siloGetters.getTotalDepositedBdv(BEAN)).to.eq(to6('2100'));
+      expect(await this.siloGetters.getTotalDeposited(BEAN)).to.eq(to6('2100'));
+      expect((await this.siloGetters.getMowStatus(userAddress, BEAN))[1]).to.eq(to6('1050'));
+
       stemTip = await this.siloGetters.stemTipForToken(this.bean.address)
       await this.silo.connect(user).withdrawDeposits(this.bean.address, [stemTip], [to6('25')], EXTERNAL)
 
+      // verify state has decreased by 25 beans: 
+      expect(await this.siloGetters.totalStalk()).to.eq(toStalk('2076.2'));
+      expect(await this.siloGetters.balanceOfStalk(userAddress)).to.eq(toStalk('1025.6'));
+      expect(await this.siloGetters.getTotalDepositedBdv(BEAN)).to.eq(to6('2075'));
+      expect(await this.siloGetters.getTotalDeposited(BEAN)).to.eq(to6('2075'));
+      expect((await this.siloGetters.getMowStatus(userAddress, BEAN))[1]).to.eq(to6('1025'));
+
       // add Bean deposit, such that the stem tip matches with the earned beans, and verify withdraw.
       await this.silo.connect(user).deposit(this.bean.address, to6('25'), EXTERNAL)
+
+      // verify state has changed correctly.
+      expect(await this.siloGetters.totalStalk()).to.eq(toStalk('2076.2'));
+      expect(await this.siloGetters.balanceOfStalk(userAddress)).to.eq(toStalk('1025.6'));
+      expect(await this.siloGetters.getTotalDepositedBdv(BEAN)).to.eq(to6('2075'));
+      expect(await this.siloGetters.getTotalDeposited(BEAN)).to.eq(to6('2075'));
+      expect((await this.siloGetters.getMowStatus(userAddress, BEAN))[1]).to.eq(to6('1050'));
+
+      // withdraw deposits with one crate.
       await this.silo.connect(user).withdrawDeposits(this.bean.address, [stemTip], [to6('50')], EXTERNAL)
+
+      // verify state. out of 50 beans, 25 are from the deposit, and 25 are from the earned beans.
+      expect(await this.siloGetters.totalStalk()).to.eq(toStalk('2051.2'));
+      expect(await this.siloGetters.balanceOfStalk(userAddress)).to.eq(toStalk('1000.6'));
+      expect(await this.siloGetters.getTotalDepositedBdv(BEAN)).to.eq(to6('2050'));
+      expect(await this.siloGetters.getTotalDeposited(BEAN)).to.eq(to6('2050'));
+      expect((await this.siloGetters.getMowStatus(userAddress, BEAN))[1]).to.eq(to6('1000'));
     });
     
     it('user can withdraws multiple earned beans', async function () {
+      
       stemTip = await this.siloGetters.stemTipForToken(this.bean.address)
       await this.silo.connect(user).withdrawDeposits(this.bean.address, [stemTip], [to6('25')], EXTERNAL)
+
+      // verify state has decreased by 25 beans: 
+      expect(await this.siloGetters.totalStalk()).to.eq(toStalk('2076.2'));
+      expect(await this.siloGetters.balanceOfStalk(userAddress)).to.eq(toStalk('1025.6'));
+      expect(await this.siloGetters.getTotalDepositedBdv(BEAN)).to.eq(to6('2075'));
+      expect(await this.siloGetters.getTotalDeposited(BEAN)).to.eq(to6('2075'));
+      expect((await this.siloGetters.getMowStatus(userAddress, BEAN))[1]).to.eq(to6('1025'));
 
       // add Bean deposit, such that the stem tip matches with the earned beans, and verify withdraw.
       await this.silo.connect(user).deposit(this.bean.address, to6('25'), EXTERNAL)
       await this.season.siloSunrise('0');
       stemTip1 = await this.siloGetters.stemTipForToken(this.bean.address)
       await this.silo.connect(user).deposit(this.bean.address, to6('50'), EXTERNAL)
+
+      expect(await this.siloGetters.totalStalk()).to.eq(toStalk('2076.41'));
+      expect(await this.siloGetters.balanceOfStalk(userAddress)).to.eq(toStalk('1025.81'));
+      expect(await this.siloGetters.getTotalDepositedBdv(BEAN)).to.eq(to6('2075'));
+      expect(await this.siloGetters.getTotalDeposited(BEAN)).to.eq(to6('2075'));
+      expect((await this.siloGetters.getMowStatus(userAddress, BEAN))[1]).to.eq(to6('1100'));
+
+
       await this.silo.connect(user).withdrawDeposits(this.bean.address, [stemTip, stemTip1], [to6('50'), to6('50')], EXTERNAL)
+
+      // verify state. out of 50 beans, 25 are from the deposit, and 25 are from the earned beans.
+      expect(await this.siloGetters.totalStalk()).to.eq(toStalk('2051.4'));
+      expect(await this.siloGetters.balanceOfStalk(userAddress)).to.eq(toStalk('1000.8'));
+      expect(await this.siloGetters.getTotalDepositedBdv(BEAN)).to.eq(to6('2050'));
+      expect(await this.siloGetters.getTotalDeposited(BEAN)).to.eq(to6('2050'));
+      expect((await this.siloGetters.getMowStatus(userAddress, BEAN))[1]).to.eq(to6('1000'));
     });
 
     it('user can transfer earned beans', async function () {
       stemTip = await this.siloGetters.stemTipForToken(this.bean.address)
       await this.silo.connect(user).transferDeposit(userAddress, user2Address, this.bean.address, stemTip, to6('25'))
+      
+      // verify state: 
+      expect(await this.siloGetters.totalStalk()).to.eq(toStalk('2101.2'));
+      expect(await this.siloGetters.balanceOfStalk(userAddress)).to.eq(toStalk('1025.6'))
+      expect(await this.siloGetters.balanceOfStalk(user2Address)).to.eq(toStalk('1075.6'));
+      expect(await this.siloGetters.getTotalDepositedBdv(BEAN)).to.eq(to6('2100'));
+      expect(await this.siloGetters.getTotalDeposited(BEAN)).to.eq(to6('2100'));
+      expect((await this.siloGetters.getMowStatus(userAddress, BEAN))[1]).to.eq(to6('1025'));
+
       // add Bean deposit, such that the stem tip matches with the earned beans, and verify withdraw.
       await this.silo.connect(user).deposit(this.bean.address, to6('25'), EXTERNAL)
+      // verify state: 
+      expect(await this.siloGetters.totalStalk()).to.eq(toStalk('2101.2'));
+      expect(await this.siloGetters.balanceOfStalk(userAddress)).to.eq(toStalk('1025.6'))
+      expect(await this.siloGetters.balanceOfStalk(user2Address)).to.eq(toStalk('1075.6'));
+      expect(await this.siloGetters.getTotalDepositedBdv(BEAN)).to.eq(to6('2100'));
+      expect(await this.siloGetters.getTotalDeposited(BEAN)).to.eq(to6('2100'));
+      expect((await this.siloGetters.getMowStatus(userAddress, BEAN))[1]).to.eq(to6('1050'));
+
       await this.silo.connect(user).transferDeposit(userAddress, user2Address, this.bean.address, stemTip, to6('50'))
+      
+      // verify state: 
+      expect(await this.siloGetters.totalStalk()).to.eq(toStalk('2101.2'));
+      expect(await this.siloGetters.balanceOfStalk(userAddress)).to.eq(toStalk('1000.6'))
+      expect(await this.siloGetters.balanceOfStalk(user2Address)).to.eq(toStalk('1100.6'));
+      expect(await this.siloGetters.getTotalDepositedBdv(BEAN)).to.eq(to6('2100'));
+      expect(await this.siloGetters.getTotalDeposited(BEAN)).to.eq(to6('2100'));
+      expect((await this.siloGetters.getMowStatus(userAddress, BEAN))[1]).to.eq(to6('1000'));
     });
 
     it('user can transferDeposits earned beans', async function () {
       stemTip = await this.siloGetters.stemTipForToken(this.bean.address)
+      
+      // verify state: 
+      expect(await this.siloGetters.totalStalk()).to.eq(toStalk('2101.2'));
+      expect(await this.siloGetters.balanceOfStalk(userAddress)).to.eq(toStalk('1050.6'))
+      expect(await this.siloGetters.balanceOfStalk(user2Address)).to.eq(toStalk('1050.6'));
+      expect(await this.siloGetters.getTotalDepositedBdv(BEAN)).to.eq(to6('2100'));
+      expect(await this.siloGetters.getTotalDeposited(BEAN)).to.eq(to6('2100'));
+      expect((await this.siloGetters.getMowStatus(userAddress, BEAN))[1]).to.eq(to6('1050'));
+
       await this.silo.connect(user).transferDeposits(userAddress, user2Address, this.bean.address, [stemTip], [to6('50')])
+      
+      // verify state: 
+      expect(await this.siloGetters.totalStalk()).to.eq(toStalk('2101.2'));
+      expect(await this.siloGetters.balanceOfStalk(userAddress)).to.eq(toStalk('1000.6'))
+      expect(await this.siloGetters.balanceOfStalk(user2Address)).to.eq(toStalk('1100.6'));
+      expect(await this.siloGetters.getTotalDepositedBdv(BEAN)).to.eq(to6('2100'));
+      expect(await this.siloGetters.getTotalDeposited(BEAN)).to.eq(to6('2100'));
+      expect((await this.siloGetters.getMowStatus(userAddress, BEAN))[1]).to.eq(to6('1000'));
     });
      
     it('user can transferDeposits earned beans', async function () {
       stemTip0 = await this.siloGetters.stemTipForToken(this.bean.address)
       await this.silo.connect(user).transferDeposits(userAddress, user2Address, this.bean.address, [stemTip], [to6('25')])
+
+      // verify state: 
+      expect(await this.siloGetters.totalStalk()).to.eq(toStalk('2101.2'));
+      expect(await this.siloGetters.balanceOfStalk(userAddress)).to.eq(toStalk('1025.6'))
+      expect(await this.siloGetters.balanceOfStalk(user2Address)).to.eq(toStalk('1075.6'));
+      expect(await this.siloGetters.getTotalDepositedBdv(BEAN)).to.eq(to6('2100'));
+      expect(await this.siloGetters.getTotalDeposited(BEAN)).to.eq(to6('2100'));
+      expect((await this.siloGetters.getMowStatus(userAddress, BEAN))[1]).to.eq(to6('1025'));
+
       // pass 1 season, deposit, and verify user can transfer.
       await this.season.siloSunrise('0');
       stemTip1 = await this.siloGetters.stemTipForToken(this.bean.address)
+
       await this.silo.connect(user).deposit(this.bean.address, to6('25'), EXTERNAL)
+
+      // verify state: 
+      expect(await this.siloGetters.totalStalk()).to.eq(toStalk('2101.405'));
+      expect(await this.siloGetters.balanceOfStalk(userAddress)).to.eq(toStalk('1025.805'))
+      expect(await this.siloGetters.balanceOfStalk(user2Address)).to.eq(toStalk('1075.6'));
+      expect(await this.siloGetters.getTotalDepositedBdv(BEAN)).to.eq(to6('2100'));
+      expect(await this.siloGetters.getTotalDeposited(BEAN)).to.eq(to6('2100'));
+      expect((await this.siloGetters.getMowStatus(userAddress, BEAN))[1]).to.eq(to6('1050'));
+
       await this.silo.connect(user).transferDeposits(userAddress, user2Address, this.bean.address, [stemTip0, stemTip1], [to6('25'), to6('25')])
+
+      // verify state: 
+      expect(await this.siloGetters.totalStalk()).to.eq(toStalk('2101.61'));
+      expect(await this.siloGetters.balanceOfStalk(userAddress)).to.eq(toStalk('1000.8'))
+      expect(await this.siloGetters.balanceOfStalk(user2Address)).to.eq(toStalk('1100.81'));
+      expect(await this.siloGetters.getTotalDepositedBdv(BEAN)).to.eq(to6('2100'));
+      expect(await this.siloGetters.getTotalDeposited(BEAN)).to.eq(to6('2100'));
+      expect((await this.siloGetters.getMowStatus(userAddress, BEAN))[1]).to.eq(to6('1000'));
     });
   });
 
