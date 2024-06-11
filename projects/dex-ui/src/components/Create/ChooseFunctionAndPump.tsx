@@ -13,7 +13,7 @@ import { XIcon } from "src/components/Icons";
 import { CreateWellStepProps, useCreateWell } from "./CreateWellProvider";
 import { CreateWellFormProgress } from "./shared/CreateWellFormProgress";
 import { ComponentInputWithCustom } from "./shared/ComponentInputWithCustom";
-import { USE_ERC20_TOKEN_ERRORS, useERC20TokenWithAddress } from "src/tokens/useERC20Token";
+import { useERC20TokenWithAddress } from "src/tokens/useERC20Token";
 import { ERC20Token } from "@beanstalk/sdk";
 import useSdk from "src/utils/sdk/useSdk";
 import BoreWellUtils from "src/wells/boreWell";
@@ -187,27 +187,31 @@ export const ChooseFunctionAndPump = () => {
 
 // ---------- STYLES & COMPONENTS ----------
 
+const uniqueTokensRequiredErrMessage = "Unique tokens required";
+
 type TokenAddressInputWithSearchProps = {
   path: "token1" | "token2";
   setToken: React.Dispatch<React.SetStateAction<ERC20Token | undefined>>;
 };
 const TokenAddressInputWithSearch = ({ path, setToken }: TokenAddressInputWithSearchProps) => {
+  const counterPath = path === "token1" ? "token2" : "token1";
+
   const {
     register,
     control,
     setValue,
     formState: {
-      errors: { [path]: formError }
-    }
+      errors: { [path]: formError, [counterPath]: counterFormError }
+    },
+    clearErrors
   } = useFormContext<FunctionTokenPumpFormValues>();
 
-  const _value = useWatch({ control, name: path });
-  const value = typeof _value === "string" ? _value : "";
-
+  const value = useWatch({ control, name: path });
   const { data: token, error, isLoading } = useERC20TokenWithAddress(value);
 
   const erc20ErrMessage = error?.message;
   const formErrMessage = formError?.message;
+  const counterFormErrMessage = counterFormError?.message;
 
   const tokenAndFormValueMatch = Boolean(
     token && token.address.toLowerCase() === value.toLowerCase()
@@ -220,6 +224,14 @@ const TokenAddressInputWithSearch = ({ path, setToken }: TokenAddressInputWithSe
       setToken(undefined);
     }
   }, [token, tokenAndFormValueMatch, setToken]);
+
+  useEffect(() => {
+    if (counterFormErrMessage === uniqueTokensRequiredErrMessage) {
+      if (formErrMessage !== uniqueTokensRequiredErrMessage) {
+        clearErrors(counterPath);
+      }
+    }
+  }, [counterFormErrMessage, formErrMessage, counterPath, clearErrors]);
 
   return (
     <>
@@ -237,6 +249,7 @@ const TokenAddressInputWithSearch = ({ path, setToken }: TokenAddressInputWithSe
               tokensAreSame: (formValue, formValues) => {
                 const counterToken = formValues[path === "token1" ? "token2" : "token1"];
                 const tokensAreSame = formValue.toLowerCase() === counterToken.toLowerCase();
+
                 return !tokensAreSame || "Unique tokens required";
               }
             }
