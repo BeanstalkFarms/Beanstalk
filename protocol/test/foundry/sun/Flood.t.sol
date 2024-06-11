@@ -512,6 +512,60 @@ contract FloodTest is TestHelper {
         assertEq(wells[1].deltaB, 100);
     }
 
+    function test_notGerminated() public {
+        address customUser = address(1337);
+
+        C.bean().mint(customUser, 10_000e6);
+        vm.prank(customUser);
+        C.bean().approve(BEANSTALK, type(uint256).max);
+        vm.prank(customUser);
+        bs.deposit(C.BEAN, 1000e6, 0);
+
+        season.siloSunrise(0);
+        season.siloSunrise(0);
+        season.siloSunrise(0); // should be germinated by now, not mown though
+
+        address sopWell = C.BEAN_ETH_WELL;
+        setReserves(sopWell, 1000000e6, 1100e18);
+
+        season.rainSunrise();
+        season.rainSunrise();
+
+        bs.mow(customUser, C.BEAN);
+
+        uint256 balanceOfPlenty = bs.balanceOfPlenty(customUser, sopWell);
+        // TODO: manually calculate this value to ensure it's correct
+        assertEq(17059168165054954010, balanceOfPlenty);
+    }
+
+    function test_Germinated() public {
+        address customUser = address(1337);
+
+        C.bean().mint(customUser, 10_000e6);
+        vm.prank(customUser);
+        C.bean().approve(BEANSTALK, type(uint256).max);
+        vm.prank(customUser);
+        bs.deposit(C.BEAN, 1000e6, 0);
+
+        season.siloSunrise(0);
+        season.siloSunrise(0);
+        season.siloSunrise(0); // should be germinated by now, not mown though
+
+        address sopWell = C.BEAN_ETH_WELL;
+        setReserves(sopWell, 1000000e6, 1100e18);
+
+        bs.mow(customUser, C.BEAN);
+        season.rainSunrise();
+        season.rainSunrise();
+
+        bs.mow(customUser, C.BEAN);
+
+        uint256 balanceOfPlenty = bs.balanceOfPlenty(customUser, sopWell);
+        // TODO: manually calculate this value to ensure it's correct
+        // Note user has more plenty here than previous test because of the earlier mow, giving them more stalk
+        assertEq(17065991377622017778, balanceOfPlenty);
+    }
+
     //////////// Helpers ////////////
 
     /**
