@@ -25,7 +25,15 @@ library LibOracleHelpers {
         uint x,
         uint y
     ) internal pure returns (uint256 percentDifference) {
-        percentDifference = x.mul(ONE).div(y);
-        percentDifference = x > y ? percentDifference - ONE : ONE - percentDifference; // SafeMath unnecessary due to conditional check
+        if (x == y) {
+            percentDifference = 0;
+        } else if (x < y) {
+            percentDifference = x.mul(ONE).div(y);
+            percentDifference = ONE - percentDifference;
+        } else {
+            percentDifference = y.mul(ONE).div(x);
+            percentDifference = ONE - percentDifference;
+        }
+        return percentDifference;
     }
 }
