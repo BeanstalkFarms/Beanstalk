@@ -459,7 +459,7 @@ export const CreateWellPreviewDeploy = () => {
         <Subtitle>Review selections and deploy your Well.</Subtitle>
       </div>
       <Flex $mt={3}>
-        <Flex $gap={2}>
+        <Flex $gap={4}>
           {/* well implementation */}
           <Flex $gap={1}>
             <Text $variant="h3">Well Implementation</Text>
