@@ -187,22 +187,18 @@ export const ChooseFunctionAndPump = () => {
 
 // ---------- STYLES & COMPONENTS ----------
 
-const TokenAddressInputWithSearch = ({
-  path,
-  setToken
-}: {
+type TokenAddressInputWithSearchProps = {
   path: "token1" | "token2";
   setToken: React.Dispatch<React.SetStateAction<ERC20Token | undefined>>;
-}) => {
+};
+const TokenAddressInputWithSearch = ({ path, setToken }: TokenAddressInputWithSearchProps) => {
   const {
     register,
     control,
     setValue,
     formState: {
       errors: { [path]: formError }
-    },
-    setError,
-    clearErrors
+    }
   } = useFormContext<FunctionTokenPumpFormValues>();
 
   const _value = useWatch({ control, name: path });
@@ -218,45 +214,38 @@ const TokenAddressInputWithSearch = ({
   );
 
   useEffect(() => {
-    if (erc20ErrMessage) {
-      setError(path, { message: erc20ErrMessage });
-    } else if (!erc20ErrMessage && formErrMessage === USE_ERC20_TOKEN_ERRORS.notERC20Ish) {
-      clearErrors(path);
-    }
-  }, [path, formErrMessage, erc20ErrMessage, setError, clearErrors]);
-
-  useEffect(() => {
     if (token && tokenAndFormValueMatch) {
       setToken(token);
     } else {
       setToken(undefined);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [token, tokenAndFormValueMatch]);
+  }, [token, tokenAndFormValueMatch, setToken]);
+
   return (
     <>
-      {!token || isLoading ? (
+      <TokenInputWrapper>
         <TextInputField
           {...register(path, {
             required: {
               value: true,
               message: "Token address is required"
             },
-            validate: (formValue, formValues) => {
-              if (!getIsValidEthereumAddress(formValue)) return "Invalid address";
-              const otherTokenValue = formValues[path === "token1" ? "token2" : "token1"];
-              const tokensAreSame = formValue.toLowerCase() === otherTokenValue.toLowerCase();
-              if (tokensAreSame) return "Unique tokens required";
-
-              return true;
+            validate: {
+              invalidAddress: (formValue) => {
+                return getIsValidEthereumAddress(formValue) || "Invalid address";
+              },
+              tokensAreSame: (formValue, formValues) => {
+                const counterToken = formValues[path === "token1" ? "token2" : "token1"];
+                const tokensAreSame = formValue.toLowerCase() === counterToken.toLowerCase();
+                return !tokensAreSame || "Unique tokens required";
+              }
             }
           })}
           placeholder="Search for token or input an address"
           startIcon="search"
           error={formErrMessage ?? erc20ErrMessage}
         />
-      ) : (
-        <Flex>
+        {token && !isLoading && (
           <FoundTokenInfo>
             {token?.logo && (
               <ImgContainer width={16} height={16}>
@@ -264,19 +253,14 @@ const TokenAddressInputWithSearch = ({
               </ImgContainer>
             )}
             <Text $variant="button-link" className="token-symbol">
-              {token.symbol}
+              {token?.symbol}
             </Text>{" "}
             <ImgContainer width={10} height={10} onClick={() => setValue(path, "")}>
               <XIcon width={10} height={10} />
             </ImgContainer>
           </FoundTokenInfo>
-          {formErrMessage && (
-            <Text $color="error" $variant="xs" $mt={0.5}>
-              {formErrMessage ?? erc20ErrMessage}
-            </Text>
-          )}
-        </Flex>
-      )}
+        )}
+      </TokenInputWrapper>
     </>
   );
 };
@@ -316,14 +300,21 @@ const TokenSelectWrapper = styled(Flex)`
   }
 `;
 
+const TokenInputWrapper = styled(Flex)`
+  position: relative;
+`;
+
 const FoundTokenInfo = styled.div`
+  position: absolute;
+  box-sizing: border-box;
+  width: 100%;
   display: flex;
   flex-direction: row;
   gap: ${theme.spacing(1)};
   align-items: center;
   border: 1px solid ${theme.colors.black};
   background: ${theme.colors.primaryLight};
-  padding: 9px 16px; // do 9 px instead of theme.spacing(1, 1.5) to match the size of the text input
+  padding: 9px 16px;
 
   .token-symbol {
     position: relative;
@@ -331,7 +322,6 @@ const FoundTokenInfo = styled.div`
   }
 
   svg {
-    margin-bottom: 2px;
     cursor: pointer;
   }
 `;
