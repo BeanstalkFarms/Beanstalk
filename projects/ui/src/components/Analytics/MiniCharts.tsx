@@ -99,7 +99,6 @@ const MiniCharts: FC<{}> = () => {
                 formattedData={queryData}
                 extraData={moreData}
                 selected={[chart]}
-                priceFormatter={chartSetupData[chart].valueFormatter}
                 size="mini"
                 containerHeight={150}
               />

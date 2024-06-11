@@ -153,15 +153,31 @@ const ChartV2: FC<ChartV2DataProps> = ({
 
     chart.current = createChart(chartContainerRef.current, chartOptions);
     const numberOfCharts = selected.length;
+    const priceScaleIds: string[] = [];
     if (numberOfCharts > 0) {
       for (let i = 0; i < numberOfCharts; i+=1) {
+        const chartSetup = chartSetupData[selected[i]];
+        let scaleId = '';
+        const findScale = priceScaleIds.findIndex((value) => value === chartSetup.valueAxisType);
+        if (findScale > -1) {
+          scaleId = findScale === 0 ? 'right' : findScale === 1 ? 'left' : '';
+        } else {
+          if (priceScaleIds.length === 0) {
+            priceScaleIds[0] = chartSetup.valueAxisType;
+            scaleId = 'right';
+          } else if (priceScaleIds.length === 1) {
+            priceScaleIds[1] = chartSetup.valueAxisType;
+            scaleId = 'left';
+          };
+        };
+
         areaSeries.current[i] = chart.current.addLineSeries({
           color: chartColors[i].lineColor,
           // topColor: chartColors[i].topColor,
           // bottomColor: chartColors[i].bottomColor,
           // pointMarkerVisible: false,
           lineWidth: 2,
-          priceScaleId: i === 0 ? 'right' : i === 1 ? 'left' : '',
+          priceScaleId: scaleId,
           priceFormat: {
             type: 'custom',
             formatter: chartSetupData[selected[i]].tickFormatter
@@ -241,22 +257,6 @@ const ChartV2: FC<ChartV2DataProps> = ({
       areaSeries.current[i].setData(formattedData[selected[i]]);
     };
 
-    const lastCommonDataPoint = (formattedData[0] || selected[0]) 
-      ? selected.map((selection) => {
-        if (!formattedData[selection]) {
-          return {
-            time: null,
-            value: null
-          }
-        }
-        return {
-          time: formattedData[selection][formattedData[selection].length -1].time,
-          value: formattedData[selection][formattedData[selection].length -1].value
-        }
-      }) 
-      : null
-    setLastDataPoint(lastCommonDataPoint ? getMergedData(lastCommonDataPoint) : { time: 0, value: [0], season: 0 });
-
     chart.current.subscribeCrosshairMove((param: any) => {
       const hoveredDataPoints: any[] = [];
       areaSeries.current.forEach((series: any, index: number) => {
@@ -271,8 +271,35 @@ const ChartV2: FC<ChartV2DataProps> = ({
       setDataPoint(getMergedData(hoveredDataPoints));
     });
 
+    chart.current.timeScale().subscribeVisibleTimeRangeChange((param : any) => {
+      const lastVisibleTimestamp = param.to;
+      const lastCommonDataPoint = (formattedData[0] || selected[0]) 
+      ? selected.map((selection) => {
+        if (!formattedData[selection]) {
+          return {
+            time: null,
+            value: null
+          }
+        };
+        const lastIndex = formattedData[selection].findIndex((value) => value.time === lastVisibleTimestamp);
+        if (lastIndex > -1) {
+          return {
+            time: formattedData[selection][lastIndex].time,
+            value: formattedData[selection][lastIndex].value,
+          };
+        };
+        return {
+          time: null,
+          value: null
+        };
+      }) 
+      : null
+      setLastDataPoint(lastCommonDataPoint ? getMergedData(lastCommonDataPoint) : { time: 0, value: [0], season: 0 });
+    });
+
     return () => {
       chart.current.unsubscribeCrosshairMove();
+      chart.current.timeScale().unsubscribeVisibleTimeRangeChange();
     };
   }, [formattedData, extraData, selected]);
 
