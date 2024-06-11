@@ -138,7 +138,7 @@ const ChartV2: FC<ChartV2DataProps> = ({
         borderVisible: false,
         visible: !(size === 'mini')
       },
-      leftPriceScale: selected.length < 2 ?  undefined : 
+      leftPriceScale: selected.length < 2 ? undefined : 
       {
         borderVisible: false,
         visible: !(size === 'mini')
@@ -257,6 +257,22 @@ const ChartV2: FC<ChartV2DataProps> = ({
       areaSeries.current[i].setData(formattedData[selected[i]]);
     };
 
+    const defaultLastDataPoint = (formattedData[0] || selected[0]) 
+      ? selected.map((selection) => {
+        if (!formattedData[selection]) {
+          return {
+            time: null,
+            value: null
+          }
+        }
+        return {
+          time: formattedData[selection][formattedData[selection].length -1].time,
+          value: formattedData[selection][formattedData[selection].length -1].value
+        }
+      }) 
+      : null
+    setLastDataPoint(defaultLastDataPoint ? getMergedData(defaultLastDataPoint) : { time: 0, value: [0], season: 0 });
+
     chart.current.subscribeCrosshairMove((param: any) => {
       const hoveredDataPoints: any[] = [];
       areaSeries.current.forEach((series: any, index: number) => {
@@ -273,14 +289,14 @@ const ChartV2: FC<ChartV2DataProps> = ({
 
     chart.current.timeScale().subscribeVisibleTimeRangeChange((param : any) => {
       const lastVisibleTimestamp = param.to;
-      const lastCommonDataPoint = (formattedData[0] || selected[0]) 
-      ? selected.map((selection) => {
+      const lastCommonDataPoint = selected.map((selection) => {
         if (!formattedData[selection]) {
           return {
             time: null,
             value: null
-          }
+          };
         };
+        
         const lastIndex = formattedData[selection].findIndex((value) => value.time === lastVisibleTimestamp);
         if (lastIndex > -1) {
           return {
@@ -288,12 +304,12 @@ const ChartV2: FC<ChartV2DataProps> = ({
             value: formattedData[selection][lastIndex].value,
           };
         };
+
         return {
           time: null,
           value: null
         };
-      }) 
-      : null
+      });
       setLastDataPoint(lastCommonDataPoint ? getMergedData(lastCommonDataPoint) : { time: 0, value: [0], season: 0 });
     });
 
