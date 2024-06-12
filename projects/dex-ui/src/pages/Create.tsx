@@ -1,12 +1,15 @@
 import React from "react";
-import { CreateWellProvider, useCreateWell } from "src/components/Create/CreateWellProvider";
-import { ChooseWellImplementation } from "src/components/Create/ChooseWellImplementation";
 
 import { Page } from "src/components/Page";
-import { ChooseFunctionAndPump } from "src/components/Create/ChooseFunctionAndPump";
-import { ChooseComponentNames } from "src/components/Create/ChooseComponentNames";
-import { CreateWellPreviewDeploy } from "src/components/Create/CreateWellPreviewDeploy";
 import { Flex } from "src/components/Layout";
+import {
+  CreateWellStep1,
+  CreateWellStep2,
+  CreateWellStep3,
+  CreateWellStep4,
+  CreateWellProvider,
+  useCreateWell
+} from "src/components/Create";
 
 export const Create = () => {
   return (
@@ -25,22 +28,22 @@ const CreateSteps = () => {
     <>
       {step === 0 && (
         <Flex $fullWidth $maxWidth={CONTENT_MAX_WIDTH}>
-          <ChooseWellImplementation />
+          <CreateWellStep1 />
         </Flex>
       )}
       {step === 1 && (
         <Flex $fullWidth $maxWidth={CONTENT_MAX_WIDTH}>
-          <ChooseFunctionAndPump />
+          <CreateWellStep2 />
         </Flex>
       )}
       {step === 2 && (
         <Flex $fullWidth $maxWidth={CONTENT_MAX_WIDTH}>
-          <ChooseComponentNames />
+          <CreateWellStep3 />
         </Flex>
       )}
       {step === 3 && (
         <Flex $fullWidth $alignSelf="center" $maxWidth={PREVIEW_MAX_WIDTH}>
-          <CreateWellPreviewDeploy />
+          <CreateWellStep4 />
         </Flex>
       )}
     </>

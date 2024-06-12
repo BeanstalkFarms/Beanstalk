@@ -39,7 +39,7 @@ const tokenFormKeys = ["token1", "token2"] as const;
 
 const optionalKeys = ["wellFunctionData", "pumpData"] as const;
 
-const ChooseFunctionAndPumpForm = () => {
+const FunctionTokensPumpForm = () => {
   const { wellTokens, wellFunctionAddress, pumpAddress, setStep2, wellFunctionData, pumpData } =
     useCreateWell();
   const sdk = useSdk();
@@ -173,14 +173,14 @@ const ChooseFunctionAndPumpForm = () => {
 
 // ----------------------------------------
 
-export const ChooseFunctionAndPump = () => {
+export const CreateWellStep2 = () => {
   return (
     <Flex $gap={3} $fullWidth>
       <div>
         <Text $variant="h2">Create a Well - Choose a Well Function and Pump</Text>
         <Subtitle>Select the components to use in your Well.</Subtitle>
       </div>
-      <ChooseFunctionAndPumpForm />
+      <FunctionTokensPumpForm />
     </Flex>
   );
 };

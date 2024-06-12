@@ -12,7 +12,7 @@ import { StyledForm } from "../Form";
 
 type FormValues = CreateWellStepProps["step1"];
 
-const ChooseWellImplementationForm = () => {
+const WellImplementationForm = () => {
   const { wellImplementation, setStep1 } = useCreateWell();
 
   const methods = useForm<FormValues>({
@@ -45,7 +45,7 @@ const ChooseWellImplementationForm = () => {
 
 // ----------------------------------------
 
-export const ChooseWellImplementation = () => {
+export const CreateWellStep1 = () => {
   return (
     <Flex $gap={3} $fullWidth>
       <Text $variant="h2">Create a Well - Choose a Well Implementation</Text>
@@ -66,7 +66,7 @@ export const ChooseWellImplementation = () => {
           <Text $lineHeight="l">
             {"Which Well Implementation do you want to use?".toUpperCase()}
           </Text>
-          <ChooseWellImplementationForm />
+          <WellImplementationForm />
         </Flex>
       </ContentWrapper>
     </Flex>

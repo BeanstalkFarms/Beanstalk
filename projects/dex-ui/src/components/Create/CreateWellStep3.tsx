@@ -1,4 +1,4 @@
-import React, { useCallback } from "react";
+import React from "react";
 import { Divider, Flex } from "src/components/Layout";
 import { Text } from "src/components/Typography";
 import { theme } from "src/utils/ui/theme";
@@ -38,7 +38,7 @@ const useWellDetailsDefaultValues = () => {
   };
 };
 
-const ChooseComponentNamesForm = () => {
+const NameAndSymbolForm = () => {
   const { data: wells } = useWells();
   const { wellDetails, setStep3 } = useCreateWell();
   const defaults = useWellDetailsDefaultValues();
@@ -50,20 +50,17 @@ const ChooseComponentNamesForm = () => {
     }
   });
 
-  const handleSave = useCallback(() => {
+  const handleSave = () => {
     const values = methods.getValues();
     setStep3(values);
-  }, [setStep3, methods]);
+  };
 
-  const onSubmit = useCallback(
-    async (values: WellDetailsFormValues) => {
-      const valid = await methods.trigger();
-      console.log("valid", valid);
-      if (!valid) return;
-      setStep3({ ...values, goNext: true });
-    },
-    [setStep3, methods]
-  );
+  const onSubmit = async (values: WellDetailsFormValues) => {
+    const valid = await methods.trigger();
+    console.log("valid", valid);
+    if (!valid) return;
+    setStep3({ ...values, goNext: true });
+  };
 
   return (
     <FormProvider {...methods}>
@@ -128,14 +125,14 @@ const ChooseComponentNamesForm = () => {
   );
 };
 
-export const ChooseComponentNames = () => {
+export const CreateWellStep3 = () => {
   return (
     <Flex $gap={3} $fullWidth>
       <div>
         <Text $variant="h2">Well Name and Symbol</Text>
         <Subtitle>Give your Well LP token a name and a symbol.</Subtitle>
       </div>
-      <ChooseComponentNamesForm />
+      <NameAndSymbolForm />
     </Flex>
   );
 };
