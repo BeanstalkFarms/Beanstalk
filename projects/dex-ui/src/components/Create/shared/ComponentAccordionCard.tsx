@@ -18,7 +18,6 @@ export const WellComponentAccordionCard = ({
   address,
   component,
   info,
-  deploy,
   links,
   setSelected
 }: WellComponentAccordionCardProps) => {
@@ -45,17 +44,50 @@ export const WellComponentAccordionCard = ({
       below={
         <Flex $direction="row" $justifyContent="space-between" $gap={1}>
           <Flex $gap={0.5} $alignItems="flex-start">
-            {[deploy, ...info].map((datum) => (
-              <Text $color="text.secondary" $variant="xs" key={`info-${datum.label}`}>
-                {datum.label}: {datum.imgSrc && <IconImg src={datum.imgSrc} />}
-                <MayLink url={datum.url || ""}>
-                  <Text as="span" $variant="xs">
-                    {" "}
-                    {datum.value}
-                  </Text>
-                </MayLink>
-              </Text>
-            ))}
+            {info.map((datum) =>
+              Array.isArray(datum.value) ? (
+                <Text
+                  $variant="xs"
+                  $color="text.secondary"
+                  $display="inline-flex"
+                  $gap={1}
+                  $alignItems="center"
+                  $flexFlow="wrap"
+                  $rowGap={0}
+                  key={`info-${datum.label}`}
+                >
+                  {datum.label}:{" "}
+                  {datum.value.map((value, index) => (
+                    <Text
+                      as="span"
+                      $color="text.secondary"
+                      $variant="xs"
+                      $whitespace="nowrap"
+                      key={`info-${datum.label}`}
+                    >
+                      {value.imgSrc && <IconImg src={value.imgSrc} width={14} height={14} />}
+                      <MayLink url={value.url || ""}>
+                        <Text as="span" $variant="xs">
+                          {" "}
+                          {value.value}
+                          {index !== datum.value.length - 1 ? "," : ""}
+                        </Text>
+                      </MayLink>
+                    </Text>
+                  ))}
+                </Text>
+              ) : (
+                <Text $color="text.secondary" $variant="xs" key={`info-${datum.label}`}>
+                  {datum.label}: {datum.imgSrc && <IconImg src={datum.imgSrc} />}
+                  <MayLink url={datum.url || ""}>
+                    <Text as="span" $variant="xs">
+                      {" "}
+                      {datum.value}
+                    </Text>
+                  </MayLink>
+                </Text>
+              )
+            )}
             <Text $color="text.light" $variant="xs">
               Used by {component.usedBy} other {toPlural("Well", component.usedBy ?? 0)}
             </Text>

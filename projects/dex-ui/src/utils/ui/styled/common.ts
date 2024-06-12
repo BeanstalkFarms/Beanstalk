@@ -18,10 +18,21 @@ const CSS_PROP_MAP = {
   $boxSizing: "box-sizing",
 
   // flex
+  $flex: "flex",
+  $flexFlow: "flex-flow",
+  $flexShrink: "flex-shrink",
+  $flexGrow: "flex-grow",
+  $flexBasis: "flex-basis",
   $direction: "flex-direction",
   $alignItems: "align-items",
-  $justifyContent: "justify-content",
   $alignSelf: "align-self",
+  $alignContent: "align-content",
+  $justifyContent: "justify-content",
+  $justifySelf: "justify-self",
+  $justifyItems: "justify-items",
+  $order: "order",
+  // $rowGap: "row-gap",
+  // $columnGap: "column-gap",
   $gap: "gap"
 
   // we can't handle margin / padding here b/c we calculate them differently
