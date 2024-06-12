@@ -82,7 +82,8 @@ const TimeTabs: FC<TimeTabProps & StackProps> = ({
           sx={{ height: '14px', ml: 0.1, mr: 0.1 }}
         />
       ) : null}
-      {windows ? WINDOWS.map((w) => (
+      {windows 
+        ? WINDOWS.map((w) => (
             <Button
               onClick={() => handleChange1(w.index)}
               key={w.label}
