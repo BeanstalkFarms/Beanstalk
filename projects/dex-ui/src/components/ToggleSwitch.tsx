@@ -26,7 +26,7 @@ const ToggleCircle = styled.div<{ checked?: boolean; disabled?: boolean }>`
   border-radius: 50%;
   background-color: ${(props) => (props.checked ? theme.colors.black : theme.colors.lightGray)};
   opacity: ${(props) => (props.disabled ? 0.5 : 1)};
-  transition: left 200ms; background-color 200ms;
+  transition: left 200ms background-color 200ms;
 `;
 
 export type ToggleSwitchProps = {

@@ -275,9 +275,7 @@ export const CreateWellProvider = ({ children }: { children: React.ReactNode }) 
         );
 
         clearWellsCache();
-        queryClient.fetchQuery({
-          queryKey: ["wells", sdk]
-        });
+        queryClient.fetchQuery({ queryKey: ["wells", sdk] });
 
         Log.module("wellDeployer").debug("Well deployed at address: ", wellAddress || "");
         setDeploying(false);
