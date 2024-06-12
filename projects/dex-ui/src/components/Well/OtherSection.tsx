@@ -40,9 +40,10 @@ const OtherSectionContent: FC<Props> = ({ well }) => {
     const data: typeof items = [];
 
     well.pumps?.forEach((pump) => {
-      if (pump.address in pumpLookup) {
+      if (pump.address.toLowerCase() in pumpLookup) {
+        const pumpInfo = pumpLookup[pump.address.toLowerCase()].component;
         data.push({
-          name: pumpLookup[pump.address].component.name,
+          name: pumpInfo?.fullName || pumpInfo.name,
           address: pump.address
         });
       } else {
@@ -67,6 +68,8 @@ const OtherSectionContent: FC<Props> = ({ well }) => {
       name: "Aquifer",
       address: well.aquifer?.address || "--"
     });
+
+    console.log("items: ", data);
 
     setItems(data);
   }, [

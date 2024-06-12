@@ -77,7 +77,7 @@ const basinAuditInfo = [
 ];
 
 const WellDotSol: WellComponentInfo = {
-  address: WELL_DOT_SOL_ADDRESS,
+  address: WELL_DOT_SOL_ADDRESS.toLowerCase(),
   component: {
     name: "Well.sol",
     summary: "A standard Well implementation that prioritizes flexibility and composability.",
@@ -105,7 +105,7 @@ const WellDotSol: WellComponentInfo = {
 };
 
 const MultiFlowPump: WellComponentInfo = {
-  address: MULTI_FLOW_PUMP_ADDRESS,
+  address: MULTI_FLOW_PUMP_ADDRESS.toLowerCase(),
   component: {
     name: "Multi Flow",
     fullName: "Multi Flow Pump",
@@ -138,7 +138,7 @@ const MultiFlowPump: WellComponentInfo = {
 };
 
 const ConstantProduct2: WellComponentInfo = {
-  address: CONSTANT_PRODUCT_2_ADDRESS,
+  address: CONSTANT_PRODUCT_2_ADDRESS.toLowerCase(),
   component: {
     name: "Constant Product 2",
     summary: "A standard x*y = k token pricing function for two tokens with no fees.",
