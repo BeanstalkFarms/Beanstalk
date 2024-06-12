@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import styled from "styled-components";
 import {
   Control,
@@ -73,53 +73,45 @@ const FormContent = ({
     }
   });
 
-  const handleSave = useCallback(
-    (formValues?: FormValues) => {
-      const values = formValues || methods.getValues();
-      setStep4({
-        salt: values.usingSalt ? values.salt : undefined,
-        token1Amount: values.seedingLiquidity ? values.token1Amount : undefined,
-        token2Amount: values.seedingLiquidity ? values.token2Amount : undefined
-      });
-    },
-    [methods, setStep4]
-  );
+  const handleSave = (formValues?: FormValues) => {
+    const values = formValues || methods.getValues();
+    setStep4({
+      salt: values.usingSalt ? values.salt : undefined,
+      token1Amount: values.seedingLiquidity ? values.token1Amount : undefined,
+      token2Amount: values.seedingLiquidity ? values.token2Amount : undefined
+    });
+  };
 
-  const onSubmit = useCallback(
-    async (values: FormValues) => {
-      setModal(true);
-      setStep4({
-        salt: values.usingSalt ? values.salt : undefined,
-        token1Amount: values.token1Amount,
-        token2Amount: values.token2Amount
-      });
+  const onSubmit = async (values: FormValues) => {
+    setModal(true);
+    setStep4({
+      salt: values.usingSalt ? values.salt : undefined,
+      token1Amount: values.token1Amount,
+      token2Amount: values.token2Amount
+    });
 
-      const token1Amount = token1.fromHuman(Number(values.token1Amount || "0"));
-      const token2Amount = token2.fromHuman(Number(values.token2Amount || "0"));
+    const token1Amount = token1.fromHuman(Number(values.token1Amount || "0"));
+    const token2Amount = token2.fromHuman(Number(values.token2Amount || "0"));
 
-      // We determine that the user is seeding liquidity if they have 'seeding liquidity' toggled on in the CURRENT form
-      // and if they have provided a non-zero amount for at least 1 token.
-      const seedingLiquidity =
-        values.seedingLiquidity && Boolean(token1Amount.gt(0) || token2Amount.gt(0));
+    // We determine that the user is seeding liquidity if they have 'seeding liquidity' toggled on in the CURRENT form
+    // and if they have provided a non-zero amount for at least 1 token.
+    const seedingLiquidity =
+      values.seedingLiquidity && Boolean(token1Amount.gt(0) || token2Amount.gt(0));
 
-      // Always use the salt value from the current form.
-      const saltValue = (values.usingSalt && values.salt) || 0;
+    // Always use the salt value from the current form.
+    const saltValue = (values.usingSalt && values.salt) || 0;
 
-      const liquidity =
-        seedingLiquidity && token1Amount && token2Amount
-          ? { token1Amount, token2Amount }
-          : undefined;
+    const liquidity =
+      seedingLiquidity && token1Amount && token2Amount ? { token1Amount, token2Amount } : undefined;
 
-      const response = await deployWell(saltValue, liquidity);
-      if ("wellAddress" in response) {
-        setDeployedWellAddress(response.wellAddress);
-        navigate(`/wells/${response.wellAddress}`);
-      } else {
-        setDeployErr(response);
-      }
-    },
-    [deployWell, setModal, setStep4, navigate, token1, token2]
-  );
+    const response = await deployWell(saltValue, liquidity);
+    if ("wellAddress" in response) {
+      setDeployedWellAddress(response.wellAddress);
+      navigate(`/wells/${response.wellAddress}`);
+    } else {
+      setDeployErr(response);
+    }
+  };
 
   return (
     <>
@@ -274,16 +266,13 @@ const AllowanceButtons = ({
   const amount1ExceedsAllowance = token1Allowance && amount1 && token1Allowance.lt(Number(amount1));
   const amount2ExceedsAllowance = token2Allowance && amount2 && token2Allowance.lt(Number(amount2));
 
-  const approveToken = useCallback(
-    async (token: ERC20Token, amount: TokenValue) => {
-      if (!address) return;
-      await ensureAllowance(address, sdk.contracts.beanstalk.address, token, amount);
-      queryClient.fetchQuery({
-        queryKey: queryKeys.tokenAllowance(token.address, sdk.contracts.beanstalk.address)
-      });
-    },
-    [address, queryClient, sdk.contracts.beanstalk.address]
-  );
+  const approveToken = async (token: ERC20Token, amount: TokenValue) => {
+    if (!address) return;
+    await ensureAllowance(address, sdk.contracts.beanstalk.address, token, amount);
+    queryClient.fetchQuery({
+      queryKey: queryKeys.tokenAllowance(token.address, sdk.contracts.beanstalk.address)
+    });
+  };
 
   useEffect(() => {
     if (seedingLiquidity && (amount1ExceedsAllowance || amount2ExceedsAllowance)) {
@@ -425,7 +414,7 @@ const SaltForm = () => {
 
 // ----------------------------------------
 
-export const CreateWellPreviewDeploy = () => {
+export const CreateWellStep4 = () => {
   const components = useWhitelistedWellComponents();
   const {
     wellImplementation,
@@ -459,7 +448,7 @@ export const CreateWellPreviewDeploy = () => {
         <Subtitle>Review selections and deploy your Well.</Subtitle>
       </div>
       <Flex $mt={3}>
-        <Flex $gap={2}>
+        <Flex $gap={4}>
           {/* well implementation */}
           <Flex $gap={1}>
             <Text $variant="h3">Well Implementation</Text>

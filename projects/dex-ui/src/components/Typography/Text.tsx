@@ -1,6 +1,11 @@
 import React, { forwardRef } from "react";
 import type { HTMLAttributes, ElementType, CSSProperties } from "react";
-import { BoxModelBase, BoxModelProps } from "src/utils/ui/styled";
+import {
+  BoxModelBase,
+  BoxModelProps,
+  FlexPropertiesBase,
+  FlexPropertiesProps
+} from "src/utils/ui/styled";
 import { BlockDisplayStyle, DisplayStyleProps } from "src/utils/ui/styled/common";
 import {
   theme,
@@ -23,8 +28,9 @@ export interface TextProps
   extends HTMLAttributes<HTMLDivElement>,
     BoxModelProps,
     CssProps,
-    DisplayStyleProps,
-    ResponsiveTextProps {
+    ResponsiveTextProps,
+    FlexPropertiesProps,
+    DisplayStyleProps {
   $variant?: FontVariant;
   $weight?: FontWeight;
   $color?: FontColor;
@@ -35,6 +41,7 @@ export interface TextProps
   as?: ElementType;
   className?: string;
   $mobileVariant?: FontVariant;
+  $whitespace?: CSSProperties["whiteSpace"];
 }
 
 export const Text = forwardRef<HTMLDivElement, TextProps>((props, ref) => {
@@ -52,6 +59,8 @@ const TextComponent = styled.div<TextProps>`
   ${FontColorStyle}
   ${BoxModelBase}
   ${BlockDisplayStyle}
+  ${FlexPropertiesBase}
   ${(props) => props.$textDecoration && `text-decoration: ${props.$textDecoration};`}
+  ${(props) => props.$whitespace && `white-space: ${props.$whitespace};`}
   ${(props) => (props.$css ? props.$css : "")}
 `;

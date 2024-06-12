@@ -49,6 +49,7 @@ const Container = styled.div<TitleContainerProps>`
 const TitleContainer = styled.div<TitleContainerProps>`
   display: flex;
   flex-direction: row;
+  align-items: center;
 `;
 
 const TitleText = styled.div<TitleProps>`

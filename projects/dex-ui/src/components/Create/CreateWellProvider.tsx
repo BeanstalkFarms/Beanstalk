@@ -4,15 +4,11 @@ import { DeepRequired } from "react-hook-form";
 import useSdk from "src/utils/sdk/useSdk";
 import { TransactionToast } from "../TxnToast/TransactionToast";
 import { Log } from "src/utils/logger";
-import { Aquifer, Pump, Well, WellFunction } from "@beanstalk/sdk-wells";
+import { Pump, WellFunction } from "@beanstalk/sdk-wells";
 import { useAccount } from "wagmi";
-import { FarmFromMode, FarmToMode } from "@beanstalk/sdk";
-import { ethers, BigNumber } from "ethers";
 import { usePumps } from "src/wells/pump/usePumps";
 import { useWellFunctions } from "src/wells/wellFunction/useWellFunctions";
 import BoreWellUtils from "src/wells/boreWell";
-import { Settings } from "src/settings";
-import { makeLocalOnlyStep } from "src/utils/workflow/steps";
 import { clearWellsCache } from "src/wells/useWells";
 import { useQueryClient } from "@tanstack/react-query";
 
@@ -47,8 +43,6 @@ import { useQueryClient } from "@tanstack/react-query";
  * Vulnerabilities:
  * - If the user provides the wrong 'data' value for a well function or a pump, the well may not deploy, may never function properly, or this may result in loss of funds.
  */
-
-const { prepareBoreWellParameters, decodeBoreWellPipeCall } = BoreWellUtils;
 
 type GoNextParams = {
   goNext?: boolean;
@@ -265,118 +259,23 @@ export const CreateWellProvider = ({ children }: { children: React.ReactNode }) 
         if (!wellDetails.name) throw new Error("well name not set");
         if (!wellDetails.symbol) throw new Error("well symbol not set");
 
-        if (liquidityAmounts) {
-          if (liquidityAmounts.token1Amount?.lte(0) && liquidityAmounts.token2Amount.lte(0)) {
-            throw new Error("At least one token amount must be greater than 0 to seed liquidity");
-          }
-          if (saltValue < 1) {
-            throw new Error("Salt value must be greater than 0 if seeding liquidity");
-          }
-        }
-
-        const aquifer = new Aquifer(sdk.wells, Settings.AQUIFER_ADDRESS);
-        const boreWellParams = await prepareBoreWellParameters(
-          aquifer,
+        const { wellAddress } = await BoreWellUtils.boreWell(
+          sdk,
+          walletAddress,
           wellImplementation,
-          [wellTokens.token1, wellTokens.token2],
           wellFunction,
-          pump,
+          [pump],
+          wellTokens.token1,
+          wellTokens.token2,
           wellDetails.name,
           wellDetails.symbol,
-          saltValue
+          saltValue,
+          liquidityAmounts,
+          toast
         );
-        Log.module("wellDeployer").debug("boreWellParams: ", boreWellParams);
-
-        const callData = aquifer.contract.interface.encodeFunctionData("boreWell", boreWellParams);
-        Log.module("wellDeployer").debug("callData: ", callData);
-
-        let wellAddress: string = "";
-
-        const staticFarm = sdk.farm.createAdvancedFarm("static-farm");
-        const advancedFarm = sdk.farm.createAdvancedFarm("adv-farm");
-        const advancedPipe = sdk.farm.createAdvancedPipe("adv-pipe");
-
-        advancedPipe.add(makeBoreWellStep(aquifer, callData));
-
-        /// If we are adding liquidity, add steps to advancedFarm & advancedPipe
-        if (liquidityAmounts) {
-          staticFarm.add(advancedPipe);
-
-          wellAddress = await staticFarm
-            .callStatic(BigNumber.from(0), { slippage: 0.05 })
-            .then((result) => decodeBoreWellPipeCall(sdk, aquifer, result) || "");
-
-          if (!wellAddress) {
-            throw new Error("Unable to determine well address");
-          }
-
-          const well = new Well(sdk.wells, wellAddress);
-          Log.module("wellDeployer").debug("Expected Well Address: ", wellAddress);
-
-          // add transfer token1 to the undeployed well address
-          advancedFarm.add(makeLocalOnlyStep("token1-amount", liquidityAmounts.token1Amount), {
-            onlyLocal: true
-          });
-          advancedFarm.add(
-            new sdk.farm.actions.TransferToken(
-              wellTokens.token1.address,
-              well.address,
-              FarmFromMode.EXTERNAL,
-              FarmToMode.EXTERNAL
-            )
-          );
-
-          // add transfer token2 to the undeployed well address
-          advancedFarm.add(makeLocalOnlyStep("token2-amount", liquidityAmounts.token2Amount), {
-            onlyLocal: true
-          });
-          advancedFarm.add(
-            new sdk.farm.actions.TransferToken(
-              wellTokens.token2.address,
-              well.address,
-              FarmFromMode.EXTERNAL,
-              FarmToMode.EXTERNAL
-            )
-          );
-
-          advancedPipe.add(
-            makeSyncWellStep(
-              well,
-              wellFunction,
-              liquidityAmounts.token1Amount,
-              liquidityAmounts.token2Amount,
-              walletAddress
-            )
-          );
-        }
-
-        advancedFarm.add(advancedPipe);
-
-        // build the workflow
-        await advancedFarm.estimate(BigNumber.from(0));
-        const txn = await advancedFarm.execute(BigNumber.from(0), {
-          slippage: 0.1 // TODO: Add slippage to form.
-        });
-
-        toast.confirming(txn);
-        Log.module("wellDeployer").debug(`Well deploying... Transaction: ${txn.hash}`);
-
-        const receipt = await txn.wait();
-        Log.module("wellDeployer").debug("Well deployed... txn events: ", receipt.events);
-
-        if (!receipt.events?.length) {
-          throw new Error("No Bore Well events found");
-        }
-
-        toast.success(receipt);
-        if (!wellAddress && !liquidityAmounts) {
-          wellAddress = receipt.events[0].address as string;
-        }
 
         clearWellsCache();
-        queryClient.fetchQuery({
-          queryKey: ["wells", sdk]
-        });
+        queryClient.fetchQuery({ queryKey: ["wells", sdk] });
 
         Log.module("wellDeployer").debug("Well deployed at address: ", wellAddress || "");
         setDeploying(false);
@@ -437,57 +336,4 @@ export const useCreateWell = () => {
   }
 
   return context;
-};
-
-const makeBoreWellStep = (aquifer: Aquifer, callData: string) => {
-  const boreWellStep = async (_amountInStep: ethers.BigNumber, _context: any) => ({
-    name: "boreWell",
-    amountOut: _amountInStep,
-    prepare: () => ({
-      target: aquifer.address,
-      callData
-    }),
-    decode: (data: string) => aquifer.contract.interface.decodeFunctionData("boreWell", data),
-    decodeResult: (data: string) =>
-      aquifer.contract.interface.decodeFunctionResult("boreWell", data)
-  });
-
-  return boreWellStep;
-};
-
-const makeSyncWellStep = (
-  well: Well,
-  wellFunction: WellFunction,
-  token1Amount: TokenValue,
-  token2Amount: TokenValue,
-  recipient: string
-) => {
-  const syncStep = async (_amt: BigNumber, context: { data: { slippage?: number } }) => {
-    // this is safe b/c regardless of the wellFunction, all WellFunctions extend IWellFunction, which
-    // requires the definition of a 'calcLpTokenSupply' function.
-    const calculatedLPSupply = await wellFunction.contract.calcLpTokenSupply(
-      [token1Amount.toBigNumber(), token2Amount.toBigNumber()],
-      wellFunction.data
-    );
-
-    // calculate the minimum LP supply with slippage
-    const lpSupplyTV = TokenValue.fromBlockchain(calculatedLPSupply, 0);
-    const lpSubSlippage = lpSupplyTV.subSlippage(context.data.slippage ?? 0.1);
-    const minLPTrimmed = lpSubSlippage.toHuman().split(".")[0];
-    const minLP = BigNumber.from(minLPTrimmed);
-
-    return {
-      name: "sync",
-      amountOut: minLP,
-      prepare: () => ({
-        target: well.address,
-        // this is safe b/c all wells extend the IWell interface & are required to define a 'sync' function.
-        callData: well.contract.interface.encodeFunctionData("sync", [recipient, minLP])
-      }),
-      decode: (data: string) => well.contract.interface.decodeFunctionData("sync", data),
-      decodeResult: (data: string) => well.contract.interface.decodeFunctionResult("sync", data)
-    };
-  };
-
-  return syncStep;
 };

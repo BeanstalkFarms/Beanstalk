@@ -10,7 +10,7 @@ import { useCreateWell } from "../CreateWellProvider";
 
 const ButtonLabels = [
   {
-    back: "Back: Choose Aquifer",
+    back: "Back",
     next: "Next: Customize Well"
   },
   {

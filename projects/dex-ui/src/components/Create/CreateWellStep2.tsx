@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import styled from "styled-components";
 import { FormProvider, useForm, useFormContext, useWatch } from "react-hook-form";
 
@@ -13,7 +13,7 @@ import { XIcon } from "src/components/Icons";
 import { CreateWellStepProps, useCreateWell } from "./CreateWellProvider";
 import { CreateWellFormProgress } from "./shared/CreateWellFormProgress";
 import { ComponentInputWithCustom } from "./shared/ComponentInputWithCustom";
-import { USE_ERC20_TOKEN_ERRORS, useERC20TokenWithAddress } from "src/tokens/useERC20Token";
+import { useERC20TokenWithAddress } from "src/tokens/useERC20Token";
 import { ERC20Token } from "@beanstalk/sdk";
 import useSdk from "src/utils/sdk/useSdk";
 import BoreWellUtils from "src/wells/boreWell";
@@ -39,7 +39,7 @@ const tokenFormKeys = ["token1", "token2"] as const;
 
 const optionalKeys = ["wellFunctionData", "pumpData"] as const;
 
-const ChooseFunctionAndPumpForm = () => {
+const FunctionTokensPumpForm = () => {
   const { wellTokens, wellFunctionAddress, pumpAddress, setStep2, wellFunctionData, pumpData } =
     useCreateWell();
   const sdk = useSdk();
@@ -50,7 +50,7 @@ const ChooseFunctionAndPumpForm = () => {
   const methods = useForm<FunctionTokenPumpFormValues>({
     defaultValues: {
       wellFunctionAddress: wellFunctionAddress || "",
-      wellFunctionData: wellFunctionData || "",
+      wellFunctionData: wellFunctionAddress || "",
       token1: wellTokens?.token1?.address || "",
       token2: wellTokens?.token2?.address || "",
       pumpAddress: pumpAddress || "",
@@ -58,26 +58,24 @@ const ChooseFunctionAndPumpForm = () => {
     }
   });
 
-  const handleSave = useCallback(() => {
+  const handleSave = () => {
     const values = methods.getValues();
+
     setStep2({
       ...values,
       token1: token1,
       token2: token2
     });
-  }, [token1, token2, methods, setStep2]);
+  };
 
-  const handleSubmit = useCallback(
-    async (values: FunctionTokenPumpFormValues) => {
-      const valid = await methods.trigger();
-      if (!valid || !token1 || !token2) return;
-      if (token1.address === token2.address) return; // should never be true, but just in case
+  const handleSubmit = async (values: FunctionTokenPumpFormValues) => {
+    const valid = await methods.trigger();
+    if (!valid || !token1 || !token2) return;
+    if (token1.address === token2.address) return; // should never be true, but just in case
 
-      const [tk1, tk2] = BoreWellUtils.prepareTokenOrderForBoreWell(sdk, [token1, token2]);
-      setStep2({ ...values, token1: tk1, token2: tk2, goNext: true });
-    },
-    [sdk, setStep2, methods, token1, token2]
-  );
+    const [tk1, tk2] = BoreWellUtils.prepareTokenOrderForBoreWell(sdk, [token1, token2]);
+    setStep2({ ...values, token1: tk1, token2: tk2, goNext: true });
+  };
 
   return (
     <FormProvider {...methods}>
@@ -175,57 +173,49 @@ const ChooseFunctionAndPumpForm = () => {
 
 // ----------------------------------------
 
-export const ChooseFunctionAndPump = () => {
+export const CreateWellStep2 = () => {
   return (
     <Flex $gap={3} $fullWidth>
       <div>
         <Text $variant="h2">Create a Well - Choose a Well Function and Pump</Text>
         <Subtitle>Select the components to use in your Well.</Subtitle>
       </div>
-      <ChooseFunctionAndPumpForm />
+      <FunctionTokensPumpForm />
     </Flex>
   );
 };
 
 // ---------- STYLES & COMPONENTS ----------
 
-const TokenAddressInputWithSearch = ({
-  path,
-  setToken
-}: {
+const uniqueTokensRequiredErrMessage = "Unique tokens required";
+
+type TokenAddressInputWithSearchProps = {
   path: "token1" | "token2";
   setToken: React.Dispatch<React.SetStateAction<ERC20Token | undefined>>;
-}) => {
+};
+const TokenAddressInputWithSearch = ({ path, setToken }: TokenAddressInputWithSearchProps) => {
+  const counterPath = path === "token1" ? "token2" : "token1";
+
   const {
     register,
     control,
     setValue,
     formState: {
-      errors: { [path]: formError }
+      errors: { [path]: formError, [counterPath]: counterFormError }
     },
-    setError,
     clearErrors
   } = useFormContext<FunctionTokenPumpFormValues>();
 
-  const _value = useWatch({ control, name: path });
-  const value = typeof _value === "string" ? _value : "";
-
+  const value = useWatch({ control, name: path });
   const { data: token, error, isLoading } = useERC20TokenWithAddress(value);
 
   const erc20ErrMessage = error?.message;
   const formErrMessage = formError?.message;
+  const counterFormErrMessage = counterFormError?.message;
 
   const tokenAndFormValueMatch = Boolean(
     token && token.address.toLowerCase() === value.toLowerCase()
   );
-
-  useEffect(() => {
-    if (erc20ErrMessage) {
-      setError(path, { message: erc20ErrMessage });
-    } else if (!erc20ErrMessage && formErrMessage === USE_ERC20_TOKEN_ERRORS.notERC20Ish) {
-      clearErrors(path);
-    }
-  }, [path, formErrMessage, erc20ErrMessage, setError, clearErrors]);
 
   useEffect(() => {
     if (token && tokenAndFormValueMatch) {
@@ -233,32 +223,42 @@ const TokenAddressInputWithSearch = ({
     } else {
       setToken(undefined);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [token, tokenAndFormValueMatch]);
+  }, [token, tokenAndFormValueMatch, setToken]);
+
+  useEffect(() => {
+    if (counterFormErrMessage === uniqueTokensRequiredErrMessage) {
+      if (formErrMessage !== uniqueTokensRequiredErrMessage) {
+        clearErrors(counterPath);
+      }
+    }
+  }, [counterFormErrMessage, formErrMessage, counterPath, clearErrors]);
+
   return (
     <>
-      {!token || isLoading ? (
+      <TokenInputWrapper>
         <TextInputField
           {...register(path, {
             required: {
               value: true,
               message: "Token address is required"
             },
-            validate: (formValue, formValues) => {
-              if (!getIsValidEthereumAddress(formValue)) return "Invalid address";
-              const otherTokenValue = formValues[path === "token1" ? "token2" : "token1"];
-              const tokensAreSame = formValue.toLowerCase() === otherTokenValue.toLowerCase();
-              if (tokensAreSame) return "Unique tokens required";
+            validate: {
+              invalidAddress: (formValue) => {
+                return getIsValidEthereumAddress(formValue) || "Invalid address";
+              },
+              tokensAreSame: (formValue, formValues) => {
+                const counterToken = formValues[path === "token1" ? "token2" : "token1"];
+                const tokensAreSame = formValue.toLowerCase() === counterToken.toLowerCase();
 
-              return true;
+                return !tokensAreSame || "Unique tokens required";
+              }
             }
           })}
           placeholder="Search for token or input an address"
           startIcon="search"
           error={formErrMessage ?? erc20ErrMessage}
         />
-      ) : (
-        <Flex>
+        {token && !isLoading && (
           <FoundTokenInfo>
             {token?.logo && (
               <ImgContainer width={16} height={16}>
@@ -266,19 +266,14 @@ const TokenAddressInputWithSearch = ({
               </ImgContainer>
             )}
             <Text $variant="button-link" className="token-symbol">
-              {token.symbol}
+              {token?.symbol}
             </Text>{" "}
             <ImgContainer width={10} height={10} onClick={() => setValue(path, "")}>
               <XIcon width={10} height={10} />
             </ImgContainer>
           </FoundTokenInfo>
-          {formErrMessage && (
-            <Text $color="error" $variant="xs" $mt={0.5}>
-              {formErrMessage ?? erc20ErrMessage}
-            </Text>
-          )}
-        </Flex>
-      )}
+        )}
+      </TokenInputWrapper>
     </>
   );
 };
@@ -318,14 +313,21 @@ const TokenSelectWrapper = styled(Flex)`
   }
 `;
 
+const TokenInputWrapper = styled(Flex)`
+  position: relative;
+`;
+
 const FoundTokenInfo = styled.div`
+  position: absolute;
+  box-sizing: border-box;
+  width: 100%;
   display: flex;
   flex-direction: row;
   gap: ${theme.spacing(1)};
   align-items: center;
   border: 1px solid ${theme.colors.black};
   background: ${theme.colors.primaryLight};
-  padding: 9px 16px; // do 9 px instead of theme.spacing(1, 1.5) to match the size of the text input
+  padding: 9px 16px;
 
   .token-symbol {
     position: relative;
@@ -333,7 +335,6 @@ const FoundTokenInfo = styled.div`
   }
 
   svg {
-    margin-bottom: 2px;
     cursor: pointer;
   }
 `;

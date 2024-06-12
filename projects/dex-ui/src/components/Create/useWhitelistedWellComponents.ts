@@ -7,6 +7,8 @@ import {
   WELL_DOT_SOL_ADDRESS
 } from "src/utils/addresses";
 import BrendanTwitterPFP from "src/assets/images/brendan-twitter-pfp.png";
+import CyrfinLogo from "src/assets/images/cyrfin-logo.svg";
+import Code4renaLogo from "src/assets/images/code4rena-logo.png";
 import ClockIcon from "src/assets/images/clock-icon.svg";
 
 export enum WellComponentType {
@@ -15,11 +17,15 @@ export enum WellComponentType {
   WellFunction = "WellFunction"
 }
 
-type ComponentInfo = {
-  label: string;
+type BaseInfo = {
   value: string;
   imgSrc?: string;
   url?: string;
+};
+
+type ComponentInfo = Omit<BaseInfo, "value"> & {
+  label: string;
+  value: string | BaseInfo[];
 };
 
 export type WellComponentInfo = {
@@ -38,7 +44,6 @@ export type WellComponentInfo = {
     };
     tokenSuffixAbbreviation?: string;
   };
-  deploy: ComponentInfo;
   info: ComponentInfo[];
   links: {
     etherscan?: string;
@@ -46,6 +51,30 @@ export type WellComponentInfo = {
     learnMore?: string;
   };
 };
+
+const code4ArenaAuditLink = "https://code4rena.com/reports/2023-07-basin";
+const halbornAuditLink =
+  "https://github.com/BeanstalkFarms/Beanstalk-Audits/blob/main/ecosystem/06-16-23-basin-halborn-report.pdf";
+const cyfrinAuditLink =
+  "https://github.com/BeanstalkFarms/Beanstalk-Audits/blob/main/ecosystem/06-16-23-basin-cyfrin-report.pdf";
+
+const basinAuditInfo = [
+  {
+    value: "Cyfrin",
+    imgSrc: CyrfinLogo,
+    url: cyfrinAuditLink
+  },
+  {
+    value: "Halborn",
+    imgSrc: HalbornLogo,
+    url: halbornAuditLink
+  },
+  {
+    value: "Code4rena",
+    imgSrc: Code4renaLogo,
+    url: code4ArenaAuditLink
+  }
+];
 
 const WellDotSol: WellComponentInfo = {
   address: WELL_DOT_SOL_ADDRESS,
@@ -63,27 +92,15 @@ const WellDotSol: WellComponentInfo = {
     },
     url: "https://github.com/BeanstalkFarms/Basin/blob/master/src/Well.sol"
   },
-  deploy: {
-    label: "Deployed By",
-    value: "Beanstalk Farms",
-    imgSrc: BeanstalkFarmsLogo
-  },
   info: [
-    {
-      label: "Block Deployed",
-      value: "12345678"
-    },
-    {
-      label: "Audited by",
-      value: "Halborn",
-      imgSrc: HalbornLogo,
-      url: "https://github.com/BeanstalkFarms/Beanstalk-Audits"
-    }
+    { label: "Deployed By", value: "Beanstalk Farms", imgSrc: BeanstalkFarmsLogo },
+    { label: "Block Deployed", value: "17977943" },
+    { label: "Audited by", value: basinAuditInfo }
   ],
   links: {
-    etherscan: "https://etherscan.io", // TODO: FIX ME
+    etherscan: `https://etherscan.io/address/${WELL_DOT_SOL_ADDRESS}`,
     github: "https://github.com/BeanstalkFarms/Basin/blob/master/src/Well.sol",
-    learnMore: "https://docs.basin.exchange" // TODO: FIX ME
+    learnMore: "https://github.com/BeanstalkFarms/Basin/blob/master/src/Well.sol"
   }
 };
 
@@ -94,7 +111,7 @@ const MultiFlowPump: WellComponentInfo = {
     fullName: "MultiFlow Pump",
     summary: "An inter-block MEV manipulation resistant oracle implementation.",
     description: [
-      "An inter-block MEV manipulation-resistant oracle implementation which can serve last values, geometric EMA values and TWA geometric SMA values."
+      "Comprehensive multi-block MEV manipulation-resistant Oracle implementation which serves up Well pricing data with an EMA for instantaneous prices and a TWAP for weighted averages over time."
     ],
     usedBy: 1,
     url: "https://docs.basin.exchange/implementations/multi-flow-pump",
@@ -103,24 +120,20 @@ const MultiFlowPump: WellComponentInfo = {
       display: "🔮 Pump"
     }
   },
-  deploy: {
-    label: "Deployed By",
-    value: "Brendan Sanderson",
-    imgSrc: BrendanTwitterPFP,
-    url: "https://twitter.com/brendaann__"
-  },
   info: [
     {
-      label: "Deployed Block",
-      value: "12345678"
-    }
-    // TODO: What block was it deployed? , TX hash?
-    // TODO: was MultiFlowPump audited?
+      label: "Deployed By",
+      value: "Brendan Sanderson",
+      imgSrc: BrendanTwitterPFP,
+      url: "https://twitter.com/brendaann__"
+    },
+    { label: "Deployed Block", value: "17977942" },
+    { label: "Audited by", value: basinAuditInfo }
   ],
   links: {
-    etherscan: "https://etherscan.io", // TODO: FIX ME
-    github: "https://github.com/BeanstalkFarms/Basin/blob/master/src/pumps/MultiFlowPump.sol"
-    // learnMore: // TODO: FIX ME
+    etherscan: `https://etherscan.io/address/${MULTI_FLOW_PUMP_ADDRESS}`,
+    github: "https://github.com/BeanstalkFarms/Basin/blob/master/src/pumps/MultiFlowPump.sol",
+    learnMore: "https://github.com/BeanstalkFarms/Basin/blob/master/src/pumps/MultiFlowPump.sol"
   }
 };
 
@@ -139,23 +152,17 @@ const ConstantProduct2: WellComponentInfo = {
     usedBy: 1,
     tokenSuffixAbbreviation: "CP2w"
   },
-  deploy: {
-    label: "Deployed By",
-    value: "Beanstalk Farms",
-    imgSrc: BeanstalkFarmsLogo
-  },
   info: [
-    {
-      label: "Deployed Block",
-      value: "12345678"
-    }
-    // TODO: What block was it deployed? , TX hash?
-    // TODO: was ConstantProduct2 audited?
+    { label: "Deployed By", value: "Beanstalk Farms", imgSrc: BeanstalkFarmsLogo },
+    { label: "Deployed Block", value: "17977906" },
+    { label: "Audited by", value: basinAuditInfo }
   ],
   links: {
-    etherscan: "https://etherscan.io", // TODO: FIX ME
-    github: "https://github.com/BeanstalkFarms/Basin/blob/master/src/functions/ConstantProduct2.sol" // TODO: FIX ME
-    // learnMore: // TODO: FIX ME
+    etherscan: `https://etherscan.io/address/${CONSTANT_PRODUCT_2_ADDRESS}`,
+    github:
+      "https://github.com/BeanstalkFarms/Basin/blob/master/src/functions/ConstantProduct2.sol",
+    learnMore:
+      "https://github.com/BeanstalkFarms/Basin/blob/master/src/functions/ConstantProduct2.sol"
   }
 };
 

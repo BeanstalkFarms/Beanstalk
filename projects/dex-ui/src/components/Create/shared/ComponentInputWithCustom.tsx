@@ -11,7 +11,6 @@ import { theme } from "src/utils/ui/theme";
 import styled from "styled-components";
 import { CircleFilledCheckIcon, CircleEmptyIcon } from "../../Icons";
 import { getIsValidEthereumAddress } from "src/utils/addresses";
-import { isConvertibleToBytes } from "src/utils/bytes";
 
 type AdditionalOptionProps = {
   value: string;
@@ -151,7 +150,7 @@ const ComponentDataFieldInput = <T extends FieldValues>(props: { path: Path<T> }
     <TextInputField
       {...register(props.path, {
         validate: (_value) => {
-          return isConvertibleToBytes(_value) || "Invalid input";
+          return _value.startsWith("0x") || "Invalid input";
         }
       })}
       placeholder="0x data"

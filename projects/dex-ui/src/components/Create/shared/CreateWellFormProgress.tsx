@@ -6,8 +6,8 @@ import { Flex } from "src/components/Layout";
 import { Link } from "react-router-dom";
 import styled from "styled-components";
 import { Text } from "src/components/Typography";
-import { FunctionTokenPumpFormValues } from "../ChooseFunctionAndPump";
-import { WellDetailsFormValues } from "../ChooseComponentNames";
+import { FunctionTokenPumpFormValues } from "../CreateWellStep2";
+import { WellDetailsFormValues } from "../CreateWellStep3";
 
 type ViableProps = Omit<FunctionTokenPumpFormValues, "wellFunctionData" | "pumpData"> &
   WellDetailsFormValues;
@@ -78,14 +78,8 @@ export const CreateWellFormProgress = () => {
         ))}
       </Flex>
       <Text $color="text.secondary" $variant="xs">
-        Visit the{" "}
-        <TextLink
-          // TODO: FIX ME
-          to="/build"
-        >
-          component library
-        </TextLink>{" "}
-        to learn more about the different Well components.
+        Visit the <TextLink to="/build">component library</TextLink> to learn more about the
+        different Well components.
       </Text>
     </ProgressContainer>
   );

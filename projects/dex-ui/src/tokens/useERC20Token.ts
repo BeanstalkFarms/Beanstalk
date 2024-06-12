@@ -72,9 +72,7 @@ export const useERC20TokenWithAddress = (_address: string | undefined = "") => {
   });
 
   const getTokenLogo = async (token: ERC20Token) => {
-    // in the sdk, BEAN_ETH is BEAN_ETH, but in dex-ui, it's BEANWETHCP2w
-    const symbol = token.address === BEANETH_ADDRESS ? "BEANWETHCP2w" : token.symbol;
-    let logo: string | undefined = token.logo ?? images[symbol];
+    let logo: string | undefined = token.logo ?? images[token.symbol];
     if (logo) return logo;
 
     if (tokenMetadata) {
