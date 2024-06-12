@@ -54,7 +54,7 @@ const MegaChart: FC<{}> = () => {
               season_lte: startSeason,
             },
             notifyOnNetworkStatusChange: true,
-            fetchPolicy: 'cache-first',
+            fetchPolicy: 'no-cache', // Hitting the network every time is MUCH faster than the cache
           })
           .then((r) => {
             r.data[entity].forEach((seasonData: any) => {
@@ -83,9 +83,8 @@ const MegaChart: FC<{}> = () => {
     }
 
     setLoading(true);
-    getSeasonData();
-    setLoading(false);
     getSeasonData(true);
+    setLoading(false);
   }, [chartSetupData, selectedCharts, season]);
 
   return (
@@ -125,7 +124,7 @@ const MegaChart: FC<{}> = () => {
               {chartSetupData[selection].name}
             </Button>
             ))}
-            {selectedCharts.length < 6 && (
+            {selectedCharts.length < 5 && (
               <Button
                 variant='contained'
                 color='primary'
