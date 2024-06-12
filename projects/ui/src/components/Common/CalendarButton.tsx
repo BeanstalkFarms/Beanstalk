@@ -10,6 +10,9 @@ import {
   IconButton,
   Divider,
   InputAdornment,
+  Drawer,
+  useTheme,
+  useMediaQuery,
 } from '@mui/material';
 import DateRangeOutlinedIcon from '@mui/icons-material/DateRangeOutlined';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
@@ -28,6 +31,10 @@ type CalendarProps = {
 }
 
 const CalendarButton: FC<CalendarProps> = ({ setTimePeriod }) => {
+    // Theme
+    const theme = useTheme();
+    const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  
   // Menu
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const menuVisible = Boolean(anchorEl);
@@ -46,49 +53,58 @@ const CalendarButton: FC<CalendarProps> = ({ setTimePeriod }) => {
     to: undefined,
   };
 
-  const presetRanges: { key: string, from: Date | undefined, to: Date | undefined }[] = [
+  const presetRanges: { key: string, fullText: string, from: Date | undefined, to: Date | undefined }[] = [
     {
         key: '1D',
+        fullText: '1 DAY',
         from: subHours((new Date()), 24),
         to: (new Date()),
     },
     {
         key: '1W',
+        fullText: '1 WEEK',
         from: subWeeks((new Date()), 1),
         to: (new Date()),
     },
     {
         key: '1M',
+        fullText: '1 MONTH',
         from: subMonths((new Date()), 1),
         to: (new Date()),
     },
     {
         key: '3M',
+        fullText: '3 MONTHS',
         from: subMonths((new Date()), 3),
         to: (new Date()),
     },
     {
         key: '6M',
+        fullText: '6 MONTHS',
         from: subMonths((new Date()), 6),
         to: (new Date()),
     },
     {
         key: 'YTD',
+        fullText: 'THIS YEAR',
         from: startOfYear((new Date())),
         to: (new Date()),
     },
     {
         key: '1Y',
+        fullText: '1 YEAR',
         from: subYears((new Date()), 1),
         to: (new Date()),
     },
     {
         key: '2Y',
+        fullText: '2 YEARS',
         from: subYears((new Date()), 2),
         to: (new Date()),
     },
     {
         key: 'ALL',
+        fullText: 'ALL DATA',
         from: undefined,
         to: undefined,
     },
@@ -208,11 +224,234 @@ const CalendarButton: FC<CalendarProps> = ({ setTimePeriod }) => {
         };
     };
 
+function CustomDayPicker() {
+    return (
+        <DayPicker 
+        mode="range" 
+        showOutsideDays
+        selected={range}
+        onSelect={handleDayPickerSelect}
+        month={month}
+        onMonthChange={setMonth}
+        fixedWeeks
+        styles={{
+            caption: {
+                display: 'flex',
+                position: 'relative',
+                justifyContent: 'center',
+                alignItems: 'center',
+                marginBottom: '10px'
+            },
+            nav: {
+                display: 'flex',
+                alignItems: 'center',
+            },
+            nav_button_previous: {
+                position: 'absolute',
+                left: '0',
+                borderRadius: '8px',
+                width: '30px',
+                height: '30px'
+            },
+            nav_button_next: {
+                position: 'absolute',
+                right: '0',
+                borderRadius: '8px',
+                width: '30px',
+                height: '30px'
+            },
+            head_row: {
+                display: 'none'
+            },
+            table: {
+                display: 'flex',
+                justifyContent: 'center',
+                backgroundColor: BeanstalkPalette.lightestGreen,
+                borderRadius: '8px',
+            },
+            tbody: {
+                padding: '10px',
+                marginLeft: '6px'
+            },
+            day: {
+                borderRadius: '4px',
+                backgroundColor: BeanstalkPalette.white,
+                height: '30px',
+                width: '30px',
+                transitionProperty: 'color, background-color, border-color, text-decoration-color, fill, stroke',
+                transitionTimingFunction: 'cubic-bezier(0.4, 0, 0.2, 1)',
+                transitionDuration: '150ms',
+            },
+        }} 
+        modifiersStyles={{    
+            today: {
+                fontWeight: 'normal',
+            },
+            selected: {
+                fontWeight: 'bold',
+                backgroundColor: BeanstalkPalette.theme.spring.beanstalkGreen,
+                color: BeanstalkPalette.white,
+            },
+            range_start: {
+                fontWeight: 'bold',
+                backgroundColor: BeanstalkPalette.theme.spring.beanstalkGreen,
+                color: BeanstalkPalette.white,
+            },
+            range_middle: {
+                fontWeight: 'bold',
+                backgroundColor: BeanstalkPalette.theme.spring.beanstalkGreen,
+                color: BeanstalkPalette.white
+            },
+            range_end: {
+                fontWeight: 'bold',
+                backgroundColor: BeanstalkPalette.theme.spring.beanstalkGreen,
+                color: BeanstalkPalette.white,
+            },
+        }}
+    />
+    )
+}
+
+function CalendarContent() {
+    return (
+                <Stack>
+                    <Box display='flex' justifyContent='space-between' paddingX='16px' paddingTop='16px'>
+                        <Typography fontWeight={700}>Custom Date Range</Typography>
+                        <IconButton
+                            aria-label="close"
+                            onClick={handleHideMenu}
+                            disableRipple
+                            sx={{
+                                p: 0,
+                            }}
+                        >
+                            <CloseIcon sx={{ fontSize: 20, color: 'text.primary' }} />
+                        </IconButton>
+                    </Box>
+                    <Box display='flex' paddingX='16px' paddingTop='16px' maxWidth={isMobile ? undefined : '310px'} gap='8px'>
+                        <TextField
+                            sx={{ 
+                                display: isMobile ? 'flex' : undefined,
+                                flexGrow: isMobile ? 1 : undefined,
+                                width: isMobile ? undefined : 160, 
+                                '& .MuiOutlinedInput-root': {
+                                    height: '32px',
+                                    borderRadius: '6px' 
+                                }
+                            }}
+                            value={inputValue.from}
+                            placeholder="YYYY-MM-DD"
+                            size="small"
+                            color="primary"
+                            onChange={(e) => {
+                                handleInputChange('date', 'from', e.target.value);
+                            }}
+                        />
+                        <TextField
+                            sx={{ 
+                                width: isMobile ? 140 : 120, 
+                                '& .MuiOutlinedInput-root': {
+                                    height: '32px',
+                                    borderRadius: '6px' 
+                                }
+                            }}
+                            value={inputTime.from}
+                            placeholder="03:00"
+                            size="small"
+                            color="primary"
+                            InputProps={{
+                                endAdornment: 
+                                    <InputAdornment position="end" sx={{ ml: 0, mr: -0.5 }}> 
+                                        <AccessTimeIcon sx={{ scale: '80%' }} />
+                                    </InputAdornment>
+                            }}
+                            onChange={(e) => {
+                                handleInputChange('time', 'from', e.target.value);
+                            }}
+                            onBlur={(e) => { formatInputTimeOnBlur('from', e.target.value); }}
+                        />
+                    </Box>
+                    <Box display='flex' paddingX='16px' marginTop='8px' maxWidth={isMobile ? undefined : '310px'} gap='8px'>
+                        <TextField
+                            sx={{ 
+                                display: isMobile ? 'flex' : undefined,
+                                flexGrow: isMobile ? 1 : undefined,
+                                width: isMobile ? undefined : 160, 
+                                '& .MuiOutlinedInput-root': {
+                                    height: '32px',
+                                    borderRadius: '6px' 
+                                }
+                            }}
+                            value={inputValue.to}
+                            placeholder="YYYY-MM-DD"
+                            size="small"
+                            color="primary"
+                            onChange={(e) => {
+                                handleInputChange('date', 'to', e.target.value);
+                            }}
+                        />
+                        <TextField
+                            sx={{ 
+                                width: isMobile ? 140 : 120, 
+                                '& .MuiOutlinedInput-root': {
+                                    height: '32px',
+                                    borderRadius: '6px' 
+                                }
+                            }}
+                            value={inputTime.to}
+                            placeholder="23:00"
+                            size="small"
+                            color="primary"
+                            InputProps={{
+                                endAdornment:
+                                <InputAdornment position="end" sx={{ ml: 0, mr: -0.5 }}> 
+                                    <AccessTimeIcon sx={{ scale: '80%' }} />
+                                </InputAdornment>
+                            }}
+                            onChange={(e) => {
+                                handleInputChange('time', 'to', e.target.value);
+                            }}
+                            onBlur={(e) => { formatInputTimeOnBlur('to', e.target.value); }}
+                        />
+                    </Box>
+                    <Divider sx={{ borderTop: 0.5, borderBottom: 0, marginTop: '16px', borderColor: 'divider' }} />
+                    <Box display='flex' flexDirection='row'>
+                    <CustomDayPicker />
+                    {isMobile && 
+                    <Box display='flex' flexDirection='column' marginTop='16px' marginBottom='16px' marginRight='16px' flexGrow={1} justifyContent='space-between'>
+                                {presetRanges.map((preset) => (
+                <Button
+                    key={`timePeriodPreset${preset.key}`}
+                    variant={selectedPreset === preset.key ? "contained" : "outlined-secondary"}
+                    size="small"
+                    color={selectedPreset === preset.key ? "primary" : "secondary"}
+                    sx={{
+                        borderRadius: 0.5,
+                        px: 0.3,
+                        py: 0.3,
+                        mt: -0.3,
+                        minWidth: 30,
+                        fontWeight: 400
+                    }}
+                    disableRipple
+                    onClick={() => { handlePresetSelect(preset.key, { from: preset.from, to: preset.to }) }}
+                >
+                    {preset.fullText}
+                </Button> 
+            ))}
+            </Box>}
+            </Box>
+                </Stack>
+
+    )
+}
+
   return (
     <ClickAwayListener onClickAway={handleHideMenu}>
       <Box sx={{ display: 'flex' }}>
         <Box sx={{ display: 'flex', gap: 0.5 }}>
-            {presetRanges.map((preset) => (
+            {!isMobile && 
+            presetRanges.map((preset) => (
                 <Button
                     key={`timePeriodPreset${preset.key}`}
                     variant="text"
@@ -237,7 +476,7 @@ const CalendarButton: FC<CalendarProps> = ({ setTimePeriod }) => {
                 key='calendarSelect'
                 variant="text"
                 size="small"
-                color={selectedPreset === "CUSTOM" ? "primary" : "dark"}
+                color={selectedPreset === "CUSTOM" && !isMobile ? "primary" : "dark"}
                 sx={{
                     borderRadius: 0.5,
                     px: 0.3,
@@ -251,6 +490,7 @@ const CalendarButton: FC<CalendarProps> = ({ setTimePeriod }) => {
                 <DateRangeOutlinedIcon color="inherit" fontSize='small' />
             </Button>
         </Box>
+        {!isMobile ?
         <Popper
           anchorEl={anchorEl}
           open={menuVisible}
@@ -276,194 +516,16 @@ const CalendarButton: FC<CalendarProps> = ({ setTimePeriod }) => {
                   },
                 }}
               >
-                <Stack>
-                    <Box display='flex' justifyContent='space-between' paddingX='16px' paddingTop='16px'>
-                        <Typography fontWeight={700}>Custom Date Range</Typography>
-                        <IconButton
-                            aria-label="close"
-                            onClick={handleHideMenu}
-                            disableRipple
-                            sx={{
-                                p: 0,
-                            }}
-                        >
-                            <CloseIcon sx={{ fontSize: 20, color: 'text.primary' }} />
-                        </IconButton>
-                    </Box>
-                    <Box display='flex' paddingX='16px' paddingTop='16px' maxWidth='310px' gap='8px'>
-                        <TextField
-                            sx={{ 
-                                width: 160, 
-                                '& .MuiOutlinedInput-root': {
-                                    height: '32px',
-                                    borderRadius: '6px' 
-                                }
-                            }}
-                            value={inputValue.from}
-                            placeholder="YYYY-MM-DD"
-                            size="small"
-                            color="primary"
-                            onChange={(e) => {
-                                handleInputChange('date', 'from', e.target.value);
-                            }}
-                        />
-                        <TextField
-                            sx={{ 
-                                width: 120, 
-                                '& .MuiOutlinedInput-root': {
-                                    height: '32px',
-                                    borderRadius: '6px' 
-                                }
-                            }}
-                            value={inputTime.from}
-                            placeholder="03:00"
-                            size="small"
-                            color="primary"
-                            InputProps={{
-                                endAdornment: 
-                                    <InputAdornment position="end" sx={{ ml: 0, mr: -0.5 }}> 
-                                        <AccessTimeIcon sx={{ scale: '80%' }} />
-                                    </InputAdornment>
-                            }}
-                            onChange={(e) => {
-                                handleInputChange('time', 'from', e.target.value);
-                            }}
-                            onBlur={(e) => { formatInputTimeOnBlur('from', e.target.value); }}
-                        />
-                    </Box>
-                    <Box display='flex' paddingX='16px' marginTop='8px' maxWidth='310px' gap='8px'>
-                        <TextField
-                            sx={{ 
-                                width: 160, 
-                                '& .MuiOutlinedInput-root': {
-                                    height: '32px',
-                                    borderRadius: '6px' 
-                                }
-                            }}
-                            value={inputValue.to}
-                            placeholder="YYYY-MM-DD"
-                            size="small"
-                            color="primary"
-                            onChange={(e) => {
-                                handleInputChange('date', 'to', e.target.value);
-                            }}
-                        />
-                        <TextField
-                            sx={{ 
-                                width: 120, 
-                                '& .MuiOutlinedInput-root': {
-                                    height: '32px',
-                                    borderRadius: '6px' 
-                                }
-                            }}
-                            value={inputTime.to}
-                            placeholder="23:00"
-                            size="small"
-                            color="primary"
-                            InputProps={{
-                                endAdornment:
-                                <InputAdornment position="end" sx={{ ml: 0, mr: -0.5 }}> 
-                                    <AccessTimeIcon sx={{ scale: '80%' }} />
-                                </InputAdornment>
-                            }}
-                            onChange={(e) => {
-                                handleInputChange('time', 'to', e.target.value);
-                            }}
-                            onBlur={(e) => { formatInputTimeOnBlur('to', e.target.value); }}
-                        />
-                    </Box>
-                    <Divider sx={{ borderTop: 0.5, borderBottom: 0, marginTop: '16px', borderColor: 'divider' }} />
-                    <DayPicker 
-                        mode="range" 
-                        showOutsideDays
-                        selected={range}
-                        onSelect={handleDayPickerSelect}
-                        month={month}
-                        onMonthChange={setMonth}
-                        styles={{
-                            caption: {
-                                display: 'flex',
-                                position: 'relative',
-                                justifyContent: 'center',
-                                alignItems: 'center',
-                                marginBottom: '10px'
-                            },
-                            nav: {
-                                display: 'flex',
-                                alignItems: 'center',
-                            },
-                            nav_button_previous: {
-                                position: 'absolute',
-                                left: '0',
-                                borderRadius: '8px',
-                                width: '30px',
-                                height: '30px'
-                            },
-                            nav_button_next: {
-                                position: 'absolute',
-                                right: '0',
-                                borderRadius: '8px',
-                                width: '30px',
-                                height: '30px'
-                            },
-                            head_row: {
-                                display: 'none'
-                            },
-                            table: {
-                                display: 'flex',
-                                justifyContent: 'center',
-                                backgroundColor: BeanstalkPalette.lightestGreen,
-                                borderRadius: '8px',
-                            },
-                            tbody: {
-                                padding: '10px',
-                                marginLeft: '6px'
-                            },
-                            day: {
-                                borderRadius: '4px',
-                                backgroundColor: BeanstalkPalette.white,
-                                height: '30px',
-                                width: '30px',
-                                transitionProperty: 'color, background-color, border-color, text-decoration-color, fill, stroke',
-                                transitionTimingFunction: 'cubic-bezier(0.4, 0, 0.2, 1)',
-                                transitionDuration: '150ms',
-                            },
-                        }} 
-                        modifiersStyles={{    
-                            today: {
-                                fontWeight: 'normal',
-                            },
-                            selected: {
-                                fontWeight: 'bold',
-                                backgroundColor: BeanstalkPalette.theme.spring.beanstalkGreen,
-                                color: BeanstalkPalette.white,
-                            },
-                            range_start: {
-                                fontWeight: 'bold',
-                                backgroundColor: BeanstalkPalette.theme.spring.beanstalkGreen,
-                                color: BeanstalkPalette.white,
-                            },
-                            range_middle: {
-                                fontWeight: 'bold',
-                                backgroundColor: BeanstalkPalette.theme.spring.beanstalkGreen,
-                                color: BeanstalkPalette.white
-                            },
-                            range_end: {
-                                fontWeight: 'bold',
-                                backgroundColor: BeanstalkPalette.theme.spring.beanstalkGreen,
-                                color: BeanstalkPalette.white,
-                            },
-                        }}
-                    />
-                    {/* <Box display='flex' paddingX='16px' paddingBottom='16px' flexDirection='row-reverse' gap='8px'>
-                        <Button sx={{ fontSize: 'small', height: '32px' }}>OK</Button>
-                        <Button variant='text' color='cancel' onClick={handleHideMenu} sx={{ fontSize: 'small', height: '32px' }}>CANCEL</Button>
-                    </Box> */}
-                </Stack>
+                <CalendarContent />
               </Box>
             </Grow>
           )}
-        </Popper>
+        </Popper> 
+        :
+        <Drawer anchor="bottom" open={menuVisible} onClose={handleHideMenu}>
+            <CalendarContent />
+        </Drawer>
+        }
       </Box>
     </ClickAwayListener>
   );

@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   Box,
+  CircularProgress,
   Tooltip,
   Typography,
   useMediaQuery,
@@ -340,7 +341,7 @@ const ChartV2: FC<ChartV2DataProps> = ({
 
         const tooltipTitle = chartSetupData[chartId].tooltipTitle;
         const tooltipHoverText = chartSetupData[chartId].tooltipHoverText;
-        const value = dataPoint?.value[index] || lastDataPoint?.value[index] || 0;
+        const value = dataPoint?.value[index] || lastDataPoint?.value[index] || undefined;
           
         return (
           <Box sx={{ display: 'flex', flexDirection: 'column'}}>
@@ -370,9 +371,13 @@ const ChartV2: FC<ChartV2DataProps> = ({
                   )}
                 </Box>
               </Box>
+              {value ? (
               <Typography variant="h2">
                 {chartSetupData[chartId].tickFormatter(value || 0)}
               </Typography>
+              ) : (
+                <CircularProgress variant='indeterminate' size={20} thickness={6}/>
+              )}
             </Box>
             {index === 0 && (
             <>

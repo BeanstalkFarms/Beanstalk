@@ -12,6 +12,7 @@ export interface SelectDialogProps {
     handleClose: () => void,
     selected: any[],
     setSelected: React.Dispatch<React.SetStateAction<any>>,
+    isMobile: boolean
 };
 
 const selectedSx = {
@@ -25,7 +26,7 @@ const selectedSx = {
     borderColor: 'text.light',
   };
 
-const SelectDialog: FC<SelectDialogProps> = ({ handleClose, selected, setSelected }) => {
+const SelectDialog: FC<SelectDialogProps> = ({ handleClose, selected, setSelected, isMobile }) => {
 
     const chartSetupData = useChartSetupData();
     const dataTypes = ['Bean', 'Silo', 'Field'];
@@ -33,6 +34,7 @@ const SelectDialog: FC<SelectDialogProps> = ({ handleClose, selected, setSelecte
     const [searchInput, setSearchInput] = useState('');
     const [selectedTypes, setSelectedTypes] = useState<string[]>([]);
     const [filteredData, setFilteredData] = useState(chartSetupData);
+    const [internalSelected, setInternalSelected] = useState(selected);
 
     function typeToggle(type: string) {
         const index = selectedTypes.indexOf(type);
@@ -57,14 +59,27 @@ const SelectDialog: FC<SelectDialogProps> = ({ handleClose, selected, setSelecte
             setFilteredData(typeFilter);
         }
     }, [chartSetupData, searchInput, selectedTypes])
+
+    function handleSelection(selection: number) {
+        const selectedItems = [...internalSelected];
+        const indexInSelection = selectedItems.findIndex((selectionIndex) => selection === selectionIndex);
+        const isSelected = indexInSelection > -1;
+        isSelected ? selectedItems.splice(indexInSelection, 1) : selectedItems.push(selection);
+        setInternalSelected(selectedItems.length > 0 ? selectedItems.length < 6 ? selectedItems : internalSelected : [0]);
+    };
+
+    function closeDialog() {
+        setSelected(internalSelected);
+        handleClose();
+    };
     
     return (
-        <Box sx={{ p: 2, display: 'flex', flexDirection: 'column', gap: 1, height: 400 }}>
+        <Box sx={{ p: 2, display: 'flex', flexDirection: 'column', gap: 1, height: 600 }}>
             <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between' }}>
                 <Box sx={{ display: 'flex'}}>Find Data</Box>
                 <IconButton
                     aria-label="close"
-                    onClick={() => handleClose()}
+                    onClick={() => closeDialog()}
                     disableRipple
                     sx={{
                         p: 0,
@@ -114,12 +129,11 @@ const SelectDialog: FC<SelectDialogProps> = ({ handleClose, selected, setSelecte
             <Divider />
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5, overflowY: 'auto' }}>
                 {filteredData.map((data, index) => {
-                    const selectedItems = [...selected];
-                    const indexInSelection = selectedItems.findIndex((selectionIndex) => data.index === selectionIndex);
+                    const indexInSelection = internalSelected.findIndex((selectionIndex) => data.index === selectionIndex);
                     const isSelected = indexInSelection > -1;
-                    isSelected ? selectedItems.splice(indexInSelection, 1) : selectedItems.push(data.index);
+                    if (!isMobile) {
                     return (
-                    <Row key={`chartSelectList${index}`} onClick={() => setSelected(selectedItems.length > 0 ? selectedItems : [0]) } gap={0.3} p={0.25} sx={{ backgroundColor: (isSelected ? 'primary.light' : undefined), '&:hover': { backgroundColor: '#F5F5F5', cursor: 'pointer' } }}>
+                    <Row key={`chartSelectList${index}`} onClick={() => handleSelection(data.index) } gap={0.3} p={0.25} sx={{ backgroundColor: (isSelected ? 'primary.light' : undefined), '&:hover': { backgroundColor: '#F5F5F5', cursor: 'pointer' } }}>
                         {data.type === 'Bean' ? (
                             <img src={beanIcon} alt="Bean" style={{ height: 16, width: 16 }} /> 
                         ) : data.type === 'Silo' ? (
@@ -132,6 +146,24 @@ const SelectDialog: FC<SelectDialogProps> = ({ handleClose, selected, setSelecte
                             <Typography fontSize={10} color='text.tertiary'>{data.shortDescription}</Typography>
                         </Box>
                     </Row>
+                    )
+                    }
+                    return (
+                        <Row key={`chartSelectList${index}`} onClick={() => handleSelection(data.index) } gap={0.3} p={0.25} sx={{ backgroundColor: (isSelected ? 'primary.light' : undefined), '&:hover': { backgroundColor: '#F5F5F5', cursor: 'pointer' } }}>
+                            <Box display='flex' alignContent='center'>
+                            {data.type === 'Bean' ? (
+                                <img src={beanIcon} alt="Bean" style={{ height: 32, width: 32 }} /> 
+                            ) : data.type === 'Silo' ? (
+                                <img src={siloIcon} alt="Silo" style={{ height: 32, width: 32 }} /> 
+                            ) : data.type === 'Field' ? (
+                                <img src={podIcon} alt="Bean" style={{ height: 32, width: 32 }} /> 
+                            ) : null}
+                            </Box>
+                            <Box display='flex' flexDirection='column'>
+                            <Box sx={{ display: 'flex', flexGrow: 1, whiteSpace: 'nowrap'}}>{data.name}</Box>
+                                <Typography fontSize={10} lineHeight={1} whiteSpace='wrap' color='text.tertiary'>{data.shortDescription}</Typography>
+                                </Box>
+                        </Row>
                     )
                 })}
             </Box>

@@ -1,4 +1,4 @@
-import { Container, Stack } from '@mui/material';
+import { Container, Stack, useMediaQuery, useTheme } from '@mui/material';
 import React from 'react';
 // import BeanAnalytics from '~/components/Analytics/Bean';
 // import FieldAnalytics from '~/components/Analytics/Field';
@@ -9,7 +9,12 @@ import PageHeader from '~/components/Common/PageHeader';
 
 import { FC } from '~/types';
 
-const AnalyticsPage: FC<{}> = () => (
+const AnalyticsPage: FC<{}> = () => {
+
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+  
+  return (
   <Container maxWidth="lg">
     <Stack gap={2}>
       <PageHeader
@@ -17,8 +22,8 @@ const AnalyticsPage: FC<{}> = () => (
         description="View historical data on Beanstalk"
         href="https://docs.bean.money/almanac/community/links#analytics"
       />
-      <MiniCharts />
-      <MegaChart />
+      {!isMobile && <MiniCharts />}
+      <MegaChart isMobile={isMobile} />
       {/*
       <BeanAnalytics />
       <SiloAnalytics />
@@ -26,6 +31,6 @@ const AnalyticsPage: FC<{}> = () => (
       */}
     </Stack>
   </Container>
-);
+)};
 
 export default AnalyticsPage;

@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { FC } from '~/types';
-import { Box, Button, Card, CircularProgress } from '@mui/material';
+import { Box, Button, Card, CircularProgress, Drawer } from '@mui/material';
 import AddRoundedIcon from '@mui/icons-material/AddRounded';
 import useToggle from '~/hooks/display/useToggle';
 import { apolloClient } from '~/graph/client';
@@ -11,7 +11,7 @@ import SelectDialog from './SelectDialog';
 import { useChartSetupData } from './useChartSetupData';
 import CalendarButton from '../Common/CalendarButton';
 
-const MegaChart: FC<{}> = () => {
+const MegaChart: FC<{ isMobile?: boolean }> = ({ isMobile = false }) => {
 
   const season = useSeason();
   const chartSetupData = useChartSetupData();
@@ -87,20 +87,34 @@ const MegaChart: FC<{}> = () => {
     setLoading(false);
   }, [chartSetupData, selectedCharts, season]);
 
+  const totalHeight = 600;
+
   return (
     <>
       <Box display='flex' flexDirection='row' gap={2}>
-        <Card sx={{ position: 'relative', width: '100%', height: 400 }}>
-          <Card sx={{ position: 'absolute', left: (dialogOpen ? '0%' : '-100%'), width: 700, zIndex: 4, height: 400, transition: 'left 0.3s' }}>
+        <Card sx={{ position: 'relative', width: '100%', height: 600 }}>
+          {!isMobile ?
+          <Card sx={{ position: 'absolute', left: (dialogOpen ? '0%' : '-100%'), width: 700, zIndex: 4, height: 600, transition: 'left 0.3s' }}>
             <SelectDialog
               handleClose={hideDialog}
               selected={selectedCharts}
               setSelected={setSelectedCharts}
+              isMobile={isMobile}
             />
           </Card>
+          :
+          <Drawer anchor="bottom" open={dialogOpen} onClose={hideDialog}>
+            <SelectDialog
+              handleClose={hideDialog}
+              selected={selectedCharts}
+              setSelected={setSelectedCharts}
+              isMobile={isMobile}
+            />
+          </Drawer>
+          }
         <Box p={1.5} sx={{ borderBottom: '0.5px', borderColor: 'divider', borderBottomStyle: 'solid', display: 'flex', flexDirection: 'row', justifyContent: 'space-between' }}>
           <Box sx={{ display: 'flex', gap: 1 }}>
-            {selectedCharts.map((selection, index) =>(
+            {!isMobile && selectedCharts.map((selection, index) =>(
             <Button
               variant='outlined-secondary'
               color='secondary'
@@ -124,7 +138,31 @@ const MegaChart: FC<{}> = () => {
               {chartSetupData[selection].name}
             </Button>
             ))}
-            {selectedCharts.length < 5 && (
+            {isMobile && (
+              <Button
+              variant='outlined-secondary'
+              color='secondary'
+              size='small'
+              key='selectedChartsButtonMobile'
+              sx={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                cursor: 'pointer',
+                border: '0.5px solid',
+                borderColor: 'divider',
+                fontWeight: 'normal',
+                color: 'text.primary',
+                boxSizing: 'border-box',
+                paddingY: 0.25,
+                paddingX: 0.75,
+              }}
+              endIcon={<DropdownIcon open={false} sx={{ fontSize: 20 }} />}
+              onClick={() => showDialog()}
+            >
+              {selectedCharts.length === 1 ? chartSetupData[selectedCharts[0]].name : `${selectedCharts.length} Selected` }
+            </Button>
+            )}
+            {selectedCharts.length < 5 && !isMobile && (
               <Button
                 variant='contained'
                 color='primary'
@@ -165,7 +203,7 @@ const MegaChart: FC<{}> = () => {
             selected={selectedCharts}
             drawPegLine
             timePeriod={timePeriod}
-            containerHeight={345}
+            containerHeight={545}
           />
         )}
         </Card>
