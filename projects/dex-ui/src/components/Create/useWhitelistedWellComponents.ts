@@ -81,7 +81,7 @@ const WellDotSol: WellComponentInfo = {
     }
   ],
   links: {
-    etherscan: "https://etherscan.io", // TODO: FIX ME
+    etherscan: `https://etherscan.io/address/${WELL_DOT_SOL_ADDRESS}`,
     github: "https://github.com/BeanstalkFarms/Basin/blob/master/src/Well.sol",
     learnMore: "https://docs.basin.exchange" // TODO: FIX ME
   }
@@ -94,7 +94,7 @@ const MultiFlowPump: WellComponentInfo = {
     fullName: "MultiFlow Pump",
     summary: "An inter-block MEV manipulation resistant oracle implementation.",
     description: [
-      "An inter-block MEV manipulation-resistant oracle implementation which can serve last values, geometric EMA values and TWA geometric SMA values."
+      "Comprehensive multi-block MEV manipulation-resistant Oracle implementation which serves up Well pricing data with an EMA for instantaneous prices and a TWAP for weighted averages over time."
     ],
     usedBy: 1,
     url: "https://docs.basin.exchange/implementations/multi-flow-pump",
@@ -112,13 +112,13 @@ const MultiFlowPump: WellComponentInfo = {
   info: [
     {
       label: "Deployed Block",
-      value: "12345678"
+      value: "17977942"
     }
-    // TODO: What block was it deployed? , TX hash?
+    // TODO: TX hash?
     // TODO: was MultiFlowPump audited?
   ],
   links: {
-    etherscan: "https://etherscan.io", // TODO: FIX ME
+    etherscan: `https://etherscan.io/address/${MULTI_FLOW_PUMP_ADDRESS}`,
     github: "https://github.com/BeanstalkFarms/Basin/blob/master/src/pumps/MultiFlowPump.sol"
     // learnMore: // TODO: FIX ME
   }
@@ -147,9 +147,8 @@ const ConstantProduct2: WellComponentInfo = {
   info: [
     {
       label: "Deployed Block",
-      value: "12345678"
+      value: "17977906"
     }
-    // TODO: What block was it deployed? , TX hash?
     // TODO: was ConstantProduct2 audited?
   ],
   links: {
