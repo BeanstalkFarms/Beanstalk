@@ -1,7 +1,13 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   Box,
+  Button,
   CircularProgress,
+  ClickAwayListener,
+  Grow,
+  IconButton,
+  Popper,
+  Stack,
   Tooltip,
   Typography,
   useMediaQuery,
@@ -10,6 +16,8 @@ import {
 import { FC } from '~/types';
 import { createChart } from 'lightweight-charts';
 import { hexToRgba } from '~/util/UI';
+import SettingsIcon from '@mui/icons-material/Settings';
+import CheckRoundedIcon from '@mui/icons-material/CheckRounded';
 import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
 import { setHours } from 'date-fns';
 import { useChartSetupData } from './useChartSetupData';
@@ -101,13 +109,44 @@ const ChartV2: FC<ChartV2DataProps> = ({
   const [lastDataPoint, setLastDataPoint] = useState<any>();
   const [dataPoint, setDataPoint] = useState<any>();
 
+
+  // Menu
+  const [leftAnchorEl, setLeftAnchorEl] = useState<null | HTMLElement>(null);
+  const [rightAnchorEl, setRightAnchorEl] = useState<null | HTMLElement>(null);
+  const leftMenuVisible = Boolean(leftAnchorEl);
+  const rightMenuVisible = Boolean(rightAnchorEl);
+  const handleToggleMenu = useCallback(
+    (event: React.MouseEvent<HTMLButtonElement>, side: string) => {
+      if (side === 'left') {
+        setLeftAnchorEl(leftAnchorEl ? null : event.currentTarget);
+      } else {
+        setRightAnchorEl(rightAnchorEl ? null : event.currentTarget);
+      };
+    },
+    [leftAnchorEl, rightAnchorEl]
+  );
+  const handleHideMenu = useCallback((side: string) => {
+    if (side === 'left') {
+      setLeftAnchorEl(null);
+    } else {
+      setRightAnchorEl(null);
+    };
+  }, []);
+  const [leftPriceScaleMode, setLeftPriceScaleMode] = useState(0);
+  const [rightPriceScaleMode, setRightPriceScaleMode] = useState(0);
+  const priceScaleModes = ['Normal', 'Logarithmic', 'Percentage', 'Indexed to 100'];
+
+
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const chartSetupData = useChartSetupData();
 
+  const chartAxisTypes = selected.map((chartId) => chartSetupData[chartId].valueAxisType);
+  const secondPriceScale = new Set(chartAxisTypes).size > 1;
 
   useEffect(() => {
     if (!chartContainerRef.current || !chartHeight) return;
+
     const chartOptions = {
       layout: {
         fontFamily: theme.typography.fontFamily,
@@ -137,11 +176,13 @@ const ChartV2: FC<ChartV2DataProps> = ({
       },
       rightPriceScale: {
         borderVisible: false,
+        mode: rightPriceScaleMode,
         visible: !(size === 'mini')
       },
-      leftPriceScale: selected.length < 2 ? undefined : 
+      leftPriceScale: !secondPriceScale ? undefined : 
       {
         borderVisible: false,
+        mode: leftPriceScaleMode,
         visible: !(size === 'mini')
       },
     };
@@ -206,7 +247,7 @@ const ChartV2: FC<ChartV2DataProps> = ({
       window.removeEventListener('resize', handleResize);
       chart.current.remove();
     };
-  }, [theme, drawPegLine, size, chartHeight, formattedData, chartSetupData, selected]);
+  }, [theme, drawPegLine, size, chartHeight, formattedData, chartSetupData, selected, rightPriceScaleMode, leftPriceScaleMode, secondPriceScale]);
 
   useMemo(() => {
     if (lastDataPoint) {
@@ -321,7 +362,7 @@ const ChartV2: FC<ChartV2DataProps> = ({
   }, [formattedData, extraData, selected]);
 
   return (
-    <Box>
+    <Box sx={{ position: 'relative' }}>
       <Box
         ref={tooltip}
         sx={{
@@ -408,7 +449,171 @@ const ChartV2: FC<ChartV2DataProps> = ({
           height: chartHeight - 20,
         }}
       />
-    </Box>
+      {size === 'full' && (
+        <ClickAwayListener onClickAway={() => handleHideMenu('right')}>
+          <>
+            <IconButton
+            disableRipple
+            onClick={(e) => handleToggleMenu(e, 'right')}
+            sx={{
+                p: 0,
+                position: 'absolute', 
+                bottom: '6px', 
+                right: '24px', 
+                zIndex: '10'
+              }}
+            >
+            <SettingsIcon 
+              sx={{ 
+                fontSize: 20, 
+                color: 'text.primary',
+                transform: `rotate(${rightAnchorEl ? 30 : 0}deg)`,
+                transition: 'transform 150ms ease-in-out',
+              }} 
+            />
+            </IconButton>
+            <Popper
+              anchorEl={rightAnchorEl}
+              open={rightMenuVisible}
+              sx={{ zIndex: 79 }}
+              placement="bottom-end"
+              // Align the menu to the bottom
+              // right side of the anchor button.
+              transition
+            >
+            {({ TransitionProps }) => (
+              <Grow
+                {...TransitionProps}
+                timeout={200}
+                style={{ transformOrigin: 'top right' }}
+              >
+                <Box
+                  sx={{
+                    borderWidth: 2,
+                    borderColor: 'divider',
+                    borderStyle: 'solid',
+                    backgroundColor: 'white',
+                    borderRadius: 1,
+                    '& .MuiInputBase-root:after, before': {
+                      borderColor: 'primary.main',
+                    },
+                    overflow: 'clip'
+                  }}
+                >
+                  <Stack gap={0}>
+                    {priceScaleModes.map((mode, index) => 
+                      <Button 
+                        variant='text'
+                        sx={{
+                          fontWeight: 400,
+                          color: 'text.primary',
+                          paddingY: 0.5,
+                          paddingX: 1,
+                          height: 'auto',
+                          justifyContent: 'space-between',
+                          borderRadius: 0,
+                          width: '150px',
+                          backgroundColor: (rightPriceScaleMode === index ? 'primary.light' : undefined), 
+                          '&:hover': { backgroundColor: '#F5F5F5', cursor: 'pointer' },
+                        }}
+                        onClick={() => setRightPriceScaleMode(index)}  
+                      >
+                        {mode}
+                        {rightPriceScaleMode === index &&
+                        <CheckRoundedIcon fontSize='inherit' />}
+                      </Button>
+                    )}
+                  </Stack>
+                </Box>
+              </Grow>
+            )}
+            </Popper>
+          </>
+        </ClickAwayListener>
+      )}
+      {size === 'full' && secondPriceScale && (
+              <ClickAwayListener onClickAway={() => handleHideMenu('left')}>
+          <>
+            <IconButton
+            disableRipple
+            onClick={(e) => handleToggleMenu(e, 'left')}
+            sx={{
+                p: 0,
+                position: 'absolute', 
+                bottom: '6px', 
+                left: '24px', 
+                zIndex: '10'
+              }}
+            >
+            <SettingsIcon 
+              sx={{ 
+                fontSize: 20, 
+                color: 'text.primary',
+                transform: `rotate(${leftAnchorEl ? 30 : 0}deg)`,
+                transition: 'transform 150ms ease-in-out',
+              }} 
+            />
+            </IconButton>
+            <Popper
+              anchorEl={leftAnchorEl}
+              open={leftMenuVisible}
+              sx={{ zIndex: 79 }}
+              placement="bottom-start"
+              // Align the menu to the bottom
+              // right side of the anchor button.
+              transition
+            >
+            {({ TransitionProps }) => (
+              <Grow
+                {...TransitionProps}
+                timeout={200}
+                style={{ transformOrigin: 'top right' }}
+              >
+                <Box
+                  sx={{
+                    borderWidth: 2,
+                    borderColor: 'divider',
+                    borderStyle: 'solid',
+                    backgroundColor: 'white',
+                    borderRadius: 1,
+                    '& .MuiInputBase-root:after, before': {
+                      borderColor: 'primary.main',
+                    },
+                    overflow: 'clip'
+                  }}
+                >
+                  <Stack gap={0}>
+                    {priceScaleModes.map((mode, index) => 
+                      <Button 
+                        variant='text'
+                        sx={{
+                          fontWeight: 400,
+                          color: 'text.primary',
+                          paddingY: 0.5,
+                          paddingX: 1,
+                          height: 'auto',
+                          justifyContent: 'space-between',
+                          borderRadius: 0,
+                          width: '150px',
+                          backgroundColor: (leftPriceScaleMode === index ? 'primary.light' : undefined), 
+                          '&:hover': { backgroundColor: '#F5F5F5', cursor: 'pointer' },
+                        }}
+                        onClick={() => setLeftPriceScaleMode(index)}  
+                      >
+                        {mode}
+                        {leftPriceScaleMode === index &&
+                        <CheckRoundedIcon fontSize='inherit' />}
+                      </Button>
+                    )}
+                  </Stack>
+                </Box>
+              </Grow>
+            )}
+            </Popper>
+          </>
+        </ClickAwayListener>
+      )}
+      </Box>
   );
 };
 
