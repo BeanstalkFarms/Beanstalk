@@ -7,18 +7,19 @@ import { size } from "src/breakpoints";
 import { displayTokenSymbol } from "src/utils/format";
 import { Token } from "@beanstalk/sdk";
 import { Skeleton } from "../Skeleton";
-import { useWellImplementations } from "src/wells/useWellImplementations";
 import { useWhitelistedWellComponents } from "../Create/useWhitelistedWellComponents";
+import { useWellImplementations } from "src/wells/useWellImplementations";
 
 type Props = { well: Well };
 
 const OtherSectionContent: FC<Props> = ({ well }) => {
   const { data: implementations } = useWellImplementations();
-  const [items, setItems] = useState<{ name: string; address: string }[]>([]);
-  const [wellFunctionName, setWellFunctionName] = useState<string>("");
   const {
     lookup: { pump: pumpLookup }
   } = useWhitelistedWellComponents();
+
+  const [items, setItems] = useState<{ name: string; address: string }[]>([]);
+  const [wellFunctionName, setWellFunctionName] = useState<string>("");
 
   const implementationAddress = implementations?.[well.address];
 
@@ -38,10 +39,10 @@ const OtherSectionContent: FC<Props> = ({ well }) => {
 
   useEffect(() => {
     const data: typeof items = [];
-
     well.pumps?.forEach((pump) => {
-      if (pump.address.toLowerCase() in pumpLookup) {
-        const pumpInfo = pumpLookup[pump.address.toLowerCase()].component;
+      const pumpAddress = pump.address.toLowerCase();
+      if (pumpAddress in pumpLookup) {
+        const pumpInfo = pumpLookup[pumpAddress].component;
         data.push({
           name: pumpInfo?.fullName || pumpInfo.name,
           address: pump.address
@@ -53,23 +54,18 @@ const OtherSectionContent: FC<Props> = ({ well }) => {
         });
       }
     });
-
     data.push({
       name: wellFunctionName ?? "Well Function",
       address: well.wellFunction?.address || "--"
     });
-
     data.push({
       name: "Well Implementation",
       address: implementationAddress || "--"
     });
-
     data.push({
       name: "Aquifer",
       address: well.aquifer?.address || "--"
     });
-
-    console.log("items: ", data);
 
     setItems(data);
   }, [

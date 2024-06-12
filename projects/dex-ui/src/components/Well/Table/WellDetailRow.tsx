@@ -66,7 +66,7 @@ export const WellDetailRow: FC<{
         <Amount>${liquidity ? liquidity.toHuman("short") : "-.--"}</Amount>
       </DesktopContainer>
       <DesktopContainer align="right">
-        <Amount>${price ? price.toHuman("short") : "-.--"}</Amount>
+        <Amount>${price && price.gt(0) ? price.toHuman("short") : "-.--"}</Amount>
       </DesktopContainer>
       <DesktopContainer align="right">
         <Amount>${volume ? volume.toHuman("short") : "-.--"}</Amount>
@@ -163,6 +163,13 @@ const DesktopContainer = styled(Td)`
       display: none;
     }
   }
+
+  :nth-child(3) {
+    @media (max-width: ${size.tablet}) {
+      display: none;
+    }
+  }
+
   @media (max-width: ${size.mobile}) {
     display: none;
   }
@@ -215,7 +222,7 @@ const Amount = styled.div`
 const Reserves = styled.div`
   display: flex;
   flex-direction: row;
-  justify-content flex-end;
+  justify-content: flex-end;
   align-items: center;
   gap: 4px;
   flex: 1;
