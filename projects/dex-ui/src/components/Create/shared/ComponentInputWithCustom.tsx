@@ -21,7 +21,7 @@ type AdditionalOptionProps = {
 type Props<T extends FieldValues> = {
   path: Path<T>;
   dataPath?: Path<T>;
-  componentType: keyof ReturnType<typeof useWhitelistedWellComponents>;
+  componentType: keyof ReturnType<typeof useWhitelistedWellComponents>['components'];
   toggleMessage: string;
   emptyValue: PathValue<T, Path<T>>;
   additional?: AdditionalOptionProps[];
@@ -37,7 +37,8 @@ export const ComponentInputWithCustom = <T extends FieldValues>({
   toggleOpen = false,
   additional
 }: Props<T>) => {
-  const { [componentType]: wellComponents } = useWhitelistedWellComponents();
+  const { components: { [componentType]: wellComponents } } = useWhitelistedWellComponents();
+
   const [usingCustom, { toggle, set: setUsingCustom }] = useBoolean(toggleOpen);
 
   const {

@@ -108,7 +108,7 @@ const MultiFlowPump: WellComponentInfo = {
   address: MULTI_FLOW_PUMP_ADDRESS,
   component: {
     name: "Multi Flow",
-    fullName: "MultiFlow Pump",
+    fullName: "Multi Flow Pump",
     summary: "An inter-block MEV manipulation resistant oracle implementation.",
     description: [
       "Comprehensive multi-block MEV manipulation-resistant Oracle implementation which serves up Well pricing data with an EMA for instantaneous prices and a TWAP for weighted averages over time."
@@ -166,18 +166,29 @@ const ConstantProduct2: WellComponentInfo = {
   }
 };
 
-export const useWhitelistedWellComponents = (): {
-  wellImplementations: readonly WellComponentInfo[];
-  pumps: readonly WellComponentInfo[];
-  wellFunctions: readonly WellComponentInfo[];
-} => {
+export const useWhitelistedWellComponents = () => {
   return useMemo(() => {
     const mapping = {
-      wellImplementations: [{ ...WellDotSol }],
-      pumps: [{ ...MultiFlowPump }],
-      wellFunctions: [{ ...ConstantProduct2 }]
+      wellImplementations: [WellDotSol],
+      pumps: [MultiFlowPump],
+      wellFunctions: [ConstantProduct2]
     } as const;
 
-    return mapping;
+    const lookup = {
+      wellImplementation: {
+        [WellDotSol.address]: WellDotSol
+      },
+      pump: {
+        [MultiFlowPump.address]: MultiFlowPump
+      },
+      wellFunction: {
+        [ConstantProduct2.address]: ConstantProduct2
+      }
+    }
+
+    return {
+      components: mapping,
+      lookup,
+    };
   }, []);
 };

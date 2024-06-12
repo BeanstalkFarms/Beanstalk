@@ -14,7 +14,7 @@ import { useWhitelistedWellComponents } from "./useWhitelistedWellComponents";
 export type WellDetailsFormValues = CreateWellStepProps["step3"];
 
 const useWellDetailsDefaultValues = () => {
-  const components = useWhitelistedWellComponents();
+  const { components } = useWhitelistedWellComponents();
   const { wellFunctionAddress = "", wellTokens } = useCreateWell();
 
   const token1 = wellTokens?.token1?.symbol;

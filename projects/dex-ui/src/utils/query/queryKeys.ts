@@ -6,5 +6,8 @@ export const queryKeys = {
     "allowance",
     tokenAddress || "invalid",
     spender
-  ]
+  ],
+
+  // wells
+  wellImplementations: (addresses: string[]) => ["wells", "implementations", addresses],
 } as const;

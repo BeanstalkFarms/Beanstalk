@@ -8,7 +8,7 @@ import { Text } from "src/components/Typography";
 import { useWhitelistedWellComponents } from "./useWhitelistedWellComponents";
 
 export const ComponentLibraryTable = () => {
-  const { wellImplementations, pumps, wellFunctions } = useWhitelistedWellComponents();
+  const { components: { wellImplementations, pumps, wellFunctions } } = useWhitelistedWellComponents();
 
   const entries = [...pumps, ...wellFunctions, ...wellImplementations];
 

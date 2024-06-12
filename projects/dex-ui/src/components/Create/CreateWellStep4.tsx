@@ -415,7 +415,7 @@ const SaltForm = () => {
 // ----------------------------------------
 
 export const CreateWellStep4 = () => {
-  const components = useWhitelistedWellComponents();
+  const { components } = useWhitelistedWellComponents();
   const {
     wellImplementation,
     pumpAddress,
