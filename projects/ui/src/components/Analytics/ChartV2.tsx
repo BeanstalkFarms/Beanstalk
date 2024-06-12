@@ -1,4 +1,10 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import {
   Box,
   Button,
@@ -48,11 +54,11 @@ type ChartV2DataProps = {
   /*
    *
    */
-  size?: "mini" | "full"
+  size?: 'mini' | 'full';
   /*
    *
    */
-  timePeriod?: { from: Date | undefined, to: Date | undefined };
+  timePeriod?: { from: Date | undefined; to: Date | undefined };
   /*
    *
    */
@@ -88,27 +94,26 @@ const chartColors = [
     lineColor: BeanstalkPalette.theme.winter.error,
     topColor: hexToRgba(BeanstalkPalette.theme.winter.error, 0.8),
     bottomColor: hexToRgba(BeanstalkPalette.theme.winter.error, 0.2),
-  }
+  },
 ];
 
 const ChartV2: FC<ChartV2DataProps> = ({
   formattedData,
   extraData,
   drawPegLine,
-  size = "full",
+  size = 'full',
   containerHeight,
   timePeriod,
-  selected
+  selected,
 }) => {
   const chartContainerRef = useRef<any>();
   const chart = useRef<any>();
   const areaSeries = useRef<any>([]);
   const tooltip = useRef<any>();
-  const chartHeight = containerHeight - ((tooltip.current?.clientHeight || 0 ));
+  const chartHeight = containerHeight - (tooltip.current?.clientHeight || 0);
 
   const [lastDataPoint, setLastDataPoint] = useState<any>();
   const [dataPoint, setDataPoint] = useState<any>();
-
 
   // Menu
   const [leftAnchorEl, setLeftAnchorEl] = useState<null | HTMLElement>(null);
@@ -121,7 +126,7 @@ const ChartV2: FC<ChartV2DataProps> = ({
         setLeftAnchorEl(leftAnchorEl ? null : event.currentTarget);
       } else {
         setRightAnchorEl(rightAnchorEl ? null : event.currentTarget);
-      };
+      }
     },
     [leftAnchorEl, rightAnchorEl]
   );
@@ -130,18 +135,24 @@ const ChartV2: FC<ChartV2DataProps> = ({
       setLeftAnchorEl(null);
     } else {
       setRightAnchorEl(null);
-    };
+    }
   }, []);
   const [leftPriceScaleMode, setLeftPriceScaleMode] = useState(0);
   const [rightPriceScaleMode, setRightPriceScaleMode] = useState(0);
-  const priceScaleModes = ['Normal', 'Logarithmic', 'Percentage', 'Indexed to 100'];
-
+  const priceScaleModes = [
+    'Normal',
+    'Logarithmic',
+    'Percentage',
+    'Indexed to 100',
+  ];
 
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const chartSetupData = useChartSetupData();
 
-  const chartAxisTypes = selected.map((chartId) => chartSetupData[chartId].valueAxisType);
+  const chartAxisTypes = selected.map(
+    (chartId) => chartSetupData[chartId].valueAxisType
+  );
   const secondPriceScale = new Set(chartAxisTypes).size > 1;
 
   useEffect(() => {
@@ -159,11 +170,11 @@ const ChartV2: FC<ChartV2DataProps> = ({
       crosshair: {
         // visible: false,
         vertLine: {
-        //  labelVisible: false,
+          //  labelVisible: false,
           labelBackgroundColor: theme.palette.text.primary,
         },
         horzLine: {
-        // labelVisible: false,
+          // labelVisible: false,
           labelBackgroundColor: theme.palette.primary.main,
         },
       },
@@ -172,19 +183,20 @@ const ChartV2: FC<ChartV2DataProps> = ({
         secondsVisible: false,
         borderVisible: false,
         visible: !(size === 'mini'),
-        minBarSpacing: 0.001
+        minBarSpacing: 0.001,
       },
       rightPriceScale: {
         borderVisible: false,
         mode: rightPriceScaleMode,
-        visible: !(size === 'mini')
+        visible: !(size === 'mini'),
       },
-      leftPriceScale: !secondPriceScale ? undefined : 
-      {
-        borderVisible: false,
-        mode: leftPriceScaleMode,
-        visible: !(size === 'mini')
-      },
+      leftPriceScale: !secondPriceScale
+        ? undefined
+        : {
+            borderVisible: false,
+            mode: leftPriceScaleMode,
+            visible: !(size === 'mini'),
+          },
     };
 
     const handleResize = () => {
@@ -197,10 +209,12 @@ const ChartV2: FC<ChartV2DataProps> = ({
     const numberOfCharts = selected.length;
     const priceScaleIds: string[] = [];
     if (numberOfCharts > 0) {
-      for (let i = 0; i < numberOfCharts; i+=1) {
+      for (let i = 0; i < numberOfCharts; i += 1) {
         const chartSetup = chartSetupData[selected[i]];
         let scaleId = '';
-        const findScale = priceScaleIds.findIndex((value) => value === chartSetup.valueAxisType);
+        const findScale = priceScaleIds.findIndex(
+          (value) => value === chartSetup.valueAxisType
+        );
         if (findScale > -1) {
           scaleId = findScale === 0 ? 'right' : findScale === 1 ? 'left' : '';
         } else {
@@ -210,8 +224,8 @@ const ChartV2: FC<ChartV2DataProps> = ({
           } else if (priceScaleIds.length === 1) {
             priceScaleIds[1] = chartSetup.valueAxisType;
             scaleId = 'left';
-          };
-        };
+          }
+        }
 
         areaSeries.current[i] = chart.current.addLineSeries({
           color: chartColors[i].lineColor,
@@ -222,10 +236,9 @@ const ChartV2: FC<ChartV2DataProps> = ({
           priceScaleId: scaleId,
           priceFormat: {
             type: 'custom',
-            formatter: chartSetupData[selected[i]].tickFormatter
-          }
+            formatter: chartSetupData[selected[i]].tickFormatter,
+          },
         });
-      
 
         if (drawPegLine) {
           const pegLine = {
@@ -237,9 +250,9 @@ const ChartV2: FC<ChartV2DataProps> = ({
             // title: 'line label here',
           };
           areaSeries.current[i].createPriceLine(pegLine);
-        };
-      };
-    };
+        }
+      }
+    }
 
     window.addEventListener('resize', handleResize);
 
@@ -247,7 +260,18 @@ const ChartV2: FC<ChartV2DataProps> = ({
       window.removeEventListener('resize', handleResize);
       chart.current.remove();
     };
-  }, [theme, drawPegLine, size, chartHeight, formattedData, chartSetupData, selected, rightPriceScaleMode, leftPriceScaleMode, secondPriceScale]);
+  }, [
+    theme,
+    drawPegLine,
+    size,
+    chartHeight,
+    formattedData,
+    chartSetupData,
+    selected,
+    rightPriceScaleMode,
+    leftPriceScaleMode,
+    secondPriceScale,
+  ]);
 
   useMemo(() => {
     if (lastDataPoint) {
@@ -256,8 +280,8 @@ const ChartV2: FC<ChartV2DataProps> = ({
       if (!from) {
         chart.current.timeScale().fitContent();
       } else if (from && !to) {
-        const newFrom = setHours(from, 0)
-        const newTo = setHours(from, 23)
+        const newFrom = setHours(from, 0);
+        const newTo = setHours(from, 23);
         chart.current.timeScale().setVisibleRange({
           from: newFrom.valueOf() / 1000,
           to: newTo.valueOf() / 1000,
@@ -267,21 +291,24 @@ const ChartV2: FC<ChartV2DataProps> = ({
           from: from.valueOf() / 1000,
           to: to!.valueOf() / 1000,
         });
-      };
-    };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [timePeriod]);
 
   useEffect(() => {
-    if (!chart.current || !formattedData || !extraData) return
-    function getMergedData(commonData: { time: number | null; value: number | null }[]) {
-
+    if (!chart.current || !formattedData || !extraData) return;
+    function getMergedData(
+      commonData: { time: number | null; value: number | null }[]
+    ) {
       const date = commonData[0]?.time
-        ? new Date((commonData[0].time) * 1000)
+        ? new Date(commonData[0].time * 1000)
         : null;
       const value = commonData ? commonData.map((data) => data.value) : null;
       const additionalData =
-        extraData && commonData[0]?.time ? extraData.get(commonData[0].time) : null;
+        extraData && commonData[0]?.time
+          ? extraData.get(commonData[0].time)
+          : null;
       const formattedDate = date?.toLocaleString(undefined, {
         dateStyle: 'short',
         timeStyle: 'short',
@@ -294,26 +321,35 @@ const ChartV2: FC<ChartV2DataProps> = ({
     }
 
     const numberOfCharts = selected?.length || 0;
-    for (let i = 0; i < numberOfCharts; i+=1) {
-      if (!formattedData[selected[i]]) return
+    for (let i = 0; i < numberOfCharts; i += 1) {
+      if (!formattedData[selected[i]]) return;
       areaSeries.current[i].setData(formattedData[selected[i]]);
-    };
+    }
 
-    const defaultLastDataPoint = (formattedData[0] || selected[0]) 
-      ? selected.map((selection) => {
-        if (!formattedData[selection]) {
-          return {
-            time: null,
-            value: null
-          }
-        }
-        return {
-          time: formattedData[selection][formattedData[selection].length -1].time,
-          value: formattedData[selection][formattedData[selection].length -1].value
-        }
-      }) 
-      : null
-    setLastDataPoint(defaultLastDataPoint ? getMergedData(defaultLastDataPoint) : { time: 0, value: [0], season: 0 });
+    const defaultLastDataPoint =
+      formattedData[0] || selected[0]
+        ? selected.map((selection) => {
+            if (!formattedData[selection]) {
+              return {
+                time: null,
+                value: null,
+              };
+            }
+            return {
+              time: formattedData[selection][
+                formattedData[selection].length - 1
+              ].time,
+              value:
+                formattedData[selection][formattedData[selection].length - 1]
+                  .value,
+            };
+          })
+        : null;
+    setLastDataPoint(
+      defaultLastDataPoint
+        ? getMergedData(defaultLastDataPoint)
+        : { time: 0, value: [0], season: 0 }
+    );
 
     chart.current.subscribeCrosshairMove((param: any) => {
       const hoveredDataPoints: any[] = [];
@@ -324,35 +360,41 @@ const ChartV2: FC<ChartV2DataProps> = ({
             value: data.value || null,
             time: data.time || null,
           };
-        };
+        }
       });
       setDataPoint(getMergedData(hoveredDataPoints));
     });
 
-    chart.current.timeScale().subscribeVisibleTimeRangeChange((param : any) => {
+    chart.current.timeScale().subscribeVisibleTimeRangeChange((param: any) => {
       const lastVisibleTimestamp = param.to;
       const lastCommonDataPoint = selected.map((selection) => {
         if (!formattedData[selection]) {
           return {
             time: null,
-            value: null
+            value: null,
           };
-        };
-        
-        const lastIndex = formattedData[selection].findIndex((value) => value.time === lastVisibleTimestamp);
+        }
+
+        const lastIndex = formattedData[selection].findIndex(
+          (value) => value.time === lastVisibleTimestamp
+        );
         if (lastIndex > -1) {
           return {
             time: formattedData[selection][lastIndex].time,
             value: formattedData[selection][lastIndex].value,
           };
-        };
+        }
 
         return {
           time: null,
-          value: null
+          value: null,
         };
       });
-      setLastDataPoint(lastCommonDataPoint ? getMergedData(lastCommonDataPoint) : { time: 0, value: [0], season: 0 });
+      setLastDataPoint(
+        lastCommonDataPoint
+          ? getMergedData(lastCommonDataPoint)
+          : { time: 0, value: [0], season: 0 }
+      );
     });
 
     return () => {
@@ -379,68 +421,74 @@ const ChartV2: FC<ChartV2DataProps> = ({
         }}
       >
         {selected.map((chartId, index) => {
+          const tooltipTitle = chartSetupData[chartId].tooltipTitle;
+          const tooltipHoverText = chartSetupData[chartId].tooltipHoverText;
+          const value =
+            dataPoint?.value[index] || lastDataPoint?.value[index] || undefined;
 
-        const tooltipTitle = chartSetupData[chartId].tooltipTitle;
-        const tooltipHoverText = chartSetupData[chartId].tooltipHoverText;
-        const value = dataPoint?.value[index] || lastDataPoint?.value[index] || undefined;
-          
-        return (
-          <Box sx={{ display: 'flex', flexDirection: 'column'}}>
-            <Box sx={{ 
-              borderLeft: selected.length > 1 ? 2.5 : 0, 
-              paddingLeft: selected.length > 1 ? 0.25 : 0,
-              borderColor: chartColors[index].lineColor
-              }}
-            >
-              <Box sx={{ display: 'flex', flexDirection: 'row' }}>
-                <Box sx={{ display: 'flex' }}>
-                  <Typography variant="body1">{tooltipTitle}</Typography>
-                  {tooltipHoverText && (
-                    <Tooltip
-                      title={tooltipHoverText}
-                      placement={isMobile ? 'top' : 'right'}
-                    >
-                      <HelpOutlineIcon
-                        sx={{
-                          color: 'text.secondary',
-                          display: 'inline',
-                          mb: 0.5,
-                          fontSize: '11px',
-                        }}
-                      />
-                    </Tooltip>
-                  )}
+          return (
+            <Box sx={{ display: 'flex', flexDirection: 'column' }}>
+              <Box
+                sx={{
+                  borderLeft: selected.length > 1 ? 2.5 : 0,
+                  paddingLeft: selected.length > 1 ? 0.25 : 0,
+                  borderColor: chartColors[index].lineColor,
+                }}
+              >
+                <Box sx={{ display: 'flex', flexDirection: 'row' }}>
+                  <Box sx={{ display: 'flex' }}>
+                    <Typography variant="body1">{tooltipTitle}</Typography>
+                    {tooltipHoverText && (
+                      <Tooltip
+                        title={tooltipHoverText}
+                        placement={isMobile ? 'top' : 'right'}
+                      >
+                        <HelpOutlineIcon
+                          sx={{
+                            color: 'text.secondary',
+                            display: 'inline',
+                            mb: 0.5,
+                            fontSize: '11px',
+                          }}
+                        />
+                      </Tooltip>
+                    )}
+                  </Box>
                 </Box>
+                {value ? (
+                  <Typography variant="h2">
+                    {chartSetupData[chartId].tickFormatter(value || 0)}
+                  </Typography>
+                ) : (
+                  <CircularProgress
+                    variant="indeterminate"
+                    size={20}
+                    thickness={6}
+                  />
+                )}
               </Box>
-              {value ? (
-              <Typography variant="h2">
-                {chartSetupData[chartId].tickFormatter(value || 0)}
-              </Typography>
-              ) : (
-                <CircularProgress variant='indeterminate' size={20} thickness={6}/>
+              {index === 0 && (
+                <>
+                  <Typography variant="bodySmall" color="text.primary">
+                    Season{' '}
+                    {dataPoint && dataPoint.season
+                      ? dataPoint.season
+                      : lastDataPoint && lastDataPoint.season
+                        ? lastDataPoint.season
+                        : 0}
+                  </Typography>
+                  <Typography variant="bodySmall" color="text.primary">
+                    {dataPoint && dataPoint.time
+                      ? dataPoint.time
+                      : lastDataPoint && lastDataPoint.time
+                        ? lastDataPoint.time
+                        : 0}
+                  </Typography>
+                </>
               )}
             </Box>
-            {index === 0 && (
-            <>
-              <Typography variant="bodySmall" color="text.primary">
-                Season{' '}
-                {dataPoint && dataPoint.season
-                  ? dataPoint.season
-                  : lastDataPoint && lastDataPoint.season
-                    ? lastDataPoint.season
-                    : 0}
-              </Typography>
-              <Typography variant="bodySmall" color="text.primary">
-                {dataPoint && dataPoint.time
-                  ? dataPoint.time
-                  : lastDataPoint && lastDataPoint.time
-                    ? lastDataPoint.time
-                    : 0}
-              </Typography>
-            </>
-            )}
-          </Box>
-        )})}
+          );
+        })}
       </Box>
       <Box
         ref={chartContainerRef}
@@ -453,24 +501,24 @@ const ChartV2: FC<ChartV2DataProps> = ({
         <ClickAwayListener onClickAway={() => handleHideMenu('right')}>
           <>
             <IconButton
-            disableRipple
-            onClick={(e) => handleToggleMenu(e, 'right')}
-            sx={{
+              disableRipple
+              onClick={(e) => handleToggleMenu(e, 'right')}
+              sx={{
                 p: 0,
-                position: 'absolute', 
-                bottom: '6px', 
-                right: '24px', 
-                zIndex: '10'
+                position: 'absolute',
+                bottom: '6px',
+                right: '24px',
+                zIndex: '10',
               }}
             >
-            <SettingsIcon 
-              sx={{ 
-                fontSize: 20, 
-                color: 'text.primary',
-                transform: `rotate(${rightAnchorEl ? 30 : 0}deg)`,
-                transition: 'transform 150ms ease-in-out',
-              }} 
-            />
+              <SettingsIcon
+                sx={{
+                  fontSize: 20,
+                  color: 'text.primary',
+                  transform: `rotate(${rightAnchorEl ? 30 : 0}deg)`,
+                  transition: 'transform 150ms ease-in-out',
+                }}
+              />
             </IconButton>
             <Popper
               anchorEl={rightAnchorEl}
@@ -481,78 +529,85 @@ const ChartV2: FC<ChartV2DataProps> = ({
               // right side of the anchor button.
               transition
             >
-            {({ TransitionProps }) => (
-              <Grow
-                {...TransitionProps}
-                timeout={200}
-                style={{ transformOrigin: 'top right' }}
-              >
-                <Box
-                  sx={{
-                    borderWidth: 2,
-                    borderColor: 'divider',
-                    borderStyle: 'solid',
-                    backgroundColor: 'white',
-                    borderRadius: 1,
-                    '& .MuiInputBase-root:after, before': {
-                      borderColor: 'primary.main',
-                    },
-                    overflow: 'clip'
-                  }}
+              {({ TransitionProps }) => (
+                <Grow
+                  {...TransitionProps}
+                  timeout={200}
+                  style={{ transformOrigin: 'top right' }}
                 >
-                  <Stack gap={0}>
-                    {priceScaleModes.map((mode, index) => 
-                      <Button 
-                        variant='text'
-                        sx={{
-                          fontWeight: 400,
-                          color: 'text.primary',
-                          paddingY: 0.5,
-                          paddingX: 1,
-                          height: 'auto',
-                          justifyContent: 'space-between',
-                          borderRadius: 0,
-                          width: '150px',
-                          backgroundColor: (rightPriceScaleMode === index ? 'primary.light' : undefined), 
-                          '&:hover': { backgroundColor: '#F5F5F5', cursor: 'pointer' },
-                        }}
-                        onClick={() => setRightPriceScaleMode(index)}  
-                      >
-                        {mode}
-                        {rightPriceScaleMode === index &&
-                        <CheckRoundedIcon fontSize='inherit' />}
-                      </Button>
-                    )}
-                  </Stack>
-                </Box>
-              </Grow>
-            )}
+                  <Box
+                    sx={{
+                      borderWidth: 2,
+                      borderColor: 'divider',
+                      borderStyle: 'solid',
+                      backgroundColor: 'white',
+                      borderRadius: 1,
+                      '& .MuiInputBase-root:after, before': {
+                        borderColor: 'primary.main',
+                      },
+                      overflow: 'clip',
+                    }}
+                  >
+                    <Stack gap={0}>
+                      {priceScaleModes.map((mode, index) => (
+                        <Button
+                          variant="text"
+                          sx={{
+                            fontWeight: 400,
+                            color: 'text.primary',
+                            paddingY: 0.5,
+                            paddingX: 1,
+                            height: 'auto',
+                            justifyContent: 'space-between',
+                            borderRadius: 0,
+                            width: '150px',
+                            backgroundColor:
+                              rightPriceScaleMode === index
+                                ? 'primary.light'
+                                : undefined,
+                            '&:hover': {
+                              backgroundColor: '#F5F5F5',
+                              cursor: 'pointer',
+                            },
+                          }}
+                          onClick={() => setRightPriceScaleMode(index)}
+                        >
+                          {mode}
+                          {rightPriceScaleMode === index && (
+                            <CheckRoundedIcon fontSize="inherit" />
+                          )}
+                        </Button>
+                      ))}
+                    </Stack>
+                  </Box>
+                </Grow>
+              )}
             </Popper>
           </>
         </ClickAwayListener>
       )}
       {size === 'full' && secondPriceScale && (
-              <ClickAwayListener onClickAway={() => handleHideMenu('left')}>
+        <ClickAwayListener onClickAway={() => handleHideMenu('left')}>
           <>
             <IconButton
-            disableRipple
-            onClick={(e) => handleToggleMenu(e, 'left')}
-            sx={{
+              disableRipple
+              onClick={(e) => handleToggleMenu(e, 'left')}
+              sx={{
                 p: 0,
-                position: 'absolute', 
-                bottom: '6px', 
-                left: '24px', 
-                zIndex: '10'
+                position: 'absolute',
+                bottom: '6px',
+                left: '24px',
+                zIndex: '10',
               }}
             >
-            <SettingsIcon 
-              sx={{ 
-                fontSize: 20, 
-                color: 'text.primary',
-                transform: `rotate(${leftAnchorEl ? 30 : 0}deg)`,
-                transition: 'transform 150ms ease-in-out',
-              }} 
-            />
+              <SettingsIcon
+                sx={{
+                  fontSize: 20,
+                  color: 'text.primary',
+                  transform: `rotate(${leftAnchorEl ? 30 : 0}deg)`,
+                  transition: 'transform 150ms ease-in-out',
+                }}
+              />
             </IconButton>
             <Popper
               anchorEl={leftAnchorEl}
@@ -563,57 +618,64 @@ const ChartV2: FC<ChartV2DataProps> = ({
               // right side of the anchor button.
               transition
             >
-            {({ TransitionProps }) => (
-              <Grow
-                {...TransitionProps}
-                timeout={200}
-                style={{ transformOrigin: 'top right' }}
-              >
-                <Box
-                  sx={{
-                    borderWidth: 2,
-                    borderColor: 'divider',
-                    borderStyle: 'solid',
-                    backgroundColor: 'white',
-                    borderRadius: 1,
-                    '& .MuiInputBase-root:after, before': {
-                      borderColor: 'primary.main',
-                    },
-                    overflow: 'clip'
-                  }}
+              {({ TransitionProps }) => (
+                <Grow
+                  {...TransitionProps}
+                  timeout={200}
+                  style={{ transformOrigin: 'top right' }}
                 >
-                  <Stack gap={0}>
-                    {priceScaleModes.map((mode, index) => 
-                      <Button 
-                        variant='text'
-                        sx={{
-                          fontWeight: 400,
-                          color: 'text.primary',
-                          paddingY: 0.5,
-                          paddingX: 1,
-                          height: 'auto',
-                          justifyContent: 'space-between',
-                          borderRadius: 0,
-                          width: '150px',
-                          backgroundColor: (leftPriceScaleMode === index ? 'primary.light' : undefined), 
-                          '&:hover': { backgroundColor: '#F5F5F5', cursor: 'pointer' },
-                        }}
-                        onClick={() => setLeftPriceScaleMode(index)}  
-                      >
-                        {mode}
-                        {leftPriceScaleMode === index &&
-                        <CheckRoundedIcon fontSize='inherit' />}
-                      </Button>
-                    )}
-                  </Stack>
-                </Box>
-              </Grow>
-            )}
+                  <Box
+                    sx={{
+                      borderWidth: 2,
+                      borderColor: 'divider',
+                      borderStyle: 'solid',
+                      backgroundColor: 'white',
+                      borderRadius: 1,
+                      '& .MuiInputBase-root:after, before': {
+                        borderColor: 'primary.main',
+                      },
+                      overflow: 'clip',
+                    }}
+                  >
+                    <Stack gap={0}>
+                      {priceScaleModes.map((mode, index) => (
+                        <Button
+                          variant="text"
+                          sx={{
+                            fontWeight: 400,
+                            color: 'text.primary',
+                            paddingY: 0.5,
+                            paddingX: 1,
+                            height: 'auto',
+                            justifyContent: 'space-between',
+                            borderRadius: 0,
+                            width: '150px',
+                            backgroundColor:
+                              leftPriceScaleMode === index
+                                ? 'primary.light'
+                                : undefined,
+                            '&:hover': {
+                              backgroundColor: '#F5F5F5',
+                              cursor: 'pointer',
+                            },
+                          }}
+                          onClick={() => setLeftPriceScaleMode(index)}
+                        >
+                          {mode}
+                          {leftPriceScaleMode === index && (
+                            <CheckRoundedIcon fontSize="inherit" />
+                          )}
+                        </Button>
+                      ))}
+                    </Stack>
+                  </Box>
+                </Grow>
+              )}
             </Popper>
           </>
         </ClickAwayListener>
       )}
-      </Box>
+    </Box>
   );
 };
 
