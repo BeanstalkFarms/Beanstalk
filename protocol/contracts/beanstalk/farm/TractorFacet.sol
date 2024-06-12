@@ -12,11 +12,12 @@ import {LibRedundantMath256} from "contracts/libraries/LibRedundantMath256.sol";
 import {LibTractor} from "../../libraries/LibTractor.sol";
 import {AdvancedFarmCall, LibFarm} from "../../libraries/LibFarm.sol";
 import {LibBytes} from "contracts/libraries/LibBytes.sol";
+import {Invariable} from "contracts/beanstalk/Invariable.sol";
 /**
  * @title TractorFacet handles tractor and blueprint operations.
  * @author funderberker, 0xm00neth
  */
-contract TractorFacet {
+contract TractorFacet is Invariable {
     using LibBytes for bytes32;
     using LibRedundantMath256 for uint256;
 
@@ -89,6 +90,7 @@ contract TractorFacet {
     )
         external
         payable
+        fundsSafu
         verifyRequisition(requisition)
         runBlueprint(requisition)
         returns (bytes[] memory results)
