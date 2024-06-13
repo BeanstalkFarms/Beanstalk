@@ -13,6 +13,7 @@ import {
   SeasonalPodsDocument,
   SeasonalRRoRDocument,
   SeasonalSownDocument,
+  SeasonalStalkDocument,
   SeasonalSupplyDocument,
   SeasonalTemperatureDocument,
   SeasonalTotalSowersDocument,
@@ -330,7 +331,7 @@ export function useChartSetupData() {
         timeScaleKey: 'createdAt',
         priceScaleKey: 'stalk',
         valueAxisType: '',
-        document: SeasonalDepositedSiloAssetDocument,
+        document: SeasonalStalkDocument,
         documentEntity: 'seasons',
         queryConfig: {
           variables: {
