@@ -137,7 +137,8 @@ const MegaChart: FC<{ isMobile?: boolean }> = ({ isMobile = false }) => {
             </Drawer>
           )}
           <Box
-            p={1.5}
+            paddingY={isMobile ? 1 : 1.5}
+            paddingX={1.5}
             sx={{
               borderBottom: '0.5px',
               borderColor: 'divider',

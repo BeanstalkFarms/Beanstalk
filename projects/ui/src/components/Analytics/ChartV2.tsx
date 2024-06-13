@@ -410,12 +410,12 @@ const ChartV2: FC<ChartV2DataProps> = ({
         sx={{
           position: 'relative',
           display: 'flex',
-          flexDirection: 'row',
+          flexDirection: isMobile && selected.length > 2 ? 'column' : 'row',
           padding: 0,
-          marginTop: 2,
+          marginTop: isMobile && selected.length > 2 ? 0.25 : 2,
           marginLeft: 2,
           zIndex: 3,
-          gap: 2,
+          gap: isMobile && selected.length > 2 ? 0.2 : 2,
           borderColor: 'transparent',
           backgroundColor: 'transparent',
         }}
@@ -425,63 +425,123 @@ const ChartV2: FC<ChartV2DataProps> = ({
           const tooltipHoverText = chartSetupData[chartId].tooltipHoverText;
           const value =
             dataPoint?.value[index] || lastDataPoint?.value[index] || undefined;
+          if (!isMobile || selected.length < 3) {
+            return (
+              <Box sx={{ display: 'flex', flexDirection: 'column' }}>
+                <Box
+                  sx={{
+                    borderLeft: selected.length > 1 ? 2.5 : 0,
+                    paddingLeft: selected.length > 1 ? 0.25 : 0,
+                    borderColor: chartColors[index].lineColor,
+                  }}
+                >
+                  <Box sx={{ display: 'flex', flexDirection: 'row' }}>
+                    <Box sx={{ display: 'flex' }}>
+                      <Typography variant="body1">{tooltipTitle}</Typography>
+                      {tooltipHoverText && (
+                        <Tooltip
+                          title={tooltipHoverText}
+                          placement={isMobile ? 'top' : 'right'}
+                        >
+                          <HelpOutlineIcon
+                            sx={{
+                              color: 'text.secondary',
+                              display: 'inline',
+                              mb: 0.5,
+                              fontSize: '11px',
+                            }}
+                          />
+                        </Tooltip>
+                      )}
+                    </Box>
+                  </Box>
+                    <Typography variant="h2">
+                      {value ? chartSetupData[chartId].tickFormatter(value || 0) :  '-'}
+                    </Typography>
+                </Box>
+                {index === 0 && (
+                  <>
+                    <Typography variant="bodySmall" color="text.primary">
+                      Season{' '}
+                      {dataPoint && dataPoint.season
+                        ? dataPoint.season
+                        : lastDataPoint && lastDataPoint.season
+                          ? lastDataPoint.season
+                          : 0}
+                    </Typography>
+                    <Typography variant="bodySmall" color="text.primary">
+                      {dataPoint && dataPoint.time
+                        ? dataPoint.time
+                        : lastDataPoint && lastDataPoint.time
+                          ? lastDataPoint.time
+                          : 0}
+                    </Typography>
+                  </>
+                )}
+              </Box>
+            );
+          }
 
           return (
-            <Box sx={{ display: 'flex', flexDirection: 'column' }}>
-              <Box
-                sx={{
-                  borderLeft: selected.length > 1 ? 2.5 : 0,
-                  paddingLeft: selected.length > 1 ? 0.25 : 0,
-                  borderColor: chartColors[index].lineColor,
-                }}
-              >
-                <Box sx={{ display: 'flex', flexDirection: 'row' }}>
-                  <Box sx={{ display: 'flex' }}>
-                    <Typography variant="body1">{tooltipTitle}</Typography>
-                    {tooltipHoverText && (
-                      <Tooltip
-                        title={tooltipHoverText}
-                        placement={isMobile ? 'top' : 'right'}
-                      >
-                        <HelpOutlineIcon
-                          sx={{
-                            color: 'text.secondary',
-                            display: 'inline',
-                            mb: 0.5,
-                            fontSize: '11px',
-                          }}
-                        />
-                      </Tooltip>
-                    )}
-                  </Box>
+            <Box sx={{ display: 'flex', flexDirection: 'row', flexGrow: 1 }}>
+                <Box
+                  sx={{
+                    display: 'flex',
+                    flexGrow: 1,
+                    borderLeft: selected.length > 1 ? 2.5 : 0,
+                    paddingLeft: selected.length > 1 ? 0.25 : 0,
+                    marginRight: 2,
+                    borderColor: chartColors[index].lineColor,
+                  }}
+                >
+                    <Box sx={{ display: 'flex', flexGrow: 1 }}>
+                      <Box sx={{ display: 'flex', flexGrow: 1 }}>
+                        <Typography fontSize={15}>{tooltipTitle}</Typography>
+                        {tooltipHoverText && (
+                          <Tooltip
+                            title={tooltipHoverText}
+                            placement={isMobile ? 'top' : 'right'}
+                          >
+                            <HelpOutlineIcon
+                              sx={{
+                                color: 'text.secondary',
+                                display: 'inline',
+                                mb: 0.5,
+                                fontSize: '11px',
+                              }}
+                            />
+                          </Tooltip>
+                        )}
+                      </Box>
+                      <Typography fontSize={16} fontWeight={600} justifyItems='flex-end'>
+                        {value ? chartSetupData[chartId].tickFormatter(value || 0) :  '-'}
+                      </Typography>
+                    </Box>
                 </Box>
-                  <Typography variant="h2">
-                    {value ? chartSetupData[chartId].tickFormatter(value || 0) :  '-'}
-                  </Typography>
-              </Box>
-              {index === 0 && (
-                <>
-                  <Typography variant="bodySmall" color="text.primary">
-                    Season{' '}
-                    {dataPoint && dataPoint.season
-                      ? dataPoint.season
-                      : lastDataPoint && lastDataPoint.season
-                        ? lastDataPoint.season
-                        : 0}
-                  </Typography>
-                  <Typography variant="bodySmall" color="text.primary">
-                    {dataPoint && dataPoint.time
-                      ? dataPoint.time
-                      : lastDataPoint && lastDataPoint.time
-                        ? lastDataPoint.time
-                        : 0}
-                  </Typography>
-                </>
-              )}
             </Box>
-          );
-        })}
+            );
+          }
+        )}
       </Box>
+      {isMobile && selected.length > 2 && 
+        <Box sx={{ display: 'flex', flexGrow: 1, paddingX: 2, paddingBottom: 1 }}>
+            <Typography variant="bodySmall" color="text.primary" flexGrow={1}>
+                      Season{' '}
+                      {dataPoint && dataPoint.season
+                        ? dataPoint.season
+                        : lastDataPoint && lastDataPoint.season
+                          ? lastDataPoint.season
+                          : 0}
+                    </Typography>
+                    <Typography variant="bodySmall" color="text.primary">
+                      {dataPoint && dataPoint.time
+                        ? dataPoint.time
+                        : lastDataPoint && lastDataPoint.time
+                          ? lastDataPoint.time
+                          : 0}
+                    </Typography>
+        </Box>
+      }
       <Box
         ref={chartContainerRef}
         id="container"
