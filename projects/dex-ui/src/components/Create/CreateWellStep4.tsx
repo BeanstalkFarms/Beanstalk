@@ -398,7 +398,6 @@ const SaltForm = () => {
               message: "Salt must be >= 1 when seeding liquidity"
             },
             validate: (formValue) => {
-              console.log("formValue: ", formValue);
               if (formValue && !Number.isInteger(Number(formValue))) {
                 return "Salt must be an integer";
               }

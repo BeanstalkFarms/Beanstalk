@@ -57,7 +57,6 @@ const NameAndSymbolForm = () => {
 
   const onSubmit = async (values: WellDetailsFormValues) => {
     const valid = await methods.trigger();
-    console.log("valid", valid);
     if (!valid) return;
     setStep3({ ...values, goNext: true });
   };
