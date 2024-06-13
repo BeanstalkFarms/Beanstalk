@@ -25,7 +25,7 @@ export type FlexPropertiesProps = {
   $columnGap?: number;
 };
 
-export const FlexPropertiesBase = css<FlexPropertiesProps>`
+export const FlexPropertiesStyle = css<FlexPropertiesProps>`
   ${(p) => makeCssStyle(p, "$flex")}
   ${(p) => makeCssStyle(p, "$flexShrink")}
   ${(p) => makeCssStyle(p, "$flexFlow")}
@@ -50,7 +50,7 @@ export type FlexModelProps = FlexPropertiesProps &
   };
 
 export const FlexBase = css<FlexModelProps>`
-  ${FlexPropertiesBase}
+  ${FlexPropertiesStyle}
   display: ${(p) => p.$display || "flex"};
   flex-direction: ${(p) => p.$direction || "column"};
   ${CommonCssStyles}

@@ -1,56 +1,89 @@
-import React, { ButtonHTMLAttributes, forwardRef } from "react";
-import { BoxModelBase, BoxModelProps } from "src/utils/ui/styled";
+import React, { ButtonHTMLAttributes, CSSProperties, forwardRef } from "react";
+import {
+  CommonCssProps,
+  CommonCssStyles,
+  FlexPropertiesStyle,
+  FlexPropertiesProps,
+  makeCssStyle
+} from "src/utils/ui/styled";
 import { theme } from "src/utils/ui/theme";
 import styled from "styled-components";
+import { Spinner } from "./Spinner";
 
 export type ButtonVariant = "outlined" | "contained"; // | "text" (Add Text Variant later)
+export type ButtonColor = "primary" | "secondary";
 
 type BaseButtonProps = {
   $variant?: ButtonVariant;
   disabled?: boolean;
+  $loading?: boolean;
   $fullWidth?: boolean;
+  $primary?: boolean;
+  $secondary?: boolean;
 };
 
-export type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & BoxModelProps & BaseButtonProps;
+type CommonButtonStyles = {
+  $whiteSpace?: CSSProperties["whiteSpace"];
+};
+
+export type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> &
+  BaseButtonProps &
+  CommonCssProps &
+  FlexPropertiesProps &
+  CommonButtonStyles;
 
 export const ButtonPrimary = forwardRef<HTMLButtonElement, ButtonProps>(
-  (props: ButtonProps, ref) => {
-    return <ButtonBase ref={ref} {...props} />;
+  ({ children, $loading, ...props }: ButtonProps, ref) => {
+    return (
+      <ButtonBase $primary $loading={$loading} ref={ref} {...props}>
+        {$loading ? <Spinner size={18} /> : children}
+      </ButtonBase>
+    );
   }
 );
 
 const getButtonFontColor = (props: BaseButtonProps) => {
-  if (props.$variant === "outlined")
-    return props.disabled ? theme.colors.disabled : theme.colors.black;
-  return theme.colors.white;
+  if (props.$variant === "outlined") {
+    if (props.disabled || props.$loading) return theme.colors.disabled;
+    return props.$secondary ? theme.colors.stoneLight : theme.colors.black;
+  }
+
+  return props.$secondary ? theme.colors.black : theme.colors.white;
 };
 
 const getButtonBgColor = (props: BaseButtonProps) => {
   if (props.$variant === "outlined") return theme.colors.white;
-  return props.disabled ? theme.colors.disabled : theme.colors.black;
+  if (props.disabled || props.$loading) return theme.colors.disabled;
+  return props.$secondary ? theme.colors.stoneLight : theme.colors.black;
 };
 
 const getButtonOutline = (props: BaseButtonProps) => {
-  if (props.$variant === "outlined")
-    return props.disabled ? theme.colors.disabled : theme.colors.lightGray;
-  return props.disabled ? theme.colors.disabled : theme.colors.black;
+  if (props.disabled) return theme.colors.disabled;
+  if (props.$variant === "outlined") {
+    return props.$secondary ? theme.colors.lightGray : theme.colors.black;
+  }
+  return theme.colors.black;
 };
 
 const ButtonBase = styled.button<ButtonProps>`
   display: flex;
   justify-content: center;
   align-items: center;
-  border: 0;
-  cursor: pointer;
-  box-sizing: border-box;
   padding: ${theme.spacing(1.5)};
-  ${theme.font.styles.variant("button-link")}
-  ${BoxModelBase}
+  box-sizing: border-box;
+
+  border: none;
+  background: ${getButtonBgColor};
+  outline: 0.5px solid ${getButtonOutline};
+  outline-offset: -0.5px;
+  color: ${getButtonFontColor};
+  ${(p) => makeCssStyle(p, "$whiteSpace")}
+
+  ${CommonCssStyles}
+  ${FlexPropertiesStyle}
   ${({ $fullWidth }) => $fullWidth && "width: 100%;"}
   
-  background-color: ${getButtonBgColor};
-  color: ${getButtonFontColor};
-  outline: 0.5px solid ${getButtonOutline};
+  ${theme.font.styles.variant("button-link")}
   cursor: ${(props) => (props.disabled ? "default" : "pointer")};
 
   &:hover,

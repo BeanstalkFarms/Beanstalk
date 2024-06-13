@@ -31,9 +31,10 @@ const CSS_PROP_MAP = {
   $justifySelf: "justify-self",
   $justifyItems: "justify-items",
   $order: "order",
-  // $rowGap: "row-gap",
-  // $columnGap: "column-gap",
-  $gap: "gap"
+  $gap: "gap",
+
+  //
+  $whiteSpace: "white-space"
 
   // we can't handle margin / padding here b/c we calculate them differently
 };
