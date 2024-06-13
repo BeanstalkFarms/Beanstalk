@@ -776,3 +776,8 @@ dataSources:
         - event: UpdateGaugeSettings(indexed address,bytes4,bytes4,uint64)
           handler: handleUpdateGaugeSettings
       file: ./src/GaugeHandler.ts
+features:
+  - grafting # feature name
+graft:
+  base: QmYfX3kMy8hQkfCqwdNsHaWuV6Cb7WmdmheqeCT539tQhN # subgraph ID of base subgraph
+  block: 19927630 # block number
