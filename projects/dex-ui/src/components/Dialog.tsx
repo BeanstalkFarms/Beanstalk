@@ -8,13 +8,16 @@ import { theme } from "src/utils/ui/theme";
 
 export const Dialog = ({
   open,
+  id,
   children,
   header,
   // divider,
   canClose = true,
   closeModal
+  // zIndex
 }: {
   open: boolean;
+  id: string; // unique id for the modal
   children: React.ReactNode;
   divider?: boolean;
   header?: string | React.ReactNode;
@@ -24,18 +27,18 @@ export const Dialog = ({
   const dontStealFocus = useCallback(
     (e: MouseEvent) => {
       if (!canClose) return;
-      if ((e.target as HTMLElement).id === "modal") {
+      if ((e.target as HTMLElement).id === id) {
         closeModal();
       }
     },
-    [canClose, closeModal]
+    [id, canClose, closeModal]
   );
 
   if (!open) return null;
 
   return (
     <div>
-      <Container onMouseDown={dontStealFocus} id="modal" />
+      <Container onMouseDown={dontStealFocus} id={id} />
       <DialogContainer data-trace="true" onMouseDown={dontStealFocus}>
         {header ? (
           <DialogHeader>
@@ -65,7 +68,12 @@ const Container = styled.div`
   background: rgba(0, 0, 0, 0.5);
   cursor: auto;
   display: flex;
-  z-index: 900;
+  z-index: 901;
+
+  ${theme.media.query.sm.only} {
+    top: 56px;
+    bottom: 0px;
+  }
 `;
 
 const DialogHeader = styled.div<{ $divider?: boolean }>`
@@ -90,11 +98,15 @@ const DialogContainer = styled.div`
   transform: translate(-50%, -50%);
   align-self: flex-start;
   flex-direction: column;
-  width: 408px;
   overflow: hidden;
   color: #000;
   z-index: 999;
   border: 2px solid black;
+
+  ${theme.media.query.sm.only} {
+    max-width: calc(100% - ${theme.spacing(4)});
+    width: 100%;
+  }
 `;
 
 const Content = styled.div`
