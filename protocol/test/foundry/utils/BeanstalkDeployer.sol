@@ -15,6 +15,7 @@ import {DiamondLoupeFacet} from "contracts/beanstalk/diamond/DiamondLoupeFacet.s
 
 /// Beanstalk Contracts w/external libraries.
 import {UnripeFacet, MockUnripeFacet} from "contracts/mocks/mockFacets/MockUnripeFacet.sol";
+import {MockAttackFacet} from "contracts/mocks/mockFacets/MockAttackFacet.sol";
 import {MockConvertFacet, ConvertFacet} from "contracts/mocks/mockFacets/MockConvertFacet.sol";
 import {MockSeasonFacet, SeasonFacet} from "contracts/mocks/mockFacets/MockSeasonFacet.sol";
 import {MockSiloFacet, SiloFacet} from "contracts/mocks/mockFacets/MockSiloFacet.sol";
@@ -87,6 +88,13 @@ contract BeanstalkDeployer is Utils {
                 facetAddresses.push(address(deployCode(facetName)));
             }
 
+            cutActions.push(IDiamondCut.FacetCutAction.Add);
+        }
+
+        // Deploy mock only facets.
+        if (mock) {
+            facetAddresses.push(address(new MockAttackFacet()));
+            facets.push("MockAttackFacet");
             cutActions.push(IDiamondCut.FacetCutAction.Add);
         }
 
