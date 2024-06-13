@@ -456,7 +456,7 @@ const ChartV2: FC<ChartV2DataProps> = ({
                     </Box>
                   </Box>
                     <Typography variant="h2">
-                      {value ? chartSetupData[chartId].tickFormatter(value || 0) :  '-'}
+                      {chartSetupData[chartId].tickFormatter(value || 0)}
                     </Typography>
                 </Box>
                 {index === 0 && (
@@ -514,7 +514,7 @@ const ChartV2: FC<ChartV2DataProps> = ({
                         )}
                       </Box>
                       <Typography fontSize={16} fontWeight={600} justifyItems='flex-end'>
-                        {value ? chartSetupData[chartId].tickFormatter(value || 0) :  '-'}
+                        {chartSetupData[chartId].tickFormatter(value || 0)}
                       </Typography>
                     </Box>
                 </Box>

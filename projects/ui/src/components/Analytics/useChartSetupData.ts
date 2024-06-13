@@ -7,6 +7,7 @@ import {
   SeasonalInstantDeltaBDocument,
   SeasonalInstantPriceDocument,
   SeasonalLiquidityDocument,
+  SeasonalLiquidityPerPoolDocument,
   SeasonalMarketCapDocument,
   SeasonalPodRateDocument,
   SeasonalPodsDocument,
@@ -15,6 +16,7 @@ import {
   SeasonalSupplyDocument,
   SeasonalTemperatureDocument,
   SeasonalTotalSowersDocument,
+  SeasonalVolumeDocument,
   SeasonalWeightedDeltaBDocument,
   SeasonalWeightedPriceDocument,
 } from '~/generated/graphql';
@@ -28,6 +30,7 @@ import {
   tickFormatUSD,
   valueFormatBeanAmount,
 } from './formatters';
+import { BEAN_CRV3_V1_LP, BEAN_LUSD_LP } from '~/constants/tokens';
 
 export function useChartSetupData() {
   const sdk = useSdk();
@@ -44,6 +47,15 @@ export function useChartSetupData() {
       sdk.tokens.UNRIPE_BEAN_WETH,
     ];
 
+    const lpTokensToChart = [
+      sdk.tokens.BEAN_CRV3_LP,
+      sdk.tokens.BEAN_ETH_WELL_LP,
+      sdk.tokens.BEAN_ETH_UNIV2_LP,
+      BEAN_LUSD_LP[1],
+      BEAN_CRV3_V1_LP[1],
+    ];
+
+    const lpCharts: any[] = [];
     const depositCharts: any[] = [];
     const apyCharts: any[] = [];
 
@@ -105,6 +117,28 @@ export function useChartSetupData() {
       apyCharts.push(apyChart);
     });
 
+    lpTokensToChart.forEach((token) => {
+      const lpChart = {
+        name: `${token.symbol} Liquidity`,
+        tooltipTitle: `${token.symbol} Liquidity`,
+        tooltipHoverText: `The total USD value of ${token.symbol} in liquidity pools on the Minting Whitelist.`,
+        shortDescription: `${token.symbol} Liquidity`,
+        timeScaleKey: 'updatedAt',
+        priceScaleKey: 'liquidityUSD',
+        document: SeasonalLiquidityPerPoolDocument,
+        documentEntity: 'seasons',
+        valueAxisType: 'totalUSDValue',
+        queryConfig: {
+          variables: { pool: token.address }, 
+          context: { subgraph: 'bean' }
+        },
+        valueFormatter: (v: string) => Number(v),
+        tickFormatter: tickFormatUSD,        
+      };
+
+      lpCharts.push(lpChart);
+    });
+    
     const output: any[] = [];
     let dataIndex = 0;
 
@@ -126,8 +160,22 @@ export function useChartSetupData() {
         valueFormatter: (v: string) => Number(v),
         tickFormatter: tickFormatBeanPrice,
       },
-      // TODO: Volume
-      // TODO: Liquidity
+      {
+        name: 'Volume',
+        tooltipTitle: 'Volume',
+        tooltipHoverText: 'The total USD volume in liquidity pools on the Minting Whitelist.',
+        shortDescription: 'The total USD volume in liquidity pools.',
+        timeScaleKey: 'timestamp',
+        priceScaleKey: 'deltaVolumeUSD',
+        document: SeasonalVolumeDocument,
+        documentEntity: 'seasons',
+        valueAxisType: 'totalUSDValue',
+        queryConfig: {
+          context: { subgraph: 'bean' },
+        },
+        valueFormatter: (v: string) => Number(v),
+        tickFormatter: tickFormatUSD,
+      },
       {
         name: 'Total Liquidity',
         tooltipTitle: 'Liquidity',
@@ -147,6 +195,7 @@ export function useChartSetupData() {
         valueFormatter: (v: string) => Number(v),
         tickFormatter: tickFormatUSD,
       },
+      ...lpCharts,
       {
         name: 'Market Cap',
         tooltipTitle: 'Market Cap',
