@@ -2,7 +2,7 @@
 pragma solidity >=0.6.0 <0.9.0;
 pragma abicoder v2;
 
-import {TestHelper} from "./utils/TestHelper.sol";
+import {TestHelper} from "test/foundry/utils/TestHelper.sol";
 import {LibTransfer} from "contracts/libraries/Token/LibTransfer.sol";
 import {IMockFBeanstalk} from "contracts/interfaces/IMockFBeanstalk.sol";
 import {MockSeasonFacet} from "contracts/mocks/mockFacets/MockSeasonFacet.sol";
@@ -50,7 +50,6 @@ contract PipelineConvertTest is TestHelper {
     PipelineConvertFacet convert = PipelineConvertFacet(BEANSTALK);
     MockSeasonFacet season = MockSeasonFacet(BEANSTALK);
     DepotFacet depot = DepotFacet(BEANSTALK);
-    MockToken bean = MockToken(C.BEAN);
     address beanEthWell = C.BEAN_ETH_WELL;
     address beanwstethWell = C.BEAN_WSTETH_WELL;
     MiscHelperContract miscHelper = new MiscHelperContract();

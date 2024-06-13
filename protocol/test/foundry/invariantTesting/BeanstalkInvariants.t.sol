@@ -19,7 +19,6 @@ contract BeanstalkInvariants is TestHelper {
     BeanstalkHandler internal beanstalkHandler;
 
     IMockFBeanstalk beanstalk = IMockFBeanstalk(BEANSTALK);
-    IERC20 bean = IERC20(C.BEAN);
     IERC20 weth = IERC20(C.WETH);
     IERC20 wsteth = IERC20(C.WSTETH);
 

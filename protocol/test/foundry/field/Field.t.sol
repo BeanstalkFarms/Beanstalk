@@ -561,18 +561,6 @@ contract FieldTest is TestHelper {
 
     // field helpers.
 
-    /**
-     * @notice mints `sowAmount` beans for farmer,
-     * issues `sowAmount` of beans to farmer.
-     * sows `sowAmount` of beans.
-     */
-    function sowAmountForFarmer(address farmer, uint256 sowAmount) internal {
-        season.setSoilE(sowAmount);
-        mintTokensToUser(farmer, C.BEAN, sowAmount);
-        vm.prank(farmer);
-        field.sow(sowAmount, 0, LibTransfer.From.EXTERNAL);
-    }
-
     function verifyPlotIndexAndPlotLengths(
         address farmer,
         uint256 fieldId,
