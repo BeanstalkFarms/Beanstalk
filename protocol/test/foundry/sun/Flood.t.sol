@@ -105,7 +105,7 @@ contract FloodTest is TestHelper {
     }
 
     function testSopsWhenAtPeg() public {
-        season.rainSunrises(25);
+        season.siloSunrise(25);
         Season memory s = seasonGetters.time();
 
         assertEq(s.lastSop, 0);
@@ -114,7 +114,7 @@ contract FloodTest is TestHelper {
 
     function testSopsBelowPeg() public {
         setDeltaBforWell(-1000e6, C.BEAN_ETH_WELL, C.WETH);
-        season.rainSunrises(25);
+        season.siloSunrise(25);
 
         Season memory s = seasonGetters.time();
         assertEq(s.lastSop, 0);
