@@ -21,7 +21,8 @@ export function updateWellVolumesAfterSwap(
   const deltaTradeVolumeReserves = emptyBigIntArray(well.tokens.length);
   const deltaTransferVolumeReserves = emptyBigIntArray(well.tokens.length);
 
-  // Trade volume is considered on the buying end of the trade
+  // Trade volume is will ignore the selling end (negative)
+  deltaTradeVolumeReserves[well.tokens.indexOf(fromToken)] = amountIn.neg();
   deltaTradeVolumeReserves[well.tokens.indexOf(toToken)] = amountOut;
   // Transfer volume is considered on both ends of the trade
   deltaTransferVolumeReserves[well.tokens.indexOf(fromToken)] = amountIn;
