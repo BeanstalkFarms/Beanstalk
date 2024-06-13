@@ -104,12 +104,12 @@ const FormContent = ({
     const liquidity =
       seedingLiquidity && token1Amount && token2Amount ? { token1Amount, token2Amount } : undefined;
 
-    const response = await deployWell(saltValue, liquidity);
-    if ("wellAddress" in response) {
-      setDeployedWellAddress(response.wellAddress);
-      navigate(`/wells/${response.wellAddress}`);
+    const result = await deployWell(saltValue, liquidity);
+    if ("wellAddress" in result) {
+      setDeployedWellAddress(result.wellAddress);
+      navigate(`/wells/${result.wellAddress}`);
     } else {
-      setDeployErr(response);
+      setDeployErr(result);
     }
   };
 
@@ -133,6 +133,7 @@ const FormContent = ({
         </StyledForm>
       </FormProvider>
       <Dialog
+        id="deploy-well-modal"
         canClose={!deploying}
         open={modalOpen}
         closeModal={() => {
@@ -155,9 +156,11 @@ const FormContent = ({
               />
             </Flex>
             {deployErr ? (
-              <Flex $alignSelf="flex-start">
+              <Flex $alignSelf="flex-start" $gap={2}>
                 <Text>Transaction Reverted: </Text>
-                <Text>{deployErr.message || "See console for details"}</Text>
+                <ErroMessageWrapper>
+                  <Text>{deployErr.message || "See console for details"}</Text>
+                </ErroMessageWrapper>
               </Flex>
             ) : null}
           </Flex>
@@ -166,6 +169,11 @@ const FormContent = ({
     </>
   );
 };
+
+const ErroMessageWrapper = styled(Flex)`
+  max-height: 300px;
+  overflow-wrap: anywhere;
+`;
 
 type LiquidityFormProps = {
   token1: ERC20Token;
@@ -269,18 +277,18 @@ const AllowanceButtons = ({
   const approveToken = async (token: ERC20Token, amount: TokenValue) => {
     if (!address) return;
     await ensureAllowance(address, sdk.contracts.beanstalk.address, token, amount);
-    queryClient.fetchQuery({
+    queryClient.invalidateQueries({
       queryKey: queryKeys.tokenAllowance(token.address, sdk.contracts.beanstalk.address)
     });
   };
 
   useEffect(() => {
     if (seedingLiquidity && (amount1ExceedsAllowance || amount2ExceedsAllowance)) {
-      setHasEnoughAllowance(false);
+      // setHasEnoughAllowance(false);
       return;
     }
 
-    setHasEnoughAllowance(true);
+    // setHasEnoughAllowance(true);
   }, [amount1ExceedsAllowance, seedingLiquidity, amount2ExceedsAllowance, setHasEnoughAllowance]);
 
   if (!amount1ExceedsAllowance && !amount2ExceedsAllowance) {
@@ -398,7 +406,6 @@ const SaltForm = () => {
               message: "Salt must be >= 1 when seeding liquidity"
             },
             validate: (formValue) => {
-              console.log("formValue: ", formValue);
               if (formValue && !Number.isInteger(Number(formValue))) {
                 return "Salt must be an integer";
               }
@@ -415,7 +422,7 @@ const SaltForm = () => {
 // ----------------------------------------
 
 export const CreateWellStep4 = () => {
-  const components = useWhitelistedWellComponents();
+  const { components } = useWhitelistedWellComponents();
   const {
     wellImplementation,
     pumpAddress,

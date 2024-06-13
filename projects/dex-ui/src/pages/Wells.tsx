@@ -206,7 +206,7 @@ const MobileHeader = styled(Th)`
 
 const DesktopHeader = styled(Th)`
   :nth-child(1) {
-    width: 12em
+    width: 10em
   }
   :nth-child(2) {
     width: 12em
@@ -214,6 +214,7 @@ const DesktopHeader = styled(Th)`
   :nth-child(3) {
     width: 12em
   }
+
   :nth-child(5) {
     @media (max-width: ${size.desktop}) {
       display: none;
@@ -221,6 +222,12 @@ const DesktopHeader = styled(Th)`
   }
   :nth-child(6) {
     @media (max-width: ${size.desktop}) {
+      display: none;
+    }
+  }
+
+  :nth-child(3) {
+    @media (max-width: ${size.tablet}) {
       display: none;
     }
   }

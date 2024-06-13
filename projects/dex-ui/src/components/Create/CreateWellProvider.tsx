@@ -2,7 +2,6 @@ import React, { createContext, useCallback, useMemo, useState } from "react";
 import { ERC20Token, TokenValue } from "@beanstalk/sdk-core";
 import { DeepRequired } from "react-hook-form";
 import useSdk from "src/utils/sdk/useSdk";
-import { TransactionToast } from "../TxnToast/TransactionToast";
 import { Log } from "src/utils/logger";
 import { Pump, WellFunction } from "@beanstalk/sdk-wells";
 import { useAccount } from "wagmi";
@@ -236,15 +235,6 @@ export const CreateWellProvider = ({ children }: { children: React.ReactNode }) 
   /// ----- Callbacks -----
   const deployWell: CreateWellContext["deployWell"] = useCallback(
     async (saltValue, liquidityAmounts) => {
-      const liqToastPortion =
-        liquidityAmounts?.token1Amount?.gt(0) || liquidityAmounts?.token2Amount.gt(0)
-          ? " with Liquidity"
-          : "";
-      const toast = new TransactionToast({
-        loading: `Deploying Well${liqToastPortion}...`,
-        error: "Failed to deploy Well",
-        success: "Well deployed successfully"
-      });
 
       setDeploying(true);
       Log.module("wellDeployer").debug("Deploying Well...");
@@ -271,7 +261,6 @@ export const CreateWellProvider = ({ children }: { children: React.ReactNode }) 
           wellDetails.symbol,
           saltValue,
           liquidityAmounts,
-          toast
         );
 
         clearWellsCache();
@@ -283,7 +272,6 @@ export const CreateWellProvider = ({ children }: { children: React.ReactNode }) 
       } catch (e: any) {
         setDeploying(false);
         console.error(e);
-        toast.error(e);
         return e;
       }
     },

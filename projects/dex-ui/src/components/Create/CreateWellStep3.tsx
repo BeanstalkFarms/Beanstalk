@@ -14,7 +14,7 @@ import { useWhitelistedWellComponents } from "./useWhitelistedWellComponents";
 export type WellDetailsFormValues = CreateWellStepProps["step3"];
 
 const useWellDetailsDefaultValues = () => {
-  const components = useWhitelistedWellComponents();
+  const { components } = useWhitelistedWellComponents();
   const { wellFunctionAddress = "", wellTokens } = useCreateWell();
 
   const token1 = wellTokens?.token1?.symbol;
@@ -28,7 +28,7 @@ const useWellDetailsDefaultValues = () => {
   const abbrev = whitelistedWellFunction?.component.tokenSuffixAbbreviation;
 
   const defaultName =
-    componentName && token1 && token2 ? `${token1}:${token2} ${componentName}` : undefined;
+    componentName && token1 && token2 ? `${token1}:${token2} ${componentName} Well` : undefined;
 
   const defaultSymbol = abbrev && token1 && token2 && `${token1}${token2}${abbrev}`;
 
@@ -57,7 +57,6 @@ const NameAndSymbolForm = () => {
 
   const onSubmit = async (values: WellDetailsFormValues) => {
     const valid = await methods.trigger();
-    console.log("valid", valid);
     if (!valid) return;
     setStep3({ ...values, goNext: true });
   };

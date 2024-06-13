@@ -3,7 +3,7 @@ import type { HTMLAttributes, ElementType, CSSProperties } from "react";
 import {
   BoxModelBase,
   BoxModelProps,
-  FlexPropertiesBase,
+  FlexPropertiesStyle,
   FlexPropertiesProps
 } from "src/utils/ui/styled";
 import { BlockDisplayStyle, DisplayStyleProps } from "src/utils/ui/styled/common";
@@ -59,7 +59,7 @@ const TextComponent = styled.div<TextProps>`
   ${FontColorStyle}
   ${BoxModelBase}
   ${BlockDisplayStyle}
-  ${FlexPropertiesBase}
+  ${FlexPropertiesStyle}
   ${(props) => props.$textDecoration && `text-decoration: ${props.$textDecoration};`}
   ${(props) => props.$whitespace && `white-space: ${props.$whitespace};`}
   ${(props) => (props.$css ? props.$css : "")}
