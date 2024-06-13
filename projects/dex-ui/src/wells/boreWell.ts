@@ -273,8 +273,6 @@ const makeSyncWellStep = (
 };
 
 const BoreWellUtils = {
-  prepareBoreWellParameters,
-  decodeBoreWellPipeCall,
   prepareTokenOrderForBoreWell,
   boreWell
 };

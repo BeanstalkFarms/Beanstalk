@@ -225,7 +225,7 @@ export const CreateWellProvider = ({ children }: { children: React.ReactNode }) 
   }, [sdk.wells, wellFunctions, wellFunctionAddress, wellFunctionData]);
 
   const pump = useMemo(() => {
-    if (!pumpAddress) return;
+    if (!pumpAddress || pumpAddress.toLowerCase() === "none") return;
     const existing = pumps.find((p) => p.address.toLowerCase() === pumpAddress.toLowerCase());
     if (existing) return existing;
 
@@ -235,15 +235,13 @@ export const CreateWellProvider = ({ children }: { children: React.ReactNode }) 
   /// ----- Callbacks -----
   const deployWell: CreateWellContext["deployWell"] = useCallback(
     async (saltValue, liquidityAmounts) => {
-
       setDeploying(true);
       Log.module("wellDeployer").debug("Deploying Well...");
 
       try {
         if (!walletAddress) throw new Error("Wallet not connected");
         if (!wellImplementation) throw new Error("well implementation not set");
-        if (!wellFunction) throw new Error("Well function ");
-        if (!pump) throw new Error("pump not set");
+        if (!wellFunction) throw new Error("Well function not set");
         if (!wellTokens.token1) throw new Error("token 1 not set");
         if (!wellTokens.token2) throw new Error("token 2 not set");
         if (!wellDetails.name) throw new Error("well name not set");
@@ -254,13 +252,13 @@ export const CreateWellProvider = ({ children }: { children: React.ReactNode }) 
           walletAddress,
           wellImplementation,
           wellFunction,
-          [pump],
+          pump ? [pump] : [],
           wellTokens.token1,
           wellTokens.token2,
           wellDetails.name,
           wellDetails.symbol,
           saltValue,
-          liquidityAmounts,
+          liquidityAmounts
         );
 
         clearWellsCache();
