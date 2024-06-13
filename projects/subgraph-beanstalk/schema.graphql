@@ -1753,6 +1753,12 @@ type DewhitelistToken implements SiloEvent @entity(immutable: true) {
 type Germinating @entity {
   "Address-(EVEN|ODD)"
   id: ID!
+  "Address of the token or account which is germinating"
+  address: String!
+  "EVEN or ODD"
+  type: String!
+  "True when the address is a farmer account"
+  isFarmer: Boolean!
   "The season in which the germination started"
   season: Int!
   "Germinating stalk. This only applies to farmer/Beanstalk address"
