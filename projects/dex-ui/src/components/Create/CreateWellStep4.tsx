@@ -487,7 +487,7 @@ export const CreateWellStep4 = () => {
           </Flex>
           {/* Tokens */}
           <Flex $gap={1}>
-            <Text $variant="h3">Well Name & Symbol</Text>
+            <Text $variant="h3">Tokens</Text>
             <InlineImgFlex>
               <img src={token1.logo ?? ""} alt={token1.name ?? ""} />
               <Text $variant="l">{token1?.symbol ?? ""}</Text>
