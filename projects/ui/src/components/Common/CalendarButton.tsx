@@ -534,7 +534,7 @@ const CalendarButton: FC<CalendarProps> = ({ setTimePeriod }) => {
                     });
                   }}
                 >
-                  {preset.fullText}
+                  {preset.key}
                 </Button>
               ))}
             </Box>
@@ -611,7 +611,7 @@ const CalendarButton: FC<CalendarProps> = ({ setTimePeriod }) => {
             anchorEl={anchorEl}
             open={menuVisible}
             sx={{ zIndex: 79 }}
-            placement="left"
+            placement="left-start"
             transition
           >
             {({ TransitionProps }) => (
