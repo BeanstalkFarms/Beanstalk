@@ -28,7 +28,7 @@ const useWellDetailsDefaultValues = () => {
   const abbrev = whitelistedWellFunction?.component.tokenSuffixAbbreviation;
 
   const defaultName =
-    componentName && token1 && token2 ? `${token1}:${token2} ${componentName}` : undefined;
+    componentName && token1 && token2 ? `${token1}:${token2} ${componentName} Well` : undefined;
 
   const defaultSymbol = abbrev && token1 && token2 && `${token1}${token2}${abbrev}`;
 

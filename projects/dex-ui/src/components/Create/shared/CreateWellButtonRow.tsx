@@ -7,6 +7,7 @@ import { ButtonPrimary } from "../../Button";
 import { LeftArrow, RightArrow } from "../../Icons";
 import { Flex } from "../../Layout";
 import { useCreateWell } from "../CreateWellProvider";
+import { ActionWalletButtonWrapper } from "src/components/Wallet";
 
 const ButtonLabels = [
   {
@@ -89,16 +90,18 @@ export const CreateWellButtonRow = ({
           {goBackLabel}
         </ButtonLabel>
       </ButtonPrimary>
-      {renderPrimaryCustom ? (
-        renderPrimaryCustom
-      ) : (
-        <ButtonPrimary type="submit" disabled={!goNextEnabled || disabled}>
-          <ButtonLabel>
-            {nextLabel}
-            <RightArrow width={16} height={16} color={theme.colors.white} />
-          </ButtonLabel>
-        </ButtonPrimary>
-      )}
+      <ActionWalletButtonWrapper allow={step !== 3}>
+        {renderPrimaryCustom ? (
+          renderPrimaryCustom
+        ) : (
+          <ButtonPrimary type="submit" disabled={!goNextEnabled || disabled}>
+            <ButtonLabel>
+              {nextLabel}
+              <RightArrow width={16} height={16} color={theme.colors.white} />
+            </ButtonLabel>
+          </ButtonPrimary>
+        )}
+      </ActionWalletButtonWrapper>
     </Flex>
   );
 };
