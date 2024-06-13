@@ -46,11 +46,11 @@ export function updateWellVolumesAfterLiquidity(
   let well = loadWell(wellAddress);
   const wellTokens = well.tokens.map<Address>((t) => Address.fromBytes(t));
 
-  // Determines which token is bought and how much was bought
-  const boughtTokens = calcLiquidityVolume(well.reserves, padTokenAmounts(wellTokens, tokens, amounts));
+  // Determines which tokens were bough/sold and how much
+  const tradeAmount = calcLiquidityVolume(well.reserves, padTokenAmounts(wellTokens, tokens, amounts));
   const deltaTransferVolumeReserves = padTokenAmounts(wellTokens, tokens, amounts);
 
-  updateVolumeStats(well, boughtTokens, deltaTransferVolumeReserves);
+  updateVolumeStats(well, tradeAmount, deltaTransferVolumeReserves);
 
   well.lastUpdateTimestamp = timestamp;
   well.lastUpdateBlockNumber = blockNumber;
@@ -76,7 +76,7 @@ export function updateWellVolumesAfterLiquidity(
  *
  * @param currentReserves - the current reserves, after the liquidity event
  * @param addedReserves - the net change in reserves after the liquidity event
- * @returns a list of tokens and the amount bought of each. in practice only one will be nonzero, and always postive.
+ * @returns a list of tokens and the amount bought of each. the purchased token is positive, the sold token negative.
  */
 export function calcLiquidityVolume(currentReserves: BigInt[], addedReserves: BigInt[]): BigInt[] {
   // Reserves prior to adding liquidity
@@ -106,11 +106,10 @@ export function calcLiquidityVolume(currentReserves: BigInt[], addedReserves: Bi
   // log.debug("scaleSqrt {}", [scaleSqrt.toString()]);
   // log.debug("reservesBeforeBalancedAdd [{}, {}]", [reservesBeforeBalancedAdd[0].toString(), reservesBeforeBalancedAdd[1].toString()]);
 
-  // The negative value is the token which got bought (removed from the pool).
-  // Returns the positive value for the token which was bought and zero for the other token.
+  // Returns the positive value for the token which was bought and negative for the sold token.
   const tokenAmountBought = [
-    reservesBeforeBalancedAdd[0].minus(initialReserves[0]) < ZERO_BI ? initialReserves[0].minus(reservesBeforeBalancedAdd[0]) : ZERO_BI,
-    reservesBeforeBalancedAdd[1].minus(initialReserves[1]) < ZERO_BI ? initialReserves[1].minus(reservesBeforeBalancedAdd[1]) : ZERO_BI
+    initialReserves[0].minus(reservesBeforeBalancedAdd[0]),
+    initialReserves[1].minus(reservesBeforeBalancedAdd[1])
   ];
   return tokenAmountBought;
 }
@@ -134,16 +133,18 @@ function updateVolumeStats(well: Well, deltaTradeVolumeReserves: BigInt[], delta
   let totalTradeUSD = ZERO_BD;
   let totalTransferUSD = ZERO_BD;
   for (let i = 0; i < deltaTradeVolumeReserves.length; ++i) {
-    tradeVolumeReserves[i] = tradeVolumeReserves[i].plus(deltaTradeVolumeReserves[i]);
-    rollingDailyTradeVolumeReserves[i] = rollingDailyTradeVolumeReserves[i].plus(deltaTradeVolumeReserves[i]);
-    rollingWeeklyTradeVolumeReserves[i] = rollingWeeklyTradeVolumeReserves[i].plus(deltaTradeVolumeReserves[i]);
+    const tokenInfo = loadToken(Address.fromBytes(well.tokens[i]));
+    let usdTradeAmount = ZERO_BD;
+    if (deltaTradeVolumeReserves[i] > ZERO_BI) {
+      tradeVolumeReserves[i] = tradeVolumeReserves[i].plus(deltaTradeVolumeReserves[i]);
+      rollingDailyTradeVolumeReserves[i] = rollingDailyTradeVolumeReserves[i].plus(deltaTradeVolumeReserves[i]);
+      rollingWeeklyTradeVolumeReserves[i] = rollingWeeklyTradeVolumeReserves[i].plus(deltaTradeVolumeReserves[i]);
+      usdTradeAmount = toDecimal(deltaTradeVolumeReserves[i], tokenInfo.decimals).times(tokenInfo.lastPriceUSD);
+    }
 
     transferVolumeReserves[i] = transferVolumeReserves[i].plus(deltaTransferVolumeReserves[i].abs());
     rollingDailyTransferVolumeReserves[i] = rollingDailyTransferVolumeReserves[i].plus(deltaTransferVolumeReserves[i].abs());
     rollingWeeklyTransferVolumeReserves[i] = rollingWeeklyTransferVolumeReserves[i].plus(deltaTransferVolumeReserves[i].abs());
-
-    const tokenInfo = loadToken(Address.fromBytes(well.tokens[i]));
-    let usdTradeAmount = toDecimal(deltaTradeVolumeReserves[i].abs(), tokenInfo.decimals).times(tokenInfo.lastPriceUSD);
     let usdTransferAmount = toDecimal(deltaTransferVolumeReserves[i].abs(), tokenInfo.decimals).times(tokenInfo.lastPriceUSD);
 
     tradeVolumeReservesUSD[i] = tradeVolumeReservesUSD[i].plus(usdTradeAmount);
