@@ -65,7 +65,7 @@ contract FloodTest is TestHelper {
         vm.deal(users[2], 10 ether);
     }
 
-    function testNotRaining() public {
+    function testNotRaining() public view {
         Season memory s = seasonGetters.time();
         assertFalse(s.raining);
     }
@@ -327,7 +327,7 @@ contract FloodTest is TestHelper {
         assertEq(IERC20(C.WETH).balanceOf(users[2]), 25595575914848452999);
     }
 
-    function testCalculateSopPerWell() public view {
+    function testCalculateSopPerWell() public pure {
         LibFlood.WellDeltaB[] memory wellDeltaBs = new LibFlood.WellDeltaB[](3);
         wellDeltaBs[0].deltaB = 100;
         wellDeltaBs[1].deltaB = 100;
@@ -482,7 +482,7 @@ contract FloodTest is TestHelper {
         }
     }
 
-    function testQuickSort() public view {
+    function testQuickSort() public pure {
         LibFlood.WellDeltaB[] memory wells = new LibFlood.WellDeltaB[](5);
         int right = int(wells.length - 1);
         wells[0] = LibFlood.WellDeltaB(address(0), 100);
@@ -520,7 +520,7 @@ contract FloodTest is TestHelper {
      */
     function calculateSopPerWellHelper(
         LibFlood.WellDeltaB[] memory wellDeltaBs
-    ) private view returns (LibFlood.WellDeltaB[] memory) {
+    ) private pure returns (LibFlood.WellDeltaB[] memory) {
         uint256 totalPositiveDeltaB;
         uint256 totalNegativeDeltaB;
         uint256 positiveDeltaBCount;
