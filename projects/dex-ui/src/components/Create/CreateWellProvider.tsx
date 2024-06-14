@@ -67,6 +67,7 @@ export type CreateWellContext = {
   wellImplementation: string | undefined;
   wellFunctionAddress: string | undefined;
   wellFunctionData: string | undefined;
+  wellFunction: WellFunction | undefined;
   pumpAddress: string | undefined;
   pumpData: string | undefined;
   wellDetails: Partial<WellDetails>;
@@ -86,8 +87,9 @@ export type CreateWellContext = {
         token2: ERC20Token;
         pumpAddress: string;
         pumpData: string;
+        wellFunction: WellFunction;
       } & GoNextParams
-    >
+    > & {}
   ) => void;
   setStep3: (params: Partial<WellDetails & GoNextParams>) => void;
   setStep4: (params: Partial<LiquidityAmounts & { salt?: number }>) => void;
@@ -122,7 +124,7 @@ const Context = createContext<CreateWellContext | null>(null);
 export const CreateWellProvider = ({ children }: { children: React.ReactNode }) => {
   const { address: walletAddress } = useAccount();
   const sdk = useSdk();
-  const wellFunctions = useWellFunctions();
+  // const wellFunctions = useWellFunctions();
   const pumps = usePumps();
   const queryClient = useQueryClient();
 
@@ -136,6 +138,7 @@ export const CreateWellProvider = ({ children }: { children: React.ReactNode }) 
   // step 2
   const [pumpAddress, setPumpAddress] = useState<string | undefined>();
   const [pumpData, setPumpData] = useState<string | undefined>();
+  const [wellFunction, setWellFunction] = useState<WellFunction | undefined>();
   const [wellFunctionAddress, setWellFunctionAddress] = useState<string | undefined>();
   const [wellFunctionData, setWellFunctionData] = useState<string | undefined>();
   const [wellTokens, setWellTokens] = useState<Partial<WellTokensParams>>({});
@@ -190,6 +193,7 @@ export const CreateWellProvider = ({ children }: { children: React.ReactNode }) 
       });
       setWellFunctionData(params.wellFunctionData);
       setPumpData(params.pumpData);
+      setWellFunction(params.wellFunction);
       params.goNext && methods.goNext();
     },
     [methods]
@@ -212,17 +216,6 @@ export const CreateWellProvider = ({ children }: { children: React.ReactNode }) 
   }, []);
 
   /// ----- Derived State -----
-  const wellFunction = useMemo(() => {
-    if (!wellFunctionAddress) return;
-    const existing = wellFunctions.find(
-      (wf) => wf.address.toLowerCase() === wellFunctionAddress.toLowerCase()
-    );
-    if (existing) return existing;
-
-    return wellFunctionData
-      ? new WellFunction(sdk.wells, wellFunctionAddress, wellFunctionData)
-      : undefined;
-  }, [sdk.wells, wellFunctions, wellFunctionAddress, wellFunctionData]);
 
   const pump = useMemo(() => {
     if (!pumpAddress || pumpAddress.toLowerCase() === "none") return;
@@ -246,6 +239,9 @@ export const CreateWellProvider = ({ children }: { children: React.ReactNode }) 
         if (!wellTokens.token2) throw new Error("token 2 not set");
         if (!wellDetails.name) throw new Error("well name not set");
         if (!wellDetails.symbol) throw new Error("well symbol not set");
+        if (pumpAddress && !pump) {
+          throw new Error("pump not set");
+        }
 
         const { wellAddress } = await BoreWellUtils.boreWell(
           sdk,
@@ -274,6 +270,7 @@ export const CreateWellProvider = ({ children }: { children: React.ReactNode }) 
       }
     },
     [
+      pumpAddress,
       queryClient,
       walletAddress,
       wellImplementation,
@@ -292,6 +289,7 @@ export const CreateWellProvider = ({ children }: { children: React.ReactNode }) 
       value={{
         step,
         wellImplementation,
+        wellFunction,
         wellFunctionAddress,
         wellFunctionData,
         pumpAddress,

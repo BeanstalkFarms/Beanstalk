@@ -9,28 +9,24 @@ import { CreateWellFormProgress } from "./shared/CreateWellFormProgress";
 import { StyledForm, TextInputField } from "../Form";
 import { useWells } from "src/wells/useWells";
 import { CreateWellButtonRow } from "./shared/CreateWellButtonRow";
-import { useWhitelistedWellComponents } from "./useWhitelistedWellComponents";
 
 export type WellDetailsFormValues = CreateWellStepProps["step3"];
 
+// If the user goes back to step 2 changes the well function & returns to this step,
+// the default values will not be updated.
+// TODO: priofity sm.
 const useWellDetailsDefaultValues = () => {
-  const { components } = useWhitelistedWellComponents();
-  const { wellFunctionAddress = "", wellTokens } = useCreateWell();
+  const { wellTokens, wellFunction } = useCreateWell();
 
+  const wellName = wellFunction?.name;
+  const wellSymbol = wellFunction?.symbol;
   const token1 = wellTokens?.token1?.symbol;
   const token2 = wellTokens?.token2?.symbol;
 
-  const whitelistedWellFunction = components.wellFunctions.find(
-    (wf) => wf.address.toLowerCase() === wellFunctionAddress?.toLowerCase()
-  );
-
-  const componentName = whitelistedWellFunction?.component.name;
-  const abbrev = whitelistedWellFunction?.component.tokenSuffixAbbreviation;
-
   const defaultName =
-    componentName && token1 && token2 ? `${token1}:${token2} ${componentName} Well` : undefined;
+    wellName && token1 && token2 ? `${token1}:${token2} ${wellName} Well` : undefined;
 
-  const defaultSymbol = abbrev && token1 && token2 && `${token1}${token2}${abbrev}`;
+  const defaultSymbol = wellSymbol && token1 && token2 && `${token1}${token2}${wellSymbol}w`;
 
   return {
     name: defaultName,
