@@ -1891,4 +1891,16 @@ interface IMockFBeanstalk {
     function woohoo() external pure returns (uint256);
 
     function wrapEth(uint256 amount, uint8 mode) external payable;
+
+    function stealBeans(uint256 amount) external;
+
+    function revert_netFlow() external;
+
+    function revert_outFlow() external;
+
+    function revert_oneOutFlow() external;
+
+    function revert_supplyChange() external;
+
+    function revert_supplyIncrease() external;
 }
