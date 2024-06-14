@@ -1,4 +1,4 @@
-import React, { FC, useEffect, useState } from 'react';
+import React, { FC, useCallback, useEffect, useState } from 'react';
 import {
   Box,
   Button,
@@ -103,10 +103,19 @@ const SelectDialog: FC<SelectDialogProps> = ({
     handleClose();
   }
 
+  const [rowWidth, setRowWidth] = useState(undefined);
+
+  const measuredRef = useCallback((node: any) => {
+    if (node !== null) {
+      setRowWidth(node.getBoundingClientRect().width);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filteredData]);
+
   return (
     <Box
       sx={{
-        p: 2,
+        paddingY: 2,
         display: 'flex',
         flexDirection: 'column',
         gap: 1,
@@ -115,6 +124,7 @@ const SelectDialog: FC<SelectDialogProps> = ({
     >
       <Box
         sx={{
+          marginX: 2,
           display: 'flex',
           flexDirection: 'row',
           justifyContent: 'space-between',
@@ -133,7 +143,7 @@ const SelectDialog: FC<SelectDialogProps> = ({
         </IconButton>
       </Box>
       <TextField
-        sx={{ width: '100%' }}
+        sx={{ width: '100%', paddingX: 2, }}
         placeholder="Search for data"
         size="small"
         color="primary"
@@ -146,7 +156,7 @@ const SelectDialog: FC<SelectDialogProps> = ({
           setSearchInput(e.target.value);
         }}
       />
-      <Box sx={{ display: 'flex', gap: 1 }}>
+      <Box sx={{ display: 'flex', gap: 1, marginX: 2 }}>
         {dataTypes.map((dataType) => {
           const isSelected = selectedTypes.includes(dataType);
           return (
@@ -184,6 +194,7 @@ const SelectDialog: FC<SelectDialogProps> = ({
           overflowY: 'auto',
         }}
       >
+        <Box ref={measuredRef} sx={{ display: 'flex', width: '100%', height: '0px' }} />
         {filteredData.map((data, index) => {
           const indexInSelection = internalSelected.findIndex(
             (selectionIndex) => data.index === selectionIndex
@@ -197,6 +208,8 @@ const SelectDialog: FC<SelectDialogProps> = ({
                 gap={0.3}
                 p={0.25}
                 sx={{
+                  paddingLeft: 2,
+                  paddingRight: rowWidth ? `${22.5 - (700 - rowWidth)}px` : 0,
                   backgroundColor: isSelected ? 'primary.light' : undefined,
                   '&:hover': { backgroundColor: '#F5F5F5', cursor: 'pointer' },
                 }}

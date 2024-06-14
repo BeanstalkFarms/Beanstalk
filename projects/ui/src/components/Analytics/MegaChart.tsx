@@ -107,7 +107,7 @@ const MegaChart: FC<{ isMobile?: boolean }> = ({ isMobile = false }) => {
   return (
     <>
       <Box display="flex" flexDirection="row" gap={2}>
-        <Card sx={{ position: 'relative', width: '100%', height: 600 }}>
+        <Card sx={{ position: 'relative', width: '100%', height: 600, overflow: 'clip' }}>
           {!isMobile ? (
             <Card
               sx={{
@@ -115,8 +115,11 @@ const MegaChart: FC<{ isMobile?: boolean }> = ({ isMobile = false }) => {
                 left: dialogOpen ? '0%' : '-100%',
                 width: 700,
                 zIndex: 4,
-                height: 600,
+                height: 601,
+                marginTop: '-1px',
                 transition: 'left 0.3s',
+                borderRadius: 0,
+                borderLeftColor: 'transparent'
               }}
             >
               <SelectDialog
@@ -224,7 +227,7 @@ const MegaChart: FC<{ isMobile?: boolean }> = ({ isMobile = false }) => {
                   endIcon={<AddRoundedIcon fontSize="small" color="inherit" />}
                   onClick={() => showDialog()}
                 >
-                  Add another
+                  Add Data
                 </Button>
               )}
             </Box>

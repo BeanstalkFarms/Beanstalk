@@ -461,6 +461,7 @@ const ChartV2: FC<ChartV2DataProps> = ({
                 </Box>
                 {index === 0 && (
                   <>
+                    {size !== 'mini' && 
                     <Typography variant="bodySmall" color="text.primary">
                       Season{' '}
                       {dataPoint && dataPoint.season
@@ -469,6 +470,7 @@ const ChartV2: FC<ChartV2DataProps> = ({
                           ? lastDataPoint.season
                           : 0}
                     </Typography>
+                    }
                     <Typography variant="bodySmall" color="text.primary">
                       {dataPoint && dataPoint.time
                         ? dataPoint.time
