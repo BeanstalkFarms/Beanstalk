@@ -39,14 +39,16 @@ export class WellFunction {
   }
 
   static async BuildConstantProduct(sdk: WellsSDK): Promise<WellFunction> {
-    const constantProductConstract = new ConstantProduct__factory(sdk.signer);
-    const deployedWellFunction = await constantProductConstract.deploy();
+    const constantProductContract = new ConstantProduct__factory(sdk.signer);
+    const deployedWellFunction = await constantProductContract.deploy();
     return new WellFunction(sdk, deployedWellFunction.address, "0x");
   }
 
   static async BuildConstantProduct2(sdk: WellsSDK): Promise<WellFunction> {
-    const constantProduct2Constract = new ConstantProduct2__factory(sdk.signer);
-    const deployedWellFunction = await constantProduct2Constract.deploy();
+    const constantProduct2Contract = new ConstantProduct2__factory(sdk.signer);
+    const deployedWellFunction = await constantProduct2Contract.deploy();
     return new WellFunction(sdk, deployedWellFunction.address, "0x");
   }
+
+  static abi = IWellFunction__factory.abi;
 }
