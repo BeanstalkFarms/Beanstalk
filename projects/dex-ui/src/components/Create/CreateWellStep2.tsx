@@ -105,7 +105,6 @@ const FunctionTokensPumpForm = () => {
     }
 
     if (!validWellFunction.name || !validWellFunction.symbol) {
-      console.log("fetching name...");
       await Promise.all([validWellFunction.getName(), validWellFunction.getSymbol()]);
     }
 
