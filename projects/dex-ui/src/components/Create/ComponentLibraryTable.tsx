@@ -114,6 +114,7 @@ const StyledLink = styled(Link).attrs({
 })`
   text-decoration: none;
   color: ${theme.colors.black};
+  outline: none;
 `;
 
 const TableData = ({
