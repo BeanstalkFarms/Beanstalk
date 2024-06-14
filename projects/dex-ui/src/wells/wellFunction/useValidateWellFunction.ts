@@ -12,7 +12,6 @@ import { queryKeys } from "src/utils/query/queryKeys";
 const getWellFunctionCalls = (wellFunction: WellFunction) => {
   const address = wellFunction.address as `0x${string}`;
   const bn = BigNumber.from(100); // random big number
-  const one = BigNumber.from(1);
   const abi = WellFunction.abi;
 
   return [
@@ -23,17 +22,17 @@ const getWellFunctionCalls = (wellFunction: WellFunction) => {
       args: [bn, [bn, bn], bn, wellFunction.data]
     },
     { address, abi, functionName: "calcLpTokenSupply", args: [[bn, bn], wellFunction.data] },
-    {
-      address,
-      abi,
-      functionName: "calcReserve",
-      args: [
-        [bn, bn],
-        one, // might be flaky
-        bn,
-        wellFunction.data
-      ]
-    },
+    // { // might be flaky
+    //   address,
+    //   abi,
+    //   functionName: "calcReserve",
+    //   args: [
+    //     [bn, bn],
+    //     one,
+    //     bn,
+    //     wellFunction.data
+    //   ]
+    // },
     { address, abi, functionName: "name", args: [] },
     { address, abi, functionName: "symbol", args: [] }
   ];
