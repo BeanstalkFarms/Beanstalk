@@ -2,6 +2,7 @@ import React, { useMemo, useState } from 'react';
 import { FC } from '~/types';
 import { Box, Button, Card, CircularProgress, Drawer } from '@mui/material';
 import AddRoundedIcon from '@mui/icons-material/AddRounded';
+import CloseIcon from '@mui/icons-material/Close';
 import useToggle from '~/hooks/display/useToggle';
 import { apolloClient } from '~/graph/client';
 import useSeason from '~/hooks/beanstalk/useSeason';
@@ -102,7 +103,11 @@ const MegaChart: FC<{ isMobile?: boolean }> = ({ isMobile = false }) => {
     setLoading(false);
   }, [chartSetupData, selectedCharts, season]);
 
-  const totalHeight = 600;
+  function handleDeselectChart(selectionIndex: number) {
+    const newSelection = [...selectedCharts];
+    newSelection.splice(selectionIndex, 1);
+    setSelectedCharts(newSelection);
+  };
 
   return (
     <>
@@ -172,9 +177,9 @@ const MegaChart: FC<{ isMobile?: boolean }> = ({ isMobile = false }) => {
                       paddingX: 0.75,
                     }}
                     endIcon={
-                      <DropdownIcon open={false} sx={{ fontSize: 20 }} />
+                      <CloseIcon sx={{ color: 'inherit' }} />
                     }
-                    onClick={() => showDialog()}
+                    onClick={() => handleDeselectChart(index)}
                   >
                     {chartSetupData[selection].name}
                   </Button>
@@ -247,14 +252,18 @@ const MegaChart: FC<{ isMobile?: boolean }> = ({ isMobile = false }) => {
               <CircularProgress variant="indeterminate" />
             </Box>
           ) : (
-            <ChartV2
-              formattedData={queryData}
-              extraData={moreData}
-              selected={selectedCharts}
-              drawPegLine
-              timePeriod={timePeriod}
-              containerHeight={545}
-            />
+            selectedCharts.length > 0 ? (
+              <ChartV2
+                formattedData={queryData}
+                extraData={moreData}
+                selected={selectedCharts}
+                drawPegLine
+                timePeriod={timePeriod}
+                containerHeight={545}
+              />
+            ) : (
+              <Box sx={{display: 'flex', height: '90%', justifyContent: 'center', alignItems: 'center'}}>Click the Add Data button to start charting</Box>
+            )
           )}
         </Card>
       </Box>

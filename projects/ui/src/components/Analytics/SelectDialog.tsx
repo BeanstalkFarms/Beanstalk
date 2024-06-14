@@ -1,4 +1,4 @@
-import React, { FC, useCallback, useEffect, useState } from 'react';
+import React, { FC, useCallback, useEffect, useMemo, useState } from 'react';
 import {
   Box,
   Button,
@@ -89,26 +89,24 @@ const SelectDialog: FC<SelectDialogProps> = ({
     isSelected
       ? selectedItems.splice(indexInSelection, 1)
       : selectedItems.push(selection);
-    setInternalSelected(
-      selectedItems.length > 0
-        ? selectedItems.length < 6
-          ? selectedItems
-          : internalSelected
-        : [0]
-    );
-  }
+    setInternalSelected(selectedItems);
+  };
 
   function closeDialog() {
     setSelected(internalSelected);
     handleClose();
-  }
+  };
+
+  useMemo(() => {
+    setInternalSelected(selected);
+  }, [selected]);
 
   const [rowWidth, setRowWidth] = useState(undefined);
 
   const measuredRef = useCallback((node: any) => {
     if (node !== null) {
       setRowWidth(node.getBoundingClientRect().width);
-    }
+    };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filteredData]);
 

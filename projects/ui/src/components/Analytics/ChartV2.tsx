@@ -431,7 +431,7 @@ const ChartV2: FC<ChartV2DataProps> = ({
                 <Box
                   sx={{
                     borderLeft: selected.length > 1 ? 2.5 : 0,
-                    paddingLeft: selected.length > 1 ? 0.25 : 0,
+                    paddingLeft: selected.length > 1 ? 1 : 0,
                     borderColor: chartColors[index].lineColor,
                   }}
                 >
@@ -561,7 +561,6 @@ const ChartV2: FC<ChartV2DataProps> = ({
                 position: 'absolute',
                 bottom: '6px',
                 right: '24px',
-                zIndex: '10',
               }}
             >
               <SettingsIcon
@@ -647,7 +646,6 @@ const ChartV2: FC<ChartV2DataProps> = ({
                 position: 'absolute',
                 bottom: '6px',
                 left: '24px',
-                zIndex: '10',
               }}
             >
               <SettingsIcon

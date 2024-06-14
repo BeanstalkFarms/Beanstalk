@@ -314,18 +314,15 @@ const CalendarButton: FC<CalendarProps> = ({ setTimePeriod }) => {
           table: {
             display: 'flex',
             justifyContent: 'center',
-            backgroundColor: BeanstalkPalette.lightestGreen,
-            borderRadius: '8px',
           },
           tbody: {
-            padding: '10px',
-            marginLeft: '6px',
+            marginLeft: '2px',
           },
           day: {
             borderRadius: '4px',
             backgroundColor: BeanstalkPalette.white,
-            height: '30px',
-            width: '30px',
+            height: '36px',
+            width: '36px',
             transitionProperty:
               'color, background-color, border-color, text-decoration-color, fill, stroke',
             transitionTimingFunction: 'cubic-bezier(0.4, 0, 0.2, 1)',
