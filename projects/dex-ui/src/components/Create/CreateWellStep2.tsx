@@ -98,8 +98,8 @@ const FunctionTokensPumpForm = () => {
       });
 
       if (!validWellFunction) {
-        // methods.setError("wellFunctionAddress", { message: "Invalid Well Function or Data" });
-        // methods.setError("wellFunctionData", { message: "Invalid Well Function or Data" });
+        methods.setError("wellFunctionAddress", { message: "Invalid Well Function or Data" });
+        methods.setError("wellFunctionData", { message: "Invalid Well Function or Data" });
         return;
       }
     }
