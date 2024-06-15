@@ -68,61 +68,51 @@ const CalendarButton: FC<CalendarProps> = ({ setTimePeriod }) => {
 
   const presetRanges: {
     key: string;
-    fullText: string;
     from: Date | undefined;
     to: Date | undefined;
   }[] = [
     {
       key: '1D',
-      fullText: '1 DAY',
       from: subHours(new Date(), 24),
       to: new Date(),
     },
     {
       key: '1W',
-      fullText: '1 WEEK',
       from: subWeeks(new Date(), 1),
       to: new Date(),
     },
     {
       key: '1M',
-      fullText: '1 MONTH',
       from: subMonths(new Date(), 1),
       to: new Date(),
     },
     {
       key: '3M',
-      fullText: '3 MONTHS',
       from: subMonths(new Date(), 3),
       to: new Date(),
     },
     {
       key: '6M',
-      fullText: '6 MONTHS',
       from: subMonths(new Date(), 6),
       to: new Date(),
     },
     {
       key: 'YTD',
-      fullText: 'THIS YEAR',
       from: startOfYear(new Date()),
       to: new Date(),
     },
     {
       key: '1Y',
-      fullText: '1 YEAR',
       from: subYears(new Date(), 1),
       to: new Date(),
     },
     {
       key: '2Y',
-      fullText: '2 YEARS',
       from: subYears(new Date(), 2),
       to: new Date(),
     },
     {
       key: 'ALL',
-      fullText: 'ALL DATA',
       from: undefined,
       to: undefined,
     },

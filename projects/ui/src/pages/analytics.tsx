@@ -12,7 +12,7 @@ const AnalyticsPage: FC<{}> = () => {
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   
   return (
-  <Container maxWidth="lg">
+  <Container sx={{ maxWidth: `92% !important`, width: '100%' }}>
     <Stack gap={2}>
       <PageHeader
         title="Analytics"
