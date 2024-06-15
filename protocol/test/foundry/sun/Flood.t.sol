@@ -122,10 +122,25 @@ contract FloodTest is TestHelper {
     }
 
     function testOneSop() public {
-        uint256 userCalcPlenty = 25595575914848452999;
-        uint256 userCalcPlentyPerRoot = 2558534177813719812;
         address sopWell = C.BEAN_ETH_WELL;
         setReserves(sopWell, 1000000e6, 1100e18);
+
+        // there's only one well, so sop amount into that well will be the current deltaB
+        int256 currentDeltaB = bs.poolCurrentDeltaB(sopWell);
+
+        // getSwapOut for how much Beanstalk will get for swapping this amount of beans
+        uint256 amountOut = IWell(sopWell).getSwapOut(
+            IERC20(C.BEAN),
+            IERC20(C.WETH),
+            uint256(currentDeltaB)
+        );
+
+        // take this amount out, multiply by sop precision then divide by rain roots (current roots)
+        uint256 userCalcPlentyPerRoot = (amountOut * C.SOP_PRECISION) / bs.totalRoots(); // 2558534177813719812
+
+        // user plenty will be plenty per root * user roots
+        uint256 userCalcPlenty = (userCalcPlentyPerRoot * bs.balanceOfRoots(users[1])) /
+            C.SOP_PRECISION; // 25595575914848452999
 
         season.rainSunrise();
         bs.mow(users[1], C.BEAN);
