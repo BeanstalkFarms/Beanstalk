@@ -43,107 +43,87 @@ type CalendarProps = {
   >;
 };
 
-const CalendarButton: FC<CalendarProps> = ({ setTimePeriod }) => {
-  // Theme
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
-
-  // Menu
-  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-  const menuVisible = Boolean(anchorEl);
-  const handleToggleMenu = useCallback(
-    (event: React.MouseEvent<HTMLButtonElement>) => {
-      setAnchorEl(anchorEl ? null : event.currentTarget);
-    },
-    [anchorEl]
-  );
-  const handleHideMenu = useCallback(() => {
-    setAnchorEl(null);
-  }, []);
-
-  const initialRange: DateRange = {
-    from: undefined,
-    to: undefined,
-  };
-
-  const presetRanges: {
-    key: string;
-    from: Date | undefined;
-    to: Date | undefined;
-  }[] = [
-    {
-      key: '1D',
-      from: subHours(new Date(), 24),
-      to: new Date(),
-    },
-    {
-      key: '1W',
-      from: subWeeks(new Date(), 1),
-      to: new Date(),
-    },
-    {
-      key: '1M',
-      from: subMonths(new Date(), 1),
-      to: new Date(),
-    },
-    {
-      key: '3M',
-      from: subMonths(new Date(), 3),
-      to: new Date(),
-    },
-    {
-      key: '6M',
-      from: subMonths(new Date(), 6),
-      to: new Date(),
-    },
-    {
-      key: 'YTD',
-      from: startOfYear(new Date()),
-      to: new Date(),
-    },
-    {
-      key: '1Y',
-      from: subYears(new Date(), 1),
-      to: new Date(),
-    },
-    {
-      key: '2Y',
-      from: subYears(new Date(), 2),
-      to: new Date(),
-    },
-    {
-      key: 'ALL',
-      from: undefined,
-      to: undefined,
-    },
-  ];
-
-  // Hold the month in state to control the calendar when the input changes
-  const [month, setMonth] = useState(new Date());
-
-  // Hold the selected dates in state
-  const [range, setRange] = useState<DateRange | undefined>(initialRange);
-
-  const [selectedPreset, setPreset] = useState<string>('1W');
-
-  const handleRangeChange = (newRange: DateRange | undefined) => {
-    setRange(newRange);
-    const newTimePeriod = {
-      from: newRange?.from,
-      to: newRange?.to,
-    };
-    setTimePeriod(newTimePeriod);
-  };
-
-  const handlePresetSelect = (
+type CalendarContentProps = {
+  handleHideMenu: () => void;
+  isMobile: boolean;
+  range: DateRange | undefined;
+  selectedPreset: string;
+  setPreset: React.Dispatch<React.SetStateAction<string>>;
+  handleRangeChange: (newRange: DateRange | undefined) => void;
+  handlePresetSelect: (
     _preset: string,
     selectedRange: DateRange | undefined
-  ) => {
-    handleRangeChange(selectedRange);
-    setPreset(_preset);
-  };
+  ) => void;
+};
 
-  // Hold the input values in state
+const presetRanges: {
+  key: string;
+  from: Date | undefined;
+  to: Date | undefined;
+}[] = [
+  {
+    key: '1D',
+    from: subHours(new Date(), 24),
+    to: new Date(),
+  },
+  {
+    key: '1W',
+    from: subWeeks(new Date(), 1),
+    to: new Date(),
+  },
+  {
+    key: '1M',
+    from: subMonths(new Date(), 1),
+    to: new Date(),
+  },
+  {
+    key: '3M',
+    from: subMonths(new Date(), 3),
+    to: new Date(),
+  },
+  {
+    key: '6M',
+    from: subMonths(new Date(), 6),
+    to: new Date(),
+  },
+  {
+    key: 'YTD',
+    from: startOfYear(new Date()),
+    to: new Date(),
+  },
+  {
+    key: '1Y',
+    from: subYears(new Date(), 1),
+    to: new Date(),
+  },
+  {
+    key: '2Y',
+    from: subYears(new Date(), 2),
+    to: new Date(),
+  },
+  {
+    key: 'ALL',
+    from: undefined,
+    to: undefined,
+  },
+];
+
+const initialRange: DateRange = {
+  from: undefined,
+  to: undefined,
+};
+
+const CalendarContent: FC<CalendarContentProps> = ({
+  handleHideMenu,
+  isMobile,
+  range,
+  selectedPreset,
+  handleRangeChange,
+  handlePresetSelect,
+  setPreset,
+}) => {
+  const [month, setMonth] = useState(new Date());
+
   const [inputValue, setInputValue] = useState<{
     from: string | undefined;
     to: string | undefined;
@@ -262,274 +242,262 @@ const CalendarButton: FC<CalendarProps> = ({ setTimePeriod }) => {
     }
   };
 
-  function CustomDayPicker() {
-    return (
-      <DayPicker
-        mode="range"
-        showOutsideDays
-        selected={range}
-        onSelect={handleDayPickerSelect}
-        month={month}
-        onMonthChange={setMonth}
-        fixedWeeks
-        styles={{
-          caption: {
-            display: 'flex',
-            position: 'relative',
-            justifyContent: 'center',
-            alignItems: 'center',
-            marginBottom: '10px',
-          },
-          nav: {
-            display: 'flex',
-            alignItems: 'center',
-          },
-          nav_button_previous: {
-            position: 'absolute',
-            left: '0',
-            borderRadius: '8px',
-            width: '30px',
-            height: '30px',
-          },
-          nav_button_next: {
-            position: 'absolute',
-            right: '0',
-            borderRadius: '8px',
-            width: '30px',
-            height: '30px',
-          },
-          head_row: {
-            display: 'none',
-          },
-          table: {
-            display: 'flex',
-            justifyContent: 'center',
-          },
-          tbody: {
-            marginLeft: '2px',
-          },
-          day: {
-            borderRadius: '4px',
-            backgroundColor: BeanstalkPalette.white,
-            height: '36px',
-            width: '36px',
-            transitionProperty:
-              'color, background-color, border-color, text-decoration-color, fill, stroke',
-            transitionTimingFunction: 'cubic-bezier(0.4, 0, 0.2, 1)',
-            transitionDuration: '150ms',
-          },
+  return (
+    <Stack>
+      <Box
+        display="flex"
+        justifyContent="space-between"
+        paddingX="16px"
+        paddingTop="16px"
+      >
+        <Typography fontWeight={700}>Custom Date Range</Typography>
+        <IconButton
+          aria-label="close"
+          onClick={handleHideMenu}
+          disableRipple
+          sx={{
+            p: 0,
+          }}
+        >
+          <CloseIcon sx={{ fontSize: 20, color: 'text.primary' }} />
+        </IconButton>
+      </Box>
+      <Box
+        sx={{
+          display: 'flex',
+          flexDirection: 'column',
+          marginTop: 1.6,
+          gap: 0.8,
         }}
-        modifiersStyles={{
-          today: {
-            fontWeight: 'normal',
-          },
-          selected: {
-            fontWeight: 'bold',
-            backgroundColor: BeanstalkPalette.theme.spring.beanstalkGreen,
-            color: BeanstalkPalette.white,
-          },
-          range_start: {
-            fontWeight: 'bold',
-            backgroundColor: BeanstalkPalette.theme.spring.beanstalkGreen,
-            color: BeanstalkPalette.white,
-          },
-          range_middle: {
-            fontWeight: 'bold',
-            backgroundColor: BeanstalkPalette.theme.spring.beanstalkGreen,
-            color: BeanstalkPalette.white,
-          },
-          range_end: {
-            fontWeight: 'bold',
-            backgroundColor: BeanstalkPalette.theme.spring.beanstalkGreen,
-            color: BeanstalkPalette.white,
-          },
+      >
+        {['from', 'to'].map((inputType) => (
+          <Box
+            display="flex"
+            paddingX={1.6}
+            maxWidth={isMobile ? undefined : 310}
+            gap={0.8}
+          >
+            <TextField
+              sx={{
+                display: isMobile ? 'flex' : undefined,
+                flexGrow: isMobile ? 1 : undefined,
+                width: isMobile ? undefined : 160,
+                '& .MuiOutlinedInput-root': {
+                  height: 32,
+                  borderRadius: 0.6,
+                },
+              }}
+              value={inputValue[inputType as keyof typeof inputValue]}
+              placeholder="MM/DD/YYYY"
+              size="small"
+              color="primary"
+              onChange={(e) => {
+                handleInputChange('date', inputType, e.target.value);
+              }}
+            />
+            <TextField
+              sx={{
+                width: isMobile ? 140 : 120,
+                '& .MuiOutlinedInput-root': {
+                  height: 32,
+                  borderRadius: 0.6,
+                },
+              }}
+              value={inputTime[inputType as keyof typeof inputTime]}
+              placeholder="03:00"
+              size="small"
+              color="primary"
+              InputProps={{
+                endAdornment: (
+                  <InputAdornment position="end" sx={{ ml: 0, mr: -0.5 }}>
+                    <AccessTimeIcon sx={{ scale: '80%' }} />
+                  </InputAdornment>
+                ),
+              }}
+              onChange={(e) => {
+                handleInputChange('time', inputType, e.target.value);
+              }}
+              onBlur={(e) => {
+                formatInputTimeOnBlur(inputType, e.target.value);
+              }}
+            />
+          </Box>
+        ))}
+      </Box>
+      <Divider
+        sx={{
+          borderTop: 0.5,
+          borderBottom: 0,
+          marginTop: '16px',
+          borderColor: 'divider',
         }}
       />
-    );
-  }
-
-  function CalendarContent() {
-    return (
-      <Stack>
-        <Box
-          display="flex"
-          justifyContent="space-between"
-          paddingX="16px"
-          paddingTop="16px"
-        >
-          <Typography fontWeight={700}>Custom Date Range</Typography>
-          <IconButton
-            aria-label="close"
-            onClick={handleHideMenu}
-            disableRipple
-            sx={{
-              p: 0,
-            }}
-          >
-            <CloseIcon sx={{ fontSize: 20, color: 'text.primary' }} />
-          </IconButton>
-        </Box>
-        <Box
-          display="flex"
-          paddingX="16px"
-          paddingTop="16px"
-          maxWidth={isMobile ? undefined : '310px'}
-          gap="8px"
-        >
-          <TextField
-            sx={{
-              display: isMobile ? 'flex' : undefined,
-              flexGrow: isMobile ? 1 : undefined,
-              width: isMobile ? undefined : 160,
-              '& .MuiOutlinedInput-root': {
-                height: '32px',
-                borderRadius: '6px',
-              },
-            }}
-            value={inputValue.from}
-            placeholder="YYYY-MM-DD"
-            size="small"
-            color="primary"
-            onChange={(e) => {
-              handleInputChange('date', 'from', e.target.value);
-            }}
-          />
-          <TextField
-            sx={{
-              width: isMobile ? 140 : 120,
-              '& .MuiOutlinedInput-root': {
-                height: '32px',
-                borderRadius: '6px',
-              },
-            }}
-            value={inputTime.from}
-            placeholder="03:00"
-            size="small"
-            color="primary"
-            InputProps={{
-              endAdornment: (
-                <InputAdornment position="end" sx={{ ml: 0, mr: -0.5 }}>
-                  <AccessTimeIcon sx={{ scale: '80%' }} />
-                </InputAdornment>
-              ),
-            }}
-            onChange={(e) => {
-              handleInputChange('time', 'from', e.target.value);
-            }}
-            onBlur={(e) => {
-              formatInputTimeOnBlur('from', e.target.value);
-            }}
-          />
-        </Box>
-        <Box
-          display="flex"
-          paddingX="16px"
-          marginTop="8px"
-          maxWidth={isMobile ? undefined : '310px'}
-          gap="8px"
-        >
-          <TextField
-            sx={{
-              display: isMobile ? 'flex' : undefined,
-              flexGrow: isMobile ? 1 : undefined,
-              width: isMobile ? undefined : 160,
-              '& .MuiOutlinedInput-root': {
-                height: '32px',
-                borderRadius: '6px',
-              },
-            }}
-            value={inputValue.to}
-            placeholder="YYYY-MM-DD"
-            size="small"
-            color="primary"
-            onChange={(e) => {
-              handleInputChange('date', 'to', e.target.value);
-            }}
-          />
-          <TextField
-            sx={{
-              width: isMobile ? 140 : 120,
-              '& .MuiOutlinedInput-root': {
-                height: '32px',
-                borderRadius: '6px',
-              },
-            }}
-            value={inputTime.to}
-            placeholder="23:00"
-            size="small"
-            color="primary"
-            InputProps={{
-              endAdornment: (
-                <InputAdornment position="end" sx={{ ml: 0, mr: -0.5 }}>
-                  <AccessTimeIcon sx={{ scale: '80%' }} />
-                </InputAdornment>
-              ),
-            }}
-            onChange={(e) => {
-              handleInputChange('time', 'to', e.target.value);
-            }}
-            onBlur={(e) => {
-              formatInputTimeOnBlur('to', e.target.value);
-            }}
-          />
-        </Box>
-        <Divider
-          sx={{
-            borderTop: 0.5,
-            borderBottom: 0,
-            marginTop: '16px',
-            borderColor: 'divider',
+      <Box display="flex" flexDirection="row">
+        <DayPicker
+          mode="range"
+          showOutsideDays
+          selected={range}
+          onSelect={handleDayPickerSelect}
+          month={month}
+          onMonthChange={setMonth}
+          fixedWeeks
+          styles={{
+            caption: {
+              display: 'flex',
+              position: 'relative',
+              justifyContent: 'center',
+              alignItems: 'center',
+              marginBottom: '10px',
+            },
+            nav: {
+              display: 'flex',
+              alignItems: 'center',
+            },
+            nav_button_previous: {
+              position: 'absolute',
+              left: '0',
+              borderRadius: '8px',
+              width: '30px',
+              height: '30px',
+            },
+            nav_button_next: {
+              position: 'absolute',
+              right: '0',
+              borderRadius: '8px',
+              width: '30px',
+              height: '30px',
+            },
+            head_row: {
+              display: 'none',
+            },
+            table: {
+              display: 'flex',
+              justifyContent: 'center',
+            },
+            tbody: {
+              marginLeft: '2px',
+            },
+            day: {
+              borderRadius: '4px',
+              backgroundColor: BeanstalkPalette.white,
+              height: '36px',
+              width: '36px',
+              transitionProperty:
+                'color, background-color, border-color, text-decoration-color, fill, stroke',
+              transitionTimingFunction: 'cubic-bezier(0.4, 0, 0.2, 1)',
+              transitionDuration: '150ms',
+            },
+          }}
+          modifiersStyles={{
+            today: {
+              fontWeight: 'normal',
+            },
+            selected: {
+              fontWeight: 'bold',
+              backgroundColor: BeanstalkPalette.theme.spring.beanstalkGreen,
+              color: BeanstalkPalette.white,
+            },
+            range_start: {
+              fontWeight: 'bold',
+              backgroundColor: BeanstalkPalette.theme.spring.beanstalkGreen,
+              color: BeanstalkPalette.white,
+            },
+            range_middle: {
+              fontWeight: 'bold',
+              backgroundColor: BeanstalkPalette.theme.spring.beanstalkGreen,
+              color: BeanstalkPalette.white,
+            },
+            range_end: {
+              fontWeight: 'bold',
+              backgroundColor: BeanstalkPalette.theme.spring.beanstalkGreen,
+              color: BeanstalkPalette.white,
+            },
           }}
         />
-        <Box display="flex" flexDirection="row">
-          <CustomDayPicker />
-          {isMobile && (
-            <Box
-              display="flex"
-              flexDirection="column"
-              marginTop="16px"
-              marginBottom="16px"
-              marginRight="16px"
-              flexGrow={1}
-              justifyContent="space-between"
-            >
-              {presetRanges.map((preset) => (
-                <Button
-                  key={`timePeriodPreset${preset.key}`}
-                  variant={
-                    selectedPreset === preset.key
-                      ? 'contained'
-                      : 'outlined-secondary'
-                  }
-                  size="small"
-                  color={
-                    selectedPreset === preset.key ? 'primary' : 'secondary'
-                  }
-                  sx={{
-                    borderRadius: 0.5,
-                    px: 0.3,
-                    py: 0.3,
-                    mt: -0.3,
-                    minWidth: 30,
-                    fontWeight: 400,
-                  }}
-                  disableRipple
-                  onClick={() => {
-                    handlePresetSelect(preset.key, {
-                      from: preset.from,
-                      to: preset.to,
-                    });
-                  }}
-                >
-                  {preset.key}
-                </Button>
-              ))}
-            </Box>
-          )}
-        </Box>
-      </Stack>
-    );
-  }
+        {isMobile && (
+          <Box
+            display="flex"
+            flexDirection="column"
+            marginTop="16px"
+            marginBottom="16px"
+            marginRight="16px"
+            flexGrow={1}
+            justifyContent="space-between"
+          >
+            {presetRanges.map((preset) => (
+              <Button
+                key={`timePeriodPreset${preset.key}`}
+                variant={
+                  selectedPreset === preset.key
+                    ? 'contained'
+                    : 'outlined-secondary'
+                }
+                size="small"
+                color={selectedPreset === preset.key ? 'primary' : 'secondary'}
+                sx={{
+                  borderRadius: 0.5,
+                  px: 0.3,
+                  py: 0.3,
+                  mt: -0.3,
+                  minWidth: 30,
+                  fontWeight: 400,
+                }}
+                disableRipple
+                onClick={() => {
+                  handlePresetSelect(preset.key, {
+                    from: preset.from,
+                    to: preset.to,
+                  });
+                }}
+              >
+                {preset.key}
+              </Button>
+            ))}
+          </Box>
+        )}
+      </Box>
+    </Stack>
+  );
+};
+
+const CalendarButton: FC<CalendarProps> = ({ setTimePeriod }) => {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const menuVisible = Boolean(anchorEl);
+
+  const handleToggleMenu = useCallback(
+    (event: React.MouseEvent<HTMLButtonElement>) => {
+      setAnchorEl(anchorEl ? null : event.currentTarget);
+    },
+    [anchorEl]
+  );
+
+  const handleHideMenu = useCallback(() => {
+    setAnchorEl(null);
+  }, []);
+
+  const [range, setRange] = useState<DateRange | undefined>(initialRange);
+
+  const [selectedPreset, setPreset] = useState<string>('1W');
+
+  const handleRangeChange = (newRange: DateRange | undefined) => {
+    setRange(newRange);
+    const newTimePeriod = {
+      from: newRange?.from,
+      to: newRange?.to,
+    };
+    setTimePeriod(newTimePeriod);
+  };
+
+  const handlePresetSelect = (
+    _preset: string,
+    selectedRange: DateRange | undefined
+  ) => {
+    handleRangeChange(selectedRange);
+    setPreset(_preset);
+  };
 
   return (
     <ClickAwayListener onClickAway={handleHideMenu}>
@@ -619,14 +587,30 @@ const CalendarButton: FC<CalendarProps> = ({ setTimePeriod }) => {
                     },
                   }}
                 >
-                  <CalendarContent />
+                  <CalendarContent
+                    handleHideMenu={handleHideMenu}
+                    isMobile={isMobile}
+                    range={range}
+                    selectedPreset={selectedPreset}
+                    handleRangeChange={handleRangeChange}
+                    handlePresetSelect={handlePresetSelect}
+                    setPreset={setPreset}
+                  />
                 </Box>
               </Grow>
             )}
           </Popper>
         ) : (
           <Drawer anchor="bottom" open={menuVisible} onClose={handleHideMenu}>
-            <CalendarContent />
+            <CalendarContent
+              handleHideMenu={handleHideMenu}
+              isMobile={isMobile}
+              range={range}
+              selectedPreset={selectedPreset}
+              handleRangeChange={handleRangeChange}
+              handlePresetSelect={handlePresetSelect}
+              setPreset={setPreset}
+            />
           </Drawer>
         )}
       </Box>
