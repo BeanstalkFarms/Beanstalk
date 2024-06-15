@@ -35,14 +35,14 @@ export const Frame: FC<{}> = ({ children }) => {
           </BrandContainer>
           <LinksContainer>
             <NavLinks>
-              <NavLink to="/wells" hovericon={wellsIcon}>
-                Liquidity
-              </NavLink>
               {(isNotProd || isNetlifyContext) && (
                 <NavLink to="/build" hovericon={buildIcon}>
                   Build
                 </NavLink>
               )}
+              <NavLink to="/wells" hovericon={wellsIcon}>
+                Liquidity
+              </NavLink>
               <NavLink to="/swap" hovericon={swapIcon}>
                 Swap
               </NavLink>

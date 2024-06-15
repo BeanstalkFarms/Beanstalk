@@ -8,9 +8,16 @@ import { Text } from "src/components/Typography";
 import { useWhitelistedWellComponents } from "./useWhitelistedWellComponents";
 
 export const ComponentLibraryTable = () => {
-  const { components: { wellImplementations, pumps, wellFunctions } } = useWhitelistedWellComponents();
+  const {
+    components: { wellImplementations, pumps, wellFunctions }
+  } = useWhitelistedWellComponents();
 
   const entries = [...pumps, ...wellFunctions, ...wellImplementations];
+
+  const openInNewTab = (url: string | undefined) => {
+    if (!url) return;
+    window.open(url, "_blank", "noopener noreferrer");
+  };
 
   return (
     <StyledTable>
@@ -29,8 +36,8 @@ export const ComponentLibraryTable = () => {
           if (!deployInfo || typeof deployInfo.value !== "string") return null;
 
           return (
-            <StyledTr key={`${component.name}-${i}`}>
-              <TableData align="left" url={component.url}>
+            <StyledTr key={`${component.name}-${i}`} onClick={() => openInNewTab(component.url)}>
+              <TableData align="left">
                 <Text $variant="l">{component.name}</Text>
                 <Text $color="text.secondary">{component.summary}</Text>
               </TableData>
@@ -69,21 +76,22 @@ const StyledTh = styled(Th)<{ $hideMobile?: boolean }>`
   `}
 `;
 
-const StyledTd = styled(Td)<{ $hasLink?: boolean; $hideMobile?: boolean }>`
+const StyledTd = styled(Td)<{ $hideMobile?: boolean }>`
   padding: unset;
   padding: ${theme.spacing(3, 2)};
-  cursor: ${(props) => (props.$hasLink ? "pointer" : "default")};
+  cursor: pointer;
   ${(props) =>
     props.$hideMobile &&
     `
-    ${theme.media.query.sm.only} {
-      display: none;
+      ${theme.media.query.sm.only} {
+        display: none;
       }
   `}
 `;
 
 const StyledTr = styled(Row)`
   height: unset;
+  cursor: pointer;
 `;
 
 const TextWrapper = styled.div`
@@ -106,6 +114,7 @@ const StyledLink = styled(Link).attrs({
 })`
   text-decoration: none;
   color: ${theme.colors.black};
+  outline: none;
 `;
 
 const TableData = ({
@@ -121,7 +130,7 @@ const TableData = ({
 }) => {
   if (url) {
     return (
-      <StyledTd align={align} $hasLink={!!url} $hideMobile={hideMobile}>
+      <StyledTd align={align} $hideMobile={hideMobile} onClick={(e) => e.stopPropagation()}>
         <StyledLink to={url}>{children}</StyledLink>
       </StyledTd>
     );

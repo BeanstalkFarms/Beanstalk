@@ -29,9 +29,9 @@ import { useAccount } from "wagmi";
 import { useQueryClient } from "@tanstack/react-query";
 import { queryKeys } from "src/utils/query/queryKeys";
 import { useBoolean } from "src/utils/ui/useBoolean";
-import { Dialog } from "../Dialog";
 import { ProgressCircle } from "../ProgressCircle";
 import { useNavigate } from "react-router-dom";
+import { Modal } from "../Modal";
 
 type FormValues = CreateWellStepProps["step4"] & {
   usingSalt: boolean;
@@ -83,6 +83,7 @@ const FormContent = ({
   };
 
   const onSubmit = async (values: FormValues) => {
+    setDeployErr(undefined);
     setModal(true);
     setStep4({
       salt: values.usingSalt ? values.salt : undefined,
@@ -132,47 +133,52 @@ const FormContent = ({
           </Flex>
         </StyledForm>
       </FormProvider>
-      <Dialog
-        id="deploy-well-modal"
-        canClose={!deploying}
-        open={modalOpen}
-        closeModal={() => {
-          setModal(false);
-          setDeployErr(undefined);
-        }}
-      >
-        <Flex $p={2} $alignItems="center">
-          <Text $variant="l">Well Deployment In Progress</Text>
-          <Flex $fullWidth>
-            <Flex $my={5} $alignSelf="center">
-              <ProgressCircle
-                size={75}
-                progress={80}
-                strokeWidth={5}
-                trackColor={theme.colors.white}
-                strokeColor={theme.colors.primary}
-                animate
-                status={deployedWellAddress ? "success" : deployErr ? "error" : undefined}
-              />
-            </Flex>
-            {deployErr ? (
-              <Flex $alignSelf="flex-start" $gap={2}>
-                <Text>Transaction Reverted: </Text>
-                <ErroMessageWrapper>
-                  <Text>{deployErr.message || "See console for details"}</Text>
-                </ErroMessageWrapper>
+      <Modal allowClose={!deploying} open={modalOpen} wide onOpenChange={setModal}>
+        <Modal.Content noTitle>
+          <ModalContentWrapper $fullWidth $alignItems="center">
+            <Text $variant="l">Well Deployment In Progress</Text>
+            <Flex $fullWidth>
+              <Flex $my={5} $alignSelf="center">
+                <ProgressCircle
+                  size={75}
+                  progress={80}
+                  strokeWidth={5}
+                  trackColor={theme.colors.white}
+                  strokeColor={theme.colors.primary}
+                  animate
+                  status={deployedWellAddress ? "success" : deployErr ? "error" : undefined}
+                />
               </Flex>
-            ) : null}
-          </Flex>
-        </Flex>
-      </Dialog>
+              {deployErr ? (
+                <Flex $alignSelf="flex-start" $gap={2}>
+                  <Text>Transaction Reverted: </Text>
+                  <ErroMessageWrapper>
+                    <Text>{deployErr.message || "See console for details"}</Text>
+                  </ErroMessageWrapper>
+                </Flex>
+              ) : null}
+            </Flex>
+          </ModalContentWrapper>
+        </Modal.Content>
+      </Modal>
     </>
   );
 };
 
 const ErroMessageWrapper = styled(Flex)`
+  overflow: auto;
   max-height: 300px;
   overflow-wrap: anywhere;
+`;
+
+const ModalContentWrapper = styled(Flex)`
+  min-width: 400px;
+
+  ${theme.media.query.sm.only} {
+    min-width: min(calc(100vw - 96px), 400px);
+    max-width: min(calc(100vw - 96px), 400px);
+    width: 100%;
+  }
 `;
 
 type LiquidityFormProps = {
@@ -481,7 +487,7 @@ export const CreateWellStep4 = () => {
           </Flex>
           {/* Tokens */}
           <Flex $gap={1}>
-            <Text $variant="h3">Well Name & Symbol</Text>
+            <Text $variant="h3">Tokens</Text>
             <InlineImgFlex>
               <img src={token1.logo ?? ""} alt={token1.name ?? ""} />
               <Text $variant="l">{token1?.symbol ?? ""}</Text>

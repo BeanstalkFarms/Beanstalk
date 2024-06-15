@@ -17,6 +17,7 @@ import { useERC20TokenWithAddress } from "src/tokens/useERC20Token";
 import { ERC20Token } from "@beanstalk/sdk";
 import useSdk from "src/utils/sdk/useSdk";
 import BoreWellUtils from "src/wells/boreWell";
+import { useValidateWellFunction } from "src/wells/wellFunction/useValidateWellFunction";
 
 const additionalOptions = [
   {
@@ -40,9 +41,18 @@ const tokenFormKeys = ["token1", "token2"] as const;
 const optionalKeys = ["wellFunctionData", "pumpData"] as const;
 
 const FunctionTokensPumpForm = () => {
-  const { wellTokens, wellFunctionAddress, pumpAddress, setStep2, wellFunctionData, pumpData } =
-    useCreateWell();
+  const {
+    wellTokens,
+    wellFunctionAddress,
+    pumpAddress,
+    setStep2,
+    wellFunctionData,
+    pumpData,
+    wellFunction
+  } = useCreateWell();
   const sdk = useSdk();
+
+  const [validateWellFunction] = useValidateWellFunction();
 
   const [token1, setToken1] = useState<ERC20Token | undefined>(undefined);
   const [token2, setToken2] = useState<ERC20Token | undefined>(undefined);
@@ -50,7 +60,7 @@ const FunctionTokensPumpForm = () => {
   const methods = useForm<FunctionTokenPumpFormValues>({
     defaultValues: {
       wellFunctionAddress: wellFunctionAddress || "",
-      wellFunctionData: wellFunctionAddress || "",
+      wellFunctionData: wellFunctionData || "",
       token1: wellTokens?.token1?.address || "",
       token2: wellTokens?.token2?.address || "",
       pumpAddress: pumpAddress || "",
@@ -64,7 +74,8 @@ const FunctionTokensPumpForm = () => {
     setStep2({
       ...values,
       token1: token1,
-      token2: token2
+      token2: token2,
+      wellFunction: wellFunction
     });
   };
 
@@ -72,9 +83,38 @@ const FunctionTokensPumpForm = () => {
     const valid = await methods.trigger();
     if (!valid || !token1 || !token2) return;
     if (token1.address === token2.address) return; // should never be true, but just in case
-
     const [tk1, tk2] = BoreWellUtils.prepareTokenOrderForBoreWell(sdk, [token1, token2]);
-    setStep2({ ...values, token1: tk1, token2: tk2, goNext: true });
+
+    const wellFunctionValidated =
+      wellFunction &&
+      values.wellFunctionAddress.toLowerCase() === wellFunction.address.toLowerCase();
+
+    let validWellFunction = wellFunctionValidated ? wellFunction : undefined;
+
+    if (!validWellFunction) {
+      validWellFunction = await validateWellFunction({
+        address: values.wellFunctionAddress,
+        data: values.wellFunctionData
+      });
+
+      if (!validWellFunction) {
+        methods.setError("wellFunctionAddress", { message: "Invalid Well Function or Data" });
+        methods.setError("wellFunctionData", { message: "Invalid Well Function or Data" });
+        return;
+      }
+    }
+
+    if (!validWellFunction.name || !validWellFunction.symbol) {
+      await Promise.all([validWellFunction.getName(), validWellFunction.getSymbol()]);
+    }
+
+    setStep2({
+      ...values,
+      token1: tk1,
+      token2: tk2,
+      wellFunction: validWellFunction,
+      goNext: true
+    });
   };
 
   return (

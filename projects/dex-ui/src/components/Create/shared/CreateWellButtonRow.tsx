@@ -32,13 +32,11 @@ export const CreateWellButtonRow = ({
   disabled = false,
   valuesRequired = true,
   optionalKeys,
-  onGoBack,
-  renderPrimaryCustom
+  onGoBack
 }: {
   disabled?: boolean;
-  optionalKeys?: readonly string[];
+  optionalKeys?: readonly string[] | string[];
   valuesRequired?: boolean;
-  renderPrimaryCustom?: JSX.Element;
   onGoBack?: () => void;
 }) => {
   const { step, goBack } = useCreateWell();
@@ -46,7 +44,7 @@ export const CreateWellButtonRow = ({
   const navigate = useNavigate();
   const {
     control,
-    formState: { errors }
+    formState: { errors, isSubmitting }
   } = useFormContext();
   const values = useWatch({ control });
 
@@ -91,16 +89,12 @@ export const CreateWellButtonRow = ({
         </ButtonLabel>
       </ButtonPrimary>
       <ActionWalletButtonWrapper allow={step !== 3}>
-        {renderPrimaryCustom ? (
-          renderPrimaryCustom
-        ) : (
-          <ButtonPrimary type="submit" disabled={!goNextEnabled || disabled}>
-            <ButtonLabel>
-              {nextLabel}
-              <RightArrow width={16} height={16} color={theme.colors.white} />
-            </ButtonLabel>
-          </ButtonPrimary>
-        )}
+        <ButtonPrimary type="submit" disabled={!goNextEnabled || disabled} $loading={isSubmitting}>
+          <ButtonLabel>
+            {nextLabel}
+            <RightArrow width={16} height={16} color={theme.colors.white} />
+          </ButtonLabel>
+        </ButtonPrimary>
       </ActionWalletButtonWrapper>
     </Flex>
   );

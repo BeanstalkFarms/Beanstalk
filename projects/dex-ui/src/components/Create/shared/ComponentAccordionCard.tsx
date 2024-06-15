@@ -63,7 +63,7 @@ export const WellComponentAccordionCard = ({
                       $color="text.secondary"
                       $variant="xs"
                       $whitespace="nowrap"
-                      key={`info-${datum.label}`}
+                      key={`info-${datum.label}-${index}`}
                     >
                       {value.imgSrc && <IconImg src={value.imgSrc} width={14} height={14} />}
                       <MayLink url={value.url || ""}>
