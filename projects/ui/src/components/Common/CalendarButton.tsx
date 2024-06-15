@@ -32,6 +32,7 @@ import {
   subMonths,
   subWeeks,
   subYears,
+  setMinutes,
 } from 'date-fns';
 import CloseIcon from '@mui/icons-material/Close';
 
@@ -212,18 +213,19 @@ const CalendarContent: FC<CalendarContentProps> = ({
         to: target === 'to' ? value : currentValue.to,
       });
 
-      const parsedTime = parse(value, 'HH', new Date());
+      const parsedTime = parse(value, 'HH:mm', new Date());
 
       if (isValid(parsedTime)) {
         const newHour = parsedTime.getHours();
+        const newMinutes = parsedTime.getMinutes();
         const newTime = {
           from:
             target === 'from' && range?.from
-              ? setHours(range.from, newHour)
+              ? setMinutes(setHours(range?.from, newHour), newMinutes)
               : range?.from,
           to:
             target === 'to' && range?.to
-              ? setHours(range?.to, newHour)
+              ? setMinutes(setHours(range?.to, newHour), newMinutes)
               : range?.to,
         };
         handleRangeChange(newTime);
@@ -274,7 +276,13 @@ const CalendarContent: FC<CalendarContentProps> = ({
           gap: 0.8,
         }}
       >
-        {['from', 'to'].map((inputType) => (
+        {['from', 'to'].map((inputType) => {
+          
+          const dateRange = range?.[inputType as keyof typeof inputValue];
+          const formattedDate = dateRange ? format(dateRange, 'MM/dd/yyy') : undefined;
+          const formattedHour = dateRange ? format(dateRange, 'HH:mm') : undefined;
+
+        return (
           <Box
             display="flex"
             paddingX={1.6}
@@ -291,7 +299,7 @@ const CalendarContent: FC<CalendarContentProps> = ({
                   borderRadius: 0.6,
                 },
               }}
-              value={inputValue[inputType as keyof typeof inputValue]}
+              value={inputValue[inputType as keyof typeof inputValue] || formattedDate}
               placeholder="MM/DD/YYYY"
               size="small"
               color="primary"
@@ -307,7 +315,7 @@ const CalendarContent: FC<CalendarContentProps> = ({
                   borderRadius: 0.6,
                 },
               }}
-              value={inputTime[inputType as keyof typeof inputTime]}
+              value={inputTime[inputType as keyof typeof inputTime] || formattedHour}
               placeholder="03:00"
               size="small"
               color="primary"
@@ -326,7 +334,7 @@ const CalendarContent: FC<CalendarContentProps> = ({
               }}
             />
           </Box>
-        ))}
+        )})}
       </Box>
       <Divider
         sx={{
