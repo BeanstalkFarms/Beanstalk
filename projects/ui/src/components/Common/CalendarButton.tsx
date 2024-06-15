@@ -23,6 +23,7 @@ import { BeanstalkPalette } from '~/components/App/muiTheme';
 import {
   format,
   isValid,
+  isBefore,
   parse,
   set,
   setHours,
@@ -168,7 +169,7 @@ const CalendarContent: FC<CalendarContentProps> = ({
     if (type === 'date') {
       const currentValue = inputValue;
       const currentTime = inputTime;
-
+      
       setInputValue({
         from: target === 'from' ? value : currentValue.from,
         to: target === 'to' ? value : currentValue.to,
@@ -186,10 +187,13 @@ const CalendarContent: FC<CalendarContentProps> = ({
         minutes: 5,
       });
 
+      const currentDateFrom = currentValue.from ? parse(currentValue.from, 'MM/dd/yyyy', new Date()) : undefined;
+      const currentDateTo = currentValue.to ? parse(currentValue.to, 'MM/dd/yyyy', new Date()) : undefined;
+
       if (isValid(parsedDate)) {
         handleRangeChange({
-          from: target === 'from' ? parsedDate : range?.from,
-          to: target === 'to' ? parsedDate : range?.to,
+          from: target === 'from' ? parsedDate : currentDateFrom,
+          to: target === 'to' ? parsedDate : currentDateTo,
         });
         setPreset('CUSTOM');
         setMonth(parsedDate);
@@ -483,12 +487,19 @@ const CalendarButton: FC<CalendarProps> = ({ setTimePeriod }) => {
   const [selectedPreset, setPreset] = useState<string>('1W');
 
   const handleRangeChange = (newRange: DateRange | undefined) => {
-    setRange(newRange);
     const newTimePeriod = {
       from: newRange?.from,
       to: newRange?.to,
     };
-    setTimePeriod(newTimePeriod);
+    if (newRange?.from && newRange.to) {
+      if (isBefore(newRange.from, newRange.to)) {
+        setRange(newRange);
+        setTimePeriod(newTimePeriod);
+      };
+    } else {
+     setRange(newRange);
+     setTimePeriod(newTimePeriod);
+    };
   };
 
   const handlePresetSelect = (
