@@ -65,6 +65,10 @@ type ChartV2DataProps = {
    *
    */
   selected: number[];
+  /*
+  *
+  */
+  preformattedTimestamps: boolean;
 };
 
 const chartColors = [
@@ -103,6 +107,7 @@ const ChartV2: FC<ChartV2DataProps> = ({
   containerHeight,
   timePeriod,
   selected,
+  preformattedTimestamps
 }) => {
   const chartContainerRef = useRef<any>();
   const chart = useRef<any>();
@@ -310,6 +315,7 @@ const ChartV2: FC<ChartV2DataProps> = ({
           ? extraData.get(commonData[0].time)
           : null;
       const formattedDate = date?.toLocaleString(undefined, {
+        timeZone: preformattedTimestamps ? 'UTC' : undefined,
         dateStyle: 'short',
         timeStyle: 'short',
       });
@@ -401,7 +407,7 @@ const ChartV2: FC<ChartV2DataProps> = ({
       chart.current.unsubscribeCrosshairMove();
       chart.current.timeScale().unsubscribeVisibleTimeRangeChange();
     };
-  }, [formattedData, extraData, selected]);
+  }, [formattedData, extraData, selected, preformattedTimestamps]);
 
   return (
     <Box sx={{ position: 'relative' }}>

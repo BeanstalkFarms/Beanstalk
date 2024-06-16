@@ -316,7 +316,7 @@ const CalendarContent: FC<CalendarContentProps> = ({
                 },
               }}
               value={inputTime[inputType as keyof typeof inputTime] || formattedHour}
-              placeholder="03:00"
+              placeholder="00:00"
               size="small"
               color="primary"
               InputProps={{
