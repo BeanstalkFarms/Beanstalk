@@ -8,7 +8,7 @@ type Token @entity {
   "Number of decimals"
   decimals: BigInt!
 
-  "Last USD price calculated"
+  "Last USD price calculated. Isn't calculated for all tokens, in those cases will be zero."
   lastPriceUSD: BigDecimal!
 }
 
@@ -18,6 +18,9 @@ type Bean @entity {
 
   "Which chain this Bean is from"
   chain: String!
+
+  "Smart contract address of the Beanstalk this Bean is associated with"
+  beanstalk: String!
 
   "Current supply"
   supply: BigInt!
