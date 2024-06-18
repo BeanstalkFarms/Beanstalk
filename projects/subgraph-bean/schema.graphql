@@ -2,6 +2,9 @@ type Token @entity {
   "Smart contract address of the token"
   id: ID!
 
+  "Name of the token, i.e. BEAN, WETH"
+  name: String!
+
   "Number of decimals"
   decimals: BigInt!
 
@@ -12,6 +15,9 @@ type Token @entity {
 type Bean @entity {
   "Contract address of the Bean token"
   id: ID!
+
+  "Which chain this Bean is from"
+  chain: String!
 
   "Current supply"
   supply: BigInt!
@@ -187,7 +193,10 @@ type PoolCross @entity {
 
 type Pool @entity {
   id: ID!
+  "The Bean token that is in this pool"
   bean: Bean!
+  "All tokens in this pool"
+  tokens: [Token!]!
   reserves: [BigInt!]!
   lastSeason: Int!
   lastPrice: BigDecimal!
