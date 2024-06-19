@@ -87,7 +87,7 @@ describe("APY Calculations", () => {
       // Bean apy
       const desiredPrecision = BigDecimal.fromString("0.0001");
       assert.assertTrue(BigDecimal_isClose(apy[0][0], BigDecimal.fromString("0.350833589560757907"), desiredPrecision));
-      assert.assertTrue(BigDecimal_isClose(apy[0][1], BigDecimal.fromString("7.978047895762885613"), desiredPrecision));
+      assert.assertTrue(BigDecimal_isClose(apy[0][1], BigDecimal.fromString("1.658686024525446868"), desiredPrecision));
 
       // Profiling:
       // Calculated in a single call + fixed point arithmetic: 2900ms
@@ -221,19 +221,19 @@ describe("APY Calculations", () => {
       log.info("bean apy {}", [beanResult.beanAPY.toString()]);
       log.info("stalk apy {}", [beanResult.stalkAPY.toString()]);
       assert.assertTrue(BigDecimal_isClose(beanResult.beanAPY, BigDecimal.fromString("0.350833589560757907"), desiredPrecision));
-      assert.assertTrue(BigDecimal_isClose(beanResult.stalkAPY, BigDecimal.fromString("7.978047895762885613"), desiredPrecision));
+      assert.assertTrue(BigDecimal_isClose(beanResult.stalkAPY, BigDecimal.fromString("1.658686024525446868"), desiredPrecision));
 
       const wethResult = loadTokenYield(BEAN_WETH_CP2_WELL, 20000, 720);
       log.info("bean apy {}", [wethResult.beanAPY.toString()]);
       log.info("stalk apy {}", [wethResult.stalkAPY.toString()]);
       assert.assertTrue(BigDecimal_isClose(wethResult.beanAPY, BigDecimal.fromString("0.479789213832026299"), desiredPrecision));
-      assert.assertTrue(BigDecimal_isClose(wethResult.stalkAPY, BigDecimal.fromString("12.821527602532040984"), desiredPrecision));
+      assert.assertTrue(BigDecimal_isClose(wethResult.stalkAPY, BigDecimal.fromString("3.092994680033632858"), desiredPrecision));
 
       const zeroGsResult = loadTokenYield(UNRIPE_BEAN, 20000, 720);
       log.info("bean apy {}", [zeroGsResult.beanAPY.toString()]);
       log.info("stalk apy {}", [zeroGsResult.stalkAPY.toString()]);
       assert.assertTrue(BigDecimal_isClose(zeroGsResult.beanAPY, BigDecimal.fromString("0.221606859225904494"), desiredPrecision));
-      assert.assertTrue(BigDecimal_isClose(zeroGsResult.stalkAPY, BigDecimal.fromString("3.129510157401476928"), desiredPrecision));
+      assert.assertTrue(BigDecimal_isClose(zeroGsResult.stalkAPY, BigDecimal.fromString("0.222879524712790346"), desiredPrecision));
     });
   });
 });

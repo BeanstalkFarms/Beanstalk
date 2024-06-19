@@ -31,10 +31,11 @@ export function handleSunrise(event: Sunrise): void {
   updateStalkWithCalls(currentSeason - 1, event.block.timestamp, event.block.number);
 
   // Update season metrics
-  //season.harvestableIndex = beanstalkContract.harvestableIndex()
   if (event.params.season == BigInt.fromI32(6075)) {
+    // Replant oracle initialization
     season.price = BigDecimal.fromString("1.07");
-  } // Replant oracle initialization
+  }
+  season.sunriseBlock = event.block.number;
   season.createdAt = event.block.timestamp;
   season.save();
 
