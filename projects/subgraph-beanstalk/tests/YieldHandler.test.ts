@@ -53,10 +53,11 @@ describe("APY Calculations", () => {
       log.info(`bean apy (4 seeds): {}`, [(apy4[0] as BigDecimal).toString()]);
       log.info(`stalk apy (2 seeds): {}`, [(apy2[1] as BigDecimal).toString()]);
       log.info(`stalk apy (4 seeds): {}`, [(apy4[1] as BigDecimal).toString()]);
-      assert.assertTrue(BigDecimal_isClose(apy2[0], BigDecimal.fromString("0.14346160171558054")));
-      assert.assertTrue(BigDecimal_isClose(apy4[0], BigDecimal.fromString("0.18299935285933523")));
-      assert.assertTrue(BigDecimal_isClose(apy2[1], BigDecimal.fromString("2.9293613175698485")));
-      assert.assertTrue(BigDecimal_isClose(apy4[1], BigDecimal.fromString("4.318733617611663")));
+      const desiredPrecision = BigDecimal.fromString("0.0001");
+      assert.assertTrue(BigDecimal_isClose(apy2[0], BigDecimal.fromString("0.14346160171558054"), desiredPrecision));
+      assert.assertTrue(BigDecimal_isClose(apy4[0], BigDecimal.fromString("0.18299935285933523"), desiredPrecision));
+      assert.assertTrue(BigDecimal_isClose(apy2[1], BigDecimal.fromString("2.9293613175698485"), desiredPrecision));
+      assert.assertTrue(BigDecimal_isClose(apy4[1], BigDecimal.fromString("4.318733617611663"), desiredPrecision));
     });
   });
 
