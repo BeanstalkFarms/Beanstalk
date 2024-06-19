@@ -234,38 +234,42 @@ export function calculateAPYPreGauge(
   seeds: BigInt
 ): BigDecimal[] {
   // Initialize sequence
-  let C = toDecimal(seeds); // Init: Total Seeds
-  let K = toDecimal(stalk, 10); // Init: Total Stalk
-  let b = seedsPerBDV.div(seedsPerBeanBDV); // Init: User BDV
-  let k = BigDecimal.fromString("1"); // Init: User Stalk
+  const beansPerSeason: f64 = parseFloat(n.toString());
+  let C: f64 = parseFloat(toDecimal(seeds).toString()); // Init: Total Seeds
+  let K: f64 = parseFloat(toDecimal(stalk, 10).toString()); // Init: Total Stalk
+  let b: f64 = parseFloat(seedsPerBDV.div(seedsPerBeanBDV).toString()); // Init: User BDV
+  let k: f64 = 1; // Init: User Stalk
+
+  let _seedsPerBdv: f64 = parseInt(seedsPerBDV.toString());
+  let _seedsPerBeanBdv: f64 = parseInt(seedsPerBeanBDV.toString());
 
   // Farmer initial values
-  let b_start = b;
-  let k_start = k;
+  let b_start: f64 = b;
+  let k_start: f64 = k;
 
   // Placeholders for above values during each iteration
-  let C_i = ZERO_BD;
-  let K_i = ZERO_BD;
-  let b_i = ZERO_BD;
-  let k_i = ZERO_BD;
+  let C_i: f64 = 0;
+  let K_i: f64 = 0;
+  let b_i: f64 = 0;
+  let k_i: f64 = 0;
 
   // Stalk and Seeds per Deposited Bean.
-  let STALK_PER_SEED = BigDecimal.fromString("0.0001"); // 1/10,000 Stalk per Seed
-  let STALK_PER_BEAN = seedsPerBeanBDV.div(BigDecimal.fromString("10000")); // 3 Seeds per Bean * 1/10,000 Stalk per Seed
+  let STALK_PER_SEED: f64 = 0.0001; // 1/10,000 Stalk per Seed
+  let STALK_PER_BEAN: f64 = parseFloat(seedsPerBeanBDV.div(BigDecimal.fromString("10000")).toString()); // 3 Seeds per Bean * 1/10,000 Stalk per Seed
 
   for (let i = 0; i < 8760; i++) {
     // Each Season, Farmer's ownership = `current Stalk / total Stalk`
-    let ownership = k.div(K);
-    let newBDV = n.times(ownership);
+    let ownership: f64 = k / K;
+    let newBDV: f64 = beansPerSeason * ownership;
 
     // Total Seeds: each seignorage Bean => 3 Seeds
-    C_i = C.plus(n.times(seedsPerBeanBDV));
+    C_i = C + beansPerSeason * _seedsPerBeanBdv;
     // Total Stalk: each seignorage Bean => 1 Stalk, each outstanding Bean => 1/10_000 Stalk
-    K_i = K.plus(n).plus(STALK_PER_SEED.times(C));
+    K_i = K + beansPerSeason + STALK_PER_SEED * C;
     // Farmer BDV: each seignorage Bean => 1 BDV
-    b_i = b.plus(newBDV);
+    b_i = b + newBDV;
     // Farmer Stalk: each 1 BDV => 1 Stalk, each outstanding Bean => d = 1/5_000 Stalk per Bean
-    k_i = k.plus(newBDV).plus(STALK_PER_BEAN.times(b));
+    k_i = k + newBDV + STALK_PER_BEAN * b;
 
     C = C_i;
     K = K_i;
@@ -282,10 +286,10 @@ export function calculateAPYPreGauge(
   // b_start = 1
   // b       = 1.1
   // b.minus(b_start) = 0.1 = 10% APY
-  let beanApy = b.minus(b_start); // beanAPY
-  let stalkApy = k.minus(k_start); // stalkAPY
+  let beanApy = b - b_start; // beanAPY
+  let stalkApy = k - k_start; // stalkAPY
 
-  return [beanApy, stalkApy];
+  return [BigDecimal.fromString(beanApy.toString()), BigDecimal.fromString(stalkApy.toString())];
 }
 
 /**
