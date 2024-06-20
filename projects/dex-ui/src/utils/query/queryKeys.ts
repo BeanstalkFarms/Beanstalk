@@ -12,5 +12,11 @@ export const queryKeys = {
   wellImplementations: (addresses: string[]) => ["wells", "implementations", addresses],
 
   // well Function
-  wellFunctionValid: (address: string, data: string) => ["wellFunction", "isValid", address, data]
+  wellFunctionValid: (address: string, data: string) => ["wellFunction", "isValid", address, data],
+  wellFunctionNames: (addresses: string[] | undefined) => ["wellFunctions", "names", addresses],
+
+  // prices
+  tokenPricesAll: ["prices", "token"],
+  tokenPrices: (address: string[]) => ["prices", "token", ...address],
+  lpTokenPrices: (addresses: string[]) => ["prices", "lp-token", ...addresses]
 } as const;
