@@ -110,8 +110,8 @@ const MiniCharts: FC<{}> = () => {
   return (
     <>
       <Box display="flex" flexDirection="row" gap={2}>
-        {selectedCharts.map((chart) => (
-          <Card sx={{ width: '100%', height: '15vh', minHeight: 150 }}>
+        {selectedCharts.map((chart, index) => (
+          <Card key={`selectedMiniChart${index}`} sx={{ width: '100%', height: '15vh', minHeight: 150 }}>
             {!loading ? (
               <ChartV2
                 formattedData={queryData}

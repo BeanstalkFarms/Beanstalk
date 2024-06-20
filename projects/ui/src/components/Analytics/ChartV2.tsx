@@ -427,7 +427,7 @@ const ChartV2: FC<ChartV2DataProps> = ({
             dataPoint?.value[index] || lastDataPoint?.value[index] || undefined;
           if (!isMobile || selected.length < 3) {
             return (
-              <Box sx={{ display: 'flex', flexDirection: 'column' }}>
+              <Box key={`selectedChartV2${index}`} sx={{ display: 'flex', flexDirection: 'column' }}>
                 <Box
                   sx={{
                     borderLeft: selected.length > 1 ? 2.5 : 0,
@@ -485,7 +485,7 @@ const ChartV2: FC<ChartV2DataProps> = ({
           }
 
           return (
-            <Box sx={{ display: 'flex', flexDirection: 'row', flexGrow: 1 }}>
+            <Box key={`selectedChartV2Mobile${index}`} sx={{ display: 'flex', flexDirection: 'row', flexGrow: 1 }}>
                 <Box
                   sx={{
                     display: 'flex',
