@@ -184,10 +184,10 @@ const makeTableData = (
       const reserve2 = well.reserves?.[1];
       const reserve1USD = reserve1?.mul(basePrice);
       const reserve2USD = reserve2?.mul(targetPrice);
-      if (reserve2USD && reserve1) {
+      if (reserve2USD && reserve1 && reserve1.gt(0)) {
         baseTokenPrice = reserve2USD.div(reserve1);
       }
-      if (reserve1USD && reserve2USD) {
+      if (reserve1USD && reserve2USD && reserve2USD.gt(0)) {
         liquidityUSD = reserve1USD.add(reserve2USD);
       }
 
