@@ -125,7 +125,7 @@ const MegaChart: FC<{ isMobile?: boolean }> = ({ isMobile = false }) => {
                 left: dialogOpen ? '0%' : '-100%',
                 width: 700,
                 zIndex: 4,
-                height: 601,
+                height: 'calc(100% + 2px)',
                 marginTop: '-1px',
                 transition: 'left 0.3s',
                 borderRadius: 0,

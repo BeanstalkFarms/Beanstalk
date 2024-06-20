@@ -117,7 +117,7 @@ const SelectDialog: FC<SelectDialogProps> = ({
         display: 'flex',
         flexDirection: 'column',
         gap: 1,
-        height: 600,
+        height: '100%',
       }}
     >
       <Box
