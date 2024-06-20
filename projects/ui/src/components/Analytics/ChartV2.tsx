@@ -18,7 +18,7 @@ import {
   useTheme,
 } from '@mui/material';
 import { FC } from '~/types';
-import { createChart } from 'lightweight-charts';
+import { TickMarkType, createChart } from 'lightweight-charts';
 import { hexToRgba } from '~/util/UI';
 import SettingsIcon from '@mui/icons-material/Settings';
 import CheckRoundedIcon from '@mui/icons-material/CheckRounded';
@@ -61,10 +61,6 @@ type ChartV2DataProps = {
    *
    */
   selected: number[];
-  /*
-  *
-  */
-  preformattedTimestamps?: boolean;
 };
 
 const chartColors = [
@@ -101,8 +97,7 @@ const ChartV2: FC<ChartV2DataProps> = ({
   drawPegLine,
   size = 'full',
   timePeriod,
-  selected,
-  preformattedTimestamps = false
+  selected
 }) => {
   const chartContainerRef = useRef<any>();
   const chart = useRef<any>();
@@ -111,6 +106,47 @@ const ChartV2: FC<ChartV2DataProps> = ({
 
   const [lastDataPoint, setLastDataPoint] = useState<any>();
   const [dataPoint, setDataPoint] = useState<any>();
+
+  function getTimezoneCorrectedTime(utcTime: Date, tickMarkType: TickMarkType) {
+    let timestamp
+    if (utcTime instanceof Date) {
+      timestamp = utcTime.getTime() / 1000
+    } else {
+      timestamp = utcTime
+    };
+    const correctedTime = new Date((timestamp * 1000));
+    let options = {};
+    switch(tickMarkType) {
+      case TickMarkType.Year:
+          options = {
+             year: 'numeric'
+          }
+          break
+      case TickMarkType.Month:
+          options = {
+              month: 'short'
+          }
+          break
+      case TickMarkType.DayOfMonth:
+          options = {
+              day: '2-digit'
+          }
+          break
+      case TickMarkType.Time:
+          options = {
+              hour: '2-digit',
+              minute: '2-digit'
+          }
+          break
+      default:
+          options = {
+              hour: '2-digit',
+              minute: '2-digit',
+              seconds: '2-digit'
+          };
+    };
+    return correctedTime.toLocaleString('en-GB', options);
+  };
 
   // Menu
   const [leftAnchorEl, setLeftAnchorEl] = useState<null | HTMLElement>(null);
@@ -168,12 +204,16 @@ const ChartV2: FC<ChartV2DataProps> = ({
           labelBackgroundColor: theme.palette.primary.main,
         },
       },
+      localization: {
+        timeFormatter: (timestamp: number) => new Date(timestamp * 1000).toLocaleString('en-GB', { dateStyle: 'medium', timeStyle: 'short' })
+      },
       timeScale: {
         timeVisible: true,
         secondsVisible: false,
         borderVisible: false,
         visible: !(size === 'mini'),
         minBarSpacing: 0.001,
+        tickMarkFormatter: (time: Date, tickMarkType: TickMarkType) => getTimezoneCorrectedTime(time, tickMarkType)
       },
       rightPriceScale: {
         borderVisible: false,
@@ -197,6 +237,9 @@ const ChartV2: FC<ChartV2DataProps> = ({
     };
 
     chart.current = createChart(chartContainerRef.current, chartOptions);
+    chart.current.timeScale().applyOptions({
+
+    })
     const numberOfCharts = selected.length;
     const priceScaleIds: string[] = [];
     if (numberOfCharts > 0) {
@@ -309,7 +352,6 @@ const ChartV2: FC<ChartV2DataProps> = ({
           ? extraData.get(commonData[0].time)
           : null;
       const formattedDate = date?.toLocaleString(undefined, {
-        timeZone: preformattedTimestamps ? 'UTC' : undefined,
         dateStyle: 'short',
         timeStyle: 'short',
       });
@@ -401,7 +443,7 @@ const ChartV2: FC<ChartV2DataProps> = ({
       chart.current.unsubscribeCrosshairMove();
       chart.current.timeScale().unsubscribeVisibleTimeRangeChange();
     };
-  }, [formattedData, extraData, selected, preformattedTimestamps]);
+  }, [formattedData, extraData, selected]);
 
   return (
     <Box sx={{ position: 'relative', height: '100%' }}>

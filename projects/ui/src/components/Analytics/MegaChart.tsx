@@ -12,11 +12,6 @@ import SelectDialog from './SelectDialog';
 import { useChartSetupData } from './useChartSetupData';
 import CalendarButton from '../Common/CalendarButton';
 
-function timeToLocal(originalTime: number) {
-  const d = new Date(originalTime * 1000);
-  return Date.UTC(d.getFullYear(), d.getMonth(), d.getDate(), d.getHours(), d.getMinutes(), d.getSeconds(), d.getMilliseconds()) / 1000;
-};
-
 const MegaChart: FC<{ isMobile?: boolean }> = ({ isMobile = false }) => {
   const season = useSeason();
   const chartSetupData = useChartSetupData();
@@ -76,7 +71,7 @@ const MegaChart: FC<{ isMobile?: boolean }> = ({ isMobile = false }) => {
                         Number(seasonData[chartSetupData[chartId].timeScaleKey])
                       );
                     }
-                    const formattedTime = timeToLocal(timestamps.get(seasonData.season));
+                    const formattedTime = timestamps.get(seasonData.season);
                     const formattedValue = chartSetupData[
                       chartId
                     ].valueFormatter(
@@ -264,7 +259,6 @@ const MegaChart: FC<{ isMobile?: boolean }> = ({ isMobile = false }) => {
                 selected={selectedCharts}
                 drawPegLine
                 timePeriod={timePeriod}
-                preformattedTimestamps
               />
             ) : (
               <Box sx={{display: 'flex', height: '90%', justifyContent: 'center', alignItems: 'center'}}>Click the Add Data button to start charting</Box>
