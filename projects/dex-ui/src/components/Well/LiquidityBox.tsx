@@ -43,10 +43,11 @@ export const LiquidityBox: FC<Props> = ({ well: _well, loading }) => {
   const position = getPositionWithWell(well);
   const isWhitelisted = getIsWhitelisted(well);
 
-  const { data: lpTokenPriceMap } = useWellLPTokenPrice(well);
+  const { data: lpTokenPriceMap = {} } = useWellLPTokenPrice(well);
 
   const lpAddress = well?.lpToken?.address;
-  const lpTokenPrice = lpAddress && lpAddress in lpTokenPriceMap ? lpTokenPriceMap[lpAddress] : TokenValue.ZERO;
+  const lpTokenPrice =
+    lpAddress && lpAddress in lpTokenPriceMap ? lpTokenPriceMap[lpAddress] : TokenValue.ZERO;
 
   const siloUSD = position?.silo.mul(lpTokenPrice) || TokenValue.ZERO;
   const externalUSD = position?.external.mul(lpTokenPrice) || TokenValue.ZERO;
