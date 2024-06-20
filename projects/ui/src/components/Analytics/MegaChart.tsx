@@ -117,7 +117,7 @@ const MegaChart: FC<{ isMobile?: boolean }> = ({ isMobile = false }) => {
   return (
     <>
       <Box display="flex" flexDirection="row" gap={2}>
-        <Card sx={{ position: 'relative', width: '100%', height: 600, overflow: 'clip' }}>
+        <Card sx={{ position: 'relative', width: '100%', height: '70vh', overflow: 'clip' }}>
           {!isMobile ? (
             <Card
               sx={{
@@ -264,7 +264,6 @@ const MegaChart: FC<{ isMobile?: boolean }> = ({ isMobile = false }) => {
                 selected={selectedCharts}
                 drawPegLine
                 timePeriod={timePeriod}
-                containerHeight={545}
                 preformattedTimestamps
               />
             ) : (

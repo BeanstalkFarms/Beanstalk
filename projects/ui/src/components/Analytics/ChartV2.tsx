@@ -60,15 +60,11 @@ type ChartV2DataProps = {
   /*
    *
    */
-  containerHeight: number;
-  /*
-   *
-   */
   selected: number[];
   /*
   *
   */
-  preformattedTimestamps: boolean;
+  preformattedTimestamps?: boolean;
 };
 
 const chartColors = [
@@ -104,16 +100,14 @@ const ChartV2: FC<ChartV2DataProps> = ({
   extraData,
   drawPegLine,
   size = 'full',
-  containerHeight,
   timePeriod,
   selected,
-  preformattedTimestamps
+  preformattedTimestamps = false
 }) => {
   const chartContainerRef = useRef<any>();
   const chart = useRef<any>();
   const areaSeries = useRef<any>([]);
   const tooltip = useRef<any>();
-  const chartHeight = containerHeight - (tooltip.current?.clientHeight || 0);
 
   const [lastDataPoint, setLastDataPoint] = useState<any>();
   const [dataPoint, setDataPoint] = useState<any>();
@@ -152,7 +146,7 @@ const ChartV2: FC<ChartV2DataProps> = ({
   const secondPriceScale = new Set(chartAxisTypes).size > 1;
 
   useEffect(() => {
-    if (!chartContainerRef.current || !chartHeight) return;
+    if (!chartContainerRef.current) return;
 
     const chartOptions = {
       layout: {
@@ -198,6 +192,7 @@ const ChartV2: FC<ChartV2DataProps> = ({
     const handleResize = () => {
       chart.current.applyOptions({
         width: chartContainerRef.current.clientWidth,
+        height: chartContainerRef.current.clientHeight
       });
     };
 
@@ -260,7 +255,6 @@ const ChartV2: FC<ChartV2DataProps> = ({
     theme,
     drawPegLine,
     size,
-    chartHeight,
     formattedData,
     chartSetupData,
     selected,
@@ -410,7 +404,7 @@ const ChartV2: FC<ChartV2DataProps> = ({
   }, [formattedData, extraData, selected, preformattedTimestamps]);
 
   return (
-    <Box sx={{ position: 'relative' }}>
+    <Box sx={{ position: 'relative', height: '100%' }}>
       <Box
         ref={tooltip}
         sx={{
@@ -554,7 +548,7 @@ const ChartV2: FC<ChartV2DataProps> = ({
         ref={chartContainerRef}
         id="container"
         sx={{
-          height: chartHeight - 20,
+          height: `calc(100% - ${size === 'mini' ? '85px' : '160px'})`,
         }}
       />
       {size === 'full' && (
@@ -565,7 +559,7 @@ const ChartV2: FC<ChartV2DataProps> = ({
               sx={{
                 p: 0,
                 position: 'absolute',
-                bottom: '6px',
+                bottom: '80px',
                 right: '24px',
               }}
             >
@@ -650,7 +644,7 @@ const ChartV2: FC<ChartV2DataProps> = ({
               sx={{
                 p: 0,
                 position: 'absolute',
-                bottom: '6px',
+                bottom: '80px',
                 left: '24px',
               }}
             >

@@ -59,7 +59,7 @@ const MiniCharts: FC<{}> = () => {
                 query: document,
                 variables: {
                   ...queryConfig?.variables,
-                  first: 168,
+                  first: 1000,
                   season_lte: startSeason,
                 },
                 notifyOnNetworkStatusChange: true,
@@ -111,14 +111,13 @@ const MiniCharts: FC<{}> = () => {
     <>
       <Box display="flex" flexDirection="row" gap={2}>
         {selectedCharts.map((chart) => (
-          <Card sx={{ width: '100%', height: 150 }}>
+          <Card sx={{ width: '100%', height: '15vh', minHeight: 150 }}>
             {!loading ? (
               <ChartV2
                 formattedData={queryData}
                 extraData={moreData}
                 selected={[chart]}
                 size="mini"
-                containerHeight={150}
               />
             ) : (
               <Box
