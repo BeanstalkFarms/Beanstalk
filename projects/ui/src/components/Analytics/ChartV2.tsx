@@ -237,9 +237,6 @@ const ChartV2: FC<ChartV2DataProps> = ({
     };
 
     chart.current = createChart(chartContainerRef.current, chartOptions);
-    chart.current.timeScale().applyOptions({
-
-    })
     const numberOfCharts = selected.length;
     const priceScaleIds: string[] = [];
     if (numberOfCharts > 0) {
