@@ -1,6 +1,7 @@
 /// All addresses are in lowercase for consistency
 
 import { ethers } from "ethers";
+import { AddressMap } from "src/types";
 
 /// Well LP Tokens
 export const BEANETH_ADDRESS = "0xbea0e11282e2bb5893bece110cf199501e872bad";
@@ -12,8 +13,9 @@ export const MULTI_FLOW_PUMP_ADDRESS = "0xba510f10e3095b83a0f33aa9ad2544e22570a8
 export const CONSTANT_PRODUCT_2_ADDRESS = "0xba510c20fd2c52e4cb0d23cfc3ccd092f9165a6e";
 
 // Well Implementation
-export const WELL_DOT_SOL_ADDRESS = "0xBA510e11eEb387fad877812108a3406CA3f43a4B".toLowerCase();
+export const WELL_DOT_SOL_ADDRESS = "0xba510e11eeb387fad877812108a3406ca3f43a4b";
 
+// ---------- METHODS ----------
 
 export const getIsValidEthereumAddress = (
   address: string | undefined,
@@ -22,4 +24,22 @@ export const getIsValidEthereumAddress = (
   if (!address) return false;
   if (enforce0Suffix && !address.startsWith("0x")) return false;
   return ethers.utils.isAddress(address ?? "");
+};
+
+/**
+ * Converts an object or array of objects with an address property to a map of address to object.
+ */
+export const toAddressMap = <T extends { address: string }>(
+  hasAddress: T | T[],
+  options?: {
+    keyLowercase?: boolean;
+  }
+) => {
+  const arr = Array.isArray(hasAddress) ? hasAddress : [hasAddress];
+
+  return arr.reduce<AddressMap<T>>((prev, curr) => {
+    const key = options?.keyLowercase ? curr.address.toLowerCase() : curr.address;
+    prev[key] = curr;
+    return prev;
+  }, {});
 };

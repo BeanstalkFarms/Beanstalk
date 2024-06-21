@@ -44,7 +44,7 @@ export const useWellImplementations = () => {
         const result = data[i];
         if (result.error) return prev;
         if (result.result) {
-          prev[curr] = result.result as string;
+          prev[curr.toLowerCase()] = result.result.toLowerCase() as string;
         }
         return prev;
       }, {});
