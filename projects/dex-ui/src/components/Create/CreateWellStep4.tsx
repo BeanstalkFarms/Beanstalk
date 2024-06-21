@@ -290,11 +290,11 @@ const AllowanceButtons = ({
 
   useEffect(() => {
     if (seedingLiquidity && (amount1ExceedsAllowance || amount2ExceedsAllowance)) {
-      // setHasEnoughAllowance(false);
+      setHasEnoughAllowance(false);
       return;
     }
 
-    // setHasEnoughAllowance(true);
+    setHasEnoughAllowance(true);
   }, [amount1ExceedsAllowance, seedingLiquidity, amount2ExceedsAllowance, setHasEnoughAllowance]);
 
   if (!amount1ExceedsAllowance && !amount2ExceedsAllowance) {

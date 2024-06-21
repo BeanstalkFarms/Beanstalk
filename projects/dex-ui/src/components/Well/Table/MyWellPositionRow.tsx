@@ -98,7 +98,7 @@ export const MyWellPositionRow: FC<{
     symbols.push(token.symbol);
   });
 
-  const lpPrice = lpAddress && lpAddress in prices ? prices[lpAddress] : undefined;
+  const lpPrice = lpAddress && prices && lpAddress in prices ? prices[lpAddress] : undefined;
   const whitelisted = getIsWhitelisted(well);
 
   const positionsUSD = {
