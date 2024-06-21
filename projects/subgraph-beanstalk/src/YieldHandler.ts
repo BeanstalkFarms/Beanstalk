@@ -379,11 +379,13 @@ export function calculateGaugeVAPYs(
   let userBeans: BigInt[] = [];
   let userLp: BigInt[] = [];
   let userStalk: BigInt[] = [];
+  let initialStalk: BigInt[] = [];
   for (let i = 0; i < tokens.length; ++i) {
     userBeans.push(toBigInt(tokens[i] == -1 ? ONE_BD : ZERO_BD, BALANCES_PRECISION));
     userLp.push(toBigInt(tokens[i] == -1 ? ZERO_BD : ONE_BD, BALANCES_PRECISION));
     // Initial stalk from deposit + avg grown stalk
     userStalk.push(toBigInt(ONE_BD, BALANCES_PRECISION).plus(startingGrownStalk.times(BI_10.pow(BALANCES_PRECISION - PRECISION))));
+    initialStalk.push(userStalk[i]);
   }
 
   const SEED_PRECISION = toBigInt(BigDecimal.fromString("10000"), PRECISION);
@@ -450,7 +452,11 @@ export function calculateGaugeVAPYs(
       .plus(userLp[i])
       .minus(BALANCES_PRECISION_BI)
       .times(toBigInt(BigDecimal.fromString("100"), PRECISION));
-    const stalkApy = userStalk[i].minus(BALANCES_PRECISION_BI).times(toBigInt(BigDecimal.fromString("100"), PRECISION));
+    const stalkApy = userStalk[i]
+      .minus(initialStalk[i])
+      .times(BALANCES_PRECISION_BI)
+      .div(initialStalk[i])
+      .times(toBigInt(BigDecimal.fromString("100"), PRECISION));
     // Add 2 to each precision to divide by 100 (i.e. 25% is .25 not 25)
     retval.push([toDecimal(beanApy, PRECISION + BALANCES_PRECISION + 2), toDecimal(stalkApy, PRECISION + BALANCES_PRECISION + 2)]);
   }
