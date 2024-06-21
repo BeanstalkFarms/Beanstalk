@@ -395,7 +395,7 @@ const HeaderContainer = styled(Row)`
   }
 
   ${mediaQuery.md.up} {
-    align-item: space-between;
+    align-items: space-between;
   }
 `;
 
@@ -509,6 +509,7 @@ const BottomContainer = styled.div`
 
 const FunctionName = styled.div`
   ${BodyL}
+  text-align: right;
 
   ${mediaQuery.lg.down} {
     ${BodyS}

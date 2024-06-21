@@ -6,7 +6,6 @@ import { Log } from "src/utils/logger";
 import { Pump, WellFunction } from "@beanstalk/sdk-wells";
 import { useAccount } from "wagmi";
 import { usePumps } from "src/wells/pump/usePumps";
-import { useWellFunctions } from "src/wells/wellFunction/useWellFunctions";
 import BoreWellUtils from "src/wells/boreWell";
 import { clearWellsCache } from "src/wells/useWells";
 import { useQueryClient } from "@tanstack/react-query";
@@ -34,10 +33,9 @@ import { useQueryClient } from "@tanstack/react-query";
  *
  * Deploying:
  * - The user can choose to deploy a well with or without liquidity.
- *  - In the case where the user decides to deploy w/o seeding liquidity, we can deploy the well via interfacing with the contract directly.
- *  - If the user decides to deploy with liquidity, we must use the pipeline contract to deploy the well.
- *    Because we we must be able to detministically predict the well address to add subsequently add liquidity, we must provide a valid 'salt' value.
- *    Aquifer.sol only creates a copy of a well implementation at a deterministic address if the 'salt' value is greater than 0.
+ *  - We use pipeline to deploy the well.
+ *  - If the user decides to deploy with liquidity, because we we must be able to detministically predict the well address to add subsequently add liquidity,
+ *    we must provide a valid 'salt' value. Aquifer.sol only creates a copy of a well implementation at a deterministic address if the 'salt' value is greater than 0.
  *
  * Vulnerabilities:
  * - If the user provides the wrong 'data' value for a well function or a pump, the well may not deploy, may never function properly, or this may result in loss of funds.
@@ -124,7 +122,6 @@ const Context = createContext<CreateWellContext | null>(null);
 export const CreateWellProvider = ({ children }: { children: React.ReactNode }) => {
   const { address: walletAddress } = useAccount();
   const sdk = useSdk();
-  // const wellFunctions = useWellFunctions();
   const pumps = usePumps();
   const queryClient = useQueryClient();
 
@@ -239,7 +236,7 @@ export const CreateWellProvider = ({ children }: { children: React.ReactNode }) 
         if (!wellTokens.token2) throw new Error("token 2 not set");
         if (!wellDetails.name) throw new Error("well name not set");
         if (!wellDetails.symbol) throw new Error("well symbol not set");
-        if (pumpAddress && !pump) {
+        if (pumpAddress !== "none" && !pump) {
           throw new Error("pump not set");
         }
 
