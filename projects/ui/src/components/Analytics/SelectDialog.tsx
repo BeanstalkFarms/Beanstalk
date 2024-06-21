@@ -2,6 +2,7 @@ import React, { FC, useCallback, useEffect, useMemo, useState } from 'react';
 import {
   Box,
   Button,
+  ClickAwayListener,
   Divider,
   IconButton,
   TextField,
@@ -111,94 +112,145 @@ const SelectDialog: FC<SelectDialogProps> = ({
   }, [filteredData]);
 
   return (
-    <Box
-      sx={{
-        paddingY: 2,
-        display: 'flex',
-        flexDirection: 'column',
-        gap: 1,
-        height: '100%',
-      }}
-    >
+    <ClickAwayListener onClickAway={handleClose} mouseEvent="onMouseDown" touchEvent="onTouchStart">
       <Box
         sx={{
-          marginX: 2,
-          display: 'flex',
-          flexDirection: 'row',
-          justifyContent: 'space-between',
-        }}
-      >
-        <Box sx={{ display: 'flex' }}>Find Data</Box>
-        <IconButton
-          aria-label="close"
-          onClick={() => closeDialog()}
-          disableRipple
-          sx={{
-            p: 0,
-          }}
-        >
-          <CloseIcon sx={{ fontSize: 20, color: 'text.primary' }} />
-        </IconButton>
-      </Box>
-      <TextField
-        sx={{ width: '100%', paddingX: 2, }}
-        placeholder="Search for data"
-        size="small"
-        color="primary"
-        InputProps={{
-          startAdornment: (
-            <SearchRoundedIcon fontSize="small" color="inherit" />
-          ),
-        }}
-        onChange={(e) => {
-          setSearchInput(e.target.value);
-        }}
-      />
-      <Box sx={{ display: 'flex', gap: 1, marginX: 2 }}>
-        {dataTypes.map((dataType) => {
-          const isSelected = selectedTypes.includes(dataType);
-          return (
-            <Button
-              key={`selectDialog${dataType}`}
-              variant="outlined"
-              size="large"
-              sx={{
-                px: 0.75,
-                py: 0.25,
-                height: 'unset',
-                backgroundColor: 'white',
-                border: '1px solid',
-                fontWeight: 'normal',
-                ':hover': {
-                  borderColor: 'text.light',
-                  background: 'primary.light',
-                  ...(isSelected ? selectedSx : {}),
-                },
-                ...(isSelected ? selectedSx : unselectedSx),
-              }}
-              onClick={() => typeToggle(dataType)}
-            >
-              {dataType}
-            </Button>
-          );
-        })}
-      </Box>
-      <Divider />
-      <Box
-        sx={{
+          paddingY: 2,
           display: 'flex',
           flexDirection: 'column',
-          gap: 0.5,
-          overflowY: 'auto',
+          gap: 1,
+          height: '100%',
         }}
       >
-        <Box ref={measuredRef} sx={{ display: 'flex', width: '100%', height: '0px' }} />
-        {filteredData.map((data, index) => {
-          const indexInSelection = internalSelected.findIndex(
-            (selectionIndex) => data.index === selectionIndex
-          );
-          const isSelected = indexInSelection > -1;
-          if (!isMobile) {
+        <Box
+          sx={{
+            marginX: 2,
+            display: 'flex',
+            flexDirection: 'row',
+            justifyContent: 'space-between',
+          }}
+        >
+          <Box sx={{ display: 'flex' }}>Find Data</Box>
+          <IconButton
+            aria-label="close"
+            onClick={() => closeDialog()}
+            disableRipple
+            sx={{
+              p: 0,
+            }}
+          >
+            <CloseIcon sx={{ fontSize: 20, color: 'text.primary' }} />
+          </IconButton>
+        </Box>
+        <TextField
+          sx={{ width: '100%', paddingX: 2, }}
+          placeholder="Search for data"
+          size="small"
+          color="primary"
+          InputProps={{
+            startAdornment: (
+              <SearchRoundedIcon fontSize="small" color="inherit" />
+            ),
+          }}
+          onChange={(e) => {
+            setSearchInput(e.target.value);
+          }}
+        />
+        <Box sx={{ display: 'flex', gap: 1, marginX: 2 }}>
+          {dataTypes.map((dataType) => {
+            const isSelected = selectedTypes.includes(dataType);
+            return (
+              <Button
+                key={`selectDialog${dataType}`}
+                variant="outlined"
+                size="large"
+                sx={{
+                  px: 0.75,
+                  py: 0.25,
+                  height: 'unset',
+                  backgroundColor: 'white',
+                  border: '1px solid',
+                  fontWeight: 'normal',
+                  ':hover': {
+                    borderColor: 'text.light',
+                    background: 'primary.light',
+                    ...(isSelected ? selectedSx : {}),
+                  },
+                  ...(isSelected ? selectedSx : unselectedSx),
+                }}
+                onClick={() => typeToggle(dataType)}
+              >
+                {dataType}
+              </Button>
+            );
+          })}
+        </Box>
+        <Divider />
+        <Box
+          sx={{
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 0.5,
+            overflowY: 'auto',
+          }}
+        >
+          <Box ref={measuredRef} sx={{ display: 'flex', width: '100%', height: '0px' }} />
+          {filteredData.map((data, index) => {
+            const indexInSelection = internalSelected.findIndex(
+              (selectionIndex) => data.index === selectionIndex
+            );
+            const isSelected = indexInSelection > -1;
+            if (!isMobile) {
+              return (
+                <Row
+                  key={`chartSelectList${index}`}
+                  onClick={() => handleSelection(data.index)}
+                  gap={0.3}
+                  p={0.25}
+                  sx={{
+                    paddingLeft: 2,
+                    paddingRight: rowWidth ? `${22.5 - (700 - rowWidth)}px` : 0,
+                    backgroundColor: isSelected ? 'primary.light' : undefined,
+                    '&:hover': { backgroundColor: '#F5F5F5', cursor: 'pointer' },
+                  }}
+                >
+                  {data.type === 'Bean' ? (
+                    <img
+                      src={beanIcon}
+                      alt="Bean"
+                      style={{ height: 16, width: 16 }}
+                    />
+                  ) : data.type === 'Silo' ? (
+                    <img
+                      src={siloIcon}
+                      alt="Silo"
+                      style={{ height: 16, width: 16 }}
+                    />
+                  ) : data.type === 'Field' ? (
+                    <img
+                      src={podIcon}
+                      alt="Bean"
+                      style={{ height: 16, width: 16 }}
+                    />
+                  ) : null}
+                  <Box>{data.name}</Box>
+                  <Box
+                    sx={{
+                      display: 'flex',
+                      flexGrow: 1,
+                      justifyContent: 'flex-end',
+                      overflow: 'clip',
+                      whiteSpace: 'nowrap',
+                      textOverflow: 'ellipsis',
+                    }}
+                  >
+                    <Typography fontSize={10} color="text.tertiary">
+                      {data.shortDescription}
+                    </Typography>
+                  </Box>
+                </Row>
+              );
+            }
             return (
               <Row
                 key={`chartSelectList${index}`}
@@ -206,101 +258,52 @@ const SelectDialog: FC<SelectDialogProps> = ({
                 gap={0.3}
                 p={0.25}
                 sx={{
-                  paddingLeft: 2,
-                  paddingRight: rowWidth ? `${22.5 - (700 - rowWidth)}px` : 0,
                   backgroundColor: isSelected ? 'primary.light' : undefined,
                   '&:hover': { backgroundColor: '#F5F5F5', cursor: 'pointer' },
                 }}
               >
-                {data.type === 'Bean' ? (
-                  <img
-                    src={beanIcon}
-                    alt="Bean"
-                    style={{ height: 16, width: 16 }}
-                  />
-                ) : data.type === 'Silo' ? (
-                  <img
-                    src={siloIcon}
-                    alt="Silo"
-                    style={{ height: 16, width: 16 }}
-                  />
-                ) : data.type === 'Field' ? (
-                  <img
-                    src={podIcon}
-                    alt="Bean"
-                    style={{ height: 16, width: 16 }}
-                  />
-                ) : null}
-                <Box>{data.name}</Box>
-                <Box
-                  sx={{
-                    display: 'flex',
-                    flexGrow: 1,
-                    justifyContent: 'flex-end',
-                    overflow: 'clip',
-                    whiteSpace: 'nowrap',
-                    textOverflow: 'ellipsis',
-                  }}
-                >
-                  <Typography fontSize={10} color="text.tertiary">
+                <Box display="flex" alignContent="center">
+                  {data.type === 'Bean' ? (
+                    <img
+                      src={beanIcon}
+                      alt="Bean"
+                      style={{ height: 32, width: 32 }}
+                    />
+                  ) : data.type === 'Silo' ? (
+                    <img
+                      src={siloIcon}
+                      alt="Silo"
+                      style={{ height: 32, width: 32 }}
+                    />
+                  ) : data.type === 'Field' ? (
+                    <img
+                      src={podIcon}
+                      alt="Bean"
+                      style={{ height: 32, width: 32 }}
+                    />
+                  ) : null}
+                </Box>
+                <Box display="flex" flexDirection="column">
+                  <Box
+                    sx={{ display: 'flex', flexGrow: 1, whiteSpace: 'nowrap' }}
+                  >
+                    {data.name}
+                  </Box>
+                  <Typography
+                    fontSize={10}
+                    lineHeight={1}
+                    whiteSpace="wrap"
+                    color="text.tertiary"
+                  >
                     {data.shortDescription}
                   </Typography>
                 </Box>
               </Row>
             );
-          }
-          return (
-            <Row
-              key={`chartSelectList${index}`}
-              onClick={() => handleSelection(data.index)}
-              gap={0.3}
-              p={0.25}
-              sx={{
-                backgroundColor: isSelected ? 'primary.light' : undefined,
-                '&:hover': { backgroundColor: '#F5F5F5', cursor: 'pointer' },
-              }}
-            >
-              <Box display="flex" alignContent="center">
-                {data.type === 'Bean' ? (
-                  <img
-                    src={beanIcon}
-                    alt="Bean"
-                    style={{ height: 32, width: 32 }}
-                  />
-                ) : data.type === 'Silo' ? (
-                  <img
-                    src={siloIcon}
-                    alt="Silo"
-                    style={{ height: 32, width: 32 }}
-                  />
-                ) : data.type === 'Field' ? (
-                  <img
-                    src={podIcon}
-                    alt="Bean"
-                    style={{ height: 32, width: 32 }}
-                  />
-                ) : null}
-              </Box>
-              <Box display="flex" flexDirection="column">
-                <Box
-                  sx={{ display: 'flex', flexGrow: 1, whiteSpace: 'nowrap' }}
-                >
-                  {data.name}
-                </Box>
-                <Typography
-                  fontSize={10}
-                  lineHeight={1}
-                  whiteSpace="wrap"
-                  color="text.tertiary"
-                >
-                  {data.shortDescription}
-                </Typography>
-              </Box>
-            </Row>
-          );
-        })}
+          })}
+        </Box>
       </Box>
-    </Box>
+    </ClickAwayListener>
   );
 };
 
