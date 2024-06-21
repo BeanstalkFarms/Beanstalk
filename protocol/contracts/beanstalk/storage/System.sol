@@ -289,7 +289,6 @@ struct WhitelistStatus {
  * @param gaugePoints the amount of Gauge points this LP token has in the LP Gauge. Only used for LP whitelisted assets.
  * GaugePoints has 18 decimal point precision (1 Gauge point = 1e18).
  * @param optimalPercentDepositedBdv The target percentage of the total LP deposited BDV for this token. 6 decimal precision.
- * @param oracleImplementation The implementation for the oracle.
  * @param gaugePointImplementation The implementation for the gauge points. Supports encodeType 0 and 1.
  * @param liquidityWeightImplementation The implementation for the liquidity weight.
  * @dev A Token is considered Whitelisted if there exists a non-zero {AssetSettings} selector.
@@ -306,7 +305,6 @@ struct AssetSettings {
     uint64 optimalPercentDepositedBdv; //  ──┘ 8
     Implementation gaugePointImplementation;
     Implementation liquidityWeightImplementation;
-    Implementation oracleImplementation;
 }
 
 /**

@@ -14,7 +14,7 @@ import {LibWhitelist} from "contracts/libraries/Silo/LibWhitelist.sol";
 import {LibRedundantMath32} from "contracts/libraries/LibRedundantMath32.sol";
 import {C} from "../C.sol";
 import {LibWell} from "contracts/libraries/Well/LibWell.sol";
-import {IGaugePointFacet} from "contracts/beanstalk/sun/GaugePointFacet.sol";
+import {IGaugePointFacet} from "contracts/beanstalk/sun/GaugePoints/GaugePointFacet.sol";
 
 /**
  * @title LibGauge
@@ -209,21 +209,6 @@ library LibGauge {
             newGaugePoints := mload(add(data, add(0x20, 0)))
         }
     }
-
-    /**
-     * @notice Calculates the new gauge points for the given token.
-     * @dev Function calls the selector of the token's gauge point function.
-     * Currently all assets uses the default GaugePoint Function.
-     * Returns the current gauge points if failed rather than revert.
-     * {GaugePointFacet.defaultGaugePointFunction()}
-     */
-    function calcGaugePointsFromAddress(
-        address target,
-        bytes4 selector,
-        uint256 gaugePoints,
-        uint256 optimalPercentDepositedBdv,
-        uint256 percentDepositedBdv
-    ) internal view returns (uint256 newGaugePoints) {}
 
     /**
      * @notice Updates the average grown stalk per BDV per Season for whitelisted Beanstalk assets.

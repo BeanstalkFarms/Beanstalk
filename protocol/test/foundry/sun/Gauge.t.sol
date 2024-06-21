@@ -7,6 +7,7 @@ import {MockSeasonFacet} from "contracts/mocks/mockFacets/MockSeasonFacet.sol";
 import {LibGauge} from "contracts/libraries/LibGauge.sol";
 import {MockChainlinkAggregator} from "contracts/mocks/chainlink/MockChainlinkAggregator.sol";
 import {MockLiquidityWeight} from "contracts/mocks/MockLiquidityWeight.sol";
+import {GaugePointPrice} from "contracts/beanstalk/sun/GaugePoints/GaugePointPrice.sol";
 import {LibAppStorage} from "contracts/libraries/LibAppStorage.sol";
 import {AppStorage} from "contracts/beanstalk/storage/AppStorage.sol";
 
@@ -19,13 +20,18 @@ contract GaugeTest is TestHelper {
 
     // Interfaces.
     MockSeasonFacet season = MockSeasonFacet(BEANSTALK);
-    MockLiquidityWeight lw = MockLiquidityWeight(BEANSTALK);
+    MockLiquidityWeight mlw = MockLiquidityWeight(BEANSTALK);
+    GaugePointPrice gpP;
 
     function setUp() public {
         initializeBeanstalkTestState(true, false);
 
         // deploy mockLiquidityWeight contract for testing.
-        lw = new MockLiquidityWeight(0.5e18);
+        mlw = new MockLiquidityWeight(0.5e18);
+
+        // deploy gaugePointPrice contract for WETH, with a price threshold of 500 USD,
+        // and a gaugePoint of 10.
+        gpP = new GaugePointPrice(BEANSTALK, C.WETH, 500e6, 10e18);
     }
 
     ////////////////////// BEAN TO MAX LP RATIO //////////////////////
@@ -189,9 +195,9 @@ contract GaugeTest is TestHelper {
         // update liquidtyWeight.
         bs.mockUpdateLiquidityWeight(
             whitelistedWellTokens[rand],
-            address(lw),
+            address(mlw),
             0x00,
-            lw.getLiquidityWeight.selector
+            mlw.getLiquidityWeight.selector
         );
 
         // 1 out of 2 whitelisted lp tokens should have updated weight.
@@ -516,6 +522,43 @@ contract GaugeTest is TestHelper {
             uint256 stalkToLp = postSettings[i].stalkEarnedPerSeason * tokenDepositedBdv;
             // precise within 1e-6.
             assertApproxEqRel(stalkToLp, (totalStalk * percentGaugePoints) / 1e18, 1e12);
+        }
+    }
+
+    function testPriceGaugePointFunction(
+        uint256 gaugePoints,
+        uint256 optimalPercentDepositedBdv,
+        uint256 percentOfDepositedBdv,
+        uint256 price
+    ) public {
+        gaugePoints = bound(gaugePoints, 1e18, 1000e18);
+        percentOfDepositedBdv = bound(percentOfDepositedBdv, 0, 100e6);
+        optimalPercentDepositedBdv = bound(optimalPercentDepositedBdv, 0, 100e6);
+        price = bound(price, 0, 1000e6);
+
+        // update weth price:
+        mockAddRound(C.ETH_USD_CHAINLINK_PRICE_AGGREGATOR, int256(price), 900);
+
+        uint256 newGaugePoints = gpP.priceGaugePointFunction(
+            gaugePoints,
+            optimalPercentDepositedBdv,
+            percentOfDepositedBdv
+        );
+
+        if (gpP.getPriceThreshold() >= price) {
+            uint256 gaugePointPrice = gpP.getGaugePointsPrice();
+            gaugePointPrice = gaugePointPrice > gaugePoints ? gaugePoints : gaugePointPrice;
+            assertEq(newGaugePoints, gaugePointPrice);
+        } else {
+            // verify standard gauge point implmnetation:
+            assertEq(
+                newGaugePoints,
+                gpP.defaultGaugePointFunction(
+                    gaugePoints,
+                    optimalPercentDepositedBdv,
+                    percentOfDepositedBdv
+                )
+            );
         }
     }
 

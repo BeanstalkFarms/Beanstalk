@@ -8,7 +8,7 @@ import {ILiquidityWeightFacet} from "contracts/beanstalk/sun/LiquidityWeightFace
 import {LibWhitelistedTokens} from "contracts/libraries/Silo/LibWhitelistedTokens.sol";
 import {AppStorage} from "contracts/beanstalk/storage/AppStorage.sol";
 import {AssetSettings, Implementation} from "contracts/beanstalk/storage/System.sol";
-import {IGaugePointFacet} from "contracts/beanstalk/sun/GaugePointFacet.sol";
+import {IGaugePointFacet} from "contracts/beanstalk/sun/GaugePoints/GaugePointFacet.sol";
 import {LibTractor} from "contracts/libraries/LibTractor.sol";
 import {LibDiamond} from "contracts/libraries/LibDiamond.sol";
 import {LibCases} from "contracts/libraries/LibCases.sol";
@@ -91,7 +91,6 @@ contract InitalizeDiamond {
             IGaugePointFacet.defaultGaugePointFunction.selector,
             bytes1(0)
         );
-        Implementation memory oracleImpl = Implementation(address(0), bytes4(0), bytes1(0));
 
         AssetSettings[] memory assetSettings = new AssetSettings[](2);
         assetSettings[0] = AssetSettings({
@@ -105,8 +104,7 @@ contract InitalizeDiamond {
             gaugePoints: 0,
             optimalPercentDepositedBdv: 0,
             gaugePointImplementation: impl,
-            liquidityWeightImplementation: impl,
-            oracleImplementation: oracleImpl
+            liquidityWeightImplementation: impl
         });
 
         assetSettings[1] = AssetSettings({
@@ -120,8 +118,7 @@ contract InitalizeDiamond {
             gaugePoints: INIT_TOKEN_G_POINTS,
             optimalPercentDepositedBdv: INIT_BEAN_TOKEN_WELL_PERCENT_TARGET,
             gaugePointImplementation: gaugePointImpl,
-            liquidityWeightImplementation: liquidityWeightImpl,
-            oracleImplementation: oracleImpl
+            liquidityWeightImplementation: liquidityWeightImpl
         });
 
         whitelistPools(tokens, assetSettings);
