@@ -27,38 +27,40 @@ import { setHours } from 'date-fns';
 import { useChartSetupData } from './useChartSetupData';
 import { BeanstalkPalette } from '../App/muiTheme';
 /*
-    List of Variables:
-    formattedData (MUST BE IN ASCENDING ORDER)
-    extraData (MUST BE IN ASCENDING ORDER)
-    drawPegLine
-    TODO: drawExploitLine (timestamp: 1650196810)
-    size
-    containerHeight
+  List of Variables:
+  TODO: drawExploitLine (timestamp: 1650196810)
 */
 
 type ChartV2DataProps = {
-  /*
-   *
+  /** 
+   * Series of timestampped values to be charted.
+   * Must be in ascending order.
    */
   formattedData: { time: number; value: number }[][];
-  /*
-   *
+  /**
+   * Lightweight Charts cannot easily handle custom data,
+   * so we pass it a Timestamp-Season Map. 
    */
   extraData?: Map<Number, String>;
-  /*
-   *
+  /**
+   * Draw $1 peg line?
    */
   drawPegLine?: boolean;
-  /*
-   *
+  /**
+   * Selects which version to show. Mini charts are used for 
+   * compact views and forgo the following:
+   * - Price Scales
+   * - Time Scale
+   * - Labels
+   * - Season Display
    */
   size?: 'mini' | 'full';
-  /*
-   *
+  /**
+   * Time period to automatically set the chart to.
    */
   timePeriod?: { from: Date | undefined; to: Date | undefined };
-  /*
-   *
+  /**
+   * Ids of the currently selected charts.
    */
   selected: number[];
 };

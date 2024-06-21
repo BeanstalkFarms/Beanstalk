@@ -24,6 +24,9 @@ import {
 import useSdk from '~/hooks/sdk';
 import { useMemo } from 'react';
 import { formatUnits } from 'viem';
+import { BEAN_CRV3_V1_LP, BEAN_LUSD_LP } from '~/constants/tokens';
+import { DocumentNode } from 'graphql';
+import { OperationVariables, QueryOptions } from '@apollo/client';
 import {
   tickFormatBeanAmount,
   tickFormatBeanPrice,
@@ -31,7 +34,75 @@ import {
   tickFormatUSD,
   valueFormatBeanAmount,
 } from './formatters';
-import { BEAN_CRV3_V1_LP, BEAN_LUSD_LP } from '~/constants/tokens';
+
+type ChartSetupBase = {
+  /**
+  * Name of this chart. Mainly used in the Select Dialog and the chips that show which charts
+  * are currently selected, therefore ideally it should be short and to the point.
+  */
+  name: string;
+  /**
+  * Title shown in the actual chart after the user 
+  * makes their selection.
+  */
+  tooltipTitle: string;
+  /**
+  * Text description shown when user hovers the tooltip icon next to the tooltip title.
+  */
+  tooltipHoverText: string;
+  /**
+  * Short description shown in the Select Dialog.
+  */
+  shortDescription: string;
+  /**
+  * The field in the GraphQL request that corresponds to a timestamp. Usually "createdAt" or "timestamp".
+  */
+  timeScaleKey: string;
+  /**
+  * The field in the GraphQL request that corresponds to the value that will be charted.
+  */
+  priceScaleKey: string;
+  /**
+  * The Apollo document of the GraphQL query.
+  */
+  document: DocumentNode;
+  /**
+  * The entity that contains the data in your GraphQL request. Usually "seasons".
+  */
+  documentEntity: string;
+  /**
+  * Short identifier for the output of this chart. Lightweight Charts only supports 
+  * two price scales, so we use this to group charts that have similar 
+  * outputs in the same price scale.
+  */
+  valueAxisType: string;
+  /**
+  * Sets up things like variables and context for the GraphQL queries.
+  */
+  queryConfig: Partial<QueryOptions<OperationVariables, any>> | undefined,
+  /**
+  * Formats the raw output from the query into a number for Lightweight Charts.
+  */
+  valueFormatter: (v: string) => number | undefined;
+  /**
+  * Formats the number used by Lightweight Charts into a string that's actually 
+  * displayed throughout the chart. This is where we can do things like add a 
+  * dollar sign to the start of a number, convert 500000 to 500,000 or 500K, and so on. 
+  */
+  tickFormatter: (v: number) => string | undefined;
+};
+
+type ChartSetup = ChartSetupBase & {
+  /**
+  * Used in the "Bean/Field/Silo" buttons in the Select Dialog to allow 
+  * the user to quickly filter the available charts.
+  */
+  type: string;
+  /**
+  * Id of this chart in the chart data array.
+  */
+  index: number;
+};
 
 export function useChartSetupData() {
   const sdk = useSdk();
@@ -56,9 +127,9 @@ export function useChartSetupData() {
       BEAN_CRV3_V1_LP[1],
     ];
 
-    const lpCharts: any[] = [];
-    const depositCharts: any[] = [];
-    const apyCharts: any[] = [];
+    const lpCharts: ChartSetupBase[] = [];
+    const depositCharts: ChartSetupBase[] = [];
+    const apyCharts: ChartSetupBase[] = [];
 
     depositedTokensToChart.forEach((token) => {
       const depositedChart = {
@@ -140,10 +211,10 @@ export function useChartSetupData() {
       lpCharts.push(lpChart);
     });
     
-    const output: any[] = [];
+    const output: ChartSetup[] = [];
     let dataIndex = 0;
 
-    const beanCharts = [
+    const beanCharts: ChartSetupBase[] = [
       {
         name: 'Bean Price',
         tooltipTitle: 'Current Bean Price',
@@ -321,7 +392,7 @@ export function useChartSetupData() {
       },
     ];
 
-    const siloCharts = [
+    const siloCharts: ChartSetupBase[] = [
       ...depositCharts,
       {
         name: `Stalk`,
@@ -345,7 +416,7 @@ export function useChartSetupData() {
       ...apyCharts,
     ];
 
-    const fieldCharts = [
+    const fieldCharts: ChartSetupBase[] = [
       {
         name: 'Real Rate of Return',
         tooltipTitle: 'Real Rate of Return',
@@ -452,7 +523,7 @@ export function useChartSetupData() {
         documentEntity: 'seasons',
         queryConfig: undefined,
         valueFormatter: (v: string) => Number(v),
-        tickFormatter: (v: string) => Number(v),
+        tickFormatter: (v: number) => v.toString(),
       },
     ];
 
