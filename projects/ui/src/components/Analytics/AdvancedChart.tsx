@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { FC } from '~/types';
 import { Box, Button, Card, CircularProgress, Drawer } from '@mui/material';
 import AddRoundedIcon from '@mui/icons-material/AddRounded';
@@ -7,6 +7,7 @@ import useToggle from '~/hooks/display/useToggle';
 import { apolloClient } from '~/graph/client';
 import useSeason from '~/hooks/beanstalk/useSeason';
 import { Range, Time } from 'lightweight-charts';
+import useSetting from '~/hooks/app/useSetting';
 import ChartV2 from './ChartV2';
 import DropdownIcon from '../Common/DropdownIcon';
 import SelectDialog from './SelectDialog';
@@ -25,10 +26,11 @@ const AdvancedChart: FC<{ isMobile?: boolean }> = ({ isMobile = false }) => {
   const season = useSeason();
   const chartSetupData = useChartSetupData();
 
-  const [timePeriod, setTimePeriod] = useState<Range<Time>>();
+  const [chartSettings, setChartSettings] = useSetting('advancedChartSettings');
+  const [timePeriod, setTimePeriod] = useState<Range<Time>>(chartSettings.timePeriod);
+  const [selectedCharts, setSelectedCharts] = useState(chartSettings?.selectedCharts || [0]);
 
   const [dialogOpen, showDialog, hideDialog] = useToggle();
-  const [selectedCharts, setSelectedCharts] = useState([0]);
   const [queryData, setQueryData] = useState<QueryData[][]>([]);
   const [loading, setLoading] = useState<boolean>(true);
 
@@ -118,6 +120,16 @@ const AdvancedChart: FC<{ isMobile?: boolean }> = ({ isMobile = false }) => {
     getSeasonData(true);
     setLoading(false);
   }, [chartSetupData, selectedCharts, season]);
+
+  useEffect(() => {
+    setChartSettings({
+      range: chartSettings.range,
+      preset: chartSettings.preset,
+      selectedCharts: selectedCharts,
+      timePeriod: timePeriod
+    });
+  // @ts-ignore
+  }, [selectedCharts, setChartSettings, chartSettings.range, chartSettings.preset, timePeriod]);
 
   function handleDeselectChart(selectionIndex: number) {
     const newSelection = [...selectedCharts];

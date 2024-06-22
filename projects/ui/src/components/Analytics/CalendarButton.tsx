@@ -35,10 +35,11 @@ import {
 } from 'date-fns';
 import CloseIcon from '@mui/icons-material/Close';
 import { Range, Time } from 'lightweight-charts';
+import useSetting from '~/hooks/app/useSetting';
 
 type CalendarProps = {
   setTimePeriod: React.Dispatch<
-    React.SetStateAction<Range<Time> | undefined>
+    React.SetStateAction<Range<Time>>
   >;
 };
 
@@ -47,11 +48,9 @@ type CalendarContentProps = {
   isMobile: boolean;
   range: DateRange | undefined;
   selectedPreset: string;
-  setPreset: React.Dispatch<React.SetStateAction<string>>;
-  handleRangeChange: (newRange: DateRange) => void;
-  handlePresetSelect: (
-    _preset: string,
-    selectedRange: DateRange
+  handleChange: (
+    newRange?: DateRange,
+    _preset?: string
   ) => void;
 };
 
@@ -117,9 +116,7 @@ const CalendarContent: FC<CalendarContentProps> = ({
   isMobile,
   range,
   selectedPreset,
-  handleRangeChange,
-  handlePresetSelect,
-  setPreset,
+  handleChange,
 }) => {
   const [month, setMonth] = useState(new Date());
 
@@ -135,8 +132,7 @@ const CalendarContent: FC<CalendarContentProps> = ({
   const handleDayPickerSelect = (date: DateRange | undefined) => {
     if (!date) {
       setInputValue({ from: undefined, to: undefined });
-      setPreset('ALL');
-      handleRangeChange(initialRange);
+      handleChange(initialRange, 'ALL');
     } else {
       const fromHour = inputTime.from
         ? parse(inputTime.from, 'HH', new Date()).getHours()
@@ -152,8 +148,7 @@ const CalendarContent: FC<CalendarContentProps> = ({
           ? set(date.to, { hours: Number(toHour || 23), minutes: 0 })
           : undefined,
       };
-      handleRangeChange(adjustedDate);
-      setPreset('CUSTOM');
+      handleChange(adjustedDate, 'CUSTOM');
       setInputValue({
         from: adjustedDate.from
           ? format(adjustedDate.from, 'MM/dd/yyyy')
@@ -189,18 +184,16 @@ const CalendarContent: FC<CalendarContentProps> = ({
       const currentDateTo = currentValue.to ? parse(currentValue.to, 'MM/dd/yyyy', new Date()) : undefined;
 
       if (isValid(parsedDate)) {
-        handleRangeChange({
+        handleChange({
           from: target === 'from' ? parsedDate : currentDateFrom,
           to: target === 'to' ? parsedDate : currentDateTo,
-        });
-        setPreset('CUSTOM');
+        }, 'CUSTOM');
         setMonth(parsedDate);
       } else {
-        handleRangeChange({
+        handleChange({
           from: undefined,
           to: undefined,
-        });
-        setPreset('ALL');
+        }, 'ALL');
       }
     } else if (type === 'time') {
       const currentValue = inputTime;
@@ -225,7 +218,7 @@ const CalendarContent: FC<CalendarContentProps> = ({
               ? setMinutes(setHours(range?.to, newHour), newMinutes)
               : range?.to,
         };
-        handleRangeChange(newTime);
+        handleChange(newTime);
       }
     }
   };
@@ -282,6 +275,7 @@ const CalendarContent: FC<CalendarContentProps> = ({
         return (
           <Box
             display="flex"
+            key={`timeInputField-${inputType}`}
             paddingX={1.6}
             maxWidth={isMobile ? undefined : 310}
             gap={0.8}
@@ -453,10 +447,10 @@ const CalendarContent: FC<CalendarContentProps> = ({
                 }}
                 disableRipple
                 onClick={() => {
-                  handlePresetSelect(preset.key, {
+                  handleChange({
                     from: preset.from,
                     to: preset.to,
-                  });
+                  }, preset.key);
                 }}
               >
                 {preset.key}
@@ -487,25 +481,29 @@ const CalendarButton: FC<CalendarProps> = ({ setTimePeriod }) => {
     setAnchorEl(null);
   }, []);
 
-  const [range, setRange] = useState<DateRange>(initialRange);
+  const [chartSettings, setChartSettings] = useSetting('advancedChartSettings');
 
-  const [selectedPreset, setPreset] = useState<string>('1W');
+  const [range, setRange] = useState<DateRange>(chartSettings?.range);
+  const [selectedPreset, setPreset] = useState<string>(chartSettings?.preset || '1W');
 
-  const handleRangeChange = (newRange: DateRange) => {
-    const newTimePeriod = {
-      from: (newRange?.from || 0).valueOf() / 1000 as Time,
-      to: (newRange?.to || Date.now()).valueOf() / 1000 as Time,
+  const handleChange = (newRange?: DateRange, _preset?: string) => {
+    if (newRange) {
+      const newTimePeriod = {
+        from: (newRange?.from || 0).valueOf() / 1000 as Time,
+        to: (newRange?.to || Date.now()).valueOf() / 1000 as Time,
+      };
+      setRange(newRange);
+      setTimePeriod(newTimePeriod);
     };
-    setRange(newRange);
-    setTimePeriod(newTimePeriod);
-  };
-
-  const handlePresetSelect = (
-    _preset: string,
-    selectedRange: DateRange
-  ) => {
-    handleRangeChange(selectedRange);
-    setPreset(_preset);
+    if (_preset) {
+      setPreset(_preset);
+    };
+    setChartSettings({
+      selectedCharts: chartSettings.selectedCharts,
+      range: newRange || chartSettings.range,
+      preset: _preset || chartSettings.preset,
+      timePeriod: chartSettings.timePeriod
+    })
   };
 
   return (
@@ -529,10 +527,10 @@ const CalendarButton: FC<CalendarProps> = ({ setTimePeriod }) => {
                 }}
                 disableRipple
                 onClick={() => {
-                  handlePresetSelect(preset.key, {
+                  handleChange({
                     from: preset.from,
                     to: preset.to,
-                  });
+                  }, preset.key);
                 }}
               >
                 {preset.key}
@@ -601,9 +599,7 @@ const CalendarButton: FC<CalendarProps> = ({ setTimePeriod }) => {
                     isMobile={isMobile}
                     range={range}
                     selectedPreset={selectedPreset}
-                    handleRangeChange={handleRangeChange}
-                    handlePresetSelect={handlePresetSelect}
-                    setPreset={setPreset}
+                    handleChange={handleChange}
                   />
                 </Box>
               </Grow>
@@ -616,9 +612,7 @@ const CalendarButton: FC<CalendarProps> = ({ setTimePeriod }) => {
               isMobile={isMobile}
               range={range}
               selectedPreset={selectedPreset}
-              handleRangeChange={handleRangeChange}
-              handlePresetSelect={handlePresetSelect}
-              setPreset={setPreset}
+              handleChange={handleChange}
             />
           </Drawer>
         )}

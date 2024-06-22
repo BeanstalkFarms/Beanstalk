@@ -23,6 +23,7 @@ import SettingsIcon from '@mui/icons-material/Settings';
 import CheckRoundedIcon from '@mui/icons-material/CheckRounded';
 import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
 import { setHours } from 'date-fns';
+import useSetting from '~/hooks/app/useSetting';
 import { useChartSetupData } from './useChartSetupData';
 import { chartColors } from './chartColors';
 /*
@@ -70,6 +71,8 @@ const ChartV2: FC<ChartV2DataProps> = ({
   const chart = useRef<IChartApi>();
   const areaSeries = useRef<ISeriesApi<"Line">[]>([]);
   const tooltip = useRef<any>();
+
+  const [chartSettings, _] = useSetting('advancedChartSettings');
 
   const [lastDataPoint, setLastDataPoint] = useState<any>();
   const [firstDataPoint, setFirstDataPoint] = useState<any>();
@@ -319,6 +322,10 @@ const ChartV2: FC<ChartV2DataProps> = ({
       areaSeries.current[i].setData(formattedData[selected[i]]);
     };
 
+    if (size === 'full') {
+      chart.current?.timeScale().setVisibleRange(chartSettings.timePeriod);
+    };
+
     function getDataPoint(mode: string) {
       let _time = 0;
       const _value: number[] = [];
@@ -387,7 +394,7 @@ const ChartV2: FC<ChartV2DataProps> = ({
       chart.current?.unsubscribeCrosshairMove(crosshairMoveHandler);
       chart.current?.timeScale().unsubscribeVisibleTimeRangeChange(timeRangeChangeHandler);
     };
-  }, [formattedData, selected]);
+  }, [formattedData, selected, size, chartSettings.timePeriod]);
 
   return (
     <Box sx={{ position: 'relative', height: '100%' }}>
