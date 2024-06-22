@@ -70,21 +70,27 @@ const MegaChart: FC<{ isMobile?: boolean }> = ({ isMobile = false }) => {
                         seasonData.season,
                         Number(seasonData[chartSetupData[chartId].timeScaleKey])
                       );
-                    }
-                    const formattedTime = timestamps.get(seasonData.season);
-                    const formattedValue = chartSetupData[
-                      chartId
-                    ].valueFormatter(
-                      seasonData[chartSetupData[chartId].priceScaleKey]
-                    );
-                    if (formattedTime > 0) {
-                      output[chartId][seasonData.season] = {
-                        time: formattedTime,
-                        value: formattedValue,
+                    };
+                    // Some charts will occasionally return two seasons as having the 
+                    // same timestamp, here we ensure we only have one datapoint per timestamp
+                    if (timestamps.get(seasonData.season + 1) !== timestamps.get(seasonData.season)
+                      && timestamps.get(seasonData.season - 1) !== timestamps.get(seasonData.season)
+                    ) {
+                      const formattedTime = timestamps.get(seasonData.season);
+                      const formattedValue = chartSetupData[
+                        chartId
+                      ].valueFormatter(
+                        seasonData[chartSetupData[chartId].priceScaleKey]
+                      );
+                      if (formattedTime > 0) {
+                        output[chartId][seasonData.season] = {
+                          time: formattedTime,
+                          value: formattedValue,
+                        };
+                        extraOutput.set(formattedTime, seasonData.season);
                       };
-                      extraOutput.set(formattedTime, seasonData.season);
-                    }
-                  }
+                    };
+                  };
                 });
               })
           );
