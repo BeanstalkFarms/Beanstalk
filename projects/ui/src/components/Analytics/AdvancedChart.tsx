@@ -11,7 +11,7 @@ import ChartV2 from './ChartV2';
 import DropdownIcon from '../Common/DropdownIcon';
 import SelectDialog from './SelectDialog';
 import { useChartSetupData } from './useChartSetupData';
-import CalendarButton from '../Common/CalendarButton';
+import CalendarButton from './CalendarButton';
 
 type QueryData = {
   time: Time,
@@ -124,7 +124,7 @@ const AdvancedChart: FC<{ isMobile?: boolean }> = ({ isMobile = false }) => {
     newSelection.splice(selectionIndex, 1);
     setSelectedCharts(newSelection);
   };
-  
+
   return (
     <>
       <Box display="flex" flexDirection="row" gap={2}>

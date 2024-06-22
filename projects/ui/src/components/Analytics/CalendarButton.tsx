@@ -38,7 +38,7 @@ import { Range, Time } from 'lightweight-charts';
 
 type CalendarProps = {
   setTimePeriod: React.Dispatch<
-    React.SetStateAction<Range<Time>>
+    React.SetStateAction<Range<Time> | undefined>
   >;
 };
 
@@ -496,8 +496,8 @@ const CalendarButton: FC<CalendarProps> = ({ setTimePeriod }) => {
       from: (newRange?.from || 0).valueOf() / 1000 as Time,
       to: (newRange?.to || Date.now()).valueOf() / 1000 as Time,
     };
-      setRange(newRange);
-      setTimePeriod(newTimePeriod);
+    setRange(newRange);
+    setTimePeriod(newTimePeriod);
   };
 
   const handlePresetSelect = (
