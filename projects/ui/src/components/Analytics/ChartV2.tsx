@@ -322,7 +322,7 @@ const ChartV2: FC<ChartV2DataProps> = ({
       areaSeries.current[i].setData(formattedData[selected[i]]);
     };
 
-    if (size === 'full') {
+    if (size === 'full' && chartSettings.timePeriod) {
       chart.current?.timeScale().setVisibleRange(chartSettings.timePeriod);
     };
 
