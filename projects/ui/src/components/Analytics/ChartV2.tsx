@@ -249,7 +249,7 @@ const ChartV2: FC<ChartV2DataProps> = ({
           (value) => value === chartSetup.valueAxisType
         );
         if (findScale > -1) {
-          scaleId = findScale === 0 ? 'right' : findScale === 1 ? 'left' : '';
+          scaleId = findScale === 0 ? 'right' : findScale === 1 ? 'left' : chartSetup.valueAxisType;
         } else {
           if (priceScaleIds.length === 0) {
             priceScaleIds[0] = chartSetup.valueAxisType;
@@ -269,7 +269,7 @@ const ChartV2: FC<ChartV2DataProps> = ({
           priceScaleId: scaleId,
           priceFormat: {
             type: 'custom',
-            formatter: chartSetupData[selected[i]].tickFormatter,
+            formatter: chartSetupData[selected[i]].shortTickFormatter,
           },
         });
 
@@ -300,7 +300,7 @@ const ChartV2: FC<ChartV2DataProps> = ({
     formattedData,
     chartSetupData,
     selected,
-    secondPriceScale,
+    secondPriceScale
   ]);
 
   useEffect(() => {

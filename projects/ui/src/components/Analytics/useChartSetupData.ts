@@ -31,6 +31,7 @@ import {
   tickFormatBeanAmount,
   tickFormatBeanPrice,
   tickFormatPercentage,
+  tickFormatTruncated,
   tickFormatUSD,
   valueFormatBeanAmount,
 } from './formatters';
@@ -85,11 +86,15 @@ type ChartSetupBase = {
   */
   valueFormatter: (v: string) => number | undefined;
   /**
-  * Formats the number used by Lightweight Charts into a string that's actually 
-  * displayed throughout the chart. This is where we can do things like add a 
-  * dollar sign to the start of a number, convert 500000 to 500,000 or 500K, and so on. 
+  * Formats the number used by Lightweight Charts into a string that's shown at the top
+  * of the chart. 
   */
   tickFormatter: (v: number) => string | undefined;
+  /**
+  * Formats the number used by Lightweight Charts into a string for the
+  * price scales.
+  */
+  shortTickFormatter: (v: number) => string | undefined;
 };
 
 type ChartSetup = ChartSetupBase & {
@@ -132,7 +137,7 @@ export function useChartSetupData() {
     const apyCharts: ChartSetupBase[] = [];
 
     depositedTokensToChart.forEach((token) => {
-      const depositedChart = {
+      const depositedChart: ChartSetupBase = {
         name: `Deposited ${token.symbol}`,
         tooltipTitle: `Total Deposited ${token.symbol}`,
         tooltipHoverText: `The total number of Deposited ${
@@ -163,8 +168,9 @@ export function useChartSetupData() {
         valueFormatter: (value: any) =>
           Number(formatUnits(value, token.decimals)),
         tickFormatter: tickFormatBeanAmount,
+        shortTickFormatter: tickFormatTruncated,
       };
-      const apyChart = {
+      const apyChart: ChartSetupBase = {
         name: `${token.symbol} 30D vAPY`,
         tooltipTitle: `${token.symbol} 30D vAPY`,
         tooltipHoverText: `The Variable Bean APY uses a moving average of Beans earned by Stalkholders during recent Seasons to estimate a future rate of return, accounting for Stalk growth.`,
@@ -183,6 +189,7 @@ export function useChartSetupData() {
         },
         valueFormatter: (v: string) => Number(v) * 100,
         tickFormatter: tickFormatPercentage,
+        shortTickFormatter: tickFormatPercentage
       };
 
       depositCharts.push(depositedChart);
@@ -190,7 +197,7 @@ export function useChartSetupData() {
     });
 
     lpTokensToChart.forEach((token) => {
-      const lpChart = {
+      const lpChart: ChartSetupBase = {
         name: `${token.symbol} Liquidity`,
         tooltipTitle: `${token.symbol} Liquidity`,
         tooltipHoverText: `The total USD value of ${token.symbol} in liquidity pools on the Minting Whitelist.`,
@@ -205,7 +212,8 @@ export function useChartSetupData() {
           context: { subgraph: 'bean' }
         },
         valueFormatter: (v: string) => Number(v),
-        tickFormatter: tickFormatUSD,        
+        tickFormatter: tickFormatUSD,
+        shortTickFormatter: tickFormatUSD
       };
 
       lpCharts.push(lpChart);
@@ -231,6 +239,7 @@ export function useChartSetupData() {
         },
         valueFormatter: (v: string) => Number(v),
         tickFormatter: tickFormatBeanPrice,
+        shortTickFormatter: tickFormatBeanPrice
       },
       {
         name: 'Volume',
@@ -247,6 +256,7 @@ export function useChartSetupData() {
         },
         valueFormatter: (v: string) => Number(v),
         tickFormatter: tickFormatUSD,
+        shortTickFormatter: tickFormatUSD,
       },
       {
         name: 'Total Liquidity',
@@ -266,6 +276,7 @@ export function useChartSetupData() {
         },
         valueFormatter: (v: string) => Number(v),
         tickFormatter: tickFormatUSD,
+        shortTickFormatter: tickFormatUSD,
       },
       ...lpCharts,
       {
@@ -282,6 +293,7 @@ export function useChartSetupData() {
         queryConfig: undefined,
         valueFormatter: (v: string) => Number(v),
         tickFormatter: tickFormatUSD,
+        shortTickFormatter: tickFormatUSD,
       },
       {
         name: 'Supply',
@@ -297,6 +309,7 @@ export function useChartSetupData() {
         queryConfig: undefined,
         valueFormatter: valueFormatBeanAmount,
         tickFormatter: tickFormatBeanAmount,
+        shortTickFormatter: tickFormatTruncated,
       },
       {
         name: 'Crosses',
@@ -314,6 +327,7 @@ export function useChartSetupData() {
         },
         valueFormatter: (v: string) => Number(v),
         tickFormatter: tickFormatBeanAmount,
+        shortTickFormatter: tickFormatBeanAmount,
       },
       {
         name: 'Inst. deltaB',
@@ -333,6 +347,7 @@ export function useChartSetupData() {
         },
         valueFormatter: valueFormatBeanAmount,
         tickFormatter: tickFormatBeanAmount,
+        shortTickFormatter: tickFormatBeanAmount,
       },
       {
         name: 'TWA deltaB',
@@ -352,6 +367,7 @@ export function useChartSetupData() {
         },
         valueFormatter: valueFormatBeanAmount,
         tickFormatter: tickFormatBeanAmount,
+        shortTickFormatter: tickFormatBeanAmount
       },
       {
         name: 'TWA Bean Price',
@@ -371,6 +387,7 @@ export function useChartSetupData() {
         },
         valueFormatter: (v: string) => Number(v),
         tickFormatter: tickFormatBeanPrice,
+        shortTickFormatter: tickFormatBeanPrice
       },
       {
         name: 'Liquidity to Supply Ratio',
@@ -389,6 +406,7 @@ export function useChartSetupData() {
         },
         valueFormatter: (v: string) => Number(v) * 100,
         tickFormatter: tickFormatPercentage,
+        shortTickFormatter: tickFormatPercentage,
       },
     ];
 
@@ -412,6 +430,7 @@ export function useChartSetupData() {
         valueFormatter: (value: any) =>
           Number(formatUnits(value, stalk.decimals)),
         tickFormatter: tickFormatBeanAmount,
+        shortTickFormatter: tickFormatTruncated,
       },
       ...apyCharts,
     ];
@@ -432,6 +451,7 @@ export function useChartSetupData() {
         queryConfig: undefined,
         valueFormatter: (v: string) => Number(v) * 100,
         tickFormatter: tickFormatPercentage,
+        shortTickFormatter: tickFormatPercentage,
       },
       {
         name: 'Max Temperature',
@@ -448,6 +468,7 @@ export function useChartSetupData() {
         queryConfig: undefined,
         valueFormatter: (v: string) => Number(v),
         tickFormatter: tickFormatPercentage,
+        shortTickFormatter: tickFormatPercentage,
       },
       {
         name: 'Pods',
@@ -463,6 +484,7 @@ export function useChartSetupData() {
         queryConfig: undefined,
         valueFormatter: valueFormatBeanAmount,
         tickFormatter: tickFormatBeanAmount,
+        shortTickFormatter: tickFormatTruncated,
       },
       {
         name: 'Pod Rate',
@@ -479,6 +501,7 @@ export function useChartSetupData() {
         queryConfig: undefined,
         valueFormatter: (v: string) => Number(v) * 100,
         tickFormatter: tickFormatPercentage,
+        shortTickFormatter: tickFormatPercentage,
       },
       {
         name: 'Beans Sown',
@@ -494,6 +517,7 @@ export function useChartSetupData() {
         queryConfig: undefined,
         valueFormatter: valueFormatBeanAmount,
         tickFormatter: tickFormatBeanAmount,
+        shortTickFormatter: tickFormatTruncated,
       },
       {
         name: 'Pods Harvested',
@@ -509,6 +533,7 @@ export function useChartSetupData() {
         queryConfig: undefined,
         valueFormatter: valueFormatBeanAmount,
         tickFormatter: tickFormatBeanAmount,
+        shortTickFormatter: tickFormatTruncated,
       },
       {
         name: 'Total Sowers',
@@ -523,7 +548,8 @@ export function useChartSetupData() {
         documentEntity: 'seasons',
         queryConfig: undefined,
         valueFormatter: (v: string) => Number(v),
-        tickFormatter: (v: number) => v.toString(),
+        tickFormatter: (v: number) => v.toFixed(0).toString(),
+        shortTickFormatter: (v: number) => v.toFixed(0).toString(),
       },
     ];
 

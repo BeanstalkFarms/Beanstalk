@@ -118,7 +118,7 @@ const MegaChart: FC<{ isMobile?: boolean }> = ({ isMobile = false }) => {
               sx={{
                 position: 'absolute',
                 left: dialogOpen ? '0%' : '-100%',
-                width: 700,
+                width: 600,
                 zIndex: 4,
                 height: 'calc(100% + 2px)',
                 marginTop: '-1px',

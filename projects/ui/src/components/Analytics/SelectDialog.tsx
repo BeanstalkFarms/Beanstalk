@@ -119,7 +119,7 @@ const SelectDialog: FC<SelectDialogProps> = ({
           display: 'flex',
           flexDirection: 'column',
           gap: 1,
-          height: '100%',
+          height: isMobile ? '400px' : '100%',
         }}
       >
         <Box
@@ -256,7 +256,8 @@ const SelectDialog: FC<SelectDialogProps> = ({
                 key={`chartSelectList${index}`}
                 onClick={() => handleSelection(data.index)}
                 gap={0.3}
-                p={0.25}
+                paddingY={0.25}
+                paddingX={2}
                 sx={{
                   backgroundColor: isSelected ? 'primary.light' : undefined,
                   '&:hover': { backgroundColor: '#F5F5F5', cursor: 'pointer' },
