@@ -197,11 +197,12 @@ export function useChartSetupData() {
     });
 
     lpTokensToChart.forEach((token) => {
+      const tokenSymbol = token.symbol === 'BEAN:ETH' ? 'Old BEAN:ETH' : token.symbol;
       const lpChart: ChartSetupBase = {
-        name: `${token.symbol} Liquidity`,
-        tooltipTitle: `${token.symbol} Liquidity`,
-        tooltipHoverText: `The total USD value of ${token.symbol} in liquidity pools on the Minting Whitelist.`,
-        shortDescription: `${token.symbol} Liquidity`,
+        name: `${tokenSymbol} Liquidity`,
+        tooltipTitle: `${tokenSymbol} Liquidity`,
+        tooltipHoverText: `The total USD value of ${tokenSymbol} in liquidity pools on the Minting Whitelist.`,
+        shortDescription: `${tokenSymbol} Liquidity.`,
         timeScaleKey: 'updatedAt',
         priceScaleKey: 'liquidityUSD',
         document: SeasonalLiquidityPerPoolDocument,
