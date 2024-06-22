@@ -3,7 +3,7 @@ query GetWellChartData($id: ID!, $lastUpdateTimestamp_gte: BigInt!, $resultsToSk
     hourlySnapshots(first: 1000, skip: $resultsToSkip, orderBy: lastUpdateTimestamp, orderDirection: asc, where: { lastUpdateTimestamp_gte: $lastUpdateTimestamp_gte }) {
       lastUpdateTimestamp
       totalLiquidityUSD
-      deltaVolumeUSD
+      deltaTradeVolumeUSD
     }
   }
 }

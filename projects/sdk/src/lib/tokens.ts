@@ -70,7 +70,8 @@ export class Tokens {
       18,
       "WETH",
       {
-        name: "Wrapped Ether"
+        name: "Wrapped Ether",
+        displayDecimals: 4
       },
       providerOrSigner
     );
