@@ -142,10 +142,10 @@ export function useChartSetupData() {
         tooltipTitle: `Total Deposited ${token.symbol}`,
         tooltipHoverText: `The total number of Deposited ${
           token.symbol === 'BEAN'
-            ? 'Beans.'
+            ? 'Beans'
             : token.symbol === 'urBEAN'
-              ? 'Unripe Beans.'
-              : `${token.name}.`
+              ? 'Unripe Beans'
+              : `${token.name}`
         } at the beginning of every Season.`,
         shortDescription: `The total number of Deposited ${
           token.symbol === 'BEAN'
