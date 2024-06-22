@@ -19,13 +19,12 @@ import {
 } from '@mui/material';
 import { FC } from '~/types';
 import { TickMarkType, createChart } from 'lightweight-charts';
-import { hexToRgba } from '~/util/UI';
 import SettingsIcon from '@mui/icons-material/Settings';
 import CheckRoundedIcon from '@mui/icons-material/CheckRounded';
 import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
 import { setHours } from 'date-fns';
 import { useChartSetupData } from './useChartSetupData';
-import { BeanstalkPalette } from '../App/muiTheme';
+import { chartColors } from './chartColors';
 /*
   List of Variables:
   TODO: drawExploitLine (timestamp: 1650196810)
@@ -64,34 +63,6 @@ type ChartV2DataProps = {
    */
   selected: number[];
 };
-
-const chartColors = [
-  {
-    lineColor: BeanstalkPalette.logoGreen,
-    topColor: hexToRgba(BeanstalkPalette.logoGreen, 0.8),
-    bottomColor: hexToRgba(BeanstalkPalette.logoGreen, 0.2),
-  },
-  {
-    lineColor: BeanstalkPalette.darkBlue,
-    topColor: hexToRgba(BeanstalkPalette.darkBlue, 0.8),
-    bottomColor: hexToRgba(BeanstalkPalette.darkBlue, 0.2),
-  },
-  {
-    lineColor: BeanstalkPalette.washedRed,
-    topColor: hexToRgba(BeanstalkPalette.washedRed, 0.8),
-    bottomColor: hexToRgba(BeanstalkPalette.washedRed, 0.2),
-  },
-  {
-    lineColor: BeanstalkPalette.theme.spring.chart.yellow,
-    topColor: hexToRgba(BeanstalkPalette.theme.spring.chart.yellow, 0.8),
-    bottomColor: hexToRgba(BeanstalkPalette.theme.spring.chart.yellow, 0.2),
-  },
-  {
-    lineColor: BeanstalkPalette.theme.winter.error,
-    topColor: hexToRgba(BeanstalkPalette.theme.winter.error, 0.8),
-    bottomColor: hexToRgba(BeanstalkPalette.theme.winter.error, 0.2),
-  },
-];
 
 const ChartV2: FC<ChartV2DataProps> = ({
   formattedData,

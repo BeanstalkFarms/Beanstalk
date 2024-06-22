@@ -15,6 +15,7 @@ import podIcon from '~/img/beanstalk/pod-icon.svg';
 import CloseIcon from '@mui/icons-material/Close';
 import Row from '../Common/Row';
 import { useChartSetupData } from './useChartSetupData';
+import { chartColors } from './chartColors';
 
 export interface SelectDialogProps {
   handleClose: () => void;
@@ -47,6 +48,8 @@ const SelectDialog: FC<SelectDialogProps> = ({
   const [selectedTypes, setSelectedTypes] = useState<string[]>([]);
   const [filteredData, setFilteredData] = useState(chartSetupData);
   const [internalSelected, setInternalSelected] = useState(selected);
+
+  const maxChartsSelected = chartColors.length;
 
   function typeToggle(type: string) {
     const index = selectedTypes.indexOf(type);
@@ -90,6 +93,7 @@ const SelectDialog: FC<SelectDialogProps> = ({
     isSelected
       ? selectedItems.splice(indexInSelection, 1)
       : selectedItems.push(selection);
+    if (selectedItems.length > maxChartsSelected) return;
     setInternalSelected(selectedItems);
   };
 
