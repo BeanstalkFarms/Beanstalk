@@ -156,7 +156,7 @@ export function useChartSetupData() {
         }`,
         timeScaleKey: 'createdAt',
         priceScaleKey: 'depositedAmount',
-        valueAxisType: `${token.symbol}_amount`,
+        valueAxisType: token.isUnripe ? 'depositedUnripeAmount' : 'depositedAmount',
         document: SeasonalDepositedSiloAssetDocument,
         documentEntity: 'seasons',
         queryConfig: {
@@ -251,7 +251,7 @@ export function useChartSetupData() {
         priceScaleKey: 'deltaVolumeUSD',
         document: SeasonalVolumeDocument,
         documentEntity: 'seasons',
-        valueAxisType: 'totalUSDValue',
+        valueAxisType: '',
         queryConfig: {
           context: { subgraph: 'bean' },
         },

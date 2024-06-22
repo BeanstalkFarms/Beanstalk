@@ -78,6 +78,7 @@ const ChartV2: FC<ChartV2DataProps> = ({
   const tooltip = useRef<any>();
 
   const [lastDataPoint, setLastDataPoint] = useState<any>();
+  const [firstDataPoint, setFirstDataPoint] = useState<any>();
   const [dataPoint, setDataPoint] = useState<any>();
 
   function getTimezoneCorrectedTime(utcTime: Date, tickMarkType: TickMarkType) {
@@ -329,6 +330,7 @@ const ChartV2: FC<ChartV2DataProps> = ({
         time: formattedDate,
         value: value,
         season: additionalData,
+        timestamp: commonData[0]?.time
       };
     }
 
@@ -360,8 +362,25 @@ const ChartV2: FC<ChartV2DataProps> = ({
     setLastDataPoint(
       defaultLastDataPoint
         ? getMergedData(defaultLastDataPoint)
-        : { time: 0, value: [0], season: 0 }
+        : { time: 0, value: [0], season: 0, timestamp: 0 }
     );
+
+    const defaultFirstDataPoint =
+      formattedData[0] || selected[0]
+        ? selected.map((selection) => {
+            if (!formattedData[selection]) {
+              return {
+                time: null,
+                value: null,
+              };
+            }
+            return {
+              time: formattedData[selection][0].time,
+              value: formattedData[selection][0].value,
+            };
+          })
+        : null;
+    setFirstDataPoint(defaultFirstDataPoint);
 
     chart.current.subscribeCrosshairMove((param: any) => {
       const hoveredDataPoints: any[] = [];
@@ -435,8 +454,8 @@ const ChartV2: FC<ChartV2DataProps> = ({
         {selected.map((chartId, index) => {
           const tooltipTitle = chartSetupData[chartId].tooltipTitle;
           const tooltipHoverText = chartSetupData[chartId].tooltipHoverText;
-          const value =
-            dataPoint?.value[index] || lastDataPoint?.value[index] || undefined;
+          const beforeFirstSeason = dataPoint && firstDataPoint ? dataPoint.timestamp < firstDataPoint[index].time : false;
+          const value = beforeFirstSeason ? 0 : dataPoint?.value[index] || lastDataPoint?.value[index] || undefined;
           if (!isMobile || selected.length < 3) {
             return (
               <Box key={`selectedChartV2${index}`} sx={{ display: 'flex', flexDirection: 'column' }}>
