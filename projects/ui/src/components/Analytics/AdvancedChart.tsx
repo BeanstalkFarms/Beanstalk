@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { FC } from '~/types';
 import { Box, Button, Card, CircularProgress, Drawer } from '@mui/material';
 import AddRoundedIcon from '@mui/icons-material/AddRounded';
@@ -27,7 +27,7 @@ const AdvancedChart: FC<{ isMobile?: boolean }> = ({ isMobile = false }) => {
   const chartSetupData = useChartSetupData();
 
   const [chartSettings, setChartSettings] = useSetting('advancedChartSettings');
-  const [timePeriod, setTimePeriod] = useState<Range<Time>>(chartSettings.timePeriod);
+  const [timePeriod, setTimePeriod] = useState<Range<Time> | undefined>(chartSettings ? chartSettings.timePeriod : undefined);
   const [selectedCharts, setSelectedCharts] = useState(chartSettings?.selectedCharts || [0]);
 
   const [dialogOpen, showDialog, hideDialog] = useToggle();
@@ -121,15 +121,13 @@ const AdvancedChart: FC<{ isMobile?: boolean }> = ({ isMobile = false }) => {
     setLoading(false);
   }, [chartSetupData, selectedCharts, season]);
 
-  useEffect(() => {
+  useMemo(() => {
     setChartSettings({
-      range: chartSettings.range,
-      preset: chartSettings.preset,
       selectedCharts: selectedCharts,
       timePeriod: timePeriod
     });
   // @ts-ignore
-  }, [selectedCharts, setChartSettings, chartSettings.range, chartSettings.preset, timePeriod]);
+  }, [selectedCharts, setChartSettings, timePeriod]);
 
   function handleDeselectChart(selectionIndex: number) {
     const newSelection = [...selectedCharts];

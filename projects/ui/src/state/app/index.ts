@@ -10,10 +10,10 @@ export type Settings = {
   datasource: DataSource;
   impersonatedAccount: string;
   advancedChartSettings: {
-    range: DateRange,
-    preset: string,
-    selectedCharts: number[],
-    timePeriod: Range<Time>
+    range?: DateRange,
+    preset?: string,
+    selectedCharts?: number[],
+    timePeriod?: Range<Time>
   };
 };
 

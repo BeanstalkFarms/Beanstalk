@@ -322,7 +322,7 @@ const ChartV2: FC<ChartV2DataProps> = ({
       areaSeries.current[i].setData(formattedData[selected[i]]);
     };
 
-    if (size === 'full' && chartSettings.timePeriod) {
+    if (size === 'full' && chartSettings?.timePeriod) {
       chart.current?.timeScale().setVisibleRange(chartSettings.timePeriod);
     };
 
@@ -394,7 +394,7 @@ const ChartV2: FC<ChartV2DataProps> = ({
       chart.current?.unsubscribeCrosshairMove(crosshairMoveHandler);
       chart.current?.timeScale().unsubscribeVisibleTimeRangeChange(timeRangeChangeHandler);
     };
-  }, [formattedData, selected, size, chartSettings.timePeriod]);
+  }, [formattedData, selected, size, chartSettings]);
 
   return (
     <Box sx={{ position: 'relative', height: '100%' }}>

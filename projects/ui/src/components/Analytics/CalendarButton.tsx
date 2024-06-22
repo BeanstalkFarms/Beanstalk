@@ -39,7 +39,7 @@ import useSetting from '~/hooks/app/useSetting';
 
 type CalendarProps = {
   setTimePeriod: React.Dispatch<
-    React.SetStateAction<Range<Time>>
+    React.SetStateAction<Range<Time> | undefined>
   >;
 };
 
@@ -483,7 +483,7 @@ const CalendarButton: FC<CalendarProps> = ({ setTimePeriod }) => {
 
   const [chartSettings, setChartSettings] = useSetting('advancedChartSettings');
 
-  const [range, setRange] = useState<DateRange>(chartSettings?.range);
+  const [range, setRange] = useState<DateRange>(chartSettings && chartSettings.range ? chartSettings.range : initialRange);
   const [selectedPreset, setPreset] = useState<string>(chartSettings?.preset || '1W');
 
   const handleChange = (newRange?: DateRange, _preset?: string) => {
