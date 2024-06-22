@@ -18,7 +18,7 @@ import {
   useTheme,
 } from '@mui/material';
 import { FC } from '~/types';
-import { TickMarkType, createChart } from 'lightweight-charts';
+import { IChartApi, MouseEventParams, Range, TickMarkType, Time, createChart } from 'lightweight-charts';
 import SettingsIcon from '@mui/icons-material/Settings';
 import CheckRoundedIcon from '@mui/icons-material/CheckRounded';
 import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
@@ -73,7 +73,7 @@ const ChartV2: FC<ChartV2DataProps> = ({
   selected
 }) => {
   const chartContainerRef = useRef<any>();
-  const chart = useRef<any>();
+  const chart = useRef<IChartApi>();
   const areaSeries = useRef<any>([]);
   const tooltip = useRef<any>();
 
@@ -303,13 +303,13 @@ const ChartV2: FC<ChartV2DataProps> = ({
         const newFrom = setHours(from, 0);
         const newTo = setHours(from, 23);
         chart.current?.timeScale().setVisibleRange({
-          from: newFrom.valueOf() / 1000,
-          to: newTo.valueOf() / 1000,
+          from: (newFrom.valueOf() / 1000) as Time,
+          to: (newTo.valueOf() / 1000) as Time,
         });
       } else {
         chart.current?.timeScale().setVisibleRange({
-          from: from.valueOf() / 1000,
-          to: to!.valueOf() / 1000,
+          from: (from.valueOf() / 1000) as Time,
+          to: (to!.valueOf() / 1000) as Time,
         });
       }
     }
@@ -389,55 +389,36 @@ const ChartV2: FC<ChartV2DataProps> = ({
         : null;
     setFirstDataPoint(defaultFirstDataPoint);
 
-    chart.current.subscribeCrosshairMove((param: any) => {
-      const hoveredDataPoints: any[] = [];
-      areaSeries.current.forEach((series: any, index: number) => {
-        const data = param.seriesData.get(series) || null;
-        if (data) {
-          hoveredDataPoints[index] = {
-            value: data.value || null,
-            time: data.time || null,
-          };
-        }
+    function crosshairMoveHandler(param: MouseEventParams) {
+      const hoveredTimestamp = param.time ? new Date(param.time?.valueOf() as number * 1000) : null;
+      const hoveredValues = Array.from(param.seriesData.values()).map((data: any) => data.value);
+      const hoveredSeason = extraData?.get(param.time?.valueOf() as number);
+      setDataPoint({
+        time: param.time ? hoveredTimestamp?.toLocaleString(undefined, { dateStyle: 'short', timeStyle: 'short' }) : null,
+        value: hoveredValues,
+        season: hoveredSeason
       });
-      setDataPoint(getMergedData(hoveredDataPoints));
-    });
+    };
 
-    chart.current.timeScale().subscribeVisibleTimeRangeChange((param: any) => {
-      const lastVisibleTimestamp = param.to;
-      const lastCommonDataPoint = selected.map((selection) => {
-        if (!formattedData[selection]) {
-          return {
-            time: null,
-            value: null,
-          };
-        }
-
-        const lastIndex = formattedData[selection].findIndex(
-          (value) => value.time === lastVisibleTimestamp
-        );
-        if (lastIndex > -1) {
-          return {
-            time: formattedData[selection][lastIndex].time,
-            value: formattedData[selection][lastIndex].value,
-          };
-        }
-
-        return {
-          time: null,
-          value: null,
-        };
+    function timeRangeChangeHandler(param: Range<Time> | null) {
+      if (!param) return;
+      const lastTimestamp = new Date(param.to.valueOf() as number * 1000);
+      const lastValues = selected.map((selection) => (formattedData[selection].find((value) => value.time === param.to))?.value);
+      const lastSeason = extraData?.get(Number(param.to.valueOf()));
+      setLastDataPoint({
+        time: lastTimestamp?.toLocaleString('en-US', { dateStyle: 'short', timeStyle: 'short', }),
+        value: lastValues,
+        season: lastSeason,
+        timestamp: param.to.valueOf()
       });
-      setLastDataPoint(
-        lastCommonDataPoint
-          ? getMergedData(lastCommonDataPoint)
-          : { time: 0, value: [0], season: 0 }
-      );
-    });
+    };
+
+    chart.current.subscribeCrosshairMove(crosshairMoveHandler);
+    chart.current.timeScale().subscribeVisibleTimeRangeChange(timeRangeChangeHandler);
 
     return () => {
-      chart.current?.unsubscribeCrosshairMove();
-      chart.current?.timeScale().unsubscribeVisibleTimeRangeChange();
+      chart.current?.unsubscribeCrosshairMove(crosshairMoveHandler);
+      chart.current?.timeScale().unsubscribeVisibleTimeRangeChange(timeRangeChangeHandler);
     };
   }, [formattedData, extraData, selected]);
 
