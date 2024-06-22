@@ -26,7 +26,7 @@ const AdvancedChart: FC<{ isMobile?: boolean }> = ({ isMobile = false }) => {
   const season = useSeason();
   const chartSetupData = useChartSetupData();
 
-  const [chartSettings, setChartSettings] = useSetting('advancedChartSettings');
+  const [chartSettings, setChartSettings] = useSetting('advancedChartDataSettings');
   const [timePeriod, setTimePeriod] = useState<Range<Time> | undefined>(chartSettings ? chartSettings.timePeriod : undefined);
   const [selectedCharts, setSelectedCharts] = useState(chartSettings?.selectedCharts || [0]);
 
@@ -126,7 +126,6 @@ const AdvancedChart: FC<{ isMobile?: boolean }> = ({ isMobile = false }) => {
       selectedCharts: selectedCharts,
       timePeriod: timePeriod
     });
-  // @ts-ignore
   }, [selectedCharts, setChartSettings, timePeriod]);
 
   function handleDeselectChart(selectionIndex: number) {

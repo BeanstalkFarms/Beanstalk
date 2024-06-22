@@ -72,7 +72,7 @@ const ChartV2: FC<ChartV2DataProps> = ({
   const areaSeries = useRef<ISeriesApi<"Line">[]>([]);
   const tooltip = useRef<any>();
 
-  const [chartSettings, _] = useSetting('advancedChartSettings');
+  const [chartSettings, _] = useSetting('advancedChartDataSettings');
 
   const [lastDataPoint, setLastDataPoint] = useState<any>();
   const [firstDataPoint, setFirstDataPoint] = useState<any>();

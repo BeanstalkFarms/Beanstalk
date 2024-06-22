@@ -481,7 +481,7 @@ const CalendarButton: FC<CalendarProps> = ({ setTimePeriod }) => {
     setAnchorEl(null);
   }, []);
 
-  const [chartSettings, setChartSettings] = useSetting('advancedChartSettings');
+  const [chartSettings, setChartSettings] = useSetting('advancedChartTimeSettings');
 
   const [range, setRange] = useState<DateRange>(chartSettings && chartSettings.range ? chartSettings.range : initialRange);
   const [selectedPreset, setPreset] = useState<string>(chartSettings?.preset || '1W');
@@ -499,10 +499,8 @@ const CalendarButton: FC<CalendarProps> = ({ setTimePeriod }) => {
       setPreset(_preset);
     };
     setChartSettings({
-      selectedCharts: chartSettings.selectedCharts,
-      range: newRange || chartSettings.range,
-      preset: _preset || chartSettings.preset,
-      timePeriod: chartSettings.timePeriod
+      range: newRange,
+      preset: _preset,
     })
   };
 

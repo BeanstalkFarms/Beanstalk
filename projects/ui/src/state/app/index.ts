@@ -9,11 +9,13 @@ export type Settings = {
   subgraphEnv: SGEnvironments;
   datasource: DataSource;
   impersonatedAccount: string;
-  advancedChartSettings: {
-    range?: DateRange,
-    preset?: string,
+  advancedChartDataSettings: {
     selectedCharts?: number[],
     timePeriod?: Range<Time>
+  };
+  advancedChartTimeSettings: {
+    range?: DateRange,
+    preset?: string,
   };
 };
 
