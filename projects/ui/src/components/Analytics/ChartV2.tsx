@@ -201,10 +201,16 @@ const ChartV2: FC<ChartV2DataProps> = ({
             mode: 0,
             visible: !(size === 'mini'),
           },
+      overlayPriceScale: {
+        scaleMargins: {
+          top: 0.8, // highest point of the series will be 80% away from the top
+          bottom: 0.2,
+        },
+      }
     };
 
     const handleResize = () => {
-      chart.current.applyOptions({
+      chart.current?.applyOptions({
         width: chartContainerRef.current.clientWidth,
         height: chartContainerRef.current.clientHeight
       });
@@ -221,7 +227,7 @@ const ChartV2: FC<ChartV2DataProps> = ({
           (value) => value === chartSetup.valueAxisType
         );
         if (findScale > -1) {
-          scaleId = findScale === 0 ? 'right' : findScale === 1 ? 'left' : chartSetup.valueAxisType;
+          scaleId = findScale > 1 ? chartSetup.valueAxisType : findScale === 0 ? 'right' : 'left';
         } else {
           if (priceScaleIds.length === 0) {
             priceScaleIds[0] = chartSetup.valueAxisType;
@@ -229,6 +235,8 @@ const ChartV2: FC<ChartV2DataProps> = ({
           } else if (priceScaleIds.length === 1) {
             priceScaleIds[1] = chartSetup.valueAxisType;
             scaleId = 'left';
+          } else {
+            scaleId = chartSetup.valueAxisType;
           };
         };
 
@@ -236,7 +244,6 @@ const ChartV2: FC<ChartV2DataProps> = ({
           color: chartColors[i].lineColor,
           // topColor: chartColors[i].topColor,
           // bottomColor: chartColors[i].bottomColor,
-          // pointMarkerVisible: false,
           lineWidth: 2,
           priceScaleId: scaleId,
           priceFormat: {
@@ -263,7 +270,7 @@ const ChartV2: FC<ChartV2DataProps> = ({
 
     return () => {
       window.removeEventListener('resize', handleResize);
-      chart.current.remove();
+      chart.current?.remove();
     };
   }, [
     theme,
@@ -276,7 +283,7 @@ const ChartV2: FC<ChartV2DataProps> = ({
   ]);
 
   useEffect(() => {
-    chart.current.applyOptions({
+    chart.current?.applyOptions({
       leftPriceScale: {
         mode: leftPriceScaleMode
       },
@@ -291,16 +298,16 @@ const ChartV2: FC<ChartV2DataProps> = ({
       const from = timePeriod?.from;
       const to = timePeriod?.to;
       if (!from) {
-        chart.current.timeScale().fitContent();
+        chart.current?.timeScale().fitContent();
       } else if (from && !to) {
         const newFrom = setHours(from, 0);
         const newTo = setHours(from, 23);
-        chart.current.timeScale().setVisibleRange({
+        chart.current?.timeScale().setVisibleRange({
           from: newFrom.valueOf() / 1000,
           to: newTo.valueOf() / 1000,
         });
       } else {
-        chart.current.timeScale().setVisibleRange({
+        chart.current?.timeScale().setVisibleRange({
           from: from.valueOf() / 1000,
           to: to!.valueOf() / 1000,
         });
@@ -429,8 +436,8 @@ const ChartV2: FC<ChartV2DataProps> = ({
     });
 
     return () => {
-      chart.current.unsubscribeCrosshairMove();
-      chart.current.timeScale().unsubscribeVisibleTimeRangeChange();
+      chart.current?.unsubscribeCrosshairMove();
+      chart.current?.timeScale().unsubscribeVisibleTimeRangeChange();
     };
   }, [formattedData, extraData, selected]);
 
@@ -454,7 +461,7 @@ const ChartV2: FC<ChartV2DataProps> = ({
         {selected.map((chartId, index) => {
           const tooltipTitle = chartSetupData[chartId].tooltipTitle;
           const tooltipHoverText = chartSetupData[chartId].tooltipHoverText;
-          const beforeFirstSeason = dataPoint && firstDataPoint ? dataPoint.timestamp < firstDataPoint[index].time : false;
+          const beforeFirstSeason = dataPoint && firstDataPoint ? dataPoint.timestamp < firstDataPoint[index]?.time : false;
           const value = beforeFirstSeason ? 0 : dataPoint?.value[index] || lastDataPoint?.value[index] || undefined;
           if (!isMobile || selected.length < 3) {
             return (

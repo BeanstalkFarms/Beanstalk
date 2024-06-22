@@ -40,66 +40,71 @@ const MiniCharts: FC<{}> = () => {
       const extraOutput = new Map();
       const timestamps = new Map();
 
-      for (let i = 0; i < selectedCharts.length; i += 1) {
-        const chartId = selectedCharts[i];
-        const queryConfig = chartSetupData[chartId].queryConfig;
-        const document = chartSetupData[chartId].document;
-        const entity = chartSetupData[chartId].documentEntity;
+      try {
+        for (let i = 0; i < selectedCharts.length; i += 1) {
+          const chartId = selectedCharts[i];
+          const queryConfig = chartSetupData[chartId].queryConfig;
+          const document = chartSetupData[chartId].document;
+          const entity = chartSetupData[chartId].documentEntity;
 
-        const currentSeason = season.toNumber();
+          const currentSeason = season.toNumber();
 
-        const iterations = getAllData ? Math.ceil(currentSeason / 1000) + 1 : 1;
-        for (let j = 0; j < iterations; j += 1) {
-          const startSeason = getAllData ? currentSeason - j * 1000 : 999999999;
-          if (startSeason <= 0) continue;
-          promises.push(
-            apolloClient
-              .query({
-                ...queryConfig,
-                query: document,
-                variables: {
-                  ...queryConfig?.variables,
-                  first: 1000,
-                  season_lte: startSeason,
-                },
-                notifyOnNetworkStatusChange: true,
-                fetchPolicy: 'cache-first',
-              })
-              .then((r) => {
-                r.data[entity].forEach((seasonData: any) => {
-                  if (seasonData?.season) {
-                    if (!output[chartId]?.length) {
-                      output[chartId] = [];
-                    }
-                    if (!timestamps.has(seasonData.season)) {
-                      timestamps.set(
-                        seasonData.season,
-                        Number(seasonData[chartSetupData[chartId].timeScaleKey])
+          const iterations = getAllData ? Math.ceil(currentSeason / 1000) + 1 : 1;
+          for (let j = 0; j < iterations; j += 1) {
+            const startSeason = getAllData ? currentSeason - j * 1000 : 999999999;
+            if (startSeason <= 0) continue;
+            promises.push(
+              apolloClient
+                .query({
+                  ...queryConfig,
+                  query: document,
+                  variables: {
+                    ...queryConfig?.variables,
+                    first: 1000,
+                    season_lte: startSeason,
+                  },
+                  notifyOnNetworkStatusChange: true,
+                  fetchPolicy: 'cache-first',
+                })
+                .then((r) => {
+                  r.data[entity].forEach((seasonData: any) => {
+                    if (seasonData?.season) {
+                      if (!output[chartId]?.length) {
+                        output[chartId] = [];
+                      }
+                      if (!timestamps.has(seasonData.season)) {
+                        timestamps.set(
+                          seasonData.season,
+                          Number(seasonData[chartSetupData[chartId].timeScaleKey])
+                        );
+                      }
+                      const formattedTime = timestamps.get(seasonData.season);
+                      const formattedValue = chartSetupData[
+                        chartId
+                      ].valueFormatter(
+                        seasonData[chartSetupData[chartId].priceScaleKey]
                       );
+                      output[chartId][seasonData.season] = {
+                        time: formattedTime,
+                        value: formattedValue,
+                      };
+                      extraOutput.set(formattedTime, seasonData.season);
                     }
-                    const formattedTime = timestamps.get(seasonData.season);
-                    const formattedValue = chartSetupData[
-                      chartId
-                    ].valueFormatter(
-                      seasonData[chartSetupData[chartId].priceScaleKey]
-                    );
-                    output[chartId][seasonData.season] = {
-                      time: formattedTime,
-                      value: formattedValue,
-                    };
-                    extraOutput.set(formattedTime, seasonData.season);
-                  }
-                });
-              })
-          );
+                  });
+                })
+            );
+          }
         }
-      }
-      await Promise.all(promises);
-      output.forEach((dataSet, index) => {
-        output[index] = dataSet.filter(Boolean);
-      });
-      setQueryData(output);
-      setMoreData(extraOutput);
+        await Promise.all(promises);
+        output.forEach((dataSet, index) => {
+          output[index] = dataSet.filter(Boolean);
+        });
+        setQueryData(output);
+        setMoreData(extraOutput);
+      } catch (e) {
+        console.debug('[MiniChart] Failed to fetch data');
+        console.error(e);
+      };
     }
 
     setLoading(true);
