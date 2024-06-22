@@ -15,7 +15,7 @@ type Props = { well: Well };
 const OtherSectionContent: FC<Props> = ({ well }) => {
   const { data: implementations } = useWellImplementations();
   const {
-    lookup: { pump: pumpLookup }
+    lookup: { pumps: pumpLookup }
   } = useWhitelistedWellComponents();
 
   const [items, setItems] = useState<{ name: string; address: string }[]>([]);
