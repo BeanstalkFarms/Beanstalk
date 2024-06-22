@@ -18,7 +18,7 @@ import {
   useTheme,
 } from '@mui/material';
 import { FC } from '~/types';
-import { IChartApi, MouseEventParams, Range, TickMarkType, Time, createChart } from 'lightweight-charts';
+import { CreatePriceLineOptions, IChartApi, ISeriesApi, MouseEventParams, Range, TickMarkType, Time, createChart } from 'lightweight-charts';
 import SettingsIcon from '@mui/icons-material/Settings';
 import CheckRoundedIcon from '@mui/icons-material/CheckRounded';
 import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
@@ -35,12 +35,7 @@ type ChartV2DataProps = {
    * Series of timestampped values to be charted.
    * Must be in ascending order.
    */
-  formattedData: { time: number; value: number }[][];
-  /**
-   * Lightweight Charts cannot easily handle custom data,
-   * so we pass it a Timestamp-Season Map. 
-   */
-  extraData?: Map<Number, String>;
+  formattedData: { time: Time, value: number, customValues: { season: number } }[][];
   /**
    * Draw $1 peg line?
    */
@@ -57,7 +52,7 @@ type ChartV2DataProps = {
   /**
    * Time period to automatically set the chart to.
    */
-  timePeriod?: { from: Date | undefined; to: Date | undefined };
+  timePeriod?: Range<Time>;
   /**
    * Ids of the currently selected charts.
    */
@@ -66,7 +61,6 @@ type ChartV2DataProps = {
 
 const ChartV2: FC<ChartV2DataProps> = ({
   formattedData,
-  extraData,
   drawPegLine,
   size = 'full',
   timePeriod,
@@ -74,7 +68,7 @@ const ChartV2: FC<ChartV2DataProps> = ({
 }) => {
   const chartContainerRef = useRef<any>();
   const chart = useRef<IChartApi>();
-  const areaSeries = useRef<any>([]);
+  const areaSeries = useRef<ISeriesApi<"Line">[]>([]);
   const tooltip = useRef<any>();
 
   const [lastDataPoint, setLastDataPoint] = useState<any>();
@@ -253,7 +247,7 @@ const ChartV2: FC<ChartV2DataProps> = ({
         });
 
         if (drawPegLine) {
-          const pegLine = {
+          const pegLine: CreatePriceLineOptions = {
             price: 1,
             color: theme.palette.primary.dark,
             lineWidth: 1,
@@ -300,16 +294,16 @@ const ChartV2: FC<ChartV2DataProps> = ({
       if (!from) {
         chart.current?.timeScale().fitContent();
       } else if (from && !to) {
-        const newFrom = setHours(from, 0);
-        const newTo = setHours(from, 23);
+        const newFrom = setHours(new Date(from.valueOf() as number * 1000), 0);
+        const newTo = setHours(new Date(from.valueOf() as number * 1000), 23);
         chart.current?.timeScale().setVisibleRange({
           from: (newFrom.valueOf() / 1000) as Time,
           to: (newTo.valueOf() / 1000) as Time,
         });
       } else {
         chart.current?.timeScale().setVisibleRange({
-          from: (from.valueOf() / 1000) as Time,
-          to: (to!.valueOf() / 1000) as Time,
+          from: from,
+          to: to!,
         });
       }
     }
@@ -317,94 +311,66 @@ const ChartV2: FC<ChartV2DataProps> = ({
   }, [timePeriod]);
 
   useEffect(() => {
-    if (!chart.current || !formattedData || !extraData) return;
-    function getMergedData(
-      commonData: { time: number | null; value: number | null }[]
-    ) {
-      const date = commonData[0]?.time
-        ? new Date(commonData[0].time * 1000)
-        : null;
-      const value = commonData ? commonData.map((data) => data.value) : null;
-      const additionalData =
-        extraData && commonData[0]?.time
-          ? extraData.get(commonData[0].time)
-          : null;
-      const formattedDate = date?.toLocaleString(undefined, {
-        dateStyle: 'short',
-        timeStyle: 'short',
-      });
-      return {
-        time: formattedDate,
-        value: value,
-        season: additionalData,
-        timestamp: commonData[0]?.time
-      };
-    }
+    if (!chart.current || !formattedData) return;
 
     const numberOfCharts = selected?.length || 0;
     for (let i = 0; i < numberOfCharts; i += 1) {
       if (!formattedData[selected[i]]) return;
       areaSeries.current[i].setData(formattedData[selected[i]]);
-    }
+    };
 
-    const defaultLastDataPoint =
-      formattedData[0] || selected[0]
-        ? selected.map((selection) => {
-            if (!formattedData[selection]) {
-              return {
-                time: null,
-                value: null,
-              };
-            }
-            return {
-              time: formattedData[selection][
-                formattedData[selection].length - 1
-              ].time,
-              value:
-                formattedData[selection][formattedData[selection].length - 1]
-                  .value,
-            };
-          })
-        : null;
-    setLastDataPoint(
-      defaultLastDataPoint
-        ? getMergedData(defaultLastDataPoint)
-        : { time: 0, value: [0], season: 0, timestamp: 0 }
-    );
+    function getDataPoint(mode: string) {
+      let _time = 0;
+      const _value: number[] = [];
+      let _season = 0;
 
-    const defaultFirstDataPoint =
-      formattedData[0] || selected[0]
-        ? selected.map((selection) => {
-            if (!formattedData[selection]) {
-              return {
-                time: null,
-                value: null,
-              };
-            }
-            return {
-              time: formattedData[selection][0].time,
-              value: formattedData[selection][0].value,
-            };
-          })
-        : null;
-    setFirstDataPoint(defaultFirstDataPoint);
+      selected.forEach((selection) => {
+        const selectedData = formattedData[selection];
+        const dataIndex = mode === 'last' ? selectedData.length - 1 : 0; 
+        _time = Math.max(_time, selectedData[dataIndex].time.valueOf() as number);
+        _season = Math.max(_season, selectedData[dataIndex].customValues.season);
+        _value.push(selectedData[dataIndex].value);
+      });
+
+      return {
+        time: new Date(_time * 1000)?.toLocaleString(undefined, { dateStyle: 'short', timeStyle: 'short' }),
+        value: _value,
+        season: _season,
+        timestamp:_time
+      };
+    };
+
+    setLastDataPoint(getDataPoint('last'));
+    setFirstDataPoint(getDataPoint('first'));
 
     function crosshairMoveHandler(param: MouseEventParams) {
       const hoveredTimestamp = param.time ? new Date(param.time?.valueOf() as number * 1000) : null;
-      const hoveredValues = Array.from(param.seriesData.values()).map((data: any) => data.value);
-      const hoveredSeason = extraData?.get(param.time?.valueOf() as number);
-      setDataPoint({
-        time: param.time ? hoveredTimestamp?.toLocaleString(undefined, { dateStyle: 'short', timeStyle: 'short' }) : null,
-        value: hoveredValues,
-        season: hoveredSeason
+      const hoveredValues: number[] = [];
+      let hoveredSeason = 0;
+      areaSeries.current.forEach((series) => {
+        const seriesValue = series.dataByIndex(param.logical?.valueOf() as number, -1);
+        // @ts-ignore
+        hoveredValues.push(seriesValue?.value);
+        hoveredSeason = Math.max(hoveredSeason, (seriesValue?.customValues!.season as number || 0));
       });
+      if (!param.time) {
+        setDataPoint(undefined);
+      } else {
+        setDataPoint({
+          time: param.time ? hoveredTimestamp?.toLocaleString(undefined, { dateStyle: 'short', timeStyle: 'short' }) : null,
+          value: param.time ? hoveredValues : null,
+          season: param.time ? hoveredSeason : null,
+          timestamp: param.time?.valueOf() as number
+        });
+      };
     };
 
     function timeRangeChangeHandler(param: Range<Time> | null) {
       if (!param) return;
       const lastTimestamp = new Date(param.to.valueOf() as number * 1000);
       const lastValues = selected.map((selection) => (formattedData[selection].find((value) => value.time === param.to))?.value);
-      const lastSeason = extraData?.get(Number(param.to.valueOf()));
+      const lastSeasons = selected.map((selection) => (formattedData[selection].find((value) => value.time === param.to))?.customValues.season || 0);
+      const lastSeason = Math.max(...lastSeasons);
       setLastDataPoint({
         time: lastTimestamp?.toLocaleString('en-US', { dateStyle: 'short', timeStyle: 'short', }),
         value: lastValues,
@@ -420,7 +386,7 @@ const ChartV2: FC<ChartV2DataProps> = ({
       chart.current?.unsubscribeCrosshairMove(crosshairMoveHandler);
       chart.current?.timeScale().unsubscribeVisibleTimeRangeChange(timeRangeChangeHandler);
     };
-  }, [formattedData, extraData, selected]);
+  }, [formattedData, selected]);
 
   return (
     <Box sx={{ position: 'relative', height: '100%' }}>
@@ -442,8 +408,8 @@ const ChartV2: FC<ChartV2DataProps> = ({
         {selected.map((chartId, index) => {
           const tooltipTitle = chartSetupData[chartId].tooltipTitle;
           const tooltipHoverText = chartSetupData[chartId].tooltipHoverText;
-          const beforeFirstSeason = dataPoint && firstDataPoint ? dataPoint.timestamp < firstDataPoint[index]?.time : false;
-          const value = beforeFirstSeason ? 0 : dataPoint?.value[index] || lastDataPoint?.value[index] || undefined;
+          const beforeFirstSeason = dataPoint && firstDataPoint ? dataPoint.timestamp < firstDataPoint[index]?.timestamp : false;
+          const value = beforeFirstSeason ? 0 : dataPoint ? dataPoint?.value[index] : lastDataPoint ? lastDataPoint?.value[index] : undefined;
           if (!isMobile || selected.length < 3) {
             return (
               <Box key={`selectedChartV2${index}`} sx={{ display: 'flex', flexDirection: 'column' }}>

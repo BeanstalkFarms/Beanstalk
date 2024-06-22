@@ -6,32 +6,36 @@ import CloseIcon from '@mui/icons-material/Close';
 import useToggle from '~/hooks/display/useToggle';
 import { apolloClient } from '~/graph/client';
 import useSeason from '~/hooks/beanstalk/useSeason';
+import { Range, Time } from 'lightweight-charts';
 import ChartV2 from './ChartV2';
 import DropdownIcon from '../Common/DropdownIcon';
 import SelectDialog from './SelectDialog';
 import { useChartSetupData } from './useChartSetupData';
 import CalendarButton from '../Common/CalendarButton';
 
+type QueryData = {
+  time: Time,
+  value: number,
+  customValues: {
+    season: number
+  };
+};
+
 const AdvancedChart: FC<{ isMobile?: boolean }> = ({ isMobile = false }) => {
   const season = useSeason();
   const chartSetupData = useChartSetupData();
 
-  const [timePeriod, setTimePeriod] = useState<{
-    from: Date | undefined;
-    to: Date | undefined;
-  }>({ from: undefined, to: undefined });
+  const [timePeriod, setTimePeriod] = useState<Range<Time>>();
 
   const [dialogOpen, showDialog, hideDialog] = useToggle();
   const [selectedCharts, setSelectedCharts] = useState([0]);
-  const [queryData, setQueryData] = useState<any[]>([]);
-  const [moreData, setMoreData] = useState<Map<any, any>>(new Map());
+  const [queryData, setQueryData] = useState<QueryData[][]>([]);
   const [loading, setLoading] = useState<boolean>(true);
 
   useMemo(() => {
     async function getSeasonData(getAllData?: boolean) {
       const promises: any[] = [];
       const output: any[] = [];
-      const extraOutput = new Map();
       const timestamps = new Map();
 
       try {
@@ -87,8 +91,10 @@ const AdvancedChart: FC<{ isMobile?: boolean }> = ({ isMobile = false }) => {
                           output[chartId][seasonData.season] = {
                             time: formattedTime,
                             value: formattedValue,
+                            customValues: {
+                              season: seasonData.season
+                            }
                           };
-                          extraOutput.set(formattedTime, seasonData.season);
                         };
                       };
                     };
@@ -102,7 +108,6 @@ const AdvancedChart: FC<{ isMobile?: boolean }> = ({ isMobile = false }) => {
           output[index] = dataSet.filter(Boolean);
         });
         setQueryData(output);
-        setMoreData(extraOutput);
       } catch (e) {
         console.debug('[AdvancedChart] Failed to fetch data');
         console.error(e);
@@ -119,7 +124,7 @@ const AdvancedChart: FC<{ isMobile?: boolean }> = ({ isMobile = false }) => {
     newSelection.splice(selectionIndex, 1);
     setSelectedCharts(newSelection);
   };
-
+  
   return (
     <>
       <Box display="flex" flexDirection="row" gap={2}>
@@ -266,7 +271,6 @@ const AdvancedChart: FC<{ isMobile?: boolean }> = ({ isMobile = false }) => {
             selectedCharts.length > 0 ? (
               <ChartV2
                 formattedData={queryData}
-                extraData={moreData}
                 selected={selectedCharts}
                 drawPegLine
                 timePeriod={timePeriod}

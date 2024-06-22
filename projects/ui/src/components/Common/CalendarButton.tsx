@@ -23,7 +23,6 @@ import { BeanstalkPalette } from '~/components/App/muiTheme';
 import {
   format,
   isValid,
-  isBefore,
   parse,
   set,
   setHours,
@@ -35,13 +34,11 @@ import {
   setMinutes,
 } from 'date-fns';
 import CloseIcon from '@mui/icons-material/Close';
+import { Range, Time } from 'lightweight-charts';
 
 type CalendarProps = {
   setTimePeriod: React.Dispatch<
-    React.SetStateAction<{
-      from: Date | undefined;
-      to: Date | undefined;
-    }>
+    React.SetStateAction<Range<Time>>
   >;
 };
 
@@ -51,10 +48,10 @@ type CalendarContentProps = {
   range: DateRange | undefined;
   selectedPreset: string;
   setPreset: React.Dispatch<React.SetStateAction<string>>;
-  handleRangeChange: (newRange: DateRange | undefined) => void;
+  handleRangeChange: (newRange: DateRange) => void;
   handlePresetSelect: (
     _preset: string,
-    selectedRange: DateRange | undefined
+    selectedRange: DateRange
   ) => void;
 };
 
@@ -149,10 +146,10 @@ const CalendarContent: FC<CalendarContentProps> = ({
         : undefined;
       const adjustedDate = {
         from: date.from
-          ? set(date.from, { hours: Number(fromHour || 0), minutes: 5 })
+          ? set(date.from, { hours: Number(fromHour || 0), minutes: 0 })
           : undefined,
         to: date.to
-          ? set(date.to, { hours: Number(toHour || 0), minutes: 5 })
+          ? set(date.to, { hours: Number(toHour || 23), minutes: 0 })
           : undefined,
       };
       handleRangeChange(adjustedDate);
@@ -490,29 +487,22 @@ const CalendarButton: FC<CalendarProps> = ({ setTimePeriod }) => {
     setAnchorEl(null);
   }, []);
 
-  const [range, setRange] = useState<DateRange | undefined>(initialRange);
+  const [range, setRange] = useState<DateRange>(initialRange);
 
   const [selectedPreset, setPreset] = useState<string>('1W');
 
-  const handleRangeChange = (newRange: DateRange | undefined) => {
+  const handleRangeChange = (newRange: DateRange) => {
     const newTimePeriod = {
-      from: newRange?.from,
-      to: newRange?.to,
+      from: (newRange?.from || 0).valueOf() / 1000 as Time,
+      to: (newRange?.to || Date.now()).valueOf() / 1000 as Time,
     };
-    if (newRange?.from && newRange.to) {
-      if (isBefore(newRange.from, newRange.to)) {
-        setRange(newRange);
-        setTimePeriod(newTimePeriod);
-      };
-    } else {
-     setRange(newRange);
-     setTimePeriod(newTimePeriod);
-    };
+      setRange(newRange);
+      setTimePeriod(newTimePeriod);
   };
 
   const handlePresetSelect = (
     _preset: string,
-    selectedRange: DateRange | undefined
+    selectedRange: DateRange
   ) => {
     handleRangeChange(selectedRange);
     setPreset(_preset);

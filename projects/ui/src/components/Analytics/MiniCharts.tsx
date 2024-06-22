@@ -3,8 +3,17 @@ import { FC } from '~/types';
 import useSeason from '~/hooks/beanstalk/useSeason';
 import { Box, Card, CircularProgress } from '@mui/material';
 import { apolloClient } from '~/graph/client';
+import { Time } from 'lightweight-charts';
 import ChartV2 from './ChartV2';
 import { useChartSetupData } from './useChartSetupData';
+
+type QueryData = {
+  time: Time,
+  value: number,
+  customValues: {
+    season: number
+  };
+};
 
 const MiniCharts: FC<{}> = () => {
   const season = useSeason();
@@ -29,15 +38,13 @@ const MiniCharts: FC<{}> = () => {
     return output;
   }, [chartSetupData]);
 
-  const [queryData, setQueryData] = useState<any[]>([]);
-  const [moreData, setMoreData] = useState<Map<any, any>>(new Map());
+  const [queryData, setQueryData] = useState<QueryData[][]>([]);
   const [loading, setLoading] = useState<boolean>(true);
 
   useMemo(() => {
     async function getSeasonData(getAllData?: boolean) {
       const promises: any[] = [];
       const output: any[] = [];
-      const extraOutput = new Map();
       const timestamps = new Map();
 
       try {
@@ -87,8 +94,10 @@ const MiniCharts: FC<{}> = () => {
                       output[chartId][seasonData.season] = {
                         time: formattedTime,
                         value: formattedValue,
+                        customValues: {
+                          season: seasonData.season
+                        }
                       };
-                      extraOutput.set(formattedTime, seasonData.season);
                     }
                   });
                 })
@@ -100,7 +109,6 @@ const MiniCharts: FC<{}> = () => {
           output[index] = dataSet.filter(Boolean);
         });
         setQueryData(output);
-        setMoreData(extraOutput);
       } catch (e) {
         console.debug('[MiniChart] Failed to fetch data');
         console.error(e);
@@ -120,7 +128,6 @@ const MiniCharts: FC<{}> = () => {
             {!loading ? (
               <ChartV2
                 formattedData={queryData}
-                extraData={moreData}
                 selected={[chart]}
                 size="mini"
               />
