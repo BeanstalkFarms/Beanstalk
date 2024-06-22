@@ -348,10 +348,11 @@ const ChartV2: FC<ChartV2DataProps> = ({
       const hoveredValues: number[] = [];
       let hoveredSeason = 0;
       areaSeries.current.forEach((series) => {
-        const seriesValue = series.dataByIndex(param.logical?.valueOf() as number, -1);
+        const seriesValueBefore = series.dataByIndex(param.logical?.valueOf() as number, -1);
+        const seriesValueAfter = series.dataByIndex(param.logical?.valueOf() as number, 1);
         // @ts-ignore
-        hoveredValues.push(seriesValue?.value);
-        hoveredSeason = Math.max(hoveredSeason, (seriesValue?.customValues!.season as number || 0));
+        hoveredValues.push(seriesValueBefore && seriesValueAfter ? seriesValueBefore?.value : 0);
+        hoveredSeason = Math.max(hoveredSeason, (seriesValueBefore?.customValues!.season as number || 0));
       });
       if (!param.time) {
         setDataPoint(undefined);
