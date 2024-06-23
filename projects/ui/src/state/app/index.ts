@@ -1,6 +1,4 @@
 import { DataSource } from '@beanstalk/sdk';
-import { Range, Time } from 'lightweight-charts';
-import { DateRange } from 'react-day-picker';
 import type { EthPriceResponse } from '~/functions/ethprice/ethprice';
 import { SGEnvironments } from '~/graph/endpoints';
 
@@ -9,14 +7,6 @@ export type Settings = {
   subgraphEnv: SGEnvironments;
   datasource: DataSource;
   impersonatedAccount: string;
-  advancedChartDataSettings: {
-    selectedCharts?: number[],
-    timePeriod?: Range<Time>
-  };
-  advancedChartTimeSettings: {
-    range?: DateRange,
-    preset?: string,
-  };
 };
 
 export type Globals = {
