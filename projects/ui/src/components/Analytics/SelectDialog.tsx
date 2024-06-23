@@ -99,6 +99,7 @@ const SelectDialog: FC<SelectDialogProps> = ({
 
   function closeDialog() {
     setSelected(internalSelected);
+    localStorage.setItem('advancedChartSelectedCharts', JSON.stringify(internalSelected));
     handleClose();
   };
 

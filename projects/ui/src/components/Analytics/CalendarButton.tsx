@@ -35,7 +35,6 @@ import {
 } from 'date-fns';
 import CloseIcon from '@mui/icons-material/Close';
 import { Range, Time } from 'lightweight-charts';
-import useSetting from '~/hooks/app/useSetting';
 
 type CalendarProps = {
   setTimePeriod: React.Dispatch<
@@ -481,10 +480,14 @@ const CalendarButton: FC<CalendarProps> = ({ setTimePeriod }) => {
     setAnchorEl(null);
   }, []);
 
-  const [chartSettings, setChartSettings] = useSetting('advancedChartTimeSettings');
+  const storedSetting1 = localStorage.getItem('advancedChartRange');
+  const storedRange = storedSetting1 ? JSON.parse(storedSetting1) : undefined;
 
-  const [range, setRange] = useState<DateRange>(chartSettings && chartSettings.range ? chartSettings.range : initialRange);
-  const [selectedPreset, setPreset] = useState<string>(chartSettings?.preset || '1W');
+  const storedSetting2 = localStorage.getItem('advancedChartPreset');
+  const storedPreset = storedSetting2 ? JSON.parse(storedSetting2) : undefined;
+
+  const [range, setRange] = useState<DateRange>(storedRange || initialRange);
+  const [selectedPreset, setPreset] = useState<string>(storedPreset || '1W');
 
   const handleChange = (newRange?: DateRange, _preset?: string) => {
     if (newRange) {
@@ -494,14 +497,13 @@ const CalendarButton: FC<CalendarProps> = ({ setTimePeriod }) => {
       };
       setRange(newRange);
       setTimePeriod(newTimePeriod);
+      localStorage.setItem('advancedChartRange', JSON.stringify(newRange));
+      localStorage.setItem('advancedChartTimePeriod', JSON.stringify(newTimePeriod));
     };
     if (_preset) {
       setPreset(_preset);
+      localStorage.setItem('advancedChartPreset', JSON.stringify(_preset));
     };
-    setChartSettings({
-      range: newRange,
-      preset: _preset,
-    })
   };
 
   return (

@@ -23,7 +23,6 @@ import SettingsIcon from '@mui/icons-material/Settings';
 import CheckRoundedIcon from '@mui/icons-material/CheckRounded';
 import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
 import { setHours } from 'date-fns';
-import useSetting from '~/hooks/app/useSetting';
 import { useChartSetupData } from './useChartSetupData';
 import { chartColors } from './chartColors';
 /*
@@ -71,8 +70,6 @@ const ChartV2: FC<ChartV2DataProps> = ({
   const chart = useRef<IChartApi>();
   const areaSeries = useRef<ISeriesApi<"Line">[]>([]);
   const tooltip = useRef<any>();
-
-  const [chartSettings, _] = useSetting('advancedChartDataSettings');
 
   const [lastDataPoint, setLastDataPoint] = useState<any>();
   const [firstDataPoint, setFirstDataPoint] = useState<any>();
@@ -322,8 +319,11 @@ const ChartV2: FC<ChartV2DataProps> = ({
       areaSeries.current[i].setData(formattedData[selected[i]]);
     };
 
-    if (size === 'full' && chartSettings?.timePeriod) {
-      chart.current?.timeScale().setVisibleRange(chartSettings.timePeriod);
+    const storedSetting = localStorage.getItem('advancedChartTimePeriod');
+    const storedTimePeriod = storedSetting ? JSON.parse(storedSetting) : undefined;
+
+    if (size === 'full' && storedTimePeriod) {
+      chart.current?.timeScale().setVisibleRange(storedTimePeriod);
     };
 
     function getDataPoint(mode: string) {
@@ -394,7 +394,7 @@ const ChartV2: FC<ChartV2DataProps> = ({
       chart.current?.unsubscribeCrosshairMove(crosshairMoveHandler);
       chart.current?.timeScale().unsubscribeVisibleTimeRangeChange(timeRangeChangeHandler);
     };
-  }, [formattedData, selected, size, chartSettings]);
+  }, [formattedData, selected, size]);
 
   return (
     <Box sx={{ position: 'relative', height: '100%' }}>

@@ -7,7 +7,6 @@ import useToggle from '~/hooks/display/useToggle';
 import { apolloClient } from '~/graph/client';
 import useSeason from '~/hooks/beanstalk/useSeason';
 import { Range, Time } from 'lightweight-charts';
-import useSetting from '~/hooks/app/useSetting';
 import ChartV2 from './ChartV2';
 import DropdownIcon from '../Common/DropdownIcon';
 import SelectDialog from './SelectDialog';
@@ -26,9 +25,14 @@ const AdvancedChart: FC<{ isMobile?: boolean }> = ({ isMobile = false }) => {
   const season = useSeason();
   const chartSetupData = useChartSetupData();
 
-  const [chartSettings, setChartSettings] = useSetting('advancedChartDataSettings');
-  const [timePeriod, setTimePeriod] = useState<Range<Time> | undefined>(chartSettings ? chartSettings.timePeriod : undefined);
-  const [selectedCharts, setSelectedCharts] = useState(chartSettings?.selectedCharts || [0]);
+  const storedSetting1 = localStorage.getItem('advancedChartTimePeriod');
+  const storedTimePeriod = storedSetting1 ? JSON.parse(storedSetting1) : undefined;
+
+  const storedSetting2 = localStorage.getItem('advancedChartSelectedCharts');
+  const storedSelectedCharts = storedSetting2 ? JSON.parse(storedSetting2) : undefined;
+
+  const [timePeriod, setTimePeriod] = useState<Range<Time> | undefined>(storedTimePeriod);
+  const [selectedCharts, setSelectedCharts] = useState<number[]>(storedSelectedCharts || [0]);
 
   const [dialogOpen, showDialog, hideDialog] = useToggle();
   const [queryData, setQueryData] = useState<QueryData[][]>([]);
@@ -121,17 +125,11 @@ const AdvancedChart: FC<{ isMobile?: boolean }> = ({ isMobile = false }) => {
     setLoading(false);
   }, [chartSetupData, selectedCharts, season]);
 
-  useMemo(() => {
-    setChartSettings({
-      selectedCharts: selectedCharts,
-      timePeriod: timePeriod
-    });
-  }, [selectedCharts, setChartSettings, timePeriod]);
-
   function handleDeselectChart(selectionIndex: number) {
     const newSelection = [...selectedCharts];
     newSelection.splice(selectionIndex, 1);
     setSelectedCharts(newSelection);
+    localStorage.setItem('advancedChartSelectedCharts', JSON.stringify(newSelection));
   };
 
   return (
