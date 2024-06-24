@@ -23,12 +23,9 @@ import SettingsIcon from '@mui/icons-material/Settings';
 import CheckRoundedIcon from '@mui/icons-material/CheckRounded';
 import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
 import { setHours } from 'date-fns';
+import { VertLine } from '~/util/lightweight-charts-plugins/vertical-line/vertical-line';
 import { useChartSetupData } from './useChartSetupData';
 import { chartColors } from './chartColors';
-/*
-  List of Variables:
-  TODO: drawExploitLine (timestamp: 1650196810)
-*/
 
 type ChartV2DataProps = {
   /** 
@@ -54,6 +51,10 @@ type ChartV2DataProps = {
    */
   timePeriod?: Range<Time>;
   /**
+   * Draws a line at the timestamp of the exploit.
+   */
+  drawExploitLine?: boolean;
+  /**
    * Ids of the currently selected charts.
    */
   selected: number[];
@@ -64,6 +65,7 @@ const ChartV2: FC<ChartV2DataProps> = ({
   drawPegLine,
   size = 'full',
   timePeriod,
+  drawExploitLine = true,
   selected
 }) => {
   const chartContainerRef = useRef<any>();
@@ -257,6 +259,14 @@ const ChartV2: FC<ChartV2DataProps> = ({
           };
           areaSeries.current[i].createPriceLine(pegLine);
         }
+
+        if (drawExploitLine) {
+          const vertLine = new VertLine(chart.current, areaSeries.current[i], 1650196810 as Time, {
+            width: 0.5
+          });
+          areaSeries.current[i].attachPrimitive(vertLine);
+        };
+
       }
     }
 
@@ -269,6 +279,7 @@ const ChartV2: FC<ChartV2DataProps> = ({
   }, [
     theme,
     drawPegLine,
+    drawExploitLine,
     size,
     formattedData,
     chartSetupData,
