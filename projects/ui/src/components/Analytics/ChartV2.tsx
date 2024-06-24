@@ -261,7 +261,8 @@ const ChartV2: FC<ChartV2DataProps> = ({
         }
 
         if (drawExploitLine) {
-          const vertLine = new VertLine(chart.current, areaSeries.current[i], 1650196810 as Time, {
+          const exploitTimestamp = 1650196810 as Time;
+          const vertLine = new VertLine(chart.current, areaSeries.current[i], exploitTimestamp, {
             width: 0.5
           });
           areaSeries.current[i].attachPrimitive(vertLine);
