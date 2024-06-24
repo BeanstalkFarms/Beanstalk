@@ -117,7 +117,7 @@ const SelectDialog: FC<SelectDialogProps> = ({
   }, [filteredData]);
 
   return (
-    <ClickAwayListener onClickAway={handleClose} mouseEvent="onMouseDown" touchEvent="onTouchStart">
+    <ClickAwayListener onClickAway={() => closeDialog()} mouseEvent="onMouseDown" touchEvent="onTouchStart">
       <Box
         sx={{
           paddingY: 2,
