@@ -178,7 +178,9 @@ library LibUnripe {
     function getTotalRecapitalizedPercent() internal view returns (uint256 recapitalizedPercent) {
         AppStorage storage s = LibAppStorage.diamondStorage();
         uint256 totalUsdNeeded = LibFertilizer.getTotalRecapDollarsNeeded();
-        if(totalUsdNeeded == 0) return 0;
+        if (totalUsdNeeded == 0) {
+            return 1e6; // if zero usd needed, full recap has happened
+        }
         return s.recapitalized.mul(DECIMALS).div(totalUsdNeeded);
     }
 
