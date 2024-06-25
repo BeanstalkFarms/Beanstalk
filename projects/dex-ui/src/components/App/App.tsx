@@ -8,7 +8,7 @@ import { Wells } from "src/pages/Wells";
 import { Frame } from "src/components/Frame/Frame";
 import { Build } from "src/pages/Build";
 import { Swap } from "src/pages/Swap";
-import { Settings, isNetlifyContext } from "src/settings";
+import { Settings } from "src/settings";
 import { Liquidity } from "src/pages/Liquidity";
 import { Create } from "src/pages/Create";
 
@@ -23,12 +23,8 @@ export const App = ({}) => {
         <Route path="/wells/:address" element={<Well />} />
         <Route path="/wells/:address/liquidity" element={<Liquidity />} />
         <Route path="/swap" element={<Swap />} />
-        {(isNotProd || isNetlifyContext) && (
-          <>
-            <Route path="/build" element={<Build />} />
-            <Route path="/create" element={<Create />} />
-          </>
-        )}
+        <Route path="/build" element={<Build />} />
+        <Route path="/create" element={<Create />} />
         {isNotProd && <Route path="/dev" element={<Dev />} />}
         <Route path="*" element={<NotFound />} />
       </Routes>
