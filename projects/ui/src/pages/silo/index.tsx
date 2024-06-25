@@ -60,6 +60,7 @@ import TransactionToast from '~/components/Common/TxnToast';
 import { useFetchFarmerSilo } from '~/state/farmer/silo/updater';
 import useFarmerSilo from '~/hooks/farmer/useFarmerSilo';
 import useSilo from '~/hooks/beanstalk/useSilo';
+import useSetting from '~/hooks/app/useSetting';
 
 const FormControlLabelStat: FC<
   Partial<FormControlLabelProps> & {
@@ -112,6 +113,9 @@ const RewardsBar: FC<{
   const getChainToken = useGetChainToken();
   const getBDV = useBDV();
   const sdk = useSdk();
+
+  // Are we impersonating a different account while not in dev mode
+  const isImpersonating = !!useSetting('impersonatedAccount')[0] && !import.meta.env.DEV;
 
   /// Calculate Unripe Silo Balance
   const urBean = getChainToken(UNRIPE_BEAN);
@@ -318,12 +322,12 @@ const RewardsBar: FC<{
       return;
     }
 
-    if (farm.length === 0) return;
+    if (farm.length === 0 || isImpersonating) return;
 
     await farm.estimate(ethers.BigNumber.from(0));
 
     return farm.estimateGas(ethers.BigNumber.from(0), { slippage: 0 });
-  }, [buildWorkflow, claimState]);
+  }, [buildWorkflow, claimState, isImpersonating]);
 
   const [gas, isEstimatingGas, estimateGas] = useQuoteAgnostic(quoteGas);
 
@@ -414,7 +418,7 @@ const RewardsBar: FC<{
             size="medium"
             variant="contained"
             sx={{ width: '100%', whiteSpace: 'nowrap' }}
-            endIcon={<DropdownIcon open={open} disabled={!canClaim} light />}
+            endIcon={<DropdownIcon open={open && canClaim} disabled={!canClaim} light />}
             onClick={open ? hide : show}
             disabled={!canClaim}
           >
@@ -422,7 +426,7 @@ const RewardsBar: FC<{
           </Button>
         </Box>
       </Stack>
-      {open && (
+      {open && canClaim && (
         <Box
           sx={{
             backgroundColor: 'rgba(244, 244, 244, 0.4)',
@@ -609,13 +613,13 @@ const RewardsBar: FC<{
                     />
                   </TokenOutput>
                   <Button
-                    disabled={empty}
+                    disabled={empty || isImpersonating}
                     variant="contained"
                     fullWidth
                     size="large"
                     onClick={handleSubmit}
                   >
-                    Claim Rewards
+                    {isImpersonating ? 'Impersonating Account' : 'Claim Rewards'}
                   </Button>
                   <Row justifyContent="flex-end" spacing={0.5}>
                     {isEstimatingGas ? (

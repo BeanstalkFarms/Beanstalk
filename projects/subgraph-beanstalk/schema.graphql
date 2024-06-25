@@ -15,6 +15,12 @@ enum PlotSource {
   TRANSFER
 }
 
+enum EmaWindow {
+  ROLLING_24_HOUR
+  ROLLING_7_DAY
+  ROLLING_30_DAY
+}
+
 type Beanstalk @entity {
   " Smart contract address of the protocol's main contract (Factory, Registry, etc) "
   id: ID!
@@ -294,10 +300,12 @@ type SiloAssetDailySnapshot @entity {
 }
 
 type SiloYield @entity {
-  "Season of data points"
+  "Season of data points - EMA window"
   id: ID!
   "Sortable int field for season"
   season: Int!
+  "Window used for vAPY calc"
+  window: EmaWindow!
   "Beta used for EMA"
   beta: BigDecimal!
   "u used for EMA"
@@ -313,7 +321,7 @@ type SiloYield @entity {
 }
 
 type TokenYield @entity {
-  "Token address - season"
+  "Token address - season - EMA window"
   id: Bytes!
   "Token being calculated"
   token: Bytes!
@@ -1110,6 +1118,8 @@ type FertilizerYield @entity {
   id: ID!
   "Current season"
   season: Int!
+  "Bean EMA Window"
+  window: EmaWindow!
   "Current humidity"
   humidity: BigDecimal!
   "Current outstanding fert"

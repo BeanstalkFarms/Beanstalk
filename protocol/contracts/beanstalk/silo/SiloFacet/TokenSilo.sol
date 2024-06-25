@@ -146,7 +146,7 @@ contract TokenSilo is Silo {
             stem = LibTokenSilo.stemTipForToken(token),
             amount
         );
-        LibSilo.mintGerminatingStalk(account, uint128(stalk), germ);
+        LibSilo.mintGerminatingStalk(account, stalk.toUint128(), germ);
     }
 
     //////////////////////// WITHDRAW ////////////////////////
@@ -165,7 +165,7 @@ contract TokenSilo is Silo {
     function _withdrawDeposit(address account, address token, int96 stem, uint256 amount) internal {
         // Remove the Deposit from `account`.
         (
-            uint256 initalStalkRemoved, 
+            uint256 initialStalkRemoved, 
             uint256 grownStalkRemoved, 
             uint256 bdvRemoved, 
             LibGerminate.Germinate germinate
@@ -178,7 +178,7 @@ contract TokenSilo is Silo {
             );
         if (germinate == LibGerminate.Germinate.NOT_GERMINATING) {
             // remove the deposit from totals
-            _withdraw(account, token, amount, bdvRemoved, initalStalkRemoved.add(grownStalkRemoved));
+            _withdraw(account, token, amount, bdvRemoved, initialStalkRemoved.add(grownStalkRemoved));
         } else {
             // remove deposit from germination, and burn the grown stalk.
             // grown stalk does not germinate and is not counted in germinating totals.
@@ -187,7 +187,7 @@ contract TokenSilo is Silo {
                 token,
                 amount,
                 bdvRemoved,
-                initalStalkRemoved,
+                initialStalkRemoved,
                 germinate
             );
 
@@ -222,7 +222,8 @@ contract TokenSilo is Silo {
             account,
             token,
             stems,
-            amounts
+            amounts,
+            LibSilo.ERC1155Event.EMIT_BATCH_EVENT
         );
 
         // withdraw deposits that are not germinating.
@@ -296,7 +297,7 @@ contract TokenSilo is Silo {
     ) private {
         // Decrement from total germinating.
         LibTokenSilo.decrementTotalGerminating(token, amount, bdv, germinateState); // Decrement total Germinating in the silo.
-        LibSilo.burnGerminatingStalk(account, uint128(stalk), germinateState); // Burn stalk and roots associated with the stalk.
+        LibSilo.burnGerminatingStalk(account, stalk.toUint128(), germinateState); // Burn stalk and roots associated with the stalk.
     }
 
     //////////////////////// TRANSFER ////////////////////////
@@ -316,7 +317,7 @@ contract TokenSilo is Silo {
         uint256 amount
     ) internal returns (uint256) {
         (
-            uint256 initalStalk,
+            uint256 initialStalk,
             uint256 grownStalk,
             uint256 bdv,
             LibGerminate.Germinate germ
@@ -337,9 +338,9 @@ contract TokenSilo is Silo {
         );
 
         if (germ == LibGerminate.Germinate.NOT_GERMINATING) {
-            LibSilo.transferStalk(sender, recipient, initalStalk.add(grownStalk));
+            LibSilo.transferStalk(sender, recipient, initialStalk.add(grownStalk));
         } else {
-            LibSilo.transferGerminatingStalk(sender, recipient, initalStalk, germ);
+            LibSilo.transferGerminatingStalk(sender, recipient, initialStalk, germ);
             if (grownStalk > 0) {
                 LibSilo.transferStalk(
                     sender,

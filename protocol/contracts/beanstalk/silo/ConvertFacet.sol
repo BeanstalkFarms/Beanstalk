@@ -178,6 +178,9 @@ contract ConvertFacet is ReentrancyGuard {
                 ));
                 i++;
             }
+
+            // if the loop is exited early, set the remaining amounts to 0.
+            // `i` is not reinitialized and uses the value from the loop.
             for (i; i < stems.length; ++i) amounts[i] = 0;
             
             emit RemoveDeposits(
@@ -240,7 +243,7 @@ contract ConvertFacet is ReentrancyGuard {
         
         // increment totals based on germination state, 
         // as well as issue stalk to the user.
-        // if the deposit is germinating, only the inital stalk of the deposit is germinating. 
+        // if the deposit is germinating, only the initial stalk of the deposit is germinating. 
         // the rest is active stalk.
         if (germ == LibGerminate.Germinate.NOT_GERMINATING) {
             LibTokenSilo.incrementTotalDeposited(token, amount, bdv);
@@ -250,9 +253,8 @@ contract ConvertFacet is ReentrancyGuard {
             );
         } else {
             LibTokenSilo.incrementTotalGerminating(token, amount, bdv, germ);
-            // safeCast not needed as stalk is <= max(uint128)
-            LibSilo.mintGerminatingStalk(account, uint128(bdv.mul(LibTokenSilo.stalkIssuedPerBdv(token))), germ);   
-            LibSilo.mintActiveStalk(account, grownStalk);
+            LibSilo.mintGerminatingStalk(msg.sender, bdv.mul(LibTokenSilo.stalkIssuedPerBdv(token)).toUint128(), germ);   
+            LibSilo.mintActiveStalk(msg.sender, grownStalk);
         }
         LibTokenSilo.addDepositToAccount(
             account, 

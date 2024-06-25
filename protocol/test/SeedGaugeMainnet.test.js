@@ -112,6 +112,28 @@ testIfRpcSet('SeedGauge Init Test', function () {
       expect(await this.beanstalk.getLockedBeans()).to.be.within(to6('25900000.000000'), to6('26000000.000000'));
     })
 
+    it('lockedBeans with input', async function () {
+      const cumulativeReserves = await this.beanstalk.wellOracleSnapshot(BEAN_ETH_WELL)
+      const seasonTime = await this.beanstalk.time()
+
+      expect(await this.beanstalk.getLockedBeansFromTwaReserves(
+        cumulativeReserves,
+        seasonTime.timestamp
+      )).to.be.within(to6('25900000.000000'), to6('26000000.000000'));
+    })
+
+    it('lockedBeans with input at sunrise', async function () {
+      await mine(300, { interval: 12 });
+      const prevCumulativeReserves = await this.beanstalk.wellOracleSnapshot(BEAN_ETH_WELL)
+      const prevSeasonTime = await this.beanstalk.time()
+      await this.beanstalk.sunrise()
+      const lockedBeans = await this.beanstalk.getLockedBeansFromTwaReserves(
+        prevCumulativeReserves,
+        prevSeasonTime.timestamp
+      )
+      expect(lockedBeans).to.be.within(to6('25900000.000000'), to6('26000000.000000'));
+    })
+
     it.skip('usd Liquidity', async function () {
       // ~13.2m usd liquidity in Bean:Eth
       expect(await this.beanstalk.getTwaLiquidityForWell(BEAN_ETH_WELL)).to.be.within(to18('13100000'), to18('13300000'));
@@ -184,7 +206,7 @@ testIfRpcSet('SeedGauge Init Test', function () {
 
     // mow arbitrary address that contains a bean3crv deposit.
     it('allows legacy bean3crv to be mown', async function () {
-      initalStalk = await this.beanstalk.balanceOfStalk(
+      initialStalk = await this.beanstalk.balanceOfStalk(
         '0x1B7eA7D42c476A1E2808f23e18D850C5A4692DF7'
       )
       await this.beanstalk.mow(
@@ -195,7 +217,7 @@ testIfRpcSet('SeedGauge Init Test', function () {
         '0x1B7eA7D42c476A1E2808f23e18D850C5A4692DF7'
       )
 
-      await expect(newStalk).to.be.above(initalStalk)
+      await expect(newStalk).to.be.above(initialStalk)
     })
     
   })

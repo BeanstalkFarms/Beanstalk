@@ -260,4 +260,67 @@ describe('Whitelist', function () {
       await expect(this.result).to.emit(this.whitelist, 'DewhitelistToken').withArgs(BEAN_3_CURVE)
     })
   })
+
+  describe('rewhitelist', async function () {
+    beforeEach(async function () {
+      this.whitelist.connect(owner).whitelistTokenWithEncodeType(
+        this.well.address,
+        this.bdv.interface.getSighash('wellBdv'),
+        '10000',
+        '1',
+        1,
+        this.gaugePoint.interface.getSighash("defaultGaugePointFunction(uint256,uint256,uint256)"),
+        this.liquidityWeight.interface.getSighash("maxWeight()"),
+        '0',
+        '0'
+      )
+      await this.whitelist.connect(owner).dewhitelistToken(this.well.address)
+
+      let settings = await this.siloGetters.tokenSettings(this.well.address);
+      expect(settings[0]).to.equal('0x00000000')
+    });
+
+    it('rewhitelists a dewhitelisted token', async function () {
+      this.result = this.whitelist.connect(owner).whitelistTokenWithEncodeType(
+        this.well.address,
+        this.bdv.interface.getSighash('wellBdv'),
+        '10000',
+        '1',
+        1,
+        this.gaugePoint.interface.getSighash("defaultGaugePointFunction(uint256,uint256,uint256)"),
+        this.liquidityWeight.interface.getSighash("maxWeight()"),
+        '0',
+        '0')
+      let settings = await this.siloGetters.tokenSettings(this.well.address)
+
+      expect(settings[0]).to.equal(this.bdv.interface.getSighash('wellBdv'))
+      expect(settings[1]).to.equal(1)
+      expect(settings[2]).to.equal(10000)
+
+      await expect(this.result).to.emit(this.whitelist, 'WhitelistToken').withArgs(
+        this.well.address, 
+        this.bdv.interface.getSighash('wellBdv'), 
+        1,
+        10000,
+        this.gaugePoint.interface.getSighash("defaultGaugePointFunction(uint256,uint256,uint256)"),
+        this.liquidityWeight.interface.getSighash("maxWeight()"),
+        '0',
+        '0'
+      );
+    })
+
+    it('reverts on an invalid stalkIssuedPerBdv upon rewhitelisting', async function () {
+      await expect(this.whitelist.connect(owner).whitelistTokenWithEncodeType(
+        this.well.address,
+        this.bdv.interface.getSighash('wellBdv'),
+        '1',
+        '1',
+        1,
+        this.gaugePoint.interface.getSighash("defaultGaugePointFunction(uint256,uint256,uint256)"),
+        this.liquidityWeight.interface.getSighash("maxWeight()"),
+        '0',
+        '0'
+      )).to.be.revertedWith('Whitelist: Cannot update stalkIssuedPerBdv')
+    })
+  })
 });

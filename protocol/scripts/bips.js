@@ -47,6 +47,28 @@ async function bip29(mock = true, account = undefined) {
   });
 }
 
+async function bipMorningAuction(mock = true, account = undefined) {
+  if (account == undefined) {
+    account = await impersonateBeanstalkOwner();
+    await mintEth(account.address);
+  }
+  
+  await upgradeWithNewFacets({
+    diamondAddress: BEANSTALK,
+    facetNames: [
+      "FieldFacet", // Add Morning Auction
+      "SeasonFacet", // Add ERC-20 permit function
+      "FundraiserFacet" // update fundraiser with new soil spec
+      // 'MockAdminFacet' // Add MockAdmin for testing purposes
+    ],
+    initFacetName: "InitBipSunriseImprovements",
+    initArgs: [],
+    bip: false,
+    verbose: true,
+    account: account
+  });
+}
+
 //BIP for Silo migration to stem
 async function bipNewSilo(mock = true, account = undefined) {
   if (account == undefined) {
@@ -216,24 +238,32 @@ async function bipSeedGauge(mock = true, account = undefined, verbose = true) {
       "MetadataFacet", // update metadata
       "BDVFacet", // update bdv functions
       "SiloGettersFacet", // add silo getters
-      "LiquidityWeightFacet" // add liquidity weight facet
+      "LiquidityWeightFacet", // add liquidity weight facet
+      "EnrootFacet", // update stem functions
+      "MigrationFacet" // update migration functions
     ],
     initFacetName: "InitBipSeedGauge",
-    selectorsToRemove: [],
+    selectorsToRemove: [
+      '0xd8a6aafe', // remove old whitelist
+      '0xb4f55be8', // remove old whitelistWithEncodeType
+      '0x07a3b202', // remove Curve Oracle
+      '0x9f9962e4', // remove getSeedsPerToken
+      '0x0b2939d1' // remove InVestingPeriod
+    ],
     libraryNames: [
-      'LibGauge', 'LibConvert', 'LibLockedUnderlying', 'LibIncentive', 'LibWellMinting', 'LibGerminate'
+      'LibGauge', 'LibConvert', 'LibLockedUnderlying', 'LibIncentive', 'LibGerminate', 'LibWellMinting'
     ],
     facetLibraries: {
       'SeasonFacet': [
         'LibGauge',
         'LibIncentive',
         'LibLockedUnderlying',
-        'LibWellMinting',
-        'LibGerminate'
+        'LibGerminate',
+        'LibWellMinting'
       ],
       'SeasonGettersFacet': [
         'LibLockedUnderlying',
-        'LibWellMinting',
+        'LibWellMinting'
       ],
       'ConvertFacet': [
         'LibConvert'
@@ -249,6 +279,7 @@ async function bipSeedGauge(mock = true, account = undefined, verbose = true) {
     verify: false
   });
 }
+
 
 
 async function bipMigrateUnripeBeanEthToBeanSteth(mock = true, account = undefined, verbose = true, oracleAccount = undefined) {
@@ -369,6 +400,7 @@ async function bipMiscellaneousImprovements(mock = true, account = undefined, ve
 exports.bip29 = bip29
 exports.bip30 = bip30
 exports.bip34 = bip34
+exports.bipMorningAuction = bipMorningAuction
 exports.bipNewSilo = bipNewSilo
 exports.bipBasinIntegration = bipBasinIntegration
 exports.bipSeedGauge = bipSeedGauge

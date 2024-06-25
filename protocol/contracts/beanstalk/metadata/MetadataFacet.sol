@@ -44,7 +44,7 @@ contract MetadataFacet is MetadataImage {
             '"}, { "trait_type": "Token Address", "value": "', LibStrings.toHexString(uint256(token), 20),
             '"}, { "trait_type": "Id", "value": "', depositId.toHexString(32),
             '"}, { "trait_type": "stem", "display_type": "number", "value": ', int256(stem).toString(),
-            '}, { "trait_type": "inital stalk per BDV", "display_type": "number", "value": ', uint256(LibTokenSilo.stalkIssuedPerBdv(token)).toString(),
+            '}, { "trait_type": "initial stalk per BDV", "display_type": "number", "value": ', uint256(LibTokenSilo.stalkIssuedPerBdv(token)).toString(),
             '}, { "trait_type": "grown stalk per BDV", "display_type": "number", "value": ', uint256(stemTip - stem).toString(),
             '}, { "trait_type": "stalk grown per BDV per season", "display_type": "number", "value": ', uint256(LibTokenSilo.stalkEarnedPerSeason(token)).toString()
         );

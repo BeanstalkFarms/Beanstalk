@@ -31,6 +31,7 @@ root.render(
   <React.StrictMode>
     <Wrapper>
       <App />
+      {/* fooooooz */}
     </Wrapper>
   </React.StrictMode>
 );

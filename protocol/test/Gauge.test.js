@@ -1,27 +1,19 @@
 const { expect } = require('chai')
 const { deploy } = require('../scripts/deploy.js')
 const { takeSnapshot, revertToSnapshot } = require("./utils/snapshot")
-const { to6, toStalk, toBean, to18 } = require('./utils/helpers.js')
-const { USDC, UNRIPE_BEAN, UNRIPE_LP, BEAN, THREE_CURVE, THREE_POOL, BEAN_3_CURVE, BEAN_ETH_WELL, BEANSTALK_PUMP, STABLE_FACTORY, ETH_USDT_UNISWAP_V3 } = require('./utils/constants.js')
+const { to6, to18 } = require('./utils/helpers.js')
+const { UNRIPE_BEAN, UNRIPE_LP, BEAN, BEAN_3_CURVE, BEAN_ETH_WELL, ETH_USDT_UNISWAP_V3, ETH_USD_CHAINLINK_AGGREGATOR } = require('./utils/constants.js')
 const { EXTERNAL, INTERNAL } = require('./utils/balances.js')
+const { setEthUsdChainlinkPrice } = require('../utils/oracle.js');
 const { ethers } = require('hardhat')
-const { advanceTime } = require('../utils/helpers.js')
-const { deployMockWell, whitelistWell, deployMockWellWithMockPump } = require('../utils/well.js')
-const { initalizeGaugeForToken } = require('../utils/gauge.js')
-const { setEthUsdChainlinkPrice, setWstethUsdPrice } = require('../utils/oracle.js')
-const { time, mineUpTo, mine } = require("@nomicfoundation/hardhat-network-helpers")
+const { whitelistWell, deployMockWellWithMockPump } = require('../utils/well.js')
+const { initializeGaugeForToken } = require('../utils/gauge.js')
 const ZERO_BYTES = ethers.utils.formatBytes32String('0x0')
 const { setOracleFailure } = require('../utils/oracle.js')
 
 
-let user, user2, owner
-let userAddress, ownerAddress, user2Address
-
-async function setToSecondsAfterHour(seconds = 0) {
-  const lastTimestamp = (await ethers.provider.getBlock('latest')).timestamp
-  const hourTimestamp = parseInt(lastTimestamp/3600 + 1) * 3600 + seconds
-  await network.provider.send("evm_setNextBlockTimestamp", [hourTimestamp])
-}
+let user, owner
+let userAddress, ownerAddress
 
 
 describe('Gauge', function () {
@@ -72,12 +64,12 @@ describe('Gauge', function () {
     await this.unripe.connect(owner).addUnripeToken(UNRIPE_BEAN, BEAN, ZERO_BYTES)
     await this.unripe.connect(owner).addUnripeToken(UNRIPE_LP, BEAN_ETH_WELL, ZERO_BYTES)
     
-    // dewhitelist curve, as initMockDiamond initalizes bean3crv.
+    // dewhitelist curve, as initMockDiamond initializes bean3crv.
     // dewhitelisted here rather than updating mock to avoid breaking other tests.
     await this.whitelist.connect(owner).dewhitelistToken(BEAN_3_CURVE)
 
-    // initalize gauge parameters for lp:
-    await initalizeGaugeForToken(BEAN_ETH_WELL, to18('1000'), to6('100'))
+    // initialize gauge parameters for lp:
+    await initializeGaugeForToken(BEAN_ETH_WELL, to18('1000'), to6('100'))
 
     await this.season.updateTWAPCurveE()
   })
@@ -91,7 +83,7 @@ describe('Gauge', function () {
   })
 
   describe('Bean to maxLP ratio', function () {
-    // MockInitDiamond initalizes BeanToMaxLpGpPerBDVRatio to 50% (50e6)
+    // MockInitDiamond initializes BeanToMaxLpGpPerBDVRatio to 50% (50e6)
 
     describe('L2SR > excessively high L2SR % + P > 1', async function () {
       it("increases Bean to maxLP ratio", async function () {
@@ -213,7 +205,6 @@ describe('Gauge', function () {
       // 100 * (1 - 0.5) + 0.5 = 1
       expect(await this.seasonGetters.getBeanToMaxLpGpPerBdvRatioScaled()).to.be.equal(to18('100'))
     })
-
   })
 
   describe('L2SR calculation', async function () {
@@ -226,7 +217,7 @@ describe('Gauge', function () {
         expect(await this.seasonGetters.getTotalWeightedUsdLiquidity()).to.be.equal(to18('1000000'))
       })
 
-      it('inital state', async function () {
+      it('initial state', async function () {
         // bean:eth has a ratio of 1000:1 (1m beans paired against 1m usd of eth),
         // bean:3crv has a ratio of 1:1 (1m beans paired against 1m usd of 3crv)
         // total supply of bean is 2m, with 0 circulating.
@@ -267,27 +258,27 @@ describe('Gauge', function () {
 
       it('decreases', async function () {
         await this.bean.mint(ownerAddress, to6('1000000'))
-        initalL2SR = await this.seasonGetters.getLiquidityToSupplyRatio()
+        initialL2SR = await this.seasonGetters.getLiquidityToSupplyRatio()
         
         await this.bean.mint(ownerAddress, to6('1000000'))
         newL2SR = await this.seasonGetters.getLiquidityToSupplyRatio()
 
-        expect(initalL2SR).to.be.equal(to18('1'))
+        expect(initialL2SR).to.be.equal(to18('1'))
         expect(newL2SR).to.be.equal(to18('0.5'))
-        expect(newL2SR).to.be.lt(initalL2SR)
+        expect(newL2SR).to.be.lt(initialL2SR)
 
       })
 
       it('increases', async function () {
         await this.bean.mint(ownerAddress, to6('1000000'))
-        initalL2SR = await this.seasonGetters.getLiquidityToSupplyRatio()
+        initialL2SR = await this.seasonGetters.getLiquidityToSupplyRatio()
 
         await this.bean.connect(owner).burn(to6('500000'))
         newL2SR = await this.seasonGetters.getLiquidityToSupplyRatio()
 
-        expect(initalL2SR).to.be.equal(to18('1'))
+        expect(initialL2SR).to.be.equal(to18('1'))
         expect(newL2SR).to.be.equal(to18('2'))
-        expect(newL2SR).to.be.gt(initalL2SR)
+        expect(newL2SR).to.be.gt(initialL2SR)
       })
     })
 
@@ -614,7 +605,7 @@ describe('Gauge', function () {
     })
   })
 
-  it('does not iterate seed gauge system if oracle failed', async function (){
+  it('does not iterate seed gauge system if uniswap oracle failed', async function (){
     await setOracleFailure(true, ETH_USDT_UNISWAP_V3)
     await this.season.stepGauge()
     // verify state is same
@@ -624,5 +615,62 @@ describe('Gauge', function () {
     expect((await this.siloGetters.tokenSettings(BEAN))[1]).to.be.eq(to6('2'))
     expect((await this.siloGetters.tokenSettings(BEAN_ETH_WELL))[1]).to.be.eq(to6('4'))
   })
+
+  it('does not iterate seed gauge system if chainlink oracle failed', async function (){
+    const ethUsdChainlinkAggregator = await ethers.getContractAt('MockChainlinkAggregator', ETH_USD_CHAINLINK_AGGREGATOR)
+    await ethUsdChainlinkAggregator.addRound(0, 0, 0, 0)
+    await this.season.stepGauge()
+    // verify state is same
+    expect(await this.seasonGetters.getBeanToMaxLpGpPerBdvRatio()).to.be.equal(to18('50'))
+    expect(await this.seasonGetters.getGaugePoints(BEAN_ETH_WELL)).to.be.eq(to18('1000'))
+
+    expect((await this.siloGetters.tokenSettings(BEAN))[1]).to.be.eq(to6('2'))
+    expect((await this.siloGetters.tokenSettings(BEAN_ETH_WELL))[1]).to.be.eq(to6('4'))
+  })
+
+  it("does not update Bean to maxLP ratio if oracle fails", async function () {
+    await this.season.seedGaugeSunSunriseWithOracle('0', 108, true)
+    expect(await this.seasonGetters.getBeanToMaxLpGpPerBdvRatio()).to.be.equal(to18('50'))
+  })
+
+  it("properly returns a oracle failure", async function () {
+    // add an invalid oracle round.
+    const ethUsdChainlinkAggregator = await ethers.getContractAt('MockChainlinkAggregator', ETH_USD_CHAINLINK_AGGREGATOR)
+    await ethUsdChainlinkAggregator.addRound(0, 0, 0, 0)
+    // step through case calculation and verify that BeanToMaxLpGpPerBdvRatio remains unchanged.
+    await this.season.calcCaseIdE(0,0)
+    expect(await this.seasonGetters.getBeanToMaxLpGpPerBdvRatio()).to.be.equal(to18('50'))
+  })
+
+  describe("excessive price", async function () {
+    beforeEach(async function () {
+      // twa: 1 million BEAN: 1000 ETH (1000 BEAN : 1 ETH)
+      await this.season.mockSetTwaReserves(BEAN_ETH_WELL, to6('1000000'), to18('1000'));
+      // USD/TKN = 0.001 ETH = 1 USD
+      await this.season.mockSetUsdTokenPrice(
+        BEAN_ETH_WELL,
+        to18('0.001')
+      )
+    })
+
+    it("at peg", async function () {
+      expect(await this.season.mockTestBeanPrice(BEAN_ETH_WELL)).to.eq(to6('1'));
+    })
+
+    it("above peg", async function () {
+      // twa: 900k BEAN: 1000 ETH (900 BEAN : 1 ETH)
+      await this.season.mockSetTwaReserves(BEAN_ETH_WELL, to6('900000'), to18('1000'));
+
+      expect(await this.season.mockTestBeanPrice(BEAN_ETH_WELL)).to.eq(1111111);
+    })
+
+    it("below peg", async function () {
+      // twa: 1.1m BEAN: 1000 ETH (110 BEAN : 1 ETH)
+      await this.season.mockSetTwaReserves(BEAN_ETH_WELL, to6('1100000'), to18('1000'));
+
+      expect(await this.season.mockTestBeanPrice(BEAN_ETH_WELL)).to.eq(909090);
+    })
+  })
+ 
 
 })
