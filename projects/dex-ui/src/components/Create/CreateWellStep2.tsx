@@ -311,9 +311,8 @@ const TokenAddressInputWithSearch = ({ path, setToken }: TokenAddressInputWithSe
         >
           <Flex>
             <TextInputField
-              // Is there another way to do this?
               // eslint-disable-next-line jsx-a11y/no-autofocus
-              autoFocus
+              autoFocus // Is there another way to do this?
               key={path}
               {...register(path, {
                 required: {
@@ -418,7 +417,6 @@ const TokenInputWrapper = styled(Flex)`
 `;
 
 const DropdownContent = styled(Flex)`
-  box-sizing: border-box;
   border: 1px solid ${theme.colors.black};
   border-top: none;
 
