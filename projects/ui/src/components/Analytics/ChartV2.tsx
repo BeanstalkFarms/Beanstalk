@@ -410,7 +410,7 @@ const ChartV2: FC<ChartV2DataProps> = ({
 
   return (
     <Box sx={{ position: 'relative', height: '100%' }}>
-      <Box sx={{ height: isMobile ? '116px' : undefined }}>
+      <Box sx={{ height: isMobile ? selected.length > 2 ? '104px' : '88px' : undefined }}>
         <Box
           ref={tooltip}
           sx={{
@@ -433,7 +433,7 @@ const ChartV2: FC<ChartV2DataProps> = ({
             const value = beforeFirstSeason ? 0 : dataPoint ? dataPoint?.value[index] : lastDataPoint ? lastDataPoint?.value[index] : undefined;
             if (!isMobile || selected.length < 3) {
               return (
-                <Box key={`selectedChartV2${index}`} sx={{ display: 'flex', flexDirection: 'column' }}>
+                <Box key={`selectedChartV2${index}`} sx={{ display: 'flex', flexDirection: 'column', height: '88px' }}>
                   <Box
                     sx={{
                       borderLeft: selected.length > 1 ? 2.5 : 0,
@@ -566,7 +566,7 @@ const ChartV2: FC<ChartV2DataProps> = ({
               sx={{
                 p: 0,
                 position: 'absolute',
-                bottom: '80px',
+                bottom: isMobile ? '64px' : '80px',
                 right: '24px',
               }}
             >
@@ -644,14 +644,14 @@ const ChartV2: FC<ChartV2DataProps> = ({
             </Popper>
           </>      )}
       {size === 'full' && secondPriceScale && (
-        <>
+          <>
             <IconButton
               disableRipple
               onClick={(e) => handleToggleMenu(e, 'left')}
               sx={{
                 p: 0,
                 position: 'absolute',
-                bottom: '80px',
+                bottom: isMobile ? '64px' : '80px',
                 left: '24px',
               }}
             >

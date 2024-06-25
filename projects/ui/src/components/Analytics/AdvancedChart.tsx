@@ -178,8 +178,7 @@ const AdvancedChart: FC<{ isMobile?: boolean }> = ({ isMobile = false }) => {
             </Drawer>
           )}
           <Box
-            paddingY={isMobile ? 1 : 1.5}
-            paddingX={1.5}
+            padding={1.5}
             sx={{
               borderBottom: '0.5px',
               borderColor: 'divider',
