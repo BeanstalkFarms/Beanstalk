@@ -410,100 +410,40 @@ const ChartV2: FC<ChartV2DataProps> = ({
 
   return (
     <Box sx={{ position: 'relative', height: '100%' }}>
-      <Box
-        ref={tooltip}
-        sx={{
-          position: 'relative',
-          display: 'flex',
-          flexDirection: isMobile && selected.length > 2 ? 'column' : 'row',
-          padding: 0,
-          marginTop: isMobile && selected.length > 2 ? 0.25 : 2,
-          marginLeft: 2,
-          zIndex: 3,
-          gap: isMobile && selected.length > 2 ? 0.2 : 2,
-          borderColor: 'transparent',
-          backgroundColor: 'transparent',
-        }}
-      >
-        {selected.map((chartId, index) => {
-          const tooltipTitle = chartSetupData[chartId].tooltipTitle;
-          const tooltipHoverText = chartSetupData[chartId].tooltipHoverText;
-          const beforeFirstSeason = dataPoint && firstDataPoint ? dataPoint.timestamp < firstDataPoint[index]?.timestamp : false;
-          const value = beforeFirstSeason ? 0 : dataPoint ? dataPoint?.value[index] : lastDataPoint ? lastDataPoint?.value[index] : undefined;
-          if (!isMobile || selected.length < 3) {
-            return (
-              <Box key={`selectedChartV2${index}`} sx={{ display: 'flex', flexDirection: 'column' }}>
-                <Box
-                  sx={{
-                    borderLeft: selected.length > 1 ? 2.5 : 0,
-                    paddingLeft: selected.length > 1 ? 1 : 0,
-                    borderColor: chartColors[index].lineColor,
-                  }}
-                >
-                  <Box sx={{ display: 'flex', flexDirection: 'row' }}>
-                    <Box sx={{ display: 'flex' }}>
-                      <Typography variant="body1">{tooltipTitle}</Typography>
-                      {tooltipHoverText && (
-                        <Tooltip
-                          title={tooltipHoverText}
-                          placement={isMobile ? 'top' : 'right'}
-                        >
-                          <HelpOutlineIcon
-                            sx={{
-                              color: 'text.secondary',
-                              display: 'inline',
-                              mb: 0.5,
-                              fontSize: '11px',
-                            }}
-                          />
-                        </Tooltip>
-                      )}
-                    </Box>
-                  </Box>
-                    <Typography variant="h2">
-                      {chartSetupData[chartId].tickFormatter(value || 0)}
-                    </Typography>
-                </Box>
-                {index === 0 && (
-                  <>
-                    {size !== 'mini' && 
-                    <Typography variant="bodySmall" color="text.primary">
-                      Season{' '}
-                      {dataPoint && dataPoint.season
-                        ? dataPoint.season
-                        : lastDataPoint && lastDataPoint.season
-                          ? lastDataPoint.season
-                          : 0}
-                    </Typography>
-                    }
-                    <Typography variant="bodySmall" color="text.primary">
-                      {dataPoint && dataPoint.time
-                        ? dataPoint.time
-                        : lastDataPoint && lastDataPoint.time
-                          ? lastDataPoint.time
-                          : 0}
-                    </Typography>
-                  </>
-                )}
-              </Box>
-            );
-          }
-
-          return (
-            <Box key={`selectedChartV2Mobile${index}`} sx={{ display: 'flex', flexDirection: 'row', flexGrow: 1 }}>
-                <Box
-                  sx={{
-                    display: 'flex',
-                    flexGrow: 1,
-                    borderLeft: selected.length > 1 ? 2.5 : 0,
-                    paddingLeft: selected.length > 1 ? 0.25 : 0,
-                    marginRight: 2,
-                    borderColor: chartColors[index].lineColor,
-                  }}
-                >
-                    <Box sx={{ display: 'flex', flexGrow: 1 }}>
-                      <Box sx={{ display: 'flex', flexGrow: 1 }}>
-                        <Typography fontSize={15}>{tooltipTitle}</Typography>
+      <Box sx={{ height: isMobile ? '116px' : undefined }}>
+        <Box
+          ref={tooltip}
+          sx={{
+            position: 'relative',
+            display: 'flex',
+            flexDirection: isMobile && selected.length > 2 ? 'column' : 'row',
+            padding: 0,
+            marginTop: isMobile && selected.length > 2 ? 0.25 : 2,
+            marginLeft: 2,
+            zIndex: 3,
+            gap: isMobile && selected.length > 2 ? 0.2 : 2,
+            borderColor: 'transparent',
+            backgroundColor: 'transparent',
+          }}
+        >
+          {selected.map((chartId, index) => {
+            const tooltipTitle = chartSetupData[chartId].tooltipTitle;
+            const tooltipHoverText = chartSetupData[chartId].tooltipHoverText;
+            const beforeFirstSeason = dataPoint && firstDataPoint ? dataPoint.timestamp < firstDataPoint[index]?.timestamp : false;
+            const value = beforeFirstSeason ? 0 : dataPoint ? dataPoint?.value[index] : lastDataPoint ? lastDataPoint?.value[index] : undefined;
+            if (!isMobile || selected.length < 3) {
+              return (
+                <Box key={`selectedChartV2${index}`} sx={{ display: 'flex', flexDirection: 'column' }}>
+                  <Box
+                    sx={{
+                      borderLeft: selected.length > 1 ? 2.5 : 0,
+                      paddingLeft: selected.length > 1 ? 1 : 0,
+                      borderColor: chartColors[index].lineColor,
+                    }}
+                  >
+                    <Box sx={{ display: 'flex', flexDirection: 'row' }}>
+                      <Box sx={{ display: 'flex' }}>
+                        <Typography variant="body1">{tooltipTitle}</Typography>
                         {tooltipHoverText && (
                           <Tooltip
                             title={tooltipHoverText}
@@ -520,35 +460,97 @@ const ChartV2: FC<ChartV2DataProps> = ({
                           </Tooltip>
                         )}
                       </Box>
-                      <Typography fontSize={16} fontWeight={600} justifyItems='flex-end'>
+                    </Box>
+                      <Typography variant="h2">
                         {chartSetupData[chartId].tickFormatter(value || 0)}
                       </Typography>
-                    </Box>
+                  </Box>
+                  {index === 0 && (
+                    <>
+                      {size !== 'mini' && 
+                      <Typography variant="bodySmall" color="text.primary">
+                        Season{' '}
+                        {dataPoint && dataPoint.season
+                          ? dataPoint.season
+                          : lastDataPoint && lastDataPoint.season
+                            ? lastDataPoint.season
+                            : 0}
+                      </Typography>
+                      }
+                      <Typography variant="bodySmall" color="text.primary">
+                        {dataPoint && dataPoint.time
+                          ? dataPoint.time
+                          : lastDataPoint && lastDataPoint.time
+                            ? lastDataPoint.time
+                            : 0}
+                      </Typography>
+                    </>
+                  )}
                 </Box>
-            </Box>
-            );
-          }
-        )}
-      </Box>
-      {isMobile && selected.length > 2 && 
-        <Box sx={{ display: 'flex', flexGrow: 1, paddingX: 2, paddingBottom: 1 }}>
-            <Typography variant="bodySmall" color="text.primary" flexGrow={1}>
-                      Season{' '}
-                      {dataPoint && dataPoint.season
-                        ? dataPoint.season
-                        : lastDataPoint && lastDataPoint.season
-                          ? lastDataPoint.season
-                          : 0}
-                    </Typography>
-                    <Typography variant="bodySmall" color="text.primary">
-                      {dataPoint && dataPoint.time
-                        ? dataPoint.time
-                        : lastDataPoint && lastDataPoint.time
-                          ? lastDataPoint.time
-                          : 0}
-                    </Typography>
+              );
+            }
+
+            return (
+              <Box key={`selectedChartV2Mobile${index}`} sx={{ display: 'flex', flexDirection: 'row', flexGrow: 1 }}>
+                  <Box
+                    sx={{
+                      display: 'flex',
+                      flexGrow: 1,
+                      borderLeft: selected.length > 1 ? 2.5 : 0,
+                      paddingLeft: selected.length > 1 ? 0.25 : 0,
+                      marginRight: 2,
+                      borderColor: chartColors[index].lineColor,
+                    }}
+                  >
+                      <Box sx={{ display: 'flex', flexGrow: 1 }}>
+                        <Box sx={{ display: 'flex', flexGrow: 1 }}>
+                          <Typography fontSize={15}>{tooltipTitle}</Typography>
+                          {tooltipHoverText && (
+                            <Tooltip
+                              title={tooltipHoverText}
+                              placement={isMobile ? 'top' : 'right'}
+                            >
+                              <HelpOutlineIcon
+                                sx={{
+                                  color: 'text.secondary',
+                                  display: 'inline',
+                                  mb: 0.5,
+                                  fontSize: '11px',
+                                }}
+                              />
+                            </Tooltip>
+                          )}
+                        </Box>
+                        <Typography fontSize={16} fontWeight={600} justifyItems='flex-end'>
+                          {chartSetupData[chartId].tickFormatter(value || 0)}
+                        </Typography>
+                      </Box>
+                  </Box>
+              </Box>
+              );
+            }
+          )}
         </Box>
-      }
+        {isMobile && selected.length > 2 && 
+          <Box sx={{ display: 'flex', flexGrow: 1, paddingX: 2 }}>
+              <Typography variant="bodySmall" color="text.primary" flexGrow={1}>
+                        Season{' '}
+                        {dataPoint && dataPoint.season
+                          ? dataPoint.season
+                          : lastDataPoint && lastDataPoint.season
+                            ? lastDataPoint.season
+                            : 0}
+                      </Typography>
+                      <Typography variant="bodySmall" color="text.primary">
+                        {dataPoint && dataPoint.time
+                          ? dataPoint.time
+                          : lastDataPoint && lastDataPoint.time
+                            ? lastDataPoint.time
+                            : 0}
+                      </Typography>
+          </Box>
+        }
+      </Box>
       <Box
         ref={chartContainerRef}
         id="container"

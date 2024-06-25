@@ -9,7 +9,7 @@ import { FC } from '~/types';
 const AnalyticsPage: FC<{}> = () => {
 
   const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+  const isMobile = useMediaQuery(theme.breakpoints.down('lg'));
   
   return (
   <Container sx={{ maxWidth: `92% !important`, width: '100%', maxHeight: `92% !important` }}>
