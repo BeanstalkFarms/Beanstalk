@@ -195,7 +195,7 @@ library LibUnripeSilo {
         ).add(amount.add(amount1).add(amount2));
         
         // Summate the BDV acrosses all 3 pre-exploit LP Silo Deposit storages
-        // and haircut by the inital recapitalization percent.
+        // and haircut by the initial recapitalization percent.
         uint256 legBdv = bdv.add(bdv1).add(bdv2)
             .mul(C.initialRecap())
             .div(C.precision());

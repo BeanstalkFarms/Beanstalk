@@ -2,13 +2,22 @@ import {
   Box,
   Button,
   ButtonGroup,
+  IconButton,
+  InputAdornment,
+  Link,
   MenuItem,
   Select,
   Stack,
+  TextField,
+  Tooltip,
   Typography,
 } from '@mui/material';
+import { FC } from '~/types';
+import { ethers } from 'ethers';
+import CheckIcon from '@mui/icons-material/Check';
+import CloseIcon from '@mui/icons-material/Close';
 import { DateTime } from 'luxon';
-import React, { useCallback } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { DataSource } from '@beanstalk/sdk';
 import { FontSize } from '~/components/App/muiTheme';
@@ -26,9 +35,11 @@ import {
   setNextSunrise,
   setRemainingUntilSunrise,
 } from '~/state/beanstalk/sun/actions';
-import { clearApolloCache } from '~/util';
-
-import { FC } from '~/types';
+import { clearApolloCache, trimAddress } from '~/util';
+import useChainId from '~/hooks/chain/useChainId';
+import { CHAIN_INFO } from '~/constants';
+import { useAccount } from 'wagmi';
+import OutputField from '../Common/Form/OutputField';
 
 const Split: FC<{}> = ({ children }) => (
   <Row justifyContent="space-between" gap={1}>
@@ -67,11 +78,36 @@ const SettingsDialog: FC<{ open: boolean; onClose?: () => void }> = ({
   open,
   onClose,
 }) => {
+  const chainId = useChainId();
   const [denomination, setDenomination] = useSetting('denomination');
   const [subgraphEnv, setSubgraphEnv] = useSetting('subgraphEnv');
   const [datasource, setDataSource] = useSetting('datasource');
+  const [impersonatedAccount, setImpersonatedAccount] = useSetting('impersonatedAccount');
+  const [internalAccount, setInternalAccount] = useState(impersonatedAccount);
+  const [isAddressValid, setIsAddressValid] = useState<boolean | undefined>(undefined);
   const dispatch = useDispatch();
   const siloBalances = useFarmerSiloBalances();
+  const account = useAccount();
+
+  const checkAddress = useCallback((address: string) => {
+    if (address) {
+      const isValid = ethers.utils.isAddress(address);
+      if (isValid) {
+        setInternalAccount(address);
+      };
+      setIsAddressValid(isValid);
+    } else {
+      setIsAddressValid(undefined);
+    }
+  }, [setInternalAccount]);
+
+  useMemo(() => {
+    if (!account.address) {
+      setInternalAccount('')
+      setIsAddressValid(undefined);
+      setImpersonatedAccount('');
+    };
+  }, [account.address, setImpersonatedAccount]);
 
   /// Cache
   const clearCache = useCallback(() => {
@@ -129,9 +165,16 @@ const SettingsDialog: FC<{ open: boolean; onClose?: () => void }> = ({
     );
   }, [siloBalances]);
 
+  const closeDialog = () => {
+    if (impersonatedAccount !== internalAccount) {
+      setImpersonatedAccount(internalAccount);
+    };
+    onClose && onClose();
+  };
+
   return (
-    <StyledDialog open={open} onClose={onClose}>
-      <StyledDialogTitle onClose={onClose}>Settings</StyledDialogTitle>
+    <StyledDialog open={open} onClose={closeDialog}>
+      <StyledDialogTitle onClose={closeDialog}>Settings</StyledDialogTitle>
       <StyledDialogContent sx={{ px: 2, pb: 2 }}>
         <Stack gap={2}>
           <Stack gap={1}>
@@ -196,6 +239,53 @@ const SettingsDialog: FC<{ open: boolean; onClose?: () => void }> = ({
                   Subgraph
                 </Button>
               </ButtonGroup>
+            </Split>
+            <Split>
+              <Typography color="text.secondary">Impersonate Account</Typography>
+              {internalAccount ? (
+                <OutputField size="small">
+                  <Row spacing={1}>
+                    <CheckIcon
+                      sx={{ height: 20, width: 20, fontSize: '100%' }}
+                      color="primary"
+                    />
+                    <Typography>
+                      <Tooltip title="View on Etherscan">
+                        <Link
+                          underline="hover"
+                          color="text.primary"
+                          href={`${CHAIN_INFO[chainId].explorer}/address/${internalAccount}`}
+                          target="_blank"
+                          rel="noreferrer"
+                        >
+                          {trimAddress(internalAccount)}
+                        </Link>
+                      </Tooltip>
+                    </Typography>
+                  </Row>
+                  <Box>
+                    <IconButton onClick={() => {setInternalAccount('')}}>
+                      <CloseIcon sx={{ height: 20, width: 20, fontSize: '100%' }} />
+                    </IconButton>
+                  </Box>
+                </OutputField>
+              ) : (
+                <TextField 
+                  sx={{ width: 180 }}
+                  placeholder="0x0000" 
+                  size='small' 
+                  color='primary'
+                  InputProps={{
+                    startAdornment:  (
+                      isAddressValid === false &&
+                        <InputAdornment position="start" sx={{ ml: -1, mr: 0 }}>
+                          <CloseIcon color="warning" sx={{ scale: '80%' }} />
+                        </InputAdornment>
+                    ),
+                  }}
+                  onChange={(e) => {checkAddress(e.target.value)}} 
+                />
+              )}
             </Split>
             <Split>
               <Typography color="text.secondary">Clear cache</Typography>

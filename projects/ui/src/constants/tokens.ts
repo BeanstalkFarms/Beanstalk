@@ -25,6 +25,7 @@ import usdtLogoUrl from '~/img/tokens/usdt-logo.svg';
 import lusdLogoUrl from '~/img/tokens/lusd-logo.svg';
 import unripeBeanLogoUrl from '~/img/tokens/unripe-bean-logo-circled.svg';
 import unripeBeanWethLogoUrl from '~/img/tokens/unrip-beanweth.svg';
+import { BeanstalkPalette } from '~/components/App/muiTheme';
 
 // Other imports
 import { ERC20Token, NativeToken, BeanstalkToken } from '~/classes/Token';
@@ -43,7 +44,6 @@ import {
   BEAN_ETH_WELL_ADDRESSES,
   BEAN_CRV3_V1_ADDRESSES,
 } from './addresses';
-import { BeanstalkPalette } from '~/components/App/muiTheme';
 
 // ----------------------------------------
 // Types + Utilities

@@ -43,6 +43,21 @@ library LibSilo {
     using LibSafeMath32 for uint32;
     using SafeCast for uint256;
 
+    //////////////////////// ENUM ////////////////////////
+    
+    /**
+     * @dev when a user removes multiple deposits, the
+     * {TransferBatch} event is emitted. However, in the 
+     * case of an enroot, the event is omitted (as the 
+     * depositID does not change). This enum is
+     * used to determine if the event should be emitted.
+     */
+    enum ERC1155Event {
+        EMIT_BATCH_EVENT,
+        NO_EMIT_BATCH_EVENT
+    }
+    
+
     uint128 internal constant PRECISION = 1e6;
     //////////////////////// EVENTS ////////////////////////
 
@@ -204,50 +219,23 @@ library LibSilo {
 
         // germinating stalk are either newly germinating, or partially germinated.
         // Thus they can only be incremented in the latest or previous season.
-        uint32 season = s.season.current;
+        uint32 germinationSeason = s.season.current;
         if (LibGerminate.getSeasonGerminationState() == germ) {
-            s.unclaimedGerminating[season].stalk = s.unclaimedGerminating[season].stalk.add(stalk);
+            s.unclaimedGerminating[germinationSeason].stalk =
+                s.unclaimedGerminating[germinationSeason].stalk.add(stalk);
         } else {
-            s.unclaimedGerminating[season.sub(1)].stalk = 
-                s.unclaimedGerminating[season.sub(1)].stalk
+            germinationSeason = germinationSeason.sub(1);
+            s.unclaimedGerminating[germinationSeason].stalk = 
+                s.unclaimedGerminating[germinationSeason].stalk
                 .add(stalk);
         }
 
-        // emit event.
-        emit LibGerminate.FarmerGerminatingStalkBalanceChanged(
-            account,
-            stalk
-        );
+        // emit events.
+        emit LibGerminate.FarmerGerminatingStalkBalanceChanged(account, stalk, germ);
+        emit LibGerminate.TotalGerminatingStalkChanged(germinationSeason, stalk);
     }
 
     //////////////////////// BURN ////////////////////////
-
-    /**
-     * @notice Burns Stalk and Roots from `account`.
-     * @dev assumes all stalk are in the same `state`. If not the case,
-     * use `burnActiveStalk` and `burnGerminatingStalk` instead.
-     */
-    function burnStalk(address account, uint256 stalk, LibGerminate.Germinate germ) internal {
-        AppStorage storage s = LibAppStorage.diamondStorage();
-        if (stalk == 0) return;
-
-        // increment user and total stalk and roots if not germinating:
-        if (germ == LibGerminate.Germinate.NOT_GERMINATING) {
-            uint256 roots = burnActiveStalk(account, stalk);
-
-            // Oversaturated was previously referred to as Raining and thus
-            // code references mentioning Rain really refer to Oversaturation
-            // If Beanstalk is Oversaturated, subtract Roots from both the
-            // account's and Beanstalk's Oversaturated Roots balances.
-            // For more info on Oversaturation, See {Weather.handleRain}
-            if (s.season.raining) {
-                s.r.roots = s.r.roots.sub(roots);
-                s.a[account].sop.roots = s.a[account].roots;
-            }
-        } else {
-            burnGerminatingStalk(account, uint128(stalk), germ);
-        }
-    }
 
     /**
      * @notice Burns stalk and roots from an account.
@@ -291,20 +279,20 @@ library LibSilo {
 
         // germinating stalk are either newly germinating, or partially germinated.
         // Thus they can only be decremented in the latest or previous season.
-        uint32 season = s.season.current;
+        uint32 germinationSeason = s.season.current;
         if (LibGerminate.getSeasonGerminationState() == germ) {
-            s.unclaimedGerminating[season].stalk = s.unclaimedGerminating[season].stalk.sub(stalk);
+            s.unclaimedGerminating[germinationSeason].stalk = 
+                s.unclaimedGerminating[germinationSeason].stalk.sub(stalk);
         } else {
-            s.unclaimedGerminating[season.sub(1)].stalk = 
-                s.unclaimedGerminating[season.sub(1)].stalk
+            germinationSeason = germinationSeason.sub(1);
+            s.unclaimedGerminating[germinationSeason].stalk = 
+                s.unclaimedGerminating[germinationSeason].stalk
                 .sub(stalk);
         }
 
         // emit events.
-        emit LibGerminate.FarmerGerminatingStalkBalanceChanged(
-            account,
-            -int256(stalk)
-        );
+        emit LibGerminate.FarmerGerminatingStalkBalanceChanged(account, -int256(stalk), germ);
+        emit LibGerminate.TotalGerminatingStalkChanged(germinationSeason, -int256(stalk));
     }
 
     //////////////////////// TRANSFER ////////////////////////
@@ -340,12 +328,12 @@ library LibSilo {
         address sender,
         address recipient,
         uint256 stalk,
-        LibGerminate.Germinate GermState
+        LibGerminate.Germinate germState
     ) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
          // Subtract Germinating Stalk from the 'sender' balance, 
          // and Add to the 'recipient' balance.
-        if (GermState == LibGerminate.Germinate.ODD) {
+        if (germState == LibGerminate.Germinate.ODD) {
             s.a[sender].farmerGerminating.odd = s.a[sender].farmerGerminating.odd.sub(stalk.toUint128());
             s.a[recipient].farmerGerminating.odd = s.a[recipient].farmerGerminating.odd.add(stalk.toUint128());
         } else {
@@ -354,14 +342,8 @@ library LibSilo {
         }
 
         // emit events.
-        emit LibGerminate.FarmerGerminatingStalkBalanceChanged(
-            sender,
-            -int256(stalk)
-        );
-        emit LibGerminate.FarmerGerminatingStalkBalanceChanged(
-            recipient,
-            int256(stalk)
-        );
+        emit LibGerminate.FarmerGerminatingStalkBalanceChanged(sender, -int256(stalk), germState);
+        emit LibGerminate.FarmerGerminatingStalkBalanceChanged(recipient, int256(stalk), germState);
     }
 
     /**
@@ -598,7 +580,7 @@ library LibSilo {
     )
         internal
         returns (
-            uint256 initalStalkRemoved,
+            uint256 initialStalkRemoved,
             uint256 grownStalkRemoved,
             uint256 bdvRemoved,
             LibGerminate.Germinate germ
@@ -609,9 +591,9 @@ library LibSilo {
         (germ, stemTip) = LibGerminate.getGerminationState(token, stem);
         bdvRemoved = LibTokenSilo.removeDepositFromAccount(account, token, stem, amount);
 
-        // the inital and grown stalk are as there are instances where the inital stalk is
+        // the initial and grown stalk are as there are instances where the initial stalk is
         // germinating, but the grown stalk is not.
-        initalStalkRemoved = bdvRemoved.mul(s.ss[token].stalkIssuedPerBdv);
+        initialStalkRemoved = bdvRemoved.mul(s.ss[token].stalkIssuedPerBdv);
 
         grownStalkRemoved = stalkReward(stem, stemTip, bdvRemoved.toUint128());
         /**
@@ -649,7 +631,8 @@ library LibSilo {
         address account,
         address token,
         int96[] calldata stems,
-        uint256[] calldata amounts
+        uint256[] calldata amounts,
+        ERC1155Event emission
     ) internal returns (AssetsRemoved memory ar) {
         AppStorage storage s = LibAppStorage.diamondStorage();
 
@@ -693,7 +676,7 @@ library LibSilo {
             }
         }
 
-        // add inital stalk deposit to all stalk removed.
+        // add initial stalk deposit to all stalk removed.
         {
             uint256 stalkIssuedPerBdv = s.ss[token].stalkIssuedPerBdv;
             if (ar.active.tokens > 0) {
@@ -710,12 +693,15 @@ library LibSilo {
         }
 
         // "removing" deposits is equivalent to "burning" a batch of ERC1155 tokens.
-        emit TransferBatch(msg.sender, account, address(0), removedDepositIDs, amounts);
+        if (emission == ERC1155Event.EMIT_BATCH_EVENT) {
+            emit TransferBatch(msg.sender, account, address(0), removedDepositIDs, amounts);
+        }
+
         emit RemoveDeposits(
             account, 
             token, 
             stems, 
-            amounts, 
+            amounts,
             ar.active.tokens.add(ar.odd.tokens).add(ar.even.tokens), 
             bdvsRemoved
         );

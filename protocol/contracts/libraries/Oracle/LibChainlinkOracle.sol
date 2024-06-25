@@ -17,7 +17,6 @@ import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
  **/
 library LibChainlinkOracle {
     using SafeMath for uint256;
-
     uint256 constant PRECISION = 1e6; // use 6 decimal precision.
 
     // timeout for Oracles with a 1 hour heartbeat.

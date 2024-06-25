@@ -6,6 +6,7 @@ export type Settings = {
   denomination: 'usd' | 'bdv';
   subgraphEnv: SGEnvironments;
   datasource: DataSource;
+  impersonatedAccount: string;
 };
 
 export type Globals = {

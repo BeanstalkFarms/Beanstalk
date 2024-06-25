@@ -7,17 +7,17 @@ import { Well } from "@beanstalk/sdk/Wells";
 const useWellChartData = (well: Well, timePeriod: string) => {
   const sdk = useSdk();
 
-  return useQuery<IWellHourlySnapshot[]>(
-    ["wells", "wellChartData", well.address],
-    async () => {
+  return useQuery({
+    queryKey: ["wells", "wellChartData", well.address],
+
+    queryFn: async () => {
       const data = await loadChartData(sdk, well, timePeriod);
 
       return data;
     },
-    {
-      staleTime: 1000 * 60
-    }
-  );
+
+    staleTime: 1000 * 60
+  });
 };
 
 export default useWellChartData;
