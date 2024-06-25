@@ -12,6 +12,12 @@ require("@openzeppelin/hardhat-upgrades");
 require("dotenv").config();
 require("@nomiclabs/hardhat-etherscan");
 
+// BIP 39 
+const { bipSeedGauge } = require("./scripts/bips.js");
+// BIP Misc Improvements
+const { bipMiscellaneousImprovements } = require("./scripts/bips.js");
+
+const { upgradeWithNewFacets } = require("./scripts/diamond");
 const {
   impersonateSigner,
   mintUsdc,
@@ -218,6 +224,10 @@ task("deploySeedGauge", async function () {
   await bipSeedGauge();
 });
 
+task("deployBipMiscImprovements", async function () {
+  await bipMiscellaneousImprovements();
+});
+
 
 /// EBIPS /// 
 
@@ -305,7 +315,7 @@ module.exports = {
         version: "0.7.6",
         settings: {
           optimizer: {
-            enabled: true,
+            enabled: false,
             runs: 100
           }
         }
@@ -314,7 +324,7 @@ module.exports = {
         version: "0.8.17",
         settings: {
           optimizer: {
-            enabled: true,
+            enabled: false,
             runs: 1000
           }
         }
@@ -328,7 +338,7 @@ module.exports = {
     }
   },
   gasReporter: {
-    enabled: true
+    enabled: false
   },
   mocha: {
     timeout: 100000000

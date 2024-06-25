@@ -52,10 +52,23 @@ describe('Convert', function () {
 
     // call sunrise twice, and end germination for the silo token,
     // so that both deposits are not germinating.
+    // user1 deposits 2 times at stem 1 and 2 100 silo tokens , so 100 bdv for each deposit
     await this.season.siloSunrise(0);
     await this.season.mockEndTotalGerminationForToken(this.siloToken.address);
     await this.season.siloSunrise(0);
     await this.season.mockEndTotalGerminationForToken(this.siloToken.address);
+
+    // To isolate the anti lamda functionality, we will create and whitelist a new silo token
+    this.newSiloToken = await ethers.getContractFactory("MockToken");
+    this.newSiloToken = await this.newSiloToken.deploy("Silo2", "SILO2")
+    await this.newSiloToken.deployed()
+
+    await this.silo.mockWhitelistToken(
+      this.newSiloToken.address, // token                        
+      this.silo.interface.getSighash("newMockBDV()"), // selector (returns 1e6)
+      '1', // stalkIssuedPerBdv
+      1e6 //aka "1 seed" // stalkEarnedPerSeason
+    );
   });
 
   beforeEach(async function () {
@@ -69,24 +82,24 @@ describe('Convert', function () {
   describe('Withdraw For Convert', async function () {
     describe("Revert", async function () {
       it('diff lengths', async function () {
-        await expect(this.convert.connect(user).withdrawForConvertE(this.siloToken.address, [to6('1'), to6('2')], ['100'], '100')).to.be.revertedWith('Convert: stems, amounts are diff lengths.')
+        await expect(this.convert.connect(user).withdrawForConvertE(this.siloToken.address, [to6('1'), to6('2')], ['100'], '100', userAddress)).to.be.revertedWith('Convert: stems, amounts are diff lengths.')
       });
 
       it('crate balance too low', async function () {
         //params are token, stem, amounts, maxtokens
         // await expect(this.convert.connect(user).withdrawForConvertE(this.siloToken.address, ['0'], ['150'], '150')).to.be.revertedWith('Silo: Crate balance too low.') //before moving to constants for the original 4 whitelisted tokens (post replant), this test would revert with 'Silo: Crate balance too low.', but now it reverts with 'Must line up with season' because there's no constant seeds amount hardcoded in for this test token
-        await expect(this.convert.connect(user).withdrawForConvertE(this.siloToken.address, [to6('2')], ['150'], '150')).to.be.revertedWith('Silo: Crate balance too low.')
+        await expect(this.convert.connect(user).withdrawForConvertE(this.siloToken.address, [to6('2')], ['150'], '150', userAddress)).to.be.revertedWith('Silo: Crate balance too low.')
       });
 
       it('not enough removed', async function () {
-        await expect(this.convert.connect(user).withdrawForConvertE(this.siloToken.address, [to6('2')], ['100'], '150')).to.be.revertedWith('Convert: Not enough tokens removed.')
+        await expect(this.convert.connect(user).withdrawForConvertE(this.siloToken.address, [to6('2')], ['100'], '150', userAddress)).to.be.revertedWith('Convert: Not enough tokens removed.')
       });
     })
 
     //this test withdraws from stem index of 2, verifies they are removed correctly and stalk balances updated
     describe("Withdraw 1 Crate", async function () {
       beforeEach(async function () {
-        this.result = await this.convert.connect(user).withdrawForConvertE(this.siloToken.address, [to6('2')], ['100'], '100');
+        this.result = await this.convert.connect(user).withdrawForConvertE(this.siloToken.address, [to6('2')], ['100'], '100', userAddress);
       })
 
       it('Emits event', async function () {
@@ -120,7 +133,7 @@ describe('Convert', function () {
     //this test withdraws from stem indexes of 2 and 1
     describe("Withdraw 1 Crate 2 input", async function () {
       beforeEach(async function () {
-        this.result = await this.convert.connect(user).withdrawForConvertE(this.siloToken.address, [to6('2'), to6('1')], ['100', '100'], '100');
+        this.result = await this.convert.connect(user).withdrawForConvertE(this.siloToken.address, [to6('2'), to6('1')], ['100', '100'], '100', userAddress);
       })
 
       it('Emits event', async function () {
@@ -151,7 +164,7 @@ describe('Convert', function () {
     //withdraws less than the full deposited amount from stem indexes of 2 and 1
     describe("Withdraw 2 Crates exact", async function () {
       beforeEach(async function () {
-        this.result = await this.convert.connect(user).withdrawForConvertE(this.siloToken.address, [to6('1'), to6('2')], ['100', '50'], '150');
+        this.result = await this.convert.connect(user).withdrawForConvertE(this.siloToken.address, [to6('1'), to6('2')], ['100', '50'], '150', userAddress);
       })
 
       it('Emits event', async function () { 
@@ -184,7 +197,7 @@ describe('Convert', function () {
 
     describe("Withdraw 2 Crates under", async function () {
       beforeEach(async function () {
-        this.result = await this.convert.connect(user).withdrawForConvertE(this.siloToken.address, [to6('1'), to6('2')], ['100', '100'], '150');
+        this.result = await this.convert.connect(user).withdrawForConvertE(this.siloToken.address, [to6('1'), to6('2')], ['100', '100'], '150', userAddress);
       })
 
       it('Emits event', async function () {
@@ -216,17 +229,17 @@ describe('Convert', function () {
   describe('Deposit For Convert', async function () {
     describe("Revert", async function () {
       it("Reverts if BDV is 0", async function () {
-        await expect(this.convert.connect(user2).depositForConvertE(this.siloToken.address, '100', '0', '100')).to.be.revertedWith("Convert: BDV or amount is 0.")
+        await expect(this.convert.connect(user2).depositForConvertE(this.siloToken.address, '100', '0', '100', user2Address)).to.be.revertedWith("Convert: BDV or amount is 0.")
       })
 
       it("Reverts if amount is 0", async function () {
-        await expect(this.convert.connect(user2).depositForConvertE(this.siloToken.address, '0', '100', '100')).to.be.revertedWith("Convert: BDV or amount is 0.")
+        await expect(this.convert.connect(user2).depositForConvertE(this.siloToken.address, '0', '100', '100', user2Address)).to.be.revertedWith("Convert: BDV or amount is 0.")
       })
     })
 
     describe('Deposit Tokens No Grown', async function () {
       beforeEach(async function () {
-        this.result = await this.convert.connect(user2).depositForConvertE(this.siloToken.address, '100', '100', '0');
+        this.result = await this.convert.connect(user2).depositForConvertE(this.siloToken.address, '100', '100', '0', user2Address);
       });
 
       it('Emits event', async function () {
@@ -266,7 +279,7 @@ describe('Convert', function () {
         expect(await this.siloGetters.getGerminatingTotalDeposited(this.siloToken.address)).to.equal('0');
         expect(await this.siloGetters.getGerminatingTotalDepositedBdv(this.siloToken.address)).to.eq('0');
         expect(await this.siloGetters.getTotalGerminatingStalk()).to.equal('0');
-        this.result = await this.convert.connect(user2).depositForConvertE(this.siloToken.address, '100', '100', '100');
+        this.result = await this.convert.connect(user2).depositForConvertE(this.siloToken.address, '100', '100', '100', user2Address);
       });
 
       it('Emits event', async function () {
@@ -308,7 +321,7 @@ describe('Convert', function () {
         expect(await this.siloGetters.getGerminatingTotalDeposited(this.siloToken.address)).to.equal('0');
         expect(await this.siloGetters.getGerminatingTotalDepositedBdv(this.siloToken.address)).to.eq('0');
         expect(await this.siloGetters.getTotalGerminatingStalk()).to.equal('0');
-        this.result = await this.convert.connect(user2).depositForConvertE(this.siloToken.address, '100', '100', '300');
+        this.result = await this.convert.connect(user2).depositForConvertE(this.siloToken.address, '100', '100', '300', user2Address);
       });
 
       it('Emits event', async function () {
@@ -401,6 +414,151 @@ describe('Convert', function () {
     it('Emits events', async function () {
       await expect(this.result).to.emit(this.silo, 'RemoveDeposits').withArgs(userAddress, this.siloToken.address, [to6('1'),  to6('2')], ['100', '100'], '200', ['100', '100']);
       await expect(this.result).to.emit(this.silo, 'AddDeposit').withArgs(userAddress, this.siloToken.address, to6('1.5'), '200', '200');
+    })
+  })
+
+  //  ------------------------------ ANTI LAMBDA CONVERT ----------------------------------
+
+  describe("anti lambda convert bdv decrease", async function () {
+
+    beforeEach(async function () {
+      // ----------------------- SETUP ------------------------
+      // user deposits 100 new silo token at stem 0 so 1000000 bdv
+      await this.newSiloToken.mint(userAddress, '10000000');
+      await this.newSiloToken.connect(user).approve(this.silo.address, '1000000000');
+      await this.silo.connect(user).deposit(this.newSiloToken.address, '100', EXTERNAL);
+      this.stem = await this.siloGetters.stemTipForToken(this.newSiloToken.address);
+      // end germination:
+      await this.season.siloSunrise(0);
+      await this.season.siloSunrise(0);
+
+      // simulate deposit bdv decrease for user by changing bdv selector to newMockBDVDecrease ie 0.9e6
+      await this.silo.mockChangeBDVSelector(this.newSiloToken.address, this.silo.interface.getSighash("newMockBDVDecrease()"))
+      const currentBdv = await this.silo.newMockBDVDecrease()
+      let depositResult = await this.siloGetters.getDeposit(userAddress, this.newSiloToken.address, this.stem)
+      const depositBdv = depositResult[1]
+
+      // ----------------------- CONVERT ------------------------
+      this.result = await this.convert.connect(user2).convert(
+        // CALLDATA                              // amount, token ,account
+        ConvertEncoder.convertAntiLambdaToLambda('100', this.newSiloToken.address , userAddress),
+        // STEMS []
+        [this.stem],
+        // AMOUNTS []
+        ['100']
+      )
+      // inital bdv: 1000000
+      // new bdv: 900000
+      // grown stalk: 2e6 (newSiloToken has 1 seed).
+      // gspbdv = grown stalk / new bdv = 2.222222
+      // stem = stemTip - gspbdv: 2 - 2.222222 = -0.222222
+      this.newStem = -222222
+    })
+
+    it('Correctly updates deposit stats', async function () {
+      let deposit = await this.siloGetters.getDeposit(userAddress, this.newSiloToken.address, this.newStem);
+      expect(deposit[0]).to.eq('100'); // deposit[0] = amount of tokens
+      expect(deposit[1]).to.eq('900000');  // deposit[1] = bdv
+    })
+
+    it('Correctly updates totals', async function () {
+      expect(await this.siloGetters.getTotalDeposited(this.newSiloToken.address)).to.equal('100');
+      expect(await this.siloGetters.getTotalDepositedBdv(this.newSiloToken.address)).to.eq('900000');
+      // 100000 stalk removed = 1 stalk/bdv for newSiloToken * 100000 bdv removed from convert
+      expect(await this.siloGetters.totalStalk()).to.equal('4900100');
+    })
+
+    it('Emits events', async function () {
+      await expect(this.result).to.emit(this.silo, 'RemoveDeposits').withArgs(userAddress, this.newSiloToken.address, [this.stem], ['100'], '100', ['1000000']);
+      await expect(this.result).to.emit(this.silo, 'AddDeposit').withArgs(userAddress, this.newSiloToken.address, this.newStem, '100', '900000'); // last param = updated bdv
+      await expect(this.result).to.emit(this.convert, 'Convert').withArgs(userAddress, this.newSiloToken.address, this.newSiloToken.address, '100', '100');
+    })
+
+  })
+
+  describe("anti lambda convert bdv increase", async function () {
+
+    beforeEach(async function () {
+      // ----------------------- SETUP ------------------------
+      // user deposits 100 new silo token at stem 0 so 1000000 bdv
+      await this.newSiloToken.mint(userAddress, '10000000');
+      await this.newSiloToken.connect(user).approve(this.silo.address, '1000000000');
+      await this.silo.connect(user).deposit(this.newSiloToken.address, '100', EXTERNAL);
+      this.stem = await this.siloGetters.stemTipForToken(this.newSiloToken.address);
+
+      // end germination:
+      await this.season.siloSunrise(0);
+      await this.season.siloSunrise(0);
+
+      // simulate deposit bdv increase for user2 by changing bdv selector to mockBdvIncrease ie 1.1e6
+      await this.silo.mockChangeBDVSelector(this.newSiloToken.address, this.silo.interface.getSighash("newMockBDVIncrease()"))
+      currentBdv = await this.silo.newMockBDVIncrease()
+      let depositResult = await this.siloGetters.getDeposit(userAddress, this.newSiloToken.address,  this.stem)
+      const depositBdv = depositResult[1]
+
+      // ----------------------- CONVERT ------------------------
+      this.result = await this.convert.connect(user2).convert(
+        // CALLDATA
+        // amount, token ,account
+        ConvertEncoder.convertAntiLambdaToLambda('100', this.newSiloToken.address , userAddress),
+        // STEMS []
+        [this.stem],
+        // AMOUNTS []
+        ['100']
+      )
+
+      // inital bdv: 1000000
+      // new bdv: 1100000
+      // grown stalk: 2e6 (newSiloToken has 1 seed).
+      // gspbdv = grown stalk / new bdv = 1.818181
+      // stem = stemTip - gspbdv: 2 - 1.818181 = 0.181819
+      this.newStem = 181819
+    })
+
+    it('Correctly updates deposit stats', async function () {
+      let deposit = await this.siloGetters.getDeposit(userAddress, this.newSiloToken.address, this.newStem);
+      expect(deposit[0]).to.eq('100'); // deposit[0] = amount of tokens
+      expect(deposit[1]).to.eq('1100000');  // deposit[1] = bdv
+    })
+
+    it('Correctly updates totals', async function () {
+      expect(await this.siloGetters.getTotalDeposited(this.newSiloToken.address)).to.equal('100');
+      expect(await this.siloGetters.getTotalDepositedBdv(this.newSiloToken.address)).to.eq('1100000');
+      // 100000 stalk added = 1 stalk/bdv for newSiloToken * 100000 bdv added from convert
+      expect(await this.siloGetters.totalStalk()).to.equal('5100100');
+    })
+
+    it('Emits events', async function () {
+      await expect(this.result).to.emit(this.silo, 'RemoveDeposits').withArgs(userAddress, this.newSiloToken.address, [this.stem], ['100'], '100', ['1000000']);
+      await expect(this.result).to.emit(this.silo, 'AddDeposit').withArgs(userAddress, this.newSiloToken.address, this.newStem, '100', '1100000'); // last param = updated bdv
+      await expect(this.result).to.emit(this.convert, 'Convert').withArgs(userAddress, this.newSiloToken.address, this.newSiloToken.address, '100', '100');
+    })
+  })
+
+  describe("anti lambda convert revert on multiple deposit update", async function () {
+
+    it("Reverts on multiple deposit input", async function () {
+      // ----------------------- SETUP ------------------------
+      // user deposits 100 new silo token at stem 0 so 1000000 bdv
+      await this.newSiloToken.mint(userAddress, '10000000');
+      await this.newSiloToken.connect(user).approve(this.silo.address, '1000000000');
+      await this.silo.connect(user).deposit(this.newSiloToken.address, '100', EXTERNAL);
+      this.stem = await this.siloGetters.stemTipForToken(this.newSiloToken.address);
+
+      // end germination:
+      await this.season.siloSunrise(0);
+      await this.season.siloSunrise(0);
+
+      // ----------------------- CONVERT ------------------------
+      await expect(this.convert.connect(user2).convert(
+        // CALLDATA
+        // amount, token ,account
+        ConvertEncoder.convertAntiLambdaToLambda('100', this.newSiloToken.address , userAddress),
+        // STEMS []
+        [this.stem, this.stem],
+        // AMOUNTS []
+        ['100', '100']
+      )).to.be.revertedWith("Convert: DecreaseBDV only supports updating one deposit.")
     })
   })
 });

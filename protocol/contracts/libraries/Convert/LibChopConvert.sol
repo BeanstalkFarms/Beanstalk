@@ -52,7 +52,7 @@ library LibChopConvert {
      */
     function getConvertedUnderlyingOut(address tokenIn, uint256 amountIn) internal view returns(uint256 amount) {
         // tokenIn == unripe bean address
-        amount = LibUnripe._getPenalizedUnderlying(
+        amount = LibUnripe.getPenalizedUnderlying(
             tokenIn,
             amountIn, 
             IBean(tokenIn).totalSupply()

@@ -8,7 +8,8 @@ const ConvertKind = {
   LAMBDA_LAMBDA: 4,
   BEANS_TO_WELL_LP: 5,
   WELL_LP_TO_BEANS: 6,
-  UNRIPE_TO_RIPE: 7
+  UNRIPE_TO_RIPE: 7,
+  ANTI_LAMBDA_LAMBDA: 8,
 }
 
 class ConvertEncoder {
@@ -82,6 +83,12 @@ class ConvertEncoder {
   defaultAbiCoder.encode(
     ['uint256', 'uint256', 'address'],
     [ConvertKind.UNRIPE_TO_RIPE, unripeAmount, unripeToken]
+  );
+
+  static convertAntiLambdaToLambda = (amount, token, account) =>
+  defaultAbiCoder.encode(
+    ['uint256', 'uint256', 'address' , 'address'],
+    [ConvertKind.ANTI_LAMBDA_LAMBDA, amount, token , account]
   );
 }
 

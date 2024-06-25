@@ -339,7 +339,6 @@ async function bipMigrateUnripeBeanEthToBeanSteth(mock = true, account = undefin
     verify: false
   });
 
-
   if (oracleAccount == undefined) {
     oracleAccount = await impersonateSigner('0x30a1976d5d087ef0BA0B4CDe87cc224B74a9c752', true); // Oracle deployer
     await mintEth(oracleAccount.address);
@@ -347,6 +346,56 @@ async function bipMigrateUnripeBeanEthToBeanSteth(mock = true, account = undefin
   await deployContract('UsdOracle', oracleAccount, verbose)
 }
 
+async function bipMiscellaneousImprovements(mock = true, account = undefined, verbose = true) {
+  if (account == undefined) {
+    account = await impersonateBeanstalkOwner();
+    await mintEth(account.address);
+  }
+
+  await upgradeWithNewFacets({
+    diamondAddress: BEANSTALK,
+    facetNames: [
+      "UnripeFacet",
+      "ConvertFacet",
+      "SeasonFacet",
+      "SeasonGettersFacet",
+      "FertilizerFacet"
+    ],
+    libraryNames: [
+      'LibGauge',
+      'LibIncentive',
+      'LibLockedUnderlying',
+      'LibWellMinting',
+      'LibGerminate',
+      'LibConvert'
+    ],
+    facetLibraries: {
+      'UnripeFacet': [
+        'LibLockedUnderlying'
+      ],
+      'ConvertFacet': [
+        'LibConvert',
+      ],
+      'SeasonFacet': [
+        'LibGauge',
+        'LibIncentive',
+        'LibLockedUnderlying',
+        'LibWellMinting',
+        'LibGerminate'
+      ],
+      'SeasonGettersFacet': [
+        'LibLockedUnderlying',
+        'LibWellMinting',
+      ],
+    },
+    selectorsToRemove: [],
+    bip: false,
+    object: !mock,
+    verbose: verbose,
+    account: account,
+    verify: false
+  });
+}
 
 exports.bip29 = bip29
 exports.bip30 = bip30
@@ -358,3 +407,4 @@ exports.bipSeedGauge = bipSeedGauge
 exports.mockBeanstalkAdmin = mockBeanstalkAdmin
 exports.bipMigrateUnripeBean3CrvToBeanEth = bipMigrateUnripeBean3CrvToBeanEth
 exports.bipMigrateUnripeBeanEthToBeanSteth = bipMigrateUnripeBeanEthToBeanSteth
+exports.bipMiscellaneousImprovements = bipMiscellaneousImprovements

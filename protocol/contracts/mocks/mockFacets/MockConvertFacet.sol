@@ -24,10 +24,12 @@ contract MockConvertFacet is ConvertFacet {
         address token,
         int96[] memory stems,
         uint256[] memory amounts,
-        uint256 maxTokens
+        uint256 maxTokens,
+        address account
     ) external {
         LibSilo._mow(msg.sender, token);
-        (uint256 stalkRemoved, uint256 bdvRemoved) = _withdrawTokens(token, stems, amounts, maxTokens);
+        if (account == address(0)) account = msg.sender;
+        (uint256 stalkRemoved, uint256 bdvRemoved) = _withdrawTokens(token, stems, amounts, maxTokens, account);
         
         
         emit MockConvert(stalkRemoved, bdvRemoved);
@@ -37,10 +39,12 @@ contract MockConvertFacet is ConvertFacet {
         address token, 
         uint256 amount, 
         uint256 bdv, 
-        uint256 grownStalk
+        uint256 grownStalk,
+        address account
     ) external {
         LibSilo._mow(msg.sender, token);
-        _depositTokensForConvert(token, amount, bdv, grownStalk);
+        if (account == address(0)) account = msg.sender;
+        _depositTokensForConvert(token, amount, bdv, grownStalk, account);
     }
 
     function convertInternalE(
@@ -51,12 +55,18 @@ contract MockConvertFacet is ConvertFacet {
         address toToken,
         address fromToken,
         uint256 toAmount,
-        uint256 fromAmount
+        uint256 fromAmount,
+        address account,
+        bool decreaseBDV
     ) {
         IERC20(tokenIn).safeTransferFrom(msg.sender, address(this), amountIn);
-        (toToken, fromToken, toAmount, fromAmount) = LibConvert.convert(
-            convertData
-        );
+        LibConvert.convertParams memory cp = LibConvert.convert(convertData);
+        toToken = cp.toToken;
+        fromToken = cp.fromToken;
+        toAmount = cp.toAmount;
+        fromAmount = cp.fromAmount;
+        account = cp.account;
+        decreaseBDV = cp.decreaseBDV;
         IERC20(toToken).safeTransfer(msg.sender, toAmount);
     }
 }
