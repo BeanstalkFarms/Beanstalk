@@ -131,7 +131,31 @@ describe('Sun', function () {
       value: 0
     })
 
-    // twaDeltaB = -100000000000000000
+    // twaDeltaB = -100000000
+    // instantaneousDeltaB = -585786437627
+                                            // twaDeltaB, case ID
+    this.result = await this.season.sunSunrise('-585786437627', 8);
+    await expect(this.result).to.emit(this.season, 'Soil').withArgs(3, '585786437627');
+    await expect(await this.field.totalSoil()).to.be.equal('585786437627');
+  })
+
+  it("twaDeltaB < 0, -instDeltaB > 0. (uses twaDeltaB)", async function () {
+    // go forward 1800 blocks
+    await advanceTime(1800)
+    // whitelist well to be included in the instantaneous deltaB calculation
+    await this.silo.mockWhitelistToken(BEAN_ETH_WELL, this.silo.interface.getSighash("mockBDV(uint256 amount)"), "10000", "1");
+    // set reserves to 0.5M Beans and 1000 Eth
+    await await this.well.setReserves([to6('500000'), to18('1000')]);
+    await await this.well.setReserves([to6('500000'), to18('1000')]);
+    // go forward 1800 blocks
+    await advanceTime(1800)
+    // send 0 eth to beanstalk
+    await user.sendTransaction({
+      to: this.diamond.address,
+      value: 0
+    })
+
+    // twaDeltaB = +500_000
     // instantaneousDeltaB = -585786437627
                                             // twaDeltaB, case ID
     this.result = await this.season.sunSunrise('-585786437627', 8);
