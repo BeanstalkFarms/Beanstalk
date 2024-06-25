@@ -1,9 +1,7 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import styled from "styled-components";
 import { FormProvider, useForm, useFormContext, useWatch } from "react-hook-form";
-
 import { getIsValidEthereumAddress } from "src/utils/addresses";
-
 import { theme } from "src/utils/ui/theme";
 import { Divider, Flex, FlexCard } from "src/components/Layout";
 import { Text } from "src/components/Typography";
@@ -18,6 +16,9 @@ import { ERC20Token } from "@beanstalk/sdk";
 import useSdk from "src/utils/sdk/useSdk";
 import BoreWellUtils from "src/wells/boreWell";
 import { useValidateWellFunction } from "src/wells/wellFunction/useValidateWellFunction";
+import { useBoolean } from "src/utils/ui/useBoolean";
+import { Dropdown } from "src/components/Dropdown";
+import { images } from "src/assets/images/tokens";
 
 const additionalOptions = [
   {
@@ -235,6 +236,8 @@ type TokenAddressInputWithSearchProps = {
 };
 const TokenAddressInputWithSearch = ({ path, setToken }: TokenAddressInputWithSearchProps) => {
   const counterPath = path === "token1" ? "token2" : "token1";
+  const sdk = useSdk();
+  const [open, { set: setOpen }] = useBoolean();
 
   const {
     register,
@@ -273,31 +276,87 @@ const TokenAddressInputWithSearch = ({ path, setToken }: TokenAddressInputWithSe
     }
   }, [counterFormErrMessage, formErrMessage, counterPath, clearErrors]);
 
+  const options = useMemo(
+    () => [sdk.tokens.BEAN, sdk.tokens.DAI, sdk.tokens.USDC, sdk.tokens.USDT, sdk.tokens.WETH],
+    [sdk]
+  );
+
+  const filteredOptions = useMemo(() => {
+    const val = value?.toLowerCase() || "";
+    return options.filter((token) => {
+      const symbolMatch = token.symbol.toLowerCase().includes(val);
+      const addressMatch = token.address.toLowerCase().includes(val);
+      const nameMatch = token.name.toLowerCase().includes(val);
+      return symbolMatch || addressMatch || nameMatch;
+    });
+  }, [options, value]);
+
   return (
     <>
       <TokenInputWrapper>
-        <TextInputField
-          {...register(path, {
-            required: {
-              value: true,
-              message: "Token address is required"
-            },
-            validate: {
-              invalidAddress: (formValue) => {
-                return getIsValidEthereumAddress(formValue) || "Invalid address";
-              },
-              tokensAreSame: (formValue, formValues) => {
-                const counterToken = formValues[path === "token1" ? "token2" : "token1"];
-                const tokensAreSame = formValue.toLowerCase() === counterToken.toLowerCase();
-
-                return !tokensAreSame || "Unique tokens required";
-              }
-            }
-          })}
-          placeholder="Search for token or input an address"
-          startIcon="search"
-          error={formErrMessage ?? erc20ErrMessage}
-        />
+        <Dropdown
+          open={open}
+          setOpen={(_open) => {
+            setOpen(_open);
+          }}
+          offset={-44}
+          trigger={
+            <TokenInputWrapper $fullWidth>
+              <TextInputField
+                placeholder="Search for token or input an address"
+                startIcon="search"
+              />
+            </TokenInputWrapper>
+          }
+        >
+          <Flex>
+            <TextInputField
+              // eslint-disable-next-line jsx-a11y/no-autofocus
+              autoFocus // Is there another way to do this?
+              key={path}
+              {...register(path, {
+                required: {
+                  value: true,
+                  message: "Token address is required"
+                },
+                validate: {
+                  invalidAddress: (formValue) => {
+                    return getIsValidEthereumAddress(formValue) || "Invalid address";
+                  },
+                  tokensAreSame: (formValue, formValues) => {
+                    const counterToken = formValues[path === "token1" ? "token2" : "token1"];
+                    const tokensAreSame = formValue.toLowerCase() === counterToken.toLowerCase();
+                    return !tokensAreSame || "Unique tokens required";
+                  }
+                },
+                onBlur: (e) => e.currentTarget.focus() // prevent this input field from going out of focus
+              })}
+              placeholder="Search for token or input an address"
+              startIcon="search"
+              error={formErrMessage ?? erc20ErrMessage}
+            />
+          </Flex>
+          <DropdownContent>
+            {filteredOptions.map((token) => {
+              return (
+                <Dropdown.SingleSelect
+                  selected={value.toLowerCase() === token.address.toLowerCase()}
+                  key={token.address}
+                  onClick={() => {
+                    setValue(path, token.address.toLowerCase());
+                  }}
+                >
+                  <TokenSelectItemWrapper>
+                    <ImgContainer width={16} height={16}>
+                      {<img src={images[token.symbol]} alt={value} />}
+                    </ImgContainer>
+                    <Text className="item-token-symbol">{token.symbol}</Text>
+                  </TokenSelectItemWrapper>
+                </Dropdown.SingleSelect>
+              );
+            })}
+          </DropdownContent>
+        </Dropdown>
         {token && !isLoading && (
           <FoundTokenInfo>
             {token?.logo && (
@@ -355,6 +414,28 @@ const TokenSelectWrapper = styled(Flex)`
 
 const TokenInputWrapper = styled(Flex)`
   position: relative;
+`;
+
+const DropdownContent = styled(Flex)`
+  border: 1px solid ${theme.colors.black};
+  border-top: none;
+
+  &:not(:last-child) {
+    border-bottom: 1px solid ${theme.colors.lightGray};
+  }
+`;
+
+const TokenSelectItemWrapper = styled.div`
+  position: relative;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: ${theme.spacing(1)};
+
+  .item-token-symbol {
+    position: relative;
+    top: 2px;
+  }
 `;
 
 const FoundTokenInfo = styled.div`

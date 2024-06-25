@@ -88,7 +88,7 @@ const WellDotSol: WellComponentInfo = {
     summary: "A standard Well implementation that prioritizes flexibility and composability.",
     description: [
       "A standard Well implementation that prioritizes flexibility and composability.",
-      "Fits many use cases for a Liquidity Well."
+      "Fits many use cases for a Well."
     ],
     usedBy: 0,
     type: {
@@ -116,7 +116,7 @@ const MultiFlowPump: WellComponentInfo = {
     fullName: "Multi Flow Pump",
     summary: "An inter-block MEV manipulation resistant oracle implementation.",
     description: [
-      "Comprehensive multi-block MEV manipulation-resistant Oracle implementation which serves up Well pricing data with an EMA for instantaneous prices and a TWAP for weighted averages over time."
+      "Comprehensive multi-block MEV manipulation-resistant oracle implementation which serves up Well pricing data with an EMA for instantaneous prices and a TWAP for weighted averages over time."
     ],
     usedBy: 0,
     url: "https://docs.basin.exchange/implementations/multi-flow-pump",
@@ -130,7 +130,7 @@ const MultiFlowPump: WellComponentInfo = {
       label: "Deployed By",
       value: "Brendan Sanderson",
       imgSrc: BrendanTwitterPFP,
-      url: "https://twitter.com/brendaann__"
+      url: "https://github.com/BrendanSanderson"
     },
     { label: "Deployed Block", value: "17977942" },
     { label: "Audited by", value: basinAuditInfo }
@@ -146,8 +146,8 @@ const ConstantProduct2: WellComponentInfo = {
   address: CONSTANT_PRODUCT_2_ADDRESS,
   component: {
     name: "Constant Product 2",
-    summary: "A standard x*y = k token pricing function for two tokens with no fees.",
-    description: ["A standard x*y = k token pricing function for two tokens with no fees."],
+    summary: "A standard x*y = k token pricing function for two tokens.",
+    description: ["A standard x*y = k token pricing function for two tokens."],
     url: "https://github.com/BeanstalkFarms/Basin/blob/master/src/functions/ConstantProduct2.sol",
     type: {
       type: WellComponentType.WellFunction,

@@ -4,7 +4,7 @@ import { FC } from "src/types";
 import styled from "styled-components";
 import { Footer } from "./Footer";
 import { Window } from "./Window";
-import { Settings, isNetlifyContext } from "src/settings";
+import { Settings } from "src/settings";
 import CustomToaster from "../TxnToast/CustomToaster";
 import buildIcon from "src/assets/images/navbar/build.svg";
 import swapIcon from "src/assets/images/navbar/swap.svg";
@@ -35,11 +35,9 @@ export const Frame: FC<{}> = ({ children }) => {
           </BrandContainer>
           <LinksContainer>
             <NavLinks>
-              {(isNotProd || isNetlifyContext) && (
-                <NavLink to="/build" hovericon={buildIcon}>
-                  Build
-                </NavLink>
-              )}
+              <NavLink to="/build" hovericon={buildIcon}>
+                Build
+              </NavLink>
               <NavLink to="/wells" hovericon={wellsIcon}>
                 Liquidity
               </NavLink>
@@ -68,11 +66,9 @@ export const Frame: FC<{}> = ({ children }) => {
             <MobileNavLink $bold to="/wells" onClick={() => setMobileMenuOpen(false)}>
               Wells
             </MobileNavLink>
-            {(isNotProd || isNetlifyContext) && (
-              <MobileNavLink $bold to="/build" onClick={() => setMobileMenuOpen(false)}>
-                Build
-              </MobileNavLink>
-            )}
+            <MobileNavLink $bold to="/build" onClick={() => setMobileMenuOpen(false)}>
+              Build
+            </MobileNavLink>
             {isNotProd && (
               <MobileNavLink $bold to="/dev" onClick={() => setMobileMenuOpen(false)}>
                 Dev
