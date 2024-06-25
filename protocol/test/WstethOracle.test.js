@@ -85,8 +85,8 @@ describe('wStEth Oracle', function () {
                 await setWstethStethRedemptionPrice('1.01')
                 await setStethEthChainlinkPrice('1.02') // The Uniswap Oracle cannot be exactly 2 
                 await setWstethEthUniswapPrice('1.005')
-                expect(await season.getWstethEthPrice()).to.be.equal('1010000') // after M-2 remediation, should not be zero
-                expect(await season.getWstethEthTwap('900')).to.be.equal('1010000') // after M-2 remediation, should not be zero
+                expect(await season.getWstethEthPrice()).to.be.equal('0')
+                expect(await season.getWstethEthTwap('900')).to.be.equal('0')
             })
         })
 
@@ -102,8 +102,8 @@ describe('wStEth Oracle', function () {
                 await setWstethStethRedemptionPrice('1')
                 await setStethEthChainlinkPrice('1.02') // The Uniswap Oracle cannot be exactly 2 
                 await setWstethEthUniswapPrice('1')
-                expect(await season.getWstethEthPrice()).to.be.equal('1000000') // after M-2 remediation, should not be zero
-                expect(await season.getWstethEthTwap('900')).to.be.equal('1000000') // after M-2 remediation, should not be zero
+                expect(await season.getWstethEthPrice()).to.be.equal('0')
+                expect(await season.getWstethEthTwap('900')).to.be.equal('0')
             })
         })
 

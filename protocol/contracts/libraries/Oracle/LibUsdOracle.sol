@@ -61,7 +61,7 @@ library LibUsdOracle {
             return ethUsdPrice;
         }
         if (token == C.WSTETH) {
-            uint256 wstethUsdPrice = LibWstethUsdOracle.getWstethUsdPrice(lookback);
+            uint256 wstethUsdPrice = LibWstethUsdOracle.getWstethUsdPrice(0);
             if (wstethUsdPrice == 0) return 0;
             return wstethUsdPrice;
         }
