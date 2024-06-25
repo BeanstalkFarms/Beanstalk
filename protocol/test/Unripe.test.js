@@ -418,6 +418,40 @@ describe('Unripe', function () {
       )
     })
   })
+
+  describe('LP chop all of supply', async function () {
+    beforeEach(async function () {
+      // totalDollarsneeded = 47
+      await this.unripeLP.mint(userAddress, to6('189'))
+      await this.unripe.connect(owner).addUnderlying(
+        UNRIPE_LP,
+        to6('100') // balanceOfUnderlying is 25
+      )            
+                                                      // s.recapitalized=25
+      await this.fertilizer.connect(user).setPenaltyParams(to6('100'), to6('100'))
+
+      // remaining recapitalization = totalDollarsNeeded - s.recapitalized = 100 - 100 = 0
+      expect(await this.fertilizer.remainingRecapitalization()).to.be.equal(to6('0'))
+      // s.recapitalized = 100
+      expect(await this.unripe.getRecapitalized()).to.be.equal(to6('100'))
+      
+      // 100000000*100000000/100000000*1000000/189000000 = 529100
+      expect(await this.unripe.getPenalty(UNRIPE_LP)).to.be.equal(to6('0.529100'))
+      // user chops ~ all the unripe LP supply
+      this.result = await this.unripe.connect(user).chop(UNRIPE_LP, to6('189'), EXTERNAL, EXTERNAL)
+    })
+
+    it('emits an event, and chopping unripe bean works', async function () {
+      await expect(this.result).to.emit(this.unripe, 'Chop').withArgs(
+        user.address,
+        UNRIPE_LP,
+        to6('189'),
+        to6('100.000000') // 100%
+      )
+
+      // attempt to chop unripe bean
+    })
+  })
   
   // Same as above but with different transfer modes used
   describe('chop, different transfer modes, half the supply, balanceOfUnderlying Max ≠ Unripe Total Supply, TotalSupply > 100, fert 25% sold', async function () {
