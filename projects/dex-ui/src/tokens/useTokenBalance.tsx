@@ -2,16 +2,18 @@ import { Token, TokenValue } from "@beanstalk/sdk";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAccount } from "wagmi";
 
-export const useTokenBalance = (token: Token) => {
+export const useTokenBalance = (token: Token | undefined) => {
   const { address } = useAccount();
   const queryClient = useQueryClient();
 
-  const key = ["token", "balance", token.symbol];
+  const key = ["token", "balance", token?.symbol];
 
   const { data, isLoading, error, refetch, isFetching } = useQuery({
     queryKey: key,
 
     queryFn: async () => {
+      if (!token) return;
+
       let balance: TokenValue;
       if (!address) {
         balance = TokenValue.ZERO;
@@ -32,7 +34,7 @@ export const useTokenBalance = (token: Token) => {
 
       return result;
     },
-
+    enabled: !!token,
     staleTime: 1000 * 15,
     refetchInterval: 1000 * 15,
     refetchIntervalInBackground: false,
