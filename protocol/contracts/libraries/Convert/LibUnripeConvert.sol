@@ -135,7 +135,7 @@ library LibUnripeConvert {
         uint256 lp = LibUnripe.unripeToUnderlying(
             C.UNRIPE_LP,
             amountIn,
-            IBean(C.UNRIPE_LP).totalSupply()
+            IBean(C.UNRIPE_BEAN).totalSupply()
         );
         bean = LibWellConvert.getBeanAmountOut(LibBarnRaise.getBarnRaiseWell(), lp);
         bean = LibUnripe
