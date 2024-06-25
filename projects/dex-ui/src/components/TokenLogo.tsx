@@ -2,6 +2,7 @@ import { Token } from "@beanstalk/sdk";
 import React from "react";
 import { images } from "src/assets/images/tokens";
 import { size } from "src/breakpoints";
+import { useERC20TokenWithAddress } from "src/tokens/useERC20Token";
 import { FC } from "src/types";
 import styled from "styled-components";
 
@@ -12,9 +13,16 @@ type Props = {
   isLP?: boolean;
 };
 
-export const TokenLogo: FC<Props> = ({ size, mobileSize, token, isLP = false }) => {
+export const TokenLogo: FC<Props> = ({ size, mobileSize, token: _token, isLP = false }) => {
+  const { data: token } = useERC20TokenWithAddress(_token?.address);
   const symbol = token?.symbol ? token?.symbol : isLP ? "LP" : "DEFAULT";
-  let image = images[symbol];
+
+  let image = token?.logo ?? images[symbol];
+
+  if (isLP && token?.logo?.includes("DEFAULT")) {
+      image = images.LP;
+  }
+
   if (!image) {
     image = isLP ? images.LP : images.DEFAULT;
   }

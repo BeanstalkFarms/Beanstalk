@@ -55,7 +55,15 @@ export const TokenPicker: FC<TokenPickerProps> = ({ token, excludeToken, editabl
 
   return (
     <>
-      <Button editable={editable} onClick={openModal}>
+      <Button 
+        editable={editable} 
+        onClick={(e) => {
+          // prevent the click event from bubbling up to the parent and stop any form submission
+          e.preventDefault();
+          e.stopPropagation();
+          openModal();
+        }}
+      >
         {token ? (
           <>
             <TokenLogo token={token} size={16} />

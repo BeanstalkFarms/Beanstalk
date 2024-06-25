@@ -1,6 +1,6 @@
 import { useCallback } from "react";
 import { Well } from "@beanstalk/sdk/Wells";
-import { BEANETH_MULTIPUMP_ADDRESS } from "src/utils/addresses";
+import { MULTI_FLOW_PUMP_ADDRESS } from "src/utils/addresses";
 import useSdk from "src/utils/sdk/useSdk";
 
 export const useBeanstalkSiloWhitelist = () => {
@@ -25,7 +25,7 @@ export const useBeanstalkSiloWhitelist = () => {
 
   const getIsMultiPumpWell = useCallback((well: Well | undefined) => {
     if (!well?.pumps) return false;
-    return !!well.pumps.find((pump) => pump.address.toLowerCase() === BEANETH_MULTIPUMP_ADDRESS);
+    return !!well.pumps.find((pump) => pump.address.toLowerCase() === MULTI_FLOW_PUMP_ADDRESS);
   }, []);
 
   return {

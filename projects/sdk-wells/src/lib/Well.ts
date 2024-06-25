@@ -1,5 +1,5 @@
 import { ERC20Token, Token, TokenValue } from "@beanstalk/sdk-core";
-import { BigNumber, CallOverrides, constants, ContractFactory, ContractTransaction, Overrides } from "ethers";
+import { BigNumber, CallOverrides, ContractTransaction, Overrides } from "ethers";
 import { Well__factory } from "src/constants/generated";
 import { Well as WellContract } from "src/constants/generated";
 
@@ -7,8 +7,6 @@ import { Aquifer } from "./Aquifer";
 import { Pump } from "./Pump";
 import {
   deadlineSecondsToBlockchain,
-  encodeWellImmutableData,
-  encodeWellInitFunctionCall,
   loadToken,
   setReadOnly,
   validateAddress,
@@ -19,7 +17,6 @@ import {
 } from "./utils";
 import { WellFunction } from "./WellFunction";
 import { WellsSDK } from "./WellsSDK";
-import { Call } from "src/types";
 
 export type WellDetails = {
   tokens: ERC20Token[];
@@ -222,7 +219,7 @@ export class Well {
   }
 
   private setPumps(pumpData: CallStruct[]) {
-    let pumps = (pumpData ?? []).map((p) => new Pump(this.sdk, p.target));
+    let pumps = (pumpData ?? []).map((p, i) => new Pump(this.sdk, p.target, pumpData[i].data));
     Object.freeze(pumps);
     setReadOnly(this, "pumps", pumps, true);
   }
@@ -859,7 +856,7 @@ export class Well {
     validateToken(toToken, "toToken");
     validateAmount(minAmountOut, "minAmountOut");
     validateAddress(recipient, "recipient");
-
+    
     return this.contract.shift(toToken.address, minAmountOut.toBigNumber(), recipient, overrides ?? {});
   }
 
