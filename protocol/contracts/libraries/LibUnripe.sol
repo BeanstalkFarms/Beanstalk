@@ -164,7 +164,13 @@ library LibUnripe {
         // But totalRipeUnderlying = CurrentUnderlying * totalUsdNeeded/usdValueRaised to get the total underlying
         // redeem = currentRipeUnderlying * (usdValueRaised/totalUsdNeeded) * UnripeAmountIn/UnripeSupply
         uint256 underlyingAmount = s.u[unripeToken].balanceOfUnderlying;
-        redeem = underlyingAmount.mul(s.recapitalized).div(totalUsdNeeded).mul(amount).div(supply);
+        if(totalUsdNeeded == 0) {
+            // when totalUsdNeeded == 0, the barnraise has been fully recapitalized.
+            redeem = underlyingAmount.mul(amount).div(supply);
+        } else {
+            redeem = underlyingAmount.mul(s.recapitalized).div(totalUsdNeeded).mul(amount).div(supply);
+        }
+        
         // cap `redeem to `balanceOfUnderlying in the case that `s.recapitalized` exceeds `totalUsdNeeded`.
         // this can occur due to unripe LP chops.
         if(redeem > underlyingAmount) redeem = underlyingAmount;
