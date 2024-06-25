@@ -299,7 +299,7 @@ const TokenAddressInputWithSearch = ({ path, setToken }: TokenAddressInputWithSe
           setOpen={(_open) => {
             setOpen(_open);
           }}
-          offset={-44}
+          offset={-43}
           trigger={
             <TokenInputWrapper $fullWidth>
               <TextInputField
