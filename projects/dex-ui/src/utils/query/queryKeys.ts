@@ -18,5 +18,9 @@ export const queryKeys = {
   // prices
   tokenPricesAll: ["prices", "token"],
   tokenPrices: (address: string[]) => ["prices", "token", ...address],
-  lpTokenPrices: (addresses: string[]) => ["prices", "lp-token", ...addresses]
+  lpTokenPrices: (addresses: string[]) => ["prices", "lp-token", ...addresses],
+
+  // token balance
+  tokenBalancesAll: ["token", "balance"],
+  tokenBalance: (symbol: string) => ["token", "balance", symbol]
 } as const;
