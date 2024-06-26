@@ -21,7 +21,7 @@ const OtherSectionContent: FC<Props> = ({ well }) => {
   const [items, setItems] = useState<{ name: string; address: string }[]>([]);
   const [wellFunctionName, setWellFunctionName] = useState<string>("");
 
-  const implementationAddress = implementations?.[well.address];
+  const implementationAddress = implementations?.[well.address.toLowerCase()];
 
   const wellTokenDetail = well.tokens
     ?.map((token) => token.symbol)

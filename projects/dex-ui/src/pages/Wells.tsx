@@ -54,8 +54,6 @@ export const Wells = () => {
       wellNamesLoading
   );
 
-  console.log("tableData: ", tableData);
-
   if (error) {
     return <Error message={error?.message} errorOnly />;
   }
