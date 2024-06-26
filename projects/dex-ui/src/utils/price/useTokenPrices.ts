@@ -4,6 +4,10 @@ import { queryKeys } from "../query/queryKeys";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import useSdk from "../sdk/useSdk";
 import { getPrice } from "./usePrice";
+import { PriceLookups } from "./priceLookups";
+import { Log } from "../../utils/logger";
+import { AddressMap } from "src/types";
+import { UseReactQueryOptions } from "../query/types";
 
 type WellOrToken = Well | ERC20Token;
 
@@ -23,7 +27,13 @@ const getTokens = (wellOrToken: WellOrToken | WellOrToken[] | undefined) => {
   return tokens;
 };
 
-export const useTokenPrices = (params: WellOrToken | WellOrToken[] | undefined) => {
+/**
+ * returns
+ */
+export const useTokenPrices = <K = AddressMap<TokenValue>>(
+  params: WellOrToken | WellOrToken[] | undefined,
+  options?: UseReactQueryOptions<AddressMap<TokenValue>, K>
+) => {
   const queryClient = useQueryClient();
   const sdk = useSdk();
 
@@ -34,11 +44,22 @@ export const useTokenPrices = (params: WellOrToken | WellOrToken[] | undefined) 
   const query = useQuery({
     queryKey: queryKeys.tokenPrices(tokenAddresses),
     queryFn: async () => {
-      const pricesResult = await Promise.all(tokens.map((token) => getPrice(token, sdk)));
+      const pricesResult = await Promise.all(
+        tokens.map((token) => {
+          if (PriceLookups[token.symbol]) return getPrice(token, sdk);
 
-      const addressToPriceMap = tokens.reduce<Record<string, TokenValue>>((prev, curr, i) => {
+          Log.module("useTokenPrices").debug(
+            "No price lookup function for ",
+            token.symbol,
+            "... resolving with 0"
+          );
+          return Promise.resolve(token.fromHuman("0"));
+        })
+      );
+
+      const addressToPriceMap = tokens.reduce<AddressMap<TokenValue>>((prev, curr, i) => {
         const result = pricesResult[i];
-        if (result) {
+        if (result && result.gt(0)) {
           prev[curr.address] = result;
         }
         return prev;
@@ -52,7 +73,12 @@ export const useTokenPrices = (params: WellOrToken | WellOrToken[] | undefined) 
 
       return addressToPriceMap;
     },
-    enabled: !!params && !!tokenAddresses.length
+    enabled: !!params && !!tokenAddresses.length,
+    refetchInterval: 60 * 1000,
+    staleTime: 60 * 1000,
+    refetchOnWindowFocus: false,
+    refetchIntervalInBackground: false,
+    ...options
   });
 
   return query;

@@ -22,5 +22,5 @@ export const queryKeys = {
 
   // token balance
   tokenBalancesAll: ["token", "balance"],
-  tokenBalance: (symbol: string) => ["token", "balance", symbol]
+  tokenBalance: (symbol: string | undefined) => ["token", "balance", symbol || "invalid"]
 } as const;
