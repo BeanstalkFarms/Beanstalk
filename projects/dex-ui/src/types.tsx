@@ -22,3 +22,12 @@ export type MayArray<T> = T | T[];
 
 // Objects
 export type AddressMap<T> = Record<string, T>;
+
+export type TokenMetadataMap = AddressMap<{
+  address: string;
+  name: string;
+  symbol: string;
+  decimals: number;
+  logoURI: string;
+  displayName?: string;
+}>
