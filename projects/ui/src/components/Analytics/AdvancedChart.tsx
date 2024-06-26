@@ -198,18 +198,21 @@ const AdvancedChart: FC<{ isMobile?: boolean }> = ({ isMobile = false }) => {
                     key={`selectedChartsButton${index}`}
                     sx={{
                       display: 'inline-flex',
-                      alignItems: 'center',
+                      alignItems: 'stretch',
                       cursor: 'pointer',
                       border: '0.5px solid',
                       borderColor: 'divider',
                       fontWeight: 'normal',
                       color: 'text.primary',
                       boxSizing: 'border-box',
+                      height: '26px',
+                      overflow: 'clip',
+                      wordBreak: 'break-all',
                       paddingY: 0.25,
                       paddingX: 0.75,
                     }}
                     endIcon={
-                      <CloseIcon sx={{ color: 'inherit' }} />
+                      <CloseIcon sx={{ color: 'inherit', marginTop: '0.5px' }} />
                     }
                     onClick={() => handleDeselectChart(index)}
                   >
@@ -224,17 +227,20 @@ const AdvancedChart: FC<{ isMobile?: boolean }> = ({ isMobile = false }) => {
                   key="selectedChartsButtonMobile"
                   sx={{
                     display: 'inline-flex',
-                    alignItems: 'center',
+                    alignItems: 'stretch',
                     cursor: 'pointer',
                     border: '0.5px solid',
                     borderColor: 'divider',
                     fontWeight: 'normal',
                     color: 'text.primary',
                     boxSizing: 'border-box',
+                    height: '26px',
+                    overflow: 'clip',
+                    wordBreak: 'break-all',
                     paddingY: 0.25,
                     paddingX: 0.75,
                   }}
-                  endIcon={<DropdownIcon open={false} sx={{ fontSize: 20 }} />}
+                  endIcon={<DropdownIcon open={false} sx={{ fontSize: 20, marginTop: '0.5px' }} />}
                   onClick={() => showDialog()}
                 >
                   {selectedCharts.length === 1
@@ -248,20 +254,26 @@ const AdvancedChart: FC<{ isMobile?: boolean }> = ({ isMobile = false }) => {
                   color="primary"
                   size="small"
                   sx={{
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    cursor: 'pointer',
                     fontWeight: 'normal',
                     color: 'primary.main',
                     backgroundColor: 'secondary.main',
+                    display: 'inline-flex',
+                    flexShrink: 0,
+                    alignItems: 'stretch',
+                    cursor: 'pointer',
+                    border: '0.5px solid',
+                    borderColor: 'divider',
                     boxSizing: 'border-box',
+                    height: '26px',
+                    overflow: 'clip',
+                    wordBreak: 'break-all',
                     paddingY: 0.25,
                     paddingX: 0.75,
                     '&:hover': {
                       color: 'primary.contrastText',
                     },
                   }}
-                  endIcon={<AddRoundedIcon fontSize="small" color="inherit" />}
+                  endIcon={<AddRoundedIcon fontSize="small" color="inherit" sx={{ marginTop: '0.5px' }} />}
                   onClick={() => showDialog()}
                 >
                   Add Data
