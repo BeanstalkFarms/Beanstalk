@@ -231,6 +231,7 @@ const Link = styled.a`
   font-weight: 600;
   text-decoration: underline;
   text-decoration-thickness: 0.5px;
+  color: black;
 
   :link {
     color: black;
