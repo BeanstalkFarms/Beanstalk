@@ -184,7 +184,7 @@ const snapshotLink = new HttpLink({
 });
 
 const snapshotLabsLink = new HttpLink({
-  uri: 'https://api.thegraph.com/subgraphs/name/snapshot-labs/snapshot',
+  uri: `https://gateway-arbitrum.network.thegraph.com/api/${import.meta.env.VITE_THEGRAPH_API_KEY}/subgraphs/id/5MkoYVE5KREBTe2x45FuPdqWKGc2JgrHDteMzi6irSGD`,
 });
 
 const beanftLink = new HttpLink({
