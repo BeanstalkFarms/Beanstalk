@@ -21,7 +21,7 @@ const OtherSectionContent: FC<Props> = ({ well }) => {
   const [items, setItems] = useState<{ name: string; address: string }[]>([]);
   const [wellFunctionName, setWellFunctionName] = useState<string>("");
 
-  const implementationAddress = implementations?.[well.address];
+  const implementationAddress = implementations?.[well.address.toLowerCase()];
 
   const wellTokenDetail = well.tokens
     ?.map((token) => token.symbol)
@@ -231,6 +231,7 @@ const Link = styled.a`
   font-weight: 600;
   text-decoration: underline;
   text-decoration-thickness: 0.5px;
+  color: black;
 
   :link {
     color: black;

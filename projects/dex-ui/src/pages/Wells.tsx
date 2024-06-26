@@ -1,4 +1,4 @@
-import { TokenValue } from "@beanstalk/sdk";
+import { BeanstalkSDK, TokenValue } from "@beanstalk/sdk";
 import React, { useMemo, useState } from "react";
 import { Item } from "src/components/Layout";
 import { Page } from "src/components/Page";
@@ -25,10 +25,13 @@ import { useTokenPrices } from "src/utils/price/useTokenPrices";
 import { useWellFunctionNames } from "src/wells/wellFunction/useWellFunctionNames";
 import { BasinAPIResponse } from "src/types";
 import { Well } from "@beanstalk/sdk-wells";
+import useSdk from "src/utils/sdk/useSdk";
 
 export const Wells = () => {
   const { data: wells, isLoading, error } = useWells();
-  const { data: wellStats } = useBasinStats();
+  const { data: wellStats = [] } = useBasinStats();
+  const sdk = useSdk();
+
   const [tab, showTab] = useState<number>(0);
 
   const { data: lpTokenPrices, isLoading: lpTokenPricesLoading } = useWellLPTokenPrice(wells);
@@ -38,8 +41,8 @@ export const Wells = () => {
   const { data: wellFnNames, isLoading: wellNamesLoading } = useWellFunctionNames(wells);
 
   const tableData = useMemo(
-    () => makeTableData(wells, wellStats, tokenPrices),
-    [tokenPrices, wellStats, wells]
+    () => makeTableData(sdk, wells, wellStats, tokenPrices),
+    [sdk, tokenPrices, wellStats, wells]
   );
 
   const loading = useLagLoading(
@@ -48,8 +51,7 @@ export const Wells = () => {
       positionsLoading ||
       lpTokenPricesLoading ||
       tokenPricesLoading ||
-      wellNamesLoading ||
-      !tableData.length
+      wellNamesLoading
   );
 
   if (error) {
@@ -97,7 +99,7 @@ export const Wells = () => {
           </THead>
         )}
         <TBody>
-          {loading ? (
+          {loading || !tableData.length ? (
             <>
               {Array(5)
                 .fill(null)
@@ -157,13 +159,14 @@ export const Wells = () => {
 };
 
 const makeTableData = (
+  sdk: BeanstalkSDK,
   wells?: Well[],
   stats?: BasinAPIResponse[],
   tokenPrices?: Record<string, TokenValue>
 ) => {
   if (!wells || !wells.length || !tokenPrices) return [];
 
-  const statsByPoolId = (stats || []).reduce<Record<string, BasinAPIResponse>>(
+  const statsByPoolId = (stats ?? []).reduce<Record<string, BasinAPIResponse>>(
     (prev, curr) => ({ ...prev, [curr.pool_id.toLowerCase()]: curr }),
     {}
   );
@@ -205,8 +208,30 @@ const makeTableData = (
     };
   });
 
-  return data;
+  const whitelistedSort = data.sort(getSortByWhitelisted(sdk));
+
+  const sortedByLiquidity = whitelistedSort.sort((a, b) => {
+    if (!a.liquidityUSD) return 1;
+    if (!b.liquidityUSD) return -1;
+
+    const diff = a.liquidityUSD.sub(b.liquidityUSD);
+    if (diff.eq(0)) return 0;
+    return diff.gt(0) ? -1 : 1;
+  });
+
+  return sortedByLiquidity;
 };
+
+const getSortByWhitelisted =
+  (sdk: BeanstalkSDK) =>
+  <T extends { well: Well }>(a: T, b: T) => {
+    const aWhitelisted = a.well.lpToken && sdk.tokens.isWhitelisted(a.well.lpToken);
+    const bWhitelisted = b.well.lpToken && sdk.tokens.isWhitelisted(b.well.lpToken);
+
+    if (aWhitelisted) return -1;
+    if (bWhitelisted) return 1;
+    return 0;
+  };
 
 const StyledTable = styled(Table)`
   overflow: auto;

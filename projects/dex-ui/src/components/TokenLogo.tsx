@@ -2,8 +2,8 @@ import { Token } from "@beanstalk/sdk";
 import React from "react";
 import { images } from "src/assets/images/tokens";
 import { size } from "src/breakpoints";
-import { useERC20TokenWithAddress } from "src/tokens/useERC20Token";
 import { FC } from "src/types";
+import { useTokenMetadata } from "src/utils/token/useTokenMetadata";
 import styled from "styled-components";
 
 type Props = {
@@ -13,14 +13,15 @@ type Props = {
   isLP?: boolean;
 };
 
-export const TokenLogo: FC<Props> = ({ size, mobileSize, token: _token, isLP = false }) => {
-  const { data: token } = useERC20TokenWithAddress(_token?.address);
+export const TokenLogo: FC<Props> = ({ size, mobileSize, token: token, isLP = false }) => {
+  const metadata = useTokenMetadata(token?.address);
+
   const symbol = token?.symbol ? token?.symbol : isLP ? "LP" : "DEFAULT";
 
-  let image = token?.logo ?? images[symbol];
+  let image = images[symbol] || metadata?.logo;
 
-  if (isLP && token?.logo?.includes("DEFAULT")) {
-      image = images.LP;
+  if (isLP) {
+    image = images.LP;
   }
 
   if (!image) {
@@ -28,7 +29,12 @@ export const TokenLogo: FC<Props> = ({ size, mobileSize, token: _token, isLP = f
   }
 
   return (
-    <Container width={size} height={size} mobileWidth={mobileSize || size} mobileHeight={mobileSize || size}>
+    <Container
+      width={size}
+      height={size}
+      mobileWidth={mobileSize || size}
+      mobileHeight={mobileSize || size}
+    >
       <img src={image} alt={`${token?.symbol} Logo`} />
     </Container>
   );
@@ -51,6 +57,7 @@ const Container = styled.div<ContainerProps>`
   img {
     width: ${(props) => props.width}px;
     height: ${(props) => props.height}px;
+    border-radius: 50%;
   }
 
   @media (max-width: ${size.mobile}) {
@@ -59,6 +66,7 @@ const Container = styled.div<ContainerProps>`
     img {
       width: ${(props) => props.mobileWidth}px;
       height: ${(props) => props.mobileHeight}px;
+      border-radius: 50%;
     }
   }
 `;
