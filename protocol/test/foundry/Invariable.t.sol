@@ -18,7 +18,7 @@ contract InvariableTest is TestHelper {
 
     function setUp() public {
         initializeBeanstalkTestState(true, true);
-        MockToken(C.WETH).mint(BEANSTALK, 1e18);
+        MockToken(C.WETH).mint(BEANSTALK, 100_000);
         
         siloUsers = createUsers(3);
         initializeUnripeTokens(siloUsers[0], 100e6, 100e18);
@@ -30,24 +30,57 @@ contract InvariableTest is TestHelper {
     }
 
     /**
-     * @notice Violates fundsSafu invariant and confirms reversion.
+     * @notice Violates fundsSafu invariant through manipulation of internal and external assets.
      */
     function test_fundsSafu(uint256 theftAmount) public {
         theftAmount = bound(theftAmount, 1, bean.balanceOf(BEANSTALK));
 
+        // Advanced farm call containing one exploit call. Will be checked against  fundsSafu.
         IMockFBeanstalk.AdvancedFarmCall[]
-            memory advancedFarmCalls = new IMockFBeanstalk.AdvancedFarmCall[](2);
+            memory advancedFarmCalls = new IMockFBeanstalk.AdvancedFarmCall[](1);
+
         // Steal Bean from contract balance.
         advancedFarmCalls[0] = IMockFBeanstalk.AdvancedFarmCall(
             abi.encodeWithSelector(MockAttackFacet.stealBeans.selector, theftAmount),
             abi.encode("")
         );
-        // Execute any external facing function invoking the invariant check.
-        advancedFarmCalls[1] = IMockFBeanstalk.AdvancedFarmCall(
-            abi.encodeWithSelector(ClaimFacet.plant.selector),
+        vm.expectRevert("INV: Insufficient token balance");
+        vm.prank(siloUsers[1]);
+        bs.advancedFarm(advancedFarmCalls);
+
+
+        // Manipulate user internal balance.
+        advancedFarmCalls[0] = IMockFBeanstalk.AdvancedFarmCall(
+            abi.encodeWithSelector(MockAttackFacet.exploitUserInternalTokenBalance.selector),
             abi.encode("")
         );
+        vm.expectRevert("INV: Insufficient token balance");
+        vm.prank(siloUsers[1]);
+        bs.advancedFarm(advancedFarmCalls);
 
+        // Malicious send of user tokens internally.
+        advancedFarmCalls[0] = IMockFBeanstalk.AdvancedFarmCall(
+            abi.encodeWithSelector(MockAttackFacet.exploitUserSendTokenInternal.selector),
+            abi.encode("")
+        );
+        vm.expectRevert("INV: Insufficient token balance");
+        vm.prank(siloUsers[1]);
+        bs.advancedFarm(advancedFarmCalls);
+
+        // Exploit Fertilizer index.
+        advancedFarmCalls[0] = IMockFBeanstalk.AdvancedFarmCall(
+            abi.encodeWithSelector(MockAttackFacet.exploitFertilizer.selector),
+            abi.encode("")
+        );
+        vm.expectRevert("INV: Insufficient token balance");
+        vm.prank(siloUsers[1]);
+        bs.advancedFarm(advancedFarmCalls);
+        
+        // Exploit Flood plenty.
+        advancedFarmCalls[0] = IMockFBeanstalk.AdvancedFarmCall(
+            abi.encodeWithSelector(MockAttackFacet.exploitSop.selector),
+            abi.encode("")
+        );
         vm.expectRevert("INV: Insufficient token balance");
         vm.prank(siloUsers[1]);
         bs.advancedFarm(advancedFarmCalls);
