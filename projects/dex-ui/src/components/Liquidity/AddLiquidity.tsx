@@ -18,8 +18,6 @@ import { size } from "src/breakpoints";
 import { LoadingTemplate } from "src/components/LoadingTemplate";
 import { ActionWalletButtonWrapper } from "src/components/Wallet";
 import { useTokenPrices } from "src/utils/price/useTokenPrices";
-import { useTokenBalance } from "src/tokens/useTokenBalance";
-import { useTokenAllowance } from "src/tokens/useTokenAllowance";
 import { PriceLookups } from "src/utils/price/priceLookups";
 
 type BaseAddLiquidityProps = {
@@ -69,8 +67,6 @@ const AddLiquidityContent = ({
 
   const inputs = Object.values(amounts);
 
-  // Derived
-
   /// Queries
   const { reserves: wellReserves, refetch: refetchWellReserves } = useWellReserves(well);
   const { data: prices = [] } = useTokenPrices(well, {
@@ -78,25 +74,24 @@ const AddLiquidityContent = ({
     staleTime: 15 * 1000,
     refetchOnWindowFocus: "always",
     select: (data) => {
-      if (!token1?.address || !token2?.address) return [];
-      return [data[token1.address], data[token2.address]];
+      return [data[token1.symbol] || null, data[token2.symbol] || null];
     }
   });
-  const { data: token1Balance } = useTokenBalance(token1);
-  const { data: token2Balance } = useTokenBalance(token2);
-
-  const { data: token1Allowance } = useTokenAllowance(token1, "");
-  const { data: token2Allowance } = useTokenAllowance(token2, "");
 
   // Indexed in the same order as well.tokens
   const [tokenAllowance, setTokenAllowance] = useState<boolean[]>([]);
 
   const canFetchPrice1 = !!(token1 && token1.symbol in PriceLookups);
   const canFetchPrice2 = !!(token2 && token2.symbol in PriceLookups);
-  const balancedInputAvailable = canFetchPrice1 && canFetchPrice2 && prices.length === 2;
+  const canFetchPrices = Boolean(canFetchPrice1 && canFetchPrice2 && prices.length === 2);
 
-  const wellHasBothNonZeroReserves = well.reserves?.every((reserve) => reserve.gt(0));
-  const hasBothNonZero = inputs.every((amt) => amt.gt(0));
+  const someWellReservesEmpty = Boolean(wellReserves && wellReserves.some((reserve) => reserve.eq(0)));
+  const areSomeInputsZero = Boolean(inputs.some((amt) => amt.value.eq("0")));
+
+  useEffect(() => {
+    console.log({ someWellReservesEmpty, areSomeInputsZero });
+    
+  }, [someWellReservesEmpty, areSomeInputsZero])
 
   const atLeastOneAmountNonZero = useMemo(() => {
     if (!well.tokens || well.tokens.length === 0) return false;
@@ -217,16 +212,16 @@ const AddLiquidityContent = ({
     queryKey: ["wells", "quote", "addliquidity", address, amounts, allTokensHaveMinAllowance],
 
     queryFn: async () => {
-      if (!atLeastOneAmountNonZero) {
+      if ((someWellReservesEmpty && areSomeInputsZero) || !atLeastOneAmountNonZero) {
         setShowQuoteDetails(false);
         return null;
       }
-
       try {
         let quote;
         let estimate;
         let gas;
         quote = await well.addLiquidityQuote(inputs);
+        console.log("quote: ", quote.toHuman());
 
         if (allTokensHaveMinAllowance && tokenAllowance.length) {
           if (useNativeETH) {
@@ -235,18 +230,15 @@ const AddLiquidityContent = ({
           } else {
             estimate = await well.addLiquidityGasEstimate(inputs, quote, address);
           }
+          
         } else {
           estimate = TokenValue.ZERO;
         }
-        if (quote.gt(0)) {
-          // setShowQuoteDetails(true);
-        }
+
+        setShowQuoteDetails(true);
+        
         gas = estimate;
-        return {
-          quote,
-          gas,
-          estimate
-        };
+        return { quote, gas, estimate };
       } catch (error: any) {
         Log.module("addliquidity").error("Error during quote: ", (error as Error).message);
         return null;
@@ -323,22 +315,17 @@ const AddLiquidityContent = ({
 
   const handleBalancedInputChange = useCallback(
     (index: number) => (amount: TokenValue) => {
-      if (!balancedInputAvailable || !prices) {
+      if (!canFetchPrices || !prices) {
         setAmounts({ ...amounts, [index]: amount });
+        console.log("inbalanced mode...");
         return;
       }
       const amountInUSD = amount.mul(prices[index] || TokenValue.ZERO);
       let _amounts = [];
       for (let i = 0; i < prices.length; i++) {
         if (i !== index) {
-          const conversion =
-            prices[i] && prices[i]?.gt(TokenValue.ZERO)
-              ? amountInUSD.div(prices[i]!)
-              : TokenValue.ZERO;
-          const conversionFormatted = TokenValue.fromHuman(
-            conversion.humanString,
-            well.tokens![i].decimals
-          );
+          const conversion = prices[i] && prices[i]?.gt(TokenValue.ZERO) ? amountInUSD.div(prices[i]!) : TokenValue.ZERO;
+          const conversionFormatted = TokenValue.fromHuman(conversion.humanString, well.tokens![i].decimals);
           _amounts[i] = conversionFormatted;
         } else {
           _amounts[i] = amount;
@@ -346,7 +333,7 @@ const AddLiquidityContent = ({
       }
       setAmounts(Object.assign({}, _amounts));
     },
-    [amounts, balancedInputAvailable, prices, well.tokens]
+    [amounts, canFetchPrices, prices, well.tokens]
   );
 
   const toggleBalanceMode = useCallback(() => {
@@ -411,10 +398,10 @@ const AddLiquidityContent = ({
   const buttonLabel = useMemo(() => {
     if (!address) return "Connect Wallet";
     if (!hasEnoughBalance) return "Insufficient Balance";
-    if (wellHasBothNonZeroReserves && !hasBothNonZero) return "Both Amounts Required";
+    if (someWellReservesEmpty && areSomeInputsZero) return "Both Amounts Required";
     if (!atLeastOneAmountNonZero) return "Enter Amount(s)";
     return "Add Liquidity";
-  }, [atLeastOneAmountNonZero, hasEnoughBalance, address, wellHasBothNonZeroReserves, hasBothNonZero]);
+  }, [atLeastOneAmountNonZero, hasEnoughBalance, address, someWellReservesEmpty, areSomeInputsZero]);
 
   return (
     <div>
@@ -433,7 +420,7 @@ const AddLiquidityContent = ({
                 }
                 amount={amounts[index]}
                 onAmountChange={
-                  balancedMode && balancedInputAvailable
+                  balancedMode && canFetchPrices
                     ? handleBalancedInputChange(index)
                     : handleImbalancedInputChange(index)
                 }
@@ -443,7 +430,7 @@ const AddLiquidityContent = ({
             ))}
           </TokenListContainer>
           <div>
-            {balancedInputAvailable && (
+            {canFetchPrices && (
               <Checkbox
                 label={"Add tokens in balanced proportion"}
                 checked={balancedMode}

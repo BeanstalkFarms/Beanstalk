@@ -45,7 +45,7 @@ export const useWellLPTokenPrice = (params: Well | Well[] | undefined) => {
 
       if (well && tokens && lpToken) {
         const wellReserveValues = reserves.map((reserve, rIdx) =>
-          reserve.mul(prices[tokens[rIdx].address] || TokenValue.ZERO)
+          reserve.mul(prices[tokens[rIdx].symbol] || TokenValue.ZERO)
         );
         const wellTVL = wellReserveValues?.reduce((acc, val) => acc.add(val));
         lpTokenPrices[lpToken.address] =

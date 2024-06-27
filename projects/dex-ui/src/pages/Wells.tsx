@@ -180,8 +180,8 @@ const makeTableData = (
     const token2 = well.tokens?.[1];
 
     if (token1 && token2) {
-      const basePrice = tokenPrices[token1.address] || TokenValue.ZERO;
-      const targetPrice = tokenPrices[token2.address] || TokenValue.ZERO;
+      const basePrice = tokenPrices[token1.symbol] || TokenValue.ZERO;
+      const targetPrice = tokenPrices[token2.symbol] || TokenValue.ZERO;
 
       const reserve1 = well.reserves?.[0];
       const reserve2 = well.reserves?.[1];

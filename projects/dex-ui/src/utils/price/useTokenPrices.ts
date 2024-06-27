@@ -39,20 +39,16 @@ export const useTokenPrices = <K = AddressMap<TokenValue>>(
 
   const tokens = getTokens(params);
 
-  const tokenAddresses = tokens.map((token) => token.address);
+  const tokenSymbol = tokens.map((token) => token.symbol);
 
   const query = useQuery({
-    queryKey: queryKeys.tokenPrices(tokenAddresses),
+    queryKey: queryKeys.tokenPrices(tokenSymbol),
     queryFn: async () => {
       const pricesResult = await Promise.all(
         tokens.map((token) => {
           if (PriceLookups[token.symbol]) return getPrice(token, sdk);
 
-          Log.module("useTokenPrices").debug(
-            "No price lookup function for ",
-            token.symbol,
-            "... resolving with 0"
-          );
+          Log.module("useTokenPrices").debug("No price lookup function for ", token.symbol, "... resolving with 0");
           return Promise.resolve(token.fromHuman("0"));
         })
       );
@@ -60,7 +56,7 @@ export const useTokenPrices = <K = AddressMap<TokenValue>>(
       const addressToPriceMap = tokens.reduce<AddressMap<TokenValue>>((prev, curr, i) => {
         const result = pricesResult[i];
         if (result && result.gt(0)) {
-          prev[curr.address] = result;
+          prev[curr.symbol] = result;
         }
         return prev;
       }, {});
@@ -73,7 +69,7 @@ export const useTokenPrices = <K = AddressMap<TokenValue>>(
 
       return addressToPriceMap;
     },
-    enabled: !!params && !!tokenAddresses.length,
+    enabled: !!params && !!tokenSymbol.length,
     refetchInterval: 60 * 1000,
     staleTime: 60 * 1000,
     refetchOnWindowFocus: false,
