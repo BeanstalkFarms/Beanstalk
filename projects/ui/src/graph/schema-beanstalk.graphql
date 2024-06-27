@@ -225,6 +225,11 @@ enum AddDeposit_orderBy {
   token
 }
 
+enum Aggregation_interval {
+  day
+  hour
+}
+
 type Beanstalk {
   """ Array of the addresses for all active farmers in the silo """
   activeFarmers: [String!]!
@@ -2681,6 +2686,9 @@ enum Incentive_orderBy {
   protocol__slug
   protocol__subgraphVersion
 }
+
+"8 bytes signed integer\n"
+scalar Int8
 
 enum MarketStatus {
   ACTIVE
@@ -12716,6 +12724,9 @@ type Subscription {
   ): [WhitelistToken!]!
 }
 
+"A string representation of microseconds UNIX timestamp (16 digits)\n"
+scalar Timestamp
+
 type TokenYield {
   """Bean APY for season"""
   beanAPY: BigDecimal!
@@ -13756,6 +13767,9 @@ type _Block_ {
 
   """The block number"""
   number: Int!
+
+  """The hash of the parent block"""
+  parentHash: Bytes
 
   """Integer representation of the timestamp stored in blocks for the chain"""
   timestamp: Int

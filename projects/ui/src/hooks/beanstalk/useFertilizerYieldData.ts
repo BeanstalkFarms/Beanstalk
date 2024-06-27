@@ -14,7 +14,7 @@ export default function useFertilizerYieldData() {
     previousData,
     refetch,
   } = useFertilizerYieldQuery({
-    variables: { season: `${season.toString()}-720` },
+    variables: { season: season.toString() },
     fetchPolicy: 'network-only',
     notifyOnNetworkStatusChange: true,
   });

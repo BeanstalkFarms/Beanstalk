@@ -19,6 +19,5 @@ describe("Whitelisting", () => {
     handleDewhitelistToken(event);
 
     assert.fieldEquals("Bean", BEAN_ERC20.toHexString(), "pools", "[" + BEAN_WETH_CP2_WELL.toHexString() + "]");
-    assert.fieldEquals("Bean", BEAN_ERC20.toHexString(), "dewhitelistedPools", "[" + BEAN_3CRV.toHexString() + "]");
   });
 });

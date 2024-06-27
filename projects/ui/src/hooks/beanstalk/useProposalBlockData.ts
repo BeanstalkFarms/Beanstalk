@@ -2,29 +2,16 @@ import BigNumber from 'bignumber.js';
 import { useEffect, useMemo, useState } from 'react';
 import { ZERO_BN } from '~/constants';
 import { STALK } from '~/constants/tokens';
-import {
-  useAllVotesQuery,
-  useProposalVotingPowerQuery,
-} from '~/generated/graphql';
-import {
-  useBeanstalkContract,
-  useEnsReverseRecords,
-} from '~/hooks/ledger/useContract';
-import {
-  BIP_47_END_TIME,
-  BIP_BASE_MIN_QUORUM,
-  BOP_BASE_MIN_QUORUM,
-  GovProposalType,
-  GovSpace,
-  getQuorumPct,
-} from '~/lib/Beanstalk/Governance';
+import { useAllVotesQuery, useProposalVotingPowerQuery } from '~/generated/graphql';
+import { useBeanstalkContract, useEnsReverseRecords } from '~/hooks/ledger/useContract';
+import { GovSpace, getQuorumPct } from '~/lib/Beanstalk/Governance';
 import { getProposalTag, getProposalType, Proposal, tokenResult } from '~/util';
 import useTotalBeaNFTsMintedAtBlock from './useTotalBeaNFTsMintedAtBlock';
 
 type VoteData = {
-  voter: string;
-  choice: any;
-  vp?: number | undefined | null;
+  voter: string; 
+  choice: any; 
+  vp?: number | undefined | null
 };
 
 export type ProposalBlockData = {
@@ -95,46 +82,6 @@ function useTotalOutstandingAtBlock(proposal: Proposal) {
   }, [isNFT, loading, totalBeaNFTs, totalBeaNFTsLoading, totalStalk]);
 }
 
-function useMinQuorumRatio(
-  proposal: Proposal,
-  totalOutstanding: BigNumber | undefined
-) {
-  const tag = getProposalTag(proposal.title);
-  const type = getProposalType(tag);
-  const baseQuorumRatio = getQuorumPct(type); // undefined if there is no set quorum
-
-  const isBOP = type === GovProposalType.BOP;
-  const isBIP = type === GovProposalType.BIP;
-
-  const isAfterBIP47 = proposal.start > BIP_47_END_TIME;
-
-  if (!(isBOP || isBIP) || !isAfterBIP47 || !baseQuorumRatio) {
-    return baseQuorumRatio;
-  }
-
-  const { choices = [], scores = [] } = proposal;
-
-  const againstIndex = choices.indexOf('Against') ?? -1;
-
-  const againstAmount =
-    againstIndex >= 0 && scores.length - 1 >= againstIndex
-      ? scores[againstIndex]
-      : undefined;
-
-  if (againstAmount === undefined || !totalOutstanding) return undefined;
-
-  const baseMinQuorum = isBIP ? BIP_BASE_MIN_QUORUM : BOP_BASE_MIN_QUORUM;
-
-  const againstRatio = new BigNumber(againstAmount).div(totalOutstanding);
-
-  const minQuorum = BigNumber.min(
-    baseMinQuorum.plus(againstRatio),
-    baseQuorumRatio
-  );
-
-  return minQuorum.toNumber();
-}
-
 export default function useProposalBlockData(
   proposal: Proposal,
   account?: string
@@ -145,13 +92,12 @@ export default function useProposalBlockData(
   /// Proposal info
   const tag = getProposalTag(proposal.title);
   const type = getProposalType(tag);
+  const pctNeededForQuorum = getQuorumPct(type); // undefined if there is no set quorum
 
   const score =
     proposal.space.id === GovSpace.BeanSprout
       ? new BigNumber(proposal.scores_total || ZERO_BN)
-      : proposal.title.includes('BFCP-B-') &&
-          proposal.choices &&
-          proposal.choices[1].includes('Remove')
+      : proposal.title.includes("BFCP-B-") && proposal.choices && proposal.choices[1].includes("Remove")
         ? new BigNumber(proposal.scores[1])
         : new BigNumber(proposal.scores[0] || ZERO_BN);
 
@@ -169,7 +115,6 @@ export default function useProposalBlockData(
   });
 
   const [totalOutstanding, isLoading] = useTotalOutstandingAtBlock(proposal);
-  const ratioNeededForQuorum = useMinQuorumRatio(proposal, totalOutstanding);
 
   const votingPower = useMemo(
     () => (vpData?.vp?.vp ? new BigNumber(vpData.vp.vp) : undefined),
@@ -177,8 +122,8 @@ export default function useProposalBlockData(
   );
 
   const totalForQuorum =
-    ratioNeededForQuorum && totalOutstanding
-      ? totalOutstanding.times(ratioNeededForQuorum)
+    pctNeededForQuorum && totalOutstanding
+      ? totalOutstanding.times(pctNeededForQuorum)
       : undefined;
 
   const pctOfQuorum =
@@ -187,7 +132,7 @@ export default function useProposalBlockData(
   /// Votes
   const { data: voteData } = useAllVotesQuery({
     variables: {
-      proposal_id: proposal?.id.toLowerCase(),
+      proposal_id: proposal?.id.toLowerCase()
     },
     skip: !proposal?.id,
     context: { subgraph: 'snapshot' },
@@ -197,34 +142,30 @@ export default function useProposalBlockData(
 
   const votes = voteData?.votes as VoteData[];
 
-  const ens = useEnsReverseRecords();
-  const [votesWithEns, setVotesWithEns] = useState<
-    Array<VoteData & { ens: string }>
-  >([]);
+  const ens = useEnsReverseRecords()
+  const [votesWithEns, setVotesWithEns] = useState<Array<VoteData & { ens: string }>>([]);
   const [loadingEns, setLoadingEns] = useState(true);
 
   useMemo(() => {
-    (async () => {
-      if (!votes) return;
-      const voterAddresses = votes.map((vote) => vote.voter);
-      const names = voterAddresses
-        ? await ens.getNames(voterAddresses)
-        : undefined;
-      let votesEns;
-      if (names) {
-        votesEns = votes.map((vote, index) => ({
-          ...vote,
-          ens: names[index],
-        }));
-      } else {
-        votesEns = votes.map((vote) => ({
-          ...vote,
-          ens: '',
-        }));
-      }
-      setVotesWithEns(votesEns);
-      setLoadingEns(false);
-    })();
+      (async () => {
+        if (!votes) return
+        const voterAddresses = votes.map((vote) => vote.voter);
+        const names = voterAddresses ? await ens.getNames(voterAddresses) : undefined;
+        let votesEns;
+        if (names) {
+          votesEns = votes.map((vote, index) => ({
+            ...vote,
+            ens: names[index] 
+          }))
+        } else {
+          votesEns = votes.map((vote) => ({
+            ...vote,
+            ens: '' 
+          }))
+        };
+        setVotesWithEns(votesEns);
+        setLoadingEns(false);
+      })()
   }, [ens, votes]);
 
   return {
@@ -233,7 +174,7 @@ export default function useProposalBlockData(
       // Metadata
       tag,
       type,
-      pctForQuorum: ratioNeededForQuorum,
+      pctForQuorum: pctNeededForQuorum,
       // Proposal
       score,
       totalOutstanding,
@@ -242,7 +183,7 @@ export default function useProposalBlockData(
       // Account
       votingPower,
       // Votes
-      votes: votesWithEns || undefined,
+      votes: votesWithEns || undefined
     },
   };
 }

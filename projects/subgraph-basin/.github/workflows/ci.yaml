@@ -1,0 +1,40 @@
+name: Continuous Integration
+
+on: [push, pull_request]
+
+jobs:
+  compile:
+    runs-on: ubuntu-latest
+    name: Compile
+    steps:
+      - name: Check out source repository
+        uses: actions/checkout@v2
+      - name: Setup Node
+        uses: actions/setup-node@v2
+        with:
+          node-version: "16"
+      - name: Install The Graph CLI
+        run: npm install -g @graphprotocol/graph-cli
+      - name: Install dependencies
+        run: npm install
+        working-directory: "${{ matrix.value }}"
+
+      # Generate code and check for uncommitted changes
+      # https://github.com/marketplace/actions/check-uncommitted-changes
+      - name: Generate Subgraph Code
+        run: npm run codegen
+        working-directory: "${{ matrix.value }}"
+      - name: Check for uncommitted changes
+        id: check-changes
+        uses: mskri/check-uncommitted-changes-action@v1.0.1
+      - name: Evaluate if there are changes
+        if: steps.check-changes.outputs.outcome == failure()
+        run: echo "There are uncommitted changes - execute 'npm run codegen' locally and commit the generated files!"
+
+      - name: Build Subgraph
+        run: npm run build
+        working-directory: "${{ matrix.value }}"
+    # TODO: add matchstick test suite
+    #- name: Run Tests
+    #  run: npm run test
+    #  working-directory: "${{ matrix.value }}"

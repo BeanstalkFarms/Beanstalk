@@ -48,14 +48,14 @@ const PoolCard: FC<{
         </Row>
         <Row justifyContent="end" gap={0.6}>
           <Typography color="text.tertiary" variant="bodySmall">
-            {useTWA ? 'TWA deltaB:' : 'deltaB:'}
+            deltaB:
           </Typography>
           <Row gap={0.25}>
             {useTWA ? (
               <Typography variant="bodySmall">
                 {poolState?.twaDeltaB?.gte(0) ? '+' : ''}
                 {(poolState?.twaDeltaB || null) === null
-                  ? 'N/A'
+                  ? 'n/a'
                   : displayBN(poolState?.twaDeltaB || ZERO_BN, true)}
               </Typography>
             ) : (

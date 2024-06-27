@@ -40,7 +40,6 @@ const CSP = buildCSP({
     '*.coinbase.com', // Wallet: Coinbase
     '*.google-analytics.com',
     '*.doubleclick.net',
-    'https://gateway-arbitrum.network.thegraph.com', // Decentralized subgraph
   ],
   'style-src': [
     "'self'",

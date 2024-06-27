@@ -247,20 +247,12 @@ async function bipSeedGauge(mock = true, account = undefined, verbose = true) {
       "0x9f9962e4", // remove getSeedsPerToken
       "0x0b2939d1" // remove InVestingPeriod
     ],
-    libraryNames: [
-      "LibGauge",
-      "LibConvert",
-      "LibLockedUnderlying",
-      "LibIncentive",
-      "LibGerminate",
-      "LibSilo"
-    ],
+    libraryNames: ["LibGauge", "LibConvert", "LibLockedUnderlying", "LibIncentive", "LibGerminate"],
     facetLibraries: {
       SeasonFacet: ["LibGauge", "LibIncentive", "LibLockedUnderlying", "LibGerminate"],
       SeasonGettersFacet: ["LibLockedUnderlying"],
       ConvertFacet: ["LibConvert"],
-      UnripeFacet: ["LibLockedUnderlying"],
-      SiloFacet: ["LibSilo"]
+      UnripeFacet: ["LibLockedUnderlying"]
     },
     bip: false,
     object: !mock,

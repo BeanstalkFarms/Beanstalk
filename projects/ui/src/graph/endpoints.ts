@@ -3,7 +3,7 @@ export enum SGEnvironments {
   BF_DEV = 'bf-dev',
   BF_TEST = 'bf-test',
   BF_2_0_3 = 'bf-2.0.3',
-  DNET = 'dnet',
+  DNET_2_0_3 = 'dnet-2.0.3',
 }
 
 type SGEnvironment = {
@@ -20,9 +20,7 @@ export const SUBGRAPH_ENVIRONMENTS: Record<SGEnvironments, SGEnvironment> = {
     name: 'Beanstalk Farms / Production',
     subgraphs: {
       beanstalk: 'https://graph.node.bean.money/subgraphs/name/beanstalk',
-      bean: `https://gateway-arbitrum.network.thegraph.com/api/${
-        import.meta.env.VITE_THEGRAPH_API_KEY
-      }/subgraphs/id/Hqtmas8CJUHXwFf7acS2sjaTw6tvdNQM3kaz2CqtYM3V`,
+      bean: 'https://graph.node.bean.money/subgraphs/name/bean',
       beanft: 'https://graph.node.bean.money/subgraphs/name/beanft',
     },
   },
@@ -52,15 +50,13 @@ export const SUBGRAPH_ENVIRONMENTS: Record<SGEnvironments, SGEnvironment> = {
       beanft: 'https://graph.node.bean.money/subgraphs/name/beanft-dev',
     },
   },
-  [SGEnvironments.DNET]: {
-    name: 'Decentralized Network / v2.2.1',
+  [SGEnvironments.DNET_2_0_3]: {
+    name: 'Decentralized Network / v2.0.3',
     subgraphs: {
-      beanstalk: `https://gateway-arbitrum.network.thegraph.com/api/${
+      beanstalk: `https://gateway.thegraph.com/api/${
         import.meta.env.VITE_THEGRAPH_API_KEY
-      }/subgraphs/id/CQgB9aDyd13X6rUtJcCWr8KtFpGGRMifu1mM6k4xQ9YA`,
-      bean: `https://gateway-arbitrum.network.thegraph.com/api/${
-        import.meta.env.VITE_THEGRAPH_API_KEY
-      }/subgraphs/id/Hqtmas8CJUHXwFf7acS2sjaTw6tvdNQM3kaz2CqtYM3V`,
+      }/subgraphs/id/R9rnzRuiyDybfDsZfoM7eA9w8WuHtZKbroGrgWwDw1d`,
+      bean: 'https://graph.node.bean.money/subgraphs/name/bean', // fixme
       beanft: 'https://graph.node.bean.money/subgraphs/name/beanft-dev',
     },
   },

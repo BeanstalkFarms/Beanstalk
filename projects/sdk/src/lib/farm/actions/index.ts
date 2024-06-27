@@ -4,9 +4,6 @@ import { WrapEth } from "./WrapEth";
 import { UnwrapEth } from "./UnwrapEth";
 import { TransferToken } from "./TransferToken";
 import { Deposit } from "./Deposit";
-import { Convert } from "./Convert";
-import { Plant } from "./Plant";
-import { Mow } from "./Mow";
 import { WithdrawDeposits } from "./WithdrawDeposits";
 import { WithdrawDeposit } from "./WithdrawDeposit";
 import { ClaimWithdrawals } from "./ClaimWithdrawals";
@@ -20,7 +17,7 @@ import { RemoveLiquidityOneToken } from "./RemoveLiquidityOneToken";
 import { WellSwap } from "./WellSwap";
 import { WellShift } from "./WellShift";
 import { WellSync } from "./WellSync";
-import { UniswapV3Swap } from "./UniswapV3Swap";
+import { UniswapV3Swap } from "./UniswapV3Swap"; 
 import { DevDebug } from "./_DevDebug";
 
 export {
@@ -37,9 +34,6 @@ export {
 
   // Beanstalk: Silo
   Deposit,
-  Convert,
-  Plant,
-  Mow,
   WithdrawDeposits,
   WithdrawDeposit,
   ClaimWithdrawals,

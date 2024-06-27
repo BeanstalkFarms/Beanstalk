@@ -1,5 +1,4 @@
 import BigNumber from 'bignumber.js';
-import { ONE_BN } from '~/constants';
 
 export enum GovSpace {
   BeanstalkDAO = 'beanstalkdao.eth',
@@ -27,14 +26,9 @@ export enum GovProposalType {
 
 export const SNAPSHOT_SPACES = Object.values(GovSpace);
 
-/**
- * Quorum for BIPs and BOPs changed via BIP-47 in the following manner:
- * BIPs: 50% vote for -> Min(50%, (1/3 * 100)% + % votes against)
- * BOPs: 35% vote for => Min(50%, 25% + % votes against)
- */
 const QUORUM = {
   [GovProposalType.BIP]: 0.5,
-  [GovProposalType.BOP]: 0.5,
+  [GovProposalType.BOP]: 0.35,
   [GovProposalType.BFCP_A]: 0.25,
   [GovProposalType.BFCP_B]: 0.35,
   [GovProposalType.BFCP_C]: 0.25,
@@ -43,11 +37,6 @@ const QUORUM = {
   [GovProposalType.BNP]: 0.15,
   [GovProposalType.FILL]: -1,
 };
-
-export const BIP_BASE_MIN_QUORUM = ONE_BN.div(3);
-export const BOP_BASE_MIN_QUORUM = ONE_BN.div(4);
-
-export const BIP_47_END_TIME = 1717034400;
 
 /// Reverse Map of GovProposalType
 const GovProposalTypeMap = {
@@ -69,7 +58,7 @@ export const getGovTypeByTag = (tag: string) => {
   return GovProposalType.FILL;
 };
 
-const getHasQuorum = (type: string) => type !== GovProposalType.FILL;
+export const getHasQuorum = (type: string) => type !== GovProposalType.FILL;
 
 export const getQuorumPct = (type: string) => {
   if (type in QUORUM && getHasQuorum(type)) {
