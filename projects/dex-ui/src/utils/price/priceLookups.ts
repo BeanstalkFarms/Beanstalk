@@ -15,6 +15,7 @@ import { Log } from "../logger";
 const ETH_USD = "0x5f4ec3df9cbd43714fe2740f5e3616155c5b8419";
 const USDC_USD = "0x8fffffd4afb6115b954bd326cbe7b4ba576818f6";
 const DAI_USD = "0xaed0c38402a5d19df6e4c03f4e2dced6e29c1ee9";
+const USDT_USD = "0x3E7d1eAB13ad0104d2750B8863b489D65364e32D";
 
 const chainlinkLookup = (address: string) => async (sdk: BeanstalkSDK) => {
   Log.module("price").debug(`Fetching ${sdk.tokens.findByAddress(address)?.symbol || address} price`);
@@ -37,5 +38,6 @@ export const PriceLookups: Record<string, (sdk: BeanstalkSDK) => Promise<TokenVa
   ETH: memoize(chainlinkLookup(ETH_USD), PRICE_EXPIRY_TIMEOUT),
   WETH: memoize(chainlinkLookup(ETH_USD), PRICE_EXPIRY_TIMEOUT),
   USDC: memoize(chainlinkLookup(USDC_USD), PRICE_EXPIRY_TIMEOUT),
-  DAI: memoize(chainlinkLookup(DAI_USD), PRICE_EXPIRY_TIMEOUT)
+  DAI: memoize(chainlinkLookup(DAI_USD), PRICE_EXPIRY_TIMEOUT),
+  // USDT: memoize(chainlinkLookup(USDT_USD), PRICE_EXPIRY_TIMEOUT),
 };

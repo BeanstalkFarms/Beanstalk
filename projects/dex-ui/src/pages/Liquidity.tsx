@@ -61,6 +61,8 @@ export const Liquidity = () => {
     return <Error message={error?.message} errorOnly />;
   }
 
+  const nonEmptyReserves = well && well?.reserves?.some((reserve) => reserve.gt(0));
+
   return (
     <Page>
       <ContentWrapper>
@@ -116,7 +118,7 @@ export const Liquidity = () => {
               </TabButton>
             </Item>
             <Item stretch>
-              <TabButton onClick={() => setTab(1)} active={tab === 1} stretch bold justify hover>
+              <TabButton onClick={() => setTab(1)} active={tab === 1} stretch bold justify hover disabled={!nonEmptyReserves}>
                 <LoadingItem loading={loading} onLoading={<>{""}</>}>
                   <span>Remove Liquidity</span>
                 </LoadingItem>
@@ -132,7 +134,7 @@ export const Liquidity = () => {
               handleSlippageValueChange={handleSlippageValueChange}
             />
           )}
-          {tab === 1 && (
+          {tab === 1 && nonEmptyReserves && (
             <RemoveLiquidity
               well={well}
               loading={loading}

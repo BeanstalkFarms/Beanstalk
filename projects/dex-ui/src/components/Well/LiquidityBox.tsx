@@ -89,7 +89,12 @@ export const LiquidityBox: FC<Props> = ({ well: _well, loading }) => {
                     content={
                       <div className="tooltip-content">
                         BEANETH LP token holders can Deposit their LP tokens in the{" "}
-                        <a className="underline" href="https://app.bean.money/#/silo" target="_blank" rel="noopener noreferrer">
+                        <a
+                          className="underline"
+                          href="https://app.bean.money/#/silo"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
                           Beanstalk Silo
                         </a>
                         &nbsp;for yield.
@@ -115,11 +120,17 @@ export const LiquidityBox: FC<Props> = ({ well: _well, loading }) => {
                   <Tooltip
                     content={
                       <div className="tooltip-content">
-                        <a className="underline" href="https://app.bean.money/#/balances" target="_blank" rel="noopener noreferrer">
+                        <a
+                          className="underline"
+                          href="https://app.bean.money/#/balances"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
                           Farm Balances
                         </a>
-                        &nbsp;allow Beanstalk users to hold assets in the protocol on their behalf. Using Farm Balances can reduce gas costs
-                        and facilitate efficient movement of assets within Beanstalk.
+                        &nbsp;allow Beanstalk users to hold assets in the protocol on their behalf.
+                        Using Farm Balances can reduce gas costs and facilitate efficient movement
+                        of assets within Beanstalk.
                       </div>
                     }
                     offsetX={-40}
@@ -161,10 +172,10 @@ export const LiquidityBox: FC<Props> = ({ well: _well, loading }) => {
                   </Breakdown>
                 }
               >
-                <>USD TOTAL: {formatUSD(USDTotal)}</>
+                <>USD TOTAL: {USDTotal.gt(0) ? formatUSD(USDTotal) : "$--"}</>
               </Tooltip>
             ) : (
-              <>USD TOTAL: {formatUSD(USDTotal)}</>
+              <>USD TOTAL: {USDTotal.gt(0) ? formatUSD(USDTotal) : "$--"}</>
             )}
           </LoadingItem>
         </USDWrapper>
