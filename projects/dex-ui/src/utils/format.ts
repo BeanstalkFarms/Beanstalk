@@ -13,11 +13,18 @@ export const formatNum = (
     defaultValue?: string;
     minDecimals?: number;
     maxDecimals?: number;
+    minValue?: number;
   }
 ) => {
   if (val === undefined || val === null) return options?.defaultValue || "-.--";
 
   const normalised = val instanceof TokenValue ? val.toHuman() : val.toString();
+
+  const num = Number(normalised);
+
+  if (options?.minValue && num > 0 && num < options.minValue) {
+    return `<${options.minValue}`
+  }
 
   return Number(normalised).toLocaleString("en-US", {
     minimumFractionDigits: options?.minDecimals || 0,

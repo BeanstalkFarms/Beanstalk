@@ -50,7 +50,7 @@ export const Reserves: FC<ReservesProps> = ({ reserves, well, twaReserves }) => 
       <Wrapper>
         <TokenLogo token={r.token} size={16} mobileSize={16} />
         <TextNudge amount={2}>
-          <Amount>{formatNum(r.amount, { minDecimals: 2 })}</Amount>
+          <Amount>{formatNum(r.amount, { minDecimals: 2, minValue: 0.001 })}</Amount>
         </TextNudge>
         {!noPriceData ? (
           <TextNudge amount={2}>
