@@ -55,8 +55,8 @@ export const TokenPicker: FC<TokenPickerProps> = ({ token, excludeToken, editabl
 
   return (
     <>
-      <Button 
-        editable={editable} 
+      <Button
+        editable={editable}
         onClick={(e) => {
           // prevent the click event from bubbling up to the parent and stop any form submission
           e.preventDefault();
@@ -75,11 +75,21 @@ export const TokenPicker: FC<TokenPickerProps> = ({ token, excludeToken, editabl
         {editable && <ChevronDown width={8} color="#adadad" />}
       </Button>
       {modalOpen && (
-        <DesktopModal id="modal-background" onClick={closeModal} role="dialog" aria-labelledby="dialog-title">
+        <DesktopModal
+          id="modal-background"
+          onClick={closeModal}
+          role="dialog"
+          aria-labelledby="dialog-title"
+        >
           <ModalContainer id="modal" data-trace="true">
             <ModalHeader>
               <div id="dialog-title">Select a token</div>
-              <ImageButton src={x} alt="Close token selector modal" size={10} onClick={closeModal} />
+              <ImageButton
+                src={x}
+                alt="Close token selector modal"
+                size={10}
+                onClick={closeModal}
+              />
             </ModalHeader>
             <ModalContent>
               <Ol>
@@ -90,7 +100,11 @@ export const TokenPicker: FC<TokenPickerProps> = ({ token, excludeToken, editabl
                       <Symbol>{token.symbol}</Symbol>
                       <Name>{token.displayName}</Name>
                     </Details>
-                    {balancesLoading || isFetching ? <Spinner size={14} /> : <Balance>{balances?.[token.symbol]?.toHuman()}</Balance>}
+                    {balancesLoading || isFetching ? (
+                      <Spinner size={14} />
+                    ) : (
+                      <Balance>{balances?.[token.symbol]?.toHuman()}</Balance>
+                    )}
                   </TokenRow>
                 ))}
               </Ol>
@@ -108,7 +122,11 @@ export const TokenPicker: FC<TokenPickerProps> = ({ token, excludeToken, editabl
           {connectorFor === "output-amount" && (
             <OutConnector>
               <svg xmlns="http://www.w3.org/2000/svg" width={48} height={184} fill="none">
-                <path id="line" stroke="#46B955" d="M-1 171H21a3 3 0 0 0 3-3V5a3 3 0 0 1 3-3h20.5" />
+                <path
+                  id="line"
+                  stroke="#46B955"
+                  d="M-1 171H21a3 3 0 0 0 3-3V5a3 3 0 0 1 3-3h20.5"
+                />
                 <path fill="#F9F8F6" stroke="#3E404B" d="M48.5 5.45a2.5 2.5 0 0 1 0-4.9v4.9Z" />
                 <path fill="#F9F8F6" stroke="#46B955" d="M0 167.55a2.502 2.502 0 0 1 0 4.9v-4.9Z" />
               </svg>
@@ -116,24 +134,34 @@ export const TokenPicker: FC<TokenPickerProps> = ({ token, excludeToken, editabl
           )}
         </DesktopModal>
       )}
-      <MobileDrawer>
-        <BottomDrawer showDrawer={modalOpen} headerText={"Select a token"} toggleDrawer={setModalOpen}>
-          <ModalContent>
-            <Ol>
-              {list.map((token: Token) => (
-                <TokenRow key={token.symbol} onClick={() => selectToken(token)}>
-                  <TokenLogo token={token} size={25} />
-                  <Details>
-                    <Symbol>{token.symbol}</Symbol>
-                    <Name>{token.displayName}</Name>
-                  </Details>
-                  {balancesLoading || isFetching ? <Spinner size={14} /> : <Balance>{balances?.[token.symbol]?.toHuman("short")}</Balance>}
-                </TokenRow>
-              ))}
-            </Ol>
-          </ModalContent>
-        </BottomDrawer>
-      </MobileDrawer>
+      {modalOpen && (
+        <MobileDrawer>
+          <BottomDrawer
+            showDrawer={modalOpen}
+            headerText={"Select a token"}
+            toggleDrawer={setModalOpen}
+          >
+            <ModalContent>
+              <Ol>
+                {list.map((token: Token) => (
+                  <TokenRow key={token.symbol} onClick={() => selectToken(token)}>
+                    <TokenLogo token={token} size={25} />
+                    <Details>
+                      <Symbol>{token.symbol}</Symbol>
+                      <Name>{token.displayName}</Name>
+                    </Details>
+                    {balancesLoading || isFetching ? (
+                      <Spinner size={14} />
+                    ) : (
+                      <Balance>{balances?.[token.symbol]?.toHuman("short")}</Balance>
+                    )}
+                  </TokenRow>
+                ))}
+              </Ol>
+            </ModalContent>
+          </BottomDrawer>
+        </MobileDrawer>
+      )}
     </>
   );
 };

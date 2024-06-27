@@ -111,15 +111,13 @@ export const TokenInput: FC<TokenInput> = ({
           canChangeValue={!!canChangeValue}
           max={clamp ? balance?.[token.symbol] : undefined}
         />
-        {canChangeToken && (
-          <TokenPicker
-            token={token}
-            editable={canChangeToken}
-            onChange={handleTokenChange}
-            connectorFor={id}
-            excludeToken={excludeToken}
-          />
-        )}
+        <TokenPicker
+          token={token}
+          editable={canChangeToken}
+          onChange={handleTokenChange}
+          connectorFor={id}
+          excludeToken={excludeToken}
+        />
       </TopRow>
 
       {showBalance && (
