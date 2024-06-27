@@ -98,7 +98,9 @@ export const TokenPicker: FC<TokenPickerProps> = ({ token, excludeToken, editabl
                     <TokenLogo token={token} size={25} />
                     <Details>
                       <Symbol>{token.symbol}</Symbol>
-                      <Name>{token.displayName}</Name>
+                      <Name>
+                        {token.displayName === "UNKNOWN" ? token.name : token.displayName}
+                      </Name>
                     </Details>
                     {balancesLoading || isFetching ? (
                       <Spinner size={14} />
