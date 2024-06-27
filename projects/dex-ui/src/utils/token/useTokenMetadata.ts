@@ -6,15 +6,16 @@ import { TokenMetadataResponse } from "alchemy-sdk";
 
 import useSdk from "../sdk/useSdk";
 import { useTokens } from "src/tokens/TokenProvider";
+import { useWells } from "src/wells/useWells";
 
 export const useTokenMetadata = (
   _address: string | undefined
 ): TokenMetadataResponse | undefined => {
   const address = _address?.toLowerCase() ?? "";
-
   const sdk = useSdk();
 
   const isValidAddress = Boolean(address && ethers.utils.isAddress(address));
+  const { data: wells } = useWells();
   const tokens = useTokens();
 
   const wellToken = useMemo(() => {
@@ -25,13 +26,17 @@ export const useTokenMetadata = (
     return sdk.tokens.findByAddress(address);
   }, [sdk, address]);
 
+  const well = wells?.find((well) => well.address.toLowerCase() === address.toLowerCase());
+
+  const tokenDataKnown = Boolean(well || wellToken || sdkToken);
+
   const query = useQuery({
     queryKey: ["token-metadata", address],
     queryFn: async () => {
       const token = await alchemy.core.getTokenMetadata(address ?? "");
       return token;
     },
-    enabled: !!address && isValidAddress && !sdkToken && !wellToken,
+    enabled: !!address && isValidAddress && !tokenDataKnown && !!wells?.length,
     // We never need to refetch this data
     staleTime: Infinity
   });

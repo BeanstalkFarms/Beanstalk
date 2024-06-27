@@ -18,7 +18,7 @@ export const TokenLogo: FC<Props> = ({ size, mobileSize, token: token, isLP = fa
 
   const symbol = token?.symbol ? token?.symbol : isLP ? "LP" : "DEFAULT";
 
-  let image = images[symbol] || metadata?.logo;
+  let image = token?.logo || images[symbol] || metadata?.logo;
 
   if (!image) {
     image = isLP ? images.LP : images.DEFAULT;
