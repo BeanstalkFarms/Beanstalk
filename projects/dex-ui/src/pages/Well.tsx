@@ -31,11 +31,15 @@ import { useIsMobile } from "src/utils/ui/useIsMobile";
 import { useLagLoading } from "src/utils/ui/useLagLoading";
 import { useBeanstalkSiloAPYs } from "src/wells/useBeanstalkSiloAPYs";
 import { useMultiFlowPumpTWAReserves } from "src/wells/useMultiFlowPumpTWAReserves";
+import { useBeanstalkSiloWhitelist } from "src/wells/useBeanstalkSiloWhitelist";
 
 export const Well = () => {
   const { well, loading: dataLoading, error } = useWellWithParams();
   const { isLoading: apysLoading } = useBeanstalkSiloAPYs();
   const { isLoading: twaLoading, getTWAReservesWithWell } = useMultiFlowPumpTWAReserves();
+  const { getIsWhitelisted } = useBeanstalkSiloWhitelist();
+
+  const isWhitelistedWell = getIsWhitelisted(well);
 
   const loading = useLagLoading(dataLoading || apysLoading || twaLoading);
 
@@ -310,13 +314,13 @@ export const Well = () => {
           </LearnMoreLabel>
           <LearnMoreButtons open={open}>
             <LoadingItem loading={loading} onLoading={<EmptyLearnItem />}>
-              <LearnYield />
+              <LearnYield isWhitelisted={isWhitelistedWell} />
             </LoadingItem>
             <LoadingItem loading={loading} onLoading={<EmptyLearnItem />}>
-              <LearnWellFunction name={wellFunctionName || "A Well Function"} />
+              <LearnWellFunction well={well} />
             </LoadingItem>
             <LoadingItem loading={loading} onLoading={<EmptyLearnItem />}>
-              <LearnPump />
+              <LearnPump well={well} />
             </LoadingItem>
           </LearnMoreButtons>
         </LearnMoreContainer>
