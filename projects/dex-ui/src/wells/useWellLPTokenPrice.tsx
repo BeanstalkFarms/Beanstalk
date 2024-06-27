@@ -1,11 +1,9 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useMemo } from "react";
 import { ERC20Token, TokenValue } from "@beanstalk/sdk";
 import { Well } from "@beanstalk/sdk/Wells";
-import useSdk from "src/utils/sdk/useSdk";
-import { getPrice } from "src/utils/price/usePrice";
 import { useTokenSupplyMany } from "src/tokens/useTokenSupply";
-
-type TokenMap<T> = Record<string, T>;
+import { AddressMap } from "src/types";
+import { useTokenPrices } from "src/utils/price/useTokenPrices";
 
 /**
  * LP Token Price is calculated as: TVL / total supply
@@ -13,10 +11,7 @@ type TokenMap<T> = Record<string, T>;
  * - TVL = (reserve1 amount  * token1 price ) + (reserve2 amount + token2 price)
  */
 
-export const useWellLPTokenPrice = (params: Well | (Well | undefined)[] | undefined) => {
-  const [lpTokenPriceMap, setLPTokenPriceMap] = useState<TokenMap<TokenValue>>({});
-  const sdk = useSdk();
-
+export const useWellLPTokenPrice = (params: Well | Well[] | undefined) => {
   const wells = useMemo(() => {
     // Make into array for easier processing
     if (!params) return [];
@@ -30,52 +25,39 @@ export const useWellLPTokenPrice = (params: Well | (Well | undefined)[] | undefi
     return _tokens;
   }, [wells]);
 
-  const { totalSupply: tokenSupplies } = useTokenSupplyMany(lpTokens);
+  const { totalSupply: tokenSupplies, loading } = useTokenSupplyMany(lpTokens);
+  const { data: prices, isLoading: tokenPricesLoading } = useTokenPrices(wells);
 
-  const fetchData = useCallback(async () => {
-    if (!wells || !tokenSupplies?.length) return;
-
-    const fetchTokenPrices = async () => {
-      const _tokenMap = wells.reduce<TokenMap<ERC20Token>>((memo, well) => {
-        if (!well || !well?.tokens) return memo;
-        well.tokens.forEach((token) => (memo[token.address] = token));
-        return memo;
-      }, {});
-
-      const tokenLyst = Object.entries(_tokenMap);
-
-      const prices = await Promise.all(tokenLyst.map(([, token]) => getPrice(token, sdk)));
-      const data = tokenLyst.reduce<TokenMap<TokenValue>>((memo, [tokenAddress], index) => {
-        memo[tokenAddress] = prices[index] || TokenValue.ZERO;
-        return memo;
-      }, {});
-      return data;
-    };
-
-    const tokenPriceMap = await fetchTokenPrices();
-
-    const lpTokenPrices: TokenMap<TokenValue> = {};
+  const lpTokenPrices = useMemo(() => {
+    if (!wells || !tokenSupplies?.length || !prices) return undefined;
+    const lpTokenPrices: AddressMap<TokenValue> = {};
 
     for (const wellIdx in wells) {
       const well = wells[wellIdx];
 
       const tokens = well?.tokens;
-      const reserves = well?.reserves && well.reserves.length === 2 ? well.reserves : [TokenValue.ZERO, TokenValue.ZERO];
+      const reserves =
+        well?.reserves && well.reserves.length === 2
+          ? well.reserves
+          : [TokenValue.ZERO, TokenValue.ZERO];
       const lpToken = well?.lpToken;
       const lpTokenSupply = tokenSupplies[wellIdx] || TokenValue.ONE;
 
       if (well && tokens && lpToken) {
-        const wellReserveValues = reserves.map((reserve, rIdx) => reserve.mul(tokenPriceMap[tokens[rIdx].address] || TokenValue.ZERO));
+        const wellReserveValues = reserves.map((reserve, rIdx) =>
+          reserve.mul(prices[tokens[rIdx].address] || TokenValue.ZERO)
+        );
         const wellTVL = wellReserveValues?.reduce((acc, val) => acc.add(val));
-        lpTokenPrices[lpToken.address] = wellTVL && lpTokenSupply.gt(0) ? wellTVL.div(lpTokenSupply) : TokenValue.ZERO;
+        lpTokenPrices[lpToken.address] =
+          wellTVL && lpTokenSupply.gt(0) ? wellTVL.div(lpTokenSupply) : TokenValue.ZERO;
       }
     }
-    setLPTokenPriceMap(lpTokenPrices);
-  }, [sdk, tokenSupplies, wells]);
 
-  useEffect(() => {
-    fetchData();
-  }, [fetchData]);
+    return lpTokenPrices;
+  }, [prices, tokenSupplies, wells]);
 
-  return { data: lpTokenPriceMap, fetch: fetchData } as const;
+  return {
+    data: lpTokenPrices,
+    isLoading: loading || tokenPricesLoading
+  };
 };

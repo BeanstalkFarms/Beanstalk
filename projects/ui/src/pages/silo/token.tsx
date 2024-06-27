@@ -9,7 +9,6 @@ import usePools from '~/hooks/beanstalk/usePools';
 import useWhitelist from '~/hooks/beanstalk/useWhitelist';
 import GuideButton from '~/components/Common/Guide/GuideButton';
 import {
-  HOW_TO_CLAIM_WITHDRAWALS,
   HOW_TO_CONVERT_DEPOSITS,
   HOW_TO_DEPOSIT_IN_THE_SILO,
   HOW_TO_TRANSFER_DEPOSITS,
@@ -27,7 +26,6 @@ const guides = [
   HOW_TO_CONVERT_DEPOSITS,
   HOW_TO_TRANSFER_DEPOSITS,
   HOW_TO_WITHDRAW_FROM_THE_SILO,
-  HOW_TO_CLAIM_WITHDRAWALS,
 ];
 
 const SILO_ACTIONS_MAX_WIDTH = '480px';
@@ -101,8 +99,8 @@ const TokenPage: FC<{}> = () => {
             label={
               <span>
                 This token was removed from the Deposit Whitelist in{' '}
-                <Link to="/governance/0x83227d95ec06039a920583b1002588efa89fa079692d8c4aebe097bbcc2aaea8">
-                  BIP-42
+                <Link to="/governance/0xec4d347918be45d2ec92de0c87a8802ab8e2017d17b5e5809c91a02ea6b9ae66">
+                  BIP-45
                 </Link>
                 . Farmers may no longer Deposit this token into the Silo. Any
                 Deposits before the upgrade can be Converted, Transfered or

@@ -110,14 +110,14 @@ const Whitelist: FC<{
           <Grid item md={2.25} xs={4}>
             <Typography color="text.secondary">Token</Typography>
           </Grid>
-          <Grid item md={1.25} xs={0} display={{ xs: 'none', md: 'block' }}>
+          <Grid item md={1} xs={0} display={{ xs: 'none', md: 'block' }}>
             <Tooltip title="The amount of Stalk and Seeds earned for each 1 Bean Denominated Value (BDV) Deposited in the Silo.">
               <Typography color="text.secondary">Rewards</Typography>
             </Tooltip>
           </Grid>
           <Grid
             item
-            md={2}
+            md={2.25}
             xs={0}
             display={{ xs: 'none', md: 'flex' }}
             justifyContent="center"
@@ -295,7 +295,7 @@ const Whitelist: FC<{
                           padding: '15px 10px',
                         }}
                         size="small"
-                        label="Removed from Deposit Whitelist in BIP-42"
+                        label="Removed from Deposit Whitelist in BIP-45"
                       />
                     )}
                   </Grid>
@@ -305,7 +305,7 @@ const Whitelist: FC<{
                      */
                     <Grid
                       item
-                      md={1.25}
+                      md={1}
                       xs={0}
                       display={{ xs: 'none', md: 'block' }}
                     >
@@ -344,29 +344,31 @@ const Whitelist: FC<{
                   {/**
                    * Cell: Bean APY
                    */}
-                  <Grid
-                    item
-                    md={2}
-                    xs={0}
-                    display={{ xs: 'none', md: 'flex' }}
-                    justifyContent="center"
-                  >
-                    <SiloAssetApyChip token={token} metric="bean" />
-                  </Grid>
-
+                  {!isDeprecated && (
+                    <Grid
+                      item
+                      md={2.25}
+                      xs={0}
+                      display={{ xs: 'none', md: 'flex' }}
+                      justifyContent="center"
+                    >
+                      <SiloAssetApyChip token={token} metric="bean" />
+                    </Grid>
+                  )}
                   {/**
                    * Cell: Stalk APY
                    */}
-                  <Grid
-                    item
-                    md={1.25}
-                    xs={0}
-                    display={{ xs: 'none', md: 'flex' }}
-                    justifyContent="center"
-                  >
-                    <SiloAssetApyChip token={token} metric="stalk" />
-                  </Grid>
-
+                  {!isDeprecated && (
+                    <Grid
+                      item
+                      md={1.25}
+                      xs={0}
+                      display={{ xs: 'none', md: 'flex' }}
+                      justifyContent="center"
+                    >
+                      <SiloAssetApyChip token={token} metric="stalk" />
+                    </Grid>
+                  )}
                   {/**
                    * Cell: TVD
                    */}

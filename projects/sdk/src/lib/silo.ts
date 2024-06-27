@@ -307,12 +307,15 @@ export class Silo {
         if (!stemTip) throw new Error(`No stem tip found for ${token.address}`);
 
         for (let stem in deposits) {
-          utils.applyDeposit(balance, token, stemTip, {
-            stem,
-            amount: deposits[stem].amount,
-            bdv: deposits[stem].bdv,
-            germinatingStem
-          });
+          // Filter dust crates - should help with crate balance too low errors
+          if (deposits[stem].amount.toString() !== "1") {
+            utils.applyDeposit(balance, token, stemTip, {
+              stem,
+              amount: deposits[stem].amount,
+              bdv: deposits[stem].bdv,
+              germinatingStem
+            });
+          };
         }
 
         utils.sortCrates(balance);
@@ -349,12 +352,15 @@ export class Silo {
         const stemTip = stemTips.get(token.address);
         if (!stemTip) throw new Error(`No stem tip found for ${token.address}`);
 
-        utils.applyDeposit(balance, token, stemTip, {
-          stem: deposit.stem || deposit.season,
-          amount: deposit.amount,
-          bdv: deposit.bdv,
-          germinatingStem
-        });
+        // Filter dust crates - should help with crate balance too low errors
+        if (BigNumber.from(deposit.amount).toString() !== "1") {
+          utils.applyDeposit(balance, token, stemTip, {
+            stem: deposit.stem || deposit.season,
+            amount: deposit.amount,
+            bdv: deposit.bdv,
+            germinatingStem
+          });
+        };
       });
 
       return utils.sortTokenMapByWhitelist(Silo.sdk.tokens.siloWhitelist, balances);

@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo } from 'react';
+import React, { useCallback, useEffect, useMemo } from 'react';
 import { AreaStack, Line, LinePath } from '@visx/shape';
 import { Group } from '@visx/group';
 
@@ -13,8 +13,9 @@ import {
 import { Box, Card, Stack, Typography } from '@mui/material';
 import ParentSize from '@visx/responsive/lib/components/ParentSize';
 import { BeanstalkPalette } from '~/components/App/muiTheme';
-
 import { displayBN } from '~/util';
+import useTokenMap from '~/hooks/chain/useTokenMap';
+import { SILO_WHITELIST } from '~/constants/tokens';
 import ChartPropProvider, {
   BaseChartProps,
   BaseDataPoint,
@@ -22,8 +23,6 @@ import ChartPropProvider, {
 } from './ChartPropProvider';
 import Row from '../Row';
 import { defaultValueFormatter } from './SeasonPlot';
-import useTokenMap from '~/hooks/chain/useTokenMap';
-import { SILO_WHITELIST } from '~/constants/tokens';
 
 type Props = {
   width: number;
@@ -40,6 +39,7 @@ const Graph = (props: Props) => {
     width,
     height,
     // props
+    useCustomTooltipNames,
     series,
     curve: _curve,
     keys,
@@ -97,7 +97,7 @@ const Graph = (props: Props) => {
   }, [data, series, width]);
 
   // tooltip
-  const { containerRef, containerBounds } = useTooltipInPortal({
+  const { containerRef, containerBounds, forceRefreshBounds } = useTooltipInPortal({
     scroll: true,
     detectBounds: true,
   });
@@ -110,6 +110,10 @@ const Graph = (props: Props) => {
     tooltipLeft = 0,
   } = useTooltip<BaseDataPoint | undefined>();
 
+  useEffect(() => {
+    forceRefreshBounds();
+  }, [forceRefreshBounds]);
+
   const handleMouseLeave = useCallback(() => {
     hideTooltip();
     onCursor?.(undefined);
@@ -120,6 +124,7 @@ const Graph = (props: Props) => {
       event: React.TouchEvent<HTMLDivElement> | React.MouseEvent<HTMLDivElement>
     ) => {
       if (series[0].length === 0) return;
+      forceRefreshBounds();
       const containerX =
         ('clientX' in event ? event.clientX : 0) - containerBounds.left;
       const containerY =
@@ -133,11 +138,13 @@ const Graph = (props: Props) => {
       onCursor?.(
         pointerData.season,
         getDisplayValue([pointerData]),
-        pointerData.date
+        pointerData.date,
+        pointerData
       );
     },
     [
       containerBounds,
+      forceRefreshBounds,
       getPointerValue,
       scales,
       series,
@@ -394,7 +401,7 @@ const Graph = (props: Props) => {
                                     }}
                                   />
                                   <Typography>
-                                    {siloTokens[key]?.symbol}
+                                    {useCustomTooltipNames ? useCustomTooltipNames[key] : siloTokens[key]?.symbol}
                                   </Typography>
                                 </Row>
                                 <Typography textAlign="right">

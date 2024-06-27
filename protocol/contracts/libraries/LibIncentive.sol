@@ -4,12 +4,9 @@ pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
 import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
-import {OracleLibrary} from "@uniswap/v3-periphery/contracts/libraries/OracleLibrary.sol";
-import {LibBeanEthWellOracle} from "contracts/libraries/Oracle/LibBeanEthWellOracle.sol";
 import {IBlockBasefee} from "../interfaces/IBlockBasefee.sol";
 import "@openzeppelin/contracts/math/Math.sol";
 import "../C.sol";
-import "./Curve/LibCurve.sol";
 
 /**
  * @title LibIncentive
@@ -19,6 +16,13 @@ import "./Curve/LibCurve.sol";
  */
 library LibIncentive {
     using SafeMath for uint256;
+
+    /**
+     * @notice Emitted when Beanstalk pays `beans` to `account` as a reward for calling `sunrise()`.
+     * @param account The address to which the reward Beans were sent
+     * @param beans The amount of Beans paid as a reward
+     */
+    event Incentivization(address indexed account, uint256 beans);
 
     /// @dev The time range over which to consult the Uniswap V3 ETH:USDC pool oracle. Measured in seconds.
     uint32 internal constant PERIOD = 1800; // 30 minutes
@@ -30,7 +34,7 @@ library LibIncentive {
     uint256 internal constant BASE_REWARD = 3e6; // 3 BEAN
 
     /// @dev Max BEAN reward for calling Sunrise.
-    uint256 internal constant MAX_REWARD = 100e6; // 100 BEAN
+    uint256 internal constant MAX_REWARD = 250e6; // 250 BEAN
 
     /// @dev Wei buffer to account for the priority fee.
     uint256 internal constant PRIORITY_FEE_BUFFER = 5e9; // 5e9 wei = 5 gwei
@@ -39,8 +43,8 @@ library LibIncentive {
     uint256 internal constant MAX_SUNRISE_GAS = 500_000; // 500k gas
 
     /// @dev Accounts for extra gas overhead for completing a Sunrise tranasaction.
-    // 21k gas (base cost for a transction) + ~79k gas for other overhead
-    uint256 internal constant SUNRISE_GAS_OVERHEAD = 100_000; // 100k gas
+    // 21k gas (base cost for a transction) + ~29 gas for other overhead
+    uint256 internal constant SUNRISE_GAS_OVERHEAD = 50_000; // 50k gas
 
     /// @dev Use external contract for block.basefee as to avoid upgrading existing contracts to solidity v8
     address private constant BASE_FEE_CONTRACT = 0x84292919cB64b590C0131550483707E43Ef223aC;
@@ -53,12 +57,14 @@ library LibIncentive {
     /**
      * @param initialGasLeft The amount of gas left at the start of the transaction
      * @param blocksLate The number of blocks late that {sunrise()} was called.
+     * @param beanEthPrice The Bean:Eth price calculated by the Minting Well. The amount of Beans per ETH.
      * @dev Calculates Sunrise incentive amount based on current gas prices and a computed
      * BEAN:ETH price. This function is called at the end of {sunriseTo()} after all
      * "step" functions have been executed.
      */
-    function determineReward(uint256 initialGasLeft, uint256 blocksLate)
-        internal
+    function determineReward(uint256 initialGasLeft, uint256 blocksLate, uint256 beanEthPrice)
+        external
+        view
         returns (uint256)
     {
 
@@ -67,9 +73,6 @@ library LibIncentive {
         if (blocksLate > MAX_BLOCKS_LATE) {
             blocksLate = MAX_BLOCKS_LATE;
         }
-
-        // Read the Bean / Eth price calculated by the Minting Well.
-        uint256 beanEthPrice = LibBeanEthWellOracle.getBeanEthWellPrice();
 
         // If the Bean Eth pool couldn't calculate a valid price, use the max reward value.
         if (beanEthPrice <= 1) {

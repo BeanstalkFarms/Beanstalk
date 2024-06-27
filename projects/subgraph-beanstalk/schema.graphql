@@ -73,6 +73,9 @@ type Season @entity {
   " Season number in Int form for sorting "
   season: Int!
 
+  " Block in which the season start was triggered by the sunrise call "
+  sunriseBlock: BigInt!
+
   " Block timestamp when sunrise was called "
   createdAt: BigInt!
 
@@ -1758,6 +1761,12 @@ type DewhitelistToken implements SiloEvent @entity(immutable: true) {
 type Germinating @entity {
   "Address-(EVEN|ODD)"
   id: ID!
+  "Address of the token or account which is germinating"
+  address: String!
+  "EVEN or ODD"
+  type: String!
+  "True when the address is a farmer account"
+  isFarmer: Boolean!
   "The season in which the germination started"
   season: Int!
   "Germinating stalk. This only applies to farmer/Beanstalk address"

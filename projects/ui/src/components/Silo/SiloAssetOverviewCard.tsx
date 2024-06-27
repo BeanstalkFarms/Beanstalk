@@ -40,11 +40,12 @@ const DepositRewards: FC<{ token: ERC20Token }> = ({ token }) => (
       </Row>
       {/* This vAPY chip is only shown on larger screens */}
       <Row sx={{ display: { xs: 'none', sm: 'block' } }}>
-        <SiloAssetApyChip
-          token={token as Token}
-          metric="bean"
-          variant="labeled"
-        />
+        {token.symbol === 'BEAN3CRV' ? null : 
+          <SiloAssetApyChip
+            token={token as Token}
+            metric="bean"
+            variant="labeled"
+          />}
       </Row>
     </Row>
   </Box>
@@ -118,14 +119,15 @@ const SiloAssetOverviewCard: FC<{ token: ERC20Token }> = ({ token }) => {
             justifyContent="center"
             sx={{ display: { xs: 'flex', sm: 'none' } }}
           >
-            <SiloAssetApyChip
-              token={token as Token}
-              metric="bean"
-              variant="labeled"
-            />
+            {token.symbol === 'BEAN3CRV' ? null : 
+              <SiloAssetApyChip
+                token={token as Token}
+                metric="bean"
+                variant="labeled"
+              />}
           </Row>
           {/* Card Carousel */}
-          <SiloCarousel token={token} />
+          {token.symbol === 'BEAN3CRV' ? null : <SiloCarousel token={token} />}
         </Stack>
       </ModuleContent>
     </Module>

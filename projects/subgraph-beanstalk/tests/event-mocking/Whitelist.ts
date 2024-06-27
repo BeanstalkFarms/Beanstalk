@@ -2,8 +2,9 @@ import { Address, BigInt, Bytes, ethereum } from "@graphprotocol/graph-ts";
 
 import { WhitelistToken as WhitelistToken_V2, DewhitelistToken } from "../../generated/Silo-Replanted/Beanstalk";
 import { WhitelistToken as WhitelistToken_V3 } from "../../generated/Silo-V3/Beanstalk";
-import { WhitelistToken as WhitelistToken_V4 } from "../../generated/BIP44-SeedGauge/Beanstalk";
+import { WhitelistToken as WhitelistToken_V4 } from "../../generated/BIP45-SeedGauge/Beanstalk";
 import { mockBeanstalkEvent } from "../../../subgraph-core/tests/event-mocking/Util";
+
 
 export function createWhitelistTokenV2Event(token: string, selector: string, seeds: BigInt, stalk: BigInt): WhitelistToken_V2 {
   let event = changetype<WhitelistToken_V2>(mockBeanstalkEvent());

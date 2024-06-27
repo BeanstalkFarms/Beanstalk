@@ -5,13 +5,17 @@ import { BEAN, SEEDS, SILO_WHITELIST, STALK } from '~/constants/tokens';
 import {
   FarmerSiloRewardsQuery,
   SeasonalInstantPriceQuery,
+  WhitelistTokenRewardsQuery,
 } from '~/generated/graphql';
 import {
+  // bnToTokenValue,
   secondsToDate,
-  STALK_PER_SEED_PER_SEASON,
   toTokenUnitsBN,
+  // tokenValueToBN,
 } from '~/util';
 import { BaseDataPoint } from '~/components/Common/Charts/ChartPropProvider';
+import { FarmerSiloTokenBalance } from '~/state/farmer/silo';
+import { BeanstalkSDK } from '@beanstalk/sdk';
 
 export type Snapshot = {
   id: string;
@@ -72,49 +76,81 @@ export const addBufferSeasons = (
  */
 export const interpolateFarmerStalk = (
   snapshots: FarmerSiloRewardsQuery['snapshots'],
+  whitelistSnapshots: WhitelistTokenRewardsQuery['snapshots'],
   season: BigNumber,
-  bufferSeasons: number = 24
+  bufferSeasons: number = 24,
+  farmerSiloBalances: TokenMap<FarmerSiloTokenBalance>,
+  sdk: BeanstalkSDK
 ) => {
   // Sequence
   let j = 0;
+  const siloWhitelist = sdk.tokens.siloWhitelist;
   const minSeason = snapshots[j].season;
   const maxSeason = season.toNumber(); // current season
   let currStalk: BigNumber = ZERO_BN;
   let currSeeds: BigNumber = ZERO_BN;
+  let currGrownStalk: BigNumber = ZERO_BN;
   let currTimestamp = DateTime.fromJSDate(
     secondsToDate(snapshots[j].createdAt)
   );
   let nextSeason: number | undefined = minSeason;
-
+  
   // Add buffer points before the first snapshot
   const stalk: BaseDataPoint[] = [];
   const seeds: BaseDataPoint[] = [];
+  const grownStalk: BaseDataPoint[] = [];
 
+  function getSeedsPerBdv(_season: number) {
+    let _output: BigNumber = ZERO_BN;
+    siloWhitelist.forEach((token) => {
+      if (farmerSiloBalances[token.address]) {
+        const deposits = farmerSiloBalances[token.address].deposited;
+        const index = whitelistSnapshots.findLastIndex((snapshot) => snapshot.season <= _season && snapshot.token.id === token.address.toLowerCase());
+        if (index >= 0) {
+          const seedsPerBdv = BigNumber(whitelistSnapshots[index].stalkEarnedPerSeason).div(1_000_000);
+          _output = (seedsPerBdv).multipliedBy(deposits.bdv).plus(_output);
+        };
+      };
+    });
+    return _output;
+  };
+
+  let lastSeedsSnapshot: BigNumber = ZERO_BN;
+  const lastSnapshotSeason =  snapshots[snapshots.length - 1].season;
   for (let s = minSeason; s <= maxSeason; s += 1) {
     if (s === nextSeason) {
       // Reached a data point for which we have a snapshot.
       // Use the corresponding total stalk value.
       currStalk = toTokenUnitsBN(snapshots[j].stalk, STALK.decimals);
-      currSeeds = toTokenUnitsBN(
-        snapshots[j].grownStalkPerSeason,
-        SEEDS.decimals
-      );
+      currSeeds = toTokenUnitsBN(snapshots[j].seeds, SEEDS.decimals);
+      lastSeedsSnapshot = toTokenUnitsBN(snapshots[j].seeds, SEEDS.decimals);
+      currGrownStalk = toTokenUnitsBN(BigNumber(0), STALK.decimals);
       currTimestamp = DateTime.fromJSDate(
         secondsToDate(snapshots[j].createdAt)
       );
       j += 1;
       nextSeason = snapshots[j]?.season || undefined;
     } else {
-      // Estimate actual amount of stalk using seeds
-      currStalk = currStalk.plus(
-        currSeeds.multipliedBy(STALK_PER_SEED_PER_SEASON)
-      ); // Each Seed grows 1/10,000 Stalk per Season
+      if (s < lastSnapshotSeason) {
+        currSeeds = lastSeedsSnapshot;
+      } else {
+        currSeeds = getSeedsPerBdv(s);
+      };
+      // Estimate actual amount of stalk / grown stalk using seeds
+      // Each Seed grows 1/10,000 Stalk per Season
+      currGrownStalk = currGrownStalk.plus((currSeeds).multipliedBy(1 / 10_000));
+
       currTimestamp = currTimestamp.plus({ hours: 1 });
-    }
+    };
     stalk.push({
       season: s,
       date: currTimestamp.toJSDate(),
       value: currStalk.toNumber(),
+    } as BaseDataPoint);
+    grownStalk.push({
+      season: s,
+      date: currTimestamp.toJSDate(),
+      value: currGrownStalk.toNumber(),
     } as BaseDataPoint);
     seeds.push({
       season: s,
@@ -126,6 +162,7 @@ export const interpolateFarmerStalk = (
   return [
     addBufferSeasons(stalk, bufferSeasons, false),
     addBufferSeasons(seeds, bufferSeasons, false),
+    addBufferSeasons(grownStalk, bufferSeasons, false),
   ] as const;
 };
 

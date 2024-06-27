@@ -3,6 +3,7 @@ import React from "react";
 import { images } from "src/assets/images/tokens";
 import { size } from "src/breakpoints";
 import { FC } from "src/types";
+import { useTokenMetadata } from "src/utils/token/useTokenMetadata";
 import styled from "styled-components";
 
 type Props = {
@@ -12,15 +13,28 @@ type Props = {
   isLP?: boolean;
 };
 
-export const TokenLogo: FC<Props> = ({ size, mobileSize, token, isLP = false }) => {
+export const TokenLogo: FC<Props> = ({ size, mobileSize, token: token, isLP = false }) => {
+  const metadata = useTokenMetadata(token?.address);
+
   const symbol = token?.symbol ? token?.symbol : isLP ? "LP" : "DEFAULT";
-  let image = images[symbol];
+
+  let image = images[symbol] || metadata?.logo;
+
+  if (isLP) {
+    image = images.LP;
+  }
+
   if (!image) {
     image = isLP ? images.LP : images.DEFAULT;
   }
 
   return (
-    <Container width={size} height={size} mobileWidth={mobileSize || size} mobileHeight={mobileSize || size}>
+    <Container
+      width={size}
+      height={size}
+      mobileWidth={mobileSize || size}
+      mobileHeight={mobileSize || size}
+    >
       <img src={image} alt={`${token?.symbol} Logo`} />
     </Container>
   );
@@ -43,6 +57,7 @@ const Container = styled.div<ContainerProps>`
   img {
     width: ${(props) => props.width}px;
     height: ${(props) => props.height}px;
+    border-radius: 50%;
   }
 
   @media (max-width: ${size.mobile}) {
@@ -51,6 +66,7 @@ const Container = styled.div<ContainerProps>`
     img {
       width: ${(props) => props.mobileWidth}px;
       height: ${(props) => props.mobileHeight}px;
+      border-radius: 50%;
     }
   }
 `;

@@ -9,6 +9,7 @@ export function loadSeason(diamondAddress: Address, id: BigInt): Season {
     season = new Season(id.toString());
     season.beanstalk = diamondAddress.toHexString();
     season.season = id.toI32();
+    season.sunriseBlock = ZERO_BI;
     season.createdAt = ZERO_BI;
     season.price = ZERO_BD;
     season.beans = ZERO_BI;

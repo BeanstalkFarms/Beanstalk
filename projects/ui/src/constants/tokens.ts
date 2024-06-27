@@ -132,6 +132,7 @@ export const WETH = {
       name: 'Wrapped Ether',
       symbol: 'WETH',
       logo: wEthIconCircledUrl,
+      displayDecimals: 4
     }
   ),
 };

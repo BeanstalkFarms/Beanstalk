@@ -101,3 +101,7 @@ export function getBigDecimalArrayTotal(detail: BigDecimal[]): BigDecimal {
 export function BigDecimal_isClose(value: BigDecimal, target: BigDecimal, window: BigDecimal): boolean {
   return target.minus(window) < value && value < target.plus(window);
 }
+
+export function BigDecimal_round(value: BigDecimal): BigDecimal {
+  return value.plus(BigDecimal.fromString("0.5")).truncate(0);
+}

@@ -5,6 +5,7 @@ on:
     types: [opened, synchronize]
     paths:
       - "projects/subgraph-beanft/**"
+      - "projects/subgraph-core/**"
 
 jobs:
   compile:

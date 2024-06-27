@@ -2298,11 +2298,17 @@ enum Field_orderBy {
 }
 
 type Germinating {
+  """Address of the token or account which is germinating"""
+  address: String!
+
   """Germinating bdv. This only applies to a Token address"""
   bdv: BigInt!
 
   """Address-(EVEN|ODD)"""
   id: ID!
+
+  """True when the address is a farmer account"""
+  isFarmer: Boolean!
 
   """The season in which the germination started"""
   season: Int!
@@ -2312,11 +2318,34 @@ type Germinating {
 
   """Germinating tokens. This only applies to a Token address"""
   tokenAmount: BigInt!
+
+  """EVEN or ODD"""
+  type: String!
 }
 
 input Germinating_filter {
   """Filter for the block changed event."""
   _change_block: BlockChangedFilter
+  address: String
+  address_contains: String
+  address_contains_nocase: String
+  address_ends_with: String
+  address_ends_with_nocase: String
+  address_gt: String
+  address_gte: String
+  address_in: [String!]
+  address_lt: String
+  address_lte: String
+  address_not: String
+  address_not_contains: String
+  address_not_contains_nocase: String
+  address_not_ends_with: String
+  address_not_ends_with_nocase: String
+  address_not_in: [String!]
+  address_not_starts_with: String
+  address_not_starts_with_nocase: String
+  address_starts_with: String
+  address_starts_with_nocase: String
   and: [Germinating_filter]
   bdv: BigInt
   bdv_gt: BigInt
@@ -2334,6 +2363,10 @@ input Germinating_filter {
   id_lte: ID
   id_not: ID
   id_not_in: [ID!]
+  isFarmer: Boolean
+  isFarmer_in: [Boolean!]
+  isFarmer_not: Boolean
+  isFarmer_not_in: [Boolean!]
   or: [Germinating_filter]
   season: Int
   season_gt: Int
@@ -2359,14 +2392,37 @@ input Germinating_filter {
   tokenAmount_lte: BigInt
   tokenAmount_not: BigInt
   tokenAmount_not_in: [BigInt!]
+  type: String
+  type_contains: String
+  type_contains_nocase: String
+  type_ends_with: String
+  type_ends_with_nocase: String
+  type_gt: String
+  type_gte: String
+  type_in: [String!]
+  type_lt: String
+  type_lte: String
+  type_not: String
+  type_not_contains: String
+  type_not_contains_nocase: String
+  type_not_ends_with: String
+  type_not_ends_with_nocase: String
+  type_not_in: [String!]
+  type_not_starts_with: String
+  type_not_starts_with_nocase: String
+  type_starts_with: String
+  type_starts_with_nocase: String
 }
 
 enum Germinating_orderBy {
+  address
   bdv
   id
+  isFarmer
   season
   stalk
   tokenAmount
+  type
 }
 
 type Harvest implements FieldEvent {
@@ -8792,6 +8848,9 @@ type Season {
 
   """ Season number in Int form for sorting """
   season: Int!
+
+  """ Block in which the season start was triggered by the sunrise call """
+  sunriseBlock: BigInt!
 }
 
 input Season_filter {
@@ -8908,6 +8967,14 @@ input Season_filter {
   season_lte: Int
   season_not: Int
   season_not_in: [Int!]
+  sunriseBlock: BigInt
+  sunriseBlock_gt: BigInt
+  sunriseBlock_gte: BigInt
+  sunriseBlock_in: [BigInt!]
+  sunriseBlock_lt: BigInt
+  sunriseBlock_lte: BigInt
+  sunriseBlock_not: BigInt
+  sunriseBlock_not_in: [BigInt!]
 }
 
 enum Season_orderBy {
@@ -8931,6 +8998,7 @@ enum Season_orderBy {
   price
   rewardBeans
   season
+  sunriseBlock
 }
 
 type SeedChange implements SiloEvent {

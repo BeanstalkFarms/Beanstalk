@@ -4,6 +4,9 @@ import { Well } from "@beanstalk/sdk/Wells";
 import { findWells } from "./wellLoader";
 import { Log } from "src/utils/logger";
 
+
+export const clearWellsCache = () => findWells.cache.clear?.();
+
 export const useWells = () => {
   const sdk = useSdk();
 
@@ -23,6 +26,7 @@ export const useWells = () => {
                 name: true,
                 tokens: true,
                 wellFunction: true,
+                pumps: true,
                 reserves: true,
                 lpToken: true
               })
