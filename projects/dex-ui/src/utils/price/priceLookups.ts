@@ -39,5 +39,5 @@ export const PriceLookups: Record<string, (sdk: BeanstalkSDK) => Promise<TokenVa
   WETH: memoize(chainlinkLookup(ETH_USD), PRICE_EXPIRY_TIMEOUT),
   USDC: memoize(chainlinkLookup(USDC_USD), PRICE_EXPIRY_TIMEOUT),
   DAI: memoize(chainlinkLookup(DAI_USD), PRICE_EXPIRY_TIMEOUT),
-  // USDT: memoize(chainlinkLookup(USDT_USD), PRICE_EXPIRY_TIMEOUT),
+  USDT: memoize(chainlinkLookup(USDT_USD), PRICE_EXPIRY_TIMEOUT)
 };
