@@ -1,0 +1,161 @@
+{
+  "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2": {
+    "address": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+    "logoURI": "/src/assets/images/tokens/WETH.svg",
+    "name": "Wrapped Ether",
+    "symbol": "WETH",
+    "decimals": 18,
+    "displayName": "Wrapped Ether"
+  },
+  "0x2260fac5e5542a773aa44fbcfedf7c193bc2c599": {
+    "address": "0x2260fac5e5542a773aa44fbcfedf7c193bc2c599",
+    "logoURI": "https://static.alchemyapi.io/images/assets/3717.png",
+    "name": "Wrapped BTC",
+    "symbol": "WBTC",
+    "displayName": "Wrapped Bitcoin",
+    "decimals": 8
+  },
+  "0x6982508145454ce325ddbe47a25d4ec3d2311933": {
+    "address": "0x6982508145454ce325ddbe47a25d4ec3d2311933",
+    "logoURI": "https://static.alchemyapi.io/images/assets/24478.png",
+    "name": "Pepe",
+    "symbol": "PEPE",
+    "decimals": 18
+  },
+  "0x576e2bed8f7b46d34016198911cdf9886f78bea7": {
+    "address": "0x576e2bed8f7b46d34016198911cdf9886f78bea7",
+    "logoURI": "https://static.alchemyapi.io/images/assets/27872.png",
+    "name": "MAGA",
+    "symbol": "TRUMP",
+    "decimals": 9,
+    "displayName": ""
+  },
+  "0x02f92800f57bcd74066f5709f1daa1a4302df875": {
+    "address": "0x02f92800f57bcd74066f5709f1daa1a4302df875",
+    "logoURI": "https://static.alchemyapi.io/images/assets/29186.png",
+    "name": "Peapods",
+    "symbol": "PEAS",
+    "decimals": 18,
+    "displayName": ""
+  },
+  "0x64aa3364f17a4d01c6f1751fd97c2bd3d7e7f1d5": {
+    "address": "0x64aa3364f17a4d01c6f1751fd97c2bd3d7e7f1d5",
+    "logoURI": "https://static.alchemyapi.io/images/assets/9067.png",
+    "name": "Olympus",
+    "symbol": "OHM",
+    "decimals": 9,
+    "displayName": ""
+  },
+  "0x514910771af9ca656af840dff83e8264ecf986ca": {
+    "address": "0x514910771af9ca656af840dff83e8264ecf986ca",
+    "logoURI": "https://static.alchemyapi.io/images/assets/1975.png",
+    "name": "ChainLink Token",
+    "symbol": "LINK",
+    "decimals": 18,
+    "displayName": ""
+  },
+  "0xd29da236dd4aac627346e1bba06a619e8c22d7c5": {
+    "address": "0xd29da236dd4aac627346e1bba06a619e8c22d7c5",
+    "logoURI": "https://static.alchemyapi.io/images/assets/31305.png",
+    "name": "MAGA",
+    "symbol": "MAGA",
+    "decimals": 9,
+    "displayName": ""
+  },
+  "0x1f9840a85d5af5bf1d1762f925bdaddc4201f984": {
+    "address": "0x1f9840a85d5af5bf1d1762f925bdaddc4201f984",
+    "logoURI": "https://static.alchemyapi.io/images/assets/7083.png",
+    "name": "Uniswap",
+    "symbol": "UNI",
+    "decimals": 18,
+    "displayName": ""
+  },
+  "0xb8c77482e45f1f44de1745f52c74426c631bdd52": {
+    "address": "0xb8c77482e45f1f44de1745f52c74426c631bdd52",
+    "logoURI": "https://static.alchemyapi.io/images/assets/1839.png",
+    "name": "BNB",
+    "symbol": "BNB",
+    "decimals": 18,
+    "displayName": ""
+  },
+  "0x4da27a545c0c5b758a6ba100e3a049001de870f5": {
+    "address": "0x4da27a545c0c5b758a6ba100e3a049001de870f5",
+    "logoURI": "https://etherscan.io/token/images/stakedaave_32.png",
+    "name": "Staked Aave",
+    "symbol": "stkAAVE",
+    "decimals": 18,
+    "displayName": ""
+  },
+  "0x5a98fcbea516cf06857215779fd812ca3bef1b32": {
+    "address": "0x5a98fcbea516cf06857215779fd812ca3bef1b32",
+    "logoURI": "https://static.alchemyapi.io/images/assets/8000.png",
+    "name": "Lido DAO Token",
+    "symbol": "LDO",
+    "decimals": 18,
+    "displayName": "UNKNOWN"
+  },
+  "0xd533a949740bb3306d119cc777fa900ba034cd52": {
+    "address": "0xd533a949740bb3306d119cc777fa900ba034cd52",
+    "logoURI": "https://static.alchemyapi.io/images/assets/6538.png",
+    "name": "Curve DAO Token",
+    "symbol": "CRV",
+    "decimals": 18,
+    "displayName": ""
+  },
+  "0xb50721bcf8d664c30412cfbc6cf7a15145234ad1": {
+    "address": "0xb50721bcf8d664c30412cfbc6cf7a15145234ad1",
+    "logoURI": "https://static.alchemyapi.io/images/assets/11841.png",
+    "name": "Arbitrum",
+    "symbol": "ARB",
+    "decimals": 18,
+    "displayName": ""
+  },
+  "0x6985884c4392d348587b19cb9eaaf157f13271cd": {
+    "address": "0x6985884c4392d348587b19cb9eaaf157f13271cd",
+    "logoURI": "https://static.alchemyapi.io/images/assets/26997.png",
+    "name": "LayerZero",
+    "symbol": "ZRO",
+    "decimals": 18,
+    "displayName": ""
+  },
+  "0x85f17cf997934a597031b2e18a9ab6ebd4b9f6a4": {
+    "address": "0x85f17cf997934a597031b2e18a9ab6ebd4b9f6a4",
+    "logoURI": "https://assets.coingecko.com/coins/images/10365/standard/near.jpg?1696510367",
+    "name": "NEAR",
+    "symbol": "NEAR",
+    "decimals": 24,
+    "displayName": ""
+  },
+  "0x163f8c2467924be0ae7b5347228cabf260318753": {
+    "address": "0x163f8c2467924be0ae7b5347228cabf260318753",
+    "logoURI": "https://static.alchemyapi.io/images/assets/13502.png",
+    "name": "Worldcoin",
+    "symbol": "WLD",
+    "decimals": 18,
+    "displayName": ""
+  },
+  "0xfaba6f8e4a5e8ab82f62fe7c39859fa577269be3": {
+    "address": "0xfaba6f8e4a5e8ab82f62fe7c39859fa577269be3",
+    "logoURI": "https://static.alchemyapi.io/images/assets/21159.png",
+    "name": "Ondo",
+    "symbol": "ONDO",
+    "decimals": 18,
+    "displayName": ""
+  },
+  "0xe28b3b32b6c345a34ff64674606124dd5aceca30": {
+    "address": "0xe28b3b32b6c345a34ff64674606124dd5aceca30",
+    "logoURI": "https://static.alchemyapi.io/images/assets/7226.png",
+    "name": "Injective Token",
+    "symbol": "INJ",
+    "decimals": 18,
+    "displayName": ""
+  },
+  "0xcd5fe23c85820f7b72d0926fc9b05b43e359b7ee": {
+    "address": "0xcd5fe23c85820f7b72d0926fc9b05b43e359b7ee",
+    "logoURI": "https://static.alchemyapi.io/images/assets/28695.png",
+    "name": "Wrapped eETH",
+    "symbol": "weETH",
+    "decimals": 18,
+    "displayName": ""
+  }
+}
