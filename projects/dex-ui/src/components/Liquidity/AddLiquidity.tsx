@@ -398,8 +398,8 @@ const AddLiquidityContent = ({
   const buttonLabel = useMemo(() => {
     if (!address) return "Connect Wallet";
     if (!hasEnoughBalance) return "Insufficient Balance";
-    if (someWellReservesEmpty && areSomeInputsZero) return "Both Amounts Required";
     if (!atLeastOneAmountNonZero) return "Enter Amount(s)";
+    if (someWellReservesEmpty && areSomeInputsZero) return "Both Amounts Required";
     return "Add Liquidity";
   }, [atLeastOneAmountNonZero, hasEnoughBalance, address, someWellReservesEmpty, areSomeInputsZero]);
 
