@@ -26,6 +26,7 @@ import { useWellFunctionNames } from "src/wells/wellFunction/useWellFunctionName
 import { BasinAPIResponse } from "src/types";
 import { Well } from "@beanstalk/sdk-wells";
 import useSdk from "src/utils/sdk/useSdk";
+import { theme } from "src/utils/ui/theme";
 
 export const Wells = () => {
   const { data: wells, isLoading, error } = useWells();
@@ -154,6 +155,7 @@ export const Wells = () => {
           )}
         </TBody>
       </StyledTable>
+      <MobileBottomNudge />
     </Page>
   );
 };
@@ -180,8 +182,8 @@ const makeTableData = (
     const token2 = well.tokens?.[1];
 
     if (token1 && token2) {
-      const basePrice = tokenPrices[token1.address] || TokenValue.ZERO;
-      const targetPrice = tokenPrices[token2.address] || TokenValue.ZERO;
+      const basePrice = tokenPrices[token1.symbol] || TokenValue.ZERO;
+      const targetPrice = tokenPrices[token2.symbol] || TokenValue.ZERO;
 
       const reserve1 = well.reserves?.[0];
       const reserve2 = well.reserves?.[1];
@@ -319,5 +321,14 @@ const NoLPMessage = styled.div`
 
   @media (max-width: ${size.mobile}) {
     font-size: 14px;
+  }
+`;
+
+const MobileBottomNudge = styled.div`
+  height: ${theme.spacing(8)};
+  width: 100%;
+
+  ${theme.media.query.sm.up} {
+    display: none;
   }
 `;
