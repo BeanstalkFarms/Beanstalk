@@ -45,11 +45,6 @@ export const Well = () => {
   const [wellFunctionName, setWellFunctionName] = useState<string | undefined>("-");
   const isMobile = useIsMobile();
 
-  useEffect(() => {
-    if (!prices.length) return;
-    if (!well?.tokens) return;
-  }, [prices, well?.tokens]);
-
   const [tab, setTab] = useState(0);
   const showTab = useCallback((e: React.MouseEvent<HTMLButtonElement, MouseEvent>, i: number) => {
     (e.target as HTMLElement).blur();
