@@ -413,11 +413,7 @@ const AddLiquidityContent = ({
                 key={`input${index}`}
                 id={`input${index}`}
                 label={`Input amount in ${token.symbol}`}
-                token={
-                  hasWETH && !useWETH && well.tokens![index].symbol === "WETH"
-                    ? sdk.tokens.ETH
-                    : well.tokens![index]
-                }
+                token={hasWETH && !useWETH && tokens[index].equals(WETH) ? sdk.tokens.ETH : tokens[index]}
                 amount={amounts[index]}
                 onAmountChange={
                   balancedMode && canFetchPrices
