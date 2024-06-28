@@ -35,9 +35,7 @@ const Deposits: FC<
 
   const stemTip = useStemTipForToken(newToken) || BigNumber.from(0);
   const lastStem = siloBalance?.mowStatus?.lastStem || BigNumber.from(0);
-  const deltaStem = transform(stemTip.sub(lastStem), 'bnjs').div(1000000); // Divide by 10 ^ 6 due to the Silo V3.1 precision updates
-
-  const decimalShift = sdk.tokens.BEAN.decimals - sdk.tokens.STALK.decimals;
+  const deltaStem = transform(stemTip.sub(lastStem), 'bnjs').div(token.isUnripe ? 1_000_000 : 10_000_000);
 
   const rows: (LegacyDepositCrate & { id: string })[] = useMemo(
     () =>
@@ -45,10 +43,10 @@ const Deposits: FC<
         id: deposit.stem?.toString(),
         mowableStalk: deposit.bdv
           ?.multipliedBy(deltaStem)
-          .shiftedBy(decimalShift),
+          .div(10000),
         ...deposit,
       })) || [],
-    [siloBalance?.deposited.crates, deltaStem, decimalShift]
+    [siloBalance?.deposited.crates, deltaStem]
   );
 
   const hasGerminating = !!rows.find((r) => r.isGerminating);
