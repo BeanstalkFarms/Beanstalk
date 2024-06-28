@@ -83,8 +83,8 @@ const OtherSectionContent: FC<Props> = ({ well }) => {
         <THead>
           <Row>
             <Th>Name</Th>
-            <DesktopTh>Address</DesktopTh>
-            <MobileTh align={"right"}>Address</MobileTh>
+            <DesktopTh align="right">Address</DesktopTh>
+            <MobileTh align="right">Address</MobileTh>
           </Row>
         </THead>
         <TBody>
@@ -92,7 +92,7 @@ const OtherSectionContent: FC<Props> = ({ well }) => {
             <Td>
               <Detail>{wellTokenDetail} Well</Detail>
             </Td>
-            <DesktopTd>
+            <DesktopTd align={"right"}>
               <Link href={`https://etherscan.io/address/${well.address}`}>{well.address}</Link>
             </DesktopTd>
             <MobileTd align={"right"}>
@@ -105,7 +105,7 @@ const OtherSectionContent: FC<Props> = ({ well }) => {
             <Td>
               <Detail>Well LP Token - {displayTokenSymbol(well.lpToken as Token)}</Detail>
             </Td>
-            <DesktopTd>
+            <DesktopTd align={"right"}>
               <Link href={`https://etherscan.io/address/${well.address}`}>{well.address}</Link>
             </DesktopTd>
             <MobileTd align={"right"}>
@@ -120,7 +120,7 @@ const OtherSectionContent: FC<Props> = ({ well }) => {
                 <Td>
                   <Detail>{`Token ${index + 1} - ${token.symbol}`}</Detail>
                 </Td>
-                <DesktopTd>
+                <DesktopTd align="right">
                   <Link
                     href={
                       token
@@ -157,7 +157,7 @@ const OtherSectionContent: FC<Props> = ({ well }) => {
                 <Td>
                   <Detail>{tableItem.name}</Detail>
                 </Td>
-                <DesktopTd>
+                <DesktopTd align={"right"}>
                   <Link href={`https://etherscan.io/address/${tableItem.address}`}>
                     {tableItem.address}
                   </Link>
