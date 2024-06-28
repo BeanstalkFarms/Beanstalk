@@ -35,8 +35,7 @@ const Deposits: FC<
 
   const stemTip = useStemTipForToken(newToken) || BigNumber.from(0);
   const lastStem = siloBalance?.mowStatus?.lastStem || BigNumber.from(0);
-  const deltaStem = transform(stemTip.sub(lastStem), 'bnjs').div(token.isUnripe ? 1_000_000 : 10_000_000);
-
+  const deltaStem = transform(stemTip.sub(lastStem), 'bnjs').div(1_000_000);
   const rows: (LegacyDepositCrate & { id: string })[] = useMemo(
     () =>
       siloBalance?.deposited.crates.map((deposit) => ({
