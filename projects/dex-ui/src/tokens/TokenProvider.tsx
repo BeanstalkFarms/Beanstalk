@@ -19,10 +19,9 @@ export const TokenProvider = ({ children }: { children: React.ReactNode }) => {
 
   for (const token of tokens || []) {
     let logo = images[token.symbol] ?? images.DEFAULT;
-    
-    if (!token.logo) {
-      token.setMetadata({ logo });
-    }
+
+    if (!logo && token.isLP) logo = images.LP;
+    if (!token.logo) token.setMetadata({ logo });
 
     add(token);
   }
