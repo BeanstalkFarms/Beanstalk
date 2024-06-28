@@ -99,10 +99,10 @@ export const Liquidity = () => {
                 <LearnYield />
               </LoadingItem>
               <LoadingItem loading={loading} onLoading={<EmptyLearnItem />}>
-                <LearnWellFunction name={wellFunctionName} />
+                <LearnWellFunction well={well} />
               </LoadingItem>
               <LoadingItem loading={loading} onLoading={<EmptyLearnItem />}>
-                <LearnPump />
+                <LearnPump well={well} />
               </LoadingItem>
             </LearnMoreButtons>
           </LearnMoreContainer>

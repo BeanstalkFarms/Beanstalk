@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import styled from "styled-components";
 import { ExpandBox } from "src/components/ExpandBox";
 import { TextNudge } from "../Typography";
@@ -14,6 +14,13 @@ type Props = {
 
 function WellFunctionDetails({ well }: Props) {
   const functionName = well?.wellFunction?.name;
+
+  useEffect(() => {
+    if (!functionName) {
+      well?.getWellFunction();
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [functionName]);
 
   if (functionName === "Constant Product") {
     return (
