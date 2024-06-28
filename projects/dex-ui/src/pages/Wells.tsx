@@ -178,6 +178,8 @@ const makeTableData = (
     let liquidityUSD: TokenValue | undefined = undefined;
     let targetVolume: TokenValue | undefined = undefined;
 
+    let liquidityUSDInferred: TokenValue | undefined = undefined;
+
     const token1 = well.tokens?.[0];
     const token2 = well.tokens?.[1];
 
@@ -189,6 +191,7 @@ const makeTableData = (
       const reserve2 = well.reserves?.[1];
       const reserve1USD = reserve1?.mul(basePrice);
       const reserve2USD = reserve2?.mul(targetPrice);
+
       if (reserve2USD && reserve1 && reserve1.gt(0)) {
         baseTokenPrice = reserve2USD.div(reserve1);
       }
@@ -200,28 +203,47 @@ const makeTableData = (
         statsByPoolId[well.address.toLowerCase()]?.target_volume || 0
       );
       targetVolume = baseVolume.mul(targetPrice);
+
+      const bothPricesAvailable = !!(reserve1USD && reserve2USD);
+      const atLeastOnePriceAvailable = !!(reserve1USD || reserve1USD);
+
+      if (atLeastOnePriceAvailable && !bothPricesAvailable) {
+        if (reserve1USD) liquidityUSDInferred = reserve1USD.mul(2);
+        if (reserve2USD) liquidityUSDInferred = reserve2USD.mul(2);
+      } else if (bothPricesAvailable) {
+        liquidityUSDInferred = liquidityUSD;
+      }
     }
+
+    const hasReserves = well.reserves?.[0]?.gt(0) && well.reserves?.[1]?.gt(0);
 
     return {
       well,
       baseTokenPrice,
       liquidityUSD,
-      targetVolume
+      targetVolume,
+      liquidityUSDInferred,
+      hasReserves
     };
   });
 
   const whitelistedSort = data.sort(getSortByWhitelisted(sdk));
 
   const sortedByLiquidity = whitelistedSort.sort((a, b) => {
-    if (!a.liquidityUSD) return 1;
-    if (!b.liquidityUSD) return -1;
+    if (!a.liquidityUSDInferred) return 1;
+    if (!b.liquidityUSDInferred) return -1;
 
-    const diff = a.liquidityUSD.sub(b.liquidityUSD);
+    const diff = a.liquidityUSDInferred.sub(b.liquidityUSDInferred);
     if (diff.eq(0)) return 0;
     return diff.gt(0) ? -1 : 1;
   });
 
-  return sortedByLiquidity;
+  const sortedByHasReserves = sortedByLiquidity.sort((a, b) => {
+    if (a.hasReserves === b.hasReserves) return 0;
+    return a.hasReserves && !b.hasReserves ? -1 : 1;
+  });
+
+  return sortedByHasReserves;
 };
 
 const getSortByWhitelisted =
