@@ -20,15 +20,17 @@ export type TokenPickerProps = {
   editable?: boolean;
   onChange?: (t: Token) => void;
   connectorFor?: string;
+  tokenOptions?: Token[];
 };
 
 type ContainerProps = {
   editable?: Boolean;
 };
 
-export const TokenPicker: FC<TokenPickerProps> = ({ token, excludeToken, editable = true, onChange, connectorFor }) => {
+export const TokenPicker: FC<TokenPickerProps> = ({ token, tokenOptions, excludeToken, editable = true, onChange, connectorFor }) => {
   const [modalOpen, setModalOpen] = useState(false);
-  const tokens = useTokens();
+  const _tokens = useTokens();
+  const tokens = tokenOptions || _tokens;
   const [list, setList] = useState<Token[]>([]);
   const { data: balances, isLoading: balancesLoading, error: balancesError, refetch, isFetching } = useAllTokensBalance();
 

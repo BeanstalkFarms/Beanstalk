@@ -62,7 +62,7 @@ const Container = styled.div<Props>`
   flex-direction: column;
   position: fixed;
   width: 100svw;
-  height: 80svh;
+  max-height: 80svh;
   left: 0;
   transition: all 0.3s ease-in-out;
   bottom: ${({ showDrawer }) => (showDrawer ? "0" : "-100%")};

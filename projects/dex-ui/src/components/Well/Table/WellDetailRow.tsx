@@ -14,6 +14,7 @@ import { Item } from "src/components/Layout";
 /// format value with 2 decimals, if value is less than 1M, otherwise use short format
 const formatMayDecimals = (tv: TokenValue | undefined) => {
   if (!tv) return "-.--";
+  if (tv.gt(0) && tv.lt(0.001)) return "<0.001";
   if (tv.lt(1_000_000)) {
     return formatNum(tv, { minDecimals: 2, maxDecimals: 2 });
   }
