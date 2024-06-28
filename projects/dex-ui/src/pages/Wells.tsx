@@ -208,6 +208,7 @@ const makeTableData = (
       const atLeastOnePriceAvailable = !!(reserve1USD || reserve1USD);
 
       if (atLeastOnePriceAvailable && !bothPricesAvailable) {
+        // Since we don't have the other price, we assume reserves are balanced 50% - 50%
         if (reserve1USD) liquidityUSDInferred = reserve1USD.mul(2);
         if (reserve2USD) liquidityUSDInferred = reserve2USD.mul(2);
       } else if (bothPricesAvailable) {
