@@ -23,6 +23,7 @@ export type MayArray<T> = T | T[];
 // Objects
 export type AddressMap<T> = Record<string, T>;
 
+/// JSON objects
 export type TokenMetadataMap = AddressMap<{
   address: string;
   name: string;
@@ -30,4 +31,6 @@ export type TokenMetadataMap = AddressMap<{
   decimals: number;
   logoURI: string;
   displayName?: string;
-}>
+  displayDecimals?: number;
+}>;
+

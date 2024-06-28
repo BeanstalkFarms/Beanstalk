@@ -3,25 +3,15 @@ import { size } from "src/breakpoints";
 import styled, { keyframes } from "styled-components";
 import { images } from "src/assets/images/tokens";
 import { Image } from "../Image";
-import { useTokens } from "src/tokens/TokenProvider";
 
 const randomKey = () => Math.random().toString(36).substring(2, 7);
 
+// only use BEAN & WETH for the Marquee. We can add more as the wells become deeper in liquidity.
+const marqueeSymbols = ["BEAN", "WETH"];
+
 export const TokenMarquee = () => {
-  const tokens = useTokens();
-
-  // Get tokens from wells, but if there aren't any (wrong network connected or something),
-  // just display ETH and BEAN
-  const symbols = Object.values(tokens).map((token) => token.symbol);
-  if (symbols.length === 0) {
-    symbols.push("BEAN", "WETH");
-  }
-
-  // Remove ETH, as it would be a dup with WETH
-  if (symbols[symbols.length - 1] === "ETH") symbols.pop();
-
   // we need distinct keys for these, so we return a function so the key can be set later
-  const logos = symbols.map((symbol) => (key: string) => (
+  const logos = marqueeSymbols.map((symbol) => (key: string) => (
     <Image key={key} src={images[symbol]} height={24} width={24} alt={`${symbol} Logo`} />
   ));
 

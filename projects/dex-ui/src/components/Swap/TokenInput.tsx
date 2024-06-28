@@ -31,7 +31,7 @@ type TokenInput = {
   debounceTime?: number;
   clamp?: boolean;
   balanceLabel?: string;
-} & Pick<TokenPickerProps, "excludeToken">;
+} & Pick<TokenPickerProps, "excludeToken" | "tokenOptions">;
 
 export const TokenInput: FC<TokenInput> = ({
   id,
@@ -50,7 +50,8 @@ export const TokenInput: FC<TokenInput> = ({
   clamp = false,
   balanceLabel = "balance",
   /// TokenPickerProps
-  excludeToken
+  excludeToken,
+  tokenOptions
 }) => {
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -117,6 +118,7 @@ export const TokenInput: FC<TokenInput> = ({
           onChange={handleTokenChange}
           connectorFor={id}
           excludeToken={excludeToken}
+          tokenOptions={tokenOptions}
         />
       </TopRow>
 

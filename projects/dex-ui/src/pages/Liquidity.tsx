@@ -23,8 +23,7 @@ import { useWellWithParams } from "src/wells/useWellWithParams";
 export const Liquidity = () => {
   const { well, loading, error } = useWellWithParams();
   const navigate = useNavigate();
-
-  const [wellFunctionName, setWellFunctionName] = useState<string>("This Well's Function");
+  
   const [tab, setTab] = useState(0);
 
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -46,16 +45,6 @@ export const Liquidity = () => {
   const toggle = useCallback(() => {
     setOpen(!open);
   }, [open]);
-
-  useEffect(() => {
-    const run = async () => {
-      if (well && well.wellFunction) {
-        const _wellName = await well.wellFunction.contract.name();
-        setWellFunctionName(_wellName);
-      }
-    };
-    run();
-  }, [well]);
 
   if (error) {
     return <Error message={error?.message} errorOnly />;
@@ -99,10 +88,10 @@ export const Liquidity = () => {
                 <LearnYield />
               </LoadingItem>
               <LoadingItem loading={loading} onLoading={<EmptyLearnItem />}>
-                <LearnWellFunction name={wellFunctionName} />
+                <LearnWellFunction well={well} />
               </LoadingItem>
               <LoadingItem loading={loading} onLoading={<EmptyLearnItem />}>
-                <LearnPump />
+                <LearnPump well={well} />
               </LoadingItem>
             </LearnMoreButtons>
           </LearnMoreContainer>

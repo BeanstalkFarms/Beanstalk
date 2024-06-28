@@ -13,7 +13,8 @@
     "name": "Wrapped BTC",
     "symbol": "WBTC",
     "displayName": "Wrapped Bitcoin",
-    "decimals": 8
+    "decimals": 8,
+    "displayDecimals": 3
   },
   "0x6982508145454ce325ddbe47a25d4ec3d2311933": {
     "address": "0x6982508145454ce325ddbe47a25d4ec3d2311933",
