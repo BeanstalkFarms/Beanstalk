@@ -46,6 +46,7 @@ import pageBackground from '~/img/beanstalk/interface/bg/spring.png';
 import EnforceNetwork from '~/components/App/EnforceNetwork';
 import useAccount from '~/hooks/ledger/useAccount';
 import './App.css';
+import "react-day-picker/dist/style.css";
 
 import { FC } from '~/types';
 

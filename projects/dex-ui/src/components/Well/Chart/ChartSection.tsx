@@ -20,7 +20,7 @@ function timeToLocal(originalTime: number) {
 }
 
 type TimeToHourlySnapshotItem = {
-  data: Pick<IWellHourlySnapshot, "deltaVolumeUSD" | "totalLiquidityUSD">;
+  data: Pick<IWellHourlySnapshot, "deltaTradeVolumeUSD" | "totalLiquidityUSD">;
   count: number;
 };
 
@@ -33,16 +33,16 @@ export type IChartDataItem = {
 const parseAndDeduplicateSnapshots = (arr: IWellHourlySnapshot[]) => {
   const snapshotMap = arr.reduce<Record<string, TimeToHourlySnapshotItem>>((memo, snapshot) => {
     const timeKey = timeToLocal(Number(snapshot.lastUpdateTimestamp)).toString();
-    const deltaVolumeUSD = Number(snapshot.deltaVolumeUSD);
+    const deltaTradeVolumeUSD = Number(snapshot.deltaTradeVolumeUSD);
     const totalLiquidityUSD = Number(snapshot.totalLiquidityUSD);
 
     if (!(timeKey in memo)) {
       memo[timeKey] = {
-        data: { deltaVolumeUSD, totalLiquidityUSD },
+        data: { deltaTradeVolumeUSD, totalLiquidityUSD },
         count: 1
       };
     } else {
-      memo[timeKey].data.deltaVolumeUSD += deltaVolumeUSD;
+      memo[timeKey].data.deltaTradeVolumeUSD += deltaTradeVolumeUSD;
       memo[timeKey].data.totalLiquidityUSD += totalLiquidityUSD;
       memo[timeKey].count++;
     }
@@ -62,7 +62,7 @@ const parseAndDeduplicateSnapshots = (arr: IWellHourlySnapshot[]) => {
     });
     volumeData.push({
       time: timeKey,
-      value: Number(TokenValue.ZERO.add(data.deltaVolumeUSD).div(count).toHuman()).toFixed(2)
+      value: Number(TokenValue.ZERO.add(data.deltaTradeVolumeUSD).div(count).toHuman()).toFixed(2)
     });
   }
 

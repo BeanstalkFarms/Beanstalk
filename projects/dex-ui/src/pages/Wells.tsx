@@ -1,4 +1,4 @@
-import { TokenValue } from "@beanstalk/sdk";
+import { BeanstalkSDK, TokenValue } from "@beanstalk/sdk";
 import React, { useMemo, useState } from "react";
 import { Item } from "src/components/Layout";
 import { Page } from "src/components/Page";
@@ -6,8 +6,6 @@ import { Title } from "src/components/PageComponents/Title";
 import { TabButton } from "src/components/TabButton";
 import { Row, TBody, THead, Table, Th } from "src/components/Table";
 import { Row as TabRow } from "src/components/Layout";
-import { getPrice } from "src/utils/price/usePrice";
-import useSdk from "src/utils/sdk/useSdk";
 import { useWells } from "src/wells/useWells";
 import styled from "styled-components";
 import { mediaQuery, size } from "src/breakpoints";
@@ -16,59 +14,46 @@ import { useWellLPTokenPrice } from "src/wells/useWellLPTokenPrice";
 import { useLPPositionSummary } from "src/tokens/useLPPositionSummary";
 
 import { WellDetailLoadingRow, WellDetailRow } from "src/components/Well/Table/WellDetailRow";
-import { MyWellPositionLoadingRow, MyWellPositionRow } from "src/components/Well/Table/MyWellPositionRow";
+import {
+  MyWellPositionLoadingRow,
+  MyWellPositionRow
+} from "src/components/Well/Table/MyWellPositionRow";
 import { useBeanstalkSiloAPYs } from "src/wells/useBeanstalkSiloAPYs";
 import { useLagLoading } from "src/utils/ui/useLagLoading";
 import useBasinStats from "src/wells/useBasinStats";
+import { useTokenPrices } from "src/utils/price/useTokenPrices";
+import { useWellFunctionNames } from "src/wells/wellFunction/useWellFunctionNames";
+import { BasinAPIResponse } from "src/types";
+import { Well } from "@beanstalk/sdk-wells";
+import useSdk from "src/utils/sdk/useSdk";
+import { theme } from "src/utils/ui/theme";
 
 export const Wells = () => {
   const { data: wells, isLoading, error } = useWells();
-  const { data: wellStats } = useBasinStats();
+  const { data: wellStats = [] } = useBasinStats();
   const sdk = useSdk();
 
-  const [wellLiquidity, setWellLiquidity] = useState<(TokenValue | undefined)[]>([]);
-  const [wellFunctionNames, setWellFunctionNames] = useState<string[]>([]);
-  const [wellTokenPrices, setWellTokenPrices] = useState<(TokenValue | null)[][]>([]);
   const [tab, showTab] = useState<number>(0);
 
-  const { data: lpTokenPrices } = useWellLPTokenPrice(wells);
+  const { data: lpTokenPrices, isLoading: lpTokenPricesLoading } = useWellLPTokenPrice(wells);
   const { hasPositions, getPositionWithWell, isLoading: positionsLoading } = useLPPositionSummary();
   const { isLoading: apysLoading } = useBeanstalkSiloAPYs();
-  // const [isLoadingWellData, setIsLoadingWellData] = useState<boolean>(true);
+  const { data: tokenPrices, isLoading: tokenPricesLoading } = useTokenPrices(wells);
+  const { data: wellFnNames, isLoading: wellNamesLoading } = useWellFunctionNames(wells);
 
-  useMemo(() => {
-    const run = async () => {
-      if (!wells || !wells.length) return;
-      let _wellsLiquidityUSD = [];
-      let _wellsTokenPrices = [];
-      for (let i = 0; i < wells.length; i++) {
-        if (!wells[i].tokens) return;
-        const _tokenPrices = await Promise.all(wells[i].tokens!.map((token) => getPrice(token, sdk)));
-        _wellsTokenPrices[i] = _tokenPrices;
-        const _reserveValues = wells[i].reserves?.map((tokenReserve, index) =>
-          tokenReserve.mul((_tokenPrices[index] as TokenValue) || TokenValue.ZERO)
-        );
-        let initialValue = TokenValue.ZERO;
-        const _totalWellLiquidity = _reserveValues?.reduce((accumulator, currentValue) => currentValue.add(accumulator), initialValue);
-        _wellsLiquidityUSD[i] = _totalWellLiquidity;
-      }
-      setWellLiquidity(_wellsLiquidityUSD);
-      setWellTokenPrices(_wellsTokenPrices);
+  const tableData = useMemo(
+    () => makeTableData(sdk, wells, wellStats, tokenPrices),
+    [sdk, tokenPrices, wellStats, wells]
+  );
 
-      let _wellsFunctionNames = [];
-      for (let i = 0; i < wells.length; i++) {
-        if (!wells[i].wellFunction) return;
-        const _wellName = await wells[i].wellFunction!.contract.name();
-        _wellsFunctionNames[i] = _wellName;
-      }
-      setWellFunctionNames(_wellsFunctionNames);
-      // setIsLoadingWellData(false);
-    };
-
-    run();
-  }, [sdk, wells]);
-
-  const loading = useLagLoading(isLoading || apysLoading || positionsLoading);
+  const loading = useLagLoading(
+    isLoading ||
+      apysLoading ||
+      positionsLoading ||
+      lpTokenPricesLoading ||
+      tokenPricesLoading ||
+      wellNamesLoading
+  );
 
   if (error) {
     return <Error message={error?.message} errorOnly />;
@@ -115,7 +100,7 @@ export const Wells = () => {
           </THead>
         )}
         <TBody>
-          {loading ? (
+          {loading || !tableData.length ? (
             <>
               {Array(5)
                 .fill(null)
@@ -139,23 +124,24 @@ export const Wells = () => {
                   </NoLPRowMobile>
                 </>
               ) : (
-                wells?.map((well, index) => {
-                  let price = undefined;
-                  let volume = undefined;
-                  if (wellStats && well.tokens && wellTokenPrices[index]) {
-                    price = well.tokens[1].fromHuman(wellStats[index].last_price).mul(wellTokenPrices[index][1] as TokenValue);
-                    volume =  well.tokens[1].fromHuman(wellStats[index].target_volume).mul(wellTokenPrices[index][1] as TokenValue);
-                  };
-                  return tab === 0 ? (
-                    <WellDetailRow
-                      well={well}
-                      liquidity={wellLiquidity?.[index]}
-                      functionName={wellFunctionNames?.[index]}
-                      price={price}
-                      volume={volume}
-                      key={`well-detail-row-${well.address}-${index}`}
-                    />
-                  ) : (
+                tableData?.map(({ well, baseTokenPrice, liquidityUSD, targetVolume }, index) => {
+                  if (tab === 0) {
+                    const priceFnName =
+                      well.wellFunction?.name || wellFnNames?.[well.wellFunction?.address || ""];
+
+                    return (
+                      <WellDetailRow
+                        well={well}
+                        liquidity={liquidityUSD}
+                        functionName={priceFnName}
+                        price={baseTokenPrice}
+                        volume={targetVolume}
+                        key={`well-detail-row-${well.address}-${index}`}
+                      />
+                    );
+                  }
+
+                  return (
                     <MyWellPositionRow
                       well={well}
                       position={getPositionWithWell(well)}
@@ -169,9 +155,85 @@ export const Wells = () => {
           )}
         </TBody>
       </StyledTable>
+      <MobileBottomNudge />
     </Page>
   );
 };
+
+const makeTableData = (
+  sdk: BeanstalkSDK,
+  wells?: Well[],
+  stats?: BasinAPIResponse[],
+  tokenPrices?: Record<string, TokenValue>
+) => {
+  if (!wells || !wells.length || !tokenPrices) return [];
+
+  const statsByPoolId = (stats ?? []).reduce<Record<string, BasinAPIResponse>>(
+    (prev, curr) => ({ ...prev, [curr.pool_id.toLowerCase()]: curr }),
+    {}
+  );
+
+  const data = (wells || []).map((well) => {
+    let baseTokenPrice: TokenValue | undefined = undefined;
+    let liquidityUSD: TokenValue | undefined = undefined;
+    let targetVolume: TokenValue | undefined = undefined;
+
+    const token1 = well.tokens?.[0];
+    const token2 = well.tokens?.[1];
+
+    if (token1 && token2) {
+      const basePrice = tokenPrices[token1.symbol] || TokenValue.ZERO;
+      const targetPrice = tokenPrices[token2.symbol] || TokenValue.ZERO;
+
+      const reserve1 = well.reserves?.[0];
+      const reserve2 = well.reserves?.[1];
+      const reserve1USD = reserve1?.mul(basePrice);
+      const reserve2USD = reserve2?.mul(targetPrice);
+      if (reserve2USD && reserve1 && reserve1.gt(0)) {
+        baseTokenPrice = reserve2USD.div(reserve1);
+      }
+      if (reserve1USD && reserve2USD && reserve2USD.gt(0)) {
+        liquidityUSD = reserve1USD.add(reserve2USD);
+      }
+
+      const baseVolume = token2.fromHuman(
+        statsByPoolId[well.address.toLowerCase()]?.target_volume || 0
+      );
+      targetVolume = baseVolume.mul(targetPrice);
+    }
+
+    return {
+      well,
+      baseTokenPrice,
+      liquidityUSD,
+      targetVolume
+    };
+  });
+
+  const whitelistedSort = data.sort(getSortByWhitelisted(sdk));
+
+  const sortedByLiquidity = whitelistedSort.sort((a, b) => {
+    if (!a.liquidityUSD) return 1;
+    if (!b.liquidityUSD) return -1;
+
+    const diff = a.liquidityUSD.sub(b.liquidityUSD);
+    if (diff.eq(0)) return 0;
+    return diff.gt(0) ? -1 : 1;
+  });
+
+  return sortedByLiquidity;
+};
+
+const getSortByWhitelisted =
+  (sdk: BeanstalkSDK) =>
+  <T extends { well: Well }>(a: T, b: T) => {
+    const aWhitelisted = a.well.lpToken && sdk.tokens.isWhitelisted(a.well.lpToken);
+    const bWhitelisted = b.well.lpToken && sdk.tokens.isWhitelisted(b.well.lpToken);
+
+    if (aWhitelisted) return -1;
+    if (bWhitelisted) return 1;
+    return 0;
+  };
 
 const StyledTable = styled(Table)`
   overflow: auto;
@@ -202,14 +264,15 @@ const MobileHeader = styled(Th)`
 
 const DesktopHeader = styled(Th)`
   :nth-child(1) {
-    width: 12em
+    width: 10em;
   }
   :nth-child(2) {
-    width: 12em
+    width: 12em;
   }
   :nth-child(3) {
-    width: 12em
+    width: 12em;
   }
+
   :nth-child(5) {
     @media (max-width: ${size.desktop}) {
       display: none;
@@ -217,6 +280,12 @@ const DesktopHeader = styled(Th)`
   }
   :nth-child(6) {
     @media (max-width: ${size.desktop}) {
+      display: none;
+    }
+  }
+
+  :nth-child(3) {
+    @media (max-width: ${size.tablet}) {
       display: none;
     }
   }
@@ -252,5 +321,14 @@ const NoLPMessage = styled.div`
 
   @media (max-width: ${size.mobile}) {
     font-size: 14px;
+  }
+`;
+
+const MobileBottomNudge = styled.div`
+  height: ${theme.spacing(8)};
+  width: 100%;
+
+  ${theme.media.query.sm.up} {
+    display: none;
   }
 `;
