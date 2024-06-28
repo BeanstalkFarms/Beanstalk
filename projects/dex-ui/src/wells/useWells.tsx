@@ -5,7 +5,7 @@ import { findWells } from "./wellLoader";
 import { Log } from "src/utils/logger";
 import tokenMetadataJson from 'src/token-metadata.json';
 import { TokenMetadataMap } from "src/types";
-
+import { images } from "src/assets/images/tokens";
 
 export const clearWellsCache = () => findWells.cache.clear?.();
 
@@ -39,8 +39,9 @@ export const useWells = () => {
         );
 
         // filter out errored calls
-        const wellsResult = res.map((promise) => (promise.status === "fulfilled" ? promise.value : null)).filter<Well>((p): p is Well => !!p);
-
+        const wellsResult = res
+          .map((promise) => (promise.status === "fulfilled" ? promise.value : null))
+          .filter<Well>((p): p is Well => !!p);
         // set token metadatas
         setTokenMetadatas(wellsResult);
         return wellsResult;
@@ -57,26 +58,20 @@ export const useWells = () => {
 
 const tokenMetadata = tokenMetadataJson as TokenMetadataMap;
 
-
 const setTokenMetadatas = (wells: Well[]) => {
   for (const well of wells) {
     if (!well.tokens) continue;
     well.tokens.forEach((token) => {
       const address = token.address.toLowerCase();
-      const metadata = tokenMetadata[address];
-      if (metadata) {
-        token.setMetadata({ 
-          logo: metadata.logoURI, 
-        });
 
-        if (metadata.displayDecimals) {
-          token.displayDecimals = metadata.displayDecimals;
-        }
-
-        if (metadata.displayName) {
-          token.displayName = metadata.displayName;
-        }
+      let logo = images[token.symbol];
+      if (address in tokenMetadata) {
+        const metadata = tokenMetadata[address];
+        if (metadata?.logoURI) logo = metadata.logoURI;
+        if (metadata.displayDecimals) token.displayDecimals = metadata.displayDecimals;
+        if (metadata.displayName) token.displayName = metadata.displayName;
       }
-    })
+      if (logo) token.setMetadata({ logo });
+    });
   }
-}
+};
