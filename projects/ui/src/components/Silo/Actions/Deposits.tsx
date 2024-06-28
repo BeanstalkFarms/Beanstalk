@@ -35,7 +35,7 @@ const Deposits: FC<
 
   const stemTip = useStemTipForToken(newToken) || BigNumber.from(0);
   const lastStem = siloBalance?.mowStatus?.lastStem || BigNumber.from(0);
-  const deltaStem = transform(stemTip.sub(lastStem), 'bnjs');
+  const deltaStem = transform(stemTip.sub(lastStem), 'bnjs').div(1000000); // Divide by 10 ^ 6 due to the Silo V3.1 precision updates
 
   const decimalShift = sdk.tokens.BEAN.decimals - sdk.tokens.STALK.decimals;
 
