@@ -39,7 +39,14 @@ async function bip29(mock = true, account = undefined) {
       "SiloFacet", // Add Deposit Permit System
       "TokenFacet" // Add ERC-20 Token Approval System
     ],
-    selectorsToRemove: ["0xeb6fa84f", "0xed778f8e", "0x72db799f", "0x56e70811", "0x6d679775", "0x1aac9789"],
+    selectorsToRemove: [
+      "0xeb6fa84f",
+      "0xed778f8e",
+      "0x72db799f",
+      "0x56e70811",
+      "0x6d679775",
+      "0x1aac9789"
+    ],
     bip: false,
     object: !mock,
     verbose: true,
@@ -52,7 +59,7 @@ async function bipMorningAuction(mock = true, account = undefined) {
     account = await impersonateBeanstalkOwner();
     await mintEth(account.address);
   }
-  
+
   await upgradeWithNewFacets({
     diamondAddress: BEANSTALK,
     facetNames: [
@@ -79,22 +86,22 @@ async function bipNewSilo(mock = true, account = undefined) {
   await upgradeWithNewFacets({
     diamondAddress: BEANSTALK,
     facetNames: [
-      'SeasonFacet',
-      'SiloFacet',
-      'ConvertFacet',
-      'WhitelistFacet',
-      'MigrationFacet',
-      'MetadataFacet',
-      'TokenFacet',
-      'ApprovalFacet',
-      'LegacyClaimWithdrawalFacet',
+      "SeasonFacet",
+      "SiloFacet",
+      "ConvertFacet",
+      "WhitelistFacet",
+      "MigrationFacet",
+      "MetadataFacet",
+      "TokenFacet",
+      "ApprovalFacet",
+      "LegacyClaimWithdrawalFacet"
     ],
-    initFacetName: 'InitBipNewSilo',
+    initFacetName: "InitBipNewSilo",
     bip: false,
     object: !mock, //if this is true, something would get spit out in the diamond cuts folder with all the data (due to gnosis safe deployment flow)
     verbose: true,
     account: account
-  })
+  });
 }
 
 //BIP to integration Basin into Beanstalk
@@ -107,36 +114,34 @@ async function bipBasinIntegration(mock = true, account = undefined) {
   await upgradeWithNewFacets({
     diamondAddress: BEANSTALK,
     facetNames: [
-      'DepotFacet',
-      'BDVFacet',
-      'ConvertFacet',
-      'ConvertGettersFacet',
-      'SiloFacet',
-      'EnrootFacet',
-      'WhitelistFacet',
-      'SeasonFacet',
-      'MetadataFacet'
+      "DepotFacet",
+      "BDVFacet",
+      "ConvertFacet",
+      "ConvertGettersFacet",
+      "SiloFacet",
+      "EnrootFacet",
+      "WhitelistFacet",
+      "SeasonFacet",
+      "MetadataFacet"
     ],
-    initFacetName: 'InitBipBasinIntegration',
+    initFacetName: "InitBipBasinIntegration",
     bip: false,
     object: !mock, //if this is true, something would get spit out in the diamond cuts folder with all the data (due to gnosis safe deployment flow)
     verbose: true,
-    selectorsToRemove: ['0x8f742d16'],
+    selectorsToRemove: ["0x8f742d16"],
     account: account
-  })
+  });
 }
 
 async function mockBeanstalkAdmin(mock = true, account = undefined) {
   if (account == undefined) {
-    account = await impersonateBeanstalkOwner()
-    await mintEth(account.address)
+    account = await impersonateBeanstalkOwner();
+    await mintEth(account.address);
   }
 
   await upgradeWithNewFacets({
     diamondAddress: BEANSTALK,
-    facetNames: [
-      'MockAdminFacet',
-    ],
+    facetNames: ["MockAdminFacet"],
     bip: false,
     object: !mock,
     verbose: true,
@@ -168,7 +173,12 @@ async function bip34(mock = true, account = undefined) {
   });
 }
 
-async function bipMigrateUnripeBean3CrvToBeanEth(mock = true, account = undefined, verbose = true, oracleAccount = undefined) {
+async function bipMigrateUnripeBean3CrvToBeanEth(
+  mock = true,
+  account = undefined,
+  verbose = true,
+  oracleAccount = undefined
+) {
   if (account == undefined) {
     account = await impersonateBeanstalkOwner();
     await mintEth(account.address);
@@ -183,25 +193,15 @@ async function bipMigrateUnripeBean3CrvToBeanEth(mock = true, account = undefine
       "FertilizerFacet",
       "MetadataFacet",
       "MigrationFacet",
-      "UnripeFacet",
+      "UnripeFacet"
     ],
-    libraryNames: [
-      'LibConvert',
-      'LibLockedUnderlying',
-    ],
+    libraryNames: ["LibConvert", "LibLockedUnderlying"],
     facetLibraries: {
-      'ConvertFacet': [
-        'LibConvert'
-      ],
-      'UnripeFacet': [
-        'LibLockedUnderlying'
-      ]
+      ConvertFacet: ["LibConvert"],
+      UnripeFacet: ["LibLockedUnderlying"]
     },
     initFacetName: "InitMigrateUnripeBean3CrvToBeanEth",
-    selectorsToRemove: [
-      '0x0bfca7e3',
-      '0x8cd31ca0'
-    ],
+    selectorsToRemove: ["0x0bfca7e3", "0x8cd31ca0"],
     bip: false,
     object: !mock,
     verbose: verbose,
@@ -209,13 +209,11 @@ async function bipMigrateUnripeBean3CrvToBeanEth(mock = true, account = undefine
     verify: false
   });
 
-
   if (oracleAccount == undefined) {
-    oracleAccount = await impersonateSigner('0x30a1976d5d087ef0BA0B4CDe87cc224B74a9c752', true); // Oracle deployer
+    oracleAccount = await impersonateSigner("0x30a1976d5d087ef0BA0B4CDe87cc224B74a9c752", true); // Oracle deployer
     await mintEth(oracleAccount.address);
   }
-  await deployContract('UsdOracle', oracleAccount, verbose)
-
+  await deployContract("UsdOracle", oracleAccount, verbose);
 }
 
 async function bipSeedGauge(mock = true, account = undefined, verbose = true) {
@@ -244,33 +242,33 @@ async function bipSeedGauge(mock = true, account = undefined, verbose = true) {
     ],
     initFacetName: "InitBipSeedGauge",
     selectorsToRemove: [
-      '0xd8a6aafe', // remove old whitelist
-      '0xb4f55be8', // remove old whitelistWithEncodeType
-      '0x07a3b202', // remove Curve Oracle
-      '0x9f9962e4', // remove getSeedsPerToken
-      '0x0b2939d1' // remove InVestingPeriod
+      "0xd8a6aafe", // remove old whitelist
+      "0xb4f55be8", // remove old whitelistWithEncodeType
+      "0x07a3b202", // remove Curve Oracle
+      "0x9f9962e4", // remove getSeedsPerToken
+      "0x0b2939d1" // remove InVestingPeriod
     ],
     libraryNames: [
-      'LibGauge', 'LibConvert', 'LibLockedUnderlying', 'LibIncentive', 'LibGerminate', 'LibWellMinting', 'LibSilo'
+      "LibGauge",
+      "LibConvert",
+      "LibLockedUnderlying",
+      "LibIncentive",
+      "LibGerminate",
+      "LibWellMinting",
+      "LibSilo"
     ],
     facetLibraries: {
-      'SeasonFacet': [
-        'LibGauge',
-        'LibIncentive',
-        'LibLockedUnderlying',
-        'LibGerminate',
-        'LibWellMinting'
+      SeasonFacet: [
+        "LibGauge",
+        "LibIncentive",
+        "LibLockedUnderlying",
+        "LibGerminate",
+        "LibWellMinting"
       ],
-      'SeasonGettersFacet': [
-        'LibLockedUnderlying',
-        'LibWellMinting'
-      ],
-      'ConvertFacet': [
-        'LibConvert'
-      ],
-      'UnripeFacet': [
-        'LibLockedUnderlying'
-      ]
+      SeasonGettersFacet: ["LibLockedUnderlying", "LibWellMinting"],
+      ConvertFacet: ["LibConvert"],
+      UnripeFacet: ["LibLockedUnderlying"],
+      SiloFacet: ["LibSilo"]
     },
     bip: false,
     object: !mock,
@@ -280,13 +278,16 @@ async function bipSeedGauge(mock = true, account = undefined, verbose = true) {
   });
 }
 
-
-
-async function bipMigrateUnripeBeanEthToBeanSteth(mock = true, account = undefined, verbose = true, oracleAccount = undefined) {
+async function bipMigrateUnripeBeanEthToBeanSteth(
+  mock = true,
+  account = undefined,
+  verbose = true,
+  oracleAccount = undefined
+) {
   if (account == undefined) {
     account = await impersonateBeanstalkOwner();
     await mintEth(account.address);
-}
+  }
 
   await upgradeWithNewFacets({
     diamondAddress: BEANSTALK,
@@ -304,31 +305,24 @@ async function bipMigrateUnripeBeanEthToBeanSteth(mock = true, account = undefin
       "WhitelistFacet" // update whitelist abilities.
     ],
     libraryNames: [
-      'LibGauge',
-      'LibIncentive',
-      'LibConvert',
-      'LibLockedUnderlying',
-      'LibWellMinting',
-      'LibGerminate'
+      "LibGauge",
+      "LibIncentive",
+      "LibConvert",
+      "LibLockedUnderlying",
+      "LibWellMinting",
+      "LibGerminate"
     ],
     facetLibraries: {
-      'ConvertFacet': [
-        'LibConvert'
+      ConvertFacet: ["LibConvert"],
+      UnripeFacet: ["LibLockedUnderlying"],
+      SeasonFacet: [
+        "LibGauge",
+        "LibIncentive",
+        "LibLockedUnderlying",
+        "LibWellMinting",
+        "LibGerminate"
       ],
-      'UnripeFacet': [
-        'LibLockedUnderlying'
-      ],
-      'SeasonFacet': [
-        'LibGauge',
-        'LibIncentive',
-        'LibLockedUnderlying',
-        'LibWellMinting',
-        'LibGerminate'
-      ],
-      'SeasonGettersFacet': [
-        'LibLockedUnderlying',
-        'LibWellMinting',
-      ],
+      SeasonGettersFacet: ["LibLockedUnderlying", "LibWellMinting"]
     },
     initFacetName: "InitMigrateUnripeBeanEthToBeanSteth",
     selectorsToRemove: [],
@@ -339,22 +333,20 @@ async function bipMigrateUnripeBeanEthToBeanSteth(mock = true, account = undefin
     verify: false
   });
 
-
   if (oracleAccount == undefined) {
-    oracleAccount = await impersonateSigner('0x30a1976d5d087ef0BA0B4CDe87cc224B74a9c752', true); // Oracle deployer
+    oracleAccount = await impersonateSigner("0x30a1976d5d087ef0BA0B4CDe87cc224B74a9c752", true); // Oracle deployer
     await mintEth(oracleAccount.address);
   }
-  await deployContract('UsdOracle', oracleAccount, verbose)
+  await deployContract("UsdOracle", oracleAccount, verbose);
 }
 
-
-exports.bip29 = bip29
-exports.bip30 = bip30
-exports.bip34 = bip34
-exports.bipMorningAuction = bipMorningAuction
-exports.bipNewSilo = bipNewSilo
-exports.bipBasinIntegration = bipBasinIntegration
-exports.bipSeedGauge = bipSeedGauge
-exports.mockBeanstalkAdmin = mockBeanstalkAdmin
-exports.bipMigrateUnripeBean3CrvToBeanEth = bipMigrateUnripeBean3CrvToBeanEth
-exports.bipMigrateUnripeBeanEthToBeanSteth = bipMigrateUnripeBeanEthToBeanSteth
+exports.bip29 = bip29;
+exports.bip30 = bip30;
+exports.bip34 = bip34;
+exports.bipMorningAuction = bipMorningAuction;
+exports.bipNewSilo = bipNewSilo;
+exports.bipBasinIntegration = bipBasinIntegration;
+exports.bipSeedGauge = bipSeedGauge;
+exports.mockBeanstalkAdmin = mockBeanstalkAdmin;
+exports.bipMigrateUnripeBean3CrvToBeanEth = bipMigrateUnripeBean3CrvToBeanEth;
+exports.bipMigrateUnripeBeanEthToBeanSteth = bipMigrateUnripeBeanEthToBeanSteth;
