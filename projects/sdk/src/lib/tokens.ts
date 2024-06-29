@@ -168,7 +168,7 @@ export class Tokens {
       providerOrSigner
     );
     this.UNRIPE_BEAN.rewards = {
-      stalk: this.STALK.amount(0),
+      stalk: this.STALK.amount(1),
       seeds: TokenValue.ZERO
     };
     this.UNRIPE_BEAN.isUnripe = true;
