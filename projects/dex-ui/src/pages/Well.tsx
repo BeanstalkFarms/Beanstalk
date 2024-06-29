@@ -31,11 +31,15 @@ import { useIsMobile } from "src/utils/ui/useIsMobile";
 import { useLagLoading } from "src/utils/ui/useLagLoading";
 import { useBeanstalkSiloAPYs } from "src/wells/useBeanstalkSiloAPYs";
 import { useMultiFlowPumpTWAReserves } from "src/wells/useMultiFlowPumpTWAReserves";
+import { useBeanstalkSiloWhitelist } from "src/wells/useBeanstalkSiloWhitelist";
 
 export const Well = () => {
   const { well, loading: dataLoading, error } = useWellWithParams();
   const { isLoading: apysLoading } = useBeanstalkSiloAPYs();
   const { isLoading: twaLoading, getTWAReservesWithWell } = useMultiFlowPumpTWAReserves();
+  const { getIsWhitelisted } = useBeanstalkSiloWhitelist();
+
+  const isWhitelistedWell = getIsWhitelisted(well);
 
   const loading = useLagLoading(dataLoading || apysLoading || twaLoading);
 
@@ -66,7 +70,7 @@ export const Well = () => {
       }
 
       if (well.wellFunction) {
-        const _wellName = await well.wellFunction.contract.name();
+        const _wellName = await well.wellFunction.getName();
         setWellFunctionName(_wellName);
       }
     };
@@ -75,7 +79,9 @@ export const Well = () => {
   }, [sdk, well]);
 
   const title = (well?.tokens ?? []).map((t) => t.symbol).join("/");
-  const logos: ReactNode[] = (well?.tokens || []).map((token) => <TokenLogo token={token} size={48} mobileSize={24} key={token.symbol} />);
+  const logos: ReactNode[] = (well?.tokens || []).map((token) => (
+    <TokenLogo token={token} size={48} mobileSize={24} key={token.symbol} />
+  ));
 
   const reserves = (well?.reserves ?? []).map((amount, i) => {
     const token = well!.tokens![i];
@@ -88,10 +94,16 @@ export const Well = () => {
       percentage: TokenValue.ZERO
     };
   });
-  const totalUSD = reserves.reduce((total, r) => total.add(r.dollarAmount ?? TokenValue.ZERO), TokenValue.ZERO);
+  const totalUSD = reserves.reduce(
+    (total, r) => total.add(r.dollarAmount ?? TokenValue.ZERO),
+    TokenValue.ZERO
+  );
 
   reserves.forEach((reserve) => {
-    reserve.percentage = reserve.dollarAmount && totalUSD.gt(TokenValue.ZERO) ? reserve.dollarAmount.div(totalUSD) : TokenValue.ZERO;
+    reserve.percentage =
+      reserve.dollarAmount && totalUSD.gt(TokenValue.ZERO)
+        ? reserve.dollarAmount.div(totalUSD)
+        : TokenValue.ZERO;
   });
 
   const twaReserves = useMemo(() => getTWAReservesWithWell(well), [well, getTWAReservesWithWell]);
@@ -99,7 +111,9 @@ export const Well = () => {
   const goLiquidity = () => navigate(`./liquidity`);
 
   const goSwap = () =>
-    well && well.tokens ? navigate(`../swap?fromToken=${well.tokens[0].symbol}&toToken=${well.tokens[1].symbol}`) : null;
+    well && well.tokens
+      ? navigate(`../swap?fromToken=${well.tokens[0].symbol}&toToken=${well.tokens[1].symbol}`)
+      : null;
 
   // Code below detects if the component with the Add/Remove Liq + Swap buttons is sticky
   const [isSticky, setIsSticky] = useState(false);
@@ -139,7 +153,12 @@ export const Well = () => {
   return (
     <Page>
       <ContentWrapper>
-        <StyledTitle title={title} parent={{ title: "Liquidity", path: "/wells" }} fontWeight="550" center />
+        <StyledTitle
+          title={title}
+          parent={{ title: "Liquidity", path: "/wells" }}
+          fontWeight="550"
+          center
+        />
 
         {/*
          *Header
@@ -160,6 +179,7 @@ export const Well = () => {
                       offsetY: 0,
                       side: "top"
                     }}
+                    returnNullOnNoAPY={true}
                   />
                 </div>
               </Header>
@@ -193,12 +213,26 @@ export const Well = () => {
         <ActivityOtherButtons gap={24} mobileGap={"0px"}>
           <LoadingItem loading={loading} onLoading={<SkeletonButtonsRow />}>
             <Item stretch>
-              <TabButton onClick={(e) => showTab(e, 0)} active={tab === 0} stretch justify bold hover>
+              <TabButton
+                onClick={(e) => showTab(e, 0)}
+                active={tab === 0}
+                stretch
+                justify
+                bold
+                hover
+              >
                 Activity
               </TabButton>
             </Item>
             <Item stretch>
-              <TabButton onClick={(e) => showTab(e, 1)} active={tab === 1} stretch justify bold hover>
+              <TabButton
+                onClick={(e) => showTab(e, 1)}
+                active={tab === 1}
+                stretch
+                justify
+                bold
+                hover
+              >
                 Contract Addresses
               </TabButton>
             </Item>
@@ -209,7 +243,14 @@ export const Well = () => {
          * Well History & Contract Info Tables
          */}
         <BottomContainer>
-          {tab === 0 && <WellHistory well={well} tokenPrices={prices} reservesUSD={totalUSD} loading={loading} />}
+          {tab === 0 && (
+            <WellHistory
+              well={well}
+              tokenPrices={prices}
+              reservesUSD={totalUSD}
+              loading={loading}
+            />
+          )}
           {tab === 1 && <OtherSection well={well} loading={loading} />}
         </BottomContainer>
 
@@ -273,13 +314,13 @@ export const Well = () => {
           </LearnMoreLabel>
           <LearnMoreButtons open={open}>
             <LoadingItem loading={loading} onLoading={<EmptyLearnItem />}>
-              <LearnYield />
+              <LearnYield isWhitelisted={isWhitelistedWell} />
             </LoadingItem>
             <LoadingItem loading={loading} onLoading={<EmptyLearnItem />}>
-              <LearnWellFunction name={wellFunctionName || "A Well Function"} />
+              <LearnWellFunction well={well} />
             </LoadingItem>
             <LoadingItem loading={loading} onLoading={<EmptyLearnItem />}>
-              <LearnPump />
+              <LearnPump well={well} />
             </LoadingItem>
           </LearnMoreButtons>
         </LearnMoreContainer>
@@ -358,7 +399,7 @@ const HeaderContainer = styled(Row)`
   }
 
   ${mediaQuery.md.up} {
-    align-item: space-between;
+    align-items: space-between;
   }
 `;
 
@@ -472,6 +513,7 @@ const BottomContainer = styled.div`
 
 const FunctionName = styled.div`
   ${BodyL}
+  text-align: right;
 
   ${mediaQuery.lg.down} {
     ${BodyS}

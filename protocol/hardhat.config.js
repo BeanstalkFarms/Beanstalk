@@ -29,7 +29,7 @@ const { BEANSTALK, PUBLIUS, BEAN_3_CURVE, PRICE } = require("./test/utils/consta
 const { task } = require("hardhat/config");
 const { TASK_COMPILE_SOLIDITY_GET_SOURCE_PATHS } = require("hardhat/builtin-tasks/task-names");
 const { bipNewSilo, bipMorningAuction, bipSeedGauge } = require("./scripts/bips.js");
-const { ebip9, ebip10, ebip11, ebip13, ebip14 } = require("./scripts/ebips.js");
+const { ebip9, ebip10, ebip11, ebip13, ebip14, ebip15, ebip16 } = require("./scripts/ebips.js");
 
 const { finishWstethMigration } = require("./scripts/beanWstethMigration.js");
 const { deployBasinV1_1Upgrade } = require("./scripts/basinV1_1.js");
@@ -226,22 +226,15 @@ task("deploySeedGauge", async function () {
   await bipSeedGauge();
 });
 
-task("UI-deployWstethMigration", async function () {
-  await impersonateBean();
-  await impersonateWsteth();
-  let c = {
-    wellImplementation: await getWellContractAt(
-      "Well",
-      "0xBA510e11eEb387fad877812108a3406CA3f43a4B"
-    ),
-    aquifer: await getWellContractAt("Aquifer", "0xBA51AAAA95aeEFc1292515b36D86C51dC7877773")
-  };
-  await deployBasinV1_1Upgrade(c, true, undefined, true, false, (mockPump = true));
-  await bipMigrateUnripeBeanEthToBeanSteth(true, undefined, true);
-  await finishWstethMigration(true, true);
-});
-
 /// EBIPS ///
+
+task("ebip16", async function () {
+  await ebip16();
+})
+
+task("ebip15", async function () {
+  await ebip15();
+})
 
 task("ebip14", async function () {
   await ebip14();

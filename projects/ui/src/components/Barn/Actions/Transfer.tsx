@@ -27,19 +27,19 @@ import { useFetchFarmerBarn } from '~/state/farmer/barn/updater';
 import { FertilizerBalance } from '~/state/farmer/barn';
 
 export type TransferFormValues = {
-    fertilizerIds: number[];
-    amounts: number[];
-    to: string | null;
-    totalSelected: number;
+  fertilizerIds: number[];
+  amounts: number[];
+  to: string | null;
+  totalSelected: number;
 };
 
 export type FullFertilizerBalance = FertilizerBalance & {
-  pctRepaid: BigNumber,
-  status: string,
-  humidity: BigNumber,
-  debt: BigNumber,
-  sprouts: BigNumber,
-  rinsableSprouts: BigNumber
+  pctRepaid: BigNumber;
+  status: string;
+  humidity: BigNumber;
+  debt: BigNumber;
+  sprouts: BigNumber;
+  rinsableSprouts: BigNumber;
 };
 
 const TransferForm: FC<FormikProps<TransferFormValues>> = ({
@@ -48,7 +48,7 @@ const TransferForm: FC<FormikProps<TransferFormValues>> = ({
   isSubmitting,
 }) => {
   const sdk = useSdk();
-  
+
   /// Data
   const beanstalkBarn = useSelector<AppState, AppState['_beanstalk']['barn']>(
     (state) => state._beanstalk.barn
@@ -70,8 +70,12 @@ const TransferForm: FC<FormikProps<TransferFormValues>> = ({
   );
 
   /// Derived
-  const isReady = values.fertilizerIds && values.to && values.amounts && isValid;
-  const totalFertAmount = values.amounts.reduce((total, current) => (current || 0) + total, 0);
+  const isReady =
+    values.fertilizerIds && values.to && values.amounts && isValid;
+  const totalFertAmount = values.amounts.reduce(
+    (total, current) => (current || 0) + total,
+    0
+  );
 
   const fertilizers = useMemo(() => {
     const output: FullFertilizerBalance[] = [];
@@ -79,9 +83,7 @@ const TransferForm: FC<FormikProps<TransferFormValues>> = ({
       const pct = pctRepaid(balance);
       const status = pct.eq(1) ? 'used' : 'active';
       const humidity = balance.token.humidity;
-      const debt = balance.amount.multipliedBy(
-        humidity.div(100).plus(1)
-      );
+      const debt = balance.amount.multipliedBy(humidity.div(100).plus(1));
       const sprouts = debt.multipliedBy(ONE_BN.minus(pct));
       const rinsableSprouts = debt.multipliedBy(pct);
 
@@ -92,7 +94,7 @@ const TransferForm: FC<FormikProps<TransferFormValues>> = ({
         humidity: humidity,
         debt: debt,
         sprouts: sprouts,
-        rinsableSprouts: rinsableSprouts
+        rinsableSprouts: rinsableSprouts,
       };
 
       output.push(fullBalance);
@@ -102,11 +104,16 @@ const TransferForm: FC<FormikProps<TransferFormValues>> = ({
 
   const sproutAmounts = [];
   for (let i = 0; i < fertilizers.length; i += 1) {
-    const pctRatio = BigNumber(values.amounts[i] || 0).div(fertilizers[i].amount);
+    const pctRatio = BigNumber(values.amounts[i] || 0).div(
+      fertilizers[i].amount
+    );
     const sprouts = fertilizers[i].sprouts.multipliedBy(pctRatio);
     sproutAmounts.push(sprouts);
-  };
-  const totalSprouts = sproutAmounts.reduce((total: BigNumber, current: BigNumber) => total.plus(current), BigNumber(0));
+  }
+  const totalSprouts = sproutAmounts.reduce(
+    (total: BigNumber, current: BigNumber) => total.plus(current),
+    BigNumber(0)
+  );
 
   return (
     <Form autoComplete="off">
@@ -118,44 +125,46 @@ const TransferForm: FC<FormikProps<TransferFormValues>> = ({
           </FieldWrapper>
         )}
         {/* Txn info */}
-        {values.to && values.amounts.length > 0 && values.fertilizerIds.length > 0 && (
-          <>
-            <TxnSeparator />
-            <TokenOutput>
-              <TokenOutput.Row
-                amount={totalSprouts.negated()}
-                token={sdk.tokens.SPROUTS}
-              />
-            </TokenOutput>
-            <Box>
-              <Accordion variant="outlined">
-                <StyledAccordionSummary title="Transaction Details" />
-                <AccordionDetails>
-                  <TxnPreview
-                    actions={
-                      values.fertilizerIds !== undefined &&
-                      values.fertilizerIds.length > 0 &&
-                      values.to ?
-                          [
-                            {
-                              type: ActionType.TRANSFER_FERTILIZER,
-                              fertAmount: BigNumber(totalFertAmount),
-                              sproutAmount: totalSprouts,
-                              to: values.to,
-                            },
-                            {
-                              type: ActionType.END_TOKEN,
-                              token: SPROUTS,
-                            },
-                          ]
+        {values.to &&
+          values.amounts.length > 0 &&
+          values.fertilizerIds.length > 0 && (
+            <>
+              <TxnSeparator />
+              <TokenOutput>
+                <TokenOutput.Row
+                  amount={totalSprouts.negated()}
+                  token={sdk.tokens.SPROUTS}
+                />
+              </TokenOutput>
+              <Box>
+                <Accordion variant="outlined">
+                  <StyledAccordionSummary title="Transaction Details" />
+                  <AccordionDetails>
+                    <TxnPreview
+                      actions={
+                        values.fertilizerIds !== undefined &&
+                        values.fertilizerIds.length > 0 &&
+                        values.to
+                          ? [
+                              {
+                                type: ActionType.TRANSFER_FERTILIZER,
+                                fertAmount: BigNumber(totalFertAmount),
+                                sproutAmount: totalSprouts,
+                                to: values.to,
+                              },
+                              {
+                                type: ActionType.END_TOKEN,
+                                token: SPROUTS,
+                              },
+                            ]
                           : []
-                    }
-                  />
-                </AccordionDetails>
-              </Accordion>
-            </Box>
-          </>
-        )}
+                      }
+                    />
+                  </AccordionDetails>
+                </Accordion>
+              </Box>
+            </>
+          )}
         <SmartSubmitButton
           loading={isSubmitting}
           disabled={!isReady || isSubmitting}
@@ -212,25 +221,26 @@ const Transfer: FC<{}> = () => {
           if (values.fertilizerIds[i]) {
             fertilizers.push(values.fertilizerIds[i]);
             amounts.push(values.amounts[i]);
-          };
-        };
+          }
+        }
 
         if (!account) throw new Error('Connect a wallet first.');
-        if (!to || !fertilizers || !amounts || fertilizers.length === 0) throw new Error('Missing data.');
+        if (!to || !fertilizers || !amounts || fertilizers.length === 0)
+          throw new Error('Missing data.');
 
         txToast = new TransactionToast({
           loading: `Transferring Fertilizers...`,
           success: 'Fertilizer Transfer successful.',
         });
 
-        let call
+        let call;
         if (fertilizers.length === 1) {
           call = fertilizer.safeTransferFrom(
             account,
             to,
             fertilizers[0],
             amounts[0],
-            "0x00"
+            '0x00'
           );
         } else {
           call = fertilizer.safeBatchTransferFrom(
@@ -238,9 +248,9 @@ const Transfer: FC<{}> = () => {
             to,
             fertilizers,
             amounts,
-            "0x00"
+            '0x00'
           );
-        };
+        }
 
         const txn = await call;
         txToast.confirming(txn);

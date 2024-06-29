@@ -1,4 +1,4 @@
-import { TokenValue } from "@beanstalk/sdk";
+import { BeanstalkSDK, TokenValue } from "@beanstalk/sdk";
 import React, { useMemo, useState } from "react";
 import { Item } from "src/components/Layout";
 import { Page } from "src/components/Page";
@@ -6,8 +6,6 @@ import { Title } from "src/components/PageComponents/Title";
 import { TabButton } from "src/components/TabButton";
 import { Row, TBody, THead, Table, Th } from "src/components/Table";
 import { Row as TabRow } from "src/components/Layout";
-import { getPrice } from "src/utils/price/usePrice";
-import useSdk from "src/utils/sdk/useSdk";
 import { useWells } from "src/wells/useWells";
 import styled from "styled-components";
 import { mediaQuery, size } from "src/breakpoints";
@@ -16,51 +14,46 @@ import { useWellLPTokenPrice } from "src/wells/useWellLPTokenPrice";
 import { useLPPositionSummary } from "src/tokens/useLPPositionSummary";
 
 import { WellDetailLoadingRow, WellDetailRow } from "src/components/Well/Table/WellDetailRow";
-import { MyWellPositionLoadingRow, MyWellPositionRow } from "src/components/Well/Table/MyWellPositionRow";
+import {
+  MyWellPositionLoadingRow,
+  MyWellPositionRow
+} from "src/components/Well/Table/MyWellPositionRow";
 import { useBeanstalkSiloAPYs } from "src/wells/useBeanstalkSiloAPYs";
 import { useLagLoading } from "src/utils/ui/useLagLoading";
+import useBasinStats from "src/wells/useBasinStats";
+import { useTokenPrices } from "src/utils/price/useTokenPrices";
+import { useWellFunctionNames } from "src/wells/wellFunction/useWellFunctionNames";
+import { BasinAPIResponse } from "src/types";
+import { Well } from "@beanstalk/sdk-wells";
+import useSdk from "src/utils/sdk/useSdk";
+import { theme } from "src/utils/ui/theme";
 
 export const Wells = () => {
   const { data: wells, isLoading, error } = useWells();
+  const { data: wellStats = [] } = useBasinStats();
   const sdk = useSdk();
 
-  const [wellLiquidity, setWellLiquidity] = useState<(TokenValue | undefined)[]>([]);
-  const [wellFunctionNames, setWellFunctionNames] = useState<string[]>([]);
   const [tab, showTab] = useState<number>(0);
 
-  const { data: lpTokenPrices } = useWellLPTokenPrice(wells);
+  const { data: lpTokenPrices, isLoading: lpTokenPricesLoading } = useWellLPTokenPrice(wells);
   const { hasPositions, getPositionWithWell, isLoading: positionsLoading } = useLPPositionSummary();
   const { isLoading: apysLoading } = useBeanstalkSiloAPYs();
+  const { data: tokenPrices, isLoading: tokenPricesLoading } = useTokenPrices(wells);
+  const { data: wellFnNames, isLoading: wellNamesLoading } = useWellFunctionNames(wells);
 
-  const loading = useLagLoading(isLoading || apysLoading || positionsLoading);
+  const tableData = useMemo(
+    () => makeTableData(sdk, wells, wellStats, tokenPrices),
+    [sdk, tokenPrices, wellStats, wells]
+  );
 
-  useMemo(() => {
-    const run = async () => {
-      if (!wells || !wells.length) return;
-      let _wellsLiquidityUSD = [];
-      for (let i = 0; i < wells.length; i++) {
-        if (!wells[i].tokens) return;
-        const _tokenPrices = await Promise.all(wells[i].tokens!.map((token) => getPrice(token, sdk)));
-        const _reserveValues = wells[i].reserves?.map((tokenReserve, index) =>
-          tokenReserve.mul((_tokenPrices[index] as TokenValue) || TokenValue.ZERO)
-        );
-        let initialValue = TokenValue.ZERO;
-        const _totalWellLiquidity = _reserveValues?.reduce((accumulator, currentValue) => currentValue.add(accumulator), initialValue);
-        _wellsLiquidityUSD[i] = _totalWellLiquidity;
-      }
-      setWellLiquidity(_wellsLiquidityUSD);
-
-      let _wellsFunctionNames = [];
-      for (let i = 0; i < wells.length; i++) {
-        if (!wells[i].wellFunction) return;
-        const _wellName = await wells[i].wellFunction!.contract.name();
-        _wellsFunctionNames[i] = _wellName;
-      }
-      setWellFunctionNames(_wellsFunctionNames);
-    };
-
-    run();
-  }, [sdk, wells]);
+  const loading = useLagLoading(
+    isLoading ||
+      apysLoading ||
+      positionsLoading ||
+      lpTokenPricesLoading ||
+      tokenPricesLoading ||
+      wellNamesLoading
+  );
 
   if (error) {
     return <Error message={error?.message} errorOnly />;
@@ -89,6 +82,8 @@ export const Wells = () => {
               <DesktopHeader>Well Function</DesktopHeader>
               <DesktopHeader align="right">Yield</DesktopHeader>
               <DesktopHeader align="right">Total Liquidity</DesktopHeader>
+              <DesktopHeader align="right">Price</DesktopHeader>
+              <DesktopHeader align="right">24H Volume</DesktopHeader>
               <DesktopHeader align="right">Reserves</DesktopHeader>
               <MobileHeader>All Wells</MobileHeader>
             </TableRow>
@@ -105,7 +100,7 @@ export const Wells = () => {
           </THead>
         )}
         <TBody>
-          {loading ? (
+          {loading || !tableData.length ? (
             <>
               {Array(5)
                 .fill(null)
@@ -129,15 +124,24 @@ export const Wells = () => {
                   </NoLPRowMobile>
                 </>
               ) : (
-                wells?.map((well, index) => {
-                  return tab === 0 ? (
-                    <WellDetailRow
-                      well={well}
-                      liquidity={wellLiquidity?.[index]}
-                      functionName={wellFunctionNames?.[index]}
-                      key={`well-detail-row-${well.address}-${index}`}
-                    />
-                  ) : (
+                tableData?.map(({ well, baseTokenPrice, liquidityUSD, targetVolume }, index) => {
+                  if (tab === 0) {
+                    const priceFnName =
+                      well.wellFunction?.name || wellFnNames?.[well.wellFunction?.address || ""];
+
+                    return (
+                      <WellDetailRow
+                        well={well}
+                        liquidity={liquidityUSD}
+                        functionName={priceFnName}
+                        price={baseTokenPrice}
+                        volume={targetVolume}
+                        key={`well-detail-row-${well.address}-${index}`}
+                      />
+                    );
+                  }
+
+                  return (
                     <MyWellPositionRow
                       well={well}
                       position={getPositionWithWell(well)}
@@ -151,9 +155,108 @@ export const Wells = () => {
           )}
         </TBody>
       </StyledTable>
+      <MobileBottomNudge />
     </Page>
   );
 };
+
+const makeTableData = (
+  sdk: BeanstalkSDK,
+  wells?: Well[],
+  stats?: BasinAPIResponse[],
+  tokenPrices?: Record<string, TokenValue>
+) => {
+  if (!wells || !wells.length || !tokenPrices) return [];
+
+  const statsByPoolId = (stats ?? []).reduce<Record<string, BasinAPIResponse>>(
+    (prev, curr) => ({ ...prev, [curr.pool_id.toLowerCase()]: curr }),
+    {}
+  );
+
+  const data = (wells || []).map((well) => {
+    let baseTokenPrice: TokenValue | undefined = undefined;
+    let liquidityUSD: TokenValue | undefined = undefined;
+    let targetVolume: TokenValue | undefined = undefined;
+
+    let liquidityUSDInferred: TokenValue | undefined = undefined;
+
+    const token1 = well.tokens?.[0];
+    const token2 = well.tokens?.[1];
+
+    if (token1 && token2) {
+      const basePrice = tokenPrices[token1.symbol] || TokenValue.ZERO;
+      const targetPrice = tokenPrices[token2.symbol] || TokenValue.ZERO;
+
+      const reserve1 = well.reserves?.[0];
+      const reserve2 = well.reserves?.[1];
+      const reserve1USD = reserve1?.mul(basePrice);
+      const reserve2USD = reserve2?.mul(targetPrice);
+
+      if (reserve2USD && reserve1 && reserve1.gt(0)) {
+        baseTokenPrice = reserve2USD.div(reserve1);
+      }
+      if (reserve1USD && reserve2USD && reserve2USD.gt(0)) {
+        liquidityUSD = reserve1USD.add(reserve2USD);
+      }
+
+      const baseVolume = token2.fromHuman(
+        statsByPoolId[well.address.toLowerCase()]?.target_volume || 0
+      );
+      targetVolume = baseVolume.mul(targetPrice);
+
+      const bothPricesAvailable = !!(reserve1USD && reserve2USD);
+      const atLeastOnePriceAvailable = !!(reserve1USD || reserve1USD);
+
+      if (atLeastOnePriceAvailable && !bothPricesAvailable) {
+        // Since we don't have the other price, we assume reserves are balanced 50% - 50%
+        if (reserve1USD) liquidityUSDInferred = reserve1USD.mul(2);
+        if (reserve2USD) liquidityUSDInferred = reserve2USD.mul(2);
+      } else if (bothPricesAvailable) {
+        liquidityUSDInferred = liquidityUSD;
+      }
+    }
+
+    const hasReserves = well.reserves?.[0]?.gt(0) && well.reserves?.[1]?.gt(0);
+
+    return {
+      well,
+      baseTokenPrice,
+      liquidityUSD,
+      targetVolume,
+      liquidityUSDInferred,
+      hasReserves
+    };
+  });
+
+  const whitelistedSort = data.sort(getSortByWhitelisted(sdk));
+
+  const sortedByLiquidity = whitelistedSort.sort((a, b) => {
+    if (!a.liquidityUSDInferred) return 1;
+    if (!b.liquidityUSDInferred) return -1;
+
+    const diff = a.liquidityUSDInferred.sub(b.liquidityUSDInferred);
+    if (diff.eq(0)) return 0;
+    return diff.gt(0) ? -1 : 1;
+  });
+
+  const sortedByHasReserves = sortedByLiquidity.sort((a, b) => {
+    if (a.hasReserves === b.hasReserves) return 0;
+    return a.hasReserves && !b.hasReserves ? -1 : 1;
+  });
+
+  return sortedByHasReserves;
+};
+
+const getSortByWhitelisted =
+  (sdk: BeanstalkSDK) =>
+  <T extends { well: Well }>(a: T, b: T) => {
+    const aWhitelisted = a.well.lpToken && sdk.tokens.isWhitelisted(a.well.lpToken);
+    const bWhitelisted = b.well.lpToken && sdk.tokens.isWhitelisted(b.well.lpToken);
+
+    if (aWhitelisted) return -1;
+    if (bWhitelisted) return 1;
+    return 0;
+  };
 
 const StyledTable = styled(Table)`
   overflow: auto;
@@ -183,6 +286,32 @@ const MobileHeader = styled(Th)`
 `;
 
 const DesktopHeader = styled(Th)`
+  :nth-child(1) {
+    width: 10em;
+  }
+  :nth-child(2) {
+    width: 12em;
+  }
+  :nth-child(3) {
+    width: 12em;
+  }
+
+  :nth-child(5) {
+    @media (max-width: ${size.desktop}) {
+      display: none;
+    }
+  }
+  :nth-child(6) {
+    @media (max-width: ${size.desktop}) {
+      display: none;
+    }
+  }
+
+  :nth-child(3) {
+    @media (max-width: ${size.tablet}) {
+      display: none;
+    }
+  }
   @media (max-width: ${size.mobile}) {
     display: none;
   }
@@ -215,5 +344,14 @@ const NoLPMessage = styled.div`
 
   @media (max-width: ${size.mobile}) {
     font-size: 14px;
+  }
+`;
+
+const MobileBottomNudge = styled.div`
+  height: ${theme.spacing(8)};
+  width: 100%;
+
+  ${theme.media.query.sm.up} {
+    display: none;
   }
 `;

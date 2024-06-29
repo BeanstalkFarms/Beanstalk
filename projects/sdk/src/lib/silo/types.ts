@@ -25,6 +25,12 @@ export type Deposit<T extends any = TokenValue> = {
   };
   /** The amount of Seeds granted for this Deposit. */
   seeds: T;
+  /** Whether or not this deposit is germinating.
+   *
+   * If the germinatingStemTip for this token is less than the stem of this deposit, then it is NOT germinating
+   * If it's greater than or equal to, then it is a germinating deposit
+   */
+  isGerminating: boolean;
 };
 
 /**
@@ -34,10 +40,14 @@ export type Deposit<T extends any = TokenValue> = {
 export type TokenSiloBalance<T extends any = TokenValue> = {
   /** The total amount of this Token currently in the Deposited state. */
   amount: T;
+  /** The total amount of this Token that is available to Convert. Excludes germinating deposits */
+  convertibleAmount: T;
   /** The BDV of this Token currently in the Deposited state. */
   bdv: T;
   /** All Deposit crates. */
   deposits: Deposit<T>[];
+  /** All Deposits that can be used in a Convert operation. Excludes germinating ones. */
+  convertibleDeposits: Deposit<T>[];
 };
 
 // FIXME: resolve with EIP712PermitMessage
