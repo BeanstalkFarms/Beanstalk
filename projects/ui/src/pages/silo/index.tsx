@@ -115,7 +115,8 @@ const RewardsBar: FC<{
   const sdk = useSdk();
 
   // Are we impersonating a different account while not in dev mode
-  const isImpersonating = !!useSetting('impersonatedAccount')[0] && !import.meta.env.DEV;
+  const isImpersonating =
+    !!useSetting('impersonatedAccount')[0] && !import.meta.env.DEV;
 
   /// Calculate Unripe Silo Balance
   const urBean = getChainToken(UNRIPE_BEAN);
@@ -247,14 +248,17 @@ const RewardsBar: FC<{
     return {
       empty: amountBean.eq(0) && amountStalk.eq(0) && amountSeeds.eq(0),
       output: new Map<Token, TokenValue>([
-        [sdk.tokens.BEAN, transform(amountBean, 'tokenValue', sdk.tokens.BEAN)],
+        [
+          sdk.tokens.BEAN, 
+          transform(amountBean.isNaN() ? ZERO_BN : amountBean, 'tokenValue', sdk.tokens.BEAN),
+        ],
         [
           sdk.tokens.STALK,
-          transform(amountStalk, 'tokenValue', sdk.tokens.STALK),
+          transform(amountStalk.isNaN() ? ZERO_BN : amountStalk, 'tokenValue', sdk.tokens.STALK),
         ],
         [
           sdk.tokens.SEEDS,
-          transform(amountSeeds, 'tokenValue', sdk.tokens.SEEDS),
+          transform(amountSeeds.isNaN() ? ZERO_BN : amountSeeds, 'tokenValue', sdk.tokens.SEEDS),
         ],
       ]),
     };
@@ -418,7 +422,13 @@ const RewardsBar: FC<{
             size="medium"
             variant="contained"
             sx={{ width: '100%', whiteSpace: 'nowrap' }}
-            endIcon={<DropdownIcon open={open && canClaim} disabled={!canClaim} light />}
+            endIcon={
+              <DropdownIcon
+                open={open && canClaim}
+                disabled={!canClaim}
+                light
+              />
+            }
             onClick={open ? hide : show}
             disabled={!canClaim}
           >
@@ -587,7 +597,7 @@ const RewardsBar: FC<{
               </Grid>
               <Grid item xs={12} md={4}>
                 <Stack spacing={1}>
-                  <TokenOutput>
+                  <TokenOutput danger={false}>
                     {empty && (
                       <Centered>
                         <Typography variant="body1" color="text.secondary">
@@ -619,7 +629,9 @@ const RewardsBar: FC<{
                     size="large"
                     onClick={handleSubmit}
                   >
-                    {isImpersonating ? 'Impersonating Account' : 'Claim Rewards'}
+                    {isImpersonating
+                      ? 'Impersonating Account'
+                      : 'Claim Rewards'}
                   </Button>
                   <Row justifyContent="flex-end" spacing={0.5}>
                     {isEstimatingGas ? (

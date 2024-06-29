@@ -65,7 +65,8 @@ export function pickCrates(deposits: Deposit[], amount: TokenValue, token: Token
         base: baseStalk,
         grown: grownStalk
       },
-      seeds: crateSeeds
+      seeds: crateSeeds,
+      isGerminating: deposit.isGerminating
     });
 
     return totalAmount.eq(amount);
@@ -112,8 +113,10 @@ export function sortTokenMapByWhitelist<T extends any>(whitelist: Set<Token>, ma
 export function makeTokenSiloBalance(): TokenSiloBalance {
   return {
     amount: TokenValue.ZERO,
+    convertibleAmount: TokenValue.ZERO,
     bdv: TokenValue.ZERO,
-    deposits: [] as Deposit[]
+    deposits: [] as Deposit[],
+    convertibleDeposits: [] as Deposit[]
   };
 }
 
@@ -121,6 +124,7 @@ export type RawDepositData = {
   stem: ethers.BigNumberish;
   amount: ethers.BigNumberish;
   bdv: ethers.BigNumberish;
+  germinatingStem: ethers.BigNumber;
 };
 
 /**
@@ -135,12 +139,20 @@ export type RawDepositData = {
  */
 export function makeDepositObject(token: Token, stemTipForToken: ethers.BigNumber, data: RawDepositData): Deposit {
   // On-chain
-  const stem = ethers.BigNumber.from(data.stem);
+  let stem
   const amount = token.fromBlockchain(data.amount.toString());
   const bdv = Silo.sdk.tokens.BEAN.fromBlockchain(data.bdv.toString()); // Hack
+  // Hack - Remove additional digits added to stem of redeposited unripe tokens in migrateStem
+  if (token.isUnripe && !ethers.BigNumber.from(data.stem).isNegative()) {
+    stem = ethers.BigNumber.from(data.stem).div(1000000);
+  } else {
+    stem = ethers.BigNumber.from(data.stem);
+  };
+  const isGerminating = stem.gte(data.germinatingStem);
 
   // Stalk
-  const base = token.getStalk(bdv);
+  // Germinating stalk has 0 base stalk
+  const base = isGerminating ? TokenValue.ZERO : token.getStalk(bdv);
   const grown = calculateGrownStalkStems(stemTipForToken, stem, bdv);
   const total = base.add(grown);
 
@@ -153,7 +165,8 @@ export function makeDepositObject(token: Token, stemTipForToken: ethers.BigNumbe
       grown,
       total
     },
-    seeds: token.getSeeds(bdv)
+    seeds: token.getSeeds(bdv),
+    isGerminating
   };
 }
 
@@ -176,27 +189,34 @@ export function calculateGrownStalkSeeds(
  * Formula: `grownStalk = bdv * (stemTip - stem)`
  * See: LibTokenSilo.grownStalkForDeposit
  *
+ * The grown stalk for a deposit (this applies to both germinating and regular deposits) is calculated by:
+ * ∆Stem * bdv / 1e6 (where bdv is in 6 decimal precision, "1" bdv = 1e6)
+ * ∆Stem = StemTip - Stem of deposit.
+ *
  * @param stemTip The current stem tip for the token that is deposited
  * @param stem The stem of the deposit
  * @param bdv The bdv of the deposit
  */
 export function calculateGrownStalkStems(stemTip: ethers.BigNumber, stem: ethers.BigNumber, bdv: TokenValue) {
-  const deltaStem = stemTip.sub(stem);
+  const deltaStem = stemTip.sub(stem).div(10 ** 6);
+
   if (deltaStem.lt(0)) return Silo.sdk.tokens.STALK.fromHuman("0"); // FIXME
   return Silo.sdk.tokens.STALK.fromBlockchain(bdv.toBigNumber().mul(deltaStem));
 }
 
 /**
  * Apply a Deposit to a TokenSiloBalance.
- * TODO: refactor to accept currentStem instead of currentSeason
- * @note expects inputs to be stringified (no decimals).
  */
 export function applyDeposit(balance: TokenSiloBalance, token: Token, stemTipForToken: ethers.BigNumber, data: RawDepositData) {
   const deposit = makeDepositObject(token, stemTipForToken, data);
 
   balance.amount = balance.amount.add(deposit.amount);
+  balance.convertibleAmount = balance.convertibleAmount.add(deposit.isGerminating ? TokenValue.ZERO : deposit.amount);
   balance.bdv = balance.bdv.add(deposit.bdv);
   balance.deposits.push(deposit);
+  if (!deposit.isGerminating) {
+    balance.convertibleDeposits.push(deposit);
+  }
 
   return deposit;
 }

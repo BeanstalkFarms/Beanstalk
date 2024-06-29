@@ -1,0 +1,13 @@
+query SeasonalWeightedDeltaB($season_lte: Int, $first: Int, $season_gte: Int) {
+  seasons: beanHourlySnapshots(
+    where: { season_lte: $season_lte, season_gte: $season_gte, season_not_in: [6074, 6075, 16644, 16645, 16646, 16647, 16648, 16649, 16650, 16651, 16652, 16653, 16654, 16655, 16656, 16657, 16658, 16659, 16660, 16661, 16662, 16663, 16664, 16665] }
+    first: $first
+    orderBy: season
+    orderDirection: desc
+  ) {
+    id
+    season
+    timestamp
+    twaDeltaB
+  }
+}

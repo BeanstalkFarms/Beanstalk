@@ -82,36 +82,47 @@ const SettingsDialog: FC<{ open: boolean; onClose?: () => void }> = ({
   const [denomination, setDenomination] = useSetting('denomination');
   const [subgraphEnv, setSubgraphEnv] = useSetting('subgraphEnv');
   const [datasource, setDataSource] = useSetting('datasource');
-  const [impersonatedAccount, setImpersonatedAccount] = useSetting('impersonatedAccount');
+  const [impersonatedAccount, setImpersonatedAccount] = useSetting(
+    'impersonatedAccount'
+  );
   const [internalAccount, setInternalAccount] = useState(impersonatedAccount);
-  const [isAddressValid, setIsAddressValid] = useState<boolean | undefined>(undefined);
+  const [isAddressValid, setIsAddressValid] = useState<boolean | undefined>(
+    undefined
+  );
   const dispatch = useDispatch();
   const siloBalances = useFarmerSiloBalances();
   const account = useAccount();
 
-  const checkAddress = useCallback((address: string) => {
-    if (address) {
-      const isValid = ethers.utils.isAddress(address);
-      if (isValid) {
-        setInternalAccount(address);
-      };
-      setIsAddressValid(isValid);
-    } else {
-      setIsAddressValid(undefined);
-    }
-  }, [setInternalAccount]);
+  const checkAddress = useCallback(
+    (address: string) => {
+      if (address) {
+        const isValid = ethers.utils.isAddress(address);
+        if (isValid) {
+          setInternalAccount(address);
+        }
+        setIsAddressValid(isValid);
+      } else {
+        setIsAddressValid(undefined);
+      }
+    },
+    [setInternalAccount]
+  );
 
   useMemo(() => {
     if (!account.address) {
-      setInternalAccount('')
+      setInternalAccount('');
       setIsAddressValid(undefined);
       setImpersonatedAccount('');
-    };
+    }
   }, [account.address, setImpersonatedAccount]);
 
   /// Cache
   const clearCache = useCallback(() => {
     clearApolloCache();
+    localStorage.removeItem('advancedChartTimePeriod');
+    localStorage.removeItem('advancedChartSelectedCharts');
+    localStorage.removeItem('advancedChartRange');
+    localStorage.removeItem('advancedChartPreset');
   }, []);
   const updateSubgraphEnv = useCallback(
     (env: SGEnvironments) => {
@@ -168,7 +179,7 @@ const SettingsDialog: FC<{ open: boolean; onClose?: () => void }> = ({
   const closeDialog = () => {
     if (impersonatedAccount !== internalAccount) {
       setImpersonatedAccount(internalAccount);
-    };
+    }
     onClose && onClose();
   };
 
@@ -241,7 +252,9 @@ const SettingsDialog: FC<{ open: boolean; onClose?: () => void }> = ({
               </ButtonGroup>
             </Split>
             <Split>
-              <Typography color="text.secondary">Impersonate Account</Typography>
+              <Typography color="text.secondary">
+                Impersonate Account
+              </Typography>
               {internalAccount ? (
                 <OutputField size="small">
                   <Row spacing={1}>
@@ -264,26 +277,33 @@ const SettingsDialog: FC<{ open: boolean; onClose?: () => void }> = ({
                     </Typography>
                   </Row>
                   <Box>
-                    <IconButton onClick={() => {setInternalAccount('')}}>
-                      <CloseIcon sx={{ height: 20, width: 20, fontSize: '100%' }} />
+                    <IconButton
+                      onClick={() => {
+                        setInternalAccount('');
+                      }}
+                    >
+                      <CloseIcon
+                        sx={{ height: 20, width: 20, fontSize: '100%' }}
+                      />
                     </IconButton>
                   </Box>
                 </OutputField>
               ) : (
-                <TextField 
+                <TextField
                   sx={{ width: 180 }}
-                  placeholder="0x0000" 
-                  size='small' 
-                  color='primary'
+                  placeholder="0x0000"
+                  size="small"
+                  color="primary"
                   InputProps={{
-                    startAdornment:  (
-                      isAddressValid === false &&
-                        <InputAdornment position="start" sx={{ ml: -1, mr: 0 }}>
-                          <CloseIcon color="warning" sx={{ scale: '80%' }} />
-                        </InputAdornment>
+                    startAdornment: isAddressValid === false && (
+                      <InputAdornment position="start" sx={{ ml: -1, mr: 0 }}>
+                        <CloseIcon color="warning" sx={{ scale: '80%' }} />
+                      </InputAdornment>
                     ),
                   }}
-                  onChange={(e) => {checkAddress(e.target.value)}} 
+                  onChange={(e) => {
+                    checkAddress(e.target.value);
+                  }}
                 />
               )}
             </Split>

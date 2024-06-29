@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { FC } from "src/types";
 import { Row, TBody, THead, Table, Td, Th } from "./Table";
 import { Well } from "@beanstalk/sdk/Wells";
@@ -7,33 +7,92 @@ import { size } from "src/breakpoints";
 import { displayTokenSymbol } from "src/utils/format";
 import { Token } from "@beanstalk/sdk";
 import { Skeleton } from "../Skeleton";
+import { useWhitelistedWellComponents } from "../Create/useWhitelistedWellComponents";
+import { useWellImplementations } from "src/wells/useWellImplementations";
 
 type Props = { well: Well };
 
-const tableItems = [
-  { name: "Multi Flow Pump", address: "0xBA510f10E3095B83a0F33aa9ad2544E22570a87C" },
-  { name: "Constant Product 2", address: "0xBA510C20FD2c52E4cb0d23CFC3cCD092F9165a6E" },
-  { name: "Well Implementation", address: "0xBA510e11eEb387fad877812108a3406CA3f43a4B" },
-  { name: "Aquifer", address: "0xBA51AAAA95aeEFc1292515b36D86C51dC7877773" }
-];
-
 const OtherSectionContent: FC<Props> = ({ well }) => {
+  const { data: implementations } = useWellImplementations();
+  const {
+    lookup: { pumps: pumpLookup }
+  } = useWhitelistedWellComponents();
+
+  const [items, setItems] = useState<{ name: string; address: string }[]>([]);
+  const [wellFunctionName, setWellFunctionName] = useState<string>("");
+
+  const implementationAddress = implementations?.[well.address.toLowerCase()];
+
+  const wellTokenDetail = well.tokens
+    ?.map((token) => token.symbol)
+    .filter(Boolean)
+    .join(":");
+
+  useEffect(() => {
+    const run = async () => {
+      if (!well.wellFunction) return;
+      const name = await well.wellFunction.getName();
+      setWellFunctionName(name);
+    };
+    run();
+  }, [well.wellFunction]);
+
+  useEffect(() => {
+    const data: typeof items = [];
+    well.pumps?.forEach((pump) => {
+      const pumpAddress = pump.address.toLowerCase();
+      if (pumpAddress in pumpLookup) {
+        const pumpInfo = pumpLookup[pumpAddress].component;
+        data.push({
+          name: pumpInfo?.fullName || pumpInfo.name,
+          address: pump.address
+        });
+      } else {
+        data.push({
+          name: "Pump",
+          address: pump.address || "--"
+        });
+      }
+    });
+    data.push({
+      name: wellFunctionName ?? "Well Function",
+      address: well.wellFunction?.address || "--"
+    });
+    data.push({
+      name: "Well Implementation",
+      address: implementationAddress || "--"
+    });
+    data.push({
+      name: "Aquifer",
+      address: well.aquifer?.address || "--"
+    });
+
+    setItems(data);
+  }, [
+    implementationAddress,
+    pumpLookup,
+    well.aquifer?.address,
+    well.pumps,
+    well.wellFunction?.address,
+    wellFunctionName
+  ]);
+
   return (
     <div>
       <Table width="100%">
         <THead>
           <Row>
             <Th>Name</Th>
-            <DesktopTh>Address</DesktopTh>
-            <MobileTh align={"right"}>Address</MobileTh>
+            <DesktopTh align="right">Address</DesktopTh>
+            <MobileTh align="right">Address</MobileTh>
           </Row>
         </THead>
         <TBody>
           <Row>
             <Td>
-              <Detail>BEAN:WETH Well</Detail>
+              <Detail>{wellTokenDetail} Well</Detail>
             </Td>
-            <DesktopTd>
+            <DesktopTd align={"right"}>
               <Link href={`https://etherscan.io/address/${well.address}`}>{well.address}</Link>
             </DesktopTd>
             <MobileTd align={"right"}>
@@ -46,7 +105,7 @@ const OtherSectionContent: FC<Props> = ({ well }) => {
             <Td>
               <Detail>Well LP Token - {displayTokenSymbol(well.lpToken as Token)}</Detail>
             </Td>
-            <DesktopTd>
+            <DesktopTd align={"right"}>
               <Link href={`https://etherscan.io/address/${well.address}`}>{well.address}</Link>
             </DesktopTd>
             <MobileTd align={"right"}>
@@ -61,9 +120,13 @@ const OtherSectionContent: FC<Props> = ({ well }) => {
                 <Td>
                   <Detail>{`Token ${index + 1} - ${token.symbol}`}</Detail>
                 </Td>
-                <DesktopTd>
+                <DesktopTd align="right">
                   <Link
-                    href={token ? `https://etherscan.io/address/${token.address}` : `https://etherscan.io/`}
+                    href={
+                      token
+                        ? `https://etherscan.io/address/${token.address}`
+                        : `https://etherscan.io/`
+                    }
                     target="_blank"
                     rel="noopener noreferrer"
                   >
@@ -72,28 +135,38 @@ const OtherSectionContent: FC<Props> = ({ well }) => {
                 </DesktopTd>
                 <MobileTd align={"right"}>
                   <Link
-                    href={token ? `https://etherscan.io/address/${token.address}` : `https://etherscan.io/`}
+                    href={
+                      token
+                        ? `https://etherscan.io/address/${token.address}`
+                        : `https://etherscan.io/`
+                    }
                     target="_blank"
                     rel="noopener noreferrer"
                   >
-                    {token.address.substr(0, 5) + "..." + token.address.substr(token.address.length - 5) || `-`}
+                    {token.address.substr(0, 5) +
+                      "..." +
+                      token.address.substr(token.address.length - 5) || `-`}
                   </Link>
                 </MobileTd>
               </Row>
             );
           })}
-          {tableItems.map(function (tableItem, index) {
+          {items.map(function (tableItem, index) {
             return (
               <Row key={`${tableItem.address}-${index}}`}>
                 <Td>
                   <Detail>{tableItem.name}</Detail>
                 </Td>
-                <DesktopTd>
-                  <Link href={`https://etherscan.io/address/${tableItem.address}`}>{tableItem.address}</Link>
+                <DesktopTd align={"right"}>
+                  <Link href={`https://etherscan.io/address/${tableItem.address}`}>
+                    {tableItem.address}
+                  </Link>
                 </DesktopTd>
                 <MobileTd align={"right"}>
                   <Link href={`https://etherscan.io/address/${tableItem.address}`}>
-                    {tableItem.address.substr(0, 5) + "..." + tableItem.address.substr(tableItem.address.length - 5)}
+                    {tableItem.address.substr(0, 5) +
+                      "..." +
+                      tableItem.address.substr(tableItem.address.length - 5)}
                   </Link>
                 </MobileTd>
               </Row>
@@ -110,7 +183,10 @@ const loadingItemProps = {
   lg: { height: 24, width: 200 }
 };
 
-export const OtherSection: FC<{ well: Well | undefined; loading?: boolean }> = ({ well, loading }) => {
+export const OtherSection: FC<{ well: Well | undefined; loading?: boolean }> = ({
+  well,
+  loading
+}) => {
   if (!well || loading) {
     return (
       <div>
@@ -155,6 +231,7 @@ const Link = styled.a`
   font-weight: 600;
   text-decoration: underline;
   text-decoration-thickness: 0.5px;
+  color: black;
 
   :link {
     color: black;

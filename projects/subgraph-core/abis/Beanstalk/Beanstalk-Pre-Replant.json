@@ -2336,6 +2336,25 @@
         "type": "address"
       },
       {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "index",
+        "type": "uint256"
+      }
+    ],
+    "name": "PodListingCancelled",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "account",
+        "type": "address"
+      },
+      {
         "indexed": false,
         "internalType": "uint256",
         "name": "index",

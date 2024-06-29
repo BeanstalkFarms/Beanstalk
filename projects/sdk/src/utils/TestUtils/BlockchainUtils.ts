@@ -363,8 +363,13 @@ export class BlockchainUtils {
     return b.toHexString();
   }
 
-  // FIXME: season -> stem
-  mockDepositCrate(token: ERC20Token, _season: number, _amount: string, _currentSeason?: number) {
+  mockDepositCrate(
+    token: ERC20Token,
+    _season: number,
+    _amount: string,
+    _currentSeason?: number,
+    _germinatingStem: ethers.BigNumber = ethers.constants.Zero
+  ) {
     const amount = token.amount(_amount);
     const bdv = TokenValue.fromHuman(amount.toHuman(), 6);
     const currentSeason = _currentSeason || _season + 100;
@@ -372,7 +377,8 @@ export class BlockchainUtils {
     return makeDepositObject(token, ethers.BigNumber.from(_season), {
       stem: currentSeason, // FIXME
       amount: amount.toBlockchain(),
-      bdv: bdv.toBlockchain()
+      bdv: bdv.toBlockchain(),
+      germinatingStem: _germinatingStem
     });
   }
 

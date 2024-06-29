@@ -15,15 +15,6 @@ import {
   BEANSTALK_FERTILIZER_ADDRESSES,
 } from '~/constants/addresses';
 import { CHAIN_INFO, SupportedChainId, MAX_UINT256 } from '~/constants';
-import {
-  StyledDialog,
-  StyledDialogActions,
-  StyledDialogContent,
-  StyledDialogTitle,
-} from '../Dialog';
-import TransactionToast from '../TxnToast';
-import { FormState, FormStateNew, FormTokenState, FormTokenStateNew } from '.';
-import WalletButton from '../Connection/WalletButton';
 import Row from '~/components/Common/Row';
 import useChainId from '~/hooks/chain/useChainId';
 import NetworkButton from '~/components/Common/Connection/NetworkButton';
@@ -36,6 +27,15 @@ import NetworkButton from '~/components/Common/Connection/NetworkButton';
 import { FC } from '~/types';
 import { getNewToOldToken } from '~/hooks/sdk';
 import useSetting from '~/hooks/app/useSetting';
+import WalletButton from '../Connection/WalletButton';
+import { FormState, FormStateNew, FormTokenState, FormTokenStateNew } from '.';
+import TransactionToast from '../TxnToast';
+import {
+  StyledDialog,
+  StyledDialogActions,
+  StyledDialogContent,
+  StyledDialogTitle,
+} from '../Dialog';
 
 const CONTRACT_NAMES: { [address: string]: string } = {
   [BEANSTALK_ADDRESSES[SupportedChainId.MAINNET]]: 'Beanstalk',
@@ -116,7 +116,8 @@ const SmartSubmitButton: FC<
   const isApproving = !!values?.approving;
 
   // Are we impersonating a different account while not in dev mode
-  const isImpersonating = !!useSetting('impersonatedAccount')[0] && !import.meta.env.DEV;
+  const isImpersonating =
+    !!useSetting('impersonatedAccount')[0] && !import.meta.env.DEV;
 
   // Dialog state and handlers
   const [open, setOpen] = useState(false);
@@ -198,9 +199,11 @@ const SmartSubmitButton: FC<
 
   if (isImpersonating) {
     return (
-      <LoadingButton {...props} disabled >Impersonating Account</LoadingButton>
+      <LoadingButton {...props} disabled>
+        Impersonating Account
+      </LoadingButton>
     );
-  };
+  }
 
   if (!SupportedChainId[chainId]) {
     return (

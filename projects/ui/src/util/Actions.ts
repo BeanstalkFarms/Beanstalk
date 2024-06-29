@@ -290,13 +290,21 @@ export const parseActionMessage = (a: Action) => {
     case ActionType.END_TOKEN:
       return null;
     case ActionType.SWAP:
-      if (a.tokenOut.isLP && a.tokenOut.symbol !== CRV3[1].symbol && !a.tokenOut.isUnripe) {
+      if (
+        a.tokenOut.isLP &&
+        a.tokenOut.symbol !== CRV3[1].symbol &&
+        !a.tokenOut.isUnripe
+      ) {
         return `Add ${displayTokenAmount(
           a.amountIn,
           a.tokenIn
         )} of liquidity for ${displayTokenAmount(a.amountOut, a.tokenOut)}.`;
       }
-      if (a.tokenIn.isLP && a.tokenIn.symbol !== CRV3[1].symbol && !a.tokenIn.isUnripe) {
+      if (
+        a.tokenIn.isLP &&
+        a.tokenIn.symbol !== CRV3[1].symbol &&
+        !a.tokenIn.isUnripe
+      ) {
         return `Burn ${displayTokenAmount(
           a.amountIn,
           a.tokenIn
