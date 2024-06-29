@@ -31,6 +31,12 @@ const { TASK_COMPILE_SOLIDITY_GET_SOURCE_PATHS } = require("hardhat/builtin-task
 const { bipNewSilo, bipMorningAuction, bipSeedGauge } = require("./scripts/bips.js");
 const { ebip9, ebip10, ebip11, ebip13, ebip14, ebip15, ebip16 } = require("./scripts/ebips.js");
 
+const { finishWstethMigration } = require("./scripts/beanWstethMigration.js");
+const { deployBasinV1_1Upgrade } = require("./scripts/basinV1_1.js");
+const { getWellContractAt } = require("./utils/well.js");
+const { bipMigrateUnripeBeanEthToBeanSteth } = require("./scripts/bips.js");
+const { impersonateWsteth, impersonateBean } = require("./scripts/impersonate.js");
+
 //////////////////////// UTILITIES ////////////////////////
 
 function getRemappings() {
@@ -50,7 +56,9 @@ task("buyBeans")
     await mintUsdc(PUBLIUS, args.amount);
     const signer = await impersonateSigner(PUBLIUS);
     await (await getUsdc()).connect(signer).approve(BEAN_3_CURVE, ethers.constants.MaxUint256);
-    const txn = await (await getBeanMetapool()).connect(signer).exchange_underlying("2", "0", args.amount, "0");
+    const txn = await (await getBeanMetapool())
+      .connect(signer)
+      .exchange_underlying("2", "0", args.amount, "0");
     const result = await txn.wait();
     console.log("Done", result);
   });
@@ -96,13 +104,13 @@ task("sunrise", async function () {
 });
 
 task("sunrise2", async function () {
-  const lastTimestamp = (await ethers.provider.getBlock('latest')).timestamp;
-  const hourTimestamp = parseInt(lastTimestamp/3600 + 1) * 3600
-  await network.provider.send("evm_setNextBlockTimestamp", [hourTimestamp])
+  const lastTimestamp = (await ethers.provider.getBlock("latest")).timestamp;
+  const hourTimestamp = parseInt(lastTimestamp / 3600 + 1) * 3600;
+  await network.provider.send("evm_setNextBlockTimestamp", [hourTimestamp]);
 
-  season = await ethers.getContractAt('SeasonFacet', BEANSTALK);
+  season = await ethers.getContractAt("SeasonFacet", BEANSTALK);
   await season.sunrise();
-})
+});
 
 task("getTime", async function () {
   this.season = await ethers.getContractAt("SeasonFacet", BEANSTALK);
@@ -142,12 +150,12 @@ task("diamondABI", "Generates ABI file for diamond, includes all ABIs of facets"
     const files = glob.sync(pattern);
     if (module == "silo") {
       // Manually add in libraries that emit events
-      files.push("contracts/libraries/Silo/LibWhitelist.sol")
-      files.push("contracts/libraries/LibGauge.sol")
-      files.push("contracts/libraries/Silo/LibLegacyTokenSilo.sol")
-      files.push("contracts/libraries/Silo/LibGerminate.sol")
-      files.push("contracts/libraries/Silo/LibWhitelistedTokens.sol")
-      files.push("contracts/libraries/Minting/LibWellMinting.sol")
+      files.push("contracts/libraries/Silo/LibWhitelist.sol");
+      files.push("contracts/libraries/LibGauge.sol");
+      files.push("contracts/libraries/Silo/LibLegacyTokenSilo.sol");
+      files.push("contracts/libraries/Silo/LibGerminate.sol");
+      files.push("contracts/libraries/Silo/LibWhitelistedTokens.sol");
+      files.push("contracts/libraries/Minting/LibWellMinting.sol");
     }
     files.forEach((file) => {
       const facetName = getFacetName(file);
@@ -218,7 +226,7 @@ task("deploySeedGauge", async function () {
   await bipSeedGauge();
 });
 
-/// EBIPS /// 
+/// EBIPS ///
 
 task("ebip16", async function () {
   await ebip16();
@@ -230,23 +238,23 @@ task("ebip15", async function () {
 
 task("ebip14", async function () {
   await ebip14();
-})
+});
 
 task("ebip13", async function () {
   await ebip13();
-})
+});
 
 task("ebip11", async function () {
   await ebip11();
-})
+});
 
 task("ebip10", async function () {
   await ebip10();
-})
+});
 
 task("ebip9", async function () {
   await ebip9();
-})
+});
 
 //////////////////////// SUBTASK CONFIGURATION ////////////////////////
 
