@@ -13,6 +13,14 @@ import {LibGauge} from "contracts/libraries/LibGauge.sol";
  * @author Brean
  * @notice Calculates the gaugePoints for whitelisted Silo LP tokens.
  */
+ interface IGaugePointFacet {
+    function defaultGaugePointFunction(
+        uint256 currentGaugePoints,
+        uint256 optimalPercentDepositedBdv,
+        uint256 percentOfDepositedBdv
+    ) external pure returns (uint256 newGaugePoints);
+}
+
 contract GaugePointFacet {
     using SafeMath for uint256;
 

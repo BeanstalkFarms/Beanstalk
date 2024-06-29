@@ -4,12 +4,12 @@ const { EXTERNAL, INTERNAL, INTERNAL_EXTERNAL, INTERNAL_TOLERANT } = require('./
 const { to18, to6, toStalk } = require('./utils/helpers.js')
 const { BEAN, USDT, WETH, CURVE_REGISTRY, CRYPTO_REGISTRY, THREE_POOL, TRI_CRYPTO, TRI_CRYPTO_POOL, THREE_CURVE, BEAN_3_CURVE, USDC, WBTC, DAI, LUSD_3_CURVE, LUSD, CRYPTO_FACTORY } = require('./utils/constants')
 const { takeSnapshot, revertToSnapshot } = require("./utils/snapshot");
+const { testIfRpcSet } = require('./utils/test.js');
 
 let user, user2, owner;
 let userAddress, ownerAddress, user2Address;
 
-describe('Farm', function () {
-  if (!!process.env.FORKING_RPC) {
+testIfRpcSet('Farm', function () {
     before(async function () {
       [owner, user, user2] = await ethers.getSigners();
       userAddress = user.address;
@@ -571,9 +571,4 @@ describe('Farm', function () {
 
     //   expect(await this.threeCurve.balanceOf(user.address)).to.be.equal('989769589977063077')
     // })
-  } else {
-    it('skip', async function () { 
-      console.log('Set FORKING_RPC in .env file to run tests')
-    })
-  }
 })

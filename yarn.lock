@@ -3696,6 +3696,13 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@beanstalk/wells1.1@npm:@beanstalk/wells@1.1.0-prerelease0":
+  version: 1.1.0-prerelease0
+  resolution: "@beanstalk/wells@npm:1.1.0-prerelease0"
+  checksum: 01a50fe94d5a055a216b9eb5b31637184f2d43be19a0272b8c895af84e7f8dc6401209871908a641c466a25f7efe0da6d4940dced77ec87a0bab521bec00bc9f
+  languageName: node
+  linkType: hard
+
 "@beanstalk/wells@npm:0.4.1":
   version: 0.4.1
   resolution: "@beanstalk/wells@npm:0.4.1"

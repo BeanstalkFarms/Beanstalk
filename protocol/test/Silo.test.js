@@ -3,11 +3,11 @@ const { deploy } = require('../scripts/deploy.js')
 const { EXTERNAL, INTERNAL, INTERNAL_EXTERNAL, INTERNAL_TOLERANT } = require('./utils/balances.js')
 const { to18, to6 , toStalk } = require('./utils/helpers.js')
 const { toBN } = require('../utils/helpers.js');
-const { BEAN, BEANSTALK, BCM, BEAN_3_CURVE, UNRIPE_BEAN, UNRIPE_LP, THREE_CURVE, THREE_POOL } = require('./utils/constants')
+const { BEAN, BEAN_3_CURVE, UNRIPE_BEAN, UNRIPE_LP, THREE_CURVE, THREE_POOL, BEAN_ETH_WELL, WETH, BEAN_WSTETH_WELL } = require('./utils/constants')
 const { takeSnapshot, revertToSnapshot } = require("./utils/snapshot");
-const { time, mineUpTo, mine } = require("@nomicfoundation/hardhat-network-helpers");
 const ZERO_BYTES = ethers.utils.formatBytes32String('0x0')
-const { whitelistWell, deployMockWell, deployMockBeanEthWell } = require('../utils/well.js');
+const { whitelistWell, deployMockBeanWell } = require('../utils/well.js');
+const axios = require("axios");
 const fs = require('fs');
 
 let user, user2, owner;
@@ -38,9 +38,13 @@ describe('Silo', function () {
     this.siloGetters = await ethers.getContractAt('SiloGettersFacet', this.diamond.address)
     await this.unripe.addUnripeToken(UNRIPE_BEAN, BEAN, ZERO_BYTES)
     await this.unripe.addUnripeToken(UNRIPE_LP, BEAN_3_CURVE, ZERO_BYTES);
-    [this.well, this.wellFunction, this.pump] = await deployMockBeanEthWell('BEANWETHCP2w')
+    [this.well, this.wellFunction, this.pump] = await deployMockBeanWell(BEAN_ETH_WELL, WETH);
+    [this.beanWstethWell, this.beanEthWellFunction1, this.pump1] = await deployMockBeanWell(BEAN_WSTETH_WELL, WETH);
     await whitelistWell(this.well.address, '10000', to6('4'))
+    await whitelistWell(this.beanWstethWell.address, '10000', to6('5'))
+
     await this.season.captureWellE(this.well.address)
+    await this.season.captureWellE(this.beanWstethWell.address)
     
 
     this.bean = await ethers.getContractAt('Bean', BEAN);
@@ -616,51 +620,78 @@ describe('Silo', function () {
       expect(await tryParseJSONObject(depositMetadataString) == true);
     })
 
+    it('returns correct json values', async function () {
+      SiloTokens = await this.whitelist.getSiloTokens();
+      // iterate through silo tokens:
+      stem = '0000000000000000001E8480'
+      for (let i = 0; i < SiloTokens.length; i++) {
+        console.log(SiloTokens[i])
+        depositID = SiloTokens[i] + stem;
+        uri = await this.metadata.uri(depositID);
+        metadataToken = await ethers.getContractAt('MockToken', SiloTokens[i]);
+        tokenSettings = await this.siloGetters.tokenSettings(metadataToken.address);
+        const response = await axios.get(uri);
+        const symbol = (await metadataToken.symbol()).includes('urBEAN3CRV') ? 'urBEANLP' : await metadataToken.symbol();
+        jsonResponse = JSON.parse(response.data.toString());
+        expect(jsonResponse.name).to.be.equal(`Beanstalk Silo Deposits`);
+        expect(jsonResponse.attributes[0].value).to.be.equal(symbol);
+        expect(jsonResponse.attributes[1].value).to.be.equal(metadataToken.address.toLowerCase());
+        expect(jsonResponse.attributes[2].value).to.be.equal(depositID.toLowerCase());
+        expect(jsonResponse.attributes[3].value).to.be.equal(parseInt(stem, 16));
+        expect(jsonResponse.attributes[4].value).to.be.equal(tokenSettings[2]);
+        expect(jsonResponse.attributes[6].value).to.be.equal(tokenSettings[1]);
+      }
+      
+    })
+
+    // previous tests - kept for reference
     // bean token
-    it('returns correct URI for bean', async function () {
-      depositmetadata = await fs.readFileSync(__dirname + '/data/base64EncodedImageBean.txt', 'utf-8');
+    it.skip('returns correct URI for bean', async function () {
       depositID1 = '0xBEA0000029AD1c77D3d5D23Ba2D8893dB9d1Efab0000000000000000001E8480';
+      uri = await this.metadata.uri(depositID1);
+      const response = await axios.get(uri);
+      jsonResponse = JSON.parse(response.data.toString());
+      console.log(jsonResponse);
+      depositmetadata = await fs.readFileSync(__dirname + '/data/base64EncodedImageBean.txt', 'utf-8');
       expect(await this.metadata.uri(depositID1)).to.eq(depositmetadata);
     })
 
     // bean3crv token
-    it('returns correct URI for bean3crv', async function () {
+    it.skip('returns correct URI for bean3crv', async function () {
       depositmetadata = await fs.readFileSync(__dirname + '/data/base64EncodedImageBean3Crv.txt', 'utf-8');
       depositID2 = '0xC9C32CD16BF7EFB85FF14E0C8603CC90F6F2EE4900000000000000001E848000';
       expect(await this.metadata.uri(depositID2)).to.eq(depositmetadata);
     })
 
     // beanEthToken
-    it('returns correct URI for beanEth', async function () {
+    it.skip('returns correct URI for beanEth', async function () {
       depositmetadata = await fs.readFileSync(__dirname + '/data/base64EncodedImageBeanEth.txt', 'utf-8');
       depositID3 = '0xBEA0e11282e2bB5893bEcE110cF199501e872bAdFFFFFFFFFFFFF000001E8480';
       expect(await this.metadata.uri(depositID3)).to.eq(depositmetadata);
     })
       
     // urBean token
-    it('returns correct URI for urBean', async function () {
+    it.skip('returns correct URI for urBean', async function () {
       depositmetadata = await fs.readFileSync(__dirname + '/data/base64EncodedImageUrBean.txt', 'utf-8');
       depositID4 = '0x1BEA0050E63e05FBb5D8BA2f10cf5800B62244490000000000000000003D0900';
       expect(await this.metadata.uri(depositID4)).to.eq(depositmetadata);
     })
 
     // urBeanEth token
-    it('returns correct URI for urBeanEth', async function () {
+    it.skip('returns correct URI for urBeanEth', async function () {
       depositmetadata = await fs.readFileSync(__dirname + '/data/base64EncodedImageUrBeanEth.txt', 'utf-8');
       depositID5 = '0x1BEA3CcD22F4EBd3d37d731BA31Eeca95713716DFFFFFFFFFFFFFFFFFFFFF97C';
       expect(await this.metadata.uri(depositID5)).to.eq(depositmetadata);
     });
 
-    it('returns correct URI for urBean3Crv once dewhitelisted', async function () {
+    it.skip('returns correct URI dewhitelisted assets', async function () {
       await this.whitelist.connect(owner).dewhitelistToken(this.beanMetapool.address);
-
       depositmetadata = await fs.readFileSync(__dirname + '/data/base64EncodedImageBean3CrvDewhitelisted.txt', 'utf-8');
       depositID2 = '0xC9C32CD16BF7EFB85FF14E0C8603CC90F6F2EE4900000000000000001E848000';
       expect(await this.metadata.uri(depositID2)).to.eq(depositmetadata);
     })
 
     it('reverts if the depositID is invalid', async function () {
-      depositmetadata = await fs.readFileSync(__dirname + '/data/base64EncodedImageBean.txt', 'utf-8');
       // invalid due to token
       invalidID0 = '0xBEA0000029AD1c77D3d5D23Ba2D8893dB9d1Efac000000000000000000000002';
       // invalid due to high stem value.

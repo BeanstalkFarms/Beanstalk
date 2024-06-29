@@ -10,7 +10,7 @@ import './MockUniswapV3Pool.sol';
 /// @title Canonical Uniswap V3 factory
 /// @notice Deploys Uniswap V3 pools and manages ownership and control over pool protocol fees
 
-contract MockUniswapV3Factory is IUniswapV3Factory,MockUniswapV3PoolDeployer, NoDelegateCall {
+contract MockUniswapV3Factory is IUniswapV3Factory, MockUniswapV3PoolDeployer, NoDelegateCall {
     /// @inheritdoc IUniswapV3Factory
     address public override owner;
 
@@ -23,6 +23,7 @@ contract MockUniswapV3Factory is IUniswapV3Factory,MockUniswapV3PoolDeployer, No
         owner = msg.sender;
         emit OwnerChanged(address(0), msg.sender);
 
+        feeAmountTickSpacing[100] = 2;
         feeAmountTickSpacing[500] = 10;
         emit FeeAmountEnabled(500, 10);
         feeAmountTickSpacing[3000] = 60;

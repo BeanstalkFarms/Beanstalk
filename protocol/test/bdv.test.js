@@ -1,11 +1,10 @@
 const { expect } = require('chai');
 const { deploy } = require('../scripts/deploy.js')
 const { takeSnapshot, revertToSnapshot } = require("./utils/snapshot");
-const { BEAN, THREE_POOL, BEAN_3_CURVE, UNRIPE_LP, UNRIPE_BEAN, ZERO_ADDRESS, WETH, BEAN_ETH_WELL } = require('./utils/constants');
+const { BEAN, THREE_POOL, BEAN_3_CURVE, UNRIPE_LP, UNRIPE_BEAN, ZERO_ADDRESS, WETH, BEAN_WSTETH_WELL } = require('./utils/constants');
 const { to18, to6 } = require('./utils/helpers.js');
 const { deployMockPump, getWellContractFactory, whitelistWell } = require('../utils/well.js');
 const { impersonateContract } = require('../scripts/impersonate.js');
-const { toBN } = require('../utils/helpers.js');
 let user,user2,owner;
 let userAddress, ownerAddress, user2Address;
 const ZERO_BYTES = ethers.utils.formatBytes32String('0x0')
@@ -18,7 +17,7 @@ describe('BDV', function () {
     [owner,user,user2] = await ethers.getSigners();
     userAddress = user.address;
     user2Address = user2.address;
-    const contracts = await deploy("Test", false, true);
+    const contracts = await deploy("Test", false, true); 
     ownerAddress = contracts.account;
     this.diamond = contracts.beanstalkDiamond;
     this.season = await ethers.getContractAt('MockSeasonFacet', this.diamond.address);
@@ -29,7 +28,7 @@ describe('BDV', function () {
     this.bdv = await ethers.getContractAt('BDVFacet', this.diamond.address)
     this.siloGetters = await ethers.getContractAt('SiloGettersFacet', this.diamond.address)
 
-    this.well = await impersonateContract('MockSetComponentsWell', BEAN_ETH_WELL)
+    this.well = await impersonateContract('MockSetComponentsWell', BEAN_WSTETH_WELL)
 
     await this.season.siloSunrise(0);
     await this.bean.mint(userAddress, '1000000000');

@@ -1,10 +1,10 @@
 const { expect } = require('chai')
 const { deploy } = require('../scripts/deploy.js')
 const { parseJson, to6, to18 } = require('./utils/helpers.js')
-const { MAX_UINT32, UNRIPE_BEAN, UNRIPE_LP, BEAN_3_CURVE, BEAN_ETH_WELL, BEAN} = require('./utils/constants.js')
+const { MAX_UINT32, UNRIPE_BEAN, UNRIPE_LP, BEAN_3_CURVE, BEAN_ETH_WELL, BEAN, BEAN_WSTETH_WELL, WSTETH, BEANSTALK_PUMP} = require('./utils/constants.js')
 const { getAltBeanstalk, getBean } = require('../utils/contracts.js');
 const { deployMockWellWithMockPump, whitelistWell} = require('../utils/well.js');
-const { setEthUsdPrice, setEthUsdcPrice, setEthUsdtPrice } = require('../scripts/usdOracle.js');
+const { setEthUsdChainlinkPrice, setWstethUsdPrice } = require('../utils/oracle.js');
 
 const { advanceTime } = require('../utils/helpers.js');
 const { impersonateBeanstalkOwner } = require('../utils/signer.js');
@@ -53,8 +53,10 @@ describe('Complex Weather', function () {
     await whitelist.connect(await impersonateBeanstalkOwner()).dewhitelistToken(BEAN_3_CURVE);
 
     // wells
-    [this.well, this.wellFunction, this.pump] = await deployMockWellWithMockPump()
-    await this.well.setReserves([to6('1000000'), to18('1000')])
+    [this.well, this.wellFunction, this.pump] = await deployMockWellWithMockPump();
+    await this.well.setReserves([to6('1000000'), to18('1000')]);
+    [this.beanWstethWell, this.wellFunction, this.pump] = await deployMockWellWithMockPump(BEAN_WSTETH_WELL, WSTETH);
+    await this.beanWstethWell.setReserves([to6('1000000'), to18('1000')]);
     await advanceTime(3600)
     await owner.sendTransaction({to: user.address, value: 0});
     await setToSecondsAfterHour(0)
@@ -64,10 +66,10 @@ describe('Complex Weather', function () {
     await whitelistWell(this.well.address, '10000', to6('4'))
     await this.season.mockSetSopWell(this.well.address)
     await this.season.captureWellE(this.well.address);
+    await this.season.captureWellE(this.beanWstethWell.address);
 
-    await setEthUsdPrice('999.998018')
-    await setEthUsdcPrice('1000')
-    await setEthUsdtPrice('1000')
+    await setEthUsdChainlinkPrice('1000')
+    await setWstethUsdPrice('1000')
   });
 
   [...Array(numberTests).keys()].map(i => i + startTest).forEach(function(v) {
@@ -103,6 +105,7 @@ describe('Complex Weather', function () {
           this.testData.rainStalk,
           this.aboveQ, // aboveQ
           this.L2SRState, // L2SR
+          BEANSTALK_PUMP
         )
       })
       it('Checks New Weather', async function () {
