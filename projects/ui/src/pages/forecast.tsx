@@ -3,7 +3,7 @@ import { Card, Container, Stack } from '@mui/material';
 
 import PageHeader from '~/components/Common/PageHeader';
 import LiquidityOverTime from '~/components/Forecast/LiquidityOverTime';
-import Price from '~/components/Analytics/Bean/Price';
+import Price from '~/components/Analytics/Bean/PriceInstant';
 import PodRate from '~/components/Analytics/Field/PodRate';
 import LiquidityByState from '~/components/Forecast/LiquidityByState';
 import MarketCap from '~/components/Analytics/Bean/MarketCap';

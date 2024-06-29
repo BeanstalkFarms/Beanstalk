@@ -251,7 +251,7 @@ async function bipSeedGauge(mock = true, account = undefined, verbose = true) {
       '0x0b2939d1' // remove InVestingPeriod
     ],
     libraryNames: [
-      'LibGauge', 'LibConvert', 'LibLockedUnderlying', 'LibIncentive', 'LibGerminate', 'LibWellMinting'
+      'LibGauge', 'LibConvert', 'LibLockedUnderlying', 'LibIncentive', 'LibGerminate', 'LibWellMinting', 'LibSilo'
     ],
     facetLibraries: {
       'SeasonFacet': [

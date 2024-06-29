@@ -14,6 +14,7 @@ import { Item } from "src/components/Layout";
 /// format value with 2 decimals, if value is less than 1M, otherwise use short format
 const formatMayDecimals = (tv: TokenValue | undefined) => {
   if (!tv) return "-.--";
+  if (tv.gt(0) && tv.lt(0.001)) return "<0.001";
   if (tv.lt(1_000_000)) {
     return formatNum(tv, { minDecimals: 2, maxDecimals: 2 });
   }
@@ -24,7 +25,9 @@ export const WellDetailRow: FC<{
   well: Well | undefined;
   liquidity: TokenValue | undefined;
   functionName: string | undefined;
-}> = ({ well, liquidity, functionName }) => {
+  price: TokenValue | undefined;
+  volume: TokenValue | undefined;
+}> = ({ well, liquidity, functionName, price, volume }) => {
   const navigate = useNavigate();
 
   if (!well) return null;
@@ -62,6 +65,12 @@ export const WellDetailRow: FC<{
       </DesktopContainer>
       <DesktopContainer align="right">
         <Amount>${liquidity ? liquidity.toHuman("short") : "-.--"}</Amount>
+      </DesktopContainer>
+      <DesktopContainer align="right">
+        <Amount>${price && price.gt(0) ? price.toHuman("short") : "-.--"}</Amount>
+      </DesktopContainer>
+      <DesktopContainer align="right">
+        <Amount>${volume ? volume.toHuman("short") : "-.--"}</Amount>
       </DesktopContainer>
       <DesktopContainer align="right">
         <Reserves>
@@ -104,6 +113,12 @@ export const WellDetailLoadingRow: FC<{}> = () => {
         <Skeleton height={24} width={90} />
       </DesktopContainer>
       <DesktopContainer align="right">
+        <Skeleton height={24} width={90} />
+      </DesktopContainer>
+      <DesktopContainer align="right">
+        <Skeleton height={24} width={90} />
+      </DesktopContainer>
+      <DesktopContainer align="right">
         <LoadingColumn align="right">
           <Skeleton height={24} width={50} />
           <Skeleton height={24} width={50} />
@@ -139,6 +154,23 @@ const TableRow = styled(Row)`
 `;
 
 const DesktopContainer = styled(Td)`
+  :nth-child(5) {
+    @media (max-width: ${size.desktop}) {
+      display: none;
+    }
+  }
+  :nth-child(6) {
+    @media (max-width: ${size.desktop}) {
+      display: none;
+    }
+  }
+
+  :nth-child(3) {
+    @media (max-width: ${size.tablet}) {
+      display: none;
+    }
+  }
+
   @media (max-width: ${size.mobile}) {
     display: none;
   }
@@ -191,7 +223,7 @@ const Amount = styled.div`
 const Reserves = styled.div`
   display: flex;
   flex-direction: row;
-  justify-content flex-end;
+  justify-content: flex-end;
   align-items: center;
   gap: 4px;
   flex: 1;

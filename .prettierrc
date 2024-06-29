@@ -2,5 +2,13 @@
   "printWidth": 100,
   "singleQuote": false,
   "semi": true,
-  "trailingComma": "none"
+  "trailingComma": "none",
+  "overrides": [
+    {
+      "files": "projects/subgraph-*/**",
+      "options": {
+        "printWidth": 140
+      }
+    }
+  ]
 }
