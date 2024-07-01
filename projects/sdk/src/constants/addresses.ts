@@ -16,6 +16,7 @@ export const addresses = {
   PIPELINE: Address.make("0xb1bE0000C6B3C62749b5F0c92480146452D15423"),
   ROOT: Address.make("0x77700005BEA4DE0A78b956517f099260C2CA9a26"),
   USD_ORACLE: Address.make("0x1aa19ed7DfC555E4644c9353Ad383c33024855F7"),
+  UNWRAP_AND_SEND_ETH_JUNCTION: Address.make("0x737Cad465B75CDc4c11B3E312Eb3fe5bEF793d96"),
 
   // ----------------------------------------
   // BeaNFT Contracts

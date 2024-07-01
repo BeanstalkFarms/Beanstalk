@@ -40,6 +40,10 @@ import {
   LidoWrap
 } from "src/constants/generated";
 import { BaseContract } from "ethers";
+import {
+  UnwrapAndSendEthJunction,
+  UnwrapAndSendEthJunction__factory
+} from "@beanstalk/sdk-wells/dist/types/constants/generated";
 
 type CurveContracts = {
   pools: {
@@ -62,6 +66,10 @@ type LidoContracts = {
   wrap: LidoWrap;
 };
 
+type PipelineJunctions = {
+  unwrapAndSendEth: UnwrapAndSendEthJunction;
+};
+
 export class Contracts {
   static sdk: BeanstalkSDK;
 
@@ -75,6 +83,7 @@ export class Contracts {
   public readonly root: Root;
   public readonly math: Math;
   public readonly usdOracle: UsdOracle;
+  public readonly pipelineJunctions: PipelineJunctions;
 
   public readonly curve: CurveContracts;
   public readonly lido: LidoContracts;
@@ -97,6 +106,9 @@ export class Contracts {
     const mathAddress = sdk.addresses.MATH.get(sdk.chainId);
     const rootAddress = sdk.addresses.ROOT.get(sdk.chainId);
     const usdOracleAddress = sdk.addresses.USD_ORACLE.get(sdk.chainId);
+    const unwrapAndSendEthJunctionAddress = sdk.addresses.UNWRAP_AND_SEND_ETH_JUNCTION.get(
+      sdk.chainId
+    );
 
     const beancrv3Address = sdk.addresses.BEAN_CRV3.get(sdk.chainId);
     const pool3Address = sdk.addresses.POOL3.get(sdk.chainId);
@@ -132,6 +144,12 @@ export class Contracts {
     this.math = Math__factory.connect(mathAddress, sdk.providerOrSigner);
     this.root = Root__factory.connect(rootAddress, sdk.providerOrSigner);
     this.usdOracle = UsdOracle__factory.connect(usdOracleAddress, sdk.providerOrSigner);
+    this.pipelineJunctions = {
+      unwrapAndSendEth: UnwrapAndSendEthJunction__factory.connect(
+        unwrapAndSendEthJunctionAddress,
+        sdk.providerOrSigner
+      )
+    };
 
     const beanCrv3 = CurveMetaPool__factory.connect(beancrv3Address, sdk.providerOrSigner);
     const pool3 = Curve3Pool__factory.connect(pool3Address, sdk.providerOrSigner);
