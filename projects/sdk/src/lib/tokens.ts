@@ -243,6 +243,8 @@ export class Tokens {
     this.map.set(addresses.BEANWSTETH_WELL.get(chainId), this.BEAN_WSTETH_WELL_LP);
     this.map.set(addresses.UNRIPE_BEAN.get(chainId), this.UNRIPE_BEAN);
     this.map.set(addresses.UNRIPE_BEAN_WETH.get(chainId), this.UNRIPE_BEAN_WETH);
+    this.map.set(addresses.STETH.get(chainId), this.STETH);
+    this.map.set(addresses.WSTETH.get(chainId), this.WSTETH);
 
     ////////// Beanstalk "Tokens" (non ERC-20) //////////
 
