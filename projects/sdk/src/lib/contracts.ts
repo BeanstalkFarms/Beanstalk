@@ -34,7 +34,10 @@ import {
   UniswapV3Router,
   UniswapV3QuoterV2__factory,
   UniswapV3QuoterV2,
-  
+  LidoStake__factory,
+  LidoWrap__factory,
+  LidoStake,
+  LidoWrap
 } from "src/constants/generated";
 import { BaseContract } from "ethers";
 
@@ -54,6 +57,11 @@ type CurveContracts = {
   zap: CurveZap;
 };
 
+type LidoContracts = {
+  stake: LidoStake;
+  wrap: LidoWrap;
+};
+
 export class Contracts {
   static sdk: BeanstalkSDK;
 
@@ -69,6 +77,7 @@ export class Contracts {
   public readonly usdOracle: UsdOracle;
 
   public readonly curve: CurveContracts;
+  public readonly lido: LidoContracts;
 
   public readonly uniswapV3Router: UniswapV3Router;
   public readonly uniswapV3QuoterV2: UniswapV3QuoterV2;
@@ -100,11 +109,23 @@ export class Contracts {
     const uniswapV3RouterAddress = sdk.addresses.UNISWAP_V3_ROUTER.get(sdk.chainId);
     const uniswapV3QuoterV2Address = sdk.addresses.UNISWAP_V3_QUOTER_V2.get(sdk.chainId);
 
+    const lidoStakeAddress = sdk.addresses.LIDO_STAKE.get(sdk.chainId);
+    const lidoWrapAddress = sdk.addresses.LIDO_WRAP.get(sdk.chainId);
+
     // Instances
     this.beanstalk = Beanstalk__factory.connect(beanstalkAddress, sdk.providerOrSigner);
-    this.beanstalkRead = Beanstalk__factory.connect(beanstalkAddress, sdk.readProvider ?? sdk.providerOrSigner);
-    this.beanstalkPrice = BeanstalkPrice__factory.connect(beanstalkPriceAddress, sdk.providerOrSigner);
-    this.fertilizer = BeanstalkFertilizer__factory.connect(beanstalkFertilizerAddress, sdk.providerOrSigner);
+    this.beanstalkRead = Beanstalk__factory.connect(
+      beanstalkAddress,
+      sdk.readProvider ?? sdk.providerOrSigner
+    );
+    this.beanstalkPrice = BeanstalkPrice__factory.connect(
+      beanstalkPriceAddress,
+      sdk.providerOrSigner
+    );
+    this.fertilizer = BeanstalkFertilizer__factory.connect(
+      beanstalkFertilizerAddress,
+      sdk.providerOrSigner
+    );
 
     this.pipeline = Pipeline__factory.connect(pipelineAddress, sdk.providerOrSigner);
     this.depot = Depot__factory.connect(depotAddress, sdk.providerOrSigner);
@@ -114,14 +135,29 @@ export class Contracts {
 
     const beanCrv3 = CurveMetaPool__factory.connect(beancrv3Address, sdk.providerOrSigner);
     const pool3 = Curve3Pool__factory.connect(pool3Address, sdk.providerOrSigner);
-    const tricrypto2 = CurveTriCrypto2Pool__factory.connect(tricrypto2Address, sdk.providerOrSigner);
+    const tricrypto2 = CurveTriCrypto2Pool__factory.connect(
+      tricrypto2Address,
+      sdk.providerOrSigner
+    );
     const poolRegistry = CurveRegistry__factory.connect(poolRegistryAddress, sdk.providerOrSigner);
     const metaFactory = CurveMetaFactory__factory.connect(metaFactoryAddress, sdk.providerOrSigner);
-    const cryptoFactory = CurveCryptoFactory__factory.connect(cryptoFactoryAddress, sdk.providerOrSigner);
+    const cryptoFactory = CurveCryptoFactory__factory.connect(
+      cryptoFactoryAddress,
+      sdk.providerOrSigner
+    );
     const zap = CurveZap__factory.connect(zapAddress, sdk.providerOrSigner);
 
-    this.uniswapV3Router = UniswapV3Router__factory.connect(uniswapV3RouterAddress, sdk.providerOrSigner);
-    this.uniswapV3QuoterV2 = UniswapV3QuoterV2__factory.connect(uniswapV3QuoterV2Address, sdk.providerOrSigner);
+    this.uniswapV3Router = UniswapV3Router__factory.connect(
+      uniswapV3RouterAddress,
+      sdk.providerOrSigner
+    );
+    this.uniswapV3QuoterV2 = UniswapV3QuoterV2__factory.connect(
+      uniswapV3QuoterV2Address,
+      sdk.providerOrSigner
+    );
+
+    const lidoStake = LidoStake__factory.connect(lidoStakeAddress, sdk.providerOrSigner);
+    const lidoWrap = LidoWrap__factory.connect(lidoWrapAddress, sdk.providerOrSigner);
 
     this.curve = {
       pools: {
@@ -141,6 +177,11 @@ export class Contracts {
         [cryptoFactoryAddress]: cryptoFactory
       },
       zap
+    };
+
+    this.lido = {
+      stake: lidoStake,
+      wrap: lidoWrap
     };
   }
 }
