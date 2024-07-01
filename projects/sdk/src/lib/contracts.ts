@@ -34,10 +34,10 @@ import {
   UniswapV3Router,
   UniswapV3QuoterV2__factory,
   UniswapV3QuoterV2,
-  LidoStake__factory,
-  LidoWrap__factory,
-  LidoStake,
-  LidoWrap
+  Steth__factory,
+  Wsteth__factory,
+  Steth,
+  Wsteth
 } from "src/constants/generated";
 import { BaseContract } from "ethers";
 import {
@@ -62,8 +62,8 @@ type CurveContracts = {
 };
 
 type LidoContracts = {
-  stake: LidoStake;
-  wrap: LidoWrap;
+  steth: Steth;
+  wsteth: Wsteth;
 };
 
 type PipelineJunctions = {
@@ -121,8 +121,8 @@ export class Contracts {
     const uniswapV3RouterAddress = sdk.addresses.UNISWAP_V3_ROUTER.get(sdk.chainId);
     const uniswapV3QuoterV2Address = sdk.addresses.UNISWAP_V3_QUOTER_V2.get(sdk.chainId);
 
-    const lidoStakeAddress = sdk.addresses.LIDO_STAKE.get(sdk.chainId);
-    const lidoWrapAddress = sdk.addresses.LIDO_WRAP.get(sdk.chainId);
+    const stethAddress = sdk.addresses.STETH.get(sdk.chainId);
+    const wstEthAddress = sdk.addresses.WSTETH.get(sdk.chainId);
 
     // Instances
     this.beanstalk = Beanstalk__factory.connect(beanstalkAddress, sdk.providerOrSigner);
@@ -174,8 +174,8 @@ export class Contracts {
       sdk.providerOrSigner
     );
 
-    const lidoStake = LidoStake__factory.connect(lidoStakeAddress, sdk.providerOrSigner);
-    const lidoWrap = LidoWrap__factory.connect(lidoWrapAddress, sdk.providerOrSigner);
+    const steth = Steth__factory.connect(stethAddress, sdk.providerOrSigner);
+    const wsteth = Wsteth__factory.connect(wstEthAddress, sdk.providerOrSigner);
 
     this.curve = {
       pools: {
@@ -197,9 +197,6 @@ export class Contracts {
       zap
     };
 
-    this.lido = {
-      stake: lidoStake,
-      wrap: lidoWrap
-    };
+    this.lido = { steth, wsteth };
   }
 }

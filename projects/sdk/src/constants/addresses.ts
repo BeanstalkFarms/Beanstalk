@@ -70,6 +70,12 @@ export const addresses = {
   LUSD: Address.make("0x5f98805A4E8be255a32880FDeC7F6728C6568bA0"),
 
   // ----------------------------------------
+  // Lido
+  // ----------------------------------------
+  STETH: Address.make("0xae7ab96520DE3A18E5e111B5EaAb095312D7fE84"),
+  WSTETH: Address.make("0x7f39C581F595B53c5cb19bD0b3f8dA6c935E2Ca0"),
+
+  // ----------------------------------------
   // Curve Pools: Other
   // ----------------------------------------
   // --------------------------------------------------
@@ -112,10 +118,6 @@ export const addresses = {
 
   // Uniswap V3 Quoter V2
   UNISWAP_V3_QUOTER_V2: Address.make("0x61fFE014bA17989E743c5F6cB21bF9697530B21e"),
-
-  // LIDO
-  LIDO_STAKE: Address.make("0xae7ab96520de3a18e5e111b5eaab095312d7fe84"),
-  LIDO_WRAP: Address.make("0x7f39c581f595b53c5cb19bd0b3f8da6c935e2ca0"),
 
   // BEAN_ETH_UNIV2_LP !! Deprecated
   BEAN_ETH_UNIV2_LP: Address.make("0x87898263B6C5BABe34b4ec53F22d98430b91e371"),
