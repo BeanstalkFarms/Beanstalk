@@ -174,7 +174,7 @@ const useMarketActivityData = () => {
             if (!e.historyID || !podOrder) return null;
 
             const podAmount = toTokenUnitsBN(
-              podOrder.podAmount || 0,
+              podOrder.podAmountFilled || 0,
               BEAN[1].decimals
             );
             const pricePerPod = toTokenUnitsBN(
@@ -192,7 +192,7 @@ const useMarketActivityData = () => {
               hash: e.hash,
               type: 'order' as const,
               action: 'cancel' as const,
-              amountPods: toTokenUnitsBN(podOrder?.podAmount, BEAN[1].decimals),
+              amountPods: toTokenUnitsBN(podOrder?.podAmountFilled, BEAN[1].decimals),
               placeInLine: toTokenUnitsBN(
                 podOrder?.maxPlaceInLine,
                 BEAN[1].decimals
@@ -231,9 +231,9 @@ const useMarketActivityData = () => {
               action: 'fill' as const,
               amountPods: podAmountFilled,
               placeInLine: toTokenUnitsBN(
-                new BigNumber(e.index),
+                new BigNumber(e.placeInLine),
                 BEAN[1].decimals
-              ).minus(harvestableIndex),
+              ),
               pricePerPod: pricePerPod,
               amountBeans: totalBeans,
               amountUSD: getUSD(BEAN[1], totalBeans),
@@ -251,8 +251,9 @@ const useMarketActivityData = () => {
               type: 'listing' as const,
               action: 'create' as const,
               amountPods: numPods,
-              placeInLine: toTokenUnitsBN(e.index, BEAN[1].decimals).minus(
-                harvestableIndex
+              placeInLine: toTokenUnitsBN(
+                new BigNumber(e.placeInLine),
+                BEAN[1].decimals
               ),
               pricePerPod: pricePerPod,
               amountBeans: totalBeans,
@@ -279,9 +280,9 @@ const useMarketActivityData = () => {
               action: 'cancel' as const,
               amountPods: numPods,
               placeInLine: toTokenUnitsBN(
-                podListing?.index,
+                new BigNumber(e.placeInLine),
                 BEAN[1].decimals
-              ).minus(harvestableIndex),
+              ),
               pricePerPod: pricePerPod,
               amountBeans: totalBeans,
               amountUSD: getUSD(BEAN[1], totalBeans),
@@ -309,9 +310,9 @@ const useMarketActivityData = () => {
               action: 'fill' as const,
               amountPods: numPodsFilled,
               placeInLine: toTokenUnitsBN(
-                podListing?.index,
+                new BigNumber(e.placeInLine),
                 BEAN[1].decimals
-              ).minus(harvestableIndex),
+              ),
               pricePerPod: pricePerPod,
               amountBeans: totalBeans,
               amountUSD: getUSD(BEAN[1], totalBeans),
