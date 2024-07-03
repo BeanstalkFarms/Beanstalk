@@ -50,7 +50,7 @@ const eventsAbi = [
   }
 ];
 
-describe.only('Silo V3: Stem deployment migrate everyone', function () {
+describe('Silo V3: Stem deployment migrate everyone', function () {
     before(async function () {
 
       try {

@@ -16,7 +16,6 @@ import {LibSafeMath32} from "../LibSafeMath32.sol";
 import {LibSafeMathSigned96} from "../LibSafeMathSigned96.sol";
 import {LibGerminate} from "./LibGerminate.sol";
 import {LibWhitelistedTokens} from "./LibWhitelistedTokens.sol";
-import {console} from "hardhat/console.sol";
 
 /**
  * @title LibSilo
@@ -251,12 +250,6 @@ library LibSilo {
 
         // Decrease supply of Stalk; Remove Stalk from the balance of `account`
         s.s.stalk = s.s.stalk.sub(stalk);
-        if (stalk > s.a[account].s.stalk) {
-            console.log("burning too much, by amount: ", stalk.sub(s.a[account].s.stalk));
-            console.log("account: ", account);
-            console.log("stalk: ", stalk);
-            console.log("s.a[account].s.stalk: ", s.a[account].s.stalk);
-        }
         s.a[account].s.stalk = s.a[account].s.stalk.sub(stalk);
 
         // Decrease supply of Roots; Remove Roots from the balance of `account`

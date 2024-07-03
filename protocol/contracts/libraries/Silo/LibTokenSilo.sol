@@ -16,7 +16,6 @@ import {LibSafeMathSigned96} from "contracts/libraries/LibSafeMathSigned96.sol";
 import {LibBytes} from "contracts/libraries/LibBytes.sol";
 import {LibGerminate} from "contracts/libraries/Silo/LibGerminate.sol";
 import {LibWhitelistedTokens} from "contracts/libraries/Silo/LibWhitelistedTokens.sol";
-import {console} from "hardhat/console.sol";
 
 /**
  * @title LibTokenSilo
@@ -153,8 +152,6 @@ library LibTokenSilo {
         }
 
         // decrement germinating amount and bdv.
-        console.log("germinate.deposited[token].amount: ", germinate.deposited[token].amount);
-        console.log("amount: ", amount);
         germinate.deposited[token].amount = germinate.deposited[token].amount.sub(
             amount.toUint128()
         );
