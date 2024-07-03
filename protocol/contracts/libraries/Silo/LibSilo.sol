@@ -456,9 +456,15 @@ library LibSilo {
             migrateStems(account);
         }
 
+        uint32 currentSeason = s.season.current;
+        
+        // End account germination.
+        if (lastUpdate < currentSeason) {
+            LibGerminate.endAccountGermination(account, lastUpdate, currentSeason);
+        }
+
         // sop data only needs to be updated once per season,
         // if it started raining and it's still raining, or there was a sop
-        uint32 currentSeason = s.season.current;
         if (s.season.rainStart > s.season.stemStartSeason) {
             if (lastUpdate <= s.season.rainStart && lastUpdate <= currentSeason) {
                 // Increments `plenty` for `account` if a Flood has occured.
@@ -467,10 +473,6 @@ library LibSilo {
             }
         }
         
-        // End account germination.
-        if (lastUpdate < currentSeason) {
-            LibGerminate.endAccountGermination(account, lastUpdate, currentSeason);
-        }
         // Calculate the amount of Grown Stalk claimable by `account`.
         // Increase the account's balance of Stalk and Roots.
         __mow(account, token);

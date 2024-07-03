@@ -7,14 +7,15 @@ const { deployMockWell, whitelistWell, deployMockWellWithMockPump } = require('.
 const { setEthUsdPrice, setEthUsdcPrice, setEthUsdtPrice } = require('../scripts/usdOracle.js');
 const { takeSnapshot, revertToSnapshot } = require("./utils/snapshot")
 
-let user,user2,owner;
-let userAddress, ownerAddress, user2Address;
+let user,user2,user3,owner;
+let userAddress, ownerAddress, user2Address, user3Address;
 
 describe('Sop', function () {
   before(async function () {
-    [owner,user,user2] = await ethers.getSigners()
+    [owner,user,user2,user3] = await ethers.getSigners()
     userAddress = user.address;
     user2Address = user2.address;
+    user3Address = user3.address;
     const contracts = await deploy("Test", false, true)
     ownerAddress = contracts.account;
     this.diamond = contracts.beanstalkDiamond
@@ -64,7 +65,6 @@ describe('Sop', function () {
     // they have updated their deposit at least once after silo sunrise)
     await this.silo.mow(userAddress, this.bean.address);
     await this.silo.mow(user2Address, this.bean.address);
-
   })
 
   beforeEach(async function () {
@@ -325,4 +325,51 @@ describe('Sop', function () {
       expect(await this.seasonGetters.getSopWell()).to.be.equal(this.well.address)
     })
   })
+
+  describe.only('Germination and Plenty', function () {
+    it('not germinated', async function () {
+      
+      await this.bean.mint(user3Address, to6('10000'));
+      await this.bean.connect(user3).approve(this.silo.address, MAX_UINT256);
+      await this.silo.connect(user3).deposit(this.bean.address, to6('1000'), EXTERNAL);
+      
+      await this.season.siloSunrise(0);
+      await this.season.siloSunrise(0);
+      await this.season.siloSunrise(0); // should be germinated by now, not mown though
+      
+      await this.well.setReserves([to6('1000000'), to18('1100')])
+      await this.pump.setInstantaneousReserves([to6('1000000'), to18('1100')])
+
+
+      await this.season.rainSunrise();
+      await this.season.rainSunrise();
+
+      await this.silo.mow(user3Address, this.bean.address);
+      
+      const balanceOfPlenty = await this.siloGetters.balanceOfPlenty(user3Address);
+      expect(balanceOfPlenty).to.equal('17059168165054954010');
+    });
+
+    it('germinated', async function () {
+      await this.bean.mint(user3Address, to6('10000'));
+      await this.bean.connect(user3).approve(this.silo.address, MAX_UINT256);
+      await this.silo.connect(user3).deposit(this.bean.address, to6('1000'), EXTERNAL);
+      
+      await this.season.siloSunrise(0);
+      await this.season.siloSunrise(0);
+      await this.season.siloSunrise(0); // should be germinated by now, not mown though
+      
+      await this.well.setReserves([to6('1000000'), to18('1100')]);
+      await this.pump.setInstantaneousReserves([to6('1000000'), to18('1100')])
+
+      await this.silo.mow(user3Address, this.bean.address);
+      await this.season.rainSunrise();
+      await this.season.rainSunrise();
+      await this.silo.mow(user3Address, this.bean.address);
+      
+      const balanceOfPlenty = await this.siloGetters.balanceOfPlenty(user3Address);
+      // Note user has more plenty here than previous test because of the earlier mow, giving them more stalk
+      expect(balanceOfPlenty).to.equal('17065991377622017778');
+    });
+  });
 })
