@@ -37,13 +37,11 @@ import {
   Steth__factory,
   Wsteth__factory,
   Steth,
-  Wsteth
-} from "src/constants/generated";
-import { BaseContract } from "ethers";
-import {
+  Wsteth,
   UnwrapAndSendEthJunction,
   UnwrapAndSendEthJunction__factory
-} from "@beanstalk/sdk-wells/dist/types/constants/generated";
+} from "src/constants/generated";
+import { BaseContract } from "ethers";
 
 type CurveContracts = {
   pools: {
