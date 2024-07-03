@@ -6,9 +6,8 @@ import { ClipboardSettings } from "src/types";
 
 export class UnwrapWstETH extends StepClass<AdvancedPipePreparedResult> {
   public name: string = "unwrapWstETH";
-  public clipboard?: ClipboardSettings;
 
-  constructor() {
+  constructor(public clipboard?: ClipboardSettings) {
     super();
   }
 
