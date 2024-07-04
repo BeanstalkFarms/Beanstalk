@@ -48,9 +48,7 @@ contract FertilizerFacet is Invariable {
         uint256[] calldata ids,
         LibTransfer.To mode
     ) external payable fundsSafu noSupplyChange oneOutFlow(C.BEAN) {
-        uint256 amount = C.fertilizer().beanstalkUpdate(LibTractor._user(), ids, s.sys.fert.bpf);
-        s.sys.fert.fertilizedPaidIndex += amount;
-        LibTransfer.sendToken(C.bean(), amount, LibTractor._user(), mode);
+        LibFertilizer.claimFertilized(ids, mode);
     }
 
     /**

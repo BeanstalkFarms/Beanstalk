@@ -67,6 +67,12 @@ library LibFertilizer {
         emit SetFertilizer(id, bpf);
     }
 
+    function claimFertilized(uint256[] calldata ids, LibTransfer.To mode) internal {
+        uint256 amount = C.fertilizer().beanstalkUpdate(LibTractor._user(), ids, s.sys.fert.bpf);
+        s.sys.fert.fertilizedPaidIndex += amount;
+        LibTransfer.sendToken(C.bean(), amount, LibTractor._user(), mode);
+    }
+
     function getBpf(uint128 id) internal pure returns (uint128 bpf) {
         bpf = getHumidity(id).add(1000).mul(PADDING);
     }
@@ -76,6 +82,31 @@ library LibFertilizer {
         if (id >= END_DECREASE_SEASON) return 200;
         uint128 humidityDecrease = id.sub(REPLANT_SEASON).mul(5);
         humidity = RESTART_HUMIDITY.sub(humidityDecrease);
+    }
+
+    function getAmountsOfIds(
+        address account,
+        uint256[] memory ids
+    )
+        external
+        view
+        returns (
+            uint256[] memory fertilizer,
+            uint256 totalFertilizer,
+            uint256[] remainingBpf,
+            uint256 totalUnfertilized
+        )
+    {
+        balances = new uint256[](ids.length);
+
+        for (uint256 i; i < ids.length; i++) {
+            fertilizer[i] = C.fertilizer().balanceOf(account, id);
+            totalFertilizer += fertilizer[i];
+            if (ids[i] > s.sys.fert.bpf) {
+                remainingBpf[i] = ids[i] - s.sys.fert.bpf;
+                totalUnfertilized += remainingBpf[i] * balances[i];
+            }
+        }
     }
 
     /**
