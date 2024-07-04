@@ -8,7 +8,7 @@ import { getIsValidEthereumAddress } from "src/utils/addresses";
 import { queryKeys } from "src/utils/query/queryKeys";
 import { ERC20Token, Token } from "@beanstalk/sdk";
 import { images } from "src/assets/images/tokens";
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
 
 const emptyMetas: TokenMetadataResponse = {
   decimals: null,
@@ -70,6 +70,13 @@ export const useTokenMetadata = (params: string | TokenIsh): TokenMetadataRespon
     // We never need to refetch this data
     staleTime: Infinity
   });
+
+  useEffect(() => {
+    if (existingMetas.symbol?.toLowerCase() === "wsteth") {
+      console.log("existing metas: ", existingMetas);
+      console.log("query data: ", query.data);
+    }
+  }, [existingMetas, query])
 
   const metadatas = useMemo(() => {
     const meta: TokenMetadataResponse = {
