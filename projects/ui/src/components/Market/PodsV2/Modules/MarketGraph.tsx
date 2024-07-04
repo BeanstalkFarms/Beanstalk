@@ -851,7 +851,7 @@ const Graph: FC<GraphProps> = ({
               >
                 Viewing: {selectedPoint.type}{' '}
                 {selectedPoint.type === 'listing'
-                  ? selectedPoint.coordinate.id
+                  ? selectedPoint.coordinate.id.slice(43)
                   : selectedPoint.coordinate.id.substring(0, 8)}
               </Typography>
               <Typography
