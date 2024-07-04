@@ -461,7 +461,7 @@ export const MarketColumns = {
 
           return (
             <Typography sx={{ fontSize: 'inherit', color: color }}>
-              {params.value.toString().toUpperCase()}
+              {key === 'cancelled_partial' ? `CANCELLED (PARTIAL)` : params.value.toString().toUpperCase()}
             </Typography>
           );
         },
