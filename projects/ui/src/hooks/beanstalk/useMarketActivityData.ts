@@ -101,7 +101,7 @@ const useMarketActivityData = () => {
         setError(true);
       }
  
-      // run join query if we loaded market events
+      // run join query if we loaded any market events
       if (podMarketEvents.length > 0) {
         setMarketEvents(podMarketEvents);
         // find IDs to join against
