@@ -214,14 +214,14 @@ export const useWhitelistedWellComponents = () => {
 
       well.pumps?.forEach((pump) => {
         const pumpAddress = pump.address.toLowerCase();
-        if (pumpAddress in pumpMap) {
+        if (pumpAddress in pumpMap && pumpAddress in map.pumps) {
           map.pumps[pumpAddress].component.usedBy += 1;
         }
       });
 
       if (well.wellFunction) {
         const wellFunctionAddress = well.wellFunction.address.toLowerCase();
-        if (wellFunctionAddress in wellFunctionMap) {
+        if (wellFunctionAddress in wellFunctionMap && wellFunctionAddress in map.wellFunctions) {
           map.wellFunctions[wellFunctionAddress].component.usedBy += 1;
         }
       }

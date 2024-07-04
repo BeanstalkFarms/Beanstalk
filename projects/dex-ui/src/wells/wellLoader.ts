@@ -8,7 +8,10 @@ import { GetWellAddressesDocument } from "src/generated/graph/graphql";
 
 type WellAddresses = string[];
 
-const WELL_BLACKLIST = ["0x875b1da8dcba757398db2bc35043a72b4b62195d"];
+const WELL_BLACKLIST = [
+  "0x875b1da8dcba757398db2bc35043a72b4b62195d",
+  "0xBea0061680A2DEeBFA59076d77e0b6c769660595"
+];
 
 const loadFromChain = async (sdk: BeanstalkSDK): Promise<WellAddresses> => {
   const aquifer = new Aquifer(sdk.wells, Settings.AQUIFER_ADDRESS);
