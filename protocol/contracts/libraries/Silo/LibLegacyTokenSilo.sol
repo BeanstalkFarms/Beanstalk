@@ -253,7 +253,7 @@ library LibLegacyTokenSilo {
      * Deposits are migrated to the stem storage system on a 1:1 basis. Accounts with
      * lots of deposits may take a considerable amount of gas to migrate.
      *
-     * Returns seeds diff compared to stored amount, for verification in merkle check, and total bdv.
+     * Returns seeds diff compared to stored amount, for verification in merkle check
      */
     function _mowAndMigrate(
         address account,
