@@ -39,14 +39,16 @@ export const useTokenMetadata = (params: string | TokenIsh): TokenMetadataRespon
 
   const existingMetas = useMemo(() => {
     const metas = { ...emptyMetas };
-    if (!isValidAddress || !existingToken) return metas;
-
-    return {
-      name: existingToken.name,
-      symbol: existingToken.symbol,
-      logo: existingToken.logo?.includes("DEFAULT.svg") ? null : existingToken.logo,
-      decimals: existingToken.decimals
-    } as TokenMetadataResponse;
+    if (isValidAddress && existingToken) {
+      if (existingToken.name) metas.name = existingToken.name;
+      if (existingToken.decimals) metas.decimals = existingToken.decimals;
+      if (existingToken.symbol) metas.symbol = existingToken.symbol;
+      if (existingToken.logo && !existingToken.logo?.includes("DEFAULT.svg")) {
+        metas.logo = existingToken.logo;
+      };
+    }
+    
+    return metas;
   }, [isValidAddress, existingToken]);
 
   const metaValues = Object.values(existingMetas);

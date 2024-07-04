@@ -71,7 +71,7 @@ const setTokenMetadatas = (wells: Well[]) => {
         if (metadata.displayDecimals) token.displayDecimals = metadata.displayDecimals;
         if (metadata.displayName) token.displayName = metadata.displayName;
       }
-      if (logo) token.setMetadata({ logo });
+      if (logo && !logo.includes("data:image/svg+xml")) token.setMetadata({ logo });
     });
   }
 };
