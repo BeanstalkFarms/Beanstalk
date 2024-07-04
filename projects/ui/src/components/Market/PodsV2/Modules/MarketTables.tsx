@@ -127,7 +127,6 @@ const MarketTables: React.FC<{}> = () => {
           {openState !== 0 && tab === 3 && (
             <MarketActivityTable
               data={eventsData}
-              fetchMoreData={fetchMoreData}
               initializing={!eventsData.length || harvestableIndex.lte(0)}
             />
           )}
