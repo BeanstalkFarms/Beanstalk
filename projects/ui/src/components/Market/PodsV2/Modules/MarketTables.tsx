@@ -3,9 +3,7 @@ import { Stack, Tab, Tabs } from '@mui/material';
 import FullscreenIcon from '@mui/icons-material/Fullscreen';
 import FullscreenExitIcon from '@mui/icons-material/FullscreenExit';
 import { useAtom, useAtomValue } from 'jotai';
-
 import useTabs from '~/hooks/display/useTabs';
-
 import { FontSize, FontWeight } from '~/components/App/muiTheme';
 import Row from '~/components/Common/Row';
 import {
@@ -53,7 +51,6 @@ const MarketTables: React.FC<{}> = () => {
   const {
     data: eventsData,
     harvestableIndex,
-    fetchMoreData,
   } = useMarketActivityData(); // "MARKET ACTIVITY"
 
   // FUNCTIONS
