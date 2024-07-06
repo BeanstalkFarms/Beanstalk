@@ -27,9 +27,6 @@ const useMarketData = () => {
   const [maxPlaceInLine, setMaxPlaceInLine] = useState<number>();
   const [maxPlotSize, setMaxPlotSize] = useState<number>();
 
-  const harvestableIndexFormatted = 
-    harvestableIndex.multipliedBy(new BigNumber(10).pow(sdk.tokens.BEAN.decimals)).toString()
-
   /// Queries
   const [getListings] = useAllPodListingsLazyQuery();
   const [getOrders] = useAllPodOrdersLazyQuery();
@@ -43,6 +40,10 @@ const useMarketData = () => {
       let listingsQueryLoops = 1;
       let ordersOutputLength = 0;
       let ordersQueryLoops = 1;
+
+      const harvestableIndexFormatted = 
+        harvestableIndex.multipliedBy(new BigNumber(10).pow(sdk.tokens.BEAN.decimals)).toString();
+  
       try {
         setLoading(true);
         setError(false);    
@@ -94,11 +95,11 @@ const useMarketData = () => {
         setError(true);
       };
     }, 
-  [])
+  [harvestableIndex]);
 
   useEffect(() => {
     _fetch();
-  }, []);
+  }, [harvestableIndex]);
 
   /// Calculations
   useEffect(() => {
