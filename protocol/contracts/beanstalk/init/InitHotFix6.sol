@@ -13,6 +13,9 @@ contract InitHotFix6 {
     AppStorage internal s;
     using SafeMath for uint256;
 
+    // copied from LibSilo.sol
+    event StalkBalanceChanged(address indexed account, int256 delta, int256 deltaRoots);
+
     function init() external {
         // generated using the script at InitHotFix6_generate.js
         adjustAccount(address(0xA7e3feD558E81dAb40Cd87F334D68b0BF0AB3fD6), 1339045260000, 0x108288355466404f3e7a6);
@@ -59,5 +62,8 @@ contract InitHotFix6 {
     function adjustAccount(address account, uint128 stalk, uint128 roots) internal {
         s.a[account].s.stalk = s.a[account].s.stalk - stalk;
         s.a[account].roots = s.a[account].roots - roots;
+
+        // emit the event
+        emit StalkBalanceChanged(account, -int256(stalk), -int256(roots));
     }
 }
