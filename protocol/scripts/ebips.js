@@ -199,7 +199,7 @@ async function ebip17(mock = true, account = undefined) {
     facetNames: [],
     initFacetName: 'InitHotFix6',
     initArgs: [],
-    selectorsToRemove: [''],
+    selectorsToRemove: [],
     bip: false,
     object: !mock,
     verbose: true,
