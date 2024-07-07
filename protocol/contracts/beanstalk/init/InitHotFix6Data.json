@@ -1,6 +1,6 @@
 [
   {
-    "account": "0xa7e3fed558e81dab40cd87f334d68b0bf0ab3fd6",
+    "account": "0xA7e3feD558E81dAb40Cd87F334D68b0BF0AB3fD6",
     "accountDiscrepancy": {
       "depositedBean": 133904526,
       "depositedBdv": 133904526,
@@ -17,7 +17,7 @@
     "txHash": "0xc13e96784c0218751ff8f9c0de21b3dbe1879ae3902798fbfaf77017cda3bb48"
   },
   {
-    "account": "0xe203096d7583e30888902b2608652c720d6c38da",
+    "account": "0xE203096D7583E30888902b2608652c720D6C38da",
     "accountDiscrepancy": {
       "depositedBean": 89563034,
       "depositedBdv": 89563034,
@@ -34,7 +34,7 @@
     "txHash": "0xe3138f983bd7de4baec19e7000abe80a42a8024b7162ea5618bb72459780afb8"
   },
   {
-    "account": "0xe5d36124de24481dac81cc06b2cd0bbe81701d14",
+    "account": "0xe5D36124DE24481daC81cc06b2Cd0bbE81701D14",
     "accountDiscrepancy": {
       "depositedBean": 271982746,
       "depositedBdv": 271982746,
@@ -51,7 +51,7 @@
     "txHash": "0x48f452e6f2e6cd07280a4bab98a470c4a5f1cce0026a7eceb244b786d8abe663"
   },
   {
-    "account": "0xdff24806405f62637e0b44cc2903f1dfc7c111cd",
+    "account": "0xdff24806405f62637E0b44cc2903F1DfC7c111Cd",
     "accountDiscrepancy": {
       "depositedBean": 446524114,
       "depositedBdv": 446524114,
@@ -68,7 +68,7 @@
     "txHash": "0x0492af41b8aa36bd2bd78eacf9ad576806d8fd66f34f096611aee80814a6181e"
   },
   {
-    "account": "0xcde68f6a7078f47ee664ccbc594c9026a8a72d25",
+    "account": "0xcDe68F6a7078f47Ee664cCBc594c9026a8a72d25",
     "accountDiscrepancy": {
       "depositedBean": 8731040,
       "depositedBdv": 8731040,
@@ -85,7 +85,7 @@
     "txHash": "0xebdb85436aa97e1bd6e9a106ec4bc39f7e595f82e30cd8cfe29fcb3a323dd93a"
   },
   {
-    "account": "0x6343b307c288432bb9ad9003b4230b08b56b3b82",
+    "account": "0x6343B307C288432BB9AD9003B4230B08B56b3b82",
     "accountDiscrepancy": {
       "depositedBean": 158760793,
       "depositedBdv": 158760793,
@@ -102,7 +102,7 @@
     "txHash": "0x1b6e13bf3c94e5aa2a8445ffad21d6ff77ad49e80aa6d56897295c59366c8243"
   },
   {
-    "account": "0xfe7a7f227967104299e2ed9c47ca28eadc3a7c5f",
+    "account": "0xFE7A7F227967104299E2ED9c47ca28eADc3a7C5f",
     "accountDiscrepancy": {
       "depositedBean": 80038404,
       "depositedBdv": 80038404,
@@ -119,7 +119,7 @@
     "txHash": "0x74108cdbe98ece9ebf97a8cb24f17f81582afe352af6f3173abcab3fe36ab8d9"
   },
   {
-    "account": "0xf6f6d531ed0f7fa18cae2c73b21aa853c765c4d8",
+    "account": "0xF6f6d531ed0f7fa18cae2C73b21aa853c765c4d8",
     "accountDiscrepancy": {
       "depositedBean": 2036861536,
       "depositedBdv": 2036861536,
@@ -136,7 +136,7 @@
     "txHash": "0xdeb93e488d8c850914dd32a91f1bd32a03e5d3fa9da0e1517a52a00d1ff23a0f"
   },
   {
-    "account": "0xcba1a275e2d858ecffaf7a87f606f74b719a8a93",
+    "account": "0xCba1A275e2D858EcffaF7a87F606f74B719a8A93",
     "accountDiscrepancy": {
       "depositedBean": 248852180,
       "depositedBdv": 248852180,
@@ -153,7 +153,7 @@
     "txHash": "0xc71bef3a0838158da7f2a73f6239dcd963d321c653b733a00e0e398108381e9f"
   },
   {
-    "account": "0xcfd9c9ac52b4b6fe30537803caeb327dadd411bb",
+    "account": "0xcfd9c9Ac52b4B6Fe30537803CaEb327daDD411bB",
     "accountDiscrepancy": {
       "depositedBean": 226529061,
       "depositedBdv": 226529061,
@@ -170,7 +170,7 @@
     "txHash": "0xa0e76ca36a82d0eb1d862f125699d173680fb84bc1ab575f40e0794fdb0d432a"
   },
   {
-    "account": "0x91953b70d0861309f7d3a429a1cf82c8353132be",
+    "account": "0x91953b70d0861309f7D3A429A1CF82C8353132Be",
     "accountDiscrepancy": {
       "depositedBean": 474231448,
       "depositedBdv": 474231448,
@@ -187,7 +187,7 @@
     "txHash": "0xe598db0643bece20c6ab5db1ebaafcfb873e4b64ce662c9a9bd7b47e62900ce2"
   },
   {
-    "account": "0x19831b174e9deabf9e4b355aadfd157f09e2af1f",
+    "account": "0x19831b174e9deAbF9E4B355AadFD157F09E2af1F",
     "accountDiscrepancy": {
       "depositedBean": 1090495370,
       "depositedBdv": 1090495370,
@@ -204,7 +204,7 @@
     "txHash": "0xf381409f445bcc836f904a36b2ed9b6497a75a509507abd9571c993b231fe99b"
   },
   {
-    "account": "0xe249d1be97f4a716cde0d7c5b6b682f491621c41",
+    "account": "0xe249d1bE97f4A716CDE0D7C5B6b682F491621C41",
     "accountDiscrepancy": {
       "depositedBean": 281349185,
       "depositedBdv": 281349185,
@@ -221,7 +221,7 @@
     "txHash": "0x69a02efde93c9fd3cbae189b8b8abe30877424c12073422805ff8866bc938034"
   },
   {
-    "account": "0x19c5bad4354e9a78a1ca0235af29b9eacf54ff2b",
+    "account": "0x19c5baD4354e9a78A1CA0235Af29b9EAcF54fF2b",
     "accountDiscrepancy": {
       "depositedBean": 81584533,
       "depositedBdv": 81584533,
@@ -238,7 +238,7 @@
     "txHash": "0x22dcf2e91034f85e571184291f74f6481f2c793a4c987c47a7e5fab53631a525"
   },
   {
-    "account": "0x6cd83315e4c4bfdf95d4a8442927c018f328c9fe",
+    "account": "0x6CD83315e4c4bFdf95D4A8442927C018F328C9fe",
     "accountDiscrepancy": {
       "depositedBean": 173788496,
       "depositedBdv": 173788496,
@@ -255,7 +255,7 @@
     "txHash": "0x8b9aa1130b213df31bea992148a2b6e1d80b2ddd31d425f9672917c0e5cf4156"
   },
   {
-    "account": "0xf05b641229bb2aa63b205ad8b423a390f7ef05a7",
+    "account": "0xf05b641229bB2aA63b205Ad8B423a390F7Ef05A7",
     "accountDiscrepancy": {
       "depositedBean": 163601580,
       "depositedBdv": 163601580,
@@ -272,7 +272,7 @@
     "txHash": "0x6ebdd4084df99c31c089abef15232b3b90e3e29268c8b1781663a38685b5ea69"
   },
   {
-    "account": "0x7d50bfead43d4fdd47a8a61f32305b2de21068bd",
+    "account": "0x7d50bfeAD43d4FDD47a8A61f32305b2dE21068Bd",
     "accountDiscrepancy": {
       "depositedBean": 300406655,
       "depositedBdv": 300406655,
@@ -289,7 +289,7 @@
     "txHash": "0xecddbc54465eb60d8429d739f9a28d0e8133bcebefcb913e05bd7ff8bd8e8533"
   },
   {
-    "account": "0xd3e0ef0ebb7bc536405918d4d8dbdf981185d435",
+    "account": "0xd3e0Ef0eBB7bC536405918d4D8dBDF981185d435",
     "accountDiscrepancy": {
       "depositedBean": 5000000000,
       "depositedBdv": 5000000000,
@@ -306,7 +306,7 @@
     "txHash": "0x563f865c941b942b7219aff8d5548b00870dc4f804a94b1967f729eaa5caf239"
   },
   {
-    "account": "0xe146313a9d6d6ccdd733cc15af3cf11d47e96f25",
+    "account": "0xE146313a9D6D6cCdd733CC15af3Cf11d47E96F25",
     "accountDiscrepancy": {
       "depositedBean": 22958427,
       "depositedBdv": 22958427,
@@ -323,7 +323,7 @@
     "txHash": "0x94422f8d4bb906ab687e714a1c9dffbe940300dfd37256e78034c421a85a6a31"
   },
   {
-    "account": "0x4ca3e5bdf3823febbe18f9664cded14b7243971c",
+    "account": "0x4Ca3E5bDf3823fEBbE18F9664cdEd14b7243971C",
     "accountDiscrepancy": {
       "depositedBean": 42193277,
       "depositedBdv": 42193277,
@@ -340,7 +340,7 @@
     "txHash": "0x87432bf56b535cd2c8588c71bfc6b35b7dde134cfc4956bed6d5519fded02712"
   },
   {
-    "account": "0xf62405e188bb9629ed623d60b7c70dcc4e2abd81",
+    "account": "0xF62405e188Bb9629eD623d60B7c70dCc4e2ABd81",
     "accountDiscrepancy": {
       "depositedBean": 211342404,
       "depositedBdv": 211342404,
@@ -357,7 +357,7 @@
     "txHash": "0xa1e6aea13a21da1e1e12e6547dfa953fc0da0a49c9e674051a99ef0f39e3e0b8"
   },
   {
-    "account": "0x52eaa3345a9b68d3b5d52da2fd47ebfc5ed11d4e",
+    "account": "0x52EAa3345a9b68d3b5d52DA2fD47EbFc5ed11d4e",
     "accountDiscrepancy": {
       "depositedBean": 117622581,
       "depositedBdv": 117622581,
@@ -374,7 +374,7 @@
     "txHash": "0xafecee0d22dd94ae34a79fddbb803f7e747a86fd02a0b1bbb886fe618889a2d7"
   },
   {
-    "account": "0xd441c97ef1458d847271f91714799007081494ef",
+    "account": "0xD441C97eF1458d847271f91714799007081494eF",
     "accountDiscrepancy": {
       "depositedBean": 2424238564,
       "depositedBdv": 2424238564,
@@ -391,7 +391,7 @@
     "txHash": "0xbf5828bf704fd7dc3a5e7228145214cca68dc12ebea4558c837bac56c9c13f92"
   },
   {
-    "account": "0xeaa4f3773f57af1d4c7130e07cde48050245511b",
+    "account": "0xEAa4F3773F57af1D4c7130e07CDE48050245511B",
     "accountDiscrepancy": {
       "depositedBean": 4341434014,
       "depositedBdv": 4341434014,
@@ -408,7 +408,7 @@
     "txHash": "0xb86fe4294118f2150887a7c6776c95b01b212cdefed1878368a59280600af829"
   },
   {
-    "account": "0x2bf046a052942b53ca6746de4d3295d8f10d4562",
+    "account": "0x2bF046A052942B53Ca6746de4D3295d8f10d4562",
     "accountDiscrepancy": {
       "depositedBean": 258059462,
       "depositedBdv": 258059462,
@@ -425,7 +425,7 @@
     "txHash": "0x13cb92c6afa3a1f4670124a3c9b022208948e5ad1302cfd1dfed5d103d6b31d3"
   },
   {
-    "account": "0x7de837caff6a19898e507f644939939cb9341209",
+    "account": "0x7dE837cAff6A19898e507F644939939cB9341209",
     "accountDiscrepancy": {
       "depositedBean": 684692720,
       "depositedBdv": 684692720,
@@ -442,7 +442,7 @@
     "txHash": "0x2628551e82d89723be8acf6631753b5486e2c707989ff68b9deb22cc2b192577"
   },
   {
-    "account": "0xc56725de9274e17847db0e45c1da36e46a7e197f",
+    "account": "0xC56725DE9274E17847db0E45c1DA36E46A7e197F",
     "accountDiscrepancy": {
       "depositedBean": 488145569,
       "depositedBdv": 488145569,
@@ -459,7 +459,7 @@
     "txHash": "0xe358468c5bc418ea875b87172624eee8355233e57138f2f9bcb922b5e6835250"
   },
   {
-    "account": "0x0be9a9100a95075270e47de519d53c5fc8f7c936",
+    "account": "0x0be9A9100A95075270e47De519D53c5fc8F7C936",
     "accountDiscrepancy": {
       "depositedBean": 491375253,
       "depositedBdv": 491375253,
@@ -476,7 +476,7 @@
     "txHash": "0x6674577fb706fb4a28afb6452600b65797b335fbb604e5dfef4f4bd02af2a869"
   },
   {
-    "account": "0xc7c1b169a8d3c5f2d6b25642c4d10da94ffcd3c9",
+    "account": "0xC7C1b169a8d3c5F2D6b25642c4d10DA94fFCd3c9",
     "accountDiscrepancy": {
       "depositedBean": 359977605,
       "depositedBdv": 359977605,
@@ -493,7 +493,7 @@
     "txHash": "0x9047747fa52a8a417f0745eebb9676077384e105b96c013dce59b9efda092ff7"
   },
   {
-    "account": "0xf840aa35b73ee0bbf488d81d684706729aba0a15",
+    "account": "0xF840AA35b73EE0Bbf488D81d684706729Aba0a15",
     "accountDiscrepancy": {
       "depositedBean": 14249979,
       "depositedBdv": 14249979,
@@ -510,7 +510,7 @@
     "txHash": "0x5a5b4bc15de098f438208f91c26a4880c8061837e39909f1134544dac461b5db"
   },
   {
-    "account": "0x11b197e2c61c2959ae84bc7f9db8e3fefe511043",
+    "account": "0x11b197e2C61c2959Ae84bC7f9db8E3fEFe511043",
     "accountDiscrepancy": {
       "depositedBean": 787555001,
       "depositedBdv": 787555001,
@@ -527,7 +527,7 @@
     "txHash": "0x36eca6d017f86cd3bfa9e63ed181732cab2ef1a90bd4a1d429b82aa568ea088f"
   },
   {
-    "account": "0xda8c9d1b00d12ddf67f2aa6af582fd6a38209b39",
+    "account": "0xDa8C9D1B00D12DdF67F2aa6aF582fD6A38209b39",
     "accountDiscrepancy": {
       "depositedBean": 376462215,
       "depositedBdv": 376462215,
@@ -544,7 +544,7 @@
     "txHash": "0xb5fab47f76c4cf036456ef64020ae636c437aa04b14bd969540aaf25af634a06"
   },
   {
-    "account": "0x53bd04892c7147e1126bc7ba68f2fb6bf5a43910",
+    "account": "0x53BD04892c7147E1126bC7bA68f2fB6bF5A43910",
     "accountDiscrepancy": {
       "depositedBean": 4158664138,
       "depositedBdv": 4158664138,
@@ -561,7 +561,7 @@
     "txHash": "0x6f4577dddf7eb9ded095ef7d4e480c423acb0abd6e1ab530b27669ede4590a9d"
   },
   {
-    "account": "0x4bf44e0c856d096b755d54ca1e9cfdc0115ed2e6",
+    "account": "0x4bf44E0c856d096B755D54CA1e9CFdc0115ED2e6",
     "accountDiscrepancy": {
       "depositedBean": 126997345,
       "depositedBdv": 126997345,
@@ -578,7 +578,7 @@
     "txHash": "0x3b3125a10e1a5980f6ab387ae6d74ebcdfe3f4e170bfd4d9d487ae930c516fbe"
   },
   {
-    "account": "0x2972bf9b54ac5100d747150dfd684899c0abec5e",
+    "account": "0x2972bf9B54aC5100d747150Dfd684899c0aBEc5E",
     "accountDiscrepancy": {
       "depositedBean": 3573573138,
       "depositedBdv": 3573573138,
