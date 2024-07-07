@@ -460,7 +460,7 @@ library LibSilo {
         // if it started raining and it's still raining, or there was a sop
         uint32 currentSeason = s.season.current;
         if (s.season.rainStart > s.season.stemStartSeason) {
-            if (lastUpdate <= s.season.rainStart && lastUpdate <= currentSeason) {
+            if ((lastUpdate <= s.season.rainStart || s.a[account].lastRain > 0) && lastUpdate <= currentSeason) {
                 // Increments `plenty` for `account` if a Flood has occured.
                 // Saves Rain Roots for `account` if it is Raining.
                 handleRainAndSops(account, lastUpdate);
@@ -525,16 +525,16 @@ library LibSilo {
      */
     function handleRainAndSops(address account, uint32 lastUpdate) private {
         AppStorage storage s = LibAppStorage.diamondStorage();
+        // If a Sop has occured since last update, calculate rewards and set last Sop.
+        if (s.season.lastSopSeason > lastUpdate) {
+            s.a[account].sop.plenty = balanceOfPlenty(account);
+            s.a[account].lastSop = s.season.lastSop;
+        }
         // If no roots, reset Sop counters variables
         if (s.a[account].roots == 0) {
             s.a[account].lastSop = s.season.rainStart;
             s.a[account].lastRain = 0;
             return;
-        }
-        // If a Sop has occured since last update, calculate rewards and set last Sop.
-        if (s.season.lastSopSeason > lastUpdate) {
-            s.a[account].sop.plenty = balanceOfPlenty(account);
-            s.a[account].lastSop = s.season.lastSop;
         }
         if (s.season.raining) {
             // If rain started after update, set account variables to track rain.
