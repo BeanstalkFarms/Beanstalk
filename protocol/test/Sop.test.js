@@ -363,7 +363,7 @@ describe('Sop', function () {
     })
   })
 
-  describe.only('Germination and Plenty', function () {
+  describe('Germination and Plenty', function () {
     it('not germinated', async function () {
       
       await this.bean.mint(user3Address, to6('10000'));

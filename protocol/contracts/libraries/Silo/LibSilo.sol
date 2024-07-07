@@ -256,6 +256,16 @@ library LibSilo {
         s.s.roots = s.s.roots.sub(roots);
         s.a[account].roots = s.a[account].roots.sub(roots);
 
+        // If it is Raining and the account now has less roots than the
+        // account's current rain roots, set the account's rain roots
+        // to the account's current roots and subtract the difference
+        // from Beanstalk's total rain roots.
+        if (s.season.raining && s.a[account].sop.roots > s.a[account].roots) {
+            uint256 deltaRoots = s.a[account].sop.roots - s.a[account].roots;
+            s.a[account].sop.roots = s.a[account].roots;
+            s.r.roots = s.r.roots.sub(deltaRoots);
+        }
+
         // emit event.
         emit StalkBalanceChanged(account, -int256(stalk), -int256(roots));
     }
