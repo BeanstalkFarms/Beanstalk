@@ -83,8 +83,9 @@ export const castPodListing = (
  * @returns Redux form of PodOrder.
  */
 export const castPodOrder = (order: PodOrderFragment): PodOrder => {
+  const pricePerPod = toTokenUnitsBN(order.pricePerPod, BEAN[1].decimals);
+
   const beanAmount = toTokenUnitsBN(order.beanAmount, BEAN[1].decimals);
-  const podAmount = beanAmount.div(toTokenUnitsBN(order.pricePerPod, BEAN[1].decimals));
   const podAmountFilled = toTokenUnitsBN(
     order.podAmountFilled,
     BEAN[1].decimals
@@ -93,6 +94,10 @@ export const castPodOrder = (order: PodOrderFragment): PodOrder => {
     order.beanAmountFilled,
     BEAN[1].decimals
   );
+
+  const beanAmountRemaining = toTokenUnitsBN(beanAmount.minus(beanAmountFilled).toFixed(6, BigNumber.ROUND_UP), 0);
+  const podAmountRemaining = toTokenUnitsBN(beanAmountRemaining.div(pricePerPod).toFixed(6, BigNumber.ROUND_UP), 0);
+  const podAmount = podAmountFilled.plus(podAmountRemaining);
 
   return {
     // Identifiers
@@ -118,8 +123,8 @@ export const castPodOrder = (order: PodOrderFragment): PodOrder => {
     beanAmountFilled: beanAmountFilled,
 
     // Computed
-    podAmountRemaining: podAmount.minus(podAmountFilled),
-    beanAmountRemaining: beanAmount.minus(beanAmountFilled),
+    podAmountRemaining: podAmountRemaining,
+    beanAmountRemaining: beanAmountRemaining,
 
     // Metadata
     status: order.status as MarketStatus,
