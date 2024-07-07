@@ -15,12 +15,11 @@ import {LibMigrateOut} from "contracts/libraries/Lineage/LibMigrateOut.sol";
  * @notice Source instance has no knowledge of possible Destinations or their configurations.
  **/
 contract MigrateOutFacet is Invariable {
-
-	/**
-	 * @notice Process the outbound migration and transfer necessary assets to destination.
-	 * @dev Reverts if failure to burn assets or destination fails.
-	 */
-    function migrateOut(address destination) external fundsSafu {
+    /**
+     * @notice Process the outbound migration and transfer necessary assets to destination.
+     * @dev Reverts if failure to burn assets or destination fails.
+     */
+    function migrateOut(address destination) external fundsSafu mowSender(token) {
         bytes[] deposits = LibMigrateOut.migrateOutDeposits();
         bytes[] plots = LibMigrateOut.migrateOutPlots();
         bytes[] fertilizer = LibMigrateOut.migrateOutFertilizer();
