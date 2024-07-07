@@ -48,23 +48,30 @@ library LibFertilizer {
     ) internal returns (uint128 id) {
         AppStorage storage s = LibAppStorage.diamondStorage();
 
-        uint128 fertilizerAmount128 = fertilizerAmount.toUint128();
 
         // Calculate Beans Per Fertilizer and add to total owed
         uint128 bpf = getBpf(season);
-        s.sys.fert.unfertilizedIndex = s.sys.fert.unfertilizedIndex.add(fertilizerAmount.mul(bpf));
-        // Get id
-        id = s.sys.fert.bpf.add(bpf);
-        // Update Total and Season supply
-        s.sys.fert.fertilizer[id] = s.sys.fert.fertilizer[id].add(fertilizerAmount128);
-        s.sys.fert.activeFertilizer = s.sys.fert.activeFertilizer.add(fertilizerAmount);
+        id = IncrementFertState(fertilizerAmount, bpf);
         // Add underlying to Unripe Beans and Unripe LP
         addUnderlying(tokenAmountIn, fertilizerAmount.mul(DECIMALS), minLP);
+    }
+
+    function IncrementFertState(
+        uint256 fertilizerAmount,
+        uint128 bpf
+    ) internal returns (uint128 id) {
+        uint128 fertilizerAmount128 = fertilizerAmount.toUint128();
+        s.sys.fert.unfertilizedIndex += fertilizerAmount * bpf;
+        id = s.sys.fert.bpf + bpf;
+        s.sys.fert.fertilizer[id] += fertilizerAmount128;
+        s.sys.fert.activeFertilizer += fertilizerAmount;
+
         // If not first time adding Fertilizer with this id, return
         if (s.sys.fert.fertilizer[id] > fertilizerAmount128) return id;
         // If first time, log end Beans Per Fertilizer and add to Season queue.
         push(id);
         emit SetFertilizer(id, bpf);
+        return id;
     }
 
     function claimFertilized(uint256[] calldata ids, LibTransfer.To mode) internal {
@@ -97,14 +104,15 @@ library LibFertilizer {
             uint256 totalUnfertilized
         )
     {
-        balances = new uint256[](ids.length);
+        fertilizer = new uint256[](ids.length);
+        remainingBpf = new uint256[](ids.length);
 
         for (uint256 i; i < ids.length; i++) {
             fertilizer[i] = C.fertilizer().balanceOf(account, id);
             totalFertilizer += fertilizer[i];
             if (ids[i] > s.sys.fert.bpf) {
                 remainingBpf[i] = ids[i] - s.sys.fert.bpf;
-                totalUnfertilized += remainingBpf[i] * balances[i];
+                totalUnfertilized += remainingBpf[i] * fertilizer[i];
             }
         }
     }
