@@ -57,6 +57,9 @@ contract InitHotFix6 {
         // fix system-level deposited bean and bdv
         s.siloBalances[C.BEAN].deposited = s.siloBalances[C.BEAN].deposited - 29746746393;
         s.siloBalances[C.BEAN].depositedBdv = s.siloBalances[C.BEAN].depositedBdv - 29746746393;
+
+        s.s.stalk = s.s.stalk - 297467463930000;
+        s.s.roots = s.s.roots - 0xe539d6d0c64ac7c32eef9d;
     }
 
     function adjustAccount(address account, uint128 stalk, uint128 roots) internal {
