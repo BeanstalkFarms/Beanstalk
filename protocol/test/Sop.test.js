@@ -75,6 +75,43 @@ describe('Sop', function () {
     await revertToSnapshot(snapshotId)
   })
 
+  
+  describe("bug report", async function () {
+    it("lost plenty 2", async function () {
+      const beanStem = to6("4");
+
+      //rain sunrise
+      await this.season.rainSunrise(); // start raining
+      await this.silo.mow(user.address, BEAN);
+      
+      // rain sunrise
+      await this.season.rainSunrise(); // still raining, no sop
+      await this.silo.mow(user.address, BEAN); // lastUpdated = rainStart + 1
+
+      // set reserves so next season plenty is accrued
+      await this.well.setReserves([to6("1000000"), to18("1100")]);
+      await this.pump.setInstantaneousReserves([to6("1000000"), to18("1100")]);
+
+      await this.season.rainSunrise(); // 1st actual sop
+
+      await this.silo.mow(user.address, BEAN); // this will do nothing as lastUpdated > rainStart
+
+      await this.season.rainSunrise();
+      await this.season.rainSunrise();
+      
+      await this.season.droughtSunrise();
+      await this.season.droughtSunrise();
+
+      await this.silo.connect(user).withdrawDeposit(BEAN, beanStem, to6("1000"), EXTERNAL);
+
+      await this.season.rainSunrise();
+      await this.silo.mow(user.address, BEAN);
+
+      const userPlenty = await this.siloGetters.balanceOfPlenty(user.address);
+      expect(userPlenty).to.be.equal("25595575914848452999");
+    });
+  });
+
   describe("Rain", async function () {
     it("Not raining", async function () {
       const season = await this.seasonGetters.time()
