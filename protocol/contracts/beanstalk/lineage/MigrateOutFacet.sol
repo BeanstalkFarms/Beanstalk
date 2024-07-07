@@ -19,7 +19,7 @@ contract MigrateOutFacet is Invariable {
      * @notice Process the outbound migration and transfer necessary assets to destination.
      * @dev Reverts if failure to burn assets or destination fails.
      */
-    function migrateOut(address destination) external fundsSafu mowSender(token) {
+    function migrateOut(address destination) external fundsSafu {
         bytes[] deposits = LibMigrateOut.migrateOutDeposits();
         bytes[] plots = LibMigrateOut.migrateOutPlots();
         bytes[] fertilizer = LibMigrateOut.migrateOutFertilizer();

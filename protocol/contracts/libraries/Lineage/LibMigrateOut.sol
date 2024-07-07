@@ -54,8 +54,15 @@ library LibMigrateOut {
     ) private returns (bytes[] depositsOut) {
         depositsOut = bytes[](deposits.length);
 
+        mapping(address => bool) memory tokenMown;
         for (uint256 i; i < deposits.length; i++) {
             require(!LibUnripe.isUnripe(token), "Unripe not supported");
+
+            // Mow each migrating token once.
+            if (!tokenMown[deposits[i].token]) {
+                tokenMown[deposits[i].token] = true;
+                _mowToken(user, deposits[i].token);
+            }
 
             deposits[i]._grownStalk = grownStalkForDeposit(
                 user,
@@ -63,7 +70,7 @@ library LibMigrateOut {
                 deposits[i].stem
             );
 
-            // Withdraw...
+            // Withdraw deposit from Silo.
             _withdrawDeposit(user, deposits[i].token, deposits[i].stem, deposits[i].amount);
 
             if (deposits[i].token == C.BEAN) {
