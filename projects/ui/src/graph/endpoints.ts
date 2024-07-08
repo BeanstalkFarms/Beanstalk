@@ -20,7 +20,7 @@ export const SUBGRAPH_ENVIRONMENTS: Record<SGEnvironments, SGEnvironment> = {
     name: 'Beanstalk Farms / Production',
     subgraphs: {
       beanstalk: 'https://graph.node.bean.money/subgraphs/name/beanstalk',
-      bean: `https://graph.node.bean.money/subgraphs/name/beanstalk`, 
+      bean: `https://graph.node.bean.money/subgraphs/name/bean`, 
       // https://gateway-arbitrum.network.thegraph.com/api/${
       //  import.meta.env.VITE_THEGRAPH_API_KEY
       // }/subgraphs/id/Hqtmas8CJUHXwFf7acS2sjaTw6tvdNQM3kaz2CqtYM3V`,
