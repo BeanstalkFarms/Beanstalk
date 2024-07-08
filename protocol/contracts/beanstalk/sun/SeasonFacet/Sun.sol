@@ -248,7 +248,12 @@ contract Sun is Oracle {
         }
 
         // Set new soil.
-        setSoil(Math.min(uint256(-twaDeltaB), uint256(-instDeltaB)));
+        if (instDeltaB < 0) {
+            setSoil(Math.min(uint256(-twaDeltaB), uint256(-instDeltaB)));
+        } else {
+            setSoil(uint256(-twaDeltaB));
+        }
+        
     }
 
     /**
