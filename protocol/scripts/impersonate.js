@@ -77,11 +77,11 @@ async function curveMetapool(poolAddress, name, tokenAddress) {
     poolAddress
   )
 
-  const beanMetapool = await ethers.getContractAt('MockMeta3Curve', poolAddress);
-  await beanMetapool.init(tokenAddress, THREE_CURVE, THREE_POOL);
-  await beanMetapool.set_A_precise('1000');
-  await beanMetapool.set_virtual_price(ethers.utils.parseEther('1'));
-  await beanMetapool.setSymbol(`${name}-f`);
+    const beanMetapool = await ethers.getContractAt('MockMeta3Curve', poolAddress);
+    await beanMetapool.init(tokenAddress, THREE_CURVE, THREE_POOL);
+    await beanMetapool.set_A_precise('1000');
+    await beanMetapool.set_virtual_price(ethers.utils.parseEther('1'));
+    await beanMetapool.setSymbol(`${name}-f`);
 }
 
 async function bean3CrvMetapool() {
@@ -114,7 +114,7 @@ async function router() {
     UNISWAP_V2_ROUTER
   )
 
-  const mockRouter =  await ethers.getContractAt("MockUniswapV2Router", UNISWAP_V2_ROUTER);
+  const mockRouter =  await ethers.getContractAt("MockUniswapV2Router", UNISWAP_V2_ROUTER); 
   await mockRouter.setWETH(WETH);
   return UNISWAP_V2_ROUTER;
 }
@@ -224,7 +224,7 @@ async function uniswapV3(poolAddress, token0, token1, fee) {
   await mockUniswapV3Factory.createPool(token0, token1, fee)
   const bytecode = await ethers.provider.getCode(pool)
   await network.provider.send("hardhat_setCode", [
-    poolAddress, 
+    poolAddress,
     bytecode,
   ]);
 }
@@ -243,14 +243,14 @@ async function impersonateContract(contractName, deployAddress) {
   await contract.deployed()
   const bytecode = await ethers.provider.getCode(contract.address)
   await network.provider.send("hardhat_setCode", [
-    deployAddress, 
+    deployAddress,
     bytecode,
   ]);
   return await ethers.getContractAt(contractName, deployAddress)
 }
 
 async function chainlinkAggregator(address, decimals=6) {
-  
+
   await impersonateContractOnPath(
     `./artifacts/contracts/mocks/chainlink/MockChainlinkAggregator.sol/MockChainlinkAggregator.json`,
     address
