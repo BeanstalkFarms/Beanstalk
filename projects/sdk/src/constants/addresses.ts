@@ -16,6 +16,7 @@ export const addresses = {
   PIPELINE: Address.make("0xb1bE0000C6B3C62749b5F0c92480146452D15423"),
   ROOT: Address.make("0x77700005BEA4DE0A78b956517f099260C2CA9a26"),
   USD_ORACLE: Address.make("0x1aa19ed7DfC555E4644c9353Ad383c33024855F7"),
+  UNWRAP_AND_SEND_ETH_JUNCTION: Address.make("0x737Cad465B75CDc4c11B3E312Eb3fe5bEF793d96"),
 
   // ----------------------------------------
   // BeaNFT Contracts
@@ -56,6 +57,7 @@ export const addresses = {
   // Wells Contracts
   // ----------------------------------------
   BEANWETH_WELL: Address.make("0xBEA0e11282e2bB5893bEcE110cF199501e872bAd"),
+  BEANWSTETH_WELL: Address.make("0xa61Ef2313C1eC9c8cf2E1cAC986539d136b1393E"),
 
   // ----------------------------------------
   // Common ERC-20 Tokens
@@ -66,6 +68,12 @@ export const addresses = {
   USDT: Address.make("0xdAC17F958D2ee523a2206206994597C13D831ec7"),
   CRV3: Address.make("0x6c3F90f043a72FA612cbac8115EE7e52BDe6E490"),
   LUSD: Address.make("0x5f98805A4E8be255a32880FDeC7F6728C6568bA0"),
+
+  // ----------------------------------------
+  // Lido
+  // ----------------------------------------
+  STETH: Address.make("0xae7ab96520DE3A18E5e111B5EaAb095312D7fE84"),
+  WSTETH: Address.make("0x7f39C581F595B53c5cb19bD0b3f8dA6c935E2Ca0"),
 
   // ----------------------------------------
   // Curve Pools: Other

@@ -77,6 +77,8 @@ export const getDepositGraph = (sdk: BeanstalkSDK): Graph => {
   graph.setNode("USDT");
   graph.setNode("3CRV");
   graph.setNode("WETH");
+  graph.setNode("wstETH");
+  graph.setNode("stETH");
 
   // graph.setNode("ETH");
 
@@ -96,7 +98,8 @@ export const getDepositGraph = (sdk: BeanstalkSDK): Graph => {
     const from = token.symbol;
     const to = `${from}:SILO`;
     graph.setEdge(from, to, {
-      build: (_: string, fromMode: FarmFromMode, toMode: FarmToMode) => new sdk.farm.actions.Deposit(token, fromMode),
+      build: (_: string, fromMode: FarmFromMode, toMode: FarmToMode) =>
+        new sdk.farm.actions.Deposit(token, fromMode),
       from,
       to,
       label: "deposit"
@@ -137,45 +140,46 @@ export const getDepositGraph = (sdk: BeanstalkSDK): Graph => {
    * BEAN / ETH / USDC / USDT / DAI => BEAN_ETH_LP
    */
   {
-    const targetToken = sdk.tokens.BEAN_ETH_WELL_LP;
-    const well = sdk.pools.BEAN_ETH_WELL;
+    const beanEthLP = sdk.tokens.BEAN_ETH_WELL_LP;
+    const beanEthWell = sdk.pools.BEAN_ETH_WELL;
 
-    if (!well) throw new Error(`Pool not found for LP token: ${targetToken.symbol}`);
+    if (!beanEthWell) throw new Error(`Pool not found for LP token: ${beanEthLP.symbol}`);
 
     // BEAN / ETH => BEAN_ETH_LP
     [sdk.tokens.BEAN, sdk.tokens.WETH].forEach((from: ERC20Token) => {
-      graph.setEdge(from.symbol, targetToken.symbol, {
+      graph.setEdge(from.symbol, beanEthLP.symbol, {
         build: (account: string, fromMode: FarmFromMode, toMode: FarmToMode) =>
-          sdk.farm.presets.wellAddLiquidity(well, from, account, fromMode, toMode),
+          sdk.farm.presets.wellAddLiquidity(beanEthWell, from, account, fromMode, toMode),
         from: from.symbol,
-        to: targetToken.symbol,
+        to: beanEthLP.symbol,
         label: "wellAddLiquidity"
       });
     });
 
     // USDC => BEAN_ETH_LP
-    graph.setEdge(sdk.tokens.USDC.symbol, targetToken.symbol, {
+    graph.setEdge(sdk.tokens.USDC.symbol, beanEthLP.symbol, {
       build: (account: string, fromMode: FarmFromMode, toMode: FarmToMode) =>
-        sdk.farm.presets.usdc2beaneth(well, account, fromMode, toMode),
+        sdk.farm.presets.usdc2beaneth(beanEthWell, account, fromMode, toMode),
       from: sdk.tokens.USDC.symbol,
-      to: targetToken.symbol,
+      to: beanEthLP.symbol,
       label: "swap2weth,deposit"
     });
 
     // USDT => BEAN_ETH_LP
-    graph.setEdge(sdk.tokens.USDT.symbol, targetToken.symbol, {
+    graph.setEdge(sdk.tokens.USDT.symbol, beanEthLP.symbol, {
       build: (account: string, fromMode: FarmFromMode, toMode: FarmToMode) =>
-        sdk.farm.presets.usdt2beaneth(well, account, fromMode, toMode),
+        sdk.farm.presets.usdt2beaneth(beanEthWell, account, fromMode, toMode),
       from: sdk.tokens.USDT.symbol,
-      to: targetToken.symbol,
+      to: beanEthLP.symbol,
       label: "swap2weth,deposit"
     });
 
     // DAI => BEAN_ETH_LP
-    graph.setEdge(sdk.tokens.DAI.symbol, targetToken.symbol, {
-      build: (account: string, fromMode: FarmFromMode, toMode: FarmToMode) => sdk.farm.presets.dai2beaneth(well, account, fromMode, toMode),
+    graph.setEdge(sdk.tokens.DAI.symbol, beanEthLP.symbol, {
+      build: (account: string, fromMode: FarmFromMode, toMode: FarmToMode) =>
+        sdk.farm.presets.dai2beaneth(beanEthWell, account, fromMode, toMode),
       from: sdk.tokens.DAI.symbol,
-      to: targetToken.symbol,
+      to: beanEthLP.symbol,
       label: "swap2weth,deposit"
     });
   }
@@ -192,7 +196,13 @@ export const getDepositGraph = (sdk: BeanstalkSDK): Graph => {
     const registry = sdk.contracts.curve.registries.poolRegistry.address;
     graph.setEdge(from.symbol, targetToken.symbol, {
       build: (_: string, fromMode: FarmFromMode, toMode: FarmToMode) =>
-        new sdk.farm.actions.RemoveLiquidityOneToken(pool.address, registry, targetToken.address, fromMode, toMode),
+        new sdk.farm.actions.RemoveLiquidityOneToken(
+          pool.address,
+          registry,
+          targetToken.address,
+          fromMode,
+          toMode
+        ),
       from: from.symbol,
       to: targetToken.symbol,
       label: "removeLiquidityOneToken"
@@ -204,7 +214,8 @@ export const getDepositGraph = (sdk: BeanstalkSDK): Graph => {
    */
   {
     graph.setEdge("WETH", "USDT", {
-      build: (_: string, from: FarmFromMode, to: FarmToMode) => sdk.farm.presets.weth2usdt(from, to),
+      build: (_: string, from: FarmFromMode, to: FarmToMode) =>
+        sdk.farm.presets.weth2usdt(from, to),
       from: "WETH",
       to: "USDT",
       label: "exchange"
@@ -223,7 +234,8 @@ export const getDepositGraph = (sdk: BeanstalkSDK): Graph => {
    */
   {
     graph.setEdge("USDT", "WETH", {
-      build: (_: string, from: FarmFromMode, to: FarmToMode) => sdk.farm.presets.usdt2weth(from, to),
+      build: (_: string, from: FarmFromMode, to: FarmToMode) =>
+        sdk.farm.presets.usdt2weth(from, to),
       from: "USDT",
       to: "WETH",
       label: "exchange"
@@ -246,15 +258,22 @@ export const getDepositGraph = (sdk: BeanstalkSDK): Graph => {
     });
   }
 
-  
   /**
    * [ USDC, DAI ] => BEAN
    */
   {
-    const well = sdk.pools.BEAN_ETH_WELL;
     graph.setEdge("USDC", "BEAN", {
       build: (account: string, from: FarmFromMode, to: FarmToMode) =>
-        sdk.farm.presets.uniV3WellSwap(well, account, sdk.tokens.USDC, sdk.tokens.WETH, sdk.tokens.BEAN, 500, from, to),
+        sdk.farm.presets.uniV3WellSwap(
+          sdk.pools.BEAN_ETH_WELL,
+          account,
+          sdk.tokens.USDC,
+          sdk.tokens.WETH,
+          sdk.tokens.BEAN,
+          500,
+          from,
+          to
+        ),
       from: "USDC",
       to: "BEAN",
       label: "uniV3WellSwap"
@@ -262,7 +281,16 @@ export const getDepositGraph = (sdk: BeanstalkSDK): Graph => {
 
     graph.setEdge("DAI", "BEAN", {
       build: (account: string, from: FarmFromMode, to: FarmToMode) =>
-        sdk.farm.presets.uniV3WellSwap(well, account, sdk.tokens.DAI, sdk.tokens.WETH, sdk.tokens.BEAN, 500, from, to),
+        sdk.farm.presets.uniV3WellSwap(
+          sdk.pools.BEAN_ETH_WELL,
+          account,
+          sdk.tokens.DAI,
+          sdk.tokens.WETH,
+          sdk.tokens.BEAN,
+          500,
+          from,
+          to
+        ),
       from: "DAI",
       to: "BEAN",
       label: "uniV3WellSwap"
@@ -273,20 +301,71 @@ export const getDepositGraph = (sdk: BeanstalkSDK): Graph => {
    * Well Swap: WETH <> BEAN
    */
   {
-    const well = sdk.pools.BEAN_ETH_WELL;
     graph.setEdge("WETH", "BEAN", {
       build: (account: string, from: FarmFromMode, to: FarmToMode) =>
-        sdk.farm.presets.wellSwap(well, sdk.tokens.WETH, sdk.tokens.BEAN, account, from, to),
+        sdk.farm.presets.wellSwap(
+          sdk.pools.BEAN_ETH_WELL,
+          sdk.tokens.WETH,
+          sdk.tokens.BEAN,
+          account,
+          from,
+          to
+        ),
       from: "WETH",
       to: "BEAN",
       label: "wellSwap"
     });
     graph.setEdge("BEAN", "WETH", {
       build: (account: string, from: FarmFromMode, to: FarmToMode) =>
-        sdk.farm.presets.wellSwap(well, sdk.tokens.BEAN, sdk.tokens.WETH, account, from, to),
+        sdk.farm.presets.wellSwap(
+          sdk.pools.BEAN_ETH_WELL,
+          sdk.tokens.BEAN,
+          sdk.tokens.WETH,
+          account,
+          from,
+          to
+        ),
       from: "BEAN",
       to: "WETH",
       label: "wellSwap"
+    });
+  }
+
+  /**
+   * set up edges for depositing to BEAN:WSTETH Well;
+   */
+  {
+    const beanWstethWell = sdk.pools.BEAN_WSTETH_WELL;
+    const beanWstethLP = sdk.tokens.BEAN_WSTETH_WELL_LP;
+
+    if (!beanWstethWell) throw new Error(`Pool not found for LP token: ${beanWstethLP.symbol}`);
+
+    // BEAN / ETH => BEAN_ETH_LP
+
+    [sdk.tokens.BEAN, sdk.tokens.WSTETH].forEach((from: ERC20Token) => {
+      graph.setEdge(from.symbol, beanWstethLP.symbol, {
+        build: (account: string, fromMode: FarmFromMode, toMode: FarmToMode) =>
+          sdk.farm.presets.wellAddLiquidity(beanWstethWell, from, account, fromMode, toMode),
+        from: from.symbol,
+        to: beanWstethLP.symbol,
+        label: "wellAddLiquidity"
+      });
+    });
+  }
+
+  /**
+   * [WETH, ETH, STETH] => BEAN_WSTETH_add liquidity
+   * Where WETH / ETH / STETH are the starting tokens.
+   */
+  {
+    [sdk.tokens.WETH, sdk.tokens.ETH, sdk.tokens.STETH].forEach((from) => {
+      graph.setEdge(from.symbol, sdk.tokens.WSTETH.symbol, {
+        build: (account: string, fromMode: FarmFromMode, toMode: FarmToMode) =>
+          sdk.farm.presets.ethIsh2beanWstethLp(from, account, fromMode, toMode),
+        from: from.symbol,
+        to: sdk.tokens.BEAN_WSTETH_WELL_LP.symbol,
+        label: "swapEth-ish2beanwstethLP"
+      });
     });
   }
 
@@ -309,7 +388,8 @@ export const getDepositGraph = (sdk: BeanstalkSDK): Graph => {
   // WETH => 3CRV
   // needed to force a path when depositing WETH > BEAN3CRV, so it doesn't go through BEAN
   graph.setEdge("WETH", "3CRV", {
-    build: (_: string, from: FarmFromMode, to: FarmToMode) => sdk.farm.presets.weth2bean3crv(from, to),
+    build: (_: string, from: FarmFromMode, to: FarmToMode) =>
+      sdk.farm.presets.weth2bean3crv(from, to),
     from: "WETH",
     to: "3CRV",
     label: "swap2usdt23crv"
