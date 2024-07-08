@@ -16,8 +16,11 @@ import rinsableSproutLogo from '~/img/beanstalk/rinsable-sprout-icon.svg';
 import beanEthLpLogoUrl from '~/img/tokens/bean-eth-lp-logo.svg';
 import beanEthWellLpLogoUrl from '~/img/tokens/bean-eth-well-lp-logo.svg';
 import beanLusdLogoUrl from '~/img/tokens/bean-lusd-logo.svg';
+import beanWstethLogo from '~/img/tokens/bean-wsteth-logo.svg';
 
 // ERC-20 Token Images
+import wstethLogo from '~/img/tokens/wsteth-logo.svg';
+import stethLogo from '~/img/tokens/steth-logo.svg';
 import crv3LogoUrl from '~/img/tokens/crv3-logo.png';
 import daiLogoUrl from '~/img/tokens/dai-logo.svg';
 import usdcLogoUrl from '~/img/tokens/usdc-logo.svg';
@@ -43,6 +46,9 @@ import {
   BEAN_ADDRESSES,
   BEAN_ETH_WELL_ADDRESSES,
   BEAN_CRV3_V1_ADDRESSES,
+  BEAN_WSTETH_ADDRESSS,
+  WSTETH_ADDRESSES,
+  STETH_ADDRESSES,
 } from './addresses';
 
 // ----------------------------------------
@@ -132,7 +138,7 @@ export const WETH = {
       name: 'Wrapped Ether',
       symbol: 'WETH',
       logo: wEthIconCircledUrl,
-      displayDecimals: 4
+      displayDecimals: 4,
     }
   ),
 };
@@ -151,6 +157,32 @@ export const BEAN = {
     {
       stalk: 1,
       seeds: 0,
+    }
+  ),
+};
+
+export const WSTETH = {
+  [SupportedChainId.MAINNET]: new ERC20Token(
+    SupportedChainId.MAINNET,
+    WSTETH_ADDRESSES,
+    18,
+    {
+      name: 'Wrapped liquid staked Ether 2.0',
+      symbol: 'wstETH',
+      logo: wstethLogo,
+    }
+  ),
+};
+
+export const STETH = {
+  [SupportedChainId.MAINNET]: new ERC20Token(
+    SupportedChainId.MAINNET,
+    STETH_ADDRESSES,
+    18,
+    {
+      name: 'Liquid staked Ether 2.0',
+      symbol: 'stETH',
+      logo: stethLogo,
     }
   ),
 };
@@ -307,6 +339,26 @@ export const BEAN_ETH_WELL_LP = {
   ),
 };
 
+export const BEAN_WSTETH_WELL_LP = {
+  [SupportedChainId.MAINNET]: new ERC20Token(
+    SupportedChainId.MAINNET,
+    BEAN_WSTETH_ADDRESSS,
+    18,
+    {
+      name: 'BEAN:wstETH LP',
+      symbol: 'BEANwstETH',
+      logo: beanWstethLogo,
+      displayDecimals: 2,
+      color: BeanstalkPalette.lightBlue,
+      isUnripe: false,
+    },
+    {
+      stalk: 1,
+      seeds: 0,
+    }
+  ),
+};
+
 export const BEAN_CRV3_V1_LP = {
   [SupportedChainId.MAINNET]: new ERC20Token(
     SupportedChainId.MAINNET,
@@ -386,6 +438,7 @@ export const UNRIPE_UNDERLYING_TOKENS: ChainConstant<ERC20Token>[] = [
 // Show these tokens as whitelisted in the Silo.
 export const SILO_WHITELIST: ChainConstant<ERC20Token>[] = [
   BEAN,
+  BEAN_WSTETH_WELL_LP,
   BEAN_ETH_WELL_LP,
   UNRIPE_BEAN,
   UNRIPE_BEAN_WETH,
@@ -408,6 +461,8 @@ export const ERC20_TOKENS: ChainConstant<ERC20Token>[] = [
   DAI,
   USDC,
   USDT,
+  STETH,
+  WSTETH,
 ];
 
 // Assets underlying 3CRV (accessible when depositing/removing liquidity)

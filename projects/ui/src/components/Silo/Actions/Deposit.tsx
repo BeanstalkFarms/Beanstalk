@@ -231,7 +231,9 @@ const DepositForm: FC<
             />
           );
         })}
-        {migrationNeeded === true ? null : <ClaimBeanDrawerToggle actionText="Deposit" />}
+        {migrationNeeded === true ? null : (
+          <ClaimBeanDrawerToggle actionText="Deposit" />
+        )}
         {isReady ? (
           <>
             <TxnSeparator />
@@ -330,6 +332,8 @@ const DepositPropProvider: FC<{
     const tokens = sdk.tokens;
     if (tokens.BEAN.equals(whitelistedToken)) {
       return [
+        tokens.STETH,
+        tokens.WSTETH,
         tokens.BEAN,
         tokens.ETH,
         tokens.WETH,
@@ -340,6 +344,8 @@ const DepositPropProvider: FC<{
       ];
     }
     return [
+      tokens.STETH,
+      tokens.WSTETH,
       tokens.BEAN,
       tokens.ETH,
       tokens.WETH,
@@ -357,6 +363,8 @@ const DepositPropProvider: FC<{
       return [
         tokens.BEAN,
         tokens.ETH,
+        tokens.WSTETH,
+        tokens.STETH,
         tokens.WETH,
         tokens.CRV3,
         tokens.DAI,
@@ -368,6 +376,8 @@ const DepositPropProvider: FC<{
       whitelistedToken,
       tokens.ETH,
       tokens.WETH,
+      tokens.WSTETH,
+      tokens.STETH,
       tokens.BEAN,
       tokens.CRV3,
       tokens.DAI,

@@ -8,15 +8,10 @@ import { ERC20Token as ERC20TokenOld } from '~/classes/Token';
 import { FarmerSiloTokenBalance } from '~/state/farmer/silo';
 import useTabs from '~/hooks/display/useTabs';
 import BadgeTab from '~/components/Common/BadgeTab';
-import Deposit from './Deposit';
-import Withdraw from './Withdraw';
-import Transfer from './Transfer';
-import Deposits from './Deposits';
 import { Module, ModuleTabs, ModuleContent } from '~/components/Common/Module';
 
 import { FC } from '~/types';
 import useSdk from '~/hooks/sdk';
-import Convert from './Convert';
 import useMigrationNeeded from '~/hooks/farmer/useMigrationNeeded';
 import { useFarmerLegacyWithdrawalsLazyQuery } from '~/generated/graphql';
 import useAccount from '~/hooks/ledger/useAccount';
@@ -26,6 +21,11 @@ import LegacyClaim, {
 } from '~/components/Silo/Actions/LegacyClaim';
 import { transform } from '~/util';
 import { useIsTokenDeprecated } from '~/hooks/beanstalk/useWhitelist';
+import Convert from './Convert';
+import Deposits from './Deposits';
+import Transfer from './Transfer';
+import Withdraw from './Withdraw';
+import Deposit from './Deposit';
 
 /**
  * Show the three primary Silo actions: Deposit, Withdraw, Claim.

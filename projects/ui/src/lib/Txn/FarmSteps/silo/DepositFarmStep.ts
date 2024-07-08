@@ -34,7 +34,10 @@ import { makeLocalOnlyStep } from '~/lib/Txn/util';
  */
 
 export class DepositFarmStep extends FarmStep {
-  constructor(_sdk: BeanstalkSDK, private _target: ERC20Token) {
+  constructor(
+    _sdk: BeanstalkSDK,
+    private _target: ERC20Token
+  ) {
     super(_sdk);
     this._target = _target;
   }
@@ -67,6 +70,9 @@ export class DepositFarmStep extends FarmStep {
       this.pushInput({
         input: [...deposit.workflow.generators] as StepGenerator[],
       });
+
+      console.log(deposit.getGraph());
+      console.log(deposit.getSimplePath());
 
       console.debug('[DepositStrategy][build]: ', this.getFarmInput());
       return this;

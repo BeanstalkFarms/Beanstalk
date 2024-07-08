@@ -12,6 +12,8 @@ import {
   DAI,
   USDC,
   USDT,
+  STETH,
+  WSTETH,
   STALK,
   SEEDS,
   PODS,
@@ -22,6 +24,7 @@ import {
   RINSABLE_SPROUTS,
   BEAN_ETH_WELL_LP,
   SILO_WHITELIST,
+  BEAN_WSTETH_WELL_LP,
 } from '~/constants/tokens';
 import { Token as TokenOld } from '~/classes';
 import useGetChainToken from '../chain/useGetChainToken';
@@ -54,6 +57,9 @@ const oldTokenMap = {
   [RINSABLE_SPROUTS.symbol]: RINSABLE_SPROUTS,
   [BEAN_ETH_UNIV2_LP[1].symbol]: BEAN_ETH_UNIV2_LP[1],
   [BEAN_LUSD_LP[1].symbol]: BEAN_LUSD_LP[1],
+  [BEAN_WSTETH_WELL_LP[1].symbol]: BEAN_WSTETH_WELL_LP[1],
+  [STETH[1].symbol]: STETH[1],
+  [WSTETH[1].symbol]: WSTETH[1],
 };
 
 export function getNewToOldToken(_token: Token) {
