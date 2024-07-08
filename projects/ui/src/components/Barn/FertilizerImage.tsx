@@ -30,7 +30,7 @@ const FertilizerImage: FC<FertilizerImageProps> = ({
   progress,
   id,
   noOpenseaLink,
-  verySmallIdStyling
+  verySmallIdStyling,
 }) => {
   const inner = (
     <Stack
@@ -72,13 +72,13 @@ const FertilizerImage: FC<FertilizerImageProps> = ({
             zIndex: verySmallIdStyling ? 3 : 1,
           }}
         >
-          <Typography 
-            color={verySmallIdStyling ? "text.primary" : "gray"}
-            sx={{ 
-              fontSize: 11, 
-              display: 'flex', 
+          <Typography
+            color={verySmallIdStyling ? 'text.primary' : 'gray'}
+            sx={{
+              fontSize: 11,
+              display: 'flex',
               justifyContent: verySmallIdStyling ? 'center' : 'start',
-              paddingX: verySmallIdStyling ? 0 : 1
+              paddingX: verySmallIdStyling ? 0 : 1,
             }}
           >
             #{id.toString()}
@@ -115,7 +115,7 @@ const FertilizerImage: FC<FertilizerImageProps> = ({
           {inner}
         </Button>
       );
-    };
+    }
     return (
       <Button
         variant="outlined"

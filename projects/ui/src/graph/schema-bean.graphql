@@ -1,0 +1,2631 @@
+"""
+creates a virtual field on the entity that may be queried but cannot be set manually through the mappings API.
+"""
+directive @derivedFrom(field: String!) on FIELD_DEFINITION
+
+"""
+Marks the GraphQL type as indexable entity.  Each type that should be an entity is required to be annotated with this directive.
+"""
+directive @entity on OBJECT
+
+"""Defined a Subgraph ID for an object type"""
+directive @subgraphId(id: String!) on OBJECT
+
+type Bean {
+  """Detailed cross events during this snapshot"""
+  crossEvents(first: Int = 100, orderBy: BeanCross_orderBy, orderDirection: OrderDirection, skip: Int = 0, where: BeanCross_filter): [BeanCross!]!
+
+  """Cumulative number of crosses"""
+  crosses: Int!
+
+  """Daily snapshot of Bean data"""
+  dailySnapshot(first: Int = 100, orderBy: BeanDailySnapshot_orderBy, orderDirection: OrderDirection, skip: Int = 0, where: BeanDailySnapshot_filter): [BeanDailySnapshot!]!
+
+  """Hourly snapshot of Bean data"""
+  hourlySnapshot(first: Int = 100, orderBy: BeanHourlySnapshot_orderBy, orderDirection: OrderDirection, skip: Int = 0, where: BeanHourlySnapshot_filter): [BeanHourlySnapshot!]!
+
+  """Contract address of the Bean token"""
+  id: ID!
+
+  """Last timestamp a cross was seen"""
+  lastCross: BigInt!
+
+  """Last season seen from Beanstalk"""
+  lastSeason: Int!
+
+  """Current liquidity in USD value"""
+  liquidityUSD: BigDecimal!
+
+  """
+  Amount of the supply which is considered Locked Beans (untradeable due to chop rate)
+  """
+  lockedBeans: BigInt!
+
+  """Current market cap"""
+  marketCap: BigDecimal!
+
+  """Pools that include this Bean"""
+  pools(first: Int = 100, orderBy: Pool_orderBy, orderDirection: OrderDirection, skip: Int = 0, where: Pool_filter): [Pool!]!
+
+  """Latest price seen"""
+  price: BigDecimal!
+
+  """Current supply"""
+  supply: BigInt!
+
+  """Percent of supply in LP used for peg maintenance"""
+  supplyInPegLP: BigDecimal!
+
+  """Cumulative volume of beans traded"""
+  volume: BigInt!
+
+  """Cumulative volume in USD value"""
+  volumeUSD: BigDecimal!
+}
+
+type BeanCross {
+  above: Boolean!
+  bean: Bean!
+  blockNumber: BigInt!
+  dailySnapshot: BeanDailySnapshot!
+  hourlySnapshot: BeanHourlySnapshot!
+  id: ID!
+  price: BigDecimal!
+  timeSinceLastCross: BigInt!
+  timestamp: BigInt!
+}
+
+input BeanCross_filter {
+  """Filter for the block changed event."""
+  _change_block: BlockChangedFilter
+  above: Boolean
+  above_in: [Boolean!]
+  above_not: Boolean
+  above_not_in: [Boolean!]
+  and: [BeanCross_filter]
+  bean: String
+  bean_: Bean_filter
+  bean_contains: String
+  bean_contains_nocase: String
+  bean_ends_with: String
+  bean_ends_with_nocase: String
+  bean_gt: String
+  bean_gte: String
+  bean_in: [String!]
+  bean_lt: String
+  bean_lte: String
+  bean_not: String
+  bean_not_contains: String
+  bean_not_contains_nocase: String
+  bean_not_ends_with: String
+  bean_not_ends_with_nocase: String
+  bean_not_in: [String!]
+  bean_not_starts_with: String
+  bean_not_starts_with_nocase: String
+  bean_starts_with: String
+  bean_starts_with_nocase: String
+  blockNumber: BigInt
+  blockNumber_gt: BigInt
+  blockNumber_gte: BigInt
+  blockNumber_in: [BigInt!]
+  blockNumber_lt: BigInt
+  blockNumber_lte: BigInt
+  blockNumber_not: BigInt
+  blockNumber_not_in: [BigInt!]
+  dailySnapshot: String
+  dailySnapshot_: BeanDailySnapshot_filter
+  dailySnapshot_contains: String
+  dailySnapshot_contains_nocase: String
+  dailySnapshot_ends_with: String
+  dailySnapshot_ends_with_nocase: String
+  dailySnapshot_gt: String
+  dailySnapshot_gte: String
+  dailySnapshot_in: [String!]
+  dailySnapshot_lt: String
+  dailySnapshot_lte: String
+  dailySnapshot_not: String
+  dailySnapshot_not_contains: String
+  dailySnapshot_not_contains_nocase: String
+  dailySnapshot_not_ends_with: String
+  dailySnapshot_not_ends_with_nocase: String
+  dailySnapshot_not_in: [String!]
+  dailySnapshot_not_starts_with: String
+  dailySnapshot_not_starts_with_nocase: String
+  dailySnapshot_starts_with: String
+  dailySnapshot_starts_with_nocase: String
+  hourlySnapshot: String
+  hourlySnapshot_: BeanHourlySnapshot_filter
+  hourlySnapshot_contains: String
+  hourlySnapshot_contains_nocase: String
+  hourlySnapshot_ends_with: String
+  hourlySnapshot_ends_with_nocase: String
+  hourlySnapshot_gt: String
+  hourlySnapshot_gte: String
+  hourlySnapshot_in: [String!]
+  hourlySnapshot_lt: String
+  hourlySnapshot_lte: String
+  hourlySnapshot_not: String
+  hourlySnapshot_not_contains: String
+  hourlySnapshot_not_contains_nocase: String
+  hourlySnapshot_not_ends_with: String
+  hourlySnapshot_not_ends_with_nocase: String
+  hourlySnapshot_not_in: [String!]
+  hourlySnapshot_not_starts_with: String
+  hourlySnapshot_not_starts_with_nocase: String
+  hourlySnapshot_starts_with: String
+  hourlySnapshot_starts_with_nocase: String
+  id: ID
+  id_gt: ID
+  id_gte: ID
+  id_in: [ID!]
+  id_lt: ID
+  id_lte: ID
+  id_not: ID
+  id_not_in: [ID!]
+  or: [BeanCross_filter]
+  price: BigDecimal
+  price_gt: BigDecimal
+  price_gte: BigDecimal
+  price_in: [BigDecimal!]
+  price_lt: BigDecimal
+  price_lte: BigDecimal
+  price_not: BigDecimal
+  price_not_in: [BigDecimal!]
+  timeSinceLastCross: BigInt
+  timeSinceLastCross_gt: BigInt
+  timeSinceLastCross_gte: BigInt
+  timeSinceLastCross_in: [BigInt!]
+  timeSinceLastCross_lt: BigInt
+  timeSinceLastCross_lte: BigInt
+  timeSinceLastCross_not: BigInt
+  timeSinceLastCross_not_in: [BigInt!]
+  timestamp: BigInt
+  timestamp_gt: BigInt
+  timestamp_gte: BigInt
+  timestamp_in: [BigInt!]
+  timestamp_lt: BigInt
+  timestamp_lte: BigInt
+  timestamp_not: BigInt
+  timestamp_not_in: [BigInt!]
+}
+
+enum BeanCross_orderBy {
+  above
+  bean
+  bean__crosses
+  bean__id
+  bean__lastCross
+  bean__lastSeason
+  bean__liquidityUSD
+  bean__lockedBeans
+  bean__marketCap
+  bean__price
+  bean__supply
+  bean__supplyInPegLP
+  bean__volume
+  bean__volumeUSD
+  blockNumber
+  dailySnapshot
+  dailySnapshot__blockNumber
+  dailySnapshot__crosses
+  dailySnapshot__deltaCrosses
+  dailySnapshot__deltaLiquidityUSD
+  dailySnapshot__deltaVolume
+  dailySnapshot__deltaVolumeUSD
+  dailySnapshot__id
+  dailySnapshot__instantaneousDeltaB
+  dailySnapshot__liquidityUSD
+  dailySnapshot__lockedBeans
+  dailySnapshot__marketCap
+  dailySnapshot__price
+  dailySnapshot__season
+  dailySnapshot__supply
+  dailySnapshot__supplyInPegLP
+  dailySnapshot__timestamp
+  dailySnapshot__twaDeltaB
+  dailySnapshot__twaPrice
+  dailySnapshot__volume
+  dailySnapshot__volumeUSD
+  hourlySnapshot
+  hourlySnapshot__blockNumber
+  hourlySnapshot__crosses
+  hourlySnapshot__deltaCrosses
+  hourlySnapshot__deltaLiquidityUSD
+  hourlySnapshot__deltaVolume
+  hourlySnapshot__deltaVolumeUSD
+  hourlySnapshot__id
+  hourlySnapshot__instantaneousDeltaB
+  hourlySnapshot__liquidityUSD
+  hourlySnapshot__lockedBeans
+  hourlySnapshot__marketCap
+  hourlySnapshot__price
+  hourlySnapshot__season
+  hourlySnapshot__supply
+  hourlySnapshot__supplyInPegLP
+  hourlySnapshot__timestamp
+  hourlySnapshot__twaDeltaB
+  hourlySnapshot__twaPrice
+  hourlySnapshot__volume
+  hourlySnapshot__volumeUSD
+  id
+  price
+  timeSinceLastCross
+  timestamp
+}
+
+type BeanDailySnapshot {
+  bean: Bean!
+  blockNumber: BigInt!
+  crossEvents(first: Int = 100, orderBy: BeanCross_orderBy, orderDirection: OrderDirection, skip: Int = 0, where: BeanCross_filter): [BeanCross!]!
+  crosses: Int!
+  deltaCrosses: Int!
+  deltaLiquidityUSD: BigDecimal!
+  deltaVolume: BigInt!
+  deltaVolumeUSD: BigDecimal!
+  id: ID!
+
+  """Instantaneous deltaB across all whitelisted pools"""
+  instantaneousDeltaB: BigInt!
+  liquidityUSD: BigDecimal!
+
+  """
+  Amount of the supply which is considered Locked Beans (untradeable due to chop rate)
+  """
+  lockedBeans: BigInt!
+  marketCap: BigDecimal!
+  price: BigDecimal!
+  season: Int!
+  supply: BigInt!
+
+  """Percent of supply in LP used for peg maintenance"""
+  supplyInPegLP: BigDecimal!
+  timestamp: BigInt!
+
+  """Time-Weighted deltaB in whitelisted pools over the previous season"""
+  twaDeltaB: BigInt!
+
+  """Time-Weighted price over the previous season"""
+  twaPrice: BigDecimal!
+  volume: BigInt!
+  volumeUSD: BigDecimal!
+}
+
+input BeanDailySnapshot_filter {
+  """Filter for the block changed event."""
+  _change_block: BlockChangedFilter
+  and: [BeanDailySnapshot_filter]
+  bean: String
+  bean_: Bean_filter
+  bean_contains: String
+  bean_contains_nocase: String
+  bean_ends_with: String
+  bean_ends_with_nocase: String
+  bean_gt: String
+  bean_gte: String
+  bean_in: [String!]
+  bean_lt: String
+  bean_lte: String
+  bean_not: String
+  bean_not_contains: String
+  bean_not_contains_nocase: String
+  bean_not_ends_with: String
+  bean_not_ends_with_nocase: String
+  bean_not_in: [String!]
+  bean_not_starts_with: String
+  bean_not_starts_with_nocase: String
+  bean_starts_with: String
+  bean_starts_with_nocase: String
+  blockNumber: BigInt
+  blockNumber_gt: BigInt
+  blockNumber_gte: BigInt
+  blockNumber_in: [BigInt!]
+  blockNumber_lt: BigInt
+  blockNumber_lte: BigInt
+  blockNumber_not: BigInt
+  blockNumber_not_in: [BigInt!]
+  crossEvents_: BeanCross_filter
+  crosses: Int
+  crosses_gt: Int
+  crosses_gte: Int
+  crosses_in: [Int!]
+  crosses_lt: Int
+  crosses_lte: Int
+  crosses_not: Int
+  crosses_not_in: [Int!]
+  deltaCrosses: Int
+  deltaCrosses_gt: Int
+  deltaCrosses_gte: Int
+  deltaCrosses_in: [Int!]
+  deltaCrosses_lt: Int
+  deltaCrosses_lte: Int
+  deltaCrosses_not: Int
+  deltaCrosses_not_in: [Int!]
+  deltaLiquidityUSD: BigDecimal
+  deltaLiquidityUSD_gt: BigDecimal
+  deltaLiquidityUSD_gte: BigDecimal
+  deltaLiquidityUSD_in: [BigDecimal!]
+  deltaLiquidityUSD_lt: BigDecimal
+  deltaLiquidityUSD_lte: BigDecimal
+  deltaLiquidityUSD_not: BigDecimal
+  deltaLiquidityUSD_not_in: [BigDecimal!]
+  deltaVolume: BigInt
+  deltaVolumeUSD: BigDecimal
+  deltaVolumeUSD_gt: BigDecimal
+  deltaVolumeUSD_gte: BigDecimal
+  deltaVolumeUSD_in: [BigDecimal!]
+  deltaVolumeUSD_lt: BigDecimal
+  deltaVolumeUSD_lte: BigDecimal
+  deltaVolumeUSD_not: BigDecimal
+  deltaVolumeUSD_not_in: [BigDecimal!]
+  deltaVolume_gt: BigInt
+  deltaVolume_gte: BigInt
+  deltaVolume_in: [BigInt!]
+  deltaVolume_lt: BigInt
+  deltaVolume_lte: BigInt
+  deltaVolume_not: BigInt
+  deltaVolume_not_in: [BigInt!]
+  id: ID
+  id_gt: ID
+  id_gte: ID
+  id_in: [ID!]
+  id_lt: ID
+  id_lte: ID
+  id_not: ID
+  id_not_in: [ID!]
+  instantaneousDeltaB: BigInt
+  instantaneousDeltaB_gt: BigInt
+  instantaneousDeltaB_gte: BigInt
+  instantaneousDeltaB_in: [BigInt!]
+  instantaneousDeltaB_lt: BigInt
+  instantaneousDeltaB_lte: BigInt
+  instantaneousDeltaB_not: BigInt
+  instantaneousDeltaB_not_in: [BigInt!]
+  liquidityUSD: BigDecimal
+  liquidityUSD_gt: BigDecimal
+  liquidityUSD_gte: BigDecimal
+  liquidityUSD_in: [BigDecimal!]
+  liquidityUSD_lt: BigDecimal
+  liquidityUSD_lte: BigDecimal
+  liquidityUSD_not: BigDecimal
+  liquidityUSD_not_in: [BigDecimal!]
+  lockedBeans: BigInt
+  lockedBeans_gt: BigInt
+  lockedBeans_gte: BigInt
+  lockedBeans_in: [BigInt!]
+  lockedBeans_lt: BigInt
+  lockedBeans_lte: BigInt
+  lockedBeans_not: BigInt
+  lockedBeans_not_in: [BigInt!]
+  marketCap: BigDecimal
+  marketCap_gt: BigDecimal
+  marketCap_gte: BigDecimal
+  marketCap_in: [BigDecimal!]
+  marketCap_lt: BigDecimal
+  marketCap_lte: BigDecimal
+  marketCap_not: BigDecimal
+  marketCap_not_in: [BigDecimal!]
+  or: [BeanDailySnapshot_filter]
+  price: BigDecimal
+  price_gt: BigDecimal
+  price_gte: BigDecimal
+  price_in: [BigDecimal!]
+  price_lt: BigDecimal
+  price_lte: BigDecimal
+  price_not: BigDecimal
+  price_not_in: [BigDecimal!]
+  season: Int
+  season_gt: Int
+  season_gte: Int
+  season_in: [Int!]
+  season_lt: Int
+  season_lte: Int
+  season_not: Int
+  season_not_in: [Int!]
+  supply: BigInt
+  supplyInPegLP: BigDecimal
+  supplyInPegLP_gt: BigDecimal
+  supplyInPegLP_gte: BigDecimal
+  supplyInPegLP_in: [BigDecimal!]
+  supplyInPegLP_lt: BigDecimal
+  supplyInPegLP_lte: BigDecimal
+  supplyInPegLP_not: BigDecimal
+  supplyInPegLP_not_in: [BigDecimal!]
+  supply_gt: BigInt
+  supply_gte: BigInt
+  supply_in: [BigInt!]
+  supply_lt: BigInt
+  supply_lte: BigInt
+  supply_not: BigInt
+  supply_not_in: [BigInt!]
+  timestamp: BigInt
+  timestamp_gt: BigInt
+  timestamp_gte: BigInt
+  timestamp_in: [BigInt!]
+  timestamp_lt: BigInt
+  timestamp_lte: BigInt
+  timestamp_not: BigInt
+  timestamp_not_in: [BigInt!]
+  twaDeltaB: BigInt
+  twaDeltaB_gt: BigInt
+  twaDeltaB_gte: BigInt
+  twaDeltaB_in: [BigInt!]
+  twaDeltaB_lt: BigInt
+  twaDeltaB_lte: BigInt
+  twaDeltaB_not: BigInt
+  twaDeltaB_not_in: [BigInt!]
+  twaPrice: BigDecimal
+  twaPrice_gt: BigDecimal
+  twaPrice_gte: BigDecimal
+  twaPrice_in: [BigDecimal!]
+  twaPrice_lt: BigDecimal
+  twaPrice_lte: BigDecimal
+  twaPrice_not: BigDecimal
+  twaPrice_not_in: [BigDecimal!]
+  volume: BigInt
+  volumeUSD: BigDecimal
+  volumeUSD_gt: BigDecimal
+  volumeUSD_gte: BigDecimal
+  volumeUSD_in: [BigDecimal!]
+  volumeUSD_lt: BigDecimal
+  volumeUSD_lte: BigDecimal
+  volumeUSD_not: BigDecimal
+  volumeUSD_not_in: [BigDecimal!]
+  volume_gt: BigInt
+  volume_gte: BigInt
+  volume_in: [BigInt!]
+  volume_lt: BigInt
+  volume_lte: BigInt
+  volume_not: BigInt
+  volume_not_in: [BigInt!]
+}
+
+enum BeanDailySnapshot_orderBy {
+  bean
+  bean__crosses
+  bean__id
+  bean__lastCross
+  bean__lastSeason
+  bean__liquidityUSD
+  bean__lockedBeans
+  bean__marketCap
+  bean__price
+  bean__supply
+  bean__supplyInPegLP
+  bean__volume
+  bean__volumeUSD
+  blockNumber
+  crossEvents
+  crosses
+  deltaCrosses
+  deltaLiquidityUSD
+  deltaVolume
+  deltaVolumeUSD
+  id
+  instantaneousDeltaB
+  liquidityUSD
+  lockedBeans
+  marketCap
+  price
+  season
+  supply
+  supplyInPegLP
+  timestamp
+  twaDeltaB
+  twaPrice
+  volume
+  volumeUSD
+}
+
+type BeanHourlySnapshot {
+  """Bean token address"""
+  bean: Bean!
+
+  """Block number this snapshot was updated"""
+  blockNumber: BigInt!
+
+  """Detailed cross events during this snapshot"""
+  crossEvents(first: Int = 100, orderBy: BeanCross_orderBy, orderDirection: OrderDirection, skip: Int = 0, where: BeanCross_filter): [BeanCross!]!
+
+  """Cumulative number of crosses"""
+  crosses: Int!
+
+  """Crosses occuring in this snapshot"""
+  deltaCrosses: Int!
+
+  """Difference in liquidity for this snapshot"""
+  deltaLiquidityUSD: BigDecimal!
+
+  """Volume in BEAN for this snapshot"""
+  deltaVolume: BigInt!
+
+  """Volume in USD for this snapshot"""
+  deltaVolumeUSD: BigDecimal!
+
+  """{Token address}-{Season}"""
+  id: ID!
+
+  """Instantaneous deltaB across all whitelisted pools"""
+  instantaneousDeltaB: BigInt!
+
+  """Current liquidity in USD"""
+  liquidityUSD: BigDecimal!
+
+  """
+  Amount of the supply which is considered Locked Beans (untradeable due to chop rate)
+  """
+  lockedBeans: BigInt!
+
+  """Current market cap"""
+  marketCap: BigDecimal!
+
+  """Current USD price"""
+  price: BigDecimal!
+
+  """Season associated with this snapshot"""
+  season: Int!
+
+  """Current supply"""
+  supply: BigInt!
+
+  """Percent of supply in LP used for peg maintenance"""
+  supplyInPegLP: BigDecimal!
+
+  """Timestamp this snapshot was updated"""
+  timestamp: BigInt!
+
+  """Time-Weighted deltaB in whitelisted pools over the previous season"""
+  twaDeltaB: BigInt!
+
+  """Time-Weighted price over the previous season"""
+  twaPrice: BigDecimal!
+
+  """Cumulative volume in BEAN"""
+  volume: BigInt!
+
+  """Cumulative volume in USD"""
+  volumeUSD: BigDecimal!
+}
+
+input BeanHourlySnapshot_filter {
+  """Filter for the block changed event."""
+  _change_block: BlockChangedFilter
+  and: [BeanHourlySnapshot_filter]
+  bean: String
+  bean_: Bean_filter
+  bean_contains: String
+  bean_contains_nocase: String
+  bean_ends_with: String
+  bean_ends_with_nocase: String
+  bean_gt: String
+  bean_gte: String
+  bean_in: [String!]
+  bean_lt: String
+  bean_lte: String
+  bean_not: String
+  bean_not_contains: String
+  bean_not_contains_nocase: String
+  bean_not_ends_with: String
+  bean_not_ends_with_nocase: String
+  bean_not_in: [String!]
+  bean_not_starts_with: String
+  bean_not_starts_with_nocase: String
+  bean_starts_with: String
+  bean_starts_with_nocase: String
+  blockNumber: BigInt
+  blockNumber_gt: BigInt
+  blockNumber_gte: BigInt
+  blockNumber_in: [BigInt!]
+  blockNumber_lt: BigInt
+  blockNumber_lte: BigInt
+  blockNumber_not: BigInt
+  blockNumber_not_in: [BigInt!]
+  crossEvents_: BeanCross_filter
+  crosses: Int
+  crosses_gt: Int
+  crosses_gte: Int
+  crosses_in: [Int!]
+  crosses_lt: Int
+  crosses_lte: Int
+  crosses_not: Int
+  crosses_not_in: [Int!]
+  deltaCrosses: Int
+  deltaCrosses_gt: Int
+  deltaCrosses_gte: Int
+  deltaCrosses_in: [Int!]
+  deltaCrosses_lt: Int
+  deltaCrosses_lte: Int
+  deltaCrosses_not: Int
+  deltaCrosses_not_in: [Int!]
+  deltaLiquidityUSD: BigDecimal
+  deltaLiquidityUSD_gt: BigDecimal
+  deltaLiquidityUSD_gte: BigDecimal
+  deltaLiquidityUSD_in: [BigDecimal!]
+  deltaLiquidityUSD_lt: BigDecimal
+  deltaLiquidityUSD_lte: BigDecimal
+  deltaLiquidityUSD_not: BigDecimal
+  deltaLiquidityUSD_not_in: [BigDecimal!]
+  deltaVolume: BigInt
+  deltaVolumeUSD: BigDecimal
+  deltaVolumeUSD_gt: BigDecimal
+  deltaVolumeUSD_gte: BigDecimal
+  deltaVolumeUSD_in: [BigDecimal!]
+  deltaVolumeUSD_lt: BigDecimal
+  deltaVolumeUSD_lte: BigDecimal
+  deltaVolumeUSD_not: BigDecimal
+  deltaVolumeUSD_not_in: [BigDecimal!]
+  deltaVolume_gt: BigInt
+  deltaVolume_gte: BigInt
+  deltaVolume_in: [BigInt!]
+  deltaVolume_lt: BigInt
+  deltaVolume_lte: BigInt
+  deltaVolume_not: BigInt
+  deltaVolume_not_in: [BigInt!]
+  id: ID
+  id_gt: ID
+  id_gte: ID
+  id_in: [ID!]
+  id_lt: ID
+  id_lte: ID
+  id_not: ID
+  id_not_in: [ID!]
+  instantaneousDeltaB: BigInt
+  instantaneousDeltaB_gt: BigInt
+  instantaneousDeltaB_gte: BigInt
+  instantaneousDeltaB_in: [BigInt!]
+  instantaneousDeltaB_lt: BigInt
+  instantaneousDeltaB_lte: BigInt
+  instantaneousDeltaB_not: BigInt
+  instantaneousDeltaB_not_in: [BigInt!]
+  liquidityUSD: BigDecimal
+  liquidityUSD_gt: BigDecimal
+  liquidityUSD_gte: BigDecimal
+  liquidityUSD_in: [BigDecimal!]
+  liquidityUSD_lt: BigDecimal
+  liquidityUSD_lte: BigDecimal
+  liquidityUSD_not: BigDecimal
+  liquidityUSD_not_in: [BigDecimal!]
+  lockedBeans: BigInt
+  lockedBeans_gt: BigInt
+  lockedBeans_gte: BigInt
+  lockedBeans_in: [BigInt!]
+  lockedBeans_lt: BigInt
+  lockedBeans_lte: BigInt
+  lockedBeans_not: BigInt
+  lockedBeans_not_in: [BigInt!]
+  marketCap: BigDecimal
+  marketCap_gt: BigDecimal
+  marketCap_gte: BigDecimal
+  marketCap_in: [BigDecimal!]
+  marketCap_lt: BigDecimal
+  marketCap_lte: BigDecimal
+  marketCap_not: BigDecimal
+  marketCap_not_in: [BigDecimal!]
+  or: [BeanHourlySnapshot_filter]
+  price: BigDecimal
+  price_gt: BigDecimal
+  price_gte: BigDecimal
+  price_in: [BigDecimal!]
+  price_lt: BigDecimal
+  price_lte: BigDecimal
+  price_not: BigDecimal
+  price_not_in: [BigDecimal!]
+  season: Int
+  season_gt: Int
+  season_gte: Int
+  season_in: [Int!]
+  season_lt: Int
+  season_lte: Int
+  season_not: Int
+  season_not_in: [Int!]
+  supply: BigInt
+  supplyInPegLP: BigDecimal
+  supplyInPegLP_gt: BigDecimal
+  supplyInPegLP_gte: BigDecimal
+  supplyInPegLP_in: [BigDecimal!]
+  supplyInPegLP_lt: BigDecimal
+  supplyInPegLP_lte: BigDecimal
+  supplyInPegLP_not: BigDecimal
+  supplyInPegLP_not_in: [BigDecimal!]
+  supply_gt: BigInt
+  supply_gte: BigInt
+  supply_in: [BigInt!]
+  supply_lt: BigInt
+  supply_lte: BigInt
+  supply_not: BigInt
+  supply_not_in: [BigInt!]
+  timestamp: BigInt
+  timestamp_gt: BigInt
+  timestamp_gte: BigInt
+  timestamp_in: [BigInt!]
+  timestamp_lt: BigInt
+  timestamp_lte: BigInt
+  timestamp_not: BigInt
+  timestamp_not_in: [BigInt!]
+  twaDeltaB: BigInt
+  twaDeltaB_gt: BigInt
+  twaDeltaB_gte: BigInt
+  twaDeltaB_in: [BigInt!]
+  twaDeltaB_lt: BigInt
+  twaDeltaB_lte: BigInt
+  twaDeltaB_not: BigInt
+  twaDeltaB_not_in: [BigInt!]
+  twaPrice: BigDecimal
+  twaPrice_gt: BigDecimal
+  twaPrice_gte: BigDecimal
+  twaPrice_in: [BigDecimal!]
+  twaPrice_lt: BigDecimal
+  twaPrice_lte: BigDecimal
+  twaPrice_not: BigDecimal
+  twaPrice_not_in: [BigDecimal!]
+  volume: BigInt
+  volumeUSD: BigDecimal
+  volumeUSD_gt: BigDecimal
+  volumeUSD_gte: BigDecimal
+  volumeUSD_in: [BigDecimal!]
+  volumeUSD_lt: BigDecimal
+  volumeUSD_lte: BigDecimal
+  volumeUSD_not: BigDecimal
+  volumeUSD_not_in: [BigDecimal!]
+  volume_gt: BigInt
+  volume_gte: BigInt
+  volume_in: [BigInt!]
+  volume_lt: BigInt
+  volume_lte: BigInt
+  volume_not: BigInt
+  volume_not_in: [BigInt!]
+}
+
+enum BeanHourlySnapshot_orderBy {
+  bean
+  bean__crosses
+  bean__id
+  bean__lastCross
+  bean__lastSeason
+  bean__liquidityUSD
+  bean__lockedBeans
+  bean__marketCap
+  bean__price
+  bean__supply
+  bean__supplyInPegLP
+  bean__volume
+  bean__volumeUSD
+  blockNumber
+  crossEvents
+  crosses
+  deltaCrosses
+  deltaLiquidityUSD
+  deltaVolume
+  deltaVolumeUSD
+  id
+  instantaneousDeltaB
+  liquidityUSD
+  lockedBeans
+  marketCap
+  price
+  season
+  supply
+  supplyInPegLP
+  timestamp
+  twaDeltaB
+  twaPrice
+  volume
+  volumeUSD
+}
+
+input Bean_filter {
+  """Filter for the block changed event."""
+  _change_block: BlockChangedFilter
+  and: [Bean_filter]
+  crossEvents_: BeanCross_filter
+  crosses: Int
+  crosses_gt: Int
+  crosses_gte: Int
+  crosses_in: [Int!]
+  crosses_lt: Int
+  crosses_lte: Int
+  crosses_not: Int
+  crosses_not_in: [Int!]
+  dailySnapshot_: BeanDailySnapshot_filter
+  hourlySnapshot_: BeanHourlySnapshot_filter
+  id: ID
+  id_gt: ID
+  id_gte: ID
+  id_in: [ID!]
+  id_lt: ID
+  id_lte: ID
+  id_not: ID
+  id_not_in: [ID!]
+  lastCross: BigInt
+  lastCross_gt: BigInt
+  lastCross_gte: BigInt
+  lastCross_in: [BigInt!]
+  lastCross_lt: BigInt
+  lastCross_lte: BigInt
+  lastCross_not: BigInt
+  lastCross_not_in: [BigInt!]
+  lastSeason: Int
+  lastSeason_gt: Int
+  lastSeason_gte: Int
+  lastSeason_in: [Int!]
+  lastSeason_lt: Int
+  lastSeason_lte: Int
+  lastSeason_not: Int
+  lastSeason_not_in: [Int!]
+  liquidityUSD: BigDecimal
+  liquidityUSD_gt: BigDecimal
+  liquidityUSD_gte: BigDecimal
+  liquidityUSD_in: [BigDecimal!]
+  liquidityUSD_lt: BigDecimal
+  liquidityUSD_lte: BigDecimal
+  liquidityUSD_not: BigDecimal
+  liquidityUSD_not_in: [BigDecimal!]
+  lockedBeans: BigInt
+  lockedBeans_gt: BigInt
+  lockedBeans_gte: BigInt
+  lockedBeans_in: [BigInt!]
+  lockedBeans_lt: BigInt
+  lockedBeans_lte: BigInt
+  lockedBeans_not: BigInt
+  lockedBeans_not_in: [BigInt!]
+  marketCap: BigDecimal
+  marketCap_gt: BigDecimal
+  marketCap_gte: BigDecimal
+  marketCap_in: [BigDecimal!]
+  marketCap_lt: BigDecimal
+  marketCap_lte: BigDecimal
+  marketCap_not: BigDecimal
+  marketCap_not_in: [BigDecimal!]
+  or: [Bean_filter]
+  pools: [String!]
+  pools_: Pool_filter
+  pools_contains: [String!]
+  pools_contains_nocase: [String!]
+  pools_not: [String!]
+  pools_not_contains: [String!]
+  pools_not_contains_nocase: [String!]
+  price: BigDecimal
+  price_gt: BigDecimal
+  price_gte: BigDecimal
+  price_in: [BigDecimal!]
+  price_lt: BigDecimal
+  price_lte: BigDecimal
+  price_not: BigDecimal
+  price_not_in: [BigDecimal!]
+  supply: BigInt
+  supplyInPegLP: BigDecimal
+  supplyInPegLP_gt: BigDecimal
+  supplyInPegLP_gte: BigDecimal
+  supplyInPegLP_in: [BigDecimal!]
+  supplyInPegLP_lt: BigDecimal
+  supplyInPegLP_lte: BigDecimal
+  supplyInPegLP_not: BigDecimal
+  supplyInPegLP_not_in: [BigDecimal!]
+  supply_gt: BigInt
+  supply_gte: BigInt
+  supply_in: [BigInt!]
+  supply_lt: BigInt
+  supply_lte: BigInt
+  supply_not: BigInt
+  supply_not_in: [BigInt!]
+  volume: BigInt
+  volumeUSD: BigDecimal
+  volumeUSD_gt: BigDecimal
+  volumeUSD_gte: BigDecimal
+  volumeUSD_in: [BigDecimal!]
+  volumeUSD_lt: BigDecimal
+  volumeUSD_lte: BigDecimal
+  volumeUSD_not: BigDecimal
+  volumeUSD_not_in: [BigDecimal!]
+  volume_gt: BigInt
+  volume_gte: BigInt
+  volume_in: [BigInt!]
+  volume_lt: BigInt
+  volume_lte: BigInt
+  volume_not: BigInt
+  volume_not_in: [BigInt!]
+}
+
+enum Bean_orderBy {
+  crossEvents
+  crosses
+  dailySnapshot
+  hourlySnapshot
+  id
+  lastCross
+  lastSeason
+  liquidityUSD
+  lockedBeans
+  marketCap
+  pools
+  price
+  supply
+  supplyInPegLP
+  volume
+  volumeUSD
+}
+
+scalar BigDecimal
+
+scalar BigInt
+
+input BlockChangedFilter {
+  number_gte: Int!
+}
+
+input Block_height {
+  hash: Bytes
+  number: Int
+  number_gte: Int
+}
+
+scalar Bytes
+
+"""Defines the order direction, either ascending or descending"""
+enum OrderDirection {
+  asc
+  desc
+}
+
+type Pool {
+  bean: Bean!
+  crossEvents(first: Int = 100, orderBy: PoolCross_orderBy, orderDirection: OrderDirection, skip: Int = 0, where: PoolCross_filter): [PoolCross!]!
+  crosses: Int!
+  dailySnapshot(first: Int = 100, orderBy: PoolDailySnapshot_orderBy, orderDirection: OrderDirection, skip: Int = 0, where: PoolDailySnapshot_filter): [PoolDailySnapshot!]!
+
+  """Instantaneous deltaB"""
+  deltaBeans: BigInt!
+  hourlySnapshot(first: Int = 100, orderBy: PoolHourlySnapshot_orderBy, orderDirection: OrderDirection, skip: Int = 0, where: PoolHourlySnapshot_filter): [PoolHourlySnapshot!]!
+  id: ID!
+
+  """Last timestamp a cross was seen for this pool"""
+  lastCross: BigInt!
+  lastPrice: BigDecimal!
+  lastSeason: Int!
+  liquidityUSD: BigDecimal!
+  reserves: [BigInt!]!
+  volume: BigInt!
+  volumeUSD: BigDecimal!
+}
+
+type PoolCross {
+  above: Boolean!
+  blockNumber: BigInt!
+  dailySnapshot: PoolDailySnapshot!
+  hourlySnapshot: PoolHourlySnapshot!
+  id: ID!
+  pool: Pool!
+  price: BigDecimal!
+  timeSinceLastCross: BigInt!
+  timestamp: BigInt!
+}
+
+input PoolCross_filter {
+  """Filter for the block changed event."""
+  _change_block: BlockChangedFilter
+  above: Boolean
+  above_in: [Boolean!]
+  above_not: Boolean
+  above_not_in: [Boolean!]
+  and: [PoolCross_filter]
+  blockNumber: BigInt
+  blockNumber_gt: BigInt
+  blockNumber_gte: BigInt
+  blockNumber_in: [BigInt!]
+  blockNumber_lt: BigInt
+  blockNumber_lte: BigInt
+  blockNumber_not: BigInt
+  blockNumber_not_in: [BigInt!]
+  dailySnapshot: String
+  dailySnapshot_: PoolDailySnapshot_filter
+  dailySnapshot_contains: String
+  dailySnapshot_contains_nocase: String
+  dailySnapshot_ends_with: String
+  dailySnapshot_ends_with_nocase: String
+  dailySnapshot_gt: String
+  dailySnapshot_gte: String
+  dailySnapshot_in: [String!]
+  dailySnapshot_lt: String
+  dailySnapshot_lte: String
+  dailySnapshot_not: String
+  dailySnapshot_not_contains: String
+  dailySnapshot_not_contains_nocase: String
+  dailySnapshot_not_ends_with: String
+  dailySnapshot_not_ends_with_nocase: String
+  dailySnapshot_not_in: [String!]
+  dailySnapshot_not_starts_with: String
+  dailySnapshot_not_starts_with_nocase: String
+  dailySnapshot_starts_with: String
+  dailySnapshot_starts_with_nocase: String
+  hourlySnapshot: String
+  hourlySnapshot_: PoolHourlySnapshot_filter
+  hourlySnapshot_contains: String
+  hourlySnapshot_contains_nocase: String
+  hourlySnapshot_ends_with: String
+  hourlySnapshot_ends_with_nocase: String
+  hourlySnapshot_gt: String
+  hourlySnapshot_gte: String
+  hourlySnapshot_in: [String!]
+  hourlySnapshot_lt: String
+  hourlySnapshot_lte: String
+  hourlySnapshot_not: String
+  hourlySnapshot_not_contains: String
+  hourlySnapshot_not_contains_nocase: String
+  hourlySnapshot_not_ends_with: String
+  hourlySnapshot_not_ends_with_nocase: String
+  hourlySnapshot_not_in: [String!]
+  hourlySnapshot_not_starts_with: String
+  hourlySnapshot_not_starts_with_nocase: String
+  hourlySnapshot_starts_with: String
+  hourlySnapshot_starts_with_nocase: String
+  id: ID
+  id_gt: ID
+  id_gte: ID
+  id_in: [ID!]
+  id_lt: ID
+  id_lte: ID
+  id_not: ID
+  id_not_in: [ID!]
+  or: [PoolCross_filter]
+  pool: String
+  pool_: Pool_filter
+  pool_contains: String
+  pool_contains_nocase: String
+  pool_ends_with: String
+  pool_ends_with_nocase: String
+  pool_gt: String
+  pool_gte: String
+  pool_in: [String!]
+  pool_lt: String
+  pool_lte: String
+  pool_not: String
+  pool_not_contains: String
+  pool_not_contains_nocase: String
+  pool_not_ends_with: String
+  pool_not_ends_with_nocase: String
+  pool_not_in: [String!]
+  pool_not_starts_with: String
+  pool_not_starts_with_nocase: String
+  pool_starts_with: String
+  pool_starts_with_nocase: String
+  price: BigDecimal
+  price_gt: BigDecimal
+  price_gte: BigDecimal
+  price_in: [BigDecimal!]
+  price_lt: BigDecimal
+  price_lte: BigDecimal
+  price_not: BigDecimal
+  price_not_in: [BigDecimal!]
+  timeSinceLastCross: BigInt
+  timeSinceLastCross_gt: BigInt
+  timeSinceLastCross_gte: BigInt
+  timeSinceLastCross_in: [BigInt!]
+  timeSinceLastCross_lt: BigInt
+  timeSinceLastCross_lte: BigInt
+  timeSinceLastCross_not: BigInt
+  timeSinceLastCross_not_in: [BigInt!]
+  timestamp: BigInt
+  timestamp_gt: BigInt
+  timestamp_gte: BigInt
+  timestamp_in: [BigInt!]
+  timestamp_lt: BigInt
+  timestamp_lte: BigInt
+  timestamp_not: BigInt
+  timestamp_not_in: [BigInt!]
+}
+
+enum PoolCross_orderBy {
+  above
+  blockNumber
+  dailySnapshot
+  dailySnapshot__createdAt
+  dailySnapshot__crosses
+  dailySnapshot__deltaBeans
+  dailySnapshot__deltaCrosses
+  dailySnapshot__deltaLiquidityUSD
+  dailySnapshot__deltaVolume
+  dailySnapshot__deltaVolumeUSD
+  dailySnapshot__id
+  dailySnapshot__lastPrice
+  dailySnapshot__liquidityUSD
+  dailySnapshot__season
+  dailySnapshot__twaDeltaBeans
+  dailySnapshot__twaPrice
+  dailySnapshot__twaToken2Price
+  dailySnapshot__updatedAt
+  dailySnapshot__utilization
+  dailySnapshot__volume
+  dailySnapshot__volumeUSD
+  hourlySnapshot
+  hourlySnapshot__createdAt
+  hourlySnapshot__crosses
+  hourlySnapshot__deltaBeans
+  hourlySnapshot__deltaCrosses
+  hourlySnapshot__deltaLiquidityUSD
+  hourlySnapshot__deltaVolume
+  hourlySnapshot__deltaVolumeUSD
+  hourlySnapshot__id
+  hourlySnapshot__lastPrice
+  hourlySnapshot__liquidityUSD
+  hourlySnapshot__season
+  hourlySnapshot__twaDeltaBeans
+  hourlySnapshot__twaPrice
+  hourlySnapshot__twaToken2Price
+  hourlySnapshot__updatedAt
+  hourlySnapshot__utilization
+  hourlySnapshot__volume
+  hourlySnapshot__volumeUSD
+  id
+  pool
+  pool__crosses
+  pool__deltaBeans
+  pool__id
+  pool__lastCross
+  pool__lastPrice
+  pool__lastSeason
+  pool__liquidityUSD
+  pool__volume
+  pool__volumeUSD
+  price
+  timeSinceLastCross
+  timestamp
+}
+
+type PoolDailySnapshot {
+  createdAt: BigInt!
+  crossEvents(first: Int = 100, orderBy: PoolCross_orderBy, orderDirection: OrderDirection, skip: Int = 0, where: PoolCross_filter): [PoolCross!]!
+  crosses: Int!
+
+  """Instantaneous deltaB"""
+  deltaBeans: BigInt!
+  deltaCrosses: Int!
+  deltaLiquidityUSD: BigDecimal!
+  deltaReserves: [BigInt!]!
+  deltaVolume: BigInt!
+  deltaVolumeUSD: BigDecimal!
+  id: ID!
+  lastPrice: BigDecimal!
+  liquidityUSD: BigDecimal!
+  pool: Pool!
+  reserves: [BigInt!]!
+  season: Int!
+
+  """Time-Weighted deltaB over the previous season"""
+  twaDeltaBeans: BigInt!
+
+  """Time-Weighted price over the previous season"""
+  twaPrice: BigDecimal!
+
+  """
+  Time-Weighted price of the other token in the pool over the previous season, if applicable
+  """
+  twaToken2Price: BigDecimal
+  updatedAt: BigInt!
+  utilization: BigDecimal!
+  volume: BigInt!
+  volumeUSD: BigDecimal!
+}
+
+input PoolDailySnapshot_filter {
+  """Filter for the block changed event."""
+  _change_block: BlockChangedFilter
+  and: [PoolDailySnapshot_filter]
+  createdAt: BigInt
+  createdAt_gt: BigInt
+  createdAt_gte: BigInt
+  createdAt_in: [BigInt!]
+  createdAt_lt: BigInt
+  createdAt_lte: BigInt
+  createdAt_not: BigInt
+  createdAt_not_in: [BigInt!]
+  crossEvents_: PoolCross_filter
+  crosses: Int
+  crosses_gt: Int
+  crosses_gte: Int
+  crosses_in: [Int!]
+  crosses_lt: Int
+  crosses_lte: Int
+  crosses_not: Int
+  crosses_not_in: [Int!]
+  deltaBeans: BigInt
+  deltaBeans_gt: BigInt
+  deltaBeans_gte: BigInt
+  deltaBeans_in: [BigInt!]
+  deltaBeans_lt: BigInt
+  deltaBeans_lte: BigInt
+  deltaBeans_not: BigInt
+  deltaBeans_not_in: [BigInt!]
+  deltaCrosses: Int
+  deltaCrosses_gt: Int
+  deltaCrosses_gte: Int
+  deltaCrosses_in: [Int!]
+  deltaCrosses_lt: Int
+  deltaCrosses_lte: Int
+  deltaCrosses_not: Int
+  deltaCrosses_not_in: [Int!]
+  deltaLiquidityUSD: BigDecimal
+  deltaLiquidityUSD_gt: BigDecimal
+  deltaLiquidityUSD_gte: BigDecimal
+  deltaLiquidityUSD_in: [BigDecimal!]
+  deltaLiquidityUSD_lt: BigDecimal
+  deltaLiquidityUSD_lte: BigDecimal
+  deltaLiquidityUSD_not: BigDecimal
+  deltaLiquidityUSD_not_in: [BigDecimal!]
+  deltaReserves: [BigInt!]
+  deltaReserves_contains: [BigInt!]
+  deltaReserves_contains_nocase: [BigInt!]
+  deltaReserves_not: [BigInt!]
+  deltaReserves_not_contains: [BigInt!]
+  deltaReserves_not_contains_nocase: [BigInt!]
+  deltaVolume: BigInt
+  deltaVolumeUSD: BigDecimal
+  deltaVolumeUSD_gt: BigDecimal
+  deltaVolumeUSD_gte: BigDecimal
+  deltaVolumeUSD_in: [BigDecimal!]
+  deltaVolumeUSD_lt: BigDecimal
+  deltaVolumeUSD_lte: BigDecimal
+  deltaVolumeUSD_not: BigDecimal
+  deltaVolumeUSD_not_in: [BigDecimal!]
+  deltaVolume_gt: BigInt
+  deltaVolume_gte: BigInt
+  deltaVolume_in: [BigInt!]
+  deltaVolume_lt: BigInt
+  deltaVolume_lte: BigInt
+  deltaVolume_not: BigInt
+  deltaVolume_not_in: [BigInt!]
+  id: ID
+  id_gt: ID
+  id_gte: ID
+  id_in: [ID!]
+  id_lt: ID
+  id_lte: ID
+  id_not: ID
+  id_not_in: [ID!]
+  lastPrice: BigDecimal
+  lastPrice_gt: BigDecimal
+  lastPrice_gte: BigDecimal
+  lastPrice_in: [BigDecimal!]
+  lastPrice_lt: BigDecimal
+  lastPrice_lte: BigDecimal
+  lastPrice_not: BigDecimal
+  lastPrice_not_in: [BigDecimal!]
+  liquidityUSD: BigDecimal
+  liquidityUSD_gt: BigDecimal
+  liquidityUSD_gte: BigDecimal
+  liquidityUSD_in: [BigDecimal!]
+  liquidityUSD_lt: BigDecimal
+  liquidityUSD_lte: BigDecimal
+  liquidityUSD_not: BigDecimal
+  liquidityUSD_not_in: [BigDecimal!]
+  or: [PoolDailySnapshot_filter]
+  pool: String
+  pool_: Pool_filter
+  pool_contains: String
+  pool_contains_nocase: String
+  pool_ends_with: String
+  pool_ends_with_nocase: String
+  pool_gt: String
+  pool_gte: String
+  pool_in: [String!]
+  pool_lt: String
+  pool_lte: String
+  pool_not: String
+  pool_not_contains: String
+  pool_not_contains_nocase: String
+  pool_not_ends_with: String
+  pool_not_ends_with_nocase: String
+  pool_not_in: [String!]
+  pool_not_starts_with: String
+  pool_not_starts_with_nocase: String
+  pool_starts_with: String
+  pool_starts_with_nocase: String
+  reserves: [BigInt!]
+  reserves_contains: [BigInt!]
+  reserves_contains_nocase: [BigInt!]
+  reserves_not: [BigInt!]
+  reserves_not_contains: [BigInt!]
+  reserves_not_contains_nocase: [BigInt!]
+  season: Int
+  season_gt: Int
+  season_gte: Int
+  season_in: [Int!]
+  season_lt: Int
+  season_lte: Int
+  season_not: Int
+  season_not_in: [Int!]
+  twaDeltaBeans: BigInt
+  twaDeltaBeans_gt: BigInt
+  twaDeltaBeans_gte: BigInt
+  twaDeltaBeans_in: [BigInt!]
+  twaDeltaBeans_lt: BigInt
+  twaDeltaBeans_lte: BigInt
+  twaDeltaBeans_not: BigInt
+  twaDeltaBeans_not_in: [BigInt!]
+  twaPrice: BigDecimal
+  twaPrice_gt: BigDecimal
+  twaPrice_gte: BigDecimal
+  twaPrice_in: [BigDecimal!]
+  twaPrice_lt: BigDecimal
+  twaPrice_lte: BigDecimal
+  twaPrice_not: BigDecimal
+  twaPrice_not_in: [BigDecimal!]
+  twaToken2Price: BigDecimal
+  twaToken2Price_gt: BigDecimal
+  twaToken2Price_gte: BigDecimal
+  twaToken2Price_in: [BigDecimal!]
+  twaToken2Price_lt: BigDecimal
+  twaToken2Price_lte: BigDecimal
+  twaToken2Price_not: BigDecimal
+  twaToken2Price_not_in: [BigDecimal!]
+  updatedAt: BigInt
+  updatedAt_gt: BigInt
+  updatedAt_gte: BigInt
+  updatedAt_in: [BigInt!]
+  updatedAt_lt: BigInt
+  updatedAt_lte: BigInt
+  updatedAt_not: BigInt
+  updatedAt_not_in: [BigInt!]
+  utilization: BigDecimal
+  utilization_gt: BigDecimal
+  utilization_gte: BigDecimal
+  utilization_in: [BigDecimal!]
+  utilization_lt: BigDecimal
+  utilization_lte: BigDecimal
+  utilization_not: BigDecimal
+  utilization_not_in: [BigDecimal!]
+  volume: BigInt
+  volumeUSD: BigDecimal
+  volumeUSD_gt: BigDecimal
+  volumeUSD_gte: BigDecimal
+  volumeUSD_in: [BigDecimal!]
+  volumeUSD_lt: BigDecimal
+  volumeUSD_lte: BigDecimal
+  volumeUSD_not: BigDecimal
+  volumeUSD_not_in: [BigDecimal!]
+  volume_gt: BigInt
+  volume_gte: BigInt
+  volume_in: [BigInt!]
+  volume_lt: BigInt
+  volume_lte: BigInt
+  volume_not: BigInt
+  volume_not_in: [BigInt!]
+}
+
+enum PoolDailySnapshot_orderBy {
+  createdAt
+  crossEvents
+  crosses
+  deltaBeans
+  deltaCrosses
+  deltaLiquidityUSD
+  deltaReserves
+  deltaVolume
+  deltaVolumeUSD
+  id
+  lastPrice
+  liquidityUSD
+  pool
+  pool__crosses
+  pool__deltaBeans
+  pool__id
+  pool__lastCross
+  pool__lastPrice
+  pool__lastSeason
+  pool__liquidityUSD
+  pool__volume
+  pool__volumeUSD
+  reserves
+  season
+  twaDeltaBeans
+  twaPrice
+  twaToken2Price
+  updatedAt
+  utilization
+  volume
+  volumeUSD
+}
+
+type PoolHourlySnapshot {
+  createdAt: BigInt!
+  crossEvents(first: Int = 100, orderBy: PoolCross_orderBy, orderDirection: OrderDirection, skip: Int = 0, where: PoolCross_filter): [PoolCross!]!
+  crosses: Int!
+
+  """Instantaneous deltaB"""
+  deltaBeans: BigInt!
+  deltaCrosses: Int!
+  deltaLiquidityUSD: BigDecimal!
+  deltaReserves: [BigInt!]!
+  deltaVolume: BigInt!
+  deltaVolumeUSD: BigDecimal!
+  id: ID!
+  lastPrice: BigDecimal!
+  liquidityUSD: BigDecimal!
+  pool: Pool!
+  reserves: [BigInt!]!
+  season: Int!
+
+  """Time-Weighted deltaB over the previous season"""
+  twaDeltaBeans: BigInt!
+
+  """Time-Weighted bean price over the previous season"""
+  twaPrice: BigDecimal!
+
+  """
+  Time-Weighted price of the other token in the pool over the previous season, if applicable
+  """
+  twaToken2Price: BigDecimal
+  updatedAt: BigInt!
+  utilization: BigDecimal!
+  volume: BigInt!
+  volumeUSD: BigDecimal!
+}
+
+input PoolHourlySnapshot_filter {
+  """Filter for the block changed event."""
+  _change_block: BlockChangedFilter
+  and: [PoolHourlySnapshot_filter]
+  createdAt: BigInt
+  createdAt_gt: BigInt
+  createdAt_gte: BigInt
+  createdAt_in: [BigInt!]
+  createdAt_lt: BigInt
+  createdAt_lte: BigInt
+  createdAt_not: BigInt
+  createdAt_not_in: [BigInt!]
+  crossEvents_: PoolCross_filter
+  crosses: Int
+  crosses_gt: Int
+  crosses_gte: Int
+  crosses_in: [Int!]
+  crosses_lt: Int
+  crosses_lte: Int
+  crosses_not: Int
+  crosses_not_in: [Int!]
+  deltaBeans: BigInt
+  deltaBeans_gt: BigInt
+  deltaBeans_gte: BigInt
+  deltaBeans_in: [BigInt!]
+  deltaBeans_lt: BigInt
+  deltaBeans_lte: BigInt
+  deltaBeans_not: BigInt
+  deltaBeans_not_in: [BigInt!]
+  deltaCrosses: Int
+  deltaCrosses_gt: Int
+  deltaCrosses_gte: Int
+  deltaCrosses_in: [Int!]
+  deltaCrosses_lt: Int
+  deltaCrosses_lte: Int
+  deltaCrosses_not: Int
+  deltaCrosses_not_in: [Int!]
+  deltaLiquidityUSD: BigDecimal
+  deltaLiquidityUSD_gt: BigDecimal
+  deltaLiquidityUSD_gte: BigDecimal
+  deltaLiquidityUSD_in: [BigDecimal!]
+  deltaLiquidityUSD_lt: BigDecimal
+  deltaLiquidityUSD_lte: BigDecimal
+  deltaLiquidityUSD_not: BigDecimal
+  deltaLiquidityUSD_not_in: [BigDecimal!]
+  deltaReserves: [BigInt!]
+  deltaReserves_contains: [BigInt!]
+  deltaReserves_contains_nocase: [BigInt!]
+  deltaReserves_not: [BigInt!]
+  deltaReserves_not_contains: [BigInt!]
+  deltaReserves_not_contains_nocase: [BigInt!]
+  deltaVolume: BigInt
+  deltaVolumeUSD: BigDecimal
+  deltaVolumeUSD_gt: BigDecimal
+  deltaVolumeUSD_gte: BigDecimal
+  deltaVolumeUSD_in: [BigDecimal!]
+  deltaVolumeUSD_lt: BigDecimal
+  deltaVolumeUSD_lte: BigDecimal
+  deltaVolumeUSD_not: BigDecimal
+  deltaVolumeUSD_not_in: [BigDecimal!]
+  deltaVolume_gt: BigInt
+  deltaVolume_gte: BigInt
+  deltaVolume_in: [BigInt!]
+  deltaVolume_lt: BigInt
+  deltaVolume_lte: BigInt
+  deltaVolume_not: BigInt
+  deltaVolume_not_in: [BigInt!]
+  id: ID
+  id_gt: ID
+  id_gte: ID
+  id_in: [ID!]
+  id_lt: ID
+  id_lte: ID
+  id_not: ID
+  id_not_in: [ID!]
+  lastPrice: BigDecimal
+  lastPrice_gt: BigDecimal
+  lastPrice_gte: BigDecimal
+  lastPrice_in: [BigDecimal!]
+  lastPrice_lt: BigDecimal
+  lastPrice_lte: BigDecimal
+  lastPrice_not: BigDecimal
+  lastPrice_not_in: [BigDecimal!]
+  liquidityUSD: BigDecimal
+  liquidityUSD_gt: BigDecimal
+  liquidityUSD_gte: BigDecimal
+  liquidityUSD_in: [BigDecimal!]
+  liquidityUSD_lt: BigDecimal
+  liquidityUSD_lte: BigDecimal
+  liquidityUSD_not: BigDecimal
+  liquidityUSD_not_in: [BigDecimal!]
+  or: [PoolHourlySnapshot_filter]
+  pool: String
+  pool_: Pool_filter
+  pool_contains: String
+  pool_contains_nocase: String
+  pool_ends_with: String
+  pool_ends_with_nocase: String
+  pool_gt: String
+  pool_gte: String
+  pool_in: [String!]
+  pool_lt: String
+  pool_lte: String
+  pool_not: String
+  pool_not_contains: String
+  pool_not_contains_nocase: String
+  pool_not_ends_with: String
+  pool_not_ends_with_nocase: String
+  pool_not_in: [String!]
+  pool_not_starts_with: String
+  pool_not_starts_with_nocase: String
+  pool_starts_with: String
+  pool_starts_with_nocase: String
+  reserves: [BigInt!]
+  reserves_contains: [BigInt!]
+  reserves_contains_nocase: [BigInt!]
+  reserves_not: [BigInt!]
+  reserves_not_contains: [BigInt!]
+  reserves_not_contains_nocase: [BigInt!]
+  season: Int
+  season_gt: Int
+  season_gte: Int
+  season_in: [Int!]
+  season_lt: Int
+  season_lte: Int
+  season_not: Int
+  season_not_in: [Int!]
+  twaDeltaBeans: BigInt
+  twaDeltaBeans_gt: BigInt
+  twaDeltaBeans_gte: BigInt
+  twaDeltaBeans_in: [BigInt!]
+  twaDeltaBeans_lt: BigInt
+  twaDeltaBeans_lte: BigInt
+  twaDeltaBeans_not: BigInt
+  twaDeltaBeans_not_in: [BigInt!]
+  twaPrice: BigDecimal
+  twaPrice_gt: BigDecimal
+  twaPrice_gte: BigDecimal
+  twaPrice_in: [BigDecimal!]
+  twaPrice_lt: BigDecimal
+  twaPrice_lte: BigDecimal
+  twaPrice_not: BigDecimal
+  twaPrice_not_in: [BigDecimal!]
+  twaToken2Price: BigDecimal
+  twaToken2Price_gt: BigDecimal
+  twaToken2Price_gte: BigDecimal
+  twaToken2Price_in: [BigDecimal!]
+  twaToken2Price_lt: BigDecimal
+  twaToken2Price_lte: BigDecimal
+  twaToken2Price_not: BigDecimal
+  twaToken2Price_not_in: [BigDecimal!]
+  updatedAt: BigInt
+  updatedAt_gt: BigInt
+  updatedAt_gte: BigInt
+  updatedAt_in: [BigInt!]
+  updatedAt_lt: BigInt
+  updatedAt_lte: BigInt
+  updatedAt_not: BigInt
+  updatedAt_not_in: [BigInt!]
+  utilization: BigDecimal
+  utilization_gt: BigDecimal
+  utilization_gte: BigDecimal
+  utilization_in: [BigDecimal!]
+  utilization_lt: BigDecimal
+  utilization_lte: BigDecimal
+  utilization_not: BigDecimal
+  utilization_not_in: [BigDecimal!]
+  volume: BigInt
+  volumeUSD: BigDecimal
+  volumeUSD_gt: BigDecimal
+  volumeUSD_gte: BigDecimal
+  volumeUSD_in: [BigDecimal!]
+  volumeUSD_lt: BigDecimal
+  volumeUSD_lte: BigDecimal
+  volumeUSD_not: BigDecimal
+  volumeUSD_not_in: [BigDecimal!]
+  volume_gt: BigInt
+  volume_gte: BigInt
+  volume_in: [BigInt!]
+  volume_lt: BigInt
+  volume_lte: BigInt
+  volume_not: BigInt
+  volume_not_in: [BigInt!]
+}
+
+enum PoolHourlySnapshot_orderBy {
+  createdAt
+  crossEvents
+  crosses
+  deltaBeans
+  deltaCrosses
+  deltaLiquidityUSD
+  deltaReserves
+  deltaVolume
+  deltaVolumeUSD
+  id
+  lastPrice
+  liquidityUSD
+  pool
+  pool__crosses
+  pool__deltaBeans
+  pool__id
+  pool__lastCross
+  pool__lastPrice
+  pool__lastSeason
+  pool__liquidityUSD
+  pool__volume
+  pool__volumeUSD
+  reserves
+  season
+  twaDeltaBeans
+  twaPrice
+  twaToken2Price
+  updatedAt
+  utilization
+  volume
+  volumeUSD
+}
+
+input Pool_filter {
+  """Filter for the block changed event."""
+  _change_block: BlockChangedFilter
+  and: [Pool_filter]
+  bean: String
+  bean_: Bean_filter
+  bean_contains: String
+  bean_contains_nocase: String
+  bean_ends_with: String
+  bean_ends_with_nocase: String
+  bean_gt: String
+  bean_gte: String
+  bean_in: [String!]
+  bean_lt: String
+  bean_lte: String
+  bean_not: String
+  bean_not_contains: String
+  bean_not_contains_nocase: String
+  bean_not_ends_with: String
+  bean_not_ends_with_nocase: String
+  bean_not_in: [String!]
+  bean_not_starts_with: String
+  bean_not_starts_with_nocase: String
+  bean_starts_with: String
+  bean_starts_with_nocase: String
+  crossEvents_: PoolCross_filter
+  crosses: Int
+  crosses_gt: Int
+  crosses_gte: Int
+  crosses_in: [Int!]
+  crosses_lt: Int
+  crosses_lte: Int
+  crosses_not: Int
+  crosses_not_in: [Int!]
+  dailySnapshot_: PoolDailySnapshot_filter
+  deltaBeans: BigInt
+  deltaBeans_gt: BigInt
+  deltaBeans_gte: BigInt
+  deltaBeans_in: [BigInt!]
+  deltaBeans_lt: BigInt
+  deltaBeans_lte: BigInt
+  deltaBeans_not: BigInt
+  deltaBeans_not_in: [BigInt!]
+  hourlySnapshot_: PoolHourlySnapshot_filter
+  id: ID
+  id_gt: ID
+  id_gte: ID
+  id_in: [ID!]
+  id_lt: ID
+  id_lte: ID
+  id_not: ID
+  id_not_in: [ID!]
+  lastCross: BigInt
+  lastCross_gt: BigInt
+  lastCross_gte: BigInt
+  lastCross_in: [BigInt!]
+  lastCross_lt: BigInt
+  lastCross_lte: BigInt
+  lastCross_not: BigInt
+  lastCross_not_in: [BigInt!]
+  lastPrice: BigDecimal
+  lastPrice_gt: BigDecimal
+  lastPrice_gte: BigDecimal
+  lastPrice_in: [BigDecimal!]
+  lastPrice_lt: BigDecimal
+  lastPrice_lte: BigDecimal
+  lastPrice_not: BigDecimal
+  lastPrice_not_in: [BigDecimal!]
+  lastSeason: Int
+  lastSeason_gt: Int
+  lastSeason_gte: Int
+  lastSeason_in: [Int!]
+  lastSeason_lt: Int
+  lastSeason_lte: Int
+  lastSeason_not: Int
+  lastSeason_not_in: [Int!]
+  liquidityUSD: BigDecimal
+  liquidityUSD_gt: BigDecimal
+  liquidityUSD_gte: BigDecimal
+  liquidityUSD_in: [BigDecimal!]
+  liquidityUSD_lt: BigDecimal
+  liquidityUSD_lte: BigDecimal
+  liquidityUSD_not: BigDecimal
+  liquidityUSD_not_in: [BigDecimal!]
+  or: [Pool_filter]
+  reserves: [BigInt!]
+  reserves_contains: [BigInt!]
+  reserves_contains_nocase: [BigInt!]
+  reserves_not: [BigInt!]
+  reserves_not_contains: [BigInt!]
+  reserves_not_contains_nocase: [BigInt!]
+  volume: BigInt
+  volumeUSD: BigDecimal
+  volumeUSD_gt: BigDecimal
+  volumeUSD_gte: BigDecimal
+  volumeUSD_in: [BigDecimal!]
+  volumeUSD_lt: BigDecimal
+  volumeUSD_lte: BigDecimal
+  volumeUSD_not: BigDecimal
+  volumeUSD_not_in: [BigDecimal!]
+  volume_gt: BigInt
+  volume_gte: BigInt
+  volume_in: [BigInt!]
+  volume_lt: BigInt
+  volume_lte: BigInt
+  volume_not: BigInt
+  volume_not_in: [BigInt!]
+}
+
+enum Pool_orderBy {
+  bean
+  bean__crosses
+  bean__id
+  bean__lastCross
+  bean__lastSeason
+  bean__liquidityUSD
+  bean__lockedBeans
+  bean__marketCap
+  bean__price
+  bean__supply
+  bean__supplyInPegLP
+  bean__volume
+  bean__volumeUSD
+  crossEvents
+  crosses
+  dailySnapshot
+  deltaBeans
+  hourlySnapshot
+  id
+  lastCross
+  lastPrice
+  lastSeason
+  liquidityUSD
+  reserves
+  volume
+  volumeUSD
+}
+
+type Query {
+  """Access to subgraph metadata"""
+  _meta(block: Block_height): _Meta_
+  bean(
+    """
+    The block at which the query should be executed. Can either be a `{ hash: Bytes }` value containing a block hash, a `{ number: Int }` containing the block number, or a `{ number_gte: Int }` containing the minimum block number. In the case of `number_gte`, the query will be executed on the latest block only if the subgraph has progressed to or past the minimum block number. Defaults to the latest block when omitted.
+    """
+    block: Block_height
+    id: ID!
+
+    """
+    Set to `allow` to receive data even if the subgraph has skipped over errors while syncing.
+    """
+    subgraphError: _SubgraphErrorPolicy_! = deny
+  ): Bean
+  beanCross(
+    """
+    The block at which the query should be executed. Can either be a `{ hash: Bytes }` value containing a block hash, a `{ number: Int }` containing the block number, or a `{ number_gte: Int }` containing the minimum block number. In the case of `number_gte`, the query will be executed on the latest block only if the subgraph has progressed to or past the minimum block number. Defaults to the latest block when omitted.
+    """
+    block: Block_height
+    id: ID!
+
+    """
+    Set to `allow` to receive data even if the subgraph has skipped over errors while syncing.
+    """
+    subgraphError: _SubgraphErrorPolicy_! = deny
+  ): BeanCross
+  beanCrosses(
+    """
+    The block at which the query should be executed. Can either be a `{ hash: Bytes }` value containing a block hash, a `{ number: Int }` containing the block number, or a `{ number_gte: Int }` containing the minimum block number. In the case of `number_gte`, the query will be executed on the latest block only if the subgraph has progressed to or past the minimum block number. Defaults to the latest block when omitted.
+    """
+    block: Block_height
+    first: Int = 100
+    orderBy: BeanCross_orderBy
+    orderDirection: OrderDirection
+    skip: Int = 0
+
+    """
+    Set to `allow` to receive data even if the subgraph has skipped over errors while syncing.
+    """
+    subgraphError: _SubgraphErrorPolicy_! = deny
+    where: BeanCross_filter
+  ): [BeanCross!]!
+  beanDailySnapshot(
+    """
+    The block at which the query should be executed. Can either be a `{ hash: Bytes }` value containing a block hash, a `{ number: Int }` containing the block number, or a `{ number_gte: Int }` containing the minimum block number. In the case of `number_gte`, the query will be executed on the latest block only if the subgraph has progressed to or past the minimum block number. Defaults to the latest block when omitted.
+    """
+    block: Block_height
+    id: ID!
+
+    """
+    Set to `allow` to receive data even if the subgraph has skipped over errors while syncing.
+    """
+    subgraphError: _SubgraphErrorPolicy_! = deny
+  ): BeanDailySnapshot
+  beanDailySnapshots(
+    """
+    The block at which the query should be executed. Can either be a `{ hash: Bytes }` value containing a block hash, a `{ number: Int }` containing the block number, or a `{ number_gte: Int }` containing the minimum block number. In the case of `number_gte`, the query will be executed on the latest block only if the subgraph has progressed to or past the minimum block number. Defaults to the latest block when omitted.
+    """
+    block: Block_height
+    first: Int = 100
+    orderBy: BeanDailySnapshot_orderBy
+    orderDirection: OrderDirection
+    skip: Int = 0
+
+    """
+    Set to `allow` to receive data even if the subgraph has skipped over errors while syncing.
+    """
+    subgraphError: _SubgraphErrorPolicy_! = deny
+    where: BeanDailySnapshot_filter
+  ): [BeanDailySnapshot!]!
+  beanHourlySnapshot(
+    """
+    The block at which the query should be executed. Can either be a `{ hash: Bytes }` value containing a block hash, a `{ number: Int }` containing the block number, or a `{ number_gte: Int }` containing the minimum block number. In the case of `number_gte`, the query will be executed on the latest block only if the subgraph has progressed to or past the minimum block number. Defaults to the latest block when omitted.
+    """
+    block: Block_height
+    id: ID!
+
+    """
+    Set to `allow` to receive data even if the subgraph has skipped over errors while syncing.
+    """
+    subgraphError: _SubgraphErrorPolicy_! = deny
+  ): BeanHourlySnapshot
+  beanHourlySnapshots(
+    """
+    The block at which the query should be executed. Can either be a `{ hash: Bytes }` value containing a block hash, a `{ number: Int }` containing the block number, or a `{ number_gte: Int }` containing the minimum block number. In the case of `number_gte`, the query will be executed on the latest block only if the subgraph has progressed to or past the minimum block number. Defaults to the latest block when omitted.
+    """
+    block: Block_height
+    first: Int = 100
+    orderBy: BeanHourlySnapshot_orderBy
+    orderDirection: OrderDirection
+    skip: Int = 0
+
+    """
+    Set to `allow` to receive data even if the subgraph has skipped over errors while syncing.
+    """
+    subgraphError: _SubgraphErrorPolicy_! = deny
+    where: BeanHourlySnapshot_filter
+  ): [BeanHourlySnapshot!]!
+  beans(
+    """
+    The block at which the query should be executed. Can either be a `{ hash: Bytes }` value containing a block hash, a `{ number: Int }` containing the block number, or a `{ number_gte: Int }` containing the minimum block number. In the case of `number_gte`, the query will be executed on the latest block only if the subgraph has progressed to or past the minimum block number. Defaults to the latest block when omitted.
+    """
+    block: Block_height
+    first: Int = 100
+    orderBy: Bean_orderBy
+    orderDirection: OrderDirection
+    skip: Int = 0
+
+    """
+    Set to `allow` to receive data even if the subgraph has skipped over errors while syncing.
+    """
+    subgraphError: _SubgraphErrorPolicy_! = deny
+    where: Bean_filter
+  ): [Bean!]!
+  pool(
+    """
+    The block at which the query should be executed. Can either be a `{ hash: Bytes }` value containing a block hash, a `{ number: Int }` containing the block number, or a `{ number_gte: Int }` containing the minimum block number. In the case of `number_gte`, the query will be executed on the latest block only if the subgraph has progressed to or past the minimum block number. Defaults to the latest block when omitted.
+    """
+    block: Block_height
+    id: ID!
+
+    """
+    Set to `allow` to receive data even if the subgraph has skipped over errors while syncing.
+    """
+    subgraphError: _SubgraphErrorPolicy_! = deny
+  ): Pool
+  poolCross(
+    """
+    The block at which the query should be executed. Can either be a `{ hash: Bytes }` value containing a block hash, a `{ number: Int }` containing the block number, or a `{ number_gte: Int }` containing the minimum block number. In the case of `number_gte`, the query will be executed on the latest block only if the subgraph has progressed to or past the minimum block number. Defaults to the latest block when omitted.
+    """
+    block: Block_height
+    id: ID!
+
+    """
+    Set to `allow` to receive data even if the subgraph has skipped over errors while syncing.
+    """
+    subgraphError: _SubgraphErrorPolicy_! = deny
+  ): PoolCross
+  poolCrosses(
+    """
+    The block at which the query should be executed. Can either be a `{ hash: Bytes }` value containing a block hash, a `{ number: Int }` containing the block number, or a `{ number_gte: Int }` containing the minimum block number. In the case of `number_gte`, the query will be executed on the latest block only if the subgraph has progressed to or past the minimum block number. Defaults to the latest block when omitted.
+    """
+    block: Block_height
+    first: Int = 100
+    orderBy: PoolCross_orderBy
+    orderDirection: OrderDirection
+    skip: Int = 0
+
+    """
+    Set to `allow` to receive data even if the subgraph has skipped over errors while syncing.
+    """
+    subgraphError: _SubgraphErrorPolicy_! = deny
+    where: PoolCross_filter
+  ): [PoolCross!]!
+  poolDailySnapshot(
+    """
+    The block at which the query should be executed. Can either be a `{ hash: Bytes }` value containing a block hash, a `{ number: Int }` containing the block number, or a `{ number_gte: Int }` containing the minimum block number. In the case of `number_gte`, the query will be executed on the latest block only if the subgraph has progressed to or past the minimum block number. Defaults to the latest block when omitted.
+    """
+    block: Block_height
+    id: ID!
+
+    """
+    Set to `allow` to receive data even if the subgraph has skipped over errors while syncing.
+    """
+    subgraphError: _SubgraphErrorPolicy_! = deny
+  ): PoolDailySnapshot
+  poolDailySnapshots(
+    """
+    The block at which the query should be executed. Can either be a `{ hash: Bytes }` value containing a block hash, a `{ number: Int }` containing the block number, or a `{ number_gte: Int }` containing the minimum block number. In the case of `number_gte`, the query will be executed on the latest block only if the subgraph has progressed to or past the minimum block number. Defaults to the latest block when omitted.
+    """
+    block: Block_height
+    first: Int = 100
+    orderBy: PoolDailySnapshot_orderBy
+    orderDirection: OrderDirection
+    skip: Int = 0
+
+    """
+    Set to `allow` to receive data even if the subgraph has skipped over errors while syncing.
+    """
+    subgraphError: _SubgraphErrorPolicy_! = deny
+    where: PoolDailySnapshot_filter
+  ): [PoolDailySnapshot!]!
+  poolHourlySnapshot(
+    """
+    The block at which the query should be executed. Can either be a `{ hash: Bytes }` value containing a block hash, a `{ number: Int }` containing the block number, or a `{ number_gte: Int }` containing the minimum block number. In the case of `number_gte`, the query will be executed on the latest block only if the subgraph has progressed to or past the minimum block number. Defaults to the latest block when omitted.
+    """
+    block: Block_height
+    id: ID!
+
+    """
+    Set to `allow` to receive data even if the subgraph has skipped over errors while syncing.
+    """
+    subgraphError: _SubgraphErrorPolicy_! = deny
+  ): PoolHourlySnapshot
+  poolHourlySnapshots(
+    """
+    The block at which the query should be executed. Can either be a `{ hash: Bytes }` value containing a block hash, a `{ number: Int }` containing the block number, or a `{ number_gte: Int }` containing the minimum block number. In the case of `number_gte`, the query will be executed on the latest block only if the subgraph has progressed to or past the minimum block number. Defaults to the latest block when omitted.
+    """
+    block: Block_height
+    first: Int = 100
+    orderBy: PoolHourlySnapshot_orderBy
+    orderDirection: OrderDirection
+    skip: Int = 0
+
+    """
+    Set to `allow` to receive data even if the subgraph has skipped over errors while syncing.
+    """
+    subgraphError: _SubgraphErrorPolicy_! = deny
+    where: PoolHourlySnapshot_filter
+  ): [PoolHourlySnapshot!]!
+  pools(
+    """
+    The block at which the query should be executed. Can either be a `{ hash: Bytes }` value containing a block hash, a `{ number: Int }` containing the block number, or a `{ number_gte: Int }` containing the minimum block number. In the case of `number_gte`, the query will be executed on the latest block only if the subgraph has progressed to or past the minimum block number. Defaults to the latest block when omitted.
+    """
+    block: Block_height
+    first: Int = 100
+    orderBy: Pool_orderBy
+    orderDirection: OrderDirection
+    skip: Int = 0
+
+    """
+    Set to `allow` to receive data even if the subgraph has skipped over errors while syncing.
+    """
+    subgraphError: _SubgraphErrorPolicy_! = deny
+    where: Pool_filter
+  ): [Pool!]!
+  token(
+    """
+    The block at which the query should be executed. Can either be a `{ hash: Bytes }` value containing a block hash, a `{ number: Int }` containing the block number, or a `{ number_gte: Int }` containing the minimum block number. In the case of `number_gte`, the query will be executed on the latest block only if the subgraph has progressed to or past the minimum block number. Defaults to the latest block when omitted.
+    """
+    block: Block_height
+    id: ID!
+
+    """
+    Set to `allow` to receive data even if the subgraph has skipped over errors while syncing.
+    """
+    subgraphError: _SubgraphErrorPolicy_! = deny
+  ): Token
+  tokens(
+    """
+    The block at which the query should be executed. Can either be a `{ hash: Bytes }` value containing a block hash, a `{ number: Int }` containing the block number, or a `{ number_gte: Int }` containing the minimum block number. In the case of `number_gte`, the query will be executed on the latest block only if the subgraph has progressed to or past the minimum block number. Defaults to the latest block when omitted.
+    """
+    block: Block_height
+    first: Int = 100
+    orderBy: Token_orderBy
+    orderDirection: OrderDirection
+    skip: Int = 0
+
+    """
+    Set to `allow` to receive data even if the subgraph has skipped over errors while syncing.
+    """
+    subgraphError: _SubgraphErrorPolicy_! = deny
+    where: Token_filter
+  ): [Token!]!
+  twaOracle(
+    """
+    The block at which the query should be executed. Can either be a `{ hash: Bytes }` value containing a block hash, a `{ number: Int }` containing the block number, or a `{ number_gte: Int }` containing the minimum block number. In the case of `number_gte`, the query will be executed on the latest block only if the subgraph has progressed to or past the minimum block number. Defaults to the latest block when omitted.
+    """
+    block: Block_height
+    id: ID!
+
+    """
+    Set to `allow` to receive data even if the subgraph has skipped over errors while syncing.
+    """
+    subgraphError: _SubgraphErrorPolicy_! = deny
+  ): TwaOracle
+  twaOracles(
+    """
+    The block at which the query should be executed. Can either be a `{ hash: Bytes }` value containing a block hash, a `{ number: Int }` containing the block number, or a `{ number_gte: Int }` containing the minimum block number. In the case of `number_gte`, the query will be executed on the latest block only if the subgraph has progressed to or past the minimum block number. Defaults to the latest block when omitted.
+    """
+    block: Block_height
+    first: Int = 100
+    orderBy: TwaOracle_orderBy
+    orderDirection: OrderDirection
+    skip: Int = 0
+
+    """
+    Set to `allow` to receive data even if the subgraph has skipped over errors while syncing.
+    """
+    subgraphError: _SubgraphErrorPolicy_! = deny
+    where: TwaOracle_filter
+  ): [TwaOracle!]!
+}
+
+type Subscription {
+  """Access to subgraph metadata"""
+  _meta(block: Block_height): _Meta_
+  bean(
+    """
+    The block at which the query should be executed. Can either be a `{ hash: Bytes }` value containing a block hash, a `{ number: Int }` containing the block number, or a `{ number_gte: Int }` containing the minimum block number. In the case of `number_gte`, the query will be executed on the latest block only if the subgraph has progressed to or past the minimum block number. Defaults to the latest block when omitted.
+    """
+    block: Block_height
+    id: ID!
+
+    """
+    Set to `allow` to receive data even if the subgraph has skipped over errors while syncing.
+    """
+    subgraphError: _SubgraphErrorPolicy_! = deny
+  ): Bean
+  beanCross(
+    """
+    The block at which the query should be executed. Can either be a `{ hash: Bytes }` value containing a block hash, a `{ number: Int }` containing the block number, or a `{ number_gte: Int }` containing the minimum block number. In the case of `number_gte`, the query will be executed on the latest block only if the subgraph has progressed to or past the minimum block number. Defaults to the latest block when omitted.
+    """
+    block: Block_height
+    id: ID!
+
+    """
+    Set to `allow` to receive data even if the subgraph has skipped over errors while syncing.
+    """
+    subgraphError: _SubgraphErrorPolicy_! = deny
+  ): BeanCross
+  beanCrosses(
+    """
+    The block at which the query should be executed. Can either be a `{ hash: Bytes }` value containing a block hash, a `{ number: Int }` containing the block number, or a `{ number_gte: Int }` containing the minimum block number. In the case of `number_gte`, the query will be executed on the latest block only if the subgraph has progressed to or past the minimum block number. Defaults to the latest block when omitted.
+    """
+    block: Block_height
+    first: Int = 100
+    orderBy: BeanCross_orderBy
+    orderDirection: OrderDirection
+    skip: Int = 0
+
+    """
+    Set to `allow` to receive data even if the subgraph has skipped over errors while syncing.
+    """
+    subgraphError: _SubgraphErrorPolicy_! = deny
+    where: BeanCross_filter
+  ): [BeanCross!]!
+  beanDailySnapshot(
+    """
+    The block at which the query should be executed. Can either be a `{ hash: Bytes }` value containing a block hash, a `{ number: Int }` containing the block number, or a `{ number_gte: Int }` containing the minimum block number. In the case of `number_gte`, the query will be executed on the latest block only if the subgraph has progressed to or past the minimum block number. Defaults to the latest block when omitted.
+    """
+    block: Block_height
+    id: ID!
+
+    """
+    Set to `allow` to receive data even if the subgraph has skipped over errors while syncing.
+    """
+    subgraphError: _SubgraphErrorPolicy_! = deny
+  ): BeanDailySnapshot
+  beanDailySnapshots(
+    """
+    The block at which the query should be executed. Can either be a `{ hash: Bytes }` value containing a block hash, a `{ number: Int }` containing the block number, or a `{ number_gte: Int }` containing the minimum block number. In the case of `number_gte`, the query will be executed on the latest block only if the subgraph has progressed to or past the minimum block number. Defaults to the latest block when omitted.
+    """
+    block: Block_height
+    first: Int = 100
+    orderBy: BeanDailySnapshot_orderBy
+    orderDirection: OrderDirection
+    skip: Int = 0
+
+    """
+    Set to `allow` to receive data even if the subgraph has skipped over errors while syncing.
+    """
+    subgraphError: _SubgraphErrorPolicy_! = deny
+    where: BeanDailySnapshot_filter
+  ): [BeanDailySnapshot!]!
+  beanHourlySnapshot(
+    """
+    The block at which the query should be executed. Can either be a `{ hash: Bytes }` value containing a block hash, a `{ number: Int }` containing the block number, or a `{ number_gte: Int }` containing the minimum block number. In the case of `number_gte`, the query will be executed on the latest block only if the subgraph has progressed to or past the minimum block number. Defaults to the latest block when omitted.
+    """
+    block: Block_height
+    id: ID!
+
+    """
+    Set to `allow` to receive data even if the subgraph has skipped over errors while syncing.
+    """
+    subgraphError: _SubgraphErrorPolicy_! = deny
+  ): BeanHourlySnapshot
+  beanHourlySnapshots(
+    """
+    The block at which the query should be executed. Can either be a `{ hash: Bytes }` value containing a block hash, a `{ number: Int }` containing the block number, or a `{ number_gte: Int }` containing the minimum block number. In the case of `number_gte`, the query will be executed on the latest block only if the subgraph has progressed to or past the minimum block number. Defaults to the latest block when omitted.
+    """
+    block: Block_height
+    first: Int = 100
+    orderBy: BeanHourlySnapshot_orderBy
+    orderDirection: OrderDirection
+    skip: Int = 0
+
+    """
+    Set to `allow` to receive data even if the subgraph has skipped over errors while syncing.
+    """
+    subgraphError: _SubgraphErrorPolicy_! = deny
+    where: BeanHourlySnapshot_filter
+  ): [BeanHourlySnapshot!]!
+  beans(
+    """
+    The block at which the query should be executed. Can either be a `{ hash: Bytes }` value containing a block hash, a `{ number: Int }` containing the block number, or a `{ number_gte: Int }` containing the minimum block number. In the case of `number_gte`, the query will be executed on the latest block only if the subgraph has progressed to or past the minimum block number. Defaults to the latest block when omitted.
+    """
+    block: Block_height
+    first: Int = 100
+    orderBy: Bean_orderBy
+    orderDirection: OrderDirection
+    skip: Int = 0
+
+    """
+    Set to `allow` to receive data even if the subgraph has skipped over errors while syncing.
+    """
+    subgraphError: _SubgraphErrorPolicy_! = deny
+    where: Bean_filter
+  ): [Bean!]!
+  pool(
+    """
+    The block at which the query should be executed. Can either be a `{ hash: Bytes }` value containing a block hash, a `{ number: Int }` containing the block number, or a `{ number_gte: Int }` containing the minimum block number. In the case of `number_gte`, the query will be executed on the latest block only if the subgraph has progressed to or past the minimum block number. Defaults to the latest block when omitted.
+    """
+    block: Block_height
+    id: ID!
+
+    """
+    Set to `allow` to receive data even if the subgraph has skipped over errors while syncing.
+    """
+    subgraphError: _SubgraphErrorPolicy_! = deny
+  ): Pool
+  poolCross(
+    """
+    The block at which the query should be executed. Can either be a `{ hash: Bytes }` value containing a block hash, a `{ number: Int }` containing the block number, or a `{ number_gte: Int }` containing the minimum block number. In the case of `number_gte`, the query will be executed on the latest block only if the subgraph has progressed to or past the minimum block number. Defaults to the latest block when omitted.
+    """
+    block: Block_height
+    id: ID!
+
+    """
+    Set to `allow` to receive data even if the subgraph has skipped over errors while syncing.
+    """
+    subgraphError: _SubgraphErrorPolicy_! = deny
+  ): PoolCross
+  poolCrosses(
+    """
+    The block at which the query should be executed. Can either be a `{ hash: Bytes }` value containing a block hash, a `{ number: Int }` containing the block number, or a `{ number_gte: Int }` containing the minimum block number. In the case of `number_gte`, the query will be executed on the latest block only if the subgraph has progressed to or past the minimum block number. Defaults to the latest block when omitted.
+    """
+    block: Block_height
+    first: Int = 100
+    orderBy: PoolCross_orderBy
+    orderDirection: OrderDirection
+    skip: Int = 0
+
+    """
+    Set to `allow` to receive data even if the subgraph has skipped over errors while syncing.
+    """
+    subgraphError: _SubgraphErrorPolicy_! = deny
+    where: PoolCross_filter
+  ): [PoolCross!]!
+  poolDailySnapshot(
+    """
+    The block at which the query should be executed. Can either be a `{ hash: Bytes }` value containing a block hash, a `{ number: Int }` containing the block number, or a `{ number_gte: Int }` containing the minimum block number. In the case of `number_gte`, the query will be executed on the latest block only if the subgraph has progressed to or past the minimum block number. Defaults to the latest block when omitted.
+    """
+    block: Block_height
+    id: ID!
+
+    """
+    Set to `allow` to receive data even if the subgraph has skipped over errors while syncing.
+    """
+    subgraphError: _SubgraphErrorPolicy_! = deny
+  ): PoolDailySnapshot
+  poolDailySnapshots(
+    """
+    The block at which the query should be executed. Can either be a `{ hash: Bytes }` value containing a block hash, a `{ number: Int }` containing the block number, or a `{ number_gte: Int }` containing the minimum block number. In the case of `number_gte`, the query will be executed on the latest block only if the subgraph has progressed to or past the minimum block number. Defaults to the latest block when omitted.
+    """
+    block: Block_height
+    first: Int = 100
+    orderBy: PoolDailySnapshot_orderBy
+    orderDirection: OrderDirection
+    skip: Int = 0
+
+    """
+    Set to `allow` to receive data even if the subgraph has skipped over errors while syncing.
+    """
+    subgraphError: _SubgraphErrorPolicy_! = deny
+    where: PoolDailySnapshot_filter
+  ): [PoolDailySnapshot!]!
+  poolHourlySnapshot(
+    """
+    The block at which the query should be executed. Can either be a `{ hash: Bytes }` value containing a block hash, a `{ number: Int }` containing the block number, or a `{ number_gte: Int }` containing the minimum block number. In the case of `number_gte`, the query will be executed on the latest block only if the subgraph has progressed to or past the minimum block number. Defaults to the latest block when omitted.
+    """
+    block: Block_height
+    id: ID!
+
+    """
+    Set to `allow` to receive data even if the subgraph has skipped over errors while syncing.
+    """
+    subgraphError: _SubgraphErrorPolicy_! = deny
+  ): PoolHourlySnapshot
+  poolHourlySnapshots(
+    """
+    The block at which the query should be executed. Can either be a `{ hash: Bytes }` value containing a block hash, a `{ number: Int }` containing the block number, or a `{ number_gte: Int }` containing the minimum block number. In the case of `number_gte`, the query will be executed on the latest block only if the subgraph has progressed to or past the minimum block number. Defaults to the latest block when omitted.
+    """
+    block: Block_height
+    first: Int = 100
+    orderBy: PoolHourlySnapshot_orderBy
+    orderDirection: OrderDirection
+    skip: Int = 0
+
+    """
+    Set to `allow` to receive data even if the subgraph has skipped over errors while syncing.
+    """
+    subgraphError: _SubgraphErrorPolicy_! = deny
+    where: PoolHourlySnapshot_filter
+  ): [PoolHourlySnapshot!]!
+  pools(
+    """
+    The block at which the query should be executed. Can either be a `{ hash: Bytes }` value containing a block hash, a `{ number: Int }` containing the block number, or a `{ number_gte: Int }` containing the minimum block number. In the case of `number_gte`, the query will be executed on the latest block only if the subgraph has progressed to or past the minimum block number. Defaults to the latest block when omitted.
+    """
+    block: Block_height
+    first: Int = 100
+    orderBy: Pool_orderBy
+    orderDirection: OrderDirection
+    skip: Int = 0
+
+    """
+    Set to `allow` to receive data even if the subgraph has skipped over errors while syncing.
+    """
+    subgraphError: _SubgraphErrorPolicy_! = deny
+    where: Pool_filter
+  ): [Pool!]!
+  token(
+    """
+    The block at which the query should be executed. Can either be a `{ hash: Bytes }` value containing a block hash, a `{ number: Int }` containing the block number, or a `{ number_gte: Int }` containing the minimum block number. In the case of `number_gte`, the query will be executed on the latest block only if the subgraph has progressed to or past the minimum block number. Defaults to the latest block when omitted.
+    """
+    block: Block_height
+    id: ID!
+
+    """
+    Set to `allow` to receive data even if the subgraph has skipped over errors while syncing.
+    """
+    subgraphError: _SubgraphErrorPolicy_! = deny
+  ): Token
+  tokens(
+    """
+    The block at which the query should be executed. Can either be a `{ hash: Bytes }` value containing a block hash, a `{ number: Int }` containing the block number, or a `{ number_gte: Int }` containing the minimum block number. In the case of `number_gte`, the query will be executed on the latest block only if the subgraph has progressed to or past the minimum block number. Defaults to the latest block when omitted.
+    """
+    block: Block_height
+    first: Int = 100
+    orderBy: Token_orderBy
+    orderDirection: OrderDirection
+    skip: Int = 0
+
+    """
+    Set to `allow` to receive data even if the subgraph has skipped over errors while syncing.
+    """
+    subgraphError: _SubgraphErrorPolicy_! = deny
+    where: Token_filter
+  ): [Token!]!
+  twaOracle(
+    """
+    The block at which the query should be executed. Can either be a `{ hash: Bytes }` value containing a block hash, a `{ number: Int }` containing the block number, or a `{ number_gte: Int }` containing the minimum block number. In the case of `number_gte`, the query will be executed on the latest block only if the subgraph has progressed to or past the minimum block number. Defaults to the latest block when omitted.
+    """
+    block: Block_height
+    id: ID!
+
+    """
+    Set to `allow` to receive data even if the subgraph has skipped over errors while syncing.
+    """
+    subgraphError: _SubgraphErrorPolicy_! = deny
+  ): TwaOracle
+  twaOracles(
+    """
+    The block at which the query should be executed. Can either be a `{ hash: Bytes }` value containing a block hash, a `{ number: Int }` containing the block number, or a `{ number_gte: Int }` containing the minimum block number. In the case of `number_gte`, the query will be executed on the latest block only if the subgraph has progressed to or past the minimum block number. Defaults to the latest block when omitted.
+    """
+    block: Block_height
+    first: Int = 100
+    orderBy: TwaOracle_orderBy
+    orderDirection: OrderDirection
+    skip: Int = 0
+
+    """
+    Set to `allow` to receive data even if the subgraph has skipped over errors while syncing.
+    """
+    subgraphError: _SubgraphErrorPolicy_! = deny
+    where: TwaOracle_filter
+  ): [TwaOracle!]!
+}
+
+type Token {
+  """Number of decimals"""
+  decimals: BigInt!
+
+  """Smart contract address of the token"""
+  id: ID!
+
+  """Last USD price calculated"""
+  lastPriceUSD: BigDecimal!
+}
+
+input Token_filter {
+  """Filter for the block changed event."""
+  _change_block: BlockChangedFilter
+  and: [Token_filter]
+  decimals: BigInt
+  decimals_gt: BigInt
+  decimals_gte: BigInt
+  decimals_in: [BigInt!]
+  decimals_lt: BigInt
+  decimals_lte: BigInt
+  decimals_not: BigInt
+  decimals_not_in: [BigInt!]
+  id: ID
+  id_gt: ID
+  id_gte: ID
+  id_in: [ID!]
+  id_lt: ID
+  id_lte: ID
+  id_not: ID
+  id_not_in: [ID!]
+  lastPriceUSD: BigDecimal
+  lastPriceUSD_gt: BigDecimal
+  lastPriceUSD_gte: BigDecimal
+  lastPriceUSD_in: [BigDecimal!]
+  lastPriceUSD_lt: BigDecimal
+  lastPriceUSD_lte: BigDecimal
+  lastPriceUSD_not: BigDecimal
+  lastPriceUSD_not_in: [BigDecimal!]
+  or: [Token_filter]
+}
+
+enum Token_orderBy {
+  decimals
+  id
+  lastPriceUSD
+}
+
+type TwaOracle {
+  cumulativeWellReserves: Bytes!
+  cumulativeWellReservesBlock: BigInt!
+  cumulativeWellReservesPrev: Bytes!
+  cumulativeWellReservesPrevBlock: BigInt!
+  cumulativeWellReservesPrevTime: BigInt!
+  cumulativeWellReservesTime: BigInt!
+  id: ID!
+  lastBalances: [BigInt!]!
+  lastSun: BigInt!
+  lastUpdated: BigInt!
+  pool: Pool!
+  priceCumulativeLast: [BigInt!]!
+  priceCumulativeSun: [BigInt!]!
+}
+
+input TwaOracle_filter {
+  """Filter for the block changed event."""
+  _change_block: BlockChangedFilter
+  and: [TwaOracle_filter]
+  cumulativeWellReserves: Bytes
+  cumulativeWellReservesBlock: BigInt
+  cumulativeWellReservesBlock_gt: BigInt
+  cumulativeWellReservesBlock_gte: BigInt
+  cumulativeWellReservesBlock_in: [BigInt!]
+  cumulativeWellReservesBlock_lt: BigInt
+  cumulativeWellReservesBlock_lte: BigInt
+  cumulativeWellReservesBlock_not: BigInt
+  cumulativeWellReservesBlock_not_in: [BigInt!]
+  cumulativeWellReservesPrev: Bytes
+  cumulativeWellReservesPrevBlock: BigInt
+  cumulativeWellReservesPrevBlock_gt: BigInt
+  cumulativeWellReservesPrevBlock_gte: BigInt
+  cumulativeWellReservesPrevBlock_in: [BigInt!]
+  cumulativeWellReservesPrevBlock_lt: BigInt
+  cumulativeWellReservesPrevBlock_lte: BigInt
+  cumulativeWellReservesPrevBlock_not: BigInt
+  cumulativeWellReservesPrevBlock_not_in: [BigInt!]
+  cumulativeWellReservesPrevTime: BigInt
+  cumulativeWellReservesPrevTime_gt: BigInt
+  cumulativeWellReservesPrevTime_gte: BigInt
+  cumulativeWellReservesPrevTime_in: [BigInt!]
+  cumulativeWellReservesPrevTime_lt: BigInt
+  cumulativeWellReservesPrevTime_lte: BigInt
+  cumulativeWellReservesPrevTime_not: BigInt
+  cumulativeWellReservesPrevTime_not_in: [BigInt!]
+  cumulativeWellReservesPrev_contains: Bytes
+  cumulativeWellReservesPrev_gt: Bytes
+  cumulativeWellReservesPrev_gte: Bytes
+  cumulativeWellReservesPrev_in: [Bytes!]
+  cumulativeWellReservesPrev_lt: Bytes
+  cumulativeWellReservesPrev_lte: Bytes
+  cumulativeWellReservesPrev_not: Bytes
+  cumulativeWellReservesPrev_not_contains: Bytes
+  cumulativeWellReservesPrev_not_in: [Bytes!]
+  cumulativeWellReservesTime: BigInt
+  cumulativeWellReservesTime_gt: BigInt
+  cumulativeWellReservesTime_gte: BigInt
+  cumulativeWellReservesTime_in: [BigInt!]
+  cumulativeWellReservesTime_lt: BigInt
+  cumulativeWellReservesTime_lte: BigInt
+  cumulativeWellReservesTime_not: BigInt
+  cumulativeWellReservesTime_not_in: [BigInt!]
+  cumulativeWellReserves_contains: Bytes
+  cumulativeWellReserves_gt: Bytes
+  cumulativeWellReserves_gte: Bytes
+  cumulativeWellReserves_in: [Bytes!]
+  cumulativeWellReserves_lt: Bytes
+  cumulativeWellReserves_lte: Bytes
+  cumulativeWellReserves_not: Bytes
+  cumulativeWellReserves_not_contains: Bytes
+  cumulativeWellReserves_not_in: [Bytes!]
+  id: ID
+  id_gt: ID
+  id_gte: ID
+  id_in: [ID!]
+  id_lt: ID
+  id_lte: ID
+  id_not: ID
+  id_not_in: [ID!]
+  lastBalances: [BigInt!]
+  lastBalances_contains: [BigInt!]
+  lastBalances_contains_nocase: [BigInt!]
+  lastBalances_not: [BigInt!]
+  lastBalances_not_contains: [BigInt!]
+  lastBalances_not_contains_nocase: [BigInt!]
+  lastSun: BigInt
+  lastSun_gt: BigInt
+  lastSun_gte: BigInt
+  lastSun_in: [BigInt!]
+  lastSun_lt: BigInt
+  lastSun_lte: BigInt
+  lastSun_not: BigInt
+  lastSun_not_in: [BigInt!]
+  lastUpdated: BigInt
+  lastUpdated_gt: BigInt
+  lastUpdated_gte: BigInt
+  lastUpdated_in: [BigInt!]
+  lastUpdated_lt: BigInt
+  lastUpdated_lte: BigInt
+  lastUpdated_not: BigInt
+  lastUpdated_not_in: [BigInt!]
+  or: [TwaOracle_filter]
+  pool: String
+  pool_: Pool_filter
+  pool_contains: String
+  pool_contains_nocase: String
+  pool_ends_with: String
+  pool_ends_with_nocase: String
+  pool_gt: String
+  pool_gte: String
+  pool_in: [String!]
+  pool_lt: String
+  pool_lte: String
+  pool_not: String
+  pool_not_contains: String
+  pool_not_contains_nocase: String
+  pool_not_ends_with: String
+  pool_not_ends_with_nocase: String
+  pool_not_in: [String!]
+  pool_not_starts_with: String
+  pool_not_starts_with_nocase: String
+  pool_starts_with: String
+  pool_starts_with_nocase: String
+  priceCumulativeLast: [BigInt!]
+  priceCumulativeLast_contains: [BigInt!]
+  priceCumulativeLast_contains_nocase: [BigInt!]
+  priceCumulativeLast_not: [BigInt!]
+  priceCumulativeLast_not_contains: [BigInt!]
+  priceCumulativeLast_not_contains_nocase: [BigInt!]
+  priceCumulativeSun: [BigInt!]
+  priceCumulativeSun_contains: [BigInt!]
+  priceCumulativeSun_contains_nocase: [BigInt!]
+  priceCumulativeSun_not: [BigInt!]
+  priceCumulativeSun_not_contains: [BigInt!]
+  priceCumulativeSun_not_contains_nocase: [BigInt!]
+}
+
+enum TwaOracle_orderBy {
+  cumulativeWellReserves
+  cumulativeWellReservesBlock
+  cumulativeWellReservesPrev
+  cumulativeWellReservesPrevBlock
+  cumulativeWellReservesPrevTime
+  cumulativeWellReservesTime
+  id
+  lastBalances
+  lastSun
+  lastUpdated
+  pool
+  pool__crosses
+  pool__deltaBeans
+  pool__id
+  pool__lastCross
+  pool__lastPrice
+  pool__lastSeason
+  pool__liquidityUSD
+  pool__volume
+  pool__volumeUSD
+  priceCumulativeLast
+  priceCumulativeSun
+}
+
+type _Block_ {
+  """The hash of the block"""
+  hash: Bytes
+
+  """The block number"""
+  number: Int!
+
+  """Integer representation of the timestamp stored in blocks for the chain"""
+  timestamp: Int
+}
+
+"""The type for the top-level _meta field"""
+type _Meta_ {
+  "Information about a specific subgraph block. The hash of the block\nwill be null if the _meta field has a block constraint that asks for\na block number. It will be filled if the _meta field has no block constraint\nand therefore asks for the latest  block\n"
+  block: _Block_!
+
+  """The deployment ID"""
+  deployment: String!
+
+  """If `true`, the subgraph encountered indexing errors at some past block"""
+  hasIndexingErrors: Boolean!
+}
+
+enum _SubgraphErrorPolicy_ {
+  """Data will be returned even if the subgraph has indexing errors"""
+  allow
+
+  """
+  If the subgraph has indexing errors, data will be omitted. The default.
+  """
+  deny
+}

@@ -3,7 +3,6 @@ import BigNumber from 'bignumber.js';
 import React, { useCallback, useMemo } from 'react';
 import useFarmerBalancesBreakdown from '~/hooks/farmer/useFarmerBalancesBreakdown';
 import { AppState } from '~/state';
-
 import useTabs from '~/hooks/display/useTabs';
 import TokenIcon from '~/components/Common/TokenIcon';
 import { SEEDS, STALK } from '~/constants/tokens';
@@ -22,42 +21,6 @@ import useMigrationNeeded from '~/hooks/farmer/useMigrationNeeded';
 import stalkIconWinter from '~/img/beanstalk/stalk-icon-green.svg';
 import seedIconWinter from '~/img/beanstalk/seed-icon-green.svg';
 import { MigrateTab } from '~/components/Silo/MigrateTab';
-import useFarmerSiloBalances from '~/hooks/farmer/useFarmerSiloBalances';
-
-const depositStats = (s: BigNumber, v: BigNumber[], d: string) => (
-  <Stat
-    title="Value Deposited"
-    titleTooltip={
-      <>
-        The historical USD value of your Silo Deposits. <br />
-        <Typography variant="bodySmall">
-          Note: Unripe assets are valued based on the current Chop Rate. Earned
-          Beans are shown upon Plant.
-        </Typography>
-      </>
-    }
-    color="primary"
-    subtitle={`Season ${s.toString()}`}
-    secondSubtitle={d}
-    amount={displayUSD(v[0])}
-    amountIcon={undefined}
-    gap={0.25}
-    sx={{ ml: 0 }}
-  />
-);
-
-const seedsStats = (s: BigNumber, v: BigNumber[], d: string) => (
-  <Stat
-    title="Seed Balance"
-    titleTooltip="Seeds are illiquid tokens that yield 1/10,000 Stalk each Season."
-    subtitle={`Season ${s.toString()}`}
-    secondSubtitle={d}
-    amount={displayStalk(v[0])}
-    sx={{ minWidth: 180, ml: 0 }}
-    amountIcon={undefined}
-    gap={0.25}
-  />
-);
 
 const SLUGS = ['migrate', 'deposits', 'stalk', 'seeds'];
 const altSLUGS = ['deposits', 'stalk', 'seeds'];
@@ -72,7 +35,6 @@ const Overview: FC<{
   const account = useAccount();
   const { data, loading } = useFarmerSiloHistory(account, false, true);
   const migrationNeeded = useMigrationNeeded();
-  const siloBalance = useFarmerSiloBalances();
   //
   const [tab, handleChange] = useTabs(
     migrationNeeded ? SLUGS : altSLUGS,
@@ -85,25 +47,74 @@ const Overview: FC<{
       ? farmerSilo.stalk.active.div(beanstalkSilo.stalk.total)
       : ZERO_BN;
 
-  const deposits = Object.values(siloBalance)
-    .map((token) => token.deposited.crates)
-    .flat(Infinity);
+  const stackedChartData: any[] = useMemo(() => [], []);
+  useMemo(() => {
+    if (data.stalk.length > 0) {
+      stackedChartData.length = 0;
+      data.stalk.forEach((_, index) => {
+        const newData = {
+          season: data.stalk[index].season,
+          date: data.stalk[index].date,
+          stalk: data.stalk[index].value,
+          grownStalk: data.grownStalk[index].value,
+          value: data.stalk[index].value + data.grownStalk[index].value,
+        };
+        stackedChartData.push(newData);
+      });
+    };
+  }, [data.stalk, data.grownStalk, stackedChartData]);
 
-  const totalStalkGrown = farmerSilo.stalk.grown;
+  const keysAndTooltips = {
+    'stalk': 'Stalk',
+    'grownStalk': 'Grown Stalk'
+  };
 
-  // deposits.forEach((deposit: any) => {
-  //   totalStalkGrown = totalStalkGrown.plus(deposit.stalk.grown)
-  // })
+  const depositStats = useCallback((dataPoint: BaseDataPoint | undefined) => {
+    const latestData = data.deposits[data.deposits.length - 1];
 
-  const stalkStats = useCallback(
-    (s: BigNumber, v: BigNumber[], d: string) => (
+    const _season = dataPoint ? dataPoint.season : season;
+    const _date = dataPoint ? dataPoint.date : latestData ? latestData.date : '';
+    const _value = dataPoint ? BigNumber(dataPoint.value) : breakdown.states.deposited.value;
+
+    return (
+      <Stat
+        title="Value Deposited"
+        titleTooltip={
+          <>
+            The historical USD value of your Silo Deposits. <br />
+            <Typography variant="bodySmall">
+              Note: Unripe assets are valued based on the current Chop Rate. Earned
+              Beans are shown upon Plant.
+            </Typography>
+          </>
+        }
+        color="primary"
+        subtitle={`Season ${_season.toString()}`}
+        secondSubtitle={_date ? _date.toLocaleString(undefined, { dateStyle: 'short', timeStyle: 'short' }) : '-'}
+        amount={displayUSD(_value)}
+        amountIcon={undefined}
+        gap={0.25}
+        sx={{ ml: 0 }}
+      />
+    )},
+    [breakdown.states.deposited.value, data.deposits, season]
+  );
+
+  const stalkStats = useCallback((dataPoint: BaseDataPoint | undefined) => {
+    const latestData = stackedChartData[stackedChartData.length - 1];
+
+    const _season = dataPoint ? dataPoint.season : season;
+    const _date = dataPoint ? dataPoint.date : latestData ? latestData.date : '';
+    const _stalkValue = dataPoint ? dataPoint.stalk : account ? farmerSilo.stalk.active : '';
+    const _grownStalkValue = dataPoint ? dataPoint.grownStalk : latestData && account ? latestData.grownStalk : '';
+    return (
       <>
         <Stat
           title="Stalk Balance"
           titleTooltip="Stalk is the governance token of the Beanstalk DAO. Stalk entitles holders to passive interest in the form of a share of future Bean mints, and the right to propose and vote on BIPs. Your Stalk is forfeited when you Withdraw your Deposited assets from the Silo."
-          subtitle={`Season ${s.toString()}`}
-          secondSubtitle={d}
-          amount={displayStalk(v[0])}
+          subtitle={`Season ${_season.toString()}`}
+          secondSubtitle={_date ? _date.toLocaleString(undefined, { dateStyle: 'short', timeStyle: 'short' }) : '-'}
+          amount={_stalkValue ? displayStalk(BigNumber(_stalkValue, 10)) : '0'}
           color="text.primary"
           sx={{ minWidth: 220, ml: 0 }}
           gap={0.25}
@@ -111,22 +122,44 @@ const Overview: FC<{
         <Stat
           title="Stalk Ownership"
           titleTooltip="Your current ownership of Beanstalk is displayed as a percentage. Ownership is determined by your proportional ownership of the total Stalk supply."
-          amount={displayPercentage(ownership.multipliedBy(100))}
+          amount={account ? displayPercentage(ownership.multipliedBy(100)) : '0'}
           color="text.primary"
           gap={0.25}
           sx={{ minWidth: 200, ml: 0 }}
         />
         <Stat
-          title="Total Stalk Grown"
-          titleTooltip="The total number of Mown and Mowable Grown Stalk your Deposits have accrued."
-          amount={displayStalk(totalStalkGrown)}
+          title="Grown Stalk"
+          titleTooltip="The total number of Mowable Grown Stalk your Deposits have accrued."
+          amount={account && _grownStalkValue ? displayStalk(BigNumber( _grownStalkValue, 10)) : '0'}
           color="text.primary"
           gap={0.25}
           sx={{ minWidth: 120, ml: 0 }}
         />
       </>
-    ),
-    [ownership, totalStalkGrown]
+    )},
+    [farmerSilo.stalk.active, season, stackedChartData, ownership, account]
+  );
+
+  const seedsStats = useCallback((dataPoint: BaseDataPoint | undefined) => {
+    const latestData = data.deposits[data.deposits.length - 1];
+
+    const _season = dataPoint ? dataPoint.season : season;
+    const _date = dataPoint ? dataPoint.date : latestData ? latestData.date : '';
+    const _value = dataPoint ? BigNumber(dataPoint.value, 10) : farmerSilo.seeds.active;
+
+    return (
+      <Stat
+        title="Seed Balance"
+        titleTooltip="Seeds are illiquid tokens that yield 1/10,000 Stalk each Season."
+        subtitle={`Season ${_season.toString()}`}
+        secondSubtitle={_date ? _date.toLocaleString(undefined, { dateStyle: 'short', timeStyle: 'short' }) : '-'}
+        amount={displayStalk(_value)}
+        sx={{ minWidth: 180, ml: 0 }}
+        amountIcon={undefined}
+        gap={0.25}
+      />
+    )},
+    [data.deposits, farmerSilo.seeds.active, season]
   );
 
   return (
@@ -182,19 +215,9 @@ const Overview: FC<{
         <OverviewPlot
           label="Silo Deposits"
           account={account}
-          current={useMemo(
-            () => [breakdown.states.deposited.value],
-            [breakdown.states.deposited.value]
-          )}
-          date={
-            data.deposits[data.deposits.length - 1]
-              ? data.deposits[data.deposits.length - 1].date
-              : ''
-          }
           series={
             useMemo(() => [data.deposits], [data.deposits]) as BaseDataPoint[][]
           }
-          season={season}
           stats={depositStats}
           loading={loading}
           empty={breakdown.states.deposited.value.eq(0)}
@@ -206,27 +229,9 @@ const Overview: FC<{
         <OverviewPlot
           label="Stalk Ownership"
           account={account}
-          current={useMemo(
-            () => [
-              farmerSilo.stalk.active,
-              // Show zero while these data points are loading
-              ownership,
-            ],
-            [farmerSilo.stalk.active, ownership]
-          )}
-          date={
-            data.stalk[data.stalk.length - 1]
-              ? data.stalk[data.stalk.length - 1].date
-              : ''
-          }
-          series={useMemo(
-            () => [
-              data.stalk,
-              // mockOwnershipPctData
-            ],
-            [data.stalk]
-          )}
-          season={season}
+          series={[stackedChartData]}
+          useStackedChart
+          keysAndTooltips={keysAndTooltips}
           stats={stalkStats}
           loading={loading}
           empty={farmerSilo.stalk.total.lte(0)}
@@ -238,17 +243,7 @@ const Overview: FC<{
         <OverviewPlot
           label="Seeds Ownership"
           account={account}
-          current={useMemo(
-            () => [farmerSilo.seeds.active],
-            [farmerSilo.seeds.active]
-          )}
           series={useMemo(() => [data.seeds], [data.seeds])}
-          date={
-            data.seeds[data.seeds.length - 1]
-              ? data.seeds[data.seeds.length - 1].date
-              : ''
-          }
-          season={season}
           stats={seedsStats}
           loading={loading}
           empty={farmerSilo.seeds.total.lte(0)}

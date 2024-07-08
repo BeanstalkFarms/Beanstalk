@@ -256,6 +256,16 @@ library LibSilo {
         s.s.roots = s.s.roots.sub(roots);
         s.a[account].roots = s.a[account].roots.sub(roots);
 
+        // If it is Raining and the account now has less roots than the
+        // account's current rain roots, set the account's rain roots
+        // to the account's current roots and subtract the difference
+        // from Beanstalk's total rain roots.
+        if (s.season.raining && s.a[account].sop.roots > s.a[account].roots) {
+            uint256 deltaRoots = s.a[account].sop.roots - s.a[account].roots;
+            s.a[account].sop.roots = s.a[account].roots;
+            s.r.roots = s.r.roots.sub(deltaRoots);
+        }
+
         // emit event.
         emit StalkBalanceChanged(account, -int256(stalk), -int256(roots));
     }
@@ -268,7 +278,7 @@ library LibSilo {
         address account,
         uint128 stalk,
         LibGerminate.Germinate germ
-    ) internal {
+    ) external {
         AppStorage storage s = LibAppStorage.diamondStorage();
 
         if (germ == LibGerminate.Germinate.ODD) {
@@ -355,35 +365,76 @@ library LibSilo {
         address recipient,
         address token,
         AssetsRemoved memory ar
-    ) internal {
+    ) external {
         AppStorage storage s = LibAppStorage.diamondStorage();
         uint256 stalkPerBDV = s.ss[token].stalkIssuedPerBdv;
 
-        // a germinating deposit may have active grown stalk,
-        // but no active stalk from bdv.
-        if (ar.active.stalk > 0) {
-            ar.active.stalk = ar.active.stalk.add(ar.active.bdv.mul(stalkPerBDV));
-            transferStalk(sender, recipient, ar.active.stalk);
-        }
-
         if (ar.odd.bdv > 0) {
-            ar.odd.stalk = ar.odd.stalk.add(ar.odd.bdv.mul(stalkPerBDV));
+            uint256 initialStalk = ar.odd.bdv.mul(stalkPerBDV);
+            
+            if (token == C.BEAN) {
+                // check whether the Germinating Stalk transferred exceeds the farmers
+                // Germinating Stalk. If so, the difference is considered from Earned 
+                // Beans. Deduct the odd BDV and increment the activeBDV by the difference.
+                (uint256 senderGerminatingStalk, uint256 earnedBeansStalk) = checkForEarnedBeans(
+                    sender,
+                    initialStalk,
+                    LibGerminate.Germinate.ODD
+                );
+                if (earnedBeansStalk > 0) {
+                    // increment the active stalk by the earned beans active stalk.
+                    // decrement the germinatingStalk stalk by the earned beans active stalk.
+                    ar.active.stalk = ar.active.stalk.add(earnedBeansStalk);
+                    initialStalk = senderGerminatingStalk;
+                }
+            }
+            // the inital Stalk issued for a Deposit is the 
+            // only Stalk that can Germinate (i.e, Grown Stalk does not Germinate).
             transferGerminatingStalk(
                 sender,
                 recipient,
-                ar.odd.stalk,
+                initialStalk,
                 LibGerminate.Germinate.ODD
             );
         }
 
         if (ar.even.bdv > 0) {
-            ar.even.stalk = ar.even.stalk.add(ar.even.bdv.mul(stalkPerBDV));
+            uint256 initialStalk = ar.even.bdv.mul(stalkPerBDV);
+           
+            if (token == C.BEAN) {
+                 // check whether the Germinating Stalk transferred exceeds the farmers
+                // Germinating Stalk. If so, the difference is considered from Earned 
+                // Beans. Deduct the even BDV and increment the active BDV by the difference.
+                (uint256 senderGerminatingStalk, uint256 earnedBeansStalk) = checkForEarnedBeans(
+                    sender,
+                    initialStalk,
+                    LibGerminate.Germinate.EVEN
+                );
+                if (earnedBeansStalk > 0) {
+                    // increment the active stalk by the earned beans active stalk.
+                    // decrement the germinatingStalk stalk by the earned beans active stalk.
+                    ar.active.stalk = ar.active.stalk.add(earnedBeansStalk);
+                    initialStalk = senderGerminatingStalk;
+                }
+            }
+            // the inital Stalk issued for a Deposit is the 
+            // only Stalk that can Germinate (i.e, Grown Stalk does not Germinate).
             transferGerminatingStalk(
                 sender,
                 recipient,
-                ar.even.stalk,
+                initialStalk,
                 LibGerminate.Germinate.EVEN
             );
+        }
+
+        // a Germinating Deposit may have Grown Stalk (which is not Germinating),
+        // but the base Stalk is still Germinating.
+        ar.active.stalk = ar.active.stalk // Grown Stalk from non-Germinating Deposits, and base stalk from Earned Bean Deposits.
+            .add(ar.active.bdv.mul(stalkPerBDV)) // base stalk from non-germinating deposits.
+            .add(ar.even.stalk) // grown stalk from Even Germinating Deposits.
+            .add(ar.odd.stalk); // grown stalk from Odd Germinating Deposits.
+        if (ar.active.stalk > 0) {
+            transferStalk(sender, recipient, ar.active.stalk);
         }
     }
 
@@ -415,21 +466,23 @@ library LibSilo {
             migrateStems(account);
         }
 
+        uint32 currentSeason = s.season.current;
+        
+        // End account germination.
+        if (lastUpdate < currentSeason) {
+            LibGerminate.endAccountGermination(account, lastUpdate, currentSeason);
+        }
+
         // sop data only needs to be updated once per season,
         // if it started raining and it's still raining, or there was a sop
-        uint32 currentSeason = s.season.current;
         if (s.season.rainStart > s.season.stemStartSeason) {
-            if (lastUpdate <= s.season.rainStart && lastUpdate <= currentSeason) {
+            if ((lastUpdate <= s.season.rainStart || s.a[account].lastRain > 0) && lastUpdate <= currentSeason) {
                 // Increments `plenty` for `account` if a Flood has occured.
                 // Saves Rain Roots for `account` if it is Raining.
                 handleRainAndSops(account, lastUpdate);
             }
         }
         
-        // End account germination.
-        if (lastUpdate < currentSeason) {
-            LibGerminate.endAccountGermination(account, lastUpdate, currentSeason);
-        }
         // Calculate the amount of Grown Stalk claimable by `account`.
         // Increase the account's balance of Stalk and Roots.
         __mow(account, token);
@@ -484,16 +537,16 @@ library LibSilo {
      */
     function handleRainAndSops(address account, uint32 lastUpdate) private {
         AppStorage storage s = LibAppStorage.diamondStorage();
+        // If a Sop has occured since last update, calculate rewards and set last Sop.
+        if (s.season.lastSopSeason > lastUpdate) {
+            s.a[account].sop.plenty = balanceOfPlenty(account);
+            s.a[account].lastSop = s.season.lastSop;
+        }
         // If no roots, reset Sop counters variables
         if (s.a[account].roots == 0) {
             s.a[account].lastSop = s.season.rainStart;
             s.a[account].lastRain = 0;
             return;
-        }
-        // If a Sop has occured since last update, calculate rewards and set last Sop.
-        if (s.season.lastSopSeason > lastUpdate) {
-            s.a[account].sop.plenty = balanceOfPlenty(account);
-            s.a[account].lastSop = s.season.lastSop;
         }
         if (s.season.raining) {
             // If rain started after update, set account variables to track rain.
@@ -591,8 +644,9 @@ library LibSilo {
         (germ, stemTip) = LibGerminate.getGerminationState(token, stem);
         bdvRemoved = LibTokenSilo.removeDepositFromAccount(account, token, stem, amount);
 
-        // the initial and grown stalk are as there are instances where the initial stalk is
-        // germinating, but the grown stalk is not.
+        // the initial and grown stalk are seperated as there are instances
+        // where the initial stalk issued for a deposit is germinating. Grown stalk never germinates,
+        // and thus is not included in the germinating stalk.
         initialStalkRemoved = bdvRemoved.mul(s.ss[token].stalkIssuedPerBdv);
 
         grownStalkRemoved = stalkReward(stem, stemTip, bdvRemoved.toUint128());
@@ -810,5 +864,34 @@ library LibSilo {
             }
         }
         return false;
+    }
+
+    /**
+     * @notice Returns the amount of Germinating Stalk 
+     * for a given Germinate enum.
+     * @dev When a Farmer attempts to withdraw Beans from a Deposit that has a Germinating Stem,
+     * `checkForEarnedBeans` is called to determine how many of the Beans were Planted vs Deposited.
+     * If a Farmer withdraws a Germinating Deposit with Earned Beans, only subtract the Germinating Beans
+     * from the Germinating Balances
+     * @return germinatingStalk stalk that is germinating for a given Germinate enum.
+     * @return earnedBeanStalk the earned bean portion of stalk for a given Germinate enum.
+     */
+    function checkForEarnedBeans(
+        address account,
+        uint256 stalk,
+        LibGerminate.Germinate germ
+    ) internal view returns (uint256 germinatingStalk, uint256 earnedBeanStalk) {
+        AppStorage storage s = LibAppStorage.diamondStorage();
+        uint256 farmerGerminatingStalk;
+        if (germ == LibGerminate.Germinate.ODD) {
+            farmerGerminatingStalk = s.a[account].farmerGerminating.odd;
+        } else {
+            farmerGerminatingStalk = s.a[account].farmerGerminating.even;
+        }
+        if (stalk > farmerGerminatingStalk) {
+            return (farmerGerminatingStalk, stalk.sub(farmerGerminatingStalk));
+        } else {
+            return (stalk, 0);
+        }
     }
 }

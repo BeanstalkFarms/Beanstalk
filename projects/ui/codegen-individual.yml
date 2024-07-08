@@ -1,0 +1,30 @@
+# Use this file to generate schemas for individual subgraphs.
+# This is particularly useful when a schema that isn't in production needs to be used.
+# A more optimal solution would involve generating a different schema for each entry in src/graph.endpoints.ts.
+overwrite: true
+generates:
+  ./src/graph/schema-beanstalk.graphql:
+    schema:
+      - https://graph.node.bean.money/subgraphs/name/beanstalk
+    plugins:
+      - "schema-ast"
+  #./src/graph/schema-bean.graphql:
+  #  schema:
+  #    - https://graph.node.bean.money/subgraphs/name/bean
+  #  plugins:
+  #    - "schema-ast"
+  ./src/graph/schema-snapshot1.graphql:
+    schema:
+      - https://hub.snapshot.org/graphql
+    plugins:
+      - "schema-ast"
+  ./src/graph/schema-snapshot2.graphql:
+    schema:
+      - https://api.thegraph.com/subgraphs/name/snapshot-labs/snapshot
+    plugins:
+      - "schema-ast"
+  ./src/graph/schema-beanft.graphql:
+    schema:
+      - https://graph.node.bean.money/subgraphs/name/beanft
+    plugins:
+      - "schema-ast"

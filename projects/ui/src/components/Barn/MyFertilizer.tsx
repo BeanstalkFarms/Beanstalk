@@ -22,12 +22,12 @@ import { displayFullBN, MaxBN, MinBN } from '~/util/Tokens';
 import { SPROUTS, RINSABLE_SPROUTS } from '~/constants/tokens';
 import { ONE_BN, ZERO_BN } from '~/constants';
 import { AppState } from '~/state';
-import TokenIcon from '../Common/TokenIcon';
-import { FontSize } from '../App/muiTheme';
 import { FertilizerBalance } from '~/state/farmer/barn';
 import Row from '~/components/Common/Row';
 
 import { FC } from '~/types';
+import { FontSize } from '../App/muiTheme';
+import TokenIcon from '../Common/TokenIcon';
 
 enum TabState {
   ACTIVE = 0,

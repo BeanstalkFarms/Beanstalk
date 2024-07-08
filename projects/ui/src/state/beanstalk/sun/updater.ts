@@ -17,6 +17,7 @@ import {
   updateSeasonResult,
   updateSeasonTime,
 } from './actions';
+import useSdk, { useRefreshSeeds } from '~/hooks/sdk';
 
 export const useSun = () => {
   const dispatch = useDispatch();
@@ -78,6 +79,7 @@ export const useSun = () => {
 
 const SunUpdater = () => {
   const [fetch, clear] = useSun();
+  const sdk = useSdk();
   const dispatch = useDispatch();
   const season = useSeason();
   const next = useSelector<AppState, DateTime>(
@@ -86,6 +88,8 @@ const SunUpdater = () => {
   const awaiting = useSelector<AppState, boolean>(
     (state) => state._beanstalk.sun.sunrise.awaiting
   );
+
+  const refreshSeeds = useRefreshSeeds();
 
   useEffect(() => {
     if (awaiting === false) {
@@ -115,11 +119,12 @@ const SunUpdater = () => {
           toast.success(
             `The Sun has risen. It is now Season ${newSeason.current.toString()}.`
           );
+          await refreshSeeds(sdk);
         }
       })();
     }, 3000);
     return () => clearInterval(i);
-  }, [dispatch, awaiting, season, next, fetch]);
+  }, [dispatch, awaiting, season, next, fetch, refreshSeeds, sdk]);
 
   // Fetch when chain changes
   useEffect(() => {

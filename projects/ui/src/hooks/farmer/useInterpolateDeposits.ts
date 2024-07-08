@@ -3,7 +3,7 @@ import { useMemo } from 'react';
 import { useSelector } from 'react-redux';
 import {
   useFarmerSiloAssetSnapshotsQuery,
-  useSeasonalPriceQuery,
+  useSeasonalInstantPriceQuery,
 } from '~/generated/graphql';
 import { AppState } from '~/state';
 import {
@@ -13,7 +13,7 @@ import {
 
 const useInterpolateDeposits = (
   siloAssetsQuery: ReturnType<typeof useFarmerSiloAssetSnapshotsQuery>,
-  priceQuery: ReturnType<typeof useSeasonalPriceQuery>,
+  priceQuery: ReturnType<typeof useSeasonalInstantPriceQuery>,
   itemizeByToken: boolean = false
 ) => {
   const unripe = useSelector<AppState, AppState['_bean']['unripe']>(

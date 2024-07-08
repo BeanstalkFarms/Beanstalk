@@ -11,6 +11,7 @@ import {
 import { BeanstalkSDK } from "../BeanstalkSDK";
 import { EventManager } from "src/lib/events/EventManager";
 import { ZERO_BN } from "src/constants";
+import { TokenValue } from "@beanstalk/sdk-core";
 
 // ----------------------------------------
 
@@ -394,7 +395,7 @@ export class EventProcessor {
 
   AddDeposit(event: EventManager.Simplify<AddDepositEvent>) {
     const token = this.getToken(event);
-    const stem = event.args.stem.toString();
+    const stem = this.migrateStem(event.args.stem);
 
     if (!this.whitelist.has(token)) throw new Error(`Attempted to process an event with an unknown token: ${token}`);
 
@@ -407,14 +408,22 @@ export class EventProcessor {
 
   RemoveDeposit(event: EventManager.Simplify<RemoveDepositEvent>) {
     const token = this.getToken(event);
-    const stem = event.args.stem.toString();
+    const stem = this.migrateStem(event.args.stem);
     this._removeDeposit(stem, token, event.args.amount);
   }
 
   RemoveDeposits(event: EventManager.Simplify<RemoveDepositsEvent>) {
     const token = this.getToken(event);
     event.args.stems.forEach((stem, index) => {
-      this._removeDeposit(stem.toString(), token, event.args.amounts[index]);
+      this._removeDeposit(this.migrateStem(stem), token, event.args.amounts[index]);
     });
+  }
+
+  migrateStem(stem: ethers.BigNumber): string {
+    let stemTV = TokenValue.fromBlockchain(stem, 0);
+    if (stemTV.abs().lt(10 ** 6)) stemTV = stemTV.mul(10 ** 6);
+    const migratedStem = stemTV.toHuman();
+
+    return migratedStem;
   }
 }
