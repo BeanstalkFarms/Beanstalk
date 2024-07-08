@@ -1,4 +1,4 @@
-var fs = require('fs');
+var fs = require("fs");
 
 const {
   ZERO_ADDRESS,
@@ -26,104 +26,98 @@ const {
   USDT,
   ETH_USD_CHAINLINK_AGGREGATOR,
   WSTETH
-} = require('../test/utils/constants');
-const { impersonateSigner, mintEth } = require('../utils');
-const { to18 } = require('../test/utils/helpers');
+} = require("../test/utils/constants");
+const { impersonateSigner, mintEth } = require("../utils");
+const { to18 } = require("../test/utils/helpers");
 
-const { getSigner } = '../utils'
+const { getSigner } = "../utils";
 
 async function curve() {
   // Deploy 3 Curveadd
-  await usdc()
+  await usdc();
 
   await impersonateContractOnPath(
     `./artifacts/contracts/mocks/curve/Mock3Curve.sol/Mock3Curve.json`,
     THREE_POOL
-  )
+  );
 
-  const threePool = await ethers.getContractAt('Mock3Curve', THREE_POOL)
-  await threePool.set_virtual_price(ethers.utils.parseEther('1'));
-
+  const threePool = await ethers.getContractAt("Mock3Curve", THREE_POOL);
+  await threePool.set_virtual_price(ethers.utils.parseEther("1"));
 
   await impersonateContractOnPath(
-    './artifacts/contracts/mocks/MockToken.sol/MockToken.json',
+    "./artifacts/contracts/mocks/MockToken.sol/MockToken.json",
     THREE_CURVE
-  )
+  );
   await impersonateContractOnPath(
-    './artifacts/contracts/mocks/curve/MockCurveFactory.sol/MockCurveFactory.json',
+    "./artifacts/contracts/mocks/curve/MockCurveFactory.sol/MockCurveFactory.json",
     STABLE_FACTORY
-  )
+  );
   await impersonateContractOnPath(
-    './artifacts/contracts/mocks/curve/MockCurveFactory.sol/MockCurveFactory.json',
+    "./artifacts/contracts/mocks/curve/MockCurveFactory.sol/MockCurveFactory.json",
     CURVE_REGISTRY
-  )
+  );
   await impersonateContractOnPath(
-    './artifacts/contracts/mocks/curve/MockCurveZap.sol/MockCurveZap.json',
+    "./artifacts/contracts/mocks/curve/MockCurveZap.sol/MockCurveZap.json",
     CURVE_ZAP
-  )
+  );
 
   const curveStableFactory = await ethers.getContractAt("MockCurveFactory", STABLE_FACTORY);
   await curveStableFactory.set_coins(BEAN_3_CURVE, [BEAN, THREE_CURVE, ZERO_ADDRESS, ZERO_ADDRESS]);
 
   const curveZap = await ethers.getContractAt("MockCurveZap", CURVE_ZAP);
-  await curveZap.approve()
-
+  await curveZap.approve();
 }
 
 async function curveMetapool(poolAddress, name, tokenAddress) {
-
   await impersonateContractOnPath(
-    './artifacts/contracts/mocks/curve/MockMeta3Curve.sol/MockMeta3Curve.json',
+    "./artifacts/contracts/mocks/curve/MockMeta3Curve.sol/MockMeta3Curve.json",
     poolAddress
-  )
+  );
 
-    const beanMetapool = await ethers.getContractAt('MockMeta3Curve', poolAddress);
-    await beanMetapool.init(tokenAddress, THREE_CURVE, THREE_POOL);
-    await beanMetapool.set_A_precise('1000');
-    await beanMetapool.set_virtual_price(ethers.utils.parseEther('1'));
-    await beanMetapool.setSymbol(`${name}-f`);
+  const beanMetapool = await ethers.getContractAt("MockMeta3Curve", poolAddress);
+  await beanMetapool.init(tokenAddress, THREE_CURVE, THREE_POOL);
+  await beanMetapool.set_A_precise("1000");
+  await beanMetapool.set_virtual_price(ethers.utils.parseEther("1"));
+  await beanMetapool.setSymbol(`${name}-f`);
 }
 
 async function bean3CrvMetapool() {
-  await curveMetapool(BEAN_3_CURVE, 'BEAN3CRV', BEAN);
+  await curveMetapool(BEAN_3_CURVE, "BEAN3CRV", BEAN);
 }
 
 async function weth() {
-  await impersonateContractOnPath(
-    './artifacts/contracts/mocks/MockWETH.sol/MockWETH.json',
-    WETH
-  )
+  await impersonateContractOnPath("./artifacts/contracts/mocks/MockWETH.sol/MockWETH.json", WETH);
   const weth = await ethers.getContractAt("MockToken", WETH);
-  await weth.setSymbol('WETH');
+  await weth.setSymbol("WETH");
   await weth.setDecimals(18);
 }
 
 async function wsteth() {
   await impersonateContractOnPath(
-    './artifacts/contracts/mocks/MockWsteth.sol/MockWsteth.json',
+    "./artifacts/contracts/mocks/MockWsteth.sol/MockWsteth.json",
     WSTETH
-  )
-  const wsteth = await ethers.getContractAt('MockWsteth', WSTETH);
-  await wsteth.setSymbol('wstETH');
-  await wsteth.setStEthPerToken(to18('1'))
+  );
+  const wsteth = await ethers.getContractAt("MockWsteth", WSTETH);
+  await wsteth.setSymbol("wstETH");
+  await wsteth.setStEthPerToken(to18("0.85"));
 }
 
 async function router() {
   await impersonateContractOnPath(
-    './artifacts/contracts/mocks/MockUniswapV2Router.sol/MockUniswapV2Router.json',
+    "./artifacts/contracts/mocks/MockUniswapV2Router.sol/MockUniswapV2Router.json",
     UNISWAP_V2_ROUTER
-  )
+  );
 
-  const mockRouter =  await ethers.getContractAt("MockUniswapV2Router", UNISWAP_V2_ROUTER); 
+  const mockRouter = await ethers.getContractAt("MockUniswapV2Router", UNISWAP_V2_ROUTER);
   await mockRouter.setWETH(WETH);
   return UNISWAP_V2_ROUTER;
 }
 
 async function pool() {
   await impersonateContractOnPath(
-    './artifacts/contracts/mocks/MockUniswapV2Pair.sol/MockUniswapV2Pair.json',
+    "./artifacts/contracts/mocks/MockUniswapV2Pair.sol/MockUniswapV2Pair.json",
     UNISWAP_V2_PAIR
-  )
+  );
   const pair = await ethers.getContractAt("MockUniswapV2Pair", UNISWAP_V2_PAIR);
   await pair.resetLP();
   await pair.setToken(BEAN);
@@ -131,7 +125,7 @@ async function pool() {
 }
 
 async function bean() {
-  await token(BEAN, 6)
+  await token(BEAN, 6);
   const bean = await ethers.getContractAt("MockToken", BEAN);
   await bean.setSymbol("BEAN");
   await bean.setName("Bean");
@@ -139,22 +133,21 @@ async function bean() {
 }
 
 async function usdc() {
-  await token(USDC, 6)
+  await token(USDC, 6);
 }
 
 async function usdt() {
-  await token(USDT, 6)
+  await token(USDT, 6);
 }
 
 async function token(address, decimals) {
   await impersonateContractOnPath(
-    './artifacts/contracts/mocks/MockToken.sol/MockToken.json',
+    "./artifacts/contracts/mocks/MockToken.sol/MockToken.json",
     address
-  )
+  );
 
   const token = await ethers.getContractAt("MockToken", address);
   await token.setDecimals(decimals);
-
 }
 
 async function unripe() {
@@ -162,38 +155,40 @@ async function unripe() {
 
   await network.provider.send("hardhat_setCode", [
     UNRIPE_BEAN,
-    JSON.parse(tokenJson).deployedBytecode,
+    JSON.parse(tokenJson).deployedBytecode
   ]);
 
   const unripeBean = await ethers.getContractAt("MockToken", UNRIPE_BEAN);
   await unripeBean.setDecimals(6);
-  await unripeBean.setSymbol('urBEAN');
+  await unripeBean.setSymbol("urBEAN");
 
   await network.provider.send("hardhat_setCode", [
     UNRIPE_LP,
-    JSON.parse(tokenJson).deployedBytecode,
+    JSON.parse(tokenJson).deployedBytecode
   ]);
   const unripeLP = await ethers.getContractAt("MockToken", UNRIPE_LP);
-  await unripeLP.setSymbol('urBEAN3CRV');
+  await unripeLP.setSymbol("urBEAN3CRV");
 }
 
 async function price(beanstalk = BEANSTALK) {
-  const priceDeployer = await impersonateSigner(PRICE_DEPLOYER)
-  await mintEth(PRICE_DEPLOYER)
-  const Price = await ethers.getContractFactory('BeanstalkPrice')
-  const price = await Price.connect(priceDeployer).deploy(beanstalk)
-  await price.deployed()
+  const priceDeployer = await impersonateSigner(PRICE_DEPLOYER);
+  await mintEth(PRICE_DEPLOYER);
+  const Price = await ethers.getContractFactory("BeanstalkPrice");
+  const price = await Price.connect(priceDeployer).deploy(beanstalk);
+  await price.deployed();
 }
 
 async function impersonateBeanstalk(owner) {
-  let beanstalkJson = fs.readFileSync(`./artifacts/contracts/mocks/MockDiamond.sol/MockDiamond.json`);
+  let beanstalkJson = fs.readFileSync(
+    `./artifacts/contracts/mocks/MockDiamond.sol/MockDiamond.json`
+  );
 
   await network.provider.send("hardhat_setCode", [
     BEANSTALK,
-    JSON.parse(beanstalkJson).deployedBytecode,
+    JSON.parse(beanstalkJson).deployedBytecode
   ]);
 
-  beanstalk = await ethers.getContractAt('MockDiamond', BEANSTALK)
+  beanstalk = await ethers.getContractAt("MockDiamond", BEANSTALK);
   await beanstalk.mockInit(owner);
 }
 
@@ -201,7 +196,7 @@ async function blockBasefee() {
   await impersonateContractOnPath(
     `./artifacts/contracts/mocks/MockBlockBasefee.sol/MockBlockBasefee.json`,
     BASE_FEE_CONTRACT
-  )
+  );
 
   const basefee = await ethers.getContractAt("MockBlockBasefee", BASE_FEE_CONTRACT);
   await basefee.setAnswer(20 * Math.pow(10, 9));
@@ -212,21 +207,18 @@ async function ethUsdcUniswap() {
 }
 
 async function ethUsdtUniswap() {
-  await usdt()
+  await usdt();
   await uniswapV3(ETH_USDT_UNISWAP_V3, WETH, USDT, 3000);
 }
 
 async function uniswapV3(poolAddress, token0, token1, fee) {
-  const MockUniswapV3Factory = await ethers.getContractFactory('MockUniswapV3Factory')
-  const mockUniswapV3Factory = await MockUniswapV3Factory.deploy()
-  await mockUniswapV3Factory.deployed()
-  const pool = await mockUniswapV3Factory.callStatic.createPool(token0, token1, fee)
-  await mockUniswapV3Factory.createPool(token0, token1, fee)
-  const bytecode = await ethers.provider.getCode(pool)
-  await network.provider.send("hardhat_setCode", [
-    poolAddress,
-    bytecode,
-  ]);
+  const MockUniswapV3Factory = await ethers.getContractFactory("MockUniswapV3Factory");
+  const mockUniswapV3Factory = await MockUniswapV3Factory.deploy();
+  await mockUniswapV3Factory.deployed();
+  const pool = await mockUniswapV3Factory.callStatic.createPool(token0, token1, fee);
+  await mockUniswapV3Factory.createPool(token0, token1, fee);
+  const bytecode = await ethers.provider.getCode(pool);
+  await network.provider.send("hardhat_setCode", [poolAddress, bytecode]);
 }
 
 async function impersonateContractOnPath(artifactPath, deployAddress) {
@@ -234,46 +226,42 @@ async function impersonateContractOnPath(artifactPath, deployAddress) {
 
   await network.provider.send("hardhat_setCode", [
     deployAddress,
-    JSON.parse(basefeeJson).deployedBytecode,
+    JSON.parse(basefeeJson).deployedBytecode
   ]);
 }
 
 async function impersonateContract(contractName, deployAddress) {
-  contract = await (await ethers.getContractFactory(contractName)).deploy()
-  await contract.deployed()
-  const bytecode = await ethers.provider.getCode(contract.address)
-  await network.provider.send("hardhat_setCode", [
-    deployAddress,
-    bytecode,
-  ]);
-  return await ethers.getContractAt(contractName, deployAddress)
+  contract = await (await ethers.getContractFactory(contractName)).deploy();
+  await contract.deployed();
+  const bytecode = await ethers.provider.getCode(contract.address);
+  await network.provider.send("hardhat_setCode", [deployAddress, bytecode]);
+  return await ethers.getContractAt(contractName, deployAddress);
 }
 
-async function chainlinkAggregator(address, decimals=6) {
-
+async function chainlinkAggregator(address, decimals = 6) {
   await impersonateContractOnPath(
     `./artifacts/contracts/mocks/chainlink/MockChainlinkAggregator.sol/MockChainlinkAggregator.json`,
     address
-  )
-  const ethUsdChainlinkAggregator = await ethers.getContractAt('MockChainlinkAggregator', address)
-  await ethUsdChainlinkAggregator.setDecimals(decimals)
+  );
+  const ethUsdChainlinkAggregator = await ethers.getContractAt("MockChainlinkAggregator", address);
+  await ethUsdChainlinkAggregator.setDecimals(decimals);
 }
 
-exports.impersonateRouter = router
-exports.impersonateBean = bean
-exports.impersonateCurve = curve
-exports.impersonateCurveMetapool = curveMetapool
-exports.impersonateBean3CrvMetapool = bean3CrvMetapool
-exports.impersonatePool = pool
-exports.impersonateWeth = weth
-exports.impersonateUnripe = unripe
-exports.impersonateUsdc = usdc
-exports.impersonatePrice = price
+exports.impersonateRouter = router;
+exports.impersonateBean = bean;
+exports.impersonateCurve = curve;
+exports.impersonateCurveMetapool = curveMetapool;
+exports.impersonateBean3CrvMetapool = bean3CrvMetapool;
+exports.impersonatePool = pool;
+exports.impersonateWeth = weth;
+exports.impersonateUnripe = unripe;
+exports.impersonateUsdc = usdc;
+exports.impersonatePrice = price;
 exports.impersonateBlockBasefee = blockBasefee;
-exports.impersonateEthUsdcUniswap = ethUsdcUniswap
-exports.impersonateEthUsdtUniswap = ethUsdtUniswap
-exports.impersonateBeanstalk = impersonateBeanstalk
-exports.impersonateChainlinkAggregator = chainlinkAggregator
-exports.impersonateContract = impersonateContract
+exports.impersonateEthUsdcUniswap = ethUsdcUniswap;
+exports.impersonateEthUsdtUniswap = ethUsdtUniswap;
+exports.impersonateBeanstalk = impersonateBeanstalk;
+exports.impersonateChainlinkAggregator = chainlinkAggregator;
+exports.impersonateContract = impersonateContract;
 exports.impersonateUniswapV3 = uniswapV3;
 exports.impersonateWsteth = wsteth;
