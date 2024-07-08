@@ -14,6 +14,7 @@ export class LidoEthToSteth extends StepClass<AdvancedPipePreparedResult> {
     return {
       name: this.name,
       amountOut: amountInStep,
+      value: amountInStep,
       prepare: () => {
         LidoEthToSteth.sdk.debug(`[${this.name}.encode()]`, {
           amount: amountInStep
@@ -22,8 +23,9 @@ export class LidoEthToSteth extends StepClass<AdvancedPipePreparedResult> {
         return {
           target: LidoEthToSteth.sdk.contracts.lido.steth.address,
           callData: LidoEthToSteth.sdk.contracts.lido.steth.interface.encodeFunctionData("submit", [
-            Clipboard.encode([], amountInStep)
-          ])
+            LidoEthToSteth.sdk.contracts.beanstalk.address
+          ]),
+          clipboard: Clipboard.encode([], amountInStep)
         };
       },
       decode: (data: string) =>

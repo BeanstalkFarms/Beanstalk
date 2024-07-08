@@ -5,16 +5,19 @@ import { Clipboard } from "src/lib/depot";
 import { ClipboardSettings } from "src/types";
 
 export class LidoWrapSteth extends StepClass<AdvancedPipePreparedResult> {
-  public name: "lidoEthToSteth";
+  public name: "lidoWrapSteth";
 
   constructor(public clipboard?: ClipboardSettings) {
     super();
   }
 
   async run(amountInStep: BigNumber, context: RunContext) {
+    const wstethAmtOut =
+      await LidoWrapSteth.sdk.contracts.lido.wsteth.getWstETHByStETH(amountInStep);
+
     return {
       name: this.name,
-      amountOut: amountInStep,
+      amountOut: wstethAmtOut,
       prepare: () => {
         LidoWrapSteth.sdk.debug(`[${this.name}.encode()]`, {
           amount: amountInStep
