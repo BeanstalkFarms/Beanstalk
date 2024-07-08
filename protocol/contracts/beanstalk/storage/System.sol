@@ -67,7 +67,6 @@ struct System {
     bytes32[16] _buffer_1;
     bytes32[144] casesV2;
     Silo silo;
-    Field field;
     Fertilizer fert;
     Season season;
     Weather weather;
