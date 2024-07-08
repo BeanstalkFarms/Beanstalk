@@ -43,6 +43,10 @@ export const Well = () => {
 
   const loading = useLagLoading(dataLoading || apysLoading || twaLoading);
 
+  useEffect(() => {
+    console.log("well: ", well);
+  }, [well]);
+
   const sdk = useSdk();
   const navigate = useNavigate();
   const [prices, setPrices] = useState<(TokenValue | null)[]>([]);

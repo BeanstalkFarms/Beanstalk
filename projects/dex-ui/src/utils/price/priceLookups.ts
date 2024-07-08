@@ -85,6 +85,7 @@ export const PriceLookups: Record<string, (sdk: BeanstalkSDK) => Promise<TokenVa
   STETH: memoize(chainlinkLookup("STETH_USD"), PRICE_EXPIRY_TIMEOUT),
   UNI: memoize(chainlinkLookup("UNI_USD"), PRICE_EXPIRY_TIMEOUT),
   BTC: memoize(chainlinkLookup("BTC_USD"), PRICE_EXPIRY_TIMEOUT),
+  wstETH: memoize(chainlinkLookup("STETH_USD"), PRICE_EXPIRY_TIMEOUT),
   WBTC: memoize(multiChainlinkLookup("WBTC_BTC", "BTC_USD"), PRICE_EXPIRY_TIMEOUT),
   LDO: memoize(multiChainlinkLookup("LDO_ETH", "ETH_USD"), PRICE_EXPIRY_TIMEOUT),
   weETH: memoize(multiChainlinkLookup("WeETH_ETH", "ETH_USD"), PRICE_EXPIRY_TIMEOUT)
