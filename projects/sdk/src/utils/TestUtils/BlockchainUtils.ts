@@ -138,7 +138,8 @@ export class BlockchainUtils {
       this.seturBEANWETHBalance(account, this.sdk.tokens.UNRIPE_BEAN_WETH.amount(amount)),
       this.setBEAN3CRVBalance(account, this.sdk.tokens.BEAN_CRV3_LP.amount(amount)),
       this.setBEANWETHBalance(account, this.sdk.tokens.BEAN_ETH_WELL_LP.amount(amount)),
-      this.setWstethBalance(account, this.sdk.tokens.WSTETH.amount(amount))
+      this.setWstethBalance(account, this.sdk.tokens.WSTETH.amount(amount)),
+      this.setStethBalance(account, this.sdk.tokens.STETH.amount(amount))
     ]);
   }
   async setETHBalance(account: string, balance: TokenValue) {
