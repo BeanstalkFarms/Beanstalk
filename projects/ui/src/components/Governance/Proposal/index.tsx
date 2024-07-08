@@ -25,6 +25,7 @@ const ProposalContent: FC<{
     'ipfs://',
     'https://cf-ipfs.com/ipfs/'
   );
+  const votingOver = props.proposal.end <= (new Date().valueOf()) / 1000;
 
   return (
     <Card sx={{ p: 2 }}>
@@ -39,7 +40,7 @@ const ProposalContent: FC<{
         </Stack>
         {pctOfQuorum && pctOfQuorum > 0 && (
           <Tooltip
-            title={`${props.quorum.data.tag} is ~${(pctOfQuorum * 100).toFixed(
+            title={`${props.quorum.data.tag} ${votingOver ? 'was' : 'is'} ~${(pctOfQuorum * 100).toFixed(
               1
             )}% of the way to reaching quorum.`}
           >
