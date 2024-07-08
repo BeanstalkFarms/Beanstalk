@@ -45,6 +45,9 @@ export class Tokens {
   public siloWhitelist: Set<Token>;
   public siloWhitelistAddresses: string[];
 
+  public siloWhitelistedWellLP: Set<Token>;
+  public siloWhitelistedWellLPAddresses: string[];
+
   private map: Map<string, Token>;
 
   constructor(sdk: BeanstalkSDK) {
@@ -180,7 +183,7 @@ export class Tokens {
     );
     this.BEAN_ETH_WELL_LP.rewards = {
       stalk: this.STALK.amount(1),
-      seeds: null
+      seeds: this.SEEDS.amount(4)
     };
 
     this.BEAN_WSTETH_WELL_LP = new ERC20Token(
@@ -391,14 +394,20 @@ export class Tokens {
 
     ////////// Groups //////////
 
+    const whitelistedWellLP = [this.BEAN_ETH_WELL_LP, this.BEAN_WSTETH_WELL_LP];
+
     const siloWhitelist = [
+      this.BEAN_ETH_WELL_LP,
+      this.BEAN_WSTETH_WELL_LP,
       this.BEAN,
       this.BEAN_CRV3_LP,
-      this.BEAN_ETH_WELL_LP,
       this.UNRIPE_BEAN,
-      this.UNRIPE_BEAN_WETH,
-      this.BEAN_WSTETH_WELL_LP
+      this.UNRIPE_BEAN_WETH
     ];
+
+    this.siloWhitelistedWellLP = new Set(whitelistedWellLP);
+    this.siloWhitelistedWellLPAddresses = whitelistedWellLP.map((t) => t.address);
+
     this.siloWhitelist = new Set(siloWhitelist);
     this.siloWhitelistAddresses = siloWhitelist.map((t) => t.address);
 
@@ -539,6 +548,15 @@ export class Tokens {
     });
 
     return balances;
+  }
+
+  /**
+   * Returns whether a token is a whitelisted LP token
+   * (e.g., BEAN:WETH Well LP / BEAN:wstETH Well LP)
+   */
+  public getIsWhitelistedWellLPToken(token: Token) {
+    const foundToken = this.map.get(token.address.toLowerCase());
+    return foundToken ? this.siloWhitelistedWellLP.has(foundToken) : false;
   }
 
   //////////////////////// Permit Data ////////////////////////
