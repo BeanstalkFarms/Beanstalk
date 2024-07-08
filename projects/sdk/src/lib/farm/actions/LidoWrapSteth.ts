@@ -5,7 +5,7 @@ import { Clipboard } from "src/lib/depot";
 import { ClipboardSettings } from "src/types";
 
 export class LidoWrapSteth extends StepClass<AdvancedPipePreparedResult> {
-  public name: "lidoWrapSteth";
+  public name: string = "lidoWrapSteth";
 
   constructor(public clipboard?: ClipboardSettings) {
     super();

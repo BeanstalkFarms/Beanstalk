@@ -4,17 +4,17 @@ import { AdvancedPipePreparedResult } from "src/lib/depot/pipe";
 import { Clipboard } from "src/lib/depot";
 
 export class LidoEthToSteth extends StepClass<AdvancedPipePreparedResult> {
-  public name: "lidoEthToSteth";
+  public name: string = "lidoEthToSteth";
 
   constructor() {
     super();
   }
 
+  // amountInStep should be an amount of ETH.
   async run(amountInStep: BigNumber, _context: RunContext) {
     return {
       name: this.name,
       amountOut: amountInStep,
-      value: amountInStep,
       prepare: () => {
         LidoEthToSteth.sdk.debug(`[${this.name}.encode()]`, {
           amount: amountInStep
@@ -25,7 +25,7 @@ export class LidoEthToSteth extends StepClass<AdvancedPipePreparedResult> {
           callData: LidoEthToSteth.sdk.contracts.lido.steth.interface.encodeFunctionData("submit", [
             LidoEthToSteth.sdk.contracts.beanstalk.address
           ]),
-          clipboard: Clipboard.encode([], amountInStep)
+          clipboard: Clipboard.encode([], amountInStep) // ETH amount to be used
         };
       },
       decode: (data: string) =>
