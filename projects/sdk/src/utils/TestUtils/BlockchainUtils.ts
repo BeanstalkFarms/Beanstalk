@@ -49,10 +49,7 @@ export class BlockchainUtils {
     const amount = crate.amount.toBlockchain();
 
     logSiloBalance(from, balance);
-    console.log(`Transferring ${crate.amount.toHuman()} ${token.symbol} to ${to}...`, {
-      season,
-      amount
-    });
+    console.log(`Transferring ${crate.amount.toHuman()} ${token.symbol} to ${to}...`, { season, amount });
 
     const txn = await this.sdk.contracts.beanstalk
       .connect(await this.provider.getSigner(from))
@@ -68,12 +65,7 @@ export class BlockchainUtils {
   /**
    * Send BEAN from the BF Multisig -> `to`.
    */
-  async sendBean(
-    to: string,
-    amount: TokenValue,
-    from: string = addr.BF_MULTISIG,
-    token: ERC20Token = this.sdk.tokens.BEAN
-  ) {
+  async sendBean(to: string, amount: TokenValue, from: string = addr.BF_MULTISIG, token: ERC20Token = this.sdk.tokens.BEAN) {
     console.log(`Sending ${amount.toHuman()} BEAN from ${from} -> ${to}...`);
 
     await this.provider.send("anvil_impersonateAccount", [from]);
@@ -224,11 +216,7 @@ export class BlockchainUtils {
     if (isTokenReverse) values.reverse();
 
     const index = ethers.utils.solidityKeccak256(["uint256", "uint256"], values);
-    await this.setStorageAt(
-      _token.address,
-      index.toString(),
-      this.toBytes32(balanceAmount).toString()
-    );
+    await this.setStorageAt(_token.address, index.toString(), this.toBytes32(balanceAmount).toString());
   }
 
   /**
@@ -250,10 +238,8 @@ export class BlockchainUtils {
     // Get the existing liquidity amounts
     const [currentBean, currentCrv3] = await this.getCurvePoolBalances(BALANCE_SLOT, POOL_ADDRESS);
 
-    const newBean =
-      beanAmount instanceof TokenValue ? beanAmount : this.sdk.tokens.BEAN.amount(beanAmount);
-    const newCrv3 =
-      crv3Amount instanceof TokenValue ? crv3Amount : this.sdk.tokens.CRV3.amount(crv3Amount);
+    const newBean = beanAmount instanceof TokenValue ? beanAmount : this.sdk.tokens.BEAN.amount(beanAmount);
+    const newCrv3 = crv3Amount instanceof TokenValue ? crv3Amount : this.sdk.tokens.CRV3.amount(crv3Amount);
 
     // update the array tracking balances
     await this.setCurvePoolBalances(POOL_ADDRESS, BALANCE_SLOT, newBean, newCrv3);
@@ -265,11 +251,7 @@ export class BlockchainUtils {
     await this.setCurvePoolBalances(POOL_ADDRESS, PREV_BALANCE_SLOT, currentBean, currentCrv3);
   }
 
-  async setWellLiquidity(
-    lpToken: Token,
-    amounts: TokenValue[],
-    account = "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266"
-  ) {
+  async setWellLiquidity(lpToken: Token, amounts: TokenValue[], account = "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266") {
     const well = await this.sdk.wells.getWell(lpToken.address);
     const tokens = well.tokens;
 
@@ -295,9 +277,7 @@ export class BlockchainUtils {
     const op = this.sdk.swap.buildSwap(this.sdk.tokens.WETH, this.sdk.tokens.BEAN, account);
     const beanAmountToBuy = deltaB.abs().mul(multiplier);
     const quote = await op.estimateReversed(beanAmountToBuy);
-    console.log(
-      `DeltaB is ${deltaB.toHuman()}. BUYING ${beanAmountToBuy.toHuman()} BEANS (with a ${multiplier}x multiplier)`
-    );
+    console.log(`DeltaB is ${deltaB.toHuman()}. BUYING ${beanAmountToBuy.toHuman()} BEANS (with a ${multiplier}x multiplier)`);
 
     await this.setBalance(this.sdk.tokens.WETH, account, quote);
     const txa = await this.sdk.tokens.WETH.approveBeanstalk(quote);
@@ -323,9 +303,7 @@ export class BlockchainUtils {
     }
     const op = this.sdk.swap.buildSwap(this.sdk.tokens.BEAN, this.sdk.tokens.WETH, account);
     const amount = deltaB.abs().mul(multiplier);
-    console.log(
-      `DeltaB is ${deltaB.toHuman()}. SELLING ${amount.toHuman()} BEANS (with a ${multiplier}x multiplier)`
-    );
+    console.log(`DeltaB is ${deltaB.toHuman()}. SELLING ${amount.toHuman()} BEANS (with a ${multiplier}x multiplier)`);
 
     await this.setBalance(this.sdk.tokens.BEAN, account, amount);
     const txa = await this.sdk.tokens.BEAN.approveBeanstalk(amount);
@@ -370,12 +348,7 @@ export class BlockchainUtils {
    * @param beanBalance
    * @param crv3Balance
    */
-  private async setCurvePoolBalances(
-    address: string,
-    slot: number,
-    beanBalance: TokenValue,
-    crv3Balance: TokenValue
-  ) {
+  private async setCurvePoolBalances(address: string, slot: number, beanBalance: TokenValue, crv3Balance: TokenValue) {
     const beanLocation = ethers.utils.solidityKeccak256(["uint256"], [slot]);
     const crv3Location = this.addOne(beanLocation);
 
