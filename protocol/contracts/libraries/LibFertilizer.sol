@@ -18,6 +18,7 @@ import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol
 import {LibWell} from "contracts/libraries/Well/LibWell.sol";
 import {LibUsdOracle} from "contracts/libraries/Oracle/LibUsdOracle.sol";
 import {LibTractor} from "contracts/libraries/LibTractor.sol";
+import {LibTransfer} from "contracts/libraries/Token/LibTransfer.sol";
 
 /**
  * @author Publius
@@ -46,9 +47,6 @@ library LibFertilizer {
         uint256 fertilizerAmount,
         uint256 minLP
     ) internal returns (uint128 id) {
-        AppStorage storage s = LibAppStorage.diamondStorage();
-
-
         // Calculate Beans Per Fertilizer and add to total owed
         uint128 bpf = getBpf(season);
         id = IncrementFertState(fertilizerAmount, bpf);
@@ -60,6 +58,7 @@ library LibFertilizer {
         uint256 fertilizerAmount,
         uint128 bpf
     ) internal returns (uint128 id) {
+        AppStorage storage s = LibAppStorage.diamondStorage();
         uint128 fertilizerAmount128 = fertilizerAmount.toUint128();
         s.sys.fert.unfertilizedIndex += fertilizerAmount * bpf;
         id = s.sys.fert.bpf + bpf;
@@ -74,7 +73,8 @@ library LibFertilizer {
         return id;
     }
 
-    function claimFertilized(uint256[] calldata ids, LibTransfer.To mode) internal {
+    function claimFertilized(uint256[] memory ids, LibTransfer.To mode) internal {
+        AppStorage storage s = LibAppStorage.diamondStorage();
         uint256 amount = C.fertilizer().beanstalkUpdate(LibTractor._user(), ids, s.sys.fert.bpf);
         s.sys.fert.fertilizedPaidIndex += amount;
         LibTransfer.sendToken(C.bean(), amount, LibTractor._user(), mode);
@@ -93,26 +93,25 @@ library LibFertilizer {
 
     function getAmountsOfIds(
         address account,
-        uint256[] memory ids
+        uint256[] memory ids,
+        uint256[] memory amounts
     )
         external
         view
-        returns (
-            uint256[] memory fertilizer,
-            uint256 totalFertilizer,
-            uint256[] remainingBpf,
-            uint256 totalUnfertilized
-        )
+        returns (uint256 totalFertilizer, uint128[] memory remainingBpf, uint256 totalUnfertilized)
     {
-        fertilizer = new uint256[](ids.length);
-        remainingBpf = new uint256[](ids.length);
+        AppStorage storage s = LibAppStorage.diamondStorage();
+        remainingBpf = new uint128[](ids.length);
 
         for (uint256 i; i < ids.length; i++) {
-            fertilizer[i] = C.fertilizer().balanceOf(account, id);
-            totalFertilizer += fertilizer[i];
+            require(
+                amounts[i] >= C.fertilizer().balanceOf(account, ids[i]),
+                "insufficient fert balance"
+            );
+            totalFertilizer += amounts[i];
             if (ids[i] > s.sys.fert.bpf) {
-                remainingBpf[i] = ids[i] - s.sys.fert.bpf;
-                totalUnfertilized += remainingBpf[i] * fertilizer[i];
+                remainingBpf[i] = uint128(ids[i] - s.sys.fert.bpf);
+                totalUnfertilized += uint256(remainingBpf[i]) * amounts[i];
             }
         }
     }

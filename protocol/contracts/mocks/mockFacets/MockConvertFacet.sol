@@ -43,7 +43,7 @@ contract MockConvertFacet is ConvertFacet {
         uint256 grownStalk
     ) external {
         LibSilo._mow(LibTractor._user(), token);
-        LibConvert._depositTokensForConvert(token, amount, bdv, grownStalk);
+        LibConvert._depositTokensForConvert(LibTractor._user(), token, amount, bdv, grownStalk);
     }
 
     function convertInternalE(

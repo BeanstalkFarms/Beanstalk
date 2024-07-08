@@ -2,12 +2,14 @@
 
 pragma solidity ^0.8.20;
 
+import {LibMigrateOut} from "contracts/libraries/Lineage/LibMigrateOut.sol";
+
 interface IMigrateOutFacet {
     function migrateOut(
         address destination,
-        bytes[] calldata deposits,
-        bytes[] calldata plots,
-        bytes[] calldata fertilizer, // someday can be deprecated/renamed
+        LibMigrateOut.SourceDeposit[] calldata sourceDeposits,
+        LibMigrateOut.SourcePlot[] calldata sourcePlots,
+        LibMigrateOut.SourceFertilizer[] calldata sourceFertilizer,
         bytes calldata data
     ) external;
 }

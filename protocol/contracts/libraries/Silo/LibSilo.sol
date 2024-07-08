@@ -156,6 +156,176 @@ library LibSilo {
         uint256[] values
     );
 
+    //////////////////////// WITHDRAW ////////////////////////
+
+    /**
+     * @notice Handles withdraw accounting.
+     *
+     * - {_removeDepositFromAccount} calculates the stalk
+     * assoicated with a given deposit, and removes the deposit from the account.
+     * emits `RemoveDeposit` and `TransferSingle` events.
+     *
+     * - {_withdraw} updates the total value deposited in the silo, and burns
+     * the stalk assoicated with the deposits.
+     *
+     */
+    function _withdrawDeposit(address account, address token, int96 stem, uint256 amount) internal {
+        // Remove the Deposit from `account`.
+        (
+            uint256 initalStalkRemoved,
+            uint256 grownStalkRemoved,
+            uint256 bdvRemoved,
+            GerminationSide side
+        ) = _removeDepositFromAccount(
+                account,
+                token,
+                stem,
+                amount,
+                LibTokenSilo.Transfer.emitTransferSingle
+            );
+        if (side == GerminationSide.NOT_GERMINATING) {
+            // remove the deposit from totals
+            _withdraw(
+                account,
+                token,
+                amount,
+                bdvRemoved,
+                initalStalkRemoved.add(grownStalkRemoved)
+            );
+        } else {
+            // remove deposit from germination, and burn the grown stalk.
+            // grown stalk does not germinate and is not counted in germinating totals.
+            _withdrawGerminating(account, token, amount, bdvRemoved, initalStalkRemoved, side);
+
+            if (grownStalkRemoved > 0) {
+                burnActiveStalk(account, grownStalkRemoved);
+            }
+        }
+    }
+
+    /**
+     * @notice Handles withdraw accounting for multiple deposits.
+     *
+     * - {_removeDepositsFromAccount} removes the deposits from the account,
+     * and returns the total tokens, stalk, and bdv removed from the account.
+     *
+     * - {_withdraw} updates the total value deposited in the silo, and burns
+     * the stalk assoicated with the deposits.
+     *
+     */
+    function _withdrawDeposits(
+        address account,
+        address token,
+        int96[] calldata stems,
+        uint256[] calldata amounts
+    ) internal returns (uint256) {
+        require(stems.length == amounts.length, "Silo: Crates, amounts are diff lengths.");
+
+        AssetsRemoved memory ar = _removeDepositsFromAccount(
+            account,
+            token,
+            stems,
+            amounts,
+            ERC1155Event.EMIT_BATCH_EVENT
+        );
+
+        // withdraw deposits that are not germinating.
+        if (ar.active.tokens > 0) {
+            _withdraw(account, token, ar.active.tokens, ar.active.bdv, ar.active.stalk);
+        }
+
+        // withdraw Germinating deposits from odd seasons
+        if (ar.odd.tokens > 0) {
+            _withdrawGerminating(
+                account,
+                token,
+                ar.odd.tokens,
+                ar.odd.bdv,
+                ar.odd.stalk,
+                GerminationSide.ODD
+            );
+        }
+
+        // withdraw Germinating deposits from even seasons
+        if (ar.even.tokens > 0) {
+            _withdrawGerminating(
+                account,
+                token,
+                ar.even.tokens,
+                ar.even.bdv,
+                ar.even.stalk,
+                GerminationSide.EVEN
+            );
+        }
+
+        if (ar.grownStalkFromGermDeposits > 0) {
+            burnActiveStalk(account, ar.grownStalkFromGermDeposits);
+        }
+
+        // we return the summation of all tokens removed from the silo.
+        // to be used in {SiloFacet.withdrawDeposits}.
+        return ar.active.tokens.add(ar.odd.tokens).add(ar.even.tokens);
+    }
+
+    /**
+     * @dev internal helper function for withdraw accounting.
+     */
+    function _withdraw(
+        address account,
+        address token,
+        uint256 amount,
+        uint256 bdv,
+        uint256 stalk
+    ) internal {
+        // Decrement total deposited in the silo.
+        LibTokenSilo.decrementTotalDeposited(token, amount, bdv);
+        // Burn stalk and roots associated with the stalk.
+        burnActiveStalk(account, stalk);
+    }
+
+    /**
+     * @dev internal helper function for withdraw accounting with germination.
+     * @param side determines whether to withdraw from odd or even germination.
+     */
+    function _withdrawGerminating(
+        address account,
+        address token,
+        uint256 amount,
+        uint256 bdv,
+        uint256 stalk,
+        GerminationSide side
+    ) internal {
+        // Deposited Earned Beans do not germinate. Thus, when withdrawing a Bean Deposit
+        // with a Germinating Stem, Beanstalk needs to determine how many of the Beans
+        // were Planted vs Deposited from a Circulating/Farm balance.
+        // If a Farmer's Germinating Stalk for a given Season is less than the number of
+        // Deposited Beans in that Season, then it is assumed that the excess Beans were
+        // Planted.
+        if (token == C.BEAN) {
+            (uint256 germinatingStalk, uint256 earnedBeansStalk) = checkForEarnedBeans(
+                account,
+                stalk,
+                side
+            );
+            // set the bdv and amount accordingly to the stalk.
+            stalk = germinatingStalk;
+            uint256 earnedBeans = earnedBeansStalk.div(C.STALK_PER_BEAN);
+            amount = amount - earnedBeans;
+            // note: the 1 Bean = 1 BDV assumption cannot be made here for input `bdv`,
+            // as a user converting a germinating LP deposit into bean may have an inflated bdv.
+            // thus, amount and bdv are decremented by the earnedBeans (where the 1 Bean = 1 BDV assumption can be made).
+            bdv = bdv - earnedBeans;
+
+            // burn the earned bean stalk (which is active).
+            burnActiveStalk(account, earnedBeansStalk);
+            // calculate earnedBeans and decrement totalDeposited.
+            LibTokenSilo.decrementTotalDeposited(C.BEAN, earnedBeans, earnedBeans);
+        }
+        // Decrement from total germinating.
+        LibTokenSilo.decrementTotalGerminating(token, amount, bdv, side); // Decrement total Germinating in the silo.
+        burnGerminatingStalk(account, uint128(stalk), side); // Burn stalk and roots associated with the stalk.
+    }
+
     //////////////////////// MINT ////////////////////////
 
     /**
@@ -260,7 +430,7 @@ library LibSilo {
      * @notice Burns germinating stalk.
      * @dev Germinating stalk does not have any roots assoicated with it.
      */
-    function burnGerminatingStalk(address account, uint128 stalk, GerminationSide side) external {
+    function burnGerminatingStalk(address account, uint128 stalk, GerminationSide side) public {
         AppStorage storage s = LibAppStorage.diamondStorage();
 
         s.accts[account].germinatingStalk[side] -= stalk;

@@ -419,7 +419,7 @@ struct SeasonOfPlenty {
 
 struct Lineage {
     uint256 startTime;
-    address[] supportedSources;
+    mapping(address=>bool) supportedSources;
 }
 
 /**

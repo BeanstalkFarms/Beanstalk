@@ -88,6 +88,14 @@ library LibWell {
         beanIndex = getBeanIndex(tokens);
     }
 
+    /**
+     * @dev Returns the index of the first ERC20 given a Well.
+     */
+    function getNonBeanIndexFromWell(address well) internal view returns (uint beanIndex) {
+        IERC20[] memory tokens = IWell(well).tokens();
+        beanIndex = getNonBeanIndex(tokens);
+    }
+
     function getNonBeanTokenFromWell(address well) internal view returns (IERC20 nonBeanToken) {
         IERC20[] memory tokens = IWell(well).tokens();
         return tokens[getNonBeanIndex(tokens)];

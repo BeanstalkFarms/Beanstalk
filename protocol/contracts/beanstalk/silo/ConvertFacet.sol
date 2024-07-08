@@ -98,7 +98,7 @@ contract ConvertFacet is Invariable, ReentrancyGuard {
         uint256 newBdv = LibTokenSilo.beanDenominatedValue(toToken, toAmount);
         toBdv = newBdv > fromBdv ? newBdv : fromBdv;
 
-        toStem = LibConvert._depositTokensForConvert(toToken, toAmount, toBdv, pipeData.grownStalk);
+        toStem = LibConvert._depositTokensForConvert(LibTractor._user(), toToken, toAmount, toBdv, pipeData.grownStalk);
 
         emit Convert(LibTractor._user(), fromToken, toToken, fromAmount, toAmount);
     }
