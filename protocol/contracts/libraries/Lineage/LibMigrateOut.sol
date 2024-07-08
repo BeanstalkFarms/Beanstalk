@@ -44,7 +44,7 @@ library LibMigrateOut {
     // TODO swapping / exiting LP will be difficult to implement with a proper minimum out.
     // remove in balanced ratio? with UI setting minimum out of each asset...
     /**
-     * @notice Withdraw deposits and send ERC20 of asset. Burns Beans.
+     * @notice Withdraw deposits and sends underlying ERC20 of asset. Burns Beans.
      * @return The set of deposits to migrate, encoded as bytes.
      */
     function migrateOutDeposits(
@@ -117,13 +117,13 @@ library LibMigrateOut {
     }
 
     /**
-     * @notice Burns plots, according to this fork's configuration.
+     * @notice Burns plots. Populates and encodes migration data.
      * @return The plots to migrate, encoded as bytes.
      */
     function migrateOutPlots() internal returns (bytes[] plots);
 
     /**
-     * @notice Burns Fertilizer, according to this fork's configuration.
+     * @notice Burns Fertilizer. Populates and encodes migration data.
      * @return The Fertilizer to migrate, encoded as bytes.
      */
     function migrateOutFertilizer(

@@ -12,7 +12,18 @@ import {AppStorage} from "contracts/libraries/LibAppStorage.sol";
  */
 library LibMigrateIn {
     // Definitions must match source migration definitions. May require multiple definitions.
-    struct SourceDeposit {}
+    struct SourceDeposit {
+        address token;
+        uint256 amount;
+        uint256 stem;
+        uint256[] sourceMinTokenAmountsOut; // LP only
+        uint256 destMinLpOut; // LP only
+        uint256 _grownStalk; // not stalk // need to change logic
+        uint256 _beansBurned;
+        address _transferredToken; // NOTE what if LP type is not supported at destination?
+        address _transferredTokenAmount;
+    }
+
     struct SourcePlot {}
 
     struct SourceFertilizer {
@@ -24,7 +35,64 @@ library LibMigrateIn {
     // Mint assets locally.
     // Underlying external ERC20s have already been transferred to destination beanstalk.
     // msg.sender == source instance
-    function migrateInDeposits(address user, bytes[] deposits) internal;
+    // Use _depositTokensForConvert() to calculate stem (includes germination logic, germiantion safety provided by source beanstalk).
+    function migrateInDeposits(address user, bytes[] deposits) internal {
+        // NOTE give 1:1 token + BDV ??
+        C.bean().mint(address(this), deposit.beansBurnt);
+
+        address[] whitelistedTokens = LibWhitelist.getWhitelistedTokens();
+        for (uint256 i = 0; i < deposits.length; i++) {
+            SourceDeposit memory deposit = abi.decode(deposits[i], (SourceDeposit));
+
+            // If LP deposit.
+            if (deposit.transferredToken != address(0)) {
+                bool lpMatched;
+                // Look for corresponding whitelisted well.
+                for (uint i; i < whitelistedTokens.length; i++) {
+                    address well = whitelistedTokens[i];
+                    address wellPairToken = LibWell.getNonBeanTokenFromWell(well);
+                    if (wellPairToken != deposit.transferredToken) {
+                        continue;
+                    }
+                    lpMatched = true;
+                    uint256[] tokenAmountsIn = new uint256[](2);
+                    tokenAmountsIn[LibWell.getBeanIndex(well)] = deposit.beansBurnt;
+                    tokenAmountsIn[LibWell.getNonBeanIndex(well)] = deposit._transferredTokenAmount;
+
+                    IERC20(deposit.transferredToken).approve(
+                        well,
+                        uint256(deposit._transferredTokenAmount)
+                    );
+                    C.bean().approve(well, deposit.beansBurnt);
+                    uint256 lpAmount = IWell(whitelistedTokens[i]).addLiquidity(
+                        tokenAmountsIn,
+                        deposit.minLpAmountOut,
+                        address(this),
+                        block.number
+                    );
+                    
+                    LibConvert._depositTokensForConvert(
+                        well,
+                        lpAmount, // amount
+                        LibWellBdv.bdv(well, lpAmount), // bdv
+                        deposit._grownStalk
+                    );
+                    break;
+                }
+                require(lpMatched, "LP not whitelisted");
+            }
+            // else if Bean deposit.
+            else {
+                // Update Beanstalk state and mint Beans to user. Bypasses standard minting calcs.
+                LibConvert._depositTokensForConvert(
+                    C.BEAN,
+                    deposit.burnedBeans, // amount
+                    deposit.burnedBeans, // bdv
+                    deposit._grownStalk
+                );
+            }
+        }
+    }
 
     function migrateInPlots(address user, bytes[] plots) internal;
 
