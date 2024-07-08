@@ -1,3 +1,4 @@
+import { LidoUnwrapWstETH } from "./../farm/actions/LidoUnwrapWsteth";
 import { Graph } from "graphlib";
 import { ERC20Token } from "src/classes/Token";
 import { BeanstalkSDK } from "src/lib/BeanstalkSDK";
@@ -14,11 +15,14 @@ export const setBidirectionalAddRemoveLiquidityEdges = (
   underlyingTokenCount: number = 3
 ) => {
   // creates an array like [1, 0, 0], [0, 1, 0], [0, 0, 1].
-  const amounts = Array.from({ length: underlyingTokenCount }, (_, i) => (i === underlyingTokenIndex ? 1 : 0));
+  const amounts = Array.from({ length: underlyingTokenCount }, (_, i) =>
+    i === underlyingTokenIndex ? 1 : 0
+  );
 
   // Underlying -> LP uses AddLiquidity.
   g.setEdge(underlyingToken.symbol, lpToken.symbol, {
-    build: (_: string, from: FarmFromMode, to: FarmToMode) => new sdk.farm.actions.AddLiquidity(pool, registry, amounts as any, from, to),
+    build: (_: string, from: FarmFromMode, to: FarmToMode) =>
+      new sdk.farm.actions.AddLiquidity(pool, registry, amounts as any, from, to),
     from: underlyingToken.symbol,
     to: lpToken.symbol,
     label: "addLiquidity"
@@ -27,7 +31,13 @@ export const setBidirectionalAddRemoveLiquidityEdges = (
   // LP -> Underlying is RemoveLiquidity
   g.setEdge(lpToken.symbol, underlyingToken.symbol, {
     build: (_: string, from: FarmFromMode, to: FarmToMode) =>
-      new sdk.farm.actions.RemoveLiquidityOneToken(pool, registry, underlyingToken.address, from, to),
+      new sdk.farm.actions.RemoveLiquidityOneToken(
+        pool,
+        registry,
+        underlyingToken.address,
+        from,
+        to
+      ),
     from: lpToken.symbol,
     to: underlyingToken.symbol,
     label: "removeLiquidity"
@@ -51,14 +61,16 @@ export const setBidirectionalExchangeEdges = (
 
   // token0 -> token1
   g.setEdge(token0s, token1s, {
-    build: (_: string, from: FarmFromMode, to: FarmToMode) => new sdk.farm.actions.Exchange(pool, registry, token0, token1, from, to),
+    build: (_: string, from: FarmFromMode, to: FarmToMode) =>
+      new sdk.farm.actions.Exchange(pool, registry, token0, token1, from, to),
     from: token0s,
     to: token1s
   });
 
   // token1 -> token0
   g.setEdge(token1s, token0s, {
-    build: (_: string, from: FarmFromMode, to: FarmToMode) => new sdk.farm.actions.Exchange(pool, registry, token1, token0, from, to),
+    build: (_: string, from: FarmFromMode, to: FarmToMode) =>
+      new sdk.farm.actions.Exchange(pool, registry, token1, token0, from, to),
     from: token1s,
     to: token0s
   });
@@ -112,14 +124,28 @@ export const getSwapGraph = (sdk: BeanstalkSDK): Graph => {
   // BEAN<>WETH via Basin Well
   graph.setEdge("BEAN", "WETH", {
     build: (account: string, from: FarmFromMode, to: FarmToMode) =>
-      sdk.farm.presets.wellSwap(sdk.pools.BEAN_ETH_WELL, sdk.tokens.BEAN, sdk.tokens.WETH, account, from, to),
+      sdk.farm.presets.wellSwap(
+        sdk.pools.BEAN_ETH_WELL,
+        sdk.tokens.BEAN,
+        sdk.tokens.WETH,
+        account,
+        from,
+        to
+      ),
     from: "BEAN",
     to: "WETH"
   });
 
   graph.setEdge("WETH", "BEAN", {
     build: (account: string, from: FarmFromMode, to: FarmToMode) =>
-      sdk.farm.presets.wellSwap(sdk.pools.BEAN_ETH_WELL, sdk.tokens.WETH, sdk.tokens.BEAN, account, from, to),
+      sdk.farm.presets.wellSwap(
+        sdk.pools.BEAN_ETH_WELL,
+        sdk.tokens.WETH,
+        sdk.tokens.BEAN,
+        account,
+        from,
+        to
+      ),
     from: "WETH",
     to: "BEAN"
   });
@@ -157,14 +183,32 @@ export const getSwapGraph = (sdk: BeanstalkSDK): Graph => {
   //BEAN<>USDC via Pipeline
   graph.setEdge("USDC", "BEAN", {
     build: (account: string, from: FarmFromMode, to: FarmToMode) =>
-      sdk.farm.presets.uniV3WellSwap(sdk.pools.BEAN_ETH_WELL, account, sdk.tokens.USDC, sdk.tokens.WETH, sdk.tokens.BEAN, 500, from, to),
+      sdk.farm.presets.uniV3WellSwap(
+        sdk.pools.BEAN_ETH_WELL,
+        account,
+        sdk.tokens.USDC,
+        sdk.tokens.WETH,
+        sdk.tokens.BEAN,
+        500,
+        from,
+        to
+      ),
     from: "USDC",
     to: "BEAN"
   });
 
   graph.setEdge("BEAN", "USDC", {
     build: (account: string, from: FarmFromMode, to: FarmToMode) =>
-      sdk.farm.presets.wellSwapUniV3(sdk.pools.BEAN_ETH_WELL, account, sdk.tokens.BEAN, sdk.tokens.WETH, sdk.tokens.USDC, 500, from, to),
+      sdk.farm.presets.wellSwapUniV3(
+        sdk.pools.BEAN_ETH_WELL,
+        account,
+        sdk.tokens.BEAN,
+        sdk.tokens.WETH,
+        sdk.tokens.USDC,
+        500,
+        from,
+        to
+      ),
     from: "BEAN",
     to: "USDC"
   });
@@ -172,16 +216,50 @@ export const getSwapGraph = (sdk: BeanstalkSDK): Graph => {
   //BEAN<>DAI via Pipeline
   graph.setEdge("DAI", "BEAN", {
     build: (account: string, from: FarmFromMode, to: FarmToMode) =>
-      sdk.farm.presets.uniV3WellSwap(sdk.pools.BEAN_ETH_WELL, account, sdk.tokens.DAI, sdk.tokens.WETH, sdk.tokens.BEAN, 500, from, to),
+      sdk.farm.presets.uniV3WellSwap(
+        sdk.pools.BEAN_ETH_WELL,
+        account,
+        sdk.tokens.DAI,
+        sdk.tokens.WETH,
+        sdk.tokens.BEAN,
+        500,
+        from,
+        to
+      ),
     from: "DAI",
     to: "BEAN"
   });
 
   graph.setEdge("BEAN", "DAI", {
     build: (account: string, from: FarmFromMode, to: FarmToMode) =>
-      sdk.farm.presets.wellSwapUniV3(sdk.pools.BEAN_ETH_WELL, account, sdk.tokens.BEAN, sdk.tokens.WETH, sdk.tokens.DAI, 500, from, to),
+      sdk.farm.presets.wellSwapUniV3(
+        sdk.pools.BEAN_ETH_WELL,
+        account,
+        sdk.tokens.BEAN,
+        sdk.tokens.WETH,
+        sdk.tokens.DAI,
+        500,
+        from,
+        to
+      ),
     from: "BEAN",
     to: "DAI"
+  });
+
+  // Lido Tokens
+  // STETH<>WSTETH
+  graph.setEdge("stETH", "wstETH", {
+    build: (_account: string, _from: FarmFromMode, _to: FarmToMode) =>
+      new sdk.farm.actions.LidoWrapSteth(),
+    from: "stETH",
+    to: "wstETH"
+  });
+
+  graph.setEdge("wstETH", "stETH", {
+    build: (_account: string, _from: FarmFromMode, _to: FarmToMode) =>
+      new sdk.farm.actions.LidoUnwrapWstETH(),
+    from: "stETH",
+    to: "wstETH"
   });
 
   /// 3CRV<>Stables via 3Pool Add/Remove Liquidity
