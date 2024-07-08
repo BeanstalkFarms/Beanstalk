@@ -134,14 +134,17 @@ library LibReceiving {
                 s.sys.fert.fertilizedIndex += deltaFertilized;
                 require(amountToFertilize == deltaFertilized, "Inexact amount of Beans at Barn");
                 require(s.sys.fert.fertilizedIndex == s.sys.fert.unfertilizedIndex, "Paid != owed");
-                return;
+                break;
             }
         }
 
-        // Distribute the rest of the Fertilized Beans
-        s.sys.fert.bpf = uint128(newBpf); // SafeCast unnecessary here.
-        deltaFertilized += (remainingBpf * s.sys.fert.activeFertilizer);
-        s.sys.fert.fertilizedIndex += deltaFertilized;
+        // If there is Fertilizer remaining.
+        if (s.sys.fert.fertilizedIndex != s.sys.fert.unfertilizedIndex) {
+            // Distribute the rest of the Fertilized Beans
+            s.sys.fert.bpf = uint128(newBpf); // SafeCast unnecessary here.
+            deltaFertilized += (remainingBpf * s.sys.fert.activeFertilizer);
+            s.sys.fert.fertilizedIndex += deltaFertilized;
+        }
 
         // There will be up to activeFertilizer Beans leftover Beans that are not fertilized.
         // These leftovers will be applied on future Fertilizer receipts.

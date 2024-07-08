@@ -1,4 +1,4 @@
-const { USDC_MINTER, BEAN } = require("../test/utils/constants");
+const { USDC_MINTER, BEAN } = require("../test/hardhat/utils/constants.js");
 const { getUsdc, getBean, getBeanstalkAdminControls } = require("./contracts.js");
 const { impersonateSigner, impersonateBeanstalkOwner } = require("./signer.js");
 
