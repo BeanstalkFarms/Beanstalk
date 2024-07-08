@@ -74,6 +74,7 @@ export default class PlantAndDoX {
           grown: grownStalk,
         },
         seeds,
+        isGerminating: false,
       };
 
       return crate;
@@ -101,6 +102,7 @@ export default class PlantAndDoX {
           grown: ZERO_BN,
         },
         seeds: tokenValueToBN(seeds),
+        isGerminating: false,
       };
 
       return crate;

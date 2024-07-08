@@ -50,6 +50,11 @@ export type BeanPoolState = {
   deltaB: BigNumber;
 
   /**
+   * Time-Weighted average deltaB (beanstalkContract.poolDeltaB(address))
+   */
+  twaDeltaB?: BigNumber | null;
+
+  /**
    * The total USD value of the assets in the Pool.
    */
   liquidity: BigNumber;

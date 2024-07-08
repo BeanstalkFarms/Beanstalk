@@ -1,10 +1,16 @@
 import React, { useEffect } from "react";
 import styled from "styled-components";
 import { ConnectKitButton, useModal as useConnectKitModal } from "connectkit";
-import { Button } from "src/components/Swap/Button";
 import { useAccount } from "wagmi";
+import { ButtonPrimary } from "./Button";
 
-type ActionWalletButtonProps = { children: JSX.Element };
+type ActionWalletButtonProps = {
+  children: JSX.Element;
+  /**
+   * allow the children to be rendered even if the user is not connected
+   */
+  allow?: boolean;
+};
 
 export const WalletButton = () => {
   useUpdateWalletModalStyles();
@@ -14,7 +20,9 @@ export const WalletButton = () => {
       {({ isConnected, show, truncatedAddress, ensName }) => {
         return (
           <>
-            <StyledConnectButton onClick={show}>{isConnected ? ensName ?? truncatedAddress : "Connect Wallet"}</StyledConnectButton>
+            <StyledConnectButton onClick={show}>
+              {isConnected ? ensName ?? truncatedAddress : "Connect Wallet"}
+            </StyledConnectButton>
           </>
         );
       }}
@@ -22,14 +30,17 @@ export const WalletButton = () => {
   );
 };
 
-export const ActionWalletButtonWrapper = ({ children }: ActionWalletButtonProps) => {
+export const ActionWalletButtonWrapper = ({ children, allow }: ActionWalletButtonProps) => {
   const { address } = useAccount();
   useUpdateWalletModalStyles();
 
-  return !address ? (
+  return !address && !allow ? (
     <ConnectKitButton.Custom>
       {({ show }) => {
-        return <Button onClick={show} label="Connect Wallet" />;
+        return <ButtonPrimary onClick={(e) => {
+          e.preventDefault();
+          show?.();
+        }}>Connect Wallet</ButtonPrimary>;
       }}
     </ConnectKitButton.Custom>
   ) : (

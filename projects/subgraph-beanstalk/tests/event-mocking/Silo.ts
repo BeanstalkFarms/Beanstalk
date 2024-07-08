@@ -10,9 +10,7 @@ import {
   RemoveWithdrawals,
   SeedsBalanceChanged,
   StalkBalanceChanged,
-  Plant,
-  WhitelistToken,
-  DewhitelistToken
+  Plant
 } from "../../generated/Silo-Replanted/Beanstalk";
 import { handleAddDeposit } from "../../src/SiloHandler";
 import { BEAN_DECIMALS } from "../../../subgraph-core/utils/Constants";

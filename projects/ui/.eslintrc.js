@@ -85,6 +85,9 @@ module.exports = {
     'arrow-body-style': 'warn',
     'no-trailing-spaces': 0,
 
+    // -- Emotion css prop on DOM element override - https://emotion.sh/docs/eslint-plugin-react
+    "react/no-unknown-property": ["error", { "ignore": ["css"] }],
+
     // -- Other (to categorize)
     'react/button-has-type': 0,
     'react/require-default-props': 0,

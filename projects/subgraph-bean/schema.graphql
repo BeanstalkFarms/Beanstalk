@@ -2,16 +2,25 @@ type Token @entity {
   "Smart contract address of the token"
   id: ID!
 
+  "Name of the token, i.e. BEAN, WETH"
+  name: String!
+
   "Number of decimals"
   decimals: BigInt!
 
-  "Last USD price calculated"
+  "Last USD price calculated. Isn't calculated for all tokens, in those cases will be zero."
   lastPriceUSD: BigDecimal!
 }
 
 type Bean @entity {
   "Contract address of the Bean token"
   id: ID!
+
+  "Which chain this Bean is from"
+  chain: String!
+
+  "Smart contract address of the Beanstalk this Bean is associated with"
+  beanstalk: String!
 
   "Current supply"
   supply: BigInt!
@@ -51,6 +60,9 @@ type Bean @entity {
 
   "Pools that include this Bean"
   pools: [Pool!]!
+
+  "Dewhitelisted pools that include this Bean"
+  dewhitelistedPools: [Pool!]!
 
   "Hourly snapshot of Bean data"
   hourlySnapshot: [BeanHourlySnapshot!]! @derivedFrom(field: "bean")
@@ -184,7 +196,10 @@ type PoolCross @entity {
 
 type Pool @entity {
   id: ID!
+  "The Bean token that is in this pool"
   bean: Bean!
+  "All tokens in this pool"
+  tokens: [Token!]!
   reserves: [BigInt!]!
   lastSeason: Int!
   lastPrice: BigDecimal!

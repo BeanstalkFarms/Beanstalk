@@ -10,6 +10,7 @@ import "../../interfaces/IBean.sol";
 import "../MockToken.sol";
 import "../../libraries/Curve/LibCurve.sol";
 import "../../libraries/Minting/LibCurveMinting.sol";
+import {I3Curve} from "contracts/interfaces/ICurve.sol";
 
 /**
  * @author Publius + LeoFib

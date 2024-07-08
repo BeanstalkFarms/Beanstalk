@@ -16,11 +16,11 @@ import { useTooltip, useTooltipInPortal } from '@visx/tooltip';
 import { CurveFactory } from 'd3-shape';
 import { Group } from '@visx/group';
 import ParentSize from '@visx/responsive/lib/components/ParentSize';
+import { BeanstalkPalette } from '~/components/App/muiTheme';
 import ChartPropProvider, {
   BaseDataPoint,
   ProviderChartProps,
 } from './ChartPropProvider';
-import { BeanstalkPalette } from '~/components/App/muiTheme';
 
 // ------------------------
 //       Line Chart

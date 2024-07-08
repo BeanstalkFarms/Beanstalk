@@ -73,6 +73,9 @@ type Season @entity {
   " Season number in Int form for sorting "
   season: Int!
 
+  " Block in which the season start was triggered by the sunrise call "
+  sunriseBlock: BigInt!
+
   " Block timestamp when sunrise was called "
   createdAt: BigInt!
 
@@ -110,6 +113,8 @@ type Silo @entity {
   farmer: Farmer
   "Tokens whitelisted for deposit within the silo"
   whitelistedTokens: [String!]!
+  "Tokens that have been removed from the silo deposit whitelist"
+  dewhitelistedTokens: [String!]!
   "Link to all silo assets currently associated with this silo"
   assets: [SiloAsset!]! @derivedFrom(field: "silo")
   "Current BDV of all deposited assets"
@@ -120,10 +125,14 @@ type Silo @entity {
   plantableStalk: BigInt!
   "Current seeds balance"
   seeds: BigInt!
-  "Current average grown stalk per bdv per season"
-  grownStalkPerBdvPerSeason: BigInt!
+  "Current grown stalk per season"
+  grownStalkPerSeason: BigInt!
   "Current roots balance"
   roots: BigInt!
+  "[Seed Gauge] Stalk that is currently Germinating"
+  germinatingStalk: BigInt!
+  "[Seed Gauge] Current target ratio of Bean to LP deposits"
+  beanToMaxLpGpPerBdvRatio: BigInt
   "Cumulative total for bean mints sent to the silo"
   beanMints: BigInt!
   "Current number of active farmers deposited in the silo"
@@ -149,10 +158,14 @@ type SiloHourlySnapshot @entity {
   plantableStalk: BigInt!
   "Point in time current seeds balance"
   seeds: BigInt!
-  "Point in time average grown stalk per bdv per season"
-  grownStalkPerBdvPerSeason: BigInt!
+  "Point in time grown stalk per season"
+  grownStalkPerSeason: BigInt!
   "Point in time current roots balance"
   roots: BigInt!
+  "[Seed Gauge] Stalk that is currently Germinating"
+  germinatingStalk: BigInt!
+  "[Seed Gauge] Current target ratio of Bean to LP deposits"
+  beanToMaxLpGpPerBdvRatio: BigInt
   "Point in time cumulative total for bean mints sent to the silo"
   beanMints: BigInt!
   "Point in time current number of active farmers deposited in the silo"
@@ -167,10 +180,14 @@ type SiloHourlySnapshot @entity {
   deltaSeeds: BigInt!
   "Point in time delta roots balance"
   deltaRoots: BigInt!
+  "Point in time germinating stalk balance"
+  deltaGerminatingStalk: BigInt!
   "Point in time delta total for bean mints sent to the silo"
   deltaBeanMints: BigInt!
   "Point in time delta number of active farmers deposited in the silo"
   deltaActiveFarmers: Int!
+  "[Seed Gauge] The caseId used in the seasonal adjustment of beanToMaxLpGpPerBdvRatio"
+  caseId: BigInt
   "Timestamp of initial snapshot creation"
   createdAt: BigInt!
   "Timestamp of last entity update"
@@ -192,10 +209,14 @@ type SiloDailySnapshot @entity {
   plantableStalk: BigInt!
   "Point in time current seeds balance"
   seeds: BigInt!
-  "Point in time average grown stalk per bdv per season"
-  grownStalkPerBdvPerSeason: BigInt!
+  "Point in time grown stalk per season"
+  grownStalkPerSeason: BigInt!
   "Point in time current roots balance"
   roots: BigInt!
+  "[Seed Gauge] Stalk that is currently Germinating"
+  germinatingStalk: BigInt!
+  "[Seed Gauge] Current target ratio of Bean to LP deposits"
+  beanToMaxLpGpPerBdvRatio: BigInt
   "Point in time cumulative total for bean mints sent to the silo"
   beanMints: BigInt!
   "Point in time current number of active farmers deposited in the silo"
@@ -210,6 +231,8 @@ type SiloDailySnapshot @entity {
   deltaSeeds: BigInt!
   "Point in time delta roots balance"
   deltaRoots: BigInt!
+  "Point in time germinating stalk balance"
+  deltaGerminatingStalk: BigInt!
   "Point in time delta total for bean mints sent to the silo"
   deltaBeanMints: BigInt!
   "Point in time delta number of active farmers deposited in the silo"
@@ -338,17 +361,85 @@ type TokenYield @entity {
 }
 
 type WhitelistTokenSetting @entity {
-  " Contract address for the whitelisted token "
+  "Contract address for the whitelisted token"
   id: Bytes!
-  " Encoded BDV selector "
+  "Encoded BDV selector"
   selector: Bytes!
+  "[Seed Gauge] Encoded Gauge Point selector"
+  gpSelector: Bytes
+  "[Seed Gauge] Encoded Liquidity Weight selector"
+  lwSelector: Bytes
   "Represents how much Stalk one BDV of the underlying deposited token grows each season."
   stalkEarnedPerSeason: BigInt!
   "The stalk per BDV that the silo grants in exchange for depositing this token."
   stalkIssuedPerBdv: BigInt!
   "The last season in which the stalkEarnedPerSeason for this token was updated."
   milestoneSeason: Int!
+  "[Seed Gauge] Current Gauge Points"
+  gaugePoints: BigInt
+  "[Seed Gauge] The current optimal targeted distribution of BDV for this whitelisted asset"
+  optimalPercentDepositedBdv: BigInt
   "Last timestamp entity was updated"
+  updatedAt: BigInt!
+  "Link to hourly snapshot data"
+  hourlySnapshots: [WhitelistTokenHourlySnapshot!]! @derivedFrom(field: "token")
+  "Link to daily snapshot data"
+  dailySnapshots: [WhitelistTokenDailySnapshot!]! @derivedFrom(field: "token")
+}
+
+type WhitelistTokenHourlySnapshot @entity {
+  "Token address - Season"
+  id: ID!
+  "The season for this snapshot"
+  season: Int!
+  "WhitelistTokenSetting associated with this snapshot"
+  token: WhitelistTokenSetting!
+  "Encoded BDV selector"
+  selector: Bytes!
+  "[Seed Gauge] Encoded Gauge Point selector"
+  gpSelector: Bytes
+  "[Seed Gauge] Encoded Liquidity Weight selector"
+  lwSelector: Bytes
+  "Represents how much Stalk one BDV of the underlying deposited token grows each season."
+  stalkEarnedPerSeason: BigInt!
+  "The stalk per BDV that the silo grants in exchange for depositing this token."
+  stalkIssuedPerBdv: BigInt!
+  "The last season in which the stalkEarnedPerSeason for this token was updated."
+  milestoneSeason: Int!
+  "[Seed Gauge] Current Gauge Points"
+  gaugePoints: BigInt
+  "[Seed Gauge] The current optimal targeted distribution of BDV for this whitelisted asset"
+  optimalPercentDepositedBdv: BigInt
+  "Timestamp of initial snapshot creation"
+  createdAt: BigInt!
+  "Timestamp of last entity update"
+  updatedAt: BigInt!
+}
+
+type WhitelistTokenDailySnapshot @entity {
+  "Token address - Unix Timestamp"
+  id: ID!
+  "WhitelistTokenSetting associated with this snapshot"
+  token: WhitelistTokenSetting!
+  "Encoded BDV selector"
+  selector: Bytes!
+  "[Seed Gauge] Encoded Gauge Point selector"
+  gpSelector: Bytes
+  "[Seed Gauge] Encoded Liquidity Weight selector"
+  lwSelector: Bytes
+  "Represents how much Stalk one BDV of the underlying deposited token grows each season."
+  stalkEarnedPerSeason: BigInt!
+  "The stalk per BDV that the silo grants in exchange for depositing this token."
+  stalkIssuedPerBdv: BigInt!
+  "The last season in which the stalkEarnedPerSeason for this token was updated."
+  milestoneSeason: Int!
+  "[Seed Gauge] Current Gauge Points"
+  gaugePoints: BigInt
+  "[Seed Gauge] The current optimal targeted distribution of BDV for this whitelisted asset"
+  optimalPercentDepositedBdv: BigInt
+  "Timestamp of initial snapshot creation"
+  createdAt: BigInt!
+  "Timestamp of last entity update"
   updatedAt: BigInt!
 }
 
@@ -438,6 +529,8 @@ type FieldHourlySnapshot @entity {
   blocksToSoldOutSoil: BigInt!
   "Bool flag if soil sold out for the season"
   soilSoldOut: Boolean!
+  "The caseId used in the seasonal adjustment of temperature"
+  caseId: BigInt!
   "Creation Block Number"
   blockNumber: BigInt!
   "Timestamp of initial snapshot creation"
@@ -1626,13 +1719,13 @@ type WhitelistToken implements SiloEvent @entity(immutable: true) {
   "Token address whitelisted"
   token: String!
   "Stalk per BDV"
-  stalk: BigInt!
+  stalk: BigInt
   "Seeds per BDV"
-  seeds: BigInt!
+  seeds: BigInt
   "Stalk earned per season"
   stalkPerSeason: BigInt
   "Selector for token"
-  selector: String!
+  selector: String
   " Block number of this event "
   blockNumber: BigInt!
   " Timestamp of this event "
@@ -1654,4 +1747,24 @@ type DewhitelistToken implements SiloEvent @entity(immutable: true) {
   blockNumber: BigInt!
   " Timestamp of this event "
   createdAt: BigInt!
+}
+
+# For each applicable address there will be a max of two germinating entities - one even and one odd
+type Germinating @entity {
+  "Address-(EVEN|ODD)"
+  id: ID!
+  "Address of the token or account which is germinating"
+  address: String!
+  "EVEN or ODD"
+  type: String!
+  "True when the address is a farmer account"
+  isFarmer: Boolean!
+  "The season in which the germination started"
+  season: Int!
+  "Germinating stalk. This only applies to farmer/Beanstalk address"
+  stalk: BigInt!
+  "Germinating tokens. This only applies to a Token address"
+  tokenAmount: BigInt!
+  "Germinating bdv. This only applies to a Token address"
+  bdv: BigInt!
 }

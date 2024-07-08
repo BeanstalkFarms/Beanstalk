@@ -2,9 +2,9 @@ import { FertilizerYield } from "../../generated/schema";
 import { ZERO_BD, ZERO_BI } from "../../../subgraph-core/utils/Decimals";
 
 export function loadFertilizerYield(season: i32, window: i32): FertilizerYield {
-  let fertilizerYield = FertilizerYield.load(season.toString());
+  let fertilizerYield = FertilizerYield.load(season.toString() + "-" + window.toString());
   if (fertilizerYield == null) {
-    fertilizerYield = new FertilizerYield(season.toString());
+    fertilizerYield = new FertilizerYield(season.toString() + "-" + window.toString());
     fertilizerYield.season = season;
     fertilizerYield.humidity = ZERO_BD;
     fertilizerYield.outstandingFert = ZERO_BI;

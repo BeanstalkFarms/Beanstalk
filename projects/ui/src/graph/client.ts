@@ -98,6 +98,7 @@ const mergeUsingSeasons: (keyArgs: string[]) => FieldPolicy = (keyArgs) => ({
     // merged[2] = ...
     for (let i = 0; i < incoming.length; i += 1) {
       const season = readField('season', incoming[i]);
+      if (((season as number) - 1) < 0) continue;
       if (!season) throw new Error('Seasons queried without season');
       // Season 1 = Index 0
       merged[(season as number) - 1] = incoming[i];
@@ -183,7 +184,7 @@ const snapshotLink = new HttpLink({
 });
 
 const snapshotLabsLink = new HttpLink({
-  uri: 'https://api.thegraph.com/subgraphs/name/snapshot-labs/snapshot',
+  uri: `https://gateway-arbitrum.network.thegraph.com/api/${import.meta.env.VITE_THEGRAPH_API_KEY}/subgraphs/id/5MkoYVE5KREBTe2x45FuPdqWKGc2JgrHDteMzi6irSGD`,
 });
 
 const beanftLink = new HttpLink({

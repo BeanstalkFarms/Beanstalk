@@ -3,6 +3,7 @@ import {
   SeasonalInstantPriceDocument,
   useFarmerSiloAssetSnapshotsQuery,
   useFarmerSiloRewardsQuery,
+  useWhitelistTokenRewardsQuery,
 } from '~/generated/graphql';
 import useSeasonsQuery, {
   SeasonRange,
@@ -26,6 +27,9 @@ const useFarmerSiloHistory = (
     skip: !account,
     fetchPolicy: 'cache-and-network',
   });
+  const seedsPerTokenQuery = useWhitelistTokenRewardsQuery({
+    fetchPolicy: 'cache-and-network'
+  });
 
   const queryConfig = useMemo(
     () => ({
@@ -47,8 +51,9 @@ const useFarmerSiloHistory = (
     priceQuery,
     itemizeByToken
   );
-  const [stalkData, seedsData] = useInterpolateStalk(
+  const [stalkData, seedsData, grownStalkData] = useInterpolateStalk(
     siloRewardsQuery,
+    seedsPerTokenQuery,
     !includeStalk
   );
 
@@ -57,6 +62,7 @@ const useFarmerSiloHistory = (
       deposits: depositData,
       stalk: stalkData,
       seeds: seedsData,
+      grownStalk: grownStalkData,
     },
     loading:
       siloRewardsQuery.loading || siloAssetsQuery.loading || priceQuery.loading,

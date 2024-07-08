@@ -41,10 +41,6 @@ contract MockMetadataERC1155 is ERC1155 {
         return IMetadataFacet(mockMetadataFacetaddress).uri(depositId);
     }
 
-     function name() external view returns (string memory){
-        return IMetadataFacet(mockMetadataFacetaddress).name();
-    }
-
     function symbol() external view returns (string memory){
         return IMetadataFacet(mockMetadataFacetaddress).symbol();
     }

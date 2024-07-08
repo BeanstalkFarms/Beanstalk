@@ -41,6 +41,7 @@ type Follow {
   follower: String!
   id: String!
   ipfs: String
+  network: String!
   space: Space!
 }
 
@@ -57,6 +58,8 @@ input FollowWhere {
   id_in: [String]
   ipfs: String
   ipfs_in: [String]
+  network: String
+  network_in: [String]
   space: String
   space_in: [String]
 }
@@ -316,6 +319,7 @@ type SpaceVoting {
 }
 
 input SpaceWhere {
+  controller: String
   created: Int
   created_gt: Int
   created_gte: Int
@@ -332,10 +336,13 @@ type Statement {
   about: String
   created: Int!
   delegate: String
+  discourse: String
   id: String!
   ipfs: String!
+  network: String
   space: String!
   statement: String
+  status: String
   updated: Int!
 }
 
@@ -406,10 +413,15 @@ type Treasury {
 type User {
   about: String
   avatar: String
+  cover: String
   created: Int!
+  farcaster: String
+  github: String
   id: String!
   ipfs: String
+  lens: String
   name: String
+  twitter: String
 }
 
 input UsersWhere {
