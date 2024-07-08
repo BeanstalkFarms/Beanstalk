@@ -24,6 +24,7 @@ import { UniswapV3Swap } from "./UniswapV3Swap";
 import { DevDebug } from "./_DevDebug";
 import { LidoEthToSteth } from "./LidoEthToSteth";
 import { LidoWrapSteth } from "./LidoWrapSteth";
+import { LidoUnwrapWstETH } from "./LidoUnwrapWsteth";
 
 export {
   // Approvals
@@ -52,6 +53,7 @@ export {
   // Lido
   LidoEthToSteth,
   LidoWrapSteth,
+  LidoUnwrapWstETH,
 
   // DEX: Curve
   AddLiquidity,

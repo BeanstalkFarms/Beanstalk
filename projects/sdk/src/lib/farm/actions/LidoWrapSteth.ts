@@ -1,8 +1,9 @@
-import { BigNumber } from "ethers";
+import { BigNumber, ethers } from "ethers";
 import { RunContext, StepClass } from "src/classes/Workflow";
 import { AdvancedPipePreparedResult } from "src/lib/depot/pipe";
 import { Clipboard } from "src/lib/depot";
 import { ClipboardSettings } from "src/types";
+import { TokenValue } from "@beanstalk/sdk-core";
 
 export class LidoWrapSteth extends StepClass<AdvancedPipePreparedResult> {
   public name: string = "lidoWrapSteth";
@@ -12,12 +13,11 @@ export class LidoWrapSteth extends StepClass<AdvancedPipePreparedResult> {
   }
 
   async run(amountInStep: BigNumber, context: RunContext) {
-    const wstethAmtOut =
-      await LidoWrapSteth.sdk.contracts.lido.wsteth.getWstETHByStETH(amountInStep);
+    const wstethAmtOut = await this.getWstETHWithStETH(amountInStep);
 
     return {
       name: this.name,
-      amountOut: wstethAmtOut,
+      amountOut: wstethAmtOut.toBigNumber(),
       prepare: () => {
         LidoWrapSteth.sdk.debug(`[${this.name}.encode()]`, {
           amount: amountInStep
@@ -42,5 +42,11 @@ export class LidoWrapSteth extends StepClass<AdvancedPipePreparedResult> {
       decodeResult: (result: string) =>
         LidoWrapSteth.sdk.contracts.lido.wsteth.interface.decodeFunctionResult("wrap", result)
     };
+  }
+
+  async getWstETHWithStETH(amountInStep: ethers.BigNumber): Promise<TokenValue> {
+    const amount = await LidoWrapSteth.sdk.contracts.lido.wsteth.getWstETHByStETH(amountInStep);
+
+    return LidoWrapSteth.sdk.tokens.WSTETH.fromBlockchain(amount);
   }
 }
