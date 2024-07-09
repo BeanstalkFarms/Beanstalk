@@ -17,6 +17,7 @@ import sproutLogo from '~/img/beanstalk/sprout-icon-winter.svg';
 import rinsableSproutLogo from '~/img/beanstalk/rinsable-sprout-icon.svg';
 import beanEthLpLogo from '~/img/tokens/bean-eth-lp-logo.svg';
 import beanEthWellLpLogo from '~/img/tokens/bean-eth-well-lp-logo.svg';
+import beathWstethWellLPLogo from '~/img/tokens/bean-wsteth-logo.svg';
 
 // ERC-20 Token Images
 import crv3Logo from '~/img/tokens/crv3-logo.png';
@@ -24,6 +25,8 @@ import daiLogo from '~/img/tokens/dai-logo.svg';
 import usdcLogo from '~/img/tokens/usdc-logo.svg';
 import usdtLogo from '~/img/tokens/usdt-logo.svg';
 import lusdLogo from '~/img/tokens/lusd-logo.svg';
+import stethLogo from '~/img/tokens/steth-logo.svg';
+import wstethLogo from '~/img/tokens/wsteth-logo.svg';
 import unripeBeanLogo from '~/img/tokens/unripe-bean-logo-circled.svg';
 import unripeBeanWethLogoUrl from '~/img/tokens/unrip-beanweth.svg';
 import useSetting from '~/hooks/app/useSetting';
@@ -33,6 +36,39 @@ import { useSigner } from '~/hooks/ledger/useSigner';
 import { useDynamicSeeds } from '~/hooks/sdk';
 
 const IS_DEVELOPMENT_ENV = process.env.NODE_ENV !== 'production';
+
+const setTokenMetadatas = (sdk: BeanstalkSDK) => {
+  // Beanstalk tokens
+  sdk.tokens.STALK.setMetadata({ logo: stalkLogo });
+  sdk.tokens.SEEDS.setMetadata({ logo: seedLogo });
+  sdk.tokens.PODS.setMetadata({ logo: podsLogo });
+  sdk.tokens.SPROUTS.setMetadata({ logo: sproutLogo });
+  sdk.tokens.RINSABLE_SPROUTS.setMetadata({ logo: rinsableSproutLogo });
+  sdk.tokens.BEAN_ETH_UNIV2_LP.setMetadata({ logo: beanEthLpLogo });
+
+  // ETH-like tokens
+  sdk.tokens.ETH.setMetadata({ logo: ethIconCircled });
+  sdk.tokens.WETH.setMetadata({ logo: wEthIconCircled });
+  sdk.tokens.STETH.setMetadata({ logo: stethLogo });
+  sdk.tokens.WSTETH.setMetadata({ logo: wstethLogo });
+
+  // ERC-20 LP tokens
+  sdk.tokens.BEAN_CRV3_LP.setMetadata({ logo: beanCrv3LpLogo });
+  sdk.tokens.BEAN_ETH_WELL_LP.setMetadata({ logo: beanEthWellLpLogo });
+  sdk.tokens.BEAN_WSTETH_WELL_LP.setMetadata({
+    logo: beathWstethWellLPLogo,
+  });
+  sdk.tokens.UNRIPE_BEAN_WETH.setMetadata({ logo: unripeBeanWethLogoUrl });
+
+  // ERC-20 tokens
+  sdk.tokens.BEAN.setMetadata({ logo: beanCircleLogo });
+  sdk.tokens.UNRIPE_BEAN.setMetadata({ logo: unripeBeanLogo });
+  sdk.tokens.CRV3.setMetadata({ logo: crv3Logo });
+  sdk.tokens.DAI.setMetadata({ logo: daiLogo });
+  sdk.tokens.USDC.setMetadata({ logo: usdcLogo });
+  sdk.tokens.USDT.setMetadata({ logo: usdtLogo });
+  sdk.tokens.LUSD.setMetadata({ logo: lusdLogo });
+};
 
 const useBeanstalkSdkContext = () => {
   const { data: signer } = useSigner();
@@ -61,29 +97,7 @@ const useBeanstalkSdkContext = () => {
       ...(subgraphUrl ? { subgraphUrl } : {}),
     });
 
-    _sdk.tokens.ETH.setMetadata({ logo: ethIconCircled });
-    _sdk.tokens.WETH.setMetadata({ logo: wEthIconCircled });
-
-    _sdk.tokens.BEAN.setMetadata({ logo: beanCircleLogo });
-    _sdk.tokens.BEAN_CRV3_LP.setMetadata({ logo: beanCrv3LpLogo });
-    _sdk.tokens.BEAN_ETH_WELL_LP.setMetadata({ logo: beanEthWellLpLogo });
-    _sdk.tokens.UNRIPE_BEAN.setMetadata({ logo: unripeBeanLogo });
-    _sdk.tokens.UNRIPE_BEAN_WETH.setMetadata({ logo: unripeBeanWethLogoUrl });
-
-    _sdk.tokens.STALK.setMetadata({ logo: stalkLogo });
-    _sdk.tokens.SEEDS.setMetadata({ logo: seedLogo });
-    _sdk.tokens.PODS.setMetadata({ logo: podsLogo });
-    _sdk.tokens.SPROUTS.setMetadata({ logo: sproutLogo });
-    _sdk.tokens.RINSABLE_SPROUTS.setMetadata({ logo: rinsableSproutLogo });
-
-    _sdk.tokens.BEAN_ETH_UNIV2_LP.setMetadata({ logo: beanEthLpLogo });
-
-    _sdk.tokens.CRV3.setMetadata({ logo: crv3Logo });
-    _sdk.tokens.DAI.setMetadata({ logo: daiLogo });
-    _sdk.tokens.USDC.setMetadata({ logo: usdcLogo });
-    _sdk.tokens.USDT.setMetadata({ logo: usdtLogo });
-    _sdk.tokens.LUSD.setMetadata({ logo: lusdLogo });
-
+    setTokenMetadatas(_sdk);
     return _sdk;
   }, [datasource, provider, signer, subgraphUrl]);
 
