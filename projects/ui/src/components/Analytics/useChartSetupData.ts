@@ -224,9 +224,9 @@ export function useChartSetupData() {
 
     depositedTokensToChart.forEach((token) => {
       const seedChart: ChartSetupBase = {
-        name: `${token.symbol} Seed Value`,
+        name: `${token.symbol} Seeds`,
         tooltipTitle: `${token.symbol} Seeds`,
-        tooltipHoverText: `The number of seeds earned per deposited ${token.name}.`,
+        tooltipHoverText: `The number of seeds per BDV rewarded to ${token.name} Deposits.`,
         shortDescription: `The number of seeds per ${token.name}.`,
         timeScaleKey: 'createdAt',
         priceScaleKey: 'stalkEarnedPerSeason',
