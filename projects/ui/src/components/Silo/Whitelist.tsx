@@ -44,6 +44,7 @@ import stalkIcon from '~/img/beanstalk/stalk-icon.svg';
 import logo from '~/img/tokens/bean-logo.svg';
 import { FC } from '~/types';
 import { useIsTokenDeprecated } from '~/hooks/beanstalk/useWhitelist';
+import { roundWithDecimals } from '~/util/UI';
 import SiloAssetApyChip from './SiloAssetApyChip';
 import StatHorizontal from '../Common/StatHorizontal';
 import BeanProgressIcon from '../Common/BeanProgressIcon';
@@ -313,10 +314,23 @@ const Whitelist: FC<{
                         <Tooltip
                           placement="right"
                           title={
-                            <>
+                            <Stack gap={0.25}>
                               1 {token.symbol} = {displayFullBN(getBDV(token))}{' '}
                               BDV
-                            </>
+                              <Row gap={0.2}>
+                                <TokenIcon
+                                  token={STALK}
+                                  css={{ height: '0.8em', marginTop: '-1px' }}
+                                />
+                                <Typography color="text.primary" mr={0.2}>
+                                  {token.rewards?.stalk}
+                                </Typography>
+                                <TokenIcon token={SEEDS} />
+                                <Typography color="text.primary">
+                                  {token.rewards?.seeds || 0}
+                                </Typography>
+                              </Row>
+                            </Stack>
                           }
                         >
                           <Box>
@@ -330,10 +344,7 @@ const Whitelist: FC<{
                               </Typography>
                               <TokenIcon token={SEEDS} />
                               <Typography color="text.primary">
-                                {Math.round(
-                                  (token.rewards?.seeds || 0 + Number.EPSILON) *
-                                    100
-                                ) / 100}
+                                {roundWithDecimals(token.rewards?.seeds, 3)}
                               </Typography>
                             </Row>
                           </Box>
