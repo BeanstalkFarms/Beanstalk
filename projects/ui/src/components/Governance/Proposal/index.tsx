@@ -15,6 +15,7 @@ import { FC } from '~/types';
 import useProposalBlockData from '~/hooks/beanstalk/useProposalBlockData';
 import Row from '~/components/Common/Row';
 import { FontSize } from '~/components/App/muiTheme';
+import BigNumber from 'bignumber.js';
 
 const ProposalContent: FC<{
   proposal: Proposal;
@@ -25,7 +26,12 @@ const ProposalContent: FC<{
     'ipfs://',
     'https://cf-ipfs.com/ipfs/'
   );
-  const votingOver = props.proposal.end <= (new Date().valueOf()) / 1000;
+  const votingOver = props.proposal.end <= new Date().valueOf() / 1000;
+
+  const quorumBN = new BigNumber(pctOfQuorum || 0)
+    .times(100)
+    .decimalPlaces(1, BigNumber.ROUND_DOWN);
+  const quorumBNToFixed = quorumBN.toFixed(0, BigNumber.ROUND_DOWN);
 
   return (
     <Card sx={{ p: 2 }}>
@@ -40,9 +46,7 @@ const ProposalContent: FC<{
         </Stack>
         {pctOfQuorum && pctOfQuorum > 0 && (
           <Tooltip
-            title={`${props.quorum.data.tag} ${votingOver ? 'was' : 'is'} ~${(pctOfQuorum * 100).toFixed(
-              1
-            )}% of the way to reaching quorum.`}
+            title={`${props.quorum.data.tag} ${votingOver ? 'was' : 'is'} ~${quorumBN.toString()}% of the way to reaching quorum.`}
           >
             <Box sx={{ position: 'relative', textAlign: 'center' }}>
               <CircularProgress
@@ -64,7 +68,7 @@ const ProposalContent: FC<{
                   fontSize: FontSize.xs,
                 }}
               >
-                {parseInt(Math.min(pctOfQuorum * 100, 100).toString(), 10)}%
+                {quorumBNToFixed.toString()}%
               </Box>
             </Box>
           </Tooltip>
