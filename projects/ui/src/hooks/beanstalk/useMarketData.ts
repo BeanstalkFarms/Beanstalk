@@ -24,8 +24,8 @@ const useMarketData = () => {
   const [listings, setListings] = useState<PodListing[] | undefined>();
   const [orders, setOrders] = useState<PodOrder[] | undefined>();
 
-  const [maxPlaceInLine, setMaxPlaceInLine] = useState<number>();
-  const [maxPlotSize, setMaxPlotSize] = useState<number>();
+  const [maxPlaceInLine, setMaxPlaceInLine] = useState<number>(0);
+  const [maxPlotSize, setMaxPlotSize] = useState<number>(0);
 
   /// Queries
   const [getListings] = useAllPodListingsLazyQuery();
