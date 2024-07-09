@@ -226,13 +226,7 @@ export function useChartSetupData() {
       const seedChart: ChartSetupBase = {
         name: `${token.symbol} Seed Value`,
         tooltipTitle: `${token.symbol} Seeds`,
-        tooltipHoverText: `The number of seeds earned by ${
-          token.symbol === 'BEAN'
-            ? 'Beans'
-            : token.symbol === 'urBEAN'
-              ? 'Unripe Beans'
-              : `${token.name}`
-        } at the beginning of every Season.`,
+        tooltipHoverText: `The number of seeds earned per deposited ${token.name}.`,
         shortDescription: `The number of seeds per ${token.name}.`,
         timeScaleKey: 'createdAt',
         priceScaleKey: 'stalkEarnedPerSeason',
