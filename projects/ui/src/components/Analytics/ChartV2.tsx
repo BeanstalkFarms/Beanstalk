@@ -433,7 +433,7 @@ const ChartV2: FC<ChartV2DataProps> = ({
             const value = beforeFirstSeason ? 0 : dataPoint ? dataPoint?.value[index] : lastDataPoint ? lastDataPoint?.value[index] : undefined;
             if (!isMobile || selected.length < 3) {
               return (
-                <Box key={`selectedChartV2${index}`} sx={{ display: 'flex', flexDirection: 'column', height: '88px' }}>
+                <Box key={`selectedChartV2${index}`} sx={{ display: 'flex', flexDirection: 'column', height: size === 'mini' ? '64px' : '88px' }}>
                   <Box
                     sx={{
                       borderLeft: selected.length > 1 ? 2.5 : 0,

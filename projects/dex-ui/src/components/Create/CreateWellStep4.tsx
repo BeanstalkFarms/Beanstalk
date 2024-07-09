@@ -73,6 +73,12 @@ const FormContent = ({
     }
   });
 
+  const [seeding, _amt1, _amt2] = methods.watch(['seedingLiquidity', 'token1Amount', 'token2Amount']);
+
+  const amt1 = Number(_amt1 || 0);
+  const amt2 = Number(_amt2 || 0);
+  const bothAmountsNeeded = seeding ? (amt1 > 0 && amt2 <= 0) || (amt1 <= 0 && amt2 > 0)  : false;
+
   const handleSave = (formValues?: FormValues) => {
     const values = formValues || methods.getValues();
     setStep4({
@@ -91,13 +97,17 @@ const FormContent = ({
       token2Amount: values.token2Amount
     });
 
+    if (bothAmountsNeeded) {
+      return;
+    }
+
     const token1Amount = token1.fromHuman(Number(values.token1Amount || "0"));
     const token2Amount = token2.fromHuman(Number(values.token2Amount || "0"));
 
     // We determine that the user is seeding liquidity if they have 'seeding liquidity' toggled on in the CURRENT form
-    // and if they have provided a non-zero amount for at least 1 token.
+    // and if they have provided a non-zero amount for BOTH tokens.
     const seedingLiquidity =
-      values.seedingLiquidity && Boolean(token1Amount.gt(0) || token2Amount.gt(0));
+      values.seedingLiquidity && Boolean(token1Amount.gt(0) && token2Amount.gt(0));
 
     // Always use the salt value from the current form.
     const saltValue = (values.usingSalt && values.salt) || 0;
@@ -128,7 +138,8 @@ const FormContent = ({
             <CreateWellButtonRow
               onGoBack={handleSave}
               valuesRequired={false}
-              disabled={!enoughAllowance}
+              disabledMessage={bothAmountsNeeded ? "Both Amounts Required" : undefined}
+              disabled={!enoughAllowance || bothAmountsNeeded}
             />
           </Flex>
         </StyledForm>

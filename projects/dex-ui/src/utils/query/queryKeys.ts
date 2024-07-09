@@ -17,6 +17,10 @@ export const queryKeys = {
 
   // prices
   tokenPricesAll: ["prices", "token"],
-  tokenPrices: (address: string[]) => ["prices", "token", ...address],
-  lpTokenPrices: (addresses: string[]) => ["prices", "lp-token", ...addresses]
+  tokenPrices: (symbols: string[]) => ["prices", "token", ...symbols],
+  lpTokenPrices: (addresses: string[]) => ["prices", "lp-token", ...addresses],
+
+  // token balance
+  tokenBalancesAll: ["token", "balance"],
+  tokenBalance: (symbol: string | undefined) => ["token", "balance", symbol || "invalid"]
 } as const;

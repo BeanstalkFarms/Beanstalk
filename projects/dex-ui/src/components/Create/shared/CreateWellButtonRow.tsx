@@ -32,11 +32,13 @@ export const CreateWellButtonRow = ({
   disabled = false,
   valuesRequired = true,
   optionalKeys,
+  disabledMessage,
   onGoBack
 }: {
   disabled?: boolean;
   optionalKeys?: readonly string[] | string[];
   valuesRequired?: boolean;
+  disabledMessage?: string;
   onGoBack?: () => void;
 }) => {
   const { step, goBack } = useCreateWell();
@@ -70,7 +72,7 @@ export const CreateWellButtonRow = ({
   const goNextEnabled = noErrors && hasRequiredValues;
 
   const goBackLabel = ButtonLabels[step].back || "Back";
-  const nextLabel = ButtonLabels[step].next || "Next";
+  const nextLabel = disabled && disabledMessage || ButtonLabels[step].next || "Next";
 
   return (
     <Flex $fullWidth $direction="row" $justifyContent="space-between" $gap={2}>
