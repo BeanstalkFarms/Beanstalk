@@ -95,8 +95,8 @@ export const castPodOrder = (order: PodOrderFragment): PodOrder => {
     BEAN[1].decimals
   );
 
-  const beanAmountRemaining = toTokenUnitsBN(beanAmount.minus(beanAmountFilled).toFixed(6, BigNumber.ROUND_UP), 0);
-  const podAmountRemaining = toTokenUnitsBN(beanAmountRemaining.div(pricePerPod).toFixed(6, BigNumber.ROUND_UP), 0);
+  const beanAmountRemaining = beanAmount.minus(beanAmountFilled).dp(6, BigNumber.ROUND_UP);
+  const podAmountRemaining = beanAmountRemaining.div(pricePerPod).dp(6, BigNumber.ROUND_UP);
   const podAmount = podAmountFilled.plus(podAmountRemaining);
 
   return {
