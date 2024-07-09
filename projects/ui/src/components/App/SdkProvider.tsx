@@ -80,7 +80,7 @@ const useBeanstalkSdkContext = () => {
   const subgraphUrl =
     SUBGRAPH_ENVIRONMENTS?.[subgraphEnv]?.subgraphs?.beanstalk;
 
-  const sdk = useMemo(() => {
+  return useMemo(() => {
     console.debug(`Instantiating BeanstalkSDK`, {
       provider,
       signer,
@@ -88,7 +88,7 @@ const useBeanstalkSdkContext = () => {
       subgraphUrl,
     });
 
-    const _sdk = new BeanstalkSDK({
+    const sdk = new BeanstalkSDK({
       provider: provider as any,
       readProvider: provider as any,
       signer: signer ?? undefined,
@@ -97,11 +97,9 @@ const useBeanstalkSdkContext = () => {
       ...(subgraphUrl ? { subgraphUrl } : {}),
     });
 
-    setTokenMetadatas(_sdk);
-    return _sdk;
+    setTokenMetadatas(sdk);
+    return sdk;
   }, [datasource, provider, signer, subgraphUrl]);
-
-  return sdk;
 };
 
 export const BeanstalkSDKContext = createContext<

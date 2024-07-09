@@ -32,7 +32,16 @@ import FarmModeField from '~/components/Common/Form/FarmModeField';
 import Token, { ERC20Token, NativeToken } from '~/classes/Token';
 import { Beanstalk } from '~/generated/index';
 import { ZERO_BN } from '~/constants';
-import { BEAN, CRV3, DAI, ETH, USDC, USDT, WETH } from '~/constants/tokens';
+import {
+  BEAN,
+  CRV3,
+  DAI,
+  ETH,
+  USDC,
+  USDT,
+  WETH,
+  WSTETH,
+} from '~/constants/tokens';
 import { useBeanstalkContract } from '~/hooks/ledger/useContract';
 import useFarmerBalances from '~/hooks/farmer/useFarmerBalances';
 import useTokenMap from '~/hooks/chain/useTokenMap';
@@ -127,7 +136,7 @@ const SwapForm: FC<
   const [balanceFromOut, setBalanceFromOut] = useState<BalanceFrom>(
     BalanceFrom.EXTERNAL
   );
-  // This tracks whether this is an exact input or an exact output swap 
+  // This tracks whether this is an exact input or an exact output swap
   const [userInputMode, setUserInputMode] = useState<string>('');
 
   /// Derived values
@@ -359,8 +368,8 @@ const SwapForm: FC<
     tokenSelect === 'tokenOut'
       ? [tokenOut]
       : tokenSelect === 'tokensIn'
-      ? values.tokensIn.map((x) => x.token)
-      : [];
+        ? values.tokensIn.map((x) => x.token)
+        : [];
   const handleCloseTokenSelect = useCallback(() => setTokenSelect(null), []);
   const handleShowTokenSelect = useCallback(
     (which: 'tokensIn' | 'tokenOut') => () => setTokenSelect(which),
@@ -391,7 +400,15 @@ const SwapForm: FC<
       });
       setFieldValue('tokenOut.token', tokenIn);
     }
-  }, [modeIn, modeOut, setFieldValue, tokenIn, tokenOut, amountOut, tokensMatch]);
+  }, [
+    modeIn,
+    modeOut,
+    setFieldValue,
+    tokenIn,
+    tokenOut,
+    amountOut,
+    tokensMatch,
+  ]);
 
   // if tokenIn && tokenOut are equal and no balances are found, reverse positions.
   // This prevents setting of internal balance of given token when there is none
@@ -428,9 +445,9 @@ const SwapForm: FC<
       getAmountOut(tokenIn, amountIn);
     } else if (userInputMode === 'exact-output' && amountOut) {
       getMinAmountIn(tokenOut, amountOut);
-    };
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tokenIn, tokenOut])
+  }, [tokenIn, tokenOut]);
 
   const handleMax = useCallback(() => {
     setFieldValue('tokensIn.0.amount', balanceInMax);
@@ -668,7 +685,7 @@ const SwapForm: FC<
 
 // ---------------------------------------------------
 
-const SUPPORTED_TOKENS = [BEAN, ETH, WETH, CRV3, DAI, USDC, USDT];
+const SUPPORTED_TOKENS = [BEAN, ETH, WETH, CRV3, DAI, USDC, USDT, WSTETH];
 
 /**
  * SWAP
