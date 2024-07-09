@@ -77,6 +77,16 @@ export const UNRIPE_BEAN_WETH_ADDRESSES = {
 // Common ERC-20 Tokens
 // ----------------------------------------
 
+export const STETH_ADDRESSES = {
+  [SupportedChainId.MAINNET]:
+    '0xae7ab96520DE3A18E5e111B5EaAb095312D7fE84'.toLowerCase(),
+};
+
+export const WSTETH_ADDRESSES = {
+  [SupportedChainId.MAINNET]:
+    '0x7f39C581F595B53c5cb19bD0b3f8dA6c935E2Ca0'.toLowerCase(),
+};
+
 export const DAI_ADDRESSES = {
   [SupportedChainId.MAINNET]:
     '0x6B175474E89094C44Da98b954EedeAC495271d0F'.toLowerCase(),
@@ -127,6 +137,11 @@ export const BEAN_CRV3_ADDRESSES = {
 export const BEAN_ETH_WELL_ADDRESSES = {
   [SupportedChainId.MAINNET]:
     '0xBEA0e11282e2bB5893bEcE110cF199501e872bAd'.toLowerCase(),
+};
+
+export const BEAN_WSTETH_ADDRESSS = {
+  [SupportedChainId.MAINNET]:
+    '0xa61Ef2313C1eC9c8cf2E1cAC986539d136b1393E'.toLowerCase(),
 };
 
 // ----------------------------------------
@@ -216,12 +231,12 @@ export const DELEGATES_REGISTRY_ADDRESSES = {
 export const BEAN_CRV3_V1_ADDRESSES = {
   [SupportedChainId.MAINNET]:
     '0x3a70DfA7d2262988064A2D051dd47521E43c9BdD'.toLowerCase(),
-}
+};
 
 /// ENS Reverse Records
 export const ENS_REVERSE_RECORDS = {
   [SupportedChainId.MAINNET]:
     '0x3671ae578e63fdf66ad4f3e12cc0c0d71ac7510c'.toLowerCase(),
-}
+};
 
 export const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000';
