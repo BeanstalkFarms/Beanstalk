@@ -791,7 +791,7 @@ export class LibraryPresets {
     };
 
     /**
-     * Go from WETH/ETH/STETH -> WSTETH
+     * Go from WETH/ETH/STETH -> WSTETH/STETH
      * Doesn't support going backwards & doesn't support transferring to a recipient address.
      */
     this.ethIshtoStethIsh = (
