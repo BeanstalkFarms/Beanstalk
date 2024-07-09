@@ -84,7 +84,8 @@ contract TestHelper is
         // as starting from an timestamp of 0 can cause issues.
         vm.warp(INITIAL_TIMESTAMP);
 
-        // initalize mock tokens.
+        // initialize mock tokens.
+        initMockBean(C.BEAN, verbose);
         initMockTokens(verbose);
 
         // initialize Depot:
@@ -104,8 +105,8 @@ contract TestHelper is
         initFertilizer(verbose);
         transferFertilizerOwnership(BEANSTALK);
 
-        // initialize Diamond, initalize users:
-        setupDiamond(mock, verbose);
+        // initialize Diamond, initialize users:
+        setupDiamond(BEANSTALK, mock, verbose);
 
         // Initialize Shipment Routes and Plans.
         initShipping(verbose);

@@ -126,7 +126,7 @@ contract PipelineConvertTest is TestHelper {
     function setUp() public {
         initializeBeanstalkTestState(true, false);
 
-        // initalize farmers.
+        // initialize farmers.
         farmers.push(users[1]);
         farmers.push(users[2]);
 
@@ -226,7 +226,7 @@ contract PipelineConvertTest is TestHelper {
     function testBasicConvertLPToBean(uint256 amount) public {
         vm.pauseGasMetering();
 
-        // well is initalized with 10000 beans. cap add liquidity
+        // well is initialized with 10000 beans. cap add liquidity
         // to reasonable amounts.
         amount = bound(amount, 1e6, 10000e6);
 
@@ -257,7 +257,7 @@ contract PipelineConvertTest is TestHelper {
     function testConvertLPToLP(uint256 amount, uint256 inputIndex, uint256 outputIndex) public {
         vm.pauseGasMetering();
 
-        // well is initalized with 10000 beans. cap add liquidity
+        // well is initialized with 10000 beans. cap add liquidity
         // to reasonable amounts.
         amount = bound(amount, 10e6, 5000e6);
 

@@ -511,7 +511,7 @@ contract MockSeasonFacet is SeasonFacet {
         return currentGaugePoints;
     }
 
-    function mockInitalizeGaugeForToken(
+    function mockInitializeGaugeForToken(
         address token,
         bytes4 gaugePointSelector,
         bytes4 liquidityWeightSelector,
@@ -593,7 +593,7 @@ contract MockSeasonFacet is SeasonFacet {
      * @dev 0 = below peg, 1 = above peg, 2 = significantly above peg.
      */
     function setPrice(uint256 price, address targetWell) public returns (int256 deltaB) {
-        // initalize beanTknPrice, and reserves.
+        // initialize beanTknPrice, and reserves.
         uint256 ethPrice = 1000e6;
         s.sys.usdTokenPrice[targetWell] = 1e24 / ethPrice;
         uint256[] memory reserves = IWell(targetWell).getReserves();

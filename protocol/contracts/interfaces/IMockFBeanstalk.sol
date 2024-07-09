@@ -1266,7 +1266,7 @@ interface IMockFBeanstalk {
         GerminationSide side
     ) external;
 
-    function mockInitalizeGaugeForToken(
+    function mockInitializeGaugeForToken(
         address token,
         bytes4 gaugePointSelector,
         bytes4 liquidityWeightSelector,

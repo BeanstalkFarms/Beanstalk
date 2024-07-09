@@ -10,7 +10,7 @@ import {Utils, console} from "test/foundry/utils/Utils.sol";
 import {Diamond} from "contracts/beanstalk/Diamond.sol";
 import {IDiamondCut} from "contracts/interfaces/IDiamondCut.sol";
 import {MockInitDiamond} from "contracts/mocks/newMockInitDiamond.sol";
-import {InitDiamond} from "contracts/beanstalk/init/newInitDiamond.sol";
+import {InitDiamond} from "contracts/beanstalk/init/InitDiamond.sol";
 import {DiamondLoupeFacet} from "contracts/beanstalk/diamond/DiamondLoupeFacet.sol";
 
 /// Beanstalk Contracts w/external libraries.

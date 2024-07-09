@@ -59,7 +59,7 @@ contract OracleDeployer is Utils {
         [WBTC_USDC_03_POOL, WBTC, C.USDC] // WBTC/USDC
     ];
 
-    // oracles must be initalized at some price. Assumes index matching with pools.
+    // oracles must be initialized at some price. Assumes index matching with pools.
     uint256[][] public priceData = [[uint256(1e18), 18], [uint256(50000e2), 6]];
 
     /**

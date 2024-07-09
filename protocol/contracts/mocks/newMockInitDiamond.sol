@@ -6,7 +6,7 @@ pragma solidity ^0.8.20;
 
 import {AppStorage} from "contracts/beanstalk/storage/AppStorage.sol";
 import {AssetSettings} from "contracts/beanstalk/storage/System.sol";
-import "contracts/beanstalk/init/InitalizeDiamond.sol";
+import "contracts/beanstalk/init/InitializeDiamond.sol";
 import {LibWhitelistedTokens} from "contracts/libraries/Silo/LibWhitelistedTokens.sol";
 import {LibWhitelist} from "contracts/libraries/Silo/LibWhitelist.sol";
 import {LibUnripe} from "contracts/libraries/LibUnripe.sol";
@@ -22,7 +22,7 @@ import {C} from "contracts/C.sol";
  * - Whitelists the bean:wsteth well.
  * - Whitelists unripe assets.
  **/
-contract MockInitDiamond is InitalizeDiamond {
+contract MockInitDiamond is InitializeDiamond {
     // min 1micro stalk earned per season due to germination.
     uint32 constant INIT_UR_BEAN_STALK_EARNED_PER_SEASON = 1;
     uint32 constant INIT_BEAN_WSTETH_WELL_STALK_EARNED_PER_SEASON = 4e6;
@@ -30,18 +30,18 @@ contract MockInitDiamond is InitalizeDiamond {
     uint32 constant INIT_BEAN_WURLP_PERCENT_TARGET = 50e6;
 
     function init() external {
-        // initalize the default state of the diamond.
-        // {see. InitalizeDiamond.initalizeDiamond()}
-        initalizeDiamond(C.BEAN, C.BEAN_ETH_WELL);
+        // initialize the default state of the diamond.
+        // {see. InitializeDiamond.initializeDiamond()}
+        initializeDiamond(C.BEAN, C.BEAN_ETH_WELL);
 
-        // initalizes unripe assets.
+        // initializes unripe assets.
         // sets the underlying LP token of unripeLP to the Bean:wstETH well.
         address underlyingUrLPWell = C.BEAN_WSTETH_WELL;
         whitelistUnderlyingUrLPWell(underlyingUrLPWell);
-        initalizeUnripeAssets(underlyingUrLPWell);
+        initializeUnripeAssets(underlyingUrLPWell);
     }
 
-    function initalizeUnripeAssets(address well) internal {
+    function initializeUnripeAssets(address well) internal {
         (
             address[] memory unripeTokens,
             address[] memory underlyingTokens
@@ -97,7 +97,7 @@ contract MockInitDiamond is InitalizeDiamond {
     }
 
     /**
-     * @notice initalizes the unripe silo settings.
+     * @notice initializes the unripe silo settings.
      * @dev unripe bean and unrpe lp has the same settings,
      * other than the BDV calculation.
      */
