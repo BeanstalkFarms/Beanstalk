@@ -52,10 +52,6 @@ export const useTokenMetadata = (params: string | TokenIsh): TokenMetadataRespon
   const metaValues = Object.values(existingMetas);
   const hasAllMetas = metaValues.length && metaValues.every(Boolean);
 
-  if (existingToken?.symbol === "PORK") {
-    console.log("PORK: ", existingMetas);
-  }
-
   const query = useQuery({
     queryKey: queryKeys.tokenMetadata(address || "invalid"),
     queryFn: async () => {
