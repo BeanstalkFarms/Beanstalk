@@ -251,6 +251,28 @@ interface IMockFBeanstalk {
         bool isSoppable;
     }
 
+    struct SourceDeposit {
+        address token;
+        uint256 amount;
+        int96 stem;
+        uint256[] sourceMinTokenAmountsOut; // LP only
+        uint256 destMinLpOut; // LP only
+        uint256 _grownStalk; // not stalk // need to change logic
+        uint256 _burnedBeans;
+        address _transferredToken; // NOTE what if LP type is not supported at destination?
+        uint256 _transferredTokenAmount;
+    }
+
+    struct SourcePlot {
+        address n;
+    }
+
+    struct SourceFertilizer {
+        uint128 id;
+        uint256 amount;
+        uint128 _remainingBpf;
+    }
+
     error AddressEmptyCode(address target);
     error AddressInsufficientBalance(address account);
     error ECDSAInvalidSignature();
@@ -1237,6 +1259,23 @@ interface IMockFBeanstalk {
     ) external;
 
     function migrationNeeded(address account) external view returns (bool hasMigrated);
+
+    // Lineage migrations.
+    function migrateOut(
+        address destination,
+        SourceDeposit[] calldata sourceDeposits,
+        SourcePlot[] calldata sourcePlots,
+        SourceFertilizer[] calldata sourceFertilizer,
+        bytes calldata data
+    ) external;
+
+    function migrateIn(
+        address user,
+        bytes[] calldata deposits,
+        bytes[] calldata plots,
+        bytes[] calldata fertilizer,
+        bytes calldata data
+    ) external;
 
     function mintBeans(address to, uint256 amount) external;
 

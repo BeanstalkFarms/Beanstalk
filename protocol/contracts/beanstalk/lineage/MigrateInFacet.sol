@@ -16,6 +16,7 @@ import {LibMigrateIn} from "contracts/libraries/Lineage/LibMigrateIn.sol";
  **/
 contract MigrateInFacet is Invariable {
     AppStorage internal s;
+
     /**
      * @notice Process the inbound migration locally.
      * @dev Reverts if failure to mint assets or handle migration in.
@@ -32,5 +33,12 @@ contract MigrateInFacet is Invariable {
         LibMigrateIn.migrateInDeposits(user, deposits);
         LibMigrateIn.migrateInPlots(user, plots);
         LibMigrateIn.migrateInFertilizer(user, fertilizer);
+    }
+
+    /** 
+     * @notice Adds a supported source from which farmers can migrate.
+     */
+    function addSupportedSource(address source) external {
+        LibMigrateIn.addSupportedSource(source);
     }
 }

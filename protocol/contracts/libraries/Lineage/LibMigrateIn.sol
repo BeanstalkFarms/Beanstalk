@@ -23,6 +23,8 @@ import {LibWhitelistedTokens} from "contracts/libraries/Silo/LibWhitelistedToken
 library LibMigrateIn {
     using SafeCast for uint256;
 
+    event SupportedSourceAdded(address source);
+
     // Definitions must match source migration definitions. May require multiple definitions.
     struct SourceDeposit {
         address token;
@@ -51,6 +53,7 @@ library LibMigrateIn {
     // msg.sender == source instance
     // Use _depositTokensForConvert() to calculate stem (includes germination logic, germiantion safety provided by source beanstalk).
     function migrateInDeposits(address user, bytes[] calldata deposits) internal {
+        if (deposits.length == 0) return;
         address[] memory whitelistedTokens = LibWhitelistedTokens.getWhitelistedTokens();
         for (uint256 i = 0; i < deposits.length; i++) {
             SourceDeposit memory deposit = abi.decode(deposits[i], (SourceDeposit));
@@ -120,6 +123,7 @@ library LibMigrateIn {
      */
     function migrateInFertilizer(address user, bytes[] memory fertilizer) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
+        if (fertilizer.length == 0) return;
         for (uint256 i = 0; i < fertilizer.length; i++) {
             SourceFertilizer memory sourceFert = abi.decode(fertilizer[i], (SourceFertilizer));
 
@@ -132,5 +136,14 @@ library LibMigrateIn {
                 s.sys.fert.bpf
             );
         }
+    }
+
+    /**
+     * @notice Adds a supported source from which farmers can migrate.
+     */
+    function addSupportedSource(address source) internal {
+        AppStorage storage s = LibAppStorage.diamondStorage();
+        s.sys.lineage.supportedSources[source] = true;
+        emit SupportedSourceAdded(source);
     }
 }

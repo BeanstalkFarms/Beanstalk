@@ -64,6 +64,7 @@ library LibMigrateOut {
         address destination,
         SourceDeposit[] memory deposits
     ) internal returns (bytes[] memory depositsOut) {
+        if (deposits.length == 0) return depositsOut;
         AppStorage storage s = LibAppStorage.diamondStorage();
         depositsOut = new bytes[](deposits.length);
 
@@ -152,6 +153,7 @@ library LibMigrateOut {
         address account,
         SourceFertilizer[] memory fertilizer
     ) internal returns (bytes[] memory fertilizerOut) {
+        if (fertilizer.length == 0) return fertilizerOut;
         AppStorage storage s = LibAppStorage.diamondStorage();
         fertilizerOut = new bytes[](fertilizer.length);
         /*
