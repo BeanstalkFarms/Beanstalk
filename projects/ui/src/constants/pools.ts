@@ -4,8 +4,19 @@ import { SupportedChainId } from '~/constants/chains';
 import curveLogo from '~/img/dexes/curve-logo.png';
 
 import { ChainConstant, PoolMap } from '.';
-import { BEAN_CRV3_ADDRESSES, BEAN_ETH_WELL_ADDRESSES } from './addresses';
-import { BEAN, BEAN_CRV3_LP, BEAN_ETH_WELL_LP, CRV3, WETH } from './tokens';
+import {
+  BEAN_CRV3_ADDRESSES,
+  BEAN_ETH_WELL_ADDRESSES,
+  BEAN_WSTETH_ADDRESSS,
+} from './addresses';
+import {
+  BEAN,
+  BEAN_CRV3_LP,
+  BEAN_ETH_WELL_LP,
+  CRV3,
+  WETH,
+  BEAN_WSTETH_WELL_LP,
+} from './tokens';
 
 // ------------------------------------
 // BEAN:CRV3 Curve MetaPool
@@ -33,6 +44,19 @@ export const BEANETH_WELL_MAINNET = new BasinWell(
     name: 'BEAN:WETH Well Pool',
     logo: curveLogo,
     symbol: 'BEAN:WETH',
+    color: '#ed9f9c',
+  }
+);
+
+export const BEANWSTETH_WELL_MAINNET = new BasinWell(
+  SupportedChainId.MAINNET,
+  BEAN_WSTETH_ADDRESSS,
+  BEAN_WSTETH_WELL_LP,
+  [BEAN, WETH],
+  {
+    name: 'BEAN:wstETH Well Pool',
+    logo: curveLogo,
+    symbol: 'BEAN:wstETH',
     color: '#ed9f9c',
   }
 );
