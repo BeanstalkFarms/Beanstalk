@@ -47,7 +47,7 @@ export class LibraryPresets {
   public readonly uniV3AddLiquidity;
   public readonly uniV3WellSwap;
   public readonly wellSwapUniV3;
-  public readonly ethIshtoWsteth;
+  public readonly ethIshtoStethIsh;
   public readonly ethIsh2beanWstethLp;
 
   /**
@@ -791,11 +791,12 @@ export class LibraryPresets {
     };
 
     /**
-     * Go from WETH/ETH/STETH -> WSTETH.
+     * Go from WETH/ETH/STETH -> WSTETH/STETH.
      * Doesn't support going backwards & doesn't support transferring to a recipient address.
      */
-    this.ethIshtoWsteth = (
+    this.ethIshtoStethIsh = (
       tokenIn: NativeToken | ERC20Token,
+      tokenOut: ERC20Token,
       from?: FarmFromMode,
       options?: {
         /**
@@ -812,13 +813,16 @@ export class LibraryPresets {
     ) => {
       const symbol = tokenIn.symbol;
 
-      const isValidTokenIn =
-        symbol === sdk.tokens.ETH.symbol ||
-        symbol === sdk.tokens.WETH.symbol ||
-        symbol === sdk.tokens.STETH.symbol;
+      const isValidTokenIn = symbol === sdk.tokens.ETH.symbol || symbol === sdk.tokens.WETH.symbol;
+
+      const isValidTokenOut = symbol === sdk.tokens.WSTETH.symbol;
 
       if (!isValidTokenIn) {
         throw new Error(`Expected token input to be ETH, WETH, or STETH, but got: ${symbol}`);
+      }
+
+      if (!isValidTokenOut) {
+        throw new Error(`Expected token out to be STETH or WSTETH but got: ${tokenOut.symbol}`);
       }
 
       const result = [];
@@ -859,12 +863,6 @@ export class LibraryPresets {
         advPipe.add(new sdk.farm.actions.LidoEthToSteth());
       }
 
-      // at this point, assume we have stETH. convert stETH -> wstETH
-      advPipe.add(
-        new sdk.farm.actions.ApproveERC20(sdk.tokens.STETH, sdk.contracts.pipeline.address)
-      );
-      advPipe.add(new sdk.farm.actions.LidoWrapSteth());
-
       result.push(advPipe);
 
       return result;
@@ -876,7 +874,7 @@ export class LibraryPresets {
       from?: FarmFromMode,
       to?: FarmToMode
     ) => {
-      const ethIs2Wsteth = this.ethIshtoWsteth(tokenIn, from);
+      const ethIs2Wsteth = this.ethIshtoStethIsh(tokenIn, sdk.tokens.WSTETH, from);
       const wellAddLiq = this.wellAddLiquidity(
         sdk.pools.BEAN_WSTETH_WELL,
         sdk.tokens.WSTETH,

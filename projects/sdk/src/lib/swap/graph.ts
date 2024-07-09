@@ -247,19 +247,26 @@ export const getSwapGraph = (sdk: BeanstalkSDK): Graph => {
   });
 
   // Lido Tokens
-  // STETH<>WSTETH
-  graph.setEdge("stETH", "wstETH", {
-    build: (_account: string, _from: FarmFromMode, _to: FarmToMode) =>
-      new sdk.farm.actions.LidoWrapSteth(),
-    from: "stETH",
-    to: "wstETH"
+  graph.setEdge("USDC", "stETH", {
+    build: (account: string, from: FarmFromMode, to: FarmToMode) => {
+      return [];
+    },
+    from: "USDC",
+    to: "stETH"
   });
 
-  graph.setEdge("wstETH", "stETH", {
-    build: (_account: string, _from: FarmFromMode, _to: FarmToMode) =>
-      new sdk.farm.actions.LidoUnwrapWstETH(),
-    from: "stETH",
+  // WETH<>WSTETH
+  graph.setEdge("WETH", "wstETH", {
+    build: (account: string, from: FarmFromMode, to: FarmToMode) =>
+      sdk.farm.presets.uniswapV3Swap(sdk.tokens.WETH, sdk.tokens.WSTETH, account, 100, from, to),
+    from: "WETH",
     to: "wstETH"
+  });
+  graph.setEdge("wstETH", "WETH", {
+    build: (account: string, from: FarmFromMode, to: FarmToMode) =>
+      sdk.farm.presets.uniswapV3Swap(sdk.tokens.WSTETH, sdk.tokens.WETH, account, 100, from, to),
+    from: "wstETH",
+    to: "WETH"
   });
 
   /// 3CRV<>Stables via 3Pool Add/Remove Liquidity
