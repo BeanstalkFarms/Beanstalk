@@ -20,6 +20,7 @@ import {
   SeasonalVolumeDocument,
   SeasonalWeightedDeltaBDocument,
   SeasonalWeightedPriceDocument,
+  SeedsPerSeasonDocument,
 } from '~/generated/graphql';
 import useSdk from '~/hooks/sdk';
 import { useMemo } from 'react';
@@ -135,6 +136,7 @@ export function useChartSetupData() {
     const lpCharts: ChartSetupBase[] = [];
     const depositCharts: ChartSetupBase[] = [];
     const apyCharts: ChartSetupBase[] = [];
+    const seedCharts: ChartSetupBase[] = [];
 
     depositedTokensToChart.forEach((token) => {
       const depositedChart: ChartSetupBase = {
@@ -218,6 +220,37 @@ export function useChartSetupData() {
       };
 
       lpCharts.push(lpChart);
+    });
+
+    depositedTokensToChart.forEach((token) => {
+      const seedChart: ChartSetupBase = {
+        name: `${token.symbol} Seed Value`,
+        tooltipTitle: `${token.symbol} Seeds`,
+        tooltipHoverText: `The number of seeds earned by ${
+          token.symbol === 'BEAN'
+            ? 'Beans'
+            : token.symbol === 'urBEAN'
+              ? 'Unripe Beans'
+              : `${token.name}`
+        } at the beginning of every Season.`,
+        shortDescription: `The number of seeds per ${token.name}.`,
+        timeScaleKey: 'createdAt',
+        priceScaleKey: 'stalkEarnedPerSeason',
+        valueAxisType: 'seedValue',
+        document: SeedsPerSeasonDocument,
+        documentEntity: 'seasons',
+        queryConfig: {
+          variables: {
+            token: `${token.address}`,
+          },
+        },
+        valueFormatter: (value: any) =>
+          Number(formatUnits(value, 6)),
+        tickFormatter: (value: any) => value.toFixed(4),
+        shortTickFormatter: tickFormatTruncated,
+      };
+
+      seedCharts.push(seedChart);
     });
     
     const output: ChartSetup[] = [];
@@ -413,6 +446,7 @@ export function useChartSetupData() {
 
     const siloCharts: ChartSetupBase[] = [
       ...depositCharts,
+      ...seedCharts,
       {
         name: `Stalk`,
         tooltipTitle: `Stalk`,
