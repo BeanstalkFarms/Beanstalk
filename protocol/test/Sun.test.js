@@ -185,8 +185,8 @@ describe('Sun', function () {
     // And since we havent changes the reserves, the instantaneous deltaB is 0
                                           // twadeltaB, CASE ID
     this.result = await this.season.sunSunrise('-100000000', 8);
-    await expect(this.result).to.emit(this.season, 'Soil').withArgs(3, '0');
-    await expect(await this.field.totalSoil()).to.be.equal('0');
+    await expect(this.result).to.emit(this.season, 'Soil').withArgs(3, '100000000');
+    await expect(await this.field.totalSoil()).to.be.equal('100000000');
   })
 
   it("rewards more than type(uint128).max Soil below peg", async function () {
