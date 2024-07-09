@@ -169,20 +169,28 @@ library LibSilo {
      * the stalk assoicated with the deposits.
      *
      */
-    function _withdrawDeposit(address account, address token, int96 stem, uint256 amount) internal {
-        // Remove the Deposit from `account`.
-        (
-            uint256 initalStalkRemoved,
+    function _withdrawDeposit(
+        address account,
+        address token,
+        int96 stem,
+        uint256 amount
+    )
+        internal
+        returns (
+            uint256 initialStalkRemoved,
             uint256 grownStalkRemoved,
             uint256 bdvRemoved,
             GerminationSide side
-        ) = _removeDepositFromAccount(
-                account,
-                token,
-                stem,
-                amount,
-                LibTokenSilo.Transfer.emitTransferSingle
-            );
+        )
+    {
+        // Remove the Deposit from `account`.
+        (initialStalkRemoved, grownStalkRemoved, bdvRemoved, side) = _removeDepositFromAccount(
+            account,
+            token,
+            stem,
+            amount,
+            LibTokenSilo.Transfer.emitTransferSingle
+        );
         if (side == GerminationSide.NOT_GERMINATING) {
             // remove the deposit from totals
             _withdraw(
@@ -190,12 +198,12 @@ library LibSilo {
                 token,
                 amount,
                 bdvRemoved,
-                initalStalkRemoved.add(grownStalkRemoved)
+                initialStalkRemoved.add(grownStalkRemoved)
             );
         } else {
             // remove deposit from germination, and burn the grown stalk.
             // grown stalk does not germinate and is not counted in germinating totals.
-            _withdrawGerminating(account, token, amount, bdvRemoved, initalStalkRemoved, side);
+            _withdrawGerminating(account, token, amount, bdvRemoved, initialStalkRemoved, side);
 
             if (grownStalkRemoved > 0) {
                 burnActiveStalk(account, grownStalkRemoved);

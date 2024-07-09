@@ -69,7 +69,7 @@ contract MigrateToChildTest is TestHelper {
         int96 stem = bs.stemTipForToken(C.BEAN);
         passGermination();
         // Capture Source state.
-        (uint256 depositAmount, uint256 depositBdv) = bs.getDeposit(user, C.BEAN, stem);
+        (uint256 sourceDepositAmount, uint256 sourceDepositBdv) = bs.getDeposit(user, C.BEAN, stem);
         // Capture Destination state.
         // Migrate.
         uint256 firstMigrationAmount = amount / 10;
@@ -107,8 +107,16 @@ contract MigrateToChildTest is TestHelper {
             new IMockFBeanstalk.SourceFertilizer[](0),
             abi.encode("")
         );
+        int96 destinationStem = bs.stemTipForToken(C.BEAN);
         // Validate Source state.
         // Validate Destination state.
+        (uint256 destinationDepositAmount, uint256 destinationDepositBdv) = bs.getDeposit(
+            user,
+            C.BEAN,
+            destinationStem
+        );
+        require(sourceDepositAmount == destinationDepositAmount, "Deposit amount mismatch");
+        require(sourceDepositBdv == destinationDepositBdv, "Deposit bdv mismatch");
     }
 
     /**

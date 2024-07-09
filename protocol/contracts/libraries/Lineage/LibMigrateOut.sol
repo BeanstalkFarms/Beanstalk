@@ -84,14 +84,13 @@ library LibMigrateOut {
                 }
             }
 
-            deposits[i]._grownStalk = LibTokenSilo.grownStalkForDeposit(
+            // Withdraw deposit from Silo.
+            (, deposits[i]._grownStalk, , ) = LibSilo._withdrawDeposit(
                 user,
                 deposits[i].token,
-                deposits[i].stem
+                deposits[i].stem,
+                deposits[i].amount
             );
-
-            // Withdraw deposit from Silo.
-            LibSilo._withdrawDeposit(user, deposits[i].token, deposits[i].stem, deposits[i].amount);
 
             if (deposits[i].token == C.BEAN) {
                 // Burn Bean.
