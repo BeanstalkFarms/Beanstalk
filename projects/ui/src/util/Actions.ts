@@ -306,13 +306,13 @@ export const parseActionMessage = (a: Action) => {
         const amtOutDisplay = displayTokenAmount(a.amountOut, a.tokenOut);
 
         if (bySource && bySource.external.plus(bySource.internal).gt(0)) {
-          const amountsBySource = displayAmountsBySource(
+          const amountsBySourceDisplay = displayAmountsBySource(
             bySource,
             a.tokenIn,
             'of liquidity'
           );
 
-          return `Add ${amountsBySource.combined} for ${amtOutDisplay}`;
+          return `Add ${amountsBySourceDisplay.combined} for ${amtOutDisplay}.`;
         }
 
         return `Add ${displayTokenAmount(
@@ -330,7 +330,18 @@ export const parseActionMessage = (a: Action) => {
           a.tokenIn
         )} for ${displayTokenAmount(a.amountOut, a.tokenOut)} of liquidity.`;
       }
-      return `Swap ${a.source ? `from your ${copy.FROM[a.source]}` : ''} ${displayTokenAmount(
+      if (
+        a.amountsBySource &&
+        a.amountsBySource.internal.plus(a.amountsBySource.external).gt(0)
+      ) {
+        const bySourceDisplay = displayAmountsBySource(
+          a.amountsBySource,
+          a.tokenIn
+        );
+        return `Swap ${bySourceDisplay.combined} for ${displayTokenAmount(a.amountOut, a.tokenOut)}.`;
+      }
+
+      return `Swap ${displayTokenAmount(
         a.amountIn,
         a.tokenIn
       )} for ${displayTokenAmount(a.amountOut, a.tokenOut)}.`;
