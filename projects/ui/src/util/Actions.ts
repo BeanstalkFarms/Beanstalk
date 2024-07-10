@@ -4,6 +4,10 @@ import { FarmFromMode, FarmToMode } from '@beanstalk/sdk';
 import Token from '~/classes/Token';
 import { displayFullBN, displayTokenAmount } from '~/util/Tokens';
 import copy from '~/constants/copy';
+import {
+  AmountsBySource,
+  displayAmountsBySource,
+} from '~/hooks/beanstalk/useBalancesUsedBySource';
 import { BEAN, PODS, SPROUTS, CRV3 } from '../constants/tokens';
 import { displayBN, trimAddress } from './index';
 
@@ -64,6 +68,8 @@ export type EndTokenAction = {
 export type SwapAction = {
   type: ActionType.SWAP;
   tokenIn: Token;
+  source?: FarmFromMode;
+  amountsBySource?: AmountsBySource;
   amountIn: BigNumber;
   tokenOut: Token;
   amountOut: BigNumber;
@@ -81,6 +87,7 @@ export type ReceiveTokenAction = {
 export type TransferBalanceAction = {
   type: ActionType.TRANSFER_BALANCE;
   amount: BigNumber;
+  amountsBySource?: AmountsBySource;
   token: Token;
   source:
     | FarmFromMode.INTERNAL
@@ -295,10 +302,23 @@ export const parseActionMessage = (a: Action) => {
         a.tokenOut.symbol !== CRV3[1].symbol &&
         !a.tokenOut.isUnripe
       ) {
+        const bySource = a.amountsBySource;
+        const amtOutDisplay = displayTokenAmount(a.amountOut, a.tokenOut);
+
+        if (bySource && bySource.external.plus(bySource.internal).gt(0)) {
+          const amountsBySource = displayAmountsBySource(
+            bySource,
+            a.tokenIn,
+            'of liquidity'
+          );
+
+          return `Add ${amountsBySource.combined} for ${amtOutDisplay}`;
+        }
+
         return `Add ${displayTokenAmount(
           a.amountIn,
           a.tokenIn
-        )} of liquidity for ${displayTokenAmount(a.amountOut, a.tokenOut)}.`;
+        )} of liquidity for ${amtOutDisplay}.`;
       }
       if (
         a.tokenIn.isLP &&
@@ -310,7 +330,7 @@ export const parseActionMessage = (a: Action) => {
           a.tokenIn
         )} for ${displayTokenAmount(a.amountOut, a.tokenOut)} of liquidity.`;
       }
-      return `Swap ${displayTokenAmount(
+      return `Swap ${a.source ? `from your ${copy.FROM[a.source]}` : ''} ${displayTokenAmount(
         a.amountIn,
         a.tokenIn
       )} for ${displayTokenAmount(a.amountOut, a.tokenOut)}.`;
