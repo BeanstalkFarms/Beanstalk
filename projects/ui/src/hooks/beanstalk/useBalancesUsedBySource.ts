@@ -1,76 +1,102 @@
-import { FarmFromMode } from '@beanstalk/sdk';
+import { FarmFromMode, Token } from '@beanstalk/sdk';
 
 import BigNumber from 'bignumber.js';
-import { useEffect, useState } from 'react';
-import copy from '~/constants/copy';
+import { useCallback } from 'react';
+import { displayTokenAmount } from '~/util';
 import useFarmerBalances from '../farmer/useFarmerBalances';
 import { ZERO_BN } from '../../constants';
 import { Balance } from '../../state/farmer/balances';
 
+// Define partial types to avoid clashing between sdk & UI token types
+type TokenIsh = { address: string; symbol: string };
+type TokenIshFormValues = { token: TokenIsh; amount: BigNumber | undefined };
+
 export type IUseBalancesUsedBySource = {
-  tokenAddress: string;
-  amount: BigNumber | undefined;
+  tokens: TokenIshFormValues[];
   mode: FarmFromMode;
 };
 
-export type BalanceBySource = {
+export type AmountsBySource = {
   internal: BigNumber;
   external: BigNumber;
 };
 
-export default function useBalancesUsedBySource({
-  tokenAddress,
-  amount,
+/**
+ * @param amounts
+ * @param token
+ * @param betweenStr
+ * @param ownerStr
+ * @returns a string for internal & external if the amount is defined & gt 0 in the order of {amount} {betweenStr | ""} {owner} Farm/Circulating Balance
+ */
+export const displayAmountsBySource = (
+  amounts: AmountsBySource,
+  token: Token,
+  between?: string, // inject a str between amounts and owner
+  owner?: string // defaults to 'your'
+) => {
+  const middle = between ? ` ${between} ` : ' ';
+  const ownerStr = owner || 'your';
+
+  const internal = amounts.internal.gt(0)
+    ? `${displayTokenAmount(amounts.internal, token)}${middle}from ${ownerStr} Farm Balance`
+    : undefined;
+  const external = amounts.external.gt(0)
+    ? `${displayTokenAmount(amounts.external, token)}${middle}from ${ownerStr} Circulating Balance`
+    : undefined;
+
+  const combined = `${internal || ''}${internal && external ? ' and ' : ''}${external || ''}`;
+
+  return {
+    internal,
+    external,
+    combined,
+  };
+};
+
+export default function useGetBalancesUsedBySource({
+  tokens,
   mode,
 }: IUseBalancesUsedBySource) {
-  const [sourceAmounts, setSourceAmounts] = useState<BalanceBySource>({
-    internal: ZERO_BN,
-    external: ZERO_BN,
-  });
-
   const balances = useFarmerBalances();
 
-  useEffect(() => {
-    const balance: Balance | null = balances[tokenAddress];
-    if (!balance || !amount || amount.lte(0)) return;
+  const getBalancesUsedBySource = useCallback(() => {
+    const bySource = tokens.reduce<AmountsBySource[]>((prev, curr) => {
+      const balance: Balance | null = balances[curr.token.address];
+      const struct = { internal: ZERO_BN, external: ZERO_BN };
+      const amount = curr.amount;
 
-    let internal = ZERO_BN;
-    let external = ZERO_BN;
+      if (!balance || !amount || amount.lte(0)) {
+        prev.push(struct);
+        return prev;
+      }
 
-    if (mode === FarmFromMode.EXTERNAL) {
-      external = amount;
-    }
-    if (mode === FarmFromMode.INTERNAL) {
-      internal = amount;
-    }
+      if (mode === FarmFromMode.EXTERNAL) {
+        struct.external = amount;
+      }
+      if (mode === FarmFromMode.INTERNAL) {
+        struct.internal = amount;
+      }
+      if (mode === FarmFromMode.INTERNAL_EXTERNAL) {
+        if (balance.internal.gte(amount)) {
+          struct.internal = amount;
+        } else {
+          // the amount the external balance has to cover.
+          const amtLeft = amount.minus(balance.internal);
 
-    if (mode === FarmFromMode.INTERNAL_EXTERNAL) {
-      if (balance.internal.gte(amount)) {
-        internal = amount;
-      } else {
-        // the amount the external balance has to cover.
-        const amtLeft = amount.minus(balance.internal);
-
-        console.log('amtLeft: ', amtLeft.toNumber());
-
-        // If the balance.external < amtLeft, the action cannot be performed.
-        if (balance.external.gte(amtLeft)) {
-          internal = balance.internal;
-          external = amtLeft;
+          // If the balance.external < amtLeft, the action cannot be performed.
+          if (balance.external.gte(amtLeft)) {
+            struct.internal = balance.internal;
+            struct.external = amtLeft;
+          }
         }
       }
-    }
 
-    setSourceAmounts({ internal, external });
-  }, [amount, balances, mode, tokenAddress]);
+      prev.push(struct);
+      return prev;
+    }, []);
 
-  useEffect(() => {
-    console.log({
-      mode: copy.FROM[mode],
-      internal: sourceAmounts.internal.toNumber(),
-      external: sourceAmounts.external.toNumber(),
-    });
-  }, [sourceAmounts, mode]);
+    return bySource;
+  }, [tokens, balances, mode]);
 
-  return sourceAmounts;
+  return [getBalancesUsedBySource] as const;
 }
