@@ -319,6 +319,19 @@ library LibSilo {
             ? s.a[sender].roots
             : s.s.roots.sub(1).mul(stalk).div(s.s.stalk).add(1);
 
+
+        // Transfer rain roots
+        // Sop roots are transferred first, can't transfer more than sender's roots
+        uint256 sopRootsToTransfer = s.a[sender].sop.roots;
+        if (sopRootsToTransfer > s.a[sender].roots) {
+            sopRootsToTransfer = s.a[sender].roots;
+        }
+        // subtract rain roots from the sender
+        s.a[sender].sop.roots = s.a[sender].sop.roots.sub(sopRootsToTransfer);
+
+        // add rain roots to the recipient
+        s.a[recipient].sop.roots = s.a[recipient].sop.roots.add(sopRootsToTransfer);
+
         // Subtract Stalk and Roots from the 'sender' balance.
         s.a[sender].s.stalk = s.a[sender].s.stalk.sub(stalk);
         s.a[sender].roots = s.a[sender].roots.sub(roots);

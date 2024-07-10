@@ -363,6 +363,101 @@ describe('Sop', function () {
     })
   })
 
+  describe('Rain roots reduced', function () {
+    it('reduces rain roots upon withdrawal', async function () {
+      const beanStem = to6("4");
+
+      // set reserves so we'll sop
+      await this.well.setReserves([to6("1000000"), to18("1100")]);
+      await this.pump.setInstantaneousReserves([to6("1000000"), to18("1100")]);
+
+      await this.season.rainSunrise(); // start raining
+      await this.season.rainSunrise(); // sop
+
+      await this.silo.mow(user.address, BEAN);
+
+      let rainRoots = await this.siloGetters.balanceOfRainRoots(userAddress);
+
+      expect(rainRoots).to.be.equal('10004000000000000000000000');
+
+      await this.silo.connect(user).withdrawDeposit(BEAN, beanStem, to6('1000'), EXTERNAL);
+
+      rainRoots = await this.siloGetters.balanceOfRainRoots(userAddress);
+
+      expect(await this.siloGetters.balanceOfRainRoots(userAddress)).to.be.equal('0');
+    });
+
+    it('reduces rain roots upon transfer', async function () {
+      const beanStem = to6("4");
+
+      // set reserves so we'll sop
+      await this.well.setReserves([to6("1000000"), to18("1100")]);
+      await this.pump.setInstantaneousReserves([to6("1000000"), to18("1100")]);
+
+      await this.season.rainSunrise(); // start raining
+      await this.season.rainSunrise(); // sop
+
+      await this.silo.mow(user.address, BEAN);
+
+      let rainRootsBefore = await this.siloGetters.balanceOfRainRoots(userAddress);
+
+      expect(rainRootsBefore).to.be.equal('10004000000000000000000000');
+
+      await this.silo.connect(user).transferDeposit(userAddress, user3Address, BEAN, beanStem, to6('1000'));
+      await this.silo.mow(user.address, BEAN);
+
+      let rainRootsAfter = await this.siloGetters.balanceOfRainRoots(userAddress);
+      console.log("rainRoots after: ", rainRootsAfter.toString());
+
+      // user should have 0 rain roots
+      expect(await this.siloGetters.balanceOfRainRoots(userAddress)).to.be.equal('0');
+      // user3 should have the rain roots
+      expect(await this.siloGetters.balanceOfRainRoots(user3Address)).to.be.equal(rainRootsBefore);
+    });
+
+    // same as above test, however another deposit before the transfer
+    // so that we can verify rain roots are transferred first
+    it('transfers rain roots first', async function () {
+      const beanStem = to6("4");
+
+        // set reserves so we'll sop
+        await this.well.setReserves([to6("1000000"), to18("1100")]);
+        await this.pump.setInstantaneousReserves([to6("1000000"), to18("1100")]);
+  
+        await this.season.rainSunrise(); // start raining
+        await this.season.rainSunrise(); // sop
+  
+        await this.silo.mow(user.address, BEAN);
+
+        // deposit
+        await this.silo.connect(user).deposit(BEAN, to6('1000'), EXTERNAL);
+
+        // pass two seasons
+        await this.season.siloSunrise(0);
+        await this.season.siloSunrise(0);
+
+        // mow so we get roots
+        await this.silo.mow(user.address, BEAN);
+
+        // verify actual roots
+        let actualRoots = await this.siloGetters.balanceOfRoots(userAddress);
+        expect(actualRoots).to.be.equal('20016000000000000000000000');
+        let rainRootsBefore = await this.siloGetters.balanceOfRainRoots(userAddress);
+        expect(rainRootsBefore).to.be.equal('10004000000000000000000000');
+  
+        await this.silo.connect(user).transferDeposit(userAddress, user3Address, BEAN, beanStem, to6('1000'));
+        await this.silo.mow(user.address, BEAN);
+  
+        let rainRootsAfter = await this.siloGetters.balanceOfRainRoots(userAddress);
+        console.log("rainRoots after: ", rainRootsAfter.toString());
+  
+        // user should have 0 rain roots
+        expect(await this.siloGetters.balanceOfRainRoots(userAddress)).to.be.equal('0');
+        // user3 should have the rain roots
+        expect(await this.siloGetters.balanceOfRainRoots(user3Address)).to.be.equal(rainRootsBefore);
+    });
+  })
+
   describe('Germination and Plenty', function () {
     it('not germinated', async function () {
       
