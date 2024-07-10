@@ -45,7 +45,7 @@ export const useUnripe = () => {
                 if (addr === UNRIPE_BEAN_WETH[1].address) {
                   return new BigNumber(result.toString()).div(1e18);
                 }
-                return tokenResult(unripeTokens[addr])(result);
+                return tokenResult(unripeTokens[addr])(result); // Is this correct ?
               }),
             ])
           )
