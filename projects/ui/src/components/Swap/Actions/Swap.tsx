@@ -650,7 +650,6 @@ const SwapForm: FC<
                       ? [
                           {
                             type: ActionType.TRANSFER_BALANCE,
-                            amountsBySource: amountsBySource?.[0] || undefined,
                             amount: amountIn!,
                             token: tokenIn,
                             source: modeIn,
