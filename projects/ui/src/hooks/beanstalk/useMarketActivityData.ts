@@ -228,19 +228,19 @@ const useMarketActivityData = () => {
           case 'PodOrderCancelled': {
             // HOTFIX: Fixes edge case where PodOrderCancelled is emitted for an order that doesn't actually exist.
             const podOrder = podOrdersById[e.historyID];
-            if (!e.historyID || !podOrder) return null;
 
-            const podAmount = toTokenUnitsBN(
-              podOrder.podAmountFilled || 0,
+            if (!e.historyID || !podOrder) return null;
+            const beanAmount = toTokenUnitsBN(
+              podOrder.beanAmount || 0,
               BEAN[1].decimals
             );
             const pricePerPod = toTokenUnitsBN(
               new BigNumber(podOrder.pricePerPod || 0),
               BEAN[1].decimals
             );
-            const totalBeans =
-              podAmount && pricePerPod
-                ? podAmount.multipliedBy(pricePerPod)
+            const podAmount =
+              beanAmount && pricePerPod
+                ? beanAmount.multipliedBy(pricePerPod)
                 : undefined;
 
             return <MarketEvent>{
@@ -249,17 +249,14 @@ const useMarketActivityData = () => {
               hash: e.hash,
               type: 'order' as const,
               action: 'cancel' as const,
-              amountPods: toTokenUnitsBN(podOrder?.podAmountFilled, BEAN[1].decimals),
+              amountPods: podAmount,
               placeInLine: toTokenUnitsBN(
                 podOrder?.maxPlaceInLine,
                 BEAN[1].decimals
               ),
-              pricePerPod: toTokenUnitsBN(
-                new BigNumber(podOrder?.pricePerPod || 0),
-                BEAN[1].decimals
-              ),
-              amountBeans: totalBeans,
-              amountUSD: totalBeans ? getUSD(BEAN[1], totalBeans) : undefined,
+              pricePerPod: pricePerPod,
+              amountBeans: beanAmount,
+              amountUSD: beanAmount ? getUSD(BEAN[1], beanAmount) : undefined,
               createdAt: e.createdAt,
             };
           }
@@ -273,13 +270,10 @@ const useMarketActivityData = () => {
               BEAN[1].decimals
             );
             const podAmountFilled = toTokenUnitsBN(
-              podOrder.podAmountFilled,
+              e.amount,
               BEAN[1].decimals
             );
-            const totalBeans = getUSD(
-              BEAN[1],
-              podAmountFilled.multipliedBy(pricePerPod)
-            );
+            const totalBeans = podAmountFilled.multipliedBy(pricePerPod).dp(6);
             return <MarketEvent>{
               id: podOrder.id,
               eventId: e.id,
@@ -327,8 +321,7 @@ const useMarketActivityData = () => {
               new BigNumber(podListing.pricePerPod || 0),
               BEAN[1].decimals
             );
-            const totalBeans = numPods.multipliedBy(pricePerPod);
-
+            const totalBeans = numPods.multipliedBy(pricePerPod).dp(6);
             return <MarketEvent>{
               id: e.historyID.split('-')[1],
               eventId: e.id,
