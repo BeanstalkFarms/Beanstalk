@@ -208,9 +208,8 @@ const useMarketActivityData = () => {
               e.maxPlaceInLine,
               BEAN[1].decimals
             );
-            // HOTFIX: amountPods is using the legacy bean amount format for these events
-            const amountPods = amount;
-            const amountBeans = amount.multipliedBy(pricePerPod);
+            const amountPods = amount.div(pricePerPod).dp(6);
+            const amountBeans = amount;
             return <MarketEvent>{
               id: 'unknown',
               eventId: e.id,
