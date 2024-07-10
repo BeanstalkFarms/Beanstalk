@@ -5,9 +5,10 @@ import useChainId from '~/hooks/chain/useChainId';
 import useTokenMap from '~/hooks/chain/useTokenMap';
 import { tokenResult } from '~/util';
 import { AddressMap, ONE_BN } from '~/constants';
-import { UNRIPE_TOKENS } from '~/constants/tokens';
+import { UNRIPE_BEAN_WETH, UNRIPE_TOKENS } from '~/constants/tokens';
 import { UnripeToken } from '~/state/bean/unripe';
 import useUnripeUnderlyingMap from '~/hooks/beanstalk/useUnripeUnderlying';
+import BigNumber from 'bignumber.js';
 import { resetUnripe, updateUnripe } from './actions';
 
 export const useUnripe = () => {
@@ -40,6 +41,12 @@ export const useUnripe = () => {
               beanstalk
                 .getRecapPaidPercent()
                 .then(tokenResult(unripeTokens[addr])),
+              beanstalk.getPenalty(addr).then((result) => {
+                if (addr === UNRIPE_BEAN_WETH[1].address) {
+                  return new BigNumber(result.toString()).div(1e18);
+                }
+                return tokenResult(unripeTokens[addr])(result);
+              }),
             ])
           )
         );
@@ -53,6 +60,7 @@ export const useUnripe = () => {
               underlying: results[index][1],
               supply: results[index][2],
               recapPaidPercent: results[index][3],
+              penalty: results[index][4],
             };
             return prev;
           },
