@@ -2,7 +2,7 @@ import { FarmFromMode, Token } from '@beanstalk/sdk';
 
 import BigNumber from 'bignumber.js';
 import { useCallback } from 'react';
-import { displayTokenAmount } from '~/util';
+import { displayTokenAmount, getTokenIndex } from '~/util';
 import useFarmerBalances from '../farmer/useFarmerBalances';
 import { ZERO_BN } from '../../constants';
 import { Balance } from '../../state/farmer/balances';
@@ -61,11 +61,18 @@ export default function useGetBalancesUsedBySource({
 
   const getBalancesUsedBySource = useCallback(() => {
     const bySource = tokens.reduce<AmountsBySource[]>((prev, curr) => {
-      const balance: Balance | null = balances[curr.token.address];
+      const tokenIndex = getTokenIndex(curr.token);
+      const balance: Balance | null = balances[tokenIndex];
       const struct = { internal: ZERO_BN, external: ZERO_BN };
       const amount = curr.amount;
 
-      if (!balance || !amount || amount.lte(0)) {
+      if (
+        !balance ||
+        !balance.external ||
+        !balance.internal ||
+        !amount ||
+        amount.lte(0)
+      ) {
         prev.push(struct);
         return prev;
       }
@@ -83,10 +90,12 @@ export default function useGetBalancesUsedBySource({
           // the amount the external balance has to cover.
           const amtLeft = amount.minus(balance.internal);
 
+          struct.internal = balance.internal;
           // If the balance.external < amtLeft, the action cannot be performed.
           if (balance.external.gte(amtLeft)) {
-            struct.internal = balance.internal;
             struct.external = amtLeft;
+          } else {
+            struct.external = balance.external;
           }
         }
       }

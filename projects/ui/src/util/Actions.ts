@@ -87,7 +87,6 @@ export type ReceiveTokenAction = {
 export type TransferBalanceAction = {
   type: ActionType.TRANSFER_BALANCE;
   amount: BigNumber;
-  amountsBySource?: AmountsBySource;
   token: Token;
   source:
     | FarmFromMode.INTERNAL
