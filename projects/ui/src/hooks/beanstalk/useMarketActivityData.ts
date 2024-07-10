@@ -239,7 +239,7 @@ const useMarketActivityData = () => {
             );
             const podAmount =
               beanAmount && pricePerPod
-                ? beanAmount.multipliedBy(pricePerPod)
+                ? beanAmount.dividedBy(pricePerPod).dp(6)
                 : undefined;
 
             return <MarketEvent>{
