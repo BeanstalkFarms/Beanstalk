@@ -87,6 +87,7 @@ export type ReceiveTokenAction = {
 export type TransferBalanceAction = {
   type: ActionType.TRANSFER_BALANCE;
   amount: BigNumber;
+  amountsBySource?: AmountsBySource;
   token: Token;
   source:
     | FarmFromMode.INTERNAL
@@ -363,6 +364,14 @@ export const parseActionMessage = (a: Action) => {
       return `${commonString}.`;
     }
     case ActionType.TRANSFER_BALANCE:
+      if (a.amountsBySource) {
+        const bySourceDisplay = displayAmountsBySource(
+          a.amountsBySource,
+          a.token
+        );
+        return `Move ${bySourceDisplay.combined} to ${a.to ? `${trimAddress(a.to, false)}'s` : 'your'} ${copy.MODES[a.destination]}.`;
+      }
+
       return a.to
         ? `Move ${displayTokenAmount(a.amount, a.token)} from your ${
             copy.MODES[a.source]
