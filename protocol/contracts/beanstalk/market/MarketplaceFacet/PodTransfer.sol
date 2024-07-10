@@ -58,6 +58,7 @@ contract PodTransfer is ReentrancyGuard {
         uint256 amount
     ) internal {
         require(from != to, "Field: Cannot transfer Pods to oneself.");
+        require(amount > 0, "Marketplace: amount must be > 0.");
         insertPlot(to, index.add(start), amount);
         removePlot(from, index, start, amount.add(start));
         emit PlotTransfer(from, to, index.add(start), amount);
