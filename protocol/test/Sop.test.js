@@ -411,6 +411,57 @@ describe('Sop', function () {
       // user3 should have 0 rain roots, none transferred
       expect(await this.siloGetters.balanceOfRainRoots(user3Address)).to.be.equal('0');
     });
+
+    it('manipulation test', async function () {
+      const beanStem = to6("4");
+
+      // user 3 deposits a bunch of bean
+
+      const depositAmount = to6('50000');
+      await this.bean.mint(user3Address, depositAmount);
+      await this.bean.connect(user3).approve(this.silo.address, MAX_UINT256);
+      await this.silo.connect(user3).deposit(this.bean.address, depositAmount, EXTERNAL);
+
+
+      // call sunrise twice to skip germination. 
+      // await this.season.siloSunrise(0)
+      // await this.season.siloSunrise(0)
+
+      // await this.silo.mow(user3Address, BEAN);
+
+
+      // set reserves so we'll sop
+      await this.well.setReserves([to6("1000000"), to18("1100")]);
+      await this.pump.setInstantaneousReserves([to6("1000000"), to18("1100")]);
+
+      await this.season.rainSunrise(); // start raining
+
+      // log current total rain roots and current total roots
+      let totalRainRoots = await this.siloGetters.totalRainRoots();
+      console.log("totalRainRoots: ", totalRainRoots);
+
+      let totalRoots = await this.siloGetters.totalRoots();
+      console.log("totalRoots: ", totalRoots);
+
+
+      await this.season.rainSunrise(); // sop
+
+
+      await this.silo.mow(user3Address, BEAN);
+
+      let totalRainRoots2 = await this.siloGetters.totalRainRoots();
+      console.log("2 totalRainRoots: ", totalRainRoots2);
+
+      let totalRoots2 = await this.siloGetters.totalRoots();
+      console.log("2 totalRoots: ", totalRoots2);
+
+      let userRainRoots = await this.siloGetters.balanceOfRainRoots(user3Address);
+      console.log("userRainRoots: ", userRainRoots);
+
+      // shouldn't be a way for a user to get more rain roots than total rain roots
+      // couldn't find a way to do lessThan without importing something else that supports BigNumber from chai
+      expect(userRainRoots.lt(totalRainRoots2)).to.be.true;
+    });
   })
 
   describe('Germination and Plenty', function () {

@@ -93,6 +93,7 @@ contract MockSeasonFacet is SeasonFacet  {
         s.season.sunriseBlock = uint32(block.number);
         // update last snapshot in beanstalk. 
         stepOracle();
+        LibGerminate.endTotalGermination(s.season.current, LibWhitelistedTokens.getWhitelistedTokens());
         mockStartSop();
     }
 
