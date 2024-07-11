@@ -251,12 +251,8 @@ const ChartSectionContent: FC<{ well: Well }> = ({ well }) => {
         </ChartLoader>
       ) : (
         <>
-          {tab === 0 && !error && (
-            <Chart data={liquidityData} legend={"TOTAL LIQUIDITY"} refetching={isRefetching} />
-          )}
-          {tab === 1 && !error && (
-            <Chart data={volumeData} legend={"HOURLY VOLUME"} refetching={isRefetching} />
-          )}
+          {tab === 0 && !error && <Chart data={liquidityData} legend={"TOTAL LIQUIDITY"} />}
+          {tab === 1 && !error && <Chart data={volumeData} legend={"HOURLY VOLUME"} />}
         </>
       )}
     </Container>

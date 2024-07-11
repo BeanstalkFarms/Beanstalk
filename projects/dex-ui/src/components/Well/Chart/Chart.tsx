@@ -31,7 +31,7 @@ function mapChartData(data: IChartDataItem[]) {
   }));
 }
 
-export const Chart: FC<Props> = ({ legend, data: _data, refetching }) => {
+export const Chart: FC<Props> = ({ legend, data: _data }) => {
   const chartContainerRef = useRef<any>();
   const chart = useRef<IChartApi>();
   const lineSeries = useRef<ISeriesApi<"Line">>();
@@ -119,14 +119,12 @@ export const Chart: FC<Props> = ({ legend, data: _data, refetching }) => {
   }, [dataPoint]);
 
   return (
-    <div>
-      <ChartContainer ref={chartContainerRef} id="container">
-        <Legend>
-          <div>{legend}</div>
-          <LegendValue>{formatToUSD(dataPointValue || lastDataPoint?.value || 0)}</LegendValue>
-        </Legend>
-      </ChartContainer>
-    </div>
+    <ChartContainer ref={chartContainerRef} id="container">
+      <Legend>
+        <div>{legend}</div>
+        <LegendValue>{formatToUSD(dataPointValue || lastDataPoint?.value || 0)}</LegendValue>
+      </Legend>
+    </ChartContainer>
   );
 };
 
