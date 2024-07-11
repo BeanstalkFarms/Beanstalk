@@ -78,7 +78,8 @@ const chainLinkWithCallback =
   };
 
 const getWstETHWithSteth = async (sdk: BeanstalkSDK) => {
-  const multiplier = await sdk.contracts.lido.wsteth.tokensPerStEth();
+  const amt = sdk.tokens.STETH.fromHuman("1");
+  const multiplier = await sdk.contracts.lido.wsteth.getWstETHByStETH(amt.toBigNumber());
   return sdk.tokens.WSTETH.fromBlockchain(multiplier);
 };
 
