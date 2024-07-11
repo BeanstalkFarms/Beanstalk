@@ -43,6 +43,8 @@ export const useUnripe = () => {
                 .then(tokenResult(unripeTokens[addr])),
               beanstalk.getPenalty(addr).then((result) => {
                 if (addr === UNRIPE_BEAN_WETH[1].address) {
+                  // handle this case separately b/c urBEAN:ETH LP liquidity was originally
+                  // bean:3crv, which had 18 decimals
                   return new BigNumber(result.toString()).div(1e18);
                 }
                 return tokenResult(unripeTokens[addr])(result); // Is this correct ?
