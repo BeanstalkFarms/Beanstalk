@@ -12,9 +12,9 @@ import { bigNumberResult } from '~/util/Ledger';
 import { tokenResult, transform } from '~/util';
 import { BEAN, STALK } from '~/constants/tokens';
 import { useGetChainConstant } from '~/hooks/chain/useChainConstant';
+import useSdk from '~/hooks/sdk';
 import { resetBeanstalkSilo, updateBeanstalkSilo } from './actions';
 import { BeanstalkSiloBalance } from './index';
-import useSdk from '~/hooks/sdk';
 
 export const useFetchBeanstalkSilo = () => {
   const dispatch = useDispatch();
