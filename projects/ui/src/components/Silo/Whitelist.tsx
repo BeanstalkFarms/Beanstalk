@@ -751,12 +751,12 @@ const Whitelist: FC<{
                                   <Box sx={{ px: 1, py: 0.5, maxWidth: 215 }}>
                                     {isUnripeLP ? (
                                       <Stat
-                                        title="Conversion Rate"
+                                        title="Chop Amount"
                                         gap={0.25}
                                         variant="h4"
                                         // After Chop Change, update this to: recap rate * Total LP Underlying urBEANETH * BeanEth LP Price
                                         amount={`${unripeTokens[token.address]?.penalty?.times(100).toFixed(3)}%`}
-                                        subtitle="The current rate for converting urBEAN:ETH LP for BEAN:ETH LP"
+                                        subtitle="The amount of BEANETH received for Chopping 1 urBEANETH."
                                       />
                                     ) : (
                                       <Stat
@@ -769,7 +769,7 @@ const Whitelist: FC<{
                                         ).toFixed(4)}%`}
                                         subtitle={
                                           <>
-                                            The current penalty for chopping
+                                            The current penalty for Chopping
                                             <br />
                                             {token.symbol} for{' '}
                                             {
