@@ -1,4 +1,3 @@
-import { LidoUnwrapWstETH } from "./../farm/actions/LidoUnwrapWsteth";
 import { Graph } from "graphlib";
 import { ERC20Token } from "src/classes/Token";
 import { BeanstalkSDK } from "src/lib/BeanstalkSDK";
