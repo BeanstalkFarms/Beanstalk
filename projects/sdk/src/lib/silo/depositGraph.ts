@@ -351,21 +351,20 @@ export const getDepositGraph = (sdk: BeanstalkSDK): Graph => {
         label: "wellAddLiquidity"
       });
     });
-  }
 
-  /**
-   * [WETH, ETH, STETH] => BEAN_WSTETH_add liquidity
-   * Where WETH / ETH / STETH are the starting tokens.
-   */
-  {
-    [sdk.tokens.WETH, sdk.tokens.ETH, sdk.tokens.STETH].forEach((from) => {
-      graph.setEdge(from.symbol, sdk.tokens.WSTETH.symbol, {
-        build: (account: string, fromMode: FarmFromMode, toMode: FarmToMode) =>
-          sdk.farm.presets.ethIsh2beanWstethLp(from, account, fromMode, toMode),
-        from: from.symbol,
-        to: sdk.tokens.BEAN_WSTETH_WELL_LP.symbol,
-        label: "swapEth-ish2beanwstethLP"
-      });
+    graph.setEdge("WETH", "wstETH", {
+      build: (account: string, fromMode: FarmFromMode, toMode: FarmToMode) =>
+        sdk.farm.presets.uniswapV3Swap(
+          sdk.tokens.WETH,
+          sdk.tokens.WSTETH,
+          account,
+          100,
+          fromMode,
+          toMode
+        ),
+      from: "WETH",
+      to: "wstETH",
+      label: "uniswapV3Swap"
     });
   }
 
