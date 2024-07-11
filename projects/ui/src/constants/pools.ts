@@ -67,6 +67,7 @@ export const ALL_POOLS: ChainConstant<PoolMap> = {
   [SupportedChainId.MAINNET]: {
     [BEANCRV3_CURVE_MAINNET.address]: BEANCRV3_CURVE_MAINNET,
     [BEANETH_WELL_MAINNET.address]: BEANETH_WELL_MAINNET,
+    [BEANWSTETH_WELL_MAINNET.address]: BEANWSTETH_WELL_MAINNET,
   },
 };
 
@@ -74,6 +75,7 @@ export const ALL_POOLS: ChainConstant<PoolMap> = {
 export const WHITELISTED_POOLS: ChainConstant<PoolMap> = {
   [SupportedChainId.MAINNET]: {
     [BEANETH_WELL_MAINNET.address]: BEANETH_WELL_MAINNET,
+    [BEANWSTETH_WELL_MAINNET.address]: BEANWSTETH_WELL_MAINNET,
   },
 };
 

@@ -439,7 +439,7 @@ export const UNRIPE_UNDERLYING_TOKENS: ChainConstant<ERC20Token>[] = [
 export const SILO_WHITELIST: ChainConstant<ERC20Token>[] = [
   BEAN,
   BEAN_ETH_WELL_LP,
-  // BEAN_WSTETH_WELL_LP,
+  BEAN_WSTETH_WELL_LP,
   UNRIPE_BEAN,
   UNRIPE_BEAN_WETH,
   BEAN_CRV3_LP,
