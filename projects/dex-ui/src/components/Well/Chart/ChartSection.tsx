@@ -78,7 +78,13 @@ const ChartSectionContent: FC<{ well: Well }> = ({ well }) => {
   const [timePeriod, setTimePeriod] = useState("week");
   const [dropdownButtonText, setDropdownButtonText] = useState("1 WEEK");
 
-  const { data: chartData, refetch, error, isLoading: chartDataLoading } = useWellChartData(well, timePeriod);
+  const {
+    data: chartData,
+    refetch,
+    error,
+    isLoading: chartDataLoading,
+    isRefetching
+  } = useWellChartData(well, timePeriod);
 
   const [liquidityData, setLiquidityData] = useState<IChartDataItem[]>([]);
   const [volumeData, setVolumeData] = useState<IChartDataItem[]>([]);
@@ -174,8 +180,14 @@ const ChartSectionContent: FC<{ well: Well }> = ({ well }) => {
         </>
       </DesktopRow>
       <MobileRow>
-        <TabButton onClick={() => setChartTypeDrawerOpen(true)}>{tab === 0 ? "LIQUIDITY" : "VOLUME"}</TabButton>
-        <BottomDrawer showDrawer={isChartTypeDrawerOpen} headerText={"View Chart"} toggleDrawer={setChartTypeDrawerOpen}>
+        <TabButton onClick={() => setChartTypeDrawerOpen(true)}>
+          {tab === 0 ? "LIQUIDITY" : "VOLUME"}
+        </TabButton>
+        <BottomDrawer
+          showDrawer={isChartTypeDrawerOpen}
+          headerText={"View Chart"}
+          toggleDrawer={setChartTypeDrawerOpen}
+        >
           <DrawerRow
             onClick={() => {
               setTab(0), setChartTypeDrawerOpen(false);
@@ -194,7 +206,11 @@ const ChartSectionContent: FC<{ well: Well }> = ({ well }) => {
         <FilterButton onClick={() => setChartRangeDrawerOpen(true)}>
           {dropdownButtonText} <ChevronDown width={6} />
         </FilterButton>
-        <BottomDrawer showDrawer={isChartRangeDrawerOpen} headerText={"Time Period"} toggleDrawer={setChartRangeDrawerOpen}>
+        <BottomDrawer
+          showDrawer={isChartRangeDrawerOpen}
+          headerText={"Time Period"}
+          toggleDrawer={setChartRangeDrawerOpen}
+        >
           <DrawerRow
             onClick={() => {
               setChartRange("day"), setChartRangeDrawerOpen(false);
@@ -235,15 +251,22 @@ const ChartSectionContent: FC<{ well: Well }> = ({ well }) => {
         </ChartLoader>
       ) : (
         <>
-          {tab === 0 && !error && <Chart data={liquidityData} legend={"TOTAL LIQUIDITY"} />}
-          {tab === 1 && !error && <Chart data={volumeData} legend={"HOURLY VOLUME"} />}
+          {tab === 0 && !error && (
+            <Chart data={liquidityData} legend={"TOTAL LIQUIDITY"} refetching={isRefetching} />
+          )}
+          {tab === 1 && !error && (
+            <Chart data={volumeData} legend={"HOURLY VOLUME"} refetching={isRefetching} />
+          )}
         </>
       )}
     </Container>
   );
 };
 
-export const ChartSection: FC<{ well: Well | undefined; loading?: boolean }> = ({ well, loading }) => {
+export const ChartSection: FC<{ well: Well | undefined; loading?: boolean }> = ({
+  well,
+  loading
+}) => {
   if (!well || loading) {
     return (
       <Container id="chart-section-loading">
@@ -325,7 +348,6 @@ const Container = styled.div`
   display: flex;
   flex-direction: column;
   outline: 0.5px solid #9ca3af;
-  outline-offset: -0.5px;
   background-color: #f9f8f6;
 `;
 
