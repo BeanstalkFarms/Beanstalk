@@ -529,6 +529,10 @@ contract SiloGettersFacet is ReentrancyGuard {
         sop.plentyPerRoot = s.a[account].sop.plentyPerRoot;
     }
 
+    function totalRainRoots() external view returns (uint256) {
+        return s.r.roots;
+    }
+
     //////////////////////// STEM ////////////////////////
 
     /**
