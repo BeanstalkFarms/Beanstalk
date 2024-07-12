@@ -1,7 +1,7 @@
 const fs = require("fs");
 
 // Read the content of the file
-const fileContent = fs.readFileSync("target_snippet_numbers.txt", "utf8");
+const fileContent = fs.readFileSync("updated_numbers.csv", "utf8");
 
 // Parse the file content
 const lines = fileContent.split("\n").filter((line) => line.trim() !== "");
@@ -43,7 +43,7 @@ function generateNestedBlocks(items, unripeSupply) {
     if (counter % marker == 0 && counter + marker < items.length) {
       let recentPercentPaid = items[counter + marker].recapPercentPaid;
       code +=
-        tab1 + "if (recentPercentPaid > " + recentPercentPaid + "e18) { // marker " + marker + "\n";
+        tab1 + "if (recentPercentPaid > " + recentPercentPaid + "e18) {\n";
       market16close = true;
     }
     marker = 8;
@@ -54,9 +54,7 @@ function generateNestedBlocks(items, unripeSupply) {
           tab2 +
           "if (recentPercentPaid > " +
           recentPercentPaid +
-          "e6) { // marker " +
-          marker +
-          "\n";
+          "e6) {\n";
       }
 
       // if inside the mod 8 marker, all the next 8 levels are going to be spit out at the same level
@@ -76,8 +74,8 @@ function generateNestedBlocks(items, unripeSupply) {
               code += tab3 + "} else {\n";
             }
           } else {
-            console.log("items.length: ", items.length);
-            console.log("counter + i + 2: ", counter + i + 2);
+            // console.log("items.length: ", items.length);
+            // console.log("counter + i + 2: ", counter + i + 2);
           }
         }
 
@@ -89,7 +87,7 @@ function generateNestedBlocks(items, unripeSupply) {
           code += tab4 + "} else {\n";
         }
 
-        code += tab5 + "return " + loopItem.percentLockedUnderlying + "; // " + unripeSupply.toLocaleString('en-US') + ", " + loopItem.recapPercentPaid + "\n";
+        code += tab5 + "return " + loopItem.percentLockedUnderlying + "e18; // " + unripeSupply.toLocaleString('en-US') + ", " + loopItem.recapPercentPaid + "\n";
 
         if (i % 2 == 1) {
           code += tab4 + "}\n"; // right after return
