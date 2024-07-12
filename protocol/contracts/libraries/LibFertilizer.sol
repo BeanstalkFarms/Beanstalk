@@ -184,10 +184,7 @@ library LibFertilizer {
         returns (uint256 remaining)
     {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        uint256 totalDollars = C
-            .dollarPerUnripeLP()
-            .mul(C.unripeLP().totalSupply())
-            .div(DECIMALS);
+        uint256 totalDollars = uint256(1e12).mul(C.unripeLP().totalSupply()).div(C.unripeLPPerDollar()).div(DECIMALS);
         totalDollars = totalDollars / 1e6 * 1e6; // round down to nearest USDC
         if (s.recapitalized >= totalDollars) return 0;
         return totalDollars.sub(s.recapitalized);
