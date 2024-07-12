@@ -412,7 +412,7 @@ describe('Sop', function () {
       expect(await this.siloGetters.balanceOfRainRoots(user3Address)).to.be.equal('0');
     });
 
-    it('manipulation test', async function () {
+    it('germination rain roots test', async function () {
       // user 3 deposits a bunch of bean
 
       const depositAmount = to6('50000');
@@ -436,14 +436,10 @@ describe('Sop', function () {
 
       await this.season.rainSunrise(); // sop
 
-
       await this.silo.mow(user3Address, BEAN);
 
       let totalRainRoots2 = await this.siloGetters.totalRainRoots();
       console.log("2 totalRainRoots: ", totalRainRoots2);
-
-      let totalRoots2 = await this.siloGetters.totalRoots();
-      console.log("2 totalRoots: ", totalRoots2);
 
       let userRainRoots = await this.siloGetters.balanceOfRainRoots(user3Address);
       console.log("userRainRoots: ", userRainRoots);
@@ -451,6 +447,41 @@ describe('Sop', function () {
       // shouldn't be a way for a user to get more rain roots than total rain roots
       // couldn't find a way to do lessThan without importing something else that supports BigNumber from chai
       expect(userRainRoots.lt(totalRainRoots2)).to.be.true;
+    });
+
+    // verifies that total rain roots are not affected by anything deposited after raining starts
+    it('second germination rain roots test', async function () {
+
+      await this.season.rainSunrise(); // start raining
+
+      let totalRainRootsBefore = await this.siloGetters.totalRainRoots();
+
+      const depositAmount = to6('50000');
+      await this.bean.mint(user3Address, depositAmount);
+      await this.bean.connect(user3).approve(this.silo.address, MAX_UINT256);
+      await this.silo.connect(user3).deposit(this.bean.address, depositAmount, EXTERNAL);
+      // set reserves so we'll sop
+      await this.well.setReserves([to6("1000000"), to18("1100")]);
+      await this.pump.setInstantaneousReserves([to6("1000000"), to18("1100")]);
+
+
+      await this.season.rainSunrise(); // sop
+
+      await this.silo.mow(user3Address, BEAN);
+
+      let totalRainRootsAfter = await this.siloGetters.totalRainRoots();
+
+      // rain roots before should equal rain roots after, anything deposited after raining doesn't count
+      expect(totalRainRootsBefore).to.be.equal(totalRainRootsAfter);
+
+      let userRainRoots = await this.siloGetters.balanceOfRainRoots(user3Address);
+
+      // assert that user rain roots are zero
+      expect(userRainRoots).to.be.equal('0');
+
+      // shouldn't be a way for a user to get more rain roots than total rain roots
+      // couldn't find a way to do lessThan without importing something else that supports BigNumber from chai
+      expect(userRainRoots.lt(totalRainRootsAfter)).to.be.true;
     });
   })
 
