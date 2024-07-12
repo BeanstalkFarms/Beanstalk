@@ -413,22 +413,12 @@ describe('Sop', function () {
     });
 
     it('manipulation test', async function () {
-      const beanStem = to6("4");
-
       // user 3 deposits a bunch of bean
 
       const depositAmount = to6('50000');
       await this.bean.mint(user3Address, depositAmount);
       await this.bean.connect(user3).approve(this.silo.address, MAX_UINT256);
       await this.silo.connect(user3).deposit(this.bean.address, depositAmount, EXTERNAL);
-
-
-      // call sunrise twice to skip germination. 
-      // await this.season.siloSunrise(0)
-      // await this.season.siloSunrise(0)
-
-      // await this.silo.mow(user3Address, BEAN);
-
 
       // set reserves so we'll sop
       await this.well.setReserves([to6("1000000"), to18("1100")]);

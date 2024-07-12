@@ -171,6 +171,16 @@ contract Weather is Sun {
             s.r.pods = s.f.pods;
             s.r.roots = s.s.roots;
         } else {
+            // Beanstalk wants to distribute plenty to users who have germinating assets
+            // prior to the start of the sop
+            // During handleRain, the sop roots are set to the current roots at the time of rain,
+            // which do not include the germinating roots.
+            if (s.season.current-1 == s.season.rainStart) {
+                // increase by germinating roots of previous season
+                // get 2 season's ago's germinating roots
+                uint256 germinatingRoots = s.unclaimedGerminating[s.season.current-2].roots;
+                s.r.roots = s.r.roots.add(germinatingRoots);
+            }
             if (s.r.roots > 0) {
                 // initialize sopWell if it is not already set.
                 if (s.sopWell == address(0)) s.sopWell = well;
