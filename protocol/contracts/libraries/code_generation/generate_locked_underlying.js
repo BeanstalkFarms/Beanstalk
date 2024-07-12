@@ -24,7 +24,7 @@ const groupedData = data.reduce((acc, item) => {
 }, {});
 
 // Helper function to generate nested if-else blocks
-function generateNestedBlocks(items) {
+function generateNestedBlocks(items, unripeSupply) {
   let code = "";
 
   counter = 0;
@@ -89,7 +89,7 @@ function generateNestedBlocks(items) {
           code += tab4 + "} else {\n";
         }
 
-        code += tab5 + "return " + loopItem.percentLockedUnderlying + ";\n";
+        code += tab5 + "return " + loopItem.percentLockedUnderlying + "; // " + unripeSupply.toLocaleString('en-US') + ", " + loopItem.recapPercentPaid + "\n";
 
         if (i % 2 == 1) {
           code += tab4 + "}\n"; // right after return
@@ -123,7 +123,7 @@ for (const unripeSupply of unripeSupplyValues) {
 
   code += `if (unripeSupply > ${unripeSupply}) {\n`;
   items.sort((a, b) => b.recapPercentPaid - a.recapPercentPaid);
-  code += generateNestedBlocks(items);
+  code += generateNestedBlocks(items, unripeSupply);
   code += `} else `;
 }
 
