@@ -1,5 +1,5 @@
 import { Token, TokenValue } from "@beanstalk/sdk";
-import { Well } from "@beanstalk/sdk/Wells";
+import { Well } from "@beanstalk/sdk-wells";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useAccount } from "wagmi";
 import { erc20Abi } from "viem";
@@ -52,6 +52,7 @@ export const useLPPositionSummary = () => {
    * Silo Balances
    */
   const { data: siloBalances, ...siloBalanceRest } = useSiloBalanceMany(lpTokens);
+  // console.log("silobals: ", siloBalances);
 
   /**
    * Contract calls to fetch internal & external balances
@@ -122,6 +123,7 @@ export const useLPPositionSummary = () => {
           return { ...oldData, [lpToken.symbol]: balance.external };
         });
 
+        
         balances[lpToken.symbol] = balance;
       }
 
@@ -139,6 +141,8 @@ export const useLPPositionSummary = () => {
     refetchIntervalInBackground: false,
     refetchOnWindowFocus: "always"
   });
+
+  // console.log("balData: ", balanceData);
 
   // Combine silo, internal & external balances & update state
   useEffect(() => {
