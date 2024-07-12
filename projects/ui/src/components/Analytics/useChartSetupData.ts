@@ -133,6 +133,11 @@ export function useChartSetupData() {
       BEAN_CRV3_V1_LP[1],
     ];
 
+    const seedValueTokensToChart = [
+      sdk.tokens.BEAN,
+      sdk.tokens.BEAN_ETH_WELL_LP
+    ];
+
     const lpCharts: ChartSetupBase[] = [];
     const depositCharts: ChartSetupBase[] = [];
     const apyCharts: ChartSetupBase[] = [];
@@ -222,7 +227,7 @@ export function useChartSetupData() {
       lpCharts.push(lpChart);
     });
 
-    depositedTokensToChart.forEach((token) => {
+    seedValueTokensToChart.forEach((token) => {
       const seedChart: ChartSetupBase = {
         name: `${token.symbol} Seeds`,
         tooltipTitle: `${token.symbol} Seeds`,
