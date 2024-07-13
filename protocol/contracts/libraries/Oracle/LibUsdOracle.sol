@@ -33,7 +33,12 @@ interface ChainlinkPriceFeedRegistry {
  **/
 library LibUsdOracle {
     using LibRedundantMath256 for uint256;
+
+    // the lookup registry for chainlink price feed given a token address.
+    // the chainlink registry address differs between networks.
     address constant chainlinkRegistry = 0x47Fb2585D2C56Fe188D0E6ec628a38b74fCeeeDf;
+
+    uint256 constant CHAINLINK_DENOMINATOR = 1e6;
 
     function getUsdPrice(address token) internal view returns (uint256) {
         return getUsdPrice(token, 0);
@@ -58,12 +63,11 @@ library LibUsdOracle {
             return uint256(1e24).div(wstethUsdPrice);
         }
 
-        // 1e18 * 1e6 = 1e24.
         uint256 tokenPrice = getTokenPriceFromExternal(token, lookback);
         if (tokenPrice == 0) return 0;
         // division is a function of the decimals of the token:
         uint256 decimals = 10 ** IERC20Decimals(token).decimals();
-        return uint256(decimals * 1e6).div(tokenPrice);
+        return uint256(decimals * CHAINLINK_DENOMINATOR).div(tokenPrice);
     }
 
     function getTokenPrice(address token) internal view returns (uint256) {
@@ -119,6 +123,7 @@ library LibUsdOracle {
                     ); // 0x0348 is the address for USD
             }
 
+            // todo: need to update timeout
             return
                 LibChainlinkOracle.getTokenPrice(
                     chainlinkOraclePriceAddress,
@@ -126,21 +131,28 @@ library LibUsdOracle {
                     lookback
                 );
         } else if (oracleImpl.encodeType == bytes1(0x02)) {
-            // assumes a dollar stablecoin is passed in
             // if the encodeType is type 2, use a uniswap oracle implementation.
+
+            // the uniswap oracle implementation combines the use of the chainlink and uniswap oracles.
+            // the chainlink oracle is used to get the price of the non-oracle token in order to
+
             address chainlinkToken = IUniswapV3PoolImmutables(oracleImpl.target).token0();
-            chainlinkToken = chainlinkToken == token
-                ? IUniswapV3PoolImmutables(oracleImpl.target).token1()
-                : token;
+
+            if (chainlinkToken == token) {
+                chainlinkToken = IUniswapV3PoolImmutables(oracleImpl.target).token1();
+            }
 
             // get twap from the `chainlinkToken` to `token`
+            // exchange 1 `chainlinkToken` for `token`
             tokenPrice = LibUniswapOracle.getTwap(
                 lookback == 0 ? LibUniswapOracle.FIFTEEN_MINUTES : uint32(lookback),
                 oracleImpl.target,
-                chainlinkToken,
                 token,
-                uint128(10) ** uint128(IERC20Decimals(token).decimals())
+                chainlinkToken,
+                uint128(10 ** IERC20Decimals(token).decimals())
             );
+
+            console.log("tokenPrice", tokenPrice);
 
             // call chainlink oracle from the OracleImplmentation contract
             Implementation memory chainlinkOracleImpl = s.sys.oracleImplementation[chainlinkToken];
@@ -159,7 +171,13 @@ library LibUsdOracle {
                 LibChainlinkOracle.FOUR_HOUR_TIMEOUT,
                 lookback
             );
-            return tokenPrice.mul(chainlinkTokenPrice).div(1e6);
+
+            console.log("chainlinkTokenPrice", chainlinkTokenPrice);
+            // WBTC/USDC * USDC/USD = WBTC/USD
+            // exchange 1e8 `token` for 50000e6 `chainlinkToken`,
+            // 50000e6 *
+            // TKN/CHAINLINK * CHAINLINK/USD = TKN/USD
+            return tokenPrice.mul(chainlinkTokenPrice).div(CHAINLINK_DENOMINATOR);
         }
 
         // If the oracle implementation address is not set, use the current contract.
