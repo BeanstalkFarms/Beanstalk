@@ -12,6 +12,7 @@ export const BEANSTALK_ADDRESSES = {
 export const BEANSTALK_PRICE_ADDRESSES = {
   [SupportedChainId.MAINNET]:
     '0x889c98cee4dEE7D042B489fC86976d3dC9a0EeE2'.toLowerCase(),
+  // TODO: FIX ME w/ the newly deployed Price Contract
   // '0xb01CE0008CaD90104651d6A84b6B11e182a9B62A'.toLowerCase(),
 };
 
