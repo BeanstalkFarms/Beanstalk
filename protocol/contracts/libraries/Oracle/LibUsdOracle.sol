@@ -61,7 +61,9 @@ library LibUsdOracle {
         // 1e18 * 1e6 = 1e24.
         uint256 tokenPrice = getTokenPriceFromExternal(token, lookback);
         if (tokenPrice == 0) return 0;
-        return uint256(1e24).div(tokenPrice);
+        // division is a function of the decimals of the token:
+        uint256 decimals = 10 ** IERC20Decimals(token).decimals();
+        return uint256(decimals * 1e6).div(tokenPrice);
     }
 
     function getTokenPrice(address token) internal view returns (uint256) {
@@ -118,12 +120,10 @@ library LibUsdOracle {
             }
 
             return
-                uint256(1e24).div(
-                    LibChainlinkOracle.getTokenPrice(
-                        chainlinkOraclePriceAddress,
-                        LibChainlinkOracle.FOUR_HOUR_TIMEOUT,
-                        lookback
-                    )
+                LibChainlinkOracle.getTokenPrice(
+                    chainlinkOraclePriceAddress,
+                    LibChainlinkOracle.FOUR_HOUR_TIMEOUT,
+                    lookback
                 );
         } else if (oracleImpl.encodeType == bytes1(0x02)) {
             // assumes a dollar stablecoin is passed in
@@ -132,6 +132,8 @@ library LibUsdOracle {
             chainlinkToken = chainlinkToken == token
                 ? IUniswapV3PoolImmutables(oracleImpl.target).token1()
                 : token;
+
+            // get twap from the `chainlinkToken` to `token`
             tokenPrice = LibUniswapOracle.getTwap(
                 lookback == 0 ? LibUniswapOracle.FIFTEEN_MINUTES : uint32(lookback),
                 oracleImpl.target,
@@ -139,7 +141,7 @@ library LibUsdOracle {
                 token,
                 uint128(10) ** uint128(IERC20Decimals(token).decimals())
             );
-            // USDC/USD
+
             // call chainlink oracle from the OracleImplmentation contract
             Implementation memory chainlinkOracleImpl = s.sys.oracleImplementation[chainlinkToken];
             address chainlinkOraclePriceAddress = chainlinkOracleImpl.target;
