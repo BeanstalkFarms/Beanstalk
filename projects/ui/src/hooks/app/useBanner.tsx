@@ -7,6 +7,7 @@ import { AppState } from '~/state';
 import { ActiveProposal } from '~/state/beanstalk/governance';
 import snapshotLogo from '~/img/ecosystem/snapshot-logo.svg';
 import useMigrationNeeded from '~/hooks/farmer/useMigrationNeeded';
+import useBeanEthStartMintingSeason from '~/hooks/beanstalk/useBeanEthStartMintingSeason';
 
 const useBanner = () => {
   const migrationNeeded = useMigrationNeeded();
@@ -14,7 +15,19 @@ const useBanner = () => {
     (state) => state._beanstalk.governance.activeProposals
   );
 
+  const { mintAllowed } = useBeanEthStartMintingSeason();
+
   return useMemo(() => {
+    if (!mintAllowed) {
+      return (
+        <Banner>
+          BIP-48 Unripe liquidity migration is in process. Quotes will be
+          affected until the migration is complete. See Discord for more
+          information.
+        </Banner>
+      );
+    }
+
     // eslint-disable-next-line no-unreachable
     if (migrationNeeded === true) {
       return (
@@ -62,7 +75,7 @@ const useBanner = () => {
       );
     }
     return null;
-  }, [activeProposals, migrationNeeded]);
+  }, [activeProposals, migrationNeeded, mintAllowed]);
 };
 
 export default useBanner;
