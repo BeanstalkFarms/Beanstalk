@@ -5,19 +5,22 @@ import {
   ModuleContent,
   ModuleHeader,
 } from '~/components/Common/Module';
-import Chop from './Chop';
 
 import { FC } from '~/types';
+import useBeanEthStartMintingSeason from '~/hooks/beanstalk/useBeanEthStartMintingSeason';
+import Chop from './Chop';
 
-const ChopActions: FC<{}> = () => (
-  <Module>
-    <ModuleHeader>
-      <Typography variant="h4">Chop</Typography>
-    </ModuleHeader>
-    <ModuleContent>
-      <Chop />
-    </ModuleContent>
-  </Module>
-);
+const ChopActions: FC<{}> = () => {
+  const { mintAllowed, MigrationAlert } = useBeanEthStartMintingSeason();
+
+  return (
+    <Module>
+      <ModuleHeader>
+        <Typography variant="h4">Chop</Typography>
+      </ModuleHeader>
+      <ModuleContent>{mintAllowed ? <Chop /> : MigrationAlert}</ModuleContent>
+    </Module>
+  );
+};
 
 export default ChopActions;

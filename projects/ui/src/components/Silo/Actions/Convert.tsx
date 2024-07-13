@@ -60,6 +60,7 @@ import usePlantAndDoX from '~/hooks/farmer/form-txn/usePlantAndDoX';
 import StatHorizontal from '~/components/Common/StatHorizontal';
 import { BeanstalkPalette, FontSize } from '~/components/App/muiTheme';
 import { AppState } from '~/state';
+import useBeanEthStartMintingSeason from '~/hooks/beanstalk/useBeanEthStartMintingSeason';
 
 // -----------------------------------------------------------------------
 
@@ -497,9 +498,9 @@ const ConvertForm: FC<
             ) : null}
 
             {/* Add-on transactions */}
-            {!isUsingPlanted && 
+            {!isUsingPlanted && (
               <AdditionalTxnsAccordion filter={disabledFormActions} />
-            }
+            )}
 
             {/* Transation preview */}
             <Box>
@@ -766,7 +767,7 @@ const ConvertPropProvider: FC<{
 
           // Plant
           farm.add(new sdk.farm.actions.Plant());
-          
+
           // Withdraw Planted deposit crate
           farm.add(
             new sdk.farm.actions.WithdrawDeposit(
@@ -868,23 +869,18 @@ const ConvertPropProvider: FC<{
                 convertData.crates
               )
             );
-          };
+          }
 
           // Mow Grown Stalk
-          const tokensWithStalk: Map<Token, TokenValue> = new Map()
-          farmerSilo.stalk.grownByToken.forEach((value, token) => { 
+          const tokensWithStalk: Map<Token, TokenValue> = new Map();
+          farmerSilo.stalk.grownByToken.forEach((value, token) => {
             if (value.gt(0)) {
               tokensWithStalk.set(token, value);
-            };
+            }
           });
           if (tokensWithStalk.size > 0) {
-            farm.add(
-              new sdk.farm.actions.Mow(
-                account,
-                tokensWithStalk
-              )
-            );
-          };
+            farm.add(new sdk.farm.actions.Mow(account, tokensWithStalk));
+          }
 
           const gasEstimate = await farm.estimateGas(earnedBeans, {
             slippage: slippage,
@@ -897,7 +893,6 @@ const ConvertPropProvider: FC<{
             { slippage: slippage },
             { gasLimit: adjustedGas }
           );
-
         }
 
         txToast.confirming(txn);
@@ -988,10 +983,18 @@ const ConvertPropProvider: FC<{
 
 const Convert: FC<{
   fromToken: ERC20Token | NativeToken;
-}> = (props) => (
-  <FormTxnProvider>
-    <ConvertPropProvider {...props} />
-  </FormTxnProvider>
-);
+}> = (props) => {
+  const { mintAllowed, MigrationAlert } = useBeanEthStartMintingSeason();
+
+  if (!mintAllowed && props.fromToken.isUnripe) {
+    return MigrationAlert;
+  }
+
+  return (
+    <FormTxnProvider>
+      <ConvertPropProvider {...props} />
+    </FormTxnProvider>
+  );
+};
 
 export default Convert;
