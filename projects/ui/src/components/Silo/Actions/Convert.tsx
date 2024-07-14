@@ -288,7 +288,7 @@ const ConvertForm: FC<
         const chopping =
           (tokenIn.address === sdk.tokens.UNRIPE_BEAN.address &&
             tokenOut?.address === sdk.tokens.BEAN.address) ||
-          (tokenIn.address === sdk.tokens.UNRIPE_BEAN_WETH.address &&
+          (tokenIn.address === sdk.tokens.UNRIPE_BEAN_WSTETH.address &&
             tokenOut?.address === sdk.tokens.BEAN_ETH_WELL_LP.address);
 
         setIsChopping(chopping);

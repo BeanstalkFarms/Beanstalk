@@ -28,7 +28,7 @@ import lusdLogo from '~/img/tokens/lusd-logo.svg';
 import stethLogo from '~/img/tokens/steth-logo.svg';
 import wstethLogo from '~/img/tokens/wsteth-logo.svg';
 import unripeBeanLogo from '~/img/tokens/unripe-bean-logo-circled.svg';
-import unripeBeanWethLogoUrl from '~/img/tokens/unrip-beanweth.svg';
+import unripeBeanWstethLogoUrl from '~/img/tokens/unripe-bean-wsteth-logo.svg';
 import useSetting from '~/hooks/app/useSetting';
 import { SUBGRAPH_ENVIRONMENTS } from '~/graph/endpoints';
 import { useEthersProvider } from '~/util/wagmi/ethersAdapter';
@@ -58,7 +58,7 @@ const setTokenMetadatas = (sdk: BeanstalkSDK) => {
   sdk.tokens.BEAN_WSTETH_WELL_LP.setMetadata({
     logo: beathWstethWellLPLogo,
   });
-  sdk.tokens.UNRIPE_BEAN_WETH.setMetadata({ logo: unripeBeanWethLogoUrl });
+  sdk.tokens.UNRIPE_BEAN_WSTETH.setMetadata({ logo: unripeBeanWstethLogoUrl });
 
   // ERC-20 tokens
   sdk.tokens.BEAN.setMetadata({ logo: beanCircleLogo });
