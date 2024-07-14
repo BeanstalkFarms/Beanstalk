@@ -387,6 +387,43 @@ describe('Sop', function () {
       expect(await this.siloGetters.balanceOfRainRoots(userAddress)).to.be.equal('0');
     });
 
+    it('stops raining and withdraw test', async function () {
+      const beanStem = to6("4");
+
+      const depositAmount = to6('50000');
+      await this.bean.mint(user3Address, depositAmount);
+      await this.bean.connect(user3).approve(this.silo.address, MAX_UINT256);
+      await this.silo.connect(user3).deposit(BEAN, depositAmount, EXTERNAL);
+
+      // log current bean stemTip
+      const stemTip = await this.siloGetters.stemTipForToken(BEAN);
+      console.log("stemTip: ", stemTip);
+
+      // pass germination
+      await this.season.siloSunrise(0);
+      await this.season.siloSunrise(0);
+
+
+      // set reserves so we'll sop
+      await this.well.setReserves([to6("1000000"), to18("1100")]);
+      await this.pump.setInstantaneousReserves([to6("1000000"), to18("1100")]);
+
+      await this.season.rainSunrise(); // start raining
+
+      await this.silo.mow(user3Address, BEAN);
+
+      let rainRoots = await this.siloGetters.balanceOfRainRoots(user3Address);
+      expect(rainRoots).to.be.equal('500000000000000000000000000');
+
+      // stop raining
+      await this.season.droughtSunrise();
+
+      // withdraw
+      await this.silo.connect(user3).withdrawDeposit(BEAN, stemTip, to6('50000'), EXTERNAL);
+      rainRoots = await this.siloGetters.balanceOfRainRoots(user3Address);
+      expect(rainRoots).to.be.equal('0');
+    });
+
     it('burns rain roots upon transfer', async function () {
       const beanStem = to6("4");
 
