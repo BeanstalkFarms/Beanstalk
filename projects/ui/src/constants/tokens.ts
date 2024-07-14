@@ -432,7 +432,7 @@ export const UNRIPE_TOKENS: ChainConstant<ERC20Token>[] = [
 ];
 export const UNRIPE_UNDERLYING_TOKENS: ChainConstant<ERC20Token>[] = [
   BEAN,
-  BEAN_ETH_WELL_LP,
+  BEAN_WSTETH_WELL_LP,
 ];
 
 // Show these tokens as whitelisted in the Silo.
