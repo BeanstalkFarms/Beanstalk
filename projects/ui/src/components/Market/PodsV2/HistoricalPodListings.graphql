@@ -3,7 +3,7 @@ query HistoricalPodListings(
 ) {
   podListings(where: {
     historyID_in: $historyIDs
-  }, orderBy: updatedAt, orderDirection: desc) {
+  }, orderBy: updatedAt, orderDirection: desc, first: 1000) {
     #// Identifiers
     id
     status

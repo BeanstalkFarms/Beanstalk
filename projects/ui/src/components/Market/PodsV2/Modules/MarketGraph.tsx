@@ -565,7 +565,8 @@ const Graph: FC<GraphProps> = ({
       setSelectedPoint(hoveredPoint);
       if (hoveredPoint.type === 'listing') {
         // handleClickFill(PodOrderAction.BUY, PodOrderType.FILL);
-        navigate(`/market/buy/${listings[hoveredPoint.index].id}`);
+        const idNumber = listings[hoveredPoint.index].id.slice(43);
+        navigate(`/market/buy/${idNumber}`);
       } else if (hoveredPoint.type === 'order') {
         // handleClickFill(PodOrderAction.SELL, PodOrderType.FILL);
         navigate(`/market/sell/${orders[hoveredPoint.index].id}`);
@@ -581,7 +582,7 @@ const Graph: FC<GraphProps> = ({
         hideTooltip();
       }
     } else if (params.listingID) {
-      const index = listings.findIndex((l) => l.id === params.listingID);
+      const index = listings.findIndex((l) => l.id.slice(43) === params.listingID);
       if (index === -1) {
         if (selectedPoint) {
           setSelectedPoint(undefined);
@@ -850,7 +851,7 @@ const Graph: FC<GraphProps> = ({
               >
                 Viewing: {selectedPoint.type}{' '}
                 {selectedPoint.type === 'listing'
-                  ? selectedPoint.coordinate.id
+                  ? selectedPoint.coordinate.id.slice(43)
                   : selectedPoint.coordinate.id.substring(0, 8)}
               </Typography>
               <Typography
