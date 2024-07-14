@@ -226,7 +226,7 @@ export class Tokens {
       chainId,
       addresses.UNRIPE_BEAN_WSTETH.get(chainId),
       6,
-      "urBEANETH",
+      "urBEANWSTETH",
       {
         name: "Unripe BEANETH", // see `.name()`
         displayName: "Unripe BEAN:ETH LP",

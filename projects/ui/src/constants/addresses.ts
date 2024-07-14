@@ -67,7 +67,7 @@ export const UNRIPE_BEAN_ADDRESSES = {
     '0x1BEA0050E63e05FBb5D8BA2f10cf5800B6224449'.toLowerCase(),
 };
 
-export const UNRIPE_BEAN_WETH_ADDRESSES = {
+export const UNRIPE_BEAN_WSTETH_ADDRESSES = {
   // --------------------------------------------------
   // "Unripe BEAN:WETH LP": Unripe vesting asset for the BEAN:WETH LP token, Localhost
   // -------------------------------------------------
