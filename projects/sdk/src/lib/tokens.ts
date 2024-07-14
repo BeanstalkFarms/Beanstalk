@@ -190,10 +190,10 @@ export class Tokens {
       chainId,
       addresses.BEANWSTETH_WELL.get(chainId),
       18,
-      "BEANwstETH",
+      "BEANWSTETH",
       {
-        name: "BEAN:wstETH Well LP token",
-        displayName: "BEAN:wstETH LP",
+        name: "BEAN:WSTETH Well LP token",
+        displayName: "BEAN:WSTETH LP",
         isLP: true,
         color: "#DFB385"
       },
@@ -201,7 +201,7 @@ export class Tokens {
     );
     this.BEAN_WSTETH_WELL_LP.rewards = {
       stalk: this.STALK.amount(1),
-      seeds: null
+      seeds: this.SEEDS.amount(1)
     };
 
     this.UNRIPE_BEAN = new ERC20Token(

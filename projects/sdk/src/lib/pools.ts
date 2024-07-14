@@ -61,9 +61,9 @@ export class Pools {
       sdk.tokens.BEAN_WSTETH_WELL_LP,
       [sdk.tokens.BEAN, sdk.tokens.WSTETH],
       {
-        name: "Basin Bean:wstETH Well",
+        name: "Basin Bean:WSTETH Well",
         logo: "",
-        symbol: "BEAN:wstETH",
+        symbol: "BEAN:WSTETH",
         color: "#ed9f9c"
       }
     );
