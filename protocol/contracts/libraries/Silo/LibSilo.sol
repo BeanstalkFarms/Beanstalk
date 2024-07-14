@@ -260,7 +260,7 @@ library LibSilo {
         // account's current rain roots, set the account's rain roots
         // to the account's current roots and subtract the difference
         // from Beanstalk's total rain roots.
-        if (s.season.raining && s.a[account].sop.roots > s.a[account].roots) {
+        if (s.a[account].sop.roots > s.a[account].roots) {
             uint256 deltaRoots = s.a[account].sop.roots.sub(s.a[account].roots);
             s.a[account].sop.roots = s.a[account].roots;
             s.r.roots = s.r.roots.sub(deltaRoots);
@@ -319,18 +319,17 @@ library LibSilo {
             ? s.a[sender].roots
             : s.s.roots.sub(1).mul(stalk).div(s.s.stalk).add(1);
 
-
-        // Rain roots cannot be transferred, burn them
-        if (s.season.raining) {
-            uint256 burnRainRoots = roots > s.a[sender].sop.roots ? s.a[sender].sop.roots : roots;
-            s.a[sender].sop.roots = s.a[sender].sop.roots.sub(burnRainRoots);
-            s.r.roots = s.r.roots.sub(burnRainRoots);
-        }
-
         // Subtract Stalk and Roots from the 'sender' balance.
         s.a[sender].s.stalk = s.a[sender].s.stalk.sub(stalk);
         s.a[sender].roots = s.a[sender].roots.sub(roots);
         emit StalkBalanceChanged(sender, -int256(stalk), -int256(roots));
+
+        // Rain roots cannot be transferred, burn them
+        if (s.season.raining && s.a[sender].sop.roots > s.a[sender].roots) {
+            uint256 deltaRoots = s.a[sender].sop.roots.sub(s.a[sender].roots);
+            s.a[sender].sop.roots = s.a[sender].roots;
+            s.r.roots = s.r.roots.sub(deltaRoots);
+        }
 
         // Add Stalk and Roots to the 'recipient' balance.
         s.a[recipient].s.stalk = s.a[recipient].s.stalk.add(stalk);
