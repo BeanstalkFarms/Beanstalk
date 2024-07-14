@@ -22,5 +22,10 @@ export const queryKeys = {
 
   // token balance
   tokenBalancesAll: ["token", "balance"],
-  tokenBalance: (symbol: string | undefined) => ["token", "balance", symbol || "invalid"]
+  tokenBalance: (symbol: string | undefined) => ["token", "balance", symbol || "invalid"],
+
+  siloBalancesAll: ["silo", "balance"],
+  siloBalance: (symbol: string) => ["silo", "balance", symbol],
+  siloBalanceMany: (symbols: string[]) => ["silo", "balance", ...symbols],
 } as const;
+
