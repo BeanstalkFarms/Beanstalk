@@ -294,8 +294,8 @@ const AddLiquidityContent = ({
         toast.error(error);
         setIsSubmitting(false);
       }
-      invalidate(queryKeys.tokenBalance(token1.symbol));
-      invalidate(queryKeys.tokenBalance(token2.symbol));
+      invalidate(queryKeys.tokenBalance(token1.address));
+      invalidate(queryKeys.tokenBalance(token2.address));
       invalidate(queryKeys.lpSummaryAll);
 
     }

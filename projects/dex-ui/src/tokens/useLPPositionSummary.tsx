@@ -103,7 +103,7 @@ export const useLPPositionSummary = () => {
 
         const lpTokenIndex = Math.floor(i / CALLS_PER_TOKEN);
         const lpToken = lpTokens[lpTokenIndex];
-        let balance = balances?.[lpToken.symbol] || {
+        let balance = balances?.[lpToken.address] || {
           external: TokenValue.ZERO,
           internal: TokenValue.ZERO
         };
@@ -113,30 +113,31 @@ export const useLPPositionSummary = () => {
           if (lpTokens[lpTokenIndex]) {
             balance.external = lpTokens[lpTokenIndex].fromBlockchain(res[i]) || TokenValue.ZERO;
           }
-          setQueryData(queryKeys.tokenBalance(lpToken.symbol), (oldData: TokenBalanceCache) => {
-            if (!oldData) return { [lpToken.symbol]: balance.external };
-              return { ...oldData, [lpToken.symbol]: balance.external };
+          setQueryData(queryKeys.tokenBalance(lpToken.address), (oldData: TokenBalanceCache) => {
+            if (!oldData) return { [lpToken.address]: balance.external };
+              return { ...oldData, [lpToken.address]: balance.external };
           })
           setQueryData(queryKeys.tokenBalancesAll, (oldData: TokenBalanceCache) => {
-            if (!oldData) return { [lpToken.symbol]: balance.external };
-              return { ...oldData, [lpToken.symbol]: balance.external };
+            if (!oldData) return { [lpToken.address]: balance.external };
+              return { ...oldData, [lpToken.address]: balance.external };
           })
           
         } else {
           if (lpTokens[lpTokenIndex]) {
             balance.internal = lpTokens[lpTokenIndex].fromBlockchain(res[i]);
-            setQueryData(queryKeys.tokenBalanceInternal(lpToken.symbol), (oldData: TokenBalanceCache) => {
-              if (!oldData) return { [lpToken.symbol]: balance.internal };
-              return { ...oldData, [lpToken.symbol]: balance.internal };
+            setQueryData(queryKeys.tokenBalanceInternal(lpToken.address), (oldData: TokenBalanceCache) => {
+              if (!oldData) return { [lpToken.address]: balance.internal };
+              return { ...oldData, [lpToken.address]: balance.internal };
             })
           }
         }
 
-        balances[lpToken.symbol] = balance;
+        balances[lpToken.address] = balance;
       }
 
       return balances;
     },
+    enabled: !!address && !!lpTokens.length,
 
     /**
      * Token balances are cached for 30 seconds, refetch value every 30 seconds,
@@ -152,21 +153,18 @@ export const useLPPositionSummary = () => {
 
   // Combine silo, internal & external balances & update state
   useEffect(() => {
-    console.log("balanceData: ", balanceData);
+    // console.log("balanceData: ", balanceData);
+    // console.log("lpTokens: ", lpTokens);
     if (!lpTokens.length || !balanceData || !siloBalances) return;
 
-    console.log("siloBalances: ", siloBalances);
-
-    // console.log("lptokens: ", lpTokens);
-
     const map = lpTokens.reduce<TokenMap<LPBalanceSummary>>((memo, curr) => {
-      const siloBalance = siloBalances[curr.symbol] || TokenValue.ZERO;
-      const internalExternal = balanceData?.[curr.symbol] || {
+      const siloBalance = siloBalances[curr.address] || TokenValue.ZERO;
+      const internalExternal = balanceData?.[curr.address] || {
         external: TokenValue.ZERO,
         internal: TokenValue.ZERO
       };
 
-      memo[curr.symbol] = {
+      memo[curr.address] = {
         silo: siloBalance,
         internal: internalExternal.internal,
         external: internalExternal.external,
@@ -191,8 +189,8 @@ export const useLPPositionSummary = () => {
    */
   const getPositionWithWell = useCallback(
     (well: Well | undefined) => {
-      if (!well?.lpToken?.symbol) return undefined;
-      return positions?.[well.lpToken.symbol];
+      if (!well?.lpToken?.address) return undefined;
+      return positions?.[well.lpToken.address];
     },
     [positions]
   );
