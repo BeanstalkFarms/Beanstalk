@@ -15,7 +15,7 @@ describe("Silo Convert", function () {
   const BEAN = sdk.tokens.BEAN;
   const BEANLP = sdk.tokens.BEAN_ETH_WELL_LP;
   const urBEAN = sdk.tokens.UNRIPE_BEAN;
-  const urBEANLP = sdk.tokens.UNRIPE_BEAN_WETH;
+  const urBEANLP = sdk.tokens.UNRIPE_BEAN_WSTETH;
   const whitelistedTokens = [BEAN, BEANLP, urBEAN, urBEANLP];
 
   beforeAll(async () => {

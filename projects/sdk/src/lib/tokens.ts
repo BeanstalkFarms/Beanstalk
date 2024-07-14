@@ -29,7 +29,7 @@ export class Tokens {
   public readonly BEAN_WSTETH_WELL_LP: ERC20Token;
   public readonly BEAN_CRV3_LP: ERC20Token;
   public readonly UNRIPE_BEAN: ERC20Token;
-  public readonly UNRIPE_BEAN_WETH: ERC20Token;
+  public readonly UNRIPE_BEAN_WSTETH: ERC20Token;
   public readonly STALK: BeanstalkToken;
   public readonly SEEDS: BeanstalkToken;
   public readonly PODS: BeanstalkToken;
@@ -222,9 +222,9 @@ export class Tokens {
     };
     this.UNRIPE_BEAN.isUnripe = true;
 
-    this.UNRIPE_BEAN_WETH = new ERC20Token(
+    this.UNRIPE_BEAN_WSTETH = new ERC20Token(
       chainId,
-      addresses.UNRIPE_BEAN_WETH.get(chainId),
+      addresses.UNRIPE_BEAN_WSTETH.get(chainId),
       6,
       "urBEANETH",
       {
@@ -234,18 +234,18 @@ export class Tokens {
       },
       providerOrSigner
     );
-    this.UNRIPE_BEAN_WETH.rewards = {
+    this.UNRIPE_BEAN_WSTETH.rewards = {
       stalk: this.STALK.amount(1),
       seeds: TokenValue.ZERO
     };
-    this.UNRIPE_BEAN_WETH.isUnripe = true;
+    this.UNRIPE_BEAN_WSTETH.isUnripe = true;
 
     this.map.set(addresses.BEAN.get(chainId), this.BEAN);
     this.map.set(addresses.BEAN_CRV3.get(chainId), this.BEAN_CRV3_LP);
     this.map.set(addresses.BEANWETH_WELL.get(chainId), this.BEAN_ETH_WELL_LP);
     this.map.set(addresses.BEANWSTETH_WELL.get(chainId), this.BEAN_WSTETH_WELL_LP);
     this.map.set(addresses.UNRIPE_BEAN.get(chainId), this.UNRIPE_BEAN);
-    this.map.set(addresses.UNRIPE_BEAN_WETH.get(chainId), this.UNRIPE_BEAN_WETH);
+    this.map.set(addresses.UNRIPE_BEAN_WSTETH.get(chainId), this.UNRIPE_BEAN_WSTETH);
     this.map.set(addresses.STETH.get(chainId), this.STETH);
     this.map.set(addresses.WSTETH.get(chainId), this.WSTETH);
 
@@ -402,7 +402,7 @@ export class Tokens {
       this.BEAN,
       this.BEAN_CRV3_LP,
       this.UNRIPE_BEAN,
-      this.UNRIPE_BEAN_WETH
+      this.UNRIPE_BEAN_WSTETH
     ];
 
     this.siloWhitelistedWellLP = new Set(whitelistedWellLP);
@@ -411,7 +411,7 @@ export class Tokens {
     this.siloWhitelist = new Set(siloWhitelist);
     this.siloWhitelistAddresses = siloWhitelist.map((t) => t.address);
 
-    this.unripeTokens = new Set([this.UNRIPE_BEAN, this.UNRIPE_BEAN_WETH]);
+    this.unripeTokens = new Set([this.UNRIPE_BEAN, this.UNRIPE_BEAN_WSTETH]);
     this.unripeUnderlyingTokens = new Set([this.BEAN, this.BEAN_CRV3_LP]);
     this.erc20Tokens = new Set([
       ...this.siloWhitelist,

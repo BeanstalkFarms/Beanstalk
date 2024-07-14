@@ -21,7 +21,7 @@ export class Convert {
   BeanCrv3: Token;
   BeanEth: Token;
   urBean: Token;
-  urBeanWeth: Token;
+  urBeanWstETH: Token;
   paths: Map<Token, Token>;
 
   constructor(sdk: BeanstalkSDK) {
@@ -30,15 +30,15 @@ export class Convert {
     this.BeanCrv3 = Convert.sdk.tokens.BEAN_CRV3_LP;
     this.BeanEth = Convert.sdk.tokens.BEAN_ETH_WELL_LP;
     this.urBean = Convert.sdk.tokens.UNRIPE_BEAN;
-    this.urBeanWeth = Convert.sdk.tokens.UNRIPE_BEAN_WETH;
+    this.urBeanWstETH = Convert.sdk.tokens.UNRIPE_BEAN_WSTETH;
 
     this.paths = new Map<Token, Token>();
     this.paths.set(this.Bean, this.BeanCrv3);
     this.paths.set(this.BeanCrv3, this.Bean);
     this.paths.set(this.Bean, this.BeanEth);
     this.paths.set(this.BeanEth, this.Bean);
-    this.paths.set(this.urBean, this.urBeanWeth);
-    this.paths.set(this.urBeanWeth, this.urBean);
+    this.paths.set(this.urBean, this.urBeanWstETH);
+    this.paths.set(this.urBeanWstETH, this.urBean);
   }
 
   async convert(
@@ -123,12 +123,12 @@ export class Convert {
   calculateEncoding(fromToken: Token, toToken: Token, amountIn: TokenValue, minAmountOut: TokenValue) {
     let encoding;
 
-    if (fromToken.address === this.urBean.address && toToken.address === this.urBeanWeth.address) {
+    if (fromToken.address === this.urBean.address && toToken.address === this.urBeanWstETH.address) {
       encoding = ConvertEncoder.unripeBeansToLP(
         amountIn.toBlockchain(), // amountBeans
         minAmountOut.toBlockchain() // minLP
       );
-    } else if (fromToken.address === this.urBeanWeth.address && toToken.address === this.urBean.address) {
+    } else if (fromToken.address === this.urBeanWstETH.address && toToken.address === this.urBean.address) {
       encoding = ConvertEncoder.unripeLPToBeans(
         amountIn.toBlockchain(), // amountLP
         minAmountOut.toBlockchain() // minBeans
@@ -162,7 +162,7 @@ export class Convert {
         amountIn.toBlockchain(), // unRipe Amount
         fromToken.address // unRipe Token
       );
-    } else if (fromToken.address === this.urBeanWeth.address && toToken.address === this.BeanEth.address) {
+    } else if (fromToken.address === this.urBeanWstETH.address && toToken.address === this.BeanEth.address) {
       encoding = ConvertEncoder.unripeToRipe(
         amountIn.toBlockchain(), // unRipe Amount
         fromToken.address // unRipe Token
