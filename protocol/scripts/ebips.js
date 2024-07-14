@@ -200,7 +200,8 @@ async function ebip17(mock = true, account = undefined) {
     libraryNames: ['LibSilo', 'LibConvert'],
     facetLibraries: {
       'SiloFacet': ['LibSilo'],
-      'ConvertFacet': ['LibConvert']
+      'ConvertFacet': ['LibConvert'],
+      'EnrootFacet': ['LibSilo']
     },
     bip: false,
     object: !mock,

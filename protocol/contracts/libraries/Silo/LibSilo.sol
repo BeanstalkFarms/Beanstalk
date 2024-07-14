@@ -707,7 +707,7 @@ library LibSilo {
         int96[] calldata stems,
         uint256[] calldata amounts,
         ERC1155Event emission
-    ) internal returns (AssetsRemoved memory ar) {
+    ) external returns (AssetsRemoved memory ar) {
         AppStorage storage s = LibAppStorage.diamondStorage();
 
         uint256[] memory bdvsRemoved = new uint256[](stems.length);
