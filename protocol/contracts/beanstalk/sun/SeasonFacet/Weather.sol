@@ -175,10 +175,10 @@ contract Weather is Sun {
             // prior to the start of the sop
             // During handleRain, the sop roots are set to the current roots at the time of rain,
             // which do not include the germinating roots.
-            if (s.season.current-1 == s.season.rainStart) {
+            if (s.season.current - 1 == s.season.rainStart) {
                 // increase by germinating roots of previous season
                 // get 2 season's ago's germinating roots
-                uint256 germinatingRoots = s.unclaimedGerminating[s.season.current-2].roots;
+                uint256 germinatingRoots = s.unclaimedGerminating[s.season.current - 2].roots;
                 s.r.roots = s.r.roots.add(germinatingRoots);
             }
             if (s.r.roots > 0) {
