@@ -520,7 +520,7 @@ describe('Sop', function () {
       expect(await this.siloGetters.balanceOfRainRoots(userAddress)).to.be.equal('10004000000000000000000000');
     });
 
-    it.only('germination rain roots test', async function () {
+    it('germination rain roots test', async function () {
       // user 3 deposits a bunch of bean
 
       const depositAmount = to6('50000');

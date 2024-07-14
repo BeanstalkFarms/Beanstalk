@@ -476,8 +476,9 @@ library LibSilo {
         uint32 currentSeason = s.season.current;
         
         // End account germination.
+        uint128 firstGerminatingRoots;
         if (lastUpdate < currentSeason) {
-            LibGerminate.endAccountGermination(account, lastUpdate, currentSeason);
+            firstGerminatingRoots = LibGerminate.endAccountGermination(account, lastUpdate, currentSeason);
         }
 
         // sop data only needs to be updated once per season,
@@ -486,7 +487,7 @@ library LibSilo {
             if ((lastUpdate <= s.season.rainStart || s.a[account].lastRain > 0) && lastUpdate <= currentSeason) {
                 // Increments `plenty` for `account` if a Flood has occured.
                 // Saves Rain Roots for `account` if it is Raining.
-                handleRainAndSops(account, lastUpdate);
+                handleRainAndSops(account, lastUpdate, firstGerminatingRoots);
             }
         }
         
@@ -542,7 +543,7 @@ library LibSilo {
     /**
      * @dev internal logic to handle when beanstalk is raining.
      */
-    function handleRainAndSops(address account, uint32 lastUpdate) private {
+    function handleRainAndSops(address account, uint32 lastUpdate, uint128 firstGerminatingRoots) private {
         AppStorage storage s = LibAppStorage.diamondStorage();
         // If a Sop has occured since last update, calculate rewards and set last Sop.
         if (s.season.lastSopSeason > lastUpdate) {
@@ -560,6 +561,18 @@ library LibSilo {
             if (s.season.rainStart > lastUpdate) {
                 s.a[account].lastRain = s.season.rainStart;
                 s.a[account].sop.roots = s.a[account].roots;
+                if (s.season.rainStart - 1 == lastUpdate) {
+                    if (firstGerminatingRoots > 0) {
+                        // if the account had just finished germinating roots this season (i.e,
+                        // deposited in the previous season before raining, and mowed during a sop),
+                        // Beanstalk will not allocate plenty to this deposit, and thus the roots
+                        // needs to be deducted from the sop roots.
+                        s.a[account].sop.roots = s.a[account].sop.roots.sub(firstGerminatingRoots);
+                    }
+                }
+                
+                //  s.a[account].roots includes newly finished germinating roots from a fresh deposit
+                //  @ season before rainStart
             }
             // If there has been a Sop since rain started,
             // save plentyPerRoot in case another SOP happens during rain.
