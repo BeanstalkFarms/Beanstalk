@@ -24,6 +24,9 @@ import { displayTokenSymbol } from "src/utils/format";
 import { LoadingTemplate } from "../LoadingTemplate";
 import { useLPPositionSummary } from "src/tokens/useLPPositionSummary";
 import { ActionWalletButtonWrapper } from "src/components/Wallet";
+import { useQueryClient } from "@tanstack/react-query";
+import { useInvalidateScopedQueries } from "src/utils/query/useInvalidateQueries";
+import { queryKeys } from "src/utils/query/queryKeys";
 
 type BaseRemoveLiquidityProps = {
   slippage: number;
@@ -37,7 +40,6 @@ type RemoveLiquidityProps = {
 
 const RemoveLiquidityContent = ({ well, slippage, slippageSettingsClickHandler, handleSlippageValueChange }: RemoveLiquidityProps) => {
   const { address } = useAccount();
-
   const [wellLpToken, setWellLpToken] = useState<Token | null>(null);
   const [lpTokenAmount, setLpTokenAmount] = useState<TokenValue | undefined>();
   const [removeLiquidityMode, setRemoveLiquidityMode] = useState<REMOVE_LIQUIDITY_MODE>(REMOVE_LIQUIDITY_MODE.Balanced);
@@ -45,9 +47,10 @@ const RemoveLiquidityContent = ({ well, slippage, slippageSettingsClickHandler, 
   const [amounts, setAmounts] = useState<TokenValue[]>([]);
   const [prices, setPrices] = useState<(TokenValue | null)[]>();
   const [tokenAllowance, setTokenAllowance] = useState<boolean>(false);
-
-  const { getPositionWithWell } = useLPPositionSummary();
+  
+  const { getPositionWithWell, refetch: refetchLPSummary } = useLPPositionSummary();
   const position = getPositionWithWell(well);
+  const invalidateScopedQuery = useInvalidateScopedQueries();
   
   const { reserves: wellReserves, refetch: refetchWellReserves } = useWellReserves(well);
   const sdk = useSdk();
@@ -152,11 +155,16 @@ const RemoveLiquidityContent = ({ well, slippage, slippageSettingsClickHandler, 
         toast.success(receipt);
         resetState();
         refetchWellReserves();
+        refetchLPSummary();
+        invalidateScopedQuery(queryKeys.tokenBalance(wellLpToken?.symbol));
+        invalidateScopedQuery(queryKeys.tokenBalance(well?.tokens?.[0]?.symbol));
+        invalidateScopedQuery(queryKeys.tokenBalance(well?.tokens?.[1]?.symbol));
       } catch (error) {
         Log.module("RemoveLiquidity").error("Error removing liquidity: ", (error as Error).message);
         toast.error(error);
       }
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     well,
     lpTokenAmount,

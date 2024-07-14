@@ -44,18 +44,17 @@ export function useScopedQueryKey<TQueryKey extends QueryKey = QueryKey>(queryKe
   return makeScopedQueryKey(address, sdk.chainId, queryKey);
 }
 
-export function useSetScopedQueryData<TData, TQueryKey extends QueryKey = QueryKey>() {
+export function useSetScopedQueryData<TQueryKey extends QueryKey = QueryKey>() {
   const chainId = useChainId();
   const { address } = useAccount();
   const queryClient = useQueryClient();
 
   return useCallback(
-    (queryKey: TQueryKey, mergeData: (oldData: undefined | void | TData) => TData) =>
+    <T>(queryKey: TQueryKey, mergeData: (oldData: undefined | void | T) => T) =>
       queryClient.setQueryData(
         makeScopedQueryKey(address, chainId, queryKey),
-        (oldData: undefined | void | TData) => {
+        (oldData: undefined | void | T) => {
           const merged = mergeData(oldData);
-          console.log("merged: ", merged);
           return merged;
         }
       ),

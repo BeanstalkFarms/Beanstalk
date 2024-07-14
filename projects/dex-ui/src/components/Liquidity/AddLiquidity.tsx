@@ -3,7 +3,7 @@ import { TokenInput } from "../../components/Swap/TokenInput";
 import { ERC20Token, Token, TokenValue } from "@beanstalk/sdk";
 import styled from "styled-components";
 import { useAccount } from "wagmi";
-import { AddLiquidityETH, Well } from "@beanstalk/sdk/Wells";
+import { AddLiquidityETH, Well } from "@beanstalk/sdk-Wells";
 import { useQuery } from "@tanstack/react-query";
 import { LIQUIDITY_OPERATION_TYPE, LiquidityAmounts } from "./types";
 import { Button } from "../Swap/Button";
@@ -19,6 +19,8 @@ import { LoadingTemplate } from "src/components/LoadingTemplate";
 import { ActionWalletButtonWrapper } from "src/components/Wallet";
 import { useTokenPrices } from "src/utils/price/useTokenPrices";
 import { PriceLookups } from "src/utils/price/priceLookups";
+import { useInvalidateScopedQueries } from "src/utils/query/useInvalidateQueries";
+import { queryKeys } from "src/utils/query/queryKeys";
 
 type BaseAddLiquidityProps = {
   slippage: number;
@@ -77,6 +79,7 @@ const AddLiquidityContent = ({
       return [data[token1.symbol] || null, data[token2.symbol] || null];
     }
   });
+  const invalidate = useInvalidateScopedQueries();
 
   // Indexed in the same order as well.tokens
   const [tokenAllowance, setTokenAllowance] = useState<boolean[]>([]);
@@ -291,7 +294,12 @@ const AddLiquidityContent = ({
         toast.error(error);
         setIsSubmitting(false);
       }
+      invalidate(queryKeys.tokenBalance(token1.symbol));
+      invalidate(queryKeys.tokenBalance(token2.symbol));
+      invalidate(queryKeys.lpSummaryAll);
+
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     quote,
     address,
