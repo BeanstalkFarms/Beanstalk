@@ -1,15 +1,15 @@
 import { Token, TokenValue } from "@beanstalk/sdk";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { queryKeys } from "src/utils/query/queryKeys";
+import { useScopedQuery, useSetScopedQueryData } from "src/utils/query/useScopedQuery";
 import { useAccount } from "wagmi";
 
 type TokenBalanceCache = undefined | void | Record<string, TokenValue>;
 
 export const useTokenBalance = (token: Token | undefined) => {
   const { address } = useAccount();
-  const queryClient = useQueryClient();
+  const setQueryData = useSetScopedQueryData();
 
-  const { data, isLoading, error, refetch, isFetching } = useQuery({
+  const { data, isLoading, error, refetch, isFetching } = useScopedQuery({
     queryKey: queryKeys.tokenBalance(token?.symbol),
 
     queryFn: async () => {
@@ -27,7 +27,7 @@ export const useTokenBalance = (token: Token | undefined) => {
       };
 
       // Also update the cache of "ALL" token query
-      queryClient.setQueryData(queryKeys.tokenBalancesAll, (oldData: TokenBalanceCache) => {
+      setQueryData(queryKeys.tokenBalancesAll, (oldData: TokenBalanceCache) => {
         if (!oldData) return result;
 
         return { ...oldData, ...result };

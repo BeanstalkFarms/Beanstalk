@@ -6,13 +6,16 @@ import { ContractFunctionParameters, erc20Abi } from "viem";
 
 import useSdk from "src/utils/sdk/useSdk";
 import { Log } from "src/utils/logger";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { BigNumber } from "ethers";
 import { multicall } from "@wagmi/core";
 import BEANSTALK_ABI from "@beanstalk/protocol/abi/Beanstalk.json";
 import { useSiloBalanceMany } from "./useSiloBalance";
 import { useWells } from "src/wells/useWells";
 import { config } from "src/utils/wagmi/config";
+import { useScopedQuery, useSetScopedQueryData } from "src/utils/query/useScopedQuery";
+import { queryKeys } from "src/utils/query/queryKeys";
+
+type TokenBalanceCache = undefined | void | Record<string, TokenValue>;
 
 export type LPBalanceSummary = {
   silo: TokenValue;
@@ -59,8 +62,7 @@ const makeMultiCall = (
 const CALLS_PER_TOKEN = 2;
 
 export const useLPPositionSummary = () => {
-  const queryClient = useQueryClient();
-
+  const setQueryData = useSetScopedQueryData();
   const { data: wells } = useWells();
   const { address } = useAccount();
   const sdk = useSdk();
@@ -81,9 +83,8 @@ export const useLPPositionSummary = () => {
   /**
    * Fetch external & internal balances
    */
-  const { data: balanceData, ...balanceRest } = useQuery({
-    queryKey: ["token", "lpSummary", ...lpTokens],
-
+  const { data: balanceData, ...balanceRest } = useScopedQuery({
+    queryKey: queryKeys.lpSummaryAll,
     queryFn: async () => {
       /**
        * TODO: check if there are any cached balances.
@@ -109,23 +110,27 @@ export const useLPPositionSummary = () => {
 
         /// update the cache object & update useQuery cache
         if (i % 2 === 0) {
-          balance.external = lpTokens[lpTokenIndex].fromBlockchain(res[i]) || TokenValue.ZERO;
-          queryClient.setQueryData(["token", "balance", lpToken.symbol], {
-            [lpToken.symbol]: balance.external
-          });
-        } else {
-          balance.internal = lpTokens[lpTokenIndex].fromBlockchain(res[i]);
-          queryClient.setQueryData(["token", "internalBalance", lpToken.symbol], {
-            [lpToken.symbol]: balance.internal
-          });
-        }
-        queryClient.setQueryData(
-          ["token", "balance"],
-          (oldData: undefined | void | Record<string, TokenValue>) => {
-            if (!oldData) return { [lpToken.symbol]: balance.external };
-            return { ...oldData, [lpToken.symbol]: balance.external };
+          if (lpTokens[lpTokenIndex]) {
+            balance.external = lpTokens[lpTokenIndex].fromBlockchain(res[i]) || TokenValue.ZERO;
           }
-        );
+          setQueryData(queryKeys.tokenBalance(lpToken.symbol), (oldData: TokenBalanceCache) => {
+            if (!oldData) return { [lpToken.symbol]: balance.external };
+              return { ...oldData, [lpToken.symbol]: balance.external };
+          })
+          setQueryData(queryKeys.tokenBalancesAll, (oldData: TokenBalanceCache) => {
+            if (!oldData) return { [lpToken.symbol]: balance.external };
+              return { ...oldData, [lpToken.symbol]: balance.external };
+          })
+          
+        } else {
+          if (lpTokens[lpTokenIndex]) {
+            balance.internal = lpTokens[lpTokenIndex].fromBlockchain(res[i]);
+            setQueryData(queryKeys.tokenBalanceInternal(lpToken.symbol), (oldData: TokenBalanceCache) => {
+              if (!oldData) return { [lpToken.symbol]: balance.internal };
+              return { ...oldData, [lpToken.symbol]: balance.internal };
+            })
+          }
+        }
 
         balances[lpToken.symbol] = balance;
       }
@@ -147,10 +152,15 @@ export const useLPPositionSummary = () => {
 
   // Combine silo, internal & external balances & update state
   useEffect(() => {
+    console.log("balanceData: ", balanceData);
     if (!lpTokens.length || !balanceData || !siloBalances) return;
 
+    console.log("siloBalances: ", siloBalances);
+
+    // console.log("lptokens: ", lpTokens);
+
     const map = lpTokens.reduce<TokenMap<LPBalanceSummary>>((memo, curr) => {
-      const siloBalance = siloBalances?.[curr.symbol] || TokenValue.ZERO;
+      const siloBalance = siloBalances[curr.symbol] || TokenValue.ZERO;
       const internalExternal = balanceData?.[curr.symbol] || {
         external: TokenValue.ZERO,
         internal: TokenValue.ZERO
