@@ -54,9 +54,9 @@ export const BEANWSTETH_WELL_MAINNET = new BasinWell(
   BEAN_WSTETH_WELL_LP,
   [BEAN, WETH],
   {
-    name: 'BEAN:wstETH Well Pool',
+    name: 'BEAN:WSTETH Well Pool',
     logo: curveLogo,
-    symbol: 'BEAN:wstETH',
+    symbol: 'BEAN:WSTETH',
     color: '#ed9f9c',
   }
 );

@@ -345,8 +345,8 @@ export const BEAN_WSTETH_WELL_LP = {
     BEAN_WSTETH_ADDRESSS,
     18,
     {
-      name: 'BEAN:wstETH LP',
-      symbol: 'BEANwstETH',
+      name: 'BEAN:WSTETH LP',
+      symbol: 'BEANWSTETH',
       logo: beanWstethLogo,
       displayDecimals: 2,
       color: BeanstalkPalette.lightBlue,
