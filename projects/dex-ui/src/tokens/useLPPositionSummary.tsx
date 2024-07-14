@@ -1,13 +1,13 @@
-import { Token, TokenValue } from "@beanstalk/sdk";
+import { BeanstalkSDK, Token, TokenValue } from "@beanstalk/sdk";
 import { Well } from "@beanstalk/sdk-wells";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useAccount } from "wagmi";
-import { erc20Abi } from "viem";
+import { ContractFunctionParameters, erc20Abi } from "viem";
 
 import useSdk from "src/utils/sdk/useSdk";
 import { Log } from "src/utils/logger";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { BigNumber as EthersBN } from "ethers";
+import { BigNumber } from "ethers";
 import { multicall } from "@wagmi/core";
 import BEANSTALK_ABI from "@beanstalk/protocol/abi/Beanstalk.json";
 import { useSiloBalanceMany } from "./useSiloBalance";
@@ -23,6 +23,41 @@ export type LPBalanceSummary = {
 
 type TokenMap<T> = { [tokenSymbol: string]: T };
 
+/**
+ * Contract calls to fetch internal & external balances
+ * Only fetch balances for wells with a defined LP Token
+ */
+const makeMultiCall = (
+  sdk: BeanstalkSDK,
+  lpTokens: Token[],
+  account: `0x${string}` | undefined
+) => {
+  const contractCalls: ContractFunctionParameters[] = [];
+  if (!account) return contractCalls;
+  Log.module("useLPPositionSummary").debug(
+    `Fetching internal & external token balances for ${lpTokens.length} lp tokens for address ${account}`
+  );
+
+  for (const t of lpTokens) {
+    contractCalls.push({
+      address: t.address as `0x{string}`,
+      abi: erc20Abi,
+      functionName: "balanceOf",
+      args: [account]
+    });
+    contractCalls.push({
+      address: sdk.contracts.beanstalk.address as `0x{string}`,
+      abi: BEANSTALK_ABI as Readonly<ContractFunctionParameters["abi"]>,
+      functionName: "getInternalBalance",
+      args: [account, t.address]
+    });
+  }
+
+  return contractCalls;
+};
+
+const CALLS_PER_TOKEN = 2;
+
 export const useLPPositionSummary = () => {
   const queryClient = useQueryClient();
 
@@ -33,55 +68,15 @@ export const useLPPositionSummary = () => {
   const [positions, setPositions] = useState<TokenMap<LPBalanceSummary>>({});
 
   // Array of LP tokens for each well
-  const lpTokens = useMemo(() => {
-    const tokens: Token[] = [];
-    if (!wells) {
-      return tokens;
-    } else if (wells instanceof Well) {
-      wells.lpToken && tokens.push(wells.lpToken);
-    } else {
-      wells.forEach((well) => {
-        well?.lpToken && tokens.push(well.lpToken);
-      });
-    }
-
-    return tokens;
-  }, [wells]);
+  const lpTokens = useMemo(
+    () => (wells || []).map((w) => w.lpToken).filter(Boolean) as Token[],
+    [wells]
+  );
 
   /**
    * Silo Balances
    */
   const { data: siloBalances, ...siloBalanceRest } = useSiloBalanceMany(lpTokens);
-  // console.log("silobals: ", siloBalances);
-
-  /**
-   * Contract calls to fetch internal & external balances
-   * Only fetch balances for wells with a defined LP Token
-   */
-  const calls = useMemo(() => {
-    const contractCalls: any[] = [];
-    if (!address) return contractCalls;
-    Log.module("useLPPositionSummary").debug(
-      `Fetching internal & external token balances for ${lpTokens.length} lp tokens for address ${address}`
-    );
-
-    for (const t of lpTokens) {
-      contractCalls.push({
-        address: t.address as `0x{string}`,
-        abi: erc20Abi,
-        functionName: "balanceOf",
-        args: [address]
-      });
-      contractCalls.push({
-        address: sdk.contracts.beanstalk.address as `0x{string}`,
-        abi: BEANSTALK_ABI,
-        functionName: "getInternalBalance",
-        args: [address, t.address]
-      });
-    }
-
-    return contractCalls;
-  }, [address, lpTokens, sdk]);
 
   /**
    * Fetch external & internal balances
@@ -98,12 +93,14 @@ export const useLPPositionSummary = () => {
       if (!address || !lpTokens.length) return balances;
 
       const res = (await multicall(config, {
-        contracts: calls,
+        contracts: makeMultiCall(sdk, lpTokens, address),
         allowFailure: false
-      })) as unknown as EthersBN[];
+      })) as unknown[] as BigNumber[];
 
       for (let i = 0; i < res.length; i++) {
-        const lpTokenIndex = Math.floor(i / 2);
+        // divide by 2 to get the index of the lp token b/c we have 2 calls per token
+
+        const lpTokenIndex = Math.floor(i / CALLS_PER_TOKEN);
         const lpToken = lpTokens[lpTokenIndex];
         let balance = balances?.[lpToken.symbol] || {
           external: TokenValue.ZERO,
@@ -112,18 +109,24 @@ export const useLPPositionSummary = () => {
 
         /// update the cache object & update useQuery cache
         if (i % 2 === 0) {
-          balance.external = lpTokens[lpTokenIndex].fromBlockchain(res[i]);
-          queryClient.setQueryData(["token", "balance", lpToken.symbol], { [lpToken.symbol]: balance.external });
+          balance.external = lpTokens[lpTokenIndex].fromBlockchain(res[i]) || TokenValue.ZERO;
+          queryClient.setQueryData(["token", "balance", lpToken.symbol], {
+            [lpToken.symbol]: balance.external
+          });
         } else {
           balance.internal = lpTokens[lpTokenIndex].fromBlockchain(res[i]);
-          queryClient.setQueryData(["token", "internalBalance", lpToken.symbol], { [lpToken.symbol]: balance.internal });
+          queryClient.setQueryData(["token", "internalBalance", lpToken.symbol], {
+            [lpToken.symbol]: balance.internal
+          });
         }
-        queryClient.setQueryData(["token", "balance"], (oldData: undefined | void | Record<string, TokenValue>) => {
-          if (!oldData) return { [lpToken.symbol]: balance.external };
-          return { ...oldData, [lpToken.symbol]: balance.external };
-        });
+        queryClient.setQueryData(
+          ["token", "balance"],
+          (oldData: undefined | void | Record<string, TokenValue>) => {
+            if (!oldData) return { [lpToken.symbol]: balance.external };
+            return { ...oldData, [lpToken.symbol]: balance.external };
+          }
+        );
 
-        
         balances[lpToken.symbol] = balance;
       }
 
@@ -141,8 +144,6 @@ export const useLPPositionSummary = () => {
     refetchIntervalInBackground: false,
     refetchOnWindowFocus: "always"
   });
-
-  // console.log("balData: ", balanceData);
 
   // Combine silo, internal & external balances & update state
   useEffect(() => {

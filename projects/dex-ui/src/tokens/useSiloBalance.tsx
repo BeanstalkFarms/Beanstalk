@@ -53,17 +53,18 @@ export const useSiloBalanceMany = (tokens: Token[]) => {
        * We find the silo balance using the token with symbol BEANETH &
        * then use BEANWETHCP2w as the key in the resultMap
        */
-      const _tokens = tokens
-        .map((token) => {
-          return {
-            token,
-            sdkToken: sdk.tokens.findByAddress(token.address)
-          };
+      const filteredTokens = tokens
+        .filter((t) => {
+          const sdkToken = sdk.tokens.findByAddress(t.address);
+          return !!(sdkToken && sdk.tokens.isWhitelisted(sdkToken));
         })
-        .filter((tk) => tk.sdkToken !== undefined);
+        .map((tk) => ({
+          token: tk,
+          sdkToken: sdk.tokens.findByAddress(tk.address)!
+        }));
 
       const result = await Promise.all(
-        _tokens.map((item) =>
+        filteredTokens.map((item) =>
           sdk.silo
             .getBalance(item.sdkToken!, address, { source: DataSource.LEDGER })
             .then((result) => ({ token: item.token, amount: result.amount }))
