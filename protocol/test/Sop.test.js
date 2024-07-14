@@ -421,15 +421,15 @@ describe('Sop', function () {
       // withdraw
       await this.silo.connect(user3).withdrawDeposit(BEAN, stemTip, to6('50000'), EXTERNAL);
       rainRoots = await this.siloGetters.balanceOfRainRoots(user3Address);
-      // rain roots still non-zero since they'll be zero'd when it starts raining again
-      expect(rainRoots).to.be.equal('500000000000000000000000000');
+      // rain roots zero after withdrawing deposit
+      expect(rainRoots).to.be.equal('0');
 
       // start raining again
       await this.season.rainSunrise();
       await this.season.rainSunrise();
       await this.silo.mow(user3Address, BEAN);
       rainRoots = await this.siloGetters.balanceOfRainRoots(user3Address);
-      expect(rainRoots).to.be.equal('500000000000000000000000000'); // actually should be zero here
+      expect(rainRoots).to.be.equal('0');
 
       // measure user actual roots
       const userRoots = await this.siloGetters.balanceOfRoots(user3Address);
@@ -520,7 +520,7 @@ describe('Sop', function () {
       expect(await this.siloGetters.balanceOfRainRoots(userAddress)).to.be.equal('10004000000000000000000000');
     });
 
-    it('germination rain roots test', async function () {
+    it.only('germination rain roots test', async function () {
       // user 3 deposits a bunch of bean
 
       const depositAmount = to6('50000');

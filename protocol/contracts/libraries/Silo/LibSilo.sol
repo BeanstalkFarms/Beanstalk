@@ -325,7 +325,7 @@ library LibSilo {
         emit StalkBalanceChanged(sender, -int256(stalk), -int256(roots));
 
         // Rain roots cannot be transferred, burn them
-        if (s.season.raining && s.a[sender].sop.roots > s.a[sender].roots) {
+        if (s.a[sender].sop.roots > s.a[sender].roots) {
             uint256 deltaRoots = s.a[sender].sop.roots.sub(s.a[sender].roots);
             s.a[sender].sop.roots = s.a[sender].roots;
             s.r.roots = s.r.roots.sub(deltaRoots);
