@@ -38,74 +38,74 @@ import {
 
 type ChartSetupBase = {
   /**
-  * Name of this chart. Mainly used in the Select Dialog and the chips that show which charts
-  * are currently selected, therefore ideally it should be short and to the point.
-  */
+   * Name of this chart. Mainly used in the Select Dialog and the chips that show which charts
+   * are currently selected, therefore ideally it should be short and to the point.
+   */
   name: string;
   /**
-  * Title shown in the actual chart after the user 
-  * makes their selection.
-  */
+   * Title shown in the actual chart after the user
+   * makes their selection.
+   */
   tooltipTitle: string;
   /**
-  * Text description shown when user hovers the tooltip icon next to the tooltip title.
-  */
+   * Text description shown when user hovers the tooltip icon next to the tooltip title.
+   */
   tooltipHoverText: string;
   /**
-  * Short description shown in the Select Dialog.
-  */
+   * Short description shown in the Select Dialog.
+   */
   shortDescription: string;
   /**
-  * The field in the GraphQL request that corresponds to a timestamp. Usually "createdAt" or "timestamp".
-  */
+   * The field in the GraphQL request that corresponds to a timestamp. Usually "createdAt" or "timestamp".
+   */
   timeScaleKey: string;
   /**
-  * The field in the GraphQL request that corresponds to the value that will be charted.
-  */
+   * The field in the GraphQL request that corresponds to the value that will be charted.
+   */
   priceScaleKey: string;
   /**
-  * The Apollo document of the GraphQL query.
-  */
+   * The Apollo document of the GraphQL query.
+   */
   document: DocumentNode;
   /**
-  * The entity that contains the data in your GraphQL request. Usually "seasons".
-  */
+   * The entity that contains the data in your GraphQL request. Usually "seasons".
+   */
   documentEntity: string;
   /**
-  * Short identifier for the output of this chart. Lightweight Charts only supports 
-  * two price scales, so we use this to group charts that have similar 
-  * outputs in the same price scale.
-  */
+   * Short identifier for the output of this chart. Lightweight Charts only supports
+   * two price scales, so we use this to group charts that have similar
+   * outputs in the same price scale.
+   */
   valueAxisType: string;
   /**
-  * Sets up things like variables and context for the GraphQL queries.
-  */
-  queryConfig: Partial<QueryOptions<OperationVariables, any>> | undefined,
+   * Sets up things like variables and context for the GraphQL queries.
+   */
+  queryConfig: Partial<QueryOptions<OperationVariables, any>> | undefined;
   /**
-  * Formats the raw output from the query into a number for Lightweight Charts.
-  */
+   * Formats the raw output from the query into a number for Lightweight Charts.
+   */
   valueFormatter: (v: string) => number | undefined;
   /**
-  * Formats the number used by Lightweight Charts into a string that's shown at the top
-  * of the chart. 
-  */
+   * Formats the number used by Lightweight Charts into a string that's shown at the top
+   * of the chart.
+   */
   tickFormatter: (v: number) => string | undefined;
   /**
-  * Formats the number used by Lightweight Charts into a string for the
-  * price scales.
-  */
+   * Formats the number used by Lightweight Charts into a string for the
+   * price scales.
+   */
   shortTickFormatter: (v: number) => string | undefined;
 };
 
 type ChartSetup = ChartSetupBase & {
   /**
-  * Used in the "Bean/Field/Silo" buttons in the Select Dialog to allow 
-  * the user to quickly filter the available charts.
-  */
+   * Used in the "Bean/Field/Silo" buttons in the Select Dialog to allow
+   * the user to quickly filter the available charts.
+   */
   type: string;
   /**
-  * Id of this chart in the chart data array.
-  */
+   * Id of this chart in the chart data array.
+   */
   index: number;
 };
 
@@ -121,7 +121,7 @@ export function useChartSetupData() {
       sdk.tokens.BEAN_CRV3_LP,
       sdk.tokens.BEAN_ETH_WELL_LP,
       sdk.tokens.UNRIPE_BEAN,
-      sdk.tokens.UNRIPE_BEAN_WETH,
+      sdk.tokens.UNRIPE_BEAN_WSTETH,
     ];
 
     const lpTokensToChart = [
@@ -156,7 +156,9 @@ export function useChartSetupData() {
         }`,
         timeScaleKey: 'createdAt',
         priceScaleKey: 'depositedAmount',
-        valueAxisType: token.isUnripe ? 'depositedUnripeAmount' : 'depositedAmount',
+        valueAxisType: token.isUnripe
+          ? 'depositedUnripeAmount'
+          : 'depositedAmount',
         document: SeasonalDepositedSiloAssetDocument,
         documentEntity: 'seasons',
         queryConfig: {
@@ -189,7 +191,7 @@ export function useChartSetupData() {
         },
         valueFormatter: (v: string) => Number(v) * 100,
         tickFormatter: tickFormatPercentage,
-        shortTickFormatter: tickFormatPercentage
+        shortTickFormatter: tickFormatPercentage,
       };
 
       depositCharts.push(depositedChart);
@@ -197,7 +199,8 @@ export function useChartSetupData() {
     });
 
     lpTokensToChart.forEach((token) => {
-      const tokenSymbol = token.symbol === 'BEAN:ETH' ? 'Old BEAN:ETH' : token.symbol;
+      const tokenSymbol =
+        token.symbol === 'BEAN:ETH' ? 'Old BEAN:ETH' : token.symbol;
       const lpChart: ChartSetupBase = {
         name: `${tokenSymbol} Liquidity`,
         tooltipTitle: `${tokenSymbol} Liquidity`,
@@ -209,17 +212,17 @@ export function useChartSetupData() {
         documentEntity: 'seasons',
         valueAxisType: 'usdLiquidity',
         queryConfig: {
-          variables: { pool: token.address }, 
-          context: { subgraph: 'bean' }
+          variables: { pool: token.address },
+          context: { subgraph: 'bean' },
         },
         valueFormatter: (v: string) => Number(v),
         tickFormatter: tickFormatUSD,
-        shortTickFormatter: tickFormatUSD
+        shortTickFormatter: tickFormatUSD,
       };
 
       lpCharts.push(lpChart);
     });
-    
+
     const output: ChartSetup[] = [];
     let dataIndex = 0;
 
@@ -240,12 +243,13 @@ export function useChartSetupData() {
         },
         valueFormatter: (v: string) => Number(v),
         tickFormatter: tickFormatBeanPrice,
-        shortTickFormatter: tickFormatBeanPrice
+        shortTickFormatter: tickFormatBeanPrice,
       },
       {
         name: 'Volume',
         tooltipTitle: 'Volume',
-        tooltipHoverText: 'The total USD volume in liquidity pools on the Minting Whitelist.',
+        tooltipHoverText:
+          'The total USD volume in liquidity pools on the Minting Whitelist.',
         shortDescription: 'The total USD volume in liquidity pools.',
         timeScaleKey: 'timestamp',
         priceScaleKey: 'deltaVolumeUSD',
@@ -368,7 +372,7 @@ export function useChartSetupData() {
         },
         valueFormatter: valueFormatBeanAmount,
         tickFormatter: tickFormatBeanAmount,
-        shortTickFormatter: tickFormatBeanAmount
+        shortTickFormatter: tickFormatBeanAmount,
       },
       {
         name: 'TWA Bean Price',
@@ -388,7 +392,7 @@ export function useChartSetupData() {
         },
         valueFormatter: (v: string) => Number(v),
         tickFormatter: tickFormatBeanPrice,
-        shortTickFormatter: tickFormatBeanPrice
+        shortTickFormatter: tickFormatBeanPrice,
       },
       {
         name: 'Liquidity to Supply Ratio',

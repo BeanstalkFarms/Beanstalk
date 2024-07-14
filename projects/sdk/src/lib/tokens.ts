@@ -228,8 +228,8 @@ export class Tokens {
       6,
       "urBEANWSTETH",
       {
-        name: "Unripe BEANETH", // see `.name()`
-        displayName: "Unripe BEAN:ETH LP",
+        name: "Unripe BEANWSTETH", // see `.name()`
+        displayName: "Unripe BEAN:WSTETH LP",
         displayDecimals: 2
       },
       providerOrSigner
