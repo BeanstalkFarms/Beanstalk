@@ -461,6 +461,29 @@ describe('Sop', function () {
       expect(await this.siloGetters.balanceOfRainRoots(user3Address)).to.be.equal('0');
     });
 
+    it('burns rain half of roots upon half transfer', async function () {
+      const beanStem = to6("4");
+
+      // set reserves so we'll sop
+      await this.well.setReserves([to6("1000000"), to18("1100")]);
+      await this.pump.setInstantaneousReserves([to6("1000000"), to18("1100")]);
+
+      await this.season.rainSunrise(); // start raining
+      await this.season.rainSunrise(); // sop
+
+      await this.silo.mow(user.address, BEAN);
+
+      let rainRootsBefore = await this.siloGetters.balanceOfRainRoots(userAddress);
+
+      expect(rainRootsBefore).to.be.equal('10004000000000000000000000');
+
+      await this.silo.connect(user).transferDeposit(userAddress, user3Address, BEAN, beanStem, to6('500'));
+      await this.silo.mow(user.address, BEAN);
+
+      // user should have half rain roots
+      expect(await this.siloGetters.balanceOfRainRoots(userAddress)).to.be.equal('5000000000000000000000000');
+    });
+
     it('germination rain roots test', async function () {
       // user 3 deposits a bunch of bean
 
