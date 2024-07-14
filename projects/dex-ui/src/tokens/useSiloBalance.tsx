@@ -9,7 +9,7 @@ export const useSiloBalance = (token: Token) => {
   const sdk = useSdk();
 
   const { data, isLoading, error, refetch, isFetching } = useScopedQuery({
-    queryKey: queryKeys.siloBalance(token.symbol),
+    queryKey: queryKeys.siloBalance(token.address),
 
     queryFn: async (): Promise<TokenValue> => {
       let balance: TokenValue;
@@ -40,7 +40,7 @@ export const useSiloBalanceMany = (tokens: Token[]) => {
   const setQueryData = useSetScopedQueryData();
 
   const { data, isLoading, error, refetch, isFetching } = useScopedQuery({
-    queryKey: queryKeys.siloBalanceMany(tokens.map((t) => t.symbol)),
+    queryKey: queryKeys.siloBalanceMany(tokens.map((t) => t.address)),
     queryFn: async () => {
       const resultMap: Record<string, TokenValue> = {};
       if (!address) return resultMap;
@@ -70,17 +70,15 @@ export const useSiloBalanceMany = (tokens: Token[]) => {
         )
       );
 
-      console.log("resulst: ", results);
-
       results.forEach((val) => {
-        resultMap[val.token.symbol] = val.amount;
+        resultMap[val.token.address] = val.amount;
 
-        // merge data into [scope, 'silo', token.symbol]
+        // merge data into [scope, 'silo', token.address]
         setQueryData(queryKeys.siloBalancesAll, (oldData) => {
-          if (!oldData) return { [val.token.symbol]: val.amount };
-          return { ...oldData, [val.token.symbol]: val.amount };
+          if (!oldData) return { [val.token.address]: val.amount };
+          return { ...oldData, [val.token.address]: val.amount };
         });
-        setQueryData(queryKeys.siloBalance(val.token.symbol), () => {
+        setQueryData(queryKeys.siloBalance(val.token.address), () => {
           return val.amount;
         });
       });

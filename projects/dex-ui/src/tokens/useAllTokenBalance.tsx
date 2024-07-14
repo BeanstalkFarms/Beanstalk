@@ -85,11 +85,11 @@ export const useAllTokensBalance = () => {
       for (let i = 0; i < res.length; i++) {
         const value = res[i];
         const token = tokensToLoad[i];
-        balances[token.symbol] = token.fromBlockchain(value);
+        balances[token.address] = token.fromBlockchain(value);
 
         // set the balance in the query cache too
-        setQueryData(queryKeys.tokenBalance(token.symbol), () => {
-          return { [token.symbol]: balances[token.symbol] }
+        setQueryData(queryKeys.tokenBalance(token.address), () => {
+          return { [token.address]: balances[token.address] }
         })
       }
 

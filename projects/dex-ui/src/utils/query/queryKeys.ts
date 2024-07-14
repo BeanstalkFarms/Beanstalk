@@ -7,7 +7,6 @@ export const queryKeys = {
     tokenAddress || "invalid",
     spender
   ],
-  lpSummary: (lpAddresses: string[]) => ["token", "lpSummary", ...lpAddresses],
   lpSummaryAll: ["token", "lpSummary"],
 
   // wells
@@ -24,11 +23,11 @@ export const queryKeys = {
 
   // token balance
   tokenBalancesAll: ["token", "balance"],
-  tokenBalance: (symbol: string | undefined) => ["token", "balance", "external", symbol || "invalid"],
-  tokenBalanceInternal: (symbol: string | undefined) => ["token", "balance", "internal", symbol || "invalid"],
+  tokenBalance: (address: string | undefined) => ["token", "balance", "external", address || "invalid"],
+  tokenBalanceInternal: (address: string | undefined) => ["token", "balance", "internal", address || "invalid"],
 
   siloBalancesAll: ["silo", "balance"],
-  siloBalance: (symbol: string) => ["silo", "balance", symbol],
-  siloBalanceMany: (symbols: string[]) => ["silo", "balance", ...symbols],
+  siloBalance: (address: string) => ["silo", "balance", address],
+  siloBalanceMany: (addresses: string[]) => ["silo", "balance", ...addresses],
 } as const;
 

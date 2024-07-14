@@ -10,7 +10,7 @@ export const useTokenBalance = (token: Token | undefined) => {
   const setQueryData = useSetScopedQueryData();
 
   const { data, isLoading, error, refetch, isFetching } = useScopedQuery({
-    queryKey: queryKeys.tokenBalance(token?.symbol),
+    queryKey: queryKeys.tokenBalance(token?.address),
 
     queryFn: async () => {
       if (!token) return;
@@ -23,7 +23,7 @@ export const useTokenBalance = (token: Token | undefined) => {
       }
 
       const result = {
-        [token.symbol]: balance
+        [token.address]: balance
       };
 
       // Also update the cache of "ALL" token query
