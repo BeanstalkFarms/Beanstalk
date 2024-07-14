@@ -76,7 +76,7 @@ const AddLiquidityContent = ({
     staleTime: 15 * 1000,
     refetchOnWindowFocus: "always",
     select: (data) => {
-      return [data[token1.symbol] || null, data[token2.symbol] || null];
+      return [data[token1.symbol] || null, data[token2.symbol] || null]; // price indexed by token symbol
     }
   });
   const invalidate = useInvalidateScopedQueries();
@@ -90,11 +90,6 @@ const AddLiquidityContent = ({
 
   const someWellReservesEmpty = Boolean(wellReserves && wellReserves.some((reserve) => reserve.eq(0)));
   const areSomeInputsZero = Boolean(inputs.some((amt) => amt.value.eq("0")));
-
-  useEffect(() => {
-    console.log({ someWellReservesEmpty, areSomeInputsZero });
-    
-  }, [someWellReservesEmpty, areSomeInputsZero])
 
   const atLeastOneAmountNonZero = useMemo(() => {
     if (!well.tokens || well.tokens.length === 0) return false;
