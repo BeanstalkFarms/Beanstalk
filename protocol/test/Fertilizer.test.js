@@ -7,6 +7,7 @@ const { BEAN, USDC, UNRIPE_BEAN, UNRIPE_LP, BEANSTALK, BARN_RAISE_TOKEN } = requ
 const { setWstethUsdPrice } = require('../utils/oracle.js');
 const { to6, to18 } = require('./utils/helpers.js');
 const { deployBasinV1_1 } = require('../scripts/basinV1_1.js');
+const { impersonateBeanWstethWell } = require('../utils/well.js');
 
 let user,user2,owner,fert
 let userAddress, ownerAddress, user2Address
@@ -63,6 +64,7 @@ describe('Fertilize', function () {
     await setWstethUsdPrice('1000')
 
     this.well = (await deployBasinV1_1(true, undefined, false, true)).well
+    await impersonateBeanWstethWell();
     
 
     this.wellToken = await ethers.getContractAt("IERC20", this.well.address)
