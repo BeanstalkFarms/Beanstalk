@@ -107,7 +107,7 @@ export const TokenPicker: FC<TokenPickerProps> = ({ token, tokenOptions, exclude
                     {balancesLoading || isFetching ? (
                       <Spinner size={14} />
                     ) : (
-                      <Balance>{balances?.[token.symbol]?.toHuman()}</Balance>
+                      <Balance>{balances?.[token.address]?.toHuman()}</Balance>
                     )}
                   </TokenRow>
                 ))}
