@@ -388,6 +388,7 @@ async function bipMiscellaneousImprovements(mock = true, account = undefined, ve
         'LibWellMinting',
       ],
     },
+    initFacetName: "InitFertUpdate",
     selectorsToRemove: [],
     bip: false,
     object: !mock,
