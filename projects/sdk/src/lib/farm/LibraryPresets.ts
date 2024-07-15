@@ -47,8 +47,6 @@ export class LibraryPresets {
   public readonly uniV3AddLiquidity;
   public readonly uniV3WellSwap;
   public readonly wellSwapUniV3;
-  public readonly ethIshtoWsteth;
-  public readonly ethIsh2beanWstethLp;
 
   /**
    * Load the Pipeline in preparation for a set Pipe actions.
@@ -788,105 +786,6 @@ export class LibraryPresets {
 
       result.push(advancedPipe);
       return result;
-    };
-
-    /**
-     * Go from WETH/ETH/STETH -> WSTETH.
-     * Doesn't support going backwards & doesn't support transferring to a recipient address.
-     */
-    this.ethIshtoWsteth = (
-      tokenIn: NativeToken | ERC20Token,
-      from?: FarmFromMode,
-      options?: {
-        /**
-         * This function will add transfer step if it has not been transferred by default
-         * If tokenIn has already been transferred to pipeline, it will skip the transfer step.
-         */
-        transferred?: boolean;
-        /**
-         * Whether or not this is a mid-pipeline step.
-         * If true, we will add all steps to pipeline. Otherwise, add all steps assuming it is the first step.
-         */
-        isMidPipe?: boolean;
-      }
-    ) => {
-      const symbol = tokenIn.symbol;
-
-      const isValidTokenIn =
-        symbol === sdk.tokens.ETH.symbol ||
-        symbol === sdk.tokens.WETH.symbol ||
-        symbol === sdk.tokens.STETH.symbol;
-
-      if (!isValidTokenIn) {
-        throw new Error(`Expected token input to be ETH, WETH, or STETH, but got: ${symbol}`);
-      }
-
-      const result = [];
-      let transferred = false;
-      const advPipe = sdk.farm.createAdvancedPipe("eth-ish-to-wsteth");
-
-      // Transfer the token to pipeline if not previously transferred to pipeline && token != ETH
-      if (!options?.transferred && symbol !== sdk.tokens.ETH.symbol) {
-        const transferToken = new sdk.farm.actions.TransferToken(
-          tokenIn.address,
-          sdk.contracts.pipeline.address,
-          from,
-          FarmToMode.INTERNAL
-        );
-
-        if (!options?.isMidPipe) {
-          result.push(transferToken);
-        } else {
-          advPipe.add(transferToken);
-        }
-        transferred = true;
-      }
-
-      // If tokenIn === WETH, unwrap WETH -> ETH
-      if (symbol === sdk.tokens.WETH.symbol) {
-        const unwrapEthFrom = transferred ? FarmFromMode.INTERNAL : from;
-        const unwrapEth = new sdk.farm.actions.UnwrapEth(unwrapEthFrom);
-
-        if (options?.isMidPipe) {
-          result.push(unwrapEth);
-        } else {
-          advPipe.add(unwrapEth);
-        }
-      }
-
-      // If tokenIn === WETH || ETH, convert ETH -> stETH
-      if (symbol === sdk.tokens.ETH.symbol || symbol === sdk.tokens.WETH.symbol) {
-        advPipe.add(new sdk.farm.actions.LidoEthToSteth());
-      }
-
-      // at this point, assume we have stETH. convert stETH -> wstETH
-      advPipe.add(
-        new sdk.farm.actions.ApproveERC20(sdk.tokens.STETH, sdk.contracts.pipeline.address)
-      );
-      advPipe.add(new sdk.farm.actions.LidoWrapSteth());
-
-      result.push(advPipe);
-
-      return result;
-    };
-
-    this.ethIsh2beanWstethLp = (
-      tokenIn: NativeToken | ERC20Token,
-      account: string,
-      from?: FarmFromMode,
-      to?: FarmToMode
-    ) => {
-      const ethIs2Wsteth = this.ethIshtoWsteth(tokenIn, from);
-      const wellAddLiq = this.wellAddLiquidity(
-        sdk.pools.BEAN_WSTETH_WELL,
-        sdk.tokens.WSTETH,
-        account,
-        from,
-        to,
-        { isMidPipe: true }
-      );
-
-      return [ethIs2Wsteth, wellAddLiq];
     };
   }
 }
