@@ -11,8 +11,4 @@ declare module '@beanstalk/sdk-core' {
       amount: TokenValue | BigNumber
     ): Promise<ContractTransaction>;
   }
-
-  namespace Token {
-    let _source: string;
-  }
 }
