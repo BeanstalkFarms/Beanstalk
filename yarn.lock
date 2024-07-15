@@ -3535,6 +3535,7 @@ __metadata:
   resolution: "@beanstalk/protocol@workspace:protocol"
   dependencies:
     "@beanstalk/wells": "npm:0.4.1"
+    "@beanstalk/wells1.1": "npm:@beanstalk/wells@1.1.0-prerelease1"
     "@ethereum-waffle/chai": "npm:4.0.10"
     "@nomicfoundation/hardhat-network-helpers": "npm:^1.0.10"
     "@nomiclabs/hardhat-ethers": "npm:^2.2.1"
@@ -3546,6 +3547,7 @@ __metadata:
     "@openzeppelin/hardhat-upgrades": "npm:^1.17.0"
     "@uniswap/v3-core": "npm:^1.0.1"
     "@uniswap/v3-periphery": "npm:^1.4.4"
+    axios: "npm:1.6.7"
     bignumber: "npm:^1.1.0"
     chai: "npm:^4.4.1"
     csv-parser: "npm:3.0.0"
@@ -3696,10 +3698,10 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@beanstalk/wells1.1@npm:@beanstalk/wells@1.1.0-prerelease0":
-  version: 1.1.0-prerelease0
-  resolution: "@beanstalk/wells@npm:1.1.0-prerelease0"
-  checksum: 01a50fe94d5a055a216b9eb5b31637184f2d43be19a0272b8c895af84e7f8dc6401209871908a641c466a25f7efe0da6d4940dced77ec87a0bab521bec00bc9f
+"@beanstalk/wells1.1@npm:@beanstalk/wells@1.1.0-prerelease1":
+  version: 1.1.0-prerelease1
+  resolution: "@beanstalk/wells@npm:1.1.0-prerelease1"
+  checksum: 10/8a8af753ad7024ccca9549932ef0bfbeb245f52c1d98664059cbd58921937b3fef94b47f4317a4b61b750ca6e48424e836d9a92206f6146d9a95e6ed5cf897de
   languageName: node
   linkType: hard
 
@@ -18539,6 +18541,17 @@ __metadata:
   languageName: node
   linkType: hard
 
+"axios@npm:1.6.7":
+  version: 1.6.7
+  resolution: "axios@npm:1.6.7"
+  dependencies:
+    follow-redirects: "npm:^1.15.4"
+    form-data: "npm:^4.0.0"
+    proxy-from-env: "npm:^1.1.0"
+  checksum: 10/a1932b089ece759cd261f175d9ebf4d41c8994cf0c0767cda86055c7a19bcfdade8ae3464bf4cec4c8b142f4a657dc664fb77a41855e8376cf38b86d7a86518f
+  languageName: node
+  linkType: hard
+
 "axios@npm:^0.21.1, axios@npm:^0.21.4":
   version: 0.21.4
   resolution: "axios@npm:0.21.4"
@@ -26155,7 +26168,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"follow-redirects@npm:^1.15.6":
+"follow-redirects@npm:^1.15.4, follow-redirects@npm:^1.15.6":
   version: 1.15.6
   resolution: "follow-redirects@npm:1.15.6"
   peerDependenciesMeta:
