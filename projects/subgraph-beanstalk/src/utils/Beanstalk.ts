@@ -8,9 +8,9 @@ export function loadBeanstalk(protocol: Address): Beanstalk {
     beanstalk = new Beanstalk(protocol.toHexString());
     beanstalk.name = "Beanstalk";
     beanstalk.slug = "beanstalk";
-    beanstalk.schemaVersion = "2.2.2";
-    beanstalk.subgraphVersion = "2.2.2";
-    beanstalk.methodologyVersion = "2.2.2";
+    beanstalk.schemaVersion = "2.3.0";
+    beanstalk.subgraphVersion = "2.3.0";
+    beanstalk.methodologyVersion = "2.3.0";
     beanstalk.lastUpgrade = ZERO_BI;
     beanstalk.lastSeason = 1;
     beanstalk.activeFarmers = [];

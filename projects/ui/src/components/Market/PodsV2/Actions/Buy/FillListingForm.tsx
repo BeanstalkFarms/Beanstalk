@@ -139,11 +139,32 @@ const FillListingV2Form: FC<
     (async () => {
       if (!account) return;
 
+      const _pricePerPod = toTokenUnitsBN(podListing.pricePerPod, 0);
+      const _remaining = toTokenUnitsBN(podListing.remainingAmount, 0);
       // Maximum BEAN precision is 6 decimals. remainingAmount * pricePerPod may
       // have more decimals, so we truncate at 6.
-      const maxBeans = podListing.remainingAmount
-        .times(podListing.pricePerPod)
-        .dp(BEAN[1].decimals, BigNumber.ROUND_DOWN);
+      
+      let maxBeans = _remaining.times(_pricePerPod).dp(6, BigNumber.ROUND_UP);
+      const diff = (maxBeans.div(podListing.pricePerPod)).dp(6, BigNumber.ROUND_DOWN).minus(podListing.remainingAmount);
+      
+      let loop = 0;
+      let found = false;
+
+      do {
+        let adjustedMaxBeans
+        if (diff.isPositive()) {
+          adjustedMaxBeans = maxBeans.minus(new BigNumber(loop * 0.0000001));
+        } else {
+          adjustedMaxBeans = maxBeans.plus(new BigNumber(loop * 0.0000001));
+        };
+        const adjustedPodAmount = adjustedMaxBeans.div(podListing.pricePerPod).dp(6, BigNumber.ROUND_DOWN);
+        if (adjustedPodAmount.eq(podListing.remainingAmount)) {
+          maxBeans = adjustedMaxBeans;
+          found = true;
+        } else {
+          loop += 1;
+        };
+      } while (found === false && loop < 50);
 
       if (maxBeans.gt(0)) {
         if (tokenIn === Bean) {

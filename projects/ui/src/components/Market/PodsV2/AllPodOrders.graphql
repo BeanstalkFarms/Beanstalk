@@ -1,10 +1,12 @@
 #import "./PodOrder.fragment.graphql"
 query AllPodOrders(
   $first: Int = 1000,
-  $status: MarketStatus = ACTIVE
+  $status: MarketStatus = ACTIVE,
+  $skip: Int = 0,
 ) {
   podOrders(
     first: $first,
+    skip: $skip,
     orderBy: createdAt,
     orderDirection: desc,
     where: { status: $status }
