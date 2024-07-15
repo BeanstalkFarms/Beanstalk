@@ -366,10 +366,10 @@ const Graph: FC<GraphProps> = ({
       !cursorPoint?.type
         ? 1
         : cursorPoint.type === _type
-        ? cursorPoint.index === _i
-          ? 1
-          : HOVER_PEER_OPACITY
-        : HOVER_PEER_OPACITY,
+          ? cursorPoint.index === _i
+            ? 1
+            : HOVER_PEER_OPACITY
+          : HOVER_PEER_OPACITY,
     [cursorPoint]
   );
 
@@ -582,14 +582,17 @@ const Graph: FC<GraphProps> = ({
         hideTooltip();
       }
     } else if (params.listingID) {
-      const index = listings.findIndex((l) => l.id.slice(43) === params.listingID);
+      // Extract index from listing id "0xaddr-index"
+      const index = listings.findIndex(
+        (l) => l.id.slice(43) === params.listingID
+      );
       if (index === -1) {
         if (selectedPoint) {
           setSelectedPoint(undefined);
           hideTooltip();
         }
-        return
-      };
+        return;
+      }
       const newSelectdPoint: SelectedPoint = {
         type: 'listing',
         index,
@@ -609,8 +612,8 @@ const Graph: FC<GraphProps> = ({
           setSelectedPoint(undefined);
           hideTooltip();
         }
-        return
-      };
+        return;
+      }
       if (!selectedPoint || selectedPoint.index !== index) {
         setSelectedPoint({
           type: 'order',
@@ -776,10 +779,10 @@ const Graph: FC<GraphProps> = ({
                 cursor: selectedPoint
                   ? 'default' // when selected, freeze cursor
                   : hoveredPoint // hovering over a point but haven't clicked it yet
-                  ? 'pointer'
-                  : zoom.isDragging
-                  ? 'grabbing' // if dragging, show grab
-                  : 'default',
+                    ? 'pointer'
+                    : zoom.isDragging
+                      ? 'grabbing' // if dragging, show grab
+                      : 'default',
                 touchAction: 'none',
               }}
             />
