@@ -137,50 +137,6 @@ export class ConvertFarmStep extends FarmStep {
     return this;
   }
 
-  // static methods
-  // FIXME: This could probably be simplified or removed entirely
-  static getConversionPath(sdk: BeanstalkSDK, tokenIn: Token) {
-    const siloConvert = sdk.silo.siloConvert;
-    const pathMatrix = [
-      [siloConvert.Bean, siloConvert.BeanCrv3],
-      [siloConvert.Bean, siloConvert.BeanEth],
-      [siloConvert.urBean, siloConvert.urBeanWstETH],
-      [siloConvert.urBean, siloConvert.Bean],
-    ];
-
-    /// b/c siloConvert uses it's own token instances
-    const sdkTokenPathMatrix = [
-      [sdk.tokens.BEAN, sdk.tokens.BEAN_CRV3_LP],
-      [sdk.tokens.BEAN, sdk.tokens.BEAN_ETH_WELL_LP],
-      [sdk.tokens.UNRIPE_BEAN, sdk.tokens.UNRIPE_BEAN_WSTETH, sdk.tokens.BEAN],
-      [
-        sdk.tokens.UNRIPE_BEAN_WSTETH,
-        sdk.tokens.UNRIPE_BEAN,
-        sdk.tokens.BEAN_ETH_WELL_LP,
-      ],
-    ];
-
-    const index =
-      tokenIn === sdk.tokens.BEAN_CRV3_LP
-        ? 0
-        : tokenIn === sdk.tokens.BEAN_ETH_WELL_LP
-          ? 1
-          : tokenIn === sdk.tokens.BEAN
-            ? 1
-            : tokenIn === sdk.tokens.UNRIPE_BEAN
-              ? 2
-              : 3;
-    const path = pathMatrix[index];
-    const tokenInIndex = path.findIndex((t) => t.equals(tokenIn));
-    const tokenOutIndex = Number(Boolean(!tokenInIndex));
-
-    return {
-      path: sdkTokenPathMatrix[index],
-      tokenIn: path[tokenInIndex],
-      tokenOut: path[tokenOutIndex],
-    };
-  }
-
   static async getMaxConvert(
     sdk: BeanstalkSDK,
     tokenIn: Token,

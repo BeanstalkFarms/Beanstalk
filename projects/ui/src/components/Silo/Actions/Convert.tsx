@@ -86,6 +86,7 @@ const filterTokenList = (
   list: Token[]
 ): Token[] => {
   if (allowUnripeConvert || !fromToken.isUnripe) return list;
+
   return list.filter((token) => token.isUnripe);
 };
 
@@ -289,7 +290,7 @@ const ConvertForm: FC<
           (tokenIn.address === sdk.tokens.UNRIPE_BEAN.address &&
             tokenOut?.address === sdk.tokens.BEAN.address) ||
           (tokenIn.address === sdk.tokens.UNRIPE_BEAN_WSTETH.address &&
-            tokenOut?.address === sdk.tokens.BEAN_ETH_WELL_LP.address);
+            tokenOut?.address === sdk.tokens.BEAN_WSTETH_WELL_LP.address);
 
         setIsChopping(chopping);
         if (!chopping) setChoppingConfirmed(true);
@@ -589,11 +590,13 @@ const ConvertPropProvider: FC<{
 
   /// Token List
   const [tokenList, initialTokenOut] = useMemo(() => {
-    const { path } = ConvertFarmStep.getConversionPath(sdk, fromToken);
-    const _tokenList = [...path].filter((_token) => !_token.equals(fromToken));
+    // We don't support native token converts
+    if (fromToken instanceof NativeToken) return [[], undefined];
+    const paths = sdk.silo.siloConvert.getConversionPaths(fromToken);
+    const _tokenList = paths.filter((_token) => !_token.equals(fromToken));
     return [
       _tokenList, // all available tokens to convert to
-      _tokenList[0], // tokenOut is the first available token that isn't the fromToken
+      _tokenList?.[0], // tokenOut is the first available token that isn't the fromToken
     ];
   }, [sdk, fromToken]);
 
@@ -956,7 +959,6 @@ const ConvertPropProvider: FC<{
               label="Slippage Tolerance"
               endAdornment="%"
             />
-
             {/* Only show the switch if we are on an an unripe silo's page */}
             {fromToken.isUnripe && (
               <SettingSwitch
