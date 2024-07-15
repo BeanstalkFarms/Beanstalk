@@ -1,5 +1,5 @@
-import { useAppSelector } from '~/state';
 import React, { useMemo } from 'react';
+import { useAppSelector } from '~/state';
 import { Stack, Typography } from '@mui/material';
 import { Link } from 'react-router-dom';
 import { DISCORD_LINK } from '~/constants';
@@ -20,9 +20,7 @@ export default function useBeanEthStartMintingSeason() {
   const MigrationAlert = useMemo(
     () => (
       <Stack width="100%" boxSizing="border-box" sx={{}}>
-        <WarningAlert
-        // color="error"
-        >
+        <WarningAlert>
           <Typography component="span">
             During the BIP-48 Unripe liquidity migration process, Unripe
             Deposits, Converts and Chops are disabled. Follow the Beanstalk{' '}
