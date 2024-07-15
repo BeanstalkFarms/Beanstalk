@@ -197,6 +197,7 @@ async function ebip17(mock = true, account = undefined) {
   await upgradeWithNewFacets({
     diamondAddress: BEANSTALK,
     facetNames: ["MigrationFacet", "MarketplaceFacet", "ConvertFacet", "EnrootFacet", "SiloGettersFacet", "SiloFacet"],
+    initFacetName: "InitHotFix6",
     libraryNames: ['LibSilo', 'LibConvert'],
     facetLibraries: {
       'SiloFacet': ['LibSilo'],
