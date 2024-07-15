@@ -36,7 +36,9 @@ library LibMigrateOut {
     }
 
     struct SourcePlot {
-        address n;
+        uint256 fieldId;
+        uint256 index;
+        uint256 amount;
     }
 
     struct SourceFertilizer {
@@ -138,10 +140,38 @@ library LibMigrateOut {
     /**
      * @notice Burns plots. Populates and encodes migration data.
      * @return plotsOut The plots to migrate, encoded as bytes.
-     * @dev Removes market listings.
+     * @dev "Burns" the Pods by setting the owner to 0x0. They remain in Pod line until Slashed.
      */
-    function migrateOutPlots() internal pure returns (bytes[] memory plotsOut) {
-        return plotsOut;
+    function migrateOutPlots(address account, SourcePlot[] memory plots) internal pure returns (bytes[] memory plotsOut) {
+        if (plotsOut.length == 0) return plotsOut;
+        AppStorage storage s = LibAppStorage.diamondStorage();
+        plotsOut = new bytes[](plots.length);
+        for (uint256 i; i < plots.length; i++) {
+            SourcePlot memory plot = plots[i];
+            uint256 pods = s.accts[account].fields[plot.fieldId].plots[plot.index];
+            require(plot.amount > 0, "No Pods to migrate");
+            require(pods >= plot.amount, "Insufficient Pods");
+
+            // Remove Plots from user.
+            LibMarket._cancelPodListing(account, fieldId, index);
+            delete s.accts[account].fields[fieldId].plots[index];
+            LibDibbler.removePlotIndexFromAccount(account, fieldId, index);
+
+            // Add new plots to null address.
+            s.accts[address(0)].fields[s.sys.activeField].plots[index] = plot.amount;
+            s.accts[address(0)].fields[s.sys.activeField].plotIndexes.push(index);
+
+            // Add partial plots back to user.
+            uint256 remainingPods = pods - plot.amount;
+            if (remainingPods > 0) {
+                uint256 newIndex = plot.index + plot.amount;
+                s.accts[account].fields[s.sys.activeField].plots[newIndex] = remainingPods;
+                s.accts[account].fields[s.sys.activeField].plotIndexes.push(newIndex);
+            }
+
+            // Update Field counters.
+            s.sys.fields[plot.fieldId].pods -= plot.amount;
+        }
     }
 
     /**
