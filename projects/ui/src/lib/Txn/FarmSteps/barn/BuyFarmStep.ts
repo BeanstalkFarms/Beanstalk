@@ -60,15 +60,6 @@ export class BuyFertilizerFarmStep extends FarmStep {
     }
 
     this.pushInput({
-      input: new this._sdk.farm.actions.TransferToken(
-        this._sdk.tokens.WSTETH.address,
-        beanstalk.address,
-        fromMode,
-        FarmToMode.EXTERNAL
-      ),
-    });
-
-    this.pushInput({
       input: async (_amountInStep) => {
         const amountWstETH =
           this._sdk.tokens.WSTETH.fromBlockchain(_amountInStep);
