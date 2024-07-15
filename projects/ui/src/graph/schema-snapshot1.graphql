@@ -235,8 +235,6 @@ type RankingObject {
 
 input RankingWhere {
   category: String
-  id: String
-  id_in: [String]
   network: String
   plugin: String
   search: String

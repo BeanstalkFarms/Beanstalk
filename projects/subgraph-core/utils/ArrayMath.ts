@@ -67,3 +67,21 @@ export function BigDecimal_indexOfMin(a: BigDecimal[]): u32 {
   }
   return retval;
 }
+
+export function f64_sum(arr: f64[]): f64 {
+  let sum: f64 = 0.0;
+  for (let i = 0; i < arr.length; i++) {
+    sum += arr[i];
+  }
+  return sum;
+}
+
+export function f64_max(arr: f64[]): f64 {
+  let max = arr[0];
+  for (let i = 1; i < arr.length; i++) {
+    if (arr[i] > max) {
+      max = arr[i];
+    }
+  }
+  return max;
+}
