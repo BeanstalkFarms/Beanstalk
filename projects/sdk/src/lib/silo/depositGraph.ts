@@ -366,6 +366,20 @@ export const getDepositGraph = (sdk: BeanstalkSDK): Graph => {
       to: "wstETH",
       label: "uniswapV3Swap"
     });
+    graph.setEdge("wstETH", "WETH", {
+      build: (account: string, fromMode: FarmFromMode, toMode: FarmToMode) =>
+        sdk.farm.presets.uniswapV3Swap(
+          sdk.tokens.WSTETH,
+          sdk.tokens.WETH,
+          account,
+          100,
+          fromMode,
+          toMode
+        ),
+      from: "wstETH",
+      to: "WETH",
+      label: "uniswapV3Swap"
+    });
   }
 
   /// 3CRV<>Stables via 3Pool Add/Remove Liquidity
