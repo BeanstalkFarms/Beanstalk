@@ -16,6 +16,7 @@ import {
   CRV3,
   WETH,
   BEAN_WSTETH_WELL_LP,
+  WSTETH,
 } from './tokens';
 
 // ------------------------------------
@@ -52,7 +53,7 @@ export const BEANWSTETH_WELL_MAINNET = new BasinWell(
   SupportedChainId.MAINNET,
   BEAN_WSTETH_ADDRESSS,
   BEAN_WSTETH_WELL_LP,
-  [BEAN, WETH],
+  [BEAN, WSTETH],
   {
     name: 'BEAN:WSTETH Well Pool',
     logo: curveLogo,
