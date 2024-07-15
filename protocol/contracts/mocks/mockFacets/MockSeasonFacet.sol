@@ -254,7 +254,7 @@ contract MockSeasonFacet is SeasonFacet {
     function resetState() public {
         for (uint256 i; i < s.sys.fieldCount; i++) {
             s.sys.fields[i].pods = 0;
-            s.sys.fields[i].harvested = 0;
+            s.sys.fields[i].processed = 0;
             s.sys.fields[i].harvestable = 0;
         }
         delete s.sys.silo;

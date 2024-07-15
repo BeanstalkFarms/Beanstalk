@@ -64,7 +64,6 @@ struct System {
     bytes32[16] _buffer_1;
     bytes32[144] casesV2;
     Silo silo;
-    Field field;
     Fertilizer fert;
     Season season;
     Weather weather;
@@ -107,13 +106,13 @@ struct Silo {
 /**
  * @notice System-level Field state variables.
  * @param pods The pod index; the total number of Pods ever minted.
- * @param harvested The harvested index; the total number of Pods that have ever been Harvested.
- * @param harvestable The harvestable index; the total number of Pods that have ever been Harvestable. Included previously Harvested Beans.
+ * @param processed Amount of Pods that have ever been Harvested or Slashed.
+ * @param harvestable Index of Pods that have ever been Harvestable. Included Processed Pods.
  * @param _buffer Reserved storage for future expansion.
  */
 struct Field {
     uint256 pods;
-    uint256 harvested;
+    uint256 processed;
     uint256 harvestable;
     bytes32[8] _buffer;
 }

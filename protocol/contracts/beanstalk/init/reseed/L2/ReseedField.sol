@@ -61,10 +61,6 @@ contract ReseedField {
         require(totalPods >= harvestable, "ReseedField: harvestable mismatch");
         require(harvestable >= harvested, "ReseedField: harvested mismatch");
 
-        s.sys.field.pods = totalPods;
-        s.sys.field.harvestable = harvestable;
-        s.sys.field.harvested = harvested;
-
         // soil demand initialization.
         s.sys.weather.thisSowTime = type(uint32).max;
         s.sys.weather.lastSowTime = type(uint32).max;
