@@ -27,7 +27,7 @@ import usdcLogoUrl from '~/img/tokens/usdc-logo.svg';
 import usdtLogoUrl from '~/img/tokens/usdt-logo.svg';
 import lusdLogoUrl from '~/img/tokens/lusd-logo.svg';
 import unripeBeanLogoUrl from '~/img/tokens/unripe-bean-logo-circled.svg';
-import unripeBeanWethLogoUrl from '~/img/tokens/unrip-beanweth.svg';
+import unripeBeanWstethLogoUrl from '~/img/tokens/unripe-bean-wsteth-logo.svg';
 import { BeanstalkPalette } from '~/components/App/muiTheme';
 
 // Other imports
@@ -42,7 +42,7 @@ import {
   USDC_ADDRESSES,
   USDT_ADDRESSES,
   UNRIPE_BEAN_ADDRESSES,
-  UNRIPE_BEAN_WETH_ADDRESSES,
+  UNRIPE_BEAN_WSTETH_ADDRESSES,
   BEAN_ADDRESSES,
   BEAN_ETH_WELL_ADDRESSES,
   BEAN_CRV3_V1_ADDRESSES,
@@ -345,8 +345,8 @@ export const BEAN_WSTETH_WELL_LP = {
     BEAN_WSTETH_ADDRESSS,
     18,
     {
-      name: 'BEAN:wstETH LP',
-      symbol: 'BEANwstETH',
+      name: 'BEAN:WSTETH LP',
+      symbol: 'BEANWSTETH',
       logo: beanWstethLogo,
       displayDecimals: 2,
       color: BeanstalkPalette.lightBlue,
@@ -402,15 +402,15 @@ export const UNRIPE_BEAN = {
   ),
 };
 
-export const UNRIPE_BEAN_WETH = {
+export const UNRIPE_BEAN_WSTETH = {
   [SupportedChainId.MAINNET]: new ERC20Token(
     SupportedChainId.MAINNET,
-    UNRIPE_BEAN_WETH_ADDRESSES,
+    UNRIPE_BEAN_WSTETH_ADDRESSES,
     6,
     {
-      name: 'Unripe BEAN:ETH LP',
-      symbol: 'urBEANETH',
-      logo: unripeBeanWethLogoUrl,
+      name: 'Unripe BEAN:WSTETH LP',
+      symbol: 'urBEANWSTETH',
+      logo: unripeBeanWstethLogoUrl,
       displayDecimals: 2,
       color: BeanstalkPalette.lightBlue,
       isUnripe: true,
@@ -428,20 +428,20 @@ export const UNRIPE_BEAN_WETH = {
 
 export const UNRIPE_TOKENS: ChainConstant<ERC20Token>[] = [
   UNRIPE_BEAN,
-  UNRIPE_BEAN_WETH,
+  UNRIPE_BEAN_WSTETH,
 ];
 export const UNRIPE_UNDERLYING_TOKENS: ChainConstant<ERC20Token>[] = [
   BEAN,
-  BEAN_ETH_WELL_LP,
+  BEAN_WSTETH_WELL_LP,
 ];
 
 // Show these tokens as whitelisted in the Silo.
 export const SILO_WHITELIST: ChainConstant<ERC20Token>[] = [
   BEAN,
   BEAN_ETH_WELL_LP,
-  // BEAN_WSTETH_WELL_LP,
+  BEAN_WSTETH_WELL_LP,
   UNRIPE_BEAN,
-  UNRIPE_BEAN_WETH,
+  UNRIPE_BEAN_WSTETH,
   BEAN_CRV3_LP,
 ];
 

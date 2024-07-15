@@ -18,7 +18,7 @@ export const balance = async (sdk, { account, symbol }) => {
         "DAI",
         "CRV3",
         "UNRIPE_BEAN",
-        "UNRIPE_BEAN_WETH",
+        "UNRIPE_BEAN_WSTETH",
         "BEAN_CRV3_LP",
         "BEAN_ETH_WELL_LP",
         "ROOT"

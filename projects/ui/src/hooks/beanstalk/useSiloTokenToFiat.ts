@@ -8,7 +8,7 @@ import {
   BEAN,
   UNRIPE_BEAN,
   BEAN_ETH_WELL_LP,
-  UNRIPE_BEAN_WETH,
+  UNRIPE_BEAN_WSTETH,
 } from '~/constants/tokens';
 import { ZERO_BN } from '~/constants';
 import { AppState } from '~/state';
@@ -23,7 +23,7 @@ const useSiloTokenToFiat = () => {
   const Bean = getChainToken(BEAN);
   const urBean = getChainToken(UNRIPE_BEAN);
   const beanWeth = getChainToken(BEAN_ETH_WELL_LP);
-  const urBeanWeth = getChainToken(UNRIPE_BEAN_WETH);
+  const urBeanWstETH = getChainToken(UNRIPE_BEAN_WSTETH);
 
   ///
   const beanPools = useSelector<AppState, AppState['_bean']['pools']>(
@@ -64,12 +64,12 @@ const useSiloTokenToFiat = () => {
       const _poolAddress = _token.address;
       const _amountLP = _amount;
 
-      if (_token === urBeanWeth) {
+      if (_token === urBeanWstETH) {
         // formula for calculating chopped urBEANETH:
         // userUrLP * totalUnderlyingLP / totalSupplyUrLP * recapPaidPercent
-        const underlyingTotalLP = unripe[urBeanWeth.address]?.underlying;
-        const totalSupplyUrLP = unripe[urBeanWeth.address]?.supply;
-        const recapPaidPercent = unripe[urBeanWeth.address]?.recapPaidPercent;
+        const underlyingTotalLP = unripe[urBeanWstETH.address]?.underlying;
+        const totalSupplyUrLP = unripe[urBeanWstETH.address]?.supply;
+        const recapPaidPercent = unripe[urBeanWstETH.address]?.recapPaidPercent;
         const choppedLP = _amount
           .multipliedBy(underlyingTotalLP)
           .dividedBy(totalSupplyUrLP)
@@ -97,7 +97,7 @@ const useSiloTokenToFiat = () => {
 
       return _denomination === 'bdv' ? bdv : usd;
     },
-    [Bean, beanPools, beanWeth, price, unripe, urBean, urBeanWeth]
+    [Bean, beanPools, beanWeth, price, unripe, urBean, urBeanWstETH]
   );
 };
 

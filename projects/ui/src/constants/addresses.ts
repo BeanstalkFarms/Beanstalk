@@ -11,7 +11,9 @@ export const BEANSTALK_ADDRESSES = {
 
 export const BEANSTALK_PRICE_ADDRESSES = {
   [SupportedChainId.MAINNET]:
-    '0xb01CE0008CaD90104651d6A84b6B11e182a9B62A'.toLowerCase(),
+    '0x889c98cee4dEE7D042B489fC86976d3dC9a0EeE2'.toLowerCase(),
+  // TODO: FIX ME w/ the newly deployed Price Contract
+  // '0xb01CE0008CaD90104651d6A84b6B11e182a9B62A'.toLowerCase(),
 };
 
 export const BEANSTALK_FERTILIZER_ADDRESSES = {
@@ -65,7 +67,7 @@ export const UNRIPE_BEAN_ADDRESSES = {
     '0x1BEA0050E63e05FBb5D8BA2f10cf5800B6224449'.toLowerCase(),
 };
 
-export const UNRIPE_BEAN_WETH_ADDRESSES = {
+export const UNRIPE_BEAN_WSTETH_ADDRESSES = {
   // --------------------------------------------------
   // "Unripe BEAN:WETH LP": Unripe vesting asset for the BEAN:WETH LP token, Localhost
   // -------------------------------------------------

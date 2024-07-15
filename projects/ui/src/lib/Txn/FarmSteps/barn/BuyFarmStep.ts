@@ -10,13 +10,16 @@ import {
 } from '@beanstalk/sdk';
 import BigNumber from 'bignumber.js';
 import { ClaimAndDoX, FarmStep } from '~/lib/Txn/Interface';
-import { SupportedChainId, BEAN_ETH_WELL_ADDRESSES } from '~/constants';
+import { SupportedChainId, BEAN_WSTETH_ADDRESSS } from '~/constants';
 import { getChainConstant } from '~/util/Chain';
 
 export class BuyFertilizerFarmStep extends FarmStep {
   private _tokenList: (ERC20Token | NativeToken)[];
 
-  constructor(_sdk: BeanstalkSDK, private _account: string) {
+  constructor(
+    _sdk: BeanstalkSDK,
+    private _account: string
+  ) {
     super(_sdk);
     this._account = _account;
     this._tokenList = BuyFertilizerFarmStep.getTokenList(_sdk.tokens);
@@ -34,7 +37,7 @@ export class BuyFertilizerFarmStep extends FarmStep {
 
     const { beanstalk } = this._sdk.contracts;
 
-    const { wethIn } = BuyFertilizerFarmStep.validateTokenIn(
+    const { wstETHIn } = BuyFertilizerFarmStep.validateTokenIn(
       this._sdk.tokens,
       this._tokenList,
       tokenIn
@@ -43,12 +46,12 @@ export class BuyFertilizerFarmStep extends FarmStep {
     let fromMode = _fromMode;
 
     /// If the user is not using additional BEANs
-    if (!wethIn) {
+    if (!wstETHIn) {
       this.pushInput({
         ...BuyFertilizerFarmStep.getSwap(
           this._sdk,
           tokenIn,
-          this._sdk.tokens.WETH,
+          this._sdk.tokens.WSTETH,
           this._account,
           fromMode
         ),
@@ -58,9 +61,10 @@ export class BuyFertilizerFarmStep extends FarmStep {
 
     this.pushInput({
       input: async (_amountInStep) => {
-        const amountWeth = this._sdk.tokens.WETH.fromBlockchain(_amountInStep);
-        const amountFert = this.getFertFromWeth(amountWeth, ethPrice);
-        const minLP = await this.calculateMinLP(amountWeth, ethPrice);
+        const amountWstETH =
+          this._sdk.tokens.WSTETH.fromBlockchain(_amountInStep);
+        const amountFert = this.getFertFromWstETH(amountWstETH, ethPrice);
+        const minLP = await this.calculateMinLP(amountWstETH, ethPrice);
 
         return {
           name: 'mintFertilizer',
@@ -68,10 +72,10 @@ export class BuyFertilizerFarmStep extends FarmStep {
           prepare: () => ({
             target: beanstalk.address,
             callData: beanstalk.interface.encodeFunctionData('mintFertilizer', [
-              amountWeth.toBlockchain(), // wethAmountIn
+              amountWstETH.toBlockchain(), // wstETHAmountIn
               amountFert.toBlockchain(), // minFertilizerOut
               minLP.subSlippage(slippage).toBlockchain(), // minLPTokensOut (with slippage applied)
-              fromMode, // fromMode
+              // fromMode, // fromMode
             ]),
           }),
           decode: (data: string) =>
@@ -90,35 +94,38 @@ export class BuyFertilizerFarmStep extends FarmStep {
   }
 
   // eslint-disable-next-line class-methods-use-this
-  getFertFromWeth(amount: TokenValue, ethPrice: TokenValue) {
-    return amount.mul(ethPrice).reDecimal(0);
+  getFertFromWstETH(amount: TokenValue, wstETHPrice: TokenValue) {
+    return amount.mul(wstETHPrice).reDecimal(0);
   }
 
   // private methods
 
   /**
-   *  The steps for calculating minLP given wethAmountIn are:
-   * 1. usdAmountIn = wethAmountIn / wethUsdcPrice (or wethAmountIn * usdcWethPrice. Let's make sure to use  getMintFertilizerOut(1000000)
+   *  The steps for calculating minLP given wstETH amount are:
+   * 1. usdAmountIn = wstETHPrice / wethUsdcPrice (or wstETHAmountIn * usdcWstETH. Let's make sure to use  getMintFertilizerOut(1000000)
    *    or the function that I will add to make sure it uses the same wethUsdc price as the contract or otherwise the amount out could be off)
    * 2. beansMinted = usdAmountIn * 0.866616  (Because Beanstalk mints 0.866616 Beans for each $1 contributed)
-   * 3. lpAmountOut = beanEthWell.getAddLiquidityOut([beansMinted, wethAmountIn])
+   * 3. lpAmountOut = beanWstETHWell.getAddLiquidityOut([beansMinted, wethAmountIn])
    *
    * Apply slippage minLPTokensOut = lpAmountOut * (1 - slippage)
    */
   // eslint-disable-next-line class-methods-use-this
   private async calculateMinLP(
-    wethAmount: TokenValue,
-    ethPrice: TokenValue
+    wstETHAmount: TokenValue,
+    wstETHPrice: TokenValue
   ): Promise<TokenValue> {
-    const beanWethWellAddress = getChainConstant(
-      BEAN_ETH_WELL_ADDRESSES,
+    const beanWstETHWellAddress = getChainConstant(
+      BEAN_WSTETH_ADDRESSS,
       SupportedChainId.MAINNET
     ).toLowerCase();
-    const well = await this._sdk.wells.getWell(beanWethWellAddress);
+    const well = await this._sdk.wells.getWell(beanWstETHWellAddress);
 
-    const usdAmountIn = ethPrice.mul(wethAmount);
+    const usdAmountIn = wstETHPrice.mul(wstETHAmount);
     const beansToMint = usdAmountIn.mul(0.866616);
-    const lpEstimate = await well.addLiquidityQuote([beansToMint, wethAmount]);
+    const lpEstimate = await well.addLiquidityQuote([
+      beansToMint,
+      wstETHAmount,
+    ]);
 
     return lpEstimate;
   }
@@ -135,7 +142,7 @@ export class BuyFertilizerFarmStep extends FarmStep {
       tokenOut,
       account,
       fromMode,
-      FarmToMode.INTERNAL
+      FarmToMode.EXTERNAL
     );
 
     return {
@@ -159,7 +166,7 @@ export class BuyFertilizerFarmStep extends FarmStep {
     const { swap, input } = BuyFertilizerFarmStep.getSwap(
       sdk,
       tokenIn,
-      sdk.tokens.WETH,
+      sdk.tokens.WSTETH,
       account,
       _fromMode
     );
@@ -179,11 +186,12 @@ export class BuyFertilizerFarmStep extends FarmStep {
   }
 
   public static getPreferredTokens(tokens: BeanstalkSDK['tokens']) {
-    const { BEAN, ETH, WETH, CRV3, DAI, USDC, USDT } = tokens;
+    const { BEAN, ETH, WETH, CRV3, DAI, USDC, USDT, WSTETH } = tokens;
 
     return [
-      { token: ETH, minimum: new BigNumber(0.01) },
+      { token: WSTETH, minimum: new BigNumber(0.01) },
       { token: WETH, minimum: new BigNumber(0.01) },
+      { token: ETH, minimum: new BigNumber(0.01) },
       { token: BEAN, minimum: new BigNumber(1) },
       { token: CRV3, minimum: new BigNumber(1) },
       { token: DAI, minimum: new BigNumber(1) },
@@ -205,6 +213,7 @@ export class BuyFertilizerFarmStep extends FarmStep {
       beanIn: sdkTokens.BEAN.equals(tokenIn),
       ethIn: tokenIn.equals(sdkTokens.ETH),
       wethIn: sdkTokens.WETH.equals(tokenIn),
+      wstETHIn: sdkTokens.WSTETH.equals(tokenIn),
     };
   }
 }

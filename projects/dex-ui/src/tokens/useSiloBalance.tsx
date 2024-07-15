@@ -1,5 +1,6 @@
 import { DataSource, Token, TokenValue } from "@beanstalk/sdk";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { queryKeys } from "src/utils/query/queryKeys";
+import { useScopedQuery, useSetScopedQueryData } from "src/utils/query/useScopedQuery";
 import useSdk from "src/utils/sdk/useSdk";
 import { useAccount } from "wagmi";
 
@@ -7,10 +8,8 @@ export const useSiloBalance = (token: Token) => {
   const { address } = useAccount();
   const sdk = useSdk();
 
-  const key = ["silo", "balance", sdk, token.symbol];
-
-  const { data, isLoading, error, refetch, isFetching } = useQuery({
-    queryKey: key,
+  const { data, isLoading, error, refetch, isFetching } = useScopedQuery({
+    queryKey: queryKeys.siloBalance(token.address),
 
     queryFn: async (): Promise<TokenValue> => {
       let balance: TokenValue;
@@ -18,7 +17,9 @@ export const useSiloBalance = (token: Token) => {
         balance = TokenValue.ZERO;
       } else {
         const sdkLPToken = sdk.tokens.findByAddress(token.address);
-        const result = await sdk.silo.getBalance(sdkLPToken!, address, { source: DataSource.LEDGER });
+        const result = await sdk.silo.getBalance(sdkLPToken!, address, {
+          source: DataSource.LEDGER
+        });
         balance = result.amount;
       }
       return balance;
@@ -36,12 +37,10 @@ export const useSiloBalance = (token: Token) => {
 export const useSiloBalanceMany = (tokens: Token[]) => {
   const { address } = useAccount();
   const sdk = useSdk();
+  const setQueryData = useSetScopedQueryData();
 
-  const queryClient = useQueryClient();
-
-  const { data, isLoading, error, refetch, isFetching } = useQuery({
-    queryKey: ["silo", "balance", sdk, ...tokens.map((token) => token.symbol)],
-
+  const { data, isLoading, error, refetch, isFetching } = useScopedQuery({
+    queryKey: queryKeys.siloBalanceMany(tokens.map((t) => t.address)),
     queryFn: async () => {
       const resultMap: Record<string, TokenValue> = {};
       if (!address) return resultMap;
@@ -53,30 +52,39 @@ export const useSiloBalanceMany = (tokens: Token[]) => {
        * We find the silo balance using the token with symbol BEANETH &
        * then use BEANWETHCP2w as the key in the resultMap
        */
-      const _tokens = tokens
-        .map((token) => {
-          return {
-            token,
-            sdkToken: sdk.tokens.findByAddress(token.address)
-          };
+      const filteredTokens = tokens
+        .filter((t) => {
+          const sdkToken = sdk.tokens.findByAddress(t.address);
+          return !!(sdkToken && sdk.tokens.isWhitelisted(sdkToken));
         })
-        .filter((tk) => tk.sdkToken !== undefined);
+        .map((tk) => ({
+          token: tk,
+          sdkToken: sdk.tokens.findByAddress(tk.address)!
+        }));
 
-      const result = await Promise.all(
-        _tokens.map((item) =>
-          sdk.silo
-            .getBalance(item.sdkToken!, address, { source: DataSource.LEDGER })
+      const results = await Promise.all(
+        filteredTokens.map(async (item) =>
+          await sdk.silo
+            .getBalance(item.sdkToken, address, { source: DataSource.LEDGER })
             .then((result) => ({ token: item.token, amount: result.amount }))
         )
       );
 
-      result.forEach((val) => {
-        resultMap[val.token.symbol] = val.amount;
-        queryClient.setQueryData(["silo", "balance", sdk, val.token.symbol], val.amount);
-      });
+      results.forEach((val) => {
+        resultMap[val.token.address] = val.amount;
 
+        // merge data into [scope, 'silo', token.address]
+        setQueryData(queryKeys.siloBalancesAll, (oldData) => {
+          if (!oldData) return { [val.token.address]: val.amount };
+          return { ...oldData, [val.token.address]: val.amount };
+        });
+        setQueryData(queryKeys.siloBalance(val.token.address), () => {
+          return val.amount;
+        });
+      });
       return resultMap;
-    }
+    },
+    enabled: !!address && !!tokens.length && !!sdk
   });
 
   return { data, isLoading, error, refetch, isFetching };

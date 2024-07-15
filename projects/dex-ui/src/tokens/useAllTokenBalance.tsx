@@ -1,5 +1,4 @@
 import { TokenValue } from "@beanstalk/sdk";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { multicall } from "@wagmi/core";
 import { BigNumber } from "ethers";
 import { useMemo } from "react";
@@ -9,6 +8,7 @@ import { Log } from "src/utils/logger";
 import { config } from "src/utils/wagmi/config";
 import { ContractFunctionParameters } from "viem";
 import { queryKeys } from "src/utils/query/queryKeys";
+import { useScopedQuery, useSetScopedQueryData } from "src/utils/query/useScopedQuery";
 
 const TokenBalanceABI = [
   {
@@ -27,7 +27,7 @@ const MAX_PER_CALL = 20;
 export const useAllTokensBalance = () => {
   const tokens = useTokens();
   const { address } = useAccount();
-  const queryClient = useQueryClient();
+  const setQueryData = useSetScopedQueryData();
 
   const tokensToLoad = Object.values(tokens).filter((t) => t.symbol !== "ETH");
 
@@ -57,7 +57,7 @@ export const useAllTokensBalance = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps -- doing just tokensToLoad doesn't work and causes multiple calls
   }, [address, tokensToLoad.map((t) => t.symbol).join()]);
 
-  const { data, isLoading, error, refetch, isFetching } = useQuery({
+  const { data, isLoading, error, refetch, isFetching } = useScopedQuery({
     queryKey: queryKeys.tokenBalancesAll,
     queryFn: async () => {
       if (!address) return {};
@@ -76,19 +76,21 @@ export const useAllTokensBalance = () => {
 
       if (ethBalance) {
         Log.module("app").debug(`ETH balance: `, ethBalance.toHuman());
-        queryClient.setQueryData(queryKeys.tokenBalance(ETH.symbol), { ETH: ethBalance });
+        setQueryData<Record<string, TokenValue>>(queryKeys.tokenBalance(ETH.symbol), () => { 
+          return { ETH: ethBalance }
+        });
         balances.ETH = ethBalance;
       }
 
       for (let i = 0; i < res.length; i++) {
         const value = res[i];
         const token = tokensToLoad[i];
-        balances[token.symbol] = token.fromBlockchain(value);
+        balances[token.address] = token.fromBlockchain(value);
 
         // set the balance in the query cache too
-        queryClient.setQueryData(queryKeys.tokenBalance(token.symbol), {
-          [token.symbol]: balances[token.symbol]
-        });
+        setQueryData(queryKeys.tokenBalance(token.address), () => {
+          return { [token.address]: balances[token.address] }
+        })
       }
 
       return balances;

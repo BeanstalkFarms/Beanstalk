@@ -36,6 +36,7 @@ const { deployBasinV1_1Upgrade } = require("./scripts/basinV1_1.js");
 const { getWellContractAt } = require("./utils/well.js");
 const { bipMigrateUnripeBeanEthToBeanSteth } = require("./scripts/bips.js");
 const { impersonateWsteth, impersonateBean } = require("./scripts/impersonate.js");
+const { deployPriceContract } = require("./scripts/price.js");
 
 //////////////////////// UTILITIES ////////////////////////
 
@@ -240,6 +241,7 @@ task("UI-deployWstethMigration", async function () {
   await deployBasinV1_1Upgrade(c, true, undefined, true, false, (mockPump = true));
   await bipMigrateUnripeBeanEthToBeanSteth(true, undefined, true);
   await finishWstethMigration(true, true);
+  await deployPriceContract();
 });
 
 /// EBIPS ///
