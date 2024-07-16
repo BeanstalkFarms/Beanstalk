@@ -30,7 +30,7 @@ async function reseed(
   reseeds = [
     reseed1,
     reseedDeployL2Beanstalk,
-    // reseed3,
+    reseed3,
     // reseed4,
     // reseed5,
     // reseed6,
@@ -38,7 +38,7 @@ async function reseed(
     // reseed8,
     // reseed9
   ];
-  let l2Beanstalk;
+  let l2BeanstalkAddress;
   console.clear();
   await printBeanstalk();
   for (let i = start; i < reseeds.length; i++) {
@@ -52,7 +52,7 @@ async function reseed(
       console.log("L2 Beanstalk:", l2BeanstalkAddress);
     } else {
       // initialize beanstalk state.
-      await reseeds[i](account, l2Beanstalk);
+      await reseeds[i](account, l2BeanstalkAddress);
     }
   }
   console.log("Reseed successful.");

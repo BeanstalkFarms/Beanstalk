@@ -82,7 +82,7 @@ async function reseedDeployL2Beanstalk(account, verbose = false, mock) {
     EnrootFacet: ["LibSilo"],
   };
 
-    const [beanstalkDiamond] = await deploy({
+  const [beanstalkDiamond] = await deploy({
       diamondName: "L2BeanstalkDiamond",
       facets: facets,
       facetLibraries: facetLibraries,
@@ -91,6 +91,6 @@ async function reseedDeployL2Beanstalk(account, verbose = false, mock) {
       args: [],
       verbose: true
     });
-    return beanstalkDiamond.address;
+  return beanstalkDiamond.address;
 }
 exports.reseedDeployL2Beanstalk = reseedDeployL2Beanstalk;
