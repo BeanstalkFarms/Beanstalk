@@ -37,14 +37,15 @@ const Fiat: FC<{
       ? _value
       : _value.div(price)
     : // derive value from token amount
-    amount && token
-    ? siloTokenToFiat(token, amount, denomination, chop)
-    : ZERO_BN;
+      amount && token
+      ? siloTokenToFiat(token, amount, denomination, chop)
+      : ZERO_BN;
   const displayValue = truncate
     ? displayBN(value, allowNegative)
     : displayFullBN(value, 2, 2);
   return (
     <Row
+      component="span"
       display="inline-flex"
       sx={{ verticalAlign: 'top', position: 'relative' }}
     >
