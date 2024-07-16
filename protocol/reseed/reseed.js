@@ -30,26 +30,26 @@ async function reseed(
   reseeds = [
     reseed1,
     reseedDeployL2Beanstalk,
-    reseed3,
-    reseed4,
-    reseed5,
-    reseed6,
-    reseed7,
-    reseed8,
-    reseed9
+    // reseed3,
+    // reseed4,
+    // reseed5,
+    // reseed6,
+    // reseed7,
+    // reseed8,
+    // reseed9
   ];
   let l2Beanstalk;
   console.clear();
   await printBeanstalk();
-  for (let i = start; i < end; i++) {
+  for (let i = start; i < reseeds.length; i++) {
     printStage(i, end, mock, log);
     if (i == 0) {
       // migrate beanstalk L1 assets.
       await reseeds[0](account);
     } else if (i == 1 && mock == true) {
       // deploy L2 beanstalk.
-      l2Beanstalk = await reseedDeployL2Beanstalk(account);
-      print("L2 Beanstalk:", l2Beanstalk.address);
+      l2BeanstalkAddress = await reseedDeployL2Beanstalk(account);
+      console.log("L2 Beanstalk:", l2BeanstalkAddress);
     } else {
       // initialize beanstalk state.
       await reseeds[i](account, l2Beanstalk);

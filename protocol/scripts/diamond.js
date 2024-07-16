@@ -198,7 +198,7 @@ async function deploy ({
 
   let deployedDiamond
   if (!impersonate) {
-    deployedDiamond = await diamondFactory.deploy(owner)
+    deployedDiamond = await diamondFactory.deploy(owner.address)
     await deployedDiamond.deployed()
     result = await deployedDiamond.deployTransaction.wait()
     if (!result.status) {
@@ -208,30 +208,33 @@ async function deploy ({
       throw (Error('failed to deploy diamond'))
     }
     if (verbose) console.log('Diamond deploy transaction hash:' + deployedDiamond.deployTransaction.hash)
-
     if (verbose) console.log(`${diamondName} deployed: ${deployedDiamond.address}`)
-    if (verbose) console.log(`Diamond owner: ${owner}`)
+    if (verbose) console.log(`Diamond owner: ${owner.address}`)
   } else {
-    await impersonateBeanstalk(owner)
+    await impersonateBeanstalk(owner.address)
     deployedDiamond = await ethers.getContractAt('Diamond', BEANSTALK)
   }
 
-  const diamondCutFacet = await ethers.getContractAt('DiamondCutFacet', deployedDiamond.address)
+  console.log('///////// Deployed Diamond: ' + deployedDiamond.address)
+  
+  // handle diamondCut tx 
   if (initDiamond !== undefined) {
+    const diamondCutFacet = await ethers.getContractAt('DiamondCutFacet', deployedDiamond.address)
     const tx = await diamondCutFacet.diamondCut(diamondCut, initDiamond.address, functionCall, txArgs)
+    result = await tx.wait()
+    // console.log(`${diamondName} diamondCut arguments:`)
+    // console.log(JSON.stringify([facets, initDiamond.address, args], null, 4))
+    if (!result.status) {
+      console.log('TRANSACTION FAILED!!! -------------------------------------------')
+      console.log('See block explorer app for details.')
+    }
+    if (verbose) console.log('DiamondCut success!')
+    if (verbose) console.log('Transaction hash:' + tx.hash)
+    if (verbose) console.log('--')
+    return [deployedDiamond, result]
+  } else {
+    return [deployedDiamond];
   }
-
-  // console.log(`${diamondName} diamondCut arguments:`)
-  // console.log(JSON.stringify([facets, initDiamond.address, args], null, 4))
-  result = await tx.wait()
-  if (!result.status) {
-    console.log('TRANSACTION FAILED!!! -------------------------------------------')
-    console.log('See block explorer app for details.')
-  }
-  if (verbose) console.log('DiamondCut success!')
-  if (verbose) console.log('Transaction hash:' + tx.hash)
-  if (verbose) console.log('--')
-  return [deployedDiamond, result]
 }
 
 function inFacets (selector, facets) {
