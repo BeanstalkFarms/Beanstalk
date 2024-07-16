@@ -12,6 +12,7 @@ export const UNRIPE_BEAN_3CRV = Address.fromString("0x1BEA3CcD22F4EBd3d37d731BA3
 export const BEANSTALK_FARMS = Address.fromString("0x21de18b6a8f78ede6d16c50a167f6b222dc08df7");
 export const WETH = Address.fromString("0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2");
 export const LUSD = Address.fromString("0x5f98805A4E8be255a32880FDeC7F6728C6568bA0");
+export const WSTETH = Address.fromString("0x7f39C581F595B53c5cb19bD0b3f8dA6c935E2Ca0");
 
 // Protocol Addresses
 export const BEANSTALK = Address.fromString("0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5");
@@ -30,6 +31,7 @@ export const WETH_USDC_PAIR = Address.fromString("0xB4e16d0168e52d35CaCD2c6185b4
 export const BEAN_LUSD_V1 = Address.fromString("0xD652c40fBb3f06d6B58Cb9aa9CFF063eE63d465D");
 export const LUSD_3POOL = Address.fromString("0xEd279fDD11cA84bEef15AF5D39BB4d4bEE23F0cA");
 export const BEAN_WETH_CP2_WELL = Address.fromString("0xBEA0e11282e2bB5893bEcE110cF199501e872bAd");
+export const BEAN_WSTETH_CP2_WELL = Address.fromString("0xBeA0000113B0d182f4064C86B71c315389E4715D");
 
 // Other Constants
 export const BEAN_DECIMALS = 6;
@@ -48,3 +50,4 @@ export const BEANSTALK_PRICE_BLOCK = BigInt.fromU32(17978222);
 export const BEAN_WETH_CP2_WELL_BLOCK = BigInt.fromU32(17978134);
 export const BEAN_WETH_UNRIPE_MIGRATION_BLOCK = BigInt.fromU32(18392690);
 export const GAUGE_BIP45_BLOCK = BigInt.fromU32(19927634);
+export const BEAN_WSTETH_CP2_WELL_BLOCK = BigInt.fromU32(20264128);

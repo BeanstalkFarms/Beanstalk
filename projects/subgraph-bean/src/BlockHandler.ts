@@ -38,8 +38,6 @@ export function beanstalkPrice_updatePoolPrices(priceOnlyOnCross: boolean, block
   const prevPrice = bean.price;
   const newPrice = toDecimal(priceResult.value.price);
 
-  // log.debug("Prev/New bean price {} / {}", [prevPrice.toString(), newPrice.toString()]);
-
   // Check for overall peg cross
   const beanCrossed = checkBeanCross(BEAN_ERC20.toHexString(), block.timestamp, block.number, prevPrice, newPrice);
 
