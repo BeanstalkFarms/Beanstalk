@@ -26,6 +26,7 @@ import {
   loadSiloAssetHourlySnapshot
 } from "./utils/SiloEntities";
 import { BeanstalkPrice } from "../generated/Season-Replanted/BeanstalkPrice";
+import { BeanstalkPrice_try_price, getBeanstalkPrice } from "./utils/BeanstalkPrice";
 
 export function handleSunrise(event: Sunrise): void {
   let currentSeason = event.params.season.toI32();
@@ -161,8 +162,7 @@ export function handleMetapoolOracle(event: MetapoolOracle): void {
   if (event.block.number < GAUGE_BIP45_BLOCK) {
     let season = loadSeason(event.address, event.params.season);
     // Attempt to pull from Beanstalk Price contract first
-    let beanstalkPrice = BeanstalkPrice.bind(BEANSTALK_PRICE_1);
-    let beanstalkQuery = beanstalkPrice.try_price();
+    let beanstalkQuery = BeanstalkPrice_try_price(event.address, event.block.number);
     if (beanstalkQuery.reverted) {
       let curvePrice = CurvePrice.bind(CURVE_PRICE);
       season.price = toDecimal(curvePrice.getCurve().price);
@@ -189,10 +189,8 @@ export function handleWellOracle(event: WellOracle): void {
 
   let season = loadSeason(event.address, event.params.season);
   season.deltaB = season.deltaB.plus(event.params.deltaB);
-  // FIXME: will not be accurate when there are multiple whitelisted wells.
-  // This information should be pulled from the Bean subgraph instead, and removed here.
   if (event.block.number >= GAUGE_BIP45_BLOCK && season.price == ZERO_BD) {
-    let beanstalkPrice = BeanstalkPrice.bind(BEANSTALK_PRICE_1);
+    let beanstalkPrice = getBeanstalkPrice(event.block.number);
     let beanstalkQuery = beanstalkPrice.getConstantProductWell(event.params.well);
     season.price = toDecimal(beanstalkQuery.price);
   }

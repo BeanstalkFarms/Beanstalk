@@ -5,6 +5,7 @@ import { CurvePrice } from "../../generated/templates/Well/CurvePrice";
 import { BEANSTALK_PRICE_1, BEAN_ERC20, BEAN_WETH_CP2_WELL, CURVE_PRICE } from "../../../subgraph-core/utils/Constants";
 import { toDecimal, ZERO_BD, ZERO_BI } from "../../../subgraph-core/utils/Decimals";
 import { BeanstalkPrice } from "../../generated/templates/Well/BeanstalkPrice";
+import { getBeanstalkPrice } from "../../../subgraph-bean/src/utils/price/BeanstalkPrice";
 
 export function loadOrCreateToken(tokenAddress: Address): Token {
   let token = Token.load(tokenAddress);
@@ -59,7 +60,7 @@ export function updateTokenUSD(tokenAddress: Address, blockNumber: BigInt, beanP
   if (tokenAddress == BEAN_ERC20) {
     // Attempt to use Beanstalk price contract first
 
-    let beanstalkPrice = BeanstalkPrice.bind(BEANSTALK_PRICE_1);
+    let beanstalkPrice = getBeanstalkPrice(blockNumber);
     let price = beanstalkPrice.try_getConstantProductWell(BEAN_WETH_CP2_WELL);
     if (!price.reverted) {
       token.lastPriceUSD = toDecimal(price.value.price);
