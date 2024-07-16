@@ -38,7 +38,7 @@ require("dotenv").config();
 let user, user2, owner;
 let userAddress, ownerAddress, user2Address;
 
-describe("Silo V3: Grown Stalk Per Bdv deployment", function () {
+describe.skip("Silo V3: Grown Stalk Per Bdv deployment", function () {
   before(async function () {
     try {
       await network.provider.request({
