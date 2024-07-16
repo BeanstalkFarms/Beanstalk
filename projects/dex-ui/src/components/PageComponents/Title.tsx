@@ -1,7 +1,7 @@
 import React from "react";
 import { FC } from "src/types";
 import styled from "styled-components";
-import { BodyL, BodyS, BodyXS, H2 } from "../Typography";
+import { BodyL, BodyS, H2, H3 } from "../Typography";
 import { Link } from "react-router-dom";
 import { size } from "src/breakpoints";
 
@@ -39,6 +39,7 @@ type TitleContainerProps = {
 const Container = styled.div<TitleContainerProps>`
   display: flex;
   flex-direction: row;
+  align-items: center;
 
   @media (max-width: ${size.mobile}) {
     justify-content: start;
@@ -48,14 +49,15 @@ const Container = styled.div<TitleContainerProps>`
 const TitleContainer = styled.div<TitleContainerProps>`
   display: flex;
   flex-direction: row;
+  align-items: center;
 `;
 
 const TitleText = styled.div<TitleProps>`
-  ${BodyL}
+  ${H3}
   ${(props) => props.fontWeight && `font-weight: ${props.fontWeight}`};
   text-transform: uppercase;
   @media (max-width: ${size.mobile}) {
-    ${({ largeOnMobile }) => (largeOnMobile ? `${H2}` : `${BodyS}`)}
+    ${({ largeOnMobile }) => (largeOnMobile ? `${H3}` : `${BodyS}`)}
   }
 `;
 const ParentText = styled(Link)`

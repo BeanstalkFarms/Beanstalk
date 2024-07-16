@@ -235,8 +235,6 @@ type RankingObject {
 
 input RankingWhere {
   category: String
-  id: String
-  id_in: [String]
   network: String
   plugin: String
   search: String
@@ -319,6 +317,7 @@ type SpaceVoting {
 }
 
 input SpaceWhere {
+  controller: String
   created: Int
   created_gt: Int
   created_gte: Int
@@ -335,10 +334,13 @@ type Statement {
   about: String
   created: Int!
   delegate: String
+  discourse: String
   id: String!
   ipfs: String!
+  network: String
   space: String!
   statement: String
+  status: String
   updated: Int!
 }
 
@@ -409,10 +411,15 @@ type Treasury {
 type User {
   about: String
   avatar: String
+  cover: String
   created: Int!
+  farcaster: String
+  github: String
   id: String!
   ipfs: String
+  lens: String
   name: String
+  twitter: String
 }
 
 input UsersWhere {

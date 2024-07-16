@@ -81,8 +81,10 @@ type Well @entity {
   symbol: String
 
   " Tokens that need to be deposited to take a position in protocol. e.g. WETH and USDC to deposit into the WETH-USDC well. Array to account for multi-asset wells like Curve and Balancer "
-  # Check for forced indexing of tokens
   tokens: [Token!]!
+
+  " The order of the tokens in the Well. The above `tokens` association will be sorted by id on any retrieval. "
+  tokenOrder: [Bytes!]!
 
   " Pricing function contract used with this well "
   wellFunction: WellFunction! @derivedFrom(field: "well")
@@ -122,6 +124,9 @@ type Well @entity {
   " All trade volume occurred in this well, in USD. This includes any net trading activity as a result of add/remove liquidity. Should be equal to the sum of all entries in cumulativeTradeVolumeReservesUSD "
   cumulativeTradeVolumeUSD: BigDecimal!
 
+  " All trade volume occurred for a specific token, in native amount. This includes absolute tokens on both sides of the trade unlike cumulativeTradeVolumeReserves. This includes any net trading activity as a result of add/remove liquidity. The ordering should be the same as the well's `tokens` field. "
+  cumulativeBiTradeVolumeReserves: [BigInt!]!
+
   " All transfer volume occurred for a specific token, in native amount. This includes the full amount of tokens transferred in ad/remove liquidity. The ordering should be the same as the well's `tokens` field. "
   cumulativeTransferVolumeReserves: [BigInt!]!
 
@@ -149,6 +154,9 @@ type Well @entity {
   " Current rolling 24h trade volume in USD "
   rollingDailyTradeVolumeUSD: BigDecimal!
 
+  " Current rolling 24h reserve trade volume in token amounts, including absolute tokens on both side of the trade unlike rollingDailyTradeVolumeReserves. "
+  rollingDailyBiTradeVolumeReserves: [BigInt!]!
+
   " Current rolling 24h reserve transfer volume in token amounts "
   rollingDailyTransferVolumeReserves: [BigInt!]!
 
@@ -166,6 +174,9 @@ type Well @entity {
 
   " Current rolling weekly trade volume in USD "
   rollingWeeklyTradeVolumeUSD: BigDecimal!
+
+  " Current rolling weekly reserve trade volume in token amounts, including absolute tokens on both side of the trade unlike rollingWeeklyTradeVolumeReserves. "
+  rollingWeeklyBiTradeVolumeReserves: [BigInt!]!
 
   " Current rolling weekly reserve transfer volume in token amounts "
   rollingWeeklyTransferVolumeReserves: [BigInt!]!
@@ -235,6 +246,9 @@ type WellDailySnapshot @entity {
   " All trade volume occurred in this well, in USD. This includes any net trading activity as a result of add/remove liquidity. Should be equal to the sum of all entries in cumulativeTradeVolumeReservesUSD "
   cumulativeTradeVolumeUSD: BigDecimal!
 
+  " All trade volume occurred for a specific token, in native amount. This includes absolute tokens on both sides of the trade unlike cumulativeTradeVolumeReserves. This includes any net trading activity as a result of add/remove liquidity. The ordering should be the same as the well's `tokens` field. "
+  cumulativeBiTradeVolumeReserves: [BigInt!]!
+
   " All transfer volume occurred for a specific token, in native amount. This includes the full amount of tokens transferred in ad/remove liquidity. The ordering should be the same as the well's `tokens` field. "
   cumulativeTransferVolumeReserves: [BigInt!]!
 
@@ -269,6 +283,9 @@ type WellDailySnapshot @entity {
 
   " Delta of cumulativeTradeVolumeUSD "
   deltaTradeVolumeUSD: BigDecimal!
+
+  " Delta of cumulativeBiTradeVolumeReserves "
+  deltaBiTradeVolumeReserves: [BigInt!]!
 
   " Delta of cumulativeTransferVolumeReserves "
   deltaTransferVolumeReserves: [BigInt!]!
@@ -322,6 +339,9 @@ type WellHourlySnapshot @entity {
   " All trade volume occurred in this well, in USD. This includes any net trading activity as a result of add/remove liquidity. Should be equal to the sum of all entries in cumulativeTradeVolumeReservesUSD "
   cumulativeTradeVolumeUSD: BigDecimal!
 
+  " All trade volume occurred for a specific token, in native amount. This includes absolute tokens on both sides of the trade unlike cumulativeTradeVolumeReserves. This includes any net trading activity as a result of add/remove liquidity. The ordering should be the same as the well's `tokens` field. "
+  cumulativeBiTradeVolumeReserves: [BigInt!]!
+
   " All transfer volume occurred for a specific token, in native amount. This includes the full amount of tokens transferred in ad/remove liquidity. The ordering should be the same as the well's `tokens` field. "
   cumulativeTransferVolumeReserves: [BigInt!]!
 
@@ -356,6 +376,9 @@ type WellHourlySnapshot @entity {
 
   " Delta of cumulativeTradeVolumeUSD "
   deltaTradeVolumeUSD: BigDecimal!
+
+  " Delta of cumulativeBiTradeVolumeReserves "
+  deltaBiTradeVolumeReserves: [BigInt!]!
 
   " Delta of cumulativeTransferVolumeReserves "
   deltaTransferVolumeReserves: [BigInt!]!

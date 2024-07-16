@@ -43,6 +43,7 @@ export function createWell(wellAddress: Address, implementation: Address, inputT
   well.aquifer = Bytes.empty();
   well.implementation = implementation;
   well.tokens = []; // This is currently set in the `handleBoreWell` function
+  well.tokenOrder = [];
   well.createdTimestamp = ZERO_BI;
   well.createdBlockNumber = ZERO_BI;
   well.lpTokenSupply = ZERO_BI;
@@ -52,6 +53,7 @@ export function createWell(wellAddress: Address, implementation: Address, inputT
   well.cumulativeTradeVolumeReserves = emptyBigIntArray(inputTokens.length);
   well.cumulativeTradeVolumeReservesUSD = emptyBigDecimalArray(inputTokens.length);
   well.cumulativeTradeVolumeUSD = ZERO_BD;
+  well.cumulativeBiTradeVolumeReserves = emptyBigIntArray(inputTokens.length);
   well.cumulativeTransferVolumeReserves = emptyBigIntArray(inputTokens.length);
   well.cumulativeTransferVolumeReservesUSD = emptyBigDecimalArray(inputTokens.length);
   well.cumulativeTransferVolumeUSD = ZERO_BD;
@@ -61,12 +63,14 @@ export function createWell(wellAddress: Address, implementation: Address, inputT
   well.rollingDailyTradeVolumeReserves = emptyBigIntArray(inputTokens.length);
   well.rollingDailyTradeVolumeReservesUSD = emptyBigDecimalArray(inputTokens.length);
   well.rollingDailyTradeVolumeUSD = ZERO_BD;
+  well.rollingDailyBiTradeVolumeReserves = emptyBigIntArray(inputTokens.length);
   well.rollingDailyTransferVolumeReserves = emptyBigIntArray(inputTokens.length);
   well.rollingDailyTransferVolumeReservesUSD = emptyBigDecimalArray(inputTokens.length);
   well.rollingDailyTransferVolumeUSD = ZERO_BD;
   well.rollingWeeklyTradeVolumeReserves = emptyBigIntArray(inputTokens.length);
   well.rollingWeeklyTradeVolumeReservesUSD = emptyBigDecimalArray(inputTokens.length);
   well.rollingWeeklyTradeVolumeUSD = ZERO_BD;
+  well.rollingWeeklyBiTradeVolumeReserves = emptyBigIntArray(inputTokens.length);
   well.rollingWeeklyTransferVolumeReserves = emptyBigIntArray(inputTokens.length);
   well.rollingWeeklyTransferVolumeReservesUSD = emptyBigDecimalArray(inputTokens.length);
   well.rollingWeeklyTransferVolumeUSD = ZERO_BD;
@@ -218,6 +222,10 @@ export function takeWellDailySnapshot(wellAddress: Address, dayID: i32, timestam
     priorSnapshot.cumulativeTradeVolumeReservesUSD
   );
   newSnapshot.deltaTradeVolumeUSD = newSnapshot.cumulativeTradeVolumeUSD.minus(priorSnapshot.cumulativeTradeVolumeUSD);
+  newSnapshot.deltaBiTradeVolumeReserves = deltaBigIntArray(
+    newSnapshot.cumulativeBiTradeVolumeReserves,
+    priorSnapshot.cumulativeBiTradeVolumeReserves
+  );
   newSnapshot.deltaTransferVolumeReserves = deltaBigIntArray(
     newSnapshot.cumulativeTransferVolumeReserves,
     priorSnapshot.cumulativeTransferVolumeReserves
@@ -249,6 +257,7 @@ export function loadOrCreateWellDailySnapshot(wellAddress: Address, dayID: i32, 
     snapshot.cumulativeTradeVolumeReserves = well.cumulativeTradeVolumeReserves;
     snapshot.cumulativeTradeVolumeReservesUSD = well.cumulativeTradeVolumeReservesUSD;
     snapshot.cumulativeTradeVolumeUSD = well.cumulativeTradeVolumeUSD;
+    snapshot.cumulativeBiTradeVolumeReserves = well.cumulativeBiTradeVolumeReserves;
     snapshot.cumulativeTransferVolumeReserves = well.cumulativeTransferVolumeReserves;
     snapshot.cumulativeTransferVolumeReservesUSD = well.cumulativeTransferVolumeReservesUSD;
     snapshot.cumulativeTransferVolumeUSD = well.cumulativeTransferVolumeUSD;
@@ -260,6 +269,7 @@ export function loadOrCreateWellDailySnapshot(wellAddress: Address, dayID: i32, 
     snapshot.deltaTradeVolumeReserves = emptyBigIntArray(well.tokens.length);
     snapshot.deltaTradeVolumeReservesUSD = emptyBigDecimalArray(well.tokens.length);
     snapshot.deltaTradeVolumeUSD = ZERO_BD;
+    snapshot.deltaBiTradeVolumeReserves = emptyBigIntArray(well.tokens.length);
     snapshot.deltaTransferVolumeReserves = emptyBigIntArray(well.tokens.length);
     snapshot.deltaTransferVolumeReservesUSD = emptyBigDecimalArray(well.tokens.length);
     snapshot.deltaTransferVolumeUSD = ZERO_BD;
@@ -295,6 +305,10 @@ export function takeWellHourlySnapshot(wellAddress: Address, hourID: i32, timest
     priorSnapshot.cumulativeTradeVolumeReservesUSD
   );
   newSnapshot.deltaTradeVolumeUSD = newSnapshot.cumulativeTradeVolumeUSD.minus(priorSnapshot.cumulativeTradeVolumeUSD);
+  newSnapshot.deltaBiTradeVolumeReserves = deltaBigIntArray(
+    newSnapshot.cumulativeBiTradeVolumeReserves,
+    priorSnapshot.cumulativeBiTradeVolumeReserves
+  );
   newSnapshot.deltaTransferVolumeReserves = deltaBigIntArray(
     newSnapshot.cumulativeTransferVolumeReserves,
     priorSnapshot.cumulativeTransferVolumeReserves
@@ -323,6 +337,7 @@ export function takeWellHourlySnapshot(wellAddress: Address, hourID: i32, timest
       oldest24h.deltaTradeVolumeReservesUSD
     );
     well.rollingDailyTradeVolumeUSD = well.rollingDailyTradeVolumeUSD.minus(oldest24h.deltaTradeVolumeUSD);
+    well.rollingDailyBiTradeVolumeReserves = deltaBigIntArray(well.rollingDailyBiTradeVolumeReserves, oldest24h.deltaBiTradeVolumeReserves);
     well.rollingDailyTransferVolumeReserves = deltaBigIntArray(
       well.rollingDailyTransferVolumeReserves,
       oldest24h.deltaTransferVolumeReserves
@@ -339,6 +354,10 @@ export function takeWellHourlySnapshot(wellAddress: Address, hourID: i32, timest
         oldest7d.deltaTradeVolumeReservesUSD
       );
       well.rollingWeeklyTradeVolumeUSD = well.rollingWeeklyTradeVolumeUSD.minus(oldest7d.deltaTradeVolumeUSD);
+      well.rollingWeeklyBiTradeVolumeReserves = deltaBigIntArray(
+        well.rollingWeeklyBiTradeVolumeReserves,
+        oldest7d.deltaBiTradeVolumeReserves
+      );
       well.rollingWeeklyTransferVolumeReserves = deltaBigIntArray(
         well.rollingWeeklyTransferVolumeReserves,
         oldest7d.deltaTransferVolumeReserves
@@ -370,6 +389,7 @@ export function loadOrCreateWellHourlySnapshot(
     snapshot.cumulativeTradeVolumeReserves = well.cumulativeTradeVolumeReserves;
     snapshot.cumulativeTradeVolumeReservesUSD = well.cumulativeTradeVolumeReservesUSD;
     snapshot.cumulativeTradeVolumeUSD = well.cumulativeTradeVolumeUSD;
+    snapshot.cumulativeBiTradeVolumeReserves = well.cumulativeBiTradeVolumeReserves;
     snapshot.cumulativeTransferVolumeReserves = well.cumulativeTransferVolumeReserves;
     snapshot.cumulativeTransferVolumeReservesUSD = well.cumulativeTransferVolumeReservesUSD;
     snapshot.cumulativeTransferVolumeUSD = well.cumulativeTransferVolumeUSD;
@@ -381,6 +401,7 @@ export function loadOrCreateWellHourlySnapshot(
     snapshot.deltaTradeVolumeReserves = emptyBigIntArray(well.tokens.length);
     snapshot.deltaTradeVolumeReservesUSD = emptyBigDecimalArray(well.tokens.length);
     snapshot.deltaTradeVolumeUSD = ZERO_BD;
+    snapshot.deltaBiTradeVolumeReserves = emptyBigIntArray(well.tokens.length);
     snapshot.deltaTransferVolumeReserves = emptyBigIntArray(well.tokens.length);
     snapshot.deltaTransferVolumeReservesUSD = emptyBigDecimalArray(well.tokens.length);
     snapshot.deltaTransferVolumeUSD = ZERO_BD;
