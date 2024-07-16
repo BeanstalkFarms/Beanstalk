@@ -1,3 +1,4 @@
+const { re } = require("mathjs")
 const { BEANSTALK } = require("../test/utils/constants")
 const { impersonateBeanstalk } = require("./impersonate")
 const fs = require('fs')
@@ -40,10 +41,9 @@ function getSelectors (contract) {
   return selectors
 }
 
-async function deployFacetsWithLibs (facets, libraryNames, facetLibraries, account, verify = false, verbose = true) {
-  let libraries = {};
-
+async function deployLibraries(libraryNames, account, verify = false, verbose = true) {
   // Deploy libraries
+  let libraries = {};
   for (const libName of libraryNames) {
     if (verbose) console.log(`Deploying: ${libName}`);
     const LibraryFactory = await ethers.getContractFactory(libName, account);
@@ -59,9 +59,10 @@ async function deployFacetsWithLibs (facets, libraryNames, facetLibraries, accou
     if (verbose) console.log(`Deployed at ${library.address}`);
     libraries[libName] = library.address;
   }
+  return libraries;
+}
 
-  if (verbose) console.log('--');
-
+async function deployFacetsWithLinkedLibraries(facets, libraryNames, facetLibraries, account, verify = false, verbose = true) {
   // Deploy facets with linked libraries
   const deployed = [];
   for (const facetName of facets) {
@@ -78,7 +79,6 @@ async function deployFacetsWithLibs (facets, libraryNames, facetLibraries, accou
     } else {
       facetFactory = await ethers.getContractFactory(facetName, account);
     }
-
     if (verbose) console.log(`Deploying ${facetName}`);
     const deployedFactory = await facetFactory.deploy();
     await deployedFactory.deployed();
@@ -87,10 +87,8 @@ async function deployFacetsWithLibs (facets, libraryNames, facetLibraries, accou
     if (verbose) console.log('--');
     deployed.push([facetName, deployedFactory]);
   }
-
   return deployed;
 }
-
 
 async function deployFacets (facets, libraryNames, facetLibraries, verify = false, verbose = true, account) {
   for (const name of libraryNames) {
@@ -154,7 +152,12 @@ async function deploy ({
   if (arguments.length !== 1) {
     throw Error(`Requires only 1 map argument. ${arguments.length} arguments used.`)
   }
-  facets = await deployFacetsWithLibs(facets, libraryNames, facetLibraries, owner, false, true)
+  // Deploy libraries
+  libraries = await deployLibraries(libraryNames, owner, false, true);
+  // Deploy facets with linked libraries
+  facets = await deployFacetsWithLinkedLibraries(facets, libraryNames,facetLibraries, owner, false, true);
+
+  // Deploy diamond
   const diamondFactory = await ethers.getContractFactory('Diamond')
   const diamondCut = []
   if (verbose) {
