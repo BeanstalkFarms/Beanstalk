@@ -108,9 +108,6 @@ describe("BeanstalkPrice", () => {
   });
 
   test("Calls correct price contract by block", () => {
-    const reverting = BeanstalkPrice_try_price(BEAN_ERC20, BigInt.fromU32(150));
-    assert.assertTrue(reverting.reverted);
-
     const price1 = BeanstalkPrice_try_price(BEAN_ERC20, PRICE_1_BLOCK);
     assert.assertTrue(price1.value.price.equals(overallPrice));
 

@@ -1,4 +1,5 @@
-import { Address, BigInt, log } from "@graphprotocol/graph-ts";
+// Unfortunately this file must be copied across the various subgraph projects. This is due to the codegen
+import { Address, BigInt } from "@graphprotocol/graph-ts";
 import {
   BeanstalkPrice,
   BeanstalkPrice__priceResultPPsStruct,
@@ -100,16 +101,7 @@ export class BeanstalkPriceResult {
 // (1) Only including whitelisted tokens in the final price calculation and the prices list
 // (2) Which contract to call (in anticipation of new BeanstalkPrice contract deployments)
 export function BeanstalkPrice_try_price(beanAddr: Address, blockNumber: BigInt): BeanstalkPriceResult {
-  let contractAddress: Address;
-  if (blockNumber < PRICE_1_BLOCK) {
-    return new BeanstalkPriceResult(null, []);
-  } else if (blockNumber < PRICE_2_BLOCK) {
-    contractAddress = BEANSTALK_PRICE_1;
-  } else {
-    contractAddress = BEANSTALK_PRICE_2;
-  }
-
-  let beanstalkPrice = BeanstalkPrice.bind(contractAddress);
+  let beanstalkPrice = getBeanstalkPrice(blockNumber);
   let beanPrice = beanstalkPrice.try_price();
 
   if (beanPrice.reverted) {
@@ -137,4 +129,17 @@ export function getPoolPrice(priceResult: BeanstalkPriceResult, pool: Address): 
     }
   }
   return null;
+}
+
+// Gets the BeanstalkPrice contract, bound to the appropriate instance of the contract.
+// Note: Will bind to PRICE_1 even if that contract has not been deployed yet
+// Thus the caller still needs to check for reverts.
+export function getBeanstalkPrice(blockNumber: BigInt): BeanstalkPrice {
+  let contractAddress: Address;
+  if (blockNumber < PRICE_2_BLOCK) {
+    contractAddress = BEANSTALK_PRICE_1;
+  } else {
+    contractAddress = BEANSTALK_PRICE_2;
+  }
+  return BeanstalkPrice.bind(contractAddress);
 }
