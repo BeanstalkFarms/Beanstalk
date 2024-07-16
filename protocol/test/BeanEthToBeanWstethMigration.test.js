@@ -39,7 +39,7 @@ testIfRpcSet('Bean:Eth to Bean:Wsteth Migration', function () {
           {
             forking: {
               jsonRpcUrl: process.env.FORKING_RPC,
-              blockNumber: 19179000
+              blockNumber: 20319000
             },
           },
         ],
@@ -63,7 +63,6 @@ testIfRpcSet('Bean:Eth to Bean:Wsteth Migration', function () {
 
     c = await deployBasinV1_1Upgrade(c, true, undefined, false, false, mockPump=true)
 
-    await bipSeedGauge(true, undefined, false)
 
     await addAdminControls();
 
@@ -71,7 +70,7 @@ testIfRpcSet('Bean:Eth to Bean:Wsteth Migration', function () {
 
     owner = await impersonateBeanstalkOwner()
     this.beanstalk = await getBeanstalk()
-    this.well = await ethers.getContractAt('IWell', c.well.address);
+    this.well = await ethers.getContractAt('IWell', BEAN_WSTETH_WELL)
     this.bean = await ethers.getContractAt('IBean', BEAN)
     this.beanEth = await ethers.getContractAt('IWell', BEAN_ETH_WELL)
     this.beanEthToken = await ethers.getContractAt('IERC20', BEAN_ETH_WELL)
@@ -178,7 +177,7 @@ testIfRpcSet('Bean:Eth to Bean:Wsteth Migration', function () {
 
   describe('Completes Migration', async function () {
     beforeEach(async function () {
-      this.beanWstethUnderlying = await finishWstethMigration(true, false);
+      this.beanWstethUnderlying = await finishWstethMigration(true, true);
     })
 
     it("successfully adds underlying", async function () {
@@ -198,22 +197,50 @@ testIfRpcSet('Bean:Eth to Bean:Wsteth Migration', function () {
       })
 
       it('enrootDeposit succeeds', async function () {
+        // increase the bdv of the lp token, in order for enrootDeposit to succeed.
+        await impersonateBean();
+        await this.bean.mint(user.address, to6('1000000'))
+        await this.bean.connect(user).approve(BEAN_WSTETH_WELL, to6('1000000'))
+        await this.beanWsteth.connect(user).addLiquidity([to6('1000000'), '0'], '0', user.address, ethers.constants.MaxUint256);
+
+        // mine 100 blocks
+        for (let i = 0; i < 1000; i++) {
+          await ethers.provider.send("evm_increaseTime", [12])
+          await hre.network.provider.send("evm_mine")
+        }
+
+        await this.beanWsteth.connect(user).addLiquidity([0, 0], '0', user.address, ethers.constants.MaxUint256);
+
         await this.beanstalk.connect(publius).enrootDeposit(UNRIPE_LP, '-56836000000', to6('1'));
       })
 
       it('enrootDeposits succeeds', async function () {
+        // increase the bdv of the lp token, in order for enrootDeposit to succeed.
+        await impersonateBean();
+        await this.bean.mint(user.address, to6('1000000'))
+        await this.bean.connect(user).approve(BEAN_WSTETH_WELL, to6('1000000'))
+        await this.beanWsteth.connect(user).addLiquidity([to6('1000000'), '0'], '0', user.address, ethers.constants.MaxUint256);
+
+        // mine 100 blocks
+        for (let i = 0; i < 1000; i++) {
+          await ethers.provider.send("evm_increaseTime", [12])
+          await hre.network.provider.send("evm_mine")
+        }
+
+        await this.beanWsteth.connect(user).addLiquidity([0, 0], '0', user.address, ethers.constants.MaxUint256);
+
         await this.beanstalk.connect(publius).enrootDeposits(UNRIPE_LP, ['-56836000000'], [to6('1')]);
       })
 
       it('convert Unripe Bean to LP succeeds', async function () {
+        await this.wsteth.mint(user.address, to18('1000000'))
+        await this.wsteth.connect(user).approve(BEAN_WSTETH_WELL, to18('1000000'))
+        await this.beanWsteth.connect(user).addLiquidity([0, to18('1000000')], '0', user.address, ethers.constants.MaxUint256);
+
         await this.beanstalk.connect(publius).convert(ConvertEncoder.convertUnripeBeansToLP(to6('200'), '0'), ['-16272000000'], [to6('200')]);
       })
 
       it('convert Unripe LP to Bean succeeds', async function () {
-        await impersonateBean()
-        await this.bean.mint(user.address, to6('100000'))
-        await this.bean.connect(user).approve(BEAN_WSTETH_WELL, to6('100000'))
-        await this.beanWsteth.connect(user).addLiquidity([to6('100000'), '0'], '0', user.address, ethers.constants.MaxUint256);
         await this.beanstalk.connect(publius).convert(ConvertEncoder.convertUnripeLPToBeans(to6('200'), '0'), ['-56836000000'], [to6('200')])
       })
     })
