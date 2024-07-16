@@ -24,7 +24,7 @@ export function handleBoreWell(event: BoreWell): void {
     tokens.push(loadOrCreateToken(event.params.tokens[i]).id);
   }
   well.tokens = tokens;
-  well.tokensOrdered = tokens;
+  well.tokenOrder = tokens;
 
   for (let i = 0; i < event.params.pumps.length; i++) {
     loadOrCreatePump(event.params.pumps[i], event.params.well);
