@@ -81,8 +81,10 @@ type Well @entity {
   symbol: String
 
   " Tokens that need to be deposited to take a position in protocol. e.g. WETH and USDC to deposit into the WETH-USDC well. Array to account for multi-asset wells like Curve and Balancer "
-  # Check for forced indexing of tokens
   tokens: [Token!]!
+
+  " The order of the tokens in the Well. The above `tokens` association will be sorted by id on any retrieval. "
+  tokenOrder: [Bytes!]!
 
   " Pricing function contract used with this well "
   wellFunction: WellFunction! @derivedFrom(field: "well")
