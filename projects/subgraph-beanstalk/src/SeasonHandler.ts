@@ -6,7 +6,7 @@ import { Incentive } from "../generated/schema";
 import { updateHarvestablePlots } from "./FieldHandler";
 import { loadBeanstalk } from "./utils/Beanstalk";
 import { Reward as RewardEntity, MetapoolOracle as MetapoolOracleEntity, WellOracle as WellOracleEntity } from "../generated/schema";
-import { BEANSTALK, BEANSTALK_PRICE, BEAN_ERC20, CURVE_PRICE, GAUGE_BIP45_BLOCK } from "../../subgraph-core/utils/Constants";
+import { BEANSTALK, BEANSTALK_PRICE_1, BEAN_ERC20, CURVE_PRICE, GAUGE_BIP45_BLOCK } from "../../subgraph-core/utils/Constants";
 import { ONE_BI, toDecimal, ZERO_BD, ZERO_BI } from "../../subgraph-core/utils/Decimals";
 import { loadField, loadFieldDaily, loadFieldHourly } from "./utils/Field";
 import {
@@ -161,7 +161,7 @@ export function handleMetapoolOracle(event: MetapoolOracle): void {
   if (event.block.number < GAUGE_BIP45_BLOCK) {
     let season = loadSeason(event.address, event.params.season);
     // Attempt to pull from Beanstalk Price contract first
-    let beanstalkPrice = BeanstalkPrice.bind(BEANSTALK_PRICE);
+    let beanstalkPrice = BeanstalkPrice.bind(BEANSTALK_PRICE_1);
     let beanstalkQuery = beanstalkPrice.try_price();
     if (beanstalkQuery.reverted) {
       let curvePrice = CurvePrice.bind(CURVE_PRICE);
@@ -192,7 +192,7 @@ export function handleWellOracle(event: WellOracle): void {
   // FIXME: will not be accurate when there are multiple whitelisted wells.
   // This information should be pulled from the Bean subgraph instead, and removed here.
   if (event.block.number >= GAUGE_BIP45_BLOCK && season.price == ZERO_BD) {
-    let beanstalkPrice = BeanstalkPrice.bind(BEANSTALK_PRICE);
+    let beanstalkPrice = BeanstalkPrice.bind(BEANSTALK_PRICE_1);
     let beanstalkQuery = beanstalkPrice.getConstantProductWell(event.params.well);
     season.price = toDecimal(beanstalkQuery.price);
   }

@@ -2,7 +2,7 @@ import { Address, BigInt, BigDecimal, ethereum } from "@graphprotocol/graph-ts";
 import { Field, FieldDailySnapshot, FieldHourlySnapshot } from "../../generated/schema";
 import { dayFromTimestamp } from "./Dates";
 import { BI_MAX, ONE_BD, toDecimal, ZERO_BD, ZERO_BI } from "../../../subgraph-core/utils/Decimals";
-import { BEANSTALK, BEANSTALK_PRICE, CURVE_PRICE } from "../../../subgraph-core/utils/Constants";
+import { BEANSTALK, BEANSTALK_PRICE_1, CURVE_PRICE } from "../../../subgraph-core/utils/Constants";
 import { loadSeason } from "./Season";
 import { CurvePrice } from "../../generated/Field/CurvePrice";
 import { BeanstalkPrice } from "../../generated/Field/BeanstalkPrice";
@@ -29,7 +29,7 @@ export function handleRateChange(evtAddress: Address, evtBlock: ethereum.Block, 
     currentPrice = seasonEntity.price;
   } else {
     // Attempt to pull from Beanstalk Price contract first
-    let beanstalkPrice = BeanstalkPrice.bind(BEANSTALK_PRICE);
+    let beanstalkPrice = BeanstalkPrice.bind(BEANSTALK_PRICE_1);
     let beanstalkQuery = beanstalkPrice.try_price();
     if (beanstalkQuery.reverted) {
       let curvePrice = CurvePrice.bind(CURVE_PRICE);

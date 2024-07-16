@@ -2,7 +2,7 @@ import { Address, BigDecimal, BigInt, log } from "@graphprotocol/graph-ts";
 import { ERC20 } from "../../generated/Aquifer/ERC20";
 import { Token } from "../../generated/schema";
 import { CurvePrice } from "../../generated/templates/Well/CurvePrice";
-import { BEANSTALK_PRICE, BEAN_ERC20, BEAN_WETH_CP2_WELL, CURVE_PRICE } from "../../../subgraph-core/utils/Constants";
+import { BEANSTALK_PRICE_1, BEAN_ERC20, BEAN_WETH_CP2_WELL, CURVE_PRICE } from "../../../subgraph-core/utils/Constants";
 import { toDecimal, ZERO_BD, ZERO_BI } from "../../../subgraph-core/utils/Decimals";
 import { BeanstalkPrice } from "../../generated/templates/Well/BeanstalkPrice";
 
@@ -59,7 +59,7 @@ export function updateTokenUSD(tokenAddress: Address, blockNumber: BigInt, beanP
   if (tokenAddress == BEAN_ERC20) {
     // Attempt to use Beanstalk price contract first
 
-    let beanstalkPrice = BeanstalkPrice.bind(BEANSTALK_PRICE);
+    let beanstalkPrice = BeanstalkPrice.bind(BEANSTALK_PRICE_1);
     let price = beanstalkPrice.try_getConstantProductWell(BEAN_WETH_CP2_WELL);
     if (!price.reverted) {
       token.lastPriceUSD = toDecimal(price.value.price);

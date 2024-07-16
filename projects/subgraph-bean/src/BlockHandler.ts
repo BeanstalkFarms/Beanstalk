@@ -1,5 +1,5 @@
 import { ethereum } from "@graphprotocol/graph-ts";
-import { BEAN_ERC20, BEAN_WETH_CP2_WELL_BLOCK, BEANSTALK_PRICE, EXPLOIT_BLOCK } from "../../subgraph-core/utils/Constants";
+import { BEAN_ERC20, BEAN_WETH_CP2_WELL_BLOCK, EXPLOIT_BLOCK } from "../../subgraph-core/utils/Constants";
 import { checkPegCrossEth as univ2_checkPegCrossEth } from "./UniswapV2Handler";
 import { loadBean, updateBeanValues } from "./utils/Bean";
 import { toDecimal, ZERO_BD, ZERO_BI } from "../../subgraph-core/utils/Decimals";
