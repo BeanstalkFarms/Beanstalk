@@ -67,7 +67,7 @@ async function reseed1(account) {
     diamondAddress: BEANSTALK,
     facetNames: ["BeanL2MigrationFacet"],
     facetsToRemove: beanstalkSelectors,
-    initFacetName: "InitL2Migration",
+    initFacetName: "ReseedL2Migration",
     bip: false,
     verbose: true,
     account: account

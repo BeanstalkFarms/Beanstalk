@@ -40,7 +40,75 @@ function getSelectors (contract) {
   return selectors
 }
 
-async function deployFacets (facets, verbose = false) {
+async function deployFacetsWithLibs (facets, libraryNames, facetLibraries, account, verify = false, verbose = true) {
+  let libraries = {};
+
+  // Deploy libraries
+  for (const libName of libraryNames) {
+    if (verbose) console.log(`Deploying: ${libName}`);
+    const LibraryFactory = await ethers.getContractFactory(libName, account);
+    const library = await LibraryFactory.deploy();
+    await library.deployed();
+    if (verify) {
+      await run(`verify`, {
+        address: library.address,
+      });
+    }
+    const receipt = await library.deployTransaction.wait();
+    if (verbose) console.log(`${libName} deploy gas used: ` + strDisplay(receipt.gasUsed));
+    if (verbose) console.log(`Deployed at ${library.address}`);
+    libraries[libName] = library.address;
+  }
+
+  if (verbose) console.log('--');
+
+  // Deploy facets with linked libraries
+  const deployed = [];
+  for (const facetName of facets) {
+    let facetFactory;
+    if (facetLibraries[facetName]) {
+      // Prepare libraries to be linked
+      const linkedLibraries = {};
+      for (const libName of facetLibraries[facetName]) {
+        linkedLibraries[libName] = libraries[libName];
+      }
+      facetFactory = await ethers.getContractFactory(facetName, {
+        libraries: linkedLibraries,
+      }, account);
+    } else {
+      facetFactory = await ethers.getContractFactory(facetName, account);
+    }
+
+    if (verbose) console.log(`Deploying ${facetName}`);
+    const deployedFactory = await facetFactory.deploy();
+    await deployedFactory.deployed();
+    await deployedFactory.deployTransaction.wait();
+    if (verbose) console.log(`${facetName} deployed: ${deployedFactory.address}`);
+    if (verbose) console.log('--');
+    deployed.push([facetName, deployedFactory]);
+  }
+
+  return deployed;
+}
+
+
+async function deployFacets (facets, libraryNames, facetLibraries, verify = false, verbose = true, account) {
+  for (const name of libraryNames) {
+      if (verbose) console.log(`Deploying: ${name}`)
+      let libraryFactory = await ethers.getContractFactory(name, account)
+      libraryFactory = await libraryFactory.deploy()
+      await libraryFactory.deployed()
+      if (verify) {
+        await run(`verify`, {
+          address: libraryFactory.address
+        });
+      }
+      const receipt = await libraryFactory.deployTransaction.wait()
+      if (verbose) console.log(`${name} deploy gas used: ` + strDisplay(receipt.gasUsed))
+      // totalGasUsed = totalGasUsed.add(receipt.gasUsed)
+      if (verbose) console.log(`Deployed at ${libraryFactory.address}`)
+      // libraries[name] = libraryFactory.address
+    }
   if (verbose) console.log('--')
   const deployed = []
   for (const facet of facets) {
@@ -72,7 +140,7 @@ async function deployFacets (facets, verbose = false) {
 }
 
 async function deploy ({
-  diamondName,
+  diamondName,  
   initDiamond,
   facets,
   owner,
@@ -86,11 +154,11 @@ async function deploy ({
   if (arguments.length !== 1) {
     throw Error(`Requires only 1 map argument. ${arguments.length} arguments used.`)
   }
-  facets = await deployFacets(facets, verbose)
+  facets = await deployFacetsWithLibs(facets, libraryNames, facetLibraries, owner, false, true)
   const diamondFactory = await ethers.getContractFactory('Diamond')
   const diamondCut = []
   if (verbose) {
-    console.log('--')
+    console.log('--') 
     console.log('Setting up diamondCut args')
     console.log('--')
   }
@@ -107,22 +175,24 @@ async function deploy ({
     ])
   }
   if (verbose) console.log('--')
-
-  let result
-  if (typeof initDiamond === 'string') {
-    const initDiamondName = initDiamond
-    if (verbose) console.log(`Deploying ${initDiamondName}`)
-    initDiamond = await ethers.getContractFactory(initDiamond)
-    initDiamond = await initDiamond.deploy()
-    await initDiamond.deployed()
-    result = await initDiamond.deployTransaction.wait()
-    if (!result.status) {
-      throw (Error(`Deploying ${initDiamondName} TRANSACTION FAILED!!! -------------------------------------------`))
+  
+  if (initDiamond !== undefined) {
+    let result
+    let functionCall
+    if (typeof initDiamond === 'string') {
+      const initDiamondName = initDiamond
+      if (verbose) console.log(`Deploying ${initDiamondName}`)
+      initDiamond = await ethers.getContractFactory(initDiamond)
+      initDiamond = await initDiamond.deploy()
+      await initDiamond.deployed()
+      result = await initDiamond.deployTransaction.wait()
+      if (!result.status) {
+        throw (Error(`Deploying ${initDiamondName} TRANSACTION FAILED!!! -------------------------------------------`))
+      }
     }
+    if (verbose) console.log('Encoding diamondCut init function call')
+    functionCall = initDiamond.interface.encodeFunctionData('init', args)
   }
-
-  if (verbose) console.log('Encoding diamondCut init function call')
-  const functionCall = initDiamond.interface.encodeFunctionData('init', args)
 
   if (verbose) console.log(`Deploying ${diamondName}`)
 
@@ -147,7 +217,9 @@ async function deploy ({
   }
 
   const diamondCutFacet = await ethers.getContractAt('DiamondCutFacet', deployedDiamond.address)
-  const tx = await diamondCutFacet.diamondCut(diamondCut, initDiamond.address, functionCall, txArgs)
+  if (initDiamond !== undefined) {
+    const tx = await diamondCutFacet.diamondCut(diamondCut, initDiamond.address, functionCall, txArgs)
+  }
 
   // console.log(`${diamondName} diamondCut arguments:`)
   // console.log(JSON.stringify([facets, initDiamond.address, args], null, 4))

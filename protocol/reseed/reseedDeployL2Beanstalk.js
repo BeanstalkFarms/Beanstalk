@@ -11,10 +11,10 @@ async function reseedDeployL2Beanstalk(account, verbose = false, mock) {
   // impersonate `account`:
   let signer;
   if (mock) {
-    await mintEth(account);
-    signer = await ethers.provider.getSigner(account);
+    await mintEth(account.address);
+    signer = await ethers.provider.getSigner(account.address);
   } else {
-    signer = await impersonateSigner(account);
+    signer = await impersonateSigner(account.address);
   }
 
   let tx;
@@ -56,7 +56,11 @@ async function reseedDeployL2Beanstalk(account, verbose = false, mock) {
     "LibConvert",
     "LibLockedUnderlying",
     "LibWellMinting",
-    "LibGerminate"
+    "LibGerminate",
+    "LibShipping",
+    "LibFlood",
+    "LibSilo",
+    "LibPipelineConvert",
   ];
 
   // A mapping of facet to public library names that will be linked to it.
@@ -67,29 +71,26 @@ async function reseedDeployL2Beanstalk(account, verbose = false, mock) {
       "LibIncentive",
       "LibLockedUnderlying",
       "LibWellMinting",
-      "LibGerminate"
+      "LibGerminate",
+      "LibShipping",
+      "LibFlood"
     ],
-    ConvertFacet: ["LibConvert"],
+    ConvertFacet: ["LibConvert", "LibPipelineConvert", "LibSilo"],
     UnripeFacet: ["LibLockedUnderlying"],
-    SeasonGettersFacet: ["LibLockedUnderlying", "LibWellMinting"]
+    SeasonGettersFacet: ["LibLockedUnderlying", "LibWellMinting"],
+    SiloFacet: ["LibSilo"],
+    EnrootFacet: ["LibSilo"],
   };
 
-  // Deploy all facets and external libraries.
-  let facetsAndNames = await deployFacets(
-    verbose,
-    mock,
-    facets,
-    libraryNames,
-    facetLibraries,
-    totalGasUsed
-  );
-  const [beanstalkDiamond] = await deploy({
-    diamondName: "L2BeanstalkDiamond",
-    facets: facetsAndNames,
-    owner: account,
-    args: [],
-    verbose: verbose
-  });
-  return beanstalkDiamond.address;
+    const [beanstalkDiamond] = await deploy({
+      diamondName: "L2BeanstalkDiamond",
+      facets: facets,
+      facetLibraries: facetLibraries,
+      libraryNames: libraryNames,
+      owner: account,
+      args: [],
+      verbose: true
+    });
+    return beanstalkDiamond.address;
 }
 exports.reseedDeployL2Beanstalk = reseedDeployL2Beanstalk;
