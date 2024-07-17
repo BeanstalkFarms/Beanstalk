@@ -20,6 +20,7 @@ query MarketEvents(
       index # of the Listing that was cancelled
       account
       historyID
+      placeInLine
       # => amount
       # => pricePerPod
     }
@@ -30,6 +31,7 @@ query MarketEvents(
       maxHarvestableIndex
       pricePerPod
       historyID
+      placeInLine
     }
     ... on PodListingFilled {
       id
@@ -37,6 +39,7 @@ query MarketEvents(
       to
       amount
       index # of Listing that sold
+      placeInLine
       start
       historyID
       # => pricePerPod
@@ -66,6 +69,7 @@ query MarketEvents(
       to
       historyID
       amount
+      placeInLine
       index # index of plot was sold to the Order
       start #
       # => maxPlaceInLine

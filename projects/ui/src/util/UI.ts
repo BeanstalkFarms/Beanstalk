@@ -48,3 +48,11 @@ export const remToPx = (_rem: string | number) => {
     throw new Error(`error in rem to px conversion. input: ${_rem}`);
   }
 };
+
+export const roundWithDecimals = (
+  value: number | undefined,
+  decimals?: number
+) => {
+  const factor = 10 ** (decimals ?? 2);
+  return Math.round((value || 0 + Number.EPSILON) * factor) / factor;
+};

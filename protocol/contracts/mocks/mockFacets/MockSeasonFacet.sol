@@ -98,6 +98,7 @@ contract MockSeasonFacet is SeasonFacet  {
         s.season.sunriseBlock = uint32(block.number);
         // update last snapshot in beanstalk. 
         stepOracle();
+        LibGerminate.endTotalGermination(s.season.current, LibWhitelistedTokens.getWhitelistedTokens());
         mockStartSop();
     }
 
@@ -106,6 +107,7 @@ contract MockSeasonFacet is SeasonFacet  {
         for (uint256 i; i < amount; ++i) {
             s.season.current += 1;
             stepOracle();
+            LibGerminate.endTotalGermination(s.season.current, LibWhitelistedTokens.getWhitelistedTokens());
             mockStartSop();
         }
         s.season.sunriseBlock = uint32(block.number);
@@ -117,6 +119,7 @@ contract MockSeasonFacet is SeasonFacet  {
         s.season.sunriseBlock = uint32(block.number);
         // update last snapshot in beanstalk. 
         stepOracle();
+        LibGerminate.endTotalGermination(s.season.current, LibWhitelistedTokens.getWhitelistedTokens());
         handleRain(2, C.BEAN_ETH_WELL);
     }
 
@@ -126,6 +129,7 @@ contract MockSeasonFacet is SeasonFacet  {
         s.season.sunriseBlock = uint32(block.number);
         // update last snapshot in beanstalk. 
         stepOracle();
+        LibGerminate.endTotalGermination(s.season.current, LibWhitelistedTokens.getWhitelistedTokens());
         mockStartSop();
         mockStepSilo(amount);
     }
@@ -136,6 +140,7 @@ contract MockSeasonFacet is SeasonFacet  {
         s.season.sunriseBlock = uint32(block.number);
         // update last snapshot in beanstalk. 
         stepOracle();
+        LibGerminate.endTotalGermination(s.season.current, LibWhitelistedTokens.getWhitelistedTokens());
         mockStartSop();
         mockStepSilo(amount);
     }

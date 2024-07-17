@@ -66,6 +66,9 @@ describe('Silo V3: Grown Stalk Per Bdv deployment', function () {
           ],
           'MockSiloFacet': [
             'LibSilo'
+          ],
+          'EnrootFacet': [
+            'LibSilo'
           ]
         },
         bip: false,

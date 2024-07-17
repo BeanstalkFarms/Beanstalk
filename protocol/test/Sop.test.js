@@ -362,6 +362,236 @@ describe('Sop', function () {
     })
   })
 
+  describe('Rain roots reduced', function () {
+    it('reduces rain roots upon withdrawal', async function () {
+      const beanStem = to6("4");
+
+      // set reserves so we'll sop
+      await this.well.setReserves([to6("1000000"), to18("1100")]);
+      await this.pump.setInstantaneousReserves([to6("1000000"), to18("1100")]);
+
+      await this.season.rainSunrise(); // start raining
+      await this.season.rainSunrise(); // sop
+
+      await this.silo.mow(user.address, BEAN);
+
+      let rainRoots = await this.siloGetters.balanceOfRainRoots(userAddress);
+
+      expect(rainRoots).to.be.equal('10004000000000000000000000');
+
+      await this.silo.connect(user).withdrawDeposit(BEAN, beanStem, to6('1000'), EXTERNAL);
+
+      rainRoots = await this.siloGetters.balanceOfRainRoots(userAddress);
+
+      expect(await this.siloGetters.balanceOfRainRoots(userAddress)).to.be.equal('0');
+    });
+
+    it('stops raining and withdraw test', async function () {
+      const beanStem = to6("4");
+
+      const depositAmount = to6('50000');
+      await this.bean.mint(user3Address, depositAmount);
+      await this.bean.connect(user3).approve(this.silo.address, MAX_UINT256);
+      await this.silo.connect(user3).deposit(BEAN, depositAmount, EXTERNAL);
+
+      // log current bean stemTip
+      const stemTip = await this.siloGetters.stemTipForToken(BEAN);
+      console.log("stemTip: ", stemTip);
+
+      // pass germination
+      await this.season.siloSunrise(0);
+      await this.season.siloSunrise(0);
+
+
+      // set reserves so we'll sop
+      await this.well.setReserves([to6("1000000"), to18("1100")]);
+      await this.pump.setInstantaneousReserves([to6("1000000"), to18("1100")]);
+
+      await this.season.rainSunrise(); // start raining
+
+      await this.silo.mow(user3Address, BEAN);
+
+      let rainRoots = await this.siloGetters.balanceOfRainRoots(user3Address);
+      expect(rainRoots).to.be.equal('500000000000000000000000000');
+
+      // stop raining
+      await this.season.droughtSunrise();
+
+      // withdraw
+      await this.silo.connect(user3).withdrawDeposit(BEAN, stemTip, to6('50000'), EXTERNAL);
+      rainRoots = await this.siloGetters.balanceOfRainRoots(user3Address);
+      // rain roots zero after withdrawing deposit
+      expect(rainRoots).to.be.equal('0');
+
+      // start raining again
+      await this.season.rainSunrise();
+      await this.season.rainSunrise();
+      await this.silo.mow(user3Address, BEAN);
+      rainRoots = await this.siloGetters.balanceOfRainRoots(user3Address);
+      expect(rainRoots).to.be.equal('0');
+
+      // measure user actual roots
+      const userRoots = await this.siloGetters.balanceOfRoots(user3Address);
+      expect(userRoots).to.be.equal('0');
+    });
+
+    it('burns rain roots upon transfer', async function () {
+      const beanStem = to6("4");
+
+      // set reserves so we'll sop
+      await this.well.setReserves([to6("1000000"), to18("1100")]);
+      await this.pump.setInstantaneousReserves([to6("1000000"), to18("1100")]);
+
+      await this.season.rainSunrise(); // start raining
+      await this.season.rainSunrise(); // sop
+
+      await this.silo.mow(user.address, BEAN);
+
+      let rainRootsBefore = await this.siloGetters.balanceOfRainRoots(userAddress);
+
+      expect(rainRootsBefore).to.be.equal('10004000000000000000000000');
+
+      await this.silo.connect(user).transferDeposit(userAddress, user3Address, BEAN, beanStem, to6('1000'));
+      await this.silo.mow(user.address, BEAN);
+
+      // user should have 0 rain roots
+      expect(await this.siloGetters.balanceOfRainRoots(userAddress)).to.be.equal('0');
+      // user3 should have 0 rain roots, none transferred
+      expect(await this.siloGetters.balanceOfRainRoots(user3Address)).to.be.equal('0');
+    });
+
+    it('burns rain half of roots upon half transfer', async function () {
+      const beanStem = to6("4");
+
+      // set reserves so we'll sop
+      await this.well.setReserves([to6("1000000"), to18("1100")]);
+      await this.pump.setInstantaneousReserves([to6("1000000"), to18("1100")]);
+
+      await this.season.rainSunrise(); // start raining
+      await this.season.rainSunrise(); // sop
+
+      await this.silo.mow(user.address, BEAN);
+
+      let rainRootsBefore = await this.siloGetters.balanceOfRainRoots(userAddress);
+
+      expect(rainRootsBefore).to.be.equal('10004000000000000000000000');
+
+      await this.silo.connect(user).transferDeposit(userAddress, user3Address, BEAN, beanStem, to6('500'));
+      await this.silo.mow(user.address, BEAN);
+
+      // user should have half rain roots
+      expect(await this.siloGetters.balanceOfRainRoots(userAddress)).to.be.equal('5004000000000000000000000');
+    });
+
+    it('does not burn rain roots upon transfer if extra roots available', async function () {
+      const beanStem = to6("4");
+
+      // set reserves so we'll sop
+      await this.well.setReserves([to6("1000000"), to18("1100")]);
+      await this.pump.setInstantaneousReserves([to6("1000000"), to18("1100")]);
+
+      await this.season.rainSunrise(); // start raining
+      await this.season.rainSunrise(); // sop
+
+      await this.silo.mow(user.address, BEAN);
+
+      let rainRootsBefore = await this.siloGetters.balanceOfRainRoots(userAddress);
+
+      expect(rainRootsBefore).to.be.equal('10004000000000000000000000');
+
+      // do another deposit
+      await this.silo.connect(user).deposit(BEAN, to6('1000'), EXTERNAL);
+
+      // pass germination
+      await this.season.siloSunrise(0);
+      await this.season.siloSunrise(0);
+
+      // verify roots went up
+      expect(await this.siloGetters.balanceOfRoots(userAddress)).to.be.equal('20008000000000000000000000');
+      // verify rain roots stayed the same
+      expect(await this.siloGetters.balanceOfRainRoots(userAddress)).to.be.equal('10004000000000000000000000');
+
+      // then transfer
+      await this.silo.connect(user).transferDeposit(userAddress, user3Address, BEAN, beanStem, to6('500'));
+      await this.silo.mow(user.address, BEAN);
+
+      // user should have full rain roots, since they had non-rain roots that could be removed before
+      expect(await this.siloGetters.balanceOfRainRoots(userAddress)).to.be.equal('10004000000000000000000000');
+    });
+
+    it('germination rain roots test', async function () {
+      // user 3 deposits a bunch of bean
+
+      const depositAmount = to6('50000');
+      await this.bean.mint(user3Address, depositAmount);
+      await this.bean.connect(user3).approve(this.silo.address, MAX_UINT256);
+      await this.silo.connect(user3).deposit(this.bean.address, depositAmount, EXTERNAL);
+
+      // set reserves so we'll sop
+      await this.well.setReserves([to6("1000000"), to18("1100")]);
+      await this.pump.setInstantaneousReserves([to6("1000000"), to18("1100")]);
+
+      await this.season.rainSunrise(); // start raining
+
+      // log current total rain roots and current total roots
+      let totalRainRoots = await this.siloGetters.totalRainRoots();
+      console.log("totalRainRoots: ", totalRainRoots);
+
+      let totalRoots = await this.siloGetters.totalRoots();
+      console.log("totalRoots: ", totalRoots);
+
+
+      await this.season.rainSunrise(); // sop
+
+      await this.silo.mow(user3Address, BEAN);
+
+      let totalRainRoots2 = await this.siloGetters.totalRainRoots();
+      console.log("2 totalRainRoots: ", totalRainRoots2);
+
+      let userRainRoots = await this.siloGetters.balanceOfRainRoots(user3Address);
+      console.log("userRainRoots: ", userRainRoots);
+
+      // shouldn't be a way for a user to get more rain roots than total rain roots
+      // couldn't find a way to do lessThan without importing something else that supports BigNumber from chai
+      expect(userRainRoots.lt(totalRainRoots2)).to.be.true;
+    });
+
+    // verifies that total rain roots are not affected by anything deposited after raining starts
+    it('second germination rain roots test', async function () {
+
+      await this.season.rainSunrise(); // start raining
+
+      let totalRainRootsBefore = await this.siloGetters.totalRainRoots();
+
+      const depositAmount = to6('50000');
+      await this.bean.mint(user3Address, depositAmount);
+      await this.bean.connect(user3).approve(this.silo.address, MAX_UINT256);
+      await this.silo.connect(user3).deposit(this.bean.address, depositAmount, EXTERNAL);
+      // set reserves so we'll sop
+      await this.well.setReserves([to6("1000000"), to18("1100")]);
+      await this.pump.setInstantaneousReserves([to6("1000000"), to18("1100")]);
+
+
+      await this.season.rainSunrise(); // sop
+
+      await this.silo.mow(user3Address, BEAN);
+
+      let totalRainRootsAfter = await this.siloGetters.totalRainRoots();
+
+      // rain roots before should equal rain roots after, anything deposited after raining doesn't count
+      expect(totalRainRootsBefore).to.be.equal(totalRainRootsAfter);
+
+      let userRainRoots = await this.siloGetters.balanceOfRainRoots(user3Address);
+
+      // assert that user rain roots are zero
+      expect(userRainRoots).to.be.equal('0');
+
+      // shouldn't be a way for a user to get more rain roots than total rain roots
+      // couldn't find a way to do lessThan without importing something else that supports BigNumber from chai
+      expect(userRainRoots.lt(totalRainRootsAfter)).to.be.true;
+    });
+  })
+
   describe('Germination and Plenty', function () {
     it('not germinated', async function () {
       

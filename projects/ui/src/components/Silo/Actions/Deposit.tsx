@@ -59,6 +59,7 @@ import FormTxnProvider from '~/components/Common/Form/FormTxnProvider';
 import useFormTxnContext from '~/hooks/sdk/useFormTxnContext';
 import { ClaimAndDoX, DepositFarmStep, FormTxn } from '~/lib/Txn';
 import useMigrationNeeded from '~/hooks/farmer/useMigrationNeeded';
+import useGetBalancesUsedBySource from '~/hooks/beanstalk/useBalancesUsedBySource';
 
 // -----------------------------------------------------------------------
 
@@ -121,9 +122,14 @@ const DepositForm: FC<
 
   const migrationNeeded = useMigrationNeeded();
   const [isTokenSelectVisible, showTokenSelect, hideTokenSelect] = useToggle();
+  const [getAmountsBySource] = useGetBalancesUsedBySource({
+    tokens: values.tokens,
+    mode: balanceFromToMode(values.balanceFrom),
+  });
   const { amount, bdv, stalk, seeds, actions } = getDepositSummary(
     whitelistedToken,
     combinedTokenState,
+    getAmountsBySource(),
     amountToBdv
   );
 
@@ -231,7 +237,9 @@ const DepositForm: FC<
             />
           );
         })}
-        {migrationNeeded === true ? null : <ClaimBeanDrawerToggle actionText="Deposit" />}
+        {migrationNeeded === true ? null : (
+          <ClaimBeanDrawerToggle actionText="Deposit" />
+        )}
         {isReady ? (
           <>
             <TxnSeparator />

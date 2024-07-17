@@ -260,8 +260,8 @@ library LibSilo {
         // account's current rain roots, set the account's rain roots
         // to the account's current roots and subtract the difference
         // from Beanstalk's total rain roots.
-        if (s.season.raining && s.a[account].sop.roots > s.a[account].roots) {
-            uint256 deltaRoots = s.a[account].sop.roots - s.a[account].roots;
+        if (s.a[account].sop.roots > s.a[account].roots) {
+            uint256 deltaRoots = s.a[account].sop.roots.sub(s.a[account].roots);
             s.a[account].sop.roots = s.a[account].roots;
             s.r.roots = s.r.roots.sub(deltaRoots);
         }
@@ -323,6 +323,13 @@ library LibSilo {
         s.a[sender].s.stalk = s.a[sender].s.stalk.sub(stalk);
         s.a[sender].roots = s.a[sender].roots.sub(roots);
         emit StalkBalanceChanged(sender, -int256(stalk), -int256(roots));
+
+        // Rain roots cannot be transferred, burn them
+        if (s.a[sender].sop.roots > s.a[sender].roots) {
+            uint256 deltaRoots = s.a[sender].sop.roots.sub(s.a[sender].roots);
+            s.a[sender].sop.roots = s.a[sender].roots;
+            s.r.roots = s.r.roots.sub(deltaRoots);
+        }
 
         // Add Stalk and Roots to the 'recipient' balance.
         s.a[recipient].s.stalk = s.a[recipient].s.stalk.add(stalk);
@@ -469,8 +476,9 @@ library LibSilo {
         uint32 currentSeason = s.season.current;
         
         // End account germination.
+        uint128 firstGerminatingRoots;
         if (lastUpdate < currentSeason) {
-            LibGerminate.endAccountGermination(account, lastUpdate, currentSeason);
+            firstGerminatingRoots = LibGerminate.endAccountGermination(account, lastUpdate, currentSeason);
         }
 
         // sop data only needs to be updated once per season,
@@ -479,7 +487,7 @@ library LibSilo {
             if ((lastUpdate <= s.season.rainStart || s.a[account].lastRain > 0) && lastUpdate <= currentSeason) {
                 // Increments `plenty` for `account` if a Flood has occured.
                 // Saves Rain Roots for `account` if it is Raining.
-                handleRainAndSops(account, lastUpdate);
+                handleRainAndSops(account, lastUpdate, firstGerminatingRoots);
             }
         }
         
@@ -535,7 +543,7 @@ library LibSilo {
     /**
      * @dev internal logic to handle when beanstalk is raining.
      */
-    function handleRainAndSops(address account, uint32 lastUpdate) private {
+    function handleRainAndSops(address account, uint32 lastUpdate, uint128 firstGerminatingRoots) private {
         AppStorage storage s = LibAppStorage.diamondStorage();
         // If a Sop has occured since last update, calculate rewards and set last Sop.
         if (s.season.lastSopSeason > lastUpdate) {
@@ -553,6 +561,18 @@ library LibSilo {
             if (s.season.rainStart > lastUpdate) {
                 s.a[account].lastRain = s.season.rainStart;
                 s.a[account].sop.roots = s.a[account].roots;
+                if (s.season.rainStart - 1 == lastUpdate) {
+                    if (firstGerminatingRoots > 0) {
+                        // if the account had just finished germinating roots this season (i.e,
+                        // deposited in the previous season before raining, and mowed during a sop),
+                        // Beanstalk will not allocate plenty to this deposit, and thus the roots
+                        // needs to be deducted from the sop roots.
+                        s.a[account].sop.roots = s.a[account].sop.roots.sub(firstGerminatingRoots);
+                    }
+                }
+                
+                //  s.a[account].roots includes newly finished germinating roots from a fresh deposit
+                //  @ season before rainStart
             }
             // If there has been a Sop since rain started,
             // save plentyPerRoot in case another SOP happens during rain.
@@ -687,7 +707,7 @@ library LibSilo {
         int96[] calldata stems,
         uint256[] calldata amounts,
         ERC1155Event emission
-    ) internal returns (AssetsRemoved memory ar) {
+    ) external returns (AssetsRemoved memory ar) {
         AppStorage storage s = LibAppStorage.diamondStorage();
 
         uint256[] memory bdvsRemoved = new uint256[](stems.length);

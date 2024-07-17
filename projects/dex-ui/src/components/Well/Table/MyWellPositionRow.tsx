@@ -98,7 +98,7 @@ export const MyWellPositionRow: FC<{
     symbols.push(token.symbol);
   });
 
-  const lpPrice = lpAddress && lpAddress in prices ? prices[lpAddress] : undefined;
+  const lpPrice = lpAddress && prices && lpAddress in prices ? prices[lpAddress] : undefined;
   const whitelisted = getIsWhitelisted(well);
 
   const positionsUSD = {
@@ -128,7 +128,7 @@ export const MyWellPositionRow: FC<{
       </DesktopContainer>
       <DesktopContainer align="right">
         <BalanceContainer>
-          <PositionBreakdown isWhitelisted={whitelisted} items={positionsUSD} totalDisplay={formatUSD(positionsUSD.total)} isLP={false} />
+          <PositionBreakdown isWhitelisted={whitelisted} items={positionsUSD} totalDisplay={positionsUSD.total.gt(0) ? formatUSD(positionsUSD.total) : "$-.--"} isLP={false} />
         </BalanceContainer>
       </DesktopContainer>
       <MobileContainer>
@@ -148,7 +148,7 @@ export const MyWellPositionRow: FC<{
       </MobileContainer>
       <MobileContainer align="right">
         <BalanceContainer>
-          <PositionBreakdown items={positionsUSD} isWhitelisted={whitelisted} totalDisplay={formatUSD(positionsUSD.total)} isLP={false} />
+          <PositionBreakdown items={positionsUSD} isWhitelisted={whitelisted} totalDisplay={positionsUSD.total.gt(0) ? formatUSD(positionsUSD.total) : "$-.--"} isLP={false} />
         </BalanceContainer>
       </MobileContainer>
     </TableRow>

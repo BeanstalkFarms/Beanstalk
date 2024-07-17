@@ -139,7 +139,7 @@ describe('Complex Weather', function () {
   })
 
   // note: podrate is exremely low.
-  describe.only("Extreme Weather", async function () {
+  describe("Extreme Weather", async function () {
     before(async function () {
       await this.season.setLastDSoilE('100000');
       await this.bean.mint(userAddress, '1000000000')
