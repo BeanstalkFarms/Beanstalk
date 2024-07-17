@@ -133,14 +133,32 @@ async function main(scriptName, verbose = true, mock = false, reset = true) {
       "LibWellMinting",
       "LibGerminate"
     ],
-    SeasonGettersFacet: ["LibLockedUnderlying", "LibWellMinting"],
-    ConvertFacet: ["LibConvert"],
-    MockConvertFacet: ["LibConvert"],
-    MockUnripeFacet: ["LibLockedUnderlying"],
-    UnripeFacet: ["LibLockedUnderlying"],
-    MockSiloFacet: ["LibSilo"],
-    SiloFacet: ["LibSilo"]
-  };
+    'SeasonGettersFacet': [
+      'LibLockedUnderlying',
+      'LibWellMinting'
+    ],
+    'ConvertFacet': [
+      'LibConvert'
+    ],
+    'MockConvertFacet': [
+      'LibConvert'
+    ],
+    'MockUnripeFacet': [
+      'LibLockedUnderlying'
+    ],
+    'UnripeFacet': [
+      'LibLockedUnderlying'
+    ],
+    'MockSiloFacet': [
+      'LibSilo'
+    ],
+    'SiloFacet': [
+      'LibSilo'
+    ],
+    'EnrootFacet': [
+      'LibSilo'
+    ]
+  }
 
   let [
     bdvFacet,

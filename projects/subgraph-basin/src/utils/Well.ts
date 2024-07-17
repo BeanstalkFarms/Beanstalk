@@ -43,6 +43,7 @@ export function createWell(wellAddress: Address, implementation: Address, inputT
   well.aquifer = Bytes.empty();
   well.implementation = implementation;
   well.tokens = []; // This is currently set in the `handleBoreWell` function
+  well.tokenOrder = [];
   well.createdTimestamp = ZERO_BI;
   well.createdBlockNumber = ZERO_BI;
   well.lpTokenSupply = ZERO_BI;

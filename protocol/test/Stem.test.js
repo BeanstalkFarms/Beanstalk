@@ -91,7 +91,8 @@ describe("Silo V3: Grown Stalk Per Bdv deployment", function () {
           "LibGerminate"
         ],
         ConvertFacet: ["LibConvert"],
-        MockSiloFacet: ["LibSilo"]
+        MockSiloFacet: ["LibSilo"],
+        EnrootFacet: ["LibSilo"]
       },
       bip: false,
       object: false,

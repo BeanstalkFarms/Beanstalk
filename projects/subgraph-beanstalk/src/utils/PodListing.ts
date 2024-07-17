@@ -1,8 +1,7 @@
-import { Address, BigInt } from "@graphprotocol/graph-ts";
+import { Address, BigInt, log } from "@graphprotocol/graph-ts";
 import { PodListing } from "../../generated/schema";
 import { BEANSTALK } from "../../../subgraph-core/utils/Constants";
 import { ZERO_BI } from "../../../subgraph-core/utils/Decimals";
-import { loadPlot } from "./Plot";
 import { loadPodMarketplace, loadPodMarketplaceDailySnapshot, loadPodMarketplaceHourlySnapshot } from "./PodMarketplace";
 
 export function loadPodListing(account: Address, index: BigInt): PodListing {
@@ -32,7 +31,6 @@ export function loadPodListing(account: Address, index: BigInt): PodListing {
     listing.amount = ZERO_BI;
     listing.remainingAmount = ZERO_BI;
     listing.filledAmount = ZERO_BI;
-    listing.cancelledAmount = ZERO_BI;
 
     listing.status = "ACTIVE";
     listing.createdAt = ZERO_BI;
@@ -45,16 +43,42 @@ export function loadPodListing(account: Address, index: BigInt): PodListing {
   return listing;
 }
 
-export function expirePodListing(diamondAddress: Address, timestamp: BigInt, listingIndex: BigInt): void {
+export function expirePodListingIfExists(
+  diamondAddress: Address,
+  farmer: string,
+  listedPlotIndex: BigInt,
+  timestamp: BigInt,
+  activeListingIndex: i32 = -1 // If provided, avoids having to lookup the index
+): void {
+  let listing = PodListing.load(farmer + "-" + listedPlotIndex.toString());
+  if (listing == null || listing.status != "ACTIVE") {
+    return;
+  }
+  listing.status = "EXPIRED";
+  listing.save();
+
   let market = loadPodMarketplace(diamondAddress);
+
+  if (activeListingIndex == -1) {
+    // There should always be a matching entry in this list because it is verified that the listing is ACTIVE
+    for (let i = 0; i < market.activeListings.length; i++) {
+      const destructured = market.activeListings[i].split("-");
+      // Unnecessary to check if the account matches.
+      if (destructured[1] == listedPlotIndex.toString()) {
+        activeListingIndex = i;
+        break;
+      }
+    }
+  }
+
   let marketHourly = loadPodMarketplaceHourlySnapshot(diamondAddress, market.season, timestamp);
   let marketDaily = loadPodMarketplaceDailySnapshot(diamondAddress, timestamp);
-  //farmer info
-  let plot = loadPlot(diamondAddress, listingIndex);
-  let listing = loadPodListing(Address.fromString(plot.farmer), listingIndex);
 
   market.expiredListedPods = market.expiredListedPods.plus(listing.remainingAmount);
   market.availableListedPods = market.availableListedPods.minus(listing.remainingAmount);
+  let activeListings = market.activeListings;
+  activeListings.splice(activeListingIndex, 1);
+  market.activeListings = activeListings;
   market.save();
 
   marketHourly.season = market.season;
@@ -70,10 +94,6 @@ export function expirePodListing(diamondAddress: Address, timestamp: BigInt, lis
   marketDaily.deltaAvailableListedPods = marketDaily.deltaAvailableListedPods.minus(listing.remainingAmount);
   marketDaily.availableListedPods = market.availableListedPods;
   marketDaily.save();
-
-  listing.status = "EXPIRED";
-  listing.remainingAmount = ZERO_BI;
-  listing.save();
 }
 
 export function createHistoricalPodListing(listing: PodListing): void {
@@ -105,7 +125,6 @@ export function createHistoricalPodListing(listing: PodListing): void {
       newListing.amount = listing.amount;
       newListing.remainingAmount = listing.remainingAmount;
       newListing.filledAmount = listing.filledAmount;
-      newListing.cancelledAmount = listing.cancelledAmount;
 
       newListing.fill = listing.fill;
 

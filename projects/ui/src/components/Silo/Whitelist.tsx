@@ -44,6 +44,7 @@ import stalkIcon from '~/img/beanstalk/stalk-icon.svg';
 import logo from '~/img/tokens/bean-logo.svg';
 import { FC } from '~/types';
 import { useIsTokenDeprecated } from '~/hooks/beanstalk/useWhitelist';
+import { roundWithDecimals } from '~/util/UI';
 import SiloAssetApyChip from './SiloAssetApyChip';
 import StatHorizontal from '../Common/StatHorizontal';
 import BeanProgressIcon from '../Common/BeanProgressIcon';
@@ -205,6 +206,8 @@ const Whitelist: FC<{
         {config.whitelist.map((token) => {
           const deposited = farmerSilo.balances[token.address]?.deposited;
           const isUnripe = token === urBean || token === urBeanWeth;
+          const isUnripeLP =
+            isUnripe && token.address === UNRIPE_BEAN_WETH[1].address;
           const isDeprecated = checkIfDeprecated(token.address);
 
           // Unripe data
@@ -313,10 +316,23 @@ const Whitelist: FC<{
                         <Tooltip
                           placement="right"
                           title={
-                            <>
+                            <Stack gap={0.25}>
                               1 {token.symbol} = {displayFullBN(getBDV(token))}{' '}
                               BDV
-                            </>
+                              <Row gap={0.2}>
+                                <TokenIcon
+                                  token={STALK}
+                                  css={{ height: '0.8em', marginTop: '-1px' }}
+                                />
+                                <Typography color="text.primary" mr={0.2}>
+                                  {token.rewards?.stalk}
+                                </Typography>
+                                <TokenIcon token={SEEDS} />
+                                <Typography color="text.primary">
+                                  {token.rewards?.seeds || 0}
+                                </Typography>
+                              </Row>
+                            </Stack>
                           }
                         >
                           <Box>
@@ -330,10 +346,7 @@ const Whitelist: FC<{
                               </Typography>
                               <TokenIcon token={SEEDS} />
                               <Typography color="text.primary">
-                                {Math.round(
-                                  (token.rewards?.seeds || 0 + Number.EPSILON) *
-                                    100
-                                ) / 100}
+                                {roundWithDecimals(token.rewards?.seeds, 3)}
                               </Typography>
                             </Row>
                           </Box>
@@ -736,39 +749,50 @@ const Whitelist: FC<{
                                   </Box>
                                   <Row>×</Row>
                                   <Box sx={{ px: 1, py: 0.5, maxWidth: 215 }}>
-                                    <Stat
-                                      title="Chop Rate"
-                                      gap={0.25}
-                                      variant="h4"
-                                      amount={`1 - ${(
-                                        unripeTokens[token.address]
-                                          ?.chopPenalty || ZERO_BN
-                                      ).toFixed(4)}%`}
-                                      subtitle={
-                                        <>
-                                          The current penalty for chopping
-                                          <br />
-                                          {token.symbol} for{' '}
-                                          {
-                                            unripeUnderlyingTokens[
-                                              token.address
-                                            ].symbol
-                                          }
-                                          .{' '}
-                                          <Link
-                                            href="https://docs.bean.money/almanac/farm/barn#chopping"
-                                            target="_blank"
-                                            rel="noreferrer"
-                                            underline="hover"
-                                            onClick={(e) => {
-                                              e.stopPropagation();
-                                            }}
-                                          >
-                                            Learn more
-                                          </Link>
-                                        </>
-                                      }
-                                    />
+                                    {isUnripeLP ? (
+                                      <Stat
+                                        title="Chop Amount"
+                                        gap={0.25}
+                                        variant="h4"
+                                        // After Chop Change, update this to: recap rate * Total LP Underlying urBEANETH * BeanEth LP Price
+                                        amount={`${unripeTokens[token.address]?.penalty?.times(100).toFixed(3)}%`}
+                                        subtitle="The amount of BEANETH received for Chopping 1 urBEANETH."
+                                      />
+                                    ) : (
+                                      <Stat
+                                        title="Chop Rate"
+                                        gap={0.25}
+                                        variant="h4"
+                                        amount={`1 - ${(
+                                          unripeTokens[token.address]
+                                            ?.chopPenalty || ZERO_BN
+                                        ).toFixed(4)}%`}
+                                        subtitle={
+                                          <>
+                                            The current penalty for Chopping
+                                            <br />
+                                            {token.symbol} for{' '}
+                                            {
+                                              unripeUnderlyingTokens[
+                                                token.address
+                                              ].symbol
+                                            }
+                                            .{' '}
+                                            <Link
+                                              href="https://docs.bean.money/almanac/farm/barn#chopping"
+                                              target="_blank"
+                                              rel="noreferrer"
+                                              underline="hover"
+                                              onClick={(e) => {
+                                                e.stopPropagation();
+                                              }}
+                                            >
+                                              Learn more
+                                            </Link>
+                                          </>
+                                        }
+                                      />
+                                    )}
                                   </Box>
                                   <Row>×</Row>
                                   <Box sx={{ px: 1, py: 0.5, maxWidth: 215 }}>
