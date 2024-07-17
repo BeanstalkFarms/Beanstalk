@@ -41,19 +41,19 @@ function generateNestedBlocks(items, unripeSupply) {
     let marker = 16;
     let market16close = false;
     if (counter % marker == 0 && counter + marker < items.length) {
-      let recentPercentPaid = items[counter + marker].recapPercentPaid;
+      let recapPercentPaid = items[counter + marker].recapPercentPaid;
       code +=
-        tab1 + "if (recentPercentPaid > " + recentPercentPaid + "e18) {\n";
+        tab1 + "if (recapPercentPaid > " + recapPercentPaid + "e6) {\n";
       market16close = true;
     }
     marker = 8;
     if (counter % marker == 0) {
       if (counter < marker) {
-        let recentPercentPaid = items[counter + marker].recapPercentPaid;
+        let recapPercentPaid = items[counter + marker].recapPercentPaid;
         code +=
           tab2 +
-          "if (recentPercentPaid > " +
-          recentPercentPaid +
+          "if (recapPercentPaid > " +
+          recapPercentPaid +
           "e6) {\n";
       }
 
@@ -65,11 +65,11 @@ function generateNestedBlocks(items, unripeSupply) {
         // if i mod 2 == 0, open an if statement (3rd layer of ifs)
         if (i % 2 == 0) {
           if (counter + i + 2 < items.length && counter + i + 2 > 0) {
-            let recentPercentPaid = items[counter + i + 2].recapPercentPaid;
+            let recapPercentPaid = items[counter + i + 2].recapPercentPaid;
             if (i % 8 == 0) {
-              code += tab3 + "if (recentPercentPaid > " + recentPercentPaid + "e6) {\n";
+              code += tab3 + "if (recapPercentPaid > " + recapPercentPaid + "e6) {\n";
             } else if (i % 8 < 6) {
-              code += tab3 + "} else if (recentPercentPaid > " + recentPercentPaid + "e6) {\n";
+              code += tab3 + "} else if (recapPercentPaid > " + recapPercentPaid + "e6) {\n";
             } else {
               code += tab3 + "} else {\n";
             }
@@ -81,8 +81,8 @@ function generateNestedBlocks(items, unripeSupply) {
 
         // if even
         if (i % 2 == 0) {
-          let recentPercentPaid = items[counter + i + 1].recapPercentPaid;
-          code += tab4 + "if (recentPercentPaid > " + recentPercentPaid + "e6) {\n";
+          let recapPercentPaid = items[counter + i + 1].recapPercentPaid;
+          code += tab4 + "if (recapPercentPaid > " + recapPercentPaid + "e6) {\n";
         } else {
           code += tab4 + "} else {\n";
         }
@@ -94,10 +94,14 @@ function generateNestedBlocks(items, unripeSupply) {
         }
       }
 
-      code += tab3 + "}\n"; // close 8-level if
+      code += tab3 + "} // closed 8 level if " + counter + "\n"; // close 8-level if
+      if (counter == 8) {
+        code += tab2 + "}\n";
+        code += tab1 + "} else { // close upper level\n";
+      }
     }
     if (market16close) {
-      code += tab2 + "} else {\n"; // close 16-level if
+      code += tab2 + "} else { // close 16 level if \n"; // close 16-level if
     }
 
     counter++;
@@ -115,11 +119,22 @@ let code = "";
 
 const unripeSupplyValues = [90000000, 10000000, 1000000];
 
+let groupCount = 0;
 for (const unripeSupply of unripeSupplyValues) {
   const items = groupedData[unripeSupply];
   if (!items) continue;
 
-  code += `if (unripeSupply > ${unripeSupply}) {\n`;
+  const unripeFormatted = unripeSupply.toLocaleString('en-US', {
+    useGrouping: true,
+    groupingSeparator: '_'
+  });
+
+  if (groupCount == 0) {
+    code += `if (unripeSupply > ${unripeFormatted}) {\n`;
+  } else {
+    code += `if (unripeSupply < ${unripeFormatted}) {\n`;
+  }
+  groupCount++;
   items.sort((a, b) => b.recapPercentPaid - a.recapPercentPaid);
   code += generateNestedBlocks(items, unripeSupply);
   code += `} else `;

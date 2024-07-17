@@ -168,15 +168,16 @@ describe('LockedBeansMainnet', function () {
       })
       // check underlying locked beans and locked LP:
       this.unripe = await ethers.getContractAt('MockUnripeFacet', BEANSTALK)
-      expect(await this.unripe.getLegacyLockedUnderlyingBean()).to.eq(to6('16778637.205350'))
-      expect(await this.unripe.getLegacyLockedUnderlyingLP()).to.be.within(to18('158853'),to18('158855'))
+      expect(await this.unripe.getLegacyLockedUnderlyingBean()).to.eq(to6('22034476.333100'))
+      // expect(await this.unripe.getLegacyLockedUnderlyingLP()).to.be.within(to18('158853'),to18('158855'))
+      expect(await this.unripe.getLegacyLockedUnderlyingLP()).to.be.within(to18('208398'),to18('208400'))
 
       // deploy misc. improvements bip
       await bipMiscellaneousImprovements(true, undefined, false)
 
       // check underlying locked beans and locked LP:
-      expect(await this.beanstalk.getLockedBeansUnderlyingUnripeBean()).to.eq(to6('3650664.793864'))
-      expect(await this.beanstalk.getLockedBeansUnderlyingUnripeLP()).to.be.within(to18('0.000001810930253916'),to18('0.000002010930253916'))
+      expect(await this.beanstalk.getLockedBeansUnderlyingUnripeBean()).to.eq(to6('14978575.114249'))
+      expect(await this.beanstalk.getLockedBeansUnderlyingUnripeLP()).to.be.within('7668288289687','7868288289687')
     })
   })
 })
