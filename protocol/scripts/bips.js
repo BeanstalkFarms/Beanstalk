@@ -273,6 +273,9 @@ async function bipSeedGauge(mock = true, account = undefined, verbose = true) {
       ],
       'SiloFacet': [
         'LibSilo'
+      ],
+      'EnrootFacet': [
+        'LibSilo'
       ]
     },
     bip: false,
