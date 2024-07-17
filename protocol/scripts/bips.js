@@ -1,8 +1,10 @@
-const { BEANSTALK } = require("../test/utils/constants");
+const { BEANSTALK, BEAN_WSTETH_WELL, BEAN } = require("../test/utils/constants");
 const { getBeanstalk, impersonateBeanstalkOwner, mintEth, impersonateSigner } = require("../utils");
 const { deployContract } = require("./contracts");
 const { upgradeWithNewFacets } = require("./diamond");
 const { impersonatePipeline, deployPipeline } = require("./pipeline");
+const { to6, to18 } = require('../test/utils/helpers.js');
+const { impersonateBeanWstethWell } = require('../utils/well.js');
 
 async function bip30(mock = true, account = undefined) {
   if (account == undefined) {
