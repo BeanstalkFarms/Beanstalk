@@ -329,7 +329,7 @@ async function bipMigrateUnripeBeanEthToBeanSteth(
       EnrootFacet: ["LibSilo"]
     },
     initFacetName: "InitMigrateUnripeBeanEthToBeanSteth",
-    selectorsToRemove: [],
+    selectorsToRemove: ['0x208c2c98', '0xbb02e10b'],
     bip: false,
     object: !mock,
     verbose: verbose,
