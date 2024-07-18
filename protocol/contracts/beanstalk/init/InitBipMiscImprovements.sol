@@ -5,7 +5,6 @@
 pragma solidity ^0.7.6;
 pragma experimental ABIEncoderV2;
 
-import {AppStorage} from "../AppStorage.sol";
 import "../../C.sol";
 import "../../tokens/Fertilizer/Fertilizer.sol";
 
@@ -16,8 +15,6 @@ import "../../tokens/Fertilizer/Fertilizer.sol";
 **/
 
 contract InitBipMiscImprovements {
-
-    AppStorage internal s;
 
     function init() external {
         
