@@ -31,10 +31,7 @@ import {
   USDT,
   WETH,
   ETH,
-<<<<<<< HEAD
   BEAN_WSTETH_WELL_LP,
-=======
->>>>>>> add-steth-oracle
 } from '~/constants/tokens';
 import { useBeanstalkContract } from '~/hooks/ledger/useContract';
 import useFarmerBalances from '~/hooks/farmer/useFarmerBalances';

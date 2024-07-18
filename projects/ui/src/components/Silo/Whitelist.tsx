@@ -25,7 +25,6 @@ import {
   STALK,
   UNRIPE_BEAN,
   UNRIPE_BEAN_WSTETH,
-  UNRIPE_BEAN_WSTETH,
 } from '~/constants/tokens';
 import { AddressMap, ONE_BN, ZERO_BN } from '~/constants';
 import { displayFullBN, displayTokenAmount } from '~/util/Tokens';
