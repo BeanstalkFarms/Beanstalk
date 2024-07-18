@@ -147,7 +147,7 @@ export class Tokens {
     );
     this.BEAN.rewards = {
       stalk: this.STALK.amount(1),
-      seeds: this.SEEDS.amount(1)
+      seeds: null
     };
 
     this.BEAN_CRV3_LP = new ERC20Token(
@@ -183,7 +183,7 @@ export class Tokens {
     );
     this.BEAN_ETH_WELL_LP.rewards = {
       stalk: this.STALK.amount(1),
-      seeds: this.SEEDS.amount(4)
+      seeds: null
     };
 
     this.BEAN_WSTETH_WELL_LP = new ERC20Token(
@@ -201,7 +201,7 @@ export class Tokens {
     );
     this.BEAN_WSTETH_WELL_LP.rewards = {
       stalk: this.STALK.amount(1),
-      seeds: this.SEEDS.amount(1)
+      seeds: null
     };
 
     this.UNRIPE_BEAN = new ERC20Token(
@@ -413,14 +413,7 @@ export class Tokens {
 
     this.unripeTokens = new Set([this.UNRIPE_BEAN, this.UNRIPE_BEAN_WSTETH]);
     this.unripeUnderlyingTokens = new Set([this.BEAN, this.BEAN_CRV3_LP]);
-    this.erc20Tokens = new Set([
-      ...this.siloWhitelist,
-      this.WETH,
-      this.CRV3,
-      this.DAI,
-      this.USDC,
-      this.USDT
-    ]);
+    this.erc20Tokens = new Set([...this.siloWhitelist, this.WETH, this.CRV3, this.DAI, this.USDC, this.USDT]);
     this.balanceTokens = new Set([this.ETH, ...this.erc20Tokens]);
     this.crv3Underlying = new Set([this.DAI, this.USDC, this.USDT]);
   }
@@ -525,10 +518,7 @@ export class Tokens {
    *
    * @todo discuss parameter inversion between getBalance() and getBalances().
    */
-  public async getBalances(
-    _account?: string,
-    _tokens?: (string | Token)[]
-  ): Promise<Map<Token, TokenBalance>> {
+  public async getBalances(_account?: string, _tokens?: (string | Token)[]): Promise<Map<Token, TokenBalance>> {
     const account = await this.sdk.getAccount(_account);
     const tokens = _tokens || Array.from(this.erc20Tokens); // is this a good default?
     const tokenAddresses = tokens.map(this.deriveAddress);
@@ -568,10 +558,7 @@ export class Tokens {
    * @ref https://github.com/dmihal/eth-permit/blob/34f3fb59f0e32d8c19933184f5a7121ee125d0a5/src/eth-permit.ts#L85
    */
   private async getEIP712DomainForToken(token: ERC20Token): Promise<EIP712Domain> {
-    const [name, chainId] = await Promise.all([
-      token.getName(),
-      this.sdk.provider.getNetwork().then((network) => network.chainId)
-    ]);
+    const [name, chainId] = await Promise.all([token.getName(), this.sdk.provider.getNetwork().then((network) => network.chainId)]);
     return {
       name,
       version: "1",
