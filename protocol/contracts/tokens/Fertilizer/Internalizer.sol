@@ -102,14 +102,14 @@ contract Internalizer is OwnableUpgradeable, ReentrancyGuardUpgradeable, Fertili
     /**
      * @notice Returns the beans per fertilizer remaining for a given fertilizer Id.
      * @param id - the id of the fertilizer
-     * Formula: bpfRemaining = s.bpf - id
+     * Formula: bpfRemaining = id - s.bpf
      * Calculated here to avoid uint underflow 
      * Solidity 0.8.0 has underflow protection and the tx would revert but we are using 0.7.6
      */
     function calculateBpfRemaining(uint256 id) internal view returns (uint128) {
         // make sure it does not underflow
-        if (IBeanstalk(BEANSTALK).beansPerFertilizer() >= uint128(id)) {
-            return IBeanstalk(BEANSTALK).beansPerFertilizer() - uint128(id);
+        if (uint128(id) >= IBeanstalk(BEANSTALK).beansPerFertilizer()) {
+            return uint128(id) - IBeanstalk(BEANSTALK).beansPerFertilizer() ;
         } else {
             return 0;
         }
