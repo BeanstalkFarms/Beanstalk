@@ -337,11 +337,11 @@ async function bipMigrateUnripeBeanEthToBeanSteth(
     verify: false
   });
 
-  // if (oracleAccount == undefined) {
-  //   oracleAccount = await impersonateSigner("0x30a1976d5d087ef0BA0B4CDe87cc224B74a9c752", true); // Oracle deployer
-  //   await mintEth(oracleAccount.address);
-  // }
-  // await deployContract("UsdOracle", oracleAccount, verbose);
+  if (oracleAccount == undefined) {
+    oracleAccount = await impersonateSigner("0x30a1976d5d087ef0BA0B4CDe87cc224B74a9c752", true); // Oracle deployer
+    await mintEth(oracleAccount.address);
+  }
+  await deployContract("UsdOracle", oracleAccount, verbose);
 }
 
 exports.bip29 = bip29;
