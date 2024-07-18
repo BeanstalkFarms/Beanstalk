@@ -15,7 +15,6 @@ import {Implementation} from "contracts/beanstalk/storage/System.sol";
 import {AppStorage} from "contracts/beanstalk/storage/AppStorage.sol";
 import {LibRedundantMath256} from "contracts/libraries/LibRedundantMath256.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import {console} from "forge-std/console.sol";
 
 interface IERC20Decimals {
     function decimals() external view returns (uint8);
@@ -112,9 +111,9 @@ library LibUsdOracle {
             if (chainlinkOraclePriceAddress == address(0)) {
                 // use the chainlink registry
                 chainlinkOraclePriceAddress = ChainlinkPriceFeedRegistry(chainlinkRegistry).getFeed(
-                        token,
-                        0x0000000000000000000000000000000000000348
-                    ); // 0x0348 is the address for USD
+                    token,
+                    0x0000000000000000000000000000000000000348
+                ); // 0x0348 is the address for USD
             }
 
             return
@@ -147,9 +146,9 @@ library LibUsdOracle {
             if (chainlinkOraclePriceAddress == address(0)) {
                 // use the chainlink registry
                 chainlinkOraclePriceAddress = ChainlinkPriceFeedRegistry(chainlinkRegistry).getFeed(
-                        chainlinkToken,
-                        0x0000000000000000000000000000000000000348
-                    ); // 0x0348 is the address for USD
+                    chainlinkToken,
+                    0x0000000000000000000000000000000000000348
+                ); // 0x0348 is the address for USD
             }
 
             uint256 chainlinkTokenPrice = LibChainlinkOracle.getTokenPrice(

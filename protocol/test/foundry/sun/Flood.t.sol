@@ -65,7 +65,7 @@ contract FloodTest is TestHelper {
         vm.deal(users[2], 10 ether);
     }
 
-    function testNotRaining() public {
+    function testNotRaining() public view {
         Season memory s = seasonGetters.time();
         assertFalse(s.raining);
     }
@@ -105,7 +105,7 @@ contract FloodTest is TestHelper {
     }
 
     function testSopsWhenAtPeg() public {
-        season.rainSunrises(25);
+        season.siloSunrise(25);
         Season memory s = seasonGetters.time();
 
         assertEq(s.lastSop, 0);
@@ -114,7 +114,7 @@ contract FloodTest is TestHelper {
 
     function testSopsBelowPeg() public {
         setDeltaBforWell(-1000e6, C.BEAN_ETH_WELL, C.WETH);
-        season.rainSunrises(25);
+        season.siloSunrise(25);
 
         Season memory s = seasonGetters.time();
         assertEq(s.lastSop, 0);
@@ -122,10 +122,25 @@ contract FloodTest is TestHelper {
     }
 
     function testOneSop() public {
-        uint256 userCalcPlenty = 25595575914848452999;
-        uint256 userCalcPlentyPerRoot = 2558534177813719812;
         address sopWell = C.BEAN_ETH_WELL;
         setReserves(sopWell, 1000000e6, 1100e18);
+
+        // there's only one well, so sop amount into that well will be the current deltaB
+        int256 currentDeltaB = bs.poolCurrentDeltaB(sopWell);
+
+        // getSwapOut for how much Beanstalk will get for swapping this amount of beans
+        uint256 amountOut = IWell(sopWell).getSwapOut(
+            IERC20(C.BEAN),
+            IERC20(C.WETH),
+            uint256(currentDeltaB)
+        );
+
+        // take this amount out, multiply by sop precision then divide by rain roots (current roots)
+        uint256 userCalcPlentyPerRoot = (amountOut * C.SOP_PRECISION) / bs.totalRoots(); // 2558534177813719812
+
+        // user plenty will be plenty per root * user roots
+        uint256 userCalcPlenty = (userCalcPlentyPerRoot * bs.balanceOfRoots(users[1])) /
+            C.SOP_PRECISION; // 25595575914848452999
 
         season.rainSunrise();
         bs.mow(users[1], C.BEAN);
@@ -327,7 +342,7 @@ contract FloodTest is TestHelper {
         assertEq(IERC20(C.WETH).balanceOf(users[2]), 25595575914848452999);
     }
 
-    function testCalculateSopPerWell() public view {
+    function testCalculateSopPerWell() public pure {
         LibFlood.WellDeltaB[] memory wellDeltaBs = new LibFlood.WellDeltaB[](3);
         wellDeltaBs[0].deltaB = 100;
         wellDeltaBs[1].deltaB = 100;
@@ -482,7 +497,7 @@ contract FloodTest is TestHelper {
         }
     }
 
-    function testQuickSort() public view {
+    function testQuickSort() public pure {
         LibFlood.WellDeltaB[] memory wells = new LibFlood.WellDeltaB[](5);
         int right = int(wells.length - 1);
         wells[0] = LibFlood.WellDeltaB(address(0), 100);
@@ -520,7 +535,7 @@ contract FloodTest is TestHelper {
      */
     function calculateSopPerWellHelper(
         LibFlood.WellDeltaB[] memory wellDeltaBs
-    ) private view returns (LibFlood.WellDeltaB[] memory) {
+    ) private pure returns (LibFlood.WellDeltaB[] memory) {
         uint256 totalPositiveDeltaB;
         uint256 totalNegativeDeltaB;
         uint256 positiveDeltaBCount;
