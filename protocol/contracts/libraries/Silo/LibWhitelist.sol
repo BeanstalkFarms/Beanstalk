@@ -133,18 +133,18 @@ library LibWhitelist {
         AppStorage storage s = LibAppStorage.diamondStorage();
 
         // verify the BDV, gaugePoint, and liquidityWeight selector.
-        verifyBDVselector(token, encodeType, selector);
-        verifyGaugePointSelector(gaugePointSelector);
-        verifyLiquidityWeightSelector(liquidityWeightSelector);
-        verifyOracleImplementation(
-            oracleImplementation.target,
-            oracleImplementation.selector,
-            oracleImplementation.encodeType
-        );
+        // verifyBDVselector(token, encodeType, selector);
+        // verifyGaugePointSelector(gaugePointSelector);
+        // verifyLiquidityWeightSelector(liquidityWeightSelector);
+        // verifyOracleImplementation(
+        //     oracleImplementation.target,
+        //     oracleImplementation.selector,
+        //     oracleImplementation.encodeType
+        // );
 
-        // verify whitelist status of token.
-        // reverts on an invalid stalkIssuedPerBdv if previously whitelisted.
-        verifyWhitelistStatus(token, selector, stalkIssuedPerBdv);
+        // // verify whitelist status of token.
+        // // reverts on an invalid stalkIssuedPerBdv if previously whitelisted.
+        // verifyWhitelistStatus(token, selector, stalkIssuedPerBdv);
 
         // If an LP token, initialize oracle storage variables.
         if (token != address(C.bean()) && !LibUnripe.isUnripe(token)) {

@@ -27,8 +27,6 @@ async function reseed6(account, L2Beanstalk) {
     urBeanBalances,
     urBeanLpBalances ] = [ beanBalances, beanEthBalances, beanWstethBalances, beanStableBalances, urBeanBalances, urBeanLpBalances ].map(convertToInt);
 
-  console.log("beanBalances", beanBalances);
-  
   await upgradeWithNewFacets({
     diamondAddress: L2Beanstalk,
     facetNames: [],
