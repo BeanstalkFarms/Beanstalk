@@ -54,3 +54,8 @@ endpoints = 'all'
 
 [rpc_endpoints]
 mainnet = "${FORKING_RPC}" 
+
+[invariant]
+runs = 4
+depth = 2048
+fail_on_revert = true

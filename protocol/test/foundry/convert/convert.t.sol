@@ -35,7 +35,6 @@ contract ConvertTest is TestHelper {
     MockSeasonFacet season = MockSeasonFacet(BEANSTALK);
 
     // MockTokens.
-    MockToken bean = MockToken(C.BEAN);
     MockToken weth = MockToken(C.WETH);
 
     // test accounts

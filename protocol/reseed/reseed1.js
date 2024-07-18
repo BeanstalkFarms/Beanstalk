@@ -1,6 +1,6 @@
 const { upgradeWithNewFacets } = require("../scripts/diamond.js");
 const fs = require("fs");
-const { BEANSTALK } = require("../test/utils/constants.js");
+const { BEANSTALK } = require("../test/hardhat/utils/constants.js");
 const SELECTORS = require("./data/beanstalkSelectors.json");
 
 /**

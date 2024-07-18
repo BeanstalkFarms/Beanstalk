@@ -248,6 +248,7 @@ interface IMockFBeanstalk {
         bool isWhitelisted;
         bool isWhitelistedLp;
         bool isWhitelistedWell;
+        bool isSoppable;
     }
 
     error AddressEmptyCode(address target);
@@ -820,36 +821,6 @@ interface IMockFBeanstalk {
         PipeCall memory p,
         uint256 value
     ) external payable returns (bytes memory result);
-
-    function exploitBurnBeans() external;
-
-    function exploitBurnStalk0() external;
-
-    function exploitBurnStalk1() external;
-
-    function exploitFertilizer() external;
-
-    function exploitMintBeans0() external;
-
-    function exploitMintBeans1() external;
-
-    function exploitMintBeans2() external;
-
-    function exploitMintBeans3() external;
-
-    function exploitSop(address sopWell) external;
-
-    function exploitTokenBalance() external;
-
-    function exploitUserDoubleSendTokenExternal() external;
-
-    function exploitUserInternalTokenBalance() external;
-
-    function exploitUserSendTokenExternal0() external;
-
-    function exploitUserSendTokenExternal1() external;
-
-    function exploitUserSendTokenInternal() external;
 
     function facetAddress(bytes4 _functionSelector) external view returns (address facetAddress_);
 
@@ -1891,4 +1862,14 @@ interface IMockFBeanstalk {
     function woohoo() external pure returns (uint256);
 
     function wrapEth(uint256 amount, uint8 mode) external payable;
+
+    function revert_netFlow() external;
+
+    function revert_outFlow() external;
+
+    function revert_oneOutFlow() external;
+
+    function revert_supplyChange() external;
+
+    function revert_supplyIncrease() external;
 }

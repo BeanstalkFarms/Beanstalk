@@ -27,6 +27,7 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
  * @param sops A mapping from Season to Plenty Per Root (PPR) in that Season. Plenty Per Root is 0 if a Season of Plenty did not occur.
  * @param fields mapping of Field ID to Storage.Field.
  * @param convertCapacity A mapping from block number to the amount of Beans that can be converted towards peg in this block before stalk penalty becomes applied.
+ * @param oracleImplementation A mapping from token to its oracle implementation.
  * @param shipmentRoutes Define the distribution of newly minted Beans.
  * @param _buffer_1 Reserved storage for future additions.
  * @param casesV2 Stores the 144 Weather and seedGauge cases.
@@ -36,8 +37,9 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
  * @param weather See {Weather}.
  * @param seedGauge Stores the seedGauge.
  * @param rain See {Rain}.
- * @param _buffer_2 Reserved storage for future additions.
- * @param oracleImplementation A mapping from token to its oracle implementation.
+ * @param migration See {Migration}.
+ * @param seedGaugeSettings See {SeedGaugeSettings}.
+ * @param sop See {SeasonOfPlenty}.
  */
 struct System {
     bool paused;
@@ -60,21 +62,20 @@ struct System {
     mapping(uint32 => uint256) sops;
     mapping(uint256 => Field) fields;
     mapping(uint256 => ConvertCapacity) convertCapacity;
+    mapping(address => Implementation) oracleImplementation;
     ShipmentRoute[] shipmentRoutes;
     bytes32[16] _buffer_1;
     bytes32[144] casesV2;
     Silo silo;
-    Field field;
     Fertilizer fert;
     Season season;
     Weather weather;
     SeedGauge seedGauge;
     Rain rain;
     Migration migration;
-    bytes32[128] _buffer_2;
-    mapping(address => Implementation) oracleImplementation;
     SeedGaugeSettings seedGaugeSettings;
     SeasonOfPlenty sop;
+    // A buffer is not included here, bc current layout of AppStorage makes it unnecessary.
 }
 
 /**
