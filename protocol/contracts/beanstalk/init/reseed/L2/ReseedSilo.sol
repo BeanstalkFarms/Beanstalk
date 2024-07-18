@@ -19,7 +19,7 @@ contract ReseedSilo {
     using LibBytes for uint256;
 
     /**
-     * @notice SiloDeposits is a struct that contains the silo deposits for a given tokens.
+     * @notice SiloDeposits is a struct that contains the silo deposits for a given token.
      */
     struct SiloDeposits {
         address token;
