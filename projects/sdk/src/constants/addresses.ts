@@ -10,9 +10,7 @@ export const addresses = {
   // ----------------------------------------
   // Ecosystem Contracts
   // ----------------------------------------
-  // TODO: Fix me w/ the newly deployed price contract
-  // BEANSTALK_PRICE: Address.make("0xb01CE0008CaD90104651d6A84b6B11e182a9B62A"),
-  BEANSTALK_PRICE: Address.make("0x889c98cee4dEE7D042B489fC86976d3dC9a0EeE2"),
+  BEANSTALK_PRICE: Address.make("0x4BEd6cb142b7d474242d87F4796387DEB9E1E1B4"),
   MATH: Address.make("0x16a903b66403d3de69db50e6d1ad0b07490b740a"),
   DEPOT: Address.make("0xDEb0f00071497a5cc9b4A6B96068277e57A82Ae2"),
   PIPELINE: Address.make("0xb1bE0000C6B3C62749b5F0c92480146452D15423"),
@@ -33,7 +31,7 @@ export const addresses = {
   UNRIPE_BEAN:
     // "Unripe Bean": Unripe vesting asset for the Bean token, Localhost
     Address.make("0x1BEA0050E63e05FBb5D8BA2f10cf5800B6224449"),
-    UNRIPE_BEAN_WSTETH:
+  UNRIPE_BEAN_WSTETH:
     // "Unripe BEAN:WSTETH LP": Unripe vesting asset for the BEAN:WSTETH LP token, Localhost
     Address.make("0x1BEA3CcD22F4EBd3d37d731BA31Eeca95713716D"),
 
@@ -59,7 +57,7 @@ export const addresses = {
   // Wells Contracts
   // ----------------------------------------
   BEANWETH_WELL: Address.make("0xBEA0e11282e2bB5893bEcE110cF199501e872bAd"),
-  BEANWSTETH_WELL: Address.make("0xa61Ef2313C1eC9c8cf2E1cAC986539d136b1393E"),
+  BEANWSTETH_WELL: Address.make("0xBeA0000113B0d182f4064C86B71c315389E4715D"),
 
   // ----------------------------------------
   // Common ERC-20 Tokens
