@@ -1,4 +1,4 @@
-const { BEANSTALK } = require("../test/utils/constants");
+const { BEANSTALK } = require("../test/hardhat/utils/constants");
 const { getBeanstalk, impersonateBeanstalkOwner, mintEth, impersonateSigner } = require("../utils");
 const { deployContract } = require("./contracts");
 const { upgradeWithNewFacets } = require("./diamond");

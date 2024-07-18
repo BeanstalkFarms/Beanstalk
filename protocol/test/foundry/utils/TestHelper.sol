@@ -49,6 +49,8 @@ contract TestHelper is
 
     Pipeline pipeline;
 
+    MockToken bean = MockToken(C.BEAN);
+
     // ideally, timestamp should be set to 1_000_000.
     // however, beanstalk rounds down to the nearest hour.
     // 1_000_000 / 3600 * 3600 = 997200.
@@ -545,5 +547,17 @@ contract TestHelper is
             vm.prank(users[i]);
             bs.deposit(token, amount, uint8(mode)); // switching from silo.deposit to bs.deposit, but bs does not have a From enum, so casting to uint8.
         }
+    }
+
+    /**
+     * @notice mints `sowAmount` beans for farmer,
+     * issues `sowAmount` of beans to farmer.
+     * sows `sowAmount` of beans.
+     */
+    function sowAmountForFarmer(address farmer, uint256 sowAmount) internal {
+        bs.setSoilE(sowAmount);
+        mintTokensToUser(farmer, C.BEAN, sowAmount);
+        vm.prank(farmer);
+        bs.sow(sowAmount, 0, uint8(LibTransfer.From.EXTERNAL));
     }
 }
