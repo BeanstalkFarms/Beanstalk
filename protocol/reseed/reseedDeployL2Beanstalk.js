@@ -84,7 +84,6 @@ async function reseedDeployL2Beanstalk(account, verbose = false, mock) {
 
   const [beanstalkDiamond] = await deploy({
       diamondName: "L2BeanstalkDiamond",
-      initDiamond: "MockInitDiamond2",
       facets: facets,
       facetLibraries: facetLibraries,
       libraryNames: libraryNames,

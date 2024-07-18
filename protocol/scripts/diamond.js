@@ -2,7 +2,6 @@ const { re } = require("mathjs")
 const { BEANSTALK } = require("../test/utils/constants")
 const { impersonateBeanstalk } = require("./impersonate")
 const fs = require('fs')
-const { ethers } = require("hardhat")
 
 const FacetCutAction = {
   Add: 0,
@@ -240,7 +239,7 @@ async function deploy ({
     if (verbose) console.log('--')
     return [deployedDiamond, result]
   } else {
-    const result = await diamondCutFacet.diamondCut(
+    const result = await diamondCutFacet.connect(owner).diamondCut(
       diamondCut,
       ethers.constants.AddressZero,
       "0x",
