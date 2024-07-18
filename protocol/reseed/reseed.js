@@ -31,7 +31,7 @@ async function reseed(
     reseed1,
     reseedDeployL2Beanstalk,
     reseed3,
-    // reseed4,
+    reseed4,
     // reseed5,
     // reseed6,
     // reseed7,
