@@ -3,7 +3,7 @@ import { ExpandBox } from "src/components/ExpandBox";
 import styled from "styled-components";
 import { FC } from "src/types";
 import { Well } from "@beanstalk/sdk-wells";
-import { getIsMultiFlowPumpV1pt1, getIsMultiPumpWell } from "src/wells/useBeanstalkSiloWhitelist";
+import { getIsMultiPumpWell } from "src/wells/pump/utils";
 import { formatWellTokenSymbols } from "src/wells/utils";
 
 type Props = {
@@ -11,9 +11,7 @@ type Props = {
 };
 
 function PumpDetails({ well }: Props) {
-  const isMultiPumpWell = getIsMultiPumpWell(well);
-
-  const isv1Pt1 = getIsMultiFlowPumpV1pt1(well);
+  const { isMultiFlow, isV1_1 } = getIsMultiPumpWell(well);
 
   return (
     <TextContainer>
@@ -21,7 +19,7 @@ function PumpDetails({ well }: Props) {
         Pumps are the oracle framework of Basin. Well deployers can define the conditions under
         which the Well should write new reserve data to the Pump, which can be used as a data feed.
       </div>
-      {isMultiPumpWell && (
+      {isMultiFlow && (
         <div>
           The{" "}
           <StyledLink
@@ -29,7 +27,7 @@ function PumpDetails({ well }: Props) {
             target="_blank"
             rel="noopener"
           >
-            {`Multi Flow Pump${isv1Pt1 ? " v1.1" : ""}`}
+            {`Multi Flow Pump${isV1_1 ? " v1.1" : ""}`}
           </StyledLink>{" "}
           is attached to {well?.tokens ? `the ${formatWellTokenSymbols(well)} Well` : "this well"}.
         </div>

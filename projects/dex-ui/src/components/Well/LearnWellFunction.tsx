@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useState } from "react";
+import React, { useEffect, useState } from "react";
 import styled from "styled-components";
 import { ExpandBox } from "src/components/ExpandBox";
 import { TextNudge } from "../Typography";
@@ -12,16 +12,7 @@ type Props = {
   well: Well | undefined;
 };
 
-function WellFunctionDetails({ well }: Props) {
-  const functionName = well?.wellFunction?.name;
-
-  useEffect(() => {
-    if (!functionName) {
-      well?.getWellFunction();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [functionName]);
-
+function WellFunctionDetails({ well, functionName }: Props & { functionName?: string }) {
   if (functionName === "Constant Product") {
     return (
       <TextContainer>
@@ -66,22 +57,30 @@ function WellFunctionDetails({ well }: Props) {
 }
 
 export const LearnWellFunction: FC<Props> = ({ well }) => {
-  const [wellFnName, setWellFnName] = useState<string>(well?.wellFunction?.name);
+  const [functionName, setFunctionName] = useState<string | undefined>(well?.wellFunction?.name);
 
-  const name = well?.wellFunction?.name;
+  useEffect(() => {
+    if (functionName) return;
+    const fetch = async () => {
+      const wellFunction = await well?.getWellFunction();
+      setFunctionName(wellFunction?.name);
+    };
+    fetch();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [functionName]);
 
   const drawerHeaderText = well?.wellFunction?.name
-    ? `What is ${name}?`
+    ? `What is ${functionName}?`
     : "What is a Well Function?";
 
   return (
     <ExpandBox drawerHeaderText={drawerHeaderText}>
       <ExpandBox.Header>
         <WellFunctionIcon />
-        <TextNudge amount={1}>What is {name}?</TextNudge>
+        <TextNudge amount={1}>What is {functionName}?</TextNudge>
       </ExpandBox.Header>
       <ExpandBox.Body>
-        <WellFunctionDetails well={well} />
+        <WellFunctionDetails well={well} functionName={functionName} />
       </ExpandBox.Body>
     </ExpandBox>
   );

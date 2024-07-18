@@ -23,11 +23,20 @@ export const queryKeys = {
 
   // token balance
   tokenBalancesAll: ["token", "balance"],
-  tokenBalance: (address: string | undefined) => ["token", "balance", "external", address || "invalid"],
-  tokenBalanceInternal: (address: string | undefined) => ["token", "balance", "internal", address || "invalid"],
+  tokenBalance: (address: string | undefined) => [
+    "token",
+    "balance",
+    "external",
+    address || "invalid"
+  ],
+  tokenBalanceInternal: (address: string | undefined) => [
+    "token",
+    "balance",
+    "internal",
+    address || "invalid"
+  ],
 
   siloBalancesAll: ["silo", "balance"],
   siloBalance: (address: string) => ["silo", "balance", address],
-  siloBalanceMany: (addresses: string[]) => ["silo", "balance", ...addresses],
+  siloBalanceMany: (addresses: string[]) => ["silo", "balance", ...addresses]
 } as const;
-
