@@ -360,6 +360,7 @@ async function bipMiscellaneousImprovements(mock = true, account = undefined, ve
 
   await upgradeWithNewFacets({
     diamondAddress: BEANSTALK,
+    initFacetName: "InitBipMiscImprovements",
     facetNames: [
       "UnripeFacet",
       "ConvertFacet",
