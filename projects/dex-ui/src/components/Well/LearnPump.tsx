@@ -3,7 +3,7 @@ import { ExpandBox } from "src/components/ExpandBox";
 import styled from "styled-components";
 import { FC } from "src/types";
 import { Well } from "@beanstalk/sdk-wells";
-import { getIsMultiPumpWell } from "src/wells/useBeanstalkSiloWhitelist";
+import { getIsMultiFlowPumpV1pt1, getIsMultiPumpWell } from "src/wells/useBeanstalkSiloWhitelist";
 import { formatWellTokenSymbols } from "src/wells/utils";
 
 type Props = {
@@ -12,6 +12,8 @@ type Props = {
 
 function PumpDetails({ well }: Props) {
   const isMultiPumpWell = getIsMultiPumpWell(well);
+
+  const isv1Pt1 = getIsMultiFlowPumpV1pt1(well);
 
   return (
     <TextContainer>
@@ -27,7 +29,7 @@ function PumpDetails({ well }: Props) {
             target="_blank"
             rel="noopener"
           >
-            Multi Flow Pump
+            {`Multi Flow Pump${isv1Pt1 ? " v1.1" : ""}`}
           </StyledLink>{" "}
           is attached to {well?.tokens ? `the ${formatWellTokenSymbols(well)} Well` : "this well"}.
         </div>

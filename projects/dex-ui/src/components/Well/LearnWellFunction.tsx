@@ -1,12 +1,12 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState, useState } from "react";
 import styled from "styled-components";
 import { ExpandBox } from "src/components/ExpandBox";
 import { TextNudge } from "../Typography";
 import { FC } from "src/types";
 import { WellFunction as WellFunctionIcon } from "../Icons";
 import { Well } from "@beanstalk/sdk-wells";
-import { CONSTANT_PRODUCT_2_ADDRESS } from "src/utils/addresses";
 import { formatWellTokenSymbols } from "src/wells/utils";
+import { isConstantProduct2 } from "src/wells/wellFunction/utils";
 
 type Props = {
   well: Well | undefined;
@@ -19,7 +19,7 @@ function WellFunctionDetails({ well }: Props) {
     if (!functionName) {
       well?.getWellFunction();
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [functionName]);
 
   if (functionName === "Constant Product") {
@@ -39,7 +39,7 @@ function WellFunctionDetails({ well }: Props) {
         </div>
       </TextContainer>
     );
-  } else if (well?.wellFunction?.address.toLowerCase() === CONSTANT_PRODUCT_2_ADDRESS) {
+  } else if (isConstantProduct2(well)) {
     return (
       <TextContainer>
         <div>
@@ -47,8 +47,8 @@ function WellFunctionDetails({ well }: Props) {
           swaps, how many LP tokens a user receives for adding liquidity, etc.
         </div>
         <div>
-          The {formatWellTokenSymbols(well)} uses the Constant Product 2 Well Function, which is a
-          gas-efficient pricing function for Wells with 2 tokens.
+          The {formatWellTokenSymbols(well)} Well uses the Constant Product 2 Well Function, which
+          is a gas-efficient pricing function for Wells with 2 tokens.
         </div>
       </TextContainer>
     );
@@ -66,6 +66,8 @@ function WellFunctionDetails({ well }: Props) {
 }
 
 export const LearnWellFunction: FC<Props> = ({ well }) => {
+  const [wellFnName, setWellFnName] = useState<string>(well?.wellFunction?.name);
+
   const name = well?.wellFunction?.name;
 
   const drawerHeaderText = well?.wellFunction?.name
