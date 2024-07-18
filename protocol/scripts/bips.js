@@ -282,7 +282,7 @@ async function bipSeedGauge(mock = true, account = undefined, verbose = true) {
 }
 
 async function bipMigrateUnripeBeanEthToBeanSteth(
-  mock = true,
+  mock = false,
   account = undefined,
   verbose = true,
   oracleAccount = undefined
@@ -329,7 +329,7 @@ async function bipMigrateUnripeBeanEthToBeanSteth(
       EnrootFacet: ["LibSilo"]
     },
     initFacetName: "InitMigrateUnripeBeanEthToBeanSteth",
-    selectorsToRemove: [],
+    selectorsToRemove: ['0x208c2c98', '0xbb02e10b'],
     bip: false,
     object: !mock,
     verbose: verbose,
@@ -337,11 +337,11 @@ async function bipMigrateUnripeBeanEthToBeanSteth(
     verify: false
   });
 
-  if (oracleAccount == undefined) {
-    oracleAccount = await impersonateSigner("0x30a1976d5d087ef0BA0B4CDe87cc224B74a9c752", true); // Oracle deployer
-    await mintEth(oracleAccount.address);
-  }
-  await deployContract("UsdOracle", oracleAccount, verbose);
+  // if (oracleAccount == undefined) {
+  //   oracleAccount = await impersonateSigner("0x30a1976d5d087ef0BA0B4CDe87cc224B74a9c752", true); // Oracle deployer
+  //   await mintEth(oracleAccount.address);
+  // }
+  // await deployContract("UsdOracle", oracleAccount, verbose);
 }
 
 exports.bip29 = bip29;
