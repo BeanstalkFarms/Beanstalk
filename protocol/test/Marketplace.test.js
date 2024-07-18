@@ -1286,14 +1286,21 @@ describe('Marketplace', function () {
       describe("Create", async function () {
         describe("revert", async function () {
           it("Reverts if price is 0", async function () {
-            await expect(this.marketplace.connect(user2).createPodOrder("100", "0", "100000", '0', EXTERNAL)).to.be.revertedWith("Marketplace: Pod price must be greater than 0.");
+            await expect(this.marketplace.connect(user2).createPodOrder("100", "0", "100000", '1', EXTERNAL)).to.be.revertedWith("Marketplace: Pod price must be greater than 0.");
           });
           it("Reverts if amount is 0", async function () {
             await expect(
               this.marketplace
                 .connect(user2)
-                .createPodOrder("0", "100000", "100000", '0', EXTERNAL)
+                .createPodOrder("0", "100000", "100000", '1', EXTERNAL)
             ).to.be.revertedWith("Marketplace: Order amount must be > 0.");
+          });
+          it("Reverts if minFill is 0", async function () {
+            await expect(
+              this.marketplace
+                .connect(user2)
+                .createPodOrder("100", "100000", "100000", '0', EXTERNAL)
+            ).to.be.revertedWith("Marketplace: Minimum fill amount must be greater than 0.");
           });
         });
   
@@ -1305,7 +1312,7 @@ describe('Marketplace', function () {
             );
             this.result = await this.marketplace
               .connect(user)
-              .createPodOrder("500", "100000", "1000", '0', EXTERNAL);
+              .createPodOrder("500", "100000", "1000", '1', EXTERNAL);
             this.id = await getOrderId(this.result);
             this.userBeanBalanceAfter = await this.bean.balanceOf(userAddress);
             this.beanstalkBeanBalanceAfter = await this.bean.balanceOf(
@@ -1325,7 +1332,7 @@ describe('Marketplace', function () {
           it("Creates the order", async function () {
             expect(await this.marketplace.podOrderById(this.id)).to.equal("500");
             expect(
-              await this.marketplace.podOrder(userAddress, "100000", "1000", '0')
+              await this.marketplace.podOrder(userAddress, "100000", "1000", '1')
             ).to.equal("500");
           });
   
@@ -1336,9 +1343,9 @@ describe('Marketplace', function () {
           });
 
           it("cancels old order, replacing with new order", async function () {
-            let newOrder =  await this.marketplace.connect(user).createPodOrder("100", "100000", "1000", '0', EXTERNAL);
+            let newOrder =  await this.marketplace.connect(user).createPodOrder("100", "100000", "1000", '1', EXTERNAL);
             expect(newOrder).to.emit(this.marketplace, "PodOrderCancelled").withArgs(userAddress, this.id);
-            expect(await this.marketplace.podOrder(userAddress, "100000", "1000", "0")).to.equal("100");
+            expect(await this.marketplace.podOrder(userAddress, "100000", "1000", "1")).to.equal("100");
           })
         });
 
@@ -1388,6 +1395,7 @@ describe('Marketplace', function () {
           this.result = await this.marketplace.connect(user).createPodOrder("50", "100000", "2500", '10', EXTERNAL);
           this.id = await getOrderId(this.result);
           this.order = [userAddress, "100000", "2500", '10'];
+          this.invalidOrder = [userAddress, "100000", "2500", '0'];
         });
   
         describe("revert", async function () {
@@ -1428,6 +1436,14 @@ describe('Marketplace', function () {
                 .connect(user2)
                 .fillPodOrder(this.order, 1000, 0, 1, INTERNAL)
             ).to.revertedWith("Marketplace: Fill must be >= minimum amount.");
+          });
+
+          it("zero amount", async function () {
+            await expect(
+              this.marketplace
+                .connect(user2)
+                .fillPodOrder(this.invalidOrder, 1000, 0, 0, INTERNAL)
+            ).to.revertedWith("Marketplace: amount must be > 0.");
           });
         });
   
@@ -1630,7 +1646,7 @@ describe('Marketplace', function () {
 
       describe("Cancel", async function () {
         beforeEach(async function () {
-          this.result = await this.marketplace.connect(user).createPodOrder('500', '100000', '1000', '0', EXTERNAL)
+          this.result = await this.marketplace.connect(user).createPodOrder('500', '100000', '1000', '1', EXTERNAL)
           this.id = await getOrderId(this.result)
         })
   
@@ -1638,7 +1654,7 @@ describe('Marketplace', function () {
           beforeEach(async function () {
             this.userBeanBalance = await this.bean.balanceOf(userAddress)
             this.beanstalkBeanBalance = await this.bean.balanceOf(this.marketplace.address)
-            this.result = await this.marketplace.connect(user).cancelPodOrder('100000', '1000', '0', EXTERNAL);
+            this.result = await this.marketplace.connect(user).cancelPodOrder('100000', '1000', '1', EXTERNAL);
             this.userBeanBalanceAfter = await this.bean.balanceOf(userAddress)
             this.beanstalkBeanBalanceAfter = await this.bean.balanceOf(this.marketplace.address)
           })
@@ -1662,7 +1678,7 @@ describe('Marketplace', function () {
           beforeEach(async function () {
             this.userBeanBalance = await this.bean.balanceOf(userAddress)
             this.beanstalkBeanBalance = await this.bean.balanceOf(this.marketplace.address)
-            this.result = await this.marketplace.connect(user).cancelPodOrder('100000', '1000', '0', INTERNAL);
+            this.result = await this.marketplace.connect(user).cancelPodOrder('100000', '1000', '1', INTERNAL);
             this.userBeanBalanceAfter = await this.bean.balanceOf(userAddress)
             this.beanstalkBeanBalanceAfter = await this.bean.balanceOf(this.marketplace.address)
           })
@@ -1691,12 +1707,16 @@ describe('Marketplace', function () {
       describe("Create", async function () {
         describe("revert", async function () {
           it("Reverts if amount is 0", async function () {
-            await expect(this.marketplace.connect(user2).createPodOrderV2("0","1000",'0',this.f.packedFunction,EXTERNAL)).to.be.revertedWith("Marketplace: Order amount must be > 0.");
+            await expect(this.marketplace.connect(user2).createPodOrderV2("0","1000",'1',this.f.packedFunction,EXTERNAL)).to.be.revertedWith("Marketplace: Order amount must be > 0.");
+          });
+
+          it("Reverts if minFill is 0", async function () {
+            await expect(this.marketplace.connect(user2).createPodOrderV2("500","1000",'0',this.f.packedFunction,EXTERNAL)).to.be.revertedWith("Marketplace: Pod price must be greater than 0.");
           });
 
           it("Reverts with invalid function", async function () {
             let brokenFunction = this.f.packedFunction.slice(0,-2);
-            await expect(this.marketplace.connect(user2).createPodOrderV2("500","1000",'0',brokenFunction,EXTERNAL)).to.be.revertedWith("Marketplace: Invalid pricing function.");
+            await expect(this.marketplace.connect(user2).createPodOrderV2("500","1000",'1',brokenFunction,EXTERNAL)).to.be.revertedWith("Marketplace: Invalid pricing function.");
           });
           
         });
@@ -1707,7 +1727,7 @@ describe('Marketplace', function () {
             this.beanstalkBeanBalance = await this.bean.balanceOf(
               this.marketplace.address
             );
-            this.result = await this.marketplace.connect(user).createPodOrderV2("500","1000",'0',this.f.packedFunction,EXTERNAL);
+            this.result = await this.marketplace.connect(user).createPodOrderV2("500","1000",'1',this.f.packedFunction,EXTERNAL);
             this.id = await getOrderId(this.result);
             this.userBeanBalanceAfter = await this.bean.balanceOf(userAddress);
             this.beanstalkBeanBalanceAfter = await this.bean.balanceOf(
@@ -1730,7 +1750,7 @@ describe('Marketplace', function () {
               await this.marketplace.podOrderV2(
                 userAddress,
                 "1000",
-                '0',
+                '1',
                 this.f.packedFunction
               )
             ).to.equal("500");
@@ -1745,25 +1765,26 @@ describe('Marketplace', function () {
                 "500",
                 0,
                 "1000",
-                '0',
+                '1',
                 this.f.packedFunction,
                 Dynamic
               );
 
           });
           it("cancels old order, replacing with new order", async function () {
-            let newOrder =  await this.marketplace.connect(user).createPodOrderV2("100", "1000", '0', this.f.packedFunction, EXTERNAL);
+            let newOrder =  await this.marketplace.connect(user).createPodOrderV2("100", "1000", '1', this.f.packedFunction, EXTERNAL);
             expect(newOrder).to.emit(this.marketplace, "PodOrderCancelled").withArgs(userAddress, this.id);
-            expect(await this.marketplace.podOrderV2(userAddress, "1000", "0", this.f.packedFunction)).to.equal("100");
+            expect(await this.marketplace.podOrderV2(userAddress, "1000", "1", this.f.packedFunction)).to.equal("100");
           })
         });
       });
 
       describe("Fill", async function () {
         beforeEach(async function () {
-          this.result = await this.marketplace.connect(user).createPodOrderV2("50", "2500", '0', this.f.packedFunction, EXTERNAL);
+          this.result = await this.marketplace.connect(user).createPodOrderV2("50", "2500", '1', this.f.packedFunction, EXTERNAL);
           this.id = await getOrderId(this.result);
-          this.order = [userAddress, "0", "2500", '0'];
+          this.order = [userAddress, "0", "2500", '1'];
+          this.invalidOrder = [userAddress, "0", "2500", '0'];
         });
 
         describe("revert", async function () {
@@ -1790,6 +1811,12 @@ describe('Marketplace', function () {
             await expect(
               this.marketplace.connect(user2).fillPodOrderV2(this.order,1000, 0, 1000, this.f.packedFunction, INTERNAL)
             ).to.revertedWith("Marketplace: Not enough beans in order.");
+          });
+
+          it("invalid amount", async function () {
+            await expect(
+              this.marketplace.connect(user2).fillPodOrderV2(this.invalidOrder,1000, 0, 0, this.f.packedFunction, INTERNAL)
+            ).to.revertedWith("Marketplace: amount must be > 0.");
           });
         });
 
@@ -1966,7 +1993,7 @@ describe('Marketplace', function () {
     
       describe("Cancel", async function () {
         beforeEach(async function () {
-          this.result = await this.marketplace.connect(user).createPodOrderV2('500','1000','0', this.f.packedFunction, EXTERNAL)
+          this.result = await this.marketplace.connect(user).createPodOrderV2('500','1000','1', this.f.packedFunction, EXTERNAL)
           this.id = await getOrderId(this.result)
         })
 
@@ -1974,7 +2001,7 @@ describe('Marketplace', function () {
           beforeEach(async function () {
             this.userBeanBalance = await this.bean.balanceOf(userAddress)
             this.beanstalkBeanBalance = await this.bean.balanceOf(this.marketplace.address)
-            this.result = await this.marketplace.connect(user).cancelPodOrderV2('1000', '0', this.f.packedFunction, EXTERNAL);
+            this.result = await this.marketplace.connect(user).cancelPodOrderV2('1000', '1', this.f.packedFunction, EXTERNAL);
             this.userBeanBalanceAfter = await this.bean.balanceOf(userAddress)
             this.beanstalkBeanBalanceAfter = await this.bean.balanceOf(this.marketplace.address)
           })
@@ -1998,7 +2025,7 @@ describe('Marketplace', function () {
           beforeEach(async function () {
             this.userBeanBalance = await this.bean.balanceOf(userAddress)
             this.beanstalkBeanBalance = await this.bean.balanceOf(this.marketplace.address)
-            this.result = await this.marketplace.connect(user).cancelPodOrderV2('1000', '0', this.f.packedFunction, INTERNAL);
+            this.result = await this.marketplace.connect(user).cancelPodOrderV2('1000', '1', this.f.packedFunction, INTERNAL);
             this.userBeanBalanceAfter = await this.bean.balanceOf(userAddress)
             this.beanstalkBeanBalanceAfter = await this.bean.balanceOf(this.marketplace.address)
           })

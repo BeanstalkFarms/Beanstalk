@@ -145,6 +145,9 @@ async function main(scriptName, verbose = true, mock = false, reset = true) {
     ],
     'SiloFacet': [
       'LibSilo'
+    ],
+    'EnrootFacet': [
+      'LibSilo'
     ]
   }
 
