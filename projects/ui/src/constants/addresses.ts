@@ -11,9 +11,7 @@ export const BEANSTALK_ADDRESSES = {
 
 export const BEANSTALK_PRICE_ADDRESSES = {
   [SupportedChainId.MAINNET]:
-    '0x889c98cee4dEE7D042B489fC86976d3dC9a0EeE2'.toLowerCase(),
-  // TODO: FIX ME w/ the newly deployed Price Contract
-  // '0xb01CE0008CaD90104651d6A84b6B11e182a9B62A'.toLowerCase(),
+    '0x4bed6cb142b7d474242d87f4796387deb9e1e1b4'.toLowerCase(),
 };
 
 export const BEANSTALK_FERTILIZER_ADDRESSES = {
@@ -143,7 +141,7 @@ export const BEAN_ETH_WELL_ADDRESSES = {
 
 export const BEAN_WSTETH_ADDRESSS = {
   [SupportedChainId.MAINNET]:
-    '0xa61Ef2313C1eC9c8cf2E1cAC986539d136b1393E'.toLowerCase(),
+    '0xBeA0000113B0d182f4064C86B71c315389E4715D'.toLowerCase(),
 };
 
 // ----------------------------------------
