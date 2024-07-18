@@ -340,7 +340,7 @@ export const getDepositGraph = (sdk: BeanstalkSDK): Graph => {
 
     if (!beanWstethWell) throw new Error(`Pool not found for LP token: ${beanWstethLP.symbol}`);
 
-    // BEAN / ETH => BEAN_ETH_LP
+    // BEAN / wstETH => BEAN_wstETH_LP
 
     [sdk.tokens.BEAN, sdk.tokens.WSTETH].forEach((from: ERC20Token) => {
       graph.setEdge(from.symbol, beanWstethLP.symbol, {
@@ -380,6 +380,7 @@ export const getDepositGraph = (sdk: BeanstalkSDK): Graph => {
       to: "WETH",
       label: "uniswapV3Swap"
     });
+
   }
 
   /// 3CRV<>Stables via 3Pool Add/Remove Liquidity

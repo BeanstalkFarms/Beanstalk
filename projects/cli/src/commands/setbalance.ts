@@ -22,7 +22,7 @@ export const setbalance = async (sdk, chain, { account, symbol, amount }) => {
       "BEAN3CRV",
       "BEANWETH",
       "urBEAN",
-      "urBEANWSTETH",
+      "urBEANwstETH",
       "ROOT"
     ];
     if (!symbols.includes(symbol)) {

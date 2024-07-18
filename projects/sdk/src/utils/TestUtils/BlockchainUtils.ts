@@ -130,6 +130,7 @@ export class BlockchainUtils {
       this.seturBEANWSTETHBalance(account, this.sdk.tokens.UNRIPE_BEAN_WSTETH.amount(amount)),
       this.setBEAN3CRVBalance(account, this.sdk.tokens.BEAN_CRV3_LP.amount(amount)),
       this.setBEANWETHBalance(account, this.sdk.tokens.BEAN_ETH_WELL_LP.amount(amount)),
+      // this.setBEANWSTETHBalance(account, this.sdk.tokens.BEAN_WSTETH_WELL_LP.amount(amount)),
       this.setWstethBalance(account, this.sdk.tokens.WSTETH.amount(amount)),
       this.setStethBalance(account, this.sdk.tokens.STETH.amount(amount))
     ]);
@@ -170,6 +171,9 @@ export class BlockchainUtils {
   async setBEANWETHBalance(account: string, balance: TokenValue) {
     this.setBalance(this.sdk.tokens.BEAN_ETH_WELL_LP, account, balance);
   }
+  // async setBEANWSTETHBalance(account: string, balance: TokenValue) {
+  //   this.setBalance(this.sdk.tokens.BEAN_WSTETH_WELL_LP, account, balance);
+  // }
   async setWstethBalance(account: string, balance: TokenValue) {
     this.setBalance(this.sdk.tokens.WSTETH, account, balance);
   }
@@ -190,6 +194,7 @@ export class BlockchainUtils {
     slotConfig.set(this.sdk.tokens.UNRIPE_BEAN_WSTETH.address, [0, false]);
     slotConfig.set(this.sdk.tokens.BEAN_CRV3_LP.address, [15, true]);
     slotConfig.set(this.sdk.tokens.BEAN_ETH_WELL_LP.address, [51, false]);
+    // slotConfig.set(this.sdk.tokens.BEAN_WSTETH_WELL_LP.address, [51, false]); // fix me. Add me once deployed
     slotConfig.set(this.sdk.tokens.WSTETH.address, [0, false]);
     slotConfig.set(this.sdk.tokens.STETH.address, [0, false]);
     return slotConfig.get(tokenAddress);

@@ -68,6 +68,8 @@ export class DepositOperation {
       }
       this.workflow.add(this.route.getStep(i).build(this.account, from, to));
     }
+
+    console.log("[depositop]: workflow", this.workflow);
   }
 
   getGraph() {
