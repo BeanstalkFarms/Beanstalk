@@ -92,10 +92,8 @@ library LibWstethEthOracle {
 
         if (LibOracleHelpers.getPercentDifference(chainlinkPrice, uniswapPrice) < MAX_DIFFERENCE) {
             wstethEthPrice = chainlinkPrice.add(uniswapPrice).div(AVERAGE_DENOMINATOR);
-        } else {
-            wstethEthPrice = chainlinkPrice;
+            if (wstethEthPrice > stethPerWsteth) wstethEthPrice = stethPerWsteth;
+            wstethEthPrice = wstethEthPrice.div(PRECISION_DENOMINATOR);
         }
-        if (wstethEthPrice > stethPerWsteth) wstethEthPrice = stethPerWsteth;
-        wstethEthPrice = wstethEthPrice.div(PRECISION_DENOMINATOR);
     }
 }
