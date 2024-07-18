@@ -345,8 +345,8 @@ export const BEAN_WSTETH_WELL_LP = {
     BEAN_WSTETH_ADDRESSS,
     18,
     {
-      name: 'BEAN:WSTETH LP',
-      symbol: 'BEANWSTETH',
+      name: 'BEAN:wstETH LP',
+      symbol: 'BEANwstETH',
       logo: beanWstethLogo,
       displayDecimals: 2,
       color: BeanstalkPalette.lightBlue,
@@ -408,8 +408,8 @@ export const UNRIPE_BEAN_WSTETH = {
     UNRIPE_BEAN_WSTETH_ADDRESSES,
     6,
     {
-      name: 'Unripe BEAN:WSTETH LP',
-      symbol: 'urBEANWSTETH',
+      name: 'Unripe BEAN:wstETH LP',
+      symbol: 'urBEANwstETH',
       logo: unripeBeanWstethLogoUrl,
       displayDecimals: 2,
       color: BeanstalkPalette.lightBlue,

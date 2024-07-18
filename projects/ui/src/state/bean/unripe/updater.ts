@@ -5,7 +5,7 @@ import useChainId from '~/hooks/chain/useChainId';
 import useTokenMap from '~/hooks/chain/useTokenMap';
 import { tokenResult } from '~/util';
 import { AddressMap, ONE_BN } from '~/constants';
-import { UNRIPE_BEAN_WETH, UNRIPE_TOKENS } from '~/constants/tokens';
+import { UNRIPE_BEAN_WSTETH, UNRIPE_TOKENS } from '~/constants/tokens';
 import { UnripeToken } from '~/state/bean/unripe';
 import useUnripeUnderlyingMap from '~/hooks/beanstalk/useUnripeUnderlying';
 import BigNumber from 'bignumber.js';
@@ -42,7 +42,7 @@ export const useUnripe = () => {
                 .getRecapPaidPercent()
                 .then(tokenResult(unripeTokens[addr])),
               beanstalk.getPenalty(addr).then((result) => {
-                if (addr === UNRIPE_BEAN_WETH[1].address) {
+                if (addr === UNRIPE_BEAN_WSTETH[1].address) {
                   // handle this case separately b/c urBEAN:ETH LP liquidity was originally
                   // bean:3crv, which had 18 decimals
                   return new BigNumber(result.toString()).div(1e18);
