@@ -301,7 +301,6 @@ async function bipMigrateUnripeBeanEthToBeanSteth(
       "EnrootFacet",
       "FertilizerFacet",
       "MetadataFacet",
-      "MigrationFacet",
       "SeasonFacet",
       "SeasonGettersFacet",
       "UnripeFacet",
