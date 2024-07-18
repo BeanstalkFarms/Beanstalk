@@ -1,4 +1,4 @@
-const { deploy, deployFacets } = require("../scripts/diamond.js");
+const { deploy, deployFacets, upgradeWithNewFacets } = require("../scripts/diamond.js");
 const fs = require("fs");
 const { impersonateSigner, mintEth } = require("../utils");
 
@@ -84,13 +84,15 @@ async function reseedDeployL2Beanstalk(account, verbose = false, mock) {
 
   const [beanstalkDiamond] = await deploy({
       diamondName: "L2BeanstalkDiamond",
+      initDiamond: "MockInitDiamond2",
       facets: facets,
       facetLibraries: facetLibraries,
       libraryNames: libraryNames,
       owner: account,
-      args: [],
+      args: [1],
       verbose: true
     });
+  
   return beanstalkDiamond.address;
 }
 exports.reseedDeployL2Beanstalk = reseedDeployL2Beanstalk;

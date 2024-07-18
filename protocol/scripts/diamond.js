@@ -2,6 +2,7 @@ const { re } = require("mathjs")
 const { BEANSTALK } = require("../test/utils/constants")
 const { impersonateBeanstalk } = require("./impersonate")
 const fs = require('fs')
+const { ethers } = require("hardhat")
 
 const FacetCutAction = {
   Add: 0,
@@ -179,9 +180,9 @@ async function deploy ({
   }
   if (verbose) console.log('--')
   
+  let functionCall
   if (initDiamond !== undefined) {
     let result
-    let functionCall
     if (typeof initDiamond === 'string') {
       const initDiamondName = initDiamond
       if (verbose) console.log(`Deploying ${initDiamondName}`)
@@ -201,6 +202,7 @@ async function deploy ({
 
   let deployedDiamond
   if (!impersonate) {
+    // deploy with owner address as owner
     deployedDiamond = await diamondFactory.deploy(owner.address)
     await deployedDiamond.deployed()
     result = await deployedDiamond.deployTransaction.wait()
@@ -219,14 +221,16 @@ async function deploy ({
   }
 
   console.log('///////// Deployed Diamond: ' + deployedDiamond.address)
+
+  console.log('///////// Preparing DiamondCut')
+  const diamondCutFacet = await ethers.getContractAt('DiamondCutFacet', deployedDiamond.address)
   
   // handle diamondCut tx 
   if (initDiamond !== undefined) {
-    const diamondCutFacet = await ethers.getContractAt('DiamondCutFacet', deployedDiamond.address)
-    const tx = await diamondCutFacet.diamondCut(diamondCut, initDiamond.address, functionCall, txArgs)
+    const tx = await diamondCutFacet.connect(owner).diamondCut(diamondCut, initDiamond.address, functionCall, txArgs)
     result = await tx.wait()
-    // console.log(`${diamondName} diamondCut arguments:`)
-    // console.log(JSON.stringify([facets, initDiamond.address, args], null, 4))
+    console.log(`${diamondName} diamondCut arguments:`)
+    console.log(JSON.stringify([facets, initDiamond.address, args], null, 4))
     if (!result.status) {
       console.log('TRANSACTION FAILED!!! -------------------------------------------')
       console.log('See block explorer app for details.')
@@ -236,6 +240,14 @@ async function deploy ({
     if (verbose) console.log('--')
     return [deployedDiamond, result]
   } else {
+    const result = await diamondCutFacet.diamondCut(
+      diamondCut,
+      ethers.constants.AddressZero,
+      "0x",
+      txArgs
+    )
+    const receipt = await result.wait()
+    console.log("DiamondCut success!")
     return [deployedDiamond];
   }
 }

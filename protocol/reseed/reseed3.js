@@ -22,12 +22,6 @@ async function reseed3(account, L2Beanstalk) {
     TEMPERATURE
   ] = data.map(convertToInt);
 
-  console.log("Account plots:", accountPlots);
-  console.log("Total pods:", TOTAL_PODS);
-  console.log("Harvestable:", HARVESTABLE);
-  console.log("Harvested:", HARVESTED);
-  console.log("Field ID:", FIELD_ID);
-  console.log("Temperature:", TEMPERATURE);
   await upgradeWithNewFacets({
     diamondAddress: L2Beanstalk,
     facetNames: [],
