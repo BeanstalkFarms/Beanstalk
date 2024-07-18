@@ -1,8 +1,10 @@
-const { BEANSTALK } = require("../test/utils/constants");
+const { BEANSTALK, BEAN_WSTETH_WELL, BEAN } = require("../test/utils/constants");
 const { getBeanstalk, impersonateBeanstalkOwner, mintEth, impersonateSigner } = require("../utils");
 const { deployContract } = require("./contracts");
 const { upgradeWithNewFacets } = require("./diamond");
 const { impersonatePipeline, deployPipeline } = require("./pipeline");
+const { to6, to18 } = require('../test/utils/helpers.js');
+const { impersonateBeanWstethWell } = require('../utils/well.js');
 
 async function bip30(mock = true, account = undefined) {
   if (account == undefined) {
@@ -268,7 +270,8 @@ async function bipSeedGauge(mock = true, account = undefined, verbose = true) {
       SeasonGettersFacet: ["LibLockedUnderlying", "LibWellMinting"],
       ConvertFacet: ["LibConvert"],
       UnripeFacet: ["LibLockedUnderlying"],
-      SiloFacet: ["LibSilo"]
+      SiloFacet: ["LibSilo"],
+      EnrootFacet: ["LibSilo"]
     },
     bip: false,
     object: !mock,
@@ -310,7 +313,8 @@ async function bipMigrateUnripeBeanEthToBeanSteth(
       "LibConvert",
       "LibLockedUnderlying",
       "LibWellMinting",
-      "LibGerminate"
+      "LibGerminate",
+      "LibSilo"
     ],
     facetLibraries: {
       ConvertFacet: ["LibConvert"],
@@ -322,7 +326,8 @@ async function bipMigrateUnripeBeanEthToBeanSteth(
         "LibWellMinting",
         "LibGerminate"
       ],
-      SeasonGettersFacet: ["LibLockedUnderlying", "LibWellMinting"]
+      SeasonGettersFacet: ["LibLockedUnderlying", "LibWellMinting"],
+      EnrootFacet: ["LibSilo"]
     },
     initFacetName: "InitMigrateUnripeBeanEthToBeanSteth",
     selectorsToRemove: [],

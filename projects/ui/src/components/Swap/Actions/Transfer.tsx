@@ -31,7 +31,10 @@ import {
   USDT,
   WETH,
   ETH,
+<<<<<<< HEAD
   BEAN_WSTETH_WELL_LP,
+=======
+>>>>>>> add-steth-oracle
 } from '~/constants/tokens';
 import { useBeanstalkContract } from '~/hooks/ledger/useContract';
 import useFarmerBalances from '~/hooks/farmer/useFarmerBalances';
@@ -49,6 +52,7 @@ import useFormMiddleware from '~/hooks/ledger/useFormMiddleware';
 import { BalanceFrom } from '~/components/Common/Form/BalanceFromRow';
 import AddressInputField from '~/components/Common/Form/AddressInputField';
 import copy from '~/constants/copy';
+import useGetBalancesUsedBySource from '~/hooks/beanstalk/useBalancesUsedBySource';
 
 /// ---------------------------------------------------------------
 
@@ -129,6 +133,15 @@ const TransferForm: FC<
   }, [balances, fromMode, tokenIn.address]);
 
   const noBalance = !balanceInMax?.gt(0);
+
+  const [getAmountsFromSource] = useGetBalancesUsedBySource({
+    tokens: values.tokensIn,
+    mode: values.fromMode,
+  });
+  const amountsBySource = useMemo(
+    () => getAmountsFromSource()?.[0] || undefined,
+    [getAmountsFromSource]
+  );
 
   const handleSetDefault = useCallback(() => {
     setFieldValue('tokensIn.0', { ...defaultValues.tokensIn[0] });
@@ -341,6 +354,7 @@ const TransferForm: FC<
                   actions={[
                     {
                       type: ActionType.TRANSFER_BALANCE,
+                      amountsBySource: amountsBySource,
                       amount: amount!,
                       token: tokenIn,
                       source: fromMode,

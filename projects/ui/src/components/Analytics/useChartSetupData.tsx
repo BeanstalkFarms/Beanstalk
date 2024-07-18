@@ -1,3 +1,4 @@
+import React, { useMemo } from 'react';
 import {
   LiquiditySupplyRatioDocument,
   SeasonalApyDocument,
@@ -22,11 +23,11 @@ import {
   SeasonalWeightedPriceDocument,
 } from '~/generated/graphql';
 import useSdk from '~/hooks/sdk';
-import { useMemo } from 'react';
 import { formatUnits } from 'viem';
 import { BEAN_CRV3_V1_LP, BEAN_LUSD_LP } from '~/constants/tokens';
 import { DocumentNode } from 'graphql';
 import { OperationVariables, QueryOptions } from '@apollo/client';
+import { Typography } from '@mui/material';
 import {
   tickFormatBeanAmount,
   tickFormatBeanPrice,
@@ -50,7 +51,7 @@ type ChartSetupBase = {
   /**
    * Text description shown when user hovers the tooltip icon next to the tooltip title.
    */
-  tooltipHoverText: string;
+  tooltipHoverText: string | JSX.Element;
   /**
    * Short description shown in the Select Dialog.
    */
@@ -397,7 +398,29 @@ export function useChartSetupData() {
       {
         name: 'Liquidity to Supply Ratio',
         tooltipTitle: 'Liquidity to Supply Ratio',
-        tooltipHoverText: `The ratio of Beans in liquidity pools on the Minting Whitelist per Bean, displayed as a percentage, at the beginning of every Season. The Liquidity to Supply Ratio is a useful indicator of Beanstalk's health. Pre-exploit values include liquidity in pools on the Deposit Whitelist.`,
+        tooltipHoverText: (
+          <Typography component="span">
+            <Typography component="span">
+              The Liquidity to Supply Ratio (L2SR) represents the Beanstalk
+              liquidity level relative to the Bean supply. The L2SR is a useful
+              indicator of Beanstalk&apos;s health.
+            </Typography>
+            <Typography component="ul">
+              <Typography component="li" ml={-2} mt={1}>
+                Liquidity is defined as the sum of the USD values of the
+                non-Bean assets in each whitelisted liquidity pool multiplied by
+                their respective liquidity weights.
+              </Typography>
+              <Typography component="li" ml={-2} mt={1}>
+                Supply is defined as the total Bean supply minus Locked Beans.
+              </Typography>
+              <Typography component="li" ml={-2} mt={1}>
+                Pre-exploit values include liquidity in pools on the Deposit
+                Whitelist.
+              </Typography>
+            </Typography>
+          </Typography>
+        ),
         shortDescription:
           'The ratio of Beans in liquidity pools on the Minting Whitelist per Bean, displayed as a percentage.',
         timeScaleKey: 'timestamp',

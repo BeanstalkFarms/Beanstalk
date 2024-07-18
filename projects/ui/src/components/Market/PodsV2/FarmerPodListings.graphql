@@ -1,7 +1,7 @@
 #import "../../PodListing.fragment.graphql"
 
 query FarmerPodListings(
-  $first: Int = 100,
+  $first: Int = 1000,
   $createdAt_gt: BigInt,
   $account: String!
 ) {

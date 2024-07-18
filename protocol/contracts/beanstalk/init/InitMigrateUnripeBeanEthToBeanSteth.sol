@@ -25,7 +25,7 @@ import {IGaugePointFacet} from "contracts/beanstalk/sun/GaugePointFacet.sol";
 contract InitMigrateUnripeBeanEthToBeanSteth {
 
     // The initial gauge points for Bean:WstETH.
-    uint128 internal constant BEAN_WSTETH_INITIAL_GAUGE_POINTS = 100e18;
+    uint128 internal constant BEAN_WSTETH_INITIAL_GAUGE_POINTS = 400e18;
 
     // The amount of Seasons that Bean:Eth Minting will be off.
     uint32 constant BEAN_ETH_PUMP_CATCH_UP_SEASONS = 24;
@@ -34,7 +34,7 @@ contract InitMigrateUnripeBeanEthToBeanSteth {
     uint32 constant private STALK_ISSUED_PER_BDV = 10000;
 
     // The optimal percent deposited for Bean:Wsteth.
-    uint64 constant private OPTIMAL_PERCENT_DEPOSITED_BDV = 5e6;
+    uint64 constant private OPTIMAL_PERCENT_DEPOSITED_BDV = 80e6;
 
     // The total percent deposited BDV.
     uint64 constant private MAX_PERCENT_DEPOSITED_BDV = 100e6;

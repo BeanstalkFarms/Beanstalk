@@ -1,7 +1,7 @@
 import { BigInt, BigDecimal, log, Bytes } from "@graphprotocol/graph-ts";
 import { afterEach, assert, clearStore, describe, test } from "matchstick-as/assembly/index";
 import * as YieldHandler from "../src/YieldHandler";
-import { BigDecimal_isClose, ZERO_BD, ZERO_BI } from "../../subgraph-core/utils/Decimals";
+import { BI_10, BigDecimal_isClose, ZERO_BD, ZERO_BI } from "../../subgraph-core/utils/Decimals";
 import { loadSilo, loadSiloAsset, loadSiloYield, loadTokenYield, loadWhitelistTokenSetting } from "../src/utils/SiloEntities";
 import {
   BEAN_3CRV,
@@ -12,7 +12,7 @@ import {
   UNRIPE_BEAN_3CRV,
   LUSD_3POOL
 } from "../../subgraph-core/utils/Constants";
-import { setSeason } from "./event-mocking/Season";
+import { setSeason } from "./utils/Season";
 
 describe("APY Calculations", () => {
   describe("Pre-Gauge", () => {
@@ -53,8 +53,11 @@ describe("APY Calculations", () => {
       log.info(`bean apy (4 seeds): {}`, [(apy4[0] as BigDecimal).toString()]);
       log.info(`stalk apy (2 seeds): {}`, [(apy2[1] as BigDecimal).toString()]);
       log.info(`stalk apy (4 seeds): {}`, [(apy4[1] as BigDecimal).toString()]);
-      assert.assertTrue((apy4[0] as BigDecimal).gt(apy2[0] as BigDecimal));
-      assert.assertTrue((apy4[1] as BigDecimal).gt(apy2[1] as BigDecimal));
+      const desiredPrecision = BigDecimal.fromString("0.0001");
+      assert.assertTrue(BigDecimal_isClose(apy2[0], BigDecimal.fromString("0.14346160171558054"), desiredPrecision));
+      assert.assertTrue(BigDecimal_isClose(apy4[0], BigDecimal.fromString("0.18299935285933523"), desiredPrecision));
+      assert.assertTrue(BigDecimal_isClose(apy2[1], BigDecimal.fromString("2.9293613175698485"), desiredPrecision));
+      assert.assertTrue(BigDecimal_isClose(apy4[1], BigDecimal.fromString("4.318733617611663"), desiredPrecision));
     });
   });
 

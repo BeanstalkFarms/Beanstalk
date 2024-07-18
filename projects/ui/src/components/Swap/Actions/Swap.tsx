@@ -65,14 +65,19 @@ import { FC } from '~/types';
 import useFormMiddleware from '~/hooks/ledger/useFormMiddleware';
 import useSdk from '~/hooks/sdk';
 import { BalanceFrom } from '~/components/Common/Form/BalanceFromRow';
-// import { Balance } from '@mui/icons-material';
+import useGetBalancesUsedBySource from '~/hooks/beanstalk/useBalancesUsedBySource';
 
 /// ---------------------------------------------------------------
+
+type ValidModesIn =
+  | FarmFromMode.INTERNAL
+  | FarmFromMode.EXTERNAL
+  | FarmFromMode.INTERNAL_EXTERNAL;
 
 type SwapFormValues = {
   /** Multiple tokens can (eventually) be swapped into tokenOut */
   tokensIn: FormTokenState[];
-  modeIn: FarmFromMode.INTERNAL | FarmFromMode.EXTERNAL;
+  modeIn: ValidModesIn;
   /** One output token can be selected */
   tokenOut: FormTokenState;
   modeOut: FarmToMode;
@@ -163,6 +168,16 @@ const SwapForm: FC<
     return [_balanceIn, _balanceIn, _balanceIn?.total || ZERO_BN] as const;
   }, [balances, modeIn, tokenIn.address, tokensMatch]);
 
+  const [getAmountsBySource] = useGetBalancesUsedBySource({
+    tokens: values.tokensIn,
+    mode: modeIn,
+  });
+
+  const amountsBySource = useMemo(
+    () => getAmountsBySource(),
+    [getAmountsBySource]
+  );
+
   // Control what balances are shown in the token selector (internal/external/total)
   useEffect(() => {
     // if tokens match, then we want to allow picking different balanceFrom options
@@ -173,9 +188,16 @@ const SwapForm: FC<
           ? BalanceFrom.INTERNAL
           : BalanceFrom.EXTERNAL
       );
+      setFieldValue(
+        'modeIn',
+        modeIn === FarmFromMode.INTERNAL
+          ? FarmFromMode.INTERNAL
+          : FarmFromMode.EXTERNAL
+      );
     } else {
       setFromOptions([BalanceFrom.TOTAL]);
       setBalanceFromIn(BalanceFrom.TOTAL);
+      setFieldValue('modeIn', FarmFromMode.INTERNAL_EXTERNAL);
     }
   }, [tokensMatch, modeIn, modeOut, setFieldValue]);
 
@@ -298,18 +320,21 @@ const SwapForm: FC<
   //
   const handleInputFromMode = useCallback(
     (v: BalanceFrom) => {
-      console.log('change');
       // Picked Farm balance
       if (v === BalanceFrom.INTERNAL) {
         setFieldValue('modeIn', FarmToMode.INTERNAL);
         setFieldValue('modeOut', FarmToMode.EXTERNAL);
         setBalanceFromOut(BalanceFrom.EXTERNAL);
       }
-      // Picked Ciruclating
+      // Picked Ciruclating Balance
       else if (v === BalanceFrom.EXTERNAL) {
         setFieldValue('modeIn', FarmToMode.EXTERNAL);
         setFieldValue('modeOut', FarmToMode.INTERNAL);
         setBalanceFromOut(BalanceFrom.INTERNAL);
+      }
+      // Picked Combined Balance
+      else if (v === BalanceFrom.TOTAL) {
+        setFieldValue('modeIn', FarmFromMode.INTERNAL_EXTERNAL);
       }
     },
     [setFieldValue]
@@ -643,7 +668,9 @@ const SwapForm: FC<
                       : [
                           {
                             type: ActionType.SWAP,
+                            amountsBySource: amountsBySource?.[0] || undefined,
                             tokenIn: tokenIn,
+                            source: modeIn,
                             amountIn: amountIn!,
                             amountOut: amountOut!,
                             tokenOut: tokenOut,

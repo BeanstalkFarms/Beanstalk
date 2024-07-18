@@ -60,6 +60,7 @@ import useFormTxnContext from '~/hooks/sdk/useFormTxnContext';
 import { ClaimAndDoX, DepositFarmStep, FormTxn } from '~/lib/Txn';
 import useMigrationNeeded from '~/hooks/farmer/useMigrationNeeded';
 import useBeanEthStartMintingSeason from '~/hooks/beanstalk/useBeanEthStartMintingSeason';
+import useGetBalancesUsedBySource from '~/hooks/beanstalk/useBalancesUsedBySource';
 
 // -----------------------------------------------------------------------
 
@@ -122,9 +123,14 @@ const DepositForm: FC<
 
   const migrationNeeded = useMigrationNeeded();
   const [isTokenSelectVisible, showTokenSelect, hideTokenSelect] = useToggle();
+  const [getAmountsBySource] = useGetBalancesUsedBySource({
+    tokens: values.tokens,
+    mode: balanceFromToMode(values.balanceFrom),
+  });
   const { amount, bdv, stalk, seeds, actions } = getDepositSummary(
     whitelistedToken,
     combinedTokenState,
+    getAmountsBySource(),
     amountToBdv
   );
 
