@@ -3,7 +3,7 @@ import { TokenInput } from "../../components/Swap/TokenInput";
 import { ERC20Token, Token, TokenValue } from "@beanstalk/sdk";
 import styled from "styled-components";
 import { useAccount } from "wagmi";
-import { AddLiquidityETH, Well } from "@beanstalk/sdk-Wells";
+import { AddLiquidityETH, Well } from "@beanstalk/sdk-wells";
 import { useQuery } from "@tanstack/react-query";
 import { LIQUIDITY_OPERATION_TYPE, LiquidityAmounts } from "./types";
 import { Button } from "../Swap/Button";

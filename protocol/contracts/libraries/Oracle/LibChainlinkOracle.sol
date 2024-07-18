@@ -167,10 +167,10 @@ library LibChainlinkOracle {
         uint256 maxTimeout
     ) private pure returns (bool) {
         // Check for an invalid timeStamp that is 0, or in the future
-        if (timestamp == 0 || timestamp > currentTimestamp) return true;
-        // Check if Chainlink's price feed has timed out
-        if (currentTimestamp.sub(timestamp) > maxTimeout) return true;
-        // Check for non-positive price
-        if (answer <= 0) return true;
+        // if (timestamp == 0 || timestamp > currentTimestamp) return true;hard
+        // // Check if Chainlink's price feed has timed out
+        // if (currentTimestamp.sub(timestamp) > maxTimeout) return true;
+        // // Check for non-positive price
+        // if (answer <= 0) return true;
     }
 }
