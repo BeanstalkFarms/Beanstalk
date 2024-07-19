@@ -24,9 +24,12 @@ const account2 = "0x0000000000000000000000000000000000000000"; // zero addy
 /// Setup
 const { sdk, account, utils } = getTestUtils();
 
+
 /// Tests
 beforeAll(async () => {
   await utils.resetFork();
+  // set rewards
+  setTokenRewards();
   const amount = sdk.tokens.BEAN.amount("100000");
   await utils.setBalance(sdk.tokens.BEAN, account, amount);
   await sdk.tokens.BEAN.approveBeanstalk(amount);
@@ -223,3 +226,13 @@ describe("Silo mowMultiple", () => {
 
   it.todo("throws when there are duplicate tokens provided");
 });
+
+
+const setTokenRewards = () => {
+  if (!sdk.tokens.BEAN.rewards) {
+    sdk.tokens.BEAN.rewards = {
+      seeds: sdk.tokens.SEEDS.amount(1),
+      stalk: sdk.tokens.STALK.amount(3)
+    }
+  }
+}
