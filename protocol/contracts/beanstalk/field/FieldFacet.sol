@@ -16,6 +16,8 @@ import {ReentrancyGuard} from "../ReentrancyGuard.sol";
 import {Invariable} from "contracts/beanstalk/Invariable.sol";
 import {LibDiamond} from "contracts/libraries/LibDiamond.sol";
 import {LibMarket} from "contracts/libraries/LibMarket.sol";
+import {LibField} from "contracts/libraries/LibField.sol";
+
 
 interface IBeanstalk {
     function cancelPodListing(uint256 fieldId, uint256 index) external;
@@ -156,7 +158,7 @@ contract FieldFacet is Invariable, ReentrancyGuard {
      *
      * Pods are "burned" when the corresponding Plot is deleted from
      * `s.accts[account].fields[fieldId].plots`.
-     * @dev If Plot has been Burned, slash the Plot. Anyone can slash Plots.
+     * @dev If Plot has been Slashed, burn the Plot. Anyone can burn Slashed Plots.
      */
     function harvest(
         uint256 fieldId,
@@ -170,7 +172,7 @@ contract FieldFacet is Invariable, ReentrancyGuard {
     /**
      * @dev Ensure that each Plot is at least partially harvestable, burn the Plot,
      * update the total harvested, and emit a {Harvest} event.
-     * @dev If Plot has been Burned, slash the Plot.
+     * @dev If Plot has been Slashed, burn the Plot.
      */
     function _harvest(
         uint256 fieldId,
@@ -190,14 +192,14 @@ contract FieldFacet is Invariable, ReentrancyGuard {
     /**
      * @dev Check if a Plot is at least partially Harvestable; calculate how many
      * Pods are Harvestable, create a new Plot if necessary.
-     * @dev If Plot has been Burned, slash the Plot.
+     * @dev If Plot has been Slashed, burn the Plot.
      */
     function _harvestPlot(
         address account,
         uint256 fieldId,
         uint256 index
     ) private returns (uint256 harvestablePods) {
-        // If Plot held by null address, it has been burned. Slash Plot.
+        // If Plot held by null address, it has been Slashed. Burn Plot.
         if (s.accts[address(0)].fields[fieldId].plots[index] > 0) {
             account = address(0);
         }
@@ -211,10 +213,9 @@ contract FieldFacet is Invariable, ReentrancyGuard {
 
         LibMarket._cancelPodListing(account, fieldId, index);
 
-        delete s.accts[account].fields[fieldId].plots[index];
-        LibDibbler.removePlotIndexFromAccount(account, fieldId, index);
+        LibField.deletePlot(account, fieldId, index);
 
-        // If performing a slash, amount harvestable does not decrease.
+        // If burning a Slashed Plot, amount harvestable does not decrease.
         if (account == address(0)) {
             s.sys.fields[fieldId].harvestable += harvestablePods;
         }
@@ -284,7 +285,7 @@ contract FieldFacet is Invariable, ReentrancyGuard {
 
     /**
      * @notice Returns the number of outstanding Pods. Includes Pods that are
-     * currently Harvestable or Slashable but have not yet been Harvested.
+     * currently Harvestable or Burnable but have not yet been Harvested.
      * @param fieldId The index of the Field to query.
      */
     function totalPods(uint256 fieldId) public view returns (uint256) {
@@ -292,7 +293,7 @@ contract FieldFacet is Invariable, ReentrancyGuard {
     }
 
     /**
-     * @notice Returns the number of Pods that have ever been Harvested or Slashed.
+     * @notice Returns the number of Pods that have ever been Harvested or Burned.
      * @param fieldId The index of the Field to query.
      */
     function totalProcessed(uint256 fieldId) public view returns (uint256) {
@@ -304,7 +305,7 @@ contract FieldFacet is Invariable, ReentrancyGuard {
      * have not yet been Harvested.
      * @dev This is the number of Pods that Beanstalk is prepared to pay back,
      * but that haven’t yet been claimed via the `harvest()` function.
-     * @dev Cannot use this number as an index, as there is no accounting for Burned plots.
+     * @dev Cannot use this number as an index, as there is no accounting for Slashed plots.
      * @param fieldId The index of the Field to query.
      */
     function totalHarvestable(uint256 fieldId) public view returns (uint256) {
@@ -313,7 +314,7 @@ contract FieldFacet is Invariable, ReentrancyGuard {
 
     /**
      * @notice Returns the number of Pods that are currently Harvestable for the active Field.
-     * @dev Cannot use this number as an index, as there is no accounting for Burned plots.
+     * @dev Cannot use this number as an index, as there is no accounting for Slashed plots.
      */
     function totalHarvestableForActiveField() public view returns (uint256) {
         return totalHarvestable(s.sys.activeField);
@@ -321,7 +322,7 @@ contract FieldFacet is Invariable, ReentrancyGuard {
 
     /**
      * @notice Returns the number of Pods that are not yet Harvestable. Also known as the Pod Line.
-     * @dev Includes Burned Pods.
+     * @dev Includes Slashed Pods.
      * @param fieldId The index of the Field to query.
      */
     function totalUnharvestable(uint256 fieldId) public view returns (uint256) {

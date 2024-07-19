@@ -38,7 +38,7 @@ contract MigrateInFacet is Invariable {
     /** 
      * @notice Adds a supported source from which farmers can migrate.
      */
-    function addSupportedSource(address source) external {
+    function addSupportedSource(address source) external fundsSafu noSupplyChange noNetFlow {
         LibMigrateIn.addSupportedSource(source);
     }
 }

@@ -108,13 +108,17 @@ struct Silo {
  * @param pods The pod index; the total number of Pods ever minted.
  * @param processed Amount of Pods that have ever been Harvested or Slashed.
  * @param harvestable Index of Pods that have ever been Harvestable. Included Processed Pods.
+ * @param latestMigratedPlotIndex The index of the latest Plot that has been migrated in.
+ * @param latestMigratedPlotOwner The owner of the latest Plot that has been migrated in.
  * @param _buffer Reserved storage for future expansion.
  */
 struct Field {
     uint256 pods;
     uint256 processed;
     uint256 harvestable;
-    bytes32[8] _buffer;
+    uint256 latestMigratedPlotIndex;
+    address latestMigratedPlotOwner;
+    bytes32[6] _buffer;
 }
 
 /**
@@ -418,7 +422,7 @@ struct SeasonOfPlenty {
 
 struct Lineage {
     uint256 startTime;
-    mapping(address=>bool) supportedSources;
+    mapping(address => bool) supportedSources;
 }
 
 /**

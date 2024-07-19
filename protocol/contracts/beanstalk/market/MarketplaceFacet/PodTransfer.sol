@@ -5,7 +5,7 @@
 pragma solidity ^0.8.20;
 
 import {ReentrancyGuard} from "contracts/beanstalk/ReentrancyGuard.sol";
-import {LibDibbler} from "contracts/libraries/LibDibbler.sol";
+import {LibField} from "contracts/libraries/LibField.sol";
 import {C} from "contracts/C.sol";
 
 /**
@@ -53,14 +53,9 @@ contract PodTransfer is ReentrancyGuard {
         uint256 amount
     ) internal {
         require(from != to, "Field: Cannot transfer Pods to oneself.");
-        insertPlot(to, fieldId, index + start, amount);
+        LibField.createPlot(to, fieldId, index + start, amount);
         removePlot(from, fieldId, index, start, amount + start);
         emit PlotTransfer(from, to, index + start, amount);
-    }
-
-    function insertPlot(address account, uint256 fieldId, uint256 index, uint256 amount) internal {
-        s.accts[account].fields[fieldId].plots[index] = amount;
-        s.accts[account].fields[fieldId].plotIndexes.push(index);
     }
 
     function removePlot(
@@ -75,8 +70,7 @@ contract PodTransfer is ReentrancyGuard {
         if (start > 0) {
             s.accts[account].fields[fieldId].plots[index] = start;
         } else {
-            delete s.accts[account].fields[fieldId].plots[index];
-            LibDibbler.removePlotIndexFromAccount(account, fieldId, index);
+            LibField.deletePlot(account, fieldId, index);
         }
 
         if (amountAfterEnd > 0) {

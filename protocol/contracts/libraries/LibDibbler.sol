@@ -6,10 +6,11 @@ import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 import {PRBMath} from "@prb/math/contracts/PRBMath.sol";
 import {LibPRBMathRoundable} from "contracts/libraries/LibPRBMathRoundable.sol";
 import {LibAppStorage, AppStorage} from "./LibAppStorage.sol";
-import {Account, Field} from "contracts/beanstalk/storage/Account.sol";
+import {Account} from "contracts/beanstalk/storage/Account.sol";
 import {LibRedundantMath128} from "./LibRedundantMath128.sol";
 import {LibRedundantMath32} from "./LibRedundantMath32.sol";
 import {LibRedundantMath256} from "contracts/libraries/LibRedundantMath256.sol";
+import {LibField} from "contracts/libraries/LibField.sol";
 
 /**
  * @title LibDibbler
@@ -96,8 +97,7 @@ library LibDibbler {
 
         uint256 index = s.sys.fields[s.sys.activeField].pods;
 
-        s.accts[account].fields[s.sys.activeField].plots[index] = pods;
-        s.accts[account].fields[s.sys.activeField].plotIndexes.push(index);
+        LibField.createPlot(account, s.sys.activeField, index, pods);
         emit Sow(account, s.sys.activeField, index, beans, pods);
 
         s.sys.fields[s.sys.activeField].pods += pods;
@@ -380,41 +380,5 @@ library LibDibbler {
                     morningTemperature()
                 );
         }
-    }
-
-    /**
-     * @notice removes a plot index from an accounts plotIndex list.
-     */
-    function removePlotIndexFromAccount(
-        address account,
-        uint256 fieldId,
-        uint256 plotIndex
-    ) internal {
-        AppStorage storage s = LibAppStorage.diamondStorage();
-        uint256 i = findPlotIndexForAccount(account, fieldId, plotIndex);
-        Field storage field = s.accts[account].fields[fieldId];
-        field.plotIndexes[i] = field.plotIndexes[field.plotIndexes.length - 1];
-        field.plotIndexes.pop();
-    }
-
-    /**
-     * @notice finds the index of a plot in an accounts plotIndex list.
-     */
-    function findPlotIndexForAccount(
-        address account,
-        uint256 fieldId,
-        uint256 plotIndex
-    ) internal view returns (uint256 i) {
-        AppStorage storage s = LibAppStorage.diamondStorage();
-        Field storage field = s.accts[account].fields[fieldId];
-        uint256[] memory plotIndexes = field.plotIndexes;
-        uint256 length = plotIndexes.length;
-        while (plotIndexes[i] != plotIndex) {
-            i++;
-            if (i >= length) {
-                revert("Id not found");
-            }
-        }
-        return i;
     }
 }

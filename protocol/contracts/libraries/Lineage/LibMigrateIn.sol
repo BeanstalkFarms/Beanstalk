@@ -14,6 +14,7 @@ import {IWell} from "contracts/interfaces/basin/IWell.sol";
 import {LibFertilizer} from "contracts/libraries/LibFertilizer.sol";
 import {LibAppStorage} from "contracts/libraries/LibAppStorage.sol";
 import {LibWhitelistedTokens} from "contracts/libraries/Silo/LibWhitelistedTokens.sol";
+import {LibField} from "contracts/libraries/LibField.sol";
 
 /**
  * @title LibMigrateIn
@@ -24,6 +25,8 @@ library LibMigrateIn {
     using SafeCast for uint256;
 
     event SupportedSourceAdded(address source);
+
+    uint256 internal constant INBOUND_FIELD = 1;
 
     // Definitions must match source migration definitions. May require multiple definitions.
     struct SourceDeposit {
@@ -39,7 +42,10 @@ library LibMigrateIn {
     }
 
     struct SourcePlot {
-        address n;
+        uint256 fieldId;
+        uint256 index;
+        uint256 amount;
+        uint256 prevIndex;
     }
 
     struct SourceFertilizer {
@@ -71,7 +77,6 @@ library LibMigrateIn {
                     ) {
                         continue;
                     }
-                    lpMatched = true;
                     uint256[] memory tokenAmountsIn = new uint256[](2);
                     tokenAmountsIn[LibWell.getBeanIndexFromWell(well)] = deposit._burnedBeans;
                     tokenAmountsIn[LibWell.getNonBeanIndexFromWell(well)] = deposit
@@ -96,6 +101,7 @@ library LibMigrateIn {
                         LibWellBdv.bdv(well, lpAmount), // bdv
                         deposit._grownStalk
                     );
+                    lpMatched = true;
                     break;
                 }
                 require(lpMatched, "LP not whitelisted");
@@ -112,10 +118,6 @@ library LibMigrateIn {
                 );
             }
         }
-    }
-
-    function migrateInPlots(address user, bytes[] memory plots) internal pure {
-        return;
     }
 
     /**
@@ -139,11 +141,62 @@ library LibMigrateIn {
     }
 
     /**
-     * @notice Adds a supported source from which farmers can migrate.
+     * @notice Create Plots in alternative Field and assign them to the migrating user.
+     * @dev Holes between migrated-in Plots are filled with Slashed Plots.
+     * @dev Assumes that no sowing will occur in the same Field as inbound migrations.
      */
-    function addSupportedSource(address source) internal {
+    function migrateInPlots(address user, bytes[] memory plots) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        s.sys.lineage.supportedSources[source] = true;
-        emit SupportedSourceAdded(source);
+        if (plots.length == 0) return;
+        // This Destination configuration expects all source Plots to be in the same Field.
+        for (uint256 i; i < plots.length; i++) {
+            SourcePlot memory sourcePlot = abi.decode(plots[i], (SourcePlot));
+            require(sourcePlot.fieldId == 0, "Field unsupported");
+            // require(sourcePlot.amount > 1000e6, "Too small");
+            require(sourcePlot.index > s.sys.fields[INBOUND_FIELD].harvestable); // 0 index not supported
+            if (sourcePlot.index > s.sys.fields[INBOUND_FIELD].latestMigratedPlotIndex) {
+                _insertAfterLastPlot(user, sourcePlot.index, sourcePlot.amount);
+            } else {
+                _insertInNullPlot(user, sourcePlot.index, sourcePlot.amount, sourcePlot.prevIndex);
+            }
+        }
+    }
+
+    function _insertInNullPlot(
+        address user,
+        uint256 index,
+        uint256 amount,
+        uint256 prevIndex
+    ) private {
+        AppStorage storage s = LibAppStorage.diamondStorage();
+        // prev plot is provided by user, but it is verified in insertion.
+        uint256 nextIndex = prevIndex + s.accts[address(0)].fields[INBOUND_FIELD].plots[prevIndex];
+        require(prevIndex < index, "prevIndex too large");
+        require(nextIndex > index + amount, "nextIndex too small");
+        require(s.accts[address(0)].fields[INBOUND_FIELD].plots[prevIndex] > 0, "non null"); // unneeded
+
+        LibField.deletePlot(address(0), INBOUND_FIELD, prevIndex);
+        LibField.createPlot(address(0), INBOUND_FIELD, prevIndex, index - prevIndex);
+        LibField.createPlot(user, INBOUND_FIELD, index, amount);
+        LibField.createPlot(
+            address(0),
+            INBOUND_FIELD,
+            index + amount,
+            nextIndex - (index + amount)
+        );
+    }
+
+    function _insertAfterLastPlot(address user, uint256 index, uint256 amount) private {
+        AppStorage storage s = LibAppStorage.diamondStorage();
+        uint256 nextIndex = s.sys.fields[INBOUND_FIELD].latestMigratedPlotIndex +
+            s.accts[s.sys.fields[INBOUND_FIELD].latestMigratedPlotOwner].fields[INBOUND_FIELD].plots[
+                s.sys.fields[INBOUND_FIELD].latestMigratedPlotIndex
+            ];
+
+        LibField.createPlot(address(0), INBOUND_FIELD, nextIndex, index - nextIndex);
+        LibField.createPlot(user, INBOUND_FIELD, index, amount);
+
+        s.sys.fields[INBOUND_FIELD].latestMigratedPlotIndex = index;
+        s.sys.fields[INBOUND_FIELD].latestMigratedPlotOwner = user;
     }
 }

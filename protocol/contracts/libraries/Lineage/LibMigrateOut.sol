@@ -14,6 +14,8 @@ import {IWell} from "contracts/interfaces/basin/IWell.sol";
 import {LibAppStorage} from "contracts/libraries/LibAppStorage.sol";
 import {LibTransfer} from "contracts/libraries/Token/LibTransfer.sol";
 import {LibFertilizer} from "contracts/libraries/LibFertilizer.sol";
+import {LibMarket} from "contracts/libraries/LibMarket.sol";
+import {LibField} from "contracts/libraries/LibField.sol";
 
 /**
  * @title LibMigrateOut
@@ -39,6 +41,7 @@ library LibMigrateOut {
         uint256 fieldId;
         uint256 index;
         uint256 amount;
+        uint256 prevDestIndex;
     }
 
     struct SourceFertilizer {
@@ -138,11 +141,15 @@ library LibMigrateOut {
     }
 
     /**
-     * @notice Burns plots. Populates and encodes migration data.
+     * @notice Slashes plots, which can later be burned. Populates and encodes migration data.
      * @return plotsOut The plots to migrate, encoded as bytes.
-     * @dev "Burns" the Pods by setting the owner to 0x0. They remain in Pod line until Slashed.
+     * @dev Slashes the Pods by setting the owner to 0x0. They remain in Pod line until they
+     *      become harvestable and can be Burned.
      */
-    function migrateOutPlots(address account, SourcePlot[] memory plots) internal pure returns (bytes[] memory plotsOut) {
+    function migrateOutPlots(
+        address account,
+        SourcePlot[] memory plots
+    ) internal returns (bytes[] memory plotsOut) {
         if (plotsOut.length == 0) return plotsOut;
         AppStorage storage s = LibAppStorage.diamondStorage();
         plotsOut = new bytes[](plots.length);
@@ -153,13 +160,11 @@ library LibMigrateOut {
             require(pods >= plot.amount, "Insufficient Pods");
 
             // Remove Plots from user.
-            LibMarket._cancelPodListing(account, fieldId, index);
-            delete s.accts[account].fields[fieldId].plots[index];
-            LibDibbler.removePlotIndexFromAccount(account, fieldId, index);
+            LibMarket._cancelPodListing(account, plot.fieldId, plot.index);
+            LibField.deletePlot(account, plot.fieldId, plot.index);
 
             // Add new plots to null address.
-            s.accts[address(0)].fields[s.sys.activeField].plots[index] = plot.amount;
-            s.accts[address(0)].fields[s.sys.activeField].plotIndexes.push(index);
+            LibField.createPlot(address(0), plot.fieldId, plot.index, plot.amount);
 
             // Add partial plots back to user.
             uint256 remainingPods = pods - plot.amount;
