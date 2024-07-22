@@ -13,18 +13,21 @@ contract OracleTest is TestHelper {
         initializeBeanstalkTestState(true, false);
     }
 
+    // 1 WBTC = 50000 USD
+    // 1e8 = 50000 USD
     function test_getUsdPrice() public {
         // encode type 0x01
         uint256 price = OracleFacet(BEANSTALK).getUsdPrice(WBTC);
-        assertEq(price, 50000e6);
+        // 1e8 / 50000 = 2000
+        assertEq(price, 2000);
 
-        // change encode type to 0x02:
+        // change encode type to 0x02, with a wbtc/usdc pool.
         vm.prank(BEANSTALK);
         bs.updateOracleImplementationForToken(
             WBTC,
             IMockFBeanstalk.Implementation(WBTC_USDC_03_POOL, bytes4(0), bytes1(0x02))
         );
         price = OracleFacet(BEANSTALK).getUsdPrice(WBTC);
-        assertApproxEqRel(price, 50000e6, 0.001e18);
+        assertApproxEqRel(price, 2000, 0.001e18);
     }
 }
