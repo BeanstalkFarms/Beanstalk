@@ -36,9 +36,9 @@ describe("Silo Convert", function () {
       await (await convert.convert(BEAN, BEAN, TokenValue.ONE)).wait();
       throw new Error("Cannot convert between the same token");
     };
-    await expect(a).rejects.toThrow("fromToken is not whitelisted");
-    await expect(b).rejects.toThrow("toToken is not whitelisted");
-    await expect(c).rejects.toThrow("Cannot convert between the same token");
+    await expect(a).rejects.toThrowError("fromToken is not whitelisted");
+    await expect(b).rejects.toThrowError("toToken is not whitelisted");
+    await expect(c).rejects.toThrowError("Cannot convert between the same token");
   });
 
   it("Validates amount", async () => {
@@ -47,7 +47,7 @@ describe("Silo Convert", function () {
       await (await convert.convert(BEAN, BEANLP, BEAN.amount(500))).wait();
     };
 
-    await expect(a).rejects.toThrow("Insufficient balance");
+    await expect(a).rejects.toThrowError("Insufficient balance");
   });
 
   it("Calculates crates when toToken is LP", async () => {
@@ -100,13 +100,7 @@ describe("Silo Convert", function () {
     // random order
     const crates = [c2, c1, c3];
 
-    const calc1 = convert.calculateConvert(
-      BEANLP,
-      BEAN,
-      BEANLP.amount(3000),
-      crates,
-      currentSeason
-    );
+    const calc1 = convert.calculateConvert(BEANLP, BEAN, BEANLP.amount(3000), crates, currentSeason);
     expect(calc1.crates.length).toEqual(3);
     expect(calc1.crates[0].amount.toHuman()).toEqual("2000"); // takes full amount from c1
     expect(calc1.crates[0].stem.toString()).toEqual("10393"); // confirm this is c1
@@ -137,7 +131,7 @@ describe("Silo Convert", function () {
 
     it(`Convert ${from.symbol} -> ${to.symbol}`, async () => {
       const fn = async () => await (await sdk.silo.convert(from, to, from.amount(1))).wait();
-      await expect(fn).rejects.toThrow("Cannot convert between the same token");
+      await expect(fn).rejects.toThrowError("Cannot convert between the same token");
     });
   });
 
@@ -166,7 +160,7 @@ describe("Silo Convert", function () {
 
       it(`Fail ${from.symbol} -> ${to.symbol}`, async () => {
         const fn = async () => await (await sdk.silo.convert(from, to, from.amount(1))).wait();
-        await expect(fn).rejects.toThrow("Cannot convert between these tokens");
+        await expect(fn).rejects.toThrowError("Cannot convert between these tokens");
       });
     });
 
@@ -208,7 +202,7 @@ describe("Silo Convert", function () {
         it(`${from.symbol} -> ${to.symbol}`, async () => {
           const fn = async () => await (await sdk.silo.convert(from, to, from.amount(100))).wait();
 
-          await expect(fn).rejects.toThrow("Cannot convert this token when deltaB is < 0");
+          await expect(fn).rejects.toThrowError("Cannot convert this token when deltaB is < 0");
         });
       });
     });
@@ -251,7 +245,7 @@ describe("Silo Convert", function () {
 
         it(`${from.symbol} -> ${to.symbol}`, async () => {
           const fn = async () => await (await sdk.silo.convert(from, to, from.amount(100))).wait();
-          await expect(fn).rejects.toThrow("Cannot convert this token when deltaB is >= 0");
+          await expect(fn).rejects.toThrowError("Cannot convert this token when deltaB is >= 0");
         });
       });
     });

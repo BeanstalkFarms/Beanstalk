@@ -171,9 +171,9 @@ export class BlockchainUtils {
   async setBEANWETHBalance(account: string, balance: TokenValue) {
     this.setBalance(this.sdk.tokens.BEAN_ETH_WELL_LP, account, balance);
   }
-  // async setBEANWSTETHBalance(account: string, balance: TokenValue) {
-  //   this.setBalance(this.sdk.tokens.BEAN_WSTETH_WELL_LP, account, balance);
-  // }
+  async setBEANWSTETHBalance(account: string, balance: TokenValue) {
+    this.setBalance(this.sdk.tokens.BEAN_WSTETH_WELL_LP, account, balance);
+  }
   async setWstethBalance(account: string, balance: TokenValue) {
     this.setBalance(this.sdk.tokens.WSTETH, account, balance);
   }
@@ -194,7 +194,7 @@ export class BlockchainUtils {
     slotConfig.set(this.sdk.tokens.UNRIPE_BEAN_WSTETH.address, [0, false]);
     slotConfig.set(this.sdk.tokens.BEAN_CRV3_LP.address, [15, true]);
     slotConfig.set(this.sdk.tokens.BEAN_ETH_WELL_LP.address, [51, false]);
-    // slotConfig.set(this.sdk.tokens.BEAN_WSTETH_WELL_LP.address, [51, false]); // fix me. Add me once deployed
+    slotConfig.set(this.sdk.tokens.BEAN_WSTETH_WELL_LP.address, [51, false]);
     slotConfig.set(this.sdk.tokens.WSTETH.address, [0, false]);
     slotConfig.set(this.sdk.tokens.STETH.address, [0, false]);
     return slotConfig.get(tokenAddress);
@@ -383,14 +383,16 @@ export class BlockchainUtils {
     _season: number,
     _amount: string,
     _currentSeason?: number,
-    _germinatingStem: ethers.BigNumber = ethers.constants.Zero
+    _germinatingStem: ethers.BigNumber = ethers.constants.Zero,
+    _stem?: number,
+    _stemTipForToken?: number
   ) {
     const amount = token.amount(_amount);
     const bdv = TokenValue.fromHuman(amount.toHuman(), 6);
     const currentSeason = _currentSeason || _season + 100;
 
-    return makeDepositObject(token, ethers.BigNumber.from(_season), {
-      stem: currentSeason, // FIXME
+    return makeDepositObject(token, ethers.BigNumber.from(_stemTipForToken || _season), {
+      stem: _stem || currentSeason, // FIXME
       amount: amount.toBlockchain(),
       bdv: bdv.toBlockchain(),
       germinatingStem: _germinatingStem
@@ -407,17 +409,24 @@ export class BlockchainUtils {
     const blockTs = parseInt(block.timestamp, 16);
     const blockDate = new Date(blockTs * 1000);
     const secondsTillNextHour = (3600000 - (blockDate.getTime() % 3600000)) / 1000;
+    console.log("forwarding season...");
 
     // fast forward evm, to just past the hour and mine a new block
     await this.sdk.provider.send("evm_increaseTime", [secondsTillNextHour + 5]);
     await this.sdk.provider.send("evm_mine", []);
 
+    console.log("increasing time...");
+
     // call sunrise
+    console.log("calling sunrise...");
     const res = await this.sdk.contracts.beanstalk.sunrise();
+    console.log("waiting.... for sunrise");
     await res.wait();
+    console.log("successfully called sunrise...");
 
     // get the new season
     const season = await this.sdk.contracts.beanstalk.season();
+    console.log("new season: ", season.toString());
 
     return season;
   }
