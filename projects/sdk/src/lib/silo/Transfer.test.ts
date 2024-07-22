@@ -28,9 +28,13 @@ describe("Silo Transfer", function () {
 
   it("Fails when using a non-whitelisted token", async () => {
     const t = async () => {
-      const tx = await transfer.transfer(sdk.tokens.ETH, sdk.tokens.BEAN.amount(3000), testDestination);
+      const tx = await transfer.transfer(
+        sdk.tokens.ETH,
+        sdk.tokens.BEAN.amount(3000),
+        testDestination
+      );
     };
-    expect(t).rejects.toThrow("Transfer error; token ETH is not a whitelisted asset");
+    await expect(t()).rejects.toThrow("Transfer error; token ETH is not a whitelisted asset");
   });
 
   describe.each(whiteListedTokens)("Transfer", (siloToken: Token) => {
