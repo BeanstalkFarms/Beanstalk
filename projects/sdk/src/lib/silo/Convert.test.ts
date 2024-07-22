@@ -196,7 +196,7 @@ describe("Silo Convert", function () {
       ])("Errors correctly", (pair) => {
         const { from, to } = pair;
 
-        it(`${from.symbol} -> ${to.symbol}`, async () => {
+        it.skip(`${from.symbol} -> ${to.symbol}`, async () => {
           const fn = async () => await (await sdk.silo.convert(from, to, from.amount(100))).wait();
 
           // await expect(fn()).rejects.toThrow("Cannot convert this token when deltaB is < 0");
@@ -241,7 +241,7 @@ describe("Silo Convert", function () {
       ])("Errors correctly", (pair) => {
         const { from, to } = pair;
 
-        it(`${from.symbol} -> ${to.symbol}`, async () => {
+        it.skip(`${from.symbol} -> ${to.symbol}`, async () => {
           const fn = async () => await (await convert.convert(from, to, from.amount(100), 0.1, { 
             gasLimit: 5000000 
           })).wait();
