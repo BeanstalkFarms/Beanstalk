@@ -36,7 +36,7 @@ async function reseed(
     reseed6,
     reseed7,
     reseed8,
-    // reseed9
+    reseed9
   ];
   let l2BeanstalkAddress;
   console.clear();
