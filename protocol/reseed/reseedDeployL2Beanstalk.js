@@ -21,7 +21,7 @@ async function reseedDeployL2Beanstalk(account, verbose = false, mock) {
       diamondName: "L2BeanstalkDiamond",
       owner: account,
       args: [],
-      verbose: true
+      verbose: verbose
     });
   
   return beanstalkDiamond.address;

@@ -2,7 +2,6 @@ const { impersonateSigner } = require("../utils");
 const { upgradeWithNewFacets } = require("../scripts/diamond.js");
 const fs = require("fs");
 const { deployMockToken } = require("../utils/well.js");
-const { convertToInt } = require("../utils/read");
 
 const { L2_WETH_ADDRESS, L2_WSTETH_ADDRESS, L2_USDC_ADDRESS } = require("../test/utils/constants");
 
@@ -25,11 +24,6 @@ async function reseed8(account, L2Beanstalk, mock = true) {
     await fs.readFileSync(INIT_WELL_BALANCES)
   );
   [urBean, urBeanLP] = JSON.parse(await fs.readFileSync(EXTERNAL_UNRIPE));
-
-  // convert all to ints
-  [beanSupply, unripeBeanSupply, unripeLpSupply] = [beanSupply, unripeBeanSupply, unripeLpSupply].map(convertToInt);
-  [ethInBeanEthWell, wstEthInBeanWstEthWell, stableInBeanStableWell] = [ethInBeanEthWell, wstEthInBeanWstEthWell, stableInBeanStableWell].map(convertToInt);
-  [urBean, urBeanLP] = [urBean, urBeanLP].map(convertToInt);
 
   // mint:
   if (mock) {

@@ -1,4 +1,4 @@
-const { deployFacets, upgradeWithNewFacets } = require("../scripts/diamond.js");
+const { upgradeWithNewFacets } = require("../scripts/diamond.js");
 const fs = require("fs");
 
 /**

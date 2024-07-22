@@ -1,6 +1,5 @@
 const { upgradeWithNewFacets } = require("../scripts/diamond.js");
 const fs = require("fs");
-const { convertToInt } = require("../utils/read");
 
 // Files
 // Todo: get plot data. Example written for testing
@@ -11,9 +10,6 @@ async function reseed3(account, L2Beanstalk) {
   console.log("reseed3: re-initialize the field and plots.\n");
 
   // Read and parse the JSON file
-  const data = JSON.parse(await fs.readFileSync(FARMER_PLOTS));
-  
-  // Convert all plot data to correct types
   const [
     accountPlots, 
     TOTAL_PODS, 
@@ -21,8 +17,8 @@ async function reseed3(account, L2Beanstalk) {
     HARVESTED, 
     FIELD_ID, 
     TEMPERATURE
-  ] = data.map(convertToInt);
-
+  ] = JSON.parse(await fs.readFileSync(FARMER_PLOTS));
+  
   await upgradeWithNewFacets({
     diamondAddress: L2Beanstalk,
     facetNames: [],

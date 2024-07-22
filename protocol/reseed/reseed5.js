@@ -1,6 +1,5 @@
 const { upgradeWithNewFacets } = require("../scripts/diamond.js");
 const fs = require("fs");
-const { convertToInt } = require("../utils/read");
 
 // Files
 const BEAN_DEPOSITS = "./reseed/data/r5/bean_deposits.json";
@@ -19,23 +18,6 @@ async function reseed5(account, L2Beanstalk) {
   let bean3CrvDeposits = JSON.parse(await fs.readFileSync(BEAN_3CRV_DEPOSITS));
   let urBeanDeposits = JSON.parse(await fs.readFileSync(UR_BEAN_DEPOSITS));
   let urBeanLpDeposits = JSON.parse(await fs.readFileSync(UR_BEANLP_DEPOSITS));
-
-  // Convert all plot data to correct types
-  [
-    beanDeposits,
-    beanEthDeposits,
-    beanWstEthDeposits,
-    bean3CrvDeposits,
-    urBeanDeposits,
-    urBeanLpDeposits
-  ] = [
-    beanDeposits,
-    beanEthDeposits,
-    beanWstEthDeposits,
-    bean3CrvDeposits,
-    urBeanDeposits,
-    urBeanLpDeposits
-  ].map(convertToInt);
 
   await upgradeWithNewFacets({
     diamondAddress: L2Beanstalk,

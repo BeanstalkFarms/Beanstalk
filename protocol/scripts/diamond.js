@@ -137,7 +137,7 @@ async function deployFacets (facets, libraryNames, facetLibraries, verify = fals
   return deployed
 }
 
-// Deploy only diamond and storage
+// Deploy only diamond and storage with initDiamond contract if provided
 async function deployInitDiamond({
   diamondName,
   initDiamond,
@@ -197,6 +197,7 @@ async function deployInitDiamond({
 
   return deployedDiamond;
 }
+
 async function deploy ({
   diamondName,  
   initDiamond,

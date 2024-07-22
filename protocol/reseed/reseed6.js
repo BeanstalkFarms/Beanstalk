@@ -1,6 +1,5 @@
 const { upgradeWithNewFacets } = require("../scripts/diamond.js");
 const fs = require("fs");
-const { convertToInt } = require("../utils/read");
 
 // Files
 const BEAN_INTERNAL_BALANCES = "./reseed/data/r6/bean_internal.json";
@@ -19,14 +18,6 @@ async function reseed6(account, L2Beanstalk) {
   let beanStableBalances = JSON.parse(await fs.readFileSync(BEAN_STABLE_BALANCES));
   let urBeanBalances = JSON.parse(await fs.readFileSync(URBEAN_BALANCES));
   let urBeanLpBalances = JSON.parse(await fs.readFileSync(URBEAN_LP_BALANCES));
-
-  // Convert string numbers to integers
-  [ beanBalances,
-    beanEthBalances,
-    beanWstethBalances,
-    beanStableBalances,
-    urBeanBalances,
-    urBeanLpBalances ] = [ beanBalances, beanEthBalances, beanWstethBalances, beanStableBalances, urBeanBalances, urBeanLpBalances ].map(convertToInt);
 
   await upgradeWithNewFacets({
     diamondAddress: L2Beanstalk,
