@@ -1,5 +1,6 @@
 const { upgradeWithNewFacets } = require("../scripts/diamond.js");
 const fs = require("fs");
+const { convertToInt } = require("../utils/read");
 
 // Files
 const BEAN_DEPOSITS = "./reseed/data/r5/bean_deposits.json";
@@ -53,18 +54,6 @@ async function reseed5(account, L2Beanstalk) {
     account: account
   });
   console.log("-----------------------------------");
-}
-
-// Helper function to recursively convert string numbers to integers
-function convertToInt(value) {
-  // Check if the value is a valid address format
-  const isAddress = /^0x[a-fA-F0-9]{40}$/.test(value);
-  if (Array.isArray(value)) {
-    return value.map(convertToInt);
-  } else if (typeof value === 'string' && !isAddress && !isNaN(value)) {
-    return parseInt(value, 10);
-  }
-  return value;
 }
 
 exports.reseed5 = reseed5;

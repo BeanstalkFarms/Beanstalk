@@ -2,6 +2,7 @@ const { impersonateSigner } = require("../utils");
 const { upgradeWithNewFacets } = require("../scripts/diamond.js");
 const fs = require("fs");
 const { deployMockToken } = require("../utils/well.js");
+const { convertToInt } = require("../utils/read");
 
 const { L2_WETH_ADDRESS, L2_WSTETH_ADDRESS, L2_USDC_ADDRESS } = require("../test/utils/constants");
 
@@ -70,18 +71,6 @@ async function reseed8(account, L2Beanstalk, mock = true) {
   });
 
   console.log("-----------------------------------");
-}
-
-// Helper function to recursively convert string numbers to integers
-function convertToInt(value) {
-  // Check if the value is a valid address format
-  const isAddress = /^0x[a-fA-F0-9]/.test(value);
-  if (Array.isArray(value)) {
-    return value.map(convertToInt);
-  } else if (typeof value === 'string' && !isAddress && !isNaN(value)) {
-    return parseInt(value, 10);
-  }
-  return value;
 }
 
 exports.reseed8 = reseed8;
