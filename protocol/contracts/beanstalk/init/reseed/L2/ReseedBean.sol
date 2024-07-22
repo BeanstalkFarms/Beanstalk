@@ -109,14 +109,15 @@ contract ReseedBean {
 
         // wells are deployed as ERC1967Proxies in order to allow for future upgrades.
 
-        // deploy new beanEthWell contract.
-        deployBeanEthWell(bean, beanEthAmounts);
+        // COMMENTED OUT DUE TO IMPLEMENTATIONS NOT BEING DEPLOYED YET.
+        // // deploy new beanEthWell contract.
+        // deployBeanEthWell(bean, beanEthAmounts);
 
-        // deploy new beanWstEthWell contract.
-        deployBeanWstEthWell(bean, beanWstethAmounts);
+        // // deploy new beanWstEthWell contract.
+        // deployBeanWstEthWell(bean, beanWstethAmounts);
 
-        // deploy new beanStableWell contract.
-        deployBeanStableWell(bean, beanStableAmounts);
+        // // deploy new beanStableWell contract.
+        // deployBeanStableWell(bean, beanStableAmounts);
 
         // mint urBean and urBeanLP to external holders:
         mintUnripeToExternal(address(urBeanERC20), urBean);

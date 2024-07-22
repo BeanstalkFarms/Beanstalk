@@ -25,7 +25,7 @@ async function reseed(
   mock = true,
   log = false,
   start = 0,
-  end = 8
+  end = 9
 ) {
   reseeds = [
     reseed1,

@@ -48,8 +48,6 @@ async function reseed8(account, L2Beanstalk, mock = true) {
     await stable.connect(owner).approve(L2Beanstalk, stableInBeanStableWell[0]);
   }
 
-  console.log(account.address)
-
   // call init:
   await upgradeWithNewFacets({
     diamondAddress: L2Beanstalk,
