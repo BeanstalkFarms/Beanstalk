@@ -109,7 +109,7 @@ contract ReseedBean {
 
         // wells are deployed as ERC1967Proxies in order to allow for future upgrades.
 
-        // COMMENTED OUT DUE TO IMPLEMENTATIONS NOT BEING DEPLOYED YET.
+        // TODO: UNCOMMENT WHEN WELLS ARE DEPLOYED.
         // // deploy new beanEthWell contract.
         // deployBeanEthWell(bean, beanEthAmounts);
 

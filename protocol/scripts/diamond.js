@@ -138,7 +138,7 @@ async function deployFacets (facets, libraryNames, facetLibraries, verify = fals
 }
 
 // Deploy only diamond and storage with initDiamond contract if provided
-async function deployInitDiamond({
+async function deployDiamond({
   diamondName,
   initDiamond,
   owner,
@@ -689,4 +689,4 @@ exports.deployFacets = deployFacets
 exports.deploy = deploy
 exports.inFacets = inFacets
 exports.upgrade = upgrade
-exports.deployInitDiamond = deployInitDiamond
+exports.deployDiamond = deployDiamond
