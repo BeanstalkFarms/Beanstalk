@@ -13,20 +13,11 @@ jest.setTimeout(30000);
 describe("Silo Convert", function () {
   const convert = new Convert(sdk);
   const BEAN = sdk.tokens.BEAN;
-  const BEANLP = sdk.tokens.BEAN_WSTETH_WELL_LP;
+  const BEANLP = sdk.tokens.BEAN_ETH_WELL_LP;
   const urBEAN = sdk.tokens.UNRIPE_BEAN;
   const urBEANLP = sdk.tokens.UNRIPE_BEAN_WSTETH;
-  // const whitelistedTokens = [BEAN, BEANLP, urBEAN, urBEANLP];
-
-  BEAN.rewards = { seeds: sdk.tokens.SEEDS.amount(3), stalk: sdk.tokens.STALK.amount(1) };
-
-  BEANLP.rewards = { seeds: sdk.tokens.SEEDS.amount(3), stalk: sdk.tokens.STALK.amount(1) };
-
-  urBEAN.rewards = { seeds: sdk.tokens.SEEDS.amount(0.001), stalk: sdk.tokens.STALK.amount(1) };
-
-  urBEANLP.rewards = { seeds: sdk.tokens.SEEDS.amount(0.001), stalk: sdk.tokens.STALK.amount(1) };
-
   beforeAll(async () => {
+    setTokenRewards();
     await utils.resetFork();
     // set default state as p > 1
     await utils.setPriceOver1(2);
@@ -78,7 +69,7 @@ describe("Silo Convert", function () {
     expect(calc1.crates[2].amount.toHuman()).toEqual("250"); // takes 300 from c3
     expect(calc1.crates[2].stem.toString()).toEqual("10000"); // confirm this is c3
     expect(calc1.seeds.toHuman()).toEqual("2549.999999");
-    // expect(calc1.stalk.toHuman()).toEqual("849.9999999999");
+    // expect(calc1.stalk.toHuman()).toEqual("849.9999999999"); // FIX ME
 
     const calc2 = convert.calculateConvert(BEAN, BEANLP, BEAN.amount(400), crates, currentSeason);
     expect(calc2.crates.length).toEqual(2);
@@ -87,7 +78,7 @@ describe("Silo Convert", function () {
     expect(calc2.crates[1].amount.toHuman()).toEqual("300");
     expect(calc1.crates[1].stem.toString()).toEqual("10000");
     expect(calc2.seeds.toHuman()).toEqual("1200");
-    // expect(calc2.stalk.toHuman()).toEqual("400");
+    // expect(calc2.stalk.toHuman()).toEqual("400"); // FIX ME
   });
 
   it("Calculates crates when toToken is NOT LP", async () => {
@@ -123,8 +114,8 @@ describe("Silo Convert", function () {
     expect(calc1.crates[1].stem.toString()).toEqual("10393"); // confirm this is c2
     expect(calc1.crates[2].amount.toHuman()).toEqual("500"); // takes 300 from c3
     expect(calc1.crates[2].stem.toString()).toEqual("10393"); // confirm this is c3
-    expect(calc1.seeds.toHuman()).toEqual("14733");
-    // expect(calc1.stalk.toHuman()).toEqual("3000");
+    expect(calc1.seeds.toHuman()).toEqual("9822");
+    // expect(calc1.stalk.toHuman()).toEqual("3000"); // FIX ME
 
     const calc2 = convert.calculateConvert(BEAN, BEANLP, BEAN.amount(2000), crates, currentSeason);
     expect(calc2.crates.length).toEqual(2);
@@ -133,7 +124,7 @@ describe("Silo Convert", function () {
     expect(calc2.crates[1].amount.toHuman()).toEqual("1000");
     expect(calc1.crates[1].stem.toString()).toEqual("10393");
     expect(calc2.seeds.toHuman()).toEqual("6886.5");
-    // expect(calc2.stalk.toHuman()).toEqual("2000");
+    // expect(calc2.stalk.toHuman()).toEqual("2000"); // FIX ME
   });
 
   describe.each([
@@ -198,15 +189,11 @@ describe("Silo Convert", function () {
         const { from, to } = pair;
 
         it(`${from.symbol} -> ${to.symbol}`, async () => {
-          const balanceBefore = await sdk.silo.getBalance(to, account, {
-            source: DataSource.LEDGER
-          });
+          const balanceBefore = await sdk.silo.getBalance(to, account, { source: DataSource.LEDGER });
           const { minAmountOut } = await sdk.silo.convertEstimate(from, to, from.amount(100));
           const tx = await sdk.silo.convert(from, to, from.amount(100), 0.1, { gasLimit: 5000000 });
           await tx.wait();
-          const balanceAfter = await sdk.silo.getBalance(to, account, {
-            source: DataSource.LEDGER
-          });
+          const balanceAfter = await sdk.silo.getBalance(to, account, { source: DataSource.LEDGER });
 
           expect(balanceAfter.amount.gte(balanceBefore.amount.add(minAmountOut))).toBe(true);
         });
@@ -226,7 +213,7 @@ describe("Silo Convert", function () {
       });
     });
 
-    describe.skip("DeltaB > 0", () => {
+    describe("DeltaB > 0", () => {
       let deltaB: TokenValue;
 
       beforeAll(async () => {
@@ -246,15 +233,11 @@ describe("Silo Convert", function () {
         const { from, to } = pair;
 
         it(`${from.symbol} -> ${to.symbol}`, async () => {
-          const balanceBefore = await sdk.silo.getBalance(to, account, {
-            source: DataSource.LEDGER
-          });
+          const balanceBefore = await sdk.silo.getBalance(to, account, { source: DataSource.LEDGER });
           const { minAmountOut } = await sdk.silo.convertEstimate(from, to, from.amount(100));
           const tx = await sdk.silo.convert(from, to, from.amount(100), 0.1, { gasLimit: 5000000 });
           await tx.wait();
-          const balanceAfter = await sdk.silo.getBalance(to, account, {
-            source: DataSource.LEDGER
-          });
+          const balanceAfter = await sdk.silo.getBalance(to, account, { source: DataSource.LEDGER });
 
           expect(balanceAfter.amount.gte(balanceBefore.amount.add(minAmountOut))).toBe(true);
         });
@@ -281,4 +264,24 @@ async function deposit(from: Token, to: Token, _amount: number) {
   await from.approveBeanstalk(amount);
   const txr = await sdk.silo.deposit(from, to, amount);
   await txr.wait();
+}
+
+
+const setTokenRewards = () => {
+  sdk.tokens.BEAN.rewards = { 
+    seeds: sdk.tokens.SEEDS.amount(3), 
+    stalk: sdk.tokens.STALK.amount(1) 
+  };
+  sdk.tokens.BEAN_ETH_WELL_LP.rewards = { 
+    seeds: sdk.tokens.SEEDS.amount(3), stalk:
+     sdk.tokens.STALK.amount(1) 
+    };
+  sdk.tokens.UNRIPE_BEAN.rewards = { 
+    seeds: sdk.tokens.SEEDS.amount(0.000001), 
+    stalk: sdk.tokens.STALK.amount(1) 
+  };
+  sdk.tokens.UNRIPE_BEAN_WSTETH.rewards = { 
+    seeds: sdk.tokens.SEEDS.amount(0.000001), 
+    stalk: sdk.tokens.STALK.amount(1) 
+  };
 }
