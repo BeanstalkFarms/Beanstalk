@@ -1,5 +1,6 @@
 const { upgradeWithNewFacets } = require("../scripts/diamond.js");
 const fs = require("fs");
+const { convertToInt } = require("../utils/read.js");
 
 // Files
 const WHITELIST_SETTINGS = "./reseed/data/r7-whitelist.json";
