@@ -110,30 +110,11 @@ contract TestHelper is
         // Initialize Shipment Routes and Plans.
         initShipping(verbose);
 
-        // TODO: upon deployment, setup these state settings
-        initStateSettings();
-
         vm.prank(BEANSTALK);
         bs.updateOracleImplementationForToken(
             WBTC,
             IMockFBeanstalk.Implementation(address(0), bytes4(0), bytes1(0x01))
         );
-    }
-
-    function initStateSettings() public {
-        AppStorage storage s = LibAppStorage.diamondStorage();
-        s.sys.evaluationParameters.maxBeanMaxLpGpPerBdvRatio = 100e18;
-        s.sys.evaluationParameters.minBeanMaxLpGpPerBdvRatio = 50e18;
-        s.sys.evaluationParameters.targetSeasonsToCatchUp = 4320;
-        s.sys.evaluationParameters.podRateLowerBound = 0.05e18;
-        s.sys.evaluationParameters.podRateOptimal = 0.15e18;
-        s.sys.evaluationParameters.podRateUpperBound = 0.25e18;
-        s.sys.evaluationParameters.deltaPodDemandLowerBound = 0.95e18;
-        s.sys.evaluationParameters.deltaPodDemandUpperBound = 1.05e18;
-        s.sys.evaluationParameters.lpToSupplyRatioUpperBound = 0.8e18;
-        s.sys.evaluationParameters.lpToSupplyRatioOptimal = 0.4e18;
-        s.sys.evaluationParameters.lpToSupplyRatioLowerBound = 0.12e18;
-        s.sys.evaluationParameters.excessivePriceThreshold = 1.05e6;
     }
 
     /**
