@@ -11,15 +11,28 @@ describe("Silo Transfer", function () {
   beforeAll(async () => {
     await utils.resetFork();
     await utils.setAllBalances(account, "2000");
+    setTokenRewards();
   });
 
   const transfer = new Transfer(sdk);
-  const whiteListedTokens = Array.from(sdk.tokens.siloWhitelist);
+  // remove bean_crv3_lp & remove bean_wsteth_lp until contract deployecd
+  const removeTokens = new Set([
+    sdk.tokens.BEAN_CRV3_LP.address,
+    sdk.tokens.BEAN_WSTETH_WELL_LP.address
+  ]);
+  const whiteListedTokens = Array.from(sdk.tokens.siloWhitelist).filter(
+    (tk) => !removeTokens.has(tk.address)
+  );
+
   const testDestination = ACCOUNTS[1][1];
 
   it("Fails when using a non-whitelisted token", async () => {
     const t = async () => {
-      const tx = await transfer.transfer(sdk.tokens.ETH, sdk.tokens.BEAN.amount(3000), testDestination);
+      const tx = await transfer.transfer(
+        sdk.tokens.ETH,
+        sdk.tokens.BEAN.amount(3000),
+        testDestination
+      );
     };
     expect(t).rejects.toThrow("Transfer error; token ETH is not a whitelisted asset");
   });
@@ -60,3 +73,25 @@ describe("Silo Transfer", function () {
     });
   });
 });
+
+const setTokenRewards = () => {
+  sdk.tokens.BEAN.rewards = {
+    seeds: sdk.tokens.SEEDS.amount(3),
+    stalk: sdk.tokens.STALK.amount(1)
+  };
+
+  sdk.tokens.BEAN_ETH_WELL_LP.rewards = {
+    seeds: sdk.tokens.SEEDS.amount(3),
+    stalk: sdk.tokens.STALK.amount(1)
+  };
+
+  sdk.tokens.UNRIPE_BEAN.rewards = {
+    seeds: sdk.tokens.SEEDS.amount(0.000001),
+    stalk: sdk.tokens.STALK.amount(1)
+  };
+
+  sdk.tokens.UNRIPE_BEAN_WSTETH.rewards = {
+    seeds: sdk.tokens.SEEDS.amount(0.000001),
+    stalk: sdk.tokens.STALK.amount(1)
+  };
+};
