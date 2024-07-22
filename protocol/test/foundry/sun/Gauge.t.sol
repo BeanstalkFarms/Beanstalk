@@ -519,7 +519,7 @@ contract GaugeTest is TestHelper {
         uint256 nonBeanAmount
     ) internal returns (uint256 newTotalNonBeanValue) {
         (, address nonBeanToken) = addLiquidityToWellAtCurrentPrice(well, nonBeanAmount);
-        uint256 usdTokenPrice = usdOracle.getUsdTokenPrice(nonBeanToken);
+        uint256 usdTokenPrice = bs.getUsdTokenPrice(nonBeanToken);
         uint256 precision = 10 ** MockToken(nonBeanToken).decimals();
         newTotalNonBeanValue = (nonBeanAmount * precision) / usdTokenPrice;
     }

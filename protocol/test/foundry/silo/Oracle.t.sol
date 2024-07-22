@@ -11,13 +11,19 @@ import {OracleFacet} from "contracts/beanstalk/sun/OracleFacet.sol";
 contract OracleTest is TestHelper {
     function setUp() public {
         initializeBeanstalkTestState(true, false);
+
+        vm.prank(BEANSTALK);
+        bs.updateOracleImplementationForToken(
+            WBTC,
+            IMockFBeanstalk.Implementation(address(0), bytes4(0), bytes1(0x01))
+        );
     }
 
     // 1 WBTC = 50000 USD
     // 1e8 = 50000 USD
     function test_getUsdPrice() public {
         // encode type 0x01
-        uint256 price = OracleFacet(BEANSTALK).getUsdPrice(WBTC);
+        uint256 price = OracleFacet(BEANSTALK).getUsdTokenPrice(WBTC);
         // 1e8 / 50000 = 2000
         assertEq(price, 2000);
 
@@ -27,7 +33,7 @@ contract OracleTest is TestHelper {
             WBTC,
             IMockFBeanstalk.Implementation(WBTC_USDC_03_POOL, bytes4(0), bytes1(0x02))
         );
-        price = OracleFacet(BEANSTALK).getUsdPrice(WBTC);
+        price = OracleFacet(BEANSTALK).getUsdTokenPrice(WBTC);
         assertApproxEqRel(price, 2000, 0.001e18);
     }
 }

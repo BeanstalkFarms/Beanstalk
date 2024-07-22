@@ -1872,4 +1872,17 @@ interface IMockFBeanstalk {
     function revert_supplyChange() external;
 
     function revert_supplyIncrease() external;
+
+    function getUsdTokenPrice(address token) external view returns (uint256);
+
+    function getUsdTokenTwap(address token, uint256 lookback) external view returns (uint256);
+
+    function getTokenUsdPrice(address token) external view returns (uint256);
+
+    function getTokenUsdTwap(address token, uint256 lookback) external view returns (uint256);
+
+    function getTokenPriceFromExternal(
+        address token,
+        uint256 lookback
+    ) external view returns (uint256 tokenPrice);
 }
