@@ -409,24 +409,17 @@ export class BlockchainUtils {
     const blockTs = parseInt(block.timestamp, 16);
     const blockDate = new Date(blockTs * 1000);
     const secondsTillNextHour = (3600000 - (blockDate.getTime() % 3600000)) / 1000;
-    console.log("forwarding season...");
 
     // fast forward evm, to just past the hour and mine a new block
     await this.sdk.provider.send("evm_increaseTime", [secondsTillNextHour + 5]);
     await this.sdk.provider.send("evm_mine", []);
 
-    console.log("increasing time...");
-
     // call sunrise
-    console.log("calling sunrise...");
     const res = await this.sdk.contracts.beanstalk.sunrise();
-    console.log("waiting.... for sunrise");
     await res.wait();
-    console.log("successfully called sunrise...");
 
     // get the new season
     const season = await this.sdk.contracts.beanstalk.season();
-    console.log("new season: ", season.toString());
 
     return season;
   }

@@ -166,9 +166,12 @@ export class Convert {
 
     const tks = Convert.sdk.tokens;
 
-    const whitelistedWellLPs = Convert.sdk.tokens.siloWhitelistedWellLPAddresses; // use wellLPAddresses to prevent using Bean_Crv3LP
-    const isFromWlLP = Boolean(whitelistedWellLPs.find((tk) => tk.toLowerCase() === fromToken.address.toLowerCase()));
-    const isToWlLP = Boolean(whitelistedWellLPs.find((tk) => tk.toLowerCase() === toToken.address.toLowerCase()));
+    const whitelistedWellLPs = new Set([
+      Convert.sdk.tokens.BEAN_ETH_WELL_LP.address.toLowerCase(),
+      Convert.sdk.tokens.BEAN_WSTETH_WELL_LP.address.toLowerCase(),
+    ]);
+    const isFromWlLP = Boolean(whitelistedWellLPs.has(fromToken.address.toLowerCase()));
+    const isToWlLP = Boolean(whitelistedWellLPs.has(toToken.address.toLowerCase()));
 
     if (fromToken.address === tks.UNRIPE_BEAN.address && toToken.address === tks.UNRIPE_BEAN_WSTETH.address) {
       encoding = ConvertEncoder.unripeBeansToLP(
@@ -233,10 +236,17 @@ export class Convert {
     if (fromToken.equals(toToken)) {
       throw new Error("Cannot convert between the same token");
     }
+
+    const path = this.getConversionPaths(fromToken as ERC20Token);
+    const found = path.find((tk) => tk.address.toLowerCase() === toToken.address.toLowerCase());
+
+    if (!found) {
+      throw new Error("No conversion path found");
+    }
   }
 
   getConversionPaths(fromToken: ERC20Token): ERC20Token[] {
     const token = Convert.sdk.tokens.findByAddress(fromToken.address);
-    return this.paths.get(fromToken) || [];
+    return token ? this.paths.get(token) || [] : [];
   }
 }
