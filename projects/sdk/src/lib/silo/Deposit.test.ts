@@ -69,16 +69,6 @@ describe("Silo Deposit", function () {
     sdk.tokens.DAI,
     sdk.tokens.USDC,
     sdk.tokens.USDT
-  ]
-
-  const beanWstETHDepositable = [
-    sdk.tokens.ETH,
-    sdk.tokens.WETH,
-    sdk.tokens.WSTETH,
-    sdk.tokens.BEAN,
-    sdk.tokens.DAI,
-    sdk.tokens.USDC,
-    sdk.tokens.USDT
   ];
   
   sdk.tokens.BEAN.rewards = { 
@@ -104,7 +94,7 @@ describe("Silo Deposit", function () {
   });
 
   describe("Routes correctly", () => {
-    describe.each(beanWstETHDepositable)("Whitelist Token", (token: Token) => {
+    describe.each(beanEthDepositable)("Whitelist Token", (token: Token) => {
       it.each(whiteListedTokensRipe.map((t) => [t.symbol, t]))(`Deposit ${token.symbol} into %s`, async (symbol: string, silo: Token) => {
         const op = builder.buildDeposit(silo, account);
         op.setInputToken(token);
