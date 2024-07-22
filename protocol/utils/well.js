@@ -365,3 +365,4 @@ exports.impersonateMockWell = impersonateMockWell
 exports.impersonateBeanEthWell = impersonateBeanEthWell
 exports.impersonateBeanWstethWell = impersonateBeanWstethWell
 exports.deployMockWellWithMockPump = deployMockWellWithMockPump
+exports.deployMockToken = deployMockToken
