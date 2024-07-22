@@ -96,19 +96,17 @@ contract GaugeTest is TestHelper {
     ) public {
         initBeanToMaxLPRatio = bound(initBeanToMaxLPRatio, 0, 100e18);
         bs.setBeanToMaxLpGpPerBdvRatio(uint128(initBeanToMaxLPRatio));
-        AppStorage storage s = LibAppStorage.diamondStorage();
         uint256 scaledRatio = bs.getBeanToMaxLpGpPerBdvRatioScaled();
+        uint256 minBeanMaxLpGpPerBdvRatio = bs.getMinBeanMaxLpGpPerBdvRatio();
+        uint256 maxBeanMaxLpGpPerBdvRatio = bs.getMaxBeanMaxLpGpPerBdvRatio();
         // scaled ratio should never fall below 50%.
-        assertGe(scaledRatio, s.sys.evaluationParameters.minBeanMaxLpGpPerBdvRatio);
+        assertGe(scaledRatio, minBeanMaxLpGpPerBdvRatio);
 
         // scaled ratio should never exceed 100%.
-        assertLe(scaledRatio, s.sys.evaluationParameters.maxBeanMaxLpGpPerBdvRatio);
+        assertLe(scaledRatio, maxBeanMaxLpGpPerBdvRatio);
 
         // the scaledRatio should increase half as fast as the initBeanToMaxLPRatio.
-        assertEq(
-            scaledRatio - s.sys.evaluationParameters.minBeanMaxLpGpPerBdvRatio,
-            initBeanToMaxLPRatio / 2
-        );
+        assertEq(scaledRatio - minBeanMaxLpGpPerBdvRatio, initBeanToMaxLPRatio / 2);
     }
 
     ////////////////////// L2SR //////////////////////
@@ -228,13 +226,8 @@ contract GaugeTest is TestHelper {
      * @notice verifies that the average grown stalk per season changes after the catchup season.
      */
     function test_avgGrownStalkPerBdv_changes(uint256 season) public {
-        AppStorage storage s = LibAppStorage.diamondStorage();
         // season is capped to uint32 max - 1.
-        season = bound(
-            season,
-            s.sys.evaluationParameters.targetSeasonsToCatchUp,
-            type(uint32).max - 1
-        );
+        season = bound(season, bs.getTargetSeasonsToCatchUp(), type(uint32).max - 1);
         depositForUser(users[1], C.BEAN, 100e6);
 
         bs.fastForward(uint32(season));
