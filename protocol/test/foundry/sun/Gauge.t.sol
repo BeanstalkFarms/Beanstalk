@@ -14,7 +14,7 @@ import {AppStorage} from "contracts/beanstalk/storage/AppStorage.sol";
  * @notice Tests the functionality of the gauge.
  */
 contract GaugeTest is TestHelper {
-    event UpdatedSeedGaugeSettings(IMockFBeanstalk.SeedGaugeSettings);
+    event UpdatedSeedGaugeSettings(IMockFBeanstalk.EvaluationParameters);
     event BeanToMaxLpGpPerBdvRatioChange(uint256 indexed season, uint256 caseId, int80 absChange);
 
     // Interfaces.
@@ -99,14 +99,14 @@ contract GaugeTest is TestHelper {
         AppStorage storage s = LibAppStorage.diamondStorage();
         uint256 scaledRatio = bs.getBeanToMaxLpGpPerBdvRatioScaled();
         // scaled ratio should never fall below 50%.
-        assertGe(scaledRatio, s.sys.seedGaugeSettings.minBeanMaxLpGpPerBdvRatio);
+        assertGe(scaledRatio, s.sys.evaluationParameters.minBeanMaxLpGpPerBdvRatio);
 
         // scaled ratio should never exceed 100%.
-        assertLe(scaledRatio, s.sys.seedGaugeSettings.maxBeanMaxLpGpPerBdvRatio);
+        assertLe(scaledRatio, s.sys.evaluationParameters.maxBeanMaxLpGpPerBdvRatio);
 
         // the scaledRatio should increase half as fast as the initBeanToMaxLPRatio.
         assertEq(
-            scaledRatio - s.sys.seedGaugeSettings.minBeanMaxLpGpPerBdvRatio,
+            scaledRatio - s.sys.evaluationParameters.minBeanMaxLpGpPerBdvRatio,
             initBeanToMaxLPRatio / 2
         );
     }
@@ -232,7 +232,7 @@ contract GaugeTest is TestHelper {
         // season is capped to uint32 max - 1.
         season = bound(
             season,
-            s.sys.seedGaugeSettings.targetSeasonsToCatchUp,
+            s.sys.evaluationParameters.targetSeasonsToCatchUp,
             type(uint32).max - 1
         );
         depositForUser(users[1], C.BEAN, 100e6);
@@ -650,15 +650,15 @@ contract GaugeTest is TestHelper {
      */
     function testSeedGaugeSettings() external {
         // validate current settings
-        IMockFBeanstalk.SeedGaugeSettings memory seedGauge = bs.getSeedGaugeSetting();
+        IMockFBeanstalk.EvaluationParameters memory seedGauge = bs.getSeedGaugeSetting();
 
         // change settings
         vm.prank(BEANSTALK);
         bs.updateSeedGaugeSettings(
-            IMockFBeanstalk.SeedGaugeSettings(uint256(0), 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
+            IMockFBeanstalk.EvaluationParameters(uint256(0), 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
         );
 
-        IMockFBeanstalk.SeedGaugeSettings memory ssg = bs.getSeedGaugeSetting();
+        IMockFBeanstalk.EvaluationParameters memory ssg = bs.getSeedGaugeSetting();
         assertEq(ssg.maxBeanMaxLpGpPerBdvRatio, 0);
         assertEq(ssg.minBeanMaxLpGpPerBdvRatio, 0);
         assertEq(ssg.targetSeasonsToCatchUp, 0);
