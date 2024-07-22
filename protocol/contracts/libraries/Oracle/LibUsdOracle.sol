@@ -15,7 +15,6 @@ import {Implementation} from "contracts/beanstalk/storage/System.sol";
 import {AppStorage} from "contracts/beanstalk/storage/AppStorage.sol";
 import {LibRedundantMath256} from "contracts/libraries/LibRedundantMath256.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import {console} from "forge-std/console.sol";
 
 interface IERC20Decimals {
     function decimals() external view returns (uint8);
@@ -152,8 +151,6 @@ library LibUsdOracle {
                 uint128(10 ** IERC20Decimals(token).decimals())
             );
 
-            console.log("tokenPrice", tokenPrice);
-
             // call chainlink oracle from the OracleImplmentation contract
             Implementation memory chainlinkOracleImpl = s.sys.oracleImplementation[chainlinkToken];
             address chainlinkOraclePriceAddress = chainlinkOracleImpl.target;
@@ -172,11 +169,6 @@ library LibUsdOracle {
                 lookback
             );
 
-            console.log("chainlinkTokenPrice", chainlinkTokenPrice);
-            // WBTC/USDC * USDC/USD = WBTC/USD
-            // exchange 1e8 `token` for 50000e6 `chainlinkToken`,
-            // 50000e6 *
-            // TKN/CHAINLINK * CHAINLINK/USD = TKN/USD
             return tokenPrice.mul(chainlinkTokenPrice).div(CHAINLINK_DENOMINATOR);
         }
 
