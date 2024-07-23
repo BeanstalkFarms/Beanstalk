@@ -259,6 +259,7 @@ task("UI-deployWstethMigration", async function () {
   await wsteth.setStEthPerToken(stethPerWsteth);
   await bipMigrateUnripeBeanEthToBeanSteth(true, undefined, true, undefined);
   await finishWstethMigration(undefined, true);
+  await deployPriceContract();
 });
 
 /// EBIPS ///
