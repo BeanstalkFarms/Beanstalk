@@ -39,6 +39,7 @@ export const useFarmerWellsSiloBalances = () => {
   const { address } = useAccount();
   const sdk = useSdk();
   const setQueryData = useSetScopedQueryData();
+  const wellTokens = Array.from(sdk.tokens.siloWhitelistedWellLP);
 
   const { data, isLoading, error, refetch, isFetching } = useScopedQuery({
     queryKey: queryKeys.siloBalancesAll,
@@ -46,10 +47,10 @@ export const useFarmerWellsSiloBalances = () => {
       const resultMap: Record<string, TokenValue> = {};
       if (!address) return resultMap;
 
-      const wellTokens = Array.from(sdk.tokens.siloWhitelistedWellLP);
-
       const results = await Promise.all(
-        wellTokens.map((token) => sdk.silo.getBalance(token, address))
+        wellTokens.map((token) =>
+          sdk.silo.getBalance(token, address, { source: DataSource.LEDGER })
+        )
       );
 
       results.forEach((val, i) => {
@@ -62,7 +63,7 @@ export const useFarmerWellsSiloBalances = () => {
 
       return resultMap;
     },
-    enabled: getIsValidEthereumAddress(address),
+    enabled: getIsValidEthereumAddress(address) && !!wellTokens.length,
     retry: false
   });
 
