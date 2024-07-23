@@ -10,10 +10,10 @@ import {
   UNRIPE_BEAN,
   UNRIPE_BEAN_3CRV
 } from "../../../subgraph-core/utils/Constants";
-import { SeedGauge } from "../../generated/Beanstalk/SeedGauge";
+import { SeedGauge } from "../../generated/Bean-ABIs/SeedGauge";
 import { ONE_BI, ZERO_BD, ZERO_BI } from "../../../subgraph-core/utils/Decimals";
-import { ERC20 } from "../../generated/Beanstalk/ERC20";
-import { Beanstalk } from "../../generated/Beanstalk/Beanstalk";
+import { ERC20 } from "../../generated/Bean-ABIs/ERC20";
+import { Beanstalk } from "../../generated/Bean-ABIs/Beanstalk";
 import { loadOrCreatePool } from "./Pool";
 import { loadOrCreateTwaOracle } from "./price/TwaOracle";
 

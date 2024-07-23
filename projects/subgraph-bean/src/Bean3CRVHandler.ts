@@ -6,8 +6,8 @@ import {
   RemoveLiquidityOne,
   TokenExchange,
   TokenExchangeUnderlying
-} from "../generated/Bean3CRV/Bean3CRV";
-import { CurvePrice } from "../generated/Bean3CRV/CurvePrice";
+} from "../generated/Bean-ABIs/Bean3CRV";
+import { CurvePrice } from "../generated/Bean-ABIs/CurvePrice";
 import { updateBeanAfterPoolSwap } from "./utils/Bean";
 import { CURVE_PRICE } from "../../subgraph-core/utils/Constants";
 import { toDecimal, ZERO_BD, ZERO_BI } from "../../subgraph-core/utils/Decimals";
