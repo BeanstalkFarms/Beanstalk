@@ -28,7 +28,7 @@ import {
 } from "./event-mocking/SeedGauge";
 import { createWhitelistTokenV4Event } from "./event-mocking/Whitelist";
 import { createTemperatureChangeEvent } from "./event-mocking/Field";
-import { simpleMockPrice } from "../../subgraph-core/tests/event-mocking/Prices";
+import { simpleMockPrice } from "../../subgraph-core/tests/event-mocking/Price";
 import { loadSilo } from "../src/utils/SiloEntities";
 import { mockBlock } from "../../subgraph-core/tests/event-mocking/Block";
 import { dayFromTimestamp } from "../src/utils/Dates";
