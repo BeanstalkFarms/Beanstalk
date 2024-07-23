@@ -373,8 +373,8 @@ dataSources:
       blockHandlers:
         - handler: handleBlock
       file: ./src/BlockHandler.ts
-features:
-  - grafting
-graft:
-  base: QmYnY2GzZbwTqot3H4jAV83mPbGTnBavdbB8bVXYxJzLUd
-  block: 20291520
+# features:
+#   - grafting
+# graft:
+#   base: QmYnY2GzZbwTqot3H4jAV83mPbGTnBavdbB8bVXYxJzLUd
+#   block: 20291520
