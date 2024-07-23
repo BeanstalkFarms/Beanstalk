@@ -45,7 +45,7 @@ async function reseed8(account, L2Beanstalk, mock = false) {
   }
 
   // approve beanstalk:
-  await weth.connect(approver).approve(L2Beanstalk, parseInt(ethInBeanEthWell[0]));
+  await weth.connect(approver).approve(L2Beanstalk, ethInBeanEthWell[0]);
   await wsteth.connect(approver).approve(L2Beanstalk, wstEthInBeanWstEthWell[0]);
   await stable.connect(approver).approve(L2Beanstalk, stableInBeanStableWell[0]);
 

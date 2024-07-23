@@ -98,7 +98,11 @@ task("getTime", async function () {
 
 task("reseed", async () => {
   const account = await impersonateSigner(BCM);
-  await hre.network.provider.send("hardhat_setBalance", [BCM, "0x21E19E0C9BAB2400000"]);
+  // mint more eth to the bcm to cover gas costs
+  const mock = true;
+  if (mock) {
+    await hre.network.provider.send("hardhat_setBalance", [BCM, "0x21E19E0C9BAB2400000"]);
+  }
   await reseed(account);
 });
 
