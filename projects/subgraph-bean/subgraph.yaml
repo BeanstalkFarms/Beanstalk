@@ -249,7 +249,45 @@ dataSources:
       apiVersion: 0.0.7
       language: wasm/assemblyscript
       entities:
-        - Bean3CRV
+        - Pool
+      abis:
+        - name: Well
+          file: ../subgraph-core/abis/Well.json
+        - name: BeanstalkPrice
+          file: ../subgraph-core/abis/BeanstalkPrice.json
+        - name: ERC20
+          file: ../subgraph-core/abis/ERC20.json
+        - name: Beanstalk
+          file: ../subgraph-core/abis/Beanstalk/Beanstalk-Replanted.json
+        - name: SeedGauge
+          file: ../subgraph-core/abis/Beanstalk/Beanstalk-BIP45.json
+      eventHandlers:
+        - event: AddLiquidity(uint256[],uint256,address)
+          handler: handleAddLiquidity
+        - event: RemoveLiquidity(uint256,uint256[],address)
+          handler: handleRemoveLiquidity
+        - event: RemoveLiquidityOneToken(uint256,address,uint256,address)
+          handler: handleRemoveLiquidityOneToken
+        - event: Swap(address,address,uint256,uint256,address)
+          handler: handleSwap
+        - event: Shift(uint256[],address,uint256,address)
+          handler: handleShift
+        - event: Sync(uint256[],uint256,address)
+          handler: handleSync
+      file: ./src/BeanWellHandler.ts
+  - kind: ethereum/contract
+    name: BEANwstETHCP2w
+    network: mainnet
+    source:
+      address: "0xBeA0000113B0d182f4064C86B71c315389E4715D"
+      abi: Well
+      startBlock: 20264128
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.7
+      language: wasm/assemblyscript
+      entities:
+        - Pool
       abis:
         - name: Well
           file: ../subgraph-core/abis/Well.json
@@ -335,3 +373,8 @@ dataSources:
       blockHandlers:
         - handler: handleBlock
       file: ./src/BlockHandler.ts
+features:
+  - grafting
+graft:
+  base: QmYnY2GzZbwTqot3H4jAV83mPbGTnBavdbB8bVXYxJzLUd
+  block: 20291520

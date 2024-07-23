@@ -86,7 +86,10 @@ function handleLiquidityChange(
   if (beanPrice.reverted) {
     return;
   }
-  let wellPrice = getPoolPrice(beanPrice, Address.fromString(poolAddress))!;
+  let wellPrice = getPoolPrice(beanPrice, Address.fromString(poolAddress));
+  if (wellPrice == null) {
+    return;
+  }
 
   let startingLiquidity = getPoolLiquidityUSD(poolAddress, blockNumber);
 
@@ -142,7 +145,10 @@ function handleSwapEvent(
   if (beanPrice.reverted) {
     return;
   }
-  let wellPrice = getPoolPrice(beanPrice, Address.fromString(poolAddress))!;
+  let wellPrice = getPoolPrice(beanPrice, Address.fromString(poolAddress));
+  if (wellPrice == null) {
+    return;
+  }
 
   let startingLiquidity = getPoolLiquidityUSD(poolAddress, blockNumber);
 
