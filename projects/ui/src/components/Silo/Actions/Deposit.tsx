@@ -59,8 +59,8 @@ import FormTxnProvider from '~/components/Common/Form/FormTxnProvider';
 import useFormTxnContext from '~/hooks/sdk/useFormTxnContext';
 import { ClaimAndDoX, DepositFarmStep, FormTxn } from '~/lib/Txn';
 import useMigrationNeeded from '~/hooks/farmer/useMigrationNeeded';
-import useBeanEthStartMintingSeason from '~/hooks/beanstalk/useBeanEthStartMintingSeason';
 import useGetBalancesUsedBySource from '~/hooks/beanstalk/useBalancesUsedBySource';
+import useIsMigrating from '~/hooks/beanstalk/useIsMigrating';
 
 // -----------------------------------------------------------------------
 
@@ -626,9 +626,9 @@ const DepositPropProvider: FC<{
 const Deposit: FC<{
   token: ERC20Token | NativeToken;
 }> = (props) => {
-  const { mintAllowed, MigrationAlert } = useBeanEthStartMintingSeason();
+  const { isMigrating, MigrationAlert } = useIsMigrating();
 
-  if (!mintAllowed && props.token.isUnripe) {
+  if (isMigrating && props.token.isUnripe) {
     return MigrationAlert;
   }
 

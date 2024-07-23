@@ -1,22 +1,10 @@
 import React, { useMemo } from 'react';
-import { useAppSelector } from '~/state';
 import { Stack, Typography } from '@mui/material';
 import { Link } from 'react-router-dom';
 import { DISCORD_LINK } from '~/constants';
 import WarningAlert from '~/components/Common/Alert/WarningAlert';
-import useSeason from './useSeason';
 
-export default function useBeanEthStartMintingSeason() {
-  const season = useSeason();
-  const allowedMintSeason = useAppSelector(
-    (s) => s._beanstalk.sun.season.beanEthStartMintingSeason
-  );
-
-  const mintAllowed = useMemo(
-    () => (allowedMintSeason ? season.gte(allowedMintSeason) : true),
-    [allowedMintSeason, season]
-  );
-
+export default function useIsMigrating() {
   const MigrationAlert = useMemo(
     () => (
       <Stack width="100%" boxSizing="border-box" sx={{}}>
@@ -41,8 +29,7 @@ export default function useBeanEthStartMintingSeason() {
   );
 
   return {
-    season: allowedMintSeason,
-    mintAllowed,
+    isMigrating: true,
     MigrationAlert,
   };
 }

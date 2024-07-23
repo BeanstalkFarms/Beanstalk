@@ -60,7 +60,7 @@ import usePlantAndDoX from '~/hooks/farmer/form-txn/usePlantAndDoX';
 import StatHorizontal from '~/components/Common/StatHorizontal';
 import { BeanstalkPalette, FontSize } from '~/components/App/muiTheme';
 import { AppState } from '~/state';
-import useBeanEthStartMintingSeason from '~/hooks/beanstalk/useBeanEthStartMintingSeason';
+import useIsMigrating from '~/hooks/beanstalk/useIsMigrating';
 
 // -----------------------------------------------------------------------
 
@@ -986,9 +986,9 @@ const ConvertPropProvider: FC<{
 const Convert: FC<{
   fromToken: ERC20Token | NativeToken;
 }> = (props) => {
-  const { mintAllowed, MigrationAlert } = useBeanEthStartMintingSeason();
+  const { isMigrating, MigrationAlert } = useIsMigrating();
 
-  if (!mintAllowed && props.fromToken.isUnripe) {
+  if (isMigrating && props.fromToken.isUnripe) {
     return MigrationAlert;
   }
 

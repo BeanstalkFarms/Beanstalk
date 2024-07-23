@@ -7,7 +7,7 @@ import { AppState } from '~/state';
 import { ActiveProposal } from '~/state/beanstalk/governance';
 import snapshotLogo from '~/img/ecosystem/snapshot-logo.svg';
 import useMigrationNeeded from '~/hooks/farmer/useMigrationNeeded';
-import useBeanEthStartMintingSeason from '~/hooks/beanstalk/useBeanEthStartMintingSeason';
+import useIsMigrating from '../beanstalk/useIsMigrating';
 
 const useBanner = () => {
   const migrationNeeded = useMigrationNeeded();
@@ -15,10 +15,10 @@ const useBanner = () => {
     (state) => state._beanstalk.governance.activeProposals
   );
 
-  const { mintAllowed } = useBeanEthStartMintingSeason();
+  const { isMigrating } = useIsMigrating();
 
   return useMemo(() => {
-    if (!mintAllowed) {
+    if (isMigrating) {
       return (
         <Banner>
           BIP-48 Unripe liquidity migration is in process. Quotes will be
@@ -75,7 +75,7 @@ const useBanner = () => {
       );
     }
     return null;
-  }, [activeProposals, migrationNeeded, mintAllowed]);
+  }, [activeProposals, migrationNeeded, isMigrating]);
 };
 
 export default useBanner;

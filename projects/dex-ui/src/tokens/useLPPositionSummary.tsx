@@ -9,7 +9,7 @@ import { Log } from "src/utils/logger";
 import { BigNumber } from "ethers";
 import { multicall } from "@wagmi/core";
 import BEANSTALK_ABI from "@beanstalk/protocol/abi/Beanstalk.json";
-import { useSiloBalanceMany } from "./useSiloBalance";
+import { useFarmerWellsSiloBalances } from "./useSiloBalance";
 import { useWells } from "src/wells/useWells";
 import { config } from "src/utils/wagmi/config";
 import { useScopedQuery, useSetScopedQueryData } from "src/utils/query/useScopedQuery";
@@ -78,7 +78,9 @@ export const useLPPositionSummary = () => {
   /**
    * Silo Balances
    */
-  const { data: siloBalances, ...siloBalanceRest } = useSiloBalanceMany(lpTokens);
+  const { data: siloBalances, ...siloBalanceRest } = useFarmerWellsSiloBalances();
+
+  // const { data: siloBalances, ...siloBalancesRest } = useSiloBal
 
   /**
    * Fetch external & internal balances
@@ -115,20 +117,22 @@ export const useLPPositionSummary = () => {
           }
           setQueryData(queryKeys.tokenBalance(lpToken.address), (oldData: TokenBalanceCache) => {
             if (!oldData) return { [lpToken.address]: balance.external };
-              return { ...oldData, [lpToken.address]: balance.external };
-          })
+            return { ...oldData, [lpToken.address]: balance.external };
+          });
           setQueryData(queryKeys.tokenBalancesAll, (oldData: TokenBalanceCache) => {
             if (!oldData) return { [lpToken.address]: balance.external };
-              return { ...oldData, [lpToken.address]: balance.external };
-          })
-          
+            return { ...oldData, [lpToken.address]: balance.external };
+          });
         } else {
           if (lpTokens[lpTokenIndex]) {
             balance.internal = lpTokens[lpTokenIndex].fromBlockchain(res[i]);
-            setQueryData(queryKeys.tokenBalanceInternal(lpToken.address), (oldData: TokenBalanceCache) => {
-              if (!oldData) return { [lpToken.address]: balance.internal };
-              return { ...oldData, [lpToken.address]: balance.internal };
-            })
+            setQueryData(
+              queryKeys.tokenBalanceInternal(lpToken.address),
+              (oldData: TokenBalanceCache) => {
+                if (!oldData) return { [lpToken.address]: balance.internal };
+                return { ...oldData, [lpToken.address]: balance.internal };
+              }
+            );
           }
         }
 
@@ -155,10 +159,10 @@ export const useLPPositionSummary = () => {
   useEffect(() => {
     // console.log("balanceData: ", balanceData);
     // console.log("lpTokens: ", lpTokens);
-    if (!lpTokens.length || !balanceData || !siloBalances) return;
+    if (!lpTokens.length || !balanceData) return;
 
     const map = lpTokens.reduce<TokenMap<LPBalanceSummary>>((memo, curr) => {
-      const siloBalance = siloBalances[curr.address] || TokenValue.ZERO;
+      const siloBalance = siloBalances?.[curr.address] || TokenValue.ZERO;
       const internalExternal = balanceData?.[curr.address] || {
         external: TokenValue.ZERO,
         internal: TokenValue.ZERO

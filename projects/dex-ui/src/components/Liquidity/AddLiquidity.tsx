@@ -219,7 +219,6 @@ const AddLiquidityContent = ({
         let estimate;
         let gas;
         quote = await well.addLiquidityQuote(inputs);
-        console.log("quote: ", quote.toHuman());
 
         if (allTokensHaveMinAllowance && tokenAllowance.length) {
           if (useNativeETH) {

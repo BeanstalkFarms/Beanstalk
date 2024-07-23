@@ -1,4 +1,5 @@
 import { DataSource, Token, TokenValue } from "@beanstalk/sdk";
+import { getIsValidEthereumAddress } from "src/utils/addresses";
 import { queryKeys } from "src/utils/query/queryKeys";
 import { useScopedQuery, useSetScopedQueryData } from "src/utils/query/useScopedQuery";
 import useSdk from "src/utils/sdk/useSdk";
@@ -34,57 +35,36 @@ export const useSiloBalance = (token: Token) => {
   return { data, isLoading, error, refetch, isFetching };
 };
 
-export const useSiloBalanceMany = (tokens: Token[]) => {
+export const useFarmerWellsSiloBalances = () => {
   const { address } = useAccount();
   const sdk = useSdk();
   const setQueryData = useSetScopedQueryData();
+  const wellTokens = Array.from(sdk.tokens.siloWhitelistedWellLP);
 
   const { data, isLoading, error, refetch, isFetching } = useScopedQuery({
-    queryKey: queryKeys.siloBalanceMany(tokens.map((t) => t.address)),
+    queryKey: queryKeys.siloBalancesAll,
     queryFn: async () => {
       const resultMap: Record<string, TokenValue> = {};
       if (!address) return resultMap;
 
-      /**
-       * For some reason the symbol sdk.tokens.findByAddress returns a
-       * token with symbol of BEANETH & the token symbol stored in the well is BEANWETHCP2w
-       *
-       * We find the silo balance using the token with symbol BEANETH &
-       * then use BEANWETHCP2w as the key in the resultMap
-       */
-      const filteredTokens = tokens
-        .filter((t) => {
-          const sdkToken = sdk.tokens.findByAddress(t.address);
-          return !!(sdkToken && sdk.tokens.isWhitelisted(sdkToken));
-        })
-        .map((tk) => ({
-          token: tk,
-          sdkToken: sdk.tokens.findByAddress(tk.address)!
-        }));
-
       const results = await Promise.all(
-        filteredTokens.map(async (item) =>
-          await sdk.silo
-            .getBalance(item.sdkToken, address, { source: DataSource.LEDGER })
-            .then((result) => ({ token: item.token, amount: result.amount }))
+        wellTokens.map((token) =>
+          sdk.silo.getBalance(token, address, { source: DataSource.LEDGER })
         )
       );
 
-      results.forEach((val) => {
-        resultMap[val.token.address] = val.amount;
-
-        // merge data into [scope, 'silo', token.address]
-        setQueryData(queryKeys.siloBalancesAll, (oldData) => {
-          if (!oldData) return { [val.token.address]: val.amount };
-          return { ...oldData, [val.token.address]: val.amount };
-        });
-        setQueryData(queryKeys.siloBalance(val.token.address), () => {
+      results.forEach((val, i) => {
+        const token = wellTokens[i];
+        resultMap[token.address] = val.amount;
+        setQueryData(queryKeys.siloBalance(token.address), () => {
           return val.amount;
         });
       });
+
       return resultMap;
     },
-    enabled: !!address && !!tokens.length && !!sdk
+    enabled: getIsValidEthereumAddress(address) && !!wellTokens.length,
+    retry: false
   });
 
   return { data, isLoading, error, refetch, isFetching };
