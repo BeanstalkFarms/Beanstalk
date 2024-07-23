@@ -15,7 +15,7 @@ async function deployPriceContract(account = undefined, beanstalk = BEANSTALK, v
             "0x4bed6cb142b7d474242d87f4796387deb9e1e1b4",
             bytecode,
         ]);
-        price = await ethers.getContractAt(contractName, deployAddress);
+        price = await ethers.getContractAt("BeanstalkPrice", "0x4bed6cb142b7d474242d87f4796387deb9e1e1b4");
     }
     return price;
 }
