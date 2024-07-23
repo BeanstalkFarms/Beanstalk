@@ -7,18 +7,18 @@ import {
 } from '~/components/Common/Module';
 
 import { FC } from '~/types';
-import useBeanEthStartMintingSeason from '~/hooks/beanstalk/useBeanEthStartMintingSeason';
+import useIsMigrating from '~/hooks/beanstalk/useIsMigrating';
 import Chop from './Chop';
 
 const ChopActions: FC<{}> = () => {
-  const { mintAllowed, MigrationAlert } = useBeanEthStartMintingSeason();
+  const { isMigrating, MigrationAlert } = useIsMigrating();
 
   return (
     <Module>
       <ModuleHeader>
         <Typography variant="h4">Chop</Typography>
       </ModuleHeader>
-      <ModuleContent>{mintAllowed ? <Chop /> : MigrationAlert}</ModuleContent>
+      <ModuleContent>{!isMigrating ? <Chop /> : MigrationAlert}</ModuleContent>
     </Module>
   );
 };
