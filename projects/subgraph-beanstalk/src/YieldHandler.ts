@@ -1,7 +1,7 @@
 import { Address, BigDecimal, BigInt, log } from "@graphprotocol/graph-ts";
-import { Beanstalk } from "../generated/Season-Replanted/Beanstalk";
+import { BasinBip } from "../generated/Beanstalk-ABIs/BasinBip";
 import { BEANSTALK, BEAN_ERC20, FERTILIZER } from "../../subgraph-core/utils/Constants";
-import { ONE_BD, toDecimal, ZERO_BD, ZERO_BI } from "../../subgraph-core/utils/Decimals";
+import { toDecimal, ZERO_BD, ZERO_BI } from "../../subgraph-core/utils/Decimals";
 import { loadFertilizer } from "./utils/Fertilizer";
 import { loadFertilizerYield } from "./utils/FertilizerYield";
 import {
@@ -458,7 +458,7 @@ function updateFertAPY(t: i32, timestamp: BigInt, window: i32): void {
   let siloYield = loadSiloYield(t, window);
   let fertilizerYield = loadFertilizerYield(t, window);
   let fertilizer = loadFertilizer(FERTILIZER);
-  let beanstalk = Beanstalk.bind(BEANSTALK);
+  let beanstalk = BasinBip.bind(BEANSTALK);
   if (t < 6534) {
     let currentFertHumidity = beanstalk.try_getCurrentHumidity();
     fertilizerYield.humidity = BigDecimal.fromString(currentFertHumidity.reverted ? "500" : currentFertHumidity.value.toString()).div(

@@ -9,7 +9,7 @@ import {
   WhitelistToken,
   TotalGerminatingStalkChanged,
   TotalStalkChangedFromGermination
-} from "../generated/BIP45-SeedGauge/Beanstalk";
+} from "../generated/Beanstalk-ABIs/SeedGauge";
 import { handleRateChange } from "./utils/Field";
 import {
   loadSilo,

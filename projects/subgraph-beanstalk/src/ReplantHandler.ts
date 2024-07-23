@@ -1,5 +1,5 @@
 import { Chop as ChopEntity } from "../generated/schema";
-import { Chop } from "../generated/Replant/Beanstalk";
+import { Chop } from "../generated/Beanstalk-ABIs/MarketV2";
 
 export function handleChop(event: Chop): void {
   let id = "chop-" + event.transaction.hash.toHexString() + "-" + event.transactionLogIndex.toString();

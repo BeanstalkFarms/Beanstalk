@@ -2,10 +2,9 @@ import { Address, BigInt, BigDecimal, ethereum } from "@graphprotocol/graph-ts";
 import { Field, FieldDailySnapshot, FieldHourlySnapshot } from "../../generated/schema";
 import { dayFromTimestamp } from "./Dates";
 import { BI_MAX, ONE_BD, toDecimal, ZERO_BD, ZERO_BI } from "../../../subgraph-core/utils/Decimals";
-import { BEANSTALK, BEANSTALK_PRICE_1, CURVE_PRICE } from "../../../subgraph-core/utils/Constants";
+import { BEANSTALK, CURVE_PRICE } from "../../../subgraph-core/utils/Constants";
 import { loadSeason } from "./Season";
-import { CurvePrice } from "../../generated/Field/CurvePrice";
-import { BeanstalkPrice } from "../../generated/Field/BeanstalkPrice";
+import { CurvePrice } from "../../generated/Beanstalk-ABIs/CurvePrice";
 import { BeanstalkPrice_try_price } from "./BeanstalkPrice";
 
 // This function is for handling both the WeatherChange and TemperatureChange events.

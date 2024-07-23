@@ -1,4 +1,4 @@
-import { PlotTransfer } from "../../generated/Field/Beanstalk";
+import { PlotTransfer } from "../../generated/Beanstalk-ABIs/PreReplant";
 import { PodTransfer } from "../../generated/schema";
 
 export function savePodTransfer(event: PlotTransfer): void {
