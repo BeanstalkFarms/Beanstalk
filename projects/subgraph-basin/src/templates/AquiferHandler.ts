@@ -1,6 +1,6 @@
 import { Address, Bytes, log } from "@graphprotocol/graph-ts";
-import { BoreWell } from "../../generated/Aquifer/Aquifer";
-import { ERC20 } from "../../generated/Aquifer/ERC20";
+import { BoreWell } from "../../generated/Basin-ABIs/Aquifer";
+import { ERC20 } from "../../generated/Basin-ABIs/ERC20";
 import { Well } from "../../generated/templates";
 import { loadOrCreateAquifer } from "../utils/Aquifer";
 import { loadOrCreatePump } from "../utils/Pump";
