@@ -24,7 +24,6 @@ import { BI_10, ZERO_BI } from "../../subgraph-core/utils/Decimals";
 import { updateStalkBalances } from "./SiloHandler";
 import { getCurrentSeason } from "./utils/Season";
 import { WhitelistToken as WhitelistTokenEntity } from "../generated/schema";
-import { BigInt } from "@graphprotocol/graph-ts";
 import { BEAN_WETH_CP2_WELL } from "../../subgraph-core/utils/Constants";
 import { Bytes4_emptyToNull } from "../../subgraph-core/utils/Bytes";
 
