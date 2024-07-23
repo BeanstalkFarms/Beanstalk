@@ -128,13 +128,14 @@ export default function useDataFeedTokenPrices() {
 
     return priceDataCache;
   }, [
-    tokenPriceMap,
-    daiPriceFeed,
-    usdtPriceFeed,
-    usdcPriceFeed,
-    ethPriceFeed,
-    crv3Pool,
-    getChainToken,
+    tokenPriceMap, 
+    daiPriceFeed, 
+    usdtPriceFeed, 
+    usdcPriceFeed, 
+    ethPriceFeed, 
+    crv3Pool, 
+    sdk.tokens.WETH.address, 
+    getChainToken
   ]);
 
   const handleUpdatePrices = useCallback(async () => {
