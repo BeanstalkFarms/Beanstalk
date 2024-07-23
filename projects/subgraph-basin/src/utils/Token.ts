@@ -4,7 +4,7 @@ import { Token } from "../../generated/schema";
 import { CurvePrice } from "../../generated/templates/Well/CurvePrice";
 import { BEAN_ERC20, CURVE_PRICE } from "../../../subgraph-core/utils/Constants";
 import { toDecimal, ZERO_BD, ZERO_BI } from "../../../subgraph-core/utils/Decimals";
-import { getBeanstalkPrice } from "../../../subgraph-bean/src/utils/price/BeanstalkPrice";
+import { getBeanstalkPrice } from "./BeanstalkPrice";
 
 export function loadOrCreateToken(tokenAddress: Address): Token {
   let token = Token.load(tokenAddress);
