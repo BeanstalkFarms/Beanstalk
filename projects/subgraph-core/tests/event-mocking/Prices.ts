@@ -1,6 +1,6 @@
 import { BigInt, ethereum, Address } from "@graphprotocol/graph-ts";
 import { createMockedFunction } from "matchstick-as/assembly/index";
-import { BEAN_3CRV, BEAN_ERC20, BEAN_WETH_CP2_WELL, BEANSTALK_PRICE, CURVE_PRICE, WETH } from "../../utils/Constants";
+import { BEAN_3CRV, BEAN_ERC20, BEAN_WETH_CP2_WELL, BEANSTALK_PRICE_1, CURVE_PRICE, WETH } from "../../utils/Constants";
 
 // These 2 classes are analagous to structs used by BeanstalkPrice contract
 class Prices {
@@ -30,7 +30,7 @@ export function setMockBeanPrice(prices: Prices, mockPools: boolean = true): voi
   const pricesReturn = toPricesStruct(prices);
 
   createMockedFunction(
-    BEANSTALK_PRICE,
+    BEANSTALK_PRICE_1,
     "price",
     "price():((uint256,uint256,int256,(address,address[2],uint256[2],uint256,uint256,int256,uint256,uint256)[]))"
   )
@@ -60,7 +60,7 @@ export function setMockWellPrice(pool: Pool): void {
   const wellPriceReturn = toPoolStruct(pool);
 
   createMockedFunction(
-    BEANSTALK_PRICE,
+    BEANSTALK_PRICE_1,
     "getConstantProductWell",
     "getConstantProductWell(address):((address,address[2],uint256[2],uint256,uint256,int256,uint256,uint256))"
   )

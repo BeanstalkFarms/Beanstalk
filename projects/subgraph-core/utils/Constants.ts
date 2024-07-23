@@ -19,7 +19,8 @@ export const FERTILIZER = Address.fromString("0x402c84De2Ce49aF88f5e2eF3710ff89b
 export const AQUIFER = Address.fromString("0xBA51AAAA95aeEFc1292515b36D86C51dC7877773");
 
 export const CURVE_PRICE = Address.fromString("0xA57289161FF18D67A68841922264B317170b0b81");
-export const BEANSTALK_PRICE = Address.fromString("0xb01CE0008CaD90104651d6A84b6B11e182a9B62A");
+export const BEANSTALK_PRICE_1 = Address.fromString("0xb01CE0008CaD90104651d6A84b6B11e182a9B62A");
+export const BEANSTALK_PRICE_2 = Address.fromString("0x4bed6cb142b7d474242d87f4796387deb9e1e1b4");
 
 // LP Addresses
 export const BEAN_3CRV_V1 = Address.fromString("0x3a70DfA7d2262988064A2D051dd47521E43c9BdD");
@@ -44,7 +45,9 @@ export const CALCULATIONS_CURVE = Address.fromString("0x25BF7b72815476Dd515044F9
 export const BEANSTALK_BLOCK = BigInt.fromU32(12974075);
 export const EXPLOIT_BLOCK = BigInt.fromU32(14602790);
 export const REPLANT_SUNRISE_BLOCK = BigInt.fromU32(15289934);
-export const BEANSTALK_PRICE_BLOCK = BigInt.fromU32(17978222);
 export const BEAN_WETH_CP2_WELL_BLOCK = BigInt.fromU32(17978134);
 export const BEAN_WETH_UNRIPE_MIGRATION_BLOCK = BigInt.fromU32(18392690);
 export const GAUGE_BIP45_BLOCK = BigInt.fromU32(19927634);
+
+export const PRICE_1_BLOCK = BigInt.fromU32(17978222);
+export const PRICE_2_BLOCK = BigInt.fromU32(20298142);

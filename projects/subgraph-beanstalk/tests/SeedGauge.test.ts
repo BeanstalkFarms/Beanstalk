@@ -15,7 +15,7 @@ import {
   handleTotalStalkChangedFromGermination
 } from "../src/GaugeHandler";
 
-import { BEAN_ERC20, BEANSTALK } from "../../subgraph-core/utils/Constants";
+import { BEAN_ERC20, BEAN_WETH_CP2_WELL, BEANSTALK, UNRIPE_BEAN, UNRIPE_BEAN_3CRV } from "../../subgraph-core/utils/Constants";
 import {
   createBeanToMaxLpGpPerBdvRatioChangeEvent,
   createFarmerGerminatingStalkBalanceChangedEvent,

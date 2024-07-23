@@ -4,7 +4,7 @@ import { getBeanTokenAddress, loadBean, updateBeanSeason, updateBeanSupplyPegPer
 import { loadOrCreatePool, updatePoolPrice, updatePoolSeason, updatePoolValues } from "./utils/Pool";
 import { BeanstalkPrice } from "../generated/Beanstalk/BeanstalkPrice";
 import {
-  BEANSTALK_PRICE,
+  BEANSTALK_PRICE_1,
   BEAN_3CRV,
   BEAN_ERC20,
   BEAN_ERC20_V1,
