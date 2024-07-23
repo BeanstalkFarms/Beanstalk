@@ -67,20 +67,22 @@ const BEAN = async (sdk: BeanstalkSDK) => {
 
 
 const chainLinkWithCallback =
-  (from: keyof typeof FEEDS, getMultiplier: (sdk: BeanstalkSDK) => Promise<TokenValue>) =>
+  (from: keyof typeof FEEDS, getMultiplier: (sdk: BeanstalkSDK) => Promise<(value: TokenValue) => TokenValue>) =>
   async (sdk: BeanstalkSDK) => {
-    const [fromPrice, multiplier] = await Promise.all([
+    const [fromPrice, calculate] = await Promise.all([
       chainlinkLookup(from)(sdk),
       getMultiplier(sdk)
     ]);
 
-    return fromPrice.mul(multiplier);
+    return calculate(fromPrice);
   };
 
 const getWstETHWithSteth = async (sdk: BeanstalkSDK) => {
   const amt = sdk.tokens.STETH.fromHuman("1");
-  const multiplier = await sdk.contracts.lido.wsteth.getWstETHByStETH(amt.toBigNumber());
-  return sdk.tokens.WSTETH.fromBlockchain(multiplier);
+  const divisor = await sdk.contracts.lido.wsteth.getWstETHByStETH(amt.toBigNumber());
+
+  const value = sdk.tokens.WSTETH.fromBlockchain(divisor);
+  return (otherValue: TokenValue) => otherValue.div(value);
 };
 
 const PRICE_EXPIRY_TIMEOUT = 60 * 5; // 5 minute cache
