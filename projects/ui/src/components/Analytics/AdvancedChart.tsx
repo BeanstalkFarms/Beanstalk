@@ -13,13 +13,15 @@ import SelectDialog from './SelectDialog';
 import { useChartSetupData } from './useChartSetupData';
 import CalendarButton from './CalendarButton';
 
-type QueryData = {
-  time: Time,
-  value: number,
+export type ChartQueryData = {
+  time: Time;
+  value: number;
   customValues: {
-    season: number
+    season: number;
   };
 };
+
+type QueryData = ChartQueryData;
 
 const AdvancedChart: FC<{ isMobile?: boolean }> = ({ isMobile = false }) => {
   const season = useSeason();
