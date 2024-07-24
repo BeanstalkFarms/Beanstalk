@@ -61,6 +61,7 @@ import { useFetchFarmerSilo } from '~/state/farmer/silo/updater';
 import useFarmerSilo from '~/hooks/farmer/useFarmerSilo';
 import useSilo from '~/hooks/beanstalk/useSilo';
 import useSetting from '~/hooks/app/useSetting';
+import SeedGaugeInfo from '~/components/Silo/SeedGauge/SeedGaugeInfo';
 
 const FormControlLabelStat: FC<
   Partial<FormControlLabelProps> & {
@@ -249,16 +250,28 @@ const RewardsBar: FC<{
       empty: amountBean.eq(0) && amountStalk.eq(0) && amountSeeds.eq(0),
       output: new Map<Token, TokenValue>([
         [
-          sdk.tokens.BEAN, 
-          transform(amountBean.isNaN() ? ZERO_BN : amountBean, 'tokenValue', sdk.tokens.BEAN),
+          sdk.tokens.BEAN,
+          transform(
+            amountBean.isNaN() ? ZERO_BN : amountBean,
+            'tokenValue',
+            sdk.tokens.BEAN
+          ),
         ],
         [
           sdk.tokens.STALK,
-          transform(amountStalk.isNaN() ? ZERO_BN : amountStalk, 'tokenValue', sdk.tokens.STALK),
+          transform(
+            amountStalk.isNaN() ? ZERO_BN : amountStalk,
+            'tokenValue',
+            sdk.tokens.STALK
+          ),
         ],
         [
           sdk.tokens.SEEDS,
-          transform(amountSeeds.isNaN() ? ZERO_BN : amountSeeds, 'tokenValue', sdk.tokens.SEEDS),
+          transform(
+            amountSeeds.isNaN() ? ZERO_BN : amountSeeds,
+            'tokenValue',
+            sdk.tokens.SEEDS
+          ),
         ],
       ]),
     };
@@ -715,6 +728,7 @@ const SiloPage: FC<{}> = () => {
           revitalizedStalk={revitalizedStalk}
           revitalizedSeeds={revitalizedSeeds}
         />
+        <SeedGaugeInfo />
         <Whitelist config={config} farmerSilo={farmerSilo} />
         {/* <RewardsDialog
           open={open}
