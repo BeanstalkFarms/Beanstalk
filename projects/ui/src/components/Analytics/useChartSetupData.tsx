@@ -463,6 +463,27 @@ export function useChartSetupData() {
         tickFormatter: tickFormatBeanAmount,
         shortTickFormatter: tickFormatTruncated,
       },
+      {
+        name: 'Grown Stalk per BDV',
+        tooltipTitle: 'Grown Stalk per Bean Denomimated Value',
+        tooltipHoverText:
+          'The number of stalk issued per Season for each bean in the Silo.',
+        shortDescription: 'Grown Stalk per BDV',
+        timeScaleKey: 'createdAt',
+        priceScaleKey: 'stalk',
+        valueAxisType: 'stalk',
+        document: SeasonalStalkDocument,
+        documentEntity: 'seasons',
+        queryConfig: {
+          variables: {
+            season_gt: 6073,
+          },
+        },
+        valueFormatter: (value: any) =>
+          Number(formatUnits(value, stalk.decimals)),
+        tickFormatter: tickFormatBeanAmount,
+        shortTickFormatter: tickFormatTruncated,
+      },
       ...apyCharts,
     ];
 
