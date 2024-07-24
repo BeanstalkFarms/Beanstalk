@@ -38,10 +38,7 @@
     "buffer": "^6.0.3",
     "d3-scale": "^4.0.2",
     "d3-time-format": "^4.1.0",
-<<<<<<< HEAD
-=======
     "date-fns": "3.6.0",
->>>>>>> master
     "ethers": "^5.7.2",
     "ethers-multicall": "^0.2.3",
     "events": "^3.3.0",
