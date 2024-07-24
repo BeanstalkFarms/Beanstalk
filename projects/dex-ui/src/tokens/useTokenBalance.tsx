@@ -2,6 +2,7 @@ import { Token, TokenValue } from "@beanstalk/sdk";
 import { queryKeys } from "src/utils/query/queryKeys";
 import { useScopedQuery, useSetScopedQueryData } from "src/utils/query/useScopedQuery";
 import { useAccount } from "wagmi";
+import { getTokenIndex } from "./utils";
 
 type TokenBalanceCache = undefined | void | Record<string, TokenValue>;
 
@@ -23,7 +24,7 @@ export const useTokenBalance = (token: Token | undefined) => {
       }
 
       const result = {
-        [token.address]: balance
+        [getTokenIndex(token)]: balance
       };
 
       // Also update the cache of "ALL" token query

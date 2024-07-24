@@ -1,7 +1,6 @@
-import { TokenValue } from "@beanstalk/sdk";
+import { Token, TokenValue } from "@beanstalk/sdk";
 import { multicall } from "@wagmi/core";
 import { BigNumber } from "ethers";
-import { useMemo } from "react";
 import { useAccount } from "wagmi";
 import { useTokens } from "./TokenProvider";
 import { Log } from "src/utils/logger";
@@ -9,6 +8,7 @@ import { config } from "src/utils/wagmi/config";
 import { ContractFunctionParameters } from "viem";
 import { queryKeys } from "src/utils/query/queryKeys";
 import { useScopedQuery, useSetScopedQueryData } from "src/utils/query/useScopedQuery";
+import { getTokenIndex } from "./utils";
 
 const TokenBalanceABI = [
   {
@@ -24,38 +24,38 @@ const TokenBalanceABI = [
 
 const MAX_PER_CALL = 20;
 
+const makeCalls = (tokensToLoad: Token[], address: string) => {
+  const contractCalls: ContractFunctionParameters[][] = [];
+  Log.module("app").debug(
+    `Fetching token balances for ${tokensToLoad.length} tokens, for address ${address}`
+  );
+
+  let callBucket: ContractFunctionParameters[] = [];
+  tokensToLoad.forEach((token, i) => {
+    callBucket.push({
+      address: token.address as `0x{string}`,
+      abi: TokenBalanceABI,
+      functionName: "balanceOf",
+      args: [address]
+    });
+
+    if (i % MAX_PER_CALL === MAX_PER_CALL - 1) {
+      contractCalls.push([...callBucket]);
+      callBucket = [];
+    }
+  });
+
+  if (callBucket.length) contractCalls.push([...callBucket]);
+
+  return contractCalls;
+}
+
 export const useAllTokensBalance = () => {
   const tokens = useTokens();
   const { address } = useAccount();
   const setQueryData = useSetScopedQueryData();
 
   const tokensToLoad = Object.values(tokens).filter((t) => t.symbol !== "ETH");
-
-  const calls = useMemo(() => {
-    const contractCalls: ContractFunctionParameters[][] = [];
-    Log.module("app").debug(
-      `Fetching token balances for ${tokensToLoad.length} tokens, for address ${address}`
-    );
-
-    let callBucket: ContractFunctionParameters[] = [];
-
-    tokensToLoad.forEach((token, i) => {
-      callBucket.push({
-        address: token.address as `0x{string}`,
-        abi: TokenBalanceABI,
-        functionName: "balanceOf",
-        args: [address]
-      });
-
-      if (i % MAX_PER_CALL === MAX_PER_CALL - 1) {
-        contractCalls.push([...callBucket]);
-        callBucket = [];
-      }
-    });
-    return contractCalls;
-
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- doing just tokensToLoad doesn't work and causes multiple calls
-  }, [address, tokensToLoad.map((t) => t.symbol).join()]);
 
   const { data, isLoading, error, refetch, isFetching } = useScopedQuery({
     queryKey: queryKeys.tokenBalancesAll,
@@ -66,7 +66,7 @@ export const useAllTokensBalance = () => {
 
       const [ethBalance, ...results] = await Promise.all([
         ETH.getBalance(address),
-        ...(calls.map((calls) =>
+        ...(makeCalls(tokensToLoad, address).map((calls) =>
           multicall(config, { contracts: calls, allowFailure: false })
         ) as unknown as BigNumber[])
       ]);
@@ -77,7 +77,7 @@ export const useAllTokensBalance = () => {
       if (ethBalance) {
         Log.module("app").debug(`ETH balance: `, ethBalance.toHuman());
         setQueryData<Record<string, TokenValue>>(queryKeys.tokenBalance(ETH.symbol), () => { 
-          return { ETH: ethBalance }
+          return { [getTokenIndex(ETH)]: ethBalance }
         });
         balances.ETH = ethBalance;
       }
@@ -85,11 +85,12 @@ export const useAllTokensBalance = () => {
       for (let i = 0; i < res.length; i++) {
         const value = res[i];
         const token = tokensToLoad[i];
-        balances[token.address] = token.fromBlockchain(value);
+        const tokenIndex = getTokenIndex(token);
+        balances[tokenIndex] = token.fromBlockchain(value);
 
         // set the balance in the query cache too
         setQueryData(queryKeys.tokenBalance(token.address), () => {
-          return { [token.address]: balances[token.address] }
+          return { [tokenIndex]: balances[token.address] }
         })
       }
 

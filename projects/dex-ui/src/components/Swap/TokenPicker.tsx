@@ -13,6 +13,7 @@ import { BottomDrawer } from "../BottomDrawer";
 import { BodyS } from "../Typography";
 import { size } from "src/breakpoints";
 import { displayTokenSymbol } from "src/utils/format";
+import { displayTokenName, getTokenIndex } from "src/tokens/utils";
 
 export type TokenPickerProps = {
   token: Token;
@@ -101,13 +102,13 @@ export const TokenPicker: FC<TokenPickerProps> = ({ token, tokenOptions, exclude
                     <Details>
                       <Symbol>{token.symbol}</Symbol>
                       <Name>
-                        {token.displayName === "UNKNOWN" ? token.name : token.displayName}
+                        {displayTokenName(token)}
                       </Name>
                     </Details>
                     {balancesLoading || isFetching ? (
                       <Spinner size={14} />
                     ) : (
-                      <Balance>{balances?.[token.address]?.toHuman()}</Balance>
+                      <Balance>{balances?.[getTokenIndex(token)]?.toHuman()}</Balance>
                     )}
                   </TokenRow>
                 ))}
