@@ -139,9 +139,18 @@ export type RawDepositData = {
  */
 export function makeDepositObject(token: Token, stemTipForToken: ethers.BigNumber, data: RawDepositData): Deposit {
   // On-chain
-  const stem = ethers.BigNumber.from(data.stem);
+  let stem
   const amount = token.fromBlockchain(data.amount.toString());
   const bdv = Silo.sdk.tokens.BEAN.fromBlockchain(data.bdv.toString()); // Hack
+<<<<<<< HEAD
+=======
+  // Hack - Remove additional digits added to stem of redeposited unripe tokens in migrateStem
+  if (token.isUnripe && !ethers.BigNumber.from(data.stem).isNegative()) {
+    stem = ethers.BigNumber.from(data.stem).div(1000000);
+  } else {
+    stem = ethers.BigNumber.from(data.stem);
+  };
+>>>>>>> master
   const isGerminating = stem.gte(data.germinatingStem);
 
   // Stalk

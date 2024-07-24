@@ -39,7 +39,9 @@ library LibIncentive {
      * BEAN:ETH price. This function is called at the end of {sunriseTo()} after all
      * "step" functions have been executed.
      */
-    function determineReward(uint256 secondsLate) external pure returns (uint256) {
+    function determineReward(
+        uint256 secondsLate
+    ) external pure returns (uint256) {
         // Cap the maximum number of blocks late. If the sunrise is later than
         // this, Beanstalk will pay the same amount. Prevents unbounded return value.
         if (secondsLate > MAX_SECONDS_LATE) {
@@ -537,7 +539,10 @@ library LibIncentive {
         }
     }
 
-    function _scaleReward(uint256 beans, uint256 scaler) private pure returns (uint256) {
+    function _scaleReward(
+        uint256 beans,
+        uint256 scaler
+    ) private pure returns (uint256) {
         return beans.mul(scaler).div(FRAC_EXP_PRECISION);
     }
 }

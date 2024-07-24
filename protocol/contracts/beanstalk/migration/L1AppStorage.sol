@@ -138,7 +138,7 @@ contract Account {
          * Previously held the V1 Silo Deposits/Withdrawals for BEAN:ETH Uniswap v2 LP Tokens.
          *
          * BEAN:3CRV and BEAN:LUSD tokens prior to Replant were stored in the Silo V2
-         * format in the `s.a[account].legacyV2Deposits` mapping.
+         * format in the `s.accts[account].legacyV2Deposits` mapping.
          *
          * NOTE: While the Silo V1 format is now deprecated, unmigrated Silo V1 deposits are still
          * stored in this storage slot. See {LibUnripeSilo} for more.

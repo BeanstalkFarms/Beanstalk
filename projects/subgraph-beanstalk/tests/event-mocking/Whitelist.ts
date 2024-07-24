@@ -1,4 +1,5 @@
 import { Address, BigInt, Bytes, ethereum } from "@graphprotocol/graph-ts";
+<<<<<<< HEAD
 import { newMockEvent } from "matchstick-as/assembly/index";
 
 import { BEANSTALK } from "../../../subgraph-core/utils/Constants";
@@ -12,6 +13,14 @@ const mockBeanstalkEvent = (): ethereum.Event => {
   e.address = BEANSTALK;
   return e;
 };
+=======
+
+import { WhitelistToken as WhitelistToken_V2, DewhitelistToken } from "../../generated/Silo-Replanted/Beanstalk";
+import { WhitelistToken as WhitelistToken_V3 } from "../../generated/Silo-V3/Beanstalk";
+import { WhitelistToken as WhitelistToken_V4 } from "../../generated/BIP45-SeedGauge/Beanstalk";
+import { mockBeanstalkEvent } from "../../../subgraph-core/tests/event-mocking/Util";
+
+>>>>>>> master
 
 export function createWhitelistTokenV2Event(token: string, selector: string, seeds: BigInt, stalk: BigInt): WhitelistToken_V2 {
   let event = changetype<WhitelistToken_V2>(mockBeanstalkEvent());

@@ -7,7 +7,8 @@ import {
   BEAN_WETH_V1,
   BEAN_WETH_CP2_WELL,
   BEAN_3CRV_V1,
-  BEAN_LUSD_V1
+  BEAN_LUSD_V1,
+  BEANSTALK
 } from "../../../subgraph-core/utils/Constants";
 import { dayFromTimestamp, hourFromTimestamp } from "../../../subgraph-core/utils/Dates";
 import { ONE_BD, toDecimal, ZERO_BD, ZERO_BI } from "../../../subgraph-core/utils/Decimals";
@@ -20,6 +21,8 @@ export function loadBean(token: string): Bean {
   let bean = Bean.load(token);
   if (bean == null) {
     bean = new Bean(token);
+    bean.chain = "ethereum";
+    bean.beanstalk = BEANSTALK.toHexString();
     bean.supply = ZERO_BI;
     bean.marketCap = ZERO_BD;
     bean.lockedBeans = ZERO_BI;
@@ -38,11 +41,15 @@ export function loadBean(token: string): Bean {
   return bean as Bean;
 }
 
+<<<<<<< HEAD
 export function loadOrCreateBeanHourlySnapshot(
   token: string,
   timestamp: BigInt,
   season: i32
 ): BeanHourlySnapshot {
+=======
+export function loadOrCreateBeanHourlySnapshot(token: string, timestamp: BigInt, season: i32): BeanHourlySnapshot {
+>>>>>>> master
   let id = token + "-" + season.toString();
   let snapshot = BeanHourlySnapshot.load(id);
   if (snapshot == null) {
@@ -254,6 +261,7 @@ export function updateBeanAfterPoolSwap(
     }
 
     updateBeanSupplyPegPercent(blockNumber);
+<<<<<<< HEAD
     updateBeanValues(
       BEAN_ERC20.toHexString(),
       timestamp,
@@ -263,6 +271,9 @@ export function updateBeanAfterPoolSwap(
       volumeUSD,
       deltaLiquidityUSD
     );
+=======
+    updateBeanValues(BEAN_ERC20.toHexString(), timestamp, beanPrice, ZERO_BI, volumeBean, volumeUSD, deltaLiquidityUSD);
+>>>>>>> master
     checkBeanCross(BEAN_ERC20.toHexString(), timestamp, blockNumber, oldBeanPrice, beanPrice);
   }
 }

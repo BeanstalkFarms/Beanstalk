@@ -70,7 +70,8 @@ export class Tokens {
       18,
       "WETH",
       {
-        name: "Wrapped Ether"
+        name: "Wrapped Ether",
+        displayDecimals: 4
       },
       providerOrSigner
     );
@@ -167,7 +168,11 @@ export class Tokens {
       providerOrSigner
     );
     this.UNRIPE_BEAN.rewards = {
+<<<<<<< HEAD
       stalk: this.STALK.amount(0),
+=======
+      stalk: this.STALK.amount(1),
+>>>>>>> master
       seeds: TokenValue.ZERO
     };
     this.UNRIPE_BEAN.isUnripe = true;

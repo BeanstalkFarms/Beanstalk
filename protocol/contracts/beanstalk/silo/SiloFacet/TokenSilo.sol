@@ -187,7 +187,12 @@ contract TokenSilo is ReentrancyGuard {
      * the stalk assoicated with the deposits.
      *
      */
-    function _withdrawDeposit(address account, address token, int96 stem, uint256 amount) internal {
+    function _withdrawDeposit(
+        address account,
+        address token,
+        int96 stem,
+        uint256 amount
+    ) internal {
         // Remove the Deposit from `account`.
         (
             uint256 initalStalkRemoved,
@@ -213,7 +218,14 @@ contract TokenSilo is ReentrancyGuard {
         } else {
             // remove deposit from germination, and burn the grown stalk.
             // grown stalk does not germinate and is not counted in germinating totals.
-            _withdrawGerminating(account, token, amount, bdvRemoved, initalStalkRemoved, side);
+            _withdrawGerminating(
+                account,
+                token,
+                amount,
+                bdvRemoved,
+                initalStalkRemoved,
+                side
+            );
 
             if (grownStalkRemoved > 0) {
                 LibSilo.burnActiveStalk(account, grownStalkRemoved);
@@ -237,7 +249,10 @@ contract TokenSilo is ReentrancyGuard {
         int96[] calldata stems,
         uint256[] calldata amounts
     ) internal returns (uint256) {
-        require(stems.length == amounts.length, "Silo: Crates, amounts are diff lengths.");
+        require(
+            stems.length == amounts.length,
+            "Silo: Crates, amounts are diff lengths."
+        );
 
         LibSilo.AssetsRemoved memory ar = LibSilo._removeDepositsFromAccount(
             account,
@@ -249,7 +264,13 @@ contract TokenSilo is ReentrancyGuard {
 
         // withdraw deposits that are not germinating.
         if (ar.active.tokens > 0) {
-            _withdraw(account, token, ar.active.tokens, ar.active.bdv, ar.active.stalk);
+            _withdraw(
+                account,
+                token,
+                ar.active.tokens,
+                ar.active.bdv,
+                ar.active.stalk
+            );
         }
 
         // withdraw Germinating deposits from odd seasons
@@ -320,11 +341,8 @@ contract TokenSilo is ReentrancyGuard {
         // Deposited Beans in that Season, then it is assumed that the excess Beans were
         // Planted.
         if (token == C.BEAN) {
-            (uint256 germinatingStalk, uint256 earnedBeansStalk) = LibSilo.checkForEarnedBeans(
-                account,
-                stalk,
-                side
-            );
+            (uint256 germinatingStalk, uint256 earnedBeansStalk) = LibSilo
+                .checkForEarnedBeans(account, stalk, side);
             // set the bdv and amount accordingly to the stalk.
             stalk = germinatingStalk;
             uint256 earnedBeans = earnedBeansStalk.div(C.STALK_PER_BEAN);
@@ -337,7 +355,11 @@ contract TokenSilo is ReentrancyGuard {
             // burn the earned bean stalk (which is active).
             LibSilo.burnActiveStalk(account, earnedBeansStalk);
             // calculate earnedBeans and decrement totalDeposited.
-            LibTokenSilo.decrementTotalDeposited(C.BEAN, earnedBeans, earnedBeans);
+            LibTokenSilo.decrementTotalDeposited(
+                C.BEAN,
+                earnedBeans,
+                earnedBeans
+            );
         }
         // Decrement from total germinating.
         LibTokenSilo.decrementTotalGerminating(token, amount, bdv, side); // Decrement total Germinating in the silo.
@@ -360,8 +382,12 @@ contract TokenSilo is ReentrancyGuard {
         int96 stem,
         uint256 amount
     ) internal returns (uint256) {
-        (uint256 initialStalk, uint256 activeStalk, uint256 bdv, GerminationSide side) = LibSilo
-            ._removeDepositFromAccount(
+        (
+            uint256 initialStalk,
+            uint256 activeStalk,
+            uint256 bdv,
+            GerminationSide side
+        ) = LibSilo._removeDepositFromAccount(
                 sender,
                 token,
                 stem,
@@ -378,11 +404,17 @@ contract TokenSilo is ReentrancyGuard {
         );
 
         if (side == GerminationSide.NOT_GERMINATING) {
-            LibSilo.transferStalk(sender, recipient, initialStalk.add(activeStalk));
+            LibSilo.transferStalk(
+                sender,
+                recipient,
+                initialStalk.add(activeStalk)
+            );
         } else {
             if (token == C.BEAN) {
-                (uint256 senderGerminatingStalk, uint256 senderEarnedBeansStalk) = LibSilo
-                    .checkForEarnedBeans(sender, initialStalk, side);
+                (
+                    uint256 senderGerminatingStalk,
+                    uint256 senderEarnedBeansStalk
+                ) = LibSilo.checkForEarnedBeans(sender, initialStalk, side);
                 // if initial stalk is greater than the sender's germinating stalk, then the sender is sending an
                 // Earned Bean Deposit. The active stalk is incremented and the
                 // initial stalk is decremented by the sender's earnedBeansStalk.
@@ -391,7 +423,12 @@ contract TokenSilo is ReentrancyGuard {
                     initialStalk = initialStalk.sub(senderEarnedBeansStalk);
                 }
             }
-            LibSilo.transferGerminatingStalk(sender, recipient, initialStalk, side);
+            LibSilo.transferGerminatingStalk(
+                sender,
+                recipient,
+                initialStalk,
+                side
+            );
             if (activeStalk > 0) {
                 LibSilo.transferStalk(sender, recipient, activeStalk);
             }
@@ -428,18 +465,26 @@ contract TokenSilo is ReentrancyGuard {
         int96[] calldata stems,
         uint256[] calldata amounts
     ) internal returns (uint256[] memory) {
-        require(stems.length == amounts.length, "Silo: Crates, amounts are diff lengths.");
+        require(
+            stems.length == amounts.length,
+            "Silo: Crates, amounts are diff lengths."
+        );
 
         LibSilo.AssetsRemoved memory ar;
         uint256[] memory bdvs = new uint256[](stems.length);
         uint256[] memory removedDepositIDs = new uint256[](stems.length);
 
         // get the germinating stem for the token
-        LibGerminate.GermStem memory germStem = LibGerminate.getGerminatingStem(token);
+        LibGerminate.GermStem memory germStem = LibGerminate.getGerminatingStem(
+            token
+        );
         // Similar to {removeDepositsFromAccount}, however the Deposit is also
         // added to the recipient's account during each iteration.
         for (uint256 i; i < stems.length; ++i) {
-            GerminationSide side = LibGerminate._getGerminationState(stems[i], germStem);
+            GerminationSide side = LibGerminate._getGerminationState(
+                stems[i],
+                germStem
+            );
             uint256 crateBdv = LibTokenSilo.removeDepositFromAccount(
                 sender,
                 token,
@@ -476,7 +521,9 @@ contract TokenSilo is ReentrancyGuard {
                 }
             }
             bdvs[i] = crateBdv;
-            removedDepositIDs[i] = uint256(LibBytes.packAddressAndStem(token, stems[i]));
+            removedDepositIDs[i] = uint256(
+                LibBytes.packAddressAndStem(token, stems[i])
+            );
         }
 
         // transfer regular and germinating stalk (if appliable)
@@ -488,9 +535,22 @@ contract TokenSilo is ReentrancyGuard {
          *  However, the ERC1155 standard has a dedicated {batchTransfer} event,
          *  which is used here.
          */
-        emit TransferBatch(LibTractor._user(), sender, recipient, removedDepositIDs, amounts);
+        emit TransferBatch(
+            LibTractor._user(),
+            sender,
+            recipient,
+            removedDepositIDs,
+            amounts
+        );
         // emit RemoveDeposits event (tokens removed are summation).
-        emit RemoveDeposits(sender, token, stems, amounts, ar.active.tokens, bdvs);
+        emit RemoveDeposits(
+            sender,
+            token,
+            stems,
+            amounts,
+            ar.active.tokens,
+            bdvs
+        );
 
         return bdvs;
     }

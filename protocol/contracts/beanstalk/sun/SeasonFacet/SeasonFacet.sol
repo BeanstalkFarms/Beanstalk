@@ -50,11 +50,17 @@ contract SeasonFacet is Invariable, Weather {
         LibTransfer.To mode
     ) public payable fundsSafu noOutFlow returns (uint256) {
         require(!s.sys.paused, "Season: Paused.");
-        require(seasonTime() > s.sys.season.current, "Season: Still current Season.");
+        require(
+            seasonTime() > s.sys.season.current,
+            "Season: Still current Season."
+        );
         uint32 season = stepSeason();
         int256 deltaB = stepOracle();
+        LibGerminate.endTotalGermination(
+            season,
+            LibWhitelistedTokens.getWhitelistedTokens()
+        );
         uint256 caseId = calcCaseIdandUpdate(deltaB);
-        LibGerminate.endTotalGermination(season, LibWhitelistedTokens.getWhitelistedTokens());
         LibGauge.stepGauge();
         stepSun(deltaB, caseId);
 
@@ -68,7 +74,10 @@ contract SeasonFacet is Invariable, Weather {
     function seasonTime() public view virtual returns (uint32) {
         if (block.timestamp < s.sys.season.start) return 0;
         if (s.sys.season.period == 0) return type(uint32).max;
-        return uint32((block.timestamp - s.sys.season.start) / s.sys.season.period);
+        return
+            uint32(
+                (block.timestamp - s.sys.season.start) / s.sys.season.period
+            );
     }
 
     //////////////////// SEASON INTERNAL ////////////////////
@@ -89,13 +98,19 @@ contract SeasonFacet is Invariable, Weather {
      * @param mode Send reward beans to Internal or Circulating balance
      * @dev Mints Beans to `account` as a reward for calling {sunrise()}.
      */
-    function incentivize(address account, LibTransfer.To mode) private returns (uint256) {
+    function incentivize(
+        address account,
+        LibTransfer.To mode
+    ) private returns (uint256) {
         uint256 secondsLate = block.timestamp.sub(
-            s.sys.season.start.add(s.sys.season.period.mul(s.sys.season.current))
+            s.sys.season.start.add(
+                s.sys.season.period.mul(s.sys.season.current)
+            )
         );
 
         // reset USD Token prices and TWA reserves in storage for all whitelisted Well LP Tokens.
-        address[] memory whitelistedWells = LibWhitelistedTokens.getWhitelistedWellLpTokens();
+        address[] memory whitelistedWells = LibWhitelistedTokens
+            .getWhitelistedWellLpTokens();
         for (uint256 i; i < whitelistedWells.length; i++) {
             LibWell.resetUsdTokenPriceForWell(whitelistedWells[i]);
             LibWell.resetTwaReservesForWell(whitelistedWells[i]);

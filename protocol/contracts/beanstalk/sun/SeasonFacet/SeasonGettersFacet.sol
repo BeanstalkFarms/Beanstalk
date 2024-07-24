@@ -84,7 +84,10 @@ contract SeasonGettersFacet {
     /**
      * @notice Returns the Plenty per Root for `season`.
      */
-    function plentyPerRoot(uint32 _season, address well) external view returns (uint256) {
+    function plentyPerRoot(
+        uint32 _season,
+        address well
+    ) external view returns (uint256) {
         return s.sys.sop.sops[_season][well];
     }
 
@@ -105,7 +108,9 @@ contract SeasonGettersFacet {
         revert("Oracle: Pool not supported");
     }
 
-    function poolCurrentDeltaB(address pool) external view returns (int256 deltaB) {
+    function poolCurrentDeltaB(
+        address pool
+    ) external view returns (int256 deltaB) {
         if (LibWell.isWell(pool)) {
             (deltaB) = LibDeltaB.currentDeltaB(pool);
             return deltaB;
@@ -118,7 +123,9 @@ contract SeasonGettersFacet {
      * @notice Returns the last Well Oracle Snapshot for a given `well`.
      * @return snapshot The encoded cumulative balances the last time the Oracle was captured.
      */
-    function wellOracleSnapshot(address well) external view returns (bytes memory snapshot) {
+    function wellOracleSnapshot(
+        address well
+    ) external view returns (bytes memory snapshot) {
         snapshot = s.sys.wellOracleSnapshots[well];
     }
 
@@ -152,7 +159,11 @@ contract SeasonGettersFacet {
      * @dev 6 decimal precision (1 GrownStalkPerBdvPerSeason = 1e6);
      * note that stalk has 10 decimals.
      */
-    function getAverageGrownStalkPerBdvPerSeason() public view returns (uint128) {
+    function getAverageGrownStalkPerBdvPerSeason()
+        public
+        view
+        returns (uint128)
+    {
         return s.sys.seedGauge.averageGrownStalkPerBdvPerSeason;
     }
 
@@ -169,14 +180,19 @@ contract SeasonGettersFacet {
      * @dev 6 decimal precision (1% = 1e6)
      */
     function getBeanToMaxLpGpPerBdvRatioScaled() public view returns (uint256) {
-        return LibGauge.getBeanToMaxLpGpPerBdvRatioScaled(s.sys.seedGauge.beanToMaxLpGpPerBdvRatio);
+        return
+            LibGauge.getBeanToMaxLpGpPerBdvRatioScaled(
+                s.sys.seedGauge.beanToMaxLpGpPerBdvRatio
+            );
     }
 
     /**
      * @notice returns the Gauge Points per BDV for a given token.
      * @param token The token to get the Gauge Points per BDV for.
      */
-    function getGaugePointsPerBdvForToken(address token) public view returns (uint256) {
+    function getGaugePointsPerBdvForToken(
+        address token
+    ) public view returns (uint256) {
         if (token == C.BEAN) {
             return getBeanGaugePointsPerBdv();
         } else {
@@ -188,11 +204,20 @@ contract SeasonGettersFacet {
      * gets the Gauge Points per BDV for a given well.
      * @param well The well to get the Gauge Points per BDV for.
      */
-    function getGaugePointsPerBdvForWell(address well) public view returns (uint256) {
+    function getGaugePointsPerBdvForWell(
+        address well
+    ) public view returns (uint256) {
         if (LibWell.isWell(well)) {
-            uint256 wellGaugePoints = s.sys.silo.assetSettings[well].gaugePoints;
+            uint256 wellGaugePoints = s
+                .sys
+                .silo
+                .assetSettings[well]
+                .gaugePoints;
             uint256 wellDepositedBdv = s.sys.silo.balances[well].depositedBdv;
-            return wellGaugePoints.mul(LibGauge.BDV_PRECISION).div(wellDepositedBdv);
+            return
+                wellGaugePoints.mul(LibGauge.BDV_PRECISION).div(
+                    wellDepositedBdv
+                );
         } else {
             revert("Token not supported");
         }
@@ -210,17 +235,23 @@ contract SeasonGettersFacet {
      */
     function getBeanGaugePointsPerBdv() public view returns (uint256) {
         uint256 beanToMaxLpGpPerBdvRatio = getBeanToMaxLpGpPerBdvRatioScaled();
-        return getBeanEthGaugePointsPerBdv().mul(beanToMaxLpGpPerBdvRatio).div(100e18);
+        return
+            getBeanEthGaugePointsPerBdv().mul(beanToMaxLpGpPerBdvRatio).div(
+                100e18
+            );
     }
 
     /**
      * @notice calculates the grown stalk issued per season.
      */
     function getGrownStalkIssuedPerSeason() public view returns (uint256) {
-        address[] memory lpGaugeTokens = LibWhitelistedTokens.getWhitelistedLpTokens();
+        address[] memory lpGaugeTokens = LibWhitelistedTokens
+            .getWhitelistedLpTokens();
         uint256 totalLpBdv;
         for (uint i; i < lpGaugeTokens.length; i++) {
-            totalLpBdv = totalLpBdv.add(s.sys.silo.balances[lpGaugeTokens[i]].depositedBdv);
+            totalLpBdv = totalLpBdv.add(
+                s.sys.silo.balances[lpGaugeTokens[i]].depositedBdv
+            );
         }
         return
             uint256(s.sys.seedGauge.averageGrownStalkPerBdvPerSeason)
@@ -232,7 +263,8 @@ contract SeasonGettersFacet {
      * @notice Gets the stalk per Gauge Point. Used In gauge system.
      */
     function getGrownStalkIssuedPerGp() external view returns (uint256) {
-        address[] memory lpGaugeTokens = LibWhitelistedTokens.getWhitelistedLpTokens();
+        address[] memory lpGaugeTokens = LibWhitelistedTokens
+            .getWhitelistedLpTokens();
         uint256 totalGaugePoints;
         for (uint i; i < lpGaugeTokens.length; i++) {
             totalGaugePoints = totalGaugePoints.add(
@@ -241,9 +273,9 @@ contract SeasonGettersFacet {
         }
         uint256 newGrownStalk = getGrownStalkIssuedPerSeason();
         totalGaugePoints = totalGaugePoints.add(
-            getBeanGaugePointsPerBdv().mul(s.sys.silo.balances[C.BEAN].depositedBdv).div(
-                LibGauge.BDV_PRECISION
-            )
+            getBeanGaugePointsPerBdv()
+                .mul(s.sys.silo.balances[C.BEAN].depositedBdv)
+                .div(LibGauge.BDV_PRECISION)
         );
         return newGrownStalk.mul(1e18).div(totalGaugePoints);
     }
@@ -255,7 +287,11 @@ contract SeasonGettersFacet {
         uint256 beanSupply = C.bean().totalSupply();
         return
             Decimal
-                .ratio(s.sys.fields[fieldId].pods - s.sys.fields[fieldId].harvestable, beanSupply)
+                .ratio(
+                    s.sys.fields[fieldId].pods -
+                        s.sys.fields[fieldId].harvestable,
+                    beanSupply
+                )
                 .value;
     }
 
@@ -264,7 +300,9 @@ contract SeasonGettersFacet {
      */
     function getLiquidityToSupplyRatio() external view returns (uint256) {
         uint256 beanSupply = C.bean().totalSupply();
-        (Decimal.D256 memory l2sr, , ) = LibEvaluate.calcLPToSupplyRatio(beanSupply);
+        (Decimal.D256 memory l2sr, , ) = LibEvaluate.calcLPToSupplyRatio(
+            beanSupply
+        );
         return l2sr.value;
     }
 
@@ -280,34 +318,58 @@ contract SeasonGettersFacet {
     /**
      * @notice returns the twa liquidity for a well, using the values stored in beanstalk.
      */
-    function getTwaLiquidityForWell(address well) public view returns (uint256) {
+    function getTwaLiquidityForWell(
+        address well
+    ) public view returns (uint256) {
         (address token, ) = LibWell.getNonBeanTokenAndIndexFromWell(well);
-        return LibWell.getTwaLiquidityFromPump(well, LibUsdOracle.getTokenPrice(token));
+        return
+            LibWell.getTwaLiquidityFromPump(
+                well,
+                LibUsdOracle.getTokenPrice(token)
+            );
     }
 
     /**
      * @notice returns the twa liquidity for a well, using the values stored in beanstalk.
      * @dev This is the liquidity used in the gauge system.
      */
-    function getWeightedTwaLiquidityForWell(address well) public view returns (uint256) {
-        return LibEvaluate.getLiquidityWeight(well).mul(getTwaLiquidityForWell(well)).div(1e18);
+    function getWeightedTwaLiquidityForWell(
+        address well
+    ) public view returns (uint256) {
+        return
+            LibEvaluate
+                .getLiquidityWeight(well)
+                .mul(getTwaLiquidityForWell(well))
+                .div(1e18);
     }
 
     /**
      * @notice Returns the total twa liquidity of beanstalk.
      */
-    function getTotalUsdLiquidity() external view returns (uint256 totalLiquidity) {
-        address[] memory wells = LibWhitelistedTokens.getWhitelistedWellLpTokens();
+    function getTotalUsdLiquidity()
+        external
+        view
+        returns (uint256 totalLiquidity)
+    {
+        address[] memory wells = LibWhitelistedTokens
+            .getWhitelistedWellLpTokens();
         for (uint i; i < wells.length; i++) {
-            totalLiquidity = totalLiquidity.add(getTwaLiquidityForWell(wells[i]));
+            totalLiquidity = totalLiquidity.add(
+                getTwaLiquidityForWell(wells[i])
+            );
         }
     }
 
     /**
      * @notice returns the total weighted liquidity of beanstalk.
      */
-    function getTotalWeightedUsdLiquidity() external view returns (uint256 totalWeightedLiquidity) {
-        address[] memory wells = LibWhitelistedTokens.getWhitelistedWellLpTokens();
+    function getTotalWeightedUsdLiquidity()
+        external
+        view
+        returns (uint256 totalWeightedLiquidity)
+    {
+        address[] memory wells = LibWhitelistedTokens
+            .getWhitelistedWellLpTokens();
         for (uint i; i < wells.length; i++) {
             totalWeightedLiquidity = totalWeightedLiquidity.add(
                 getWeightedTwaLiquidityForWell(wells[i])
@@ -330,21 +392,29 @@ contract SeasonGettersFacet {
         address token,
         uint256 percentOfDepositedBdv
     ) external view returns (uint256) {
-        return LibGauge.calcGaugePoints(s.sys.silo.assetSettings[token], percentOfDepositedBdv);
+        return
+            LibGauge.calcGaugePoints(
+                s.sys.silo.assetSettings[token],
+                percentOfDepositedBdv
+            );
     }
 
     /**
      * @notice returns the new gauge point for a token,
      * if it were to be updated with the current state.
      */
-    function getGaugePointsWithParams(address token) external view returns (uint256) {
-        address[] memory whitelistedLpTokens = LibWhitelistedTokens.getWhitelistedLpTokens();
+    function getGaugePointsWithParams(
+        address token
+    ) external view returns (uint256) {
+        address[] memory whitelistedLpTokens = LibWhitelistedTokens
+            .getWhitelistedLpTokens();
 
         // get the germinating assets that will finish germination in the next season.
         GerminationSide side;
         if (
-            LibGerminate.getGerminationStateForSeason(s.sys.season.current + 1) ==
-            GerminationSide.ODD
+            LibGerminate.getGerminationStateForSeason(
+                s.sys.season.current + 1
+            ) == GerminationSide.ODD
         ) {
             side = GerminationSide.ODD;
         } else {
@@ -381,21 +451,29 @@ contract SeasonGettersFacet {
         return s.sys.casesV2;
     }
 
-    function getCaseData(uint256 caseId) external view returns (bytes32 casesData) {
+    function getCaseData(
+        uint256 caseId
+    ) external view returns (bytes32 casesData) {
         return LibCases.getDataFromCase(caseId);
     }
 
-    function getChangeFromCaseId(uint256 caseId) public view returns (uint32, int8, uint80, int80) {
+    function getChangeFromCaseId(
+        uint256 caseId
+    ) public view returns (uint32, int8, uint80, int80) {
         LibCases.CaseData memory cd = LibCases.decodeCaseData(caseId);
         return (cd.mT, cd.bT, cd.mL, cd.bL);
     }
 
-    function getAbsTemperatureChangeFromCaseId(uint256 caseId) external view returns (int8 t) {
+    function getAbsTemperatureChangeFromCaseId(
+        uint256 caseId
+    ) external view returns (int8 t) {
         (, t, , ) = getChangeFromCaseId(caseId);
         return t;
     }
 
-    function getRelTemperatureChangeFromCaseId(uint256 caseId) external view returns (uint32 mt) {
+    function getRelTemperatureChangeFromCaseId(
+        uint256 caseId
+    ) external view returns (uint32 mt) {
         (mt, , , ) = getChangeFromCaseId(caseId);
         return mt;
     }
@@ -422,7 +500,11 @@ contract SeasonGettersFacet {
         return s.sys.season.timestamp;
     }
 
-    function getSeedGaugeSetting() external view returns (SeedGaugeSettings memory) {
+    function getSeedGaugeSetting()
+        external
+        view
+        returns (SeedGaugeSettings memory)
+    {
         return s.sys.seedGaugeSettings;
     }
 

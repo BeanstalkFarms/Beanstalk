@@ -3,6 +3,7 @@
   "singleQuote": false,
   "semi": true,
   "trailingComma": "none",
+<<<<<<< HEAD
 
   "plugins": ["prettier-plugin-solidity"],
   "overrides": [
@@ -19,3 +20,14 @@
     }
   ]
 }
+=======
+  "overrides": [
+    {
+      "files": "projects/subgraph-*/**",
+      "options": {
+        "printWidth": 140
+      }
+    }
+  ]
+}
+>>>>>>> master

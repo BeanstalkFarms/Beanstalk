@@ -29,7 +29,9 @@ contract WhitelistFacet is Invariable, WhitelistedTokens, ReentrancyGuard {
      * @notice Removes a token from the Silo Whitelist.
      * @dev Can only be called by Beanstalk or Beanstalk owner.
      */
-    function dewhitelistToken(address token) external payable fundsSafu noNetFlow noSupplyChange {
+    function dewhitelistToken(
+        address token
+    ) external payable fundsSafu noNetFlow noSupplyChange {
         LibDiamond.enforceIsOwnerOrContract();
         LibWhitelist.dewhitelistToken(token);
     }
@@ -184,7 +186,10 @@ contract WhitelistFacet is Invariable, WhitelistedTokens, ReentrancyGuard {
         uint32 stalkEarnedPerSeason
     ) external payable fundsSafu noNetFlow noSupplyChange {
         LibDiamond.enforceIsOwnerOrContract();
-        LibWhitelist.updateStalkPerBdvPerSeasonForToken(token, stalkEarnedPerSeason);
+        LibWhitelist.updateStalkPerBdvPerSeasonForToken(
+            token,
+            stalkEarnedPerSeason
+        );
     }
 
     /**
@@ -239,7 +244,9 @@ contract WhitelistFacet is Invariable, WhitelistedTokens, ReentrancyGuard {
         LibWhitelist.updateGaugePointImplementationForToken(token, impl);
     }
 
-    function updateSeedGaugeSettings(SeedGaugeSettings memory updatedSeedGaugeSettings) external {
+    function updateSeedGaugeSettings(
+        SeedGaugeSettings memory updatedSeedGaugeSettings
+    ) external {
         LibDiamond.enforceIsOwnerOrContract();
         s.sys.seedGaugeSettings = updatedSeedGaugeSettings;
         emit UpdatedSeedGaugeSettings(updatedSeedGaugeSettings);

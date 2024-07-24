@@ -11,8 +11,14 @@ enum MarketStatus {
 
 enum PlotSource {
   SOW
-  HARVEST
   TRANSFER
+  MARKET
+}
+
+enum EmaWindow {
+  ROLLING_24_HOUR
+  ROLLING_7_DAY
+  ROLLING_30_DAY
 }
 
 enum EmaWindow {
@@ -72,6 +78,9 @@ type Season @entity {
 
   " Season number in Int form for sorting "
   season: Int!
+
+  " Block in which the season start was triggered by the sunrise call "
+  sunriseBlock: BigInt!
 
   " Block timestamp when sunrise was called "
   createdAt: BigInt!
@@ -666,28 +675,28 @@ type Plot @entity {
   field: Field!
   "Farmer who owns this plot"
   farmer: Farmer!
-  "Transaction source for this plot"
+  "Transaction source for this plot. Not the same as creationHash which can include plots splitting from transfer or harvest without the owner changing"
   source: PlotSource!
+  "Transaction hash corresponding to source"
+  sourceHash: String!
   "Associated plot listing"
   listing: PodListing
   "Season when created"
   season: Int!
-  "Creation transaction hash"
+  "Transaction hash of when this plot entity was created"
   creationHash: String!
   "Timestamp of creation"
   createdAt: BigInt!
   "Timestamp when updated"
   updatedAt: BigInt!
+  "Block when updated"
+  updatedAtBlock: BigInt!
   "Plot Index"
   index: BigInt!
-  "Beans used to sow, if any"
-  beans: BigInt!
   "Total pods in plot"
   pods: BigInt!
-  "Total pods that were sown, if any"
-  sownPods: BigInt!
-  "Temperature when the plot was sown"
-  temperature: Int!
+  "Number of beans spent for each pod, whether through sowing or on the marketplace"
+  beansPerPod: BigInt!
   "Number of pods harvestable"
   harvestablePods: BigInt!
   "Number of pods harvested"
@@ -701,10 +710,10 @@ type PodMarketplace @entity {
   id: ID!
   "Current season of the marketplace"
   season: Int!
-  "Indexes of actively listed plots"
-  listingIndexes: [BigInt!]!
-  "Active pod order IDs"
-  orders: [PodOrder!]!
+  "Information about the active pod listings. Each entry of the form 'account-index-expiry'"
+  activeListings: [String!]!
+  "Information about the active pod orders. Each entry of the form 'orderId-maxPlaceInLine'"
+  activeOrders: [String!]!
   "All historical listings"
   allListings: [PodListing!]! @derivedFrom(field: "podMarketplace")
   "All historical orders"
@@ -713,20 +722,24 @@ type PodMarketplace @entity {
   fills: [PodFill!]! @derivedFrom(field: "podMarketplace")
   "Current cumulative pods listed for sale"
   listedPods: BigInt!
+  "Current amount of total pods listed"
+  availableListedPods: BigInt!
   "Current cumulative pod listings filled"
   filledListedPods: BigInt!
   "Current cumulative pod listings that expired"
   expiredListedPods: BigInt!
   "Current cumulative pod listings that were cancelled"
   cancelledListedPods: BigInt!
-  "Current amount of total pods listed"
-  availableListedPods: BigInt!
-  "Current cumulative pod orders created"
-  orderedPods: BigInt!
+  "Current cumulative beans in pod orders created"
+  orderBeans: BigInt!
+  "Current amount of total beans in pod orders"
+  availableOrderBeans: BigInt!
+  "Current cumulative filled beans in pod orders"
+  filledOrderBeans: BigInt!
   "Current cumulative pod orders filled"
   filledOrderedPods: BigInt!
-  "Current cumulative pod orders cancelled"
-  cancelledOrderedPods: BigInt!
+  "Current cumulative beans in pod orders cancelled"
+  cancelledOrderBeans: BigInt!
   "Cumulative pod volume between listings and orders"
   podVolume: BigInt!
   "Cumulative bean volume between listings and orders"
@@ -746,40 +759,48 @@ type PodMarketplaceHourlySnapshot @entity {
   podMarketplace: PodMarketplace!
   "Point in time current cumulative pods listed for sale"
   listedPods: BigInt!
+  "Point in time current amount of total pods listed"
+  availableListedPods: BigInt!
   "Point in time current cumulative pod listings filled"
   filledListedPods: BigInt!
   "Point in time current cumulative pod listings that expired"
   expiredListedPods: BigInt!
   "Point in time current cumulative pod listings that were cancelled"
   cancelledListedPods: BigInt!
-  "Point in time current amount of total pods listed"
-  availableListedPods: BigInt!
-  "Point in time current cumulative pod orders created"
-  orderedPods: BigInt!
-  "Point in time current cumulative pod orders filled"
+  "Current cumulative beans in pod orders created"
+  orderBeans: BigInt!
+  "Current amount of total beans in pod orders"
+  availableOrderBeans: BigInt!
+  "Current cumulative filled beans in pod orders"
+  filledOrderBeans: BigInt!
+  "Current cumulative pod orders filled"
   filledOrderedPods: BigInt!
-  "Point in time current cumulative pod orders cancelled"
-  cancelledOrderedPods: BigInt!
+  "Current cumulative beans in pod orders cancelled"
+  cancelledOrderBeans: BigInt!
   "Point in time current cumulative pod volume between listings and orders"
   podVolume: BigInt!
   "Point in time current cumulative bean volume between listings and orders"
   beanVolume: BigInt!
   "Point in time current delta pods listed for sale"
   deltaListedPods: BigInt!
+  "Point in time current delta of total pods listed"
+  deltaAvailableListedPods: BigInt!
   "Point in time current delta pod listings filled"
   deltaFilledListedPods: BigInt!
   "Point in time current delta pod listings that expired"
   deltaExpiredListedPods: BigInt!
   "Point in time current delta pod listings that were cancelled"
   deltaCancelledListedPods: BigInt!
-  "Point in time current delta of total pods listed"
-  deltaAvailableListedPods: BigInt!
-  "Point in time current delta pod orders created"
-  deltaOrderedPods: BigInt!
+  "Point in time current delta ordered beans in pod orders created"
+  deltaOrderBeans: BigInt!
+  "Point in time current delta available ordered beans in pod orders"
+  deltaAvailableOrderBeans: BigInt!
+  "Point in time current delta filled ordered beans in pod orders"
+  deltaFilledOrderBeans: BigInt!
   "Point in time current delta pod orders filled"
   deltaFilledOrderedPods: BigInt!
-  "Point in time current delta pod orders cancelled"
-  deltaCancelledOrderedPods: BigInt!
+  "Point in time current delta cancelled ordered beans in pod orders"
+  deltaCancelledOrderBeans: BigInt!
   "Point in time current delta pod volume between listings and orders"
   deltaPodVolume: BigInt!
   "Point in time current delta bean volume between listings and orders"
@@ -799,40 +820,48 @@ type PodMarketplaceDailySnapshot @entity {
   podMarketplace: PodMarketplace!
   "Point in time current cumulative pods listed for sale"
   listedPods: BigInt!
+  "Point in time current amount of total pods listed"
+  availableListedPods: BigInt!
   "Point in time current cumulative pod listings filled"
   filledListedPods: BigInt!
   "Point in time current cumulative pod listings that expired"
   expiredListedPods: BigInt!
   "Point in time current cumulative pod listings that were cancelled"
   cancelledListedPods: BigInt!
-  "Point in time current amount of total pods listed"
-  availableListedPods: BigInt!
-  "Point in time current cumulative pod orders created"
-  orderedPods: BigInt!
-  "Point in time current cumulative pod orders filled"
+  "Current cumulative beans in pod orders created"
+  orderBeans: BigInt!
+  "Current amount of total beans in pod orders"
+  availableOrderBeans: BigInt!
+  "Current cumulative filled beans in pod orders"
+  filledOrderBeans: BigInt!
+  "Current cumulative pod orders filled"
   filledOrderedPods: BigInt!
-  "Point in time current cumulative pod orders cancelled"
-  cancelledOrderedPods: BigInt!
+  "Current cumulative beans in pod orders cancelled"
+  cancelledOrderBeans: BigInt!
   "Point in time current cumulative pod volume between listings and orders"
   podVolume: BigInt!
   "Point in time current cumulative bean volume between listings and orders"
   beanVolume: BigInt!
   "Point in time current delta pods listed for sale"
   deltaListedPods: BigInt!
+  "Point in time current delta of total pods listed"
+  deltaAvailableListedPods: BigInt!
   "Point in time current delta pod listings filled"
   deltaFilledListedPods: BigInt!
   "Point in time current delta pod listings that expired"
   deltaExpiredListedPods: BigInt!
   "Point in time current delta pod listings that were cancelled"
   deltaCancelledListedPods: BigInt!
-  "Point in time current delta of total pods listed"
-  deltaAvailableListedPods: BigInt!
-  "Point in time current delta pod orders created"
-  deltaOrderedPods: BigInt!
+  "Point in time current delta ordered beans in pod orders created"
+  deltaOrderBeans: BigInt!
+  "Point in time current delta available ordered beans in pod orders"
+  deltaAvailableOrderBeans: BigInt!
+  "Point in time current delta filled ordered beans in pod orders"
+  deltaFilledOrderBeans: BigInt!
   "Point in time current delta pod orders filled"
   deltaFilledOrderedPods: BigInt!
-  "Point in time current delta pod orders cancelled"
-  deltaCancelledOrderedPods: BigInt!
+  "Point in time current delta cancelled ordered beans in pod orders"
+  deltaCancelledOrderBeans: BigInt!
   "Point in time current delta pod volume between listings and orders"
   deltaPodVolume: BigInt!
   "Point in time current delta bean volume between listings and orders"
@@ -978,11 +1007,6 @@ type PodListing @entity {
   """
   filledAmount: BigInt!
 
-  """
-  The number of Pods that were remaining in *this* PodListing when it was Cancelled.
-  """
-  cancelledAmount: BigInt!
-
   ######################## Activity ########################
 
   "Any Fills associated with this PodListing."
@@ -1069,21 +1093,16 @@ type PodOrder @entity {
   ######################## Amounts ########################
 
   """
-  The original number of Pods requested by this PodOrder.
+  The original number of Beans locked in the PodOrder.
 
   Does NOT change as Fills occur.
-  Not deterministic for PodOrders with pricingType = DYNAMIC.
+  Always deterministic, since the Farmer must lock Beans for PodOrder fulfillment.
 
-  If pricingType = FIXED:
-    Set to the number of Pods which can be purchased by the Order.
-    If FIXED (V1): `amount` field emitted in PodOrderCreated.
-    If FIXED (V2): `amount / pricePerPod` fields emitted in PodOrderCreated.
-
-  If pricingType = DYNAMIC:
-    Set to `0`. The number of Pods that will be provided is unknown, since
-    the price is calculated based on the place in line of supplied Pods.
+  If FIXED (V1): `amount * pricePerPod` fields emitted in PodOrderCreated.
+  If FIXED (V2): `amount` field emitted in PodOrderCreated.
+  If DYNAMIC (V2): `amount` field emitted in PodOrderCreated.
   """
-  podAmount: BigInt!
+  beanAmount: BigInt!
 
   """
   The current number of Pods that have been purchased by this PodOrder.
@@ -1095,18 +1114,6 @@ type PodOrder @entity {
   Upon PodOrder cancellation, this value is locked.
   """
   podAmountFilled: BigInt!
-
-  """
-  The original number of Beans locked in the PodOrder.
-
-  Does NOT change as Fills occur.
-  Always deterministic, since the Farmer must lock Beans for PodOrder fulfillment.
-
-  If FIXED (V1): `amount * pricePerPod` fields emitted in PodOrderCreated.
-  If FIXED (V2): `amount` field emitted in PodOrderCreated.
-  If DYNAMIC (V2): `amount` field emitted in PodOrderCreated.
-  """
-  beanAmount: BigInt!
 
   """
   The current number of Beans spent to acquire Pods.
@@ -1149,18 +1156,20 @@ type PodFill @entity {
   listing: PodListing
   "Associated order, if any"
   order: PodOrder
-  "Account fulfilling the order"
+  "Account that is sending pods"
   from: String! # These are already referenced via the listing and order entities.
-  "Account filling the order"
+  "Account that is receiving pods"
   to: Farmer!
   "Number of pods filled"
   amount: BigInt!
+  "Where these pods were in line when filled"
+  placeInLine: BigInt!
   "Index of plot transferred"
   index: BigInt!
   "Start of plot transferred"
   start: BigInt!
   "Total beans used to fill listing/order"
-  costInBeans: BigInt
+  costInBeans: BigInt!
 }
 
 ##################################
@@ -1545,6 +1554,8 @@ type PodListingCreated implements MarketplaceEvent @entity(immutable: true) {
   historyID: String!
   " Account creating the listing"
   account: String!
+  "Where these pods were in line when listed"
+  placeInLine: BigInt!
   " Index of the plot listed"
   index: BigInt!
   " Start value of the plot listed "
@@ -1584,6 +1595,8 @@ type PodListingFilled implements MarketplaceEvent @entity(immutable: true) {
   from: String!
   "Account buying pods"
   to: String!
+  "Where these pods were in line when filled"
+  placeInLine: BigInt!
   "Index of the plot transferred"
   index: BigInt!
   "Start of the plot transferred"
@@ -1611,6 +1624,8 @@ type PodListingCancelled implements MarketplaceEvent @entity(immutable: true) {
   historyID: String!
   " Account cancelling listing"
   account: String!
+  "Where these pods were in line when cancelled"
+  placeInLine: BigInt!
   " Index of plot listing being cancelled"
   index: BigInt!
   " Block number of this event "
@@ -1669,6 +1684,8 @@ type PodOrderFilled implements MarketplaceEvent @entity(immutable: true) {
   from: String!
   "Account buying pods"
   to: String!
+  "Where these pods were in line when filled"
+  placeInLine: BigInt!
   "Index of the plot transferred"
   index: BigInt!
   "Start of the plot transferred"
@@ -1750,6 +1767,15 @@ type DewhitelistToken implements SiloEvent @entity(immutable: true) {
 type Germinating @entity {
   "Address-(EVEN|ODD)"
   id: ID!
+<<<<<<< HEAD
+=======
+  "Address of the token or account which is germinating"
+  address: String!
+  "EVEN or ODD"
+  type: String!
+  "True when the address is a farmer account"
+  isFarmer: Boolean!
+>>>>>>> master
   "The season in which the germination started"
   season: Int!
   "Germinating stalk. This only applies to farmer/Beanstalk address"

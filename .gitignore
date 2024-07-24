@@ -40,6 +40,9 @@ node_modules
 # Local Netlify folder
 .netlify
 
+<<<<<<< HEAD
 # forge libraries.
 protocol/lib/
+=======
+>>>>>>> master
 

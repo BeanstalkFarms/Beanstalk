@@ -40,7 +40,7 @@ export default function useFarmerMarketItemStats(
     });
     items.push({
       label: 'PRICE',
-      info: displayFullBN(item.pricePerPod, 2, 2),
+      info: displayFullBN(item.pricePerPod, 4, 2),
     });
     if (isListing(item)) {
       items.push({

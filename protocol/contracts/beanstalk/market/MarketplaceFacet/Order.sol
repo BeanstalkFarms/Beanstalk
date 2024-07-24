@@ -53,11 +53,19 @@ contract Order is Listing {
         uint256 beanAmount
     ) internal returns (bytes32 id) {
         require(beanAmount > 0, "Marketplace: Order amount must be > 0.");
-        require(podOrder.pricePerPod > 0, "Marketplace: Pod price must be greater than 0.");
+        require(
+            podOrder.pricePerPod > 0,
+            "Marketplace: Pod price must be greater than 0."
+        );
+        require(
+            podOrder.minFillAmount > 0,
+            "Marketplace: Minimum fill amount must be greater than 0."
+        );
 
         id = _getOrderId(podOrder);
 
-        if (s.sys.podOrders[id] > 0) _cancelPodOrder(podOrder, LibTransfer.To.INTERNAL);
+        if (s.sys.podOrders[id] > 0)
+            _cancelPodOrder(podOrder, LibTransfer.To.INTERNAL);
         s.sys.podOrders[id] = beanAmount;
 
         emit PodOrderCreated(
@@ -89,11 +97,15 @@ contract Order is Listing {
             "Marketplace: Fill must be >= minimum amount."
         );
         require(
-            s.accts[filler].fields[podOrder.fieldId].plots[index] >= (start + podAmount),
+            s.accts[filler].fields[podOrder.fieldId].plots[index] >=
+                (start + podAmount),
             "Marketplace: Invalid Plot."
         );
         require(
-            (index + start + podAmount - s.sys.fields[podOrder.fieldId].harvestable) <=
+            (index +
+                start +
+                podAmount -
+                s.sys.fields[podOrder.fieldId].harvestable) <=
                 podOrder.maxPlaceInLine,
             "Marketplace: Plot too far in line."
         );
@@ -101,7 +113,10 @@ contract Order is Listing {
         bytes32 id = _getOrderId(podOrder);
 
         uint256 costInBeans = (podAmount * podOrder.pricePerPod) / 1000000;
-        require(costInBeans <= s.sys.podOrders[id], "Marketplace: Not enough beans in order.");
+        require(
+            costInBeans <= s.sys.podOrders[id],
+            "Marketplace: Not enough beans in order."
+        );
         s.sys.podOrders[id] = s.sys.podOrders[id] - costInBeans;
 
         LibTransfer.sendToken(C.bean(), costInBeans, filler, mode);
@@ -110,7 +125,14 @@ contract Order is Listing {
             LibMarket._cancelPodListing(filler, podOrder.fieldId, index);
         }
 
-        _transferPlot(filler, podOrder.orderer, podOrder.fieldId, index, start, podAmount);
+        _transferPlot(
+            filler,
+            podOrder.orderer,
+            podOrder.fieldId,
+            index,
+            start,
+            podAmount
+        );
 
         if (s.sys.podOrders[id] == 0) {
             delete s.sys.podOrders[id];
@@ -131,7 +153,10 @@ contract Order is Listing {
     /*
      * Cancel
      */
-    function _cancelPodOrder(PodOrder memory podOrder, LibTransfer.To mode) internal {
+    function _cancelPodOrder(
+        PodOrder memory podOrder,
+        LibTransfer.To mode
+    ) internal {
         bytes32 id = _getOrderId(podOrder);
         uint256 amountBeans = s.sys.podOrders[id];
         LibTransfer.sendToken(C.bean(), amountBeans, podOrder.orderer, mode);
@@ -143,7 +168,9 @@ contract Order is Listing {
      * Get
      */
 
-    function _getOrderId(PodOrder memory podOrder) internal pure returns (bytes32 id) {
+    function _getOrderId(
+        PodOrder memory podOrder
+    ) internal pure returns (bytes32 id) {
         return
             keccak256(
                 abi.encodePacked(

@@ -12,14 +12,18 @@ import { config } from "src/utils/wagmi/config";
 
 export const useMultiFlowPumpTWAReserves = () => {
   const { data: wells } = useWells();
-  const { getIsMultiPumpWell } = useBeanstalkSiloWhitelist();
+  const { getIsMultiPumpWell, getIsWhitelisted } = useBeanstalkSiloWhitelist();
   const sdk = useSdk();
 
   const query = useQuery({
     queryKey: ["wells", "multiFlowPumpTWAReserves"],
 
     queryFn: async () => {
+<<<<<<< HEAD
       const whitelistedWells = (wells || []).filter((well) => getIsMultiPumpWell(well));
+=======
+      const whitelistedWells = (wells || []).filter((well) => getIsMultiPumpWell(well) && getIsWhitelisted(well) );
+>>>>>>> master
 
       const [{ timestamp: seasonTimestamp }, ...wellOracleSnapshots] = await Promise.all([
         sdk.contracts.beanstalk.time(),
@@ -42,24 +46,23 @@ export const useMultiFlowPumpTWAReserves = () => {
       const twaReservesResult: any[] = await multicall(config, { contracts: calls });
 
       const mapping: Record<string, TokenValue[]> = {};
-      let index = 0;
 
       whitelistedWells.forEach((well) => {
         const twa = [TokenValue.ZERO, TokenValue.ZERO];
         const numPumps = well.pumps?.length || 1;
 
-        well.pumps?.forEach((_pump) => {
-          const twaResult = twaReservesResult[index];
+        well.pumps?.forEach((_pump, index) => {
+          const indexedResult = twaReservesResult[index];
+          if (indexedResult.error) return;
+
+          const reserves = indexedResult?.result?.[0]
           const token1 = well.tokens?.[0];
           const token2 = well.tokens?.[1];
 
-          const reserves = twaResult["twaReserves"];
-
-          if (token1 && token2 && reserves.length === 2) {
+          if (token1 && token2 && reserves.length === 2 && reserves.length === 2) {
             twa[0] = twa[0].add(TokenValue.fromBlockchain(reserves[0], token1.decimals));
             twa[1] = twa[1].add(TokenValue.fromBlockchain(reserves[1], token2.decimals));
           }
-          index += 1;
         });
 
         /// In case there is more than one pump, divide the reserves by the number of pumps

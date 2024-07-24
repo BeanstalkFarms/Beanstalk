@@ -1,4 +1,5 @@
 import { Address, BigInt, ethereum } from "@graphprotocol/graph-ts";
+<<<<<<< HEAD
 import { newMockEvent } from "matchstick-as/assembly/index";
 import { Incentivization } from "../../generated/Season-Replanted/Beanstalk";
 
@@ -18,6 +19,12 @@ export function setSeason(season: u32): void {
   beanstalk.save();
 }
 
+=======
+import { Incentivization } from "../../generated/Season-Replanted/Beanstalk";
+
+import { mockBeanstalkEvent } from "../../../subgraph-core/tests/event-mocking/Util";
+
+>>>>>>> master
 export function createSunriseEvent(season: BigInt): void {}
 export function createSeasonSnapshotEvent(
   season: i32,

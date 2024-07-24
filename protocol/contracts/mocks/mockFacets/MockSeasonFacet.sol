@@ -40,7 +40,11 @@ interface ResetPool {
 interface IMockPump {
     function update(uint256[] memory _reserves, bytes memory) external;
 
-    function update(address well, uint256[] memory _reserves, bytes memory) external;
+    function update(
+        address well,
+        uint256[] memory _reserves,
+        bytes memory
+    ) external;
 
     function readInstantaneousReserves(
         address well,
@@ -55,7 +59,11 @@ contract MockSeasonFacet is SeasonFacet {
 
     event UpdateTWAPs(uint256[2] balances);
     event DeltaB(int256 deltaB);
-    event GaugePointChange(uint256 indexed season, address indexed token, uint256 gaugePoints);
+    event GaugePointChange(
+        uint256 indexed season,
+        address indexed token,
+        uint256 gaugePoints
+    );
     event Incentivization(address indexed account, uint256 beans);
     event UpdateAverageStalkPerBdvPerSeason(uint256 newStalkPerBdvPerSeason);
     event UpdateGaugeSettings(
@@ -65,7 +73,10 @@ contract MockSeasonFacet is SeasonFacet {
         uint64 optimalPercentDepositedBdv
     );
     event TotalGerminatingStalkChanged(uint256 season, int256 deltaStalk);
-    event TotalStalkChangedFromGermination(int256 deltaStalk, int256 deltaRoots);
+    event TotalStalkChangedFromGermination(
+        int256 deltaStalk,
+        int256 deltaRoots
+    );
 
     function reentrancyGuardTest() public nonReentrant {
         reentrancyGuardTest();
@@ -98,6 +109,10 @@ contract MockSeasonFacet is SeasonFacet {
         s.sys.season.sunriseBlock = uint32(block.number);
         // update last snapshot in beanstalk.
         stepOracle();
+        LibGerminate.endTotalGermination(
+            s.sys.season.current,
+            LibWhitelistedTokens.getWhitelistedTokens()
+        );
         mockStartSop();
     }
 
@@ -106,6 +121,10 @@ contract MockSeasonFacet is SeasonFacet {
         for (uint256 i; i < amount; ++i) {
             s.sys.season.current += 1;
             stepOracle();
+            LibGerminate.endTotalGermination(
+                s.sys.season.current,
+                LibWhitelistedTokens.getWhitelistedTokens()
+            );
             mockStartSop();
         }
         s.sys.season.sunriseBlock = uint32(block.number);
@@ -117,6 +136,10 @@ contract MockSeasonFacet is SeasonFacet {
         s.sys.season.sunriseBlock = uint32(block.number);
         // update last snapshot in beanstalk.
         stepOracle();
+        LibGerminate.endTotalGermination(
+            s.sys.season.current,
+            LibWhitelistedTokens.getWhitelistedTokens()
+        );
         LibFlood.handleRain(2);
     }
 
@@ -126,6 +149,10 @@ contract MockSeasonFacet is SeasonFacet {
         s.sys.season.sunriseBlock = uint32(block.number);
         // update last snapshot in beanstalk.
         stepOracle();
+        LibGerminate.endTotalGermination(
+            s.sys.season.current,
+            LibWhitelistedTokens.getWhitelistedTokens()
+        );
         mockStartSop();
         mockStepSilo(amount);
     }
@@ -136,6 +163,10 @@ contract MockSeasonFacet is SeasonFacet {
         s.sys.season.sunriseBlock = uint32(block.number);
         // update last snapshot in beanstalk.
         stepOracle();
+        LibGerminate.endTotalGermination(
+            s.sys.season.current,
+            LibWhitelistedTokens.getWhitelistedTokens()
+        );
         mockStartSop();
         mockStepSilo(amount);
     }
@@ -147,15 +178,27 @@ contract MockSeasonFacet is SeasonFacet {
         stepSun(deltaB, caseId);
     }
 
-    function seedGaugeSunSunrise(int256 deltaB, uint256 caseId) public {
+    function seedGaugeSunSunrise(
+        int256 deltaB,
+        uint256 caseId,
+        bool oracleFailure
+    ) public {
         require(!s.sys.paused, "Season: Paused.");
         s.sys.season.current += 1;
         s.sys.season.sunriseBlock = uint32(block.number);
-        updateTemperatureAndBeanToMaxLpGpPerBdvRatio(caseId, false);
+        updateTemperatureAndBeanToMaxLpGpPerBdvRatio(caseId, oracleFailure);
         stepSun(deltaB, caseId);
     }
 
-    function sunTemperatureSunrise(int256 deltaB, uint256 caseId, uint32 t) public {
+    function seedGaugeSunSunrise(int256 deltaB, uint256 caseId) public {
+        seedGaugeSunSunrise(deltaB, caseId, false);
+    }
+
+    function sunTemperatureSunrise(
+        int256 deltaB,
+        uint256 caseId,
+        uint32 t
+    ) public {
         require(!s.sys.paused, "Season: Paused.");
         s.sys.season.current += 1;
         s.sys.weather.temp = t;
@@ -316,13 +359,19 @@ contract MockSeasonFacet is SeasonFacet {
             C.bean().mint(address(this), l2srBeans - C.bean().totalSupply());
         }
         Call[] memory pump = IWell(C.BEAN_ETH_WELL).pumps();
-        IMockPump(pump[0].target).update(pump[0].target, reserves, pump[0].data);
+        IMockPump(pump[0].target).update(
+            pump[0].target,
+            reserves,
+            pump[0].data
+        );
         s.sys.twaReserves[C.BEAN_ETH_WELL].reserve0 = uint128(reserves[0]);
         s.sys.twaReserves[C.BEAN_ETH_WELL].reserve1 = uint128(reserves[1]);
         s.sys.usdTokenPrice[C.BEAN_ETH_WELL] = 0.001e18;
         if (aboveQ) {
             // increase bean price
-            s.sys.twaReserves[C.BEAN_ETH_WELL].reserve0 = uint128(reserves[0].mul(10).div(11));
+            s.sys.twaReserves[C.BEAN_ETH_WELL].reserve0 = uint128(
+                reserves[0].mul(10).div(11)
+            );
         } else {
             // decrease bean price
             s.sys.twaReserves[C.BEAN_ETH_WELL].reserve0 = uint128(reserves[0]);
@@ -331,7 +380,9 @@ contract MockSeasonFacet is SeasonFacet {
         /// FIELD ///
         s.sys.season.raining = raining;
         s.sys.rain.roots = rainRoots ? 1 : 0;
-        s.sys.fields[s.sys.activeField].pods = (pods.mul(C.bean().totalSupply()) / 1000); // previous tests used 1000 as the total supply.
+        s.sys.fields[s.sys.activeField].pods = (pods.mul(
+            C.bean().totalSupply()
+        ) / 1000); // previous tests used 1000 as the total supply.
         s.sys.weather.lastDeltaSoil = uint128(_lastDeltaSoil);
         s.sys.beanSown = beanSown;
         s.sys.soil = endSoil;
@@ -361,7 +412,8 @@ contract MockSeasonFacet is SeasonFacet {
 
     function rewardToFertilizerE(uint256 amount) external {
         // Simulate the ShipmentPlan cap.
-        uint256 unfertilizedBeans = s.sys.fert.unfertilizedIndex - s.sys.fert.fertilizedIndex;
+        uint256 unfertilizedBeans = s.sys.fert.unfertilizedIndex -
+            s.sys.fert.fertilizedIndex;
         require(
             unfertilizedBeans >= amount,
             "rewardToFertilizerE: amount greater than outstanding Fert"
@@ -394,9 +446,19 @@ contract MockSeasonFacet is SeasonFacet {
         s.sys.silo.assetSettings[C.UNRIPE_BEAN].milestoneSeason = currentSeason;
         s.sys.silo.assetSettings[C.UNRIPE_BEAN].milestoneStem = 0;
 
-        s.sys.silo.assetSettings[address(C.unripeLP())].stalkEarnedPerSeason = 2 * 1e6;
-        s.sys.silo.assetSettings[address(C.unripeLP())].stalkIssuedPerBdv = 10000;
-        s.sys.silo.assetSettings[address(C.unripeLP())].milestoneSeason = currentSeason;
+        s.sys.silo.assetSettings[address(C.unripeLP())].stalkEarnedPerSeason =
+            2 *
+            1e6;
+        s
+            .sys
+            .silo
+            .assetSettings[address(C.unripeLP())]
+            .stalkIssuedPerBdv = 10000;
+        s
+            .sys
+            .silo
+            .assetSettings[address(C.unripeLP())]
+            .milestoneSeason = currentSeason;
         s.sys.silo.assetSettings[address(C.unripeLP())].milestoneStem = 0;
 
         s.sys.season.stemStartSeason = uint16(s.sys.season.current);
@@ -436,7 +498,9 @@ contract MockSeasonFacet is SeasonFacet {
             );
     }
 
-    function getChainlinkTwapEthUsdPrice(uint256 lookback) external view returns (uint256) {
+    function getChainlinkTwapEthUsdPrice(
+        uint256 lookback
+    ) external view returns (uint256) {
         return
             LibChainlinkOracle.getTwap(
                 C.ETH_USD_CHAINLINK_PRICE_AGGREGATOR,
@@ -449,7 +513,9 @@ contract MockSeasonFacet is SeasonFacet {
         return LibWstethUsdOracle.getWstethUsdPrice(0);
     }
 
-    function getWstethUsdTwap(uint256 lookback) external view returns (uint256) {
+    function getWstethUsdTwap(
+        uint256 lookback
+    ) external view returns (uint256) {
         return LibWstethUsdOracle.getWstethUsdPrice(lookback);
     }
 
@@ -457,7 +523,9 @@ contract MockSeasonFacet is SeasonFacet {
         return LibWstethEthOracle.getWstethEthPrice(0);
     }
 
-    function getWstethEthTwap(uint256 lookback) external view returns (uint256) {
+    function getWstethEthTwap(
+        uint256 lookback
+    ) external view returns (uint256) {
         return LibWstethEthOracle.getWstethEthPrice(lookback);
     }
 
@@ -492,7 +560,10 @@ contract MockSeasonFacet is SeasonFacet {
     function mockSetAverageGrownStalkPerBdvPerSeason(
         uint128 _averageGrownStalkPerBdvPerSeason
     ) external {
-        s.sys.seedGauge.averageGrownStalkPerBdvPerSeason = _averageGrownStalkPerBdvPerSeason;
+        s
+            .sys
+            .seedGauge
+            .averageGrownStalkPerBdvPerSeason = _averageGrownStalkPerBdvPerSeason;
     }
 
     /**
@@ -500,7 +571,12 @@ contract MockSeasonFacet is SeasonFacet {
      * @dev used to test the updateGrownStalkPerSeason updating.
      */
     function mockUpdateAverageGrownStalkPerBdvPerSeason() external {
-        LibGauge.updateGrownStalkEarnedPerSeason(0, new LibGauge.LpGaugePointData[](0), 100e18, 0);
+        LibGauge.updateGrownStalkEarnedPerSeason(
+            0,
+            new LibGauge.LpGaugePointData[](0),
+            100e18,
+            0
+        );
     }
 
     function gaugePointsNoChange(
@@ -511,14 +587,18 @@ contract MockSeasonFacet is SeasonFacet {
         return currentGaugePoints;
     }
 
-    function mockInitalizeGaugeForToken(
+    function mockinitializeGaugeForToken(
         address token,
         bytes4 gaugePointSelector,
         bytes4 liquidityWeightSelector,
         uint96 gaugePoints,
         uint64 optimalPercentDepositedBdv
     ) external {
-        AssetSettings storage ss = LibAppStorage.diamondStorage().sys.silo.assetSettings[token];
+        AssetSettings storage ss = LibAppStorage
+            .diamondStorage()
+            .sys
+            .silo
+            .assetSettings[token];
         ss.gaugePointImplementation.selector = gaugePointSelector;
         ss.liquidityWeightImplementation.selector = liquidityWeightSelector;
         ss.optimalPercentDepositedBdv = optimalPercentDepositedBdv;
@@ -550,6 +630,7 @@ contract MockSeasonFacet is SeasonFacet {
     }
 
     function mockIncrementGermination(
+        address account,
         address token,
         uint128 amount,
         uint128 bdv,
@@ -592,7 +673,10 @@ contract MockSeasonFacet is SeasonFacet {
      * @notice sets the price state of beanstalk.
      * @dev 0 = below peg, 1 = above peg, 2 = significantly above peg.
      */
-    function setPrice(uint256 price, address targetWell) public returns (int256 deltaB) {
+    function setPrice(
+        uint256 price,
+        address targetWell
+    ) public returns (int256 deltaB) {
         // initalize beanTknPrice, and reserves.
         uint256 ethPrice = 1000e6;
         s.sys.usdTokenPrice[targetWell] = 1e24 / ethPrice;
@@ -611,7 +695,9 @@ contract MockSeasonFacet is SeasonFacet {
                 // excessively above peg
 
                 // to get Q, decrease s.sys.reserve0 of the well to be >1.05.
-                s.sys.twaReserves[targetWell].reserve0 = uint128(reserves[0].mul(90).div(100));
+                s.sys.twaReserves[targetWell].reserve0 = uint128(
+                    reserves[0].mul(90).div(100)
+                );
             }
         }
     }
@@ -627,13 +713,19 @@ contract MockSeasonFacet is SeasonFacet {
             s.sys.fields[s.sys.activeField].pods = beanSupply.mul(49).div(1000);
         } else if (podRate == 1) {
             // < 15%
-            s.sys.fields[s.sys.activeField].pods = beanSupply.mul(149).div(1000);
+            s.sys.fields[s.sys.activeField].pods = beanSupply.mul(149).div(
+                1000
+            );
         } else if (podRate == 2) {
             // < 25%
-            s.sys.fields[s.sys.activeField].pods = beanSupply.mul(249).div(1000);
+            s.sys.fields[s.sys.activeField].pods = beanSupply.mul(249).div(
+                1000
+            );
         } else {
             // > 25%
-            s.sys.fields[s.sys.activeField].pods = beanSupply.mul(251).div(1000);
+            s.sys.fields[s.sys.activeField].pods = beanSupply.mul(251).div(
+                1000
+            );
         }
     }
 
@@ -661,7 +753,10 @@ contract MockSeasonFacet is SeasonFacet {
      * @notice sets the L2SR state of beanstalk.
      * @dev 0 = extremely low, 1 = low, 2 = high, 3 = extremely high.
      */
-    function setL2SR(uint256 liquidityToSupplyRatio, address targetWell) public {
+    function setL2SR(
+        uint256 liquidityToSupplyRatio,
+        address targetWell
+    ) public {
         uint256 beansInWell = C.bean().balanceOf(targetWell);
         uint256 beanSupply = C.bean().totalSupply();
         uint currentL2SR = beansInWell.mul(1e18).div(beanSupply);
@@ -682,7 +777,9 @@ contract MockSeasonFacet is SeasonFacet {
         }
 
         // mint new beans outside of the well for the L2SR to change.
-        uint256 newSupply = beansInWell.mul(currentL2SR).div(ratio).sub(beansInWell);
+        uint256 newSupply = beansInWell.mul(currentL2SR).div(ratio).sub(
+            beansInWell
+        );
         beanSupply += newSupply;
 
         C.bean().mint(msg.sender, newSupply);
@@ -691,7 +788,9 @@ contract MockSeasonFacet is SeasonFacet {
     /**
      * @notice mock updates case id and beanstalk state. disables oracle failure.
      */
-    function mockCalcCaseIdandUpdate(int256 deltaB) public returns (uint256 caseId) {
+    function mockCalcCaseIdandUpdate(
+        int256 deltaB
+    ) public returns (uint256 caseId) {
         uint256 beanSupply = C.bean().totalSupply();
         // prevents infinite L2SR and podrate
         if (beanSupply == 0) {
@@ -729,12 +828,20 @@ contract MockSeasonFacet is SeasonFacet {
     }
 
     function initOracleForWell(address well) internal {
-        require(s.sys.wellOracleSnapshots[well].length == 0, "Season: Oracle already initialized.");
+        require(
+            s.sys.wellOracleSnapshots[well].length == 0,
+            "Season: Oracle already initialized."
+        );
         LibWellMinting.initializeOracle(well);
     }
 
-    function getPoolDeltaBWithoutCap(address well) external view returns (int256 deltaB) {
-        bytes memory lastSnapshot = LibAppStorage.diamondStorage().sys.wellOracleSnapshots[well];
+    function getPoolDeltaBWithoutCap(
+        address well
+    ) external view returns (int256 deltaB) {
+        bytes memory lastSnapshot = LibAppStorage
+            .diamondStorage()
+            .sys
+            .wellOracleSnapshots[well];
         // If the length of the stored Snapshot for a given Well is 0,
         // then the Oracle is not initialized.
         if (lastSnapshot.length > 0) {

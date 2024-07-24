@@ -65,14 +65,20 @@ library LibGerminate {
      * @param deltaGerminatingStalk the change in the total germinating stalk.
      * @dev the issuance season may differ from the season that this event was emitted in..
      */
-    event TotalGerminatingStalkChanged(uint256 germinationSeason, int256 deltaGerminatingStalk);
+    event TotalGerminatingStalkChanged(
+        uint256 germinationSeason,
+        int256 deltaGerminatingStalk
+    );
 
     /**
      * @notice emitted at the sunrise function when the total stalk and roots are incremented.
      * @dev currently, stalk and roots can only increase at the end of `endTotalGermination`,
      * but is casted in the event to allow for future decreases.
      */
-    event TotalStalkChangedFromGermination(int256 deltaStalk, int256 deltaRoots);
+    event TotalStalkChangedFromGermination(
+        int256 deltaStalk,
+        int256 deltaRoots
+    );
 
     struct GermStem {
         int96 germinatingStem;
@@ -85,7 +91,10 @@ library LibGerminate {
      * as the roots of the stalk should be calculated based on the total stalk
      * when germination finishes, rather than when germination starts.
      */
-    function endTotalGermination(uint32 season, address[] memory tokens) external {
+    function endTotalGermination(
+        uint32 season,
+        address[] memory tokens
+    ) external {
         AppStorage storage s = LibAppStorage.diamondStorage();
 
         // germination can only occur after season 3.
@@ -95,11 +104,19 @@ library LibGerminate {
         // base roots are used if there are no roots in the silo.
         // root calculation is skipped if no deposits have been made
         // in the season.
-        uint128 finishedGerminatingStalk = s.sys.silo.unclaimedGerminating[germinationSeason].stalk;
+        uint128 finishedGerminatingStalk = s
+            .sys
+            .silo
+            .unclaimedGerminating[germinationSeason]
+            .stalk;
         uint128 rootsFromGerminatingStalk;
         if (s.sys.silo.roots == 0) {
-            rootsFromGerminatingStalk = finishedGerminatingStalk.mul(uint128(C.getRootsBase()));
-        } else if (s.sys.silo.unclaimedGerminating[germinationSeason].stalk > 0) {
+            rootsFromGerminatingStalk = finishedGerminatingStalk.mul(
+                uint128(C.getRootsBase())
+            );
+        } else if (
+            s.sys.silo.unclaimedGerminating[germinationSeason].stalk > 0
+        ) {
             rootsFromGerminatingStalk = s
                 .sys
                 .silo
@@ -108,7 +125,11 @@ library LibGerminate {
                 .div(s.sys.silo.stalk)
                 .toUint128();
         }
-        s.sys.silo.unclaimedGerminating[germinationSeason].roots = rootsFromGerminatingStalk;
+        s
+            .sys
+            .silo
+            .unclaimedGerminating[germinationSeason]
+            .roots = rootsFromGerminatingStalk;
         // increment total stalk and roots based on unclaimed values.
         s.sys.silo.stalk = s.sys.silo.stalk.add(finishedGerminatingStalk);
         s.sys.silo.roots = s.sys.silo.roots.add(rootsFromGerminatingStalk);
@@ -131,7 +152,9 @@ library LibGerminate {
             emit TotalGerminatingBalanceChanged(
                 germinationSeason,
                 tokens[i],
-                -int256(uint256(s.sys.silo.germinating[side][tokens[i]].amount)),
+                -int256(
+                    uint256(s.sys.silo.germinating[side][tokens[i]].amount)
+                ),
                 -int256(uint256(s.sys.silo.germinating[side][tokens[i]].bdv))
             );
             // clear deposited values.
@@ -163,15 +186,22 @@ library LibGerminate {
      * the germination process:
      * - increments the assoicated values (bdv, stalk, roots)
      * - clears the germination struct for the account.
+     *
+     * @return firstGerminatingRoots the roots from the first germinating stalk.
+     * used in {handleRain} to properly set the rain roots of a user,
+     * if the user had deposited in the season prior to a rain.
      */
     function endAccountGermination(
         address account,
         uint32 lastMowedSeason,
         uint32 currentSeason
-    ) internal {
+    ) internal returns (uint128 firstGerminatingRoots) {
         AppStorage storage s = LibAppStorage.diamondStorage();
         bool lastUpdateOdd = isSeasonOdd(lastMowedSeason);
-        (uint128 firstStalk, uint128 secondStalk) = getGerminatingStalk(account, lastUpdateOdd);
+        (uint128 firstStalk, uint128 secondStalk) = getGerminatingStalk(
+            account,
+            lastUpdateOdd
+        );
         uint128 totalRootsFromGermination;
         uint128 germinatingStalk;
 
@@ -213,8 +243,12 @@ library LibGerminate {
 
         // increment users stalk and roots.
         if (germinatingStalk > 0) {
-            s.accts[account].stalk = s.accts[account].stalk.add(germinatingStalk);
-            s.accts[account].roots = s.accts[account].roots.add(totalRootsFromGermination);
+            s.accts[account].stalk = s.accts[account].stalk.add(
+                germinatingStalk
+            );
+            s.accts[account].roots = s.accts[account].roots.add(
+                totalRootsFromGermination
+            );
 
             // emit event. Active stalk is incremented, germinating stalk is decremented.
             emit LibSilo.StalkBalanceChanged(
@@ -303,10 +337,16 @@ library LibGerminate {
         AppStorage storage s = LibAppStorage.diamondStorage();
         if (lastUpdateOdd) {
             firstStalk = s.accts[account].germinatingStalk[GerminationSide.ODD];
-            secondStalk = s.accts[account].germinatingStalk[GerminationSide.EVEN];
+            secondStalk = s.accts[account].germinatingStalk[
+                GerminationSide.EVEN
+            ];
         } else {
-            firstStalk = s.accts[account].germinatingStalk[GerminationSide.EVEN];
-            secondStalk = s.accts[account].germinatingStalk[GerminationSide.ODD];
+            firstStalk = s.accts[account].germinatingStalk[
+                GerminationSide.EVEN
+            ];
+            secondStalk = s.accts[account].germinatingStalk[
+                GerminationSide.ODD
+            ];
         }
     }
 
@@ -318,7 +358,11 @@ library LibGerminate {
         address account,
         uint32 lastMowedSeason,
         uint32 currentSeason
-    ) internal view returns (uint256 germinatingStalk, uint256 germinatingRoots) {
+    )
+        internal
+        view
+        returns (uint256 germinatingStalk, uint256 germinatingRoots)
+    {
         // if user has mowed already,
         // then there are no germinating stalk and roots to finish.
         if (lastMowedSeason == currentSeason) {
@@ -335,7 +379,10 @@ library LibGerminate {
         // then the first stalk is still germinating.
         if (firstStalk > 0 && lastMowedSeason < currentSeason.sub(1)) {
             germinatingStalk = firstStalk;
-            germinatingRoots = calculateGerminatingRoots(lastMowedSeason, firstStalk);
+            germinatingRoots = calculateGerminatingRoots(
+                lastMowedSeason,
+                firstStalk
+            );
         }
 
         // check to end germination for second stalk.
@@ -416,7 +463,9 @@ library LibGerminate {
      * @dev the 'germinating' stem is the stem where deposits that have a stem
      * equal or higher than this value are germinating.
      */
-    function getGerminatingStem(address token) internal view returns (GermStem memory germStem) {
+    function getGerminatingStem(
+        address token
+    ) internal view returns (GermStem memory germStem) {
         germStem.stemTip = LibTokenSilo.stemTipForToken(token);
         germStem.germinatingStem = _getGerminatingStem(token, germStem.stemTip);
     }
@@ -426,8 +475,15 @@ library LibGerminate {
      * @dev the 'germinating' stem is the stem where deposits that have a stem
      * equal or higher than this value are germinating.
      */
-    function _getGerminatingStem(address token, int96 stemTip) internal view returns (int96 stem) {
-        return __getGerminatingStem(stemTip, int96(uint96(getPrevStalkEarnedPerSeason(token))));
+    function _getGerminatingStem(
+        address token,
+        int96 stemTip
+    ) internal view returns (int96 stem) {
+        return
+            __getGerminatingStem(
+                stemTip,
+                int96(uint96(getPrevStalkEarnedPerSeason(token)))
+            );
     }
 
     /**
@@ -456,8 +512,15 @@ library LibGerminate {
     ) private view returns (uint32 prevStalkEarnedPerSeason) {
         AppStorage storage s = LibAppStorage.diamondStorage();
 
-        if (s.sys.silo.assetSettings[token].milestoneSeason < s.sys.season.current) {
-            prevStalkEarnedPerSeason = s.sys.silo.assetSettings[token].stalkEarnedPerSeason;
+        if (
+            s.sys.silo.assetSettings[token].milestoneSeason <
+            s.sys.season.current
+        ) {
+            prevStalkEarnedPerSeason = s
+                .sys
+                .silo
+                .assetSettings[token]
+                .stalkEarnedPerSeason;
         } else {
             int24 deltaStalkEarnedPerSeason = s
                 .sys
@@ -498,9 +561,15 @@ library LibGerminate {
             // if the stem is equal to the stem tip, it is in the initial stages of germination.
             // if the stem is not equal to the stemTip, its in the germination process.
             if (stem == germData.stemTip) {
-                return isCurrentSeasonOdd() ? GerminationSide.ODD : GerminationSide.EVEN;
+                return
+                    isCurrentSeasonOdd()
+                        ? GerminationSide.ODD
+                        : GerminationSide.EVEN;
             } else {
-                return isCurrentSeasonOdd() ? GerminationSide.EVEN : GerminationSide.ODD;
+                return
+                    isCurrentSeasonOdd()
+                        ? GerminationSide.EVEN
+                        : GerminationSide.ODD;
             }
         }
     }
@@ -509,14 +578,21 @@ library LibGerminate {
      * @notice returns the germination side for the current season.
      * @dev used in new deposits, as all new deposits are germinating.
      */
-    function getSeasonGerminationSide() internal view returns (GerminationSide) {
-        return isCurrentSeasonOdd() ? GerminationSide.ODD : GerminationSide.EVEN;
+    function getSeasonGerminationSide()
+        internal
+        view
+        returns (GerminationSide)
+    {
+        return
+            isCurrentSeasonOdd() ? GerminationSide.ODD : GerminationSide.EVEN;
     }
 
     /**
      * @notice returns the germination state for a given season.
      */
-    function getGerminationStateForSeason(uint32 season) internal pure returns (GerminationSide) {
+    function getGerminationStateForSeason(
+        uint32 season
+    ) internal pure returns (GerminationSide) {
         return isSeasonOdd(season) ? GerminationSide.ODD : GerminationSide.EVEN;
     }
 

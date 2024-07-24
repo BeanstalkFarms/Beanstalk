@@ -48,7 +48,11 @@ contract Weather is Sun {
      * @param absChange The absolute change in Temperature.
      * @dev formula: T_n = T_n-1 +/- bT
      */
-    event TemperatureChange(uint256 indexed season, uint256 caseId, int8 absChange);
+    event TemperatureChange(
+        uint256 indexed season,
+        uint256 caseId,
+        int8 absChange
+    );
 
     /**
      * @notice Emitted when the grownStalkToLP changes.
@@ -57,7 +61,11 @@ contract Weather is Sun {
      * @param absChange The absolute change in the BeanToMaxLPGpPerBDVRatio.
      * @dev formula: L_n = L_n-1 +/- bL
      */
-    event BeanToMaxLpGpPerBdvRatioChange(uint256 indexed season, uint256 caseId, int80 absChange);
+    event BeanToMaxLpGpPerBdvRatioChange(
+        uint256 indexed season,
+        uint256 caseId,
+        int80 absChange
+    );
 
     /**
      * @notice Emitted when Beans are minted to a Well during the Season of Plenty.
@@ -66,7 +74,12 @@ contract Weather is Sun {
      * @param token The token that was swapped for Beans.
      * @param amount The amount of tokens which was received for swapping Beans.
      */
-    event SeasonOfPlentyWell(uint256 indexed season, address well, address token, uint256 amount);
+    event SeasonOfPlentyWell(
+        uint256 indexed season,
+        address well,
+        address token,
+        uint256 amount
+    );
 
     /**
      * @notice Emitted when Beans are minted to the Field during the Season of Plenty.
@@ -92,7 +105,10 @@ contract Weather is Sun {
             return 9; // Reasonably low
         }
         // Calculate Case Id
-        (uint256 caseId, bool oracleFailure) = LibEvaluate.evaluateBeanstalk(deltaB, beanSupply);
+        (uint256 caseId, bool oracleFailure) = LibEvaluate.evaluateBeanstalk(
+            deltaB,
+            beanSupply
+        );
         updateTemperatureAndBeanToMaxLpGpPerBdvRatio(caseId, oracleFailure);
         LibFlood.handleRain(caseId);
         return caseId;
@@ -147,28 +163,51 @@ contract Weather is Sun {
      * @dev bL are set during edge cases such that the event emitted is valid.
      */
     function updateBeanToMaxLPRatio(int80 bL, uint256 caseId) private {
-        uint128 beanToMaxLpGpPerBdvRatio = s.sys.seedGauge.beanToMaxLpGpPerBdvRatio;
+        uint128 beanToMaxLpGpPerBdvRatio = s
+            .sys
+            .seedGauge
+            .beanToMaxLpGpPerBdvRatio;
         if (bL < 0) {
             if (beanToMaxLpGpPerBdvRatio <= uint128(int128(-bL))) {
-                bL = -SafeCast.toInt80(int256(uint256(beanToMaxLpGpPerBdvRatio)));
+                bL = -SafeCast.toInt80(
+                    int256(uint256(beanToMaxLpGpPerBdvRatio))
+                );
                 s.sys.seedGauge.beanToMaxLpGpPerBdvRatio = 0;
             } else {
-                s.sys.seedGauge.beanToMaxLpGpPerBdvRatio = beanToMaxLpGpPerBdvRatio.sub(
+                s
+                    .sys
+                    .seedGauge
+                    .beanToMaxLpGpPerBdvRatio = beanToMaxLpGpPerBdvRatio.sub(
                     uint128(int128(-bL))
                 );
             }
         } else {
-            if (beanToMaxLpGpPerBdvRatio.add(uint128(int128(bL))) >= MAX_BEAN_LP_GP_PER_BDV_RATIO) {
+            if (
+                beanToMaxLpGpPerBdvRatio.add(uint128(int128(bL))) >=
+                MAX_BEAN_LP_GP_PER_BDV_RATIO
+            ) {
                 // if (change > 0 && 100e18 - beanToMaxLpGpPerBdvRatio <= bL),
                 // then bL cannot overflow.
                 bL = int80(
                     SafeCast.toInt80(
-                        int256(uint256(MAX_BEAN_LP_GP_PER_BDV_RATIO.sub(beanToMaxLpGpPerBdvRatio)))
+                        int256(
+                            uint256(
+                                MAX_BEAN_LP_GP_PER_BDV_RATIO.sub(
+                                    beanToMaxLpGpPerBdvRatio
+                                )
+                            )
+                        )
                     )
                 );
-                s.sys.seedGauge.beanToMaxLpGpPerBdvRatio = MAX_BEAN_LP_GP_PER_BDV_RATIO;
+                s
+                    .sys
+                    .seedGauge
+                    .beanToMaxLpGpPerBdvRatio = MAX_BEAN_LP_GP_PER_BDV_RATIO;
             } else {
-                s.sys.seedGauge.beanToMaxLpGpPerBdvRatio = beanToMaxLpGpPerBdvRatio.add(
+                s
+                    .sys
+                    .seedGauge
+                    .beanToMaxLpGpPerBdvRatio = beanToMaxLpGpPerBdvRatio.add(
                     uint128(int128(bL))
                 );
             }

@@ -6,52 +6,64 @@ import { Footer } from "./Footer";
 import { Window } from "./Window";
 import { Settings } from "src/settings";
 import CustomToaster from "../TxnToast/CustomToaster";
-// import buildIcon from "src/assets/images/navbar/build.svg";
+import buildIcon from "src/assets/images/navbar/build.svg";
 import swapIcon from "src/assets/images/navbar/swap.svg";
 import wellsIcon from "src/assets/images/navbar/wells.svg";
 import { LinksNav } from "../Typography";
 import { BurgerMenuIcon, Discord, Github, Logo, Twitter, X, BeanstalkLogoBlack } from "../Icons";
+<<<<<<< HEAD
 import { size } from "src/breakpoints";
 import { useAccount } from "wagmi";
 import { Title } from "../PageComponents/Title";
+=======
+>>>>>>> master
 import { TokenMarquee } from "./TokenMarquee";
 import { WalletButton } from "src/components/Wallet";
+import { theme } from "src/utils/ui/theme";
+import { useChainId } from "wagmi";
 
 export const Frame: FC<{}> = ({ children }) => {
   const isNotProd = !Settings.PRODUCTION;
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+<<<<<<< HEAD
   const { chain } = useAccount();
+=======
+  const chain = useChainId();
+>>>>>>> master
 
   return (
     <Container id="frame">
+      {/* Desktop */}
       <NavContainer>
-        <BrandContainer onClick={() => setMobileMenuOpen(false)}>
-          <Brand>
-            <Link to={"/"}>
-              <Logo /> <div>BASIN</div>
-            </Link>
-          </Brand>
-        </BrandContainer>
-        <RightSide>
-          <NavLinks>
-            <NavLink to="/wells" hovericon={wellsIcon}>
-              Liquidity
-            </NavLink>
-            {/* <NavLink to="/build" hovericon={buildIcon}>
-              Build
-            </NavLink> */}
-            <NavLink to="/swap" hovericon={swapIcon}>
-              Swap
-            </NavLink>
-            {isNotProd && <NavLink to="/dev">Dev</NavLink>}
-          </NavLinks>
-        </RightSide>
-        <StyledConnectContainer>
-          <WalletButton />
-        </StyledConnectContainer>
-        <DropdownMenu open={mobileMenuOpen} onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
-          {mobileMenuOpen ? <X /> : <BurgerMenuIcon />}
-        </DropdownMenu>
+        <NavGrid>
+          <BrandContainer onClick={() => setMobileMenuOpen(false)}>
+            <Brand>
+              <Link to={"/"}>
+                <Logo /> <BasinText>BASIN</BasinText>
+              </Link>
+            </Brand>
+          </BrandContainer>
+          <LinksContainer>
+            <NavLinks>
+              <NavLink to="/build" hovericon={buildIcon}>
+                Build
+              </NavLink>
+              <NavLink to="/wells" hovericon={wellsIcon}>
+                Liquidity
+              </NavLink>
+              <NavLink to="/swap" hovericon={swapIcon}>
+                Swap
+              </NavLink>
+              {(isNotProd || false) && <NavLink to="/dev">Dev</NavLink>}
+            </NavLinks>
+          </LinksContainer>
+          <StyledConnectContainer>
+            <WalletButton />
+          </StyledConnectContainer>
+          <DropdownMenu open={mobileMenuOpen} onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
+            {mobileMenuOpen ? <X /> : <BurgerMenuIcon />}
+          </DropdownMenu>
+        </NavGrid>
       </NavContainer>
       <TokenMarquee />
       <Window>
@@ -64,9 +76,9 @@ export const Frame: FC<{}> = ({ children }) => {
             <MobileNavLink $bold to="/wells" onClick={() => setMobileMenuOpen(false)}>
               Wells
             </MobileNavLink>
-            {/* <MobileNavLink $bold to="/build" onClick={() => setMobileMenuOpen(false)}>
+            <MobileNavLink $bold to="/build" onClick={() => setMobileMenuOpen(false)}>
               Build
-            </MobileNavLink> */}
+            </MobileNavLink>
             {isNotProd && (
               <MobileNavLink $bold to="/dev" onClick={() => setMobileMenuOpen(false)}>
                 Dev
@@ -76,10 +88,18 @@ export const Frame: FC<{}> = ({ children }) => {
               <Box href="https://basin.exchange/discord" rel="noopener noreferrer" target="_blank">
                 <Discord width={20} />
               </Box>
-              <Box href="https://twitter.com/basinexchange" rel="noopener noreferrer" target="_blank">
+              <Box
+                href="https://twitter.com/basinexchange"
+                rel="noopener noreferrer"
+                target="_blank"
+              >
                 <Twitter width={20} />
               </Box>
-              <Box href="https://github.com/BeanstalkFarms/Basin" rel="noopener noreferrer" target="_blank">
+              <Box
+                href="https://github.com/BeanstalkFarms/Basin"
+                rel="noopener noreferrer"
+                target="_blank"
+              >
                 <Github width={20} />
               </Box>
               <Box href="https://bean.money" rel="noopener noreferrer" target="_blank">
@@ -121,35 +141,49 @@ type NavLinkProps = {
 };
 
 const Container = styled.div`
-  // border: 1px solid red;
   display: flex;
   flex-direction: column;
   box-sizing: border-box;
   width: 100vw;
   height: 100vh;
   align-items: center;
+
+  ${theme.media.query.sm.only} {
+    width: 100svw;
+    height: 100svh;
+  }
 `;
 
 const NavContainer = styled.nav`
   border-bottom: 0.5px solid black;
   display: flex;
-  flex-direction: row;
-  justify-content: space-between;
   width: 100vw;
   height: 56px;
   min-height: 56px;
   box-sizing: border-box;
   padding: 0px;
-  align-items: center;
-  @media (min-width: ${size.mobile}) {
+
+  ${theme.media.query.md.up} {
     height: 64px;
     min-height: 64px;
   }
 `;
 
+const NavGrid = styled.div`
+  display: grid;
+  grid-template-columns: 178px 1fr 192px;
+  align-items: center;
+  height: 100%;
+  width: 100%;
+
+  ${theme.media.query.md.down} {
+    grid-template-columns: 1fr 1fr;
+  }
+`;
+
 const NavLinks = styled.div`
   display: none;
-  @media (min-width: ${size.mobile}) {
+  ${theme.media.query.md.up} {
     display: flex;
     align-self: stretch;
     align-items: center;
@@ -184,12 +218,15 @@ const NavLink = styled(Link)<NavLinkProps>`
     border-right: 0.5px solid black;
   }
 `;
-const RightSide = styled.div`
-  // border: 1px solid red;
+const LinksContainer = styled.div`
   display: flex;
+  justify-self: center;
   flex-direction: row;
   align-self: stretch;
-  align-items: center;
+
+  ${theme.media.query.md.down} {
+    display: none;
+  }
 `;
 
 const BrandContainer = styled.div`
@@ -198,6 +235,14 @@ const BrandContainer = styled.div`
   flex: 1;
   align-self: stretch;
   align-items: center;
+
+  ${theme.media.query.md.down} {
+    justify-self: flex-start;
+  }
+`;
+
+const BasinText = styled.div`
+  margin-bottom: -4px;
 `;
 
 const Brand = styled.div`
@@ -207,8 +252,8 @@ const Brand = styled.div`
 
   a {
     display: flex;
-    align-items: center;
     gap: 4px;
+    align-items: center;
     ${LinksNav}
     text-decoration: none;
     text-transform: uppercase;
@@ -219,20 +264,23 @@ const Brand = styled.div`
     }
   }
 
-  @media (min-width: ${size.mobile}) {
+  ${theme.media.query.md.up} {
+    justify-self: flex-start;
     padding-left: 48px;
   }
 `;
 
 const StyledConnectContainer = styled.div`
   display: none;
-  @media (min-width: ${size.mobile}) {
+  ${theme.media.query.md.up} {
     display: flex;
     direction: row;
     width: 192px;
     align-self: stretch;
     align-items: center;
     justify-content: center;
+    border-left: 0.5px solid black;
+    box-sizing: border-box;
   }
 `;
 
@@ -255,7 +303,9 @@ const DropdownMenu = styled.button<{ open?: boolean }>`
   flex-direction: column;
   justify-content: center;
   gap: 9px;
-  @media (min-width: ${size.mobile}) {
+  justify-self: flex-end;
+
+  ${theme.media.query.md.up} {
     display: none;
   }
   div {
@@ -285,7 +335,8 @@ const BurgerMenu = styled.div<{ open: boolean }>`
   margin-left: -0.5px;
   transform: ${(props) => (props.open ? `translateX(0%)` : `translateX(100%)`)};
   z-index: 9999;
-  @media (min-width: ${size.mobile}) {
+
+  ${theme.media.query.md.up} {
     display: none;
   }
 `;

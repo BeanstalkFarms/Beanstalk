@@ -2,11 +2,23 @@ import { Address, BigDecimal, BigInt, store } from "@graphprotocol/graph-ts";
 import { toDecimal, ZERO_BD, ZERO_BI } from "../../../subgraph-core/utils/Decimals";
 import { Germinating } from "../../generated/schema";
 
+<<<<<<< HEAD
 export function loadOrCreateGerminating(address: Address, season: i32): Germinating {
   const id = address.toHexString() + "-" + germinationSeasonCategory(season);
   let germinating = Germinating.load(id);
   if (germinating == null) {
     germinating = new Germinating(id);
+=======
+export function loadOrCreateGerminating(address: Address, season: i32, isFarmer: boolean): Germinating {
+  const type = germinationSeasonCategory(season);
+  const id = address.toHexString() + "-" + type;
+  let germinating = Germinating.load(id);
+  if (germinating == null) {
+    germinating = new Germinating(id);
+    germinating.address = address.toHexString();
+    germinating.type = type;
+    germinating.isFarmer = isFarmer;
+>>>>>>> master
     germinating.season = season;
     germinating.stalk = ZERO_BI;
     germinating.tokenAmount = ZERO_BI;

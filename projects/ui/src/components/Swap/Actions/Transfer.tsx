@@ -21,7 +21,21 @@ import FarmModeField from '~/components/Common/Form/FarmModeField';
 import Token, { ERC20Token, NativeToken } from '~/classes/Token';
 import { Beanstalk } from '~/generated/index';
 import { ZERO_BN } from '~/constants';
+<<<<<<< HEAD
 import { BEAN, BEAN_CRV3_LP, BEAN_ETH_WELL_LP, CRV3, DAI, USDC, USDT, WETH, ETH } from '~/constants/tokens';
+=======
+import {
+  BEAN,
+  BEAN_CRV3_LP,
+  BEAN_ETH_WELL_LP,
+  CRV3,
+  DAI,
+  USDC,
+  USDT,
+  WETH,
+  ETH,
+} from '~/constants/tokens';
+>>>>>>> master
 import { useBeanstalkContract } from '~/hooks/ledger/useContract';
 import useFarmerBalances from '~/hooks/farmer/useFarmerBalances';
 import useTokenMap from '~/hooks/chain/useTokenMap';
@@ -38,6 +52,7 @@ import useFormMiddleware from '~/hooks/ledger/useFormMiddleware';
 import { BalanceFrom } from '~/components/Common/Form/BalanceFromRow';
 import AddressInputField from '~/components/Common/Form/AddressInputField';
 import copy from '~/constants/copy';
+import useGetBalancesUsedBySource from '~/hooks/beanstalk/useBalancesUsedBySource';
 
 /// ---------------------------------------------------------------
 
@@ -118,6 +133,15 @@ const TransferForm: FC<
   }, [balances, fromMode, tokenIn.address]);
 
   const noBalance = !balanceInMax?.gt(0);
+
+  const [getAmountsFromSource] = useGetBalancesUsedBySource({
+    tokens: values.tokensIn,
+    mode: values.fromMode,
+  });
+  const amountsBySource = useMemo(
+    () => getAmountsFromSource()?.[0] || undefined,
+    [getAmountsFromSource]
+  );
 
   const handleSetDefault = useCallback(() => {
     setFieldValue('tokensIn.0', { ...defaultValues.tokensIn[0] });
@@ -257,8 +281,14 @@ const TransferForm: FC<
   const internalExternalCheck = fromMode === FarmFromMode.INTERNAL_EXTERNAL;
 
   const ethTransferCheck = tokenIn.address === 'eth';
+<<<<<<< HEAD
   
   const ethTransferModeCheck = ethTransferCheck && toMode === FarmToMode.EXTERNAL;
+=======
+
+  const ethTransferModeCheck =
+    ethTransferCheck && toMode === FarmToMode.EXTERNAL;
+>>>>>>> master
 
   const isValid =
     amountsCheck &&
@@ -329,6 +359,7 @@ const TransferForm: FC<
                   actions={[
                     {
                       type: ActionType.TRANSFER_BALANCE,
+                      amountsBySource: amountsBySource,
                       amount: amount!,
                       token: tokenIn,
                       source: fromMode,
@@ -350,9 +381,13 @@ const TransferForm: FC<
           </Box>
         ) : null}
         {sameAddressCheck && ethTransferCheck ? (
+<<<<<<< HEAD
           <Warning color="error">
             You cannot send ETH to yourself.
           </Warning>
+=======
+          <Warning color="error">You cannot send ETH to yourself.</Warning>
+>>>>>>> master
         ) : toMode === FarmToMode.INTERNAL && ethTransferCheck ? (
           <Warning color="error">
             ETH can only be delivered to a Circulating Balance.
@@ -361,10 +396,19 @@ const TransferForm: FC<
           <Warning>
             You cannot use Combined Balance when transferring to yourself.
           </Warning>
+<<<<<<< HEAD
         ) : amount?.gt(balanceInMax) && (
           <Warning>
             {`Transfer amount higher than your ${copy.MODES[values.fromMode]}.`}
           </Warning>
+=======
+        ) : (
+          amount?.gt(balanceInMax) && (
+            <Warning>
+              {`Transfer amount higher than your ${copy.MODES[values.fromMode]}.`}
+            </Warning>
+          )
+>>>>>>> master
         )}
         {toMode === FarmToMode.INTERNAL && !ethTransferCheck && (
           <Warning color="error">
@@ -398,7 +442,21 @@ const TransferForm: FC<
 
 // ---------------------------------------------------
 
+<<<<<<< HEAD
 const SUPPORTED_TOKENS = [BEAN, ETH, WETH, BEAN_ETH_WELL_LP, BEAN_CRV3_LP, CRV3, DAI, USDC, USDT];
+=======
+const SUPPORTED_TOKENS = [
+  BEAN,
+  ETH,
+  WETH,
+  BEAN_ETH_WELL_LP,
+  BEAN_CRV3_LP,
+  CRV3,
+  DAI,
+  USDC,
+  USDT,
+];
+>>>>>>> master
 
 const Transfer: FC<{}> = () => {
   /// Ledger
@@ -464,7 +522,11 @@ const Transfer: FC<{}> = () => {
         if (!tokenAmount) throw new Error('No input amount set.');
         if (!account) throw new Error('Connect a wallet first.');
         if (!recipient) throw new Error('Enter an address to transfer to.');
+<<<<<<< HEAD
         if (!signer) throw new Error('Signer not found.')
+=======
+        if (!signer) throw new Error('Signer not found.');
+>>>>>>> master
         if (approving) return;
 
         txToast = new TransactionToast({
@@ -473,10 +535,17 @@ const Transfer: FC<{}> = () => {
         });
 
         let txn;
+<<<<<<< HEAD
         if (tokenAddress === "eth") {
           txn = await signer.sendTransaction({
             to: recipient,
             value: amount
+=======
+        if (tokenAddress === 'eth') {
+          txn = await signer.sendTransaction({
+            to: recipient,
+            value: amount,
+>>>>>>> master
           });
         } else {
           txn = await beanstalk.transferToken(
@@ -486,7 +555,11 @@ const Transfer: FC<{}> = () => {
             fromMode,
             toMode
           );
+<<<<<<< HEAD
         };
+=======
+        }
+>>>>>>> master
         txToast.confirming(txn);
 
         const receipt = await txn.wait();

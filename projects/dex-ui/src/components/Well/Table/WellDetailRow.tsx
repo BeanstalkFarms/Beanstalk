@@ -14,6 +14,7 @@ import { Item } from "src/components/Layout";
 /// format value with 2 decimals, if value is less than 1M, otherwise use short format
 const formatMayDecimals = (tv: TokenValue | undefined) => {
   if (!tv) return "-.--";
+  if (tv.gt(0) && tv.lt(0.001)) return "<0.001";
   if (tv.lt(1_000_000)) {
     return formatNum(tv, { minDecimals: 2, maxDecimals: 2 });
   }
@@ -66,7 +67,11 @@ export const WellDetailRow: FC<{
         <Amount>${liquidity ? liquidity.toHuman("short") : "-.--"}</Amount>
       </DesktopContainer>
       <DesktopContainer align="right">
+<<<<<<< HEAD
         <Amount>${price ? price.toHuman("short") : "-.--"}</Amount>
+=======
+        <Amount>${price && price.gt(0) ? price.toHuman("short") : "-.--"}</Amount>
+>>>>>>> master
       </DesktopContainer>
       <DesktopContainer align="right">
         <Amount>${volume ? volume.toHuman("short") : "-.--"}</Amount>
@@ -163,6 +168,16 @@ const DesktopContainer = styled(Td)`
       display: none;
     }
   }
+<<<<<<< HEAD
+=======
+
+  :nth-child(3) {
+    @media (max-width: ${size.tablet}) {
+      display: none;
+    }
+  }
+
+>>>>>>> master
   @media (max-width: ${size.mobile}) {
     display: none;
   }
@@ -215,7 +230,7 @@ const Amount = styled.div`
 const Reserves = styled.div`
   display: flex;
   flex-direction: row;
-  justify-content flex-end;
+  justify-content: flex-end;
   align-items: center;
   gap: 4px;
   flex: 1;

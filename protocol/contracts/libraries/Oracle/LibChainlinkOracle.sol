@@ -56,7 +56,9 @@ library LibChainlinkOracle {
         address priceAggregatorAddress,
         uint256 maxTimeout
     ) internal view returns (uint256 price) {
-        IChainlinkAggregator priceAggregator = IChainlinkAggregator(priceAggregatorAddress);
+        IChainlinkAggregator priceAggregator = IChainlinkAggregator(
+            priceAggregatorAddress
+        );
         // First, try to get current decimal precision:
         uint8 decimals;
         try priceAggregator.decimals() returns (uint8 _decimals) {
@@ -77,7 +79,14 @@ library LibChainlinkOracle {
         ) {
             // Check for an invalid roundId that is 0
             if (roundId == 0) return 0;
-            if (checkForInvalidTimestampOrAnswer(timestamp, answer, block.timestamp, maxTimeout)) {
+            if (
+                checkForInvalidTimestampOrAnswer(
+                    timestamp,
+                    answer,
+                    block.timestamp,
+                    maxTimeout
+                )
+            ) {
                 return 0;
             }
             // Adjust to 6 decimal precision.
@@ -98,7 +107,9 @@ library LibChainlinkOracle {
         uint256 maxTimeout,
         uint256 lookback
     ) internal view returns (uint256 price) {
-        IChainlinkAggregator priceAggregator = IChainlinkAggregator(priceAggregatorAddress);
+        IChainlinkAggregator priceAggregator = IChainlinkAggregator(
+            priceAggregatorAddress
+        );
         // First, try to get current decimal precision:
         uint8 decimals;
         try priceAggregator.decimals() returns (uint8 _decimals) {
@@ -119,7 +130,14 @@ library LibChainlinkOracle {
         ) {
             // Check for an invalid roundId that is 0
             if (roundId == 0) return 0;
-            if (checkForInvalidTimestampOrAnswer(timestamp, answer, block.timestamp, maxTimeout)) {
+            if (
+                checkForInvalidTimestampOrAnswer(
+                    timestamp,
+                    answer,
+                    block.timestamp,
+                    maxTimeout
+                )
+            ) {
                 return 0;
             }
 
@@ -139,7 +157,10 @@ library LibChainlinkOracle {
                     );
                     roundId -= 1;
                     t.lastTimestamp = timestamp;
-                    (answer, timestamp) = getRoundData(priceAggregator, roundId);
+                    (answer, timestamp) = getRoundData(
+                        priceAggregator,
+                        roundId
+                    );
                     if (
                         checkForInvalidTimestampOrAnswer(
                             timestamp,
@@ -154,7 +175,10 @@ library LibChainlinkOracle {
                 t.cumulativePrice = t.cumulativePrice.add(
                     uint256(answer).mul(t.lastTimestamp.sub(t.endTimestamp))
                 );
-                return t.cumulativePrice.mul(PRECISION).div(10 ** decimals).div(lookback);
+                return
+                    t.cumulativePrice.mul(PRECISION).div(10 ** decimals).div(
+                        lookback
+                    );
             }
         } catch {
             // If call to Chainlink aggregator reverts, return a price of 0 indicating failure

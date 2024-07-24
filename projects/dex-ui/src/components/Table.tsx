@@ -1,4 +1,4 @@
-import { size } from "src/breakpoints";
+import { mediaQuery, size } from "src/breakpoints";
 import styled from "styled-components";
 
 export const Table = styled.table`
@@ -45,3 +45,9 @@ export const THead = styled.thead`
   }
 `;
 export const TBody = styled.tbody``;
+
+export const ResponsiveTr = styled(Row)`
+  ${mediaQuery.sm.only} {
+    height: 66px;
+  }
+`;

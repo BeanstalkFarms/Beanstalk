@@ -35,20 +35,21 @@ const Deposits: FC<
 
   const stemTip = useStemTipForToken(newToken) || BigNumber.from(0);
   const lastStem = siloBalance?.mowStatus?.lastStem || BigNumber.from(0);
-  const deltaStem = transform(stemTip.sub(lastStem), 'bnjs');
-
-  const decimalShift = sdk.tokens.BEAN.decimals - sdk.tokens.STALK.decimals;
-
+  const deltaStem = transform(stemTip.sub(lastStem), 'bnjs').div(1_000_000);
   const rows: (LegacyDepositCrate & { id: string })[] = useMemo(
     () =>
       siloBalance?.deposited.crates.map((deposit) => ({
         id: deposit.stem?.toString(),
         mowableStalk: deposit.bdv
           ?.multipliedBy(deltaStem)
+<<<<<<< HEAD
           .shiftedBy(decimalShift),
+=======
+          .div(10000),
+>>>>>>> master
         ...deposit,
       })) || [],
-    [siloBalance?.deposited.crates, deltaStem, decimalShift]
+    [siloBalance?.deposited.crates, deltaStem]
   );
 
   const hasGerminating = !!rows.find((r) => r.isGerminating);

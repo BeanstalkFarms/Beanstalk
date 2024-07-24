@@ -62,17 +62,24 @@ contract ConvertFacet is Invariable, ReentrancyGuard {
         fundsSafu
         noSupplyChange
         nonReentrant
-        returns (int96 toStem, uint256 fromAmount, uint256 toAmount, uint256 fromBdv, uint256 toBdv)
+        returns (
+            int96 toStem,
+            uint256 fromAmount,
+            uint256 toAmount,
+            uint256 fromBdv,
+            uint256 toBdv
+        )
     {
         address toToken;
         address fromToken;
 
         // if the convert is a well <> bean convert, cache the state to validate convert.
-        LibPipelineConvert.PipelineConvertData memory pipeData = LibPipelineConvert.getConvertState(
+        LibPipelineConvert.PipelineConvertData
+            memory pipeData = LibPipelineConvert.getConvertState(convertData);
+
+        (toToken, fromToken, toAmount, fromAmount) = LibConvert.convert(
             convertData
         );
-
-        (toToken, fromToken, toAmount, fromAmount) = LibConvert.convert(convertData);
 
         require(fromAmount > 0, "Convert: From amount is 0.");
 
@@ -98,8 +105,19 @@ contract ConvertFacet is Invariable, ReentrancyGuard {
         uint256 newBdv = LibTokenSilo.beanDenominatedValue(toToken, toAmount);
         toBdv = newBdv > fromBdv ? newBdv : fromBdv;
 
-        toStem = LibConvert._depositTokensForConvert(toToken, toAmount, toBdv, pipeData.grownStalk);
+        toStem = LibConvert._depositTokensForConvert(
+            toToken,
+            toAmount,
+            toBdv,
+            pipeData.grownStalk
+        );
 
-        emit Convert(LibTractor._user(), fromToken, toToken, fromAmount, toAmount);
+        emit Convert(
+            LibTractor._user(),
+            fromToken,
+            toToken,
+            fromAmount,
+            toAmount
+        );
     }
 }

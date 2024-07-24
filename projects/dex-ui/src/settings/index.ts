@@ -19,7 +19,11 @@ export type DexSettings = {
   NETLIFY_BUILD_ID?: string;
 };
 
+<<<<<<< HEAD
 const temp = netlifyContext === "production" || "deploy-preview" ? ProdSettings : DevSettings;
+=======
+const temp = netlifyContext === "production" || netlifyContext === "deploy-preview" ? ProdSettings : DevSettings;
+>>>>>>> master
 
 export const Settings = {
   ...temp,
@@ -27,6 +31,8 @@ export const Settings = {
   NETLIFY_COMMIT_HASH: netlifyCommitHash,
   NETLIFY_BUILD_ID: netlifyBuildId
 };
+
+export const isNetlifyContext = netlifyContext === 'deploy-preview';
 
 // @ts-ignore
 globalThis.settings = () => Log.module("settings").log(Settings);
