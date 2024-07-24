@@ -61,6 +61,7 @@ import { useFetchFarmerSilo } from '~/state/farmer/silo/updater';
 import useFarmerSilo from '~/hooks/farmer/useFarmerSilo';
 import useSilo from '~/hooks/beanstalk/useSilo';
 import useSetting from '~/hooks/app/useSetting';
+import SeedGaugeInfo from '~/components/Silo/SeedGauge/SeedGaugeInfo';
 
 const FormControlLabelStat: FC<
   Partial<FormControlLabelProps> & {
@@ -727,6 +728,7 @@ const SiloPage: FC<{}> = () => {
           revitalizedStalk={revitalizedStalk}
           revitalizedSeeds={revitalizedSeeds}
         />
+        <SeedGaugeInfo />
         <Whitelist config={config} farmerSilo={farmerSilo} />
         {/* <RewardsDialog
           open={open}
