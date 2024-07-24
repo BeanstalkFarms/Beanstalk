@@ -9,6 +9,7 @@ const { setEthUsdChainlinkPrice, setWstethUsdPrice } = require('../utils/oracle.
 const { deployBasin } = require('../scripts/basin.js');
 const ZERO_BYTES = ethers.utils.formatBytes32String('0x0')
 const { deployBasinV1_1Upgrade } = require('../scripts/basinV1_1.js');
+const { impersonateBeanWstethWell } = require('../utils/well.js');
 const { advanceTime } = require('../utils/helpers.js');
 const { deployMockWell, setReserves, deployMockBeanWell } = require('../utils/well.js');
 
@@ -70,6 +71,7 @@ describe('Sun', function () {
     await setWstethUsdPrice('1000');
 
     let c = await deployBasin(true, undefined, false, true)
+    await impersonateBeanWstethWell();
     await c.multiFlowPump.update([toBean('10000'), to18('10')], 0x00);
     await c.multiFlowPump.update([toBean('10000'), to18('10')], 0x00);
     c = await deployBasinV1_1Upgrade(c, true, undefined, false, true, mockPump=true)

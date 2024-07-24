@@ -31,7 +31,7 @@ const {
 const { BEANSTALK, PUBLIUS, BEAN_3_CURVE, PRICE } = require("./test/utils/constants.js");
 const { task } = require("hardhat/config");
 const { TASK_COMPILE_SOLIDITY_GET_SOURCE_PATHS } = require("hardhat/builtin-tasks/task-names");
-const { bipNewSilo, bipMorningAuction, bipSeedGauge } = require("./scripts/bips.js");
+const { bipNewSilo, bipMorningAuction, bipSeedGauge, bipMigrateUnripeBeanEthToBeanSteth } = require("./scripts/bips.js");
 const { ebip9, ebip10, ebip11, ebip13, ebip14, ebip15, ebip16, ebip17 } = require("./scripts/ebips.js");
 
 //////////////////////// UTILITIES ////////////////////////
@@ -219,6 +219,10 @@ task("deploySiloV3", async function () {
 
 task("deploySeedGauge", async function () {
   await bipSeedGauge();
+});
+
+task("deployWstethMigration", async function () {
+  await bipMigrateUnripeBeanEthToBeanSteth();
 });
 
 task("deployBipMiscImprovements", async function () {

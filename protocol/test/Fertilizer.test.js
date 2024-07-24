@@ -3,10 +3,12 @@ const { deploy } = require('../scripts/deploy.js')
 const { impersonateFertilizer } = require('../scripts/deployFertilizer.js')
 const { EXTERNAL, INTERNAL } = require('./utils/balances.js')
 const { takeSnapshot, revertToSnapshot } = require("./utils/snapshot.js");
-const { BEAN, USDC, UNRIPE_BEAN, UNRIPE_LP, BEANSTALK, BARN_RAISE_TOKEN } = require('./utils/constants.js');
+const { BEAN, USDC, UNRIPE_BEAN, UNRIPE_LP, BEANSTALK, BARN_RAISE_TOKEN, BEAN_WSTETH_WELL } = require('./utils/constants.js');
 const { setWstethUsdPrice } = require('../utils/oracle.js');
 const { to6, to18 } = require('./utils/helpers.js');
 const { deployBasinV1_1 } = require('../scripts/basinV1_1.js');
+const { impersonateBeanWstethWell } = require('../utils/well.js');
+const { impersonateContract } = require('../scripts/impersonate.js');
 const axios = require('axios')
 
 let user,user2,owner,fert
@@ -63,7 +65,11 @@ describe('Fertilize', function () {
 
     await setWstethUsdPrice('1000')
 
-    this.well = (await deployBasinV1_1(true, undefined, false, true)).well
+    // this.well = (await deployBasinV1_1(true, undefined, false, true)).well
+    this.well = await impersonateContract('MockSetComponentsWell', BEAN_WSTETH_WELL)
+    console.log("well address: ", this.well.address);
+    await impersonateBeanWstethWell();
+    console.log("BEAN_WSTETH_WELL: ", BEAN_WSTETH_WELL);
     
 
     this.wellToken = await ethers.getContractAt("IERC20", this.well.address)
