@@ -3,21 +3,26 @@ import { Token as CoreToken } from "@beanstalk/sdk-core";
 import { BigNumber, ContractTransaction } from "ethers";
 
 const STALK_DECIMALS = 10;
-const SEED_DECIMALS = 6;
 
 declare module "@beanstalk/sdk-core" {
-  abstract class Token {
-    static _source: string;
+  interface Token {
     isUnripe: boolean;
     rewards?: { stalk: TokenValue; seeds: TokenValue | null };
     getStalk(bdv?: TokenValue): TokenValue;
     getSeeds(bdv?: TokenValue): TokenValue;
     approveBeanstalk(amount: TokenValue | BigNumber): Promise<ContractTransaction>;
   }
+
+  namespace Token {
+    let _source: string;
+  }
 }
 
 Object.defineProperty(CoreToken, "_source", {
-  value: "BeanstalkSDK"
+  value: "BeanstalkSDK",
+  writable: false,
+  configurable: false,
+  enumerable: true
 });
 
 /**
@@ -47,5 +52,9 @@ CoreToken.prototype.approveBeanstalk = function (amount: TokenValue | BigNumber)
   return;
 };
 
-export type Token = InstanceType<typeof CoreToken>;
+
+// Re-export the extended CoreToken as Token
 export const Token = CoreToken;
+
+// export type Token = CoreToken;
+export type Token = InstanceType<typeof CoreToken>;
