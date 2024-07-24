@@ -82,7 +82,7 @@ describe('Complex Weather', function () {
         await this.fertilizer.setFertilizerE(false, to6('0'))
         await this.season.setYieldE(this.testData.startingWeather)
         await this.season.setBeanToMaxLpGpPerBdvRatio(to18(this.testData.initialPercentToLp))
-        this.bean.connect(user).burn(await this.bean.balanceOf(userAddress))
+        await this.bean.connect(user).burn(await this.bean.balanceOf(userAddress))
         this.dsoil = this.testData.lastSoil
         this.startSoil = this.testData.startingSoil
         this.endSoil = this.testData.endingSoil
