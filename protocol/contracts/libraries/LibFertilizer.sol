@@ -52,18 +52,12 @@ library LibFertilizer {
 
         // Calculate Beans Per Fertilizer and add to total owed
         uint128 bpf = getBpf(season);
-        s.sys.fert.unfertilizedIndex = s.sys.fert.unfertilizedIndex.add(
-            fertilizerAmount.mul(bpf)
-        );
+        s.sys.fert.unfertilizedIndex = s.sys.fert.unfertilizedIndex.add(fertilizerAmount.mul(bpf));
         // Get id
         id = s.sys.fert.bpf.add(bpf);
         // Update Total and Season supply
-        s.sys.fert.fertilizer[id] = s.sys.fert.fertilizer[id].add(
-            fertilizerAmount128
-        );
-        s.sys.fert.activeFertilizer = s.sys.fert.activeFertilizer.add(
-            fertilizerAmount
-        );
+        s.sys.fert.fertilizer[id] = s.sys.fert.fertilizer[id].add(fertilizerAmount128);
+        s.sys.fert.activeFertilizer = s.sys.fert.activeFertilizer.add(fertilizerAmount);
         // Add underlying to Unripe Beans and Unripe LP
         addUnderlying(tokenAmountIn, fertilizerAmount.mul(DECIMALS), minLP);
         // If not first time adding Fertilizer with this id, return
@@ -95,9 +89,7 @@ library LibFertilizer {
     ) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
         // Calculate how many new Deposited Beans will be minted
-        uint256 percentToFill = usdAmount.mul(C.precision()).div(
-            remainingRecapitalization()
-        );
+        uint256 percentToFill = usdAmount.mul(C.precision()).div(remainingRecapitalization());
 
         uint256 newDepositedBeans;
         if (
@@ -107,14 +99,10 @@ library LibFertilizer {
             newDepositedBeans = (C.unripeBean().totalSupply()).sub(
                 s.sys.silo.unripeSettings[C.UNRIPE_BEAN].balanceOfUnderlying
             );
-            newDepositedBeans = newDepositedBeans.mul(percentToFill).div(
-                C.precision()
-            );
+            newDepositedBeans = newDepositedBeans.mul(percentToFill).div(C.precision());
         }
         // Calculate how many Beans to add as LP
-        uint256 newDepositedLPBeans = usdAmount.mul(C.exploitAddLPRatio()).div(
-            DECIMALS
-        );
+        uint256 newDepositedLPBeans = usdAmount.mul(C.exploitAddLPRatio()).div(DECIMALS);
 
         // Mint the Deposited Beans to Beanstalk.
         C.bean().mint(address(this), newDepositedBeans);
@@ -183,16 +171,9 @@ library LibFertilizer {
         }
     }
 
-    function remainingRecapitalization()
-        internal
-        view
-        returns (uint256 remaining)
-    {
+    function remainingRecapitalization() internal view returns (uint256 remaining) {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        uint256 totalDollars = C
-            .dollarPerUnripeLP()
-            .mul(C.unripeLP().totalSupply())
-            .div(DECIMALS);
+        uint256 totalDollars = C.dollarPerUnripeLP().mul(C.unripeLP().totalSupply()).div(DECIMALS);
         totalDollars = (totalDollars / 1e6) * 1e6; // round down to nearest USDC
         if (s.sys.fert.recapitalized >= totalDollars) return 0;
         return totalDollars.sub(s.sys.fert.recapitalized);
@@ -201,16 +182,11 @@ library LibFertilizer {
     function pop() internal returns (bool) {
         AppStorage storage s = LibAppStorage.diamondStorage();
         uint128 first = s.sys.fert.fertFirst;
-        s.sys.fert.activeFertilizer = s.sys.fert.activeFertilizer.sub(
-            getAmount(first)
-        );
+        s.sys.fert.activeFertilizer = s.sys.fert.activeFertilizer.sub(getAmount(first));
         uint128 next = getNext(first);
         if (next == 0) {
             // If all Unfertilized Beans have been fertilized, delete line.
-            require(
-                s.sys.fert.activeFertilizer == 0,
-                "Still active fertilizer"
-            );
+            require(s.sys.fert.activeFertilizer == 0, "Still active fertilizer");
             s.sys.fert.fertFirst = 0;
             s.sys.fert.fertLast = 0;
             s.sys.season.fertilizing = false;
@@ -243,25 +219,15 @@ library LibFertilizer {
         // other is supported by the Lib Usd Oracle.
         IERC20[] memory tokens = IWell(well).tokens();
         require(tokens.length == 2, "Fertilizer: Well must have 2 tokens.");
-        require(
-            tokens[0] == C.bean() || tokens[1] == C.bean(),
-            "Fertilizer: Well must have BEAN."
-        );
+        require(tokens[0] == C.bean() || tokens[1] == C.bean(), "Fertilizer: Well must have BEAN.");
         // Check that Lib Usd Oracle supports the non-Bean token in the Well.
-        LibUsdOracle.getTokenPrice(
-            address(tokens[tokens[0] == C.bean() ? 1 : 0])
-        );
+        LibUsdOracle.getTokenPrice(address(tokens[tokens[0] == C.bean() ? 1 : 0]));
 
-        uint256 balanceOfUnderlying = s
-            .sys
-            .silo
-            .unripeSettings[C.UNRIPE_LP]
-            .balanceOfUnderlying;
-        IERC20(s.sys.silo.unripeSettings[C.UNRIPE_LP].underlyingToken)
-            .safeTransfer(
-                LibDiamond.diamondStorage().contractOwner,
-                balanceOfUnderlying
-            );
+        uint256 balanceOfUnderlying = s.sys.silo.unripeSettings[C.UNRIPE_LP].balanceOfUnderlying;
+        IERC20(s.sys.silo.unripeSettings[C.UNRIPE_LP].underlyingToken).safeTransfer(
+            LibDiamond.diamondStorage().contractOwner,
+            balanceOfUnderlying
+        );
         LibUnripe.decrementUnderlying(C.UNRIPE_LP, balanceOfUnderlying);
         LibUnripe.switchUnderlyingToken(C.UNRIPE_LP, well);
     }

@@ -32,12 +32,7 @@ library LibFlood {
      * @param token The token that was swapped for Beans.
      * @param amount The amount of tokens which was received for swapping Beans.
      */
-    event SeasonOfPlentyWell(
-        uint256 indexed season,
-        address well,
-        address token,
-        uint256 amount
-    );
+    event SeasonOfPlentyWell(uint256 indexed season, address well, address token, uint256 amount);
 
     /**
      * @notice Emitted when Beans are minted to the Field during the Season of Plenty.
@@ -67,15 +62,12 @@ library LibFlood {
             return;
         } else if (!s.sys.season.raining) {
             s.sys.season.raining = true;
-            address[] memory wells = LibWhitelistedTokens
-                .getCurrentlySoppableWellLpTokens();
+            address[] memory wells = LibWhitelistedTokens.getCurrentlySoppableWellLpTokens();
             // Set the plenty per root equal to previous rain start.
             uint32 season = s.sys.season.current;
             uint32 rainstartSeason = s.sys.season.rainStart;
             for (uint i; i < wells.length; i++) {
-                s.sys.sop.sops[season][wells[i]] = s.sys.sop.sops[
-                    rainstartSeason
-                ][wells[i]];
+                s.sys.sop.sops[season][wells[i]] = s.sys.sop.sops[rainstartSeason][wells[i]];
             }
             s.sys.season.rainStart = s.sys.season.current;
             s.sys.rain.pods = s.sys.fields[s.sys.activeField].pods;
@@ -120,14 +112,12 @@ library LibFlood {
 
         // If a Sop has occured since last update, calculate rewards and set last Sop.
         if (s.sys.season.lastSopSeason > lastUpdate) {
-            address[] memory tokens = LibWhitelistedTokens
-                .getWhitelistedWellLpTokens();
+            address[] memory tokens = LibWhitelistedTokens.getWhitelistedWellLpTokens();
             for (uint i; i < tokens.length; i++) {
-                s
-                    .accts[account]
-                    .sop
-                    .perWellPlenty[tokens[i]]
-                    .plenty = balanceOfPlenty(account, tokens[i]);
+                s.accts[account].sop.perWellPlenty[tokens[i]].plenty = balanceOfPlenty(
+                    account,
+                    tokens[i]
+                );
             }
             s.accts[account].lastSop = s.sys.season.lastSop;
         }
@@ -149,11 +139,9 @@ library LibFlood {
                         // deposited in the previous season before raining, and mowed during a sop),
                         // Beanstalk will not allocate plenty to this deposit, and thus the roots
                         // needs to be deducted from the sop roots.
-                        s.accts[account].sop.rainRoots = s
-                            .accts[account]
-                            .sop
-                            .rainRoots
-                            .sub(firstGerminatingRoots);
+                        s.accts[account].sop.rainRoots = s.accts[account].sop.rainRoots.sub(
+                            firstGerminatingRoots
+                        );
                     }
                 }
 
@@ -163,16 +151,11 @@ library LibFlood {
             // If there has been a Sop since rain started,
             // save plentyPerRoot in case another SOP happens during rain.
             if (s.sys.season.lastSop == s.sys.season.rainStart) {
-                address[] memory tokens = LibWhitelistedTokens
-                    .getWhitelistedWellLpTokens();
+                address[] memory tokens = LibWhitelistedTokens.getWhitelistedWellLpTokens();
                 for (uint i; i < tokens.length; i++) {
-                    s
-                        .accts[account]
-                        .sop
-                        .perWellPlenty[tokens[i]]
-                        .plentyPerRoot = s.sys.sop.sops[s.sys.season.lastSop][
-                        tokens[i]
-                    ];
+                    s.accts[account].sop.perWellPlenty[tokens[i]].plentyPerRoot = s.sys.sop.sops[
+                        s.sys.season.lastSop
+                    ][tokens[i]];
                 }
             }
         } else if (s.accts[account].lastRain > 0) {
@@ -184,10 +167,7 @@ library LibFlood {
     /**
      * @dev returns the amount of `plenty` an account has.
      */
-    function balanceOfPlenty(
-        address account,
-        address well
-    ) internal view returns (uint256 plenty) {
+    function balanceOfPlenty(address account, address well) internal view returns (uint256 plenty) {
         AppStorage storage s = LibAppStorage.diamondStorage();
         Account storage a = s.accts[account];
         plenty = a.sop.perWellPlenty[well].plenty;
@@ -202,18 +182,14 @@ library LibFlood {
             } else {
                 previousPPR = s.sys.sop.sops[a.lastSop][well];
             }
-            uint256 lastRainPPR = s.sys.sop.sops[s.accts[account].lastRain][
-                well
-            ];
+            uint256 lastRainPPR = s.sys.sop.sops[s.accts[account].lastRain][well];
 
             // If there has been a SOP duing the rain sesssion since last update, process SOP.
             if (lastRainPPR > previousPPR) {
                 uint256 plentyPerRoot = lastRainPPR - previousPPR;
                 previousPPR = lastRainPPR;
                 plenty = plenty.add(
-                    plentyPerRoot.mul(s.accts[account].sop.rainRoots).div(
-                        C.SOP_PRECISION
-                    )
+                    plentyPerRoot.mul(s.accts[account].sop.rainRoots).div(C.SOP_PRECISION)
                 );
             }
         } else {
@@ -223,13 +199,8 @@ library LibFlood {
 
         // Handle and SOPs that started + ended before after last Silo update.
         if (s.sys.season.lastSop > s.accts[account].lastUpdate) {
-            uint256 plentyPerRoot = s
-            .sys
-            .sop
-            .sops[s.sys.season.lastSop][well].sub(previousPPR);
-            plenty = plenty.add(
-                plentyPerRoot.mul(s.accts[account].roots).div(C.SOP_PRECISION)
-            );
+            uint256 plentyPerRoot = s.sys.sop.sops[s.sys.season.lastSop][well].sub(previousPPR);
+            plenty = plenty.add(plentyPerRoot.mul(s.accts[account].roots).div(C.SOP_PRECISION));
         }
     }
 
@@ -241,9 +212,7 @@ library LibFlood {
         // Make 0.1% of the total bean supply worth of pods harvestable.
 
         uint256 totalBeanSupply = C.bean().totalSupply();
-        uint256 sopFieldBeans = totalBeanSupply.div(
-            FLOOD_PODLINE_PERCENT_DENOMINATOR
-        ); // 1/1000 = 0.1% of total supply
+        uint256 sopFieldBeans = totalBeanSupply.div(FLOOD_PODLINE_PERCENT_DENOMINATOR); // 1/1000 = 0.1% of total supply
 
         // Note there may be cases where zero harvestable pods are available. For clarity, the code will still emit an event
         // but with zero sop field beans.
@@ -251,9 +220,7 @@ library LibFlood {
             s.sys.fields[s.sys.activeField].harvestable
         );
 
-        sopFieldBeans = sopFieldBeans > maxHarvestable
-            ? maxHarvestable
-            : sopFieldBeans;
+        sopFieldBeans = sopFieldBeans > maxHarvestable ? maxHarvestable : sopFieldBeans;
 
         s.sys.fields[s.sys.activeField].harvestable = s
             .sys
@@ -275,15 +242,11 @@ library LibFlood {
             uint256 positiveDeltaBCount
         )
     {
-        address[] memory wells = LibWhitelistedTokens
-            .getCurrentlySoppableWellLpTokens();
+        address[] memory wells = LibWhitelistedTokens.getCurrentlySoppableWellLpTokens();
         wellDeltaBs = new WellDeltaB[](wells.length);
 
         for (uint i = 0; i < wells.length; i++) {
-            wellDeltaBs[i] = WellDeltaB(
-                wells[i],
-                LibDeltaB.currentDeltaB(wells[i])
-            );
+            wellDeltaBs[i] = WellDeltaB(wells[i], LibDeltaB.currentDeltaB(wells[i]));
             if (wellDeltaBs[i].deltaB > 0) {
                 totalPositiveDeltaB += uint256(wellDeltaBs[i].deltaB);
                 positiveDeltaBCount++;
@@ -312,11 +275,7 @@ library LibFlood {
                     ? arr[uint(left)]
                     : arr[uint(right)]
             )
-            : (
-                arr[uint(mid)].deltaB < arr[uint(right)].deltaB
-                    ? arr[uint(mid)]
-                    : arr[uint(right)]
-            );
+            : (arr[uint(mid)].deltaB < arr[uint(right)].deltaB ? arr[uint(mid)] : arr[uint(right)]);
 
         int i = left;
         int j = right;
@@ -386,9 +345,7 @@ library LibFlood {
         s.sys.sop.sops[s.sys.season.rainStart][well] = s
         .sys
         .sop
-        .sops[s.sys.season.lastSop][well].add(
-                amount.mul(C.SOP_PRECISION).div(s.sys.rain.roots)
-            );
+        .sops[s.sys.season.lastSop][well].add(amount.mul(C.SOP_PRECISION).div(s.sys.rain.roots));
 
         // update Beanstalk's stored overall plenty for this well
         s.sys.sop.plentyPerSopToken[sopToken] += amount;
@@ -410,10 +367,7 @@ library LibFlood {
             return wellDeltaBs;
         }
 
-        if (
-            totalPositiveDeltaB < totalNegativeDeltaB ||
-            positiveDeltaBCount == 0
-        ) {
+        if (totalPositiveDeltaB < totalNegativeDeltaB || positiveDeltaBCount == 0) {
             // The less than conditional can occur if the twaDeltaB is positive, but the instanteous deltaB is negative or 0
             // In that case, no reductions are needed.
             // If there are no positive values, no well flooding is needed, return zeros
@@ -436,15 +390,11 @@ library LibFlood {
         // as reduction amount (amount of beans to flood per well).
         for (uint256 i = positiveDeltaBCount; i > 0; i--) {
             if (shaveToLevel > uint256(wellDeltaBs[i - 1].deltaB)) {
-                shaveToLevel +=
-                    (shaveToLevel - uint256(wellDeltaBs[i - 1].deltaB)) /
-                    (i - 1);
+                shaveToLevel += (shaveToLevel - uint256(wellDeltaBs[i - 1].deltaB)) / (i - 1);
                 // amount to sop for this well must be zero
                 wellDeltaBs[i - 1].deltaB = 0;
             } else {
-                wellDeltaBs[i - 1].deltaB =
-                    wellDeltaBs[i - 1].deltaB -
-                    int256(shaveToLevel);
+                wellDeltaBs[i - 1].deltaB = wellDeltaBs[i - 1].deltaB - int256(shaveToLevel);
             }
         }
         return wellDeltaBs;

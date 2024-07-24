@@ -18,12 +18,7 @@ library LibTokenApprove {
         uint256 amount
     );
 
-    function approve(
-        address account,
-        address spender,
-        IERC20 token,
-        uint256 amount
-    ) internal {
+    function approve(address account, address spender, IERC20 token, uint256 amount) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
         s.a[account].tokenAllowances[spender][token] = amount;
         emit TokenApproval(account, spender, token, amount);
@@ -38,18 +33,10 @@ library LibTokenApprove {
         return s.a[account].tokenAllowances[spender][token];
     }
 
-    function spendAllowance(
-        address owner,
-        address spender,
-        IERC20 token,
-        uint256 amount
-    ) internal {
+    function spendAllowance(address owner, address spender, IERC20 token, uint256 amount) internal {
         uint256 currentAllowance = allowance(owner, spender, token);
         if (currentAllowance != type(uint256).max) {
-            require(
-                currentAllowance >= amount,
-                "Token: insufficient allowance"
-            );
+            require(currentAllowance >= amount, "Token: insufficient allowance");
             approve(owner, spender, token, currentAllowance - amount);
         }
     }

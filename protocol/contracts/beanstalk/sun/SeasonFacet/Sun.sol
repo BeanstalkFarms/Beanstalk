@@ -41,18 +41,12 @@ contract Sun is Oracle, Distribution {
     function stepSun(int256 deltaB, uint256 caseId) internal {
         // Above peg
         if (deltaB > 0) {
-            uint256 priorHarvestable = s
-                .sys
-                .fields[s.sys.activeField]
-                .harvestable;
+            uint256 priorHarvestable = s.sys.fields[s.sys.activeField].harvestable;
 
             C.bean().mint(address(this), uint256(deltaB));
             LibShipping.ship(uint256(deltaB));
 
-            setSoilAbovePeg(
-                s.sys.fields[s.sys.activeField].harvestable - priorHarvestable,
-                caseId
-            );
+            setSoilAbovePeg(s.sys.fields[s.sys.activeField].harvestable - priorHarvestable, caseId);
             s.sys.season.abovePeg = true;
         }
         // Below peg

@@ -8,11 +8,10 @@ import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 import {C} from "contracts/C.sol";
 import {Invariable} from "contracts/beanstalk/Invariable.sol";
- import {AppStorage} from "contracts/beanstalk/storage/AppStorage.sol";
+import {AppStorage} from "contracts/beanstalk/storage/AppStorage.sol";
 import {LibAppStorage} from "contracts/libraries/LibAppStorage.sol";
 import {LibTransfer} from "contracts/libraries/Token/LibTransfer.sol";
- import {LibBalance} from "contracts/libraries/Token/LibBalance.sol";
-
+import {LibBalance} from "contracts/libraries/Token/LibBalance.sol";
 
 /**
  * @title Mock Attack Facet

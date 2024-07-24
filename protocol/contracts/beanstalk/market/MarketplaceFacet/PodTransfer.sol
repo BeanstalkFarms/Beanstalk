@@ -59,12 +59,7 @@ contract PodTransfer is ReentrancyGuard {
         emit PlotTransfer(from, to, index + start, amount);
     }
 
-    function insertPlot(
-        address account,
-        uint256 fieldId,
-        uint256 index,
-        uint256 amount
-    ) internal {
+    function insertPlot(address account, uint256 fieldId, uint256 index, uint256 amount) internal {
         s.accts[account].fields[fieldId].plots[index] = amount;
         s.accts[account].fields[fieldId].plotIndexes.push(index);
     }
@@ -76,8 +71,7 @@ contract PodTransfer is ReentrancyGuard {
         uint256 start,
         uint256 end
     ) internal {
-        uint256 amountAfterEnd = s.accts[account].fields[fieldId].plots[index] -
-            end;
+        uint256 amountAfterEnd = s.accts[account].fields[fieldId].plots[index] - end;
 
         if (start > 0) {
             s.accts[account].fields[fieldId].plots[index] = start;

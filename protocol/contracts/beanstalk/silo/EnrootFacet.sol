@@ -76,15 +76,7 @@ contract EnrootFacet is Invariable, ReentrancyGuard {
         address token,
         int96 stem,
         uint256 amount
-    )
-        external
-        payable
-        fundsSafu
-        noNetFlow
-        noSupplyChange
-        nonReentrant
-        mowSender(token)
-    {
+    ) external payable fundsSafu noNetFlow noSupplyChange nonReentrant mowSender(token) {
         require(
             s.sys.silo.unripeSettings[token].underlyingToken != address(0),
             "Silo: token not unripe"
@@ -123,15 +115,9 @@ contract EnrootFacet is Invariable, ReentrancyGuard {
 
         // enroots should mint active stalk,
         // as unripe assets have been in the system for at least 1 season.
-        uint256 deltaStalk = deltaBDV
-            .mul(s.sys.silo.assetSettings[token].stalkIssuedPerBdv)
-            .add(
-                LibSilo.stalkReward(
-                    stem,
-                    LibTokenSilo.stemTipForToken(token),
-                    uint128(deltaBDV)
-                )
-            );
+        uint256 deltaStalk = deltaBDV.mul(s.sys.silo.assetSettings[token].stalkIssuedPerBdv).add(
+            LibSilo.stalkReward(stem, LibTokenSilo.stemTipForToken(token), uint128(deltaBDV))
+        );
 
         LibSilo.mintActiveStalk(LibTractor._user(), deltaStalk.toUint128());
     }
@@ -153,15 +139,7 @@ contract EnrootFacet is Invariable, ReentrancyGuard {
         address token,
         int96[] calldata stems,
         uint256[] calldata amounts
-    )
-        external
-        payable
-        fundsSafu
-        noNetFlow
-        noSupplyChange
-        nonReentrant
-        mowSender(token)
-    {
+    ) external payable fundsSafu noNetFlow noSupplyChange nonReentrant mowSender(token) {
         require(
             s.sys.silo.unripeSettings[token].underlyingToken != address(0),
             "Silo: token not unripe"
@@ -215,9 +193,7 @@ contract EnrootFacet is Invariable, ReentrancyGuard {
         // reverts if bdvAdded < bdvRemoved.
         LibTokenSilo.incrementTotalDepositedBdv(
             token,
-            enrootData.bdvAdded.sub(
-                ar.active.bdv.add(ar.even.bdv).add(ar.odd.bdv)
-            )
+            enrootData.bdvAdded.sub(ar.active.bdv.add(ar.even.bdv).add(ar.odd.bdv))
         );
         LibSilo.mintActiveStalk(
             LibTractor._user(),
@@ -243,18 +219,12 @@ contract EnrootFacet is Invariable, ReentrancyGuard {
             ar.active.tokens.add(ar.odd.tokens).add(ar.even.tokens)
         );
         // summate the total amount removed.
-        enrootData.totalAmountRemoved = ar.active.tokens.add(ar.odd.tokens).add(
-            ar.even.tokens
-        );
+        enrootData.totalAmountRemoved = ar.active.tokens.add(ar.odd.tokens).add(ar.even.tokens);
 
         // get the stemTip and stalkPerBdv.
         enrootData.stemTip = LibTokenSilo.stemTipForToken(token);
         // get the stalk per BDV.
-        enrootData.stalkPerBdv = s
-            .sys
-            .silo
-            .assetSettings[token]
-            .stalkIssuedPerBdv;
+        enrootData.stalkPerBdv = s.sys.silo.assetSettings[token].stalkIssuedPerBdv;
     }
 
     /**

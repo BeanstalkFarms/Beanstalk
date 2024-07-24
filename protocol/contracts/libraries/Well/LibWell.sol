@@ -27,11 +27,7 @@ library LibWell {
 
     function getRatiosAndBeanIndex(
         IERC20[] memory tokens
-    )
-        internal
-        view
-        returns (uint[] memory ratios, uint beanIndex, bool success)
-    {
+    ) internal view returns (uint[] memory ratios, uint beanIndex, bool success) {
         return getRatiosAndBeanIndex(tokens, 0);
     }
 
@@ -42,11 +38,7 @@ library LibWell {
     function getRatiosAndBeanIndex(
         IERC20[] memory tokens,
         uint256 lookback
-    )
-        internal
-        view
-        returns (uint[] memory ratios, uint beanIndex, bool success)
-    {
+    ) internal view returns (uint[] memory ratios, uint beanIndex, bool success) {
         success = true;
         ratios = new uint[](tokens.length);
         beanIndex = type(uint256).max;
@@ -55,10 +47,7 @@ library LibWell {
                 beanIndex = i;
                 ratios[i] = 1e6;
             } else {
-                ratios[i] = LibUsdOracle.getUsdPrice(
-                    address(tokens[i]),
-                    lookback
-                );
+                ratios[i] = LibUsdOracle.getUsdPrice(address(tokens[i]), lookback);
                 if (ratios[i] == 0) {
                     success = false;
                 }
@@ -70,9 +59,7 @@ library LibWell {
     /**
      * @dev Returns the index of Bean in a list of tokens.
      */
-    function getBeanIndex(
-        IERC20[] memory tokens
-    ) internal pure returns (uint beanIndex) {
+    function getBeanIndex(IERC20[] memory tokens) internal pure returns (uint beanIndex) {
         for (beanIndex; beanIndex < tokens.length; ++beanIndex) {
             if (C.BEAN == address(tokens[beanIndex])) {
                 return beanIndex;
@@ -84,9 +71,7 @@ library LibWell {
     /**
      * @dev Returns the first ERC20 well token that is not Bean.
      */
-    function getNonBeanIndex(
-        IERC20[] memory tokens
-    ) internal pure returns (uint nonBeanIndex) {
+    function getNonBeanIndex(IERC20[] memory tokens) internal pure returns (uint nonBeanIndex) {
         for (nonBeanIndex; nonBeanIndex < tokens.length; ++nonBeanIndex) {
             if (C.BEAN != address(tokens[nonBeanIndex])) {
                 return nonBeanIndex;
@@ -98,16 +83,12 @@ library LibWell {
     /**
      * @dev Returns the index of Bean given a Well.
      */
-    function getBeanIndexFromWell(
-        address well
-    ) internal view returns (uint beanIndex) {
+    function getBeanIndexFromWell(address well) internal view returns (uint beanIndex) {
         IERC20[] memory tokens = IWell(well).tokens();
         beanIndex = getBeanIndex(tokens);
     }
 
-    function getNonBeanTokenFromWell(
-        address well
-    ) internal view returns (IERC20 nonBeanToken) {
+    function getNonBeanTokenFromWell(address well) internal view returns (IERC20 nonBeanToken) {
         IERC20[] memory tokens = IWell(well).tokens();
         return tokens[getNonBeanIndex(tokens)];
     }
@@ -177,10 +158,7 @@ library LibWell {
      * @dev Sets the price in {AppStorage.usdTokenPrice} given a set of ratios.
      * It assumes that the ratios correspond to the Constant Product Well indexes.
      */
-    function setUsdTokenPriceForWell(
-        address well,
-        uint256[] memory ratios
-    ) internal {
+    function setUsdTokenPriceForWell(address well, uint256[] memory ratios) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
 
         // If the reserves length is 0, then {LibWellMinting} failed to compute
@@ -198,9 +176,7 @@ library LibWell {
      * @notice Returns the USD / TKN price stored in {AppStorage.usdTokenPrice}.
      * @dev assumes TKN has 18 decimals.
      */
-    function getUsdTokenPriceForWell(
-        address well
-    ) internal view returns (uint tokenUsd) {
+    function getUsdTokenPriceForWell(address well) internal view returns (uint tokenUsd) {
         tokenUsd = LibAppStorage.diamondStorage().sys.usdTokenPrice[well];
     }
 
@@ -219,10 +195,7 @@ library LibWell {
      * if the length of the twaReserves is 0, then the minting oracle is off.
      *
      */
-    function setTwaReservesForWell(
-        address well,
-        uint256[] memory twaReserves
-    ) internal {
+    function setTwaReservesForWell(address well, uint256[] memory twaReserves) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
         // if the length of twaReserves is 0, then return 0.
         // the length of twaReserves should never be 1, but
@@ -265,27 +238,22 @@ library LibWell {
      * @notice returns the price in terms of TKN/BEAN.
      * (if eth is 1000 beans, this function will return 1000e6);
      */
-    function getBeanTokenPriceFromTwaReserves(
-        address well
-    ) internal view returns (uint256 price) {
+    function getBeanTokenPriceFromTwaReserves(address well) internal view returns (uint256 price) {
         AppStorage storage s = LibAppStorage.diamondStorage();
         // s.sys.twaReserve[well] should be set prior to this function being called.
         // 'price' is in terms of reserve0:reserve1.
-        if (
-            s.sys.twaReserves[well].reserve0 == 0 ||
-            s.sys.twaReserves[well].reserve1 == 0
-        ) {
+        if (s.sys.twaReserves[well].reserve0 == 0 || s.sys.twaReserves[well].reserve1 == 0) {
             price = 0;
         } else {
             // fetch the bean index from the well in order to properly return the bean price.
             if (getBeanIndexFromWell(well) == 0) {
                 price = uint256(s.sys.twaReserves[well].reserve0).mul(1e18).div(
-                        s.sys.twaReserves[well].reserve1
-                    );
+                    s.sys.twaReserves[well].reserve1
+                );
             } else {
                 price = uint256(s.sys.twaReserves[well].reserve1).mul(1e18).div(
-                        s.sys.twaReserves[well].reserve0
-                    );
+                    s.sys.twaReserves[well].reserve0
+                );
             }
         }
     }
@@ -305,9 +273,7 @@ library LibWell {
      * the initial timestamp and reserves is the timestamp of the start
      * of the last season. wrapped in try/catch to return gracefully.
      */
-    function getTwaReservesFromPump(
-        address well
-    ) internal view returns (uint256[] memory) {
+    function getTwaReservesFromPump(address well) internal view returns (uint256[] memory) {
         AppStorage storage s = LibAppStorage.diamondStorage();
         Call[] memory pumps = IWell(well).pumps();
         try

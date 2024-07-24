@@ -28,10 +28,7 @@ contract MockSiloFacet is SiloFacet {
     /**
      * @notice emitted when the farmers germinating stalk changes.
      */
-    event FarmerGerminatingStalkBalanceChanged(
-        address indexed account,
-        int256 delta
-    );
+    event FarmerGerminatingStalkBalanceChanged(address indexed account, int256 delta);
 
     /**
      * @notice emitted when the total germinating amount/bdv changes.
@@ -189,10 +186,7 @@ contract MockSiloFacet is SiloFacet {
     //     // emit SeedsBalanceChanged(account, int256(seeds)); //don't really care about the event for unit testing purposes of unripe stuff
     // }
 
-    function getUnripeForAmount(
-        uint256 t,
-        uint256 amount
-    ) private pure returns (uint256) {
+    function getUnripeForAmount(uint256 t, uint256 amount) private pure returns (uint256) {
         if (t == 0) return amount.mul(AMOUNT_TO_BDV_BEAN_ETH).div(1e18);
         else if (t == 1) return amount.mul(AMOUNT_TO_BDV_BEAN_3CRV).div(1e18);
         else return amount.mul(AMOUNT_TO_BDV_BEAN_LUSD).div(1e18);
@@ -216,15 +210,9 @@ contract MockSiloFacet is SiloFacet {
     ) external {
         s.sys.silo.assetSettings[token].selector = selector;
         s.sys.silo.assetSettings[token].stalkIssuedPerBdv = stalkIssuedPerBdv; //previously just called "stalk"
-        s
-            .sys
-            .silo
-            .assetSettings[token]
-            .stalkEarnedPerSeason = stalkEarnedPerSeason; //previously called "seeds"
+        s.sys.silo.assetSettings[token].stalkEarnedPerSeason = stalkEarnedPerSeason; //previously called "seeds"
 
-        s.sys.silo.assetSettings[token].milestoneSeason = uint24(
-            s.sys.season.current
-        );
+        s.sys.silo.assetSettings[token].milestoneSeason = uint24(s.sys.season.current);
         LibWhitelistedTokens.addWhitelistStatus(
             token,
             true,
@@ -253,22 +241,11 @@ contract MockSiloFacet is SiloFacet {
     ) external {
         if (stalkEarnedPerSeason == 0) stalkEarnedPerSeason = 1;
         s.sys.silo.assetSettings[token].selector = selector;
-        s
-            .sys
-            .silo
-            .assetSettings[token]
-            .stalkEarnedPerSeason = stalkEarnedPerSeason;
+        s.sys.silo.assetSettings[token].stalkEarnedPerSeason = stalkEarnedPerSeason;
         s.sys.silo.assetSettings[token].stalkIssuedPerBdv = stalkIssuedPerBdv;
-        s.sys.silo.assetSettings[token].milestoneSeason = uint32(
-            s.sys.season.current
-        );
+        s.sys.silo.assetSettings[token].milestoneSeason = uint32(s.sys.season.current);
         s.sys.silo.assetSettings[token].encodeType = encodeType;
-        s
-            .sys
-            .silo
-            .assetSettings[token]
-            .gaugePointImplementation
-            .selector = gaugePointSelector;
+        s.sys.silo.assetSettings[token].gaugePointImplementation.selector = gaugePointSelector;
         s
             .sys
             .silo
@@ -276,11 +253,7 @@ contract MockSiloFacet is SiloFacet {
             .liquidityWeightImplementation
             .selector = liquidityWeightSelector;
         s.sys.silo.assetSettings[token].gaugePoints = gaugePoints;
-        s
-            .sys
-            .silo
-            .assetSettings[token]
-            .optimalPercentDepositedBdv = optimalPercentDepositedBdv;
+        s.sys.silo.assetSettings[token].optimalPercentDepositedBdv = optimalPercentDepositedBdv;
 
         LibWhitelistedTokens.addWhitelistStatus(
             token,
@@ -309,41 +282,25 @@ contract MockSiloFacet is SiloFacet {
         bytes1 encodeType,
         bytes4 selector
     ) external {
-        s
-            .sys
-            .silo
-            .assetSettings[token]
-            .liquidityWeightImplementation = Implementation(
+        s.sys.silo.assetSettings[token].liquidityWeightImplementation = Implementation(
             newLiquidityWeightImplementation,
             selector,
             encodeType
         );
     }
 
-    function incrementTotalDepositedAmount(
-        address token,
-        uint256 amount
-    ) internal {
+    function incrementTotalDepositedAmount(address token, uint256 amount) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        s.sys.silo.balances[token].deposited = s
-            .sys
-            .silo
-            .balances[token]
-            .deposited
-            .add(amount.toUint128());
+        s.sys.silo.balances[token].deposited = s.sys.silo.balances[token].deposited.add(
+            amount.toUint128()
+        );
     }
 
-    function incrementTotalDepositedBDV(
-        address token,
-        uint256 amount
-    ) internal {
+    function incrementTotalDepositedBDV(address token, uint256 amount) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        s.sys.silo.balances[token].depositedBdv = s
-            .sys
-            .silo
-            .balances[token]
-            .depositedBdv
-            .add(amount.toUint128());
+        s.sys.silo.balances[token].depositedBdv = s.sys.silo.balances[token].depositedBdv.add(
+            amount.toUint128()
+        );
     }
 
     /**
@@ -358,12 +315,7 @@ contract MockSiloFacet is SiloFacet {
         uint128 bdv,
         LibTransfer.From mode
     ) external {
-        LibTransfer.receiveToken(
-            IERC20(token),
-            _amount,
-            LibTractor._user(),
-            mode
-        );
+        LibTransfer.receiveToken(IERC20(token), _amount, LibTractor._user(), mode);
         _depositAtStemAndBdv(LibTractor._user(), token, _amount, stem, bdv);
     }
 
@@ -386,17 +338,11 @@ contract MockSiloFacet is SiloFacet {
             bdv,
             LibTokenSilo.Transfer.emitTransferSingle
         );
-        uint256 stalk = bdv.mul(
-            s.sys.silo.assetSettings[token].stalkIssuedPerBdv
-        );
+        uint256 stalk = bdv.mul(s.sys.silo.assetSettings[token].stalkIssuedPerBdv);
         LibSilo.mintActiveStalk(account, uint128(stalk));
     }
 
-    function setStalkAndRoots(
-        address account,
-        uint128 stalk,
-        uint256 roots
-    ) external {
+    function setStalkAndRoots(address account, uint128 stalk, uint256 roots) external {
         s.sys.silo.stalk = stalk;
         s.sys.silo.roots = stalk;
         s.accts[account].stalk = stalk;

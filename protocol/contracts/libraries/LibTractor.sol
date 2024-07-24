@@ -92,7 +92,10 @@ library LibTractor {
      */
     function _setPublisher(address payable publisher) internal {
         TractorStorage storage ts = _tractorStorage();
-        require(uint160(bytes20(address(ts.activePublisher))) <= 1, "LibTractor: publisher already set");
+        require(
+            uint160(bytes20(address(ts.activePublisher))) <= 1,
+            "LibTractor: publisher already set"
+        );
         ts.activePublisher = publisher;
     }
 

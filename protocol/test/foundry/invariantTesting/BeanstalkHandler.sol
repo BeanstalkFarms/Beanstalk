@@ -43,13 +43,17 @@ contract BeanstalkHandler is Test {
         // tokens.push(C.BEAN_WSTETH_WELL); // is not mock erc20
     }
 
-    function deposit(uint16 userSeed, uint16 tokenSeed, uint256 amount) public useUser(userSeed) useToken(tokenSeed) {
+    function deposit(
+        uint16 userSeed,
+        uint16 tokenSeed,
+        uint256 amount
+    ) public useUser(userSeed) useToken(tokenSeed) {
         amount = bound(amount, 1, type(uint96).max);
 
         MockToken(token).mint(user, amount);
         bean.approve(address(bs), type(uint256).max);
 
-        (,, int96 stem) = bs.deposit(token, amount, 0);
+        (, , int96 stem) = bs.deposit(token, amount, 0);
 
         depositSumsTotal[token] += amount;
         depositSumsUser[user][token] += amount;
@@ -61,18 +65,25 @@ contract BeanstalkHandler is Test {
         userDeposits[user][token].push(stem);
     }
 
-    function withdraw(uint16 userSeed, uint16 tokenSeed, uint256 stemSeed, uint256 amount) public useUser(userSeed) useToken(tokenSeed) {
+    function withdraw(
+        uint16 userSeed,
+        uint16 tokenSeed,
+        uint256 stemSeed,
+        uint256 amount
+    ) public useUser(userSeed) useToken(tokenSeed) {
         // vm.assume(userDeposits[user][token].length > 0);
         if (userDeposits[user][token].length == 0) return;
         uint256 stemIndex = bound(stemSeed, 0, userDeposits[user][token].length - 1);
         int96 stem = userDeposits[user][token][stemIndex];
-        (uint256 depositAmount,) = bs.getDeposit(user, token, stem);
+        (uint256 depositAmount, ) = bs.getDeposit(user, token, stem);
         amount = bound(amount, 1, depositAmount);
 
         bs.withdrawDeposit(token, stem, amount, 0);
 
         if (amount == depositAmount) {
-            userDeposits[user][token][stemIndex] = userDeposits[user][token][userDeposits[user][token].length - 1];
+            userDeposits[user][token][stemIndex] = userDeposits[user][token][
+                userDeposits[user][token].length - 1
+            ];
             userDeposits[user][token].pop();
         }
 

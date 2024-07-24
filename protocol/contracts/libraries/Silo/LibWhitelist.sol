@@ -157,22 +157,11 @@ library LibWhitelist {
         // of 1 (due to the germination update). set stalkEarnedPerSeason to 1 to prevent revert.
         if (stalkEarnedPerSeason == 0) stalkEarnedPerSeason = 1;
         s.sys.silo.assetSettings[token].selector = selector;
-        s
-            .sys
-            .silo
-            .assetSettings[token]
-            .stalkEarnedPerSeason = stalkEarnedPerSeason;
+        s.sys.silo.assetSettings[token].stalkEarnedPerSeason = stalkEarnedPerSeason;
         s.sys.silo.assetSettings[token].stalkIssuedPerBdv = stalkIssuedPerBdv;
-        s.sys.silo.assetSettings[token].milestoneSeason = uint32(
-            s.sys.season.current
-        );
+        s.sys.silo.assetSettings[token].milestoneSeason = uint32(s.sys.season.current);
         s.sys.silo.assetSettings[token].encodeType = encodeType;
-        s
-            .sys
-            .silo
-            .assetSettings[token]
-            .gaugePointImplementation
-            .selector = gaugePointSelector;
+        s.sys.silo.assetSettings[token].gaugePointImplementation.selector = gaugePointSelector;
         s
             .sys
             .silo
@@ -180,11 +169,7 @@ library LibWhitelist {
             .liquidityWeightImplementation
             .selector = liquidityWeightSelector;
         s.sys.silo.assetSettings[token].gaugePoints = gaugePoints;
-        s
-            .sys
-            .silo
-            .assetSettings[token]
-            .optimalPercentDepositedBdv = optimalPercentDepositedBdv;
+        s.sys.silo.assetSettings[token].optimalPercentDepositedBdv = optimalPercentDepositedBdv;
 
         // the Oracle should return the price for the non-bean asset in USD
         s.sys.oracleImplementation[token] = oracleImplementation;
@@ -225,14 +210,8 @@ library LibWhitelist {
             oracleImplementation.selector,
             oracleImplementation.encodeType
         );
-        verifyGaugePointImplementation(
-            gpImplementation.target,
-            gpImplementation.selector
-        );
-        verifyLiquidityWeightImplementation(
-            lwImplementation.target,
-            lwImplementation.selector
-        );
+        verifyGaugePointImplementation(gpImplementation.target, gpImplementation.selector);
+        verifyLiquidityWeightImplementation(lwImplementation.target, lwImplementation.selector);
 
         // add whitelist status
         LibWhitelistedTokens.addWhitelistStatus(
@@ -258,44 +237,16 @@ library LibWhitelist {
         // of 1 (due to the germination update). set stalkEarnedPerSeason to 1 to prevent revert.
         if (stalkEarnedPerSeason == 0) stalkEarnedPerSeason = 1;
         s.sys.silo.assetSettings[token].selector = selector;
-        s
-            .sys
-            .silo
-            .assetSettings[token]
-            .stalkEarnedPerSeason = stalkEarnedPerSeason;
+        s.sys.silo.assetSettings[token].stalkEarnedPerSeason = stalkEarnedPerSeason;
         s.sys.silo.assetSettings[token].stalkIssuedPerBdv = stalkIssuedPerBdv;
-        s.sys.silo.assetSettings[token].milestoneSeason = uint32(
-            s.sys.season.current
-        );
+        s.sys.silo.assetSettings[token].milestoneSeason = uint32(s.sys.season.current);
         s.sys.silo.assetSettings[token].encodeType = encodeType;
-        s
-            .sys
-            .silo
-            .assetSettings[token]
-            .gaugePointImplementation
-            .selector = bytes4(0);
-        s
-            .sys
-            .silo
-            .assetSettings[token]
-            .liquidityWeightImplementation
-            .selector = bytes4(0);
+        s.sys.silo.assetSettings[token].gaugePointImplementation.selector = bytes4(0);
+        s.sys.silo.assetSettings[token].liquidityWeightImplementation.selector = bytes4(0);
         s.sys.silo.assetSettings[token].gaugePoints = gaugePoints;
-        s
-            .sys
-            .silo
-            .assetSettings[token]
-            .optimalPercentDepositedBdv = optimalPercentDepositedBdv;
-        s
-            .sys
-            .silo
-            .assetSettings[token]
-            .gaugePointImplementation = gpImplementation;
-        s
-            .sys
-            .silo
-            .assetSettings[token]
-            .liquidityWeightImplementation = lwImplementation;
+        s.sys.silo.assetSettings[token].optimalPercentDepositedBdv = optimalPercentDepositedBdv;
+        s.sys.silo.assetSettings[token].gaugePointImplementation = gpImplementation;
+        s.sys.silo.assetSettings[token].liquidityWeightImplementation = lwImplementation;
 
         // the Oracle should return the price for the non-bean asset in USD
         s.sys.oracleImplementation[token] = oracleImplementation;
@@ -326,11 +277,7 @@ library LibWhitelist {
         address token,
         uint64 optimalPercentDepositedBdv
     ) internal {
-        AssetSettings storage ss = LibAppStorage
-            .diamondStorage()
-            .sys
-            .silo
-            .assetSettings[token];
+        AssetSettings storage ss = LibAppStorage.diamondStorage().sys.silo.assetSettings[token];
         updateGaugeForToken(
             token,
             ss.gaugePointImplementation.selector,
@@ -349,11 +296,7 @@ library LibWhitelist {
         bytes4 liquidityWeightSelector,
         uint64 optimalPercentDepositedBdv
     ) internal {
-        AssetSettings storage ss = LibAppStorage
-            .diamondStorage()
-            .sys
-            .silo
-            .assetSettings[token];
+        AssetSettings storage ss = LibAppStorage.diamondStorage().sys.silo.assetSettings[token];
         require(ss.selector != 0, "Whitelist: Token not whitelisted in Silo");
         verifyGaugePointSelector(gaugePointSelector);
         verifyLiquidityWeightSelector(liquidityWeightSelector);
@@ -379,35 +322,21 @@ library LibWhitelist {
     ) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
 
-        require(
-            s.sys.silo.assetSettings[token].milestoneSeason != 0,
-            "Token not whitelisted"
-        );
+        require(s.sys.silo.assetSettings[token].milestoneSeason != 0, "Token not whitelisted");
 
         // beanstalk requires a min. stalkEarnedPerSeason of 1.
         if (stalkEarnedPerSeason == 0) stalkEarnedPerSeason = 1;
 
         // update milestone stem and season.
-        s.sys.silo.assetSettings[token].milestoneStem = LibTokenSilo
-            .stemTipForToken(token);
+        s.sys.silo.assetSettings[token].milestoneStem = LibTokenSilo.stemTipForToken(token);
         s.sys.silo.assetSettings[token].milestoneSeason = s.sys.season.current;
 
         // stalkEarnedPerSeason is set to int32 before casting down.
-        s.sys.silo.assetSettings[token].deltaStalkEarnedPerSeason = (int32(
-            stalkEarnedPerSeason
-        ) - int32(s.sys.silo.assetSettings[token].stalkEarnedPerSeason))
-            .toInt24();
-        s
-            .sys
-            .silo
-            .assetSettings[token]
-            .stalkEarnedPerSeason = stalkEarnedPerSeason;
+        s.sys.silo.assetSettings[token].deltaStalkEarnedPerSeason = (int32(stalkEarnedPerSeason) -
+            int32(s.sys.silo.assetSettings[token].stalkEarnedPerSeason)).toInt24();
+        s.sys.silo.assetSettings[token].stalkEarnedPerSeason = stalkEarnedPerSeason;
 
-        emit UpdatedStalkPerBdvPerSeason(
-            token,
-            stalkEarnedPerSeason,
-            s.sys.season.current
-        );
+        emit UpdatedStalkPerBdvPerSeason(token, stalkEarnedPerSeason, s.sys.season.current);
     }
 
     /**
@@ -437,18 +366,11 @@ library LibWhitelist {
         address token,
         Implementation memory gpImplementation
     ) internal {
-        AssetSettings storage ss = LibAppStorage
-            .diamondStorage()
-            .sys
-            .silo
-            .assetSettings[token];
+        AssetSettings storage ss = LibAppStorage.diamondStorage().sys.silo.assetSettings[token];
         require(ss.selector != 0, "Whitelist: Token not whitelisted in Silo");
 
         // check that new implementation is valid.
-        verifyGaugePointImplementation(
-            gpImplementation.target,
-            gpImplementation.selector
-        );
+        verifyGaugePointImplementation(gpImplementation.target, gpImplementation.selector);
 
         ss.gaugePointImplementation = gpImplementation;
 
@@ -462,25 +384,15 @@ library LibWhitelist {
         address token,
         Implementation memory lwImplementation
     ) internal {
-        AssetSettings storage ss = LibAppStorage
-            .diamondStorage()
-            .sys
-            .silo
-            .assetSettings[token];
+        AssetSettings storage ss = LibAppStorage.diamondStorage().sys.silo.assetSettings[token];
         require(ss.selector != 0, "Whitelist: Token not whitelisted in Silo");
 
         // check that new implementation is valid.
-        verifyLiquidityWeightImplementation(
-            lwImplementation.target,
-            lwImplementation.selector
-        );
+        verifyLiquidityWeightImplementation(lwImplementation.target, lwImplementation.selector);
 
         ss.liquidityWeightImplementation = lwImplementation;
 
-        emit UpdatedLiqudityWeightImplementationForToken(
-            token,
-            lwImplementation
-        );
+        emit UpdatedLiqudityWeightImplementationForToken(token, lwImplementation);
     }
 
     /**
@@ -491,13 +403,7 @@ library LibWhitelist {
         AppStorage storage s = LibAppStorage.diamondStorage();
 
         // before dewhitelisting, verify that `libWhitelistedTokens` are updated.
-        LibWhitelistedTokens.updateWhitelistStatus(
-            token,
-            false,
-            false,
-            false,
-            false
-        );
+        LibWhitelistedTokens.updateWhitelistStatus(token, false, false, false, false);
 
         // set the stalkEarnedPerSeason to 1 and update milestone stem.
         // stalkEarnedPerSeason requires a min value of 1.
@@ -524,11 +430,7 @@ library LibWhitelist {
     /**
      * @notice Verifies whether the bdv selector is valid.
      */
-    function verifyBDVselector(
-        address token,
-        bytes1 encodeType,
-        bytes4 selector
-    ) internal view {
+    function verifyBDVselector(address token, bytes1 encodeType, bytes4 selector) internal view {
         (bool success, ) = address(this).staticcall(
             LibTokenSilo.encodeBdvFunction(token, encodeType, selector, 0)
         );
@@ -552,14 +454,10 @@ library LibWhitelist {
             );
         } else if (encodeType == bytes1(0x02)) {
             // 0x0dfe1681 == token0() for uniswap pools.
-            (success, ) = oracleImplementation.staticcall(
-                abi.encodeWithSelector(0x0dfe1681)
-            );
+            (success, ) = oracleImplementation.staticcall(abi.encodeWithSelector(0x0dfe1681));
         } else {
             // verify you passed in a callable oracle selector
-            (success, ) = oracleImplementation.staticcall(
-                abi.encodeWithSelector(selector, 0)
-            );
+            (success, ) = oracleImplementation.staticcall(abi.encodeWithSelector(selector, 0));
         }
 
         require(success, "Whitelist: Invalid Oracle Implementation");
@@ -581,9 +479,7 @@ library LibWhitelist {
         bytes4 selector
     ) internal view {
         // verify you passed in a callable gaugePoint selector
-        (bool success, ) = gpImplementation.staticcall(
-            abi.encodeWithSelector(selector, 0, 0, 0)
-        );
+        (bool success, ) = gpImplementation.staticcall(abi.encodeWithSelector(selector, 0, 0, 0));
         require(success, "Whitelist: Invalid GaugePoint selector");
     }
 
@@ -604,9 +500,7 @@ library LibWhitelist {
         bytes4 selector
     ) internal view {
         // verify you passed in a callable liquidityWeight selector
-        (bool success, ) = lwImplementation.staticcall(
-            abi.encodeWithSelector(selector)
-        );
+        (bool success, ) = lwImplementation.staticcall(abi.encodeWithSelector(selector));
         require(success, "Whitelist: Invalid LiquidityWeight selector");
     }
 
@@ -622,8 +516,9 @@ library LibWhitelist {
     ) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
 
-        (bool isWhitelisted, bool previouslyWhitelisted) = LibWhitelistedTokens
-            .checkWhitelisted(token);
+        (bool isWhitelisted, bool previouslyWhitelisted) = LibWhitelistedTokens.checkWhitelisted(
+            token
+        );
         require(isWhitelisted == false, "Whitelist: Token already whitelisted");
 
         // add whitelist status. If previously whitelisted, update the status rather than appending.
@@ -651,8 +546,7 @@ library LibWhitelist {
         // previous value.
         if (previouslyWhitelisted) {
             require(
-                s.sys.silo.assetSettings[token].stalkIssuedPerBdv ==
-                    stalkIssuedPerBdv,
+                s.sys.silo.assetSettings[token].stalkIssuedPerBdv == stalkIssuedPerBdv,
                 "Whitelist: Cannot update stalkIssuedPerBdv"
             );
         }
