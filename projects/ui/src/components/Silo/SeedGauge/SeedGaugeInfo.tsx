@@ -134,19 +134,15 @@ const SeedGaugeSelect = ({
             const pct = datum.optimalPercentDepositedBdv;
 
             return (
-              <>
+              <React.Fragment key={`gp-text-${i}`}>
                 {symbol}{' '}
                 <Typography component="span" color="text.primary">
                   {displayFullBN(pct, 0)}%
                 </Typography>
                 {i !== sortedTokensWithGP.length - 1 ? ', ' : ''}
-              </>
+              </React.Fragment>
             );
           })}
-          {/* BEAN:ETH{' '}
-          <Typography component="span" color="text.primary">
-            100%
-          </Typography> */}
         </Typography>
       ),
     });
@@ -181,6 +177,7 @@ const SeedGaugeInfo = () => {
   return (
     <Stack gap={2}>
       <SeedGaugeSelect
+        key="seed-gauge-select"
         activeIndex={activeIndex}
         gaugeQuery={query}
         setActiveIndex={setActiveIndex}
