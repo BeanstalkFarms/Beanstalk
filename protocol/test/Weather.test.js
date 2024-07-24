@@ -138,12 +138,12 @@ describe('Complex Weather', function () {
     })
   })
 
-  // note: podrate is exremely low.
+  // note: podrate is extremely high.
   describe("Extreme Weather", async function () {
     before(async function () {
       await this.season.setLastDSoilE('100000');
       await this.bean.mint(userAddress, '1000000000')
-      await this.field.incrementTotalPodsE('100000000000');
+      await this.field.incrementTotalPodsE('100000000000000');
     })
 
     beforeEach(async function () {
