@@ -361,31 +361,24 @@ async function bipMiscellaneousImprovements(mock = true, account = undefined, ve
       "FertilizerFacet"
     ],
     libraryNames: [
-      'LibGauge',
-      'LibIncentive',
-      'LibLockedUnderlying',
-      'LibWellMinting',
-      'LibGerminate',
-      'LibConvert'
+      "LibGauge",
+      "LibIncentive",
+      "LibLockedUnderlying",
+      "LibWellMinting",
+      "LibGerminate",
+      "LibConvert"
     ],
     facetLibraries: {
-      'UnripeFacet': [
-        'LibLockedUnderlying'
+      UnripeFacet: ["LibLockedUnderlying"],
+      ConvertFacet: ["LibConvert"],
+      SeasonFacet: [
+        "LibGauge",
+        "LibIncentive",
+        "LibLockedUnderlying",
+        "LibWellMinting",
+        "LibGerminate"
       ],
-      'ConvertFacet': [
-        'LibConvert',
-      ],
-      'SeasonFacet': [
-        'LibGauge',
-        'LibIncentive',
-        'LibLockedUnderlying',
-        'LibWellMinting',
-        'LibGerminate'
-      ],
-      'SeasonGettersFacet': [
-        'LibLockedUnderlying',
-        'LibWellMinting',
-      ],
+      SeasonGettersFacet: ["LibLockedUnderlying", "LibWellMinting"]
     },
     selectorsToRemove: [],
     bip: false,
@@ -396,14 +389,14 @@ async function bipMiscellaneousImprovements(mock = true, account = undefined, ve
   });
 }
 
-exports.bip29 = bip29
-exports.bip30 = bip30
-exports.bip34 = bip34
-exports.bipMorningAuction = bipMorningAuction
-exports.bipNewSilo = bipNewSilo
-exports.bipBasinIntegration = bipBasinIntegration
-exports.bipSeedGauge = bipSeedGauge
-exports.mockBeanstalkAdmin = mockBeanstalkAdmin
-exports.bipMigrateUnripeBean3CrvToBeanEth = bipMigrateUnripeBean3CrvToBeanEth
-exports.bipMigrateUnripeBeanEthToBeanSteth = bipMigrateUnripeBeanEthToBeanSteth
-exports.bipMiscellaneousImprovements = bipMiscellaneousImprovements
+exports.bip29 = bip29;
+exports.bip30 = bip30;
+exports.bip34 = bip34;
+exports.bipMorningAuction = bipMorningAuction;
+exports.bipNewSilo = bipNewSilo;
+exports.bipBasinIntegration = bipBasinIntegration;
+exports.bipSeedGauge = bipSeedGauge;
+exports.mockBeanstalkAdmin = mockBeanstalkAdmin;
+exports.bipMigrateUnripeBean3CrvToBeanEth = bipMigrateUnripeBean3CrvToBeanEth;
+exports.bipMigrateUnripeBeanEthToBeanSteth = bipMigrateUnripeBeanEthToBeanSteth;
+exports.bipMiscellaneousImprovements = bipMiscellaneousImprovements;
