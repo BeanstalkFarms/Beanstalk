@@ -39,15 +39,14 @@ library LibLockedUnderlying {
      * @notice Return the % of Underlying Tokens that would be locked if all of the Unripe Tokens
      * were chopped.
      * @param unripeToken The address of the Unripe Token
-     * @param recapPercentPaid The % of Sprouts that have been Rinsed or are Rinsable.
-     * Should have 6 decimal precision.
+     * @param recapPercentPaid The % of the Unripe Token that has been recapitalized
      *
      * @dev Solves the below equation for N_{⌈U/i⌉}:
-     * N_{t+1} = N_t - i * R * N_t / (U - i * t)
+     * N_{t+1} = N_t - π * i / (U - i * t)
      * where:
      *  - N_t is the number of Underlying Tokens at step t
      *  - U is the starting number of Unripe Tokens
-     *  - R is the % of Sprouts that are Rinsable or Rinsed
+     *  - π is the amount recapitalized
      *  - i is the number of Unripe Beans that are chopped at each step. i ~= 46,659 is used as this is aboutr
      *    the average Unripe Beans held per Farmer with a non-zero balance.
      *
