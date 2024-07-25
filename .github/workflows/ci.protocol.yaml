@@ -59,10 +59,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: "18"
-
-      - name: Install Yarn
-        run: npm install -g yarn@1.22.22 # Explicitly install Yarn Classic
+          node-version: "16"
 
       - name: Install build essentials
         run: sudo apt-get update && sudo apt-get install -y build-essential python3
@@ -76,10 +73,6 @@ jobs:
 
       - name: Clear Yarn Cache
         run: yarn cache clean
-
-      - name: Install dependencies with retry
-        run: |
-          yarn install --immutable
 
       - name: Add prettier dependencies
         run: yarn add prettier prettier-plugin-solidity
