@@ -17,6 +17,7 @@ export type SiloTokenSettingMap = AddressMap<{
   gaugePoints: BigNumberJS;
   optimalPercentDepositedBdv: BigNumberJS;
   currentPercentDepositedBdv: BigNumberJS;
+  gaugePointsPerBdv: BigNumberJS;
 }>;
 
 const toBN = (
@@ -29,6 +30,28 @@ const toBN = (
       : decimalsOrToken;
   return BigNumberJS(TokenValue.fromBlockchain(n, decimals).toHuman());
 };
+
+const gaugePointsAbi = [
+  {
+    inputs: [
+      {
+        internalType: 'address',
+        name: 'token',
+        type: 'address',
+      },
+    ],
+    name: 'getGaugePointsPerBdvForToken',
+    outputs: [
+      {
+        internalType: 'uint256',
+        name: '',
+        type: 'uint256',
+      },
+    ],
+    stateMutability: 'view',
+    type: 'function',
+  },
+] as const;
 
 const abi = [
   {
@@ -79,6 +102,17 @@ const makeContractCalls = (beanstalkAddress: string, tokens: Token[]) =>
     args: [token.address],
   }));
 
+const gaugePointsPerBdvPerTokenCalls = (
+  beanstalkAddress: string,
+  tokens: Token[]
+) =>
+  tokens.map((token) => ({
+    address: beanstalkAddress as `0x{string}`,
+    abi: gaugePointsAbi,
+    functionName: 'getGaugePointsPerBdvForToken',
+    args: [token.address],
+  }));
+
 const useSeedGauge = () => {
   const sdk = useSdk();
   const siloBals = useAppSelector((s) => s._beanstalk.silo.balances);
@@ -94,26 +128,40 @@ const useSeedGauge = () => {
         sdk.contracts.beanstalk.address,
         whitelist
       );
+      const gaugeCalls = gaugePointsPerBdvPerTokenCalls(
+        sdk.contracts.beanstalk.address,
+        whitelist
+      );
 
-      const [_maxBean2LPRatio, settings] = await Promise.all([
-        sdk.contracts.beanstalk.getBeanToMaxLpGpPerBdvRatioScaled(),
-        multicall(config, { contracts: calls }),
-      ]);
+      const [_maxBean2LPRatio, settings, gaugePointsPerBdvForToken] =
+        await Promise.all([
+          sdk.contracts.beanstalk.getBeanToMaxLpGpPerBdvRatioScaled(),
+          multicall(config, { contracts: calls }),
+          multicall(config, { contracts: gaugeCalls }),
+        ]);
 
       const map: SiloTokenSettingMap = {};
       whitelist.forEach((token, i) => {
         const result = settings[i];
-        if (result.error || !result.result) return;
-        const r = result.result;
-        map[token.address] = {
-          optimalPercentDepositedBdv: toBN(r.optimalPercentDepositedBdv, 6),
-          currentPercentDepositedBdv: ZERO_BN,
-          stalkIssuedPerBdv: toBN(r.stalkIssuedPerBdv, stalk.decimals),
-          stalkedEarnedPerSeason: toBN(r.stalkIssuedPerBdv, stalk.decimals),
-          milestoneStem: toBN(r.milestoneStem, 0),
-          gaugePoints: toBN(r.gaugePoints, 18),
-          deltaStalkEarnedPerSeason: toBN(r.deltaStalkEarnedPerSeason, 0),
-        };
+        if (!result.error && result.result) {
+          const r = result.result;
+          map[token.address] = {
+            optimalPercentDepositedBdv: toBN(r.optimalPercentDepositedBdv, 6),
+            currentPercentDepositedBdv: ZERO_BN,
+            stalkIssuedPerBdv: toBN(r.stalkIssuedPerBdv, stalk.decimals),
+            stalkedEarnedPerSeason: toBN(r.stalkIssuedPerBdv, stalk.decimals),
+            milestoneStem: toBN(r.milestoneStem, 0),
+            gaugePoints: toBN(r.gaugePoints, 18),
+            deltaStalkEarnedPerSeason: toBN(r.deltaStalkEarnedPerSeason, 0),
+            gaugePointsPerBdv: ZERO_BN, // filler
+          };
+        }
+
+        const gpResult = gaugePointsPerBdvForToken[i];
+        if (!gpResult.error && result.result && token.symbol !== 'BEAN') {
+          map[token.address].gaugePointsPerBdv = toBN(gpResult.result, 18);
+          console.log(gpResult.result.toString());
+        }
       });
 
       const maxBean2LPRatio = toBN(_maxBean2LPRatio, 18);
@@ -152,7 +200,7 @@ const useSeedGauge = () => {
       if (!(key in bdvs)) return;
       tokenSettings[key].currentPercentDepositedBdv = bdvs[key]
         .div(totalBdv)
-        .times(100);
+        .times(100); // scale amount to pct
     });
 
     return {
