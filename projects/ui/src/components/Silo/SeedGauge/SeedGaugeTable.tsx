@@ -1,9 +1,9 @@
 import React, { useMemo } from 'react';
 import {
+  Box,
   Breakpoint,
   Card,
   Chip,
-  Divider,
   Grid,
   GridProps,
   Stack,
@@ -89,7 +89,7 @@ const GridConfig: Record<
     advanced: { xs: 4, lg: 1.5 },
     basic: { xs: 5, sm: 3 },
   },
-  currentBDVPct: {
+  currentLPBDVPct: {
     advanced: { xs: 4, lg: 1.5 },
     basic: { xs: 4.5, sm: 3 },
   },
@@ -144,8 +144,8 @@ const BDVPctColumns: ISeedGaugeColumn[] = [
     },
   },
   {
-    key: 'currentBDVPct',
-    header: 'Current BDV %',
+    key: 'currentLPBDVPct',
+    header: 'Current LP BDV %',
     render: ({ optimalBDVPct, currentBDVPct, gaugePoints }) => {
       if (!gaugePoints || gaugePoints.eq(0)) {
         return (
@@ -258,7 +258,7 @@ const useTableConfig = (
         gaugePoints: tokenSettings?.gaugePoints || ZERO_BN,
         gaugePointsPerBDV: ZERO_BN, // TODO: SG: Implement this
         optimalBDVPct: tokenSettings?.optimalPercentDepositedBdv || ZERO_BN,
-        currentBDVPct: ZERO_BN, // TODO: SG: Implement this
+        currentBDVPct: tokenSettings?.currentPercentDepositedBdv || ZERO_BN, // TODO: SG: Implement this
         deltaStalkPerSeason: tokenSettings?.deltaStalkEarnedPerSeason,
       };
 
@@ -273,13 +273,17 @@ const useTableConfig = (
 
 // TODO: SG: FIX ME
 const ExpectedSeedRewardDirection = (row: ISeedGaugeRow) => {
-  if (row.optimalBDVPct.lte(0)) return null;
+  const optimal = row.optimalBDVPct?.eq(row.currentBDVPct);
 
-  const increasing = row.deltaStalkPerSeason?.gt(0);
+  if (!row.gaugePoints || row.gaugePoints.lte(0) || optimal) {
+    return null;
+  }
+
+  const isBelow = row.currentBDVPct?.lt(row.optimalBDVPct);
   // const decreasing = rowSeedData.deltaStalkPerSeason?.lt(0);
 
-  const direction = increasing ? 'increase' : 'decrease';
-  const Arrow = increasing ? ArrowUpward : ArrowDownward;
+  const direction = isBelow ? 'increase' : 'decrease';
+  const Arrow = isBelow ? ArrowUpward : ArrowDownward;
   return (
     <Stack
       direction="row"
@@ -351,45 +355,50 @@ const SeedGaugeTable = ({
 
   return (
     <Stack>
-      <Stack px={2}>
-        <Stack pt={1.5} direction="row" alignItems="center" gap={1}>
-          <Typography>Show additional information</Typography>
-          <Switch
-            value={isAdvanced}
-            onChange={() => (isAdvanced ? hide : show)()}
-            inputProps={{ 'aria-label': 'controlled' }}
-            sx={({ breakpoints }) => ({
-              [breakpoints.down('md')]: {
-                display: 'none',
-              },
-            })}
-          />
+      <Box sx={{ borderBottom: '0.5px solid', borderColor: 'divider' }}>
+        <Stack px={2}>
+          <Stack pt={1.5} direction="row" alignItems="center" gap={1}>
+            <Typography variant="bodySmall">
+              Show additional information
+            </Typography>
+            <Switch
+              size="small"
+              value={isAdvanced}
+              onChange={() => (isAdvanced ? hide : show)()}
+              inputProps={{ 'aria-label': 'controlled' }}
+              sx={({ breakpoints }) => ({
+                [breakpoints.down('md')]: {
+                  display: 'none',
+                },
+              })}
+            />
+          </Stack>
+          <Stack pt={1} pb={1.5} px={1}>
+            {/* Headers */}
+            <Grid container direction="row" spacing={1}>
+              {cols.map((column) => (
+                <GridColumn
+                  column={column}
+                  isAdvanced={isAdvanced}
+                  key={`sg-header-${column.key}`}
+                >
+                  <Tooltip title={column.headerTooltip || ''}>
+                    <Typography
+                      variant="bodySmall"
+                      color="text.secondary"
+                      align="inherit"
+                      textAlign="inherit"
+                    >
+                      {column.header}
+                    </Typography>
+                  </Tooltip>
+                </GridColumn>
+              ))}
+            </Grid>
+          </Stack>
         </Stack>
-        <Stack pb={1.5} px={1}>
-          {/* Headers */}
-          <Grid container direction="row" spacing={1}>
-            {cols.map((column) => (
-              <GridColumn
-                column={column}
-                isAdvanced={isAdvanced}
-                key={`sg-header-${column.key}`}
-              >
-                <Tooltip title={column.headerTooltip || ''}>
-                  <Typography
-                    variant="bodySmall"
-                    color="text.secondary"
-                    align="inherit"
-                    textAlign="inherit"
-                  >
-                    {column.header}
-                  </Typography>
-                </Tooltip>
-              </GridColumn>
-            ))}
-          </Grid>
-        </Stack>
-      </Stack>
-      <Divider />
+      </Box>
+
       {/* Rows */}
       <Stack p={1} gap={1}>
         {rows.map((row, i) => (
