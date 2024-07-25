@@ -10,6 +10,7 @@ import useSdk from '~/hooks/sdk';
 import { Token } from '@beanstalk/sdk';
 import SeasonsToCatchUpInfo from './SeasonsToCatchUpInfo';
 import SeedGaugeTable from './SeedGaugeTable';
+import Bean2MaxLPRatio from './Bean2MaxLPRatio';
 
 interface ISeedGaugeCardInfo {
   title: string;
@@ -181,6 +182,7 @@ const SeedGaugeInfoSelected = ({
   return (
     <Card>
       {activeIndex === 0 ? <SeasonsToCatchUpInfo /> : null}
+      {activeIndex === 1 ? <Bean2MaxLPRatio data={data} /> : null}
       {activeIndex === 2 ? <SeedGaugeTable data={data} /> : null}
     </Card>
   );
