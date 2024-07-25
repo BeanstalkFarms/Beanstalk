@@ -3,13 +3,29 @@ import { useQuery } from '@tanstack/react-query';
 import { AddressMap, ZERO_BN } from '~/constants';
 import { Token, TokenValue } from '@beanstalk/sdk';
 import { config } from '~/util/wagmi/config';
-import BigNumber from 'bignumber.js';
+import { BigNumber as BigNumberJS } from 'bignumber.js';
+import { BigNumber as BigNumberEthers } from 'ethers';
 import useSdk from '../sdk';
 
-export type TokenSettingMap = AddressMap<{
-  optimalPercentDepositedBdv: BigNumber;
-  gaugePoints: BigNumber;
+export type SiloTokenSettingMap = AddressMap<{
+  stalkedEarnedPerSeason: BigNumberJS;
+  stalkIssuedPerBdv: BigNumberJS;
+  milestoneStem: BigNumberJS;
+  deltaStalkEarnedPerSeason: BigNumberJS;
+  gaugePoints: BigNumberJS;
+  optimalPercentDepositedBdv: BigNumberJS;
 }>;
+
+const toBN = (
+  n: BigInt | BigNumberEthers | number,
+  decimalsOrToken: number | Token
+) => {
+  const decimals =
+    decimalsOrToken instanceof Token
+      ? decimalsOrToken.decimals
+      : decimalsOrToken;
+  return BigNumberJS(TokenValue.fromBlockchain(n, decimals).toHuman());
+};
 
 const abi = [
   {
@@ -65,6 +81,8 @@ const useSeedGauge = () => {
 
   const whitelist = [...sdk.tokens.siloWhitelist];
 
+  const stalk = sdk.tokens.STALK;
+
   return useQuery({
     queryKey: ['beanstalk', 'silo', 'beanstalkSiloTokenSettings'],
     queryFn: async () => {
@@ -78,33 +96,41 @@ const useSeedGauge = () => {
         multicall(config, { contracts: calls }),
       ]);
 
-      const tokenSettings = whitelist.reduce<TokenSettingMap>(
-        (prev, curr, i) => {
-          const result = settings[i];
-          if (result.error || !result.result) return prev;
-          const r = result.result;
+      const map: SiloTokenSettingMap = {};
 
-          const optimalPct = new BigNumber(
-            TokenValue.fromBlockchain(r.optimalPercentDepositedBdv, 6).toHuman()
-          );
-          const gaugePoints = new BigNumber(
-            TokenValue.fromBlockchain(r.gaugePoints, 18).toHuman()
-          );
-          prev[curr.address] = {
-            optimalPercentDepositedBdv: optimalPct,
-            gaugePoints: gaugePoints,
-          };
-          return prev;
-        },
-        {}
-      );
+      const displayMap: any = {};
 
-      const maxBean2LPRatio = new BigNumber(
-        TokenValue.fromBlockchain(_maxBean2LPRatio, 18).toHuman()
-      );
+      whitelist.forEach((token, i) => {
+        const result = settings[i];
+        if (result.error || !result.result) return;
+        const r = result.result;
+
+        map[token.address] = {
+          optimalPercentDepositedBdv: toBN(r.optimalPercentDepositedBdv, 6),
+          stalkIssuedPerBdv: toBN(r.stalkIssuedPerBdv, stalk.decimals),
+          stalkedEarnedPerSeason: toBN(r.stalkIssuedPerBdv, stalk.decimals),
+          milestoneStem: toBN(r.milestoneStem, 0),
+          gaugePoints: toBN(r.gaugePoints, 18),
+          deltaStalkEarnedPerSeason: toBN(r.deltaStalkEarnedPerSeason, 0),
+        };
+
+        const m = map[token.address];
+        displayMap[token.symbol] = {
+          optimalPercentDepositedBdv: m.optimalPercentDepositedBdv?.toNumber(),
+          stalkIssuedPerBdv: m?.stalkIssuedPerBdv?.toNumber(),
+          stalkedEarnedPerSeason: m.stalkedEarnedPerSeason?.toNumber(),
+          milestoneStem: m.milestoneStem?.toNumber(),
+          gaugePoints: m.gaugePoints?.toNumber(),
+          deltaStalkEarnedPerSeason: m.deltaStalkEarnedPerSeason?.toNumber(),
+        };
+      });
+
+      console.log('displaydata: ', displayMap);
+
+      const maxBean2LPRatio = toBN(_maxBean2LPRatio, 18);
 
       return {
-        tokenSettings,
+        tokenSettings: map,
         maxBean2LPRatio,
       };
     },
