@@ -13,7 +13,7 @@ interface IMockFBeanstalk {
         DECREASE
     }
 
-    struct SeedGaugeSettings {
+    struct EvaluationParameters {
         uint256 maxBeanMaxLpGpPerBdvRatio;
         uint256 minBeanMaxLpGpPerBdvRatio;
         uint256 targetSeasonsToCatchUp;
@@ -476,7 +476,7 @@ interface IMockFBeanstalk {
 
     function abovePeg() external view returns (bool);
 
-    function updateSeedGaugeSettings(SeedGaugeSettings memory updatedSeedGaugeSettings) external;
+    function updateSeedGaugeSettings(EvaluationParameters memory updatedSeedGaugeSettings) external;
 
     function activeField() external view returns (uint256);
 
@@ -585,7 +585,7 @@ interface IMockFBeanstalk {
 
     function balanceOfPlenty(address account, address well) external view returns (uint256 plenty);
 
-    function getSeedGaugeSetting() external view returns (SeedGaugeSettings memory);
+    function getSeedGaugeSetting() external view returns (EvaluationParameters memory);
 
     function getMaxBeanMaxLpGpPerBdvRatio() external view returns (uint256);
 
@@ -1872,4 +1872,17 @@ interface IMockFBeanstalk {
     function revert_supplyChange() external;
 
     function revert_supplyIncrease() external;
+
+    function getUsdTokenPrice(address token) external view returns (uint256);
+
+    function getUsdTokenTwap(address token, uint256 lookback) external view returns (uint256);
+
+    function getTokenUsdPrice(address token) external view returns (uint256);
+
+    function getTokenUsdTwap(address token, uint256 lookback) external view returns (uint256);
+
+    function getTokenPriceFromExternal(
+        address token,
+        uint256 lookback
+    ) external view returns (uint256 tokenPrice);
 }

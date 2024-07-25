@@ -38,7 +38,7 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
  * @param seedGauge Stores the seedGauge.
  * @param rain See {Rain}.
  * @param migration See {Migration}.
- * @param seedGaugeSettings See {SeedGaugeSettings}.
+ * @param evaluationParameters See {EvaluationParameters}.
  * @param sop See {SeasonOfPlenty}.
  */
 struct System {
@@ -73,7 +73,7 @@ struct System {
     SeedGauge seedGauge;
     Rain rain;
     Migration migration;
-    SeedGaugeSettings seedGaugeSettings;
+    EvaluationParameters evaluationParameters;
     SeasonOfPlenty sop;
     // A buffer is not included here, bc current layout of AppStorage makes it unnecessary.
 }
@@ -393,7 +393,7 @@ struct Implementation {
     bytes1 encodeType;
 }
 
-struct SeedGaugeSettings {
+struct EvaluationParameters {
     uint256 maxBeanMaxLpGpPerBdvRatio;
     uint256 minBeanMaxLpGpPerBdvRatio;
     uint256 targetSeasonsToCatchUp;

@@ -259,7 +259,7 @@ library LibGauge {
 
         // update the average grown stalk per BDV per Season.
         // beanstalk must exist for a minimum of the catchup season in order to update the average.
-        if (s.sys.season.current > s.sys.seedGaugeSettings.targetSeasonsToCatchUp) {
+        if (s.sys.season.current > s.sys.evaluationParameters.targetSeasonsToCatchUp) {
             updateAverageStalkPerBdvPerSeason();
         }
 
@@ -319,7 +319,7 @@ library LibGauge {
         // Thus, safeCast was determined is to be unnecessary.
         s.sys.seedGauge.averageGrownStalkPerBdvPerSeason = uint128(
             getAverageGrownStalkPerBdv().mul(BDV_PRECISION).div(
-                s.sys.seedGaugeSettings.targetSeasonsToCatchUp
+                s.sys.evaluationParameters.targetSeasonsToCatchUp
             )
         );
         emit UpdateAverageStalkPerBdvPerSeason(s.sys.seedGauge.averageGrownStalkPerBdvPerSeason);
@@ -365,11 +365,11 @@ library LibGauge {
         uint256 beanToMaxLpGpPerBdvRatio
     ) internal view returns (uint256) {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        uint256 beanMaxLpGpRatioRange = s.sys.seedGaugeSettings.maxBeanMaxLpGpPerBdvRatio -
-            s.sys.seedGaugeSettings.minBeanMaxLpGpPerBdvRatio;
+        uint256 beanMaxLpGpRatioRange = s.sys.evaluationParameters.maxBeanMaxLpGpPerBdvRatio -
+            s.sys.evaluationParameters.minBeanMaxLpGpPerBdvRatio;
         return
             beanToMaxLpGpPerBdvRatio.mul(beanMaxLpGpRatioRange).div(ONE_HUNDRED_PERCENT).add(
-                s.sys.seedGaugeSettings.minBeanMaxLpGpPerBdvRatio
+                s.sys.evaluationParameters.minBeanMaxLpGpPerBdvRatio
             );
     }
 }
