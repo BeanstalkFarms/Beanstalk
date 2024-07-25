@@ -18,6 +18,7 @@ evm_version = 'shanghai'
 # https://book.getfoundry.sh/reference/config/solidity-compiler
 libraries = []
 auto_detect_solc = true
+solc_version = '0.8.25'
 
 # 2462: Visibility for constructor is ignored
 ignored_error_codes = [2462]
@@ -54,3 +55,8 @@ endpoints = 'all'
 
 [rpc_endpoints]
 mainnet = "${FORKING_RPC}" 
+
+[invariant]
+runs = 4
+depth = 2048
+fail_on_revert = true

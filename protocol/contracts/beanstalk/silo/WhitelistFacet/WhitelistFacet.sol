@@ -10,7 +10,7 @@ import {AppStorage} from "contracts/beanstalk/storage/AppStorage.sol";
 import {WhitelistedTokens} from "contracts/beanstalk/silo/WhitelistFacet/WhitelistedTokens.sol";
 import {Invariable} from "contracts/beanstalk/Invariable.sol";
 import {ReentrancyGuard} from "contracts/beanstalk/ReentrancyGuard.sol";
-import {SeedGaugeSettings} from "contracts/beanstalk/storage/System.sol";
+import {EvaluationParameters} from "contracts/beanstalk/storage/System.sol";
 import {Implementation} from "contracts/beanstalk/storage/System.sol";
 
 /**
@@ -21,9 +21,9 @@ import {Implementation} from "contracts/beanstalk/storage/System.sol";
  **/
 contract WhitelistFacet is Invariable, WhitelistedTokens, ReentrancyGuard {
     /**
-     * @notice emitted when {SeedGaugeSettings} is updated.
+     * @notice emitted when {EvaluationParameters} is updated.
      */
-    event UpdatedSeedGaugeSettings(SeedGaugeSettings);
+    event UpdatedSeedGaugeSettings(EvaluationParameters);
 
     /**
      * @notice Removes a token from the Silo Whitelist.
@@ -239,9 +239,11 @@ contract WhitelistFacet is Invariable, WhitelistedTokens, ReentrancyGuard {
         LibWhitelist.updateGaugePointImplementationForToken(token, impl);
     }
 
-    function updateSeedGaugeSettings(SeedGaugeSettings memory updatedSeedGaugeSettings) external {
+    function updateSeedGaugeSettings(
+        EvaluationParameters memory updatedSeedGaugeSettings
+    ) external {
         LibDiamond.enforceIsOwnerOrContract();
-        s.sys.seedGaugeSettings = updatedSeedGaugeSettings;
+        s.sys.evaluationParameters = updatedSeedGaugeSettings;
         emit UpdatedSeedGaugeSettings(updatedSeedGaugeSettings);
     }
 }
