@@ -295,6 +295,29 @@ contract TokenSilo is Silo {
         uint256 stalk,
         LibGerminate.Germinate germinateState
     ) private {
+        // Deposited Earned Beans do not germinate. Thus, when withdrawing a Bean Deposit
+        // with a Germinating Stem, Beanstalk needs to determine how many of the Beans
+        // were Planted vs Deposited from a Circulating/Farm balance. 
+        // If a Farmer's Germinating Stalk for a given Season is less than the number of 
+        // Deposited Beans in that Season, then it is assumed that the excess Beans were
+        // Planted.
+        if (token == C.BEAN) {
+            (uint256 germinatingStalk, uint256 earnedBeansStalk) = LibSilo.checkForEarnedBeans(account, stalk, germinateState);
+            // set the bdv and amount accordingly to the stalk. 
+            stalk = germinatingStalk;
+            uint256 earnedBeans = earnedBeansStalk.div(C.STALK_PER_BEAN);
+
+            amount = amount.sub(earnedBeans);
+            // note: the 1 Bean = 1 BDV assumption cannot be made here for input `bdv`, 
+            // as a user converting a germinating LP deposit into bean may have an inflated bdv.
+            // thus, amount and bdv are decremented by the earnedBeans (where the 1 Bean = 1 BDV assumption can be made).
+            bdv = bdv.sub(earnedBeans);
+
+            // burn the earned bean stalk (which is active).
+            LibSilo.burnActiveStalk(account,  earnedBeansStalk);
+            // calculate earnedBeans and decrement totalDeposited.
+            LibTokenSilo.decrementTotalDeposited(C.BEAN, earnedBeans, earnedBeans);
+        }
         // Decrement from total germinating.
         LibTokenSilo.decrementTotalGerminating(token, amount, bdv, germinateState); // Decrement total Germinating in the silo.
         LibSilo.burnGerminatingStalk(account, stalk.toUint128(), germinateState); // Burn stalk and roots associated with the stalk.
@@ -318,7 +341,7 @@ contract TokenSilo is Silo {
     ) internal returns (uint256) {
         (
             uint256 initialStalk,
-            uint256 grownStalk,
+            uint256 activeStalk,
             uint256 bdv,
             LibGerminate.Germinate germ
         ) = LibSilo._removeDepositFromAccount(
@@ -338,14 +361,26 @@ contract TokenSilo is Silo {
         );
 
         if (germ == LibGerminate.Germinate.NOT_GERMINATING) {
-            LibSilo.transferStalk(sender, recipient, initialStalk.add(grownStalk));
+            LibSilo.transferStalk(sender, recipient, initialStalk.add(activeStalk));
         } else {
+            if (token == C.BEAN) {
+                (uint256 senderGerminatingStalk, uint256 senderEarnedBeansStalk) = LibSilo.checkForEarnedBeans(sender, initialStalk, germ);
+                // if initial stalk is greater than the sender's germinating stalk, then the sender is sending an 
+                // Earned Bean Deposit. The active stalk is incremented and the
+                // initial stalk is decremented by the sender's earnedBeansStalk.
+                if(senderEarnedBeansStalk > 0) {
+                    activeStalk = activeStalk.add(senderEarnedBeansStalk);
+                    initialStalk = senderGerminatingStalk;
+                }
+            }
             LibSilo.transferGerminatingStalk(sender, recipient, initialStalk, germ);
-            if (grownStalk > 0) {
+            // a germinating deposit may have grown stalk, or in the case of a Earned Bean Deposit,
+            // active stalk will need to be transferred.
+            if (activeStalk > 0) {
                 LibSilo.transferStalk(
                     sender,
                     recipient, 
-                    grownStalk
+                    activeStalk
                 ); 
             }
         }

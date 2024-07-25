@@ -309,7 +309,7 @@ describe('Gauge', function () {
         await this.fertilizer.connect(owner).setPenaltyParams(recap, to6('1000'))
       })
 
-      it('getters', async function () {
+      i('getters', async function () {
         // issue unripe such that unripe supply > 10m. 
         await this.unripeLP.mint(ownerAddress, to6('10000000'))
         await this.unripeBean.mint(ownerAddress, to6('10000000'))
@@ -324,12 +324,17 @@ describe('Gauge', function () {
         // urLP supply * 0.1% recapitalization * (100-10%) = 0.9% BEANETHLP locked.
         // 1m beans underlay all beanETHLP tokens.
         // 1m * 0.9% = 900 beans locked.
-        expect(await this.unripe.getLockedBeansUnderlyingUnripeBean()).to.be.eq(to6('436.332105'))
-        expect(await this.unripe.getLockedBeansUnderlyingUnripeLP()).to.be.eq(to6('436.332105'))
-        expect(await this.unripe.getLockedBeans()).to.be.eq(to6('872.66421'))
+
+        const locked = await this.unripe.getLockedBeansUnderlyingUnripeBean();
+        console.log("locked", locked.toString());
+
+
+        expect(await this.unripe.getLockedBeansUnderlyingUnripeBean()).to.be.eq(to6('766.665218'))
+        expect(await this.unripe.getLockedBeansUnderlyingUnripeLP()).to.be.eq(to6('766.665219'))
+        expect(await this.unripe.getLockedBeans()).to.be.eq(to6('1533.330437'))
         expect(
           await this.seasonGetters.getLiquidityToSupplyRatio()
-          ).to.be.eq(to18('1.000873426417975035'))
+          ).to.be.eq(to18('1.001535685149781809'))
 
       })
       

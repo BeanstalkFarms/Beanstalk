@@ -61,6 +61,7 @@ contract Order is Listing {
     ) internal returns (bytes32 id) {
         require(beanAmount > 0, "Marketplace: Order amount must be > 0.");
         require(pricePerPod > 0, "Marketplace: Pod price must be greater than 0.");
+        require(minFillAmount > 0, "Marketplace: Minimum fill amount must be greater than 0.");
 
         id = createOrderId(msg.sender, pricePerPod, maxPlaceInLine, minFillAmount);
 
@@ -78,6 +79,7 @@ contract Order is Listing {
         bytes calldata pricingFunction
     ) internal returns (bytes32 id) {
         require(beanAmount > 0, "Marketplace: Order amount must be > 0.");
+        require(minFillAmount > 0, "Marketplace: Pod price must be greater than 0.");
         id = createOrderIdV2(msg.sender, 0, maxPlaceInLine, minFillAmount, pricingFunction);
         if (s.podOrders[id] > 0) _cancelPodOrderV2(maxPlaceInLine, minFillAmount, pricingFunction, LibTransfer.To.INTERNAL);
         s.podOrders[id] = beanAmount;
@@ -98,6 +100,7 @@ contract Order is Listing {
     ) internal {
 
         require(amount >= o.minFillAmount, "Marketplace: Fill must be >= minimum amount.");
+        require(amount > 0, "Marketplace: amount must be > 0.");
         require(s.a[msg.sender].field.plots[index] >= (start.add(amount)), "Marketplace: Invalid Plot.");
         require(index.add(start).add(amount).sub(s.f.harvestable) <= o.maxPlaceInLine, "Marketplace: Plot too far in line.");
         
@@ -126,6 +129,7 @@ contract Order is Listing {
     ) internal {
 
         require(amount >= o.minFillAmount, "Marketplace: Fill must be >= minimum amount.");
+        require(amount > 0, "Marketplace: amount must be > 0.");
         require(s.a[msg.sender].field.plots[index] >= (start.add(amount)), "Marketplace: Invalid Plot.");
         require(index.add(start).add(amount).sub(s.f.harvestable) <= o.maxPlaceInLine, "Marketplace: Plot too far in line.");
         

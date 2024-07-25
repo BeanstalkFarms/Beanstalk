@@ -7,6 +7,7 @@ export type UnripeToken = {
   underlying: BigNumber;
   supply: BigNumber;
   recapPaidPercent: BigNumber;
+  penalty: BigNumber;
 };
 
 export type Unripe = AddressMap<UnripeToken>;

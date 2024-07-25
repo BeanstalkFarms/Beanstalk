@@ -12,6 +12,7 @@ import {
   Typography,
 } from '@mui/material';
 import ArrowRightIcon from '@mui/icons-material/ArrowRight';
+import { ReportGmailerrorred } from '@mui/icons-material';
 import { Link as RouterLink } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { useAccount } from 'wagmi';
@@ -42,6 +43,8 @@ import useUnripeUnderlyingMap from '~/hooks/beanstalk/useUnripeUnderlying';
 import stalkIcon from '~/img/beanstalk/stalk-icon.svg';
 import logo from '~/img/tokens/bean-logo.svg';
 import { FC } from '~/types';
+import { useIsTokenDeprecated } from '~/hooks/beanstalk/useWhitelist';
+import { roundWithDecimals } from '~/util/UI';
 import SiloAssetApyChip from './SiloAssetApyChip';
 import StatHorizontal from '../Common/StatHorizontal';
 import BeanProgressIcon from '../Common/BeanProgressIcon';
@@ -71,6 +74,7 @@ const Whitelist: FC<{
   /// Settings
   const [denomination] = useSetting('denomination');
   const account = useAccount();
+  const checkIfDeprecated = useIsTokenDeprecated();
 
   /// Chain
   const getChainToken = useGetChainToken();
@@ -91,6 +95,7 @@ const Whitelist: FC<{
 
   return (
     <Card>
+      {/* Header */}
       <Box
         display="flex"
         sx={{
@@ -103,7 +108,7 @@ const Whitelist: FC<{
         }}
       >
         <Grid container alignItems="center">
-          <Grid item md={2.5} xs={4}>
+          <Grid item md={2.25} xs={4}>
             <Typography color="text.secondary">Token</Typography>
           </Grid>
           <Grid item md={1} xs={0} display={{ xs: 'none', md: 'block' }}>
@@ -111,18 +116,28 @@ const Whitelist: FC<{
               <Typography color="text.secondary">Rewards</Typography>
             </Tooltip>
           </Grid>
-          <Grid item md={2} xs={0} display={{ xs: 'none', md: 'flex' }} justifyContent='center'>
+          <Grid
+            item
+            md={2.25}
+            xs={0}
+            display={{ xs: 'none', md: 'flex' }}
+            justifyContent="center"
+          >
             <Tooltip title="Estimated annual Beans earned by a Stalkholder for Depositing an asset.">
               <Chip
                 variant="filled"
                 color="primary"
                 label={
                   <Row gap={0.5}>
-                    <TokenIcon token={BEAN[1]} /> 
-                    vAPY 24H 
-                    <Typography color='white' marginTop={-0.25}>|</Typography> 
-                    7D 
-                    <Typography color='white' marginTop={-0.25}>|</Typography> 
+                    <TokenIcon token={BEAN[1]} />
+                    vAPY 24H
+                    <Typography color="white" marginTop={-0.25}>
+                      |
+                    </Typography>
+                    7D
+                    <Typography color="white" marginTop={-0.25}>
+                      |
+                    </Typography>
                     30D
                   </Row>
                 }
@@ -131,15 +146,19 @@ const Whitelist: FC<{
               />
             </Tooltip>
           </Grid>
-          <Grid item md={1.25} xs={0} display={{ xs: 'none', md: 'flex' }} justifyContent='center'>
+          <Grid
+            item
+            md={1.25}
+            xs={0}
+            display={{ xs: 'none', md: 'flex' }}
+            justifyContent="center"
+          >
             <Tooltip title="Estimated annual growth in Stalk for Depositing an asset.">
               <Typography color="text.primary">
                 <TokenIcon
-                  token={
-                    { symbol: 'Stalk', logo: stalkIcon } as Token
-                  }
-                />
-                {' '}vAPY
+                  token={{ symbol: 'Stalk', logo: stalkIcon } as Token}
+                />{' '}
+                vAPY
               </Typography>
             </Tooltip>
           </Grid>
@@ -182,10 +201,15 @@ const Whitelist: FC<{
           </Grid>
         </Grid>
       </Box>
+      {/* Rows */}
       <Stack gap={1} p={1}>
         {config.whitelist.map((token) => {
           const deposited = farmerSilo.balances[token.address]?.deposited;
           const isUnripe = token === urBean || token === urBeanWeth;
+          const isUnripeLP =
+            isUnripe && token.address === UNRIPE_BEAN_WETH[1].address;
+          const isDeprecated = checkIfDeprecated(token.address);
+
           // Unripe data
           const underlyingToken = isUnripe
             ? unripeUnderlyingTokens[token.address]
@@ -197,6 +221,33 @@ const Whitelist: FC<{
               ).div(unripeTokens[token.address]?.supply || ONE_BN)
             : ONE_BN;
 
+          const wlSx = {
+            textAlign: 'left',
+            px: 2,
+            py: 1.5,
+            borderColor: 'divider',
+            borderWidth: '0.5px',
+            background: BeanstalkPalette.white,
+            '&:hover': {
+              borderColor: 'primary.main',
+              backgroundColor: 'primary.light',
+            },
+          };
+
+          const depSx = {
+            textAlign: 'left',
+            px: 2,
+            py: 1.5,
+            height: '90px',
+            borderColor: '#d2ebfd',
+            borderWidth: '0.5px',
+            background: BeanstalkPalette.white,
+            '&:hover': {
+              borderColor: '#dae8f2',
+              backgroundColor: 'primary.light',
+            },
+          };
+
           return (
             <Box key={`${token.address}-${token.chainId}`}>
               <Button
@@ -204,102 +255,133 @@ const Whitelist: FC<{
                 to={`/silo/${token.address}`}
                 fullWidth
                 variant="outlined"
-                color="secondary"
+                color="primary"
                 size="large"
-                sx={{
-                  textAlign: 'left',
-                  px: 2,
-                  py: 1.5,
-                  borderColor: 'divider',
-                  borderWidth: '0.5px',
-                  background: BeanstalkPalette.white,
-                  '&:hover': {
-                    borderColor: 'primary.main',
-                    backgroundColor: 'primary.light',
-                  },
-                }}
+                sx={isDeprecated ? depSx : wlSx}
               >
                 <Grid container alignItems="center">
                   {/**
                    * Cell: Token
                    */}
-                  <Grid item md={2.5} xs={7}>
+                  <Grid
+                    item
+                    md={isDeprecated ? 6.75 : 2.25}
+                    xs={isDeprecated ? 7 : 7}
+                  >
                     <Row gap={1}>
                       <Box
                         component="img"
                         src={token.logo}
                         alt={token.name}
-                        sx={{ height: IconSize.medium, display: 'inline' }}
+                        css={{
+                          height: IconSize.medium,
+                          display: 'inline',
+                          opacity: isDeprecated ? 0.2 : 1,
+                        }}
                       />
-                      <Typography display="inline" color="text.primary">
+                      <Typography
+                        display="inline"
+                        color={isDeprecated ? 'text.tertiary' : 'text.primary'}
+                      >
                         {token.name}
                       </Typography>
                     </Row>
+                    {isDeprecated && (
+                      <Chip
+                        icon={<ReportGmailerrorred />}
+                        variant="outlined"
+                        sx={{
+                          border: 'none',
+                          color: '#9ca3ad',
+                          backgroundColor: '#f2f7fd',
+                          marginTop: '5px',
+                          padding: '15px 10px',
+                        }}
+                        size="small"
+                        label="Removed from Deposit Whitelist in BIP-45"
+                      />
+                    )}
                   </Grid>
-                  {/**
-                   * Cell: Rewards
-                   */}
-                  <Grid
-                    item
-                    md={1}
-                    xs={0}
-                    display={{ xs: 'none', md: 'block' }}
-                  >
-                    <Row gap={0.75}>
-                      <Tooltip
-                        placement="right"
-                        title={
-                          <>
-                            1 {token.symbol} = {displayFullBN(getBDV(token))}{' '}
-                            BDV
-                          </>
-                        }
-                      >
-                        <Box>
-                          <Row gap={0.2}>
-                            <TokenIcon
-                              token={STALK}
-                              css={{ height: '0.8em', marginTop: '-1px' }}
-                            />
-                            <Typography color="text.primary" mr={0.2}>
-                              {token.rewards?.stalk}
-                            </Typography>
-                            <TokenIcon token={SEEDS} />
-                            <Typography color="text.primary">
-                              {token.rewards?.seeds}
-                            </Typography>
-                          </Row>
-                        </Box>
-                      </Tooltip>
-                    </Row>
-                  </Grid>
-
+                  {!isDeprecated && (
+                    /**
+                     * Cell: Rewards
+                     */
+                    <Grid
+                      item
+                      md={1}
+                      xs={0}
+                      display={{ xs: 'none', md: 'block' }}
+                    >
+                      <Row gap={0.75}>
+                        <Tooltip
+                          placement="right"
+                          title={
+                            <Stack gap={0.25}>
+                              1 {token.symbol} = {displayFullBN(getBDV(token))}{' '}
+                              BDV
+                              <Row gap={0.2}>
+                                <TokenIcon
+                                  token={STALK}
+                                  css={{ height: '0.8em', marginTop: '-1px' }}
+                                />
+                                <Typography color="text.primary" mr={0.2}>
+                                  {token.rewards?.stalk}
+                                </Typography>
+                                <TokenIcon token={SEEDS} />
+                                <Typography color="text.primary">
+                                  {token.rewards?.seeds || 0}
+                                </Typography>
+                              </Row>
+                            </Stack>
+                          }
+                        >
+                          <Box>
+                            <Row gap={0.2}>
+                              <TokenIcon
+                                token={STALK}
+                                css={{ height: '0.8em', marginTop: '-1px' }}
+                              />
+                              <Typography color="text.primary" mr={0.2}>
+                                {token.rewards?.stalk}
+                              </Typography>
+                              <TokenIcon token={SEEDS} />
+                              <Typography color="text.primary">
+                                {roundWithDecimals(token.rewards?.seeds, 3)}
+                              </Typography>
+                            </Row>
+                          </Box>
+                        </Tooltip>
+                      </Row>
+                    </Grid>
+                  )}
                   {/**
                    * Cell: Bean APY
                    */}
-                  <Grid
-                    item
-                    md={2}
-                    xs={0}
-                    display={{ xs: 'none', md: 'flex' }}
-                    justifyContent='center'
-                  >
-                    <SiloAssetApyChip token={token} metric="bean" />
-                  </Grid>
-
+                  {!isDeprecated && (
+                    <Grid
+                      item
+                      md={2.25}
+                      xs={0}
+                      display={{ xs: 'none', md: 'flex' }}
+                      justifyContent="center"
+                    >
+                      <SiloAssetApyChip token={token} metric="bean" />
+                    </Grid>
+                  )}
                   {/**
                    * Cell: Stalk APY
                    */}
-                  <Grid
-                    item
-                    md={1.25}
-                    xs={0}
-                    display={{ xs: 'none', md: 'flex' }}
-                    justifyContent='center'
-                  >
-                    <SiloAssetApyChip token={token} metric="stalk" />
-                  </Grid>
-
+                  {!isDeprecated && (
+                    <Grid
+                      item
+                      md={1.25}
+                      xs={0}
+                      display={{ xs: 'none', md: 'flex' }}
+                      justifyContent="center"
+                    >
+                      <SiloAssetApyChip token={token} metric="stalk" />
+                    </Grid>
+                  )}
                   {/**
                    * Cell: TVD
                    */}
@@ -433,7 +515,10 @@ const Whitelist: FC<{
                         )
                       }
                     >
-                      <Typography display="inline" color="text.primary">
+                      <Typography
+                        display="inline"
+                        color={isDeprecated ? 'text.tertiary' : 'text.primary'}
+                      >
                         {isUnripe ? (
                           <>
                             <Fiat
@@ -483,7 +568,11 @@ const Whitelist: FC<{
                         xs={0}
                         display={{ xs: 'none', md: 'block' }}
                       >
-                        <Typography color="text.primary">
+                        <Typography
+                          color={
+                            isDeprecated ? 'text.tertiary' : 'text.primary'
+                          }
+                        >
                           {/* If this is the entry for Bean deposits,
                            * display Earned Beans and Deposited Beans separately.
                            * Internally they are both considered "Deposited". */}
@@ -660,39 +749,50 @@ const Whitelist: FC<{
                                   </Box>
                                   <Row>×</Row>
                                   <Box sx={{ px: 1, py: 0.5, maxWidth: 215 }}>
-                                    <Stat
-                                      title="Chop Rate"
-                                      gap={0.25}
-                                      variant="h4"
-                                      amount={`1 - ${(
-                                        unripeTokens[token.address]
-                                          ?.chopPenalty || ZERO_BN
-                                      ).toFixed(4)}%`}
-                                      subtitle={
-                                        <>
-                                          The current penalty for chopping
-                                          <br />
-                                          {token.symbol} for{' '}
-                                          {
-                                            unripeUnderlyingTokens[
-                                              token.address
-                                            ].symbol
-                                          }
-                                          .{' '}
-                                          <Link
-                                            href="https://docs.bean.money/almanac/farm/barn#chopping"
-                                            target="_blank"
-                                            rel="noreferrer"
-                                            underline="hover"
-                                            onClick={(e) => {
-                                              e.stopPropagation();
-                                            }}
-                                          >
-                                            Learn more
-                                          </Link>
-                                        </>
-                                      }
-                                    />
+                                    {isUnripeLP ? (
+                                      <Stat
+                                        title="Chop Amount"
+                                        gap={0.25}
+                                        variant="h4"
+                                        // After Chop Change, update this to: recap rate * Total LP Underlying urBEANETH * BeanEth LP Price
+                                        amount={`${unripeTokens[token.address]?.penalty?.times(100).toFixed(3)}%`}
+                                        subtitle="The amount of BEANETH received for Chopping 1 urBEANETH."
+                                      />
+                                    ) : (
+                                      <Stat
+                                        title="Chop Rate"
+                                        gap={0.25}
+                                        variant="h4"
+                                        amount={`1 - ${(
+                                          unripeTokens[token.address]
+                                            ?.chopPenalty || ZERO_BN
+                                        ).toFixed(4)}%`}
+                                        subtitle={
+                                          <>
+                                            The current penalty for Chopping
+                                            <br />
+                                            {token.symbol} for{' '}
+                                            {
+                                              unripeUnderlyingTokens[
+                                                token.address
+                                              ].symbol
+                                            }
+                                            .{' '}
+                                            <Link
+                                              href="https://docs.bean.money/almanac/farm/barn#chopping"
+                                              target="_blank"
+                                              rel="noreferrer"
+                                              underline="hover"
+                                              onClick={(e) => {
+                                                e.stopPropagation();
+                                              }}
+                                            >
+                                              Learn more
+                                            </Link>
+                                          </>
+                                        }
+                                      />
+                                    )}
                                   </Box>
                                   <Row>×</Row>
                                   <Box sx={{ px: 1, py: 0.5, maxWidth: 215 }}>
@@ -732,7 +832,11 @@ const Whitelist: FC<{
                               )
                             }
                           >
-                            <Typography color="text.primary">
+                            <Typography
+                              color={
+                                isDeprecated ? 'text.tertiary' : 'text.primary'
+                              }
+                            >
                               <Row gap={0.3}>
                                 {/*
                                  * There are multiple states here:

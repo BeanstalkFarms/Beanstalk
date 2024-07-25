@@ -1,18 +1,7 @@
-import { Address, BigInt, Bytes, ethereum } from "@graphprotocol/graph-ts";
-import { newMockEvent } from "matchstick-as/assembly/index";
+import { Address, BigInt, ethereum } from "@graphprotocol/graph-ts";
 import { Incentivization } from "../../generated/Season-Replanted/Beanstalk";
 
-import { AddDeposit, RemoveDeposit, RemoveDeposits } from "../../generated/Silo-Replanted/Beanstalk";
-import { handleAddDeposit } from "../../src/SiloHandler";
-import { BEAN_DECIMALS } from "../../../subgraph-core/utils/Constants";
-import { BEANSTALK } from "../../../subgraph-core/utils/Constants";
-
-// Default mock to include beanstalk address
-const mockBeanstalkEvent = (): ethereum.Event => {
-  let e = changetype<ethereum.Event>(newMockEvent());
-  e.address = BEANSTALK;
-  return e;
-};
+import { mockBeanstalkEvent } from "../../../subgraph-core/tests/event-mocking/Util";
 
 export function createSunriseEvent(season: BigInt): void {}
 export function createSeasonSnapshotEvent(

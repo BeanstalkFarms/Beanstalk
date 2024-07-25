@@ -25,7 +25,7 @@ library LibBarnRaise {
         AppStorage storage s = LibAppStorage.diamondStorage();
         return
             s.u[C.UNRIPE_LP].underlyingToken == address(0)
-                ? C.BEAN_ETH_WELL
+                ? C.BEAN_WSTETH_WELL
                 : s.u[C.UNRIPE_LP].underlyingToken;
     }
 }

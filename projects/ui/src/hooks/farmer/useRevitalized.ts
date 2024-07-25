@@ -48,7 +48,6 @@ export default function useRevitalized() {
     (state) => state._beanstalk.silo
   );
   const sdk = useSdk();
-
   return useMemo(() => {
     let revitalizedBDV = ZERO_BN;
     let revitalizedStalk = ZERO_BN;
@@ -78,13 +77,16 @@ export default function useRevitalized() {
 
       const crates = balances[token.address].deposited.crates;
       crates.forEach((crate) => {
-        const stem = crate.stem as unknown as BigNumber; // Fix bad type from upstream.
+        const stem = BigNumber(crate.stem.toString());
         const bdv = getExpectedBDV(token);
         const futureBDV = getExpectedBDVForCrate(token, crate.amount);
         const currentBDV = crate.bdv;
         const stemDelta = stemTip.minus(stem);
         const deltaBDV = MaxBN(futureBDV.minus(currentBDV), ZERO_BN);
-        const deltaGrownStalk = stemDelta.times(deltaBDV).div(10000);
+        const deltaGrownStalk = stemDelta
+          .times(deltaBDV)
+          .div(10000)
+          .div(1000000); // 1e4 for stalk and 1e6 for stems
 
         // console.log({
         //   crateAmount: crate.amount.toString(),

@@ -1,7 +1,7 @@
 #import "../../PodOrder.fragment.graphql"
 
 query FarmerPodOrders(
-  $first: Int = 100,
+  $first: Int = 1000,
   $createdAt_gt: BigInt,
   $account: String!
 ) {

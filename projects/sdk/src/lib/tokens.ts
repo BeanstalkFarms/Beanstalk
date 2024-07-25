@@ -70,7 +70,8 @@ export class Tokens {
       18,
       "WETH",
       {
-        name: "Wrapped Ether"
+        name: "Wrapped Ether",
+        displayDecimals: 4
       },
       providerOrSigner
     );
@@ -115,7 +116,7 @@ export class Tokens {
     );
     this.BEAN.rewards = {
       stalk: this.STALK.amount(1),
-      seeds: this.SEEDS.amount(3)
+      seeds: null
     };
 
     this.BEAN_CRV3_LP = new ERC20Token(
@@ -133,7 +134,7 @@ export class Tokens {
     );
     this.BEAN_CRV3_LP.rewards = {
       stalk: this.STALK.amount(1),
-      seeds: this.SEEDS.amount(3.25)
+      seeds: null
     };
 
     this.BEAN_ETH_WELL_LP = new ERC20Token(
@@ -151,7 +152,7 @@ export class Tokens {
     );
     this.BEAN_ETH_WELL_LP.rewards = {
       stalk: this.STALK.amount(1),
-      seeds: this.SEEDS.amount(4.5)
+      seeds: null
     };
 
     this.UNRIPE_BEAN = new ERC20Token(
@@ -168,7 +169,7 @@ export class Tokens {
     );
     this.UNRIPE_BEAN.rewards = {
       stalk: this.STALK.amount(1),
-      seeds: this.SEEDS.amount(0)
+      seeds: TokenValue.ZERO
     };
     this.UNRIPE_BEAN.isUnripe = true;
 
@@ -186,7 +187,7 @@ export class Tokens {
     );
     this.UNRIPE_BEAN_WETH.rewards = {
       stalk: this.STALK.amount(1),
-      seeds: this.SEEDS.amount(0)
+      seeds: TokenValue.ZERO
     };
     this.UNRIPE_BEAN_WETH.isUnripe = true;
 
@@ -334,7 +335,7 @@ export class Tokens {
     );
     this.BEAN_ETH_UNIV2_LP.rewards = {
       stalk: this.STALK.amount(1),
-      seeds: this.SEEDS.amount(4)
+      seeds: null
     };
 
     this.map.set(addresses.BEAN_ETH_UNIV2_LP.get(chainId), this.BEAN_ETH_UNIV2_LP);

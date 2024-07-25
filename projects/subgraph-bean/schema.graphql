@@ -2,16 +2,25 @@ type Token @entity {
   "Smart contract address of the token"
   id: ID!
 
+  "Name of the token, i.e. BEAN, WETH"
+  name: String!
+
   "Number of decimals"
   decimals: BigInt!
 
-  "Last USD price calculated"
+  "Last USD price calculated. Isn't calculated for all tokens, in those cases will be zero."
   lastPriceUSD: BigDecimal!
 }
 
 type Bean @entity {
   "Contract address of the Bean token"
   id: ID!
+
+  "Which chain this Bean is from"
+  chain: String!
+
+  "Smart contract address of the Beanstalk this Bean is associated with"
+  beanstalk: String!
 
   "Current supply"
   supply: BigInt!
@@ -21,6 +30,9 @@ type Bean @entity {
 
   "Current market cap"
   marketCap: BigDecimal!
+
+  "Amount of the supply which is considered Locked Beans (untradeable due to chop rate)"
+  lockedBeans: BigInt!
 
   "Percent of supply in LP used for peg maintenance"
   supplyInPegLP: BigDecimal!
@@ -49,6 +61,9 @@ type Bean @entity {
   "Pools that include this Bean"
   pools: [Pool!]!
 
+  "Dewhitelisted pools that include this Bean"
+  dewhitelistedPools: [Pool!]!
+
   "Hourly snapshot of Bean data"
   hourlySnapshot: [BeanHourlySnapshot!]! @derivedFrom(field: "bean")
 
@@ -69,8 +84,17 @@ type BeanHourlySnapshot @entity {
   "Current market cap"
   marketCap: BigDecimal!
 
+  "Amount of the supply which is considered Locked Beans (untradeable due to chop rate)"
+  lockedBeans: BigInt!
+
   "Percent of supply in LP used for peg maintenance"
   supplyInPegLP: BigDecimal!
+
+  "Instantaneous deltaB across all whitelisted pools"
+  instantaneousDeltaB: BigInt!
+
+  "Time-Weighted deltaB in whitelisted pools over the previous season"
+  twaDeltaB: BigInt!
 
   "Cumulative volume in BEAN"
   volume: BigInt!
@@ -84,11 +108,11 @@ type BeanHourlySnapshot @entity {
   "Current USD price"
   price: BigDecimal!
 
+  "Time-Weighted price over the previous season"
+  twaPrice: BigDecimal!
+
   "Cumulative number of crosses"
   crosses: Int!
-
-  "Current deltaB for peg"
-  deltaBeans: BigInt!
 
   "Volume in BEAN for this snapshot"
   deltaVolume: BigInt!
@@ -121,14 +145,21 @@ type BeanDailySnapshot @entity {
   supply: BigInt!
   marketCap: BigDecimal!
 
+  "Amount of the supply which is considered Locked Beans (untradeable due to chop rate)"
+  lockedBeans: BigInt!
   "Percent of supply in LP used for peg maintenance"
   supplyInPegLP: BigDecimal!
+  "Instantaneous deltaB across all whitelisted pools"
+  instantaneousDeltaB: BigInt!
+  "Time-Weighted deltaB in whitelisted pools over the previous season"
+  twaDeltaB: BigInt!
   volume: BigInt!
   volumeUSD: BigDecimal!
   liquidityUSD: BigDecimal!
   price: BigDecimal!
+  "Time-Weighted price over the previous season"
+  twaPrice: BigDecimal!
   crosses: Int!
-  deltaBeans: BigInt!
   deltaVolume: BigInt!
   deltaVolumeUSD: BigDecimal!
   deltaLiquidityUSD: BigDecimal!
@@ -143,6 +174,7 @@ type BeanCross @entity {
   id: ID!
   bean: Bean!
   price: BigDecimal!
+  blockNumber: BigInt!
   timestamp: BigInt!
   timeSinceLastCross: BigInt!
   above: Boolean!
@@ -154,6 +186,7 @@ type PoolCross @entity {
   id: ID!
   pool: Pool!
   price: BigDecimal!
+  blockNumber: BigInt!
   timestamp: BigInt!
   timeSinceLastCross: BigInt!
   above: Boolean!
@@ -163,7 +196,10 @@ type PoolCross @entity {
 
 type Pool @entity {
   id: ID!
+  "The Bean token that is in this pool"
   bean: Bean!
+  "All tokens in this pool"
+  tokens: [Token!]!
   reserves: [BigInt!]!
   lastSeason: Int!
   lastPrice: BigDecimal!
@@ -174,6 +210,7 @@ type Pool @entity {
   "Last timestamp a cross was seen for this pool"
   lastCross: BigInt!
   crossEvents: [PoolCross!]! @derivedFrom(field: "pool")
+  "Instantaneous deltaB"
   deltaBeans: BigInt!
   hourlySnapshot: [PoolHourlySnapshot!]! @derivedFrom(field: "pool")
   dailySnapshot: [PoolDailySnapshot!]! @derivedFrom(field: "pool")
@@ -184,12 +221,19 @@ type PoolHourlySnapshot @entity {
   pool: Pool!
   reserves: [BigInt!]!
   lastPrice: BigDecimal!
+  "Time-Weighted bean price over the previous season"
+  twaPrice: BigDecimal!
+  "Time-Weighted price of the other token in the pool over the previous season, if applicable"
+  twaToken2Price: BigDecimal
   volume: BigInt!
   volumeUSD: BigDecimal!
   liquidityUSD: BigDecimal!
   crosses: Int!
   utilization: BigDecimal!
+  "Instantaneous deltaB"
   deltaBeans: BigInt!
+  "Time-Weighted deltaB over the previous season"
+  twaDeltaBeans: BigInt!
   deltaReserves: [BigInt!]!
   deltaVolume: BigInt!
   deltaVolumeUSD: BigDecimal!
@@ -206,12 +250,19 @@ type PoolDailySnapshot @entity {
   pool: Pool!
   reserves: [BigInt!]!
   lastPrice: BigDecimal!
+  "Time-Weighted price over the previous season"
+  twaPrice: BigDecimal!
+  "Time-Weighted price of the other token in the pool over the previous season, if applicable"
+  twaToken2Price: BigDecimal
   volume: BigInt!
   volumeUSD: BigDecimal!
   liquidityUSD: BigDecimal!
   crosses: Int!
   utilization: BigDecimal!
+  "Instantaneous deltaB"
   deltaBeans: BigInt!
+  "Time-Weighted deltaB over the previous season"
+  twaDeltaBeans: BigInt!
   deltaReserves: [BigInt!]!
   deltaVolume: BigInt!
   deltaVolumeUSD: BigDecimal!
@@ -221,4 +272,27 @@ type PoolDailySnapshot @entity {
   season: Int!
   createdAt: BigInt!
   updatedAt: BigInt!
+}
+
+# For tracking twa balances as the seasons progress
+type TwaOracle @entity {
+  id: ID!
+  pool: Pool!
+  # These two fields are used to determine twa over the previous season.
+  # priceCumulativeSun is the value of priceCumulativeLast at the time of the previous sunrise (lastSun)
+  priceCumulativeSun: [BigInt!]!
+  lastSun: BigInt!
+  # These three fields are for when manual calculation of price cumulative last is required (beanlusd, wells)
+  # Otherwise the equivalent values are derived from the corresponding contract functions.
+  priceCumulativeLast: [BigInt!]!
+  lastBalances: [BigInt!]!
+  lastUpdated: BigInt!
+  # These fields are for saving the raw Well reserves outputted by the WellOracle event
+  # The previous two seasons are needed because in the same block as a new season starts, the newest value cannot be used.
+  cumulativeWellReserves: Bytes!
+  cumulativeWellReservesTime: BigInt!
+  cumulativeWellReservesBlock: BigInt!
+  cumulativeWellReservesPrev: Bytes!
+  cumulativeWellReservesPrevTime: BigInt!
+  cumulativeWellReservesPrevBlock: BigInt!
 }

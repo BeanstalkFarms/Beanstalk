@@ -4,24 +4,19 @@
   "scripts": {
     "codegen": "rm -rf ./generated && graph codegen",
     "build": "yarn codegen && graph build",
-    "deploy": "graph deploy --node https://api.thegraph.com/deploy/ beanft",
+    "test": "graph test",
+    "testd": "docker run -it --rm --mount type=bind,source=\"$(pwd)\"/matchstick-docker.yaml,target=/matchstick/matchstick.yaml --mount type=bind,source=\"$(pwd)\"/../../,target=/matchstick/repo-mounted/ matchstick",
+    "testd-named": "../subgraph-core/tests/scripts/docker-run-named.sh",
     "create-local": "graph create --node http://localhost:8020/ beanft",
     "remove-local": "graph remove --node http://localhost:8020/ beanft",
-    "deploy-local": "graph deploy --node http://localhost:8020/ --ipfs http://localhost:5001 beanft",
-    "create-hosted": "graph create --node http://graph.node.bean.money:8020/ beanft",
-    "remove-hosted": "graph remove --node http://graph.node.bean.money:8020/ beanft",
-    "deploy-hosted": "graph deploy --node http://graph.node.bean.money:8020/ --ipfs http://graph.node.bean.money:5001 beanft",
-    "create-hosted-dev": "graph create --node http://graph.node.bean.money:8020/ beanft-dev",
-    "remove-hosted-dev": "graph remove --node http://graph.node.bean.money:8020/ beanft-dev",
-    "deploy-hosted-dev": "graph deploy --node http://graph.node.bean.money:8020/ --ipfs http://graph.node.bean.money:5001 beanft-dev",
-    "test": "graph test"
+    "deploy-local": "graph deploy --node http://localhost:8020/ --ipfs http://localhost:5001 beanft"
   },
   "dependencies": {
-    "@graphprotocol/graph-cli": "0.56.0",
-    "@graphprotocol/graph-ts": "0.31.0",
+    "@graphprotocol/graph-cli": "0.69.0",
+    "@graphprotocol/graph-ts": "0.34.0",
     "ethers": "^6.3.0"
   },
   "devDependencies": {
-    "matchstick-as": "0.5.0"
+    "matchstick-as": "^0.6.0"
   }
 }

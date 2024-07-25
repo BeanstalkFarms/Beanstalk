@@ -4,6 +4,10 @@ import { FarmFromMode, FarmToMode } from '@beanstalk/sdk';
 import Token from '~/classes/Token';
 import { displayFullBN, displayTokenAmount } from '~/util/Tokens';
 import copy from '~/constants/copy';
+import {
+  AmountsBySource,
+  displayAmountsBySource,
+} from '~/hooks/beanstalk/useBalancesUsedBySource';
 import { BEAN, PODS, SPROUTS, CRV3 } from '../constants/tokens';
 import { displayBN, trimAddress } from './index';
 
@@ -64,6 +68,8 @@ export type EndTokenAction = {
 export type SwapAction = {
   type: ActionType.SWAP;
   tokenIn: Token;
+  source?: FarmFromMode;
+  amountsBySource?: AmountsBySource;
   amountIn: BigNumber;
   tokenOut: Token;
   amountOut: BigNumber;
@@ -81,6 +87,7 @@ export type ReceiveTokenAction = {
 export type TransferBalanceAction = {
   type: ActionType.TRANSFER_BALANCE;
   amount: BigNumber;
+  amountsBySource?: AmountsBySource;
   token: Token;
   source:
     | FarmFromMode.INTERNAL
@@ -290,18 +297,50 @@ export const parseActionMessage = (a: Action) => {
     case ActionType.END_TOKEN:
       return null;
     case ActionType.SWAP:
-      if (a.tokenOut.isLP && a.tokenOut.symbol !== CRV3[1].symbol && !a.tokenOut.isUnripe) {
+      if (
+        a.tokenOut.isLP &&
+        a.tokenOut.symbol !== CRV3[1].symbol &&
+        !a.tokenOut.isUnripe
+      ) {
+        const bySource = a.amountsBySource;
+        const amtOutDisplay = displayTokenAmount(a.amountOut, a.tokenOut);
+
+        if (bySource && bySource.external.plus(bySource.internal).gt(0)) {
+          const amountsBySourceDisplay = displayAmountsBySource(
+            bySource,
+            a.tokenIn,
+            'of liquidity'
+          );
+
+          return `Add ${amountsBySourceDisplay.combined} for ${amtOutDisplay}.`;
+        }
+
         return `Add ${displayTokenAmount(
           a.amountIn,
           a.tokenIn
-        )} of liquidity for ${displayTokenAmount(a.amountOut, a.tokenOut)}.`;
+        )} of liquidity for ${amtOutDisplay}.`;
       }
-      if (a.tokenIn.isLP && a.tokenIn.symbol !== CRV3[1].symbol && !a.tokenIn.isUnripe) {
+      if (
+        a.tokenIn.isLP &&
+        a.tokenIn.symbol !== CRV3[1].symbol &&
+        !a.tokenIn.isUnripe
+      ) {
         return `Burn ${displayTokenAmount(
           a.amountIn,
           a.tokenIn
         )} for ${displayTokenAmount(a.amountOut, a.tokenOut)} of liquidity.`;
       }
+      if (
+        a.amountsBySource &&
+        a.amountsBySource.internal.plus(a.amountsBySource.external).gt(0)
+      ) {
+        const bySourceDisplay = displayAmountsBySource(
+          a.amountsBySource,
+          a.tokenIn
+        );
+        return `Swap ${bySourceDisplay.combined} for ${displayTokenAmount(a.amountOut, a.tokenOut)}.`;
+      }
+
       return `Swap ${displayTokenAmount(
         a.amountIn,
         a.tokenIn
@@ -325,6 +364,14 @@ export const parseActionMessage = (a: Action) => {
       return `${commonString}.`;
     }
     case ActionType.TRANSFER_BALANCE:
+      if (a.amountsBySource) {
+        const bySourceDisplay = displayAmountsBySource(
+          a.amountsBySource,
+          a.token
+        );
+        return `Move ${bySourceDisplay.combined} to ${a.to ? `${trimAddress(a.to, false)}'s` : 'your'} ${copy.MODES[a.destination]}.`;
+      }
+
       return a.to
         ? `Move ${displayTokenAmount(a.amount, a.token)} from your ${
             copy.MODES[a.source]

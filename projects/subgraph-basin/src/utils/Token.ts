@@ -1,5 +1,4 @@
-import { Address, BigDecimal, BigInt } from "@graphprotocol/graph-ts";
-import { log } from "matchstick-as";
+import { Address, BigDecimal, BigInt, log } from "@graphprotocol/graph-ts";
 import { ERC20 } from "../../generated/Aquifer/ERC20";
 import { Token } from "../../generated/schema";
 import { CurvePrice } from "../../generated/templates/Well/CurvePrice";
@@ -14,16 +13,25 @@ export function loadOrCreateToken(tokenAddress: Address): Token {
     token = new Token(tokenAddress);
 
     let nameCall = tokenContract.try_name();
-    if (nameCall.reverted) token.name = "";
-    else token.name = nameCall.value;
+    if (nameCall.reverted) {
+      token.name = "";
+    } else {
+      token.name = nameCall.value;
+    }
 
     let symbolCall = tokenContract.try_symbol();
-    if (symbolCall.reverted) token.symbol = "";
-    else token.symbol = symbolCall.value;
+    if (symbolCall.reverted) {
+      token.symbol = "";
+    } else {
+      token.symbol = symbolCall.value;
+    }
 
     let decimalCall = tokenContract.try_decimals();
-    if (decimalCall.reverted) token.decimals = 18; // Default to 18 decimals
-    else token.decimals = decimalCall.value;
+    if (decimalCall.reverted) {
+      token.decimals = 18; // Default to 18 decimals
+    } else {
+      token.decimals = decimalCall.value;
+    }
 
     token.lastPriceUSD = ZERO_BD;
     token.lastPriceBlockNumber = ZERO_BI;
@@ -63,10 +71,11 @@ export function updateTokenUSD(tokenAddress: Address, blockNumber: BigInt, beanP
       if (curve.reverted) {
         return;
       }
-
       token.lastPriceUSD = toDecimal(curve.value.price);
     }
-  } else token.lastPriceUSD = beanPrice.times(getBeanPriceUDSC());
+  } else {
+    token.lastPriceUSD = beanPrice.times(getBeanPriceUDSC());
+  }
   token.lastPriceBlockNumber = blockNumber;
   token.save();
 }

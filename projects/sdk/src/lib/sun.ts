@@ -1,3 +1,4 @@
+import { ContractTransaction } from "ethers";
 import { BeanstalkSDK } from "./BeanstalkSDK";
 
 export class Sun {
@@ -11,5 +12,7 @@ export class Sun {
     return Sun.sdk.contracts.beanstalk.season();
   }
 
-  // ... other sun related things
+  async sunrise(): Promise<ContractTransaction> {
+    return Sun.sdk.contracts.beanstalk.sunrise();
+  }
 }

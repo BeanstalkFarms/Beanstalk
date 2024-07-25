@@ -9,6 +9,7 @@ const { setEthUsdChainlinkPrice, setWstethUsdPrice } = require('../utils/oracle.
 const { deployBasin } = require('../scripts/basin.js');
 const ZERO_BYTES = ethers.utils.formatBytes32String('0x0')
 const { deployBasinV1_1Upgrade } = require('../scripts/basinV1_1.js');
+const { impersonateBeanWstethWell } = require('../utils/well.js');
 const { advanceTime } = require('../utils/helpers.js');
 const { deployMockWell, setReserves, deployMockBeanWell } = require('../utils/well.js');
 
@@ -70,6 +71,7 @@ describe('Sun', function () {
     await setWstethUsdPrice('1000');
 
     let c = await deployBasin(true, undefined, false, true)
+    await impersonateBeanWstethWell();
     await c.multiFlowPump.update([toBean('10000'), to18('10')], 0x00);
     await c.multiFlowPump.update([toBean('10000'), to18('10')], 0x00);
     c = await deployBasinV1_1Upgrade(c, true, undefined, false, true, mockPump=true)
@@ -185,8 +187,8 @@ describe('Sun', function () {
     // And since we havent changes the reserves, the instantaneous deltaB is 0
                                           // twadeltaB, CASE ID
     this.result = await this.season.sunSunrise('-100000000', 8);
-    await expect(this.result).to.emit(this.season, 'Soil').withArgs(3, '0');
-    await expect(await this.field.totalSoil()).to.be.equal('0');
+    await expect(this.result).to.emit(this.season, 'Soil').withArgs(3, '100000000');
+    await expect(await this.field.totalSoil()).to.be.equal('100000000');
   })
 
   it("rewards more than type(uint128).max Soil below peg", async function () {
