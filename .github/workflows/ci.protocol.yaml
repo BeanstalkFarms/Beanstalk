@@ -7,6 +7,47 @@ on:
       - "protocol/**"
 
 jobs:
+  test:
+    needs: format
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: "18"
+
+      - name: Install Yarn
+        run: npm install -g yarn@1.22.22 # Explicitly install Yarn Classic
+
+      - name: Install build essentials
+        run: sudo apt-get update && sudo apt-get install -y build-essential
+
+      - name: Cache Node Modules
+        id: node-modules-cache
+        uses: actions/cache@v3
+        with:
+          path: "**/node_modules"
+          key: ${{ runner.os }}-modules-${{ hashFiles('**/yarn.lock') }}
+
+      - name: Install Dependencies
+        if: steps.node-modules-cache.outputs.cache-hit != 'true'
+        run: |
+          yarn cache clean
+          yarn install --immutable
+
+      - name: Generate
+        run: yarn generate
+        working-directory: protocol
+
+      - name: Run tests
+        env:
+          FORKING_RPC: ${{ secrets.ANVIL_FORK_URL }}
+        run: yarn test
+        working-directory: protocol
+
   format:
     runs-on: ubuntu-latest
     steps:
@@ -58,44 +99,3 @@ jobs:
         run: |
           shopt -s globstar
           yarn prettier --check --config .prettierrc --plugin=prettier-plugin-solidity protocol/**/*.sol
-
-  test:
-    needs: format
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: "18"
-
-      - name: Install Yarn
-        run: npm install -g yarn@1.22.22 # Explicitly install Yarn Classic
-
-      - name: Install build essentials
-        run: sudo apt-get update && sudo apt-get install -y build-essential
-
-      - name: Cache Node Modules
-        id: node-modules-cache
-        uses: actions/cache@v3
-        with:
-          path: "**/node_modules"
-          key: ${{ runner.os }}-modules-${{ hashFiles('**/yarn.lock') }}
-
-      - name: Install Dependencies
-        if: steps.node-modules-cache.outputs.cache-hit != 'true'
-        run: |
-          yarn cache clean
-          yarn install --immutable
-
-      - name: Generate
-        run: yarn generate
-        working-directory: protocol
-
-      - name: Run tests
-        env:
-          FORKING_RPC: ${{ secrets.ANVIL_FORK_URL }}
-        run: yarn test
-        working-directory: protocol
