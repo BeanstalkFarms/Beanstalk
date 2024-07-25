@@ -372,7 +372,6 @@ async function bipMiscellaneousImprovements(mock = true, account = undefined, ve
     facetLibraries: {
       UnripeFacet: ["LibLockedUnderlying"],
       ConvertFacet: ["LibConvert"],
-      ConvertGettersFacet: ["LibConvert"],
       SeasonFacet: [
         "LibGauge",
         "LibIncentive",
