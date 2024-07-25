@@ -9,7 +9,7 @@ import {GaugePointFacet} from "./GaugePointFacet.sol";
 /**
  * @title GaugePointPrice
  * @author Brean
- * @notice GaugePointPrice implments `priceGaugePointFunction`.
+ * @notice GaugePointPrice implements `priceGaugePointFunction`.
  */
 interface IBS {
     function getTokenPrice(address) external view returns (uint256);
@@ -22,6 +22,10 @@ contract GaugePointPrice is GaugePointFacet {
     uint256 immutable gaugePointsPrice;
 
     /**
+     * @param _beanstalk The address of the Beanstalk contract.
+     * @param _token The address of the token to check the price of.
+     * @param _priceThreshold The price threshold to check against.
+     * @param _gaugePointsPrice The gauge points price to return when the price is below the threshold.
      * @dev `priceThreshold` should have 6 decimal precision, regardless of token decimals.
      */
     constructor(
@@ -51,16 +55,21 @@ contract GaugePointPrice is GaugePointFacet {
         uint256 optimalPercentDepositedBdv,
         uint256 percentOfDepositedBdv
     ) public view returns (uint256 newGaugePoints) {
-        uint256 price = IBS(beanstalk).getTokenPrice(token);
-        if (priceThreshold >= price) {
+        try IBS(beanstalk).getTokenPrice(token) returns (uint256 price) {
+            if (priceThreshold >= price) {
+                return
+                    currentGaugePoints > gaugePointsPrice ? gaugePointsPrice : currentGaugePoints;
+            } else {
+                return
+                    defaultGaugePointFunction(
+                        currentGaugePoints,
+                        optimalPercentDepositedBdv,
+                        percentOfDepositedBdv
+                    );
+            }
+        } catch {
+            // If the price cannot be fetched, assume price manipulation.
             return currentGaugePoints > gaugePointsPrice ? gaugePointsPrice : currentGaugePoints;
-        } else {
-            return
-                defaultGaugePointFunction(
-                    currentGaugePoints,
-                    optimalPercentDepositedBdv,
-                    percentOfDepositedBdv
-                );
         }
     }
 
