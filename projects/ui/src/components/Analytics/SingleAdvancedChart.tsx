@@ -72,7 +72,7 @@ const SingleAdvancedChart = ({ chartName }: { chartName: string }) => {
                     season_lte: startSeason,
                   },
                   notifyOnNetworkStatusChange: true,
-                  fetchPolicy: 'no-cache', // Hitting the network every time is MUCH faster than the cache
+                  fetchPolicy: 'cache-first', // Hitting the network every time is MUCH faster than the cache
                 })
                 .then((r) => {
                   r.data[entity].forEach((seasonData: any) => {

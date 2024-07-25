@@ -1,12 +1,15 @@
 import { Box, Card, Grid, Stack, Typography } from '@mui/material';
 import React, { useMemo, useState } from 'react';
 import DropdownIcon from '~/components/Common/DropdownIcon';
-import useSeedGauge, { TokenSettingMap } from '~/hooks/beanstalk/useSeedGauge';
+import useSeedGauge, {
+  SiloTokenSettingMap,
+} from '~/hooks/beanstalk/useSeedGauge';
 import { displayFullBN } from '~/util';
 import { ZERO_BN } from '~/constants';
 import useSdk from '~/hooks/sdk';
 import { Token } from '@beanstalk/sdk';
 import SeasonsToCatchUpInfo from './SeasonsToCatchUpInfo';
+import SeedGaugeTable from './SeedGaugeTable';
 
 interface ISeedGaugeCardInfo {
   title: string;
@@ -65,7 +68,7 @@ const SeedGaugeInfoCard = ({
 );
 
 const SeedGaugeSelect = ({
-  gaugeQuery: { data, isLoading },
+  gaugeQuery: { data },
   activeIndex,
   setActiveIndex,
 }: {
@@ -104,45 +107,47 @@ const SeedGaugeSelect = ({
 
     type TokenWithGP = {
       token: Token;
-    } & TokenSettingMap[string];
+    } & SiloTokenSettingMap[string];
 
-    const tokensWithGp: TokenWithGP[] = [];
+    const tokensWithGP: TokenWithGP[] = [];
 
     if (data?.tokenSettings) {
+      // filter out tokens with 0 optimalPercentDepositedBdv
       for (const token of [...sdk.tokens.siloWhitelist]) {
         const setting = data.tokenSettings[token.address];
-        if (setting?.optimalPercentDepositedBdv.gt(0)) {
-          tokensWithGp.push({ token: token, ...setting });
+        if (setting?.optimalPercentDepositedBdv?.gt(0)) {
+          tokensWithGP.push({ token: token, ...setting });
         }
       }
+      // sort by optimalPercentDepositedBdv
+      tokensWithGP.sort(
+        (a, b) =>
+          b.optimalPercentDepositedBdv
+            ?.minus(a.optimalPercentDepositedBdv || ZERO_BN)
+            .toNumber() || 0
+      );
     }
-
-    const sortedTokensWithGP = tokensWithGp.sort((a, b) =>
-      Number(
-        b.optimalPercentDepositedBdv
-          .minus(a.optimalPercentDepositedBdv)
-          .toString()
-      )
-    );
 
     arr.push({
       title: 'Optimal Distribution of LP',
       subtitle: (
         <Typography color="text.secondary">
-          {sortedTokensWithGP.map((datum, i) => {
-            const symbol = datum.token.symbol;
-            const pct = datum.optimalPercentDepositedBdv;
+          {tokensWithGP.length
+            ? tokensWithGP.map((datum, i) => {
+                const symbol = datum.token.symbol;
+                const pct = datum.optimalPercentDepositedBdv;
 
-            return (
-              <React.Fragment key={`gp-text-${i}`}>
-                {symbol}{' '}
-                <Typography component="span" color="text.primary">
-                  {displayFullBN(pct, 0)}%
-                </Typography>
-                {i !== sortedTokensWithGP.length - 1 ? ', ' : ''}
-              </React.Fragment>
-            );
-          })}
+                return (
+                  <React.Fragment key={`gp-text-${i}`}>
+                    {symbol}{' '}
+                    <Typography component="span" color="text.primary">
+                      {pct ? displayFullBN(pct, 0) : '-'}%
+                    </Typography>
+                    {i !== tokensWithGP.length - 1 ? ', ' : ''}
+                  </React.Fragment>
+                );
+              })
+            : '--'}
         </Typography>
       ),
     });
@@ -164,10 +169,21 @@ const SeedGaugeSelect = ({
   );
 };
 
-const SeedGaugeInfoSelected = ({ activeIndex }: { activeIndex: number }) => {
+const SeedGaugeInfoSelected = ({
+  activeIndex,
+  data,
+}: {
+  activeIndex: number;
+  data: ReturnType<typeof useSeedGauge>['data'];
+}) => {
   if (activeIndex === -1) return null;
 
-  return <Card>{activeIndex === 0 ? <SeasonsToCatchUpInfo /> : null}</Card>;
+  return (
+    <Card>
+      {activeIndex === 0 ? <SeasonsToCatchUpInfo /> : null}
+      {activeIndex === 2 ? <SeedGaugeTable data={data} /> : null}
+    </Card>
+  );
 };
 
 const SeedGaugeInfo = () => {
@@ -182,7 +198,7 @@ const SeedGaugeInfo = () => {
         gaugeQuery={query}
         setActiveIndex={setActiveIndex}
       />
-      <SeedGaugeInfoSelected activeIndex={activeIndex} />
+      <SeedGaugeInfoSelected activeIndex={activeIndex} data={query.data} />
     </Stack>
   );
 };
