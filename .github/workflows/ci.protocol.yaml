@@ -24,7 +24,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          yarn install --frozen-lockfile
+          yarn install --immutable
           yarn add prettier prettier-plugin-solidity
 
       - name: Run formatter
