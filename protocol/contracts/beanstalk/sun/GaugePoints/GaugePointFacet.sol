@@ -5,7 +5,6 @@
 pragma solidity ^0.8.20;
 
 import {LibRedundantMath256} from "contracts/libraries/LibRedundantMath256.sol";
-import {LibGauge} from "contracts/libraries/LibGauge.sol";
 
 /**
  * @title GaugePointFacet
@@ -44,7 +43,7 @@ contract GaugePointFacet {
         uint256 currentGaugePoints,
         uint256 optimalPercentDepositedBdv,
         uint256 percentOfDepositedBdv
-    ) external pure returns (uint256 newGaugePoints) {
+    ) public pure returns (uint256 newGaugePoints) {
         if (
             percentOfDepositedBdv >
             optimalPercentDepositedBdv.mul(UPPER_THRESHOLD).div(THRESHOLD_PRECISION)
@@ -61,7 +60,7 @@ contract GaugePointFacet {
             // Cap gaugePoints to MAX_GAUGE_POINTS if it exceeds.
             if (newGaugePoints > MAX_GAUGE_POINTS) return MAX_GAUGE_POINTS;
         } else {
-            // If % of deposited BDV is .01% within range of optimal, 
+            // If % of deposited BDV is .01% within range of optimal,
             // keep gauge points the same.
             return currentGaugePoints;
         }
