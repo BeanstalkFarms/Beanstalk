@@ -16,9 +16,15 @@ jobs:
       - uses: actions/setup-node@v3
         with:
           node-version: "18"
-      - run: yarn add prettier 
-      - run: yarn add prettier-plugin-solidity
-      # - run: shopt -s globstar; yarn dlx -p prettier prettier --write --config .prettierrc --plugin=prettier-plugin-solidity protocol/**/*.sol || true
+
+      - name: Install build essentials
+        run: sudo apt-get update && sudo apt-get install -y build-essential
+
+      - name: Install dependencies
+        run: |
+          yarn install --frozen-lockfile
+          yarn add prettier prettier-plugin-solidity
+
       - run: shopt -s globstar; yarn prettier --write --config .prettierrc --plugin=prettier-plugin-solidity protocol/**/*.sol || true
       - name: Commit changes
         uses: stefanzweifel/git-auto-commit-action@v4
