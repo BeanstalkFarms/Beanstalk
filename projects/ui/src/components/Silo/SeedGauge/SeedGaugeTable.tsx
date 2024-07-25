@@ -41,12 +41,9 @@ type ISeedGaugeColumn = {
   key: string;
   header: string;
   headerTooltip?: string;
-  //   gridConfigProps: { advanced?: GridConfigProps; basic: GridConfigProps };
   render: (data: ISeedGaugeRow) => string | JSX.Element;
   align?: 'left' | 'right';
   mobileAlign?: 'left' | 'right';
-  hideMobile?: boolean;
-  hideTablet?: boolean;
 };
 
 const displayBNValue = (
@@ -65,31 +62,36 @@ const GridConfig: Record<
     advanced: GridConfigProps;
     // basic is optional b/c the default view limits which ones are shown
     basic?: GridConfigProps;
+    hideMobile?: boolean;
   }
 > = {
   token: {
-    advanced: { xs: 2, lg: 2 },
-    basic: { xs: 4 },
+    advanced: { xs: 4, lg: 1.5 },
+    basic: { xs: 2.5, sm: 6 },
   },
   totalGrownStalk: {
     advanced: { lg: 1.5 },
+    hideMobile: true,
   },
   totalGrownStalkPerBDV: {
-    advanced: { lg: 2 },
+    advanced: { lg: 2.5 },
+    hideMobile: true,
   },
   gaugePoints: {
-    advanced: { lg: 1.5 },
+    advanced: { lg: 1.75 },
+    hideMobile: true,
   },
   gaugePointsPerBDV: {
-    advanced: { lg: 1.5 },
+    advanced: { lg: 1.75 },
+    hideMobile: true,
   },
   optimalBDVPct: {
     advanced: { xs: 4, lg: 1.5 },
-    basic: { xs: 4 },
+    basic: { xs: 5, sm: 3 },
   },
   currentBDVPct: {
-    basic: { xs: 4 },
-    advanced: { xs: 3 },
+    advanced: { xs: 4, lg: 1.5 },
+    basic: { xs: 4.5, sm: 3 },
   },
 };
 
@@ -98,47 +100,60 @@ const TokenColumn: ISeedGaugeColumn = {
   header: 'Token',
   align: 'left',
   render: (data) => (
-    <Stack direction="row" gap={0.5}>
+    <Stack direction="row" gap={0.5} alignItems="center">
       <TokenIcon token={data.token} />
-      <Typography>{data.token.symbol}</Typography>
+      <Typography variant="bodySmall">{data.token.symbol}</Typography>
     </Stack>
   ),
 };
 
-const getGridConfigProps = (isAdvancedView: boolean, key: string) => {
-  if (!(key in GridConfig)) return { show: false, config: {} };
-
-  const configKey = isAdvancedView ? 'advanced' : 'basic';
-  const configItem = GridConfig[key][configKey];
-
-  return {
-    visible: !!configItem,
-    config: configItem || {},
-  };
+const chipSx = {
+  '& .MuiChip-label': {
+    padding: '4px',
+  },
+  height: 'unset',
+  width: 'unset',
+  borderRadius: '4px',
+  fontSize: '14px', // set manually
+  lineHeight: '17px', // set manually
 };
 
-const basicViewColumns: ISeedGaugeColumn[] = [
-  TokenColumn,
+const BDVPctColumns: ISeedGaugeColumn[] = [
   {
     key: 'optimalBDVPct',
     header: 'Optimal BDV %',
-    render: ({ optimalBDVPct }) => (
-      <Chip
-        variant="filled"
-        label={`${displayBNValue(optimalBDVPct, '0')}%`}
-        sx={{
-          fontSize: '14px', // set manually
-          lineHeight: '17px', // set manually
-          background: Palette.lightestGreen,
-          color: Palette.winterGreen,
-        }}
-      />
-    ),
+    render: ({ optimalBDVPct, gaugePoints }) => {
+      if (!gaugePoints || gaugePoints.eq(0)) {
+        return (
+          <Typography variant="bodySmall" color="text.tertiary">
+            N/A
+          </Typography>
+        );
+      }
+      return (
+        <Chip
+          variant="filled"
+          label={`${displayBNValue(optimalBDVPct, '0')}%`}
+          sx={{
+            ...chipSx,
+            background: Palette.lightestGreen,
+            color: Palette.winterGreen,
+          }}
+        />
+      );
+    },
   },
   {
     key: 'currentBDVPct',
     header: 'Current BDV %',
-    render: ({ optimalBDVPct, currentBDVPct }) => {
+    render: ({ optimalBDVPct, currentBDVPct, gaugePoints }) => {
+      if (!gaugePoints || gaugePoints.eq(0)) {
+        return (
+          <Typography variant="bodySmall" color="text.tertiary">
+            N/A
+          </Typography>
+        );
+      }
       const isOptimal = currentBDVPct.eq(optimalBDVPct);
 
       return (
@@ -146,8 +161,7 @@ const basicViewColumns: ISeedGaugeColumn[] = [
           variant="filled"
           label={`${displayBNValue(currentBDVPct, '0')}%`}
           sx={{
-            fontSize: '14px',
-            lineHeight: '17px',
+            ...chipSx,
             color: isOptimal ? Palette.winterGreen : Palette.theme.winter.red,
             background: isOptimal ? Palette.lightestGreen : Palette.lightestRed,
           }}
@@ -157,16 +171,17 @@ const basicViewColumns: ISeedGaugeColumn[] = [
   },
 ];
 
+const basicViewColumns: ISeedGaugeColumn[] = [TokenColumn, ...BDVPctColumns];
+
 const columns: ISeedGaugeColumn[] = [
   TokenColumn,
   {
     key: 'totalGrownStalk',
     header: 'Total grown stalk',
-    hideMobile: true,
-    hideTablet: true,
     render: ({ totalGrownStalk }) => (
       <Typography
-        color={isNonZero(totalGrownStalk) ? 'text.primary' : 'text.secondary'}
+        variant="bodySmall"
+        color={isNonZero(totalGrownStalk) ? 'text.primary' : 'text.tertiary'}
       >
         {displayBNValue(totalGrownStalk)}
       </Typography>
@@ -175,12 +190,11 @@ const columns: ISeedGaugeColumn[] = [
   {
     key: 'totalGrownStalkPerBDV',
     header: 'Total Grown Stalk per BDV',
-    hideMobile: true,
-    hideTablet: true,
     render: ({ totalGrownStalkPerBDV }) => (
       <Typography
+        variant="bodySmall"
         color={
-          isNonZero(totalGrownStalkPerBDV) ? 'text.primary' : 'text.secondary'
+          isNonZero(totalGrownStalkPerBDV) ? 'text.primary' : 'text.tertiary'
         }
       >
         {displayBNValue(totalGrownStalkPerBDV)}
@@ -190,11 +204,10 @@ const columns: ISeedGaugeColumn[] = [
   {
     key: 'gaugePoints',
     header: 'Gauge Points',
-    hideMobile: true,
-    hideTablet: true,
     render: ({ gaugePoints }) => (
       <Typography
-        color={isNonZero(gaugePoints) ? 'text.primary' : 'text.secondary'}
+        variant="bodySmall"
+        color={isNonZero(gaugePoints) ? 'text.primary' : 'text.tertiary'}
       >
         {displayBNValue(gaugePoints)}
       </Typography>
@@ -203,38 +216,16 @@ const columns: ISeedGaugeColumn[] = [
   {
     key: 'gaugePointsPerBDV',
     header: 'Gauge Points per BDV',
-    hideMobile: true,
-    hideTablet: true,
     render: ({ gaugePointsPerBDV }) => (
       <Typography
-        color={isNonZero(gaugePointsPerBDV) ? 'text.primary' : 'text.secondary'}
+        variant="bodySmall"
+        color={isNonZero(gaugePointsPerBDV) ? 'text.primary' : 'text.tertiary'}
       >
         {displayBNValue(gaugePointsPerBDV)}
       </Typography>
     ),
   },
-  {
-    key: 'optimalBDVPct',
-    header: 'Optimal BDV %',
-    render: ({ optimalBDVPct }) => (
-      <Typography
-        color={isNonZero(optimalBDVPct) ? 'text.primary' : 'text.secondary'}
-      >
-        {displayBNValue(optimalBDVPct)}
-      </Typography>
-    ),
-  },
-  {
-    key: 'currentBDVPct',
-    header: 'Current BDV %',
-    render: ({ currentBDVPct }) => (
-      <Typography
-        color={isNonZero(currentBDVPct) ? 'text.primary' : 'text.secondary'}
-      >
-        {displayBNValue(currentBDVPct)}
-      </Typography>
-    ),
-  },
+  ...BDVPctColumns,
 ];
 
 const useTableConfig = (
@@ -294,14 +285,58 @@ const ExpectedSeedRewardDirection = (row: ISeedGaugeRow) => {
       direction="row"
       justifyContent="flex-end"
       alignItems="center"
-      pr={4}
+      pr={{ xs: 2, md: 4 }}
       gap={0.25}
+      sx={(theme) => ({
+        // don't display this on mobile
+        [theme.breakpoints.down('sm')]: { display: 'none' },
+      })}
     >
-      <Arrow sx={{ fontSize: 'inherit', color: 'text.secondary' }} />
-      <Typography color="text.secondary">
+      <Arrow sx={{ fontSize: '0.9rem', color: 'text.secondary' }} />
+      <Typography color="text.secondary" variant="bodySmall">
         Expected Seed Reward {direction} next Season
       </Typography>
     </Stack>
+  );
+};
+
+const GridColumn = ({
+  column,
+  isAdvanced,
+  ...gridProps
+}: {
+  column: ISeedGaugeColumn;
+  isAdvanced: boolean;
+} & GridProps) => {
+  const configKey = isAdvanced ? 'advanced' : 'basic';
+  const config = GridConfig[column.key];
+  const selectedConfig = config?.[configKey];
+
+  if (!(column.key in GridConfig) || !selectedConfig) return null;
+
+  const hideMobile = config.hideMobile || false;
+
+  return (
+    <Grid
+      item
+      display="flex"
+      textAlign={column.align || 'right'}
+      alignItems="center"
+      justifyContent={column.align === 'left' ? 'flex-start' : 'flex-end'}
+      {...selectedConfig}
+      {...gridProps}
+      sx={({ breakpoints }) => ({
+        [breakpoints.down('lg')]: {
+          textAlign: column.mobileAlign || column.align || 'right',
+          justifyContent:
+            (column.mobileAlign || column.align) === 'left'
+              ? 'flex-start'
+              : 'flex-end',
+          display: hideMobile ? 'none' : 'flex',
+        },
+        ...gridProps.sx,
+      })}
+    />
   );
 };
 
@@ -311,9 +346,7 @@ const SeedGaugeTable = ({
   data: ReturnType<typeof useSeedGauge>['data'];
 }) => {
   const [isAdvanced, show, hide] = useToggle();
-
   const rows = useTableConfig(isAdvanced, data);
-
   const cols = isAdvanced ? columns : basicViewColumns;
 
   return (
@@ -332,59 +365,32 @@ const SeedGaugeTable = ({
             })}
           />
         </Stack>
-        <Stack
-          pb={1.5}
-          px={1} // add 10px padding on x for alignment
-        >
-          {/*
-           * Headers
-           */}
+        <Stack pb={1.5} px={1}>
+          {/* Headers */}
           <Grid container direction="row" spacing={1}>
-            {cols.map((column) => {
-              const { visible, config: gridConfig } = getGridConfigProps(
-                isAdvanced,
-                column.key
-              );
-
-              if (!visible) return null;
-              return (
-                <Grid
-                  item
-                  display="flex"
-                  justifyContent={
-                    column.align === 'left' ? 'flex-start' : 'flex-end'
-                  }
-                  textAlign={column.align}
-                  zeroMinWidth
-                  {...gridConfig}
-                  sx={({ breakpoints: bp }) => ({
-                    [bp.down('md')]: {
-                      textAlign: column.mobileAlign || 'right',
-                      alignItems: column.mobileAlign || 'right',
-                      display: column.hideMobile ? 'none' : 'block',
-                    },
-                    [bp.between('md', 'lg')]: {
-                      display: column.hideTablet ? 'none' : 'block',
-                    },
-                  })}
-                >
-                  <Tooltip title={column.headerTooltip || ''}>
-                    <Typography
-                      variant="bodySmall"
-                      color="text.secondary"
-                      align="inherit"
-                      textAlign="inherit"
-                    >
-                      {column.header}
-                    </Typography>
-                  </Tooltip>
-                </Grid>
-              );
-            })}
+            {cols.map((column) => (
+              <GridColumn
+                column={column}
+                isAdvanced={isAdvanced}
+                key={`sg-header-${column.key}`}
+              >
+                <Tooltip title={column.headerTooltip || ''}>
+                  <Typography
+                    variant="bodySmall"
+                    color="text.secondary"
+                    align="inherit"
+                    textAlign="inherit"
+                  >
+                    {column.header}
+                  </Typography>
+                </Tooltip>
+              </GridColumn>
+            ))}
           </Grid>
         </Stack>
       </Stack>
       <Divider />
+      {/* Rows */}
       <Stack p={1} gap={1}>
         {rows.map((row, i) => (
           <Card
@@ -394,56 +400,36 @@ const SeedGaugeTable = ({
               borderColor: 'divider',
             }}
           >
-            <Stack py={1} gap={0.5}>
+            <Stack py={1}>
               <Grid container px={2}>
-                {cols.map((column, j) => {
-                  const { visible, config: gridConfig } = getGridConfigProps(
-                    isAdvanced,
-                    column.key
-                  );
-                  if (!visible) return null;
-                  return (
-                    <Grid
-                      item
-                      key={`seed-gauge-col-${i}-${j}`}
-                      {...gridConfig}
-                      sx={({ breakpoints: bp }) => ({
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent:
-                          column.align === 'left' ? 'flex-start' : 'flex-end',
-                        [bp.down('md')]: {
-                          textAlign: column.mobileAlign || 'right',
-                          alignItems: column.mobileAlign || 'right',
-                          display: column.hideMobile ? 'none' : 'block',
-                        },
-                        [bp.between('md', 'lg')]: {
-                          display: column.hideTablet ? 'none' : 'block',
-                        },
-                      })}
-                    >
-                      <Stack direction="row" alignItems="center">
-                        {column.render(row)}
-                        {j === cols.length - 1 ? (
-                          <Stack
-                            display={{ xs: 'none', md: 'block' }}
-                            sx={{ width: '20px' }}
-                            alignItems="center"
-                          >
-                            <ArrowRight
-                              sx={{
-                                position: 'relative',
-                                color: 'secondary.main',
-                                top: '3px',
-                                marginRight: '-3px',
-                              }}
-                            />
-                          </Stack>
-                        ) : null}
-                      </Stack>
-                    </Grid>
-                  );
-                })}
+                {cols.map((column, j) => (
+                  <GridColumn
+                    column={column}
+                    isAdvanced={isAdvanced}
+                    key={`sgr-${i}-${row.token.symbol}-${j}`}
+                  >
+                    <Stack direction="row" alignItems="center">
+                      {column.render(row)}
+                      {/* render the right arrow if last column */}
+                      {j === cols.length - 1 ? (
+                        <Stack
+                          display={{ xs: 'none', md: 'block' }}
+                          sx={{ width: '20px' }}
+                          alignItems="center"
+                        >
+                          <ArrowRight
+                            sx={{
+                              position: 'relative',
+                              color: 'secondary.main',
+                              top: '3px',
+                              marginRight: '-3px',
+                            }}
+                          />
+                        </Stack>
+                      ) : null}
+                    </Stack>
+                  </GridColumn>
+                ))}
               </Grid>
               <ExpectedSeedRewardDirection {...row} />
             </Stack>
