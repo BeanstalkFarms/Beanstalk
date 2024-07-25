@@ -254,18 +254,18 @@ contract InitalizeDiamond {
     }
 
     function initializeSeedGaugeSettings() internal {
-        s.sys.seedGaugeSettings.maxBeanMaxLpGpPerBdvRatio = MAX_BEAN_MAX_LP_GP_PER_BDV_RATIO;
-        s.sys.seedGaugeSettings.minBeanMaxLpGpPerBdvRatio = MIN_BEAN_MAX_LP_GP_PER_BDV_RATIO;
-        s.sys.seedGaugeSettings.targetSeasonsToCatchUp = TARGET_SEASONS_TO_CATCHUP;
-        s.sys.seedGaugeSettings.podRateLowerBound = POD_RATE_LOWER_BOUND;
-        s.sys.seedGaugeSettings.podRateOptimal = POD_RATE_OPTIMAL;
-        s.sys.seedGaugeSettings.podRateUpperBound = POD_RATE_UPPER_BOUND;
-        s.sys.seedGaugeSettings.deltaPodDemandLowerBound = DELTA_POD_DEMAND_LOWER_BOUND;
-        s.sys.seedGaugeSettings.deltaPodDemandUpperBound = DELTA_POD_DEMAND_UPPER_BOUND;
-        s.sys.seedGaugeSettings.lpToSupplyRatioUpperBound = LP_TO_SUPPLY_RATIO_UPPER_BOUND;
-        s.sys.seedGaugeSettings.lpToSupplyRatioOptimal = LP_TO_SUPPLY_RATIO_OPTIMAL;
-        s.sys.seedGaugeSettings.lpToSupplyRatioLowerBound = LP_TO_SUPPLY_RATIO_LOWER_BOUND;
-        s.sys.seedGaugeSettings.excessivePriceThreshold = EXCESSIVE_PRICE_THRESHOLD;
+        s.sys.evaluationParameters.maxBeanMaxLpGpPerBdvRatio = MAX_BEAN_MAX_LP_GP_PER_BDV_RATIO;
+        s.sys.evaluationParameters.minBeanMaxLpGpPerBdvRatio = MIN_BEAN_MAX_LP_GP_PER_BDV_RATIO;
+        s.sys.evaluationParameters.targetSeasonsToCatchUp = TARGET_SEASONS_TO_CATCHUP;
+        s.sys.evaluationParameters.podRateLowerBound = POD_RATE_LOWER_BOUND;
+        s.sys.evaluationParameters.podRateOptimal = POD_RATE_OPTIMAL;
+        s.sys.evaluationParameters.podRateUpperBound = POD_RATE_UPPER_BOUND;
+        s.sys.evaluationParameters.deltaPodDemandLowerBound = DELTA_POD_DEMAND_LOWER_BOUND;
+        s.sys.evaluationParameters.deltaPodDemandUpperBound = DELTA_POD_DEMAND_UPPER_BOUND;
+        s.sys.evaluationParameters.lpToSupplyRatioUpperBound = LP_TO_SUPPLY_RATIO_UPPER_BOUND;
+        s.sys.evaluationParameters.lpToSupplyRatioOptimal = LP_TO_SUPPLY_RATIO_OPTIMAL;
+        s.sys.evaluationParameters.lpToSupplyRatioLowerBound = LP_TO_SUPPLY_RATIO_LOWER_BOUND;
+        s.sys.evaluationParameters.excessivePriceThreshold = EXCESSIVE_PRICE_THRESHOLD;
     }
 
     function initalizeFarmAndTractor() public {

@@ -10,7 +10,7 @@ const {
   BEANSTALK,
   UNRIPE_BEAN,
   TRI_CRYPTO_POOL
-} = require("../test/utils/constants.js");
+} = require("../test/hardhat/utils/constants.js");
 const diamond = require("./diamond.js");
 const {
   impersonateBean,

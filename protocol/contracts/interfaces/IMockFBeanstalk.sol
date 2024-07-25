@@ -13,7 +13,7 @@ interface IMockFBeanstalk {
         DECREASE
     }
 
-    struct SeedGaugeSettings {
+    struct EvaluationParameters {
         uint256 maxBeanMaxLpGpPerBdvRatio;
         uint256 minBeanMaxLpGpPerBdvRatio;
         uint256 targetSeasonsToCatchUp;
@@ -248,6 +248,7 @@ interface IMockFBeanstalk {
         bool isWhitelisted;
         bool isWhitelistedLp;
         bool isWhitelistedWell;
+        bool isSoppable;
     }
 
     error AddressEmptyCode(address target);
@@ -475,7 +476,7 @@ interface IMockFBeanstalk {
 
     function abovePeg() external view returns (bool);
 
-    function updateSeedGaugeSettings(SeedGaugeSettings memory updatedSeedGaugeSettings) external;
+    function updateSeedGaugeSettings(EvaluationParameters memory updatedSeedGaugeSettings) external;
 
     function activeField() external view returns (uint256);
 
@@ -584,7 +585,7 @@ interface IMockFBeanstalk {
 
     function balanceOfPlenty(address account, address well) external view returns (uint256 plenty);
 
-    function getSeedGaugeSetting() external view returns (SeedGaugeSettings memory);
+    function getSeedGaugeSetting() external view returns (EvaluationParameters memory);
 
     function getMaxBeanMaxLpGpPerBdvRatio() external view returns (uint256);
 
@@ -820,36 +821,6 @@ interface IMockFBeanstalk {
         PipeCall memory p,
         uint256 value
     ) external payable returns (bytes memory result);
-
-    function exploitBurnBeans() external;
-
-    function exploitBurnStalk0() external;
-
-    function exploitBurnStalk1() external;
-
-    function exploitFertilizer() external;
-
-    function exploitMintBeans0() external;
-
-    function exploitMintBeans1() external;
-
-    function exploitMintBeans2() external;
-
-    function exploitMintBeans3() external;
-
-    function exploitSop(address sopWell) external;
-
-    function exploitTokenBalance() external;
-
-    function exploitUserDoubleSendTokenExternal() external;
-
-    function exploitUserInternalTokenBalance() external;
-
-    function exploitUserSendTokenExternal0() external;
-
-    function exploitUserSendTokenExternal1() external;
-
-    function exploitUserSendTokenInternal() external;
 
     function facetAddress(bytes4 _functionSelector) external view returns (address facetAddress_);
 
@@ -1891,4 +1862,27 @@ interface IMockFBeanstalk {
     function woohoo() external pure returns (uint256);
 
     function wrapEth(uint256 amount, uint8 mode) external payable;
+
+    function revert_netFlow() external;
+
+    function revert_outFlow() external;
+
+    function revert_oneOutFlow() external;
+
+    function revert_supplyChange() external;
+
+    function revert_supplyIncrease() external;
+
+    function getUsdTokenPrice(address token) external view returns (uint256);
+
+    function getUsdTokenTwap(address token, uint256 lookback) external view returns (uint256);
+
+    function getTokenUsdPrice(address token) external view returns (uint256);
+
+    function getTokenUsdTwap(address token, uint256 lookback) external view returns (uint256);
+
+    function getTokenPriceFromExternal(
+        address token,
+        uint256 lookback
+    ) external view returns (uint256 tokenPrice);
 }

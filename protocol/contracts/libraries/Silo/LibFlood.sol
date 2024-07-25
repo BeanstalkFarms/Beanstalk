@@ -93,6 +93,9 @@ library LibFlood {
                 for (uint i; i < wellDeltaBs.length; i++) {
                     sopWell(wellDeltaBs[i]);
                 }
+
+                s.sys.season.lastSop = s.sys.season.rainStart;
+                s.sys.season.lastSopSeason = s.sys.season.current;
             }
         }
     }
@@ -323,9 +326,6 @@ library LibFlood {
         .sys
         .sop
         .sops[s.sys.season.lastSop][well].add(amount.mul(C.SOP_PRECISION).div(s.sys.rain.roots));
-
-        s.sys.season.lastSop = s.sys.season.rainStart;
-        s.sys.season.lastSopSeason = s.sys.season.current;
 
         // update Beanstalk's stored overall plenty for this well
         s.sys.sop.plentyPerSopToken[sopToken] += amount;
