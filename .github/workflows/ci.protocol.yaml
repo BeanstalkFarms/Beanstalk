@@ -13,7 +13,9 @@ jobs:
       - uses: actions/checkout@v3
         with:
           ref: ${{ github.head_ref }}
-      - uses: actions/setup-node@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
         with:
           node-version: "18"
 
@@ -25,35 +27,53 @@ jobs:
           yarn install --frozen-lockfile
           yarn add prettier prettier-plugin-solidity
 
-      - run: shopt -s globstar; yarn prettier --write --config .prettierrc --plugin=prettier-plugin-solidity protocol/**/*.sol || true
+      - name: Run formatter
+        run: |
+          shopt -s globstar
+          yarn prettier --write --config .prettierrc --plugin=prettier-plugin-solidity protocol/**/*.sol || true
+
       - name: Commit changes
         uses: stefanzweifel/git-auto-commit-action@v4
         with:
           commit_message: prettier auto formatting changes
           branch: ${{ github.head_ref }}
-      - name: check format
-        run: shopt -s globstar; yarn prettier --check --config .prettierrc --plugin=prettier-plugin-solidity protocol/**/*.sol
+
+      - name: Check format
+        run: |
+          shopt -s globstar
+          yarn prettier --check --config .prettierrc --plugin=prettier-plugin-solidity protocol/**/*.sol
+
   test:
     needs: format
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - name: Protocol Tests
+
+      - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
           node-version: "18"
+
+      - name: Install build essentials
+        run: sudo apt-get update && sudo apt-get install -y build-essential
+
       - name: Cache Node Modules
         id: node-modules-cache
         uses: actions/cache@v3
         with:
           path: "**/node_modules"
           key: ${{ runner.os }}-modules-${{ hashFiles('**/yarn.lock') }}
+
       - name: Install Dependencies
         if: steps.node-modules-cache.outputs.cache-hit != 'true'
-        run: yarn install --immutable
-      - run: yarn generate
+        run: yarn install --frozen-lockfile
+
+      - name: Generate
+        run: yarn generate
         working-directory: protocol
-      - run: yarn test
+
+      - name: Run tests
         env:
           FORKING_RPC: ${{ secrets.ANVIL_FORK_URL }}
+        run: yarn test
         working-directory: protocol
