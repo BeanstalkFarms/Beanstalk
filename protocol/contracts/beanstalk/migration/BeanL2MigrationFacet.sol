@@ -31,6 +31,8 @@ interface IL2Bridge {
 
 interface IBeanL1RecieverFacet {
     function recieveL1Beans(address reciever, uint256 amount) external;
+
+    function approveReciever(address reciever, uint256 amount) external;
 }
 
 contract BeanL2MigrationFacet is Invariable, ReentrancyGuard {
@@ -49,11 +51,44 @@ contract BeanL2MigrationFacet is Invariable, ReentrancyGuard {
     ) external nonReentrant {
         IBean(L1_BEAN).burnFrom(msg.sender, amount);
 
-        // send data to
+        // send data to L2Beanstalk via the bridge contract.
         IL2Bridge(BRIDGE).sendMessage(
             L2Beanstalk,
             abi.encodeCall(IBeanL1RecieverFacet(L2Beanstalk).recieveL1Beans, (reciever, amount)),
             gasLimit
         );
+    }
+
+    /**
+     * @notice allows a contract to approve an address on L2 to recieve their Beanstalk assets.
+     * @dev Beanstalk cannot assume that owners of a contract are able to have access to the same address on L2.
+     * Thus, contracts that own Beanstalk Assets must approve an address on L2 to recieve their assets.
+     */
+    function approveL2Reciever(
+        address reciever,
+        address L2Beanstalk,
+        uint256 gasLimit
+    ) external nonReentrant {
+        require(hasCode(msg.sender), "BeanL2MigrationFacet: must be a contract");
+        // send data to L2Beanstalk via the bridge contract.
+        IL2Bridge(BRIDGE).sendMessage(
+            L2Beanstalk,
+            abi.encodeCall(
+                IBeanL1RecieverFacet(L2Beanstalk).approveReciever,
+                (msg.sender, reciever)
+            ),
+            gasLimit
+        );
+    }
+
+    /**
+     * @notice checks whether an address has code.
+     */
+    function hasCode(address _addr) internal view returns (bool) {
+        uint256 size;
+        assembly {
+            size := extcodesize(_addr)
+        }
+        return size > 0;
     }
 }
