@@ -4,6 +4,20 @@ import { BigNumber, ContractTransaction } from "ethers";
 const STALK_DECIMALS = 10;
 const SEED_DECIMALS = 6;
 
+declare module "@beanstalk/sdk-core" {
+  interface Token {
+    isUnripe: boolean;
+    rewards?: { stalk: TokenValue; seeds: TokenValue | null };
+    getStalk(bdv?: TokenValue): TokenValue;
+    getSeeds(bdv?: TokenValue): TokenValue;
+    approveBeanstalk(amount: TokenValue | BigNumber): Promise<ContractTransaction>;
+  }
+
+  namespace Token {
+    let _source: string;
+  }
+}
+
 // Adding the static Token._source property
 Object.defineProperty(CoreToken, "_source", {
   value: "BeanstalkSDK",
