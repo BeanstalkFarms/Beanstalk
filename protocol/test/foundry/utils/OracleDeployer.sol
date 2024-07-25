@@ -78,8 +78,8 @@ contract OracleDeployer is Utils {
         // optional labels to assist in testing.
         vm.label(C.ETH_USD_CHAINLINK_PRICE_AGGREGATOR, "CL ETH/USD");
         vm.label(C.WSTETH_ETH_CHAINLINK_PRICE_AGGREGATOR, "CL WstETH/ETH");
-        vm.label(C.USDC_CHAINLINK_PRICE_AGGREGATOR, "CL USDC/USD");
-        vm.label(C.USDT_CHAINLINK_PRICE_AGGREGATOR, "CL USDT/USD");
+        vm.label(0x8fFfFfd4AfB6115b954Bd326cbe7B4BA576818f6, "CL USDC/USD");
+        vm.label(0x3E7d1eAB13ad0104d2750B8863b489D65364e32D, "CL USDT/USD");
         vm.label(WBTC_USD_CHAINLINK_PRICE_AGGREGATOR, "CL WBTC/USD");
 
         for (uint i; i < chainlinkOracles.length; i++) {
