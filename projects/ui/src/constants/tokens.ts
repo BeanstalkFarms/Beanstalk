@@ -326,7 +326,7 @@ export const BEAN_ETH_WELL_LP = {
     BEAN_ETH_WELL_ADDRESSES,
     18,
     {
-      name: 'BEAN:ETH Well LP',
+      name: 'BEAN:ETH LP',
       symbol: 'BEANETH',
       logo: beanEthWellLpLogoUrl,
       isLP: true,

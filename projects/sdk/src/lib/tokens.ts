@@ -174,8 +174,8 @@ export class Tokens {
       18,
       "BEANETH",
       {
-        name: "BEAN:ETH Well LP Token", // see .name()
-        displayName: "BEAN:ETH LP",
+        name: "BEAN:ETH LP", // see .name()
+        displayName: "BEAN:ETH Well LP",
         isLP: true,
         color: "#DFB385"
       },
@@ -183,7 +183,7 @@ export class Tokens {
     );
     this.BEAN_ETH_WELL_LP.rewards = {
       stalk: this.STALK.amount(1),
-      seeds: this.SEEDS.amount(1), // fill value
+      seeds: this.SEEDS.amount(1) // fill value
     };
 
     this.BEAN_WSTETH_WELL_LP = new ERC20Token(
@@ -192,8 +192,8 @@ export class Tokens {
       18,
       "BEANwstETH",
       {
-        name: "BEAN:wstETH Well LP token",
-        displayName: "BEAN:wstETH LP",
+        name: "BEAN:wstETH LP",
+        displayName: "BEAN:wstETH Well LP",
         isLP: true,
         color: "#DFB385"
       },
