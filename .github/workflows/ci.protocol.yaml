@@ -17,7 +17,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: "18"
+          node-version: "21"
 
       - name: Install build essentials
         run: sudo apt-get update && sudo apt-get install -y build-essential python3
@@ -34,7 +34,7 @@ jobs:
 
       - name: Install dependencies with retry
         run: |
-          for i in 1 2 3; do yarn add prettier prettier-plugin-solidity && break || sleep 10; done
+          yarn add prettier prettier-plugin-solidity
 
       - name: Run formatter
         run: |
