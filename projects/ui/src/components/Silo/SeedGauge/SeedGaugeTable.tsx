@@ -23,6 +23,7 @@ import useWhitelist from '~/hooks/beanstalk/useWhitelist';
 import { useAppSelector } from '~/state';
 import { BeanstalkPalette as Palette } from '~/components/App/muiTheme';
 import { ArrowDownward, ArrowUpward, ArrowRight } from '@mui/icons-material';
+import logo from '~/img/tokens/bean-logo.svg';
 
 type GridConfigProps = Pick<GridProps, Breakpoint>;
 
@@ -34,6 +35,7 @@ type ISeedGaugeRow = {
   gaugePointsPerBDV: BigNumber;
   optimalBDVPct: BigNumber;
   currentBDVPct: BigNumber;
+  totalBDV: BigNumber;
   deltaStalkPerSeason: BigNumber | undefined;
 };
 
@@ -66,31 +68,27 @@ const GridConfig: Record<
   }
 > = {
   token: {
-    advanced: { xs: 4, lg: 1.5 },
+    advanced: { xs: 4, lg: 2 },
     basic: { xs: 2.5, sm: 6 },
   },
-  totalGrownStalk: {
-    advanced: { lg: 1.5 },
-    hideMobile: true,
-  },
-  totalGrownStalkPerBDV: {
-    advanced: { lg: 2.5 },
+  totalBDV: {
+    advanced: { lg: 2 },
     hideMobile: true,
   },
   gaugePoints: {
-    advanced: { lg: 1.75 },
+    advanced: { lg: 2 },
     hideMobile: true,
   },
   gaugePointsPerBDV: {
-    advanced: { lg: 1.75 },
+    advanced: { lg: 2 },
     hideMobile: true,
   },
   optimalBDVPct: {
-    advanced: { xs: 4, lg: 1.5 },
+    advanced: { xs: 4, lg: 2 },
     basic: { xs: 5, sm: 3 },
   },
   currentLPBDVPct: {
-    advanced: { xs: 4, lg: 1.5 },
+    advanced: { xs: 4, lg: 2 },
     basic: { xs: 4.5, sm: 3 },
   },
 };
@@ -176,29 +174,18 @@ const basicViewColumns: ISeedGaugeColumn[] = [TokenColumn, ...BDVPctColumns];
 const columns: ISeedGaugeColumn[] = [
   TokenColumn,
   {
-    key: 'totalGrownStalk',
-    header: 'Total grown stalk',
-    render: ({ totalGrownStalk }) => (
-      <Typography
-        variant="bodySmall"
-        color={isNonZero(totalGrownStalk) ? 'text.primary' : 'text.tertiary'}
-      >
-        {displayBNValue(totalGrownStalk)}
-      </Typography>
-    ),
-  },
-  {
-    key: 'totalGrownStalkPerBDV',
-    header: 'Total Grown Stalk per BDV',
-    render: ({ totalGrownStalkPerBDV }) => (
-      <Typography
-        variant="bodySmall"
-        color={
-          isNonZero(totalGrownStalkPerBDV) ? 'text.primary' : 'text.tertiary'
-        }
-      >
-        {displayBNValue(totalGrownStalkPerBDV)}
-      </Typography>
+    key: 'totalBDV',
+    header: 'Total BDV',
+    render: ({ totalBDV }) => (
+      <Stack direction="row" alignItems="center" gap={0.25}>
+        <img src={logo} style={{ width: 'auto', height: '.85rem' }} alt="" />
+        <Typography
+          variant="bodySmall"
+          color={isNonZero(totalBDV) ? 'text.primary' : 'text.tertiary'}
+        >
+          {displayBNValue(totalBDV)}
+        </Typography>
+      </Stack>
     ),
   },
   {
@@ -251,12 +238,17 @@ const useTableConfig = (
     const mappedData: ISeedGaugeRow[] = tokens.map((token) => {
       const tokenSettings = gaugeData?.tokenSettings[token.address];
 
+      const siloBal = siloBalances[token.address];
+
       const rowSeedData: ISeedGaugeRow = {
         token: token,
+        totalBDV: (siloBal?.bdvPerToken || ZERO_BN).times(
+          siloBal?.deposited.amount || ZERO_BN
+        ),
         totalGrownStalk: tokenSettings?.milestoneStem || ZERO_BN,
         totalGrownStalkPerBDV: tokenSettings?.stalkIssuedPerBdv || ZERO_BN,
         gaugePoints: tokenSettings?.gaugePoints || ZERO_BN,
-        gaugePointsPerBDV: ZERO_BN, // TODO: SG: Implement this
+        gaugePointsPerBDV: tokenSettings?.gaugePointsPerBdv || ZERO_BN, // TODO: SG: Implement this
         optimalBDVPct: tokenSettings?.optimalPercentDepositedBdv || ZERO_BN,
         currentBDVPct: tokenSettings?.currentPercentDepositedBdv || ZERO_BN, // TODO: SG: Implement this
         deltaStalkPerSeason: tokenSettings?.deltaStalkEarnedPerSeason,
@@ -266,7 +258,7 @@ const useTableConfig = (
     });
 
     return mappedData;
-  }, [sdk, advancedView, gaugeData?.tokenSettings]);
+  }, [sdk, siloBalances, advancedView, gaugeData?.tokenSettings]);
 
   return rowData;
 };
