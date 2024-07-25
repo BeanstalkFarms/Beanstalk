@@ -24,7 +24,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          yarn add prettier prettier-plugin-solidity --verbose
+          yarn add prettier prettier-plugin-solidity
 
       - name: Run formatter
         run: |
