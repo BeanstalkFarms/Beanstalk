@@ -2,6 +2,7 @@ import { TokenValue, Token as CoreToken } from "@beanstalk/sdk-core";
 import { BigNumber, ContractTransaction } from "ethers";
 
 const STALK_DECIMALS = 10;
+const SEED_DECIMALS = 6;
 
 declare module "@beanstalk/sdk-core" {
   interface Token {
@@ -68,9 +69,5 @@ CoreToken.prototype.approveBeanstalk = function (
   return;
 };
 
-
-// Re-export the extended CoreToken as Token
-export const Token = CoreToken;
-
-// export type Token = CoreToken;
 export type Token = InstanceType<typeof CoreToken>;
+export const Token = CoreToken;
