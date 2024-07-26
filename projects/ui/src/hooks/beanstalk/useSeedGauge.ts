@@ -7,6 +7,7 @@ import { BigNumber as BigNumberJS } from 'bignumber.js';
 import { BigNumber as BigNumberEthers } from 'ethers';
 import { useAppSelector } from '~/state';
 import { useMemo } from 'react';
+import { cloneDeep } from 'lodash';
 import useSdk from '../sdk';
 
 export type SiloTokenSettingMap = AddressMap<{
@@ -18,7 +19,19 @@ export type SiloTokenSettingMap = AddressMap<{
   optimalPercentDepositedBdv: BigNumberJS;
   currentPercentDepositedBdv: BigNumberJS;
   gaugePointsPerBdv: BigNumberJS;
+  totalBdv: BigNumberJS;
 }>;
+
+export type BaseTokenSeedGaugeQueryInfo = {
+  optimalPercentDepositedBdv: BigNumberJS;
+  gaugePoints: BigNumberJS;
+  gaugePointsPerBdv: BigNumberJS;
+};
+
+export type TokenSeedGaugeInfo = {
+  currentPercentDepositedBdv: BigNumberJS;
+  totalBdv: BigNumberJS;
+} & BaseTokenSeedGaugeQueryInfo;
 
 const toBN = (
   n: BigInt | BigNumberEthers | number,
@@ -119,7 +132,6 @@ const useSeedGauge = () => {
   const siloLoading = !Object.keys(siloBals).length;
 
   const whitelist = [...sdk.tokens.siloWhitelist];
-  const stalk = sdk.tokens.STALK;
 
   const query = useQuery({
     queryKey: ['beanstalk', 'silo', 'beanstalkSiloTokenSettings'],
@@ -140,27 +152,24 @@ const useSeedGauge = () => {
           multicall(config, { contracts: gaugeCalls }),
         ]);
 
-      const map: SiloTokenSettingMap = {};
+      const map: AddressMap<TokenSeedGaugeInfo> = {};
+
       whitelist.forEach((token, i) => {
         const result = settings[i];
         if (!result.error && result.result) {
           const r = result.result;
           map[token.address] = {
             optimalPercentDepositedBdv: toBN(r.optimalPercentDepositedBdv, 6),
-            currentPercentDepositedBdv: ZERO_BN,
-            stalkIssuedPerBdv: toBN(r.stalkIssuedPerBdv, stalk.decimals),
-            stalkedEarnedPerSeason: toBN(r.stalkIssuedPerBdv, stalk.decimals),
-            milestoneStem: toBN(r.milestoneStem, 0),
             gaugePoints: toBN(r.gaugePoints, 18),
-            deltaStalkEarnedPerSeason: toBN(r.deltaStalkEarnedPerSeason, 0),
             gaugePointsPerBdv: ZERO_BN, // filler
+            currentPercentDepositedBdv: ZERO_BN, // filler
+            totalBdv: ZERO_BN, // filler
           };
         }
 
         const gpResult = gaugePointsPerBdvForToken[i];
         if (!gpResult.error && result.result && token.symbol !== 'BEAN') {
           map[token.address].gaugePointsPerBdv = toBN(gpResult.result, 18);
-          console.log(gpResult.result.toString());
         }
       });
 
@@ -175,42 +184,41 @@ const useSeedGauge = () => {
     enabled: !!whitelist.length,
   });
 
-  const datas = useMemo(() => {
-    if (!Object.keys(siloBals).length || !query.data?.tokenSettings) return;
-    const bdvs: AddressMap<BigNumberJS> = {};
+  const tokenSettings = useMemo(() => {
+    if (!Object.keys(siloBals).length || !query.data?.tokenSettings) return {};
 
-    const tokenSettings = { ...query.data.tokenSettings };
-    const filteredTokensWithGaugePts = Object.entries(tokenSettings).filter(
-      ([_, v]) => v.gaugePoints.gt(0)
-    );
+    // Deep clone to avoid mutating the query data
+    const tokenSettingMap = cloneDeep(query.data.tokenSettings);
 
-    const totalBdv = filteredTokensWithGaugePts.reduce<BigNumberJS>(
-      (prev, [address, _]) => {
-        const bdvPerToken = siloBals[address].bdvPerToken || ZERO_BN;
-        const totalDeposited = siloBals[address].deposited.amount || ZERO_BN;
-        const tokenTotalBdv = bdvPerToken.times(totalDeposited);
-        bdvs[address] = tokenTotalBdv;
+    let totalRelevantBdv = ZERO_BN;
 
-        return prev.plus(tokenTotalBdv);
-      },
-      ZERO_BN
-    );
+    Object.entries(tokenSettingMap).forEach(([address, values]) => {
+      const bdvPerToken = siloBals[address].bdvPerToken || ZERO_BN;
+      const totalDeposited = siloBals[address].deposited.amount || ZERO_BN;
+      const tokenTotalBdv = bdvPerToken.times(totalDeposited);
 
-    filteredTokensWithGaugePts.forEach(([key]) => {
-      if (!(key in bdvs)) return;
-      tokenSettings[key].currentPercentDepositedBdv = bdvs[key]
-        .div(totalBdv)
-        .times(100); // scale amount to pct
+      if (values.gaugePoints.gt(0)) {
+        totalRelevantBdv = totalRelevantBdv.plus(tokenTotalBdv);
+      }
+      tokenSettingMap[address].totalBdv = tokenTotalBdv;
     });
 
-    return {
-      maxBean2LPRatio: query.data.maxBean2LPRatio,
-      tokenSettings,
-    };
-  }, [query?.data, siloBals]);
+    Object.entries(tokenSettingMap).forEach(([key, value]) => {
+      if (value.gaugePoints.gt(0)) {
+        tokenSettingMap[key].currentPercentDepositedBdv = value.totalBdv
+          .div(totalRelevantBdv)
+          .times(100); // scale amount to pct
+      }
+    });
+
+    return tokenSettingMap;
+  }, [query?.data?.tokenSettings, siloBals]);
 
   return {
-    data: datas,
+    data: {
+      maxBean2LPRatio: query.data?.maxBean2LPRatio,
+      tokenSettings,
+    },
     isLoading: siloLoading || query.isLoading,
   };
 };
