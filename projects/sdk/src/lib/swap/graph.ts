@@ -149,6 +149,35 @@ export const getSwapGraph = (sdk: BeanstalkSDK): Graph => {
     to: "BEAN"
   });
 
+  // BEAN<>wstETH via Basin Well
+  graph.setEdge("BEAN", "wstETH", {
+    build: (account: string, from: FarmFromMode, to: FarmToMode) =>
+      sdk.farm.presets.wellSwap(
+        sdk.pools.BEAN_WSTETH_WELL,
+        sdk.tokens.BEAN,
+        sdk.tokens.WSTETH,
+        account,
+        from,
+        to
+      ),
+    from: "BEAN",
+    to: "wstETH"
+  });
+
+  graph.setEdge("wstETH", "BEAN", {
+    build: (account: string, from: FarmFromMode, to: FarmToMode) =>
+      sdk.farm.presets.wellSwap(
+        sdk.pools.BEAN_WSTETH_WELL,
+        sdk.tokens.WSTETH,
+        sdk.tokens.BEAN,
+        account,
+        from,
+        to
+      ),
+    from: "wstETH",
+    to: "BEAN"
+  });
+
   // USDC<>WETH via Uniswap V3
   graph.setEdge("USDC", "WETH", {
     build: (account: string, from: FarmFromMode, to: FarmToMode) =>
