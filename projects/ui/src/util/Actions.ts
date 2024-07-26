@@ -303,7 +303,10 @@ export const parseActionMessage = (a: Action) => {
         !a.tokenOut.isUnripe
       ) {
         const bySource = a.amountsBySource;
-        const amtOutDisplay = displayTokenAmount(a.amountOut, a.tokenOut);
+        const amtOutDisplay = displayTokenAmount(a.amountOut, a.tokenOut, {
+          showName: false,
+          showSymbol: true,
+        });
 
         if (bySource && bySource.external.plus(bySource.internal).gt(0)) {
           const amountsBySourceDisplay = displayAmountsBySource(
@@ -315,20 +318,20 @@ export const parseActionMessage = (a: Action) => {
           return `Add ${amountsBySourceDisplay.combined} for ${amtOutDisplay}.`;
         }
 
-        return `Add ${displayTokenAmount(
-          a.amountIn,
-          a.tokenIn
-        )} of liquidity for ${amtOutDisplay}.`;
+        return `Add ${displayTokenAmount(a.amountIn, a.tokenIn, {
+          showName: false,
+          showSymbol: true,
+        })} of liquidity for ${amtOutDisplay}.`;
       }
       if (
         a.tokenIn.isLP &&
         a.tokenIn.symbol !== CRV3[1].symbol &&
         !a.tokenIn.isUnripe
       ) {
-        return `Burn ${displayTokenAmount(
-          a.amountIn,
-          a.tokenIn
-        )} for ${displayTokenAmount(a.amountOut, a.tokenOut)} of liquidity.`;
+        return `Burn ${displayTokenAmount(a.amountIn, a.tokenIn, {
+          showName: false,
+          showSymbol: true,
+        })} for ${displayTokenAmount(a.amountOut, a.tokenOut, { showName: false, showSymbol: true })} of liquidity.`;
       }
       if (
         a.amountsBySource &&
@@ -338,13 +341,13 @@ export const parseActionMessage = (a: Action) => {
           a.amountsBySource,
           a.tokenIn
         );
-        return `Swap ${bySourceDisplay.combined} for ${displayTokenAmount(a.amountOut, a.tokenOut)}.`;
+        return `Swap ${bySourceDisplay.combined} for ${displayTokenAmount(a.amountOut, a.tokenOut, { showName: false, showSymbol: true })}.`;
       }
 
-      return `Swap ${displayTokenAmount(
-        a.amountIn,
-        a.tokenIn
-      )} for ${displayTokenAmount(a.amountOut, a.tokenOut)}.`;
+      return `Swap ${displayTokenAmount(a.amountIn, a.tokenIn, {
+        showName: false,
+        showSymbol: true,
+      })} for ${displayTokenAmount(a.amountOut, a.tokenOut, { showName: false, showSymbol: true })}.`;
     case ActionType.RECEIVE_TOKEN: {
       if (a.hideMessage) {
         return null;
