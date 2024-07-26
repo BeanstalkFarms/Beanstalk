@@ -7,20 +7,17 @@ import {
 } from '~/components/Common/Module';
 
 import { FC } from '~/types';
-import useIsMigrating from '~/hooks/beanstalk/useIsMigrating';
 import Chop from './Chop';
 
-const ChopActions: FC<{}> = () => {
-  const { isMigrating, MigrationAlert } = useIsMigrating();
-
-  return (
-    <Module>
-      <ModuleHeader>
-        <Typography variant="h4">Chop</Typography>
-      </ModuleHeader>
-      <ModuleContent>{!isMigrating ? <Chop /> : MigrationAlert}</ModuleContent>
-    </Module>
-  );
-};
+const ChopActions: FC<{}> = () => (
+  <Module>
+    <ModuleHeader>
+      <Typography variant="h4">Chop</Typography>
+    </ModuleHeader>
+    <ModuleContent>
+      <Chop />
+    </ModuleContent>
+  </Module>
+);
 
 export default ChopActions;

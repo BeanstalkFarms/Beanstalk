@@ -60,7 +60,6 @@ import usePlantAndDoX from '~/hooks/farmer/form-txn/usePlantAndDoX';
 import StatHorizontal from '~/components/Common/StatHorizontal';
 import { BeanstalkPalette, FontSize } from '~/components/App/muiTheme';
 import { AppState } from '~/state';
-import useIsMigrating from '~/hooks/beanstalk/useIsMigrating';
 
 // -----------------------------------------------------------------------
 
@@ -985,18 +984,10 @@ const ConvertPropProvider: FC<{
 
 const Convert: FC<{
   fromToken: ERC20Token | NativeToken;
-}> = (props) => {
-  const { isMigrating, MigrationAlert } = useIsMigrating();
-
-  if (isMigrating && props.fromToken.isUnripe) {
-    return MigrationAlert;
-  }
-
-  return (
-    <FormTxnProvider>
-      <ConvertPropProvider {...props} />
-    </FormTxnProvider>
-  );
-};
+}> = (props) => (
+  <FormTxnProvider>
+    <ConvertPropProvider {...props} />
+  </FormTxnProvider>
+);
 
 export default Convert;
