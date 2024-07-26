@@ -93,13 +93,17 @@ const useSeedGauge = () => {
         const { error: err, result } = settings[i];
         const { error: gpErr, result: gpResult } = gaugePointsPerBdvForToken[i];
 
-        if (!!err || !!gpErr || !result || !gpResult) return;
+        if (!err && !!result) {
+          map[token.address] = {
+            optimalPctDepositedBdv: toBN(result.optimalPercentDepositedBdv, 6),
+            gaugePoints: toBN(result.gaugePoints, 18),
+            gaugePointsPerBdv: ZERO_BN,
+          };
+        }
 
-        map[token.address] = {
-          optimalPctDepositedBdv: toBN(result.optimalPercentDepositedBdv, 6),
-          gaugePoints: toBN(result.gaugePoints, 18),
-          gaugePointsPerBdv: toBN(gpResult, 18),
-        };
+        if (!gpErr && !!gpResult) {
+          map[token.address].gaugePointsPerBdv = toBN(gpResult, 18);
+        }
       });
 
       const maxBean2LPRatio = toBN(_maxBean2LPRatio, 18);
@@ -113,6 +117,8 @@ const useSeedGauge = () => {
     enabled: !!whitelist.length,
   });
 
+  console.log('query: ', query.data);
+
   const gaugeData = useMemo(() => {
     if (!Object.keys(siloBals).length || !query.data?.tokenSettings) return {};
 
@@ -122,7 +128,7 @@ const useSeedGauge = () => {
 
     let totalRelevantBdv = ZERO_BN;
 
-    Object.entries(query.data.tokenSettings).forEach(([address, values]) => {
+    Object.entries(tokenSettingMap).forEach(([address, values]) => {
       const bdvPerToken = siloBals[address].bdvPerToken || ZERO_BN;
       const totalDeposited = siloBals[address].deposited.amount || ZERO_BN;
       const tokenTotalBdv = bdvPerToken.times(totalDeposited);
@@ -146,6 +152,8 @@ const useSeedGauge = () => {
 
     return map;
   }, [query?.data?.tokenSettings, siloBals, sdk]);
+
+  console.log('gaugeData: ', gaugeData);
 
   return {
     data: {
