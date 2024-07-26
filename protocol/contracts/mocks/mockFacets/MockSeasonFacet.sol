@@ -10,7 +10,11 @@ import {LibDiamond} from "contracts/libraries/LibDiamond.sol";
 import {IERC1155} from "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
 import "../MockToken.sol";
 import "contracts/libraries/LibBytes.sol";
-import {LibEthUsdOracle, LibUniswapOracle, LibChainlinkOracle} from "contracts/libraries/Oracle/LibEthUsdOracle.sol";
+import {LibUniswapOracle} from "contracts/libraries/Oracle/LibUniswapOracle.sol";
+import {LibChainlinkOracle} from "contracts/libraries/Oracle/LibChainlinkOracle.sol";
+import {LibEthUsdOracle} from "contracts/libraries/Oracle/LibEthUsdOracle.sol";
+import {LibWstethEthOracle} from "contracts/libraries/Oracle/LibWstethEthOracle.sol";
+import {LibWstethUsdOracle} from "contracts/libraries/Oracle/LibWstethUsdOracle.sol";
 import {LibUsdOracle} from "contracts/libraries/Oracle/LibUsdOracle.sol";
 import {LibAppStorage, Storage} from "contracts/libraries/LibAppStorage.sol";
 import {SignedSafeMath} from "@openzeppelin/contracts/math/SignedSafeMath.sol";
@@ -21,6 +25,7 @@ import {LibWellMinting} from "contracts/libraries/Minting/LibWellMinting.sol";
 import {LibEvaluate} from "contracts/libraries/LibEvaluate.sol";
 import {LibTokenSilo} from "contracts/libraries/Silo/LibTokenSilo.sol";
 import {LibSilo} from "contracts/libraries/Silo/LibSilo.sol";
+import {IWell, Call} from "contracts/interfaces/basin/IWell.sol";
 
 /**
  * @author Publius
@@ -285,7 +290,8 @@ contract MockSeasonFacet is SeasonFacet  {
         bool raining,
         bool rainRoots,
         bool aboveQ,
-        uint256 L2SRState
+        uint256 L2SRState,
+        address pump
     ) public {
         // L2SR
         // 3 = exs high, 1 = rea high, 2 = rea low, 3 = exs low
@@ -309,7 +315,11 @@ contract MockSeasonFacet is SeasonFacet  {
         if(l2srBeans > C.bean().totalSupply()) {
             C.bean().mint(address(this), l2srBeans - C.bean().totalSupply());
         }
-        IMockPump(C.BEANSTALK_PUMP).update(reserves, new bytes(0));
+        
+        {
+            Call memory pumpData = IWell(C.BEAN_ETH_WELL).pumps()[0];
+            IMockPump(pumpData.target).update(reserves, pumpData.data);
+        }
         s.twaReserves[C.BEAN_ETH_WELL].reserve0 = uint128(reserves[0]);
         s.twaReserves[C.BEAN_ETH_WELL].reserve1 = uint128(reserves[1]);
         s.usdTokenPrice[C.BEAN_ETH_WELL] = 0.001e18;
@@ -438,20 +448,39 @@ contract MockSeasonFacet is SeasonFacet  {
         return LibEthUsdOracle.getEthUsdPrice();
     }
 
-    function getEthUsdcPrice() external view returns (uint256) {
-        return LibUniswapOracle.getEthUsdcPrice(900);
-    }
-
-    function getEthUsdtPrice() external view returns (uint256) {
-        return LibUniswapOracle.getEthUsdtPrice(900);
+    function getEthUsdTwap(uint256 lookback) external view returns (uint256) {
+        return LibEthUsdOracle.getEthUsdPrice(lookback);
     }
 
     function getChainlinkEthUsdPrice() external view returns (uint256) {
-        return LibChainlinkOracle.getEthUsdPrice();
+        return LibChainlinkOracle.getPrice(
+            LibEthUsdOracle.ETH_USD_CHAINLINK_PRICE_AGGREGATOR,
+            LibChainlinkOracle.FOUR_HOUR_TIMEOUT
+        );
     }
 
     function getChainlinkTwapEthUsdPrice(uint256 lookback) external view returns (uint256) {
-        return LibChainlinkOracle.getEthUsdTwap(lookback);
+        return LibChainlinkOracle.getTwap(
+            LibEthUsdOracle.ETH_USD_CHAINLINK_PRICE_AGGREGATOR,
+            LibChainlinkOracle.FOUR_HOUR_TIMEOUT,
+            lookback
+        );
+    }
+
+    function getWstethUsdPrice() external view returns (uint256) {
+        return LibWstethUsdOracle.getWstethUsdPrice(0);
+    }
+
+    function getWstethUsdTwap(uint256 lookback) external view returns (uint256) {
+        return LibWstethUsdOracle.getWstethUsdPrice(lookback);
+    }
+
+    function getWstethEthPrice() external view returns (uint256) {
+        return LibWstethEthOracle.getWstethEthPrice(0);
+    }
+
+    function getWstethEthTwap(uint256 lookback) external view returns (uint256) {
+        return LibWstethEthOracle.getWstethEthPrice(lookback);
     }
 
     function setBeanToMaxLpGpPerBdvRatio(uint128 percent) external {

@@ -10,6 +10,11 @@ pragma experimental ABIEncoderV2;
  * @author Brean
  * @notice determines the liquidity weight. Used in the gauge system.
  */
+interface ILiquidityWeightFacet {
+    function maxWeight() external pure returns (uint256);
+}
+
+
 contract LiquidityWeightFacet {
     uint256 constant MAX_WEIGHT = 1e18;
 

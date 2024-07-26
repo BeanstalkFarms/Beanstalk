@@ -2,10 +2,10 @@ import { useMemo } from "react";
 import BeanstalkFarmsLogo from "src/assets/images/beanstalk-farms.png";
 import HalbornLogo from "src/assets/images/halborn-logo.png";
 import {
-  MULTI_FLOW_PUMP_ADDRESS,
-  CONSTANT_PRODUCT_2_ADDRESS,
   WELL_DOT_SOL_ADDRESS,
-  toAddressMap
+  toAddressMap,
+  MULTI_FLOW_PUMP_V_1PT1_ADDRESS,
+  CONSTANT_PRODUCT_2_V2_ADDRESS
 } from "src/utils/addresses";
 import BrendanTwitterPFP from "src/assets/images/brendan-twitter-pfp.png";
 import CyrfinLogo from "src/assets/images/cyrfin-logo.svg";
@@ -110,10 +110,10 @@ const WellDotSol: WellComponentInfo = {
 };
 
 const MultiFlowPump: WellComponentInfo = {
-  address: MULTI_FLOW_PUMP_ADDRESS,
+  address: MULTI_FLOW_PUMP_V_1PT1_ADDRESS,
   component: {
     name: "Multi Flow",
-    fullName: "Multi Flow Pump",
+    fullName: "Multi Flow Pump V1.1",
     summary: "An inter-block MEV manipulation resistant oracle implementation.",
     description: [
       "Comprehensive multi-block MEV manipulation-resistant oracle implementation which serves up Well pricing data with an EMA for instantaneous prices and a TWAP for weighted averages over time."
@@ -136,14 +136,14 @@ const MultiFlowPump: WellComponentInfo = {
     { label: "Audited by", value: basinAuditInfo }
   ],
   links: {
-    etherscan: `https://etherscan.io/address/${MULTI_FLOW_PUMP_ADDRESS}`,
+    etherscan: `https://etherscan.io/address/${MULTI_FLOW_PUMP_V_1PT1_ADDRESS}`,
     github: "https://github.com/BeanstalkFarms/Basin/blob/master/src/pumps/MultiFlowPump.sol",
     learnMore: "https://github.com/BeanstalkFarms/Basin/blob/master/src/pumps/MultiFlowPump.sol"
   }
 };
 
 const ConstantProduct2: WellComponentInfo = {
-  address: CONSTANT_PRODUCT_2_ADDRESS,
+  address: CONSTANT_PRODUCT_2_V2_ADDRESS,
   component: {
     name: "Constant Product 2",
     summary: "A standard x*y = k token pricing function for two tokens.",
@@ -162,7 +162,7 @@ const ConstantProduct2: WellComponentInfo = {
     { label: "Audited by", value: basinAuditInfo }
   ],
   links: {
-    etherscan: `https://etherscan.io/address/${CONSTANT_PRODUCT_2_ADDRESS}`,
+    etherscan: `https://etherscan.io/address/${CONSTANT_PRODUCT_2_V2_ADDRESS}`,
     github:
       "https://github.com/BeanstalkFarms/Basin/blob/master/src/functions/ConstantProduct2.sol",
     learnMore:

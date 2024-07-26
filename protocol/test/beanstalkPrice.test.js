@@ -2,16 +2,33 @@ const { expect } = require('chai');
 const { deploy } = require('../scripts/deploy.js')
 const { EXTERNAL } = require('./utils/balances.js')
 const { to18, to6, advanceTime } = require('./utils/helpers.js')
-const { BEAN, BEANSTALK, BEAN_3_CURVE, THREE_CURVE, THREE_POOL, WETH, STABLE_FACTORY, BEAN_ETH_WELL } = require('./utils/constants')
-const { takeSnapshot, revertToSnapshot } = require("./utils/snapshot");
-const { deployWell, setReserves, whitelistWell } = require('../utils/well.js');
-const { setEthUsdPrice, setEthUsdcPrice, setEthUsdtPrice } = require('../scripts/usdOracle.js');
+const { BEAN, BEANSTALK, BEAN_3_CURVE, THREE_CURVE, THREE_POOL, WETH, STABLE_FACTORY, BEAN_ETH_WELL, BEAN_WSTETH_WELL } = require('./utils/constants.js')
+const { takeSnapshot, revertToSnapshot } = require("./utils/snapshot.js");
+const { deployWell, setReserves, whitelistWell, impersonateBeanWstethWell } = require('../utils/well.js');
+const { setEthUsdChainlinkPrice, setWstethUsdPrice } = require('../utils/oracle.js');
 const { getBeanstalk } = require('../utils/contracts.js');
 const { impersonateBeanEthWell } = require('../utils/well.js')
 const fs = require('fs');
 
 let user, user2, owner;
 let userAddress, ownerAddress, user2Address;
+
+async function initWell(owner, well, season) {
+  await setReserves(
+    owner,
+    well,
+    [to6('1000000'), to18('1000')]
+  );
+
+  await setReserves(
+    owner,
+    well,
+    [to6('1000000'), to18('1000')]
+  );
+
+  await whitelistWell(well.address, '10000', to6('4'))
+  await season.captureWellE(well.address);
+}
 
 describe('BeanstalkPrice', function () {
   before(async function () {
@@ -24,8 +41,11 @@ describe('BeanstalkPrice', function () {
     this.beanstalk = await getBeanstalk(this.diamond.address);
     this.curve = await ethers.getContractAt('CurveFacet', this.diamond.address)
     await impersonateBeanEthWell()
-    this.well = await ethers.getContractAt("IWell", BEAN_ETH_WELL);
-    this.wellToken = await ethers.getContractAt("IERC20", this.well.address)
+    await impersonateBeanWstethWell()
+
+    this.beanEthWell = await ethers.getContractAt("IWell", BEAN_ETH_WELL);
+    this.beanWstethWell = await ethers.getContractAt("IWell", BEAN_WSTETH_WELL);
+    this.wellToken = await ethers.getContractAt("IERC20", this.beanEthWell.address)
     this.threeCurve = await ethers.getContractAt('MockToken', THREE_CURVE)
     this.threePool = await ethers.getContractAt('Mock3Curve', THREE_POOL)
     this.beanThreeCurve = await ethers.getContractAt('MockMeta3Curve', BEAN_3_CURVE);
@@ -68,27 +88,13 @@ describe('BeanstalkPrice', function () {
       EXTERNAL
     )
 
-    await setEthUsdPrice('999.998018')
-    await setEthUsdcPrice('1000')
-    await setEthUsdtPrice('1000')
-    
-    await setReserves(
-      owner,
-      this.well,
-      [to6('1000000'), to18('1000')]
-    );
+    await setEthUsdChainlinkPrice('1000')
 
-    await setReserves(
-      owner,
-      this.well,
-      [to6('1000000'), to18('1000')]
-    );
-      
-    await whitelistWell(this.well.address, '10000', to6('4'));
-    await this.season.captureWellE(this.well.address);
+    await initWell(owner, this.beanEthWell, this.season)
+    await initWell(owner, this.beanWstethWell, this.season)
 
     const BeanstalkPrice = await ethers.getContractFactory('BeanstalkPrice');
-    const _beanstalkPrice = await BeanstalkPrice.deploy();
+    const _beanstalkPrice = await BeanstalkPrice.deploy(this.diamond.address);
     await _beanstalkPrice.deployed();
     this.beanstalkPrice = await ethers.getContractAt('BeanstalkPrice', _beanstalkPrice.address);
 
@@ -122,7 +128,7 @@ describe('BeanstalkPrice', function () {
       )
       const p = await this.beanstalkPrice.price()
       const c = await this.beanstalkPrice.getCurve()
-      const w = await this.beanstalkPrice.getConstantProductWell(this.well.address)
+      const w = await this.beanstalkPrice.getConstantProductWell(this.beanEthWell.address)
 
       expect(p.price).to.equal('1004479');
       expect(p.liquidity).to.equal('4108727000000');
@@ -141,7 +147,7 @@ describe('BeanstalkPrice', function () {
       await advanceTime(1800)
       await setReserves(
         owner,
-        this.well,
+        this.beanEthWell,
         [to6('500000'), to18('1000')]
       );
       await advanceTime(1800)
@@ -152,7 +158,7 @@ describe('BeanstalkPrice', function () {
 
       const p = await this.beanstalkPrice.price()
       const c = await this.beanstalkPrice.getCurve()
-      const w = await this.beanstalkPrice.getConstantProductWell(this.well.address)
+      const w = await this.beanstalkPrice.getConstantProductWell(this.beanEthWell.address)
 
       expect(p.price).to.equal('1499997');
       expect(p.liquidity).to.equal('3999995000000');
@@ -179,7 +185,7 @@ describe('BeanstalkPrice', function () {
       await advanceTime(1800)
       await setReserves(
         owner,
-        this.well,
+        this.beanEthWell,
         [to6('500000'), to18('1000')]
       );
       await advanceTime(1800)
@@ -190,7 +196,7 @@ describe('BeanstalkPrice', function () {
 
       const p = await this.beanstalkPrice.price()
       const c = await this.beanstalkPrice.getCurve()
-      const w = await this.beanstalkPrice.getConstantProductWell(this.well.address)
+      const w = await this.beanstalkPrice.getConstantProductWell(this.beanEthWell.address)
 
       expect(p.price).to.equal('1491246');
       expect(p.liquidity).to.equal('4108725000000');
@@ -218,7 +224,7 @@ describe('BeanstalkPrice', function () {
       // ~500 beans need be to be bought to get back to peg
       const p = await this.beanstalkPrice.price()
       const c = await this.beanstalkPrice.getCurve()
-      const w = await this.beanstalkPrice.getConstantProductWell(this.well.address)
+      const w = await this.beanstalkPrice.getConstantProductWell(this.beanEthWell.address)
 
       expect(p.price).to.equal('995576');
       expect(p.liquidity).to.equal('4090478600000');
@@ -238,7 +244,7 @@ describe('BeanstalkPrice', function () {
       await advanceTime(1800)
       await setReserves(
         owner,
-        this.well,
+        this.beanEthWell,
         [to6('2000000'), to18('1000')]
       );
       await advanceTime(1800)
@@ -249,7 +255,7 @@ describe('BeanstalkPrice', function () {
 
       const p = await this.beanstalkPrice.price()
       const c = await this.beanstalkPrice.getCurve()
-      const w = await this.beanstalkPrice.getConstantProductWell(this.well.address)
+      const w = await this.beanstalkPrice.getConstantProductWell(this.beanEthWell.address)
 
       expect(p.price).to.equal('749999');
       expect(p.liquidity).to.equal('3999995000000');
@@ -276,7 +282,7 @@ describe('BeanstalkPrice', function () {
       await advanceTime(1800)
       await setReserves(
         owner,
-        this.well,
+        this.beanEthWell,
         [to6('2000000'), to18('1000')]
       );
       await advanceTime(1800)
@@ -287,7 +293,7 @@ describe('BeanstalkPrice', function () {
 
       const p = await this.beanstalkPrice.price()
       const c = await this.beanstalkPrice.getCurve()
-      const w = await this.beanstalkPrice.getConstantProductWell(this.well.address)
+      const w = await this.beanstalkPrice.getConstantProductWell(this.beanEthWell.address)
 
       expect(p.price).to.equal('751106');
       expect(p.liquidity).to.equal('4090476600000');
@@ -314,7 +320,7 @@ describe('BeanstalkPrice', function () {
       await advanceTime(1800)
       await setReserves(
         owner,
-        this.well,
+        this.beanEthWell,
         [to6('500000'), to18('1000')]
       );
       await advanceTime(1800)
@@ -325,7 +331,7 @@ describe('BeanstalkPrice', function () {
 
       const p = await this.beanstalkPrice.price()
       const c = await this.beanstalkPrice.getCurve()
-      const w = await this.beanstalkPrice.getConstantProductWell(this.well.address)
+      const w = await this.beanstalkPrice.getConstantProductWell(this.beanEthWell.address)
 
       expect(p.price).to.equal('1484514');
       expect(p.liquidity).to.equal('4090476600000');
@@ -352,7 +358,7 @@ describe('BeanstalkPrice', function () {
       await advanceTime(1800)
       await setReserves(
         owner,
-        this.well,
+        this.beanEthWell,
         [to6('2000000'), to18('1000')]
       );
       await advanceTime(1800)
@@ -363,7 +369,7 @@ describe('BeanstalkPrice', function () {
 
       const p = await this.beanstalkPrice.price()
       const c = await this.beanstalkPrice.getCurve()
-      const w = await this.beanstalkPrice.getConstantProductWell(this.well.address)
+      const w = await this.beanstalkPrice.getConstantProductWell(this.beanEthWell.address)
 
       expect(p.price).to.equal('761095');
       expect(p.liquidity).to.equal('4108725000000');

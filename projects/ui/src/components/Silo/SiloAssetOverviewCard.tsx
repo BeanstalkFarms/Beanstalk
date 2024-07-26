@@ -2,7 +2,12 @@ import React from 'react';
 import CallMadeIcon from '@mui/icons-material/CallMade';
 import { Box, Link, Stack, Typography } from '@mui/material';
 import { FC } from '~/types';
-import { SEEDS, STALK, BEAN_ETH_WELL_LP } from '~/constants/tokens';
+import {
+  SEEDS,
+  STALK,
+  BEAN_ETH_WELL_LP,
+  BEAN_WSTETH_WELL_LP,
+} from '~/constants/tokens';
 import Token, { ERC20Token } from '~/classes/Token';
 import Row from '~/components/Common/Row';
 import {
@@ -40,12 +45,13 @@ const DepositRewards: FC<{ token: ERC20Token }> = ({ token }) => (
       </Row>
       {/* This vAPY chip is only shown on larger screens */}
       <Row sx={{ display: { xs: 'none', sm: 'block' } }}>
-        {token.symbol === 'BEAN3CRV' ? null : 
+        {token.symbol === 'BEAN3CRV' ? null : (
           <SiloAssetApyChip
             token={token as Token}
             metric="bean"
             variant="labeled"
-          />}
+          />
+        )}
       </Row>
     </Row>
   </Box>
@@ -56,7 +62,8 @@ const SiloAssetOverviewCard: FC<{ token: ERC20Token }> = ({ token }) => {
   const whitelist = useWhitelist();
 
   const isRipeAndIsLP = token.isLP && !token.isUnripe;
-  const isWell = token.equals(BEAN_ETH_WELL_LP[1]);
+  const isWell =
+    token.equals(BEAN_ETH_WELL_LP[1]) || token.equals(BEAN_WSTETH_WELL_LP[1]);
   const tokenTVD = tvdByToken[token.address];
   const tokenPctTVD = tokenTVD.div(total).times(100);
 
@@ -119,12 +126,13 @@ const SiloAssetOverviewCard: FC<{ token: ERC20Token }> = ({ token }) => {
             justifyContent="center"
             sx={{ display: { xs: 'flex', sm: 'none' } }}
           >
-            {token.symbol === 'BEAN3CRV' ? null : 
+            {token.symbol === 'BEAN3CRV' ? null : (
               <SiloAssetApyChip
                 token={token as Token}
                 metric="bean"
                 variant="labeled"
-              />}
+              />
+            )}
           </Row>
           {/* Card Carousel */}
           {token.symbol === 'BEAN3CRV' ? null : <SiloCarousel token={token} />}

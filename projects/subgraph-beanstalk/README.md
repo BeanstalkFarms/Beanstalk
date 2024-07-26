@@ -11,20 +11,19 @@
 
 ### Subgraphs
 
-All currently used subgraphs live on the graph protocol's centralized host.
+All currently used subgraphs live on a centralized host controlled by beanstalk farms.
 
 - [Testing Subgraph](https://graph.node.bean.money/subgraphs/name/beanstalk-testing)
   - Used during local development for debugging and rapid iteration.
 - [Dev Subgraph](https://graph.node.bean.money/subgraphs/name/beanstalk-dev)
   - Used for testing fixes or improvements made in the testing subgraph.
-- [Canonical Subgraph](https://thegraph.com/explorer/subgraphs/R9rnzRuiyDybfDsZfoM7eA9w8WuHtZKbroGrgWwDw1d?view=Overview)
-  - Decentralized deployment to the Graph network.
+- [Canonical Subgraph](https://graph.node.bean.money/subgraphs/name/beanstalk)
   - Stable deployment and current source of truth for UI and other production processes.
-  - The `master` branch is updated when a new deployment is ready to be indexed.
-  - All changes pushed to the canonical subgraph are prototyped on the testing subgraph, tested on the dev subgraph, then made canonical once verified.
 
 ### Testing
 
 To test with Docker, the first time you will need to run `yarn run graph test -d`. This will build the `matchstick` Docker image. Then, you can use the `yarn testd` script to run all tests. Alternatively, use `yarn testd-named <TestName1> ...` to run specific tests. I have found running in Docker to be preferred since otherwise there can be issues with console output and some test cases fail silently.
+
+### Deploying
 
 When using graph cli commands, you will often need to specify which manifest file should be used. This is necessary to support multiple chains in the same codebase. The commands which need it will be evident - as they will fail when unable to find a `subgraph.yaml` file. In those commands, include `./manifest/${chain}.yaml` as the final argument to the command. See scripts inside `package.json` for examples.
