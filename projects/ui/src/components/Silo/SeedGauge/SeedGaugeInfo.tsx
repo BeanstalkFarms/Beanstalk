@@ -2,7 +2,7 @@ import { Box, Card, Grid, Stack, Typography } from '@mui/material';
 import React, { useMemo, useState } from 'react';
 import DropdownIcon from '~/components/Common/DropdownIcon';
 import useSeedGauge, {
-  SiloTokenSettingMap,
+  TokenSeedGaugeInfo,
 } from '~/hooks/beanstalk/useSeedGauge';
 import { displayFullBN } from '~/util';
 import { ZERO_BN } from '~/constants';
@@ -21,6 +21,7 @@ interface ISeedGaugeInfoCardProps extends ISeedGaugeCardInfo {
   active: boolean;
   setActive: () => void;
 }
+
 const SeedGaugeInfoCard = ({
   title,
   subtitle,
@@ -108,23 +109,23 @@ const SeedGaugeSelect = ({
 
     type TokenWithGP = {
       token: Token;
-    } & SiloTokenSettingMap[string];
+    } & TokenSeedGaugeInfo;
 
     const tokensWithGP: TokenWithGP[] = [];
 
-    if (data?.tokenSettings) {
+    if (data?.gaugeData) {
       // filter out tokens with 0 optimalPercentDepositedBdv
       for (const token of [...sdk.tokens.siloWhitelist]) {
-        const setting = data.tokenSettings[token.address];
-        if (setting?.optimalPercentDepositedBdv?.gt(0)) {
+        const setting = data.gaugeData[token.address];
+        if (setting?.optimalPctDepositedBdv?.gt(0)) {
           tokensWithGP.push({ token: token, ...setting });
         }
       }
       // sort by optimalPercentDepositedBdv
       tokensWithGP.sort(
         (a, b) =>
-          b.optimalPercentDepositedBdv
-            ?.minus(a.optimalPercentDepositedBdv || ZERO_BN)
+          b.optimalPctDepositedBdv
+            ?.minus(a.optimalPctDepositedBdv || ZERO_BN)
             .toNumber() || 0
       );
     }
@@ -136,7 +137,7 @@ const SeedGaugeSelect = ({
           {tokensWithGP.length
             ? tokensWithGP.map((datum, i) => {
                 const symbol = datum.token.symbol;
-                const pct = datum.optimalPercentDepositedBdv;
+                const pct = datum.optimalPctDepositedBdv;
 
                 return (
                   <React.Fragment key={`gp-text-${i}`}>
