@@ -12,15 +12,17 @@ const Bean2MaxLPRatio = ({ data }: IBean2MaxLPRatio) => {
   const sdk = useSdk();
 
   const maxLP = useMemo(() => {
-    if (!data?.tokenSettings) return;
-    const arr = Object.entries(data.tokenSettings);
+    if (!data?.gaugeData) return;
+    const arr = Object.entries(data.gaugeData);
     const sorted = [...arr].sort(([_ak, a], [_bk, b]) => {
-      const diff = Number(b.gaugePoints.minus(a.gaugePoints).toString());
+      const diff = Number(
+        b.gaugePointsPerBdv.minus(a.gaugePointsPerBdv).toString()
+      );
       return diff;
     });
 
     return sdk.tokens.findByAddress(sorted[0][0] || '');
-  }, [data?.tokenSettings, sdk]);
+  }, [data?.gaugeData, sdk]);
 
   return (
     <Box>

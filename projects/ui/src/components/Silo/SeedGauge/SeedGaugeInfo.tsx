@@ -13,6 +13,9 @@ import SeasonsToCatchUpInfo from './SeasonsToCatchUpInfo';
 import SeedGaugeTable from './SeedGaugeTable';
 import Bean2MaxLPRatio from './Bean2MaxLPRatio';
 
+const TARGET_SEASONS_TO_CATCH_UP = 4320;
+const MONTHS_TO_CATCH_UP = 6;
+
 interface ISeedGaugeCardInfo {
   title: string;
   subtitle: string | JSX.Element;
@@ -97,7 +100,9 @@ const SeedGaugeSelect = ({
     arr.push({
       title: 'Target Seasons to Catch Up',
       subtitle: (
-        <Typography color="text.primary">4320 Seasons, ~6 months</Typography>
+        <Typography color="text.primary">
+          {TARGET_SEASONS_TO_CATCH_UP} Seasons, ~{MONTHS_TO_CATCH_UP} months
+        </Typography>
       ),
     });
 
@@ -106,7 +111,10 @@ const SeedGaugeSelect = ({
       subtitle: (
         <Typography color="text.secondary">
           <Typography component="span" color="text.primary">
-            {displayFullBN(data?.maxBean2LPRatio || ZERO_BN, 0)}%
+            {data?.maxBean2LPRatio
+              ? displayFullBN(data?.maxBean2LPRatio || ZERO_BN, 0)
+              : '--'}
+            %
           </Typography>{' '}
           Seed reward for Beans vs. the Max LP token
         </Typography>
