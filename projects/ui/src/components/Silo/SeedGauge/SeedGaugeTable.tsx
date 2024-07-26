@@ -15,10 +15,10 @@ import useToggle from '~/hooks/display/useToggle';
 import { ERC20Token } from '@beanstalk/sdk';
 import BigNumber from 'bignumber.js';
 import useSdk from '~/hooks/sdk';
-import { ZERO_BN } from '~/constants';
 import { displayFullBN } from '~/util';
-import useSeedGauge from '~/hooks/beanstalk/useSeedGauge';
-import { useAppSelector } from '~/state';
+import useSeedGauge, {
+  TokenSeedGaugeInfo,
+} from '~/hooks/beanstalk/useSeedGauge';
 import {
   IconSize,
   BeanstalkPalette as Palette,
@@ -31,14 +31,14 @@ type GridConfigProps = Pick<GridProps, Breakpoint>;
 
 type ISeedGaugeRow = {
   token: ERC20Token;
-  totalGrownStalkPerBDV: BigNumber;
-  gaugePoints: BigNumber;
-  gaugePointsPerBDV: BigNumber;
-  optimalBDVPct: BigNumber;
-  currentBDVPct: BigNumber;
-  totalBDV: BigNumber;
-  deltaStalkPerSeason: BigNumber | undefined;
-};
+  // totalGrownStalkPerBDV: BigNumber;
+  // gaugePoints: BigNumber;
+  // gaugePointsPerBDV: BigNumber;
+  // optimalBDVPct: BigNumber;
+  // currentBDVPct: BigNumber;
+  // totalBDV: BigNumber;
+  // deltaStalkPerSeason: BigNumber | undefined;
+} & TokenSeedGaugeInfo;
 
 type ISeedGaugeColumn = {
   key: string;
@@ -128,14 +128,14 @@ const BDVPctColumns: ISeedGaugeColumn[] = [
   {
     key: 'optimalBDVPct',
     header: 'Optimal BDV %',
-    render: ({ optimalBDVPct, gaugePoints }) => {
+    render: ({ optimalPctDepositedBdv, gaugePoints }) => {
       if (!gaugePoints || gaugePoints.eq(0)) {
         return <Typography color="text.tertiary">N/A</Typography>;
       }
       return (
         <Chip
           variant="filled"
-          label={`${displayBNValue(optimalBDVPct, '0')}%`}
+          label={`${displayBNValue(optimalPctDepositedBdv, '0')}%`}
           sx={chipSx}
         />
       );
@@ -144,16 +144,20 @@ const BDVPctColumns: ISeedGaugeColumn[] = [
   {
     key: 'currentLPBDVPct',
     header: 'Current LP BDV %',
-    render: ({ optimalBDVPct, currentBDVPct, gaugePoints }) => {
+    render: ({
+      optimalPctDepositedBdv,
+      currentPctDepositedBdv,
+      gaugePoints,
+    }) => {
       if (!gaugePoints || gaugePoints.eq(0)) {
         return <Typography color="text.tertiary">N/A</Typography>;
       }
-      const isOptimal = currentBDVPct.eq(optimalBDVPct);
+      const isOptimal = currentPctDepositedBdv.eq(optimalPctDepositedBdv);
 
       return (
         <Chip
           variant="filled"
-          label={`${displayBNValue(currentBDVPct, '0')}%`}
+          label={`${displayBNValue(currentPctDepositedBdv, '0')}%`}
           sx={{
             ...chipSx,
             color: isOptimal ? Palette.logoGreen : Palette.theme.winter.red,
@@ -172,13 +176,13 @@ const advancedViewColumns: ISeedGaugeColumn[] = [
   {
     key: 'totalBDV',
     header: 'Total BDV',
-    render: ({ totalBDV }) => (
+    render: ({ totalBdv }) => (
       <Stack direction="row" alignItems="center" gap={0.25}>
         <img src={logo} style={{ width: 'auto', height: '.85rem' }} alt="" />
         <Typography
-          color={isNonZero(totalBDV) ? 'text.primary' : 'text.tertiary'}
+          color={isNonZero(totalBdv) ? 'text.primary' : 'text.tertiary'}
         >
-          {displayBNValue(totalBDV)}
+          {displayBNValue(totalBdv)}
         </Typography>
       </Stack>
     ),
@@ -197,11 +201,11 @@ const advancedViewColumns: ISeedGaugeColumn[] = [
   {
     key: 'gaugePointsPerBDV',
     header: 'Gauge Points per BDV',
-    render: ({ gaugePointsPerBDV }) => (
+    render: ({ gaugePointsPerBdv }) => (
       <Typography
-        color={isNonZero(gaugePointsPerBDV) ? 'text.primary' : 'text.tertiary'}
+        color={isNonZero(gaugePointsPerBdv) ? 'text.primary' : 'text.tertiary'}
       >
-        {displayBNValue(gaugePointsPerBDV)}
+        {displayBNValue(gaugePointsPerBdv)}
       </Typography>
     ),
   },
@@ -213,8 +217,6 @@ const useTableConfig = (
   gaugeData: ReturnType<typeof useSeedGauge>['data']
 ) => {
   const sdk = useSdk();
-  const siloBalances = useAppSelector((s) => s._beanstalk.silo.balances);
-
   const rowData = useMemo(() => {
     const baseTokens = [sdk.tokens.BEAN_ETH_WELL_LP];
     const tokens = advancedView
@@ -222,45 +224,40 @@ const useTableConfig = (
           sdk.tokens.BEAN,
           ...baseTokens,
           sdk.tokens.UNRIPE_BEAN,
-          sdk.tokens.UNRIPE_BEAN_WETH,
+          sdk.tokens.UNRIPE_BEAN_WSTETH,
         ]
       : baseTokens;
 
-    const mappedData: ISeedGaugeRow[] = tokens.map((token) => {
-      const tokenSettings = gaugeData?.tokenSettings[token.address];
+    const mappedData: ISeedGaugeRow[] = tokens.reduce<ISeedGaugeRow[]>(
+      (prev, token) => {
+        const gaugeInfo = gaugeData?.gaugeData[token.address];
 
-      const siloBal = siloBalances[token.address];
+        if (gaugeInfo) {
+          prev.push({
+            token,
+            ...gaugeInfo,
+          });
+        }
 
-      const rowSeedData: ISeedGaugeRow = {
-        token: token,
-        totalBDV: (siloBal?.bdvPerToken || ZERO_BN).times(
-          siloBal?.deposited.amount || ZERO_BN
-        ),
-        totalGrownStalkPerBDV: tokenSettings?.stalkIssuedPerBdv || ZERO_BN,
-        gaugePoints: tokenSettings?.gaugePoints || ZERO_BN,
-        gaugePointsPerBDV: tokenSettings?.gaugePointsPerBdv || ZERO_BN,
-        optimalBDVPct: tokenSettings?.optimalPercentDepositedBdv || ZERO_BN,
-        currentBDVPct: tokenSettings?.currentPercentDepositedBdv || ZERO_BN,
-        deltaStalkPerSeason: tokenSettings?.deltaStalkEarnedPerSeason,
-      };
-
-      return rowSeedData;
-    });
+        return prev;
+      },
+      []
+    );
 
     return mappedData;
-  }, [sdk, siloBalances, advancedView, gaugeData?.tokenSettings]);
+  }, [sdk, advancedView, gaugeData?.gaugeData]);
 
   return rowData;
 };
 
 const ExpectedSeedRewardDirection = (row: ISeedGaugeRow) => {
-  const optimal = row.optimalBDVPct?.eq(row.currentBDVPct);
+  const optimal = row.optimalPctDepositedBdv?.eq(row.currentPctDepositedBdv);
 
   if (!row.gaugePoints || row.gaugePoints.lte(0) || optimal) {
     return null;
   }
 
-  const isBelow = row.currentBDVPct?.lt(row.optimalBDVPct);
+  const isBelow = row.currentPctDepositedBdv?.lt(row.optimalPctDepositedBdv);
 
   const direction = isBelow ? 'increase' : 'decrease';
   const Arrow = isBelow ? ArrowUpward : ArrowDownward;
@@ -384,12 +381,12 @@ const SeedGaugeTable = ({
               value={isAdvanced}
               onChange={() => (isAdvanced ? hide : show)()}
               inputProps={{ 'aria-label': 'controlled' }}
-              sx={({ breakpoints }) => ({
-                display: { md: 'none' },
-                // [breakpoints.down('md')]: {
-                //   display: 'none',
-                // },
-              })}
+              sx={{
+                display: {
+                  md: 'none',
+                  lg: 'block',
+                },
+              }}
             />
           </Stack>
 
