@@ -122,7 +122,7 @@ export function useChartSetupData() {
       sdk.tokens.BEAN_CRV3_LP,
       sdk.tokens.BEAN_ETH_WELL_LP,
       sdk.tokens.UNRIPE_BEAN,
-      sdk.tokens.UNRIPE_BEAN_WETH,
+      sdk.tokens.UNRIPE_BEAN_WSTETH,
     ];
 
     const lpTokensToChart = [

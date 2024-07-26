@@ -322,7 +322,7 @@
   },
   {
     "inputs": [],
-    "name": "getLockedBeansUnderlyingUnripeBeanEth",
+    "name": "getLockedBeansUnderlyingUnripeLP",
     "outputs": [
       {
         "internalType": "uint256",
@@ -619,6 +619,30 @@
   {
     "inputs": [
       {
+        "internalType": "uint256",
+        "name": "tokenAmountIn",
+        "type": "uint256"
+      },
+      {
+        "internalType": "address",
+        "name": "barnRaiseToken",
+        "type": "address"
+      }
+    ],
+    "name": "_getMintFertilizerOut",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "fertilizerAmountOut",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
         "internalType": "address[]",
         "name": "accounts",
         "type": "address[]"
@@ -752,6 +776,19 @@
   {
     "inputs": [
       {
+        "internalType": "address",
+        "name": "well",
+        "type": "address"
+      }
+    ],
+    "name": "beginBarnRaiseMigration",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
         "internalType": "uint256[]",
         "name": "ids",
         "type": "uint256[]"
@@ -775,6 +812,32 @@
         "internalType": "uint256",
         "name": "",
         "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "getBarnRaiseToken",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "getBarnRaiseWell",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
       }
     ],
     "stateMutability": "view",
@@ -899,7 +962,7 @@
     "inputs": [
       {
         "internalType": "uint256",
-        "name": "wethAmountIn",
+        "name": "tokenAmountIn",
         "type": "uint256"
       }
     ],
@@ -950,7 +1013,7 @@
     "inputs": [
       {
         "internalType": "uint256",
-        "name": "wethAmountIn",
+        "name": "tokenAmountIn",
         "type": "uint256"
       },
       {
@@ -962,11 +1025,6 @@
         "internalType": "uint256",
         "name": "minLPTokensOut",
         "type": "uint256"
-      },
-      {
-        "internalType": "enum LibTransfer.From",
-        "name": "mode",
-        "type": "uint8"
       }
     ],
     "name": "mintFertilizer",
@@ -7407,6 +7465,25 @@
     "type": "event"
   },
   {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "well",
+        "type": "address"
+      }
+    ],
+    "name": "check",
+    "outputs": [
+      {
+        "internalType": "int256",
+        "name": "deltaB",
+        "type": "int256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
     "inputs": [],
     "name": "maxWeight",
     "outputs": [
@@ -8009,6 +8086,11 @@
             "internalType": "uint16",
             "name": "stemScaleSeason",
             "type": "uint16"
+          },
+          {
+            "internalType": "uint32",
+            "name": "beanEthStartMintingSeason",
+            "type": "uint32"
           },
           {
             "internalType": "uint256",

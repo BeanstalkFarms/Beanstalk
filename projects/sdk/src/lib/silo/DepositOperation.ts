@@ -38,7 +38,12 @@ export class DepositOperation {
   buildWorkflow() {
     this.route = this.router.getRoute(this.inputToken.symbol, `${this.targetToken.symbol}:SILO`);
 
-    if (this.inputToken.symbol !== "BEANETH" && this.targetToken.symbol === "BEANETH") {
+    const isInputWhitelistedLP = DepositOperation.sdk.tokens.getIsWhitelistedWellLPToken(this.inputToken);
+    const isTargetWhitelistedLP = DepositOperation.sdk.tokens.getIsWhitelistedWellLPToken(this.targetToken);
+
+    // if the input token is NOT a whitelisted LP token like BEAN_ETH_WELL_LP, we need to use the advanced farm workflow
+    // so that we can utilize pipeline to swap to the target token
+    if (!isInputWhitelistedLP && isTargetWhitelistedLP) {
       this.workflow = DepositOperation.sdk.farm.createAdvancedFarm(`Deposit`);
     } else {
       this.workflow = DepositOperation.sdk.farm.create(`Deposit`);

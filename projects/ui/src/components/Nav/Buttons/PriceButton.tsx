@@ -35,6 +35,7 @@ import FolderMenu from '../FolderMenu';
 const poolLinks: { [key: string]: string } = {
   '0xc9c32cd16bf7efb85ff14e0c8603cc90f6f2ee49': CURVE_LINK,
   '0xbea0e11282e2bb5893bece110cf199501e872bad': `${BASIN_WELL_LINK}0xbea0e11282e2bb5893bece110cf199501e872bad`,
+  '0xbea0000113b0d182f4064c86b71c315389e4715d': `${BASIN_WELL_LINK}0xbea0000113b0d182f4064c86b71c315389e4715d`,
 };
 
 const PriceButton: FC<ButtonProps> = ({ ...props }) => {

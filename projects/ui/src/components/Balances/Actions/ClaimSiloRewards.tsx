@@ -18,20 +18,20 @@ import seedIcon from '~/img/beanstalk/seed-icon-winter.svg';
 
 import useRevitalized from '~/hooks/farmer/useRevitalized';
 import { AppState } from '~/state';
-import RewardItem from '../../Silo/RewardItem';
 import useFarmerBalancesBreakdown from '~/hooks/farmer/useFarmerBalancesBreakdown';
 import DropdownIcon from '~/components/Common/DropdownIcon';
 import useToggle from '~/hooks/display/useToggle';
 import useGetChainToken from '~/hooks/chain/useGetChainToken';
 import useFarmerSiloBalances from '~/hooks/farmer/useFarmerSiloBalances';
-import RewardsForm, { ClaimRewardsFormParams } from '../../Silo/RewardsForm';
 import { ClaimRewardsAction } from '~/util';
-import { UNRIPE_BEAN, UNRIPE_BEAN_WETH } from '~/constants/tokens';
+import { UNRIPE_BEAN, UNRIPE_BEAN_WSTETH } from '~/constants/tokens';
+import { hoverMap } from '~/constants/silo';
+import { ZERO_BN } from '~/constants';
+import RewardsForm, { ClaimRewardsFormParams } from '../../Silo/RewardsForm';
 import DescriptionButton from '../../Common/DescriptionButton';
 import GasTag from '../../Common/GasTag';
-import { hoverMap } from '~/constants/silo';
 import MountedAccordion from '../../Common/Accordion/MountedAccordion';
-import { ZERO_BN } from '~/constants';
+import RewardItem from '../../Silo/RewardItem';
 
 const options = [
   {
@@ -93,10 +93,10 @@ const ClaimRewardsContent: React.FC<
 
   /// Calculate Unripe Silo Balance
   const urBean = getChainToken(UNRIPE_BEAN);
-  const urBeanWeth = getChainToken(UNRIPE_BEAN_WETH);
+  const urBeanWstETH = getChainToken(UNRIPE_BEAN_WSTETH);
   const unripeDepositedBalance = balances[
     urBean.address
-  ]?.deposited.amount.plus(balances[urBeanWeth.address]?.deposited.amount);
+  ]?.deposited.amount.plus(balances[urBeanWstETH.address]?.deposited.amount);
 
   /// Handlers
   const onMouseOver = useCallback(
@@ -214,8 +214,8 @@ const ClaimRewardsContent: React.FC<
         {!open
           ? 'Claim Rewards'
           : selectedAction === undefined
-          ? 'Close'
-          : `${options[selectedAction].title}`}
+            ? 'Close'
+            : `${options[selectedAction].title}`}
       </LoadingButton>
     </Stack>
   );
