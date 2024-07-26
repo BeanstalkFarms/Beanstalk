@@ -7,7 +7,7 @@ import { AddressMap } from "src/types";
 export const BEANETH_ADDRESS = "0xbea0e11282e2bb5893bece110cf199501e872bad";
 
 /// Pump Addresses
-export const MULTI_FLOW_PUMP_ADDRESS = "0xBA51AaaAa95bA1d5efB3cB1A3f50a09165315A17";
+export const MULTI_FLOW_PUMP_ADDRESS = "0xBA510f10E3095B83a0F33aa9ad2544E22570a87C".toLowerCase();
 
 /// Multi Flow Pump V1.1
 export const MULTI_FLOW_PUMP_V_1PT1_ADDRESS = "0xBA51AaaAa95bA1d5efB3cB1A3f50a09165315A17".toLowerCase();
