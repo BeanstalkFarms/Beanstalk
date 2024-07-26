@@ -8,6 +8,7 @@ import { displayFullBN } from '~/util';
 import { ZERO_BN } from '~/constants';
 import useSdk from '~/hooks/sdk';
 import { Token } from '@beanstalk/sdk';
+import BeanProgressIcon from '~/components/Common/BeanProgressIcon';
 import SeasonsToCatchUpInfo from './SeasonsToCatchUpInfo';
 import SeedGaugeTable from './SeedGaugeTable';
 import Bean2MaxLPRatio from './Bean2MaxLPRatio';
@@ -19,6 +20,7 @@ interface ISeedGaugeCardInfo {
 
 interface ISeedGaugeInfoCardProps extends ISeedGaugeCardInfo {
   active: boolean;
+  loading?: boolean;
   setActive: () => void;
 }
 
@@ -26,10 +28,11 @@ const SeedGaugeInfoCard = ({
   title,
   subtitle,
   active,
+  loading,
   setActive,
 }: ISeedGaugeInfoCardProps) => (
   <Card
-    onClick={setActive}
+    onClick={!loading ? setActive : () => {}}
     sx={({ breakpoints }) => ({
       display: 'flex',
       flexDirection: 'column',
@@ -61,16 +64,19 @@ const SeedGaugeInfoCard = ({
           subtitle
         )}
       </Stack>
-
       <Box alignSelf="center">
-        <DropdownIcon open={active} sx={{ fontSize: '1.25rem' }} />
+        {loading ? (
+          <BeanProgressIcon size={10} enabled variant="indeterminate" />
+        ) : (
+          <DropdownIcon open={active} sx={{ fontSize: '1.25rem' }} />
+        )}
       </Box>
     </Stack>
   </Card>
 );
 
 const SeedGaugeSelect = ({
-  gaugeQuery: { data },
+  gaugeQuery: { data, isLoading },
   activeIndex,
   setActiveIndex,
 }: {
@@ -80,7 +86,7 @@ const SeedGaugeSelect = ({
 }) => {
   const sdk = useSdk();
 
-  const hastSetActiveIndex = (index: number) => {
+  const handleSetActiveIndex = (index: number) => {
     const newIndex = activeIndex === index ? -1 : index;
     setActiveIndex(newIndex);
   };
@@ -162,7 +168,8 @@ const SeedGaugeSelect = ({
         <Grid item xs={12} md={4} key={`sgi-${i}`}>
           <SeedGaugeInfoCard
             active={activeIndex === i}
-            setActive={() => hastSetActiveIndex(i)}
+            setActive={() => handleSetActiveIndex(i)}
+            loading={isLoading}
             {...info}
           />
         </Grid>

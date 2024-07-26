@@ -2,7 +2,7 @@ import React, { useMemo } from 'react';
 import {
   Box,
   Breakpoint,
-  Button,
+  Card,
   Chip,
   Grid,
   GridProps,
@@ -31,13 +31,6 @@ type GridConfigProps = Pick<GridProps, Breakpoint>;
 
 type ISeedGaugeRow = {
   token: ERC20Token;
-  // totalGrownStalkPerBDV: BigNumber;
-  // gaugePoints: BigNumber;
-  // gaugePointsPerBDV: BigNumber;
-  // optimalBDVPct: BigNumber;
-  // currentBDVPct: BigNumber;
-  // totalBDV: BigNumber;
-  // deltaStalkPerSeason: BigNumber | undefined;
 } & TokenSeedGaugeInfo;
 
 type ISeedGaugeColumn = {
@@ -60,7 +53,7 @@ const GridConfig: Record<
 > = {
   token: {
     advanced: { xs: 4, lg: 2 },
-    basic: { xs: 2.5, sm: 6 },
+    basic: { xs: 2.5, sm: 5 },
   },
   totalBDV: {
     advanced: { lg: 2 },
@@ -80,7 +73,7 @@ const GridConfig: Record<
   },
   currentLPBDVPct: {
     advanced: { xs: 4, lg: 2 },
-    basic: { xs: 4.5, sm: 3 },
+    basic: { xs: 4.5, sm: 4 },
   },
 };
 
@@ -201,13 +194,14 @@ const advancedViewColumns: ISeedGaugeColumn[] = [
   {
     key: 'gaugePointsPerBDV',
     header: 'Gauge Points per BDV',
-    render: ({ gaugePointsPerBdv }) => (
-      <Typography
-        color={isNonZero(gaugePointsPerBdv) ? 'text.primary' : 'text.tertiary'}
-      >
-        {displayBNValue(gaugePointsPerBdv)}
-      </Typography>
-    ),
+    render: ({ gaugePointsPerBdv }) => {
+      const isValidValue = isNonZero(gaugePointsPerBdv);
+      return (
+        <Typography color={isValidValue ? 'text.primary' : 'text.tertiary'}>
+          {isValidValue ? gaugePointsPerBdv.toExponential(2, 2) : 'N/A'}
+        </Typography>
+      );
+    },
   },
   ...BDVPctColumns,
 ];
@@ -218,7 +212,10 @@ const useTableConfig = (
 ) => {
   const sdk = useSdk();
   const rowData = useMemo(() => {
-    const baseTokens = [sdk.tokens.BEAN_ETH_WELL_LP];
+    const baseTokens = [
+      sdk.tokens.BEAN_ETH_WELL_LP,
+      sdk.tokens.BEAN_WSTETH_WELL_LP,
+    ];
     const tokens = advancedView
       ? [
           sdk.tokens.BEAN,
@@ -228,21 +225,15 @@ const useTableConfig = (
         ]
       : baseTokens;
 
-    const mappedData: ISeedGaugeRow[] = tokens.reduce<ISeedGaugeRow[]>(
-      (prev, token) => {
-        const gaugeInfo = gaugeData?.gaugeData[token.address];
+    const mappedData = tokens.reduce<ISeedGaugeRow[]>((prev, token) => {
+      const gaugeInfo = gaugeData?.gaugeData?.[token.address];
 
-        if (gaugeInfo) {
-          prev.push({
-            token,
-            ...gaugeInfo,
-          });
-        }
+      if (gaugeInfo) {
+        return [...prev, { token, ...gaugeInfo }];
+      }
 
-        return prev;
-      },
-      []
-    );
+      return prev;
+    }, []);
 
     return mappedData;
   }, [sdk, advancedView, gaugeData?.gaugeData]);
@@ -266,9 +257,9 @@ const ExpectedSeedRewardDirection = (row: ISeedGaugeRow) => {
       direction="row"
       justifyContent="flex-end"
       alignItems="center"
-      pr={{ xs: 2, md: 4 }}
+      pr={2}
       gap={0.25}
-      sx={{ display: { sm: 'none' } }}
+      display={{ xs: 'none', md: 'flex' }}
     >
       <Arrow sx={{ fontSize: '0.9rem', color: 'text.secondary' }} />
       <Typography color="text.secondary">
@@ -320,12 +311,13 @@ const GridColumn = ({
 
 const ARROW_WIDTH = '20px';
 
-const buttonSx = {
+const RowSx = {
+  display: 'flex',
   py: 1.5,
   px: 2,
   borderWidth: '0.5px',
   borderColor: 'divider',
-  background: 'light.main',
+  background: 'white',
   '&:hover': {
     borderColor: 'primary.main',
     backgroundColor: 'primary.light',
@@ -381,12 +373,11 @@ const SeedGaugeTable = ({
               value={isAdvanced}
               onChange={() => (isAdvanced ? hide : show)()}
               inputProps={{ 'aria-label': 'controlled' }}
-              sx={{
-                display: {
-                  md: 'none',
-                  lg: 'block',
+              sx={(t) => ({
+                [t.breakpoints.down('lg')]: {
+                  display: 'none',
                 },
-              }}
+              })}
             />
           </Stack>
 
@@ -419,34 +410,34 @@ const SeedGaugeTable = ({
       {/* Rows */}
       <Stack p={1} gap={1}>
         {rows.map((row, i) => (
-          <Box key={`seed-gauge-row-${i}-${row.token.symbol}`}>
-            <Button
-              component={RouterLink}
-              to={`/silo/${row.token.address}`}
-              fullWidth
-              variant="outlined"
-              color="primary"
-              size="large"
-              sx={buttonSx}
-            >
-              <Stack width="100%">
-                <Grid container>
-                  {cols.map((column, j) => (
-                    <GridColumn
-                      key={`sgr-${i}-${row.token.symbol}-${j}`}
-                      column={column}
-                      isAdvanced={isAdvanced}
-                    >
-                      <Stack direction="row" alignItems="center">
-                        {column.render(row)}
-                        {j === cols.length - 1 && <ArrowRightAdornment />}
-                      </Stack>
-                    </GridColumn>
-                  ))}
-                </Grid>
-                <ExpectedSeedRewardDirection {...row} />
-              </Stack>
-            </Button>
+          <Box
+            key={`seed-gauge-row-${i}-${row.token.symbol}`}
+            component={RouterLink}
+            to={`/silo/${row.token.address}`}
+            sx={{ textDecoration: 'none' }}
+          >
+            <Card>
+              <Box sx={RowSx}>
+                <Stack width="100%">
+                  <Grid container>
+                    {cols.map((column, j) => (
+                      <GridColumn
+                        key={`sgr-${i}-${row.token.symbol}-${j}`}
+                        column={column}
+                        isAdvanced={isAdvanced}
+                      >
+                        <Stack direction="row" alignItems="center">
+                          {column.render(row)}
+                          {j === cols.length - 1 && <ArrowRightAdornment />}
+                        </Stack>
+                      </GridColumn>
+                    ))}
+                  </Grid>
+                  <ExpectedSeedRewardDirection {...row} />
+                </Stack>
+              </Box>
+            </Card>
+            {/* </Button> */}
           </Box>
         ))}
       </Stack>
