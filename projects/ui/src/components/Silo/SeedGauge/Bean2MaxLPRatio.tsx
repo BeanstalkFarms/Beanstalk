@@ -3,9 +3,91 @@ import { Box, Link, Stack, Typography } from '@mui/material';
 import useSeedGauge from '~/hooks/beanstalk/useSeedGauge';
 import useSdk from '~/hooks/sdk';
 import TokenIcon from '~/components/Common/TokenIcon';
+import useElementDimensions from '~/hooks/display/useElementDimensions';
+import { BeanstalkPalette } from '~/components/App/muiTheme';
 
 type IBean2MaxLPRatio = {
   data: ReturnType<typeof useSeedGauge>['data'];
+};
+
+const BAR_WIDTH = 8;
+const BAR_HEIGHT = 55;
+const SELECTED_BAR_HEIGHT = 65;
+const MIN_SPACING = 10; // 1 = 10px;
+
+const LPRatioShiftChart = ({ data }: IBean2MaxLPRatio) => {
+  const containerRef = React.useRef<HTMLDivElement | null>(null);
+  const { width } = useElementDimensions(containerRef);
+
+  const maxBars = width / (BAR_WIDTH + MIN_SPACING);
+  const minBars = maxBars - 2;
+
+  const increasing = false;
+  const decreasing = true;
+
+  // TODO: FIX LOGIC
+  const arr = Array.from({ length: minBars });
+  const maxIndex = arr.length - 1;
+  const selectedIndex = maxIndex - 2;
+  const addIndex = increasing ? 1 : decreasing ? -1 : 0;
+
+  const neighborIndex = selectedIndex + addIndex;
+
+  return (
+    <Stack width="100%" ref={containerRef}>
+      <Stack>
+        <Typography variant="h3">
+          54.5%{' '}
+          <Typography component="span" variant="h4">
+            Bean to Max LP Ratio
+          </Typography>
+        </Typography>
+        <Typography color="text.secondary">
+          Expected increase of X% next Season
+        </Typography>
+      </Stack>
+      <Stack
+        pt={2}
+        pb={1}
+        direction="row"
+        alignItems="center"
+        justifyContent="space-between"
+        width="100%"
+      >
+        {arr.map((_, i) => (
+          <Box
+            key={`gauge-bar-${i}`}
+            sx={{
+              borderRadius: 10,
+              height: `${i === selectedIndex ? SELECTED_BAR_HEIGHT : BAR_HEIGHT}px`,
+              width: `${BAR_WIDTH}px`,
+              background: BeanstalkPalette.logoGreen,
+              opacity: i === selectedIndex || i === neighborIndex ? 1 : 0.3,
+              animation:
+                i === neighborIndex
+                  ? 'blink 2500ms linear infinite'
+                  : undefined,
+              '@keyframes blink': {
+                '0%': { opacity: 1 },
+                '50%': { opacity: 0.1 },
+                '100%': { opacity: 1 },
+              },
+            }}
+          />
+        ))}
+      </Stack>
+      <Stack direction="row" justifyContent="space-between" width="100%">
+        <Stack textAlign="left">
+          <Typography variant="subtitle2">50%</Typography>
+          <Typography color="text.secondary">Minimum</Typography>
+        </Stack>
+        <Stack textAlign="right">
+          <Typography variant="subtitle2">100%</Typography>
+          <Typography color="text.secondary">Maximum</Typography>
+        </Stack>
+      </Stack>
+    </Stack>
+  );
 };
 
 const Bean2MaxLPRatio = ({ data }: IBean2MaxLPRatio) => {
@@ -26,7 +108,7 @@ const Bean2MaxLPRatio = ({ data }: IBean2MaxLPRatio) => {
 
   return (
     <Box>
-      <Box sx={{ border: '0.5px solid', borderColor: 'divider' }}>
+      <Box sx={{ borderBottom: '1px solid', borderColor: 'divider' }}>
         <Stack gap={2} py={2} px={1.5}>
           <Stack>
             <Typography variant="h4">
@@ -60,6 +142,9 @@ const Bean2MaxLPRatio = ({ data }: IBean2MaxLPRatio) => {
             Read more about the Bean to Max LP Ratio
           </Link>
         </Stack>
+      </Box>
+      <Box px={1.5} py={2}>
+        <LPRatioShiftChart data={data} />
       </Box>
     </Box>
   );
