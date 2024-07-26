@@ -33,7 +33,7 @@ import {
   BEAN_ETH_UNIV2_LP,
   BEAN_LUSD_LP,
   UNRIPE_BEAN,
-  UNRIPE_BEAN_WETH,
+  UNRIPE_BEAN_WSTETH,
 } from '~/constants/tokens';
 import { UNRIPE_ASSET_TOOLTIPS } from '~/constants/tooltips';
 import { ZERO_BN } from '~/constants';
@@ -122,7 +122,7 @@ const PickBeansDialog: FC<
   /// Tokens
   const getChainToken = useGetChainToken();
   const urBean = getChainToken(UNRIPE_BEAN);
-  const urBeanWeth = getChainToken(UNRIPE_BEAN_WETH);
+  const urBeanWstETH = getChainToken(UNRIPE_BEAN_WSTETH);
 
   /// Farmer
   const [refetchFarmerSilo] = useFetchFarmerSilo();
@@ -160,7 +160,7 @@ const PickBeansDialog: FC<
             ),
             Promise.all([
               beanstalk.picked(account, urBean.address),
-              beanstalk.picked(account, urBeanWeth.address),
+              beanstalk.picked(account, urBeanWstETH.address),
             ]),
           ]);
           console.debug('[PickDialog] loaded states', {
@@ -178,7 +178,7 @@ const PickBeansDialog: FC<
         errorToast.error(err);
       }
     })();
-  }, [account, beanstalk, open, urBean.address, urBeanWeth.address]);
+  }, [account, beanstalk, open, urBean.address, urBeanWstETH.address]);
 
   /// Tab handlers
   const handleDialogClose = () => {
@@ -224,7 +224,7 @@ const PickBeansDialog: FC<
       if (merkles.bean3crv && picked[1] === false) {
         data.push(
           beanstalk.interface.encodeFunctionData('pick', [
-            urBeanWeth.address,
+            urBeanWstETH.address,
             merkles.bean3crv.amount,
             merkles.bean3crv.proof,
             isDeposit ? FarmToMode.INTERNAL : FarmToMode.EXTERNAL,
@@ -233,7 +233,7 @@ const PickBeansDialog: FC<
         if (isDeposit) {
           data.push(
             beanstalk.interface.encodeFunctionData('deposit', [
-              urBeanWeth.address,
+              urBeanWstETH.address,
               merkles.bean3crv.amount,
               FarmFromMode.INTERNAL, // always use internal for deposits
             ])
@@ -273,7 +273,7 @@ const PickBeansDialog: FC<
       picked,
       beanstalk,
       urBean.address,
-      urBeanWeth.address,
+      urBeanWstETH.address,
       refetchFarmerSilo,
       middleware,
     ]
@@ -302,14 +302,14 @@ const PickBeansDialog: FC<
   const tab0 = (
     <>
       <StyledDialogTitle sx={{ pb: 1 }} onClose={handleDialogClose}>
-        Pick non-Deposited Unripe Beans and Unripe BEAN:ETH LP
+        Pick non-Deposited Unripe Beans and Unripe BEAN:WSTETH LP
       </StyledDialogTitle>
       <Row gap={1} pb={2} pl={1} pr={3}>
         <img src={pickImage} alt="pick" css={{ height: 120 }} />
         <Typography sx={{ fontSize: '15px' }} color="text.secondary">
-          To claim non-Deposited Unripe Beans and Unripe BEAN:ETH LP, they must
-          be Picked. You can Pick assets to your wallet, or Pick and Deposit
-          them directly in the Silo.
+          To claim non-Deposited Unripe Beans and Unripe BEAN:WSTETH LP, they
+          must be Picked. You can Pick assets to your wallet, or Pick and
+          Deposit them directly in the Silo.
           <br />
           <br />
           Unripe Deposited assets <b>do not need to be Picked</b> and were be
@@ -421,7 +421,7 @@ const PickBeansDialog: FC<
              * Section 2b: Total Unripe LP
              */}
             <Row justifyContent="space-between" pl={1}>
-              <Typography>Unripe BEAN:ETH LP available to Pick</Typography>
+              <Typography>Unripe BEAN:WSTETH LP available to Pick</Typography>
               <Row gap={0.3}>
                 <img src={brownLPIcon} alt="Circulating Beans" width={13} />
                 <Typography variant="h4">

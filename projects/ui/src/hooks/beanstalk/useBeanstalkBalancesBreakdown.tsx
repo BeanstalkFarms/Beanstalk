@@ -3,14 +3,14 @@ import { useMemo } from 'react';
 import { useSelector } from 'react-redux';
 import { AddressMap, TokenMap, ZERO_BN } from '~/constants';
 import { AppState } from '~/state';
-import useSiloTokenToFiat from './useSiloTokenToFiat';
-import useWhitelist from './useWhitelist';
 import { BeanstalkSiloBalance } from '~/state/beanstalk/silo';
 import { BeanstalkPalette } from '~/components/App/muiTheme';
 import useGetChainToken from '~/hooks/chain/useGetChainToken';
-import { BEAN, BEAN_ETH_WELL_LP } from '~/constants/tokens';
+import { BEAN, BEAN_WSTETH_WELL_LP } from '~/constants/tokens';
 import useUnripeUnderlyingMap from '~/hooks/beanstalk/useUnripeUnderlying';
 import { UnripeToken } from '~/state/bean/unripe';
+import useWhitelist from './useWhitelist';
+import useSiloTokenToFiat from './useSiloTokenToFiat';
 
 // -----------------
 // Types and Helpers
@@ -33,7 +33,8 @@ export const STATE_CONFIG = {
   withdrawn: [
     'Claimable',
     colors.chart.yellowLight,
-    (name: string) => `Legacy Claimable ${name === 'Beans' ? 'Bean' : name} Withdrawals from before Silo V3.`,
+    (name: string) =>
+      `Legacy Claimable ${name === 'Beans' ? 'Bean' : name} Withdrawals from before Silo V3.`,
   ],
   farmable: [
     'Farm & Circulating',
@@ -156,7 +157,7 @@ export default function useBeanstalkSiloBreakdown() {
 
   const getChainToken = useGetChainToken();
   const Bean = getChainToken(BEAN);
-  const BeanETH = getChainToken(BEAN_ETH_WELL_LP);
+  const BeanWstETH = getChainToken(BEAN_WSTETH_WELL_LP);
   const unripeToRipe = useUnripeUnderlyingMap('unripe');
   const ripeToUnripe = useUnripeUnderlyingMap('ripe');
 
@@ -206,11 +207,11 @@ export default function useBeanstalkSiloBreakdown() {
 
               // Ripe Pooled = BEAN:ETH_RESERVES * (Ripe BEAN:ETH / BEAN:ETH Token Supply)
               ripePooled = new BigNumber(totalPooled).multipliedBy(
-                 new BigNumber(
-                   unripeTokenState[ripeToUnripe[BeanETH.address].address]
-                     ?.underlying || 0
-                 ).div(new BigNumber(poolState[BeanETH.address]?.supply || 0))
-               );
+                new BigNumber(
+                  unripeTokenState[ripeToUnripe[BeanWstETH.address].address]
+                    ?.underlying || 0
+                ).div(new BigNumber(poolState[BeanWstETH.address]?.supply || 0))
+              );
               // pooled = new BigNumber(totalPooled).minus(ripePooled);
 
               farmable = beanSupply
@@ -232,7 +233,9 @@ export default function useBeanstalkSiloBreakdown() {
             const amountByState = {
               deposited: siloBalance.deposited?.amount,
               withdrawn:
-                TOKEN === BeanETH ? undefined : siloBalance.withdrawn?.amount,
+                TOKEN === BeanWstETH
+                  ? undefined
+                  : siloBalance.withdrawn?.amount,
               pooled: pooled,
               ripePooled: ripePooled,
               ripe: ripe,
@@ -242,7 +245,7 @@ export default function useBeanstalkSiloBreakdown() {
             const usdValueByState = {
               deposited: getUSD(TOKEN, siloBalance.deposited.amount),
               withdrawn:
-                TOKEN === BeanETH
+                TOKEN === BeanWstETH
                   ? undefined
                   : getUSD(TOKEN, siloBalance.withdrawn.amount),
               pooled: pooled ? getUSD(TOKEN, pooled) : undefined,
@@ -302,7 +305,7 @@ export default function useBeanstalkSiloBreakdown() {
       ripeToUnripe,
       unripeToRipe,
       Bean,
-      BeanETH,
+      BeanWstETH,
       poolState,
       getUSD,
       unripeTokenState,

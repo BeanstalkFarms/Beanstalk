@@ -60,6 +60,7 @@ import useFormTxnContext from '~/hooks/sdk/useFormTxnContext';
 import { ClaimAndDoX, DepositFarmStep, FormTxn } from '~/lib/Txn';
 import useMigrationNeeded from '~/hooks/farmer/useMigrationNeeded';
 import useGetBalancesUsedBySource from '~/hooks/beanstalk/useBalancesUsedBySource';
+import useIsMigrating from '~/hooks/beanstalk/useIsMigrating';
 
 // -----------------------------------------------------------------------
 
@@ -341,6 +342,7 @@ const DepositPropProvider: FC<{
         tokens.BEAN,
         tokens.ETH,
         tokens.WETH,
+        tokens.WSTETH,
         tokens.CRV3,
         tokens.DAI,
         tokens.USDC,
@@ -351,6 +353,7 @@ const DepositPropProvider: FC<{
       tokens.BEAN,
       tokens.ETH,
       tokens.WETH,
+      tokens.WSTETH,
       whitelistedToken,
       tokens.CRV3,
       tokens.DAI,
@@ -366,6 +369,7 @@ const DepositPropProvider: FC<{
         tokens.BEAN,
         tokens.ETH,
         tokens.WETH,
+        tokens.WSTETH,
         tokens.CRV3,
         tokens.DAI,
         tokens.USDC,
@@ -376,6 +380,7 @@ const DepositPropProvider: FC<{
       whitelistedToken,
       tokens.ETH,
       tokens.WETH,
+      tokens.WSTETH,
       tokens.BEAN,
       tokens.CRV3,
       tokens.DAI,
@@ -620,10 +625,18 @@ const DepositPropProvider: FC<{
 
 const Deposit: FC<{
   token: ERC20Token | NativeToken;
-}> = (props) => (
-  <FormTxnProvider>
-    <DepositPropProvider {...props} />
-  </FormTxnProvider>
-);
+}> = (props) => {
+  const { isMigrating, MigrationAlert } = useIsMigrating();
+
+  if (isMigrating && props.token.isUnripe) {
+    return MigrationAlert;
+  }
+
+  return (
+    <FormTxnProvider>
+      <DepositPropProvider {...props} />
+    </FormTxnProvider>
+  );
+};
 
 export default Deposit;

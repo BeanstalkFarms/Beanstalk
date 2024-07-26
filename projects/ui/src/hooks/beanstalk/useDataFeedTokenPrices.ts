@@ -1,18 +1,18 @@
 import { BigNumber } from 'bignumber.js';
 import { useCallback, useMemo, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
+import useGetChainToken from '~/hooks/chain/useGetChainToken';
+import { useAggregatorV3Contract } from '~/hooks/ledger/useContract';
+import { updateTokenPrices } from '~/state/beanstalk/tokenPrices/actions';
 import { TokenMap } from '../../constants/index';
 import { bigNumberResult } from '../../util/Ledger';
-import useGetChainToken from '~/hooks/chain/useGetChainToken';
 import { CRV3, DAI, ETH, USDC, USDT, WETH } from '../../constants/tokens';
 import {
   DAI_CHAINLINK_ADDRESSES,
   USDT_CHAINLINK_ADDRESSES,
   USDC_CHAINLINK_ADDRESSES,
 } from '../../constants/addresses';
-import { useAggregatorV3Contract } from '~/hooks/ledger/useContract';
 import { AppState } from '../../state/index';
-import { updateTokenPrices } from '~/state/beanstalk/tokenPrices/actions';
 import useSdk from '../sdk';
 
 const getBNResult = (result: any, decimals: number) => {
@@ -70,7 +70,7 @@ export default function useDataFeedTokenPrices() {
       usdcPriceFeed.latestRoundData(),
       usdcPriceFeed.decimals(),
       ethPriceFeed.getEthUsdPrice(),
-      ethPriceFeed.getEthUsdTwa(3600),
+      ethPriceFeed.getUsdTokenTwap(sdk.tokens.WETH.address, 0),
       crv3Pool.get_virtual_price(),
     ]);
 
@@ -128,13 +128,14 @@ export default function useDataFeedTokenPrices() {
 
     return priceDataCache;
   }, [
-    tokenPriceMap,
-    daiPriceFeed,
-    usdtPriceFeed,
-    usdcPriceFeed,
-    ethPriceFeed,
-    crv3Pool,
-    getChainToken,
+    tokenPriceMap, 
+    daiPriceFeed, 
+    usdtPriceFeed, 
+    usdcPriceFeed, 
+    ethPriceFeed, 
+    crv3Pool, 
+    sdk.tokens.WETH.address, 
+    getChainToken
   ]);
 
   const handleUpdatePrices = useCallback(async () => {

@@ -31,6 +31,7 @@ import {
   USDT,
   WETH,
   ETH,
+  BEAN_WSTETH_WELL_LP,
 } from '~/constants/tokens';
 import { useBeanstalkContract } from '~/hooks/ledger/useContract';
 import useFarmerBalances from '~/hooks/farmer/useFarmerBalances';
@@ -426,6 +427,7 @@ const SUPPORTED_TOKENS = [
   WETH,
   BEAN_ETH_WELL_LP,
   BEAN_CRV3_LP,
+  BEAN_WSTETH_WELL_LP,
   CRV3,
   DAI,
   USDC,

@@ -30,6 +30,9 @@ const { task } = require("hardhat/config");
 const { TASK_COMPILE_SOLIDITY_GET_SOURCE_PATHS } = require("hardhat/builtin-tasks/task-names");
 const { bipNewSilo, bipMorningAuction, bipSeedGauge, bipMigrateUnripeBeanEthToBeanSteth } = require("./scripts/bips.js");
 const { ebip9, ebip10, ebip11, ebip13, ebip14, ebip15, ebip16, ebip17 } = require("./scripts/ebips.js");
+const { finishWstethMigration } = require("./scripts/beanWstethMigration.js");
+const { impersonateWsteth, impersonateBean } = require("./scripts/impersonate.js");
+const { deployPriceContract } = require("./scripts/price.js");
 
 //////////////////////// UTILITIES ////////////////////////
 
@@ -220,6 +223,17 @@ task("deploySeedGauge", async function () {
 
 task("deployWstethMigration", async function () {
   await bipMigrateUnripeBeanEthToBeanSteth();
+});
+
+task("UI-deployWstethMigration", async function () {
+  await impersonateBean();
+  wsteth = await ethers.getContractAt("MockWsteth", "0x7f39C581F595B53c5cb19bD0b3f8dA6c935E2Ca0");
+  const stethPerWsteth = await wsteth.stEthPerToken();
+  await impersonateWsteth();
+  await wsteth.setStEthPerToken(stethPerWsteth);
+  await bipMigrateUnripeBeanEthToBeanSteth(true, undefined, true, undefined);
+  await finishWstethMigration(undefined, true);
+  await deployPriceContract();
 });
 
 /// EBIPS /// 

@@ -463,7 +463,7 @@ export const parseActionMessage = (a: Action) => {
       return `Buy ${displayFullBN(a.amountOut, 2)} Fertilizer at ${displayFullBN(
         a.humidity.multipliedBy(100),
         1
-      )}% Humidity with ${displayFullBN(a.amountIn, 2)} Wrapped Ether.`;
+      )}% Humidity with ${displayFullBN(a.amountIn, 2)} wstETH.`;
     case ActionType.RECEIVE_FERT_REWARDS:
       return `Receive ${displayFullBN(a.amountOut, 2)} Sprouts.`;
     case ActionType.TRANSFER_FERTILIZER:

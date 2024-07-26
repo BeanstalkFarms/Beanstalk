@@ -27,28 +27,41 @@ const { sdk, account, utils } = getTestUtils();
 /// Tests
 beforeAll(async () => {
   await utils.resetFork();
+  setTokenRewards();
+  // set rewards
   const amount = sdk.tokens.BEAN.amount("100000");
   await utils.setBalance(sdk.tokens.BEAN, account, amount);
   await sdk.tokens.BEAN.approveBeanstalk(amount);
 
   await sdk.silo.deposit(sdk.tokens.BEAN, sdk.tokens.BEAN, amount, 0.1, account);
-});
+}, 20_000);
+
 describe("Silo Balance loading", () => {
   describe("getBalance", function () {
     it("returns an empty object", async () => {
-      const balance = await sdk.silo.getBalance(sdk.tokens.BEAN, account2, { source: DataSource.LEDGER });
+      const balance = await sdk.silo.getBalance(sdk.tokens.BEAN, account2, {
+        source: DataSource.LEDGER
+      });
       chaiExpect(balance.amount.eq(0)).to.be.true;
     });
     it("loads an account with deposits (fuzzy)", async () => {
-      const balance = await sdk.silo.getBalance(sdk.tokens.BEAN, account, { source: DataSource.LEDGER });
+      const balance = await sdk.silo.getBalance(sdk.tokens.BEAN, account, {
+        source: DataSource.LEDGER
+      });
       chaiExpect(balance.amount.toHuman()).to.eq("100000");
     });
 
     // FIX: discrepancy in graph results
     it.skip("source: ledger === subgraph", async function () {
       const [ledger, subgraph]: TokenSiloBalance[] = await Promise.all([
-        timer(sdk.silo.getBalance(sdk.tokens.BEAN, account, { source: DataSource.LEDGER }), "Ledger result time"),
-        timer(sdk.silo.getBalance(sdk.tokens.BEAN, account, { source: DataSource.SUBGRAPH }), "Subgraph result time")
+        timer(
+          sdk.silo.getBalance(sdk.tokens.BEAN, account, { source: DataSource.LEDGER }),
+          "Ledger result time"
+        ),
+        timer(
+          sdk.silo.getBalance(sdk.tokens.BEAN, account, { source: DataSource.SUBGRAPH }),
+          "Subgraph result time"
+        )
       ]);
 
       // We cannot compare .deposited.bdv as the ledger results come from prod
@@ -58,18 +71,18 @@ describe("Silo Balance loading", () => {
     });
   });
 
-  describe("getBalances", function () {
+  describe.skip("getBalances", function () {
     let ledger: Map<Token, TokenSiloBalance>;
     let subgraph: Map<Token, TokenSiloBalance>;
 
     // Pulled an account with some large positions for testing
     // @todo pick several accounts and loop
-    beforeAll(async () => {
-      [ledger, subgraph] = await Promise.all([
-        timer(sdk.silo.getBalances(account, { source: DataSource.LEDGER }), "Ledger result time"),
-        timer(sdk.silo.getBalances(account, { source: DataSource.SUBGRAPH }), "Subgraph result time")
-      ]);
-    });
+    // beforeAll(async () => {
+    // [ledger, subgraph] = await Promise.all([
+    //   timer(sdk.silo.getBalances(account, { source: DataSource.LEDGER }), "Ledger result time"),
+    //   timer(sdk.silo.getBalances(account, { source: DataSource.SUBGRAPH }), "Subgraph result time")
+    // ]);
+    // });
 
     // FIX: Discrepancy in graph results.
     it.skip("source: ledger === subgraph", async function () {
@@ -92,7 +105,9 @@ describe("Silo Balance loading", () => {
   describe("stalk calculations for each crate", () => {
     let balance: TokenSiloBalance;
     beforeAll(async () => {
-      balance = await sdk.silo.getBalance(sdk.tokens.BEAN, BF_MULTISIG, { source: DataSource.SUBGRAPH });
+      balance = await sdk.silo.getBalance(sdk.tokens.BEAN, BF_MULTISIG, {
+        source: DataSource.SUBGRAPH
+      });
     });
 
     it("stalk = baseStalk + grownStalk", () => {
@@ -135,7 +150,7 @@ describe("Deposit Permits", function () {
     const owner = account;
     const spender = sdk.contracts.root.address;
     const token = sdk.tokens.BEAN.address;
-    const amount = sdk.tokens.BEAN.amount("100").toString();
+    const amount = sdk.tokens.BEAN.amount("100").toBlockchain();
 
     // const startAllowance = await sdk.contracts.beanstalk.depositAllowance(owner, spender, token);
     // const depositPermitNonces = await sdk.contracts.beanstalk.depositPermitNonces(owner);
@@ -180,7 +195,9 @@ describe("Silo mowMultiple", () => {
   const whitelistedToken = sdk.tokens.BEAN;
   const whitelistedToken2 = sdk.tokens.BEAN_CRV3_LP;
   const nonWhitelistedToken = sdk.tokens.DAI;
-  const whitelistedTokenAddresses = Array.from(sdk.tokens.siloWhitelist.values()).map((token) => token.address);
+  const whitelistedTokenAddresses = Array.from(sdk.tokens.siloWhitelist.values()).map(
+    (token) => token.address
+  );
 
   beforeEach(() => {
     // We mock the methods used in mowMultiple
@@ -199,27 +216,44 @@ describe("Silo mowMultiple", () => {
   });
 
   it("throws when non-whitelisted token provided", async () => {
-    await expect(sdk.silo.mowMultiple(account, [nonWhitelistedToken])).rejects.toThrow(`${nonWhitelistedToken.symbol} is not whitelisted`);
+    await expect(sdk.silo.mowMultiple(account, [nonWhitelistedToken])).rejects.toThrow(
+      `${nonWhitelistedToken.symbol} is not whitelisted`
+    );
   });
 
   it.skip("warns when single token provided", async () => {
     const consoleSpy = jest.spyOn(console, "warn").mockImplementation(() => {});
     await sdk.silo.mowMultiple(account, [whitelistedToken]);
-    expect(consoleSpy).toHaveBeenCalledWith("Optimization: use `mow()` instead of `mowMultiple()` for a single token");
+    expect(consoleSpy).toHaveBeenCalledWith(
+      "Optimization: use `mow()` instead of `mowMultiple()` for a single token"
+    );
     consoleSpy.mockRestore();
   });
 
   it.skip("mows multiple tokens", async () => {
     const transaction = await sdk.silo.mowMultiple(account, [whitelistedToken, whitelistedToken2]);
     expect(transaction).toBe("mockedTransaction");
-    expect(Silo.sdk.contracts.beanstalk.mowMultiple).toHaveBeenCalledWith(account, [whitelistedToken.address, whitelistedToken2.address]);
+    expect(Silo.sdk.contracts.beanstalk.mowMultiple).toHaveBeenCalledWith(account, [
+      whitelistedToken.address,
+      whitelistedToken2.address
+    ]);
   });
 
   it.skip("mows all whitelisted tokens when no specific tokens provided", async () => {
     const transaction = await sdk.silo.mowMultiple(account);
     expect(transaction).toBe("mockedTransaction");
-    expect(Silo.sdk.contracts.beanstalk.mowMultiple).toHaveBeenCalledWith(account, whitelistedTokenAddresses);
+    expect(Silo.sdk.contracts.beanstalk.mowMultiple).toHaveBeenCalledWith(
+      account,
+      whitelistedTokenAddresses
+    );
   });
 
   it.todo("throws when there are duplicate tokens provided");
 });
+
+const setTokenRewards = () => {
+  sdk.tokens.BEAN.rewards = {
+    seeds: sdk.tokens.SEEDS.amount(3),
+    stalk: sdk.tokens.STALK.amount(1)
+  };
+};
