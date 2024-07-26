@@ -1,23 +1,43 @@
-import { TokenValue } from "@beanstalk/sdk-core";
-import { Token as CoreToken } from "@beanstalk/sdk-core";
+import { TokenValue, Token as CoreToken } from "@beanstalk/sdk-core";
 import { BigNumber, ContractTransaction } from "ethers";
 
 const STALK_DECIMALS = 10;
 const SEED_DECIMALS = 6;
 
 declare module "@beanstalk/sdk-core" {
-  abstract class Token {
-    static _source: string;
+  interface Token {
     isUnripe: boolean;
     rewards?: { stalk: TokenValue; seeds: TokenValue | null };
     getStalk(bdv?: TokenValue): TokenValue;
     getSeeds(bdv?: TokenValue): TokenValue;
     approveBeanstalk(amount: TokenValue | BigNumber): Promise<ContractTransaction>;
   }
+
+  namespace Token {
+    let _source: string;
+  }
 }
 
+// Adding the static Token._source property
 Object.defineProperty(CoreToken, "_source", {
-  value: "BeanstalkSDK"
+  value: "BeanstalkSDK",
+  writable: false,
+  configurable: false,
+  enumerable: true
+});
+
+// define property Token.prototype.isUnripe
+Object.defineProperty(CoreToken.prototype, "isUnripe", {
+  value: false,
+  writable: true,
+  configurable: true
+});
+
+// define property Token.prototype.rewards
+Object.defineProperty(CoreToken.prototype, "rewards", {
+  value: undefined,
+  writable: true,
+  configurable: true
 });
 
 /**
@@ -42,7 +62,9 @@ CoreToken.prototype.getSeeds = function (bdv?: TokenValue): TokenValue {
   return this.rewards.seeds.mul(bdv);
 };
 
-CoreToken.prototype.approveBeanstalk = function (amount: TokenValue | BigNumber): Promise<ContractTransaction> {
+CoreToken.prototype.approveBeanstalk = function (
+  amount: TokenValue | BigNumber
+): Promise<ContractTransaction> {
   // @ts-ignore
   return;
 };

@@ -45,7 +45,7 @@ import {
 } from '~/util';
 import {
   UNRIPE_BEAN,
-  UNRIPE_BEAN_WETH,
+  UNRIPE_BEAN_WSTETH,
   UNRIPE_TOKENS,
 } from '~/constants/tokens';
 import { ZERO_BN } from '~/constants';
@@ -276,7 +276,7 @@ const PREFERRED_TOKENS: PreferredToken[] = [
     minimum: new BigNumber(1),
   },
   {
-    token: UNRIPE_BEAN_WETH,
+    token: UNRIPE_BEAN_WSTETH,
     minimum: new BigNumber(1),
   },
 ];

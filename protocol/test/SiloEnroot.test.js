@@ -2,7 +2,7 @@ const { expect } = require("chai");
 const { deploy } = require("../scripts/deploy.js");
 const { readPrune, toBN, } = require("../utils");
 const { EXTERNAL } = require("./utils/balances.js");
-const { BEAN, BEAN_3_CURVE, UNRIPE_LP, UNRIPE_BEAN, THREE_CURVE, BEAN_ETH_WELL, WETH, ZERO_ADDRESS } = require("./utils/constants");
+const { BEAN, BEAN_3_CURVE, UNRIPE_LP, UNRIPE_BEAN, THREE_CURVE, BEAN_ETH_WELL, WETH, BEAN_WSTETH_WELL, ZERO_ADDRESS } = require("./utils/constants");
 const { to18, to6, toStalk } = require("./utils/helpers.js");
 const { takeSnapshot, revertToSnapshot } = require("./utils/snapshot");
 const { impersonateMockWell } = require("../utils/well.js");
@@ -48,7 +48,7 @@ describe("Silo Enroot", function () {
 
     await this.season.teleportSunrise(ENROOT_FIX_SEASON)
 
-    const [well, pump, wellFunction] = await impersonateMockWell(pumpBalances = [to6('10000'), to18('10')]);
+    const [well, pump, wellFunction] = await impersonateMockWell(BEAN_WSTETH_WELL, pumpBalances = [to6('10000'), to18('10')]);
     this.well = well; this.pump = pump; this.wellFunction = wellFunction;
 
     const SiloToken = await ethers.getContractFactory("MockToken");
@@ -81,6 +81,7 @@ describe("Silo Enroot", function () {
     await this.beanThreeCurve.set_supply(ethers.utils.parseEther("2000000"));
     await this.beanThreeCurve.set_balances([ethers.utils.parseUnits("1000000", 6), ethers.utils.parseEther("1000000")]);
     await this.beanThreeCurve.set_balances([ethers.utils.parseUnits("1200000", 6), ethers.utils.parseEther("1000000")]);
+
   });
 
   beforeEach(async function () {
@@ -253,6 +254,8 @@ describe("Silo Enroot", function () {
 
       beforeEach(async function () {
         await this.unripe.connect(owner).addUnderlying(UNRIPE_LP, '147796000000000')
+        this.fertilizer = await ethers.getContractAt('MockFertilizerFacet', this.diamond.address)
+        await this.fertilizer.setBarnRaiseWell(BEAN_WSTETH_WELL);
         await this.silo.connect(user).mockUnripeLPDeposit('0', ENROOT_FIX_SEASON, to18('0.000000083406453'), to6('10'))
         await this.season.lightSunrise()
         await this.silo.connect(user).mockUnripeLPDeposit('0', ENROOT_FIX_SEASON+1, to18('0.000000083406453'), to6('10'))

@@ -8,7 +8,6 @@ import {SafeCast} from "@openzeppelin/contracts/utils/SafeCast.sol";
 import {Call, IWell, IERC20} from "../../interfaces/basin/IWell.sol";
 import {IBeanstalkWellFunction} from "../../interfaces/basin/IBeanstalkWellFunction.sol";
 import {LibUsdOracle} from "../../libraries/Oracle/LibUsdOracle.sol";
-import {LibWellMinting} from "../../libraries/Minting/LibWellMinting.sol";
 import {LibWell} from "../../libraries/Well/LibWell.sol";
 import {C} from "../../C.sol";
 

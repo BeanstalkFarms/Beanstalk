@@ -152,7 +152,7 @@ contract Silo is ReentrancyGuard {
      * with an amount of 0.
      */
     function _claimPlenty(address account) internal {
-        // Plenty is earned in the form of the sop token.
+        // Plenty is earned in the form of the non-Bean token in the SOP Well.
         uint256 plenty = s.a[account].sop.plenty;
         IWell well = IWell(s.sopWell);
         IERC20[] memory tokens = well.tokens();

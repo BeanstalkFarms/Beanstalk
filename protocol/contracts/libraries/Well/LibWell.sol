@@ -299,11 +299,12 @@ library LibWell {
     ) internal view returns (uint256 usdLiquidity) {
         AppStorage storage s = LibAppStorage.diamondStorage();
         (, uint256 j) = getNonBeanTokenAndIndexFromWell(well);
-        try ICumulativePump(C.BEANSTALK_PUMP).readTwaReserves(
+        Call[] memory pumps = IWell(well).pumps();
+        try ICumulativePump(pumps[0].target).readTwaReserves(
             well,
             s.wellOracleSnapshots[well],
             uint40(s.season.timestamp),
-            C.BYTES_ZERO
+            pumps[0].data
         ) returns (uint[] memory twaReserves, bytes memory) {
             usdLiquidity = tokenUsdPrice.mul(twaReserves[j]).div(1e6);
         } catch {
