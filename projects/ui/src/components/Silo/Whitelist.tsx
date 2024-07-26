@@ -206,13 +206,19 @@ const Whitelist: FC<{
         {config.whitelist.map((token) => {
           const deposited = farmerSilo.balances[token.address]?.deposited;
           const isUnripe = token === urBean || token === urBeanWstETH;
-          const isUnripeLP = isUnripe && token.address === UNRIPE_BEAN_WSTETH[1].address;
+          const isUnripeLP =
+            isUnripe && token.address === UNRIPE_BEAN_WSTETH[1].address;
           const isDeprecated = checkIfDeprecated(token.address);
 
           // Unripe data
-          const underlyingToken = isUnripe ? unripeUnderlyingTokens[token.address] : null;
+          const underlyingToken = isUnripe
+            ? unripeUnderlyingTokens[token.address]
+            : null;
           const pctUnderlyingDeposited = isUnripe
-            ? (beanstalkSilo.balances[token.address]?.deposited.amount || ZERO_BN).div(unripeTokens[token.address]?.supply || ONE_BN)
+            ? (
+                beanstalkSilo.balances[token.address]?.deposited.amount ||
+                ZERO_BN
+              ).div(unripeTokens[token.address]?.supply || ONE_BN)
             : ONE_BN;
 
           const wlSx = {
@@ -482,8 +488,8 @@ const Whitelist: FC<{
                                 gap={0.25}
                                 variant="h4"
                                 amount={displayTokenAmount(
-                                  beanstalkSilo.balances[token.address]
-                                    ?.deposited.amount || ZERO_BN,
+                                  beanstalkSilo.balances[token.address]?.TVD ||
+                                    ZERO_BN,
                                   token,
                                   { showName: false }
                                 )}
@@ -534,10 +540,7 @@ const Whitelist: FC<{
                         ) : (
                           <Fiat
                             token={token}
-                            amount={
-                              beanstalkSilo.balances[token.address]?.deposited
-                                .amount
-                            }
+                            amount={beanstalkSilo.balances[token.address]?.TVD}
                             truncate
                           />
                         )}
