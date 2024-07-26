@@ -1,15 +1,15 @@
-async function deploy(name, account, verbose = false) {
-  const contract = await (await ethers.getContractFactory(name, account)).deploy();
+async function deploy(name, account, verbose = false, parameters = []) {
+  const contract = await (await ethers.getContractFactory(name, account)).deploy(...parameters);
   await contract.deployed()
   if (verbose) console.log(`${name} deployed to: ${contract.address}`)
   return contract
 }
 
-async function deployAtNonce(name, account, nonce, verbose = false) {
+async function deployAtNonce(name, account, nonce, verbose = false, parameters = []) {
   if (verbose) console.log(`Start Nonce: ${await ethers.provider.getTransactionCount(account.address)}`)
   await increaseToNonce(account, nonce)
   if (verbose) console.log(`Deploying Contract with nonce: ${await ethers.provider.getTransactionCount(account.address)}`)
-  return await deploy(name, account, true)
+  return await deploy(name, account, true, parameters)
 }
 
 async function increaseToNonce(account, nonce) {

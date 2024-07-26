@@ -127,9 +127,12 @@ export class BlockchainUtils {
       this.setROOTBalance(account, this.sdk.tokens.ROOT.amount(amount)),
       this.seturBEANBalance(account, this.sdk.tokens.UNRIPE_BEAN.amount(amount)),
       // this.seturBEAN3CRVBalance(account, this.sdk.tokens.UNRIPE_BEAN_CRV3.amount(amount)),
-      this.seturBEANWETHBalance(account, this.sdk.tokens.UNRIPE_BEAN_WETH.amount(amount)),
+      this.seturBEANWSTETHBalance(account, this.sdk.tokens.UNRIPE_BEAN_WSTETH.amount(amount)),
       this.setBEAN3CRVBalance(account, this.sdk.tokens.BEAN_CRV3_LP.amount(amount)),
-      this.setBEANWETHBalance(account, this.sdk.tokens.BEAN_ETH_WELL_LP.amount(amount))
+      this.setBEANWETHBalance(account, this.sdk.tokens.BEAN_ETH_WELL_LP.amount(amount)),
+      // this.setBEANWSTETHBalance(account, this.sdk.tokens.BEAN_WSTETH_WELL_LP.amount(amount)),
+      this.setWstethBalance(account, this.sdk.tokens.WSTETH.amount(amount)),
+      this.setStethBalance(account, this.sdk.tokens.STETH.amount(amount))
     ]);
   }
   async setETHBalance(account: string, balance: TokenValue) {
@@ -159,14 +162,23 @@ export class BlockchainUtils {
   async seturBEANBalance(account: string, balance: TokenValue) {
     this.setBalance(this.sdk.tokens.UNRIPE_BEAN, account, balance);
   }
-  async seturBEANWETHBalance(account: string, balance: TokenValue) {
-    this.setBalance(this.sdk.tokens.UNRIPE_BEAN_WETH, account, balance);
+  async seturBEANWSTETHBalance(account: string, balance: TokenValue) {
+    this.setBalance(this.sdk.tokens.UNRIPE_BEAN_WSTETH, account, balance);
   }
   async setBEAN3CRVBalance(account: string, balance: TokenValue) {
     this.setBalance(this.sdk.tokens.BEAN_CRV3_LP, account, balance);
   }
   async setBEANWETHBalance(account: string, balance: TokenValue) {
     this.setBalance(this.sdk.tokens.BEAN_ETH_WELL_LP, account, balance);
+  }
+  async setBEANWSTETHBalance(account: string, balance: TokenValue) {
+    this.setBalance(this.sdk.tokens.BEAN_WSTETH_WELL_LP, account, balance);
+  }
+  async setWstethBalance(account: string, balance: TokenValue) {
+    this.setBalance(this.sdk.tokens.WSTETH, account, balance);
+  }
+  async setStethBalance(account: string, balance: TokenValue) {
+    this.setBalance(this.sdk.tokens.STETH, account, balance);
   }
 
   private getBalanceConfig(tokenAddress: string) {
@@ -179,9 +191,12 @@ export class BlockchainUtils {
     slotConfig.set(this.sdk.tokens.BEAN.address, [0, false]);
     slotConfig.set(this.sdk.tokens.ROOT.address, [151, false]);
     slotConfig.set(this.sdk.tokens.UNRIPE_BEAN.address, [0, false]);
-    slotConfig.set(this.sdk.tokens.UNRIPE_BEAN_WETH.address, [0, false]);
+    slotConfig.set(this.sdk.tokens.UNRIPE_BEAN_WSTETH.address, [0, false]);
     slotConfig.set(this.sdk.tokens.BEAN_CRV3_LP.address, [15, true]);
     slotConfig.set(this.sdk.tokens.BEAN_ETH_WELL_LP.address, [51, false]);
+    slotConfig.set(this.sdk.tokens.BEAN_WSTETH_WELL_LP.address, [51, false]);
+    slotConfig.set(this.sdk.tokens.WSTETH.address, [0, false]);
+    slotConfig.set(this.sdk.tokens.STETH.address, [0, false]);
     return slotConfig.get(tokenAddress);
   }
 
@@ -368,14 +383,16 @@ export class BlockchainUtils {
     _season: number,
     _amount: string,
     _currentSeason?: number,
-    _germinatingStem: ethers.BigNumber = ethers.constants.Zero
+    _germinatingStem: ethers.BigNumber = ethers.constants.Zero,
+    _stem?: number,
+    _stemTipForToken?: number
   ) {
     const amount = token.amount(_amount);
     const bdv = TokenValue.fromHuman(amount.toHuman(), 6);
     const currentSeason = _currentSeason || _season + 100;
 
-    return makeDepositObject(token, ethers.BigNumber.from(_season), {
-      stem: currentSeason, // FIXME
+    return makeDepositObject(token, ethers.BigNumber.from(_stemTipForToken || _season), {
+      stem: _stem || currentSeason, // FIXME
       amount: amount.toBlockchain(),
       bdv: bdv.toBlockchain(),
       germinatingStem: _germinatingStem

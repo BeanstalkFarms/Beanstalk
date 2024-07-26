@@ -2,23 +2,17 @@ const { expect } = require('chai')
 const { deploy } = require('../scripts/deploy.js')
 const { takeSnapshot, revertToSnapshot } = require("./utils/snapshot")
 const { to6, toStalk, toBean, to18 } = require('./utils/helpers.js');
-const { USDC, UNRIPE_BEAN, UNRIPE_LP, BEAN,ETH_USDC_UNISWAP_V3, BASE_FEE_CONTRACT, THREE_CURVE, THREE_POOL, BEAN_3_CURVE, BEAN_ETH_WELL, WETH, BEANSTALK_PUMP } = require('./utils/constants.js');
+const { USDC, UNRIPE_BEAN, UNRIPE_LP, BEAN,ETH_USDC_UNISWAP_V3, BASE_FEE_CONTRACT, THREE_CURVE, THREE_POOL, BEAN_3_CURVE, BEAN_ETH_WELL, WSTETH, WETH, BEAN_WSTETH_WELL } = require('./utils/constants.js');
 const { EXTERNAL, INTERNAL } = require('./utils/balances.js');
 const { ethers } = require('hardhat');
-const { deployMockWell, setReserves } = require('../utils/well.js');
-const { setEthUsdPrice, setEthUsdcPrice } = require('../utils/oracle.js');
-const { deployBasin, deployBasinWithMockPump } = require('../scripts/basin.js');
+const { setEthUsdChainlinkPrice, setWstethUsdPrice } = require('../utils/oracle.js');
+const { deployBasin } = require('../scripts/basin.js');
 const ZERO_BYTES = ethers.utils.formatBytes32String('0x0')
-const { advanceTime } = require('../utils/helpers.js');
+const { deployBasinV1_1Upgrade } = require('../scripts/basinV1_1.js');
+const { impersonateBeanWstethWell } = require('../utils/well.js');
 
 let user, user2, owner;
 let userAddress, ownerAddress, user2Address;
-
-async function setToSecondsAfterHour(seconds = 0) {
-  const lastTimestamp = (await ethers.provider.getBlock('latest')).timestamp;
-  const hourTimestamp = parseInt(lastTimestamp/3600 + 1) * 3600 + seconds
-  await network.provider.send("evm_setNextBlockTimestamp", [hourTimestamp])
-}
 
 describe('Sun', function () {
   before(async function () {
@@ -33,7 +27,7 @@ describe('Sun', function () {
     this.silo = await ethers.getContractAt('MockSiloFacet', this.diamond.address)
     this.field = await ethers.getContractAt('MockFieldFacet', this.diamond.address)
     this.usdc = await ethers.getContractAt('MockToken', USDC);
-    this.weth = await ethers.getContractAt('MockToken', WETH);
+    this.wsteth = await ethers.getContractAt('MockToken', WSTETH);
     this.unripe = await ethers.getContractAt('MockUnripeFacet', this.diamond.address)
   
     // These are needed for sunrise incentive test
@@ -57,9 +51,9 @@ describe('Sun', function () {
 
     await this.usdc.mint(owner.address, to6('10000'))
     await this.bean.mint(owner.address, to6('10000'))
-    await this.weth.mint(owner.address, to18('10000'))
+    await this.wsteth.mint(owner.address, to18('10000'))
     await this.usdc.connect(owner).approve(this.diamond.address, to6('10000'))
-    await this.weth.connect(owner).approve(this.diamond.address, to18('10000'))
+    await this.wsteth.connect(owner).approve(this.diamond.address, to18('10000'))
     this.unripeBean = await ethers.getContractAt('MockToken', UNRIPE_BEAN)
     // add unripe
 
@@ -69,15 +63,19 @@ describe('Sun', function () {
     await this.unripeBean.mint(userAddress, to6('1000'))
     await this.unripeBean.connect(user).approve(this.diamond.address, to6('100000000'))
     await this.unripe.addUnripeToken(UNRIPE_BEAN, BEAN, ZERO_BYTES)
-    await this.unripe.addUnripeToken(UNRIPE_LP, BEAN_ETH_WELL, ZERO_BYTES);
+    await this.unripe.addUnripeToken(UNRIPE_LP, BEAN_WSTETH_WELL, ZERO_BYTES);
 
-    await setEthUsdPrice('999.998018');
-    await setEthUsdcPrice('1000');
+    await setEthUsdChainlinkPrice('1000');
+    await setWstethUsdPrice('1000');
 
-    this.well = await deployBasinWithMockPump(true, undefined, false, true)
-    this.pump = await ethers.getContractAt('MockPump', BEANSTALK_PUMP);
-    await this.pump.update([toBean('10000'), to18('10')], 0x00);
-    await this.pump.update([toBean('10000'), to18('10')], 0x00);
+    let c = await deployBasin(true, undefined, false, true)
+    await impersonateBeanWstethWell();
+    await c.multiFlowPump.update([toBean('10000'), to18('10')], 0x00);
+    await c.multiFlowPump.update([toBean('10000'), to18('10')], 0x00);
+    c = await deployBasinV1_1Upgrade(c, true, undefined, false, true, mockPump=true)
+    await c.multiFlowPump.update([toBean('10000'), to18('10')], 0x00);
+    await c.multiFlowPump.update([toBean('10000'), to18('10')], 0x00);
+    this.pump = c.multiFlowPump;
 
     await this.season.siloSunrise(0)
   })
