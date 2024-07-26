@@ -53,7 +53,7 @@ export const BEAN_WETH_CP2_WELL_BLOCK = BigInt.fromU32(17978134);
 export const BEAN_WSTETH_CP2_WELL_BLOCK = BigInt.fromU32(20264128);
 
 export const BEAN_WETH_UNRIPE_MIGRATION_BLOCK = BigInt.fromU32(18392690);
-export const BEAN_WSTETH_UNRIPE_MIGRATION_BLOCK = BigInt.fromU32(99999999); // TODO wstETH
+export const BEAN_WSTETH_UNRIPE_MIGRATION_BLOCK = BigInt.fromU32(20389706);
 
 export const PRICE_1_BLOCK = BigInt.fromU32(17978222);
 export const PRICE_2_BLOCK = BigInt.fromU32(20298142);
