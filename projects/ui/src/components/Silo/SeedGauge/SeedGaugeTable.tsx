@@ -2,7 +2,7 @@ import React, { useMemo } from 'react';
 import {
   Box,
   Breakpoint,
-  Card,
+  Button,
   Chip,
   Grid,
   GridProps,
@@ -16,20 +16,21 @@ import { ERC20Token } from '@beanstalk/sdk';
 import BigNumber from 'bignumber.js';
 import useSdk from '~/hooks/sdk';
 import { ZERO_BN } from '~/constants';
-import TokenIcon from '~/components/Common/TokenIcon';
 import { displayFullBN } from '~/util';
 import useSeedGauge from '~/hooks/beanstalk/useSeedGauge';
-import useWhitelist from '~/hooks/beanstalk/useWhitelist';
 import { useAppSelector } from '~/state';
-import { BeanstalkPalette as Palette } from '~/components/App/muiTheme';
+import {
+  IconSize,
+  BeanstalkPalette as Palette,
+} from '~/components/App/muiTheme';
 import { ArrowDownward, ArrowUpward, ArrowRight } from '@mui/icons-material';
 import logo from '~/img/tokens/bean-logo.svg';
+import { Link as RouterLink } from 'react-router-dom';
 
 type GridConfigProps = Pick<GridProps, Breakpoint>;
 
 type ISeedGaugeRow = {
   token: ERC20Token;
-  totalGrownStalk: BigNumber;
   totalGrownStalkPerBDV: BigNumber;
   gaugePoints: BigNumber;
   gaugePointsPerBDV: BigNumber;
@@ -47,16 +48,6 @@ type ISeedGaugeColumn = {
   align?: 'left' | 'right';
   mobileAlign?: 'left' | 'right';
 };
-
-const displayBNValue = (
-  value: BigNumber | undefined,
-  defaultValue?: string | number
-) => {
-  if (!value || value.eq(0)) return defaultValue?.toString() || 'N/A';
-  return displayFullBN(value, 2);
-};
-
-const isNonZero = (value: BigNumber | undefined) => value && !value.eq(0);
 
 const GridConfig: Record<
   string,
@@ -93,14 +84,29 @@ const GridConfig: Record<
   },
 };
 
+const displayBNValue = (
+  value: BigNumber | undefined,
+  defaultValue?: string | number
+) => {
+  if (!value || value.eq(0)) return defaultValue?.toString() || 'N/A';
+  return displayFullBN(value, 2);
+};
+
+const isNonZero = (value: BigNumber | undefined) => value && !value.eq(0);
+
 const TokenColumn: ISeedGaugeColumn = {
   key: 'token',
   header: 'Token',
   align: 'left',
-  render: (data) => (
-    <Stack direction="row" gap={0.5} alignItems="center">
-      <TokenIcon token={data.token} />
-      <Typography variant="bodySmall">{data.token.symbol}</Typography>
+  render: ({ token }) => (
+    <Stack direction="row" gap={1} alignItems="center">
+      <Box
+        component="img"
+        src={token.logo}
+        alt={token.name}
+        height={IconSize.medium}
+      />
+      <Typography color="text.primary">{token.symbol}</Typography>
     </Stack>
   ),
 };
@@ -112,8 +118,10 @@ const chipSx = {
   height: 'unset',
   width: 'unset',
   borderRadius: '4px',
-  fontSize: '14px', // set manually
-  lineHeight: '17px', // set manually
+  fontSize: '16px', // set manually
+  lineHeight: '16px', // set manually
+  background: Palette.lightestGreen,
+  color: Palette.logoGreen,
 };
 
 const BDVPctColumns: ISeedGaugeColumn[] = [
@@ -122,21 +130,13 @@ const BDVPctColumns: ISeedGaugeColumn[] = [
     header: 'Optimal BDV %',
     render: ({ optimalBDVPct, gaugePoints }) => {
       if (!gaugePoints || gaugePoints.eq(0)) {
-        return (
-          <Typography variant="bodySmall" color="text.tertiary">
-            N/A
-          </Typography>
-        );
+        return <Typography color="text.tertiary">N/A</Typography>;
       }
       return (
         <Chip
           variant="filled"
           label={`${displayBNValue(optimalBDVPct, '0')}%`}
-          sx={{
-            ...chipSx,
-            background: Palette.lightestGreen,
-            color: Palette.winterGreen,
-          }}
+          sx={chipSx}
         />
       );
     },
@@ -146,11 +146,7 @@ const BDVPctColumns: ISeedGaugeColumn[] = [
     header: 'Current LP BDV %',
     render: ({ optimalBDVPct, currentBDVPct, gaugePoints }) => {
       if (!gaugePoints || gaugePoints.eq(0)) {
-        return (
-          <Typography variant="bodySmall" color="text.tertiary">
-            N/A
-          </Typography>
-        );
+        return <Typography color="text.tertiary">N/A</Typography>;
       }
       const isOptimal = currentBDVPct.eq(optimalBDVPct);
 
@@ -160,7 +156,7 @@ const BDVPctColumns: ISeedGaugeColumn[] = [
           label={`${displayBNValue(currentBDVPct, '0')}%`}
           sx={{
             ...chipSx,
-            color: isOptimal ? Palette.winterGreen : Palette.theme.winter.red,
+            color: isOptimal ? Palette.logoGreen : Palette.theme.winter.red,
             background: isOptimal ? Palette.lightestGreen : Palette.lightestRed,
           }}
         />
@@ -171,7 +167,7 @@ const BDVPctColumns: ISeedGaugeColumn[] = [
 
 const basicViewColumns: ISeedGaugeColumn[] = [TokenColumn, ...BDVPctColumns];
 
-const columns: ISeedGaugeColumn[] = [
+const advancedViewColumns: ISeedGaugeColumn[] = [
   TokenColumn,
   {
     key: 'totalBDV',
@@ -180,7 +176,6 @@ const columns: ISeedGaugeColumn[] = [
       <Stack direction="row" alignItems="center" gap={0.25}>
         <img src={logo} style={{ width: 'auto', height: '.85rem' }} alt="" />
         <Typography
-          variant="bodySmall"
           color={isNonZero(totalBDV) ? 'text.primary' : 'text.tertiary'}
         >
           {displayBNValue(totalBDV)}
@@ -193,7 +188,6 @@ const columns: ISeedGaugeColumn[] = [
     header: 'Gauge Points',
     render: ({ gaugePoints }) => (
       <Typography
-        variant="bodySmall"
         color={isNonZero(gaugePoints) ? 'text.primary' : 'text.tertiary'}
       >
         {displayBNValue(gaugePoints)}
@@ -205,7 +199,6 @@ const columns: ISeedGaugeColumn[] = [
     header: 'Gauge Points per BDV',
     render: ({ gaugePointsPerBDV }) => (
       <Typography
-        variant="bodySmall"
         color={isNonZero(gaugePointsPerBDV) ? 'text.primary' : 'text.tertiary'}
       >
         {displayBNValue(gaugePointsPerBDV)}
@@ -220,8 +213,6 @@ const useTableConfig = (
   gaugeData: ReturnType<typeof useSeedGauge>['data']
 ) => {
   const sdk = useSdk();
-  const whitelist = useWhitelist();
-  const poolData = useAppSelector((s) => s._bean.pools);
   const siloBalances = useAppSelector((s) => s._beanstalk.silo.balances);
 
   const rowData = useMemo(() => {
@@ -245,12 +236,11 @@ const useTableConfig = (
         totalBDV: (siloBal?.bdvPerToken || ZERO_BN).times(
           siloBal?.deposited.amount || ZERO_BN
         ),
-        totalGrownStalk: tokenSettings?.milestoneStem || ZERO_BN,
         totalGrownStalkPerBDV: tokenSettings?.stalkIssuedPerBdv || ZERO_BN,
         gaugePoints: tokenSettings?.gaugePoints || ZERO_BN,
-        gaugePointsPerBDV: tokenSettings?.gaugePointsPerBdv || ZERO_BN, // TODO: SG: Implement this
+        gaugePointsPerBDV: tokenSettings?.gaugePointsPerBdv || ZERO_BN,
         optimalBDVPct: tokenSettings?.optimalPercentDepositedBdv || ZERO_BN,
-        currentBDVPct: tokenSettings?.currentPercentDepositedBdv || ZERO_BN, // TODO: SG: Implement this
+        currentBDVPct: tokenSettings?.currentPercentDepositedBdv || ZERO_BN,
         deltaStalkPerSeason: tokenSettings?.deltaStalkEarnedPerSeason,
       };
 
@@ -263,7 +253,6 @@ const useTableConfig = (
   return rowData;
 };
 
-// TODO: SG: FIX ME
 const ExpectedSeedRewardDirection = (row: ISeedGaugeRow) => {
   const optimal = row.optimalBDVPct?.eq(row.currentBDVPct);
 
@@ -272,7 +261,6 @@ const ExpectedSeedRewardDirection = (row: ISeedGaugeRow) => {
   }
 
   const isBelow = row.currentBDVPct?.lt(row.optimalBDVPct);
-  // const decreasing = rowSeedData.deltaStalkPerSeason?.lt(0);
 
   const direction = isBelow ? 'increase' : 'decrease';
   const Arrow = isBelow ? ArrowUpward : ArrowDownward;
@@ -283,13 +271,10 @@ const ExpectedSeedRewardDirection = (row: ISeedGaugeRow) => {
       alignItems="center"
       pr={{ xs: 2, md: 4 }}
       gap={0.25}
-      sx={(theme) => ({
-        // don't display this on mobile
-        [theme.breakpoints.down('sm')]: { display: 'none' },
-      })}
+      sx={{ display: { sm: 'none' } }}
     >
       <Arrow sx={{ fontSize: '0.9rem', color: 'text.secondary' }} />
-      <Typography color="text.secondary" variant="bodySmall">
+      <Typography color="text.secondary">
         Expected Seed Reward {direction} next Season
       </Typography>
     </Stack>
@@ -336,6 +321,46 @@ const GridColumn = ({
   );
 };
 
+const ARROW_WIDTH = '20px';
+
+const buttonSx = {
+  py: 1.5,
+  px: 2,
+  borderWidth: '0.5px',
+  borderColor: 'divider',
+  background: 'light.main',
+  '&:hover': {
+    borderColor: 'primary.main',
+    backgroundColor: 'primary.light',
+  },
+};
+
+const lastChildSx = {
+  '&:last-child': {
+    pr: {
+      xs: 0,
+      md: ARROW_WIDTH,
+    },
+  },
+};
+
+const ArrowRightAdornment = () => (
+  <Stack
+    display={{ xs: 'none', md: 'block' }}
+    sx={{ width: ARROW_WIDTH }}
+    alignItems="center"
+  >
+    <ArrowRight
+      sx={{
+        color: 'secondary.main',
+        position: 'relative',
+        top: '3px',
+        marginRight: '-3px',
+      }}
+    />
+  </Stack>
+);
+
 const SeedGaugeTable = ({
   data,
 }: {
@@ -343,12 +368,13 @@ const SeedGaugeTable = ({
 }) => {
   const [isAdvanced, show, hide] = useToggle();
   const rows = useTableConfig(isAdvanced, data);
-  const cols = isAdvanced ? columns : basicViewColumns;
+  const cols = isAdvanced ? advancedViewColumns : basicViewColumns;
 
   return (
     <Stack>
       <Box sx={{ borderBottom: '0.5px solid', borderColor: 'divider' }}>
-        <Stack px={2}>
+        <Stack px={3}>
+          {/* Show Advanced */}
           <Stack pt={1.5} direction="row" alignItems="center" gap={1}>
             <Typography variant="bodySmall">
               Show additional information
@@ -359,24 +385,26 @@ const SeedGaugeTable = ({
               onChange={() => (isAdvanced ? hide : show)()}
               inputProps={{ 'aria-label': 'controlled' }}
               sx={({ breakpoints }) => ({
-                [breakpoints.down('md')]: {
-                  display: 'none',
-                },
+                display: { md: 'none' },
+                // [breakpoints.down('md')]: {
+                //   display: 'none',
+                // },
               })}
             />
           </Stack>
-          <Stack pt={1} pb={1.5} px={1}>
-            {/* Headers */}
-            <Grid container direction="row" spacing={1}>
+
+          {/* Headers */}
+          <Stack pt={1} pb={1.5}>
+            <Grid container direction="row">
               {cols.map((column) => (
                 <GridColumn
                   column={column}
                   isAdvanced={isAdvanced}
                   key={`sg-header-${column.key}`}
+                  sx={lastChildSx}
                 >
                   <Tooltip title={column.headerTooltip || ''}>
                     <Typography
-                      variant="bodySmall"
                       color="text.secondary"
                       align="inherit"
                       textAlign="inherit"
@@ -394,47 +422,35 @@ const SeedGaugeTable = ({
       {/* Rows */}
       <Stack p={1} gap={1}>
         {rows.map((row, i) => (
-          <Card
-            key={`seed-gauge-row-${i}-${row.token.symbol}`}
-            sx={{
-              borderWidth: '0.5px',
-              borderColor: 'divider',
-            }}
-          >
-            <Stack py={1}>
-              <Grid container px={2}>
-                {cols.map((column, j) => (
-                  <GridColumn
-                    column={column}
-                    isAdvanced={isAdvanced}
-                    key={`sgr-${i}-${row.token.symbol}-${j}`}
-                  >
-                    <Stack direction="row" alignItems="center">
-                      {column.render(row)}
-                      {/* render the right arrow if last column */}
-                      {j === cols.length - 1 ? (
-                        <Stack
-                          display={{ xs: 'none', md: 'block' }}
-                          sx={{ width: '20px' }}
-                          alignItems="center"
-                        >
-                          <ArrowRight
-                            sx={{
-                              position: 'relative',
-                              color: 'secondary.main',
-                              top: '3px',
-                              marginRight: '-3px',
-                            }}
-                          />
-                        </Stack>
-                      ) : null}
-                    </Stack>
-                  </GridColumn>
-                ))}
-              </Grid>
-              <ExpectedSeedRewardDirection {...row} />
-            </Stack>
-          </Card>
+          <Box key={`seed-gauge-row-${i}-${row.token.symbol}`}>
+            <Button
+              component={RouterLink}
+              to={`/silo/${row.token.address}`}
+              fullWidth
+              variant="outlined"
+              color="primary"
+              size="large"
+              sx={buttonSx}
+            >
+              <Stack width="100%">
+                <Grid container>
+                  {cols.map((column, j) => (
+                    <GridColumn
+                      key={`sgr-${i}-${row.token.symbol}-${j}`}
+                      column={column}
+                      isAdvanced={isAdvanced}
+                    >
+                      <Stack direction="row" alignItems="center">
+                        {column.render(row)}
+                        {j === cols.length - 1 && <ArrowRightAdornment />}
+                      </Stack>
+                    </GridColumn>
+                  ))}
+                </Grid>
+                <ExpectedSeedRewardDirection {...row} />
+              </Stack>
+            </Button>
+          </Box>
         ))}
       </Stack>
     </Stack>
