@@ -20,8 +20,8 @@ export class LibraryPresets {
   public readonly usdt2bean: ActionBuilder;
   public readonly bean2usdt: ActionBuilder;
 
-  public readonly weth2bean: ActionBuilder;
-  public readonly bean2weth: ActionBuilder;
+  // public readonly weth2bean: ActionBuilder;
+  // public readonly bean2weth: ActionBuilder;
   public readonly weth2bean3crv: ActionBuilder;
 
   public readonly usdc2bean: ActionBuilder;
@@ -47,6 +47,9 @@ export class LibraryPresets {
   public readonly uniV3AddLiquidity;
   public readonly uniV3WellSwap;
   public readonly wellSwapUniV3;
+
+  public readonly stable2Bean;
+  public readonly bean2Stable;
 
   /**
    * Load the Pipeline in preparation for a set Pipe actions.
@@ -224,15 +227,15 @@ export class LibraryPresets {
       );
 
     //////// WETH <> BEAN
-    this.weth2bean = (fromMode?: FarmFromMode, toMode?: FarmToMode) => [
-      this.weth2usdt(fromMode, FarmToMode.INTERNAL) as StepGenerator,
-      this.usdt2bean(FarmFromMode.INTERNAL, toMode) as StepGenerator
-    ];
+    // this.weth2bean = (fromMode?: FarmFromMode, toMode?: FarmToMode) => [
+    //   this.weth2usdt(fromMode, FarmToMode.INTERNAL) as StepGenerator,
+    //   this.usdt2bean(FarmFromMode.INTERNAL, toMode) as StepGenerator
+    // ];
 
-    this.bean2weth = (fromMode?: FarmFromMode, toMode?: FarmToMode) => [
-      this.bean2usdt(fromMode, FarmToMode.INTERNAL) as StepGenerator,
-      this.usdt2weth(FarmFromMode.INTERNAL, toMode) as StepGenerator
-    ];
+    // this.bean2weth = (fromMode?: FarmFromMode, toMode?: FarmToMode) => [
+    //   this.bean2usdt(fromMode, FarmToMode.INTERNAL) as StepGenerator,
+    //   this.usdt2weth(FarmFromMode.INTERNAL, toMode) as StepGenerator
+    // ];
 
     ///////// WETH  -> 3CRV ///////////
     this.weth2bean3crv = (fromMode?: FarmFromMode, toMode?: FarmToMode) => [
@@ -306,6 +309,63 @@ export class LibraryPresets {
       fromMode?: FarmFromMode,
       toMode?: FarmToMode
     ) => [this.uniV3AddLiquidity(well, account, sdk.tokens.DAI, sdk.tokens.WETH, 500, fromMode)];
+
+    // shortest path is BEAN:WETH(well) => WETH:STABLE(uniV3)
+    // but we want to route swap through bean:wstETH b/c that's where the liquidity is
+    // eventually we'd want to have a router that will allow the user to pick a path / choose the best route
+    // thus the path for the best price is BEAN->wstETH(well) => wstETH->WETH(univ3) => WETH->STABLE(univ3)
+    this.bean2Stable = (
+      toToken: ERC20Token,
+      account: string,
+      fromMode?: FarmFromMode,
+      toMode?: FarmToMode
+    ) => {
+      return [
+        this.wellSwapUniV3(
+          sdk.pools.BEAN_WSTETH_WELL,
+          account,
+          sdk.tokens.BEAN,
+          sdk.tokens.WSTETH,
+          sdk.tokens.WETH,
+          100,
+          fromMode,
+          toMode
+        ),
+        this.uniswapV3Swap(
+          sdk.tokens.WETH,
+          toToken,
+          account,
+          500,
+          FarmFromMode.INTERNAL_TOLERANT,
+          toMode
+        )
+      ];
+    };
+
+    // shortest path is // shortest path is WETH:STABLE(uniV3) => BEAN:WETH(well)
+    // but we want to route swap through bean:wstETH b/c that's where the liquidity is
+    // eventually we'd want to have a router that will allow the user to pick a path / choose the best route
+    // thus the path for the best price is STABLE->WETH(univ3) => WETH->wstETH(univ3) => wstETH->BEAN(well)
+    this.stable2Bean = (
+      fromToken: ERC20Token,
+      account: string,
+      fromMode?: FarmFromMode,
+      toMode?: FarmToMode
+    ) => {
+      return [
+        this.uniswapV3Swap(fromToken, sdk.tokens.WETH, account, 500, fromMode, FarmToMode.INTERNAL),
+        this.uniV3WellSwap(
+          sdk.pools.BEAN_WSTETH_WELL,
+          account,
+          sdk.tokens.WETH,
+          sdk.tokens.WSTETH,
+          sdk.tokens.BEAN,
+          100,
+          FarmFromMode.INTERNAL_TOLERANT,
+          toMode
+        )
+      ];
+    };
 
     ///////// BEAN <> WETH ///////////
     this.wellSwap = (
