@@ -20,7 +20,7 @@ jobs:
           node-version: "18"
 
       - name: Install Yarn
-        run: npm install -g yarn@1.22.22 # Explicitly install Yarn Classic
+        run: npm install -g yarn@3.3.1
 
       - name: Install build essentials
         run: sudo apt-get update && sudo apt-get install -y build-essential
@@ -59,7 +59,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: "16"
+          node-version: "18"
 
       - name: Install build essentials
         run: sudo apt-get update && sudo apt-get install -y build-essential python3
