@@ -297,15 +297,15 @@ export class BlockchainUtils {
       console.log("DeltaB already over 0, skipping");
       return;
     }
-    const op = this.sdk.swap.buildSwap(this.sdk.tokens.WETH, this.sdk.tokens.BEAN, account);
+    const op = this.sdk.swap.buildSwap(this.sdk.tokens.WSTETH, this.sdk.tokens.BEAN, account);
     const beanAmountToBuy = deltaB.abs().mul(multiplier);
     const quote = await op.estimateReversed(beanAmountToBuy);
     console.log(
       `DeltaB is ${deltaB.toHuman()}. BUYING ${beanAmountToBuy.toHuman()} BEANS (with a ${multiplier}x multiplier)`
     );
 
-    await this.setBalance(this.sdk.tokens.WETH, account, quote);
-    const txa = await this.sdk.tokens.WETH.approveBeanstalk(quote);
+    await this.setBalance(this.sdk.tokens.WSTETH, account, quote);
+    const txa = await this.sdk.tokens.WSTETH.approveBeanstalk(quote);
     await txa.wait();
 
     const tx = op.execute(quote, 0.2);
@@ -326,7 +326,7 @@ export class BlockchainUtils {
       console.log("DeltaB already under zero, skipping");
       return;
     }
-    const op = this.sdk.swap.buildSwap(this.sdk.tokens.BEAN, this.sdk.tokens.WETH, account);
+    const op = this.sdk.swap.buildSwap(this.sdk.tokens.BEAN, this.sdk.tokens.WSTETH, account);
     const amount = deltaB.abs().mul(multiplier);
     console.log(
       `DeltaB is ${deltaB.toHuman()}. SELLING ${amount.toHuman()} BEANS (with a ${multiplier}x multiplier)`
