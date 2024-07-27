@@ -399,6 +399,7 @@ library LibDibbler {
         Field storage field = s.accts[account].fields[fieldId];
         field.plotIndexes[i] = field.plotIndexes[field.plotIndexes.length - 1];
         field.piIndex[field.plotIndexes[i]] = i;
+        field.piIndex[plotIndex] = type(uint256).max;
         field.plotIndexes.pop();
     }
 
@@ -411,8 +412,6 @@ library LibDibbler {
         uint256 plotIndex
     ) internal view returns (uint256 i) {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        console.log("i", i);
-        console.log("plotIndex", plotIndex);
         return s.accts[account].fields[fieldId].piIndex[plotIndex];
     }
 }

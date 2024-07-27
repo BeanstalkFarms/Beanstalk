@@ -599,6 +599,7 @@ library LibTokenSilo {
         uint256 i = findDepositIdForAccount(account, token, depositId);
         list.depositIds[i] = list.depositIds[list.depositIds.length - 1];
         list.idIndex[list.depositIds[i]] = i;
+        list.idIndex[depositId] = type(uint256).max;
         list.depositIds.pop();
     }
 
