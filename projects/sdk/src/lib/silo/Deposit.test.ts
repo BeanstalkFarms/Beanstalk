@@ -20,7 +20,7 @@ const happyPaths: Record<string, string> = {
   "WETH:BEANwstETH": "WETH -> wstETH -> BEANwstETH -> BEANwstETH:SILO",
 
   "wstETH:BEANETH": "wstETH -> WETH -> BEANETH -> BEANETH:SILO",
-  "wstETH:BEAN": "wstETH -> WETH -> BEAN -> BEAN:SILO",
+  "wstETH:BEAN": "wstETH -> BEAN -> BEAN:SILO",
   "wstETH:BEANwstETH": "wstETH -> BEANwstETH -> BEANwstETH:SILO",
 
   "BEAN:BEAN": "BEAN -> BEAN:SILO",
