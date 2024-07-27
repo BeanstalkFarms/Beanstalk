@@ -9,6 +9,7 @@ import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
 import {LibAppStorage} from "../LibAppStorage.sol";
 import {AppStorage} from "contracts/beanstalk/storage/AppStorage.sol";
 import {Deposited, GerminationSide} from "contracts/beanstalk/storage/System.sol";
+import {DepositListData} from "contracts/beanstalk/storage/Account.sol";
 import {C} from "../../C.sol";
 import {LibRedundantMath32} from "contracts/libraries/LibRedundantMath32.sol";
 import {LibRedundantMath128} from "contracts/libraries/LibRedundantMath128.sol";
@@ -291,8 +292,11 @@ library LibTokenSilo {
         uint256 depositId = LibBytes.packAddressAndStem(token, stem);
 
         // add a depositId to an account's depositList, if there is not an existing deposit.
-        if (s.accts[account].deposits[depositId].amount == 0) {
-            s.accts[account].depositIdList[token].push(depositId);
+        if (s.accts[account].deposits[depositId].amount == 0 && amount > 0) {
+            s.accts[account].depositIdList[token].depositIds.push(depositId);
+            s.accts[account].depositIdList[token].idIndex[depositId] =
+                s.accts[account].depositIdList[token].depositIds.length -
+                1;
         }
         // add amount and bdv to the deposits.
         s.accts[account].deposits[depositId].amount = s
@@ -591,11 +595,11 @@ library LibTokenSilo {
         uint256 depositId
     ) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
+        DepositListData storage list = s.accts[account].depositIdList[token];
         uint256 i = findDepositIdForAccount(account, token, depositId);
-        s.accts[account].depositIdList[token][i] = s.accts[account].depositIdList[token][
-            s.accts[account].depositIdList[token].length - 1
-        ];
-        s.accts[account].depositIdList[token].pop();
+        list.depositIds[i] = list.depositIds[list.depositIds.length - 1];
+        list.idIndex[list.depositIds[i]] = i;
+        list.depositIds.pop();
     }
 
     /**
@@ -607,14 +611,6 @@ library LibTokenSilo {
         uint256 depositId
     ) internal view returns (uint256 i) {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        uint256[] memory depositIdList = s.accts[account].depositIdList[token];
-        uint256 length = depositIdList.length;
-        while (depositIdList[i] != depositId) {
-            i++;
-            if (i >= length) {
-                revert("Id not found");
-            }
-        }
-        return i;
+        i = s.accts[account].depositIdList[token].idIndex[depositId];
     }
 }

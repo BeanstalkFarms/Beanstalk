@@ -74,6 +74,7 @@ library LibDibbler {
         bool abovePeg
     ) internal returns (uint256) {
         AppStorage storage s = LibAppStorage.diamondStorage();
+        uint256 activeField = s.sys.activeField;
 
         uint256 pods;
         if (abovePeg) {
@@ -94,13 +95,16 @@ library LibDibbler {
             s.sys.soil = s.sys.soil.sub(uint128(beans));
         }
 
-        uint256 index = s.sys.fields[s.sys.activeField].pods;
+        uint256 index = s.sys.fields[activeField].pods;
 
-        s.accts[account].fields[s.sys.activeField].plots[index] = pods;
-        s.accts[account].fields[s.sys.activeField].plotIndexes.push(index);
-        emit Sow(account, s.sys.activeField, index, beans, pods);
+        s.accts[account].fields[activeField].plots[index] = pods;
+        s.accts[account].fields[activeField].plotIndexes.push(index);
+        s.accts[account].fields[activeField].piIndex[index] =
+            s.accts[account].fields[activeField].plotIndexes.length -
+            1;
+        emit Sow(account, activeField, index, beans, pods);
 
-        s.sys.fields[s.sys.activeField].pods += pods;
+        s.sys.fields[activeField].pods += pods;
         _saveSowTime();
         return pods;
     }
@@ -394,6 +398,7 @@ library LibDibbler {
         uint256 i = findPlotIndexForAccount(account, fieldId, plotIndex);
         Field storage field = s.accts[account].fields[fieldId];
         field.plotIndexes[i] = field.plotIndexes[field.plotIndexes.length - 1];
+        field.piIndex[field.plotIndexes[i]] = i;
         field.plotIndexes.pop();
     }
 
@@ -406,15 +411,8 @@ library LibDibbler {
         uint256 plotIndex
     ) internal view returns (uint256 i) {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        Field storage field = s.accts[account].fields[fieldId];
-        uint256[] memory plotIndexes = field.plotIndexes;
-        uint256 length = plotIndexes.length;
-        while (plotIndexes[i] != plotIndex) {
-            i++;
-            if (i >= length) {
-                revert("Id not found");
-            }
-        }
-        return i;
+        console.log("i", i);
+        console.log("plotIndex", plotIndex);
+        return s.accts[account].fields[fieldId].piIndex[plotIndex];
     }
 }
