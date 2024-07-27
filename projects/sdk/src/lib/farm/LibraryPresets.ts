@@ -6,6 +6,7 @@ import { FarmFromMode, FarmToMode } from "../farm/types";
 import { EIP2612PermitMessage, SignedPermit } from "../permit";
 import { Exchange, ExchangeUnderlying } from "./actions/index";
 import { BasinWell } from "src/classes/Pool/BasinWell";
+import { sdk } from "src/constants/generated/projects";
 
 export type ActionBuilder = (
   fromMode?: FarmFromMode,
@@ -50,6 +51,8 @@ export class LibraryPresets {
 
   public readonly stable2Bean;
   public readonly bean2Stable;
+  public readonly stable2beanWstETH;
+  public readonly stable2wstETH;
 
   /**
    * Load the Pipeline in preparation for a set Pipe actions.
@@ -226,17 +229,6 @@ export class LibraryPresets {
         toMode
       );
 
-    //////// WETH <> BEAN
-    // this.weth2bean = (fromMode?: FarmFromMode, toMode?: FarmToMode) => [
-    //   this.weth2usdt(fromMode, FarmToMode.INTERNAL) as StepGenerator,
-    //   this.usdt2bean(FarmFromMode.INTERNAL, toMode) as StepGenerator
-    // ];
-
-    // this.bean2weth = (fromMode?: FarmFromMode, toMode?: FarmToMode) => [
-    //   this.bean2usdt(fromMode, FarmToMode.INTERNAL) as StepGenerator,
-    //   this.usdt2weth(FarmFromMode.INTERNAL, toMode) as StepGenerator
-    // ];
-
     ///////// WETH  -> 3CRV ///////////
     this.weth2bean3crv = (fromMode?: FarmFromMode, toMode?: FarmToMode) => [
       this.weth2usdt(fromMode, FarmToMode.INTERNAL) as StepGenerator,
@@ -310,6 +302,26 @@ export class LibraryPresets {
       toMode?: FarmToMode
     ) => [this.uniV3AddLiquidity(well, account, sdk.tokens.DAI, sdk.tokens.WETH, 500, fromMode)];
 
+    ///////// BEAN:wstETH Well ///////////
+    // STABLE -> BEAN:wstETH LP
+    this.stable2beanWstETH = (
+      fromToken: ERC20Token,
+      account: string,
+      fromMode?: FarmFromMode,
+      _toMode?: FarmToMode
+    ) => [
+      this.uniswapV3Swap(fromToken, sdk.tokens.WETH, account, 500, fromMode, FarmToMode.INTERNAL),
+      this.uniV3AddLiquidity(
+        sdk.pools.BEAN_WSTETH_WELL,
+        account,
+        sdk.tokens.WETH,
+        sdk.tokens.WSTETH,
+        100,
+        FarmFromMode.INTERNAL_TOLERANT
+      )
+    ];
+
+    // BEAN->USDC/USDT/DAI via Pipeline
     // shortest path is BEAN:WETH(well) => WETH:STABLE(uniV3)
     // but we want to route swap through bean:wstETH b/c that's where the liquidity is
     // eventually we'd want to have a router that will allow the user to pick a path / choose the best route
@@ -329,19 +341,13 @@ export class LibraryPresets {
           sdk.tokens.WETH,
           100,
           fromMode,
-          toMode
+          FarmToMode.INTERNAL
         ),
-        this.uniswapV3Swap(
-          sdk.tokens.WETH,
-          toToken,
-          account,
-          500,
-          FarmFromMode.INTERNAL_TOLERANT,
-          toMode
-        )
+        this.uniswapV3Swap(sdk.tokens.WETH, toToken, account, 500, FarmFromMode.INTERNAL, toMode)
       ];
     };
 
+    // USDC/USDT/DAI->BEAN via Pipeline
     // shortest path is // shortest path is WETH:STABLE(uniV3) => BEAN:WETH(well)
     // but we want to route swap through bean:wstETH b/c that's where the liquidity is
     // eventually we'd want to have a router that will allow the user to pick a path / choose the best route
@@ -366,6 +372,36 @@ export class LibraryPresets {
         )
       ];
     };
+
+    ///////// USDC/USDT/DAI -> WstETH ///////////
+    this.stable2wstETH = (
+      fromToken: ERC20Token,
+      account: string,
+      fromMode?: FarmFromMode,
+      toMode?: FarmToMode
+    ) => {
+      const validInputs = [sdk.tokens.DAI, sdk.tokens.USDC, sdk.tokens.USDT];
+
+      if (!validInputs.some((t) => t.equals(fromToken))) {
+        throw new Error(
+          `[stable2wstETH] expected tokenIn to be DAI, USDC, USDT, but got ${fromToken.symbol}`
+        );
+      }
+
+      return [
+        this.uniswapV3Swap(fromToken, sdk.tokens.WETH, account, 500, fromMode, FarmToMode.INTERNAL),
+        this.uniswapV3Swap(
+          sdk.tokens.WETH,
+          sdk.tokens.WSTETH,
+          account,
+          100,
+          FarmFromMode.INTERNAL_TOLERANT,
+          toMode
+        )
+      ];
+    };
+
+    // ETH/WETH -> wstETH
 
     ///////// BEAN <> WETH ///////////
     this.wellSwap = (
@@ -576,8 +612,9 @@ export class LibraryPresets {
         FarmToMode.INTERNAL,
         transferClipboard
       );
-
+      // if (account !== sdk.contracts.pipeline.address) {
       result.push(transfer);
+      // }
       advancedPipe.add(approveUniswap);
       advancedPipe.add(swap, { tag: "uniV3SwapAmount" });
       if (transferBack) {
