@@ -107,19 +107,6 @@ export const getSwapGraph = (sdk: BeanstalkSDK): Graph => {
     to: "ETH"
   });
 
-  /// USDT<>WETH via tricrypto2 Exchange
-
-  graph.setEdge("WETH", "USDT", {
-    build: (_: string, from: FarmFromMode, to: FarmToMode) => sdk.farm.presets.weth2usdt(from, to),
-    from: "WETH",
-    to: "USDT"
-  });
-  graph.setEdge("USDT", "WETH", {
-    build: (_: string, from: FarmFromMode, to: FarmToMode) => sdk.farm.presets.usdt2weth(from, to),
-    from: "USDT",
-    to: "WETH"
-  });
-
   // BEAN<>WETH via Basin Well
   graph.setEdge("BEAN", "WETH", {
     build: (account: string, from: FarmFromMode, to: FarmToMode) =>
@@ -208,72 +195,6 @@ export const getSwapGraph = (sdk: BeanstalkSDK): Graph => {
     to: "DAI"
   });
 
-  //BEAN<>USDC via Pipeline
-  graph.setEdge("USDC", "BEAN", {
-    build: (account: string, from: FarmFromMode, to: FarmToMode) =>
-      sdk.farm.presets.uniV3WellSwap(
-        sdk.pools.BEAN_ETH_WELL,
-        account,
-        sdk.tokens.USDC,
-        sdk.tokens.WETH,
-        sdk.tokens.BEAN,
-        500,
-        from,
-        to
-      ),
-    from: "USDC",
-    to: "BEAN"
-  });
-
-  graph.setEdge("BEAN", "USDC", {
-    build: (account: string, from: FarmFromMode, to: FarmToMode) =>
-      sdk.farm.presets.wellSwapUniV3(
-        sdk.pools.BEAN_ETH_WELL,
-        account,
-        sdk.tokens.BEAN,
-        sdk.tokens.WETH,
-        sdk.tokens.USDC,
-        500,
-        from,
-        to
-      ),
-    from: "BEAN",
-    to: "USDC"
-  });
-
-  //BEAN<>DAI via Pipeline
-  graph.setEdge("DAI", "BEAN", {
-    build: (account: string, from: FarmFromMode, to: FarmToMode) =>
-      sdk.farm.presets.uniV3WellSwap(
-        sdk.pools.BEAN_ETH_WELL,
-        account,
-        sdk.tokens.DAI,
-        sdk.tokens.WETH,
-        sdk.tokens.BEAN,
-        500,
-        from,
-        to
-      ),
-    from: "DAI",
-    to: "BEAN"
-  });
-
-  graph.setEdge("BEAN", "DAI", {
-    build: (account: string, from: FarmFromMode, to: FarmToMode) =>
-      sdk.farm.presets.wellSwapUniV3(
-        sdk.pools.BEAN_ETH_WELL,
-        account,
-        sdk.tokens.BEAN,
-        sdk.tokens.WETH,
-        sdk.tokens.DAI,
-        500,
-        from,
-        to
-      ),
-    from: "BEAN",
-    to: "DAI"
-  });
-
   // WETH<>WSTETH
   graph.setEdge("WETH", "wstETH", {
     build: (account: string, from: FarmFromMode, to: FarmToMode) =>
@@ -286,6 +207,22 @@ export const getSwapGraph = (sdk: BeanstalkSDK): Graph => {
       sdk.farm.presets.uniswapV3Swap(sdk.tokens.WSTETH, sdk.tokens.WETH, account, 100, from, to),
     from: "wstETH",
     to: "WETH"
+  });
+
+  // BEAN<>Stables
+  [sdk.tokens.DAI, sdk.tokens.USDC, sdk.tokens.USDT].forEach((token) => {
+    graph.setEdge("BEAN", token.symbol, {
+      build: (account: string, from: FarmFromMode, to: FarmToMode) =>
+        sdk.farm.presets.bean2Stable(token, account, from, to),
+      from: "BEAN",
+      to: token.symbol
+    });
+    graph.setEdge(token.symbol, "BEAN", {
+      build: (account: string, from: FarmFromMode, to: FarmToMode) =>
+        sdk.farm.presets.stable2Bean(token, account, from, to),
+      from: token.symbol,
+      to: "BEAN"
+    });
   });
 
   /// 3CRV<>Stables via 3Pool Add/Remove Liquidity
@@ -341,3 +278,70 @@ export const getSwapGraph = (sdk: BeanstalkSDK): Graph => {
 
   return graph;
 };
+
+// RE-add these when BEAN<>WETH has more liquidity
+//BEAN<>USDC via Pipeline
+// graph.setEdge("USDC", "BEAN", {
+//   build: (account: string, from: FarmFromMode, to: FarmToMode) =>
+//     sdk.farm.presets.uniV3WellSwap(
+//       sdk.pools.BEAN_ETH_WELL,
+//       account,
+//       sdk.tokens.USDC,
+//       sdk.tokens.WETH,
+//       sdk.tokens.BEAN,
+//       500,
+//       from,
+//       to
+//     ),
+//   from: "USDC",
+//   to: "BEAN"
+// });
+
+// graph.setEdge("BEAN", "USDC", {
+//   build: (account: string, from: FarmFromMode, to: FarmToMode) =>
+//     sdk.farm.presets.wellSwapUniV3(
+//       sdk.pools.BEAN_ETH_WELL,
+//       account,
+//       sdk.tokens.BEAN,
+//       sdk.tokens.WETH,
+//       sdk.tokens.USDC,
+//       500,
+//       from,
+//       to
+//     ),
+//   from: "BEAN",
+//   to: "USDC"
+// });
+
+//BEAN<>DAI via Pipeline
+// graph.setEdge("DAI", "BEAN", {
+//   build: (account: string, from: FarmFromMode, to: FarmToMode) =>
+//     sdk.farm.presets.uniV3WellSwap(
+//       sdk.pools.BEAN_ETH_WELL,
+//       account,
+//       sdk.tokens.DAI,
+//       sdk.tokens.WETH,
+//       sdk.tokens.BEAN,
+//       500,
+//       from,
+//       to
+//     ),
+//   from: "DAI",
+//   to: "BEAN"
+// });
+
+// graph.setEdge("BEAN", "DAI", {
+//   build: (account: string, from: FarmFromMode, to: FarmToMode) =>
+//     sdk.farm.presets.wellSwapUniV3(
+//       sdk.pools.BEAN_ETH_WELL,
+//       account,
+//       sdk.tokens.BEAN,
+//       sdk.tokens.WETH,
+//       sdk.tokens.DAI,
+//       500,
+//       from,
+//       to
+//     ),
+//   from: "BEAN",
+//   to: "DAI"
+// });

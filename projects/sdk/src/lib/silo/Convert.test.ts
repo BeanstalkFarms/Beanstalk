@@ -11,13 +11,13 @@ sdk.source = DataSource.LEDGER;
 
 jest.setTimeout(30000);
 
-const convert = sdk.silo.siloConvert
+const convert = sdk.silo.siloConvert;
 const BEAN = sdk.tokens.BEAN;
 const BEANLP = sdk.tokens.BEAN_ETH_WELL_LP;
 const urBEAN = sdk.tokens.UNRIPE_BEAN;
 const urBEANLP = sdk.tokens.UNRIPE_BEAN_WSTETH;
 
-describe("Silo Convert", function () {  
+describe("Silo Convert", function () {
   beforeAll(async () => {
     setTokenRewards();
     await utils.resetFork();
@@ -102,7 +102,13 @@ describe("Silo Convert", function () {
     // random order
     const crates = [c2, c1, c3];
 
-    const calc1 = convert.calculateConvert(BEANLP, BEAN, BEANLP.amount(3000), crates, currentSeason);
+    const calc1 = convert.calculateConvert(
+      BEANLP,
+      BEAN,
+      BEANLP.amount(3000),
+      crates,
+      currentSeason
+    );
     expect(calc1.crates.length).toEqual(3);
     expect(calc1.crates[0].amount.toHuman()).toEqual("2000"); // takes full amount from c1
     expect(calc1.crates[0].stem.toString()).toEqual("10393"); // confirm this is c1
@@ -133,7 +139,7 @@ describe("Silo Convert", function () {
 
     it(`Convert ${from.symbol} -> ${to.symbol}`, async () => {
       const fn = async () => await (await sdk.silo.convert(from, to, from.amount(1))).wait();
-      await expect(fn()).rejects.toThrow("Cannot convert between the same token");
+      await expect(fn).rejects.toThrow("Cannot convert between the same token");
     });
   });
 
@@ -157,7 +163,7 @@ describe("Silo Convert", function () {
       const { from, to } = pair;
       it(`Fail ${from.symbol} -> ${to.symbol}`, async () => {
         const fn = async () => await (await convert.convert(from, to, from.amount(1))).wait();
-        await expect(fn()).rejects.toThrow("No conversion path found");
+        await expect(fn).rejects.toThrow("No conversion path found");
       });
     });
 
@@ -179,7 +185,8 @@ describe("Silo Convert", function () {
       ])("Converts Successfully", (pair) => {
         const { from, to } = pair;
 
-        it.skip(`${from.symbol} -> ${to.symbol}`, async () => { // TODO: FIX ME. USD Oracle Fails
+        it.skip(`${from.symbol} -> ${to.symbol}`, async () => {
+          // TODO: FIX ME. USD Oracle Fails
           const balanceBefore = await sdk.silo.getBalance(to, account);
           const { minAmountOut } = await sdk.silo.convertEstimate(from, to, from.amount(100));
           const tx = await convert.convert(from, to, from.amount(100), 0.1, { gasLimit: 5000000 });
@@ -200,7 +207,7 @@ describe("Silo Convert", function () {
           const fn = async () => await (await sdk.silo.convert(from, to, from.amount(100))).wait();
 
           // await expect(fn()).rejects.toThrow("Cannot convert this token when deltaB is < 0");
-          await expect(fn()).rejects.toThrow();
+          await expect(fn).rejects.toThrow();
         });
       });
     });
@@ -218,18 +225,23 @@ describe("Silo Convert", function () {
         expect(deltaB.gte(TokenValue.ZERO)).toBe(true);
       });
 
-      describe.each([ 
+      describe.each([
         { from: BEAN, to: BEANLP },
         { from: urBEAN, to: urBEANLP }
       ])("Converts Successfully", (pair) => {
         const { from, to } = pair;
 
-        it.skip(`${from.symbol} -> ${to.symbol}`, async () => { // TODO: FIX ME. USD Oracle Fails
-          const balanceBefore = await sdk.silo.getBalance(to, account, { source: DataSource.LEDGER });
+        it.skip(`${from.symbol} -> ${to.symbol}`, async () => {
+          // TODO: FIX ME. USD Oracle Fails
+          const balanceBefore = await sdk.silo.getBalance(to, account, {
+            source: DataSource.LEDGER
+          });
           const { minAmountOut } = await sdk.silo.convertEstimate(from, to, from.amount(100));
           const tx = await sdk.silo.convert(from, to, from.amount(100), 0.1, { gasLimit: 5000000 });
           await tx.wait();
-          const balanceAfter = await sdk.silo.getBalance(to, account, { source: DataSource.LEDGER });
+          const balanceAfter = await sdk.silo.getBalance(to, account, {
+            source: DataSource.LEDGER
+          });
 
           expect(balanceAfter.amount.gte(balanceBefore.amount.add(minAmountOut))).toBe(true);
         });
@@ -242,10 +254,13 @@ describe("Silo Convert", function () {
         const { from, to } = pair;
 
         it.skip(`${from.symbol} -> ${to.symbol}`, async () => {
-          const fn = async () => await (await convert.convert(from, to, from.amount(100), 0.1, { 
-            gasLimit: 5000000 
-          })).wait();
-          await expect(fn()).rejects.toThrow();
+          const fn = async () =>
+            await (
+              await convert.convert(from, to, from.amount(100), 0.1, {
+                gasLimit: 5000000
+              })
+            ).wait();
+          await expect(fn).rejects.toThrow();
           // await expect(fn()).rejects.toThrow("Cannot convert this token when deltaB is >= 0");
         });
       });
@@ -261,22 +276,21 @@ async function deposit(from: Token, to: Token, _amount: number) {
   await txr.wait();
 }
 
-
 const setTokenRewards = () => {
-  sdk.tokens.BEAN.rewards = { 
-    seeds: sdk.tokens.SEEDS.amount(3), 
-    stalk: sdk.tokens.STALK.amount(1) 
+  sdk.tokens.BEAN.rewards = {
+    seeds: sdk.tokens.SEEDS.amount(3),
+    stalk: sdk.tokens.STALK.amount(1)
   };
-  sdk.tokens.BEAN_ETH_WELL_LP.rewards = { 
-    seeds: sdk.tokens.SEEDS.amount(3), stalk:
-     sdk.tokens.STALK.amount(1) 
-    };
-  sdk.tokens.UNRIPE_BEAN.rewards = { 
-    seeds: sdk.tokens.SEEDS.amount(0.000001), 
-    stalk: sdk.tokens.STALK.amount(1) 
+  sdk.tokens.BEAN_ETH_WELL_LP.rewards = {
+    seeds: sdk.tokens.SEEDS.amount(3),
+    stalk: sdk.tokens.STALK.amount(1)
   };
-  sdk.tokens.UNRIPE_BEAN_WSTETH.rewards = { 
-    seeds: sdk.tokens.SEEDS.amount(0.000001), 
-    stalk: sdk.tokens.STALK.amount(1) 
+  sdk.tokens.UNRIPE_BEAN.rewards = {
+    seeds: sdk.tokens.SEEDS.amount(0.000001),
+    stalk: sdk.tokens.STALK.amount(1)
   };
-}
+  sdk.tokens.UNRIPE_BEAN_WSTETH.rewards = {
+    seeds: sdk.tokens.SEEDS.amount(0.000001),
+    stalk: sdk.tokens.STALK.amount(1)
+  };
+};
