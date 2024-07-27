@@ -25,6 +25,7 @@ import { BASIN_WELL_LINK, CURVE_LINK, NEW_BN, ZERO_BN } from '~/constants';
 import { useFetchPools } from '~/state/bean/pools/updater';
 import { AppState } from '~/state';
 import ethereumLogo from '~/img/tokens/eth-logo-circled.svg';
+import wstETHLogo from '~/img/tokens/wsteth-logo.svg';
 
 // ------------------------------------------------------------
 
@@ -306,6 +307,23 @@ const PriceButton: FC<ButtonProps> = ({ ...props }) => {
         </Box>
         <div>${tokenPrices.eth?.toFixed(2) || 0}</div>
       </Box>
+      <Box
+        sx={{
+          display: 'flex',
+          flexDirection: 'row',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+        }}
+      >
+        <Box display="flex" flexDirection="row">
+          <Avatar
+            sx={{ width: 18, height: 18, marginRight: '5px' }}
+            src={wstETHLogo}
+          />{' '}
+          wstETH Price
+        </Box>
+        <div>${tokenPrices.wstETH?.toFixed(2) || 0}</div>
+      </Box>
 
       {/* TWA ETH Price */}
       <Box
@@ -325,7 +343,24 @@ const PriceButton: FC<ButtonProps> = ({ ...props }) => {
         </Box>
         <div>${tokenPrices['ETH-TWA']?.toFixed(2) || 0}</div>
       </Box>
-
+      {/* TWA wstETH Price */}
+      <Box
+        sx={{
+          display: 'flex',
+          flexDirection: 'row',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+        }}
+      >
+        <Box display="flex" flexDirection="row">
+          <Avatar
+            sx={{ width: 18, height: 18, marginRight: '5px' }}
+            src={wstETHLogo}
+          />{' '}
+          TWA ETH Price
+        </Box>
+        <div>${tokenPrices['wstETH-TWA']?.toFixed(2) || 0}</div>
+      </Box>
       <Box sx={{ marginTop: '100px' }}>
         <Typography
           sx={{ color: '#647265', fontSize: '12px', lineHeight: '14px' }}
