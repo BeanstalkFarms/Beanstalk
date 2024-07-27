@@ -95,6 +95,7 @@ export const getSwapGraph = (sdk: BeanstalkSDK): Graph => {
   ////// Add Edges
 
   /// ETH<>WETH via Wrap/Unwrap
+
   graph.setEdge("ETH", "WETH", {
     build: (_: string, _2: FarmFromMode, to: FarmToMode) => new sdk.farm.actions.WrapEth(to),
     from: "ETH",
@@ -120,6 +121,7 @@ export const getSwapGraph = (sdk: BeanstalkSDK): Graph => {
     from: "BEAN",
     to: "WETH"
   });
+
   graph.setEdge("WETH", "BEAN", {
     build: (account: string, from: FarmFromMode, to: FarmToMode) =>
       sdk.farm.presets.wellSwap(
@@ -148,6 +150,7 @@ export const getSwapGraph = (sdk: BeanstalkSDK): Graph => {
     from: "BEAN",
     to: "wstETH"
   });
+
   graph.setEdge("wstETH", "BEAN", {
     build: (account: string, from: FarmFromMode, to: FarmToMode) =>
       sdk.farm.presets.wellSwap(
@@ -160,18 +163,6 @@ export const getSwapGraph = (sdk: BeanstalkSDK): Graph => {
       ),
     from: "wstETH",
     to: "BEAN"
-  });
-
-  /// USDT<>WETH via tricrypto2 Exchange
-  graph.setEdge("WETH", "USDT", {
-    build: (_: string, from: FarmFromMode, to: FarmToMode) => sdk.farm.presets.weth2usdt(from, to),
-    from: "WETH",
-    to: "USDT"
-  });
-  graph.setEdge("USDT", "WETH", {
-    build: (_: string, from: FarmFromMode, to: FarmToMode) => sdk.farm.presets.usdt2weth(from, to),
-    from: "USDT",
-    to: "WETH"
   });
 
   // USDC<>WETH via Uniswap V3
@@ -288,7 +279,7 @@ export const getSwapGraph = (sdk: BeanstalkSDK): Graph => {
   return graph;
 };
 
-// removing these routes for now since BEAN<>WETH liquidity is low
+// RE-add these when BEAN<>WETH has more liquidity
 //BEAN<>USDC via Pipeline
 // graph.setEdge("USDC", "BEAN", {
 //   build: (account: string, from: FarmFromMode, to: FarmToMode) =>

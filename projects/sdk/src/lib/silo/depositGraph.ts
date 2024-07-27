@@ -443,15 +443,6 @@ export const getDepositGraph = (sdk: BeanstalkSDK): Graph => {
   return graph;
 };
 
-// no longer need this one since bean:3crv is de-whitelisted
-// graph.setEdge("WETH", "USDT", {
-//   build: (_: string, from: FarmFromMode, to: FarmToMode) =>
-//     sdk.farm.presets.weth2usdt(from, to),
-//   from: "WETH",
-//   to: "USDT",
-//   label: "exchange"
-// });
-
 // remove these as bean:eth has low liquidity
 
 // graph.setEdge("USDC", "BEAN", {

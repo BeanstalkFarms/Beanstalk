@@ -6,7 +6,6 @@ import { FarmFromMode, FarmToMode } from "../farm/types";
 import { EIP2612PermitMessage, SignedPermit } from "../permit";
 import { Exchange, ExchangeUnderlying } from "./actions/index";
 import { BasinWell } from "src/classes/Pool/BasinWell";
-import { sdk } from "src/constants/generated/projects";
 
 export type ActionBuilder = (
   fromMode?: FarmFromMode,
@@ -17,19 +16,7 @@ export class LibraryPresets {
   static sdk: BeanstalkSDK;
   public readonly weth2usdt: ActionBuilder;
   public readonly usdt2weth: ActionBuilder;
-
-  public readonly usdt2bean: ActionBuilder;
-  public readonly bean2usdt: ActionBuilder;
-
-  // public readonly weth2bean: ActionBuilder;
-  // public readonly bean2weth: ActionBuilder;
   public readonly weth2bean3crv: ActionBuilder;
-
-  public readonly usdc2bean: ActionBuilder;
-  public readonly bean2usdc: ActionBuilder;
-
-  public readonly dai2bean: ActionBuilder;
-  public readonly bean2dai: ActionBuilder;
 
   public readonly dai2usdt: ActionBuilder;
   public readonly usdc2usdt: ActionBuilder;
@@ -151,6 +138,8 @@ export class LibraryPresets {
   constructor(sdk: BeanstalkSDK) {
     LibraryPresets.sdk = sdk;
 
+    const stables = [sdk.tokens.DAI, sdk.tokens.USDC, sdk.tokens.USDT];
+
     ///////// WETH <> USDT ///////////
     this.weth2usdt = (fromMode?: FarmFromMode, toMode?: FarmToMode) =>
       new Exchange(
@@ -168,63 +157,6 @@ export class LibraryPresets {
         sdk.contracts.curve.registries.cryptoFactory.address,
         sdk.tokens.USDT,
         sdk.tokens.WETH,
-        fromMode,
-        toMode
-      );
-
-    ///////// USDT <> BEAN ///////////
-    this.usdt2bean = (fromMode?: FarmFromMode, toMode?: FarmToMode) =>
-      new ExchangeUnderlying(
-        sdk.contracts.curve.pools.beanCrv3.address,
-        sdk.tokens.USDT,
-        sdk.tokens.BEAN,
-        fromMode,
-        toMode
-      );
-
-    this.bean2usdt = (fromMode?: FarmFromMode, toMode?: FarmToMode) =>
-      new ExchangeUnderlying(
-        sdk.contracts.curve.pools.beanCrv3.address,
-        sdk.tokens.BEAN,
-        sdk.tokens.USDT,
-        fromMode,
-        toMode
-      );
-
-    ///////// USDC <> BEAN ///////////
-    this.usdc2bean = (fromMode?: FarmFromMode, toMode?: FarmToMode) =>
-      new ExchangeUnderlying(
-        sdk.contracts.curve.pools.beanCrv3.address,
-        sdk.tokens.USDC,
-        sdk.tokens.BEAN,
-        fromMode,
-        toMode
-      );
-
-    this.bean2usdc = (fromMode?: FarmFromMode, toMode?: FarmToMode) =>
-      new ExchangeUnderlying(
-        sdk.contracts.curve.pools.beanCrv3.address,
-        sdk.tokens.BEAN,
-        sdk.tokens.USDC,
-        fromMode,
-        toMode
-      );
-
-    ///////// DAI <> BEAN ///////////
-    this.dai2bean = (fromMode?: FarmFromMode, toMode?: FarmToMode) =>
-      new ExchangeUnderlying(
-        sdk.contracts.curve.pools.beanCrv3.address,
-        sdk.tokens.DAI,
-        sdk.tokens.BEAN,
-        fromMode,
-        toMode
-      );
-
-    this.bean2dai = (fromMode?: FarmFromMode, toMode?: FarmToMode) =>
-      new ExchangeUnderlying(
-        sdk.contracts.curve.pools.beanCrv3.address,
-        sdk.tokens.BEAN,
-        sdk.tokens.DAI,
         fromMode,
         toMode
       );
@@ -265,18 +197,6 @@ export class LibraryPresets {
         toMode
       );
 
-    ///////// DAI -> WETH ///////////
-    this.dai2weth = (fromMode?: FarmFromMode, toMode?: FarmToMode) => [
-      this.dai2usdt(fromMode, FarmToMode.INTERNAL) as StepGenerator,
-      this.usdt2weth(FarmFromMode.INTERNAL, toMode) as StepGenerator
-    ];
-
-    ///////// USDC -> WETH ///////////
-    this.usdc2weth = (fromMode?: FarmFromMode, toMode?: FarmToMode) => [
-      this.usdc2usdt(fromMode, FarmToMode.INTERNAL) as StepGenerator,
-      this.usdt2weth(FarmFromMode.INTERNAL, toMode) as StepGenerator
-    ];
-
     ///////// [ USDC, USDT, DAI ] -> BEANETH ///////////
     this.usdc2beaneth = (
       well: BasinWell,
@@ -309,17 +229,25 @@ export class LibraryPresets {
       account: string,
       fromMode?: FarmFromMode,
       _toMode?: FarmToMode
-    ) => [
-      this.uniswapV3Swap(fromToken, sdk.tokens.WETH, account, 500, fromMode, FarmToMode.INTERNAL),
-      this.uniV3AddLiquidity(
-        sdk.pools.BEAN_WSTETH_WELL,
-        account,
-        sdk.tokens.WETH,
-        sdk.tokens.WSTETH,
-        100,
-        FarmFromMode.INTERNAL_TOLERANT
-      )
-    ];
+    ) => {
+      if (!stables.some((t) => t.equals(fromToken))) {
+        throw new Error(
+          `[stable2wstETH] expected tokenIn to be DAI, USDC, USDT, but got ${fromToken.symbol}`
+        );
+      }
+
+      return [
+        this.uniswapV3Swap(fromToken, sdk.tokens.WETH, account, 500, fromMode, FarmToMode.INTERNAL),
+        this.uniV3AddLiquidity(
+          sdk.pools.BEAN_WSTETH_WELL,
+          account,
+          sdk.tokens.WETH,
+          sdk.tokens.WSTETH,
+          100,
+          FarmFromMode.INTERNAL_TOLERANT
+        )
+      ];
+    };
 
     // BEAN->USDC/USDT/DAI via Pipeline
     // shortest path is BEAN:WETH(well) => WETH:STABLE(uniV3)
@@ -612,9 +540,8 @@ export class LibraryPresets {
         FarmToMode.INTERNAL,
         transferClipboard
       );
-      // if (account !== sdk.contracts.pipeline.address) {
+
       result.push(transfer);
-      // }
       advancedPipe.add(approveUniswap);
       advancedPipe.add(swap, { tag: "uniV3SwapAmount" });
       if (transferBack) {
