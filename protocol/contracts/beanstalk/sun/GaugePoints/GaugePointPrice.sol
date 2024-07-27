@@ -12,7 +12,7 @@ import {GaugePointFacet} from "./GaugePointFacet.sol";
  * @notice GaugePointPrice implements `priceGaugePointFunction`.
  */
 interface IBS {
-    function getTokenPrice(address) external view returns (uint256);
+    function getTokenUsdPrice(address) external view returns (uint256);
 }
 
 contract GaugePointPrice is GaugePointFacet {
@@ -55,7 +55,7 @@ contract GaugePointPrice is GaugePointFacet {
         uint256 optimalPercentDepositedBdv,
         uint256 percentOfDepositedBdv
     ) public view returns (uint256 newGaugePoints) {
-        try IBS(beanstalk).getTokenPrice(token) returns (uint256 price) {
+        try IBS(beanstalk).getTokenUsdPrice(token) returns (uint256 price) {
             if (priceThreshold >= price) {
                 return
                     currentGaugePoints > gaugePointsPrice ? gaugePointsPrice : currentGaugePoints;
