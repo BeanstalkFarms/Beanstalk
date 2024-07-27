@@ -3,6 +3,8 @@ import {
   BEAN_3CRV,
   BEAN_WETH_CP2_WELL,
   BEAN_WETH_UNRIPE_MIGRATION_BLOCK,
+  BEAN_WSTETH_CP2_WELL,
+  BEAN_WSTETH_UNRIPE_MIGRATION_BLOCK,
   BEANSTALK,
   GAUGE_BIP45_BLOCK,
   UNRIPE_BEAN,
@@ -58,8 +60,10 @@ export function calcLockedBeans(blockNumber: BigInt): BigInt {
 function getUnderlyingUnripe(blockNumber: BigInt): Address {
   if (blockNumber < BEAN_WETH_UNRIPE_MIGRATION_BLOCK) {
     return BEAN_3CRV;
-  } else {
+  } else if (blockNumber < BEAN_WSTETH_UNRIPE_MIGRATION_BLOCK) {
     return BEAN_WETH_CP2_WELL;
+  } else {
+    return BEAN_WSTETH_CP2_WELL;
   }
 }
 
