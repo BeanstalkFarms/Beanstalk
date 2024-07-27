@@ -15,11 +15,8 @@ describe("Silo Transfer", function () {
   });
 
   const transfer = new Transfer(sdk);
-  // remove bean_crv3_lp & remove bean_wsteth_lp until contract deployecd
-  const removeTokens = new Set([
-    sdk.tokens.BEAN_CRV3_LP.address,
-    sdk.tokens.BEAN_WSTETH_WELL_LP.address
-  ]);
+  // remove bean_crv3_lp
+  const removeTokens = new Set([sdk.tokens.BEAN_CRV3_LP.address]);
   const whiteListedTokens = Array.from(sdk.tokens.siloWhitelist).filter(
     (tk) => !removeTokens.has(tk.address)
   );
