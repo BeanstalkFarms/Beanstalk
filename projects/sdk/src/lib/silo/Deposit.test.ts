@@ -118,17 +118,13 @@ describe("Silo Deposit", function () {
     });
   });
 
-  describe.each(depositableTokens)(
-    "Deposit BEAN_wstETH_LP",
-    (token: Token) => {
-      const dest = sdk.tokens.BEAN_WSTETH_WELL_LP;
-      const op = builder.buildDeposit(dest, account);
-      it(`${token.symbol} -> ${dest.symbol}`, async () => {
-        await testDeposit(op, token, dest);
-      }, 120_000);
-    },
-    120_000
-  );
+  describe.each(depositableTokens)("Deposit BEAN_wstETH_LP", (token: Token) => {
+    const dest = sdk.tokens.BEAN_WSTETH_WELL_LP;
+    const op = builder.buildDeposit(dest, account);
+    it(`${token.symbol} -> ${dest.symbol}`, async () => {
+      await testDeposit(op, token, dest);
+    });
+  });
 
   it("Fails to deposit non-whitelisted assets", async () => {
     const t = () => {
