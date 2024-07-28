@@ -27,7 +27,7 @@ contract DepotFacet is Invariable {
      **/
     function pipe(
         PipeCall calldata p
-    ) external payable fundsSafu noSupplyIncrease returns (bytes memory result) {
+    ) external payable fundsSafu noSupplyIncrease nonReentrant returns (bytes memory result) {
         result = IPipeline(PIPELINE).pipe(p);
     }
 
@@ -39,7 +39,7 @@ contract DepotFacet is Invariable {
      **/
     function multiPipe(
         PipeCall[] calldata pipes
-    ) external payable fundsSafu noSupplyIncrease returns (bytes[] memory results) {
+    ) external payable fundsSafu noSupplyIncrease nonReentrant returns (bytes[] memory results) {
         results = IPipeline(PIPELINE).multiPipe(pipes);
     }
 
@@ -51,7 +51,7 @@ contract DepotFacet is Invariable {
     function advancedPipe(
         AdvancedPipeCall[] calldata pipes,
         uint256 value
-    ) external payable fundsSafu noSupplyIncrease returns (bytes[] memory results) {
+    ) external payable fundsSafu noSupplyIncrease nonReentrant returns (bytes[] memory results) {
         results = IPipeline(PIPELINE).advancedPipe{value: value}(pipes);
         LibEth.refundEth();
     }
@@ -65,7 +65,7 @@ contract DepotFacet is Invariable {
     function etherPipe(
         PipeCall calldata p,
         uint256 value
-    ) external payable fundsSafu noSupplyIncrease returns (bytes memory result) {
+    ) external payable fundsSafu noSupplyIncrease nonReentrant returns (bytes memory result) {
         result = IPipeline(PIPELINE).pipe{value: value}(p);
         LibEth.refundEth();
     }
