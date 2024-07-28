@@ -22,13 +22,8 @@ jobs:
       - name: Validate environment input
         id: check_env
         run: |
-<<<<<<< HEAD
-          # Check if the environment is either 'prod' or 'dev' or 'testing'
-          if [[ "${{ github.event.inputs.environment }}" != "prod" && "${{ github.event.inputs.environment }}" != "dev" && "${{ github.event.inputs.environment }}" != "testing" ]]; then
-=======
           # Check if the environment is prod/dev/testing/prev
           if [[ "${{ github.event.inputs.environment }}" != "prod" && "${{ github.event.inputs.environment }}" != "dev" && "${{ github.event.inputs.environment }}" != "testing" && "${{ github.event.inputs.environment }}" != "prev" ]]; then
->>>>>>> master
             echo "Error: Environment must be one of 'prod', 'dev', 'testing'."
             exit 1
           fi
