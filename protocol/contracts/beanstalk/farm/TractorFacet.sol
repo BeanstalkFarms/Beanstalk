@@ -12,7 +12,9 @@ import {LibRedundantMath256} from "contracts/libraries/LibRedundantMath256.sol";
 import {LibTractor} from "../../libraries/LibTractor.sol";
 import {AdvancedFarmCall, LibFarm} from "../../libraries/LibFarm.sol";
 import {LibBytes} from "contracts/libraries/LibBytes.sol";
+import {LibDiamond} from "contracts/libraries/LibDiamond.sol";
 import {Invariable} from "contracts/beanstalk/Invariable.sol";
+
 /**
  * @title TractorFacet handles tractor and blueprint operations.
  * @author funderberker, 0xm00neth
@@ -59,6 +61,23 @@ contract TractorFacet is Invariable {
         LibTractor._setPublisher(payable(requisition.blueprint.publisher));
         _;
         LibTractor._resetPublisher();
+    }
+
+    /**
+     * @notice Updates the tractor version used for EIP712 signatures.
+     * @dev This function will render all existing blueprints invalid.
+     */
+    function updateTractorVersion(string calldata version) fundsSafu noNetFlow noSupplyChange external {
+        LibDiamond.enforceIsContractOwner();
+        LibTractor._setVersion(version);
+    }
+
+    /**
+     * @notice Get the current tractor version.
+     * @dev Only blueprints using the current version can be run.
+     */
+    function getTractorVersion() external view returns (string memory) {
+        return LibTractor._tractorStorage().version;
     }
 
     /**
