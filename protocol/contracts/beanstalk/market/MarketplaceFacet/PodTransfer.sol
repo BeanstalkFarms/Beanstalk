@@ -61,6 +61,9 @@ contract PodTransfer is ReentrancyGuard {
     function insertPlot(address account, uint256 fieldId, uint256 index, uint256 amount) internal {
         s.accts[account].fields[fieldId].plots[index] = amount;
         s.accts[account].fields[fieldId].plotIndexes.push(index);
+        s.accts[account].fields[fieldId].piIndex[index] =
+            s.accts[account].fields[fieldId].plotIndexes.length -
+            1;
     }
 
     function removePlot(
@@ -83,6 +86,9 @@ contract PodTransfer is ReentrancyGuard {
             uint256 newIndex = index + end;
             s.accts[account].fields[fieldId].plots[newIndex] = amountAfterEnd;
             s.accts[account].fields[fieldId].plotIndexes.push(newIndex);
+            s.accts[account].fields[fieldId].piIndex[newIndex] =
+                s.accts[account].fields[fieldId].plotIndexes.length -
+                1;
         }
     }
 
