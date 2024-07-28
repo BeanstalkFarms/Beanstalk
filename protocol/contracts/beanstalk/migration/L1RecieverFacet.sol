@@ -391,28 +391,28 @@ contract L1RecieverFacet is ReentrancyGuard {
     /**
      * @notice returns the deposit Merkle Root.
      */
-    function getDepositMerkleRoot() external view returns (bytes32) {
+    function getDepositMerkleRoot() external pure returns (bytes32) {
         return DEPOSIT_MERKLE_ROOT;
     }
 
     /**
      * @notice returns the Plot Merkle Root.
      */
-    function getPlotMerkleRoot() external view returns (bytes32) {
+    function getPlotMerkleRoot() external pure returns (bytes32) {
         return PLOT_MERKLE_ROOT;
     }
 
     /**
      * @notice returns the Fertilizer Merkle Root.
      */
-    function getFertilizerMerkleRoot() external view returns (bytes32) {
+    function getFertilizerMerkleRoot() external pure returns (bytes32) {
         return FERTILIZER_MERKLE_ROOT;
     }
 
     /**
      * @notice returns the Internal Balance Merkle Root.
      */
-    function getInternalBalanceMerkleRoot() external view returns (bytes32) {
+    function getInternalBalanceMerkleRoot() external pure returns (bytes32) {
         return INTERNAL_BALANCE_MERKLE_ROOT;
     }
 }
