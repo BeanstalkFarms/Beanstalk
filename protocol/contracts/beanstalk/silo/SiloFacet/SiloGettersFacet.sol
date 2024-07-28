@@ -512,7 +512,7 @@ contract SiloGettersFacet is ReentrancyGuard {
     }
 
     function totalRainRoots() external view returns (uint256) {
-        return s.sys.silo.roots;
+        return s.sys.rain.roots;
     }
 
     //////////////////////// STEM ////////////////////////

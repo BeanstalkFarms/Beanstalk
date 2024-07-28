@@ -259,7 +259,8 @@ library LibSilo {
         if (s.accts[account].sop.rainRoots > s.accts[account].roots) {
             uint256 deltaRoots = s.accts[account].sop.rainRoots.sub(s.accts[account].roots);
             s.accts[account].sop.rainRoots = s.accts[account].roots;
-            s.sys.silo.roots = s.sys.silo.roots.sub(deltaRoots);
+            // decrease system rain roots
+            s.sys.rain.roots = s.sys.rain.roots.sub(deltaRoots);
         }
 
         // emit event.
@@ -316,7 +317,7 @@ library LibSilo {
         if (s.accts[sender].sop.rainRoots > s.accts[sender].roots) {
             uint256 deltaRoots = s.accts[sender].sop.rainRoots.sub(s.accts[sender].roots);
             s.accts[sender].sop.rainRoots = s.accts[sender].roots;
-            s.sys.silo.roots = s.sys.silo.roots.sub(deltaRoots);
+            s.sys.rain.roots = s.sys.rain.roots.sub(deltaRoots);
         }
 
         // Add Stalk and Roots to the 'recipient' balance.
