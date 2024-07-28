@@ -7,7 +7,9 @@ import { BigNumber as BigNumberJS } from 'bignumber.js';
 import { BigNumber as BigNumberEthers } from 'ethers';
 import { useAppSelector } from '~/state';
 import { useMemo } from 'react';
+import { LibCases } from '~/lib/Beanstalk/LibCases';
 import useSdk from '../sdk';
+import { toBNWithDecimals } from "../../util/BigNumber";
 
 export type SiloTokenSettingMap = AddressMap<{
   stalkedEarnedPerSeason: BigNumberJS;
@@ -157,7 +159,11 @@ const useSeedGauge = () => {
 
   return {
     data: {
-      maxBean2LPRatio: query.data?.maxBean2LPRatio,
+      bean2MaxLPRatio: {
+        max: toBNWithDecimals(LibCases.MAX_BEAN_MAX_LP_GP_PER_BDV_RATIO, 18),
+        value: query.data?.maxBean2LPRatio,
+        min: toBNWithDecimals(LibCases.MIN_BEAN_MAX_LP_GP_PER_BDV_RATIO, 18),
+      },
       gaugeData: gaugeData,
     },
     isLoading: siloLoading || query.isLoading,
