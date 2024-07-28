@@ -84,7 +84,7 @@ contract TractorFacet is Invariable {
      */
     function publishRequisition(
         LibTractor.Requisition calldata requisition
-    ) external verifyRequisition(requisition) {
+    ) external fundsSafu noNetFlow noSupplyChange verifyRequisition(requisition) {
         emit PublishRequisition(requisition);
     }
 
@@ -93,7 +93,7 @@ contract TractorFacet is Invariable {
      */
     function cancelBlueprint(
         LibTractor.Requisition calldata requisition
-    ) external verifyRequisition(requisition) {
+    ) external fundsSafu noNetFlow noSupplyChange verifyRequisition(requisition) {
         require(msg.sender == requisition.blueprint.publisher, "TractorFacet: not publisher");
         LibTractor._cancelBlueprint(requisition.blueprintHash);
         emit CancelBlueprint(requisition.blueprintHash);
