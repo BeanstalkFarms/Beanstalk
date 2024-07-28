@@ -10,32 +10,32 @@ import {IBean} from "contracts/interfaces/IBean.sol";
 
 /**
  * @author Brean
- * @title BeanL2MigrationFacet
- * @notice Allows farmers with external bean balances to migrate onto L2.
+ * @title L2MigrationFacet
+ * @notice Allows 1) farmers with external bean balances and 2) contracts with native bean assets to migrate onto L2.
  * @dev When migrating to an L2, given a majority of bean assets reside in the diamond contract,
- * beanstalk is able to send these assets to an L2. Beanstalk does not have control of Bean or Wells
+ * Beanstalk is able to send these assets to an L2. Beanstalk does not have control of Bean or Wells
  * where tokens are paired with Beans. Given beanstalk cannot receive these assets, as well as a potenital
  * double-spend if Beanstalk were to mint external beans to these users (where a user is able to sell their
  * L1 Beans for value), Beanstalk allows Farmers who hold Beans to 1) Burn their Beans on L1 and 2) Issue the
  * same amount on L2.
  *
- * While this can be done by implmentating an ERC20 bridge solution, ideally the two Beans are not linked via an
- * L2 bridge.
+ * Beanstalk also allows contracts that own Beanstalk assets to approve an address on L2 to recieve their assets.
+ * Beanstalk cannot mint Beanstalk assets to an contract on L2, as it cannot assume that the owner of the contract
+ * has access to the same address on L2.
  *
- * The Facet implmentation may need to change depending on the L2 that the beanstalk DAO chooses to migrate to.
  **/
 
 interface IL2Bridge {
     function sendMessage(address _target, bytes memory _message, uint32 _minGasLimit) external;
 }
 
-interface IBeanL1RecieverFacet {
+interface IL1RecieverFacet {
     function recieveL1Beans(address reciever, uint256 amount) external;
 
-    function approveReciever(address reciever, uint256 amount) external;
+    function approveReciever(address owner, address reciever) external;
 }
 
-contract BeanL2MigrationFacet is Invariable, ReentrancyGuard {
+contract L2MigrationFacet is Invariable, ReentrancyGuard {
     address constant BRIDGE = address(0x866E82a600A1414e583f7F13623F1aC5d58b0Afa);
     address constant L1_BEAN = address(0xBEA0000029AD1c77D3d5D23Ba2D8893dB9d1Efab);
 
@@ -54,7 +54,7 @@ contract BeanL2MigrationFacet is Invariable, ReentrancyGuard {
         // send data to L2Beanstalk via the bridge contract.
         IL2Bridge(BRIDGE).sendMessage(
             L2Beanstalk,
-            abi.encodeCall(IBeanL1RecieverFacet(L2Beanstalk).recieveL1Beans, (reciever, amount)),
+            abi.encodeCall(IL1RecieverFacet(L2Beanstalk).recieveL1Beans, (reciever, amount)),
             gasLimit
         );
     }
@@ -67,16 +67,19 @@ contract BeanL2MigrationFacet is Invariable, ReentrancyGuard {
     function approveL2Reciever(
         address reciever,
         address L2Beanstalk,
-        uint256 gasLimit
+        uint32 gasLimit
     ) external nonReentrant {
-        require(hasCode(msg.sender), "BeanL2MigrationFacet: must be a contract");
+        // verify msg.sender is a contract.
+        require(hasCode(msg.sender), "L2MigrationFacet: must be a contract");
+        require(
+            reciever != address(0) || reciever != address(type(uint160).max),
+            "L2MigrationFacet: invalid reciever"
+        );
+
         // send data to L2Beanstalk via the bridge contract.
         IL2Bridge(BRIDGE).sendMessage(
             L2Beanstalk,
-            abi.encodeCall(
-                IBeanL1RecieverFacet(L2Beanstalk).approveReciever,
-                (msg.sender, reciever)
-            ),
+            abi.encodeCall(IL1RecieverFacet(L2Beanstalk).approveReciever, (msg.sender, reciever)),
             gasLimit
         );
     }

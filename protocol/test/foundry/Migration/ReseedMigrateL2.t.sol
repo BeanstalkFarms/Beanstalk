@@ -3,7 +3,7 @@ pragma solidity >=0.6.0 <0.9.0;
 pragma abicoder v2;
 
 import {TestHelper, LibTransfer, C, IMockFBeanstalk} from "test/foundry/utils/TestHelper.sol";
-import {BeanL2MigrationFacet} from "contracts/beanstalk/migration/BeanL2MigrationFacet.sol";
+import {L2MigrationFacet} from "contracts/beanstalk/migration/L2MigrationFacet.sol";
 import {ReseedL2Migration} from "contracts/beanstalk/init/reseed/L1/ReseedL2Migration.sol";
 import {L1TokenFacet} from "contracts/beanstalk/migration/L1TokenFacet.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
@@ -58,10 +58,10 @@ contract reeseedMigrateL2 is TestHelper {
         );
 
         string[] memory facetNames = new string[](2);
-        facetNames[0] = "BeanL2MigrationFacet";
+        facetNames[0] = "L2MigrationFacet";
         facetNames[1] = "L1TokenFacet";
         address[] memory newFacetAddresses = new address[](2);
-        newFacetAddresses[0] = address(new BeanL2MigrationFacet()); // deploy the BeanL2MigrationFacet.
+        newFacetAddresses[0] = address(new L2MigrationFacet()); // deploy the L2MigrationFacet.
         newFacetAddresses[1] = address(new L1TokenFacet()); // deploy the L1TokenFacet.
 
         IDiamondCut.FacetCutAction[] memory facetCutActions = new IDiamondCut.FacetCutAction[](2);
@@ -155,7 +155,7 @@ contract reeseedMigrateL2 is TestHelper {
     function test_bean_l2_migration() public {
         vm.startPrank(BS_FARMS);
         IERC20(C.BEAN).approve(BEANSTALK, 1e6);
-        BeanL2MigrationFacet(BEANSTALK).migrateL2Beans(BS_FARMS, L2_BEANSTALK, 1e6, 1000000);
+        L2MigrationFacet(BEANSTALK).migrateL2Beans(BS_FARMS, L2_BEANSTALK, 1e6, 1000000);
     }
 
     //////// MIGRATION HELPERS ////////
